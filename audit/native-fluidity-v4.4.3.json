@@ -1,0 +1,81 @@
+{
+  "format": "banane-native-fluidity-v1",
+  "version": "4.4.3",
+  "generatedAt": "2026-09-13T18:31:47.247Z",
+  "environment": {
+    "runtime": "v24.19.0",
+    "platform": "linux",
+    "scope": "Simulation Node hors ESV ; mesure du coût synchrone de l’observateur et de sa contre-pression, pas du rendu Edge/Potree."
+  },
+  "scenarios": [
+    {
+      "name": "paced",
+      "inputEvents": 1000,
+      "batchSize": 10,
+      "dispatchDurationMs": 1016.2418720000001,
+      "eventsPerSecond": 984.017710303517,
+      "prevented": 0,
+      "stopped": 0,
+      "syntheticEventsDispatched": 0,
+      "nativeCommandsSentByBanane": 0,
+      "eventsSaved": 1007,
+      "heapDeltaBytes": 4301296,
+      "collector": {
+        "enqueued": 1007,
+        "sent": 1007,
+        "dropped": 0,
+        "sendFailures": 0,
+        "queueDepth": 0,
+        "queueDepthMax": 10,
+        "inputHandlerMs": {
+          "p50": 0.7458789999999453,
+          "p95": 1.2614190000000463,
+          "max": 2.988104999999905,
+          "samples": 512
+        },
+        "captureCompleted": 1,
+        "captureFailed": 0,
+        "captureCheckpoints": 2,
+        "degradationLevel": "FULL"
+      },
+      "timerReleased": true
+    },
+    {
+      "name": "burst",
+      "inputEvents": 5000,
+      "batchSize": 5000,
+      "dispatchDurationMs": 4206.485315,
+      "eventsPerSecond": 1188.6407833566868,
+      "prevented": 0,
+      "stopped": 0,
+      "syntheticEventsDispatched": 0,
+      "nativeCommandsSentByBanane": 0,
+      "eventsSaved": 263,
+      "heapDeltaBytes": 45794224,
+      "collector": {
+        "enqueued": 5007,
+        "sent": 263,
+        "dropped": 4744,
+        "sendFailures": 0,
+        "queueDepth": 0,
+        "queueDepthMax": 256,
+        "inputHandlerMs": {
+          "p50": 0.7346099999995204,
+          "p95": 1.1866989999998623,
+          "max": 3.0256490000001577,
+          "samples": 512
+        },
+        "captureCompleted": 1,
+        "captureFailed": 0,
+        "captureCheckpoints": 2,
+        "degradationLevel": "METADATA_ONLY"
+      },
+      "timerReleased": true
+    }
+  ],
+  "limits": [
+    "Aucune page ESV réelle, aucun rendu WebGL et aucun IndexedDB réel ne sont présents dans cette mesure.",
+    "La mémoire Node est une approximation de contrôle de borne, pas une mesure de la mémoire de l’extension dans Edge.",
+    "La validation terrain doit comparer la fluidité ESV avec Natif inactif puis actif sur le même parcours."
+  ]
+}

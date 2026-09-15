@@ -1,0 +1,289 @@
+{
+  "format": "banane-native-geometry-audit-v1",
+  "generatedAt": "2026-09-12T18:04:36.434Z",
+  "sources": [
+    {
+      "file": "banane-native-v4-1789117835514.json",
+      "sha256": "7d49411c00adddf015d7bd7f65a840fa37d5cfd608087f67c907a61fa5a55e52",
+      "version": "4.4.0",
+      "sessionId": "ccd34488-ffec-4435-a74e-58b870b18238",
+      "grain": {
+        "visits": 118,
+        "distinctVisitIds": 118,
+        "distinctIdentities": 100,
+        "events": 1426,
+        "captures": 63
+      },
+      "chronology": {
+        "eventTimestampInversions": 730,
+        "eventsWithExplicitSequence": 0,
+        "periods": 1,
+        "periodsWithoutEnd": 0,
+        "interruptedPeriodsWithoutEnd": 0
+      },
+      "captureFailures": [
+        {
+          "reason": "Les nœuds LiDAR visibles ont changé pendant l'export. Attends la fin du chargement puis réessaie.",
+          "count": 36
+        },
+        {
+          "reason": "La caméra a changé pendant l'export. Garde la vue immobile et réessaie.",
+          "count": 10
+        },
+        {
+          "reason": "Cible différente : cut",
+          "count": 9
+        }
+      ],
+      "captureOutcomes": [
+        {
+          "outcome": "partial-resource-limit-empty",
+          "count": 60
+        },
+        {
+          "outcome": "partial-resource-limit-with-points",
+          "count": 2
+        },
+        {
+          "outcome": "read-complete-empty",
+          "count": 1
+        }
+      ],
+      "pipeline": {
+        "availableInBuffers": 35167614,
+        "diagnosticProbesRead": 18683,
+        "read": 369469,
+        "finiteTransformed": 369469,
+        "retainedInRoi": 2,
+        "saved": 2,
+        "exported": 2
+      },
+      "evidence": {
+        "capturesWithProbeRoiHit": 54,
+        "probeRoiHits": 263,
+        "capturesResourceLimited": 62,
+        "nodesAvailable": 1099,
+        "nodesNotScanned": 749,
+        "nodesPartialBudget": 62,
+        "capturesWithHierarchyMismatch": 63,
+        "completeScans": 1,
+        "completeLoadedRoi": 0
+      }
+    },
+    {
+      "file": "banane-native-v4-1789120447962.json",
+      "sha256": "83740d5fe603c6aa9ceed1c74763fc27e7d6bed025ef63c51a59494c640e4d2b",
+      "version": "4.4.0",
+      "sessionId": "9be15ca8-a052-435f-aadb-a64a19c2f10f",
+      "grain": {
+        "visits": 190,
+        "distinctVisitIds": 190,
+        "distinctIdentities": 178,
+        "events": 2915,
+        "captures": 48
+      },
+      "chronology": {
+        "eventTimestampInversions": 1447,
+        "eventsWithExplicitSequence": 0,
+        "periods": 2,
+        "periodsWithoutEnd": 1,
+        "interruptedPeriodsWithoutEnd": 1
+      },
+      "captureFailures": [
+        {
+          "reason": "Les nœuds LiDAR visibles ont changé pendant l'export. Attends la fin du chargement puis réessaie.",
+          "count": 108
+        },
+        {
+          "reason": "Cible différente : cut",
+          "count": 16
+        },
+        {
+          "reason": "La caméra a changé pendant l'export. Garde la vue immobile et réessaie.",
+          "count": 15
+        },
+        {
+          "reason": "capture-not-started-reader-busy",
+          "count": 3
+        }
+      ],
+      "captureOutcomes": [
+        {
+          "outcome": "partial-resource-limit-empty",
+          "count": 46
+        },
+        {
+          "outcome": "partial-resource-limit-with-points",
+          "count": 2
+        }
+      ],
+      "pipeline": {
+        "availableInBuffers": 28994791,
+        "diagnosticProbesRead": 17833,
+        "read": 289856,
+        "finiteTransformed": 289856,
+        "retainedInRoi": 2,
+        "saved": 2,
+        "exported": 2
+      },
+      "evidence": {
+        "capturesWithProbeRoiHit": 45,
+        "probeRoiHits": 248,
+        "capturesResourceLimited": 48,
+        "nodesAvailable": 1049,
+        "nodesNotScanned": 737,
+        "nodesPartialBudget": 48,
+        "capturesWithHierarchyMismatch": 48,
+        "completeScans": 0,
+        "completeLoadedRoi": 0
+      }
+    },
+    {
+      "file": "banane-native-v4-1789125861104.json",
+      "sha256": "00dfeba665f3263a8c4d65a9029add4e59fecb595adfb5918f9216690dde5fb1",
+      "version": "4.4.0",
+      "sessionId": "96bb7902-6d7d-4601-b553-527dddbb83df",
+      "grain": {
+        "visits": 118,
+        "distinctVisitIds": 118,
+        "distinctIdentities": 84,
+        "events": 1096,
+        "captures": 4
+      },
+      "chronology": {
+        "eventTimestampInversions": 549,
+        "eventsWithExplicitSequence": 0,
+        "periods": 2,
+        "periodsWithoutEnd": 0,
+        "interruptedPeriodsWithoutEnd": 0
+      },
+      "captureFailures": [
+        {
+          "reason": "Les nœuds LiDAR visibles ont changé pendant l'export. Attends la fin du chargement puis réessaie.",
+          "count": 82
+        },
+        {
+          "reason": "Cible différente : cut",
+          "count": 26
+        },
+        {
+          "reason": "capture-not-started-reader-busy",
+          "count": 4
+        },
+        {
+          "reason": "La caméra a changé pendant l'export. Garde la vue immobile et réessaie.",
+          "count": 2
+        }
+      ],
+      "captureOutcomes": [
+        {
+          "outcome": "partial-resource-limit-empty",
+          "count": 4
+        }
+      ],
+      "pipeline": {
+        "availableInBuffers": 3044476,
+        "diagnosticProbesRead": 2159,
+        "read": 26233,
+        "finiteTransformed": 26233,
+        "retainedInRoi": 0,
+        "saved": 0,
+        "exported": 0
+      },
+      "evidence": {
+        "capturesWithProbeRoiHit": 4,
+        "probeRoiHits": 14,
+        "capturesResourceLimited": 4,
+        "nodesAvailable": 127,
+        "nodesNotScanned": 109,
+        "nodesPartialBudget": 4,
+        "capturesWithHierarchyMismatch": 4,
+        "completeScans": 0,
+        "completeLoadedRoi": 0
+      }
+    }
+  ],
+  "aggregate": {
+    "sessions": 3,
+    "visits": 426,
+    "captures": 115,
+    "failedCaptureAttempts": 311,
+    "captureFailures": [
+      {
+        "reason": "Les nœuds LiDAR visibles ont changé pendant l'export. Attends la fin du chargement puis réessaie.",
+        "count": 226
+      },
+      {
+        "reason": "Cible différente : cut",
+        "count": 51
+      },
+      {
+        "reason": "La caméra a changé pendant l'export. Garde la vue immobile et réessaie.",
+        "count": 27
+      },
+      {
+        "reason": "capture-not-started-reader-busy",
+        "count": 7
+      }
+    ],
+    "captureOutcomes": [
+      {
+        "outcome": "partial-resource-limit-empty",
+        "count": 110
+      },
+      {
+        "outcome": "partial-resource-limit-with-points",
+        "count": 4
+      },
+      {
+        "outcome": "read-complete-empty",
+        "count": 1
+      }
+    ],
+    "pipeline": {
+      "availableInBuffers": 67206881,
+      "diagnosticProbesRead": 38675,
+      "read": 685558,
+      "finiteTransformed": 685558,
+      "retainedInRoi": 4,
+      "saved": 4,
+      "exported": 4
+    },
+    "evidence": {
+      "capturesWithProbeRoiHit": 103,
+      "probeRoiHits": 525,
+      "capturesResourceLimited": 114,
+      "nodesAvailable": 2275,
+      "nodesNotScanned": 1595,
+      "nodesPartialBudget": 114,
+      "capturesWithHierarchyMismatch": 115,
+      "completeScans": 1,
+      "completeLoadedRoi": 0
+    },
+    "eventTimestampInversions": 2726,
+    "eventsWithExplicitSequence": 0,
+    "conclusions": [
+      {
+        "severity": "critical",
+        "confidence": "high",
+        "code": "SEQUENTIAL_SCAN_EXHAUSTS_300MS",
+        "evidence": "114/115 captures sont limitées ; 103/115 contiennent pourtant des sondes situées dans une ROI de rail ; 1595/2275 nœuds n'ont jamais été balayés.",
+        "cause": "Le lecteur prépare tous les nœuds puis les balaie dans l’ordre de visibleNodes avec un budget mural de 300 ms. Les nœuds grossiers et éloignés consomment le budget avant les nœuds portant la zone du rail."
+      },
+      {
+        "severity": "high",
+        "confidence": "high",
+        "code": "RESOURCE_LIMIT_MISLABELED_AS_NO_POINTS",
+        "evidence": "Le statut `no-points` écrase `partial-limit` lorsque zéro point a été retenu, même si le balayage est incomplet.",
+        "cause": "Ordre de priorité des statuts dans le lecteur V4.4."
+      }
+    ]
+  },
+  "immutability": {
+    "sourceFilesModified": false
+  },
+  "limits": [
+    "Les points non exportés ne peuvent pas être rejoués depuis les JSON seuls.",
+    "La validation finale nécessite une courte session ESV avec le lecteur corrigé."
+  ]
+}

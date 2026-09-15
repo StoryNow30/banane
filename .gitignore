@@ -1,0 +1,17 @@
+# Exports Natif / LiDAR volumineux — exclus du dépôt sur consigne.
+# 47 Mo de nuages de points bruts. Voir datasets/native/README.md pour la
+# conséquence exacte sur le banc (2 tests sur 364).
+datasets/native/*
+!datasets/native/README.md
+
+# Sorties de build et archives produites localement.
+releases/
+archive/
+*.zip
+*.7z
+
+# Bruit d'outillage.
+node_modules/
+.DS_Store
+*.pyc
+__pycache__/

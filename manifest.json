@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Banane V4.5 TEST",
+  "version": "4.5.7",
+  "description": "Observation native passive, corrections manuelles et pilotage TEST séparés pour ESV LiDAR. Collecte segmentée et export compact.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://esv.lidar.altametris.xyz/rails_validation/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Ouvrir Banane 4.5.7 TEST"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://esv.lidar.altametris.xyz/rails_validation/*"
+      ],
+      "js": [
+        "src/early-input.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://esv.lidar.altametris.xyz/rails_validation/*"
+      ],
+      "js": [
+        "src/bridge.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

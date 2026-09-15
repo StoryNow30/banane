@@ -1,0 +1,563 @@
+{
+  "format": "banane-v3-development-corpus-v1",
+  "role": "development-only; no independently validated automatic positioning",
+  "units": "ESV scene units interpreted as metres; not independently calibrated",
+  "counts": {
+    "reference_files": 9,
+    "reference_occurrences": 55,
+    "unique_records": 11,
+    "duplicates_removed": 44,
+    "paired_cuts": 10,
+    "paired_rail_observations": 20,
+    "missing_lidar": 1
+  },
+  "sources": [
+    {
+      "file": "banane-lidar-part-23-cut-2855-1788941885642.json",
+      "sha256": "0bab8a65dba3d990c1dd57ab5d0570ba0019bba3d22ca2d77a60083b4f4d7d89"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2856-1788942234335.json",
+      "sha256": "dee462c7dd21327eb433fa4d4082c00d6bda19950a4e850a0aee69b0aac25aa5"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2857-1788942362360.json",
+      "sha256": "3688b8ec3469af9019207fbea41308670e1de6bcf8ebfb422405318b5e3c0201"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2858-1788942415172.json",
+      "sha256": "ec590d3cde3aa94fc25fa0fe0b9f287702a803d43d7b8027533ae1d489aacaf4"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2859-1788942465953.json",
+      "sha256": "5704438c43667193bbf366f23dd3763828784a36646579cb87cb17d85c399435"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2860-1788942528253.json",
+      "sha256": "14b8f020a7962650525be74b8b8d699d6f557a83d912a8c59af3bc2f97a99ed4"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2864-1788942588137.json",
+      "sha256": "7ad5d951ae8dccfeae4cae558fcfe79dc206d305cb54c2adabd7f48a180bbbe0"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2865-1788942689157.json",
+      "sha256": "6e3e14c2c758c72ce7d36479c7a495eba19b765b86a6fe6b7dbb824c912db823"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2866-1788942754049.json",
+      "sha256": "9dfa45f4e0481f3b59f5b81a48f05f1acb19f60145449bd5412b09b9da0233a0"
+    },
+    {
+      "file": "banane-lidar-part-23-cut-2972-1788942957128.json",
+      "sha256": "047f1ae9e4da277d9860f015391ab5e4fd64648e637cb830d7ebf0fd01ff6847"
+    },
+    {
+      "file": "banane-references-v24-1788942279203.json",
+      "sha256": "010080eb51012ae0dc0052347e485d06fde05540fdd8e7f69dc754e4341ffca9"
+    },
+    {
+      "file": "banane-references-v24-1788942372337.json",
+      "sha256": "1a4227a7cfcc6e36593a356ad9bcd4713324469403d4089ab3d865cfac0441ad"
+    },
+    {
+      "file": "banane-references-v24-1788942424049.json",
+      "sha256": "248d7446861b30009c2876da5b6afea27549fdc7e64e00ccbbafd405e77415bb"
+    },
+    {
+      "file": "banane-references-v24-1788942475109.json",
+      "sha256": "216a8b79526f405b6672a9fc556ec59494bd42939295c1537f4c56153a3b7c73"
+    },
+    {
+      "file": "banane-references-v24-1788942539498.json",
+      "sha256": "596f6232b38e2a42cab7432d26475d56b1cfca076f605e180ae7fc657f7ad370"
+    },
+    {
+      "file": "banane-references-v24-1788942596856.json",
+      "sha256": "be03ffda52f8088de368053341dc6d2aa9ecf38189e58e15bb0b7492d780c1bf"
+    },
+    {
+      "file": "banane-references-v24-1788942696962.json",
+      "sha256": "60c028626b813f40bccf49ba5089a4a307eae3d0abd33ccd6ff8b783098b490c"
+    },
+    {
+      "file": "banane-references-v24-1788942761196.json",
+      "sha256": "e31b01163c79ecd97c24c5fe3015306ac2c61ddfe3e9bd3182d1552f8f60b427"
+    },
+    {
+      "file": "banane-references-v24-1788942963289.json",
+      "sha256": "e6d4336857ea0f65167d56738e67126fadcc3baa4fc870e41899b7503d0f8f97"
+    }
+  ],
+  "paired": [
+    {
+      "part": 23,
+      "cut": 2855,
+      "shape": "U50",
+      "recordId": "32494148-4702-4569-aaab-dc91d183de24",
+      "lidarCaptureId": "15d5f64b-e738-4b85-a9d5-accdc6a59342",
+      "lidar_file": "banane-lidar-part-23-cut-2855-1788941885642.json",
+      "reference_sources": [
+        "banane-references-v24-1788942279203.json",
+        "banane-references-v24-1788942372337.json",
+        "banane-references-v24-1788942424049.json",
+        "banane-references-v24-1788942475109.json",
+        "banane-references-v24-1788942539498.json",
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 4764,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2322,
+          "points_inside_clip": 1346,
+          "diagnostic_head_window_before": 151,
+          "diagnostic_head_window_corrected": 143,
+          "manual_displacement_local_mm": [
+            -4.717369084105078e-05,
+            -32.80256493856872,
+            7.798337982979609
+          ],
+          "manual_displacement_norm_mm": 33.71679613854237,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2442,
+          "points_inside_clip": 1348,
+          "diagnostic_head_window_before": 152,
+          "diagnostic_head_window_corrected": 197,
+          "manual_displacement_local_mm": [
+            4.680144259151456e-05,
+            26.07203424840798,
+            2.6569800190886643
+          ],
+          "manual_displacement_norm_mm": 26.207069898678004,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2856,
+      "shape": "U50",
+      "recordId": "3c00f506-8385-42ff-973c-5f110567e24d",
+      "lidarCaptureId": "9aa41316-2cb8-421d-932d-c57442bf3913",
+      "lidar_file": "banane-lidar-part-23-cut-2856-1788942234335.json",
+      "reference_sources": [
+        "banane-references-v24-1788942279203.json",
+        "banane-references-v24-1788942372337.json",
+        "banane-references-v24-1788942424049.json",
+        "banane-references-v24-1788942475109.json",
+        "banane-references-v24-1788942539498.json",
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 2979,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2603,
+          "points_inside_clip": 1273,
+          "diagnostic_head_window_before": 179,
+          "diagnostic_head_window_corrected": 147,
+          "manual_displacement_local_mm": [
+            -0.00013429769360536213,
+            -34.87249060953435,
+            1.3507308501332438
+          ],
+          "manual_displacement_norm_mm": 34.89864001876863,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 376,
+          "points_inside_clip": 184,
+          "diagnostic_head_window_before": 25,
+          "diagnostic_head_window_corrected": 27,
+          "manual_displacement_local_mm": [
+            0.0001341953892381106,
+            24.46031453599895,
+            -0.04425109641867375
+          ],
+          "manual_displacement_norm_mm": 24.4603545636105,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2857,
+      "shape": "U50",
+      "recordId": "d3b340c3-52ea-4e4c-8c15-ecbd39529e87",
+      "lidarCaptureId": "7a657d58-6fa6-46ca-af71-8824dcf5b5e7",
+      "lidar_file": "banane-lidar-part-23-cut-2857-1788942362360.json",
+      "reference_sources": [
+        "banane-references-v24-1788942372337.json",
+        "banane-references-v24-1788942424049.json",
+        "banane-references-v24-1788942475109.json",
+        "banane-references-v24-1788942539498.json",
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 3792,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2208,
+          "points_inside_clip": 1158,
+          "diagnostic_head_window_before": 221,
+          "diagnostic_head_window_corrected": 174,
+          "manual_displacement_local_mm": [
+            -4.502105196099111e-05,
+            -37.90028452638443,
+            1.939125183571184
+          ],
+          "manual_displacement_norm_mm": 37.94985867774058,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 1584,
+          "points_inside_clip": 733,
+          "diagnostic_head_window_before": 102,
+          "diagnostic_head_window_corrected": 130,
+          "manual_displacement_local_mm": [
+            4.506266842461969e-05,
+            25.723652873615997,
+            0.8925248397721186
+          ],
+          "manual_displacement_norm_mm": 25.739132031867896,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2858,
+      "shape": "U50",
+      "recordId": "40ba0a80-4968-4092-8576-f00823ff9d32",
+      "lidarCaptureId": "78f47b1b-f7fc-432d-b898-831dadc6b10e",
+      "lidar_file": "banane-lidar-part-23-cut-2858-1788942415172.json",
+      "reference_sources": [
+        "banane-references-v24-1788942424049.json",
+        "banane-references-v24-1788942475109.json",
+        "banane-references-v24-1788942539498.json",
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 4920,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2402,
+          "points_inside_clip": 1204,
+          "diagnostic_head_window_before": 246,
+          "diagnostic_head_window_corrected": 246,
+          "manual_displacement_local_mm": [
+            -4.199325002561312e-05,
+            -35.873996696354546,
+            7.515414332165838
+          ],
+          "manual_displacement_norm_mm": 36.652763764223074,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2518,
+          "points_inside_clip": 1351,
+          "diagnostic_head_window_before": 163,
+          "diagnostic_head_window_corrected": 200,
+          "manual_displacement_local_mm": [
+            4.28486467967256e-05,
+            22.869686497669406,
+            5.553857429010073
+          ],
+          "manual_displacement_norm_mm": 23.534398076970014,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2859,
+      "shape": "U50",
+      "recordId": "15377a56-f38d-4956-b0ad-80299522c0c2",
+      "lidarCaptureId": "fbdd16eb-9349-43e3-89d1-1f804ef44e46",
+      "lidar_file": "banane-lidar-part-23-cut-2859-1788942465953.json",
+      "reference_sources": [
+        "banane-references-v24-1788942475109.json",
+        "banane-references-v24-1788942539498.json",
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 5356,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2668,
+          "points_inside_clip": 1266,
+          "diagnostic_head_window_before": 219,
+          "diagnostic_head_window_corrected": 224,
+          "manual_displacement_local_mm": [
+            -4.016310386591047e-05,
+            -38.27048550694624,
+            3.2679214141407398
+          ],
+          "manual_displacement_norm_mm": 38.40975619953861,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2688,
+          "points_inside_clip": 1305,
+          "diagnostic_head_window_before": 149,
+          "diagnostic_head_window_corrected": 186,
+          "manual_displacement_local_mm": [
+            3.9861362792251525e-05,
+            20.77866860738453,
+            3.702124891976549
+          ],
+          "manual_displacement_norm_mm": 21.105894859325296,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2860,
+      "shape": "U50",
+      "recordId": "aab19365-1448-45bd-972e-bcd389573f4f",
+      "lidarCaptureId": "b75b96b0-6781-4d61-a961-87810cd23182",
+      "lidar_file": "banane-lidar-part-23-cut-2860-1788942528253.json",
+      "reference_sources": [
+        "banane-references-v24-1788942539498.json",
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 5244,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2587,
+          "points_inside_clip": 1321,
+          "diagnostic_head_window_before": 227,
+          "diagnostic_head_window_corrected": 229,
+          "manual_displacement_local_mm": [
+            -3.703280994881243e-05,
+            -41.09172269168805,
+            -0.7399227450843481
+          ],
+          "manual_displacement_norm_mm": 41.098383903027816,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2657,
+          "points_inside_clip": 1319,
+          "diagnostic_head_window_before": 167,
+          "diagnostic_head_window_corrected": 195,
+          "manual_displacement_local_mm": [
+            3.7028879148441565e-05,
+            20.964132746513986,
+            -0.0009763153658998158
+          ],
+          "manual_displacement_norm_mm": 20.964132769280514,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2864,
+      "shape": "U50",
+      "recordId": "0a37ecb7-b9c4-406e-aca0-ed9362e03f69",
+      "lidarCaptureId": "1887292c-1e18-4f52-86c6-5d96ececc394",
+      "lidar_file": "banane-lidar-part-23-cut-2864-1788942588137.json",
+      "reference_sources": [
+        "banane-references-v24-1788942596856.json",
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 5026,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2383,
+          "points_inside_clip": 1313,
+          "diagnostic_head_window_before": 215,
+          "diagnostic_head_window_corrected": 185,
+          "manual_displacement_local_mm": [
+            -4.2597016116897814e-05,
+            -40.91716837666763,
+            2.745348980694964
+          ],
+          "manual_displacement_norm_mm": 41.00916493897659,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2643,
+          "points_inside_clip": 1292,
+          "diagnostic_head_window_before": 173,
+          "diagnostic_head_window_corrected": 207,
+          "manual_displacement_local_mm": [
+            4.255213513959401e-05,
+            16.75955081776026,
+            5.466216210864975
+          ],
+          "manual_displacement_norm_mm": 17.628444720928428,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2865,
+      "shape": "U50",
+      "recordId": "37e57181-327d-460f-b0aa-f7f96652006a",
+      "lidarCaptureId": "b1b1e2c2-2968-4c94-84aa-a6e1882628af",
+      "lidar_file": "banane-lidar-part-23-cut-2865-1788942689157.json",
+      "reference_sources": [
+        "banane-references-v24-1788942696962.json",
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 5293,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2634,
+          "points_inside_clip": 1253,
+          "diagnostic_head_window_before": 127,
+          "diagnostic_head_window_corrected": 127,
+          "manual_displacement_local_mm": [
+            -3.9715812363931476e-05,
+            -39.61019095781505,
+            2.679890947343228
+          ],
+          "manual_displacement_norm_mm": 39.70074361023737,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2659,
+          "points_inside_clip": 1298,
+          "diagnostic_head_window_before": 171,
+          "diagnostic_head_window_corrected": 206,
+          "manual_displacement_local_mm": [
+            3.9553789729838706e-05,
+            17.69632693051859,
+            4.2028779867003125
+          ],
+          "manual_displacement_norm_mm": 18.18857251695306,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2866,
+      "shape": "U50",
+      "recordId": "d89bee1e-1278-4e72-9bfd-cd9811b320d1",
+      "lidarCaptureId": "915b04b5-67bf-45ca-9f2b-0200d73b64d8",
+      "lidar_file": "banane-lidar-part-23-cut-2866-1788942754049.json",
+      "reference_sources": [
+        "banane-references-v24-1788942761196.json",
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 5059,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2510,
+          "points_inside_clip": 1357,
+          "diagnostic_head_window_before": 129,
+          "diagnostic_head_window_corrected": 129,
+          "manual_displacement_local_mm": [
+            -4.348054595231125e-05,
+            -45.25193848439726,
+            3.399201284190614
+          ],
+          "manual_displacement_norm_mm": 45.379428224339804,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2549,
+          "points_inside_clip": 1358,
+          "diagnostic_head_window_before": 174,
+          "diagnostic_head_window_corrected": 202,
+          "manual_displacement_local_mm": [
+            4.278676994727333e-05,
+            13.775396038903986,
+            4.0065039669583
+          ],
+          "manual_displacement_norm_mm": 14.34620542400439,
+          "rotationChanged": false
+        }
+      }
+    },
+    {
+      "part": 23,
+      "cut": 2972,
+      "shape": "U50",
+      "recordId": "ede4e85b-b999-4277-855e-bc3dc4a5c1cc",
+      "lidarCaptureId": "4958c04a-91b6-403f-82a7-63eecb13b621",
+      "lidar_file": "banane-lidar-part-23-cut-2972-1788942957128.json",
+      "reference_sources": [
+        "banane-references-v24-1788942963289.json"
+      ],
+      "points": 5367,
+      "pairing_checks": "passed",
+      "rails": {
+        "left": {
+          "points_in_roi": 2669,
+          "points_inside_clip": 1261,
+          "diagnostic_head_window_before": 181,
+          "diagnostic_head_window_corrected": 136,
+          "manual_displacement_local_mm": [
+            -4.2060319239018976e-05,
+            -44.22788538145846,
+            6.405175377498221
+          ],
+          "manual_displacement_norm_mm": 44.68928413986631,
+          "rotationChanged": false
+        },
+        "right": {
+          "points_in_roi": 2698,
+          "points_inside_clip": 1296,
+          "diagnostic_head_window_before": 174,
+          "diagnostic_head_window_corrected": 207,
+          "manual_displacement_local_mm": [
+            4.2272367682442447e-05,
+            17.4788612665977,
+            -0.1755309874933303
+          ],
+          "manual_displacement_norm_mm": 17.479742627004885,
+          "rotationChanged": false
+        }
+      }
+    }
+  ],
+  "missing_lidar": [
+    {
+      "part": 23,
+      "cut": 2867,
+      "recordId": "4afebb4c-ff7a-4222-b14f-a16c738a9d9a",
+      "lidarCaptureId": "df74948f-5e47-4cc0-90f3-f9e8021b869f",
+      "reference_sources": [
+        "banane-references-v24-1788942963289.json"
+      ]
+    }
+  ],
+  "evaluation": {
+    "independent_holdout_defined": false,
+    "limitation": "All examples are from part 23; most cut numbers are close. No independent accuracy claim."
+  }
+}

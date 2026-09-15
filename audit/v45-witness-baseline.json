@@ -1,0 +1,4081 @@
+{
+  "format": "banane-native-offline-evaluation-v1",
+  "version": "4.4.3",
+  "generatedAt": "2026-09-14T08:49:21.899Z",
+  "sources": [
+    {
+      "file": "banane-native-v4-1789328681673(1).json",
+      "sha256": "275e1f217da4b5f7483399e7cf5954373fb5bccc77c13c9c3aedb9e76b2f274c",
+      "format": "banane-native-session-v2",
+      "version": "4.4.3",
+      "records": 22,
+      "cloudObjects": 301
+    }
+  ],
+  "safety": {
+    "esvConnected": false,
+    "nativeCommandsSent": 0,
+    "navigationActions": 0,
+    "learningOrThresholdMutation": false,
+    "humanFinalPositionsProvidedToEngine": false
+  },
+  "engine": {
+    "version": "4.4.3",
+    "method": "template-surfaces-v3",
+    "parameters": {
+      "searchY": 0.08,
+      "searchZ": 0.04,
+      "grid": 0.003,
+      "minTop": 15,
+      "minFace": 6,
+      "maxResidual": 0.004,
+      "minConfidence": 55,
+      "topBand": 0.012,
+      "faceBand": 0.01,
+      "alternativeSeparation": 0.02,
+      "minTemplateLossRatio": 1.5,
+      "maxSingleRailLateral": 0.06,
+      "pairedSupportLateral": 0.04,
+      "method": "template-surfaces-v3"
+    },
+    "buildHash": "22c017b5e27cfd047531e5519e519a817aaf4948a47106d3d874979f9cf8fbb0"
+  },
+  "results": [
+    {
+      "recordId": "127be44f-c6e2-4553-98db-a141efbcc7a5",
+      "visitId": "127be44f-c6e2-4553-98db-a141efbcc7a5",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 313,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "comparable-candidate",
+          "snapshotId": "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:3",
+          "captureId": "15a7fdf4-f90a-4781-9740-d3c6ea709fdc",
+          "chunkIds": [
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:1",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:2",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:3"
+          ],
+          "points": 3520,
+          "acquiredThroughAt": "2026-09-13T19:42:39.259Z",
+          "storedAt": "2026-09-13T19:42:39.273Z",
+          "receiptEventSeq": 8,
+          "capturedAt": "2026-09-13T19:42:38.466Z",
+          "viewEpochId": "0e88696f-1a31-4b87-b253-45ac8f9b488c",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:right:0",
+          "captureId": "15a7fdf4-f90a-4781-9740-d3c6ea709fdc",
+          "chunkIds": [
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:right:0"
+          ],
+          "points": 320,
+          "acquiredThroughAt": "2026-09-13T19:42:38.708Z",
+          "storedAt": "2026-09-13T19:42:38.727Z",
+          "receiptEventSeq": 5,
+          "capturedAt": "2026-09-13T19:42:38.466Z",
+          "viewEpochId": "0e88696f-1a31-4b87-b253-45ac8f9b488c",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "comparable-candidate",
+          "leftCaptureId": "15a7fdf4-f90a-4781-9740-d3c6ea709fdc",
+          "rightCaptureId": "15a7fdf4-f90a-4781-9740-d3c6ea709fdc",
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": []
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "ready",
+          "inputHash": "ae0cf36174def7e4f3b0b37180dc32b02218534b65a207f43d9bb7cac044edfb",
+          "points": 3520,
+          "sourceChunkIds": [
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:1",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:2",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:3"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "f68f915873321d7911f16a76971d6c7e9146c9d79aa04bb731b72aa26fb4d626",
+          "points": 320,
+          "sourceChunkIds": [
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:right:0"
+          ]
+        },
+        "pair": {
+          "status": "ready",
+          "inputHash": "f445b9897c08f8a1a938be0b26fdfd6edc2b859f71e8038afb84b82d35cde306",
+          "points": 3840,
+          "sourceChunkIds": [
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:1",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:2",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:left:3",
+            "15a7fdf4-f90a-4781-9740-d3c6ea709fdc:right:0"
+          ]
+        }
+      },
+      "proposal": {
+        "left": {
+          "side": "left",
+          "status": "candidate",
+          "delta": [
+            0,
+            -0.004999999999999965,
+            0.005999999999999998
+          ],
+          "confidence": 72,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 698,
+            "topCount": 199,
+            "faceCount": 22,
+            "residual": 0.002002600363420616,
+            "seed": [
+              -0.004999999999999965,
+              0.005999999999999998
+            ],
+            "surfaceIntersection": [
+              -0.0060102631164213275,
+              0.004229726872496106
+            ],
+            "topSpanBins": 7,
+            "faceSpanBins": 4,
+            "templateLoss": 6.926758703468898e-7,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.0000015761452043624087,
+              "alternativeLoss": 0.00005849419459317111,
+              "lossRatio": 37.112186384396935,
+              "separation": 0.024738633753705965,
+              "alternative": [
+                0.019000000000000034,
+                0.011
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.05008351996545608,
+            "rawSlope": -0.05008351996545608,
+            "slopeLimited": false,
+            "intercept": 0.0039287117397071745,
+            "residual": 0.002002600363420616,
+            "count": 199
+          },
+          "face": {
+            "slope": -0.07162972206734429,
+            "rawSlope": -0.07162972206734429,
+            "slopeLimited": false,
+            "intercept": -0.005707288956123654,
+            "residual": 0.001037607404451731,
+            "count": 22
+          }
+        },
+        "right": {
+          "side": "right",
+          "status": "unresolved",
+          "delta": null,
+          "confidence": 0,
+          "reasons": [
+            "Plan de roulement insuffisamment observé."
+          ],
+          "method": "template-surfaces-v3",
+          "source": "no-estimate",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 77,
+            "topCount": 5,
+            "faceCount": 9,
+            "residual": 0.004479954755658493,
+            "seed": [
+              -0.0010000000000000347,
+              -1.734723475976807e-18
+            ],
+            "surfaceIntersection": [
+              0.006061473740036279,
+              0.006911813704496997
+            ],
+            "topSpanBins": 4,
+            "faceSpanBins": 6,
+            "templateLoss": 0.000004997981787160679,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000006992072830296982,
+              "alternativeLoss": 0.000014463165080128209,
+              "lossRatio": 2.0685089287769762,
+              "separation": 0.057000000000000016,
+              "alternative": [
+                0.05599999999999998,
+                -0.0010000000000000018
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.17862043571152136,
+            "rawSlope": -0.17862043571152136,
+            "slopeLimited": false,
+            "intercept": 0.005829110623997772,
+            "residual": 0.00013671429142966384,
+            "count": 5
+          },
+          "face": {
+            "slope": -0.2807108676538867,
+            "rawSlope": -0.2807108676538867,
+            "slopeLimited": false,
+            "intercept": -0.004121252517984903,
+            "residual": 0.004479954755658493,
+            "count": 9
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            -7.916241884231567e-8,
+            -0.0060855429619550705,
+            0.009299141849623993
+          ],
+          "engineDeltaLocal": [
+            0,
+            -0.004999999999999965,
+            0.005999999999999998
+          ],
+          "errorMm": {
+            "longitudinal": 0.000079,
+            "lateral": 1.085543,
+            "vertical": -3.299142,
+            "euclidean": 3.473146
+          }
+        },
+        "right": {
+          "status": "unresolved",
+          "reason": "Plan de roulement insuffisamment observé.",
+          "humanDeltaLocal": [
+            7.916241884231567e-8,
+            0.05568593414500356,
+            0.004358524252893403
+          ]
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "598318d6-94af-4ed3-9c9b-7368ed569814",
+      "visitId": "598318d6-94af-4ed3-9c9b-7368ed569814",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 314,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "engine-useful-point-count-below-minimum",
+            "roi-point-count-below-minimum"
+          ],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:3",
+          "captureId": "cd00226e-a0fc-4eba-87c9-631c94ee9de6",
+          "chunkIds": [
+            "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:0",
+            "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:1",
+            "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:3"
+          ],
+          "points": 2880,
+          "acquiredThroughAt": "2026-09-13T19:42:58.272Z",
+          "storedAt": "2026-09-13T19:42:58.305Z",
+          "receiptEventSeq": 91,
+          "capturedAt": "2026-09-13T19:42:56.809Z",
+          "viewEpochId": "d1907739-c0bd-4510-9478-143900e9761e",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": "cd00226e-a0fc-4eba-87c9-631c94ee9de6",
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:capture-used-a-different-rail-pose-than-initial-state",
+            "left:engine-useful-point-count-below-minimum",
+            "left:roi-point-count-below-minimum"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "engine-useful-point-count-below-minimum",
+            "roi-point-count-below-minimum"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "7ec84af328695cee818a733c3fae6f4e89522927e12d14db79302efddf82cb16",
+          "points": 2880,
+          "sourceChunkIds": [
+            "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:0",
+            "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:1",
+            "cd00226e-a0fc-4eba-87c9-631c94ee9de6:right:3"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:capture-used-a-different-rail-pose-than-initial-state",
+            "left:engine-useful-point-count-below-minimum",
+            "left:roi-point-count-below-minimum"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": {
+          "side": "right",
+          "status": "candidate",
+          "delta": [
+            0,
+            0.05399999999999998,
+            0.0019999999999999983
+          ],
+          "confidence": 73,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 250,
+            "topCount": 83,
+            "faceCount": 44,
+            "residual": 0.001879219125301964,
+            "seed": [
+              0.05399999999999998,
+              0.0019999999999999983
+            ],
+            "surfaceIntersection": [
+              0.04873236791635629,
+              0.0004027609650107729
+            ],
+            "topSpanBins": 7,
+            "faceSpanBins": 6,
+            "templateLoss": 7.925940949586584e-7,
+            "templateAmbiguity": {
+              "coarseBestLoss": 8.126972023685484e-7,
+              "alternativeLoss": 0.000010929492935119507,
+              "lossRatio": 13.448419538379454,
+              "separation": 0.07224956747275377,
+              "alternative": [
+                -0.019000000000000034,
+                -0.004000000000000002
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.017459013615328707,
+            "rawSlope": -0.017459013615328707,
+            "slopeLimited": false,
+            "intercept": -0.0004480581099480994,
+            "residual": 0.001879219125301964,
+            "count": 83
+          },
+          "face": {
+            "slope": 0.3442479383027667,
+            "rawSlope": 0.3442479383027667,
+            "slopeLimited": false,
+            "intercept": -0.04887101754819008,
+            "residual": 0.0007622122417182478,
+            "count": 44
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, capture-used-a-different-rail-pose-than-initial-state, engine-useful-point-count-below-minimum, roi-point-count-below-minimum"
+        },
+        "right": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            7.543712854385376e-8,
+            0.05361673515290022,
+            0.0020711328252218664
+          ],
+          "engineDeltaLocal": [
+            0,
+            0.05399999999999998,
+            0.0019999999999999983
+          ],
+          "errorMm": {
+            "longitudinal": -0.000075,
+            "lateral": 0.383265,
+            "vertical": -0.071133,
+            "euclidean": 0.38981
+          }
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "c034d9dd-8cfb-4ac8-9511-0c27e45f98f9",
+      "visitId": "c034d9dd-8cfb-4ac8-9511-0c27e45f98f9",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 315,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "comparable-candidate",
+          "snapshotId": "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:left:0",
+          "captureId": "16eac18c-4f83-4a8b-96b4-d0643a5ae61d",
+          "chunkIds": [
+            "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:left:0"
+          ],
+          "points": 320,
+          "acquiredThroughAt": "2026-09-13T19:43:01.856Z",
+          "storedAt": "2026-09-13T19:43:02.363Z",
+          "receiptEventSeq": 111,
+          "capturedAt": "2026-09-13T19:43:01.806Z",
+          "viewEpochId": "f7e73912-f167-486c-bc95-d8753f4acf4f",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:right:1",
+          "captureId": "16eac18c-4f83-4a8b-96b4-d0643a5ae61d",
+          "chunkIds": [
+            "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:right:1"
+          ],
+          "points": 273,
+          "acquiredThroughAt": "2026-09-13T19:43:02.404Z",
+          "storedAt": "2026-09-13T19:43:02.419Z",
+          "receiptEventSeq": 112,
+          "capturedAt": "2026-09-13T19:43:01.806Z",
+          "viewEpochId": "f7e73912-f167-486c-bc95-d8753f4acf4f",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "comparable-candidate",
+          "leftCaptureId": "16eac18c-4f83-4a8b-96b4-d0643a5ae61d",
+          "rightCaptureId": "16eac18c-4f83-4a8b-96b4-d0643a5ae61d",
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": []
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "ready",
+          "inputHash": "307f27f68bf25c2e92c0a08e21c2e8dd8feab026a7ccd8e29a9ab52269aedd29",
+          "points": 320,
+          "sourceChunkIds": [
+            "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:left:0"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "a188904ef26fc95aaf4981bcaf70ee2563323a3b389bc3a76e119410be04b16b",
+          "points": 273,
+          "sourceChunkIds": [
+            "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:right:1"
+          ]
+        },
+        "pair": {
+          "status": "ready",
+          "inputHash": "543408382da9863215227a09256762eaa64ecba1a215f966723e3083613ff377",
+          "points": 593,
+          "sourceChunkIds": [
+            "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:left:0",
+            "16eac18c-4f83-4a8b-96b4-d0643a5ae61d:right:1"
+          ]
+        }
+      },
+      "proposal": {
+        "left": {
+          "side": "left",
+          "status": "unresolved",
+          "delta": null,
+          "confidence": 0,
+          "reasons": [
+            "Plan de roulement insuffisamment observé."
+          ],
+          "method": "template-surfaces-v3",
+          "source": "no-estimate",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 87,
+            "topCount": 4,
+            "faceCount": 9,
+            "residual": 0.0003642995127563914,
+            "seed": [
+              -0.078,
+              0.010000000000000002
+            ],
+            "surfaceIntersection": [
+              -0.0761986863693504,
+              0.0104152099522548
+            ],
+            "topSpanBins": 3,
+            "faceSpanBins": 4,
+            "templateLoss": 0.00000997151954938927,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000013514724410616692,
+              "alternativeLoss": 0.00003412629047152577,
+              "lossRatio": 2.5251192280855803,
+              "separation": 0.12014990636700476,
+              "alternative": [
+                0.04300000000000004,
+                0.004999999999999998
+              ]
+            }
+          },
+          "top": {
+            "slope": 0.01930907670520031,
+            "rawSlope": 0.01930907670520031,
+            "slopeLimited": false,
+            "intercept": 0.011886536232196087,
+            "residual": 0.00013545152984512348,
+            "count": 4
+          },
+          "face": {
+            "slope": -0.028137436121691776,
+            "rawSlope": -0.028137436121691776,
+            "slopeLimited": false,
+            "intercept": -0.07590562906462482,
+            "residual": 0.0003642995127563914,
+            "count": 9
+          }
+        },
+        "right": {
+          "side": "right",
+          "status": "unresolved",
+          "delta": null,
+          "confidence": 0,
+          "reasons": [
+            "Plan de roulement insuffisamment observé."
+          ],
+          "method": "template-surfaces-v3",
+          "source": "no-estimate",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 65,
+            "topCount": 8,
+            "faceCount": 6,
+            "residual": 0.0013270142481805036,
+            "seed": [
+              -0.062000000000000055,
+              -0.014999999999999996
+            ],
+            "surfaceIntersection": [
+              -0.06983916698684782,
+              -0.013738088955359579
+            ],
+            "topSpanBins": 6,
+            "faceSpanBins": 3,
+            "templateLoss": 0.000008851232005193215,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.00001022119168925185,
+              "alternativeLoss": 0.00001347114442389608,
+              "lossRatio": 1.3179622135510616,
+              "separation": 0.10504284840006961,
+              "alternative": [
+                0.04399999999999997,
+                -0.013000000000000001
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.021257678873960035,
+            "rawSlope": -0.021257678873960035,
+            "slopeLimited": false,
+            "intercept": -0.012253470370728296,
+            "residual": 0.0013270142481805036,
+            "count": 8
+          },
+          "face": {
+            "slope": 0.349927598413921,
+            "rawSlope": 0.349927598413921,
+            "slopeLimited": false,
+            "intercept": 0.0746465034617936,
+            "residual": 0.0005730797762896062,
+            "count": 6
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "unresolved",
+          "reason": "Plan de roulement insuffisamment observé.",
+          "humanDeltaLocal": [
+            -0.0003989292308688164,
+            0.040617243852466345,
+            0.0087071088491939
+          ]
+        },
+        "right": {
+          "status": "unresolved",
+          "reason": "Plan de roulement insuffisamment observé.",
+          "humanDeltaLocal": [
+            0.000398930162191391,
+            0.04019931284710765,
+            -0.009082901087822393
+          ]
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "a47b16f3-24eb-4fc3-8229-538707eb1db0",
+      "visitId": "a47b16f3-24eb-4fc3-8229-538707eb1db0",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 316,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "comparable-candidate",
+          "snapshotId": "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:left:0",
+          "captureId": "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b",
+          "chunkIds": [
+            "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:left:0"
+          ],
+          "points": 287,
+          "acquiredThroughAt": "2026-09-13T19:43:10.873Z",
+          "storedAt": "2026-09-13T19:43:11.041Z",
+          "receiptEventSeq": 158,
+          "capturedAt": "2026-09-13T19:43:10.759Z",
+          "viewEpochId": "a5c6b5d9-bae4-4417-98d1-5fa70fb0ee0a",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:right:1",
+          "captureId": "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b",
+          "chunkIds": [
+            "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:right:1"
+          ],
+          "points": 320,
+          "acquiredThroughAt": "2026-09-13T19:43:11.091Z",
+          "storedAt": "2026-09-13T19:43:11.107Z",
+          "receiptEventSeq": 159,
+          "capturedAt": "2026-09-13T19:43:10.759Z",
+          "viewEpochId": "a5c6b5d9-bae4-4417-98d1-5fa70fb0ee0a",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "comparable-candidate",
+          "leftCaptureId": "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b",
+          "rightCaptureId": "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b",
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": []
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "ready",
+          "inputHash": "c69a9874e48089062bc0ff2ad60fbebc006e1f8826e6e77983a8f6d4a8a00b8e",
+          "points": 287,
+          "sourceChunkIds": [
+            "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:left:0"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "f3d2d731f69f87b18256062d85cf4cb2c1cd5eebeb4e95ad306dfc1814c08403",
+          "points": 320,
+          "sourceChunkIds": [
+            "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:right:1"
+          ]
+        },
+        "pair": {
+          "status": "ready",
+          "inputHash": "ebedd5027df27f77717178c131baf1cbae7a76be03e7faa50d8c5a805e27c6eb",
+          "points": 607,
+          "sourceChunkIds": [
+            "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:left:0",
+            "f72ecf6d-df7c-46e8-b9f2-ea2afd64aa6b:right:1"
+          ]
+        }
+      },
+      "proposal": {
+        "left": {
+          "side": "left",
+          "status": "unresolved",
+          "delta": null,
+          "confidence": 0,
+          "reasons": [
+            "Plan de roulement insuffisamment observé."
+          ],
+          "method": "template-surfaces-v3",
+          "source": "no-estimate",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 88,
+            "topCount": 7,
+            "faceCount": 11,
+            "residual": 0.0010156601567582876,
+            "seed": [
+              -0.008999999999999963,
+              0.004999999999999998
+            ],
+            "surfaceIntersection": [
+              -0.011741031432957277,
+              0.0006167974268443016
+            ],
+            "topSpanBins": 5,
+            "faceSpanBins": 4,
+            "templateLoss": 0.000006090546703667333,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000007560048493508856,
+              "alternativeLoss": 0.00016892206133375994,
+              "lossRatio": 22.344044681564984,
+              "separation": 0.04167733196834941,
+              "alternative": [
+                -0.02899999999999996,
+                -0.030999999999999996
+              ]
+            }
+          },
+          "top": {
+            "slope": 0.07368034338854298,
+            "rawSlope": 0.07368034338854298,
+            "slopeLimited": false,
+            "intercept": 0.0014818806545602707,
+            "residual": 0.0010156601567582876,
+            "count": 7
+          },
+          "face": {
+            "slope": -0.12900923972224707,
+            "rawSlope": -0.12900923972224707,
+            "slopeLimited": false,
+            "intercept": -0.011661458865857455,
+            "residual": 0.0009547549096877526,
+            "count": 11
+          }
+        },
+        "right": {
+          "side": "right",
+          "status": "unresolved",
+          "delta": null,
+          "confidence": 0,
+          "reasons": [
+            "Plan de roulement insuffisamment observé."
+          ],
+          "method": "template-surfaces-v3",
+          "source": "no-estimate",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 92,
+            "topCount": 5,
+            "faceCount": 9,
+            "residual": 0.001650817553889832,
+            "seed": [
+              0.04599999999999997,
+              0.0019999999999999983
+            ],
+            "surfaceIntersection": [
+              0.04645164765491953,
+              0.005330573513136271
+            ],
+            "topSpanBins": 5,
+            "faceSpanBins": 6,
+            "templateLoss": 0.000010079140656845766,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000012137219021425566,
+              "alternativeLoss": 0.000022819889860139543,
+              "lossRatio": 1.8801580345428466,
+              "separation": 0.1230365799264593,
+              "alternative": [
+                -0.07600000000000007,
+                -0.004000000000000002
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.16324908655686285,
+            "rawSlope": -0.16324908655686285,
+            "slopeLimited": false,
+            "intercept": -0.0022526155355905818,
+            "residual": 0.001650817553889832,
+            "count": 5
+          },
+          "face": {
+            "slope": 0.07430162694199914,
+            "rawSlope": 0.07430162694199914,
+            "slopeLimited": false,
+            "intercept": -0.04684771793947947,
+            "residual": 0.0002855320579718962,
+            "count": 9
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "unresolved",
+          "reason": "Plan de roulement insuffisamment observé.",
+          "humanDeltaLocal": [
+            -4.6566128730773926e-8,
+            -0.0095271747559309,
+            0.010345014336053282
+          ]
+        },
+        "right": {
+          "status": "unresolved",
+          "reason": "Plan de roulement insuffisamment observé.",
+          "humanDeltaLocal": [
+            4.7497451305389404e-8,
+            0.04969580564647913,
+            0.0018747587746474892
+          ]
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "7c890fc1-14c6-46e8-827a-8c34bb55220c",
+      "visitId": "7c890fc1-14c6-46e8-827a-8c34bb55220c",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 317,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_NO_MOVEMENT",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "comparable-candidate",
+          "snapshotId": "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:1",
+          "captureId": "a6927fdc-fbf5-4d98-9f7c-11266f53e3de",
+          "chunkIds": [
+            "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:0",
+            "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:1"
+          ],
+          "points": 2624,
+          "acquiredThroughAt": "2026-09-13T19:43:19.471Z",
+          "storedAt": "2026-09-13T19:43:19.525Z",
+          "receiptEventSeq": 214,
+          "capturedAt": "2026-09-13T19:43:19.012Z",
+          "viewEpochId": "891ef7ad-4198-4d47-b285-ffc9302d0831",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:1",
+          "captureId": "96841528-8a70-42e3-b0f8-8ba7b3ca9526",
+          "chunkIds": [
+            "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:0",
+            "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:1"
+          ],
+          "points": 2496,
+          "acquiredThroughAt": "2026-09-13T19:43:19.939Z",
+          "storedAt": "2026-09-13T19:43:20.006Z",
+          "receiptEventSeq": 221,
+          "capturedAt": "2026-09-13T19:43:19.657Z",
+          "viewEpochId": "a02c6dd5-b572-4e01-83b6-9ee311195501",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "comparable-candidate",
+          "leftCaptureId": "a6927fdc-fbf5-4d98-9f7c-11266f53e3de",
+          "rightCaptureId": "96841528-8a70-42e3-b0f8-8ba7b3ca9526",
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": []
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "ready",
+          "inputHash": "21d1db56fd599449201ca0a3f10cb8ce2864814e6cf23443e6f3dd78d52d0afd",
+          "points": 2624,
+          "sourceChunkIds": [
+            "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:0",
+            "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:1"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "db0957e0d62415b4c5ba848a79126ddd1e9e465d793e6564dcec9e61c99e527c",
+          "points": 2496,
+          "sourceChunkIds": [
+            "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:0",
+            "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:1"
+          ]
+        },
+        "pair": {
+          "status": "ready",
+          "inputHash": "0b9db57ef6bebe7a48c04e12bbf2918716e1e5cc19b827f6370859464c9e369d",
+          "points": 5120,
+          "sourceChunkIds": [
+            "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:0",
+            "a6927fdc-fbf5-4d98-9f7c-11266f53e3de:left:1",
+            "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:0",
+            "96841528-8a70-42e3-b0f8-8ba7b3ca9526:right:1"
+          ]
+        }
+      },
+      "proposal": {
+        "left": {
+          "side": "left",
+          "status": "candidate",
+          "delta": [
+            0,
+            0.0030000000000000348,
+            -0.005999999999999997
+          ],
+          "confidence": 72,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 618,
+            "topCount": 165,
+            "faceCount": 22,
+            "residual": 0.0019750748611265783,
+            "seed": [
+              0.0030000000000000348,
+              -0.005999999999999997
+            ],
+            "surfaceIntersection": [
+              0.0048662528735973895,
+              -0.008147928765921733
+            ],
+            "topSpanBins": 8,
+            "faceSpanBins": 5,
+            "templateLoss": 0.0000013117561378614682,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000001950974089790179,
+              "alternativeLoss": 0.00006898862711315586,
+              "lossRatio": 35.36111908107163,
+              "separation": 0.020124611797498106,
+              "alternative": [
+                0.019000000000000034,
+                -0.0010000000000000018
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.05796915517042135,
+            "rawSlope": -0.05796915517042135,
+            "slopeLimited": false,
+            "intercept": -0.007865836197993657,
+            "residual": 0.0019750748611265783,
+            "count": 165
+          },
+          "face": {
+            "slope": 0.14645259460335613,
+            "rawSlope": 0.14645259460335613,
+            "slopeLimited": false,
+            "intercept": 0.0060595381820099485,
+            "residual": 0.0016125312956364489,
+            "count": 22
+          }
+        },
+        "right": {
+          "side": "right",
+          "status": "candidate",
+          "delta": [
+            0,
+            -0.0010000000000000347,
+            -0.005000000000000002
+          ],
+          "confidence": 71,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 454,
+            "topCount": 175,
+            "faceCount": 20,
+            "residual": 0.0020710509210770042,
+            "seed": [
+              -0.0010000000000000347,
+              -0.005000000000000002
+            ],
+            "surfaceIntersection": [
+              -0.00037898621008313784,
+              -0.008867789970314665
+            ],
+            "topSpanBins": 7,
+            "faceSpanBins": 5,
+            "templateLoss": 0.000001076840366088658,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.0000019993243932132125,
+              "alternativeLoss": 0.0000698966830809333,
+              "lossRatio": 34.96015119817495,
+              "separation": 0.021840329667841555,
+              "alternative": [
+                -0.022000000000000033,
+                0.0019999999999999983
+              ]
+            }
+          },
+          "top": {
+            "slope": 0.003824779152649242,
+            "rawSlope": 0.003824779152649242,
+            "slopeLimited": false,
+            "intercept": -0.008869239508870133,
+            "residual": 0.0020710509210770042,
+            "count": 175
+          },
+          "face": {
+            "slope": -0.006115023965335495,
+            "rawSlope": -0.006115023965335495,
+            "slopeLimited": false,
+            "intercept": 0.000324759461895102,
+            "residual": 0.0008571829704993646,
+            "count": 20
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            0,
+            0,
+            0
+          ],
+          "engineDeltaLocal": [
+            0,
+            0.0030000000000000348,
+            -0.005999999999999997
+          ],
+          "errorMm": {
+            "longitudinal": 0,
+            "lateral": 3,
+            "vertical": -6,
+            "euclidean": 6.708204
+          }
+        },
+        "right": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            0,
+            0,
+            0
+          ],
+          "engineDeltaLocal": [
+            0,
+            -0.0010000000000000347,
+            -0.005000000000000002
+          ],
+          "errorMm": {
+            "longitudinal": 0,
+            "lateral": -1,
+            "vertical": -5,
+            "euclidean": 5.09902
+          }
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "74e42dde-c5a0-4781-8ab1-2598f1bf3082",
+      "visitId": "74e42dde-c5a0-4781-8ab1-2598f1bf3082",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 318,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "comparable-candidate",
+          "snapshotId": "723f9c1b-77e0-4d53-8c87-668d697c3a05:left:0",
+          "captureId": "723f9c1b-77e0-4d53-8c87-668d697c3a05",
+          "chunkIds": [
+            "723f9c1b-77e0-4d53-8c87-668d697c3a05:left:0"
+          ],
+          "points": 1472,
+          "acquiredThroughAt": "2026-09-13T19:43:21.596Z",
+          "storedAt": "2026-09-13T19:43:21.978Z",
+          "receiptEventSeq": 237,
+          "capturedAt": "2026-09-13T19:43:21.559Z",
+          "viewEpochId": "8ae8d8a9-ad33-42be-9a76-080bc1b5ae88",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "723f9c1b-77e0-4d53-8c87-668d697c3a05:right:7",
+          "captureId": "723f9c1b-77e0-4d53-8c87-668d697c3a05",
+          "chunkIds": [
+            "723f9c1b-77e0-4d53-8c87-668d697c3a05:right:7"
+          ],
+          "points": 576,
+          "acquiredThroughAt": "2026-09-13T19:43:23.329Z",
+          "storedAt": "2026-09-13T19:43:23.371Z",
+          "receiptEventSeq": 245,
+          "capturedAt": "2026-09-13T19:43:21.559Z",
+          "viewEpochId": "8ae8d8a9-ad33-42be-9a76-080bc1b5ae88",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "comparable-candidate",
+          "leftCaptureId": "723f9c1b-77e0-4d53-8c87-668d697c3a05",
+          "rightCaptureId": "723f9c1b-77e0-4d53-8c87-668d697c3a05",
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": []
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "ready",
+          "inputHash": "0173d86861bef2eb1b24a837798ef4bd29ad5496be8119504fa748f9783e51a2",
+          "points": 1472,
+          "sourceChunkIds": [
+            "723f9c1b-77e0-4d53-8c87-668d697c3a05:left:0"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "dcc8d9694eddace691e4fa6fc7a8ba5b47fce124514b8f7ad82a07486c0da041",
+          "points": 576,
+          "sourceChunkIds": [
+            "723f9c1b-77e0-4d53-8c87-668d697c3a05:right:7"
+          ]
+        },
+        "pair": {
+          "status": "ready",
+          "inputHash": "76c8080df9ef28850972df95aa1bff62296e366af8476f15b45b5238a97a065b",
+          "points": 2048,
+          "sourceChunkIds": [
+            "723f9c1b-77e0-4d53-8c87-668d697c3a05:left:0",
+            "723f9c1b-77e0-4d53-8c87-668d697c3a05:right:7"
+          ]
+        }
+      },
+      "proposal": {
+        "left": {
+          "side": "left",
+          "status": "candidate",
+          "delta": [
+            0,
+            0.004000000000000035,
+            -0.006
+          ],
+          "confidence": 72,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 364,
+            "topCount": 106,
+            "faceCount": 12,
+            "residual": 0.0020024810051191668,
+            "seed": [
+              0.004000000000000035,
+              -0.006
+            ],
+            "surfaceIntersection": [
+              0.004592637850594427,
+              -0.009003919860425839
+            ],
+            "topSpanBins": 8,
+            "faceSpanBins": 5,
+            "templateLoss": 0.0000020878214267593195,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000002118064768944309,
+              "alternativeLoss": 0.00009361741518553863,
+              "lossRatio": 44.19950539671157,
+              "separation": 0.021840329667841555,
+              "alternative": [
+                0.025000000000000033,
+                -0.0010000000000000018
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.050083519808566374,
+            "rawSlope": -0.050083519808566374,
+            "slopeLimited": false,
+            "intercept": -0.008773904391662021,
+            "residual": 0.0020024810051191668,
+            "count": 106
+          },
+          "face": {
+            "slope": 0.0917843807142488,
+            "rawSlope": 0.0917843807142488,
+            "slopeLimited": false,
+            "intercept": 0.005419057058984338,
+            "residual": 0.0019294415414138665,
+            "count": 12
+          }
+        },
+        "right": {
+          "side": "right",
+          "status": "candidate",
+          "delta": [
+            0,
+            -0.005000000000000035,
+            -0.004000000000000002
+          ],
+          "confidence": 77,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 75,
+            "topCount": 18,
+            "faceCount": 11,
+            "residual": 0.001576102133711661,
+            "seed": [
+              -0.005000000000000035,
+              -0.004000000000000002
+            ],
+            "surfaceIntersection": [
+              -0.0034712460820642416,
+              -0.004221959715420872
+            ],
+            "topSpanBins": 7,
+            "faceSpanBins": 3,
+            "templateLoss": 0.0000032067019323139015,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000004963115630863642,
+              "alternativeLoss": 0.00020703985114467593,
+              "lossRatio": 41.71570169696984,
+              "separation": 0.020124611797498103,
+              "alternative": [
+                0.004999999999999965,
+                -0.022
+              ]
+            }
+          },
+          "top": {
+            "slope": -0.05810713345152207,
+            "rawSlope": -0.05810713345152207,
+            "slopeLimited": false,
+            "intercept": -0.004020255556087292,
+            "residual": 0.0012801455158308389,
+            "count": 18
+          },
+          "face": {
+            "slope": 0.005131315939689886,
+            "rawSlope": 0.005131315939689886,
+            "slopeLimited": false,
+            "intercept": 0.0034929102912487097,
+            "residual": 0.001576102133711661,
+            "count": 11
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            0.00015031825751066208,
+            0.0009708232246339321,
+            -0.006777328933821991
+          ],
+          "engineDeltaLocal": [
+            0,
+            0.004000000000000035,
+            -0.006
+          ],
+          "errorMm": {
+            "longitudinal": -0.150318,
+            "lateral": 3.029177,
+            "vertical": 0.777329,
+            "euclidean": 3.130934
+          }
+        },
+        "right": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            -0.00015031825751066208,
+            0.0001834188587963581,
+            -0.0036622581828851253
+          ],
+          "engineDeltaLocal": [
+            0,
+            -0.005000000000000035,
+            -0.004000000000000002
+          ],
+          "errorMm": {
+            "longitudinal": 0.150318,
+            "lateral": -5.183419,
+            "vertical": -0.337742,
+            "euclidean": 5.196585
+          }
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "10cfd00f-84e1-444f-b6fa-7033fd1df3cd",
+      "visitId": "10cfd00f-84e1-444f-b6fa-7033fd1df3cd",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 319,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "cf7ff1d0-8f43-4716-8ed3-bf8ed46a3637:left:0",
+          "captureId": "cf7ff1d0-8f43-4716-8ed3-bf8ed46a3637",
+          "chunkIds": [
+            "cf7ff1d0-8f43-4716-8ed3-bf8ed46a3637:left:0"
+          ],
+          "points": 704,
+          "acquiredThroughAt": "2026-09-13T19:43:29.091Z",
+          "storedAt": "2026-09-13T19:43:29.551Z",
+          "receiptEventSeq": 283,
+          "capturedAt": "2026-09-13T19:43:28.751Z",
+          "viewEpochId": "5377ed8f-5bb5-4b7f-a6eb-af941d23aaf0",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "cf7ff1d0-8f43-4716-8ed3-bf8ed46a3637",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "0e7de35d-037b-47c6-8a77-aedf10fb9a87",
+      "visitId": "0e7de35d-037b-47c6-8a77-aedf10fb9a87",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 320,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "qualified-stored-snapshot-missing, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "c6a33981-0263-4023-abef-6fada77779fa",
+      "visitId": "c6a33981-0263-4023-abef-6fada77779fa",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 321,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "qualified-stored-snapshot-missing, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "6593f18f-3e77-46ae-8137-01caae72963c",
+      "visitId": "6593f18f-3e77-46ae-8137-01caae72963c",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 322,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "f4624def-78d6-4525-aadb-7165bd700ec5:left:0",
+          "captureId": "f4624def-78d6-4525-aadb-7165bd700ec5",
+          "chunkIds": [
+            "f4624def-78d6-4525-aadb-7165bd700ec5:left:0"
+          ],
+          "points": 320,
+          "acquiredThroughAt": "2026-09-13T19:43:35.789Z",
+          "storedAt": "2026-09-13T19:43:36.172Z",
+          "receiptEventSeq": 343,
+          "capturedAt": "2026-09-13T19:43:35.629Z",
+          "viewEpochId": "6c426bcb-93a6-43b5-9a5f-948875ab6753",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "f4624def-78d6-4525-aadb-7165bd700ec5",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "qualified-stored-snapshot-missing, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "fd2abf62-9553-4327-97a7-a58efd427ebe",
+      "visitId": "fd2abf62-9553-4327-97a7-a58efd427ebe",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 323,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "0c0c2a45-ebdc-418c-b872-879772efb358:left:0",
+          "captureId": "0c0c2a45-ebdc-418c-b872-879772efb358",
+          "chunkIds": [
+            "0c0c2a45-ebdc-418c-b872-879772efb358:left:0"
+          ],
+          "points": 958,
+          "acquiredThroughAt": "2026-09-13T19:43:37.088Z",
+          "storedAt": "2026-09-13T19:43:37.550Z",
+          "receiptEventSeq": 362,
+          "capturedAt": "2026-09-13T19:43:37.007Z",
+          "viewEpochId": "51211e3e-305f-4e30-a538-800e5319e636",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": "0c0c2a45-ebdc-418c-b872-879772efb358:right:1",
+          "captureId": "0c0c2a45-ebdc-418c-b872-879772efb358",
+          "chunkIds": [
+            "0c0c2a45-ebdc-418c-b872-879772efb358:right:1"
+          ],
+          "points": 704,
+          "acquiredThroughAt": "2026-09-13T19:43:37.621Z",
+          "storedAt": "2026-09-13T19:43:37.641Z",
+          "receiptEventSeq": 365,
+          "capturedAt": "2026-09-13T19:43:37.007Z",
+          "viewEpochId": "51211e3e-305f-4e30-a538-800e5319e636",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "0c0c2a45-ebdc-418c-b872-879772efb358",
+          "rightCaptureId": "0c0c2a45-ebdc-418c-b872-879772efb358",
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "9a9d9f76-c018-4071-bb11-b6d50dd558c7",
+      "visitId": "9a9d9f76-c018-4071-bb11-b6d50dd558c7",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 324,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:qualified-stored-snapshot-missing",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:qualified-stored-snapshot-missing",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "qualified-stored-snapshot-missing, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "f3c58cf5-4b94-4530-9be2-4eee8999b339",
+      "visitId": "f3c58cf5-4b94-4530-9be2-4eee8999b339",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 325,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "77096acf-fdb2-438b-ae29-3dfd0b515cf9:left:1",
+          "captureId": "77096acf-fdb2-438b-ae29-3dfd0b515cf9",
+          "chunkIds": [
+            "77096acf-fdb2-438b-ae29-3dfd0b515cf9:left:0",
+            "77096acf-fdb2-438b-ae29-3dfd0b515cf9:left:1"
+          ],
+          "points": 2496,
+          "acquiredThroughAt": "2026-09-13T19:43:42.658Z",
+          "storedAt": "2026-09-13T19:43:42.695Z",
+          "receiptEventSeq": 421,
+          "capturedAt": "2026-09-13T19:43:42.092Z",
+          "viewEpochId": "78959edb-9387-4d2c-99e3-cd945af0bbc6",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "77096acf-fdb2-438b-ae29-3dfd0b515cf9",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "057f9051-00fd-4bd3-ba2b-42311d0db5c9",
+      "visitId": "057f9051-00fd-4bd3-ba2b-42311d0db5c9",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 326,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "5bace3ea-a0d9-486e-9350-ea28bc483a33:left:0",
+          "captureId": "5bace3ea-a0d9-486e-9350-ea28bc483a33",
+          "chunkIds": [
+            "5bace3ea-a0d9-486e-9350-ea28bc483a33:left:0"
+          ],
+          "points": 704,
+          "acquiredThroughAt": "2026-09-13T19:43:44.739Z",
+          "storedAt": "2026-09-13T19:43:45.280Z",
+          "receiptEventSeq": 435,
+          "capturedAt": "2026-09-13T19:43:44.677Z",
+          "viewEpochId": "42ba21da-358e-44a1-8603-d07c978658fa",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": "5bace3ea-a0d9-486e-9350-ea28bc483a33:right:3",
+          "captureId": "5bace3ea-a0d9-486e-9350-ea28bc483a33",
+          "chunkIds": [
+            "5bace3ea-a0d9-486e-9350-ea28bc483a33:right:1",
+            "5bace3ea-a0d9-486e-9350-ea28bc483a33:right:3"
+          ],
+          "points": 704,
+          "acquiredThroughAt": "2026-09-13T19:43:45.496Z",
+          "storedAt": "2026-09-13T19:43:45.506Z",
+          "receiptEventSeq": 439,
+          "capturedAt": "2026-09-13T19:43:44.677Z",
+          "viewEpochId": "42ba21da-358e-44a1-8603-d07c978658fa",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "5bace3ea-a0d9-486e-9350-ea28bc483a33",
+          "rightCaptureId": "5bace3ea-a0d9-486e-9350-ea28bc483a33",
+          "simultaneousRequired": false,
+          "sameViewEpoch": true,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "8b19f21d-4a4f-4c22-8b10-f70711e03030",
+      "visitId": "8b19f21d-4a4f-4c22-8b10-f70711e03030",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 327,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "engine-useful-point-count-below-minimum",
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": "2064c535-4ba2-4292-857f-e52c2a627f1e:right:2",
+          "captureId": "2064c535-4ba2-4292-857f-e52c2a627f1e",
+          "chunkIds": [
+            "2064c535-4ba2-4292-857f-e52c2a627f1e:right:0",
+            "2064c535-4ba2-4292-857f-e52c2a627f1e:right:2"
+          ],
+          "points": 2496,
+          "acquiredThroughAt": "2026-09-13T19:43:48.877Z",
+          "storedAt": "2026-09-13T19:43:48.942Z",
+          "receiptEventSeq": 463,
+          "capturedAt": "2026-09-13T19:43:48.091Z",
+          "viewEpochId": "671670f4-f000-470e-94b5-5c7a6fdaacbd",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": "2064c535-4ba2-4292-857f-e52c2a627f1e",
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:engine-useful-point-count-below-minimum",
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "engine-useful-point-count-below-minimum",
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:engine-useful-point-count-below-minimum",
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "engine-useful-point-count-below-minimum, longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "97cc7561-bc09-4d77-9238-def85e0c0e49",
+      "visitId": "97cc7561-bc09-4d77-9238-def85e0c0e49",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 328,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": "22fd2111-d3df-4938-ba9b-945c2be36600:right:0",
+          "captureId": "22fd2111-d3df-4938-ba9b-945c2be36600",
+          "chunkIds": [
+            "22fd2111-d3df-4938-ba9b-945c2be36600:right:0"
+          ],
+          "points": 448,
+          "acquiredThroughAt": "2026-09-13T19:43:52.289Z",
+          "storedAt": "2026-09-13T19:43:52.313Z",
+          "receiptEventSeq": 488,
+          "capturedAt": "2026-09-13T19:43:52.122Z",
+          "viewEpochId": "5af0ee63-ff96-4cc2-ad23-6a6486b25244",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": "22fd2111-d3df-4938-ba9b-945c2be36600",
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "adaf2007-8454-4cce-9502-973cfc66f1f7",
+      "visitId": "adaf2007-8454-4cce-9502-973cfc66f1f7",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 329,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "a02f75a9-143a-4fa2-828b-6ccf4140c82c:left:1",
+          "captureId": "a02f75a9-143a-4fa2-828b-6ccf4140c82c",
+          "chunkIds": [
+            "a02f75a9-143a-4fa2-828b-6ccf4140c82c:left:0",
+            "a02f75a9-143a-4fa2-828b-6ccf4140c82c:left:1"
+          ],
+          "points": 2752,
+          "acquiredThroughAt": "2026-09-13T19:43:55.156Z",
+          "storedAt": "2026-09-13T19:43:55.238Z",
+          "receiptEventSeq": 507,
+          "capturedAt": "2026-09-13T19:43:54.378Z",
+          "viewEpochId": "66370695-85e5-44ec-9eba-c20cf94767dc",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "a02f75a9-143a-4fa2-828b-6ccf4140c82c",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "qualified-stored-snapshot-missing",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:qualified-stored-snapshot-missing",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "qualified-stored-snapshot-missing, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "85304567-39dd-4681-af39-b5829a0297a4",
+      "visitId": "85304567-39dd-4681-af39-b5829a0297a4",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 330,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "PASS_NO_DECISION",
+      "referenceStatus": "not-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "9a72492a-069a-4823-b7eb-a928acab93e0:left:0",
+          "captureId": "9a72492a-069a-4823-b7eb-a928acab93e0",
+          "chunkIds": [
+            "9a72492a-069a-4823-b7eb-a928acab93e0:left:0"
+          ],
+          "points": 448,
+          "acquiredThroughAt": "2026-09-13T19:43:56.493Z",
+          "storedAt": "2026-09-13T19:43:57.120Z",
+          "receiptEventSeq": 516,
+          "capturedAt": "2026-09-13T19:43:56.440Z",
+          "viewEpochId": "cd494b03-ef22-432b-9162-d240eeddb960",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "roi-point-count-below-minimum",
+            "engine-useful-point-count-below-minimum",
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ],
+          "referenceStatus": "not-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "9a72492a-069a-4823-b7eb-a928acab93e0",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:roi-point-count-below-minimum",
+            "right:engine-useful-point-count-below-minimum",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "roi-point-count-below-minimum",
+            "engine-useful-point-count-below-minimum",
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "validated-reference-not-observed",
+            "human-final-reference-missing",
+            "human-final-rail-state-missing"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:validated-reference-not-observed",
+            "left:human-final-reference-missing",
+            "left:human-final-rail-state-missing",
+            "right:roi-point-count-below-minimum",
+            "right:engine-useful-point-count-below-minimum",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:validated-reference-not-observed",
+            "right:human-final-reference-missing",
+            "right:human-final-rail-state-missing"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "roi-point-count-below-minimum, engine-useful-point-count-below-minimum, longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, validated-reference-not-observed, human-final-reference-missing, human-final-rail-state-missing"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "e9e72ec2-534d-4ae4-95cb-31dd701dda21",
+      "visitId": "e9e72ec2-534d-4ae4-95cb-31dd701dda21",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 331,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "AMBIGUOUS_MULTIPLE_INTENTS",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "f504b93b-63a8-46eb-b981-7c523d3fa7b9:left:0",
+          "captureId": "f504b93b-63a8-46eb-b981-7c523d3fa7b9",
+          "chunkIds": [
+            "f504b93b-63a8-46eb-b981-7c523d3fa7b9:left:0"
+          ],
+          "points": 1216,
+          "acquiredThroughAt": "2026-09-13T19:44:01.153Z",
+          "storedAt": "2026-09-13T19:44:01.761Z",
+          "receiptEventSeq": 540,
+          "capturedAt": "2026-09-13T19:44:01.056Z",
+          "viewEpochId": "8c7551d8-f844-4cb1-abe5-d42d910fa108",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "multiple-operator-intents-observed"
+          ],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "engine-useful-point-count-below-minimum",
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "geometry-acquired-after-operator-intent",
+            "multiple-operator-intents-observed"
+          ],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "f504b93b-63a8-46eb-b981-7c523d3fa7b9",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:multiple-operator-intents-observed",
+            "right:engine-useful-point-count-below-minimum",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:capture-used-a-different-rail-pose-than-initial-state",
+            "right:geometry-acquired-after-operator-intent",
+            "right:multiple-operator-intents-observed"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "multiple-operator-intents-observed"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "engine-useful-point-count-below-minimum",
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "geometry-acquired-after-operator-intent",
+            "multiple-operator-intents-observed"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:multiple-operator-intents-observed",
+            "right:engine-useful-point-count-below-minimum",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:capture-used-a-different-rail-pose-than-initial-state",
+            "right:geometry-acquired-after-operator-intent",
+            "right:multiple-operator-intents-observed"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "multiple-operator-intents-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "engine-useful-point-count-below-minimum, longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, capture-used-a-different-rail-pose-than-initial-state, geometry-acquired-after-operator-intent, multiple-operator-intents-observed"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "905e8d94-e6f0-4827-aa30-c431b144a362",
+      "visitId": "905e8d94-e6f0-4827-aa30-c431b144a362",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 332,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-timing-uncertain",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "human-final-reference-not-freshly-observed"
+          ],
+          "referenceStatus": "candidate-timing-uncertain"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": "4df76b02-bcfa-4a30-ae52-8f269c465e15:right:3",
+          "captureId": "4df76b02-bcfa-4a30-ae52-8f269c465e15",
+          "chunkIds": [
+            "4df76b02-bcfa-4a30-ae52-8f269c465e15:right:0",
+            "4df76b02-bcfa-4a30-ae52-8f269c465e15:right:1",
+            "4df76b02-bcfa-4a30-ae52-8f269c465e15:right:3"
+          ],
+          "points": 2752,
+          "acquiredThroughAt": "2026-09-13T19:44:11.554Z",
+          "storedAt": "2026-09-13T19:44:11.573Z",
+          "receiptEventSeq": 610,
+          "capturedAt": "2026-09-13T19:44:10.506Z",
+          "viewEpochId": "20c43e4b-30f6-4176-bbd9-133fa77e8ef3",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "human-final-reference-not-freshly-observed"
+          ],
+          "referenceStatus": "candidate-timing-uncertain"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": "4df76b02-bcfa-4a30-ae52-8f269c465e15",
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:capture-used-a-different-rail-pose-than-initial-state",
+            "left:human-final-reference-not-freshly-observed",
+            "right:human-final-reference-not-freshly-observed"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "human-final-reference-not-freshly-observed"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "human-final-reference-not-freshly-observed"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:capture-used-a-different-rail-pose-than-initial-state",
+            "left:human-final-reference-not-freshly-observed",
+            "right:human-final-reference-not-freshly-observed"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, capture-used-a-different-rail-pose-than-initial-state, human-final-reference-not-freshly-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "human-final-reference-not-freshly-observed"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "1f17bfa6-e89c-46aa-b1a5-20a127092df5",
+      "visitId": "1f17bfa6-e89c-46aa-b1a5-20a127092df5",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 333,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "VALIDATE_CORRECTED_BOTH",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "geometry-acquired-after-operator-intent"
+          ],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "comparable-candidate",
+          "snapshotId": "a656c5b1-4c67-449b-9eb1-f7656be2aab4:right:0",
+          "captureId": "a656c5b1-4c67-449b-9eb1-f7656be2aab4",
+          "chunkIds": [
+            "a656c5b1-4c67-449b-9eb1-f7656be2aab4:right:0"
+          ],
+          "points": 704,
+          "acquiredThroughAt": "2026-09-13T19:44:17.052Z",
+          "storedAt": "2026-09-13T19:44:17.096Z",
+          "receiptEventSeq": 649,
+          "capturedAt": "2026-09-13T19:44:16.738Z",
+          "viewEpochId": "22a20a47-87b1-4d86-831e-a8a282181994",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": null,
+          "rightCaptureId": "a656c5b1-4c67-449b-9eb1-f7656be2aab4",
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:capture-used-a-different-rail-pose-than-initial-state",
+            "left:geometry-acquired-after-operator-intent"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "geometry-acquired-after-operator-intent"
+          ]
+        },
+        "right": {
+          "status": "ready",
+          "inputHash": "a9ecb82f3661c0d583de6aec87cac685641172d29bcf65d3dac6310c7169195b",
+          "points": 704,
+          "sourceChunkIds": [
+            "a656c5b1-4c67-449b-9eb1-f7656be2aab4:right:0"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:longitudinal-coverage-insufficient",
+            "left:longitudinal-span-insufficient",
+            "left:checkpoint-not-qualified",
+            "left:capture-used-a-different-rail-pose-than-initial-state",
+            "left:geometry-acquired-after-operator-intent"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": {
+          "side": "right",
+          "status": "candidate",
+          "delta": [
+            0,
+            -0.0030000000000000348,
+            -0.011999999999999997
+          ],
+          "confidence": 62,
+          "reasons": [],
+          "method": "template-surfaces-v3",
+          "source": "lidar-template-supported",
+          "parameters": {
+            "searchY": 0.08,
+            "searchZ": 0.04,
+            "grid": 0.003,
+            "minTop": 15,
+            "minFace": 6,
+            "maxResidual": 0.004,
+            "minConfidence": 55,
+            "topBand": 0.012,
+            "faceBand": 0.01,
+            "alternativeSeparation": 0.02,
+            "minTemplateLossRatio": 1.5,
+            "maxSingleRailLateral": 0.06,
+            "pairedSupportLateral": 0.04,
+            "method": "template-surfaces-v3"
+          },
+          "metrics": {
+            "points": 109,
+            "topCount": 29,
+            "faceCount": 10,
+            "residual": 0.002831776342507841,
+            "seed": [
+              -0.0030000000000000348,
+              -0.011999999999999997
+            ],
+            "surfaceIntersection": [
+              -0.008642368931395078,
+              -0.011116833383452148
+            ],
+            "topSpanBins": 6,
+            "faceSpanBins": 4,
+            "templateLoss": 0.0000023954707369591055,
+            "templateAmbiguity": {
+              "coarseBestLoss": 0.000005502412238274992,
+              "alternativeLoss": 0.00008333843625481968,
+              "lossRatio": 15.14580017744114,
+              "separation": 0.026832815729997475,
+              "alternative": [
+                -0.028000000000000032,
+                -0.0010000000000000018
+              ]
+            }
+          },
+          "top": {
+            "slope": 0.03497708992233917,
+            "rawSlope": 0.03497708992233917,
+            "slopeLimited": false,
+            "intercept": -0.011419118298707584,
+            "residual": 0.002831776342507841,
+            "count": 29
+          },
+          "face": {
+            "slope": 0.3281764725711225,
+            "rawSlope": 0.3281764725711225,
+            "slopeLimited": false,
+            "intercept": 0.0122906520973373,
+            "residual": 0.001036122997410069,
+            "count": 10
+          }
+        }
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, capture-used-a-different-rail-pose-than-initial-state, geometry-acquired-after-operator-intent"
+        },
+        "right": {
+          "status": "comparable",
+          "humanDeltaLocal": [
+            0.00007798895239830017,
+            0.001512215007096529,
+            -0.004032459110021591
+          ],
+          "engineDeltaLocal": [
+            0,
+            -0.0030000000000000348,
+            -0.011999999999999997
+          ],
+          "errorMm": {
+            "longitudinal": -0.077989,
+            "lateral": -4.512215,
+            "vertical": -7.967541,
+            "euclidean": 9.156848
+          }
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    },
+    {
+      "recordId": "85d11ad9-b40b-424f-835b-a53d0b6d3b55",
+      "visitId": "85d11ad9-b40b-424f-835b-a53d0b6d3b55",
+      "identity": {
+        "pageId": "541514f9-8c73-4e7f-8abf-f2f86e024277",
+        "part": 28,
+        "cut": 334,
+        "shape": "U50",
+        "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f",
+        "projectId": null
+      },
+      "visitRelation": {
+        "type": "first-observation",
+        "relatedVisitId": null,
+        "relatedSessionId": null
+      },
+      "humanLabel": "AMBIGUOUS_MULTIPLE_INTENTS",
+      "referenceStatus": "candidate-observed",
+      "eligibility": {
+        "left": {
+          "status": "excluded",
+          "snapshotId": "e1b0d86b-0cef-4c69-aa5d-304dc4b5174b:left:1",
+          "captureId": "e1b0d86b-0cef-4c69-aa5d-304dc4b5174b",
+          "chunkIds": [
+            "e1b0d86b-0cef-4c69-aa5d-304dc4b5174b:left:0",
+            "e1b0d86b-0cef-4c69-aa5d-304dc4b5174b:left:1"
+          ],
+          "points": 2496,
+          "acquiredThroughAt": "2026-09-13T19:44:23.672Z",
+          "storedAt": "2026-09-13T19:44:23.713Z",
+          "receiptEventSeq": 684,
+          "capturedAt": "2026-09-13T19:44:22.773Z",
+          "viewEpochId": "57c6afb5-dae5-44c4-b9ec-81966ce873a4",
+          "coordinateSystem": {
+            "name": "scene-relative",
+            "matrixLayout": "column-major; column vectors",
+            "units": "metres-observed-not-independently-calibrated",
+            "physicalCalibrationStatus": "not-independently-verified",
+            "frameId": "68aa8637-8827-486d-b9d8-ae1bdb49b21f"
+          },
+          "criteriaVersion": "native-visible-roi-v1",
+          "reasons": [
+            "multiple-operator-intents-observed",
+            "decision-effect-not-observed"
+          ],
+          "referenceStatus": "candidate-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "snapshotId": null,
+          "captureId": null,
+          "chunkIds": [],
+          "points": 0,
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "geometry-acquired-after-operator-intent",
+            "multiple-operator-intents-observed",
+            "decision-effect-not-observed"
+          ],
+          "referenceStatus": "candidate-observed"
+        },
+        "pair": {
+          "status": "excluded",
+          "leftCaptureId": "e1b0d86b-0cef-4c69-aa5d-304dc4b5174b",
+          "rightCaptureId": null,
+          "simultaneousRequired": false,
+          "sameViewEpoch": false,
+          "compatibilityChecked": true,
+          "reasons": [
+            "left:multiple-operator-intents-observed",
+            "left:decision-effect-not-observed",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:capture-used-a-different-rail-pose-than-initial-state",
+            "right:geometry-acquired-after-operator-intent",
+            "right:multiple-operator-intents-observed",
+            "right:decision-effect-not-observed"
+          ]
+        }
+      },
+      "engineInput": {
+        "left": {
+          "status": "excluded",
+          "reasons": [
+            "multiple-operator-intents-observed",
+            "decision-effect-not-observed"
+          ]
+        },
+        "right": {
+          "status": "excluded",
+          "reasons": [
+            "longitudinal-coverage-insufficient",
+            "longitudinal-span-insufficient",
+            "checkpoint-not-qualified",
+            "capture-used-a-different-rail-pose-than-initial-state",
+            "geometry-acquired-after-operator-intent",
+            "multiple-operator-intents-observed",
+            "decision-effect-not-observed"
+          ]
+        },
+        "pair": {
+          "status": "excluded",
+          "reasons": [
+            "left:multiple-operator-intents-observed",
+            "left:decision-effect-not-observed",
+            "right:longitudinal-coverage-insufficient",
+            "right:longitudinal-span-insufficient",
+            "right:checkpoint-not-qualified",
+            "right:capture-used-a-different-rail-pose-than-initial-state",
+            "right:geometry-acquired-after-operator-intent",
+            "right:multiple-operator-intents-observed",
+            "right:decision-effect-not-observed"
+          ]
+        }
+      },
+      "proposal": {
+        "left": null,
+        "right": null
+      },
+      "comparison": {
+        "left": {
+          "status": "excluded",
+          "reason": "multiple-operator-intents-observed, decision-effect-not-observed"
+        },
+        "right": {
+          "status": "excluded",
+          "reason": "longitudinal-coverage-insufficient, longitudinal-span-insufficient, checkpoint-not-qualified, capture-used-a-different-rail-pose-than-initial-state, geometry-acquired-after-operator-intent, multiple-operator-intents-observed, decision-effect-not-observed"
+        }
+      },
+      "engineErrors": {},
+      "serverConfirmationStatus": "not-observed",
+      "safety": {
+        "humanFinalPositionsProvidedToEngine": false,
+        "nativeCommandSent": false,
+        "navigationAction": false
+      },
+      "sourceFile": "banane-native-v4-1789328681673(1).json"
+    }
+  ],
+  "metrics": {
+    "visitsRead": 22,
+    "usableByRail": {
+      "left": 5,
+      "right": 7
+    },
+    "usablePairs": 5,
+    "comparableByRail": {
+      "left": 3,
+      "right": 4
+    },
+    "unresolvedByRail": {
+      "left": 2,
+      "right": 3
+    },
+    "errors": {
+      "left": {
+        "lateral": {
+          "count": 3,
+          "medianMm": 3,
+          "p90Mm": 3.023342,
+          "maximumMm": 3.029177
+        },
+        "vertical": {
+          "count": 3,
+          "medianMm": 3.299142,
+          "p90Mm": 5.459828,
+          "maximumMm": 6
+        },
+        "euclidean": {
+          "count": 3,
+          "medianMm": 3.473146,
+          "p90Mm": 6.061192,
+          "maximumMm": 6.708204
+        }
+      },
+      "right": {
+        "lateral": {
+          "count": 4,
+          "medianMm": 2.756108,
+          "p90Mm": 4.982058,
+          "maximumMm": 5.183419
+        },
+        "vertical": {
+          "count": 4,
+          "medianMm": 2.668871,
+          "p90Mm": 7.077279,
+          "maximumMm": 7.967541
+        },
+        "euclidean": {
+          "count": 4,
+          "medianMm": 5.147803,
+          "p90Mm": 7.968769,
+          "maximumMm": 9.156848
+        }
+      }
+    },
+    "lossCauses": {
+      "longitudinal-coverage-insufficient": 13,
+      "longitudinal-span-insufficient": 12,
+      "checkpoint-not-qualified": 13,
+      "capture-used-a-different-rail-pose-than-initial-state": 5,
+      "engine-useful-point-count-below-minimum": 4,
+      "roi-point-count-below-minimum": 2,
+      "validated-reference-not-observed": 24,
+      "human-final-reference-missing": 24,
+      "human-final-rail-state-missing": 24,
+      "qualified-stored-snapshot-missing": 5,
+      "multiple-operator-intents-observed": 4,
+      "geometry-acquired-after-operator-intent": 3,
+      "human-final-reference-not-freshly-observed": 2,
+      "decision-effect-not-observed": 2
+    }
+  },
+  "limits": [
+    "Seuls les points à visibilité de découpe explicitement vérifiée sont transmis au moteur et représentés. Une capture sans preuve de découpe reste exclue.",
+    "Une session ESV réelle courte avec la version corrigée reste obligatoire pour valider la couverture, les repères et la fluidité WebGL.",
+    "Une référence native reste candidate tant qu’elle n’a pas été revue ; usableForTraining demeure faux."
+  ],
+  "visualProofs": {
+    "directory": "audit/v45-witness-baseline-svg",
+    "generated": 6,
+    "scope": "qualified-exported-examples"
+  }
+}

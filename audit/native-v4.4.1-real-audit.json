@@ -1,0 +1,76 @@
+{
+  "format": "banane-native-v441-readonly-audit-v1",
+  "source": {
+    "file": "banane-native-v4-1789294517253(1).json",
+    "sha256": "86700e4d29ff0406614c901aae6ed52b1b3a1f2d3dbb59b724f69b16884d33f6",
+    "version": "4.4.1"
+  },
+  "counts": {
+    "visits": 76,
+    "events": 2283,
+    "chunks": 316,
+    "captures": 226,
+    "points": 539309,
+    "pointsByRail": {
+      "left": 195781,
+      "right": 343528
+    },
+    "visibility": {
+      "true": 297185,
+      "false": 242124,
+      "unknown": 0
+    },
+    "maximumTransformError": 2.2325362114550273e-9,
+    "exportedComparableRails": 0,
+    "validationNoMovement": 17,
+    "terminations": {
+      "RESOURCE_LIMIT": 4,
+      "VIEW_CHANGED": 148,
+      "TARGET_CHANGED": 38,
+      "RAIL_STATE_CHANGED": 35,
+      "NONE": 1
+    }
+  },
+  "counterfactualScreens": [
+    {
+      "filter": "numeric-only",
+      "groups": 67,
+      "visitRails": 42,
+      "visitsWithBothRails": 12,
+      "terminations": {
+        "VIEW_CHANGED": 26,
+        "RAIL_STATE_CHANGED": 32,
+        "TARGET_CHANGED": 8,
+        "RESOURCE_LIMIT": 1
+      }
+    },
+    {
+      "filter": "visible-only",
+      "groups": 32,
+      "visitRails": 28,
+      "visitsWithBothRails": 6,
+      "terminations": {
+        "RAIL_STATE_CHANGED": 18,
+        "VIEW_CHANGED": 8,
+        "TARGET_CHANGED": 5,
+        "RESOURCE_LIMIT": 1
+      }
+    },
+    {
+      "filter": "visible-and-initial-pose",
+      "groups": 25,
+      "visitRails": 23,
+      "visitsWithBothRails": 4,
+      "terminations": {
+        "RAIL_STATE_CHANGED": 16,
+        "VIEW_CHANGED": 6,
+        "TARGET_CHANGED": 3
+      }
+    }
+  ],
+  "limits": [
+    "Ces filtres sont exploratoires : pas de preuve de stockage confirmé par bloc dans le format 4.4.1.",
+    "Aucune référence ancienne promue et aucun export source modifié ; comparaison réelle 4.4.2 nécessite un nouvel essai ESV.",
+    "Cohérence numérique interne des repères seulement, sans calibration physique ni certification humaine."
+  ]
+}

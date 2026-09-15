@@ -1,0 +1,3176 @@
+{
+  "format": "banane-geometry-evaluation",
+  "version": "4.1.0",
+  "evaluatedAt": "2026-09-10T07:18:59.805Z",
+  "input": {
+    "file": "banane-corrections-v4-1788961523204.json",
+    "format": "banane-corrections-session-v4",
+    "records": 47,
+    "clouds": 47,
+    "missingCloudRecordIds": []
+  },
+  "method": {
+    "searchY": 0.08,
+    "searchZ": 0.04,
+    "grid": 0.003,
+    "minTop": 15,
+    "minFace": 6,
+    "maxResidual": 0.004,
+    "minConfidence": 55,
+    "topBand": 0.012,
+    "faceBand": 0.01,
+    "alternativeSeparation": 0.02,
+    "minTemplateLossRatio": 1.5,
+    "maxSingleRailLateral": 0.06,
+    "pairedSupportLateral": 0.04,
+    "method": "template-surfaces-v3"
+  },
+  "comparison": {
+    "baseline": {
+      "label": "V4.0 surface-intersection placement (V3.0.1 equivalent on these 47 supported references)",
+      "candidateRails": 94,
+      "totalRails": 94,
+      "railCoverage": 1,
+      "fullyProposableCuts": 47,
+      "totalCuts": 47,
+      "cutCoverage": 1,
+      "error": {
+        "n": 94,
+        "meanMm": 7.586784239748648,
+        "medianMm": 5.516316983119443,
+        "p90Mm": 8.803579915920201,
+        "maxMm": 78.04054914638549,
+        "within10mm": 89
+      },
+      "errorsOver25mm": [
+        {
+          "cut": 8232,
+          "side": "left",
+          "errorMm": 78.04054914638549
+        },
+        {
+          "cut": 9017,
+          "side": "right",
+          "errorMm": 70.25306012935046
+        },
+        {
+          "cut": 9449,
+          "side": "right",
+          "errorMm": 71.53850118294183
+        }
+      ]
+    },
+    "current": {
+      "label": "V4.1 supported-template placement with ambiguity and pair gates",
+      "candidateRails": 76,
+      "totalRails": 94,
+      "railCoverage": 0.8085106382978723,
+      "fullyProposableCuts": 29,
+      "totalCuts": 47,
+      "cutCoverage": 0.6170212765957447,
+      "error": {
+        "n": 76,
+        "meanMm": 4.116459538298551,
+        "medianMm": 3.5475425376184138,
+        "p90Mm": 6.808471746093683,
+        "maxMm": 11.427588056069661,
+        "within10mm": 74
+      },
+      "errorsOver25mm": []
+    }
+  },
+  "rejectedFormerErrorsOver25mm": [
+    {
+      "cut": 8232,
+      "side": "left",
+      "formerErrorMm": 78.04054914638549,
+      "reasons": [
+        "Grand déplacement isolé : le second rail ne confirme pas ce placement."
+      ]
+    },
+    {
+      "cut": 9017,
+      "side": "right",
+      "formerErrorMm": 70.25306012935046,
+      "reasons": [
+        "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+      ]
+    },
+    {
+      "cut": 9449,
+      "side": "right",
+      "formerErrorMm": 71.53850118294183,
+      "reasons": [
+        "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "part": 11,
+      "cut": 5342,
+      "side": "left",
+      "manualMm": [
+        0.08676134439156158,
+        0.4486144677429138,
+        0.23685316077859397
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.728324411502032,
+          -5.1472648092968365
+        ],
+        "errorMm": 5.5347909975649285,
+        "confidence": 63
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          3.0000000000000346,
+          -5.000000000000002
+        ],
+        "errorMm": 5.825952857056805,
+        "confidence": 63,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 70.48696137027919
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5342,
+      "side": "right",
+      "manualMm": [
+        -0.08676040670252405,
+        -0.9497313036916921,
+        1.5220107224216406
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -3.7808208151903857,
+          -3.382180217079105
+        ],
+        "errorMm": 5.663363308262177,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -2.0000000000000346,
+          -1.0000000000000018
+        ],
+        "errorMm": 2.7333367495839487,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 41.00143608345394
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5345,
+      "side": "left",
+      "manualMm": [
+        0.20381924878165592,
+        -12.469874758565425,
+        -13.52895125312159
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.394499355290293,
+          -16.680750199559107
+        ],
+        "errorMm": 4.408323122912865,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -11.999999999999963,
+          -14.999999999999996
+        ],
+        "errorMm": 1.5576613850909309,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.8294097424138145
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5345,
+      "side": "right",
+      "manualMm": [
+        -0.20381884951348184,
+        34.841217556042636,
+        -15.465777899979827
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.17587249382274,
+          -19.040667071227016
+        ],
+        "errorMm": 4.27457464417437,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.999999999999964,
+          -21.999999999999996
+        ],
+        "errorMm": 6.5393281337090015,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.806377327705286
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5346,
+      "side": "left",
+      "manualMm": [
+        0.35002904223802034,
+        -16.542812860286915,
+        -7.647191374395845
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -13.237718850139657,
+          -12.338311862278385
+        ],
+        "errorMm": 5.749154562033679,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -15.99999999999996,
+          -12
+        ],
+        "errorMm": 4.400466914185005,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.464172321506376
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5346,
+      "side": "right",
+      "manualMm": [
+        -0.3500293405522825,
+        34.775759616373136,
+        -14.158800987726039
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          30.528559900682474,
+          -16.80019145187507
+        ],
+        "errorMm": 5.013797916580578,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          33.99999999999996,
+          -18.999999999999993
+        ],
+        "errorMm": 4.91543806777028,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 7.668095504445819
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5347,
+      "side": "left",
+      "manualMm": [
+        0.34200849950138945,
+        -7.502343567125536,
+        -1.5486936263329198
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -5.0768508694194665,
+          -7.345673658270027
+        ],
+        "errorMm": 6.293247343862641,
+        "confidence": 69
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.4615657026871727
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5347,
+      "side": "right",
+      "manualMm": [
+        -0.3420092798478436,
+        36.80131903777806,
+        -11.000091580715576
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.74219185094733,
+          -15.844029516253268
+        ],
+        "errorMm": 5.274534087707521,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.999999999999964,
+          -12.999999999999998
+        ],
+        "errorMm": 2.7131815842085762,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.650358268700507
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5351,
+      "side": "left",
+      "manualMm": [
+        0.4197787411612808,
+        0.5140722856040725,
+        1.5438300621823942
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          0.6764560445390029,
+          -3.4258759638365
+        ],
+        "errorMm": 4.990046158278027,
+        "confidence": 72
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.0000000000000346,
+          -1.0000000000000018
+        ],
+        "errorMm": 2.6236256059910543,
+        "confidence": 72,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 8.973460478747027
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5351,
+      "side": "right",
+      "manualMm": [
+        -0.41977786440838827,
+        43.70640428982142,
+        -9.3440053488969
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          40.99718369796495,
+          -15.740327534136817
+        ],
+        "errorMm": 6.959096720708712,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          40.999999999999964,
+          -16.999999999999996
+        ],
+        "errorMm": 8.131118725804615,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 7.600039270069073
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5352,
+      "side": "left",
+      "manualMm": [
+        -0.33891779457917437,
+        0.05659389492507216,
+        1.1299904360839719
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          3.22996240894178,
+          -4.6324142075465025
+        ],
+        "errorMm": 6.5871420414447615,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          3.0000000000000346,
+          -5.000000000000002
+        ],
+        "errorMm": 6.808471746093683,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 14.970953480290806
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5352,
+      "side": "right",
+      "manualMm": [
+        0.33891778184624854,
+        -0.012955168166683961,
+        0.25867251249067635
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -5.398936479481063,
+          -4.306112142526774
+        ],
+        "errorMm": 7.068303820250097,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -3.0000000000000346,
+          -5
+        ],
+        "errorMm": 6.057304572485927,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 5.608686135773184
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5356,
+      "side": "left",
+      "manualMm": [
+        0.02153841978724813,
+        0.8406346143203791,
+        -0.6562840937398562
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          3.070690489677731,
+          -4.200058279484914
+        ],
+        "errorMm": 4.187116978339132,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          2.0000000000000346,
+          -4.000000000000002
+        ],
+        "errorMm": 3.5390716385538417,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 55.594242174270796
+      }
+    },
+    {
+      "part": 11,
+      "cut": 5356,
+      "side": "right",
+      "manualMm": [
+        -0.0215386089621461,
+        -1.4719396599858214,
+        -5.492171352354802
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -3.578414597760394,
+          -8.1102107391064
+        ],
+        "errorMm": 3.3603319487412384,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -3.0000000000000346,
+          -3
+        ],
+        "errorMm": 2.92341416222511,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 14.821507834155202
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6525,
+      "side": "left",
+      "manualMm": [
+        8.276401786133647e-8,
+        -18.69783316124085,
+        10.367561484528665
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.52727567258022,
+          3.1881582502682364
+        ],
+        "errorMm": 7.50034336625263,
+        "confidence": 68
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.3717899594117562
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6525,
+      "side": "right",
+      "manualMm": [
+        8.185452315956354e-9,
+        40.41532392284353,
+        12.765505153311096
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.502372060552716,
+          8.352032081121832
+        ],
+        "errorMm": 5.898299486762679,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          40.999999999999964,
+          5.999999999999998
+        ],
+        "errorMm": 6.790722059890102,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 6.47248300665138
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6526,
+      "side": "left",
+      "manualMm": [
+        -0.00013623503036797047,
+        -20.48410750239782,
+        9.583520884319796
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.566400088141428,
+          3.00749219685403
+        ],
+        "errorMm": 7.65457932878432,
+        "confidence": 73
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -18.999999999999957,
+          9.999999999999998
+        ],
+        "errorMm": 1.5414376247618211,
+        "confidence": 73,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.5084858635420781
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6526,
+      "side": "right",
+      "manualMm": [
+        0.0001361095200991258,
+        40.04512243091085,
+        11.436708896809478
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          35.17737828431787,
+          7.760510402417663
+        ],
+        "errorMm": 6.099948234647954,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.999999999999964,
+          5.999999999999998
+        ],
+        "errorMm": 5.80864264734783,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.5726662478245894
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6527,
+      "side": "left",
+      "manualMm": [
+        -0.000005055881047155708,
+        -19.852802780860657,
+        4.747633647056659
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.915038616661022,
+          2.368381179870715
+        ],
+        "errorMm": 3.7803836560713715,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.99999999999996,
+          3.9999999999999982
+        ],
+        "errorMm": 2.9491422103254585,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.5756847575761388
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6527,
+      "side": "right",
+      "manualMm": [
+        0.000004830326361116022,
+        36.23328888670585,
+        9.06204009467615
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.39945189524784,
+          6.203379493179891
+        ],
+        "errorMm": 3.3963066036225333,
+        "confidence": 65
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          38.999999999999964,
+          0.9999999999999983
+        ],
+        "errorMm": 8.523566206266853,
+        "confidence": 65,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.165002653622073
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6528,
+      "side": "left",
+      "manualMm": [
+        -0.00001734952093102038,
+        -18.91675361457601,
+        -2.7240267915402683
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -13.498890592941423,
+          -1.250043357354185
+        ],
+        "errorMm": 5.614790012614137,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -15.99999999999996,
+          2.9999999999999982
+        ],
+        "errorMm": 6.424323649903873,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.8504505517987684
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6528,
+      "side": "right",
+      "manualMm": [
+        0.000017599631974007934,
+        39.56655181445967,
+        3.551208852371701
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.161051158830105,
+          6.327041523051713
+        ],
+        "errorMm": 4.393481732227604,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.999999999999964,
+          7.999999999999998
+        ],
+        "errorMm": 5.136042337425974,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.711970029254046
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6529,
+      "side": "left",
+      "manualMm": [
+        -0.000016761987353675067,
+        -18.480367323263636,
+        5.989152506700179
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -12.439648232873486,
+          -0.41496587186751893
+        ],
+        "errorMm": 8.803579915920201,
+        "confidence": 65
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -14.999999999999957,
+          5.999999999999998
+        ],
+        "errorMm": 3.4803842278164394,
+        "confidence": 65,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.9792262739493636
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6529,
+      "side": "right",
+      "manualMm": [
+        0.00001622265699552372,
+        38.36794458447912,
+        10.0424546768636
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.96917162282691,
+          8.383724470925367
+        ],
+        "errorMm": 3.7819364803250144,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          39.999999999999964,
+          6.999999999999998
+        ],
+        "errorMm": 3.452554900412635,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.416940104898309
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6530,
+      "side": "left",
+      "manualMm": [
+        -0.00014213401300366968,
+        -15.757316494273255,
+        8.036531307681116
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -8.434977586233359,
+          4.9514389711532205
+        ],
+        "errorMm": 7.945718458975257,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -14.999999999999961,
+          3.9999999999999982
+        ],
+        "errorMm": 4.106959129403445,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.9082200656429213
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6530,
+      "side": "right",
+      "manualMm": [
+        0.0001422240529791452,
+        42.61543761595021,
+        12.438942863809643
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          40.721478380634,
+          10.63829553928421
+        ],
+        "errorMm": 2.6133144457925224,
+        "confidence": 64
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.438330930326746
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6531,
+      "side": "left",
+      "manualMm": [
+        -0.00004735102265840396,
+        -15.278019306151691,
+        8.886029917249516
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.593375576369016,
+          5.074017962035748
+        ],
+        "errorMm": 6.844458304606165,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -14.999999999999961,
+          7.999999999999998
+        ],
+        "errorMm": 0.928624655658246,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.7140205064497853
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6531,
+      "side": "right",
+      "manualMm": [
+        0.000047622052079532295,
+        42.61543770871867,
+        12.43894285994429
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          39.565448359785194,
+          10.688694730661675
+        ],
+        "errorMm": 3.5165044497245903,
+        "confidence": 68
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.4150008824748392
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6532,
+      "side": "left",
+      "manualMm": [
+        -0.0000721029209671542,
+        -17.913793329171313,
+        8.581287008667005
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -14.285636866060027,
+          0.27867633724589164
+        ],
+        "errorMm": 9.060731939926862,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.999999999999964,
+          4.999999999999998
+        ],
+        "errorMm": 3.696029611905722,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.1886809262373434
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6532,
+      "side": "right",
+      "manualMm": [
+        0.00007206654117908329,
+        42.96381796621063,
+        14.203397983521882
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          41.157606884897426,
+          9.334820596746361
+        ],
+        "errorMm": 5.192826229181383,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          39.999999999999964,
+          5.999999999999998
+        ],
+        "errorMm": 8.722382439338325,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.8259147045532529
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6533,
+      "side": "left",
+      "manualMm": [
+        -0.00004588127922033891,
+        -16.345710931091162,
+        5.008737889511394
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -15.751566061185235,
+          -0.22490307672138124
+        ],
+        "errorMm": 5.267257910143623,
+        "confidence": 63
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.2871659219953142
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6533,
+      "side": "right",
+      "manualMm": [
+        0.000045947672333568335,
+        42.70271555560612,
+        10.696307019372853
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          43.45106147245082,
+          5.1446327414807085
+        ],
+        "errorMm": 5.601884406267107,
+        "confidence": 63
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          40.999999999999964,
+          1.9999999999999982
+        ],
+        "errorMm": 8.861433069239306,
+        "confidence": 63,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.9653413412682283
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6534,
+      "side": "left",
+      "manualMm": [
+        0.04088302557647694,
+        0.05586614497588016,
+        -7.605008174508043
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          4.035724373744439,
+          -5.295806878055232
+        ],
+        "errorMm": 4.601451246119689,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          4.000000000000035,
+          -6.000000000000002
+        ],
+        "errorMm": 4.258393421041042,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 31.577643419390704
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6534,
+      "side": "right",
+      "manualMm": [
+        -0.040883208384911995,
+        2.296983329415525,
+        -10.98118321206698
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          0.030877505823856437,
+          -6.8566524267759
+        ],
+        "errorMm": 4.70623641982187,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -2.0000000000000346,
+          -9.999999999999998
+        ],
+        "errorMm": 4.407772415364155,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 24.047039684310064
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6535,
+      "side": "left",
+      "manualMm": [
+        -0.08883641658030683,
+        2.060334776615491,
+        -2.4643779842108415
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          2.4027546000691564,
+          -8.991417039926292
+        ],
+        "errorMm": 6.5366185508441355,
+        "confidence": 62
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          2.0000000000000346,
+          -5.000000000000002
+        ],
+        "errorMm": 2.5378950335139456,
+        "confidence": 62,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 26.86811727618186
+      }
+    },
+    {
+      "part": 11,
+      "cut": 6535,
+      "side": "right",
+      "manualMm": [
+        0.08883701957529411,
+        2.0787907292287855,
+        -6.624593531881828
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.4318954090594849,
+          -7.239683257485586
+        ],
+        "errorMm": 0.8970512481721816,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.9999999999999654,
+          -11
+        ],
+        "errorMm": 4.377017449852097,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 27.047371161987
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7815,
+      "side": "left",
+      "manualMm": [
+        0.0026923098630504683,
+        -8.613674257389903,
+        -6.2973035488482765
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -4.11103773123254,
+          -8.541174410732282
+        ],
+        "errorMm": 5.0307752265461945,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -7.999999999999962,
+          -9.999999999999998
+        ],
+        "errorMm": 3.7532072087865136,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.58407307177706
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7815,
+      "side": "right",
+      "manualMm": [
+        -0.002692459020181559,
+        30.505719930602027,
+        -7.384631575916956
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          29.144186318383994,
+          -10.559904500025217
+        ],
+        "errorMm": 3.4548718021237907,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          29.999999999999957,
+          -5.9999999999999964
+        ],
+        "errorMm": 1.4740978592244203,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 13.495626443834709
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7816,
+      "side": "left",
+      "manualMm": [
+        0.17122449753514957,
+        -14.081594437129752,
+        -10.827720135097252
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -8.670419691850112,
+          -12.79496348547353
+        ],
+        "errorMm": 5.76022363733458,
+        "confidence": 67
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.3833723351718672
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7816,
+      "side": "right",
+      "manualMm": [
+        -0.1712235443847021,
+        38.82687843156418,
+        -7.841382166631661
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          35.97880607255068,
+          -10.772551761496844
+        ],
+        "errorMm": 4.0905487233610245,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.999999999999964,
+          -7
+        ],
+        "errorMm": 1.192044207680046,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.169356728473213
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7817,
+      "side": "left",
+      "manualMm": [
+        -0.3562743650036282,
+        -10.791968963303589,
+        -6.188206885589409
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -2.478609587773918,
+          -9.562631755176836
+        ],
+        "errorMm": 8.979176951723135,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.999999999999964,
+          -7
+        ],
+        "errorMm": 1.188761676114857,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 9.851712784810681
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7817,
+      "side": "right",
+      "manualMm": [
+        0.35627316265163245,
+        38.36940018470614,
+        -7.427542539332421
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.1099473095163,
+          -8.189163800733011
+        ],
+        "errorMm": 4.341651334251308,
+        "confidence": 73
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.999999999999964,
+          -4.000000000000002
+        ],
+        "errorMm": 4.819526535880588,
+        "confidence": 73,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.852130083951823
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7818,
+      "side": "left",
+      "manualMm": [
+        -0.13244494584796485,
+        -6.479018512436596,
+        -7.277718150312751
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -1.738321027523989,
+          -9.51187963177018
+        ],
+        "errorMm": 5.242445215008494,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -7.999999999999962,
+          -8
+        ],
+        "errorMm": 1.6889693364826888,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 13.908771104555068
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7818,
+      "side": "right",
+      "manualMm": [
+        0.1324440463577048,
+        40.39495888662259,
+        -4.268833167827779
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.48677000888011,
+          -6.119071923489379
+        ],
+        "errorMm": 4.326068097300114,
+        "confidence": 66
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.1823137733549611
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7819,
+      "side": "left",
+      "manualMm": [
+        0.1089177567337174,
+        2.2559800618182635,
+        -7.278445868159622
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          2.926113233793424,
+          -9.345031746621695
+        ],
+        "errorMm": 2.17525141971503,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.0000000000000346,
+          -7
+        ],
+        "errorMm": 1.2910774937671219,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 10.643187779944657
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7819,
+      "side": "right",
+      "manualMm": [
+        -0.10891794499912066,
+        42.00740710507489,
+        -10.30260060727528
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.668927161518624,
+          -14.895823931979013
+        ],
+        "errorMm": 6.3191749342762495,
+        "confidence": 63
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          38.999999999999964,
+          -10.999999999999996
+        ],
+        "errorMm": 3.0891303836793247,
+        "confidence": 63,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.4884771479108747
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7821,
+      "side": "left",
+      "manualMm": [
+        0.05975747899356065,
+        -6.7837613138408415,
+        -4.641945028730277
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -1.3670350170224823,
+          -8.950161554746716
+        ],
+        "errorMm": 6.921360008407333,
+        "confidence": 64
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.2518762274178117
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7821,
+      "side": "right",
+      "manualMm": [
+        -0.05975672684144229,
+        41.06990376931208,
+        -0.3042637652299618
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.95657392516339,
+          -6.586426527290383
+        ],
+        "errorMm": 7.509235796150344,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          39.999999999999964,
+          -3
+        ],
+        "errorMm": 2.9009065461409143,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 5.468917137150956
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7822,
+      "side": "left",
+      "manualMm": [
+        -0.007032776011328679,
+        -6.217914176772865,
+        -10.784809184258393
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -0.1537830988525546,
+          -11.69352651777973
+        ],
+        "errorMm": 6.1318433103251655,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -2.9999999999999654,
+          -12
+        ],
+        "errorMm": 3.4397252546790984,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.7009433511968264
+      }
+    },
+    {
+      "part": 11,
+      "cut": 7822,
+      "side": "right",
+      "manualMm": [
+        0.007032521352812182,
+        38.39121917860666,
+        -7.863201519839436
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          35.10736451278266,
+          -9.366921747008382
+        ],
+        "errorMm": 3.611775940476884,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          38.999999999999964,
+          -8.999999999999998
+        ],
+        "errorMm": 1.289563619736633,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.6672558783517064
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8232,
+      "side": "left",
+      "manualMm": [
+        -0.058862496189249214,
+        -9.964290106154294,
+        -7.10316348164497
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          67.78892973977364,
+          -13.793503522835106
+        ],
+        "errorMm": 78.04054914638549,
+        "confidence": 77
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Grand déplacement isolé : le second rail ne confirme pas ce placement."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 2.9648519380658196
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8232,
+      "side": "right",
+      "manualMm": [
+        0.05886295457457891,
+        36.64858413208094,
+        -7.950478843667952
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          33.52711384817748,
+          -10.615424012032873
+        ],
+        "errorMm": 4.104750215433962,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.999999999999964,
+          -7.9999999999999964
+        ],
+        "errorMm": 0.359736437647052,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.982890007534901
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8233,
+      "side": "left",
+      "manualMm": [
+        -0.07125921365513932,
+        -8.199834343258772,
+        -6.754781869091175
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -0.6658610724781272,
+          -13.969765403416591
+        ],
+        "errorMm": 10.431769673500026,
+        "confidence": 67
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.17860426913996
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8233,
+      "side": "right",
+      "manualMm": [
+        0.07125885167624801,
+        36.77877195070778,
+        -1.8294340154625388
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          31.91742394824494,
+          -6.285355074460101
+        ],
+        "errorMm": 6.594923404332274,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          35.999999999999964,
+          -5.000000000000002
+        ],
+        "errorMm": 3.265586048086543,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.9504012830313273
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8234,
+      "side": "left",
+      "manualMm": [
+        0.07778603685437702,
+        -8.962056578184274,
+        -4.5328483379947215
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -7.197618534020216,
+          -7.877311943203402
+        ],
+        "errorMm": 3.782159315230975,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.999999999999964,
+          -8
+        ],
+        "errorMm": 3.6200162792128348,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.3131592745653817
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8234,
+      "side": "right",
+      "manualMm": [
+        -0.07778630970278755,
+        30.875919653226447,
+        -6.055835431808987
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          28.022725634621715,
+          -7.179350590965719
+        ],
+        "errorMm": 3.0674179908571273,
+        "confidence": 71
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.0565513333463137
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8235,
+      "side": "left",
+      "manualMm": [
+        -0.09061383207153995,
+        -15.845322102904902,
+        -2.4411031509217196
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.885245860380378,
+          -10.155205098513548
+        ],
+        "errorMm": 9.748748049934823,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -14.999999999999961,
+          -8.999999999999995
+        ],
+        "errorMm": 6.613766566871803,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.166872139611121
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8235,
+      "side": "right",
+      "manualMm": [
+        0.09061315813596593,
+        35.25432928597638,
+        -6.273301019973587
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          30.80469700073173,
+          -11.217085032009177
+        ],
+        "errorMm": 6.651949982973235,
+        "confidence": 66
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.4158196873347593
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8236,
+      "side": "left",
+      "manualMm": [
+        -0.09634071102482267,
+        -15.976238178382118,
+        -5.055056922834922
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -11.287289561945748,
+          -10.14783804673196
+        ],
+        "errorMm": 6.923289697542876,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -14.999999999999957,
+          -13.000000000000002
+        ],
+        "errorMm": 8.005275948580724,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 5.281803303351158
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8236,
+      "side": "right",
+      "manualMm": [
+        0.0963404227150022,
+        28.958730020917756,
+        -2.657841004634065
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          24.841435112387067,
+          -7.871460318761836
+        ],
+        "errorMm": 6.64403681458101,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          27.999999999999954,
+          -7.9999999999999964
+        ],
+        "errorMm": 5.428361397496217,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.9240435499797686
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8237,
+      "side": "left",
+      "manualMm": [
+        0,
+        0,
+        0
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          4.178650128911863,
+          -6.402016030846066
+        ],
+        "errorMm": 7.645058937579562,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          3.469446951953614e-14,
+          -4.000000000000002
+        ],
+        "errorMm": 4.000000000000002,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.03234695631163
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8237,
+      "side": "right",
+      "manualMm": [
+        -0.09222476364811882,
+        38.93597535409299,
+        -10.019676988548554
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          34.80852128697842,
+          -11.09332246646002
+        ],
+        "errorMm": 4.265805562307116,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          38.999999999999964,
+          -9.999999999999998
+        ],
+        "errorMm": 0.11398134141957218,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.039808032867489
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8238,
+      "side": "left",
+      "manualMm": [
+        -0.023867704840085935,
+        -11.663287442843284,
+        -6.144568193178657
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -5.939953764136617,
+          -8.496237464508381
+        ],
+        "errorMm": 6.187686678143036,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -10.999999999999961,
+          -8.999999999999995
+        ],
+        "errorMm": 2.931554315133004,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 8.126943683357261
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8238,
+      "side": "right",
+      "manualMm": [
+        0.023867203708505258,
+        39.437091500190036,
+        -11.304834584848322
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.78896199202691,
+          -12.24544236569179
+        ],
+        "errorMm": 1.8977996512999329,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          39.999999999999964,
+          -8.999999999999995
+        ],
+        "errorMm": 2.372698481915495,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 5.191799727687683
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8239,
+      "side": "left",
+      "manualMm": [
+        -0.43085824654554017,
+        -12.425507914826994,
+        -3.922634735474162
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -7.071316299362092,
+          -5.603886949461506
+        ],
+        "errorMm": 5.628464772099787,
+        "confidence": 68
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.3602474098571107
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8239,
+      "side": "right",
+      "manualMm": [
+        0.43085814013466006,
+        31.812696940050955,
+        -7.319173567395865
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          28.568453620653337,
+          -13.978860053580389
+        ],
+        "errorMm": 7.420389312337,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          31.999999999999957,
+          -12
+        ],
+        "errorMm": 4.704344509637035,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 7.033582433828935
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8240,
+      "side": "left",
+      "manualMm": [
+        -0.14221160927263554,
+        -6.348102585548077,
+        -4.6637643600249135
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -2.123708521892213,
+          -8.957746778418283
+        ],
+        "errorMm": 6.025281267819303,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -4.999999999999962,
+          -6
+        ],
+        "errorMm": 1.9034522343660358,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 13.706734928419552
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8240,
+      "side": "right",
+      "manualMm": [
+        0.14221231322153471,
+        37.73736717278098,
+        -3.5284312126862005
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          33.02152514802314,
+          -8.709511023467938
+        ],
+        "errorMm": 7.0073517358695545,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.999999999999964,
+          -10.000000000000002
+        ],
+        "errorMm": 6.514993266186935,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.916571334125683
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8241,
+      "side": "left",
+      "manualMm": [
+        -0.1366307678836165,
+        -0.42343211055140273,
+        -8.454506755626312
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          3.991738692399772,
+          -10.580131629323617
+        ],
+        "errorMm": 4.902109983430163,
+        "confidence": 71
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -0.9999999999999654,
+          -13.999999999999998
+        ],
+        "errorMm": 5.577059603524946,
+        "confidence": 71,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 7.114130963908643
+      }
+    },
+    {
+      "part": 11,
+      "cut": 8241,
+      "side": "right",
+      "manualMm": [
+        0.13663067875313573,
+        37.95556002773992,
+        -7.885020890341821
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          33.02990673198532,
+          -13.367383361434534
+        ],
+        "errorMm": 7.371365314295613,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          38.999999999999964,
+          -10.999999999999996
+        ],
+        "errorMm": 3.2882544992196006,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.1326672601091845
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9013,
+      "side": "left",
+      "manualMm": [
+        -0.07988384459167719,
+        -9.986109616079375,
+        -7.538822406857548
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.088440781175407,
+          -12.665672602251094
+        ],
+        "errorMm": 5.20545710690151,
+        "confidence": 60
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -8.999999999999963,
+          -9.999999999999995
+        ],
+        "errorMm": 2.6525815253329124,
+        "confidence": 60,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 24.78836072984451
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9013,
+      "side": "right",
+      "manualMm": [
+        0.07988262586877681,
+        39.26253721658668,
+        -7.819562831102189
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.97419721948563,
+          -12.64098887874112
+        ],
+        "errorMm": 5.337511621448638,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          38.999999999999964,
+          -5
+        ],
+        "errorMm": 2.8328857341131464,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.326277329905658
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9014,
+      "side": "left",
+      "manualMm": [
+        0.15934156908770092,
+        -13.10118036235508,
+        -8.693063976870974
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -10.07835590571175,
+          -11.97116551369551
+        ],
+        "errorMm": 4.461928631998921,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.999999999999961,
+          -11
+        ],
+        "errorMm": 3.8684186937696814,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 36.65858395050216
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9014,
+      "side": "right",
+      "manualMm": [
+        -0.15934239127091132,
+        38.73960116413855,
+        -6.098746322635407
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          35.26934601612916,
+          -17.03801711497001
+        ],
+        "errorMm": 11.477617621177602,
+        "confidence": 65
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.999999999999964,
+          -13.999999999999998
+        ],
+        "errorMm": 7.937393120774513,
+        "confidence": 65,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.812616508942742
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9015,
+      "side": "left",
+      "manualMm": [
+        0.11125225682917517,
+        -9.158429871604312,
+        -8.453779035370701
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -7.765479179665203,
+          -10.162743165790612
+        ],
+        "errorMm": 2.2075432258248338,
+        "confidence": 64
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.2071217392593756
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9015,
+      "side": "right",
+      "manualMm": [
+        -0.11125339005957358,
+        41.723756220108044,
+        -4.639034056779678
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.98279464982863,
+          -13.060476945964245
+        ],
+        "errorMm": 9.664874249749104,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.999999999999964,
+          -14.999999999999996
+        ],
+        "errorMm": 11.38753113806416,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 8.315337435671408
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9016,
+      "side": "left",
+      "manualMm": [
+        -0.03160891719744541,
+        -9.812282352299917,
+        -12.788549356955059
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.056578721821953,
+          -12.92486792082163
+        ],
+        "errorMm": 0.7685504873582562,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -9.999999999999961,
+          -13.999999999999998
+        ],
+        "errorMm": 1.226315497512133,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.7208985786083963
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9016,
+      "side": "right",
+      "manualMm": [
+        0.03160998494422529,
+        40.0473052985717,
+        -14.768286970792133
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.80653819390682,
+          -11.307230119697504
+        ],
+        "errorMm": 4.741569902926169,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          37.999999999999964,
+          -11.999999999999993
+        ],
+        "errorMm": 3.4432355320781642,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 5.627918999389272
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9017,
+      "side": "left",
+      "manualMm": [
+        0.07971742525114678,
+        -16.521721975550463,
+        -15.946531008580678
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.5692844692789,
+          -17.57941997204819
+        ],
+        "errorMm": 1.635525428023774,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -16.99999999999996,
+          -14.999999999999993
+        ],
+        "errorMm": 1.0634969143183983,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 19.59457733874291
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9017,
+      "side": "right",
+      "manualMm": [
+        -0.0797187185526127,
+        44.83955391879135,
+        -14.52827426973613
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -24.37986835286487,
+          -26.53484259054229
+        ],
+        "errorMm": 70.25306012935046,
+        "confidence": 70
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.1131859456607889
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9018,
+      "side": "left",
+      "manualMm": [
+        0.05365720971894916,
+        -11.685106008712864,
+        -6.580227184009857
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -12.060684507534841,
+          -8.039166504585383
+        ],
+        "errorMm": 1.5074621872715643,
+        "confidence": 74
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -11.999999999999963,
+          -9.999999999999998
+        ],
+        "errorMm": 3.434659143916422,
+        "confidence": 74,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 9.253949702482958
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9018,
+      "side": "right",
+      "manualMm": [
+        -0.053657468015444465,
+        38.8050593828666,
+        -7.405723184490398
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.98580008676046,
+          -8.72581075646263
+        ],
+        "errorMm": 2.248380463359786,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          36.999999999999964,
+          -9.999999999999998
+        ],
+        "errorMm": 3.160916116419313,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.752918320132187
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9444,
+      "side": "left",
+      "manualMm": [
+        -0.00007904964149929583,
+        5.960173417520309,
+        5.638587670205197
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          7.972172228761759,
+          5.019481388253878
+        ],
+        "errorMm": 2.1050966274823213,
+        "confidence": 69
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          8.000000000000036,
+          1.9999999999999982
+        ],
+        "errorMm": 4.171356221495482,
+        "confidence": 69,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 13.134968589249235
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9444,
+      "side": "right",
+      "manualMm": [
+        0.00007887865649536252,
+        50.5016654026349,
+        3.2253743403600765
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          47.03111116391574,
+          -0.4790764911787675
+        ],
+        "errorMm": 5.076189781066328,
+        "confidence": 62
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          47.99999999999997,
+          -1.0000000000000018
+        ],
+        "errorMm": 4.910409159035098,
+        "confidence": 62,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 1.928926100061615
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9445,
+      "side": "left",
+      "manualMm": [
+        -0.00012582495401147753,
+        6.8969494559496525,
+        6.90192587387628
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          9.52515025132801,
+          4.128043618841948
+        ],
+        "errorMm": 3.8212383073362095,
+        "confidence": 72
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          6.000000000000035,
+          1.9999999999999982
+        ],
+        "errorMm": 4.983311711636949,
+        "confidence": 72,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.1990009401356936
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9445,
+      "side": "right",
+      "manualMm": [
+        0.0001260814315173775,
+        51.39480284913134,
+        2.833354055262305
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          45.74718208838728,
+          3.57720356637216
+        ],
+        "errorMm": 5.6963964370698665,
+        "confidence": 72
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.1989830163373303
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9446,
+      "side": "left",
+      "manualMm": [
+        0.00005786932888440788,
+        5.13249405184979,
+        6.553544270829548
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          6.784236501489584,
+          3.095025781943745
+        ],
+        "errorMm": 3.83270182263842,
+        "confidence": 70
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          5.000000000000035,
+          2.9999999999999982
+        ],
+        "errorMm": 3.556013436682986,
+        "confidence": 70,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 3.134905885611083
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9446,
+      "side": "right",
+      "manualMm": [
+        -0.000058011210057884455,
+        50.17510311290607,
+        1.0252601865232691
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          47.71701381569022,
+          -3.892470419329928
+        ],
+        "errorMm": 5.497842968673957,
+        "confidence": 66
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          46.99999999999997,
+          0.9999999999999983
+        ],
+        "errorMm": 3.175203593153437,
+        "confidence": 66,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.7735068338360405
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9447,
+      "side": "left",
+      "manualMm": [
+        0.22187877766555175,
+        -63.004859202010266,
+        6.472088824779121
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -59.814705605975114,
+          3.335338955517031
+        ],
+        "errorMm": 4.479454196728672,
+        "confidence": 64
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -60.999999999999986,
+          3.9999999999999982
+        ],
+        "errorMm": 3.1905977135109787,
+        "confidence": 64,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.16890966517363
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9447,
+      "side": "right",
+      "manualMm": [
+        -0.22187788999872282,
+        -41.88058193165034,
+        7.770332883808351
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -47.58522848575938,
+          6.109664172397287
+        ],
+        "errorMm": 5.945590187225998,
+        "confidence": 68
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -43.000000000000036,
+          5.999999999999998
+        ],
+        "errorMm": 2.1062775527720112,
+        "confidence": 68,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.184913774917638
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9448,
+      "side": "left",
+      "manualMm": [
+        -0.00007379094313364476,
+        3.2814891355883447,
+        13.197525445292513
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          4.902208104637001,
+          4.420375909902334
+        ],
+        "errorMm": 8.925529897360674,
+        "confidence": 67
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.0000000000000346,
+          1.9999999999999982
+        ],
+        "errorMm": 11.427588056069661,
+        "confidence": 67,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 2.4635507660093054
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9448,
+      "side": "right",
+      "manualMm": [
+        0.00007375092536676675,
+        48.279731734965026,
+        3.987595588093029
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          45.96047010005628,
+          -3.1661935992101817
+        ],
+        "errorMm": 7.5203506748671725,
+        "confidence": 67
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.1226910047548622
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9449,
+      "side": "left",
+      "manualMm": [
+        0.000050416929298080504,
+        1.8435963665979216,
+        10.64902963663883
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          0.47695905119685,
+          4.906911572450693
+        ],
+        "errorMm": 5.902509416973786,
+        "confidence": 61
+      },
+      "current": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          1.0000000000000346,
+          5.999999999999998
+        ],
+        "errorMm": 4.724947766338291,
+        "confidence": 61,
+        "reasons": [],
+        "source": "lidar-template-supported",
+        "templateLossRatio": 4.621060790953044
+      }
+    },
+    {
+      "part": 11,
+      "cut": 9449,
+      "side": "right",
+      "manualMm": [
+        -0.00005055881047155708,
+        50.95914344281027,
+        2.8115346987576117
+      ],
+      "baseline": {
+        "status": "candidate",
+        "deltaMm": [
+          0,
+          -20.227514180351584,
+          -4.274855633558694
+        ],
+        "errorMm": 71.53850118294183,
+        "confidence": 66
+      },
+      "current": {
+        "status": "unresolved",
+        "deltaMm": null,
+        "errorMm": null,
+        "confidence": 0,
+        "reasons": [
+          "Plusieurs placements concurrents du champignon sont géométriquement plausibles."
+        ],
+        "source": "no-estimate",
+        "templateLossRatio": 1.4969023759065943
+      }
+    }
+  ]
+}

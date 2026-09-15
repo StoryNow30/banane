@@ -1,0 +1,366 @@
+/* Real ESV page adapter. Selectors originate in Banane V2–V2.4.2 sources.
+ * No server URL/payload is invented. Canvas clicks and navigation require readback.
+ */
+(()=>{'use strict';if(window.__BANANE_V3_PAGE)return;
+ const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
+ /* Réglages du pilote : source unique dans src/settings.js. Repli sur les
+  * anciennes valeurs codées en dur si le module n'est pas chargé, pour ne
+  * jamais empêcher l'adaptateur de fonctionner. */
+ const P=window.BananeSettings?.pilote||{tentativesParVue:3,stabiliteMs:800,budgetCaptureMs:60000,
+   sondageMs:80,lecturesStables:3,attenteMs:12000,attenteNavigationMs:15000,attenteClicMs:5000};
+ const pageId=K.uid(),objects=new WeakMap(),frames=new WeakMap(),nativeFrames=new WeakMap(),nativeViews=new WeakMap();let frame=null,cancelled=false;
+ const selectors={label:'O2N3DCutDescription',shape:'O2N3DCutShapeInfo',left:'O2N3DCutLRClick',right:'O2N3DCutRRClick',validate:'O2N3DCutValidate3DRail',next:'O2N3DCutNextInvalid3DRail'};
+ const objectId=o=>{if(!objects.has(o))objects.set(o,K.uid());return objects.get(o);};
+ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ function cutLabel(){const text=document.getElementById(selectors.label)?.textContent||'',match=/Cut\s+(\d+)\s+of\s+part\s+(\d+)/i.exec(text);
+   if(!match)return null;return {pageId,part:Number(match[2]),cut:Number(match[1])};}
+ function commandInfo(id){const el=document.getElementById(id);return {id,exists:!!el,tag:el?.tagName||null,disabled:!!el?.disabled,
+   title:(el?.title||'').slice(0,180),text:(el?.textContent||'').trim().slice(0,180)};}
+ /* MÉMOÏSATION DE L'IDENTIFICATION DES RAILS.
+  *
+  * `context()` reparcourt la scène et calcule, pour CHAQUE rail, la moyenne des
+  * ordonnées de tous les sommets du contour — 625 sommets par rail sur le
+  * terrain — uniquement pour décider quel objet est à gauche et lequel à droite.
+  *
+  * Or `context()` est appelé par `snapshot()`, lui-même appelé par
+  * `assertExpected()`, lui-même appelé par `guard()` — qui s'exécute à CHAQUE
+  * itération de `waitFor`, donc toutes les 80 ms pendant toute la capture.
+  * Mesure terrain : la capture représente 85 % du temps du pilote (6,95 s sur
+  * 8,16 s par cut), dont 2,4 s d'attente AVANT la première lecture. Ce recalcul
+  * consomme le temps processeur dont ESV a besoin pour stabiliser son niveau de
+  * détail — c'est-à-dire précisément ce qu'on attend.
+  *
+  * Le résultat ne change pas tant que le cut, le profil, la racine et sa
+  * matrice sont les mêmes. On le conserve, et on revérifie ces quatre choses à
+  * chaque appel — elles coûtent une regex et une comparaison de 16 nombres.
+  * Les POSES des rails, elles, restent relues à neuf : `railState()` lit les
+  * matrices monde à chaque fois, donc un rail déplacé est vu immédiatement. */
+ const contextes=new WeakMap();
+ function context(){
+   if(window.__BANANE_V24||window.__BANANE_V23||window.__BANANE_V231||window.__BANANE_V2_LOADED__||window.__BANANE_V21_LOADED__||window.__BANANE_V22_LOADED__)throw Error('Une ancienne Banane est active. Désactive-la puis recharge ESV après sauvegarde.');
+   const viewer=window.viewer,root=viewer?.scene?.scene;if(!root)throw Error('Ouvre une coupe dans ESV 3D.');
+   const text=document.getElementById(selectors.label)?.textContent||'',m=/Cut\s+(\d+)\s+of\s+part\s+(\d+)/i.exec(text);
+   if(!m)throw Error('Identité de cut introuvable.');
+   const shape=document.getElementById(selectors.shape)?.textContent?.trim();if(!shape)throw Error('Profil introuvable.');
+   const garde=contextes.get(root);
+   const matriceRacine=C.worldMatrix(root);
+   if(garde&&garde.part===Number(m[2])&&garde.cut===Number(m[1])&&garde.shape===shape&&
+      garde.enfants===(root.children?.length||0)&&
+      garde.rootMatrix.every((v,i)=>Math.abs(v-matriceRacine[i])<=1e-9)&&
+      ['left','right'].every(s=>garde.pair[s]&&garde.pair[s].object.parent===root))
+     return {viewer,root,pair:garde.pair,frame:garde.frame,
+       identity:{pageId,part:garde.part,cut:garde.cut,shape,frameId:garde.frame.id,projectId:null}};
+   const candidates=[];
+   for(const o of root.children||[]){if(o.type!=='Object3D')continue;
+     const profile=o.children?.find(p=>p.children?.some(c=>c.type==='Line'));
+     if(!profile||!o.children?.some(c=>c.type==='Mesh'))continue;
+     const lines=profile.children.filter(c=>c.type==='Line'&&c.geometry?.attributes?.position);
+     const line=lines.sort((a,b)=>b.geometry.attributes.position.count-a.geometry.attributes.position.count)[0];
+     if(!line)continue;const reader=C.attribute(line.geometry.attributes.position),inv=C.inverse(C.worldMatrix(profile)),world=C.worldMatrix(line),ys=[];
+     for(let i=0;i<reader.count;i++)ys.push(C.point(inv,C.point(world,reader.point(i)))[1]);
+     const centre=ys.reduce((a,b)=>a+b,0)/ys.length;
+     if(Math.abs(centre)<.005)throw Error('Correspondance G/D du profil ambiguë.');
+     candidates.push({object:o,profile,side:centre>0?'left':'right',objectId:objectId(o),profileId:objectId(profile)});
+   }
+   if(shape!=='U50')throw Error('Profil non testé : '+shape+'. Capture automatique limitée au U50 observé.');
+   if(candidates.length!==2||new Set(candidates.map(r=>r.side)).size!==2)throw Error('Les deux rails ne sont pas identifiables sans ambiguïté.');
+   const rootMatrix=matriceRacine;frame=frames.get(root);
+   if(!frame||rootMatrix.some((v,i)=>Math.abs(v-frame.rootMatrix[i])>1e-9)){
+     frame={id:K.uid(),origin:C.point(C.worldMatrix(candidates.find(r=>r.side==='left').object),[0,0,0]),rootMatrix};frames.set(root,frame);}
+   const pair=Object.fromEntries(candidates.map(r=>[r.side,r]));
+   contextes.set(root,{part:Number(m[2]),cut:Number(m[1]),shape,pair,frame,rootMatrix,enfants:root.children?.length||0});
+   return {viewer,root,pair,frame,identity:{pageId,part:Number(m[2]),cut:Number(m[1]),shape,frameId:frame.id,projectId:null}};
+ }
+ function railState(r){return {object:r.object,profile:r.profile,railMatrix:C.worldMatrix(r.object),profileMatrix:C.worldMatrix(r.profile),rotation:C.rotation(r.object),profileRotation:C.rotation(r.profile)};}
+ function sameRailPose(a,b,tolerance=1e-7){return ['railLocalToSceneRelative','profileLocalToSceneRelative'].every(name=>
+   Array.isArray(a?.[name])&&Array.isArray(b?.[name])&&a[name].length===16&&b[name].length===16&&a[name].every((value,index)=>Number.isFinite(value)&&Number.isFinite(b[name][index])&&Math.abs(value-b[name][index])<=tolerance));}
+ function snapshot(){const c=context();return {identity:K.completeIdentity(c.identity),capturedAt:new Date().toISOString(),
+   geominfo:{status:'not-observed',raw:null,source:null},
+   mapping:Object.fromEntries(['left','right'].map(s=>[s,{objectId:c.pair[s].objectId,profileId:c.pair[s].profileId,method:'observed-U50-mirrored-contour'}])),
+   rails:Object.fromEntries(['left','right'].map(s=>[s,C.serialRail(railState(c.pair[s]),c.frame.origin)]))};}
+ function nativeContext(){const partialReasons=[],label=cutLabel(),shape=document.getElementById(selectors.shape)?.textContent?.trim()||null;
+   if(!label)partialReasons.push('cut-identity-not-observed');if(!shape)partialReasons.push('shape-not-observed');
+   const viewer=window.viewer,root=viewer?.scene?.scene;if(!root)return {viewer:null,root:null,pair:{},frame:null,label,shape,partialReasons:[...partialReasons,'scene-not-ready']};
+   const candidates=[];
+   for(const o of root.children||[]){try{if(o.type!=='Object3D')continue;
+     const profile=o.children?.find(p=>p.children?.some(c=>c.type==='Line'));if(!profile||!o.children?.some(c=>c.type==='Mesh'))continue;
+     const lines=profile.children.filter(c=>c.type==='Line'&&c.geometry?.attributes?.position);
+     const line=lines.sort((a,b)=>b.geometry.attributes.position.count-a.geometry.attributes.position.count)[0];if(!line)continue;
+     const reader=C.attribute(line.geometry.attributes.position),inv=C.inverse(C.worldMatrix(profile)),world=C.worldMatrix(line),ys=[];
+     for(let i=0;i<reader.count;i++)ys.push(C.point(inv,C.point(world,reader.point(i)))[1]);
+     const centre=ys.reduce((a,b)=>a+b,0)/ys.length;if(Math.abs(centre)<.005){partialReasons.push('rail-side-ambiguous');continue;}
+     candidates.push({object:o,profile,side:centre>0?'left':'right',objectId:objectId(o),profileId:objectId(profile)});
+   }catch(e){partialReasons.push('rail-object-unreadable:'+e.message);}}
+   const pair={};for(const candidate of candidates){if(pair[candidate.side])partialReasons.push('duplicate-'+candidate.side+'-rail');else pair[candidate.side]=candidate;}
+   for(const side of ['left','right'])if(!pair[side])partialReasons.push('rail-'+side+'-not-observed');
+   const rootMatrix=C.worldMatrix(root);let nativeFrame=nativeFrames.get(root);
+   if(!nativeFrame||rootMatrix.some((v,i)=>Math.abs(v-nativeFrame.rootMatrix[i])>1e-9)){
+     nativeFrame={id:K.uid(),origin:C.point(rootMatrix,[0,0,0]),rootMatrix};nativeFrames.set(root,nativeFrame);}
+   return {viewer,root,pair,frame:nativeFrame,label,shape,partialReasons};
+ }
+ function nativeViewObservation(c){if(!c.viewer||!c.frame||!c.root)return {status:'not-observed',viewEpochId:null,observedAt:new Date().toISOString(),loadedNodeCount:null};
+   try{const inventory=L.inventory(c.viewer),camera=L.cameraSnapshot(c.viewer,c.frame.origin),tokens=inventory.nodes.map(node=>[
+      objectId(node.obj),objectId(node.geometry),objectId(node.position),node.position.array||node.position.data?.array?objectId(node.position.array||node.position.data?.array):null,node.attribute.count,node.position.version??null,
+      node.position.data?.version??null,node.world,node.drawRange?.start??0,node.drawRange?.count??null]);
+     const signature=JSON.stringify([camera?.cameraToSceneRelative||null,tokens]),previous=nativeViews.get(c.root);
+     const view=previous?.signature===signature?previous:{signature,viewEpochId:K.uid()};nativeViews.set(c.root,view);
+     return {status:'observed',viewEpochId:view.viewEpochId,observedAt:new Date().toISOString(),loadedNodeCount:inventory.nodes.length,
+       unsupportedNodeCount:inventory.clouds.reduce((sum,cloud)=>sum+(cloud.unsupportedNodes?.length||0),0),camera:camera?{type:camera.type,cameraToSceneRelative:camera.cameraToSceneRelative,viewport:camera.viewport}:null};
+   }catch(error){return {status:'unavailable',viewEpochId:null,observedAt:new Date().toISOString(),loadedNodeCount:null,reason:error.message};}}
+ function nativeSnapshot(){const c=nativeContext(),identity=K.completeIdentity({pageId,part:c.label?.part??null,cut:c.label?.cut??null,
+    shape:c.shape,frameId:c.frame?.id??null,projectId:null}),rails={left:null,right:null},mapping={left:null,right:null};
+   for(const side of ['left','right'])if(c.pair[side]&&c.frame){try{rails[side]=C.serialRail(railState(c.pair[side]),c.frame.origin);
+     mapping[side]={objectId:c.pair[side].objectId,profileId:c.pair[side].profileId,method:'passive-observed-contour-side'};
+   }catch(e){c.partialReasons.push('rail-'+side+'-state-unreadable:'+e.message);}}
+   const viewObservation=nativeViewObservation(c);if(viewObservation.status!=='observed')c.partialReasons.push('loaded-view-'+viewObservation.status);
+   return {identity,capturedAt:new Date().toISOString(),status:c.partialReasons.length?'partial':'complete',partialReasons:[...new Set(c.partialReasons)],
+     geominfo:{status:'not-observed',raw:null,source:null},mapping,rails,viewObservation};
+ }
+ async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
+   const c=nativeContext(),railInputs={},associationByRail={};
+   for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
+     railInputs[side]=railState(c.pair[side]);associationByRail[side]='same-target-and-rail-pose';}
+   const guard=()=>{if(!isActive()){const error=Error('passive-lidar-read-cancelled');error.code='COLLECTOR_STOPPED';throw error;}
+     const now=nativeSnapshot();try{K.assertTarget(expected.identity,now.identity);}catch(error){error.code='TARGET_CHANGED';throw error;}
+     for(const side of Object.keys(railInputs))if(!now.rails[side]||!sameRailPose(now.rails[side],expected.rails[side])){const error=Error('rail-state-changed-during-passive-lidar-read:'+side);error.code='RAIL_STATE_CHANGED';throw error;}
+     // A newly loaded Potree node changes the inventory epoch without
+     // invalidating an already copied point. The sampler checks the exact
+     // buffer references, versions, node matrices and clipping per segment.
+     // A camera move still terminates the current acquisition safely.
+     const previousCamera=expected.viewObservation?.camera?.cameraToSceneRelative,currentCamera=now.viewObservation?.camera?.cameraToSceneRelative;
+     const cameraChanged=Array.isArray(previousCamera)&&Array.isArray(currentCamera)?
+      previousCamera.some((value,index)=>Math.abs(value-currentCamera[index])>1e-7):
+      expected.viewObservation?.viewEpochId&&now.viewObservation?.viewEpochId!==expected.viewObservation.viewEpochId;
+     if(cameraChanged){const error=Error('camera-changed-during-passive-lidar-read');error.code='VIEW_CHANGED';throw error;}};
+   const pause=()=>new Promise(resolve=>typeof requestIdleCallback==='function'?requestIdleCallback(()=>resolve(),{timeout:16}):setTimeout(resolve,0));
+   const data=await N.capture({viewer:c.viewer,rails:railInputs,associationByRail,origin:c.frame?.origin||[0,0,0],enums:window.Potree||{},guard,pause,
+     captureId:request.captureId||K.uid(),visitId:request.visitId||null,viewObservation:expected.viewObservation||initial.viewObservation,onCheckpoint:request.onCheckpoint,
+     maxNodes:512,maxPointsPerRail:50000,maxInspected:500000,maxMillis:1800,yieldEvery:2048,probeCount:33,checkpointPoints:2048,
+     meta:{version:K.VERSION,sessionId:pageId,identity:expected.identity,part:expected.identity.part,cut:expected.identity.cut,shape:expected.identity.shape,
+       coordinateBridge:{sceneFrameId:expected.identity.frameId,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
+   data.readStrategy={mode:'passive-prioritized-loaded-view',cameraChangedByBanane:false,railSelectionChangedByBanane:false,navigationChangedByBanane:false,
+     maximumPointsPerRail:50000,maximumInspected:500000,maximumMillis:1800,maximumLoadedNodes:512,yieldEvery:2048,progressiveCheckpointPoints:2048};
+   return data;
+ }
+ async function waitFor(check,message,timeout=P.attenteMs,guard=()=>{}){const start=Date.now();let last;
+   while(Date.now()-start<timeout){if(cancelled)throw Error('Action interrompue.');guard();try{const value=check();if(value)return value;}catch(e){last=e;}
+     await sleep(P.sondageMs);}throw Error(message+(last?' '+last.message:''));}
+ function assertExpected(expected){const now=snapshot();K.assertTarget(expected.identity||expected,now.identity);return now;}
+ function nativeClick(id){const button=document.getElementById(id);if(!button||button.disabled)throw Error('Commande ESV indisponible : '+id);button.click();}
+ function nativeDecision(operatorDecision){
+   if(operatorDecision==='VALIDATE'){nativeClick(selectors.validate);return {commandSent:true,command:'VALIDATE'};}
+   if(operatorDecision!=='SKIP')throw Error('Décision opérateur inconnue.');
+   // No SKIP button or server endpoint has been observed. Relay the documented
+   // ESV shortcut to its own keyboard handler; never substitute Next Invalid.
+   const init={key:'Backspace',code:'Backspace',shiftKey:true,ctrlKey:false,metaKey:false,altKey:false,bubbles:true,cancelable:true,composed:true};
+   document.dispatchEvent(new KeyboardEvent('keydown',init));
+   document.dispatchEvent(new KeyboardEvent('keyup',init));
+   return {commandSent:true,command:'SKIP'};
+ }
+ async function captureOnce(expected,guard){guard();const c=context();
+   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,
+     meta:{version:K.VERSION,captureId:K.uid(),sessionId:pageId,visitId:`${c.frame.id}:${c.identity.part}:${c.identity.cut}`,
+       identity:c.identity,part:c.identity.part,cut:c.identity.cut,shape:c.identity.shape,railStateProvenance:'observed-before',
+       coordinateBridge:{sceneFrameId:c.frame.id,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
+   guard();return data;}
+ /* SIGNATURE DU NIVEAU DE DÉTAIL CHARGÉ.
+  *
+  * Appelée à chaque itération de `waitFor`, donc toutes les 80 ms pendant toute
+  * l'attente de stabilisation — 2,4 s par rail en médiane sur le terrain.
+  *
+  * L'ancienne version sérialisait DEUX fois : un `JSON.stringify` par nœud
+  * (jusqu'à 512), puis un tri de ces chaînes, puis un second `JSON.stringify`
+  * de l'ensemble. On n'a besoin que de savoir si quelque chose a changé : une
+  * empreinte numérique commutative suffit, elle ne demande ni tri ni chaînes
+  * intermédiaires, et elle se compare en un test d'égalité.
+  *
+  * Commutative et donc insensible à l'ordre des nœuds, comme l'était le tri
+  * qu'elle remplace. La valeur reste une chaîne pour que l'appelant, inchangé,
+  * continue de comparer par `!==`. */
+ /* Déléguée à `src/lod-signature.js` : une fonction dont une collision coûterait
+  * la lecture d'un nuage incomplet doit pouvoir s'auditer et se tester seule.
+  * Voir ce fichier pour le raisonnement et tests/lod-signature.test.cjs pour les
+  * sept propriétés de discrimination vérifiées. */
+ const SIG=window.BananeLodSignature;
+ function loadedSignature(){
+   const id=o=>o&&typeof o==='object'?objectId(o):'';
+   return SIG.signature(L.inventory(context().viewer),id);
+ }
+ async function capture(expected,progress=()=>{}){cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
+   const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs;
+   const guard=()=>{if(cancelled)throw Error('Export interrompu.');const now=assertExpected(expected);
+     if(!K.equalPoses(now.rails,expected.rails))throw Error('Rails modifiés pendant la lecture.');
+     if(Date.now()-startedAt>=budgetMs)throw Error('Lecture LiDAR instable : délai total de 60 secondes atteint.');};
+   for(const side of ['left','right']){
+     guard();await select(side,expected,guard);
+     for(let attempt=1;attempt<=maxAttemptsPerView;attempt++){
+       const began=Date.now();guard();progress('capture-wait',{side,attempt,maxAttemptsPerView});
+       try{
+         let previous=null,unchangedSince=Date.now();
+         await waitFor(()=>{const signature=loadedSignature();
+           if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
+           return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
+         },'Niveau de détail non stabilisé.',12000,guard);
+         guard();progress('capture-read',{side,attempt});
+         const data=await captureOnce(expected,guard);guard();
+         attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began});captures.push(data);
+         progress('capture-view-ready',{side,attempt,points:data.pointsSceneRelative.length});break;
+       }catch(e){
+         // Never retain points from a failed attempt or retry after a moved rail,
+         // a different cut, Stop, or an exhausted overall budget.
+         guard();if(!K.transientCaptureError(e))throw e;
+         attempts.push({side,attempt,status:'discarded',message:e.message,durationMs:Date.now()-began});
+         progress('capture-retry',{side,attempt,maxAttemptsPerView,message:e.message});
+         if(attempt===maxAttemptsPerView)throw Error(`Lecture LiDAR instable : rail ${side==='left'?'gauche':'droit'} après ${attempt} tentatives. ${e.message}`);
+       }
+     }
+   }
+   guard();const data=window.BananeMerge3.merge(...captures);guard();
+   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
+   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length});return data;
+ }
+ async function select(side,expected,guard=()=>assertExpected(expected)){guard();nativeClick(selectors[side]);
+   // Wait for a stable camera, rather than treating a dispatched click as success.
+   let previous=null,stable=0;
+   await waitFor(()=>{assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+     if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;return stable>=P.lecturesStables;},'Caméra ESV non stabilisée.',P.attenteMs,guard);}
+ async function clickPosition(side,target,expected){
+   await select(side,expected);assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   const m=C.multiply(cam.projection,cam.sceneRelativeToCamera),ndc=C.point(m,target),r=cam.viewport;
+   if(!r||ndc.some(v=>v < -1||v>1))throw Error('Position proposée hors de la vue : '+side);
+   c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
+     clientX:r.left+(ndc[0]+1)*r.width/2,clientY:r.top+(1-ndc[1])*r.height/2,button:0,buttons:1}));
+   return waitFor(()=>{const now=assertExpected(expected);return C.distance(now.rails[side].positionSceneRelative,target)<=.001?now:false;},
+     'Le clic n’a pas produit le déplacement demandé pour '+side+'. État à réconcilier.',P.attenteClicMs);
+ }
+ async function apply(before,proposals){cancelled=false;const now=assertExpected(before);
+   if(!K.equalPoses(now.rails,before.rails))throw Error('Rails modifiés avant l’application.');
+   const expected=K.expectedPoses(before,proposals);
+   for(const s of ['left','right']){if(cancelled)throw Error('Action interrompue.');await clickPosition(s,expected[s].positionSceneRelative,before.identity);}
+   return snapshot();}
+ async function restore(before){cancelled=false;assertExpected(before);
+   for(const s of ['left','right'])await clickPosition(s,before.rails[s].positionSceneRelative,before.identity);return snapshot();}
+ async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
+   const target=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},'Aucun changement de cut après navigation.');
+   return waitFor(()=>{const now=snapshot();return K.key(now.identity)===K.key(target)?now:false;},'Le cut suivant est affiché, mais ses rails ne sont pas encore disponibles.');}
+ async function decisionAndNext(identity,operatorDecision,scope={},progress=()=>{}){
+   cancelled=false;const beforeCommand=assertExpected(identity),startedAt=new Date().toISOString();
+   const command=operatorDecision==='VALIDATE'?commandInfo(selectors.validate):{id:'Shift+Backspace',exists:true,disabled:false};
+   progress('decision-before-command',{identity:beforeCommand.identity,operatorDecision,command});
+   /* RELECTURE IMMÉDIATE APRÈS LA COMMANDE.
+    *
+    * Le bouton de validation d'ESV valide ET navigue. `src/engine.js`, gelé,
+    * ARRÊTE le lot quand la relecture sur la même identité échoue (ligne 171
+    * puis 257). Terrain du 15/09 : 12 lots arrêtés sur 12, ici même.
+    *
+    * HONNÊTETÉ SUR CE CHANGEMENT : rapprocher la relecture du clic ne corrige
+    * PAS le défaut observé. Ni la construction de l'objet ni `progress(...)`
+    * ne rendent la main à la boucle d'événements — il n'y avait donc aucun
+    * yield à supprimer entre les deux. Si ESV change son libellé de façon
+    * synchrone dans le gestionnaire de clic, ce qui est ce que montrent les
+    * journaux, la relecture échouait avant et échoue encore.
+    *
+    * Le changement est conservé parce qu'il est gratuit et strictement meilleur
+    * dans le cas où le gestionnaire d'ESV serait asynchrone, et parce qu'il
+    * rend la séquence lisible. Il ne doit pas être présenté comme un correctif.
+    * Le vrai défaut est architectural et décrit dans AUDIT_PILOTE.md. */
+   const sent=nativeDecision(operatorDecision);
+   let apres=null,apresErreur=null;
+   try{const vu=snapshot();K.assertTarget(identity,vu.identity);apres=vu;}catch(e){apresErreur=e;}
+   const evidence={trigger:operatorDecision==='VALIDATE'?'observed-legacy-validation-button':'relayed-native-skip-shortcut',startedAt,
+     operatorDecision,commandSent:sent.commandSent===true,afterObserved:false,serverConfirmed:false,navigationObserved:false,
+     afterStateStatus:'PENDING',beforeNavigationIdentity:K.completeIdentity(beforeCommand.identity),afterState:null,nextIdentity:null,nextReady:null};
+   progress('decision-command-returned',{operatorDecision,label:cutLabel()});
+   try{
+     if(apresErreur)throw apresErreur;
+     const after=apres;evidence.afterObserved=true;evidence.afterState=after;evidence.afterStateStatus='OBSERVED_SAME_TARGET';
+     progress('decision-after-observed',{identity:after.identity});
+   }catch(e){
+     const label=cutLabel();
+     if(label&&K.key(label)!==K.key(identity))evidence.afterStateStatus='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';
+     else throw e;
+   }
+   const changed=cutLabel();
+   const nextLabel=changed&&K.key(changed)!==K.key(identity)?changed:await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},
+     `${operatorDecision} transmis, résultat non confirmé : le cut n’a pas changé.`,P.attenteNavigationMs);
+   evidence.navigationObserved=true;evidence.navigationAfter={label:nextLabel,observedAt:new Date().toISOString()};
+   progress('navigation-observed',{nextIdentity:nextLabel});
+   if(identity.cut<(scope.end??Infinity)&&nextLabel.part===(scope.part??nextLabel.part)&&nextLabel.cut<=(scope.end??Infinity)){
+     try{const ready=await waitFor(()=>{const n=snapshot();return K.key(n.identity)===K.key(nextLabel)?n:false;},'Le cut suivant est affiché mais ses rails ne sont pas prêts.',12000);
+       evidence.nextReady=true;evidence.nextIdentity=K.completeIdentity(ready.identity);}
+     catch(e){evidence.nextReady=false;evidence.nextIdentity=K.completeIdentity(nextLabel);progress('next-geometry-unavailable',{message:e.message,nextIdentity:nextLabel});}
+   }else evidence.nextIdentity=K.completeIdentity(nextLabel);
+   evidence.meaning=evidence.afterObserved?'État après commande relu sur la même identité ; navigation observée ; confirmation serveur indisponible.':'Navigation observée avant relecture de l’état après ; confirmation serveur indisponible.';
+   return evidence;
+ }
+ const validateAndNext=(identity,scope,progress)=>decisionAndNext(identity,'VALIDATE',scope,progress);
+ const skipAndNext=(identity,scope,progress)=>decisionAndNext(identity,'SKIP',scope,progress);
+ let manual=null,manualChannel=null,manualBanner=null;const manualRequests=new Map(),manualListeners=[];
+ function manualMessage(type,payload){const requestId=K.uid();return new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{manualRequests.delete(requestId);reject(Error('Enregistrement sans accusé de réception. Aucune commande ESV n’est relancée.'));},10000);
+   manualRequests.set(requestId,{resolve,reject,timer,channel:manualChannel});
+   window.postMessage({kind:'banane4:manual-event',channel:manualChannel,requestId,type,payload},location.origin);
+ });}
+ window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:manual-ack')return;
+   const pending=manualRequests.get(e.data.requestId);if(!pending||pending.channel!==e.data.channel)return;
+   manualRequests.delete(e.data.requestId);clearTimeout(pending.timer);if(e.data.error)pending.reject(Error(e.data.error));else pending.resolve(e.data.result);
+ });
+ async function manualStart(options){
+   if(manual?.active)throw Error('Une session de corrections est déjà active dans ESV.');
+   manualChannel=options.channel;cancelled=false;
+   manual=new window.BananeManualPage4.Collector({state:snapshot,label:cutLabel,capture,
+     settle:async label=>{let previous=null,stable=0;return waitFor(()=>{
+       const now=snapshot();if(K.key(now.identity)!==K.key(label))return false;
+       const signature=JSON.stringify([now.mapping,now.rails]);stable=signature===previous?stable+1:0;previous=signature;return stable>=P.lecturesStables?now:false;
+     },'Les rails du cut ne sont pas prêts.',12000,()=>{const now=cutLabel();if(!now||K.key(now)!==K.key(label))throw Error('Le cut a changé pendant sa préparation.');});},
+     left:before=>select('left',before),nativeDecision,cancel:async()=>{cancelled=true;},
+     send:manualMessage,now:()=>Date.now(),interval:(fn,ms)=>setInterval(fn,ms),clearInterval:id=>clearInterval(id),
+     install:handler=>{const relay=e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:operator-input'||e.data.channel!==manualChannel)return;
+       handler({...e.data.input,target:{kind:e.data.input.targetKind},preventDefault(){},stopImmediatePropagation(){}});};
+       window.addEventListener('message',relay);manualListeners.push(['message',relay]);},
+     uninstall:()=>{for(const [type,handler] of manualListeners.splice(0))window.removeEventListener(type,handler,true);},
+     editable:el=>!!el?.closest?.('input,textarea,select,[contenteditable="true"]'),
+     isValidation:el=>el?.kind==='validation',isCanvas:el=>el?.kind==='canvas',
+     paint:message=>{if(!manualBanner){manualBanner=document.createElement('div');
+       manualBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#18191b;color:#f4db72;border:1px solid #625a34;border-radius:8px;font:14px Arial;pointer-events:none';
+       manualBanner.setAttribute('role','status');document.documentElement.append(manualBanner);}
+       manualBanner.textContent=message;
+       window.postMessage({kind:'banane4:manual-phase',channel:manualChannel,phase:manual?.phase||'PREPARING'},location.origin);}
+   });return manual.start(options);
+ }
+ let native=null,nativeChannel=null,nativeFailureBanner=null;const nativeRequests=new Map(),nativeListeners=[];
+ function nativeMessage(type,payload){const requestId=K.uid();return new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{nativeRequests.delete(requestId);reject(Error('Sauvegarde Natif sans accusé de réception.'));},10000);
+   nativeRequests.set(requestId,{resolve,reject,timer,channel:nativeChannel});
+   window.postMessage({kind:'banane4:native-event',channel:nativeChannel,requestId,type,payload},location.origin);
+ });}
+ window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:native-ack')return;
+   const pending=nativeRequests.get(e.data.requestId);if(!pending||pending.channel!==e.data.channel)return;
+   nativeRequests.delete(e.data.requestId);clearTimeout(pending.timer);if(e.data.error)pending.reject(Error(e.data.error));else pending.resolve(e.data.result);
+ });
+ function nativeApi(){return {snapshot:nativeSnapshot,capture:nativeCapture,send:nativeMessage,now:()=>Date.now(),performanceNow:()=>typeof performance!=='undefined'&&performance.now?performance.now():Date.now(),
+   interval:(fn,ms)=>setInterval(fn,ms),clearInterval:id=>clearInterval(id),defer:fn=>setTimeout(fn,0),
+   install:handler=>{const relay=e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:native-input'||e.data.channel!==nativeChannel)return;
+     const input=e.data.input;handler({...input,target:{kind:input.targetKind}});};window.addEventListener('message',relay);nativeListeners.push(['message',relay,false]);},
+   uninstall:()=>{for(const [type,handler,options] of nativeListeners.splice(0))window.removeEventListener(type,handler,options);},
+   editable:el=>el?.kind==='input'||!!el?.closest?.('input,textarea,select,[contenteditable="true"]'),
+   targetKind:el=>el?.kind|| (el?.closest?.('#O2N3DCutValidate3DRail')?'validation':el?.closest?.('canvas')?'canvas':el?.closest?.('button,a')?'control':'other'),
+   signalFailure:message=>{if(nativeFailureBanner)return;nativeFailureBanner=document.createElement('div');nativeFailureBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#381f23;color:#ffd7dc;border:1px solid #8b5058;border-radius:8px;font:14px Arial;pointer-events:none';
+     nativeFailureBanner.setAttribute('role','alert');nativeFailureBanner.textContent=message;document.documentElement.append(nativeFailureBanner);}};}
+ async function nativeStart(options){if(native?.active)throw Error('Le mode Natif est déjà actif dans ESV.');nativeChannel=options.channel;
+   native=native||new window.BananeNativePage4.Observer(nativeApi());return native.start(options);}
+ async function nativeResume(options){nativeChannel=options.channel;native=native||new window.BananeNativePage4.Observer(nativeApi());return native.resume(options);}
+ const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,validateAndNext,skipAndNext,
+   manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
+   manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
+   nativeResume,nativeFinish:async()=>native?native.finish():{active:false},cancel:async()=>{cancelled=true;return {cancelRequested:true};}};
+ window.__BANANE_V3_PAGE={version:K.VERSION};
+ // The isolated content script supplies a fresh per-document channel. It is a
+ // routing nonce, not a claim that a hostile page is a security boundary.
+ window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
+   const {id,channel,action,args=[]}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
+   if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
+   const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
+   try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
+   catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}});
+})();

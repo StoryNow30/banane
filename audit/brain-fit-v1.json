@@ -1,0 +1,175 @@
+{
+ "format": "banane-brain-fit-v1",
+ "builtAt": "2026-09-15T13:06:11.073Z",
+ "unites": "unités de scène — PAS des millimètres : la calibration physique n’est pas attestée",
+ "decoupage": {
+  "developpement": {
+   "part": 20,
+   "rails": 168
+  },
+  "reserve": {
+   "part": 17,
+   "rails": 52
+  },
+  "regle": "blocs = parts entières ; le bloc réservé n’a servi à aucun ajustement ni choix de seuil"
+ },
+ "mesuresDeveloppement": {
+  "n": 127,
+  "residuVerticalMoyen": 0.004553291980516445,
+  "residuVerticalEcart": 0.0035329791683178847,
+  "residuLateralMoyen": -0.0011765485591842405,
+  "residuLateralEcart": 0.01476500360712898,
+  "rapportVertical": 1.28879672468727,
+  "rapportLateral": 0.07968494898410781,
+  "cutsApparies": 84,
+  "diffVerticaleEcart": 0.009670395695672582
+ },
+ "reglagesFiges": {
+  "biaisVertical": 0.004553291980516445,
+  "biaisLateral": 0,
+  "plausibiliteLaterale": 0.050243195083567116,
+  "ecartVerticalMax": 0.014505593543508874,
+  "selectionActive": true
+ },
+ "developpement": {
+  "rails": 168,
+  "proposeAvant": 127,
+  "proposeApres": 141,
+  "selections": 14,
+  "abstentions": 19,
+  "avant": {
+   "n": 127,
+   "p50": 0.00519907717743235,
+   "p90": 0.009663258531068386,
+   "moyenne": 0.007746524169715767
+  },
+  "apres": {
+   "n": 141,
+   "p50": 0.0030591294898763373,
+   "p90": 0.007152604238423452,
+   "moyenne": 0.006885009554977145
+  },
+  "apparies": {
+   "n": 127,
+   "gainMedian": 0.002421642373703314,
+   "gainMoyen": 0.0017342951398126479,
+   "ameliores": 93,
+   "degrades": 34
+  },
+  "nouvelles": [
+   {
+    "cut": "20/488",
+    "side": "left",
+    "erreur": 0.002476773815542821
+   },
+   {
+    "cut": "20/5464",
+    "side": "left",
+    "erreur": 0.005227175259192738
+   },
+   {
+    "cut": "20/1668",
+    "side": "right",
+    "erreur": 0.0066277949879740014
+   },
+   {
+    "cut": "20/5467",
+    "side": "left",
+    "erreur": 0.006592198023659218
+   },
+   {
+    "cut": "20/487",
+    "side": "right",
+    "erreur": 0.007921477004176017
+   },
+   {
+    "cut": "20/5119",
+    "side": "left",
+    "erreur": 0.003982234049691921
+   },
+   {
+    "cut": "20/9039",
+    "side": "left",
+    "erreur": 0.08127665037535454
+   },
+   {
+    "cut": "20/6572",
+    "side": "left",
+    "erreur": 0.0008254493490315032
+   },
+   {
+    "cut": "20/3911",
+    "side": "right",
+    "erreur": 0.0004668673566177282
+   },
+   {
+    "cut": "20/9040",
+    "side": "left",
+    "erreur": 0.002689221745031788
+   },
+   {
+    "cut": "20/5124",
+    "side": "left",
+    "erreur": 0.0006352471574319768
+   },
+   {
+    "cut": "20/9108",
+    "side": "left",
+    "erreur": 0.08415086730488115
+   },
+   {
+    "cut": "20/5116",
+    "side": "left",
+    "erreur": 0.002795489753719765
+   },
+   {
+    "cut": "20/5465",
+    "side": "left",
+    "erreur": 0.0015658142717760494
+   }
+  ]
+ },
+ "reserve": {
+  "rails": 52,
+  "proposeAvant": 46,
+  "proposeApres": 49,
+  "selections": 3,
+  "abstentions": 1,
+  "avant": {
+   "n": 46,
+   "p50": 0.004240345782338272,
+   "p90": 0.006403124237432877,
+   "moyenne": 0.004449509367320162
+  },
+  "apres": {
+   "n": 49,
+   "p50": 0.0027721830910113028,
+   "p90": 0.00523571542167229,
+   "moyenne": 0.002965677074440119
+  },
+  "apparies": {
+   "n": 46,
+   "gainMedian": 0.0018266348563884696,
+   "gainMoyen": 0.0014918941404498509,
+   "ameliores": 32,
+   "degrades": 14
+  },
+  "nouvelles": [
+   {
+    "cut": "17/3176",
+    "side": "right",
+    "erreur": 0.003721439969123857
+   },
+   {
+    "cut": "17/3175",
+    "side": "right",
+    "erreur": 0.0032874840982625073
+   },
+   {
+    "cut": "17/3179",
+    "side": "right",
+    "erreur": 0.0022589521441451076
+   }
+  ]
+ }
+}

@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-09-10T16:53:34.673Z",
+  "corpusVersion": "banane-human-reference-1",
+  "sources": {
+    "auto-v40": {
+      "file": "banane-bilan-v4-1789026759209.json",
+      "sha256": "43d20578640035d4ac687d04bf1f8ad4ab51f0191ca08f10a560c85b38ef8d20"
+    },
+    "auto-v41": {
+      "file": "banane-bilan-v4-1789025658138.json",
+      "sha256": "2b3208461e8329c58df97b9bea62dc99ccc0279b69f3c10611c6711462be9562"
+    },
+    "manual-v40": {
+      "file": "banane-corrections-v4-1789033646631(2).json",
+      "sha256": "d06e4f01b8660ef1eae8158750009b63d4ee32feea8533e7659e85eecd55e3a5"
+    },
+    "manual-v42": {
+      "file": "banane-corrections-v4-1789042324894(1).json",
+      "sha256": "d6c69a8b43ae2c65b3bc3fa05f52586aaf76f7cac9fa2151e1a1b0aeb42a55af"
+    }
+  },
+  "recalculated": {
+    "humanCorrections": 110,
+    "humanCorrectionsV40": 26,
+    "humanCorrectionsV42": 84,
+    "humanLidarClouds": 110,
+    "humanLidarPoints": 1314278,
+    "correctedBoth": 80,
+    "correctedLeftOnly": 13,
+    "correctedRightOnly": 4,
+    "validateNoMovement": 13,
+    "humanSkip": 0,
+    "rawGeominfoExported": 0,
+    "explicitLevelCrossing": 0,
+    "automaticHumanMatchingCuts": 0,
+    "reservedV42Cuts9031to9047": 17,
+    "reservedContinuousTriplets": 15
+  },
+  "assertions": {
+    "humanCorrections": 110,
+    "humanCorrectionsV40": 26,
+    "humanCorrectionsV42": 84,
+    "humanLidarClouds": 110,
+    "humanLidarPoints": 1314278,
+    "correctedBoth": 80,
+    "correctedLeftOnly": 13,
+    "correctedRightOnly": 4,
+    "validateNoMovement": 13,
+    "humanSkip": 0,
+    "rawGeominfoExported": 0,
+    "explicitLevelCrossing": 0,
+    "automaticHumanMatchingCuts": 0,
+    "reservedV42Cuts9031to9047": 17,
+    "reservedContinuousTriplets": 15
+  },
+  "passed": true,
+  "mismatches": []
+}

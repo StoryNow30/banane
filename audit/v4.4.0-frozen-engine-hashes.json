@@ -1,0 +1,6 @@
+{
+  "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+  "src/engine.js": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
+  "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+  "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
+}

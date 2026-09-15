@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.5</title><link rel="stylesheet" href="panel.css"></head>
+<body data-window="home"><main>
+
+<header><p class="brand">BANANE <span>V4.5.7 · TEST</span></p>
+<h1 id="vue-titre">Une tâche, une fenêtre.</h1>
+<p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p></header>
+
+<!-- Navigation interne : une seule fenêtre, jamais une seconde qui s'ouvre
+     par-dessus. L'onglet actif porte aria-current pour le lecteur d'écran. -->
+<nav id="nav" class="nav" aria-label="Vues Banane">
+ <button class="nav-tab" data-view="home">Accueil</button>
+ <button class="nav-tab" data-view="native">Natif</button>
+ <button class="nav-tab" data-view="automatic">Pilote</button>
+ <button class="nav-tab" data-view="assisted">Assisté</button>
+</nav>
+
+<p id="context" class="context"></p>
+<div id="notice" class="status" role="status" aria-live="polite">Prêt.</div>
+
+<!-- ------------------------------------------------------------- accueil -->
+<section class="vue" data-vue="home">
+ <div class="choices">
+  <button class="choice" data-view="native"><span class="choice-title">Mode Natif <span aria-hidden="true">→</span></span><span>Observer ton travail manuel dans ESV sans piloter l’interface. C’est le mode de collecte.</span></button>
+  <button class="choice" data-view="automatic"><span class="choice-title">Pilotage automatique <span aria-hidden="true">→</span></span><span>Lancer et suivre un lot de cuts de test.</span></button>
+  <button class="choice" data-view="assisted"><span class="choice-title">Essai assisté <span aria-hidden="true">→</span></span><span>Une proposition sur le cut affiché, à ta demande.</span></button>
+ </div>
+ <div class="guide"><p>Les données sont conservées quand tu fermes cette fenêtre.</p></div>
+</section>
+
+<!-- ---------------------------------------------------------------- natif -->
+<section class="vue" data-vue="native" hidden>
+ <div class="count"><strong id="native-count">0</strong><span>visites de cuts enregistrées dans cette session</span></div>
+ <p id="native-incomplete" class="warning" hidden></p>
+
+ <section id="native-health" class="health" hidden><h2>Santé de la collecte</h2><div class="health-grid"><div><span class="health-label">Volume conservé</span><strong id="h-bytes">—</strong><span id="h-pending" class="muted"></span></div><div><span class="health-label">Segments écrits</span><strong id="h-seg">0</strong><span id="h-clouds" class="muted"></span></div><div><span class="health-label">Captures</span><strong id="h-cap">—</strong><span id="h-caprate" class="muted"></span></div><div><span class="health-label">File d’envoi</span><strong id="h-queue">—</strong><span id="h-dropped" class="muted"></span></div><div><span class="health-label">Niveau du collecteur</span><strong id="h-level">—</strong><span id="h-peak" class="muted"></span></div><div id="h-aside-box" hidden><span class="health-label">Mis à l’écart</span><strong id="h-aside">0</strong><span class="muted">avec cause</span></div></div><p id="h-note" class="muted"></p></section>
+
+ <button id="native-start" class="primary">Démarrer l’observation</button>
+ <div class="row"><button id="native-pause" class="secondary" hidden>Pause</button><button id="native-resume" class="secondary" hidden>Reprendre</button></div>
+ <button id="native-end" class="primary" hidden>Terminer et télécharger</button>
+ <button id="native-download" class="secondary" hidden>Télécharger à nouveau la session</button>
+
+ <div class="guide"><p>Travaille ensuite normalement dans ESV. Aucun clic Banane n’est nécessaire entre les cuts.</p><p>Ce mode n’envoie aucun déplacement, changement de caméra, choix de rail, VALIDATE, SKIP ou navigation.</p></div>
+
+ <section id="native-quality" class="health" hidden><h2>Qualité de capture</h2><div class="health-grid"><div><span class="health-label">Repères avec instantané qualifié</span><strong id="q-rails">—</strong><span id="q-rails-note" class="muted"></span></div><div><span class="health-label">Instants de capture qualifiés</span><strong id="q-snap">—</strong><span id="q-snap-rate" class="muted"></span></div><div><span class="health-label">Points retirés au clipping</span><strong id="q-clip">—</strong><span class="muted">filtre de visibilité ESV</span></div><div><span class="health-label">Flanc interne conservé</span><strong id="q-face">—</strong><span id="q-face-note" class="muted"></span></div></div><p id="q-note" class="muted"></p></section>
+
+ <details><summary>Ce qui est observé</summary><p>Chaque visite, y compris un retour sur un cut, reste distincte. Banane sépare l’état observé, l’intention clavier ou souris, l’effet ensuite observé et la confirmation serveur — qui reste indiquée comme non observée.</p><p>Les points déjà chargés sont lus par petites portions avec une mémoire bornée. Si la collecte ne suit plus, elle réduit son niveau et l’indique dans l’export. Pause ferme la période en cours ; Reprendre en ouvre une nouvelle sans inventer ce qui s’est passé pendant la pause.</p></details>
+
+ <details id="reglages"><summary>Réglages de la collecte</summary><div id="reglages-liste" class="settings-list"></div><p class="muted settings-note">Ces valeurs pilotent la collecte et l’export. Les seuils géométriques du moteur ne sont pas ici : ils sont gelés et contrôlés par le banc.</p></details>
+
+ <details class="danger-zone"><summary>Abandonner cette session</summary>
+  <p class="muted">Supprime définitivement les nuages, visites et événements de cette session. Aucun export n’est produit. Les segments déjà téléchargés sur ton disque ne sont pas touchés.</p>
+  <button id="native-discard" class="danger" hidden>Annuler cette session et supprimer ses données</button>
+  <p id="native-discard-note" class="muted" hidden>Action irréversible : une confirmation te sera demandée.</p>
+ </details>
+</section>
+
+<!-- ---------------------------------------------------------------- pilote -->
+<section class="vue" data-vue="automatic" hidden>
+ <p class="muted">Le recalage reste expérimental. Ce lot sert à tester des résultats que tu contrôles ensuite.</p>
+ <div class="range"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0"></label></div>
+ <div id="batch" class="batch">Aucun lot en cours.</div>
+ <button id="start-batch" class="primary">Démarrer le lot TEST</button>
+ <div class="row"><button id="pause" class="secondary" hidden>Pause</button><button id="resume" class="secondary" hidden>Reprendre</button><button id="stop" class="danger" hidden>Arrêter</button></div>
+ <div class="row"><button id="retry" class="secondary" hidden>Réessayer ce cut</button><button id="manual-takeover" class="secondary" hidden>Reprise manuelle</button><button id="explicit-skip" class="danger" hidden>SKIP explicite</button></div>
+ <button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button>
+ <details id="cerveau"><summary>Cerveau de placement</summary><label class="interrupteur"><input type="checkbox" id="brain-toggle"> Activer le cerveau sur les propositions</label><p class="muted">Retire un biais vertical systématique mesuré sur le corpus de corrections, et tranche entre les candidats que le moteur expose déjà. Chaque proposition touchée est marquée dans l’export.</p><p class="warning" id="brain-caveat">Éteint par défaut. Ses réglages ont été ajustés sur les parts 17 et 20 d’un corpus de <em>corrections</em>, où les gestes sont 4,5 fois plus grands qu’en travail normal. Ils ne sont pas validés sur ta collecte Natif.</p><label class="interrupteur" id="brain-sanspause-box" hidden><input type="checkbox" id="brain-sanspause"> Autoriser les sélections en mode « Tenter » (essai)</label><p class="warning" id="brain-policy" hidden></p><p class="muted" id="brain-journal"></p></details><details><summary>Réglages du lot</summary><label>Si les deux propositions existent mais restent incertaines<select id="policy"><option value="pause">Mettre le lot en pause</option><option value="attempt">Tenter la proposition expérimentale</option></select></label><p class="muted">Un rail non résolu met toujours le cut en pause. Aucun SKIP automatique et aucun point inventé.</p><label>Seuil de l’indice LiDAR / 100<input id="confidence" type="number" value="55" min="0" max="100"></label><p class="muted">Cet indice ne mesure pas la précision réelle du pointage.</p></details>
+ <details><summary>Dépannage</summary><button id="journal" class="secondary">Télécharger le journal</button><button id="close-uncertain" class="secondary" hidden>Archiver le résultat interrompu</button><p class="muted">La navigation est observée dans ESV. La confirmation de l’enregistrement serveur reste indisponible.</p></details>
+ <p class="muted">Changer de vue ne met pas le lot en pause. Utilise Pause ou Arrêter.</p>
+</section>
+
+<!-- -------------------------------------------------------------- assisté -->
+<section class="vue" data-vue="assisted" hidden>
+ <div class="guide"><p>Clique sur Proposer, examine le résultat, puis choisis de l’appliquer ou de l’ignorer. La validation du cut reste ton action dans ESV.</p></div>
+ <button id="analyze" class="primary">Proposer pour ce cut</button>
+ <div id="proposals" class="proposals"></div>
+ <button id="accept" class="primary" hidden>Appliquer cette proposition</button>
+ <button id="reject" class="secondary" hidden>Ignorer cette proposition</button>
+ <button id="restore" class="secondary" hidden>Revenir aux positions initiales</button>
+ <p class="muted">Le retour aux positions initiales concerne le même cut, avant validation dans ESV.</p>
+ <details><summary>Exporter cet essai</summary><button id="assisted-dataset" class="secondary">Télécharger le bilan et les LiDAR</button></details>
+</section>
+
+<!-- --------------------------------------------------- commun à toutes les vues -->
+<p id="export-status" class="muted" role="status"></p>
+<details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
+<footer>Les données sont conservées quand tu fermes cette fenêtre.</footer>
+</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="panel.js"></script></body></html>
