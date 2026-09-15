@@ -87,7 +87,9 @@
      const names={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
        PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',
        FINISHED_WITH_UNCONFIRMED_ACTIONS:'Terminé avec actions non confirmées',ERROR:'Interrompu'};
-     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     // Les cuts repris à la main sont comptés à part : Banane ne les a pas validés.
+     const repris=b?.manuallyCompleted?.length?` · ${b.manuallyCompleted.length} repris à la main`:'';
+     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${repris}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -109,6 +111,13 @@
       * L'opérateur lisait donc « Choisis Réessayer, Reprise manuelle, SKIP
       * explicite ou Arrêter » devant trois boutons sur quatre. */
      button('manual-takeover',{hidden:!actionable,disabled:busy||active(s)});
+     /* V4.6.0 : la reprise manuelle n'est plus une impasse. Le bouton de
+      * déclaration n'existe que dans cet état ; le moteur refuse la déclaration
+      * tant qu'ESV n'affiche pas le cut suivant. */
+     button('manual-completion',{hidden:b?.state!=='MANUAL_TAKEOVER',disabled:busy||active(s)});
+     if(b?.state==='MANUAL_TAKEOVER')
+       note('Ce cut t’est rendu : Banane n’a envoyé aucune commande dessus. Corrige-le dans ESV, ouvre le cut suivant, '
+         +'puis clique sur « Repris manuellement » — le lot repartira, et ce cut sera journalisé comme repris à la main, jamais comme validé par Banane.');
      button('explicit-skip',{hidden:!actionable,disabled:busy||active(s)});
      button('close-uncertain',{hidden:!s.reconcileRequired,disabled:busy});
      /* Terrain, cut 6/4245 : avec « Tenter la proposition expérimentale », le
@@ -442,6 +451,9 @@ on('native-discard',async()=>{
  on('retry',()=>api('retry'));on('explicit-skip',()=>api('explicit-skip'));
  // Reprise manuelle : le pilote rend la main, sans ouvrir aucune fenêtre.
  on('manual-takeover',()=>api('manual-takeover'));
+ /* V4.6.0 : l'opérateur déclare avoir traité le cut dans ESV. Banane journalise
+  * la reprise sans prétendre l'avoir validée, puis repart au cut suivant. */
+ on('manual-completion',()=>api('manual-completion'));
   on('analyze',async()=>{await api('settings',{mode:'assisted'});return api('analyze');});
  on('dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
 on('assisted-dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));

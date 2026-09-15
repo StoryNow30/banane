@@ -23,13 +23,32 @@ const GB = require('../src/geometry-brain.js');
 const CAPTURES = path.resolve(__dirname, 'fixtures', 'captures-moteur.json');
 const captures = () => JSON.parse(fs.readFileSync(CAPTURES, 'utf8')).captures;
 
-test('les fichiers gelés restent identiques à la référence 4.4.0', () => {
+/* V4.6.0 : `src/engine.js` est dégelé sur décision explicite (défauts 4 et 9
+ * d'AUDIT_PILOTE.md), mais ré-épinglé sur une baseline déclarée. Les trois
+ * autres fichiers restent gelés à 4.4.0, et le fichier d'empreintes historique
+ * n'est pas modifié. */
+const empreinte = (root, fichier) =>
+  crypto.createHash('sha256').update(fs.readFileSync(path.join(root, fichier))).digest('hex');
+
+test('le placement, les transformations et le lecteur LiDAR restent identiques à la référence 4.4.0', () => {
   const root = path.resolve(__dirname, '..');
   const attendu = JSON.parse(fs.readFileSync(path.join(root, 'audit', 'v4.4.0-frozen-engine-hashes.json'), 'utf8'));
-  for (const [fichier, empreinte] of Object.entries(attendu)) {
-    const vu = crypto.createHash('sha256').update(fs.readFileSync(path.join(root, fichier))).digest('hex');
-    assert.equal(vu, empreinte, fichier + ' a changé');
-  }
+  const geles = Object.keys(attendu).filter(f => f !== 'src/engine.js');
+  assert.deepEqual(geles, ['src/geometry.js', 'vendor/capture-core.js', 'vendor/lidar.js']);
+  for (const fichier of geles) assert.equal(empreinte(root, fichier), attendu[fichier], fichier + ' a changé');
+});
+
+test('le moteur dégelé reste épinglé sur la baseline V4.6.0, qui recopie les empreintes historiques', () => {
+  const root = path.resolve(__dirname, '..');
+  const historique = JSON.parse(fs.readFileSync(path.join(root, 'audit', 'v4.4.0-frozen-engine-hashes.json'), 'utf8'));
+  const baseline = JSON.parse(fs.readFileSync(path.join(root, 'audit', 'v4.6.0-engine-baseline.json'), 'utf8'));
+  /* La baseline ne doit jamais servir à assouplir le gel historique par la
+   * bande : elle recopie les trois empreintes 4.4.0 telles quelles, et garde
+   * trace de l'empreinte 4.4.0 du moteur. */
+  for (const fichier of ['src/geometry.js', 'vendor/capture-core.js', 'vendor/lidar.js'])
+    assert.equal(baseline.unchangedSince440[fichier], historique[fichier], fichier + ' : empreinte historique réécrite');
+  assert.equal(baseline.engine.previousHash440, historique['src/engine.js']);
+  assert.equal(empreinte(root, 'src/engine.js'), baseline.engine['src/engine.js'], 'src/engine.js ne correspond pas à sa baseline déclarée');
 });
 
 test('le cerveau est ÉTEINT par défaut', () => {

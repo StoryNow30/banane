@@ -109,6 +109,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='resume'){await engine.resume();return engine.view();}
  if(action==='retry'){await engine.retryPaused();return engine.view();}
  if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
+ // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
+ if(action==='manual-completion'){await engine.manualCompletion();return engine.view();}
  if(action==='explicit-skip'){await engine.skipPaused();return engine.view();}
  if(action==='start'){
   if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');

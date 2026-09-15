@@ -57,11 +57,10 @@ Un quatrième mode, **Correction** (« Mes corrections »), a été **retiré en
 
 ### LE MOTEUR GELÉ — contrainte centrale
 
-Quatre fichiers sont **gelés octet pour octet** depuis la version 4.4.0 :
+Trois fichiers sont **gelés octet pour octet** depuis la version 4.4.0 :
 
 ```
 src/geometry.js          — le calcul de placement
-src/engine.js            — le pilote et la machine à états
 vendor/capture-core.js   — transformations de coordonnées
 vendor/lidar.js          — lecteur LiDAR partagé
 ```
@@ -70,7 +69,18 @@ vendor/lidar.js          — lecteur LiDAR partagé
 `audit/v4.4.0-frozen-engine-hashes.json` à chaque exécution du banc. **Ce
 fichier d'empreintes ne doit jamais être modifié.** Mic a posé la règle ainsi :
 *« Ne modifie pas verify.cjs ni ses empreintes simplement pour obtenir un
-résultat vert. »*
+résultat vert. »* Il n'est pas modifié : il porte toujours les quatre
+empreintes d'origine, celle du moteur comprise.
+
+**`src/engine.js` est dégelé depuis V4.6.0**, sur décision explicite, pour les
+défauts 4 et 9 d'`AUDIT_PILOTE.md` — deux défauts que l'audit avait identifiés
+comme incorrigibles sans lever le gel. Il n'est pas rendu libre pour autant :
+il est **ré-épinglé** sur `audit/v4.6.0-engine-baseline.json`, que le banc
+vérifie de la même façon. Toute dérive non déclarée du moteur fait donc encore
+échouer le banc ; changer le moteur suppose de mettre sa baseline à jour
+sciemment. Cette baseline recopie les trois empreintes historiques à
+l'identique et conserve l'empreinte 4.4.0 du moteur — un test vérifie ce point
+précis, pour qu'elle ne puisse pas servir à assouplir le gel par la bande.
 
 Le banc doit rester vert : **339 tests au 15/09**, dont 201 hérités de la
 référence V4.5.

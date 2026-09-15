@@ -10,7 +10,7 @@
      validationStarted:false,batch:null,notice:'Prêt. Sélectionne un onglet ESV.',events:[],settings:{...G.DEFAULTS}};}
   async init(){const old=await this.store.getState();if(old){this.s=old;this.s.version=K.VERSION;this.s.schemaVersion=4;
     this.s.settings={...G.DEFAULTS,...this.s.settings,method:G.DEFAULTS.method};
-    if(this.s.batch){for(const name of ['processed','skipped','paused','interrupted','sequence'])if(!Array.isArray(this.s.batch[name]))this.s.batch[name]=[];
+    if(this.s.batch){for(const name of ['processed','skipped','paused','interrupted','sequence','manuallyCompleted'])if(!Array.isArray(this.s.batch[name]))this.s.batch[name]=[];
       this.s.batch.activeIdentity=this.s.batch.activeIdentity||this.s.before?.identity||null;this.s.batch.lastCompletedIdentity=this.s.batch.lastCompletedIdentity||null;}
     // A pending, unapplied old proposal must pass the new support check. Never
     // recalculate an already applied proposal before validation or recovery.
@@ -147,6 +147,25 @@
    }else if(K.equalPoses(now.rails,this.s.snapshot.rails,.001))this.s.applied=null;
    else throw Error('État intermédiaire : utilise Restaurer sur le même cut avant validation.');
    this.s.intent=null;this.s.reconcileRequired=false;await this.event('reconciled',{identity:now.identity});return now;}
+  /* La transition attendue après une commande native : même onglet, même part,
+   * et le SUCCESSEUR IMMÉDIAT du cut commandé. Une navigation quelconque ne
+   * vaut pas preuve — un saut en avant ferait franchir en silence les cuts
+   * sautés, un retour en arrière ferait retraiter un cut déjà commandé.
+   * Le contrôle ne sert qu'à décider si la navigation peut TENIR LIEU de
+   * relecture manquée : quand l'état après a été relu, la preuve ne repose pas
+   * sur elle et le verdict n'est que consigné. En cas de doute le lot s'arrête,
+   * ce qui est le comportement d'avant V4.6.0. */
+  expectedTransition(identity,evidence,scope){
+   if(evidence.navigationObserved!==true)return{expected:false,reason:'NAVIGATION_NOT_OBSERVED',observed:null};
+   const seen=evidence.nextIdentity||evidence.navigationAfter?.identity||evidence.navigationAfter?.label;
+   if(!seen)return{expected:false,reason:'NEXT_IDENTITY_UNKNOWN',observed:null};
+   const next=K.completeIdentity(seen);
+   if(next.pageId!==identity.pageId)return{expected:false,reason:'PAGE_CHANGED',observed:next};
+   if(next.part!==identity.part||scope?.part!=null&&next.part!==scope.part)return{expected:false,reason:'PART_CHANGED',observed:next};
+   if(!Number.isInteger(next.cut)||!Number.isInteger(identity.cut))return{expected:false,reason:'CUT_NOT_COMPARABLE',observed:next};
+   if(next.cut!==identity.cut+1)return{expected:false,reason:next.cut<=identity.cut?'NO_FORWARD_MOVE':'CUTS_SKIPPED',observed:next};
+   return{expected:true,reason:'IMMEDIATE_SUCCESSOR_SAME_PAGE_AND_PART',observed:next};
+  }
   async validateAndNext(scope){
    this.gate();const now=await this.adapter.state();
    if(!this.s.applied)throw Error('Aucune application vérifiée.');K.assertTarget(this.s.applied.identity,now.identity);
@@ -159,17 +178,42 @@
    try{const evidence=await this.adapter.validateAndNext(now.identity,scope);
     if(evidence.commandSent!==true)throw Error('La commande native n’est pas journalisée comme transmise.');
     if(!evidence.navigationObserved&&!evidence.serverConfirmed)throw Error('Résultat de validation/navigation ambigu.');
-    outcomeObserved=true;this.s.intent=null;this.s.lastActionEvidence=K.clone(evidence);
+    outcomeObserved=true;this.s.intent=null;
+    /* V4.6.0, défaut 4 d'AUDIT_PILOTE.md. `startBatch` EXIGE déjà
+     * `allowNavigationEvidence` pour seulement démarrer, faute de confirmation
+     * serveur sur cet ESV. Mais sur le chemin où la navigation EST observée et
+     * la relecture manquée, l'ancien ordre levait AFTER_STATE_MISSING avant
+     * d'atteindre la ligne qui lisait cette déclaration : la politique était
+     * obligatoire et inatteignable exactement là où elle servait. Elle est
+     * consultée ici. 12 lots sur 12 s'arrêtaient là le 15/09.
+     *
+     * Ce que cela n'autorise PAS : compter une validation. L'enregistrement
+     * garde `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED` et
+     * `usableForTraining:false` ; il n'existe aucune confirmation serveur, et
+     * `validationProof:'navigation-only'` dit sur quoi l'avancement repose. */
+    const transition=this.expectedTransition(now.identity,evidence,scope);
+    const acceptedOnNavigation=evidence.afterObserved!==true&&scope?.allowNavigationEvidence===true&&transition.expected;
+    evidence.expectedTransition=transition.reason;evidence.navigationMatchedExpectedTransition=transition.expected;
+    evidence.acceptedOnNavigationEvidence=acceptedOnNavigation;
+    evidence.validationProof=evidence.serverConfirmed===true?'server-confirmed':evidence.afterObserved===true?'after-state-observed':acceptedOnNavigation?'navigation-only':'none';
+    this.s.lastActionEvidence=K.clone(evidence);
     const record=this.s.records.slice().reverse().find(r=>K.cutId(r.identity)===K.cutId(now.identity));
     if(record){Object.assign(record,{commandSent:true,afterObserved:evidence.afterObserved===true,afterStateStatus:evidence.afterStateStatus,
       serverConfirmed:evidence.serverConfirmed===true,navigationObserved:evidence.navigationObserved===true,navigationAfter:evidence.navigationAfter||null,
-      nextCutId:evidence.nextIdentity?K.cutId(evidence.nextIdentity):null});
+      nextCutId:evidence.nextIdentity?K.cutId(evidence.nextIdentity):null,navigationMatchedExpectedTransition:transition.expected,
+      expectedTransition:transition.reason,acceptedOnNavigationEvidence:acceptedOnNavigation,validationProof:evidence.validationProof});
       if(!record.afterObserved){record.status='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';record.usableForTraining=false;}
       await this.store.putRecord(record);}
     await this.event('validation-observation',{identity:now.identity,commandSent:true,afterObserved:evidence.afterObserved===true,
-      afterStateStatus:evidence.afterStateStatus,serverConfirmed:evidence.serverConfirmed===true,navigationObserved:evidence.navigationObserved===true,evidence});
-    if(!evidence.afterObserved){const error=Error('AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');error.code='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';throw error;}
+      afterStateStatus:evidence.afterStateStatus,serverConfirmed:evidence.serverConfirmed===true,navigationObserved:evidence.navigationObserved===true,
+      navigationMatchedExpectedTransition:transition.expected,expectedTransition:transition.reason,validationProof:evidence.validationProof,evidence});
+    if(evidence.afterObserved!==true&&!acceptedOnNavigation){const error=Error('AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');
+      error.code='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';error.transition=transition;throw error;}
     if(!evidence.serverConfirmed&&!scope.allowNavigationEvidence)throw Error('Navigation observée, confirmation serveur absente selon la politique choisie.');
+    if(acceptedOnNavigation){
+      this.s.notice=`Cut ${now.identity.cut} : commande envoyée, navigation attendue vers ${transition.observed.cut} observée, état final non relu. Le lot avance sur la navigation ; ce cut n’est pas déclaré validé.`;
+      await this.event('validation-accepted-on-navigation',{identity:now.identity,nextIdentity:transition.observed,transition:transition.reason,
+        status:'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED',usableForTraining:false,serverConfirmed:false,validationProof:'navigation-only'});}
     return evidence;
    }catch(e){this.s.reconcileRequired=!outcomeObserved;await this.save();throw e;}}
   async exportReferences(){const data={format:'banane-manual-references-v3',version:K.VERSION,sessionId:this.s.sessionId,
@@ -203,16 +247,22 @@
    }catch(e){this.busy=false;throw e;}this.launch();return this.view();}
   launch(){this.task=this.run().finally(()=>{this.task=null;this.busy=false;});}
   async boundary(){if(this.s.batch.state!=='RUNNING')return false;await this.save();return true;}
+  /* « COMPLETED » s'affiche « Terminé confirmé » dans le panneau. Un lot qui
+   * contient une action sans confirmation serveur — ou un cut repris à la main,
+   * que Banane n'a pas validé — ne peut pas porter ce mot. */
+  closingState(b){return b.processed.some(x=>!x.evidence?.serverConfirmed)||b.skipped.some(x=>!x.evidence?.serverConfirmed)||b.manuallyCompleted?.length>0
+    ?'FINISHED_WITH_UNCONFIRMED_ACTIONS':'COMPLETED';}
   async run(){this.busy=true;const b=this.s.batch;
    try{while(await this.boundary()){
      const now=await this.adapter.state(),scope=b.scope,k=K.key(now.identity);
      if(now.identity.pageId!==scope.pageId||now.identity.part!==scope.part)throw Error('Sortie inattendue de l’onglet ou de la part du lot.');
-     if(now.identity.cut>scope.end){b.state=b.processed.some(x=>!x.evidence?.serverConfirmed)||b.skipped.some(x=>!x.evidence?.serverConfirmed)?'FINISHED_WITH_UNCONFIRMED_ACTIONS':'COMPLETED';break;}
+     if(now.identity.cut>scope.end){b.state=this.closingState(b);break;}
      if(now.identity.cut<scope.start)throw Error('Cut hors périmètre.');
      const fullKey=K.cutId(now.identity);b.activeIdentity=K.completeIdentity(now.identity);b.sequence=b.sequence||[];
      if(!b.currentSequence||b.currentSequence.cutId!==fullKey){const sequenceIndex=b.sequence.length,previousCutId=b.sequence.at(-1)?.cutId??null;
        b.currentSequence={sequenceIndex,cutId:fullKey,identity:K.completeIdentity(now.identity),previousCutId,nextCutId:null};b.sequence.push(b.currentSequence);}
-     if([...b.processed,...b.skipped].some(x=>x.key===fullKey||x.key===k))throw Error('Cut déjà traité dans ce lot : boucle arrêtée.');
+     // Un cut repris à la main compte comme traité : le lot ne doit jamais le redémarrer.
+     if([...b.processed,...b.skipped,...(b.manuallyCompleted||[])].some(x=>x.key===fullKey||x.key===k))throw Error('Cut déjà traité dans ce lot : boucle arrêtée.');
      if(b.step==='capture'){
        b.cutStartedAt=new Date().toISOString();
        if(this.s.collection==='STALE')await this.archivePending('batch-new-target');
@@ -244,7 +294,7 @@
          previousCutId:b.currentSequence.previousCutId,nextCutId:b.currentSequence.nextCutId,evidence,durationMs:Date.now()-Date.parse(b.cutStartedAt)});
        b.lastCompletedIdentity=K.completeIdentity(now.identity);b.step='capture';
        this.s.proposal=null;this.s.applied=null;await this.save();
-       if(now.identity.cut===scope.end){b.state=b.processed.some(x=>!x.evidence.serverConfirmed)||b.skipped.some(x=>!x.evidence?.serverConfirmed)?'FINISHED_WITH_UNCONFIRMED_ACTIONS':'COMPLETED';break;}
+       if(now.identity.cut===scope.end){b.state=this.closingState(b);break;}
        if(evidence.nextReady===false){if(b.state==='RUNNING'){b.state='PAUSED';this.s.notice='Navigation observée. Attends le chargement des rails du cut suivant, puis clique sur Reprendre.';}break;}
      }
    }}catch(e){
@@ -274,8 +324,68 @@
   async manualTakeover(){const b=this.s.batch;if(!this.pausedProposalAction(b))throw Error('Ce cut pausé ne peut pas passer en reprise manuelle.');
    const now=await this.adapter.state();K.assertTarget(b.activeIdentity,now.identity);
    b.interrupted.push({identity:K.completeIdentity(now.identity),status:'MANUAL_TAKEOVER',proposal:K.clone(this.s.proposal),lidarCaptureId:this.s.lidarId});
-   await this.archivePending('manual-takeover-unresolved-rail');b.state='MANUAL_TAKEOVER';b.step='manual';this.s.mode='observation';
-   this.s.notice=`Cut ${now.identity.cut} préservé pour reprise manuelle. Ouvre Mes corrections.`;await this.event('batch-manual-takeover',{identity:now.identity});
+   /* Ce qui est mis de côté pour que `manualCompletion()` puisse tracer la
+    * provenance du cut rendu, et pour rendre son mode au lot à la reprise. */
+   b.manualTakeover={identity:K.completeIdentity(now.identity),startedAt:new Date().toISOString(),modeBeforeTakeover:this.s.mode,
+     before:K.clone(this.s.before),lidarCaptureId:this.s.lidarId,proposal:K.clone(this.s.proposal),sequence:K.clone(b.currentSequence||null)};
+   await this.archivePending('manual-takeover-unresolved-rail');
+   b.manualTakeover.archivedCaptureId=this.s.incomplete.at(-1)?.id||null;
+   b.state='MANUAL_TAKEOVER';b.step='manual';this.s.mode='observation';
+   /* Le mode Correction a été retiré en 4.5.4 : ce message ne renvoie plus vers
+    * un flux qui n'existe pas. Le cut se corrige dans ESV, puis se déclare. */
+   this.s.notice=`Cut ${now.identity.cut} rendu : corrige-le dans ESV et ouvre le cut suivant, puis déclare « Repris manuellement » pour que le lot reprenne.`;
+   await this.event('batch-manual-takeover',{identity:now.identity});
+  }
+  /* V4.6.0, défaut 9 d'AUDIT_PILOTE.md. `manualTakeover()` était une impasse :
+   * aucun chemin ne ramenait le lot en RUNNING, si bien qu'un seul cut ambigu
+   * coupait les 22 autres d'un lot de 23. L'opérateur corrige le cut dans ESV,
+   * y navigue lui-même, puis le déclare ici.
+   *
+   * CE QUE BANANE NE PRÉTEND PAS. Elle n'a envoyé aucune commande sur ce cut,
+   * n'a pas relu son état final et n'a aucune confirmation serveur : le cut
+   * n'entre pas dans `processed`, qui ne compte que les validations conduites
+   * par Banane, et son enregistrement porte `bananeValidated:false`,
+   * `commandSent:false`, `usableForTraining:false`. Ce qu'elle sait se limite à
+   * ceci : l'opérateur a déclaré la reprise, et le cut affiché est bien le
+   * suivant attendu. */
+  async manualCompletion(){const b=this.s.batch;
+   if(this.task)throw Error('Attends la fin de l’action en cours.');
+   if(!b||b.state!=='MANUAL_TAKEOVER')throw Error('Aucune reprise manuelle en cours à déclarer.');
+   this.gate();
+   const taken=K.completeIdentity(b.manualTakeover?.identity||b.activeIdentity);
+   const now=await this.adapter.state();now.identity=K.completeIdentity(now.identity);
+   if(now.identity.pageId!==b.scope.pageId||now.identity.part!==b.scope.part)throw Error('Contexte de lot changé : reprise manuelle non déclarable ici.');
+   if(K.key(now.identity)===K.key(taken))throw Error(`Cut ${taken.cut} toujours affiché : termine-le dans ESV et ouvre le cut suivant avant de déclarer la reprise.`);
+   // Même exigence que pour la navigation après commande : le successeur immédiat, pas un cut quelconque.
+   const transition=this.expectedTransition(taken,{navigationObserved:true,nextIdentity:now.identity},b.scope);
+   if(!transition.expected)throw Error(`Cut ${now.identity.cut} affiché : ce n’est pas le suivant attendu après ${taken.cut} (${transition.reason}). Ouvre le cut ${taken.cut+1} ou arrête le lot.`);
+   const origin=b.manualTakeover||{},sequence=origin.sequence||b.currentSequence||{};
+   const record={id:K.uid(),recordId:K.uid(),format:'banane-manual-completion-v1',version:K.VERSION,
+     source:'operator-manual-completion-from-automatic-pause',identity:taken,before:origin.before||null,
+     lidarCaptureId:origin.lidarCaptureId||null,proposal:origin.proposal||null,archivedCaptureId:origin.archivedCaptureId||null,
+     geominfo:origin.proposal?.geominfo||origin.before?.geominfo||{status:'not-observed',raw:null,source:null},
+     decision:'MANUAL_COMPLETION',operatorDecision:'MANUAL_COMPLETION',decisionRule:'operator-declared-manual-completion-from-manual-takeover',
+     provenance:'operator-in-esv',bananeValidated:false,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false,
+     afterStateStatus:'NOT_OBSERVED_BANANE_DID_NOT_ACT',status:'operator-manual-completion',validationProof:'none',
+     operatorNavigationObserved:true,observedIdentityAtDeclaration:K.completeIdentity(now.identity),
+     usableForTraining:false,trainingExclusionReason:'operator-manual-completion',
+     sequenceIndex:sequence.sequenceIndex??null,previousCutId:sequence.previousCutId??null,nextCutId:K.cutId(now.identity),
+     takeoverStartedAt:origin.startedAt||null,declaredAt:new Date().toISOString()};
+   await this.store.putRecord(record);this.s.records.push(record);
+   b.manuallyCompleted=b.manuallyCompleted||[];
+   b.manuallyCompleted.push({key:K.cutId(taken),identity:taken,cut:taken.cut,recordId:record.recordId,sequenceIndex:record.sequenceIndex,
+     previousCutId:record.previousCutId,nextCutId:record.nextCutId,bananeValidated:false,declaredAt:record.declaredAt});
+   b.interrupted.push({identity:taken,status:'MANUAL_COMPLETION',recordId:record.recordId});
+   await this.event('batch-manual-completion',{identity:taken,recordId:record.recordId,nextIdentity:now.identity,bananeValidated:false,
+     commandSent:false,serverConfirmed:false,afterObserved:false,usableForTraining:false,status:record.status});
+   /* `lastCompletedIdentity` reste la dernière validation conduite par Banane :
+    * un cut rendu à l'opérateur ne s'y inscrit pas. */
+   b.lastManuallyCompletedIdentity=taken;this.s.mode=origin.modeBeforeTakeover||'automatic-test';
+   this.s.proposal=null;this.s.applied=null;this.s.before=null;this.s.lidarId=null;this.s.collection='IDLE';
+   b.manualTakeover=null;b.currentSequence=null;b.pauseReason=null;b.error=null;b.step='capture';
+   b.activeIdentity=K.completeIdentity(now.identity);b.state='RUNNING';
+   this.s.notice=`Cut ${taken.cut} repris à la main et journalisé sans validation Banane. Lot repris au cut ${now.identity.cut}.`;
+   await this.save();this.launch();return this.view();
   }
   async skipPaused(){const b=this.s.batch;if(!this.pausedProposalAction(b))throw Error('Ce cut pausé ne peut pas être skippé explicitement.');
    this.gate();const now=await this.adapter.state();K.assertTarget(b.activeIdentity,now.identity);this.writable(now.identity);
@@ -301,7 +411,7 @@
        afterStateStatus:record.afterStateStatus,serverConfirmed:record.serverConfirmed,navigationObserved:record.navigationObserved,evidence});
      if(!record.afterObserved){b.state='PAUSED_AFTER_STATE_MISSING';b.step='capture';b.interrupted.push({identity:record.identity,status:record.status,evidence});
        this.s.notice='SKIP transmis, mais le cut a changé avant la relecture finale. Reprise automatique suspendue.';await this.save();return;}
-     if(now.identity.cut===b.scope.end){b.state=record.serverConfirmed?'COMPLETED':'FINISHED_WITH_UNCONFIRMED_ACTIONS';await this.save();return;}
+     if(now.identity.cut===b.scope.end){b.state=this.closingState(b);await this.save();return;}
      if(!evidence.navigationObserved||!evidence.nextIdentity){b.state='PAUSED_ADAPTER_UNRESPONSIVE';this.s.notice='SKIP transmis sans identité suivante confirmée. La commande ne sera pas répétée.';await this.save();return;}
      b.state='RUNNING';b.step='capture';b.activeIdentity=K.completeIdentity(evidence.nextIdentity);await this.save();this.launch();
    }catch(e){b.state='PAUSED_ADAPTER_UNRESPONSIVE';b.error={message:e.message,step:'explicit-skip',timestamp:new Date().toISOString()};
@@ -309,6 +419,8 @@
   }
   closureSummary(){const b=this.s.batch,records=this.s.records;
    return {status:b?.state||null,completed:b?.processed?.length||0,paused:b?.paused?.length||0,skipped:b?.skipped?.length||0,
+     manuallyCompleted:b?.manuallyCompleted?.length||0,manuallyCompletedCuts:(b?.manuallyCompleted||[]).map(x=>K.cutId(x.identity)),
+     lastManuallyCompletedIdentity:b?.lastManuallyCompletedIdentity||null,
      interrupted:b?.interrupted?.length||0,withoutFinalState:records.filter(r=>r.status==='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED'||r.status==='incomplete-no-after').map(r=>K.cutId(r.identity||r.before?.identity)),
      withoutServerConfirmation:records.filter(r=>r.commandSent&&!r.serverConfirmed).map(r=>K.cutId(r.identity)),activeIdentity:b?.activeIdentity||null,
      lastCompletedIdentity:b?.lastCompletedIdentity||null};

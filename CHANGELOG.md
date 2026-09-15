@@ -1,5 +1,62 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.6.0 — machine à états du pilote
+
+Lot V4.6.0 : les défauts 4 et 9 d'`AUDIT_PILOTE.md`, les deux que l'audit avait
+identifiés comme incorrigibles sans lever le gel de `src/engine.js`. Le gel est
+levé pour eux seuls, sur décision explicite. Ni `src/geometry.js`, ni le
+cerveau, ni les seuils ne sont touchés.
+
+**Le contrat validation/navigation (défaut 4).** Le bouton de validation d'ESV
+valide et navigue d'un seul geste : la relecture de l'état final échoue donc
+systématiquement, et le lot s'arrêtait au premier cut — 12 lots sur 12 le 15/09.
+`startBatch` exigeait déjà que l'opérateur déclare « la navigation observée me
+suffit comme preuve » pour seulement démarrer, mais le refus sur relecture
+manquée était levé **avant** la ligne qui lisait cette déclaration : politique
+obligatoire, et inatteignable là où elle servait. Elle est maintenant consultée
+au bon endroit.
+
+Ce que cela ne change pas : un cut avancé de cette façon n'est jamais déclaré
+validé. Son enregistrement garde `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED`
+et `usableForTraining: false`, porte `validationProof: 'navigation-only'`, et un
+lot qui en contient ne peut plus finir sur `COMPLETED` — affiché « Terminé
+confirmé » — mais sur `FINISHED_WITH_UNCONFIRMED_ACTIONS`.
+
+**La navigation doit être celle qu'on attend.** Une navigation quelconque ne
+vaut pas preuve : même onglet, même part, et le successeur immédiat du cut
+commandé. Un saut, un retour en arrière ou un changement de part arrêtent le lot
+comme avant. Sans ce contrôle, un saut ferait franchir en silence les cuts
+sautés.
+
+**`MANUAL_COMPLETION` (défaut 9).** « Reprise manuelle » était une impasse :
+aucun chemin ne ramenait le lot en marche, si bien qu'un seul cut ambigu coupait
+les 22 autres d'un lot de 23. L'opérateur corrige le cut dans ESV, ouvre le
+suivant, puis déclare « Repris manuellement » : le lot repart. Banane n'a envoyé
+aucune commande sur ce cut et ne prétend pas l'avoir validé —
+`bananeValidated: false`, `commandSent: false`, `serverConfirmed: false`,
+`usableForTraining: false`, provenance `operator-in-esv`. Le cut n'entre pas
+dans `processed`, réservé aux validations conduites par Banane ; il est compté à
+part et affiché « repris à la main ». Le lot ne peut jamais le redémarrer. Le
+message du moteur ne renvoie plus vers « Mes corrections », retiré en 4.5.4.
+
+**Conséquence du défaut 4, constatée :** un lot d'un seul cut se termine, au
+lieu de rester bloqué (défaut 10, qui n'a pas demandé de correctif propre).
+
+**Empreintes.** `audit/v4.4.0-frozen-engine-hashes.json` n'est pas modifié.
+`src/geometry.js`, `vendor/capture-core.js` et `vendor/lidar.js` y restent
+vérifiés octet pour octet. Le moteur est ré-épinglé sur
+`audit/v4.6.0-engine-baseline.json`, contrôlé de la même façon : une dérive non
+déclarée du moteur fait échouer le banc. Un test vérifie que cette baseline
+recopie les empreintes historiques à l'identique, pour qu'elle ne puisse pas
+servir à assouplir le gel par la bande.
+
+**Banc.** 371 tests. Sur un clone sans `datasets/native/`, 369 verts et les deux
+rouges habituels de cette exclusion. Les nouveaux tests couvrent : mono-cut,
+multi-cut, navigation absente, navigation attendue sans état final, navigation
+inattendue (saut, retour arrière, autre part, autre onglet) et reprise manuelle.
+Chacun a été vérifié non complaisant — ils échouent quand on retire le correctif
+qu'ils verrouillent.
+
 ## 4.5.0 — 15 septembre 2026
 
 Première version officielle de la série V4.5. Le moteur de placement reste gelé

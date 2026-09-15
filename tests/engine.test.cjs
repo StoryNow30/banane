@@ -83,16 +83,6 @@ test('scope and repeated target protections prevent out-of-scope application',as
  adapter.validateAndNext=async()=>{adapter.calls.push('validate');return {commandSent:true,afterObserved:true,afterStateStatus:'OBSERVED_SAME_TARGET',navigationObserved:true,serverConfirmed:false};};
  await e.startBatch(scope());await e.task;assert.equal(e.s.batch.state,'ERROR');assert.match(e.s.notice,/déjà traité/);assert.equal(adapter.calls.filter(c=>c==='apply').length,1);
 });
-test('target navigation before after-state read pauses without silently processing the next cut',async()=>{
- const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';adapter.validateAndNext=async()=>{
-   adapter.calls.push('validate');await adapter.next();return {commandSent:true,afterObserved:false,afterStateStatus:'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED',
-     serverConfirmed:false,navigationObserved:true,nextIdentity:K.clone(adapter.identity),navigationAfter:{identity:K.clone(adapter.identity)}};};
- await e.startBatch(scope());await e.task;
- assert.equal(e.s.batch.state,'PAUSED_AFTER_STATE_MISSING');assert.equal(e.s.batch.processed.length,0);
- assert.equal(adapter.calls.filter(c=>c==='capture').length,1);assert.equal(store.records[0].status,'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');
- assert.deepEqual({commandSent:store.records[0].commandSent,afterObserved:store.records[0].afterObserved,serverConfirmed:store.records[0].serverConfirmed,navigationObserved:store.records[0].navigationObserved},
-   {commandSent:true,afterObserved:false,serverConfirmed:false,navigationObserved:true});
-});
 test('an unresolved cut offers bounded actions and retry restarts the same cut without a native decision',async()=>{
  const {adapter,engine:e}=await app();adapter.noPoints=true;e.s.mode='automatic-test';await e.startBatch(scope({end:100}));await e.task;
  assert.equal(e.s.batch.state,'PAUSED_UNRESOLVED_RAIL');assert.deepEqual(e.s.batch.paused[0].actions,['RETRY','MANUAL_TAKEOVER','EXPLICIT_SKIP','STOP']);
