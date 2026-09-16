@@ -8,7 +8,7 @@
     "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
   },
   "engine": {
-    "src/engine.js": "84ef4f66eccc67e66a51fd3a30948a2acb7d61c5fbd6c0cb5293ba4afb0a3969",
+    "src/engine.js": "5537c86bf560c66a9d0811096f6abf1e69e6a8f6bd74b724da901b3c9d92be65",
     "previousHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
     "unfrozenBy": "V4.6.0 — contrat validation/navigation (défaut 4) et MANUAL_COMPLETION avec reprise du lot (défaut 9)",
     "scope": [
@@ -16,7 +16,8 @@
       "expectedTransition : la navigation doit être le successeur immédiat, même onglet et même part",
       "manualCompletion : reprise du lot après reprise manuelle, sans prétendre à une validation Banane",
       "init : seul validation-accepted crédite processed au redémarrage ; une commande non acceptée ne sera ni comptée ni renvoyée",
-      "assertBatchContextFree : MANUAL_TAKEOVER est un lot actif, que rien ne remplace"
+      "assertBatchContextFree : MANUAL_TAKEOVER est un lot actif, que rien ne remplace",
+      "validationAttemptId : chaque validation porte une identité de tentative (batchId + proposalId), et init() ne crédite que sur elle"
     ]
   }
 }

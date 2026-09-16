@@ -1,7 +1,7 @@
 # Audit du mode Pilote automatique
 
 Banc au moment de l'audit : **364 / 364**, `geometryUnchanged: true`, aucun
-fichier gelé modifié. Après V4.6.0 : **378 tests**, dont 376 verts et 2 ignorés
+fichier gelé modifié. Après V4.6.0 : **383 tests**, dont 381 verts et 2 ignorés
 sur un clone sans `datasets/native/` — ignorés, pas réussis, et l'audit le dit
 (`benchMode: "partial"`). Le placement, les transformations et le lecteur LiDAR
 restent identiques à 4.4.0 ; le moteur est épinglé sur sa baseline V4.6.0.

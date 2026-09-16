@@ -32,12 +32,13 @@ Le contrôle de l'archive **installable**, lui, n'a plus besoin du corpus : il a
 été séparé du contrôle de l'archive source en V4.6.0 et s'exécute donc aussi
 depuis un clone propre.
 
-Les deux échouent **uniquement** parce que les trois fichiers ci-dessus sont
-absents. Aucun autre test ne dépend de ce dossier.
+Les deux sont ignorés **uniquement** parce que les trois fichiers ci-dessus sont
+absents — c'est la seule condition qui déclenche le `skip`, et un test le
+vérifie dans les deux sens. Aucun autre test ne dépend de ce dossier.
 
 Mesure effectuée sur une copie jetable de l'arbre, `datasets/native/` retiré,
 le reste identique au bit près. Sur le poste de travail complet, le banc était à
-**364/364** avant V4.6.0 ; **378/378 n'a pas été mesuré ici**, faute des trois
+**364/364** avant V4.6.0 ; **383/383 n'a pas été mesuré ici**, faute des trois
 fichiers — c'est l'attendu, pas un relevé. Les trois fichiers gelés à 4.4.0
 restent identiques ; `src/engine.js`, dégelé en V4.6.0, est vérifié contre
 `audit/v4.6.0-engine-baseline.json`.
@@ -54,5 +55,5 @@ node tools/verify.cjs --full
 ignoré : c'est le seul mode qui autorise à annoncer un banc entièrement vert.
 Sans le corpus, il s'arrête tout de suite en nommant les fichiers manquants.
 
-Attendu : `{"tests":378,...,"pass":378,"fail":0,"skipped":0}`,
+Attendu : `{"tests":383,...,"pass":383,"fail":0,"skipped":0}`,
 `Geometry unchanged: true`, `Engine matches V4.6.0 baseline: true`.

@@ -40,25 +40,43 @@
        * issues mais une seule : ni crédit, ni renvoi. La commande native est
        * irréversible ; le lot s'arrête pour contrôle, comme il l'aurait fait
        * sans l'interruption. */
+      /* Revue Astra complémentaire : une TENTATIVE, pas un cut. Chercher par
+       * pageId/part/cut ne suffisait pas — les événements restent dans
+       * `s.events` d'un lot à l'autre, si bien qu'une acceptation ancienne du
+       * même cut, venue d'un lot antérieur, pouvait être prise pour celle de la
+       * tentative courante. L'identifiant de tentative est vérifié avec le lot
+       * et la proposition auxquels il appartient : rien d'autre ne crédite. */
       const passees=this.s.events.slice().reverse(),cible=K.key(this.s.applied.identity);
-      const acceptee=passees.find(e=>e.type==='validation-accepted'&&K.key(e.identity)===cible);
-      const commandee=passees.find(e=>e.type==='validation-intent'&&K.key(e.identity)===cible);
+      const tentative=this.s.applied.validationAttempt;
+      const attempt=(tentative?.batchId??null)===(this.s.batch.id??null)?tentative:null;
+      const memeTentative=e=>!!attempt?.validationAttemptId&&e.validationAttemptId===attempt.validationAttemptId
+        &&(e.batchId??null)===(this.s.batch.id??null)&&(e.proposalId??null)===(attempt.proposalId??null);
+      const acceptee=passees.find(e=>e.type==='validation-accepted'&&memeTentative(e));
+      const commandee=passees.find(e=>e.type==='validation-intent'&&memeTentative(e));
+      /* État écrit par une version antérieure à V4.6.0 : aucune tentative n'y
+       * est identifiée. Si un intent sans identifiant existe pour ce cut, la
+       * commande a pu partir — on ne crédite pas et on ne renvoie pas.
+       * Sans aucun intent, `validateAndNext` n'a pas commencé : rien n'est
+       * parti, et la reprise peut la conduire normalement. */
+      const heritee=!attempt&&passees.find(e=>e.type==='validation-intent'&&!e.validationAttemptId&&K.key(e.identity)===cible);
       if(this.s.batch.step==='validate'&&acceptee){
         const k=acceptee.cutId||K.key(acceptee.identity);
         if(!this.s.batch.processed.some(p=>p.key===k||p.key===K.key(acceptee.identity)))
           this.s.batch.processed.push({key:k,identity:K.completeIdentity(acceptee.identity),cut:acceptee.identity.cut,
-            evidence:acceptee.evidence,recovered:true});
+            evidence:acceptee.evidence,recovered:true,validationAttemptId:acceptee.validationAttemptId});
         this.s.batch.lastCompletedIdentity=K.completeIdentity(acceptee.identity);
         this.s.batch.step='capture';this.s.applied=null;this.s.proposal=null;
-      }else if(this.s.batch.step==='validate'&&commandee){
+      }else if(this.s.batch.step==='validate'&&(commandee||heritee)){
         this.s.batch.state='PAUSED_AFTER_STATE_MISSING';
         this.s.batch.error={code:'VALIDATION_NOT_ACCEPTED_BEFORE_RESTART',step:'validate',timestamp:new Date().toISOString(),
           message:'Commande de validation transmise, résultat non accepté avant le redémarrage.'};
         if(!Array.isArray(this.s.batch.interrupted))this.s.batch.interrupted=[];
         this.s.batch.interrupted.push({identity:K.completeIdentity(this.s.applied.identity),
-          status:'VALIDATION_NOT_ACCEPTED_BEFORE_RESTART',evidence:this.s.lastActionEvidence||null});
+          status:'VALIDATION_NOT_ACCEPTED_BEFORE_RESTART',evidence:this.s.lastActionEvidence||null,
+          validationAttemptId:attempt?.validationAttemptId??null,legacyStateWithoutAttemptId:!attempt});
         this.s.notice='Commande de validation transmise avant l’interruption, sans résultat accepté. Ce cut n’est ni compté ni retraité, et la commande ne sera pas renvoyée : contrôle-le dans ESV.';
         await this.event('batch-validation-not-accepted-on-restart',{identity:this.s.applied.identity,
+          validationAttemptId:attempt?.validationAttemptId??null,batchId:this.s.batch.id??null,
           commandSent:true,accepted:false,counted:false,resent:false});
       }else if(this.s.batch.step==='apply')this.s.batch.step='validate';
     }
@@ -213,8 +231,18 @@
    this.writable(now.identity);
    if(!K.equalPoses(this.s.applied.observed.rails,now.rails,.001))throw Error('Rails modifiés depuis la vérification.');
    if(this.s.collection==='READY_FOR_AFTER')await this.finish('automatic-test-before-after',this.s.batch?.currentSequence);
-   this.s.validationStarted=true;this.s.intent={kind:'validate',identity:now.identity};
-   await this.event('validation-intent',{identity:now.identity,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false}); // Persist before the irreversible request.
+   /* V4.6.0, revue Astra complémentaire. `s.events` survit d'un lot à l'autre :
+    * une identité de cut ne désigne donc PAS une tentative. Le même cut 100
+    * peut avoir été accepté par un lot antérieur, et cette acceptation traîne
+    * encore dans le journal. Chaque validation reçoit ici son identifiant
+    * propre, créé AVANT la requête irréversible et persisté avec `applied` et
+    * l'intent, avec le lot et la proposition auxquels il appartient.
+    * `init()` ne recrédite que sur cet identifiant. */
+   const attempt={validationAttemptId:K.uid(),batchId:this.s.batch?.id??null,
+     proposalId:this.s.applied.proposalId??null,cutId:K.cutId(now.identity)};
+   this.s.validationStarted=true;this.s.applied.validationAttempt=attempt;
+   this.s.intent={kind:'validate',identity:now.identity,...attempt};
+   await this.event('validation-intent',{identity:now.identity,...attempt,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false}); // Persist before the irreversible request.
    let outcomeObserved=false;
    try{const evidence=await this.adapter.validateAndNext(now.identity,scope);
     if(evidence.commandSent!==true)throw Error('La commande native n’est pas journalisée comme transmise.');
@@ -245,7 +273,7 @@
       expectedTransition:transition.reason,acceptedOnNavigationEvidence:acceptedOnNavigation,validationProof:evidence.validationProof});
       if(!record.afterObserved){record.status='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';record.usableForTraining=false;}
       await this.store.putRecord(record);}
-    await this.event('validation-observation',{identity:now.identity,commandSent:true,afterObserved:evidence.afterObserved===true,
+    await this.event('validation-observation',{identity:now.identity,...attempt,commandSent:true,afterObserved:evidence.afterObserved===true,
       afterStateStatus:evidence.afterStateStatus,serverConfirmed:evidence.serverConfirmed===true,navigationObserved:evidence.navigationObserved===true,
       navigationMatchedExpectedTransition:transition.expected,expectedTransition:transition.reason,validationProof:evidence.validationProof,evidence});
     if(evidence.afterObserved!==true&&!acceptedOnNavigation){const error=Error('AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');
@@ -257,7 +285,7 @@
      * tous les contrôles passés — jamais avant. `init()` ne crédite `processed`
      * que sur lui : un `validation-observation`, journalisé plus haut quel que
      * soit le verdict, ne vaut pas acceptation. */
-    await this.event('validation-accepted',{identity:now.identity,cutId:K.cutId(now.identity),action:'VALIDATE',
+    await this.event('validation-accepted',{identity:now.identity,...attempt,action:'VALIDATE',
       acceptedOnNavigationEvidence:acceptedOnNavigation,validationProof:evidence.validationProof,
       transition:transition.reason,nextIdentity:transition.observed,evidence});
     return evidence;

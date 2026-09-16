@@ -90,6 +90,25 @@ exige le corpus et refuse le moindre test ignoré. Le contrôle de l'archive
 installable a été séparé de celui de l'archive source, de sorte qu'il s'exécute
 aussi sans le corpus.
 
+**Identité de tentative de validation.** Le correctif de récupération ci-dessus
+appariait encore les événements par identité de cut. Or `s.events` survit d'un
+lot à l'autre : une acceptation ancienne du **même** `pageId/part/cut`, venue
+d'un lot antérieur, pouvait donc être prise pour celle de la tentative courante
+et créditer un lot qui n'avait rien validé.
+
+Chaque validation porte désormais un `validationAttemptId`, créé **avant** la
+requête irréversible et persisté avec `applied` et l'intent, accompagné du
+`batchId` et du `proposalId` auxquels il appartient. Les trois événements —
+`validation-intent`, `validation-observation`, `validation-accepted` — le
+transportent, et `init()` ne recrédite que sur une correspondance exacte des
+trois. Une acceptation qui ne correspond pas à la tentative courante est
+ignorée, quel que soit son cut.
+
+Un état écrit par une version antérieure à V4.6.0 ne porte aucun identifiant de
+tentative : s'il contient un intent sans identifiant pour ce cut, la commande a
+pu partir, donc ni crédit ni renvoi. Sans aucun intent, `validateAndNext` n'avait
+pas commencé et la reprise la conduit normalement.
+
 **Formulation `MANUAL_COMPLETION`.** `operatorNavigationObserved: true` est
 retiré : Banane n'observait pas l'opérateur naviguer et ne peut rien dire d'une
 navigation. Ce qui est consigné correspond à ce qui est fait — une lecture de
@@ -97,14 +116,17 @@ l'identité affichée à la déclaration : `identityReadAtDeclaration`,
 `identityDifferedFromTakenCut`, `identityIsExpectedSuccessor`,
 `transitionAtDeclaration`, et `navigationObservedByBanane: false`.
 
-**Banc.** 378 tests. Sur un clone sans `datasets/native/` : 376 verts, 0 rouge,
+**Banc.** 383 tests. Sur un clone sans `datasets/native/` : 381 verts, 0 rouge,
 2 ignorés, et le banc va jusqu'au bout. Les tests couvrent : mono-cut,
 multi-cut, navigation absente, navigation attendue sans état final, navigation
 inattendue (saut, retour arrière, autre part, autre onglet), reprise manuelle,
 redémarrage après acceptation, redémarrage après refus, conservation du journal
-d'interruptions, lot actif en reprise manuelle (moteur et service worker) et
-détection du corpus. Chacun a été vérifié non complaisant — ils échouent quand
-on retire le correctif qu'ils verrouillent.
+d'interruptions, lot actif en reprise manuelle (moteur et service worker),
+détection du corpus, et les cinq cas d'identité de tentative — acceptation d'un
+lot antérieur sur le même cut, intent d'un lot antérieur, crédit exactement une
+fois malgré plusieurs redémarrages, refus courant non rattrapé par une
+acceptation ancienne, état hérité sans identifiant. Chacun a été vérifié non
+complaisant — ils échouent quand on retire le correctif qu'ils verrouillent.
 
 ## 4.5.0 — 15 septembre 2026
 
