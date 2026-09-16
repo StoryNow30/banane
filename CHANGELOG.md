@@ -104,10 +104,18 @@ transportent, et `init()` ne recrédite que sur une correspondance exacte des
 trois. Une acceptation qui ne correspond pas à la tentative courante est
 ignorée, quel que soit son cut.
 
-Un état écrit par une version antérieure à V4.6.0 ne porte aucun identifiant de
-tentative : s'il contient un intent sans identifiant pour ce cut, la commande a
-pu partir, donc ni crédit ni renvoi. Sans aucun intent, `validateAndNext` n'avait
-pas commencé et la reprise la conduit normalement.
+**Migration depuis V4.5.7.** Un état écrit par une version antérieure ne porte
+aucun identifiant de tentative. Le journal ne peut pas en tenir lieu : ses
+événements survivent aux lots, si bien qu'un `validation-intent` V4.5.7 traînant
+sur le même cut bloquait à tort un lot V4.6 neuf qui n'avait rien envoyé.
+
+Seul un marqueur appartenant à l'**état courant** fait foi : `validationStarted`,
+que `apply()` remet à faux avant chaque application. Il n'est vrai, dans cette
+branche, que si la commande est partie **et** revenue — si elle était encore en
+vol, `s.intent` serait posé et la réconciliation aurait déjà pris la main. Il
+vaut seul, sans confirmation du journal, celui-ci étant plafonné à 150
+événements dont l'intent peut avoir été chassé. Aucun événement antérieur au lot
+courant ne peut donc bloquer ce lot.
 
 **Formulation `MANUAL_COMPLETION`.** `operatorNavigationObserved: true` est
 retiré : Banane n'observait pas l'opérateur naviguer et ne peut rien dire d'une
@@ -116,7 +124,7 @@ l'identité affichée à la déclaration : `identityReadAtDeclaration`,
 `identityDifferedFromTakenCut`, `identityIsExpectedSuccessor`,
 `transitionAtDeclaration`, et `navigationObservedByBanane: false`.
 
-**Banc.** 383 tests. Sur un clone sans `datasets/native/` : 381 verts, 0 rouge,
+**Banc.** 385 tests. Sur un clone sans `datasets/native/` : 383 verts, 0 rouge,
 2 ignorés, et le banc va jusqu'au bout. Les tests couvrent : mono-cut,
 multi-cut, navigation absente, navigation attendue sans état final, navigation
 inattendue (saut, retour arrière, autre part, autre onglet), reprise manuelle,
@@ -125,7 +133,8 @@ d'interruptions, lot actif en reprise manuelle (moteur et service worker),
 détection du corpus, et les cinq cas d'identité de tentative — acceptation d'un
 lot antérieur sur le même cut, intent d'un lot antérieur, crédit exactement une
 fois malgré plusieurs redémarrages, refus courant non rattrapé par une
-acceptation ancienne, état hérité sans identifiant. Chacun a été vérifié non
+acceptation ancienne, intent V4.5.7 périmé n'entravant pas un lot neuf, et
+les deux états d'interruption réellement persistés par 4.5.7. Chacun a été vérifié non
 complaisant — ils échouent quand on retire le correctif qu'ils verrouillent.
 
 ## 4.5.0 — 15 septembre 2026

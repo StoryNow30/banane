@@ -54,11 +54,22 @@
       const acceptee=passees.find(e=>e.type==='validation-accepted'&&memeTentative(e));
       const commandee=passees.find(e=>e.type==='validation-intent'&&memeTentative(e));
       /* État écrit par une version antérieure à V4.6.0 : aucune tentative n'y
-       * est identifiée. Si un intent sans identifiant existe pour ce cut, la
-       * commande a pu partir — on ne crédite pas et on ne renvoie pas.
-       * Sans aucun intent, `validateAndNext` n'a pas commencé : rien n'est
-       * parti, et la reprise peut la conduire normalement. */
-      const heritee=!attempt&&passees.find(e=>e.type==='validation-intent'&&!e.validationAttemptId&&K.key(e.identity)===cible);
+       * est identifiée. LE JOURNAL NE PEUT PAS EN TENIR LIEU — ses événements
+       * survivent aux lots, si bien qu'un `validation-intent` V4.5.7 traînant
+       * sur le même cut bloquerait à tort un lot neuf qui n'a rien envoyé.
+       *
+       * Seul un marqueur appartenant à l'ÉTAT COURANT fait foi : `s.validationStarted`,
+       * que `apply()` remet à faux avant CHAQUE application. Ici il n'est vrai
+       * que si la commande est partie ET revenue — si elle était encore en vol,
+       * `s.intent` serait posé et la branche de réconciliation, plus haut,
+       * aurait déjà pris la main. Il vaut seul, sans confirmation du journal :
+       * celui-ci est plafonné à 150 événements et l'intent peut en avoir été
+       * chassé. */
+      const heritee=!attempt&&this.s.validationStarted===true;
+      /* Retrouvé pour la trace seulement, jamais comme condition, et jamais
+       * antérieur au lot courant. */
+      const intentHerite=heritee&&passees.find(e=>e.type==='validation-intent'&&!e.validationAttemptId&&K.key(e.identity)===cible
+        &&(!this.s.batch.startedAt||e.timestamp>=this.s.batch.startedAt))||null;
       if(this.s.batch.step==='validate'&&acceptee){
         const k=acceptee.cutId||K.key(acceptee.identity);
         if(!this.s.batch.processed.some(p=>p.key===k||p.key===K.key(acceptee.identity)))
@@ -73,7 +84,8 @@
         if(!Array.isArray(this.s.batch.interrupted))this.s.batch.interrupted=[];
         this.s.batch.interrupted.push({identity:K.completeIdentity(this.s.applied.identity),
           status:'VALIDATION_NOT_ACCEPTED_BEFORE_RESTART',evidence:this.s.lastActionEvidence||null,
-          validationAttemptId:attempt?.validationAttemptId??null,legacyStateWithoutAttemptId:!attempt});
+          validationAttemptId:attempt?.validationAttemptId??null,legacyStateWithoutAttemptId:!attempt,
+          legacyMarker:attempt?null:'validationStarted',legacyIntentEventId:intentHerite?.eventId??null});
         this.s.notice='Commande de validation transmise avant l’interruption, sans résultat accepté. Ce cut n’est ni compté ni retraité, et la commande ne sera pas renvoyée : contrôle-le dans ESV.';
         await this.event('batch-validation-not-accepted-on-restart',{identity:this.s.applied.identity,
           validationAttemptId:attempt?.validationAttemptId??null,batchId:this.s.batch.id??null,

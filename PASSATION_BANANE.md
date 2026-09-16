@@ -85,7 +85,7 @@ l'identique et conserve l'empreinte 4.4.0 du moteur — un test vérifie ce poin
 précis, pour qu'elle ne puisse pas servir à assouplir le gel par la bande.
 
 Le banc doit rester vert : **339 tests au 15/09**, dont 201 hérités de la
-référence V4.5. **383 après le lot V4.6.0.**
+référence V4.5. **385 après le lot V4.6.0.**
 
 ### Deux modes de banc depuis V4.6.0
 

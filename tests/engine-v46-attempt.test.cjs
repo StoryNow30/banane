@@ -102,22 +102,79 @@ test('a refused current attempt is never rescued by an older acceptance of the s
  assert.equal(redemarre.closureSummary().completed,0);
 });
 
-/* Chemin hérité, ajouté avec la garde : un état écrit par une version
- * antérieure à V4.6.0 ne porte aucun identifiant de tentative. Si un intent
- * sans identifiant existe pour ce cut, la commande a pu partir — ni crédit, ni
- * renvoi. C'est le seul cas où l'absence d'identifiant bloque, et il ne doit
- * pas attraper un lot qui n'a simplement pas encore tenté de valider. */
-test('a pre-V4.6.0 state without an attempt id is neither credited nor resent',async()=>{
- const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';
+/* MIGRATION DEPUIS V4.5.7 — révisée après la revue finale.
+ *
+ * Ce que 4.5.7 persistait vraiment, dans `validateAndNext` :
+ *
+ *     this.s.validationStarted=true; this.s.intent={kind:'validate',identity};
+ *     await this.event('validation-intent',{...});   // ← sauvegarde l'état
+ *     ...appel de l'adaptateur...
+ *     outcomeObserved=true; this.s.intent=null;      // ← effacé au retour
+ *
+ * D'où deux états interrompus distincts, et un seul relève de cette branche :
+ * celui où la commande est PARTIE ET REVENUE, donc `intent` effacé et
+ * `validationStarted` resté vrai. La première version de ce test se contentait
+ * de poser un événement dans le journal sans reproduire ces marqueurs — elle ne
+ * reproduisait donc pas l'état réellement écrit par 4.5.7. */
+async function etatHerite4_5_7(adapter,e,{intentEncorePose=false}={}){
  await e.analyze();e.s.batch=enValidation(adapter,'lot-hérité');await e.apply();
- // Tel que 4.5.7 l'écrivait : un intent sans identifiant de tentative.
+ // L'intent tel que 4.5.7 le journalisait : sans identifiant de tentative.
  await e.event('validation-intent',{identity:adapter.identity,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false});
- assert.equal(e.s.applied.validationAttempt,undefined);
+ e.s.validationStarted=true;e.s.intent=intentEncorePose?{kind:'validate',identity:K.clone(adapter.identity)}:null;
+ await e.save();
+}
+test('a pre-V4.6.0 state interrupted after the command returned is neither credited nor resent',async()=>{
+ const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';
+ await etatHerite4_5_7(adapter,e);
+ assert.equal(e.s.applied.validationAttempt,undefined,'4.5.7 n’identifiait pas ses tentatives');
+ assert.equal(e.s.validationStarted,true);assert.equal(e.s.intent,null);
  assert.equal(store.events.at(-1).validationAttemptId,undefined);
  const redemarre=new Engine(adapter,store);await redemarre.init();
  assert.equal(redemarre.s.batch.processed.length,0);
  assert.equal(redemarre.s.batch.state,'PAUSED_AFTER_STATE_MISSING');
  assert.equal(redemarre.s.batch.interrupted.at(-1).legacyStateWithoutAttemptId,true);
+ assert.equal(redemarre.s.batch.interrupted.at(-1).legacyMarker,'validationStarted');
  await assert.rejects(()=>redemarre.resume(),/État final manquant/);
- assert.equal(adapter.calls.filter(c=>c==='validate').length,0,'aucune commande n’est envoyée');
+ assert.equal(adapter.calls.filter(c=>c==='validate').length,0,'aucune commande n’est renvoyée');
+});
+/* L'autre état 4.5.7 : interrompu AVANT le retour de la commande, `intent`
+ * encore posé. Il ne passe pas par cette branche — la réconciliation le prend
+ * en charge plus haut — mais le contrat qui compte est le même, et il doit être
+ * vérifié plutôt que supposé : ni crédit, ni renvoi. */
+test('a pre-V4.6.0 state interrupted with its validate intent still set is neither credited nor resent',async()=>{
+ const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';
+ await etatHerite4_5_7(adapter,e,{intentEncorePose:true});
+ assert.equal(e.s.intent.kind,'validate');assert.equal(e.s.validationStarted,true);
+ const redemarre=new Engine(adapter,store);await redemarre.init();
+ assert.equal(redemarre.s.batch.processed.length,0,'aucun crédit');
+ assert.equal(redemarre.s.reconcileRequired,true);
+ await assert.rejects(()=>redemarre.resume(),/Réconciliation/);
+ assert.equal(adapter.calls.filter(c=>c==='validate').length,0,'aucune commande n’est renvoyée');
+});
+/* LE DÉFAUT SIGNALÉ PAR LA REVUE FINALE. Un intent V4.5.7 sur le cut 100 dort
+ * dans le journal ; un lot V4.6 revient sur ce cut, applique, et n'a encore
+ * rien envoyé. L'ancien événement ne doit pas le bloquer : `apply()` a remis
+ * `validationStarted` à faux, et c'est ce marqueur-là qui fait foi. */
+test('a stale V4.5.7 intent on the same cut never blocks a fresh V4.6 batch that has sent nothing',async()=>{
+ const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';
+ // Le lot d'avant, en 4.5.7 : son intent reste dans `s.events`.
+ await e.analyze();e.s.batch=enValidation(adapter,'lot-4.5.7');await e.apply();
+ await e.event('validation-intent',{identity:adapter.identity,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false});
+ e.s.validationStarted=true;e.s.intent=null;await e.save();
+ const vieilIntent=store.events.filter(x=>x.type==='validation-intent'&&!x.validationAttemptId);
+ assert.equal(vieilIntent.length,1,'le vieil intent est bien au journal');
+ // Lot V4.6 neuf sur le MÊME cut : il applique, il ne valide pas encore.
+ rouvrirLeCut100(adapter,e);await e.analyze();
+ e.s.batch={...enValidation(adapter,'lot-V4.6'),startedAt:new Date().toISOString()};
+ await e.apply();await e.save();
+ assert.equal(e.s.validationStarted,false,'apply() a remis le marqueur à faux');
+ assert.ok(store.events.some(x=>x.type==='validation-intent'&&!x.validationAttemptId),'le vieil intent traîne toujours');
+ const redemarre=new Engine(adapter,store);await redemarre.init();
+ assert.notEqual(redemarre.s.batch.state,'PAUSED_AFTER_STATE_MISSING','un événement antérieur ne bloque pas ce lot');
+ assert.equal(redemarre.s.batch.step,'validate');assert.equal(redemarre.s.batch.processed.length,0);
+ // Et la validation courante peut partir.
+ const avant=adapter.calls.filter(c=>c==='validate').length;
+ await redemarre.resume();await redemarre.task;
+ assert.equal(adapter.calls.filter(c=>c==='validate').length,avant+1,'la validation courante part');
+ assert.equal(redemarre.s.batch.processed.length,1);assert.equal(redemarre.s.batch.processed[0].cut,100);
 });

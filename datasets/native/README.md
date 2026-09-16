@@ -38,7 +38,7 @@ vérifie dans les deux sens. Aucun autre test ne dépend de ce dossier.
 
 Mesure effectuée sur une copie jetable de l'arbre, `datasets/native/` retiré,
 le reste identique au bit près. Sur le poste de travail complet, le banc était à
-**364/364** avant V4.6.0 ; **383/383 n'a pas été mesuré ici**, faute des trois
+**364/364** avant V4.6.0 ; **385/385 n'a pas été mesuré ici**, faute des trois
 fichiers — c'est l'attendu, pas un relevé. Les trois fichiers gelés à 4.4.0
 restent identiques ; `src/engine.js`, dégelé en V4.6.0, est vérifié contre
 `audit/v4.6.0-engine-baseline.json`.
@@ -55,5 +55,5 @@ node tools/verify.cjs --full
 ignoré : c'est le seul mode qui autorise à annoncer un banc entièrement vert.
 Sans le corpus, il s'arrête tout de suite en nommant les fichiers manquants.
 
-Attendu : `{"tests":383,...,"pass":383,"fail":0,"skipped":0}`,
+Attendu : `{"tests":385,...,"pass":385,"fail":0,"skipped":0}`,
 `Geometry unchanged: true`, `Engine matches V4.6.0 baseline: true`.
