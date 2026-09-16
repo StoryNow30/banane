@@ -1,4 +1,4 @@
-# Flank Support Shadow V1.2 — instrumentation hors ligne
+# Flank Support Shadow V1.3 — instrumentation hors ligne
 
 Lot séparé, **lecture seule**. Aucun changement runtime, `geometry.js`, moteur,
 Brain, Pair Arbitration, seuil, politique ou paramètre. Aucun seuil n'est choisi,
@@ -191,6 +191,44 @@ C'est vrai par construction — une ligne dégradée a toujours un `visitIndex`
 supérieur à la frontière, donc ne peut jamais précéder une ligne admissible — et
 la propriété est verrouillée par test plutôt que laissée à la démonstration.
 
+## V1.3 — le test de fraîcheur, aligné mot pour mot sur le runtime
+
+**Ce que V1.1 faisait de trop.** Le critère annoncé « repris verbatim » ajoutait
+`freshnessMs === undefined`. Le runtime, lui, teste exactement :
+
+```js
+freshnessMs === null || freshnessMs < 0 || freshnessMs > 1500
+```
+
+`undefined` n'y tombe pas — `undefined === null` est faux, et ses comparaisons le
+sont aussi. Un critère présenté comme verbatim ne pouvait donc pas le contenir.
+Le test est désormais identique au runtime, et publié tel quel dans
+`runtimeTest`.
+
+**La garde de banc est conservée, mais à part.** Une fraîcheur absente n'est pas
+une fraîcheur nulle, et le runtime ne la voit pas. Elle est signalée dans
+`benchGuards` — `freshness-undefined-not-seen-by-runtime` — avec
+`benchGuardsAreNotRuntimeCriterion: true`, et n'entre dans aucun motif runtime.
+
+**Effet exact sur tous les compteurs**, mesuré et non estimé :
+
+| compteur | V1.1 | V1.3 | écart |
+|---|---:|---:|---:|
+| motif `human-final-reference-not-freshly-observed` | **664** | **210** | **−454** |
+| rails portant la garde de banc | — | **454** | +454 |
+| `validated-reference-not-observed` | 454 | 454 | 0 |
+| `human-final-reference-missing` | 454 | 454 | 0 |
+| `human-final-rail-state-missing` | 454 | 454 | 0 |
+| `multiple-operator-intents-observed` | 72 | 72 | 0 |
+| `decision-effect-not-observed` | 22 | 22 | 0 |
+| **rails `reliableObservation`** | **3 576** | **3 576** | **0** |
+| `candidate-observed` | 3 666 | 3 666 | 0 |
+
+**Aucun verdict ne bouge.** Les 454 rails concernés portaient déjà d'autres
+motifs — ce sont les mêmes 454 que `human-final-reference-missing`. Le correctif
+déplace un compteur de motif, pas une décision : tous les compteurs post-hoc,
+par corpus comme en combined-day, sont inchangés. Verrouillé par test.
+
 ## Artefacts et reproduction
 
 - `tools/flank-support-shadow.cjs` — le banc ;
@@ -200,10 +238,10 @@ la propriété est verrouillée par test plutôt que laissée à la démonstrati
 - `tests/flank-support-shadow.test.cjs` — tests, qui ne relisent jamais les
   collectes.
 
-- `tests/flank-support-shadow.test.cjs` — **24 tests**.
+- `tests/flank-support-shadow.test.cjs` — **25 tests**.
 
 Empreinte du contenu, horodatage exclu, **deux exécutions donnent la même** :
-`676305a74cbfe06701ec03222f70c09f208008f1ca8ac9b0330e3b95e5121cd4`.
+`23f71c19056fb38bc2c442cf35da87b9373f6a64276f161afcd8fa611a16eee7`.
 
 ```bash
 node tools/flank-support-shadow.cjs \

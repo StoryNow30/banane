@@ -10,7 +10,7 @@ const F = require('../tools/flank-support-shadow.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
 const A = JSON.parse(fs.readFileSync(path.join(ROOT, 'audit/flank-support-shadow-v1.json')));
-assert.equal(A.format, 'banane-flank-support-shadow-v1.2');
+assert.equal(A.format, 'banane-flank-support-shadow-v1.3');
 const ROWS = A.rows;
 const FLANK = ROWS.filter(r => r.population === 'flank-only');
 const CORPUS = n => A.corpora.find(c => c.name === n);
@@ -357,6 +357,50 @@ test('reliableObservation : critère du projet repris VERBATIM, statut brut cons
     assert.ok(s.flankOnly.postHoc.reliableObservationOnly);
     assert.ok(s.allPopulationsPostHoc.reliableObservationOnly);
   }
+});
+
+test('le test de fraîcheur est EXACTEMENT celui du runtime, undefined exclu', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'src/native-session.js'), 'utf8');
+  /* Le runtime teste null, < 0 et > 1500 — et RIEN d'autre. `undefined` n'y
+   * tombe pas : `undefined === null` est faux et ses comparaisons le sont
+   * aussi. V1.1 l'ajoutait au critère dit « verbatim » : c'était une
+   * divergence, corrigée ici. */
+  assert.ok(src.includes('freshnessMs===null||reference?.association?.freshnessMs<0'));
+  assert.ok(src.includes('freshnessMs>1500'));
+  const ligne = src.split('\n').find(l => l.includes('human-final-reference-not-freshly-observed'));
+  assert.ok(ligne, 'la ligne du test de fraîcheur doit exister');
+  assert.ok(!ligne.includes('undefined'),
+    'la ligne runtime ne teste pas undefined — le banc ne peut donc pas l’y ajouter');
+  assert.equal(A.reliableObservationCriterion.undefinedIsNotInTheRuntimeTest, true);
+  assert.equal(A.reliableObservationCriterion.freshnessRuntimeTest,
+    'freshnessMs === null || freshnessMs < 0 || freshnessMs > 1500');
+  for (const r of ROWS) {
+    const ro = r.postHocEvaluation.reliableObservation;
+    assert.equal(ro.runtimeTest, 'freshnessMs === null || freshnessMs < 0 || freshnessMs > 1500');
+    assert.equal(ro.benchGuardsAreNotRuntimeCriterion, true);
+    // la garde de banc n'est JAMAIS mêlée aux motifs runtime
+    for (const g of ro.benchGuards) assert.ok(!ro.reasons.includes(g));
+  }
+  /* Effet exact, mesuré : le motif de fraîcheur passe de 664 à 210, soit les
+   * 454 rails dont la fraîcheur était `undefined` ; aucun VERDICT ne bouge,
+   * parce que ces 454 rails portaient déjà d'autres motifs. */
+  const motifs = {};
+  for (const r of ROWS) for (const m of r.postHocEvaluation.reliableObservation.reasons)
+    motifs[m] = (motifs[m] || 0) + 1;
+  assert.equal(motifs['human-final-reference-not-freshly-observed'], 210);
+  const gardes = ROWS.filter(r => r.postHocEvaluation.reliableObservation.benchGuards.length);
+  assert.equal(gardes.length, 454);
+  for (const r of gardes) {
+    assert.deepEqual(r.postHocEvaluation.reliableObservation.benchGuards,
+      ['freshness-undefined-not-seen-by-runtime']);
+    assert.ok(!r.postHocEvaluation.reliableObservation.reasons
+      .includes('human-final-reference-not-freshly-observed'));
+    // ces rails restent non fiables pour d'AUTRES motifs : le verdict ne bouge pas
+    assert.equal(r.postHocEvaluation.reliableObservation.reliable, false);
+  }
+  assert.equal(ROWS.filter(r => r.postHocEvaluation.reliableObservation.reliable).length, 3576);
+  assert.equal(A.combinedDay.summary.allPopulationsPostHoc.reliableObservationOnly.rails, 3576);
+  assert.equal(A.combinedDay.summary.allPopulationsPostHoc.allCandidateObserved.rails, 3666);
 });
 
 test('pointsUsed est renseigné, et distinct des points fournis', () => {

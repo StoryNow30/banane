@@ -354,12 +354,25 @@ function reliableObservation(visit, side) {
   if (!ref?.state) reasons.push('human-final-reference-missing');
   if (ref?.association?.identityMatched === false) reasons.push('human-final-reference-identity-mismatch');
   const fresh = ref?.association?.freshnessMs;
-  if (fresh === null || fresh === undefined || fresh < 0 || fresh > 1500)
+  /* EXACTEMENT le test du runtime, et rien de plus :
+   *   freshnessMs === null || freshnessMs < 0 || freshnessMs > 1500
+   * `undefined` n'y figure pas — et n'y tombe pas non plus, puisque
+   * `undefined === null` est faux et que ses comparaisons le sont aussi. Le
+   * banc ne peut donc pas l'y ajouter en se réclamant du verbatim.
+   * (V1.1 l'ajoutait : c'était une divergence, corrigée en V1.3.) */
+  if (fresh === null || fresh < 0 || fresh > 1500)
     reasons.push('human-final-reference-not-freshly-observed');
   if (!visit.navigationObserved) reasons.push('decision-effect-not-observed');
   if (!ref?.state?.rails?.[side]) reasons.push('human-final-rail-state-missing');
+  /* Garde PROPRE AU BANC, publiée à part et jamais mêlée au critère runtime :
+   * une fraîcheur absente n'est pas la même chose qu'une fraîcheur nulle, et le
+   * runtime ne la voit pas. On la signale sans l'ériger en critère. */
+  const benchGuards = [];
+  if (fresh === undefined) benchGuards.push('freshness-undefined-not-seen-by-runtime');
   return { reliable: reasons.length === 0, reasons,
            criterion: 'src/native-session.js — referenceReasons, repris verbatim',
+           runtimeTest: 'freshnessMs === null || freshnessMs < 0 || freshnessMs > 1500',
+           benchGuards, benchGuardsAreNotRuntimeCriterion: true,
            freshnessMs: fresh ?? null, freshnessWindowMs: [0, 1500] };
 }
 
@@ -769,7 +782,7 @@ function main() {
   const built = dirs.map(d => buildCorpus(d.dir, d.name));
   const combined = combine(built);
   const body = {
-    format: 'banane-flank-support-shadow-v1.2',
+    format: 'banane-flank-support-shadow-v1.3',
     nature: 'instrumentation hors ligne, lecture seule — aucune politique, aucun seuil, aucune règle',
     studiedAbstention: FLANK_REASON,
     engine: { version: '4.6.0', geometryMethod: G.DEFAULTS.method, parameters: G.DEFAULTS,
@@ -786,6 +799,9 @@ function main() {
       conditions: ['intention opérateur unique valant VALIDATE', 'état de référence présent',
                    'identité concordante', 'fraîcheur d’association dans [0, 1500] ms',
                    'effet de décision observé', 'état de rail présent du côté considéré'],
+      freshnessRuntimeTest: 'freshnessMs === null || freshnessMs < 0 || freshnessMs > 1500',
+      undefinedIsNotInTheRuntimeTest: true,
+      benchGuardsPublishedSeparately: ['freshness-undefined-not-seen-by-runtime'],
       invented: false,
     },
     oppositeStates: OPPOSITE_STATES,

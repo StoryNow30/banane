@@ -187,9 +187,89 @@ const UNSATISFIED_CLASSES = [
   'famille-absente',
   'candidats-concordants-tous-faux',
   'familles-divergentes-toutes-fausses',
-  'hors-fenetre-de-recherche',
+  'generation-unreachable-by-bounds',
+  'outside-nominal-window-but-not-proven-unreachable',
   'correction-humaine-ambigue',
 ];
+
+/**
+ * Domaines réellement atteignables par le moteur gelé, PAR FAMILLE.
+ *
+ * Lus dans `src/geometry.js`, exprimés en fonction de ses propres `DEFAULTS` —
+ * aucune borne n'est modifiée, aucune valeur nouvelle n'est proposée :
+ *
+ *   coarse / alternative  `search(0, 0, searchY, searchZ, grid, true)`
+ *                         → boîte ±searchY, ±searchZ
+ *   seed                  raffinement `search(best.u, best.z, .004, .004, .001)`
+ *                         autour d'un `best` déjà dans la boîte grossière
+ *                         → boîte ±(searchY + .004), ±(searchZ + .004)
+ *   surfaceIntersection   acceptée tant que |u| ≤ searchY + .01
+ *                         et |z| ≤ searchZ + .01
+ *                         → boîte ±(searchY + .01), ±(searchZ + .01)
+ *
+ * L'enveloppe PERMISSIVE est la plus large des trois. Les constantes .004 et
+ * .01 sont citées depuis le code du moteur, pas choisies ici.
+ */
+const REFINE = 0.004, SURFACE_MARGIN = 0.01;
+function reachableDomains(cfg = G.DEFAULTS) {
+  return {
+    coarse: { boundY: cfg.searchY, boundZ: cfg.searchZ,
+              from: 'search(0,0,searchY,searchZ,grid,true)' },
+    alternative: { boundY: cfg.searchY, boundZ: cfg.searchZ,
+                   from: 'candidat retenu dans la grille grossière' },
+    seed: { boundY: cfg.searchY + REFINE, boundZ: cfg.searchZ + REFINE,
+            from: 'raffinement search(best.u,best.z,.004,.004,.001)' },
+    surfaceIntersection: { boundY: cfg.searchY + SURFACE_MARGIN, boundZ: cfg.searchZ + SURFACE_MARGIN,
+                           from: '|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01' },
+  };
+}
+
+/**
+ * Distance minimale d'un déplacement humain à un domaine atteignable.
+ *
+ * Le domaine est l'ensemble des placements que le moteur PEUT produire :
+ * `{ (0, y, z) : |y| ≤ boundY, |z| ≤ boundZ }`. La composante x y est
+ * toujours nulle — la recherche du moteur est bidimensionnelle — donc l'écart
+ * humain en x compte intégralement dans la distance. L'omettre surestimerait
+ * l'accessibilité.
+ */
+function distanceToDomain(human, boundY, boundZ) {
+  const dx = Math.abs(human[0]);
+  const dy = Math.max(0, Math.abs(human[1]) - boundY);
+  const dz = Math.max(0, Math.abs(human[2]) - boundZ);
+  return Math.hypot(dx, dy, dz);
+}
+
+/**
+ * Preuve CONSERVATRICE d'inaccessibilité.
+ *
+ * Un cas n'est déclaré `generation-unreachable-by-bounds` que si, en donnant au
+ * moteur le domaine le PLUS PERMISSIF que son propre code autorise, la distance
+ * de la référence humaine à ce domaine reste STRICTEMENT supérieure à la
+ * convention de satisfaction. Sortir des bornes nominales ne suffit pas : un
+ * point à 0,002 au-delà de `searchY` reste satisfaisable.
+ */
+function reachability(human, tol = TOLERANCE_ORACLE, cfg = G.DEFAULTS) {
+  const domains = reachableDomains(cfg);
+  const perFamily = Object.fromEntries(Object.entries(domains).map(([n, d]) =>
+    [n, { boundY: d.boundY, boundZ: d.boundZ, from: d.from,
+          minDistance: distanceToDomain(human, d.boundY, d.boundZ) }]));
+  const best = Object.entries(perFamily).reduce((a, b) => b[1].minDistance < a[1].minDistance ? b : a);
+  const outsideNominal = Math.abs(human[1]) > cfg.searchY || Math.abs(human[2]) > cfg.searchZ;
+  return {
+    perFamily,
+    mostPermissive: { family: best[0], minDistance: best[1].minDistance,
+                      boundY: best[1].boundY, boundZ: best[1].boundZ },
+    outsideNominalWindow: outsideNominal,
+    nominalWindow: { searchY: cfg.searchY, searchZ: cfg.searchZ },
+    tolerance: tol,
+    provenUnreachable: best[1].minDistance > tol,
+    proof: best[1].minDistance > tol
+      ? `distance minimale ${best[1].minDistance} au domaine le plus permissif `
+        + `(${best[0]} : ±${best[1].boundY}, ±${best[1].boundZ}) > ${tol}`
+      : `distance minimale ${best[1].minDistance} ≤ ${tol} : accessible, donc NON prouvé impossible`,
+  };
+}
 
 /**
  * Pourquoi aucun candidat exposé n'est satisfaisant ?
@@ -197,10 +277,13 @@ const UNSATISFIED_CLASSES = [
  * L'ordre des tests est explicite et les catégories sont EXCLUSIVES. Aucune ne
  * propose de correctif : elles décrivent où se situe l'obstacle.
  *
- * `hors-fenetre-de-recherche` compare le déplacement humain aux bornes de
- * recherche `searchY` / `searchZ` du moteur gelé. Ce n'est pas un seuil nouveau :
- * ce sont ses propres bornes, citées, et un placement au-delà ne POUVAIT pas
- * être produit — c'est une limite de génération démontrable.
+ * CORRECTION V1.1 du diagnostic. Le premier découpage concluait à une
+ * « génération impossible » dès que la référence sortait des bornes nominales.
+ * C'était insuffisant : le moteur raffine au-delà de la grille grossière, et
+ * accepte l'intersection de surfaces plus loin encore. Un point hors bornes
+ * nominales peut donc rester à portée, et 0,010 est la convention de
+ * satisfaction — pas l'appartenance au domaine. La preuve est désormais
+ * conservatrice, et le cas non prouvé reçoit une classe distincte.
  */
 function classifyUnsatisfied(row, ambiguousCuts, cfg = G.DEFAULTS) {
   const human = row.postHocEvaluation.humanDeltaLocal;
@@ -211,20 +294,20 @@ function classifyUnsatisfied(row, ambiguousCuts, cfg = G.DEFAULTS) {
   const spread = present.length > 1
     ? Math.max(...present.flatMap(([, a], i) => present.slice(i + 1).map(([, b]) => norm(a, b))))
     : 0;
-  const outOfWindow = Math.abs(human[1]) > cfg.searchY || Math.abs(human[2]) > cfg.searchZ;
+  const reach = reachability(human, TOLERANCE_ORACLE, cfg);
   const detail = { errors, spread, familiesPresent: present.map(([n]) => n),
                    humanMagnitude: Math.hypot(...human),
+                   humanX: Math.abs(human[0]), humanY: Math.abs(human[1]), humanZ: Math.abs(human[2]),
                    searchWindow: { searchY: cfg.searchY, searchZ: cfg.searchZ },
-                   humanY: Math.abs(human[1]), humanZ: Math.abs(human[2]) };
+                   reachability: reach };
   if (ambiguousCuts.has(key))
     return { classe: 'correction-humaine-ambigue', detail: { ...detail, ambiguousCut: key } };
-  if (outOfWindow)
-    return { classe: 'hors-fenetre-de-recherche', detail };
+  if (reach.provenUnreachable)
+    return { classe: 'generation-unreachable-by-bounds', detail };
+  if (reach.outsideNominalWindow)
+    return { classe: 'outside-nominal-window-but-not-proven-unreachable', detail };
   if (present.length < 3)
     return { classe: 'famille-absente', detail };
-  /* Tous faux : la question devient « le moteur hésitait-il ? ». Des candidats
-   * serrés et tous faux, c'est une erreur SYSTÉMATIQUE de placement ; des
-   * candidats dispersés et tous faux, c'est une génération qui rate la cible. */
   return spread <= Math.min(...Object.values(errors))
     ? { classe: 'candidats-concordants-tous-faux', detail }
     : { classe: 'familles-divergentes-toutes-fausses', detail };
@@ -417,6 +500,15 @@ function main() {
       note: 'la branche « unsupported » joint ses messages par un espace ; elle sort APRÈS '
           + 'la construction des métriques, donc les trois familles existent déjà' },
     unsatisfiedClasses: UNSATISFIED_CLASSES,
+    reachableDomains: reachableDomains(),
+    supersededDiagnostic: {
+      v1Class: 'hors-fenetre-de-recherche', v1Count: 25,
+      why: 'le test |humanY| > searchY || |humanZ| > searchZ ne prouve pas l’inaccessibilité : '
+         + 'il ignore le raffinement ±.004, l’enveloppe surfaceIntersection ±.01, la composante x '
+         + 'et le fait que 0,010 est une convention de SATISFACTION, pas d’appartenance au domaine',
+      replacedBy: ['generation-unreachable-by-bounds',
+                   'outside-nominal-window-but-not-proven-unreachable'],
+    },
     units: 'scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres',
     evaluationConvention: { tolerance: TOLERANCE_ORACLE, usedFor: 'comptage uniquement' },
     corpora: corpora.map(c => ({ name: c.name, directory: path.resolve(c.dir) })),
@@ -436,7 +528,8 @@ function main() {
   if (out) console.log('écrit :', out);
 }
 
-module.exports = { EXIT_STAGES, STAGE_OF, stageOf, SUPPORT_MESSAGES, AMBIGUITY_MESSAGE, UNSATISFIED_CLASSES, inputDescriptors, diagnoseRail,
+module.exports = { EXIT_STAGES, STAGE_OF, stageOf, REFINE, SURFACE_MARGIN,
+                   reachableDomains, distanceToDomain, reachability, SUPPORT_MESSAGES, AMBIGUITY_MESSAGE, UNSATISFIED_CLASSES, inputDescriptors, diagnoseRail,
                    classifyUnsatisfied, ambiguousHumanCuts, concentration, quantiles, tally,
                    run, summarise, TOLERANCE_ORACLE };
 if (require.main === module) main();

@@ -97,9 +97,41 @@
   "famille-absente",
   "candidats-concordants-tous-faux",
   "familles-divergentes-toutes-fausses",
-  "hors-fenetre-de-recherche",
+  "generation-unreachable-by-bounds",
+  "outside-nominal-window-but-not-proven-unreachable",
   "correction-humaine-ambigue"
  ],
+ "reachableDomains": {
+  "coarse": {
+   "boundY": 0.08,
+   "boundZ": 0.04,
+   "from": "search(0,0,searchY,searchZ,grid,true)"
+  },
+  "alternative": {
+   "boundY": 0.08,
+   "boundZ": 0.04,
+   "from": "candidat retenu dans la grille grossière"
+  },
+  "seed": {
+   "boundY": 0.084,
+   "boundZ": 0.044,
+   "from": "raffinement search(best.u,best.z,.004,.004,.001)"
+  },
+  "surfaceIntersection": {
+   "boundY": 0.09,
+   "boundZ": 0.05,
+   "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01"
+  }
+ },
+ "supersededDiagnostic": {
+  "v1Class": "hors-fenetre-de-recherche",
+  "v1Count": 25,
+  "why": "le test |humanY| > searchY || |humanZ| > searchZ ne prouve pas l’inaccessibilité : il ignore le raffinement ±.004, l’enveloppe surfaceIntersection ±.01, la composante x et le fait que 0,010 est une convention de SATISFACTION, pas d’appartenance au domaine",
+  "replacedBy": [
+   "generation-unreachable-by-bounds",
+   "outside-nominal-window-but-not-proven-unreachable"
+  ]
+ },
  "units": "scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres",
  "evaluationConvention": {
   "tolerance": 0.01,
@@ -398,8 +430,9 @@
     "final-complementary": 20
    },
    "byClass": {
-    "hors-fenetre-de-recherche": 25,
-    "familles-divergentes-toutes-fausses": 20
+    "generation-unreachable-by-bounds": 21,
+    "familles-divergentes-toutes-fausses": 20,
+    "outside-nominal-window-but-not-proven-unreachable": 4
    },
    "byClassAndCorpus": {
     "famille-absente": {},
@@ -408,9 +441,13 @@
      "historical-original": 13,
      "final-complementary": 7
     },
-    "hors-fenetre-de-recherche": {
-     "final-complementary": 13,
-     "historical-original": 12
+    "generation-unreachable-by-bounds": {
+     "historical-original": 11,
+     "final-complementary": 10
+    },
+    "outside-nominal-window-but-not-proven-unreachable": {
+     "final-complementary": 3,
+     "historical-original": 1
     },
     "correction-humaine-ambigue": {}
    },
@@ -4461,7 +4498,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.12501277345757816,
@@ -4475,12 +4512,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10097293165873078,
+    "humanX": 1.0110670700669289e-7,
+    "humanY": 0.10096246562898159,
+    "humanZ": 0.001453775039408356,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10096246562898159,
-    "humanZ": 0.001453775039408356
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.02096246562922542
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.02096246562922542
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.016962465629282913
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.010962465629447847
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.010962465629447847,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.010962465629447847 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4535,7 +4615,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.06944731520880147,
@@ -4549,12 +4629,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.1074360279124506,
+    "humanX": 4.109460860490799e-8,
+    "humanY": 0.1069082273170352,
+    "humanZ": 0.01063630694989115,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.1069082273170352,
-    "humanZ": 0.01063630694989115
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.026908227317066578
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.026908227317066578
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.022908227317072052
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.016908227317085137
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.016908227317085137,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.016908227317085137 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4609,7 +4732,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.120704228853303,
@@ -4623,12 +4746,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10861576999825918,
+    "humanX": 5.494803190231323e-8,
+    "humanY": 0.10849885735660791,
+    "humanZ": 0.005038198549300432,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10849885735660791,
-    "humanZ": 0.005038198549300432
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.028498857356660884
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.028498857356660884
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02449885735666953
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.018498857356689522
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.018498857356689522,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.018498857356689522 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4683,7 +4849,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.11620476719354138,
@@ -4697,12 +4863,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10775009830308892,
+    "humanX": 1.1129304766654968e-7,
+    "humanY": 0.1076711779460311,
+    "humanZ": 0.004123241931665689,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.1076711779460311,
-    "humanZ": 0.004123241931665689
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.027671177946254902
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.027671177946254902
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02367117794629272
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.01767117794638156
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.01767117794638156,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.01767117794638156 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4757,7 +4966,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.12308813888237162,
@@ -4771,12 +4980,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.11362534477934241,
+    "humanX": 1.0151416063308716e-7,
+    "humanY": 0.11361839529126883,
+    "humanZ": 0.0012566732475534081,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.11361839529126883,
-    "humanZ": 0.0012566732475534081
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.03361839529142209
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.03361839529142209
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.029618395291442785
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.023618395291486988
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.023618395291486988,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.023618395291486988 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4831,7 +5083,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.11194981993032956,
@@ -4845,12 +5097,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.11351303972404383,
+    "humanX": 9.872019290924072e-8,
+    "humanY": 0.11350929830223322,
+    "humanZ": 0.0009216215694323182,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.11350929830223322,
-    "humanZ": 0.0009216215694323182
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.033509298302378636
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.033509298302378636
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02950929830239834
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.02350929830244049
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.02350929830244049,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.02350929830244049 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4905,7 +5200,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.0908705770080385,
@@ -4919,12 +5214,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.11428572228968142,
+    "humanX": 7.031485438346863e-8,
+    "humanY": 0.11414060369133949,
+    "humanZ": 0.005757508857641369,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.11414060369133949,
-    "humanZ": 0.005757508857641369
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.034140603691411905
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.034140603691411905
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.030140603691421505
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.0241406036914419
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.0241406036914419,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.0241406036914419 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -4993,12 +5331,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.010475711813872855,
+    "humanX": 0.00009881239384412766,
+    "humanY": 0.009869466070085764,
+    "humanZ": 0.0035106144205201417,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.009869466070085764,
-    "humanZ": 0.0035106144205201417
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00009881239384412766
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00009881239384412766
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00009881239384412766
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00009881239384412766
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00009881239384412766,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00009881239384412766 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5067,12 +5448,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.014909803556511636,
+    "humanX": 0.000011335127055644989,
+    "humanY": 0.014182417187839746,
+    "humanZ": 0.004600125685101375,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.014182417187839746,
-    "humanZ": 0.004600125685101375
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.000011335127055644989
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.000011335127055644989
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.000011335127055644989
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.000011335127055644989
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.000011335127055644989,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.000011335127055644989 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5141,12 +5565,55 @@
      "alternative"
     ],
     "humanMagnitude": 0,
+    "humanX": 0,
+    "humanY": 0,
+    "humanZ": 0,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0,
-    "humanZ": 0
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5215,12 +5682,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.013429515633249784,
+    "humanX": 0.00017082039266824722,
+    "humanY": 0.01291907811537385,
+    "humanZ": 0.003663349722046405,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.01291907811537385,
-    "humanZ": 0.003663349722046405
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00017082039266824722
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00017082039266824722
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00017082039266824722
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00017082039266824722
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00017082039266824722,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00017082039266824722 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5289,12 +5799,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011577082790051684,
+    "humanX": 0.00011935550719499588,
+    "humanY": 0.010697145480662584,
+    "humanZ": 0.004425571009051055,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.010697145480662584,
-    "humanZ": 0.004425571009051055
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00011935550719499588
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00011935550719499588
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00011935550719499588
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00011935550719499588
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00011935550719499588,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00011935550719499588 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5363,12 +5916,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011897701448591317,
+    "humanX": 0.000032349489629268646,
+    "humanY": 0.010653507430106401,
+    "humanZ": 0.005296888964949176,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.010653507430106401,
-    "humanZ": 0.005296888964949176
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.000032349489629268646
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.000032349489629268646
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.000032349489629268646
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.000032349489629268646
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.000032349489629268646,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.000032349489629268646 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5437,12 +6033,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.04776757879024183,
+    "humanX": 1.210719347000122e-7,
+    "humanY": 0.045065746176987886,
+    "humanZ": 0.015837301063584164,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.045065746176987886,
-    "humanZ": 0.015837301063584164
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 1.210719347000122e-7
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 1.210719347000122e-7
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 1.210719347000122e-7
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 1.210719347000122e-7
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 1.210719347000122e-7,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 1.210719347000122e-7 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5511,12 +6150,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011985551980222884,
+    "humanX": 0.00007865205407142639,
+    "humanY": 0.011873934417963028,
+    "humanZ": 0.0016300158167723566,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.011873934417963028,
-    "humanZ": 0.0016300158167723566
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00007865205407142639
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00007865205407142639
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00007865205407142639
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00007865205407142639
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00007865205407142639,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00007865205407142639 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5571,7 +6253,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "outside-nominal-window-but-not-proven-unreachable",
    "detail": {
     "errors": {
      "seed": 0.024981753968490825,
@@ -5585,12 +6267,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.09802816975646084,
+    "humanX": 5.681067705154419e-8,
+    "humanY": 0.09798240149393678,
+    "humanZ": 0.0029951733304187655,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.09798240149393678,
-    "humanZ": 0.0029951733304187655
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.017982401494026516
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.017982401494026516
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.013982401494052183
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00798240149413894
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.00798240149413894,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00798240149413894 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -5645,7 +6370,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.05640026375677172,
@@ -5659,12 +6384,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10250894123431162,
+    "humanX": 6.309710443019867e-8,
+    "humanY": 0.10239963047206402,
+    "humanZ": 0.004732727771624923,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10239963047206402,
-    "humanZ": 0.004732727771624923
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.022399630472152886
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.022399630472152886
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.0183996304721722
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.01239963047222456
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.01239963047222456,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.01239963047222456 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -5719,7 +6487,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.05682708123106826,
@@ -5733,12 +6501,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.100822361010265,
+    "humanX": 1.1990778148174286e-7,
+    "humanY": 0.1008097305893898,
+    "humanZ": 0.0015958377625793219,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.1008097305893898,
-    "humanZ": 0.0015958377625793219
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.02080973058973526
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.02080973058973526
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.01680973058981746
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.010809730590054847
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.010809730590054847,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.010809730590054847 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -5793,7 +6604,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.05724666707445089,
@@ -5807,12 +6618,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.1012583125553707,
+    "humanX": 4.98257577419281e-8,
+    "humanY": 0.10124539025127888,
+    "humanZ": 0.0016176570788957179,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10124539025127888,
-    "humanZ": 0.0016176570788957179
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.0212453902513373
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.0212453902513373
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.01724539025135085
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.011245390251389265
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.011245390251389265,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.011245390251389265 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -5867,7 +6721,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.058339228876754134,
@@ -5881,12 +6735,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10133274342377854,
+    "humanX": 1.0081566870212555e-7,
+    "humanY": 0.10133266635239124,
+    "humanZ": 0.00012497877469286323,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10133266635239124,
-    "humanZ": 0.00012497877469286323
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.02133266635262946
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.02133266635262946
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.017332666352684434
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.011332666352839676
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.011332666352839676,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.011332666352839676 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -5955,12 +6852,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011787222689348618,
+    "humanX": 0.00002535991370677948,
+    "humanY": 0.011786657385528088,
+    "humanZ": 0.00011262006592005491,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.011786657385528088,
-    "humanZ": 0.00011262006592005491
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00002535991370677948
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00002535991370677948
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00002535991370677948
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00002535991370677948
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00002535991370677948,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00002535991370677948 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6029,12 +6969,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011224593201681888,
+    "humanX": 0.00006403611041605473,
+    "humanY": 0.011024435982108116,
+    "humanZ": 0.0021093134419061244,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.011024435982108116,
-    "humanZ": 0.0021093134419061244
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00006403611041605473
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00006403611041605473
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00006403611041605473
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00006403611041605473
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00006403611041605473,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00006403611041605473 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6103,12 +7086,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.008386132852028322,
+    "humanX": 0.00017583370208740234,
+    "humanY": 0.008214106783270836,
+    "humanZ": 0.0016807011852506548,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.008214106783270836,
-    "humanZ": 0.0016807011852506548
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00017583370208740234
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00017583370208740234
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00017583370208740234
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00017583370208740234
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00017583370208740234,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00017583370208740234 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6177,12 +7203,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.012545337515766716,
+    "humanX": 0.00005264207720756531,
+    "humanY": 0.011546643916517496,
+    "humanZ": 0.004904868648736738,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.011546643916517496,
-    "humanZ": 0.004904868648736738
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00005264207720756531
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00005264207720756531
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00005264207720756531
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00005264207720756531
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00005264207720756531,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00005264207720756531 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6251,12 +7320,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011734975293591125,
+    "humanX": 0.00009208312258124352,
+    "humanY": 0.011176442727446556,
+    "humanZ": 0.00357607239857316,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.011176442727446556,
-    "humanZ": 0.00357607239857316
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00009208312258124352
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00009208312258124352
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00009208312258124352
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00009208312258124352
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00009208312258124352,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00009208312258124352 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6325,12 +7437,55 @@
      "alternative"
     ],
     "humanMagnitude": 0,
+    "humanX": 0,
+    "humanY": 0,
+    "humanZ": 0,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0,
-    "humanZ": 0
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6385,7 +7540,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.02844029848598249,
@@ -6399,12 +7554,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10756518225826872,
+    "humanX": 7.264316082000732e-8,
+    "humanY": 0.10754507966339588,
+    "humanZ": 0.0020794889860553667,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10754507966339588,
-    "humanZ": 0.0020794889860553667
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.027545079663491668
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.027545079663491668
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02354507966350794
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.01754507966354627
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.01754507966354627,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.01754507966354627 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6459,7 +7657,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.023165768052698377,
@@ -6473,12 +7671,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10353824480996195,
+    "humanX": 3.91155481338501e-8,
+    "humanY": 0.10353687172755599,
+    "humanZ": 0.0005332271539373323,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10353687172755599,
-    "humanZ": 0.0005332271539373323
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.02353687172758849
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.02353687172758849
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.01953687172759514
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.013536871727612506
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.013536871727612506,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.013536871727612506 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6533,7 +7774,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.027331654808068397,
@@ -6547,12 +7788,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10702274445802626,
+    "humanX": 1.30385160446167e-7,
+    "humanY": 0.10702214343473315,
+    "humanZ": 0.00035867247788701206,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10702214343473315,
-    "humanZ": 0.00035867247788701206
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.02702214343504771
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.02702214343504771
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.023022143435102362
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.017022143435232517
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.017022143435232517,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.017022143435232517 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6607,7 +7891,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.029265845431177797,
@@ -6621,12 +7905,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.11107683250765667,
+    "humanX": 1.0803341865539551e-7,
+    "humanY": 0.11105216946452856,
+    "humanZ": 0.0023405933316098526,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.11105216946452856,
-    "humanZ": 0.0023405933316098526
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.03105216946471649
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.03105216946471649
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.027052169464744272
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.021052169464805762
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.021052169464805762,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.021052169464805762 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6681,7 +8008,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.025294028421397764,
@@ -6695,12 +8022,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10738576275343521,
+    "humanX": 9.778887033462524e-8,
+    "humanY": 0.10726215573959053,
+    "humanZ": 0.0051509211043594405,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10726215573959053,
-    "humanZ": 0.0051509211043594405
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.027262155739765908
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.027262155739765908
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02326215573979606
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.017262155739867512
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.017262155739867512,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.017262155739867512 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6755,7 +8125,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.02543389968486694,
@@ -6769,12 +8139,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10675940343176978,
+    "humanX": 2.60770320892334e-8,
+    "humanY": 0.10671740025281906,
+    "humanZ": 0.002994445589138195,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10671740025281906,
-    "humanZ": 0.002994445589138195
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.026717400252831786
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.026717400252831786
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.022717400252834023
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.016717400252839403
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.016717400252839403,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.016717400252839403 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6829,7 +8242,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.023731499359693615,
@@ -6843,12 +8256,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10658716337508575,
+    "humanX": 9.313225746154785e-10,
+    "humanY": 0.10658648423850536,
+    "humanZ": 0.0003804918160312809,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10658648423850536,
-    "humanZ": 0.0003804918160312809
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.02658648423850538
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.02658648423850538
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02258648423850538
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.01658648423850539
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.01658648423850539,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.01658648423850539 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -6903,7 +8359,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "outside-nominal-window-but-not-proven-unreachable",
    "detail": {
     "errors": {
      "seed": 0.012516216746628102,
@@ -6917,12 +8373,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.09553681160037177,
+    "humanX": 8.66129994392395e-8,
+    "humanY": 0.09543390537146479,
+    "humanZ": 0.004433066242199857,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.09543390537146479,
-    "humanZ": 0.004433066242199857
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.015433905371707817
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.015433905371707817
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.011433905371792834
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.005433905372155071
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.005433905372155071,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.005433905372155071 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -6977,7 +8476,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "outside-nominal-window-but-not-proven-unreachable",
    "detail": {
     "errors": {
      "seed": 0.015387488527520274,
@@ -6991,12 +8490,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.0976678117653755,
+    "humanX": 8.847564458847046e-8,
+    "humanY": 0.09759038116317242,
+    "humanZ": 0.0038883106171851978,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.09759038116317242,
-    "humanZ": 0.0038883106171851978
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.017590381163394928
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.017590381163394928
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.013590381163460412
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.007590381163688076
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.007590381163688076,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.007590381163688076 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7051,7 +8593,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "outside-nominal-window-but-not-proven-unreachable",
    "detail": {
     "errors": {
      "seed": 0.015734701117685997,
@@ -7065,12 +8607,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.09715861743227258,
+    "humanX": 6.798654794692993e-8,
+    "humanY": 0.09711108362535015,
+    "humanZ": 0.003038812013983261,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.09711108362535015,
-    "humanZ": 0.003038812013983261
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.017111083625485208
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.017111083625485208
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.013111083625526413
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.007111083625675149
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.007111083625675149,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.007111083625675149 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7125,7 +8710,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.02279560051565884,
@@ -7139,12 +8724,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.10552731255027173,
+    "humanX": 6.705522537231445e-8,
+    "humanY": 0.10545406199526042,
+    "humanZ": 0.00393122153764125,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.10545406199526042,
-    "humanZ": 0.00393122153764125
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.025454061995348738
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.025454061995348738
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.021454061995365207
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.015454061995405895
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.015454061995405895,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.015454061995405895 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -7199,7 +8827,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.02766285652713377,
@@ -7213,12 +8841,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.1104659134579423,
+    "humanX": 3.166496753692627e-8,
+    "humanY": 0.11046377592720091,
+    "humanZ": 0.0006872001176816411,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.11046377592720091,
-    "humanZ": 0.0006872001176816411
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.03046377592721737
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.03046377592721737
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.02646377592721985
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.02046377592722541
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.02046377592722541,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.02046377592722541 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -7287,12 +8958,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.010687214449292489,
+    "humanX": 0.00019518844783306122,
+    "humanY": 0.010348764015361667,
+    "humanZ": 0.0026611158391460776,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.010348764015361667,
-    "humanZ": 0.0026611158391460776
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.00019518844783306122
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.00019518844783306122
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.00019518844783306122
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.00019518844783306122
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.00019518844783306122,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.00019518844783306122 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7361,12 +9075,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011024130245910653,
+    "humanX": 0.0001982683315873146,
+    "humanY": 0.010283305775374174,
+    "humanZ": 0.003968092700233683,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.010283305775374174,
-    "humanZ": 0.003968092700233683
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.0001982683315873146
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.0001982683315873146
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.0001982683315873146
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.0001982683315873146
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.0001982683315873146,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.0001982683315873146 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7435,12 +9192,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.0124830895025887,
+    "humanX": 0.0001206742599606514,
+    "humanY": 0.01206958049442619,
+    "humanZ": 0.003184052126016468,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.01206958049442619,
-    "humanZ": 0.003184052126016468
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.0001206742599606514
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.0001206742599606514
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.0001206742599606514
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.0001206742599606514
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.0001206742599606514,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.0001206742599606514 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7495,7 +9295,7 @@
      }
     }
    },
-   "classe": "hors-fenetre-de-recherche",
+   "classe": "generation-unreachable-by-bounds",
    "detail": {
     "errors": {
      "seed": 0.09580006280243217,
@@ -7509,12 +9309,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.17479334720746734,
+    "humanX": 5.8673322200775146e-8,
+    "humanY": 0.17478520376607776,
+    "humanZ": 0.0016872381092980504,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.17478520376607776,
-    "humanZ": 0.0016872381092980504
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.09478520376609592
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.09478520376609592
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.0907852037660967
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.08478520376609805
+      }
+     },
+     "mostPermissive": {
+      "family": "surfaceIntersection",
+      "minDistance": 0.08478520376609805,
+      "boundY": 0.09,
+      "boundZ": 0.05
+     },
+     "outsideNominalWindow": true,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": true,
+     "proof": "distance minimale 0.08478520376609805 au domaine le plus permissif (surfaceIntersection : ±0.09, ±0.05) > 0.01"
+    }
    }
   },
   {
@@ -7583,12 +9426,55 @@
      "alternative"
     ],
     "humanMagnitude": 0.011858130040852292,
+    "humanX": 0.0003092316910624504,
+    "humanY": 0.011154623934999108,
+    "humanZ": 0.004011731383798178,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.011154623934999108,
-    "humanZ": 0.004011731383798178
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.0003092316910624504
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.0003092316910624504
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.0003092316910624504
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.0003092316910624504
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.0003092316910624504,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.0003092316910624504 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7657,12 +9543,55 @@
      "alternative"
     ],
     "humanMagnitude": 0,
+    "humanX": 0,
+    "humanY": 0,
+    "humanZ": 0,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0,
-    "humanZ": 0
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   },
   {
@@ -7731,16 +9660,59 @@
      "alternative"
     ],
     "humanMagnitude": 0.012229402969588278,
+    "humanX": 0.0003939783200621605,
+    "humanY": 0.012222315825056285,
+    "humanZ": 0.00013443938587442972,
     "searchWindow": {
      "searchY": 0.08,
      "searchZ": 0.04
     },
-    "humanY": 0.012222315825056285,
-    "humanZ": 0.00013443938587442972
+    "reachability": {
+     "perFamily": {
+      "coarse": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "search(0,0,searchY,searchZ,grid,true)",
+       "minDistance": 0.0003939783200621605
+      },
+      "alternative": {
+       "boundY": 0.08,
+       "boundZ": 0.04,
+       "from": "candidat retenu dans la grille grossière",
+       "minDistance": 0.0003939783200621605
+      },
+      "seed": {
+       "boundY": 0.084,
+       "boundZ": 0.044,
+       "from": "raffinement search(best.u,best.z,.004,.004,.001)",
+       "minDistance": 0.0003939783200621605
+      },
+      "surfaceIntersection": {
+       "boundY": 0.09,
+       "boundZ": 0.05,
+       "from": "|surfaceU| ≤ searchY+.01 et |surfaceZ| ≤ searchZ+.01",
+       "minDistance": 0.0003939783200621605
+      }
+     },
+     "mostPermissive": {
+      "family": "coarse",
+      "minDistance": 0.0003939783200621605,
+      "boundY": 0.08,
+      "boundZ": 0.04
+     },
+     "outsideNominalWindow": false,
+     "nominalWindow": {
+      "searchY": 0.08,
+      "searchZ": 0.04
+     },
+     "tolerance": 0.01,
+     "provenUnreachable": false,
+     "proof": "distance minimale 0.0003939783200621605 ≤ 0.01 : accessible, donc NON prouvé impossible"
+    }
    }
   }
  ],
- "sha256": "735b9b0f2540a778898baacb6a7eebac31dd61eb0ba5a9a81784df68d94d7ce6",
+ "sha256": "fd9004413836b986627b94d065f6a67f233ca14a81a562975d8525d2f8f1be7f",
  "sha256Covers": [
   "format",
   "engine",
@@ -7749,5 +9721,5 @@
   "noCandidateRails",
   "flankUnsatisfiedRails"
  ],
- "generatedAt": "2026-09-16T21:39:25.461Z"
+ "generatedAt": "2026-09-16T21:51:21.132Z"
 }

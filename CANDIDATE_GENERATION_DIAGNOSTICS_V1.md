@@ -92,24 +92,77 @@ gabarit**, pas à la capture, pas au ROI, pas au contour.
 
 ## 4. Les 45 `flank-only` sans candidat satisfaisant
 
-| classe | rails | historique | final | écart humain médian |
+### L'ancien découpage V1 était insuffisant — supersédé
+
+Le premier diagnostic concluait à une « génération impossible » dès que
+
+```
+|humanY| > searchY  ||  |humanZ| > searchZ
+```
+
+**Cela ne prouve rien.** Le moteur possède plusieurs domaines, et `0,010` est une
+convention de **satisfaction**, pas une appartenance au domaine :
+
+| famille | domaine réellement atteignable | d'où il vient dans `geometry.js` |
+|---|---|---|
+| coarse / alternative | ±0,080 · ±0,040 | `search(0,0,searchY,searchZ,grid,true)` |
+| seed | ±0,084 · ±0,044 | raffinement `search(best.u,best.z,.004,.004,.001)` |
+| **surfaceIntersection** | **±0,090 · ±0,050** | `|surfaceU| ≤ searchY+.01`, `|surfaceZ| ≤ searchZ+.01` |
+
+Les marges `.004` et `.01` sont **citées** depuis le moteur ; aucune borne n'est
+modifiée ni proposée.
+
+**L'ancien compteur `hors-fenetre-de-recherche` = 25 vaut donc uniquement comme
+diagnostic V1**, et il est publié dans l'artefact sous `supersededDiagnostic`.
+
+### La preuve conservatrice
+
+Un cas n'est `generation-unreachable-by-bounds` que si, en donnant au moteur
+**l'enveloppe la plus permissive que son propre code autorise**, la distance de
+la référence humaine à ce domaine reste **strictement** supérieure à 0,010.
+
+La distance inclut la composante **x** : tous les candidats du moteur ont
+`x = 0` — sa recherche est bidimensionnelle — donc un écart humain en x compte
+intégralement. L'omettre surestimerait l'accessibilité.
+
+```
+d = hypot( |hx| , max(0, |hy| − boundY) , max(0, |hz| − boundZ) )
+```
+
+### Nouveau découpage, correctement prouvé
+
+| classe | rails | historique | final | distance au domaine le plus permissif |
 |---|---:|---:|---:|---|
-| **`hors-fenetre-de-recherche`** | **25** | 12 | 13 | **106,8×10⁻³** (max 174,8) |
-| `familles-divergentes-toutes-fausses` | **20** | 13 | 7 | 11,8×10⁻³ (max 47,8) |
+| **`generation-unreachable-by-bounds`** | **21** | 11 | 10 | min 10,81 · méd 17,02 · max 84,79 ×10⁻³ |
+| **`outside-nominal-window-but-not-proven-unreachable`** | **4** | 1 | 3 | min 5,43 · méd 7,59 · max 7,98 ×10⁻³ |
+| `familles-divergentes-toutes-fausses` | 20 | 13 | 7 | 0 — toutes dans le domaine grossier |
 | `famille-absente` | 0 | — | — | — |
 | `candidats-concordants-tous-faux` | 0 | — | — | — |
 | `correction-humaine-ambigue` | 0 *(voir l'angle mort)* | — | — | — |
 
-**25 sur 45 sont des limites de génération démontrables.** Le déplacement humain
-sort des **bornes de recherche du moteur lui-même** — `searchY` 0,08 et `searchZ`
-0,04, citées depuis ses `DEFAULTS`, jamais recopiées ni choisies ici. Aucun
-candidat ne **pouvait** être produit à cet endroit. Un test vérifie l'exclusivité
-dans les deux sens : tout cas hors fenêtre dépasse réellement une borne, et aucun
-cas classé autrement ne la dépasse.
+**Les 25 anciens se redistribuent exactement : 21 + 4.** Quatre cas sortaient des
+bornes nominales mais restaient à **5,43–7,98×10⁻³** d'un domaine atteignable :
+les appeler « génération impossible » était faux.
 
-Les 20 autres sont **dans** la fenêtre : les trois familles divergent et sont
-toutes fausses, à 11,8×10⁻³ de médiane. C'est de la **qualité de placement**, pas
-de l'inaccessibilité.
+Pour les 21 prouvés, le domaine le plus permissif est **toujours**
+`surfaceIntersection`, et la preuve est **recalculable depuis la seule référence
+humaine** — vérifié par test, avec les quatre distances par famille publiées, pas
+seulement la meilleure.
+
+### Cas de frontière vérifiés
+
+| cas synthétique | hors bornes nominales | prouvé impossible |
+|---|---|---|
+| juste au-delà de `searchY`, atteignable au seed raffiné | oui | **non** |
+| hors coarse, dans l'enveloppe `surfaceIntersection` | oui | **non** |
+| hors de tout domaine mais à moins de 0,010 | oui | **non** |
+| au-delà de 0,010 de tout domaine permissif | oui | **oui** |
+| pile à 0,010 *(dépassement strict exigé)* | oui | **non** |
+| écart en **x** seul, y et z dans les bornes | **non** | **oui** |
+
+Le dernier cas est celui que le découpage V1 ne pouvait pas voir : il ne
+regardait que y et z. Il ne se présente pas dans ce corpus — 0 rail sur 45 — mais
+la logique le traite.
 
 ### Angle mort à ne pas prendre pour un résultat
 
@@ -133,9 +186,11 @@ Constats, pas recommandations de valeurs — aucun seuil n'est proposé.
    avant de mesurer quoi que ce soit sur elle.
 3. **Le biais droite/gauche est inversé entre échecs et réussites.** Il doit être
    expliqué : une asymétrie non comprise contaminerait toute statistique de paire.
-4. **25 corrections humaines sortent de la fenêtre de recherche du moteur.**
-   Aucune politique bâtie sur les candidats exposés ne les atteindra. C'est un
-   sujet de génération, pas d'arbitrage.
+4. **21 corrections humaines sont hors d'atteinte, preuve à l'appui.** Aucune
+   politique bâtie sur les candidats exposés ne les atteindra : c'est un sujet de
+   génération, pas d'arbitrage. Quatre autres sortent des bornes nominales sans
+   être hors d'atteinte — elles relèvent de la qualité de placement, et les
+   confondre avec les précédentes fausserait le dimensionnement du problème.
 5. **Les contradictions humaines ne sont pas toutes visibles.** Le détecteur a un
    angle mort documenté ; la qualification des références doit être traitée avant
    de leur faire porter une évaluation de politique.
@@ -146,10 +201,10 @@ Constats, pas recommandations de valeurs — aucun seuil n'est proposé.
 - `audit/candidate-generation-diagnostics-v1.json`, format
   `banane-candidate-generation-diagnostics-v1` — une ligne par rail
   `no-candidate` et par rail `flank-only` insatisfait ;
-- `tests/candidate-generation-diagnostics.test.cjs` — 13 tests.
+- `tests/candidate-generation-diagnostics.test.cjs` — **17 tests**.
 
 Empreinte du contenu, horodatage exclu :
-`735b9b0f2540a778898baacb6a7eebac31dd61eb0ba5a9a81784df68d94d7ce6`.
+`fd9004413836b986627b94d065f6a67f233ca14a81a562975d8525d2f8f1be7f`.
 
 ```bash
 node tools/candidate-generation-diagnostics.cjs \

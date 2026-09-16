@@ -115,26 +115,120 @@ test('les 45 flank-only sans bon candidat sont classés, sans recouvrement', () 
   assert.equal(Object.values(S.flankUnsatisfied.byClass).reduce((a, b) => a + b, 0), 45);
   for (const r of FU) assert.ok(D.UNSATISFIED_CLASSES.includes(r.classe), r.classe);
   assert.deepEqual(S.flankUnsatisfied.byCorpus, { 'historical-original': 25, 'final-complementary': 20 });
-  assert.equal(S.flankUnsatisfied.byClass['hors-fenetre-de-recherche'], 25);
-  assert.equal(S.flankUnsatisfied.byClass['familles-divergentes-toutes-fausses'], 20);
 });
 
-test('« hors fenêtre » est démontrable : les bornes citées sont celles du moteur', () => {
+test('l’ancien diagnostic « hors-fenetre-de-recherche » est publié comme SUPERSÉDÉ', () => {
+  const sup = A.supersededDiagnostic;
+  assert.equal(sup.v1Class, 'hors-fenetre-de-recherche');
+  assert.equal(sup.v1Count, 25);
+  assert.deepEqual(sup.replacedBy,
+    ['generation-unreachable-by-bounds', 'outside-nominal-window-but-not-proven-unreachable']);
+  assert.ok(sup.why.includes('.004') && sup.why.includes('.01'));
+  // la classe supersédée ne doit plus être attribuée à aucun rail
+  assert.ok(!D.UNSATISFIED_CLASSES.includes('hors-fenetre-de-recherche'));
+  for (const r of FU) assert.notEqual(r.classe, 'hors-fenetre-de-recherche');
+  // et les 25 se redistribuent exactement entre les deux nouvelles classes
+  const horsNominal = FU.filter(r => r.detail.reachability.outsideNominalWindow);
+  assert.equal(horsNominal.length, 25);
+  assert.equal(S.flankUnsatisfied.byClass['generation-unreachable-by-bounds'], 21);
+  assert.equal(S.flankUnsatisfied.byClass['outside-nominal-window-but-not-proven-unreachable'], 4);
+});
+
+test('les domaines atteignables sont ceux du moteur, aucune borne inventée', () => {
   const cfg = require('../src/geometry.js').DEFAULTS;
-  const hors = FU.filter(r => r.classe === 'hors-fenetre-de-recherche');
-  assert.equal(hors.length, 25);
-  for (const r of hors) {
-    assert.equal(r.detail.searchWindow.searchY, cfg.searchY);
-    assert.equal(r.detail.searchWindow.searchZ, cfg.searchZ);
-    assert.ok(r.detail.humanY > cfg.searchY || r.detail.humanZ > cfg.searchZ,
-      'un cas « hors fenêtre » doit réellement dépasser une borne du moteur');
+  const dom = D.reachableDomains();
+  assert.equal(dom.coarse.boundY, cfg.searchY);
+  assert.equal(dom.coarse.boundZ, cfg.searchZ);
+  assert.equal(dom.alternative.boundY, cfg.searchY);
+  assert.equal(dom.seed.boundY, cfg.searchY + D.REFINE);
+  assert.equal(dom.seed.boundZ, cfg.searchZ + D.REFINE);
+  assert.equal(dom.surfaceIntersection.boundY, cfg.searchY + D.SURFACE_MARGIN);
+  assert.equal(dom.surfaceIntersection.boundZ, cfg.searchZ + D.SURFACE_MARGIN);
+  /* Les deux marges sont CITÉES depuis geometry.js : le raffinement ±.004 et
+   * l'acceptation de l'intersection à ±.01. */
+  assert.equal(D.REFINE, 0.004);
+  assert.equal(D.SURFACE_MARGIN, 0.01);
+  assert.ok(GEO.includes('.004,.004,.001'), 'le raffinement ±.004 doit exister dans le moteur');
+  assert.ok(GEO.includes('cfg.searchY+.01') && GEO.includes('cfg.searchZ+.01'),
+    'l’enveloppe surfaceIntersection ±.01 doit exister dans le moteur');
+  // surfaceIntersection est bien le domaine le plus permissif
+  const noms = Object.keys(dom);
+  for (const n of noms) assert.ok(dom.surfaceIntersection.boundY >= dom[n].boundY
+    && dom.surfaceIntersection.boundZ >= dom[n].boundZ);
+});
+
+test('cas de frontière synthétiques : la preuve ne se déclenche qu’à bon escient', () => {
+  const cfg = require('../src/geometry.js').DEFAULTS;
+  const T = D.TOLERANCE_ORACLE;
+  const cas = [
+    { nom: 'juste au-delà de searchY, encore atteignable au seed raffiné',
+      human: [0, cfg.searchY + 0.002, 0], horsNominal: true, prouve: false, distMax: 0 },
+    { nom: 'hors coarse mais dans l’enveloppe surfaceIntersection',
+      human: [0, cfg.searchY + 0.008, 0], horsNominal: true, prouve: false, distMax: 0 },
+    { nom: 'hors de tout domaine mais à moins de 0,010',
+      human: [0, cfg.searchY + D.SURFACE_MARGIN + 0.005, 0], horsNominal: true, prouve: false, distMax: T },
+    { nom: 'réellement au-delà de 0,010 de tout domaine permissif',
+      human: [0, cfg.searchY + D.SURFACE_MARGIN + 0.050, 0], horsNominal: true, prouve: true },
+  ];
+  for (const c of cas) {
+    const r = D.reachability(c.human, T, cfg);
+    assert.equal(r.outsideNominalWindow, c.horsNominal, c.nom + ' — hors bornes nominales');
+    assert.equal(r.provenUnreachable, c.prouve, c.nom + ' — preuve');
+    if (c.distMax !== undefined)
+      assert.ok(r.mostPermissive.minDistance <= c.distMax + 1e-12,
+        `${c.nom} — distance ${r.mostPermissive.minDistance} > ${c.distMax}`);
   }
-  /* Et réciproquement : aucun cas classé autrement ne dépasse les bornes — la
-   * catégorie est donc exclusive, pas un fourre-tout. */
-  for (const r of FU) if (r.classe !== 'hors-fenetre-de-recherche')
-    assert.ok(r.detail.humanY <= cfg.searchY && r.detail.humanZ <= cfg.searchZ);
-  // ce sont les bornes du moteur gelé, citées, jamais un seuil nouveau
-  assert.equal(cfg.searchY, 0.08); assert.equal(cfg.searchZ, 0.04);
+  /* Exactement à la tolérance : la preuve exige un dépassement STRICT, donc
+   * un point pile à 0,010 n'est PAS déclaré impossible. */
+  const pile = D.reachability([0, cfg.searchY + D.SURFACE_MARGIN + T, 0], T, cfg);
+  assert.ok(Math.abs(pile.mostPermissive.minDistance - T) < 1e-12);
+  assert.equal(pile.provenUnreachable, false, 'égalité stricte : pile à la tolérance reste accessible');
+  /* Un écart humain en x ne peut JAMAIS être atteint : la recherche du moteur
+   * est bidimensionnelle et tous ses candidats ont x exactement nul. */
+  const enX = D.reachability([0.02, 0.01, 0.01], T, cfg);
+  assert.equal(enX.outsideNominalWindow, false, 'y et z sont pourtant dans les bornes');
+  assert.equal(enX.provenUnreachable, true, 'l’écart en x rend le placement inatteignable');
+  assert.ok(Math.abs(enX.mostPermissive.minDistance - 0.02) < 1e-12);
+  // et la distance à un domaine est nulle quand le point est dedans
+  assert.equal(D.distanceToDomain([0, 0.01, 0.01], cfg.searchY, cfg.searchZ), 0);
+});
+
+test('chaque cas « prouvé inaccessible » porte sa preuve, et elle tient', () => {
+  const cfg = require('../src/geometry.js').DEFAULTS;
+  const T = D.TOLERANCE_ORACLE;
+  const prouves = FU.filter(r => r.classe === 'generation-unreachable-by-bounds');
+  assert.equal(prouves.length, 21);
+  for (const r of prouves) {
+    const re = r.detail.reachability;
+    assert.equal(re.provenUnreachable, true);
+    assert.ok(re.minDistanceIsStrictlyGreater ?? re.mostPermissive.minDistance > T,
+      'la distance doit dépasser STRICTEMENT la tolérance');
+    // la preuve est recalculable depuis la référence humaine seule
+    const recalc = D.reachability([r.detail.humanX, r.detail.humanY, r.detail.humanZ], T, cfg);
+    assert.ok(Math.abs(recalc.mostPermissive.minDistance - re.mostPermissive.minDistance) < 1e-12);
+    assert.ok(re.proof.includes('>'), 'la preuve doit être énoncée');
+    // les quatre domaines sont publiés, pas seulement le plus permissif
+    assert.deepEqual(Object.keys(re.perFamily).sort(),
+      ['alternative', 'coarse', 'seed', 'surfaceIntersection']);
+    for (const d of Object.values(re.perFamily)) assert.ok(d.minDistance >= re.mostPermissive.minDistance - 1e-12);
+  }
+  /* Réciproque : aucun cas d'une autre classe n'est prouvé inaccessible. */
+  for (const r of FU) if (r.classe !== 'generation-unreachable-by-bounds')
+    assert.equal(r.detail.reachability.provenUnreachable, false, r.classe);
+});
+
+test('« hors bornes mais non prouvé » est une classe réelle, pas un fourre-tout', () => {
+  const T = D.TOLERANCE_ORACLE;
+  const cas = FU.filter(r => r.classe === 'outside-nominal-window-but-not-proven-unreachable');
+  assert.equal(cas.length, 4);
+  for (const r of cas) {
+    const re = r.detail.reachability;
+    assert.equal(re.outsideNominalWindow, true, 'elle doit vraiment sortir des bornes nominales');
+    assert.equal(re.provenUnreachable, false);
+    assert.ok(re.mostPermissive.minDistance > 0 && re.mostPermissive.minDistance <= T,
+      `distance ${re.mostPermissive.minDistance} hors de ]0, ${T}]`);
+    assert.ok(re.proof.includes('NON prouvé impossible'));
+  }
 });
 
 test('le détecteur d’ambiguïté humaine déclare son angle mort', () => {
