@@ -1,4 +1,4 @@
-# Flank Support Shadow V1 — instrumentation hors ligne
+# Flank Support Shadow V1.1 — instrumentation hors ligne
 
 Lot séparé, **lecture seule**. Aucun changement runtime, `geometry.js`, moteur,
 Brain, Pair Arbitration, seuil, politique ou paramètre. Aucun seuil n'est choisi,
@@ -26,118 +26,133 @@ déplacerait la pose de référence sans que personne ne le voie.
 > déclenché**, et les chiffres du lot `native-replay` ne sont pas affectés
 > rétroactivement. Le fail-closed est une garantie, pas une correction.
 
-## Population — 1358 rails
+## Correction de cadrage — la session dégradée existe bien
 
-| population | rails |
-|---|---:|
-| `not-replayable` (éligibilité `excluded`) | 1045 |
-| **`flank-only`** — motif exactement celui étudié | **169** |
-| `engine-candidate` | 99 |
-| `flank-with-others` — flanc **joint** à un autre motif | 24 |
-| `other-abstention` | 19 |
-| `no-candidate` | 2 |
+V1 concluait que `0c58c033-f2e7-4aa5-ad8c-80b081a83932` était « absente ». C'était
+vrai du **corpus historique de 679 visites seulement**, et j'ai généralisé à tort.
+Cette session appartient à l'**archive finale complémentaire de 1 486 visites**,
+que V1 n'avait pas rejouée. V1.1 rejoue les deux.
 
-313 rails rejoués, conforme au lot précédent. `flank-with-others` est séparé à
-dessein : `geometry.js` joint ses motifs par un espace, et un rail qui manque
-aussi de plan de roulement n'est pas le même objet d'étude.
+## Quatre corrections V1.1
 
-Les 169 `flank-only` : **88 droite / 81 gauche**, **137 part 1 / 32 part 8**.
+1. **Ingestion tolérante.** Le banc ne suppose plus que tout `.json` porte
+   `session`, `segment`, `records` et `dictionaries`. Le piège est réel : le
+   bilan de l'archive finale porte le **bon** `format`
+   (`banane-native-session-v3-compact`) et **n'a pas de `session`** — le format
+   seul ne peut donc pas trancher. Chaque fichier écarté est rapporté avec son
+   motif.
+2. **Dégradation lue, pas déduite.** V1 déduisait « sans perte » de `visitStatus`
+   et `lidarStatus`, qui décrivent la complétude d'une visite, **pas** la perte
+   d'événements. V1.1 lit `metrics.dropped`, `metrics.degradationEvents`,
+   `metrics.degradationPeak` et la cohérence de séquence `nextEventSeq` contre
+   les événements exportés.
+3. **`reliableObservation`.** Le statut brut `candidate-observed` est **conservé
+   tel quel** ; un champ séparé applique le critère observationnel historique du
+   projet, repris **verbatim** de `src/native-session.js` (`referenceReasons`).
+   Aucun critère nouveau.
+4. **`pointsUsed`.** V1 le laissait à `null` et rangeait à tort les points
+   **retenus** sous `pointsInCapture`. V1.1 sépare `pointsSupplied` (fournis au
+   moteur) et `pointsUsed` (retenus après filtrage de ROI).
 
-## Distributions brutes — aucun seuil retenu
+## Deux corpus, gardés séparés
 
-| grandeur | n | p10 | médiane | p90 |
-|---|---:|---:|---:|---:|
-| `faceCount` | 169 | 0 | **3** | 5 |
-| `faceSpanBins` | 169 | 1 | 2 | 3 |
-| `topCount` | 169 | 29 | 43 | 60 |
-| `lossRatio` | 169 | 2,47 | 8,05 | 22,50 |
-| seed↔surface ×10⁻³ | 169 | 0,00 | 1,86 | 6,15 |
-| seed↔alternative ×10⁻³ | 169 | 19,24 | 22,36 | 61,21 |
+| | historical-original | final-complementary |
+|---|---:|---:|
+| visites | **679** | **1 486** |
+| sessions | 3 | 8 |
+| rails | 1 358 | 2 972 |
+| fichiers ignorés | 0 | **2** |
 
-À titre de repère factuel, `minFace` vaut **6** dans les DEFAULTS de
-`geometry.js` — **non modifié, et aucune autre valeur n'est proposée ici**.
+Fichiers ignorés du corpus final :
 
-## Continuité strictement causale
+| fichier | motif |
+|---|---|
+| `banane-bilan-v4-…-seg01.json` | `champ-manquant:session` *(format pourtant correct)* |
+| `banane-journal-v4-…json` | `format-non-natif:banane-test-journal-v4` |
 
-Ancre = même session, même page, même frame, même part, **même côté**,
-`visitIndex` **strictement antérieur**, et moteur réellement `candidate`.
-**Une abstention n'est jamais une ancre**, même répétée à l'identique : une suite
-d'abstentions stables ne prouve rien sur le placement.
+## Populations
 
-Ancre trouvée pour **152 / 169** rails `flank-only`.
-
-| écart à l'ancre | p10 | médiane | p90 |
+| population | historique | final | combined-day |
 |---|---:|---:|---:|
-| `cutGap` | 1 | 16 | 336 |
-| `visitIndexGap` | 1 | 9 | 46 |
-| distance ancre→seed ×10⁻³ | 1,41 | 7,07 | 48,77 |
-| distance ancre→surfaceIntersection ×10⁻³ | 1,78 | 7,07 | 49,04 |
-| distance ancre→alternative ×10⁻³ | 14,32 | 23,09 | 61,33 |
+| `not-replayable` | 1 045 | 2 693 | 3 738 |
+| **`flank-only`** | **169** | **114** | **283** |
+| `engine-candidate` | 99 | 77 | 176 |
+| `flank-with-others` | 24 | 24 | 48 |
+| `other-abstention` | 19 | 2 | 21 |
+| `no-candidate` | 2 | 62 | 64 |
+| **`failClosed`** | **0** | **0** | **0** |
 
-**Aucune fenêtre maximale n'est retenue.** `windowChosen` vaut `null` sur chaque
-ligne. Les valeurs 1/2/3/5/10/20/40 déjà regardées ailleurs sont du
-développement, pas des seuils à promouvoir — les écarts sont livrés bruts.
+## Ancrage causal et contexte opposé — `flank-only`
 
-## Rail opposé — exposé, jamais déplacé
+| | historique | final | combined-day |
+|---|---:|---:|---:|
+| ancre trouvée | 152 / 169 | 87 / 114 | **239 / 283** |
+| opposé non rejouable | 104 | 67 | 171 |
+| opposé `flank-only` | 34 | 16 | 50 |
+| opposé candidat | 23 | 14 | 37 |
+| opposé sans candidat | 1 | 12 | 13 |
+| opposé autre abstention | 7 | 5 | 12 |
 
-| état de l'opposé | rails `flank-only` |
-|---|---:|
-| `opposite-not-replayable` | 104 |
-| `opposite-flank-only` | 34 |
-| `opposite-candidate` | 23 |
-| `opposite-other-abstention` | 7 |
-| `opposite-no-candidate` | 1 |
+## Post-hoc strict sur `flank-only`
 
-`railMoved: false` sur chaque ligne. Ces états servent à évaluer **plus tard**
-une architecture de type `lock-resolved-rail` ; le shadow n'en évalue aucune.
+Convention d'évaluation `≤ 0,010 unité de scène` — **métrique de banc
+uniquement**, jamais un seuil runtime ni une calibration physique.
 
-## Évaluation post hoc — après coup, et seulement après
+| verdict | historique | final | combined-day |
+|---|---:|---:|---:|
+| **seed satisfaisant** | **134** | **90** | **224** |
+| **autre candidat satisfaisant** | **10** | **4** | **14** |
+| — dont `surfaceIntersection` | 5 | 0 | **5** |
+| — dont `alternative` | 5 | 4 | **9** |
+| **aucun candidat satisfaisant** | **25** | **20** | **45** |
 
-La référence humaine n'entre que dans `postHocEvaluation`, une fois les trois
-autres blocs construits. Convention d'évaluation `≤ 0,010 unité de scène` :
-**métrique de banc uniquement**, jamais un seuil runtime, jamais une calibration
-physique, jamais un millimètre.
+Les deux familles contribuent aux récupérations : **aucune préférence de famille
+n'est codée**, et le partage 5 / 9 confirme qu'aucune ne domine.
 
-| verdict sur les 169 `flank-only` | rails |
-|---|---:|
-| **seed satisfaisant** | **134** |
-| seed insuffisant, **autre candidat** satisfaisant | **10** |
-| aucun candidat exposé satisfaisant | 25 |
-| référence absente / ambiguë / non qualifiable | 0 |
+### Les mêmes compteurs sur `reliableObservation` seul
 
-Les 10 récupérations se répartissent **5 `surfaceIntersection` / 5 `alternative`**
-— exactement l'observation qui interdit de coder une préférence de famille. Le
-shadow expose les trois familles et n'en privilégie aucune.
+**Identiques, aux mêmes rails** : 283 / 283 sur combined-day, 169 / 169 et
+114 / 114 par corpus.
 
-> **Lecture, strictement descriptive.** Sur 169 rails où le moteur s'abstient
-> faute d'appui de flanc, son propre `seed` tombe déjà sous la convention
-> d'évaluation dans 134 cas. C'est une observation sur une population **non
-> indépendante de l'humain** (voir la limite ci-dessous), et **aucune conclusion
-> opérationnelle n'en est tirée ici** : ni seuil, ni score, ni règle.
+Ce n'est pas un oubli, c'est un **résultat structurel** : l'éligibilité
+`comparable-candidate` de la collecte **exige déjà** tout le critère
+observationnel — `src/native-session.js` refuse le statut dès qu'un
+`referenceReason` subsiste. Tout rail rejouable est donc fiable par
+construction. Le critère est néanmoins recalculé depuis les champs bruts, et il
+**mord** sur la population entière (3 666 `candidate-observed` contre 3 576
+fiables), ce qui prouve qu'il est réellement évalué et non recopié.
 
-### Limite d'échantillonnage, reprise du lot précédent
+## Session dégradée `0c58c033-f2e7-4aa5-ad8c-80b081a83932`
 
-L'éligibilité de la collecte dépend en partie de la disponibilité de la référence
-humaine. Les 313 rails rejoués ne sont donc **pas un échantillon indépendant**,
-et aucun taux mesuré ici ne doit être extrapolé aux 611 cuts.
+Frontière déterminée par les **vraies** métadonnées :
 
-## Anomalie — la session dégradée annoncée n'existe pas
+| | valeur |
+|---|---|
+| dernier export sans perte | `…T13-18-15-auto-seg06.json` (segment 6), `maxVisitIndex` **245** |
+| premier export dégradé | `…T13-25-47-seg01.json` |
+| motifs | **`dropped=65`**, **`degradationEvents=2`**, **`degradationPeak=METADATA_ONLY`** |
 
-La consigne nomme `0c58c033-f2e7-4aa5-ad8c-80b081a83932` comme session signalant
-des événements perdus. **Elle est absente de la collecte.** Les trois sessions
-présentes sont `f938b9f8…`, `92dbb85e…` et `06c77393…`.
+| tranche | rails | dont `flank-only` |
+|---|---:|---:|
+| `before-last-lossless-snapshot` | **492** | **38** |
+| `after-last-lossless-snapshot` | **288** | **1** |
 
-Vérifié en outre sur ces trois : `dropped = 0`, `sendFailures = 0`,
-`degradationEvents = 0`, `degradationPeak = FULL`, et **aucun trou de séquence
-d'événements** (`nextEventSeq` égale le nombre d'événements exportés). Aucune
-perte n'est donc constatée.
+`excludedFromCausalAnalysis` est vrai sur toute la tranche tardive : elle n'est
+**jamais mélangée en silence** aux analyses causales. Une session sans aucune
+perte porte `lossless-throughout`, jamais un `not-applicable` par défaut.
 
-Le mécanisme de marquage est néanmoins **implémenté et testé** : chaque ligne
-porte une tranche, et lorsqu'une session dégradée est présente, la frontière est
-le dernier snapshot explicitement sans perte, avec
-`before-last-lossless-snapshot` / `after-last-lossless-snapshot` et
-`excludedFromCausalAnalysis` sur la tranche tardive. Ici, les 1358 lignes portent
-`not-applicable` — **jamais un mélange silencieux**.
+## combined-day — dédupliqué, jamais fusionné
+
+Clé d'unicité `sessionId|visitId|side`. **Recouvrement : 0 ligne, 0 session
+partagée** — les deux corpus sont disjoints (3 + 8 = 11 sessions). Aucune session
+n'est recousue, aucune valeur n'est moyennée. Total : 2 165 visites, 4 330 rails.
+
+## Le corpus historique est inchangé
+
+V1.1 ajoute des champs et corrige l'ingestion ; elle ne touche **aucun** résultat
+des 679 visites. Vérifié ligne à ligne contre l'artefact V1 : **0 ligne
+divergente** sur population, candidats, verdict post-hoc et histoire causale.
+Figé par test.
 
 ## Artefacts et reproduction
 
@@ -145,13 +160,18 @@ le dernier snapshot explicitement sans perte, avec
 - `audit/flank-support-shadow-v1.json` — une ligne par rail, quatre blocs
   séparés : `decisionFeatures`, `causalHistory`, `oppositeRailContext`,
   `postHocEvaluation` ;
-- `tests/flank-support-shadow.test.cjs` — 15 tests, qui ne relisent jamais la
-  collecte.
+- `tests/flank-support-shadow.test.cjs` — tests, qui ne relisent jamais les
+  collectes.
+
+- `tests/flank-support-shadow.test.cjs` — **20 tests**.
 
 Empreinte du contenu, horodatage exclu, **deux exécutions donnent la même** :
-`7548e6eba4bed2e45540deb7b97658a9b6420c2297b6297185c648395d1211e1`.
+`0e15a913a2fe4c3b3ca724abfe51872fe57b4c0db2f97e43efc418c166c0bee4`.
 
 ```bash
-node tools/flank-support-shadow.cjs <dossier-collecte> --output audit/flank-support-shadow-v1.json
+node tools/flank-support-shadow.cjs \
+  --corpus historical-original  <dossier-collecte-679> \
+  --corpus final-complementary  <dossier-collecte-1486> \
+  --output audit/flank-support-shadow-v1.json
 node --test tests/flank-support-shadow.test.cjs
 ```

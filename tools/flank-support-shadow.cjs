@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* Flank Support Shadow V1 — instrumentation HORS LIGNE, LECTURE SEULE.
+/* Flank Support Shadow V1.1 — instrumentation HORS LIGNE, LECTURE SEULE.
  *
  * Objet : étudier les abstentions du moteur gelé dont le SEUL motif est
  * « Flanc interne insuffisamment observé. ». Ce fichier n'est pas une politique,
@@ -36,11 +36,55 @@
  *
  * AUCUN GAGNANT N'EST DÉSIGNÉ. Pas de seuil retenu, pas de score combiné, pas de
  * classifieur, pas de fenêtre causale maximale, pas de préférence de famille.
+ *
+ * V1.1 — quatre corrections, aucune n'altère les résultats du corpus historique :
+ *
+ *   1. INGESTION TOLÉRANTE. Une archive contient des fichiers qui ne sont pas des
+ *      exports Natif — un bilan, un journal de test. Le banc ne suppose plus que
+ *      tout `.json` porte `session`, `segment`, `records` et `dictionaries` : il
+ *      valide la structure, ignore le reste et RAPPORTE chaque fichier écarté
+ *      avec son motif. Le piège est réel : le bilan porte le bon `format` mais
+ *      n'a pas de `session`, donc le format seul ne suffit pas à trancher.
+ *
+ *   2. DÉGRADATION LUE, PAS DÉDUITE. V1 déduisait « sans perte » de
+ *      `visitStatus` / `lidarStatus`, qui ne parlent pas de perte d'événements.
+ *      V1.1 lit les métadonnées réelles — `metrics.dropped`,
+ *      `metrics.degradationEvents`, `metrics.degradationPeak`, et la cohérence
+ *      de séquence `nextEventSeq` contre les événements exportés — détermine le
+ *      DERNIER export explicitement sans perte, et marque chaque visite par
+ *      rapport à cette vraie frontière.
+ *
+ *   3. `reliableObservation`. Le statut brut `candidate-observed` est conservé
+ *      tel quel, et un second champ applique le critère observationnel
+ *      historique du projet, repris VERBATIM de `src/native-session.js` — aucun
+ *      critère nouveau n'est inventé. Les compteurs sont publiés deux fois :
+ *      sur tous les `candidate-observed`, et sur le seul sous-ensemble fiable.
+ *
+ *   4. `pointsUsed`. V1 le laissait à `null` et rangeait à tort le compte de
+ *      points RETENUS sous `pointsInCapture`. V1.1 sépare les deux : les points
+ *      réellement fournis au moteur, et ceux qu'il retient après filtrage.
  */
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const C = require('../vendor/capture-core.js');
 const G = require('../src/geometry.js');
 const N = require('./native-replay.cjs');
+
+/**
+ * Structure minimale d'un export Natif exploitable. Le `format` seul ne suffit
+ * pas : le bilan de l'archive finale porte `banane-native-session-v3-compact`
+ * sans aucune `session`. On valide donc ce dont on a besoin, pas une étiquette.
+ */
+const NATIVE_FORMAT = 'banane-native-session-v3-compact';
+function classifyExport(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return 'racine-non-objet';
+  if (raw.format !== NATIVE_FORMAT) return `format-non-natif:${raw.format ?? 'absent'}`;
+  for (const k of ['session', 'segment', 'records', 'dictionaries'])
+    if (!raw[k]) return `champ-manquant:${k}`;
+  if (typeof raw.session.id !== 'string' || !raw.session.id) return 'champ-manquant:session.id';
+  if (!Array.isArray(raw.records)) return 'records-non-tableau';
+  if (typeof raw.segment.stamp !== 'string') return 'champ-manquant:segment.stamp';
+  return null;                                           // exploitable
+}
 
 const ROOT = path.resolve(__dirname, '..');
 /** Motif d'abstention étudié, cité MOT POUR MOT depuis `src/geometry.js`. */
@@ -96,7 +140,7 @@ function replayRailExact(visit, side, chunks) {
     for (let i = 0; i < c.points.length; i++) { points.push(c.points[i]); visible.push(c.visible ? c.visible[i] : true); }
   }
   if (!points.length) return { replayed: false, eligibility, failClosed: 'aucun-point', proposal: null };
-  return { replayed: true, eligibility, failClosed: null, rail,
+  return { replayed: true, eligibility, failClosed: null, rail, pointsSupplied: points.length,
            snapshotId: el.snapshotId, snapshotsAvailable: snap.available,
            proposal: G.propose({ rails: { [side]: rail }, pointsSceneRelative: points,
                                  visibleByClipBoxes: visible }, side) };
@@ -135,7 +179,12 @@ function decisionFeatures(r, side, visit) {
     /* appui géométrique observé */
     topCount: m?.topCount ?? null, topSpanBins: m?.topSpanBins ?? null,
     faceCount: m?.faceCount ?? null, faceSpanBins: m?.faceSpanBins ?? null,
-    pointsInCapture: m?.points ?? null, pointsUsed: null,
+    /* `metrics.points` est le nombre de points que le moteur RETIENT après son
+     * filtrage de ROI, pas le nombre qu'on lui a donné. V1 le rangeait sous
+     * `pointsInCapture` et laissait `pointsUsed` à null : les deux sont
+     * désormais distincts et tous deux renseignés. */
+    pointsSupplied: r.pointsSupplied ?? null,
+    pointsUsed: m?.points ?? null,
     residual: m?.residual ?? null,
     topResidual: r.proposal?.top?.residual ?? null,
     faceResidual: r.proposal?.face?.residual ?? null,
@@ -265,14 +314,51 @@ function oppositeRailContext(row, byVisitSide) {
  * Tout ce qui précède a été construit sans aucune valeur humaine.            */
 
 /**
+ * Critère d'observation fiable — REPRIS VERBATIM du projet.
+ *
+ * Aucun critère nouveau n'est inventé ici. Ce sont exactement les
+ * `referenceReasons` de `src/native-session.js` (une intention opérateur unique
+ * et valant VALIDATE ; un état de référence présent ; une identité concordante ;
+ * une fraîcheur d'association dans [0, 1500] ms ; un effet de décision observé ;
+ * et, côté par côté, un état de rail présent). C'est le critère qui produit le
+ * compteur `humanReliableObservationAssociations` du manifest de la collecte.
+ *
+ * Il est recalculé à partir des champs bruts, et non lu depuis l'éligibilité :
+ * la comparaison des deux est elle-même un contrôle de cohérence.
+ */
+function reliableObservation(visit, side) {
+  const reasons = [];
+  const intents = visit.operatorIntents || [];
+  const sole = intents.length === 1 ? intents[0] : null;
+  const multi = intents.length > 1;
+  if (!sole || sole.intent !== 'VALIDATE')
+    reasons.push(multi ? 'multiple-operator-intents-observed'
+      : sole?.intent === 'SKIP' ? 'operator-skip-observed' : 'validated-reference-not-observed');
+  const ref = visit.humanFinalReference;
+  if (!ref?.state) reasons.push('human-final-reference-missing');
+  if (ref?.association?.identityMatched === false) reasons.push('human-final-reference-identity-mismatch');
+  const fresh = ref?.association?.freshnessMs;
+  if (fresh === null || fresh === undefined || fresh < 0 || fresh > 1500)
+    reasons.push('human-final-reference-not-freshly-observed');
+  if (!visit.navigationObserved) reasons.push('decision-effect-not-observed');
+  if (!ref?.state?.rails?.[side]) reasons.push('human-final-rail-state-missing');
+  return { reliable: reasons.length === 0, reasons,
+           criterion: 'src/native-session.js — referenceReasons, repris verbatim',
+           freshnessMs: fresh ?? null, freshnessWindowMs: [0, 1500] };
+}
+
+/**
  * Mesure post hoc. La référence humaine est OBSERVATIONNELLE : la collecte la
  * marque `usableForTraining: false` sur 679 visites sur 679. Elle ne devient
  * pas une vérité d'entraînement ici et n'a influencé aucun bloc précédent.
  */
 function postHocEvaluation(row, visit, rail, tol = TOLERANCE_ORACLE) {
   const ref = visit.humanFinalReference;
-  const base = { humanStatus: ref?.status ?? 'absent', tolerance: tol,
-                 toleranceIsEvaluationOnly: true };
+  const rel = reliableObservation(visit, row.decisionFeatures.side);
+  /* Le statut BRUT est conservé tel quel ; la fiabilité observationnelle est un
+   * champ SÉPARÉ, jamais une réécriture du statut. */
+  const base = { humanStatus: ref?.status ?? 'absent', reliableObservation: rel,
+                 tolerance: tol, toleranceIsEvaluationOnly: true };
   if (!rail) return { ...base, qualified: false, verdict: 'reference-non-qualifiable' };
   if (!ref || ref.status !== 'candidate-observed')
     return { ...base, qualified: false, verdict: 'reference-absente-ou-ambigue' };
@@ -300,73 +386,191 @@ function postHocEvaluation(row, visit, rail, tol = TOLERANCE_ORACLE) {
 /* --------------------------------------------------- sessions dégradées */
 
 /**
- * Tranche de dégradation.
+ * Perte d'un export, LUE dans ses métadonnées — jamais déduite.
  *
- * La consigne nomme une session signalant des événements perdus. Le banc ne la
- * croit pas sur parole : il vérifie sa présence et publie le résultat. Si elle
- * est absente, ou si aucune perte n'est constatée, chaque ligne est marquée
- * `not-applicable` — jamais mélangée en silence à une tranche tardive.
+ * V1 regardait `visitStatus` et `lidarStatus` : ces deux champs décrivent la
+ * complétude d'une visite et d'une capture, pas la perte d'événements. Un export
+ * peut être plein de visites « complete » et avoir perdu 65 événements.
  *
- * Quand une perte existe, la frontière est le DERNIER snapshot explicitement
- * sans perte, et chaque ligne est marquée `before-last-lossless-snapshot` ou
- * `after-last-lossless-snapshot`.
+ * Un export est explicitement SANS PERTE quand les quatre signaux le disent :
+ * aucun événement abandonné, aucun événement de dégradation, un pic de
+ * dégradation resté à `FULL`, et une séquence d'événements sans trou.
  */
-function degradationContext(rows, sessionsSeen, degraded = DEGRADED_SESSIONS) {
-  const report = degraded.map(id => {
-    const present = sessionsSeen.has(id);
-    return { sessionId: id, present,
-             note: present ? null
-                 : 'session ABSENTE de la collecte lue — aucune ligne ne peut lui être rattachée' };
-  });
-  const boundary = new Map();
-  for (const id of degraded) {
-    if (!sessionsSeen.has(id)) continue;
-    const mine = rows.filter(r => r.decisionFeatures.sessionId === id && r.population !== 'not-replayable');
-    const lossless = mine.filter(r => r.decisionFeatures.captureContext.lidarStatus === null
-                                   || r.decisionFeatures.captureContext.visitStatus === 'complete');
-    boundary.set(id, lossless.length
-      ? Math.max(...lossless.map(r => r.decisionFeatures.visitIndex)) : -Infinity);
+function exportLoss(raw) {
+  const s = raw.session ?? {}, m = s.metrics ?? {}, et = raw.exportTrace ?? {};
+  const exported = Array.isArray(raw.events) ? raw.events.length : null;
+  const nextSeq = typeof s.nextEventSeq === 'number' ? s.nextEventSeq : null;
+  /* Un trou de séquence est un DÉFICIT : plus d'événements exportés que la
+   * séquence n'en annonce n'est pas une perte. */
+  const sequenceGap = nextSeq !== null && exported !== null ? Math.max(0, nextSeq - exported) : null;
+  const dropped = m.dropped ?? null, degradationEvents = m.degradationEvents ?? null;
+  const degradationPeak = m.degradationPeak ?? null, degradationLevel = m.degradationLevel ?? null;
+  const signals = { dropped, degradationEvents, degradationPeak, degradationLevel,
+                    recoveries: m.recoveries ?? null, sendFailures: m.sendFailures ?? null,
+                    interruptions: s.interruptions ?? null,
+                    nextEventSeq: nextSeq, eventsExported: exported, sequenceGap,
+                    allRequestedObjectsPresent: et.allRequestedObjectsPresent ?? null };
+  const known = dropped !== null && degradationEvents !== null && degradationPeak !== null && sequenceGap !== null;
+  const lossless = known && dropped === 0 && degradationEvents === 0
+                 && degradationPeak === 'FULL' && sequenceGap === 0;
+  const why = [];
+  if (!known) why.push('signaux-incomplets');
+  if (dropped) why.push(`dropped=${dropped}`);
+  if (degradationEvents) why.push(`degradationEvents=${degradationEvents}`);
+  if (degradationPeak && degradationPeak !== 'FULL') why.push(`degradationPeak=${degradationPeak}`);
+  if (sequenceGap) why.push(`sequenceGap=${sequenceGap}`);
+  return { lossless, reasons: why, signals,
+           /* informatif, volontairement HORS du critère : il parle de la
+            * complétude des objets exportés, pas de perte d'événements */
+           allRequestedObjectsPresentIsInformativeOnly: true };
+}
+
+/**
+ * Frontière de dégradation, par session.
+ *
+ * La frontière est le DERNIER export explicitement sans perte, au sens de
+ * `exportLoss`. Toute visite d'indice supérieur au plus grand `visitIndex` que
+ * cet export contenait est déclarée postérieure, donc écartée des analyses
+ * causales. Une session dont tous les exports sont sans perte n'a pas de
+ * frontière : ses lignes sont `lossless-throughout`, jamais `not-applicable`
+ * par défaut silencieux.
+ */
+function degradationBoundaries(exports) {
+  const bySession = new Map();
+  for (const e of exports) {
+    if (!bySession.has(e.sessionId)) bySession.set(e.sessionId, []);
+    bySession.get(e.sessionId).push(e);
   }
+  const out = new Map();
+  for (const [sid, list] of bySession) {
+    const sorted = list.slice().sort((a, b) => a.stamp < b.stamp ? -1 : a.stamp > b.stamp ? 1 : 0);
+    const lossless = sorted.filter(e => e.loss.lossless);
+    const degraded = sorted.filter(e => !e.loss.lossless);
+    const last = lossless.length ? lossless[lossless.length - 1] : null;
+    out.set(sid, {
+      sessionId: sid, exports: sorted.length,
+      losslessExports: lossless.length, degradedExports: degraded.length,
+      anyLoss: degraded.length > 0,
+      lastLosslessExport: last ? { file: last.file, stamp: last.stamp, segment: last.segment,
+                                   maxVisitIndex: last.maxVisitIndex } : null,
+      firstDegradedExport: degraded.length ? { file: degraded[0].file, stamp: degraded[0].stamp,
+                                               reasons: degraded[0].loss.reasons } : null,
+      perExport: sorted.map(e => ({ file: e.file, stamp: e.stamp, segment: e.segment,
+                                    records: e.records, maxVisitIndex: e.maxVisitIndex,
+                                    lossless: e.loss.lossless, reasons: e.loss.reasons,
+                                    signals: e.loss.signals })),
+    });
+  }
+  return out;
+}
+
+/** Marque chaque ligne par rapport à la vraie frontière de sa session. */
+function applyDegradation(rows, boundaries) {
   for (const r of rows) {
-    const id = r.decisionFeatures.sessionId;
-    if (!boundary.has(id)) {
-      r.degradation = { degradedSession: false, slice: 'not-applicable',
-                        excludedFromCausalAnalysis: false };
-      continue;
-    }
-    const b = boundary.get(id);
-    const after = r.decisionFeatures.visitIndex > b;
-    r.degradation = { degradedSession: true, lastLosslessVisitIndex: b,
+    const b = boundaries.get(r.decisionFeatures.sessionId);
+    if (!b) { r.degradation = { degradedSession: false, slice: 'session-inconnue',
+                                excludedFromCausalAnalysis: false, lastLosslessVisitIndex: null }; continue; }
+    if (!b.anyLoss) { r.degradation = { degradedSession: false, slice: 'lossless-throughout',
+                                        excludedFromCausalAnalysis: false, lastLosslessVisitIndex: null }; continue; }
+    const cut = b.lastLosslessExport ? b.lastLosslessExport.maxVisitIndex : -Infinity;
+    const after = r.decisionFeatures.visitIndex > cut;
+    r.degradation = { degradedSession: true, lastLosslessVisitIndex: Number.isFinite(cut) ? cut : null,
                       slice: after ? 'after-last-lossless-snapshot' : 'before-last-lossless-snapshot',
                       excludedFromCausalAnalysis: after };
   }
-  return report;
 }
 
 /* ------------------------------------------------------------------ pilote */
 
-function build(dir) {
-  const frozen = N.assertFrozenEngine();
-  const index = N.indexCollection(dir);
-  const visits = N.readVisits(dir, index);
+/**
+ * Lecture d'un corpus. Le banc a son PROPRE lecteur : celui de
+ * `tools/native-replay.cjs` suppose que tout `.json` est un export Natif et
+ * planterait sur le bilan de l'archive finale. `native-replay.cjs` n'est pas
+ * modifié, pour que ses résultats restent reproductibles à l'octet.
+ */
+function readCorpus(dir) {
+  const files = fs.readdirSync(dir, { recursive: true })
+    .filter(f => typeof f === 'string' && f.endsWith('.json')).sort();
+  const exports_ = [], ignored = [];
+  for (const f of files) {
+    let raw;
+    try { raw = JSON.parse(fs.readFileSync(path.join(dir, f))); }
+    catch (e) { ignored.push({ file: f, reason: 'json-illisible', detail: String(e.message).slice(0, 80) }); continue; }
+    const bad = classifyExport(raw);
+    if (bad) { ignored.push({ file: f, reason: bad, format: raw?.format ?? null }); raw = null; continue; }
+    exports_.push({ file: f, sessionId: raw.session.id, stamp: raw.segment.stamp,
+                    segment: raw.segment.index ?? null, records: raw.records.length,
+                    maxVisitIndex: raw.records.reduce((m, r) => Math.max(m, r.visitIndex ?? -1), -1),
+                    loss: exportLoss(raw) });
+    raw = null;
+  }
+  if (!exports_.length) throw Error('Aucun export Natif exploitable dans ' + dir);
+  /* Le plus complet d'une session est le plus TARDIF, pas le plus haut en
+   * indice de segment : les fichiers sans « auto- » sont des exports manuels
+   * postérieurs. Constaté sur les données, pas supposé. */
+  const latest = new Map();
+  for (const e of exports_)
+    if (!latest.has(e.sessionId) || e.stamp > latest.get(e.sessionId).stamp) latest.set(e.sessionId, e);
+  return { dir, files, exports: exports_, ignored, latestPerSession: latest };
+}
+
+/** Visites dédupliquées, avec les champs nécessaires au critère observationnel. */
+function readVisitsOf(corpus) {
+  const visits = [];
+  for (const { file } of corpus.latestPerSession.values()) {
+    const raw = JSON.parse(fs.readFileSync(path.join(corpus.dir, file)));
+    const deref = N.derefer(raw.dictionaries);
+    for (const r of raw.records) visits.push({
+      sessionId: raw.session.id, sourceFile: file,
+      visitId: r.visitId, visitIndex: r.visitIndex, identity: deref(r.identity),
+      status: r.status, lidarStatus: r.lidarStatus ?? null,
+      multiIntent: r.multiIntent === true,
+      operatorIntents: deref(r.operatorIntents ?? []),
+      navigationObserved: r.navigationObserved === true,
+      observedLabelCandidate: r.observedLabelCandidate ?? null,
+      usableAsNativeReference: r.usableAsNativeReference === true,
+      geometryEligibility: deref(r.geometryEligibility ?? null),
+      railSnapshots: deref(r.railSnapshots ?? null),
+      humanFinalReference: deref(r.humanFinalReference ?? null),
+    });
+  }
+  return visits;
+}
+
+function readChunksOf(corpus, needed) {
+  const out = new Map();
+  for (const e of corpus.exports) {
+    const raw = JSON.parse(fs.readFileSync(path.join(corpus.dir, e.file)));
+    for (const c of raw.clouds ?? []) {
+      if (c.format !== 'banane-native-lidar-chunk-v1') continue;
+      if (!needed.has(c.chunkId) || out.has(c.chunkId)) continue;
+      out.set(c.chunkId, { points: c.pointsSceneRelative, visible: c.visibleByClipBoxes ?? null });
+    }
+    if (out.size === needed.size) break;
+  }
+  return out;
+}
+
+/** Construit le shadow d'UN corpus. Les trois étages gardent leur ordre. */
+function buildCorpus(dir, name) {
+  const corpus = readCorpus(dir);
+  const visits = readVisitsOf(corpus);
   const needed = new Set();
   for (const v of visits) for (const s of ['left', 'right']) {
     const el = v.geometryEligibility?.[s];
     if (el?.status === 'comparable-candidate') for (const id of el.chunkIds ?? []) needed.add(id);
   }
-  const chunks = N.readNeededChunks(dir, index, needed);
-
-  /* étape 1 — rejeu et features, sans aucune valeur humaine */
-  const rows = [], railsByKey = new Map(), poses = new Map();
+  const chunks = readChunksOf(corpus, needed);
+  const rows = [], byKey = new Map(), poses = new Map();
   for (const visit of visits) for (const side of ['left', 'right']) {
     const r = replayRailExact(visit, side, chunks);
-    const pop = population(r);
     const row = {
-      population: pop,
+      corpus: name, population: population(r),
       eligibility: { status: r.eligibility, failClosed: r.failClosed,
                      reasons: visit.geometryEligibility?.[side]?.reasons ?? [] },
       decisionFeatures: r.replayed ? decisionFeatures(r, side, visit) : {
-        side, status: null, abstentionReasons: [], candidates: { seed: null, surfaceIntersection: null, alternative: null },
+        side, status: null, abstentionReasons: [], pointsSupplied: null, pointsUsed: null,
+        candidates: { seed: null, surfaceIntersection: null, alternative: null },
         target: { part: visit.identity.part, cut: visit.identity.cut, pageId: visit.identity.pageId,
                   frameId: visit.identity.frameId, shape: visit.identity.shape },
         sessionId: visit.sessionId, visitIndex: visit.visitIndex, visitId: visit.visitId,
@@ -375,22 +579,27 @@ function build(dir) {
       },
     };
     rows.push(row);
-    railsByKey.set(`${visit.sessionId}|${visit.visitId}|${side}`, row);
+    byKey.set(`${visit.sessionId}|${visit.visitId}|${side}`, row);
     poses.set(row, { visit, rail: r.rail ?? null });
   }
-  /* étape 2 — histoire causale et rail opposé, toujours sans humain */
   for (const row of rows) {
     row.causalHistory = causalHistory(row, rows);
-    row.oppositeRailContext = oppositeRailContext(row, railsByKey);
+    row.oppositeRailContext = oppositeRailContext(row, byKey);
   }
-  const degradationReport = degradationContext(rows, new Set(visits.map(v => v.sessionId)));
-  /* étape 3 — SEULEMENT MAINTENANT, la référence humaine */
+  const boundaries = degradationBoundaries(corpus.exports);
+  applyDegradation(rows, boundaries);
+  /* --- frontière : l'humain entre seulement maintenant --- */
   for (const row of rows) {
     const { visit, rail } = poses.get(row);
     row.postHocEvaluation = postHocEvaluation(row, visit, rail);
   }
-  return { frozen, index, rows, degradationReport, chunksNeeded: needed.size, chunksRead: chunks.size };
+  return { name, dir, corpus, visits, rows, boundaries,
+           chunksNeeded: needed.size, chunksRead: chunks.size };
 }
+
+
+
+/* ------------------------------------------------------- agrégats et pilote */
 
 const tally = (list, key) => {
   const m = {};
@@ -398,10 +607,40 @@ const tally = (list, key) => {
   return Object.fromEntries(Object.entries(m).sort((a, b) => b[1] - a[1]));
 };
 
-function summarise(rows) {
+/**
+ * Compteurs post hoc. Publiés DEUX FOIS : sur tous les `candidate-observed`,
+ * puis sur le seul sous-ensemble observationnellement fiable. Le second n'est
+ * pas une correction du premier : les deux sont livrés côte à côte.
+ */
+function postHocCounters(rows) {
+  const observed = rows.filter(r => r.postHocEvaluation.humanStatus === 'candidate-observed');
+  const reliable = observed.filter(r => r.postHocEvaluation.reliableObservation.reliable);
+  const block = list => ({
+    rails: list.length,
+    verdicts: tally(list, r => r.postHocEvaluation.verdict),
+    otherCandidateFamily: tally(
+      list.filter(r => r.postHocEvaluation.verdict === 'seed-insuffisant-autre-candidat-satisfaisant'),
+      r => r.postHocEvaluation.best.family),
+  });
+  return { allCandidateObserved: block(observed), reliableObservationOnly: block(reliable),
+           notCandidateObserved: rows.length - observed.length };
+}
+
+function summarise(rows, boundaries) {
   const flank = rows.filter(r => r.population === 'flank-only');
+  const deg = {};
+  if (boundaries) for (const [sid, b] of boundaries) {
+    if (!b.anyLoss) continue;
+    const mine = rows.filter(r => r.decisionFeatures.sessionId === sid);
+    deg[sid] = { lastLosslessExport: b.lastLosslessExport, firstDegradedExport: b.firstDegradedExport,
+                 railsBySlice: tally(mine, r => r.degradation.slice),
+                 flankOnlyBySlice: tally(mine.filter(r => r.population === 'flank-only'),
+                                         r => r.degradation.slice) };
+  }
   return {
     rails: rows.length,
+    visits: new Set(rows.map(r => `${r.decisionFeatures.sessionId}|${r.decisionFeatures.visitId}`)).size,
+    sessions: new Set(rows.map(r => r.decisionFeatures.sessionId)).size,
     population: tally(rows, r => r.population),
     failClosed: tally(rows.filter(r => r.eligibility.failClosed), r => r.eligibility.failClosed),
     flankOnly: {
@@ -410,21 +649,60 @@ function summarise(rows) {
       byPart: tally(flank, r => r.decisionFeatures.target.part),
       anchorFound: tally(flank, r => r.causalHistory.anchorFound),
       oppositeState: tally(flank, r => r.oppositeRailContext.state),
-      postHocVerdict: tally(flank, r => r.postHocEvaluation.verdict),
+      postHoc: postHocCounters(flank),
     },
-    allPopulationsPostHoc: tally(rows, r => r.postHocEvaluation.verdict),
+    flankWithOthers: { rails: rows.filter(r => r.population === 'flank-with-others').length },
+    engineCandidate: { rails: rows.filter(r => r.population === 'engine-candidate').length },
+    noCandidate: { rails: rows.filter(r => r.population === 'no-candidate').length },
+    allPopulationsPostHoc: postHocCounters(rows),
     degradationSlice: tally(rows, r => r.degradation.slice),
-    note: 'aucun seuil, aucun score combiné, aucun classifieur, aucun gagnant',
+    degradedSessions: deg,
+    note: 'aucun seuil, aucun score combiné, aucun classifieur, aucune règle, aucun gagnant',
   };
 }
 
+/**
+ * Fusion « combined-day » — DÉDUPLIQUÉE, jamais fusionnée.
+ *
+ * Deux corpus du même jour peuvent se recouvrir. La clé d'unicité est
+ * (session, visite, côté) : une ligne vue dans les deux corpus est comptée UNE
+ * fois, en gardant la version du corpus historique, et le recouvrement est
+ * rapporté. Aucune valeur n'est moyennée, aucune session n'est recousue.
+ */
+function combine(corpora) {
+  const seen = new Map(), rows = [], overlap = [];
+  for (const c of corpora) for (const r of c.rows) {
+    const k = `${r.decisionFeatures.sessionId}|${r.decisionFeatures.visitId}|${r.decisionFeatures.side}`;
+    if (seen.has(k)) { overlap.push({ key: k, keptFrom: seen.get(k), alsoIn: c.name }); continue; }
+    seen.set(k, c.name); rows.push(r);
+  }
+  const sessions = {};
+  for (const c of corpora) for (const sid of new Set(c.rows.map(r => r.decisionFeatures.sessionId)))
+    (sessions[sid] ??= []).push(c.name);
+  const boundaries = new Map();
+  for (const c of corpora) for (const [sid, b] of c.boundaries) if (!boundaries.has(sid)) boundaries.set(sid, b);
+  return { rows, overlap,
+           sharedSessions: Object.entries(sessions).filter(([, v]) => v.length > 1)
+             .map(([sid, v]) => ({ sessionId: sid, corpora: v })),
+           sessionsByCorpus: sessions, boundaries };
+}
+
 function main() {
-  const dir = process.argv[2];
-  if (!dir) { console.error('usage : node tools/flank-support-shadow.cjs <dossier-collecte> [--output f.json]'); process.exit(2); }
-  const { frozen, rows, degradationReport, index, chunksNeeded, chunksRead } = build(dir);
+  const args = process.argv.slice(2);
+  const out = args.includes('--output') ? args[args.indexOf('--output') + 1] : null;
+  const dirs = [];
+  for (let i = 0; i < args.length; i++)
+    if (args[i] === '--corpus') dirs.push({ name: args[i + 1], dir: args[i + 2] });
+  if (!dirs.length) {
+    console.error('usage : node tools/flank-support-shadow.cjs --corpus <nom> <dossier> [--corpus …] [--output f.json]');
+    process.exit(2);
+  }
+  const frozen = N.assertFrozenEngine();
+  const built = dirs.map(d => buildCorpus(d.dir, d.name));
+  const combined = combine(built);
   const body = {
-    format: 'banane-flank-support-shadow-v1',
-    nature: 'instrumentation hors ligne, lecture seule — aucune politique, aucun seuil, aucun runtime',
+    format: 'banane-flank-support-shadow-v1.1',
+    nature: 'instrumentation hors ligne, lecture seule — aucune politique, aucun seuil, aucune règle',
     studiedAbstention: FLANK_REASON,
     engine: { version: '4.6.0', geometryMethod: G.DEFAULTS.method, parameters: G.DEFAULTS,
               frozenHashes: frozen, calledWithoutOptions: true },
@@ -435,27 +713,53 @@ function main() {
                             neverA: ['seuil runtime', 'calibration physique'] },
     blocks: { humanFreeBlocks: ['decisionFeatures', 'causalHistory', 'oppositeRailContext'],
               humanBlock: 'postHocEvaluation' },
-    collection: { directory: path.resolve(dir), files: index.files.length, chunksNeeded, chunksRead },
-    degradedSessions: degradationReport,
+    reliableObservationCriterion: {
+      source: 'src/native-session.js — referenceReasons, repris verbatim',
+      conditions: ['intention opérateur unique valant VALIDATE', 'état de référence présent',
+                   'identité concordante', 'fraîcheur d’association dans [0, 1500] ms',
+                   'effet de décision observé', 'état de rail présent du côté considéré'],
+      invented: false,
+    },
     oppositeStates: OPPOSITE_STATES,
-    summary: summarise(rows),
-    rows,
+    corpora: built.map(c => ({
+      name: c.name, directory: path.resolve(c.dir),
+      files: c.corpus.files.length, nativeExports: c.corpus.exports.length,
+      ignoredSidecars: c.corpus.ignored,
+      sessions: [...c.corpus.latestPerSession.keys()],
+      visitsRead: c.visits.length, chunksNeeded: c.chunksNeeded, chunksRead: c.chunksRead,
+      degradation: [...c.boundaries.values()],
+      summary: summarise(c.rows, c.boundaries),
+    })),
+    combinedDay: {
+      deduplicationKey: 'sessionId|visitId|side',
+      merged: false, mergeNote: 'aucune session n’est recousue, aucune valeur n’est moyennée',
+      overlapRows: combined.overlap.length,
+      sharedSessions: combined.sharedSessions,
+      sessionsByCorpus: combined.sessionsByCorpus,
+      summary: summarise(combined.rows, combined.boundaries),
+    },
+    rows: built.flatMap(c => c.rows),
   };
-  /* Déterminisme : l'empreinte porte sur le contenu, l'horodatage en est exclu. */
-  const hashed = { format: body.format, studiedAbstention: body.studiedAbstention,
-                   engine: body.engine, snapshotPolicy: body.snapshotPolicy,
-                   summary: body.summary, rows: body.rows };
+  const hashed = { format: body.format, studiedAbstention: body.studiedAbstention, engine: body.engine,
+                   snapshotPolicy: body.snapshotPolicy, corpora: body.corpora,
+                   combinedDay: body.combinedDay, rows: body.rows };
   body.sha256 = crypto.createHash('sha256').update(JSON.stringify(hashed)).digest('hex');
-  body.sha256Covers = ['format', 'studiedAbstention', 'engine', 'snapshotPolicy', 'summary', 'rows'];
+  body.sha256Covers = ['format', 'studiedAbstention', 'engine', 'snapshotPolicy', 'corpora', 'combinedDay', 'rows'];
   body.generatedAt = new Date().toISOString();
-  const out = process.argv.includes('--output') ? process.argv[process.argv.indexOf('--output') + 1] : null;
   if (out) { fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, JSON.stringify(body, null, 1)); }
-  console.log(JSON.stringify(body.summary, null, 1));
-  console.log('sha256 du contenu :', body.sha256);
+  for (const c of body.corpora) {
+    console.log(`\n=== ${c.name} — ${c.visitsRead} visites, ${c.nativeExports} exports, `
+      + `${c.ignoredSidecars.length} fichiers ignorés`);
+    console.log(JSON.stringify(c.summary, null, 1));
+  }
+  console.log('\n=== combined-day'); console.log(JSON.stringify(body.combinedDay, null, 1));
+  console.log('\nsha256 :', body.sha256);
   if (out) console.log('écrit :', out);
 }
 
 module.exports = { FLANK_REASON, TOLERANCE_ORACLE, DEGRADED_SESSIONS, OPPOSITE_STATES,
                    exactSnapshot, replayRailExact, population, decisionFeatures, causalHistory,
-                   oppositeRailContext, postHocEvaluation, degradationContext, build, summarise, norm, mag };
+                   oppositeRailContext, postHocEvaluation, reliableObservation, classifyExport, exportLoss,
+                   degradationBoundaries, applyDegradation, readCorpus, readVisitsOf, buildCorpus,
+                   combine, postHocCounters, summarise, norm, mag };
 if (require.main === module) main();
