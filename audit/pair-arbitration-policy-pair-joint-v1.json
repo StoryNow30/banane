@@ -1,0 +1,5023 @@
+{
+  "format": "banane-pair-arbitration-policy-v1",
+  "policy": "famille-seulement",
+  "variant": "pair-joint",
+  "variantMeaning": "l’arbitre peut déplacer les deux rails, y compris un rail déjà résolu (status candidate) que settled ne protège pas parce que son partenaire s’abstient ou que son lossRatio est < R",
+  "frozenAt": "2026-09-16T10:42:58.770Z",
+  "nature": "artefact hors ligne figé, remis pour scoring indépendant — aucune exécution runtime",
+  "source": {
+    "file": "datasets/automatic/offline-evaluation-v4.3.0.json",
+    "sha256": "e4bbad2f064eeebb78f25cf171daf6e3c6e38cb238f613468bb61ef6583119cd"
+  },
+  "units": "scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres",
+  "parameters": {
+    "R": 5,
+    "minBase": 5,
+    "K": [
+      1,
+      2,
+      3,
+      5,
+      10
+    ],
+    "KNotChosen": "aucune valeur de K n’est retenue : les décisions sont fournies pour chacune",
+    "anchor": "médiane de la relation de paire du couple (graine, graine) sur les cuts de la MÊME PART où lossRatio ≥ R des deux côtés, cut jugé retiré (leave-one-out), cuts réservés exclus",
+    "dispersion": "écart absolu médian autour de cette médiane, plancher 1e-4",
+    "gate": "|paire − ancre| de la meilleure combinaison ≤ K × dispersion, sinon abstention",
+    "untouched": "un cut fortement discriminé des deux côtés n’est jamais arbitré",
+    "families": {
+      "best": [
+        "graine",
+        "surface"
+      ],
+      "alternative": [
+        "alternative"
+      ]
+    },
+    "familyRepresentative": {
+      "best": "graine",
+      "alternative": "alternative"
+    },
+    "fineVariantNeverArbitrated": "la variante fine n’est jamais choisie par le banc. La graine est UTILISÉE COMME REPRÉSENTANT de la famille best, choix cohérent avec proposal.delta === metrics.seed sur les 173 rails que le moteur a effectivement résolus. Sur un rail abstenu le moteur n’a rien appliqué : il n’avait donc décidé d’appliquer ni la graine ni autre chose."
+  },
+  "reserved": {
+    "cuts": [
+      9031,
+      9032,
+      9033,
+      9034,
+      9035,
+      9036,
+      9037,
+      9038,
+      9039,
+      9040,
+      9041,
+      9042,
+      9043,
+      9044,
+      9045,
+      9046,
+      9047
+    ],
+    "usage": "évaluation finale uniquement — exclus du socle d’ancrage et de tout réglage"
+  },
+  "counts": {
+    "cuts": 110,
+    "decisions": 110
+  },
+  "decisions": [
+    {
+      "part": 17,
+      "cut": 648,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 7.595645460388693,
+        "right": 37.17394555765927
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3172,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 68.84899655574466,
+        "right": 52.09659030406679
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 6363,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 136.11108409194298,
+        "right": 34.71676652088925
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 6954,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 44.02574260159873,
+        "right": 92.0109067779069
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 774,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 58.79464314971688,
+        "right": 2.622484472046106
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3180,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.192193282789556,
+        "right": 1.9803025722398286
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 6367,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 68.69179402399942,
+        "right": 17.241811037590107
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3174,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 3.9400630931914287,
+        "right": 1.1855742666346658
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 7482,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 39.9539320025484,
+        "right": 77.68103848862489
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 349,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 45.87180416497329,
+        "right": 21.518744066502272
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 9151,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 94.75587978244936,
+        "right": 14.58311187667124
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3176,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.0427990056615895,
+        "right": 1.069311800358909
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 7632,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 44.8329509173093,
+        "right": 15.222081174661525
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3173,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 37.54186423923215,
+        "right": 37.749813042018175
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 7481,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 32.01114432804449,
+        "right": 64.56681875254982
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3175,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 11.567445838579822,
+        "right": 1.4150841799616916
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 7478,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 48.01018904873615,
+        "right": 70.20479653850326
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 7479,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 58.800008926437414,
+        "right": 30.8901633419903
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3177,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.782192453635266,
+        "right": 1.5324371278655013
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3171,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 63.97343982103469,
+        "right": 81.55647135843097
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 3179,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.477449405667392,
+        "right": 1.165115648796895
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 646,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 18.385407933095507,
+        "right": 66.5285930360267
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 6369,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 158.70598546284546,
+        "right": 35.07178512055255
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 6364,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 22.129963814199535,
+        "right": 55.191896633131314
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 6365,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 64.64612213263024,
+        "right": 29.991075009856065
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 17,
+      "cut": 7480,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 40.174684973709276,
+        "right": 27.22845453673007
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1665,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 3.081625586970436,
+        "right": 1.16623089500004
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9036,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 7.782955780068868,
+        "right": 16.420325387911017
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9106,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 11.550274397303395,
+        "right": 1.1763277240706802
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3914,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 3.4394403383658974,
+        "right": 3.6710040479871076
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9113,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 22.22909505120623,
+        "right": 56.32409821794314
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9105,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 12.829939897078829,
+        "right": 1.3559338675400778
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1612,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 36.68382283992805,
+        "right": 22.476847724622274
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 488,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.360337201762758,
+        "right": 3.0832131424181055
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5464,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.2548194928821645,
+        "right": 4.893096802799502
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5469,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.5390498147474068,
+        "right": 2.1507842716692793
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9037,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 5.570264419882754,
+        "right": 9.290143554512943
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5463,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 4.036508736665249,
+        "right": 7.260282732884449
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1668,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.3844833794182416,
+        "right": 1.104270380032899
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9031,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 12.530165798700367,
+        "right": 16.690466938511562
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9034,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 5.547380052768201,
+        "right": 32.28648181541956
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9110,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 42.196495865060626,
+        "right": 7.012196167637881
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9112,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 55.00113422770102,
+        "right": 63.795526318591904
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5467,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.4979482445587815,
+        "right": 4.460810947439669
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5122,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 3.93844852553909,
+        "right": 2.1986084184884924
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5118,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 4.980630087855453,
+        "right": 1.6364726102982312
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9104,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 33.239667526964,
+        "right": 1.1898038376009836
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 6577,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.3631782203985745,
+        "right": 3.830543897173984
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1512,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.0308372906439156,
+        "right": 28.110997229609186
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5117,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.7961415300445673,
+        "right": 1.942403042449814
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9035,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 30.469595670891692,
+        "right": 22.58753692462491
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 4568,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 11.751191547521653,
+        "right": 82.93413158563745
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5466,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.6778988673674053,
+        "right": 11.352264070887843
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3913,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.581849234482038,
+        "right": 2.3061267747332463
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9046,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 29.304455417508407,
+        "right": 41.7722417631243
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5125,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 1.439554704648384,
+        "right": 1.1649232947302566
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "alternative",
+          "placementLeft": "alternative",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9103,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 40.29078105289123,
+        "right": 1.748745494163724
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5120,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.5745845390730044,
+        "right": 2.0587445816638
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3908,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 1.5893920302508038,
+        "right": 1.119843605333719
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 487,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.3888507277603592,
+        "right": 1.0320424705784976
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 6574,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.001175856753403,
+        "right": 1.7005741442910975
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 484,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.8512029159056098,
+        "right": 2.7135238740198995
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3910,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.2274817084996488,
+        "right": 6.213352224575455
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1670,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 25.712810607623776,
+        "right": 63.85275126795352
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 6573,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.1049972438479907,
+        "right": 5.077313961007782
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5123,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.099296739478785,
+        "right": 1.8530882397419488
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "right"
+          ]
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "right"
+          ]
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "right"
+          ]
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "right"
+          ]
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": [
+            "right"
+          ]
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 6576,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.9304481809467529,
+        "right": 2.6503196743605795
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5119,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.4058700375444588,
+        "right": 3.7982187316103446
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9032,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 23.010422225576885,
+        "right": 28.84930746002989
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5468,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 1.1941381585824682,
+        "right": 1.3513912088889282
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9039,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.3271871852420931,
+        "right": 38.431646189538064
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5128,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 31.817978890965534,
+        "right": 27.365191886095225
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9045,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.7036881316881898,
+        "right": 13.61394184126946
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 6572,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.100571236894777,
+        "right": 12.492585416024355
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1425,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 31.963235968194095,
+        "right": 60.32119072912289
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9038,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 4.473241158896068,
+        "right": 20.885035115453082
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1664,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.870272229182281,
+        "right": 1.0662525016913313
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 6575,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.808938059411596,
+        "right": 2.796162413212459
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3911,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.6390718629253187,
+        "right": 1.1833360031405877
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9040,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.4823407697716038,
+        "right": 50.39708834999024
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9044,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.6948838806874746,
+        "right": 31.688060143871734
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9102,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 40.802212318324955,
+        "right": 52.79377903011351
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 51.791812664734834,
+        "right": 9.628537495863043
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5124,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.0947409553415406,
+        "right": 3.573868634409017
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3912,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.6442963301983595,
+        "right": 4.720951873906586
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9043,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.254480628352947,
+        "right": 40.02132962804702
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9108,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.3423377721708913,
+        "right": 21.483035721371227
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 4065,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 50.11859591070908,
+        "right": 70.8320743997817
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 4569,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 54.527305798744486,
+        "right": 68.4480752003754
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1426,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 132.4028531135977,
+        "right": 41.785136771021136
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5116,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.4246640549867322,
+        "right": 21.19937068871952
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9033,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 5.535011053203691,
+        "right": 30.25308311251065
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9114,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 39.927737298551634,
+        "right": 54.26144137484358
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 3909,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 1.181581867698648,
+        "right": 1.1225267557964402
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5121,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.1116448208184195,
+        "right": 3.0845858927307197
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 485,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 1.4661026209272074,
+        "right": 1.030440458315823
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "10": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 4570,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 134.30636415439744,
+        "right": 72.27094134005453
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9041,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.9016511554233781,
+        "right": 32.601859255703566
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": [
+            "left"
+          ]
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9047,
+      "reserved": true,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 37.426357336494654,
+        "right": 31.992281031589346
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9111,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 11.71690331287179,
+        "right": 109.51265140710244
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5470,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.7076507913019914,
+        "right": 3.4270117467938404
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9042,
+      "reserved": true,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.223151205168985,
+        "right": 50.01276597092724
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "alternative",
+          "familyRight": "best",
+          "placementLeft": "alternative",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 5465,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.086032000429562,
+        "right": 2.7272200653974776
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "3": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 483,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.3285495524831705,
+        "right": 1.7231939112931773
+      },
+      "byK": {
+        "1": {
+          "decision": "abstention",
+          "reason": "aucun-candidat-plausible"
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 489,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "candidate",
+        "right": "unresolved"
+      },
+      "lossRatio": {
+        "left": 2.034635824278964,
+        "right": 1.754336135947513
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "alternative",
+          "placementLeft": "graine",
+          "placementRight": "alternative",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 482,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.767346112553997,
+        "right": 2.2913431060186906
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 9109,
+      "reserved": false,
+      "engineApplies": false,
+      "railStatus": {
+        "left": "unresolved",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 1.4541777294075147,
+        "right": 36.35975930605149
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 2544,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 10.441970726032423,
+        "right": 53.23253993792535
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 486,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 2.7287495867423717,
+        "right": 2.9691294857325228
+      },
+      "byK": {
+        "1": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "2": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "3": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "5": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        },
+        "10": {
+          "decision": "arbitrée",
+          "familyLeft": "best",
+          "familyRight": "best",
+          "placementLeft": "graine",
+          "placementRight": "graine",
+          "resolvedRailsMoved": []
+        }
+      }
+    },
+    {
+      "part": 20,
+      "cut": 1422,
+      "reserved": false,
+      "engineApplies": true,
+      "railStatus": {
+        "left": "candidate",
+        "right": "candidate"
+      },
+      "lossRatio": {
+        "left": 63.606789754990096,
+        "right": 29.452818351256138
+      },
+      "byK": {
+        "1": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "2": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "3": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "5": {
+          "decision": "moteur",
+          "reason": "settled"
+        },
+        "10": {
+          "decision": "moteur",
+          "reason": "settled"
+        }
+      }
+    }
+  ],
+  "sha256": "af2721d297937fefa73cd132567b32e8f5d001d4dc6d1a14e5bf2e00cc58ff1f",
+  "sha256Covers": [
+    "format",
+    "policy",
+    "variant",
+    "source",
+    "parameters",
+    "reserved",
+    "decisions"
+  ]
+}

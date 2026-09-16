@@ -260,20 +260,33 @@ leur graine. Verrouillé par test.
 
 C'est le point critique du tour, et il se règle sans règle nouvelle :
 
-- **représentant de `best` = la graine**, parce que c'est le placement que le
-  moteur applique lui-même quand il résout (`delta === seed`, 173/173) ;
+- **représentant de `best` = la graine.** Formulation exacte (corrigée au tour 3,
+  voir plus bas) : la graine est **utilisée comme représentant** de la famille
+  `best`, choix cohérent avec `proposal.delta === metrics.seed` sur les **173
+  rails que le moteur a effectivement résolus**. Sur un rail **abstenu**, le
+  moteur n'a **rien appliqué** : on ne peut donc pas dire qu'il « avait déjà
+  décidé d'appliquer la graine » sur ce rail-là. Le banc n'invente pour autant
+  aucune règle graine-contre-surface : il reprend un représentant **observé
+  ailleurs** plutôt que d'arbitrer la variante fine ;
 - **représentant de `alternative` = l'alternative**, seul placement exposé de
   cette famille.
 
-Donc, pour un rail **déjà résolu**, la décision du moteur est préservée à
-l'identique. Pour un rail **abstenu**, prendre la graine **reproduit une
-préférence déjà déterminée par le moteur** — ce n'est pas une règle
-graine-contre-surface créée en silence. `surfaceIntersection` n'est jamais
-choisi par le banc ; un test l'interdit explicitement.
+`surfaceIntersection` n'est jamais choisi par le banc ; un test l'interdit
+explicitement. Les 47 rails abstenus ne portent **aucun** `delta` : vérifié par
+test.
 
 Conséquence mécanique : l'arbitrage porte sur 4 combinaisons de familles, pas 9.
 
+> **Ce que cette formalisation ne garantissait pas.** Elle préserve la variante
+> fine, mais **pas la famille** d'un rail que le moteur avait déjà résolu.
+> `settled` est une condition de **cut** : voir le tour 3.
+
 ## Résultats — 93 cuts hors réserve, ancre corrigée
+
+> **Colonne « récup. » périmée — voir le tour 3.** Le compteur `recovered` de ces
+> deux tableaux était **faux** : il comptait tout cut arbitré sur lequel le
+> moteur n'appliquait rien, **sans regarder l'erreur obtenue**. Les tableaux
+> recalculés sont plus bas. Les autres colonnes restent exactes.
 
 **Politique fine (9 combinaisons)** — celle du tour 1 :
 
@@ -325,23 +338,13 @@ en payait 7 régressions. « Famille seulement » renonce aux deux côtés du ha
 **3. Couverture moindre à K faible** : 12 récupérations contre 16 à K = 1, 20
 contre 26 à K = 3. L'écart se referme à K = 10 (30 contre 30).
 
-## Artefact de politique figé
+## Artefact de politique figé — **supersédé**
 
-```bash
-node tools/pair-lab.cjs --freeze audit/pair-arbitration-policy-v1.json
-```
-
-- `audit/pair-arbitration-policy-v1.json`, format `banane-pair-arbitration-policy-v1` ;
-- **décision déterministe pour les 110 cuts**, et pour **chaque** K du balayage —
-  aucun K n'est retenu, le scoring indépendant choisira ;
-- description complète des paramètres, des familles, de la règle de représentant
-  et de l'usage de la réserve ;
-- empreinte du corpus source ;
-- **SHA-256 recalculable par un tiers**, portant sur le contenu décisionnel seul
-  (`format`, `policy`, `source`, `parameters`, `reserved`, `decisions`) —
-  l'horodatage en est **exclu**, sans quoi l'empreinte ne serait pas
-  reproductible. Deux gels successifs donnent la même empreinte ; vérifié par
-  test.
+L'artefact `audit/pair-arbitration-policy-v1.json`, SHA
+`33a654200bcd5ff688c41b149a00dede0ad65786bcebfbdc0cf7d76d8fad714f`, est
+**provisoire et supersédé** par les deux artefacts du tour 3. Il a été retiré du
+dépôt pour qu'aucun tiers ne le score par erreur ; il reste consultable dans
+l'historique, au commit `4d4e73c`.
 
 ## Chantier séparé, documenté et non résolu ici
 
@@ -360,3 +363,231 @@ Aucun changement runtime, `geometry.js`, cerveau, seuil moteur ou génération d
 candidats. `banane-data`, le benchmark indépendant archivé et la collecte Natif
 V4.6 **ne sont pas utilisés** : la politique doit être figée avant de s'en
 servir, sous peine de se régler sur ses propres données de validation.
+
+---
+
+# Tour 3 — revue Astra du code : deux défauts mécaniques, corrigés
+
+Astra a relu directement `tools/pair-lab.cjs`. Les deux défauts signalés sont
+réels et vérifiables dans le code du tour 2. Aucun paramètre n'a été touché :
+`R = 5`, `minBase = 5`, le balayage de K, l'ancre, la dispersion et la porte de
+plausibilité sont **identiques** au tour 2.
+
+## Défaut 1 — « rail déjà résolu » : contradiction entre le code et le rapport
+
+Le rapport affirmait qu'un rail déjà résolu conservait sa décision. **C'est faux
+au niveau de la famille.** `decideFamily()` n'immobilise que les cuts où
+`settled(row, R)` est vrai — et `settled` est une condition de **cut**, qui exige
+que les **deux** rails soient discriminés :
+
+```js
+return l.status === 'candidate' && r.status === 'candidate'
+  && Math.min(l.lossRatio ?? -Infinity, r.lossRatio ?? -Infinity) >= R;
+```
+
+Sur un cut à un rail abstenu, les quatre couples de familles sont donc parcourus
+et le rail déjà `candidate` peut changer de famille.
+
+### La mesure d'abord — combien de décisions gelées le font réellement ?
+
+Sur les 110 cuts, variante du tour 2 :
+
+| K | cuts arbitrés | cuts déplaçant un rail déjà résolu | rails déplacés | cuts concernés |
+|---:|---:|---:|---:|---|
+| 1 | 22 | **2** | 2 | 5123 (droit), 6576 (gauche) |
+| 2 | 35 | **4** | 4 | 1665 (g), 5123 (d), 6576 (g), 9041 (g) |
+| 3 | 51 | **5** | 5 | 1665 (g), 5123 (d), 6576 (g), 9041 (g), 9106 (g) |
+| 5 | 62 | **5** | 5 | *idem* |
+| 10 | 65 | **5** | 5 | *idem* |
+
+Décomposition des 110 cuts selon ce que `settled` protège, à `R = 5` :
+
+| catégorie | cuts |
+|---|---:|
+| `settled` des deux côtés — jamais arbitrés | 41 |
+| **deux** rails déjà `candidate`, mais `lossRatio < R` | **27** |
+| **un** rail `candidate` + un rail `unresolved` | **37** |
+| aucun rail `candidate` | 5 |
+
+Les 64 cuts des deux lignes du milieu portent un rail que le moteur a résolu et
+que `settled` ne protège pas.
+
+**Le cas le plus net est le cut 9106** : son rail gauche a un `lossRatio` de
+**11.55**, largement au-dessus de `R = 5`, et se fait pourtant déplacer de `best`
+vers `alternative` — uniquement parce que son partenaire droit s'abstient
+(`lossRatio` 1.18). Le résultat sort à **48.26** de la référence humaine.
+
+### Les deux variantes, explicitement distinctes
+
+Le banc expose désormais `VARIANTS = ['pair-joint', 'lock-resolved-rail']`. Seul
+l'ensemble des familles ouvertes par rail change ; tout le reste est commun.
+
+| variante | familles ouvertes pour un rail `candidate` | pour un rail `unresolved` |
+|---|---|---|
+| `pair-joint` | `best`, `alternative` | `best`, `alternative` |
+| `lock-resolved-rail` | `best` **seulement** — donc sa graine | `best`, `alternative` |
+
+**Conséquence assumée de `lock-resolved-rail`** : sur les 27 cuts dont les deux
+rails sont `candidate` sans être `settled`, la seule option ouverte est le couple
+que le moteur applique déjà. Il n'y a rien à arbitrer, et le banc le dit
+explicitement — décision `moteur`, motif `aucun-rail-abstenu` — plutôt que de le
+confondre avec une abstention ou avec un cut fortement discriminé.
+
+**Le banc ne choisit pas entre les deux variantes.** Les deux sont mesurées,
+figées et livrées.
+
+## Défaut 2 — le compteur `recovered` était faux
+
+Dans `sweep()`, tout cut arbitré avec `!engineApplies(row)` incrémentait
+`recovered`, **indépendamment de son erreur par rapport à la référence humaine**.
+Un cut sorti à 48.26 y était compté comme « récupéré ». Trois compteurs distincts
+le remplacent :
+
+| compteur | définition |
+|---|---|
+| `arbitratedAbstention` | cuts arbitrés sur lesquels le moteur n'appliquait rien |
+| `recoveredAtOracleTolerance` | … dont l'erreur finale **≤ 0.010** |
+| `arbitratedButOutsideTolerance` | … dont l'erreur finale **> 0.010** |
+
+`0.010` reste la **convention d'évaluation** de l'oracle, reprise du banc
+indépendant : elle sert à **compter**, jamais à décider. Aucune règle ne la lit.
+
+Deux compteurs s'ajoutent pour la symétrie — `unchanged` (arbitrage qui retombe
+exactement sur ce que le moteur appliquait) et `untouchedSettled` /
+`untouchedNothingToArbitrate`. Un test vérifie que les compteurs **se referment
+sans reste** à chaque K et pour chaque variante.
+
+## Tableaux recalculés — 93 cuts hors réserve, tous les K
+
+Lecture des colonnes : `arbAbst` = cuts arbitrés sans placement moteur préalable,
+dont `récup ≤ tol` et `hors tol` ; `arbAppl` = cuts arbitrés que le moteur avait
+déjà placés, dont `corr.`, `régr.` et `inch.` ; `rails dépl.` = rails déjà
+résolus déplacés hors de leur graine.
+
+**Politique fine (9 combinaisons, variante fine arbitrée)**
+
+| K | moteur | abst. | arbitré | arbAbst | **récup ≤ tol** | **hors tol** | arbAppl | corr. | **régr.** | inch. | rails dépl. |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 36 | 25 | 32 | 16 | **16** | **0** | 16 | 2 | **6** | 8 | 17 |
+| 2 | 36 | 18 | 39 | 20 | **19** | **1** | 19 | 2 | **7** | 10 | 21 |
+| 3 | 36 | 10 | 47 | 26 | **23** | **3** | 21 | 2 | **7** | 12 | 23 |
+| 5 | 36 | 5 | 52 | 29 | **26** | **3** | 23 | 4 | **7** | 12 | 25 |
+| 10 | 36 | 4 | 53 | 30 | **26** | **4** | 23 | 4 | **7** | 12 | 26 |
+
+**Famille seulement — variante `pair-joint`**
+
+| K | moteur | abst. | arbitré | arbAbst | **récup ≤ tol** | **hors tol** | arbAppl | corr. | **régr.** | inch. | rails dépl. |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 36 | 36 | 21 | 12 | **12** | **0** | 9 | 2 | **0** | 7 | 2 |
+| 2 | 36 | 27 | 30 | 16 | **15** | **1** | 14 | 2 | **0** | 12 | 3 |
+| 3 | 36 | 18 | 39 | 20 | **17** | **3** | 19 | 2 | **0** | 17 | 4 |
+| 5 | 36 | 7 | 50 | 28 | **25** | **3** | 22 | 2 | **0** | 20 | 4 |
+| 10 | 36 | 4 | 53 | 30 | **26** | **4** | 23 | 2 | **0** | 21 | 4 |
+
+**Famille seulement — variante `lock-resolved-rail`**
+
+| K | moteur | *(dont rien à arbitrer)* | abst. | arbitré | arbAbst | **récup ≤ tol** | **hors tol** | arbAppl | corr. | **régr.** | rails dépl. |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 59 | *23* | 22 | 12 | 12 | **12** | **0** | 0 | 0 | **0** | **0** |
+| 2 | 59 | *23* | 19 | 15 | 15 | **15** | **0** | 0 | 0 | **0** | **0** |
+| 3 | 59 | *23* | 16 | 18 | 18 | **17** | **1** | 0 | 0 | **0** | **0** |
+| 5 | 59 | *23* | 8 | 26 | 26 | **25** | **1** | 0 | 0 | **0** | **0** |
+| 10 | 59 | *23* | 6 | 28 | 28 | **26** | **2** | 0 | 0 | **0** | **0** |
+
+Les régressions restent nulles dans les **deux** variantes, à tous les K.
+
+### Ce que le compteur corrigé change dans la lecture du tour 2
+
+À K = 3, le tour 2 annonçait **20 récupérations** pour « famille seulement ». Il
+y en a **17** sous la convention d'évaluation ; les **3 autres** ressortent
+au-dessus : 1665 à 12.75, **9106 à 48.26**, 1668 à 10.34. La politique fine
+annonçait 26 récupérations : il y en a 23, mêmes trois débordements.
+
+Le cut 9106 est le même que celui du défaut 1 : c'était un rail à `lossRatio`
+11.55 déplacé par son partenaire abstenu, et l'ancien compteur l'annonçait
+« récupéré ».
+
+## Comparaison complète des deux variantes
+
+### Cuts qui décident différemment
+
+| K | 1 | 2 | 3 | 5 | 10 |
+|---|---:|---:|---:|---:|---:|
+| cuts divergents (sur 110) | 27 | 28 | 29 | 29 | 29 |
+
+L'écrasante majorité (27) sont les cuts à deux rails `candidate` non `settled` :
+`pair-joint` les arbitre, `lock-resolved-rail` rend la main au moteur. Les
+divergences restantes sont les cuts 1665 et 9106, à un rail abstenu, où
+`pair-joint` déplace le rail résolu et `lock-resolved-rail` s'abstient.
+
+### Gains et pertes de `lock-resolved-rail` face à `pair-joint`
+
+| K | récup ≤ tol | hors tol | corrections | régressions | rails résolus déplacés |
+|---:|---|---|---|---|---|
+| 1 | 12 → **12** | 0 → **0** | 2 → **0** | 0 → 0 | 2 → **0** |
+| 2 | 15 → **15** | 1 → **0** | 2 → **0** | 0 → 0 | 3 → **0** |
+| 3 | 17 → **17** | 3 → **1** | 2 → **0** | 0 → 0 | 4 → **0** |
+| 5 | 25 → **25** | 3 → **1** | 2 → **0** | 0 → 0 | 4 → **0** |
+| 10 | 26 → **26** | 4 → **2** | 2 → **0** | 0 → 0 | 4 → **0** |
+
+**Gain.** Les récupérations sous tolérance sont **exactement les mêmes cuts** —
+vérifié par différence d'ensembles, pas seulement par comptage. `lock` supprime
+en revanche les débordements 1665 (12.75) et 9106 (48.26).
+
+**Perte, énoncée sans l'atténuer.** Les trois corrections matérielles du tour 2 —
+5123 (67.12 → 7.44), 6576 (82.11 → 6.27) et 9041 (100.96 → 5.86, sur la tenue à
+l'écart) — passent **toutes** par le déplacement d'un rail déjà résolu.
+`lock-resolved-rail` ne peut donc pas les produire : elle rend la main au moteur,
+qui reste à 67.12, 82.11 et 100.96. Verrouillé par test.
+
+C'est un arbitrage réel, pas un choix évident : `lock` évite deux placements très
+mauvais, `pair-joint` répare trois placements très mauvais. **Le banc ne tranche
+pas.** Les deux artefacts sont livrés.
+
+## Terminologie corrigée
+
+Ne subsiste plus, ni dans le code ni ici, la formule « le moteur avait déjà
+décidé d'appliquer la graine » appliquée à un rail **abstenu**. La formulation
+retenue est : *la graine est utilisée comme représentant de `best`, choix
+cohérent avec `proposal.delta === metrics.seed` sur les 173 rails effectivement
+résolus ; sur un rail abstenu le moteur n'a rien appliqué.* Les 47 rails abstenus
+ne portent aucun `delta` — vérifié par test, et 173 + 47 = 220.
+
+## Artefacts figés — deux, un par variante
+
+```bash
+node tools/pair-lab.cjs --freeze audit/pair-arbitration-policy-pair-joint-v1.json --variant pair-joint
+node tools/pair-lab.cjs --freeze audit/pair-arbitration-policy-lock-resolved-rail-v1.json --variant lock-resolved-rail
+```
+
+| artefact | SHA-256 du contenu canonique |
+|---|---|
+| `audit/pair-arbitration-policy-pair-joint-v1.json` | `af2721d297937fefa73cd132567b32e8f5d001d4dc6d1a14e5bf2e00cc58ff1f` |
+| `audit/pair-arbitration-policy-lock-resolved-rail-v1.json` | `21d57823da2615875e330c0a3b226191e505e43881329bd0f23b246c0fd87a36` |
+| ~~`audit/pair-arbitration-policy-v1.json`~~ | ~~`33a654200bcd5ff688c41b149a00dede0ad65786bcebfbdc0cf7d76d8fad714f`~~ — **supersédé**, retiré du dépôt |
+
+Corpus source, inchangé :
+`e4bbad2f064eeebb78f25cf171daf6e3c6e38cb238f613468bb61ef6583119cd`.
+
+Le champ `variant` entre désormais dans l'empreinte, de sorte que deux artefacts
+ne puissent jamais se confondre. Le SHA reste **recalculable par un tiers** :
+
+```
+sha256( JSON.stringify({format, policy, variant, source, parameters, reserved, decisions}) )
+```
+
+L'horodatage en est exclu. Chaque décision gelée porte en plus `railStatus` et,
+lorsqu'elle arbitre, la liste `resolvedRailsMoved` — un tiers peut donc vérifier
+le défaut 1 sans relire le code.
+
+## Ce que le tour 3 n'a pas touché
+
+`R = 5`, `minBase = 5`, le balayage `K ∈ {1, 2, 3, 5, 10}`, l'ancre, la
+dispersion et la porte de plausibilité sont **inchangés**. Aucun K n'est retenu.
+Les cuts 9031–9047 restent en évaluation finale, exclus du socle d'ancrage et de
+tout réglage. Aucun fichier runtime, `geometry.js`, cerveau, seuil moteur ou
+génération de candidats n'est modifié. `banane-data`, le benchmark indépendant
+archivé et la collecte Natif V4.6 ne sont pas utilisés.
+
+L'absence d'ancre sur une part nouvelle reste **documentée et non résolue** ; les
+deux variantes la partagent à l'identique.

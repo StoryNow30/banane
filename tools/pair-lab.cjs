@@ -140,11 +140,14 @@ const FAMILIES = { best: ['graine', 'surface'], alternative: ['alternative'] };
  * Représentant d'une famille pour un rail — la VARIANTE FINE N'EST JAMAIS
  * ARBITRÉE ICI.
  *
- * Pour la famille 'best', le représentant est la graine, parce que c'est le
- * placement que le moteur applique lui-même quand il résout (delta === seed sur
- * 173/173). Cela REPRODUIT une préférence déjà déterminée par le moteur ; cela
- * n'introduit aucune règle graine-contre-surface, ni pour un rail résolu, ni
- * pour un rail abstenu.
+ * Pour la famille 'best', le représentant est la graine. Formulation exacte :
+ * la graine est UTILISÉE COMME REPRÉSENTANT de la famille 'best', choix
+ * cohérent avec le fait que `proposal.delta === metrics.seed` sur les 173 rails
+ * que le moteur a effectivement résolus. Sur un rail abstenu, le moteur n'a
+ * RIEN appliqué : on ne peut donc pas dire qu'il « avait déjà décidé
+ * d'appliquer la graine ». Le banc n'introduit pour autant aucune règle
+ * graine-contre-surface : il reprend le représentant observé ailleurs plutôt
+ * que d'arbitrer la variante fine.
  *
  * Pour la famille 'alternative', il n'existe qu'un seul placement exposé.
  */
@@ -152,6 +155,36 @@ function familyRepresentative(family) {
   if (family === 'best') return 'graine';
   if (family === 'alternative') return 'alternative';
   throw Error('Famille inconnue : ' + family);
+}
+
+/* --- variantes d'arbitrage -------------------------------------------------
+ *
+ * Deux variantes EXPLICITEMENT DISTINCTES. Le banc ne choisit pas entre elles :
+ * les deux sont mesurées, figées et livrées.
+ *
+ *   'pair-joint'          l'arbitre peut déplacer les DEUX rails, y compris un
+ *                         rail que le moteur a déjà résolu (`status` vaut
+ *                         'candidate') mais que `settled` ne protège pas.
+ *
+ *   'lock-resolved-rail'  tout rail déjà 'candidate' reste EXACTEMENT sur sa
+ *                         graine — le placement que le moteur lui a appliqué —
+ *                         et seul un rail abstenu peut changer de famille.
+ *
+ * Origine de la distinction : `settled(row, R)` est une condition de CUT, vraie
+ * seulement si les DEUX rails sont fortement discriminés. Sur un cut à un rail
+ * abstenu, 'pair-joint' parcourt donc les quatre couples de familles et peut
+ * déplacer le rail déjà résolu. Ce n'est pas théorique : mesuré sur le corpus,
+ * 5 cuts et 5 rails, dont le cut 9106 dont le rail gauche a un `lossRatio` de
+ * 11.55 — bien au-dessus de R = 5 — et se retrouve déplacé parce que son
+ * partenaire s'abstient.
+ */
+const VARIANTS = ['pair-joint', 'lock-resolved-rail'];
+
+/** Familles ouvertes à l'arbitrage pour un rail donné, selon la variante. */
+function openFamilies(rail, variant) {
+  if (variant === 'lock-resolved-rail' && rail.status === 'candidate') return ['best'];
+  if (!VARIANTS.includes(variant)) throw Error('Variante inconnue : ' + variant);
+  return Object.keys(FAMILIES);
 }
 
 /**
@@ -193,13 +226,28 @@ function decide(row, rows, { R, K, minBase = 5 }) {
  * Motif : la relation de paire sépare les familles (écart latéral médian
  * 42.50) mais pas les variantes fines d'une même famille (2.17). Le premier
  * tour arbitrait les deux et produisait dix régressions, toutes intra-famille.
+ *
+ * `variant` sélectionne l'une des deux variantes décrites ci-dessus. Tous les
+ * autres paramètres — R, minBase, K, ancre, dispersion, porte — sont identiques
+ * d'une variante à l'autre : seul l'ensemble des familles ouvertes change.
  */
-function decideFamily(row, rows, { R, K, minBase = 5 }) {
-  if (settled(row, R)) return { decision: 'moteur' };
+function decideFamily(row, rows, { R, K, minBase = 5, variant = 'pair-joint' }) {
+  if (settled(row, R)) return { decision: 'moteur', reason: 'settled' };
+  const openLeft = openFamilies(row.rails.left, variant);
+  const openRight = openFamilies(row.rails.right, variant);
+  /* Sous 'lock-resolved-rail', un cut dont les deux rails sont déjà 'candidate'
+   * n'offre qu'un seul couple : celui que le moteur applique déjà. Il n'y a
+   * rien à arbitrer, et le dire explicitement vaut mieux que de le confondre
+   * avec une abstention ou avec un cut fortement discriminé. */
+  if (openLeft.length === 1 && openRight.length === 1
+      && openLeft[0] === 'best' && openRight[0] === 'best'
+      && row.rails.left.status === 'candidate' && row.rails.right.status === 'candidate') {
+    return { decision: 'moteur', reason: 'aucun-rail-abstenu' };
+  }
   const a = anchorFor(rows, row.part, row.cut, R, minBase);
   if (!a) return { decision: 'abstention', reason: 'socle-insuffisant' };
   const options = [];
-  for (const left of Object.keys(FAMILIES)) for (const right of Object.keys(FAMILIES)) {
+  for (const left of openLeft) for (const right of openRight) {
     const l = familyRepresentative(left), r = familyRepresentative(right);
     const c = row.combinations.find(x => x.left === l && x.right === r);
     if (c) options.push({ familyLeft: left, familyRight: right, left: l, right: r, pair: c.pair });
@@ -209,7 +257,18 @@ function decideFamily(row, rows, { R, K, minBase = 5 }) {
   if (ranked[0].gap > K * a.dispersion) return { decision: 'abstention', reason: 'aucun-candidat-plausible', anchor: a };
   const w = ranked[0].o;
   return { decision: 'arbitrée', left: w.left, right: w.right,
-           familyLeft: w.familyLeft, familyRight: w.familyRight, anchor: a, gap: ranked[0].gap };
+           familyLeft: w.familyLeft, familyRight: w.familyRight, anchor: a, gap: ranked[0].gap,
+           lockedLeft: openLeft.length === 1, lockedRight: openRight.length === 1 };
+}
+
+/** Décideur « famille seulement » lié à une variante — pour `sweep` et `freeze`. */
+const familyDecider = variant => (row, rows, opts) => decideFamily(row, rows, { ...opts, variant });
+
+/** Nombre de rails DÉJÀ résolus par le moteur que cette décision déplace hors de sa graine. */
+function resolvedRailsMoved(row, d) {
+  if (d.decision !== 'arbitrée') return [];
+  return ['left', 'right'].filter(s =>
+    row.rails[s].status === 'candidate' && (s === 'left' ? d.left : d.right) !== 'graine');
 }
 
 /* --- mesure : c'est ICI, et seulement ici, qu'apparaît la référence humaine - */
@@ -233,24 +292,69 @@ const engineApplies = row => row.rails.left.status === 'candidate' && row.rails.
 const recoverable = (row, tol = TOLERANCE_ORACLE) =>
   Math.min(...row.combinations.map(c => measure(row, c.left, c.right) ?? Infinity)) <= tol;
 
+/**
+ * Balayage de K.
+ *
+ * CORRECTION (revue Astra). Le compteur `recovered` du tour précédent était
+ * faux : il incrémentait pour TOUT cut arbitré dont le moteur n'appliquait rien,
+ * sans regarder l'erreur obtenue. Un cut sorti à 48×10⁻³ de la référence humaine
+ * y était compté comme « récupéré ». Trois compteurs distincts le remplacent :
+ *
+ *   arbitratedAbstention           cuts arbitrés sur lesquels le moteur
+ *                                  n'appliquait rien (au moins un rail abstenu)
+ *   recoveredAtOracleTolerance     ... dont l'erreur finale ≤ TOLERANCE_ORACLE
+ *   arbitratedButOutsideTolerance  ... dont l'erreur finale > TOLERANCE_ORACLE
+ *
+ * `TOLERANCE_ORACLE` reste une convention d'ÉVALUATION reprise du banc
+ * indépendant : elle sert à COMPTER, jamais à décider.
+ */
 function sweep(rows, R, Ks, decider = decide) {
   const design = rows.filter(r => !r.reserved);          // les réservés ne servent à rien ici
   return Ks.map(K => {
-    const out = { K, arbitrated: 0, abstained: 0, untouched: 0, recovered: 0, corrected: 0, regressed: 0, errors: [] };
+    const out = {
+      K,
+      untouched: 0, untouchedSettled: 0, untouchedNothingToArbitrate: 0,
+      abstained: 0, arbitrated: 0,
+      // cuts arbitrés sur lesquels le moteur n'appliquait rien
+      arbitratedAbstention: 0, recoveredAtOracleTolerance: 0,
+      arbitratedButOutsideTolerance: 0, abstentionNotMeasurable: 0,
+      // cuts arbitrés sur lesquels le moteur appliquait déjà un couple complet
+      arbitratedApplied: 0, corrected: 0, regressed: 0, unchanged: 0, appliedNotMeasurable: 0,
+      // effet sur les rails que le moteur avait déjà résolus
+      resolvedRailsMoved: 0, cutsWithResolvedRailMoved: 0,
+      errors: [],
+    };
     for (const row of design) {
       const d = decider(row, rows, { R, K });
-      if (d.decision === 'moteur') { out.untouched++; continue; }
+      if (d.decision === 'moteur') {
+        out.untouched++;
+        if (d.reason === 'aucun-rail-abstenu') out.untouchedNothingToArbitrate++;
+        else out.untouchedSettled++;
+        continue;
+      }
       if (d.decision === 'abstention') { out.abstained++; continue; }
       out.arbitrated++;
+      const moved = resolvedRailsMoved(row, d);
+      out.resolvedRailsMoved += moved.length;
+      if (moved.length) out.cutsWithResolvedRailMoved++;
       const after = measure(row, d.left, d.right);
-      if (!engineApplies(row)) { out.recovered++; out.errors.push(after); continue; }
+      if (!engineApplies(row)) {
+        out.arbitratedAbstention++;
+        if (after === null) { out.abstentionNotMeasurable++; continue; }
+        out.errors.push(after);
+        if (after <= TOLERANCE_ORACLE) out.recoveredAtOracleTolerance++;
+        else out.arbitratedButOutsideTolerance++;
+        continue;
+      }
+      out.arbitratedApplied++;
       const before = appliedError(row);
-      if (before === null || after === null) continue;
+      if (before === null || after === null) { out.appliedNotMeasurable++; continue; }
       if (after < before - 1e-9) out.corrected++;
       else if (after > before + 1e-9) out.regressed++;
+      else out.unchanged++;
     }
-    out.errorP90 = quantile(out.errors, 0.9);
-    out.errorMax = out.errors.length ? Math.max(...out.errors) : null;
+    out.abstentionErrorP90 = quantile(out.errors, 0.9);
+    out.abstentionErrorMax = out.errors.length ? Math.max(...out.errors) : null;
     delete out.errors;
     return out;
   });
@@ -263,24 +367,33 @@ function sweep(rows, R, Ks, decider = decide) {
  * n'est choisi ici, le scoring indépendant pourra retenir celle qu'il veut.
  * L'empreinte est calculée sur le contenu canonique, champ `sha256` exclu.
  */
-function freeze(rows, { R = 5, Ks = [1, 2, 3, 5, 10], minBase = 5 } = {}) {
+function freeze(rows, { R = 5, Ks = [1, 2, 3, 5, 10], minBase = 5, variant = 'pair-joint' } = {}) {
+  if (!VARIANTS.includes(variant)) throw Error('Variante inconnue : ' + variant);
   const decisions = rows.map(row => {
     const perK = {};
     for (const K of Ks) {
-      const d = decideFamily(row, rows, { R, K, minBase });
+      const d = decideFamily(row, rows, { R, K, minBase, variant });
       perK[String(K)] = d.decision === 'arbitrée'
         ? { decision: 'arbitrée', familyLeft: d.familyLeft, familyRight: d.familyRight,
-            placementLeft: d.left, placementRight: d.right }
+            placementLeft: d.left, placementRight: d.right,
+            resolvedRailsMoved: resolvedRailsMoved(row, d) }
         : { decision: d.decision, reason: d.reason ?? null };
     }
     return { part: row.part, cut: row.cut, reserved: row.reserved,
              engineApplies: engineApplies(row),
+             railStatus: { left: row.rails.left.status, right: row.rails.right.status },
              lossRatio: { left: row.rails.left.lossRatio, right: row.rails.right.lossRatio },
              byK: perK };
   });
   const body = {
     format: 'banane-pair-arbitration-policy-v1',
     policy: 'famille-seulement',
+    variant,
+    variantMeaning: variant === 'pair-joint'
+      ? 'l’arbitre peut déplacer les deux rails, y compris un rail déjà résolu (status candidate) '
+      + 'que settled ne protège pas parce que son partenaire s’abstient ou que son lossRatio est < R'
+      : 'tout rail déjà résolu (status candidate) reste exactement sur sa graine ; '
+      + 'seul un rail abstenu peut changer de famille',
     frozenAt: new Date().toISOString(),
     nature: 'artefact hors ligne figé, remis pour scoring indépendant — aucune exécution runtime',
     source: { file: path.relative(ROOT, SOURCE),
@@ -297,9 +410,10 @@ function freeze(rows, { R = 5, Ks = [1, 2, 3, 5, 10], minBase = 5 } = {}) {
       families: FAMILIES,
       familyRepresentative: { best: 'graine', alternative: 'alternative' },
       fineVariantNeverArbitrated:
-        'la variante fine n’est jamais choisie par le banc. Le représentant de la famille best '
-      + 'est la graine parce que proposal.delta === metrics.seed sur les 173 rails résolus : '
-      + 'c’est la préférence déjà déterminée par le moteur, reproduite et non inventée.',
+        'la variante fine n’est jamais choisie par le banc. La graine est UTILISÉE COMME '
+      + 'REPRÉSENTANT de la famille best, choix cohérent avec proposal.delta === metrics.seed '
+      + 'sur les 173 rails que le moteur a effectivement résolus. Sur un rail abstenu le moteur '
+      + 'n’a rien appliqué : il n’avait donc décidé d’appliquer ni la graine ni autre chose.',
     },
     reserved: { cuts: rows.filter(r => r.reserved).map(r => r.cut).sort((a, b) => a - b),
                 usage: 'évaluation finale uniquement — exclus du socle d’ancrage et de tout réglage' },
@@ -307,16 +421,18 @@ function freeze(rows, { R = 5, Ks = [1, 2, 3, 5, 10], minBase = 5 } = {}) {
     decisions,
   };
   /* L'empreinte porte sur le CONTENU DÉCISIONNEL seul — format, politique,
-   * source, paramètres, réserve et décisions — à l'exclusion de l'horodatage et
-   * des champs descriptifs. Un tiers peut donc la recalculer à l'identique :
-   *   sha256( JSON.stringify({format, policy, source, parameters, reserved, decisions}) )
+   * variante, source, paramètres, réserve et décisions — à l'exclusion de
+   * l'horodatage et des champs descriptifs. Un tiers peut donc la recalculer à
+   * l'identique :
+   *   sha256( JSON.stringify({format, policy, variant, source, parameters, reserved, decisions}) )
    * Vérifié par test. */
-  const hashed = { format: body.format, policy: body.policy, source: body.source,
-                   parameters: body.parameters, reserved: body.reserved, decisions: body.decisions };
+  const hashed = { format: body.format, policy: body.policy, variant: body.variant,
+                   source: body.source, parameters: body.parameters,
+                   reserved: body.reserved, decisions: body.decisions };
   const canonical = JSON.stringify(hashed);
   return { ...body,
            sha256: crypto.createHash('sha256').update(canonical).digest('hex'),
-           sha256Covers: ['format', 'policy', 'source', 'parameters', 'reserved', 'decisions'] };
+           sha256Covers: ['format', 'policy', 'variant', 'source', 'parameters', 'reserved', 'decisions'] };
 }
 
 function main() {
@@ -339,8 +455,11 @@ function main() {
       reservedCuts: rows.filter(r => r.reserved).length,
     },
     recoverable: {},
-    sweep: { fine: sweep(rows, R, [1, 2, 3, 5, 10], decide),
-             famille: sweep(rows, R, [1, 2, 3, 5, 10], decideFamily) },
+    sweep: {
+      fine: sweep(rows, R, [1, 2, 3, 5, 10], decide),
+      'famille/pair-joint': sweep(rows, R, [1, 2, 3, 5, 10], familyDecider('pair-joint')),
+      'famille/lock-resolved-rail': sweep(rows, R, [1, 2, 3, 5, 10], familyDecider('lock-resolved-rail')),
+    },
   };
   for (const part of [17, 20]) {
     const ls = rows.filter(r => r.part === part);
@@ -351,11 +470,14 @@ function main() {
     };
   }
   if (process.argv.includes('--freeze')) {
-    const frozen = freeze(rows);
-    const dest = process.argv[process.argv.indexOf('--freeze') + 1];
+    const i = process.argv.indexOf('--freeze');
+    const dest = process.argv[i + 1];
+    const v = process.argv.indexOf('--variant');
+    const variant = v === -1 ? 'pair-joint' : process.argv[v + 1];
+    const frozen = freeze(rows, { variant });
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, JSON.stringify(frozen, null, 2));
-    console.log(`politique figée : ${path.relative(ROOT, dest)}`);
+    console.log(`politique figée : ${path.relative(ROOT, dest)}  (variante ${frozen.variant})`);
     console.log(`sha256 du contenu canonique : ${frozen.sha256}`);
     console.log(`corpus source : ${frozen.source.sha256}`);
     return;
@@ -367,6 +489,7 @@ function main() {
 }
 
 module.exports = { build, candidates, settled, anchorFor, appliedPair, decide, decideFamily,
-                   FAMILIES, familyRepresentative, measure, appliedError, engineApplies,
+                   FAMILIES, familyRepresentative, VARIANTS, openFamilies, familyDecider,
+                   resolvedRailsMoved, measure, appliedError, engineApplies,
                    recoverable, sweep, freeze, quantile, originAfter, point, SOURCE, TOLERANCE_ORACLE };
 if (require.main === module) main();
