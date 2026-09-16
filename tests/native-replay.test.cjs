@@ -105,6 +105,15 @@ test('part 1 / cut 2891 : deux revisites, et le seul cas « rail résolu à chan
   assert.deepEqual(d[0].humanDeltaLocal.left, [0, 0, 0]);
   assert.ok(Math.hypot(...d[0].humanDeltaLocal.right) > 0.010,
     'la correction humaine droite doit dépasser la convention d’évaluation');
+  /* Le cas reste COMPTÉ mécaniquement — taxonomie et settled=3 inchangés — mais
+   * il est marqué non robuste, et cette qualification est verrouillée ici. */
+  const md = fs.readFileSync(path.resolve(__dirname, '../NATIVE_REPLAY_V46.md'), 'utf8');
+  for (const attendu of ['9,850551563793', '5,893', '13,110', '2892', 'non robuste'])
+    assert.ok(md.includes(attendu), `le rapport doit énoncer « ${attendu} » sur le cut 2891`);
+  assert.equal(C.taxonomy['rail-resolu-a-changer-pour-ameliorer-la-paire'], 1,
+    'le cas ambigu reste compté dans la taxonomie');
+  assert.equal(C.anchorFeasibility.find(x => x.part === 1).settled, 3,
+    'settled=3 est inchangé : 2891 reste compté dans le socle historique');
 });
 
 test('les revisites existent et sont comptées, 2891 n’est pas un cas isolé', () => {
@@ -193,6 +202,82 @@ test('la collecte est passive : le moteur n’a rien appliqué sur le terrain', 
   assert.equal(A.rows.filter(r => r.provenance.commandSentByBanane).length, 0);
   assert.equal(A.rows.filter(r => r.provenance.usableForTraining).length, 0);
   assert.equal(A.rows.length, 679);
+});
+
+test('somme des motifs = 2647, et aucun compteur individuel n’a bougé', () => {
+  /* Anomalie reproduite par l'audit indépendant : le total annoncé dans le
+   * rapport valait 2657. C'était une erreur d'addition dans la PROSE ; le champ
+   * calculé de l'artefact valait déjà 2647. Verrouillé des deux côtés. */
+  const t = Object.values(C.eligibilityReasons.byReason).reduce((a, b) => a + b, 0);
+  assert.equal(t, 2647);
+  assert.equal(C.eligibilityReasons.occurrences, 2647);
+  assert.equal(SUM.eligibilityReasons.occurrences, 2647);
+  const md = fs.readFileSync(path.resolve(__dirname, '../NATIVE_REPLAY_V46.md'), 'utf8');
+  assert.ok(md.includes('**2647** occurrences'), 'le rapport doit porter le total correct');
+  /* « 2657 » ne doit plus être ÉNONCÉ comme un total ; il ne subsiste que dans
+   * la section qui décrit la correction, où le nommer est utile au lecteur. */
+  assert.ok(!md.includes('2657 occurrences'), 'le total fautif ne doit plus être énoncé');
+  assert.equal((md.match(/2657/g) || []).length, 1,
+    '2657 ne doit apparaître qu’une fois, dans la section de correction');
+  assert.ok(/Le rapport annonçait \*\*2657\*\*/.test(md),
+    'la correction doit nommer l’ancienne valeur fautive');
+  // les 14 compteurs individuels sont inchangés, un par un
+  assert.deepEqual(C.eligibilityReasons.byReason, {
+    'qualified-stored-snapshot-missing': 625,
+    'validated-reference-not-observed': 270,
+    'human-final-reference-missing': 270,
+    'human-final-rail-state-missing': 270,
+    'checkpoint-not-qualified': 226,
+    'capture-used-a-different-rail-pose-than-initial-state': 197,
+    'engine-useful-point-count-below-minimum': 177,
+    'longitudinal-coverage-insufficient': 171,
+    'geometry-acquired-after-operator-intent': 168,
+    'longitudinal-span-insufficient': 151,
+    'roi-point-count-below-minimum': 70,
+    'human-final-reference-not-freshly-observed': 38,
+    'multiple-operator-intents-observed': 8,
+    'decision-effect-not-observed': 6,
+  });
+});
+
+test('503 / 176 sont des VISITES, jamais des cuts, dans tout champ machine', () => {
+  /* Anomalie reproduite par l'audit indépendant : anchorFeasibility[].cuts
+   * valait 503 / 176, qui sont des visites. Le champ a été supprimé plutôt que
+   * renommé, et remplacé par `visits` + `distinctCuts` explicites. */
+  for (const a of [SUM.anchorFeasibility, C.anchorFeasibility, A.summary.anchorFeasibility]) {
+    for (const e of a) assert.ok(!('cuts' in e),
+      `le champ ambigu « cuts » subsiste sur la part ${e.part}`);
+  }
+  const attendu = { 1: { visits: 503, distinctCuts: 474 }, 8: { visits: 176, distinctCuts: 137 } };
+  for (const src of [SUM.anchorFeasibility, A.summary.anchorFeasibility]) {
+    for (const e of src) {
+      assert.equal(e.visits, attendu[e.part].visits, `part ${e.part} : visits`);
+      assert.equal(e.distinctCuts, attendu[e.part].distinctCuts, `part ${e.part} : distinctCuts`);
+    }
+  }
+  /* Contrôle transversal : nulle part dans les deux artefacts un champ nommé
+   * « cut » ou « cuts » ne doit valoir 503 ou 176. */
+  const suspects = [];
+  const walk = (o, chemin) => {
+    if (Array.isArray(o)) return o.forEach((x, i) => walk(x, `${chemin}[${i}]`));
+    if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) {
+      if (/^(cut|cuts|distinctCuts)$/.test(k) && (v === 503 || v === 176))
+        suspects.push(`${chemin}.${k} = ${v}`);
+      walk(v, `${chemin}.${k}`);
+    }
+  };
+  walk(SUM, 'summary'); walk(A.summary, 'artefact.summary');
+  assert.deepEqual(suspects, [], 'champs présentant 503/176 comme des cuts : ' + suspects.join(', '));
+  // et les visites, elles, valent bien 503 + 176 = 679
+  assert.equal(503 + 176, C.counts.visits);
+  assert.equal(474 + 137, C.counts.distinctCuts);
+});
+
+test('l’artefact livré est reproductible par commande, allègement compris', () => {
+  /* L'allègement se faisait par une commande ad hoc hors de l'outil : l'artefact
+   * n'était donc pas reproductible. Il est désormais déclaré et testé. */
+  assert.deepEqual(A.slimmed.droppedFields, ['engine.initialRails']);
+  for (const r of A.rows) assert.ok(!('initialRails' in r.engine));
 });
 
 test('socle d’ancrage : part 1 absent, part 8 atteint tout juste', () => {

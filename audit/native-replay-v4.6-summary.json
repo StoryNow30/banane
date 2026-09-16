@@ -3,7 +3,7 @@
  "nature": "recalculé depuis audit/native-replay-v4.6.json seul — aucune relecture de la collecte",
  "source": {
   "format": "banane-native-replay-v1",
-  "generatedAt": "2026-09-16T11:24:34.295Z",
+  "generatedAt": "2026-09-16T20:40:16.591Z",
   "oracleTolerance": 0.01
  },
  "definitions": {
@@ -806,7 +806,8 @@
  "anchorFeasibility": [
   {
    "part": 1,
-   "cuts": 503,
+   "visits": 503,
+   "distinctCuts": 474,
    "replayedBoth": 39,
    "settled": 3,
    "settledCuts": [
@@ -820,7 +821,8 @@
   },
   {
    "part": 8,
-   "cuts": 176,
+   "visits": 176,
+   "distinctCuts": 137,
    "replayedBoth": 37,
    "settled": 5,
    "settledCuts": [

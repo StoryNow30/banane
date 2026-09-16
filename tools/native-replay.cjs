@@ -364,9 +364,15 @@ function anchorFeasibility(rows, R = 5, minBase = 5) {
   const byPart = new Map();
   for (const row of rows) {
     const p = row.identity.part;
-    if (!byPart.has(p)) byPart.set(p, { part: p, cuts: 0, replayedBoth: 0, settled: 0, settledCuts: [] });
+    /* `visits` et `distinctCuts` sont NOMMÉS séparément : le dénominateur
+     * naturel ici est la VISITE (une ligne = une visite), et 503 / 176 sont des
+     * visites, pas des cuts. Les cuts distincts valent 474 / 137. Le champ
+     * `cuts` de la première version confondait les deux ; il a été supprimé
+     * plutôt que renommé, pour qu'aucun lecteur ne le retrouve. */
+    if (!byPart.has(p)) byPart.set(p, { part: p, visits: 0, distinctCutSet: new Set(),
+                                        replayedBoth: 0, settled: 0, settledCuts: [] });
     const e = byPart.get(p);
-    e.cuts++;
+    e.visits++; e.distinctCutSet.add(row.identity.cut);
     const L = row.engine.rails.left, Rr = row.engine.rails.right;
     if (!(L.replayed && Rr.replayed)) continue;
     e.replayedBoth++;
@@ -376,8 +382,10 @@ function anchorFeasibility(rows, R = 5, minBase = 5) {
     }
   }
   return [...byPart.values()].sort((a, b) => a.part - b.part).map(e => ({
-    ...e, R, minBase, socleExists: e.settled >= minBase,
+    part: e.part, visits: e.visits, distinctCuts: e.distinctCutSet.size,
+    replayedBoth: e.replayedBoth, settled: e.settled,
     settledCuts: e.settledCuts.sort((a, b) => a - b),
+    R, minBase, socleExists: e.settled >= minBase,
   }));
 }
 
@@ -549,6 +557,25 @@ function summarise(rows, tol = TOLERANCE_ORACLE) {
   };
 }
 
+/**
+ * Allègement de l'artefact livré.
+ *
+ * `engine.initialRails` porte les poses brutes des deux rails — matrices,
+ * contours, sommets. C'est 53 Mo contre 1,3 Mo, soit quarante fois le reste,
+ * pour des données qu'aucune consolidation ni aucun test n'utilise : tout ce qui
+ * en dérive (`measure`, `pairRelation`) est déjà calculé et stocké au moment du
+ * rejeu. Le champ est donc retiré de l'artefact livré.
+ *
+ * La première version faisait cet allègement par une commande ad hoc, hors de
+ * l'outil : l'artefact n'était donc pas reproductible par une commande. Il l'est
+ * désormais, et l'artefact déclare `slimmed` pour que personne ne cherche un
+ * champ qui n'y est pas.
+ */
+function slimRow(row) {
+  const { initialRails, ...engine } = row.engine;
+  return { ...row, engine };
+}
+
 function main() {
   const dir = process.argv[2];
   if (!dir) {
@@ -564,13 +591,15 @@ function main() {
     engine: { version: '4.6.0', geometryMethod: G.DEFAULTS.method, parameters: G.DEFAULTS,
               frozenHashes: frozen, calledWithoutOptions: true },
     units: 'scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres',
+    slimmed: { droppedFields: ['engine.initialRails'],
+               why: 'poses brutes inutilisées par la consolidation et les tests ; 53 Mo contre 1,3 Mo' },
     collection: { directory: path.resolve(dir), files: index.files.length,
                   latestPerSession: Object.fromEntries([...index.latestPerSession].map(([k, v]) => [k, v.file])),
                   chunksNeeded, chunksRead },
     humanReferenceCaveat:
       'les références humaines sont fiables au sens OBSERVATIONNEL uniquement ; elles ne sont pas '
     + 'promues en vérité d’entraînement et ne servent à aucune décision de l’étage 1',
-    summary, rows,
+    summary, rows: rows.map(slimRow),
   };
   const out = process.argv.includes('--output') ? process.argv[process.argv.indexOf('--output') + 1] : null;
   if (out) {
@@ -582,7 +611,7 @@ function main() {
   console.log(JSON.stringify(summary, null, 2));
 }
 
-module.exports = { pairReplayable, scorable, consolidate, cutDossier, assertFrozenEngine, derefer, indexCollection, readVisits, readNeededChunks,
+module.exports = { slimRow, pairReplayable, scorable, consolidate, cutDossier, assertFrozenEngine, derefer, indexCollection, readVisits, readNeededChunks,
                    initialRail, replayRail, exposedCandidates, replayCut, humanDeltaLocal,
                    measureCut, pairRelation, classify, anchorFeasibility, run, summarise,
                    move, norm, FAMILY_OF, TOLERANCE_ORACLE };

@@ -92,7 +92,7 @@ Statuts, sur **1358 rails** (2 × 679) : `comparable-candidate` **313**,
 `excluded` **1045**.
 
 **Un rail exclu porte plusieurs motifs à la fois.** La somme des motifs
-(2657 occurrences) dépasse donc le nombre de rails exclus (1045), et le résumé
+(**2647** occurrences) dépasse donc le nombre de rails exclus (1045), et le résumé
 machine le déclare explicitement (`multiLabelled: true`) pour qu'on ne lise pas
 625 comme un nombre de rails.
 
@@ -152,16 +152,33 @@ socles d'ancrage de la part 1. Il a **deux revisites** :
 | 232 | `excluded` / `excluded` | `VALIDATE_CORRECTED_RIGHT_ONLY` | non qualifiable |
 
 **Les deux références humaines se contredisent.** Mesuré dans la collecte brute :
-le rail gauche est identique à **0,000×10⁻³** près — cohérent avec le label
-« RIGHT_ONLY » — mais le rail **droit diffère de 9,851×10⁻³** entre les deux
-observations du même cut, prises à 6 secondes d'intervalle. C'est **98,5 % de la
-convention d'évaluation (10×10⁻³)**.
 
-Conséquence à énoncer clairement : l'unique cas « rail résolu à changer » repose
-sur une référence humaine qu'une seconde observation du même cut contredit
-presque à hauteur de toute la tolérance. **Ce cas n'est pas robuste** et ne doit
-pas servir de preuve. Il reste compté dans la taxonomie — on ne retire pas un cut
-parce qu'il dérange — mais il est marqué ambigu.
+| grandeur | valeur |
+|---|---|
+| écart des références humaines **gauches** | **0** (exactement) |
+| écart des références humaines **droites** | **9,850551563793×10⁻³ unité de scène** |
+| entre les **fins** de visite (dernières observations) | **5,893 s** (≈ 5,9 s) |
+| entre les **débuts** de visite | **13,110 s** (≈ 13,1 s) |
+| visite intercalée | visitIndex 231 — **part 1 / cut 2892**, label `PASS_NO_DECISION` |
+
+Le rail gauche est identique au chiffre près, cohérent avec le label
+« RIGHT_ONLY ». Le rail droit, lui, diffère de **98,5 % de la convention
+d'évaluation (10×10⁻³)** entre deux observations du même cut séparées par une
+visite d'un autre cut.
+
+Les unités restent des unités de scène : `9,850551563793×10⁻³` n'est pas un
+millimètre et n'est pas converti.
+
+**Conséquence, énoncée sans l'atténuer.** L'unique cas « rail résolu à changer »
+repose sur une référence humaine qu'une seconde observation du même cut
+contredit presque à hauteur de toute la tolérance. **Ce cas est explicitement
+qualifié de non robuste** et ne doit pas servir de preuve.
+
+**Ce qui ne change pas pour autant.** Le cut reste **compté mécaniquement** :
+la taxonomie garde son `1`, et `settled = 3` pour la part 1 garde 2891 dans les
+trois socles d'ancrage. La politique d'ancrage historique n'est pas retouchée —
+on ne retire pas un cut du décompte parce qu'il dérange. Il est **marqué
+ambigu**, rien de plus. Verrouillé par test.
 
 ## Une agrégation citée et NON reproductible : `58 / 15 / 1`
 
@@ -191,6 +208,27 @@ d'entraînement à aucun moment, et n'entrent dans aucune décision de l'étage 
 `commandSentByBanane` est **faux sur les 679 visites** : la collecte est une
 observation passive. Le rejeu calcule donc ce que le moteur *aurait* proposé, et
 ne constate pas ce qu'il a fait.
+
+## Correction de consolidation — deux anomalies reproduites par l'audit indépendant
+
+1. **Total des occurrences de motifs.** Le rapport annonçait **2657** ; la valeur
+   correcte est **2647**. C'était une erreur d'addition dans la prose : le champ
+   calculé de l'artefact valait déjà 2647. Aucun compteur individuel n'a été
+   touché — les 14 sont verrouillés un par un par test.
+2. **`anchorFeasibility[].cuts = 503 / 176` était faux sémantiquement** : ce sont
+   des **visites**. Le champ ambigu a été **supprimé** plutôt que renommé, pour
+   qu'aucun lecteur ne le retrouve, et remplacé par `visits` (503 / 176) et
+   `distinctCuts` (474 / 137) explicites. Un test balaie récursivement les deux
+   artefacts et échoue si un champ nommé `cut`/`cuts`/`distinctCuts` vaut encore
+   503 ou 176 à tort.
+
+Une troisième anomalie a été trouvée en vérifiant : l'artefact livré était
+allégé par une commande **ad hoc hors de l'outil**, donc non reproductible par
+une commande. L'allègement (`engine.initialRails`, 53 Mo contre 1,7 Mo) est
+désormais **dans l'outil**, déclaré par le champ `slimmed` de l'artefact et
+testé. Vérifié : hors `anchorFeasibility`, `generatedAt` et `collection`, les
+`rows` et le `summary` régénérés sont **identiques** au blob précédent
+`c56fe5b032788019cd6a09161c23354fd185d962`.
 
 ## Artefacts
 
