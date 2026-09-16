@@ -1,6 +1,6 @@
 {
   "format": "banane-pair-arbitration-lab-v1",
-  "generatedAt": "2026-09-16T09:56:44.202Z",
+  "generatedAt": "2026-09-16T10:24:06.485Z",
   "source": "datasets/automatic/offline-evaluation-v4.3.0.json",
   "units": "scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres",
   "nature": "laboratoire hors ligne — aucune politique de production, aucun paramètre retenu",
@@ -37,61 +37,120 @@
       ]
     }
   },
-  "sweep": [
-    {
-      "K": 1,
-      "arbitrated": 48,
-      "abstained": 9,
-      "untouched": 36,
-      "recovered": 26,
-      "corrected": 9,
-      "regressed": 10,
-      "errorP90": 0.009166882831712827,
-      "errorMax": 0.010335148532085725
-    },
-    {
-      "K": 2,
-      "arbitrated": 50,
-      "abstained": 7,
-      "untouched": 36,
-      "recovered": 27,
-      "corrected": 10,
-      "regressed": 10,
-      "errorP90": 0.009165759796789396,
-      "errorMax": 0.010335148532085725
-    },
-    {
-      "K": 3,
-      "arbitrated": 52,
-      "abstained": 5,
-      "untouched": 36,
-      "recovered": 29,
-      "corrected": 10,
-      "regressed": 10,
-      "errorP90": 0.009662850008129704,
-      "errorMax": 0.048261051492077656
-    },
-    {
-      "K": 5,
-      "arbitrated": 53,
-      "abstained": 4,
-      "untouched": 36,
-      "recovered": 30,
-      "corrected": 10,
-      "regressed": 10,
-      "errorP90": 0.010577110771158051,
-      "errorMax": 0.048261051492077656
-    },
-    {
-      "K": 10,
-      "arbitrated": 54,
-      "abstained": 3,
-      "untouched": 36,
-      "recovered": 31,
-      "corrected": 10,
-      "regressed": 10,
-      "errorP90": 0.012754770922808948,
-      "errorMax": 0.048261051492077656
-    }
-  ]
+  "sweep": {
+    "fine": [
+      {
+        "K": 1,
+        "arbitrated": 32,
+        "abstained": 25,
+        "untouched": 36,
+        "recovered": 16,
+        "corrected": 2,
+        "regressed": 6,
+        "errorP90": 0.008931362005141837,
+        "errorMax": 0.009161267657095675
+      },
+      {
+        "K": 2,
+        "arbitrated": 39,
+        "abstained": 18,
+        "untouched": 36,
+        "recovered": 20,
+        "corrected": 2,
+        "regressed": 7,
+        "errorP90": 0.00896944856144818,
+        "errorMax": 0.012754770922808948
+      },
+      {
+        "K": 3,
+        "arbitrated": 47,
+        "abstained": 10,
+        "untouched": 36,
+        "recovered": 26,
+        "corrected": 2,
+        "regressed": 7,
+        "errorP90": 0.009999203533105773,
+        "errorMax": 0.048261051492077656
+      },
+      {
+        "K": 5,
+        "arbitrated": 52,
+        "abstained": 5,
+        "untouched": 36,
+        "recovered": 29,
+        "corrected": 4,
+        "regressed": 7,
+        "errorP90": 0.0097976365337178,
+        "errorMax": 0.048261051492077656
+      },
+      {
+        "K": 10,
+        "arbitrated": 53,
+        "abstained": 4,
+        "untouched": 36,
+        "recovered": 30,
+        "corrected": 4,
+        "regressed": 7,
+        "errorP90": 0.010577110771158051,
+        "errorMax": 0.048261051492077656
+      }
+    ],
+    "famille": [
+      {
+        "K": 1,
+        "arbitrated": 21,
+        "abstained": 36,
+        "untouched": 36,
+        "recovered": 12,
+        "corrected": 2,
+        "regressed": 0,
+        "errorP90": 0.008129259996949134,
+        "errorMax": 0.008914588681685215
+      },
+      {
+        "K": 2,
+        "arbitrated": 30,
+        "abstained": 27,
+        "untouched": 36,
+        "recovered": 16,
+        "corrected": 2,
+        "regressed": 0,
+        "errorP90": 0.00899518679829479,
+        "errorMax": 0.012754770922808948
+      },
+      {
+        "K": 3,
+        "arbitrated": 39,
+        "abstained": 18,
+        "untouched": 36,
+        "recovered": 20,
+        "corrected": 2,
+        "regressed": 0,
+        "errorP90": 0.010577110771158051,
+        "errorMax": 0.048261051492077656
+      },
+      {
+        "K": 5,
+        "arbitrated": 50,
+        "abstained": 7,
+        "untouched": 36,
+        "recovered": 28,
+        "corrected": 2,
+        "regressed": 0,
+        "errorP90": 0.009864825533513791,
+        "errorMax": 0.048261051492077656
+      },
+      {
+        "K": 10,
+        "arbitrated": 53,
+        "abstained": 4,
+        "untouched": 36,
+        "recovered": 30,
+        "corrected": 2,
+        "regressed": 0,
+        "errorP90": 0.010577110771158051,
+        "errorMax": 0.048261051492077656
+      }
+    ]
+  }
 }

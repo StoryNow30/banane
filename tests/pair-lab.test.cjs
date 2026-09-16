@@ -122,3 +122,88 @@ test('le balayage de K est livré entier, sans valeur retenue',()=>{
  // la couverture croît avec K : la porte s'ouvre
  for(let i=1;i<s.length;i++)assert.ok(s[i].arbitrated>=s[i-1].arbitrated,'couverture non monotone');
 });
+
+/* ---- tour « famille seulement » ---------------------------------------- */
+
+test('le moteur applique la graine : sa préférence fine est déjà déterminée',()=>{
+ /* C'est ce fait qui autorise à reprendre la graine comme représentant de la
+  * famille, y compris pour un rail abstenu, SANS inventer de règle
+  * graine-contre-surface. */
+ let resolus=0;
+ for(const x of source.results)for(const s of ['left','right']){
+  const p=x.proposal[s];
+  if(!p.delta)continue;
+  resolus++;
+  assert.deepEqual(p.delta,[0,p.metrics.seed[0],p.metrics.seed[1]],
+    'le delta appliqué doit être exactement la graine');
+ }
+ assert.equal(resolus,173);
+ assert.equal(L.familyRepresentative('best'),'graine');
+ assert.equal(L.familyRepresentative('alternative'),'alternative');
+ assert.throws(()=>L.familyRepresentative('autre'),/Famille inconnue/);
+});
+
+test('la relation de paire appliquée est celle du couple (graine, graine)',()=>{
+ const row=rows.find(r=>L.settled(r,5));
+ const parGraine=row.combinations.find(c=>c.left==='graine'&&c.right==='graine').pair;
+ assert.equal(L.appliedPair(row),parGraine);
+});
+
+test('la partition en familles est structurelle, pas métrique',()=>{
+ assert.deepEqual(L.FAMILIES,{best:['graine','surface'],alternative:['alternative']});
+ /* Un critère de distance serait un seuil nouveau : le moteur garantit
+  * alternativeSeparation contre coarseBest, pas contre la graine affinée. */
+ const sep=source.engine.parameters.alternativeSeparation;
+ const proches=source.results.flatMap(x=>['left','right'].map(s=>{
+  const m=x.proposal[s].metrics,a=m.templateAmbiguity.alternative;
+  return Math.hypot(a[0]-m.seed[0],a[1]-m.seed[1]);
+ })).filter(d=>d<sep).length;
+ assert.equal(proches,29,'29 alternatives sont à moins de alternativeSeparation de leur graine');
+});
+
+test('« famille seulement » n’arbitre jamais une variante fine',()=>{
+ for(const r of rows){
+  const d=L.decideFamily(r,rows,{R:5,K:3});
+  if(d.decision!=='arbitrée')continue;
+  assert.ok(['graine','alternative'].includes(d.left),'surface ne doit jamais être choisie');
+  assert.ok(['graine','alternative'].includes(d.right),'surface ne doit jamais être choisie');
+  assert.equal(d.left,L.familyRepresentative(d.familyLeft));
+  assert.equal(d.right,L.familyRepresentative(d.familyRight));
+ }
+});
+
+test('« famille seulement » supprime les régressions, à tous les K du balayage',()=>{
+ for(const s of L.sweep(rows,5,[1,2,3,5,10],L.decideFamily))
+  assert.equal(s.regressed,0,`K=${s.K} : régression inattendue`);
+ // la politique fine, elle, en produit — c'est la raison d'être de ce tour
+ assert.ok(L.sweep(rows,5,[3],L.decide)[0].regressed>0,
+   'la politique fine doit conserver ses régressions, sinon la comparaison n’a plus d’objet');
+});
+
+test('les corrections matérielles sont conservées par « famille seulement »',()=>{
+ for(const cut of [5123,6576,9041]){
+  const r=rows.find(x=>x.cut===cut);
+  const d=L.decideFamily(r,rows,{R:5,K:3});
+  assert.equal(d.decision,'arbitrée',`cut ${cut} doit rester arbitré`);
+  const avant=L.appliedError(r),apres=L.measure(r,d.left,d.right);
+  assert.ok(apres<avant,`cut ${cut} : ${apres} devrait être meilleur que ${avant}`);
+  assert.ok(avant>L.TOLERANCE_ORACLE&&apres<=L.TOLERANCE_ORACLE,
+    `cut ${cut} : le mauvais choix matériel doit repasser sous la convention d’évaluation`);
+ }
+});
+
+test('l’artefact figé est déterministe et son empreinte est recalculable',()=>{
+ const a=L.freeze(rows),b=L.freeze(rows);
+ assert.equal(a.sha256,b.sha256,'deux gels doivent donner la même empreinte');
+ assert.equal(a.decisions.length,110);
+ assert.deepEqual(Object.keys(a.decisions[0].byK),['1','2','3','5','10'],'aucun K n’est choisi');
+ // recalcul indépendant, exactement comme le ferait un tiers
+ const crypto=require('node:crypto');
+ const canonique=JSON.stringify({format:a.format,policy:a.policy,source:a.source,
+   parameters:a.parameters,reserved:a.reserved,decisions:a.decisions});
+ assert.equal(crypto.createHash('sha256').update(canonique).digest('hex'),a.sha256);
+ assert.deepEqual(a.sha256Covers,['format','policy','source','parameters','reserved','decisions']);
+ // l'horodatage ne doit PAS entrer dans l'empreinte
+ assert.ok(!a.sha256Covers.includes('frozenAt'));
+ assert.equal(a.reserved.cuts.length,17);
+});

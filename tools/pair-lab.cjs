@@ -35,7 +35,7 @@
  * AUCUN PARAMÈTRE N'EST CHOISI ICI. Le balayage de K est livré entier ; le
  * réglage relève de la revue.
  */
-const fs = require('node:fs'), path = require('node:path');
+const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const SOURCE = path.join(ROOT, 'datasets/automatic/offline-evaluation-v4.3.0.json');
@@ -109,8 +109,50 @@ function settled(row, R) {
   return l.status === 'candidate' && r.status === 'candidate'
     && Math.min(l.lossRatio ?? -Infinity, r.lossRatio ?? -Infinity) >= R;
 }
-/** Relation de paire du couple que le moteur applique de fait. */
-const appliedPair = row => row.combinations.find(c => c.left === 'surface' && c.right === 'surface').pair;
+/**
+ * Relation de paire du couple que le moteur applique de fait.
+ *
+ * CORRECTION (tour « famille seulement »). Le premier banc prenait ici le couple
+ * (surface, surface). C'était faux : sur les 173 rails résolus du corpus,
+ * `proposal.delta` est STRICTEMENT égal à `metrics.seed` — écart 3D nul.
+ * `surfaceIntersection` est exposé comme diagnostic et n'est jamais appliqué.
+ * Le couple réellement appliqué est donc (graine, graine). Verrouillé par test.
+ */
+const appliedPair = row => row.combinations.find(c => c.left === 'graine' && c.right === 'graine').pair;
+
+/* --- familles de placement ------------------------------------------------
+ *
+ * La partition est STRUCTURELLE, pas métrique : elle vient du champ d'où le
+ * candidat est lu, donc de la construction du moteur lui-même.
+ *
+ *   famille 'best'        metrics.seed + metrics.surfaceIntersection
+ *                         — le meilleur de grille grossière et son affinage
+ *   famille 'alternative' templateAmbiguity.alternative
+ *                         — une AUTRE cellule grossière, par construction
+ *
+ * Un critère de distance serait un seuil NOUVEAU : le moteur garantit
+ * `alternativeSeparation` contre `coarseBest`, pas contre la graine affinée, et
+ * 29 rails sur 220 ont une alternative à moins de 0.02 de leur graine.
+ */
+const FAMILIES = { best: ['graine', 'surface'], alternative: ['alternative'] };
+
+/**
+ * Représentant d'une famille pour un rail — la VARIANTE FINE N'EST JAMAIS
+ * ARBITRÉE ICI.
+ *
+ * Pour la famille 'best', le représentant est la graine, parce que c'est le
+ * placement que le moteur applique lui-même quand il résout (delta === seed sur
+ * 173/173). Cela REPRODUIT une préférence déjà déterminée par le moteur ; cela
+ * n'introduit aucune règle graine-contre-surface, ni pour un rail résolu, ni
+ * pour un rail abstenu.
+ *
+ * Pour la famille 'alternative', il n'existe qu'un seul placement exposé.
+ */
+function familyRepresentative(family) {
+  if (family === 'best') return 'graine';
+  if (family === 'alternative') return 'alternative';
+  throw Error('Famille inconnue : ' + family);
+}
 
 /**
  * Ancre et dispersion estimées sur les cuts de la MÊME PART que le moteur a
@@ -140,6 +182,36 @@ function decide(row, rows, { R, K, minBase = 5 }) {
   return { decision: 'arbitrée', left: ranked[0].c.left, right: ranked[0].c.right, anchor: a, gap: ranked[0].gap };
 }
 
+/**
+ * Politique « FAMILLE SEULEMENT ».
+ *
+ * Identique à `decide` — même ancre, même porte, mêmes R et K — à une seule
+ * différence : l'arbitrage ne porte que sur la FAMILLE de chaque rail. La
+ * variante fine à l'intérieur d'une famille n'est jamais choisie par le banc,
+ * elle est reprise du moteur.
+ *
+ * Motif : la relation de paire sépare les familles (écart latéral médian
+ * 42.50) mais pas les variantes fines d'une même famille (2.17). Le premier
+ * tour arbitrait les deux et produisait dix régressions, toutes intra-famille.
+ */
+function decideFamily(row, rows, { R, K, minBase = 5 }) {
+  if (settled(row, R)) return { decision: 'moteur' };
+  const a = anchorFor(rows, row.part, row.cut, R, minBase);
+  if (!a) return { decision: 'abstention', reason: 'socle-insuffisant' };
+  const options = [];
+  for (const left of Object.keys(FAMILIES)) for (const right of Object.keys(FAMILIES)) {
+    const l = familyRepresentative(left), r = familyRepresentative(right);
+    const c = row.combinations.find(x => x.left === l && x.right === r);
+    if (c) options.push({ familyLeft: left, familyRight: right, left: l, right: r, pair: c.pair });
+  }
+  const ranked = options.map(o => ({ o, gap: Math.abs(o.pair - a.median) })).sort((x, y) => x.gap - y.gap);
+  if (!ranked.length) return { decision: 'abstention', reason: 'aucune-famille-exposée' };
+  if (ranked[0].gap > K * a.dispersion) return { decision: 'abstention', reason: 'aucun-candidat-plausible', anchor: a };
+  const w = ranked[0].o;
+  return { decision: 'arbitrée', left: w.left, right: w.right,
+           familyLeft: w.familyLeft, familyRight: w.familyRight, anchor: a, gap: ranked[0].gap };
+}
+
 /* --- mesure : c'est ICI, et seulement ici, qu'apparaît la référence humaine - */
 
 function measure(row, left, right) {
@@ -161,12 +233,12 @@ const engineApplies = row => row.rails.left.status === 'candidate' && row.rails.
 const recoverable = (row, tol = TOLERANCE_ORACLE) =>
   Math.min(...row.combinations.map(c => measure(row, c.left, c.right) ?? Infinity)) <= tol;
 
-function sweep(rows, R, Ks) {
+function sweep(rows, R, Ks, decider = decide) {
   const design = rows.filter(r => !r.reserved);          // les réservés ne servent à rien ici
   return Ks.map(K => {
     const out = { K, arbitrated: 0, abstained: 0, untouched: 0, recovered: 0, corrected: 0, regressed: 0, errors: [] };
     for (const row of design) {
-      const d = decide(row, rows, { R, K });
+      const d = decider(row, rows, { R, K });
       if (d.decision === 'moteur') { out.untouched++; continue; }
       if (d.decision === 'abstention') { out.abstained++; continue; }
       out.arbitrated++;
@@ -182,6 +254,69 @@ function sweep(rows, R, Ks) {
     delete out.errors;
     return out;
   });
+}
+
+/**
+ * Artefact de politique FIGÉ et sérialisable — « famille seulement ».
+ *
+ * Décision déterministe par cut, pour CHAQUE valeur de K du balayage : aucun K
+ * n'est choisi ici, le scoring indépendant pourra retenir celle qu'il veut.
+ * L'empreinte est calculée sur le contenu canonique, champ `sha256` exclu.
+ */
+function freeze(rows, { R = 5, Ks = [1, 2, 3, 5, 10], minBase = 5 } = {}) {
+  const decisions = rows.map(row => {
+    const perK = {};
+    for (const K of Ks) {
+      const d = decideFamily(row, rows, { R, K, minBase });
+      perK[String(K)] = d.decision === 'arbitrée'
+        ? { decision: 'arbitrée', familyLeft: d.familyLeft, familyRight: d.familyRight,
+            placementLeft: d.left, placementRight: d.right }
+        : { decision: d.decision, reason: d.reason ?? null };
+    }
+    return { part: row.part, cut: row.cut, reserved: row.reserved,
+             engineApplies: engineApplies(row),
+             lossRatio: { left: row.rails.left.lossRatio, right: row.rails.right.lossRatio },
+             byK: perK };
+  });
+  const body = {
+    format: 'banane-pair-arbitration-policy-v1',
+    policy: 'famille-seulement',
+    frozenAt: new Date().toISOString(),
+    nature: 'artefact hors ligne figé, remis pour scoring indépendant — aucune exécution runtime',
+    source: { file: path.relative(ROOT, SOURCE),
+              sha256: crypto.createHash('sha256').update(fs.readFileSync(SOURCE)).digest('hex') },
+    units: 'scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres',
+    parameters: {
+      R, minBase, K: Ks,
+      KNotChosen: 'aucune valeur de K n’est retenue : les décisions sont fournies pour chacune',
+      anchor: 'médiane de la relation de paire du couple (graine, graine) sur les cuts de la MÊME PART '
+            + 'où lossRatio ≥ R des deux côtés, cut jugé retiré (leave-one-out), cuts réservés exclus',
+      dispersion: 'écart absolu médian autour de cette médiane, plancher 1e-4',
+      gate: '|paire − ancre| de la meilleure combinaison ≤ K × dispersion, sinon abstention',
+      untouched: 'un cut fortement discriminé des deux côtés n’est jamais arbitré',
+      families: FAMILIES,
+      familyRepresentative: { best: 'graine', alternative: 'alternative' },
+      fineVariantNeverArbitrated:
+        'la variante fine n’est jamais choisie par le banc. Le représentant de la famille best '
+      + 'est la graine parce que proposal.delta === metrics.seed sur les 173 rails résolus : '
+      + 'c’est la préférence déjà déterminée par le moteur, reproduite et non inventée.',
+    },
+    reserved: { cuts: rows.filter(r => r.reserved).map(r => r.cut).sort((a, b) => a - b),
+                usage: 'évaluation finale uniquement — exclus du socle d’ancrage et de tout réglage' },
+    counts: { cuts: rows.length, decisions: decisions.length },
+    decisions,
+  };
+  /* L'empreinte porte sur le CONTENU DÉCISIONNEL seul — format, politique,
+   * source, paramètres, réserve et décisions — à l'exclusion de l'horodatage et
+   * des champs descriptifs. Un tiers peut donc la recalculer à l'identique :
+   *   sha256( JSON.stringify({format, policy, source, parameters, reserved, decisions}) )
+   * Vérifié par test. */
+  const hashed = { format: body.format, policy: body.policy, source: body.source,
+                   parameters: body.parameters, reserved: body.reserved, decisions: body.decisions };
+  const canonical = JSON.stringify(hashed);
+  return { ...body,
+           sha256: crypto.createHash('sha256').update(canonical).digest('hex'),
+           sha256Covers: ['format', 'policy', 'source', 'parameters', 'reserved', 'decisions'] };
 }
 
 function main() {
@@ -204,7 +339,8 @@ function main() {
       reservedCuts: rows.filter(r => r.reserved).length,
     },
     recoverable: {},
-    sweep: sweep(rows, R, [1, 2, 3, 5, 10]),
+    sweep: { fine: sweep(rows, R, [1, 2, 3, 5, 10], decide),
+             famille: sweep(rows, R, [1, 2, 3, 5, 10], decideFamily) },
   };
   for (const part of [17, 20]) {
     const ls = rows.filter(r => r.part === part);
@@ -214,12 +350,23 @@ function main() {
       notRecoverable: ls.filter(r => !recoverable(r)).map(r => r.cut).sort((a, b) => a - b),
     };
   }
+  if (process.argv.includes('--freeze')) {
+    const frozen = freeze(rows);
+    const dest = process.argv[process.argv.indexOf('--freeze') + 1];
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, JSON.stringify(frozen, null, 2));
+    console.log(`politique figée : ${path.relative(ROOT, dest)}`);
+    console.log(`sha256 du contenu canonique : ${frozen.sha256}`);
+    console.log(`corpus source : ${frozen.source.sha256}`);
+    return;
+  }
   const out = process.argv.includes('--output') ? process.argv[process.argv.indexOf('--output') + 1] : null;
   const text = JSON.stringify(result, null, 2);
   if (out) { fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, text); }
   console.log(text);
 }
 
-module.exports = { build, candidates, settled, anchorFor, decide, measure, appliedError,
-                   engineApplies, recoverable, sweep, quantile, originAfter, point, SOURCE, TOLERANCE_ORACLE };
+module.exports = { build, candidates, settled, anchorFor, appliedPair, decide, decideFamily,
+                   FAMILIES, familyRepresentative, measure, appliedError, engineApplies,
+                   recoverable, sweep, freeze, quantile, originAfter, point, SOURCE, TOLERANCE_ORACLE };
 if (require.main === module) main();

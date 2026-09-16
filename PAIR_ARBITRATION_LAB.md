@@ -159,35 +159,12 @@ sinon, parmi les 9 combinaisons exposées :
 `R = 5`, socle minimal de 5 cuts. Ce sont des **paramètres de laboratoire**, pas
 des seuils du moteur.
 
-### Balayage complet — 93 cuts hors réserve
+### Balayage — chiffres périmés, voir le tour 2
 
-| K | arbitré | abstenu | inchangé | récupérations | corrections | **régressions** | p90 récup. | max récup. |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 48 | 9 | 36 | 26 | 9 | **10** | 9.17 | 10.34 |
-| 2 | 50 | 7 | 36 | 27 | 10 | **10** | 9.17 | 10.34 |
-| 3 | 52 | 5 | 36 | 29 | 10 | **10** | 9.66 | 48.26 |
-| 5 | 53 | 4 | 36 | 30 | 10 | **10** | 10.58 | 48.26 |
-| 10 | 54 | 3 | 36 | 31 | 10 | **10** | 12.75 | 48.26 |
-
-### Ce que ces chiffres disent vraiment
-
-**Les grosses corrections sont réelles** : 6576 (82.11 → 5.89), 5123
-(67.12 → 8.18), et sur la tenue à l'écart 9041 (100.96 → 5.86). Ce sont les
-outliers du terrain, et la paire les tranche.
-
-**Les 10 régressions sont réelles aussi, et je ne les minimise pas.** Elles sont
-toutes petites — 3.73 → 4.85, 5.87 → 8.81, 2.37 → 6.53 — et toutes **entre
-variantes fines d'une même famille**. C'est la conséquence directe des deux
-échelles : la paire n'a pas la résolution pour choisir entre `graine` et
-`surface`, distantes de ~2, et elle s'en mêle quand même.
-
-Mon premier banc en 2×2 affichait **zéro régression** : c'était un artefact du
-jeu de candidats appauvri, pas une qualité de la politique.
-
-**Piste que cela ouvre, non implémentée** : n'utiliser la paire que pour choisir
-la **famille** par rail, et laisser le moteur choisir la variante fine à
-l'intérieur. Cela devrait conserver les corrections et supprimer les
-régressions. À tester au prochain tour.
+> **Les chiffres publiés ici au premier tour étaient faussés par une erreur de
+> ma part** : l'ancre était calculée sur le couple `(surface, surface)` alors
+> que le moteur applique `(graine, graine)`. Corrigé au tour 2. Les tableaux
+> corrigés, et la politique « famille seulement », sont plus bas.
 
 ### Cas impossibles à départager
 
@@ -247,3 +224,139 @@ Natif V4.6 ne sont pas utilisés ici** : la politique doit être figée avant de
 s'en servir, sous peine de régler le banc sur ses propres données de validation.
 
 **Aucune modification runtime. Aucun seuil touché. Aucun paramètre retenu.**
+
+---
+
+# Tour 2 — arbitrer la famille, pas la variante fine
+
+Ce tour n'a qu'un objet : isoler l'effet « famille seulement ». **`R = 5`, le
+socle minimal, `K`, l'ancre et la porte de plausibilité sont inchangés.**
+
+## Une erreur du tour 1, corrigée
+
+L'ancre était calculée sur la relation de paire du couple `(surface, surface)`,
+présenté comme « le couple que le moteur applique ». **C'est faux.** Sur les
+**173 rails résolus, `proposal.delta` est strictement égal à `metrics.seed`** —
+écart 3D nul, latéral nul. `surfaceIntersection` est exposé comme diagnostic et
+n'est **jamais appliqué**.
+
+L'ancre porte désormais sur `(graine, graine)`. Les chiffres du tour 1 en sont
+modifiés ; ceux qui suivent les remplacent.
+
+## Familles — partition structurelle, pas métrique
+
+| famille | placements | nature |
+|---|---|---|
+| `best` | `metrics.seed`, `metrics.surfaceIntersection` | le meilleur de grille grossière et son affinage |
+| `alternative` | `templateAmbiguity.alternative` | **une autre cellule grossière, par construction** |
+
+La séparation vient du **champ lu**, donc de la construction du moteur — pas
+d'un seuil que j'ajouterais. Un critère de distance aurait été un seuil nouveau :
+le moteur garantit `alternativeSeparation` contre `coarseBest`, pas contre la
+graine affinée, et **29 rails sur 220** ont une alternative à moins de 0.02 de
+leur graine. Verrouillé par test.
+
+## « Laisser le moteur choisir la variante fine » — formalisation
+
+C'est le point critique du tour, et il se règle sans règle nouvelle :
+
+- **représentant de `best` = la graine**, parce que c'est le placement que le
+  moteur applique lui-même quand il résout (`delta === seed`, 173/173) ;
+- **représentant de `alternative` = l'alternative**, seul placement exposé de
+  cette famille.
+
+Donc, pour un rail **déjà résolu**, la décision du moteur est préservée à
+l'identique. Pour un rail **abstenu**, prendre la graine **reproduit une
+préférence déjà déterminée par le moteur** — ce n'est pas une règle
+graine-contre-surface créée en silence. `surfaceIntersection` n'est jamais
+choisi par le banc ; un test l'interdit explicitement.
+
+Conséquence mécanique : l'arbitrage porte sur 4 combinaisons de familles, pas 9.
+
+## Résultats — 93 cuts hors réserve, ancre corrigée
+
+**Politique fine (9 combinaisons)** — celle du tour 1 :
+
+| K | arbitré | abstenu | inchangé | récup. | corrections | **régressions** |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 32 | 25 | 36 | 16 | 2 | **6** |
+| 2 | 39 | 18 | 36 | 20 | 2 | **7** |
+| 3 | 47 | 10 | 36 | 26 | 2 | **7** |
+| 5 | 52 | 5 | 36 | 29 | 4 | **7** |
+| 10 | 53 | 4 | 36 | 30 | 4 | **7** |
+
+**Politique « famille seulement » (4 combinaisons)** :
+
+| K | arbitré | abstenu | inchangé | récup. | corrections | **régressions** |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 21 | 36 | 36 | 12 | 2 | **0** |
+| 2 | 30 | 27 | 36 | 16 | 2 | **0** |
+| 3 | 39 | 18 | 36 | 20 | 2 | **0** |
+| 5 | 50 | 7 | 36 | 28 | 2 | **0** |
+| 10 | 53 | 4 | 36 | 30 | 2 | **0** |
+
+**Les régressions disparaissent entièrement, à tous les K.** Verrouillé par test.
+
+### Les corrections matérielles sont conservées
+
+| cut | avant | après | familles retenues |
+|---|---:|---:|---|
+| 5123 | 67.12 | **7.44** | best / alternative |
+| 6576 | 82.11 | **6.27** | alternative / best |
+| 9041 *(tenue à l'écart)* | 100.96 | **5.86** | alternative / best |
+
+Les trois repassent sous la convention d'évaluation. Verrouillé par test.
+
+## Les pertes — rapportées entièrement
+
+**1. Six récupérations perdues** à K = 3 (conception) : cuts 3174, 3175, 3176,
+3179, 9108, 5465. La politique fine les atteignait à 3.87–8.95 ; « famille
+seulement » s'y abstient. Ce sont des abstentions maintenues, pas des mauvais
+placements — mais ce sont des pertes de couverture réelles.
+
+**2. Deux corrections perdues sur la tenue à l'écart** : 9045 (6.18 → 2.65) et
+9044 (11.22 → 9.07). Toutes deux étaient des échanges de variante fine.
+
+**Lecture honnête de ces deux pertes.** Elles relèvent du même phénomène que les
+sept régressions : la paire n'a pas la résolution du fin, et ses choix à cette
+échelle sont fortuits. La politique fine gagnait 2 corrections supplémentaires et
+en payait 7 régressions. « Famille seulement » renonce aux deux côtés du hasard.
+
+**3. Couverture moindre à K faible** : 12 récupérations contre 16 à K = 1, 20
+contre 26 à K = 3. L'écart se referme à K = 10 (30 contre 30).
+
+## Artefact de politique figé
+
+```bash
+node tools/pair-lab.cjs --freeze audit/pair-arbitration-policy-v1.json
+```
+
+- `audit/pair-arbitration-policy-v1.json`, format `banane-pair-arbitration-policy-v1` ;
+- **décision déterministe pour les 110 cuts**, et pour **chaque** K du balayage —
+  aucun K n'est retenu, le scoring indépendant choisira ;
+- description complète des paramètres, des familles, de la règle de représentant
+  et de l'usage de la réserve ;
+- empreinte du corpus source ;
+- **SHA-256 recalculable par un tiers**, portant sur le contenu décisionnel seul
+  (`format`, `policy`, `source`, `parameters`, `reserved`, `decisions`) —
+  l'horodatage en est **exclu**, sans quoi l'empreinte ne serait pas
+  reproductible. Deux gels successifs donnent la même empreinte ; vérifié par
+  test.
+
+## Chantier séparé, documenté et non résolu ici
+
+**Absence d'ancre sur une part nouvelle.** La politique exige un socle d'au moins
+5 cuts fortement discriminés dans la part. Sur la session terrain du 16/09
+(part 8), **aucun cut n'atteint `lossRatio ≥ 5` des deux côtés** — pas même le
+cut 40 (4.67 / 27.20). Le socle est vide et **la politique n'y démarre pas**.
+
+C'est la limite opérationnelle la plus sérieuse de cette première politique.
+Elle est **documentée et laissée ouverte** : ce sera un chantier distinct, après
+gel de celle-ci.
+
+## Rappel de périmètre
+
+Aucun changement runtime, `geometry.js`, cerveau, seuil moteur ou génération de
+candidats. `banane-data`, le benchmark indépendant archivé et la collecte Natif
+V4.6 **ne sont pas utilisés** : la politique doit être figée avant de s'en
+servir, sous peine de se régler sur ses propres données de validation.
