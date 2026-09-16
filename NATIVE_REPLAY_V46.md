@@ -48,13 +48,29 @@ humaine ne peut pas l'influencer.
 
 | | valeur |
 |---|---:|
-| visites | 679 |
-| cuts distincts | 611 |
+| visites | 679 — part 1 : **503** · part 8 : **176** |
+| cuts distincts | 611 — part 1 : **474** · part 8 : **137** |
 | parts | 1 et 8 |
 | rails rejoués | **313** |
 | cuts à deux rails rejoués | **76** |
 | cuts avec référence humaine sur les deux rails | 219 |
-| **cuts comparables** | **74** (part 1 : 38 · part 8 : 36) |
+| **cuts rejouables en paire** | **76** |
+| **cuts scorables** | **74** (part 1 : 38 · part 8 : 36) |
+| non scorables parmi les rejouables en paire | **2** |
+
+**`76 = 74 + 2`**, vérifié par test. Les deux prédicats sont exportés et testés,
+aucun compteur n'est posé sans lui :
+
+- `pairReplayable` : `engine.rails.left.replayed && engine.rails.right.replayed` ;
+- `scorable` : `interpretation.classe !== 'non-qualifiable'`.
+
+Les **2 non scorables** sont rejouables en paire mais la géométrie n'expose
+aucun candidat d'un côté :
+
+| cut | côté sans candidat | candidats de l'autre côté |
+|---|---|---|
+| **part 1 / cut 326** | **droit** | seed, surfaceIntersection, alternative |
+| **part 8 / cut 9656** | **gauche** | seed, surfaceIntersection, alternative |
 
 ## Classement descriptif des 74 cuts comparables
 
@@ -68,10 +84,45 @@ humaine ne peut pas l'influencer.
 | *non qualifiable* | *605* |
 
 Motifs de non-qualification : 442 cuts sans aucun rail rejouable, 161 à un seul
-rail, 2 sans candidat exposé. La cause dominante est l'acquisition, pas la
-géométrie : `longitudinal-coverage-insufficient` (510),
-`engine-useful-point-count-below-minimum` (459),
-`longitudinal-span-insufficient` (389), `roi-point-count-below-minimum` (194).
+rail, 2 sans candidat exposé.
+
+### Compteurs canoniques `geometryEligibility[side].reasons`
+
+Statuts, sur **1358 rails** (2 × 679) : `comparable-candidate` **313**,
+`excluded` **1045**.
+
+**Un rail exclu porte plusieurs motifs à la fois.** La somme des motifs
+(2657 occurrences) dépasse donc le nombre de rails exclus (1045), et le résumé
+machine le déclare explicitement (`multiLabelled: true`) pour qu'on ne lise pas
+625 comme un nombre de rails.
+
+| motif | occurrences |
+|---|---:|
+| `qualified-stored-snapshot-missing` | 625 |
+| `validated-reference-not-observed` | 270 |
+| `human-final-reference-missing` | 270 |
+| `human-final-rail-state-missing` | 270 |
+| `checkpoint-not-qualified` | 226 |
+| `capture-used-a-different-rail-pose-than-initial-state` | 197 |
+| `engine-useful-point-count-below-minimum` | 177 |
+| `longitudinal-coverage-insufficient` | 171 |
+| `geometry-acquired-after-operator-intent` | 168 |
+| `longitudinal-span-insufficient` | 151 |
+| `roi-point-count-below-minimum` | 70 |
+| `human-final-reference-not-freshly-observed` | 38 |
+| `multiple-operator-intents-observed` | 8 |
+| `decision-effect-not-observed` | 6 |
+
+### Limite d'échantillonnage — à ne pas passer sous silence
+
+Trois de ces motifs (`human-final-reference-missing`,
+`human-final-rail-state-missing`, `human-final-reference-not-freshly-observed`)
+portent sur la **disponibilité de la référence humaine**. La porte d'éligibilité
+de la collecte en dépend donc, et **les 313 rails rejoués ne sont pas un
+échantillon indépendant de l'humain**. L'étage 1 ne lit aucune valeur humaine —
+c'est vérifié sur les clés, récursivement — mais le *choix des cuts qu'il voit*
+n'est pas neutre. Aucun taux mesuré ici ne doit être extrapolé à la population
+complète des 611 cuts.
 
 **Lecture.** Sur les 74 cuts comparables, le moteur place correctement 7 cuts et
 s'abstient 40 fois alors qu'un candidat exposé est bon — c'est la même signature
@@ -88,6 +139,41 @@ figés par Pair Arbitration V1, repris tels quels.
 |---:|---:|---:|---:|---|
 | 1 | 503 | 39 | **3** (744, 2891, 3018) | **non** |
 | 8 | 176 | 37 | **5** (8580, 9391, 9540, 9542, 9667) | **oui, tout juste** |
+
+### Le cut 1/2891 est doublement singulier, et fragile
+
+Le cut **part 1 / cut 2891** est à la fois l'**unique** représentant de la classe
+« rail résolu à changer pour améliorer la paire » et l'**un des trois seuls**
+socles d'ancrage de la part 1. Il a **deux revisites** :
+
+| visitIndex | éligibilité G / D | label opérateur | classe |
+|---:|---|---|---|
+| 230 | `comparable-candidate` / `comparable-candidate` | `VALIDATE_CORRECTED_RIGHT_ONLY` | rail résolu à changer |
+| 232 | `excluded` / `excluded` | `VALIDATE_CORRECTED_RIGHT_ONLY` | non qualifiable |
+
+**Les deux références humaines se contredisent.** Mesuré dans la collecte brute :
+le rail gauche est identique à **0,000×10⁻³** près — cohérent avec le label
+« RIGHT_ONLY » — mais le rail **droit diffère de 9,851×10⁻³** entre les deux
+observations du même cut, prises à 6 secondes d'intervalle. C'est **98,5 % de la
+convention d'évaluation (10×10⁻³)**.
+
+Conséquence à énoncer clairement : l'unique cas « rail résolu à changer » repose
+sur une référence humaine qu'une seconde observation du même cut contredit
+presque à hauteur de toute la tolérance. **Ce cas n'est pas robuste** et ne doit
+pas servir de preuve. Il reste compté dans la taxonomie — on ne retire pas un cut
+parce qu'il dérange — mais il est marqué ambigu.
+
+## Une agrégation citée et NON reproductible : `58 / 15 / 1`
+
+Le triplet `58 / 15 / 1` a une somme correcte (74), mais **aucune partition des
+74 cuts scorables ne le produit**. Dix partitions ont été essayées et sont
+verrouillées par test : classe, part, nombre de rails résolus, récupérabilité
+sous tolérance, moteur sous tolérance, label opérateur, `lidarStatus`,
+`visitStatus`, session, meilleure famille par rail. Les plus proches sont
+`visitStatus` (57 / 17) et « meilleure famille par rail » (62 / 9 / 3).
+
+**Il n'est donc pas figé.** Un test échoue si une future agrégation le reproduit :
+il faudra alors la documenter plutôt que la déclarer irreproductible.
 
 **C'est le résultat opérationnel le plus important.** Le problème d'absence
 d'ancre sur une part nouvelle, documenté et laissé ouvert par Pair Arbitration
@@ -111,4 +197,21 @@ ne constate pas ce qu'il a fait.
 - `tools/native-replay.cjs` — le banc, lecture seule ;
 - `audit/native-replay-v4.6.json` — résultat par cut, format
   `banane-native-replay-v1` : candidats exposés, statut, `lossRatio`, décision
-  moteur, mesure contre l'humain et classement, cut par cut.
+  moteur, mesure contre l'humain et classement, cut par cut ;
+- `audit/native-replay-v4.6-summary.json` — résumé machine, format
+  `banane-native-replay-summary-v1`, **recalculé depuis le seul artefact**, sans
+  relire la collecte : compteurs, prédicats, les 74 `{part, cut, classe}`, la
+  taxonomie, les compteurs canoniques de motifs, les cuts revisités et la
+  faisabilité du socle ;
+- `tests/native-replay.test.cjs` — 12 tests de cohérence indépendants, qui
+  recalculent tout depuis l'artefact comme le ferait un tiers n'ayant que le
+  dépôt.
+
+Reproduire le résumé et les tests, sans l'archive de 34 Mo :
+
+```bash
+node -e "const M=require('./tools/native-replay.cjs');\
+ const a=require('./audit/native-replay-v4.6.json');\
+ console.log(JSON.stringify(M.consolidate(a).counts))"
+node --test tests/native-replay.test.cjs
+```

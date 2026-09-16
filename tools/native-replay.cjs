@@ -381,6 +381,117 @@ function anchorFeasibility(rows, R = 5, minBase = 5) {
   }));
 }
 
+/* ------------------------------------------- consolidation depuis l'artefact
+ *
+ * Tout ce qui suit se recalcule à partir du SEUL `audit/native-replay-v4.6.json`,
+ * sans relire la collecte. C'est ce qui rend les chiffres vérifiables par un
+ * tiers qui n'a pas l'archive de 34 Mo.
+ */
+
+/** Un cut est REJOUABLE EN PAIRE quand les deux rails ont été rejoués. */
+const pairReplayable = row => row.engine.rails.left.replayed && row.engine.rails.right.replayed;
+/** Un cut est SCORABLE quand il est classé dans une catégorie autre que « non-qualifiable ». */
+const scorable = row => row.interpretation.classe !== 'non-qualifiable';
+
+/**
+ * Consolidation. Aucune agrégation n'est inventée ici : chaque compteur est
+ * défini par le prédicat qui le produit, et la somme est vérifiée.
+ */
+function consolidate(artefact) {
+  const rows = artefact.rows, S = ['left', 'right'];
+  const tally = (list, key) => {
+    const m = {};
+    for (const x of list) { const k = String(key(x)); m[k] = (m[k] || 0) + 1; }
+    return m;
+  };
+  const pair = rows.filter(pairReplayable);
+  const scored = pair.filter(scorable);
+  const unscored = pair.filter(r => !scorable(r));
+
+  const byPart = {};
+  for (const r of rows) {
+    const p = r.identity.part;
+    (byPart[p] ??= { part: p, visits: 0, cuts: new Set() });
+    byPart[p].visits++; byPart[p].cuts.add(r.identity.cut);
+  }
+
+  const revisits = {};
+  for (const r of rows) {
+    const k = `${r.identity.part}/${r.identity.cut}`;
+    (revisits[k] ??= []).push(r);
+  }
+
+  return {
+    format: 'banane-native-replay-summary-v1',
+    nature: 'recalculé depuis audit/native-replay-v4.6.json seul — aucune relecture de la collecte',
+    source: { format: artefact.format, generatedAt: artefact.generatedAt,
+              oracleTolerance: artefact.summary.oracleTolerance },
+    definitions: {
+      pairReplayable: 'engine.rails.left.replayed && engine.rails.right.replayed',
+      scorable: "interpretation.classe !== 'non-qualifiable'",
+      note: 'les deux prédicats sont exportés et testés ; aucun compteur n’est posé sans son prédicat',
+    },
+    counts: {
+      visits: rows.length,
+      distinctCuts: new Set(rows.map(r => `${r.identity.part}/${r.identity.cut}`)).size,
+      pairReplayable: pair.length,
+      scorable: scored.length,
+      notScorableAmongPairReplayable: unscored.length,
+      identity: `${pair.length} = ${scored.length} + ${unscored.length}`,
+    },
+    byPart: Object.values(byPart).sort((a, b) => a.part - b.part)
+      .map(e => ({ part: e.part, visits: e.visits, distinctCuts: e.cuts.size })),
+    notScorable: unscored.map(r => ({
+      part: r.identity.part, cut: r.identity.cut, motif: r.interpretation.motif,
+      missingSide: S.find(s => !Object.keys(r.engine.rails[s].candidates).length) ?? null,
+      candidatesBySide: Object.fromEntries(S.map(s => [s, Object.keys(r.engine.rails[s].candidates)])),
+    })),
+    taxonomy: tally(scored, r => r.interpretation.classe),
+    taxonomyClasses: ['moteur-correct', 'moteur-abstient-bon-candidat-expose',
+      'mauvaise-famille-alors-qu-une-autre-est-meilleure',
+      'rail-resolu-a-changer-pour-ameliorer-la-paire', 'aucun-candidat-satisfaisant'],
+    scoredCuts: scored.map(r => ({ part: r.identity.part, cut: r.identity.cut,
+      classe: r.interpretation.classe })).sort((a, b) => a.part - b.part || a.cut - b.cut),
+    eligibilityStatus: tally(rows.flatMap(r => S.map(s => r.engine.rails[s])), e => e.eligibility),
+    /* Compteurs CANONIQUES de geometryEligibility[side].reasons : un rail non
+     * rejoué peut porter PLUSIEURS motifs, donc la somme des motifs dépasse le
+     * nombre de rails. Les deux chiffres sont donnés pour qu'aucun lecteur ne
+     * les confonde. */
+    eligibilityReasons: (() => {
+      const m = {}; let railsNotReplayed = 0, occurrences = 0;
+      for (const r of rows) for (const s of S) {
+        const e = r.engine.rails[s];
+        if (e.replayed) continue;
+        railsNotReplayed++;
+        for (const x of e.notReplayedReasons || []) { m[x] = (m[x] || 0) + 1; occurrences++; }
+      }
+      return { railsNotReplayed, occurrences, multiLabelled: true,
+               byReason: Object.fromEntries(Object.entries(m).sort((a, b) => b[1] - a[1])) };
+    })(),
+    revisitedCuts: Object.entries(revisits).filter(([, v]) => v.length > 1)
+      .map(([k, v]) => ({ cut: k, visits: v.length,
+                          scorable: v.filter(scorable).length })).sort((a, b) => b.visits - a.visits),
+    anchorFeasibility: artefact.summary.anchorFeasibility,
+  };
+}
+
+/** Toutes les revisites d'un cut, avec ce qui permet de juger leur cohérence. */
+function cutDossier(artefact, part, cut) {
+  const S = ['left', 'right'];
+  return artefact.rows.filter(r => r.identity.part === part && r.identity.cut === cut)
+    .sort((a, b) => a.visitIndex - b.visitIndex)
+    .map(r => ({
+      visitIndex: r.visitIndex, visitId: r.visitId, sessionId: r.sessionId,
+      visitStatus: r.provenance.visitStatus,
+      observedLabelCandidate: r.provenance.observedLabelCandidate,
+      usableForOfflineEvaluationByRail: r.provenance.usableForOfflineEvaluationByRail,
+      eligibility: Object.fromEntries(S.map(s => [s, r.engine.rails[s].eligibility])),
+      humanStatus: r.measure.humanStatus,
+      humanDeltaLocal: Object.fromEntries(S.map(s => [s, r.measure[s]?.human ?? null])),
+      classe: r.interpretation.classe,
+    }));
+}
+
 /* ------------------------------------------------------------------ pilote */
 
 function run(dir, { tol = TOLERANCE_ORACLE } = {}) {
@@ -471,7 +582,7 @@ function main() {
   console.log(JSON.stringify(summary, null, 2));
 }
 
-module.exports = { assertFrozenEngine, derefer, indexCollection, readVisits, readNeededChunks,
+module.exports = { pairReplayable, scorable, consolidate, cutDossier, assertFrozenEngine, derefer, indexCollection, readVisits, readNeededChunks,
                    initialRail, replayRail, exposedCandidates, replayCut, humanDeltaLocal,
                    measureCut, pairRelation, classify, anchorFeasibility, run, summarise,
                    move, norm, FAMILY_OF, TOLERANCE_ORACLE };
