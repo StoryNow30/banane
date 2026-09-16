@@ -35,7 +35,7 @@ def build(destination, include_tests=False):
             if relative.parts[0] == 'audit' and (relative.parent != Path('audit') or relative.name not in {'verification.json', 'verification.txt', 'ingestion-certificate-v4.3.0.json', 'native-fluidity-v4.4.3.json',
                    'native-geometry-loss-v4.4.0.json', 'native-geometry-loss-v4.4.0.md', 'native-offline-evaluation-v4.4.0.json', 'native-offline-evaluation-v4.4.0.md',
                    'native-v4.4.1-real-audit.json', 'native-offline-v4.4.1-baseline.json', 'native-offline-v4.4.1-baseline.md',
-                   'v4.2.1-geometry-hashes.json', 'v4.4.0-frozen-engine-hashes.json'}):
+                   'v4.2.1-geometry-hashes.json', 'v4.4.0-frozen-engine-hashes.json', 'v4.6.0-engine-baseline.json'}):
                 continue
             if file.is_symlink():
                 raise ValueError(f'Symlink refused: {relative}')

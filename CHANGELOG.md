@@ -1,5 +1,142 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.6.0 — machine à états du pilote
+
+Lot V4.6.0 : les défauts 4 et 9 d'`AUDIT_PILOTE.md`, les deux que l'audit avait
+identifiés comme incorrigibles sans lever le gel de `src/engine.js`. Le gel est
+levé pour eux seuls, sur décision explicite. Ni `src/geometry.js`, ni le
+cerveau, ni les seuils ne sont touchés.
+
+**Le contrat validation/navigation (défaut 4).** Le bouton de validation d'ESV
+valide et navigue d'un seul geste : la relecture de l'état final échoue donc
+systématiquement, et le lot s'arrêtait au premier cut — 12 lots sur 12 le 15/09.
+`startBatch` exigeait déjà que l'opérateur déclare « la navigation observée me
+suffit comme preuve » pour seulement démarrer, mais le refus sur relecture
+manquée était levé **avant** la ligne qui lisait cette déclaration : politique
+obligatoire, et inatteignable là où elle servait. Elle est maintenant consultée
+au bon endroit.
+
+Ce que cela ne change pas : un cut avancé de cette façon n'est jamais déclaré
+validé. Son enregistrement garde `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED`
+et `usableForTraining: false`, porte `validationProof: 'navigation-only'`, et un
+lot qui en contient ne peut plus finir sur `COMPLETED` — affiché « Terminé
+confirmé » — mais sur `FINISHED_WITH_UNCONFIRMED_ACTIONS`.
+
+**La navigation doit être celle qu'on attend.** Une navigation quelconque ne
+vaut pas preuve : même onglet, même part, et le successeur immédiat du cut
+commandé. Un saut, un retour en arrière ou un changement de part arrêtent le lot
+comme avant. Sans ce contrôle, un saut ferait franchir en silence les cuts
+sautés.
+
+**`MANUAL_COMPLETION` (défaut 9).** « Reprise manuelle » était une impasse :
+aucun chemin ne ramenait le lot en marche, si bien qu'un seul cut ambigu coupait
+les 22 autres d'un lot de 23. L'opérateur corrige le cut dans ESV, ouvre le
+suivant, puis déclare « Repris manuellement » : le lot repart. Banane n'a envoyé
+aucune commande sur ce cut et ne prétend pas l'avoir validé —
+`bananeValidated: false`, `commandSent: false`, `serverConfirmed: false`,
+`usableForTraining: false`, provenance `operator-in-esv`. Le cut n'entre pas
+dans `processed`, réservé aux validations conduites par Banane ; il est compté à
+part et affiché « repris à la main ». Le lot ne peut jamais le redémarrer. Le
+message du moteur ne renvoie plus vers « Mes corrections », retiré en 4.5.4.
+
+**Conséquence du défaut 4, constatée :** un lot d'un seul cut se termine, au
+lieu de rester bloqué (défaut 10, qui n'a pas demandé de correctif propre).
+
+**Empreintes.** `audit/v4.4.0-frozen-engine-hashes.json` n'est pas modifié.
+`src/geometry.js`, `vendor/capture-core.js` et `vendor/lidar.js` y restent
+vérifiés octet pour octet. Le moteur est ré-épinglé sur
+`audit/v4.6.0-engine-baseline.json`, contrôlé de la même façon : une dérive non
+déclarée du moteur fait échouer le banc. Un test vérifie que cette baseline
+recopie les empreintes historiques à l'identique, pour qu'elle ne puisse pas
+servir à assouplir le gel par la bande.
+
+**Version.** La version produit passe à **4.6.0** partout où elle est une
+version runtime ou d'export : `src/core.js`, `manifest.json`, `panel.html`,
+`src/bridge.js`, le repli du service worker. Les enregistrements V4.6 ne sont
+plus estampillés 4.5.7.
+
+### Corrections demandées par la revue Astra
+
+**Récupération MV3 — un `validation-observation` ne vaut plus acceptation.** Cet
+événement est journalisé *avant* les contrôles d'acceptation. `Engine.init()`
+s'en servait pour recréditer `processed` après un redémarrage du service
+worker : une navigation inattendue, que le moteur venait de refuser, pouvait
+donc être comptée comme un cut traité. Le lot dispose maintenant d'un marqueur
+durable distinct, `validation-accepted`, émis une fois **tous** les contrôles
+passés — c'est le seul sur lequel `init()` crédite.
+
+Et quand la commande est partie sans être acceptée, il n'y a pas deux issues
+mais une seule : ni crédit, ni renvoi. La commande native est irréversible ; le
+lot se pose en `PAUSED_AFTER_STATE_MISSING` avec le code
+`VALIDATION_NOT_ACCEPTED_BEFORE_RESTART` et attend un contrôle dans ESV.
+
+Au passage : `batch.interrupted`, la liste des interruptions, était écrasée par
+un booléen à chaque redémarrage — le journal était perdu et `closureSummary`
+lisait 0. Le drapeau a désormais son propre champ, `interruptedByRestart`.
+
+**`MANUAL_TAKEOVER` est un lot actif.** Le cut est rendu à l'opérateur, mais le
+lot garde son contexte et reprendra : rien ne doit le remplacer. Ni un nouveau
+lot, ni le mode Natif, ni une analyse assistée — refus porté par le moteur et le
+service worker, pas par l'interface, puisqu'un appel direct au service worker la
+contourne. « Arrêter » redevient disponible pendant la reprise manuelle : c'est,
+avec « Repris manuellement », la seule sortie de cet état.
+
+**Banc exploitable depuis un clone propre.** Les deux tests qui exigent le
+corpus Natif privé s'ignorent eux-mêmes lorsqu'il est absent, au lieu de faire
+échouer le banc avant les contrôles d'empreintes. Un test ignoré n'est pas un
+test réussi : `audit/verification.json` porte `benchMode`, `allTestsExecuted`,
+`skippedForMissingCorpus` et `nativeCorpus`. `--full` (ou `BANANE_BANC=full`)
+exige le corpus et refuse le moindre test ignoré. Le contrôle de l'archive
+installable a été séparé de celui de l'archive source, de sorte qu'il s'exécute
+aussi sans le corpus.
+
+**Identité de tentative de validation.** Le correctif de récupération ci-dessus
+appariait encore les événements par identité de cut. Or `s.events` survit d'un
+lot à l'autre : une acceptation ancienne du **même** `pageId/part/cut`, venue
+d'un lot antérieur, pouvait donc être prise pour celle de la tentative courante
+et créditer un lot qui n'avait rien validé.
+
+Chaque validation porte désormais un `validationAttemptId`, créé **avant** la
+requête irréversible et persisté avec `applied` et l'intent, accompagné du
+`batchId` et du `proposalId` auxquels il appartient. Les trois événements —
+`validation-intent`, `validation-observation`, `validation-accepted` — le
+transportent, et `init()` ne recrédite que sur une correspondance exacte des
+trois. Une acceptation qui ne correspond pas à la tentative courante est
+ignorée, quel que soit son cut.
+
+**Migration depuis V4.5.7.** Un état écrit par une version antérieure ne porte
+aucun identifiant de tentative. Le journal ne peut pas en tenir lieu : ses
+événements survivent aux lots, si bien qu'un `validation-intent` V4.5.7 traînant
+sur le même cut bloquait à tort un lot V4.6 neuf qui n'avait rien envoyé.
+
+Seul un marqueur appartenant à l'**état courant** fait foi : `validationStarted`,
+que `apply()` remet à faux avant chaque application. Il n'est vrai, dans cette
+branche, que si la commande est partie **et** revenue — si elle était encore en
+vol, `s.intent` serait posé et la réconciliation aurait déjà pris la main. Il
+vaut seul, sans confirmation du journal, celui-ci étant plafonné à 150
+événements dont l'intent peut avoir été chassé. Aucun événement antérieur au lot
+courant ne peut donc bloquer ce lot.
+
+**Formulation `MANUAL_COMPLETION`.** `operatorNavigationObserved: true` est
+retiré : Banane n'observait pas l'opérateur naviguer et ne peut rien dire d'une
+navigation. Ce qui est consigné correspond à ce qui est fait — une lecture de
+l'identité affichée à la déclaration : `identityReadAtDeclaration`,
+`identityDifferedFromTakenCut`, `identityIsExpectedSuccessor`,
+`transitionAtDeclaration`, et `navigationObservedByBanane: false`.
+
+**Banc.** 385 tests. Sur un clone sans `datasets/native/` : 383 verts, 0 rouge,
+2 ignorés, et le banc va jusqu'au bout. Les tests couvrent : mono-cut,
+multi-cut, navigation absente, navigation attendue sans état final, navigation
+inattendue (saut, retour arrière, autre part, autre onglet), reprise manuelle,
+redémarrage après acceptation, redémarrage après refus, conservation du journal
+d'interruptions, lot actif en reprise manuelle (moteur et service worker),
+détection du corpus, et les cinq cas d'identité de tentative — acceptation d'un
+lot antérieur sur le même cut, intent d'un lot antérieur, crédit exactement une
+fois malgré plusieurs redémarrages, refus courant non rattrapé par une
+acceptation ancienne, intent V4.5.7 périmé n'entravant pas un lot neuf, et
+les deux états d'interruption réellement persistés par 4.5.7. Chacun a été vérifié non
+complaisant — ils échouent quand on retire le correctif qu'ils verrouillent.
+
 ## 4.5.0 — 15 septembre 2026
 
 Première version officielle de la série V4.5. Le moteur de placement reste gelé

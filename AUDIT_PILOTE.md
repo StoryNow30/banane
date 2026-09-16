@@ -1,6 +1,10 @@
 # Audit du mode Pilote automatique
 
-Banc : **364 / 364**, `geometryUnchanged: true`. Aucun fichier gelé modifié.
+Banc au moment de l'audit : **364 / 364**, `geometryUnchanged: true`, aucun
+fichier gelé modifié. Après V4.6.0 : **385 tests**, dont 383 verts et 2 ignorés
+sur un clone sans `datasets/native/` — ignorés, pas réussis, et l'audit le dit
+(`benchMode: "partial"`). Le placement, les transformations et le lecteur LiDAR
+restent identiques à 4.4.0 ; le moteur est épinglé sur sa baseline V4.6.0.
 Corpus d'appui : **37 cycles de pilote réels** du 15/09, parts 6 et 31.
 
 Unités de scène ×10⁻³ pour les distances. Ce ne sont pas des millimètres.
@@ -11,15 +15,21 @@ Unités de scène ×10⁻³ pour les distances. Ce ne sont pas des millimètres.
 
 | fichier | rôle | gelé ? |
 |---|---|---|
-| `src/engine.js` | machine à états du lot, décisions | **OUI** |
+| `src/engine.js` | machine à états du lot, décisions | dégelé en V4.6.0, ré-épinglé |
 | `src/geometry.js` | placement | **OUI** |
 | `src/adapter-page.js` | actions dans ESV : lire, cliquer, valider | non |
 | `background.js` | orchestration | non |
 | `panel.js` | interface | non |
 
-**La moitié du pilote est gelée.** Plusieurs défauts ci-dessous sont dans
-`src/engine.js` et ne peuvent pas être corrigés sans lever le gel — décision de
-Mic, pas la mienne. Ils sont marqués **[GELÉ]**.
+**La moitié du pilote était gelée.** Plusieurs défauts ci-dessous sont dans
+`src/engine.js` et ne pouvaient pas être corrigés sans lever le gel — décision
+de Mic, pas la mienne. Ils étaient marqués **[GELÉ]**.
+
+**V4.6.0 a levé ce gel pour les défauts 4 et 9**, sur décision explicite, et
+seulement pour eux. Le moteur n'est pas libre : il est ré-épinglé sur
+`audit/v4.6.0-engine-baseline.json`, vérifié par le banc au même titre que les
+trois fichiers restés gelés à 4.4.0. Les défauts 6, 7 et 8 restent ouverts et
+ne sont pas traités ici.
 
 ---
 
@@ -130,7 +140,7 @@ baisser lit un nuage moins chargé. Il est rendu visible pour pouvoir être
 
 ## Défaut 4 — une politique du moteur est rendue inaccessible par l'ordre de ses propres contrôles
 
-**NON CORRIGÉ. [GELÉ] — demande un arbitrage.**
+**CORRIGÉ en V4.6.0**, après levée du gel — l'issue n°1 du tableau ci-dessous.
 
 *Révisé après revue de Mic, qui a vu plus loin que la première rédaction.*
 
@@ -193,6 +203,28 @@ doit pas être présenté comme un correctif**.
 | lever le gel de `engine.js` pour ne plus arrêter le lot sur une relecture manquée | le moteur n'est plus identique à la référence 4.4.0 |
 | ne plus valider avec le bouton d'ESV, mais placer puis naviguer avec « Next » | les cuts ne sont plus validés : changement métier |
 | accepter l'arrêt et relancer le lot cut par cut | ce que tu fais déjà, sans automatisation réelle |
+
+**Ce qui a été fait en V4.6.0 — issue n°1.** La politique est désormais lue là
+où elle sert : `validateAndNext` consulte `allowNavigationEvidence` **avant** de
+refuser sur relecture manquée. La contradiction interne disparaît ; le moteur
+n'est plus identique à la référence 4.4.0, et c'est le coût annoncé.
+
+Ce que cela n'autorise pas, et qui est verrouillé par test :
+
+- l'enregistrement garde `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED` et
+  `usableForTraining: false` — aucun cut avancé de cette façon n'est déclaré
+  validé, ni ne peut servir à l'entraînement ;
+- `validationProof: 'navigation-only'` dit sur quoi repose l'avancement ;
+- un lot contenant une telle action ne peut pas porter `COMPLETED`, qui
+  s'affiche « Terminé confirmé » — il finit en
+  `FINISHED_WITH_UNCONFIRMED_ACTIONS` ;
+- **la navigation doit être celle qu'on attend** : même onglet, même part, et le
+  successeur immédiat. Un saut, un retour en arrière ou un changement de part ne
+  valent rien et le lot s'arrête comme avant. Sans ce contrôle, un saut ferait
+  franchir en silence les cuts sautés — c'est la moitié du correctif, pas un
+  détail.
+
+Rien n'a été touché dans la géométrie, le cerveau ni les seuils.
 
 ---
 
@@ -274,7 +306,7 @@ Si ESV exposait une écriture directe de la pose, ces attentes disparaîtraient.
 
 ## Défaut 9 — le lot ne reprend pas après « Reprise manuelle »
 
-**[GELÉ] — signalé.**
+**CORRIGÉ en V4.6.0**, après levée du gel.
 
 `manualTakeover()` pose `b.state = 'MANUAL_TAKEOVER'` et `b.step = 'manual'`.
 Aucun chemin ne ramène le lot en `RUNNING` sur le cut suivant : il faut relancer
@@ -291,6 +323,30 @@ observe le changement d'identité → l'opérateur confirme « repris manuelleme
 → Banane journalise `MANUAL_COMPLETION` **sans prétendre avoir validé** →
 reprise du lot au cut suivant. Cela demande de modifier la machine à états.
 
+**C'est ce flux qui est implémenté**, à l'identique. `manualCompletion()` :
+
+- refuse la déclaration tant qu'ESV affiche encore le cut rendu, et tant que le
+  cut affiché n'est pas le successeur immédiat — même contrôle de transition que
+  pour la navigation après commande ;
+- journalise un enregistrement `banane-manual-completion-v1` dont la provenance
+  est explicite : `provenance: 'operator-in-esv'`, `bananeValidated: false`,
+  `commandSent: false`, `serverConfirmed: false`, `afterObserved: false`,
+  `usableForTraining: false`, `trainingExclusionReason:
+  'operator-manual-completion'`. Banane n'a envoyé aucune commande sur ce cut et
+  ne prétend rien d'autre que ce qu'elle a fait : **une lecture de l'identité
+  affichée au moment de la déclaration** — `identityReadAtDeclaration`,
+  `identityIsExpectedSuccessor`, `navigationObservedByBanane: false`. Elle n'a
+  pas vu l'opérateur naviguer, elle n'observait pas, et ne l'affirme donc pas ;
+- **n'inscrit pas le cut dans `processed`**, qui ne compte que les validations
+  conduites par Banane — il est compté à part, dans `manuallyCompleted`, et le
+  panneau l'affiche « repris à la main » ;
+- rend au lot son mode, reprend au cut suivant, et interdit au lot de redémarrer
+  un cut repris à la main.
+
+Le message obsolète est corrigé du même coup : il ne renvoie plus vers « Mes
+corrections », retiré en 4.5.4, mais vers ESV puis la déclaration. Le bouton
+« Repris manuellement » n'apparaît que dans cet état.
+
 ## Défaut 10 — conséquence du défaut 4, pas un défaut distinct
 
 *Reformulé après revue.*
@@ -305,6 +361,11 @@ arrive jamais, la relecture ayant échoué avant. Tes essais à un seul cut (360
 
 **Ce défaut disparaît de lui-même si le défaut 4 est réparé.** Il ne mérite pas
 de correctif propre.
+
+**Vérifié en V4.6.0 :** il a effectivement disparu sans correctif propre. Un lot
+d'un seul cut se termine maintenant sur la navigation attendue, au lieu de
+rester bloqué. Un test le verrouille — et il échoue si l'on retire le correctif
+du défaut 4.
 
 ---
 

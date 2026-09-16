@@ -1,0 +1,23 @@
+{
+  "version": "4.6.0",
+  "note": "Baseline moteur V4.6.0. src/engine.js est dégelé sur décision explicite pour les défauts 4 et 9 d'AUDIT_PILOTE.md, puis ré-épinglé ici : toute dérive non déclarée du moteur fait échouer le banc. audit/v4.4.0-frozen-engine-hashes.json n'est pas modifié ; les trois autres fichiers y restent gelés octet pour octet et leurs empreintes sont recopiées ci-dessous à l'identique.",
+  "historicalReference": "audit/v4.4.0-frozen-engine-hashes.json",
+  "unchangedSince440": {
+    "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
+  },
+  "engine": {
+    "src/engine.js": "f7d3ea2232199b1c994caed1805f7463bceed96b23b68a055b4b23ca88272dd3",
+    "previousHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
+    "unfrozenBy": "V4.6.0 — contrat validation/navigation (défaut 4) et MANUAL_COMPLETION avec reprise du lot (défaut 9)",
+    "scope": [
+      "validateAndNext : la politique allowNavigationEvidence est consultée avant le refus sur relecture manquée",
+      "expectedTransition : la navigation doit être le successeur immédiat, même onglet et même part",
+      "manualCompletion : reprise du lot après reprise manuelle, sans prétendre à une validation Banane",
+      "init : seul validation-accepted crédite processed au redémarrage ; une commande non acceptée ne sera ni comptée ni renvoyée",
+      "assertBatchContextFree : MANUAL_TAKEOVER est un lot actif, que rien ne remplace",
+      "validationAttemptId : chaque validation porte une identité de tentative (batchId + proposalId), et init() ne crédite que sur elle ; pour un état hérité pré-V4.6.0, seul s.validationStarted fait foi, jamais un événement du journal"
+    ]
+  }
+}

@@ -9,7 +9,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geom
  'src/brain.js','src/geometry-brain.js',
  'src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.5.7';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.6.0';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 // V4.5.7 — une seule page. Les vues sont un état interne de panel.html, plus
 // des fenêtres distinctes : ouvrir le Natif depuis l'accueil laissait deux
@@ -79,7 +79,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   const ping=await call('ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Banane ${VERSION}.`);
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
  if(action==='view'){pollCurrent();return engine.view();}
- if(action==='native-start')return native.start();
+ // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
+ if(action==='native-start'){engine.assertBatchContextFree('démarrer le mode Natif');return native.start();}
  if(action==='native-pause')return native.pause();
  if(action==='native-resume')return native.resume();
  if(action==='native-end')return native.end();
@@ -109,8 +110,12 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='resume'){await engine.resume();return engine.view();}
  if(action==='retry'){await engine.retryPaused();return engine.view();}
  if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
+ // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
+ if(action==='manual-completion'){await engine.manualCompletion();return engine.view();}
  if(action==='explicit-skip'){await engine.skipPaused();return engine.view();}
  if(action==='start'){
+  // Avant tout archivage : un lot en reprise manuelle garde son contexte.
+  engine.assertBatchContextFree('un nouveau lot');
   if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');
   /* GARDE-FOU DÉCOUVERT SUR LE TERRAIN, cut 6/4245.
    *
