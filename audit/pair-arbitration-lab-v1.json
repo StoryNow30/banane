@@ -1,0 +1,97 @@
+{
+  "format": "banane-pair-arbitration-lab-v1",
+  "generatedAt": "2026-09-16T09:56:44.202Z",
+  "source": "datasets/automatic/offline-evaluation-v4.3.0.json",
+  "units": "scene-units; physicalCalibrationStatus: not-independently-verified; never millimetres",
+  "nature": "laboratoire hors ligne — aucune politique de production, aucun paramètre retenu",
+  "candidatesPerRail": [
+    "graine",
+    "surface",
+    "alternative"
+  ],
+  "combinationsPerCut": 9,
+  "oracleTolerance": 0.01,
+  "counts": {
+    "cuts": 110,
+    "rails": 220,
+    "abstainingRails": 47,
+    "abstainingCuts": 42,
+    "reservedCuts": 17
+  },
+  "recoverable": {
+    "17": {
+      "cuts": 26,
+      "recoverable": 26,
+      "notRecoverable": []
+    },
+    "20": {
+      "cuts": 84,
+      "recoverable": 78,
+      "notRecoverable": [
+        485,
+        1512,
+        1664,
+        1665,
+        3908,
+        3909
+      ]
+    }
+  },
+  "sweep": [
+    {
+      "K": 1,
+      "arbitrated": 48,
+      "abstained": 9,
+      "untouched": 36,
+      "recovered": 26,
+      "corrected": 9,
+      "regressed": 10,
+      "errorP90": 0.009166882831712827,
+      "errorMax": 0.010335148532085725
+    },
+    {
+      "K": 2,
+      "arbitrated": 50,
+      "abstained": 7,
+      "untouched": 36,
+      "recovered": 27,
+      "corrected": 10,
+      "regressed": 10,
+      "errorP90": 0.009165759796789396,
+      "errorMax": 0.010335148532085725
+    },
+    {
+      "K": 3,
+      "arbitrated": 52,
+      "abstained": 5,
+      "untouched": 36,
+      "recovered": 29,
+      "corrected": 10,
+      "regressed": 10,
+      "errorP90": 0.009662850008129704,
+      "errorMax": 0.048261051492077656
+    },
+    {
+      "K": 5,
+      "arbitrated": 53,
+      "abstained": 4,
+      "untouched": 36,
+      "recovered": 30,
+      "corrected": 10,
+      "regressed": 10,
+      "errorP90": 0.010577110771158051,
+      "errorMax": 0.048261051492077656
+    },
+    {
+      "K": 10,
+      "arbitrated": 54,
+      "abstained": 3,
+      "untouched": 36,
+      "recovered": 31,
+      "corrected": 10,
+      "regressed": 10,
+      "errorP90": 0.012754770922808948,
+      "errorMax": 0.048261051492077656
+    }
+  ]
+}
