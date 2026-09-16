@@ -3,6 +3,8 @@
 **Destinataire : un assistant IA reprenant le projet à froid (ChatGPT ou autre).**
 **Date : 15 septembre 2026. État à la version 4.5.7.**
 **Auteur : Claude Opus 5, qui a mené les versions 4.5.0 à 4.5.7.**
+**Mis à jour le 16 septembre 2026 pour le lot V4.6.0 : moteur dégelé puis
+ré-épinglé, et deux modes de banc. Les sections concernées le disent.**
 
 Ce document est autoportant. Il contient le contexte, ce qui a été fait, ce qui a
 été mesuré, ce qui a échoué, et les règles à ne pas enfreindre. Les chiffres
@@ -83,7 +85,19 @@ l'identique et conserve l'empreinte 4.4.0 du moteur — un test vérifie ce poin
 précis, pour qu'elle ne puisse pas servir à assouplir le gel par la bande.
 
 Le banc doit rester vert : **339 tests au 15/09**, dont 201 hérités de la
-référence V4.5.
+référence V4.5. **378 après le lot V4.6.0.**
+
+### Deux modes de banc depuis V4.6.0
+
+`node tools/verify.cjs` s'exécute désormais entièrement depuis un clone GitHub
+propre. Les deux tests qui exigent le corpus Natif privé s'y **ignorent
+eux-mêmes**, avec leur raison, sans arrêter les contrôles d'empreintes et de
+baseline. Un test ignoré n'est pas un test réussi : `audit/verification.json`
+porte `benchMode`, `allTestsExecuted` et `nativeCorpus`.
+
+`node tools/verify.cjs --full` (ou `BANANE_BANC=full`) **exige** le corpus et
+refuse le moindre test ignoré. C'est le mode du poste de travail, et le seul qui
+autorise à annoncer un banc entièrement vert.
 
 ### Autres règles posées par Mic, toujours en vigueur
 

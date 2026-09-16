@@ -118,6 +118,26 @@ test('le mode Correction est retiré, mais ses données restent récupérables',
   await assert.rejects(()=>b.api(action),/Aucune session/,
    action+' doit rester disponible pour récupérer une session antérieure');
 });
+/* V4.6.0, revue Astra. La réciproque du test suivant : un lot en reprise
+ * manuelle est un LOT ACTIF, et le service worker le garantit lui-même. Ni un
+ * nouveau lot, ni le mode Natif ne prennent sa place — quoi que l'interface
+ * affiche, puisqu'un appel direct au service worker contourne l'interface. */
+test('a manual takeover holds the batch context against a new batch or native mode',async()=>{
+ const b=background();await b.api('connect',{tabId:1});b.adapter.noPoints=true;
+ await b.api('settings',{mode:'automatic-test'});
+ const depart=(await b.api('view')).current.identity;
+ await b.api('start',{part:depart.part,start:depart.cut,end:depart.cut+1,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt'});
+ // Le lot tourne en tâche de fond : on attend la pause sur rail non résolu.
+ let vue;for(let i=0;i<400&&(vue=await b.api('view')).batch?.state!=='PAUSED_UNRESOLVED_RAIL';i++)await new Promise(r=>setImmediate(r));
+ assert.equal(vue.batch.state,'PAUSED_UNRESOLVED_RAIL');
+ await b.api('manual-takeover');assert.equal((await b.api('view')).batch.state,'MANUAL_TAKEOVER');
+ await assert.rejects(()=>b.api('native-start'),/Reprise manuelle en cours/);
+ await assert.rejects(()=>b.api('start',{part:depart.part,start:depart.cut,end:depart.cut+1,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt'}),/Reprise manuelle en cours/);
+ assert.equal(b.adapter.calls.includes('nativeStart'),false);
+ assert.equal((await b.api('view')).batch.state,'MANUAL_TAKEOVER','le contexte du lot est intact');
+ // Arrêter reste la sortie disponible, côté service worker aussi.
+ await b.api('stop');assert.equal((await b.api('view')).batch.state,'STOPPED');
+});
 test('native mode excludes corrections and pilot commands while remaining command-free',async()=>{
  const b=background();await b.api('connect',{tabId:1});await b.api('native-start');
  await assert.rejects(()=>b.api('manual-start'),/mode Natif/);await assert.rejects(()=>b.api('settings',{mode:'automatic-test'}),/mode Natif/);

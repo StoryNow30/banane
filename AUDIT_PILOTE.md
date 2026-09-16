@@ -1,11 +1,10 @@
 # Audit du mode Pilote automatique
 
 Banc au moment de l'audit : **364 / 364**, `geometryUnchanged: true`, aucun
-fichier gelé modifié. Après V4.6.0 : **371 tests**, dont 369 verts sur un clone
-sans `datasets/native/` — les deux rouges sont ceux que cette exclusion
-provoque, inchangés (voir `datasets/native/README.md`). Le placement, les
-transformations et le lecteur LiDAR restent identiques à 4.4.0 ; le moteur est
-épinglé sur sa baseline V4.6.0.
+fichier gelé modifié. Après V4.6.0 : **378 tests**, dont 376 verts et 2 ignorés
+sur un clone sans `datasets/native/` — ignorés, pas réussis, et l'audit le dit
+(`benchMode: "partial"`). Le placement, les transformations et le lecteur LiDAR
+restent identiques à 4.4.0 ; le moteur est épinglé sur sa baseline V4.6.0.
 Corpus d'appui : **37 cycles de pilote réels** du 15/09, parts 6 et 31.
 
 Unités de scène ×10⁻³ pour les distances. Ce ne sont pas des millimètres.
@@ -334,8 +333,10 @@ reprise du lot au cut suivant. Cela demande de modifier la machine à états.
   `commandSent: false`, `serverConfirmed: false`, `afterObserved: false`,
   `usableForTraining: false`, `trainingExclusionReason:
   'operator-manual-completion'`. Banane n'a envoyé aucune commande sur ce cut et
-  ne prétend rien d'autre que ce qu'elle a vu : l'opérateur a déclaré, et le cut
-  affiché est bien le suivant ;
+  ne prétend rien d'autre que ce qu'elle a fait : **une lecture de l'identité
+  affichée au moment de la déclaration** — `identityReadAtDeclaration`,
+  `identityIsExpectedSuccessor`, `navigationObservedByBanane: false`. Elle n'a
+  pas vu l'opérateur naviguer, elle n'observait pas, et ne l'affirme donc pas ;
 - **n'inscrit pas le cut dans `processed`**, qui ne compte que les validations
   conduites par Banane — il est compté à part, dans `manuallyCompleted`, et le
   panneau l'affiche « repris à la main » ;

@@ -99,7 +99,14 @@ test('manual completion resumes the batch and never claims Banane validated the 
    serverConfirmed:r.serverConfirmed,navigationObserved:r.navigationObserved,validationProof:r.validationProof},
    {bananeValidated:false,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false,validationProof:'none'});
  assert.equal(r.usableForTraining,false);assert.equal(r.trainingExclusionReason,'operator-manual-completion');
- assert.equal(r.identity.cut,100);assert.equal(r.observedIdentityAtDeclaration.cut,101);
+ assert.equal(r.identity.cut,100);
+ /* Ce qui est consigné correspond exactement à ce qui est observé : UNE lecture
+  * de l'identité affichée au moment de la déclaration. Banane n'a pas vu
+  * l'opérateur naviguer et ne l'affirme pas. */
+ assert.equal(r.identityReadAtDeclaration.cut,101);
+ assert.equal(r.navigationObservedByBanane,false);assert.equal(r.identityIsExpectedSuccessor,true);
+ assert.equal(r.identityDifferedFromTakenCut,true);assert.equal(r.transitionAtDeclaration,'IMMEDIATE_SUCCESSOR_SAME_PAGE_AND_PART');
+ assert.equal(r.operatorNavigationObserved,undefined,'une observation de navigation qui n’a pas eu lieu ne doit plus être affirmée');
  // Le résumé de clôture ne compte pas ce cut comme une validation de Banane.
  const bilan=e.closureSummary();assert.equal(bilan.completed,1);assert.equal(bilan.manuallyCompleted,1);
  assert.equal(bilan.lastCompletedIdentity.cut,101);assert.equal(bilan.lastManuallyCompletedIdentity.cut,100);

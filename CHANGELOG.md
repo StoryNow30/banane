@@ -50,12 +50,61 @@ déclarée du moteur fait échouer le banc. Un test vérifie que cette baseline
 recopie les empreintes historiques à l'identique, pour qu'elle ne puisse pas
 servir à assouplir le gel par la bande.
 
-**Banc.** 371 tests. Sur un clone sans `datasets/native/`, 369 verts et les deux
-rouges habituels de cette exclusion. Les nouveaux tests couvrent : mono-cut,
+**Version.** La version produit passe à **4.6.0** partout où elle est une
+version runtime ou d'export : `src/core.js`, `manifest.json`, `panel.html`,
+`src/bridge.js`, le repli du service worker. Les enregistrements V4.6 ne sont
+plus estampillés 4.5.7.
+
+### Corrections demandées par la revue Astra
+
+**Récupération MV3 — un `validation-observation` ne vaut plus acceptation.** Cet
+événement est journalisé *avant* les contrôles d'acceptation. `Engine.init()`
+s'en servait pour recréditer `processed` après un redémarrage du service
+worker : une navigation inattendue, que le moteur venait de refuser, pouvait
+donc être comptée comme un cut traité. Le lot dispose maintenant d'un marqueur
+durable distinct, `validation-accepted`, émis une fois **tous** les contrôles
+passés — c'est le seul sur lequel `init()` crédite.
+
+Et quand la commande est partie sans être acceptée, il n'y a pas deux issues
+mais une seule : ni crédit, ni renvoi. La commande native est irréversible ; le
+lot se pose en `PAUSED_AFTER_STATE_MISSING` avec le code
+`VALIDATION_NOT_ACCEPTED_BEFORE_RESTART` et attend un contrôle dans ESV.
+
+Au passage : `batch.interrupted`, la liste des interruptions, était écrasée par
+un booléen à chaque redémarrage — le journal était perdu et `closureSummary`
+lisait 0. Le drapeau a désormais son propre champ, `interruptedByRestart`.
+
+**`MANUAL_TAKEOVER` est un lot actif.** Le cut est rendu à l'opérateur, mais le
+lot garde son contexte et reprendra : rien ne doit le remplacer. Ni un nouveau
+lot, ni le mode Natif, ni une analyse assistée — refus porté par le moteur et le
+service worker, pas par l'interface, puisqu'un appel direct au service worker la
+contourne. « Arrêter » redevient disponible pendant la reprise manuelle : c'est,
+avec « Repris manuellement », la seule sortie de cet état.
+
+**Banc exploitable depuis un clone propre.** Les deux tests qui exigent le
+corpus Natif privé s'ignorent eux-mêmes lorsqu'il est absent, au lieu de faire
+échouer le banc avant les contrôles d'empreintes. Un test ignoré n'est pas un
+test réussi : `audit/verification.json` porte `benchMode`, `allTestsExecuted`,
+`skippedForMissingCorpus` et `nativeCorpus`. `--full` (ou `BANANE_BANC=full`)
+exige le corpus et refuse le moindre test ignoré. Le contrôle de l'archive
+installable a été séparé de celui de l'archive source, de sorte qu'il s'exécute
+aussi sans le corpus.
+
+**Formulation `MANUAL_COMPLETION`.** `operatorNavigationObserved: true` est
+retiré : Banane n'observait pas l'opérateur naviguer et ne peut rien dire d'une
+navigation. Ce qui est consigné correspond à ce qui est fait — une lecture de
+l'identité affichée à la déclaration : `identityReadAtDeclaration`,
+`identityDifferedFromTakenCut`, `identityIsExpectedSuccessor`,
+`transitionAtDeclaration`, et `navigationObservedByBanane: false`.
+
+**Banc.** 378 tests. Sur un clone sans `datasets/native/` : 376 verts, 0 rouge,
+2 ignorés, et le banc va jusqu'au bout. Les tests couvrent : mono-cut,
 multi-cut, navigation absente, navigation attendue sans état final, navigation
-inattendue (saut, retour arrière, autre part, autre onglet) et reprise manuelle.
-Chacun a été vérifié non complaisant — ils échouent quand on retire le correctif
-qu'ils verrouillent.
+inattendue (saut, retour arrière, autre part, autre onglet), reprise manuelle,
+redémarrage après acceptation, redémarrage après refus, conservation du journal
+d'interruptions, lot actif en reprise manuelle (moteur et service worker) et
+détection du corpus. Chacun a été vérifié non complaisant — ils échouent quand
+on retire le correctif qu'ils verrouillent.
 
 ## 4.5.0 — 15 septembre 2026
 

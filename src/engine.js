@@ -24,13 +24,42 @@
       this.s.batch.state='PAUSED';this.s.batch.error.retryableCapture=true;
       this.s.notice='Lecture LiDAR interrompue conservée. Sur le même cut, clique sur Reprendre ; aucune capture à annuler.';
     }
-    if(this.s.batch&&['RUNNING','PAUSED'].includes(this.s.batch.state)){this.s.batch.state='PAUSED';this.s.batch.interrupted=true;}
+    /* `interrupted` est la LISTE des interruptions du lot. Elle était écrasée
+     * par un booléen à chaque redémarrage, ce qui perdait le journal et faisait
+     * lire 0 à `closureSummary`. Le drapeau a désormais son propre champ. */
+    if(this.s.batch&&['RUNNING','PAUSED'].includes(this.s.batch.state)){this.s.batch.state='PAUSED';this.s.batch.interruptedByRestart=true;}
     if(this.s.intent){this.s.reconcileRequired=true;this.s.notice='Action interrompue : état ESV à réconcilier avant toute nouvelle écriture.';}
     else if(this.s.batch&&this.s.applied){
-      const validation=this.s.events.slice().reverse().find(e=>e.type==='validation-observation'&&K.key(e.identity)===K.key(this.s.applied.identity));
-      if(validation&&this.s.batch.step==='validate'){
-        const k=K.key(validation.identity);if(!this.s.batch.processed.some(p=>p.key===k))this.s.batch.processed.push({key:k,cut:validation.identity.cut,evidence:validation.evidence,recovered:true});
+      /* V4.6.0, revue Astra. `validation-observation` est journalisé AVANT les
+       * contrôles d'acceptation : s'en servir pour créditer `processed` au
+       * redémarrage revenait à créditer une navigation inattendue que le moteur
+       * venait justement de refuser. Seul `validation-accepted`, émis une fois
+       * TOUS les contrôles passés, vaut acceptation durable pour le lot.
+       *
+       * Et quand la commande est partie sans être acceptée, il n'y a pas deux
+       * issues mais une seule : ni crédit, ni renvoi. La commande native est
+       * irréversible ; le lot s'arrête pour contrôle, comme il l'aurait fait
+       * sans l'interruption. */
+      const passees=this.s.events.slice().reverse(),cible=K.key(this.s.applied.identity);
+      const acceptee=passees.find(e=>e.type==='validation-accepted'&&K.key(e.identity)===cible);
+      const commandee=passees.find(e=>e.type==='validation-intent'&&K.key(e.identity)===cible);
+      if(this.s.batch.step==='validate'&&acceptee){
+        const k=acceptee.cutId||K.key(acceptee.identity);
+        if(!this.s.batch.processed.some(p=>p.key===k||p.key===K.key(acceptee.identity)))
+          this.s.batch.processed.push({key:k,identity:K.completeIdentity(acceptee.identity),cut:acceptee.identity.cut,
+            evidence:acceptee.evidence,recovered:true});
+        this.s.batch.lastCompletedIdentity=K.completeIdentity(acceptee.identity);
         this.s.batch.step='capture';this.s.applied=null;this.s.proposal=null;
+      }else if(this.s.batch.step==='validate'&&commandee){
+        this.s.batch.state='PAUSED_AFTER_STATE_MISSING';
+        this.s.batch.error={code:'VALIDATION_NOT_ACCEPTED_BEFORE_RESTART',step:'validate',timestamp:new Date().toISOString(),
+          message:'Commande de validation transmise, résultat non accepté avant le redémarrage.'};
+        if(!Array.isArray(this.s.batch.interrupted))this.s.batch.interrupted=[];
+        this.s.batch.interrupted.push({identity:K.completeIdentity(this.s.applied.identity),
+          status:'VALIDATION_NOT_ACCEPTED_BEFORE_RESTART',evidence:this.s.lastActionEvidence||null});
+        this.s.notice='Commande de validation transmise avant l’interruption, sans résultat accepté. Ce cut n’est ni compté ni retraité, et la commande ne sera pas renvoyée : contrôle-le dans ESV.';
+        await this.event('batch-validation-not-accepted-on-restart',{identity:this.s.applied.identity,
+          commandSent:true,accepted:false,counted:false,resent:false});
       }else if(this.s.batch.step==='apply')this.s.batch.step='validate';
     }
     await this.save();}return this.s;}
@@ -54,7 +83,7 @@
      proposal:this.s.proposal?K.clone(this.s.proposal):null,geominfo:this.s.before.geominfo||{status:'not-observed',raw:null,source:null},
      commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false,status:'incomplete-no-after',usableForTraining:false};
    this.s.incomplete.push(item);await this.store.putRecord(item);this.s.before=null;this.s.collection='IDLE';await this.event('capture-abandoned',{id:item.id,reason});}
-  async begin(){await this.observe();
+  async begin(){this.assertBatchContextFree('une nouvelle capture');await this.observe();
    if(this.s.collection==='STALE')await this.archivePending('target-changed');
    if(this.s.collection==='READY_FOR_AFTER')throw Error('Capture avant déjà ouverte : termine l’après ou annule.');
    if(this.s.collection==='BEFORE_CAPTURED'&&this.s.before){
@@ -88,6 +117,7 @@
   async standalone(){const now=await this.adapter.state(),data=await this.adapter.capture(now);await this.store.putCloud(data.captureId,data);
    this.s.lastLidarId=data.captureId;await this.event('lidar-exported',{identity:now.identity,lidarId:data.captureId});return data;}
   async analyze(){
+   this.assertBatchContextFree('une analyse assistée');
    if(this.s.collection!=='READY_FOR_AFTER')await this.begin();
    const now=await this.adapter.state();K.assertTarget(this.s.before.identity,now.identity);
    if(!K.equalPoses(this.s.before.rails,now.rails))throw Error('Les rails ont été modifiés après l’avant : enregistrer l’après ou annuler avant une nouvelle analyse.');
@@ -96,6 +126,17 @@
      geominfo:data.geominfo||now.geominfo||{status:'not-observed',raw:null,source:null},createdAt:new Date().toISOString()};
    this.s.notice='Propositions calculées. Confiance heuristique, non calibrée.';await this.event('proposed',{proposal:this.s.proposal});return this.s.proposal;}
   gate(){if(this.s.reconcileRequired||this.s.intent)throw Error('Réconciliation requise : aucune nouvelle écriture autorisée sur un état incertain.');}
+  /* V4.6.0, revue Astra. MANUAL_TAKEOVER est un LOT ACTIF : le cut est rendu à
+   * l'opérateur, mais le lot garde son contexte — cible, bornes, séquence — et
+   * reprendra au cut suivant. Rien ne doit le remplacer : ni un nouveau lot, ni
+   * le mode Natif, ni une analyse assistée. La garantie est ici, dans le
+   * moteur, pas dans l'interface : masquer un bouton n'empêche rien.
+   * Seuls « Repris manuellement » et « Arrêter » en sortent. */
+  batchHoldsContext(){return this.s.batch?.state==='MANUAL_TAKEOVER';}
+  assertBatchContextFree(what='cette action'){
+   if(!this.batchHoldsContext())return;
+   const cut=this.s.batch.manualTakeover?.identity?.cut??this.s.batch.activeIdentity?.cut;
+   throw Error(`Reprise manuelle en cours sur le cut ${cut} : ${what} remplacerait le contexte du lot. Déclare « Repris manuellement » pour reprendre, ou arrête le lot.`);}
   writable(identity){if((this.s.blockedTargets||[]).includes(K.key(identity)))throw Error('Ce cut a un résultat incertain archivé : aucune nouvelle écriture automatique dans cette page.');}
   async closeUncertain(){
    if(!this.s.reconcileRequired){this.s.notice='Aucun résultat incertain à clôturer. Vérifie les bornes et les paramètres du nouveau lot.';await this.save();return;}
@@ -210,10 +251,15 @@
     if(evidence.afterObserved!==true&&!acceptedOnNavigation){const error=Error('AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');
       error.code='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';error.transition=transition;throw error;}
     if(!evidence.serverConfirmed&&!scope.allowNavigationEvidence)throw Error('Navigation observée, confirmation serveur absente selon la politique choisie.');
-    if(acceptedOnNavigation){
+    if(acceptedOnNavigation)
       this.s.notice=`Cut ${now.identity.cut} : commande envoyée, navigation attendue vers ${transition.observed.cut} observée, état final non relu. Le lot avance sur la navigation ; ce cut n’est pas déclaré validé.`;
-      await this.event('validation-accepted-on-navigation',{identity:now.identity,nextIdentity:transition.observed,transition:transition.reason,
-        status:'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED',usableForTraining:false,serverConfirmed:false,validationProof:'navigation-only'});}
+    /* Le SEUL marqueur durable d'une action acceptée pour le lot, émis une fois
+     * tous les contrôles passés — jamais avant. `init()` ne crédite `processed`
+     * que sur lui : un `validation-observation`, journalisé plus haut quel que
+     * soit le verdict, ne vaut pas acceptation. */
+    await this.event('validation-accepted',{identity:now.identity,cutId:K.cutId(now.identity),action:'VALIDATE',
+      acceptedOnNavigationEvidence:acceptedOnNavigation,validationProof:evidence.validationProof,
+      transition:transition.reason,nextIdentity:transition.observed,evidence});
     return evidence;
    }catch(e){this.s.reconcileRequired=!outcomeObserved;await this.save();throw e;}}
   async exportReferences(){const data={format:'banane-manual-references-v3',version:K.VERSION,sessionId:this.s.sessionId,
@@ -221,6 +267,7 @@
    if(this.s.collection==='AFTER_CAPTURED')this.s.collection='EXPORTED';await this.save();return data;}
   async startBatch(scope){
    if(this.task||this.busy)throw Error('Une opération est déjà en cours.');
+   this.assertBatchContextFree('un nouveau lot');
    this.busy=true;try{
    if(this.s.mode!=='automatic-test')throw Error('Choisis Automatique TEST.');
    if(!scope.testConfirmed)throw Error('Le périmètre doit être déclaré TEST au lancement du lot.');
@@ -367,7 +414,14 @@
      decision:'MANUAL_COMPLETION',operatorDecision:'MANUAL_COMPLETION',decisionRule:'operator-declared-manual-completion-from-manual-takeover',
      provenance:'operator-in-esv',bananeValidated:false,commandSent:false,afterObserved:false,serverConfirmed:false,navigationObserved:false,
      afterStateStatus:'NOT_OBSERVED_BANANE_DID_NOT_ACT',status:'operator-manual-completion',validationProof:'none',
-     operatorNavigationObserved:true,observedIdentityAtDeclaration:K.completeIdentity(now.identity),
+     /* Ce qui est observé à la déclaration, et rien de plus : UNE lecture de
+      * l'identité affichée, faite à ce moment-là. Banane n'a pas vu l'opérateur
+      * naviguer — elle n'observait pas — et ne peut donc rien dire d'une
+      * navigation. Elle constate que l'identité lue diffère du cut rendu et
+      * qu'elle en est le successeur immédiat. `operatorNavigationObserved` a
+      * été retiré : il affirmait une observation qui n'a pas eu lieu. */
+     identityReadAtDeclaration:K.completeIdentity(now.identity),identityDifferedFromTakenCut:true,
+     identityIsExpectedSuccessor:true,transitionAtDeclaration:transition.reason,navigationObservedByBanane:false,
      usableForTraining:false,trainingExclusionReason:'operator-manual-completion',
      sequenceIndex:sequence.sequenceIndex??null,previousCutId:sequence.previousCutId??null,nextCutId:K.cutId(now.identity),
      takeoverStartedAt:origin.startedAt||null,declaredAt:new Date().toISOString()};
@@ -432,7 +486,7 @@
    const now=await this.adapter.state();if(now.identity.pageId!==this.s.batch.scope.pageId||now.identity.part!==this.s.batch.scope.part)throw Error('Contexte de lot changé : reprise refusée.');
    if(this.s.before)K.assertTarget(this.s.before.identity,now.identity);
    if(this.s.batch.step==='capture'&&this.s.before&&!K.equalPoses(this.s.before.rails,now.rails))throw Error('Rails modifiés depuis la lecture interrompue : capture initiale conservée.');
-   this.s.batch.state='RUNNING';this.s.batch.interrupted=false;this.s.batch.error=null;await this.save();this.launch();}
+   this.s.batch.state='RUNNING';this.s.batch.interruptedByRestart=false;this.s.batch.error=null;await this.save();this.launch();}
  }
  return {Engine};
 });

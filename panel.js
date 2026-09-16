@@ -100,7 +100,10 @@
          +'Le placement a probablement été appliqué, mais Banane ne compte jamais une réussite qu’il n’a pas vue. '
          +'Vérifie le cut dans ESV, puis clique sur Arrêter pour clore le lot.');
      button('start-batch',{disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
-     button('pause',{hidden:b?.state!=='RUNNING',disabled:working});button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR','MANUAL_TAKEOVER'].includes(b.state),disabled:working});
+     button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
+ * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
+ * dans un état dont rien ne le faisait sortir. */
+button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:working});
      button('resume',{hidden:!['PAUSED','STOPPED'].includes(b?.state),disabled:busy||active(s)});
      const actionable=b?.step==='apply'&&['unresolved-rail','low-confidence'].includes(b?.pauseReason);
      button('retry',{hidden:!actionable,disabled:busy||active(s)});

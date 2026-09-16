@@ -1,15 +1,15 @@
 {
-  "startedAt": "2026-09-15T19:47:15.507Z",
-  "finishedAt": "2026-09-15T19:47:59.078Z",
+  "startedAt": "2026-09-16T04:59:53.051Z",
+  "finishedAt": "2026-09-16T05:00:07.272Z",
   "node": "v22.22.2",
   "platform": "linux",
   "counts": {
-    "tests": 364,
+    "tests": 378,
     "suites": 0,
-    "pass": 364,
+    "pass": 376,
     "fail": 0,
     "cancelled": 0,
-    "skipped": 0,
+    "skipped": 2,
     "todo": 0
   },
   "files": [
@@ -22,6 +22,8 @@
     "tests/collecteur-injection.test.cjs",
     "tests/core.test.cjs",
     "tests/early-input.test.cjs",
+    "tests/engine-v46-restart.test.cjs",
+    "tests/engine-v46.test.cjs",
     "tests/engine.test.cjs",
     "tests/export-manifeste.test.cjs",
     "tests/gauge.test.cjs",
@@ -58,11 +60,11 @@
   ],
   "runtimeFilesSyntaxChecked": 29,
   "hashes": {
-    "manifest.json": "773dac87de11379bf8874ee0909e387ae67b98538a7b07699070684bbc967048",
-    "panel.html": "ecaf19d8397a237e52852a8c417a0ed9006ae83e2799564db96cfb2eebbb972d",
+    "manifest.json": "3aaf8e375157709fa1749046fb4cbe39b8bd35fb5c8548f2be663e2e8e85d139",
+    "panel.html": "af793922eaef37599b84b464df8057ca2f61df73dfd6612f6be9d7ae8e63b822",
     "panel.css": "250bea9c6f2f10b67a52fe19e1bff93b7a69bb191aff08022dbdbc07d23d2163",
-    "background.js": "861c1c2b6c118e61e7df56f3519cc5ff56063aaea312c33bc8acbcb132b12704",
-    "panel.js": "a9ffb2cd7a8317b79cfa127a209f6b798db7288f0847504c10d9bd829d008013",
+    "background.js": "46e7785b83490a71c8658814814692282cf79ced9c73fd867a52495b7dd8849f",
+    "panel.js": "b22b6a47265820e21d8528ab8c5c67a3fa0b36f4c8b699dfc664e7d91d1f3b30",
     "tools/offline-evaluate.cjs": "d8ea7e742dc32bfa0ea31cb0b85e24d5b55248ee37d02b60a8eb4bbfded2d538",
     "tools/native-offline-evaluate.cjs": "a46150cf9903608b0b723e2694877da4b7eb4ff76bcab385b6294d4ca4a7240d",
     "tools/audit-native-geometry.cjs": "6d7a00a4ad2a6bb881f76334e040811cd94616758decbcd010712c625839b3d8",
@@ -71,10 +73,10 @@
     "tools/native-fluidity.cjs": "2231ce6daf6de7b713f4ea71b3b48fb4eb55901fb9e1ef3bea9d07c65f8e355e",
     "src/adapter-page.js": "7a18aff53e0de726442306008a5713b2aa5ee1999ceb5afcb120fc9ff14e8c08",
     "src/brain.js": "bced4a7a8560afa7608f758d1735c5e12590c1c15de9c75a29d0c279a1102c4e",
-    "src/bridge.js": "0f68ad6202c879ac877c156acaeb1694faaa90dbbb1116071e51bba71b746aab",
-    "src/core.js": "6b85ad0194ee88bd11288107ab2262d128156c37d889e148610ce90befe47cb6",
+    "src/bridge.js": "b94fe4b0f94c22b723a4c132a15360b81e086d5068082e58bad9cc039b4125c2",
+    "src/core.js": "5b58ea2050364789a82e9b7f18da47c0c8982c05707ac84387ec0e753c8b3532",
     "src/early-input.js": "a3d90c794f9a82977218844f84baaf3c90b134e2f58067758d90d1a80a7344e8",
-    "src/engine.js": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
+    "src/engine.js": "84ef4f66eccc67e66a51fd3a30948a2acb7d61c5fbd6c0cb5293ba4afb0a3969",
     "src/gauge.js": "74e6018de224f7ed44f15888a07ae274f4563576b72c34e501d4d24f0899d6e3",
     "src/geometry-brain.js": "fb5a2a120e6e38025d239c896d33b40e93b33a8f25dbef26efc76c91c2ece430",
     "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
@@ -92,6 +94,34 @@
     "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
   },
   "geometryUnchanged": true,
+  "frozenSince440": [
+    "src/geometry.js",
+    "vendor/capture-core.js",
+    "vendor/lidar.js"
+  ],
+  "engineBaselineVersion": "4.6.0",
+  "engineMatchesBaseline": true,
+  "engineHash": "84ef4f66eccc67e66a51fd3a30948a2acb7d61c5fbd6c0cb5293ba4afb0a3969",
+  "engineHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
+  "benchMode": "partial",
+  "nativeCorpus": {
+    "directory": "datasets/native/reference/Banane",
+    "required": [
+      "banane-native-v4-1789117835514.json",
+      "banane-native-v4-1789120447962.json",
+      "banane-native-v4-1789125861104.json"
+    ],
+    "missing": [
+      "banane-native-v4-1789117835514.json",
+      "banane-native-v4-1789120447962.json",
+      "banane-native-v4-1789125861104.json"
+    ],
+    "present": false,
+    "mode": "partial",
+    "reason": "corpus Natif privé absent (datasets/native/) : test ignoré, pas réussi. Voir datasets/native/README.md."
+  },
+  "skippedForMissingCorpus": 2,
+  "allTestsExecuted": false,
   "browserExtensionLoad": "NOT_EXECUTED: management URL blocked",
   "browserUI": "NOT_EXECUTED: ERR_BLOCKED_BY_CLIENT",
   "realIndexedDB": "NOT_EXECUTED",
