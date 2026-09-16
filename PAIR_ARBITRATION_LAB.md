@@ -544,6 +544,70 @@ C'est un arbitrage réel, pas un choix évident : `lock` évite deux placements 
 mauvais, `pair-joint` répare trois placements très mauvais. **Le banc ne tranche
 pas.** Les deux artefacts sont livrés.
 
+### Pertes de couverture, par catégorie de cut
+
+La couverture ne veut pas dire la même chose selon que le moteur avait ou non
+placé les deux rails. Les 93 cuts de conception se scindent en **34 cuts que le
+moteur ne place pas** et **59 qu'il place déjà**.
+
+**Sur les 34 cuts que le moteur ne place pas** — c'est la couverture qui compte,
+puisque c'est là que la politique apporte quelque chose :
+
+| K | fine | `pair-joint` | `lock-resolved-rail` | cuts que `lock` décline en plus |
+|---:|---:|---:|---:|---|
+| 1 | 16 | 12 | **12** | — |
+| 2 | 20 | 16 | **15** | 1665 |
+| 3 | 26 | 20 | **18** | 1665, 9106 |
+| 5 | 29 | 28 | **26** | 1665, 9106 |
+| 10 | 30 | 30 | **28** | 1665, 9106 |
+
+Trois énoncés, tous vérifiés par test :
+
+1. **La couverture de `lock` est strictement incluse** dans celle de
+   `pair-joint` : elle ne place jamais un cut de plus.
+2. **Ce qu'elle décline en plus est exactement l'ensemble des cuts où
+   `pair-joint` déplaçait un rail déjà résolu** — 1665 et 9106. C'est la
+   définition du contrat, pas un résultat empirique.
+3. **Tous ces cuts-là ressortaient hors tolérance** sous `pair-joint` : 1665 à
+   12.75, 9106 à 48.26. **Aucune récupération sous tolérance n'est perdue, à
+   aucun K.**
+
+**La réciproque du point 3 est fausse, et il faut le dire.** Tous les placements
+hors tolérance ne disparaissent pas avec `lock` : le cut **1668** ressort à
+**10.34** dans les **deux** variantes, à K ≥ 3. Son erreur ne vient pas d'un rail
+déplacé mais de l'absence du bon placement parmi les candidats exposés —
+c'est la limite déjà identifiée au tour 1, que ni l'une ni l'autre variante ne
+corrige. Verrouiller le rail résolu supprime deux débordements sur trois, pas
+les trois.
+
+La perte de couverture de « famille seulement » face à la politique **fine**
+subsiste et reste celle du tour 2 : à K = 3, six cuts — 3174, 3175, 3176, 3179,
+5465, 9108 — que le fin atteignait entre 3.87 et 8.95. L'écart se referme
+entièrement à K = 10 (30 contre 30 pour `pair-joint`, 28 pour `lock`).
+
+**Sur les 59 cuts que le moteur place déjà**, `lock-resolved-rail` en arbitre
+**zéro**, à tous les K, par construction. Ce n'est pas une perte de couverture au
+sens où la politique laisserait un cut sans placement : le moteur en a déjà posé
+un. C'est le renoncement à toute correction — chiffré plus haut : les trois
+corrections matérielles.
+
+### Deux contrats, pas deux réglages
+
+Les deux variantes n'expriment pas deux valeurs d'un même paramètre, mais deux
+contrats différents sur ce que la politique a le droit de faire :
+
+| | `pair-joint` | `lock-resolved-rail` |
+|---|---|---|
+| **contrat** | la relation de paire arbitre le **couple** ; une décision moteur isolée peut être révisée si la paire la contredit | une décision moteur, même faible, n'est **jamais** révisée ; la politique ne parle que là où le moteur s'est tu |
+| **peut réparer** | un mauvais placement moteur (5123, 6576, 9041) | rien |
+| **peut abîmer** | un rail que le moteur avait bien résolu (9106, `lossRatio` 11.55) | rien |
+| **couverture** | plus large de 2 cuts au plus | strictement incluse |
+
+Choisir entre elles, c'est choisir **si Banane est autorisée à contredire le
+moteur sur un rail qu'il a résolu**. Cette question ne se tranche pas par un
+comptage sur 93 cuts : elle relève de la revue et de l'exploitation. Les deux
+artefacts sont donc figés et livrés côte à côte, et le banc n'en désigne aucun.
+
 ## Terminologie corrigée
 
 Ne subsiste plus, ni dans le code ni ici, la formule « le moteur avait déjà

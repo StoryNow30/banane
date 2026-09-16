@@ -291,6 +291,47 @@ test('sous lock-resolved-rail, un cut sans rail abstenu n’est pas arbitrable',
   assert.equal(s.arbitratedApplied,0,`K=${s.K}`);
 });
 
+test('la perte de couverture de lock : ce qu’elle est, et ce qu’elle n’est pas',()=>{
+ const abstenus=rows.filter(r=>!r.reserved&&!L.engineApplies(r));
+ assert.equal(abstenus.length,34);
+ const horsTol=(r,d)=>{const e=L.measure(r,d.left,d.right);return e!==null&&e>L.TOLERANCE_ORACLE;};
+ for(const K of [1,2,3,5,10]){
+  const arb=v=>new Set(abstenus.filter(r=>
+    L.decideFamily(r,rows,{R:5,K,variant:v}).decision==='arbitrée').map(r=>r.cut));
+  const p=arb('pair-joint'),l=arb('lock-resolved-rail');
+  // 1. la couverture de lock est strictement incluse : elle ne place jamais un cut de plus
+  assert.deepEqual([...l].filter(c=>!p.has(c)),[],`K=${K} : lock ne doit rien couvrir en plus`);
+  const declines=[...p].filter(c=>!l.has(c)).sort((a,b)=>a-b);
+  /* 2. ce qu'elle décline en plus est EXACTEMENT l'ensemble des cuts où la
+   *    décision de pair-joint déplaçait un rail déjà résolu — c'est la
+   *    définition même du contrat, pas un résultat. */
+  const deplaces=[...p].filter(c=>{
+   const r=rows.find(x=>x.cut===c);
+   return L.resolvedRailsMoved(r,L.decideFamily(r,rows,{R:5,K,variant:'pair-joint'})).length>0;
+  }).sort((a,b)=>a-b);
+  assert.deepEqual(declines,deplaces,`K=${K} : lock décline exactement les rails résolus déplacés`);
+  /* 3. et TOUS ces cuts-là ressortaient hors tolérance sous pair-joint. La
+   *    réciproque est FAUSSE : le cut 1668 est hors tolérance à K≥3 et lock le
+   *    place quand même — son erreur ne vient pas d'un rail déplacé mais de
+   *    l'absence du bon placement parmi les candidats exposés. */
+  for(const c of declines){
+   const r=rows.find(x=>x.cut===c);
+   assert.ok(horsTol(r,L.decideFamily(r,rows,{R:5,K,variant:'pair-joint'})),
+     `K=${K} cut ${c} : un cut décliné par lock devrait être hors tolérance sous pair-joint`);
+  }
+ }
+ // le contre-exemple, nommément : 1668 hors tolérance des deux côtés, à l'identique
+ const r1668=rows.find(r=>r.cut===1668);
+ for(const v of L.VARIANTS){
+  const d=L.decideFamily(r1668,rows,{R:5,K:3,variant:v});
+  assert.equal(d.decision,'arbitrée',`${v} : 1668 doit rester arbitré`);
+  assert.ok(horsTol(r1668,d),`${v} : 1668 doit ressortir hors tolérance`);
+  assert.deepEqual(L.resolvedRailsMoved(r1668,d),[],'1668 ne déplace aucun rail résolu');
+ }
+ // et sur les 59 cuts que le moteur place déjà, lock n'en arbitre aucun
+ assert.equal(rows.filter(r=>!r.reserved&&L.engineApplies(r)).length,59);
+});
+
 test('la comparaison des deux variantes est livrée entière, gains ET pertes',()=>{
  const pj=L.sweep(rows,5,[1,2,3,5,10],L.familyDecider('pair-joint'));
  const lk=L.sweep(rows,5,[1,2,3,5,10],L.familyDecider('lock-resolved-rail'));
