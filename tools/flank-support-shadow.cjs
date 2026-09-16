@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* Flank Support Shadow V1.1 — instrumentation HORS LIGNE, LECTURE SEULE.
+/* Flank Support Shadow V1.2 — instrumentation HORS LIGNE, LECTURE SEULE.
  *
  * Objet : étudier les abstentions du moteur gelé dont le SEUL motif est
  * « Flanc interne insuffisamment observé. ». Ce fichier n'est pas une politique,
@@ -63,6 +63,22 @@
  *   4. `pointsUsed`. V1 le laissait à `null` et rangeait à tort le compte de
  *      points RETENUS sous `pointsInCapture`. V1.1 sépare les deux : les points
  *      réellement fournis au moteur, et ceux qu'il retient après filtrage.
+ *
+ * V1.2 — correction causale minimale. AUCUN résultat géométrique ne change.
+ *
+ *   Une ligne d'une tranche dégradée garde ses données descriptives et son
+ *   post-hoc — on ne jette rien — mais son histoire causale devient NON
+ *   ADMISSIBLE, et elle ne peut plus servir d'ancre à une analyse dite propre.
+ *   Les compteurs sont publiés DEUX FOIS : descriptifs complets, puis
+ *   `causal-clean` seuls. Une tranche dégradée ne peut pas contaminer une
+ *   statistique d'ancre en se glissant dans le passé d'une autre ligne.
+ *
+ *   La dégradation est donc désormais calculée AVANT l'histoire causale. Elle ne
+ *   lit ni valeur humaine ni géométrie : uniquement les métadonnées d'export.
+ *   Les lignes antérieures à la frontière conservent exactement leur histoire
+ *   V1.1 — propriété vérifiée par test, et vraie par construction puisqu'une
+ *   ligne dégradée a toujours un `visitIndex` supérieur à la frontière et ne
+ *   peut donc jamais précéder une ligne admissible.
  */
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const C = require('../vendor/capture-core.js');
@@ -233,9 +249,9 @@ function decisionFeatures(r, side, visit) {
  * AUCUNE FENÊTRE MAXIMALE N'EST CHOISIE. Les écarts sont exposés ; les valeurs
  * 1/2/3/5/10/20/40 déjà regardées sont du développement, pas des seuils.
  */
-function causalHistory(row, all) {
+function causalHistory(row, all, { pool = null } = {}) {
   const k = row.decisionFeatures;
-  const past = all.filter(o =>
+  const past = (pool ?? all).filter(o =>
     o.decisionFeatures.sessionId === k.sessionId &&
     o.decisionFeatures.target.pageId === k.target.pageId &&
     o.decisionFeatures.target.frameId === k.target.frameId &&
@@ -480,6 +496,41 @@ function applyDegradation(rows, boundaries) {
   }
 }
 
+/**
+ * Admissibilité causale — V1.2.
+ *
+ * Une ligne dont `degradation.excludedFromCausalAnalysis` est vrai reste
+ * DÉCRITE : ses features, son histoire descriptive et son post-hoc sont
+ * conservés à l'identique. Mais :
+ *
+ *   · son `causalHistory.admissible` passe à faux ;
+ *   · elle n'entre dans aucune statistique d'ancre « propre » ;
+ *   · elle ne peut servir d'ancre à AUCUNE ligne dans l'analyse propre.
+ *
+ * L'analyse propre est calculée sur un vivier restreint, et non en filtrant
+ * après coup : un passé dégradé ne peut donc pas s'y glisser.
+ *
+ * Les lignes admissibles retrouvent exactement leur histoire V1.1, parce qu'une
+ * ligne dégradée a par construction un `visitIndex` postérieur à la frontière
+ * et ne pouvait donc déjà pas les précéder. Vérifié par test, pas supposé.
+ */
+function applyCausalAdmissibility(rows) {
+  const clean = rows.filter(r => r.degradation.excludedFromCausalAnalysis !== true);
+  for (const row of rows) {
+    const admissible = row.degradation.excludedFromCausalAnalysis !== true;
+    row.causalHistory.admissible = admissible;
+    row.causalHistory.admissibility = admissible
+      ? { status: 'causal-clean', slice: row.degradation.slice }
+      : { status: 'excluded-degraded-slice', slice: row.degradation.slice,
+          note: 'ligne conservée et décrite, mais retirée de l’analyse causale et '
+              + 'interdite comme ancre d’une analyse propre' };
+    row.causalHistory.clean = admissible
+      ? causalHistory(row, rows, { pool: clean })
+      : { anchorFound: false, reason: 'ligne-non-admissible', candidatesConsidered: 0, anchor: null };
+    delete row.causalHistory.clean.admissible;
+  }
+}
+
 /* ------------------------------------------------------------------ pilote */
 
 /**
@@ -582,12 +633,15 @@ function buildCorpus(dir, name) {
     byKey.set(`${visit.sessionId}|${visit.visitId}|${side}`, row);
     poses.set(row, { visit, rail: r.rail ?? null });
   }
+  /* La dégradation est établie AVANT l'histoire causale : elle ne lit que des
+   * métadonnées d'export, donc aucune information géométrique ni humaine. */
+  const boundaries = degradationBoundaries(corpus.exports);
+  applyDegradation(rows, boundaries);
   for (const row of rows) {
     row.causalHistory = causalHistory(row, rows);
     row.oppositeRailContext = oppositeRailContext(row, byKey);
   }
-  const boundaries = degradationBoundaries(corpus.exports);
-  applyDegradation(rows, boundaries);
+  applyCausalAdmissibility(rows);
   /* --- frontière : l'humain entre seulement maintenant --- */
   for (const row of rows) {
     const { visit, rail } = poses.get(row);
@@ -651,6 +705,20 @@ function summarise(rows, boundaries) {
       oppositeState: tally(flank, r => r.oppositeRailContext.state),
       postHoc: postHocCounters(flank),
     },
+    /* V1.2 — les DEUX jeux, côte à côte. Le second ne corrige pas le premier :
+     * il répond à une autre question, sur un sous-ensemble admissible. */
+    causalAnchors: {
+      descriptive: { rails: rows.length, flankOnly: flank.length,
+                     anchorFound: tally(flank, r => r.causalHistory.anchorFound) },
+      causalClean: (() => {
+        const cr = rows.filter(r => r.causalHistory.admissible);
+        const cf = cr.filter(r => r.population === 'flank-only');
+        return { rails: cr.length, flankOnly: cf.length,
+                 anchorFound: tally(cf, r => r.causalHistory.clean.anchorFound),
+                 excludedRails: rows.length - cr.length,
+                 excludedFlankOnly: flank.length - cf.length };
+      })(),
+    },
     flankWithOthers: { rails: rows.filter(r => r.population === 'flank-with-others').length },
     engineCandidate: { rails: rows.filter(r => r.population === 'engine-candidate').length },
     noCandidate: { rails: rows.filter(r => r.population === 'no-candidate').length },
@@ -701,7 +769,7 @@ function main() {
   const built = dirs.map(d => buildCorpus(d.dir, d.name));
   const combined = combine(built);
   const body = {
-    format: 'banane-flank-support-shadow-v1.1',
+    format: 'banane-flank-support-shadow-v1.2',
     nature: 'instrumentation hors ligne, lecture seule — aucune politique, aucun seuil, aucune règle',
     studiedAbstention: FLANK_REASON,
     engine: { version: '4.6.0', geometryMethod: G.DEFAULTS.method, parameters: G.DEFAULTS,
@@ -760,6 +828,6 @@ function main() {
 module.exports = { FLANK_REASON, TOLERANCE_ORACLE, DEGRADED_SESSIONS, OPPOSITE_STATES,
                    exactSnapshot, replayRailExact, population, decisionFeatures, causalHistory,
                    oppositeRailContext, postHocEvaluation, reliableObservation, classifyExport, exportLoss,
-                   degradationBoundaries, applyDegradation, readCorpus, readVisitsOf, buildCorpus,
+                   degradationBoundaries, applyDegradation, applyCausalAdmissibility, readCorpus, readVisitsOf, buildCorpus,
                    combine, postHocCounters, summarise, norm, mag };
 if (require.main === module) main();

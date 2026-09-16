@@ -10,6 +10,7 @@ const F = require('../tools/flank-support-shadow.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
 const A = JSON.parse(fs.readFileSync(path.join(ROOT, 'audit/flank-support-shadow-v1.json')));
+assert.equal(A.format, 'banane-flank-support-shadow-v1.2');
 const ROWS = A.rows;
 const FLANK = ROWS.filter(r => r.population === 'flank-only');
 const CORPUS = n => A.corpora.find(c => c.name === n);
@@ -124,9 +125,87 @@ test('l’ancre est bien la plus RÉCENTE antérieure, et le calcul est reproduc
   const byKey = new Map();
   for (const r of ROWS) byKey.set(`${r.decisionFeatures.sessionId}|${r.decisionFeatures.visitId}|${r.decisionFeatures.side}`, r);
   for (const r of ROWS.slice(0, 400)) {
-    assert.deepEqual(F.causalHistory(r, ROWS), r.causalHistory);
+    /* V1.2 ajoute `admissible`, `admissibility` et `clean` par-dessus l'histoire
+     * DESCRIPTIVE. C'est cette dernière qui doit rester purement reproductible. */
+    const { admissible, admissibility, clean, ...descriptive } = r.causalHistory;
+    assert.deepEqual(F.causalHistory(r, ROWS), descriptive);
     assert.deepEqual(F.oppositeRailContext(r, byKey), r.oppositeRailContext);
   }
+});
+
+/* ---- V1.2 : admissibilité causale ---------------------------------------- */
+
+test('une ligne d’une tranche dégradée est décrite mais NON admissible', () => {
+  const degradees = ROWS.filter(r => r.degradation.excludedFromCausalAnalysis === true);
+  assert.equal(degradees.length, 288);
+  for (const r of degradees) {
+    assert.equal(r.causalHistory.admissible, false);
+    assert.equal(r.causalHistory.admissibility.status, 'excluded-degraded-slice');
+    // ses données descriptives et son post-hoc sont CONSERVÉS : on ne jette rien
+    assert.ok(r.decisionFeatures, 'les features restent');
+    assert.ok(r.postHocEvaluation, 'le post-hoc reste');
+    assert.ok('anchorFound' in r.causalHistory, 'l’histoire descriptive reste');
+    // mais elle n'a aucune ancre propre
+    assert.equal(r.causalHistory.clean.anchorFound, false);
+    assert.equal(r.causalHistory.clean.reason, 'ligne-non-admissible');
+  }
+  for (const r of ROWS) if (r.degradation.excludedFromCausalAnalysis !== true)
+    assert.equal(r.causalHistory.admissible, true);
+});
+
+test('aucune ligne dégradée ne sert d’ancre à une analyse propre', () => {
+  const degradees = new Set(ROWS.filter(r => r.causalHistory.admissible === false)
+    .map(r => `${r.decisionFeatures.sessionId}|${r.decisionFeatures.visitId}|${r.decisionFeatures.side}`));
+  assert.ok(degradees.size > 0);
+  for (const r of ROWS) {
+    const c = r.causalHistory.clean;
+    if (!c.anchorFound) continue;
+    const k = `${r.decisionFeatures.sessionId}|${c.anchor.visitId}|${r.decisionFeatures.side}`;
+    assert.ok(!degradees.has(k),
+      `ancre propre issue d’une tranche dégradée : ${r.decisionFeatures.target.cut}`);
+  }
+});
+
+test('les lignes antérieures à la frontière gardent EXACTEMENT leur histoire V1.1', () => {
+  /* Propriété vraie par construction — une ligne dégradée a toujours un
+   * visitIndex supérieur à la frontière, donc ne peut précéder une ligne
+   * admissible — et vérifiée ici plutôt que supposée. */
+  let verifiees = 0;
+  for (const r of ROWS) {
+    if (!r.causalHistory.admissible) continue;
+    const { admissible, admissibility, clean, ...descriptive } = r.causalHistory;
+    assert.deepEqual(clean, descriptive,
+      `l’ancre propre diffère de l’ancre descriptive (cut ${r.decisionFeatures.target.cut})`);
+    verifiees++;
+  }
+  assert.equal(verifiees, 4042);
+  // et aucune ligne admissible n'a un visitIndex postérieur à sa frontière
+  for (const r of ROWS) {
+    const b = r.degradation.lastLosslessVisitIndex;
+    if (b === null || !r.causalHistory.admissible) continue;
+    assert.ok(r.decisionFeatures.visitIndex <= b);
+  }
+});
+
+test('les compteurs descriptifs et causal-clean sont publiés SÉPARÉMENT', () => {
+  for (const s of [...A.corpora.map(c => c.summary), A.combinedDay.summary]) {
+    assert.ok(s.causalAnchors.descriptive && s.causalAnchors.causalClean);
+    const d = s.causalAnchors.descriptive, c = s.causalAnchors.causalClean;
+    assert.equal(c.rails, d.rails - c.excludedRails);
+    assert.equal(c.flankOnly, d.flankOnly - c.excludedFlankOnly);
+    // le jeu propre ne peut jamais compter PLUS d'ancres que le descriptif
+    assert.ok((c.anchorFound.true ?? 0) <= (d.anchorFound.true ?? 0));
+  }
+  // le corpus historique n'a aucune tranche dégradée : les deux jeux coïncident
+  const h = HIST.summary.causalAnchors;
+  assert.equal(h.causalClean.excludedRails, 0);
+  assert.deepEqual(h.causalClean.anchorFound, h.descriptive.anchorFound);
+  // le corpus final en a : les deux jeux diffèrent, et c'est le but
+  const f = FINAL.summary.causalAnchors;
+  assert.equal(f.causalClean.excludedRails, 288);
+  assert.equal(f.causalClean.excludedFlankOnly, 1);
+  assert.equal(f.descriptive.anchorFound.true, 87);
+  assert.equal(f.causalClean.anchorFound.true, 86);
 });
 
 test('aucun candidat n’est créé : trois familles, composante x nulle', () => {

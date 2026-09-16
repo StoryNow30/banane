@@ -1,4 +1,4 @@
-# Flank Support Shadow V1.1 — instrumentation hors ligne
+# Flank Support Shadow V1.2 — instrumentation hors ligne
 
 Lot séparé, **lecture seule**. Aucun changement runtime, `geometry.js`, moteur,
 Brain, Pair Arbitration, seuil, politique ou paramètre. Aucun seuil n'est choisi,
@@ -154,6 +154,43 @@ des 679 visites. Vérifié ligne à ligne contre l'artefact V1 : **0 ligne
 divergente** sur population, candidats, verdict post-hoc et histoire causale.
 Figé par test.
 
+## V1.2 — correction causale minimale
+
+Aucun résultat géométrique ne change. Une ligne dont
+`degradation.excludedFromCausalAnalysis` est vrai :
+
+- **garde** ses données descriptives et son post-hoc — on ne jette rien ;
+- voit son `causalHistory.admissible` passer à **faux**, avec le motif
+  `excluded-degraded-slice` ;
+- n'entre dans **aucune** statistique d'ancre « propre » ;
+- ne peut servir d'ancre à **aucune** ligne de l'analyse propre — celle-ci est
+  calculée sur un vivier restreint, et non filtrée après coup, de sorte qu'un
+  passé dégradé ne puisse pas s'y glisser.
+
+La dégradation est donc désormais établie **avant** l'histoire causale. Elle ne
+lit que des métadonnées d'export : ni géométrie, ni valeur humaine.
+
+### Compteurs publiés séparément
+
+| | descriptif | causal-clean |
+|---|---|---|
+| **historical-original** | 1 358 rails, 169 flank-only, 152 ancres | **identique** — 0 exclu |
+| **final-complementary** | 2 972 rails, 114 flank-only, 87 ancres | 2 684 rails, 113 flank-only, **86** ancres — 288 exclus, dont 1 flank-only |
+| **combined-day** | 4 330 rails, 283 flank-only, 239 ancres | 4 042 rails, 282 flank-only, **238** ancres |
+
+Le second jeu ne corrige pas le premier : il répond à une autre question, sur un
+sous-ensemble admissible.
+
+### Les lignes antérieures à la frontière sont intactes
+
+Vérifié, pas supposé : sur les **4 330** lignes, l'histoire causale descriptive
+est **identique à V1.1**, 0 divergente. Et pour les **4 042** lignes admissibles,
+l'ancre propre **égale** l'ancre descriptive.
+
+C'est vrai par construction — une ligne dégradée a toujours un `visitIndex`
+supérieur à la frontière, donc ne peut jamais précéder une ligne admissible — et
+la propriété est verrouillée par test plutôt que laissée à la démonstration.
+
 ## Artefacts et reproduction
 
 - `tools/flank-support-shadow.cjs` — le banc ;
@@ -163,10 +200,10 @@ Figé par test.
 - `tests/flank-support-shadow.test.cjs` — tests, qui ne relisent jamais les
   collectes.
 
-- `tests/flank-support-shadow.test.cjs` — **20 tests**.
+- `tests/flank-support-shadow.test.cjs` — **24 tests**.
 
 Empreinte du contenu, horodatage exclu, **deux exécutions donnent la même** :
-`0e15a913a2fe4c3b3ca724abfe51872fe57b4c0db2f97e43efc418c166c0bee4`.
+`676305a74cbfe06701ec03222f70c09f208008f1ca8ac9b0330e3b95e5121cd4`.
 
 ```bash
 node tools/flank-support-shadow.cjs \
