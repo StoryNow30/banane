@@ -5,6 +5,9 @@ Git stores the sidecar as ordered fragments:
   benchmark.json.gz.b64.part001, part002, …
 because a single 178 KiB POST does not go through the connector.
 
+Fragments are concatenated in name order. Newlines (Git EOF) are
+ignored; they are not part of the payload.
+
 The inflated file MUST hash to:
   3a700609dc264e2df8eae515ff9289a834c402023b4d80f222f32f60d0326ecf
 """
@@ -28,7 +31,8 @@ def sidecar_text() -> str:
 
 def main():
     out_path = HERE / "benchmark.json"
-    raw = base64.b64decode(sidecar_text().strip())
+    text = sidecar_text().replace("\r", "").replace("\n", "")
+    raw = base64.b64decode(text)
     data = gzip.decompress(raw)
     digest = hashlib.sha256(data).hexdigest()
     if digest != EXPECTED:
