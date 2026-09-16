@@ -1,82 +1,80 @@
 # Pair Lab V1
 
-Banc hors ligne. Il mesure une seule grandeur de **paire**, parce que le contrôle
+Banc hors ligne. Il mesure une grandeur de **paire**, parce que le contrôle
 rail par rail a manqué le défaut vu à l’œil sur le cut 6/9480.
 
-## Grandeur
+## Grandeurs — pas de repli silencieux
 
-`pairOriginDistance` : distance euclidienne entre les origines de profil
-gauche et droite, dans le repère de scène exporté.
+Deux métriques distinctes. L’une n’est jamais substituée à l’autre.
 
-- ce n’est **pas** l’écartement ESV ;
-- ce n’est **pas** une valeur en millimètres certifiés ;
-- le facteur ×10³ est une échelle d’affichage, identique à celle déjà utilisée
-  dans `AUDIT_PILOTE.md` ;
-- aucune cible n’est imposée, y compris 1436 ;
-- aucun seuil, aucun SKIP, aucun entraînement, aucune commande ESV.
+| nom | champ lu | rôle |
+|---|---|---|
+| `pairProfileOriginDistance` | `profileOriginSceneRelative` uniquement | **canonique** |
+| `pairRailPositionDistance` | `positionSceneRelative` uniquement | secondaire |
 
-Les origines lues sont `profileOriginSceneRelative` si elle existe, sinon
-`positionSceneRelative`.
+Si le champ canonique manque, la mesure canonique vaut `unavailable`
+(`profileOriginSceneRelative-missing`). Aucun fallback.
 
-Quatre séries, quand les poses existent :
+Ce n’est **pas** l’écartement ESV. Les unités sont des unités de scène. Le
+facteur ×10³ est une échelle d’affichage. Aucune cible, y compris 1436.
+Aucun seuil, aucun SKIP, aucun entraînement, aucune commande ESV.
+
+## Séries
 
 | série | source |
 |---|---|
 | `initial` | origines avant geste |
 | `human` | origines après correction humaine |
-| `engine` | origines obtenues en appliquant les deltas du moteur **gelé** aux poses initiales |
-| `brain` | même chose après le post-traitement du cerveau, sans modifier `src/brain.js` |
+| `engineFrozen` | deltas du moteur **gelé** (`src/geometry.js`) appliqués aux poses initiales |
+| `brainOfflineReplayV1Forced` | post-traitement V1 hors ligne, cerveau **forcé** actif, paramètres `AJUSTE` |
 
-Le cerveau n’invente pas de candidat. S’il s’abstient, la colonne `brain`
-reprend la paire moteur ou reste indisponible.
+`brainOfflineReplayV1Forced` n’est **pas** le comportement runtime : au
+runtime le cerveau est éteint par défaut et la sélection peut être coupée.
+Le banc appelle `geometry-brain.js` avec `actif: true` et les mêmes
+paramètres uniquement dans un test d’identité.
+
+La correction humaine n’entre jamais dans l’entrée du moteur.
 
 ## Témoin obligatoire — part 6 / cut 9480
 
-Fait rapporté (défaut 7 d’`AUDIT_PILOTE.md`), pas un rejeu local : le JSON de
-cette visite n’est pas dans le dépôt.
+Statut : `reported-not-replayed`. La formule Pair Lab **ne prétend pas**
+reproduire ces trois chiffres tant que les origines brutes manquent.
 
-| source | pairOriginDistance ×10³ |
+| source | valeur rapportée ×10³ |
 |---|---:|
 | initial ESV | 1499,93 |
 | Banane observée | 1517,73 |
-| moteur gelé seul | 1518,19 |
+| moteur gelé | 1518,19 |
 
-Banane et le moteur gelé **augmentent** la distance de paire. Sur d’autres
-parts, la correction humaine **resserre** fortement la dispersion de cette
-même grandeur. Ces deux observations ne sont pas encore une règle.
+## Couverture par source
 
-## Chiffres humains rapportés, non recalculés ici
+Pour `banane-corrections-session-v4` :
 
-Tant que les JSON Natif / corrections correspondants ne sont pas passés au
-banc :
+- jointure `record.lidarCaptureId → cloud.captureId`, sinon `visitId` ;
+- si une capture LiDAR est jointe : rejeu `Geometry.proposeBoth` sur
+  l’initial + le nuage, jamais sur `corrected` ;
+- si le LiDAR manque : `engineFrozen` et `brainOfflineReplayV1Forced`
+  restent `unavailable`.
 
-- parts 17/20 (n rapporté = 211 cuts sur plusieurs parts, détail 17/20) :
-  avant ≈ 1482,85 ± 35,79 ; après humain ≈ 1437,07 ± 5,20
-- part 6 : avant ≈ 1438,71 ± 27,10 ; après humain ≈ 1435,99 ± 3,85
+Pour `banane-offline-evaluation-v1` : les propositions déjà stockées sont
+relues telles quelles.
 
-Le banc les recopie comme `reported-not-recomputed`. Dès qu’un fichier
-`banane-corrections-session-v4` ou `banane-offline-evaluation-v1` est fourni,
-il **calcule** initial / humain / moteur / cerveau et agrège **par part**.
+## Associations descriptives
 
-## Pouvoir prédictif
+Pas un « pouvoir prédictif ».
 
-Question posée, pas tranchée : `pairOriginDistance` sépare-t-il les mauvaises
-propositions mieux que l’erreur rail à rail ?
+Descripteurs calculables **avant** la finale humaine :
 
-Le banc publie seulement :
+- variation de paire initial → moteur ;
+- valeur absolue de cette variation.
 
-- la moyenne (moteur − humain) de la paire ;
-- le Pearson entre `|paire moteur − paire humaine|` et le max des erreurs rail
-  déjà calculées par le rejeu hors ligne, quand il est fourni ;
-- le Pearson entre `|paire initiale − paire humaine|` et la même erreur rail.
-
-n < 3 ⇒ corrélation `null`, jamais une valeur inventée. Une corrélation nulle
-n’autorise aucun seuil.
+L’erreur finale n’entre ensuite que comme comparateur (Pearson si n ≥ 3,
+sinon `null`). Aucun seuil.
 
 ## Reproduire
 
 ```bash
-node --test tests/pair-lab.test.cjs
+node --test tests/pair-lab.test.cjs tests/pair-lab.integration.test.cjs
 
 node tools/pair-lab.cjs \
   --out audit/pair-lab-v1.json \
@@ -88,14 +86,13 @@ node tools/pair-lab.cjs \
   --markdown audit/pair-lab-v1.md
 ```
 
-Sans fichier d’entrée, le rapport contient le témoin 6/9480 et les séries
-humaines rapportées. Avec l’évaluation hors ligne V4.3, le moteur et le
-cerveau sont recalculés sur les poses initiales déjà stockées — le fichier
-`src/geometry.js` n’est pas modifié.
+Les JSON de corrections parts 17 et 20 seront passés au banc **après** cette
+correction de méthodologie.
 
 ## Hors périmètre V1
 
-- lire l’écartement affiché par ESV (toujours `KI-001`) ;
+- lire l’écartement affiché par ESV (`KI-001`) ;
 - brancher une contrainte de paire dans le moteur ou le cerveau ;
 - régler quoi que ce soit sur le jeu réservé 9031–9047 ;
-- appeler les unités de scène des millimètres.
+- appeler les unités de scène des millimètres ;
+- prétendre que la formule courante reproduit le témoin 6/9480.

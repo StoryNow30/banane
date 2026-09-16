@@ -3,42 +3,55 @@
  if(typeof module==='object')module.exports=api;else root.BananePairOriginDistance1=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- /* Pair Lab V1 — grandeur mesurée : distance euclidienne entre les origines
-  * de profil des deux rails, dans le repère de scène exporté.
+ /* Pair Lab V1 — deux grandeurs distinctes, aucune substitution silencieuse.
   *
-  * Ce n'est PAS l'écartement ESV. Aucune équivalence n'est affirmée.
-  * Les unités sont des unités de scène. Elles ne sont pas appelées millimètres :
-  * physicalCalibrationStatus ne l'atteste pas. Le facteur ×10³ n'est qu'une
-  * échelle d'affichage, identique à celle des chiffres déjà publiés.
+  * pairProfileOriginDistance (canonique)
+  *   origines : rail.profileOriginSceneRelative uniquement.
   *
-  * Aucun seuil, aucune cible (y compris 1436), aucune décision automatique. */
+  * pairRailPositionDistance (secondaire)
+  *   origines : rail.positionSceneRelative uniquement.
+  *
+  * Si le champ canonique manque, la mesure canonique est unavailable.
+  * On ne recopie jamais l'autre champ.
+  *
+  * Ce ne sont pas l'écartement ESV. Unités de scène, pas des millimètres
+  * certifiés. Aucun seuil, aucune cible (y compris 1436). */
  const SCALE=1e3;
+ const CANONICAL_FIELD='profileOriginSceneRelative';
+ const SECONDARY_FIELD='positionSceneRelative';
  const fini=v=>Number.isFinite(v);
  function asPoint(v){
   if(!Array.isArray(v)||v.length<3)return null;
   const p=v.slice(0,3);
   return p.every(fini)?p:null;
  }
- function originOf(rail){
+ function originFrom(rail,field){
   if(!rail||typeof rail!=='object')return null;
-  return asPoint(rail.profileOriginSceneRelative)||asPoint(rail.positionSceneRelative);
+  return asPoint(rail[field]);
  }
- function pairOriginDistance(leftRail,rightRail){
-  const left=originOf(leftRail),right=originOf(rightRail);
-  if(!left||!right)return {status:'unavailable',reason:'origin-missing',leftOrigin:left,rightOrigin:right};
+ function distance(name,field,leftRail,rightRail){
+  const left=originFrom(leftRail,field),right=originFrom(rightRail,field);
+  if(!left||!right)return {
+   status:'unavailable',reason:field+'-missing',name,provenance:field,
+   leftOrigin:left,rightOrigin:right,notAnEsvGauge:true,
+   unitName:'scene-units',physicalCalibrationStatus:'not-attested'
+  };
   const sceneUnits=Math.hypot(left[0]-right[0],left[1]-right[1],left[2]-right[2]);
   return {
-   status:'measured',
-   name:'pairOriginDistance',
-   sceneUnits,
-   sceneUnitsTimes1e3:sceneUnits*SCALE,
-   unitName:'scene-units',
-   displayScale:SCALE,
-   physicalCalibrationStatus:'not-attested',
-   notAnEsvGauge:true,
-   leftOrigin:left,
-   rightOrigin:right
+   status:'measured',name,provenance:field,sceneUnits,
+   sceneUnitsTimes1e3:sceneUnits*SCALE,unitName:'scene-units',
+   displayScale:SCALE,physicalCalibrationStatus:'not-attested',
+   notAnEsvGauge:true,leftOrigin:left,rightOrigin:right
   };
+ }
+ function pairProfileOriginDistance(leftRail,rightRail){
+  return distance('pairProfileOriginDistance',CANONICAL_FIELD,leftRail,rightRail);
+ }
+ function pairRailPositionDistance(leftRail,rightRail){
+  return distance('pairRailPositionDistance',SECONDARY_FIELD,leftRail,rightRail);
+ }
+ function pairOriginDistance(leftRail,rightRail){
+  return pairProfileOriginDistance(leftRail,rightRail);
  }
  function stats(values){
   const a=values.filter(fini).slice().sort((x,y)=>x-y);
@@ -57,5 +70,9 @@
   if(!(dx>0)||!(dy>0))return null;
   return num/Math.sqrt(dx*dy);
  }
- return {SCALE,originOf,pairOriginDistance,stats,pearson};
+ return {
+  SCALE,CANONICAL_FIELD,SECONDARY_FIELD,originFrom,
+  pairProfileOriginDistance,pairRailPositionDistance,pairOriginDistance,
+  stats,pearson
+ };
 });
