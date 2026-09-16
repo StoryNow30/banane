@@ -8,10 +8,19 @@ Ce n’est pas une spécification runtime. Aucun seuil de production. Pas un éc
 
 | fichier | rôle |
 |---|---|
-| `benchmark.json` | Cuts 17 + 20, candidats, combinaisons, features ante-humaines, oracle, catégories |
+| `benchmark.json` | Cuts 17 + 20 (1 397 245 octets). SHA-256 ci-dessous. |
 | `manifest.json` | SHA-256, sources, effectifs, no-tuning holdout |
 | `score-policy.py` | Score une politique externe sans la modifier |
+| `unpack-benchmark.py` | Vérifie le SHA-256 d’un `benchmark.json` local |
 | `README.md` | Ce protocole |
+
+## SHA-256 canonique de benchmark.json
+
+```
+3a700609dc264e2df8eae515ff9289a834c402023b4d80f222f32f60d0326ecf
+```
+
+Le fichier non compressé (1,4 Mo) est l’artefact gelé. Il est conservé tel quel dans le workspace du banc (`artifacts/pair-lab/benchmark-v1/benchmark.json`). GitHub Contents via le connecteur ne transporte pas ce blob en un seul POST ; le protocole, le manifeste et le scorer sont sur cette branche. Ne pas régénérer `benchmark.json`.
 
 ## Espace de candidats
 
@@ -84,4 +93,5 @@ Une décision hors des candidats exposés du cut est `INVALID`. Un cut absent de
 - pas de nouveau candidat ;
 - pas de conversion en mm ;
 - pas d’usage de la réserve 9031–9047 pour caler quoi que ce soit ;
-- pas de pool 17+20 pour choisir une règle (le scoring peut afficher les deux splits, pas les mélanger pour un fit).
+- pas de pool 17+20 pour choisir une règle ;
+- aucun nouveau travail de sélection ou de tuning jusqu’à livraison de la politique Claude.
