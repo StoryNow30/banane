@@ -1,16 +1,87 @@
 {
   "format": "banane-geometry-candidate-v1-replication-freeze-v2",
-  "lot": "independent-replication-v2-retry-after-capsule-publication",
-  "frozenAt": "2026-09-17T18:07:30Z",
-  "verdict": "INCONCLUSIVE",
-  "stopReason": "DATASET_NOT_FULLY_MATERIALIZED_LOCALLY",
-  "capsuleHead": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
-  "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
-  "datasetCommit": "d541686d3a98569125cdbdb261ef121c9f533d6a",
-  "assembled": null,
-  "shaRun1": null,
-  "shaRun2": null,
+  "lot": "independent-replication-v2-retry-with-frozen-data-capsule",
+  "frozenAt": "2026-09-17T18:55:50Z",
+  "vocabulary": ["fait", "hypothèse"],
+  "noReuseOfV1Implementation": true,
+  "noReuseOfV1Json86780db9": true,
+  "noHumanOracle": true,
+  "noTuning": true,
+  "noRuntimeChange": true,
+  "noCapsuleModification": true,
+  "clone": {
+    "path": "/home/workdir/ws-gcv1-v2/banane",
+    "remote": "https://github.com/StoryNow30/banane.git",
+    "requested": "git checkout --detach origin/infra-gcv1-replication-capsule-v1",
+    "head": "2366d483b643bf8415f3d8ecba35938ac4c1d02e"
+  },
+  "requested": {
+    "capsuleRepo": "StoryNow30/banane",
+    "capsuleBranch": "infra-gcv1-replication-capsule-v1",
+    "capsuleHead": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+    "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
+    "dataArchiveName": "GCV1_REPLICATION_DATASET_239_V1.7z",
+    "dataArchiveSha256": "ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35",
+    "dataArchiveBytes": 78956815,
+    "dataManifestName": "GCV1_REPLICATION_DATASET_239_MANIFEST.json",
+    "dataFileCount": 437,
+    "datasetDeclaredSource": {
+      "repo": "StoryNow30/banane-data",
+      "head": "d541686d3a98569125cdbdb261ef121c9f533d6a"
+    }
+  },
+  "verification": {
+    "capsuleHeadResolved": true,
+    "capsuleHeadExact": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+    "candidateBaseResolved": true,
+    "pinnedGeometryVerified": true,
+    "pinnedBaselineVerified": true,
+    "captureCoreVerified": true,
+    "manifestFilesAllSha256Ok": true,
+    "contractsTestPass": "5/5",
+    "hashOnlyOk": true,
+    "dataArchivePresentLocally": false,
+    "dataArchiveShaVerified": false,
+    "manifest437Verified": false,
+    "rails239AccessibleViaOfficialRunner": false,
+    "stopReason": "DATA_CAPSULE_ARCHIVE_ABSENT"
+  },
+  "hashesVerified": {
+    "geometry.js": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "geometry-baseline.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "aStar": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
+  },
+  "probes": {
+    "workspaceFind7z": "no file matching GCV1_REPLICATION_DATASET_239_V1.7z",
+    "grokFilesLsRoot": [".tmp/", "gc-v1/", "gcv1-v2/"],
+    "grokFilesStatArchive": "rc=1 absent",
+    "githubReleaseBananeTag": "404 gcv1-replication-dataset-239-v1",
+    "githubReleaseBananeDataTag": "404 gcv1-replication-dataset-239-v1",
+    "githubCodeSearchFilename": "0 hits",
+    "bananeDataAccessedForShards": false
+  },
+  "execution": {
+    "run1": {"attempted": false, "sha256": null, "reason": "data archive absent; official runner not started"},
+    "run2": {"attempted": false, "sha256": null, "reason": "run1 not started"},
+    "shaRun1EqualsShaRun2": null
+  },
+  "population": {
+    "assembled": null,
+    "failures": null,
+    "controls": null,
+    "declaredLock": 239,
+    "lockSplit": "63 failure + 176 control (contracts.test.cjs)",
+    "status": "not-replayed"
+  },
+  "dataCapsule": {"filesVerified": null, "expected": 437, "status": "archive-not-present"},
   "countersIndependent": null,
-  "confrontation": "not-opened",
-  "sha256": "2cb0a2ab7a0bf8de5b6797d2a6cb0dd0539a29e29bc536e61872555fe071aa9e"
+  "confrontation": {
+    "status": "not-opened",
+    "reason": "freeze without own rail-by-rail output; published Candidate V1 results and human oracle remain closed"
+  },
+  "verdict": "INCONCLUSIVE",
+  "sha256": "4cdd04d749277e9ffce82688af10200edaba84129fd93dc225c58204e565d37e",
+  "sha256Input": "canonical JSON sort_keys separators compact of all keys except sha256/sha256Input"
 }
