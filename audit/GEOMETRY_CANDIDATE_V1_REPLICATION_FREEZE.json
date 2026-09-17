@@ -1,1 +1,49 @@
-PLACEHOLDER
+{
+  "format": "banane-geometry-candidate-v1-replication-freeze-v2",
+  "lot": "independent-replication-v2-final-retry-via-private-transfer-branch",
+  "frozenAt": "2026-09-17T19:33:30Z",
+  "vocabulary": ["fait", "hypothese"],
+  "noReuseOfV1Implementation": true,
+  "noReuseOfV1Json86780db9": true,
+  "noHumanOracle": true,
+  "noTuning": true,
+  "noRuntimeChange": true,
+  "noCapsuleModification": true,
+  "clone": {
+    "path": "/home/workdir/ws-gcv1-final/banane",
+    "head": "2366d483b643bf8415f3d8ecba35938ac4c1d02e"
+  },
+  "requested": {
+    "capsuleHead": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+    "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
+    "transferRepo": "StoryNow30/banane-data",
+    "transferBranch": "transfer/gcv1-replication-dataset-239-v1",
+    "transferHead": "239f36ddcc9372bc2421c65c276d4d118d86e60a",
+    "datasetPathResolved": "/home/workdir/ws-gcv1-final/data/gcv1-replication-dataset-239-v1/datasets/native-v4.6-2026-09-16"
+  },
+  "hashesVerified": {
+    "geometry.js": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "geometry-baseline.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "aStar": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
+  },
+  "transferParts": {
+    "001": {"bytes": 33554432, "sha256": "a29edd160b5fba48820008fed5d2db012997b52295139075a88c6180c29d1698"},
+    "002": {"bytes": 33554432, "sha256": "eb8d548f19e406085581e6197bf599c5db1a0c2e9df371fd7a88c343f60ab0f7"},
+    "003": {"bytes": 11847951, "sha256": "0df0b7e92e82e8eb4dbd52c7c94befb3bba1af61cc99e29c8bb13180188a992b"},
+    "manifest": {"bytes": 114657, "sha256": "659a74d742b0d2d7e53aa34557aa955d3b4413e1f382ca2c3f0720d33e120619"},
+    "archiveRebuilt": {"bytes": 78956815, "sha256": "ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35"}
+  },
+  "dataCapsule": {"expected": 437, "verified": 437, "totalBytes": 1064696197, "status": "437/437 PASS"},
+  "contractsTestPass": "5/5",
+  "execution": {
+    "run1": {"attempted": true, "completed": true, "assembled": 239, "sha256": "99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0", "ms": 30052},
+    "run2": {"attempted": true, "completed": true, "assembled": 239, "sha256": "99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0", "ms": 28937},
+    "shaRun1EqualsShaRun2": true,
+    "datasetResolvedIdentical": true
+  },
+  "population": {"assembled": 239, "failures": 63, "controls": 176, "declaredLock": 239, "status": "239/239", "chunksLoaded": 293, "chunksNeeded": 293},
+  "confrontation": {"status": "not-opened-at-freeze"},
+  "verdictAtFreeze": "pending-confrontation"
+}
