@@ -68,7 +68,24 @@
        if(score<best.loss)best={loss:score,u,z};
      }
    }
-   search(0,0,cfg.searchY,cfg.searchZ,cfg.grid,true);
+   const uCenters=[0];
+   if(lab){
+     if(Array.isArray(lab.uSeeds)){
+       const seeds=lab.uSeeds.filter(u=>Number.isFinite(u));
+       if(seeds.length){
+         if(lab.replaceOrigin)uCenters.length=0;
+         for(const u of seeds)if(!uCenters.some(c=>Math.abs(c-u)<1e-9))uCenters.push(u);
+       }
+     }else if(lab.cloudUSeed){
+       const uMed=median(points.map(p=>p[0]));
+       if(Number.isFinite(uMed)){
+         if(lab.replaceOrigin){uCenters.length=0;uCenters.push(uMed);}
+         else if(Math.abs(uMed)>1e-9)uCenters.push(uMed);
+       }
+     }
+     if(!uCenters.length)uCenters.push(0);
+   }
+   for(const cu of uCenters)search(cu,0,cfg.searchY,cfg.searchZ,cfg.grid,true);
    const lossMinCoarse={...best};
    const topRowsAt=(u,z)=>points.filter(p=>p[0]>u+.012&&p[0]<u+width-.012&&Math.abs(p[1]-z)<cfg.topBand);
    /* ---- lab-geometry-prototype-v1 : inactive unless options.lab is set ---- */
@@ -150,7 +167,9 @@
    let surfaceU=best.u,surfaceZ=best.z,reasons=[];
    if(face){const denom=1-face.slope*top.slope;
      if(Math.abs(denom)>.5){surfaceU=(face.intercept+face.slope*top.intercept)/denom;surfaceZ=top.slope*surfaceU+top.intercept;}}
-   if(!Number.isFinite(surfaceU)||!Number.isFinite(surfaceZ)||Math.abs(surfaceU)>cfg.searchY+.01||Math.abs(surfaceZ)>cfg.searchZ+.01)return unresolved('Intersection hors de la fenêtre expérimentale.');
+   let uWindowOk=Math.abs(surfaceU)<=cfg.searchY+.01;
+   if(lab&&lab.recenterWindow)uWindowOk=uCenters.some(cu=>Math.abs(surfaceU-cu)<=cfg.searchY+.01);
+   if(!Number.isFinite(surfaceU)||!Number.isFinite(surfaceZ)||!uWindowOk||Math.abs(surfaceZ)>cfg.searchZ+.01)return unresolved('Intersection hors de la fenêtre expérimentale.');
    const faceCount=face?.count||0,residual=Math.max(top.residual,face?.residual||cfg.maxResidual*2);
    const binsTop=new Set(topRows.map(p=>Math.floor(p[0]/.006))).size;
    const binsFace=new Set(faceRows.map(p=>Math.floor(p[0]/.005))).size;
@@ -161,6 +180,7 @@
        alternative:alternative?[sign*alternative.u,alternative.z]:null}};
    if(lab)metrics.lab={lossMinCoarse:[sign*lossMinCoarse.u,lossMinCoarse.z,lossMinCoarse.loss],
      selectedCoarse:[sign*coarseBest.u,coarseBest.z,coarseBest.loss],topRows:topRows.length,coarseCount:coarse.length,
+     uCenters:uCenters.slice(),recenterWindow:!!lab.recenterWindow,replaceOrigin:!!lab.replaceOrigin,
      flank:{faceRows:faceRows.length,faceCount,topCount:top.count,topSlope:top.slope,topSlopeLimited:!!top.slopeLimited,
        faceSlope:face?face.slope:null,faceSlopeLimited:!!face?.slopeLimited,faceBand:cfg.faceBand,minTop:cfg.minTop,minFace:cfg.minFace}};
    // The first method returned a writable candidate even without both sheets,
