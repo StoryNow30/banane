@@ -3,7 +3,7 @@
 Lot **EXPÉRIMENTAL**. Branche `lab-u-recentering-stabilization-v1`. Aucun merge, aucun searchY global.
 
 - Branche : `lab-u-recentering-stabilization-v1`
-- HEAD : `(après commit)`
+- HEAD : `93b75ed`
 - Base : `d1b2bb8`
 - Lab amont : `04a4932`
 - Commande : `node tools/u-recentering-stabilization-v1.cjs`
