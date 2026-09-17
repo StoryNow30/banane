@@ -160,14 +160,44 @@
        lossRatio:Number.isFinite(templateLossRatio)?templateLossRatio:null,separation:alternative?Math.hypot(alternative.u-coarseBest.u,alternative.z-coarseBest.z):null,
        alternative:alternative?[sign*alternative.u,alternative.z]:null}};
    if(lab)metrics.lab={lossMinCoarse:[sign*lossMinCoarse.u,lossMinCoarse.z,lossMinCoarse.loss],
-     selectedCoarse:[sign*coarseBest.u,coarseBest.z,coarseBest.loss],topRows:topRows.length,coarseCount:coarse.length};
+     selectedCoarse:[sign*coarseBest.u,coarseBest.z,coarseBest.loss],topRows:topRows.length,coarseCount:coarse.length,
+     flank:{faceRows:faceRows.length,faceCount,topCount:top.count,topSlope:top.slope,topSlopeLimited:!!top.slopeLimited,
+       faceSlope:face?face.slope:null,faceSlopeLimited:!!face?.slopeLimited,faceBand:cfg.faceBand,minTop:cfg.minTop,minFace:cfg.minFace}};
    // The first method returned a writable candidate even without both sheets,
    // or after forcing an implausible fitted slope to its numeric search limit.
    // These are missing geometric support, not merely a low confidence score.
    const unsupported=[];
-   if(top.count<cfg.minTop)unsupported.push('Plan de roulement insuffisamment observé.');
-   if(!face||faceCount<cfg.minFace)unsupported.push('Flanc interne insuffisamment observé.');
-   if(top.slopeLimited||face?.slopeLimited)unsupported.push('Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.');
+   let minTopReq=cfg.minTop,minFaceReq=cfg.minFace,skipFaceGate=false;
+   if(lab&&(lab.adaptiveFace||lab.relativeFace||lab.partialFaceKeep||lab.explicitFaceAbstain)){
+     if(lab.adaptiveFace){
+       const vis=points.filter(p=>Math.abs(p[0]-best.u)<cfg.faceBand&&p[1]<best.z-.006&&p[1]>best.z-.040).length;
+       minFaceReq=vis<=0?cfg.minFace:Math.min(cfg.minFace,Math.max(3,vis));
+       metrics.lab.adaptiveFace={visibleInZone:vis,minFaceReq};
+     }
+     if(lab.relativeFace){
+       minFaceReq=Math.max(3,Math.round(DEFAULTS.minFace*top.count/DEFAULTS.minTop));
+       metrics.lab.relativeFace={minFaceReq,topCount:top.count,ratio:DEFAULTS.minFace/DEFAULTS.minTop};
+     }
+     const strongRs=top.count>=DEFAULTS.minTop;
+     const facePartial=!!face&&faceCount>=3&&faceCount<minFaceReq;
+     skipFaceGate=!!(lab.partialFaceKeep&&strongRs&&facePartial&&!top.slopeLimited&&!face.slopeLimited);
+     if(lab.partialFaceKeep)metrics.lab.partialFaceKeep={strongRs,facePartial,skipFaceGate,faceCount,minFaceReq};
+     metrics.lab.minTopReq=minTopReq;metrics.lab.minFaceReq=minFaceReq;metrics.lab.skipFaceGate=skipFaceGate;
+     if(top.count<minTopReq)unsupported.push('Plan de roulement insuffisamment observé.');
+     if((!face||faceCount<minFaceReq)&&!skipFaceGate){
+       if(lab.explicitFaceAbstain){
+         if(!face||faceCount<3)unsupported.push(faceRows.length===0
+           ?'Flanc interne absent de la fenêtre d’observation ; abstention.'
+           :'Flanc interne trop clairsemé pour estimer une nappe ; abstention.');
+         else unsupported.push('Flanc interne partiellement observé ; abstention plutôt que publication.');
+       }else unsupported.push('Flanc interne insuffisamment observé.');
+     }
+     if(top.slopeLimited||face?.slopeLimited)unsupported.push('Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.');
+   }else{
+     if(top.count<cfg.minTop)unsupported.push('Plan de roulement insuffisamment observé.');
+     if(!face||faceCount<cfg.minFace)unsupported.push('Flanc interne insuffisamment observé.');
+     if(top.slopeLimited||face?.slopeLimited)unsupported.push('Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.');
+   }
    if(unsupported.length)return {...unresolved(unsupported.join(' ')),metrics,top,face};
    if(templateLossRatio<cfg.minTemplateLossRatio)return {...unresolved('Plusieurs placements concurrents du champignon sont géométriquement plausibles.'),metrics,top,face};
    let confidence=100*Math.min(1,top.count/cfg.minTop,faceCount/cfg.minFace,binsTop/5,binsFace/3)*Math.exp(-residual/.006);
