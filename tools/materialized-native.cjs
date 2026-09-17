@@ -243,6 +243,56 @@ function loadNeededChunks(base, docs, needed) {
   return out;
 }
 
+function loadNeededChunksComplete(base, docs, needed) {
+  const out = loadNeededChunks(base, docs, needed);
+  if (!needed.size || out.size === needed.size) return out;
+  for (const d of docs) {
+    if (out.size === needed.size) break;
+    if (d.kind === 'exact' && d.exactDoc?.clouds) {
+      ingestCloudArray(d.exactDoc.clouds, needed, out);
+      continue;
+    }
+    if (!d.file || !String(d.file).endsWith('_index.json')) continue;
+    let idx;
+    try { idx = loadJson(d.file); } catch { continue; }
+    const node = idx.semanticRepresentation;
+    if (!node || node.kind !== 'object-shards') continue;
+    for (const shard of node.shards || []) {
+      if (out.size === needed.size) break;
+      const shardPath = path.join(base, shard.path);
+      if (!fs.existsSync(shardPath)) continue;
+      const text = fs.readFileSync(shardPath, 'utf8');
+      let hit = false;
+      for (const id of needed) { if (!out.has(id) && text.includes(id)) { hit = true; break; } }
+      if (!hit) continue;
+      const obj = JSON.parse(text);
+      if (Array.isArray(obj.clouds)) ingestCloudArray(obj.clouds, needed, out);
+    }
+  }
+  if (out.size === needed.size) return out;
+  function walk(dir) {
+    if (out.size === needed.size) return;
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (out.size === needed.size) return;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { walk(p); continue; }
+      if (!e.isFile() || !e.name.endsWith('.json')) continue;
+      if (!(e.name.startsWith('root-object') || e.name.includes('clouds'))) continue;
+      const text = fs.readFileSync(p, 'utf8');
+      let hit = false;
+      for (const id of needed) { if (!out.has(id) && text.includes(id)) { hit = true; break; } }
+      if (!hit) continue;
+      const obj = JSON.parse(text);
+      if (Array.isArray(obj)) ingestCloudArray(obj, needed, out);
+      else if (Array.isArray(obj.clouds)) ingestCloudArray(obj.clouds, needed, out);
+    }
+  }
+  walk(base);
+  return out;
+}
+
 function initialRail(visit, side) {
   const snaps = visit.railSnapshots?.[side];
   const el = visit.geometryEligibility?.[side];
@@ -299,6 +349,6 @@ function railKey(visit, side) {
 
 module.exports = {
   REF, DEFAULT_ROOT, derefer, loadManifest, loadVisitDocuments, readVisits,
-  collectNeededChunkIds, loadNeededChunks, assembleCapture, initialRail,
+  collectNeededChunkIds, loadNeededChunks, loadNeededChunksComplete, assembleCapture, initialRail,
   humanDeltaLocal, railKey, latestDocsPerSession, loadNode, ensureRailsDictionary, hydrateRailPoses,
 };

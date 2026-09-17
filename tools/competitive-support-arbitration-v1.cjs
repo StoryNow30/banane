@@ -820,7 +820,7 @@ function build(args = parseArgs(process.argv.slice(2))) {
 module.exports = {
   BASELINE_GEOMETRY_SHA, A_STAR_HASH, ENGINE_Y, ENGINE_Z, KEY_9644, CUTS_5, RATIO, SEP,
   lossRatio, inCompetitive, alreadyQualified, spatialClusters, policyS1, policyS2,
-  rankS2, competitiveView, lminOf, deriveScience, build,
+  rankS2, competitiveView, lminOf, analyseRail, applyPolicies, deriveScience, build,
 };
 
 if (require.main === module) build();
