@@ -1,0 +1,45 @@
+name: Banane Research Bootstrap
+
+on:
+  push:
+    paths:
+      - 'tools/banane-bootstrap.cjs'
+      - 'data/native-v46.lock.json'
+      - 'tests/banane-bootstrap.test.cjs'
+      - 'tests/fixtures/bootstrap/**'
+      - 'RESEARCH_BOOTSTRAP.md'
+      - '.github/workflows/research-bootstrap.yml'
+  pull_request:
+    paths:
+      - 'tools/banane-bootstrap.cjs'
+      - 'data/native-v46.lock.json'
+      - 'tests/banane-bootstrap.test.cjs'
+      - 'tests/fixtures/bootstrap/**'
+      - 'RESEARCH_BOOTSTRAP.md'
+      - '.github/workflows/research-bootstrap.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  clean-clone-bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: node --check tools/banane-bootstrap.cjs
+      - name: Unit tests
+        run: node --test tests/banane-bootstrap.test.cjs
+      - name: Doctor must fail closed without private data
+        shell: bash
+        run: |
+          set +e
+          node tools/banane-bootstrap.cjs doctor --json > /tmp/doctor.json
+          code=$?
+          set -e
+          cat /tmp/doctor.json
+          test "$code" -eq 2
+          node -e "const s=require('/tmp/doctor.json'); if(!s.code.ok || s.ready!==false) process.exit(1)"
