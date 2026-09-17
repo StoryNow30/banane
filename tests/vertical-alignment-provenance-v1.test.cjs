@@ -1,0 +1,21 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('fs');
+const crypto=require('crypto');
+const lab=require('../tools/vertical-alignment-provenance-v1.cjs');
+const ROOT=process.cwd();
+const ALLOWED_STAGES=new Set(['scene-profile-relative-relation','scene-to-profile-transform','chunk-composition','association-observable','insufficient-provenance']);
+const sha256=s=>crypto.createHash('sha256').update(s).digest('hex');
+let cached;const get=()=>cached||(cached=lab.build(ROOT));
+function walkKeys(v,fn,p=''){if(Array.isArray(v)){for(const x of v)walkKeys(x,fn,p+'[]');return;}if(v&&typeof v==='object')for(const[k,x]of Object.entries(v)){fn(k,p?`${p}.${k}`:k);walkKeys(x,fn,p?`${p}.${k}`:k);}}
+test('loads exactly the sealed 239-rail capsule',()=>{const a=get();assert.equal(a.summary.rails,239);assert.deepEqual(a.summary.cohorts,{control:176,failure:63});assert.equal(a.capsule.shards.reduce((s,x)=>s+x.rails,0),239);});
+test('frozen runtime hashes match exactly',()=>{const a=get();assert.equal(a.runtime.allMatch,true);for(const[p,h]of Object.entries(lab.EXPECTED_RUNTIME_HASHES))assert.equal(a.runtime.actual[p],h,p);});
+test('capsule has no human/manual correction payload leakage',()=>{const{rows}=lab.loadCapsule(ROOT),banned=[];for(const r of rows)walkKeys(r,(k,p)=>{if(/^(human|manual|operator|corrected|correction|humanReference|manualReference)$/i.test(k))banned.push(p);});assert.deepEqual(banned,[]);});
+test('independent projection is not a C.point wrapper',()=>{const source=lab.projectPointIndependently.toString();assert.match(source,/dot\(/);assert.match(source,/origin/);assert.doesNotMatch(source,/C\.point|capture-core|require\(/);});
+test('round-trip audit is explicit and fail-closed',()=>{const a=get();for(const r of a.rails){const m=r.matrixAudit;assert.ok(m.roundTrip||m.usable===false);if(m.usable){assert.equal(m.roundTrip.passesNumericEnvelope,true);assert.equal(m.independentInverse.passesNumericEnvelope,true);assert.ok(Number.isFinite(m.roundTrip.sceneToProfileLocalToScene.max));assert.ok(Number.isFinite(m.roundTrip.profileLocalToSceneToProfileLocal.max));}else assert.equal(r.firstObservedStage,'insufficient-provenance');}});
+test('independent projection is compared pointwise with transformed z',()=>{const a=get();assert.equal(a.summary.projectionEquivalentRails+a.summary.projectionNonEquivalentRails,239);for(const r of a.rails)if(r.matrixAudit.usable&&r.matrixAudit.linear.orthogonal){assert.ok(r.projectionIndependentVsTransform);assert.ok(Number.isFinite(r.projectionIndependentVsTransform.differenceLocalZ.max));assert.ok(Number.isFinite(r.projectionIndependentVsTransform.numericTolerance));}});
+test('per-chunk statistics exist before concatenation',()=>{const a=get();for(const r of a.rails){assert.equal(r.perChunkStatistics.length,r.sourceProvenance.chunkCount);assert.ok(r.perChunkStatistics.length>=1);for(const c of r.perChunkStatistics){assert.ok(c.pointCount>=1);assert.ok(c.statistics);assert.equal(c.statistics.all.profileLocalZ.count,c.pointCount);}}});
+test('causal classification is never inferred from provenance stage',()=>{const a=get();for(const r of a.rails){assert.ok(ALLOWED_STAGES.has(r.firstObservedStage));assert.equal(r.causalSource,'unknown');if(r.firstObservedStage==='insufficient-provenance')assert.equal(r.causalSource,'unknown');}});
+test('artifact deterministic hash excludes generatedAt and deterministicSha256 and is repeatable',()=>{const a=get(),b=lab.build(ROOT);assert.equal(a.deterministicSha256,b.deterministicSha256);const payload=JSON.parse(JSON.stringify(a));delete payload.generatedAt;delete payload.deterministicSha256;assert.equal(sha256(lab.canonicalize(payload)),a.deterministicSha256);});
+test('written artifact, when present, has the same deterministic identity',()=>{const p='audit/vertical-alignment-provenance-v1.json';if(!fs.existsSync(p))return;const disk=JSON.parse(fs.readFileSync(p,'utf8'));assert.equal(disk.deterministicSha256,get().deterministicSha256);assert.equal(disk.rails.length,239);});
