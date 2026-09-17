@@ -1,0 +1,12 @@
+{
+  "format": "banane-geometry-candidate-v1-independent-replication-v2",
+  "nature": "replication-independante-fail-closed",
+  "units": "scene-units-not-computed",
+  "capsuleUnresolved": true,
+  "officialCommandNotExecuted": true,
+  "noInventedRunner": true,
+  "noReusedV1Harness": true,
+  "freezeSha256": "39f45733ad9f327874513243dd0ebf68d1eaea99b83b76c10fc9a0ea6d835bc4",
+  "stopReason": "CAPSULE_REF_UNRESOLVED",
+  "rows": []
+}
