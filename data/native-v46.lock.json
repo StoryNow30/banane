@@ -1,0 +1,69 @@
+{
+  "format": "banane-research-data-lock-v1",
+  "dataset": "native-v46",
+  "description": "Sources brutes Natif V4.6 requises par les replays et labs hors ligne.",
+  "source": {
+    "repository": "StoryNow30/banane-data",
+    "releaseTag": "native-v4.6-2026-09-16",
+    "releaseUrl": "https://github.com/StoryNow30/banane-data/releases/tag/native-v4.6-2026-09-16"
+  },
+  "canonicalRoot": ".banane-data/native-v46",
+  "compatibleCode": {
+    "referenceCommit": "3256d8b329bfa9a9ab13a6b93f2ac78d786f9096",
+    "criticalFiles": {
+      "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+      "src/engine.js": "f7d3ea2232199b1c994caed1805f7463bceed96b23b68a055b4b23ca88272dd3",
+      "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+      "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
+    },
+    "requiredRepositoryFiles": [
+      "tools/native-replay.cjs",
+      "tools/verify.cjs",
+      "audit/v4.6.0-engine-baseline.json",
+      "audit/v4.4.0-frozen-engine-hashes.json",
+      "datasets/native/README.md"
+    ]
+  },
+  "assets": [
+    {
+      "key": "historical",
+      "role": "historical-native-v46-raw",
+      "name": "banane-native-v4.6-2026-09-16.7z",
+      "assetId": 567662835,
+      "bytes": 34509008,
+      "sha256": "32e48aa79de988ab8bb6efc65d7038d4e27535e2a5f2486768438616f518bfc0",
+      "extractDir": "historical"
+    },
+    {
+      "key": "final",
+      "role": "final-daily-collection-raw",
+      "name": "banane-native-v4.6-2026-09-16-final.7z",
+      "assetId": 568307664,
+      "bytes": 56657500,
+      "sha256": "7cac220bd6e097f14ff1d39cbc431e7c6e918b819bdf521883bc33847ec12c66",
+      "extractDir": "final"
+    }
+  ],
+  "lookup": {
+    "directoryEnvironment": [
+      "BANANE_NATIVE_DIR"
+    ],
+    "perAssetEnvironment": {
+      "historical": "BANANE_NATIVE_HISTORICAL",
+      "final": "BANANE_NATIVE_FINAL"
+    },
+    "fallbackDirectories": [
+      ".banane-data/native-v46/downloads",
+      "datasets/native-v46",
+      "/tmp/native-v46"
+    ]
+  },
+  "extraction": {
+    "programs": [
+      "7zz",
+      "7z"
+    ],
+    "jsonRequired": true,
+    "provenanceMarker": ".banane-bootstrap.json"
+  }
+}
