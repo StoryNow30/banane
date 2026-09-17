@@ -1,0 +1,16 @@
+{
+  "format": "banane-geometry-candidate-v1-replication-freeze-v2",
+  "lot": "independent-replication-v2-retry-after-capsule-publication",
+  "frozenAt": "2026-09-17T18:07:30Z",
+  "verdict": "INCONCLUSIVE",
+  "stopReason": "DATASET_NOT_FULLY_MATERIALIZED_LOCALLY",
+  "capsuleHead": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+  "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
+  "datasetCommit": "d541686d3a98569125cdbdb261ef121c9f533d6a",
+  "assembled": null,
+  "shaRun1": null,
+  "shaRun2": null,
+  "countersIndependent": null,
+  "confrontation": "not-opened",
+  "sha256": "2cb0a2ab7a0bf8de5b6797d2a6cb0dd0539a29e29bc536e61872555fe071aa9e"
+}

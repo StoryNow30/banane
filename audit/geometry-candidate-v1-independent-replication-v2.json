@@ -1,12 +1,24 @@
 {
-  "format": "banane-geometry-candidate-v1-independent-replication-v2",
-  "nature": "replication-independante-fail-closed",
-  "units": "scene-units-not-computed",
-  "capsuleUnresolved": true,
-  "officialCommandNotExecuted": true,
-  "noInventedRunner": true,
-  "noReusedV1Harness": true,
-  "freezeSha256": "39f45733ad9f327874513243dd0ebf68d1eaea99b83b76c10fc9a0ea6d835bc4",
-  "stopReason": "CAPSULE_REF_UNRESOLVED",
+  "format": "geometry-candidate-v1-independent-replication-v2",
+  "capsuleHead": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+  "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
+  "datasetCommit": "d541686d3a98569125cdbdb261ef121c9f533d6a",
+  "hashesVerified": {
+    "geometry.js": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "geometry-baseline.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "aStar": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
+  },
+  "assembled": null,
+  "shaRun1": null,
+  "shaRun2": null,
+  "countersIndependent": null,
+  "confrontation": {
+    "status": "not-opened",
+    "reason": "freeze without own rail-by-rail output; published Candidate V1 results and human oracle remain closed"
+  },
+  "stopReason": "DATASET_NOT_FULLY_MATERIALIZED_LOCALLY",
+  "verdict": "INCONCLUSIVE",
   "rows": []
 }
