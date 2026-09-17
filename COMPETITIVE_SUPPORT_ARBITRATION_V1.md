@@ -3,7 +3,7 @@
 Lot **EXPÉRIMENTAL**. Branche `lab-competitive-support-arbitration-v1`. Aucun merge. A_STAR figé.
 
 - Branche : `lab-competitive-support-arbitration-v1`
-- HEAD : `(après commit)`
+- HEAD : `2ac4e6a`
 - Base : `8d98f68`
 - Lab amont : `2ec9443`
 - Commande : `node tools/competitive-support-arbitration-v1.cjs`
