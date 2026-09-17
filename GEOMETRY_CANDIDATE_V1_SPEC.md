@@ -3,7 +3,7 @@
 Artefact scientifique. **Pas une branche d’intégration runtime.** Réplication indépendante requise avant tout ESV.
 
 - Base Banane : `0f6846f` / lab NEXT V0 `9e40ad2`
-- Qualification : `(après commit)` branche `lab-geometry-engine-next-v0-qualification`
+- Qualification : `bd22efc` branche `lab-geometry-engine-next-v0-qualification`
 - Composition hash : `0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a`
 - A_STAR hash : `e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f`
 - geometry.js : `77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503`

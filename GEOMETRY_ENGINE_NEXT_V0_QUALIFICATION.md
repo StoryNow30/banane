@@ -2,7 +2,7 @@
 
 Lot **EXPÉRIMENTAL**. Branche `lab-geometry-engine-next-v0-qualification`. Aucun merge. Moteur inchangé.
 
-- HEAD : `(après commit)`
+- HEAD : `bd22efc`
 - Base : `0f6846f` (lab NEXT V0 `9e40ad2`)
 - Commande : `node tools/geometry-engine-next-v0-qualification.cjs`
 - Tests : `node tests/geometry-engine-next-v0-qualification.test.cjs`
