@@ -3,7 +3,7 @@
 Lot **EXPÉRIMENTAL**. Branche `lab-geometry-engine-next-v0`. Aucun merge. Pas d’intégration runtime. Pas d’ESV.
 
 - Branche : `lab-geometry-engine-next-v0`
-- HEAD : `(après commit)`
+- HEAD : `9e40ad2`
 - Base : `a97373e` (Competitive Support V1, lab `2ac4e6a`)
 - Commande : `node tools/geometry-engine-next-v0.cjs`
 - Tests : `node tests/geometry-engine-next-v0.test.cjs`
