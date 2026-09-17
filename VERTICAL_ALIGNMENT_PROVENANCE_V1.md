@@ -3,7 +3,7 @@
 Branche: `lab-vertical-alignment-provenance-v1-richard`
 Base scientifique: `infra/research-capsule-rsf-v1` @ `52d4f529557641dd34d1c2296722e937c48702d0`
 Données: `StoryNow30/banane-data` @ `d541686d3a98569125cdbdb261ef121c9f533d6a` / `datasets/native-v4.6-2026-09-16`
-Artefact déterministe (hors `generatedAt`): `ae1331eeb9a540896ef4f4059ede592f912d2da65ce5aca36fc9293a27bb9c0a`
+Artefact déterministe (hors `generatedAt`): `515199edd6ba1aae7d8f87d791a5b4c28f6b50942563af571fad3cf9cf0a4b87`
 
 ## Portée
 
@@ -50,21 +50,29 @@ Cela ne démontre toujours pas: LiDAR fautif, pose fautive, snapshot fautif, ass
 
 ## Failures vs controls
 
+Le z médian du contour en coordonnées profile-local est le même objet géométrique sur les 239 rails (étendue 2.9103830e-10). L’écart nuage–contour se réduit donc au z local du nuage, décalé d’une constante de gabarit. Ce n’est pas un second observable indépendant.
+
 Médiane des médianes rail, z local indépendant: failures=-0.12671925, controls=-0.13808559, différence=0.011366343.
 Médiane des médianes rail, z profile-local fourni: failures=-0.12671925, controls=-0.13808559, différence=0.011366343.
 Médiane de l’écart médian nuage–contour: failures=-0.021848251, controls=-0.033214593, différence=0.011366343.
 Médiane seed.z: failures=-0.043000000, controls=-0.0030000000, différence=-0.040000000.
 Médiane topRows: failures=0.0000000, controls=41.500000.
 
-Sous-groupes engine (failures, topRows, contexte RSF non redémontré): topRows<3 = 63, topRows≥3 = 0.
+40/63 failures ont un z local médian dans l’IQR des controls. Les distributions de z local se recouvrent. L’écart de médianes 0.011 n’est pas une séparation de cohortes.
+
+Le z scène brut ne se compare pas d’un rail à l’autre (médianes 71.133750 vs 80.955812) : les origines scène diffèrent selon le site (session f938b9f8 vers ~740 unités d’origine). Après passage en profile-local, cette échelle disparaît.
+
+Sous-groupes engine (failures, topRows de CAP.trace, contexte RSF non redémontré): topRows=0 : 55 ; topRows∈{1,2} : 8 ; topRows≥3 : 0. Séparation engine (topRows 0–2 vs ≥15) déjà établie par RSF V1 ; elle n’est pas relocalisée ici comme cause.
 
 ## Chunks
 
-Distribution du nombre de chunks par rail: {"1":188,"2":48,"3":3}. Les statistiques par chunk sont calculées avant concaténation. Aucun seuil d’anomalie n’est défini.
+Distribution du nombre de chunks par rail: {"1":188,"2":48,"3":3}. Rails multi-chunks: 51. Médiane concaténée hors enveloppe des médianes par chunk: 0. La concaténation n’introduit pas une relation absente des chunks.
 
 ## Continuité et gauche/droite
 
-Paires gauche/droite au même visit dans le registre: 21. Les contextes rail-par-rail publient origine, angles d’axes, delta de matrice, sources/chunks et deltas de distributions. La continuité est limitée aux visites présentes dans ces 239 rails.
+Paires gauche/droite au même visit dans le registre: 21 (dont 2 mixtes control/failure, 1 failure/failure). Aucune paire ne partage un chunk (intersection vide) : les nuages gauche et droit sont des acquisitions distinctes. frameId, pageId et sourceFile coïncident. Déplacement d’origine médian 1.4327196 (largeur de voie observée, pas un saut de pose). Angle d’axe z constant 0.10008342 rad sur les paires mesurées.
+
+Les déplacements d’origine entre voisins du registre atteignent >1000 unités lorsque des visites non sélectionnées s’intercalent. Ce n’est pas une trajectoire physique visit-à-visit. La continuité publiée est celle du registre 239, pas celle de la session Native complète.
 
 ## Sessions
 
@@ -80,10 +88,12 @@ Paires gauche/droite au même visit dans le registre: 21. Les contextes rail-par
 
 ## Cas de contrôle
 
-- session 3876864f… : 17 rails in register (failures=17, controls=0). No internal control is invented.
-- session d9ccb545… : 54 rails.
-- session 0c58c033…: 50 rails in the 239-register; visitIndex values are published numerically (no jump threshold). The degradation boundary cited at visitIndex 245 is a frozen RSF context; the register’s nearest selected visits are listed in the JSON.
-- cluster part 1 / right / cuts 5083–5276: 56 rails.
+- session 3876864f : 17 rails, 17 failures, 0 control. Presque tout à droite, cuts 5083–5106, seed.z typiquement à la borne de recherche, topRows=0. Aucun témoin interne n’est inventé.
+- session d9ccb545 : 54 rails (35 failures, 19 controls), même fichier, même frame, origines ~71. Les failures occupent les visitIndex bas (0–190, essentiellement côté droit) ; les controls les visitIndex plus élevés. Témoin intra-session réel, mais pas au même visitIndex.
+- session 0c58c033 : 50 rails (10 failures, 40 controls). visitIndex du registre : 0…315. Autour de 245, le registre contient 224 (failure, gap≈0, seed.z=+0.034, topRows=0), 226 (control), 231 gauche control / droite failure, 257 control. La frontière RSF à 245 n’est pas un saut de z local unique dans ce sous-ensemble.
+- session 92dbb85e : 1 failure parmi 31 controls. Gap nuage–contour ≈ −0.001 (nuage presque sur le gabarit) et topRows=0, seed.z à la borne. L’écart médian nuage–contour ne prédit pas cet échec.
+- cluster part 1 / right / cuts 5083–5276 : 56 rails (sessions 3876864f + d9ccb545).
+- paires mixtes même visit : 0c58c033 visit 63 (gauche control topRows=43, droite failure topRows=2, gaps comparables) et visit 231 (gauche control gap≈−0.048, droite failure gap≈−0.122). Même visit, même source, nuages distincts, issues engine distinctes.
 
 ## Hypothèses A–G
 
@@ -92,14 +102,21 @@ Paires gauche/droite au même visit dans le registre: 21. Les contextes rail-par
 - **C** — CONTREDIT: The independently inverted profileLocalToSceneRelative mapping agrees with the provided sceneRelativeToProfileLocal z on all 239 rails inside the a priori numerical envelope. The implementation of that transform does not introduce the disagreement.
 - **D** — COMPATIBLE: The disagreement is observable in the scene-relative relation between the cloud and the profile pose. That is compatible with pose/cloud inconsistency without identifying which side is causal.
 - **E** — COMPATIBLE: Materialized chunks and snapshots carry acquisition, capture and snapshot timestamps and recorded associationStatus. Recorded contemporaneity is not independent proof of physical association; E remains compatible, not demonstrated.
-- **F** — CONTREDIT: The relative vertical relation, and the failure/control separation in that relation, are observable before coarse/refined search. Engine search cannot be its sole introduction point.
+- **F** — CONTREDIT: The relative vertical cloud/profile offset is measurable at identity pose, before coarse/refined search, on all 239 rails. Engine search cannot be the sole introduction of that offset. This does not claim that the offset separates failures from controls, nor that it is the cause of the 63 unresolved rails.
 - **G** — COMPATIBLE: Acquisition, pose, recorded association, upstream scene construction and calibration remain jointly compatible because they are not separable as unique physical causes.
+
+Lecture : A et D restent ouvertes parce que le z local est une relation nuage/pose, pas un verdict sur lequel des deux est fautif. B et C sont fermées comme *points d’introduction*. F est fermée comme *introduction unique par la recherche* : l’offset existe déjà à la pose d’identité. F n’est pas une explication des 63 unresolved. E n’est pas observée : associationStatus=`same-target-and-rail-pose` sur 239/239, mêmes captureId/visitId, snapshotId = chunkId, deltas d’horloge enregistrement de l’ordre de 0–1 s et recouvrants entre cohortes. G reste le résidu non séparable (acquisition, pose, calibration, chaîne capteur→scène).
 
 ## Provenance disponible
 
 - timestamps présents sur 239/239 rails (champs matérialisés chunk/snapshot/eligibility).
+- associationStatus: {"same-target-and-rail-pose":239}.
 - contradictions d’association directe: 0.
+- delta médian (fin d’acquisition − snapshot.acquiredThrough) failures=0.0000000 ms, controls=0.0000000 ms.
+- delta médian (capturedAt − viewObservedAt) failures=520.00000 ms, controls=437.00000 ms.
 - captureId, chunkId, snapshotId, frameId, viewEpochId, sourceStatus, associationStatus sont lus lorsqu’ils existent.
+- sourceStatus nuage: reference-version-and-matrix-stable-through-checkpoint (enregistré, non vérifié indépendamment).
+- coordinateSystem.physicalCalibrationStatus: not-independently-verified ; units: metres-observed-not-independently-calibrated.
 
 ## PROVENANCE_GAP
 
@@ -118,7 +135,7 @@ Instrumentation minimale à ajouter lors d’une future collecte Native:
 
 ## Causes non démontrées
 
-La source causale reste `unknown` rail par rail. Les données présentes ne démontrent ni un LiDAR fautif, ni une pose profil fautive, ni un décalage temporel, ni une association incorrecte, ni un snapshot incorrect, ni une transformation amont fautive.
+La source causale reste `unknown` rail par rail. Les données présentes ne démontrent ni un LiDAR fautif, ni une pose profil fautive, ni un décalage temporel, ni une association incorrecte, ni un snapshot incorrect, ni une transformation amont fautive. Elles ne démontrent pas non plus que l’offset nuage–gabarit à la pose d’identité *est* la cause des 63 « Plan de roulement non estimable. ».
 
 ## Fichiers consultés
 

@@ -1225,8 +1225,72 @@ function summarize(rails) {
   const failures = rails.filter(r => r.identity.cohort === 'failure');
   const qTopRows = {
     topRowsLt3: failures.filter(r => (r.engineTrace?.topRows ?? 0) < 3).length,
-    topRowsGe3: failures.filter(r => (r.engineTrace?.topRows ?? 0) >= 3).length
+    topRowsGe3: failures.filter(r => (r.engineTrace?.topRows ?? 0) >= 3).length,
+    topRowsEq0: failures.filter(r => (r.engineTrace?.topRows ?? 0) === 0).length,
+    topRows1or2: failures.filter(r => {
+      const t = r.engineTrace?.topRows ?? 0;
+      return t === 1 || t === 2;
+    }).length
   };
+  const fLocal = failures.map(r => r.sceneProjectedCloudStatistics?.median).filter(finite);
+  const cLocal = rails.filter(r => r.identity.cohort === 'control').map(r => r.sceneProjectedCloudStatistics?.median).filter(finite);
+  const cIqr = cLocal.length ? [quantileSorted(cLocal.slice().sort((a, b) => a - b), 0.25), quantileSorted(cLocal.slice().sort((a, b) => a - b), 0.75)] : [null, null];
+  const failuresInsideControlLocalIqr = fLocal.filter(z => z >= cIqr[0] && z <= cIqr[1]).length;
+  const contourZs = rails.map(r => r.cloudContourRelation?.contourMedianLocalZ).filter(finite);
+  const contourSpread = contourZs.length ? Math.max(...contourZs) - Math.min(...contourZs) : null;
+  const mixedPairs = [];
+  const lrSeen = new Set();
+  for (const r of rails) {
+    const ctx = r.sameVisitOppositeSideContext;
+    if (!ctx) continue;
+    const k = r.identity.visitId;
+    if (lrSeen.has(k)) continue;
+    lrSeen.add(k);
+    mixedPairs.push({
+      sessionId: r.identity.sessionId,
+      visitIndex: r.identity.visitIndex,
+      leftCohort: r.identity.side === 'left' ? r.identity.cohort : ctx.opposite.cohort,
+      rightCohort: r.identity.side === 'right' ? r.identity.cohort : ctx.opposite.cohort,
+      originDisplacement: ctx.comparison?.profileOriginDisplacement ?? null,
+      sameFrameId: ctx.sameFrameId,
+      sameSourceFile: ctx.sameSourceFile,
+      chunkIntersection: (ctx.chunkSources?.intersection || []).length,
+      axisZRadians: ctx.comparison?.axisOrientationDeltaRadians?.z ?? null
+    });
+  }
+  const multi = rails.filter(r => r.chunkComposition.chunkCount > 1);
+  let concatOutside = 0;
+  for (const r of multi) {
+    const meds = r.perChunkStatistics.map(c => c.independentMedianLocalZ).filter(finite);
+    const cat = r.chunkComposition.concatenatedProjectedMedian;
+    if (!meds.length || !finite(cat)) continue;
+    if (cat < Math.min(...meds) - 1e-12 || cat > Math.max(...meds) + 1e-12) concatOutside++;
+  }
+  const assocStatus = {};
+  for (const r of rails) {
+    const s = r.associationObservability?.snapshotAssociationStatus ?? 'null';
+    assocStatus[s] = (assocStatus[s] || 0) + 1;
+  }
+  const timestampDeltas = { failure: {}, control: {} };
+  for (const cohort of ['failure', 'control']) {
+    const xs = rails.filter(r => r.identity.cohort === cohort);
+    const ended = [], started = [], capturedView = [];
+    for (const r of xs) {
+      for (const d of r.temporalProvenance?.deltasMs || []) {
+        if (finite(d.acquisitionEndedMinusSnapshotAcquiredThroughMs)) ended.push(d.acquisitionEndedMinusSnapshotAcquiredThroughMs);
+        if (finite(d.acquisitionStartedMinusSnapshotStartedMs)) started.push(d.acquisitionStartedMinusSnapshotStartedMs);
+        if (finite(d.capturedAtMinusViewObservedAtMs)) capturedView.push(d.capturedAtMinusViewObservedAtMs);
+      }
+    }
+    timestampDeltas[cohort] = {
+      acquisitionEndedMinusSnapshotAcquiredThroughMs: stats(ended),
+      acquisitionStartedMinusSnapshotStartedMs: stats(started),
+      capturedAtMinusViewObservedAtMs: stats(capturedView)
+    };
+  }
+  const lrDisplacements = mixedPairs.map(p => p.originDisplacement).filter(finite);
+  const lrAngles = mixedPairs.map(p => p.axisZRadians).filter(finite);
+
   return {
     rails: rails.length,
     projectionEquivalent,
@@ -1244,8 +1308,32 @@ function summarize(rails) {
     sameVisitOppositeSidePairs: rails.filter(r => r.sameVisitOppositeSideContext).length / 2,
     sessions,
     associationDirectContradictions: assocContradictions,
+    associationStatusCounts: assocStatus,
     railsWithTimestamps: timestampsPresent,
+    timestampDeltasMs: timestampDeltas,
     failureEngineSubgroups: qTopRows,
+    overlap: {
+      failuresIndependentLocalZInsideControlIqr: failuresInsideControlLocalIqr,
+      failureCount: failures.length,
+      controlIndependentLocalZIqr: cIqr
+    },
+    contourMedianLocalZ: {
+      min: contourZs.length ? Math.min(...contourZs) : null,
+      max: contourZs.length ? Math.max(...contourZs) : null,
+      spread: contourSpread
+    },
+    leftRight: {
+      uniquePairs: mixedPairs.length,
+      mixedCohortPairs: mixedPairs.filter(p => p.leftCohort !== p.rightCohort).length,
+      failureFailurePairs: mixedPairs.filter(p => p.leftCohort === 'failure' && p.rightCohort === 'failure').length,
+      originDisplacement: stats(lrDisplacements),
+      axisZOrientationDeltaRadians: stats(lrAngles),
+      pairs: mixedPairs
+    },
+    chunkCompositionIntegrity: {
+      multiChunkRails: multi.length,
+      concatMedianOutsidePerChunkEnvelope: concatOutside
+    },
     special: {
       session3876864f: rails.filter(r => r.identity.sessionId.startsWith('3876864f')).map(r => ({
         identity: compactRef(r), gap: r.cloudContourRelation?.medianDifferenceIndependent,
@@ -1318,9 +1406,9 @@ function hypothesesFrom(summary, rails) {
           : 'Required timestamps are absent; association contemporaneity is not testable from the available fields.')
     },
     F: {
-      status: (eq && sceneStageAll && cohortGapBothFinite) ? 'CONTREDIT' : 'COMPATIBLE',
-      statement: (eq && sceneStageAll && cohortGapBothFinite)
-        ? 'The relative vertical relation, and the failure/control separation in that relation, are observable before coarse/refined search. Engine search cannot be its sole introduction point.'
+      status: (eq && sceneStageAll) ? 'CONTREDIT' : 'COMPATIBLE',
+      statement: (eq && sceneStageAll)
+        ? 'The relative vertical cloud/profile offset is measurable at identity pose, before coarse/refined search, on all 239 rails. Engine search cannot be the sole introduction of that offset. This does not claim that the offset separates failures from controls, nor that it is the cause of the 63 unresolved rails.'
         : 'Pre-search localization is incomplete on some rails, so engine search cannot be excluded as an introduction path.'
     },
     G: {
@@ -1414,21 +1502,29 @@ function report(a) {
     '',
     '## Failures vs controls',
     '',
+    'Le z médian du contour en coordonnées profile-local est le même objet géométrique sur les 239 rails (étendue ' + fmt(a.summary.contourMedianLocalZ.spread) + '). L’écart nuage–contour se réduit donc au z local du nuage, décalé d’une constante de gabarit. Ce n’est pas un second observable indépendant.',
+    '',
     `Médiane des médianes rail, z local indépendant: failures=${fmt(f.independentLocalZMedianAcrossRails.median)}, controls=${fmt(c.independentLocalZMedianAcrossRails.median)}, différence=${fmt(a.summary.cohortMedianDifferences.independentLocalZ)}.`,
     `Médiane des médianes rail, z profile-local fourni: failures=${fmt(f.providedLocalZMedianAcrossRails.median)}, controls=${fmt(c.providedLocalZMedianAcrossRails.median)}, différence=${fmt(a.summary.cohortMedianDifferences.providedLocalZ)}.`,
     `Médiane de l’écart médian nuage–contour: failures=${fmt(f.cloudContourGapAcrossRails.median)}, controls=${fmt(c.cloudContourGapAcrossRails.median)}, différence=${fmt(a.summary.cohortMedianDifferences.cloudContourGap)}.`,
     `Médiane seed.z: failures=${fmt(f.seedZAcrossRails.median)}, controls=${fmt(c.seedZAcrossRails.median)}, différence=${fmt(a.summary.cohortMedianDifferences.seedZ)}.`,
     `Médiane topRows: failures=${fmt(f.topRowsAcrossRails.median)}, controls=${fmt(c.topRowsAcrossRails.median)}.`,
     '',
-    `Sous-groupes engine (failures, topRows, contexte RSF non redémontré): topRows<3 = ${a.summary.failureEngineSubgroups.topRowsLt3}, topRows≥3 = ${a.summary.failureEngineSubgroups.topRowsGe3}.`,
+    `${a.summary.overlap.failuresIndependentLocalZInsideControlIqr}/${a.summary.overlap.failureCount} failures ont un z local médian dans l’IQR des controls. Les distributions de z local se recouvrent. L’écart de médianes 0.011 n’est pas une séparation de cohortes.`,
+    '',
+    `Le z scène brut ne se compare pas d’un rail à l’autre (médianes ${fmt(f.rawSceneZMedianAcrossRails.median)} vs ${fmt(c.rawSceneZMedianAcrossRails.median)}) : les origines scène diffèrent selon le site (session f938b9f8 vers ~740 unités d’origine). Après passage en profile-local, cette échelle disparaît.`,
+    '',
+    `Sous-groupes engine (failures, topRows de CAP.trace, contexte RSF non redémontré): topRows=0 : ${a.summary.failureEngineSubgroups.topRowsEq0} ; topRows∈{1,2} : ${a.summary.failureEngineSubgroups.topRows1or2} ; topRows≥3 : ${a.summary.failureEngineSubgroups.topRowsGe3}. Séparation engine (topRows 0–2 vs ≥15) déjà établie par RSF V1 ; elle n’est pas relocalisée ici comme cause.`,
     '',
     '## Chunks',
     '',
-    `Distribution du nombre de chunks par rail: ${JSON.stringify(a.summary.chunkCountDistribution)}. Les statistiques par chunk sont calculées avant concaténation. Aucun seuil d’anomalie n’est défini.`,
+    `Distribution du nombre de chunks par rail: ${JSON.stringify(a.summary.chunkCountDistribution)}. Rails multi-chunks: ${a.summary.chunkCompositionIntegrity.multiChunkRails}. Médiane concaténée hors enveloppe des médianes par chunk: ${a.summary.chunkCompositionIntegrity.concatMedianOutsidePerChunkEnvelope}. La concaténation n’introduit pas une relation absente des chunks.`,
     '',
     '## Continuité et gauche/droite',
     '',
-    `Paires gauche/droite au même visit dans le registre: ${a.summary.sameVisitOppositeSidePairs}. Les contextes rail-par-rail publient origine, angles d’axes, delta de matrice, sources/chunks et deltas de distributions. La continuité est limitée aux visites présentes dans ces 239 rails.`,
+    `Paires gauche/droite au même visit dans le registre: ${a.summary.leftRight.uniquePairs} (dont ${a.summary.leftRight.mixedCohortPairs} mixtes control/failure, ${a.summary.leftRight.failureFailurePairs} failure/failure). Aucune paire ne partage un chunk (intersection vide) : les nuages gauche et droit sont des acquisitions distinctes. frameId, pageId et sourceFile coïncident. Déplacement d’origine médian ${fmt(a.summary.leftRight.originDisplacement.median)} (largeur de voie observée, pas un saut de pose). Angle d’axe z constant ${fmt(a.summary.leftRight.axisZOrientationDeltaRadians.median)} rad sur les paires mesurées.`,
+    '',
+    'Les déplacements d’origine entre voisins du registre atteignent >1000 unités lorsque des visites non sélectionnées s’intercalent. Ce n’est pas une trajectoire physique visit-à-visit. La continuité publiée est celle du registre 239, pas celle de la session Native complète.',
     '',
     '## Sessions',
     '',
@@ -1436,20 +1532,29 @@ function report(a) {
     '',
     '## Cas de contrôle',
     '',
-    `- session 3876864f… : ${a.summary.special.session3876864f.length} rails in register (failures=${a.summary.special.session3876864f.filter(x => x.identity.cohort === 'failure').length}, controls=${a.summary.special.session3876864f.filter(x => x.identity.cohort === 'control').length}). No internal control is invented.`,
-    `- session d9ccb545… : ${a.summary.special.sessionD9ccb545.length} rails.`,
-    `- session 0c58c033…: ${a.summary.special.session0c58c033.length} rails in the 239-register; visitIndex values are published numerically (no jump threshold). The degradation boundary cited at visitIndex 245 is a frozen RSF context; the register’s nearest selected visits are listed in the JSON.`,
-    `- cluster part 1 / right / cuts 5083–5276: ${a.summary.special.clusterPart1Right5083_5276.length} rails.`,
+    `- session 3876864f : ${a.summary.special.session3876864f.length} rails, 17 failures, 0 control. Presque tout à droite, cuts 5083–5106, seed.z typiquement à la borne de recherche, topRows=0. Aucun témoin interne n’est inventé.`,
+    `- session d9ccb545 : ${a.summary.special.sessionD9ccb545.length} rails (35 failures, 19 controls), même fichier, même frame, origines ~71. Les failures occupent les visitIndex bas (0–190, essentiellement côté droit) ; les controls les visitIndex plus élevés. Témoin intra-session réel, mais pas au même visitIndex.`,
+    `- session 0c58c033 : ${a.summary.special.session0c58c033.length} rails (10 failures, 40 controls). visitIndex du registre : 0…315. Autour de 245, le registre contient 224 (failure, gap≈0, seed.z=+0.034, topRows=0), 226 (control), 231 gauche control / droite failure, 257 control. La frontière RSF à 245 n’est pas un saut de z local unique dans ce sous-ensemble.`,
+    `- session 92dbb85e : 1 failure parmi 31 controls. Gap nuage–contour ≈ −0.001 (nuage presque sur le gabarit) et topRows=0, seed.z à la borne. L’écart médian nuage–contour ne prédit pas cet échec.`,
+    `- cluster part 1 / right / cuts 5083–5276 : ${a.summary.special.clusterPart1Right5083_5276.length} rails (sessions 3876864f + d9ccb545).`,
+    `- paires mixtes même visit : 0c58c033 visit 63 (gauche control topRows=43, droite failure topRows=2, gaps comparables) et visit 231 (gauche control gap≈−0.048, droite failure gap≈−0.122). Même visit, même source, nuages distincts, issues engine distinctes.`,
     '',
     '## Hypothèses A–G',
     '',
     hyp,
     '',
+    'Lecture : A et D restent ouvertes parce que le z local est une relation nuage/pose, pas un verdict sur lequel des deux est fautif. B et C sont fermées comme *points d’introduction*. F est fermée comme *introduction unique par la recherche* : l’offset existe déjà à la pose d’identité. F n’est pas une explication des 63 unresolved. E n’est pas observée : associationStatus=`same-target-and-rail-pose` sur 239/239, mêmes captureId/visitId, snapshotId = chunkId, deltas d’horloge enregistrement de l’ordre de 0–1 s et recouvrants entre cohortes. G reste le résidu non séparable (acquisition, pose, calibration, chaîne capteur→scène).',
+    '',
     '## Provenance disponible',
     '',
     `- timestamps présents sur ${a.summary.railsWithTimestamps}/${a.summary.rails} rails (champs matérialisés chunk/snapshot/eligibility).`,
+    `- associationStatus: ${JSON.stringify(a.summary.associationStatusCounts)}.`,
     `- contradictions d’association directe: ${a.summary.associationDirectContradictions}.`,
+    `- delta médian (fin d’acquisition − snapshot.acquiredThrough) failures=${fmt(a.summary.timestampDeltasMs.failure.acquisitionEndedMinusSnapshotAcquiredThroughMs.median)} ms, controls=${fmt(a.summary.timestampDeltasMs.control.acquisitionEndedMinusSnapshotAcquiredThroughMs.median)} ms.`,
+    `- delta médian (capturedAt − viewObservedAt) failures=${fmt(a.summary.timestampDeltasMs.failure.capturedAtMinusViewObservedAtMs.median)} ms, controls=${fmt(a.summary.timestampDeltasMs.control.capturedAtMinusViewObservedAtMs.median)} ms.`,
     `- captureId, chunkId, snapshotId, frameId, viewEpochId, sourceStatus, associationStatus sont lus lorsqu’ils existent.`,
+    `- sourceStatus nuage: reference-version-and-matrix-stable-through-checkpoint (enregistré, non vérifié indépendamment).`,
+    `- coordinateSystem.physicalCalibrationStatus: not-independently-verified ; units: metres-observed-not-independently-calibrated.`,
     '',
     '## PROVENANCE_GAP',
     '',
@@ -1463,7 +1568,7 @@ function report(a) {
     '',
     '## Causes non démontrées',
     '',
-    'La source causale reste `unknown` rail par rail. Les données présentes ne démontrent ni un LiDAR fautif, ni une pose profil fautive, ni un décalage temporel, ni une association incorrecte, ni un snapshot incorrect, ni une transformation amont fautive.',
+    'La source causale reste `unknown` rail par rail. Les données présentes ne démontrent ni un LiDAR fautif, ni une pose profil fautive, ni un décalage temporel, ni une association incorrecte, ni un snapshot incorrect, ni une transformation amont fautive. Elles ne démontrent pas non plus que l’offset nuage–gabarit à la pose d’identité *est* la cause des 63 « Plan de roulement non estimable. ».',
     '',
     '## Fichiers consultés',
     '',

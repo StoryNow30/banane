@@ -1,7 +1,7 @@
 {
   "format": "banane-vertical-alignment-provenance-v1",
   "baseCommit": "52d4f529557641dd34d1c2296722e937c48702d0",
-  "generatedAt": "2026-09-17T14:11:17.060Z",
+  "generatedAt": "2026-09-17T14:21:20.277Z",
   "source": {
     "repository": "StoryNow30/banane-data",
     "commit": "d541686d3a98569125cdbdb261ef121c9f533d6a",
@@ -4972,10 +4972,348 @@
       }
     },
     "associationDirectContradictions": 0,
+    "associationStatusCounts": {
+      "same-target-and-rail-pose": 239
+    },
     "railsWithTimestamps": 239,
+    "timestampDeltasMs": {
+      "failure": {
+        "acquisitionEndedMinusSnapshotAcquiredThroughMs": {
+          "count": 73,
+          "min": -539,
+          "q1": 0,
+          "median": 0,
+          "q3": 0,
+          "max": 0,
+          "mean": -33.64383561643836
+        },
+        "acquisitionStartedMinusSnapshotStartedMs": {
+          "count": 73,
+          "min": 19,
+          "q1": 36,
+          "median": 62,
+          "q3": 121,
+          "max": 929,
+          "mean": 135.986301369863
+        },
+        "capturedAtMinusViewObservedAtMs": {
+          "count": 73,
+          "min": 48,
+          "q1": 264,
+          "median": 520,
+          "q3": 765,
+          "max": 4210,
+          "mean": 571.6164383561644
+        }
+      },
+      "control": {
+        "acquisitionEndedMinusSnapshotAcquiredThroughMs": {
+          "count": 220,
+          "min": -1132,
+          "q1": 0,
+          "median": 0,
+          "q3": 0,
+          "max": 0,
+          "mean": -86.70454545454545
+        },
+        "acquisitionStartedMinusSnapshotStartedMs": {
+          "count": 220,
+          "min": 7,
+          "q1": 37.75,
+          "median": 66.5,
+          "q3": 198.25,
+          "max": 1579,
+          "mean": 180.9
+        },
+        "capturedAtMinusViewObservedAtMs": {
+          "count": 220,
+          "min": 60,
+          "q1": 167,
+          "median": 437,
+          "q3": 815,
+          "max": 4924,
+          "mean": 634.7363636363636
+        }
+      }
+    },
     "failureEngineSubgroups": {
       "topRowsLt3": 63,
-      "topRowsGe3": 0
+      "topRowsGe3": 0,
+      "topRowsEq0": 55,
+      "topRows1or2": 8
+    },
+    "overlap": {
+      "failuresIndependentLocalZInsideControlIqr": 40,
+      "failureCount": 63,
+      "controlIndependentLocalZIqr": [
+        -0.14617034810180485,
+        -0.12149365948062041
+      ]
+    },
+    "contourMedianLocalZ": {
+      "min": -0.10487099754391238,
+      "max": -0.10487099725287408,
+      "spread": 2.9103830456733704e-10
+    },
+    "leftRight": {
+      "uniquePairs": 21,
+      "mixedCohortPairs": 2,
+      "failureFailurePairs": 1,
+      "originDisplacement": {
+        "count": 21,
+        "min": 1.307484003209757,
+        "q1": 1.4246604506793883,
+        "median": 1.432719617848404,
+        "q3": 1.4759341037484486,
+        "max": 1.5000000071572164,
+        "mean": 1.4382084262404773
+      },
+      "axisZOrientationDeltaRadians": {
+        "count": 21,
+        "min": 0.10008341675107742,
+        "q1": 0.10008341675107742,
+        "median": 0.10008341675107742,
+        "q3": 0.10008341675107742,
+        "max": 0.10008341675107742,
+        "mean": 0.10008341675107739
+      },
+      "pairs": [
+        {
+          "sessionId": "ba703239-af3c-48eb-b830-c31e821bd730",
+          "visitIndex": 49,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4247585526454918,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "ba703239-af3c-48eb-b830-c31e821bd730",
+          "visitIndex": 71,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4265292559836382,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "ba703239-af3c-48eb-b830-c31e821bd730",
+          "visitIndex": 174,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4239277175907379,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "ba703239-af3c-48eb-b830-c31e821bd730",
+          "visitIndex": 228,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4243299234740014,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "3876864f-a864-4678-b7b0-3feecc4af418",
+          "visitIndex": 15,
+          "leftCohort": "failure",
+          "rightCohort": "failure",
+          "originDisplacement": 1.499994028572761,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "d9ccb545-25db-4262-b383-794ab3272ec7",
+          "visitIndex": 95,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.440630914218382,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "d9ccb545-25db-4262-b383-794ab3272ec7",
+          "visitIndex": 322,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4999974239648546,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "0c58c033-f2e7-4aa5-ad8c-80b081a83932",
+          "visitIndex": 62,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.432719617848404,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "0c58c033-f2e7-4aa5-ad8c-80b081a83932",
+          "visitIndex": 63,
+          "leftCohort": "control",
+          "rightCohort": "failure",
+          "originDisplacement": 1.3190573398487953,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "0c58c033-f2e7-4aa5-ad8c-80b081a83932",
+          "visitIndex": 231,
+          "leftCohort": "control",
+          "rightCohort": "failure",
+          "originDisplacement": 1.307484003209757,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "92dbb85e-9534-4de6-83c5-289d3ecdf766",
+          "visitIndex": 102,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4246604506793883,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "06c77393-ecb3-4aa1-84e8-7fd9c5b60c7f",
+          "visitIndex": 191,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4759341037484486,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "06c77393-ecb3-4aa1-84e8-7fd9c5b60c7f",
+          "visitIndex": 230,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4246016924062626,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "06c77393-ecb3-4aa1-84e8-7fd9c5b60c7f",
+          "visitIndex": 251,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4292867635460635,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 4,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4289548069612326,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 13,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.492175386853458,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 84,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4445051679976417,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 86,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4403653122057485,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 115,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.5000000071572164,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 116,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4999999969365465,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        },
+        {
+          "sessionId": "f938b9f8-e2d7-47c6-bb08-5b00f3debe05",
+          "visitIndex": 138,
+          "leftCohort": "control",
+          "rightCohort": "control",
+          "originDisplacement": 1.4424644852011979,
+          "sameFrameId": true,
+          "sameSourceFile": true,
+          "chunkIntersection": 0,
+          "axisZRadians": 0.10008341675107742
+        }
+      ]
+    },
+    "chunkCompositionIntegrity": {
+      "multiChunkRails": 51,
+      "concatMedianOutsidePerChunkEnvelope": 0
     },
     "special": {
       "session3876864f": [
@@ -8183,7 +8521,7 @@
     },
     "F": {
       "status": "CONTREDIT",
-      "statement": "The relative vertical relation, and the failure/control separation in that relation, are observable before coarse/refined search. Engine search cannot be its sole introduction point."
+      "statement": "The relative vertical cloud/profile offset is measurable at identity pose, before coarse/refined search, on all 239 rails. Engine search cannot be the sole introduction of that offset. This does not claim that the offset separates failures from controls, nor that it is the cause of the 63 unresolved rails."
     },
     "G": {
       "status": "COMPATIBLE",
@@ -207038,5 +207376,5 @@
       "limitations": []
     }
   ],
-  "deterministicSha256": "ae1331eeb9a540896ef4f4059ede592f912d2da65ce5aca36fc9293a27bb9c0a"
+  "deterministicSha256": "515199edd6ba1aae7d8f87d791a5b4c28f6b50942563af571fad3cf9cf0a4b87"
 }
