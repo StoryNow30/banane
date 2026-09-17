@@ -3,7 +3,7 @@
 Branche: `lab-vertical-alignment-provenance-v1-richard`
 Base scientifique: `infra/research-capsule-rsf-v1` @ `52d4f529557641dd34d1c2296722e937c48702d0`
 Données: `StoryNow30/banane-data` @ `d541686d3a98569125cdbdb261ef121c9f533d6a` / `datasets/native-v4.6-2026-09-16`
-Artefact déterministe (hors `generatedAt`): `515199edd6ba1aae7d8f87d791a5b4c28f6b50942563af571fad3cf9cf0a4b87`
+Artefact déterministe (hors `generatedAt`): `5c024a41779665fc8ad394cfe7462e41239eaea97b0162122f3c8daafd3c1202`
 
 ## Portée
 
@@ -136,6 +136,71 @@ Instrumentation minimale à ajouter lors d’une future collecte Native:
 ## Causes non démontrées
 
 La source causale reste `unknown` rail par rail. Les données présentes ne démontrent ni un LiDAR fautif, ni une pose profil fautive, ni un décalage temporel, ni une association incorrecte, ni un snapshot incorrect, ni une transformation amont fautive. Elles ne démontrent pas non plus que l’offset nuage–gabarit à la pose d’identité *est* la cause des 63 « Plan de roulement non estimable. ».
+
+## INDEPENDENT_REPLICATION_CONFRONTATION
+
+Pair : `lab-vertical-alignment-provenance-replication-v1` @ `7a6555b8389ae584abef70bc757feac9940f784e` (`VERTICAL_ALIGNMENT_PROVENANCE_REPLICATION_V1.md`).
+Statut : **PARTIELLEMENT CONCORDANT**.
+
+Loki tool file at that HEAD is the literal string "see-file" (MCP truncation). Confrontation uses the published markdown and tests only. Session-level tables are not in that report.
+
+### Différence de définition
+
+La différence apparente SCENE_PROFILE_RELATION × 239 vs coarse-search-offset-while-local-near-plane 40/63 n’est pas une contradiction de mesure. C’est premier-stade-où-l’offset-existe vs premier-stade-où-une-séparation-de-cohorte-apparaît.
+
+- Richard demande : premier stade où l’offset nuage/profil existe (sans seuil).
+- Loki demande : premier stade où un |Δ| de cohortes dépasse 0.015, puis familles à 0.030.
+
+### Phénomènes reproduits
+
+- Population 63 failures + 176 controls, exit « Plan de roulement non estimable. »
+- Association : 0 contradiction / 239 des deux côtés
+- coarse.z médian failures -0.040000000 vs Richard -0.040000000 ; controls -0.0010000000 vs -0.0010000000
+- refined.z médian failures -0.043000000 vs Richard -0.043000000 ; controls -0.0030000000 vs -0.0030000000
+- Z scène − origine profil Loki (-0.12660000 / -0.14050000) ≈ z local indépendant Richard (-0.12671925 / -0.13808559)
+- Calibration : metres-observed-not-independently-calibrated / not-independently-verified
+
+### Différences méthodologiques
+
+- Loki lit la géométrie depuis la capsule RSF ; Richard relit la vue matérialisée (parité payload 239/239, donc mêmes points si la parité tient).
+- Loki n’appelle pas G.propose ; Richard observe seed/coarse/refined via CAP.trace. Les z coarse/refined publiés coïncident malgré cela.
+- Loki publie un seuil 0.015 (stade) et 0.030 (familles). Richard n’en définit aucun pour localiser le premier stade.
+- Loki mesure zLocalHeadWindow (fenêtre « tête »). Richard mesure la médiane du nuage visible entier et l’écart au gabarit. Ce n’est pas le même observable local.
+
+### Différences de définition
+
+- Richard firstObservedStage = existence de la relation nuage/pose à l’identité, sur les 239 rails.
+- Loki firstStageAbove015 = premier |Δ| de médianes de cohortes ≥ 0.015. Son z local tête |Δ|=0.0136 < 0.015, puis coarse |Δ|=0.039 → coarse-search-z.
+- Le |Δ| de z local indépendant Richard vaut 0.0114 < 0.015, puis |Δ| coarse 0.039. Appliquée aux différences de cohortes, la règle 0.015 de Loki désignerait aussi coarse-search comme premier stade séparateur.
+- Les familles Loki 40 / 10 / 13 partitionnent les 63 failures. Richard 40/63 dans l’IQR de z local des controls est un autre cut. Les deux « 40 » ne sont pas identifiés comme les mêmes rails.
+
+### Contradictions réelles
+
+Aucune contradiction réelle identifiée sur les quantités publiées qui se recouvrent (coarse.z, refined.z, association 0/239, Z scène−origine ≈ z local indépendant).
+
+Sessions 0c58c033 / d9ccb545 / 3876864f : Le rapport Loki à 7a6555b ne publie pas 0c58c033, d9ccb545, 3876864f. Pas de confrontation de grain session.
+
+Proxy des familles Loki 0.030 appliqué à ( |gap Richard|, |coarse.z| ) : {"local-transformed-already-offset":10,"coarse-search-offset-while-local-near-plane":41,"no-large-offset":12} contre Loki 40 / 10 / 13. Proxy only. Richard gap (full-cloud median vs contour) is not Loki zLocalHeadWindow. Counts are not an identity of the same 40 rails.
+
+Loki n’a pas publié A–G. Son tableau (local tête près du plan, gros z à coarse pour 40 failures, association 0/239) est compatible avec C CONTREDIT, E non observée, et avec F CONTREDIT au sens « la recherche n’introduit pas l’offset d’existence ». Il n’est pas une affirmation que coarse.z cause les 63 RSF.
+
+## STATUT DU CHANTIER
+
+**CLOSED**
+
+Mesures indépendantes 239/239 terminées, runtime gelé, confrontation documentaire Loki faite. Les pistes moteur-critiques que ce lab peut fermer (transform, chunks, anomalie verticale globale, association manifeste) sont fermées. Le résidu est PROVENANCE_GAP hors chemin critique moteur. causalSource reste unknown. Pas de merge.
+
+Pistes fermées comme explication principale des RSF :
+- **bug scene→profile transform** — FERMÉE comme explication principale des RSF. C CONTREDIT. Inverse indépendant ≡ z fourni 239/239. Loki : |Δ| local tête 0.0136 sous le seuil 0.015.
+- **bug de concaténation chunks** — FERMÉE comme explication principale des RSF. B CONTREDIT. 51 rails multi-chunks ; médiane concaténée dans l’enveloppe par chunk 51/51. Loki n’a pas testé B ; la fermeture repose sur Richard.
+- **simple anomalie verticale globale** — FERMÉE comme explication principale des RSF. L’offset nuage/profil à l’identité existe des deux côtés et ne sépare pas les cohortes (40/63 failures dans l’IQR control). Loki : 40/63 already local-near-plane sous seuil 0.030.
+- **association manifestement incorrecte** — FERMÉE comme explication principale des RSF. 0 contradiction d’identifiants / 239 chez Richard et chez Loki. associationStatus=same-target-and-rail-pose partout. E n’est pas OBSERVÉ.
+
+Pistes non fermées (hors chemin critique moteur) :
+- **origine physique LiDAR** — NON DÉMONTRÉE / NON TESTABLE comme cause. A COMPATIBLE. Relation nuage/pose, pas isolat capteur.
+- **origine physique pose** — NON DÉMONTRÉE / NON TESTABLE comme cause. D COMPATIBLE. Non séparable du nuage.
+- **chaîne capteur→scène** — PROVENANCE_GAP. sourceStatus enregistré, chaîne versionnée absente.
+- **synchronisation physique des horloges** — PROVENANCE_GAP. Timestamps présents et cohérents ; pas de preuve d’horloge commune indépendante.
 
 ## Fichiers consultés
 

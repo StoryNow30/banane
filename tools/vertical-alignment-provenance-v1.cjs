@@ -21,6 +21,28 @@ const crypto = require('node:crypto');
 const BASE_COMMIT = '52d4f529557641dd34d1c2296722e937c48702d0';
 const DATA_COMMIT = 'd541686d3a98569125cdbdb261ef121c9f533d6a';
 const DATASET_REL = 'datasets/native-v4.6-2026-09-16';
+const LOKI_REPLICATION = Object.freeze({
+  branch: 'lab-vertical-alignment-provenance-replication-v1',
+  head: '7a6555b8389ae584abef70bc757feac9940f784e',
+  report: 'VERTICAL_ALIGNMENT_PROVENANCE_REPLICATION_V1.md',
+  toolAtHead: 'see-file',
+  cited: {
+    sceneMinusOriginMedian: { failure: -0.1266, control: -0.1405, absDelta: 0.0139 },
+    localHeadMedian: { failure: 0.0069, control: -0.0067, absDelta: 0.0136 },
+    coarseZMedian: { failure: -0.040, control: -0.001, absDelta: 0.039 },
+    refinedZMedian: { failure: -0.043, control: -0.003, absDelta: 0.040 },
+    firstStageAbove015: 'coarse-search-z',
+    familyThreshold: 0.030,
+    families: {
+      'coarse-search-offset-while-local-near-plane': 40,
+      'local-transformed-already-offset': 10,
+      'no-large-offset': 13
+    },
+    associationInconsistencies: 0,
+    stageThreshold: 0.015
+  }
+});
+
 const CAPSULE_DIR = path.join('data', 'capsules', 'rsf-v1');
 
 const EXPECTED_RUNTIME_HASHES = Object.freeze({
@@ -1361,7 +1383,27 @@ function summarize(rails) {
         coarseBestZ: r.engineTrace?.coarseBestZ, refinedBestZ: r.engineTrace?.refinedBestZ,
         gap: r.cloudContourRelation?.medianDifferenceIndependent, stage: r.firstObservedStage
       }))
-    }
+    },
+    lokiThresholdProxyOnRichardGapAndCoarse: (() => {
+      const T = LOKI_REPLICATION.cited.familyThreshold;
+      const counts = {
+        'local-transformed-already-offset': 0,
+        'coarse-search-offset-while-local-near-plane': 0,
+        'no-large-offset': 0
+      };
+      for (const r of failures) {
+        const gap = Math.abs(r.cloudContourRelation?.medianDifferenceIndependent ?? Infinity);
+        const coarse = Math.abs(r.engineTrace?.coarseBestZ ?? Infinity);
+        if (gap >= T) counts['local-transformed-already-offset']++;
+        else if (coarse >= T) counts['coarse-search-offset-while-local-near-plane']++;
+        else counts['no-large-offset']++;
+      }
+      return {
+        note: 'Proxy only. Richard gap (full-cloud median vs contour) is not Loki zLocalHeadWindow. Counts are not an identity of the same 40 rails.',
+        threshold: T,
+        counts
+      };
+    })()
   };
 }
 
@@ -1443,6 +1485,125 @@ function buildProvenanceGap(rails) {
       'Persist a pose-state timestamp distinct from export storedAt',
       'Record an independently verified unit/calibration status rather than metres-observed-not-independently-calibrated'
     ]
+  };
+}
+
+function confrontationFrom(summary, hypotheses) {
+  const loki = LOKI_REPLICATION.cited;
+  const proxy = summary.lokiThresholdProxyOnRichardGapAndCoarse;
+  const richard = {
+    independentLocalZMedian: {
+      failure: summary.cohorts.failure.independentLocalZMedianAcrossRails.median,
+      control: summary.cohorts.control.independentLocalZMedianAcrossRails.median,
+      absDelta: Math.abs(summary.cohortMedianDifferences.independentLocalZ)
+    },
+    cloudContourGapMedian: {
+      failure: summary.cohorts.failure.cloudContourGapAcrossRails.median,
+      control: summary.cohorts.control.cloudContourGapAcrossRails.median,
+      absDelta: Math.abs(summary.cohortMedianDifferences.cloudContourGap)
+    },
+    coarseZMedian: {
+      failure: summary.cohorts.failure.coarseBestZAcrossRails.median,
+      control: summary.cohorts.control.coarseBestZAcrossRails.median
+    },
+    refinedZMedian: {
+      failure: summary.cohorts.failure.refinedBestZAcrossRails.median,
+      control: summary.cohorts.control.refinedBestZAcrossRails.median
+    },
+    firstObservedStage: summary.firstObservedStage,
+    associationDirectContradictions: summary.associationDirectContradictions,
+    hypotheses: Object.fromEntries(Object.entries(hypotheses).map(([k, v]) => [k, v.status]))
+  };
+  return {
+    peer: {
+      branch: LOKI_REPLICATION.branch,
+      head: LOKI_REPLICATION.head,
+      report: LOKI_REPLICATION.report,
+      toolAtHead: LOKI_REPLICATION.toolAtHead,
+      jsonAtHead: null,
+      limitation: 'Loki tool file at that HEAD is the literal string "see-file" (MCP truncation). Confrontation uses the published markdown and tests only. Session-level tables are not in that report.'
+    },
+    status: 'PARTIELLEMENT CONCORDANT',
+    definitionDifference: {
+      richardAsks: 'premier stade où l’offset nuage/profil existe (sans seuil)',
+      lokiAsks: 'premier stade où un |Δ| de cohortes dépasse 0.015, puis familles à 0.030',
+      verdict: 'La différence apparente SCENE_PROFILE_RELATION × 239 vs coarse-search-offset-while-local-near-plane 40/63 n’est pas une contradiction de mesure. C’est premier-stade-où-l’offset-existe vs premier-stade-où-une-séparation-de-cohorte-apparaît.'
+    },
+    reproduced: [
+      'Population 63 failures + 176 controls, exit « Plan de roulement non estimable. »',
+      'Association : 0 contradiction / 239 des deux côtés',
+      `coarse.z médian failures ${fmt(loki.coarseZMedian.failure)} vs Richard ${fmt(richard.coarseZMedian.failure)} ; controls ${fmt(loki.coarseZMedian.control)} vs ${fmt(richard.coarseZMedian.control)}`,
+      `refined.z médian failures ${fmt(loki.refinedZMedian.failure)} vs Richard ${fmt(richard.refinedZMedian.failure)} ; controls ${fmt(loki.refinedZMedian.control)} vs ${fmt(richard.refinedZMedian.control)}`,
+      `Z scène − origine profil Loki (${fmt(loki.sceneMinusOriginMedian.failure)} / ${fmt(loki.sceneMinusOriginMedian.control)}) ≈ z local indépendant Richard (${fmt(richard.independentLocalZMedian.failure)} / ${fmt(richard.independentLocalZMedian.control)})`,
+      'Calibration : metres-observed-not-independently-calibrated / not-independently-verified'
+    ],
+    methodologicalDifferences: [
+      'Loki lit la géométrie depuis la capsule RSF ; Richard relit la vue matérialisée (parité payload 239/239, donc mêmes points si la parité tient).',
+      'Loki n’appelle pas G.propose ; Richard observe seed/coarse/refined via CAP.trace. Les z coarse/refined publiés coïncident malgré cela.',
+      'Loki publie un seuil 0.015 (stade) et 0.030 (familles). Richard n’en définit aucun pour localiser le premier stade.',
+      'Loki mesure zLocalHeadWindow (fenêtre « tête »). Richard mesure la médiane du nuage visible entier et l’écart au gabarit. Ce n’est pas le même observable local.'
+    ],
+    definitionalDifferences: [
+      'Richard firstObservedStage = existence de la relation nuage/pose à l’identité, sur les 239 rails.',
+      'Loki firstStageAbove015 = premier |Δ| de médianes de cohortes ≥ 0.015. Son z local tête |Δ|=0.0136 < 0.015, puis coarse |Δ|=0.039 → coarse-search-z.',
+      'Le |Δ| de z local indépendant Richard vaut 0.0114 < 0.015, puis |Δ| coarse 0.039. Appliquée aux différences de cohortes, la règle 0.015 de Loki désignerait aussi coarse-search comme premier stade séparateur.',
+      'Les familles Loki 40 / 10 / 13 partitionnent les 63 failures. Richard 40/63 dans l’IQR de z local des controls est un autre cut. Les deux « 40 » ne sont pas identifiés comme les mêmes rails.'
+    ],
+    realContradictions: [],
+    lokiCited: loki,
+    richard,
+    thresholdProxy: proxy,
+    sessions: {
+      comparable: false,
+      reason: 'Le rapport Loki à 7a6555b ne publie pas 0c58c033, d9ccb545, 3876864f. Pas de confrontation de grain session.'
+    },
+    hypothesesAtoG: {
+      lokiPublished: false,
+      richard: richard.hypotheses,
+      reading: 'Loki n’a pas publié A–G. Son tableau (local tête près du plan, gros z à coarse pour 40 failures, association 0/239) est compatible avec C CONTREDIT, E non observée, et avec F CONTREDIT au sens « la recherche n’introduit pas l’offset d’existence ». Il n’est pas une affirmation que coarse.z cause les 63 RSF.'
+    }
+  };
+}
+
+function labStatusFrom(summary, hypotheses, confrontation) {
+  const closed = [
+    {
+      piste: 'bug scene→profile transform',
+      status: 'FERMÉE comme explication principale des RSF',
+      why: 'C CONTREDIT. Inverse indépendant ≡ z fourni 239/239. Loki : |Δ| local tête 0.0136 sous le seuil 0.015.'
+    },
+    {
+      piste: 'bug de concaténation chunks',
+      status: 'FERMÉE comme explication principale des RSF',
+      why: 'B CONTREDIT. 51 rails multi-chunks ; médiane concaténée dans l’enveloppe par chunk 51/51. Loki n’a pas testé B ; la fermeture repose sur Richard.'
+    },
+    {
+      piste: 'simple anomalie verticale globale',
+      status: 'FERMÉE comme explication principale des RSF',
+      why: 'L’offset nuage/profil à l’identité existe des deux côtés et ne sépare pas les cohortes (40/63 failures dans l’IQR control). Loki : 40/63 already local-near-plane sous seuil 0.030.'
+    },
+    {
+      piste: 'association manifestement incorrecte',
+      status: 'FERMÉE comme explication principale des RSF',
+      why: '0 contradiction d’identifiants / 239 chez Richard et chez Loki. associationStatus=same-target-and-rail-pose partout. E n’est pas OBSERVÉ.'
+    }
+  ];
+  const notClosed = [
+    { piste: 'origine physique LiDAR', status: 'NON DÉMONTRÉE / NON TESTABLE comme cause', why: 'A COMPATIBLE. Relation nuage/pose, pas isolat capteur.' },
+    { piste: 'origine physique pose', status: 'NON DÉMONTRÉE / NON TESTABLE comme cause', why: 'D COMPATIBLE. Non séparable du nuage.' },
+    { piste: 'chaîne capteur→scène', status: 'PROVENANCE_GAP', why: 'sourceStatus enregistré, chaîne versionnée absente.' },
+    { piste: 'synchronisation physique des horloges', status: 'PROVENANCE_GAP', why: 'Timestamps présents et cohérents ; pas de preuve d’horloge commune indépendante.' }
+  ];
+  return {
+    state: 'CLOSED',
+    justification: 'Mesures indépendantes 239/239 terminées, runtime gelé, confrontation documentaire Loki faite. Les pistes moteur-critiques que ce lab peut fermer (transform, chunks, anomalie verticale globale, association manifeste) sont fermées. Le résidu est PROVENANCE_GAP hors chemin critique moteur. causalSource reste unknown. Pas de merge.',
+    independentReplicationStatus: confrontation.status,
+    closedAsPrincipalRsfExplanation: closed,
+    notClosed,
+    hypotheses: Object.fromEntries(Object.entries(hypotheses).map(([k, v]) => [k, v.status])),
+    payloadParity: summary.rails,
+    remainingProvenanceGap: true,
+    causalSource: 'unknown'
   };
 }
 
@@ -1570,6 +1731,56 @@ function report(a) {
     '',
     'La source causale reste `unknown` rail par rail. Les données présentes ne démontrent ni un LiDAR fautif, ni une pose profil fautive, ni un décalage temporel, ni une association incorrecte, ni un snapshot incorrect, ni une transformation amont fautive. Elles ne démontrent pas non plus que l’offset nuage–gabarit à la pose d’identité *est* la cause des 63 « Plan de roulement non estimable. ».',
     '',
+    '## INDEPENDENT_REPLICATION_CONFRONTATION',
+    '',
+    `Pair : \`${a.independentReplicationConfrontation.peer.branch}\` @ \`${a.independentReplicationConfrontation.peer.head}\` (\`${a.independentReplicationConfrontation.peer.report}\`).`,
+    `Statut : **${a.independentReplicationConfrontation.status}**.`,
+    '',
+    a.independentReplicationConfrontation.peer.limitation,
+    '',
+    '### Différence de définition',
+    '',
+    a.independentReplicationConfrontation.definitionDifference.verdict,
+    '',
+    `- Richard demande : ${a.independentReplicationConfrontation.definitionDifference.richardAsks}.`,
+    `- Loki demande : ${a.independentReplicationConfrontation.definitionDifference.lokiAsks}.`,
+    '',
+    '### Phénomènes reproduits',
+    '',
+    a.independentReplicationConfrontation.reproduced.map(x => `- ${x}`).join('\n'),
+    '',
+    '### Différences méthodologiques',
+    '',
+    a.independentReplicationConfrontation.methodologicalDifferences.map(x => `- ${x}`).join('\n'),
+    '',
+    '### Différences de définition',
+    '',
+    a.independentReplicationConfrontation.definitionalDifferences.map(x => `- ${x}`).join('\n'),
+    '',
+    '### Contradictions réelles',
+    '',
+    a.independentReplicationConfrontation.realContradictions.length
+      ? a.independentReplicationConfrontation.realContradictions.map(x => `- ${x}`).join('\n')
+      : 'Aucune contradiction réelle identifiée sur les quantités publiées qui se recouvrent (coarse.z, refined.z, association 0/239, Z scène−origine ≈ z local indépendant).',
+    '',
+    `Sessions 0c58c033 / d9ccb545 / 3876864f : ${a.independentReplicationConfrontation.sessions.reason}`,
+    '',
+    `Proxy des familles Loki 0.030 appliqué à ( |gap Richard|, |coarse.z| ) : ${JSON.stringify(a.independentReplicationConfrontation.thresholdProxy.counts)} contre Loki 40 / 10 / 13. ${a.independentReplicationConfrontation.thresholdProxy.note}`,
+    '',
+    a.independentReplicationConfrontation.hypothesesAtoG.reading,
+    '',
+    '## STATUT DU CHANTIER',
+    '',
+    `**${a.labStatus.state}**`,
+    '',
+    a.labStatus.justification,
+    '',
+    'Pistes fermées comme explication principale des RSF :',
+    a.labStatus.closedAsPrincipalRsfExplanation.map(x => `- **${x.piste}** — ${x.status}. ${x.why}`).join('\n'),
+    '',
+    'Pistes non fermées (hors chemin critique moteur) :',
+    a.labStatus.notClosed.map(x => `- **${x.piste}** — ${x.status}. ${x.why}`).join('\n'),
+    '',
     '## Fichiers consultés',
     '',
     `Commit banane-data: \`${a.source.commit}\`. Manifest SHA-256: \`${a.source.manifestSha256}\`.`,
@@ -1634,6 +1845,8 @@ function build(opts = {}) {
   const summary = summarize(rails);
   const hyp = hypothesesFrom(summary, rails);
   const gap = buildProvenanceGap(rails);
+  const confrontation = confrontationFrom(summary, hyp);
+  const labStatus = labStatusFrom(summary, hyp, confrontation);
   const consultedHashes = { ...scanned.fileHashes };
   for (const f of located.consulted) {
     const p = path.join(dataRoot, f);
@@ -1687,6 +1900,8 @@ function build(opts = {}) {
     summary,
     hypotheses: hyp,
     provenanceGap: gap,
+    independentReplicationConfrontation: confrontation,
+    labStatus,
     rails
   };
   result.deterministicSha256 = sha256Text(canonicalize(stripGenerated(result)));
@@ -1757,15 +1972,18 @@ if (require.main === module) {
     deterministicSha256: a.deterministicSha256,
     cohortMedianDifferences: a.summary.cohortMedianDifferences,
     hypotheses: Object.fromEntries(Object.entries(a.hypotheses).map(([k, v]) => [k, v.status])),
-    provenanceGap: a.provenanceGap.code
+    provenanceGap: a.provenanceGap.code,
+    independentReplicationStatus: a.independentReplicationConfrontation.status,
+    labStatus: a.labStatus.state
   }, null, 2));
 }
 
 module.exports = {
   BASE_COMMIT, DATA_COMMIT, CAPSULE_DIR, EXPECTED_RUNTIME_HASHES, TOLERANCES, STAGES,
+  LOKI_REPLICATION,
   canonicalize, numericEnvelope, applyAffine, applyLinear, independentAffineInverse,
   projectPointIndependently, stats, loadCapsuleRegistry, runtimeHashes, auditMatrix,
   analyzeRail, loadNode, visitNodeForChunks, visitEntryClouds, listMaterializedEntries,
   scanNeededChunks, isLidarChunk, shaOf, findHumanKeys, build, report, writeOutputs,
-  classifyFirstObservedStage
+  classifyFirstObservedStage, confrontationFrom, labStatusFrom
 };

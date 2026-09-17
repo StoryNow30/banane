@@ -309,6 +309,31 @@ test('written artifact, when present, has 239 rails and unknown causalSource', (
     }
   });
   assert.deepEqual(banned, []);
+  assert.equal(disk.labStatus.state, 'CLOSED');
+  assert.equal(disk.independentReplicationConfrontation.status, 'PARTIELLEMENT CONCORDANT');
+  assert.notEqual(disk.independentReplicationConfrontation.status, 'CONCORDANT');
+  assert.notEqual(disk.independentReplicationConfrontation.status, 'CONTRADICTOIRE');
+  assert.deepEqual(disk.independentReplicationConfrontation.realContradictions, []);
+  assert.equal(disk.independentReplicationConfrontation.peer.head, lab.LOKI_REPLICATION.head);
+  const closed = disk.labStatus.closedAsPrincipalRsfExplanation.map(x => x.piste);
+  assert.ok(closed.includes('bug scene→profile transform'));
+  assert.ok(closed.includes('bug de concaténation chunks'));
+  assert.ok(closed.includes('simple anomalie verticale globale'));
+  assert.ok(closed.includes('association manifestement incorrecte'));
+  const open = disk.labStatus.notClosed.map(x => x.piste);
+  assert.ok(open.includes('origine physique LiDAR'));
+  assert.ok(open.includes('origine physique pose'));
+  assert.ok(open.includes('chaîne capteur→scène'));
+  assert.ok(open.includes('synchronisation physique des horloges'));
+  assert.equal(disk.labStatus.causalSource, 'unknown');
+  assert.equal(disk.labStatus.remainingProvenanceGap, true);
+});
+
+test('Loki citation is frozen and not derived from Richard measurements', () => {
+  assert.equal(lab.LOKI_REPLICATION.head, '7a6555b8389ae584abef70bc757feac9940f784e');
+  assert.equal(lab.LOKI_REPLICATION.cited.families['coarse-search-offset-while-local-near-plane'], 40);
+  assert.equal(lab.LOKI_REPLICATION.cited.firstStageAbove015, 'coarse-search-z');
+  assert.equal(lab.LOKI_REPLICATION.cited.associationInconsistencies, 0);
 });
 
 
