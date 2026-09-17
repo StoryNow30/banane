@@ -1,78 +1,169 @@
 {
   "format": "banane-geometry-candidate-v1-replication-freeze-v2",
-  "lot": "independent-replication-v2",
-  "frozenAt": "2026-09-17T17:45:55Z",
-  "vocabulary": ["observé", "calculé", "hypothèse"],
+  "lot": "independent-replication-v2-final-retry-via-private-transfer-branch",
+  "frozenAt": "2026-09-17T19:33:30Z",
+  "vocabulary": [
+    "fait",
+    "hypoth\u00e8se"
+  ],
   "noReuseOfV1Implementation": true,
   "noReuseOfV1Json86780db9": true,
   "noHumanOracle": true,
   "noTuning": true,
   "noRuntimeChange": true,
+  "noCapsuleModification": true,
+  "clone": {
+    "path": "/home/workdir/ws-gcv1-final/banane",
+    "head": "2366d483b643bf8415f3d8ecba35938ac4c1d02e"
+  },
   "requested": {
-    "capsuleBranch": "infra-gcv1-replication-capsule-v1",
-    "capsuleHead": "2366d48",
-    "candidateBase": "0dbcb7a",
-    "datasetRepo": "StoryNow30/banane-data",
-    "datasetBranch": "infra/materialized-native-v46-v1",
-    "datasetCommit": "d541686d3a98569125cdbdb261ef121c9f533d6a",
-    "pinnedGeometry": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
-    "pinnedBaseline": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
-    "officialCommand": "NODE_OPTIONS=--max-old-space-size=4096 node replication/geometry-candidate-v1/run.cjs --dataset /datasets/native-v4.6-2026-09-16 --out geometry-candidate-v1-replay.json"
+    "capsuleHead": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+    "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
+    "transferRepo": "StoryNow30/banane-data",
+    "transferBranch": "transfer/gcv1-replication-dataset-239-v1",
+    "transferHead": "239f36ddcc9372bc2421c65c276d4d118d86e60a",
+    "datasetPathResolved": "/home/workdir/ws-gcv1-final/data/gcv1-replication-dataset-239-v1/datasets/native-v4.6-2026-09-16"
   },
-  "verification": {
-    "capsuleHeadResolved": false,
-    "candidateBaseResolved": false,
-    "replicationCapsuleManifestFound": false,
-    "pinnedGeometryVerified": false,
-    "pinnedBaselineVerified": false,
-    "officialRunnerFound": false,
-    "hashProvenanceFound": false,
-    "datasetCommitResolved": true,
-    "datasetNativeV46PathExists": true,
-    "rails239AccessibleViaOfficialRunner": false,
-    "stopReason": "CAPSULE_REF_UNRESOLVED"
+  "hashesVerified": {
+    "geometry.js": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "geometry-baseline.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "aStar": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
   },
-  "probes": {
-    "gitLsRemoteBanane": "no ref infra-gcv1-replication-capsule-v1; no object 2366d48; no object 0dbcb7a",
-    "githubListCommits2366d48": "404 StoryNow30/banane and StoryNow30/banane-data",
-    "githubListCommits0dbcb7a": "404 StoryNow30/banane",
-    "variantInfraSlash": "404 infra/gcv1-replication-capsule-v1",
-    "codeSearchHASH_PROVENANCE": "0 hits repo:StoryNow30/banane",
-    "codeSearchRunCjs": "0 hits",
-    "datasetManifestFormat": "banane-data-materialized-dataset-v1",
-    "datasetId": "native-v4.6-2026-09-16",
-    "sourceArchives": [
-      {
-        "name": "banane-native-v4.6-2026-09-16.7z",
-        "bytes": 34509008,
-        "sha256": "32e48aa79de988ab8bb6efc65d7038d4e27535e2a5f2486768438616f518bfc0"
-      },
-      {
-        "name": "banane-native-v4.6-2026-09-16-final.7z",
-        "bytes": 56657500,
-        "sha256": "7cac220bd6e097f14ff1d39cbc431e7c6e918b819bdf521883bc33847ec12c66"
-      }
-    ]
+  "transferParts": {
+    "001": {
+      "bytes": 33554432,
+      "sha256": "a29edd160b5fba48820008fed5d2db012997b52295139075a88c6180c29d1698"
+    },
+    "002": {
+      "bytes": 33554432,
+      "sha256": "eb8d548f19e406085581e6197bf599c5db1a0c2e9df371fd7a88c343f60ab0f7"
+    },
+    "003": {
+      "bytes": 11847951,
+      "sha256": "0df0b7e92e82e8eb4dbd52c7c94befb3bba1af61cc99e29c8bb13180188a992b"
+    },
+    "manifest": {
+      "bytes": 114657,
+      "sha256": "659a74d742b0d2d7e53aa34557aa955d3b4413e1f382ca2c3f0720d33e120619"
+    },
+    "archiveRebuilt": {
+      "bytes": 78956815,
+      "sha256": "ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35"
+    }
   },
+  "dataCapsule": {
+    "expected": 437,
+    "verified": 437,
+    "totalBytes": 1064696197,
+    "status": "437/437 PASS"
+  },
+  "contractsTestPass": "5/5",
   "execution": {
-    "run1": {"attempted": false, "sha256": null, "reason": "official runner absent"},
-    "run2": {"attempted": false, "sha256": null, "reason": "official runner absent"},
-    "shaRun1EqualsShaRun2": null
+    "run1": {
+      "attempted": true,
+      "completed": true,
+      "assembled": 239,
+      "sha256": "99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0",
+      "ms": 30052
+    },
+    "run2": {
+      "attempted": true,
+      "completed": true,
+      "assembled": 239,
+      "sha256": "99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0",
+      "ms": 28937
+    },
+    "shaRun1EqualsShaRun2": true,
+    "datasetResolvedIdentical": true
   },
   "population": {
-    "assembled": null,
-    "failures": null,
-    "controls": null,
-    "failClosedMissing": null,
+    "assembled": 239,
+    "failures": 63,
+    "controls": 176,
     "declaredLock": 239,
-    "status": "not-replayed"
+    "status": "239/239",
+    "chunksLoaded": 293,
+    "chunksNeeded": 293
   },
-  "countersIndependent": null,
+  "countersIndependent": {
+    "source": "geometry-candidate-v1-replay-run1.json only",
+    "v46Candidate": 176,
+    "nextCandidate": 201,
+    "astarCandidate": 197,
+    "failureV46Published": 0,
+    "failureV46Unresolved": 63,
+    "failureNextPublished": 25,
+    "failureNextUnresolved": 38,
+    "failureAstarPublished": 23,
+    "controlV46Published": 176,
+    "controlV46Unresolved": 0,
+    "controlNextPublished": 176,
+    "controlNextUnresolved": 0,
+    "classV46Next": {
+      "UNCHANGED_GOOD": 165,
+      "UNCHANGED_UNRESOLVED": 38,
+      "RECOVERED": 25,
+      "MOVED": 10,
+      "DIFFERENT_CANDIDATE": 1
+    },
+    "classV46Astar": {
+      "UNCHANGED_GOOD": 163,
+      "UNCHANGED_UNRESOLVED": 40,
+      "RECOVERED": 23,
+      "MOVED": 10,
+      "LOST": 2,
+      "DIFFERENT_CANDIDATE": 1
+    },
+    "s1Activated": 42,
+    "s1Changed": 4,
+    "nextActivated": 42,
+    "nextChanged": 4,
+    "publishedWeak": 0,
+    "alreadyQualified": 197,
+    "ok": 239,
+    "statusFlipV46ToNext": 25,
+    "v46UnresolvedToNextCandidate": 25,
+    "v46CandidateToNextUnresolved": 0,
+    "v46UnresolvedToAstarCandidate": 23,
+    "v46CandidateToAstarUnresolved": 2,
+    "attribution": {
+      "UNCHANGED": 201,
+      "A": 34,
+      "C": 2,
+      "B": 2
+    },
+    "v46Motif": {
+      "candidate": 176,
+      "rsf": 63
+    },
+    "nextMotif": {
+      "candidate": 201,
+      "flank": 29,
+      "rsf": 8,
+      "minTop": 1
+    },
+    "s1ChangedByCohort": {
+      "failure": 2,
+      "control": 2
+    },
+    "s1ActivatedByCohort": {
+      "failure": 40,
+      "control": 2
+    },
+    "deltaMagGt0p05": {
+      "v46": 17,
+      "next": 41
+    },
+    "deltaMagGt0p10": {
+      "v46": 0
+    }
+  },
   "confrontation": {
-    "status": "not-opened",
-    "reason": "freeze without own rail-by-rail output; oracle and lab results remain closed"
+    "status": "not-opened-at-freeze"
   },
-  "verdict": "INCONCLUSIVE",
-  "sha256": "39f45733ad9f327874513243dd0ebf68d1eaea99b83b76c10fc9a0ea6d835bc4",
-  "sha256Covers": ["format", "lot", "vocabulary", "noReuseOfV1Implementation", "noReuseOfV1Json86780db9", "noHumanOracle", "noTuning", "noRuntimeChange", "requested", "verification", "probes", "execution", "population", "countersIndependent", "confrontation", "verdict"]
+  "verdictAtFreeze": "pending-confrontation",
+  "sha256": "1cd6ef9b80bc96457913f03192590da5f819c3fcbefef79393e781200893066b",
+  "sha256Input": "canonical JSON sort_keys separators compact except sha256/sha256Input"
 }

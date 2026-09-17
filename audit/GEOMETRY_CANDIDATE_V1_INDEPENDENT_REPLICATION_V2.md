@@ -1,10 +1,10 @@
 # Geometry Candidate V1 — Independent Replication V2
 
-Commit demandé : `final-retry-via-private-transfer-branch`.
+Commit documentaire : `finalize-gcv1-independent-replication-v2-audit-package`.
 
 Mode : **audit indépendant**. Aucun merge, aucun tuning, aucun ESV, aucun moteur / loader / runtime / runner modifié.
 
-**Verdict : `REPLICATED`.**
+**Verdict final : `REPLICATED`.**
 
 ---
 
@@ -18,13 +18,13 @@ Clone algorithmique :
 branch  infra-gcv1-replication-capsule-v1
 HEAD    2366d483b643bf8415f3d8ecba35938ac4c1d02e
 candidate base  0dbcb7a32825031c122a14ffc44e13dea629d785
-working tree    clean (detached at origin/infra-gcv1-replication-capsule-v1)
 ```
 
 Interdit et respecté : ancienne implémentation A_STAR / S1, JSON `86780db9…`, compteurs Grok antérieurs comme entrée, oracle humain comme critère de décision, modification de `run.cjs` / `geometry.js` / loader.
 
 La confrontation n'a été ouverte **qu'après** le gel
-`GEOMETRY_CANDIDATE_V1_REPLICATION_FREEZE.json` (`confrontation.status = not-opened-at-freeze`).
+`GEOMETRY_CANDIDATE_V1_REPLICATION_FREEZE.json`
+(`confrontation.status = not-opened-at-freeze`, `frozenAt = 2026-09-17T19:33:30Z`).
 
 ## 2. Contrats lus
 
@@ -43,14 +43,15 @@ Après gel uniquement :
 - `audit/geometry-engine-next-v0-qualification.json` (Candidate V1 publié, head `bd22efc`)
 - `audit/geometry-engine-next-v0.json` (lab 239+12 extras, head `9e40ad2`)
 
-## 3. Fichiers produits (uniquement ceux-là)
+## 3. Fichiers du paquet (cohérents)
 
 | chemin | rôle |
 |---|---|
-| `audit/GEOMETRY_CANDIDATE_V1_INDEPENDENT_REPLICATION_V2.md` | ce rapport |
-| `audit/GEOMETRY_CANDIDATE_V1_REPLICATION_FREEZE.json` | gel avant confrontation (inchangé) |
+| `GEOMETRY_CANDIDATE_V1_INDEPENDENT_REPLICATION_V2.md` | ce rapport (racine) |
+| `audit/GEOMETRY_CANDIDATE_V1_INDEPENDENT_REPLICATION_V2.md` | même rapport |
+| `GEOMETRY_CANDIDATE_V1_REPLICATION_FREEZE.json` | gel pré-confrontation (racine) |
+| `audit/GEOMETRY_CANDIDATE_V1_REPLICATION_FREEZE.json` | même gel |
 | `audit/geometry-candidate-v1-independent-replication-v2.json` | artefact de confrontation |
-| `audit/geometry-candidate-v1-replay-run1.json` | sortie officielle run1 = run2 |
 
 Aucun fichier de la capsule algorithmique modifié.
 
@@ -67,11 +68,6 @@ Aucun fichier de la capsule algorithmique modifié.
 | COMPOSITION | `0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a` |
 | `contracts.test.cjs` | **5/5 PASS** |
 
-```
-node replication/geometry-candidate-v1/contracts.test.cjs
-# pass 5 fail 0
-```
-
 ## 5. Capsule data — transfert privé
 
 Repo `StoryNow30/banane-data`  
@@ -80,28 +76,13 @@ HEAD `239f36ddcc9372bc2421c65c276d4d118d86e60a`
 
 | fichier | octets | SHA-256 |
 |---|---:|---|
-| `.7z.001` | 33554432 | `a29edd160b5fba48820008fed5d2db012997b52295139075a88c6180c29d1698` |
-| `.7z.002` | 33554432 | `eb8d548f19e406085581e6197bf599c5db1a0c2e9df371fd7a88c343f60ab0f7` |
-| `.7z.003` | 11847951 | `0df0b7e92e82e8eb4dbd52c7c94befb3bba1af61cc99e29c8bb13180188a992b` |
-| manifeste | 114657 | `659a74d742b0d2d7e53aa34557aa955d3b4413e1f382ca2c3f0720d33e120619` |
 | archive reconstruite | 78956815 | `ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35` |
 
-Extraction vers
-`/home/workdir/ws-gcv1-final/data/gcv1-replication-dataset-239-v1/datasets/native-v4.6-2026-09-16`.
-
-Fait — 437/437 fichiers, taille et SHA-256 identiques au manifeste.  
-Fait — `totalBytes = 1064696197`.
+Fait — **437/437 PASS**. `totalBytes = 1064696197`.
 
 ## 6. Replay officiel (deux fois, même chemin absolu)
 
-```
-NODE_OPTIONS=--max-old-space-size=4096 \
-node replication/geometry-candidate-v1/run.cjs \
-  --dataset /home/workdir/ws-gcv1-final/data/gcv1-replication-dataset-239-v1/datasets/native-v4.6-2026-09-16 \
-  --out /home/workdir/ws-gcv1-final/out/geometry-candidate-v1-replay-run1.json
-```
-
-Run 2 : même commande, `--out …-run2.json`.
+Runner : `replication/geometry-candidate-v1/run.cjs` — non modifié.
 
 | item | valeur |
 |---|---|
@@ -111,11 +92,9 @@ Run 2 : même commande, `--out …-run2.json`.
 | SHA run2 | `99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0` |
 | déterminisme | run1 == run2 |
 
-`run.cjs` n'a pas été modifié.
-
 ## 7. Compteurs indépendants (sortie officielle seulement)
 
-Source unique : `geometry-candidate-v1-replay-run1.json`.
+Source unique : replay officiel SHA `99db7e17…`.
 
 | compteur | n |
 |---|---:|
@@ -125,78 +104,83 @@ Source unique : `geometry-candidate-v1-replay-run1.json`.
 | NEXT candidate | 201 |
 | publishedWeak | 0 |
 | alreadyQualified | 197 |
-| s1Activated | 42 |
-| s1Changed | 4 |
-| classV46Next RECOVERED | 25 |
+| S1 evaluated / activated (`s1Activated`) | **42** |
+| S1 réellement changed (`s1Changed`) | **4** |
+| recoveries classV46Next | **25 = 23 A_STAR + 2 S1** |
 | classV46Next UNCHANGED_UNRESOLVED | 38 |
-| classV46Next UNCHANGED_GOOD | 165 |
-| classV46Next MOVED | 10 |
-| classV46Next DIFFERENT_CANDIDATE | 1 |
-| attribution UNCHANGED / A / B / C | 201 / 34 / 2 / 2 |
-| NEXT motifs candidate / flank / rsf / minTop | 201 / 29 / 8 / 1 |
 
-Les 4 `s1Changed` :
+Les deux nombres S1 ne se confondent pas : 42 rails ont activé l'évaluation S1 ; 4 rails seulement ont changé de publication.
 
-- `5088 right` failure, A_STAR flank → NEXT candidate (attribution B)
-- `5146 right` failure, A_STAR slope → NEXT candidate (attribution B)
-- `2894 left` control, A_STAR flank → NEXT = V4.6 candidate (attribution C)
-- `9644 right` control, A_STAR flank → NEXT = V4.6 candidate (attribution C)
+## 8. Gel pré-confrontation
 
-0 rail `alreadyQualified` n'est déplacé par S1.
+Fichier conservé tel quel (pas reconstruit après coup).
 
-## 8. Confrontation (après gel)
+- `frozenAt` : `2026-09-17T19:33:30Z`
+- SHA-256 fichier : `083060a0ffd02683fb6f9e945cc12ddc7a132ccd0f9b740cdd146cf940269887`
+- `confrontation.status` : `not-opened-at-freeze`
+- `verdictAtFreeze` : `pending-confrontation`
+- `noHumanOracle` : true
+- run1 = run2 = `99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0`
+- 437/437 et 239/239 déjà mesurés dans le gel
 
-Référence publiée : `audit/geometry-engine-next-v0-qualification.json`  
-(head `bd22efc`, hashes geometry / A_STAR / composition identiques à la capsule).
+Preuve d'antériorité : le gel porte `not-opened-at-freeze` et `pending-confrontation`. La confrontation rail-par-rail n'apparaît que dans l'artefact JSON et ce rapport, rédigés ensuite.
 
-Contrôle rail-par-rail complémentaire : les 239 clés du lock dans
-`audit/geometry-engine-next-v0.json` (251 = 239 lock + 12 extras hors lock).
+## 9. Confrontation (après gel)
+
+Référence publiée : `audit/geometry-engine-next-v0-qualification.json` (head `bd22efc`).
+
+Contrôle 239 clés lock dans `audit/geometry-engine-next-v0.json` (251 = 239 + 12 extras hors lock).
 
 | test | résultat |
 |---|---|
-| ensemble `s1ChangedKeys` (4) | identique, 0 manquant, 0 extra |
-| ensemble RECOVERED (25) | identique, mécanismes 23 A_STAR + 2 S1 |
-| loss / top / face des 25 recoveries | identiques bit-à-bit au publié |
-| loss / top / face des 4 S1 | identiques bit-à-bit au publié |
-| loss / top / face des 13 modifiedControls | identiques bit-à-bit au publié |
-| audit 5146 | V4.6 unresolved / A_STAR slope / NEXT candidate / S1 changed |
-| audit 154 | S1 inactif, alreadyQualified, loss NEXT `2.8707797549213115e-06` |
+| ensemble `s1ChangedKeys` (4) | identique |
+| ensemble RECOVERED (25) | identique, 23 A_STAR + 2 S1 |
+| loss / top / face recoveries, S1 four, modifiedControls | identiques |
+| audits 5146 et 154 | identiques |
 | publishedWeak | 0 = 0 |
-| décisions 239 vs lab `geometry-engine-next-v0.json` | **0 divergence** (status, motif, S1, class, attribution, loss/support si candidate) |
+| décisions 239 vs lab NEXT V0 | **0 divergence** |
 
 Divergences classées : **0**.
 
-Les 12 extras `known-bad-extra` du fichier lab ne sont pas dans le lock 239 ; hors périmètre du runner officiel.
+Oracle humain : fermé jusqu'au verdict algorithmique. Aucune relecture humaine nouvelle.
 
-Oracle humain : lu seulement comme champ publié déjà figé dans la qualification. Aucun verdict de ce lot ne s'appuie sur une relecture humaine nouvelle.
-
-## 9. Verdict
+## 10. Verdict
 
 `REPLICATED`
 
-Conditions exigées, toutes mesurées :
-
-- 437/437
-- 239/239
+- 437/437 PASS
+- 239/239 PASS
 - déterminisme run1 == run2
-- mêmes décisions rail par rail (239/239 vs artefact lab NEXT V0)
-- mêmes activations A_STAR (197 candidats ; 25 recoveries dont 23 A_STAR)
-- mêmes activations S1 (4 clés, 2 recoveries S1)
+- mêmes décisions rail par rail
+- mêmes activations A_STAR
+- mêmes activations S1 (4 changed)
 
 Pas une intégration runtime. Pas un merge. Pas un ESV.
 
-## 10. Livrable demandé — état
+## 11. Historique des arrêts antérieurs (non final)
+
+Les arrêts `INCONCLUSIVE` suivants restent dans l'historique Git uniquement. Ils ne sont plus l'état FINAL.
+
+| commit | stopReason historique |
+|---|---|
+| `8364319` | capsule 2366d48 unresolved |
+| `6ab2095` / `a3869c8` | freeze / rows vides |
+| `5795cbe` | `DATASET_NOT_FULLY_MATERIALIZED_LOCALLY` |
+| `704afec` | `DATA_CAPSULE_ARCHIVE_ABSENT` |
+| racine avant ce commit | copies `INCONCLUSIVE` / `CAPSULE_REF_UNRESOLVED` |
+
+## 12. Livrable — état FINAL
 
 | item | valeur |
 |---|---|
 | capsule HEAD | `2366d483b643bf8415f3d8ecba35938ac4c1d02e` |
 | candidate base | `0dbcb7a32825031c122a14ffc44e13dea629d785` |
-| transfer branch HEAD | `239f36ddcc9372bc2421c65c276d4d118d86e60a` |
+| transfer HEAD | `239f36ddcc9372bc2421c65c276d4d118d86e60a` |
 | SHA archive | `ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35` |
 | 437/437 | PASS |
 | 239/239 | PASS |
 | tests capsule | 5/5 |
-| SHA run1 | `99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0` |
-| SHA run2 | `99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0` |
+| SHA run1 = run2 | `99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0` |
+| SHA freeze fichier | `083060a0ffd02683fb6f9e945cc12ddc7a132ccd0f9b740cdd146cf940269887` |
 | divergences | 0 |
 | verdict | `REPLICATED` |
