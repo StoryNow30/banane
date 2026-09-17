@@ -1,1 +1,119 @@
-PLACEHOLDER
+{
+  "format": "banane-geometry-candidate-v1-independent-replication-v2",
+  "lot": "final-retry-via-private-transfer-branch",
+  "mode": "audit-independant",
+  "verdict": "REPLICATED",
+  "divergences": 0,
+  "stopReason": null,
+  "vocabulary": ["fait", "hypothese"],
+  "noMerge": true,
+  "noTuning": true,
+  "noEsv": true,
+  "noRuntimeChange": true,
+  "noCapsuleModification": true,
+  "oracleClosedUntilAlgorithmicVerdict": true,
+  "capsule": {
+    "repo": "StoryNow30/banane",
+    "branch": "infra-gcv1-replication-capsule-v1",
+    "head": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+    "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785"
+  },
+  "transfer": {
+    "repo": "StoryNow30/banane-data",
+    "branch": "transfer/gcv1-replication-dataset-239-v1",
+    "head": "239f36ddcc9372bc2421c65c276d4d118d86e60a",
+    "archiveSha256": "ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35",
+    "archiveBytes": 78956815,
+    "files437": true
+  },
+  "dataCapsule": {
+    "expected": 437,
+    "verified": 437,
+    "totalBytes": 1064696197,
+    "status": "437/437 PASS",
+    "sourceCommit": "d541686d3a98569125cdbdb261ef121c9f533d6a"
+  },
+  "contractsTestPass": "5/5",
+  "hashes": {
+    "geometry.js": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "geometry-baseline.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "aStar": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a",
+    "archive": "ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35",
+    "run1": "99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0",
+    "run2": "99db7e173004697755775dabce726cccae0bf97f28a6852a4cf01ab14c41c4b0"
+  },
+  "execution": {
+    "runner": "replication/geometry-candidate-v1/run.cjs",
+    "runnerUnmodified": true,
+    "assembled": 239,
+    "chunksLoaded": 293,
+    "chunksNeeded": 293,
+    "shaRun1EqualsShaRun2": true
+  },
+  "counts": {
+    "n": 239,
+    "failures": 63,
+    "controls": 176,
+    "v46Candidate": 176,
+    "astarCandidate": 197,
+    "nextCandidate": 201,
+    "publishedWeak": 0,
+    "alreadyQualified": 197,
+    "s1Activated": 42,
+    "s1Changed": 4,
+    "classV46Next": {
+      "UNCHANGED_GOOD": 165,
+      "MOVED": 10,
+      "DIFFERENT_CANDIDATE": 1,
+      "UNCHANGED_UNRESOLVED": 38,
+      "RECOVERED": 25
+    },
+    "attribution": {"UNCHANGED": 201, "A": 34, "C": 2, "B": 2},
+    "nextMotif": {"candidate": 201, "minTop": 1, "rsf": 8, "flank": 29}
+  },
+  "s1ChangedKeys": [
+    "06c77393-ecb3-4aa1-84e8-7fd9c5b60c7f|fbb902d4-c847-4327-9565-ea6a1acd0361|1|2894|left",
+    "3876864f-a864-4678-b7b0-3feecc4af418|5718fbfe-c435-4589-86be-5b1b647c9b9f|1|5088|right",
+    "d9ccb545-25db-4262-b383-794ab3272ec7|78b8f581-337d-4ae0-8404-223074a0ed00|1|5146|right",
+    "f938b9f8-e2d7-47c6-bb08-5b00f3debe05|5c478f42-1ea1-48ad-93ec-8e14618b8daa|8|9644|right"
+  ],
+  "s1ChangedSetEqual": true,
+  "recoveredSetEqual": true,
+  "recoveredN": 25,
+  "confrontation": {
+    "openedAfterFreeze": true,
+    "publishedQualification": {
+      "path": "audit/geometry-engine-next-v0-qualification.json",
+      "head": "bd22efc",
+      "s1ChangedMatch": true,
+      "recoveriesMatch": true,
+      "recoveryMechanisms": {"A_STAR": 23, "S1": 2},
+      "s1FourLossTopFaceMatch": true,
+      "recoveriesLossTopFaceMatch": true,
+      "modifiedControlsLossTopFaceMatch": true,
+      "audit5146Match": true,
+      "audit154Match": true,
+      "publishedWeakMatch": true
+    },
+    "publishedLabNextV0": {
+      "path": "audit/geometry-engine-next-v0.json",
+      "head": "9e40ad2",
+      "labRails": 251,
+      "lockRailsCompared": 239,
+      "extrasOutsideLock": 12,
+      "decisionDivergences": 0
+    }
+  },
+  "gates": {
+    "files437": true,
+    "assembled239": true,
+    "determinism": true,
+    "publishedWeak0": true,
+    "alreadyStrongNotMovedByS1": true,
+    "sameRailDecisions": true,
+    "sameAstarActivations": true,
+    "sameS1Activations": true
+  }
+}
