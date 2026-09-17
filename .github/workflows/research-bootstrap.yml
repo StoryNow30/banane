@@ -1,55 +1,45 @@
-name: Banane Vertical Alignment Provenance Probe
+name: Banane Research Bootstrap
 
 on:
   push:
-    branches:
-      - lab-vertical-alignment-provenance-v1
     paths:
+      - 'tools/banane-bootstrap.cjs'
+      - 'data/native-v46.lock.json'
+      - 'tests/banane-bootstrap.test.cjs'
+      - 'tests/fixtures/bootstrap/**'
+      - 'RESEARCH_BOOTSTRAP.md'
+      - '.github/workflows/research-bootstrap.yml'
+  pull_request:
+    paths:
+      - 'tools/banane-bootstrap.cjs'
+      - 'data/native-v46.lock.json'
+      - 'tests/banane-bootstrap.test.cjs'
+      - 'tests/fixtures/bootstrap/**'
+      - 'RESEARCH_BOOTSTRAP.md'
       - '.github/workflows/research-bootstrap.yml'
 
 permissions:
   contents: read
 
 jobs:
-  probe-capsule-schema:
+  clean-clone-bootstrap:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Probe exact RSF V1 capsule schema
+      - name: Syntax
+        run: node --check tools/banane-bootstrap.cjs
+      - name: Unit tests
+        run: node --test tests/banane-bootstrap.test.cjs
+      - name: Doctor must fail closed without private data
         shell: bash
         run: |
-          node <<'NODE'
-          const fs=require('fs'), path=require('path');
-          const dir='data/capsules/rsf-v1/rails';
-          const files=fs.readdirSync(dir).filter(f=>f.endsWith('.jsonl')).sort();
-          const rows=[];
-          for(const f of files){
-            for(const line of fs.readFileSync(path.join(dir,f),'utf8').split(/\n/)) if(line.trim()) rows.push(JSON.parse(line));
-          }
-          function type(v){if(v===null)return'null';if(Array.isArray(v))return'array';return typeof v;}
-          function walk(v,p='',out=new Map(),depth=0){
-            const t=type(v); const rec=out.get(p)||{types:new Set(),arrayLengths:new Set(),present:0}; rec.types.add(t); rec.present++; if(t==='array')rec.arrayLengths.add(v.length);out.set(p,rec);
-            if(depth>=5)return out;
-            if(t==='object') for(const [k,x] of Object.entries(v)) walk(x,p?`${p}.${k}`:k,out,depth+1);
-            else if(t==='array'&&v.length){ const sample=v[0]; walk(sample,`${p}[]`,out,depth+1); }
-            return out;
-          }
-          const fields=new Map();for(const r of rows)walk(r,'',fields);
-          const fieldSummary=[...fields].sort(([a],[b])=>a.localeCompare(b)).map(([p,r])=>({path:p||'$',types:[...r.types].sort(),present:r.present,arrayLengths:[...r.arrayLengths].sort((a,b)=>a-b).slice(0,20)}));
-          function slim(v,depth=0){
-            if(depth>6)return '[depth]';
-            if(Array.isArray(v)){
-              if(v.length>32)return {__arrayLength:v.length,first:slim(v[0],depth+1),last:slim(v[v.length-1],depth+1)};
-              return v.map(x=>slim(x,depth+1));
-            }
-            if(v&&typeof v==='object'){const o={};for(const [k,x] of Object.entries(v))o[k]=slim(x,depth+1);return o;}
-            return v;
-          }
-          const cohorts=[...new Set(rows.map(r=>r.cohort))];
-          console.log('PROBE_BEGIN');
-          console.log(JSON.stringify({count:rows.length,files,cohorts,topLevelKeys:[...new Set(rows.flatMap(r=>Object.keys(r)))].sort(),fields:fieldSummary,examples:Object.fromEntries(cohorts.map(c=>[c,slim(rows.find(r=>r.cohort===c))]))},null,2));
-          console.log('PROBE_END');
-          NODE
+          set +e
+          node tools/banane-bootstrap.cjs doctor --json > /tmp/doctor.json
+          code=$?
+          set -e
+          cat /tmp/doctor.json
+          test "$code" -eq 2
+          node -e "const s=require('/tmp/doctor.json'); if(!s.code.ok || s.ready!==false) process.exit(1)"
