@@ -3,7 +3,7 @@
 Lot **EXPÉRIMENTAL**. Branche `lab-face-aware-arbitration-v1`. Aucun merge. A_STAR figé.
 
 - Branche : `lab-face-aware-arbitration-v1`
-- HEAD : `(après commit)`
+- HEAD : `2ec9443`
 - Base : `f25f337`
 - Lab amont : `93b75ed`
 - Commande : `node tools/face-aware-arbitration-v1.cjs`
