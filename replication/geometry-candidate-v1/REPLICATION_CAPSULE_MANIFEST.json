@@ -3,7 +3,7 @@
   "candidateTip": "0dbcb7a",
   "candidateBranch": "lab-geometry-engine-next-v0-qualification",
   "capsuleBranch": "infra-gcv1-replication-capsule-v1",
-  "generatedAt": "2026-09-17T17:09:39.230Z",
+  "generatedAt": "2026-09-17T17:40:28.721Z",
   "contracts": {
     "geometry": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
     "baseline": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
@@ -11,6 +11,8 @@
     "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
   },
   "captureCoreSha256": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+  "geometryPath": "src/geometry.js",
+  "baselinePath": "src/geometry-baseline.js",
   "dataset": {
     "repo": "StoryNow30/banane-data",
     "branch": "infra/materialized-native-v46-v1",
@@ -20,8 +22,8 @@
   "files": [
     {
       "rel": "candidate-v1-config.json",
-      "sha256": "7269e96736a18119949e48b21b340126016d8816c970f1d0830637d006bb6d6f",
-      "bytes": 1642
+      "sha256": "2aa1f5b95e0192669c4804d68ed6a78cea487d43e2f7d9cc18f51ed3f81685cd",
+      "bytes": 1866
     },
     {
       "rel": "contracts.test.cjs",
@@ -37,6 +39,11 @@
       "rel": "GEOMETRY_CANDIDATE_V1_SPEC.md",
       "sha256": "8a1fe9ff7b9510551a6caa56fb1d8fc0460eb9e1be102538a3007c78c3d90d4d",
       "bytes": 2303
+    },
+    {
+      "rel": "HASH_PROVENANCE.md",
+      "sha256": "82d8341fde52bc7fa1cafd1963f159ea104cd95c783259c3da9b938410610439",
+      "bytes": 3114
     },
     {
       "rel": "pinned/audit/rsf-population-v1.json",
@@ -105,8 +112,8 @@
     },
     {
       "rel": "README_REPLICATION.md",
-      "sha256": "e8d32f32d361b452a472b6b52c80fc1911870ea60825cca3a3f6e4f415b4ae50",
-      "bytes": 1914
+      "sha256": "fca843182751bac6249168b33b1e2e5ee0dda7cd5ffd4d449025752720e22731",
+      "bytes": 2345
     },
     {
       "rel": "run.cjs",

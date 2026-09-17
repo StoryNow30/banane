@@ -37,7 +37,11 @@
   },
   "compositionHash": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a",
   "geometrySha256": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+  "geometryPath": "src/geometry.js",
+  "geometryNote": "lab file with A_STAR hooks; NOT the V4.6 blob",
   "baselineSha256": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+  "baselinePath": "src/geometry-baseline.js",
+  "baselineNote": "frozen V4.6; identical to src/geometry.js at 3256d8b",
   "lock": {
     "file": "pinned/audit/rsf-population-v1.json",
     "n": 239,

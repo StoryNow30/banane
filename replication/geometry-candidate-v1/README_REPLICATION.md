@@ -32,6 +32,13 @@ node --test replication/geometry-candidate-v1/contracts.test.cjs
 
 Les tests vérifient hashes, DEFAULTS, lock 239, absence d’oracle dans la sortie. Ils ne figent aucun compteur scientifique (recoveries, S1, lossRatio).
 
+Deux SHA distincts — ne pas les confondre :
+
+- `src/geometry.js` (lab Candidate V1) = `77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503`
+- `src/geometry-baseline.js` (V4.6 figé) = `3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53`
+
+Le SHA historique « geometry.js = 3343330… » est le **même blob** que `geometry-baseline.js` aujourd’hui (état `3256d8b`). Détail : `HASH_PROVENANCE.md`.
+
 ## Déterminisme
 
 Deux exécutions sur le même dataset doivent produire le même SHA-256 du JSON.
