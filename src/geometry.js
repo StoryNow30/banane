@@ -141,6 +141,7 @@
        }
      }
    }
+   if(lab&&typeof lab.onCoarse==='function')lab.onCoarse(coarse.map(c=>({u:c.u,z:c.z,loss:c.loss})),{best:{u:best.u,z:best.z,loss:best.loss},uCenters:uCenters.slice()});
    const coarseBest={...best};let alternative=null;
    const alternativePool=lab&&lab.preferSupported
      ?coarse.filter(c=>(c.topRows??topRowsAt(c.u,c.z).length)>=MIN_TOP_ROWS)
