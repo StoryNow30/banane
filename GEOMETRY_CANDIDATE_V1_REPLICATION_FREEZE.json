@@ -1,0 +1,78 @@
+{
+  "format": "banane-geometry-candidate-v1-replication-freeze-v2",
+  "lot": "independent-replication-v2",
+  "frozenAt": "2026-09-17T17:45:55Z",
+  "vocabulary": ["observé", "calculé", "hypothèse"],
+  "noReuseOfV1Implementation": true,
+  "noReuseOfV1Json86780db9": true,
+  "noHumanOracle": true,
+  "noTuning": true,
+  "noRuntimeChange": true,
+  "requested": {
+    "capsuleBranch": "infra-gcv1-replication-capsule-v1",
+    "capsuleHead": "2366d48",
+    "candidateBase": "0dbcb7a",
+    "datasetRepo": "StoryNow30/banane-data",
+    "datasetBranch": "infra/materialized-native-v46-v1",
+    "datasetCommit": "d541686d3a98569125cdbdb261ef121c9f533d6a",
+    "pinnedGeometry": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "pinnedBaseline": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "officialCommand": "NODE_OPTIONS=--max-old-space-size=4096 node replication/geometry-candidate-v1/run.cjs --dataset /datasets/native-v4.6-2026-09-16 --out geometry-candidate-v1-replay.json"
+  },
+  "verification": {
+    "capsuleHeadResolved": false,
+    "candidateBaseResolved": false,
+    "replicationCapsuleManifestFound": false,
+    "pinnedGeometryVerified": false,
+    "pinnedBaselineVerified": false,
+    "officialRunnerFound": false,
+    "hashProvenanceFound": false,
+    "datasetCommitResolved": true,
+    "datasetNativeV46PathExists": true,
+    "rails239AccessibleViaOfficialRunner": false,
+    "stopReason": "CAPSULE_REF_UNRESOLVED"
+  },
+  "probes": {
+    "gitLsRemoteBanane": "no ref infra-gcv1-replication-capsule-v1; no object 2366d48; no object 0dbcb7a",
+    "githubListCommits2366d48": "404 StoryNow30/banane and StoryNow30/banane-data",
+    "githubListCommits0dbcb7a": "404 StoryNow30/banane",
+    "variantInfraSlash": "404 infra/gcv1-replication-capsule-v1",
+    "codeSearchHASH_PROVENANCE": "0 hits repo:StoryNow30/banane",
+    "codeSearchRunCjs": "0 hits",
+    "datasetManifestFormat": "banane-data-materialized-dataset-v1",
+    "datasetId": "native-v4.6-2026-09-16",
+    "sourceArchives": [
+      {
+        "name": "banane-native-v4.6-2026-09-16.7z",
+        "bytes": 34509008,
+        "sha256": "32e48aa79de988ab8bb6efc65d7038d4e27535e2a5f2486768438616f518bfc0"
+      },
+      {
+        "name": "banane-native-v4.6-2026-09-16-final.7z",
+        "bytes": 56657500,
+        "sha256": "7cac220bd6e097f14ff1d39cbc431e7c6e918b819bdf521883bc33847ec12c66"
+      }
+    ]
+  },
+  "execution": {
+    "run1": {"attempted": false, "sha256": null, "reason": "official runner absent"},
+    "run2": {"attempted": false, "sha256": null, "reason": "official runner absent"},
+    "shaRun1EqualsShaRun2": null
+  },
+  "population": {
+    "assembled": null,
+    "failures": null,
+    "controls": null,
+    "failClosedMissing": null,
+    "declaredLock": 239,
+    "status": "not-replayed"
+  },
+  "countersIndependent": null,
+  "confrontation": {
+    "status": "not-opened",
+    "reason": "freeze without own rail-by-rail output; oracle and lab results remain closed"
+  },
+  "verdict": "INCONCLUSIVE",
+  "sha256": "39f45733ad9f327874513243dd0ebf68d1eaea99b83b76c10fc9a0ea6d835bc4",
+  "sha256Covers": ["format", "lot", "vocabulary", "noReuseOfV1Implementation", "noReuseOfV1Json86780db9", "noHumanOracle", "noTuning", "noRuntimeChange", "requested", "verification", "probes", "execution", "population", "countersIndependent", "confrontation", "verdict"]
+}
