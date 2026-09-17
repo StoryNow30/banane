@@ -811,7 +811,7 @@ module.exports = {
   BASELINE_GEOMETRY_SHA, A_STAR_HASH, ENGINE_Y, ENGINE_Z, KEY_9644, CUTS_5,
   aStarFrozen, assertAStarFrozen, faceTier, qualifyStrong, dominates,
   policyA, policyB, policyC, policyLossFirst, localMinima, characterize,
-  analyse9644, deriveScience, build, aStarLab,
+  analyse9644, deriveScience, build, aStarLab, reducePool,
 };
 
 if (require.main === module) build();
