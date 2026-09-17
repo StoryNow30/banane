@@ -2,7 +2,13 @@
 
 Lot **EXPÉRIMENTAL / DIAGNOSTIQUE**. Branche `lab-no-support-generator-v1`. Aucun merge, aucun prototype moteur, aucune action ESV.
 
-**Statut du lot : `INCONCLUSIVE`.** Outil offline uniquement.
+- Branche : `lab-no-support-generator-v1`
+- HEAD : `6f2f2389018cea6bcbbd467ea9056282d87c8c65`
+- Base : `82ea59b97996beb5e23317cdd82f89428be24995` (Flank Support Lab V1)
+- Commande : `node tools/no-support-generator-lab-v1.cjs`
+- Tests : `node tests/no-support-generator-lab-v1.test.cjs` (13/13)
+
+**Statut du lot : `INCONCLUSIVE`.** Outil offline uniquement. Ce n’est pas un correctif.
 
 - Base géométrie : `3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53` (`src/geometry-baseline.js`)
 - Géométrie courante : `21701c6de3e0f61f1000a609017de5b43c3eef83e901524e8fbd0a89d1f560ad`
