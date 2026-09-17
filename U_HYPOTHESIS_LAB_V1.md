@@ -3,7 +3,7 @@
 Lot **EXPÉRIMENTAL**. Branche `lab-u-hypothesis-v1`. Aucun merge, aucune action ESV, aucun searchY global.
 
 - Branche : `lab-u-hypothesis-v1`
-- HEAD : `(après commit)`
+- HEAD : `04a4932`
 - Base : `616030b`
 - Commande : `node tools/u-hypothesis-lab-v1.cjs`
 - Tests : `node tests/u-hypothesis-lab-v1.test.cjs`
