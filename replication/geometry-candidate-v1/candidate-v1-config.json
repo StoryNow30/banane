@@ -1,0 +1,53 @@
+{
+  "id": "GEOMETRY_CANDIDATE_V1",
+  "source": {
+    "branch": "lab-geometry-engine-next-v0-qualification",
+    "tip": "0dbcb7a",
+    "nextV0Lab": "9e40ad2",
+    "baseBanane": "0f6846f"
+  },
+  "composition": {
+    "engine": "GEOMETRY_ENGINE_NEXT_V0",
+    "aStar": {
+      "id": "A_STAR",
+      "hash": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+      "method": "median-all-local-points",
+      "replaceOrigin": false,
+      "recenterWindow": true,
+      "searchY": 0.08,
+      "searchZ": 0.04,
+      "grid": 0.003,
+      "minTop": 15,
+      "minFace": 6,
+      "uSeedRule": "median-U of engine-local points via hypothesesA"
+    },
+    "support": {
+      "id": "S1",
+      "title": "SUPPORT_FALLBACK_15",
+      "minTemplateLossRatio": 1.5,
+      "alternativeSeparation": 0.02,
+      "activatesOnlyIfAStarNotStrong": true,
+      "uniqueStrongCluster": "min-loss",
+      "multiCluster": "AMBIGUOUS",
+      "none": "keep-A_STAR"
+    },
+    "excluded": ["S2"],
+    "notAGlobalSearchY": true,
+    "noNewThreshold": true
+  },
+  "compositionHash": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a",
+  "geometrySha256": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+  "baselineSha256": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+  "lock": {
+    "file": "pinned/audit/rsf-population-v1.json",
+    "n": 239,
+    "failures": 63,
+    "controls": 176
+  },
+  "dataset": {
+    "repo": "StoryNow30/banane-data",
+    "branch": "infra/materialized-native-v46-v1",
+    "head": "d541686d3a98569125cdbdb261ef121c9f533d6a",
+    "path": "datasets/native-v4.6-2026-09-16"
+  }
+}

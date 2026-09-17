@@ -1,0 +1,117 @@
+{
+  "format": "gcv1-replication-capsule-v1",
+  "candidateTip": "0dbcb7a",
+  "candidateBranch": "lab-geometry-engine-next-v0-qualification",
+  "capsuleBranch": "infra-gcv1-replication-capsule-v1",
+  "generatedAt": "2026-09-17T17:09:39.230Z",
+  "contracts": {
+    "geometry": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "baseline": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "aStar": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "composition": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
+  },
+  "captureCoreSha256": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+  "dataset": {
+    "repo": "StoryNow30/banane-data",
+    "branch": "infra/materialized-native-v46-v1",
+    "head": "d541686d3a98569125cdbdb261ef121c9f533d6a",
+    "path": "datasets/native-v4.6-2026-09-16"
+  },
+  "files": [
+    {
+      "rel": "candidate-v1-config.json",
+      "sha256": "7269e96736a18119949e48b21b340126016d8816c970f1d0830637d006bb6d6f",
+      "bytes": 1642
+    },
+    {
+      "rel": "contracts.test.cjs",
+      "sha256": "5f7eea1c357c88e940af53cca9cce25dcd94f27b529de9d9c700fb5773bd0537",
+      "bytes": 4231
+    },
+    {
+      "rel": "DEFINITIONS.md",
+      "sha256": "52e3b7a1a8263ab260fcae1da393d6a03b6fd1b3349646935c8682f15eff8e10",
+      "bytes": 7045
+    },
+    {
+      "rel": "GEOMETRY_CANDIDATE_V1_SPEC.md",
+      "sha256": "8a1fe9ff7b9510551a6caa56fb1d8fc0460eb9e1be102538a3007c78c3d90d4d",
+      "bytes": 2303
+    },
+    {
+      "rel": "pinned/audit/rsf-population-v1.json",
+      "sha256": "b3b5434e706f798c452d779576abe1d28a143cee1af76b53b0f7a594eaff1e27",
+      "bytes": 79892
+    },
+    {
+      "rel": "pinned/src/geometry-baseline.js",
+      "sha256": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+      "bytes": 9925
+    },
+    {
+      "rel": "pinned/src/geometry.js",
+      "sha256": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "bytes": 16913
+    },
+    {
+      "rel": "pinned/tools/competitive-support-arbitration-v1.cjs",
+      "sha256": "d160039844311e6077de8a31fab188cf635431f81fe613752d78d6557d5b78b9",
+      "bytes": 36868
+    },
+    {
+      "rel": "pinned/tools/face-aware-arbitration-v1.cjs",
+      "sha256": "890f4c651de310ea6e1166dde06571966cfee53fee3c0a2c7c1fbc2e8d427f00",
+      "bytes": 37011
+    },
+    {
+      "rel": "pinned/tools/flank-support-lab-v1.cjs",
+      "sha256": "03a50d9e1c88156334b4b0baa5c33af5e88ee4d00224201b6986fda78c4f8c3e",
+      "bytes": 47984
+    },
+    {
+      "rel": "pinned/tools/geometry-engine-next-v0.cjs",
+      "sha256": "194e783c726ffde779b875ebd5f8da5f1d49f2e51035ba9a3cbbb3ff7220d89e",
+      "bytes": 42886
+    },
+    {
+      "rel": "pinned/tools/geometry-prototype-v1.cjs",
+      "sha256": "10edf937c38ac68317540ba9b6fcfcc3d6419438d39b5cbd0dc681babce797a4",
+      "bytes": 40967
+    },
+    {
+      "rel": "pinned/tools/materialized-native.cjs",
+      "sha256": "c2c45c4344c660b749d6d596738b1153a824840fa9bf1b303c76e322723cc418",
+      "bytes": 13334
+    },
+    {
+      "rel": "pinned/tools/no-support-generator-lab-v1.cjs",
+      "sha256": "dbc2ce9036cf87be913be8db68afaf39b3fae4d61b5fdda4f1b374692b2e6abb",
+      "bytes": 40820
+    },
+    {
+      "rel": "pinned/tools/u-hypothesis-lab-v1.cjs",
+      "sha256": "79fbb42fadd89945364aef8fa7e66ec9ba6e35667ae2de0b2642a6e4591afd6d",
+      "bytes": 34751
+    },
+    {
+      "rel": "pinned/tools/u-recentering-stabilization-v1.cjs",
+      "sha256": "9e2c369750083d82df07339958de58805f7c5b2b9ab97de240e9f02b6486b76b",
+      "bytes": 33209
+    },
+    {
+      "rel": "pinned/vendor/capture-core.js",
+      "sha256": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+      "bytes": 7775
+    },
+    {
+      "rel": "README_REPLICATION.md",
+      "sha256": "e8d32f32d361b452a472b6b52c80fc1911870ea60825cca3a3f6e4f415b4ae50",
+      "bytes": 1914
+    },
+    {
+      "rel": "run.cjs",
+      "sha256": "b527db1e0163a56f2280087b4e10326156cdc6df1af1b2495b003befda07e200",
+      "bytes": 7864
+    }
+  ]
+}
