@@ -4,6 +4,9 @@
 datasets/native/*
 !datasets/native/README.md
 
+# Cache canonique du Research Bootstrap : archives privées, extractions et state.
+.banane-data/
+
 # Sorties de build et archives produites localement.
 releases/
 archive/
