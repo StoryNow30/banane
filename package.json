@@ -1,0 +1,6 @@
+{
+  "name": "banane",
+  "private": true,
+  "type": "commonjs",
+  "description": "CJS package boundary so src/*.js stay CommonJS even when a parent workspace is ESM."
+}

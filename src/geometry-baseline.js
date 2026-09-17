@@ -8,7 +8,6 @@
    maxResidual:.004,minConfidence:55,topBand:.012,faceBand:.01,
    alternativeSeparation:.02,minTemplateLossRatio:1.5,maxSingleRailLateral:.06,pairedSupportLateral:.04,
    method:'template-surfaces-v3'});
- const MIN_TOP_ROWS=3;
  function robustLine(rows){
    if(rows.length<3)return null;
    const slopes=[];const stride=Math.max(1,Math.floor(rows.length/70));
@@ -20,17 +19,14 @@
    return {slope,rawSlope,slopeLimited:slope!==rawSlope,intercept,residual:median(rows.map(p=>Math.abs(p[1]-slope*p[0]-intercept))),count:rows.length};
  }
  function propose(capture,side,options={}){
-   const lab=options.lab&&typeof options.lab==='object'?options.lab:null;
-   const cfg={...DEFAULTS,...options,method:DEFAULTS.method};delete cfg.lab;
-   const rail=capture.rails?.[side];
+   const cfg={...DEFAULTS,...options,method:DEFAULTS.method},rail=capture.rails?.[side];
    for(const [k,lo,hi] of [['searchY',.005,.2],['searchZ',.005,.1],['grid',.001,.01],['minTop',3,500],['minFace',3,500],['minConfidence',0,100],
      ['alternativeSeparation',.005,.1],['minTemplateLossRatio',1,100],['maxSingleRailLateral',.01,.2],['pairedSupportLateral',.005,.2]])
      if(!Number.isFinite(cfg[k])||cfg[k]<lo||cfg[k]>hi)throw Error('Paramètre géométrique invalide : '+k);
    if(cfg.pairedSupportLateral>=cfg.maxSingleRailLateral)throw Error('Paramètres géométriques incohérents : appui pair >= déplacement isolé.');
    if(!rail)throw Error('Profil absent : '+side);
-   const parameters=lab?{...cfg,lab:{...lab}}:cfg;
    const unresolved=reason=>({side,status:'unresolved',delta:null,confidence:0,reasons:[reason],
-     method:cfg.method,source:'no-estimate',parameters});
+     method:cfg.method,source:'no-estimate',parameters:cfg});
    if(!capture.pointsSceneRelative?.length)return unresolved('Aucun point LiDAR disponible.');
    const contour=rail.profileContours?.reduce((a,b)=>(b.verticesSceneRelative?.length||0)>(a?.verticesSceneRelative?.length||0)?b:a,null);
    if(!contour)return unresolved('Contour du profil absent.');
@@ -69,75 +65,13 @@
      }
    }
    search(0,0,cfg.searchY,cfg.searchZ,cfg.grid,true);
-   const lossMinCoarse={...best};
-   const topRowsAt=(u,z)=>points.filter(p=>p[0]>u+.012&&p[0]<u+width-.012&&Math.abs(p[1]-z)<cfg.topBand);
-   /* ---- lab-geometry-prototype-v1 : inactive unless options.lab is set ---- */
-   if(lab){
-     if(lab.cloudZSeed){
-       const zMed=median(points.map(p=>p[1]));
-       if(Number.isFinite(zMed))search(0,zMed,cfg.searchY,cfg.searchZ,cfg.grid,true);
-     }
-     if(Number.isFinite(lab.pairSeedZ))search(0,lab.pairSeedZ,cfg.searchY,cfg.searchZ,cfg.grid,true);
-     if(lab.lockZToCloud){
-       const zMed=median(points.map(p=>p[1]));
-       if(Number.isFinite(zMed)){
-         let pick=null;
-         for(const c of coarse){
-           if(Math.abs(c.z-zMed)>0.012)continue;
-           if(!pick||c.loss<pick.loss)pick=c;
-         }
-         if(!pick){
-           for(const c of coarse){
-             if(!pick||Math.abs(c.z-zMed)<Math.abs(pick.z-zMed))pick=c;
-           }
-         }
-         if(pick)best={loss:pick.loss,u:pick.u,z:pick.z};
-       }
-     }
-     const penalty=Number.isFinite(lab.supportPenalty)?lab.supportPenalty:0;
-     if(lab.preferSupported||penalty>0||lab.multiMinima){
-       for(const c of coarse)c.topRows=topRowsAt(c.u,c.z).length;
-       if(penalty>0){
-         let pick=coarse[0];
-         for(const c of coarse){c.score=c.loss+penalty*(c.topRows<MIN_TOP_ROWS?1:0);if(c.score<pick.score)pick=c;}
-         best={loss:pick.loss,u:pick.u,z:pick.z};
-       }
-       if(lab.multiMinima){
-         const minima=[];
-         for(const c of coarse){
-           let local=true;
-           for(const o of coarse){
-             if(o===c)continue;
-             if(Math.hypot(o.u-c.u,o.z-c.z)>=cfg.alternativeSeparation)continue;
-             if(o.loss<c.loss){local=false;break;}
-           }
-           if(local)minima.push(c);
-         }
-         minima.sort((a,b)=>a.loss-b.loss);
-         const supported=minima.filter(c=>c.topRows>=MIN_TOP_ROWS);
-         const pick=(lab.preferSupported&&supported.length)?supported[0]:minima[0];
-         if(pick)best={loss:pick.loss,u:pick.u,z:pick.z};
-       }else if(lab.preferSupported){
-         let supported=null;
-         for(const c of coarse)if(c.topRows>=MIN_TOP_ROWS&&(!supported||c.loss<supported.loss))supported=c;
-         if(supported)best={loss:supported.loss,u:supported.u,z:supported.z};
-       }
-     }
-   }
    const coarseBest={...best};let alternative=null;
-   const alternativePool=lab&&lab.preferSupported
-     ?coarse.filter(c=>(c.topRows??topRowsAt(c.u,c.z).length)>=MIN_TOP_ROWS)
-     :coarse;
-   for(const candidate of alternativePool){
+   for(const candidate of coarse){
      if(Math.hypot(candidate.u-coarseBest.u,candidate.z-coarseBest.z)<cfg.alternativeSeparation)continue;
      if(!alternative||candidate.loss<alternative.loss)alternative=candidate;
    }
    const templateLossRatio=alternative&&coarseBest.loss>0?alternative.loss/coarseBest.loss:Infinity;
    search(best.u,best.z,.004,.004,.001);
-   if(lab&&lab.preserveCoarseSupport){
-     const refinedN=topRowsAt(best.u,best.z).length,coarseN=topRowsAt(coarseBest.u,coarseBest.z).length;
-     if(refinedN<MIN_TOP_ROWS&&coarseN>=MIN_TOP_ROWS)best={...coarseBest};
-   }
    // Surface fits validate support and remain diagnostic. Placement itself uses
    // the full U50 head template because the fitted sheet intersection was less
    // stable on the manual passage-level-crossing references.
@@ -159,8 +93,6 @@
      templateAmbiguity:{coarseBestLoss:coarseBest.loss,alternativeLoss:alternative?.loss??null,
        lossRatio:Number.isFinite(templateLossRatio)?templateLossRatio:null,separation:alternative?Math.hypot(alternative.u-coarseBest.u,alternative.z-coarseBest.z):null,
        alternative:alternative?[sign*alternative.u,alternative.z]:null}};
-   if(lab)metrics.lab={lossMinCoarse:[sign*lossMinCoarse.u,lossMinCoarse.z,lossMinCoarse.loss],
-     selectedCoarse:[sign*coarseBest.u,coarseBest.z,coarseBest.loss],topRows:topRows.length,coarseCount:coarse.length};
    // The first method returned a writable candidate even without both sheets,
    // or after forcing an implausible fitted slope to its numeric search limit.
    // These are missing geometric support, not merely a low confidence score.
@@ -178,11 +110,10 @@
    if(residual>cfg.maxResidual)reasons.push('Nappes dispersées.');
    if(confidence<cfg.minConfidence)reasons.push('Confiance heuristique faible.');
    return {side,status:'candidate',delta:[0,sign*best.u,best.z],confidence,reasons,method:cfg.method,source:'lidar-template-supported',
-     parameters,metrics,top,face};
+     parameters:cfg,metrics,top,face};
  }
  function enforcePairSupport(proposals,options={}){
-   const cfg={...DEFAULTS,...options};delete cfg.lab;
-   const candidates=['left','right'].filter(s=>proposals[s]?.delta);
+   const cfg={...DEFAULTS,...options},candidates=['left','right'].filter(s=>proposals[s]?.delta);
    if(cfg.pairedSupportLateral>=cfg.maxSingleRailLateral)throw Error('Paramètres géométriques incohérents : appui pair >= déplacement isolé.');
    if(candidates.length!==2)return proposals;
    const lateral=Object.fromEntries(candidates.map(s=>[s,Math.abs(proposals[s].delta[1])]));
@@ -194,20 +125,6 @@
    }
    return proposals;
  }
- function proposeBoth(capture,options={}){
-   const lab=options.lab&&typeof options.lab==='object'?options.lab:null;
-   const out=enforcePairSupport({left:propose(capture,'left',options),right:propose(capture,'right',options)},options);
-   if(!lab||!lab.pairZTransfer)return out;
-   const FAILURE='Plan de roulement non estimable.';
-   for(const side of ['left','right']){
-     const other=side==='left'?'right':'left';
-     const fail=out[side]?.status==='unresolved'&&(out[side].reasons||[]).join(' ').includes(FAILURE);
-     const ok=out[other]?.status==='candidate'&&Array.isArray(out[other].delta);
-     if(!fail||!ok)continue;
-     const retry=propose(capture,side,{...options,lab:{...lab,cloudZSeed:true,preferSupported:true,pairSeedZ:out[other].delta[2]}});
-     out[side]=retry;
-   }
-   return enforcePairSupport(out,options);
- }
- return {DEFAULTS,median,robustLine,enforcePairSupport,propose,proposeBoth,MIN_TOP_ROWS};
+ function proposeBoth(capture,options={}){return enforcePairSupport({left:propose(capture,'left',options),right:propose(capture,'right',options)},options);}
+ return {DEFAULTS,median,robustLine,enforcePairSupport,propose,proposeBoth};
 });
