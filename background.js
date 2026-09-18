@@ -1,12 +1,12 @@
 'use strict';
-// L'ORDRE COMPTE. `src/engine.js` est gelé et lie sa géométrie au chargement,
-// depuis globalThis. `src/geometry-brain.js` se charge entre les deux et y
-// substitue une composition « géométrie gelée + cerveau ». Aucun fichier gelé
-// n'est modifié ; la géométrie d'origine reste sous BananeGeometryFrozen.
-// Le cerveau est ÉTEINT par défaut : sans appel explicite à configure(),
-// proposeBoth rend l'objet de la géométrie gelée par identité.
+// L'ORDRE COMPTE. `src/engine.js` est gelé et lie sa géométrie au chargement.
+// La composition V4.6 (géométrie gelée + cerveau) reste la décision runtime.
+// GCV1 est chargé ensuite comme copie scientifique figée, puis immédiatement
+// encapsulé par un shadow qui REND TOUJOURS la décision V4.6 au moteur.
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geometry.js',
- 'src/brain.js','src/geometry-brain.js',
+ 'src/brain.js','src/geometry-brain.js');
+globalThis.BananeGeometryRuntimeV46=globalThis.BananeGeometry3;
+importScripts('src/geometry-candidate-v1.js','src/gcv1-shadow.js',
  'src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.6.0';
@@ -33,7 +33,17 @@ async function call(action,...args){if(selectedTab===null)throw Error('Sélectio
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
 const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
 adapter.capabilities={serverConfirmation:false};
-const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);await engine.init();
+const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
+ // Le moteur reste inchangé. On enveloppe seulement l'appel public analyze()
+ // afin de persister, après son calcul, le journal shadow éventuel. Le retour
+ // de analyze() reste exactement la proposition V4.6 consommée par apply().
+ const analyzeV46=engine.analyze.bind(engine);
+ engine.analyze=async(...args)=>{
+   const proposal=await analyzeV46(...args),shadow=BananeGCV1Shadow.consumeLast();
+   if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||null,proposalId:proposal?.id||null,shadow});
+   return proposal;
+ };
+ await engine.init();
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();})();
 async function openPanel(which='home'){if(!VIEWS.includes(which))throw Error('Vue inconnue.');
  const url=chrome.runtime.getURL(PANEL)+'#'+which;
@@ -96,6 +106,14 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='native-discard')return native.discard();
  // État du cerveau : ce qu'il est réglé à faire, et ce qu'il a fait au dernier passage.
  if(action==='brain-state')return {...BananeGeometryBrain.reglages(),ajuste:BananeGeometryBrain.AJUSTE,dernier:BananeGeometryBrain.journal()};
+ // Gate interne GCV1 : OFF à chaque démarrage du service worker. L'activer
+ // n'accorde aucun pouvoir d'action au candidat ; seul un événement compact
+ // gcv1-shadow-observed est ajouté après une analyse V4.6.
+ if(action==='gcv1-shadow-state')return {...BananeGCV1Shadow.state(),dernier:BananeGCV1Shadow.journal()};
+ if(action==='gcv1-shadow-configure'){
+  if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer le shadow GCV1.');
+  return BananeGCV1Shadow.configure({enabled:args?.enabled});
+ }
  // V4.5.7 — le mode Correction est retiré : aucune nouvelle session ne peut
  // être démarrée, et la page ESV ne reçoit plus manual-page.js. Fermeture et
  // téléchargement restent ouverts pour récupérer une session déjà enregistrée
