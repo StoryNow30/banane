@@ -1,0 +1,48 @@
+name: GCV1 shadow V1 verification
+
+on:
+  push:
+    branches:
+      - integration/gcv1-runtime-shadow-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Verify V4.6 plus shadow isolation
+        run: node tools/verify.cjs
+      - name: Frozen runtime hashes
+        shell: bash
+        run: |
+          test "$(sha256sum src/geometry.js | cut -d' ' -f1)" = "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53"
+          test "$(sha256sum src/engine.js | cut -d' ' -f1)" = "f7d3ea2232199b1c994caed1805f7463bceed96b23b68a055b4b23ca88272dd3"
+          test "$(sha256sum src/geometry-candidate-v1.js | cut -d' ' -f1)" = "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503"
+      - name: Report verification counts
+        run: python - <<'PY'
+          import json
+          d=json.load(open("audit/verification.json",encoding="utf-8"))
+          print(json.dumps({
+            "counts":d["counts"],
+            "engineMatchesBaseline":d["engineMatchesBaseline"],
+            "geometryUnchanged":d["geometryUnchanged"],
+            "benchMode":d["benchMode"],
+          },indent=2))
+          assert d["counts"]["tests"] == 390, d["counts"]
+          assert d["counts"]["pass"] == 388, d["counts"]
+          assert d["counts"]["fail"] == 0, d["counts"]
+          assert d["counts"]["skipped"] == 2, d["counts"]
+          assert d["engineMatchesBaseline"] is True
+          assert d["geometryUnchanged"] is True
+          PY
