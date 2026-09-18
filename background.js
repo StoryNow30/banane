@@ -4,9 +4,8 @@
 // GCV1 est chargé ensuite comme copie scientifique figée, puis immédiatement
 // encapsulé par un shadow qui REND TOUJOURS la décision V4.6 au moteur.
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geometry.js',
- 'src/brain.js','src/geometry-brain.js');
-globalThis.BananeGeometryRuntimeV46=globalThis.BananeGeometry3;
-importScripts('src/geometry-candidate-v1.js','src/gcv1-shadow.js',
+ 'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
+ 'src/geometry-candidate-v1.js','src/gcv1-shadow.js',
  'src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.6.0';
