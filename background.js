@@ -38,7 +38,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  // de analyze() reste exactement la proposition V4.6 consommée par apply().
  const analyzeV46=engine.analyze.bind(engine);
  engine.analyze=async(...args)=>{
-   const proposal=await analyzeV46(...args),shadow=BananeGCV1Shadow.consumeLast();
+   const proposal=await analyzeV46(...args),shadow=globalThis.BananeGCV1Shadow?.consumeLast?.()||null;
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||null,proposalId:proposal?.id||null,shadow});
    return proposal;
  };
