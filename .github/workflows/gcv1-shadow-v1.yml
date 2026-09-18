@@ -21,6 +21,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Focused shadow diagnostics
+        run: node --test --test-reporter=tap tests/gcv1-shadow.test.cjs tests/background.test.cjs tests/package.test.cjs
       - name: Verify V4.6 plus shadow isolation
         run: node tools/verify.cjs
       - name: Frozen runtime hashes
