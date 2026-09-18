@@ -13,7 +13,8 @@ const C={point:(_m,p)=>p.slice()};
 
 function fixture(){
  const contour=[];
- for(let i=0;i<8;i++)contour.push([0,.03+i*.005,0]);
+ for(let u=.012;u<=.072+1e-12;u+=.006)contour.push([0,u,0]);
+ for(let z=-.014;z>=-.034-1e-12;z-=.004)contour.push([0,.012,z]);
  const rail={sceneRelativeToProfileLocal:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
    profileContours:[{verticesSceneRelative:contour}]};
  const points=[];
