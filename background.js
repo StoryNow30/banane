@@ -34,11 +34,26 @@ const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','app
 adapter.capabilities={serverConfirmation:false};
 const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
  // Le moteur reste inchangé. On enveloppe seulement l'appel public analyze()
- // afin de persister, après son calcul, le journal shadow éventuel. Le retour
- // de analyze() reste exactement la proposition V4.6 consommée par apply().
+ // afin d'armer pour UN appel le candidat actif Assisté, puis de persister le
+ // journal comparatif. Hors Assisté, le retour reste exactement V4.6.
  const analyzeV46=engine.analyze.bind(engine);
  engine.analyze=async(...args)=>{
-   const proposal=await analyzeV46(...args),shadow=globalThis.BananeGCV1Shadow?.consumeLast?.()||null;
+   const gcv1=globalThis.BananeGCV1Shadow;
+   const activeAssisted=engine.s.mode==='assisted'&&gcv1?.state?.().activeAssistedEnabled===true;
+   let proposal;
+   try{if(activeAssisted)gcv1.armOnce('active-assisted');proposal=await analyzeV46(...args);}
+   finally{gcv1?.disarm?.();}
+   const shadow=gcv1?.consumeLast?.()||null;
+   /* Engine.analyze() reste l'unique constructeur de s.proposal. On annote le
+    * même objet après le calcul pour rendre la provenance durable ; event()
+    * persiste ensuite ensemble l'état annoté et le proposalId comparatif. */
+   if(activeAssisted&&shadow?.selection){
+     proposal.geometryEngine=shadow.selection.selectedEngine;
+     proposal.geometrySelection={selector:'active-assisted',requestedEngine:'geometry-candidate-v1',
+       selectedEngine:shadow.selection.selectedEngine,fallback:shadow.selection.fallback===true,
+       fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
+       geometrySha256:shadow.contract?.geometrySha256||null};
+   }
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||null,proposalId:proposal?.id||null,shadow});
    return proposal;
  };
@@ -105,13 +120,16 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='native-discard')return native.discard();
  // État du cerveau : ce qu'il est réglé à faire, et ce qu'il a fait au dernier passage.
  if(action==='brain-state')return {...BananeGeometryBrain.reglages(),ajuste:BananeGeometryBrain.AJUSTE,dernier:BananeGeometryBrain.journal()};
- // Gate interne GCV1 : OFF à chaque démarrage du service worker. L'activer
- // n'accorde aucun pouvoir d'action au candidat ; seul un événement compact
- // gcv1-shadow-observed est ajouté après une analyse V4.6.
+ // Gates internes GCV1 : shadow et actif Assisté sont OFF à chaque démarrage
+ // du service worker. Elles n'accordent aucun accès à l'adaptateur ; seule la
+ // géométrie rendue par l'appel Assisté explicitement armé peut changer.
  if(action==='gcv1-shadow-state')return {...BananeGCV1Shadow.state(),dernier:BananeGCV1Shadow.journal()};
  if(action==='gcv1-shadow-configure'){
-  if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer le shadow GCV1.');
-  return BananeGCV1Shadow.configure({enabled:args?.enabled});
+   if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer le shadow GCV1.');
+   const options={};
+   if(Object.prototype.hasOwnProperty.call(args||{},'enabled'))options.enabled=args.enabled;
+   if(Object.prototype.hasOwnProperty.call(args||{},'activeAssisted'))options.activeAssisted=args.activeAssisted;
+   return BananeGCV1Shadow.configure(options);
  }
  // V4.5.7 — le mode Correction est retiré : aucune nouvelle session ne peut
  // être démarrée, et la page ESV ne reçoit plus manual-page.js. Fermeture et

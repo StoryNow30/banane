@@ -41,7 +41,7 @@
     Candidate.DEFAULTS.alternativeSeparation!==CONTRACT.alternativeSeparation)
    throw Error('GCV1 shadow : paramètres Candidate V1 dérivés du gel.');
 
- let enabled=false,last=null;
+ let enabled=false,activeAssistedEnabled=false,armedSelector=null,last=null;
  const round6=x=>Math.round(Number(x)*1e6)/1e6;
  const clone=x=>x==null?x:JSON.parse(JSON.stringify(x));
 
@@ -51,13 +51,26 @@
      enabled=options.enabled;
      if(!enabled)last=null;
    }
+   if(Object.prototype.hasOwnProperty.call(options,'activeAssisted')){
+     if(typeof options.activeAssisted!=='boolean')throw Error('GCV1 actif Assisté : activeAssisted doit être un booléen.');
+     activeAssistedEnabled=options.activeAssisted;
+     if(!activeAssistedEnabled)armedSelector=null;
+   }
    return state();
  }
  function state(){
-   return {enabled,mode:'shadow-only',contract:{...CONTRACT},hasPendingJournal:last!==null};
+   return {enabled,activeAssistedEnabled,selector:armedSelector||'shadow',armedForNextCall:armedSelector!==null,
+     mode:armedSelector||'shadow-only',contract:{...CONTRACT},hasPendingJournal:last!==null};
  }
  function journal(){return clone(last);}
  function consumeLast(){const out=clone(last);last=null;return out;}
+ function armOnce(selector){
+   if(selector!=='active-assisted')throw Error('GCV1 : seul le sélecteur active-assisted est autorisé dans ce lot.');
+   if(!activeAssistedEnabled)throw Error('GCV1 actif Assisté : gate fermée.');
+   if(armedSelector!==null)throw Error('GCV1 : un sélecteur est déjà armé.');
+   armedSelector=selector;return state();
+ }
+ function disarm(){armedSelector=null;return state();}
 
  function prepareFrame(capture,side){
    const rail=capture?.rails?.[side];
@@ -376,23 +389,88 @@
    }};
  }
 
- function proposeBoth(capture,options={}){
-   const runtime=Runtime.proposeBoth(capture,options);
-   if(!enabled){last=null;return runtime;}
-   try{
-     const science=scientificProposeBoth(capture);
-     last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
-       contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,...science};
-   }catch(e){
-     last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
-       contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,
-       error:e?.message||String(e)};
-   }
-   return runtime;
- }
+  /* Frontière pure entre le résultat scientifique et le contrat historique
+   * consommé par Engine.apply(). Elle ne connaît ni l'adaptateur, ni ESV. Un
+   * `unresolved` reste une abstention et ne reçoit jamais un delta V4.6. */
+  function toRuntimeRails(science){
+    if(!science||!science.rails||typeof science.rails!=='object')throw Error('GCV1 : résultat scientifique absent.');
+    const parameters={contractId:CONTRACT.id,geometrySha256:CONTRACT.geometrySha256,
+      aStarHash:CONTRACT.aStarHash,compositionHash:CONTRACT.compositionHash,
+      searchY:CONTRACT.searchY,searchZ:CONTRACT.searchZ,grid:CONTRACT.grid,
+      minTop:CONTRACT.minTop,minFace:CONTRACT.minFace,minTemplateLossRatio:CONTRACT.minTemplateLossRatio,
+      alternativeSeparation:CONTRACT.alternativeSeparation,policy:'S1'};
+    const rails={};
+    for(const side of ['left','right']){
+      const rail=science.rails[side];
+      if(!rail)throw Error('GCV1 : résultat absent pour '+side+'.');
+      if(rail.error)throw Error('GCV1 '+side+' : '+rail.error);
+      const next=rail.next;
+      const unresolvedReason=rail.reason||next?.reason||'GCV1 ne publie pas de position exploitable.';
+      if(rail.ok!==true||!next||next.status!=='candidate'){
+        rails[side]={side,status:'unresolved',delta:null,confidence:0,reasons:[unresolvedReason],
+          method:Candidate.DEFAULTS.method,source:'geometry-candidate-v1-abstention',parameters:{...parameters},
+          geometryEngine:'geometry-candidate-v1',gcv1:{motif:next?.motif||'input',activated:!!next?.activated,
+            changed:!!next?.changed,confidenceStatus:next?.confidenceStatus||'not-applicable'}};
+        continue;
+      }
+      if(!Array.isArray(next.delta)||next.delta.length!==3||!next.delta.every(Number.isFinite))
+        throw Error('GCV1 '+side+' : delta candidate invalide.');
+      /* Une sélection S1 n'a pas de confiance calibrée propre. Zéro ne
+       * vaut ici que contrat d'affichage Assisté ; ce lot ne l'autorise jamais
+       * comme politique Pilote. A_STAR inchangé conserve son indice Candidate. */
+      const confidence=next.changed?0:(Number.isFinite(rail.astar?.confidence)?rail.astar.confidence:0);
+      const confidenceStatus=next.changed?'non-calibrated-s1-selection':'candidate-v1';
+      rails[side]={side,status:'candidate',delta:next.delta.slice(),confidence,
+        reasons:next.reason?[next.reason]:[],method:Candidate.DEFAULTS.method,
+        source:next.changed?'geometry-candidate-v1-s1':'geometry-candidate-v1-astar',parameters:{...parameters},
+        geometryEngine:'geometry-candidate-v1',gcv1:{motif:next.motif,activated:!!next.activated,changed:!!next.changed,
+          confidenceStatus,topRows:next.topRows??null,faceCount:next.faceCount??null,
+          nClusters:next.nClusters??null,nStrongCompetitive:next.nStrongCompetitive??null}};
+    }
+    return rails;
+  }
+
+  function compactRuntimeRails(rails){
+    return Object.fromEntries(['left','right'].map(side=>{const p=rails?.[side];return [side,p?{
+      status:p.status,delta:p.delta||null,confidence:p.confidence??null,reasons:p.reasons||[],method:p.method||null,source:p.source||null,
+    }:null];}));
+  }
+
+  function proposeBoth(capture,options={}){
+    /* Consommé avant tout calcul : même une exception V4.6 ne peut laisser
+     * l'appel suivant armé par accident. background.js désarme aussi en finally,
+     * ce qui protège les erreurs survenues avant d'entrer dans cette façade. */
+    const selector=armedSelector;armedSelector=null;
+    const runtime=Runtime.proposeBoth(capture,options);
+    const active=selector==='active-assisted';
+    if(!enabled&&!active){last=null;return runtime;}
+    try{
+      const science=scientificProposeBoth(capture);
+      let selected=runtime,selectedEngine='v4.6',fallback=false,fallbackReason=null,runtimeRails=null;
+      if(active){
+        try{runtimeRails=toRuntimeRails(science);selected=runtimeRails;selectedEngine='geometry-candidate-v1';}
+        catch(e){fallback=true;fallbackReason=e?.message||String(e);}
+      }
+      last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
+        contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,...science,
+        selection:{selector:active?'active-assisted':'shadow',requestedEngine:active?'geometry-candidate-v1':'v4.6',
+          selectedEngine,fallback,fallbackReason},
+        comparison:{v46:compactRuntimeRails(runtime),gcv1:runtimeRails?compactRuntimeRails(runtimeRails):null,
+          selectedEngine,fallback}};
+      return selected;
+    }catch(e){
+      last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
+        contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,
+        error:e?.message||String(e),selection:{selector:active?'active-assisted':'shadow',
+          requestedEngine:active?'geometry-candidate-v1':'v4.6',selectedEngine:'v4.6',fallback:active,
+          fallbackReason:active?(e?.message||String(e)):null},
+        comparison:{v46:compactRuntimeRails(runtime),gcv1:null,selectedEngine:'v4.6',fallback:active}};
+      return runtime;
+    }
+  }
 
  const geometry={...Runtime,proposeBoth};
- const api={CONTRACT,geometry,configure,state,journal,consumeLast,scientificProposeBoth};
+  const api={CONTRACT,geometry,configure,state,journal,consumeLast,armOnce,disarm,scientificProposeBoth,toRuntimeRails};
  if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{
    round6,lossRatio,inCompetitive,spatialClusters,qualifyStrong,alreadyQualified,policyS1,hypotDelta,
  },enumerable:false});

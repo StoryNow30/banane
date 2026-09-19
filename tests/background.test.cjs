@@ -1,7 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('./fixtures.cjs');
-function background(){const adapter=new SimulatedESV(),store=new MemoryStore();store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
+function background({shadow}={}){const adapter=new SimulatedESV(),store=new MemoryStore();store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
  const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../src/engine.js'),BananeManualSession4:require('../src/manual-session.js'),BananeNativeSession4:require('../src/native-session.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../src/geometry-brain.js'),
+  BananeGCV1Shadow:shadow,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:f=>onConnect=f}},
    action:{onClicked:{addListener:f=>click=f}},storage:{local:{get:async()=>({}),set:async()=>{}}},
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),query:async({url}={})=>!url?[{id:1,url:'https://esv.lidar.altametris.xyz/rails_validation/test',title:'ESV TEST'},...panelTabs]:
@@ -14,7 +15,7 @@ function background(){const adapter=new SimulatedESV(),store=new MemoryStore();s
  const sender={id:'test',url:'chrome-extension://test/panel.html',tab:{id:20}};
  const message=(m,from=sender)=>new Promise(resolve=>{const ret=onMessage(m,from,resolve);if(ret!==true)resolve(undefined);});
  const api=async(action,args={})=>{const r=await message({kind:'panel',action,args});if(r.error)throw Error(r.error);return r.result;};
- return {adapter,store,api,message,click,opened,injected,launcherMessages,
+ return {adapter,store,api,message,click,opened,injected,launcherMessages,shadow,
   connectPanel:(url='chrome-extension://test/panel.html',windowId=99,tabId=199)=>{let disconnected;
    // V4.5.4 : le service worker demande un changement de vue par le port ;
    // le banc doit pouvoir l'observer pour vérifier qu'aucune fenêtre n'est ouverte en double.
@@ -22,9 +23,21 @@ function background(){const adapter=new SimulatedESV(),store=new MemoryStore();s
    const port={name:'banane-panel-presence',sender:{id:'test',url,tab:{id:tabId,windowId}},
      postMessage:m=>posted.push(m),onDisconnect:{addListener:f=>disconnected=f}};
    onConnect(port);return {posted,disconnect:async()=>{disconnected();await new Promise(resolve=>setImmediate(resolve));}};},
-  closeWindow:async id=>{const index=panelTabs.findIndex(tab=>tab.windowId===id);
+ closeWindow:async id=>{const index=panelTabs.findIndex(tab=>tab.windowId===id);
    if(index>=0){const [tab]=panelTabs.splice(index,1);onTabRemoved?.(tab.id);}
    onWindowRemoved?.(id);await new Promise(resolve=>setImmediate(resolve));}};
+}
+function shadowHarness({fallback=false}={}){let enabled=false,activeAssistedEnabled=false,armed=false,last=null;
+ const calls={arm:0,disarm:0,consume:0};
+ return {calls,state:()=>({enabled,activeAssistedEnabled,selector:armed?'active-assisted':'shadow'}),journal:()=>last,
+  configure(options={}){if(Object.hasOwn(options,'enabled'))enabled=options.enabled;if(Object.hasOwn(options,'activeAssisted'))activeAssistedEnabled=options.activeAssisted;return this.state();},
+  armOnce(selector){assert.equal(selector,'active-assisted');assert.equal(activeAssistedEnabled,true);assert.equal(armed,false);armed=true;calls.arm++;
+   last={contract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:'candidate-hash'},selection:{selector:'active-assisted',
+     requestedEngine:'geometry-candidate-v1',selectedEngine:fallback?'v4.6':'geometry-candidate-v1',fallback,
+     fallbackReason:fallback?'candidate-test-failure':null},comparison:{v46:{},gcv1:fallback?null:{},selectedEngine:fallback?'v4.6':'geometry-candidate-v1',fallback}};},
+  disarm(){armed=false;calls.disarm++;return this.state();},
+  consumeLast(){calls.consume++;const out=last;last=null;return out;},
+ };
 }
 test('the ESV launch button hides while any Banane window remains and returns after the last closes',async()=>{
  const b=background(),sender={id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}},status=()=>b.message({kind:'launcher-status'},sender);
@@ -144,6 +157,53 @@ test('native mode excludes corrections and pilot commands while remaining comman
  assert.ok(b.adapter.calls.includes('nativeStart'));assert.equal(b.adapter.calls.some(x=>['apply','next','validate','skip'].includes(x)),false);
  await b.api('native-pause');await b.api('native-resume');const data=await b.api('native-end');assert.equal(data.format,'banane-native-session-v2');
  assert.deepEqual(b.adapter.calls.filter(x=>x.startsWith('native')),['nativeStart','nativePause','nativeResume','nativeFinish']);
+});
+
+test('background arms GCV1 for one assisted analysis and persists proposal provenance with its proposalId',async()=>{
+ const shadow=shadowHarness(),b=background({shadow});await b.api('connect',{tabId:1});
+ await b.api('gcv1-shadow-configure',{activeAssisted:true});await b.api('settings',{mode:'assisted'});
+ const proposal=await b.api('analyze');
+ assert.equal(shadow.calls.arm,1);assert.equal(shadow.calls.disarm,1);assert.equal(shadow.state().selector,'shadow');
+ assert.equal(proposal.geometryEngine,'geometry-candidate-v1');assert.equal(proposal.geometrySelection.fallback,false);
+ assert.equal(proposal.geometrySelection.contractId,'GEOMETRY_CANDIDATE_V1');
+ const event=b.store.events.find(e=>e.type==='gcv1-shadow-observed');assert.ok(event);
+ assert.equal(event.proposalId,proposal.id);assert.equal(event.shadow.selection.selectedEngine,'geometry-candidate-v1');
+ assert.equal(b.store.state.proposal.id,proposal.id);assert.equal(b.store.state.proposal.geometryEngine,'geometry-candidate-v1');
+});
+
+test('background persists an explicit atomic fallback on the existing V4.6 proposal',async()=>{
+ const shadow=shadowHarness({fallback:true}),b=background({shadow});await b.api('connect',{tabId:1});
+ await b.api('gcv1-shadow-configure',{activeAssisted:true});await b.api('settings',{mode:'assisted'});
+ const proposal=await b.api('analyze'),event=b.store.events.find(e=>e.type==='gcv1-shadow-observed');
+ assert.equal(proposal.geometryEngine,'v4.6');assert.equal(proposal.geometrySelection.fallback,true);
+ assert.match(proposal.geometrySelection.fallbackReason,/candidate-test-failure/);
+ assert.equal(event.proposalId,proposal.id);assert.equal(event.shadow.selection.fallback,true);
+});
+
+test('automatic-test and Native never arm the active-assisted selector',async()=>{
+ const shadow=shadowHarness(),b=background({shadow});await b.api('connect',{tabId:1});
+ await b.api('gcv1-shadow-configure',{activeAssisted:true});await b.api('settings',{mode:'automatic-test'});await b.api('analyze');
+ assert.equal(shadow.calls.arm,0,'automatic analysis stays on V4.6');assert.equal(shadow.calls.consume,1);
+ const nativeShadow=shadowHarness(),n=background({shadow:nativeShadow});await n.api('connect',{tabId:1});
+ await n.api('gcv1-shadow-configure',{activeAssisted:true});await n.api('native-start');
+ await assert.rejects(()=>n.api('analyze'),/mode Natif/);assert.equal(nativeShadow.calls.arm,0);
+ await n.api('native-end');
+});
+
+test('background disarms the selector in finally when assisted analysis fails',async()=>{
+ const shadow=shadowHarness(),b=background({shadow});await b.api('connect',{tabId:1});
+ await b.api('gcv1-shadow-configure',{activeAssisted:true});await b.api('settings',{mode:'assisted'});
+ b.adapter.capture=async()=>{throw Error('capture-test-failure');};
+ await assert.rejects(()=>b.api('analyze'),/capture-test-failure/);
+ assert.equal(shadow.calls.arm,1);assert.equal(shadow.calls.disarm,1);assert.equal(shadow.state().selector,'shadow');
+});
+
+test('a new service worker facade starts with active-assisted disabled',async()=>{
+ const first=shadowHarness(),b=background({shadow:first});await b.api('gcv1-shadow-configure',{activeAssisted:true});
+ assert.equal((await b.api('gcv1-shadow-state')).activeAssistedEnabled,true);
+ const restarted=background({shadow:shadowHarness()});
+ assert.equal((await restarted.api('gcv1-shadow-state')).activeAssistedEnabled,false);
+ assert.equal((await restarted.api('gcv1-shadow-state')).selector,'shadow');
 });
 
 /* L'ORDRE DE CHARGEMENT EST LA MÉCANIQUE ENTIÈRE.
