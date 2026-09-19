@@ -70,7 +70,7 @@ test('GCV1 shadow contains candidate failures and never replaces the V4.6 runtim
  assert.equal(j.commandsByShadow,0);
  assert.match(j.rails.left.error,/candidate-test-failure/);
  assert.match(j.rails.right.error,/candidate-test-failure/);
- assert.equal(j.selection.selector,'shadow');assert.equal(j.selection.fallback,false);
+ assert.equal(j.selection.selector,'shadow');assert.equal(j.selection.selectedEngine,'v4.6');assert.equal(j.selection.fallback,false);
 });
 
 test('GCV1 shadow gate accepts only an explicit boolean and disabling clears pending telemetry',()=>{
@@ -100,6 +100,7 @@ test('active assisted converts two GCV1 candidates after V4.6 and records proven
  }
  assert.deepEqual(j.comparison.v46.left.delta,h.runtimeResult.left.delta);
  assert.equal(j.selection.selectedEngine,'geometry-candidate-v1');assert.equal(j.selection.fallback,false);
+ assert.equal(j.runtimeDecisionUntouched,false);assert.equal(j.commandsByShadow,0);assert.equal(h.runtimeCalls,1);
  assert.equal(h.api.state().selector,'shadow');assert.equal(h.api.state().armedForNextCall,false);
  assert.strictEqual(h.api.geometry.proposeBoth(fixture(),{}),h.runtimeResult,'the next unarmed call must return V4.6');
  assert.equal(h.candidateCalls,2,'the one-shot selector must not leak into the next call');
@@ -128,6 +129,7 @@ test('active assisted technical failure falls back atomically to the already com
  const got=h.api.geometry.proposeBoth(fixture(),{}),j=h.api.journal();
  assert.strictEqual(got,h.runtimeResult);assert.equal(h.runtimeCalls,1);
  assert.equal(j.selection.selectedEngine,'v4.6');assert.equal(j.selection.fallback,true);
+ assert.equal(j.runtimeDecisionUntouched,true);assert.equal(j.commandsByShadow,0);
  assert.match(j.selection.fallbackReason,/candidate-test-failure-left/);
  assert.equal(j.comparison.gcv1,null);assert.deepEqual(j.comparison.v46.left.delta,h.runtimeResult.left.delta);
 });

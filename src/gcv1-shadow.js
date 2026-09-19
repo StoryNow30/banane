@@ -452,19 +452,20 @@
         catch(e){fallback=true;fallbackReason=e?.message||String(e);}
       }
       last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
-        contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,...science,
+        contract:{...CONTRACT},runtimeDecisionUntouched:selectedEngine==='v4.6',commandsByShadow:0,...science,
         selection:{selector:active?'active-assisted':'shadow',requestedEngine:active?'geometry-candidate-v1':'v4.6',
           selectedEngine,fallback,fallbackReason},
         comparison:{v46:compactRuntimeRails(runtime),gcv1:runtimeRails?compactRuntimeRails(runtimeRails):null,
           selectedEngine,fallback}};
       return selected;
     }catch(e){
+      const selectedEngine='v4.6';
       last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
-        contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,
+        contract:{...CONTRACT},runtimeDecisionUntouched:selectedEngine==='v4.6',commandsByShadow:0,
         error:e?.message||String(e),selection:{selector:active?'active-assisted':'shadow',
-          requestedEngine:active?'geometry-candidate-v1':'v4.6',selectedEngine:'v4.6',fallback:active,
+          requestedEngine:active?'geometry-candidate-v1':'v4.6',selectedEngine,fallback:active,
           fallbackReason:active?(e?.message||String(e)):null},
-        comparison:{v46:compactRuntimeRails(runtime),gcv1:null,selectedEngine:'v4.6',fallback:active}};
+        comparison:{v46:compactRuntimeRails(runtime),gcv1:null,selectedEngine,fallback:active}};
       return runtime;
     }
   }
