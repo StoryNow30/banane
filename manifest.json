@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Banane V4.5 TEST",
+  "name": "Banane 4.7.0 RC1 TEST",
   "version": "4.6.0",
+  "version_name": "4.7.0 RC1",
   "description": "Observation native passive, corrections manuelles et pilotage TEST séparés pour ESV LiDAR. Collecte segmentée et export compact.",
   "permissions": [
     "storage",
@@ -15,7 +16,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Ouvrir Banane 4.6.0 TEST"
+    "default_title": "Ouvrir Banane 4.7.0 RC1 TEST"
   },
   "content_scripts": [
     {

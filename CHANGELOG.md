@@ -1,5 +1,78 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7.0 RC1 — release candidate (packaging, sans changement fonctionnel)
+
+Release candidate de packaging uniquement, construite sur le lot de
+développement 4.7 ci-dessous, à la QA indépendante duquel elle est adossée :
+`091462fbca267fb8f4e60f33f4db842bc2fbcd85` (branche `work/gcv1-pilot-g8`). La
+QA a rendu `PASS_DEFERRED_UNRESOLVED_EDGE_READY` — aucun défaut bloquant sur le
+protocole `DEFERRED_UNRESOLVED`.
+
+**Cette RC n'est pas la release finale.** Elle reste soumise à l'audit Astra
+indépendant et à la vérification terrain Edge finale décrite dans ce fichier
+et dans DECISIONS.md.
+
+**Ce qui change dans cette RC, et rien d'autre** : l'identification destinée
+à l'opérateur qui charge le paquet dans Edge — `manifest.json` (`name`,
+`version_name` ajouté, `action.default_title`) et `panel.html` (`<title>` de
+la page seulement).
+
+`manifest.json.version` **reste `4.6.0`**, à l'identique de `K.VERSION`
+(`src/core.js`) : `tests/settings.test.cjs` et `tests/package.test.cjs`
+vérifient déjà, avant cette RC, que ces deux valeurs sont égales et
+correspondent à `/^4\.6\.\d+$/`, et que le bouton flottant injecté dans ESV
+(`src/bridge.js`, hors périmètre RC) contient littéralement
+`Banane ${manifest.version} · ouvrir` — tout comme le bandeau d'en-tête de
+`panel.html` doit contenir `V${manifest.version} · TEST`. Faire porter
+`4.7.0 RC1` par `manifest.version` aurait donc cassé ces contrôles existants
+ou exigé de toucher `src/bridge.js`/`src/core.js` : les deux sont hors
+périmètre. `version_name` est le mécanisme standard Manifest V3 prévu pour
+exactement ce cas — un nom de release lisible distinct de la version machine
+— et c'est lui qui porte `4.7.0 RC1` ; Edge l'affiche à la place de
+`version` sur la page `edge://extensions`. Le bandeau `panel.html` et le
+bouton flottant continuent donc, à dessein, d'afficher `4.6.0` : c'est la
+même étiquette de format d'enregistrement/export que celle déjà figée par le
+lot de développement 4.7 ci-dessous (« sans bump de version produit »), pas
+un oubli.
+
+`src/engine.js`, la machine à états `deferred`, l'adaptateur
+(`src/adapter-page.js`), le bridge (`src/bridge.js`), `nextWithoutDecision`,
+`unresolvedPolicy`, la politique de faible confiance, G8/G8.1, GCV1, A_STAR,
+S1, les seuils, la confiance, les règles unresolved, l'export fonctionnel et
+le comportement de l'interface ne sont **pas** modifiés par cette RC.
+
+**Contenu réel de cette RC** (rien de plus n'est revendiqué, aucun gain
+scientifique GCV1 n'est affirmé) :
+
+- Pilote GCV1 consolidé (sélection, abstention, seuils inchangés).
+- G8.1 — `NEXT_NON_VALIDATED_CUT_SAME_PAGE_AND_PART` : contrat VALIDATE
+  inchangé, verdicts non affectés par 4.7 (non-régression testée).
+- Export Diagnostic GCV1 et export Corpus GCV1 + LiDAR.
+- `DEFERRED_UNRESOLVED` : un cut réellement non résolu par GCV1 peut être
+  différé par une navigation sans décision (aucun apply, aucun VALIDATE, aucun
+  SKIP), enregistré une fois, sans jamais requalifier la décision scientifique
+  — un rail unresolved reste unresolved.
+- Navigation sans décision via le chemin ESV établi, par inspection terrain
+  directe du JavaScript ESV chargé dans Edge le 20 septembre 2026, comme
+  équivalent au raccourci opérateur Maj+Z (`buttonNextInvalidCut()` /
+  `loadNextInvalidCut("positive")` — voir D-4.7b de DECISIONS.md). Cette
+  équivalence vient de cette inspection, pas d'une documentation fournisseur ;
+  aucun artefact rétroactif n'est fabriqué pour cette RC.
+- La politique historique `pause` reste disponible et reste le comportement
+  d'un lot antérieur à 4.7, ou d'un lot hors Pilote GCV1.
+- Redémarrage sans rejeu à chaque frontière du protocole `deferred`
+  (préparé, émission possible, observé, finalisé), vérifié par le banc.
+
+**Limites connues, non résolues par cette RC** :
+
+- KI-025 (limite assumée) — aucune transaction atomique commune entre le
+  stockage Banane et l'effet ESV ; un différé interrompu entre l'émission
+  possible et une progression acceptée reste explicitement incertain
+  (`PAUSED_DEFER_NAVIGATION_UNCERTAIN`) et n'est jamais renvoyé automatiquement.
+- KI-026 (limite de maintenance) — la navigation sans décision dépend de
+  symboles et d'un identifiant DOM internes à ESV, non documentés par le
+  fournisseur, susceptibles de changer sans préavis à une mise à jour ESV.
+
 ## 4.7 — différer un unresolved GCV1 (lot de développement)
 
 Lot de développement, sans bump de version produit : la 4.7.0 officielle

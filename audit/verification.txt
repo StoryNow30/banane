@@ -1,4 +1,4 @@
-Started: 2026-09-20T21:21:26.428Z
+Started: 2026-09-20T22:28:52.379Z
 Node: v22.22.2
 Platform: linux
 Bench mode: partial (native corpus absent: 2 tests skipped, not passed)
@@ -9,2827 +9,2827 @@ TAP version 13
 # Subtest: real adapter code identifies mirrored rails regardless of root list order
 ok 1 - real adapter code identifies mirrored rails regardless of root list order
   ---
-  duration_ms: 17.945407
+  duration_ms: 24.169812
   type: 'test'
   ...
 # Subtest: real adapter native click path reads back both corrections and can restore on the same cut
 ok 2 - real adapter native click path reads back both corrections and can restore on the same cut
   ---
-  duration_ms: 13.029131
+  duration_ms: 28.391671
   type: 'test'
   ...
 # Subtest: real adapter navigation is never presented as server confirmation; changed target rejects writes
 ok 3 - real adapter navigation is never presented as server confirmation; changed target rejects writes
   ---
-  duration_ms: 3.693412
+  duration_ms: 6.53786
   type: 'test'
   ...
 # Subtest: real validation adapter exposes the observed next-non-validated navigation contract
 ok 4 - real validation adapter exposes the observed next-non-validated navigation contract
   ---
-  duration_ms: 2.341378
+  duration_ms: 4.16456
   type: 'test'
   ...
 # Subtest: real adapter reports an absent native command without fabricating a request
 ok 5 - real adapter reports an absent native command without fabricating a request
   ---
-  duration_ms: 1.990239
+  duration_ms: 2.894734
   type: 'test'
   ...
 # Subtest: real adapter bounds the wait when a native validation button leaves the cut unchanged
 ok 6 - real adapter bounds the wait when a native validation button leaves the cut unchanged
   ---
-  duration_ms: 4.371839
+  duration_ms: 6.506223
   type: 'test'
   ...
 # Subtest: a single-cut lot detects navigation even when the next cut has no rail geometry yet
 ok 7 - a single-cut lot detects navigation even when the next cut has no rail geometry yet
   ---
-  duration_ms: 4.538162
+  duration_ms: 3.266691
   type: 'test'
   ...
 # Subtest: longer lots preserve navigation evidence while marking the next geometry as not ready
 ok 8 - longer lots preserve navigation evidence while marking the next geometry as not ready
   ---
-  duration_ms: 6.022767
+  duration_ms: 7.470666
   type: 'test'
   ...
 # Subtest: manual SKIP relays the ESV keyboard shortcut and never substitutes Next Invalid
 ok 9 - manual SKIP relays the ESV keyboard shortcut and never substitutes Next Invalid
   ---
-  duration_ms: 0.717939
+  duration_ms: 0.935474
   type: 'test'
   ...
 # Subtest: explicit paused-cut SKIP sends one native shortcut and exports four independent observations
 ok 10 - explicit paused-cut SKIP sends one native shortcut and exports four independent observations
   ---
-  duration_ms: 3.119385
+  duration_ms: 4.023887
   type: 'test'
   ...
 # Subtest: native snapshot preserves a one-rail scene as partial data instead of inventing the missing rail
 ok 11 - native snapshot preserves a one-rail scene as partial data instead of inventing the missing rail
   ---
-  duration_ms: 1.955152
+  duration_ms: 4.4197
   type: 'test'
   ...
 # Subtest: native LiDAR path is bounded, yields often, and contains no camera, selection, navigation, or decision call
 ok 12 - native LiDAR path is bounded, yields often, and contains no camera, selection, navigation, or decision call
   ---
-  duration_ms: 0.424685
+  duration_ms: 0.577483
   type: 'test'
   ...
 # Subtest: quand ESV laisse un tour, l’état est relu sur la même identité
 ok 13 - quand ESV laisse un tour, l’état est relu sur la même identité
   ---
-  duration_ms: 1.992783
+  duration_ms: 2.868532
   type: 'test'
   ...
 # Subtest: une navigation synchrone reste honnêtement rapportée comme non relue
 ok 14 - une navigation synchrone reste honnêtement rapportée comme non relue
   ---
-  duration_ms: 2.517596
+  duration_ms: 2.696216
   type: 'test'
   ...
 # Subtest: l’identification des rails n’est pas refaite à chaque lecture d’état
 ok 15 - l’identification des rails n’est pas refaite à chaque lecture d’état
   ---
-  duration_ms: 2.514381
+  duration_ms: 5.110417
   type: 'test'
   ...
 # Subtest: mais elle est refaite dès que le cut change
 ok 16 - mais elle est refaite dès que le cut change
   ---
-  duration_ms: 4.272961
+  duration_ms: 5.565346
   type: 'test'
   ...
 # Subtest: un rail déplacé est vu immédiatement malgré la mémoïsation
 ok 17 - un rail déplacé est vu immédiatement malgré la mémoïsation
   ---
-  duration_ms: 1.551597
+  duration_ms: 4.369464
   type: 'test'
   ...
 # Subtest: l’identification reste correcte après mémoïsation, ordre de scène inversé
 ok 18 - l’identification reste correcte après mémoïsation, ordre de scène inversé
   ---
-  duration_ms: 1.573147
+  duration_ms: 1.724831
   type: 'test'
   ...
 # Subtest: la signature du niveau de détail distingue toujours un chargement qui bouge
 ok 19 - la signature du niveau de détail distingue toujours un chargement qui bouge
   ---
-  duration_ms: 1.56452
+  duration_ms: 2.339753
   type: 'test'
   ...
 # Subtest: le pilote lit ses réglages depuis la source unique
 ok 20 - le pilote lit ses réglages depuis la source unique
   ---
-  duration_ms: 0.546355
+  duration_ms: 0.629003
   type: 'test'
   ...
 # Subtest: les réglages du pilote sont affichables à l’opérateur
 ok 21 - les réglages du pilote sont affichables à l’opérateur
   ---
-  duration_ms: 14.067351
+  duration_ms: 38.214627
   type: 'test'
   ...
 # Subtest: l’adaptateur fonctionne même si la source unique est absente
 ok 22 - l’adaptateur fonctionne même si la source unique est absente
   ---
-  duration_ms: 0.335008
+  duration_ms: 0.382817
   type: 'test'
   ...
 # Subtest: un rail remplacé par un nouvel objet invalide la mémoïsation
 ok 23 - un rail remplacé par un nouvel objet invalide la mémoïsation
   ---
-  duration_ms: 2.989889
+  duration_ms: 3.706312
   type: 'test'
   ...
 # Subtest: un objet détaché de la scène force un recalcul, il n’est pas servi du cache
 ok 24 - un objet détaché de la scène force un recalcul, il n’est pas servi du cache
   ---
-  duration_ms: 1.612077
+  duration_ms: 1.717556
   type: 'test'
   ...
 # Subtest: the ESV launch button hides while any Banane window remains and returns after the last closes
 ok 25 - the ESV launch button hides while any Banane window remains and returns after the last closes
   ---
-  duration_ms: 26.106048
+  duration_ms: 49.086866
   type: 'test'
   ...
 # Subtest: window presence still works when extension URL tab filters return no matches
 ok 26 - window presence still works when extension URL tab filters return no matches
   ---
-  duration_ms: 3.77642
+  duration_ms: 4.552341
   type: 'test'
   ...
 # Subtest: panel registration alone restores visibility state after a service worker restart
 ok 27 - panel registration alone restores visibility state after a service worker restart
   ---
-  duration_ms: 3.78897
+  duration_ms: 5.685099
   type: 'test'
   ...
 # Subtest: dedicated panel accepts an extension-tab sender; website and foreign senders cannot issue commands
 ok 28 - dedicated panel accepts an extension-tab sender; website and foreign senders cannot issue commands
   ---
-  duration_ms: 3.780913
+  duration_ms: 3.433443
   type: 'test'
   ...
 # Subtest: production background routes capture and persists exports with clouds separate from journal
 ok 29 - production background routes capture and persists exports with clouds separate from journal
   ---
-  duration_ms: 177.139947
+  duration_ms: 273.798359
   type: 'test'
   ...
 # Subtest: panel polling returns immediately, allows only one pending observation, and preserves the original batch error
 ok 30 - panel polling returns immediately, allows only one pending observation, and preserves the original batch error
   ---
-  duration_ms: 27.107702
+  duration_ms: 31.200653
   type: 'test'
   ...
 # Subtest: toutes les vues vivent dans une seule fenêtre, jamais une seconde
 ok 31 - toutes les vues vivent dans une seule fenêtre, jamais une seconde
   ---
-  duration_ms: 9.890329
+  duration_ms: 8.395175
   type: 'test'
   ...
 # Subtest: la fenêtre ouverte reçoit la vue demandée au lieu d’être dupliquée
 ok 32 - la fenêtre ouverte reçoit la vue demandée au lieu d’être dupliquée
   ---
-  duration_ms: 6.123836
+  duration_ms: 5.64916
   type: 'test'
   ...
 # Subtest: le mode Correction est retiré, mais ses données restent récupérables
 ok 33 - le mode Correction est retiré, mais ses données restent récupérables
   ---
-  duration_ms: 20.924699
+  duration_ms: 22.998037
   type: 'test'
   ...
 # Subtest: a manual takeover holds the batch context against a new batch or native mode
 ok 34 - a manual takeover holds the batch context against a new batch or native mode
   ---
-  duration_ms: 326.217474
+  duration_ms: 360.465181
   type: 'test'
   ...
 # Subtest: native mode excludes corrections and pilot commands while remaining command-free
 ok 35 - native mode excludes corrections and pilot commands while remaining command-free
   ---
-  duration_ms: 46.555204
+  duration_ms: 47.528019
   type: 'test'
   ...
 # Subtest: background arms GCV1 for one assisted analysis and persists proposal provenance with its proposalId
 ok 36 - background arms GCV1 for one assisted analysis and persists proposal provenance with its proposalId
   ---
-  duration_ms: 144.616716
+  duration_ms: 133.58124
   type: 'test'
   ...
 # Subtest: manual GCV1 export actions reuse the persisted observation and LiDAR without adapter traffic
 ok 37 - manual GCV1 export actions reuse the persisted observation and LiDAR without adapter traffic
   ---
-  duration_ms: 168.216256
+  duration_ms: 197.454769
   type: 'test'
   ...
 # Subtest: background persists an explicit atomic fallback on the existing V4.6 proposal
 ok 38 - background persists an explicit atomic fallback on the existing V4.6 proposal
   ---
-  duration_ms: 144.556517
+  duration_ms: 135.445577
   type: 'test'
   ...
 # Subtest: automatic-test remains V4.6 unless its batch scope explicitly selects GCV1; Native never arms it
 ok 39 - automatic-test remains V4.6 unless its batch scope explicitly selects GCV1; Native never arms it
   ---
-  duration_ms: 131.414427
+  duration_ms: 128.895366
   type: 'test'
   ...
 # Subtest: a GCV1 pilot batch persists its engine contract, selects it once per analysis, and applies a candidate
 ok 40 - a GCV1 pilot batch persists its engine contract, selects it once per analysis, and applies a candidate
   ---
-  duration_ms: 527.235441
+  duration_ms: 527.147936
   type: 'test'
   ...
 # Subtest: a GCV1 pilot technical error clears the V4.6 proposal and stops before apply
 ok 41 - a GCV1 pilot technical error clears the V4.6 proposal and stops before apply
   ---
-  duration_ms: 163.750439
+  duration_ms: 162.10579
   type: 'test'
   ...
 # Subtest: restart refuses a GCV1 batch whose persisted engine contract no longer matches
 ok 42 - restart refuses a GCV1 batch whose persisted engine contract no longer matches
   ---
-  duration_ms: 620.726259
+  duration_ms: 588.230563
   type: 'test'
   ...
 # Subtest: the automatic TEST UI names GCV1 explicitly in every pilot start command
 ok 43 - the automatic TEST UI names GCV1 explicitly in every pilot start command
   ---
-  duration_ms: 0.669397
+  duration_ms: 0.600219
   type: 'test'
   ...
 # Subtest: background disarms the selector in finally when assisted analysis fails
 ok 44 - background disarms the selector in finally when assisted analysis fails
   ---
-  duration_ms: 43.612253
+  duration_ms: 44.01818
   type: 'test'
   ...
 # Subtest: a new service worker facade starts with active-assisted disabled
 ok 45 - a new service worker facade starts with active-assisted disabled
   ---
-  duration_ms: 4.229564
+  duration_ms: 4.221865
   type: 'test'
   ...
 # Subtest: le cerveau se charge entre la géométrie gelée et le moteur
 ok 46 - le cerveau se charge entre la géométrie gelée et le moteur
   ---
-  duration_ms: 0.390147
+  duration_ms: 0.446306
   type: 'test'
   ...
 # Subtest: la politique « attempt » coupe les sélections, sauf accord explicite
 ok 47 - la politique « attempt » coupe les sélections, sauf accord explicite
   ---
-  duration_ms: 0.254099
+  duration_ms: 0.222792
   type: 'test'
   ...
 # Subtest: le jeu d’essai porte les deux blocs et la cible humaine
 ok 48 - le jeu d’essai porte les deux blocs et la cible humaine
   ---
-  duration_ms: 2.166287
+  duration_ms: 4.052481
   type: 'test'
   ...
 # Subtest: aucune fuite : la cible n’apparaît dans aucune entrée du moteur
 ok 49 - aucune fuite : la cible n’apparaît dans aucune entrée du moteur
   ---
-  duration_ms: 2.105289
+  duration_ms: 2.470067
   type: 'test'
   ...
 # Subtest: un biais nul laisse la proposition intacte
 ok 50 - un biais nul laisse la proposition intacte
   ---
-  duration_ms: 1.491915
+  duration_ms: 1.924951
   type: 'test'
   ...
 # Subtest: le biais vertical est appliqué, le latéral reste à la main de l’appelant
 ok 51 - le biais vertical est appliqué, le latéral reste à la main de l’appelant
   ---
-  duration_ms: 0.205805
+  duration_ms: 0.198334
   type: 'test'
   ...
 # Subtest: le cerveau ne sélectionne que sur une abstention pour concurrence
 ok 52 - le cerveau ne sélectionne que sur une abstention pour concurrence
   ---
-  duration_ms: 0.290141
+  duration_ms: 0.373041
   type: 'test'
   ...
 # Subtest: sans rail opposé résolu, le cerveau s’abstient : pas d’appui de dévers
 ok 53 - sans rail opposé résolu, le cerveau s’abstient : pas d’appui de dévers
   ---
-  duration_ms: 0.224618
+  duration_ms: 0.281254
   type: 'test'
   ...
 # Subtest: le candidat retenu est celui qui s’accorde en dévers avec le rail opposé
 ok 54 - le candidat retenu est celui qui s’accorde en dévers avec le rail opposé
   ---
-  duration_ms: 0.32684
+  duration_ms: 0.394382
   type: 'test'
   ...
 # Subtest: un candidat latéralement invraisemblable est refusé, pas corrigé
 ok 55 - un candidat latéralement invraisemblable est refusé, pas corrigé
   ---
-  duration_ms: 0.333821
+  duration_ms: 0.36714
   type: 'test'
   ...
 # Subtest: aucun candidat en accord de dévers : abstention
 ok 56 - aucun candidat en accord de dévers : abstention
   ---
-  duration_ms: 0.476256
+  duration_ms: 0.840424
   type: 'test'
   ...
 # Subtest: le cerveau n’invente aucun candidat
 ok 57 - le cerveau n’invente aucun candidat
   ---
-  duration_ms: 1.109174
+  duration_ms: 2.378459
   type: 'test'
   ...
 # Subtest: une abstention n’est jamais transformée en SKIP
 ok 58 - une abstention n’est jamais transformée en SKIP
   ---
-  duration_ms: 0.237078
+  duration_ms: 0.381438
   type: 'test'
   ...
 # Subtest: une sélection ne peut PAS être appliquée seule par le pilote
 ok 59 - une sélection ne peut PAS être appliquée seule par le pilote
   ---
-  duration_ms: 0.304899
+  duration_ms: 0.267814
   type: 'test'
   ...
 # Subtest: des réglages aberrants sont refusés, pas silencieusement corrigés
 ok 60 - des réglages aberrants sont refusés, pas silencieusement corrigés
   ---
-  duration_ms: 0.441427
+  duration_ms: 0.559252
   type: 'test'
   ...
 # Subtest: l’ajustement rejette de lui-même le biais latéral, qui est du bruit
 ok 61 - l’ajustement rejette de lui-même le biais latéral, qui est du bruit
   ---
-  duration_ms: 1.863012
+  duration_ms: 1.561555
   type: 'test'
   ...
 # Subtest: le biais vertical se retrouve dans les DEUX blocs, séparément
 ok 62 - le biais vertical se retrouve dans les DEUX blocs, séparément
   ---
-  duration_ms: 0.461762
+  duration_ms: 0.54657
   type: 'test'
   ...
 # Subtest: sur le bloc RÉSERVÉ, le cerveau améliore l’erreur médiane
 ok 63 - sur le bloc RÉSERVÉ, le cerveau améliore l’erreur médiane
   ---
-  duration_ms: 1.672981
+  duration_ms: 4.600871
   type: 'test'
   ...
 # Subtest: le cerveau ne dégrade pas le taux de proposition
 ok 64 - le cerveau ne dégrade pas le taux de proposition
   ---
-  duration_ms: 2.048932
+  duration_ms: 7.292878
   type: 'test'
   ...
 # Subtest: désactiver la sélection laisse le biais agir seul
 ok 65 - désactiver la sélection laisse le biais agir seul
   ---
-  duration_ms: 0.555939
+  duration_ms: 0.550741
   type: 'test'
   ...
 # Subtest: le cerveau est un post-traitement pur : aucune dépendance, aucun nuage relu
 ok 66 - le cerveau est un post-traitement pur : aucune dépendance, aucun nuage relu
   ---
-  duration_ms: 0.514937
+  duration_ms: 0.546463
   type: 'test'
   ...
 # Subtest: the floating Banane button follows window visibility signals without intercepting ESV input
 ok 67 - the floating Banane button follows window visibility signals without intercepting ESV input
   ---
-  duration_ms: 7.633764
+  duration_ms: 10.958758
   type: 'test'
   ...
 # Subtest: an obsolete initial status cannot restore the button after a panel opens
 ok 68 - an obsolete initial status cannot restore the button after a panel opens
   ---
-  duration_ms: 1.925327
+  duration_ms: 3.390257
   type: 'test'
   ...
 # Subtest: an out-of-order show message cannot reinsert the button while a panel exists
 ok 69 - an out-of-order show message cannot reinsert the button while a panel exists
   ---
-  duration_ms: 1.624882
+  duration_ms: 3.584902
   type: 'test'
   ...
 # Subtest: a read-only observation timeout never cancels an active ESV operation
 ok 70 - a read-only observation timeout never cancels an active ESV operation
   ---
-  duration_ms: 1.184249
+  duration_ms: 2.332466
   type: 'test'
   ...
 # Subtest: a validation timeout records its last acknowledged stage, cancels once, and ignores late replies
 ok 71 - a validation timeout records its last acknowledged stage, cancels once, and ignores late replies
   ---
-  duration_ms: 1.571528
+  duration_ms: 2.347345
   type: 'test'
   ...
 # Subtest: native observation messages are forwarded and passive adapter timeouts never send cancel
 ok 72 - native observation messages are forwarded and passive adapter timeouts never send cancel
   ---
-  duration_ms: 3.364904
+  duration_ms: 5.23953
   type: 'test'
   ...
 # Subtest: sans qualification, le budget ne coupe pas à 8
 ok 73 - sans qualification, le budget ne coupe pas à 8
   ---
-  duration_ms: 1.407961
+  duration_ms: 1.807525
   type: 'test'
   ...
 # Subtest: une fois les DEUX côtés qualifiés, le budget serré s’applique
 ok 74 - une fois les DEUX côtés qualifiés, le budget serré s’applique
   ---
-  duration_ms: 0.262255
+  duration_ms: 0.346654
   type: 'test'
   ...
 # Subtest: le budget atteint n’est pas compté comme une panne
 ok 75 - le budget atteint n’est pas compté comme une panne
   ---
-  duration_ms: 0.786431
+  duration_ms: 0.967772
   type: 'test'
   ...
 # Subtest: le motif distingue un budget qualifié d’un budget prématuré
 ok 76 - le motif distingue un budget qualifié d’un budget prématuré
   ---
-  duration_ms: 8.172428
+  duration_ms: 6.864712
   type: 'test'
   ...
 # Subtest: un refus de cut n’est pas compté comme une panne de capture
 ok 77 - un refus de cut n’est pas compté comme une panne de capture
   ---
-  duration_ms: 5.59612
+  duration_ms: 5.749608
   type: 'test'
   ...
 # Subtest: une vraie panne reste comptée comme telle
 ok 78 - une vraie panne reste comptée comme telle
   ---
-  duration_ms: 1.299035
+  duration_ms: 1.492063
   type: 'test'
   ...
 # Subtest: acquitter un segment libère réellement la place
 ok 79 - acquitter un segment libère réellement la place
   ---
-  duration_ms: 4.14008
+  duration_ms: 5.236755
   type: 'test'
   ...
 # Subtest: les identifiants purgés restent DÉCLARÉS, donc une perte reste détectable
 ok 80 - les identifiants purgés restent DÉCLARÉS, donc une perte reste détectable
   ---
-  duration_ms: 1.285686
+  duration_ms: 4.352561
   type: 'test'
   ...
 # Subtest: le manifeste ne redemande pas ce qui est déjà écrit
 ok 81 - le manifeste ne redemande pas ce qui est déjà écrit
   ---
-  duration_ms: 2.306793
+  duration_ms: 4.520261
   type: 'test'
   ...
 # Subtest: un objet impossible à purger ne bloque pas l’acquittement
 ok 82 - un objet impossible à purger ne bloque pas l’acquittement
   ---
-  duration_ms: 0.879236
+  duration_ms: 1.977078
   type: 'test'
   ...
 # Subtest: abandonner une session supprime ses données et rend le compte
 ok 83 - abandonner une session supprime ses données et rend le compte
   ---
-  duration_ms: 0.849651
+  duration_ms: 2.14535
   type: 'test'
   ...
 # Subtest: abandonner sans session en cours est refusé clairement
 ok 84 - abandonner sans session en cours est refusé clairement
   ---
-  duration_ms: 0.511417
+  duration_ms: 0.716304
   type: 'test'
   ...
 # Subtest: l’abandon n’échoue pas si la page ESV ne répond plus
 ok 85 - l’abandon n’échoue pas si la page ESV ne répond plus
   ---
-  duration_ms: 0.332171
+  duration_ms: 0.919639
   type: 'test'
   ...
 # Subtest: actual exporter node replacement is retried; only successful G/D snapshots enter the merge
 ok 86 - actual exporter node replacement is retried; only successful G/D snapshots enter the merge
   ---
-  duration_ms: 48.466519
+  duration_ms: 46.341138
   type: 'test'
   ...
 # Subtest: per-view retries are bounded and never send a validation command
 ok 87 - per-view retries are bounded and never send a validation command
   ---
-  duration_ms: 9.754871
+  duration_ms: 10.424532
   type: 'test'
   ...
 # Subtest: permanently replacing buffers never pass the stable-view check, even at constant point count
 ok 88 - permanently replacing buffers never pass the stable-view check, even at constant point count
   ---
-  duration_ms: 58.685215
+  duration_ms: 49.937825
   type: 'test'
   ...
 # Subtest: the total capture budget expires before the 90-second bridge deadline
 ok 89 - the total capture budget expires before the 90-second bridge deadline
   ---
-  duration_ms: 6.981914
+  duration_ms: 6.145691
   type: 'test'
   ...
 # Subtest: Stop during capture wait prevents any read or automatic retry
 ok 90 - Stop during capture wait prevents any read or automatic retry
   ---
-  duration_ms: 2.875333
+  duration_ms: 2.376198
   type: 'test'
   ...
 # Subtest: changed cuts or rail poses abort capture immediately and never qualify as LOD retries
 ok 91 - changed cuts or rail poses abort capture immediately and never qualify as LOD retries
   ---
-  duration_ms: 6.008971
+  duration_ms: 5.955699
   type: 'test'
   ...
 # Subtest: camera and clipping changes are not silently retried as LOD replacement
 ok 92 - camera and clipping changes are not silently retried as LOD replacement
   ---
-  duration_ms: 9.293279
+  duration_ms: 16.416945
   type: 'test'
   ...
 # Subtest: exhausted capture pauses; Resume keeps the first snapshot and does not repeat earlier cuts
 ok 93 - exhausted capture pauses; Resume keeps the first snapshot and does not repeat earlier cuts
   ---
-  duration_ms: 1994.510626
+  duration_ms: 1893.157287
   type: 'test'
   ...
 # Subtest: Stop remains stopped when the cancelled read rejects; Resume needs no manual cancellation
 ok 94 - Stop remains stopped when the cancelled read rejects; Resume needs no manual cancellation
   ---
-  duration_ms: 444.918459
+  duration_ms: 441.51318
   type: 'test'
   ...
 # Subtest: resume after an interrupted capture refuses manual rail movements without erasing the before
 ok 95 - resume after an interrupted capture refuses manual rail movements without erasing the before
   ---
-  duration_ms: 45.026594
+  duration_ms: 43.007041
   type: 'test'
   ...
 # Subtest: a standalone interrupted read can be restarted directly without Annuler
 ok 96 - a standalone interrupted read can be restarted directly without Annuler
   ---
-  duration_ms: 74.750682
+  duration_ms: 72.988184
   type: 'test'
   ...
 # Subtest: legacy cut-62 capture error migrates to a resumable pause while preserving records
 ok 97 - legacy cut-62 capture error migrates to a resumable pause while preserving records
   ---
-  duration_ms: 19.789565
+  duration_ms: 14.552593
   type: 'test'
   ...
 # Subtest: la séquence réelle passe sans perte quand tout va bien
 ok 98 - la séquence réelle passe sans perte quand tout va bien
   ---
-  duration_ms: 21.146238
+  duration_ms: 11.727039
   type: 'test'
   ...
 # Subtest: une panne passagère dégrade puis se répare, et rien n’est perdu
 ok 99 - une panne passagère dégrade puis se répare, et rien n’est perdu
   ---
-  duration_ms: 33.501952
+  duration_ms: 16.212955
   type: 'test'
   ...
 # Subtest: deux échecs isolés ne coupent plus le LiDAR
 ok 100 - deux échecs isolés ne coupent plus le LiDAR
   ---
-  duration_ms: 11.782518
+  duration_ms: 6.09275
   type: 'test'
   ...
 # Subtest: un refus définitif au milieu du flux ne perturbe pas la suite
 ok 101 - un refus définitif au milieu du flux ne perturbe pas la suite
   ---
-  duration_ms: 4.507952
+  duration_ms: 2.304217
   type: 'test'
   ...
 # Subtest: sous saturation, ce qui est jeté est compté, jamais silencieux
 ok 102 - sous saturation, ce qui est jeté est compté, jamais silencieux
   ---
-  duration_ms: 4.469682
+  duration_ms: 5.826795
   type: 'test'
   ...
 # Subtest: le pic de dégradation subi reste lisible après retour à la normale
 ok 103 - le pic de dégradation subi reste lisible après retour à la normale
   ---
-  duration_ms: 11.794822
+  duration_ms: 4.794663
   type: 'test'
   ...
 # Subtest: les réglages de récupération sont ceux de la source unique
 ok 104 - les réglages de récupération sont ceux de la source unique
   ---
-  duration_ms: 0.164837
+  duration_ms: 0.201236
   type: 'test'
   ...
 # Subtest: parser returns the invalid-file name and does not salvage a truncated reference
 ok 105 - parser returns the invalid-file name and does not salvage a truncated reference
   ---
-  duration_ms: 1.749543
+  duration_ms: 1.574915
   type: 'test'
   ...
 # Subtest: metadata pairing ignores suffixes, deduplicates cumulative records and identifies 2867
 ok 106 - metadata pairing ignores suffixes, deduplicates cumulative records and identifies 2867
   ---
-  duration_ms: 495.718062
+  duration_ms: 380.803497
   type: 'test'
   ...
 # Subtest: identity tolerates corrected coordinates and reordered rail maps; rejects changed page/part/cut
 ok 107 - identity tolerates corrected coordinates and reordered rail maps; rejects changed page/part/cut
   ---
-  duration_ms: 0.445842
+  duration_ms: 0.431351
   type: 'test'
   ...
 # Subtest: one rail correction preserves the other rail and captures actual mutable rotations
 ok 108 - one rail correction preserves the other rail and captures actual mutable rotations
   ---
-  duration_ms: 9.625016
+  duration_ms: 9.011091
   type: 'test'
   ...
 # Subtest: geometry requires observed points and uses no manual after information
 ok 109 - geometry requires observed points and uses no manual after information
   ---
-  duration_ms: 125.26064
+  duration_ms: 105.835782
   type: 'test'
   ...
 # Subtest: poor right-rail data is scored low; isolated far outliers do not decide the fit
 ok 110 - poor right-rail data is scored low; isolated far outliers do not decide the fit
   ---
-  duration_ms: 100.625264
+  duration_ms: 108.062777
   type: 'test'
   ...
 # Subtest: the document-start guard is inert outside a corrections session
 ok 111 - the document-start guard is inert outside a corrections session
   ---
-  duration_ms: 3.770499
+  duration_ms: 3.31182
   type: 'test'
   ...
 # Subtest: trusted validation is stopped before the ESV listener and relayed once; native replay is allowed
 ok 112 - trusted validation is stopped before the ESV listener and relayed once; native replay is allowed
   ---
-  duration_ms: 2.03582
+  duration_ms: 1.852703
   type: 'test'
   ...
 # Subtest: Shift Backspace is captured as one operator input while plain Backspace remains native
 ok 113 - Shift Backspace is captured as one operator input while plain Backspace remains native
   ---
-  duration_ms: 2.05404
+  duration_ms: 1.799553
   type: 'test'
   ...
 # Subtest: pointing is blocked only during preparation; decision shortcuts remain blocked after a collector error
 ok 114 - pointing is blocked only during preparation; decision shortcuts remain blocked after a collector error
   ---
-  duration_ms: 3.177274
+  duration_ms: 3.044232
   type: 'test'
   ...
 # Subtest: Enter follows the observed ESV button shortcut while typing inputs stay native
 ok 115 - Enter follows the observed ESV button shortcut while typing inputs stay native
   ---
-  duration_ms: 0.884286
+  duration_ms: 1.81511
   type: 'test'
   ...
 # Subtest: native observation at document start is passive and does not re-emit or stop ESV input
 ok 116 - native observation at document start is passive and does not re-emit or stop ESV input
   ---
-  duration_ms: 1.043651
+  duration_ms: 2.321624
   type: 'test'
   ...
 # Subtest: an acceptance from an earlier batch never credits a later batch on the same cut
 ok 117 - an acceptance from an earlier batch never credits a later batch on the same cut
   ---
-  duration_ms: 655.809396
+  duration_ms: 710.808113
   type: 'test'
   ...
 # Subtest: an intent from an earlier batch is not read as the current attempt
 ok 118 - an intent from an earlier batch is not read as the current attempt
   ---
-  duration_ms: 1105.464741
+  duration_ms: 1160.731621
   type: 'test'
   ...
 # Subtest: an accepted current attempt is credited exactly once, however many restarts follow
 ok 119 - an accepted current attempt is credited exactly once, however many restarts follow
   ---
-  duration_ms: 363.486068
+  duration_ms: 375.058737
   type: 'test'
   ...
 # Subtest: a refused current attempt is never rescued by an older acceptance of the same cut
 ok 120 - a refused current attempt is never rescued by an older acceptance of the same cut
   ---
-  duration_ms: 814.279146
+  duration_ms: 886.710276
   type: 'test'
   ...
 # Subtest: a pre-V4.6.0 state interrupted after the command returned is neither credited nor resent
 ok 121 - a pre-V4.6.0 state interrupted after the command returned is neither credited nor resent
   ---
-  duration_ms: 246.794876
+  duration_ms: 242.097899
   type: 'test'
   ...
 # Subtest: a pre-V4.6.0 state interrupted with its validate intent still set is neither credited nor resent
 ok 122 - a pre-V4.6.0 state interrupted with its validate intent still set is neither credited nor resent
   ---
-  duration_ms: 195.360909
+  duration_ms: 191.204618
   type: 'test'
   ...
 # Subtest: a stale V4.5.7 intent on the same cut never blocks a fresh V4.6 batch that has sent nothing
 ok 123 - a stale V4.5.7 intent on the same cut never blocks a fresh V4.6 batch that has sent nothing
   ---
-  duration_ms: 733.87362
+  duration_ms: 685.727818
   type: 'test'
   ...
 # Subtest: a restart after an accepted validation credits the cut once and never resends the command
 ok 124 - a restart after an accepted validation credits the cut once and never resends the command
   ---
-  duration_ms: 355.391292
+  duration_ms: 353.591925
   type: 'test'
   ...
 # Subtest: a restart after 497 to next non-validated 499 credits 497 once and never invents 498
 ok 125 - a restart after 497 to next non-validated 499 credits 497 once and never invents 498
   ---
-  duration_ms: 315.666507
+  duration_ms: 302.944264
   type: 'test'
   ...
 # Subtest: a restart after a refused validation credits nothing and never resends the command
 ok 126 - a restart after a refused validation credits nothing and never resends the command
   ---
-  duration_ms: 301.886691
+  duration_ms: 299.897193
   type: 'test'
   ...
 # Subtest: a restart keeps the interruption log instead of overwriting it with a flag
 ok 127 - a restart keeps the interruption log instead of overwriting it with a flag
   ---
-  duration_ms: 386.887632
+  duration_ms: 405.98189
   type: 'test'
   ...
 # Subtest: manual takeover is an active batch that no new batch, capture or assisted analysis may replace
 ok 128 - manual takeover is an active batch that no new batch, capture or assisted analysis may replace
   ---
-  duration_ms: 393.723308
+  duration_ms: 436.126923
   type: 'test'
   ...
 # Subtest: expected navigation without an after-state advances the batch, marked and excluded from training
 ok 129 - expected navigation without an after-state advances the batch, marked and excluded from training
   ---
-  duration_ms: 1756.50049
+  duration_ms: 1762.099043
   type: 'test'
   ...
 # Subtest: a single-cut batch finishes on expected navigation instead of stalling
 ok 130 - a single-cut batch finishes on expected navigation instead of stalling
   ---
-  duration_ms: 367.15902
+  duration_ms: 346.534591
   type: 'test'
   ...
 # Subtest: 497 VALIDATE to next non-validated 499 credits only 497 and continues on 499
 ok 131 - 497 VALIDATE to next non-validated 499 credits only 497 and continues on 499
   ---
-  duration_ms: 681.116893
+  duration_ms: 661.43906
   type: 'test'
   ...
 # Subtest: an unexpected navigation without an after-state stops the batch instead of advancing
 ok 132 - an unexpected navigation without an after-state stops the batch instead of advancing
   ---
-  duration_ms: 1736.764827
+  duration_ms: 1721.793201
   type: 'test'
   ...
 # Subtest: no observed navigation at all stays ambiguous and is never accepted as evidence
 ok 133 - no observed navigation at all stays ambiguous and is never accepted as evidence
   ---
-  duration_ms: 304.618219
+  duration_ms: 313.394618
   type: 'test'
   ...
 # Subtest: manual completion resumes the batch and never claims Banane validated the cut
 ok 134 - manual completion resumes the batch and never claims Banane validated the cut
   ---
-  duration_ms: 833.329019
+  duration_ms: 907.573656
   type: 'test'
   ...
 # Subtest: manual completion refuses a cut that is not the expected successor
 ok 135 - manual completion refuses a cut that is not the expected successor
   ---
-  duration_ms: 139.256438
+  duration_ms: 158.827996
   type: 'test'
   ...
 # Subtest: a manually completed cut is never restarted by the batch loop
 ok 136 - a manually completed cut is never restarted by the batch loop
   ---
-  duration_ms: 1044.297665
+  duration_ms: 1043.487871
   type: 'test'
   ...
 # Subtest: capture workflow persists before, both corrections, after and export across UI reopen
 ok 137 - capture workflow persists before, both corrections, after and export across UI reopen
   ---
-  duration_ms: 235.955903
+  duration_ms: 240.4195
   type: 'test'
   ...
 # Subtest: changed target retains a stale before until next begin archives it; no cross-cut pair
 ok 138 - changed target retains a stale before until next begin archives it; no cross-cut pair
   ---
-  duration_ms: 118.366262
+  duration_ms: 93.577351
   type: 'test'
   ...
 # Subtest: observation is read-only; assisted requires explicit apply and rejects a second application
 ok 139 - observation is read-only; assisted requires explicit apply and rejects a second application
   ---
-  duration_ms: 201.379114
+  duration_ms: 206.102417
   type: 'test'
   ...
 # Subtest: double button calls cannot overlap a capture
 ok 140 - double button calls cannot overlap a capture
   ---
-  duration_ms: 52.350432
+  duration_ms: 54.319904
   type: 'test'
   ...
 # Subtest: automatic TEST processes three cuts without individual approval and archives before validation
 ok 141 - automatic TEST processes three cuts without individual approval and archives before validation
   ---
-  duration_ms: 2487.242151
+  duration_ms: 2525.318501
   type: 'test'
   ...
 # Subtest: low confidence policies pause, skip without validation, or attempt a candidate
 ok 142 - low confidence policies pause, skip without validation, or attempt a candidate
   ---
-  duration_ms: 631.057277
+  duration_ms: 676.341302
   type: 'test'
   ...
 # Subtest: missing cloud cannot be called a measured extrapolation even when attempt is chosen
 ok 143 - missing cloud cannot be called a measured extrapolation even when attempt is chosen
   ---
-  duration_ms: 92.164356
+  duration_ms: 99.712341
   type: 'test'
   ...
 # Subtest: pause then resume does not reapply or recapture the current cut
 ok 144 - pause then resume does not reapply or recapture the current cut
   ---
-  duration_ms: 535.515897
+  duration_ms: 567.122007
   type: 'test'
   ...
 # Subtest: stop during analyze prevents new writes; resume on another target is refused
 ok 145 - stop during analyze prevents new writes; resume on another target is refused
   ---
-  duration_ms: 134.376751
+  duration_ms: 132.573638
   type: 'test'
   ...
 # Subtest: uncertain validation blocks repeats and restoration after a validation attempt
 ok 146 - uncertain validation blocks repeats and restoration after a validation attempt
   ---
-  duration_ms: 312.495063
+  duration_ms: 324.456791
   type: 'test'
   ...
 # Subtest: an application mismatch is not success; restore resolves partial uncertain state
 ok 147 - an application mismatch is not success; restore resolves partial uncertain state
   ---
-  duration_ms: 147.643078
+  duration_ms: 141.725984
   type: 'test'
   ...
 # Subtest: background restart with an apply intent pauses and reconciles without a duplicate write
 ok 148 - background restart with an apply intent pauses and reconciles without a duplicate write
   ---
-  duration_ms: 190.360142
+  duration_ms: 196.946376
   type: 'test'
   ...
 # Subtest: scope and repeated target protections prevent out-of-scope application
 ok 149 - scope and repeated target protections prevent out-of-scope application
   ---
-  duration_ms: 373.667189
+  duration_ms: 378.893348
   type: 'test'
   ...
 # Subtest: an unresolved cut offers bounded actions and retry restarts the same cut without a native decision
 ok 150 - an unresolved cut offers bounded actions and retry restarts the same cut without a native decision
   ---
-  duration_ms: 732.383869
+  duration_ms: 729.344928
   type: 'test'
   ...
 # Subtest: manual takeover preserves the unresolved attempt without validation, SKIP or navigation
 ok 151 - manual takeover preserves the unresolved attempt without validation, SKIP or navigation
   ---
-  duration_ms: 129.16445
+  duration_ms: 132.777867
   type: 'test'
   ...
 # Subtest: explicit SKIP from an unresolved pause is operator-driven, excluded from training and fully traced
 ok 152 - explicit SKIP from an unresolved pause is operator-driven, excluded from training and fully traced
   ---
-  duration_ms: 164.125279
+  duration_ms: 185.46457
   type: 'test'
   ...
 # Subtest: le manifeste ne transporte ni les visites ni les événements
 ok 153 - le manifeste ne transporte ni les visites ni les événements
   ---
-  duration_ms: 3.516605
+  duration_ms: 3.667372
   type: 'test'
   ...
 # Subtest: le manifeste reste très en dessous de la limite de message
 ok 154 - le manifeste reste très en dessous de la limite de message
   ---
-  duration_ms: 221.866433
+  duration_ms: 257.563141
   type: 'test'
   ...
 # Subtest: le manifeste incrémental ne liste que les nuages pas encore écrits
 ok 155 - le manifeste incrémental ne liste que les nuages pas encore écrits
   ---
-  duration_ms: 2.071883
+  duration_ms: 2.164743
   type: 'test'
   ...
 # Subtest: le manifeste complet liste tous les nuages, même déjà écrits
 ok 156 - le manifeste complet liste tous les nuages, même déjà écrits
   ---
-  duration_ms: 0.587798
+  duration_ms: 0.735043
   type: 'test'
   ...
 # Subtest: le manifeste garde l’état de session, que le panneau doit réécrire
 ok 157 - le manifeste garde l’état de session, que le panneau doit réécrire
   ---
-  duration_ms: 0.549144
+  duration_ms: 0.692613
   type: 'test'
   ...
 # Subtest: gauge parser keeps the raw ESV text and accepts observed millimetre spacing formats without rounding
 ok 158 - gauge parser keeps the raw ESV text and accepts observed millimetre spacing formats without rounding
   ---
-  duration_ms: 1.288611
+  duration_ms: 1.281444
   type: 'test'
   ...
 # Subtest: gauge range classification is pure and never turns an unreadable value into a decision
 ok 159 - gauge range classification is pure and never turns an unreadable value into a decision
   ---
-  duration_ms: 0.33579
+  duration_ms: 0.327248
   type: 'test'
   ...
 # Subtest: the received operator policy preserves every boundary without triggering an automatic decision
 ok 160 - the received operator policy preserves every boundary without triggering an automatic decision
   ---
-  duration_ms: 1.562576
+  duration_ms: 1.473693
   type: 'test'
   ...
 # Subtest: the confirmed 1410 boundary has one unambiguous operator policy outcome
 ok 161 - the confirmed 1410 boundary has one unambiguous operator policy outcome
   ---
-  duration_ms: 0.244076
+  duration_ms: 0.239975
   type: 'test'
   ...
 # Subtest: la primitive réelle clique la commande ESV observée, sans VALIDATE ni SKIP
 ok 162 - la primitive réelle clique la commande ESV observée, sans VALIDATE ni SKIP
   ---
-  duration_ms: 16.379687
+  duration_ms: 16.494415
   type: 'test'
   ...
 # Subtest: la preuve porte l’équivalence Maj+Z établie, sa source et sa limite de stabilité
 ok 163 - la preuve porte l’équivalence Maj+Z établie, sa source et sa limite de stabilité
   ---
-  duration_ms: 4.56124
+  duration_ms: 4.729948
   type: 'test'
   ...
 # Subtest: la primitive réelle refuse une cible différente avant toute émission
 ok 164 - la primitive réelle refuse une cible différente avant toute émission
   ---
-  duration_ms: 2.288198
+  duration_ms: 2.137027
   type: 'test'
   ...
 # Subtest: la primitive réelle rend une commande absente sans fabriquer de requête
 ok 165 - la primitive réelle rend une commande absente sans fabriquer de requête
   ---
-  duration_ms: 1.8866
+  duration_ms: 1.992091
   type: 'test'
   ...
 # Subtest: la primitive réelle borne l’attente quand le cut ne change pas, sans seconde action
 ok 166 - la primitive réelle borne l’attente quand le cut ne change pas, sans seconde action
   ---
-  duration_ms: 4.202513
+  duration_ms: 4.155695
   type: 'test'
   ...
 # Subtest: la source de la primitive n’appelle ni apply, ni VALIDATE, ni SKIP, ni raccourci clavier
 ok 167 - la source de la primitive n’appelle ni apply, ni VALIDATE, ni SKIP, ni raccourci clavier
   ---
-  duration_ms: 0.501571
+  duration_ms: 0.562573
   type: 'test'
   ...
 # Subtest: le bridge n’émet la navigation qu’une fois et ignore une réponse tardive
 ok 168 - le bridge n’émet la navigation qu’une fois et ignore une réponse tardive
   ---
-  duration_ms: 2.279025
+  duration_ms: 2.173601
   type: 'test'
   ...
 # Subtest: l’export GCV1 expose un différé confirmé, sa provenance et la décision scientifique conservée
 ok 169 - l’export GCV1 expose un différé confirmé, sa provenance et la décision scientifique conservée
   ---
-  duration_ms: 186.919634
+  duration_ms: 194.623846
   type: 'test'
   ...
 # Subtest: l’export distingue un différé confirmé d’une intention incertaine
 ok 170 - l’export distingue un différé confirmé d’une intention incertaine
   ---
-  duration_ms: 134.402763
+  duration_ms: 133.363022
   type: 'test'
   ...
 # Subtest: un export antérieur à 4.7 reste lisible, avec deferral absent
 ok 171 - un export antérieur à 4.7 reste lisible, avec deferral absent
   ---
-  duration_ms: 0.701267
+  duration_ms: 0.58132
   type: 'test'
   ...
 # Subtest: les compteurs sont identiques après rechargement et redémarrage
 ok 172 - les compteurs sont identiques après rechargement et redémarrage
   ---
-  duration_ms: 2230.373322
+  duration_ms: 2279.145941
   type: 'test'
   ...
 # Subtest: les deux verdicts de transition VALIDATE restent inchangés
 ok 173 - les deux verdicts de transition VALIDATE restent inchangés
   ---
-  duration_ms: 1.517937
+  duration_ms: 1.454595
   type: 'test'
   ...
 # Subtest: 549 vers 552 ne crée que 549 differed ; 550 et 551 n’entrent nulle part
 ok 174 - 549 vers 552 ne crée que 549 differed ; 550 et 551 n’entrent nulle part
   ---
-  duration_ms: 646.578822
+  duration_ms: 652.586579
   type: 'test'
   ...
 # Subtest: 600 différé au-delà de la borne termine le lot sans toucher 604
 ok 175 - 600 différé au-delà de la borne termine le lot sans toucher 604
   ---
-  duration_ms: 156.358424
+  duration_ms: 187.810573
   type: 'test'
   ...
 # Subtest: une cible au-delà de la borne termine le lot même quand la source y est encore
 ok 176 - une cible au-delà de la borne termine le lot même quand la source y est encore
   ---
-  duration_ms: 157.071745
+  duration_ms: 162.240279
   type: 'test'
   ...
 # Subtest: page ou part différente, retour arrière, cut identique et identité incomplète sont refusés
 ok 177 - page ou part différente, retour arrière, cut identique et identité incomplète sont refusés
   ---
-  duration_ms: 609.630224
+  duration_ms: 633.674071
   type: 'test'
   ...
 # Subtest: une commande de navigation indisponible ne diffère rien et ne se replie sur aucune décision
 ok 178 - une commande de navigation indisponible ne diffère rien et ne se replie sur aucune décision
   ---
-  duration_ms: 156.771124
+  duration_ms: 146.64774
   type: 'test'
   ...
 # Subtest: une absence de progression après commande reste incertaine, sans deferred ni renvoi
 ok 179 - une absence de progression après commande reste incertaine, sans deferred ni renvoi
   ---
-  duration_ms: 123.526353
+  duration_ms: 129.247092
   type: 'test'
   ...
 # Subtest: une erreur de transport laisse l’émission INCONNUE, jamais un faux négatif
 ok 180 - une erreur de transport laisse l’émission INCONNUE, jamais un faux négatif
   ---
-  duration_ms: 117.895172
+  duration_ms: 127.059333
   type: 'test'
   ...
 # Subtest: une incertitude de navigation se clôture explicitement et bloque le cut
 ok 181 - une incertitude de navigation se clôture explicitement et bloque le cut
   ---
-  duration_ms: 139.226164
+  duration_ms: 142.067925
   type: 'test'
   ...
 # Subtest: un échec d’écriture AVANT le marqueur d’émission n’envoie aucune commande
 ok 182 - un échec d’écriture AVANT le marqueur d’émission n’envoie aucune commande
   ---
-  duration_ms: 112.384438
+  duration_ms: 112.588081
   type: 'test'
   ...
 # Subtest: un échec d’écriture APRÈS une émission possible ne répète rien et n’enchaîne pas
 ok 183 - un échec d’écriture APRÈS une émission possible ne répète rien et n’enchaîne pas
   ---
-  duration_ms: 179.78753
+  duration_ms: 177.708411
   type: 'test'
   ...
 # Subtest: redémarrage APRÈS le marqueur mais AVANT l’appel : incertain, jamais renvoyé
 ok 184 - redémarrage APRÈS le marqueur mais AVANT l’appel : incertain, jamais renvoyé
   ---
-  duration_ms: 201.613064
+  duration_ms: 207.898002
   type: 'test'
   ...
 # Subtest: redémarrage sur un état PRÉPARÉ : l’invariant prouve la non-émission, le cut est réévalué
 ok 185 - redémarrage sur un état PRÉPARÉ : l’invariant prouve la non-émission, le cut est réévalué
   ---
-  duration_ms: 245.469276
+  duration_ms: 259.066034
   type: 'test'
   ...
 # Subtest: redémarrage entre observation durable et finalisation : écritures locales complétées, rien commandé
 ok 186 - redémarrage entre observation durable et finalisation : écritures locales complétées, rien commandé
   ---
-  duration_ms: 259.667871
+  duration_ms: 271.22524
   type: 'test'
   ...
 # Subtest: redémarrage APRÈS finalisation : une seule entrée, aucun rejeu
 ok 187 - redémarrage APRÈS finalisation : une seule entrée, aucun rejeu
   ---
-  duration_ms: 236.013059
+  duration_ms: 241.408774
   type: 'test'
   ...
 # Subtest: une observation acceptée finalisée deux fois ne crée ni seconde entrée ni second enregistrement
 ok 188 - une observation acceptée finalisée deux fois ne crée ni seconde entrée ni second enregistrement
   ---
-  duration_ms: 287.890854
+  duration_ms: 297.243535
   type: 'test'
   ...
 # Subtest: une seconde opération sur le même cut est refusée, et une intention en cours interdit toute autre
 ok 189 - une seconde opération sur le même cut est refusée, et une intention en cours interdit toute autre
   ---
-  duration_ms: 124.045301
+  duration_ms: 129.372101
   type: 'test'
   ...
 # Subtest: un second lancement et des reprises répétées n’émettent qu’une seule navigation
 ok 190 - un second lancement et des reprises répétées n’émettent qu’une seule navigation
   ---
-  duration_ms: 154.674332
+  duration_ms: 159.361349
   type: 'test'
   ...
 # Subtest: revenir sur un cut déjà différé arrête la boucle au lieu de le rejouer
 ok 191 - revenir sur un cut déjà différé arrête la boucle au lieu de le rejouer
   ---
-  duration_ms: 175.217064
+  duration_ms: 169.671686
   type: 'test'
   ...
 # Subtest: un arrêt pendant la préparation empêche l’émission ; il ne l’annule jamais après coup
 ok 192 - un arrêt pendant la préparation empêche l’émission ; il ne l’annule jamais après coup
   ---
-  duration_ms: 142.698015
+  duration_ms: 146.297347
   type: 'test'
   ...
 # Subtest: un arrêt pendant l’attente conserve le résultat incertain et ne redémarre pas le lot
 ok 193 - un arrêt pendant l’attente conserve le résultat incertain et ne redémarre pas le lot
   ---
-  duration_ms: 129.120843
+  duration_ms: 124.634152
   type: 'test'
   ...
 # Subtest: un arrêt ne rouvre pas les actions ESV quand la non-émission est prouvée
 ok 194 - un arrêt ne rouvre pas les actions ESV quand la non-émission est prouvée
   ---
-  duration_ms: 132.64551
+  duration_ms: 129.712087
   type: 'test'
   ...
 # Subtest: une cible changée à la main avant l’action est refusée sans commande
 ok 195 - une cible changée à la main avant l’action est refusée sans commande
   ---
-  duration_ms: 143.264305
+  duration_ms: 142.414002
   type: 'test'
   ...
 # Subtest: après un échec de navigation prouvé, les quatre actions de l’opérateur restent offertes
 ok 196 - après un échec de navigation prouvé, les quatre actions de l’opérateur restent offertes
   ---
-  duration_ms: 173.930614
+  duration_ms: 193.014989
   type: 'test'
   ...
 # Subtest: un rail unresolved diffère le cut entier : zéro apply, VALIDATE ou SKIP, une navigation, un deferred
 ok 197 - un rail unresolved diffère le cut entier : zéro apply, VALIDATE ou SKIP, une navigation, un deferred
   ---
-  duration_ms: 178.572698
+  duration_ms: 184.277619
   type: 'test'
   ...
 # Subtest: les deux rails unresolved sont différés de la même façon, sans décision
 ok 198 - les deux rails unresolved sont différés de la même façon, sans décision
   ---
-  duration_ms: 158.774336
+  duration_ms: 167.020187
   type: 'test'
   ...
 # Subtest: un lot mixte traite, diffère, traite, sans application partielle du cut différé
 ok 199 - un lot mixte traite, diffère, traite, sans application partielle du cut différé
   ---
-  duration_ms: 1958.44345
+  duration_ms: 2055.477439
   type: 'test'
   ...
 # Subtest: la politique pause d’un lot ancien, sans le champ, reste la pause historique
 ok 200 - la politique pause d’un lot ancien, sans le champ, reste la pause historique
   ---
-  duration_ms: 93.915973
+  duration_ms: 95.318646
   type: 'test'
   ...
 # Subtest: un changement du réglage d’interface ne convertit pas un lot en cours
 ok 201 - un changement du réglage d’interface ne convertit pas un lot en cours
   ---
-  duration_ms: 101.701382
+  duration_ms: 104.122725
   type: 'test'
   ...
 # Subtest: hors Pilote GCV1, le défaut reste la pause et defer ne s’applique pas
 ok 202 - hors Pilote GCV1, le défaut reste la pause et defer ne s’applique pas
   ---
-  duration_ms: 104.231443
+  duration_ms: 105.727657
   type: 'test'
   ...
 # Subtest: une proposition d’une autre identité ne peut pas différer le cut courant
 ok 203 - une proposition d’une autre identité ne peut pas différer le cut courant
   ---
-  duration_ms: 100.788768
+  duration_ms: 101.100838
   type: 'test'
   ...
 # Subtest: un repli hors GCV1 déclaré dans la sélection interdit le defer
 ok 204 - un repli hors GCV1 déclaré dans la sélection interdit le defer
   ---
-  duration_ms: 109.071556
+  duration_ms: 106.3745
   type: 'test'
   ...
 # Subtest: un delta manquant qui n’est pas une abstention GCV1 n’est pas un unresolved GCV1
 ok 205 - un delta manquant qui n’est pas une abstention GCV1 n’est pas un unresolved GCV1
   ---
-  duration_ms: 102.412677
+  duration_ms: 107.876129
   type: 'test'
   ...
 # Subtest: une erreur technique GCV1 garde son diagnostic et ne diffère rien
 ok 206 - une erreur technique GCV1 garde son diagnostic et ne diffère rien
   ---
-  duration_ms: 71.537934
+  duration_ms: 72.153238
   type: 'test'
   ...
 # Subtest: les politiques de faible confiance et S1 sont inchangées par 4.7
 ok 207 - les politiques de faible confiance et S1 sont inchangées par 4.7
   ---
-  duration_ms: 416.613627
+  duration_ms: 444.856675
   type: 'test'
   ...
 # Subtest: diagnostic is a lossless observational view and never mutates persisted events
 ok 208 - diagnostic is a lossless observational view and never mutates persisted events
   ---
-  duration_ms: 2.595878
+  duration_ms: 2.566393
   type: 'test'
   ...
 # Subtest: same-cut events never cross proposal boundaries and ambiguous legacy fallback stays empty
 ok 209 - same-cut events never cross proposal boundaries and ambiguous legacy fallback stays empty
   ---
-  duration_ms: 1.85895
+  duration_ms: 1.825138
   type: 'test'
   ...
 # Subtest: a legacy observation is not assigned to the current export session
 ok 210 - a legacy observation is not assigned to the current export session
   ---
-  duration_ms: 0.247102
+  duration_ms: 0.28494
   type: 'test'
   ...
 # Subtest: an incomplete legacy runtime identity cannot match a complete GCV1 observation
 ok 211 - an incomplete legacy runtime identity cannot match a complete GCV1 observation
   ---
-  duration_ms: 0.342909
+  duration_ms: 0.287394
   type: 'test'
   ...
 # Subtest: an incomplete or different preceding capture identity is never used as LiDAR provenance
 ok 212 - an incomplete or different preceding capture identity is never used as LiDAR provenance
   ---
-  duration_ms: 0.322474
+  duration_ms: 0.310678
   type: 'test'
   ...
 # Subtest: a complete identical legacy identity still supports an unambiguous batch fallback
 ok 213 - a complete identical legacy identity still supports an unambiguous batch fallback
   ---
-  duration_ms: 0.345695
+  duration_ms: 0.29444
   type: 'test'
   ...
 # Subtest: complete corpus links available LiDAR and reports a missing capture without mutation
 ok 214 - complete corpus links available LiDAR and reports a missing capture without mutation
   ---
-  duration_ms: 2.010384
+  duration_ms: 2.004953
   type: 'test'
   ...
 # Subtest: GCV1 exports are exposed only by explicit panel controls
 ok 215 - GCV1 exports are exposed only by explicit panel controls
   ---
-  duration_ms: 0.877437
+  duration_ms: 0.968335
   type: 'test'
   ...
 # Subtest: GCV1 A_STAR candidates are applied normally in automatic-test
 ok 216 - GCV1 A_STAR candidates are applied normally in automatic-test
   ---
-  duration_ms: 390.239929
+  duration_ms: 399.977452
   type: 'test'
   ...
 # Subtest: GCV1 S1 candidates with confidence zero remain admissible in the TEST batch
 ok 217 - GCV1 S1 candidates with confidence zero remain admissible in the TEST batch
   ---
-  duration_ms: 363.475692
+  duration_ms: 367.438473
   type: 'test'
   ...
 # Subtest: GCV1 unresolved pauses without apply, validate, or implicit SKIP
 ok 218 - GCV1 unresolved pauses without apply, validate, or implicit SKIP
   ---
-  duration_ms: 113.729769
+  duration_ms: 111.91766
   type: 'test'
   ...
 # Subtest: a new pilot TEST batch defaults to defer, and an explicit pause is respected
 ok 219 - a new pilot TEST batch defaults to defer, and an explicit pause is respected
   ---
-  duration_ms: 702.151007
+  duration_ms: 721.586494
   type: 'test'
   ...
 # Subtest: a technical GCV1 error ends explicitly before every write
 ok 220 - a technical GCV1 error ends explicitly before every write
   ---
-  duration_ms: 75.029502
+  duration_ms: 82.260318
   type: 'test'
   ...
 # Subtest: the persisted batch engine survives Engine rehydration
 ok 221 - the persisted batch engine survives Engine rehydration
   ---
-  duration_ms: 332.341766
+  duration_ms: 351.85279
   type: 'test'
   ...
 # Subtest: GCV1 shadow is disabled by default and returns the exact V4.6 runtime object
 ok 222 - GCV1 shadow is disabled by default and returns the exact V4.6 runtime object
   ---
-  duration_ms: 1.379779
+  duration_ms: 2.928967
   type: 'test'
   ...
 # Subtest: GCV1 shadow contains candidate failures and never replaces the V4.6 runtime decision
 ok 223 - GCV1 shadow contains candidate failures and never replaces the V4.6 runtime decision
   ---
-  duration_ms: 1.910384
+  duration_ms: 1.992611
   type: 'test'
   ...
 # Subtest: GCV1 shadow gate accepts only an explicit boolean and disabling clears pending telemetry
 ok 224 - GCV1 shadow gate accepts only an explicit boolean and disabling clears pending telemetry
   ---
-  duration_ms: 1.619715
+  duration_ms: 1.676846
   type: 'test'
   ...
 # Subtest: active assisted converts two GCV1 candidates after V4.6 and records provenance
 ok 225 - active assisted converts two GCV1 candidates after V4.6 and records provenance
   ---
-  duration_ms: 2.634807
+  duration_ms: 2.722902
   type: 'test'
   ...
 # Subtest: active assisted preserves one candidate and one unresolved without a V4.6 rail mix
 ok 226 - active assisted preserves one candidate and one unresolved without a V4.6 rail mix
   ---
-  duration_ms: 0.8252
+  duration_ms: 0.85827
   type: 'test'
   ...
 # Subtest: active assisted keeps two scientific unresolved results as abstentions
 ok 227 - active assisted keeps two scientific unresolved results as abstentions
   ---
-  duration_ms: 0.583643
+  duration_ms: 0.680961
   type: 'test'
   ...
 # Subtest: active assisted technical failure falls back atomically to the already computed V4.6 object
 ok 228 - active assisted technical failure falls back atomically to the already computed V4.6 object
   ---
-  duration_ms: 0.5657
+  duration_ms: 0.78231
   type: 'test'
   ...
 # Subtest: active pilot TEST returns GCV1 candidates without using the assisted gate
 ok 229 - active pilot TEST returns GCV1 candidates without using the assisted gate
   ---
-  duration_ms: 0.762209
+  duration_ms: 0.789463
   type: 'test'
   ...
 # Subtest: active pilot TEST contains no technical fallback to V4.6
 ok 230 - active pilot TEST contains no technical fallback to V4.6
   ---
-  duration_ms: 1.313503
+  duration_ms: 1.445939
   type: 'test'
   ...
 # Subtest: selector is single-use, is cleared on runtime failure, and defaults inactive after restart
 ok 231 - selector is single-use, is cleared on runtime failure, and defaults inactive after restart
   ---
-  duration_ms: 0.540611
+  duration_ms: 0.583927
   type: 'test'
   ...
 # Subtest: GCV1 facade exposes computation and selection only, never an ESV action surface
 ok 232 - GCV1 facade exposes computation and selection only, never an ESV action surface
   ---
-  duration_ms: 0.206647
+  duration_ms: 0.299511
   type: 'test'
   ...
 # Subtest: S1 leaves an already STRONG A_STAR candidate untouched and inactive
 ok 233 - S1 leaves an already STRONG A_STAR candidate untouched and inactive
   ---
-  duration_ms: 0.153517
+  duration_ms: 0.155207
   type: 'test'
   ...
 # Subtest: S1 uses one STRONG competitive cluster but abstains when STRONG clusters are spatially distinct
 ok 234 - S1 uses one STRONG competitive cluster but abstains when STRONG clusters are spatially distinct
   ---
-  duration_ms: 0.260723
+  duration_ms: 0.315197
   type: 'test'
   ...
 # Subtest: le placement, les transformations et le lecteur LiDAR restent identiques à la référence 4.4.0
 ok 235 - le placement, les transformations et le lecteur LiDAR restent identiques à la référence 4.4.0
   ---
-  duration_ms: 3.531314
+  duration_ms: 3.147569
   type: 'test'
   ...
 # Subtest: le moteur dégelé reste épinglé sur la baseline V4.6.0, qui recopie les empreintes historiques
 ok 236 - le moteur dégelé reste épinglé sur la baseline V4.6.0, qui recopie les empreintes historiques
   ---
-  duration_ms: 0.668301
+  duration_ms: 0.600621
   type: 'test'
   ...
 # Subtest: le cerveau est ÉTEINT par défaut
 ok 237 - le cerveau est ÉTEINT par défaut
   ---
-  duration_ms: 0.272538
+  duration_ms: 0.307181
   type: 'test'
   ...
 # Subtest: éteint, la composition rend l’objet du moteur gelé PAR IDENTITÉ
 ok 238 - éteint, la composition rend l’objet du moteur gelé PAR IDENTITÉ
   ---
-  duration_ms: 464.977276
+  duration_ms: 477.975867
   type: 'test'
   ...
 # Subtest: la surface exposée est celle que le moteur gelé attend
 ok 239 - la surface exposée est celle que le moteur gelé attend
   ---
-  duration_ms: 0.312179
+  duration_ms: 0.257848
   type: 'test'
   ...
 # Subtest: allumé, chaque proposition touchée est MARQUÉE
 ok 240 - allumé, chaque proposition touchée est MARQUÉE
   ---
-  duration_ms: 233.231216
+  duration_ms: 261.224073
   type: 'test'
   ...
 # Subtest: allumé, le biais vertical est bien celui demandé
 ok 241 - allumé, le biais vertical est bien celui demandé
   ---
-  duration_ms: 460.902993
+  duration_ms: 404.767509
   type: 'test'
   ...
 # Subtest: une défaillance du cerveau rend la proposition gelée, jamais une erreur
 ok 242 - une défaillance du cerveau rend la proposition gelée, jamais une erreur
   ---
-  duration_ms: 94.852597
+  duration_ms: 106.912615
   type: 'test'
   ...
 # Subtest: des réglages aberrants sont refusés, et l’état précédent est conservé
 ok 243 - des réglages aberrants sont refusés, et l’état précédent est conservé
   ---
-  duration_ms: 0.939295
+  duration_ms: 0.81463
   type: 'test'
   ...
 # Subtest: le journal dit ce que le cerveau a fait, pour chaque rail
 ok 244 - le journal dit ce que le cerveau a fait, pour chaque rail
   ---
-  duration_ms: 50.527703
+  duration_ms: 44.695949
   type: 'test'
   ...
 # Subtest: les réglages ajustés livrés sont ceux du rapport, et sont figés
 ok 245 - les réglages ajustés livrés sont ceux du rapport, et sont figés
   ---
-  duration_ms: 0.28042
+  duration_ms: 0.200169
   type: 'test'
   ...
 # Subtest: la confiance nulle NE SUFFIT PAS à empêcher une application automatique
 ok 246 - la confiance nulle NE SUFFIT PAS à empêcher une application automatique
   ---
-  duration_ms: 0.701957
+  duration_ms: 0.674408
   type: 'test'
   ...
 # Subtest: politique « attempt » : le cerveau ne produit AUCUNE sélection
 ok 247 - politique « attempt » : le cerveau ne produit AUCUNE sélection
   ---
-  duration_ms: 0.351525
+  duration_ms: 0.311347
   type: 'test'
   ...
 # Subtest: politique « pause » : la sélection reste offerte, et reste marquée
 ok 248 - politique « pause » : la sélection reste offerte, et reste marquée
   ---
-  duration_ms: 0.467662
+  duration_ms: 0.548819
   type: 'test'
   ...
 # Subtest: le biais vertical, lui, n’est jamais coupé : il garde la confiance du moteur
 ok 249 - le biais vertical, lui, n’est jamais coupé : il garde la confiance du moteur
   ---
-  duration_ms: 0.320404
+  duration_ms: 0.284267
   type: 'test'
   ...
 # Subtest: le mode essai est un choix explicite, désactivé par défaut
 ok 250 - le mode essai est un choix explicite, désactivé par défaut
   ---
-  duration_ms: 0.156017
+  duration_ms: 0.156099
   type: 'test'
   ...
 # Subtest: le réglage d’essai n’est jamais transmis au cerveau comme paramètre
 ok 251 - le réglage d’essai n’est jamais transmis au cerveau comme paramètre
   ---
-  duration_ms: 54.199866
+  duration_ms: 44.23926
   type: 'test'
   ...
 # Subtest: competing distant template placements are unresolved instead of receiving a misleading confidence score
 ok 252 - competing distant template placements are unresolved instead of receiving a misleading confidence score
   ---
-  duration_ms: 47.203896
+  duration_ms: 43.422786
   type: 'test'
   ...
 # Subtest: a large one-sided placement is refused unless the other rail provides pair support
 ok 253 - a large one-sided placement is refused unless the other rail provides pair support
   ---
-  duration_ms: 0.38214
+  duration_ms: 0.34946
   type: 'test'
   ...
 # Subtest: geometry reliability parameters reject inconsistent pair thresholds
 ok 254 - geometry reliability parameters reject inconsistent pair thresholds
   ---
-  duration_ms: 0.396627
+  duration_ms: 0.456665
   type: 'test'
   ...
 # Subtest: real cut 200 right no longer yields a writable position from a slope forced to 0.5
 ok 255 - real cut 200 right no longer yields a writable position from a slope forced to 0.5
   ---
-  duration_ms: 171.579333
+  duration_ms: 169.284474
   type: 'test'
   ...
 # Subtest: real cut 207 left no longer yields a writable position without sufficient running-sheet points
 ok 256 - real cut 207 left no longer yields a writable position without sufficient running-sheet points
   ---
-  duration_ms: 31.440536
+  duration_ms: 27.566568
   type: 'test'
   ...
 # Subtest: the other eight supported positions use the full-template placement while retaining the old surface intersection
 ok 257 - the other eight supported positions use the full-template placement while retaining the old surface intersection
   ---
-  duration_ms: 742.128638
+  duration_ms: 721.512639
   type: 'test'
   ...
 # Subtest: missing geometry always pauses explicitly; legacy skip is normalized to pause
 ok 258 - missing geometry always pauses explicitly; legacy skip is normalized to pause
   ---
-  duration_ms: 655.739635
+  duration_ms: 662.954711
   type: 'test'
   ...
 # Subtest: actual 7460 journal resumes a new cut while archiving the former validation and keeping all old records
 ok 259 - actual 7460 journal resumes a new cut while archiving the former validation and keeping all old records
   ---
-  duration_ms: 492.525464
+  duration_ms: 540.528121
   type: 'test'
   ...
 # Subtest: server-proof policy is rejected before any capture, application or validation
 ok 260 - server-proof policy is rejected before any capture, application or validation
   ---
-  duration_ms: 2.938304
+  duration_ms: 2.977906
   type: 'test'
   ...
 # Subtest: the uncertain 7460 validation cannot be retried even after the ESV page changes
 ok 261 - the uncertain 7460 validation cannot be retried even after the ESV page changes
   ---
-  duration_ms: 8.906982
+  duration_ms: 9.392047
   type: 'test'
   ...
 # Subtest: closing a former validation does not erase a separate manual capture on the current cut
 ok 262 - closing a former validation does not erase a separate manual capture on the current cut
   ---
-  duration_ms: 8.368884
+  duration_ms: 11.203143
   type: 'test'
   ...
 # Subtest: navigation evidence is saved even if a server-capable adapter unexpectedly returns no server receipt
 ok 263 - navigation evidence is saved even if a server-capable adapter unexpectedly returns no server receipt
   ---
-  duration_ms: 414.305038
+  duration_ms: 448.865188
   type: 'test'
   ...
 # Subtest: an operator stop during next-cut loading stays stopped after navigation evidence arrives
 ok 264 - an operator stop during next-cut loading stays stopped after navigation evidence arrives
   ---
-  duration_ms: 438.176846
+  duration_ms: 427.478668
   type: 'test'
   ...
 # Subtest: permuter les mêmes nœuds ne change PAS la signature
 ok 265 - permuter les mêmes nœuds ne change PAS la signature
   ---
-  duration_ms: 1.420454
+  duration_ms: 1.454328
   type: 'test'
   ...
 # Subtest: ajouter un nœud change la signature
 ok 266 - ajouter un nœud change la signature
   ---
-  duration_ms: 0.293825
+  duration_ms: 0.329845
   type: 'test'
   ...
 # Subtest: retirer un nœud change la signature
 ok 267 - retirer un nœud change la signature
   ---
-  duration_ms: 0.190016
+  duration_ms: 0.231756
   type: 'test'
   ...
 # Subtest: remplacer un nœud par un autre, à nombre constant, change la signature
 ok 268 - remplacer un nœud par un autre, à nombre constant, change la signature
   ---
-  duration_ms: 9.849216
+  duration_ms: 8.303992
   type: 'test'
   ...
 # Subtest: changer la version d’un tampon change la signature
 ok 269 - changer la version d’un tampon change la signature
   ---
-  duration_ms: 0.326179
+  duration_ms: 0.279912
   type: 'test'
   ...
 # Subtest: changer la matrice monde change la signature
 ok 270 - changer la matrice monde change la signature
   ---
-  duration_ms: 0.145031
+  duration_ms: 0.131437
   type: 'test'
   ...
 # Subtest: changer la plage de dessin change la signature
 ok 271 - changer la plage de dessin change la signature
   ---
-  duration_ms: 0.192803
+  duration_ms: 0.239073
   type: 'test'
   ...
 # Subtest: changer le nombre de points d’un nœud change la signature
 ok 272 - changer le nombre de points d’un nœud change la signature
   ---
-  duration_ms: 0.127144
+  duration_ms: 0.205696
   type: 'test'
   ...
 # Subtest: changer l’état des nuages change la signature
 ok 273 - changer l’état des nuages change la signature
   ---
-  duration_ms: 0.389173
+  duration_ms: 0.338388
   type: 'test'
   ...
 # Subtest: la signature est stable : deux appels identiques donnent la même valeur
 ok 274 - la signature est stable : deux appels identiques donnent la même valeur
   ---
-  duration_ms: 0.847525
+  duration_ms: 0.944774
   type: 'test'
   ...
 # Subtest: les deux combinateurs sont bien indépendants
 ok 275 - les deux combinateurs sont bien indépendants
   ---
-  duration_ms: 0.354608
+  duration_ms: 0.356701
   type: 'test'
   ...
 # Subtest: un inventaire vide ou absent ne fait pas tomber la fonction
 ok 276 - un inventaire vide ou absent ne fait pas tomber la fonction
   ---
-  duration_ms: 0.223697
+  duration_ms: 0.24298
   type: 'test'
   ...
 # Subtest: un champ manquant dans un nœud ne fait pas tomber la fonction
 ok 277 - un champ manquant dans un nœud ne fait pas tomber la fonction
   ---
-  duration_ms: 0.169196
+  duration_ms: 0.129375
   type: 'test'
   ...
 # Subtest: one session start and one end collect three sparse cuts, including the last without extra validation
 ok 278 - one session start and one end collect three sparse cuts, including the last without extra validation
   ---
-  duration_ms: 704.491719
+  duration_ms: 698.45245
   type: 'test'
   ...
 # Subtest: the manual after is durable before validation; repeated keys and keyup do not duplicate it
 ok 279 - the manual after is durable before validation; repeated keys and keyup do not duplicate it
   ---
-  duration_ms: 134.394
+  duration_ms: 137.801337
   type: 'test'
   ...
 # Subtest: validation, SKIP, validation preserve three captures and three distinct operator decisions
 ok 280 - validation, SKIP, validation preserve three captures and three distinct operator decisions
   ---
-  duration_ms: 635.924957
+  duration_ms: 638.137267
   type: 'test'
   ...
 # Subtest: a repeated Shift Backspace sends only one SKIP command
 ok 281 - a repeated Shift Backspace sends only one SKIP command
   ---
-  duration_ms: 144.880148
+  duration_ms: 132.111329
   type: 'test'
   ...
 # Subtest: a failing after write sends no validation and leaves the existing before recoverable
 ok 282 - a failing after write sends no validation and leaves the existing before recoverable
   ---
-  duration_ms: 72.019221
+  duration_ms: 69.249458
   type: 'test'
   ...
 # Subtest: changing cuts without captured validation never pairs the former before with the new after
 ok 283 - changing cuts without captured validation never pairs the former before with the new after
   ---
-  duration_ms: 131.371582
+  duration_ms: 130.564569
   type: 'test'
   ...
 # Subtest: a failed LiDAR read does not require per-cut buttons and is excluded from training
 ok 284 - a failed LiDAR read does not require per-cut buttons and is excluded from training
   ---
-  duration_ms: 127.897471
+  duration_ms: 118.440968
   type: 'test'
   ...
 # Subtest: ending on an unused prepared cut creates no false manual reference or incomplete after
 ok 285 - ending on an unused prepared cut creates no false manual reference or incomplete after
   ---
-  duration_ms: 79.700984
+  duration_ms: 69.240898
   type: 'test'
   ...
 # Subtest: ending during preparation cancels the read, detaches input and does not create a false reference
 ok 286 - ending during preparation cancels the read, detaches input and does not create a false reference
   ---
-  duration_ms: 33.01981
+  duration_ms: 30.951162
   type: 'test'
   ...
 # Subtest: a validation not followed by navigation is never replayed automatically
 ok 287 - a validation not followed by navigation is never replayed automatically
   ---
-  duration_ms: 152.551747
+  duration_ms: 147.996726
   type: 'test'
   ...
 # Subtest: after an uncertain SKIP, recovery never repeats the native command
 ok 288 - after an uncertain SKIP, recovery never repeats the native command
   ---
-  duration_ms: 166.494319
+  duration_ms: 173.046641
   type: 'test'
   ...
 # Subtest: a rail move after the saved after prevents forwarding validation on a different state
 ok 289 - a rail move after the saved after prevents forwarding validation on a different state
   ---
-  duration_ms: 110.425161
+  duration_ms: 105.174186
   type: 'test'
   ...
 # Subtest: ending after an acknowledgement failure still releases all operator input
 ok 290 - ending after an acknowledgement failure still releases all operator input
   ---
-  duration_ms: 53.867058
+  duration_ms: 58.806447
   type: 'test'
   ...
 # Subtest: a restarted worker pauses the manual session and refuses a stale decision intent
 ok 291 - a restarted worker pauses the manual session and refuses a stale decision intent
   ---
-  duration_ms: 78.072051
+  duration_ms: 66.447523
   type: 'test'
   ...
 # Subtest: normal typing, synthetic clicks and pointing in READY do not trigger collection commands
 ok 292 - normal typing, synthetic clicks and pointing in READY do not trigger collection commands
   ---
-  duration_ms: 56.990654
+  duration_ms: 56.855353
   type: 'test'
   ...
 # Subtest: an empty acknowledgement cannot authorize a validation
 ok 293 - an empty acknowledgement cannot authorize a validation
   ---
-  duration_ms: 68.790921
+  duration_ms: 63.340006
   type: 'test'
   ...
 # Subtest: two concurrent starts create only one session and one LiDAR capture
 ok 294 - two concurrent starts create only one session and one LiDAR capture
   ---
-  duration_ms: 54.442669
+  duration_ms: 56.17997
   type: 'test'
   ...
 # Subtest: operator-selected parts can change inside one session without crossing before/after identities
 ok 295 - operator-selected parts can change inside one session without crossing before/after identities
   ---
-  duration_ms: 304.568833
+  duration_ms: 306.602823
   type: 'test'
   ...
 # Subtest: resuming a paused recording preserves the same session and its earlier manual records
 ok 296 - resuming a paused recording preserves the same session and its earlier manual records
   ---
-  duration_ms: 351.632857
+  duration_ms: 344.028676
   type: 'test'
   ...
 # Subtest: Enter and the native validation button also save the after before forwarding a single click
 ok 297 - Enter and the native validation button also save the after before forwarding a single click
   ---
-  duration_ms: 258.46397
+  duration_ms: 271.551629
   type: 'test'
   ...
 # Subtest: ending after page reload exports the saved data without sending a finish or validation to the new document
 ok 298 - ending after page reload exports the saved data without sending a finish or validation to the new document
   ---
-  duration_ms: 60.452352
+  duration_ms: 64.116555
   type: 'test'
   ...
 # Subtest: Pause in Mes corrections sends no decision and resumes on the exact same cut
 ok 299 - Pause in Mes corrections sends no decision and resumes on the exact same cut
   ---
-  duration_ms: 167.699287
+  duration_ms: 177.246034
   type: 'test'
   ...
 # Subtest: a human validation without rail movement is exported as a positive VALIDATE_NO_MOVEMENT label
 ok 300 - a human validation without rail movement is exported as a positive VALIDATE_NO_MOVEMENT label
   ---
-  duration_ms: 262.059647
+  duration_ms: 256.396952
   type: 'test'
   ...
 # Subtest: the four positive human validation labels are mutually exclusive
 ok 301 - the four positive human validation labels are mutually exclusive
   ---
-  duration_ms: 0.21833
+  duration_ms: 0.224537
   type: 'test'
   ...
 # Subtest: la fusion garde toutes les visites, pas seulement celles du premier segment
 ok 302 - la fusion garde toutes les visites, pas seulement celles du premier segment
   ---
-  duration_ms: 62.914883
+  duration_ms: 61.384456
   type: 'test'
   ...
 # Subtest: les événements ressortent ordonnés et sans doublon
 ok 303 - les événements ressortent ordonnés et sans doublon
   ---
-  duration_ms: 55.433048
+  duration_ms: 47.933694
   type: 'test'
   ...
 # Subtest: un nuage présent dans deux segments n’est gardé qu’une fois
 ok 304 - un nuage présent dans deux segments n’est gardé qu’une fois
   ---
-  duration_ms: 48.959458
+  duration_ms: 50.902179
   type: 'test'
   ...
 # Subtest: un segment manquant est signalé au lieu d’être passé sous silence
 ok 305 - un segment manquant est signalé au lieu d’être passé sous silence
   ---
-  duration_ms: 50.032204
+  duration_ms: 49.351978
   type: 'test'
   ...
 # Subtest: le fichier fusionné repart en format v2, lisible par le banc
 ok 306 - le fichier fusionné repart en format v2, lisible par le banc
   ---
-  duration_ms: 42.877493
+  duration_ms: 36.35284
   type: 'test'
   ...
 # Subtest: two loaded views merge exact points once, preserve provenance and recalculate retained counts
 ok 307 - two loaded views merge exact points once, preserve provenance and recalculate retained counts
   ---
-  duration_ms: 77.346952
+  duration_ms: 81.975746
   type: 'test'
   ...
 # Subtest: view merge rejects different cuts and rail states
 ok 308 - view merge rejects different cuts and rail states
   ---
-  duration_ms: 22.822552
+  duration_ms: 27.89781
   type: 'test'
   ...
 # Subtest: le volume stocké est comptabilisé au fil de la collecte
 ok 309 - le volume stocké est comptabilisé au fil de la collecte
   ---
-  duration_ms: 1.392692
+  duration_ms: 1.396417
   type: 'test'
   ...
 # Subtest: aucun conseil de vidage tant que le seuil n’est pas atteint
 ok 310 - aucun conseil de vidage tant que le seuil n’est pas atteint
   ---
-  duration_ms: 0.239567
+  duration_ms: 0.288709
   type: 'test'
   ...
 # Subtest: le vidage est conseillé avant le mur de téléchargement
 ok 311 - le vidage est conseillé avant le mur de téléchargement
   ---
-  duration_ms: 61.474219
+  duration_ms: 58.809507
   type: 'test'
   ...
 # Subtest: un segment acquitté remet le compteur en attente à zéro sans perdre l’historique
 ok 312 - un segment acquitté remet le compteur en attente à zéro sans perdre l’historique
   ---
-  duration_ms: 87.548508
+  duration_ms: 95.894254
   type: 'test'
   ...
 # Subtest: un acquittement répété n’invente pas de doublon
 ok 313 - un acquittement répété n’invente pas de doublon
   ---
-  duration_ms: 0.321764
+  duration_ms: 0.264252
   type: 'test'
   ...
 # Subtest: la comptabilité n’interrompt jamais la collecte
 ok 314 - la comptabilité n’interrompt jamais la collecte
   ---
-  duration_ms: 0.321471
+  duration_ms: 0.280797
   type: 'test'
   ...
 # Subtest: des segments compactés se refusionnent sans perte ni doublon
 ok 315 - des segments compactés se refusionnent sans perte ni doublon
   ---
-  duration_ms: 2.328523
+  duration_ms: 2.154112
   type: 'test'
   ...
 # Subtest: compact interne les structures répétées au lieu de les recopier
 ok 316 - compact interne les structures répétées au lieu de les recopier
   ---
-  duration_ms: 8.279328
+  duration_ms: 7.348258
   type: 'test'
   ...
 # Subtest: compact retire les champs dérivables et les déclare
 ok 317 - compact retire les champs dérivables et les déclare
   ---
-  duration_ms: 7.606794
+  duration_ms: 7.510927
   type: 'test'
   ...
 # Subtest: expand restaure tout ce que le moteur consomme, au bit près
 ok 318 - expand restaure tout ce que le moteur consomme, au bit près
   ---
-  duration_ms: 12.558625
+  duration_ms: 9.64093
   type: 'test'
   ...
 # Subtest: le champ dérivé recalculé reste sous la tolérance documentée
 ok 319 - le champ dérivé recalculé reste sous la tolérance documentée
   ---
-  duration_ms: 7.427344
+  duration_ms: 7.681524
   type: 'test'
   ...
 # Subtest: compactage en flux : un interner partagé donne le même résultat
 ok 320 - compactage en flux : un interner partagé donne le même résultat
   ---
-  duration_ms: 10.339547
+  duration_ms: 8.576311
   type: 'test'
   ...
 # Subtest: une référence inconnue échoue franchement au lieu de produire un trou
 ok 321 - une référence inconnue échoue franchement au lieu de produire un trou
   ---
-  duration_ms: 0.474045
+  duration_ms: 0.500103
   type: 'test'
   ...
 # Subtest: les tableaux de points ne sont jamais internés par erreur
 ok 322 - les tableaux de points ne sont jamais internés par erreur
   ---
-  duration_ms: 0.206918
+  duration_ms: 0.204586
   type: 'test'
   ...
 # Subtest: le compactage réduit réellement le volume sérialisé
 ok 323 - le compactage réduit réellement le volume sérialisé
   ---
-  duration_ms: 7.759294
+  duration_ms: 7.469443
   type: 'test'
   ...
 # Subtest: l’interner mesure le poids de ses dictionnaires
 ok 324 - l’interner mesure le poids de ses dictionnaires
   ---
-  duration_ms: 1.745441
+  duration_ms: 2.007688
   type: 'test'
   ...
 # Subtest: réinterner la même structure ne regonfle pas le budget
 ok 325 - réinterner la même structure ne regonfle pas le budget
   ---
-  duration_ms: 2.263968
+  duration_ms: 2.431745
   type: 'test'
   ...
 # Subtest: le poids suivi croît avec les structures distinctes
 ok 326 - le poids suivi croît avec les structures distinctes
   ---
-  duration_ms: 2.323957
+  duration_ms: 2.461498
   type: 'test'
   ...
 # Subtest: the three read-only Terra exports reproduce the demonstrated geometry loss
 ok 327 - the three read-only Terra exports reproduce the demonstrated geometry loss # SKIP corpus Natif privé absent (datasets/native/) : test ignoré, pas réussi. Voir datasets/native/README.md.
   ---
-  duration_ms: 1.784068
+  duration_ms: 2.012748
   type: 'test'
   ...
 # Subtest: the native corpus detector drives the skip from the files actually present
 ok 328 - the native corpus detector drives the skip from the files actually present
   ---
-  duration_ms: 3.808125
+  duration_ms: 4.141165
   type: 'test'
   ...
 # Subtest: l’accumulateur donne exactement le même verdict que le balayage complet
 ok 329 - l’accumulateur donne exactement le même verdict que le balayage complet
   ---
-  duration_ms: 14.118494
+  duration_ms: 14.405838
   type: 'test'
   ...
 # Subtest: qualifies() concorde avec le statut complet quand les conditions de base tiennent
 ok 330 - qualifies() concorde avec le statut complet quand les conditions de base tiennent
   ---
-  duration_ms: 1.331006
+  duration_ms: 1.183189
   type: 'test'
   ...
 # Subtest: les causes d’exclusion restent nommées à l’identique
 ok 331 - les causes d’exclusion restent nommées à l’identique
   ---
-  duration_ms: 0.516958
+  duration_ms: 0.609069
   type: 'test'
   ...
 # Subtest: un transformé invalide ou une association douteuse restent bloquants
 ok 332 - un transformé invalide ou une association douteuse restent bloquants
   ---
-  duration_ms: 0.590358
+  duration_ms: 0.534536
   type: 'test'
   ...
 # Subtest: un très grand échantillon ne fait plus exploser la pile
 ok 333 - un très grand échantillon ne fait plus exploser la pile
   ---
-  duration_ms: 92.134488
+  duration_ms: 77.899381
   type: 'test'
   ...
 # Subtest: le coût d’évaluation ne dépend plus du volume déjà accumulé
 ok 334 - le coût d’évaluation ne dépend plus du volume déjà accumulé
   ---
-  duration_ms: 11.886466
+  duration_ms: 14.080487
   type: 'test'
   ...
 # Subtest: passive reader prioritizes nodes whose probes hit a rail ROI before a large irrelevant node
 ok 335 - passive reader prioritizes nodes whose probes hit a rail ROI before a large irrelevant node
   ---
-  duration_ms: 14.920058
+  duration_ms: 15.788098
   type: 'test'
   ...
 # Subtest: passive and functional readers see the same loaded buffers without invoking adapter navigation
 ok 336 - passive and functional readers see the same loaded buffers without invoking adapter navigation
   ---
-  duration_ms: 29.378389
+  duration_ms: 26.423326
   type: 'test'
   ...
 # Subtest: one observed rail produces an independently qualified geometry observation
 ok 337 - one observed rail produces an independently qualified geometry observation
   ---
-  duration_ms: 3.448978
+  duration_ms: 8.038002
   type: 'test'
   ...
 # Subtest: a target change preserves already checkpointed points and reports the interruption explicitly
 ok 338 - a target change preserves already checkpointed points and reports the interruption explicitly
   ---
-  duration_ms: 5.146023
+  duration_ms: 1.453688
   type: 'test'
   ...
 # Subtest: coverage never qualifies a merely non-empty or uncalibrated rail sample
 ok 339 - coverage never qualifies a merely non-empty or uncalibrated rail sample
   ---
-  duration_ms: 0.427709
+  duration_ms: 0.385325
   type: 'test'
   ...
 # Subtest: a stored first rail snapshot survives a later target interruption without qualifying unfinished enrichment
 ok 340 - a stored first rail snapshot survives a later target interruption without qualifying unfinished enrichment
   ---
-  duration_ms: 2.210234
+  duration_ms: 2.658304
   type: 'test'
   ...
 # Subtest: unknown clipping never qualifies a snapshot even with ample raw points
 ok 341 - unknown clipping never qualifies a snapshot even with ample raw points
   ---
-  duration_ms: 4.498044
+  duration_ms: 3.054414
   type: 'test'
   ...
 # Subtest: visibility clipping qualifies the left rail independently and rejects raw right points outside the active cut
 ok 342 - visibility clipping qualifies the left rail independently and rejects raw right points outside the active cut
   ---
-  duration_ms: 3.035712
+  duration_ms: 3.511166
   type: 'test'
   ...
 # Subtest: the offline engine input boundary accepts geometry and initial rails but no human final
 ok 343 - the offline engine input boundary accepts geometry and initial rails but no human final
   ---
-  duration_ms: 20.822237
+  duration_ms: 21.178567
   type: 'test'
   ...
 # Subtest: changing only the human final never changes engine input or proposal
 ok 344 - changing only the human final never changes engine input or proposal
   ---
-  duration_ms: 229.635472
+  duration_ms: 212.559162
   type: 'test'
   ...
 # Subtest: one rail can be evaluated independently and a visual proof stays in its initial profile frame
 ok 345 - one rail can be evaluated independently and a visual proof stays in its initial profile frame
   ---
-  duration_ms: 65.485671
+  duration_ms: 63.217342
   type: 'test'
   ...
 # Subtest: a mismatched identity is excluded instead of mixing cuts
 ok 346 - a mismatched identity is excluded instead of mixing cuts
   ---
-  duration_ms: 5.529243
+  duration_ms: 5.119495
   type: 'test'
   ...
 # Subtest: the replay feeds only proven clip-visible points, not the raw coverage used in the old audit
 ok 347 - the replay feeds only proven clip-visible points, not the raw coverage used in the old audit
   ---
-  duration_ms: 7.657682
+  duration_ms: 7.944813
   type: 'test'
   ...
 # Subtest: a new qualified descriptor must refer to the exact persisted snapshot chunk
 ok 348 - a new qualified descriptor must refer to the exact persisted snapshot chunk
   ---
-  duration_ms: 4.887088
+  duration_ms: 4.803666
   type: 'test'
   ...
 # Subtest: un seul échec d’envoi ne coupe plus le LiDAR pour toute la session
 ok 349 - un seul échec d’envoi ne coupe plus le LiDAR pour toute la session
   ---
-  duration_ms: 7.49749
+  duration_ms: 4.946227
   type: 'test'
   ...
 # Subtest: trois échecs consécutifs font bien basculer en METADATA_ONLY
 ok 350 - trois échecs consécutifs font bien basculer en METADATA_ONLY
   ---
-  duration_ms: 2.30337
+  duration_ms: 3.834486
   type: 'test'
   ...
 # Subtest: la dégradation se répare quand la file retombe et que les envois repassent
 ok 351 - la dégradation se répare quand la file retombe et que les envois repassent
   ---
-  duration_ms: 2.888933
+  duration_ms: 3.054082
   type: 'test'
   ...
 # Subtest: le pic de dégradation reste conservé pour le diagnostic
 ok 352 - le pic de dégradation reste conservé pour le diagnostic
   ---
-  duration_ms: 3.877493
+  duration_ms: 3.873974
   type: 'test'
   ...
 # Subtest: un élément systématiquement refusé est mis à l’écart avec sa cause, et la file repart
 ok 353 - un élément systématiquement refusé est mis à l’écart avec sa cause, et la file repart
   ---
-  duration_ms: 1.506632
+  duration_ms: 1.351913
   type: 'test'
   ...
 # Subtest: un refus définitif sort immédiatement, sans réessai inutile
 ok 354 - un refus définitif sort immédiatement, sans réessai inutile
   ---
-  duration_ms: 1.588926
+  duration_ms: 1.445777
   type: 'test'
   ...
 # Subtest: un refus définitif ne dégrade pas le collecteur
 ok 355 - un refus définitif ne dégrade pas le collecteur
   ---
-  duration_ms: 1.821399
+  duration_ms: 1.410744
   type: 'test'
   ...
 # Subtest: la file absorbe les rafales avant de jeter
 ok 356 - la file absorbe les rafales avant de jeter
   ---
-  duration_ms: 0.168508
+  duration_ms: 0.269626
   type: 'test'
   ...
 # Subtest: la perte est expliquée et comptée, jamais silencieuse
 ok 357 - la perte est expliquée et comptée, jamais silencieuse
   ---
-  duration_ms: 1.836942
+  duration_ms: 3.732578
   type: 'test'
   ...
 # Subtest: la temporisation de réessai croît au lieu de marteler
 ok 358 - la temporisation de réessai croît au lieu de marteler
   ---
-  duration_ms: 1.739885
+  duration_ms: 1.061059
   type: 'test'
   ...
 # Subtest: native input observation never blocks, delays, or re-emits the operator event
 ok 359 - native input observation never blocks, delays, or re-emits the operator event
   ---
-  duration_ms: 30.42222
+  duration_ms: 31.748304
   type: 'test'
   ...
 # Subtest: rapid navigation and a return create three distinct visits without spatial sequence inference
 ok 360 - rapid navigation and a return create three distinct visits without spatial sequence inference
   ---
-  duration_ms: 58.093804
+  duration_ms: 61.866897
   type: 'test'
   ...
 # Subtest: one missing rail is preserved and the available rail can still be offered to the passive reader
 ok 361 - one missing rail is preserved and the available rail can still be offered to the passive reader
   ---
-  duration_ms: 22.265549
+  duration_ms: 21.100957
   type: 'test'
   ...
 # Subtest: Pause then Resume opens a new period and a new visit without continuity across the pause
 ok 362 - Pause then Resume opens a new period and a new visit without continuity across the pause
   ---
-  duration_ms: 36.431456
+  duration_ms: 38.528416
   type: 'test'
   ...
 # Subtest: a bounded queue degrades to metadata-only without blocking the event handler
 ok 363 - a bounded queue degrades to metadata-only without blocking the event handler
   ---
-  duration_ms: 69.104607
+  duration_ms: 66.371426
   type: 'test'
   ...
 # Subtest: a state change during a passive read is retained as an explicit capture failure
 ok 364 - a state change during a passive read is retained as an explicit capture failure
   ---
-  duration_ms: 4.322274
+  duration_ms: 4.705429
   type: 'test'
   ...
 # Subtest: a qualified no-movement validation stays a candidate reference, never an automatic training item
 ok 365 - a qualified no-movement validation stays a candidate reference, never an automatic training item
   ---
-  duration_ms: 257.940192
+  duration_ms: 257.648338
   type: 'test'
   ...
 # Subtest: an observed SKIP remains distinct and is excluded from pointing references
 ok 366 - an observed SKIP remains distinct and is excluded from pointing references
   ---
-  duration_ms: 232.509707
+  duration_ms: 243.977047
   type: 'test'
   ...
 # Subtest: native observation classifies corrections of both rails without sending their movement
 ok 367 - native observation classifies corrections of both rails without sending their movement
   ---
-  duration_ms: 261.757457
+  duration_ms: 270.256543
   type: 'test'
   ...
 # Subtest: one good rail remains comparable when the other geometry is missing
 ok 368 - one good rail remains comparable when the other geometry is missing
   ---
-  duration_ms: 163.622938
+  duration_ms: 164.14045
   type: 'test'
   ...
 # Subtest: multiple terminal intentions remain sequenced and never become a silent positive reference
 ok 369 - multiple terminal intentions remain sequenced and never become a silent positive reference
   ---
-  duration_ms: 259.933348
+  duration_ms: 253.650346
   type: 'test'
   ...
 # Subtest: Pause and resume preserve the session and classify continuation separately from a revisit
 ok 370 - Pause and resume preserve the session and classify continuation separately from a revisit
   ---
-  duration_ms: 107.492067
+  duration_ms: 111.408348
   type: 'test'
   ...
 # Subtest: a worker restart writes a recovered closure with unknown end time and no invented final state
 ok 371 - a worker restart writes a recovered closure with unknown end time and no invented final state
   ---
-  duration_ms: 82.145134
+  duration_ms: 83.463781
   type: 'test'
   ...
 # Subtest: progressive chunks remain exportable after an interruption
 ok 372 - progressive chunks remain exportable after an interruption
   ---
-  duration_ms: 184.444247
+  duration_ms: 193.466656
   type: 'test'
   ...
 # Subtest: partial rails and missing LiDAR retain exact exclusion reasons
 ok 373 - partial rails and missing LiDAR retain exact exclusion reasons
   ---
-  duration_ms: 86.620556
+  duration_ms: 97.48983
   type: 'test'
   ...
 # Subtest: a stable stored rail snapshot remains comparable when the final capture report arrives after VALIDATE and reports interruption
 ok 374 - a stable stored rail snapshot remains comparable when the final capture report arrives after VALIDATE and reports interruption
   ---
-  duration_ms: 142.184651
+  duration_ms: 145.141078
   type: 'test'
   ...
 # Subtest: the acquisition interval, not late checkpoint storage or the final report sequence, determines pre-intent geometry
 ok 375 - the acquisition interval, not late checkpoint storage or the final report sequence, determines pre-intent geometry
   ---
-  duration_ms: 139.143586
+  duration_ms: 145.724465
   type: 'test'
   ...
 # Subtest: a cached human state observed after the keypress is retained but explicitly excluded
 ok 376 - a cached human state observed after the keypress is retained but explicitly excluded
   ---
-  duration_ms: 164.245315
+  duration_ms: 168.232814
   type: 'test'
   ...
 # Subtest: a checkpoint with clipping or source proof absent cannot be promoted by a later clean capture report
 ok 377 - a checkpoint with clipping or source proof absent cannot be promoted by a later clean capture report
   ---
-  duration_ms: 151.62056
+  duration_ms: 156.23951
   type: 'test'
   ...
 # Subtest: a contradictory final frame revokes a prior checkpoint with explicit evidence, without erasing its history
 ok 378 - a contradictory final frame revokes a prior checkpoint with explicit evidence, without erasing its history
   ---
-  duration_ms: 153.302032
+  duration_ms: 175.914789
   type: 'test'
   ...
 # Subtest: exploratory baseline screens only visible, sufficiently spread points and identical initial pose
 ok 379 - exploratory baseline screens only visible, sufficiently spread points and identical initial pose
   ---
-  duration_ms: 2.141794
+  duration_ms: 2.512704
   type: 'test'
   ...
 # Subtest: les quatre labels humains sont exclusifs et la validation sans mouvement reste positive
 ok 380 - les quatre labels humains sont exclusifs et la validation sans mouvement reste positive
   ---
-  duration_ms: 1.913653
+  duration_ms: 2.040038
   type: 'test'
   ...
 # Subtest: les quantiles et agrégats hors ligne sont déterministes
 ok 381 - les quantiles et agrégats hors ligne sont déterministes
   ---
-  duration_ms: 0.914017
+  duration_ms: 0.916561
   type: 'test'
   ...
 # Subtest: manifest and bundled runtime form a self-contained MV3 extension without fixture dependencies
 ok 382 - manifest and bundled runtime form a self-contained MV3 extension without fixture dependencies
   ---
-  duration_ms: 9.865163
+  duration_ms: 12.352515
   type: 'test'
   ...
 # Subtest: built installable archive contains runtime sources, offline results and documentation without bulky reference fixtures
 ok 383 - built installable archive contains runtime sources, offline results and documentation without bulky reference fixtures
   ---
-  duration_ms: 270.254913
+  duration_ms: 292.249855
   type: 'test'
   ...
 # Subtest: built source archive carries the runnable tests, fixtures and the three native reference exports
 ok 384 - built source archive carries the runnable tests, fixtures and the three native reference exports # SKIP corpus Natif privé absent (datasets/native/) : test ignoré, pas réussi. Voir datasets/native/README.md.
   ---
-  duration_ms: 0.133104
+  duration_ms: 0.115808
   type: 'test'
   ...
 # Subtest: every Banane page announces its presence and reconnects after a worker interruption
 ok 385 - every Banane page announces its presence and reconnects after a worker interruption
   ---
-  duration_ms: 6.845019
+  duration_ms: 7.05662
   type: 'test'
   ...
 # Subtest: the pre-correction input, selected snapshot and proposal are invariant to final-only change
 ok 386 - the pre-correction input, selected snapshot and proposal are invariant to final-only change
   ---
-  duration_ms: 230.806487
+  duration_ms: 227.260058
   type: 'test'
   ...
 # Subtest: never feed a qualified snapshot acquired after an observed correction to the engine
 ok 387 - never feed a qualified snapshot acquired after an observed correction to the engine
   ---
-  duration_ms: 63.034361
+  duration_ms: 55.669262
   type: 'test'
   ...
 # Subtest: left corrected before acquisition of the still-unchanged right rail retains right input
 ok 388 - left corrected before acquisition of the still-unchanged right rail retains right input
   ---
-  duration_ms: 105.903144
+  duration_ms: 95.388805
   type: 'test'
   ...
 # Subtest: rail displacement accompanied by a view change bounds only that rail; camera-only changes do not
 ok 389 - rail displacement accompanied by a view change bounds only that rail; camera-only changes do not
   ---
-  duration_ms: 184.609522
+  duration_ms: 166.060267
   type: 'test'
   ...
 # Subtest: unattributable rail change excludes both sides with an explicit conservative reason
 ok 390 - unattributable rail change excludes both sides with an explicit conservative reason
   ---
-  duration_ms: 5.931083
+  duration_ms: 5.323546
   type: 'test'
   ...
 # Subtest: a local rail frame change without a displacement bounds its side, while a global frame change bounds both
 ok 391 - a local rail frame change without a displacement bounds its side, while a global frame change bounds both
   ---
-  duration_ms: 63.80765
+  duration_ms: 64.72206
   type: 'test'
   ...
 # Subtest: transition side is reconstructed from exported visit-state events, without reading the human final
 ok 392 - transition side is reconstructed from exported visit-state events, without reading the human final
   ---
-  duration_ms: 25.90048
+  duration_ms: 22.291043
   type: 'test'
   ...
 # Subtest: human final freshness, association and visit chronology are checked independently of unique VALIDATE
 ok 393 - human final freshness, association and visit chronology are checked independently of unique VALIDATE
   ---
-  duration_ms: 401.695886
+  duration_ms: 360.167959
   type: 'test'
   ...
 # Subtest: reference engine proposal is identical to frozen legacy evaluation on the same rail/pair input
 ok 394 - reference engine proposal is identical to frozen legacy evaluation on the same rail/pair input
   ---
-  duration_ms: 178.313308
+  duration_ms: 160.670823
   type: 'test'
   ...
 # Subtest: unknown physical calibration never claims certified millimetres
 ok 395 - unknown physical calibration never claims certified millimetres
   ---
-  duration_ms: 0.550599
+  duration_ms: 0.508796
   type: 'test'
   ...
 # Subtest: multiple or skip-only operator intents cannot silently become a reference
 ok 396 - multiple or skip-only operator intents cannot silently become a reference
   ---
-  duration_ms: 192.093017
+  duration_ms: 173.070152
   type: 'test'
   ...
 # Subtest: untrusted checkpoint and mismatched cut are excluded without mixing rails
 ok 397 - untrusted checkpoint and mismatched cut are excluded without mixing rails
   ---
-  duration_ms: 98.654722
+  duration_ms: 84.356588
   type: 'test'
   ...
 # Subtest: separate engine adapters run on prepared inputs without changing the source engine
 ok 398 - separate engine adapters run on prepared inputs without changing the source engine
   ---
-  duration_ms: 189.761757
+  duration_ms: 162.112392
   type: 'test'
   ...
 # Subtest: le jeu d’essai porte bien la forme du terrain
 ok 399 - le jeu d’essai porte bien la forme du terrain
   ---
-  duration_ms: 1.11492
+  duration_ms: 1.948901
   type: 'test'
   ...
 # Subtest: la mesure par repère est celle qui conditionne le moteur
 ok 400 - la mesure par repère est celle qui conditionne le moteur
   ---
-  duration_ms: 1.039108
+  duration_ms: 1.082857
   type: 'test'
   ...
 # Subtest: le taux par instant de capture reste exposé, mais explicité
 ok 401 - le taux par instant de capture reste exposé, mais explicité
   ---
-  duration_ms: 0.405836
+  duration_ms: 0.3936
   type: 'test'
   ...
 # Subtest: les deux lectures divergent franchement, et c’est le fait à retenir
 ok 402 - les deux lectures divergent franchement, et c’est le fait à retenir
   ---
-  duration_ms: 0.377339
+  duration_ms: 0.38799
   type: 'test'
   ...
 # Subtest: les motifs d’exclusion réels sont conservés, séparés de l’interruption
 ok 403 - les motifs d’exclusion réels sont conservés, séparés de l’interruption
   ---
-  duration_ms: 0.419849
+  duration_ms: 0.417197
   type: 'test'
   ...
 # Subtest: le clipping du terrain est comptabilisé tel quel
 ok 404 - le clipping du terrain est comptabilisé tel quel
   ---
-  duration_ms: 0.324573
+  duration_ms: 0.377841
   type: 'test'
   ...
 # Subtest: un repère observé sans instantané qualifié est compté comme tel
 ok 405 - un repère observé sans instantané qualifié est compté comme tel
   ---
-  duration_ms: 0.285181
+  duration_ms: 0.258937
   type: 'test'
   ...
 # Subtest: un repère n’est compté qualifié qu’une seule fois
 ok 406 - un repère n’est compté qualifié qu’une seule fois
   ---
-  duration_ms: 0.996178
+  duration_ms: 0.187519
   type: 'test'
   ...
 # Subtest: le suivi par repère est borné et le signale
 ok 407 - le suivi par repère est borné et le signale
   ---
-  duration_ms: 5.391167
+  duration_ms: 5.424488
   type: 'test'
   ...
 # Subtest: la mesure de qualité n’interrompt jamais la collecte
 ok 408 - la mesure de qualité n’interrompt jamais la collecte
   ---
-  duration_ms: 0.561151
+  duration_ms: 0.539195
   type: 'test'
   ...
 # Subtest: une clé de repère exige une identité et un côté
 ok 409 - une clé de repère exige une identité et un côté
   ---
-  duration_ms: 0.239981
+  duration_ms: 0.269096
   type: 'test'
   ...
 # Subtest: a V3 exported dataset pairs its own before and after by metadata
 ok 410 - a V3 exported dataset pairs its own before and after by metadata
   ---
-  duration_ms: 121.194388
+  duration_ms: 124.383647
   type: 'test'
   ...
 # Subtest: two concurrent lot starts create one lot and one application
 ok 411 - two concurrent lot starts create one lot and one application
   ---
-  duration_ms: 442.303999
+  duration_ms: 450.370503
   type: 'test'
   ...
 # Subtest: restart between verified apply and progress save resumes validation without reapplying
 ok 412 - restart between verified apply and progress save resumes validation without reapplying
   ---
-  duration_ms: 438.360837
+  duration_ms: 482.390817
   type: 'test'
   ...
 # Subtest: restart after persisted navigation evidence archives progress without repeating validation
 ok 413 - restart after persisted navigation evidence archives progress without repeating validation
   ---
-  duration_ms: 414.228054
+  duration_ms: 427.805001
   type: 'test'
   ...
 # Subtest: closing an uncertain result preserves evidence and blocks that target while allowing a new cut
 ok 414 - closing an uncertain result preserves evidence and blocks that target while allowing a new cut
   ---
-  duration_ms: 1016.30685
+  duration_ms: 1078.65112
   type: 'test'
   ...
 # Subtest: une session qui tient dans le budget reste en un seul fichier
 ok 415 - une session qui tient dans le budget reste en un seul fichier
   ---
-  duration_ms: 51.30913
+  duration_ms: 52.038192
   type: 'test'
   ...
 # Subtest: une queue trop courte n’est pas isolée dans son propre segment
 ok 416 - une queue trop courte n’est pas isolée dans son propre segment
   ---
-  duration_ms: 58.403278
+  duration_ms: 53.851725
   type: 'test'
   ...
 # Subtest: une queue substantielle obtient bien son segment
 ok 417 - une queue substantielle obtient bien son segment
   ---
-  duration_ms: 72.295398
+  duration_ms: 62.683005
   type: 'test'
   ...
 # Subtest: aucun segment ne dégénère en une poignée d’objets
 ok 418 - aucun segment ne dégénère en une poignée d’objets
   ---
-  duration_ms: 85.233724
+  duration_ms: 78.511394
   type: 'test'
   ...
 # Subtest: le budget porte sur le fichier écrit, pas seulement sur les nuages
 ok 419 - le budget porte sur le fichier écrit, pas seulement sur les nuages
   ---
-  duration_ms: 79.437723
+  duration_ms: 74.43281
   type: 'test'
   ...
 # Subtest: les seuils de file sont ordonnés et laissent de la marge
 ok 420 - les seuils de file sont ordonnés et laissent de la marge
   ---
-  duration_ms: 1.034094
+  duration_ms: 0.945678
   type: 'test'
   ...
 # Subtest: un échec isolé ne peut pas couper le LiDAR
 ok 421 - un échec isolé ne peut pas couper le LiDAR
   ---
-  duration_ms: 0.201233
+  duration_ms: 0.198799
   type: 'test'
   ...
 # Subtest: les seuils d’export restent sous la limite de téléchargement
 ok 422 - les seuils d’export restent sous la limite de téléchargement
   ---
-  duration_ms: 0.199616
+  duration_ms: 0.158375
   type: 'test'
   ...
 # Subtest: le plancher d’objets par segment empêche l’émiettement
 ok 423 - le plancher d’objets par segment empêche l’émiettement
   ---
-  duration_ms: 0.137658
+  duration_ms: 0.112874
   type: 'test'
   ...
 # Subtest: le collecteur applique bien les réglages centralisés
 ok 424 - le collecteur applique bien les réglages centralisés
   ---
-  duration_ms: 0.2752
+  duration_ms: 0.375194
   type: 'test'
   ...
 # Subtest: une surcharge explicite reste prioritaire, pour les tests et les essais
 ok 425 - une surcharge explicite reste prioritaire, pour les tests et les essais
   ---
-  duration_ms: 0.185108
+  duration_ms: 0.191357
   type: 'test'
   ...
 # Subtest: la session lit les mêmes réglages d’export
 ok 426 - la session lit les mêmes réglages d’export
   ---
-  duration_ms: 0.103185
+  duration_ms: 0.111859
   type: 'test'
   ...
 # Subtest: les réglages sont lisibles par l’interface
 ok 427 - les réglages sont lisibles par l’interface
   ---
-  duration_ms: 14.992722
+  duration_ms: 14.337152
   type: 'test'
   ...
 # Subtest: les réglages sont gelés : personne ne les modifie à chaud
 ok 428 - les réglages sont gelés : personne ne les modifie à chaud
   ---
-  duration_ms: 0.419865
+  duration_ms: 0.336331
   type: 'test'
   ...
 # Subtest: la version officielle est cohérente entre le code et le manifeste
 ok 429 - la version officielle est cohérente entre le code et le manifeste
   ---
-  duration_ms: 1.931529
+  duration_ms: 0.896467
   type: 'test'
   ...
 # Subtest: les seuils du moteur ne sont pas dans les réglages de collecte
 ok 430 - les seuils du moteur ne sont pas dans les réglages de collecte
   ---
-  duration_ms: 0.21743
+  duration_ms: 1.456855
   type: 'test'
   ...
 # Subtest: le jeu d’essai porte bien la structure réelle
 ok 431 - le jeu d’essai porte bien la structure réelle
   ---
-  duration_ms: 21.477838
+  duration_ms: 21.582367
   type: 'test'
   ...
 # Subtest: compactage puis réhydratation : ce que le moteur lit est intact
 ok 432 - compactage puis réhydratation : ce que le moteur lit est intact
   ---
-  duration_ms: 79.090788
+  duration_ms: 84.506592
   type: 'test'
   ...
 # Subtest: le compactage gagne réellement sur la structure réelle
 ok 433 - le compactage gagne réellement sur la structure réelle
   ---
-  duration_ms: 49.84118
+  duration_ms: 46.229255
   type: 'test'
   ...
 # Subtest: découper à 40960 Ko puis fusionner rend la session entière
 ok 434 - découper à 40960 Ko puis fusionner rend la session entière
   ---
-  duration_ms: 216.788559
+  duration_ms: 223.812261
   type: 'test'
   ...
 # Subtest: découper à 900 Ko puis fusionner rend la session entière
 ok 435 - découper à 900 Ko puis fusionner rend la session entière
   ---
-  duration_ms: 242.682364
+  duration_ms: 232.572395
   type: 'test'
   ...
 # Subtest: découper à 400 Ko puis fusionner rend la session entière
 ok 436 - découper à 400 Ko puis fusionner rend la session entière
   ---
-  duration_ms: 233.109051
+  duration_ms: 225.065007
   type: 'test'
   ...
 # Subtest: un budget serré découpe réellement, et la fusion reste exacte
 ok 437 - un budget serré découpe réellement, et la fusion reste exacte
   ---
-  duration_ms: 242.722148
+  duration_ms: 228.062613
   type: 'test'
   ...
 # Subtest: le plancher d’objets prime sur le budget
 ok 438 - le plancher d’objets prime sur le budget
   ---
-  duration_ms: 85.855476
+  duration_ms: 87.249759
   type: 'test'
   ...
 # Subtest: chaque segment reste autonome : lisible seul, sans dictionnaire manquant
 ok 439 - chaque segment reste autonome : lisible seul, sans dictionnaire manquant
   ---
-  duration_ms: 136.3961
+  duration_ms: 131.999688
   type: 'test'
   ...
 # Subtest: 3392 regression: 16 nodes with incompatible reported boxes are actually read
 ok 440 - 3392 regression: 16 nodes with incompatible reported boxes are actually read
   ---
-  duration_ms: 13.703704
+  duration_ms: 15.788591
   type: 'test'
   ...
 # Subtest: zero ROI retains evidence; no point checks are reported as zero error
 ok 441 - zero ROI retains evidence; no point checks are reported as zero error
   ---
-  duration_ms: 3.168075
+  duration_ms: 2.861371
   type: 'test'
   ...
 # Subtest: all node diagnostics survive an early scan budget
 ok 442 - all node diagnostics survive an early scan budget
   ---
-  duration_ms: 3.874271
+  duration_ms: 3.647908
   type: 'test'
   ...
 # Subtest: matrix hypotheses are exposed but never silently substituted
 ok 443 - matrix hypotheses are exposed but never silently substituted
   ---
-  duration_ms: 0.763631
+  duration_ms: 0.781093
   type: 'test'
   ...
 # Subtest: probes respect indexed draw ranges
 ok 444 - probes respect indexed draw ranges
   ---
-  duration_ms: 1.089555
+  duration_ms: 1.097968
   type: 'test'
   ...
 # Subtest: diagnostic samples from unscanned nodes must also remain consistent
 ok 445 - diagnostic samples from unscanned nodes must also remain consistent
   ---
-  duration_ms: 2.351033
+  duration_ms: 2.43898
   type: 'test'
   ...
 # Subtest: independent NumPy/SciPy oracle for arbitrary 3D rotations and nonuniform reflected scales
 ok 446 - independent NumPy/SciPy oracle for arbitrary 3D rotations and nonuniform reflected scales
   ---
-  duration_ms: 4.043564
+  duration_ms: 4.060454
   type: 'test'
   ...
 # Subtest: full rotation, translated parent, mirrored scale and world/local round trips
 ok 447 - full rotation, translated parent, mirrored scale and world/local round trips
   ---
-  duration_ms: 0.859947
+  duration_ms: 0.815587
   type: 'test'
   ...
 # Subtest: manual matrices, stale live caches, Euler and nested profile rotations are preserved
 ok 448 - manual matrices, stale live caches, Euler and nested profile rotations are preserved
   ---
-  duration_ms: 2.330541
+  duration_ms: 2.093302
   type: 'test'
   ...
 # Subtest: interleaved and normalized attributes, source precision and invalid buffers
 ok 449 - interleaved and normalized attributes, source precision and invalid buffers
   ---
-  duration_ms: 1.615385
+  duration_ms: 1.588999
   type: 'test'
   ...
 # Subtest: loaded points preserve identity and matrices, both rail ROIs, no scene mutation
 ok 450 - loaded points preserve identity and matrices, both rail ROIs, no scene mutation
   ---
-  duration_ms: 3.622676
+  duration_ms: 4.154161
   type: 'test'
   ...
 # Subtest: Set nodes and object deduplication; no loaded-cache fallback when visibleNodes is empty
 ok 451 - Set nodes and object deduplication; no loaded-cache fallback when visibleNodes is empty
   ---
-  duration_ms: 3.300526
+  duration_ms: 5.440269
   type: 'test'
   ...
 # Subtest: unknown geometry-node transform is reported and not guessed
 ok 452 - unknown geometry-node transform is reported and not guessed
   ---
-  duration_ms: 2.062799
+  duration_ms: 1.327363
   type: 'test'
   ...
 # Subtest: bounded export is visibly partial; non-finite points and drawRange are tracked
 ok 453 - bounded export is visibly partial; non-finite points and drawRange are tracked
   ---
-  duration_ms: 1.608662
+  duration_ms: 2.77054
   type: 'test'
   ...
 # Subtest: actual cancellation and cut changes abort within a chunk
 ok 454 - actual cancellation and cut changes abort within a chunk
   ---
-  duration_ms: 1.280486
+  duration_ms: 1.836846
   type: 'test'
   ...
 # Subtest: buffer replacement, version changes, LOD replacement and camera change are rejected
 ok 455 - buffer replacement, version changes, LOD replacement and camera change are rejected
   ---
-  duration_ms: 3.389233
+  duration_ms: 4.586844
   type: 'test'
   ...
 # Subtest: box clipping uses actual enum values; keeps all ROI points and annotates membership
 ok 456 - box clipping uses actual enum values; keeps all ROI points and annotates membership
   ---
-  duration_ms: 6.894124
+  duration_ms: 1.683601
   type: 'test'
   ...
 # Subtest: left then right capture retains both operations and complete coordinate frames
 ok 457 - left then right capture retains both operations and complete coordinate frames
   ---
-  duration_ms: 20.341863
+  duration_ms: 20.023854
   type: 'test'
   ...
 # Subtest: existing before is not overwritten; cut change away and back invalidates baseline
 ok 458 - existing before is not overwritten; cut change away and back invalidates baseline
   ---
-  duration_ms: 9.038482
+  duration_ms: 8.622867
   type: 'test'
   ...
 # Subtest: completed cut followed by next cut enables before and preserves both complete references
 ok 459 - completed cut followed by next cut enables before and preserves both complete references
   ---
-  duration_ms: 8.17894
+  duration_ms: 7.967814
   type: 'test'
   ...
 # Subtest: next cut archives unfinished before, unlocks UI and never labels it as a completed pair
 ok 460 - next cut archives unfinished before, unlocks UI and never labels it as a completed pair
   ---
-  duration_ms: 7.773131
+  duration_ms: 9.147824
   type: 'test'
   ...
 # Subtest: same label redraw and same-cut rail edits retain a usable pending capture
 ok 461 - same label redraw and same-cut rail edits retain a usable pending capture
   ---
-  duration_ms: 5.598061
+  duration_ms: 6.96062
   type: 'test'
   ...
 # Subtest: rapid away-and-back and part changes cannot pair different visits
 ok 462 - rapid away-and-back and part changes cannot pair different visits
   ---
-  duration_ms: 10.156454
+  duration_ms: 7.146748
   type: 'test'
   ...
 # Subtest: loading without rail objects waits; replacing the scene archives the pending baseline
 ok 463 - loading without rail objects waits; replacing the scene archives the pending baseline
   ---
-  duration_ms: 4.855203
+  duration_ms: 4.812981
   type: 'test'
   ...
 # Subtest: manual cancel preserves unfinished initial state and all completed records
 ok 464 - manual cancel preserves unfinished initial state and all completed records
   ---
-  duration_ms: 10.402638
+  duration_ms: 6.87
   type: 'test'
   ...
 # Subtest: cut change during export retains busy lock until cancellation exits and permits next capture
 ok 465 - cut change during export retains busy lock until cancellation exits and permits next capture
   ---
-  duration_ms: 7.598308
+  duration_ms: 6.053103
   type: 'test'
   ...
 # Subtest: marker recovery stays unverified and never replaces explicit references
 ok 466 - marker recovery stays unverified and never replaces explicit references
   ---
-  duration_ms: 6.337266
+  duration_ms: 10.568238
   type: 'test'
   ...
 # Subtest: standalone export works without manual correction and preserves ESV positions
 ok 467 - standalone export works without manual correction and preserves ESV positions
   ---
-  duration_ms: 4.874886
+  duration_ms: 4.914243
   type: 'test'
   ...
 # Subtest: failure exports actionable diagnostic; empty cloud is not reported as usable
 ok 468 - failure exports actionable diagnostic; empty cloud is not reported as usable
   ---
-  duration_ms: 3.559129
+  duration_ms: 3.612657
   type: 'test'
   ...
 # Subtest: coexisting old extensions are diagnosed, not destroyed or invoked
 ok 469 - coexisting old extensions are diagnosed, not destroyed or invoked
   ---
-  duration_ms: 1.678488
+  duration_ms: 1.909523
   type: 'test'
   ...
 # Subtest: a new visit exports a frame bridge so a recentered left rail is not mistaken for no motion
 ok 470 - a new visit exports a frame bridge so a recentered left rail is not mistaken for no motion
   ---
-  duration_ms: 8.211343
+  duration_ms: 9.732488
   type: 'test'
   ...
 # Subtest: a changed scene root never shares a frame identifier by assumption
 ok 471 - a changed scene root never shares a frame identifier by assumption
   ---
-  duration_ms: 7.826682
+  duration_ms: 9.665853
   type: 'test'
   ...
 1..471
@@ -2840,7 +2840,7 @@ ok 471 - a changed scene root never shares a frame identifier by assumption
 # cancelled 0
 # skipped 2
 # todo 0
-# duration_ms 21494.371837
+# duration_ms 21816.938613
 Exit code: 0
 
 2 test(s) skipped because the private native corpus is absent. Skipped is not passed. See datasets/native/README.md.
