@@ -65,8 +65,8 @@
  function journal(){return clone(last);}
  function consumeLast(){const out=clone(last);last=null;return out;}
  function armOnce(selector){
-   if(selector!=='active-assisted')throw Error('GCV1 : seul le sélecteur active-assisted est autorisé dans ce lot.');
-   if(!activeAssistedEnabled)throw Error('GCV1 actif Assisté : gate fermée.');
+   if(!['active-assisted','active-pilot-test'].includes(selector))throw Error('GCV1 : sélecteur actif inconnu.');
+   if(selector==='active-assisted'&&!activeAssistedEnabled)throw Error('GCV1 actif Assisté : gate fermée.');
    if(armedSelector!==null)throw Error('GCV1 : un sélecteur est déjà armé.');
    armedSelector=selector;return state();
  }
@@ -415,9 +415,9 @@
       }
       if(!Array.isArray(next.delta)||next.delta.length!==3||!next.delta.every(Number.isFinite))
         throw Error('GCV1 '+side+' : delta candidate invalide.');
-      /* Une sélection S1 n'a pas de confiance calibrée propre. Zéro ne
-       * vaut ici que contrat d'affichage Assisté ; ce lot ne l'autorise jamais
-       * comme politique Pilote. A_STAR inchangé conserve son indice Candidate. */
+      /* Une sélection S1 n'a pas de confiance calibrée propre. Zéro décrit ce
+       * statut sans invalider la publication Candidate ; le lot Pilote TEST
+       * décide de l'admissibilité à sa frontière. A_STAR conserve son indice. */
       const confidence=next.changed?0:(Number.isFinite(rail.astar?.confidence)?rail.astar.confidence:0);
       const confidenceStatus=next.changed?'non-calibrated-s1-selection':'candidate-v1';
       rails[side]={side,status:'candidate',delta:next.delta.slice(),confidence,
@@ -442,30 +442,32 @@
      * ce qui protège les erreurs survenues avant d'entrer dans cette façade. */
     const selector=armedSelector;armedSelector=null;
     const runtime=Runtime.proposeBoth(capture,options);
-    const active=selector==='active-assisted';
+    const activeAssisted=selector==='active-assisted',activePilot=selector==='active-pilot-test';
+    const active=activeAssisted||activePilot;
     if(!enabled&&!active){last=null;return runtime;}
     try{
       const science=scientificProposeBoth(capture);
       let selected=runtime,selectedEngine='v4.6',fallback=false,fallbackReason=null,runtimeRails=null;
       if(active){
         try{runtimeRails=toRuntimeRails(science);selected=runtimeRails;selectedEngine='geometry-candidate-v1';}
-        catch(e){fallback=true;fallbackReason=e?.message||String(e);}
+        catch(e){if(activePilot)throw e;fallback=true;fallbackReason=e?.message||String(e);}
       }
       last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
         contract:{...CONTRACT},runtimeDecisionUntouched:selectedEngine==='v4.6',commandsByShadow:0,...science,
-        selection:{selector:active?'active-assisted':'shadow',requestedEngine:active?'geometry-candidate-v1':'v4.6',
+        selection:{selector:active?selector:'shadow',requestedEngine:active?'geometry-candidate-v1':'v4.6',
           selectedEngine,fallback,fallbackReason},
         comparison:{v46:compactRuntimeRails(runtime),gcv1:runtimeRails?compactRuntimeRails(runtimeRails):null,
           selectedEngine,fallback}};
       return selected;
     }catch(e){
-      const selectedEngine='v4.6';
+      const selectedEngine=activePilot?null:'v4.6';
       last={format:'banane-gcv1-shadow-v1',observedAt:new Date().toISOString(),
-        contract:{...CONTRACT},runtimeDecisionUntouched:selectedEngine==='v4.6',commandsByShadow:0,
-        error:e?.message||String(e),selection:{selector:active?'active-assisted':'shadow',
-          requestedEngine:active?'geometry-candidate-v1':'v4.6',selectedEngine,fallback:active,
-          fallbackReason:active?(e?.message||String(e)):null},
-        comparison:{v46:compactRuntimeRails(runtime),gcv1:null,selectedEngine,fallback:active}};
+        contract:{...CONTRACT},runtimeDecisionUntouched:true,commandsByShadow:0,
+        error:e?.message||String(e),selection:{selector:active?selector:'shadow',
+          requestedEngine:active?'geometry-candidate-v1':'v4.6',selectedEngine,fallback:activeAssisted,
+          technicalError:activePilot,fallbackReason:activeAssisted?(e?.message||String(e)):null},
+        comparison:{v46:compactRuntimeRails(runtime),gcv1:null,selectedEngine,fallback:activeAssisted}};
+      if(activePilot){const error=Error('GCV1 Pilote TEST : '+(e?.message||String(e)));error.code='GCV1_PILOT_TECHNICAL_ERROR';throw error;}
       return runtime;
     }
   }

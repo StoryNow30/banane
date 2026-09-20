@@ -78,7 +78,7 @@ test('GCV1 shadow gate accepts only an explicit boolean and disabling clears pen
  assert.throws(()=>h.api.configure({enabled:1}),/booléen/);
  assert.throws(()=>h.api.configure({activeAssisted:1}),/booléen/);
  assert.throws(()=>h.api.armOnce('active-assisted'),/gate fermée/);
- h.api.configure({activeAssisted:true});assert.throws(()=>h.api.armOnce('active-pilot'),/seul le sélecteur active-assisted/);
+ h.api.configure({activeAssisted:true});assert.throws(()=>h.api.armOnce('active-pilot'),/inconnu/);
  h.api.configure({enabled:true});
  h.api.geometry.proposeBoth(fixture(),{});
  assert.equal(h.api.state().hasPendingJournal,true);
@@ -132,6 +132,23 @@ test('active assisted technical failure falls back atomically to the already com
  assert.equal(j.runtimeDecisionUntouched,true);assert.equal(j.commandsByShadow,0);
  assert.match(j.selection.fallbackReason,/candidate-test-failure-left/);
  assert.equal(j.comparison.gcv1,null);assert.deepEqual(j.comparison.v46.left.delta,h.runtimeResult.left.delta);
+});
+
+test('active pilot TEST returns GCV1 candidates without using the assisted gate',()=>{
+ const h=harness({candidates:{left:'candidate',right:'candidate'}});h.api.armOnce('active-pilot-test');
+ const got=h.api.geometry.proposeBoth(fixture(),{}),j=h.api.journal();
+ assert.deepEqual(h.order,['runtime','candidate-left','candidate-right']);
+ assert.equal(got.left.geometryEngine,'geometry-candidate-v1');assert.equal(got.right.geometryEngine,'geometry-candidate-v1');
+ assert.equal(j.selection.selector,'active-pilot-test');assert.equal(j.selection.selectedEngine,'geometry-candidate-v1');
+ assert.equal(j.selection.fallback,false);assert.equal(j.commandsByShadow,0);
+});
+
+test('active pilot TEST contains no technical fallback to V4.6',()=>{
+ const h=harness({candidateThrows:'left',candidates:{right:'candidate'}});h.api.armOnce('active-pilot-test');
+ assert.throws(()=>h.api.geometry.proposeBoth(fixture(),{}),/GCV1 Pilote TEST.*candidate-test-failure-left/);
+ const j=h.api.journal();assert.equal(j.selection.selector,'active-pilot-test');assert.equal(j.selection.selectedEngine,null);
+ assert.equal(j.selection.fallback,false);assert.equal(j.selection.technicalError,true);
+ assert.equal(j.runtimeDecisionUntouched,true);assert.equal(j.commandsByShadow,0);assert.equal(h.runtimeCalls,1);
 });
 
 test('selector is single-use, is cleared on runtime failure, and defaults inactive after restart',()=>{

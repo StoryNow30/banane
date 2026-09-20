@@ -449,7 +449,7 @@ on('native-discard',async()=>{
 });
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
    await api('settings',{mode:'automatic-test',minConfidence:Number($('confidence').value)});
-   return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,lowConfidence:$('policy').value});});
+   return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,lowConfidence:$('policy').value,geometryEngine:'geometry-candidate-v1'});});
  for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
  on('retry',()=>api('retry'));on('explicit-skip',()=>api('explicit-skip'));
  // Reprise manuelle : le pilote rend la main, sans ouvrir aucune fenêtre.

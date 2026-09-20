@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('./fixtures.cjs');
-function background({shadow}={}){const adapter=new SimulatedESV(),store=new MemoryStore();store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
+function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore()}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
  const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../src/engine.js'),BananeManualSession4:require('../src/manual-session.js'),BananeNativeSession4:require('../src/native-session.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../src/geometry-brain.js'),
   BananeGCV1Shadow:shadow,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:f=>onConnect=f}},
@@ -27,13 +27,14 @@ function background({shadow}={}){const adapter=new SimulatedESV(),store=new Memo
    if(index>=0){const [tab]=panelTabs.splice(index,1);onTabRemoved?.(tab.id);}
    onWindowRemoved?.(id);await new Promise(resolve=>setImmediate(resolve));}};
 }
-function shadowHarness({fallback=false}={}){let enabled=false,activeAssistedEnabled=false,armed=false,last=null;
+function shadowHarness({fallback=false,pilotFailure=false,contractHash='candidate-hash'}={}){let enabled=false,activeAssistedEnabled=false,armed=false,last=null;
  const calls={arm:0,disarm:0,consume:0};
- return {calls,state:()=>({enabled,activeAssistedEnabled,selector:armed?'active-assisted':'shadow'}),journal:()=>last,
+ return {calls,
   configure(options={}){if(Object.hasOwn(options,'enabled'))enabled=options.enabled;if(Object.hasOwn(options,'activeAssisted'))activeAssistedEnabled=options.activeAssisted;return this.state();},
-  armOnce(selector){assert.equal(selector,'active-assisted');assert.equal(activeAssistedEnabled,true);assert.equal(armed,false);armed=true;calls.arm++;
-   last={contract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:'candidate-hash'},selection:{selector:'active-assisted',
-     requestedEngine:'geometry-candidate-v1',selectedEngine:fallback?'v4.6':'geometry-candidate-v1',fallback,
+  state:()=>({enabled,activeAssistedEnabled,selector:armed||'shadow',contract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:contractHash}}),journal:()=>last,
+  armOnce(selector){assert.ok(['active-assisted','active-pilot-test'].includes(selector));if(selector==='active-assisted')assert.equal(activeAssistedEnabled,true);assert.equal(armed,false);armed=selector;calls.arm++;
+   last={contract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:contractHash},selection:{selector,
+     requestedEngine:'geometry-candidate-v1',selectedEngine:pilotFailure?null:fallback?'v4.6':'geometry-candidate-v1',fallback:pilotFailure?false:fallback,
      fallbackReason:fallback?'candidate-test-failure':null},comparison:{v46:{},gcv1:fallback?null:{},selectedEngine:fallback?'v4.6':'geometry-candidate-v1',fallback}};},
   disarm(){armed=false;calls.disarm++;return this.state();},
   consumeLast(){calls.consume++;const out=last;last=null;return out;},
@@ -180,7 +181,7 @@ test('background persists an explicit atomic fallback on the existing V4.6 propo
  assert.equal(event.proposalId,proposal.id);assert.equal(event.shadow.selection.fallback,true);
 });
 
-test('automatic-test and Native never arm the active-assisted selector',async()=>{
+test('automatic-test remains V4.6 unless its batch scope explicitly selects GCV1; Native never arms it',async()=>{
  const shadow=shadowHarness(),b=background({shadow});await b.api('connect',{tabId:1});
  await b.api('gcv1-shadow-configure',{activeAssisted:true});await b.api('settings',{mode:'automatic-test'});await b.api('analyze');
  assert.equal(shadow.calls.arm,0,'automatic analysis stays on V4.6');assert.equal(shadow.calls.consume,1);
@@ -188,6 +189,47 @@ test('automatic-test and Native never arm the active-assisted selector',async()=
  await n.api('gcv1-shadow-configure',{activeAssisted:true});await n.api('native-start');
  await assert.rejects(()=>n.api('analyze'),/mode Natif/);assert.equal(nativeShadow.calls.arm,0);
  await n.api('native-end');
+});
+
+test('a GCV1 pilot batch persists its engine contract, selects it once per analysis, and applies a candidate',async()=>{
+ const shadow=shadowHarness(),b=background({shadow});await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
+ const apply=b.adapter.apply.bind(b.adapter);let releaseApply;
+ b.adapter.apply=(...args)=>new Promise((resolve,reject)=>{releaseApply=()=>apply(...args).then(resolve,reject);});
+ await b.api('start',{part:23,start:100,end:100,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'pause',geometryEngine:'geometry-candidate-v1'});
+ while(!releaseApply)await new Promise(r=>setImmediate(r));
+ const pending=await b.api('view');assert.equal(pending.proposal.geometryEngine,'geometry-candidate-v1');
+ assert.equal(pending.proposal.geometrySelection.selector,'active-pilot-test');assert.equal(pending.proposal.geometrySelection.fallback,false);
+ releaseApply();
+ while(!['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));
+ const view=await b.api('view'),started=b.store.events.find(e=>e.type==='batch-started'),observed=b.store.events.find(e=>e.type==='gcv1-shadow-observed');
+ assert.equal(view.batch.scope.geometryEngine,'geometry-candidate-v1');assert.equal(view.batch.scope.geometryContract.geometrySha256,'candidate-hash');
+ assert.equal(view.batch.scope.requestedLowConfidence,'pause');assert.equal(view.batch.scope.lowConfidence,'attempt');
+ assert.equal(started.batch.scope.geometryEngine,'geometry-candidate-v1');assert.equal(observed.shadow.selection.selector,'active-pilot-test');
+ assert.equal(observed.shadow.selection.selectedEngine,'geometry-candidate-v1');assert.equal(shadow.calls.arm,1);assert.equal(shadow.calls.disarm,1);
+ assert.equal(b.adapter.calls.filter(x=>x==='apply').length,1);assert.equal(b.adapter.calls.includes('skip'),false);
+});
+
+test('a GCV1 pilot technical error clears the V4.6 proposal and stops before apply',async()=>{
+ const b=background({shadow:shadowHarness({pilotFailure:true})});await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
+ await b.api('start',{part:23,start:100,end:100,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1'});
+ while((await b.api('view')).batch?.state==='RUNNING')await new Promise(r=>setImmediate(r));
+ const view=await b.api('view');assert.equal(view.batch.state,'ERROR');assert.match(view.batch.error.message,/GCV1 Pilote TEST/);
+ assert.equal(view.proposal,null);assert.equal(b.adapter.calls.includes('apply'),false);assert.equal(b.adapter.calls.includes('skip'),false);
+ assert.ok(b.store.events.some(e=>e.type==='gcv1-pilot-error'));
+});
+
+test('restart refuses a GCV1 batch whose persisted engine contract no longer matches',async()=>{
+ const store=new MemoryStore(),first=background({shadow:shadowHarness(),store});await first.api('connect',{tabId:1});await first.api('settings',{mode:'automatic-test'});
+ await first.api('start',{part:23,start:100,end:100,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1'});
+ while((await first.api('view')).batch?.state==='RUNNING')await new Promise(r=>setImmediate(r));
+ store.state.batch.state='PAUSED';store.state.batch.scope.geometryContract.geometrySha256='different-engine';
+ const restarted=background({shadow:shadowHarness(),store});await assert.rejects(()=>restarted.api('resume'),/indisponible ou incohérent/);
+ assert.equal((await restarted.api('view')).batch.scope.geometryEngine,'geometry-candidate-v1');
+});
+
+test('the automatic TEST UI names GCV1 explicitly in every pilot start command',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../panel.js'),'utf8');
+ assert.match(src,/api\('start',[^;]*geometryEngine:'geometry-candidate-v1'/);
 });
 
 test('background disarms the selector in finally when assisted analysis fails',async()=>{

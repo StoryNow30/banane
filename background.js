@@ -1,8 +1,8 @@
 'use strict';
 // L'ORDRE COMPTE. `src/engine.js` est gelé et lie sa géométrie au chargement.
 // La composition V4.6 (géométrie gelée + cerveau) reste la décision runtime.
-// GCV1 est chargé ensuite comme copie scientifique figée, puis immédiatement
-// encapsulé par un shadow qui REND TOUJOURS la décision V4.6 au moteur.
+// GCV1 est chargé ensuite comme copie scientifique figée. La façade conserve
+// V4.6 par défaut, et ne sélectionne GCV1 que pour un appel explicitement armé.
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
  'src/geometry-candidate-v1.js','src/gcv1-shadow.js',
@@ -10,6 +10,18 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geom
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.6.0';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
+const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
+function liveGCV1Contract(){
+ const contract=globalThis.BananeGCV1Shadow?.state?.().contract;
+ if(!contract?.id||!contract?.geometrySha256)throw Error('Moteur GCV1 Pilote TEST indisponible.');
+ return {id:contract.id,geometrySha256:contract.geometrySha256};
+}
+function assertPilotContract(scope){
+ if(scope?.geometryEngine!==GCV1_ENGINE)return;
+ const live=liveGCV1Contract(),saved=scope.geometryContract;
+ if(!saved||saved.id!==live.id||saved.geometrySha256!==live.geometrySha256)
+  throw Error('Moteur GCV1 du lot indisponible ou incohérent : reprise refusée.');
+}
 // V4.5.7 — une seule page. Les vues sont un état interne de panel.html, plus
 // des fenêtres distinctes : ouvrir le Natif depuis l'accueil laissait deux
 // popups empilées. Le mode Correction est retiré.
@@ -40,21 +52,33 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  engine.analyze=async(...args)=>{
    const gcv1=globalThis.BananeGCV1Shadow;
    const activeAssisted=engine.s.mode==='assisted'&&gcv1?.state?.().activeAssistedEnabled===true;
-   let proposal;
-   try{if(activeAssisted)gcv1.armOnce('active-assisted');proposal=await analyzeV46(...args);}
+   const pilotScope=engine.s.mode==='automatic-test'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE
+     ?engine.s.batch.scope:null;
+   if(pilotScope)assertPilotContract(pilotScope);
+   const selector=pilotScope?'active-pilot-test':activeAssisted?'active-assisted':null;
+   let proposal,analysisError=null;
+   try{if(selector)gcv1.armOnce(selector);proposal=await analyzeV46(...args);}
+   catch(e){analysisError=e;}
    finally{gcv1?.disarm?.();}
    const shadow=gcv1?.consumeLast?.()||null;
    /* Engine.analyze() reste l'unique constructeur de s.proposal. On annote le
     * même objet après le calcul pour rendre la provenance durable ; event()
     * persiste ensuite ensemble l'état annoté et le proposalId comparatif. */
-   if(activeAssisted&&shadow?.selection){
+   if(selector&&proposal&&shadow?.selection){
      proposal.geometryEngine=shadow.selection.selectedEngine;
-     proposal.geometrySelection={selector:'active-assisted',requestedEngine:'geometry-candidate-v1',
+     proposal.geometrySelection={selector,requestedEngine:GCV1_ENGINE,
        selectedEngine:shadow.selection.selectedEngine,fallback:shadow.selection.fallback===true,
        fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
        geometrySha256:shadow.contract?.geometrySha256||null};
    }
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||null,proposalId:proposal?.id||null,shadow});
+   if(analysisError)throw analysisError;
+   if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
+     engine.s.proposal=null;
+     const reason=shadow?.selection?.fallbackReason||shadow?.error||'sélection GCV1 absente';
+     await engine.event('gcv1-pilot-error',{identity:engine.s.before?.identity||null,message:reason,geometryEngine:GCV1_ENGINE});
+     throw Error('GCV1 Pilote TEST : '+reason);
+   }
    return proposal;
  };
  await engine.init();
@@ -142,7 +166,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Le mode Natif est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
- if(action==='resume'){await engine.resume();return engine.view();}
+ if(action==='resume'){assertPilotContract(engine.s.batch?.scope);await engine.resume();return engine.view();}
  if(action==='retry'){await engine.retryPaused();return engine.view();}
  if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
  // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
@@ -165,10 +189,21 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    * vertical — cette correction-là garde la confiance du moteur et n'a jamais
    * été en cause. Un rail ambigu redevient alors `unresolved`, ce qui met le
    * lot en pause par le chemin `missing`, avant même la question de confiance. */
-  const tente=args?.lowConfidence==='attempt';
+  const geometryEngine=args?.geometryEngine||V46_ENGINE;
+  if(![V46_ENGINE,GCV1_ENGINE].includes(geometryEngine))throw Error('Moteur géométrique de lot inconnu.');
+  const startArgs={...args,geometryEngine};
+  if(geometryEngine===GCV1_ENGINE){
+    startArgs.geometryContract=liveGCV1Contract();
+    startArgs.requestedLowConfidence=args?.lowConfidence||null;
+    // La publication GCV1 est la frontière d'admissibilité du lot TEST : une
+    // candidate finie, y compris S1 à confiance non calibrée, n'est pas
+    // repassée dans le seuil de confiance historique V4.6.
+    startArgs.lowConfidence='attempt';
+  }
+  const tente=startArgs.lowConfidence==='attempt';
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
-  await engine.startBatch(args);return engine.view();}
+  await engine.startBatch(startArgs);return engine.view();}
  if(action==='cloud')return store.getCloud(args.id);
  if(action==='journal')return {format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary()};
  if(action==='dataset')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
