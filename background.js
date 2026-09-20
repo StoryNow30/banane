@@ -6,7 +6,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
  'src/geometry-candidate-v1.js','src/gcv1-shadow.js',
- 'src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.6.0';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
@@ -71,7 +71,9 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
        fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
        geometrySha256:shadow.contract?.geometrySha256||null};
    }
-   if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||null,proposalId:proposal?.id||null,shadow});
+   if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
+     sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
+     proposalId:proposal?.id||null,shadow});
    if(analysisError)throw analysisError;
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
      engine.s.proposal=null;
@@ -154,6 +156,15 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    if(Object.prototype.hasOwnProperty.call(args||{},'enabled'))options.enabled=args.enabled;
    if(Object.prototype.hasOwnProperty.call(args||{},'activeAssisted'))options.activeAssisted=args.activeAssisted;
    return BananeGCV1Shadow.configure(options);
+ }
+ // Exports GCV1 strictement manuels : ils relisent les événements et les
+ // captures déjà persistés. Aucun calcul géométrique ni appel adaptateur.
+ if(action==='gcv1-diagnostic-export')return BananeGCV1Export.buildDiagnostic({version:VERSION,
+   sessionId:engine.s.sessionId,state:engine.view(),events:await store.all('events')});
+ if(action==='gcv1-corpus-export-plan'){
+   const diagnostic=BananeGCV1Export.buildDiagnostic({version:VERSION,sessionId:engine.s.sessionId,
+     state:engine.view(),events:await store.all('events')});
+   return BananeGCV1Export.buildCorpusPlan({diagnostic,getCloud:id=>store.getCloud(id)});
  }
  // V4.5.7 — le mode Correction est retiré : aucune nouvelle session ne peut
  // être démarrée, et la page ESV ne reçoit plus manual-page.js. Fermeture et

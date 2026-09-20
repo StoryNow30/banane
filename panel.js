@@ -460,6 +460,18 @@ on('native-discard',async()=>{
   on('analyze',async()=>{await api('settings',{mode:'assisted'});return api('analyze');});
  on('dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
 on('assisted-dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
+ on('gcv1-diagnostic-export',async()=>{
+   const diagnostic=await api('gcv1-diagnostic-export');
+   saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`banane-gcv1-diagnostic-${Date.now()}.json`);
+   note(`Diagnostic GCV1 exporté : ${diagnostic.observationCount} observation(s).`);
+ });
+ on('gcv1-corpus-export',async()=>{
+   const plan=await api('gcv1-corpus-export-plan');
+   if(plan.cloudIds.length)await dataset(plan,'banane-gcv1-corpus',{compact:false});
+   else saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`banane-gcv1-corpus-${Date.now()}.json`);
+   if(plan.missingCaptureIds.length)note(`Corpus GCV1 exporté ; ${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) sont absentes du store.`,true);
+   else note(`Corpus GCV1 exporté : ${plan.cloudIds.length} capture(s) LiDAR.`);
+ });
  /* Cerveau : interrupteur explicite, et compte rendu de ce qu'il a fait au
   * dernier passage. Un post-traitement qu'on ne voit pas agir serait pire que
   * pas de post-traitement du tout. */

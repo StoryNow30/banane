@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('./fixtures.cjs');
 function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore()}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
- const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../src/engine.js'),BananeManualSession4:require('../src/manual-session.js'),BananeNativeSession4:require('../src/native-session.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../src/geometry-brain.js'),
+ const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../src/engine.js'),BananeManualSession4:require('../src/manual-session.js'),BananeNativeSession4:require('../src/native-session.js'),BananeGCV1Export:require('../src/gcv1-export.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../src/geometry-brain.js'),
   BananeGCV1Shadow:shadow,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:f=>onConnect=f}},
    action:{onClicked:{addListener:f=>click=f}},storage:{local:{get:async()=>({}),set:async()=>{}}},
@@ -170,6 +170,19 @@ test('background arms GCV1 for one assisted analysis and persists proposal prove
  const event=b.store.events.find(e=>e.type==='gcv1-shadow-observed');assert.ok(event);
  assert.equal(event.proposalId,proposal.id);assert.equal(event.shadow.selection.selectedEngine,'geometry-candidate-v1');
  assert.equal(b.store.state.proposal.id,proposal.id);assert.equal(b.store.state.proposal.geometryEngine,'geometry-candidate-v1');
+});
+
+test('manual GCV1 export actions reuse the persisted observation and LiDAR without adapter traffic',async()=>{
+ const shadow=shadowHarness(),b=background({shadow});await b.api('connect',{tabId:1});
+ await b.api('gcv1-shadow-configure',{activeAssisted:true});await b.api('settings',{mode:'assisted'});
+ const proposal=await b.api('analyze'),observed=b.store.events.find(e=>e.type==='gcv1-shadow-observed');
+ const calls=b.adapter.calls.slice(),diagnostic=await b.api('gcv1-diagnostic-export');
+ assert.equal(diagnostic.observationCount,1);assert.equal(diagnostic.observations[0].proposalId,proposal.id);
+ assert.equal(diagnostic.observations[0].sessionId,observed.sessionId);
+ assert.equal(diagnostic.observations[0].lidar.captureId,observed.lidarCaptureId);
+ const corpus=await b.api('gcv1-corpus-export-plan');
+ assert.deepEqual(corpus.cloudIds,[observed.lidarCaptureId]);assert.deepEqual(corpus.missingCaptureIds,[]);
+ assert.deepEqual(b.adapter.calls,calls,'exports never call ESV');
 });
 
 test('background persists an explicit atomic fallback on the existing V4.6 proposal',async()=>{
