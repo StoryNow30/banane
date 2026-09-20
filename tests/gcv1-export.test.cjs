@@ -21,7 +21,7 @@ function sourceEvents(){
  return [
   event('before-captured',{identity:identity(497),lidarId:'lidar-497'}),
   event('proposed',{identity:identity(497),proposal}),
-  event('gcv1-shadow-observed',{identity:identity(497),proposalId:'proposal-497',shadow:{format:'banane-gcv1-shadow-v1',
+  event('gcv1-shadow-observed',{identity:identity(497),sessionId:'session-test',proposalId:'proposal-497',shadow:{format:'banane-gcv1-shadow-v1',
    observedAt:'2026-09-20T10:00:01.000Z',contract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:'candidate-hash'},
    runtimeDecisionUntouched:false,commandsByShadow:0,rails:{left:science(s1),right:science(candidate,{side:'right'})},
    summary:{nextCandidates:2,nextUnresolved:0,s1Changed:1},selection:{selector:'active-pilot-test',requestedEngine:'geometry-candidate-v1',selectedEngine:'geometry-candidate-v1',fallback:false,fallbackReason:null},
@@ -38,7 +38,7 @@ function sourceEvents(){
    left:{status:'candidate',source:'geometry-candidate-v1-astar',delta:[0,0,0],confidence:60,gcv1:{confidenceStatus:'candidate-v1'}},
    right:{status:'unresolved',source:'geometry-candidate-v1-abstention',delta:null,confidence:0,gcv1:{confidenceStatus:'not-applicable'}},
   }}}),
-  event('gcv1-shadow-observed',{identity:identity(499),proposalId:'proposal-499',shadow:{format:'banane-gcv1-shadow-v1',
+  event('gcv1-shadow-observed',{identity:identity(499),sessionId:'session-test',proposalId:'proposal-499',shadow:{format:'banane-gcv1-shadow-v1',
    contract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:'candidate-hash'},runtimeDecisionUntouched:false,commandsByShadow:0,
    rails:{left:science(candidate),right:science(unresolved,{side:'right'})},summary:{nextCandidates:1,nextUnresolved:1},
    selection:{selector:'active-pilot-test',requestedEngine:'geometry-candidate-v1',selectedEngine:'geometry-candidate-v1',fallback:false,fallbackReason:null},comparison:{fallback:false}}}),
@@ -64,6 +64,31 @@ test('diagnostic is a lossless observational view and never mutates persisted ev
  const second=diagnostic.observations[1];
  assert.equal(second.rails.right.status,'unresolved');assert.equal(second.rails.right.delta,null);
  assert.equal(second.rails.right.branch,'ABSTENTION');assert.equal(second.runtime.abstention.status,'PAUSED_UNRESOLVED_RAIL');
+});
+
+test('same-cut events never cross proposal boundaries and ambiguous legacy fallback stays empty',()=>{
+ const id=identity(497),shadow={selection:{fallback:false},rails:{},summary:{}};
+ const events=[
+  event('gcv1-shadow-observed',{identity:id,batchId:'batch-retry',proposalId:'proposal-A',sessionId:'session-test',shadow}),
+  event('gcv1-shadow-observed',{identity:id,batchId:'batch-retry',proposalId:'proposal-B',sessionId:'session-test',shadow}),
+  event('validation-accepted',{identity:id,batchId:'batch-retry',proposalId:'proposal-B',nextIdentity:identity(499),transition:'B_ONLY'}),
+  event('batch-after-state-missing',{identity:id,batchId:'batch-retry',message:'legacy event without proposal id'}),
+ ];
+ const diagnostic=Export.buildDiagnostic({sessionId:'session-test',events});
+ const a=diagnostic.observations.find(o=>o.proposalId==='proposal-A');
+ const b=diagnostic.observations.find(o=>o.proposalId==='proposal-B');
+ assert.equal(a.runtime.validationAccepted,null,'proposal B must not contaminate proposal A');
+ assert.equal(a.runtime.interruption,null,'ambiguous event without proposalId must not be guessed');
+ assert.equal(b.runtime.validationAccepted.proposalId,'proposal-B');
+ assert.equal(b.runtime.interruption,null,'ambiguous fallback is absent for every competing proposal');
+});
+
+test('a legacy observation is not assigned to the current export session',()=>{
+ const legacy=event('gcv1-shadow-observed',{proposalId:'legacy-proposal',shadow:{selection:{fallback:false},rails:{},summary:{}}});
+ const diagnostic=Export.buildDiagnostic({sessionId:'current-session',events:[legacy]});
+ assert.equal(diagnostic.sessionId,'current-session','root session remains export context');
+ assert.equal(diagnostic.observations[0].sessionId,null);
+ assert.equal(diagnostic.observations[0].sessionScope,'legacy-unscoped');
 });
 
 test('complete corpus links available LiDAR and reports a missing capture without mutation',async()=>{

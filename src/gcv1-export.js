@@ -14,10 +14,18 @@
  function linkedEvents(events,observation){
   const proposalId=observation.proposalId;
   const batchId=observation.batchId;
+  /* Un événement qui nomme une proposition ne peut appartenir qu'à elle.
+   * Pour les anciens événements sans proposalId, le couple lot+cible n'est
+   * utilisable que si une seule proposition explicite existe dans ce scope. */
+  const scopedProposalIds=new Set(events.filter(event=>batchId&&batchIdOf(event)===batchId&&
+   sameIdentity(event.identity,observation.identity)).map(proposalIdOf).filter(Boolean));
+  const fallbackUnambiguous=scopedProposalIds.size<=1&&
+   (!scopedProposalIds.size||proposalId&&scopedProposalIds.has(proposalId));
   return events.filter(event=>{
    if(event.type==='gcv1-shadow-observed')return false;
-   if(proposalId&&proposalIdOf(event)===proposalId)return true;
-   return !!batchId&&batchIdOf(event)===batchId&&sameIdentity(event.identity,observation.identity);
+   const eventProposalId=proposalIdOf(event);
+   if(eventProposalId)return !!proposalId&&eventProposalId===proposalId;
+   return fallbackUnambiguous&&!!batchId&&batchIdOf(event)===batchId&&sameIdentity(event.identity,observation.identity);
   });
  }
 
@@ -97,7 +105,8 @@
     observationEventId:event.eventId??null,
     identity:clone(event.identity??proposed?.identity??null),
     timestamp:shadow.observedAt??event.timestamp??null,
-    sessionId:event.sessionId??sessionId??null,
+    sessionId:event.sessionId??null,
+    sessionScope:event.sessionId?'persisted':'legacy-unscoped',
     batchId,
     proposalId,
     lidar:{captureId:capture.captureId,association:capture.association},
