@@ -41,6 +41,26 @@ test('a single-cut batch finishes on expected navigation instead of stalling',as
  assert.equal(e.s.batch.processed[0].cut,100);assert.equal(store.records.at(-1).status,'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');
  assert.equal(store.records.at(-1).usableForTraining,false);
 });
+test('497 VALIDATE to next non-validated 499 credits only 497 and continues on 499',async()=>{
+ const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';adapter.identity.cut=497;
+ const capture=adapter.capture.bind(adapter);adapter.capture=async expected=>{
+  adapter.noPoints=adapter.identity.cut===499;return capture(expected);};
+ adapter.validateAndNext=async identity=>{
+  adapter.calls.push('validate');assert.equal(identity.cut,497);adapter.identity.cut=499;
+  const next=K.completeIdentity(adapter.identity);
+  return {operatorDecision:'VALIDATE',decisionCommand:{id:'O2N3DCutValidate3DRail',title:'Press ↵ to validate both rails (Load next non validated cut)'},
+   navigationSemantics:'VALIDATE_NEXT_NON_VALIDATED_CUT',commandSent:true,afterObserved:false,
+   afterStateStatus:'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED',serverConfirmed:false,navigationObserved:true,
+   nextIdentity:next,navigationAfter:{identity:next}};
+ };
+ await e.startBatch(scope({start:497,end:499}));await e.task;
+ assert.equal(e.s.batch.state,'PAUSED_UNRESOLVED_RAIL');assert.equal(e.s.batch.activeIdentity.cut,499);
+ assert.deepEqual(e.s.batch.processed.map(x=>x.cut),[497]);assert.equal(e.s.batch.processed.some(x=>x.cut===498),false);
+ assert.equal(adapter.calls.filter(x=>x==='validate').length,1);assert.equal(adapter.calls.includes('skip'),false);
+ const accepted=store.events.find(x=>x.type==='validation-accepted');assert.equal(accepted.identity.cut,497);
+ assert.equal(accepted.validationProof,'navigation-only');assert.equal(accepted.transition,'NEXT_NON_VALIDATED_CUT_SAME_PAGE_AND_PART');
+ assert.equal(accepted.evidence.navigationObserved,true);assert.equal(accepted.evidence.acceptedOnNavigationEvidence,true);
+});
 /* La navigation ne vaut preuve que si elle est CELLE QU'ON ATTEND. Un saut, un
  * retour en arrière, un changement de part ou d'onglet ne valent rien : sans
  * état final relu, le lot s'arrête comme avant V4.6.0. Sans ce contrôle, un
@@ -50,10 +70,11 @@ test('an unexpected navigation without an after-state stops the batch instead of
    ['saut de cuts',{cut:105},'CUTS_SKIPPED'],
    ['retour en arrière',{cut:99},'NO_FORWARD_MOVE'],
    ['autre part',{part:24,cut:101},'PART_CHANGED'],
-   ['autre onglet',{pageId:'autre-page',cut:101},'PAGE_CHANGED']]){
+   ['autre onglet',{pageId:'autre-page',cut:101},'PAGE_CHANGED'],
+   ['identité absente',null,'NEXT_IDENTITY_UNKNOWN']]){
   const {adapter,store,engine:e}=await app();e.s.mode='automatic-test';
   const depart=K.clone(adapter.identity);
-  adapter.validateAndNext=sansEtatFinal(adapter,()=>({...depart,...ecart}));
+  adapter.validateAndNext=sansEtatFinal(adapter,()=>ecart===null?null:{...depart,...ecart});
   await e.startBatch(scope());await e.task;
   assert.equal(e.s.batch.state,'PAUSED_AFTER_STATE_MISSING',nom);
   assert.equal(e.s.batch.processed.length,0,nom);assert.equal(adapter.calls.filter(c=>c==='capture').length,1,nom);

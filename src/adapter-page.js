@@ -246,6 +246,9 @@
  async function decisionAndNext(identity,operatorDecision,scope={},progress=()=>{}){
    cancelled=false;const beforeCommand=assertExpected(identity),startedAt=new Date().toISOString();
    const command=operatorDecision==='VALIDATE'?commandInfo(selectors.validate):{id:'Shift+Backspace',exists:true,disabled:false};
+   const navigationSemantics=operatorDecision==='VALIDATE'&&command.id===selectors.validate&&
+     /load\s+next\s+non[-\s]?validated\s+cut/i.test(command.title)
+     ?'VALIDATE_NEXT_NON_VALIDATED_CUT':null;
    progress('decision-before-command',{identity:beforeCommand.identity,operatorDecision,command});
    /* RELECTURE IMMÉDIATE APRÈS LA COMMANDE.
     *
@@ -268,7 +271,7 @@
    let apres=null,apresErreur=null;
    try{const vu=snapshot();K.assertTarget(identity,vu.identity);apres=vu;}catch(e){apresErreur=e;}
    const evidence={trigger:operatorDecision==='VALIDATE'?'observed-legacy-validation-button':'relayed-native-skip-shortcut',startedAt,
-     operatorDecision,commandSent:sent.commandSent===true,afterObserved:false,serverConfirmed:false,navigationObserved:false,
+     operatorDecision,decisionCommand:command,navigationSemantics,commandSent:sent.commandSent===true,afterObserved:false,serverConfirmed:false,navigationObserved:false,
      afterStateStatus:'PENDING',beforeNavigationIdentity:K.completeIdentity(beforeCommand.identity),afterState:null,nextIdentity:null,nextReady:null};
    progress('decision-command-returned',{operatorDecision,label:cutLabel()});
    try{

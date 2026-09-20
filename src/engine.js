@@ -218,10 +218,11 @@
    }else if(K.equalPoses(now.rails,this.s.snapshot.rails,.001))this.s.applied=null;
    else throw Error('État intermédiaire : utilise Restaurer sur le même cut avant validation.');
    this.s.intent=null;this.s.reconcileRequired=false;await this.event('reconciled',{identity:now.identity});return now;}
-  /* La transition attendue après une commande native : même onglet, même part,
-   * et le SUCCESSEUR IMMÉDIAT du cut commandé. Une navigation quelconque ne
-   * vaut pas preuve — un saut en avant ferait franchir en silence les cuts
-   * sautés, un retour en arrière ferait retraiter un cut déjà commandé.
+  /* La transition attendue après une commande native : même onglet, même part
+   * et mouvement strictement vers l'avant. Le successeur immédiat est admis ;
+   * un saut ne l'est que si l'adaptateur atteste le bouton VALIDATE observé,
+   * dont le contrat ESV est « Load next non validated cut ». Les cuts compris
+   * entre les deux ne sont jamais crédités ni déclarés traités.
    * Le contrôle ne sert qu'à décider si la navigation peut TENIR LIEU de
    * relecture manquée : quand l'état après a été relu, la preuve ne repose pas
    * sur elle et le verdict n'est que consigné. En cas de doute le lot s'arrête,
@@ -234,7 +235,14 @@
    if(next.pageId!==identity.pageId)return{expected:false,reason:'PAGE_CHANGED',observed:next};
    if(next.part!==identity.part||scope?.part!=null&&next.part!==scope.part)return{expected:false,reason:'PART_CHANGED',observed:next};
    if(!Number.isInteger(next.cut)||!Number.isInteger(identity.cut))return{expected:false,reason:'CUT_NOT_COMPARABLE',observed:next};
-   if(next.cut!==identity.cut+1)return{expected:false,reason:next.cut<=identity.cut?'NO_FORWARD_MOVE':'CUTS_SKIPPED',observed:next};
+   if(next.cut<=identity.cut)return{expected:false,reason:'NO_FORWARD_MOVE',observed:next};
+   if(next.cut>identity.cut+1){
+     const nextNonValidated=evidence.operatorDecision==='VALIDATE'&&
+       evidence.navigationSemantics==='VALIDATE_NEXT_NON_VALIDATED_CUT'&&
+       evidence.decisionCommand?.id==='O2N3DCutValidate3DRail';
+     if(!nextNonValidated)return{expected:false,reason:'CUTS_SKIPPED',observed:next};
+     return{expected:true,reason:'NEXT_NON_VALIDATED_CUT_SAME_PAGE_AND_PART',observed:next};
+   }
    return{expected:true,reason:'IMMEDIATE_SUCCESSOR_SAME_PAGE_AND_PART',observed:next};
   }
   async validateAndNext(scope){

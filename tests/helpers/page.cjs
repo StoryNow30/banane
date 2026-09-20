@@ -11,7 +11,7 @@ function page(){
  }};
  for(const [id,text] of [['O2N3DCutDescription','Cut 100 of part 23'],['O2N3DCutShapeInfo','U50']])nodes.set(id,{textContent:text});
  for(const [id,side] of [['O2N3DCutLRClick','left'],['O2N3DCutRRClick','right']])nodes.set(id,{click(){selected=side;const p=side==='left'?left.position:right.position;camera.position={x:p.x+.2,y:p.y,z:p.z};}});
- nodes.set('O2N3DCutValidate3DRail',{click(){nodes.get('O2N3DCutDescription').textContent='Cut 101 of part 23';}});
+ nodes.set('O2N3DCutValidate3DRail',{title:'Press ↵ to validate both rails (Load next non validated cut)',click(){nodes.get('O2N3DCutDescription').textContent='Cut 101 of part 23';}});
  nodes.set('O2N3DCutNextInvalid3DRail',{click(){nodes.get('O2N3DCutDescription').textContent='Cut 101 of part 23';}});
  const ctx={console,window:null,location:{origin:'https://esv.lidar.altametris.xyz'},document:{getElementById:id=>nodes.get(id),dispatchEvent:e=>{
    keyboard.push(e);if(e.type==='keydown'&&e.key==='Backspace'&&e.shiftKey)nodes.get('O2N3DCutDescription').textContent='Cut 101 of part 23';return true;}},

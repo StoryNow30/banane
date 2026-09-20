@@ -25,6 +25,19 @@ test('a restart after an accepted validation credits the cut once and never rese
  assert.equal(adapter.calls.filter(c=>c==='validate').length,1);
 });
 
+test('a restart after 497 to next non-validated 499 credits 497 once and never invents 498',async()=>{
+ const {adapter,store,engine:e}=await app();adapter.identity.cut=497;e.s.mode='automatic-test';await e.analyze();
+ const sc=scope({start:497,end:499});e.s.batch=enValidation(adapter,sc);await e.apply();
+ adapter.validateAndNext=async()=>{adapter.calls.push('validate');adapter.identity.cut=499;const next=K.completeIdentity(adapter.identity);
+  return {operatorDecision:'VALIDATE',decisionCommand:{id:'O2N3DCutValidate3DRail'},navigationSemantics:'VALIDATE_NEXT_NON_VALIDATED_CUT',
+   commandSent:true,afterObserved:false,afterStateStatus:'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED',serverConfirmed:false,
+   navigationObserved:true,nextIdentity:next,navigationAfter:{identity:next}};};
+ await e.validateAndNext(sc);const restarted=new Engine(adapter,store);await restarted.init();
+ assert.deepEqual(restarted.s.batch.processed.map(x=>x.cut),[497]);assert.equal(restarted.s.batch.processed.some(x=>x.cut===498),false);
+ assert.equal(restarted.s.batch.processed[0].evidence.validationProof,'navigation-only');
+ assert.equal(adapter.calls.filter(x=>x==='validate').length,1);assert.equal(adapter.calls.includes('skip'),false);
+});
+
 /* LE DÉFAUT SIGNALÉ PAR LA REVUE. `validation-observation` est journalisé AVANT
  * les contrôles d'acceptation : s'en servir au redémarrage créditait une
  * navigation inattendue que le moteur venait de refuser. Ici la navigation
