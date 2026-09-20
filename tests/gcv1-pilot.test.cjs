@@ -14,8 +14,10 @@ function candidate(confidence=80,confidenceStatus='candidate-v1'){
 }
 const scope={pageId:'fixture-page',part:23,start:100,end:100,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1',
  geometryContract:{id:'GEOMETRY_CANDIDATE_V1',geometrySha256:'candidate-hash'}};
-async function run(railsOrError){const Engine=engineWith(railsOrError),adapter=new SimulatedESV(),store=new MemoryStore(),engine=new Engine(adapter,store);
- await engine.init();engine.s.mode='automatic-test';await engine.startBatch(scope);await engine.task;return {engine,adapter,store,Engine};}
+async function run(railsOrError,overrides={}){const Engine=engineWith(railsOrError),adapter=new SimulatedESV(),store=new MemoryStore(),engine=new Engine(adapter,store);
+ await engine.init();engine.s.mode='automatic-test';await engine.startBatch({...scope,...overrides});await engine.task;return {engine,adapter,store,Engine};}
+const unresolvedRails=()=>Object.fromEntries(['left','right'].map(side=>[side,{side,status:'unresolved',delta:null,confidence:0,reasons:['test-unresolved'],
+ method:G.DEFAULTS.method,source:'geometry-candidate-v1-abstention',geometryEngine:'geometry-candidate-v1'}]));
 
 test('GCV1 A_STAR candidates are applied normally in automatic-test',async()=>{
  const {engine,adapter,store}=await run(candidate());assert.equal(engine.s.batch.state,'FINISHED_WITH_UNCONFIRMED_ACTIONS');
@@ -30,11 +32,20 @@ test('GCV1 S1 candidates with confidence zero remain admissible in the TEST batc
  assert.equal(rail.gcv1.confidenceStatus,'non-calibrated-s1-selection');
 });
 
+/* La politique `pause` conserve EXACTEMENT le comportement historique. Elle est
+ * déclarée ici, puisque 4.7 lui adjoint `defer` et fait de celui-ci le défaut
+ * des nouveaux lots Pilote TEST : ce que cet essai épingle est la pause, pas le
+ * défaut. Le défaut est vérifié par l'essai suivant. */
 test('GCV1 unresolved pauses without apply, validate, or implicit SKIP',async()=>{
- const unresolved=Object.fromEntries(['left','right'].map(side=>[side,{side,status:'unresolved',delta:null,confidence:0,reasons:['test-unresolved'],method:G.DEFAULTS.method,
-  source:'geometry-candidate-v1-abstention',geometryEngine:'geometry-candidate-v1'}]));
- const {engine,adapter}=await run(unresolved);assert.equal(engine.s.batch.state,'PAUSED_UNRESOLVED_RAIL');
+ const {engine,adapter}=await run(unresolvedRails(),{unresolvedPolicy:'pause'});assert.equal(engine.s.batch.state,'PAUSED_UNRESOLVED_RAIL');
  assert.equal(adapter.calls.includes('apply'),false);assert.equal(adapter.calls.includes('validate'),false);assert.equal(adapter.calls.includes('skip'),false);
+ assert.equal(adapter.calls.includes('nextWithoutDecision'),false);assert.equal(engine.s.batch.deferred.length,0);
+});
+
+test('a new pilot TEST batch defaults to defer, and an explicit pause is respected',async()=>{
+ const {engine}=await run(candidate());assert.equal(engine.s.batch.scope.unresolvedPolicy,'defer');
+ const explicite=await run(candidate(),{unresolvedPolicy:'pause'});assert.equal(explicite.engine.s.batch.scope.unresolvedPolicy,'pause');
+ await assert.rejects(()=>run(candidate(),{unresolvedPolicy:'autre'}),/Politique de rail non résolu invalide/);
 });
 
 test('a technical GCV1 error ends explicitly before every write',async()=>{

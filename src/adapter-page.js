@@ -243,6 +243,100 @@
  async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
    const target=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},'Aucun changement de cut après navigation.');
    return waitFor(()=>{const now=snapshot();return K.key(now.identity)===K.key(target)?now:false;},'Le cut suivant est affiché, mais ses rails ne sont pas encore disponibles.');}
+ /* NAVIGATION SANS DÉCISION — Banane 4.7.
+  *
+  * CE QUE LE CODE ACCESSIBLE ÉTABLIT. `O2N3DCutNextInvalid3DRail` est un bouton
+  * ESV relevé dans les sources Banane V2–V2.4.2 (audit-corpus.md, A5), déjà
+  * câblé ici par `next()` depuis la V3. Il n'est ni `O2N3DCutValidate3DRail` ni
+  * le raccourci SKIP : DECISIONS.md pose explicitement que le chemin SKIP ne
+  * passe PAS par lui. C'est donc la seule commande native observée du dépôt qui
+  * change de cut sans porter de décision.
+  *
+  * CE QUE LE CODE ACCESSIBLE N'ÉTABLIT PAS. Aucune source du dépôt ne relie ce
+  * bouton au raccourci Maj+Z rapporté par l'opérateur — ni binding clavier, ni
+  * libellé, ni trace. L'équivalence est donc rendue telle quelle dans la preuve
+  * (`shortcutEquivalence.established:false`) et reste à établir devant ESV.
+  *
+  * POURQUOI PAS UN KeyboardEvent « Z ». Rien n'atteste qu'ESV écoute cette
+  * touche, et le défaut 6 d'AUDIT_PILOTE.md rappelle qu'un KeyboardEvent
+  * dispatché ne prouve pas sa prise en compte. Une primitive factice serait pire
+  * qu'une limite déclarée.
+  *
+  * AUCUN REPLI. Commande absente, désactivée ou cible différente : l'opération
+  * rend un refus AVANT toute émission. Ni VALIDATE, ni SKIP, ni saisie d'un
+  * numéro de cut ne remplacent cette action.
+  *
+  * Les refus sont RENDUS, pas levés : une exception ne traverse le bridge que
+  * sous forme de message, ce qui perdrait la distinction entre « rien n'est
+  * parti » et « on ne sait pas ». */
+ async function nextWithoutDecision(identity,scope={},operationId=null,progress=()=>{}){
+   cancelled=false;const startedAt=new Date().toISOString();
+   const evidence={format:'banane-next-without-decision-v1',operationId:operationId??null,
+     action:'NEXT_WITHOUT_DECISION',trigger:'observed-esv-next-invalid-rail-button',startedAt,
+     command:commandInfo(selectors.next),
+     shortcutEquivalence:{claimedShortcut:'Maj+Z',established:false,
+       basis:'bouton ESV observé dans les sources V2–V2.4.2 ; aucun lien code entre ce bouton et le raccourci',
+       verification:'essai Edge requis'},
+     /* Corrélation réellement disponible : ESV ne renvoie pas d'identifiant
+      * d'opération. Elle tient à la requête/réponse du bridge, qui relie cette
+      * preuve à UN appel, et au contrôle de cible fait dans la page juste avant
+      * l'action. Une navigation manuelle concurrente reste hors de portée. */
+     correlation:{operationId:operationId??null,source:'banane-bridge-request-response',
+       esvEchoesOperationId:false,targetVerifiedInPageBeforeCommand:false,
+       concurrentManualNavigationExcluded:false},
+     operatorDecision:null,decisionCommand:null,commandScope:'banane-operation-only',
+     bananeValidated:false,applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,
+     commandRequested:true,commandInvoked:false,commandSent:false,invokedAt:null,
+     beforeNavigationIdentity:null,navigationObserved:false,serverConfirmed:false,afterObserved:false,
+     nextIdentity:null,nextIdentityComplete:false,nextReady:null,navigationAfter:null,observedAt:null,refusal:null};
+   const refuse=(code,message)=>{evidence.refusal={code,message,at:new Date().toISOString()};return evidence;};
+   // Identité complète vérifiée AU PLUS PRÈS du point d'effet, dans la page.
+   let before;try{before=assertExpected(identity);}
+   catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
+   evidence.beforeNavigationIdentity=K.completeIdentity(before.identity);
+   evidence.correlation.targetVerifiedInPageBeforeCommand=true;
+   /* Contexte d'exécution : un rechargement d'ESV crée un nouveau `pageId`, que
+    * `assertExpected` refuse déjà. Le lot est revérifié ici, dans la page, au
+    * plus près du point d'effet — pas seulement côté moteur avant l'attente. */
+   if(scope&&scope.pageId!=null&&before.identity.pageId!==scope.pageId)
+     return refuse('BATCH_CONTEXT_MISMATCH_BEFORE_COMMAND','Contexte de page différent de celui du lot.');
+   if(scope&&scope.part!=null&&before.identity.part!==scope.part)
+     return refuse('BATCH_CONTEXT_MISMATCH_BEFORE_COMMAND','Part affichée hors du lot : '+before.identity.part);
+   // Observation armée avant l'action : le libellé de départ est lu d'abord.
+   const startLabel=cutLabel();
+   if(!startLabel||K.key(startLabel)!==K.key(identity))
+     return refuse('TARGET_MISMATCH_BEFORE_COMMAND','Le cut affiché a changé avant la navigation sans décision.');
+   if(cancelled)return refuse('CANCELLED_BEFORE_COMMAND','Action interrompue avant émission.');
+   const button=document.getElementById(selectors.next);
+   if(!button||button.disabled)return refuse('NAVIGATION_COMMAND_UNAVAILABLE','Commande ESV indisponible : '+selectors.next);
+   progress('defer-before-command',{identity:evidence.beforeNavigationIdentity,operationId:evidence.operationId,command:evidence.command});
+   /* Plus rien n'est révocable à partir d'ici : l'état inconnu est posé AVANT
+    * l'appel, et n'est relevé qu'au retour. Une exception de la page laisse donc
+    * « unknown », jamais un `false` rassurant. */
+   evidence.commandInvoked='unknown';
+   try{button.click();}catch(e){return refuse('NAVIGATION_COMMAND_THREW',e.message);}
+   evidence.commandInvoked=true;evidence.commandSent=true;evidence.invokedAt=new Date().toISOString();
+   progress('defer-command-returned',{operationId:evidence.operationId,label:cutLabel()});
+   const immediate=cutLabel();
+   let nextLabel=immediate&&K.key(immediate)!==K.key(identity)?immediate:null;
+   if(!nextLabel){
+     try{nextLabel=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},
+       'Navigation sans décision transmise, cut inchangé : aucune progression observée.',P.attenteNavigationMs);}
+     catch(e){return refuse(cancelled?'CANCELLED_DURING_OBSERVATION':'NO_NAVIGATION_OBSERVED',e.message);}
+   }
+   evidence.navigationObserved=true;evidence.observedAt=new Date().toISOString();
+   evidence.navigationAfter={label:nextLabel,observedAt:evidence.observedAt};
+   progress('defer-navigation-observed',{operationId:evidence.operationId,nextIdentity:nextLabel});
+   try{const ready=await waitFor(()=>{const now=snapshot();return K.key(now.identity)===K.key(nextLabel)?now:false;},
+       'Le cut suivant est affiché, mais ses rails ne sont pas encore disponibles.',12000);
+     evidence.nextReady=true;evidence.nextIdentity=K.completeIdentity(ready.identity);
+     evidence.nextIdentityComplete=true;evidence.navigationAfter.identity=evidence.nextIdentity;}
+   catch(e){evidence.nextReady=false;evidence.nextIdentity=K.completeIdentity(nextLabel);
+     evidence.nextIdentityComplete=false;evidence.nextIdentityUnavailableReason=e.message;
+     progress('defer-next-geometry-unavailable',{operationId:evidence.operationId,message:e.message,nextIdentity:nextLabel});}
+   evidence.meaning='Navigation ESV sans décision : Banane n’a émis pour ce cut ni application de rail, ni VALIDATE, ni SKIP ; confirmation serveur indisponible.';
+   return evidence;
+ }
  async function decisionAndNext(identity,operatorDecision,scope={},progress=()=>{}){
    cancelled=false;const beforeCommand=assertExpected(identity),startedAt=new Date().toISOString();
    const command=operatorDecision==='VALIDATE'?commandInfo(selectors.validate):{id:'Shift+Backspace',exists:true,disabled:false};
@@ -353,7 +447,7 @@
  async function nativeStart(options){if(native?.active)throw Error('Le mode Natif est déjà actif dans ESV.');nativeChannel=options.channel;
    native=native||new window.BananeNativePage4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new window.BananeNativePage4.Observer(nativeApi());return native.resume(options);}
- const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,validateAndNext,skipAndNext,
+ const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},cancel:async()=>{cancelled=true;return {cancelRequested:true};}};

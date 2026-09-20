@@ -66,9 +66,47 @@
   const evidence=validationAccepted?.evidence||validationObservation?.evidence||null;
   const unresolved=Object.entries(observation.shadow?.rails||{}).filter(([,rail])=>
    rail?.next&&rail.next.status!=='candidate').map(([side,rail])=>({side,status:rail.next.status,motif:rail.next.motif??null,reason:rail.next.reason??rail.reason??null}));
+  /* BANANE 4.7 — issue « différé ». Construite à partir des faits persistés, et
+   * séparée de la décision scientifique : un rail unresolved reste unresolved,
+   * `abstention` ci-dessous le conserve. Différer est une issue du PILOTE, ni
+   * une résolution GCV1, ni une validation humaine, ni un nouveau label.
+   * Les différés CONFIRMÉS ne sont jamais confondus avec les intentions
+   * incertaines : seul `defer-finalized` confirme. */
+  const deferIntent=last('defer-intent');
+  const deferObservation=last('defer-navigation-observation');
+  const deferAccepted=last('defer-navigation-accepted');
+  const deferFinalized=last('defer-finalized');
+  const deferUncertainty=linked.slice().reverse().find(e=>['defer-navigation-uncertain','defer-navigation-not-emitted',
+   'defer-navigation-uncertain-on-restart','defer-intent-not-emitted-on-restart','defer-intent-closed',
+   'defer-intent-abandoned-before-emission','defer-intent-orphaned'].includes(e.type))||null;
+  const deferEvidence=deferFinalized?.evidence||deferAccepted?.evidence||deferObservation?.evidence||null;
+  const deferral=deferIntent||deferFinalized?{
+   status:deferFinalized?'DEFERRED_UNRESOLVED':'DEFER_NOT_CONFIRMED',
+   confirmed:!!deferFinalized,
+   operationId:deferFinalized?.operationId??deferAccepted?.operationId??deferIntent?.operationId??null,
+   policy:deferIntent?.policy??'defer',
+   identity:clone(deferFinalized?.identity??deferIntent?.identity??null),
+   nextIdentity:clone(deferFinalized?.nextIdentity??deferAccepted?.nextIdentity??null),
+   transition:deferFinalized?.transition??deferAccepted?.transition??deferObservation?.transition??null,
+   proposalId:deferFinalized?.proposalId??deferIntent?.proposalId??null,
+   lidarCaptureId:deferFinalized?.lidarCaptureId??deferIntent?.lidarCaptureId??null,
+   lidarCaptureStatus:(deferFinalized?.lidarCaptureId??deferIntent?.lidarCaptureId)?'persisted-on-intent':'not-available',
+   recordId:deferFinalized?.recordId??null,
+   railsAtDeferral:clone(deferFinalized?.rails??deferIntent?.rails??null),
+   unresolvedRails:clone(deferFinalized?.unresolvedRails??deferIntent?.unresolvedRails??null),
+   motif:deferIntent?.eligibility??null,
+   navigationWithoutDecision:{
+    commandInvoked:deferFinalized?.commandInvoked??deferObservation?.commandInvoked??null,
+    navigationObserved:deferObservation?.navigationObserved??(deferFinalized?true:null),
+    commandScope:'banane-operation-only',bananeValidated:false,
+    applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,
+    shortcutEquivalence:clone(deferEvidence?.shortcutEquivalence??null),
+    correlation:clone(deferEvidence?.correlation??null),evidence:clone(deferEvidence)},
+   uncertainty:deferFinalized?null:clone(deferUncertainty||deferObservation||null),
+  }:null;
   return {
    association:linked.length?'proposal-or-batch-id':'none',
-   apply,validationIntent,validationObservation,validationAccepted,
+   apply,validationIntent,validationObservation,validationAccepted,deferral,
    afterObserved:evidence?.afterObserved??validationObservation?.afterObserved??apply?.afterObserved??null,
    serverConfirmed:evidence?.serverConfirmed??validationObservation?.serverConfirmed??null,
    navigationObserved:evidence?.navigationObserved??validationObservation?.navigationObserved??null,

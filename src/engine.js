@@ -10,7 +10,10 @@
      validationStarted:false,batch:null,notice:'Prêt. Sélectionne un onglet ESV.',events:[],settings:{...G.DEFAULTS}};}
   async init(){const old=await this.store.getState();if(old){this.s=old;this.s.version=K.VERSION;this.s.schemaVersion=4;
     this.s.settings={...G.DEFAULTS,...this.s.settings,method:G.DEFAULTS.method};
-    if(this.s.batch){for(const name of ['processed','skipped','paused','interrupted','sequence','manuallyCompleted'])if(!Array.isArray(this.s.batch[name]))this.s.batch[name]=[];
+    /* `deferred` rejoint les collections du lot. Un lot ancien se relit donc
+     * avec une liste vide — et, faute de `scope.unresolvedPolicy`, conserve la
+     * politique historique `pause` (voir `unresolvedPolicy()`). */
+    if(this.s.batch){for(const name of ['processed','skipped','paused','interrupted','sequence','manuallyCompleted','deferred'])if(!Array.isArray(this.s.batch[name]))this.s.batch[name]=[];
       this.s.batch.activeIdentity=this.s.batch.activeIdentity||this.s.before?.identity||null;this.s.batch.lastCompletedIdentity=this.s.batch.lastCompletedIdentity||null;}
     // A pending, unapplied old proposal must pass the new support check. Never
     // recalculate an already applied proposal before validation or recovery.
@@ -28,6 +31,9 @@
      * par un booléen à chaque redémarrage, ce qui perdait le journal et faisait
      * lire 0 à `closureSummary`. Le drapeau a désormais son propre champ. */
     if(this.s.batch&&['RUNNING','PAUSED'].includes(this.s.batch.state)){this.s.batch.state='PAUSED';this.s.batch.interruptedByRestart=true;}
+    /* APRÈS la remise en pause générale : une navigation différée incertaine
+     * doit pouvoir imposer son propre état, pas le subir. */
+    await this.recoverDefer();
     if(this.s.intent){this.s.reconcileRequired=true;this.s.notice='Action interrompue : état ESV à réconcilier avant toute nouvelle écriture.';}
     else if(this.s.batch&&this.s.applied){
       /* V4.6.0, revue Astra. `validation-observation` est journalisé AVANT les
@@ -169,6 +175,25 @@
    throw Error(`Reprise manuelle en cours sur le cut ${cut} : ${what} remplacerait le contexte du lot. Déclare « Repris manuellement » pour reprendre, ou arrête le lot.`);}
   writable(identity){if((this.s.blockedTargets||[]).includes(K.key(identity)))throw Error('Ce cut a un résultat incertain archivé : aucune nouvelle écriture automatique dans cette page.');}
   async closeUncertain(){
+   /* Une navigation différée non résolue se clôture ici aussi : sans cette
+    * sortie l'opérateur resterait enfermé. Rien n'est recommandé à ESV, et le
+    * cut est bloqué en écriture automatique comme tout résultat incertain. */
+   const defer=this.deferPending();
+   if(defer){
+    const identity=K.completeIdentity(defer.identity);
+    this.s.blockedTargets=[...new Set([...(this.s.blockedTargets||[]),K.key(identity)])];
+    if(this.s.batch){this.s.batch.interrupted=Array.isArray(this.s.batch.interrupted)?this.s.batch.interrupted:[];
+      this.s.batch.interrupted.push({identity,status:'DEFER_NAVIGATION_CLOSED_BY_OPERATOR',operationId:defer.operationId,
+        phase:defer.phase,commandInvoked:defer.commandInvoked??'unknown',evidence:defer.evidence??null});}
+    await this.event('defer-intent-closed',{identity,operationId:defer.operationId,batchId:defer.batchId??null,
+      phase:defer.phase,commandInvoked:defer.commandInvoked??'unknown',deferredConfirmed:false,counted:false,resent:false});
+    this.s.deferIntent=null;
+    if(this.s.before&&K.cutId(this.s.before.identity)===K.cutId(identity))await this.archivePending('defer-uncertain-closed');
+    this.s.proposal=null;this.s.lidarId=null;this.s.applied=null;this.s.collection='IDLE';
+    if(this.s.batch)this.s.batch.state='STOPPED';
+    this.s.notice='Navigation différée incertaine archivée. Contrôle ce cut dans ESV ; ouvre un autre cut pour un nouvel essai.';
+    if(!this.s.reconcileRequired){await this.save();return;}
+   }
    if(!this.s.reconcileRequired){this.s.notice='Aucun résultat incertain à clôturer. Vérifie les bornes et les paramètres du nouveau lot.';await this.save();return;}
    const identity=this.s.intent?.identity||this.s.snapshot?.identity;
    if(identity)this.s.blockedTargets=[...new Set([...(this.s.blockedTargets||[]),K.key(identity)])];
@@ -244,6 +269,328 @@
      return{expected:true,reason:'NEXT_NON_VALIDATED_CUT_SAME_PAGE_AND_PART',observed:next};
    }
    return{expected:true,reason:'IMMEDIATE_SUCCESSOR_SAME_PAGE_AND_PART',observed:next};
+  }
+  /* ------------------------------------------------------------------------
+   * BANANE 4.7 — DIFFÉRER UN UNRESOLVED GCV1 (Pilote TEST).
+   *
+   * Un cut réellement non résolu par GCV1 peut être quitté par une NAVIGATION
+   * SANS DÉCISION : aucune application de rail, aucun VALIDATE, aucun SKIP. Le
+   * cut source est enregistré une fois comme `DEFERRED_UNRESOLVED` et le lot
+   * continue sur la cible réellement affichée.
+   *
+   * Ce n'est PAS une résolution GCV1, ni une validation humaine, ni un nouveau
+   * label scientifique : un rail unresolved reste unresolved. Le gain du lot est
+   * la continuité du traitement et l'identification fiable des cas à revoir.
+   * ---------------------------------------------------------------------- */
+  /* Politique effective du lot. Un lot ANCIEN n'a pas le champ : il garde la
+   * pause historique. Le champ est figé à la création et rien — ni redémarrage,
+   * ni changement du réglage d'interface — ne le convertit en cours de route. */
+  unresolvedPolicy(b){return b?.scope?.unresolvedPolicy==='defer'?'defer':'pause';}
+  deferRailView(proposal){return Object.fromEntries(Object.entries(proposal?.rails||{}).map(([side,p])=>[side,
+    {status:p.status,confidence:p.confidence,reasons:p.reasons||[],source:p.source||null,
+     geometryEngine:p.geometryEngine||null,gcv1:p.gcv1?K.clone(p.gcv1):null,proposal:p.delta||null}]));}
+  /* `missing === true` ne prouve rien à lui seul : il dit qu'un delta manque,
+   * pas POURQUOI. La branche defer exige une proposition GCV1 attribuée sans
+   * ambiguïté au cut courant, avec au moins un rail explicitement abstenu par
+   * GCV1. Tout le reste — proposition absente, périmée, d'une autre identité,
+   * LiDAR non démontré, repli hors GCV1, delta manquant sans abstention —
+   * conserve son diagnostic et sa pause. */
+  deferEligibility(identity,b){
+   const refuse=(reason,unresolvedRails=[])=>({eligible:false,reason,unresolvedRails});
+   if(this.unresolvedPolicy(b)!=='defer')return refuse('POLICY_PAUSE');
+   if(b?.scope?.geometryEngine!=='geometry-candidate-v1')return refuse('BATCH_NOT_GCV1_PILOT');
+   const proposal=this.s.proposal,target=K.cutId(identity);
+   if(!proposal)return refuse('PROPOSAL_MISSING');
+   if(K.cutId(proposal.identity)!==target)return refuse('PROPOSAL_IDENTITY_MISMATCH');
+   if(!this.s.before||K.cutId(this.s.before.identity)!==target)return refuse('CAPTURE_IDENTITY_MISMATCH');
+   if(!this.s.lidarId)return refuse('LIDAR_CAPTURE_NOT_DEMONSTRATED');
+   if(b.currentSequence&&b.currentSequence.cutId!==target)return refuse('SEQUENCE_IDENTITY_MISMATCH');
+   const selection=proposal.geometrySelection;
+   if(selection&&(selection.selectedEngine!=='geometry-candidate-v1'||selection.fallback===true))return refuse('GCV1_NOT_SELECTED');
+   const sides=['left','right'],rails=proposal.rails||{};
+   if(sides.some(side=>!rails[side]))return refuse('RAIL_PROPOSAL_MISSING');
+   if(sides.some(side=>rails[side].geometryEngine!=='geometry-candidate-v1'))return refuse('RAIL_NOT_ATTRIBUTED_TO_GCV1');
+   const unresolvedRails=sides.filter(side=>rails[side].status==='unresolved'&&rails[side].source==='geometry-candidate-v1-abstention');
+   if(!unresolvedRails.length)return refuse('NO_GCV1_UNRESOLVED_RAIL');
+   // Un rail sans delta qui n'est PAS une abstention GCV1 n'est pas un unresolved GCV1.
+   if(sides.some(side=>!rails[side].delta&&!unresolvedRails.includes(side)))return refuse('MISSING_DELTA_WITHOUT_GCV1_ABSTENTION',unresolvedRails);
+   return {eligible:true,reason:'GCV1_UNRESOLVED_CONFIRMED',unresolvedRails};
+  }
+  /* Contrat d'acceptation propre à la navigation sans décision. Il ne réutilise
+   * PAS `expectedTransition()` : celui-ci refuse tout saut qui n'est pas attesté
+   * par le bouton VALIDATE d'ESV, et ses deux verdicts doivent rester
+   * inchangés. Ici aucun delta de +1 n'est exigé — 549 → 552 est accepté, et
+   * 550/551 n'entrent dans aucune collection. */
+  deferTransition(identity,evidence,scope){
+   if(identity?.pageId==null||identity?.part==null||!Number.isInteger(identity?.cut))
+     return {expected:false,reason:'SOURCE_IDENTITY_INCOMPLETE',observed:null};
+   if(evidence?.navigationObserved!==true)return {expected:false,reason:'NAVIGATION_NOT_OBSERVED',observed:null};
+   const seen=evidence.nextIdentity||evidence.navigationAfter?.identity||evidence.navigationAfter?.label;
+   if(!seen)return {expected:false,reason:'NEXT_IDENTITY_UNKNOWN',observed:null};
+   const next=K.completeIdentity(seen);
+   if(next.pageId==null||next.part==null)return {expected:false,reason:'NEXT_IDENTITY_INCOMPLETE',observed:next};
+   if(next.pageId!==identity.pageId)return {expected:false,reason:'PAGE_CHANGED',observed:next};
+   if(next.part!==identity.part||scope?.part!=null&&next.part!==scope.part)return {expected:false,reason:'PART_CHANGED',observed:next};
+   if(!Number.isInteger(next.cut))return {expected:false,reason:'CUT_NOT_COMPARABLE',observed:next};
+   if(next.cut===identity.cut)return {expected:false,reason:'NO_FORWARD_MOVE',observed:next};
+   if(next.cut<identity.cut)return {expected:false,reason:'BACKWARD_MOVE',observed:next};
+   return {expected:true,reason:'NEXT_CUT_WITHOUT_DECISION_SAME_PAGE_AND_PART',observed:next};
+  }
+  deferPending(){return this.s.deferIntent&&this.s.deferIntent.phase!=='FINALIZED'?this.s.deferIntent:null;}
+  /* PROTOCOLE DURABLE.
+   *
+   * Il n'existe aucune transaction commune entre le stockage Banane et l'effet
+   * ESV : on ne peut donc pas garantir leur atomicité, seulement conserver
+   * explicitement la fenêtre où une commande a pu partir.
+   *
+   *  1. PRÉPARÉ — intention persistée et confirmée avant toute couche capable
+   *     d'agir. Invariant : l'appel adaptateur n'a lieu qu'APRÈS le marqueur 2.
+   *  2. ÉMISSION POSSIBLE — marqueur persisté et confirmé. Il n'affirme pas que
+   *     la commande est partie ; il interdit d'affirmer le contraire.
+   *  3. ACTION — au plus une fois, contrôles de cible et de contexte au plus
+   *     près du point d'effet, dans la page.
+   *  4. OBSERVATION — preuves recueillies, refus compris ; acceptation selon
+   *     `deferTransition()` seulement.
+   *  5. FINALISATION — entrée deferred unique, enregistrement, checkpoint de
+   *     reprise ; l'intention active n'est effacée qu'ensuite.
+   */
+  async deferUnresolved(now,b,eligibility){
+   const scope=b.scope,identity=K.completeIdentity(now.identity),cutId=K.cutId(identity);
+   if(this.deferPending())throw Error('Une navigation différée est déjà en cours : aucune seconde commande.');
+   if((b.deferred||[]).some(d=>d.key===cutId))throw Error('Ce cut est déjà différé dans ce lot.');
+   const operationId=K.uid();
+   const intent={format:'banane-defer-intent-v1',operationId,batchId:b.id??null,phase:'PREPARED',policy:'defer',
+     identity,cutId,sequenceIndex:b.currentSequence?.sequenceIndex??null,previousCutId:b.currentSequence?.previousCutId??null,
+     proposalId:this.s.proposal?.id??null,lidarCaptureId:this.s.lidarId??null,
+     rails:this.deferRailView(this.s.proposal),unresolvedRails:eligibility.unresolvedRails,eligibility:eligibility.reason,
+     geominfo:K.clone(this.s.proposal?.geominfo??null),
+     scope:{pageId:scope.pageId??null,part:scope.part??null,start:scope.start??null,end:scope.end??null},
+     geometryEngine:scope.geometryEngine??null,geometryContract:K.clone(scope.geometryContract??null),
+     commandScope:'banane-operation-only',bananeValidated:false,applyCommandSent:false,
+     validationCommandSent:false,skipCommandSent:false,commandInvoked:null,
+     preparedAt:new Date().toISOString(),emissionPossibleAt:null,observedAt:null,finalizedAt:null,
+     startedAtMs:Date.now(),evidence:null,nextIdentity:null,transition:null,refusal:null,nonEmissionProof:null};
+   this.s.deferIntent=intent;await this.save(); // 1. Préparé : écriture confirmée avant toute émission possible.
+   await this.event('defer-intent',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
+     lidarCaptureId:intent.lidarCaptureId,sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,
+     rails:intent.rails,unresolvedRails:intent.unresolvedRails,policy:'defer',eligibility:intent.eligibility,
+     commandRequested:false,commandInvoked:null,bananeValidated:false,validationCommandSent:false,skipCommandSent:false});
+   /* Dernière frontière encore révocable : pause, arrêt ou reprise manuelle
+    * demandés pendant la préparation empêchent l'émission. */
+   if(b.state!=='RUNNING'){this.s.deferIntent=null;
+     await this.event('defer-intent-abandoned-before-emission',{identity,operationId,batchId:intent.batchId,
+       state:b.state,commandInvoked:false,deferredConfirmed:false});
+     await this.save();return {status:'ABANDONED_BEFORE_EMISSION'};}
+   intent.phase='COMMAND_MAY_HAVE_BEEN_SENT';intent.emissionPossibleAt=new Date().toISOString();
+   await this.save(); // 2. Émission possible : écriture confirmée AVANT l'appel.
+   await this.event('defer-command-possible',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
+     commandRequested:true,commandInvoked:null,
+     note:'La commande de navigation sans décision peut désormais avoir été émise.'});
+   let evidence=null,transportError=null;
+   try{evidence=await this.adapter.nextWithoutDecision(identity,scope,operationId);} // 3. Action : au plus une fois.
+   catch(e){transportError=e;}
+   intent.evidence=K.clone(evidence??null);
+   intent.commandInvoked=transportError?'unknown':(evidence?.commandInvoked??'unknown');
+   intent.refusal=K.clone(evidence?.refusal??(transportError?{code:'ADAPTER_ERROR',message:transportError.message}:null));
+   const transition=this.deferTransition(identity,evidence||{},scope); // 4. Observation.
+   intent.transition=transition.reason;
+   await this.save();
+   await this.event('defer-navigation-observation',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
+     commandInvoked:intent.commandInvoked,navigationObserved:evidence?.navigationObserved===true,
+     refusal:intent.refusal,transition:transition.reason,accepted:transition.expected,
+     nextIdentity:transition.observed,nextReady:evidence?.nextReady??null,evidence:intent.evidence});
+   if(!transition.expected)return await this.deferNotAccepted(b,intent,transition);
+   intent.phase='OBSERVED';intent.observedAt=new Date().toISOString();
+   intent.nextIdentity=K.completeIdentity(transition.observed);
+   await this.save(); // Observation acceptée, durable, avant toute finalisation.
+   await this.event('defer-navigation-accepted',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
+     transition:transition.reason,nextIdentity:intent.nextIdentity,commandInvoked:intent.commandInvoked,
+     bananeValidated:false,validationCommandSent:false,skipCommandSent:false,applyCommandSent:false,evidence:intent.evidence});
+   return await this.finalizeDefer(b); // 5. Finalisation durable.
+  }
+  /* Aucune progression acceptée. Deux situations, jamais confondues :
+   * — la NON-ÉMISSION est PROUVÉE (refus rendu par l'adaptateur avant le clic) :
+   *   le cut retombe sur la pause historique, avec ses quatre actions ;
+   * — sinon l'émission reste INCERTAINE : état explicite, intention et preuves
+   *   conservées, aucun renvoi automatique. Un timeout ou un accusé absent ne
+   *   prouve pas la non-émission. */
+  async deferNotAccepted(b,intent,transition){
+   const proven=intent.commandInvoked===false&&!!intent.refusal;
+   const code=proven?'DEFER_NAVIGATION_NOT_EMITTED'
+     :transition.reason==='NAVIGATION_NOT_OBSERVED'?'DEFER_NO_PROGRESS':'DEFER_TRANSITION_REFUSED';
+   const message=proven
+     ?`Navigation sans décision impossible sur le cut ${intent.identity.cut} (${intent.refusal.code}) : aucune commande n’a été émise.`
+     :`Navigation sans décision transmise sur le cut ${intent.identity.cut}, sans progression acceptée (${transition.reason}). Elle ne sera pas renvoyée.`;
+   if(proven){
+     intent.phase='NOT_EMITTED';intent.nonEmissionProof=intent.refusal.code;await this.save();
+     await this.event('defer-navigation-not-emitted',{identity:intent.identity,operationId:intent.operationId,
+       batchId:intent.batchId,code,refusal:intent.refusal,commandInvoked:false,resent:false,deferredConfirmed:false});
+     this.s.deferIntent=null;
+     /* Un arrêt demandé pendant l'attente n'est jamais annulé par le retour de
+      * l'action : rendre les quatre actions de la pause rouvrirait des écritures
+      * ESV que l'opérateur vient d'interdire. */
+     if(b.state==='STOPPED'){
+       b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
+       b.interrupted.push({identity:K.completeIdentity(intent.identity),status:code,operationId:intent.operationId,
+         commandInvoked:false,refusal:intent.refusal,transition:transition.reason});
+       this.s.notice=message+' Le lot est arrêté.';
+     }else{
+       // Retour au comportement historique : le cut reste en main, sans commande.
+       this.pauseUnresolvedRail(b,intent.identity,{deferAttempt:{operationId:intent.operationId,outcome:code,
+         refusal:intent.refusal,commandInvoked:false,transition:transition.reason}});
+       this.s.notice=message+' Choisis Réessayer, Reprise manuelle, SKIP explicite ou Arrêter.';
+     }
+     b.error={code,step:b.step,timestamp:new Date().toISOString(),message};
+     await this.save();return {status:code};
+   }
+   b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
+   b.interrupted.push({identity:K.completeIdentity(intent.identity),status:code,operationId:intent.operationId,
+     commandInvoked:intent.commandInvoked,transition:transition.reason,observedIdentity:transition.observed||null,
+     refusal:intent.refusal,evidence:intent.evidence});
+   /* Un arrêt explicite de l'opérateur n'est pas écrasé : il reste la décision
+    * la plus forte. L'intention non résolue bloque de toute façon la reprise. */
+   if(b.state!=='STOPPED')b.state='PAUSED_DEFER_NAVIGATION_UNCERTAIN';
+   b.error={code,step:b.step,timestamp:new Date().toISOString(),message};
+   this.s.notice=message+' Contrôle ce cut dans ESV, puis clôture ce résultat incertain.';
+   await this.save();
+   await this.event('defer-navigation-uncertain',{identity:intent.identity,operationId:intent.operationId,
+     batchId:intent.batchId,code,transition:transition.reason,observedIdentity:transition.observed||null,
+     commandInvoked:intent.commandInvoked,refusal:intent.refusal,resent:false,deferredConfirmed:false,counted:false});
+   return {status:code};
+  }
+  /* Pause historique d'un rail non résolu, extraite pour être partagée par le
+   * chemin `pause` et par l'échec PROUVÉ de la navigation sans décision. */
+  pauseUnresolvedRail(b,identity,extra={}){
+   const paused={status:'PAUSED_UNRESOLVED_RAIL',identity:K.completeIdentity(identity),before:K.clone(this.s.before),
+     lidarCaptureId:this.s.lidarId,proposal:K.clone(this.s.proposal),
+     rails:Object.fromEntries(Object.entries(this.s.proposal?.rails||{}).map(([side,p])=>[side,{status:p.status,confidence:p.confidence,reasons:p.reasons,proposal:p.delta||null}])),
+     geominfo:this.s.proposal?.geominfo,sequenceIndex:b.currentSequence?.sequenceIndex??null,
+     unresolvedPolicy:this.unresolvedPolicy(b),...extra,
+     actions:['RETRY','MANUAL_TAKEOVER','EXPLICIT_SKIP','STOP'],pausedAt:new Date().toISOString()};
+   b.state='PAUSED_UNRESOLVED_RAIL';b.pauseReason='unresolved-rail';b.step='apply';b.paused.push(paused);
+   return paused;
+  }
+  /* Finalisation durable, idempotente : UNE entrée deferred par identité
+   * complète de cut dans un lot, l'opération servant de clé de déduplication.
+   * Rejouée après une interruption, elle ne commande rien à ESV et ne
+   * multiplie ni l'entrée, ni l'enregistrement. */
+  async finalizeDefer(b,{recovered=false}={}){
+   const intent=this.s.deferIntent;
+   if(!intent||intent.phase!=='OBSERVED')throw Error('Aucune navigation différée observée à finaliser.');
+   const identity=K.completeIdentity(intent.identity),key=K.cutId(identity);
+   const nextIdentity=K.completeIdentity(intent.nextIdentity),nextCutId=K.cutId(nextIdentity);
+   b.deferred=Array.isArray(b.deferred)?b.deferred:[];
+   const recordId='defer-'+intent.operationId;
+   if(!b.deferred.some(d=>d.operationId===intent.operationId||d.key===key)){
+    const record={id:recordId,recordId,format:'banane-deferred-unresolved-v1',version:K.VERSION,
+      source:'pilot-gcv1-unresolved-deferred',batchId:intent.batchId,operationId:intent.operationId,
+      identity,before:K.clone(this.s.before),lidarCaptureId:intent.lidarCaptureId??null,
+      lidarCaptureStatus:intent.lidarCaptureId?'persisted-on-intent':'not-available',
+      proposalId:intent.proposalId,proposal:K.clone(this.s.proposal),rails:intent.rails,
+      unresolvedRails:intent.unresolvedRails,geominfo:intent.geominfo,
+      geometryEngine:intent.geometryEngine,geometryContract:intent.geometryContract,
+      decision:'DEFERRED_UNRESOLVED',operatorDecision:null,
+      decisionRule:'pilot-defer-gcv1-unresolved-by-navigation-without-decision',
+      scientificDecisionPreserved:'gcv1-unresolved-rails-remain-unresolved',
+      /* Ce que ces champs disent : les commandes Banane de CETTE opération. Ce
+       * n'est pas un audit rétroactif de tout ce qu'ESV a pu connaître sur ce
+       * cut, ni la preuve qu'aucun humain ne l'a jamais modifié. */
+      commandScope:'banane-operation-only',bananeValidated:false,applyCommandSent:false,
+      validationCommandSent:false,skipCommandSent:false,commandSent:false,
+      navigationWithoutDecisionSent:intent.commandInvoked===true,commandInvoked:intent.commandInvoked,
+      afterObserved:false,serverConfirmed:false,navigationObserved:true,
+      afterStateStatus:'NOT_OBSERVED_NO_DECISION_SENT',status:'deferred-unresolved',validationProof:'none',
+      nextIdentity,navigationAfter:K.clone(intent.evidence?.navigationAfter??null),
+      transition:intent.transition,evidence:intent.evidence,
+      sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,nextCutId,
+      usableForTraining:false,trainingExclusionReason:'gcv1-unresolved-deferred',
+      preparedAt:intent.preparedAt,emissionPossibleAt:intent.emissionPossibleAt,observedAt:intent.observedAt,
+      recoveredFinalization:recovered,deferredAt:new Date().toISOString()};
+    await this.store.putRecord(record);
+    if(!this.s.records.some(r=>(r.recordId||r.id)===recordId))this.s.records.push(record);
+    b.deferred.push({key,operationId:intent.operationId,identity,cut:identity.cut,recordId,
+      sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,nextCutId,nextIdentity,
+      proposalId:intent.proposalId,lidarCaptureId:intent.lidarCaptureId??null,rails:intent.rails,
+      unresolvedRails:intent.unresolvedRails,transition:intent.transition,policy:'defer',
+      bananeValidated:false,commandInvoked:intent.commandInvoked,evidence:intent.evidence,
+      recovered,durationMs:Number.isFinite(intent.startedAtMs)?Date.now()-intent.startedAtMs:null,
+      deferredAt:record.deferredAt});
+   }
+   b.lastDeferredIdentity=identity;
+   if(b.currentSequence&&b.currentSequence.cutId===key)b.currentSequence.nextCutId=nextCutId;
+   // Données transitoires du cut source nettoyées, provenance conservée par l'archive.
+   if(this.s.before&&K.cutId(this.s.before.identity)===key)await this.archivePending('deferred-unresolved');
+   this.s.lidarId=null;this.s.proposal=null;this.s.applied=null;this.s.snapshot=null;this.s.expected=null;
+   this.s.collection='IDLE';b.currentSequence=null;b.step='capture';b.pauseReason=null;b.error=null;
+   b.activeIdentity=nextIdentity; // Checkpoint de reprise : la cible acceptée.
+   intent.phase='FINALIZED';intent.finalizedAt=new Date().toISOString();
+   await this.save();
+   await this.event('defer-finalized',{identity,operationId:intent.operationId,batchId:intent.batchId,
+     proposalId:intent.proposalId,lidarCaptureId:intent.lidarCaptureId??null,recordId,
+     rails:intent.rails,unresolvedRails:intent.unresolvedRails,nextIdentity,transition:intent.transition,
+     sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,nextCutId,
+     status:'DEFERRED_UNRESOLVED',deferredConfirmed:true,recovered,commandInvoked:intent.commandInvoked,
+     commandScope:'banane-operation-only',bananeValidated:false,applyCommandSent:false,
+     validationCommandSent:false,skipCommandSent:false,evidence:intent.evidence});
+   this.s.notice=`Cut ${identity.cut} non résolu par GCV1 : différé sans décision. Lot poursuivi sur le cut ${nextIdentity.cut}.`;
+   // L'intention active ne s'efface qu'une fois preuves ET checkpoint durables.
+   this.s.deferIntent=null;await this.save();
+   return {status:'DEFERRED_UNRESOLVED',nextIdentity,nextReady:intent.evidence?.nextReady??null,operationId:intent.operationId};
+  }
+  /* TABLE DE REPRISE. Elle est lue depuis les SEULES données persistées : un
+   * redémarrage ne conserve aucune variable du processus interrompu. */
+  async recoverDefer(){
+   const intent=this.s.deferIntent;if(!intent)return;
+   const b=this.s.batch;
+   if(intent.phase==='FINALIZED'){this.s.deferIntent=null;return;}
+   if(!b||(intent.batchId??null)!==(b.id??null)){
+    /* Intention orpheline : conservée, jamais rejouée. Elle bloque toute
+     * reprise jusqu'à sa clôture. Signalée UNE fois : `init()` s'exécute à
+     * chaque démarrage du service worker, et le journal est plafonné. */
+    if(!intent.orphanReported){intent.orphanReported=true;
+      await this.event('defer-intent-orphaned',{identity:intent.identity,operationId:intent.operationId,
+        batchId:intent.batchId??null,phase:intent.phase,commandInvoked:intent.commandInvoked??'unknown',
+        resent:false,deferredConfirmed:false});}
+    this.s.notice='Intention de navigation différée sans lot correspondant : clôture-la avant toute nouvelle action.';
+    return;
+   }
+   b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
+   /* Préparé : l'invariant du protocole interdit toute émission avant le
+    * marqueur suivant, qui n'a pas été écrit. Rien n'est parti ; le cut sera
+    * réévalué à la reprise, après revérification de l'identité et du contexte
+    * par la boucle du lot. */
+   if(intent.phase==='PREPARED'||intent.phase==='NOT_EMITTED'&&intent.nonEmissionProof){
+    b.interrupted.push({identity:K.completeIdentity(intent.identity),status:'DEFER_INTENT_NOT_EMITTED',
+      operationId:intent.operationId,commandInvoked:false,
+      nonEmissionProof:intent.nonEmissionProof||'no-emission-marker-persisted-before-restart'});
+    this.s.deferIntent=null;
+    this.s.notice='Navigation différée préparée sans qu’aucune commande ait pu partir. Le cut sera réévalué à la reprise.';
+    await this.event('defer-intent-not-emitted-on-restart',{identity:intent.identity,operationId:intent.operationId,
+      batchId:intent.batchId,commandInvoked:false,resent:false,deferredConfirmed:false,counted:false});
+    return;
+   }
+   /* Observation acceptée durable, finalisation incomplète : SEULES les
+    * écritures locales sont complétées, de façon idempotente. Aucune commande
+    * ESV n'est envoyée. */
+   if(intent.phase==='OBSERVED'){
+    await this.finalizeDefer(b,{recovered:true});
+    this.s.notice='Navigation différée observée avant l’interruption : écritures locales complétées, aucune commande ESV renvoyée.';
+    return;
+   }
+   /* Émission possible sans observation acceptée durable. Un redémarrage juste
+    * après le marqueur — même avant l'appel réel — reste incertain : ni le
+    * timeout ni l'absence d'accusé ne prouvent la non-émission. */
+   // Comme ci-dessus : un arrêt explicite antérieur reste la décision la plus forte.
+   if(b.state!=='STOPPED')b.state='PAUSED_DEFER_NAVIGATION_UNCERTAIN';
+   b.error={code:'DEFER_NAVIGATION_UNCERTAIN_BEFORE_RESTART',step:b.step,timestamp:new Date().toISOString(),
+     message:'Navigation sans décision peut-être émise, sans progression acceptée avant le redémarrage.'};
+   b.interrupted.push({identity:K.completeIdentity(intent.identity),status:'DEFER_NAVIGATION_UNCERTAIN',
+     operationId:intent.operationId,commandInvoked:intent.commandInvoked??'unknown',
+     transition:intent.transition??null,refusal:intent.refusal??null,evidence:intent.evidence??null});
+   this.s.notice='Navigation sans décision peut-être partie avant l’interruption, sans progression acceptée. Elle ne sera pas renvoyée : contrôle le cut dans ESV, puis clôture ce résultat.';
+   await this.event('defer-navigation-uncertain-on-restart',{identity:intent.identity,operationId:intent.operationId,
+     batchId:intent.batchId,commandInvoked:intent.commandInvoked??'unknown',phase:intent.phase,
+     resent:false,deferredConfirmed:false,counted:false});
   }
   async validateAndNext(scope){
    this.gate();const now=await this.adapter.state();
@@ -321,6 +668,8 @@
    if(!scope.testConfirmed)throw Error('Le périmètre doit être déclaré TEST au lancement du lot.');
    if(!Number.isInteger(scope.part)||!Number.isInteger(scope.start)||!Number.isInteger(scope.end)||scope.start<0||scope.end<scope.start)throw Error('Bornes du lot invalides.');
    if(!['pause','skip','attempt'].includes(scope.lowConfidence))throw Error('Politique de faible confiance invalide.');
+   if(scope.unresolvedPolicy!==undefined&&scope.unresolvedPolicy!==null&&!['pause','defer'].includes(scope.unresolvedPolicy))throw Error('Politique de rail non résolu invalide.');
+   if(this.deferPending())throw Error('Navigation différée non résolue : clôture ce résultat avant de lancer un nouveau lot.');
    if(!scope.allowNavigationEvidence&&this.adapter.capabilities?.serverConfirmation!==true)throw Error('Avant de lancer : coche « Continuer sur navigation observée, sans preuve serveur ». La V3 ne dispose pas de confirmation serveur ; aucun rail n’a été déplacé par ce lancement.');
    const now=await this.observe();if(now.identity.part!==scope.part||now.identity.cut!==scope.start)throw Error('Ouvre le premier cut du lot dans ESV.');
    if(this.s.before&&(this.s.collection==='READY_FOR_AFTER'||this.s.collection==='BEFORE_CAPTURED'&&(this.s.lidarId||this.s.intent||this.s.applied)))throw Error('Termine ou annule la capture manuelle avant de lancer un lot.');
@@ -335,7 +684,11 @@
    this.gate();this.writable(now.identity);
    const normalizedScope={...scope,pageId:now.identity.pageId};
    if(normalizedScope.lowConfidence==='skip')normalizedScope.lowConfidence='pause';
-   this.s.batch={id:K.uid(),state:'RUNNING',step:'capture',scope:normalizedScope,processed:[],skipped:[],paused:[],interrupted:[],sequence:[],
+   /* Politique figée dans le scope persistant à la CRÉATION du lot. Défaut des
+    * nouveaux lots Pilote TEST : différer. Un choix explicite est respecté, et
+    * hors Pilote GCV1 rien ne change — la pause reste le défaut. */
+   normalizedScope.unresolvedPolicy=scope.unresolvedPolicy??(scope.geometryEngine==='geometry-candidate-v1'?'defer':'pause');
+   this.s.batch={id:K.uid(),state:'RUNNING',step:'capture',scope:normalizedScope,processed:[],skipped:[],paused:[],interrupted:[],sequence:[],deferred:[],
      activeIdentity:K.completeIdentity(now.identity),lastCompletedIdentity:null,startedAt:new Date().toISOString()};
    await this.event('batch-started',{batch:this.s.batch});
    if(scope.lowConfidence==='skip')await this.event('legacy-automatic-skip-disabled',{identity:now.identity,requestedPolicy:'skip',effectivePolicy:'pause'});
@@ -345,7 +698,9 @@
   /* « COMPLETED » s'affiche « Terminé confirmé » dans le panneau. Un lot qui
    * contient une action sans confirmation serveur — ou un cut repris à la main,
    * que Banane n'a pas validé — ne peut pas porter ce mot. */
-  closingState(b){return b.processed.some(x=>!x.evidence?.serverConfirmed)||b.skipped.some(x=>!x.evidence?.serverConfirmed)||b.manuallyCompleted?.length>0
+  /* Un cut différé est une action native sans confirmation serveur : il retire
+   * lui aussi le droit au mot « Terminé confirmé ». */
+  closingState(b){return b.processed.some(x=>!x.evidence?.serverConfirmed)||b.skipped.some(x=>!x.evidence?.serverConfirmed)||b.manuallyCompleted?.length>0||b.deferred?.length>0
     ?'FINISHED_WITH_UNCONFIRMED_ACTIONS':'COMPLETED';}
   async run(){this.busy=true;const b=this.s.batch;
    try{while(await this.boundary()){
@@ -357,7 +712,8 @@
      if(!b.currentSequence||b.currentSequence.cutId!==fullKey){const sequenceIndex=b.sequence.length,previousCutId=b.sequence.at(-1)?.cutId??null;
        b.currentSequence={sequenceIndex,cutId:fullKey,identity:K.completeIdentity(now.identity),previousCutId,nextCutId:null};b.sequence.push(b.currentSequence);}
      // Un cut repris à la main compte comme traité : le lot ne doit jamais le redémarrer.
-     if([...b.processed,...b.skipped,...(b.manuallyCompleted||[])].some(x=>x.key===fullKey||x.key===k))throw Error('Cut déjà traité dans ce lot : boucle arrêtée.');
+     // Un cut différé non plus : y revenir signalerait une navigation inattendue.
+     if([...b.processed,...b.skipped,...(b.manuallyCompleted||[]),...(b.deferred||[])].some(x=>x.key===fullKey||x.key===k))throw Error('Cut déjà traité dans ce lot : boucle arrêtée.');
      if(b.step==='capture'){
        b.cutStartedAt=new Date().toISOString();
        if(this.s.collection==='STALE')await this.archivePending('batch-new-target');
@@ -367,13 +723,25 @@
      if(!await this.boundary())break;
      const fits=Object.values(this.s.proposal.rails),missing=fits.some(p=>!p.delta),low=missing||fits.some(p=>p.confidence<this.s.settings.minConfidence);
      if(b.step==='apply'&&missing){
-       const rails=Object.fromEntries(Object.entries(this.s.proposal.rails).map(([side,p])=>[side,{status:p.status,confidence:p.confidence,reasons:p.reasons,proposal:p.delta||null}]));
-       const paused={status:'PAUSED_UNRESOLVED_RAIL',identity:K.completeIdentity(now.identity),before:K.clone(this.s.before),lidarCaptureId:this.s.lidarId,
-         proposal:K.clone(this.s.proposal),rails,geominfo:this.s.proposal.geominfo,sequenceIndex:b.currentSequence.sequenceIndex,
-         actions:['RETRY','MANUAL_TAKEOVER','EXPLICIT_SKIP','STOP'],pausedAt:new Date().toISOString()};
-       b.state='PAUSED_UNRESOLVED_RAIL';b.pauseReason='unresolved-rail';b.paused.push(paused);
+       /* Si UN SEUL rail est non résolu, le cut entier est différé : le rail
+        * candidat n'est pas appliqué d'abord. La branche defer passe avant la
+        * question de confiance, qui ne change pas. */
+       const eligibility=this.deferEligibility(now.identity,b);
+       if(eligibility.eligible){
+         const outcome=await this.deferUnresolved(now,b,eligibility);
+         if(outcome.status!=='DEFERRED_UNRESOLVED')break;
+         const target=outcome.nextIdentity;
+         // Bornes appliquées APRÈS validation de l'identité et de la transition.
+         if(now.identity.cut>=scope.end||Number.isInteger(target?.cut)&&target.cut>scope.end){b.state=this.closingState(b);break;}
+         if(outcome.nextReady===false){if(b.state==='RUNNING'){b.state='PAUSED';
+           this.s.notice=`Cut ${now.identity.cut} différé. Attends le chargement des rails du cut ${target.cut}, puis clique sur Reprendre.`;}break;}
+         continue;
+       }
+       const paused=this.pauseUnresolvedRail(b,now.identity,
+         this.unresolvedPolicy(b)==='defer'?{deferRefused:{reason:eligibility.reason}}:{});
        this.s.notice='Rail non résolu : cut conservé sans commande. Choisis Réessayer, Reprise manuelle, SKIP explicite ou Arrêter.';
-       await this.event('batch-paused-unresolved-rail',{identity:now.identity,paused});break;
+       await this.event('batch-paused-unresolved-rail',{identity:now.identity,paused,
+         unresolvedPolicy:this.unresolvedPolicy(b),deferEligibility:eligibility.reason});break;
      }
      if(b.step==='apply'&&low&&scope.lowConfidence!=='attempt'){
        b.state='PAUSED';b.pauseReason='low-confidence';b.paused.push({status:'PAUSED_LOW_CONFIDENCE',identity:K.completeIdentity(now.identity),
@@ -520,7 +888,14 @@
      this.s.reconcileRequired=true;this.s.notice=e.message+' La commande SKIP ne sera pas répétée.';await this.event('explicit-skip-unconfirmed',{identity:now.identity,message:e.message});throw e;}
   }
   closureSummary(){const b=this.s.batch,records=this.s.records;
+   const defer=this.deferPending();
    return {status:b?.state||null,completed:b?.processed?.length||0,paused:b?.paused?.length||0,skipped:b?.skipped?.length||0,
+     /* Issus des seuls résultats CONFIRMÉS : une intention en attente ou une
+      * commande incertaine n'est jamais comptée comme différée. */
+     deferred:b?.deferred?.length||0,deferredCuts:(b?.deferred||[]).map(x=>K.cutId(x.identity)),
+     unresolvedPolicy:b?this.unresolvedPolicy(b):null,lastDeferredIdentity:b?.lastDeferredIdentity||null,
+     deferPending:defer?{operationId:defer.operationId,phase:defer.phase,identity:K.completeIdentity(defer.identity),
+       commandInvoked:defer.commandInvoked??'unknown',transition:defer.transition??null}:null,
      manuallyCompleted:b?.manuallyCompleted?.length||0,manuallyCompletedCuts:(b?.manuallyCompleted||[]).map(x=>K.cutId(x.identity)),
      lastManuallyCompletedIdentity:b?.lastManuallyCompletedIdentity||null,
      interrupted:b?.interrupted?.length||0,withoutFinalState:records.filter(r=>r.status==='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED'||r.status==='incomplete-no-after').map(r=>K.cutId(r.identity||r.before?.identity)),
@@ -528,6 +903,8 @@
      lastCompletedIdentity:b?.lastCompletedIdentity||null};
   }
   async resume(){if(this.task)throw Error('Attends la fin de l’action en cours.');this.gate();
+   if(this.s.batch?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN')throw Error('Navigation différée incertaine : contrôle le cut dans ESV puis clôture ce résultat. Aucune commande ne sera renvoyée.');
+   if(this.deferPending())throw Error('Navigation différée non résolue : clôture ce résultat avant toute reprise.');
    if(!this.s.batch||!['PAUSED','STOPPED','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(this.s.batch.state))throw Error('Aucun lot à reprendre.');
    if(this.s.batch.state==='PAUSED_AFTER_STATE_MISSING')throw Error('État final manquant : contrôle le cut dans ESV avant toute reprise.');
    if(this.s.batch.state==='PAUSED_ADAPTER_UNRESPONSIVE')throw Error('Adaptateur sans réponse : reconnecte ESV avant toute reprise.');

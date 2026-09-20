@@ -1,6 +1,6 @@
 {
   "version": "4.6.0",
-  "note": "Baseline moteur V4.6.0, ré-épinglée en G8.1 après correction du contrat ESV VALIDATE vers le prochain cut non validé. audit/v4.4.0-frozen-engine-hashes.json n'est pas modifié ; les trois autres fichiers y restent gelés octet pour octet et leurs empreintes sont recopiées ci-dessous à l'identique.",
+  "note": "Baseline moteur V4.6.0, ré-épinglée en G8.1 après correction du contrat ESV VALIDATE vers le prochain cut non validé, puis en 4.7 pour le report des unresolved GCV1. audit/v4.4.0-frozen-engine-hashes.json n'est pas modifié ; les trois autres fichiers y restent gelés octet pour octet et leurs empreintes sont recopiées ci-dessous à l'identique. Le nom du fichier reste celui de la baseline ; aucun bump de version produit n'est déclaré ici.",
   "historicalReference": "audit/v4.4.0-frozen-engine-hashes.json",
   "unchangedSince440": {
     "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
@@ -8,16 +8,22 @@
     "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
   },
   "engine": {
-    "src/engine.js": "7e0faf584cd627d1e20efe49097cc6a212dd53138f948f945a2564b30a434698",
+    "src/engine.js": "09aecd679635905433b63a20ddcf58a535acafe7e93103ee1c901131feae3314",
     "previousHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
-    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé",
+    "previousHashG8": "7e0faf584cd627d1e20efe49097cc6a212dd53138f948f945a2564b30a434698",
+    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision",
     "scope": [
       "validateAndNext : la politique allowNavigationEvidence est consultée avant le refus sur relecture manquée",
       "expectedTransition : même onglet, même part et mouvement avant ; un saut exige la provenance déterministe VALIDATE_NEXT_NON_VALIDATED_CUT du bouton ESV observé",
       "manualCompletion : reprise du lot après reprise manuelle, sans prétendre à une validation Banane",
       "init : seul validation-accepted crédite processed au redémarrage ; une commande non acceptée ne sera ni comptée ni renvoyée",
       "assertBatchContextFree : MANUAL_TAKEOVER est un lot actif, que rien ne remplace",
-      "validationAttemptId : chaque validation porte une identité de tentative (batchId + proposalId), et init() ne crédite que sur elle ; pour un état hérité pré-V4.6.0, seul s.validationStarted fait foi, jamais un événement du journal"
+      "validationAttemptId : chaque validation porte une identité de tentative (batchId + proposalId), et init() ne crédite que sur elle ; pour un état hérité pré-V4.6.0, seul s.validationStarted fait foi, jamais un événement du journal",
+      "4.7 unresolvedPolicy : politique pause/defer figée dans le scope à la création du lot ; un lot sans le champ garde la pause historique",
+      "4.7 deferEligibility : la branche defer exige une proposition GCV1 attribuée au cut courant, un LiDAR référencé et au moins un rail explicitement abstenu par GCV1",
+      "4.7 deferTransition : contrat d'acceptation propre à la navigation sans décision, sans exigence de delta +1 ; expectedTransition et ses deux verdicts VALIDATE restent inchangés",
+      "4.7 deferUnresolved/finalizeDefer/recoverDefer : protocole préparé → émission possible → action unique → observation → finalisation durable, avec table de reprise et état PAUSED_DEFER_NAVIGATION_UNCERTAIN",
+      "4.7 batch.deferred : collection et compteurs distincts de processed, skipped, paused, interrupted et manuallyCompleted"
     ]
   }
 }

@@ -1,5 +1,5 @@
 (()=>{'use strict';if(window.__banane3Bridge)return;window.__banane3Bridge=true;
- const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
+ const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
  let pill=null,launcherGeneration=0;
  function setLauncherVisible(visible){if(!pill)return;const shown=visible===true;pill.hidden=!shown;
   if(shown){if(!pill.isConnected)document.documentElement.append(pill);}else if(pill.isConnected)pill.remove();}

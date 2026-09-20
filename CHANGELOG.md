@@ -1,5 +1,95 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — différer un unresolved GCV1 (lot de développement)
+
+Lot de développement, sans bump de version produit : la 4.7.0 officielle
+appartient au lot de release. Ni `src/geometry.js` ni `src/geometry-candidate-v1.js`
+ne sont touchés — leurs empreintes SHA-256 sont inchangées, et A_STAR, S1, les
+seuils, le pool, les clusters, la confiance, les règles d'abstention et la
+sélection GCV1 non plus.
+
+**Le problème.** En Pilote TEST, un rail que GCV1 n'a pas résolu met le lot en
+pause (`PAUSED_UNRESOLVED_RAIL`) et l'opérateur doit intervenir avant que le
+lot reprenne. Terrain : le cut 549 — gauche `candidate / A_STAR`, droite
+`unresolved` — a arrêté le lot, pause conservée après redémarrage. Un seul cut
+non résolu bloque tous les suivants.
+
+**Ce qui change.** Le réglage « Lorsqu'un rail n'est pas résolu » offre
+« Continuer et le différer » (défaut des nouveaux lots Pilote TEST) ou « Mettre
+le lot en pause » (comportement historique, inchangé). En mode différé, le cut
+est quitté par une **navigation sans décision** : aucune correction appliquée,
+aucun VALIDATE, aucun SKIP. Si un seul rail est non résolu, le cut **entier**
+est différé — le rail candidat n'est jamais appliqué d'abord. Le cut source est
+enregistré une fois comme `DEFERRED_UNRESOLVED`, le lot repart sur la cible
+réellement affichée, et le compteur « Différés : N » suit les seules
+finalisations durables.
+
+**Ce que ce lot ne revendique pas.** Aucun gain de résolution GCV1 : un rail
+`unresolved` reste `unresolved`, et l'export le conserve séparément de l'issue
+du pilote. Différer n'est ni une résolution, ni une validation humaine, ni un
+nouveau label scientifique. Le gain est la continuité du traitement et
+l'identification fiable des cas à revoir en GCV2.
+
+**La commande de navigation, et sa limite.** La primitive utilise
+`O2N3DCutNextInvalid3DRail`, bouton ESV relevé dans les sources V2–V2.4.2
+(`audit-corpus.md`, A5), déjà câblé depuis la V3, et dont `DECISIONS.md` pose
+qu'il n'est pas le chemin SKIP. **Aucune source du dépôt ne relie ce bouton au
+raccourci Maj+Z rapporté par l'opérateur.** L'équivalence est déclarée non
+établie dans la preuve elle-même (`shortcutEquivalence.established: false`) et
+reste à vérifier devant ESV. Aucun `KeyboardEvent` « Z » n'est synthétisé :
+rien n'atteste qu'ESV l'écoute, et le défaut 6 d'`AUDIT_PILOTE.md` rappelle
+qu'un événement dispatché ne prouve pas sa prise en compte. Aucun repli : si la
+commande est absente ou désactivée, le lot retombe sur la pause historique avec
+ses quatre actions — jamais sur VALIDATE, SKIP, ou une navigation vers un
+numéro de cut choisi.
+
+**Protocole durable.** Il n'existe aucune transaction commune entre le stockage
+Banane et l'effet ESV, et le lot ne prétend pas le contraire. Il conserve
+explicitement la fenêtre où une commande a pu partir : intention persistée, puis
+marqueur « émission possible » persisté **avant** l'appel, puis une action au
+plus, puis observation, puis finalisation durable ; l'intention active n'est
+effacée qu'ensuite. Au redémarrage : un état préparé n'a pu rien émettre et le
+cut est réévalué ; un état « émission possible » sans progression acceptée donne
+`PAUSED_DEFER_NAVIGATION_UNCERTAIN`, sans aucun renvoi de commande ; une
+observation acceptée mais non finalisée complète ses seules écritures locales ;
+un état finalisé ne rejoue rien. Un timeout ou un accusé absent ne prouvent pas
+la non-émission.
+
+**Acceptation.** Même page, même part, cut strictement supérieur, identités
+source et cible utilisables, action identifiée et observation corrélée à
+l'opération. Aucun delta de +1 n'est exigé et aucun cut intermédiaire n'est
+inventé : 549 → 552 donne uniquement 549 différé, avec 552 comme cible
+observée ; 550 et 551 n'entrent dans aucune collection. Les bornes s'appliquent
+après validation de la transition : 600 différé avec 604 affiché termine
+normalement le lot, sans capture ni décision sur 604. Les deux verdicts de
+transition VALIDATE — `IMMEDIATE_SUCCESSOR_SAME_PAGE_AND_PART` et
+`NEXT_NON_VALIDATED_CUT_SAME_PAGE_AND_PART` — sont inchangés : la navigation
+sans décision a son propre contrat.
+
+### Vérification terrain à faire dans Edge
+
+Les tests Node ne démontrent pas l'effet réel de Maj+Z. Sur un cas unresolved
+confirmé — le cut 549 est le témoin historique, à revérifier tel quel sans le
+modifier pour retrouver l'ancien résultat :
+
+1. Lancer un lot Pilote TEST avec « Continuer et le différer », bornes couvrant
+   le cut et au moins un cut résoluble après lui.
+2. Au cut non résolu, vérifier dans le journal : `defer-intent` avec l'identité
+   complète et le `proposalId` exact, puis `defer-command-possible`, puis
+   `defer-navigation-accepted`, puis `defer-finalized`. Vérifier l'absence de
+   `applied-verified`, `validation-intent` et `explicit-skip-intent` pour ce cut.
+3. Comparer la cible enregistrée (`nextIdentity`) au cut réellement affiché par
+   ESV, et vérifier que le compteur affiche « Différés : 1 ».
+4. Vérifier que le lot poursuit et traite normalement le cut résoluble suivant.
+5. Si la page le permet : recharger l'extension et vérifier qu'aucune commande
+   n'est renvoyée et que le compteur ne bouge pas ; puis différer un cut dont la
+   cible dépasse la borne et vérifier que le lot se termine sans toucher la cible.
+
+Ce qui reste à établir par cet essai, et par lui seul : que la commande utilisée
+est bien l'action que l'opérateur appelle Maj+Z, et qu'elle ne porte aucune
+décision ESV. Si elle s'avérait effectuer une décision, le contrat « navigation
+sans décision » de ce lot ne serait pas tenu et la primitive devrait changer.
+
 ## 4.6.0 — machine à états du pilote
 
 Lot V4.6.0 : les défauts 4 et 9 d'`AUDIT_PILOTE.md`, les deux que l'audit avait
