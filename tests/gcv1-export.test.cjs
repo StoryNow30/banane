@@ -91,6 +91,40 @@ test('a legacy observation is not assigned to the current export session',()=>{
  assert.equal(diagnostic.observations[0].sessionScope,'legacy-unscoped');
 });
 
+test('an incomplete legacy runtime identity cannot match a complete GCV1 observation',()=>{
+ const id=identity(497),events=[
+  event('gcv1-shadow-observed',{identity:id,batchId:'batch-legacy',proposalId:'proposal-A',shadow:{selection:{fallback:false},rails:{},summary:{}}}),
+  event('validation-accepted',{identity:{pageId:id.pageId,part:id.part},batchId:'batch-legacy',transition:'INCOMPLETE_IDENTITY'}),
+ ];
+ const observation=Export.buildDiagnostic({events}).observations[0];
+ assert.equal(observation.runtime.validationAccepted,null);
+ assert.equal(observation.runtime.transition,null);
+});
+
+test('an incomplete or different preceding capture identity is never used as LiDAR provenance',()=>{
+ for(const beforeIdentity of [
+  {pageId:'page-test',part:9,shape:'U50',frameId:'frame-test'},
+  identity(496),
+ ]){
+  const events=[
+   event('before-captured',{identity:beforeIdentity,lidarId:'unproven-lidar'}),
+   event('gcv1-shadow-observed',{identity:identity(497),proposalId:'proposal-A',shadow:{selection:{fallback:false},rails:{},summary:{}}}),
+  ];
+  const lidar=Export.buildDiagnostic({events}).observations[0].lidar;
+  assert.equal(lidar.captureId,null);assert.equal(lidar.association,'unavailable');
+ }
+});
+
+test('a complete identical legacy identity still supports an unambiguous batch fallback',()=>{
+ const id=identity(497),events=[
+  event('gcv1-shadow-observed',{identity:id,batchId:'batch-legacy',proposalId:'proposal-A',shadow:{selection:{fallback:false},rails:{},summary:{}}}),
+  event('validation-accepted',{identity:{...id},batchId:'batch-legacy',transition:'COMPLETE_LEGACY_MATCH',nextIdentity:identity(499)}),
+ ];
+ const runtime=Export.buildDiagnostic({events}).observations[0].runtime;
+ assert.equal(runtime.validationAccepted.transition,'COMPLETE_LEGACY_MATCH');
+ assert.equal(runtime.transition,'COMPLETE_LEGACY_MATCH');assert.equal(runtime.nextIdentity.cut,499);
+});
+
 test('complete corpus links available LiDAR and reports a missing capture without mutation',async()=>{
  const diagnostic=Export.buildDiagnostic({version:'4.6.0',sessionId:'session-test',events:sourceEvents()});
  const before=JSON.stringify(diagnostic),cloud={captureId:'lidar-497',pointsSceneRelative:[[1,2,3]]};

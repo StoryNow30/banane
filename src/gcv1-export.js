@@ -6,8 +6,10 @@
  'use strict';
 
  const clone=value=>value==null?value:JSON.parse(JSON.stringify(value));
- const sameIdentity=(a,b)=>!!a&&!!b&&['pageId','part','cut','shape','frameId']
-  .every(key=>a[key]==null||b[key]==null||a[key]===b[key]);
+ const IDENTITY_FIELDS=['pageId','part','cut','shape','frameId'];
+ const sameCompleteIdentity=(a,b)=>!!a&&!!b&&IDENTITY_FIELDS.every(key=>
+  Object.prototype.hasOwnProperty.call(a,key)&&Object.prototype.hasOwnProperty.call(b,key)&&
+  a[key]!=null&&b[key]!=null&&a[key]===b[key]);
  const proposalIdOf=event=>event?.proposalId??event?.proposal?.id??event?.paused?.proposal?.id??null;
  const batchIdOf=event=>event?.batchId??event?.batch?.id??event?.paused?.batchId??null;
 
@@ -18,14 +20,14 @@
    * Pour les anciens événements sans proposalId, le couple lot+cible n'est
    * utilisable que si une seule proposition explicite existe dans ce scope. */
   const scopedProposalIds=new Set(events.filter(event=>batchId&&batchIdOf(event)===batchId&&
-   sameIdentity(event.identity,observation.identity)).map(proposalIdOf).filter(Boolean));
+   sameCompleteIdentity(event.identity,observation.identity)).map(proposalIdOf).filter(Boolean));
   const fallbackUnambiguous=scopedProposalIds.size<=1&&
    (!scopedProposalIds.size||proposalId&&scopedProposalIds.has(proposalId));
   return events.filter(event=>{
    if(event.type==='gcv1-shadow-observed')return false;
    const eventProposalId=proposalIdOf(event);
    if(eventProposalId)return !!proposalId&&eventProposalId===proposalId;
-   return fallbackUnambiguous&&!!batchId&&batchIdOf(event)===batchId&&sameIdentity(event.identity,observation.identity);
+   return fallbackUnambiguous&&!!batchId&&batchIdOf(event)===batchId&&sameCompleteIdentity(event.identity,observation.identity);
   });
  }
 
@@ -44,7 +46,7 @@
   for(let i=index-1;i>=0;i--){
    const candidate=events[i];
    if(candidate.type==='gcv1-shadow-observed'||candidate.type==='batch-started')break;
-   if(candidate.type==='before-captured'&&candidate.lidarId&&sameIdentity(candidate.identity,event.identity))
+   if(candidate.type==='before-captured'&&candidate.lidarId&&sameCompleteIdentity(candidate.identity,event.identity))
     return {captureId:candidate.lidarId,association:'preceding-before-captured-same-identity'};
   }
   return {captureId:null,association:'unavailable'};
