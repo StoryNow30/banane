@@ -39,7 +39,8 @@ class SimulatedESV{
   this.calls.push('nextWithoutDecision');this.deferCalls.push({identity:K.clone(identity),operationId});
   const evidence={format:'banane-next-without-decision-v1',operationId:operationId??null,action:'NEXT_WITHOUT_DECISION',
    trigger:'observed-esv-next-invalid-rail-button',command:{id:'O2N3DCutNextInvalid3DRail',exists:true,disabled:false},
-   shortcutEquivalence:{claimedShortcut:'Maj+Z',established:false},operatorDecision:null,
+   shortcutEquivalence:{claimedShortcut:'Maj+Z',established:true,
+    source:'observation du code ESV chargé, non documentation fournisseur'},operatorDecision:null,
    commandScope:'banane-operation-only',bananeValidated:false,applyCommandSent:false,
    validationCommandSent:false,skipCommandSent:false,commandRequested:true,commandInvoked:true,commandSent:true,
    beforeNavigationIdentity:K.completeIdentity(identity),navigationObserved:false,serverConfirmed:false,

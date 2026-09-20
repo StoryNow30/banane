@@ -252,15 +252,31 @@
   * passe PAS par lui. C'est donc la seule commande native observée du dépôt qui
   * change de cut sans porter de décision.
   *
-  * CE QUE LE CODE ACCESSIBLE N'ÉTABLIT PAS. Aucune source du dépôt ne relie ce
-  * bouton au raccourci Maj+Z rapporté par l'opérateur — ni binding clavier, ni
-  * libellé, ni trace. L'équivalence est donc rendue telle quelle dans la preuve
-  * (`shortcutEquivalence.established:false`) et reste à établir devant ESV.
+  * L'ÉQUIVALENCE AVEC MAJ+Z EST ÉTABLIE — inspection terrain du 20/09/2026.
+  * Le JavaScript ESV réellement chargé dans Edge a été lu. Son gestionnaire
+  * clavier contient `e.shiftKey && 90 == e.which ? t.buttonNextInvalidCut()`, et
+  * le bouton est câblé par `$('#O2N3DCutNextInvalid3DRail').click(function(){
+  * t.buttonNextInvalidCut() })`. Les deux chemins convergent donc sur la MÊME
+  * fonction native, `buttonNextInvalidCut()`, qui appelle
+  * `loadNextInvalidCut('positive')`.
   *
-  * POURQUOI PAS UN KeyboardEvent « Z ». Rien n'atteste qu'ESV écoute cette
-  * touche, et le défaut 6 d'AUDIT_PILOTE.md rappelle qu'un KeyboardEvent
-  * dispatché ne prouve pas sa prise en compte. Une primitive factice serait pire
-  * qu'une limite déclarée.
+  * Les chemins décisionnels sont séparés dans ce même code :
+  * `buttonValidateRail()` et `buttonValidateRailAndNext()` passent par
+  * `railPairUpdated(…, 'valid', …)`, `buttonSkipRail()` par
+  * `railPairUpdated(…, 'skipped', …)`. Le chemin utilisé ici n'en touche aucun :
+  * le contrat « navigation sans décision » est donc observé, pas supposé.
+  *
+  * CE QUE CELA NE REND PAS GARANTI. Cette preuve vient de l'observation du code
+  * chargé, pas d'une documentation du fournisseur : `buttonNextInvalidCut`,
+  * `loadNextInvalidCut` et l'identifiant DOM restent des symboles internes non
+  * publiés, susceptibles de changer à une mise à jour d'ESV (KI-026). C'est une
+  * intégration, pas un contrat public.
+  *
+  * POURQUOI PAS UN KeyboardEvent « Z » MALGRÉ TOUT. L'inspection montre bien un
+  * gestionnaire clavier, mais le défaut 6 d'AUDIT_PILOTE.md rappelle qu'un
+  * KeyboardEvent dispatché ne prouve pas sa prise en compte. Le bouton atteint
+  * la même fonction et rend, lui, un état vérifiable avant l'action (présence,
+  * `disabled`) : il reste le chemin retenu.
   *
   * AUCUN REPLI. Commande absente, désactivée ou cible différente : l'opération
   * rend un refus AVANT toute émission. Ni VALIDATE, ni SKIP, ni saisie d'un
@@ -274,9 +290,20 @@
    const evidence={format:'banane-next-without-decision-v1',operationId:operationId??null,
      action:'NEXT_WITHOUT_DECISION',trigger:'observed-esv-next-invalid-rail-button',startedAt,
      command:commandInfo(selectors.next),
-     shortcutEquivalence:{claimedShortcut:'Maj+Z',established:false,
-       basis:'bouton ESV observé dans les sources V2–V2.4.2 ; aucun lien code entre ce bouton et le raccourci',
-       verification:'essai Edge requis'},
+     /* Établie par inspection du JavaScript ESV chargé, pas par une
+      * documentation du fournisseur : `source` et `stability` le disent, pour
+      * que l'export ne laisse jamais lire un contrat public là où il n'y a
+      * qu'une intégration observée. */
+     shortcutEquivalence:{claimedShortcut:'Maj+Z',established:true,
+       basis:'inspection terrain du JavaScript ESV : le gestionnaire clavier (e.shiftKey && 90 == e.which) et #O2N3DCutNextInvalid3DRail appellent tous deux buttonNextInvalidCut(), qui appelle loadNextInvalidCut("positive")',
+       verification:'confirmé par inspection directe du JavaScript ESV dans Edge le 2026-09-20',
+       observedPath:['keydown shiftKey && which===90','buttonNextInvalidCut()','loadNextInvalidCut("positive")'],
+       buttonPath:['#O2N3DCutNextInvalid3DRail click','buttonNextInvalidCut()','loadNextInvalidCut("positive")'],
+       decisionPathsObservedSeparate:{
+         validate:'buttonValidateRail() / buttonValidateRailAndNext() → railPairUpdated(…, "valid", …)',
+         skip:'buttonSkipRail() → railPairUpdated(…, "skipped", …)'},
+       source:'observation du code ESV chargé, non documentation fournisseur',
+       stability:'symboles et identifiant DOM internes ESV, non documentés publiquement : susceptibles de changer (KI-026)'},
      /* Corrélation réellement disponible : ESV ne renvoie pas d'identifiant
       * d'opération. Elle tient à la requête/réponse du bridge, qui relie cette
       * preuve à UN appel, et au contrôle de cible fait dans la page juste avant

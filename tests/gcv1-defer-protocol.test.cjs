@@ -2,10 +2,15 @@
  *
  * Ce que ces essais démontrent : qu'un cut réellement non résolu par GCV1 peut
  * être quitté par une NAVIGATION SANS DÉCISION, qu'il est enregistré une fois,
- * et que rien d'autre ne l'est. Ce qu'ils ne démontrent PAS : l'effet réel de
- * Maj+Z dans Edge. Une doublure ESV ne prouve pas ce qu'ESV fait — voir la
- * procédure terrain de CHANGELOG.md et la limite déclarée dans
- * `shortcutEquivalence` de src/adapter-page.js.
+ * et que rien d'autre ne l'est. Ce qu'ils ne démontrent PAS : le comportement
+ * d'ESV lui-même. Une doublure ESV ne prouve pas ce qu'ESV fait, et aucun essai
+ * de ce banc n'exécute le raccourci clavier réel.
+ *
+ * L'équivalence Maj+Z ↔ O2N3DCutNextInvalid3DRail, elle, ne dépend plus de ce
+ * banc : elle a été établie le 20/09/2026 par inspection du JavaScript ESV
+ * chargé dans Edge (voir `shortcutEquivalence` dans src/adapter-page.js et
+ * D-4.7b de DECISIONS.md). Ce qui reste à vérifier sur le terrain est le
+ * déroulé complet du report en session réelle — procédure dans CHANGELOG.md.
  *
  * Le banc est découpé en trois fichiers pour tenir le budget de temps par
  * fichier de tools/verify.cjs ; le harnais commun est dans tests/helpers/defer.cjs.

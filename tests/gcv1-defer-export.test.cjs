@@ -2,10 +2,15 @@
  *
  * Ce que ces essais démontrent : qu'un cut réellement non résolu par GCV1 peut
  * être quitté par une NAVIGATION SANS DÉCISION, qu'il est enregistré une fois,
- * et que rien d'autre ne l'est. Ce qu'ils ne démontrent PAS : l'effet réel de
- * Maj+Z dans Edge. Une doublure ESV ne prouve pas ce qu'ESV fait — voir la
- * procédure terrain de CHANGELOG.md et la limite déclarée dans
- * `shortcutEquivalence` de src/adapter-page.js.
+ * et que rien d'autre ne l'est. Ce qu'ils ne démontrent PAS : le comportement
+ * d'ESV lui-même. Une doublure ESV ne prouve pas ce qu'ESV fait, et aucun essai
+ * de ce banc n'exécute le raccourci clavier réel.
+ *
+ * L'équivalence Maj+Z ↔ O2N3DCutNextInvalid3DRail, elle, ne dépend plus de ce
+ * banc : elle a été établie le 20/09/2026 par inspection du JavaScript ESV
+ * chargé dans Edge (voir `shortcutEquivalence` dans src/adapter-page.js et
+ * D-4.7b de DECISIONS.md). Ce qui reste à vérifier sur le terrain est le
+ * déroulé complet du report en session réelle — procédure dans CHANGELOG.md.
  *
  * Le banc est découpé en trois fichiers pour tenir le budget de temps par
  * fichier de tools/verify.cjs ; le harnais commun est dans tests/helpers/defer.cjs.
@@ -27,10 +32,33 @@ test('la primitive réelle clique la commande ESV observée, sans VALIDATE ni SK
  assert.equal(evidence.bananeValidated,false);assert.equal(evidence.validationCommandSent,false);assert.equal(evidence.skipCommandSent,false);
  // Aucun raccourci clavier relayé : la primitive n'invente pas de décision.
  assert.equal(f.keyboard.length,0);
- // La limite est DÉCLARÉE, pas masquée.
- assert.equal(evidence.shortcutEquivalence.established,false);
  assert.equal(evidence.correlation.esvEchoesOperationId,false);
  assert.equal(evidence.correlation.targetVerifiedInPageBeforeCommand,true);
+});
+
+/* Garde de non-régression de la MÉTADONNÉE, pas du raccourci lui-même : rien
+ * ici n'exécute ESV. L'équivalence Maj+Z ↔ O2N3DCutNextInvalid3DRail a été
+ * établie le 20/09/2026 par inspection du JavaScript ESV chargé dans Edge ; cet
+ * essai vérifie que la preuve la porte, et qu'elle continue de dire d'où elle
+ * vient et ce qu'elle ne garantit pas. */
+test('la preuve porte l’équivalence Maj+Z établie, sa source et sa limite de stabilité',async()=>{
+ const f=page(),before=await f.call('state');
+ const {shortcutEquivalence:eq}=await f.call('nextWithoutDecision',before.identity,{part:23},'op-eq');
+ assert.equal(eq.claimedShortcut,'Maj+Z');
+ assert.equal(eq.established,true);
+ // Les deux chemins observés convergent sur la même fonction native ESV.
+ assert.match(eq.basis,/buttonNextInvalidCut\(\)/);
+ assert.match(eq.basis,/loadNextInvalidCut\("positive"\)/);
+ assert.match(eq.basis,/O2N3DCutNextInvalid3DRail/);
+ assert.equal(eq.observedPath.at(-1),'loadNextInvalidCut("positive")');
+ assert.equal(eq.buttonPath.at(-1),'loadNextInvalidCut("positive")');
+ assert.match(eq.verification,/2026-09-20/);
+ // Ni VALIDATE ni SKIP : les chemins décisionnels observés restent distincts.
+ assert.match(eq.decisionPathsObservedSeparate.validate,/railPairUpdated.*valid/);
+ assert.match(eq.decisionPathsObservedSeparate.skip,/railPairUpdated.*skipped/);
+ // Observation du code chargé, pas contrat public : la limite reste écrite.
+ assert.match(eq.source,/non documentation fournisseur/);
+ assert.match(eq.stability,/susceptibles de changer/);
 });
 
 test('la primitive réelle refuse une cible différente avant toute émission',async()=>{

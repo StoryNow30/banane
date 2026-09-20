@@ -30,18 +30,37 @@ du pilote. Différer n'est ni une résolution, ni une validation humaine, ni un
 nouveau label scientifique. Le gain est la continuité du traitement et
 l'identification fiable des cas à revoir en GCV2.
 
-**La commande de navigation, et sa limite.** La primitive utilise
-`O2N3DCutNextInvalid3DRail`, bouton ESV relevé dans les sources V2–V2.4.2
-(`audit-corpus.md`, A5), déjà câblé depuis la V3, et dont `DECISIONS.md` pose
-qu'il n'est pas le chemin SKIP. **Aucune source du dépôt ne relie ce bouton au
-raccourci Maj+Z rapporté par l'opérateur.** L'équivalence est déclarée non
-établie dans la preuve elle-même (`shortcutEquivalence.established: false`) et
-reste à vérifier devant ESV. Aucun `KeyboardEvent` « Z » n'est synthétisé :
-rien n'atteste qu'ESV l'écoute, et le défaut 6 d'`AUDIT_PILOTE.md` rappelle
-qu'un événement dispatché ne prouve pas sa prise en compte. Aucun repli : si la
-commande est absente ou désactivée, le lot retombe sur la pause historique avec
-ses quatre actions — jamais sur VALIDATE, SKIP, ou une navigation vers un
-numéro de cut choisi.
+**La commande de navigation, et l'équivalence Maj+Z — établie le 20/09/2026.**
+La primitive utilise `O2N3DCutNextInvalid3DRail`, bouton ESV relevé dans les
+sources V2–V2.4.2 (`audit-corpus.md`, A5) et déjà câblé depuis la V3.
+L'inspection directe du JavaScript ESV chargé dans Edge, le 20 septembre 2026,
+établit que ce bouton **et** le raccourci Maj+Z atteignent la même fonction
+native :
+
+```text
+gestionnaire clavier : e.shiftKey && 90 == e.which ? t.buttonNextInvalidCut()
+bouton               : $("#O2N3DCutNextInvalid3DRail").click(… t.buttonNextInvalidCut())
+les deux             → buttonNextInvalidCut() → loadNextInvalidCut("positive")
+```
+
+Les chemins décisionnels sont séparés dans ce même code :
+`buttonValidateRail()` et `buttonValidateRailAndNext()` passent par
+`railPairUpdated(…, "valid", …)`, `buttonSkipRail()` par
+`railPairUpdated(…, "skipped", …)`. Le chemin utilisé ici n'en touche aucun : le
+contrat « navigation sans décision » est donc **observé**, plus supposé. La
+preuve retournée porte `shortcutEquivalence.established: true` avec les deux
+chemins et la date d'inspection.
+
+**Ce que cette preuve ne rend pas garanti.** Elle vient de l'observation du code
+chargé, pas d'une documentation du fournisseur. `buttonNextInvalidCut`,
+`loadNextInvalidCut` et l'identifiant DOM restent des symboles internes non
+publiés, susceptibles de changer à une mise à jour d'ESV : c'est une
+intégration, pas un contrat public (KI-026). Aucun `KeyboardEvent` « Z » n'est
+synthétisé pour autant — le défaut 6 d'`AUDIT_PILOTE.md` rappelle qu'un
+événement dispatché ne prouve pas sa prise en compte, tandis que le bouton rend
+un état vérifiable avant l'action. Aucun repli : si la commande est absente ou
+désactivée, le lot retombe sur la pause historique avec ses quatre actions —
+jamais sur VALIDATE, SKIP, ou une navigation vers un numéro de cut choisi.
 
 **Protocole durable.** Il n'existe aucune transaction commune entre le stockage
 Banane et l'effet ESV, et le lot ne prétend pas le contraire. Il conserve
@@ -68,9 +87,11 @@ sans décision a son propre contrat.
 
 ### Vérification terrain à faire dans Edge
 
-Les tests Node ne démontrent pas l'effet réel de Maj+Z. Sur un cas unresolved
-confirmé — le cut 549 est le témoin historique, à revérifier tel quel sans le
-modifier pour retrouver l'ancien résultat :
+L'équivalence Maj+Z ↔ `O2N3DCutNextInvalid3DRail` est établie par inspection du
+code ESV (ci-dessus) ; ce qui reste à vérifier est le **déroulé complet du
+report en session réelle**, qu'aucun test Node ne démontre. Sur un cas
+unresolved confirmé — le cut 549 est le témoin historique, à revérifier tel quel
+sans le modifier pour retrouver l'ancien résultat :
 
 1. Lancer un lot Pilote TEST avec « Continuer et le différer », bornes couvrant
    le cut et au moins un cut résoluble après lui.
@@ -85,10 +106,16 @@ modifier pour retrouver l'ancien résultat :
    n'est renvoyée et que le compteur ne bouge pas ; puis différer un cut dont la
    cible dépasse la borne et vérifier que le lot se termine sans toucher la cible.
 
-Ce qui reste à établir par cet essai, et par lui seul : que la commande utilisée
-est bien l'action que l'opérateur appelle Maj+Z, et qu'elle ne porte aucune
-décision ESV. Si elle s'avérait effectuer une décision, le contrat « navigation
-sans décision » de ce lot ne serait pas tenu et la primitive devrait changer.
+Ce qui reste à établir par cet essai : que la chaîne complète — intention,
+émission, observation, finalisation, reprise du lot — se comporte en session
+ESV réelle comme au banc, et que la cible enregistrée est bien celle qu'ESV
+affiche. L'identité de l'action, elle, n'est plus en question.
+
+Il reste utile d'y vérifier au passage que le bouton est toujours présent et
+actif : c'est un symbole interne ESV, qu'une mise à jour du fournisseur peut
+déplacer ou renommer sans préavis (KI-026). Si cela arrivait, la primitive rend
+`NAVIGATION_COMMAND_UNAVAILABLE` et le lot retombe sur la pause historique sans
+rien commander — l'échec est visible, jamais silencieux.
 
 ## 4.6.0 — machine à états du pilote
 
