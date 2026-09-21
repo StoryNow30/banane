@@ -1,13 +1,70 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — consolidation QA du garde d'écartement (tests et documentation)
+
+Aucune modification de logique : `src/engine.js`, `src/gauge.js`,
+`src/gcv1-shadow.js`, `background.js`, `src/geometry.js`,
+`src/geometry-candidate-v1.js` et `src/adapter-page.js` gardent leurs
+empreintes **au bit près**. Ce lot ferme les lacunes d'essais et de
+documentation relevées par la QA indépendante, qui n'avait reproduit **aucun
+défaut fonctionnel** du garde.
+
+**La portée du dernier garde est GLOBALE, et c'est voulu.** Le contrat
+d'écartement est une contrainte **physique** de la voie : il ne dépend pas de
+l'algorithme qui a produit la proposition. Le garde vit donc dans
+`Engine.apply()`, point de passage unique de toute commande de déplacement, et
+s'applique à tous les appelants — lot Pilote GCV1, lot automatique V4.6, et
+correction assistée d'un seul cut (« Accepter », que `background.js` route vers
+`Engine.apply(false)`). Quel que soit le moteur, Banane ne commande pas une
+paire hors de [1405, 1470] mm. Trois essais l'épinglent désormais
+explicitement, dont un lot V4.6 sans aucune attribution GCV1, et un contrôle
+statique vérifie que le garde ne consulte ni `geometryEngine` ni le bloc
+`gcv1` : sa seule entrée est la paire prévue.
+
+**GCV1 reste le seul chemin qui transforme un refus en report.** Pour lui,
+l'étage A rend les deux rails abstenus et le cut part en
+`DEFERRED_UNRESOLVED` par une navigation sans décision. Pour les autres modes,
+le refus du dernier garde est un **arrêt sûr sans commande** : rien n'est muté,
+`reconcileRequired` reste faux, et le lot s'arrête en `ERROR` avec l'événement
+`gauge-contract-violation`. Un déclenchement du dernier garde dans un lot GCV1
+est une **violation d'invariant** — l'étage A aurait dû s'abstenir — et jamais
+une seconde manière silencieuse de décider.
+
+**Essais ajoutés.** `tests/gauge-deferred.test.cjs` rejoue le chemin complet
+sur le cut **réel 850** de la partie 15, avec ses poses avant et ses deltas
+publiés : étage A → abstention des deux rails → `toRuntimeRails` en
+`geometry-candidate-v1-abstention` / `confidence 0` / `delta null` →
+`deferEligibility` éligible → `DEFERRED_UNRESOLVED` finalisé, avec pour seules
+commandes `capture` puis `nextWithoutDecision`. Le même fichier épingle la
+violation d'invariant : étage A contourné, la paire atteint la boucle
+automatique, le lot s'arrête sans aucune commande et sans état partiel.
+`tests/gauge-scope.test.cjs` couvre les modes non-GCV1 ci-dessus.
+`tests/background.test.cjs` épingle désormais l'ordre de chargement de
+`src/gauge.js` avant `src/engine.js` et `src/gcv1-shadow.js`, qui en dépendent
+au chargement — le même contrôle statique que celui protégeant le cerveau.
+`tests/fixtures/gauge-part15-smoke.json` gagne les matrices de repère des
+rails, relevées telles quelles dans le bilan du lot, pour que le cas réel
+puisse traverser le moteur.
+
 ## 4.7 — garde d'écartement de paire, deux défenses indépendantes
 
 Le lot Pilote réel du 21 septembre sur la partie 15 a appliqué **puis validé**
-dix paires dont l'écartement final était hors du contrat métier : 1503,5 ·
-1507,8 · 1508,5 · 1509,3 · 1509,8 · 1509,9 · 1510,1 · 1513,0 · 1513,5 et
-1564,0 mm, pour un contrat admissible de 1405 à 1470 mm. Chaque rail était
+dix paires dont l'écartement final était hors du contrat métier — écartements
+**OBSERVÉS**, c'est-à-dire relus dans ESV après application : 1503,5 · 1507,8 ·
+1508,5 · 1509,3 · 1509,8 · 1509,9 · 1510,1 · 1513,0 · 1513,5 et 1564,0 mm,
+pour un contrat admissible de 1405 à 1470 mm. Chaque rail était
 individuellement plausible ; c'est la **paire** qui était fausse, et aucun
 étage ne mesurait son écartement.
+
+**Deux grandeurs distinctes, à ne jamais confondre.** L'écartement **PRÉDIT**
+est calculé avant toute commande, sur l'état attendu `K.expectedPoses` : c'est
+la seule valeur que les deux gardes connaissent au moment de décider.
+L'écartement **OBSERVÉ** (ou relu) est mesuré après l'application réelle dans
+ESV. Ils diffèrent du bruit de placement d'ESV — par exemple sur le cut 850,
+**prédit ≈ 1510,5 mm** contre **observé ≈ 1510,1 mm**. Sur les 56 paires
+appliquées du lot, `max |prédit − observé| = 0,5253 mm`, sous la tolérance de
+relecture de 1 mm du moteur, et **0 changement de classe sur 56** : aucune
+paire ne change de côté du contrat entre la prédiction et la relecture.
 
 **Cause.** `src/gauge.js` existait mais n'était chargé par **rien** — ni
 `importScripts`, ni les scripts de page, ni le panneau, ni un `require` de

@@ -282,6 +282,22 @@ test('le cerveau se charge entre la géométrie gelée et le moteur',()=>{
  assert.ok(rang('src/geometry-brain.js')<rang('src/engine.js'),
   'la composition doit être en place AVANT que le moteur lie sa géométrie');
 });
+/* Même raison, autre dépendance : `src/engine.js` et `src/gcv1-shadow.js`
+ * lisent tous deux le contrat d'écartement depuis globalThis au chargement, et
+ * refusent de se construire sans lui (« contrat d'écartement absent »). Une
+ * réorganisation de la liste qui placerait `gauge.js` après eux casserait le
+ * chargement de l'extension en silence dans ce banc Node, où les deux modules
+ * sont obtenus par `require`. Le contrôle est donc statique, comme pour le
+ * cerveau. */
+test('le contrat d’écartement se charge avant le moteur et avant la composition GCV1',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../background.js'),'utf8');
+ const liste=src.match(/importScripts\(([^)]*)\)/s)[1];
+ const rang=f=>liste.indexOf("'"+f+"'");
+ assert.ok(rang('src/gauge.js')>=0,'src/gauge.js absent de importScripts');
+ for(const f of ['src/gcv1-shadow.js','src/engine.js'])
+  assert.ok(rang('src/gauge.js')<rang(f),
+   'src/gauge.js doit être chargé AVANT '+f+' qui en dépend au chargement');
+});
 test('la politique « attempt » coupe les sélections, sauf accord explicite',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../background.js'),'utf8');
  assert.match(src,/lowConfidence==='attempt'/,'la politique doit être lue au démarrage');
