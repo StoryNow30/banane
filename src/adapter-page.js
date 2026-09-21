@@ -9,6 +9,12 @@
  const P=window.BananeSettings?.pilote||{tentativesParVue:3,stabiliteMs:800,budgetCaptureMs:60000,
    sondageMs:80,lecturesStables:3,attenteMs:12000,attenteNavigationMs:15000,attenteClicMs:5000};
  const pageId=K.uid(),objects=new WeakMap(),frames=new WeakMap(),nativeFrames=new WeakMap(),nativeViews=new WeakMap();let frame=null,cancelled=false;
+ /* D1. Annulations et invocations CORRÉLÉES À UNE OPÉRATION, par opposition au
+  * drapeau `cancelled` que chaque entrée de l'adaptateur remet à faux. Ces deux
+  * collections ne sont jamais vidées par une autre requête : une annulation
+  * connue de la page reste connue, et une opération déjà invoquée ne peut pas
+  * l'être une seconde fois. Elles vivent le temps du document, comme la page. */
+ const cancelledOperations=new Set(),invokedOperations=new Map();
  const selectors={label:'O2N3DCutDescription',shape:'O2N3DCutShapeInfo',left:'O2N3DCutLRClick',right:'O2N3DCutRRClick',validate:'O2N3DCutValidate3DRail',next:'O2N3DCutNextInvalid3DRail'};
  const objectId=o=>{if(!objects.has(o))objects.set(o,K.uid());return objects.get(o);};
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -286,7 +292,7 @@
   * sous forme de message, ce qui perdrait la distinction entre « rien n'est
   * parti » et « on ne sait pas ». */
  async function nextWithoutDecision(identity,scope={},operationId=null,progress=()=>{}){
-   cancelled=false;const startedAt=new Date().toISOString();
+   const startedAt=new Date().toISOString();
    const evidence={format:'banane-next-without-decision-v1',operationId:operationId??null,
      action:'NEXT_WITHOUT_DECISION',trigger:'observed-esv-next-invalid-rail-button',startedAt,
      command:commandInfo(selectors.next),
@@ -317,6 +323,31 @@
      beforeNavigationIdentity:null,navigationObserved:false,serverConfirmed:false,afterObserved:false,
      nextIdentity:null,nextIdentityComplete:false,nextReady:null,navigationAfter:null,observedAt:null,refusal:null};
    const refuse=(code,message)=>{evidence.refusal={code,message,at:new Date().toISOString()};return evidence;};
+   /* D1, revue Astra. ANNULATION PORTÉE PAR L'OPÉRATION.
+    *
+    * `cancelled` est un drapeau de module que CHAQUE entrée de l'adaptateur
+    * remet à faux : une requête arrivée après un `cancel` effaçait donc
+    * l'annulation et cliquait quand même. `cancelledOperations` ne l'est
+    * jamais — aucune autre requête, aucun callback tardif n'en retire une
+    * entrée — et le contrôle vaut quel que soit l'ordre d'arrivée des deux
+    * messages. C'est ce qui rend l'annulation corrélée à SON opération.
+    *
+    * `invokedOperations` garantit au plus UNE invocation par opération : un
+    * message dupliqué ou rejoué ne peut pas produire un second clic. Il rend
+    * alors `commandInvoked:'unknown'` — cet appel-ci n'a pas cliqué, mais
+    * l'opération, elle, a déjà pu produire son effet. */
+   if(operationId&&cancelledOperations.has(operationId))
+     return refuse('CANCELLED_BEFORE_COMMAND','Opération annulée avant toute action : '+operationId);
+   if(operationId&&invokedOperations.has(operationId)){
+     evidence.commandInvoked='unknown';evidence.operationAlreadyInvoked=true;
+     evidence.firstInvokedAt=invokedOperations.get(operationId);
+     return refuse('OPERATION_ALREADY_INVOKED','Cette opération a déjà été invoquée une fois ; aucune seconde action.');
+   }
+   /* Le drapeau global est remis à faux pour que les attentes de CETTE
+    * opération fonctionnent, comme le font les autres entrées de l'adaptateur.
+    * Il est d'abord relevé : un `cancel` sans identifiant d'opération — un
+    * délai de bridge sur une autre requête — est consigné, jamais silencieux. */
+   evidence.inheritedBlanketCancel=cancelled===true;cancelled=false;
    // Identité complète vérifiée AU PLUS PRÈS du point d'effet, dans la page.
    let before;try{before=assertExpected(identity);}
    catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
@@ -337,10 +368,22 @@
    const button=document.getElementById(selectors.next);
    if(!button||button.disabled)return refuse('NAVIGATION_COMMAND_UNAVAILABLE','Commande ESV indisponible : '+selectors.next);
    progress('defer-before-command',{identity:evidence.beforeNavigationIdentity,operationId:evidence.operationId,command:evidence.command});
+   /* D1. DERNIER INSTANT ENCORE RÉVOCABLE DANS LA PAGE. `progress()` poste un
+    * message et les contrôles ci-dessus lisent le DOM : une annulation a pu
+    * arriver entre-temps. Elle est donc relue ici, et plus rien ne s'intercale
+    * entre ce contrôle et le clic. Une annulation connue de la page avant le
+    * clic prouve la non-émission ; c'est la seule chose que la page puisse
+    * prouver, et elle ne prétend rien au-delà. */
+   if(operationId&&cancelledOperations.has(operationId))
+     return refuse('CANCELLED_BEFORE_COMMAND','Opération annulée avant le clic : '+operationId);
+   if(cancelled)return refuse('CANCELLED_BEFORE_COMMAND','Action interrompue avant le clic.');
    /* Plus rien n'est révocable à partir d'ici : l'état inconnu est posé AVANT
     * l'appel, et n'est relevé qu'au retour. Une exception de la page laisse donc
-    * « unknown », jamais un `false` rassurant. */
+    * « unknown », jamais un `false` rassurant. L'opération est marquée invoquée
+    * AVANT le clic, pour qu'un doublon ne puisse pas en produire un second même
+    * si celui-ci lève. */
    evidence.commandInvoked='unknown';
+   if(operationId)invokedOperations.set(operationId,new Date().toISOString());
    try{button.click();}catch(e){return refuse('NAVIGATION_COMMAND_THREW',e.message);}
    evidence.commandInvoked=true;evidence.commandSent=true;evidence.invokedAt=new Date().toISOString();
    progress('defer-command-returned',{operationId:evidence.operationId,label:cutLabel()});
@@ -477,7 +520,15 @@
  const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
-   nativeResume,nativeFinish:async()=>native?native.finish():{active:false},cancel:async()=>{cancelled=true;return {cancelRequested:true};}};
+   nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
+   /* Un `cancel` PORTANT un identifiant d'opération est retenu pour elle seule
+    * et définitivement : plus aucune requête, si tardive soit-elle, ne la
+    * réautorise. Sans identifiant — un délai de bridge, par exemple — il garde
+    * son ancien sens global, qui ne concerne que l'attente en cours. */
+   cancel:async(options=null)=>{cancelled=true;
+     const operationId=options&&typeof options==='object'&&typeof options.operationId==='string'?options.operationId:null;
+     if(operationId)cancelledOperations.add(operationId);
+     return {cancelRequested:true,operationId,scopedCancelledOperations:cancelledOperations.size};}};
  window.__BANANE_V3_PAGE={version:K.VERSION};
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.

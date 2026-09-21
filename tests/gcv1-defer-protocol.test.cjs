@@ -268,7 +268,13 @@ test('un arrêt pendant la préparation empêche l’émission ; il ne l’annul
  assert.equal(counts(adapter).nextWithoutDecision,0,'aucune commande après un arrêt encore révocable');
  assert.equal(engine.s.batch.deferred.length,0);
  assert.equal(engine.s.deferIntent,null);
- assert.ok(store.events.some(e=>e.type==='defer-intent-abandoned-before-emission'));
+ /* D1 : l'abandon avant toute transmission porte désormais sa PREUVE de
+  * non-émission — l'autorisation refusée et la frontière où elle l'a été. */
+ const abandon=store.events.find(e=>e.type==='defer-navigation-not-dispatched');
+ assert.ok(abandon,'la non-émission est journalisée explicitement');
+ assert.equal(abandon.commandInvoked,false);assert.equal(abandon.dispatched,false);
+ assert.equal(abandon.authorization,'REVOKED_BEFORE_DISPATCH');
+ assert.equal(engine.s.batch.interrupted.at(-1).status,'DEFER_NAVIGATION_NOT_DISPATCHED');
 });
 
 test('un arrêt pendant l’attente conserve le résultat incertain et ne redémarre pas le lot',async()=>{

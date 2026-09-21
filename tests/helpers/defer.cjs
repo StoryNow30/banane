@@ -39,12 +39,85 @@ async function pilot(propose,overrides={},prepare=()=>{}){
 }
 const counts=adapter=>Object.fromEntries(['apply','validate','skip','nextWithoutDecision','capture']
  .map(name=>[name,adapter.calls.filter(x=>x===name).length]));
-/* Reconstruction du runtime depuis les SEULES données persistées : nouvel objet
- * moteur, nouveau stockage, aucune variable du processus interrompu. */
+/* ANCIEN HELPER DE REPRISE — relu par la revue Astra.
+ *
+ * Il combine un ÉTAT ancien avec le journal, les enregistrements et les nuages
+ * tels qu'ils sont À LA FIN du scénario. Ce n'est donc pas la photographie d'un
+ * crash : des faits postérieurs à la frontière simulée y sont présents. Il
+ * reste utilisable pour les essais qui ne vérifient qu'une relecture d'état,
+ * mais aucun nouvel essai de crash ne doit s'en servir — voir `crashImage`. */
 function restartFrom(snapshot,store,Engine,adapter){
  const fresh=new MemoryStore();fresh.state=K.clone(snapshot);
  fresh.events=store.events.map(e=>K.clone(e));fresh.records=store.records.map(r=>K.clone(r));
  fresh.clouds=new Map([...store.clouds].map(([id,cloud])=>[id,K.clone(cloud)]));
  return {engine:new Engine(adapter,fresh),store:fresh};
 }
-module.exports={G,K,GCV1,MemoryStore,SimulatedESV,Engine,EngineWith,candidate,unresolved,scope,byCut,pilot,counts,restartFrom};
+
+/* PHOTOGRAPHIE FIDÈLE D'UNE FRONTIÈRE DE CRASH.
+ *
+ * `CrashStore` capture, au moment exact où un état est écrit, une image
+ * SIMULTANÉE de tout ce qui est persistant : état, journal, enregistrements et
+ * nuages. Aucun événement ni enregistrement postérieur à cette frontière n'y
+ * figure, puisqu'ils n'existaient pas encore.
+ *
+ * `restartFromImage` reconstruit ensuite un moteur, un stockage et un
+ * adaptateur NEUFS à partir de cette seule image : aucune variable, promesse,
+ * autorisation ou callback du runtime interrompu ne survit. L'état ESV du
+ * nouvel adaptateur est déclaré par l'essai, pour correspondre à ce que l'effet
+ * avait réellement pu produire à la frontière testée. */
+class CrashStore extends MemoryStore{
+ image(){return {state:K.clone(this.state),events:this.events.map(e=>K.clone(e)),
+  records:this.records.map(r=>K.clone(r)),clouds:[...this.clouds].map(([id,cloud])=>[id,K.clone(cloud)])};}
+}
+function restartFromImage(image,{esvCut=null,esvIdentity=null}={}){
+ const store=new CrashStore();
+ store.state=K.clone(image.state);
+ store.events=image.events.map(e=>K.clone(e));
+ store.records=image.records.map(r=>K.clone(r));
+ store.clouds=new Map(image.clouds.map(([id,cloud])=>[id,K.clone(cloud)]));
+ const adapter=new SimulatedESV();
+ if(esvIdentity)adapter.identity=K.clone(esvIdentity);
+ else if(Number.isInteger(esvCut))adapter.identity.cut=esvCut;
+ return {engine:new Engine(adapter,store),store,adapter,image};
+}
+/* Lance un lot en capturant l'image à la PREMIÈRE écriture qui satisfait
+ * `frontier(state)`. L'image n'est prise qu'une fois : les écritures suivantes
+ * appartiennent déjà à l'après-crash. */
+async function runCapturingCrash(propose,overrides={},frontier=()=>false,prepare=()=>{}){
+ const Engine=EngineWith(propose),adapter=new SimulatedESV(),store=new CrashStore();
+ if(Number.isInteger(overrides.start))adapter.identity.cut=overrides.start;
+ let image=null;
+ const engine=new Engine(adapter,store);
+ /* `onSetState` reçoit l'état EN COURS d'écriture et s'exécute avant qu'il ne
+  * remplace l'ancien : l'image prend donc cet état-là, accompagné du journal,
+  * des enregistrements et des nuages déjà durables au même instant. */
+ store.onSetState=state=>{if(image||!frontier(state,engine,adapter))return;
+  image=store.image();image.state=K.clone(state);};
+ await engine.init();engine.s.mode='automatic-test';
+ await prepare({engine,adapter,store});
+ await engine.startBatch(scope(overrides));await engine.task;
+ return {engine,adapter,store,image,Engine};
+}
+/* L'export GCV1 part des observations shadow journalisées par background.js.
+ * On la reproduit telle quelle pour que l'association passe par les règles de
+ * provenance existantes — `proposalId` exact — sans en inventer une. */
+const Export=require('../../src/gcv1-export.js');
+async function ajouterShadow({engine,store}){
+ const intent=store.events.find(e=>e.type==='defer-intent');
+ if(!intent)throw Error('Aucune intention différée dans le journal : rien à relier.');
+ await engine.event('gcv1-shadow-observed',{identity:K.clone(intent.identity),
+  sessionId:engine.s.sessionId,batchId:engine.s.batch.id,proposalId:intent.proposalId,
+  lidarCaptureId:intent.lidarCaptureId??null,
+  shadow:{format:'banane-gcv1-shadow-v1',contract:{id:'GEOMETRY_CANDIDATE_V1'},
+   selection:{selector:'active-pilot-test',requestedEngine:GCV1,selectedEngine:GCV1,fallback:false},
+   rails:{left:{next:{status:'unresolved',motif:'ambiguity'}},right:{next:{status:'unresolved',motif:'ambiguity'}}}}});
+ return intent.proposalId;
+}
+function deferralDe({engine,store},{events=null,state=null}={}){
+ const diagnostic=Export.buildDiagnostic({version:'4.6.0',sessionId:engine.s.sessionId,
+  state:state??engine.view(),events:events??store.events});
+ if(!diagnostic.observations.length)throw Error('Une observation shadow est nécessaire à l’export.');
+ return diagnostic.observations.at(-1).runtime.deferral;
+}
+module.exports={G,K,GCV1,MemoryStore,SimulatedESV,Engine,EngineWith,candidate,unresolved,scope,byCut,pilot,counts,
+ restartFrom,CrashStore,restartFromImage,runCapturingCrash,Export,ajouterShadow,deferralDe};

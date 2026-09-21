@@ -8,10 +8,10 @@
     "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
   },
   "engine": {
-    "src/engine.js": "09aecd679635905433b63a20ddcf58a535acafe7e93103ee1c901131feae3314",
+    "src/engine.js": "94374fa7dd35de26597399ab9d154052ea599fc99fb68718d41b72e0d775a0ea",
     "previousHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
     "previousHashG8": "7e0faf584cd627d1e20efe49097cc6a212dd53138f948f945a2564b30a434698",
-    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision",
+    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision ; 4.7 correctif Astra — D1 autorisation de dispatch, D2 borne contre STOP/PAUSE, D3 finalisation réparable",
     "scope": [
       "validateAndNext : la politique allowNavigationEvidence est consultée avant le refus sur relecture manquée",
       "expectedTransition : même onglet, même part et mouvement avant ; un saut exige la provenance déterministe VALIDATE_NEXT_NON_VALIDATED_CUT du bouton ESV observé",
@@ -23,7 +23,12 @@
       "4.7 deferEligibility : la branche defer exige une proposition GCV1 attribuée au cut courant, un LiDAR référencé et au moins un rail explicitement abstenu par GCV1",
       "4.7 deferTransition : contrat d'acceptation propre à la navigation sans décision, sans exigence de delta +1 ; expectedTransition et ses deux verdicts VALIDATE restent inchangés",
       "4.7 deferUnresolved/finalizeDefer/recoverDefer : protocole préparé → émission possible → action unique → observation → finalisation durable, avec table de reprise et état PAUSED_DEFER_NAVIGATION_UNCERTAIN",
-      "4.7 batch.deferred : collection et compteurs distincts de processed, skipped, paused, interrupted et manuallyCompleted"
-    ]
+      "4.7 batch.deferred : collection et compteurs distincts de processed, skipped, paused, interrupted et manuallyCompleted",
+      "4.7 D1 revokeDeferAuthorization/deferAuthorized : l'autorisation d'une opération différée est relue sans aucun await avant le dispatch ; stop() et pause() la revoquent tant que rien n'a ete transmis",
+      "4.7 D1 deferAbandoned : un dispatch refuse rend la non-emission durable avant tout nettoyage, sans reecrire l'etat operateur",
+      "4.7 D2 : la cloture de borne du chemin differe ne s'applique que si le lot tourne encore ; STOP et PAUSE sont conserves et la borne atteinte est consignee",
+      "4.7 D3 deferFinalPayload/recoverDefer : l'evenement final porte un identifiant deterministe derive de l'operation et un horodatage fige, et une finalisation durable sans evenement final est reparee localement sans commander ESV"
+    ],
+    "previousHash47Defer": "09aecd679635905433b63a20ddcf58a535acafe7e93103ee1c901131feae3314"
   }
 }

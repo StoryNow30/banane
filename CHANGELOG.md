@@ -1,5 +1,74 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — correctif post red-team Astra (D1–D4)
+
+Quatre défauts certains, reproduits par l'audit indépendant Astra sur le lot
+« différer un unresolved GCV1 », et leurs reproductions versionnées. La science
+GCV1 n'est pas touchée : `src/geometry.js` et `src/geometry-candidate-v1.js`
+gardent leurs empreintes, et `src/gcv1-shadow.js`, `src/brain.js` et
+`src/geometry-brain.js` sont identiques à la base.
+
+**D1 — un STOP pouvait encore être suivi d'une navigation.** Le moteur
+vérifiait que le lot tournait, puis laissait deux `await` — l'écriture du
+marqueur d'émission possible et sa journalisation — avant d'appeler
+l'adaptateur. Un STOP traité dans cette fenêtre marquait le lot `STOPPED` et la
+navigation partait quand même. Côté page, `nextWithoutDecision` remettait à
+faux le drapeau global `cancelled` : une requête arrivée après un `cancel`
+effaçait l'annulation et cliquait.
+
+L'autorisation est désormais portée par l'opération. `stop()` et `pause()` la
+révoquent tant que rien n'a été transmis, et le dispatch la relit sans qu'aucun
+`await` ne sépare le contrôle de l'appel. Dans la page, une annulation porte
+l'identifiant de son opération et n'est jamais effacée par une autre requête ;
+elle est relue une dernière fois juste avant le clic. Une opération déjà
+invoquée ne peut pas l'être une seconde fois, ce qui ferme aussi le doublon de
+message qu'Astra avait relevé comme dette.
+
+Trois situations restent distinguées, et nommées : commande non transmise
+(non-émission **prouvée**, `DEFER_NAVIGATION_NOT_DISPATCHED`), clic empêché par
+une annulation connue de la page (non-émission prouvée par la page), commande en
+transit ou déjà partie (émission **possible**, jamais renvoyée, jamais rejouée).
+
+**Limite résiduelle, non refermée.** La page ne connaît pas instantanément un
+STOP demandé dans le service worker. Entre le dispatch et la réception de
+l'annulation, la commande peut déjà avoir agi. Aucun jeton ne rend cette
+frontière atomique, et le correctif ne le prétend pas : il garantit qu'une
+commande encore révocable ne part pas, et que ce qui a pu partir n'est ni nié,
+ni renvoyé, ni rejoué.
+
+**D2 — STOP et PAUSE écrasés par la clôture de borne.** Un cut différé à la
+dernière borne finalisait correctement son résultat, puis la clôture normale
+remplaçait `STOPPED` ou `PAUSED` par `FINISHED_WITH_UNCONFIRMED_ACTIONS`. La
+borne ne clôt plus le lot que s'il tourne encore : le résultat deferred acquis
+est conservé, la décision opérateur aussi, et la borne atteinte est consignée
+(`boundaryReachedWhileHalted`). Une reprise explicite repasse par le contrôle
+de borne en tête de boucle et clôture normalement.
+
+**D3 — finalisation durable mais export non confirmé.** Un crash entre
+l'écriture de l'état `FINALIZED` et celle de l'événement `defer-finalized`
+laissait un deferred et son enregistrement durables, tandis que l'export, qui
+ne lit que le journal, répondait `DEFER_NOT_CONFIRMED`. L'événement final porte
+maintenant un identifiant **déterministe** dérivé de l'opération et un
+horodatage figé sur la finalisation : réémis, il reste un seul événement
+logique. Au redémarrage, un état finalisé sans son événement est réparé
+localement, à partir de l'intention durable et de l'entrée deferred de la même
+opération — aucune commande ESV, aucun second deferred, aucune provenance
+reconstruite depuis une proposition ou une capture plus récente.
+
+**D4 — deux opérations mélangées dans l'export.** `runtimeResult` prenait, pour
+chaque type d'événement, le dernier du tableau. Or `store.all('events')` rend
+les événements par clé — des UUID aléatoires — et non par chronologie : sur une
+proposition ayant porté deux opérations, l'export pouvait annoncer
+`operationId` = A avec l'evidence de B. Les faits sont désormais regroupés par
+opération, une opération est choisie explicitement — finalisation durable
+unique, sinon intention encore persistée, sinon opération unique — et seuls ses
+événements sont agrégés. Aucun ordre de tableau, aucun ordre lexical d'UUID
+n'entre dans ce choix. Quand les données ne permettent pas de trancher,
+l'export publie `DEFER_AMBIGUOUS` avec le motif et les identifiants en présence,
+plutôt que d'en choisir une. Les événements historiques sans `operationId` ne
+rejoignent aucune opération : ils sont comptés et exposés, jamais rattachés
+après coup.
+
 ## 4.7 — différer un unresolved GCV1 (lot de développement)
 
 Lot de développement, sans bump de version produit : la 4.7.0 officielle

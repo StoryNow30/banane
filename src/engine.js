@@ -103,7 +103,14 @@
   async save(){await this.store.setState(K.clone(this.s));}
   async event(type,detail={}){const identity=detail.identity===null?null:K.completeIdentity(detail.identity||this.s.current?.identity||this.s.before?.identity||{});
    const e={eventId:K.uid(),timestamp:new Date().toISOString(),type,identity,...detail};
-   await this.store.putEvent(e);this.s.events.push(e);if(this.s.events.length>150)this.s.events.shift();await this.save();}
+   /* D3. Un événement peut porter un identifiant DÉTERMINISTE, dérivé de son
+    * opération, pour qu'une réémission après interruption reste UN seul
+    * événement logique. Le stockage le déduplique déjà par clé ; le journal en
+    * mémoire doit en faire autant, sans quoi une reprise en afficherait deux. */
+   await this.store.putEvent(e);
+   const existant=this.s.events.findIndex(x=>x.eventId===e.eventId);
+   if(existant>=0)this.s.events[existant]=e;else this.s.events.push(e);
+   if(this.s.events.length>150)this.s.events.shift();await this.save();}
   async locked(fn){if(this.busy)throw Error('Une opération est déjà en cours.');this.busy=true;
    try{return await fn();}catch(e){this.s.notice=e.message;await this.event('error',{message:e.message});throw e;}finally{this.busy=false;await this.save();}}
   async observe(){const previous=this.s.current?.identity,now=await this.adapter.state();now.identity=K.completeIdentity(now.identity);
@@ -337,6 +344,35 @@
    return {expected:true,reason:'NEXT_CUT_WITHOUT_DECISION_SAME_PAGE_AND_PART',observed:next};
   }
   deferPending(){return this.s.deferIntent&&this.s.deferIntent.phase!=='FINALIZED'?this.s.deferIntent:null;}
+  /* D1, revue Astra. RÉVOCATION D'UNE OPÉRATION ENCORE RÉVOCABLE.
+   *
+   * Entre l'autorisation du moteur et l'appel adaptateur, l'ancien code laissait
+   * DEUX `await` — l'écriture du marqueur et sa journalisation. Un STOP traité
+   * dans cette fenêtre marquait le lot `STOPPED` et laissait tout de même partir
+   * la navigation. Le contrôle est désormais porté par l'opération elle-même :
+   * `stop()`, `pause()` et la reprise manuelle la révoquent, et le dispatch la
+   * revérifie sans aucun `await` entre le contrôle et l'appel.
+   *
+   * La révocation ne vaut QUE tant que rien n'a été transmis. Une fois
+   * `dispatchedAt` posé, elle est enregistrée comme demandée après coup et
+   * n'autorise à affirmer aucune non-émission : le résultat reste celui que
+   * l'observation ou la page démontrera. */
+  revokeDeferAuthorization(reason){
+   const intent=this.deferPending();
+   if(!intent||!['PREPARED','COMMAND_MAY_HAVE_BEEN_SENT'].includes(intent.phase))return null;
+   const at=new Date().toISOString();
+   if(intent.dispatchedAt){intent.revocationAfterDispatch={reason,at};return 'AFTER_DISPATCH';}
+   intent.revoked={reason,at};return 'BEFORE_DISPATCH';
+  }
+  /* Autorisation relue AU PLUS PRÈS du dispatch. Aucun `await` ne doit séparer
+   * ce contrôle de l'appel adaptateur : le moteur est mono-tâche, donc rien ne
+   * peut s'intercaler entre les deux. */
+  deferAuthorized(b,intent){
+   if(intent.revoked)return {ok:false,code:'REVOKED_BEFORE_DISPATCH',detail:intent.revoked};
+   if(b.state!=='RUNNING')return {ok:false,code:'BATCH_NOT_RUNNING',detail:{state:b.state}};
+   if(this.s.deferIntent!==intent)return {ok:false,code:'INTENT_REPLACED',detail:null};
+   return {ok:true,code:'AUTHORIZED',detail:null};
+  }
   /* PROTOCOLE DURABLE.
    *
    * Il n'existe aucune transaction commune entre le stockage Banane et l'effet
@@ -369,24 +405,34 @@
      commandScope:'banane-operation-only',bananeValidated:false,applyCommandSent:false,
      validationCommandSent:false,skipCommandSent:false,commandInvoked:null,
      preparedAt:new Date().toISOString(),emissionPossibleAt:null,observedAt:null,finalizedAt:null,
-     startedAtMs:Date.now(),evidence:null,nextIdentity:null,transition:null,refusal:null,nonEmissionProof:null};
+     startedAtMs:Date.now(),evidence:null,nextIdentity:null,transition:null,refusal:null,nonEmissionProof:null,
+     /* D1 : état d'autorisation de CETTE opération. `dispatchedAt` sépare ce qui
+      * est encore révocable de ce qui ne l'est plus. */
+     revoked:null,revocationAfterDispatch:null,dispatchedAt:null,
+     finalEventId:'defer-finalized-'+operationId,finalEventEmitted:false};
    this.s.deferIntent=intent;await this.save(); // 1. Préparé : écriture confirmée avant toute émission possible.
    await this.event('defer-intent',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
      lidarCaptureId:intent.lidarCaptureId,sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,
      rails:intent.rails,unresolvedRails:intent.unresolvedRails,policy:'defer',eligibility:intent.eligibility,
      commandRequested:false,commandInvoked:null,bananeValidated:false,validationCommandSent:false,skipCommandSent:false});
-   /* Dernière frontière encore révocable : pause, arrêt ou reprise manuelle
-    * demandés pendant la préparation empêchent l'émission. */
-   if(b.state!=='RUNNING'){this.s.deferIntent=null;
-     await this.event('defer-intent-abandoned-before-emission',{identity,operationId,batchId:intent.batchId,
-       state:b.state,commandInvoked:false,deferredConfirmed:false});
-     await this.save();return {status:'ABANDONED_BEFORE_EMISSION'};}
+   /* Première frontière révocable : pause, arrêt ou reprise manuelle demandés
+    * pendant la préparation empêchent l'émission. */
+   let autorisation=this.deferAuthorized(b,intent);
+   if(!autorisation.ok)return await this.deferAbandoned(b,intent,autorisation,'before-emission-marker');
    intent.phase='COMMAND_MAY_HAVE_BEEN_SENT';intent.emissionPossibleAt=new Date().toISOString();
    await this.save(); // 2. Émission possible : écriture confirmée AVANT l'appel.
    await this.event('defer-command-possible',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
      commandRequested:true,commandInvoked:null,
      note:'La commande de navigation sans décision peut désormais avoir été émise.'});
+   /* D1. DERNIÈRE FRONTIÈRE RÉVOCABLE CÔTÉ MOTEUR. Les deux `await` ci-dessus
+    * rendent la main : l'autorisation est donc relue ICI, et plus aucun `await`
+    * ne sépare ce contrôle de l'appel. Le marqueur durable reste écrit — il dit
+    * « la commande a PU partir », pas qu'elle est partie : si le dispatch est
+    * refusé, la non-émission est prouvée côté moteur et consignée comme telle. */
+   autorisation=this.deferAuthorized(b,intent);
+   if(!autorisation.ok)return await this.deferAbandoned(b,intent,autorisation,'after-emission-marker');
    let evidence=null,transportError=null;
+   intent.dispatchedAt=new Date().toISOString(); // Plus rien n'est révocable à partir d'ici.
    try{evidence=await this.adapter.nextWithoutDecision(identity,scope,operationId);} // 3. Action : au plus une fois.
    catch(e){transportError=e;}
    intent.evidence=K.clone(evidence??null);
@@ -407,6 +453,33 @@
      transition:transition.reason,nextIdentity:intent.nextIdentity,commandInvoked:intent.commandInvoked,
      bananeValidated:false,validationCommandSent:false,skipCommandSent:false,applyCommandSent:false,evidence:intent.evidence});
    return await this.finalizeDefer(b); // 5. Finalisation durable.
+  }
+  /* D1. Dispatch refusé par l'autorisation : la commande n'a PAS été transmise
+   * à une couche capable d'agir. La non-émission est donc prouvée côté moteur,
+   * et la preuve est rendue durable AVANT d'effacer l'intention — sans quoi une
+   * interruption juste après ferait relire « émission possible » et imposerait
+   * l'incertitude à une opération dont on sait qu'elle n'est jamais partie.
+   *
+   * L'état opérateur n'est jamais réécrit ici : un STOP ou une PAUSE qui vient
+   * de révoquer l'opération reste la décision la plus forte (D2). */
+  async deferAbandoned(b,intent,autorisation,frontier){
+   const code='DEFER_NAVIGATION_NOT_DISPATCHED';
+   intent.phase='NOT_EMITTED';intent.commandInvoked=false;
+   intent.nonEmissionProof='engine-authorization-'+autorisation.code+'-at-'+frontier;
+   intent.refusal={code:autorisation.code,message:'Dispatch refusé avant toute transmission : '+autorisation.code,
+     at:new Date().toISOString(),frontier};
+   await this.save(); // Preuve de non-émission durable avant tout nettoyage.
+   await this.event('defer-navigation-not-dispatched',{identity:intent.identity,operationId:intent.operationId,
+     batchId:intent.batchId,proposalId:intent.proposalId,code,frontier,authorization:autorisation.code,
+     revoked:intent.revoked??null,batchState:b.state,commandRequested:frontier==='after-emission-marker',
+     commandInvoked:false,dispatched:false,resent:false,deferredConfirmed:false,counted:false});
+   this.s.deferIntent=null;
+   b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
+   b.interrupted.push({identity:K.completeIdentity(intent.identity),status:code,operationId:intent.operationId,
+     commandInvoked:false,nonEmissionProof:intent.nonEmissionProof,authorization:autorisation.code,frontier});
+   this.s.notice=`Cut ${intent.identity.cut} : navigation sans décision abandonnée avant toute transmission (${autorisation.code}). Aucune commande n’est partie.`;
+   await this.save();
+   return {status:'ABANDONED_BEFORE_EMISSION',code:autorisation.code,frontier};
   }
   /* Aucune progression acceptée. Deux situations, jamais confondues :
    * — la NON-ÉMISSION est PROUVÉE (refus rendu par l'adaptateur avant le clic) :
@@ -524,25 +597,80 @@
    this.s.collection='IDLE';b.currentSequence=null;b.step='capture';b.pauseReason=null;b.error=null;
    b.activeIdentity=nextIdentity; // Checkpoint de reprise : la cible acceptée.
    intent.phase='FINALIZED';intent.finalizedAt=new Date().toISOString();
+   intent.recoveredFinalization=recovered;
    await this.save();
-   await this.event('defer-finalized',{identity,operationId:intent.operationId,batchId:intent.batchId,
-     proposalId:intent.proposalId,lidarCaptureId:intent.lidarCaptureId??null,recordId,
-     rails:intent.rails,unresolvedRails:intent.unresolvedRails,nextIdentity,transition:intent.transition,
-     sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,nextCutId,
-     status:'DEFERRED_UNRESOLVED',deferredConfirmed:true,recovered,commandInvoked:intent.commandInvoked,
-     commandScope:'banane-operation-only',bananeValidated:false,applyCommandSent:false,
-     validationCommandSent:false,skipCommandSent:false,evidence:intent.evidence});
+   await this.event('defer-finalized',this.deferFinalPayload(intent,b.deferred.find(d=>d.operationId===intent.operationId)));
+   intent.finalEventEmitted=true;
    this.s.notice=`Cut ${identity.cut} non résolu par GCV1 : différé sans décision. Lot poursuivi sur le cut ${nextIdentity.cut}.`;
    // L'intention active ne s'efface qu'une fois preuves ET checkpoint durables.
    this.s.deferIntent=null;await this.save();
    return {status:'DEFERRED_UNRESOLVED',nextIdentity,nextReady:intent.evidence?.nextReady??null,operationId:intent.operationId};
+  }
+  /* D3, revue Astra. L'ÉVÉNEMENT FINAL EST DÉTERMINISTE.
+   *
+   * Sa vérité ne peut pas dépendre du fait qu'une dernière écriture de journal
+   * ait eu le temps d'aboutir : `eventId` est dérivé de l'opération et
+   * `timestamp` est figé sur l'instant de finalisation déjà persisté. Réémis
+   * après une interruption, l'événement est IDENTIQUE — le stockage le
+   * déduplique par sa clé, et le journal en mémoire aussi.
+   *
+   * Tous les champs viennent de l'intention durable et de l'entrée deferred de
+   * LA MÊME opération. Rien n'est relu depuis `s.proposal` ou `s.lidarId`, qui
+   * décrivent déjà, au moment d'une reprise, un autre cut. */
+  deferFinalPayload(intent,entry){
+   const identity=K.completeIdentity(intent.identity);
+   const nextIdentity=K.completeIdentity(intent.nextIdentity??entry?.nextIdentity??null);
+   return {eventId:intent.finalEventId||('defer-finalized-'+intent.operationId),
+     timestamp:intent.finalizedAt??new Date().toISOString(),
+     identity,operationId:intent.operationId,batchId:intent.batchId??null,
+     proposalId:intent.proposalId??null,lidarCaptureId:intent.lidarCaptureId??null,
+     recordId:entry?.recordId??('defer-'+intent.operationId),
+     rails:intent.rails,unresolvedRails:intent.unresolvedRails,nextIdentity,transition:intent.transition,
+     sequenceIndex:intent.sequenceIndex??null,previousCutId:intent.previousCutId??null,
+     nextCutId:entry?.nextCutId??K.cutId(nextIdentity),
+     status:'DEFERRED_UNRESOLVED',deferredConfirmed:true,recovered:intent.recoveredFinalization===true,
+     commandInvoked:intent.commandInvoked,commandScope:'banane-operation-only',
+     bananeValidated:false,applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,
+     evidence:intent.evidence};
   }
   /* TABLE DE REPRISE. Elle est lue depuis les SEULES données persistées : un
    * redémarrage ne conserve aucune variable du processus interrompu. */
   async recoverDefer(){
    const intent=this.s.deferIntent;if(!intent)return;
    const b=this.s.batch;
-   if(intent.phase==='FINALIZED'){this.s.deferIntent=null;return;}
+   /* D3. FINALISATION DURABLE, ÉVÉNEMENT FINAL PEUT-ÊTRE PAS. L'ancienne version
+    * effaçait simplement l'intention : le runtime gardait alors un deferred et
+    * son enregistrement, tandis que l'export, qui ne lit que le journal,
+    * affirmait `DEFER_NOT_CONFIRMED`. Une opération durablement finalisée doit
+    * reconstruire exactement le même résultat logique après redémarrage.
+    *
+    * La réparation est LOCALE : elle réémet l'événement déterministe depuis
+    * l'intention et l'entrée deferred de la même opération. Aucune commande
+    * ESV, aucun second deferred, aucune décision scientifique touchée, aucune
+    * preuve fabriquée — seulement un fait déjà démontré par les données
+    * durables, rendu de nouveau lisible. */
+   if(intent.phase==='FINALIZED'){
+    const entry=b&&(intent.batchId??null)===(b.id??null)
+      ?(b.deferred||[]).find(d=>d.operationId===intent.operationId)??null:null;
+    if(!intent.finalEventEmitted&&entry){
+      await this.event('defer-finalized',this.deferFinalPayload(intent,entry));
+      intent.finalEventEmitted=true;await this.save();
+      await this.event('defer-final-event-repaired-on-restart',{identity:intent.identity,
+        operationId:intent.operationId,batchId:intent.batchId??null,proposalId:intent.proposalId??null,
+        finalEventId:intent.finalEventId||('defer-finalized-'+intent.operationId),recordId:entry.recordId??null,
+        rebuiltFrom:'persisted-defer-intent-and-deferred-entry',commandedEsv:false,
+        deferredCreated:0,deferredConfirmed:true,resent:false});
+      this.s.notice='Finalisation différée retrouvée durable : journal complété localement, aucune commande ESV renvoyée.';
+    }else if(!intent.finalEventEmitted&&!entry){
+      /* Anomalie : un état finalisé sans entrée durable correspondante. Rien
+       * n'est reconstruit à partir de données étrangères ; le fait est exporté
+       * tel quel pour examen. */
+      await this.event('defer-finalized-without-durable-entry',{identity:intent.identity,
+        operationId:intent.operationId,batchId:intent.batchId??null,proposalId:intent.proposalId??null,
+        deferredConfirmed:false,repaired:false,commandedEsv:false,resent:false});
+    }
+    this.s.deferIntent=null;await this.save();return;
+   }
    if(!b||(intent.batchId??null)!==(b.id??null)){
     /* Intention orpheline : conservée, jamais rejouée. Elle bloque toute
      * reprise jusqu'à sa clôture. Signalée UNE fois : `init()` s'exécute à
@@ -732,7 +860,20 @@
          if(outcome.status!=='DEFERRED_UNRESOLVED')break;
          const target=outcome.nextIdentity;
          // Bornes appliquées APRÈS validation de l'identité et de la transition.
-         if(now.identity.cut>=scope.end||Number.isInteger(target?.cut)&&target.cut>scope.end){b.state=this.closingState(b);break;}
+         /* D2, revue Astra. La borne ne clôt le lot que s'il TOURNE encore. Un
+          * STOP ou une PAUSE demandés pendant la navigation restent la décision
+          * la plus forte : le résultat deferred acquis est conservé, mais
+          * l'état opérateur n'est pas remplacé par une clôture automatique. Une
+          * reprise explicite ultérieure repassera par le contrôle de borne en
+          * tête de boucle et clôturera normalement. */
+         if(now.identity.cut>=scope.end||Number.isInteger(target?.cut)&&target.cut>scope.end){
+           if(b.state==='RUNNING')b.state=this.closingState(b);
+           else{b.boundaryReachedWhileHalted={at:new Date().toISOString(),state:b.state,
+             sourceCut:now.identity.cut,targetCut:target?.cut??null,end:scope.end};
+             this.s.notice=`Cut ${now.identity.cut} différé et enregistré. Lot ${b.state==='STOPPED'?'arrêté':'en pause'} à ta demande ; la borne ${scope.end} est atteinte et sera constatée à la reprise.`;
+             await this.event('batch-boundary-reached-while-halted',{identity:now.identity,state:b.state,
+               sourceCut:now.identity.cut,targetCut:target?.cut??null,end:scope.end,closedAutomatically:false});}
+           break;}
          if(outcome.nextReady===false){if(b.state==='RUNNING'){b.state='PAUSED';
            this.s.notice=`Cut ${now.identity.cut} différé. Attends le chargement des rails du cut ${target.cut}, puis clique sur Reprendre.`;}break;}
          continue;
@@ -775,8 +916,25 @@
        b.error={message:e.message,step:b.step,timestamp:new Date().toISOString()};this.s.notice=e.message;await this.event('batch-error',{message:e.message,step:b.step});}
    }
    finally{await this.event('batch-state',{identity:b.activeIdentity,state:b.state,step:b.step,processed:b.processed.length,skipped:b.skipped.length});}}
-  async pause(){if(this.s.batch?.state==='RUNNING'){this.s.batch.state='PAUSED';this.s.notice='Pause demandée, après l’action en cours.';await this.save();}}
-  async stop(){if(this.s.batch){this.s.batch.state='STOPPED';this.s.notice='Arrêt demandé, aucune nouvelle action après celle en cours.';await this.adapter.cancel?.();await this.save();}}
+  /* D1. L'état du lot et la révocation sont posés SYNCHRONEMENT, avant le
+   * moindre `await` : le moteur est mono-tâche, donc `deferUnresolved` ne peut
+   * pas reprendre la main entre les deux et verra toujours la révocation. */
+  async pause(){if(this.s.batch?.state==='RUNNING'){this.s.batch.state='PAUSED';
+   const revocation=this.revokeDeferAuthorization('pause');
+   this.s.notice='Pause demandée, après l’action en cours.';await this.save();
+   if(revocation)await this.event('defer-authorization-revoked',{identity:this.s.deferIntent?.identity??null,
+     operationId:this.s.deferIntent?.operationId??null,reason:'pause',scope:revocation,resent:false});}}
+  async stop(){if(this.s.batch){this.s.batch.state='STOPPED';
+   const intent=this.deferPending(),revocation=this.revokeDeferAuthorization('stop');
+   this.s.notice='Arrêt demandé, aucune nouvelle action après celle en cours.';
+   /* L'annulation est PORTÉE PAR L'OPÉRATION. Un `cancel` global ne dit pas à
+    * la page DE QUOI il parle : selon l'ordre d'arrivée, il annulerait une
+    * requête étrangère ou serait effacé par la requête suivante. Avec
+    * l'identifiant d'opération, la page refuse le clic quel que soit l'ordre. */
+   await this.adapter.cancel?.(intent?{operationId:intent.operationId,reason:'stop'}:undefined);
+   await this.save();
+   if(revocation)await this.event('defer-authorization-revoked',{identity:intent?.identity??null,
+     operationId:intent?.operationId??null,reason:'stop',scope:revocation,resent:false});}}
   pausedProposalAction(b){return !!b&&b.step==='apply'&&['unresolved-rail','low-confidence'].includes(b.pauseReason);}
   async retryPaused(){const b=this.s.batch;if(!this.pausedProposalAction(b))throw Error('Ce cut pausé ne peut pas être réessayé automatiquement.');
    const now=await this.adapter.state();K.assertTarget(b.activeIdentity,now.identity);

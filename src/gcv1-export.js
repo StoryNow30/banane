@@ -52,7 +52,127 @@
   return {captureId:null,association:'unavailable'};
  }
 
- function runtimeResult(events,observation){
+ /* D4, revue Astra. UN `deferral` VIENT D'UNE SEULE OPÉRATION.
+  *
+  * L'ancienne version prenait, pour chaque type d'événement, le DERNIER du
+  * tableau. Or `store.all('events')` rend les événements par clé — des UUID
+  * aléatoires — et non par chronologie : sur une proposition ayant porté deux
+  * opérations (une préparée puis interrompue, une seconde reprise), l'export
+  * pouvait mêler l'intention de A, la navigation de B et la finalisation d'une
+  * troisième. Les faits sont donc regroupés PAR OPÉRATION, une opération est
+  * choisie explicitement, et seuls ses événements sont agrégés.
+  *
+  * Aucun ordre de tableau, aucun ordre lexical d'UUID n'entre dans ce choix. */
+ const DEFER_PHASES=['defer-intent','defer-command-possible','defer-navigation-observation',
+  'defer-navigation-accepted','defer-finalized'];
+ const DEFER_OUTCOMES=['defer-navigation-uncertain','defer-navigation-not-emitted','defer-navigation-not-dispatched',
+  'defer-navigation-uncertain-on-restart','defer-intent-not-emitted-on-restart','defer-intent-closed',
+  'defer-intent-abandoned-before-emission','defer-intent-orphaned','defer-authorization-revoked',
+  'defer-final-event-repaired-on-restart','defer-finalized-without-durable-entry'];
+ const DEFER_TYPES=new Set([...DEFER_PHASES,...DEFER_OUTCOMES]);
+
+ /* Regroupement par `operationId`. Les événements qui n'en portent pas — un
+  * journal antérieur à 4.7 — ne rejoignent AUCUN groupe : on ne leur attribue
+  * pas après coup l'identifiant d'une opération, ce qui fabriquerait une
+  * association que les données ne portent pas. Ils sont comptés et exposés. */
+ function groupDeferEvents(linked,observation){
+  const groups=new Map(),legacy=[];
+  for(const event of linked){
+   if(!DEFER_TYPES.has(event.type))continue;
+   const batchId=event.batchId??null;
+   if(batchId&&observation.batchId&&batchId!==observation.batchId)continue;
+   const id=typeof event.operationId==='string'&&event.operationId?event.operationId:null;
+   if(!id){legacy.push(event);continue;}
+   if(!groups.has(id))groups.set(id,[]);
+   groups.get(id).push(event);
+  }
+  return {groups,legacy};
+ }
+ /* Un seul événement par type DANS UNE MÊME opération. Des doublons y sont des
+  * réémissions du même fait : on prend le plus récent par timestamp et, à
+  * timestamp égal, on départage par identifiant. Ce départage ordonne des
+  * événements ÉQUIVALENTS de façon reproductible ; il ne sert jamais de
+  * chronologie entre opérations. */
+ function pickDeferEvent(groupEvents,type){
+  const list=groupEvents.filter(e=>e.type===type);
+  if(!list.length)return null;
+  if(list.length===1)return clone(list[0]);
+  const sorted=list.slice().sort((a,b)=>
+   String(a.timestamp??'').localeCompare(String(b.timestamp??''))||
+   String(a.eventId??'').localeCompare(String(b.eventId??'')));
+  return clone(sorted[sorted.length-1]);
+ }
+ /* Choix de l'opération, dans cet ordre et sur des faits durables seulement :
+  * une finalisation unique l'emporte ; sinon l'intention encore persistée, si
+  * elle appartient bien à ce groupe ; sinon l'unique opération présente. Toute
+  * autre situation est une AMBIGUÏTÉ, exportée telle quelle. */
+ function selectDeferOperation(groups,legacy,state){
+  /* Les identifiants sont RENDUS triés : l'ordre d'insertion d'une Map suit
+   * celui du tableau lu, et rien de ce que l'export publie ne doit en dépendre.
+   * Ce tri est une présentation stable, jamais une chronologie. */
+  const ids=[...groups.keys()].sort(),base={operationIds:ids,legacyEventsWithoutOperationId:legacy.length};
+  if(!ids.length)return {operationId:null,events:[],selectedBy:null,
+   ambiguity:legacy.length?{reason:'DEFER_EVENTS_WITHOUT_OPERATION_ID',...base}:null,...base};
+  const finalized=ids.filter(id=>groups.get(id).some(e=>e.type==='defer-finalized'));
+  if(finalized.length===1)return {operationId:finalized[0],events:groups.get(finalized[0]),
+   selectedBy:'durable-finalization',ambiguity:null,...base};
+  if(finalized.length>1)return {operationId:null,events:[],selectedBy:null,
+   ambiguity:{reason:'MULTIPLE_FINALIZED_OPERATIONS',finalizedOperationIds:finalized.slice().sort(),...base},...base};
+  const active=typeof state?.deferIntent?.operationId==='string'?state.deferIntent.operationId:null;
+  if(active&&groups.has(active))return {operationId:active,events:groups.get(active),
+   selectedBy:'persisted-active-intent',ambiguity:null,...base};
+  if(ids.length===1)return {operationId:ids[0],events:groups.get(ids[0]),
+   selectedBy:'single-operation',ambiguity:null,...base};
+  return {operationId:null,events:[],selectedBy:null,
+   ambiguity:{reason:'MULTIPLE_OPERATIONS_NO_DURABLE_SELECTOR',...base},...base};
+ }
+ function deferralResult(linked,observation,state){
+  const {groups,legacy}=groupDeferEvents(linked,observation);
+  if(!groups.size&&!legacy.length)return null;
+  const selection=selectDeferOperation(groups,legacy,state);
+  const common={operationIds:selection.operationIds,selectedBy:selection.selectedBy,
+   legacyEventsWithoutOperationId:selection.legacyEventsWithoutOperationId,
+   duplicateEventsInOperation:selection.events.length-new Set(selection.events.map(e=>e.type)).size};
+  if(!selection.operationId)return {status:'DEFER_AMBIGUOUS',confirmed:false,operationId:null,
+   policy:null,identity:null,nextIdentity:null,transition:null,proposalId:null,lidarCaptureId:null,
+   lidarCaptureStatus:'not-available',recordId:null,railsAtDeferral:null,unresolvedRails:null,motif:null,
+   navigationWithoutDecision:null,uncertainty:null,ambiguity:selection.ambiguity,...common};
+  const pick=type=>pickDeferEvent(selection.events,type);
+  const intent=pick('defer-intent'),observationEvent=pick('defer-navigation-observation');
+  const accepted=pick('defer-navigation-accepted'),finalized=pick('defer-finalized');
+  /* L'issue non confirmée vient elle aussi de CETTE opération, jamais d'une
+   * autre : c'est exactement le mélange que D4 supprime. */
+  const outcome=DEFER_OUTCOMES.map(type=>pick(type)).filter(Boolean)
+   .sort((a,b)=>String(a.timestamp??'').localeCompare(String(b.timestamp??''))||
+    String(a.eventId??'').localeCompare(String(b.eventId??''))).at(-1)||null;
+  const evidence=finalized?.evidence||accepted?.evidence||observationEvent?.evidence||null;
+  return {
+   status:finalized?'DEFERRED_UNRESOLVED':'DEFER_NOT_CONFIRMED',
+   confirmed:!!finalized,
+   operationId:selection.operationId,
+   policy:intent?.policy??'defer',
+   identity:clone(finalized?.identity??intent?.identity??null),
+   nextIdentity:clone(finalized?.nextIdentity??accepted?.nextIdentity??null),
+   transition:finalized?.transition??accepted?.transition??observationEvent?.transition??null,
+   proposalId:finalized?.proposalId??intent?.proposalId??null,
+   lidarCaptureId:finalized?.lidarCaptureId??intent?.lidarCaptureId??null,
+   lidarCaptureStatus:(finalized?.lidarCaptureId??intent?.lidarCaptureId)?'persisted-on-intent':'not-available',
+   recordId:finalized?.recordId??null,
+   railsAtDeferral:clone(finalized?.rails??intent?.rails??null),
+   unresolvedRails:clone(finalized?.unresolvedRails??intent?.unresolvedRails??null),
+   motif:intent?.eligibility??null,
+   navigationWithoutDecision:{
+    commandInvoked:finalized?.commandInvoked??observationEvent?.commandInvoked??null,
+    navigationObserved:observationEvent?.navigationObserved??(finalized?true:null),
+    commandScope:'banane-operation-only',bananeValidated:false,
+    applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,
+    shortcutEquivalence:clone(evidence?.shortcutEquivalence??null),
+    correlation:clone(evidence?.correlation??null),evidence:clone(evidence)},
+   uncertainty:finalized?null:clone(outcome||observationEvent||null),
+   ambiguity:selection.ambiguity,...common};
+ }
+
+ function runtimeResult(events,observation,state){
   const linked=linkedEvents(events,observation);
   const last=type=>clone(linked.filter(e=>e.type===type).at(-1)||null);
   const apply=last('applied-verified');
@@ -72,38 +192,7 @@
    * une résolution GCV1, ni une validation humaine, ni un nouveau label.
    * Les différés CONFIRMÉS ne sont jamais confondus avec les intentions
    * incertaines : seul `defer-finalized` confirme. */
-  const deferIntent=last('defer-intent');
-  const deferObservation=last('defer-navigation-observation');
-  const deferAccepted=last('defer-navigation-accepted');
-  const deferFinalized=last('defer-finalized');
-  const deferUncertainty=linked.slice().reverse().find(e=>['defer-navigation-uncertain','defer-navigation-not-emitted',
-   'defer-navigation-uncertain-on-restart','defer-intent-not-emitted-on-restart','defer-intent-closed',
-   'defer-intent-abandoned-before-emission','defer-intent-orphaned'].includes(e.type))||null;
-  const deferEvidence=deferFinalized?.evidence||deferAccepted?.evidence||deferObservation?.evidence||null;
-  const deferral=deferIntent||deferFinalized?{
-   status:deferFinalized?'DEFERRED_UNRESOLVED':'DEFER_NOT_CONFIRMED',
-   confirmed:!!deferFinalized,
-   operationId:deferFinalized?.operationId??deferAccepted?.operationId??deferIntent?.operationId??null,
-   policy:deferIntent?.policy??'defer',
-   identity:clone(deferFinalized?.identity??deferIntent?.identity??null),
-   nextIdentity:clone(deferFinalized?.nextIdentity??deferAccepted?.nextIdentity??null),
-   transition:deferFinalized?.transition??deferAccepted?.transition??deferObservation?.transition??null,
-   proposalId:deferFinalized?.proposalId??deferIntent?.proposalId??null,
-   lidarCaptureId:deferFinalized?.lidarCaptureId??deferIntent?.lidarCaptureId??null,
-   lidarCaptureStatus:(deferFinalized?.lidarCaptureId??deferIntent?.lidarCaptureId)?'persisted-on-intent':'not-available',
-   recordId:deferFinalized?.recordId??null,
-   railsAtDeferral:clone(deferFinalized?.rails??deferIntent?.rails??null),
-   unresolvedRails:clone(deferFinalized?.unresolvedRails??deferIntent?.unresolvedRails??null),
-   motif:deferIntent?.eligibility??null,
-   navigationWithoutDecision:{
-    commandInvoked:deferFinalized?.commandInvoked??deferObservation?.commandInvoked??null,
-    navigationObserved:deferObservation?.navigationObserved??(deferFinalized?true:null),
-    commandScope:'banane-operation-only',bananeValidated:false,
-    applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,
-    shortcutEquivalence:clone(deferEvidence?.shortcutEquivalence??null),
-    correlation:clone(deferEvidence?.correlation??null),evidence:clone(deferEvidence)},
-   uncertainty:deferFinalized?null:clone(deferUncertainty||deferObservation||null),
-  }:null;
+  const deferral=deferralResult(linked,observation,state);
   return {
    association:linked.length?'proposal-or-batch-id':'none',
    apply,validationIntent,validationObservation,validationAccepted,deferral,
@@ -160,7 +249,9 @@
     summary:clone(shadow.summary??null),
     comparison:clone(shadow.comparison??null),
    };
-   observation.runtime=runtimeResult(source,{...observation,shadow});
+   // `state` porte l'intention différée encore persistée : elle sert à choisir
+   // l'opération courante quand aucune finalisation durable ne tranche (D4).
+   observation.runtime=runtimeResult(source,{...observation,shadow},state);
    observations.push(observation);
   }
   return {format:'banane-gcv1-diagnostic-v1',version,exportedAt,scope:'current-engine-session',
