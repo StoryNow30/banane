@@ -46,6 +46,10 @@ const ambiguousAstar=(motif='ambiguity',reason=AMBIG)=>({status:'unresolved',mot
   loss:1e-6,topRows:12,faceCount:3,slopeLimited:false});
 const s1Publishing=pick=>({status:'candidate',motif:'candidate',reason:null,pick,policy:'S1',
   changed:true,activated:true,nStrongCompetitive:1,nClusters:1});
+/* Sortie V4.6 compactée : `status` est la clause C4 de la règle ablatée. Un V4.6
+ * UNRESOLVED porte encore seed/top/face, donc la cellule du pool ne suffit pas. */
+const v46Proposal=(status='candidate',delta=[0,0,0])=>({status,reason:status==='candidate'?null:'Autre raison.',
+  delta:status==='candidate'?delta:null,seed:[delta[1],delta[2]],topRows:40,faceCount:8,slopeLimited:false});
 
 /* ---- A — le cas de terrain devient une ambiguïté préservée ---- */
 test('A — 2857 droite : S1 voulait publier un placement distant, GCV1 préserve l’ambiguïté',()=>{
@@ -95,20 +99,20 @@ test('C — 4680 droite : candidat S1 confondu avec le candidat V4.6, garde sile
  const cell=strongCell(.019,-.005,{loss:7.07487933969744e-7,topRows:298,faceCount:44});
  const pick={...cell};
  assert.equal(T.spatialClusters([cell,pick]).length,1,'une seule hypothèse spatiale');
- assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(pick),cell),false);
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(pick),v46Proposal(),cell),false);
 });
 
 /* ---- D — pas de V4.6 exploitable : les récupérations S1 existantes survivent ---- */
 test('D — sans candidat V4.6 STRONG, la garde ne bloque aucune récupération S1',()=>{
  const far=strongCell(.16,.034);
- assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),null),false,'V4.6 absent');
- assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(),null),false,'cellule V4.6 absente');
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(),
    strongCell(0,0,{faceCount:5})),false,'V4.6 sous minFace');
- assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(),
    strongCell(0,0,{topRows:14})),false,'V4.6 sous minTop');
- assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(),
    strongCell(0,0,{slopeLimited:true})),false,'V4.6 à inclinaison bridée');
- assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(),
    strongCell(0,0,{windowOk:false})),false,'V4.6 hors fenêtre');
 });
 
@@ -116,22 +120,22 @@ test('D — sans candidat V4.6 STRONG, la garde ne bloque aucune récupération 
 test('E — A_STAR abstenu pour un autre motif : la garde reste muette',()=>{
  const far=strongCell(.16,.034),v46=strongCell(0,0);
  for(const motif of ['flank','minTop','window','slope','rsf','pair-lateral','other'])
-  assert.equal(T.preserveAmbiguity(ambiguousAstar(motif,'Autre raison.'),s1Publishing(far),v46),false,motif);
+  assert.equal(T.preserveAmbiguity(ambiguousAstar(motif,'Autre raison.'),s1Publishing(far),v46Proposal(),v46),false,motif);
  // et jamais sur un A_STAR qui est lui-même candidat
  assert.equal(T.preserveAmbiguity({status:'candidate',motif:'candidate',reason:null},
-   s1Publishing(far),v46),false,'A_STAR candidat');
+   s1Publishing(far),v46Proposal(),v46),false,'A_STAR candidat');
  // ni sur une sortie S1 qui ne change rien
  assert.equal(T.preserveAmbiguity(ambiguousAstar(),
-   {status:'unresolved',motif:'ambiguity',pick:null,changed:false,activated:true},v46),false,'S1 sans candidat');
+   {status:'unresolved',motif:'ambiguity',pick:null,changed:false,activated:true},v46Proposal(),v46),false,'S1 sans candidat');
  assert.equal(T.preserveAmbiguity(ambiguousAstar(),
-   {...s1Publishing(far),changed:false},v46),false,'S1 conserve le motif A_STAR');
+   {...s1Publishing(far),changed:false},v46Proposal(),v46),false,'S1 conserve le motif A_STAR');
 });
 
 /* ---- F — candidat S1 non distinct spatialement : aucune abstention ajoutée ---- */
 test('F — la distinction spatiale est celle du contrat, et elle seule décide',()=>{
  const v46=strongCell(0,0);
- const just=T.preserveAmbiguity(ambiguousAstar(),s1Publishing(strongCell(SEP-1e-4,0)),v46);
- const over=T.preserveAmbiguity(ambiguousAstar(),s1Publishing(strongCell(SEP,0)),v46);
+ const just=T.preserveAmbiguity(ambiguousAstar(),s1Publishing(strongCell(SEP-1e-4,0)),v46Proposal(),v46);
+ const over=T.preserveAmbiguity(ambiguousAstar(),s1Publishing(strongCell(SEP,0)),v46Proposal(),v46);
  assert.equal(just,false,'sous la séparation du contrat : même hypothèse');
  assert.equal(over,true,'à la séparation du contrat : hypothèses distinctes');
  // la frontière est exactement celle de spatialClusters, pas un seuil nouveau
@@ -160,4 +164,24 @@ test('G — une ambiguïté préservée traverse la frontière runtime en absten
   assert.equal(Object.hasOwn(r,key),false,key+' ne doit pas exister sur un rail runtime');
  for(const action of ['apply','validateAndNext','skipAndNext','navigate'])
   assert.equal(Object.hasOwn(Shadow,action),false,action+' ne doit pas être exposé');
+});
+
+/* ---- H — portée : un V4.6 UNRESOLVED ne vaut pas un candidat V4.6 ---- */
+test('H — V4.6 unresolved avec une cellule pourtant STRONG : la garde reste muette',()=>{
+ /* `src/geometry.js` rend `{...unresolved(...),metrics,top,face}` sur ses deux
+  * sorties non soutenues : un V4.6 UNRESOLVED porte donc encore seed, top et
+  * face. Sur sa propre abstention d'ambiguïté (ratio de perte sous
+  * minTemplateLossRatio) minTop, minFace, la pente et la fenêtre sont déjà tous
+  * satisfaits, et la cellule `engine-published` qui en découle est STRONG.
+  * La clause C4 de la règle ablatée est `v46.status === 'candidate'` : tester
+  * la seule cellule du pool rendrait la garde plus large que la règle validée. */
+ const cell=strongCell(0,0);
+ assert.equal(T.qualifyStrong(cell),true,'la cellule issue d’un V4.6 unresolved peut être STRONG');
+ const far=strongCell(.16,.034);
+ assert.equal(T.spatialClusters([cell,far]).length,2,'et spatialement distincte du pick S1');
+ for(const status of ['unresolved','absent'])
+  assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(status),cell),false,status);
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),null,cell),false,'V4.6 absent');
+ // et la garde reste effective quand V4.6 est bien candidat
+ assert.equal(T.preserveAmbiguity(ambiguousAstar(),s1Publishing(far),v46Proposal(),cell),true);
 });

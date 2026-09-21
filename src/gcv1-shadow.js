@@ -336,10 +336,19 @@
   * V4.6, aucun candidat publié, aucune décision d'application ici — le Pilote
   * suit son chemin DEFERRED_UNRESOLVED habituel. Aucun seuil nouveau : le
   * motif vient de motifOf, la qualification géométrique de qualifyStrong, et
-  * la distinction spatiale de spatialClusters/SEP (alternativeSeparation). */
- function preserveAmbiguity(astar,s1,v46Cell){
+  * la distinction spatiale de spatialClusters/SEP (alternativeSeparation).
+  *
+  * `v46.status` est testé explicitement, et pas seulement la cellule du pool :
+  * un V4.6 UNRESOLVED porte encore `metrics.seed`, `top` et `face` sur ses deux
+  * sorties non soutenues (`src/geometry.js`, branches `unsupported` et ratio de
+  * perte). La cellule `engine-published` qui en découle peut donc être STRONG
+  * alors que V4.6 ne propose rien — en particulier sur sa propre abstention
+  * d'ambiguïté, où minTop, minFace, la pente et la fenêtre sont déjà tous
+  * satisfaits. Sans ce test, la garde serait plus large que la règle ablatée. */
+ function preserveAmbiguity(astar,s1,v46,v46Cell){
    if(!astar||astar.status==='candidate'||astar.motif!=='ambiguity')return false;
    if(!s1||!s1.changed||s1.status!=='candidate'||!s1.pick)return false;
+   if(v46?.status!=='candidate')return false;
    if(!qualifyStrong(v46Cell))return false;
    return spatialClusters([v46Cell,s1.pick]).length>1;
  }
@@ -374,7 +383,7 @@
    const lmin=lminOf(reduced.pool,astar),view=competitiveView(reduced.pool,lmin);
    const s1=policyS1(astar,reduced.pool,{sign:frame.sign},view);
    const v46Cell=reduced.pool.find(c=>(c.tags||[]).includes('engine-published'))||null;
-   const ambiguityPreserved=preserveAmbiguity(astar,s1,v46Cell);
+   const ambiguityPreserved=preserveAmbiguity(astar,s1,v46,v46Cell);
    const pub=ambiguityPreserved?{status:'unresolved',motif:'ambiguity',reason:astar.reason||null,pick:null,
      policy:'S1',changed:false,activated:true,nStrongCompetitive:s1.nStrongCompetitive??null,
      nClusters:s1.nClusters??null,note:'Ambiguïté A_STAR préservée : le candidat S1 et un candidat V4.6 STRONG occupent des hypothèses spatialement distinctes.'}:s1;
