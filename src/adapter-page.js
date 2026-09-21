@@ -225,15 +225,55 @@
    data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
    progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length});return data;
  }
+ /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
+  * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de
+  * sélection et par le garde d'émission, pour qu'elles ne puissent pas diverger. */
+ function projectToView(cam,point){
+   if(!cam||!cam.viewport||!Array.isArray(point))return null;
+   const ndc=C.point(C.multiply(cam.projection,cam.sceneRelativeToCamera),point);
+   return {ndc,viewport:cam.viewport,inView:!ndc.some(v=>v < -1||v>1)};
+ }
+ /* Un refus d'émission doit être explicable sans rejeu : repère, source, cible,
+  * centre de vue, NDC par composante et bornes retenues. */
+ function refusalDetail(side,now,target,cam,view){
+   const fmt=p=>Array.isArray(p)?p.map(v=>Number(v).toFixed(6)).join(', '):'non-observé';
+   const reason=!cam?'caméra non lisible':!cam.viewport?'viewport absent'
+     :'hors bornes : '+['x','y','z'].filter((_,i)=>Math.abs(view.ndc[i])>1).join('+');
+   return `[repère=scene-relative frameId=${now.identity.frameId??'non-observé'}`
+     +` ; source=(${fmt(now.rails[side]?.positionSceneRelative)}) ; cible=(${fmt(target)})`
+     +` ; centre de vue=(${fmt(cam?.cameraToSceneRelative?.slice(12,15))})`
+     +` ; ndc=(${fmt(view?.ndc)}) ; bornes=[-1,1] par composante`
+     +` ; viewport=${cam?.viewport?`${cam.viewport.width.toFixed(1)}x${cam.viewport.height.toFixed(1)}px`:'absent'}`
+     +` ; raison=${reason}]`;
+ }
+ /* SÉLECTION D'UN RAIL — incident terrain du 21/09/2026, cut 3560.
+  *
+  * Une caméra IMMOBILE n'est pas un rail SÉLECTIONNÉ. ESV recentre sa vue
+  * orthographique sur le rail cliqué de façon asynchrone : « inchangée depuis
+  * trois lectures » se lit exactement comme « pas encore partie », et comme
+  * « jamais partie ». Attendre la seule stabilité rendait donc la main avec la
+  * caméra du rail PRÉCÉDENT.
+  *
+  * Ce n'est pas rattrapable en aval : la vue mesurée sur les 66 vues du lot
+  * terrain fait 0,4 unité de scène, l'entraxe des rails 1,50 — 3,75 fois plus.
+  * Les deux rails ne peuvent jamais coexister dans la vue, et le rail non
+  * sélectionné projette à |ndc| ≈ 7,4. L'attente doit donc observer le rail
+  * DEMANDÉ revenu dans la vue, en plus de la stabilité.
+  *
+  * Le prédicat reste la condition dont dépend le clic — aucun seuil d'amplitude
+  * n'est introduit : le rail sélectionné projette à ndc ≈ 0, l'autre à ≈ 7,4. */
  async function select(side,expected,guard=()=>assertExpected(expected)){guard();nativeClick(selectors[side]);
-   // Wait for a stable camera, rather than treating a dispatched click as success.
    let previous=null,stable=0;
-   await waitFor(()=>{assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
-     if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;return stable>=P.lecturesStables;},'Caméra ESV non stabilisée.',P.attenteMs,guard);}
+   await waitFor(()=>{const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+     if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;
+     if(stable<P.lecturesStables)return false;
+     return !!projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView;},
+     'Vue ESV non recentrée sur le rail '+side+'.',P.attenteMs,guard);}
  async function clickPosition(side,target,expected){
-   await select(side,expected);assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
-   const m=C.multiply(cam.projection,cam.sceneRelativeToCamera),ndc=C.point(m,target),r=cam.viewport;
-   if(!r||ndc.some(v=>v < -1||v>1))throw Error('Position proposée hors de la vue : '+side);
+   await select(side,expected);const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   const view=projectToView(cam,target);
+   if(!view?.inView)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view));
+   const r=view.viewport,ndc=view.ndc;
    c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
      clientX:r.left+(ndc[0]+1)*r.width/2,clientY:r.top+(1-ndc[1])*r.height/2,button:0,buttons:1}));
    return waitFor(()=>{const now=assertExpected(expected);return C.distance(now.rails[side].positionSceneRelative,target)<=.001?now:false;},

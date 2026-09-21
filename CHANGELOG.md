@@ -1,5 +1,43 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — correctif ciblé : incident apply du cut 3560
+
+Premier lot Pilote GCV1 réel sous Edge : 33 propositions, 29 appliquées et
+validées, 3 différées par navigation sans décision, et **un refus d'apply** sur
+la partie 9, cut 3560 — « Position proposée hors de la vue : left » — alors que
+la proposition était applicable. La science n'est pas touchée : `src/engine.js`,
+`src/geometry.js`, `src/geometry-candidate-v1.js`, `src/gcv1-shadow.js`,
+`src/brain.js`, `src/geometry-brain.js` et `src/gcv1-export.js` gardent leurs
+empreintes. Ni la politique `DEFERRED_UNRESOLVED`, ni les règles VALIDATE/SKIP
+ne sont modifiées.
+
+**Cause.** `select()` n'attendait qu'une caméra IMMOBILE, jamais le rail
+DEMANDÉ revenu dans la vue. ESV recentre sa vue orthographique sur le rail
+cliqué de façon asynchrone : « inchangée depuis trois lectures » se lit
+exactement comme « pas encore partie », et comme « jamais partie ». La main
+était donc rendue avec la caméra du rail précédent. Ce n'est pas rattrapable en
+aval, parce que la vue relevée sur les 66 vues du lot fait 0,4 unité de scène
+quand l'entraxe des rails en fait 1,50 — 3,75 fois plus : les deux rails ne
+peuvent jamais coexister dans la vue, et le rail non sélectionné projette à
+|ndc| ≈ 7,4. La capture finissant sur le rail droit et l'apply commençant par le
+gauche, chaque apply exigeait cette migration ; 29 l'ont obtenue, et le seul cut
+où ESV était dégradé (vue droite à 17,1 s, `partial-limit`, 80 points retenus
+sur 504 270 inspectés) ne l'a pas obtenue.
+
+**Correctif.** L'attente de sélection observe désormais le rail demandé
+réellement revenu dans la vue, en plus de la stabilité. Le prédicat est la
+condition dont dépend le clic — aucun seuil d'amplitude n'est introduit : le
+rail sélectionné projette à ndc ≈ 0, l'autre à ≈ 7,4. Le garde d'émission de
+`clickPosition()` est conservé : l'apply est un clic sur le canvas, une cible
+non projetable enverrait un clic à une position d'écran arbitraire. Son refus
+expose maintenant le repère, la source, la cible, le centre de vue, le NDC par
+composante, les bornes retenues et la raison exacte, pour être explicable sans
+rejeu. Reproduction versionnée : `tests/incident-3560.test.cjs`, cinq essais sur
+les grandeurs terrain, dont trois échouent avant correctif.
+
+Dette conservée et documentée (KI-030) : un refus sur le second rail laisse un
+apply partiel à réconcilier. Hors périmètre de ce lot.
+
 ## 4.7 — correctif post red-team Astra (D1–D4)
 
 Quatre défauts certains, reproduits par l'audit indépendant Astra sur le lot
