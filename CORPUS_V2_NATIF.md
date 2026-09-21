@@ -11,15 +11,24 @@ Les études GCV1 disponibles reposent sur deux ensembles très inégaux :
 
 | Ensemble | Rails exploitables | Oracle humain | Rôle |
 |---|---:|---|---|
-| `tests/corpus` (partie 23, profil U50) | 20 | `explicit-before-after`, 10 paires | seul HOLDOUT indépendant |
-| corpus GCV1 de découverte (parties 3, 7, 9) | 96 | 18 rails seulement, via session Natif | DÉCOUVERTE |
+| `tests/corpus` (partie 23, profil U50) | 20 | `explicit-before-after`, 10 paires | REGRESSION_CONSUMED — ancien holdout dépensé |
+| corpus GCV1 de découverte (parties 3, 7, 9) | 96 | 18 rails seulement, via session Natif | DISCOVERY — hypothèses déjà formées |
 
-Un HOLDOUT de 20 rails sur **une seule partie et un seul profil** ne permet ni
-de stratifier, ni de mesurer une non-dégradation ailleurs. C'est la limite qui a
-clos les deux dernières études : le phénomène visé par le support LiDAR
-adaptatif était absent du HOLDOUT (0/20), et le défaut S1 n'a qu'une seule
-occurrence mesurable sur 116 rails. Les deux verdicts sont corrects, et les
-deux sont limités par le volume d'oracles, pas par la méthode.
+La partie 23 est désormais un corpus **connu et consommé pour ce chantier**.
+Le cas 23/2857 droit a servi à identifier le défaut S1, comprendre sa cause,
+définir la garde, mesurer son comportement et valider le correctif. Cette
+partie reste utilisable pour la reproduction, la non-régression et la
+comparaison historique ; elle ne peut plus apporter de preuve indépendante
+de généralisation d'un futur GCV1.
+
+Ces 20 rails sur **une seule partie et un seul profil** ne permettent ni de
+stratifier, ni de mesurer une non-dégradation ailleurs. Le phénomène visé par
+le support LiDAR adaptatif était absent de cet ancien holdout (0/20), et le
+défaut S1 n'a qu'une seule occurrence mesurable sur les 116 rails étudiés.
+La correction ciblée est reproduite et sa non-régression est mesurée sur des
+données connues. Une preuve indépendante de généralisation nécessitera de
+nouvelles parties jamais utilisées pendant la conception, réservées en
+HOLDOUT selon la procédure du §5.
 
 ## 2. Verdict de suffisance — chaque donnée requise existe déjà
 
@@ -92,13 +101,15 @@ porter `humanFinalPositionsProvidedToEngine:false`.
 ## 5. Manifeste — ce qui reste à produire, hors ligne
 
 Un fichier par lot de collecte, écrit **avant toute analyse**, une ligne par
-rail :
+rail. Exemple fictif de structure pour une NOUVELLE partie affectée à
+DEVELOPMENT : les identifiants et valeurs ci-dessous sont illustratifs et ne
+constituent aucun nouvel oracle réel.
 
 ```
 { "format":"banane-corpus-v2-manifest-v1", "generatedAt":"…",
   "source":{ "file":"…", "sha256":"…", "nativeSessionId":"…" },
   "rows":[ { "recordId":"…", "visitId":"…", "side":"left",
-             "part":23, "cut":2857, "shape":"U50", "projectId":"…",
+             "part":999, "cut":1, "shape":"U50", "projectId":"…",
              "humanLabel":"VALIDATE_CORRECTED_BOTH",
              "displacementLocal":[0,0.0257,0.0009], "zSign":"+",
              "pointsRetained":194, "engineInputPoints":…,
@@ -111,12 +122,21 @@ Règle de partition, à déclarer avec le manifeste et jamais après :
 - La partition est **par partie**, pas par rail ni par cut. Deux cuts voisins
   d'une même partie partagent la voie, la pose et souvent le défaut : les
   répartir des deux côtés de la frontière ferait fuir le HOLDOUT.
-- `tests/corpus` (partie 23) **reste HOLDOUT** et ne change pas de statut.
-- Les parties 3, 7 et 9 restent **DÉCOUVERTE** : elles ont déjà servi à former
-  des hypothèses et ne peuvent plus prouver une généralisation.
-- Toute partie nouvellement collectée est affectée à l'ouverture du manifeste,
-  par une règle écrite, et son affectation n'est plus modifiable. Un HOLDOUT
-  regardé est un HOLDOUT dépensé.
+- Les parties 3, 7 et 9 ont le statut **DISCOVERY** : elles ont déjà servi à
+  former des hypothèses et ne peuvent plus prouver une généralisation indépendante.
+- `tests/corpus` (partie 23) a le statut **REGRESSION_CONSUMED** : ancien
+  holdout dépensé, réservé à la reproduction, à la non-régression et à la
+  comparaison historique ; aucune validation indépendante future sur cette partie.
+- Chaque nouvelle partie est affectée **avant toute analyse**, à l'ouverture
+  du manifeste et selon une règle écrite, soit à **DEVELOPMENT**, soit à **HOLDOUT**.
+- **DEVELOPMENT** : nouvelles parties accessibles pendant la conception de
+  GCV1 V2, utilisables pour les hypothèses, les choix architecturaux et les réglages.
+- **HOLDOUT** : nouvelles parties affectées à l'avance, non inspectées pendant
+  la conception et ouvertes seulement une fois le candidat scientifique figé.
+- Dès qu'un HOLDOUT est examiné pour prendre une décision de conception, il
+  devient **REGRESSION_CONSUMED** pour les travaux ultérieurs. Consigner cette
+  transition dans le manifeste en conservant l'affectation initiale et son
+  historique ; une partie consommée ne redevient jamais un HOLDOUT indépendant.
 
 Objectifs de volume, comme **objectifs de collecte** et non comme seuils
 scientifiques : au moins deux parties et deux profils distincts de ceux déjà
