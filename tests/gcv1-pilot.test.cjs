@@ -3,12 +3,19 @@ const G=require('../src/geometry.js'),{K,MemoryStore,SimulatedESV}=require('./fi
 
 function engineWith(railsOrError){
  const geometry={...G,proposeBoth(){if(railsOrError instanceof Error)throw railsOrError;return K.clone(railsOrError);}};
- const ctx={BananeCore3:K,BananeGeometry3:geometry};vm.createContext(ctx);
+ /* `src/engine.js` lit ses dépendances depuis globalThis dans ce contexte :
+  * le contrat d'écartement en fait désormais partie, comme au chargement de
+  * background.js. */
+ const ctx={BananeCore3:K,BananeGeometry3:geometry,BananeGauge4:require('../src/gauge.js')};vm.createContext(ctx);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/engine.js'),'utf8'),ctx);
  return ctx.BananeEngine3.Engine;
 }
+/* Écartement du double ESV : 1500,0 mm avant correction. Les deux deltas
+ * referment la paire à 1440,0 mm, donc dans le contrat [1405, 1470] — sans
+ * quoi le garde d'écartement refuserait de commander, ce que ces essais ne
+ * cherchent pas à éprouver. */
 function candidate(confidence=80,confidenceStatus='candidate-v1'){
- return Object.fromEntries(['left','right'].map((side,i)=>[side,{side,status:'candidate',delta:[0,i?0.001:-0.001,0.001],confidence,reasons:[],
+ return Object.fromEntries(['left','right'].map((side,i)=>[side,{side,status:'candidate',delta:[0,i?0.03:-0.03,0.001],confidence,reasons:[],
   method:G.DEFAULTS.method,source:confidenceStatus==='candidate-v1'?'geometry-candidate-v1-astar':'geometry-candidate-v1-s1',
   geometryEngine:'geometry-candidate-v1',gcv1:{confidenceStatus}}]));
 }

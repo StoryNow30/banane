@@ -12,8 +12,12 @@ let PROPOSE=null;const proposeBothReel=G.proposeBoth;
 G.proposeBoth=(capture,options)=>PROPOSE?PROPOSE(capture,options):proposeBothReel(capture,options);
 const {Engine}=require('../../src/engine.js');
 const EngineWith=propose=>{PROPOSE=propose;return Engine;};
+/* Écartement du double ESV : 1500,0 mm avant correction. Les deux deltas
+ * referment la paire à 1440,0 mm, donc dans le contrat [1405, 1470] — sans
+ * quoi le garde d'écartement refuserait de commander, ce que ces essais ne
+ * cherchent pas à éprouver. */
 function candidate(confidence=80,confidenceStatus='candidate-v1'){
- return Object.fromEntries(['left','right'].map((side,i)=>[side,{side,status:'candidate',delta:[0,i?0.001:-0.001,0.001],confidence,reasons:[],
+ return Object.fromEntries(['left','right'].map((side,i)=>[side,{side,status:'candidate',delta:[0,i?0.03:-0.03,0.001],confidence,reasons:[],
   method:G.DEFAULTS.method,source:confidenceStatus==='candidate-v1'?GCV1+'-astar':GCV1+'-s1',
   geometryEngine:GCV1,gcv1:{confidenceStatus,motif:'candidate'}}]));
 }

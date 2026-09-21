@@ -9,17 +9,25 @@ const DEFAULTS=Object.freeze({
  method:'template-surfaces-v3',
 });
 const median=a=>{if(!a.length)return NaN;const b=a.slice().sort((x,y)=>x-y),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
-const C={point:(_m,p)=>p.slice()};
+/* Le double de capture-core doit désormais savoir mesurer une distance : la
+ * composition GCV1 y lit l'écartement de la paire publiée. */
+const C={point:(_m,p)=>p.slice(),
+ distance:(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]))};
 
 function fixture(){
  const contour=[];
  for(let u=.012;u<=.072+1e-12;u+=.006)contour.push([0,u,0]);
  for(let z=-.014;z>=-.034-1e-12;z-=.004)contour.push([0,.012,z]);
- const rail={sceneRelativeToProfileLocal:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-   profileContours:[{verticesSceneRelative:contour}]};
+ /* Les deux rails portent une origine distincte : l'écartement de la paire est
+  * de 1450 mm, et les deux propositions du double se déplacent du même vecteur,
+  * donc l'écartement prévu reste 1450 mm — nominal, admissible. */
+ const railAt=x=>({positionSceneRelative:[x,0,0],
+   sceneRelativeToProfileLocal:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+   profileLocalToSceneRelative:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+   profileContours:[{verticesSceneRelative:contour}]});
  const points=[];
  for(let i=0;i<24;i++)points.push([0,.03+(i%8)*.004,(i%3)*.002]);
- return {rails:{left:rail,right:rail},pointsSceneRelative:points,visibleByClipBoxes:points.map(()=>true)};
+ return {rails:{left:railAt(0),right:railAt(1.45)},pointsSceneRelative:points,visibleByClipBoxes:points.map(()=>true)};
 }
 function harness({candidateThrows=false,candidates={},runtimeThrows=false}={}){
  let runtimeCalls=0,candidateCalls=0;const order=[];

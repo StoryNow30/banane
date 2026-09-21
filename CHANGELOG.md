@@ -1,5 +1,78 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — garde d'écartement de paire, deux défenses indépendantes
+
+Le lot Pilote réel du 21 septembre sur la partie 15 a appliqué **puis validé**
+dix paires dont l'écartement final était hors du contrat métier : 1503,5 ·
+1507,8 · 1508,5 · 1509,3 · 1509,8 · 1509,9 · 1510,1 · 1513,0 · 1513,5 et
+1564,0 mm, pour un contrat admissible de 1405 à 1470 mm. Chaque rail était
+individuellement plausible ; c'est la **paire** qui était fausse, et aucun
+étage ne mesurait son écartement.
+
+**Cause.** `src/gauge.js` existait mais n'était chargé par **rien** — ni
+`importScripts`, ni les scripts de page, ni le panneau, ni un `require` de
+production. Il ne calculait d'ailleurs pas l'écartement : son entrée était le
+**texte** affiché par ESV. La seule règle de paire du moteur,
+`enforcePairSupport`, compare des amplitudes latérales et n'a aucune notion
+d'espacement résultant. La composition GCV1 décide **par rail**, et les
+cellules candidates ne sortaient jamais de `scientificRail`.
+
+**Grandeur contrôlée.** La distance euclidienne entre les origines des deux
+rails, mesurée sur l'état **attendu après application des deltas**
+(`K.expectedPoses`), jamais sur l'état avant : l'écartement AVANT vaut
+couramment 1480–1500 mm et c'est précisément ce que Banane corrige. Sur les 56
+paires appliquées du lot réel, l'écartement prévu reproduit l'écartement relu
+dans ESV à **0,53 mm près au pire**, sous la tolérance de relecture de 1 mm du
+moteur, et la classe prévue coïncide avec la classe relue dans **56 cas sur
+56**. La mesure est invariante par translation globale, par changement de
+repère de scène et par échange gauche/droite, par construction.
+
+**Étage A — garde de paire dans GCV1.** Quand les deux rails publient un
+candidat, l'écartement prévu est mesuré et classé. Hors contrat, les **deux**
+rails deviennent `unresolved` avec le motif `gauge-out-of-contract` : aucun
+apply partiel n'est possible, et le cut suit le chemin `DEFERRED_UNRESOLVED`
+existant. Les candidats initiaux restent au diagnostic. La science mono-rail
+n'est pas touchée — ni la perte, ni `searchY`/`searchZ`, ni le support, ni la
+politique S1, ni la garde d'ambiguïté S1, dont les huit essais A–H restent
+verts.
+
+**Étage B — dernier garde avant commande.** `src/engine.js` mesure à son tour
+l'écartement sur l'état attendu, juste avant `adapter.apply`. Hors contrat, il
+ne commande rien, ne mute aucun état (ni snapshot, ni expected, ni intent), ne
+pose pas `reconcileRequired`, n'envoie ni VALIDATE ni SKIP, journalise
+`gauge-contract-violation` et rend une erreur `GAUGE_OUT_OF_CONTRACT` qui
+arrête le lot de façon récupérable. Un déclenchement de cet étage est une
+**violation d'invariant** — l'étage A aurait dû s'abstenir — et non une
+seconde façon silencieuse de trancher : le moteur ne fabrique aucun résultat
+scientifique.
+
+**Hors contrat n'est jamais un SKIP.** Le module d'écartement ne rend plus
+aucun outcome décisionnel, et sa borne basse passe de 1410 à **1405 mm** :
+la dérive est corrigée et les trois bornes 1405/1430/1470 n'existent qu'à un
+seul endroit. Aucune voie ajoutée n'appelle `SKIP`, `explicit-skip` ni
+`skipAndNext`. Le SKIP reste une décision de l'opérateur seul.
+
+**Rejeu.** Sur les 74 cuts du lot réel, **10 décisions changent** — les dix
+paires hors contrat, qui passent d'« appliquée puis validée » à
+`unresolved / gauge-out-of-contract` — et **64 sont inchangées** : les 46
+applications admissibles (1429,1 à 1446,8 mm) et les 18 différés, sur
+lesquels la garde est inerte faute de paire publiée. Sur les 58 autres
+captures disponibles, 7 paires sur 51 sont refusées, dont quatre des grosses
+erreurs de placement déjà documentées sur la partie 9.
+
+**Ce lot ne choisit pas un autre couple de candidats.** Une étude préliminaire
+hors ligne montre que les dix cuts bloqués exposent des couples déjà produits
+dont l'écartement serait admissible, mais que **0 sur 10** en exposent un dont
+les deux cellules restent dans le competitive set existant (`loss/lmin ≤ 1,5`).
+Les sauver demanderait donc de relâcher un critère scientifique, ce qui n'est
+pas une décision d'écartement. C'est l'objet de `GAUGE_PAIR_ARBITRATION_STUDY`.
+
+Le moteur est ré-épinglé sciemment : `src/engine.js` passe de
+`94374fa7dd35de26…` à `be15576321f7a1bf…`, et `audit/v4.6.0-engine-baseline.json`
+déclare le périmètre exact du dégel. `src/geometry.js`,
+`src/geometry-candidate-v1.js` et `src/adapter-page.js` gardent leurs
+empreintes. Aucun bump de version : le manifeste reste en 4.6.0.
+
 ## 4.7 — correctif ciblé : préservation de l'ambiguïté S1
 
 La politique S1 pouvait **lever** une abstention d'A_STAR prononcée pour

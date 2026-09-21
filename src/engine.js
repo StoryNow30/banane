@@ -1,8 +1,10 @@
 (function(root,factory){const api=factory(typeof module==='object'?require('./core.js'):root.BananeCore3,
- typeof module==='object'?require('./geometry.js'):root.BananeGeometry3);
+ typeof module==='object'?require('./geometry.js'):root.BananeGeometry3,
+ typeof module==='object'?require('./gauge.js'):root.BananeGauge4);
  if(typeof module==='object')module.exports=api;else root.BananeEngine3=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(K,G){
+})(typeof globalThis!=='undefined'?globalThis:this,function(K,G,Gauge){
  'use strict';
+ if(!Gauge||typeof Gauge.classifyMm!=='function')throw Error('Moteur : contrat d’écartement absent.');
  class Engine{
   constructor(adapter,store){this.adapter=adapter;this.store=store;this.busy=false;this.task=null;
    this.s={schemaVersion:4,version:K.VERSION,sessionId:K.uid(),mode:'observation',collection:'IDLE',
@@ -218,8 +220,32 @@
    const now=await this.adapter.state();K.assertTarget(this.s.proposal.identity,now.identity);this.writable(now.identity);
    if(!K.equalPoses(this.s.before.rails,now.rails))throw Error('État modifié depuis la proposition.');
    const proposals=this.s.proposal.rails;if(Object.values(proposals).some(p=>!p.delta))throw Error('Une proposition est absente.');
+   /* ÉTAGE B — dernier garde avant toute commande, indépendant de la couche
+    * scientifique. L'état attendu est calculé ici de toute façon ; on y mesure
+    * l'écartement de la paire et on refuse de commander hors contrat.
+    *
+    * Rien n'est muté avant ce contrôle : ni snapshot, ni expected, ni intent.
+    * Le refus ne pose donc pas `reconcileRequired`, n'envoie ni VALIDATE ni
+    * SKIP, ne touche pas la scène, et laisse un état récupérable — le lot
+    * s'arrête sur une erreur portant son code.
+    *
+    * L'étage A de GCV1 doit normalement avoir déjà transformé ce cas en
+    * abstention. Un déclenchement ici est donc une VIOLATION D'INVARIANT, et
+    * pas une seconde façon silencieuse de trancher : ce garde ne fabrique
+    * aucun résultat scientifique et ne prend aucune décision métier. */
+   const expected=K.expectedPoses(now,proposals);
+   const gaugeMm=Gauge.gaugeMmOf(expected,K.C),gaugeClass=Gauge.classifyMm(gaugeMm);
+   if(!Gauge.admissible(gaugeClass)){
+    await this.event('gauge-contract-violation',{identity:now.identity,proposalId:this.s.proposal.id,
+      gaugeMm,gaugeClass,contract:Gauge.CONTRACT,beforeGaugeMm:Gauge.gaugeMmOf(now.rails,K.C),
+      commandSent:false,validateSent:false,skipSent:false,stage:'engine-pre-apply',
+      invariant:'GCV1_PAIR_GAUGE_GATE_SHOULD_HAVE_ABSTAINED'});
+    const error=Error('Écartement de paire hors contrat : '+gaugeMm.toFixed(1)+' mm ('+gaugeClass+
+      ', admissible '+Gauge.CONTRACT.lowMm+'–'+Gauge.CONTRACT.maximumMm+' mm). Aucune commande envoyée.');
+    error.code='GAUGE_OUT_OF_CONTRACT';throw error;
+   }
    this.s.snapshot=K.clone(now);this.s.validationStarted=false;
-   this.s.expected=K.expectedPoses(now,proposals);this.s.intent={kind:'apply',proposalId:this.s.proposal.id,identity:now.identity};await this.save();
+   this.s.expected=expected;this.s.intent={kind:'apply',proposalId:this.s.proposal.id,identity:now.identity};await this.save();
    try{const result=await this.adapter.apply(now,proposals);K.assertTarget(now.identity,result.identity);
     if(!K.equalPoses(this.s.expected,result.rails,.001))throw Error('Application non conforme à la proposition (tolérance de relecture 1 mm).');
     const observedRecord=K.reference(now,result,this.s.lidarId,this.s.sessionId);

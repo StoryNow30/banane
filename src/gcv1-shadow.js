@@ -1,21 +1,27 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports){
-    const api=factory(require('./geometry-brain.js'),require('./geometry-candidate-v1.js'),require('../vendor/capture-core.js'));
+    const api=factory(require('./geometry-brain.js'),require('./geometry-candidate-v1.js'),require('../vendor/capture-core.js'),require('./gauge.js'));
     Object.defineProperty(api,'_createForTest',{value:factory,enumerable:false});
     module.exports=api;
   }else{
     const runtime=root.BananeGeometryRuntimeV46;
     const candidate=root.BananeGeometry3;
-    const api=factory(runtime,candidate,root.BananeCaptureCore);
+    const api=factory(runtime,candidate,root.BananeCaptureCore,root.BananeGauge4);
     root.BananeGCV1Shadow=api;
     root.BananeGeometry3=api.geometry;
   }
-})(typeof globalThis!=='undefined'?globalThis:this,function(Runtime,Candidate,C){
+})(typeof globalThis!=='undefined'?globalThis:this,function(Runtime,Candidate,C,Gauge){
  'use strict';
+
+ /* Le contrat d'écartement est injecté par l'enveloppe ; le repli garde les
+  * appels historiques à trois arguments de `_createForTest` fonctionnels. */
+ const GAUGE=Gauge||(typeof module==='object'&&typeof require==='function'?require('./gauge.js'):
+   (typeof globalThis!=='undefined'?globalThis:this).BananeGauge4);
 
  if(!Runtime||typeof Runtime.proposeBoth!=='function')throw Error('GCV1 shadow : géométrie runtime V4.6 absente.');
  if(!Candidate||typeof Candidate.propose!=='function')throw Error('GCV1 shadow : Candidate V1 absent.');
- if(!C||typeof C.point!=='function')throw Error('GCV1 shadow : capture-core absent.');
+ if(!C||typeof C.point!=='function'||typeof C.distance!=='function')throw Error('GCV1 shadow : capture-core absent ou incomplet.');
+ if(!GAUGE||typeof GAUGE.classifyMm!=='function')throw Error('GCV1 shadow : contrat d’écartement absent.');
 
  const V46=Runtime.frozen&&typeof Runtime.frozen.propose==='function'?Runtime.frozen:Runtime;
  const RATIO=1.5,SEP=.02,GRID=.003;
@@ -403,18 +409,65 @@
      s1Activated:!!pub.activated,s1Changed:!!pub.changed,publishedWeak,s1AmbiguityPreserved:ambiguityPreserved,
      deltaV46Next:hypotDelta(v46.delta,nextDelta)};
  }
+ /* ÉTAGE A — garde d'écartement de la PAIRE PUBLIÉE.
+  *
+  * Un candidat peut être excellent seul et faux en paire : c'est le défaut
+  * constaté en lot réel, où dix paires ont été appliquées puis validées entre
+  * 1503,5 et 1564,0 mm. La science mono-rail n'y est pour rien et n'est pas
+  * touchée — ni la perte, ni la fenêtre de recherche, ni le support, ni S1.
+  *
+  * La contrainte porte sur l'APRÈS PRÉDIT, jamais sur l'AVANT : l'écartement
+  * AVANT vaut couramment 1480–1500 mm et c'est l'état que Banane corrige.
+  *
+  * Hors contrat, les DEUX rails du cut deviennent unresolved, avec le motif
+  * `gauge-out-of-contract`. Aucun apply partiel n'est donc possible, et le
+  * cut suit le chemin DEFERRED_UNRESOLVED existant. Aucun SKIP, aucune
+  * décision : une paire hors contrat est une abstention.
+  *
+  * Ce lot ne choisit PAS un autre couple de candidats ; il sécurise la paire
+  * finalement publiée. Les candidats initiaux restent dans le diagnostic. */
+ function assessPublishedPair(capture,rails){
+   const left=rails.left,right=rails.right;
+   if(!left||!right||left.ok!==true||right.ok!==true)return null;
+   if(left.next?.status!=='candidate'||right.next?.status!=='candidate')return null;
+   if(!Array.isArray(left.next.delta)||!Array.isArray(right.next.delta))return null;
+   return GAUGE.assessPair(capture.rails,{left:left.next.delta,right:right.next.delta},C);
+ }
+ function rejectPairForGauge(rail,report){
+   const published=rail.next;
+   rail.pairGauge={...report,rejected:true,publishedBeforeGate:{status:published.status,motif:published.motif,
+     delta:published.delta,loss:published.loss,topRows:published.topRows,faceCount:published.faceCount,
+     pick:published.pick,changed:published.changed,activated:published.activated}};
+   rail.next={...published,status:'unresolved',motif:'gauge-out-of-contract',
+     reason:'Écartement de paire hors contrat : '+report.predictedMm.toFixed(1)+' mm ('+report.gaugeClass+
+       ', admissible '+report.lowMm+'–'+report.maximumMm+' mm).',
+     delta:null,pick:null,changed:false};
+   rail.s1Changed=false;rail.publishedWeak=false;rail.deltaV46Next=hypotDelta(rail.v46.delta,null);
+ }
  function scientificProposeBoth(capture){
    const rails={};
    for(const side of ['left','right']){
      try{rails[side]=scientificRail(capture,side);}
      catch(e){rails[side]={ok:false,side,error:e?.message||String(e)};}
    }
-   return {rails,summary:{
+   const pairGauge=assessPublishedPair(capture,rails);
+   /* Une paire dont l'écartement n'est pas MESURABLE n'est pas rejetée ici :
+    * fabriquer une abstention depuis un champ absent serait une décision
+    * scientifique inventée. Le dernier garde du moteur, lui, refuse de
+    * commander ce qu'il ne peut pas vérifier. */
+   if(pairGauge){
+     if(pairGauge.measurable&&!pairGauge.admissible)for(const side of ['left','right'])rejectPairForGauge(rails[side],pairGauge);
+     else for(const side of ['left','right'])rails[side].pairGauge={...pairGauge,rejected:false};
+   }
+   return {rails,pairGauge,summary:{
      nextCandidates:Object.values(rails).filter(r=>r?.next?.status==='candidate').length,
      nextUnresolved:Object.values(rails).filter(r=>r?.next&&r.next.status!=='candidate').length,
      s1Activated:Object.values(rails).filter(r=>r?.s1Activated).length,
      s1Changed:Object.values(rails).filter(r=>r?.s1Changed).length,
      publishedWeak:Object.values(rails).filter(r=>r?.publishedWeak).length,
+     pairGaugeRejected:!!(pairGauge&&pairGauge.measurable&&!pairGauge.admissible),
+     pairGaugeMm:pairGauge?pairGauge.predictedMm:null,
+     pairGaugeClass:pairGauge?pairGauge.gaugeClass:null,
    }};
  }
 
@@ -505,6 +558,7 @@
   const api={CONTRACT,geometry,configure,state,journal,consumeLast,armOnce,disarm,scientificProposeBoth,toRuntimeRails};
  if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{
    round6,lossRatio,inCompetitive,spatialClusters,qualifyStrong,alreadyQualified,policyS1,preserveAmbiguity,hypotDelta,
+   assessPublishedPair,GAUGE,
  },enumerable:false});
  return api;
 });

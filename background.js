@@ -3,7 +3,7 @@
 // La composition V4.6 (géométrie gelée + cerveau) reste la décision runtime.
 // GCV1 est chargé ensuite comme copie scientifique figée. La façade conserve
 // V4.6 par défaut, et ne sélectionne GCV1 que pour un appel explicitement armé.
-importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/geometry.js',
+importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
  'src/geometry-candidate-v1.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
