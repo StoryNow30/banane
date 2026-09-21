@@ -35,8 +35,13 @@ autres occurrences `s1Changed`. Rejeu complet après correctif : **1 rail sur 11
 change de décision**, 16 champs scientifiques comparés sur les 116 rails ne
 montrent **aucune** divergence, les erreurs > 50 mm sur les 38 rails à oracle
 humain passent de 7 à 6, les abstentions de 3 à 4, et **aucune erreur nouvelle**
-n'apparaît. Reproduction versionnée : `tests/gcv1-s1-ambiguity.test.cjs`, sept
-essais A–G, tous rouges avant correctif.
+n'apparaît. Reproduction versionnée : `tests/gcv1-s1-ambiguity.test.cjs`.
+Les essais A–G étaient tous rouges avant correctif, mais ne constituent pas
+sept preuves fonctionnelles indépendantes : A et G démontrent le comportement
+incorrect ; B dépend du nouveau champ observable ; C, D, E et F échouaient
+notamment parce que le nouveau helper et son API n'existaient pas dans
+l'ancienne version. H reste un test de non-régression du code courant, pas une
+reproduction directe du défaut sur `ae8002ee` avec la même signature.
 
 Dette conservée et documentée (KI-031) : sur un cas de ce type, GCV1 s'abstient
 alors qu'une hypothèse était la bonne. Départager deux hypothèses soutenues

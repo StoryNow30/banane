@@ -60,8 +60,16 @@ c'est un **manifeste** (§5) et la discipline de collecte (§3).
 5. Une session d'essai ou une mauvaise cible se jette avec `discard()`, qui
    supprime nuages, visites et événements. **Ne jamais réparer un enregistrement
    à la main.**
-6. Exporter la session. L'export est consommable tel quel par
-   `tools/native-offline-evaluate.cjs`, et l'appariement strict
+6. Exporter la session. Si le fichier est au format
+   `banane-native-session-v3-compact`, le réhydrater d'abord par
+   `src/native-export.js` → `expand()`, par exemple avec
+   `node tools/export-compact.cjs --expand COMPACT.json --out SESSION.json`.
+   Fournir ensuite `SESSION.json` à
+   `node tools/native-offline-evaluate.cjs --input SESSION.json --output RAPPORT.json`.
+   Le replay attend les `records` et `clouds` réhydratés, pas les références
+   internées du format compact. Si l'export comprend plusieurs segments,
+   `tools/merge-segments.cjs` les réhydrate via `expand()` pendant la fusion ;
+   son fichier fusionné est l'entrée du replay. L'appariement strict
    `K.pairCorpus` refuse toute paire dont les rails de capture ne sont pas à la
    pose `initial` de la référence.
 
