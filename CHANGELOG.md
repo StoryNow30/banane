@@ -1,5 +1,50 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — correctif ciblé : préservation de l'ambiguïté S1
+
+La politique S1 pouvait **lever** une abstention d'A_STAR prononcée pour
+AMBIGUÏTÉ, sur son seul test « un cluster STRONG compétitif ». Le cas
+indépendant partie 23 / cut 2857 / rail droit le montre : A_STAR s'abstenait
+parce que plusieurs placements du champignon étaient plausibles, et S1 publiait
+u = 161,4 mm, z = 34,0 mm — **139,7 mm** de la correction humaine — alors que
+V4.6 proposait u = 26,0 mm, à 0,9 mm de cette correction. Le candidat V4.6,
+géométriquement STRONG, occupait une hypothèse spatialement distincte : les deux
+placements étaient réellement soutenus, l'ambiguïté était réelle, et S1 la
+levait sans preuve.
+
+**Correctif.** Quand A_STAR s'abstient pour ambiguïté, que S1 publierait un
+candidat, et qu'un candidat V4.6 géométriquement STRONG occupe une hypothèse
+spatialement distincte, GCV1 rend `unresolved / ambiguity`. La garde ne choisit
+pas : elle **préserve** l'ambiguïté. **Aucun repli automatique vers V4.6**,
+aucun candidat, aucune décision VALIDATE/SKIP, aucune application — le Pilote
+suit son chemin `DEFERRED_UNRESOLVED` habituel.
+
+**Aucun seuil empirique n'est introduit.** Le motif vient de `motifOf`, la
+qualification de `qualifyStrong`, la séparation spatiale de `spatialClusters` et
+de `CONTRACT.alternativeSeparation` (20 mm), toutes trois préexistantes. La
+science n'est pas touchée : `src/geometry.js`, `src/geometry-candidate-v1.js`,
+la fonction de perte, `searchY`/`searchZ`, l'enveloppe LiDAR, le germe
+secondaire, `src/engine.js`, l'adaptateur et la navigation gardent leurs
+empreintes. Seule la couche de composition `src/gcv1-shadow.js` change.
+
+**Ablation avant codage,** sur les 116 rails exploitables de tous les corpus
+disponibles : la règle se déclenche **une seule fois**, sur 23/2857 droite. Elle
+préserve les deux ratifications S1 utiles (23/2865 droite, 0,7 mm de V4.6, 3,2
+mm de l'humain ; 9/4680 droite, 0,0 mm de V4.6, 4,1 mm de l'humain) et les cinq
+autres occurrences `s1Changed`. Rejeu complet après correctif : **1 rail sur 116
+change de décision**, 16 champs scientifiques comparés sur les 116 rails ne
+montrent **aucune** divergence, les erreurs > 50 mm sur les 38 rails à oracle
+humain passent de 7 à 6, les abstentions de 3 à 4, et **aucune erreur nouvelle**
+n'apparaît. Reproduction versionnée : `tests/gcv1-s1-ambiguity.test.cjs`, sept
+essais A–G, tous rouges avant correctif.
+
+Dette conservée et documentée (KI-031) : sur un cas de ce type, GCV1 s'abstient
+alors qu'une hypothèse était la bonne. Départager deux hypothèses soutenues
+demanderait une observation supplémentaire, pas un arbitrage.
+
+Procédure de collecte du Corpus V2 Natif : `CORPUS_V2_NATIF.md`. Vérification
+faite, les primitives Natif existantes suffisent ; aucune collecte n'est codée.
+
 ## 4.7 — correctif ciblé : incident apply du cut 3560
 
 Premier lot Pilote GCV1 réel sous Edge : 33 propositions, 29 appliquées et

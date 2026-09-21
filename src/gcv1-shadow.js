@@ -328,6 +328,21 @@
      policy:'S1',changed:false,activated:true,nStrongCompetitive:0,nClusters:0,
      note:'Aucun STRONG dans le competitive set ; motif A_STAR conservé.'};
  }
+ /* Garde d'ambiguïté S1. Quand A_STAR s'abstient POUR AMBIGUÏTÉ et que S1
+  * publierait malgré tout un candidat appartenant à une hypothèse spatialement
+  * distincte de celle d'un candidat V4.6 géométriquement STRONG, les deux
+  * placements concurrents sont réellement soutenus : l'ambiguïté constatée par
+  * A_STAR n'est pas levée, elle est préservée. Aucun repli automatique sur
+  * V4.6, aucun candidat publié, aucune décision d'application ici — le Pilote
+  * suit son chemin DEFERRED_UNRESOLVED habituel. Aucun seuil nouveau : le
+  * motif vient de motifOf, la qualification géométrique de qualifyStrong, et
+  * la distinction spatiale de spatialClusters/SEP (alternativeSeparation). */
+ function preserveAmbiguity(astar,s1,v46Cell){
+   if(!astar||astar.status==='candidate'||astar.motif!=='ambiguity')return false;
+   if(!s1||!s1.changed||s1.status!=='candidate'||!s1.pick)return false;
+   if(!qualifyStrong(v46Cell))return false;
+   return spatialClusters([v46Cell,s1.pick]).length>1;
+ }
  function deltaOf(pub,sign){
    if(!pub||pub.status!=='candidate'||!pub.pick)return null;
    return [0,sign*pub.pick.u,pub.pick.z];
@@ -358,12 +373,17 @@
    const reduced=reducePool(coarse,frame,meta.uCenters||[0,frame.uMedian],extras);
    const lmin=lminOf(reduced.pool,astar),view=competitiveView(reduced.pool,lmin);
    const s1=policyS1(astar,reduced.pool,{sign:frame.sign},view);
-   const nextDelta=deltaOf(s1,frame.sign);
-   const next={status:s1.status,motif:s1.motif,reason:s1.reason||null,delta:nextDelta,
-     loss:s1.pick?.loss??null,topRows:s1.pick?.topRows??null,faceCount:s1.pick?.faceCount??null,
-     slopeLimited:!!s1.pick?.slopeLimited,activated:!!s1.activated,changed:!!s1.changed,
-     nClusters:s1.nClusters??null,nStrongCompetitive:s1.nStrongCompetitive??null,pick:compactCell(s1.pick)};
-   const publishedWeak=!!(next.status==='candidate'&&s1.pick&&!qualifyStrong(s1.pick));
+   const v46Cell=reduced.pool.find(c=>(c.tags||[]).includes('engine-published'))||null;
+   const ambiguityPreserved=preserveAmbiguity(astar,s1,v46Cell);
+   const pub=ambiguityPreserved?{status:'unresolved',motif:'ambiguity',reason:astar.reason||null,pick:null,
+     policy:'S1',changed:false,activated:true,nStrongCompetitive:s1.nStrongCompetitive??null,
+     nClusters:s1.nClusters??null,note:'Ambiguïté A_STAR préservée : le candidat S1 et un candidat V4.6 STRONG occupent des hypothèses spatialement distinctes.'}:s1;
+   const nextDelta=deltaOf(pub,frame.sign);
+   const next={status:pub.status,motif:pub.motif,reason:pub.reason||null,delta:nextDelta,
+     loss:pub.pick?.loss??null,topRows:pub.pick?.topRows??null,faceCount:pub.pick?.faceCount??null,
+     slopeLimited:!!pub.pick?.slopeLimited,activated:!!pub.activated,changed:!!pub.changed,
+     nClusters:pub.nClusters??null,nStrongCompetitive:pub.nStrongCompetitive??null,pick:compactCell(pub.pick)};
+   const publishedWeak=!!(next.status==='candidate'&&pub.pick&&!qualifyStrong(pub.pick));
    return {ok:true,side,
      frame:{sign:frame.sign,width:round6(frame.width),pointsLocal:frame.pointsLocal,uMedian:round6(frame.uMedian),
        uSeed:aStarLab(frame).uSeeds[0],zMedian:frame.zMedian},
@@ -371,7 +391,7 @@
      competitive:{lmin:view.lmin,nPool:view.nPool,nCompetitive:view.nCompetitive,
        nStrongPool:view.nStrongPool,nStrongCompetitive:view.nStrongCompetitive,nClusters:view.nClusters},
      poolMeta:{nCoarse:reduced.nCoarse,nLocalMin:reduced.nLocalMin,nKept:reduced.nKept,nDense:reduced.nDense,nStrongDense:reduced.nStrongDense},
-     s1Activated:!!s1.activated,s1Changed:!!s1.changed,publishedWeak,
+     s1Activated:!!pub.activated,s1Changed:!!pub.changed,publishedWeak,s1AmbiguityPreserved:ambiguityPreserved,
      deltaV46Next:hypotDelta(v46.delta,nextDelta)};
  }
  function scientificProposeBoth(capture){
@@ -475,7 +495,7 @@
  const geometry={...Runtime,proposeBoth};
   const api={CONTRACT,geometry,configure,state,journal,consumeLast,armOnce,disarm,scientificProposeBoth,toRuntimeRails};
  if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{
-   round6,lossRatio,inCompetitive,spatialClusters,qualifyStrong,alreadyQualified,policyS1,hypotDelta,
+   round6,lossRatio,inCompetitive,spatialClusters,qualifyStrong,alreadyQualified,policyS1,preserveAmbiguity,hypotDelta,
  },enumerable:false});
  return api;
 });
