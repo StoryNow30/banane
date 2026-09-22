@@ -1,0 +1,269 @@
+{
+ "format": "banane-resolution-report-v1",
+ "sessions": [
+  {
+   "input": "session.json",
+   "version": "4.7.0",
+   "visits": 32,
+   "rows": [
+    {
+     "inputMode": "initial-pose-read",
+     "rails": 46,
+     "pointsMedian": 446,
+     "faceMedian": 3,
+     "faceAtLeast6": 9,
+     "resolved": 7,
+     "resolutionRate": 0.15217391304347827,
+     "abstentions": {
+      "flank": 34,
+      "minTop": 3,
+      "slope": 2
+     },
+     "railsJudged": 7,
+     "lateralAbsMedianMm": 0.9,
+     "lateralAbsP90Mm": 17.7,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 18,
+     "cutsApplicable": 1,
+     "cutsApplicableJudged": 1,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 1.7
+    },
+    {
+     "inputMode": "first-snapshot",
+     "rails": 46,
+     "pointsMedian": 352,
+     "faceMedian": 3,
+     "faceAtLeast6": 8,
+     "resolved": 6,
+     "resolutionRate": 0.13043478260869565,
+     "abstentions": {
+      "flank": 35,
+      "minTop": 3,
+      "slope": 2
+     },
+     "railsJudged": 6,
+     "lateralAbsMedianMm": 2.4,
+     "lateralAbsP90Mm": 17.7,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 18,
+     "cutsApplicable": 1,
+     "cutsApplicableJudged": 1,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 3.7
+    }
+   ]
+  },
+  {
+   "input": "session.json",
+   "version": "4.7.1",
+   "visits": 41,
+   "rows": [
+    {
+     "inputMode": "initial-pose-read",
+     "rails": 63,
+     "pointsMedian": 704,
+     "faceMedian": 3,
+     "faceAtLeast6": 10,
+     "resolved": 10,
+     "resolutionRate": 0.15873015873015872,
+     "abstentions": {
+      "flank": 51,
+      "minTop": 2
+     },
+     "railsJudged": 6,
+     "lateralAbsMedianMm": 4,
+     "lateralAbsP90Mm": 17.2,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 29,
+     "cutsApplicable": 0,
+     "cutsApplicableJudged": 0,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 0
+    },
+    {
+     "inputMode": "first-snapshot",
+     "rails": 63,
+     "pointsMedian": 704,
+     "faceMedian": 3,
+     "faceAtLeast6": 8,
+     "resolved": 8,
+     "resolutionRate": 0.12698412698412698,
+     "abstentions": {
+      "flank": 53,
+      "minTop": 2
+     },
+     "railsJudged": 6,
+     "lateralAbsMedianMm": 4,
+     "lateralAbsP90Mm": 17.2,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 29,
+     "cutsApplicable": 0,
+     "cutsApplicableJudged": 0,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 0
+    }
+   ]
+  },
+  {
+   "input": "session.json",
+   "version": "4.7.1",
+   "visits": 111,
+   "rows": [
+    {
+     "inputMode": "initial-pose-read",
+     "rails": 47,
+     "pointsMedian": 621,
+     "faceMedian": 3,
+     "faceAtLeast6": 9,
+     "resolved": 9,
+     "resolutionRate": 0.19148936170212766,
+     "abstentions": {
+      "flank": 32,
+      "slope": 1,
+      "minTop": 5
+     },
+     "railsJudged": 4,
+     "lateralAbsMedianMm": 1.8,
+     "lateralAbsP90Mm": 2,
+     "railsWrongOver10Mm": 0,
+     "cutsWithBothRails": 17,
+     "cutsApplicable": 0,
+     "cutsApplicableJudged": 0,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 0
+    },
+    {
+     "inputMode": "first-snapshot",
+     "rails": 47,
+     "pointsMedian": 320,
+     "faceMedian": 0,
+     "faceAtLeast6": 4,
+     "resolved": 3,
+     "resolutionRate": 0.06382978723404255,
+     "abstentions": {
+      "flank": 37,
+      "minTop": 7
+     },
+     "railsJudged": 0,
+     "lateralAbsMedianMm": null,
+     "lateralAbsP90Mm": null,
+     "railsWrongOver10Mm": 0,
+     "cutsWithBothRails": 17,
+     "cutsApplicable": 0,
+     "cutsApplicableJudged": 0,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 0
+    }
+   ]
+  },
+  {
+   "input": "session.json",
+   "version": "4.7.2",
+   "visits": 105,
+   "rows": [
+    {
+     "inputMode": "initial-pose-read",
+     "rails": 174,
+     "pointsMedian": 826,
+     "faceMedian": 6,
+     "faceAtLeast6": 93,
+     "resolved": 87,
+     "resolutionRate": 0.5,
+     "abstentions": {
+      "flank": 76,
+      "slope": 6,
+      "minTop": 3,
+      "gauge-out-of-contract": 2
+     },
+     "railsJudged": 47,
+     "lateralAbsMedianMm": 2.1,
+     "lateralAbsP90Mm": 5.1,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 78,
+     "cutsApplicable": 18,
+     "cutsApplicableJudged": 10,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 6.5
+    },
+    {
+     "inputMode": "first-snapshot",
+     "rails": 174,
+     "pointsMedian": 693,
+     "faceMedian": 3,
+     "faceAtLeast6": 27,
+     "resolved": 29,
+     "resolutionRate": 0.16666666666666666,
+     "abstentions": {
+      "flank": 124,
+      "minTop": 21
+     },
+     "railsJudged": 10,
+     "lateralAbsMedianMm": 1.5,
+     "lateralAbsP90Mm": 21.9,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 78,
+     "cutsApplicable": 3,
+     "cutsApplicableJudged": 1,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 1.5
+    }
+   ]
+  },
+  {
+   "input": "session.json",
+   "version": "4.7.3",
+   "visits": 67,
+   "rows": [
+    {
+     "inputMode": "initial-pose-read",
+     "rails": 111,
+     "pointsMedian": 2138,
+     "faceMedian": 12,
+     "faceAtLeast6": 105,
+     "resolved": 82,
+     "resolutionRate": 0.7387387387387387,
+     "abstentions": {
+      "minTop": 3,
+      "flank": 5,
+      "gauge-out-of-contract": 18,
+      "ambiguity": 2,
+      "slope": 1
+     },
+     "railsJudged": 66,
+     "lateralAbsMedianMm": 3.2,
+     "lateralAbsP90Mm": 5,
+     "railsWrongOver10Mm": 1,
+     "cutsWithBothRails": 55,
+     "cutsApplicable": 37,
+     "cutsApplicableJudged": 29,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 5.8
+    },
+    {
+     "inputMode": "first-snapshot",
+     "rails": 111,
+     "pointsMedian": 704,
+     "faceMedian": 6,
+     "faceAtLeast6": 61,
+     "resolved": 55,
+     "resolutionRate": 0.4954954954954955,
+     "abstentions": {
+      "flank": 39,
+      "minTop": 15,
+      "ambiguity": 2
+     },
+     "railsJudged": 44,
+     "lateralAbsMedianMm": 4,
+     "lateralAbsP90Mm": 6.1,
+     "railsWrongOver10Mm": 3,
+     "cutsWithBothRails": 55,
+     "cutsApplicable": 12,
+     "cutsApplicableJudged": 8,
+     "cutsApplicableWrongOver10Mm": 0,
+     "worstApplicableLateralMm": 5.4
+    }
+   ]
+  }
+ ]
+}

@@ -48,7 +48,13 @@ function temporalBoundaries(record,observations=[]){const rows=(record.stateTran
  return {known,unknown};}
 
 // Read only acquisition, initial state and geometry. Never consult final/label/eligibility.
-function prepareRail(record,side,clouds,observations=[],boundaries=temporalBoundaries(record,observations)){
+/* Entrée moteur (4.8) : `initial-pose-read` par défaut — l'instantané qualifié
+ * plus la suite de la même lecture, sur la même pose, avant toute action
+ * humaine (voir `initialPoseReadIds`). `first-snapshot` reproduit l'entrée
+ * historique, pour comparer. */
+const INPUT_MODES=Object.freeze(['initial-pose-read','first-snapshot']),DEFAULT_INPUT_MODE='initial-pose-read';
+function prepareRail(record,side,clouds,observations=[],boundaries=temporalBoundaries(record,observations),options={}){
+ const inputMode=options.inputMode||DEFAULT_INPUT_MODE;if(!INPUT_MODES.includes(inputMode))throw Error('Mode d’entrée inconnu : '+inputMode);
  const initial=record.beforeEstablished,firstChange=boundaries.known[side]?.at||null,
   firstUnknown=boundaries.unknown.sort((a,b)=>String(a.at).localeCompare(String(b.at)))[0]||null;
  const bounds=[firstChange&&{at:firstChange,reason:'no-qualified-pre-correction-snapshot'},
@@ -77,6 +83,10 @@ function prepareRail(record,side,clouds,observations=[],boundaries=temporalBound
  if(reasons.length)return {status:'excluded',reasons,snapshotId:snapshot.snapshotId,...timing};
  const descriptor={identity:record.identity,side,initialRail:initial.rails[side],eligibility:{criteriaVersion:snapshot.criteriaVersion,
   snapshotId:snapshot.snapshotId,chunkIds:snapshot.chunkIds}};
+ const intentAt=(record.operatorIntents||[]).map(intent=>intent.observedAt).filter(validTime).sort()[0]||null;
+ const boundaryAt=[firstBoundary?.at,intentAt].filter(validTime).sort()[0]||null;
+ if(inputMode==='initial-pose-read'){const ids=Legacy.initialPoseReadIds(descriptor.eligibility,clouds,side,boundaryAt);
+  if(ids)descriptor.eligibility={...descriptor.eligibility,readMode:'initial-pose-read-v1',snapshotChunkIds:snapshot.chunkIds.slice(),chunkIds:ids,boundaryAt};}
  const input=Legacy.buildEngineInput(descriptor,clouds);
  if(input.status!=='ready')return {status:'excluded',reasons:input.reasons,snapshotId:snapshot.snapshotId,...timing};
  const checkpoint=clouds.get(snapshot.snapshotId);
@@ -87,12 +97,13 @@ function prepareRail(record,side,clouds,observations=[],boundaries=temporalBound
  const allPoints=input.chunks.reduce((n,c)=>n+(c.pointsSceneRelative?.length||0),0);
  return {...input,snapshotId:snapshot.snapshotId,snapshotAcquiredThroughAt:snapshot.acquiredThroughAt,
   ...timing,initialObservedAt:initial.capturedAt,initialRail:copy(initial.rails[side]),
+  inputMode,readBoundaryAt:boundaryAt,snapshotChunkCount:snapshot.chunkIds.length,inputChunkCount:descriptor.eligibility.chunkIds.length,
   quality:{...copy(snapshot.coverage),clipStatus:snapshot.clipStatus,transform:copy(snapshot.transform),
    sourceStatus:snapshot.sourceStatus,pointsExported:allPoints,pointsOutsideVerifiedClip:allPoints-input.points},
   coordinateSystem:copy(snapshot.coordinateSystem)};
 }
-function prepareVisit(record,clouds,observations=[]){const boundaries=temporalBoundaries(record,observations);
- const rails=Object.fromEntries(SIDES.map(side=>[side,prepareRail(record,side,clouds,observations,boundaries)]));
+function prepareVisit(record,clouds,observations=[],options={}){const boundaries=temporalBoundaries(record,observations);
+ const rails=Object.fromEntries(SIDES.map(side=>[side,prepareRail(record,side,clouds,observations,boundaries,options)]));
  const pair=Legacy.buildPairInput(rails.left,rails.right);
  return {recordId:record.recordId,visitId:record.visitId,identity:completeIdentity(record.identity),rails,pair};}
 // Future variants implement exactly this adapter; reference code is left byte-identical.
@@ -237,4 +248,4 @@ function run(argv=process.argv.slice(2)){const opt=parse(argv),bytes=fs.readFile
  fs.writeFileSync(path.join(out,'overlays.json'),JSON.stringify(overlays,null,2));
  return {manifest,results,overlays};}
 if(require.main===module)try{const r=run();console.log(JSON.stringify({witness:r.manifest.witness,summary:r.manifest.summary,overlays:r.overlays.length},null,2));}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={engines,observedRailTransition,temporalBoundaries,prepareRail,prepareVisit,referenceFor,execute,evaluateVisit,score,metrics,overlay,run};
+module.exports={INPUT_MODES,DEFAULT_INPUT_MODE,engines,observedRailTransition,temporalBoundaries,prepareRail,prepareVisit,referenceFor,execute,evaluateVisit,score,metrics,overlay,run};

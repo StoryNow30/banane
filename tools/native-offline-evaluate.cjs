@@ -19,14 +19,45 @@ function chunksFor(descriptor,clouds){const chunks=[],reasons=[];for(const id of
   else if(!Array.isArray(chunk.pointsSceneRelative)||!chunk.pointsSceneRelative.length)reasons.push('chunk-empty:'+id);else chunks.push(chunk);}
  if(!chunks.length&&!reasons.length)reasons.push('no-geometry-chunk');return {chunks,reasons};}
 /* This function deliberately has no human-final argument. It is the leakage boundary. */
+/* 4.8 — LECTURE COMPLÈTE DE LA POSE DE DÉPART.
+ *
+ * Le premier instantané qualifié est déclenché dès qu'il y a juste assez de
+ * points pour dire « la zone est couverte ». Donner au moteur ce seul
+ * instantané revenait à le priver de tout ce que la même lecture ramassait
+ * ensuite, sur la même pose et avant tout geste humain. Collecte 4.7.3 : flanc
+ * médian 6 points avec l'instantané seul, 12 avec la lecture complète ; 105 rails
+ * sur 111 au-dessus du seuil de 6 au lieu de 61.
+ *
+ * Les blocs ajoutés sont strictement bornés : même lecture (captureId) que
+ * l'instantané, même côté, rang supérieur, même pose de rail, acquisition
+ * terminée AVANT la frontière (premier geste humain sur ce rail, transition non
+ * attribuable ou intention de l'opérateur). La frontière anti-fuite reste celle
+ * de la référence : aucun point acquis après une action humaine n'entre. */
+const chunkRank=chunk=>Number(String(chunk?.chunkId||'').split(':').pop());
+function initialPoseReadIds(eligibility,clouds,side,boundaryAt){
+ const snapshot=clouds.get(eligibility?.snapshotId);if(!snapshot||!Array.isArray(eligibility?.chunkIds))return null;
+ const limit=boundaryAt?Date.parse(boundaryAt):Infinity,base=new Set(eligibility.chunkIds),pose=JSON.stringify(railPose(snapshot.rail));
+ const extra=[...clouds.values()].filter(chunk=>chunk?.format==='banane-native-lidar-chunk-v1'&&chunk.captureId===snapshot.captureId&&chunk.side===side&&
+  !base.has(chunk.chunkId)&&chunkRank(chunk)>chunkRank(snapshot)&&JSON.stringify(railPose(chunk.rail))===pose&&
+  Date.parse(chunk.acquisition?.endedAt||chunk.capturedAt||'')<limit).sort((a,b)=>chunkRank(a)-chunkRank(b));
+ return [...eligibility.chunkIds,...extra.map(chunk=>chunk.chunkId)];}
 function buildEngineInput(descriptor,clouds){const resolved=chunksFor(descriptor,clouds);if(resolved.reasons.length)return {status:'excluded',reasons:resolved.reasons};
  const first=resolved.chunks[0],reasons=[];for(const chunk of resolved.chunks){if(JSON.stringify(chunk.coordinateSystem)!==JSON.stringify(first.coordinateSystem))reasons.push('chunk-coordinate-system-mismatch');
   if(JSON.stringify(railPose(chunk.rail))!==JSON.stringify(railPose(first.rail)))reasons.push('chunk-rail-frame-mismatch');}
  const initial=descriptor.initialRail;if(!initial)reasons.push('initial-rail-missing');
  if(initial&&JSON.stringify(railPose(initial))!==JSON.stringify(railPose(first.rail)))reasons.push('chunk-does-not-match-initial-rail-pose');
  if(descriptor.eligibility?.criteriaVersion==='native-visible-roi-v1'){
-  const last=resolved.chunks.at(-1);if(last.chunkId!==descriptor.eligibility.snapshotId||last.qualification?.status!=='qualified-candidate'||
-     JSON.stringify(last.qualification.chunkIds)!==JSON.stringify(descriptor.eligibility.chunkIds))reasons.push('qualified-checkpoint-not-exported');}
+  /* En lecture complète, la preuve de qualification reste l'instantané : il
+   * doit figurer à son rang, avec la liste de blocs qu'il déclarait. Les blocs
+   * qui suivent doivent venir de la même lecture et s'achever avant la frontière. */
+  const complete=descriptor.eligibility.readMode==='initial-pose-read-v1',snapshotIds=complete?descriptor.eligibility.snapshotChunkIds:descriptor.eligibility.chunkIds;
+  const last=complete?resolved.chunks[(snapshotIds?.length||0)-1]:resolved.chunks.at(-1);
+  if(!last||last.chunkId!==descriptor.eligibility.snapshotId||last.qualification?.status!=='qualified-candidate'||
+     JSON.stringify(last.qualification.chunkIds)!==JSON.stringify(snapshotIds))reasons.push('qualified-checkpoint-not-exported');
+  if(complete){const limit=descriptor.eligibility.boundaryAt?Date.parse(descriptor.eligibility.boundaryAt):Infinity;
+   for(const chunk of resolved.chunks.slice(snapshotIds?.length||0)){
+    if(chunk.captureId!==last?.captureId)reasons.push('initial-pose-read-foreign-capture');
+    if(!(Date.parse(chunk.acquisition?.endedAt||chunk.capturedAt||'')<limit))reasons.push('initial-pose-read-after-human-boundary');}}}
  if(reasons.length)return {status:'excluded',reasons:[...new Set(reasons)]};
  const pointsSceneRelative=[],visibleByClipBoxes=[];
  for(const chunk of resolved.chunks)for(let i=0;i<chunk.pointsSceneRelative.length;i++)if(chunk.visibleByClipBoxes?.[i]===true){
@@ -104,4 +135,4 @@ function run(argv=process.argv.slice(2)){const args=parseArgs(argv),projectRoot=
  fs.mkdirSync(path.dirname(args.output),{recursive:true});fs.writeFileSync(args.output,JSON.stringify(report,null,2));if(args.markdown){fs.mkdirSync(path.dirname(args.markdown),{recursive:true});fs.writeFileSync(args.markdown,markdown(report));}
  return report;}
 if(require.main===module){try{const report=run();console.log(JSON.stringify({output:parseArgs(process.argv.slice(2)).output,metrics:report.metrics,visualProofs:report.visualProofs||null},null,2));}catch(error){console.error(error.stack||error);process.exitCode=1;}}
-module.exports={aggregate,buildEngineInput,buildPairInput,compare,evaluateRecord,humanDelta,parseArgs,renderSvg,run,stats};
+module.exports={initialPoseReadIds,aggregate,buildEngineInput,buildPairInput,compare,evaluateRecord,humanDelta,parseArgs,renderSvg,run,stats};
