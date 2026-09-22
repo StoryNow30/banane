@@ -95,7 +95,7 @@ test('les réglages sont gelés : personne ne les modifie à chaud', () => {
 test('la version officielle est cohérente entre le code et le manifeste', () => {
   const manifest = require('../manifest.json');
   assert.equal(manifest.version, K.VERSION, 'manifeste et core.js doivent annoncer la même version');
-  assert.match(K.VERSION, /^4\.6\.\d+$/, 'version officielle attendue en 4.6.x');
+  assert.match(K.VERSION, /^4\.7\.\d+$/, 'version officielle attendue en 4.7.x');
 });
 
 test('les seuils du moteur ne sont pas dans les réglages de collecte', () => {

@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const C=require('../tools/native-corpus.cjs');
 const root=path.resolve(__dirname,'..');
 test('manifest and bundled runtime form a self-contained MV3 extension without fixture dependencies',()=>{
- const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));assert.equal(manifest.manifest_version,3);assert.equal(manifest.version,require('../src/core.js').VERSION);assert.match(manifest.version,/^4\.6\.\d+$/);
+ const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));assert.equal(manifest.manifest_version,3);assert.equal(manifest.version,require('../src/core.js').VERSION);assert.match(manifest.version,/^4\.7\.\d+$/);
  assert.equal(manifest.action.default_popup,undefined);assert.equal(manifest.background.service_worker,'background.js');
  assert.deepEqual(manifest.host_permissions,['https://esv.lidar.altametris.xyz/rails_validation/*']);
  const runtime=['background.js','panel.html','panel.css','panel.js',...fs.readdirSync(path.join(root,'src')).map(x=>'src/'+x),...fs.readdirSync(path.join(root,'vendor')).map(x=>'vendor/'+x)];
