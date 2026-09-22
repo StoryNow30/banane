@@ -71,7 +71,9 @@ test('native snapshot preserves a one-rail scene as partial data instead of inve
 test('native LiDAR path is bounded, yields often, and contains no camera, selection, navigation, or decision call',()=>{
  const source=fs.readFileSync(path.join(__dirname,'../src/adapter-page.js'),'utf8');
  const body=source.slice(source.indexOf('async function nativeCapture'),source.indexOf('async function waitFor'));
- assert.match(body,/maxPointsPerRail:50000/);assert.match(body,/maxInspected:500000/);assert.match(body,/maxMillis:1800/);assert.match(body,/maxNodes:512/);assert.match(body,/yieldEvery:2048/);
+ assert.match(body,/maxPointsPerRail:50000/);assert.match(body,/maxInspected:500000/);assert.match(body,/maxMillis:1800/);assert.match(body,/maxNodes:512/);
+ // 4.7.2 : la pause est rythmée par tranches de 5 ms ; le compte de points ne reste qu'une borne haute.
+ assert.match(body,/sliceMs:5,/);assert.match(body,/yieldEvery:65536/);assert.doesNotMatch(body,/requestIdleCallback/);
  assert.match(body,/passive-prioritized-loaded-view/);assert.match(body,/onCheckpoint/);
  assert.doesNotMatch(body,/nativeClick|select\(|nativeDecision|validateAndNext|skipAndNext|selectors\.(left|right|next|validate)/);
 });

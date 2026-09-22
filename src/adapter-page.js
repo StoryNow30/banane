@@ -108,9 +108,14 @@
    try{const inventory=L.inventory(c.viewer),camera=L.cameraSnapshot(c.viewer,c.frame.origin),tokens=inventory.nodes.map(node=>[
       objectId(node.obj),objectId(node.geometry),objectId(node.position),node.position.array||node.position.data?.array?objectId(node.position.array||node.position.data?.array):null,node.attribute.count,node.position.version??null,
       node.position.data?.version??null,node.world,node.drawRange?.start??0,node.drawRange?.count??null]);
-     const signature=JSON.stringify([camera?.cameraToSceneRelative||null,tokens]),previous=nativeViews.get(c.root);
-     const view=previous?.signature===signature?previous:{signature,viewEpochId:K.uid()};nativeViews.set(c.root,view);
-     return {status:'observed',viewEpochId:view.viewEpochId,observedAt:new Date().toISOString(),loadedNodeCount:inventory.nodes.length,
+     /* Deux époques (4.7.2). `viewEpochId` garde son sens : nœuds chargés ET
+      * caméra. `loadEpochId` ne suit que les nœuds chargés : c'est lui qui dit
+      * si une nouvelle lecture peut apporter des points. La même sérialisation
+      * sert aux deux — JSON.stringify([a,b]) vaut '['+a+','+b+']'. */
+     const loadSignature=JSON.stringify(tokens),signature='['+JSON.stringify(camera?.cameraToSceneRelative||null)+','+loadSignature+']',previous=nativeViews.get(c.root);
+     const view=previous?.signature===signature?previous:{signature,viewEpochId:K.uid(),loadSignature,
+       loadEpochId:previous?.loadSignature===loadSignature&&previous?.loadEpochId?previous.loadEpochId:K.uid()};nativeViews.set(c.root,view);
+     return {status:'observed',viewEpochId:view.viewEpochId,loadEpochId:view.loadEpochId,observedAt:new Date().toISOString(),loadedNodeCount:inventory.nodes.length,
        unsupportedNodeCount:inventory.clouds.reduce((sum,cloud)=>sum+(cloud.unsupportedNodes?.length||0),0),camera:camera?{type:camera.type,cameraToSceneRelative:camera.cameraToSceneRelative,viewport:camera.viewport}:null};
    }catch(error){return {status:'unavailable',viewEpochId:null,observedAt:new Date().toISOString(),loadedNodeCount:null,reason:error.message};}}
  function nativeSnapshot(){const c=nativeContext(),identity=K.completeIdentity({pageId,part:c.label?.part??null,cut:c.label?.cut??null,
@@ -122,30 +127,57 @@
    return {identity,capturedAt:new Date().toISOString(),status:c.partialReasons.length?'partial':'complete',partialReasons:[...new Set(c.partialReasons)],
      geominfo:{status:'not-observed',raw:null,source:null},mapping,rails,viewObservation};
  }
+ /* Garde de capture native — 4.7.2 : identité et rails, rien d'autre.
+  *
+  * La garde est appelée à chaque pause du lecteur. Elle passait par
+  * `nativeSnapshot`, qui recalcule aussi l'observation de vue : inventaire de
+  * tous les nœuds chargés, lecture de la caméra et sérialisation JSON d'une
+  * signature de tous les nœuds. Rien de cela ne sert à décider si la lecture
+  * doit s'arrêter ; seules l'identité du cut et la pose des rails comptent. */
+ function nativeGuardState(){const c=nativeContext(),identity=K.completeIdentity({pageId,part:c.label?.part??null,cut:c.label?.cut??null,
+    shape:c.shape,frameId:c.frame?.id??null,projectId:null}),rails={left:null,right:null};
+   for(const side of ['left','right'])if(c.pair[side]&&c.frame){try{rails[side]=C.serialRail(railState(c.pair[side]),c.frame.origin);}catch(e){rails[side]=null;}}
+   return {identity,rails,viewer:c.viewer,origin:c.frame?.origin||null};}
+ function nativeCameraMatrix(viewer,origin){try{const camera=viewer?.scene?.getActiveCamera?.();return camera&&origin?C.rebase(C.worldMatrix(camera),origin):null;}catch(e){return null;}}
+ /* Rendre la main à ESV entre deux tranches de lecture. `requestIdleCallback`
+  * attendait un temps libre qui n'arrive jamais pendant qu'ESV dessine : chaque
+  * pause coûtait les 16 ms de son délai maximal. `scheduler.yield` (ou, à
+  * défaut, un message de canal) laisse passer les entrées et le rendu en
+  * attente, puis reprend aussitôt. */
+ function yieldToPage(){
+   if(typeof scheduler!=='undefined'&&typeof scheduler.yield==='function')return scheduler.yield();
+   if(typeof MessageChannel==='function')return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();resolve();};channel.port2.postMessage(0);});
+   return new Promise(resolve=>setTimeout(resolve,0));}
  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
    const c=nativeContext(),railInputs={},associationByRail={};
    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
      railInputs[side]=railState(c.pair[side]);associationByRail[side]='same-target-and-rail-pose';}
-   const guard=()=>{if(!isActive()){const error=Error('passive-lidar-read-cancelled');error.code='COLLECTOR_STOPPED';throw error;}
-     const now=nativeSnapshot();try{K.assertTarget(expected.identity,now.identity);}catch(error){error.code='TARGET_CHANGED';throw error;}
-     for(const side of Object.keys(railInputs))if(!now.rails[side]||!sameRailPose(now.rails[side],expected.rails[side])){const error=Error('rail-state-changed-during-passive-lidar-read:'+side);error.code='RAIL_STATE_CHANGED';throw error;}
-     // A newly loaded Potree node changes the inventory epoch without
-     // invalidating an already copied point. The sampler checks the exact
-     // buffer references, versions, node matrices and clipping per segment.
-     // A camera move still terminates the current acquisition safely.
-     const previousCamera=expected.viewObservation?.camera?.cameraToSceneRelative,currentCamera=now.viewObservation?.camera?.cameraToSceneRelative;
-     const cameraChanged=Array.isArray(previousCamera)&&Array.isArray(currentCamera)?
-      previousCamera.some((value,index)=>Math.abs(value-currentCamera[index])>1e-7):
-      expected.viewObservation?.viewEpochId&&now.viewObservation?.viewEpochId!==expected.viewObservation.viewEpochId;
-     if(cameraChanged){const error=Error('camera-changed-during-passive-lidar-read');error.code='VIEW_CHANGED';throw error;}};
-   const pause=()=>new Promise(resolve=>typeof requestIdleCallback==='function'?requestIdleCallback(()=>resolve(),{timeout:16}):setTimeout(resolve,0));
-   const data=await N.capture({viewer:c.viewer,rails:railInputs,associationByRail,origin:c.frame?.origin||[0,0,0],enums:window.Potree||{},guard,pause,
+   /* Un mouvement de caméra N'ARRÊTE PLUS la lecture (4.7.2).
+    *
+    * Un point lu reste valable quelle que soit la caméra : il est pris dans le
+    * buffer du nœud et transformé par la matrice du nœud, deux choses que le
+    * lecteur revérifie à chaque pause (`sourceUnchanged`) ; la découpe est
+    * revérifiée à chaque checkpoint. Lots du 22/09 : 378 captures sur 491
+    * arrêtées par la caméra au lot 3, et le budget de 24 captures par visite
+    * épuisé par ces arrêts sur 89 visites — la lecture était tuée pendant le
+    * déplacement de vue qui accompagne chaque changement de cut. Le mouvement
+    * reste consigné, pour que l'export dise ce qui s'est passé. */
+   const cameraAtStart=expected.viewObservation?.camera?.cameraToSceneRelative||nativeCameraMatrix(c.viewer,c.frame?.origin);
+   let guards=0;
+   const guard=()=>{guards++;if(!isActive()){const error=Error('passive-lidar-read-cancelled');error.code='COLLECTOR_STOPPED';throw error;}
+     const now=nativeGuardState();try{K.assertTarget(expected.identity,now.identity);}catch(error){error.code='TARGET_CHANGED';throw error;}
+     for(const side of Object.keys(railInputs))if(!now.rails[side]||!sameRailPose(now.rails[side],expected.rails[side])){const error=Error('rail-state-changed-during-passive-lidar-read:'+side);error.code='RAIL_STATE_CHANGED';throw error;}};
+   const data=await N.capture({viewer:c.viewer,rails:railInputs,associationByRail,origin:c.frame?.origin||[0,0,0],enums:window.Potree||{},guard,pause:yieldToPage,
      captureId:request.captureId||K.uid(),visitId:request.visitId||null,viewObservation:expected.viewObservation||initial.viewObservation,onCheckpoint:request.onCheckpoint,
-     maxNodes:512,maxPointsPerRail:50000,maxInspected:500000,maxMillis:1800,yieldEvery:2048,probeCount:33,checkpointPoints:2048,
+     maxNodes:512,maxPointsPerRail:50000,maxInspected:500000,maxMillis:1800,yieldEvery:65536,sliceMs:5,probeCount:33,checkpointPoints:2048,
      meta:{version:K.VERSION,sessionId:pageId,identity:expected.identity,part:expected.identity.part,cut:expected.identity.cut,shape:expected.identity.shape,
        coordinateBridge:{sceneFrameId:expected.identity.frameId,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
+   const cameraAtEnd=nativeCameraMatrix(c.viewer,c.frame?.origin);
+   const cameraMoved=Array.isArray(cameraAtStart)&&Array.isArray(cameraAtEnd)?cameraAtStart.some((value,index)=>Math.abs(value-cameraAtEnd[index])>1e-7):null;
    data.readStrategy={mode:'passive-prioritized-loaded-view',cameraChangedByBanane:false,railSelectionChangedByBanane:false,navigationChangedByBanane:false,
-     maximumPointsPerRail:50000,maximumInspected:500000,maximumMillis:1800,maximumLoadedNodes:512,yieldEvery:2048,progressiveCheckpointPoints:2048};
+     maximumPointsPerRail:50000,maximumInspected:500000,maximumMillis:1800,maximumLoadedNodes:512,yieldEvery:65536,progressiveCheckpointPoints:2048,
+     pacing:'time-slices',sliceMs:5,yieldMechanism:typeof scheduler!=='undefined'&&typeof scheduler.yield==='function'?'scheduler.yield':typeof MessageChannel==='function'?'message-channel':'timeout',
+     guard:'identity-and-rail-pose',guardCalls:guards,cameraMoveTerminatesRead:false,cameraMovedDuringRead:cameraMoved};
    return data;
  }
  async function waitFor(check,message,timeout=P.attenteMs,guard=()=>{}){const start=Date.now();let last;
@@ -547,9 +579,18 @@
  });
  function nativeApi(){return {snapshot:nativeSnapshot,capture:nativeCapture,send:nativeMessage,now:()=>Date.now(),performanceNow:()=>typeof performance!=='undefined'&&performance.now?performance.now():Date.now(),
    interval:(fn,ms)=>setInterval(fn,ms),clearInterval:id=>clearInterval(id),defer:fn=>setTimeout(fn,0),
+   /* Détection immédiate du changement de cut : l'étiquette ESV est observée
+    * au lieu d'attendre le prochain relevé périodique (125 ms). Le relevé reste
+    * actif : l'observateur n'est qu'un déclencheur de plus, sans effet sur ESV. */
+   watch:handler=>{const node=document.getElementById(selectors.label);if(!node||typeof MutationObserver!=='function')return false;
+     /* Seul un TEXTE différent déclenche : une réécriture à l'identique par
+      * ESV, même répétée à chaque image, ne coûte qu'une comparaison. */
+     let last=node.textContent;const observer=new MutationObserver(()=>{const text=node.textContent;if(text===last)return;last=text;handler();});
+     observer.observe(node,{characterData:true,childList:true,subtree:true});
+     nativeListeners.push(['mutation',observer,null]);return true;},
    install:handler=>{const relay=e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:native-input'||e.data.channel!==nativeChannel)return;
      const input=e.data.input;handler({...input,target:{kind:input.targetKind}});};window.addEventListener('message',relay);nativeListeners.push(['message',relay,false]);},
-   uninstall:()=>{for(const [type,handler,options] of nativeListeners.splice(0))window.removeEventListener(type,handler,options);},
+   uninstall:()=>{for(const [type,handler,options] of nativeListeners.splice(0)){if(type==='mutation')handler.disconnect();else window.removeEventListener(type,handler,options);}},
    editable:el=>el?.kind==='input'||!!el?.closest?.('input,textarea,select,[contenteditable="true"]'),
    targetKind:el=>el?.kind|| (el?.closest?.('#O2N3DCutValidate3DRail')?'validation':el?.closest?.('canvas')?'canvas':el?.closest?.('button,a')?'control':'other'),
    signalFailure:message=>{if(nativeFailureBanner)return;nativeFailureBanner=document.createElement('div');nativeFailureBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#381f23;color:#ffd7dc;border:1px solid #8b5058;border-radius:8px;font:14px Arial;pointer-events:none';

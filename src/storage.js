@@ -20,6 +20,8 @@ class BananeStorage3{
  async deleteEvent(id){return this.transaction('events','readwrite',s=>s.delete(id));}
  async putRecord(r){return this.transaction('records','readwrite',s=>s.put(r,r.recordId||r.id));}
  async deleteRecord(id){return this.transaction('records','readwrite',s=>s.delete(id));}
+ /* Lecture par clé : un enregistrement, sans charger toute la base (4.7.2). */
+ async getRecord(id){return this.transaction('records','readonly',s=>s.get(id));}
  async all(name){return this.transaction(name,'readonly',s=>s.getAll());}
  async keys(name){return this.transaction(name,'readonly',s=>s.getAllKeys());}
 }

@@ -1,5 +1,67 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.2 — mode Natif réoptimisé, 22 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`. Cette version rend au mode Natif sa capacité à capturer au rythme du
+travail réel, sans rien changer au placement.
+
+**Diagnostic, sur les exports du 22/09.** Au lot 3 (34 visites/min, visites de
+0,7 s en médiane), 78 visites sur 111 n'ont produit **aucun** instantané. Trois
+causes, mesurées dans les événements :
+
+1. **La caméra tuait la lecture.** 378 captures sur 491 arrêtées par
+   `camera-changed-during-passive-lidar-read`, la plupart avant d'avoir lu un
+   seul point. Chaque changement de cut s'accompagne d'un déplacement de vue.
+2. **Ces arrêts épuisaient le budget.** Chaque mouvement de caméra relançait une
+   lecture, aussitôt tuée ; 89 visites ont atteint la limite de 24 captures
+   avant qu'une seule aboutisse.
+3. **Le lecteur plafonnait à ~106 000 points/s**, identique sur les trois lots.
+   Il s'arrêtait tous les 2048 points et attendait `requestIdleCallback` jusqu'à
+   16 ms ; ESV dessine en continu, la page n'est jamais libre, chaque pause
+   coûtait donc les 16 ms entières. Les captures finissaient sur le budget de
+   1,8 s avant d'avoir lu la moitié des points chargés.
+
+Le diagnostic donné avec la 4.7.1 — « captures interrompues par l'opérateur » —
+était faux : c'est la garde caméra qui les interrompait. Le préfiltre de la
+4.7.1 visait le coût par point, qui n'était pas le goulot.
+
+**Corrections.**
+
+- `src/native-lidar.js` : lecture par **tranches de temps** (`sliceMs`) au lieu
+  d'une pause tous les 2048 points ; **accès direct au buffer** sur les
+  attributs flottants non normalisés, prouvé nœud par nœud en relisant chaque
+  sonde par les deux chemins — au moindre écart, chemin historique. La garde, la
+  vérification des sources et le checkpoint restent exécutés à chaque pause.
+- `src/adapter-page.js` : un mouvement de caméra **n'arrête plus** la lecture
+  (un point lu dépend du buffer et de la matrice du nœud, revérifiés à chaque
+  pause, jamais de la caméra) ; il est consigné dans `readStrategy`. La garde ne
+  lit plus que l'identité et les rails, sans inventaire des nœuds ni signature
+  JSON. La pause passe par `scheduler.yield`, ou un message de canal.
+- `src/native-page.js` : une lecture n'est relancée que si elle peut apporter des
+  points — rails déplacés, ou nouveaux nœuds chargés (`loadEpochId`, sans la
+  caméra) tant que la pose n'a pas ses deux côtés qualifiés. Le changement de cut
+  est détecté dès que l'étiquette ESV change, sans attendre le relevé de 125 ms.
+- `src/native-session.js`, `src/storage.js` : le service worker ne relit plus
+  toute la base à chaque début de visite ni à chaque événement tardif ; lecture
+  par clé et index des autres sessions construit une fois.
+- Bilan de clôture : bloc `captureHealth` (lectures par visite, causes d'arrêt,
+  part des visites avec instantané initial qualifié par rail).
+
+**Mesure.** `tools/native-capture-bench.cjs`, même scène (500 000 points,
+20 nœuds, ~2 % dans la ROI), pauses et garde modélisées, code à froid : premier
+instantané qualifié **~205 ms → ~35 ms** ; capture complète **1 816 ms, arrêtée
+sur budget après 197 000 points → ~80 ms, les 500 000 points lus**. Points retenus
+identiques, vérifié par `tests/native-lidar-speed.test.cjs`.
+
+Ce que cela ne prouve pas : le gain en conditions réelles. Le banc modélise le
+coût d'une pause et de la garde ; il ne mesure ni Potree ni Edge. La prochaine
+collecte au rythme réel le dira, dans `closureSummary.captureHealth`.
+
+Aucune science touchée : `geometry.js`, `geometry-candidate-v1.js`, `gauge.js`,
+`gcv1-shadow.js`, `engine.js` et les deux fichiers `vendor/` gardent leurs
+empreintes. Le mode Pilote n'utilise pas ce lecteur.
+
 ## 4.7.1 — build de mesure, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée

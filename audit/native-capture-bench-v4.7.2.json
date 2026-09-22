@@ -1,0 +1,59 @@
+{
+ "format": "banane-native-capture-bench-v1",
+ "rows": {
+  "ancien": {
+   "profile": {
+    "yieldEvery": 2048,
+    "sliceMs": null,
+    "yieldMs": 16,
+    "guardMs": 2
+   },
+   "durationMs": 1819.157623,
+   "firstQualifiedMs": {
+    "left": 204.52939000000003,
+    "right": 206.670101
+   },
+   "pauses": 96,
+   "guards": 129,
+   "pointsRead": 197528,
+   "pointsAvailable": 500000,
+   "status": "partial-resource-limit",
+   "termination": "RESOURCE_LIMIT",
+   "retained": {
+    "left": 503,
+    "right": 671
+   },
+   "qualified": {
+    "left": "qualified-candidate",
+    "right": "qualified-candidate"
+   }
+  },
+  "nouveau": {
+   "profile": {
+    "yieldEvery": 65536,
+    "sliceMs": 5,
+    "yieldMs": 8,
+    "guardMs": 0.3
+   },
+   "durationMs": 58.93922700000007,
+   "firstQualifiedMs": {
+    "left": 18.366723000000093,
+    "right": 18.74760200000003
+   },
+   "pauses": 4,
+   "guards": 30,
+   "pointsRead": 500000,
+   "pointsAvailable": 500000,
+   "status": "complete-loaded-buffers",
+   "termination": null,
+   "retained": {
+    "left": 503,
+    "right": 671
+   },
+   "qualified": {
+    "left": "qualified-candidate",
+    "right": "qualified-candidate"
+   }
+  }
+ }
+}

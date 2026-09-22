@@ -110,7 +110,31 @@
   }
   return {lo,hi};
  }
- function prepareNode(node,origin,frames,bounds,index,probeCount){
+ /* ACCÈS DIRECT AU BUFFER — 4.7.2.
+  *
+  * `C.attribute` (gelé) lit chaque coordonnée par `getX/getY/getZ` quand
+  * l'attribut les porte, ce qui est le cas de tout attribut Three.js dans ESV,
+  * et alloue un tableau par point. Sur un attribut flottant, non normalisé et
+  * non indexé, ces accesseurs ne font que lire `array[i*stride+offset+k]`.
+  *
+  * Le lecteur lit alors le tableau directement — mais seulement après l'avoir
+  * PROUVÉ sur ce nœud : chaque sonde est relue par les deux chemins et doit
+  * donner exactement les mêmes valeurs. Au moindre écart, ou si une condition
+  * manque, le nœud garde le chemin historique. La stabilité du buffer reste
+  * vérifiée à chaque pause par `sourceUnchanged`, comme avant. */
+ function directReader(node,range,sampleIds){
+  const a=node.position,meta=node.attribute.metadata||{},src=a?.array||a?.data?.array;
+  if(range.index||!a||a.normalized||a.isFloat16BufferAttribute||meta.normalized)return null;
+  if(!(src instanceof Float32Array||src instanceof Float64Array))return null;
+  const stride=meta.stride,offset=meta.offset;
+  if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0||meta.itemSize<3)return null;
+  let checked=0;
+  for(const drawIndex of sampleIds){if(drawIndex<0||drawIndex>=node.attribute.count)continue;
+   const reference=node.attribute.point(drawIndex),base=drawIndex*stride+offset;
+   for(let axis=0;axis<3;axis++)if(!Object.is(reference[axis],src[base+axis]))return null;checked++;}
+  return checked?{src,stride,offset,probesChecked:checked}:null;
+ }
+ function prepareNode(node,origin,frames,bounds,index,probeCount,directRead=true){
   const model=C.rebase(node.world,origin),range=draw(node),transforms=Object.fromEntries(Object.entries(frames).map(([side,frame])=>[side,C.multiply(frame.sceneRelativeToProfileLocal,model)]));
   const sampleIds=new Set();for(let i=0;i<Math.min(probeCount,range.count);i++)sampleIds.add(range.start+Math.floor(i*(range.count-1)/Math.max(1,Math.min(probeCount,range.count)-1)));
   const probeHits=Object.fromEntries(Object.keys(frames).map(side=>[side,0])),minimumDistance=Object.fromEntries(Object.keys(frames).map(side=>[side,Infinity]));let probesRead=0;
@@ -120,10 +144,12 @@
     minimumDistance[side]=Math.min(minimumDistance[side],distance);if(inBox(local,bounds))probeHits[side]++;}}
   const direct=Object.values(probeHits).reduce((n,value)=>n+value,0),distance=Math.min(...Object.values(minimumDistance));
   const roiBounds=Object.fromEntries(Object.entries(transforms).map(([side,transform])=>[side,rawRoiBounds(transform,bounds)]));
-  return {node,index,model,range,transforms,roiBounds,probeHits,minimumDistance,probesRead,priority:[direct?0:1,distance,range.count,index],
+  const fast=directRead?directReader(node,range,sampleIds):null;
+  return {node,index,model,range,transforms,roiBounds,fast,probeHits,minimumDistance,probesRead,priority:[direct?0:1,distance,range.count,index],
    report:{nodeId:node.id,source:node.source,pointsAvailable:range.count,diagnosticProbesRead:probesRead,probeRoiHits:probeHits,
     minimumNormalizedDistance:Object.fromEntries(Object.entries(minimumDistance).map(([side,value])=>[side,finite(value)?value:null])),pointsRead:0,pointsTransformed:0,
-    retainedByRail:Object.fromEntries(Object.keys(frames).map(side=>[side,0])),status:'not-read'}};
+    retainedByRail:Object.fromEntries(Object.keys(frames).map(side=>[side,0])),status:'not-read',
+    readPath:fast?'direct-buffer-verified-by-probes':'attribute-accessor'}};
  }
  function sourceUnchanged(entry){
   const node=entry.node;
@@ -172,9 +198,30 @@
   const NEAR_TOP=settings.usefulBounds[2],NEAR_FACE_LOW=0.009,NEAR_FACE_HIGH=0.034;
   const coverageBase=Object.fromEntries(sides.map(side=>[side,
    transformChecks[side].valid===true&&(options.associationByRail?.[side]||'same-target-and-rail-pose')==='same-target-and-rail-pose']));
+  /* DÉCOUPAGE PAR LE TEMPS — 4.7.2.
+   *
+   * Avant, le lecteur s'arrêtait tous les 2048 points (et tous les 8 nœuds à
+   * la préparation) et l'adaptateur attendait `requestIdleCallback` jusqu'à
+   * 16 ms. ESV dessine en continu : la page n'a jamais de temps libre, chaque
+   * pause coûtait donc les 16 ms entières. Débit plafonné à ~106 000 points/s
+   * sur les trois lots du 22/09, captures arrêtées par le budget de 1,8 s avant
+   * d'avoir lu la moitié des nœuds chargés.
+   *
+   * Avec `sliceMs`, le lecteur travaille par tranches de durée bornée et ne
+   * rend la main qu'à leur échéance. La garde, la vérification des sources et
+   * le checkpoint restent exécutés à CHAQUE pause, exactement comme avant ;
+   * seul le rythme change. Sans `sliceMs`, le comportement historique est
+   * conservé à l'identique (compte de points, `yieldEvery`). */
+  const sliceMs=finite(settings.sliceMs)&&settings.sliceMs>0?settings.sliceMs:null;
+  const sliceClock=typeof options.sliceClock==='function'?options.sliceClock:
+   (typeof performance!=='undefined'&&typeof performance.now==='function'?()=>performance.now():clock);
+  let sliceStart=sliceClock(),pauses=0;
+  const sliceDue=()=>sliceMs!==null&&sliceClock()-sliceStart>=sliceMs;
+  const rest=async()=>{await pause();pauses++;guard();sliceStart=sliceClock();};
   let prepared=[];
-  try{for(const [index,node] of inventory.nodes.entries()){guard();prepared.push(prepareNode(node,options.origin,frames,settings.bounds,index,settings.probeCount));
-    if((index+1)%8===0){await pause();guard();}}}
+  try{if(sliceMs!==null)guard();
+   for(const [index,node] of inventory.nodes.entries()){if(sliceMs===null)guard();prepared.push(prepareNode(node,options.origin,frames,settings.bounds,index,settings.probeCount,options.directRead!==false));
+    if(sliceMs===null?(index+1)%8===0:sliceDue())await rest();}}
   catch(error){const normalized=normalizeTermination(error);result.termination=normalized.code==='READ_ERROR'?{...normalized,code:'INVALID_TRANSFORM_OR_BUFFER'}:normalized;
    result.status=result.termination.code==='INVALID_TRANSFORM_OR_BUFFER'?'invalid-transform-or-buffer':'partial-interrupted';result.completedAt=nowIso();return result;}
   prepared.sort((a,b)=>{for(let i=0;i<a.priority.length;i++)if(a.priority[i]!==b.priority[i])return a.priority[i]-b.priority[i];return 0;});
@@ -211,60 +258,114 @@
     if(chunk.qualification.status==='qualified-candidate'&&!firstSnapshots[side])firstSnapshots[side]={...clone(chunk.qualification),snapshotId:chunk.chunkId,
       storageConfirmedAt:receipt?.storageConfirmedAt||null,chunkIds:emittedIds[side].slice()};
     trace.pointsCheckpointed+=chunk.pointsSceneRelative.length;trace.perRail[side].pointsCheckpointed+=chunk.pointsSceneRelative.length;}}
+  const CLOCK_EVERY=256,FAST_CHUNK=4096,saturatedNow=()=>sides.every(side=>railCounts[side]>=settings.maxPointsPerRail);
+  let saturated=saturatedNow();
+  /* Rétention d'un point candidat : transformations, visibilité, tampons et
+   * compteurs. Partagée par les deux chemins de lecture — le chemin rapide ne
+   * change QUE la façon de trouver les candidats, jamais ce qu'on en fait. */
+  function retain(entry,sourceIndex,raw){
+   /* `pointScene` ne sert QUE si un rail retient le point : il est donc
+    * calculé au premier rail qui passe, et `pointsTransformed` compte
+    * désormais les transformations réellement utiles. */
+   let pointScene=null,retained=false;
+   for(const side of sides){if(railCounts[side]>=settings.maxPointsPerRail)continue;const local=C.point(entry.transforms[side],raw);if(!inBox(local,settings.bounds))continue;
+    if(pointScene===null){pointScene=C.point(entry.model,raw);trace.pointsTransformed++;entry.report.pointsTransformed++;}
+    const visible=L.boxVisible(clippingByCloud[entry.node.cloudIndex],pointScene);
+    chunks[side].firstReadAt??=nowIso();chunks[side].scene.push(pointScene);chunks[side].local.push(local);chunks[side].sources.push([entry.index,sourceIndex]);chunks[side].visible.push(visible);
+    const perte=clipLoss[side];   // ne pas nommer L : L est le lecteur LiDAR du module
+    if(visible===true){accumulators[side].add(local);perte.inRoiKept++;}else perte.inRoiDropped++;
+    /* Bandes approchées dans le repère local : le dessus autour de z=0, le
+     * flanc juste en dessous. Approximation assumée — la bande exacte du
+     * moteur dépend de la position qu'il retient, inconnue ici. Suffisant
+     * pour chiffrer ce que le filtre retire là où ça compte. */
+    if(Math.abs(local[1])<=settings.usefulBounds[1]){
+     const lz=local[2];
+     if(Math.abs(lz)<=0.012){if(visible===true)perte.nearTopKept++;else perte.nearTopDropped++;}
+     else if(lz<-NEAR_FACE_LOW&&lz>-NEAR_FACE_HIGH){if(visible===true)perte.nearFaceKept++;else perte.nearFaceDropped++;}
+    }
+    railCounts[side]++;entry.report.retainedByRail[side]++;trace.pointsRetainedInRoi++;trace.perRail[side].pointsRetainedInRoi++;retained=true;}
+   if(retained)saturated=saturatedNow();
+   return retained;
+  }
+  // Persist the first complete visible-ROI snapshot promptly. A later rail
+  // move or target change can only interrupt enrichment, not this copy.
+  // Mêmes instants de déclenchement qu'avant (seuil + pas de 128) : ils ne
+  // dépendent que de l'accumulateur, qui ne change qu'à une rétention.
+  function snapshotReady(){let ready=false;
+   for(const side of sides)if(!firstSnapshots[side]&&chunks[side].scene.length&&accumulators[side].count>=nextCoverageCheck[side]){
+    nextCoverageCheck[side]=accumulators[side].count+128;
+    if(coverageBase[side]&&accumulators[side].qualifies())ready=true;}
+   return ready;}
+  /* Boîtes du rejet préalable, sous la forme attendue par `nextCandidate` :
+   * null pour un côté inactif (saturé), ALL pour un côté actif sans boîte
+   * fiable — tout point fini est alors candidat, comme avant. */
+  const ALL=Symbol('all');
+  const packedBoxes=entry=>sides.map(side=>{if(railCounts[side]>=settings.maxPointsPerRail)return null;const box=entry.roiBounds?.[side];
+   return box?[box.lo[0],box.lo[1],box.lo[2],box.hi[0],box.hi[1],box.hi[2]]:ALL;});
+  function nextCandidate(src,stride,offset,from,to,b0,b1){
+   for(let i=from;i<to;i++){
+    const base=i*stride+offset,x=src[base],y=src[base+1],z=src[base+2];
+    if(x-x!==0||y-y!==0||z-z!==0)continue;   // non fini : lu, compté, jamais candidat
+    if(b0===ALL||b1===ALL)return i;
+    if(b0!==null&&b0!==undefined&&x>=b0[0]&&x<=b0[3]&&y>=b0[1]&&y<=b0[4]&&z>=b0[2]&&z<=b0[5])return i;
+    if(b1!==null&&b1!==undefined&&x>=b1[0]&&x<=b1[3]&&y>=b1[1]&&y<=b1[4]&&z>=b1[2]&&z<=b1[5])return i;
+   }
+   return to;
+  }
+  const limitReached=entry=>{
+   const overTime=clock()-started>=settings.maxMillis;
+   if(trace.pointsRead<settings.maxInspected&&!overTime&&!saturated)return false;
+   termination={code:'RESOURCE_LIMIT',reason:trace.pointsRead>=settings.maxInspected?'maximum-inspected-reached':overTime?'maximum-millis-reached':'maximum-retained-reached',observedAt:nowIso()};
+   entry.report.status='partial-resource-limit';allRead=false;return true;};
+  const sourceChanged=()=>{const error=Error('source-buffer-or-matrix-changed');error.code='SOURCE_CHANGED';return error;};
   scan:for(const entry of prepared){entry.report.status='reading';
-   try{guard();if(!sourceUnchanged(entry)){const error=Error('source-buffer-or-matrix-changed');error.code='SOURCE_CHANGED';throw error;}
-    let sinceYield=0;
-    for(let drawIndex=entry.range.start;drawIndex<entry.range.end;drawIndex++){
-     if(trace.pointsRead>=settings.maxInspected||clock()-started>=settings.maxMillis||sides.every(side=>railCounts[side]>=settings.maxPointsPerRail)){
-      termination={code:'RESOURCE_LIMIT',reason:trace.pointsRead>=settings.maxInspected?'maximum-inspected-reached':clock()-started>=settings.maxMillis?'maximum-millis-reached':'maximum-retained-reached',observedAt:nowIso()};
-      entry.report.status='partial-resource-limit';allRead=false;break scan;}
-     if(sinceYield>=settings.yieldEvery){await checkpoint();await pause();guard();if(!sourceUnchanged(entry)){const error=Error('source-buffer-or-matrix-changed');error.code='SOURCE_CHANGED';throw error;}sinceYield=0;}
-     const sourceIndex=entry.range.index?entry.range.index.get(drawIndex,0):drawIndex;if(!Number.isInteger(sourceIndex)||sourceIndex<0||sourceIndex>=entry.node.attribute.count)continue;
-     trace.pointsRead++;entry.report.pointsRead++;sinceYield++;const raw=entry.node.attribute.point(sourceIndex);if(!raw.every(finite))continue;
-     /* Six comparaisons écartent la grande majorité des points avant toute
-      * transformation. Un côté sans boîte fiable force le chemin complet. */
-     let candidate=false;
-     for(const side of sides){
-      if(railCounts[side]>=settings.maxPointsPerRail)continue;
-      const box=entry.roiBounds?.[side];
-      if(!box){candidate=true;break;}
-      if(raw[0]>=box.lo[0]&&raw[0]<=box.hi[0]&&raw[1]>=box.lo[1]&&raw[1]<=box.hi[1]
-       &&raw[2]>=box.lo[2]&&raw[2]<=box.hi[2]){candidate=true;break;}
+   try{guard();if(!sourceUnchanged(entry))throw sourceChanged();
+    let sinceYield=0;const count=entry.node.attribute.count;
+    if(entry.fast){
+     /* CHEMIN RAPIDE. `nextCandidate` parcourt le tableau sans allocation ni
+      * appel par point et s'arrête au premier candidat. Les bornes de points
+      * sont respectées exactement (le segment ne dépasse jamais maxInspected
+      * ni yieldEvery) ; l'horloge et la tranche sont vérifiées entre segments
+      * d'au plus 4096 points. */
+     const {src,stride,offset}=entry.fast,end=Math.min(entry.range.end,count);let i=Math.max(0,entry.range.start);
+     while(i<end){
+      if(limitReached(entry))break scan;
+      if(sinceYield>=settings.yieldEvery||sliceDue()){await checkpoint();await rest();if(!sourceUnchanged(entry))throw sourceChanged();sinceYield=0;}
+      const stop=Math.min(end,i+FAST_CHUNK,i+(settings.maxInspected-trace.pointsRead),i+(settings.yieldEvery-sinceYield));
+      const boxes=packedBoxes(entry),hit=nextCandidate(src,stride,offset,i,stop,boxes[0],boxes[1]);
+      const next=hit<stop?hit+1:stop,scanned=next-i;
+      trace.pointsRead+=scanned;entry.report.pointsRead+=scanned;sinceYield+=scanned;i=next;
+      if(hit<stop){const base=hit*stride+offset;
+       if(retain(entry,hit,[src[base],src[base+1],src[base+2]])&&snapshotReady())await checkpoint(true);}
      }
-     if(!candidate)continue;
-     /* `pointScene` ne sert QUE si un rail retient le point : il est donc
-      * calculé au premier rail qui passe, et `pointsTransformed` compte
-      * désormais les transformations réellement utiles. */
-     let pointScene=null;
-     for(const side of sides){if(railCounts[side]>=settings.maxPointsPerRail)continue;const local=C.point(entry.transforms[side],raw);if(!inBox(local,settings.bounds))continue;
-      if(pointScene===null){pointScene=C.point(entry.model,raw);trace.pointsTransformed++;entry.report.pointsTransformed++;}
-      const visible=L.boxVisible(clippingByCloud[entry.node.cloudIndex],pointScene);
-      chunks[side].firstReadAt??=nowIso();chunks[side].scene.push(pointScene);chunks[side].local.push(local);chunks[side].sources.push([entry.index,sourceIndex]);chunks[side].visible.push(visible);
-      const perte=clipLoss[side];   // ne pas nommer L : L est le lecteur LiDAR du module
-      if(visible===true){accumulators[side].add(local);perte.inRoiKept++;}else perte.inRoiDropped++;
-      /* Bandes approchées dans le repère local : le dessus autour de z=0, le
-       * flanc juste en dessous. Approximation assumée — la bande exacte du
-       * moteur dépend de la position qu'il retient, inconnue ici. Suffisant
-       * pour chiffrer ce que le filtre retire là où ça compte. */
-      if(Math.abs(local[1])<=settings.usefulBounds[1]){
-       const z=local[2];
-       if(Math.abs(z)<=0.012){if(visible===true)perte.nearTopKept++;else perte.nearTopDropped++;}
-       else if(z<-NEAR_FACE_LOW&&z>-NEAR_FACE_HIGH){if(visible===true)perte.nearFaceKept++;else perte.nearFaceDropped++;}
+    }else{
+     let untilClock=0,yieldDue=false;
+     for(let drawIndex=entry.range.start;drawIndex<entry.range.end;drawIndex++){
+      /* L'horloge n'est lue que tous les 256 points : lue à chaque point, elle
+       * coûtait à elle seule une part mesurable de la lecture. Les bornes de
+       * points restent vérifiées à chaque point. */
+      if(--untilClock<=0){untilClock=CLOCK_EVERY;if(sliceDue())yieldDue=true;if(limitReached(entry))break scan;}
+      else if(trace.pointsRead>=settings.maxInspected||saturated){if(limitReached(entry))break scan;}
+      if(sinceYield>=settings.yieldEvery||yieldDue){await checkpoint();await rest();if(!sourceUnchanged(entry))throw sourceChanged();sinceYield=0;yieldDue=false;untilClock=0;}
+      const sourceIndex=entry.range.index?entry.range.index.get(drawIndex,0):drawIndex;if(!Number.isInteger(sourceIndex)||sourceIndex<0||sourceIndex>=count)continue;
+      trace.pointsRead++;entry.report.pointsRead++;sinceYield++;const raw=entry.node.attribute.point(sourceIndex);if(!raw.every(finite))continue;
+      /* Six comparaisons écartent la grande majorité des points avant toute
+       * transformation. Un côté sans boîte fiable force le chemin complet. */
+      let candidate=false;
+      for(const side of sides){
+       if(railCounts[side]>=settings.maxPointsPerRail)continue;
+       const box=entry.roiBounds?.[side];
+       if(!box){candidate=true;break;}
+       if(raw[0]>=box.lo[0]&&raw[0]<=box.hi[0]&&raw[1]>=box.lo[1]&&raw[1]<=box.hi[1]&&raw[2]>=box.lo[2]&&raw[2]<=box.hi[2]){candidate=true;break;}
       }
-      railCounts[side]++;entry.report.retainedByRail[side]++;trace.pointsRetainedInRoi++;trace.perRail[side].pointsRetainedInRoi++;}
-     // Persist the first complete visible-ROI snapshot promptly. A later rail
-     // move or target change can only interrupt enrichment, not this copy.
-     // Mêmes instants de déclenchement qu'avant (seuil + pas de 128), mais la
-     // décision est désormais O(1) au lieu de rebalayer tout l'historique.
-     let snapshotReady=false;for(const side of sides)if(!firstSnapshots[side]&&chunks[side].scene.length&&accumulators[side].count>=nextCoverageCheck[side]){
-       nextCoverageCheck[side]=accumulators[side].count+128;
-       if(coverageBase[side]&&accumulators[side].qualifies())snapshotReady=true;}
-     if(snapshotReady)await checkpoint(true);
+      if(!candidate)continue;
+      if(retain(entry,sourceIndex,raw)&&snapshotReady())await checkpoint(true);
+     }
     }
     if(entry.report.status==='reading')entry.report.status='complete';
    }catch(error){termination=normalizeTermination(error);entry.report.status='partial-'+termination.code.toLowerCase().replaceAll('_','-');allRead=false;break;}}
   try{await checkpoint(true);}catch(error){termination=normalizeTermination(error);if(termination.code==='READ_ERROR')termination.code='CHECKPOINT_FAILED';allRead=false;}
-  result.termination=termination;result.completedAt=nowIso();result.status=termination?(termination.code==='RESOURCE_LIMIT'?'partial-resource-limit':'partial-interrupted'):(allRead?'complete-loaded-buffers':'partial');
+  result.termination=termination;result.completedAt=nowIso();result.pacing={mode:sliceMs!==null?'time-slices':'point-count',sliceMs,yieldEvery:settings.yieldEvery,pauses};result.status=termination?(termination.code==='RESOURCE_LIMIT'?'partial-resource-limit':'partial-interrupted'):(allRead?'complete-loaded-buffers':'partial');
   for(const side of sides){const associationStatus=options.associationByRail?.[side]||'same-target-and-rail-pose',assessment=coverageFrom(accumulators[side],settings,transformChecks[side],associationStatus,termination);
    result.railObservations[side]={side,rail:clone(frames[side]),capturedAt:startedAt,completedAt:result.completedAt,associationStatus,transform:transformChecks[side],
     pointsRetained:railCounts[side],pointsVisibleForEngine:accumulators[side].count,coverage:assessment,geometryInputStatus:assessment.status==='qualified-candidate'?'qualified-candidate':'unavailable-or-insufficient',
@@ -281,6 +382,6 @@
  const api={DEFAULTS,capture,coverage,coverageFrom,coverageAccumulator,normalizeTermination};
  /* Exposé pour les essais : la propriété conservative du rejet préalable se
   * vérifie directement, sans passer par une capture complète. */
- if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{rawRoiBounds,inBox}});
+ if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{rawRoiBounds,inBox,directReader}});
  return api;
 });

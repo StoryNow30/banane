@@ -1,8 +1,12 @@
 # État du projet Banane
 
 Date : 22 septembre 2026  
-Version active de l'extension : **4.7.1 TEST** (build de mesure ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.2 TEST** (mode Natif réoptimisé ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.2
+
+La 4.7.2 réoptimise la capture du mode Natif ; elle ne touche ni au placement ni au Pilote. Sur les exports du 22/09, la lecture était arrêtée par tout mouvement de caméra (378 captures sur 491 au lot 3), ces arrêts épuisaient le budget de captures par visite, et le lecteur plafonnait à ~106 000 points/s à cause de pauses de 16 ms. Corrections : lecture par tranches de temps avec accès direct au buffer prouvé par sondes, caméra consignée sans arrêter la lecture, garde réduite à l'identité et aux rails, relances limitées aux nouveaux nœuds chargés, service worker sans relecture intégrale de la base. Banc (code à froid) : premier instantané qualifié ~205 ms → ~35 ms, capture complète 1 816 ms → ~80 ms, points retenus identiques. Le gain terrain reste à mesurer sur la prochaine collecte (`closureSummary.captureHealth`).
 
 ## État 4.7.0
 

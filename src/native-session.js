@@ -69,9 +69,15 @@
     catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';period.status='INTERRUPTED';period.endedAt=iso();period.endTimeStatus='observed';n.message=error.message;await this.e.save();throw error;}
    }finally{this.starting=false;}}
   receive(type,data){const next=this.queue.then(()=>this.handle(type,data));this.queue=next.catch(()=>{});return next;}
+  /* 4.7.2 — lecture d'UN enregistrement par sa clé. Avant, chaque événement
+   * tardif d'une visite close (capture achevée après le changement de cut,
+   * fréquent au rythme réel) relisait TOUS les enregistrements de la base,
+   * sessions passées comprises. Le coût croissait avec l'historique. */
+  async recordById(id){if(typeof this.store.getRecord==='function')return this.store.getRecord(id);
+   return (await this.store.all('records')).find(item=>(item.recordId||item.id)===id);}
   async record(data){const n=this.e.s.native,current=n?.current;if(current?.visitId===data.visitId)return current;
-   const records=await this.store.all('records'),saved=records.find(item=>item.nativeSessionId===n?.id&&item.visitId===data.visitId);
-   if(!saved)throw Error('La visite native ne correspond à aucun enregistrement conservé.');return saved;}
+   const saved=data.visitId?await this.recordById(data.visitId):null;
+   if(!saved||saved.nativeSessionId!==n?.id||saved.visitId!==data.visitId)throw Error('La visite native ne correspond à aucun enregistrement conservé.');return saved;}
   mergeMetrics(metrics){if(!metrics)return;const m=this.e.s.native.metrics;m.queueDepthMax=Math.max(m.queueDepthMax,metrics.queueDepthMax||0);
    m.dropped=Math.max(m.dropped,metrics.dropped||0);m.sendFailures=Math.max(m.sendFailures,metrics.sendFailures||0);
    m.captureCompleted=Math.max(m.captureCompleted,metrics.captureCompleted||0);m.captureFailed=Math.max(m.captureFailed,metrics.captureFailed||0);
@@ -97,10 +103,23 @@
    const observed=SIDES.filter(side=>record.beforeEstablishedByRail[side]);record.beforeEstablishment={status:observed.length===2?'complete-by-rail':'partial-by-rail',
     observedRails:observed,simultaneous:observed.length===2&&record.beforeEstablishedByRail.left.observedAt===record.beforeEstablishedByRail.right.observedAt,
     observedAtByRail:Object.fromEntries(SIDES.map(side=>[side,record.beforeEstablishedByRail[side]?.observedAt||null])),immutablePerRail:true};}
-  visitRelation(records,n,identity,periodId){const same=records.filter(record=>record.source==='native-passive-observation'&&record.visitId&&K.cutId(record.identity)===K.cutId(identity));
-   const inSession=same.filter(record=>record.nativeSessionId===n.id),cross=same.filter(record=>record.nativeSessionId!==n.id);
-   if(inSession.length){const previous=inSession.at(-1);return {type:previous.observationPeriodId===periodId?'revisit':'pause-continuation',relatedVisitId:previous.visitId,relatedSessionId:n.id};}
-   if(cross.length){const previous=cross.at(-1);return {type:'cross-session-revisit',relatedVisitId:previous.visitId,relatedSessionId:previous.nativeSessionId};}
+  /* Relation d'une visite aux précédentes du même cut — 4.7.2.
+   *
+   * Dans la session, la liste chronologique `n.visits` suffit : elle retient la
+   * DERNIÈRE visite du cut (l'ancienne lecture intégrale prenait la dernière
+   * dans l'ordre des clés, c'est-à-dire des UUID). Entre sessions, un index des
+   * autres sessions est construit une fois par vie du service worker, au lieu
+   * d'une lecture intégrale de la base à chaque début de visite. */
+  async crossSessionIndex(n){if(this.crossIndex?.sessionId===n.id)return this.crossIndex.map;const map=new Map();
+   for(const record of await this.store.all('records'))
+    if(record.source==='native-passive-observation'&&record.visitId&&record.nativeSessionId!==n.id)
+     map.set(K.cutId(record.identity),{visitId:record.visitId,nativeSessionId:record.nativeSessionId});
+   this.crossIndex={sessionId:n.id,map};return map;}
+  visitRelation(n,identity,periodId,cross){const cut=K.cutId(identity);
+   const previous=(n.visits||[]).slice().reverse().find(visit=>visit.visitId&&K.cutId(visit.identity)===cut);
+   if(previous)return {type:previous.observationPeriodId===periodId?'revisit':'pause-continuation',relatedVisitId:previous.visitId,relatedSessionId:n.id};
+   const other=cross?.get(cut);
+   if(other)return {type:'cross-session-revisit',relatedVisitId:other.visitId,relatedSessionId:other.nativeSessionId};
    return {type:'first-observation',relatedVisitId:null,relatedSessionId:null};}
   redactedEvent(type,data){if(type==='capture-ready'){const cloud=data.cloud||{},pointsByRail=Object.fromEntries(SIDES.map(side=>[side,cloud.railObservations?.[side]?.pointsRetained||0]));
     return {...data,cloud:{format:cloud.format,captureId:cloud.captureId,identity:cloud.identity,status:cloud.status,termination:cloud.termination,pointsByRail,trace:cloud.trace}};}
@@ -118,10 +137,10 @@
     if(period){period.status='RUNNING';period.startedAt=data.startedAt||period.startedAt;period.endTimeStatus='open';}await this.e.save();return {saved:true,eventSeq:logged.eventSeq};}
    if(type==='visit-started'){
     if(n.current){this.partialReason(n.current,'new-visit-before-previous-close');n.current.status='partial';n.incomplete=unique([...n.incomplete,n.current.recordId]);await this.saveRecord(n.current);}
-    const identity=K.completeIdentity(data.identity||data.initialObserved?.identity||{}),visitIndex=n.visits.length,all=await this.store.all('records');
+    const identity=K.completeIdentity(data.identity||data.initialObserved?.identity||{}),visitIndex=n.visits.length,cross=await this.crossSessionIndex(n);
     const record={format:'banane-native-visit-v2',version:K.VERSION,recordId:data.visitId,id:data.visitId,nativeSessionId:n.id,
       source:'native-passive-observation',observationPeriodId:data.observationPeriodId,visitId:data.visitId,visitIndex,
-      previousVisitId:data.previousVisitId||n.visits.at(-1)?.visitId||null,nextVisitId:null,visitRelation:this.visitRelation(all,n,identity,data.observationPeriodId),identity,
+      previousVisitId:data.previousVisitId||n.visits.at(-1)?.visitId||null,nextVisitId:null,visitRelation:this.visitRelation(n,identity,data.observationPeriodId,cross),identity,
       startedAt:data.initialObserved?.capturedAt||iso(),endedAt:null,endTimeStatus:'open',firstObserved:K.clone(data.initialObserved),beforeEstablished:null,beforeEstablishedByRail:{left:null,right:null},
       beforeEstablishment:{status:'not-established',observedAt:null,immutable:true},lastObserved:K.clone(data.initialObserved),humanFinalReference:null,
       initialObserved:K.clone(data.initialObserved),finalObserved:K.clone(data.initialObserved),stateTransitions:[],operatorEvents:[],operatorIntents:[],multiIntent:false,observedEffects:[],
@@ -135,8 +154,8 @@
       usableAsNativeReference:false,usableForOfflineEvaluationByRail:{left:false,right:false},usableForTraining:false,
       trainingExclusionReason:'native-reference-requires-explicit-review'};
     this.establishBefore(record,data.initialObserved);for(const reason of data.initialObserved?.partialReasons||[])this.partialReason(record,reason);
-    const previousId=n.visits.at(-1)?.visitId;if(previousId){const previous=all.find(item=>item.nativeSessionId===n.id&&item.visitId===previousId);
-      if(previous){previous.nextVisitId=record.visitId;await this.saveRecord(previous);}}
+    const previousId=n.visits.at(-1)?.visitId;if(previousId){const previous=await this.recordById(previousId);
+      if(previous&&previous.nativeSessionId===n.id&&previous.visitId===previousId){previous.nextVisitId=record.visitId;await this.saveRecord(previous);}}
     n.current=record;n.visits.push({visitId:record.visitId,visitIndex,identity,observationPeriodId:record.observationPeriodId,relation:record.visitRelation.type});
     this.e.s.current=K.clone(data.initialObserved);await this.saveRecord(record);await this.e.save();return {saved:true,recordId:record.recordId,eventSeq:logged.eventSeq};
    }
@@ -571,7 +590,15 @@
    const latency=Object.fromEntries(SIDES.map(side=>{const values=firstStored[side].map(({record,snapshot})=>Date.parse(snapshot.acquiredThroughAt)-Date.parse(record.startedAt)).filter(v=>Number.isFinite(v)&&v>=0);
      return [side,{count:values.length,medianMs:median(values),maximumMs:values.length?Math.max(...values):null}];}));
    const durationMinutes=n.finishedAt?Math.max(0,(Date.parse(n.finishedAt)-Date.parse(n.startedAt))/60000):null;
-   const closureSummary={status:n.status,visits:records.length,complete:records.filter(record=>record.status==='complete').length,partial:records.filter(record=>record.status!=='complete').length,
+   /* Santé de la capture (4.7.2) : ce qu'il faut regarder en premier après une
+    * session au rythme réel. Part des visites dont chaque rail a un instantané
+    * qualifié et stocké pour sa pose initiale, nombre de lectures par visite,
+    * et causes d'arrêt des lectures. */
+   const captures=records.flatMap(record=>Object.values(record.geometryCaptures||{}));
+   const terminations={};for(const capture of captures){const key=capture.termination?.code||(capture.status==='reading'?'NOT_REPORTED':'NONE');terminations[key]=(terminations[key]||0)+1;}
+   const captureHealth={visits:records.length,captures:captures.length,capturesPerVisit:records.length?captures.length/records.length:null,terminations,
+     qualifiedInitialSnapshotRateByRail:Object.fromEntries(SIDES.map(side=>[side,records.length?firstStored[side].length/records.length:null]))};
+   const closureSummary={captureHealth,status:n.status,visits:records.length,complete:records.filter(record=>record.status==='complete').length,partial:records.filter(record=>record.status!=='complete').length,
      returns:[...counts.values()].filter(count=>count>1).reduce((sum,count)=>sum+count-1,0),observationPeriods:n.observationPeriods.length,lidarCaptures:n.cloudIds.length,
      usableByRail:Object.fromEntries(SIDES.map(side=>[side,records.filter(record=>record.geometryEligibility?.[side]?.status==='comparable-candidate').length])),
      usablePairs:records.filter(record=>record.geometryEligibility?.pair?.status==='comparable-candidate').length,geometryLossCauses:lossCauses,

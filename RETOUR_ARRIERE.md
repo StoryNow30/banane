@@ -1,5 +1,17 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.2**, la cible de retour est la **4.7.1**, commit `8199451` :
+
+```bash
+git archive 8199451 | tar -x -C /tmp/banane-4.7.1
+cd /tmp/banane-4.7.1 && python3 tools/package.py --output /tmp/banane-v4.7.1-test.zip
+```
+
+La 4.7.2 ne change que la capture du mode Natif (lecteur, garde, relances,
+service worker). Revenir en 4.7.1 ne change aucun placement ni aucune décision
+du Pilote ; seule la capture Natif redevient celle qui perdait les visites
+rapides.
+
 **Depuis la 4.7.1**, build de mesure, la cible de retour est la release
 officielle **4.7.0**, étiquetée `v4.7.0` :
 

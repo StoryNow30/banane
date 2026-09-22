@@ -41,12 +41,14 @@ La V4.4 lisait les nœuds dans leur ordre Potree avec un budget de 300 ms. L'aud
 | Points conservés par rail | 50 000 |
 | Points inspectés | 500 000 |
 | Budget de lecture | 1 800 ms |
-| Restitution au navigateur | 2 048 points |
+| Restitution au navigateur | 2 048 points (4.7.2 : tranches de 5 ms) |
 | Sauvegarde progressive | 2 048 points par portion |
 
 Gauche et droite sont sauvegardés séparément avec identité, matrices, position, vue et temps. Leur observation simultanée n'est pas obligatoire. Une paire n'est formée que si l'identité, le repère et les poses initiales sont compatibles. Un rail valide reste analysable seul.
 
-Un changement de cible, de pose ou de vue pendant la lecture arrête explicitement la tentative. Les portions déjà sauvegardées restent attachées à l'ancienne cible ; elles ne sont jamais ajoutées au nouveau cut. Aucun nouvel essai identique n'est lancé aveuglément.
+Un changement de cible ou de pose pendant la lecture arrête explicitement la tentative.
+
+**4.7.2 — rythme réel.** Un mouvement de caméra n'arrête plus la lecture : un point lu vient d'un buffer et d'une matrice de nœud revérifiés à chaque pause, jamais de la caméra ; le mouvement est consigné dans `readStrategy.cameraMovedDuringRead`. La lecture travaille par tranches de 5 ms et rend la main par `scheduler.yield` (au lieu d'attendre jusqu'à 16 ms un temps libre qu'ESV ne laisse jamais) ; sur un attribut flottant non normalisé, elle lit le buffer directement après l'avoir prouvé nœud par nœud sur les sondes. La garde ne lit que l'identité et les rails. Une lecture n'est relancée que sur déplacement de rail, ou sur nouveaux nœuds chargés (`loadEpochId`, sans la caméra) tant que la pose n'a pas ses deux côtés qualifiés ; le changement de cut est détecté dès que l'étiquette ESV change. Le bilan de clôture expose `captureHealth`. Les portions déjà sauvegardées restent attachées à l'ancienne cible ; elles ne sont jamais ajoutées au nouveau cut. Aucun nouvel essai identique n'est lancé aveuglément.
 
 Chaque résumé trace séparément les points disponibles, sondés, lus, transformés, retenus, sauvegardés et exportés. Une lecture complète vide, une limite vide, une interruption, une transformation invalide, un lecteur indisponible et une surcharge portent des statuts différents.
 

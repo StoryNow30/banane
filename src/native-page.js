@@ -141,7 +141,7 @@
    if(this.sessionId&&this.sessionId!==sessionId){this.queue=[];this.checkpointReceipts.clear();this.retryAt=0;this.failureShown=false;this.metrics={enqueued:0,sent:0,dropped:0,sendFailures:0,
      queueDepthMax:0,handlerDurationsMs:[],captureCompleted:0,captureFailed:0,captureBudgeted:0,captureRefused:0,captureCheckpoints:0,degradationLevel:'FULL'};this.collectorSeq=0;}
    this.sessionId=sessionId;this.periodId=observationPeriodId;this.active=true;this.paused=false;this.generation++;this.current=null;
-   this.api.install(e=>this.input(e));this.timer=this.api.interval(()=>{void this.observe('poll');void this.flush();},this.pollMs);
+   this.api.install(e=>this.input(e));this.api.watch?.(()=>{void this.observe('label-changed');});this.timer=this.api.interval(()=>{void this.observe('poll');void this.flush();},this.pollMs);
    this.enqueue('period-started',{startedAt:new Date().toISOString()},true);await this.observe('period-start');
    return {active:true,observationPeriodId:this.periodId,metrics:this.metricSnapshot()};}
   input(event){if(!this.active||event.isTrusted===false)return;const began=this.api.performanceNow?this.api.performanceNow():this.now();
@@ -161,7 +161,10 @@
    this.api.defer?.(()=>{void this.observe(intent?'after-decision-input':'after-input');});
   }
   viewKey(state){return state?.viewObservation?.viewEpochId||'view-not-observed';}
-  captureKey(state){return `${this.viewKey(state)}|${this.railKey(state)}`;}
+  /* Époque de chargement : les nœuds chargés, sans la caméra. Un adaptateur
+   * qui ne la fournit pas retombe sur l'époque de vue (comportement 4.7.1). */
+  loadKey(state){return state?.viewObservation?.loadEpochId||this.viewKey(state);}
+  captureKey(state){return `${this.loadKey(state)}|${this.railKey(state)}`;}
   async observe(reason){if(!this.active)return;let state;
    try{state=this.api.snapshot();}catch(e){this.enqueue('observation-failed',{visitId:this.current?.visitId||null,reason:e.message,trigger:reason},true);return;}
    const identityKey=this.stateKey(state),railKey=this.railKey(state);
@@ -169,14 +172,23 @@
    if(identityKey!==this.current.identityKey){const previous=this.current;this.closeVisit('target-changed',state.identity);
     this.openVisit(state,identityKey,railKey,reason,previous.visitId);return;}
    const before=this.current.state,viewKey=this.viewKey(state),viewChanged=viewKey!==this.current.viewKey,railChanged=railKey!==this.current.railKey;
-   this.current.state=state;this.current.railKey=railKey;this.current.viewKey=viewKey;
+   const loadKey=this.loadKey(state),loadChanged=loadKey!==this.current.loadKey;
+   this.current.state=state;this.current.railKey=railKey;this.current.viewKey=viewKey;this.current.loadKey=loadKey;
    if(railChanged||viewChanged)this.enqueue('state-observed',{visitId:this.current.visitId,identity:state.identity,state,trigger:reason,
      effect:{kind:railChanged&&viewChanged?'rail-and-loaded-view-changed':railChanged?'rail-state-changed':'loaded-view-changed',
       fromCapturedAt:before?.capturedAt||null,toCapturedAt:state.capturedAt,fromViewEpochId:before?.viewObservation?.viewEpochId||null,toViewEpochId:viewKey}},true);
-   if(railChanged||viewChanged)this.startCapture(this.current,state);
+   /* 4.7.2 — une lecture n'est relancée que si elle peut apporter quelque
+    * chose : rails déplacés, ou nouveaux nœuds chargés tant que la pose
+    * courante n'a pas ses deux côtés qualifiés. Un mouvement de caméra seul
+    * ne change aucun point en mémoire : il est consigné, pas relu. Au lot 3,
+    * ces relances comptaient 491 captures pour 111 visites. */
+   if(railChanged)this.startCapture(this.current,state);
+   else if(loadChanged&&!this.poseQualified(this.current,state))this.startCapture(this.current,state);
   }
-  openVisit(state,identityKey,railKey,trigger,previousVisitId=null){const visit={visitId:K.uid(),identityKey,railKey,viewKey:this.viewKey(state),state,
-    attemptedCaptureKeys:new Set(),pendingCaptureState:null,captureCount:0,qualifiedSides:new Set()};this.current=visit;
+  poseQualified(visit,state){const sides=['left','right'].filter(side=>state?.rails?.[side]);if(!sides.length)return false;
+   const qualified=visit.qualifiedByRailKey?.get(this.railKey(state));return !!qualified&&sides.every(side=>qualified.has(side));}
+  openVisit(state,identityKey,railKey,trigger,previousVisitId=null){const visit={visitId:K.uid(),identityKey,railKey,viewKey:this.viewKey(state),loadKey:this.loadKey(state),state,
+    attemptedCaptureKeys:new Set(),pendingCaptureState:null,captureCount:0,qualifiedSides:new Set(),qualifiedByRailKey:new Map()};this.current=visit;
    this.enqueue('visit-started',{visitId:visit.visitId,previousVisitId,identity:state.identity,initialObserved:state,trigger},true);
    this.startCapture(visit,state);}
   closeVisit(reason,nextIdentity=null){const visit=this.current;if(!visit)return;
@@ -210,11 +222,12 @@
    if(this.metrics.degradationLevel==='METADATA_ONLY'){
     this.metrics.captureFailed++;this.enqueue('capture-failed',{visitId:visit.visitId,identity:state.identity,
       reason:'metadata-only-because-collector-overloaded',degradationLevel:this.metrics.degradationLevel},true);return;}
-   const generation=this.generation,periodId=this.periodId;
+   const generation=this.generation,periodId=this.periodId,captureRailKey=this.railKey(state);
    const request={visitId:visit.visitId,captureId:K.uid(),onCheckpoint:async chunk=>{this.metrics.captureCheckpoints++;
      /* La qualification est connue ici, au checkpoint : c'est ce qui permet au
       * budget de savoir si la géométrie est acquise avant de couper. */
-     if(chunk?.qualification?.status==='qualified-candidate'&&chunk.side)visit.qualifiedSides.add(chunk.side);
+     if(chunk?.qualification?.status==='qualified-candidate'&&chunk.side){visit.qualifiedSides.add(chunk.side);
+      if(!visit.qualifiedByRailKey.has(captureRailKey))visit.qualifiedByRailKey.set(captureRailKey,new Set());visit.qualifiedByRailKey.get(captureRailKey).add(chunk.side);}
      if(!this.enqueue('capture-checkpoint',{visitId:visit.visitId,identity:state.identity,chunk},true))throw Error('progressive-checkpoint-queue-full');
      await this.flush();const receipt=this.checkpointReceipts.get(chunk.chunkId);this.checkpointReceipts.delete(chunk.chunkId);
      if(!receipt?.storageConfirmedAt||this.queue.some(item=>item.type==='capture-checkpoint'&&item.payload.chunk?.chunkId===chunk.chunkId))
