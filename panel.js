@@ -97,6 +97,22 @@
            ?`Politique effective de ce lot : ${effective==='defer'?'continuer et différer':'mettre le lot en pause'}.`:'';
        }
      }
+     /* Un lot Pilote GCV1 NEUTRALISE la question de faible confiance : la
+      * publication GCV1 est sa propre frontière d'admissibilité, et
+      * background.js force `lowConfidence` à « tenter ». Le réglage choisi
+      * restait alors affiché sans effet. On dit désormais ce qui s'applique
+      * vraiment, comme pour la politique des rails non résolus. */
+     if($('policy-effective')){
+       const demande=running?b.scope?.requestedLowConfidence:null;
+       const applique=running?(b.scope?.lowConfidence||'pause'):null;
+       const nom=v=>v==='attempt'?'tenter la proposition expérimentale':'mettre le lot en pause';
+       $('policy-effective').hidden=!running;
+       $('policy-effective').textContent=!running?''
+         :demande&&demande!==applique
+           ?`Politique effective de ce lot : ${nom(applique)}. Le lot Pilote GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nom(demande)} » ne s’y applique pas.`
+           :`Politique effective de ce lot : ${nom(applique)}.`;
+     }
+     if($('policy')&&running&&b.scope?.lowConfidence&&document.activeElement!==$('policy'))$('policy').value=b.scope.lowConfidence;
      const names={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
        PAUSED_DEFER_NAVIGATION_UNCERTAIN:'Navigation différée incertaine',
        PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',

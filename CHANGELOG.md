@@ -1,5 +1,71 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — analyse du lot terrain du 21 septembre : politique effective affichée, écartement mesuré
+
+Aucune modification de la science ni du pilotage. `src/geometry.js`,
+`src/geometry-candidate-v1.js`, `src/gauge.js`, `src/gcv1-shadow.js`,
+`src/engine.js`, `src/adapter-page.js` et `background.js` gardent leurs
+empreintes. Ce lot répond à l'analyse de deux lots automatiques et d'une
+session de corrections manuelles.
+
+**Le premier lot ne s'est pas interrompu : il a fini.** Sa portée demandée était
+`part 15, cuts 1 → 1` — un seul cut. Il a traité le cut 1, la validation a
+navigué vers 845, et 845 dépasse la borne : le lot s'est fermé en
+`FINISHED_WITH_UNCONFIRMED_ACTIONS` sept secondes après son démarrage, sans
+erreur, sans pause, sans capture en échec. Le chargement long du nuage suivant
+observé à l'écran n'y a pas de part. Le second lot, `cuts 845 → 9589`, a
+parcouru 74 cuts de 845 à 9086 — 55 traités, 18 différés — et s'est terminé sur
+un **arrêt demandé** : `capture-failed` puis `batch-action-interrupted` sur le
+cut 9086 sont la conséquence de l'annulation, pas sa cause.
+
+**Le réglage de faible confiance était neutralisé sans le dire (KI-033).** Dans
+un lot Pilote GCV1, `background.js` force `lowConfidence` à « tenter » et ne
+garde le choix de l'opérateur que dans `requestedLowConfidence`. Le lot réel
+porte `requestedLowConfidence: "pause"` et `lowConfidence: "attempt"`, et aucun
+cut n'a été mis en pause pour faible confiance. Le panneau affiche désormais la
+politique **effective**, et dit pourquoi le choix ne s'applique pas — comme il
+le faisait déjà pour les rails non résolus. La neutralisation elle-même n'est
+pas modifiée : c'est un choix documenté, pas un défaut.
+
+**Pause et report ne répondent pas à la même question.** La pause porte sur deux
+propositions qui existent mais restent incertaines ; le report porte sur un rail
+qui n'est pas résolu du tout. En lot GCV1 la première question est neutralisée,
+et seule la seconde subsiste — ce que le lot montre : 0 pause, 18 reports.
+
+**Les mauvais placements ont une cause unique et déjà traitée.** Sur les neuf
+cuts signalés qui ont réellement été appliqués, la correction humaine vaut 69 à
+124 mm **sur un seul rail** et environ zéro sur l'autre : le moteur a placé un
+rail sur un second minimum du gabarit. Le défaut ne dépend ni de la branche
+(A_STAR sur cinq, S1 sur quatre) ni de la confiance — un candidat A_STAR à
+confiance 78 est faux de 78 mm. Aucun contrôle mono-rail ne les sépare ; le
+seul signal qui le fait est l'écartement de la paire. Le garde livré le même
+jour les intercepte **tous les neuf**, plus le cut 850 que l'analyse a trouvé
+hors contrat sans qu'il ait été signalé.
+
+**Cinq des cuts signalés n'avaient rien reçu de Banane** — 2400, 2402, 3859,
+4295 et 7722 ont été différés, un rail abstenu, aucune commande envoyée ; et
+4356, 9075, 9078 n'ont jamais été visités par le lot. L'écartement que
+l'opérateur y a corrigé est l'état ESV d'origine, pas un placement du pilote.
+
+**L'écartement cible est confirmé, le réglage du cerveau ne l'est pas.** Les 91
+corrections manuelles ramènent l'écartement dans [1 429,6 ; 1 445,0] mm,
+médiane 1 436,2 — la cible ~1 436 annoncée par `AUDIT_PILOTE.md` défaut 7, cette
+fois mesurée sur les données Natif que cette section réclamait. En revanche le
+biais latéral de +4 mm à gauche appartient à l'**état ESV**, pas au pilote : là
+où le pilote a placé, l'opérateur ne retouche plus latéralement (KI-034).
+Ajouter une correction latérale au cerveau dégraderait ses bons placements ;
+elle n'est donc pas faite.
+
+**Sur 91 corrections, 22 seulement sont rejouables** côté géométrie
+(`comparable-candidate`), les autres étant écartées pour pose de capture
+différente de l'état initial, géométrie acquise après l'intention, couverture
+longitudinale ou points utiles insuffisants. L'écartement, lui, reste mesurable
+sur les 91 : c'est une distance, pas un rejeu.
+
+`tools/native-gauge-report.cjs` rend cette mesure reproductible sur n'importe
+quel export Natif, sans rien décider ni entraîner — `usableForTraining` reste
+faux. Essais : `tests/native-gauge-report.test.cjs`.
+
 ## 4.7 — consolidation QA du garde d'écartement (tests et documentation)
 
 Aucune modification de logique : `src/engine.js`, `src/gauge.js`,

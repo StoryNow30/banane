@@ -259,7 +259,7 @@ compte du raccourci. À investiguer devant ESV.
 
 ## Défaut 7 — l'écartement de voie n'est vérifié nulle part
 
-**NON CORRIGÉ — trouvé par Mic, à l'œil, sur le cut 6/9480.**
+**CORRIGÉ EN 4.7 pour la partie « vérifié nulle part » — trouvé par Mic, à l'œil, sur le cut 6/9480.** La suite de cette section reste la rédaction d'origine ; ce qui a changé est consigné à la fin.
 
 Ni le moteur ni le cerveau ne contrôlent l'écartement résultant du placement.
 Chaque rail est placé indépendamment.
@@ -290,6 +290,46 @@ bouger de façon décorrélée en conservant l'écartement. Il fallait mesurer l
 C'est de loin la piste la plus prometteuse ouverte à ce jour, et elle relève du
 cerveau, pas du pilote. Non implémentée : elle demande un ajustement sur données
 Natif représentatives, pas sur le corpus biaisé.
+
+### Ce qui a changé en 4.7
+
+**La mesure existe maintenant, et elle refuse.** Un garde d'écartement mesure la
+distance entre les origines des deux rails sur l'état *prévu* après application
+des deltas, et refuse de commander hors de [1 405, 1 470] mm (D-027). Deux
+étages indépendants : la composition GCV1 rend les deux rails abstenus, et
+`Engine.apply()` refuse la commande quel que soit le moteur d'origine. Sur le
+lot Pilote réel du 21 septembre (partie 15), dix paires avaient été appliquées
+**puis validées** entre 1 503,5 et 1 564,0 mm ; le garde les intercepte toutes
+les dix, et ne refuse aucune des quarante-six applications admissibles.
+
+**La cible ~1 436 est confirmée sur données Natif représentatives.** La session
+Natif du 21 septembre, sur la même partie 15, contient 91 corrections
+manuelles. L'écartement après correction humaine y tient dans
+**[1 429,6 ; 1 445,0] mm**, médiane **1 436,2**, écart moyen à 1 436 de
+**2,4 mm** — 89 `NOMINAL` et 2 `TOLERANCE`, aucune hors contrat. C'est
+exactement le geste décrit plus haut sur les parts 17/20 et 6, mesuré cette
+fois sur les données que cette section réclamait. Reproductible par
+`node tools/native-gauge-report.cjs --input <export-natif.json>`.
+
+**Mais l'ajustement du cerveau annoncé ici n'est PAS justifié par ces données,
+et n'a pas été fait.** En séparant les visites selon ce qu'était l'état AVANT,
+le geste latéral de l'opérateur se sépare net :
+
+| état trouvé à l'ouverture du cut | latéral gauche | latéral droite |
+|---|---:|---:|
+| placement laissé par le pilote (n = 20) | +0,23 ± 3,04 | +0,49 ± 1,05 |
+| état ESV brut, cut non traité (n = 37) | **+4,04 ± 2,34** | −0,08 ± 0,91 |
+
+Le biais latéral de +4 mm à gauche appartient à **l'état ESV d'origine**, pas au
+placement du pilote : là où le pilote a placé, l'opérateur ne retouche plus
+latéralement (moyenne très inférieure à l'écart-type, donc du bruit au critère
+de `src/brain.js`). Le pilote corrige donc déjà ce biais. Ajouter une
+correction latérale au cerveau **dégraderait** ses bons placements. Le geste
+vertical résiduel sur ces mêmes placements (+2,55 ± 3,23 à gauche, +2,71 ± 3,61
+à droite) ne passe pas non plus le critère du biais.
+
+Ce qui reste ouvert n'est donc pas un réglage du cerveau, mais la
+**récupération** des paires que le garde refuse désormais (KI-032).
 
 ## Défaut 8 — le placement est appliqué par clics simulés dans le canevas
 
