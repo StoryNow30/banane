@@ -1,5 +1,15 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.3**, la cible de retour est la **4.7.2**, commit `d96543c` :
+
+```bash
+git archive d96543c | tar -x -C /tmp/banane-4.7.2
+cd /tmp/banane-4.7.2 && python3 tools/package.py --output /tmp/banane-v4.7.2-test.zip
+```
+
+La 4.7.3 ne change que la fin de session Natif et la relance après une
+modification de la découpe ESV.
+
 **Depuis la 4.7.2**, la cible de retour est la **4.7.1**, commit `8199451` :
 
 ```bash

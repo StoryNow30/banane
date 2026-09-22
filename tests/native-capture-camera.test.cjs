@@ -31,7 +31,7 @@ function page(){
   const source=fs.readFileSync(path.join(__dirname,'../src/adapter-page.js'),'utf8').replace(/\}\)\(\);\s*$/,
     ';globalThis.__nativeTest={nativeCapture,nativeGuardState,nativeSnapshot,nativeApi};})();');
   vm.runInContext(source,ctx);
-  return {ctx,camera,left,right,nodes,observers,api:ctx.__nativeTest};
+  return {ctx,camera,left,right,nodes,observers,pc,api:ctx.__nativeTest};
 }
 async function capture(f,onCheckpoint){
   const expected=f.api.nativeSnapshot();
@@ -81,4 +81,15 @@ test('l’étiquette du cut est observée et seul un texte différent déclenche
   f.nodes.get('O2N3DCutDescription').textContent='Cut 101 of part 23';observer.callback();assert.equal(calls,1);
   observer.callback();assert.equal(calls,1);
   api.uninstall();assert.equal(observer.disconnected,true);
+});
+
+test('l’époque de chargement ignore la caméra mais suit la découpe ESV (4.7.3)',()=>{
+  const f=page(),first=f.api.nativeSnapshot().viewObservation;
+  f.camera.position.x+=1;const moved=f.api.nativeSnapshot().viewObservation;
+  assert.notEqual(moved.viewEpochId,first.viewEpochId,'la vue suit la caméra');
+  assert.equal(moved.loadEpochId,first.loadEpochId,'la caméra seule ne change pas ce qui est chargé');
+  f.pc.material.clipBoxes=[{inverse:{elements:C.identity()}}];f.pc.material.clipTask=2;
+  const clipped=f.api.nativeSnapshot().viewObservation;
+  assert.notEqual(clipped.loadEpochId,first.loadEpochId,'une découpe modifiée relance la lecture');
+  assert.equal(f.api.nativeSnapshot().viewObservation.loadEpochId,clipped.loadEpochId,'stable tant que rien ne change');
 });

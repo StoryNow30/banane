@@ -8,7 +8,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.2';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.3';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -133,7 +133,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='native-start'){engine.assertBatchContextFree('démarrer le mode Natif');return native.start();}
  if(action==='native-pause')return native.pause();
  if(action==='native-resume')return native.resume();
- if(action==='native-end')return native.end();
+ if(action==='native-end')return native.end({dataset:false});
  if(action==='native-download')return native.dataset();
  // V4.5-R : export segmenté. Le panneau demande un plan (métadonnées + nuages
  // pas encore écrits), écrit le segment, puis acquitte les identifiants.

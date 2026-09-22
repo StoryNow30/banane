@@ -156,7 +156,8 @@ test('native mode excludes corrections and pilot commands while remaining comman
  const b=background();await b.api('connect',{tabId:1});await b.api('native-start');
  await assert.rejects(()=>b.api('manual-start'),/mode Natif/);await assert.rejects(()=>b.api('settings',{mode:'automatic-test'}),/mode Natif/);
  assert.ok(b.adapter.calls.includes('nativeStart'));assert.equal(b.adapter.calls.some(x=>['apply','next','validate','skip'].includes(x)),false);
- await b.api('native-pause');await b.api('native-resume');const data=await b.api('native-end');assert.equal(data.format,'banane-native-session-v2');
+ await b.api('native-pause');await b.api('native-resume');const data=await b.api('native-end');assert.equal(data.format,'banane-native-session-end-v1');assert.equal(data.status,'FINISHED');
+ assert.ok(JSON.stringify(data).length<4096,'la fin de session ne renvoie qu’un résumé, jamais la session entière');
  assert.deepEqual(b.adapter.calls.filter(x=>x.startsWith('native')),['nativeStart','nativePause','nativeResume','nativeFinish']);
 });
 

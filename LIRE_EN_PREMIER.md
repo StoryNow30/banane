@@ -1,12 +1,13 @@
-# Démarrer avec Banane V4.7.2 TEST — mode Natif réoptimisé
+# Démarrer avec Banane V4.7.3 TEST — mode Natif réoptimisé
 
-**Ce n'est pas une release.** La 4.7.2 rend au mode Natif sa capacité à
-capturer au rythme réel du travail. La release officielle reste la **4.7.0**,
+**Ce n'est pas une release.** La 4.7.2 a rendu au mode Natif sa capacité à
+capturer au rythme réel du travail ; la 4.7.3 corrige la fin de session (erreur
+« 64MiB ») et relance la lecture quand ESV déplace sa boîte de découpe. La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.2-test.zip` dans Edge, exactement comme la 4.7.1.
+Installe `banane-v4.7.3-test.zip` dans Edge, exactement comme la 4.7.2.
 
-Vérifie d'abord **V4.7.2 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.2 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.1, l'ancienne copie est toujours chargée.
+Vérifie d'abord **V4.7.3 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.3 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.2, l'ancienne copie est toujours chargée.
 
 ## Ce qui change pour toi
 
@@ -24,7 +25,7 @@ Une collecte Natif au rythme réel, idéalement sur la même partie que le lot 3
 pour comparer. Puis envoie l'export.
 
 Ce qui devrait bouger : la part des visites avec un instantané LiDAR qualifié
-(11 % au lot 3). Le bilan de clôture l'indique directement, dans
+(11 % au lot 3 en 4.7.1, 83 % en 4.7.2). Le bilan de clôture l'indique directement, dans
 `closureSummary.captureHealth`. Ce qui ne bouge pas : le placement, les
 propositions, les décisions du Pilote. Aucune science n'a été touchée.
 

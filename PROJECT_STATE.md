@@ -1,8 +1,12 @@
 # État du projet Banane
 
 Date : 22 septembre 2026  
-Version active de l'extension : **4.7.2 TEST** (mode Natif réoptimisé ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.3 TEST** (mode Natif réoptimisé ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.3
+
+Première collecte 4.7.2 mesurée (105 visites, 20,8/min) : sur les visites de moins d'une seconde, 79 % / 73 % des rails ont un instantané initial qualifié, contre 5 % / 4 % en 4.7.1. La 4.7.3 corrige la fin de session (le panneau recevait toute la session en un message, au-delà de la limite de 64 MiB) et relance la lecture quand ESV modifie sa boîte de découpe, première cause des rails restés sans instantané.
 
 ## État 4.7.2
 

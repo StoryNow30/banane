@@ -1,5 +1,41 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.3 — deux correctifs après la première collecte 4.7.2, 22 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`.
+
+**Mesure terrain de la 4.7.2** (collecte Natif du 22/09, 18h40 : 105 visites,
+20,8 visites/min). À durée de visite égale, part des rails avec un instantané
+qualifié et stocké pour leur pose initiale :
+
+| Visites | 4.7.1 (lot 3) | 4.7.2 |
+|---|---|---|
+| moins d'une seconde | 5 % G · 4 % D (84 visites) | 79 % G · 73 % D (33 visites) |
+| 1 à 2 s | 42 % · 67 % (12) | 75 % · 70 % (20) |
+| plus de 2 s | 80 % · 100 % (15) | 96 % · 87 % (52) |
+
+Chemin direct emprunté par 310 lectures sur 310, `scheduler.yield` disponible
+dans Edge, débit médian 625 points/ms (4.7.1 : ~106), aucune lecture arrêtée par
+la caméra alors qu'elle a bougé pendant 174 lectures sur 310.
+
+**Correctif 1 — fin de session.** « Message exceeded maximum allowed size of
+64MiB » : la fin de session renvoyait tout le jeu au panneau en un seul message
+(88 Mo de visites et d'événements pour 105 visites) ; le message échouait, et
+l'export devait être relancé à la main. Aucune donnée perdue — les trois
+segments reçus contiennent les 1 178 objets déclarés. `native-end` rend
+désormais un résumé de quelques centaines d'octets ; l'export passe comme avant
+par le manifeste léger.
+
+**Correctif 2 — découpe ESV.** Première cause des rails restés sans instantané :
+ESV déplace sa boîte de découpe juste après le changement de cut, la lecture
+s'arrêtait (`CLIP_CHANGED`, 39 lectures) et rien ne la relançait faute de
+nouveaux nœuds — jusqu'à des visites de 3,8 s sans instantané. L'état de la
+découpe entre désormais dans `loadEpochId` : une découpe modifiée relance la
+lecture tant que la pose n'a pas ses deux côtés qualifiés.
+
+Aucune science touchée ; le Pilote n'utilise pas ce chemin.
+
 ## 4.7.2 — mode Natif réoptimisé, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée

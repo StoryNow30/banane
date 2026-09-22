@@ -112,7 +112,13 @@
       * caméra. `loadEpochId` ne suit que les nœuds chargés : c'est lui qui dit
       * si une nouvelle lecture peut apporter des points. La même sérialisation
       * sert aux deux — JSON.stringify([a,b]) vaut '['+a+','+b+']'. */
-     const loadSignature=JSON.stringify(tokens),signature='['+JSON.stringify(camera?.cameraToSceneRelative||null)+','+loadSignature+']',previous=nativeViews.get(c.root);
+     /* 4.7.3 : la découpe ESV fait partie de ce qui est chargé et visible. Sur
+      * la collecte 4.7.2, ESV déplaçait sa boîte de découpe juste après le
+      * changement de cut ; la lecture s'arrêtait (CLIP_CHANGED) et rien ne la
+      * relançait, faute de nouveaux nœuds — 39 lectures, jusqu'à des visites de
+      * 3,8 s sans instantané. Une découpe modifiée change donc l'époque. */
+     const clips=(c.viewer.scene?.pointclouds||[]).map(pc=>{try{return L.clipSnapshot(pc,c.frame.origin,window.Potree||{});}catch(error){return {error:error.message};}});
+     const loadSignature=JSON.stringify([tokens,clips]),signature='['+JSON.stringify(camera?.cameraToSceneRelative||null)+','+loadSignature+']',previous=nativeViews.get(c.root);
      const view=previous?.signature===signature?previous:{signature,viewEpochId:K.uid(),loadSignature,
        loadEpochId:previous?.loadSignature===loadSignature&&previous?.loadEpochId?previous.loadEpochId:K.uid()};nativeViews.set(c.root,view);
      return {status:'observed',viewEpochId:view.viewEpochId,loadEpochId:view.loadEpochId,observedAt:new Date().toISOString(),loadedNodeCount:inventory.nodes.length,

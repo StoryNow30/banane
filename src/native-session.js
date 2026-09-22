@@ -336,7 +336,15 @@
    const period=this.newPeriod(n);try{await this.adapter.nativeResume({sessionId:n.id,observationPeriodId:period.observationPeriodId});n.status='RUNNING';period.status='RUNNING';
     n.message='Nouvelle période d’observation native active.';await this.e.save();return this.e.view();}catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';period.status='INTERRUPTED';
     period.endedAt=iso();period.endTimeStatus='observed';n.message=error.message;await this.e.save();throw error;}}
-  end(){if(this.ending)return this.ending;this.ending=this.close().finally(()=>{this.ending=null;});return this.ending;}
+  /* `end({dataset:false})` rend un résumé léger au lieu de la session entière.
+   * 4.7.2 terrain : la fin de session renvoyait tout le jeu (88 Mo de visites et
+   * d'événements pour 105 visites) dans un seul message vers le panneau —
+   * « Message exceeded maximum allowed size of 64MiB ». L'export passe de toute
+   * façon par le manifeste léger et la lecture directe du stockage. */
+  end(options={}){if(this.ending)return this.ending;this.ending=this.close(options).finally(()=>{this.ending=null;});return this.ending;}
+  endSummary(){const n=this.e.s.native;if(!n)return null;
+   return {format:'banane-native-session-end-v1',version:K.VERSION,sessionId:n.id,status:n.status,finishedAt:n.finishedAt||null,
+    visits:(n.visits||[]).length,incomplete:(n.incomplete||[]).length,cloudsStored:(n.cloudIds||[]).length,adapterError:n.adapterError||null};}
   /* V4.5.4 — abandon explicite d'une session.
    *
    * Une session d'essai, une mauvaise cible, un départ raté : il n'existait
@@ -367,14 +375,14 @@
    await this.e.save();
    return {discarded:true,sessionId,clouds:nuages,records:visites,events:evenements};
   }
-  async close(){const n=this.e.s.native;if(!n)throw Error('Aucune session Natif à terminer.');let adapterError=null;
+  async close({dataset=true}={}){const n=this.e.s.native;if(!n)throw Error('Aucune session Natif à terminer.');let adapterError=null;
    try{const result=await this.adapter.nativeFinish();this.mergeMetrics(result?.metrics);}catch(error){adapterError=error;n.message='Fin interrompue : '+error.message;}
    await this.queue;if(n.current){this.partialReason(n.current,'session-ended-before-visit-close');this.classify(n.current);await this.saveRecord(n.current);
     n.incomplete=unique([...n.incomplete,n.current.recordId]);n.current=null;}
    n.status=adapterError?'PAUSED_ADAPTER_UNRESPONSIVE':'FINISHED';n.finishedAt=iso();n.adapterError=adapterError?.message||null;n.currentPeriodId=null;
-   const records=(await this.store.all('records')).filter(record=>record.nativeSessionId===n.id);
-   await this.nativeEvent('session-finished',{sessionId:n.id,identity:null,status:n.status,records:records.length,incomplete:n.incomplete.length,adapterError:n.adapterError});
-   await this.e.save();return this.dataset();}
+   // Une visite = un enregistrement : le compte vient de la session, sans relire toute la base.
+   await this.nativeEvent('session-finished',{sessionId:n.id,identity:null,status:n.status,records:(n.visits||[]).length,incomplete:n.incomplete.length,adapterError:n.adapterError});
+   await this.e.save();return dataset?this.dataset():this.endSummary();}
   /* V4.5-R — comptabilité de volume et conseil d'export segmenté.
    * Au-delà d'environ 64 Mo, la préparation du fichier unique échouait dans la
    * fenêtre et la session entière devenait intéléchargeable : toute la collecte
