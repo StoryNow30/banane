@@ -1,0 +1,96 @@
+{
+  "format": "banane-smoke-terrain-v1",
+  "capitalisedAt": "2026-09-22",
+  "smokeDate": "2026-09-22",
+  "environment": "Edge reel, ESV reel, operateur humain",
+  "checkpoint": "5e6d0e8b14ea880195672e5b9da914f046701e0c",
+  "geometryEngine": "geometry-candidate-v1",
+  "sourceExports": {
+    "included": false,
+    "reason": "Exports Natif et Pilote prives, hors depot. Seuls les faits de decision sont versionnes, pas les nuages ni les poses."
+  },
+  "scope": { "part": 16, "startCut": 9451, "endCut": 9493 },
+  "counts": {
+    "unvalidatedCutsEncountered": 13,
+    "appliedAndValidated": 7,
+    "deferred": 6,
+    "automaticSkips": 0,
+    "deferredByGaugeGate": 3,
+    "deferredByAmbiguity": 3
+  },
+  "gaugeContract": {
+    "version": "gauge-contract-v2",
+    "lowMm": 1405,
+    "nominalMm": 1430,
+    "maximumMm": 1470,
+    "source": "src/gauge.js",
+    "measuredOn": "ecartement PREVU apres application des deltas, jamais l'etat avant"
+  },
+  "gaugeGateTriggers": [
+    { "cut": 9452, "predictedGaugeMm": 1333.5, "approximate": true, "gaugeClass": "LOW_INVALID",
+      "marginBelowLowMm": 71.5,
+      "apply": 0, "validate": 0, "skip": 0, "outcome": "DEFERRED_UNRESOLVED",
+      "navigation": "sans decision" },
+    { "cut": 9453, "predictedGaugeMm": 1368.3, "approximate": true, "gaugeClass": "LOW_INVALID",
+      "marginBelowLowMm": 36.7,
+      "apply": 0, "validate": 0, "skip": 0, "outcome": "DEFERRED_UNRESOLVED",
+      "navigation": "sans decision" },
+    { "cut": 9488, "predictedGaugeMm": 1328.8, "approximate": true, "gaugeClass": "LOW_INVALID",
+      "marginBelowLowMm": 76.2,
+      "apply": 0, "validate": 0, "skip": 0, "outcome": "DEFERRED_UNRESOLVED",
+      "navigation": "sans decision" }
+  ],
+  "gaugeClassRecheck": {
+    "performed": true,
+    "method": "node -e require('./src/gauge.js').classifyMm(<predictedGaugeMm>)",
+    "result": "les trois valeurs rendent LOW_INVALID, conforme a l'observation terrain",
+    "note": "controle de coherence des faits capitalises avec le contrat gele ; ce n'est PAS un rejeu du lot."
+  },
+  "ambiguityDeferrals": [
+    { "cut": 9472, "cause": "ambiguite / abstention scientifique", "gaugeGate": false },
+    { "cut": 9473, "cause": "ambiguite / abstention scientifique", "gaugeGate": false },
+    { "cut": 9487, "cause": "ambiguite / abstention scientifique", "gaugeGate": false }
+  ],
+  "appliedPlacements": {
+    "count": 7,
+    "humanCorrectionMaxMm": 7.6,
+    "humanCorrectionMaxApproximate": true,
+    "distributionRecorded": false,
+    "note": "7,6 mm est un MAJORANT observe sur 7 placements. Ni moyenne, ni ecart-type, ni mediane, ni valeur par cut n'ont ete relevees pendant le smoke."
+  },
+  "corpusStatus": {
+    "part": 16,
+    "split": "DEVELOPMENT",
+    "state": "REGRESSION_CONSUMED",
+    "futureIndependentHoldout": false,
+    "reason": "Session examinee pour decider de la qualification 4.7 du garde d'ecartement. Une partie consommee ne redevient jamais un HOLDOUT independant (CORPUS_V2_NATIF.md 5).",
+    "remainsUsableFor": ["reproduction", "non-regression", "comparaison historique"]
+  },
+  "proves": [
+    "Le Gauge Safety Gate se declenche en conditions reelles, sur trois cuts distincts.",
+    "Son issue est complete : 0 apply, 0 VALIDATE, 0 SKIP, DEFERRED_UNRESOLVED, navigation sans decision.",
+    "La regle D-027 « un hors-contrat n'est jamais un SKIP » tient sur le terrain : 0 SKIP automatique sur 13 cuts.",
+    "Garde d'ecartement et abstention scientifique coexistent sans se confondre : 3 et 3.",
+    "Le pilote reste utilisable malgre le garde : 7 des 13 cuts traites bout en bout.",
+    "Aucun gros faux placement gauge-admissible n'a ete reproduit sur ce smoke."
+  ],
+  "doesNotProve": [
+    "L'absence de faux placements gauge-admissibles : non-reproduction sur 13 cuts, pas absence.",
+    "Que les trois refus du garde etaient les bons refus : aucune reference humaine finale sur 9452, 9453, 9488.",
+    "Une generalisation : une partie, un profil, une session, un operateur, une journee.",
+    "Une precision de placement : le majorant 7,6 mm porte sur 7 cas.",
+    "L'affichage UI ajoute en a507525 : le smoke tourne sur 5e6d0e8, qui ne le contient pas.",
+    "Une reponse a KI-032 : aucune paire refusee n'a ete recuperee."
+  ],
+  "limits": [
+    "13 cuts non valides : aucune strate (cote x signe de Z) mesurable.",
+    "Une seule partie : la partition du Corpus V2 est par partie, donc un seul point non stratifiable.",
+    "Les 6 cuts differes sont quittes sans decision et n'apportent aucun oracle.",
+    "Seul le majorant des corrections humaines a ete note ; les valeurs par cut n'existent pas.",
+    "Exports privés hors depot : ces faits ne sont pas rejouables depuis ce depot seul.",
+    "Checkpoint anterieur a a507525 : ni la politique effective affichee, ni tools/native-gauge-report.cjs ne sont exerces."
+  ],
+  "sourceDataModified": false,
+  "references": ["DECISIONS.md#D-027", "KNOWN_ISSUES.md#KI-031", "KNOWN_ISSUES.md#KI-032",
+    "KNOWN_ISSUES.md#KI-033", "CORPUS_V2_NATIF.md", "AUDIT_PILOTE.md", "audit/SMOKE_TERRAIN_PARTIE_16.md"]
+}

@@ -1,5 +1,44 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — capitalisation du smoke terrain du 22 septembre (partie 16)
+
+Aucune modification de code. Aucun bump de version : le manifeste reste en
+**4.6.0**. Cette entrée **capitalise** un smoke Edge réel déjà exécuté sur le
+checkpoint `5e6d0e8`, et n'ajoute ni science, ni pilotage, ni donnée source.
+
+**Le garde d'écartement s'est déclenché sur le terrain, et s'est abstenu
+proprement.** Sur la partie 16, cuts 9451 → 9493, 13 cuts non validés ont été
+rencontrés : 7 appliqués puis validés, 6 différés, **0 SKIP automatique**. Le
+Gauge Safety Gate a refusé la commande sur trois cuts — 9452 (≈ 1 333,5 mm),
+9453 (≈ 1 368,3 mm) et 9488 (≈ 1 328,8 mm), tous trois `LOW_INVALID`. Pour
+chacun : 0 `apply`, 0 `VALIDATE`, 0 `SKIP`, `DEFERRED_UNRESOLVED`, navigation
+sans décision. C'est le contrat D-027 tenu sur du réel : un hors-contrat est une
+**abstention**, jamais un SKIP.
+
+**Les deux causes de report ne se confondent pas.** Trois autres cuts — 9472,
+9473, 9487 — ont été différés pour **ambiguïté / abstention scientifique**
+(`KI-031`), pas par le garde. Les compter ensemble doublerait le taux de refus
+du garde. Bilan : 3 garde + 3 ambiguïté = 6 différés.
+
+**Le pilote reste utilisable.** Les 7 placements appliqués n'ont demandé que de
+petites corrections humaines, d'amplitude maximale **≈ 7,6 mm** — un majorant
+sur 7 cas, pas une distribution. Aucun gros faux placement gauge-admissible n'a
+été reproduit.
+
+**Ce que ce smoke ne prouve pas est écrit avec le reste.** 13 cuts n'ont aucune
+puissance statistique ; la non-reproduction n'est pas une absence ; les trois
+refus n'ont laissé aucune référence humaine, donc le bon placement sur ces cuts
+reste inconnu ; et le smoke n'exerce ni l'affichage de la politique effective ni
+`tools/native-gauge-report.cjs`, tous deux postérieurs au checkpoint.
+
+**La session Natif associée est dépensée.** Partie 16 classée **DEVELOPMENT /
+REGRESSION_CONSUMED**, jamais futur HOLDOUT indépendant : elle a été regardée
+pour décider (`CORPUS_V2_NATIF.md` §5).
+
+Ajoutés : `audit/SMOKE_TERRAIN_PARTIE_16.md` et
+`audit/smoke-terrain-partie-16.json` (`banane-smoke-terrain-v1`). Les exports
+Natif et Pilote de la session restent privés et hors dépôt.
+
 ## 4.7 — analyse du lot terrain du 21 septembre : politique effective affichée, écartement mesuré
 
 Aucune modification de la science ni du pilotage. `src/geometry.js`,

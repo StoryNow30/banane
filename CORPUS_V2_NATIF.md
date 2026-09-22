@@ -127,6 +127,13 @@ Règle de partition, à déclarer avec le manifeste et jamais après :
 - `tests/corpus` (partie 23) a le statut **REGRESSION_CONSUMED** : ancien
   holdout dépensé, réservé à la reproduction, à la non-régression et à la
   comparaison historique ; aucune validation indépendante future sur cette partie.
+- La **partie 16** (smoke terrain du 22 septembre 2026, cuts 9451 → 9493) a le
+  statut **DEVELOPMENT / REGRESSION_CONSUMED**. Elle a été examinée pour
+  décider — qualifier le comportement du garde d'écartement en 4.7 — donc elle
+  est dépensée à l'ouverture. Elle reste utilisable pour la reproduction, la
+  non-régression et la comparaison historique, et ne sera **jamais** un HOLDOUT
+  indépendant. Faits capitalisés : `audit/SMOKE_TERRAIN_PARTIE_16.md` et
+  `audit/smoke-terrain-partie-16.json` ; les exports de la session restent privés.
 - Chaque nouvelle partie est affectée **avant toute analyse**, à l'ouverture
   du manifeste et selon une règle écrite, soit à **DEVELOPMENT**, soit à **HOLDOUT**.
 - **DEVELOPMENT** : nouvelles parties accessibles pendant la conception de
