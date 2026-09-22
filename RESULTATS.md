@@ -1,4 +1,38 @@
-# Résultats — Banane V4 TEST 4.4.3
+# Résultats — Banane V4 TEST 4.7.0
+
+## Résultats 4.7.0
+
+```
+550 tests · 548 réussis · 0 échec · 2 ignorés
+Node v22.22.2 · checkpoint 6ead46f
+```
+
+Les 2 ignorés sont les deux essais qui exigent le corpus Natif privé, absent du
+clone ; ils s'ignorent en énonçant leur motif. **Un test ignoré n'est pas un
+test réussi.**
+
+Placement, transformations de coordonnées et lecteur LiDAR partagé inchangés
+depuis 4.4.0 (SHA-256). `src/engine.js` conforme à la baseline déclarée V4.6.0.
+
+Paquet installable reproductible bit à bit depuis `git archive 6ead46f` :
+**595 704 octets**, **95 entrées**, toutes identiques octet pour octet aux blobs
+Git du checkpoint, `manifest.json` une seule fois à la racine, aucun dossier
+parent.
+
+Ce qui est démontré par ces essais : le moteur, le protocole de report, le garde
+d'écartement, l'export et la reprise, contre une doublure ESV. Ce qui ne l'est
+pas : les effets réels dans Edge. L'équivalence `Maj+Z` est établie par
+inspection du JavaScript ESV chargé, pas par ces tests.
+
+Preuve terrain distincte : le garde d'écartement s'est déclenché en Edge réel
+sur le lot du 21 septembre, les cuts rejetés recevant 0 apply, 0 `VALIDATE`,
+0 `SKIP`, puis une navigation sans décision. Petit échantillon, pas une preuve
+de généralisation.
+
+## Historique V4.4 — conservé comme preuve
+
+Les sections ci-dessous décrivent l'état de leur époque. Elles ne décrivent pas
+la 4.7.0.
 
 La V4.4.2 enregistre et acquitte des instantanés qualifiés par rail avant l'intention opérateur, indépendamment du résumé de capture tardif ; une contradiction explicite les révoque. **Dans ESV, le bouton flottant est resté visible malgré une fenêtre ouverte : le masquage V4.4.2 a échoué sur le terrain.** La V4.4.3 suit les fenêtres et pages ouvertes, retire physiquement le bouton et empêche une réponse de statut tardive de le réafficher. Cette correction est vérifiée localement, pas encore dans Edge. Ni placement, ni pilote, ni lecteur LiDAR partagé ne changent : leurs empreintes SHA-256 restent figées.
 

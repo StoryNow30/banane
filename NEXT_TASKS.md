@@ -1,10 +1,65 @@
-# Prochaines tâches — extension 4.4.3 TEST / banc V4.5 lot 1
+# Prochaines tâches — après la 4.7.0
 
-Avant toute revendication de gain de précision : faire revoir à Terra les **sept** finales candidates comparables du banc après correction de la borne par rail (`audit/V45_LOT1_BORNE_TEMPORELLE.md`), vérifier visuellement quelques repères dans ESV et obtenir la calibration indépendante des unités. Constituer ensuite un bloc spatial indépendant avant de comparer des méthodes sur les mêmes entrées et les mêmes finales ; conserver le témoin V4.4.3 comme donnée connue de développement. Le banc et sa commande sont documentés dans `PLACEMENT_LAB.md`. Les vérifications terrain ci-dessous restent ouvertes : ce lot n'a modifié ni l'extension ni son moteur.
+## A. Fermer réellement la 4.7.0
 
-1. Mic installe le ZIP V4.4.3 dans **le dossier déjà chargé par Edge**, recharge l'extension puis l'onglet ESV. Quand Banane est fermé, le bouton doit dire « Banane 4.4.3 · ouvrir », et le panneau « V4.4.3 · TEST ». Vérifier ensuite son retrait immédiat à l'ouverture, sa persistance masquée lorsque deux fenêtres Banane sont ouvertes, puis son retour seulement après fermeture de la dernière ; si l'ancien libellé « Banane V4 · ouvrir » apparaît, identifier et recharger la bonne extension avant de conclure.
-2. Après ce contrôle ciblé, suivre `NATIVE_GEOMETRY_ACCEPTANCE.md` : gauche/droite chargés, rail unique, navigation rapide, revisite, validation sans mouvement et Pause/Reprendre ; comparer la fluidité avec et sans Natif, puis envoyer le nouveau `banane-native-v4-…json`.
-3. Auditer le nouvel export : points disponibles, lus, transformés, dans le clipping et la ROI, checkpoints acquittés avant intention, qualification par rail et paire, motifs de perte, interruptions et temps. Produire quelques superpositions SVG pour contrôler visuellement la concordance des repères. Si 0 exemple qualifié, corriger la cause réellement mesurée.
-4. Rejouer `tools/native-offline-evaluate.cjs` sur le nouvel export sans passer le final humain au moteur. Toute référence doit être revue par Mic avant un usage d'entraînement.
-5. Vérifier dans Edge la récupération IndexedDB après interruption, l'absence de commande Banane et de geste bloqué, et la fluidité réelle. `serverConfirmationStatus: not-observed` reste attendu.
-6. Reporter les changements du moteur de placement et du pilote à un chantier séparé. Statut vert/rouge, projet, geominfo, ordre spatial, écartement calibré et confirmation serveur restent absents tant qu'ESV ne les fournit pas.
+Le checkpoint `6ead46f` est complet côté code, tests, paquet et documentation.
+Deux conditions du contrat de fermeture restent ouvertes, et **aucune ne peut
+être produite par le dépôt** :
+
+1. **QA indépendante** du checkpoint final.
+2. **Contrôle Edge court** sur le seul runtime modifié depuis le paquet
+   réellement smoké : ouvrir le panneau, lancer un lot Pilote GCV1 en demandant
+   « Mettre le lot en pause » pour la faible confiance, et vérifier que la ligne
+   de politique effective annonce « tenter la proposition expérimentale » et
+   nomme le choix qui ne s'applique pas. Aucun chemin de commande n'a changé —
+   `engine`, `gauge`, `gcv1-shadow`, `geometry`, `geometry-candidate-v1`,
+   `adapter-page` et `gcv1-export` sont identiques octet pour octet au
+   checkpoint `5e6d0e8` — donc un smoke complet n'est pas nécessaire.
+
+Tant que ces deux points ne sont pas faits, écrire `PASS_BANANE_47_FINAL` serait
+faux. Le tag `v4.7.0` et tout merge dans `main` attendent la même décision.
+
+## B. Candidats 4.8
+
+Périmètre annoncé : accélération du Pilote, nouvelle UI, recherche scientifique
+supplémentaire. Rien de tout cela n'entre dans une correction 4.7.
+
+### Dettes ouvertes, chiffrées, prêtes à être instruites
+
+| Sujet | Source | Ce qui est déjà établi |
+|---|---|---|
+| Réconciliation d'une application partielle | KI-030 | La boucle séquentielle date de `569c9a5`. Le comportement actuel est caractérisé par `tests/ki030-partial-apply.test.cjs` : état partiel réel, aucune décision ensuite, fermeture par `reconcileRequired`, restauration effective. Un correctif doit traiter la réconciliation, pas élargir un garde. |
+| Arbitrage de paire hors contrat | KI-032, `GAUGE_PAIR_ARBITRATION_STUDY` | Sur les 10 cuts hors contrat du lot réel, **0 sur 10** admettent un couple admissible dont les deux cellules restent dans le competitive set (`loss/lmin ≤ 1,5`). Les récupérer exige de relâcher un critère scientifique, pas une règle d'écartement. |
+| Lever l'abstention d'ambiguïté A_STAR | KI-031, `CORPUS_V2_NATIF.md` | Coût mesuré sur 116 rails : une abstention de plus, une erreur > 50 mm de moins, aucune erreur nouvelle. Lever l'abstention demande une **observation supplémentaire**, pas une règle de priorité. |
+| Sérialiser les entrées concurrentes de `run()` | KI-029 | Deux `resume()` simultanés produisent deux captures puis `ERROR`, sans aucune navigation. |
+| Clé d'archivage des captures incomplètes | KI-028 | `archivePending()` utilise une clé aléatoire : une reprise peut archiver deux fois la même capture. Sans conséquence observée sur le report. |
+| Revérifier les symboles ESV | KI-026 | `#O2N3DCutNextInvalid3DRail`, `buttonNextInvalidCut`, `loadNextInvalidCut` sont internes et non documentés. À revérifier par inspection à **chaque** mise à jour ESV constatée : un changement de sémantique à identifiant constant ne serait vu que comme cela. |
+
+### Ce qui reste interdit sans élément nouveau
+
+- Rouvrir les audits fermés : GCV1 239, external24, S1 complet, Gauge complet,
+  les 56 applications de la partie 15, l'étude support adaptive, No-Support
+  Generator, Brain V2, pair arbitration V2.
+- Retuner les seuils scientifiques, les pools, les clusters ou la confidence.
+- Choisir un écartement cible. L'intervalle `[1405, 1470]` est un critère
+  d'**admissibilité** ; « le candidat le plus proche de 1435 » ne doit jamais
+  être implémenté.
+
+### Données
+
+Les lots terrain déjà ouverts et analysés sont **DEVELOPMENT /
+REGRESSION_CONSUMED** : ils ne peuvent plus servir de holdout aveugle pour
+revendiquer la généralisation d'un moteur. Les exemples `usableForTraining:false`
+ne deviennent pas des données d'entraînement sans revue d'éligibilité explicite,
+et aucune correction humaine ne doit fuir dans l'entrée moteur.
+
+Le dernier lot Auto + Natif validé par l'opérateur pourra servir aux travaux
+scientifiques 4.8 une fois la 4.7 fermée.
+
+## C. Vérifications terrain encore ouvertes, indépendantes de 4.7
+
+Elles concernent le Mode Natif et traînent depuis la 4.4 : couverture réelle du
+lecteur LiDAR, fluidité Edge/Potree/IndexedDB mesurée et non simulée,
+récupération IndexedDB après interruption. Protocole dans
+`NATIVE_GEOMETRY_ACCEPTANCE.md`. `serverConfirmationStatus: not-observed` reste
+attendu — aucun accusé serveur ESV exploitable n'est disponible.

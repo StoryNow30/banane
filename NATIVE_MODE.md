@@ -1,4 +1,12 @@
-# Mode Natif V4.4.3
+# Mode Natif
+
+Le Mode Natif observe le travail manuel dans ESV sans le piloter : aucun
+changement de caméra, aucune sélection de rail, aucun déplacement, aucun
+`VALIDATE`, aucun `SKIP`, aucune navigation. Il n'a pas changé depuis la série
+4.4 et la 4.7.0 ne le modifie pas.
+
+Le détail ci-dessous date de cette série et est conservé tel quel : les numéros
+de version qu'il cite sont ceux de l'époque, pas ceux de la version installée.
 
 La 4.4.2 reprend le lecteur passif de la 4.4.1 et enregistre un checkpoint immuable qualifié **par rail** dès que les points visibles, la pose initiale et la couverture sont suffisants. Elle conserve les dates d'acquisition et l'acquittement de stockage indépendamment de la réception des événements et du résumé final de lecture. Un chargement de nœud Potree sans mouvement de caméra n'interrompt plus automatiquement la capture ; une incompatibilité de pose, de source ou de clipping est motivée et une contradiction ultérieure révoque la preuve. Un checkpoint gauche ne dépend pas de la disponibilité du droit. Le rejeu hors ligne utilise seulement les points dans le clipping, sans donner la référence finale au moteur. L'ancien export V4.4.1 n'est pas promu rétroactivement : 0 rail comparable prouvé.
 
