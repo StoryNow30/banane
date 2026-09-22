@@ -9,6 +9,12 @@
  const P=window.BananeSettings?.pilote||{tentativesParVue:3,stabiliteMs:800,budgetCaptureMs:60000,
    sondageMs:80,lecturesStables:3,attenteMs:12000,attenteNavigationMs:15000,attenteClicMs:5000};
  const pageId=K.uid(),objects=new WeakMap(),frames=new WeakMap(),nativeFrames=new WeakMap(),nativeViews=new WeakMap();let frame=null,cancelled=false;
+ /* D1. Annulations et invocations CORRÉLÉES À UNE OPÉRATION, par opposition au
+  * drapeau `cancelled` que chaque entrée de l'adaptateur remet à faux. Ces deux
+  * collections ne sont jamais vidées par une autre requête : une annulation
+  * connue de la page reste connue, et une opération déjà invoquée ne peut pas
+  * l'être une seconde fois. Elles vivent le temps du document, comme la page. */
+ const cancelledOperations=new Set(),invokedOperations=new Map();
  const selectors={label:'O2N3DCutDescription',shape:'O2N3DCutShapeInfo',left:'O2N3DCutLRClick',right:'O2N3DCutRRClick',validate:'O2N3DCutValidate3DRail',next:'O2N3DCutNextInvalid3DRail'};
  const objectId=o=>{if(!objects.has(o))objects.set(o,K.uid());return objects.get(o);};
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -219,15 +225,55 @@
    data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
    progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length});return data;
  }
+ /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
+  * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de
+  * sélection et par le garde d'émission, pour qu'elles ne puissent pas diverger. */
+ function projectToView(cam,point){
+   if(!cam||!cam.viewport||!Array.isArray(point))return null;
+   const ndc=C.point(C.multiply(cam.projection,cam.sceneRelativeToCamera),point);
+   return {ndc,viewport:cam.viewport,inView:!ndc.some(v=>v < -1||v>1)};
+ }
+ /* Un refus d'émission doit être explicable sans rejeu : repère, source, cible,
+  * centre de vue, NDC par composante et bornes retenues. */
+ function refusalDetail(side,now,target,cam,view){
+   const fmt=p=>Array.isArray(p)?p.map(v=>Number(v).toFixed(6)).join(', '):'non-observé';
+   const reason=!cam?'caméra non lisible':!cam.viewport?'viewport absent'
+     :'hors bornes : '+['x','y','z'].filter((_,i)=>Math.abs(view.ndc[i])>1).join('+');
+   return `[repère=scene-relative frameId=${now.identity.frameId??'non-observé'}`
+     +` ; source=(${fmt(now.rails[side]?.positionSceneRelative)}) ; cible=(${fmt(target)})`
+     +` ; centre de vue=(${fmt(cam?.cameraToSceneRelative?.slice(12,15))})`
+     +` ; ndc=(${fmt(view?.ndc)}) ; bornes=[-1,1] par composante`
+     +` ; viewport=${cam?.viewport?`${cam.viewport.width.toFixed(1)}x${cam.viewport.height.toFixed(1)}px`:'absent'}`
+     +` ; raison=${reason}]`;
+ }
+ /* SÉLECTION D'UN RAIL — incident terrain du 21/09/2026, cut 3560.
+  *
+  * Une caméra IMMOBILE n'est pas un rail SÉLECTIONNÉ. ESV recentre sa vue
+  * orthographique sur le rail cliqué de façon asynchrone : « inchangée depuis
+  * trois lectures » se lit exactement comme « pas encore partie », et comme
+  * « jamais partie ». Attendre la seule stabilité rendait donc la main avec la
+  * caméra du rail PRÉCÉDENT.
+  *
+  * Ce n'est pas rattrapable en aval : la vue mesurée sur les 66 vues du lot
+  * terrain fait 0,4 unité de scène, l'entraxe des rails 1,50 — 3,75 fois plus.
+  * Les deux rails ne peuvent jamais coexister dans la vue, et le rail non
+  * sélectionné projette à |ndc| ≈ 7,4. L'attente doit donc observer le rail
+  * DEMANDÉ revenu dans la vue, en plus de la stabilité.
+  *
+  * Le prédicat reste la condition dont dépend le clic — aucun seuil d'amplitude
+  * n'est introduit : le rail sélectionné projette à ndc ≈ 0, l'autre à ≈ 7,4. */
  async function select(side,expected,guard=()=>assertExpected(expected)){guard();nativeClick(selectors[side]);
-   // Wait for a stable camera, rather than treating a dispatched click as success.
    let previous=null,stable=0;
-   await waitFor(()=>{assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
-     if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;return stable>=P.lecturesStables;},'Caméra ESV non stabilisée.',P.attenteMs,guard);}
+   await waitFor(()=>{const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+     if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;
+     if(stable<P.lecturesStables)return false;
+     return !!projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView;},
+     'Vue ESV non recentrée sur le rail '+side+'.',P.attenteMs,guard);}
  async function clickPosition(side,target,expected){
-   await select(side,expected);assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
-   const m=C.multiply(cam.projection,cam.sceneRelativeToCamera),ndc=C.point(m,target),r=cam.viewport;
-   if(!r||ndc.some(v=>v < -1||v>1))throw Error('Position proposée hors de la vue : '+side);
+   await select(side,expected);const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   const view=projectToView(cam,target);
+   if(!view?.inView)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view));
+   const r=view.viewport,ndc=view.ndc;
    c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
      clientX:r.left+(ndc[0]+1)*r.width/2,clientY:r.top+(1-ndc[1])*r.height/2,button:0,buttons:1}));
    return waitFor(()=>{const now=assertExpected(expected);return C.distance(now.rails[side].positionSceneRelative,target)<=.001?now:false;},
@@ -243,9 +289,170 @@
  async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
    const target=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},'Aucun changement de cut après navigation.');
    return waitFor(()=>{const now=snapshot();return K.key(now.identity)===K.key(target)?now:false;},'Le cut suivant est affiché, mais ses rails ne sont pas encore disponibles.');}
+ /* NAVIGATION SANS DÉCISION — Banane 4.7.
+  *
+  * CE QUE LE CODE ACCESSIBLE ÉTABLIT. `O2N3DCutNextInvalid3DRail` est un bouton
+  * ESV relevé dans les sources Banane V2–V2.4.2 (audit-corpus.md, A5), déjà
+  * câblé ici par `next()` depuis la V3. Il n'est ni `O2N3DCutValidate3DRail` ni
+  * le raccourci SKIP : DECISIONS.md pose explicitement que le chemin SKIP ne
+  * passe PAS par lui. C'est donc la seule commande native observée du dépôt qui
+  * change de cut sans porter de décision.
+  *
+  * L'ÉQUIVALENCE AVEC MAJ+Z EST ÉTABLIE — inspection terrain du 20/09/2026.
+  * Le JavaScript ESV réellement chargé dans Edge a été lu. Son gestionnaire
+  * clavier contient `e.shiftKey && 90 == e.which ? t.buttonNextInvalidCut()`, et
+  * le bouton est câblé par `$('#O2N3DCutNextInvalid3DRail').click(function(){
+  * t.buttonNextInvalidCut() })`. Les deux chemins convergent donc sur la MÊME
+  * fonction native, `buttonNextInvalidCut()`, qui appelle
+  * `loadNextInvalidCut('positive')`.
+  *
+  * Les chemins décisionnels sont séparés dans ce même code :
+  * `buttonValidateRail()` et `buttonValidateRailAndNext()` passent par
+  * `railPairUpdated(…, 'valid', …)`, `buttonSkipRail()` par
+  * `railPairUpdated(…, 'skipped', …)`. Le chemin utilisé ici n'en touche aucun :
+  * le contrat « navigation sans décision » est donc observé, pas supposé.
+  *
+  * CE QUE CELA NE REND PAS GARANTI. Cette preuve vient de l'observation du code
+  * chargé, pas d'une documentation du fournisseur : `buttonNextInvalidCut`,
+  * `loadNextInvalidCut` et l'identifiant DOM restent des symboles internes non
+  * publiés, susceptibles de changer à une mise à jour d'ESV (KI-026). C'est une
+  * intégration, pas un contrat public.
+  *
+  * POURQUOI PAS UN KeyboardEvent « Z » MALGRÉ TOUT. L'inspection montre bien un
+  * gestionnaire clavier, mais le défaut 6 d'AUDIT_PILOTE.md rappelle qu'un
+  * KeyboardEvent dispatché ne prouve pas sa prise en compte. Le bouton atteint
+  * la même fonction et rend, lui, un état vérifiable avant l'action (présence,
+  * `disabled`) : il reste le chemin retenu.
+  *
+  * AUCUN REPLI. Commande absente, désactivée ou cible différente : l'opération
+  * rend un refus AVANT toute émission. Ni VALIDATE, ni SKIP, ni saisie d'un
+  * numéro de cut ne remplacent cette action.
+  *
+  * Les refus sont RENDUS, pas levés : une exception ne traverse le bridge que
+  * sous forme de message, ce qui perdrait la distinction entre « rien n'est
+  * parti » et « on ne sait pas ». */
+ async function nextWithoutDecision(identity,scope={},operationId=null,progress=()=>{}){
+   const startedAt=new Date().toISOString();
+   const evidence={format:'banane-next-without-decision-v1',operationId:operationId??null,
+     action:'NEXT_WITHOUT_DECISION',trigger:'observed-esv-next-invalid-rail-button',startedAt,
+     command:commandInfo(selectors.next),
+     /* Établie par inspection du JavaScript ESV chargé, pas par une
+      * documentation du fournisseur : `source` et `stability` le disent, pour
+      * que l'export ne laisse jamais lire un contrat public là où il n'y a
+      * qu'une intégration observée. */
+     shortcutEquivalence:{claimedShortcut:'Maj+Z',established:true,
+       basis:'inspection terrain du JavaScript ESV : le gestionnaire clavier (e.shiftKey && 90 == e.which) et #O2N3DCutNextInvalid3DRail appellent tous deux buttonNextInvalidCut(), qui appelle loadNextInvalidCut("positive")',
+       verification:'confirmé par inspection directe du JavaScript ESV dans Edge le 2026-09-20',
+       observedPath:['keydown shiftKey && which===90','buttonNextInvalidCut()','loadNextInvalidCut("positive")'],
+       buttonPath:['#O2N3DCutNextInvalid3DRail click','buttonNextInvalidCut()','loadNextInvalidCut("positive")'],
+       decisionPathsObservedSeparate:{
+         validate:'buttonValidateRail() / buttonValidateRailAndNext() → railPairUpdated(…, "valid", …)',
+         skip:'buttonSkipRail() → railPairUpdated(…, "skipped", …)'},
+       source:'observation du code ESV chargé, non documentation fournisseur',
+       stability:'symboles et identifiant DOM internes ESV, non documentés publiquement : susceptibles de changer (KI-026)'},
+     /* Corrélation réellement disponible : ESV ne renvoie pas d'identifiant
+      * d'opération. Elle tient à la requête/réponse du bridge, qui relie cette
+      * preuve à UN appel, et au contrôle de cible fait dans la page juste avant
+      * l'action. Une navigation manuelle concurrente reste hors de portée. */
+     correlation:{operationId:operationId??null,source:'banane-bridge-request-response',
+       esvEchoesOperationId:false,targetVerifiedInPageBeforeCommand:false,
+       concurrentManualNavigationExcluded:false},
+     operatorDecision:null,decisionCommand:null,commandScope:'banane-operation-only',
+     bananeValidated:false,applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,
+     commandRequested:true,commandInvoked:false,commandSent:false,invokedAt:null,
+     beforeNavigationIdentity:null,navigationObserved:false,serverConfirmed:false,afterObserved:false,
+     nextIdentity:null,nextIdentityComplete:false,nextReady:null,navigationAfter:null,observedAt:null,refusal:null};
+   const refuse=(code,message)=>{evidence.refusal={code,message,at:new Date().toISOString()};return evidence;};
+   /* D1, revue Astra. ANNULATION PORTÉE PAR L'OPÉRATION.
+    *
+    * `cancelled` est un drapeau de module que CHAQUE entrée de l'adaptateur
+    * remet à faux : une requête arrivée après un `cancel` effaçait donc
+    * l'annulation et cliquait quand même. `cancelledOperations` ne l'est
+    * jamais — aucune autre requête, aucun callback tardif n'en retire une
+    * entrée — et le contrôle vaut quel que soit l'ordre d'arrivée des deux
+    * messages. C'est ce qui rend l'annulation corrélée à SON opération.
+    *
+    * `invokedOperations` garantit au plus UNE invocation par opération : un
+    * message dupliqué ou rejoué ne peut pas produire un second clic. Il rend
+    * alors `commandInvoked:'unknown'` — cet appel-ci n'a pas cliqué, mais
+    * l'opération, elle, a déjà pu produire son effet. */
+   if(operationId&&cancelledOperations.has(operationId))
+     return refuse('CANCELLED_BEFORE_COMMAND','Opération annulée avant toute action : '+operationId);
+   if(operationId&&invokedOperations.has(operationId)){
+     evidence.commandInvoked='unknown';evidence.operationAlreadyInvoked=true;
+     evidence.firstInvokedAt=invokedOperations.get(operationId);
+     return refuse('OPERATION_ALREADY_INVOKED','Cette opération a déjà été invoquée une fois ; aucune seconde action.');
+   }
+   /* Le drapeau global est remis à faux pour que les attentes de CETTE
+    * opération fonctionnent, comme le font les autres entrées de l'adaptateur.
+    * Il est d'abord relevé : un `cancel` sans identifiant d'opération — un
+    * délai de bridge sur une autre requête — est consigné, jamais silencieux. */
+   evidence.inheritedBlanketCancel=cancelled===true;cancelled=false;
+   // Identité complète vérifiée AU PLUS PRÈS du point d'effet, dans la page.
+   let before;try{before=assertExpected(identity);}
+   catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
+   evidence.beforeNavigationIdentity=K.completeIdentity(before.identity);
+   evidence.correlation.targetVerifiedInPageBeforeCommand=true;
+   /* Contexte d'exécution : un rechargement d'ESV crée un nouveau `pageId`, que
+    * `assertExpected` refuse déjà. Le lot est revérifié ici, dans la page, au
+    * plus près du point d'effet — pas seulement côté moteur avant l'attente. */
+   if(scope&&scope.pageId!=null&&before.identity.pageId!==scope.pageId)
+     return refuse('BATCH_CONTEXT_MISMATCH_BEFORE_COMMAND','Contexte de page différent de celui du lot.');
+   if(scope&&scope.part!=null&&before.identity.part!==scope.part)
+     return refuse('BATCH_CONTEXT_MISMATCH_BEFORE_COMMAND','Part affichée hors du lot : '+before.identity.part);
+   // Observation armée avant l'action : le libellé de départ est lu d'abord.
+   const startLabel=cutLabel();
+   if(!startLabel||K.key(startLabel)!==K.key(identity))
+     return refuse('TARGET_MISMATCH_BEFORE_COMMAND','Le cut affiché a changé avant la navigation sans décision.');
+   if(cancelled)return refuse('CANCELLED_BEFORE_COMMAND','Action interrompue avant émission.');
+   const button=document.getElementById(selectors.next);
+   if(!button||button.disabled)return refuse('NAVIGATION_COMMAND_UNAVAILABLE','Commande ESV indisponible : '+selectors.next);
+   progress('defer-before-command',{identity:evidence.beforeNavigationIdentity,operationId:evidence.operationId,command:evidence.command});
+   /* D1. DERNIER INSTANT ENCORE RÉVOCABLE DANS LA PAGE. `progress()` poste un
+    * message et les contrôles ci-dessus lisent le DOM : une annulation a pu
+    * arriver entre-temps. Elle est donc relue ici, et plus rien ne s'intercale
+    * entre ce contrôle et le clic. Une annulation connue de la page avant le
+    * clic prouve la non-émission ; c'est la seule chose que la page puisse
+    * prouver, et elle ne prétend rien au-delà. */
+   if(operationId&&cancelledOperations.has(operationId))
+     return refuse('CANCELLED_BEFORE_COMMAND','Opération annulée avant le clic : '+operationId);
+   if(cancelled)return refuse('CANCELLED_BEFORE_COMMAND','Action interrompue avant le clic.');
+   /* Plus rien n'est révocable à partir d'ici : l'état inconnu est posé AVANT
+    * l'appel, et n'est relevé qu'au retour. Une exception de la page laisse donc
+    * « unknown », jamais un `false` rassurant. L'opération est marquée invoquée
+    * AVANT le clic, pour qu'un doublon ne puisse pas en produire un second même
+    * si celui-ci lève. */
+   evidence.commandInvoked='unknown';
+   if(operationId)invokedOperations.set(operationId,new Date().toISOString());
+   try{button.click();}catch(e){return refuse('NAVIGATION_COMMAND_THREW',e.message);}
+   evidence.commandInvoked=true;evidence.commandSent=true;evidence.invokedAt=new Date().toISOString();
+   progress('defer-command-returned',{operationId:evidence.operationId,label:cutLabel()});
+   const immediate=cutLabel();
+   let nextLabel=immediate&&K.key(immediate)!==K.key(identity)?immediate:null;
+   if(!nextLabel){
+     try{nextLabel=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},
+       'Navigation sans décision transmise, cut inchangé : aucune progression observée.',P.attenteNavigationMs);}
+     catch(e){return refuse(cancelled?'CANCELLED_DURING_OBSERVATION':'NO_NAVIGATION_OBSERVED',e.message);}
+   }
+   evidence.navigationObserved=true;evidence.observedAt=new Date().toISOString();
+   evidence.navigationAfter={label:nextLabel,observedAt:evidence.observedAt};
+   progress('defer-navigation-observed',{operationId:evidence.operationId,nextIdentity:nextLabel});
+   try{const ready=await waitFor(()=>{const now=snapshot();return K.key(now.identity)===K.key(nextLabel)?now:false;},
+       'Le cut suivant est affiché, mais ses rails ne sont pas encore disponibles.',12000);
+     evidence.nextReady=true;evidence.nextIdentity=K.completeIdentity(ready.identity);
+     evidence.nextIdentityComplete=true;evidence.navigationAfter.identity=evidence.nextIdentity;}
+   catch(e){evidence.nextReady=false;evidence.nextIdentity=K.completeIdentity(nextLabel);
+     evidence.nextIdentityComplete=false;evidence.nextIdentityUnavailableReason=e.message;
+     progress('defer-next-geometry-unavailable',{operationId:evidence.operationId,message:e.message,nextIdentity:nextLabel});}
+   evidence.meaning='Navigation ESV sans décision : Banane n’a émis pour ce cut ni application de rail, ni VALIDATE, ni SKIP ; confirmation serveur indisponible.';
+   return evidence;
+ }
  async function decisionAndNext(identity,operatorDecision,scope={},progress=()=>{}){
    cancelled=false;const beforeCommand=assertExpected(identity),startedAt=new Date().toISOString();
    const command=operatorDecision==='VALIDATE'?commandInfo(selectors.validate):{id:'Shift+Backspace',exists:true,disabled:false};
+   const navigationSemantics=operatorDecision==='VALIDATE'&&command.id===selectors.validate&&
+     /load\s+next\s+non[-\s]?validated\s+cut/i.test(command.title)
+     ?'VALIDATE_NEXT_NON_VALIDATED_CUT':null;
    progress('decision-before-command',{identity:beforeCommand.identity,operatorDecision,command});
    /* RELECTURE IMMÉDIATE APRÈS LA COMMANDE.
     *
@@ -268,7 +475,7 @@
    let apres=null,apresErreur=null;
    try{const vu=snapshot();K.assertTarget(identity,vu.identity);apres=vu;}catch(e){apresErreur=e;}
    const evidence={trigger:operatorDecision==='VALIDATE'?'observed-legacy-validation-button':'relayed-native-skip-shortcut',startedAt,
-     operatorDecision,commandSent:sent.commandSent===true,afterObserved:false,serverConfirmed:false,navigationObserved:false,
+     operatorDecision,decisionCommand:command,navigationSemantics,commandSent:sent.commandSent===true,afterObserved:false,serverConfirmed:false,navigationObserved:false,
      afterStateStatus:'PENDING',beforeNavigationIdentity:K.completeIdentity(beforeCommand.identity),afterState:null,nextIdentity:null,nextReady:null};
    progress('decision-command-returned',{operatorDecision,label:cutLabel()});
    try{
@@ -350,10 +557,18 @@
  async function nativeStart(options){if(native?.active)throw Error('Le mode Natif est déjà actif dans ESV.');nativeChannel=options.channel;
    native=native||new window.BananeNativePage4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new window.BananeNativePage4.Observer(nativeApi());return native.resume(options);}
- const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,validateAndNext,skipAndNext,
+ const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
-   nativeResume,nativeFinish:async()=>native?native.finish():{active:false},cancel:async()=>{cancelled=true;return {cancelRequested:true};}};
+   nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
+   /* Un `cancel` PORTANT un identifiant d'opération est retenu pour elle seule
+    * et définitivement : plus aucune requête, si tardive soit-elle, ne la
+    * réautorise. Sans identifiant — un délai de bridge, par exemple — il garde
+    * son ancien sens global, qui ne concerne que l'attente en cours. */
+   cancel:async(options=null)=>{cancelled=true;
+     const operationId=options&&typeof options==='object'&&typeof options.operationId==='string'?options.operationId:null;
+     if(operationId)cancelledOperations.add(operationId);
+     return {cancelRequested:true,operationId,scopedCancelledOperations:cancelledOperations.size};}};
  window.__BANANE_V3_PAGE={version:K.VERSION};
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.

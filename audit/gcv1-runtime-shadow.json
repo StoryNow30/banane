@@ -1,0 +1,81 @@
+{
+  "format": "gcv1-runtime-shadow-v1-audit",
+  "generatedAt": "2026-09-18T06:55:00Z",
+  "branch": "integration/gcv1-runtime-shadow-v1",
+  "base": "eaf0e2c834031f3f741fd234a1ef91af1412bd7a",
+  "runtimeCodeCheckpoint": "2ab54af30d08177035ee6688bd47ccf115f62808",
+  "candidateBase": "0dbcb7a32825031c122a14ffc44e13dea629d785",
+  "capsule": "2366d483b643bf8415f3d8ecba35938ac4c1d02e",
+  "frozen": {
+    "geometrySha256": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+    "engineSha256": "f7d3ea2232199b1c994caed1805f7463bceed96b23b68a055b4b23ca88272dd3",
+    "candidateGeometrySha256": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+    "aStarHash": "e46dfc2b5610bedd5052750fba054956c2b07127781f142563e0bdd4c292a58f",
+    "compositionHash": "0ea0824fb9e0b763d575ee95784475632f7fe2fd18e684b68e9f765106b6b27a"
+  },
+  "featureGate": {
+    "default": false,
+    "mode": "shadow-only",
+    "runtimeDecisionUntouched": true,
+    "commandsByShadow": 0
+  },
+  "publicCleanClone": {
+    "workflowRunId": 35316709287,
+    "status": "PASS",
+    "tests": 390,
+    "pass": 388,
+    "fail": 0,
+    "skipped": 2,
+    "skippedReason": "private Natif corpus absent",
+    "geometryHash": "PASS",
+    "engineHash": "PASS",
+    "candidateHash": "PASS"
+  },
+  "parity239": {
+    "workflowRepo": "StoryNow30/banane-data",
+    "workflowBranch": "audit/gcv1-runtime-shadow-parity-v1",
+    "workflowHead": "7334e8d048402c70a1f2f0eb6d9163d4d6bc11ca",
+    "workflowRunId": 35316768479,
+    "status": "PASS",
+    "dataSource": "239f36ddcc9372bc2421c65c276d4d118d86e60a",
+    "archiveSha256": "ae7a79ac5392e8a6a8289db4652b8bedd628cdce6002ba35b0ba1ce623e05d35",
+    "population": 239,
+    "failures": 63,
+    "controls": 176,
+    "v46Candidate": 176,
+    "astarCandidate": 197,
+    "nextCandidate": 201,
+    "recovered": 25,
+    "recoveredAstar": 23,
+    "recoveredByS1AfterAstar": 2,
+    "controlsPublished": 176,
+    "s1Activated": 42,
+    "s1Changed": 4,
+    "publishedWeak": 0,
+    "divergences": 0
+  },
+  "external24": {
+    "status": "PRIOR_GROK_LOCAL_PASS_NOT_REEXECUTED_ON_REMOTE_CHECKPOINT",
+    "priorReported": {
+      "population": 24,
+      "candidates": 16,
+      "unresolved": 8,
+      "recoveries": 6,
+      "regressions": 0,
+      "s1Activated": 0
+    }
+  },
+  "browser": {
+    "extensionLoad": "NOT_EXECUTED",
+    "realIndexedDB": "NOT_EXECUTED",
+    "realESV": "NOT_EXECUTED"
+  },
+  "restrictions": {
+    "merge": false,
+    "deployment": false,
+    "activeESV": false,
+    "tuning": false
+  },
+  "verdict": "RUNTIME_SHADOW_MIXED",
+  "verdictReason": "Offline isolation and frozen 239 parity pass; browser smoke is still missing and external24 has not been rerun on the reconstructed remote checkpoint."
+}

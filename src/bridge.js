@@ -1,5 +1,5 @@
 (()=>{'use strict';if(window.__banane3Bridge)return;window.__banane3Bridge=true;
- const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
+ const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
  let pill=null,launcherGeneration=0;
  function setLauncherVisible(visible){if(!pill)return;const shown=visible===true;pill.hidden=!shown;
   if(shown){if(!pill.isConnected)document.documentElement.append(pill);}else if(pill.isConnected)pill.remove();}
@@ -55,7 +55,7 @@
      const error=p.acknowledged?'Délai dépassé dans ESV à l’étape '+p.stage+' ; résultat à contrôler.':'Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','manualFinish'].includes(m.action)?90000:45000);
    pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,action:m.action,args:m.args||[]},location.origin);return true;});
- pill=document.createElement('button');pill.textContent='Banane 4.5.7 · ouvrir';pill.type='button';pill.hidden=true;
+ pill=document.createElement('button');pill.textContent='Banane 4.7.0 · ouvrir';pill.type='button';pill.hidden=true;
  pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#f5d65c;color:#172026;border:1px solid #7d712f;border-radius:9px;padding:10px 15px;font:600 13px Arial;cursor:pointer';
  pill.onclick=()=>{launcherGeneration++;setLauncherVisible(false);chrome.runtime.sendMessage({kind:'open-panel'}).then(reply=>{if(reply?.error)void refreshLauncher();},()=>refreshLauncher());};void refreshLauncher();
  // A heartbeat also makes interrupted background work observable; it never resumes a lot.

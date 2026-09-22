@@ -68,10 +68,10 @@
      const running=['STARTING','RUNNING'].includes(n?.status),paused=['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status),open=nativeActive(s);
      note(n?.message||'Ouvre le premier cut à observer, puis démarre le mode Natif.',n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
      if(manualActive(s))note('Une session Mes corrections est active. Termine-la avant de démarrer le mode Natif.');
-     if(['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer le mode Natif.');
+     if(['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer le mode Natif.');
      $('native-count').textContent=n?.visits.length||0;const count=n?.incomplete.length||0;$('native-incomplete').hidden=!count;
      $('native-incomplete').textContent=`${count} visite(s) partielle(s), conservée(s) avec leur motif.`;
-     button('native-start',{hidden:open,disabled:busy||manualActive(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
+     button('native-start',{hidden:open,disabled:busy||manualActive(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
      $('native-start').textContent=n?.status==='FINISHED'?'Démarrer une nouvelle session':'Démarrer l’observation';
      button('native-pause',{hidden:!running,disabled:working});button('native-resume',{hidden:!paused,disabled:working});
      button('native-end',{hidden:!n||n.status==='FINISHED',disabled:working});
@@ -82,12 +82,47 @@
      if($('native-discard-note'))$('native-discard-note').hidden=!n;
    }else if(which==='automatic'){
      note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||'Choisis les bornes de ton lot TEST.');
-     const running=['RUNNING','PAUSED','STOPPED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state),range=running?b.scope:null;
+     const running=['RUNNING','PAUSED','STOPPED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state),range=running?b.scope:null;
      for(const [f,v] of [['start',range?.start??id?.cut],['end',range?.end??id?.cut],['confidence',s.settings?.minConfidence]])if(v!==undefined&&!edited.has(f)&&document.activeElement!==$(f))$(f).value=v;
+     /* La politique du lot est FIGÉE à sa création : tant qu'il vit, le réglage
+      * affiché est le sien, pas celui du prochain lot. Un lot antérieur à 4.7
+      * n'a pas ce champ et garde la pause historique. */
+     if($('unresolved-policy')){
+       const effective=running?(b.scope?.unresolvedPolicy||'pause'):null;
+       if(effective&&document.activeElement!==$('unresolved-policy'))$('unresolved-policy').value=effective;
+       $('unresolved-policy').disabled=!!running;
+       if($('unresolved-policy-effective')){
+         $('unresolved-policy-effective').hidden=!running;
+         $('unresolved-policy-effective').textContent=running
+           ?`Politique effective de ce lot : ${effective==='defer'?'continuer et différer':'mettre le lot en pause'}.`:'';
+       }
+     }
+     /* Un lot Pilote GCV1 NEUTRALISE la question de faible confiance : la
+      * publication GCV1 est sa propre frontière d'admissibilité, et
+      * background.js force `lowConfidence` à « tenter ». Le réglage choisi
+      * restait alors affiché sans effet. On dit désormais ce qui s'applique
+      * vraiment, comme pour la politique des rails non résolus. */
+     if($('policy-effective')){
+       const demande=running?b.scope?.requestedLowConfidence:null;
+       const applique=running?(b.scope?.lowConfidence||'pause'):null;
+       const nom=v=>v==='attempt'?'tenter la proposition expérimentale':'mettre le lot en pause';
+       $('policy-effective').hidden=!running;
+       $('policy-effective').textContent=!running?''
+         :demande&&demande!==applique
+           ?`Politique effective de ce lot : ${nom(applique)}. Le lot Pilote GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nom(demande)} » ne s’y applique pas.`
+           :`Politique effective de ce lot : ${nom(applique)}.`;
+     }
+     if($('policy')&&running&&b.scope?.lowConfidence&&document.activeElement!==$('policy'))$('policy').value=b.scope.lowConfidence;
      const names={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
+       PAUSED_DEFER_NAVIGATION_UNCERTAIN:'Navigation différée incertaine',
        PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',
        FINISHED_WITH_UNCONFIRMED_ACTIONS:'Terminé avec actions non confirmées',ERROR:'Interrompu'};
-     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     // Les cuts repris à la main sont comptés à part : Banane ne les a pas validés.
+     const repris=b?.manuallyCompleted?.length?` · ${b.manuallyCompleted.length} repris à la main`:'';
+     /* Le compteur suit la FINALISATION durable, jamais le début d'une
+      * tentative : une intention en attente ne s'y ajoute pas. */
+     const differes=b?` · Différés : ${b.deferred?.length||0}`:'';
+     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -97,8 +132,19 @@
        note('La commande est partie et ESV a changé de cut avant que Banane puisse relire l’état final. '
          +'Le placement a probablement été appliqué, mais Banane ne compte jamais une réussite qu’il n’a pas vue. '
          +'Vérifie le cut dans ESV, puis clique sur Arrêter pour clore le lot.');
-     button('start-batch',{disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
-     button('pause',{hidden:b?.state!=='RUNNING',disabled:working});button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR','MANUAL_TAKEOVER'].includes(b.state),disabled:working});
+     /* Un échec ou une incertitude de navigation reste visible AVEC le cut
+      * concerné : aucun bouton n'est présenté comme réussi sur un simple accusé. */
+     const differe=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
+     if(b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||differe)
+       note(`Cut ${differe?.identity?.cut??b?.activeIdentity?.cut??'?'} : la navigation sans décision `
+         +(differe?.commandInvoked===false?'n’a pas été émise.':'a peut-être été transmise, sans progression acceptée.')
+         +' Elle ne sera pas renvoyée. Aucun cut n’est compté comme différé tant que la progression n’est pas acceptée. '
+         +'Contrôle ce cut dans ESV, puis clôture ce résultat incertain.');
+     button('start-batch',{disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
+     button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
+ * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
+ * dans un état dont rien ne le faisait sortir. */
+button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:working});
      button('resume',{hidden:!['PAUSED','STOPPED'].includes(b?.state),disabled:busy||active(s)});
      const actionable=b?.step==='apply'&&['unresolved-rail','low-confidence'].includes(b?.pauseReason);
      button('retry',{hidden:!actionable,disabled:busy||active(s)});
@@ -109,8 +155,15 @@
       * L'opérateur lisait donc « Choisis Réessayer, Reprise manuelle, SKIP
       * explicite ou Arrêter » devant trois boutons sur quatre. */
      button('manual-takeover',{hidden:!actionable,disabled:busy||active(s)});
+     /* V4.6.0 : la reprise manuelle n'est plus une impasse. Le bouton de
+      * déclaration n'existe que dans cet état ; le moteur refuse la déclaration
+      * tant qu'ESV n'affiche pas le cut suivant. */
+     button('manual-completion',{hidden:b?.state!=='MANUAL_TAKEOVER',disabled:busy||active(s)});
+     if(b?.state==='MANUAL_TAKEOVER')
+       note('Ce cut t’est rendu : Banane n’a envoyé aucune commande dessus. Corrige-le dans ESV, ouvre le cut suivant, '
+         +'puis clique sur « Repris manuellement » — le lot repartira, et ce cut sera journalisé comme repris à la main, jamais comme validé par Banane.');
      button('explicit-skip',{hidden:!actionable,disabled:busy||active(s)});
-     button('close-uncertain',{hidden:!s.reconcileRequired,disabled:busy});
+     button('close-uncertain',{hidden:!s.reconcileRequired&&!differe,disabled:busy});
      /* Terrain, cut 6/4245 : avec « Tenter la proposition expérimentale », le
       * moteur gelé applique malgré une confiance nulle. Les sélections du
       * cerveau sont donc coupées dans ce mode — il faut le dire, pas le taire. */
@@ -437,14 +490,30 @@ on('native-discard',async()=>{
 });
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
    await api('settings',{mode:'automatic-test',minConfidence:Number($('confidence').value)});
-   return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,lowConfidence:$('policy').value});});
+   return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,
+     lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',geometryEngine:'geometry-candidate-v1'});});
  for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
  on('retry',()=>api('retry'));on('explicit-skip',()=>api('explicit-skip'));
  // Reprise manuelle : le pilote rend la main, sans ouvrir aucune fenêtre.
  on('manual-takeover',()=>api('manual-takeover'));
+ /* V4.6.0 : l'opérateur déclare avoir traité le cut dans ESV. Banane journalise
+  * la reprise sans prétendre l'avoir validée, puis repart au cut suivant. */
+ on('manual-completion',()=>api('manual-completion'));
   on('analyze',async()=>{await api('settings',{mode:'assisted'});return api('analyze');});
  on('dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
 on('assisted-dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
+ on('gcv1-diagnostic-export',async()=>{
+   const diagnostic=await api('gcv1-diagnostic-export');
+   saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`banane-gcv1-diagnostic-${Date.now()}.json`);
+   note(`Diagnostic GCV1 exporté : ${diagnostic.observationCount} observation(s).`);
+ });
+ on('gcv1-corpus-export',async()=>{
+   const plan=await api('gcv1-corpus-export-plan');
+   if(plan.cloudIds.length)await dataset(plan,'banane-gcv1-corpus',{compact:false});
+   else saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`banane-gcv1-corpus-${Date.now()}.json`);
+   if(plan.missingCaptureIds.length)note(`Corpus GCV1 exporté ; ${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) sont absentes du store.`,true);
+   else note(`Corpus GCV1 exporté : ${plan.cloudIds.length} capture(s) LiDAR.`);
+ });
  /* Cerveau : interrupteur explicite, et compte rendu de ce qu'il a fait au
   * dernier passage. Un post-traitement qu'on ne voit pas agir serait pire que
   * pas de post-traitement du tout. */

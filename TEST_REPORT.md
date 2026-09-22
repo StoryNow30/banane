@@ -1,6 +1,31 @@
-# Rapport de tests — Banane 4.4.3 TEST
+# Rapport de tests — Banane 4.7.0 TEST
 
-Date : 13 septembre 2026. `node tools/verify.cjs` régénère `audit/verification.json` et `.txt`. Les paragraphes qui suivent sur le défaut V4.4 et sur la V4.4.1 restent des preuves historiques.
+Date : 22 septembre 2026. `node tools/verify.cjs` régénère `audit/verification.json` et `.txt`. Les sections datées des versions antérieures sont conservées comme **preuves historiques** : elles décrivent l'état de leur époque, pas celui de la 4.7.0.
+
+## Banc 4.7.0
+
+```
+550 tests · 548 réussis · 0 échec · 2 ignorés
+Node v22.22.2 · placement inchangé depuis 4.4.0 (SHA-256)
+src/engine.js conforme à audit/v4.6.0-engine-baseline.json
+```
+
+Les **2 ignorés** sont les deux essais qui exigent le corpus Natif privé, absent du clone : `the three read-only Terra exports reproduce the demonstrated geometry loss` et `built source archive carries the runnable tests, fixtures and the three native reference exports`. Ils s'ignorent eux-mêmes en énonçant leur motif. **Un test ignoré n'est pas un test réussi** : l'archive *source* n'est donc pas vérifiée hors du poste disposant du corpus. Le banc complet (`--full`) refuse le moindre ignoré et n'a pas été exécuté ici.
+
+### Ce que ce banc démontre, et ce qu'il ne démontre pas
+
+Il démontre le comportement du moteur, du protocole de report, du garde d'écartement, de l'export et de la reprise, contre une doublure ESV. Les essais de crash recréent le runtime depuis les **seules données persistées**, sans conserver les variables du processus interrompu.
+
+Il ne démontre **pas** les effets réels dans Edge. Une doublure ESV ne prouve pas que `Maj+Z` agit : cette équivalence est établie par inspection du JavaScript ESV réellement chargé (KI-024, fermée), pas par ces tests, et reste exposée à un changement de symboles internes (KI-026).
+
+### Couverture ajoutée par le lot de release
+
+- `tests/panel-policies.test.cjs` — §10 du cahier : politique effective affichée et compteur `Différés : N`. Les quatre essais de politique échouent contre le panneau antérieur et passent contre celui-ci : ils reproduisent le défaut d'affichage KI-033.
+- `tests/ki030-partial-apply.test.cjs` — caractérisation de KI-030. L'état partiel est constaté tel qu'il est ; ce qui est exigé et vérifié, c'est qu'aucune décision ne suive, que `reconcileRequired` ferme toute écriture, que la fermeture survive au redémarrage et que `restore()` ramène réellement les deux rails.
+
+### Preuve terrain distincte des tests
+
+Le garde d'écartement a été déclenché en Edge réel sur le lot du 21 septembre : les cuts rejetés ont reçu 0 apply, 0 `VALIDATE`, 0 `SKIP`, puis une navigation sans décision. C'est une observation de terrain sur petit échantillon, pas une preuve de généralisation.
 
 ## Régression réelle du bouton et correction V4.4.3
 

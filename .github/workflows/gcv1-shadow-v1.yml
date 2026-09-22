@@ -1,0 +1,43 @@
+name: GCV1 shadow V1 verification
+
+on:
+  push:
+    branches:
+      - integration/gcv1-runtime-shadow-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Focused shadow diagnostics
+        run: node --test --test-reporter=tap tests/gcv1-shadow.test.cjs tests/background.test.cjs tests/package.test.cjs
+      - name: Verify V4.6 plus shadow isolation
+        run: node tools/verify.cjs
+      - name: Frozen runtime hashes
+        shell: bash
+        run: |
+          test "$(sha256sum src/geometry.js | cut -d' ' -f1)" = "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53"
+          test "$(sha256sum src/engine.js | cut -d' ' -f1)" = "f7d3ea2232199b1c994caed1805f7463bceed96b23b68a055b4b23ca88272dd3"
+          test "$(sha256sum src/geometry-candidate-v1.js | cut -d' ' -f1)" = "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503"
+      - name: Report verification counts
+        run: node -e "const d=require('./audit/verification.json'); console.log(JSON.stringify({counts:d.counts,engineMatchesBaseline:d.engineMatchesBaseline,geometryUnchanged:d.geometryUnchanged,benchMode:d.benchMode},null,2)); if(d.counts.tests!==390||d.counts.pass!==388||d.counts.fail!==0||d.counts.skipped!==2||d.engineMatchesBaseline!==true||d.geometryUnchanged!==true) process.exit(1)"
+      - name: Build installable shadow package
+        run: python3 tools/package.py --output banane-gcv1-runtime-shadow-v1.zip
+      - name: Upload installable shadow package
+        uses: actions/upload-artifact@v4
+        with:
+          name: banane-gcv1-runtime-shadow-v1
+          path: banane-gcv1-runtime-shadow-v1.zip
+          if-no-files-found: error

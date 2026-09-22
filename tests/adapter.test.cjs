@@ -18,6 +18,15 @@ test('real adapter navigation is never presented as server confirmation; changed
  assert.equal(evidence.afterStateStatus,'AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED');assert.equal(evidence.navigationObserved,true);assert.equal(evidence.serverConfirmed,false);
  await assert.rejects(()=>f.call('apply',before,{left:{delta:[0,0,0]},right:{delta:[0,0,0]}}),/Cible différente/);
 });
+test('real validation adapter exposes the observed next-non-validated navigation contract',async()=>{
+ const f=page(),before=await f.call('state');f.nodes.get('O2N3DCutValidate3DRail').click=()=>{
+  f.nodes.get('O2N3DCutDescription').textContent='Cut 102 of part 23';};
+ const evidence=await f.call('validateAndNext',before.identity,{});
+ assert.equal(evidence.navigationSemantics,'VALIDATE_NEXT_NON_VALIDATED_CUT');
+ assert.equal(evidence.decisionCommand.id,'O2N3DCutValidate3DRail');
+ assert.match(evidence.decisionCommand.title,/Load next non validated cut/);
+ assert.equal(evidence.nextIdentity.cut,102);
+});
 test('real adapter reports an absent native command without fabricating a request',async()=>{
  const f=page(),before=await f.call('state');f.nodes.delete('O2N3DCutValidate3DRail');
  await assert.rejects(()=>f.call('validateAndNext',before.identity,{}),/Commande ESV indisponible/);

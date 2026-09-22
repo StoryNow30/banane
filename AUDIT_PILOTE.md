@@ -1,6 +1,10 @@
 # Audit du mode Pilote automatique
 
-Banc : **364 / 364**, `geometryUnchanged: true`. Aucun fichier gelé modifié.
+Banc au moment de l'audit : **364 / 364**, `geometryUnchanged: true`, aucun
+fichier gelé modifié. Après V4.6.0 : **385 tests**, dont 383 verts et 2 ignorés
+sur un clone sans `datasets/native/` — ignorés, pas réussis, et l'audit le dit
+(`benchMode: "partial"`). Le placement, les transformations et le lecteur LiDAR
+restent identiques à 4.4.0 ; le moteur est épinglé sur sa baseline V4.6.0.
 Corpus d'appui : **37 cycles de pilote réels** du 15/09, parts 6 et 31.
 
 Unités de scène ×10⁻³ pour les distances. Ce ne sont pas des millimètres.
@@ -11,15 +15,21 @@ Unités de scène ×10⁻³ pour les distances. Ce ne sont pas des millimètres.
 
 | fichier | rôle | gelé ? |
 |---|---|---|
-| `src/engine.js` | machine à états du lot, décisions | **OUI** |
+| `src/engine.js` | machine à états du lot, décisions | dégelé en V4.6.0, ré-épinglé |
 | `src/geometry.js` | placement | **OUI** |
 | `src/adapter-page.js` | actions dans ESV : lire, cliquer, valider | non |
 | `background.js` | orchestration | non |
 | `panel.js` | interface | non |
 
-**La moitié du pilote est gelée.** Plusieurs défauts ci-dessous sont dans
-`src/engine.js` et ne peuvent pas être corrigés sans lever le gel — décision de
-Mic, pas la mienne. Ils sont marqués **[GELÉ]**.
+**La moitié du pilote était gelée.** Plusieurs défauts ci-dessous sont dans
+`src/engine.js` et ne pouvaient pas être corrigés sans lever le gel — décision
+de Mic, pas la mienne. Ils étaient marqués **[GELÉ]**.
+
+**V4.6.0 a levé ce gel pour les défauts 4 et 9**, sur décision explicite, et
+seulement pour eux. Le moteur n'est pas libre : il est ré-épinglé sur
+`audit/v4.6.0-engine-baseline.json`, vérifié par le banc au même titre que les
+trois fichiers restés gelés à 4.4.0. Les défauts 6, 7 et 8 restent ouverts et
+ne sont pas traités ici.
 
 ---
 
@@ -130,7 +140,7 @@ baisser lit un nuage moins chargé. Il est rendu visible pour pouvoir être
 
 ## Défaut 4 — une politique du moteur est rendue inaccessible par l'ordre de ses propres contrôles
 
-**NON CORRIGÉ. [GELÉ] — demande un arbitrage.**
+**CORRIGÉ en V4.6.0**, après levée du gel — l'issue n°1 du tableau ci-dessous.
 
 *Révisé après revue de Mic, qui a vu plus loin que la première rédaction.*
 
@@ -194,6 +204,28 @@ doit pas être présenté comme un correctif**.
 | ne plus valider avec le bouton d'ESV, mais placer puis naviguer avec « Next » | les cuts ne sont plus validés : changement métier |
 | accepter l'arrêt et relancer le lot cut par cut | ce que tu fais déjà, sans automatisation réelle |
 
+**Ce qui a été fait en V4.6.0 — issue n°1.** La politique est désormais lue là
+où elle sert : `validateAndNext` consulte `allowNavigationEvidence` **avant** de
+refuser sur relecture manquée. La contradiction interne disparaît ; le moteur
+n'est plus identique à la référence 4.4.0, et c'est le coût annoncé.
+
+Ce que cela n'autorise pas, et qui est verrouillé par test :
+
+- l'enregistrement garde `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED` et
+  `usableForTraining: false` — aucun cut avancé de cette façon n'est déclaré
+  validé, ni ne peut servir à l'entraînement ;
+- `validationProof: 'navigation-only'` dit sur quoi repose l'avancement ;
+- un lot contenant une telle action ne peut pas porter `COMPLETED`, qui
+  s'affiche « Terminé confirmé » — il finit en
+  `FINISHED_WITH_UNCONFIRMED_ACTIONS` ;
+- **la navigation doit être celle qu'on attend** : même onglet, même part, et le
+  successeur immédiat. Un saut, un retour en arrière ou un changement de part ne
+  valent rien et le lot s'arrête comme avant. Sans ce contrôle, un saut ferait
+  franchir en silence les cuts sautés — c'est la moitié du correctif, pas un
+  détail.
+
+Rien n'a été touché dans la géométrie, le cerveau ni les seuils.
+
 ---
 
 ## Défaut 5 — aucune action offerte après cet arrêt
@@ -227,7 +259,7 @@ compte du raccourci. À investiguer devant ESV.
 
 ## Défaut 7 — l'écartement de voie n'est vérifié nulle part
 
-**NON CORRIGÉ — trouvé par Mic, à l'œil, sur le cut 6/9480.**
+**CORRIGÉ EN 4.7 pour la partie « vérifié nulle part » — trouvé par Mic, à l'œil, sur le cut 6/9480.** La suite de cette section reste la rédaction d'origine ; ce qui a changé est consigné à la fin.
 
 Ni le moteur ni le cerveau ne contrôlent l'écartement résultant du placement.
 Chaque rail est placé indépendamment.
@@ -259,6 +291,46 @@ C'est de loin la piste la plus prometteuse ouverte à ce jour, et elle relève d
 cerveau, pas du pilote. Non implémentée : elle demande un ajustement sur données
 Natif représentatives, pas sur le corpus biaisé.
 
+### Ce qui a changé en 4.7
+
+**La mesure existe maintenant, et elle refuse.** Un garde d'écartement mesure la
+distance entre les origines des deux rails sur l'état *prévu* après application
+des deltas, et refuse de commander hors de [1 405, 1 470] mm (D-027). Deux
+étages indépendants : la composition GCV1 rend les deux rails abstenus, et
+`Engine.apply()` refuse la commande quel que soit le moteur d'origine. Sur le
+lot Pilote réel du 21 septembre (partie 15), dix paires avaient été appliquées
+**puis validées** entre 1 503,5 et 1 564,0 mm ; le garde les intercepte toutes
+les dix, et ne refuse aucune des quarante-six applications admissibles.
+
+**La cible ~1 436 est confirmée sur données Natif représentatives.** La session
+Natif du 21 septembre, sur la même partie 15, contient 91 corrections
+manuelles. L'écartement après correction humaine y tient dans
+**[1 429,6 ; 1 445,0] mm**, médiane **1 436,2**, écart moyen à 1 436 de
+**2,4 mm** — 89 `NOMINAL` et 2 `TOLERANCE`, aucune hors contrat. C'est
+exactement le geste décrit plus haut sur les parts 17/20 et 6, mesuré cette
+fois sur les données que cette section réclamait. Reproductible par
+`node tools/native-gauge-report.cjs --input <export-natif.json>`.
+
+**Mais l'ajustement du cerveau annoncé ici n'est PAS justifié par ces données,
+et n'a pas été fait.** En séparant les visites selon ce qu'était l'état AVANT,
+le geste latéral de l'opérateur se sépare net :
+
+| état trouvé à l'ouverture du cut | latéral gauche | latéral droite |
+|---|---:|---:|
+| placement laissé par le pilote (n = 20) | +0,23 ± 3,04 | +0,49 ± 1,05 |
+| état ESV brut, cut non traité (n = 37) | **+4,04 ± 2,34** | −0,08 ± 0,91 |
+
+Le biais latéral de +4 mm à gauche appartient à **l'état ESV d'origine**, pas au
+placement du pilote : là où le pilote a placé, l'opérateur ne retouche plus
+latéralement (moyenne très inférieure à l'écart-type, donc du bruit au critère
+de `src/brain.js`). Le pilote corrige donc déjà ce biais. Ajouter une
+correction latérale au cerveau **dégraderait** ses bons placements. Le geste
+vertical résiduel sur ces mêmes placements (+2,55 ± 3,23 à gauche, +2,71 ± 3,61
+à droite) ne passe pas non plus le critère du biais.
+
+Ce qui reste ouvert n'est donc pas un réglage du cerveau, mais la
+**récupération** des paires que le garde refuse désormais (KI-032).
+
 ## Défaut 8 — le placement est appliqué par clics simulés dans le canevas
 
 **NON CORRIGÉ — inhérent.**
@@ -274,7 +346,7 @@ Si ESV exposait une écriture directe de la pose, ces attentes disparaîtraient.
 
 ## Défaut 9 — le lot ne reprend pas après « Reprise manuelle »
 
-**[GELÉ] — signalé.**
+**CORRIGÉ en V4.6.0**, après levée du gel.
 
 `manualTakeover()` pose `b.state = 'MANUAL_TAKEOVER'` et `b.step = 'manual'`.
 Aucun chemin ne ramène le lot en `RUNNING` sur le cut suivant : il faut relancer
@@ -291,6 +363,30 @@ observe le changement d'identité → l'opérateur confirme « repris manuelleme
 → Banane journalise `MANUAL_COMPLETION` **sans prétendre avoir validé** →
 reprise du lot au cut suivant. Cela demande de modifier la machine à états.
 
+**C'est ce flux qui est implémenté**, à l'identique. `manualCompletion()` :
+
+- refuse la déclaration tant qu'ESV affiche encore le cut rendu, et tant que le
+  cut affiché n'est pas le successeur immédiat — même contrôle de transition que
+  pour la navigation après commande ;
+- journalise un enregistrement `banane-manual-completion-v1` dont la provenance
+  est explicite : `provenance: 'operator-in-esv'`, `bananeValidated: false`,
+  `commandSent: false`, `serverConfirmed: false`, `afterObserved: false`,
+  `usableForTraining: false`, `trainingExclusionReason:
+  'operator-manual-completion'`. Banane n'a envoyé aucune commande sur ce cut et
+  ne prétend rien d'autre que ce qu'elle a fait : **une lecture de l'identité
+  affichée au moment de la déclaration** — `identityReadAtDeclaration`,
+  `identityIsExpectedSuccessor`, `navigationObservedByBanane: false`. Elle n'a
+  pas vu l'opérateur naviguer, elle n'observait pas, et ne l'affirme donc pas ;
+- **n'inscrit pas le cut dans `processed`**, qui ne compte que les validations
+  conduites par Banane — il est compté à part, dans `manuallyCompleted`, et le
+  panneau l'affiche « repris à la main » ;
+- rend au lot son mode, reprend au cut suivant, et interdit au lot de redémarrer
+  un cut repris à la main.
+
+Le message obsolète est corrigé du même coup : il ne renvoie plus vers « Mes
+corrections », retiré en 4.5.4, mais vers ESV puis la déclaration. Le bouton
+« Repris manuellement » n'apparaît que dans cet état.
+
 ## Défaut 10 — conséquence du défaut 4, pas un défaut distinct
 
 *Reformulé après revue.*
@@ -305,6 +401,11 @@ arrive jamais, la relecture ayant échoué avant. Tes essais à un seul cut (360
 
 **Ce défaut disparaît de lui-même si le défaut 4 est réparé.** Il ne mérite pas
 de correctif propre.
+
+**Vérifié en V4.6.0 :** il a effectivement disparu sans correctif propre. Un lot
+d'un seul cut se termine maintenant sur la navigation attendue, au lieu de
+rester bloqué. Un test le verrouille — et il échoue si l'on retire le correctif
+du défaut 4.
 
 ---
 
