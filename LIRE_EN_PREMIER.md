@@ -1,8 +1,25 @@
-# Démarrer avec Banane V4.7.0 TEST
+# Démarrer avec Banane V4.7.1 TEST — build de mesure
 
-Installe `releases/banane-v4.7.0-test.zip` dans Edge. `releases/banane-v4.7.0-source-tests.zip` contient les sources et les tests reproductibles : ne l'installe pas.
+**Ce n'est pas une release.** La 4.7.1 est un build de développement destiné à
+UNE mesure : vérifier que le lecteur LiDAR retient davantage de points dans le
+même temps de travail. La release officielle reste la **4.7.0**, étiquetée
+`v4.7.0` dans Git.
 
-Vérifie d'abord **V4.7.0 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.0 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Installe `banane-v4.7.1-test.zip` dans Edge, exactement comme la 4.7.0.
+
+Vérifie d'abord **V4.7.1 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.1 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.0, l'ancienne copie est toujours chargée.
+
+## Ce qu'il faut faire avec ce build
+
+Une collecte Natif **dans les mêmes conditions que la précédente** : même façon
+de travailler, même rythme, durée comparable. Ne change rien à tes habitudes —
+c'est la comparaison qui compte, pas la performance.
+
+Puis envoie l'export. Le banc comparera les deux collectes.
+
+Ce qui devrait bouger : le nombre de points retenus par capture, et le nombre de
+repères avec instantané qualifié. Ce qui ne bougera pas : le placement, les
+propositions, les décisions. Aucune science n'a été touchée.
 
 ## Mise à jour
 

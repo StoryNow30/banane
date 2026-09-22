@@ -1,5 +1,32 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.1 — build de mesure, 22 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`. Cette version existe pour qu'une mesure terrain soit comparable à la
+précédente sans confusion possible sur ce qui est installé dans Edge.
+
+Un seul changement fonctionnel : le lecteur LiDAR rejette les points hors ROI
+avant de les transformer. Mesuré sur le lot du 22 septembre, 2,9 minutes de
+collecte : 49 548 001 points lus, autant transformés, 983 089 retenus — 98 % du
+travail était jeté. Et le lecteur n'est pas borné par son budget : 342 captures
+sur 372 sont interrompues par l'opérateur, 27 seulement atteignent une limite de
+ressource. Le temps utile partait donc en transformations inutiles.
+
+Les huit coins de la ROI sont ramenés une fois par nœud dans l'espace brut par
+la transformation inverse, et on en prend la boîte englobante : six comparaisons
+remplacent une transformation, et la boîte ne peut pas écarter un point que la
+ROI aurait accepté. `pointScene` n'est plus calculé que pour les points
+effectivement retenus.
+
+Aucune science touchée : `geometry.js`, `geometry-candidate-v1.js`, `gauge.js`,
+`gcv1-shadow.js`, `engine.js` et `adapter-page.js` gardent leurs empreintes. Les
+points retenus sont les mêmes qu'en 4.7.0 — seul le coût pour les obtenir change.
+
+Ce que cela ne prouve pas : qu'un flanc interne médian de 2 points franchira le
+seuil de 6. Le gain porte sur le travail utile par unité de temps avant
+interruption ; son effet se mesurera sur la prochaine collecte.
+
 ## 4.7.0 — release, 22 septembre 2026
 
 Version officielle portée à **4.7.0**. Le contenu fonctionnel de la 4.7 est

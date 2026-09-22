@@ -1,7 +1,7 @@
 # État du projet Banane
 
 Date : 22 septembre 2026  
-Version active de l'extension : **4.7.0 TEST**  
+Version active de l'extension : **4.7.1 TEST** (build de mesure ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
 
 ## État 4.7.0

@@ -1,8 +1,20 @@
 # Procédure de retour arrière — Banane 4.7.0
 
-Cible de retour : **4.6.0**, checkpoint `5e6d0e8b14ea880195672e5b9da914f046701e0c`.
-C'est la dernière version dont le paquet a été réellement installé et utilisé
-dans Edge sur ESV.
+**Depuis la 4.7.1**, build de mesure, la cible de retour est la release
+officielle **4.7.0**, étiquetée `v4.7.0` :
+
+```bash
+git archive v4.7.0 | tar -x -C /tmp/banane-4.7.0
+cd /tmp/banane-4.7.0 && python3 tools/package.py --output /tmp/banane-v4.7.0-test.zip
+```
+
+La 4.7.1 ne diffère de la 4.7.0 que par le coût de lecture du LiDAR : les points
+retenus sont les mêmes, aucune science n'est touchée. Revenir en arrière ne
+change donc aucun comportement, seulement le temps passé à lire.
+
+Cible de retour depuis la **4.7.0** : **4.6.0**, checkpoint
+`5e6d0e8b14ea880195672e5b9da914f046701e0c`. C'est la dernière version dont le
+paquet a été réellement installé et utilisé dans Edge sur ESV.
 
 Aucune donnée collectée n'est perdue par un retour arrière : les sessions vivent
 dans IndexedDB, pas dans le code.
