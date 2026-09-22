@@ -550,4 +550,91 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 
 ### Amendements enregistrés
 
-*(aucun à ce jour)*
+## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
+
+**22 septembre 2026.** Élément nouveau : les mesures produites depuis la
+signature, et la doctrine de séquence arrêtée par la direction.
+
+### 1.1 Doctrine de séquence
+
+> **Rendre l'observation saine → mesurer où le moteur échoue → introduire le
+> plus petit apprentissage capable de corriger précisément cette classe
+> d'erreur.**
+
+Elle prime sur l'ordre des chantiers du §12. Aucun apprentissage n'est engagé
+tant que l'étape qui le précède n'a pas rendu son chiffre.
+
+### 1.2 « Observation saine » devient mesurable
+
+Trois seuils, dont un indicateur nouveau qui agrège les autres.
+
+| Indicateur | Mesuré le 22/09 | Seuil « sain » |
+|---|---|---|
+| Qualification de collecte (P4) | 61 % | ≥ 60 % — tenu |
+| Flanc interne à la meilleure position | médiane 2 points | ≥ 6, cible 10 |
+| **Taux de résolution** — rails résolus / rails qualifiés | **10 %** (4 sur 39) | **≥ 70 %** |
+
+Le taux de résolution est l'indicateur de référence de l'étape 1. Tant qu'il
+reste bas, « mesurer où le moteur échoue » revient à mesurer où il se tait :
+ce n'est pas la même question et les conclusions ne se transportent pas.
+
+### 1.3 La taxonomie d'échec sera refaite, pas réutilisée
+
+Quand l'observation sera saine, la classe dominante actuelle — la famine du
+flanc interne — disparaîtra. Ce qui restera relève de E1, les minima parasites
+à 69–124 mm, et de la précision fine. La répartition par cause sera donc
+reconstruite sur les nouvelles données, par le banc du §5.2.
+
+Condition facile à oublier : mesurer où le moteur échoue exige des cas où il
+échoue **et où la vérité est connue**. Cela ramène le taux de qualification et
+le plancher P2 au premier plan.
+
+### 1.4 A1 est redéfini — résultat négatif intégré
+
+A0 mesuré sur le lot du 22 septembre : le classement déterministe par somme des
+pertes normalisées retrouve le meilleur couple admissible **17 fois sur 17**.
+C'est la contrainte d'écartement qui fait le travail, pas le classement.
+
+**A1 tel que défini au §5.3 — « score de justesse pour classer les
+hypothèses » — est sans objet.** Le classer n'a rien à gagner.
+
+Mais A0 a testé le CLASSEMENT, pas la DÉCISION DE PUBLIER. Deux fonctions
+distinctes :
+
+- *lequel de ces couples est le meilleur ?* — résolu sans apprentissage ;
+- *ce couple est-il assez bon pour être publié, ou faut-il s'abstenir ?* —
+  **ouvert, et c'est là que vivent les erreurs de 69 à 124 mm.**
+
+A1 devient donc un **modèle d'abstention** : prédire, à partir de `metrics`
+déjà calculé, si le placement retenu s'écarte au-delà d'un seuil. Quelques
+dizaines de coefficients, entrées existantes, aucune dépendance. Il attaque la
+classe d'erreur qui coûte, et lui seul.
+
+Il reste soumis à l'étape 1 de la doctrine : il n'est pas engagé avant que le
+taux de résolution ait atteint son seuil.
+
+### 1.5 P2 devient bloquant
+
+A0 publierait à environ 5 mm par rail de la correction humaine. Savoir si c'est
+préférable à une abstention est **indécidable** sans le plancher de
+reproductibilité humaine. P2 passe de précondition à **blocage** : aucune
+décision de publication, aucun seuil d'abstention, aucune cible d'erreur n'est
+arrêtée avant sa mesure.
+
+### 1.6 Inférence embarquée écartée du périmètre 4.8
+
+La piste d'un réseau sur nuage de points — ranker et refiner appris, PyTorch,
+export ONNX, exécution par ONNX Runtime Web — a été instruite puis écartée pour
+la 4.8. Motifs retenus : l'entrée est affamée, et un modèle ne voit pas ce qui
+n'a pas été capturé ; le socle géométrique que cette architecture suppose
+fiable résout aujourd'hui 4 rails sur 39 ; le service worker MV3 est détruit
+après environ trente secondes d'inactivité, si bien que le chargement du
+runtime et des poids ne s'amortit pas sur un lot.
+
+La piste n'est pas rejetée sur le fond : son architecture — géométrie, puis
+couche apprise, puis arbitrage de paire, puis garde d'écartement, puis
+application native — reste la bonne. Elle est reportée, et sa réouverture
+demande un amendement adossé à l'atteinte du seuil de résolution du §1.2.
+
+La piste A2 du §5.3 est suspendue en conséquence ; P6 reste en vigueur pour
+toute reprise ultérieure.
