@@ -83,6 +83,33 @@
   const acc=coverageAccumulator(settings);for(const point of points)acc.add(point);
   return coverageFrom(acc,settings,transform,associationStatus,termination);
  }
+/* REJET PRÉALABLE — boîte englobante de la ROI dans l'espace BRUT du nœud.
+ *
+ * Mesuré sur le lot du 22/09 : le lecteur lit un nœud Potree d'environ 39 000
+ * points par capture et n'en retient que 2 %. Les 98 % restants coûtaient
+ * chacun deux à trois produits matrice-vecteur AVANT d'être reconnus hors ROI —
+ * et 92 % des captures sont interrompues par l'opérateur, pas par leur budget.
+ * La fenêtre utile était donc dépensée à transformer des points voués au rebut.
+ *
+ * Les huit coins de la ROI, exprimée en repère profil, sont ramenés ici par la
+ * transformation inverse ; on en prend les extrêmes. Tout point hors de cette
+ * boîte est hors ROI AVEC CERTITUDE : la boîte englobe le parallélépipède image,
+ * donc elle ne peut pas écarter un point que `inBox` aurait accepté. Le test
+ * coûte six comparaisons au lieu d'une transformation.
+ *
+ * Si l'inverse n'existe pas ou n'est pas fini, on rend `null` et le chemin
+ * complet reprend pour ce côté : jamais de rejet sur une géométrie douteuse. */
+ function rawRoiBounds(transform,bounds){
+  let inverse;try{inverse=C.inverse(transform);}catch(error){return null;}
+  if(!Array.isArray(inverse)||!inverse.every(finite))return null;
+  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
+  for(let corner=0;corner<8;corner++){
+   const point=C.point(inverse,[(corner&1?1:-1)*bounds[0],(corner&2?1:-1)*bounds[1],(corner&4?1:-1)*bounds[2]]);
+   if(!point.every(finite))return null;
+   for(let axis=0;axis<3;axis++){if(point[axis]<lo[axis])lo[axis]=point[axis];if(point[axis]>hi[axis])hi[axis]=point[axis];}
+  }
+  return {lo,hi};
+ }
  function prepareNode(node,origin,frames,bounds,index,probeCount){
   const model=C.rebase(node.world,origin),range=draw(node),transforms=Object.fromEntries(Object.entries(frames).map(([side,frame])=>[side,C.multiply(frame.sceneRelativeToProfileLocal,model)]));
   const sampleIds=new Set();for(let i=0;i<Math.min(probeCount,range.count);i++)sampleIds.add(range.start+Math.floor(i*(range.count-1)/Math.max(1,Math.min(probeCount,range.count)-1)));
@@ -92,7 +119,8 @@
    for(const [side,transform] of Object.entries(transforms)){const local=C.point(transform,raw),distance=Math.hypot(...local.map((value,axis)=>value/bounds[axis]));
     minimumDistance[side]=Math.min(minimumDistance[side],distance);if(inBox(local,bounds))probeHits[side]++;}}
   const direct=Object.values(probeHits).reduce((n,value)=>n+value,0),distance=Math.min(...Object.values(minimumDistance));
-  return {node,index,model,range,transforms,probeHits,minimumDistance,probesRead,priority:[direct?0:1,distance,range.count,index],
+  const roiBounds=Object.fromEntries(Object.entries(transforms).map(([side,transform])=>[side,rawRoiBounds(transform,bounds)]));
+  return {node,index,model,range,transforms,roiBounds,probeHits,minimumDistance,probesRead,priority:[direct?0:1,distance,range.count,index],
    report:{nodeId:node.id,source:node.source,pointsAvailable:range.count,diagnosticProbesRead:probesRead,probeRoiHits:probeHits,
     minimumNormalizedDistance:Object.fromEntries(Object.entries(minimumDistance).map(([side,value])=>[side,finite(value)?value:null])),pointsRead:0,pointsTransformed:0,
     retainedByRail:Object.fromEntries(Object.keys(frames).map(side=>[side,0])),status:'not-read'}};
@@ -193,8 +221,23 @@
      if(sinceYield>=settings.yieldEvery){await checkpoint();await pause();guard();if(!sourceUnchanged(entry)){const error=Error('source-buffer-or-matrix-changed');error.code='SOURCE_CHANGED';throw error;}sinceYield=0;}
      const sourceIndex=entry.range.index?entry.range.index.get(drawIndex,0):drawIndex;if(!Number.isInteger(sourceIndex)||sourceIndex<0||sourceIndex>=entry.node.attribute.count)continue;
      trace.pointsRead++;entry.report.pointsRead++;sinceYield++;const raw=entry.node.attribute.point(sourceIndex);if(!raw.every(finite))continue;
-     const pointScene=C.point(entry.model,raw);trace.pointsTransformed++;entry.report.pointsTransformed++;
+     /* Six comparaisons écartent la grande majorité des points avant toute
+      * transformation. Un côté sans boîte fiable force le chemin complet. */
+     let candidate=false;
+     for(const side of sides){
+      if(railCounts[side]>=settings.maxPointsPerRail)continue;
+      const box=entry.roiBounds?.[side];
+      if(!box){candidate=true;break;}
+      if(raw[0]>=box.lo[0]&&raw[0]<=box.hi[0]&&raw[1]>=box.lo[1]&&raw[1]<=box.hi[1]
+       &&raw[2]>=box.lo[2]&&raw[2]<=box.hi[2]){candidate=true;break;}
+     }
+     if(!candidate)continue;
+     /* `pointScene` ne sert QUE si un rail retient le point : il est donc
+      * calculé au premier rail qui passe, et `pointsTransformed` compte
+      * désormais les transformations réellement utiles. */
+     let pointScene=null;
      for(const side of sides){if(railCounts[side]>=settings.maxPointsPerRail)continue;const local=C.point(entry.transforms[side],raw);if(!inBox(local,settings.bounds))continue;
+      if(pointScene===null){pointScene=C.point(entry.model,raw);trace.pointsTransformed++;entry.report.pointsTransformed++;}
       const visible=L.boxVisible(clippingByCloud[entry.node.cloudIndex],pointScene);
       chunks[side].firstReadAt??=nowIso();chunks[side].scene.push(pointScene);chunks[side].local.push(local);chunks[side].sources.push([entry.index,sourceIndex]);chunks[side].visible.push(visible);
       const perte=clipLoss[side];   // ne pas nommer L : L est le lecteur LiDAR du module
@@ -235,5 +278,9 @@
   result.warnings.push('La qualification décrit une entrée candidate pour analyse hors ligne, jamais une promotion automatique pour entraînement.');
   return result;
  }
- return {DEFAULTS,capture,coverage,coverageFrom,coverageAccumulator,normalizeTermination};
+ const api={DEFAULTS,capture,coverage,coverageFrom,coverageAccumulator,normalizeTermination};
+ /* Exposé pour les essais : la propriété conservative du rejet préalable se
+  * vérifie directement, sans passer par une capture complète. */
+ if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{rawRoiBounds,inBox}});
+ return api;
 });
