@@ -1,12 +1,24 @@
 # État du projet Banane
 
-Date : 14 septembre 2026  
-Version active de l'extension : **4.4.3 TEST** ; chantier hors ligne **V4.5 lot 1**  
+Date : 22 septembre 2026  
+Version active de l'extension : **4.7.0 TEST**  
 Statut : développement expérimental, non qualifié pour la production.
 
-Le lot 1 V4.5 fournit un banc **hors ligne**, pas une nouvelle extension ni un moteur entraîné. Le ZIP V4.4.3 fourni et le moteur restent inchangés. Le témoin natif contient 22 visites et 377 477 points. Après correction de la borne temporelle **par rail**, le banc admet 14 rails gauches et 12 droits (toutes visites), dont **7 propositions comparables à une finale candidate** (3 gauches et 4 droits). Trois rails droits supplémentaires deviennent admissibles (cuts 314, 332, 333) : le 332 n'a pas de finale comparable ; aux cuts 314 et 333, la gauche avait changé avant la capture droite, mais le droit n'avait pas encore changé. Les cinq comparaisons précédemment annoncées décrivent l'ancienne borne commune, désormais historique. **201 tests locaux réussis**, sans essai ESV. Voir `PLACEMENT_LAB.md` et `audit/V45_LOT1_BORNE_TEMPORELLE.md` ; les autres états V4.4.3 ci-dessous restent à valider sur Edge/ESV.
+## État 4.7.0
 
-## Résultat actuel
+La 4.7.0 consolide le Pilote GCV1 et ferme la chaîne runtime. Elle ne retouche pas le placement : `src/geometry.js` et `src/geometry-candidate-v1.js` gardent leurs empreintes gelées, et `src/engine.js` reste conforme à la baseline déclarée `audit/v4.6.0-engine-baseline.json`. **Aucun gain de résolution n'est revendiqué** : le gain est la continuité du traitement et l'identification fiable des cas à revoir.
+
+**Différer un rail non résolu.** En Pilote TEST, un cut réellement non résolu par GCV1 est quitté par une navigation sans décision — le chemin natif de Maj+Z — sans correction, sans `VALIDATE`, sans `SKIP`. Le cut est enregistré une fois comme `DEFERRED_UNRESOLVED` et compté à part de `processed` et `skipped`. La politique est figée à la création du lot ; un lot antérieur à 4.7 garde la pause historique. Le protocole durable interdit le double envoi et le rejeu après redémarrage : une commande dont l'émission reste incertaine n'est jamais renvoyée.
+
+**Garde d'écartement de paire, deux étages indépendants.** Contrat admissible `[1405, 1470] mm`. Dans GCV1, une paire publiée hors contrat rend les **deux** rails non résolus, motif `gauge-out-of-contract`, sans repli V4.6. Dans le moteur, un dernier garde recalcule l'écartement prévu avant toute commande et refuse d'agir hors contrat, quel que soit le moteur d'origine. L'intervalle est un critère d'**admissibilité**, jamais une fonction d'optimisation vers une valeur cible.
+
+**Origine terrain.** Sur la partie 15, 10 des 56 applications observées produisaient un écartement hors contrat, entre 1 503,5 et 1 564,0 mm, appliquées puis validées. Chaque rail était individuellement plausible ; c'est la paire qui était fausse, et la confiance seule ne les détectait pas. Ces dix cas sont rejoués par `tests/gauge-pair-gate.test.cjs` depuis leurs valeurs réelles.
+
+**Banc au HEAD** : 550 tests, 548 réussis, 0 échec, 2 ignorés faute du corpus Natif privé, absent du clone public. Un test ignoré n'est pas un test réussi. Le placement est inchangé depuis 4.4.0 (SHA-256).
+
+Les limites connues, chiffrées et justifiées, sont dans `KNOWN_ISSUES.md`. Les plus structurantes pour 4.7 : aucune transaction commune entre le stockage Banane et l'effet ESV (KI-025), dépendance à des symboles ESV internes non documentés (KI-026), et application séquentielle des deux rails sans restauration automatique (KI-030), caractérisée par `tests/ki030-partial-apply.test.cjs` et fermée par `reconcileRequired`.
+
+## Historique V4.4 — conservé comme preuve
 
 Retour terrain V4.4.2 : le bouton flottant « Banane V4 · ouvrir » est toujours visible alors qu'une fenêtre Banane est ouverte. **L'affirmation de succès en conditions ESV de la V4.4.2 était prématurée.** La V4.4.3 remplace l'inférence fragile par recherche des URL de fenêtres par deux preuves locales : identifiants des fenêtres ouvertes et connexions vivantes des pages Banane (renouvelées après redémarrage du service worker). Le bouton est physiquement retiré du DOM dès l'ouverture et réinséré après fermeture de la dernière fenêtre. La réponse d'état arrivée en retard ne peut plus annuler la notification d'ouverture. La version « 4.4.3 » est affichée pour confirmer visuellement la mise à jour. Un essai Edge/ESV V4.4.3 reste nécessaire ; les tests de navigateur sont simulés.
 
@@ -26,14 +38,30 @@ Le nouveau contrat `banane-native-session-v2` conserve les captures partielles e
 
 ## Placement et pilote inchangés
 
-La V4.4.3 ne modifie ni `src/geometry.js`, ni `vendor/capture-core.js`, ni `src/engine.js`, ni `vendor/lidar.js`. Leurs SHA-256 restent respectivement :
+Trois fichiers restent **gelés à la référence 4.4.0** et sont vérifiés octet
+pour octet par `tools/verify.cjs` contre `audit/v4.4.0-frozen-engine-hashes.json`,
+qui n'est pas modifiable :
 
-- `3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53` ;
-- `2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054` ;
-- `2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6`.
-- `375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311`.
+- `src/geometry.js` — `3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53` ;
+- `vendor/capture-core.js` — `2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054` ;
+- `vendor/lidar.js` — `375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311`.
 
-Les sécurités V4.3 restent actives : les quatre preuves après commande restent distinctes, une cible changée avant relecture devient `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED`, un rail non résolu devient `PAUSED_UNRESOLVED_RAIL`, Pause est disponible dans Mes corrections et aucun SKIP automatique silencieux n'est autorisé.
+`src/geometry-candidate-v1.js`, la science GCV1, est figé de la même façon à
+`77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503`.
+
+**`src/engine.js` n'est plus gelé à 4.4.0** : il a été dégelé sur décision
+explicite en V4.6.0 pour les défauts 4 et 9 d'`AUDIT_PILOTE.md`, puis
+**ré-épinglé** sur une baseline déclarée, `audit/v4.6.0-engine-baseline.json`.
+Sa valeur en 4.7.0 est `be15576321f7a1bf7b0c727281b7f8a882eeea254382c83cf96590220740da33`.
+Le contrôle reste aussi strict : toute dérive non déclarée du moteur fait
+échouer le banc, et la baseline doit recopier à l'identique les empreintes
+historiques 4.4.0, si bien qu'elle ne peut pas servir à assouplir le gel par la
+bande. *(La valeur `2bf19ce7…` que ce document annonçait auparavant est celle de
+l'époque 4.4.3 ; elle est périmée depuis V4.6.0.)*
+
+Les sécurités V4.3 restent actives : les quatre preuves après commande restent distinctes, une cible changée avant relecture devient `AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED`, Pause est disponible dans Mes corrections et aucun SKIP automatique silencieux n'est autorisé.
+
+Le traitement d'un rail non résolu, lui, **a changé en 4.7** : `PAUSED_UNRESOLVED_RAIL` reste le comportement des lots en politique `pause` et de tous les lots antérieurs à 4.7, mais les nouveaux lots Pilote GCV1 diffèrent le cut par défaut. Dans les deux cas, aucune correction partielle n'est appliquée et aucune décision ESV n'est émise.
 
 ## Banc hors ligne conservé
 
@@ -50,7 +78,7 @@ Les résultats restent dans `audit/ingestion-certificate-v4.3.0.json`, `datasets
 
 ## Limites bloquantes
 
-- Le bouton a été vu **toujours visible** dans ESV avec la V4.4.2 ; la correction V4.4.3 n'est pas encore validée dans Edge. Aucun export pris avec la **4.4.3** n'existe encore : aucune paire géométrique réelle, comparaison du moteur, preuve visuelle dans ESV ou mesure de fluidité Edge/IndexedDB ne peuvent être certifiées.
+- **Époque V4.4.x, jamais reprise.** Le bouton a été vu **toujours visible** dans ESV avec la V4.4.2 ; le correctif V4.4.3 n'a jamais reçu de contrôle dédié dans Edge et KI-023 reste ouverte. Aucun export pris avec la **4.4.3** n'existe : aucune paire géométrique réelle, comparaison du moteur, preuve visuelle dans ESV ou mesure de fluidité Edge/IndexedDB ne peut être certifiée pour cette version.
 - Les versions des attributs Potree sont contrôlées, mais une mutation en place des points sans mise à jour de version/source n'est pas décelable par référence seule ; vérifier sur ESV. La cohérence des matrices n'établit pas une calibration physique indépendante des unités.
 
 - Les trois premiers exports audités proviennent de la V4.4.0 ; **un export V4.4.1 supplémentaire a été fourni et audité** (76 visites, 539 309 points, mais 0 rail comparable prouvé selon le contrat temporel). Aucune visualisation de couple géométrique réel ni mesure instrumentée de fluidité WebGL/Potree n'est disponible ; les tests Node ne les remplacent pas.
@@ -64,4 +92,4 @@ Les résultats restent dans `audit/ingestion-certificate-v4.3.0.json`, `datasets
 
 ## Livraison
 
-Les archives V4.4.3 TEST installable et source/tests sont dans `releases/`. Le ZIP source/tests contient les trois JSON historiques V4.4 en lecture seule nécessaires pour reproduire les tests, mais **pas** le grand export V4.4.1 : son audit recalculé et son empreinte sont livrés et son rejeu nécessite que Mic fournisse ce fichier séparément. Le ZIP installable exclut tous les JSON Natif ; l'archive originale reste hors des deux ZIP. Protocole terrain : `NATIVE_GEOMETRY_ACCEPTANCE.md`.
+Les archives 4.7.0 TEST installable et source/tests se construisent avec `tools/package.py` (voir `README.md`). Pour que l'empreinte SHA-256 du ZIP soit reproductible, l'archive doit être construite depuis un export propre du commit — `git archive <commit>` — et non depuis un répertoire de travail, dont les dates de fichiers dépendent du clone. Le ZIP source/tests contient les trois JSON historiques V4.4 en lecture seule nécessaires pour reproduire les tests, mais **pas** le grand export V4.4.1 : son audit recalculé et son empreinte sont livrés et son rejeu nécessite que Mic fournisse ce fichier séparément. Le ZIP installable exclut tous les JSON Natif ; l'archive originale reste hors des deux ZIP. Protocole terrain : `NATIVE_GEOMETRY_ACCEPTANCE.md`.

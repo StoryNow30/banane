@@ -1,18 +1,24 @@
-# Banane V4 TEST — 4.4.3
+# Banane V4 TEST — 4.7.0
 
 La V4 sépare les tâches dans des fenêtres sombres. Le nouveau **Mode Natif** observe le travail manuel dans ESV sans le piloter. **Mes corrections** conserve le workflow guidé avec capture avant la décision. **Pilotage automatique** gère les lots TEST. L’**assisté** sert à essayer une proposition sur un seul cut.
 
-La V4.4.3 reprend la collecte géométrique V4.4.2 et corrige le **bouton flottant resté visible chez Mic**. L'ouverture est suivie par les fenêtres et pages réellement présentes ; le bouton est retiré de la page ESV tant que Banane reste ouvert. **Ce correctif est testé localement mais attend un nouvel essai Edge ; aucun export ESV V4.4.3 ne prouve encore une paire LiDAR exploitable.** Ni l'algorithme de placement ni le pilote ne changent. Voir `NATIVE_GEOMETRY_ACCEPTANCE.md`, `TEST_REPORT.md` et `RESULTATS.md`.
+La **4.7.0** consolide le Pilote GCV1 et ferme la chaîne runtime. Trois apports :
 
-## Mettre à jour ta V3
+- **Différer un rail non résolu.** En Pilote TEST, un cut que GCV1 ne résout pas peut être quitté par une navigation sans décision — aucune correction appliquée, aucun `VALIDATE`, aucun `SKIP` — et le lot continue. Le cut est enregistré une fois comme `DEFERRED_UNRESOLVED`, pour revue. Ce n'est ni une validation, ni un SKIP, ni une résolution : un rail non résolu le reste.
+- **Garde d'écartement de paire.** Un couple de rails dont l'écartement prévu sort du contrat ferroviaire n'est plus appliqué. Deux défenses indépendantes : une abstention scientifique dans GCV1, et un dernier garde dans le moteur qui refuse de commander avant tout envoi.
+- **Exports de diagnostic** du Pilote GCV1, avec la provenance exacte et les statuts scientifiques conservés.
 
-1. Termine l’activité en cours. Dans la V3, conserve un export complet des données et des LiDAR.
-2. Décompresse **banane-v4.4.3-test.zip**. Copie son contenu **dans le même dossier que l’extension déjà chargée dans Edge**, en remplaçant les fichiers. Cela conserve l’identité de l’extension et son stockage. Les fichiers du ZIP sont directement à sa racine. L'autre ZIP, **banane-v4.4.3-source-tests.zip**, sert uniquement à reproduire l'audit et les tests : ne l'installe pas dans Edge.
+Le placement lui-même n'est pas retouché : `src/geometry.js` et `src/geometry-candidate-v1.js` gardent les empreintes gelées. Aucun gain de résolution n'est revendiqué — le gain est la continuité du traitement et l'identification fiable des cas à revoir. Voir `CHANGELOG.md`, `KNOWN_ISSUES.md` et `TEST_REPORT.md`.
+
+## Mettre à jour Banane
+
+1. Termine l’activité en cours et conserve un export complet des données et des LiDAR.
+2. Décompresse **banane-v4.7.0-test.zip**. Copie son contenu **dans le même dossier que l’extension déjà chargée dans Edge**, en remplaçant les fichiers. Cela conserve l’identité de l’extension et son stockage. Les fichiers du ZIP sont directement à sa racine. L'autre ZIP, **banane-v4.7.0-source-tests.zip**, sert uniquement à reproduire l'audit et les tests : ne l'installe pas dans Edge.
 3. Dans `edge://extensions`, clique sur **Recharger** sur la carte de Banane.
 4. **Recharge la page ESV.** Cette étape installe le capteur des commandes avant les scripts ESV.
 5. Clique sur Banane, puis **Mes corrections**. Avec un seul onglet ESV ouvert, la connexion se fait automatiquement. S’il y en a plusieurs, choisis le bon dans **Connexion à ESV**.
 
-Le panneau doit afficher **V4.4.3 · TEST**. Après fermeture de toutes les fenêtres Banane, le bouton au bas d'ESV doit afficher **Banane 4.4.3 · ouvrir**. Si tu vois encore **Banane V4 · ouvrir**, recharge l'extension puis la page ESV et vérifie qu'une ancienne copie de Banane n'est pas chargée en parallèle. Pour une première installation, charge dans Edge le dossier contenant `manifest.json` avec **Charger l’extension non empaquetée**.
+Le panneau doit afficher **V4.7.0 · TEST**. Après fermeture de toutes les fenêtres Banane, le bouton au bas d'ESV doit afficher **Banane 4.7.0 · ouvrir**. Si tu vois encore un numéro plus ancien, recharge l'extension puis la page ESV et vérifie qu'une ancienne copie de Banane n'est pas chargée en parallèle. Pour une première installation, charge dans Edge le dossier contenant `manifest.json` avec **Charger l’extension non empaquetée**.
 
 ## Mode Natif : Banane observe, Mic travaille dans ESV
 
@@ -24,7 +30,7 @@ Le panneau doit afficher **V4.4.3 · TEST**. Après fermeture de toutes les fen�
 
 Le Mode Natif n'envoie aucun changement de caméra, sélection de rail, déplacement, `VALIDATE`, `SKIP` ou navigation. Les gestes clavier et souris sont observés passivement dès le chargement de la page : Banane ne les bloque pas, ne les retarde pas volontairement et ne les réémet pas vers ESV.
 
-Le petit bouton flottant « Banane » au bas de la page ESV **doit** disparaître dès qu'une fenêtre Banane est ouverte. Il revient seulement lorsque toutes les fenêtres Banane ont été fermées ; cette V4.4.3 nécessite encore ton contrôle réel dans Edge. Il ne touche pas aux commandes ESV.
+Le petit bouton flottant « Banane » au bas de la page ESV **doit** disparaître dès qu'une fenêtre Banane est ouverte. Il revient seulement lorsque toutes les fenêtres Banane ont été fermées. Il ne touche pas aux commandes ESV.
 
 Chaque affichage d'un cut constitue une visite distincte. Un retour sur un ancien cut reçoit donc un nouveau `visitId`. L'ordre de ces visites n'est pas présenté comme la séquence spatiale ESV. L'export distingue l'état observé, l'intention `VALIDATE` ou `SKIP` éventuellement reconnue, l'effet ensuite observé et la confirmation serveur, qui reste `not-observed`.
 
@@ -67,11 +73,22 @@ Démarre une session dans **Mes corrections**, corrige deux ou trois cuts avec t
 3. Clique sur **Démarrer le lot TEST**. **Pause**, **Reprendre** et **Arrêter** pilotent le lot.
 4. **Télécharger le bilan et les LiDAR** donne le fichier complet de diagnostic.
 
-Par défaut, une proposition incertaine met le lot en pause sur le même cut. Un rail non résolu ne produit jamais de validation partielle. Les actions proposées sont réessayer, reprise manuelle, SKIP explicite ou arrêt. « Tenter » permet une proposition de faible indice, mais ne crée pas de position lorsque la géométrie est non estimable. Aucun SKIP ni entraînement automatique ne se lance.
+Un rail non résolu ne produit jamais de validation partielle : le cut entier est concerné, jamais un seul rail.
+
+**Lorsqu’un rail n’est pas résolu**, deux comportements, réglables avant le lancement :
+
+- **Continuer et le différer** — défaut des nouveaux lots Pilote GCV1. Banane quitte le cut par une navigation sans décision et poursuit le lot. Le cut est compté dans **Différés : N**, jamais dans les cuts traités. Aucune correction, aucun `VALIDATE`, aucun `SKIP` n’est envoyé sur ce cut.
+- **Mettre le lot en pause** — comportement historique, toujours disponible. Les actions proposées sont réessayer, reprise manuelle, SKIP explicite ou arrêt.
+
+La politique est **figée à la création du lot** : ni un redémarrage, ni un changement du réglage ne convertit un lot déjà lancé. Un lot lancé avant la 4.7 garde la pause historique.
+
+Un couple de rails dont l’écartement prévu sort du contrat est refusé avant toute commande, et le cut suit le même chemin : ni correction, ni décision. Le panneau affiche la **politique effective** du lot, y compris lorsqu’elle diffère du réglage choisi.
+
+« Tenter » permet une proposition de faible indice, mais ne crée pas de position lorsque la géométrie est non estimable. Aucun SKIP ni entraînement automatique ne se lance.
 
 Une lecture perturbée par le chargement Potree est recommencée jusqu’à trois fois par vue, avec une limite totale de 60 secondes pour la capture. Les lectures rejetées ne sont pas fusionnées. Si ces tentatives échouent en mode automatique, le lot se met en pause ; **Reprendre** relit le même état initial, sans bouton d’annulation et sans retraiter les cuts précédents.
 
-Le bouton natif ESV passe au prochain cut non validé : les numéros peuvent sauter. La navigation observée ne constitue pas une preuve d’enregistrement serveur. Une validation déjà transmise n’est pas automatiquement renvoyée après un résultat incertain.
+Le bouton natif ESV passe au prochain cut non validé : les numéros peuvent sauter, et Banane n’invente aucun cut intermédiaire. Un saut de 549 à 552 enregistre 549, et 550 comme 551 n’entrent dans aucun compteur. La navigation observée ne constitue pas une preuve d’enregistrement serveur. Une validation déjà transmise n’est pas automatiquement renvoyée après un résultat incertain ; une navigation sans décision non plus.
 
 ## Essai assisté
 
@@ -99,7 +116,7 @@ Aucune dépendance n’est nécessaire pour charger l’extension. Pour les test
 node tools/verify.cjs
 node tools/results.cjs
 python3 tools/package.py
-python3 tools/package.py --source --output releases/banane-v4.4.3-source-tests.zip
+python3 tools/package.py --source --output releases/banane-v4.7.0-source-tests.zip
 ```
 
 Le banc des quatre exports externes se lance séparément avec la commande documentée dans `OFFLINE_EVALUATION.md`. Les JSON de référence, volumineux et en lecture seule, ne sont pas intégrés au ZIP ; le certificat contient leurs noms et empreintes.

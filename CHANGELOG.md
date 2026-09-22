@@ -1,4 +1,49 @@
-# Banane V4 TEST 4.4.3 — 13 septembre 2026
+# Banane V4 TEST — journal des versions
+
+## 4.7.0 — release, 22 septembre 2026
+
+Version officielle portée à **4.7.0**. Le contenu fonctionnel de la 4.7 est
+décrit par les sections qui suivent ; ce lot de release ne fait que le clore.
+
+**Aucune logique n'est touchée.** Ni moteur, ni science, ni pilote, ni
+adaptateur : `src/geometry.js`, `src/geometry-candidate-v1.js`, `src/gauge.js`,
+`src/gcv1-shadow.js`, `src/engine.js` et `src/adapter-page.js` gardent leurs
+empreintes, et `src/engine.js` reste conforme à
+`audit/v4.6.0-engine-baseline.json` — le fichier n'est pas renommé, puisque le
+moteur est réellement inchangé depuis V4.6.0.
+
+Version déclarée dans `manifest.json`, `src/core.js` et le repli de
+`background.js`. Version montrée à l'opérateur à trois endroits :
+le titre et le bandeau `V4.7.0 · TEST` de `panel.html`, et le libellé du bouton
+flottant de `src/bridge.js`. L'épingle de version officielle passe de `4.6.x` à
+`4.7.x` dans `tests/package.test.cjs` et `tests/settings.test.cjs` : ces deux
+expressions *sont* la déclaration de version, les déplacer est l'acte du lot de
+release, et leur assertion utile — manifeste et `core.js` d'accord — est
+conservée.
+
+**Couverture ajoutée**, deux fichiers de tests, aucun runtime :
+`tests/panel-policies.test.cjs` vérifie le §10 du cahier — politique effective
+affichée et compteur `Différés : N` — et reproduit le défaut d'affichage KI-033 ;
+`tests/ki030-partial-apply.test.cjs` caractérise KI-030 sans le corriger, en
+fixant ce qui est réellement exigé : aucune décision après un état partiel,
+fermeture par `reconcileRequired`, survie au redémarrage, restauration
+effective des deux rails.
+
+**Documentation** remise en cohérence : `README.md`, `LIRE_EN_PREMIER.md`,
+`PROJECT_STATE.md` et `TEST_REPORT.md` annonçaient encore la 4.4.3 et sont
+livrés dans le ZIP. Le `README` portait en outre une erreur de fond — « une
+proposition incertaine met le lot en pause » — alors que le défaut des nouveaux
+lots Pilote GCV1 est `defer` depuis 4.7.
+
+**Reproductibilité du paquet.** Le ZIP n'est bit-à-bit reproductible que
+construit depuis un export propre du commit (`git archive <commit>`), qui fixe
+les dates des entrées à celle du commit. Construit depuis un répertoire de
+travail, son contenu est identique mais son empreinte SHA-256 diffère, car les
+dates viennent du clone. La procédure de release retient `git archive`.
+
+Banc : 550 tests, 548 réussis, 0 échec, 2 ignorés (corpus Natif privé absent du
+clone — ignoré n'est pas réussi).
+
 
 ## 4.7 — analyse du lot terrain du 21 septembre : politique effective affichée, écartement mesuré
 

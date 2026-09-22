@@ -1,28 +1,47 @@
-# Démarrer avec Banane V4.4.3 TEST
+# Démarrer avec Banane V4.7.0 TEST
 
-Installe seulement `releases/banane-v4.4.3-test.zip` dans Edge ; `releases/banane-v4.4.3-source-tests.zip` contient les sources et tests reproductibles. Vérifie d'abord « V4.4.3 · TEST » dans la fenêtre Banane et « Banane 4.4.3 · ouvrir » quand toutes les fenêtres sont fermées. En V4.4.2, le bouton restait affiché malgré l'ouverture ; en V4.4.3 il doit se masquer et revenir après fermeture de toutes les fenêtres. Ce correctif attend ton essai Edge. Le Mode Natif conserve son instantané de chaque rail avant intention. Voir `NATIVE_GEOMETRY_ACCEPTANCE.md`.
+Installe `releases/banane-v4.7.0-test.zip` dans Edge. `releases/banane-v4.7.0-source-tests.zip` contient les sources et les tests reproductibles : ne l'installe pas.
+
+Vérifie d'abord **V4.7.0 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.0 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Mise à jour
 
-1. Décompresse le ZIP et remplace les fichiers dans **le dossier de Banane déjà chargé dans Edge**.
+1. Décompresse le ZIP et remplace les fichiers dans **le dossier de Banane déjà chargé dans Edge**. L'identité de l'extension et son stockage sont conservés.
 2. Dans `edge://extensions`, clique sur **Recharger**. Recharge ensuite **la page ESV**.
-3. Ouvre Banane. Pour vérifier le nouveau collecteur géométrique sans piloter ESV, choisis **Mode Natif**. La connexion est automatique s’il n’y a qu’un onglet ESV.
+3. Ouvre Banane.
 
-## Ton essai du Mode Natif corrigé
+## Ce que la 4.7 change pour toi
 
-Lis `NATIVE_GEOMETRY_ACCEPTANCE.md` : démarre l'observation, travaille normalement dans ESV sur quelques cuts (deux rails chargés, rail seul, retour sur un cut, pause), puis termine et télécharge le JSON. Banane ne sélectionne rien et ne valide rien à ta place. Le rapport de trois anciens exports explique le défaut corrigé ; seul un nouvel essai ESV peut démontrer la capture des points et sa fluidité réelle.
+**Un cut que le moteur ne sait pas résoudre n'arrête plus le lot.** Avant, le lot se mettait en pause et t'attendait. Maintenant, par défaut, Banane quitte ce cut par une navigation sans décision — la même action que **Maj+Z** — et continue. Le cut est compté à part, dans **Différés : N**.
 
-## Mes corrections : essai séparé de deux ou trois cuts
+Un cut différé n'est **ni validé, ni skippé, ni corrigé**. Banane n'envoie rien dessus. Il est simplement mis de côté pour que tu le regardes plus tard. Les compteurs le disent : « cuts traités » et « Différés » ne se mélangent jamais.
 
-- Clique une fois sur **Démarrer l’enregistrement**.
-- Attends **Cut prêt**, puis travaille comme d’habitude : gauche → `d` → droit → `Shift + Espace` pour valider ou `Shift + Retour arrière` pour skipper.
-- Continue sur les cuts suivants. Banane s’occupe de l’enregistrement.
-- À la fin, clique une fois sur **Terminer et télécharger** et envoie le JSON obtenu.
+Tu gardes le choix. Dans **Réglages du lot**, *Lorsqu'un rail n'est pas résolu* propose **Continuer et le différer** (le nouveau défaut) ou **Mettre le lot en pause** (l'ancien comportement). Le choix est figé au démarrage du lot : le changer ensuite n'affecte que le lot suivant.
 
-Le fichier contient toute la session. Les boutons avant/après ont disparu de cette fenêtre.
+**Un écartement de rails aberrant n'est plus appliqué.** Sur le lot du 21 septembre, dix paires avaient été appliquées puis validées avec un écartement entre 1 503 et 1 564 mm, hors du contrat ferroviaire. Chaque rail semblait plausible tout seul ; c'est la paire qui était fausse. Banane mesure désormais l'écartement **prévu** avant d'agir et refuse de commander hors contrat. Ces cuts-là sont différés, pas corrigés.
 
-Un cut SKIP reste dans le fichier avec son LiDAR disponible et les états avant/final des deux rails, mais il est exclu des exemples de pointage correct pour l’entraînement. Aucun SKIP n’est déclenché automatiquement.
+**Le panneau dit ce qui s'applique vraiment.** En lot Pilote GCV1, le réglage de faible confiance est neutralisé — la publication GCV1 est sa propre frontière. Le panneau l'annonce désormais au lieu d'afficher un réglage sans effet.
 
-**Pilotage automatique** est une autre fenêtre. L’**assisté**, accessible depuis l’accueil, sert simplement à demander puis accepter ou ignorer une proposition sur un cut.
+## Ton essai
 
-La V4.4.2 ne change pas le placement ni le pilote. Les exemples géométriques candidats du Natif ne sont pas automatiquement utilisables pour entraîner le moteur ; ils nécessitent une revue humaine.
+Lance un lot Pilote TEST sur une plage où tu sais qu'il y a des cuts difficiles, et regarde :
+
+- les propositions normales sont appliquées et validées comme avant ;
+- un cut non résolu est quitté sans décision, et **Différés** augmente de 1 ;
+- aucun SKIP ne part tout seul ;
+- les numéros de cut peuvent sauter — c'est ESV qui décide du suivant, Banane n'en invente aucun ;
+- ferme puis rouvre la fenêtre : les compteurs sont identiques, et rien n'est rejoué.
+
+Si une navigation reste incertaine, Banane te le dit avec le numéro du cut et **ne la renvoie pas**. Contrôle ce cut dans ESV, puis clôture le résultat depuis **Dépannage**.
+
+À la fin, **Télécharger le bilan et les LiDAR** produit le fichier de diagnostic complet.
+
+## Les autres modes n'ont pas changé
+
+**Mode Natif** observe ton travail manuel sans rien piloter. **Mes corrections** conserve le workflow guidé. L'**assisté** demande une proposition sur un seul cut. Aucun de ces modes n'envoie de VALIDATE, de SKIP ou de navigation à ta place.
+
+Un cut SKIP reste dans le fichier avec son LiDAR et les états avant/final des deux rails, mais il est exclu des exemples d'entraînement. Aucun SKIP n'est déclenché automatiquement.
+
+## Ce qui n'est pas prouvé
+
+La confirmation d'enregistrement côté serveur ESV n'est toujours pas observable : une navigation observée n'est pas une preuve d'enregistrement. Le garde d'écartement intercepte les erreurs grossières de paire, pas les erreurs qui conservent l'écartement. Les limites connues sont listées dans `KNOWN_ISSUES.md`.
