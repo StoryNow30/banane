@@ -1,8 +1,12 @@
 # État du projet Banane
 
 Date : 22 septembre 2026  
-Version active de l'extension : **4.7.3 TEST** (mode Natif réoptimisé ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.4 TEST** (mode Natif réoptimisé ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.4
+
+La 4.7.4 allège les collectes Natif : plus de lecture LiDAR après un déplacement de rail par l'opérateur (42 % des points de la collecte 4.7.3, jamais utilisés par le moteur). Le banc passe à l'entrée « lecture complète de la pose de départ » : taux de résolution 50 % (partie 19) et 74 % (partie 20), contre 17 % et 50 % avec le seul premier instantané. Détail et corrections de constats antérieurs : amendement n°2 de `BANANE_4.8_CAHIER.md`. La proposition « flanc partiel » pour le Pilote reste en attente de décision.
 
 ## État 4.7.3
 

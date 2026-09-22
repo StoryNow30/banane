@@ -52,6 +52,12 @@
      * qui n'aboutirait jamais. */
     maxCapturesPerVisitUnqualified: 24,
     pollMs: 125,
+    /* 4.7.4 — lectures LiDAR après un déplacement de rail PAR L'OPÉRATEUR.
+     * Elles ne nourrissent jamais le moteur, dont l'entrée est la pose de
+     * départ, avant toute action humaine. Collecte 4.7.3 : 42 % des points
+     * exportés venaient de ces lectures. Un ajustement des rails par ESV
+     * lui-même, sans geste de l'opérateur, reste lu. */
+    captureAfterOperatorRailChange: false,
   });
 
   /* --- Pilote automatique : lecture LiDAR et attentes dans ESV ---

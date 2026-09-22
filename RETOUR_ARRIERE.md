@@ -1,5 +1,15 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.4**, la cible de retour est la **4.7.3**, commit `e570f4a` :
+
+```bash
+git archive e570f4a | tar -x -C /tmp/banane-4.7.3
+cd /tmp/banane-4.7.3 && python3 tools/package.py --output /tmp/banane-v4.7.3-test.zip
+```
+
+La 4.7.4 ne change dans l'extension que l'arrêt des lectures LiDAR après un
+déplacement de rail par l'opérateur.
+
 **Depuis la 4.7.3**, la cible de retour est la **4.7.2**, commit `d96543c` :
 
 ```bash

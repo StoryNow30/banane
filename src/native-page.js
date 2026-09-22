@@ -46,14 +46,16 @@
    this.consecutiveFailures=0;this.lastFailureAt=0;
    this.maxCapturesPerVisit=options.maxCapturesPerVisit||C.maxCapturesPerVisit;
    this.maxCapturesPerVisitUnqualified=options.maxCapturesPerVisitUnqualified||C.maxCapturesPerVisitUnqualified;
-   this.pollMs=options.pollMs||C.pollMs;this.queue=[];this.active=false;this.paused=false;this.flushing=false;this.retryAt=0;this.current=null;
+   this.pollMs=options.pollMs||C.pollMs;
+   this.captureAfterOperatorRailChange=options.captureAfterOperatorRailChange??C.captureAfterOperatorRailChange??false;this.queue=[];this.active=false;this.paused=false;this.flushing=false;this.retryAt=0;this.current=null;
    this.captureTask=null;this.generation=0;this.failureShown=false;this.collectorSeq=0;this.checkpointReceipts=new Map();this.metrics={enqueued:0,sent:0,dropped:0,sendFailures:0,
      queueDepthMax:0,handlerDurationsMs:[],captureCompleted:0,captureFailed:0,captureBudgeted:0,captureRefused:0,captureCheckpoints:0,degradationLevel:'FULL'};}
   now(){return this.api.now?this.api.now():Date.now();}
   metricSnapshot(){const d=this.metrics.handlerDurationsMs;return {enqueued:this.metrics.enqueued,sent:this.metrics.sent,dropped:this.metrics.dropped,
     sendFailures:this.metrics.sendFailures,queueDepth:this.queue.length,queueDepthMax:this.metrics.queueDepthMax,
     inputHandlerMs:{p50:quantile(d,.5),p95:quantile(d,.95),max:d.length?Math.max(...d):0,samples:d.length},
-    captureCompleted:this.metrics.captureCompleted,captureFailed:this.metrics.captureFailed,captureBudgeted:this.metrics.captureBudgeted||0,captureRefused:this.metrics.captureRefused||0,captureCheckpoints:this.metrics.captureCheckpoints,degradationLevel:this.metrics.degradationLevel,
+    captureCompleted:this.metrics.captureCompleted,captureFailed:this.metrics.captureFailed,captureBudgeted:this.metrics.captureBudgeted||0,captureRefused:this.metrics.captureRefused||0,
+    captureSkippedAfterOperatorRailChange:this.metrics.captureSkippedAfterOperatorRailChange||0,captureCheckpoints:this.metrics.captureCheckpoints,degradationLevel:this.metrics.degradationLevel,
     degradationPeak:this.metrics.degradationPeak||this.metrics.degradationLevel,degradationEvents:this.metrics.degradationEvents||0,
     recoveries:this.metrics.recoveries||0,setAside:this.metrics.setAside||0,refused:this.metrics.refused||0,setAsideItems:(this.metrics.setAsideItems||[]).slice(0,32)};}
   setLevel(level){const order={FULL:0,DEGRADED:1,METADATA_ONLY:2};
@@ -146,6 +148,7 @@
    return {active:true,observationPeriodId:this.periodId,metrics:this.metricSnapshot()};}
   input(event){if(!this.active||event.isTrusted===false)return;const began=this.api.performanceNow?this.api.performanceNow():this.now();
    const editable=this.api.editable?.(event.target)===true,targetKind=this.api.targetKind?.(event.target)||'other';
+   if(this.current&&!editable)this.current.operatorInputs=(this.current.operatorInputs||0)+1;
    const shiftOnly=!!event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey;
    const validate=event.type==='keydown'&&shiftOnly&&(event.code==='Space'||event.key===' ')||event.type==='click'&&targetKind==='validation';
    const skip=event.type==='keydown'&&shiftOnly&&(event.code==='Backspace'||event.key==='Backspace');
@@ -182,6 +185,15 @@
     * courante n'a pas ses deux côtés qualifiés. Un mouvement de caméra seul
     * ne change aucun point en mémoire : il est consigné, pas relu. Au lot 3,
     * ces relances comptaient 491 captures pour 111 visites. */
+   /* 4.7.4 — un déplacement de rail précédé d'un geste de l'opérateur clôt la
+    * lecture de la visite : la pose de départ est dépassée et rien de ce qui
+    * suit n'entrera dans l'entrée moteur. Un ajustement par ESV sans geste
+    * (chargement du cut) reste lu, puisque la pose de départ n'est pas encore
+    * établie par l'opérateur. */
+   if(railChanged&&!this.captureAfterOperatorRailChange&&this.current.operatorInputs>0&&!this.current.operatorRailChangeAt){
+    this.current.operatorRailChangeAt=state.capturedAt||new Date().toISOString();
+    this.metrics.captureSkippedAfterOperatorRailChange=(this.metrics.captureSkippedAfterOperatorRailChange||0)+1;}
+   if(this.current.operatorRailChangeAt)return;
    if(railChanged)this.startCapture(this.current,state);
    else if(loadChanged&&!this.poseQualified(this.current,state))this.startCapture(this.current,state);
   }

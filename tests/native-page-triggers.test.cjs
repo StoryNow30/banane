@@ -9,7 +9,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {Observer}=require('../src/native-page.js'),{K,base}=require('./fixtures.cjs');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 
-function fixture({qualify=[]}={}){
+function fixture({qualify=[],observer:observerOptions={}}={}){
   let state={identity:{pageId:'native-page',part:23,cut:100,shape:'U50',frameId:'native-frame',projectId:null},rails:K.clone(base.rails),
     capturedAt:new Date().toISOString(),status:'complete',partialReasons:[],viewObservation:{status:'observed',viewEpochId:'view-1',loadEpochId:'load-1'}};
   let watcher=null;const sent=[],captures=[];
@@ -20,8 +20,8 @@ function fixture({qualify=[]}={}){
     send:async(type,payload)=>{sent.push({type,payload});return type==='capture-checkpoint'?{saved:true,chunkId:payload.chunk.chunkId,storageConfirmedAt:new Date().toISOString()}:{saved:true};},
     now:()=>0,performanceNow:()=>0,interval:()=>1,clearInterval:()=>{},defer:fn=>queueMicrotask(fn),install:()=>{},uninstall:()=>{},
     watch:fn=>{watcher=fn;return true;},editable:()=>false,targetKind:()=>'other',signalFailure:()=>{}};
-  const observer=new Observer(api,{});
-  return {observer,sent,captures,watcher:()=>watcher,
+  const observer=new Observer(api,observerOptions);
+  return {observer,sent,captures,watcher:()=>watcher,input:()=>observer.input({type:'pointerdown',isTrusted:true,target:{kind:'canvas'}}),
     set:mutate=>{const next=K.clone(state);mutate(next);next.capturedAt=new Date().toISOString();state=next;},
     start:()=>observer.start({sessionId:'s',observationPeriodId:'p'}),settle:async()=>{for(let i=0;i<8;i++)await flush();}};
 }
@@ -71,4 +71,36 @@ test('un adaptateur sans époque de chargement garde le comportement 4.7.1',asyn
   const f=fixture();f.set(s=>{delete s.viewObservation.loadEpochId;});await f.start();await f.settle();
   f.set(s=>{s.viewObservation.viewEpochId='view-2';});await f.observer.observe('poll');await f.settle();
   assert.equal(f.captures.length,2,'sans loadEpochId, la vue fait office d’époque de chargement');
+});
+
+const moveLeft=s=>{s.rails.left.positionSceneRelative=s.rails.left.positionSceneRelative.map((v,i)=>i===1?v+.01:v);
+  s.rails.left.railLocalToSceneRelative=s.rails.left.railLocalToSceneRelative.map((v,i)=>i===13?v+.01:v);};
+
+test('4.7.4 — après un déplacement de rail par l’opérateur, plus aucune lecture dans la visite',async()=>{
+  const f=fixture();await f.start();await f.settle();assert.equal(f.captures.length,1);
+  f.input();f.set(moveLeft);await f.observer.observe('after-input');await f.settle();
+  assert.equal(f.captures.length,1,'la pose de départ est dépassée : rien de ce qui suit n’entre dans le moteur');
+  f.set(s=>{s.viewObservation.viewEpochId='view-9';s.viewObservation.loadEpochId='load-9';});await f.observer.observe('poll');await f.settle();
+  assert.equal(f.captures.length,1,'ni sur nouveau chargement');
+  assert.equal(f.observer.metricSnapshot().captureSkippedAfterOperatorRailChange,1);
+  assert.ok(f.sent.some(x=>x.type==='state-observed'&&x.payload.effect.kind==='rail-state-changed'),'le déplacement reste consigné');
+});
+
+test('4.7.4 — un ajustement des rails par ESV, sans geste de l’opérateur, reste lu',async()=>{
+  const f=fixture();await f.start();await f.settle();
+  f.set(moveLeft);await f.observer.observe('poll');await f.settle();
+  assert.equal(f.captures.length,2);assert.equal(f.observer.metricSnapshot().captureSkippedAfterOperatorRailChange,0);
+});
+
+test('4.7.4 — le réglage permet de revenir à l’ancien comportement',async()=>{
+  const f=fixture({observer:{captureAfterOperatorRailChange:true}});await f.start();await f.settle();
+  f.input();f.set(moveLeft);await f.observer.observe('after-input');await f.settle();
+  assert.equal(f.captures.length,2);
+});
+
+test('4.7.4 — une nouvelle visite rouvre la lecture',async()=>{
+  const f=fixture();await f.start();await f.settle();
+  f.input();f.set(moveLeft);await f.observer.observe('after-input');await f.settle();assert.equal(f.captures.length,1);
+  f.set(s=>{s.identity.cut=101;});await f.observer.observe('poll');await f.settle();
+  assert.equal(f.captures.length,2);assert.equal(f.captures[1].cut,101);
 });

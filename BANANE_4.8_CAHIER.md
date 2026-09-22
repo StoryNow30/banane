@@ -550,6 +550,9 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 
 ### Amendements enregistrés
 
+- n°1 — doctrine de séquence et conséquences des premières mesures (22/09)
+- n°2 — l'entrée du moteur, la densité, et le flanc (22/09) : corrige le §1.2 du n°1
+
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
 **22 septembre 2026.** Élément nouveau : les mesures produites depuis la
@@ -638,3 +641,99 @@ demande un amendement adossé à l'atteinte du seuil de résolution du §1.2.
 
 La piste A2 du §5.3 est suspendue en conséquence ; P6 reste en vigueur pour
 toute reprise ultérieure.
+
+## Amendement n°2 — l'entrée du moteur, la densité, et le flanc
+
+**22 septembre 2026.** Éléments nouveaux : les collectes Natif 4.7.2 (partie 19,
+105 visites) et 4.7.3 (partie 20, 67 visites), la session Pilote de la partie 18
+et sa relecture native, et le rapport `tools/resolution-report.cjs`
+(`audit/resolution-lots-2026-09-22.json`).
+
+### 2.1 Correction du §1.2 de l'amendement n°1
+
+« Flanc interne à la meilleure position : médiane 2 points » et « flanc ≥ 6
+inatteignable avec ce capteur » étaient faux dans leur généralité. Deux
+artefacts les produisaient :
+
+- **la lecture Natif 4.7.0–4.7.1** s'arrêtait à chaque mouvement de caméra et
+  plafonnait à ~106 000 points/s (corrigé en 4.7.2) ;
+- **le banc ne donnait au moteur que le premier instantané qualifié**, déclenché
+  dès qu'il y a juste assez de points pour dire « zone couverte ». La suite de la
+  même lecture, même pose, avant toute action humaine, était stockée mais jamais
+  utilisée.
+
+Avec la lecture 4.7.2+ et l'entrée complète (§2.2) :
+
+| Collecte | Points visibles par rail | Flanc médian | Rails flanc ≥ 6 | Rails résolus |
+|---|---|---|---|---|
+| 4.7.2, partie 19 | 826 | 6 | 93 / 174 | 50 % (17 % avec l'instantané seul) |
+| 4.7.3, partie 20 | 2 138 | 12 | 105 / 111 | 74 % (50 % avec l'instantané seul) |
+
+**La densité dépend de la partie** (données sources) : c'est elle, et non plus la
+capture, qui fixe désormais le plafond du flanc. La densité chargée ne croît
+quasiment pas pendant une visite (points en mémoire ×1,00 à ×1,04 en médiane
+entre première et dernière lecture) : relire plus tard n'apporterait rien, et
+n'est pas fait.
+
+### 2.2 Entrée moteur du banc : la lecture complète de la pose de départ
+
+L'entrée par défaut du banc (§5.2) devient l'instantané qualifié **plus la suite
+de la même lecture** : même `captureId`, même côté, même pose de rail,
+acquisition terminée avant la frontière — première correction observée du rail,
+transition non attribuable ou intention de l'opérateur. La frontière anti-fuite
+est inchangée : aucun point acquis après une action humaine n'entre.
+`first-snapshot` reste disponible pour comparer. L'évaluateur historique 4.4 et
+ses artefacts d'audit ne sont pas modifiés.
+
+### 2.3 Étape 1 de la doctrine : seuil atteint sur une partie, pas sur l'autre
+
+Taux de résolution sur données natives, hors ligne : **74 %** sur la partie 20,
+**50 %** sur la partie 19, pour un seuil de 70 %. L'étape 1 n'est donc pas
+déclarée franchie : le seuil doit tenir sur des parties de densités différentes,
+au rythme réel.
+
+Au niveau du cut (deux rails candidats, écartement dans le contrat) : partie 20,
+37 cuts appliquables sur 55, **0 faux sur 29 jugés** (pire rail 5,8 mm) ; les 9
+paires refusées par l'écartement contenaient toutes un rail faux de 47 à 200 mm.
+
+### 2.4 Le Pilote lit déjà toute la zone chargée
+
+Le Pilote lit, pour chaque vue de rail et après stabilisation du niveau de
+détail, **tous** les points chargés dans la zone : ≈ 1 750 points par rail dans
+la ROI, ≈ 875 visibles, sur la partie 18. Le gain du §2.1 venait de l'entrée du
+banc, que le Pilote n'utilise pas. Le chantier « le Pilote lit comme le Natif »
+envisagé le 22/09 est **annulé** : il n'apporterait rien au placement. Les
+différés du Pilote sur les parties peu denses viennent d'un flanc de 3 à 5
+points, réel.
+
+### 2.5 Proposition « flanc partiel » : maintenue, non tranchée
+
+Le retrait approuvé le 22/09 reposait sur la prémisse corrigée au §2.4. Re-mesurée
+sur entrées complètes, la règle (flanc 3 à 5 points acceptés si le dessus a au
+moins 15 points, pas de pente hors domaine, rapport de perte ≥ 1,5, deux rails
+exigés, écartement dans le contrat, aucune autre garde touchée) donne :
+
+| Jeu | Cuts appliqués | Avec la règle | Nouveaux jugés | Faux > 10 mm |
+|---|---|---|---|---|
+| Partie 19 (4.7.2) | 18 / 78 | 50 / 78 | 13 | 0 (pire 5,6 mm) |
+| Partie 20 (4.7.3) | 37 / 55 | 39 / 55 | 2 | 0 |
+| Lots 1–3 + Pilote partie 18 | — | +16 cuts | 14 | 0 (pire 4,3 mm) |
+
+Le risque résiduel est inchangé : une erreur identique sur les deux rails passe
+l'écartement. La proposition reste soumise au §1.5 (P2) et à la décision de la
+direction.
+
+### 2.6 Volume des collectes Natif
+
+Les lectures LiDAR faites après un déplacement de rail **par l'opérateur** ne
+nourrissent jamais le moteur ; elles faisaient 42 % des points exportés de la
+collecte 4.7.3. Elles sont supprimées à partir de la 4.7.4
+(`collector.captureAfterOperatorRailChange`, désactivé par défaut) ; un
+ajustement des rails par ESV sans geste de l'opérateur reste lu.
+
+### 2.7 Impact
+
+Sur le §2 : l'engagement de 90 % n'est ni confirmé ni infirmé ; il dépend
+désormais de la densité des parties et de la décision du §2.5. Sur le §15 : P4
+tenu en Natif 4.7.2+ (82 à 87 % des rails avec instantané qualifié) ; P2 toujours
+bloquant.

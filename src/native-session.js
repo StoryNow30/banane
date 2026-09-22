@@ -89,7 +89,7 @@
    if(metrics.degradationLevel)m.degradationLevel=metrics.degradationLevel;
    if(metrics.degradationPeak)m.degradationPeak=metrics.degradationPeak;
    if(Number.isFinite(metrics.queueDepth))m.queueDepth=metrics.queueDepth;
-   for(const k of ['degradationEvents','recoveries','setAside','refused','captureBudgeted','captureRefused'])
+   for(const k of ['degradationEvents','recoveries','setAside','refused','captureBudgeted','captureRefused','captureSkippedAfterOperatorRailChange'])
     if(Number.isFinite(metrics[k]))m[k]=Math.max(m[k]||0,metrics[k]);
    if(Array.isArray(metrics.setAsideItems)&&metrics.setAsideItems.length){
     m.setAsideItems=metrics.setAsideItems.slice(0,32);}}

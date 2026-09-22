@@ -1,13 +1,14 @@
-# Démarrer avec Banane V4.7.3 TEST — mode Natif réoptimisé
+# Démarrer avec Banane V4.7.4 TEST — mode Natif réoptimisé
 
 **Ce n'est pas une release.** La 4.7.2 a rendu au mode Natif sa capacité à
 capturer au rythme réel du travail ; la 4.7.3 corrige la fin de session (erreur
-« 64MiB ») et relance la lecture quand ESV déplace sa boîte de découpe. La release officielle reste la **4.7.0**,
+« 64MiB ») et relance la lecture quand ESV déplace sa boîte de découpe ; la 4.7.4
+allège les fichiers en ne relisant plus le LiDAR après que tu as déplacé un rail. La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.3-test.zip` dans Edge, exactement comme la 4.7.2.
+Installe `banane-v4.7.4-test.zip` dans Edge, exactement comme la 4.7.3.
 
-Vérifie d'abord **V4.7.3 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.3 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.2, l'ancienne copie est toujours chargée.
+Vérifie d'abord **V4.7.4 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.4 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.3, l'ancienne copie est toujours chargée.
 
 ## Ce qui change pour toi
 

@@ -1,5 +1,42 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.4 — collectes Natif allégées, banc à entrée complète, 22 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`.
+
+**Extension — un seul changement : plus de lecture LiDAR après un déplacement de
+rail par l'opérateur.** Ces lectures ne nourrissent jamais le moteur, dont
+l'entrée est la pose de départ avant toute action humaine ; sur la collecte
+4.7.3 elles faisaient 42 % des points exportés (≈ 160 Mo pour 67 visites). Un
+ajustement des rails par ESV sans geste de l'opérateur reste lu. Réglage
+`collector.captureAfterOperatorRailChange` (désactivé), compteur
+`captureSkippedAfterOperatorRailChange` dans la santé de collecte.
+
+**Banc — l'entrée du moteur devient la lecture complète de la pose de départ**
+(`tools/placement-lab.cjs`) : l'instantané qualifié plus la suite de la même
+lecture, même pose, acquise avant la première action humaine. Le banc ne donnait
+jusqu'ici que le premier instantané, déclenché au strict minimum de couverture.
+`tools/resolution-report.cjs` mesure le taux de résolution dans les deux modes.
+
+| Collecte | Rails résolus, instantané seul | Rails résolus, lecture complète |
+|---|---|---|
+| 4.7.2, partie 19 | 17 % | 50 % |
+| 4.7.3, partie 20 | 50 % | 74 % |
+
+Partie 20 : 37 cuts appliquables sur 55, 0 faux sur 29 jugés (pire rail
+5,8 mm) ; les 9 paires refusées par l'écartement avaient toutes un rail faux.
+
+**Mesuré puis écarté :**
+- relire le détail chargé plus tard dans la visite — la densité chargée ne
+  bouge quasiment pas (×1,00 à ×1,04 en médiane) ;
+- faire lire le Pilote comme le Natif — le Pilote lit déjà tous les points
+  chargés (≈ 875 visibles par rail sur la partie 18) ; le gain venait de
+  l'entrée du banc, que le Pilote n'utilise pas.
+
+Constats consignés dans l'amendement n°2 du cahier 4.8. Aucune science touchée ;
+le Pilote n'est pas modifié.
+
 ## 4.7.3 — deux correctifs après la première collecte 4.7.2, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
