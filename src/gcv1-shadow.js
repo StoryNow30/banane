@@ -1,27 +1,30 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports){
-    const api=factory(require('./geometry-brain.js'),require('./geometry-candidate-v1.js'),require('../vendor/capture-core.js'),require('./gauge.js'));
+    const api=factory(require('./geometry-brain.js'),require('./geometry-candidate-v1.js'),require('../vendor/capture-core.js'),require('./gauge.js'),require('./placement-convention.js'));
     Object.defineProperty(api,'_createForTest',{value:factory,enumerable:false});
     module.exports=api;
   }else{
     const runtime=root.BananeGeometryRuntimeV46;
     const candidate=root.BananeGeometry3;
-    const api=factory(runtime,candidate,root.BananeCaptureCore,root.BananeGauge4);
+    const api=factory(runtime,candidate,root.BananeCaptureCore,root.BananeGauge4,root.BananePlacementConvention);
     root.BananeGCV1Shadow=api;
     root.BananeGeometry3=api.geometry;
   }
-})(typeof globalThis!=='undefined'?globalThis:this,function(Runtime,Candidate,C,Gauge){
+})(typeof globalThis!=='undefined'?globalThis:this,function(Runtime,Candidate,C,Gauge,Convention){
  'use strict';
 
  /* Le contrat d'écartement est injecté par l'enveloppe ; le repli garde les
   * appels historiques à trois arguments de `_createForTest` fonctionnels. */
  const GAUGE=Gauge||(typeof module==='object'&&typeof require==='function'?require('./gauge.js'):
    (typeof globalThis!=='undefined'?globalThis:this).BananeGauge4);
+ const CONVENTION=Convention||(typeof module==='object'&&typeof require==='function'?require('./placement-convention.js'):
+   (typeof globalThis!=='undefined'?globalThis:this).BananePlacementConvention);
 
  if(!Runtime||typeof Runtime.proposeBoth!=='function')throw Error('GCV1 shadow : géométrie runtime V4.6 absente.');
  if(!Candidate||typeof Candidate.propose!=='function')throw Error('GCV1 shadow : Candidate V1 absent.');
  if(!C||typeof C.point!=='function'||typeof C.distance!=='function')throw Error('GCV1 shadow : capture-core absent ou incomplet.');
  if(!GAUGE||typeof GAUGE.classifyMm!=='function')throw Error('GCV1 shadow : contrat d’écartement absent.');
+ if(!CONVENTION||typeof CONVENTION.calibrate!=='function')throw Error('GCV1 shadow : calage de convention absent.');
 
  const V46=Runtime.frozen&&typeof Runtime.frozen.propose==='function'?Runtime.frozen:Runtime;
  const RATIO=1.5,SEP=.02,GRID=.003;
@@ -59,7 +62,13 @@
   * au-delà de 10 mm, pire rail 6,5 mm. `configure({partialFlank:false})` la coupe
   * jusqu'au redémarrage ; le retour durable est la 4.7.4. */
  const PARTIAL_FLANK_DEFAULT=true;
- let enabled=false,activeAssistedEnabled=false,armedSelector=null,last=null,partialFlank=PARTIAL_FLANK_DEFAULT;
+ /* CALAGE DE CONVENTION — cahier 4.8, amendement n°4 ; voir
+  * `placement-convention.js`. Appliqué au rail publié, après S1 et AVANT la
+  * garde d'écartement : la paire est jugée sur les positions réellement
+  * commandées. Ne touche ni A_STAR, ni S1, ni aucun seuil ; un rail non résolu
+  * le reste. `configure({convention:false})` le coupe jusqu'au redémarrage. */
+ const CONVENTION_DEFAULT=true;
+ let enabled=false,activeAssistedEnabled=false,armedSelector=null,last=null,partialFlank=PARTIAL_FLANK_DEFAULT,convention=CONVENTION_DEFAULT;
  const round6=x=>Math.round(Number(x)*1e6)/1e6;
  const clone=x=>x==null?x:JSON.parse(JSON.stringify(x));
 
@@ -73,6 +82,10 @@
      if(typeof options.partialFlank!=='boolean')throw Error('GCV1 : partialFlank doit être un booléen.');
      partialFlank=options.partialFlank;
    }
+   if(Object.prototype.hasOwnProperty.call(options,'convention')){
+     if(typeof options.convention!=='boolean')throw Error('GCV1 : convention doit être un booléen.');
+     convention=options.convention;
+   }
    if(Object.prototype.hasOwnProperty.call(options,'activeAssisted')){
      if(typeof options.activeAssisted!=='boolean')throw Error('GCV1 actif Assisté : activeAssisted doit être un booléen.');
      activeAssistedEnabled=options.activeAssisted;
@@ -81,7 +94,7 @@
    return state();
  }
  function state(){
-   return {enabled,activeAssistedEnabled,partialFlank,selector:armedSelector||'shadow',armedForNextCall:armedSelector!==null,
+   return {enabled,activeAssistedEnabled,partialFlank,convention,conventionVersion:CONVENTION.DEFAULTS.version,selector:armedSelector||'shadow',armedForNextCall:armedSelector!==null,
      mode:armedSelector||'shadow-only',contract:{...CONTRACT},hasPendingJournal:last!==null};
  }
  function journal(){return clone(last);}
@@ -416,6 +429,13 @@
      nClusters:pub.nClusters??null,nStrongCompetitive:pub.nStrongCompetitive??null,pick:compactCell(pub.pick)};
    const publishedWeak=!!(next.status==='candidate'&&pub.pick&&!qualifyStrong(pub.pick));
    const partialFlankUsed=!!(partialFlank&&next.status==='candidate'&&(next.faceCount??0)<Candidate.DEFAULTS.minFace);
+   /* Calage de convention du rail publié. Le delta scientifique reste lisible
+    * dans `next.rawDelta` et dans `conventionCalibration.rawDelta`. */
+   let conventionCalibration=null;
+   if(convention&&next.status==='candidate'&&Array.isArray(next.delta)){
+     conventionCalibration=CONVENTION.calibrate(capture,side,next.delta);
+     if(conventionCalibration.applied){next.rawDelta=next.delta;next.delta=conventionCalibration.delta.slice();}
+   }
    return {ok:true,side,
      frame:{sign:frame.sign,width:round6(frame.width),pointsLocal:frame.pointsLocal,uMedian:round6(frame.uMedian),
        uSeed:aStarLab(frame).uSeeds[0],zMedian:frame.zMedian},
@@ -424,6 +444,7 @@
        nStrongPool:view.nStrongPool,nStrongCompetitive:view.nStrongCompetitive,nClusters:view.nClusters},
      poolMeta:{nCoarse:reduced.nCoarse,nLocalMin:reduced.nLocalMin,nKept:reduced.nKept,nDense:reduced.nDense,nStrongDense:reduced.nStrongDense},
      s1Activated:!!pub.activated,s1Changed:!!pub.changed,publishedWeak,partialFlank,partialFlankUsed,s1AmbiguityPreserved:ambiguityPreserved,
+     convention,conventionCalibration,
      deltaV46Next:hypotDelta(v46.delta,nextDelta)};
  }
  /* ÉTAGE A — garde d'écartement de la PAIRE PUBLIÉE.
@@ -460,6 +481,7 @@
        ', admissible '+report.lowMm+'–'+report.maximumMm+' mm).',
      delta:null,pick:null,changed:false};
    rail.s1Changed=false;rail.publishedWeak=false;rail.partialFlankUsed=false;rail.deltaV46Next=hypotDelta(rail.v46.delta,null);
+   if(rail.conventionCalibration)rail.conventionCalibration={...rail.conventionCalibration,appliedToPublication:false};
  }
  function scientificProposeBoth(capture){
    const rails={};
@@ -497,7 +519,8 @@
       aStarHash:CONTRACT.aStarHash,compositionHash:CONTRACT.compositionHash,
       searchY:CONTRACT.searchY,searchZ:CONTRACT.searchZ,grid:CONTRACT.grid,
       minTop:CONTRACT.minTop,minFace:CONTRACT.minFace,minTemplateLossRatio:CONTRACT.minTemplateLossRatio,
-      alternativeSeparation:CONTRACT.alternativeSeparation,policy:'S1',partialFlank};
+      alternativeSeparation:CONTRACT.alternativeSeparation,policy:'S1',partialFlank,
+      convention:convention?CONVENTION.DEFAULTS.version:false};
     const rails={};
     for(const side of ['left','right']){
       const rail=science.rails[side];
@@ -524,7 +547,11 @@
         source:next.changed?'geometry-candidate-v1-s1':'geometry-candidate-v1-astar',parameters:{...parameters},
         geometryEngine:'geometry-candidate-v1',gcv1:{motif:next.motif,activated:!!next.activated,changed:!!next.changed,
           confidenceStatus,topRows:next.topRows??null,faceCount:next.faceCount??null,
-          nClusters:next.nClusters??null,nStrongCompetitive:next.nStrongCompetitive??null,partialFlankUsed:!!rail.partialFlankUsed}};
+          nClusters:next.nClusters??null,nStrongCompetitive:next.nStrongCompetitive??null,partialFlankUsed:!!rail.partialFlankUsed,
+          convention:rail.conventionCalibration?{applied:!!rail.conventionCalibration.applied,
+            reason:rail.conventionCalibration.reason??null,duMm:rail.conventionCalibration.duMm??null,
+            dzMm:rail.conventionCalibration.dzMm??null,faceMode:rail.conventionCalibration.faceMode??null,
+            rawDelta:rail.conventionCalibration.rawDelta}:null}};
     }
     return rails;
   }

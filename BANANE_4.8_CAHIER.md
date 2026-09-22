@@ -553,6 +553,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°1 — doctrine de séquence et conséquences des premières mesures (22/09)
 - n°2 — l'entrée du moteur, la densité, et le flanc (22/09) : corrige le §1.2 du n°1
 - n°3 — flanc partiel activé dans le Pilote ; contexte de voie (22/09) : tranche le §2.5 du n°2, déroge au §1.5 du n°1 pour cette seule règle
+- n°4 — audit 4.7.5 ; A1 redéfini en calage de convention (22/09) : remplace le §1.4 du n°1, mesure P5
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -874,3 +875,92 @@ Sur le §2 : le taux de résolution hors ligne dépasse désormais 70 % sur les 
 parties natives ; l'engagement de 90 % reste ouvert et dépend des appareils de
 voie (§3.4–3.7). Sur le §15 : P2 toujours non mesuré, et toujours bloquant hors
 de la dérogation du §3.1 ; P4 tenu.
+
+## Amendement n°4 — audit 4.7.5 ; A1 redéfini en calage de convention
+
+**22 septembre 2026.** Éléments nouveaux : l'audit `AUDIT_CERVEAU_4.7.5.md`
+(385 cuts, 7 sessions, parties 13, 18, 19, 20), ses outils
+`tools/brain-audit.cjs` et `tools/convention-fit.cjs`, et leurs relevés
+`audit/brain-audit-2026-09-22.json` et `audit/convention-fit-2026-09-22.json`.
+
+### 4.1 Ce que l'audit établit
+
+- **Le banc prédit le Pilote** : 23 décisions Pilote sur 23 reproduites à
+  l'identique à partir de ses propres captures.
+- **Aucun cut appliqué n'est faux** : 0 sur 76 jugés. Les 9 rails faux publiés
+  (17 à 177 mm) sont tous arrêtés par l'exigence des deux rails, l'autre rail
+  s'abstenant ; deux ne sont faux que de 17 mm, en deçà de ce que le contrat
+  d'écartement peut voir.
+- **Les placements appliqués sont biaisés** : latéral +2,1 mm côté champ sur
+  chaque rail, vertical −2,8 mm, écartement +4,5 mm en médiane. Le moteur pose
+  le gabarit au milieu de la bande de points, l'opérateur en enveloppe.
+- **Quand le moteur s'abstient, la bonne position est calculée** pour 88 % des
+  rails (minimum local à ≤ 10 mm) ; elle sort de la fenêtre pour 4 rails sur 105.
+- **P2 reste non mesurable** (un seul cut commun à deux sessions) mais il est
+  **borné** : le moteur calé reproduit l'humain à 1,6 mm latéral et 1,1 mm
+  vertical en médiane ; le bruit humain ne peut pas dépasser cet écart.
+
+### 4.2 P5 mesuré
+
+Le dénominateur des mauvais placements (P5) est mesuré : **0 cut appliqué faux
+au-delà de 10 mm sur 76 jugés**, erreur latérale médiane 2,4 mm (p90 5,0),
+verticale 2,8 mm (p90 6,1). Au sens de C4, il n'y a aujourd'hui rien à réduire
+de 90 % ; la qualité des placements se mesure par leur précision (C2), rapportée
+avec sa médiane, sa queue et son biais.
+
+### 4.3 A1 redéfini : calage de convention
+
+Le §1.4 faisait d'A1 un modèle d'abstention. Mesuré, il n'a **rien à
+apprendre** : aucune erreur appliquée à intercepter. La classe d'erreur qui
+coûte est le biais de convention, présent sur 100 % des placements. Le plus
+petit apprentissage qui la corrige est un **calage à deux constantes**,
+`src/placement-convention.js` :
+
+- dessus au 90e centile des points du dessus, + 1,0 mm ;
+- flanc à la médiane des points du flanc, − 2,6 mm (côté voie) ;
+- aucune correction latérale sous 6 points de flanc, aucun calage sous 15
+  points de dessus ni au-delà de 8 mm de déplacement.
+
+Validation en retenant chaque session à tour de rôle : latéral médian
+2,39 → 1,60 mm, vertical 2,83 → 1,13 mm, écartement 4,67 → 2,34 mm (biais
++4,5 → +0,4 mm) ; aucun rail ne franchit 10 mm. Constantes stables d'une
+session retenue à l'autre (dessus +0,6 à +1,2 ; flanc −2,1 à −2,8 mm).
+
+### 4.4 Décision et périmètre
+
+Le calage est **actif dans le build TEST 4.7.6**, au titre du mandat du 22/09
+(« travaille sur le chantier selon les résultats de l'audit »). Il ne relève pas
+du §1.5 : il ne fixe ni seuil d'abstention, ni cible d'erreur, ni décision de
+publier, et le biais qu'il corrige se mesure indépendamment de P2 — une médiane
+signée sur 185 rails ne dépend pas du bruit humain.
+
+Il est appliqué au rail publié, après S1 et **avant** la garde d'écartement, qui
+juge la paire calée. Il ne choisit aucun candidat, ne connaît pas l'autre rail,
+ne vise aucun écartement ; un rail non résolu le reste. A_STAR, S1, les seuils,
+`geometry-candidate-v1.js` et `engine.js` sont intacts. Chaque proposition
+porte son delta brut (`gcv1.convention.rawDelta`). C'est une couche apprise
+posée sur la science gelée, au sens de l'architecture du §1.6 — pas une
+modification de cette science.
+
+**Règle d'arrêt.** Sur la relecture Natif d'un lot Pilote 4.7.6 (au moins
+20 rails jugés), si le placement calé est plus loin de l'humain que le
+placement brut, en médiane latérale ou verticale, ou si un cut appliqué est
+faux au-delà de 10 mm alors que le placement brut ne l'aurait pas été : retour
+4.7.5 et amendement. Limite connue : en relecture, l'opérateur part du
+placement calé ; un effet d'ancrage le favoriserait.
+
+### 4.5 Suite, dans l'ordre
+
+1. Mesure terrain du calage (lot Pilote 4.7.6 relu en Natif).
+2. Continuité de voie (amendement n°3) : collectes d'autres parties avec
+   appareils de voie.
+3. Rails abstenus par manque de flanc alors que la bonne position est calculée
+   (27 sur 41) : à instruire, en gardant en tête les rails faux de 17 mm que
+   seule l'abstention de l'autre rail arrête aujourd'hui.
+4. Temps moteur (médiane 152 ms, p90 758 ms par cut) : relevé pour la 4.9.
+
+### 4.6 Impact
+
+Sur le §2 : la couverture n'est pas modifiée par le calage ; la qualité l'est
+(C2). Sur le §15 : P5 mesuré ; P2 borné mais toujours non mesuré ; P0 confirmé
+sur les données d'observation saine (88 %).

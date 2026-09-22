@@ -1,5 +1,48 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.6 — audit du cerveau de placement ; calage de convention, 22 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`.
+
+**Audit** (`AUDIT_CERVEAU_4.7.5.md`, `tools/brain-audit.cjs`,
+`audit/brain-audit-2026-09-22.json`) : moteur Pilote 4.7.5 rejoué sur 385 cuts,
+sept sessions, parties 13, 18, 19 et 20.
+
+- Le banc reproduit 23 décisions Pilote sur 23 à partir de ses captures.
+- **0 cut appliqué faux** sur 76 jugés (P5 mesuré). Les 9 rails faux publiés
+  sont arrêtés par l'exigence des deux rails, pas par l'écartement.
+- **Tous les placements sont biaisés** : rail 2,8 mm trop bas, flanc 2,1 mm côté
+  champ, écartement +4,5 mm en médiane. Le moteur pose le gabarit au milieu de
+  la bande de points LiDAR, l'opérateur en enveloppe.
+- Quand le moteur s'abstient, la bonne position est parmi ses minima locaux pour
+  88 % des rails.
+- P2 non mesurable (un seul cut commun à deux sessions), borné à ≈ 1,6 mm.
+
+**Extension — un seul changement : calage de convention** (cahier 4.8,
+amendement n°4). `src/placement-convention.js`, appliqué dans
+`src/gcv1-shadow.js` au rail publié, après S1 et avant la garde d'écartement :
+dessus au 90e centile des points du dessus + 1,0 mm, flanc à la médiane des
+points du flanc − 2,6 mm ; aucune correction latérale sous 6 points de flanc,
+aucun calage sous 15 points de dessus ni au-delà de 8 mm. Deux constantes,
+ajustées par `tools/convention-fit.cjs` avec le module lui-même.
+
+| Chaque session retenue à tour de rôle | Moteur 4.7.5 | 4.7.6 |
+|---|---|---|
+| Latéral, médiane · p90 | 2,39 · 4,95 mm | 1,60 · 3,71 mm |
+| Vertical, médiane · p90 | 2,83 · 6,14 mm | 1,13 · 2,84 mm |
+| Écartement, médiane · biais | 4,67 · +4,5 mm | 2,34 · +0,4 mm |
+
+Aucune décision de cut ne change (mêmes cuts appliqués, différés, refusés,
+session par session) ; aucun rail ne franchit 10 mm. A_STAR, S1, seuils,
+`geometry-candidate-v1.js` et `engine.js` intacts. Chaque proposition porte son
+delta brut (`gcv1.convention.rawDelta`). Coupure pour essai :
+`gcv1-shadow-configure` avec `{convention:false}` ; retour durable : 4.7.5.
+
+**Règle d'arrêt :** relecture Natif d'un lot Pilote 4.7.6 plus loin de l'humain
+avec calage que sans (au moins 20 rails), ou cut faux > 10 mm dû au calage →
+retour 4.7.5.
+
 ## 4.7.5 — flanc partiel actif dans le Pilote, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée

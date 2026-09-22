@@ -1,5 +1,18 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.6**, la cible de retour est la **4.7.5**, commit `b9ef24f` :
+
+```bash
+git archive b9ef24f | tar -x -C /tmp/banane-4.7.5
+cd /tmp/banane-4.7.5 && python3 tools/package.py --output /tmp/banane-v4.7.5-test.zip
+```
+
+La 4.7.6 ne change dans l'extension que le calage de convention des rails
+publiés par GCV1. C'est ce retour que prévoit la règle d'arrêt de l'amendement
+n°4 du cahier 4.8. Pour un essai ponctuel, `gcv1-shadow-configure` avec
+`{convention:false}` coupe le calage jusqu'au prochain redémarrage du service
+worker ; ce réglage n'est pas durable.
+
 **Depuis la 4.7.5**, la cible de retour est la **4.7.4**, commit `ef90c8d` :
 
 ```bash

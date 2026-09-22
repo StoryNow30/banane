@@ -1,8 +1,12 @@
 # État du projet Banane
 
 Date : 22 septembre 2026  
-Version active de l'extension : **4.7.5 TEST** (flanc partiel actif dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.6 TEST** (calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.6
+
+Audit du cerveau de placement sur 385 cuts et sept sessions (`AUDIT_CERVEAU_4.7.5.md`, `tools/brain-audit.cjs`) : le banc reproduit 23 décisions Pilote sur 23 ; aucun cut appliqué n'est faux (0 sur 76 jugés, P5 mesuré) ; mais tous les placements sont biaisés par rapport à la validation humaine — rail 2,8 mm trop bas, écartement 4,5 mm trop large — parce que le moteur pose le gabarit au milieu de la bande de points et l'opérateur en enveloppe. Le modèle d'abstention A1 n'a rien à apprendre ; A1 devient un calage à deux constantes (`src/placement-convention.js`), appliqué au rail publié avant la garde d'écartement. Validé en retenant chaque session : latéral médian 2,39 → 1,60 mm, vertical 2,83 → 1,13 mm, écartement 4,67 → 2,34 mm, aucun rail au-delà de 10 mm. Quand le moteur s'abstient, la bonne position figure parmi ses minima locaux pour 88 % des rails. Amendement n°4 de `BANANE_4.8_CAHIER.md`.
 
 ## État 4.7.5
 

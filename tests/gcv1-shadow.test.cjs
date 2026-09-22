@@ -98,7 +98,10 @@ test('GCV1 shadow gate accepts only an explicit boolean and disabling clears pen
 
 test('active assisted converts two GCV1 candidates after V4.6 and records provenance',()=>{
  const h=harness({candidates:{left:'candidate',right:'candidate'}});
- h.api.configure({activeAssisted:true});h.api.armOnce('active-assisted');
+ /* Test de tuyauterie : le delta doit être rendu à l'identique. Le calage de
+  * convention, qui le déplace de quelques millimètres, a ses propres tests
+  * (placement-convention.test.cjs). */
+ h.api.configure({activeAssisted:true,convention:false});h.api.armOnce('active-assisted');
  const got=h.api.geometry.proposeBoth(fixture(),{}),j=h.api.journal();
  assert.notStrictEqual(got,h.runtimeResult);assert.deepEqual(h.order,['runtime','candidate-left','candidate-right']);
  for(const side of ['left','right']){

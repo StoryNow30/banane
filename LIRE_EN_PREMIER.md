@@ -1,40 +1,43 @@
-# Démarrer avec Banane V4.7.5 TEST — flanc partiel dans le Pilote
+# Démarrer avec Banane V4.7.6 TEST — placements calés sur ta façon de poser
 
-**Ce n'est pas une release.** La 4.7.5 active dans le Pilote la règle « flanc
-partiel » que tu as validée : un rail dont le dessus est bien vu mais dont le
-flanc intérieur n'a que 3 à 5 points LiDAR peut maintenant être placé, au lieu
-d'être différé. Tout le reste est identique à la 4.7.4. La release officielle
-reste la **4.7.0**, étiquetée `v4.7.0` dans Git.
+**Ce n'est pas une release.** La release officielle reste la **4.7.0**,
+étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.5-test.zip` dans Edge, exactement comme la 4.7.4.
+Installe `banane-v4.7.6-test.zip` dans Edge, exactement comme la 4.7.5.
 
-Vérifie d'abord **V4.7.5 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.5 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.4, l'ancienne copie est toujours chargée.
+Vérifie d'abord **V4.7.6 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.6 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.5, l'ancienne copie est toujours chargée.
 
 ## Ce qui change pour toi
 
-Dans un lot Pilote, **moins de cuts différés sur les parties peu denses** (parties
-18 et 19 notamment). Mesuré hors ligne sur tes cinq collectes : 56 cuts
-appliqués deviennent 113, et sur les 72 que tes relectures permettent de juger,
-aucun n'est faux de plus de 10 mm (pire rail 6,5 mm). Les deux rails restent
-exigés et l'écartement reste vérifié : la règle ne desserre aucune garde.
+L'audit du moteur (`AUDIT_CERVEAU_4.7.5.md`) a trouvé que le Pilote ne pose
+jamais un cut faux sur tes données, mais qu'il pose **tous** ses rails un peu
+différemment de toi : le moteur met le profil **au milieu** des points LiDAR,
+toi tu le poses **en enveloppe** — le dessus au-dessus des points, le flanc
+côté voie. Résultat mesuré : rail 2,8 mm trop bas et écartement 4,5 mm trop
+large, en médiane.
 
-**Ce qui ne change pas : les appareils de voie et contre-rails.** Là, le flanc
-est bien vu ; c'est la pose de départ d'ESV qui est trop loin du vrai rail
-(jusqu'à 115 mm), et le moteur trouve le contre-rail. Ces cuts restent différés.
-La solution par les cuts voisins est à l'étude pour la 4.8 (cahier 4.8,
-amendement n°3).
+La 4.7.6 **cale** chaque rail publié sur ta façon de poser, à partir de ses
+propres points. Mesuré sur tes sept sessions, chaque session tenue à l'écart
+de l'ajustement : écart au placement humain divisé par 1,5 en latéral, par 2,5
+en vertical, écartement ramené de +4,5 à +0,4 mm de biais. Le calage ne choisit
+rien, ne vise aucun écartement, et la garde d'écartement juge la paire calée.
+Le flanc partiel de la 4.7.5 reste actif.
+
+Ce qui ne change pas : les cuts différés (appareils de voie, flanc insuffisant)
+restent différés.
 
 ## Ce qu'il faut faire avec ce build
 
-1. Un lot **Pilote** sur une plage mêlant voie courante et appareils de voie,
-   idéalement sur une partie peu dense (18 ou 19).
+1. Un lot **Pilote**, sur une partie où tu as déjà travaillé ou une nouvelle.
 2. Puis la **relecture en Natif des mêmes cuts** : valide chaque cut
-   (Maj+Espace), corrige ceux qui sont faux. C'est elle qui juge le Pilote.
+   (Maj+Espace), corrige ceux que tu poserais autrement. Tes retouches mesurent
+   directement le calage.
 3. Envoie les deux exports.
 
-**Règle d'arrêt :** si un cut appliqué par le Pilote avec un flanc partiel est
-faux de plus de 10 mm, on revient à la 4.7.4 (voir `RETOUR_ARRIERE.md`) et le
-cas est consigné.
+**Règle d'arrêt :** si, sur au moins 20 rails relus, le placement calé est plus
+loin de ta pose que ne l'aurait été le placement brut, ou si un cut appliqué est
+faux de plus de 10 mm à cause du calage, on revient à la 4.7.5 (voir
+`RETOUR_ARRIERE.md`).
 
 ## Mise à jour
 
