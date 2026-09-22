@@ -1,5 +1,39 @@
 # Banane V4 TEST 4.4.3 — 13 septembre 2026
 
+## 4.7 — micro-correctif UI : le select de politique porte la DEMANDE, pas l'effet
+
+Aucun bump de version : le manifeste reste en **4.6.0**. Seuls `panel.js` et un
+fichier de tests changent ; les neuf fichiers fonctionnels protégés restent
+octet pour octet identiques à `5e6d0e8`.
+
+**Le correctif de `KI-033` écrivait dans le contrôle qu'il devait seulement
+décrire.** `panel.js` recopiait `b.scope.lowConfidence` — la politique
+**effective**, forcée à « tenter » par GCV1 — dans le `<select>` de politique
+de faible confiance. Quatre conséquences : la préférence de l'opérateur était
+perdue dès la fin du lot ; le lot suivant repartait avec un
+`requestedLowConfidence` faux ; le message explicatif s'auto-supprimait, faute
+de divergence à signaler ; et la case `brain-sanspause` se dévoilait alors que
+l'opérateur avait demandé la pause.
+
+**Le contrôle porte désormais `scope.requestedLowConfidence`** — ce que
+l'opérateur a demandé — et il est **gelé pendant le lot**, comme
+`unresolved-policy` : la politique d'un lot est figée à sa création. La
+politique **effective** continue d'être annoncée séparément, en toutes lettres,
+par `#policy-effective`. Un lot sans `requestedLowConfidence` laisse le select
+intact : on ne devine pas une préférence, et on n'y recopie surtout pas la
+politique effective.
+
+Six tests ajoutés (`tests/panel-policy-effective.test.cjs`), qui font tourner le
+vrai `panel.js` dans un contexte `vm` plutôt que d'en doubler la logique :
+préférence conservée et select gelé pendant le lot, contrôle rendu à la fin,
+lot suivant qui repart bien sur « pause » sans geste de l'opérateur, cas sans
+divergence, `brain-sanspause` qui reste masqué, et une garde de source
+interdisant toute réécriture de `scope.lowConfidence` dans un contrôle. Les six
+échouent sur `a507525` et passent sur ce commit.
+
+Banc : **546 tests, 544 passés, 0 échec, 2 ignorés** — +6 exactement, les deux
+ignorés Natif privé restant des ignorés.
+
 ## 4.7 — capitalisation du smoke terrain du 22 septembre (partie 16)
 
 Aucune modification de code. Aucun bump de version : le manifeste reste en

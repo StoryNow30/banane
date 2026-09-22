@@ -112,7 +112,23 @@
            ?`Politique effective de ce lot : ${nom(applique)}. Le lot Pilote GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nom(demande)} » ne s’y applique pas.`
            :`Politique effective de ce lot : ${nom(applique)}.`;
      }
-     if($('policy')&&running&&b.scope?.lowConfidence&&document.activeElement!==$('policy'))$('policy').value=b.scope.lowConfidence;
+     /* Le select porte la preference DEMANDEE par l'operateur, jamais la
+      * politique forcee. Y ecrire `lowConfidence` perdait le choix : le lot
+      * suivant repartait avec un `requestedLowConfidence` faux, le message
+      * ci-dessus disparaissait, et `brain-sanspause` s'affichait alors que
+      * l'operateur avait demande la pause. La politique effective est dite
+      * juste au-dessus, en toutes lettres ; le controle, lui, n'est pas
+      * touche. Il est gele pendant le lot, comme `unresolved-policy` : la
+      * politique d'un lot est FIGEE a sa creation.
+      *
+      * Un lot sans `requestedLowConfidence` (anterieur a 4.7, ou moteur V4.6
+      * qui ne force rien) laisse le select intact : on ne devine pas une
+      * preference, et on n'y recopie surtout pas la politique effective. */
+     if($('policy')){
+       const demande=running?b.scope?.requestedLowConfidence:null;
+       if(demande&&document.activeElement!==$('policy'))$('policy').value=demande;
+       $('policy').disabled=!!running;
+     }
      const names={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
        PAUSED_DEFER_NAVIGATION_UNCERTAIN:'Navigation différée incertaine',
        PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',
