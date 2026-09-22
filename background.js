@@ -8,7 +8,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.4';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.5';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -155,6 +155,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    const options={};
    if(Object.prototype.hasOwnProperty.call(args||{},'enabled'))options.enabled=args.enabled;
    if(Object.prototype.hasOwnProperty.call(args||{},'activeAssisted'))options.activeAssisted=args.activeAssisted;
+   // Flanc partiel (cahier 4.8, amendement n°3) : actif par défaut, coupable sans rebuild.
+   if(Object.prototype.hasOwnProperty.call(args||{},'partialFlank'))options.partialFlank=args.partialFlank;
    return BananeGCV1Shadow.configure(options);
  }
  // Exports GCV1 strictement manuels : ils relisent les événements et les

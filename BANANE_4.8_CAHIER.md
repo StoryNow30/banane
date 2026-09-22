@@ -552,6 +552,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 
 - n°1 — doctrine de séquence et conséquences des premières mesures (22/09)
 - n°2 — l'entrée du moteur, la densité, et le flanc (22/09) : corrige le §1.2 du n°1
+- n°3 — flanc partiel activé dans le Pilote ; contexte de voie (22/09) : tranche le §2.5 du n°2, déroge au §1.5 du n°1 pour cette seule règle
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -737,3 +738,139 @@ Sur le §2 : l'engagement de 90 % n'est ni confirmé ni infirmé ; il dépend
 désormais de la densité des parties et de la décision du §2.5. Sur le §15 : P4
 tenu en Natif 4.7.2+ (82 à 87 % des rails avec instantané qualifié) ; P2 toujours
 bloquant.
+
+## Amendement n°3 — flanc partiel activé dans le Pilote ; contexte de voie
+
+**22 septembre 2026.** Éléments nouveaux : la décision de la direction sur le
+§2.5 ; la mesure du moteur réel avec et sans la règle sur les cinq collectes
+(`audit/resolution-partial-flank-2026-09-22.json`) ; la session Pilote 4.7.4 de
+la partie 20 et sa relecture Natif ; l'étude de continuité de voie
+(`tools/continuity-study.cjs`, `audit/continuity-study-2026-09-22.json`).
+
+### 3.1 Décision : flanc partiel actif dans le Pilote à partir de la 4.7.5
+
+La direction tranche le §2.5 : **la règle est activée.** C'est une dérogation
+explicite au §1.5 pour cette seule règle — P2 reste non mesuré ; la décision de
+publier repose sur la mesure contre la relecture humaine (§3.2), pas sur un
+plancher de reproductibilité. Le §1.5 reste en vigueur pour toute autre décision
+de publication.
+
+Mise en œuvre : `src/gcv1-shadow.js` passe l'option de laboratoire existante
+`partialFaceKeep` à l'appel A_STAR. `src/geometry-candidate-v1.js` n'est pas
+modifié (empreinte gelée) ; `minTop` 15, `minFace` 6 et le rapport de perte 1,5
+restent les valeurs du contrat. Chaque proposition appliquée porte
+`gcv1.partialFlankUsed` et `parameters.partialFlank`. Le retour durable est la
+4.7.4 ; `gcv1-shadow-configure` avec `partialFlank:false` coupe la règle jusqu'au
+prochain redémarrage du service worker, pour un essai.
+
+**Règle d'arrêt.** Au premier cut appliqué par le Pilote avec un rail en flanc
+partiel que la relecture Natif trouve faux de plus de 10 mm, la règle est
+coupée et un amendement consigne le cas.
+
+### 3.2 Mesure du moteur réel, règle inactive puis active
+
+Mêmes données, même entrée (lecture complète de la pose de départ, §2.2), moteur
+4.7.5 réglé dans les deux états :
+
+| Collecte | Rails résolus | Cuts appliqués | Jugés | Faux > 10 mm | Pire rail |
+|---|---|---|---|---|---|
+| Lot 1, 4.7.0 | 15 % → 52 % | 1 → 6 | 6 | 0 | 5,4 mm |
+| Lot 2, 4.7.1 | 16 % → 59 % | 0 → 11 | 8 | 0 | 4,0 mm |
+| Lot 3, 4.7.1 | 19 % → 57 % | 0 → 7 | 4 | 0 | 4,0 mm |
+| Partie 19, 4.7.2 | 50 % → 79 % | 18 → 50 | 23 | 0 | 6,5 mm |
+| Partie 20, 4.7.3 | 74 % → 77 % | 37 → 39 | 31 | 0 | 5,8 mm |
+| **Total** | | **56 → 113** | **72** | **0** | **6,5 mm** |
+
+Au niveau du rail, la règle résout aussi des rails faux : 7 sur 194 jugés au-delà
+de 10 mm (4 sur 130 sans la règle). **Aucun n'atteint l'application** : la paire
+est exigée et l'écartement vérifié. La sûreté vient de ces deux gardes, pas de la
+règle elle-même ; c'est pourquoi aucune d'elles n'est desserrée. Le risque d'une
+erreur identique sur les deux rails, qui passe l'écartement, reste entier.
+
+### 3.3 Étape 1 de la doctrine
+
+Hors ligne, le seuil de 70 % est atteint sur les deux parties natives de densités
+différentes : **79 %** (partie 19) et **77 %** (partie 20). Il n'est pas déclaré
+franchi avant une session Pilote 4.7.5 relue en Natif : le Pilote lit ses propres
+vues, et son taux de résolution terrain n'est pas encore mesuré.
+
+### 3.4 Ce qui reste : les appareils de voie et contre-rails
+
+Session Pilote 4.7.4, partie 20, cuts 126 à 138, tous relus en Natif : 2 cuts
+appliqués (3 mm au plus de l'humain), 10 différés. Sur les 10, 8 sont refusés par
+l'écartement — un rail posé sur une structure voisine à 65–192 mm, l'autre juste
+à 4 mm près — et 2 par ambiguïté. Le flanc y est de 10 à 53 points : **ce n'est pas un
+problème d'observation**, et le flanc partiel n'y change rien.
+
+Cause : dans un appareil de voie, la pose initiale d'ESV est loin du rail — sur
+chacun des 10 cuts différés, l'humain a déplacé au moins un rail de 62 à 115 mm. Le vrai rail est au bord ou hors de la
+fenêtre de recherche de GCV1 (±80 mm autour de la pose initiale), et le meilleur
+minimum dans la fenêtre est le contre-rail ou l'aiguille.
+
+### 3.5 Contexte de voie — options explorées hors ligne
+
+Question posée par la direction : le moteur peut-il mesurer la position et
+l'écartement des rails aux cuts précédents et suivants pour placer ceux-ci ?
+
+| Option | Résultat | Verdict |
+|---|---|---|
+| A0 : classer les couples par pertes, garder le meilleur admissible | 10 justes, 9 faux sur 19 cuts difficiles | écartée : publie des faux |
+| Ancrer sur le rail sûr, reporter l'écartement du voisin | faux publiés | écartée ; et c'est une cible d'écartement (§3.6) |
+| Prédire la position par les voisins **validés par l'humain** (±3 cuts) | erreur médiane 4,4 mm | indisponible au Pilote, qui n'a pas de validation en cours de lot |
+| Prédire par les voisins **appliqués par le moteur** (±5 cuts), sans recherche | médiane 14 mm, max 25 mm | trop imprécis pour publier ; assez pour guider |
+| **Recherche recentrée** : moteur gelé, fenêtre recentrée sur la prédiction des voisins moteur, résultat à ≤ 30 mm de la prédiction, paire + écartement | voir ci-dessous | **retenue pour la 4.8** |
+
+Recherche recentrée, jugée contre la relecture humaine (options de laboratoire
+existantes `uSeeds`, `recenterWindow`, `replaceOrigin`, flanc partiel) :
+
+| Jeu | Cuts difficiles | Voisins des deux côtés (second passage) | Voisins précédents seuls (passage unique) |
+|---|---|---|---|
+| Natif 4.7.3, partie 20 | 12 | 7 justes · 0 faux · 5 différés | 4 justes · 0 faux · 8 différés |
+| Relecture du Pilote 4.7.4, partie 20 | 7 | 5 justes · 0 faux · 1 différé · 1 sans référence | 3 justes · 0 faux · 3 différés · 1 sans référence |
+| **Total** | **19** | **12 justes · 0 faux** | **7 justes · 0 faux** |
+
+Limites, à lire avant toute conclusion :
+
+- **une seule partie, un seul jour** : les 19 cuts viennent de la partie 20 ;
+- **pire rail 9,2 mm** (9,5 mm en passage unique), près du seuil de 10 ; sur le
+  lot 5, l'erreur gauche est positive sur les 7 cuts justes (+1 à +9 mm) et la
+  droite négative sur 6 (jusqu'à −5,4 mm) : biais possible, à comprendre avant
+  toute publication ;
+- le passage unique manque les séries de cuts difficiles consécutifs (pas assez
+  de voisins appliqués) : d'où le second passage ;
+- une erreur de mode commun des voisins se propagerait au cut : la prédiction
+  n'est jamais publiée seule, elle ne fait que déplacer la fenêtre.
+
+### 3.6 Écartement des voisins : garde, jamais cible
+
+L'écartement mesuré aux cuts voisins peut servir de **garde** — s'abstenir si
+l'écartement du cut s'écarte de celui des voisins au-delà d'une tolérance à
+mesurer — et jamais de **cible** : choisir, parmi des candidats, celui dont
+l'écartement est le plus proche de celui des voisins est interdit au même titre
+que « le plus proche de 1435 ». Dans un appareil de voie, l'écartement varie
+lui-même (surécartement) ; la tolérance devra en tenir compte. Cette garde
+n'attrape pas l'erreur de mode commun ; la continuité de position, oui. Elle est
+proposée pour mesure en 4.8, sans engagement.
+
+### 3.7 Nouveau chantier 4.8 : « contexte de voie »
+
+Ajouté au §5, après le chantier A :
+
+1. **Second passage** sur les cuts différés d'un lot Pilote : voisins appliqués
+   des deux côtés, moteur gelé recentré, mêmes gardes (deux rails, écartement
+   dans le contrat, acceptation à ≤ 30 mm de la prédiction). Pas de chaînage :
+   un cut résolu par continuité ne sert pas de voisin.
+2. Préalables à toute application : mesure sur au moins deux autres parties
+   comportant des appareils de voie ; explication du biais de signe du §3.5 ;
+   d'abord en observation dans le Pilote (calculé, consigné, non appliqué) sur
+   un lot complet relu en Natif.
+3. Même règle d'arrêt que le §3.1.
+
+L'implémentation dans le Pilote demande un amendement adossé à ces mesures.
+
+### 3.8 Impact
+
+Sur le §2 : le taux de résolution hors ligne dépasse désormais 70 % sur les deux
+parties natives ; l'engagement de 90 % reste ouvert et dépend des appareils de
+voie (§3.4–3.7). Sur le §15 : P2 toujours non mesuré, et toujours bloquant hors
+de la dérogation du §3.1 ; P4 tenu.

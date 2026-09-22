@@ -1,12 +1,16 @@
 # État du projet Banane
 
 Date : 22 septembre 2026  
-Version active de l'extension : **4.7.4 TEST** (mode Natif réoptimisé ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.5 TEST** (flanc partiel actif dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.5
+
+La 4.7.5 active dans le Pilote la règle « flanc partiel », décidée par la direction le 22/09 : un rail dont le dessus est bien observé mais le flanc intérieur réduit à 3–5 points peut être publié ; rapport de perte, exigence des deux rails et garde d'écartement inchangés, fichier gelé `geometry-candidate-v1.js` intact. Mesuré avec le moteur réel sur les cinq collectes : cuts appliqués 56 → 113, 72 jugés contre relecture humaine, 0 faux au-delà de 10 mm (pire 6,5 mm) ; taux de résolution hors ligne 79 % (partie 19) et 77 % (partie 20). La classe restante — appareils de voie et contre-rails, où la pose ESV est à 62–115 mm du rail — fait l'objet d'une étude hors ligne par continuité de voie (`tools/continuity-study.cjs` : 12 cuts justes, 0 faux, 6 différés sur 19 en second passage, une seule partie). Détail, règle d'arrêt et chantier 4.8 « contexte de voie » : amendement n°3 de `BANANE_4.8_CAHIER.md`.
 
 ## État 4.7.4
 
-La 4.7.4 allège les collectes Natif : plus de lecture LiDAR après un déplacement de rail par l'opérateur (42 % des points de la collecte 4.7.3, jamais utilisés par le moteur). Le banc passe à l'entrée « lecture complète de la pose de départ » : taux de résolution 50 % (partie 19) et 74 % (partie 20), contre 17 % et 50 % avec le seul premier instantané. Détail et corrections de constats antérieurs : amendement n°2 de `BANANE_4.8_CAHIER.md`. La proposition « flanc partiel » pour le Pilote reste en attente de décision.
+La 4.7.4 allège les collectes Natif : plus de lecture LiDAR après un déplacement de rail par l'opérateur (42 % des points de la collecte 4.7.3, jamais utilisés par le moteur). Le banc passe à l'entrée « lecture complète de la pose de départ » : taux de résolution 50 % (partie 19) et 74 % (partie 20), contre 17 % et 50 % avec le seul premier instantané. Détail et corrections de constats antérieurs : amendement n°2 de `BANANE_4.8_CAHIER.md`. La proposition « flanc partiel » pour le Pilote était alors en attente de décision (tranchée en 4.7.5).
 
 ## État 4.7.3
 

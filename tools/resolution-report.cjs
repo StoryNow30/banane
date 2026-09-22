@@ -65,9 +65,14 @@ function render(name,rows){
 }
 function run(argv=process.argv.slice(2)){
   const inputs=[];let out=null;
-  for(let i=0;i<argv.length;i++){if(argv[i]==='--input')inputs.push(argv[++i]);else if(argv[i]==='--json')out=argv[++i];else throw Error('Argument inconnu : '+argv[i]);}
-  if(!inputs.length){console.error('Usage : --input SESSION.json [--input ...] [--json SORTIE]');process.exit(1);}
-  const report={format:'banane-resolution-report-v1',sessions:[]};
+  for(let i=0;i<argv.length;i++){if(argv[i]==='--input')inputs.push(argv[++i]);else if(argv[i]==='--json')out=argv[++i];
+    /* Flanc partiel (amendement n°3) : actif par défaut dans le moteur ; `off`
+     * mesure le comportement antérieur sur les mêmes données. */
+    else if(argv[i]==='--partial-flank'){const v=argv[++i];if(!['on','off'].includes(v))throw Error('--partial-flank on|off');Shadow.configure({partialFlank:v==='on'});}
+    else throw Error('Argument inconnu : '+argv[i]);}
+  if(!inputs.length){console.error('Usage : --input SESSION.json [--input ...] [--json SORTIE] [--partial-flank on|off]');process.exit(1);}
+  console.log(`flanc partiel : ${Shadow.state().partialFlank?'actif':'inactif'}`);
+  const report={format:'banane-resolution-report-v1',partialFlank:Shadow.state().partialFlank,sessions:[]};
   for(const input of inputs){
     const session=JSON.parse(fs.readFileSync(input,'utf8'));
     const rows=Lab.INPUT_MODES.map(mode=>analyseSession(session,mode));

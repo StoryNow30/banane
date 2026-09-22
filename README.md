@@ -1,4 +1,4 @@
-# Banane V4 TEST — 4.7.4
+# Banane V4 TEST — 4.7.5
 
 La V4 sépare les tâches dans des fenêtres sombres. Le nouveau **Mode Natif** observe le travail manuel dans ESV sans le piloter. **Mes corrections** conserve le workflow guidé avec capture avant la décision. **Pilotage automatique** gère les lots TEST. L’**assisté** sert à essayer une proposition sur un seul cut.
 
@@ -13,12 +13,12 @@ Le placement lui-même n'est pas retouché : `src/geometry.js` et `src/geometry-
 ## Mettre à jour Banane
 
 1. Termine l’activité en cours et conserve un export complet des données et des LiDAR.
-2. Décompresse **banane-v4.7.4-test.zip**. Copie son contenu **dans le même dossier que l’extension déjà chargée dans Edge**, en remplaçant les fichiers. Cela conserve l’identité de l’extension et son stockage. Les fichiers du ZIP sont directement à sa racine. L'autre ZIP, **banane-v4.7.1-source-tests.zip**, sert uniquement à reproduire l'audit et les tests : ne l'installe pas dans Edge.
+2. Décompresse **banane-v4.7.5-test.zip**. Copie son contenu **dans le même dossier que l’extension déjà chargée dans Edge**, en remplaçant les fichiers. Cela conserve l’identité de l’extension et son stockage. Les fichiers du ZIP sont directement à sa racine. L'autre ZIP, **banane-v4.7.1-source-tests.zip**, sert uniquement à reproduire l'audit et les tests : ne l'installe pas dans Edge.
 3. Dans `edge://extensions`, clique sur **Recharger** sur la carte de Banane.
 4. **Recharge la page ESV.** Cette étape installe le capteur des commandes avant les scripts ESV.
 5. Clique sur Banane, puis **Mes corrections**. Avec un seul onglet ESV ouvert, la connexion se fait automatiquement. S’il y en a plusieurs, choisis le bon dans **Connexion à ESV**.
 
-Le panneau doit afficher **V4.7.4 · TEST**. Après fermeture de toutes les fenêtres Banane, le bouton au bas d'ESV doit afficher **Banane 4.7.4 · ouvrir**. Si tu vois encore un numéro plus ancien, recharge l'extension puis la page ESV et vérifie qu'une ancienne copie de Banane n'est pas chargée en parallèle. Pour une première installation, charge dans Edge le dossier contenant `manifest.json` avec **Charger l’extension non empaquetée**.
+Le panneau doit afficher **V4.7.5 · TEST**. Après fermeture de toutes les fenêtres Banane, le bouton au bas d'ESV doit afficher **Banane 4.7.5 · ouvrir**. Si tu vois encore un numéro plus ancien, recharge l'extension puis la page ESV et vérifie qu'une ancienne copie de Banane n'est pas chargée en parallèle. Pour une première installation, charge dans Edge le dossier contenant `manifest.json` avec **Charger l’extension non empaquetée**.
 
 ## Mode Natif : Banane observe, Mic travaille dans ESV
 
@@ -116,7 +116,7 @@ Aucune dépendance n’est nécessaire pour charger l’extension. Pour les test
 node tools/verify.cjs
 node tools/results.cjs
 python3 tools/package.py
-python3 tools/package.py --source --output releases/banane-v4.7.4-source-tests.zip
+python3 tools/package.py --source --output releases/banane-v4.7.5-source-tests.zip
 ```
 
 Le banc des quatre exports externes se lance séparément avec la commande documentée dans `OFFLINE_EVALUATION.md`. Les JSON de référence, volumineux et en lecture seule, ne sont pas intégrés au ZIP ; le certificat contient leurs noms et empreintes.

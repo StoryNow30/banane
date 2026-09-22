@@ -1,0 +1,399 @@
+{
+ "format": "banane-continuity-study-v1",
+ "note": "Étude hors ligne, sans effet sur l’extension. Cahier 4.8, amendement n°3 §3.5. both = second passage (voisins des deux côtés) ; before = passage unique (voisins précédents seuls).",
+ "window": 5,
+ "acceptMm": 30,
+ "runs": {
+  "both": [
+   {
+    "input": "session.json",
+    "version": "4.7.3",
+    "parts": [
+     20
+    ],
+    "hardCuts": 12,
+    "right": 7,
+    "wrong": 0,
+    "abstained": 5,
+    "unreferenced": 0,
+    "rows": [
+     {
+      "cut": 60,
+      "status": "abstained",
+      "reasons": {
+       "left": "engine-abstained"
+      }
+     },
+     {
+      "cut": 61,
+      "status": "abstained",
+      "reasons": {
+       "left": "far-from-prediction"
+      }
+     },
+     {
+      "cut": 62,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1439.4,
+      "lateralErrorsMm": [
+       3,
+       -5.4
+      ]
+     },
+     {
+      "cut": 63,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1439.5,
+      "lateralErrorsMm": [
+       2.5,
+       -3.9
+      ]
+     },
+     {
+      "cut": 64,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1435.3,
+      "lateralErrorsMm": [
+       3.6,
+       0.3
+      ]
+     },
+     {
+      "cut": 66,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1445.7,
+      "lateralErrorsMm": [
+       6,
+       -5.2
+      ]
+     },
+     {
+      "cut": 87,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1445.3,
+      "lateralErrorsMm": [
+       1,
+       -5.2
+      ]
+     },
+     {
+      "cut": 88,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1445.5,
+      "lateralErrorsMm": [
+       2.8,
+       -4.1
+      ]
+     },
+     {
+      "cut": 89,
+      "status": "abstained",
+      "reasons": {
+       "left": "far-from-prediction"
+      }
+     },
+     {
+      "cut": 98,
+      "status": "abstained",
+      "reasons": {
+       "right": "far-from-prediction"
+      }
+     },
+     {
+      "cut": 100,
+      "status": "abstained",
+      "reasons": {
+       "right": "engine-abstained"
+      }
+     },
+     {
+      "cut": 101,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1449.4,
+      "lateralErrorsMm": [
+       9.2,
+       -3.8
+      ]
+     }
+    ],
+    "label": "Natif 4.7.3, partie 20 (lot 5)"
+   },
+   {
+    "input": "native.json",
+    "version": "4.7.4",
+    "parts": [
+     20
+    ],
+    "hardCuts": 7,
+    "right": 5,
+    "wrong": 0,
+    "abstained": 1,
+    "unreferenced": 1,
+    "rows": [
+     {
+      "cut": 126,
+      "status": "abstained",
+      "reasons": {
+       "left": "neighbours-insufficient",
+       "right": "neighbours-insufficient"
+      }
+     },
+     {
+      "cut": 127,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1442.5,
+      "lateralErrorsMm": [
+       0.1,
+       1
+      ]
+     },
+     {
+      "cut": 129,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1440.8,
+      "lateralErrorsMm": [
+       6.2,
+       -0.3
+      ]
+     },
+     {
+      "cut": 136,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1441.6,
+      "lateralErrorsMm": [
+       2.9,
+       -1.2
+      ]
+     },
+     {
+      "cut": 137,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1439.2,
+      "lateralErrorsMm": [
+       2.7,
+       2.4
+      ]
+     },
+     {
+      "cut": 138,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1439.4,
+      "lateralErrorsMm": [
+       0.5,
+       0.4
+      ]
+     },
+     {
+      "cut": 140,
+      "status": "published-unreferenced",
+      "reasons": {},
+      "gaugeMm": 1440.6
+     }
+    ],
+    "label": "Relecture Natif du Pilote 4.7.4, partie 20"
+   }
+  ],
+  "before": [
+   {
+    "input": "session.json",
+    "version": "4.7.3",
+    "parts": [
+     20
+    ],
+    "hardCuts": 12,
+    "right": 4,
+    "wrong": 0,
+    "abstained": 8,
+    "unreferenced": 0,
+    "rows": [
+     {
+      "cut": 60,
+      "status": "abstained",
+      "reasons": {
+       "left": "engine-abstained"
+      }
+     },
+     {
+      "cut": 61,
+      "status": "abstained",
+      "reasons": {
+       "left": "far-from-prediction"
+      }
+     },
+     {
+      "cut": 62,
+      "status": "abstained",
+      "reasons": {
+       "left": "engine-abstained"
+      }
+     },
+     {
+      "cut": 63,
+      "status": "abstained",
+      "reasons": {
+       "right": "far-from-prediction"
+      }
+     },
+     {
+      "cut": 64,
+      "status": "abstained",
+      "reasons": {
+       "left": "neighbours-insufficient",
+       "right": "neighbours-insufficient"
+      }
+     },
+     {
+      "cut": 66,
+      "status": "abstained",
+      "reasons": {
+       "left": "neighbours-insufficient",
+       "right": "neighbours-insufficient"
+      }
+     },
+     {
+      "cut": 87,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1445.1,
+      "lateralErrorsMm": [
+       1.1,
+       -4.9
+      ]
+     },
+     {
+      "cut": 88,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1445.4,
+      "lateralErrorsMm": [
+       2.7,
+       -4
+      ]
+     },
+     {
+      "cut": 89,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1462.1,
+      "lateralErrorsMm": [
+       -9.5,
+       -5.9
+      ]
+     },
+     {
+      "cut": 98,
+      "status": "abstained",
+      "reasons": {
+       "right": "engine-abstained"
+      }
+     },
+     {
+      "cut": 100,
+      "status": "abstained",
+      "reasons": {
+       "right": "engine-abstained"
+      }
+     },
+     {
+      "cut": 101,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1447.1,
+      "lateralErrorsMm": [
+       6,
+       -4.5
+      ]
+     }
+    ],
+    "label": "Natif 4.7.3, partie 20 (lot 5)"
+   },
+   {
+    "input": "native.json",
+    "version": "4.7.4",
+    "parts": [
+     20
+    ],
+    "hardCuts": 7,
+    "right": 3,
+    "wrong": 0,
+    "abstained": 3,
+    "unreferenced": 1,
+    "rows": [
+     {
+      "cut": 126,
+      "status": "abstained",
+      "reasons": {
+       "left": "neighbours-insufficient",
+       "right": "neighbours-insufficient"
+      }
+     },
+     {
+      "cut": 127,
+      "status": "abstained",
+      "reasons": {
+       "left": "neighbours-insufficient",
+       "right": "neighbours-insufficient"
+      }
+     },
+     {
+      "cut": 129,
+      "status": "abstained",
+      "reasons": {
+       "left": "neighbours-insufficient",
+       "right": "neighbours-insufficient"
+      }
+     },
+     {
+      "cut": 136,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1442,
+      "lateralErrorsMm": [
+       3.2,
+       -1.4
+      ]
+     },
+     {
+      "cut": 137,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1438.4,
+      "lateralErrorsMm": [
+       2.5,
+       2.9
+      ]
+     },
+     {
+      "cut": 138,
+      "status": "right",
+      "reasons": {},
+      "gaugeMm": 1439,
+      "lateralErrorsMm": [
+       0.2,
+       0.8
+      ]
+     },
+     {
+      "cut": 140,
+      "status": "published-unreferenced",
+      "reasons": {},
+      "gaugeMm": 1440.6
+     }
+    ],
+    "label": "Relecture Natif du Pilote 4.7.4, partie 20"
+   }
+  ]
+ }
+}

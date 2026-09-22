@@ -1,5 +1,18 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.5**, la cible de retour est la **4.7.4**, commit `ef90c8d` :
+
+```bash
+git archive ef90c8d | tar -x -C /tmp/banane-4.7.4
+cd /tmp/banane-4.7.4 && python3 tools/package.py --output /tmp/banane-v4.7.4-test.zip
+```
+
+La 4.7.5 ne change dans l'extension que l'activation du flanc partiel dans le
+Pilote. C'est ce retour que prévoit la règle d'arrêt de l'amendement n°3 du
+cahier 4.8. Pour un essai ponctuel, la règle se coupe aussi dans le service
+worker (`gcv1-shadow-configure` avec `{partialFlank:false}`), mais ce réglage
+n'est pas durable : il revient actif à chaque redémarrage du service worker.
+
 **Depuis la 4.7.4**, la cible de retour est la **4.7.3**, commit `e570f4a` :
 
 ```bash

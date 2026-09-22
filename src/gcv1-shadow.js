@@ -47,7 +47,19 @@
     Candidate.DEFAULTS.alternativeSeparation!==CONTRACT.alternativeSeparation)
    throw Error('GCV1 shadow : paramètres Candidate V1 dérivés du gel.');
 
- let enabled=false,activeAssistedEnabled=false,armedSelector=null,last=null;
+ /* FLANC PARTIEL — décision de la direction du 22/09/2026 (cahier 4.8,
+  * amendement n°3). Le fichier gelé `geometry-candidate-v1.js` porte déjà
+  * l'option de laboratoire `partialFaceKeep` : accepter 3 à 5 points de flanc
+  * quand le dessus est bien observé (≥ minTop), sans pente hors domaine. Le
+  * rapport de perte (≥ 1,5), la garde d'écartement à ses deux étages, l'exigence
+  * des deux rails et l'absence d'application partielle restent inchangés. Aucun
+  * seuil du fichier gelé n'est modifié : l'option est passée à l'appel A_STAR.
+  * Mesuré avant activation, moteur réel, cinq collectes : 72 cuts appliqués
+  * jugés contre la relecture humaine (32 de plus que sans la règle), 0 faux
+  * au-delà de 10 mm, pire rail 6,5 mm. `configure({partialFlank:false})` la coupe
+  * jusqu'au redémarrage ; le retour durable est la 4.7.4. */
+ const PARTIAL_FLANK_DEFAULT=true;
+ let enabled=false,activeAssistedEnabled=false,armedSelector=null,last=null,partialFlank=PARTIAL_FLANK_DEFAULT;
  const round6=x=>Math.round(Number(x)*1e6)/1e6;
  const clone=x=>x==null?x:JSON.parse(JSON.stringify(x));
 
@@ -57,6 +69,10 @@
      enabled=options.enabled;
      if(!enabled)last=null;
    }
+   if(Object.prototype.hasOwnProperty.call(options,'partialFlank')){
+     if(typeof options.partialFlank!=='boolean')throw Error('GCV1 : partialFlank doit être un booléen.');
+     partialFlank=options.partialFlank;
+   }
    if(Object.prototype.hasOwnProperty.call(options,'activeAssisted')){
      if(typeof options.activeAssisted!=='boolean')throw Error('GCV1 actif Assisté : activeAssisted doit être un booléen.');
      activeAssistedEnabled=options.activeAssisted;
@@ -65,7 +81,7 @@
    return state();
  }
  function state(){
-   return {enabled,activeAssistedEnabled,selector:armedSelector||'shadow',armedForNextCall:armedSelector!==null,
+   return {enabled,activeAssistedEnabled,partialFlank,selector:armedSelector||'shadow',armedForNextCall:armedSelector!==null,
      mode:armedSelector||'shadow-only',contract:{...CONTRACT},hasPendingJournal:last!==null};
  }
  function journal(){return clone(last);}
@@ -378,7 +394,7 @@
    const frame=prepareFrame(capture,side);
    if(!frame.ok)return {ok:false,side,reason:frame.reason,v46,astar:null,next:null,s1Activated:false,s1Changed:false,publishedWeak:false};
    let coarse=[],meta={uCenters:[0]};
-   const astarP=Candidate.propose(capture,side,{lab:{...aStarLab(frame),onCoarse(c,m){coarse=c;meta=m;}}});
+   const astarP=Candidate.propose(capture,side,{lab:{...aStarLab(frame),...(partialFlank?{partialFaceKeep:true}:{}),onCoarse(c,m){coarse=c;meta=m;}}});
    const astar=compactProposal(astarP);astar.motif=motifOf(astar);
    astar.uCenters=astarP.metrics?.lab?.uCenters||meta.uCenters;
    const extras=[];
@@ -399,6 +415,7 @@
      slopeLimited:!!pub.pick?.slopeLimited,activated:!!pub.activated,changed:!!pub.changed,
      nClusters:pub.nClusters??null,nStrongCompetitive:pub.nStrongCompetitive??null,pick:compactCell(pub.pick)};
    const publishedWeak=!!(next.status==='candidate'&&pub.pick&&!qualifyStrong(pub.pick));
+   const partialFlankUsed=!!(partialFlank&&next.status==='candidate'&&(next.faceCount??0)<Candidate.DEFAULTS.minFace);
    return {ok:true,side,
      frame:{sign:frame.sign,width:round6(frame.width),pointsLocal:frame.pointsLocal,uMedian:round6(frame.uMedian),
        uSeed:aStarLab(frame).uSeeds[0],zMedian:frame.zMedian},
@@ -406,7 +423,7 @@
      competitive:{lmin:view.lmin,nPool:view.nPool,nCompetitive:view.nCompetitive,
        nStrongPool:view.nStrongPool,nStrongCompetitive:view.nStrongCompetitive,nClusters:view.nClusters},
      poolMeta:{nCoarse:reduced.nCoarse,nLocalMin:reduced.nLocalMin,nKept:reduced.nKept,nDense:reduced.nDense,nStrongDense:reduced.nStrongDense},
-     s1Activated:!!pub.activated,s1Changed:!!pub.changed,publishedWeak,s1AmbiguityPreserved:ambiguityPreserved,
+     s1Activated:!!pub.activated,s1Changed:!!pub.changed,publishedWeak,partialFlank,partialFlankUsed,s1AmbiguityPreserved:ambiguityPreserved,
      deltaV46Next:hypotDelta(v46.delta,nextDelta)};
  }
  /* ÉTAGE A — garde d'écartement de la PAIRE PUBLIÉE.
@@ -442,7 +459,7 @@
      reason:'Écartement de paire hors contrat : '+report.predictedMm.toFixed(1)+' mm ('+report.gaugeClass+
        ', admissible '+report.lowMm+'–'+report.maximumMm+' mm).',
      delta:null,pick:null,changed:false};
-   rail.s1Changed=false;rail.publishedWeak=false;rail.deltaV46Next=hypotDelta(rail.v46.delta,null);
+   rail.s1Changed=false;rail.publishedWeak=false;rail.partialFlankUsed=false;rail.deltaV46Next=hypotDelta(rail.v46.delta,null);
  }
  function scientificProposeBoth(capture){
    const rails={};
@@ -480,7 +497,7 @@
       aStarHash:CONTRACT.aStarHash,compositionHash:CONTRACT.compositionHash,
       searchY:CONTRACT.searchY,searchZ:CONTRACT.searchZ,grid:CONTRACT.grid,
       minTop:CONTRACT.minTop,minFace:CONTRACT.minFace,minTemplateLossRatio:CONTRACT.minTemplateLossRatio,
-      alternativeSeparation:CONTRACT.alternativeSeparation,policy:'S1'};
+      alternativeSeparation:CONTRACT.alternativeSeparation,policy:'S1',partialFlank};
     const rails={};
     for(const side of ['left','right']){
       const rail=science.rails[side];
@@ -507,7 +524,7 @@
         source:next.changed?'geometry-candidate-v1-s1':'geometry-candidate-v1-astar',parameters:{...parameters},
         geometryEngine:'geometry-candidate-v1',gcv1:{motif:next.motif,activated:!!next.activated,changed:!!next.changed,
           confidenceStatus,topRows:next.topRows??null,faceCount:next.faceCount??null,
-          nClusters:next.nClusters??null,nStrongCompetitive:next.nStrongCompetitive??null}};
+          nClusters:next.nClusters??null,nStrongCompetitive:next.nStrongCompetitive??null,partialFlankUsed:!!rail.partialFlankUsed}};
     }
     return rails;
   }

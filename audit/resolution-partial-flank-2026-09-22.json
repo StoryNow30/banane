@@ -1,0 +1,269 @@
+{
+ "format": "banane-resolution-partial-flank-v1",
+ "note": "Même données, même entrée (lecture complète de la pose de départ), moteur 4.7.5 : flanc partiel inactif puis actif. Cahier 4.8, amendement n°3.",
+ "lots": [
+  {
+   "lot": 1,
+   "version": "4.7.0",
+   "visits": 32,
+   "off": {
+    "inputMode": "initial-pose-read",
+    "rails": 46,
+    "pointsMedian": 446,
+    "faceMedian": 3,
+    "faceAtLeast6": 9,
+    "resolved": 7,
+    "resolutionRate": 0.15217391304347827,
+    "abstentions": {
+     "flank": 34,
+     "minTop": 3,
+     "slope": 2
+    },
+    "railsJudged": 7,
+    "lateralAbsMedianMm": 0.9,
+    "lateralAbsP90Mm": 17.7,
+    "railsWrongOver10Mm": 1,
+    "cutsWithBothRails": 18,
+    "cutsApplicable": 1,
+    "cutsApplicableJudged": 1,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 1.7
+   },
+   "on": {
+    "inputMode": "initial-pose-read",
+    "rails": 46,
+    "pointsMedian": 446,
+    "faceMedian": 3,
+    "faceAtLeast6": 9,
+    "resolved": 24,
+    "resolutionRate": 0.5217391304347826,
+    "abstentions": {
+     "flank": 15,
+     "minTop": 3,
+     "ambiguity": 2,
+     "slope": 2
+    },
+    "railsJudged": 21,
+    "lateralAbsMedianMm": 2,
+    "lateralAbsP90Mm": 17.7,
+    "railsWrongOver10Mm": 3,
+    "cutsWithBothRails": 18,
+    "cutsApplicable": 6,
+    "cutsApplicableJudged": 6,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 5.4
+   }
+  },
+  {
+   "lot": 2,
+   "version": "4.7.1",
+   "visits": 41,
+   "off": {
+    "inputMode": "initial-pose-read",
+    "rails": 63,
+    "pointsMedian": 704,
+    "faceMedian": 3,
+    "faceAtLeast6": 10,
+    "resolved": 10,
+    "resolutionRate": 0.15873015873015872,
+    "abstentions": {
+     "flank": 51,
+     "minTop": 2
+    },
+    "railsJudged": 6,
+    "lateralAbsMedianMm": 4,
+    "lateralAbsP90Mm": 17.2,
+    "railsWrongOver10Mm": 1,
+    "cutsWithBothRails": 29,
+    "cutsApplicable": 0,
+    "cutsApplicableJudged": 0,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 0
+   },
+   "on": {
+    "inputMode": "initial-pose-read",
+    "rails": 63,
+    "pointsMedian": 704,
+    "faceMedian": 3,
+    "faceAtLeast6": 10,
+    "resolved": 37,
+    "resolutionRate": 0.5873015873015873,
+    "abstentions": {
+     "flank": 22,
+     "gauge-out-of-contract": 2,
+     "minTop": 2
+    },
+    "railsJudged": 24,
+    "lateralAbsMedianMm": 3.1,
+    "lateralAbsP90Mm": 5,
+    "railsWrongOver10Mm": 1,
+    "cutsWithBothRails": 29,
+    "cutsApplicable": 11,
+    "cutsApplicableJudged": 8,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 4
+   }
+  },
+  {
+   "lot": 3,
+   "version": "4.7.1",
+   "visits": 111,
+   "off": {
+    "inputMode": "initial-pose-read",
+    "rails": 47,
+    "pointsMedian": 621,
+    "faceMedian": 3,
+    "faceAtLeast6": 9,
+    "resolved": 9,
+    "resolutionRate": 0.19148936170212766,
+    "abstentions": {
+     "flank": 32,
+     "slope": 1,
+     "minTop": 5
+    },
+    "railsJudged": 4,
+    "lateralAbsMedianMm": 1.8,
+    "lateralAbsP90Mm": 2,
+    "railsWrongOver10Mm": 0,
+    "cutsWithBothRails": 17,
+    "cutsApplicable": 0,
+    "cutsApplicableJudged": 0,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 0
+   },
+   "on": {
+    "inputMode": "initial-pose-read",
+    "rails": 47,
+    "pointsMedian": 621,
+    "faceMedian": 3,
+    "faceAtLeast6": 9,
+    "resolved": 27,
+    "resolutionRate": 0.574468085106383,
+    "abstentions": {
+     "flank": 13,
+     "slope": 1,
+     "ambiguity": 1,
+     "minTop": 5
+    },
+    "railsJudged": 14,
+    "lateralAbsMedianMm": 2,
+    "lateralAbsP90Mm": 71.3,
+    "railsWrongOver10Mm": 2,
+    "cutsWithBothRails": 17,
+    "cutsApplicable": 7,
+    "cutsApplicableJudged": 4,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 4
+   }
+  },
+  {
+   "lot": 4,
+   "version": "4.7.2",
+   "visits": 105,
+   "off": {
+    "inputMode": "initial-pose-read",
+    "rails": 174,
+    "pointsMedian": 826,
+    "faceMedian": 6,
+    "faceAtLeast6": 93,
+    "resolved": 87,
+    "resolutionRate": 0.5,
+    "abstentions": {
+     "flank": 76,
+     "slope": 6,
+     "minTop": 3,
+     "gauge-out-of-contract": 2
+    },
+    "railsJudged": 47,
+    "lateralAbsMedianMm": 2.1,
+    "lateralAbsP90Mm": 5.1,
+    "railsWrongOver10Mm": 1,
+    "cutsWithBothRails": 78,
+    "cutsApplicable": 18,
+    "cutsApplicableJudged": 10,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 6.5
+   },
+   "on": {
+    "inputMode": "initial-pose-read",
+    "rails": 174,
+    "pointsMedian": 826,
+    "faceMedian": 6,
+    "faceAtLeast6": 93,
+    "resolved": 137,
+    "resolutionRate": 0.7873563218390804,
+    "abstentions": {
+     "flank": 20,
+     "slope": 6,
+     "ambiguity": 4,
+     "minTop": 3,
+     "gauge-out-of-contract": 4
+    },
+    "railsJudged": 66,
+    "lateralAbsMedianMm": 2.2,
+    "lateralAbsP90Mm": 4.4,
+    "railsWrongOver10Mm": 0,
+    "cutsWithBothRails": 78,
+    "cutsApplicable": 50,
+    "cutsApplicableJudged": 23,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 6.5
+   }
+  },
+  {
+   "lot": 5,
+   "version": "4.7.3",
+   "visits": 67,
+   "off": {
+    "inputMode": "initial-pose-read",
+    "rails": 111,
+    "pointsMedian": 2138,
+    "faceMedian": 12,
+    "faceAtLeast6": 105,
+    "resolved": 82,
+    "resolutionRate": 0.7387387387387387,
+    "abstentions": {
+     "minTop": 3,
+     "flank": 5,
+     "gauge-out-of-contract": 18,
+     "ambiguity": 2,
+     "slope": 1
+    },
+    "railsJudged": 66,
+    "lateralAbsMedianMm": 3.2,
+    "lateralAbsP90Mm": 5,
+    "railsWrongOver10Mm": 1,
+    "cutsWithBothRails": 55,
+    "cutsApplicable": 37,
+    "cutsApplicableJudged": 29,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 5.8
+   },
+   "on": {
+    "inputMode": "initial-pose-read",
+    "rails": 111,
+    "pointsMedian": 2138,
+    "faceMedian": 12,
+    "faceAtLeast6": 105,
+    "resolved": 85,
+    "resolutionRate": 0.7657657657657657,
+    "abstentions": {
+     "minTop": 3,
+     "gauge-out-of-contract": 18,
+     "ambiguity": 3,
+     "slope": 1,
+     "flank": 1
+    },
+    "railsJudged": 69,
+    "lateralAbsMedianMm": 3.2,
+    "lateralAbsP90Mm": 5.1,
+    "railsWrongOver10Mm": 1,
+    "cutsWithBothRails": 55,
+    "cutsApplicable": 39,
+    "cutsApplicableJudged": 31,
+    "cutsApplicableWrongOver10Mm": 0,
+    "worstApplicableLateralMm": 5.8
+   }
+  }
+ ]
+}

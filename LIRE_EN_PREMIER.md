@@ -1,34 +1,40 @@
-# Démarrer avec Banane V4.7.4 TEST — mode Natif réoptimisé
+# Démarrer avec Banane V4.7.5 TEST — flanc partiel dans le Pilote
 
-**Ce n'est pas une release.** La 4.7.2 a rendu au mode Natif sa capacité à
-capturer au rythme réel du travail ; la 4.7.3 corrige la fin de session (erreur
-« 64MiB ») et relance la lecture quand ESV déplace sa boîte de découpe ; la 4.7.4
-allège les fichiers en ne relisant plus le LiDAR après que tu as déplacé un rail. La release officielle reste la **4.7.0**,
-étiquetée `v4.7.0` dans Git.
+**Ce n'est pas une release.** La 4.7.5 active dans le Pilote la règle « flanc
+partiel » que tu as validée : un rail dont le dessus est bien vu mais dont le
+flanc intérieur n'a que 3 à 5 points LiDAR peut maintenant être placé, au lieu
+d'être différé. Tout le reste est identique à la 4.7.4. La release officielle
+reste la **4.7.0**, étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.4-test.zip` dans Edge, exactement comme la 4.7.3.
+Installe `banane-v4.7.5-test.zip` dans Edge, exactement comme la 4.7.4.
 
-Vérifie d'abord **V4.7.4 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.4 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.3, l'ancienne copie est toujours chargée.
+Vérifie d'abord **V4.7.5 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.5 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.4, l'ancienne copie est toujours chargée.
 
 ## Ce qui change pour toi
 
-Rien dans ta façon de travailler : **travaille normalement, à ton rythme.** Le
-mode Natif ne perd plus la capture quand la vue bouge, et lit le LiDAR environ
-trente fois plus vite. Tu n'as rien à attendre ni à ralentir.
+Dans un lot Pilote, **moins de cuts différés sur les parties peu denses** (parties
+18 et 19 notamment). Mesuré hors ligne sur tes cinq collectes : 56 cuts
+appliqués deviennent 113, et sur les 72 que tes relectures permettent de juger,
+aucun n'est faux de plus de 10 mm (pire rail 6,5 mm). Les deux rails restent
+exigés et l'écartement reste vérifié : la règle ne desserre aucune garde.
 
-**Valide chaque cut** (Maj+Espace), y compris ceux que tu ne modifies pas : un
-cut validé sans retouche dit que son placement est bon, c'est une référence
-aussi précieuse qu'une correction.
+**Ce qui ne change pas : les appareils de voie et contre-rails.** Là, le flanc
+est bien vu ; c'est la pose de départ d'ESV qui est trop loin du vrai rail
+(jusqu'à 115 mm), et le moteur trouve le contre-rail. Ces cuts restent différés.
+La solution par les cuts voisins est à l'étude pour la 4.8 (cahier 4.8,
+amendement n°3).
 
 ## Ce qu'il faut faire avec ce build
 
-Une collecte Natif au rythme réel, idéalement sur la même partie que le lot 3
-pour comparer. Puis envoie l'export.
+1. Un lot **Pilote** sur une plage mêlant voie courante et appareils de voie,
+   idéalement sur une partie peu dense (18 ou 19).
+2. Puis la **relecture en Natif des mêmes cuts** : valide chaque cut
+   (Maj+Espace), corrige ceux qui sont faux. C'est elle qui juge le Pilote.
+3. Envoie les deux exports.
 
-Ce qui devrait bouger : la part des visites avec un instantané LiDAR qualifié
-(11 % au lot 3 en 4.7.1, 83 % en 4.7.2). Le bilan de clôture l'indique directement, dans
-`closureSummary.captureHealth`. Ce qui ne bouge pas : le placement, les
-propositions, les décisions du Pilote. Aucune science n'a été touchée.
+**Règle d'arrêt :** si un cut appliqué par le Pilote avec un flanc partiel est
+faux de plus de 10 mm, on revient à la 4.7.4 (voir `RETOUR_ARRIERE.md`) et le
+cas est consigné.
 
 ## Mise à jour
 

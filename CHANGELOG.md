@@ -1,5 +1,45 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.5 — flanc partiel actif dans le Pilote, 22 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`.
+
+**Extension — un seul changement : la règle « flanc partiel » est active dans le
+Pilote**, sur décision de la direction (cahier 4.8, amendement n°3). Un rail dont
+le dessus est bien observé (≥ 15 points) mais dont le flanc intérieur n'a que 3 à
+5 points peut être publié, au lieu d'être différé. Rapport de perte ≥ 1,5, deux
+rails exigés, garde d'écartement à ses deux étages : inchangés.
+`src/geometry-candidate-v1.js` n'est pas modifié ; `src/gcv1-shadow.js` passe
+l'option de laboratoire existante `partialFaceKeep` à l'appel A_STAR. Chaque
+proposition appliquée porte `gcv1.partialFlankUsed` et `parameters.partialFlank`.
+
+Moteur réel, mêmes données, règle inactive puis active :
+
+| Collecte | Rails résolus | Cuts appliqués | Jugés | Faux > 10 mm |
+|---|---|---|---|---|
+| Lots 1 à 3 (4.7.0–4.7.1) | 15–19 % → 52–59 % | 1 → 24 | 18 | 0 |
+| Partie 19 (4.7.2) | 50 % → 79 % | 18 → 50 | 23 | 0 |
+| Partie 20 (4.7.3) | 74 % → 77 % | 37 → 39 | 31 | 0 |
+
+Pire rail sur un cut appliqué : 6,5 mm. Au niveau du rail, la règle résout aussi
+7 rails faux sur 194 jugés ; aucun n'est appliqué, la paire et l'écartement les
+arrêtent. `audit/resolution-partial-flank-2026-09-22.json`.
+
+**Règle d'arrêt :** premier cut appliqué en flanc partiel trouvé faux de plus de
+10 mm par la relecture Natif → retour 4.7.4 et amendement.
+
+**Étude hors ligne — contexte de voie** (`tools/continuity-study.cjs`, sans effet
+sur l'extension). Les différés restants du Pilote 4.7.4 (partie 20) sont des
+appareils de voie et contre-rails : la pose ESV est à 62–115 mm du rail, le
+moteur trouve le contre-rail, l'écartement refuse la paire. Fenêtre du moteur
+gelé recentrée sur la position prédite par les cuts voisins appliqués : 12 cuts
+justes, 0 faux, 6 différés sur 19 avec les voisins des deux côtés ; 7 justes,
+0 faux en passage unique. Une seule partie, pire rail 9,2 mm : proposé comme
+chantier 4.8, pas activé. `audit/continuity-study-2026-09-22.json`.
+
+`tools/resolution-report.cjs` accepte `--partial-flank on|off`.
+
 ## 4.7.4 — collectes Natif allégées, banc à entrée complète, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
