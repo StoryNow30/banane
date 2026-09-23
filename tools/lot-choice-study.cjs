@@ -5,7 +5,7 @@
  * le moteur calcule déjà, celle que la voie prédit.
  *
  *   node tools/lot-choice-study.cjs --input SESSION.json|DOSSIER[=libellé] [...]
- *        [--choose-mm 15] [--variant A|B] [--chain none|guarded] [--json SORTIE]
+ *        [--choose-mm 15] [--variant A|B] [--chain none|guarded] [--sides both|previous] [--json SORTIE]
  *
  * ÉTUDE HORS LIGNE, chantier n°1 du plan de mi-parcours (23/09, D-037). Aucune
  * position humaine n'entre dans le calcul : c'est le Pilote seul, sur un lot.
@@ -65,7 +65,7 @@ function chooseRail(capture,side,science,chooseMm){
     lossRatio:minima.length?r1(pick.m.loss/minima[0].loss):null,rankByLoss:minima.indexOf(pick.m)};
 }
 const FIRST_PASS=new WeakMap();
-function studySession(session,label,{chooseMm=15,variant='A',chain='none'}={}){
+function studySession(session,label,{chooseMm=15,variant='A',chain='none',sides='both'}={}){
   const records=(session.records||[]).filter(r=>r.visitRelation?.type==='first-observation'&&r.beforeEstablished?.rails&&!EXCLUDED.has(r.identity?.cut))
     .sort((a,b)=>a.visitIndex-b.visitIndex);
   const chunks=new Map();for(const c of session.clouds||[])if(c.pointsSceneRelative)(chunks.get(c.visitId)||chunks.set(c.visitId,[]).get(c.visitId)).push(c);
@@ -75,14 +75,27 @@ function studySession(session,label,{chooseMm=15,variant='A',chain='none'}={}){
   const items=FIRST_PASS.get(session).map(i=>({record:i.record,input:i.input,esv:i.esv}));
   const same=(a,b)=>a.part===b.part&&(a.frameId??null)===(b.frameId??null);
   const neighbours=(item,pool)=>pool.filter(o=>o!==item&&same(o.record.identity,item.record.identity)&&o.record.identity.cut!==item.record.identity.cut&&
+    (sides!=='previous'||o.record.visitIndex<item.record.visitIndex)&&
     Math.abs(o.record.identity.cut-item.record.identity.cut)<=GAP).sort((a,b)=>Math.abs(a.record.identity.cut-item.record.identity.cut)-Math.abs(b.record.identity.cut-item.record.identity.cut)).slice(0,2);
   const lateralFrom=(item,anchors,pos)=>Math.max(...SIDES.map(s=>{const init=item.record.beforeEstablished.rails[s],M=init.sceneRelativeToProfileLocal,o=C.point(M,init.positionSceneRelative);
     const p=O.predict(init,anchors,s),q=C.point(M,pos[s]);return Math.abs((q[1]-o[1]-p.lateral)*1000);}));
   // 1–2. Premier passage et garde.
   const applied=items.filter(i=>i.esv?.applicable);
   for(const i of applied)i.positions=Object.fromEntries(SIDES.map(s=>[s,i.esv.rails[s].positionSceneRelative]));
-  for(const i of applied){const nb=neighbours(i,applied);i.guardMm=nb.length?r1(lateralFrom(i,nb.map(n=>({positions:n.positions})),i.positions)):null;i.kept=i.guardMm===null||i.guardMm<=GUARD_MM;}
-  const anchorsPool=applied.filter(i=>i.kept);
+  let anchorsPool;
+  if(sides==='previous'){
+    /* Un seul passage : chaque cut n'est jugé qu'avec les cuts DÉJÀ passés du
+     * lot ; l'ensemble d'ancres grandit dans l'ordre des visites. */
+    anchorsPool=[];
+    for(const i of items.slice().sort((a,b)=>a.record.visitIndex-b.record.visitIndex)){
+      if(!i.esv?.applicable)continue;
+      const nb=neighbours(i,anchorsPool);i.guardMm=nb.length?r1(lateralFrom(i,nb.map(n=>({positions:n.positions})),i.positions)):null;
+      i.kept=i.guardMm===null||i.guardMm<=GUARD_MM;if(i.kept)anchorsPool.push(i);
+    }
+  }else{
+    for(const i of applied){const nb=neighbours(i,applied);i.guardMm=nb.length?r1(lateralFrom(i,nb.map(n=>({positions:n.positions})),i.positions)):null;i.kept=i.guardMm===null||i.guardMm<=GUARD_MM;}
+    anchorsPool=applied.filter(i=>i.kept);
+  }
   // 3. Second passage. Chaînage gardé (option) : un cut que le moteur, parti de
   // la voie, publie à 10 mm au plus de la prédiction devient à son tour une
   // ancre, et le passage recommence jusqu'à ce que rien ne change.
@@ -152,13 +165,13 @@ function studySession(session,label,{chooseMm=15,variant='A',chain='none'}={}){
   const allCuts=rows.length,appliedAll=rows.filter(r=>['first-pass','second-pass-window','second-pass-choice'].includes(r.stage)).length;
   summary.coverageAllCuts={applied:appliedAll,cuts:allCuts,rate:r1(100*appliedAll/allCuts)};
   summary.coverageEsvAllCuts={applied:rows.filter(r=>r.esv==='applied').length,cuts:allCuts,rate:r1(100*rows.filter(r=>r.esv==='applied').length/allCuts)};
-  return {label,chooseMm,variant,chain,summary,rows};
+  return {label,chooseMm,variant,chain,sides,summary,rows};
 }
 function run(argv=process.argv.slice(2)){
-  const inputs=[],opt={chooseMm:15,variant:'A',chain:'none'};let out=null;
+  const inputs=[],opt={chooseMm:15,variant:'A',chain:'none',sides:'both'};let out=null;
   for(let i=0;i<argv.length;i++){
     if(argv[i]==='--input'){const [file,label]=argv[++i].split('=');inputs.push({file,label:label||path.basename(file)});}
-    else if(argv[i]==='--choose-mm')opt.chooseMm=argv[++i];else if(argv[i]==='--chain')opt.chain=argv[++i];else if(argv[i]==='--variant')opt.variant=argv[++i];
+    else if(argv[i]==='--choose-mm')opt.chooseMm=argv[++i];else if(argv[i]==='--chain')opt.chain=argv[++i];else if(argv[i]==='--sides')opt.sides=argv[++i];else if(argv[i]==='--variant')opt.variant=argv[++i];
     else if(argv[i]==='--json')out=argv[++i];else throw Error('Argument inconnu : '+argv[i]);
   }
   if(!inputs.length){console.error('Usage : --input SESSION.json|DOSSIER[=libellé] [...] [--choose-mm 15] [--variant A|B] [--json SORTIE]');process.exit(1);}
@@ -166,9 +179,9 @@ function run(argv=process.argv.slice(2)){
   const report={format:'banane-lot-choice-study-v1',engine:'gcv1-shadow 4.7.7',wrongMm:WRONG_MM,guardMm:GUARD_MM,excludedCuts:[...EXCLUDED],runs:[]};
   for(const {file,label} of inputs){
     const session=Segments.loadSession(file);
-    for(const chain of opt.chain.split(','))for(const variant of variants)for(const chooseMm of radii){
-      const s=studySession(session,label,{chooseMm,variant,chain}),m=s.summary;report.runs.push(s);
-      console.log(`${label} [${variant}, ${chooseMm} mm, chaînage ${chain}] : jugés ${m.judged} · pose ESV seule ${m.esvOnly.right} justes / ${m.esvOnly.wrong} faux · lot ${m.lot.right} / ${m.lot.wrong} · couverture tous cuts ${m.coverageEsvAllCuts.rate} % → ${m.coverageAllCuts.rate} % · ${JSON.stringify(m.byStage)}`);
+    for(const sides of opt.sides.split(','))for(const chain of opt.chain.split(','))for(const variant of variants)for(const chooseMm of radii){
+      const s=studySession(session,label,{chooseMm,variant,chain,sides}),m=s.summary;report.runs.push(s);
+      console.log(`${label} [${sides==='previous'?'un passage':'deux passages'}, ${variant}, ${chooseMm} mm, chaînage ${chain}] : jugés ${m.judged} · pose ESV seule ${m.esvOnly.right} justes / ${m.esvOnly.wrong} faux · lot ${m.lot.right} / ${m.lot.wrong} · couverture tous cuts ${m.coverageEsvAllCuts.rate} % → ${m.coverageAllCuts.rate} % · ${JSON.stringify(m.byStage)}`);
       if(m.wrongCuts.length)console.log('   faux : '+m.wrongCuts.map(w=>`${w.cut} (${w.stage}, ${w.worstMm} mm)`).join(' · '));
     }
   }
