@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banane UI Next — Pilote (maquette)</title>
+  <link rel="stylesheet" href="maquettes.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="brand"><span>BANANE</span><small>UI NEXT · MAQUETTE</small></p>
+      <h1>Pilote</h1>
+      <p class="intro">Suivi du lot et état du cut en cours.</p>
+      <p class="preview-note">Aperçu statique · données d’exemple figées · aucune liaison à ESV</p>
+    </header>
+
+    <nav class="nav" aria-label="Vues Banane">
+      <span>Accueil</span>
+      <span>Natif</span>
+      <span aria-current="page">Pilote</span>
+      <span>Assisté</span>
+    </nav>
+
+    <section class="card lot-card" aria-labelledby="lot-title">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">Lot pilote</p>
+          <h2 id="lot-title">Lot de démonstration</h2>
+          <p class="subtle">24 cuts · fenêtre de test</p>
+        </div>
+        <span class="status-pill">En cours</span>
+      </div>
+
+      <p class="lot-count">
+        <strong>20</strong><span class="unit">/ 24</span>
+        <span class="count-caption">statuts enregistrés</span>
+      </p>
+      <div class="progress-track" role="img" aria-label="14 cuts traités, 4 différés, 2 refusés par l’écartement, 4 en cours ou à traiter">
+        <span class="segment-treated"></span>
+        <span class="segment-deferred"></span>
+        <span class="segment-rejected"></span>
+        <span class="segment-pending"></span>
+      </div>
+      <div class="legend" aria-label="État du lot">
+        <div class="legend-item"><i class="swatch treated" aria-hidden="true"></i><span>Traités</span><strong>14</strong></div>
+        <div class="legend-item"><i class="swatch deferred" aria-hidden="true"></i><span>Différés</span><strong>4</strong></div>
+        <div class="legend-item"><i class="swatch" aria-hidden="true"></i><span>Refusés · écartement</span><strong>2</strong></div>
+        <div class="legend-item"><i class="swatch" aria-hidden="true"></i><span>En cours / à traiter</span><strong>4</strong></div>
+      </div>
+
+      <div class="policy">
+        <div>
+          <span class="policy-label">Politique effective</span>
+          <p><strong>Propositions incertaines</strong> · pause du lot</p>
+          <p><strong>Rail non résolu</strong> · différer</p>
+        </div>
+        <div>
+          <span class="policy-label">Contrat d’écartement</span>
+          <p><strong>1 405–1 470 mm</strong></p>
+          <p>aucune cible privilégiée</p>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span>Lot en cours · 20 statuts durables</span>
+        <div class="controls" aria-label="Commandes illustratives, inactives">
+          <button type="button" disabled>Pause</button>
+          <button type="button" disabled>Arrêter</button>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="kpi-title">
+      <div class="kpi-heading">
+        <h2 id="kpi-title">Chiffres clés</h2>
+        <span>provenance indiquée par mesure</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi">
+          <span class="kpi-label">Couverture</span>
+          <span class="kpi-value">58<small>%</small></span>
+          <span class="kpi-source">14 cuts traités / 24</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Erreur médiane</span>
+          <span class="kpi-value missing">non rapportée</span>
+          <span class="kpi-source">relecture absente</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Biais d’écartement</span>
+          <span class="kpi-value">+0,8<small>mm</small></span>
+          <span class="kpi-source">8 paires relues · 22/09</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Rails calés</span>
+          <span class="kpi-value">28<small>/48</small></span>
+          <span class="kpi-source">14 paires complètes</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card cut-card" aria-labelledby="cut-title">
+      <div class="card-heading cut-heading">
+        <div>
+          <p class="eyebrow">Cut en cours</p>
+          <h2 id="cut-title">Cut 21 <span>sur 24</span></h2>
+        </div>
+        <span class="status-pill">Revue opérateur</span>
+      </div>
+
+      <div class="rails">
+        <article class="rail" aria-label="Rail gauche 2162">
+          <div class="rail-top">
+            <div class="rail-label">Rail 2162<span class="rail-side">Côté gauche</span></div>
+            <span class="rail-tag">Proposition</span>
+          </div>
+          <p class="rail-value">+4<small>mm</small></p>
+          <p class="rail-note">À examiner dans ESV · non appliquée</p>
+        </article>
+        <article class="rail" aria-label="Rail droit 2163">
+          <div class="rail-top">
+            <div class="rail-label">Rail 2163<span class="rail-side">Côté droit</span></div>
+            <span class="rail-tag abstention">Abstention</span>
+          </div>
+          <p class="rail-value">Aucune proposition</p>
+          <p class="rail-note">Flanc trop peu documenté</p>
+        </article>
+      </div>
+
+      <div class="anomaly">
+        <span class="anomaly-label">Anomalie</span>
+        <p><strong>Paire incomplète.</strong> Aucune position appliquée ; le rail droit reste à examiner.</p>
+      </div>
+
+      <dl class="esv-state">
+        <div><dt>VALIDATE</dt><dd>non observé</dd></div>
+        <div><dt>SKIP</dt><dd>non observé</dd></div>
+        <div><dt>Décision opérateur</dt><dd>en attente dans ESV</dd></div>
+      </dl>
+    </section>
+
+    <details class="card diagnostic">
+      <summary>
+        <span>Diagnostic GCV1</span>
+        <span class="diagnostic-hint">cut 21 · replié</span>
+      </summary>
+      <div class="diagnostic-body">
+        <p>Contenu d’exemple uniquement. Aucun calcul ni export diagnostic n’est exécuté depuis cette page.</p>
+      </div>
+    </details>
+
+    <p class="source-note">Données de démonstration locales · les mesures sont illustratives, pas un résultat du moteur.</p>
+    <footer>Maquette statique du panneau opérateur · commandes affichées à titre visuel.</footer>
+  </main>
+</body>
+</html>
