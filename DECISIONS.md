@@ -1,5 +1,30 @@
 # Décisions techniques
 
+## D-037 - Plan de mi-parcours du cahier 4.8
+
+Date : 23 septembre 2026. Décision de la direction sur l'audit interne à
+mi-parcours (l'audit indépendant est en cours ; les deux seront versés
+ensemble).
+
+Constat retenu : dans la majorité des cuts différés, le moteur a calculé la
+bonne position et ne la choisit pas — ambiguïté entre le rail et un champignon
+voisin, ou paire refusée par l'écartement parce qu'un rail est sur ce voisin.
+Sur le terrain (Pilote 4.7.6, partie 19), 11 différés sur 13 relèvent du choix.
+
+- **Objectif intermédiaire : 80 % des cuts de lots Pilote**, deux rails dans le
+  contrat, 0 cut faux au-delà de 10 mm, rapporté par partie. Les 90 % du §2
+  restent le cap.
+- **Chantier 1 — décider sur le lot** : utiliser la position prédite par la
+  voie pour choisir entre les minima que le moteur calcule déjà ; étude hors
+  ligne d'abord (`tools/lot-choice-study.cjs`), amendement ensuite si elle le
+  justifie.
+- **Chantier 2 — lots Pilote terrain** sur des parties à appareils de voie,
+  relus en Natif ; C1 compté sur les cuts du lot.
+- **Chantier 3 — aligner le banc sur le Pilote** : le filtre de qualification
+  centré sur la pose ESV ne doit plus retirer du banc les cuts que le Pilote
+  sait lire.
+- **Chantier 4 — P2** : 30 cuts replacés en aveugle.
+
 ## D-036 - Observation « continuité » dans le Natif (4.7.7)
 
 Date : 23 septembre 2026. Décision de la direction, sur la base de l'amendement
