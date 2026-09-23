@@ -1138,6 +1138,11 @@ cause décrite au §3.4 du n°3, sur une nouvelle partie.
 
 ### 7.3 Amorce par continuité : mesure
 
+> **Chiffres remplacés au §7.8.** Cette première mesure a été relue par un
+> modèle indépendant le jour même : références jugées sans la fraîcheur du
+> banc, points comptés deux fois, ancres ordonnées par numéro de cut et non
+> par ordre de visite (KI-045). Elle est conservée pour la traçabilité.
+
 Même moteur, mêmes points ; seul change le départ. Le rail de départ est
 translaté, dans son plan de profil, jusqu'à la droite tirée des deux cuts
 d'ancrage les plus proches (3 numéros au plus). Points : tous les nuages de la
@@ -1156,19 +1161,24 @@ reçoit exactement les mêmes.
 
 Sur la session longue, le départ est à 3,1 mm médian de la pose humaine
 (p90 9,2 mm) avec les ancres de l'opérateur, contre 4,5 mm (p90 121 mm) depuis
-la pose ESV. **Les 9 cuts faux de la courbe (398 à 435) deviennent justes** ;
-restent 241 (aucun cut validé à moins de 3 numéros : départ ESV) et 983 (15 mm,
-déjà connu). Justes : latéral médian 1,3 mm.
+la pose ESV. Sur les 9 cuts faux de la courbe (398 à 435), **7 deviennent
+justes et 2 passent en abstention** (412, 435) — et non « les 9 deviennent
+justes », comme écrit d'abord ; 5 cuts justes depuis la pose ESV passent en
+abstention ou en refus d'écartement. Restent faux 241 (aucun cut validé à moins
+de 3 numéros : départ ESV) et 983 (15 mm, déjà connu).
 
-### 7.4 Le chaînage propage l'erreur — le §3.7 du n°3 confirmé
+### 7.4 Le chaînage ne corrige pas une ancre fausse
 
 Le moteur s'appuie sur ses propres cuts appliqués, sans aucune position
 humaine. Session longue : 398 est posé faux depuis la pose ESV (160 mm), puis
-**400, 403 et 404 sont posés faux sur son prolongement** (178 à 250 mm) ; 409,
-faux depuis la pose ESV. Une erreur de mode commun devient une série. C'est
-exactement ce que le §3.7 du n°3 interdit (« un cut résolu par continuité ne
-sert pas de voisin ») : la règle est désormais mesurée, pas seulement
-prudente.
+400, 403 et 404 sont posés faux sur son prolongement (178 à 250 mm) ; 409,
+faux depuis la pose ESV. Correction après relecture : ces trois cuts n'ont
+chacun qu'**une seule ancre** (400 ← 398, 403 ← 400, 404 ← 403), et les cinq
+faux du chaînage étaient **déjà faux depuis la pose ESV**. La mesure montre
+qu'une ancre fausse est réutilisée et empêche la correction ; elle ne montre
+pas que le chaînage crée des erreurs nouvelles. La règle du §3.7 du n°3
+(« un cut résolu par continuité ne sert pas de voisin ») reste une prudence,
+pas un résultat démontré.
 
 ### 7.5 Le relais par l'opérateur
 
@@ -1186,9 +1196,11 @@ cuts voisins acceptés.
 
 ### 7.6 Limites
 
-- Les points de l'étude incluent les nuages capturés après les gestes de
-  l'opérateur : la couverture absolue est optimiste ; la comparaison au témoin,
-  qui reçoit les mêmes points, ne l'est pas.
+- Les points de l'étude incluaient des nuages capturés après les gestes de
+  l'opérateur. Contrairement à ce qui était écrit, donner les mêmes points au
+  témoin ne suffit pas à neutraliser le biais : le moteur filtre les points
+  autour de son départ, qui diffère entre les deux. Corrigé au §7.8 : seuls
+  les points capturés à la pose ESV avant le premier geste sont utilisés.
 - Partie 22 : 8 cuts jugés, une seule série. Elle compte comme première des
   « deux autres parties comportant des appareils de voie » du §3.7 du n°3, pas
   comme la preuve.
@@ -1218,7 +1230,59 @@ Préalables inchangés du §3.7 du n°3 (deuxième partie à appareils de voie,
 observation dans le Pilote avant toute application). Le relais par l'opérateur
 change le déroulé du Pilote : décision de la direction.
 
-Sur le §2 : avec des ancres validées, 192 cuts justes et 3 faux sur 284 contre
-161 et 11 depuis la pose ESV ; l'engagement de 90 % dépend désormais de
-l'ancrage. Sur le §15 :
-P5 toujours ouvert en conditions réelles.
+Sur le §2 : avec des ancres validées, et après correction (§7.8), 141 cuts
+justes et 3 faux sur 252 contre 118 et 6 depuis la pose ESV ; l'engagement de
+90 % dépend désormais de l'ancrage. Sur le §15 : P5 toujours ouvert en
+conditions réelles.
+
+### 7.8 Relecture indépendante et chiffres corrigés
+
+La première étude (§7.3 à 7.5) a été relue le 23/09 par un modèle indépendant,
+sans accès aux archives, sur le code et les relevés. Ses constats, vérifiés :
+
+| Constat | Effet | Suite |
+|---|---|---|
+| Référence « stricte » sans fraîcheur ni association du banc ; des références non fiables servaient d'ancre (418) | biais | jugement par `referenceFor` ; ancres aux mêmes règles |
+| Toutes les captures d'une visite concaténées : points comptés deux fois (17 579 lignes pour 8 637 points au cut 1198) | gonfle les seuils du moteur | une capture par côté, doublons retirés |
+| Nuages capturés après les gestes de l'opérateur ; visibilité inconnue admise | fuite possible | pose ESV exacte, avant le premier changement de rail, visibilité prouvée |
+| Contours pris sur un nuage d'une autre pose | décisions faussées possibles | contours de la capture retenue, même pose |
+| Ancres ordonnées par numéro de cut, pas par ordre de visite ; repère non contrôlé | scénario non reproduit | ordre réel (`visitIndex`), même partie et même repère |
+| Chaînage : une seule ancre, faux déjà faux au témoin | surinterprétation | §7.4 corrigé |
+| Garde à 30 mm non testée | variante incomplète | évaluée ci-dessous |
+| « 9 faux deviennent justes » : 7 justes, 2 abstentions | affirmation fausse | §7.3 corrigé |
+| Seuil latéral arrondi, vertical ignoré | sans effet mesuré | erreurs brutes, vertical rapporté |
+
+Nouvelle mesure : `tools/continuity-seed-study.cjs --mode observer`, qui rejoue
+exactement le calcul de la 4.7.7 (`src/continuity-observer.js`) et le témoin
+depuis la pose ESV sur **la même entrée**, jugés aux règles du banc
+(`audit/continuity-observer-2026-09-23.json`) :
+
+| Session (cuts jugés) | Départ ESV | Départ par continuité | Continuité + garde 30 mm |
+|---|---|---|---|
+| Partie 22 (7) | 0 juste · 0 faux | 4 · 2¹ | 4 · 1 · 1 différé |
+| Partie 20, Natif longue (177) | 80 · **6** | **98 · 1** | 98 · 1 |
+| Partie 20, Natif courte (52) | 31 · 0 | 31 · 0 | 31 · 0 |
+| Partie 19, relecture du Pilote (16) | 7 · 0 | 8 · 0 | 8 · 0 |
+| **Total (252)** | **118 · 6** | **141 · 3** | 141 · 2 |
+
+¹ 1204 et 1205, à 11,3 et 11,5 mm : juste au-delà du seuil, là où le départ ESV
+s'abstient. 1203 n'est plus une ancre (référence de minutage incertain), d'où
+une extrapolation sur 2 cuts pour 1204.
+
+Ce qui tient : sur la session longue, les 5 cuts faux de la courbe depuis la
+pose ESV (398, 400, 402, 405, 409) deviennent justes ; le seul faux restant
+(983, 14,4 mm) l'est aussi depuis la pose ESV. Transitions : 5 faux → juste,
+16 abstentions ou refus → juste, 3 justes → abstention ou refus. Les chiffres
+bruts baissent (entrée plus stricte), l'écart entre les deux départs demeure.
+Ce qui ne tient pas : la session courte ne gagne rien (pose ESV déjà bonne) ;
+sur la partie 22, deux erreurs marginales apparaissent. Temps moteur par
+calcul : 0,7 à 1,2 s médian, p90 jusqu'à 2,1 s.
+
+### 7.9 Décision : 4.7.7, observation en Natif
+
+Décision de la direction du 23/09 (D-036) : la 4.7.7 calcule en Natif, à la fin
+de chaque première visite, la proposition par continuité aux règles du §7.8,
+et la consigne dans la visite sans l'appliquer ni l'afficher. Mesure attendue :
+une collecte Natif sur une autre partie à appareils de voie. Règle d'arrêt :
+plus de cuts faux par continuité que depuis la pose ESV rejouée sur la même
+entrée.

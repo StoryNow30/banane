@@ -1,5 +1,41 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.7 — observation « continuité » en Natif, 23 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
+`v4.7.0`.
+
+**Extension — un seul changement, sans effet sur le travail** (D-036, cahier 4.8
+amendement n°7). À la fin de chaque première visite Natif,
+`src/continuity-observer.js` calcule la proposition que GCV1 aurait faite en
+partant de la droite des cuts voisins déjà validés par l'opérateur, et la
+consigne dans la visite (`continuityObservation`). Rien n'est appliqué, affiché
+ni commandé. Ancres : validations fiables et antérieures, aux règles de
+référence du banc, même partie et même repère, 3 numéros au plus ; sans ancre,
+aucun calcul. Points : une capture par côté, à la pose ESV exacte, avant le
+premier changement de rail, visibilité prouvée, doublons retirés. Moteur,
+calage, flanc partiel et garde d'écartement inchangés. Calcul hors de la file
+des événements ; la fin de session attend les calculs en cours (15 s au plus).
+Coupure : `continuity.observe` dans `src/settings.js`.
+
+**Étude, relue et corrigée.** La première étude de l'amendement n°7 a été relue
+par un modèle indépendant ; ses défauts (références trop lâches, points comptés
+deux fois, ancres ordonnées par numéro de cut, affirmation fausse sur la
+courbe) sont corrigés (KI-045). Rejoué exactement comme la 4.7.7, jugé aux
+règles du banc (`tools/continuity-seed-study.cjs --mode observer`,
+`audit/continuity-observer-2026-09-23.json`) :
+
+| 252 cuts jugés, 23/09 | Justes | Faux |
+|---|---|---|
+| Départ depuis la pose ESV | 118 | 6 |
+| Départ par continuité | 141 | 3 |
+
+Les 5 cuts faux de la courbe de la partie 20 deviennent justes ; la session
+courte ne gagne rien ; sur la partie 22, deux erreurs marginales (11,3 et
+11,5 mm) apparaissent là où le départ ESV s'abstient.
+
+Aussi : `tools/merge-segments.cjs` relit développé un export compact unique.
+
 ## 4.7.6 — audit du cerveau de placement ; calage de convention, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée
