@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banane · La ligne</title>
+<!-- Proposition d'interface « La ligne » pour Banane UI Next (cahier 4.8, §5.4).
+     Maquette statique : données fictives, aucune liaison avec l'extension.
+     Chaque écran a le format de la fenêtre Banane (560 × 820). -->
+<style>
+:root{
+ --bg:#f5f4ef;--surface:#fff;--ink:#1c2226;--ink-2:#4b535a;--muted:#7d838a;--line:#e4e2da;--line-2:#cdcac0;
+ --accent:#2e6b55;--accent-2:#4f8a73;--accent-soft:#e4efe9;--warn:#a2660f;--warn-soft:#f7eddb;--risk:#9c3d2a;--risk-soft:#f7e4de;
+ --band:#e9f1ec;--future:#d4d1c7;--shadow:0 1px 0 rgba(0,0,0,.02);
+ --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,monospace;
+ color-scheme:light;
+}
+.dark{
+ --bg:#141517;--surface:#1c1e21;--ink:#ecebe6;--ink-2:#bdbcb5;--muted:#8d8c87;--line:#2b2d31;--line-2:#3b3d42;
+ --accent:#72c3a0;--accent-2:#5aa487;--accent-soft:#1e3129;--warn:#e3aa4c;--warn-soft:#322817;--risk:#e8826a;--risk-soft:#3a231d;
+ --band:#1b2a23;--future:#3a3c40;color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#dcdad2;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#1c2226;font-synthesis:none}
+.board{display:flex;flex-wrap:wrap;gap:28px;padding:28px;align-items:flex-start}
+.board>figure{margin:0}
+.board figcaption{font:600 12px/1.4 Inter,"Segoe UI",sans-serif;color:#555;margin:0 0 8px;letter-spacing:.02em}
+
+/* ---------------------------------------------------------------- fenêtre */
+.panel{width:560px;height:820px;overflow:hidden;background:var(--bg);color:var(--ink);padding:15px 20px 14px;display:flex;flex-direction:column;gap:9px;
+ font-size:13px;line-height:1.45;font-variant-numeric:tabular-nums;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.panel>*{flex-shrink:0}
+.top{display:flex;align-items:center;gap:10px}
+.brand{font:700 12px/1 var(--mono);letter-spacing:.14em}
+.brand small{font-weight:500;color:var(--muted);letter-spacing:.06em;margin-left:6px}
+.where{margin-left:auto;font:500 12px/1 var(--mono);color:var(--ink-2)}
+.where b{color:var(--ink);font-weight:700}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px;background:var(--surface)}
+.tabs span{text-align:center;padding:6px 0;border-radius:6px;font-weight:600;font-size:12.5px;color:var(--ink-2)}
+.tabs span.on{background:var(--ink);color:var(--bg)}
+.tabs span i{font-style:normal;display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:1px}
+
+.state{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pill{font-weight:700;font-size:12px;padding:3px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.risk{background:var(--risk-soft);color:var(--risk)}
+.pill.ink{background:var(--line);color:var(--ink)}
+.policy{font-size:12px;color:var(--ink-2);line-height:1.35}
+.policy b{color:var(--ink);font-weight:600}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.kpis>div{padding:9px 11px;border-left:1px solid var(--line)}
+.kpis>div:first-child{border-left:0}
+.kpis .l{font-size:11px;color:var(--muted);display:block}
+.kpis strong{font-size:20px;font-weight:650;letter-spacing:-.01em}
+.kpis strong small{font-size:12px;color:var(--muted);font-weight:500;margin-left:2px}
+.kpis .warn strong{color:var(--warn)}
+.kpis .risk strong{color:var(--risk)}
+
+.card{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:11px 12px}
+.card h3{margin:0 0 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px}
+.card h3 .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:4px 11px;font-size:11px;color:var(--ink-2);margin-top:4px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend svg{flex:none}
+
+.cut{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start}
+.cut .num{font:700 26px/1 var(--mono);letter-spacing:-.02em}
+.cut .num small{display:block;font:500 11px/1.6 Inter,"Segoe UI",sans-serif;color:var(--muted);letter-spacing:0}
+.rails{display:grid;grid-template-columns:auto 1fr 1fr;gap:2px 12px;font-size:12.5px}
+.rails .h{color:var(--muted);font-size:11px}
+.rails .v{font-family:var(--mono)}
+.src{font-size:12px;color:var(--ink-2);margin-top:6px}
+.src b{color:var(--ink);font-weight:600}
+
+.gauge{margin-top:8px}
+.gauge .t{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-2)}
+.gauge .t b{font-family:var(--mono);color:var(--ink)}
+
+.proof{display:grid;gap:0}
+.proof .row{display:grid;grid-template-columns:44px 1fr 66px 92px 78px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:12px}
+.proof .row:first-of-type{border-top:0}
+.proof .row.head{font-size:10.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;padding-top:0}
+.proof .c{font-family:var(--mono);font-weight:600}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;white-space:nowrap}
+.st::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
+.st.ok{color:var(--accent)}.st.ok::before{background:var(--accent)}
+.st.sent{color:var(--ink-2)}.st.sent::before{border:1.5px solid var(--ink-2);width:5px;height:5px}
+.st.na{color:var(--muted)}.st.na::before{border:1.5px dashed var(--muted);width:5px;height:5px}
+.st.unk{color:var(--risk)}.st.unk::before{background:repeating-linear-gradient(45deg,var(--risk) 0 2px,transparent 2px 4px);border:1px solid var(--risk);width:6px;height:6px}
+
+.actions{display:flex;gap:8px;margin-top:auto}
+.btn{flex:1;text-align:center;padding:10px 12px;border-radius:8px;font-weight:650;font-size:13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.dark .btn.primary{color:#0f1512}
+.btn.danger{color:var(--risk);border-color:color-mix(in srgb,var(--risk) 45%,var(--line-2))}
+.btn.off{opacity:.45}
+.btn small{display:block;font-weight:500;font-size:11px;opacity:.8}
+.fold{display:flex;justify-content:space-between;padding:8px 12px;border:1px dashed var(--line-2);border-radius:8px;color:var(--ink-2);font-size:12px}
+.fold b{font-weight:600;color:var(--ink)}
+
+.alert{border:1px solid color-mix(in srgb,var(--risk) 45%,var(--line));background:var(--risk-soft);border-radius:8px;padding:11px 12px;color:var(--ink)}
+.alert h4{margin:0 0 5px;font-size:13.5px;color:var(--risk);display:flex;gap:8px;align-items:center}
+.alert p{margin:0 0 6px;font-size:12.5px}
+.alert ol{margin:4px 0 0;padding-left:18px;font-size:12.5px}
+.alert .lock{margin-left:auto;font:600 11px/1 var(--mono);padding:4px 7px;border-radius:5px;background:var(--surface);color:var(--risk);border:1px solid color-mix(in srgb,var(--risk) 35%,var(--line))}
+
+.bars{display:grid;gap:7px;margin-top:4px}
+.bar{display:grid;grid-template-columns:150px 1fr 86px;white-space:nowrap;gap:10px;align-items:center;font-size:12.5px}
+.bar .track{height:6px;background:var(--line);border-radius:3px;overflow:hidden;display:flex}
+.bar .track i{display:block;height:100%}
+.bar .n{text-align:right;font-family:var(--mono);color:var(--ink-2)}
+.stack{display:flex;height:10px;border-radius:3px;overflow:hidden;margin:6px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font:600 11.5px/1 var(--mono);padding:5px 7px;border-radius:5px;border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));color:var(--warn);background:var(--warn-soft)}
+.chip.more{border-style:dashed;background:transparent;color:var(--ink-2);border-color:var(--line-2)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.4}
+.note b{color:var(--ink-2);font-weight:600}
+.health{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.health div{font-size:11px;color:var(--muted)}
+.health strong{display:block;font-size:14.5px;color:var(--ink);font-weight:600}
+.promise{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink-2);padding:8px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.promise b{color:var(--ink)}
+svg text{font-family:var(--mono)}
+</style></head>
+<body>
+<div class="board">
+
+<!-- ======================================================= 1. PILOTE EN COURS -->
+<figure><figcaption>1 · Pilote — lot en cours</figcaption>
+<section class="panel" id="s1">
+ <div class="top"><span class="brand">BANANE<small>4.8 · Pilote</small></span><span class="where">partie <b>20</b> · cut <b>412</b> · lot 380–560</span></div>
+ <div class="tabs"><span>Accueil</span><span>Natif</span><span class="on">Pilote<i></i></span><span>Assisté</span></div>
+ <div class="state"><span class="pill">En cours</span><span class="policy">Politique effective : <b>non résolu → différer</b> · <b>incertain → pause</b></span></div>
+ <div class="kpis">
+  <div><span class="l">Cuts traités</span><strong>32<small>/181</small></strong></div>
+  <div><span class="l">Posés</span><strong>23</strong></div>
+  <div class="warn"><span class="l">Différés</span><strong>8</strong></div>
+  <div class="risk"><span class="l">Refusés</span><strong>1</strong></div>
+ </div>
+ <div class="card"><h3>La voie <span class="r">cuts 392 → 432 · déplacement latéral posé</span></h3>
+  <svg class="ruban" data-set="pilot" width="512" height="132"></svg>
+  <div class="legend" data-legend="pilot"></div>
+ </div>
+ <div class="card">
+  <div class="cut"><div class="num">412<small>en cours</small></div>
+   <div>
+    <div class="rails"><span class="h"></span><span class="h">Rail gauche</span><span class="h">Rail droit</span>
+     <span class="h">latéral</span><span class="v">+148 mm</span><span class="v">+151 mm</span>
+     <span class="h">vertical</span><span class="v">−4 mm</span><span class="v">−2 mm</span></div>
+    <div class="src">Source <b>moteur</b>, 1<sup>er</sup> passage · à <b>6 mm</b> de la voie</div>
+   </div></div>
+  <div class="gauge"><div class="t"><span>Écartement <b>1 441 mm</b></span><span>dans le contrat</span></div><svg class="gaugebar" data-mm="1441" width="512" height="22"></svg></div>
+ </div>
+ <div class="card proof"><h3>Commandes et preuves <span class="r">aucune réussite sans effet observé</span></h3>
+  <div class="row head"><span>Cut</span><span>Commande</span><span>Émise</span><span>Effet</span><span>Serveur</span></div>
+  <div class="row"><span class="c">412</span><span>appliquer 2 rails</span><span class="st sent">émise</span><span class="st sent">attendu</span><span class="st na">non dispo.</span></div>
+  <div class="row"><span class="c">411</span><span>valider et suivant</span><span class="st sent">émise</span><span class="st ok">cut 412</span><span class="st na">non dispo.</span></div>
+  </div>
+ <div class="fold"><span><b>Diagnostic</b> · motifs, candidats, journal GCV1</span><span>déplier ▾</span></div>
+ <div class="actions"><span class="btn">Pause</span><span class="btn danger">Arrêter le lot</span></div>
+</section></figure>
+
+<!-- ============================================ 2. PILOTE, NAVIGATION INCERTAINE -->
+<figure><figcaption>2 · Pilote — navigation incertaine</figcaption>
+<section class="panel" id="s2">
+ <div class="top"><span class="brand">BANANE<small>4.8 · Pilote</small></span><span class="where">partie <b>20</b> · cut <b>409 ?</b> · lot 380–560</span></div>
+ <div class="tabs"><span>Accueil</span><span>Natif</span><span class="on">Pilote<i style="background:var(--risk)"></i></span><span>Assisté</span></div>
+ <div class="state"><span class="pill risk">Pause · incertain</span><span class="policy">Politique effective : <b>non résolu → différer</b> · <b>incertain → pause</b></span></div>
+ <div class="alert">
+  <h4>Cut 409 : navigation non confirmée <span class="lock">ÉCRITURES FERMÉES</span></h4>
+  <p>« Suivant sans décision » a peut-être été transmis, mais ESV n’a pas montré le cut suivant. <b>Banane ne renverra pas la commande</b> et ne compte pas 409 comme différé tant que la progression n’est pas acceptée.</p>
+  <ol><li>Regarde dans ESV quel cut est affiché et si 409 a changé.</li><li>Clôture ce résultat incertain : le lot reste arrêté sur ce constat.</li></ol>
+ </div>
+ <div class="kpis">
+  <div><span class="l">Cuts traités</span><strong>29<small>/181</small></strong></div>
+  <div><span class="l">Posés</span><strong>21</strong></div>
+  <div class="warn"><span class="l">Différés</span><strong>7</strong></div>
+  <div class="risk"><span class="l">Incertain</span><strong>1</strong></div>
+ </div>
+ <div class="card"><h3>La voie <span class="r">cuts 389 → 429</span></h3>
+  <svg class="ruban" data-set="uncertain" width="512" height="132"></svg>
+  <div class="legend" data-legend="uncertain"></div>
+ </div>
+ <div class="card proof"><h3>Commandes et preuves <span class="r">409 : une seule émission</span></h3>
+  <div class="row head"><span>Cut</span><span>Commande</span><span>Émise</span><span>Effet</span><span>Serveur</span></div>
+  <div class="row"><span class="c">409</span><span>suivant sans décision</span><span class="st unk">inconnu</span><span class="st unk">non observé</span><span class="st na">non dispo.</span></div>
+  <div class="row"><span class="c">408</span><span>valider et suivant</span><span class="st sent">émise</span><span class="st ok">cut 409</span><span class="st na">non dispo.</span></div>
+ </div>
+ <div class="actions"><span class="btn danger" style="flex:2">Clôturer le résultat incertain du cut 409<small>après contrôle dans ESV</small></span><span class="btn">Journal</span></div>
+</section></figure>
+
+<!-- ================================================== 3. PILOTE, FIN DE LOT -->
+<figure><figcaption>3 · Pilote — fin de lot et reprise des différés</figcaption>
+<section class="panel" id="s3">
+ <div class="top"><span class="brand">BANANE<small>4.8 · Pilote</small></span><span class="where">partie <b>20</b> · lot 380–560</span></div>
+ <div class="tabs"><span>Accueil</span><span>Natif</span><span class="on">Pilote</span><span>Assisté</span></div>
+ <div class="state"><span class="pill ink">Terminé confirmé</span><span class="policy">181 cuts distincts · 3 revisites non recomptées · 41 min</span></div>
+ <div class="card"><h3>Bilan du lot <span class="r">sur les cuts distincts</span></h3>
+  <div class="stack" id="stack3"></div>
+  <div class="bars">
+   <div class="bar"><span>Posés par le moteur</span><span class="track"><i style="width:56%;background:var(--accent)"></i></span><span class="n">101 · 56 %</span></div>
+   <div class="bar"><span>Posés par la voie</span><span class="track"><i style="width:10%;background:var(--accent-2)"></i></span><span class="n">18 · 10 %</span></div>
+   <div class="bar"><span>Différés</span><span class="track"><i style="width:27%;background:var(--warn)"></i></span><span class="n">49 · 27 %</span></div>
+   <div class="bar"><span>Refusés (écartement)</span><span class="track"><i style="width:3%;background:var(--risk)"></i></span><span class="n">5 · 3 %</span></div>
+   <div class="bar"><span>Sans entrée moteur</span><span class="track"><i style="width:4%;background:repeating-linear-gradient(90deg,var(--line-2) 0 3px,transparent 3px 5px)"></i></span><span class="n">8 · 4 %</span></div>
+  </div>
+  <p class="note" style="margin:8px 0 0">Justesse <b>non mesurée</b> : elle viendra de la relecture Natif du lot. Un chiffre de couverture n’est jamais présenté seul.</p>
+ </div>
+ <div class="card"><h3>Tout le lot <span class="r">380 → 560</span></h3>
+  <svg class="strip" data-set="lot" width="512" height="44"></svg>
+ </div>
+ <div class="card"><h3>Différés : 49 <span class="r">par tronçon</span></h3>
+  <div class="chips"><span class="chip">398–405</span><span class="chip">409</span><span class="chip">431–433</span><span class="chip">447</span><span class="chip">470–481</span><span class="chip">502</span><span class="chip">515–529</span><span class="chip">544</span><span class="chip more">+ 7 isolés</span></div>
+  <p class="note" style="margin:8px 0 0">Chaque différé reste <b>non résolu</b> dans ESV : aucune correction, aucun VALIDATE, aucun SKIP.</p>
+ </div>
+ <div class="actions" style="flex-direction:column">
+  <span class="btn off">Reprendre les différés depuis la voie (49)<small>plus tard : décision D2 et retour au cut (chantier 1)</small></span>
+  <div style="display:flex;gap:8px"><span class="btn">Bilan et LiDAR</span><span class="btn">Nouveau lot</span></div>
+ </div>
+</section></figure>
+
+<!-- ======================================================== 4. NATIF -->
+<figure><figcaption>4 · Natif — collecte en cours</figcaption>
+<section class="panel" id="s4">
+ <div class="top"><span class="brand">BANANE<small>4.8 · Natif</small></span><span class="where">partie <b>22</b> · cut <b>1204</b></span></div>
+ <div class="tabs"><span>Accueil</span><span class="on">Natif<i></i></span><span>Pilote</span><span>Assisté</span></div>
+ <div class="state"><span class="pill">Observation · 00:42</span><span class="policy">Tu travailles dans ESV ; Banane <b>n’envoie aucune commande</b> dans ce mode.</span></div>
+ <div class="kpis">
+  <div><span class="l">Visites</span><strong>146</strong></div>
+  <div><span class="l">Cuts distincts</span><strong>131</strong></div>
+  <div><span class="l">Revisites</span><strong>15</strong></div>
+  <div><span class="l">Entrée moteur</span><strong>94<small>%</small></strong></div>
+ </div>
+ <div class="card"><h3>Ton parcours <span class="r">cuts 1184 → 1224 · points lus par cut</span></h3>
+  <svg class="ruban" data-set="native" width="512" height="132"></svg>
+  <div class="legend" data-legend="native"></div>
+ </div>
+ <div class="card"><h3>Santé de la collecte <span class="r">à l’instant</span></h3>
+  <div class="health"><div>Volume<strong>212 Mo</strong></div><div>File d’envoi<strong>0</strong></div><div>Niveau<strong>complet</strong></div><div>Mis à l’écart<strong>0</strong></div></div>
+  <p class="note" style="margin:8px 0 0">Segment 7 écrit à 10:41 · aucune perte · navigation : Z, S et carte observées, jamais émises.</p>
+ </div>
+ <div class="card"><h3>Continuité observée <span class="r">4.7.7, jamais appliquée</span></h3>
+  <p class="note" style="margin:0">Sur les cuts validés de cette session, la position prédite par la voie est à <b>≤ 10 mm</b> de ta pose pour <b>71 %</b> des rails jugés. Calcul consigné dans l’export, sans effet sur ESV.</p>
+ </div>
+ <div class="fold"><span><b>Ce qui est observé</b> · réglages · abandonner la session</span><span>déplier ▾</span></div>
+ <div class="actions"><span class="btn">Pause</span><span class="btn primary" style="flex:2">Terminer et télécharger</span></div>
+</section></figure>
+
+<!-- ======================================================== 5. ASSISTÉ -->
+<figure><figcaption>5 · Assisté — une proposition sur le cut affiché</figcaption>
+<section class="panel" id="s5">
+ <div class="top"><span class="brand">BANANE<small>4.8 · Assisté</small></span><span class="where">partie <b>22</b> · cut <b>1196</b></span></div>
+ <div class="tabs"><span>Accueil</span><span>Natif</span><span>Pilote</span><span class="on">Assisté</span></div>
+ <div class="state"><span class="pill">Proposition prête</span><span class="policy">Calculée à 10:37:43 sur <b>cut 1196</b> · identité vérifiée avant application</span></div>
+ <div class="card"><h3>Coupe du cut 1196 <span class="r">vue dans le sens de la voie</span></h3>
+  <svg id="section" width="512" height="176"></svg>
+  <div class="legend"><span><svg width="18" height="8"><rect x="1" y="1" width="16" height="6" rx="2" fill="none" stroke="var(--muted)" stroke-dasharray="3 2"/></svg>pose ESV</span><span><svg width="18" height="8"><rect x="1" y="1" width="16" height="6" rx="2" fill="var(--accent)"/></svg>proposition</span><span>déplacements agrandis pour la lecture ; valeurs réelles écrites</span></div>
+ </div>
+ <div class="card">
+  <div class="rails"><span class="h"></span><span class="h">Rail gauche</span><span class="h">Rail droit</span>
+   <span class="h">latéral</span><span class="v">−12 mm</span><span class="v">−9 mm</span>
+   <span class="h">vertical</span><span class="v">+3 mm</span><span class="v">+5 mm</span>
+   <span class="h">points</span><span class="v">41 dessus · 7 flanc</span><span class="v">38 dessus · 5 flanc</span></div>
+  <div class="gauge"><div class="t"><span>Écartement <b>1 438 mm</b></span><span>dans le contrat</span></div><svg class="gaugebar" data-mm="1438" width="512" height="22"></svg></div>
+  <p class="note" style="margin:6px 0 0">Le contrat est une plage d’admissibilité : Banane n’y vise aucune valeur.</p>
+ </div>
+ <div class="fold"><span><b>Pourquoi</b> · A_STAR direct · calage +2 mm · perte 0,62</span><span>déplier ▾</span></div>
+ <div class="actions" style="flex-direction:column">
+  <span class="btn primary">Appliquer cette proposition<small>les deux rails, ou aucun</small></span>
+  <div style="display:flex;gap:8px"><span class="btn">Ignorer</span><span class="btn">Revenir aux positions initiales</span></div>
+  <p class="note" style="margin:0;text-align:center">La validation du cut reste ton geste dans ESV.</p>
+ </div>
+</section></figure>
+
+<!-- ============================================== 6. PILOTE, THÈME SOMBRE -->
+<figure><figcaption>6 · Pilote — thème sombre, posé sur ESV</figcaption>
+<section class="panel dark" id="s6"></section></figure>
+
+</div>
+<script>
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+const el=(tag,attrs={},parent)=>{const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.append(e);return e;};
+
+/* ---------------------------------------------------------------- données
+ * Fictives. Déplacement latéral posé (mm) le long d'une courbe où la pose ESV
+ * de départ s'éloigne de la voie : les cuts posés suivent une ligne douce, un
+ * cut qui en sort se voit. */
+const curve=n=>n<394?8+(n-380)*.4:n<412?14+Math.pow((n-394)/18,1.6)*136:150+(n-412)*1.1;
+function pilotSet(current,uncertain){
+  const s={};
+  for(let n=380;n<=560;n++){
+    let st=n<current?'moteur':n===current?'courant':'avenir';
+    if(n<current){
+      if([399,401,403].includes(n))st='voie';
+      if([398,400,402,404].includes(n))st='differe';
+      if(n===405)st='refuse';
+      if(n===407)st='garde';
+      if(n===386)st='sans';
+    }
+    if(uncertain&&n===uncertain)st='incertain';
+    const lat=curve(n)+Math.sin(n*1.7)*3;
+    s[n]={st,lat:['moteur','voie','courant'].includes(st)?lat:null,proposal:st==='garde'?lat+41:null};
+  }
+  return s;
+}
+const SETS={
+  pilot:{from:392,to:432,current:412,cuts:pilotSet(412),profile:'lat'},
+  uncertain:{from:389,to:429,current:409,cuts:pilotSet(409,409),profile:'lat'},
+  native:{from:1184,to:1224,current:1204,profile:'points',cuts:(()=>{const s={};for(let n=1184;n<=1224;n++){
+    let st=n<1204?'valide':n===1204?'courant':'avenir';if([1191,1197].includes(n))st='revisite';if(n===1200)st='skip';
+    const pts=n<=1204?Math.round(900+600*Math.abs(Math.sin(n*.9))+(n===1195?-800:0)):null;
+    s[n]={st,points:pts,input:n<=1204&&n!==1195};}return s;})()},
+};
+
+/* ---------------------------------------------------------------- symboles
+ * La forme porte l'état, la couleur ne fait que le renforcer (lisible en
+ * niveaux de gris). */
+function mark(g,st,x,y){
+  const S=8,h=S/2;
+  switch(st){
+    case 'moteur':case 'valide':el('rect',{x:x-h,y:y-h,width:S,height:S,rx:1.5,fill:'var(--accent)'},g);break;
+    case 'voie':el('rect',{x:x-h+.75,y:y-h+.75,width:S-1.5,height:S-1.5,rx:1.5,fill:'var(--surface)',stroke:'var(--accent)','stroke-width':1.5},g);
+      el('circle',{cx:x,cy:y,r:1.6,fill:'var(--accent)'},g);break;
+    case 'revisite':el('rect',{x:x-h,y:y-h,width:S,height:S,rx:1.5,fill:'var(--accent)'},g);el('line',{x1:x-h,x2:x+h,y1:y+h+3,y2:y+h+3,stroke:'var(--accent)','stroke-width':1.5},g);break;
+    case 'differe':case 'garde':el('rect',{x:x-h+.75,y:y-h+.75,width:S-1.5,height:S-1.5,rx:1.5,fill:'var(--warn-soft)',stroke:'var(--warn)','stroke-width':1.5},g);break;
+    case 'refuse':{el('rect',{x:x-h+.75,y:y-h+.75,width:S-1.5,height:S-1.5,rx:1.5,fill:'var(--risk-soft)',stroke:'var(--risk)','stroke-width':1.5},g);
+      el('line',{x1:x-h+1.5,y1:y+h-1.5,x2:x+h-1.5,y2:y-h+1.5,stroke:'var(--risk)','stroke-width':1.5},g);break;}
+    case 'skip':el('path',{d:`M${x-h+1},${y-h+1}L${x+h-1},${y+h-1}M${x+h-1},${y-h+1}L${x-h+1},${y+h-1}`,stroke:'var(--ink-2)','stroke-width':1.6},g);break;
+    case 'sans':el('rect',{x:x-h+.75,y:y-h+.75,width:S-1.5,height:S-1.5,rx:1.5,fill:'none',stroke:'var(--line-2)','stroke-width':1.5,'stroke-dasharray':'2 1.5'},g);break;
+    case 'incertain':el('path',{d:`M${x},${y-h-1}L${x+h+1},${y+h}L${x-h-1},${y+h}Z`,fill:'var(--risk)'},g);break;
+    case 'courant':el('rect',{x:x-h,y:y-h,width:S,height:S,rx:1.5,fill:'var(--ink)'},g);break;
+    default:el('circle',{cx:x,cy:y,r:1.6,fill:'var(--future)'},g);
+  }
+}
+const LEGENDS={
+  pilot:[['moteur','posé · moteur'],['voie','posé · voie'],['differe','différé'],['refuse','refusé'],['sans','sans entrée']],
+  uncertain:[['moteur','posé · moteur'],['voie','posé · voie'],['differe','différé'],['incertain','navigation incertaine'],['refuse','refusé']],
+  native:[['valide','validé par toi'],['revisite','revisité'],['skip','SKIP (ton geste)'],['courant','cut affiché']],
+};
+for(const box of document.querySelectorAll('[data-legend]'))for(const [st,label] of LEGENDS[box.dataset.legend]){
+  const span=document.createElement('span'),svg=el('svg',{width:12,height:14});mark(svg,st,6,7);span.append(svg,label);box.append(span);}
+
+/* ---------------------------------------------------------------- ruban
+ * Le lot en schéma linéaire : un repère par cut (comme un PK), l'état en
+ * forme, et au-dessus le profil du déplacement latéral posé, avec la bande de
+ * la garde de continuité (±30 mm autour de la droite des voisins). */
+function ruban(svg){
+  const set=SETS[svg.dataset.set],W=+svg.getAttribute('width'),H=+svg.getAttribute('height');
+  const n=set.to-set.from,pad=10,dx=(W-2*pad)/n,X=c=>pad+(c-set.from)*dx,base=96;
+  const g=el('g',{},svg);
+  // Profil
+  const top=12,bottom=76;
+  if(set.profile==='lat'){
+    const cuts=Object.entries(set.cuts).map(([k,v])=>[+k,v]).filter(([c])=>c>=set.from&&c<=set.to);
+    const vals=cuts.map(([,v])=>v.lat).filter(v=>v!=null),lo=0,hi=200,Y=v=>bottom-(v-lo)/(hi-lo)*(bottom-top);
+    for(const v of [0,100,200]){el('line',{x1:pad,x2:W-pad,y1:Y(v),y2:Y(v),stroke:'var(--line)','stroke-dasharray':'2 3'},g);
+      const t=el('text',{x:W-pad,y:Y(v)-3,'text-anchor':'end','font-size':9,fill:'var(--muted)'},g);t.textContent=v+' mm';}
+    // bande de garde : droite des voisins posés, ±30 mm
+    const placed=cuts.filter(([,v])=>v.lat!=null);
+    const bandUp=[],bandDn=[];
+    for(const [c] of cuts){if(c>set.current)break;const nb=placed.filter(([k])=>k<c).slice(-2);if(nb.length<2)continue;
+      const [[c1,v1],[c2,v2]]=nb,p=v2.lat+(v2.lat-v1.lat)/(c2-c1)*(c-c2);bandUp.push([X(c),Y(p+30)]);bandDn.push([X(c),Y(p-30)]);}
+    if(bandUp.length)el('path',{d:'M'+bandUp.map(p=>p.join(',')).join('L')+'L'+bandDn.reverse().map(p=>p.join(',')).join('L')+'Z',fill:'var(--band)'},g);
+    // ligne posée
+    el('path',{d:'M'+placed.map(([c,v])=>`${X(c)},${Y(v.lat)}`).join('L'),fill:'none',stroke:'var(--accent)','stroke-width':1.6,'stroke-linejoin':'round'},g);
+    for(const [c,v] of placed)el('circle',{cx:X(c),cy:Y(v.lat),r:v.st==='courant'?3.2:2.1,fill:v.st==='voie'?'var(--surface)':v.st==='courant'?'var(--ink)':'var(--accent)',stroke:'var(--accent)','stroke-width':v.st==='voie'?1.4:0},g);
+    // proposition retenue par la garde
+    for(const [c,v] of cuts)if(v.proposal!=null){const y=Y(v.proposal);
+      el('line',{x1:X(c),x2:X(c),y1:y+3,y2:base-6,stroke:'var(--warn)','stroke-dasharray':'2 2'},g);
+      el('circle',{cx:X(c),cy:y,r:2.6,fill:'var(--surface)',stroke:'var(--warn)','stroke-width':1.5},g);
+      const t=el('text',{x:X(c)-6,y:y+3,'text-anchor':'end','font-size':9.5,fill:'var(--warn)','font-weight':600},g);t.textContent='407 retenu : 41 mm hors voie';}
+  }else if(set.profile==='points'){
+    const Y=v=>bottom-v/2000*(bottom-top);
+    for(const v of [0,1000,2000]){el('line',{x1:pad,x2:W-pad,y1:Y(v),y2:Y(v),stroke:'var(--line)','stroke-dasharray':'2 3'},g);
+      const t=el('text',{x:W-pad,y:Y(v)-3,'text-anchor':'end','font-size':9,fill:'var(--muted)'},g);t.textContent=v?v+' pts':'';}
+    for(const [k,v] of Object.entries(set.cuts)){const c=+k;if(v.points==null)continue;
+      el('rect',{x:X(c)-3,y:Y(v.points),width:6,height:bottom-Y(v.points),rx:1,fill:v.input?'var(--accent-soft)':'var(--warn-soft)',stroke:v.input?'var(--accent-2)':'var(--warn)','stroke-width':.8},g);
+      if(!v.input){el('line',{x1:X(c),x2:X(c),y1:top+8,y2:Y(v.points)-2,stroke:'var(--warn)','stroke-dasharray':'2 2'},g);const t=el('text',{x:X(c)+4,y:top+6,'font-size':9.5,fill:'var(--warn)','font-weight':600},g);t.textContent='1195 : trop peu de points, sans entrée';}}
+  }
+  // Voie et repères
+  el('line',{x1:pad-4,x2:W-pad+4,y1:base,y2:base,stroke:'var(--line-2)','stroke-width':1},g);
+  for(let c=set.from;c<=set.to;c++){mark(g,set.cuts[c].st,X(c),base);
+    if(c%5===0&&Math.abs(c-set.current)>2){const t=el('text',{x:X(c),y:base+20,'text-anchor':'middle','font-size':9,fill:'var(--muted)'},g);t.textContent=c;}}
+  // Curseur : le cut affiché, avec son numéro
+  const cx=X(set.current),st=set.cuts[set.current].st,col=st==='incertain'?'var(--risk)':'var(--ink)';
+  el('line',{x1:cx,x2:cx,y1:top-4,y2:base-7,stroke:col,'stroke-width':1,'stroke-dasharray':st==='incertain'?'3 2':'none',opacity:.5},g);
+  const label=String(set.current)+(st==='incertain'?' ?':''),w=8+label.length*7;
+  el('rect',{x:cx-w/2,y:base+10,width:w,height:15,rx:3,fill:col},g);
+  const t=el('text',{x:cx,y:base+21,'text-anchor':'middle','font-size':10.5,'font-weight':700,fill:'var(--surface)'},g);t.textContent=label;
+}
+
+/* Tout le lot sur une ligne : un trait par cut, et la fenêtre du ruban. */
+function strip(svg){
+  const W=+svg.getAttribute('width'),cuts=pilotSet(561),from=380,to=560,dx=(W-20)/(to-from+1);
+  const colors={moteur:'var(--accent)',voie:'var(--accent-2)',differe:'var(--warn)',garde:'var(--warn)',refuse:'var(--risk)',sans:'var(--line-2)'};
+  const runs=[[398,405],[409,409],[431,433],[447,447],[470,481],[502,502],[515,529],[544,544],[389,389],[455,455],[488,488],[551,551]];
+  for(let c=from;c<=to;c++){let st=cuts[c].st;if(c>407)st=runs.some(([a,b])=>c>=a&&c<=b)?'differe':[423,466,497,538,556].includes(c)?'refuse':[418,459,493,509,533,548,553].includes(c)?'sans':[414,415,436,437,452,490,491,512,513,535,536,540,541].includes(c)?'voie':'moteur';
+    el('rect',{x:10+(c-from)*dx,y:6,width:Math.max(1,dx-.4),height:16,fill:colors[st]||'var(--future)'},svg);}
+  for(const c of [400,450,500,550]){const t=el('text',{x:10+(c-from)*dx,y:38,'text-anchor':'middle','font-size':9,fill:'var(--muted)'},svg);t.textContent=c;}
+}
+
+/* Écartement : la plage d'admissibilité seulement, sans valeur centrale. */
+function gaugebar(svg){
+  const W=+svg.getAttribute('width'),mm=+svg.dataset.mm,lo=1395,hi=1480,X=v=>6+(v-lo)/(hi-lo)*(W-12);
+  el('rect',{x:6,y:8,width:W-12,height:5,rx:2.5,fill:'var(--line)'},svg);
+  el('rect',{x:X(1405),y:8,width:X(1470)-X(1405),height:5,rx:2.5,fill:'var(--accent-soft)',stroke:'var(--accent-2)','stroke-width':.8},svg);
+  for(const v of [1405,1470]){const t=el('text',{x:X(v),y:22,'text-anchor':'middle','font-size':9,fill:'var(--muted)'},svg);t.textContent=v;}
+  el('path',{d:`M${X(mm)},4 l4,-4 h-8 z`,fill:'var(--ink)',transform:`translate(0,4)`},svg);
+  el('line',{x1:X(mm),x2:X(mm),y1:6,y2:15,stroke:'var(--ink)','stroke-width':1.5},svg);
+}
+
+/* Coupe : deux rails Vignole, pose ESV en pointillés, proposition pleine.
+ * Déplacements exagérés pour être lisibles ; les valeurs écrites sont réelles. */
+function section(svg){
+  const W=512,g=el('g',{},svg),top=58,k=1.3;
+  const defs=el('defs',{},svg),m=el('marker',{id:'arr',viewBox:'0 0 6 6',refX:5,refY:3,markerWidth:6,markerHeight:6,orient:'auto'},defs);el('path',{d:'M0,0L6,3L0,6z',fill:'var(--ink)'},m);
+  el('rect',{x:30,y:top+74,width:W-60,height:14,rx:2,fill:'var(--line)'},g);
+  const rail=(x,y,style)=>el('path',{d:`M${x-24},${y+3}q0,-3 3,-3h42q3,0 3,3v14q0,3 -3,3h-15v36h31v10h-74v-10h31v-36h-15q-3,0 -3,-3z`,...style},g);
+  for(const [x,du,dz,name] of [[118,-12,3,'gauche'],[394,-9,5,'droit']]){
+    rail(x,top,{fill:'none',stroke:'var(--muted)','stroke-dasharray':'4 3','stroke-width':1.2});
+    const nx=x+du*k,ny=top-dz*k;rail(nx,ny,{fill:'var(--accent)','fill-opacity':.92});
+    el('line',{x1:x,y1:top-12,x2:nx,y2:ny-12,stroke:'var(--ink)','stroke-width':1.3,'marker-end':'url(#arr)'},g);
+    const t=el('text',{x,y:top-22,'text-anchor':'middle','font-size':11,fill:'var(--ink)','font-weight':700},g);t.textContent=`${du} / +${dz} mm`;
+    const u=el('text',{x,y:top+104,'text-anchor':'middle','font-size':9.5,fill:'var(--muted)'},g);u.textContent='rail '+name;
+  }
+  const y=top+10,x1=118+27,x2=394-27;
+  el('line',{x1,x2:236,y1:y,y2:y,stroke:'var(--line-2)','stroke-dasharray':'3 3'},g);el('line',{x1:276,x2,y1:y,y2:y,stroke:'var(--line-2)','stroke-dasharray':'3 3'},g);
+  const b=el('text',{x:256,y:y+4,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},g);b.textContent='≈';
+  const t=el('text',{x:256,y:y+22,'text-anchor':'middle','font-size':10,fill:'var(--ink-2)'},g);t.textContent='1 438 mm, échelle coupée';
+}
+
+// Écran 6 : l'écran 1 en thème sombre.
+document.getElementById('s6').innerHTML=document.getElementById('s1').innerHTML;
+document.querySelectorAll('svg.ruban').forEach(ruban);
+document.querySelectorAll('svg.strip').forEach(strip);
+document.querySelectorAll('svg.gaugebar').forEach(gaugebar);
+section(document.getElementById('section'));
+// Barre empilée du bilan
+const stack=document.getElementById('stack3');
+for(const [w,c] of [[56,'var(--accent)'],[10,'var(--accent-2)'],[27,'var(--warn)'],[3,'var(--risk)'],[4,'var(--line-2)']]){const i=document.createElement('i');i.style.cssText=`width:${w}%;background:${c};display:block`;stack.append(i);}
+</script>
+</body></html>

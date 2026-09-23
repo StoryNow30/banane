@@ -1,0 +1,192 @@
+{
+ "format": "banane-navigation-observee-v1",
+ "date": "2026-09-23",
+ "methode": "Pour chaque geste de l'opérateur (touche ou clic, hors saisie et répétition) enregistré par le Natif, on lit l'identité du cut ouvert par la visite SUIVANTE, si aucun autre geste ne s'intercale. Corrélation observée, pas causalité prouvée : un geste non enregistré (molette, glisser) peut s'intercaler. Codes physiques : KeyW = touche Z et KeyA = touche Q sur clavier AZERTY. Sessions dédoublonnées par identifiant.",
+ "sessions": [
+  {
+   "collecte": "23/09 · 4.7.6 · Natif partie 20 (courte)",
+   "sessionId": "6d5f712e-c3fc-4a21-8672-3ed2787907a2",
+   "visites": 56,
+   "gestesAttribues": 55
+  },
+  {
+   "collecte": "23/09 · 4.7.6 · Natif partie 20 (longue)",
+   "sessionId": "7620bacc-5d0f-41d6-a772-d8f58b020db6",
+   "visites": 343,
+   "gestesAttribues": 322
+  },
+  {
+   "collecte": "23/09 · 4.7.6 · relecture Natif du lot Pilote partie 19",
+   "sessionId": "5be781d4-e4c0-4998-8b03-b700a30509b5",
+   "visites": 174,
+   "gestesAttribues": 173
+  },
+  {
+   "collecte": "23/09 · 4.7.7 · Natif partie 24",
+   "sessionId": "d8cb68af-355d-45d6-89a1-0d8b51e1ddb3",
+   "visites": 210,
+   "gestesAttribues": 203
+  },
+  {
+   "collecte": "23/09 · 4.7.6 · Natif partie 22 (logique opérateur)",
+   "sessionId": "a6e4e2a0-336d-478c-8fb1-89c54735af19",
+   "visites": 16,
+   "gestesAttribues": 15
+  },
+  {
+   "collecte": "22/09 · Natif partie 13",
+   "sessionId": "f7132bf4-4143-40e1-9807-0770b9fa5771",
+   "visites": 32,
+   "gestesAttribues": 31
+  },
+  {
+   "collecte": "22/09 · Natif partie 18",
+   "sessionId": "037195ae-c6b6-416b-a450-d649cec8415b",
+   "visites": 41,
+   "gestesAttribues": 40
+  },
+  {
+   "collecte": "22/09 · Natif partie 18",
+   "sessionId": "455f3bc1-2546-4ada-823e-7635d3b58895",
+   "visites": 111,
+   "gestesAttribues": 110
+  },
+  {
+   "collecte": "22/09 · Natif partie 19",
+   "sessionId": "e85791b2-28c7-46b8-b9af-34742d365c02",
+   "visites": 105,
+   "gestesAttribues": 104
+  },
+  {
+   "collecte": "22/09 · Natif partie 20",
+   "sessionId": "603bb8d5-711e-4ee1-8f6b-2aff08c65dd3",
+   "visites": 67,
+   "gestesAttribues": 66
+  },
+  {
+   "collecte": "22/09 · relecture Natif partie 18",
+   "sessionId": "bd985b32-0ea7-4239-b526-2dbf3121507c",
+   "visites": 14,
+   "gestesAttribues": 13
+  },
+  {
+   "collecte": "22/09 · relecture Natif partie 20",
+   "sessionId": "77b9d675-3b4e-4e2d-a6e1-425e1098dd8d",
+   "visites": 15,
+   "gestesAttribues": 14
+  }
+ ],
+ "gestes": [
+  {
+   "geste": "Maj+Space",
+   "gestes": 591,
+   "transitions": {
+    "+1": 582,
+    "saut avant (>1)": 8,
+    "-1": 1
+   }
+  },
+  {
+   "geste": "KeyW",
+   "gestes": 173,
+   "transitions": {
+    "+1": 172,
+    "-1": 1
+   }
+  },
+  {
+   "geste": "KeyD",
+   "gestes": 165,
+   "transitions": {
+    "+1": 161,
+    "saut avant (>1)": 2,
+    "-1": 2
+   }
+  },
+  {
+   "geste": "clic:canvas",
+   "gestes": 125,
+   "transitions": {
+    "+1": 98,
+    "saut avant (>1)": 20,
+    "saut arrière (<-1)": 5,
+    "-1": 2
+   }
+  },
+  {
+   "geste": "KeyS",
+   "gestes": 38,
+   "transitions": {
+    "-1": 36,
+    "+1": 2
+   }
+  },
+  {
+   "geste": "Space",
+   "gestes": 23,
+   "transitions": {
+    "-1": 15,
+    "saut arrière (<-1)": 1,
+    "saut avant (>1)": 7
+   }
+  },
+  {
+   "geste": "KeyF",
+   "gestes": 16,
+   "transitions": {
+    "+1": 16
+   }
+  },
+  {
+   "geste": "Maj+Backspace",
+   "gestes": 6,
+   "transitions": {
+    "+1": 6
+   }
+  },
+  {
+   "geste": "Ctrl+Backspace",
+   "gestes": 4,
+   "transitions": {
+    "+1": 4
+   }
+  },
+  {
+   "geste": "KeyC",
+   "gestes": 2,
+   "transitions": {
+    "-1": 1,
+    "+1": 1
+   }
+  },
+  {
+   "geste": "KeyA",
+   "gestes": 1,
+   "transitions": {
+    "-1": 1
+   }
+  },
+  {
+   "geste": "clic:other",
+   "gestes": 1,
+   "transitions": {
+    "saut arrière (<-1)": 1
+   }
+  },
+  {
+   "geste": "Maj+ShiftLeft",
+   "gestes": 1,
+   "transitions": {
+    "+1": 1
+   }
+  }
+ ],
+ "lecture": {
+  "KeyW (touche Z)": "cut suivant, +1",
+  "KeyS (touche S)": "cut précédent, -1",
+  "KeyD": "+1 le plus souvent : rôle à établir",
+  "Maj+Space": "valider et suivant : +1, ou saut vers le prochain cut non validé",
+  "clic:canvas": "la plupart suivis de +1 ; 25 sauts lointains (sélection sur la carte)"
+ },
+ "outil": "script ponctuel de lecture des exports Natif (événements native-operator-event puis native-visit-started) ; relevé figé ici"
+}
