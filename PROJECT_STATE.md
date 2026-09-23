@@ -1,8 +1,20 @@
 # État du projet Banane
 
 Date : 23 septembre 2026  
-Version active de l'extension : **4.7.7 TEST** (observation « continuité » en Natif ; calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.8 TEST** (décision sur le lot observée dans le Pilote ; observation « continuité » en Natif ; calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.8
+
+Audits à mi-parcours, interne et indépendant (`audit/mi-parcours/`) : les deux
+concluent que l'objectif de 90 % n'est pas démontré, et fixent un objectif
+intermédiaire de 80 % des cuts distincts de lots Pilote, 0 faux (D-037, D-038).
+Phase 0 (`tools/lot-choice-study.cjs`) : décider sur le lot, sans position
+humaine, fait passer la couverture de 45 % à 56 % sur 722 cuts, 7 faux → 4, le
+choix par la voie n'en créant aucun ; insuffisant seul pour 80 %. La 4.7.8
+observe cette décision dans le Pilote, sans l'appliquer (amendement n°9,
+D-039), pour la mesurer sur des lots réels. Plan jusqu'à la 4.8 :
+`PLAN_4.8.md`.
 
 ## État 4.7.7
 

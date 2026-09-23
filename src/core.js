@@ -2,7 +2,7 @@
  if(typeof module==='object')module.exports=api;else root.BananeCore3=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(C){
  'use strict';
- const VERSION='4.7.7';
+ const VERSION='4.7.8';
  const clone=x=>JSON.parse(JSON.stringify(x)),uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;
  const key=x=>`${x.pageId}|${x.part}|${x.cut}`;
  const identityFields=['pageId','part','cut','shape','frameId','projectId'];

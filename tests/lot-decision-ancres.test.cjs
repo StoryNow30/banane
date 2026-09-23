@@ -1,6 +1,6 @@
 'use strict';
-/* Décision sur le lot, module de l'extension (amendement n°9, D-039). Même
- * logique que l'étude de phase 0 (`tools/lot-choice-study.cjs`, un passage). */
+/* Décision sur le lot : reprise par la voie et ses limites (amendement n°9,
+ * D-039, KI-047). Cas des ancres fausses, dans son propre fichier pour tenir le délai. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const L=require('../src/lot-decision.js'),O=require('../src/continuity-observer.js'),Shadow=require('../src/gcv1-shadow.js');
 const {K,base}=require('./fixtures.cjs');
@@ -14,23 +14,11 @@ function shifted(rails,mm){return Object.fromEntries(SIDES.map(side=>{const r=ra
 const anchorAt=(cut,rails)=>({identity:{part:23,cut,frameId:'f'},positions:Object.fromEntries(SIDES.map(s=>[s,rails[s].positionSceneRelative]))});
 const lateralMm=(rails,positions,ref)=>Math.max(...SIDES.map(s=>{const m=rails[s].sceneRelativeToProfileLocal,a=K.C.point(m,positions[s]),h=K.C.point(m,ref[s].positionSceneRelative);return Math.abs(a[1]-h[1])*1000;}));
 
-test('premier cut du lot : appliqué par le moteur, sans ancre, devient ancre',()=>{
-  const cap=capture(base.rails),d=L.decideCut({capture:cap,science:science0,anchors:[],Shadow});
-  assert.equal(d.stage,'first-pass');assert.equal(d.guardMm,null);assert.equal(d.anchor,true);
+test('voisins faux sans structure parallèle à leur écart : jamais de paire fausse',()=>{
+  for(const [esv,mm] of [[150,-150],[0,100]]){
+    const rails=shifted(truth,esv),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),wrong=shifted(truth,mm);
+    const d=L.decideCut({capture:cap,science:sci,anchors:[anchorAt(104,wrong),anchorAt(103,wrong)],Shadow});
+    if(d.positions&&d.stage!=='first-pass')assert.ok(lateralMm(rails,d.positions,truth)<=10,`ESV ${esv}, ancres ${mm} : ${d.stage}`);
+  }
 });
 
-test('cut appliqué conforme à ses voisins : confirmé par la garde',()=>{
-  const cap=capture(base.rails),d=L.decideCut({capture:cap,science:science0,anchors:[anchorAt(104,truth),anchorAt(103,truth)],Shadow});
-  assert.equal(d.stage,'first-pass');assert.ok(d.guardMm<=3,String(d.guardMm));
-});
-
-test('un cut appliqué que ses voisins contredisent est retiré par la garde puis repris par la voie',()=>{
-  const cap=capture(base.rails),far=shifted(truth,100);
-  const d=L.decideCut({capture:cap,science:science0,anchors:[anchorAt(104,far),anchorAt(103,far)],Shadow});
-  assert.equal(d.guardDeferred,true);assert.ok(d.guardMm>30);assert.notEqual(d.stage,'first-pass');
-});
-
-test('les ancres d’une autre partie ou d’un autre repère sont ignorées',()=>{
-  const other={...anchorAt(104,truth),identity:{part:24,cut:104,frameId:'f'}},frame={...anchorAt(104,truth),identity:{part:23,cut:104,frameId:'g'}};
-  assert.deepEqual(L.neighbours({part:23,cut:105,frameId:'f'},[other,frame]),[]);
-});

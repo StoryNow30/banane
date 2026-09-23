@@ -1,5 +1,17 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.8**, la cible de retour est la **4.7.7**, commit `7a21a05`
+(extension 4.7.7, documentation à jour) :
+
+```bash
+git archive 7a21a05 | tar -x -C /tmp/banane-4.7.7
+cd /tmp/banane-4.7.7 && python3 tools/package.py --output /tmp/banane-v4.7.7-test.zip
+```
+
+La 4.7.8 n'ajoute à l'extension qu'un calcul consigné dans le Pilote, jamais
+appliqué. Sans changer de version, il se coupe en passant `lot.observe` à
+`false` dans `src/settings.js`.
+
 **Depuis la 4.7.7**, la cible de retour est la **4.7.6**, commit `bd32245`
 (extension identique à la 4.7.6, outils et documentation à jour) :
 

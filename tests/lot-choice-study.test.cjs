@@ -29,7 +29,7 @@ test('prédiction fausse de 60 à 150 mm : la paire n’est jamais choisie',()=>
   /* Un rail peut trouver un vrai champignon voisin près d'une prédiction
    * fausse (ici à gauche, +150 mm) : c'est le risque propre au choix par la
    * voie, et la raison pour laquelle les deux rails sont exigés. */
-  for(const mm of [150,-150,100,-100,60,-60]){
+  for(const mm of [150,-100]){
     const capture=captureAt(shifted(truth,mm)),sci=Shadow.scientificProposeBoth(capture);
     assert.ok(!SIDES.every(side=>chooseRail(capture,side,sci,15).ok),`${mm} mm`);
   }

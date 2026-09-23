@@ -1,5 +1,34 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.8 — décision sur le lot en observation dans le Pilote, 23 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension — sans effet sur le travail** (amendement n°9, D-039). Pour chaque
+cut d'un lot Pilote GCV1, `src/lot-decision.js` calcule, sur la capture du cut
+et les cuts déjà passés du lot, ce que donnerait la décision sur le lot — garde
+de continuité (30 mm), fenêtre déplacée, choix par la voie parmi les minima du
+moteur, journal des candidats des rails repris — et `background.js` le consigne
+dans l'observation GCV1 (`lotObservation`), exportée dans le diagnostic.
+Jamais appliquée : un test compare un lot avec et sans observation, commandes
+et état identiques. Coupure : `lot.observe` dans `src/settings.js`.
+
+**Phase 0** (`tools/lot-choice-study.cjs`, `audit/lot-choice-2026-09-23.json`) :
+722 cuts, 392 jugés, sans aucune position humaine, faux = latéral OU vertical
+au-delà de 10 mm (D-038). Pose ESV seule 45,2 % des cuts, 199 justes / 7 faux ;
+décision sur le lot en deux passages 56,0 %, 254 / 4 ; en un passage 53,3 %,
+242 / 5. Le choix par la voie : 48 cuts, 30 jugés, 0 faux. Le module de
+l'extension reproduit l'étude en un passage (312/312 cuts, partie 20 longue).
+
+**Banc aligné** (`tools/cut-matrix.cjs`, chantier 3) : matrice cut par cut,
+entrée du banc et entrée à la pose ESV côté par côté, raisons d'exclusion.
+Partie 24 : 147 cuts ont des points à la pose ESV avant le premier geste, le
+banc historique n'en retenait que 124.
+
+**Audits à mi-parcours** (`audit/mi-parcours/`) ; plan jusqu'à la 4.8
+(`PLAN_4.8.md`) ; D-037, D-038, D-039 ; KI-047 (ancres fausses sur une paire
+parallèle : risque de mode commun, gardé visible par un test).
+
 ## 4.7.7 — observation « continuité » en Natif, 23 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée

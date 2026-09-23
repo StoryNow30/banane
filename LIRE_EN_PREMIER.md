@@ -1,39 +1,43 @@
-# Démarrer avec Banane V4.7.7 TEST — Banane observe ta logique de continuité
+# Démarrer avec Banane V4.7.8 TEST — le Pilote observe sa décision sur le lot
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.7-test.zip` dans Edge, exactement comme la 4.7.6.
+Installe `banane-v4.7.8-test.zip` dans Edge, exactement comme la 4.7.7.
 
-Vérifie d'abord **V4.7.7 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.7 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.6, l'ancienne copie est toujours chargée.
+Vérifie d'abord **V4.7.8 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.8 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
 
-**Rien de visible.** En Natif, à la fin de chaque cut, Banane calcule en
-arrière-plan la pose qu'il aurait proposée en partant de la droite de tes
-derniers cuts validés — ta façon de faire, mesurée sur ton export de la
-partie 22 (amendement n°7 du cahier 4.8). Il l'écrit dans l'export, dans la
-visite (`continuityObservation`), et c'est tout : **rien n'est appliqué, rien
-n'est affiché, aucune commande n'est envoyée**. C'est voulu : si tu voyais sa
-proposition, elle influencerait ta pose, et ta pose est le juge.
-
-Le Pilote, le calage et le flanc partiel sont inchangés.
+**Rien de visible, et le Pilote fait exactement ce qu'il faisait.** Pendant un
+lot Pilote, pour chaque cut, Banane calcule en plus ce qu'il aurait fait en
+décidant sur le lot (amendement n°9) : vérifier un cut appliqué contre les cuts
+déjà passés, et, pour un cut qu'il diffère, reprendre la position que la voie
+prédit. Il l'écrit dans le journal du Pilote. **Rien de cela n'est appliqué.**
+Le mode Natif garde l'observation de la 4.7.7.
 
 ## Ce qu'il faut faire avec ce build
 
-1. **Une session Natif sur une partie avec appareils de voie ou contre-rails**,
-   idéalement autre que 20 et 22. Pose chaque cut toi-même et **valide chaque
-   cut** (Maj+Espace) : seules tes validations servent d'appui.
-2. **Commence quelques cuts avant la zone difficile** et avance cut par cut :
-   les appuis sont tes cuts validés à 3 numéros au plus du cut en cours.
-3. Travaille comme d'habitude, y compris les retours en arrière : Banane ne
-   s'appuie que sur ce que tu as déjà validé.
-4. Envoie l'export.
+**F1 — deux ou trois lots Pilote sur des parties à appareils de voie**
+(idéalement une partie jamais collectée) :
 
-**Règle d'arrêt :** si, sur la collecte, le départ par continuité fait plus de
-cuts faux que le départ ESV rejoué sur la même entrée, l'observation s'arrête
-là (retour à la 4.7.6, voir `RETOUR_ARRIERE.md`). À surveiller aussi : si la
-santé de collecte se dégrade (captures perdues, file qui monte), dis-le.
+1. Lance un lot Pilote GCV1 complet, comme d'habitude.
+2. À la fin du lot, exporte le **diagnostic GCV1** et le **corpus LiDAR** du lot.
+3. Puis **relis les mêmes cuts en Natif**, en validant chaque cut (Maj+Espace),
+   et exporte la session Natif.
+
+**F2 — P2, le plancher humain : 30 cuts replacés en aveugle**, quelques jours
+après leur première pose :
+
+1. En Natif, reviens sur 30 cuts d'une collecte déjà faite.
+2. Avant de poser, **éloigne grossièrement les deux rails** (au moins 5 cm) pour
+   ne pas partir de ton ancienne pose, puis replace-les et valide.
+3. Exporte la session. La comparaison avec ta première pose donnera ton propre
+   écart : le plancher sous lequel aucune précision n'a de sens.
+
+**Arrêt :** si, sur un lot, la décision sur le lot produit un seul cut faux que
+le Pilote n'aurait pas fait, elle n'est pas activée (D2). Si le Pilote te semble
+plus lent, dis-le : le calcul ajouté est mesuré dans le journal.
 
 ## Mise à jour
 
