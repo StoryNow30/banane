@@ -1,0 +1,1352 @@
+{
+ "format": "banane-acceptance-report-v1",
+ "tool": "tools/acceptance-report.cjs",
+ "rules": {
+  "wrongMm": 10,
+  "criterion": "latéral OU vertical, valeurs brutes (D-038)",
+  "denominator": "cuts DISTINCTS du lot ; sans entrée, différés, refusés, sans décision au dénominateur ; revisite ≠ nouveau cut",
+  "reference": "dernière visite validée de la relecture, règles strictes referenceFor ; lue après coup, jamais en entrée moteur",
+  "units": "unités de scène × 1000 (mm), étalonnage physique non vérifié",
+  "gaugeContract": "[1405, 1470] mm, admissibilité seulement",
+  "exclusions": [
+   {
+    "part": 19,
+    "cut": 9033,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   },
+   {
+    "part": 19,
+    "cut": 9241,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   }
+  ],
+  "p2": "P2 non mesuré"
+ },
+ "config": null,
+ "p2": null,
+ "lots": [
+  {
+   "label": "pilote-p19-4.7.6",
+   "batch": {
+    "id": "c6e24847-cf33-4429-9da1-abb1d2386a79",
+    "state": "STOPPED",
+    "part": 19,
+    "start": 9019,
+    "end": 9408,
+    "unresolvedPolicy": "defer",
+    "startedAt": "2026-09-23T06:46:46.934Z"
+   },
+   "version": "4.7.6",
+   "observationsOutsideLot": 0,
+   "relecture": {
+    "segments": 3,
+    "records": 174,
+    "allDeclaredCloudsPresent": true,
+    "frame": {
+     "pilotFrameIds": [
+      "fcb5a152-1cb4-474d-8f25-bb1aaf132304"
+     ],
+     "relectureFrameIds": [
+      "53b71338-d711-4130-878b-a527605453b6"
+     ],
+     "sameFrameId": false,
+     "translationSceneUnits": [
+      737962.3069,
+      6762384.6692,
+      86.8741
+     ],
+     "cutsCompared": 29,
+     "cutsAgreeing": 29,
+     "usable": true,
+     "rule": "frameId différent : translation unique du lot acceptée si la majorité des cuts la vérifient (≤ 1 mm, rotation identique) ; chaque cut est contrôlé seul"
+    }
+   },
+   "lotDecisionSource": "rejeu-hors-ligne",
+   "lotDecisionParity": null,
+   "journalConsistency": {
+    "journalCompleted": 15,
+    "journalDeferred": 14,
+    "applied": 15,
+    "deferredOrRefused": 14
+   },
+   "inputs": [
+    {
+     "file": "banane-bilan-v4-2026-09-23T06-49-39-seg01.json",
+     "kind": "ignored",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.6",
+     "sha256": "50e461792ad1f7ac011f8d1f3fba69b3d54bd2a4af56f80b8ab886104a457f59",
+     "bytes": 33424579
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-23T06-49-45-seg01.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.6",
+     "sha256": "ae9ea9b07207fa3501ef622d54475954ad931f1d16272b496cfa13f573050326",
+     "bytes": 31981723
+    },
+    {
+     "file": "banane-gcv1-diagnostic-1790146183684.json",
+     "kind": "diagnostic",
+     "format": "banane-gcv1-diagnostic-v1",
+     "version": "4.7.6",
+     "sha256": "40a419de69f0e2722ec94d166fd31b357ec2342bf2745a06f22554ea822c612c",
+     "bytes": 441522
+    },
+    {
+     "file": "banane-journal-v4-1790146186710.json",
+     "kind": "journal",
+     "format": "banane-test-journal-v4",
+     "version": "4.7.6",
+     "sha256": "91ee2aa0ff2a745f109f6083fc6204d37669743a7370efbee5630439708f2156",
+     "bytes": 1890451
+    },
+    {
+     "file": "banane-native-v4-2026-09-23T06-53-20-auto-seg01.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.6",
+     "sha256": "402b33dacb527658b8a77f3c0dad01fae3afc6f01c29f173515dc5c0e9b96058",
+     "bytes": 26123961
+    },
+    {
+     "file": "banane-native-v4-2026-09-23T06-56-02-auto-seg02.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.6",
+     "sha256": "44de0740db80ac9ee7585785218863c3d1f1122995cd3c3e7591832717d20647",
+     "bytes": 48166831
+    },
+    {
+     "file": "banane-native-v4-2026-09-23T06-57-38-seg01.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.6",
+     "sha256": "38b21ac61b5c7178dbb8a53cc71bf7a2e37f47021ae01e6f38b92be57527c5d9",
+     "bytes": 45369983
+    }
+   ],
+   "rows": [
+    {
+     "part": 19,
+     "cut": 9019,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9033,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "excluded": "demande de l’opérateur : référence humaine fondée sur une information absente des données",
+     "gauge": {
+      "appliedMm": 1428.1,
+      "gaugeClass": "TOLERANCE",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9036,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 8.1
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9043,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9044,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": 1.53,
+        "verticalMm": 0.72
+       },
+       "right": {
+        "lateralMm": -2.81,
+        "verticalMm": -0.12
+       }
+      },
+      "worstMm": 2.81,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 25,
+      "startGapMm": 46.79
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9045,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.2
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9046,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 0.8
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9047,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1454.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 19.7
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9048,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 29,
+      "startGapMm": 45.28
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9049,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1305.6,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "gauge-HIGH_INVALID",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 30,
+      "startGapMm": 45.36
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9050,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 31
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9051,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1433.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9052,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1286.1,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:multi-intent-reference-ambiguous",
+       "right:multi-intent-reference-ambiguous"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 33
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9218,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1304.9,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 34,
+      "startGapMm": 43.35
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9220,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 36,
+      "startGapMm": 39.24
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9221,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.29
+       },
+       "right": {
+        "lateralMm": -0.47,
+        "verticalMm": -0.43
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 37,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9229,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9230,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1433.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 1.8
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9231,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 6.2
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 47
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9234,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 8.2
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9235,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.9
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9241,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "excluded": "demande de l’opérateur : référence humaine fondée sur une information absente des données",
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9242,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1311.4,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 58,
+      "startGapMm": 35.67
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9315,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 97,
+      "startGapMm": 33.21
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9316,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "judged",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 98,
+      "startGapMm": 36.95
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9317,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1470.8,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:multi-intent-reference-ambiguous",
+       "right:multi-intent-reference-ambiguous"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 99
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9344,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 2,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9405,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9406,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "no-input",
+     "reason": "différé-sans-point-lidar",
+     "motifs": [
+      "left:input",
+      "right:input"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "relu-sans-validation",
+      "poseChanged": false,
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": null
+     }
+    },
+    {
+     "part": 19,
+     "cut": 9407,
+     "frameId": "fcb5a152-1cb4-474d-8f25-bb1aaf132304",
+     "pilotVisits": 1,
+     "gcv1Observations": 0,
+     "outcome": "other",
+     "reason": "atteint-sans-décision:lot-arrêté-sur-ce-cut",
+     "lot": {
+      "stage": null,
+      "wouldApply": false,
+      "reason": "aucune-observation"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pose-du-pilote-inconnue"
+     }
+    }
+   ]
+  }
+ ],
+ "parts": [
+  {
+   "part": 19,
+   "holdout": "non déclaré (aucune configuration)",
+   "lots": [
+    "pilote-p19-4.7.6"
+   ],
+   "c1": {
+    "distinctCuts": 28,
+    "applied": 14,
+    "deferred": 7,
+    "gaugeRejected": 5,
+    "noInput": 1,
+    "other": 1,
+    "coveragePct": 50,
+    "revisitedCuts": 0,
+    "otherDetail": [
+     {
+      "cut": 9406,
+      "outcome": "no-input",
+      "reason": "différé-sans-point-lidar"
+     },
+     {
+      "cut": 9407,
+      "outcome": "other",
+      "reason": "atteint-sans-décision:lot-arrêté-sur-ce-cut"
+     }
+    ]
+   },
+   "c4": {
+    "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+    "judgedApplied": 1,
+    "appliedNotJudged": 13,
+    "wrong": 0,
+    "wrongCuts": []
+   },
+   "c2": {
+    "rails": 2,
+    "lateralMm": {
+     "count": 2,
+     "median": 0,
+     "p90": 0,
+     "maximum": 0
+    },
+    "verticalMm": {
+     "count": 2,
+     "median": 0,
+     "p90": 0,
+     "maximum": 0
+    },
+    "floor": {
+     "label": "P2 non mesuré"
+    }
+   },
+   "c3": {
+    "refused": [
+     {
+      "cut": 9049,
+      "predictedMm": 1305.6,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 9052,
+      "predictedMm": 1286.1,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 9218,
+      "predictedMm": 1304.9,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 9242,
+      "predictedMm": 1311.4,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 9317,
+      "predictedMm": 1470.8,
+      "gaugeClass": "HIGH_INVALID"
+     }
+    ],
+    "appliedOutOfContract": [],
+    "appliedGaugeUnmeasured": []
+   },
+   "lotDecision": {
+    "wouldApply": 16,
+    "coveragePct": 57.1,
+    "judged": 2,
+    "wrong": 0,
+    "wrongCuts": [],
+    "newWrong": [],
+    "gained": [
+     {
+      "cut": 9044,
+      "stage": "choice",
+      "worstMm": 2.81
+     },
+     {
+      "cut": 9052,
+      "stage": "window",
+      "worstMm": null
+     }
+    ],
+    "lost": [],
+    "byStage": {
+     "first-pass": 14,
+     "choice": 1,
+     "deferred": 11,
+     "window": 1,
+     "aucune": 1
+    }
+   },
+   "unjudgeable": {
+    "relu-sans-validation": {
+     "cuts": 14,
+     "applied": 12,
+     "list": [
+      9019,
+      9036,
+      9043,
+      9045,
+      9046,
+      9047,
+      9051,
+      9229,
+      9230,
+      9234,
+      9235,
+      9344,
+      9405,
+      9406
+     ]
+    },
+    "référence-non-stricte": {
+     "cuts": 4,
+     "applied": 1,
+     "list": [
+      9050,
+      9052,
+      9231,
+      9317
+     ]
+    },
+    "pose-du-pilote-inconnue": {
+     "cuts": 1,
+     "applied": 0,
+     "list": [
+      9407
+     ]
+    }
+   },
+   "deferredStartGapsMm": [
+    {
+     "cut": 9044,
+     "startGapMm": 46.79
+    },
+    {
+     "cut": 9048,
+     "startGapMm": 45.28
+    },
+    {
+     "cut": 9049,
+     "startGapMm": 45.36
+    },
+    {
+     "cut": 9218,
+     "startGapMm": 43.35
+    },
+    {
+     "cut": 9220,
+     "startGapMm": 39.24
+    },
+    {
+     "cut": 9242,
+     "startGapMm": 35.67
+    },
+    {
+     "cut": 9315,
+     "startGapMm": 33.21
+    },
+    {
+     "cut": 9316,
+     "startGapMm": 36.95
+    }
+   ],
+   "excluded": [
+    {
+     "cut": 9033,
+     "outcome": "applied",
+     "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+    },
+    {
+     "cut": 9241,
+     "outcome": "deferred",
+     "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+    }
+   ]
+  }
+ ],
+ "total": {
+  "c1": {
+   "distinctCuts": 28,
+   "applied": 14,
+   "deferred": 7,
+   "gaugeRejected": 5,
+   "noInput": 1,
+   "other": 1,
+   "coveragePct": 50,
+   "revisitedCuts": 0,
+   "otherDetail": [
+    {
+     "cut": 9406,
+     "outcome": "no-input",
+     "reason": "différé-sans-point-lidar"
+    },
+    {
+     "cut": 9407,
+     "outcome": "other",
+     "reason": "atteint-sans-décision:lot-arrêté-sur-ce-cut"
+    }
+   ]
+  },
+  "c4": {
+   "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+   "judgedApplied": 1,
+   "appliedNotJudged": 13,
+   "wrong": 0,
+   "wrongCuts": []
+  },
+  "c2": {
+   "rails": 2,
+   "lateralMm": {
+    "count": 2,
+    "median": 0,
+    "p90": 0,
+    "maximum": 0
+   },
+   "verticalMm": {
+    "count": 2,
+    "median": 0,
+    "p90": 0,
+    "maximum": 0
+   },
+   "floor": {
+    "label": "P2 non mesuré"
+   }
+  },
+  "c3": {
+   "refused": [
+    {
+     "cut": 9049,
+     "predictedMm": 1305.6,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 9052,
+     "predictedMm": 1286.1,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 9218,
+     "predictedMm": 1304.9,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 9242,
+     "predictedMm": 1311.4,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 9317,
+     "predictedMm": 1470.8,
+     "gaugeClass": "HIGH_INVALID"
+    }
+   ],
+   "appliedOutOfContract": [],
+   "appliedGaugeUnmeasured": []
+  },
+  "lotDecision": {
+   "wouldApply": 16,
+   "coveragePct": 57.1,
+   "judged": 2,
+   "wrong": 0,
+   "wrongCuts": [],
+   "newWrong": [],
+   "gained": [
+    {
+     "cut": 9044,
+     "stage": "choice",
+     "worstMm": 2.81
+    },
+    {
+     "cut": 9052,
+     "stage": "window",
+     "worstMm": null
+    }
+   ],
+   "lost": [],
+   "byStage": {
+    "first-pass": 14,
+    "choice": 1,
+    "deferred": 11,
+    "window": 1,
+    "aucune": 1
+   }
+  },
+  "unjudgeable": {
+   "relu-sans-validation": {
+    "cuts": 14,
+    "applied": 12,
+    "list": [
+     9019,
+     9036,
+     9043,
+     9045,
+     9046,
+     9047,
+     9051,
+     9229,
+     9230,
+     9234,
+     9235,
+     9344,
+     9405,
+     9406
+    ]
+   },
+   "référence-non-stricte": {
+    "cuts": 4,
+    "applied": 1,
+    "list": [
+     9050,
+     9052,
+     9231,
+     9317
+    ]
+   },
+   "pose-du-pilote-inconnue": {
+    "cuts": 1,
+    "applied": 0,
+    "list": [
+     9407
+    ]
+   }
+  },
+  "deferredStartGapsMm": [
+   {
+    "cut": 9044,
+    "startGapMm": 46.79
+   },
+   {
+    "cut": 9048,
+    "startGapMm": 45.28
+   },
+   {
+    "cut": 9049,
+    "startGapMm": 45.36
+   },
+   {
+    "cut": 9218,
+    "startGapMm": 43.35
+   },
+   {
+    "cut": 9220,
+    "startGapMm": 39.24
+   },
+   {
+    "cut": 9242,
+    "startGapMm": 35.67
+   },
+   {
+    "cut": 9315,
+    "startGapMm": 33.21
+   },
+   {
+    "cut": 9316,
+    "startGapMm": 36.95
+   }
+  ],
+  "excluded": [
+   {
+    "cut": 9033,
+    "outcome": "applied",
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   },
+   {
+    "cut": 9241,
+    "outcome": "deferred",
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   }
+  ]
+ }
+}
