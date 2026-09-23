@@ -1,80 +1,97 @@
-# Banane UI Next — proposition « La ligne »
+# Banane UI Next — proposition « La ligne », version 2
 
 Proposition indépendante pour le chantier B (cahier 4.8, §5.4), faite sans
-consulter les maquettes corrigées de Luna, pour que la direction compare deux
-approches. Maquette statique : `index.html` (ouvrir dans un navigateur), et
-les six écrans en image (`ecran-*.png`). **Données fictives.**
+consulter les maquettes corrigées de Luna. Maquette statique : `index.html`
+(ouvrir dans un navigateur) et sept planches en image (`ecran-*.png`).
+**Données fictives.**
 
-## L'idée : le lot est une ligne, pas une liste
+La version 1 (commit a74c225) posait l'idée ; la direction l'a retenue et a
+demandé un vrai travail de design et des boutons plus simples. La version 2
+garde l'idée et reprend tout le reste.
 
-L'opérateur raisonne en voie : il pose un cut en regardant ceux d'avant
-(amendement n°7). La décision sur le lot fait la même chose (n°9). L'interface
-actuelle ne montre pourtant qu'un compteur de cuts et le cut en cours.
+## L'idée, inchangée : le lot est une ligne
 
-« La ligne » dessine le lot comme un **schéma linéaire de ligne ferroviaire**,
-à la manière d'un référencement linéaire en SIG : un repère par cut, comme un
-point kilométrique, et au-dessus un **profil en long du déplacement posé**.
+L'opérateur pose un cut en regardant la voie (amendement n°7) ; la décision
+sur le lot fait de même (n°9). « La ligne » dessine donc le lot comme un
+**schéma linéaire de ligne ferroviaire** : un repère par cut, comme un point
+kilométrique, et au-dessus un **profil en long du déplacement posé**, avec la
+bande de la garde de continuité (±30 mm). Un cut qui sort de la continuité de
+la voie se voit sans rien lire.
 
-- **L'état se lit à la forme**, la couleur ne fait que la renforcer (lisible en
-  niveaux de gris) : carré plein = posé par le moteur ; carré évidé pointé =
-  posé par la voie ; carré évidé ocre = différé ; carré barré = refusé par
-  l'écartement ; pointillé = sans entrée moteur ; triangle = navigation
-  incertaine ; noir = cut affiché.
-- **Le profil** relie les cuts posés et dessine la bande de la garde de
-  continuité (±30 mm autour de la droite des voisins). Une proposition retenue
-  par la garde apparaît hors de la bande, avec son écart : le « pourquoi » d'un
-  différé se voit au lieu de se lire dans un journal.
-- **Le curseur** porte toujours le numéro du cut affiché. En cas
-  d'incertitude, il devient « 409 ? » : l'incertitude reste visible avec son
-  cut (§5.4).
+## Ce que la version 2 change
 
-## Les écrans
+**Le ruban devient une voie.** Deux rails fins, et une traverse par cut. La
+forme porte l'état, la couleur ne fait que la renforcer :
 
-| # | Écran | Ce qu'il montre |
+| Traverse | Sens |
+|---|---|
+| pleine | posé par le moteur (ou validé par toi, en Natif) |
+| creuse | posé par la voie |
+| pointillée | différé : la place est vide, à combler plus tard |
+| croix | refusé par l'écartement (rouge) ou SKIP de l'opérateur (gris) |
+| fine et pâle | à venir |
+| haute, noire, avec son numéro | le cut affiché ; rouge et « 409 ? » si la navigation est incertaine |
+
+**Moins de cadres, plus de hiérarchie.** Plus aucune carte : des blocs séparés
+par l'espace. Chaque écran se lit de haut en bas : l'état en capitales
+colorées, un grand chiffre (le cut), une ligne de compteurs, la voie, le
+détail, puis la barre d'action. Typographie Inter à chiffres tabulaires (la
+police est embarquée avec la maquette ; dans l'extension, elle le serait aussi,
+sans appel réseau).
+
+**Un état, une action** (planche 7). Un seul bouton plein par écran, en bas à
+gauche, toujours au même endroit. Les autres choix sont des liens à côté.
+« Détails › » à droite ouvre le diagnostic. Règles :
+
+1. Un bouton ne dit jamais « réussi » : la ligne d'état le dit, après l'effet
+   observé.
+2. Une action irréversible n'est jamais le bouton plein : elle est en rouge et
+   demande une confirmation (Arrêter le lot, SKIP explicite).
+3. Pas de bouton grisé pour une fonction future ou inutile dans l'état.
+4. Un verbe et son objet, avec le numéro du cut quand l'action le vise.
+5. Vert pour avancer, noir pour s'arrêter ou constater.
+
+Avant / après, pour le Pilote : le panneau actuel (`panel.js`) a neuf
+boutons d'action et en affiche jusqu'à six ensemble — sur un rail non résolu :
+Démarrer (grisé), Arrêter, Réessayer, Reprise manuelle, SKIP explicite,
+Télécharger le bilan, tous de même poids. « La ligne » en montre un, plus un
+ou deux liens. Aucune fonction n'est retirée : chacune reste accessible dans
+l'état où elle a un sens.
+
+## Les planches
+
+| # | Écran | Action principale |
 |---|---|---|
-| 1 | Pilote, lot en cours | ruban, cut en cours avec ses deux rails, écartement en plage d'admissibilité, commandes et preuves |
-| 2 | Pilote, navigation incertaine | un seul état d'alerte, écritures fermées, marche à suivre, un seul bouton nommant le cut |
-| 3 | Pilote, fin de lot | bilan sur les cuts distincts, tout le lot sur une ligne, différés par tronçon, reprise des différés (future) |
-| 4 | Natif, collecte | ton parcours (validé, revisité, SKIP), points lus par cut, santé en une ligne, continuité observée |
-| 5 | Assisté | coupe du cut : pose ESV en pointillés, proposition pleine, déplacements écrits |
+| 1 | Pilote, lot en cours | Pause (lien : Arrêter le lot) |
+| 2 | Pilote, navigation incertaine | J'ai vérifié le cut 409 · clôturer (lien : Journal) |
+| 3 | Pilote, fin de lot | Télécharger le bilan et les LiDAR (lien : Nouveau lot) |
+| 4 | Natif, collecte | Terminer et télécharger (lien : Pause) |
+| 5 | Assisté | Appliquer les deux rails (lien : Ignorer) |
 | 6 | Pilote, thème sombre | l'écran 1 posé sur ESV |
+| 7 | Les boutons | les dix états et leur action |
 
-## Les règles conservées du §5.4, et où elles sont
+## Les règles du cahier, et où elles sont
 
-- **Politique effective affichée** : ligne d'état de chaque écran Pilote, en
-  permanence, pas dans un réglage replié.
-- **« Différés : N » fidèle** : chiffre clé ; à l'écran 2, le cut incertain
-  n'y est pas ajouté et le texte le dit.
-- **Incertitude de navigation visible avec son cut** : curseur « 409 ? »,
-  triangle sur le ruban, titre de l'alerte, libellé du bouton.
-- **Aucun bouton présenté comme réussi sur un simple accusé** : le tableau
-  « Commandes et preuves » sépare trois colonnes — *émise*, *effet observé*,
-  *serveur* (toujours « non disponible ») — et seul un effet observé prend la
-  couleur de la réussite.
+- **Politique effective affichée** : sous le compteur, en permanence.
+- **« Différés : N » fidèle** : compteur ambre ; à l'écran 2, le cut incertain
+  n'y est pas ajouté et une ligne le dit.
+- **Incertitude visible avec son cut** : traverse rouge « 409 ? », titre,
+  libellé du bouton.
+- **Aucun bouton présenté comme réussi sur un simple accusé** : la dernière
+  commande se lit en trois étapes — émise, effet, serveur (toujours « non
+  disponible ») ; seul un effet observé passe au vert.
+- **Écartement** : une plage 1405–1470 sans valeur centrale ni repère à 1435.
+- **Deux rails ou aucun** : c'est le libellé même du bouton de l'Assisté.
+- **Couverture jamais seule** : le bilan de fin de lot dit que la justesse
+  n'est pas mesurée avant la relecture Natif.
+- **Natif** : « Aucune commande n'est envoyée » reste affiché pendant toute la
+  collecte.
 
-Et des règles du contrat, rendues visibles :
+## Ce que ça demande à l'extension
 
-- **Écartement** : une plage 1405–1470 sans valeur centrale ni repère à 1435,
-  avec la phrase « Banane n'y vise aucune valeur ».
-- **Pas d'application partielle** : « Appliquer — les deux rails, ou aucun ».
-- **Couverture jamais seule** : le bilan de fin de lot dit que la justesse n'est
-  pas mesurée tant que la relecture Natif n'est pas faite.
-- **Natif** : « Banane n'envoie aucune commande dans ce mode » reste affiché
-  pendant toute la collecte.
-
-## Ce que cette proposition ajoute, et ce qu'elle demande
-
-- La **reprise des différés** (écran 3) est montrée désactivée : elle dépend de
-  la décision D2 et du chantier 1 (retour à un cut). La ligne en est le support
-  naturel : chaque tronçon différé est une cible de navigation.
-- Le profil demande, par cut, le déplacement latéral posé et l'écart à la voie :
-  la 4.7.8 les calcule déjà (`lotObservation`) ; rien de nouveau côté moteur.
-- Sur une fenêtre de 560 px, le ruban montre 41 cuts ; le lot entier tient sur
-  la ligne de l'écran 3.
-
-## Hors de cette proposition
-
-Le diagnostic complet (motifs, candidats, journal GCV1) reste replié ; son
-contenu n'est pas redessiné ici. Le style suit la référence retenue
-(`design/ui-next/REFERENCE.md`) — fond clair, un seul accent vert, alerte douce
-et rare — sans en reprendre la mise en page par cartes de chiffres.
+- Le profil lit, par cut, le déplacement latéral posé et l'écart à la voie : la
+  4.7.8 les calcule déjà (`lotObservation`).
+- La reprise des différés n'apparaît pas tant qu'elle n'existe pas (D2 et
+  chantier 1) ; la ligne en sera le support naturel, chaque tronçon différé
+  étant une cible de navigation.
+- La police Inter (48 Ko, licence SIL OFL, `fonts/`).
