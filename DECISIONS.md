@@ -1,5 +1,106 @@
 # Décisions techniques
 
+## D-035 - Bilan des curseurs du cahier 4.8, §8 (critère C5)
+
+Date : 23 septembre 2026. Source : `audit/brain-audit-2026-09-22.json` (moteur
+4.7.6, 385 cuts, parties 13, 18, 19, 20), rails abstenus jugés contre la
+validation humaine ; « juste au premier rang » signifie que le meilleur minimum
+de la grille était à 10 mm ou moins de la pose humaine.
+
+| Curseur | Valeur retenue | Coût mesuré | Décision |
+|---|---|---|---|
+| `minFace` | 6, avec flanc partiel 3–5 points si le dessus est bien vu | Voir D-031 | **Desserré** en 4.7.5 (D-031). Reste : 60 rails abstenus pour flanc, 27 sur 41 jugés justes au premier rang, avec moins de 3 points de flanc. Pas de nouveau desserrage sans une autre preuve (continuité de voie, D-033). |
+| `minTop` | 15 | 15 rails abstenus ; sur 13 jugés, 7 justes au premier rang, 3 à un rang suivant, 3 absents | **Conservé.** Desserrer publierait au mieux 7 justes pour 6 douteux ; aucun bilan de desserrage n'est encore mesuré. Bilan incomplet, à instruire. |
+| Competitive set `loss/lmin` (ambiguïté) | 1,5 | 13 rails abstenus ; sur 12 jugés, 7 justes au premier rang, 5 faux au premier rang | **Conservé.** Desserrer publierait 5 rails faux sur 12. Le classement doit venir d'une autre information (continuité de voie), pas d'un seuil plus lâche. |
+| Pente hors domaine | inchangée | 10 rails abstenus ; sur 7 jugés, 6 justes au premier rang | **Conservé**, hors liste du §8. Coût réel, gain de desserrage non mesuré. |
+| Garde d'ambiguïté S1 | active | KI-031 : une abstention de plus, une erreur > 50 mm de moins | **Conservé.** |
+| Seuil de confiance | neutralisé en Pilote GCV1 | 0 cut mis en pause sur 74 (KI-033) | **Conservé.** |
+| Fenêtre de fraîcheur de la référence | 1 500 ms | 9 rails sans référence sur 477 qualifiés, contre 145 faute de validation | **Conservée.** Ce n'est pas elle qui prive le banc de références, c'est l'absence de validation (KI-039). |
+
+Le contrat d'écartement n'est pas un curseur (cahier §8) : inchangé.
+
+## D-034 - A1 redéfini deux fois ; A2 écarté de la 4.8
+
+Date : 22 septembre 2026 (cahier 4.8, amendements n°1 et n°4). Le score de
+justesse pour classer des hypothèses (A1 d'origine) est sans objet : le
+classement déterministe retrouve le meilleur couple admissible 17 fois sur 17.
+Le modèle d'abstention qui l'a remplacé est lui aussi sans objet : aucun cut
+appliqué n'est faux sur 76 jugés. A1 devient le calage de convention (D-032).
+L'inférence embarquée (A2) est écartée de la 4.8 : entrée alors affamée, service
+worker MV3 détruit après une trentaine de secondes d'inactivité ; réouverture
+par amendement seulement.
+
+## D-033 - Continuité de voie : étudiée, pas activée
+
+Date : 22 septembre 2026 (cahier 4.8, amendement n°3). Dans les appareils de
+voie, recentrer la recherche du moteur gelé sur la position prédite par les cuts
+voisins appliqués donne 12 cuts justes, 0 faux et 6 différés sur 19 avec des
+voisins des deux côtés (7 justes, 0 faux en passage unique). Une seule partie,
+un seul jour : outil `tools/continuity-study.cjs`, rien dans l'extension.
+Préalables à toute activation : mesure sur au moins deux autres parties avec
+appareils de voie, puis observation dans le Pilote sans application.
+L'écartement des cuts voisins ne peut servir que de garde, jamais de cible.
+
+## D-032 - Calage de convention des rails publiés (4.7.6)
+
+Date : 22 septembre 2026 (cahier 4.8, amendement n°4). Le moteur pose le gabarit
+au milieu de la bande de points LiDAR, l'opérateur en enveloppe : rail 2,8 mm
+trop bas, écartement 4,5 mm trop large en médiane. `src/placement-convention.js`
+cale chaque rail publié : dessus au 90e centile des points + 1,0 mm, flanc à la
+médiane des points − 2,6 mm, pas de correction latérale sous 6 points de flanc,
+pas de calage sous 15 points de dessus ni au-delà de 8 mm. Appliqué après S1 et
+avant la garde d'écartement ; A_STAR, S1 et seuils inchangés. Hors ligne, chaque
+session retenue à tour de rôle : latéral médian 2,39 → 1,60 mm, vertical
+2,83 → 1,13 mm, écartement 4,67 → 2,34 mm ; aucune décision de cut changée.
+
+**Validation.** La relecture Natif d'un lot Pilote est ancrée : l'opérateur part
+du placement proposé et ne retouche qu'au-delà de sa tolérance (KI-034, KI-035).
+La mesure qui fait foi est une collecte Natif indépendante — l'opérateur pose
+depuis l'état ESV, sans proposition — sur une partie non utilisée pour
+l'ajustement, rejouée hors ligne calage actif puis coupé
+(`tools/brain-audit.cjs --convention on|off`). Retour 4.7.5 si le calage y est
+plus loin de l'humain que le placement brut, en médiane latérale ou verticale,
+ou s'il rend faux au-delà de 10 mm un cut que le placement brut n'aurait pas
+rendu faux.
+
+## D-031 - Flanc partiel dans le Pilote (4.7.5)
+
+Date : 22 septembre 2026, décision de la direction (cahier 4.8, amendement n°3).
+Un rail dont le dessus a au moins 15 points et le flanc 3 à 5 points peut être
+publié, sans pente hors domaine, rapport de perte ≥ 1,5, deux rails exigés,
+écartement dans le contrat. Option de laboratoire existante `partialFaceKeep`,
+fichier gelé intact. Bilan, moteur réel sur cinq collectes : cuts appliqués
+56 → 113, 72 jugés, 0 faux au-delà de 10 mm, pire rail 6,5 mm. Dérogation au
+§1.5 (P2) pour cette seule règle. Retour 4.7.4 au premier cut appliqué en flanc
+partiel trouvé faux au-delà de 10 mm.
+
+## D-030 - Le Pilote ne lit pas « comme le Natif »
+
+Date : 22 septembre 2026 (cahier 4.8, amendement n°2). Le Pilote lit déjà tous
+les points chargés dans la zone après stabilisation du niveau de détail. Le gain
+de résolution mesuré venait de l'entrée du banc, pas de la lecture ; le chantier
+envisagé est annulé.
+
+## D-029 - Entrée du banc : lecture complète de la pose de départ
+
+Date : 22 septembre 2026 (cahier 4.8, amendement n°2). Le banc donne au moteur
+l'instantané qualifié plus la suite de la même lecture — même capture, même
+côté, même pose — acquise avant la première action humaine. La frontière
+anti-fuite (D-026) est inchangée. `first-snapshot` reste disponible pour
+comparer ; l'évaluateur historique 4.4 n'est pas modifié.
+
+## D-028 - Collecte Natif au rythme réel (4.7.2 à 4.7.4)
+
+Date : 22 septembre 2026. La lecture Natif n'est plus interrompue par un
+mouvement de caméra ; elle lit par tranches de temps avec accès direct aux
+buffers ; la garde se réduit à l'identité du cut et à la pose des rails ; une
+relecture n'est relancée que pour de nouveaux nœuds chargés tant que la pose
+n'est pas qualifiée (4.7.2). La fin de session reste sous la limite de message
+de 64 MiB et une modification de la découpe ESV relance la lecture (4.7.3). Plus
+aucune lecture après un déplacement de rail par l'opérateur, qui ne nourrirait
+jamais le moteur (4.7.4, `collector.captureAfterOperatorRailChange`). Le
+placement et le Pilote ne sont pas touchés par ces trois versions.
+
 ## D-4.7c - Autorisation d'opération, finalisation déterministe, export par opération
 
 Date : 21 septembre 2026, correctif post red-team Astra.

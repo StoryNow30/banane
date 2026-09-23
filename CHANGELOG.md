@@ -43,6 +43,12 @@ delta brut (`gcv1.convention.rawDelta`). Coupure pour essai :
 avec calage que sans (au moins 20 rails), ou cut faux > 10 mm dû au calage →
 retour 4.7.5.
 
+*Précisé le 23/09 (amendement n°5)* : la relecture d'un lot Pilote est ancrée
+sur la proposition et ne peut pas juger un écart de 2 mm. Le calage se juge sur
+une collecte Natif indépendante, sur une partie non utilisée, rejouée calage
+actif puis coupé. Décisions datées D-028 à D-035 dans `DECISIONS.md`, dont le
+bilan des curseurs (C5) ; KI-035 à KI-041 dans `KNOWN_ISSUES.md`.
+
 ## 4.7.5 — flanc partiel actif dans le Pilote, 22 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0, étiquetée

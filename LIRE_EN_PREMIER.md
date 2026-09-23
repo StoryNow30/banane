@@ -28,15 +28,23 @@ restent différés.
 
 ## Ce qu'il faut faire avec ce build
 
-1. Un lot **Pilote**, sur une partie où tu as déjà travaillé ou une nouvelle.
-2. Puis la **relecture en Natif des mêmes cuts** : valide chaque cut
-   (Maj+Espace), corrige ceux que tu poserais autrement. Tes retouches mesurent
-   directement le calage.
-3. Envoie les deux exports.
+Deux collectes, qui mesurent deux choses différentes (précisé le 23/09,
+amendement n°5 du cahier 4.8) :
 
-**Règle d'arrêt :** si, sur au moins 20 rails relus, le placement calé est plus
-loin de ta pose que ne l'aurait été le placement brut, ou si un cut appliqué est
-faux de plus de 10 mm à cause du calage, on revient à la 4.7.5 (voir
+1. **Une collecte Natif sur une partie nouvelle**, sans lancer le Pilote : tu
+   poses chaque cut toi-même depuis l'état ESV et tu valides chaque cut
+   (Maj+Espace). C'est la seule mesure honnête du calage : en relecture d'un lot
+   Pilote, tu pars de la proposition et tu ne retouches pas un écart de 2 mm,
+   ce qui est normal mais ne permet pas de le juger.
+2. **Un lot Pilote**, puis la **relecture en Natif des mêmes cuts**, en validant
+   chaque cut. Elle mesure la couverture réelle du Pilote et repère les erreurs
+   franches, au-delà de 10 mm.
+3. Envoie les exports.
+
+**Règles d'arrêt :** retour à la 4.7.5 si, sur la collecte de la partie nouvelle,
+le placement calé est plus loin de ta pose que le placement brut, ou s'il rend
+faux de plus de 10 mm un cut que le placement brut aurait bien placé ; retour à
+la 4.7.4 si un cut appliqué en flanc partiel est faux de plus de 10 mm (voir
 `RETOUR_ARRIERE.md`).
 
 ## Mise à jour

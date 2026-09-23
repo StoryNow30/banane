@@ -554,6 +554,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°2 — l'entrée du moteur, la densité, et le flanc (22/09) : corrige le §1.2 du n°1
 - n°3 — flanc partiel activé dans le Pilote ; contexte de voie (22/09) : tranche le §2.5 du n°2, déroge au §1.5 du n°1 pour cette seule règle
 - n°4 — audit 4.7.5 ; A1 redéfini en calage de convention (22/09) : remplace le §1.4 du n°1, mesure P5
+- n°5 — validation du calage et bilan des curseurs (23/09) : précise la règle d'arrêt du §4.4 du n°4
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -964,3 +965,37 @@ placement calé ; un effet d'ancrage le favoriserait.
 Sur le §2 : la couverture n'est pas modifiée par le calage ; la qualité l'est
 (C2). Sur le §15 : P5 mesuré ; P2 borné mais toujours non mesuré ; P0 confirmé
 sur les données d'observation saine (88 %).
+
+## Amendement n°5 — validation du calage et bilan des curseurs
+
+**23 septembre 2026.** Élément nouveau : KI-034, mesuré sur la partie 15 avant
+cet audit — sur les cuts placés par le pilote, la retouche latérale de
+l'opérateur vaut +0,23 ± 3,04 mm, alors que l'audit mesure un écart de 2,1 mm
+par flanc contre des poses faites sans proposition.
+
+### 5.1 La relecture d'un lot Pilote ne juge pas le calage
+
+En relecture, l'opérateur part du placement proposé et ne retouche qu'au-delà de
+sa tolérance. Une différence de 2 mm y reste invisible, dans un sens comme dans
+l'autre. La règle d'arrêt du §4.4 de l'amendement n°4 est donc précisée :
+
+- **la mesure qui fait foi** est une collecte Natif indépendante — l'opérateur
+  pose depuis l'état ESV, sans proposition — sur une partie non utilisée pour
+  l'ajustement, rejouée hors ligne calage actif puis coupé
+  (`tools/brain-audit.cjs --convention on|off`) ;
+- retour 4.7.5 si le calage y est plus loin de l'humain que le placement brut, en
+  médiane latérale ou verticale, ou s'il rend faux au-delà de 10 mm un cut que le
+  placement brut n'aurait pas rendu faux ;
+- la relecture d'un lot Pilote reste utile pour la couverture réelle du Pilote et
+  pour la règle d'arrêt du flanc partiel (erreurs au-delà de 10 mm, que la
+  tolérance de l'opérateur ne masque pas).
+
+Cette collecte vaut aussi confirmation terrain au sens du §11 pour le calage.
+
+### 5.2 Bilan des curseurs
+
+Le bilan exigé par C5 est consigné dans `DECISIONS.md`, D-035. En résumé : le
+flanc est desserré (flanc partiel) ; `minTop`, le competitive set et la pente
+sont conservés, avec leur coût mesuré. Desserrer le competitive set publierait 5
+rails faux sur 12, et `minTop` n'a pas encore de bilan de desserrage : C5 reste
+partiel sur ce point.
