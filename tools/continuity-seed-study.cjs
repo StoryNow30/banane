@@ -5,7 +5,7 @@
  * de la continuité de la voie plutôt que de la pose ESV ?
  *
  *   node tools/continuity-seed-study.cjs --input SESSION.json|DOSSIER[=libellé] [...]
- *        [--mode all|esv|operator|chain|relay] [--gap 3] [--json SORTIE]
+ *        [--mode all|esv,operator,…] [--points visit|before] [--gap 3] [--json SORTIE]
  *
  * ÉTUDE HORS LIGNE, sans effet sur l'extension (cahier 4.8, amendement n°7).
  * Elle reproduit la logique de placement de l'opérateur (export Natif du 23/09,
@@ -30,7 +30,7 @@
  * garde d'écartement du moteur reste la seule règle de paire.
  */
 const fs=require('node:fs'),path=require('node:path');
-const Segments=require('./merge-segments.cjs'),Shadow=require('../src/gcv1-shadow.js'),Gauge=require('../src/gauge.js');
+const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs'),Shadow=require('../src/gcv1-shadow.js'),Gauge=require('../src/gauge.js');
 const C=require('../vendor/capture-core.js'),N=require('./native-offline-evaluate.cjs'),K=require('../src/core.js');
 const SIDES=['left','right'],WRONG_MM=10,MODES=['esv','operator','chain','relay'];
 const JUDGED=new Set(['applied-right','applied-wrong','rail-abstained','gauge-rejected']);
@@ -64,15 +64,33 @@ function start(init,anchors,side){
   const P=init.profileLocalToSceneRelative,a=C.point(P,o),b=C.point(P,[o[0],o[1]+lat,o[2]+vert]);
   return {t:[b[0]-a[0],b[1]-a[1],b[2]-a[2]]};
 }
-function studySession(session,label,{mode='operator',gap=3}={}){
+/* Points « avant » : seuls les nuages acquis avant le premier geste de
+ * l'opérateur sur les rails, c'est-à-dire ce que Banane a déjà en main quand il
+ * doit proposer. La capture native couvre ±0,4 m latéralement autour de la pose
+ * ESV (`native-lidar.js`, bounds) : un rail décalé de moins de 40 cm y est. */
+function beforeCutoff(record,observations){
+  const b=Lab.temporalBoundaries(record,observations);
+  return [b.known.left?.at,b.known.right?.at,...b.unknown.map(u=>u.at)].filter(Boolean).sort()[0]||null;
+}
+function observationsByVisit(session){
+  const map=new Map();
+  for(const e of session.events||[])if(e.visitId&&['native-visit-started','native-state-observed'].includes(e.type)){
+    const rows=map.get(e.visitId)||[];rows.push({type:e.type,eventSeq:e.eventSeq,state:e.type==='native-visit-started'?e.initialObserved:e.state});map.set(e.visitId,rows);}
+  for(const rows of map.values())rows.sort((a,b)=>a.eventSeq-b.eventSeq);
+  return map;
+}
+function studySession(session,label,{mode='operator',gap=3,points='visit'}={}){
   if(!MODES.includes(mode))throw Error('Mode inconnu : '+mode);
+  if(!['visit','before'].includes(points))throw Error('Points inconnus : '+points);
+  const observations=points==='before'?observationsByVisit(session):null;
   const visits=(session.records||[]).filter(r=>r.visitRelation?.type==='first-observation'&&r.beforeEstablished?.rails&&
     !EXCLUDED.has(r.identity?.cut)).sort((a,b)=>a.identity.cut-b.identity.cut);
   const cloudsByVisit=new Map();
   for(const c of session.clouds||[])if(c.pointsSceneRelative)(cloudsByVisit.get(c.visitId)||cloudsByVisit.set(c.visitId,[]).get(c.visitId)).push(c);
   const anchors=[],rows=[];
   for(const record of visits){
-    const cut=record.identity.cut,clouds=cloudsByVisit.get(record.visitId)||[];
+    const cut=record.identity.cut,cutoff=points==='before'?beforeCutoff(record,observations.get(record.visitId)||[]):null;
+    const clouds=(cloudsByVisit.get(record.visitId)||[]).filter(c=>!cutoff||(c.acquisition?.acquiredThroughAt||c.acquisition?.endedAt||c.capturedAt)<cutoff);
     if(mode==='operator'&&!strict(record)){ // ancre seulement
       if(validated(record))anchors.push({cut,world:Object.fromEntries(SIDES.map(s=>[s,record.humanFinalReference.state.rails[s].positionSceneRelative]))});
       continue;}
@@ -84,9 +102,9 @@ function studySession(session,label,{mode='operator',gap=3}={}){
       rails[side]=translated({...init,profileContours:contours},start(init,near,side).t);
     }
     if(!ok)continue;
-    const points=[],visible=[];
-    for(const c of clouds)for(let k=0;k<c.pointsSceneRelative.length;k++){points.push(c.pointsSceneRelative[k]);visible.push(c.visibleByClipBoxes?.[k]!==false);}
-    const science=Shadow.scientificProposeBoth({format:'continuity-seed-study',identity:record.identity,rails,pointsSceneRelative:points,visibleByClipBoxes:visible,sourceChunkIds:[]});
+    const cloud=[],visible=[];
+    for(const c of clouds)for(let k=0;k<c.pointsSceneRelative.length;k++){cloud.push(c.pointsSceneRelative[k]);visible.push(c.visibleByClipBoxes?.[k]!==false);}
+    const science=Shadow.scientificProposeBoth({format:'continuity-seed-study',identity:record.identity,rails,pointsSceneRelative:cloud,visibleByClipBoxes:visible,sourceChunkIds:[]});
     const applied=SIDES.every(s=>science.rails[s]?.ok&&science.rails[s].next.status==='candidate');
     const poses=applied?K.expectedPoses({rails},Object.fromEntries(SIDES.map(s=>[s,{delta:science.rails[s].next.delta}]))):null;
     const row={cut,seeded:near.length>0,anchors:near.map(a=>a.cut),applied,gaugeRejected:!!science.summary.pairGaugeRejected,
@@ -114,27 +132,27 @@ function studySession(session,label,{mode='operator',gap=3}={}){
   }
   const count=o=>rows.filter(r=>r.outcome===o).length;
   const starts=rows.flatMap(r=>SIDES.map(s=>r.rails[s]?.startLateralMm).filter(Number.isFinite).map(Math.abs)).sort((a,b)=>a-b);
-  return {label,mode,gap,summary:{judged:rows.filter(r=>JUDGED.has(r.outcome)).length,
+  return {label,mode,gap,points,summary:{judged:rows.filter(r=>JUDGED.has(r.outcome)).length,
     appliedRight:count('applied-right'),appliedWrong:count('applied-wrong'),railAbstained:count('rail-abstained'),gaugeRejected:count('gauge-rejected'),
     appliedUnreferenced:count('applied-unreferenced'),seeded:rows.filter(r=>r.seeded).length,operatorAnchors:rows.filter(r=>r.operatorAnchor).length,
     startLateralMedianMm:r1(starts[starts.length>>1]),startLateralP90Mm:r1(starts[Math.floor(starts.length*.9)]),
     wrong:rows.filter(r=>r.outcome==='applied-wrong').map(r=>({cut:r.cut,worstLateralMm:r1(r.worstLateralMm),anchors:r.anchors}))},rows};
 }
 function run(argv=process.argv.slice(2)){
-  const inputs=[],opt={mode:'all',gap:3};let out=null;
+  const inputs=[],opt={mode:'all',gap:3,points:'visit'};let out=null;
   for(let i=0;i<argv.length;i++){
     if(argv[i]==='--input'){const [file,label]=argv[++i].split('=');inputs.push({file,label:label||path.basename(file)});}
-    else if(argv[i]==='--mode')opt.mode=argv[++i];else if(argv[i]==='--gap')opt.gap=+argv[++i];
+    else if(argv[i]==='--mode')opt.mode=argv[++i];else if(argv[i]==='--points')opt.points=argv[++i];else if(argv[i]==='--gap')opt.gap=+argv[++i];
     else if(argv[i]==='--json')out=argv[++i];else throw Error('Argument inconnu : '+argv[i]);
   }
   if(!inputs.length){console.error('Usage : --input SESSION.json|DOSSIER[=libellé] [...] [--mode all|esv|operator|chain|relay] [--gap 3] [--json SORTIE]');process.exit(1);}
-  const modes=opt.mode==='all'?MODES:[opt.mode];
-  const report={format:'banane-continuity-seed-study-v1',engine:'gcv1-shadow 4.7.6',wrongMm:WRONG_MM,gap:opt.gap,excludedCuts:[...EXCLUDED],modes:{}};
+  const modes=opt.mode==='all'?MODES:opt.mode.split(',');
+  const report={format:'banane-continuity-seed-study-v1',engine:'gcv1-shadow 4.7.6',wrongMm:WRONG_MM,gap:opt.gap,points:opt.points,excludedCuts:[...EXCLUDED],modes:{}};
   for(const {file,label} of inputs){
     const session=Segments.loadSession(file); // relue une fois pour tous les départs
     for(const mode of modes){
-      const s=studySession(session,label,{mode,gap:opt.gap}),m=s.summary;(report.modes[mode]||(report.modes[mode]=[])).push(s);
-      console.log(`${label} [${mode}] : justes ${m.appliedRight} · faux ${m.appliedWrong} · abstention ${m.railAbstained} · écartement ${m.gaugeRejected} · sans réf. appliqués ${m.appliedUnreferenced} · départ latéral médian ${m.startLateralMedianMm} mm, p90 ${m.startLateralP90Mm}${mode==='relay'?` · corrections opérateur servant d'ancre ${m.operatorAnchors}`:''}`);
+      const s=studySession(session,label,{mode,gap:opt.gap,points:opt.points}),m=s.summary;(report.modes[mode]||(report.modes[mode]=[])).push(s);
+      console.log(`${label} [${mode}${opt.points==='before'?', points avant':''}] : justes ${m.appliedRight} · faux ${m.appliedWrong} · abstention ${m.railAbstained} · écartement ${m.gaugeRejected} · sans réf. appliqués ${m.appliedUnreferenced} · départ latéral médian ${m.startLateralMedianMm} mm, p90 ${m.startLateralP90Mm}${mode==='relay'?` · corrections opérateur servant d'ancre ${m.operatorAnchors}`:''}`);
       if(m.wrong.length)console.log('   faux : '+m.wrong.map(w=>`${w.cut} (${w.worstLateralMm} mm${w.anchors.length?', ancres '+w.anchors.join('+'):', départ ESV'})`).join(' · '));
     }
   }
