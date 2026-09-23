@@ -1,5 +1,33 @@
 # Décisions techniques
 
+## D-038 - Comparaison des deux audits à mi-parcours ; définitions de mesure
+
+Date : 23 septembre 2026. Sources : `audit/mi-parcours/AUDIT_CLAUDE.md` et
+`audit/mi-parcours/AUDIT_ASTRA.md` (indépendant). Les deux convergent sur
+l'objectif intermédiaire de 80 % et sur la décision au niveau du lot.
+
+Retenu de l'audit indépendant, sans changer le plan D-037 :
+
+- **Dénominateur de C1** : tous les cuts DISTINCTS d'un lot Pilote complet
+  déclaré ; un cut sans entrée, différé, refusé par la garde ou de résultat
+  inconnu reste au dénominateur ; une revisite n'est pas un nouveau cut. Le
+  taux sur cuts avec entrée est un diagnostic, jamais le dénominateur.
+- **Critère « faux » bidimensionnel** : erreur latérale OU verticale au-delà
+  de 10 mm, mesurée sur valeurs brutes. Vérifié : sur les 233 cuts jugés
+  justes des deux audits du moteur, aucun ne dépasse 10 mm verticalement ;
+  les chiffres passés ne changent pas, la définition si.
+- **Périmètre explicite** : les cuts 9033 et 9241, exclus à la demande de
+  l'opérateur, le sont dans chaque bilan qui les concerne, et le bilan le dit.
+- **Minima proches ≠ paires récupérables** : le plafond « ~88 % » de l'audit
+  interne n'est pas une mesure ; seule une paire complète, admissible et jugée
+  compte (chantier 1, `tools/lot-choice-study.cjs`).
+- **Journaliser les candidats** : minima et paires de chaque rail consignés
+  dans l'observation, pour séparer absence d'observation, bon rail non choisi
+  et paire refusée (prochaine version d'observation).
+- **Qualification par côté instrumentée** (chantier 3) : raison, présence,
+  visibilité, capture avant geste, doublons.
+- **Holdout par partie** et P2 avant toute conclusion de généralisation.
+
 ## D-037 - Plan de mi-parcours du cahier 4.8
 
 Date : 23 septembre 2026. Décision de la direction sur l'audit interne à
