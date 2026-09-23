@@ -24,6 +24,9 @@ faux. Le tag `v4.7.0` et tout merge dans `main` attendent la même décision.
 Périmètre annoncé : accélération du Pilote, nouvelle UI, recherche scientifique
 supplémentaire. Rien de tout cela n'entre dans une correction 4.7.
 
+Référence de style retenue pour la nouvelle UI (chantier B, Banane UI Next) :
+`design/ui-next/REFERENCE.md` et ses deux captures. Aucun développement engagé.
+
 ### Dettes ouvertes, chiffrées, prêtes à être instruites
 
 | Sujet | Source | Ce qui est déjà établi |

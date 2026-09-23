@@ -28,7 +28,7 @@ def build(destination, include_tests=False):
             relative = file.relative_to(ROOT)
             if any(p.startswith('.') or p == '__pycache__' for p in relative.parts):
                 continue
-            if relative.parts[0] in {'archive', 'releases'} or relative.parts[0] == 'tests' and not include_tests or relative.parts[:2] == ('datasets', 'manual'):
+            if relative.parts[0] in {'archive', 'releases', 'design'} or relative.parts[0] == 'tests' and not include_tests or relative.parts[:2] == ('datasets', 'manual'):
                 continue
             if relative.parts[:2] == ('datasets', 'native') and not (include_tests and relative.parts[:3] == ('datasets', 'native', 'reference') and relative.suffix == '.json'):
                 continue
