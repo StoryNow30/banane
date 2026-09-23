@@ -557,6 +557,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°5 — validation du calage et bilan des curseurs (23/09) : précise la règle d'arrêt du §4.4 du n°4
 - n°6 — premières mesures terrain de la 4.7.6 (23/09) : calage validé sur cuts inédits, P5 révisé, garde de continuité prioritaire
 - n°7 — la logique de l'opérateur : partir de la continuité de la voie (23/09) : mesure l'amorce par continuité, confirme le §3.7 du n°3, élargit le chantier du §6.8 du n°6
+- n°8 — première collecte 4.7.7 (23/09) : observation « continuité » mesurée sur le terrain, partie 24
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1286,3 +1287,60 @@ et la consigne dans la visite sans l'appliquer ni l'afficher. Mesure attendue :
 une collecte Natif sur une autre partie à appareils de voie. Règle d'arrêt :
 plus de cuts faux par continuité que depuis la pose ESV rejouée sur la même
 entrée.
+
+## Amendement n°8 — première collecte 4.7.7 : la continuité mesurée sur le terrain
+
+**23 septembre 2026.** Élément nouveau : la session Natif 4.7.7 de l'après-midi
+(`banane-data`, `collections/2026-09-23_v4.7.7_/`) : partie 24, 210 visites,
+176 cuts en **20 séries** de 3 à 27 cuts réparties de 764 à 8457, chaque série
+commencée quelques cuts avant sa zone ; relevés
+`audit/continuity-observer-2026-09-23-p24.json` et
+`audit/continuity-parity-2026-09-23-p24.json`.
+
+### 8.1 L'extension a calculé ce qu'elle devait, sans gêner la collecte
+
+- Session complète : 2 037 nuages déclarés, tous présents.
+- Un bloc `continuityObservation` sur chacune des 176 premières visites :
+  122 calculés, 51 sans ancre (dont les 20 premiers cuts de série), 3 sans
+  points utilisables.
+- **Parité : 176 blocs sur 176 reproduits à l'identique hors ligne**
+  (ancres, entrée, prédiction, statuts et deltas).
+- Temps moteur dans le service worker : **255 ms médian, p90 368 ms, max
+  550 ms**.
+- Santé de collecte : 0 événement perdu, 0 échec d'envoi, file au plus à 24
+  (94 et 33 sur les sessions 4.7.6 du matin), niveau complet de bout en bout ;
+  instantané initial qualifié pour 83 % / 74 % des rails (82–89 % / 73–79 % en
+  4.7.6). KI-046 : aucun effet mesuré.
+
+### 8.2 Continuité contre pose ESV, même entrée, jugé aux règles du banc
+
+| Partie 24, 105 cuts jugés | Justes | Faux | Abstention | Refus d'écartement |
+|---|---|---|---|---|
+| Départ depuis la pose ESV | 59 | **0** | 29 | 17 |
+| Départ par continuité | **68** | **0** | 30 | 7 |
+
+Transitions : 9 refus d'écartement → justes (766, 771–773, 1827–1830, 2560 :
+des grappes, là où la pose ESV mène le moteur sur un champignon voisin),
+3 abstentions → justes, 3 justes → abstention ou refus. Précision des justes
+inchangée : latéral médian 1,3 mm dans les deux cas (p90 5,1 → 4,7 mm),
+vertical 0,9 → 0,8 mm. Écart des justes à la prédiction : 4,4 mm médian,
+p90 9,3, max 23,3 : la garde à 30 mm n'aurait rien changé. 34 cuts non jugés
+faute de référence (26 sans pose finale, 8 à intentions multiples).
+
+**Règle d'arrêt de D-036 : non déclenchée** (0 faux contre 0).
+
+### 8.3 Bilan des mesures de continuité, entrée corrigée
+
+| | Cuts jugés | Départ ESV | Continuité |
+|---|---|---|---|
+| 23/09 matin, parties 19, 20, 22 (§7.8) | 252 | 118 justes · 6 faux | 141 · 3 |
+| 23/09 après-midi, partie 24 (terrain 4.7.7) | 105 | 59 · 0 | 68 · 0 |
+| **Total** | **357** | **177 · 6** | **209 · 3** |
+
+Sur le §3.7 du n°3 : la mesure sur deux autres parties à appareils de voie est
+faite (parties 22 et 24), sous réserve que les zones de la partie 24 en soient.
+Prochaine étape prévue par ce paragraphe : l'observation dans le Pilote, sur
+un lot complet relu en Natif — ou, selon la décision de la direction, l'assistant
+Natif. Sur le §2 : la continuité ajoute des cuts justes sans faux, mais les
+abstentions (30 sur 105) restent le premier frein à la couverture.
+
