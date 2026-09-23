@@ -1,51 +1,39 @@
-# Démarrer avec Banane V4.7.6 TEST — placements calés sur ta façon de poser
+# Démarrer avec Banane V4.7.7 TEST — Banane observe ta logique de continuité
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.6-test.zip` dans Edge, exactement comme la 4.7.5.
+Installe `banane-v4.7.7-test.zip` dans Edge, exactement comme la 4.7.6.
 
-Vérifie d'abord **V4.7.6 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.6 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.5, l'ancienne copie est toujours chargée.
+Vérifie d'abord **V4.7.7 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.7 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées. Si tu lis encore 4.7.6, l'ancienne copie est toujours chargée.
 
 ## Ce qui change pour toi
 
-L'audit du moteur (`AUDIT_CERVEAU_4.7.5.md`) a trouvé que le Pilote ne pose
-jamais un cut faux sur tes données, mais qu'il pose **tous** ses rails un peu
-différemment de toi : le moteur met le profil **au milieu** des points LiDAR,
-toi tu le poses **en enveloppe** — le dessus au-dessus des points, le flanc
-côté voie. Résultat mesuré : rail 2,8 mm trop bas et écartement 4,5 mm trop
-large, en médiane.
+**Rien de visible.** En Natif, à la fin de chaque cut, Banane calcule en
+arrière-plan la pose qu'il aurait proposée en partant de la droite de tes
+derniers cuts validés — ta façon de faire, mesurée sur ton export de la
+partie 22 (amendement n°7 du cahier 4.8). Il l'écrit dans l'export, dans la
+visite (`continuityObservation`), et c'est tout : **rien n'est appliqué, rien
+n'est affiché, aucune commande n'est envoyée**. C'est voulu : si tu voyais sa
+proposition, elle influencerait ta pose, et ta pose est le juge.
 
-La 4.7.6 **cale** chaque rail publié sur ta façon de poser, à partir de ses
-propres points. Mesuré sur tes sept sessions, chaque session tenue à l'écart
-de l'ajustement : écart au placement humain divisé par 1,5 en latéral, par 2,5
-en vertical, écartement ramené de +4,5 à +0,4 mm de biais. Le calage ne choisit
-rien, ne vise aucun écartement, et la garde d'écartement juge la paire calée.
-Le flanc partiel de la 4.7.5 reste actif.
-
-Ce qui ne change pas : les cuts différés (appareils de voie, flanc insuffisant)
-restent différés.
+Le Pilote, le calage et le flanc partiel sont inchangés.
 
 ## Ce qu'il faut faire avec ce build
 
-Deux collectes, qui mesurent deux choses différentes (précisé le 23/09,
-amendement n°5 du cahier 4.8) :
+1. **Une session Natif sur une partie avec appareils de voie ou contre-rails**,
+   idéalement autre que 20 et 22. Pose chaque cut toi-même et **valide chaque
+   cut** (Maj+Espace) : seules tes validations servent d'appui.
+2. **Commence quelques cuts avant la zone difficile** et avance cut par cut :
+   les appuis sont tes cuts validés à 3 numéros au plus du cut en cours.
+3. Travaille comme d'habitude, y compris les retours en arrière : Banane ne
+   s'appuie que sur ce que tu as déjà validé.
+4. Envoie l'export.
 
-1. **Une collecte Natif sur une partie nouvelle**, sans lancer le Pilote : tu
-   poses chaque cut toi-même depuis l'état ESV et tu valides chaque cut
-   (Maj+Espace). C'est la seule mesure honnête du calage : en relecture d'un lot
-   Pilote, tu pars de la proposition et tu ne retouches pas un écart de 2 mm,
-   ce qui est normal mais ne permet pas de le juger.
-2. **Un lot Pilote**, puis la **relecture en Natif des mêmes cuts**, en validant
-   chaque cut. Elle mesure la couverture réelle du Pilote et repère les erreurs
-   franches, au-delà de 10 mm.
-3. Envoie les exports.
-
-**Règles d'arrêt :** retour à la 4.7.5 si, sur la collecte de la partie nouvelle,
-le placement calé est plus loin de ta pose que le placement brut, ou s'il rend
-faux de plus de 10 mm un cut que le placement brut aurait bien placé ; retour à
-la 4.7.4 si un cut appliqué en flanc partiel est faux de plus de 10 mm (voir
-`RETOUR_ARRIERE.md`).
+**Règle d'arrêt :** si, sur la collecte, le départ par continuité fait plus de
+cuts faux que le départ ESV rejoué sur la même entrée, l'observation s'arrête
+là (retour à la 4.7.6, voir `RETOUR_ARRIERE.md`). À surveiller aussi : si la
+santé de collecte se dégrade (captures perdues, file qui monte), dis-le.
 
 ## Mise à jour
 

@@ -32,7 +32,8 @@
 const fs=require('node:fs'),path=require('node:path');
 const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs'),Shadow=require('../src/gcv1-shadow.js'),Gauge=require('../src/gauge.js');
 const C=require('../vendor/capture-core.js'),N=require('./native-offline-evaluate.cjs'),K=require('../src/core.js');
-const SIDES=['left','right'],WRONG_MM=10,MODES=['esv','operator','chain','relay'];
+const Observer=require('../src/continuity-observer.js');
+const SIDES=['left','right'],WRONG_MM=10,MODES=['esv','operator','chain','relay'],GUARD_MM=30;
 const JUDGED=new Set(['applied-right','applied-wrong','rail-abstained','gauge-rejected']);
 /* Cuts exclus du bilan par l'opérateur le 23/09 : référence impossible à déduire. */
 const EXCLUDED=new Set([9033,9241]);
@@ -138,6 +139,63 @@ function studySession(session,label,{mode='operator',gap=3,points='visit'}={}){
     startLateralMedianMm:r1(starts[starts.length>>1]),startLateralP90Mm:r1(starts[Math.floor(starts.length*.9)]),
     wrong:rows.filter(r=>r.outcome==='applied-wrong').map(r=>({cut:r.cut,worstLateralMm:r1(r.worstLateralMm),anchors:r.anchors}))},rows};
 }
+/* MODE observer — la 4.7.7 rejouée, corrigée après la relecture indépendante
+ * du 23/09 : visites dans leur ORDRE RÉEL (visitIndex), ancres = validations
+ * fiables déjà faites (src/continuity-observer.js), entrée = une capture par
+ * côté prise à la pose ESV avant le premier geste, points visibles prouvés et
+ * sans doublon. Le témoin part de la pose ESV sur EXACTEMENT la même entrée.
+ * Jugement aux règles du banc (placement-lab referenceFor), erreurs brutes non
+ * arrondies ; latéral > 10 mm = faux, vertical > 10 mm rapporté à part. La
+ * garde de continuité (30 mm de la prédiction) est évaluée en variante. */
+function observerSession(session,label){
+  const records=(session.records||[]).filter(r=>!EXCLUDED.has(r.identity?.cut)).sort((a,b)=>a.visitIndex-b.visitIndex);
+  const chunksByVisit=new Map();
+  for(const c of session.clouds||[])if(c.format==='banane-native-lidar-chunk-v1'||c.pointsSceneRelative)(chunksByVisit.get(c.visitId)||chunksByVisit.set(c.visitId,[]).get(c.visitId)).push(c);
+  const rows=[];
+  for(const record of records){
+    if(record.visitRelation?.type!=='first-observation'||!record.beforeEstablished?.rails)continue;
+    const earlier=records.filter(r=>r.visitIndex<record.visitIndex);
+    const anchors=Observer.selectAnchors(record,earlier);
+    const chunks=chunksByVisit.get(record.visitId)||[];
+    const block=Observer.observe({record,anchors,chunks,Shadow,now:()=>null});
+    const row={cut:record.identity.cut,visitIndex:record.visitIndex,anchors:anchors.map(a=>a.cut),status:block.status,input:block.input||null};
+    if(block.status!=='computed'){row.outcome='not-computed';rows.push(row);continue;}
+    const input=Observer.gatherInput(record,chunks);
+    const esv=Observer.proposeFrom(Shadow,record,input,Observer.startRails(record,input,null).rails);
+    // Jugement : la référence humaine n'est lue qu'ici, aux règles du banc.
+    const through=chunks.filter(c=>input.chunkIds.includes(c.chunkId)).map(c=>c.acquisition?.endedAt||c.capturedAt).filter(Boolean).sort().at(-1)||null;
+    const refs=Object.fromEntries(SIDES.map(side=>[side,Lab.referenceFor(record,side,record.beforeEstablished.rails[side],through)]));
+    row.referenced=SIDES.every(side=>refs[side].status==='candidate');
+    row.referenceReasons=SIDES.filter(side=>refs[side].status!=='candidate').map(side=>side+':'+refs[side].reason);
+    const judge=summary=>{
+      if(!summary.applicable)return {outcome:summary.gaugeRejected?'gauge-rejected':'rail-abstained',motifs:SIDES.map(s=>summary.rails[s].motif).filter(Boolean)};
+      if(!row.referenced)return {outcome:'applied-unreferenced'};
+      const M=record.beforeEstablished.rails;const err={};
+      for(const side of SIDES){const m=M[side].sceneRelativeToProfileLocal,a=C.point(m,summary.rails[side].positionSceneRelative),h=C.point(m,refs[side].finalRail.positionSceneRelative);
+        err[side]={lateralMm:(a[1]-h[1])*1000,verticalMm:(a[2]-h[2])*1000};}
+      const worst=Math.max(...SIDES.map(s=>Math.abs(err[s].lateralMm))),worstV=Math.max(...SIDES.map(s=>Math.abs(err[s].verticalMm)));
+      return {outcome:worst>WRONG_MM?'applied-wrong':'applied-right',worstLateralMm:r1(worst),worstVerticalMm:r1(worstV),verticalOver10:worstV>WRONG_MM,
+        errors:Object.fromEntries(SIDES.map(s=>[s,{lateralMm:r1(err[s].lateralMm),verticalMm:r1(err[s].verticalMm)}]))};
+    };
+    const cont=block.fromContinuity;
+    row.continuity=judge(cont);row.esv=judge(esv);
+    row.continuity.fromPredictionMm=cont.applicable?r1(Math.max(...SIDES.map(s=>Math.abs(cont.rails[s].fromPredictionLateralMm)))):null;
+    row.continuity.engineMs=cont.engineMs;
+    row.continuityGuarded=cont.applicable&&row.continuity.fromPredictionMm>GUARD_MM?{outcome:'continuity-deferred'}:row.continuity;
+    rows.push(row);
+  }
+  const judged=rows.filter(r=>r.referenced&&r.continuity),count=(key,o)=>judged.filter(r=>r[key].outcome===o).length;
+  const tally=key=>({right:count(key,'applied-right'),wrong:count(key,'applied-wrong'),abstained:count(key,'rail-abstained'),gaugeRejected:count(key,'gauge-rejected'),
+    deferred:count(key,'continuity-deferred'),verticalOver10AmongRight:judged.filter(r=>r[key].outcome==='applied-right'&&r[key].verticalOver10).length,
+    wrongCuts:judged.filter(r=>r[key].outcome==='applied-wrong').map(r=>({cut:r.cut,worstLateralMm:r[key].worstLateralMm,anchors:r.anchors}))});
+  const transitions={};for(const r of judged){const k=r.esv.outcome+' → '+r.continuity.outcome;transitions[k]=(transitions[k]||0)+1;}
+  const byAnchors=n=>{const sub=judged.filter(r=>r.anchors.length===n);return {cuts:sub.length,right:sub.filter(r=>r.continuity.outcome==='applied-right').length,wrong:sub.filter(r=>r.continuity.outcome==='applied-wrong').length};};
+  const statuses={};for(const r of rows)statuses[r.status]=(statuses[r.status]||0)+1;
+  const ms=rows.map(r=>r.continuity?.engineMs).filter(Number.isFinite).sort((a,b)=>a-b);
+  return {label,mode:'observer',summary:{visits:rows.length,statuses,judged:judged.length,esv:tally('esv'),continuity:tally('continuity'),continuityGuarded30:tally('continuityGuarded'),
+    oneAnchor:byAnchors(1),twoAnchors:byAnchors(2),transitions,engineMsMedian:ms[ms.length>>1]??null,engineMsP90:ms[Math.floor(ms.length*.9)]??null,
+    duplicatesRemoved:rows.reduce((n,r)=>n+(r.input?.duplicatesRemoved||0),0)},rows};
+}
 function run(argv=process.argv.slice(2)){
   const inputs=[],opt={mode:'all',gap:3,points:'visit'};let out=null;
   for(let i=0;i<argv.length;i++){
@@ -147,10 +205,21 @@ function run(argv=process.argv.slice(2)){
   }
   if(!inputs.length){console.error('Usage : --input SESSION.json|DOSSIER[=libellé] [...] [--mode all|esv|operator|chain|relay] [--gap 3] [--json SORTIE]');process.exit(1);}
   const modes=opt.mode==='all'?MODES:opt.mode.split(',');
+  for(const m of modes)if(m!=='observer'&&!MODES.includes(m))throw Error('Mode inconnu : '+m);
   const report={format:'banane-continuity-seed-study-v1',engine:'gcv1-shadow 4.7.6',wrongMm:WRONG_MM,gap:opt.gap,points:opt.points,excludedCuts:[...EXCLUDED],modes:{}};
   for(const {file,label} of inputs){
     const session=Segments.loadSession(file); // relue une fois pour tous les départs
     for(const mode of modes){
+      if(mode==='observer'){
+        const s=observerSession(session,label),m=s.summary;(report.modes.observer||(report.modes.observer=[])).push(s);
+        const line=(name,t)=>`${name} justes ${t.right} · faux ${t.wrong} · abstention ${t.abstained} · écartement ${t.gaugeRejected}${t.deferred?` · différés garde ${t.deferred}`:''}`;
+        console.log(`${label} [observer] : ${m.visits} visites ${JSON.stringify(m.statuses)} · jugés ${m.judged} · doublons retirés ${m.duplicatesRemoved} · moteur ${m.engineMsMedian} ms médian, p90 ${m.engineMsP90}`);
+        console.log('   '+line('départ ESV :',m.esv)+(m.esv.wrongCuts.length?' ['+m.esv.wrongCuts.map(w=>w.cut).join(' ')+']':''));
+        console.log('   '+line('continuité :',m.continuity)+(m.continuity.wrongCuts.length?' ['+m.continuity.wrongCuts.map(w=>`${w.cut} (${w.worstLateralMm} mm, ancres ${w.anchors.join('+')})`).join(' · ')+']':''));
+        console.log('   '+line('continuité + garde 30 mm :',m.continuityGuarded30));
+        console.log(`   une ancre : ${JSON.stringify(m.oneAnchor)} · deux ancres : ${JSON.stringify(m.twoAnchors)}`);
+        continue;
+      }
       const s=studySession(session,label,{mode,gap:opt.gap,points:opt.points}),m=s.summary;(report.modes[mode]||(report.modes[mode]=[])).push(s);
       console.log(`${label} [${mode}${opt.points==='before'?', points avant':''}] : justes ${m.appliedRight} · faux ${m.appliedWrong} · abstention ${m.railAbstained} · écartement ${m.gaugeRejected} · sans réf. appliqués ${m.appliedUnreferenced} · départ latéral médian ${m.startLateralMedianMm} mm, p90 ${m.startLateralP90Mm}${mode==='relay'?` · corrections opérateur servant d'ancre ${m.operatorAnchors}`:''}`);
       if(m.wrong.length)console.log('   faux : '+m.wrong.map(w=>`${w.cut} (${w.worstLateralMm} mm${w.anchors.length?', ancres '+w.anchors.join('+'):', départ ESV'})`).join(' · '));
@@ -160,4 +229,4 @@ function run(argv=process.argv.slice(2)){
   return report;
 }
 if(require.main===module)run();
-module.exports={studySession,fitAt,run};
+module.exports={studySession,observerSession,fitAt,run};

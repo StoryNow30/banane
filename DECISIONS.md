@@ -1,5 +1,35 @@
 # Décisions techniques
 
+## D-036 - Observation « continuité » dans le Natif (4.7.7)
+
+Date : 23 septembre 2026. Décision de la direction, sur la base de l'amendement
+n°7 du cahier 4.8 et de sa relecture indépendante.
+
+À la fin de chaque première visite Natif, Banane calcule la proposition que le
+moteur GCV1 aurait faite en partant de la droite des cuts voisins déjà validés
+par l'opérateur, et la consigne dans la visite (`continuityObservation`). Elle
+n'est **ni appliquée, ni affichée, ni commandée** : l'opérateur ne doit pas
+être influencé, sinon sa pose cesse d'être un juge indépendant.
+
+Règles (`src/continuity-observer.js`), fixées après la relecture :
+
+- ancres : validations fiables et ANTÉRIEURES de la session, aux règles de
+  référence du banc (une seule intention VALIDATE, état associé, fraîcheur de
+  0 à 1 500 ms), même partie et même repère de scène, à 3 numéros de cut au
+  plus ; les 2 plus proches. Jamais une proposition du moteur ;
+- sans ancre : aucun calcul (pas de retour à la pose ESV) ;
+- points : une capture par côté, prise à la pose ESV exacte avant le premier
+  changement de rail, visibilité prouvée, doublons retirés ;
+- moteur, calage et garde d'écartement appelés tels quels ; aucune cible
+  d'écartement ; l'écart à la prédiction est consigné pour juger toute garde
+  de continuité hors ligne ;
+- calcul hors de la file des événements, une visite à la fois, au plus 4 en
+  attente ; la fin de session attend les calculs en cours (15 s au plus).
+
+Coupure : `BananeSettings.continuity.observe`. Retour : 4.7.6
+(`RETOUR_ARRIERE.md`). Critère d'arrêt : si, sur la collecte, le départ par
+continuité fait plus de cuts faux que le départ ESV rejoué sur la même entrée.
+
 ## D-035 - Bilan des curseurs du cahier 4.8, §8 (critère C5)
 
 Date : 23 septembre 2026. Source : `audit/brain-audit-2026-09-22.json` (moteur

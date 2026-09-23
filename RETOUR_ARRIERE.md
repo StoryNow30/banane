@@ -1,5 +1,18 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.7**, la cible de retour est la **4.7.6**, commit `bd32245`
+(extension identique à la 4.7.6, outils et documentation à jour) :
+
+```bash
+git archive bd32245 | tar -x -C /tmp/banane-4.7.6
+cd /tmp/banane-4.7.6 && python3 tools/package.py --output /tmp/banane-v4.7.6-test.zip
+```
+
+La 4.7.7 ne change dans l'extension que l'observation « continuité » en Natif :
+un calcul consigné, jamais appliqué. C'est ce retour que prévoit la règle
+d'arrêt de D-036. Sans changer de version, l'observation se coupe en passant
+`continuity.observe` à `false` dans `src/settings.js`.
+
 **Depuis la 4.7.6**, la cible de retour est la **4.7.5**, commit `b9ef24f` :
 
 ```bash

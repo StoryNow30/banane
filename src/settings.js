@@ -93,6 +93,19 @@
   });
 
   /* --- Export : vidage automatique et segmentation --- */
+  /* --- Observation « continuité » (4.7.7, cahier 4.8 amendement n°7) ---
+   * Calcul fantôme en Natif : la proposition que GCV1 aurait faite en partant
+   * des cuts voisins déjà validés, consignée dans la visite, jamais appliquée
+   * ni affichée. Le calcul passe après la fin de visite, hors de la file des
+   * événements ; au-delà de `maxPending` visites en attente, les plus
+   * anciennes sont sautées et le disent. */
+  const continuity = Object.freeze({
+    observe: true,
+    maxPending: 4,
+    /* Attente maximale des calculs en cours à la fin de session. */
+    drainAtEndMs: 15000,
+  });
+
   const exportSettings = Object.freeze({
     /* Volume en attente déclenchant un vidage automatique pendant la collecte.
      * Sous la limite de téléchargement observée (~64 Mo) pour garder de la
@@ -165,6 +178,7 @@
       { groupe: 'Pilote', nom: 'Tentatives par vue', valeur: String(pilote.tentativesParVue), pourquoi: 'Relectures d’un rail avant abandon.' },
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
+      { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
       { groupe: 'Export', nom: 'Taille de segment visée', valeur: mo(exportSettings.segmentBytes), pourquoi: 'Réserve de ' + mo(exportSettings.segmentReserveBytes) + ', plancher de ' + exportSettings.minObjectsPerSegment + ' objets.' },
@@ -175,5 +189,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, export: exportSettings, reader, derived, describe };
+  return { Mo, collector, pilote, continuity, export: exportSettings, reader, derived, describe };
 });

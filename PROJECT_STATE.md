@@ -1,8 +1,12 @@
 # État du projet Banane
 
-Date : 22 septembre 2026  
-Version active de l'extension : **4.7.6 TEST** (calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
+Date : 23 septembre 2026  
+Version active de l'extension : **4.7.7 TEST** (observation « continuité » en Natif ; calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.7
+
+Un export Natif de l'opérateur sur la partie 22 montre sa logique : les cuts précédents disent où chercher et quel champignon est le bon, les points disent où poser. La 4.7.7 observe cette logique en Natif sans rien changer au travail : à la fin de chaque première visite, `src/continuity-observer.js` calcule la proposition que GCV1 aurait faite en partant de la droite des cuts voisins déjà validés (appuis fiables et antérieurs, points pris à la pose ESV avant le premier geste, sans doublon) et la consigne dans la visite, jamais appliquée ni affichée (D-036). L'étude hors ligne qui l'a motivée a été relue par un modèle indépendant ; ses défauts (références trop lâches, points comptés deux fois, ancres ordonnées par numéro) sont corrigés et ses chiffres remplacés au §7.8 de l'amendement n°7 de `BANANE_4.8_CAHIER.md` (KI-045).
 
 ## État 4.7.6
 

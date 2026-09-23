@@ -94,6 +94,45 @@
    if(Array.isArray(metrics.setAsideItems)&&metrics.setAsideItems.length){
     m.setAsideItems=metrics.setAsideItems.slice(0,32);}}
   async saveRecord(record){record.updatedAt=iso();await this.store.putRecord(record);}
+  /* 4.7.7 — OBSERVATION « CONTINUITÉ » (cahier 4.8, amendement n°7).
+   * À la fin d'une première visite, la proposition que GCV1 aurait faite en
+   * partant des cuts voisins déjà validés est calculée par
+   * `src/continuity-observer.js` et consignée dans `continuityObservation`.
+   * Rien n'est appliqué, affiché ni commandé. Le calcul tourne hors de la file
+   * des événements (il ne retarde pas leur accusé de réception), une visite à
+   * la fois ; seule l'écriture finale repasse par la file, pour ne jamais
+   * écraser une mise à jour concurrente de la visite. */
+  continuityTools(){
+   const observer=typeof module==='object'?require('./continuity-observer.js'):globalThis.BananeContinuityObserver;
+   const shadow=typeof module==='object'?require('./gcv1-shadow.js'):globalThis.BananeGCV1Shadow;
+   return observer&&typeof shadow?.scientificProposeBoth==='function'?{observer,shadow}:null;}
+  scheduleContinuity(visitId){
+   if(S.continuity?.observe===false||!this.continuityTools())return;
+   (this.continuityPending??=[]).push(visitId);
+   while(this.continuityPending.length>(S.continuity?.maxPending??4))
+    void this.writeContinuity(this.continuityPending.shift(),{format:'banane-continuity-observation-v1',status:'skipped-backlog',applied:false,displayed:false});
+   if(!this.continuityRunning){this.continuityRunning=this.drainContinuity().finally(()=>{this.continuityRunning=null;});}}
+  async drainContinuity(){await Promise.resolve();
+   while(this.continuityPending?.length){const visitId=this.continuityPending.shift();
+    try{await this.observeContinuity(visitId);}
+    catch(e){await this.writeContinuity(visitId,{format:'banane-continuity-observation-v1',status:'error',reason:String(e?.message||e),applied:false,displayed:false});}}}
+  async observeContinuity(visitId){const n=this.e.s.native,tools=this.continuityTools();if(!n||!tools)return;
+   const record=await this.recordById(visitId);
+   if(!record||record.nativeSessionId!==n.id||record.visitRelation?.type!=='first-observation'||!record.beforeEstablished?.rails)return;
+   // Ancres : visites ANTÉRIEURES de cette session, voisines du cut ; la visite observée n'est jamais relue au-delà de sa pose de départ.
+   const earlier=[];
+   for(const visit of n.visits||[])if(visit.visitIndex<record.visitIndex&&tools.observer.near(record.identity,visit.identity,tools.observer.DEFAULTS.gap)){
+    const other=await this.recordById(visit.visitId);if(other&&other.nativeSessionId===n.id)earlier.push(other);}
+   const anchors=tools.observer.selectAnchors(record,earlier);
+   const chunks=[];if(anchors.length)for(const id of record.lidarChunkIds||[]){const chunk=await this.store.getCloud(id);if(chunk)chunks.push(chunk);}
+   await this.writeContinuity(visitId,tools.observer.observe({record,anchors,chunks,Shadow:tools.shadow}));}
+  writeContinuity(visitId,observation){
+   const next=this.queue.then(async()=>{const record=await this.recordById(visitId);if(!record)return;
+    record.continuityObservation=observation;await this.saveRecord(record);});
+   this.queue=next.catch(()=>{});return next;}
+  async continuityIdle(limitMs=S.continuity?.drainAtEndMs??15000){
+   if(!this.continuityRunning)return;let timer;
+   await Promise.race([this.continuityRunning,new Promise(resolve=>{timer=setTimeout(resolve,limitMs);})]);clearTimeout(timer);}
   partialReason(record,reason){record.partialReasons=record.partialReasons||[];if(reason&&!record.partialReasons.includes(reason))record.partialReasons.push(reason);}
   establishBefore(record,state){if(!state||!anyRail(state))return;record.beforeEstablishedByRail=record.beforeEstablishedByRail||{left:null,right:null};
    if(!record.beforeEstablished){record.beforeEstablished=K.clone(state);record.beforeEstablished.rails={left:null,right:null};}
@@ -249,7 +288,7 @@
     record.navigationObserved=data.reason==='target-changed'&&!!record.nextObservedIdentity;
     if(record.navigationObserved)record.observedEffects.push({kind:'target-changed',nextIdentity:record.nextObservedIdentity,observedAt:record.endedAt,eventSeq:logged.eventSeq});
     this.classify(record);await this.saveRecord(record);if(record.status!=='complete')n.incomplete=unique([...n.incomplete,record.recordId]);
-    if(n.current?.visitId===record.visitId)n.current=null;await this.e.save();return {saved:true,eventSeq:logged.eventSeq};
+    if(n.current?.visitId===record.visitId)n.current=null;await this.e.save();this.scheduleContinuity(record.visitId);return {saved:true,eventSeq:logged.eventSeq};
    }
    if(type==='period-ended'){const period=n.observationPeriods.find(item=>item.observationPeriodId===data.observationPeriodId);
     if(period){period.endedAt=data.endedAt||iso();period.endTimeStatus='observed';period.status=data.reason==='finished'?'FINISHED':'PAUSED';period.reason=data.reason;period.metrics=data.metrics;}
@@ -377,7 +416,7 @@
   }
   async close({dataset=true}={}){const n=this.e.s.native;if(!n)throw Error('Aucune session Natif à terminer.');let adapterError=null;
    try{const result=await this.adapter.nativeFinish();this.mergeMetrics(result?.metrics);}catch(error){adapterError=error;n.message='Fin interrompue : '+error.message;}
-   await this.queue;if(n.current){this.partialReason(n.current,'session-ended-before-visit-close');this.classify(n.current);await this.saveRecord(n.current);
+   await this.queue;await this.continuityIdle();await this.queue;if(n.current){this.partialReason(n.current,'session-ended-before-visit-close');this.classify(n.current);await this.saveRecord(n.current);
     n.incomplete=unique([...n.incomplete,n.current.recordId]);n.current=null;}
    n.status=adapterError?'PAUSED_ADAPTER_UNRESPONSIVE':'FINISHED';n.finishedAt=iso();n.adapterError=adapterError?.message||null;n.currentPeriodId=null;
    // Une visite = un enregistrement : le compte vient de la session, sans relire toute la base.
