@@ -103,3 +103,19 @@ test('le fichier fusionné repart en format v2, lisible par le banc', () => {
   assert.equal(merged.dictionaries, undefined, 'plus aucune référence de dictionnaire');
   assert.deepEqual(merged.clouds[0].pointsSceneRelative, [[1, 2, 3], [4, 5, 6]]);
 });
+
+/* Export manuel 4.7.6 du 23/09 : un fichier compact unique était relu tel quel
+ * par `loadSession`, identités et rails restant des références de dictionnaire. */
+test('un export compact unique est relu développé par loadSession', () => {
+  const { loadSession } = require(TOOL);
+  const dir = tmp();
+  const a = write(dir, '2026-09-23T09-39-36', segment({ cloudIds: ['c1'], allCloudIds: ['c1'], records: ['r1'], events: [1] }));
+  const s = loadSession(a);
+  assert.equal(s.format, 'banane-native-session-v2');
+  assert.equal(s.dictionaries, undefined);
+  assert.equal(s.records[0].visitId, 'r1');
+  assert.deepEqual(s.clouds[0].pointsSceneRelative, [[1, 2, 3], [4, 5, 6]]);
+  const plain = path.join(dir, 'v2.json');
+  fs.writeFileSync(plain, JSON.stringify({ format: 'banane-gcv1-lidar-corpus-v1', records: [] }));
+  assert.equal(loadSession(plain).format, 'banane-gcv1-lidar-corpus-v1', 'un document non compact reste intact');
+});

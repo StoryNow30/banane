@@ -98,7 +98,9 @@ function loadSession(input) {
     const files = fs.readdirSync(input).filter(f => f.endsWith('.json')).sort().map(f => path.join(input, f));
     return mergeFiles(files).merged;
   }
-  return JSON.parse(fs.readFileSync(input, 'utf8'));
+  // Un export compact (v3) se relit développé, comme dans la fusion.
+  const doc = JSON.parse(fs.readFileSync(input, 'utf8'));
+  return doc.format === X.FORMAT ? X.expand(doc) : doc;
 }
 
 function main() {

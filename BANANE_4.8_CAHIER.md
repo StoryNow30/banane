@@ -556,6 +556,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°4 — audit 4.7.5 ; A1 redéfini en calage de convention (22/09) : remplace le §1.4 du n°1, mesure P5
 - n°5 — validation du calage et bilan des curseurs (23/09) : précise la règle d'arrêt du §4.4 du n°4
 - n°6 — premières mesures terrain de la 4.7.6 (23/09) : calage validé sur cuts inédits, P5 révisé, garde de continuité prioritaire
+- n°7 — la logique de l'opérateur : partir de la continuité de la voie (23/09) : mesure l'amorce par continuité, confirme le §3.7 du n°3, élargit le chantier du §6.8 du n°6
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1096,3 +1097,128 @@ réécrit toutes les visites et tous les événements déjà exportés (1 651 Mo
 
 Sur le §2 : couverture Pilote mesurée à 52 % sur la partie 19. Sur le §15 : P5
 révisé (8 sur 118 hors ligne, partie 20) ; P2 resserré.
+
+## Amendement n°7 — la logique de l'opérateur : partir de la continuité de la voie
+
+**23 septembre 2026.** Élément nouveau : un export Natif de l'opérateur sur la
+partie 22 (cuts 1196–1205, `banane-data`,
+`collections/2026-09-23_v4.7.6_/natif p22 logique operateur/`), transmis pour
+montrer comment il place un champignon en s'aidant de l'écartement des cuts
+précédents ; l'étude `tools/continuity-seed-study.cjs` et son relevé
+`audit/continuity-seed-2026-09-23.json`. Les cuts 9033 et 9241 restent exclus.
+
+### 7.1 Ce que fait l'opérateur
+
+Sur toute la série, chaque rail a un second champignon à 8–16 cm côté voie
+(contre-rail ou appareil de voie), et la pose ESV de départ est un gabarit à
+1 500 mm posé à 156–272 mm des rails. Relevé des gestes :
+
+- deux clics par cut, rail gauche puis rail droit, 5 à 6 s par cut ; le second
+  clic tombe à 5 mm au plus de l'écartement du cut précédent sur 6 cuts sur 8 ;
+- au cut 1203, le premier clic donne 1 321 mm, 120 mm de moins que le voisin :
+  c'est l'autre champignon. L'opérateur essaie les autres combinaisons pendant
+  près de 30 s et retient 1 437,8 mm (voisin : 1 441,2) ;
+- le réglage fin suit ensuite les points, même s'il éloigne de l'écartement du
+  voisin (1205 : 1 440 → 1 426 mm) ;
+- en fin de session, retours 1204 → 1203 → 1202 → 1203 → 1204 → 1205, sans
+  modification : une vérification visuelle de la continuité.
+
+Lecture : **la continuité dit où chercher et quel champignon est le bon ;
+les points disent où poser.** L'écartement du voisin sert à reconnaître un
+mauvais champignon (−120 mm), jamais à fixer la position finale. C'est la
+garde du §3.6 du n°3, pas une cible.
+
+### 7.2 Le moteur 4.7.6 sur la même série
+
+Aucun cut juste : 7 visites sans entrée (rail droit sans instantané qualifié
+autour de la pose ESV), le reste en abstention ou refusé par l'écartement.
+Rejoué avec tous les nuages de la visite, depuis la pose ESV, il pose le rail
+gauche sur l'autre champignon (136 à 188 mm de l'humain) et s'abstient : la
+cause décrite au §3.4 du n°3, sur une nouvelle partie.
+
+### 7.3 Amorce par continuité : mesure
+
+Même moteur, mêmes points ; seul change le départ. Le rail de départ est
+translaté, dans son plan de profil, jusqu'à la droite tirée des deux cuts
+d'ancrage les plus proches (3 numéros au plus). Points : tous les nuages de la
+première visite, qui approchent une capture faite autour du départ ; le témoin
+reçoit exactement les mêmes.
+
+| Session (cuts jugés) | Départ ESV (témoin) | Ancres validées par l'opérateur | Chaînage sur le moteur | Relais opérateur |
+|---|---|---|---|---|
+| Partie 22 (8) | 0 juste · 0 faux | 4 · 1¹ | 6 · 1¹ | 6 · 1¹ |
+| Partie 20, Natif longue (199) | 109 · **11** | **135 · 2** | 123 · 5 | 130 · 6 |
+| Partie 20, Natif courte (52) | 41 · 0 | 41 · 0 | 41 · 0 | 41 · 0 |
+| Partie 19, relecture du Pilote (25) | 11 · 0 | 12 · 0 | 12 · 0 | 10 · 0 |
+| **Total (284)** | **161 · 11** | **192 · 3** | 182 · 6 | 187 · 7 |
+
+¹ le cut 1205, discuté au §7.6.
+
+Sur la session longue, le départ est à 3,1 mm médian de la pose humaine
+(p90 9,2 mm) avec les ancres de l'opérateur, contre 4,5 mm (p90 121 mm) depuis
+la pose ESV. **Les 9 cuts faux de la courbe (398 à 435) deviennent justes** ;
+restent 241 (aucun cut validé à moins de 3 numéros : départ ESV) et 983 (15 mm,
+déjà connu). Justes : latéral médian 1,3 mm.
+
+### 7.4 Le chaînage propage l'erreur — le §3.7 du n°3 confirmé
+
+Le moteur s'appuie sur ses propres cuts appliqués, sans aucune position
+humaine. Session longue : 398 est posé faux depuis la pose ESV (160 mm), puis
+**400, 403 et 404 sont posés faux sur son prolongement** (178 à 250 mm) ; 409,
+faux depuis la pose ESV. Une erreur de mode commun devient une série. C'est
+exactement ce que le §3.7 du n°3 interdit (« un cut résolu par continuité ne
+sert pas de voisin ») : la règle est désormais mesurée, pas seulement
+prudente.
+
+### 7.5 Le relais par l'opérateur
+
+Ancres : cuts appliqués depuis la pose ESV, et cuts NON appliqués que
+l'opérateur corrige au fil du lot ; un cut résolu par continuité n'est jamais
+ancre. Moins bon que prévu : 130 justes et **6 faux** sur la session longue,
+pour 63 corrections servant d'ancre. Cause : quand trois cuts de suite sont
+résolus par continuité, aucune ancre ne reste à 3 numéros et le moteur repart
+de la pose ESV (403, 412, 241, 983), puis un départ ESV faux devient ancre
+(404 sur 403). **Le point faible n'est pas l'amorce, c'est le retour silencieux
+à la pose ESV au milieu d'une zone difficile.** À corriger avant toute
+conception du Pilote : ne jamais repartir de la pose ESV quand une ancre, même
+plus lointaine, existe ; ou différer ; et contrôler tout départ ESV contre les
+cuts voisins acceptés.
+
+### 7.6 Limites
+
+- Les points de l'étude incluent les nuages capturés après les gestes de
+  l'opérateur : la couverture absolue est optimiste ; la comparaison au témoin,
+  qui reçoit les mêmes points, ne l'est pas.
+- Partie 22 : 8 cuts jugés, une seule série. Elle compte comme première des
+  « deux autres parties comportant des appareils de voie » du §3.7 du n°3, pas
+  comme la preuve.
+- Cut 1205 : le moteur place le rail gauche à 11 mm de l'opérateur ; à la pose
+  de l'opérateur, les points du flanc sont à 8,9 mm du gabarit contre 2 à 3 mm
+  d'habitude. À relire avant de le compter faux.
+- L'étude déplace le départ ; le §3.5 du n°3 ajoutait une graine (`uSeeds`)
+  sans déplacer l'origine. Les deux mesurent la même idée par deux moyens.
+
+### 7.7 Conséquence pour le chantier « garde de continuité »
+
+Le chantier du §6.8 du n°6 devient **« continuité de voie »**, une seule
+prédiction — la droite des cuts d'ancrage — pour deux usages :
+
+1. **amorce** : chercher autour de la prédiction plutôt qu'autour de la pose
+   ESV quand des ancres existent ;
+2. **garde** : différer un cut dont le résultat s'écarte de la prédiction
+   au-delà d'un seuil (30 mm au §6.6 du n°6).
+
+Règles d'ancrage, tirées des §7.4 et 7.5 : un cut résolu par continuité ne sert
+jamais d'ancre ; un départ depuis la pose ESV au milieu d'une zone ancrée est
+contrôlé par la garde avant de pouvoir servir d'ancre ; faute d'ancre, le cut
+est différé plutôt que posé depuis une pose ESV lointaine. Aucune cible
+d'écartement : la garde d'écartement reste la seule règle de paire.
+
+Préalables inchangés du §3.7 du n°3 (deuxième partie à appareils de voie,
+observation dans le Pilote avant toute application). Le relais par l'opérateur
+change le déroulé du Pilote : décision de la direction.
+
+Sur le §2 : avec des ancres validées, 192 cuts justes et 3 faux sur 284 contre
+161 et 11 depuis la pose ESV ; l'engagement de 90 % dépend désormais de
+l'ancrage. Sur le §15 :
+P5 toujours ouvert en conditions réelles.
