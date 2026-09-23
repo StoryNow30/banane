@@ -1,5 +1,9 @@
 # Prochaines tâches — après la 4.7.0
 
+> **Plan jusqu'à la sortie de la 4.8 : `PLAN_4.8.md`** (23/09/2026, après les
+> audits à mi-parcours et les décisions D-037 et D-038). Le §A ci-dessous
+> (fermeture de la 4.7.0) reste ouvert.
+
 ## A. Fermer réellement la 4.7.0
 
 Le checkpoint `6ead46f` est complet côté code, tests, paquet et documentation.
