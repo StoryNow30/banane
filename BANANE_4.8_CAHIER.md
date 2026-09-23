@@ -558,6 +558,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°6 — premières mesures terrain de la 4.7.6 (23/09) : calage validé sur cuts inédits, P5 révisé, garde de continuité prioritaire
 - n°7 — la logique de l'opérateur : partir de la continuité de la voie (23/09) : mesure l'amorce par continuité, confirme le §3.7 du n°3, élargit le chantier du §6.8 du n°6
 - n°8 — première collecte 4.7.7 (23/09) : observation « continuité » mesurée sur le terrain, partie 24
+- n°9 — décider sur le lot (23/09) : lève la règle « la prédiction ne fait que déplacer la fenêtre » (n°3 §3.5) pour le choix par la voie ; objectif intermédiaire 80 % ; définitions de mesure D-038
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1343,4 +1344,55 @@ Prochaine étape prévue par ce paragraphe : l'observation dans le Pilote, sur
 un lot complet relu en Natif — ou, selon la décision de la direction, l'assistant
 Natif. Sur le §2 : la continuité ajoute des cuts justes sans faux, mais les
 abstentions (30 sur 105) restent le premier frein à la couverture.
+
+## Amendement n°9 — décider sur le lot
+
+**23 septembre 2026.** Éléments nouveaux : les deux audits à mi-parcours
+(`audit/mi-parcours/`), les décisions D-037 et D-038, et l'étude
+`audit/lot-choice-2026-09-23.json` (`tools/lot-choice-study.cjs`).
+
+### 9.1 Ce qui change
+
+1. **Règle levée.** Le §3.5 du n°3 limitait la continuité à « déplacer la
+   fenêtre ». Elle peut désormais **choisir**, parmi les minima locaux que le
+   moteur calcule déjà, celui que la voie prédit, aux conditions de l'étude :
+   ancres = cuts appliqués du lot confirmés par la garde de continuité (30 mm)
+   ou résolus par la voie à 10 mm au plus de la prédiction ; minimum seul à
+   15 mm latéraux et 20 mm verticaux de la prédiction ; au moins 15 points de
+   dessus et 3 de flanc sous le gabarit ; calage de convention ; **les deux
+   rails** ; écartement dans le contrat, en admissibilité seulement.
+   Le critère de choix est la POSITION du champignon prédite par la voie,
+   jamais un écartement : l'invariant 1 du §7 est inchangé.
+2. **Objectif intermédiaire** (D-037) : 80 % des cuts distincts de chaque lot
+   Pilote complet de validation, 0 faux ; 90 % reste le cap du §2.
+3. **Définitions de mesure** (D-038) : dénominateur, faux latéral OU vertical
+   au-delà de 10 mm, périmètre explicite, partie tenue à l'écart.
+
+### 9.2 Pourquoi
+
+Hors ligne, sans aucune position humaine, sur 722 cuts (392 jugés) :
+
+| Pilote | Cuts appliqués | Justes | Faux |
+|---|---|---|---|
+| Départ depuis la pose ESV | 45,2 % | 199 | 7 |
+| Décision sur le lot, deux passages | 56,0 % | 254 | 4 |
+| Décision sur le lot, un seul passage | 53,3 % | 242 | 5 |
+
+Le choix par la voie a résolu 48 cuts, dont 30 jugés : **0 faux**. Les 4 faux
+restants viennent du premier passage (241, 409, 983 : cuts isolés que la garde
+ne peut contredire) et de la fenêtre déplacée (407). Hors cuts sans capture
+avant geste — propres à la collecte Natif —, la couverture atteint 66,7 %.
+
+### 9.3 Mise en œuvre
+
+Dans l'ordre du plan (`PLAN_4.8.md`) : **4.7.8 en observation dans le Pilote**
+(calculé, consigné, jamais appliqué), avec journal des candidats et
+qualification instrumentée par côté ; activation en 4.7.9 seulement après la
+décision D2, sur mesure terrain. Deux passages visés (reprise des différés en
+fin de lot), un seul passage mesuré en parallèle. Point ouvert pour tenir le
+0 faux : les cuts faux isolés du premier passage.
+
+Sur le §2 : la décision sur le lot est sûre mais ne suffit pas à 80 % sur ces
+données ; la mesure terrain de la 4.7.8 départagera observation et choix. Sur
+le §15 : P2 toujours à mesurer (session F2).
 

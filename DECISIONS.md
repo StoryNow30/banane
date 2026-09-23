@@ -1,5 +1,18 @@
 # Décisions techniques
 
+## D-039 - D1 : choix par la voie autorisé ; 4.7.8 en observation dans le Pilote
+
+Date : 23 septembre 2026. Décision de la direction sur le résultat de la
+phase 0 (`audit/lot-choice-2026-09-23.json`). Amendement n°9 du cahier.
+
+- La règle « la prédiction ne fait que déplacer la fenêtre » est levée pour le
+  choix par la voie, aux conditions du n°9 §9.1.
+- Variante visée : deux passages (reprise des différés en fin de lot), rails
+  éligibles élargis aux abstentions de qualité (variante B), chaînage gardé à
+  10 mm ; le seul passage est mesuré en parallèle.
+- Mise en œuvre : 4.7.8 en observation dans le Pilote, jamais appliquée ;
+  activation soumise à D2.
+
 ## D-038 - Comparaison des deux audits à mi-parcours ; définitions de mesure
 
 Date : 23 septembre 2026. Sources : `audit/mi-parcours/AUDIT_CLAUDE.md` et
