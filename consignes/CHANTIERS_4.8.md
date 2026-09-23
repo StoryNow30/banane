@@ -31,7 +31,8 @@ ou s'abstient ; un cut que le moteur ne sait pas placer est « différé ».
 
 DÉPÔTS
 - Code : https://github.com/StoryNow30/banane
-  Base OBLIGATOIRE : commit 5a204fa (branche claude/banane-48-cahier, 4.7.8).
+  Base OBLIGATOIRE : commit a74c225 (branche claude/banane-48-cahier : code
+  4.7.8 inchangé depuis 5a204fa, plus ces consignes et le relevé de navigation).
   Crée ta propre branche depuis ce commit : chantier-48/<nom-du-chantier>.
 - Données : https://github.com/StoryNow30/banane-data
   branche claude/banane-47-gate-audit-vaktr1, dossiers
