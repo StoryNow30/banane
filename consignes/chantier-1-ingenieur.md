@@ -118,7 +118,8 @@ revenir à un cut précis.
 
 L'OPÉRATEUR INSPECTE ESV EN PARALLÈLE
 Tu n'as pas accès à ESV (authentification). L'opérateur suit sa propre fiche
-(consignes/chantier-1-operateur.md, même dépôt) et te remettra quatre
+(consignes/chantier-1-operateur.md, sur la
+branche claude/banane-48-cahier) et te remettra quatre
 éléments : l'inventaire des contrôles et fonctions de la page, le journal de
 ses gestes (Z, S, D, carte, boutons à la souris), les requêtes réseau vues
 pendant ces gestes, et des extraits du code d'ESV. Ce code appartient à
