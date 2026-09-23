@@ -3,7 +3,7 @@
 /*
  * brain-audit.cjs — audit du cerveau de placement, une ligne par rail et par cut.
  *
- *   node tools/brain-audit.cjs --input SESSION.json[=libellé] [--input ...] [--json SORTIE]
+ *   node tools/brain-audit.cjs --input SESSION.json|DOSSIER[=libellé] [--input ...] [--json SORTIE]
  *                              [--convention on|off] [--partial-flank on|off]
  *
  * Doctrine (cahier 4.8, amendement n°1) : mesurer où le moteur échoue avant
@@ -26,7 +26,7 @@
  * qu'après le calcul, pour juger. Unités de scène × 1000 (non calibrées).
  */
 const fs=require('node:fs'),path=require('node:path');
-const Lab=require('./placement-lab.cjs'),PS=require('./pair-search.cjs');
+const Lab=require('./placement-lab.cjs'),PS=require('./pair-search.cjs'),Segments=require('./merge-segments.cjs');
 const Shadow=require('../src/gcv1-shadow.js'),Candidate=require('../src/geometry-candidate-v1.js');
 const Gauge=require('../src/gauge.js'),C=require('../vendor/capture-core.js');
 const SIDES=['left','right'],WRONG_MM=10;
@@ -157,7 +157,8 @@ function run(argv=process.argv.slice(2)){
   if(!inputs.length){console.error('Usage : --input SESSION.json[=libellé] [--input ...] [--json SORTIE]');process.exit(1);}
   const sessions=[];
   for(const {file,label} of inputs){
-    const session=JSON.parse(fs.readFileSync(file,'utf8')),cuts=analyseSession(session,label),summary=summarise(cuts);
+    // Un fichier de session, ou un dossier de segments fusionnés en mémoire.
+    const session=Segments.loadSession(file),cuts=analyseSession(session,label),summary=summarise(cuts);
     sessions.push({label,version:session.version||null,summary,cuts});
     console.log(`${label} (${session.version}) : ${summary.cuts} cuts · justes ${summary.appliedRight} · faux ${summary.appliedWrong} · sans réf ${summary.appliedUnreferenced} · écartement ${summary.gaugeRejected} · abstention ${summary.railAbstained} ${JSON.stringify(summary.abstentionMotifs)} · sans entrée ${summary.noInput}`);
   }

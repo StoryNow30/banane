@@ -23,7 +23,7 @@
  * intercepte. La référence humaine n'est lue qu'après le calcul moteur.
  */
 const fs=require('node:fs'),path=require('node:path');
-const Lab=require('./placement-lab.cjs'),Shadow=require('../src/gcv1-shadow.js');
+const Lab=require('./placement-lab.cjs'),Shadow=require('../src/gcv1-shadow.js'),Segments=require('./merge-segments.cjs');
 const Convention=require('../src/placement-convention.js'),Gauge=require('../src/gauge.js'),C=require('../vendor/capture-core.js');
 const SIDES=['left','right'],WRONG_MM=10;
 const median=v=>{const a=v.filter(Number.isFinite).sort((x,y)=>x-y),n=a.length;return n?(n%2?a[n>>1]:(a[n/2-1]+a[n/2])/2):null;};
@@ -110,7 +110,7 @@ function run(argv=process.argv.slice(2)){
   for(let i=0;i<argv.length;i++){if(argv[i]==='--input'){const [file,label]=argv[++i].split('=');inputs.push({file,label:label||path.basename(file)});}
     else if(argv[i]==='--json')out=argv[++i];else throw Error('Argument inconnu : '+argv[i]);}
   if(!inputs.length){console.error('Usage : --input SESSION.json[=libellé] [--input ...] [--json SORTIE]');process.exit(1);}
-  const sessions=inputs.map(({file,label})=>{const s=collect(JSON.parse(fs.readFileSync(file,'utf8')),label);console.log(`${label} : ${s.rows.length} rails référencés, ${s.cuts.length} cuts à deux rails`);return {label,...s};});
+  const sessions=inputs.map(({file,label})=>{const s=collect(Segments.loadSession(file),label);console.log(`${label} : ${s.rows.length} rails référencés, ${s.cuts.length} cuts à deux rails`);return {label,...s};});
   const constants=fit(sessions.flatMap(s=>s.rows)),cv=crossValidate(sessions);
   const line=(name,x)=>console.log(`${name.padEnd(11)} médiane ${x.before.medianMm} → ${x.after.medianMm} mm · p90 ${x.before.p90Mm} → ${x.after.p90Mm} · max ${x.before.maxMm} → ${x.after.maxMm} · biais ${x.signedBefore} → ${x.signedAfter}`);
   console.log(`constantes (toutes sessions) : dessus ${r2(constants.topOffsetMm)} · flanc ${r2(constants.faceOffsetMm)} mm · (flanc < ${Convention.DEFAULTS.minFacePoints} points : ${r2(constants.faceFallbackObservedMm)} mm observé, non utilisé)`);

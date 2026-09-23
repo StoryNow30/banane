@@ -1,0 +1,944 @@
+{
+ "format": "banane-continuity-guard-study-v1",
+ "date": "2026-09-23",
+ "note": "Étude hors ligne (amendement n°6). Moteur 4.7.6, calage actif. Cuts 9033 et 9241 exclus du bilan par l’opérateur.",
+ "sessions": [
+  {
+   "label": "natif-long-p20",
+   "window": 6,
+   "thresholds": {
+    "15": {
+     "applicable": 178,
+     "noAnchor": 40,
+     "wrong": 8,
+     "wrongStopped": 4,
+     "right": 110,
+     "rightStopped": 10,
+     "unref": 60,
+     "unrefStopped": 5,
+     "rows": [
+      {
+       "cut": 125,
+       "outcome": "applied-right",
+       "worst": 0.2,
+       "devMm": 23.5,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 126,
+       "outcome": "applied-right",
+       "worst": 4.5,
+       "devMm": 25,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 134,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 23.2,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 135,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 38.6,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 136,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 52.5,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 153,
+       "outcome": "applied-right",
+       "worst": 0.4,
+       "devMm": 25.1,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 154,
+       "outcome": "applied-right",
+       "worst": 3.6,
+       "devMm": 36.6,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 241,
+       "outcome": "applied-wrong",
+       "worst": 29,
+       "devMm": 7,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 398,
+       "outcome": "applied-wrong",
+       "worst": 159.9,
+       "devMm": 31.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 400,
+       "outcome": "applied-wrong",
+       "worst": 250,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 0
+      },
+      {
+       "cut": 402,
+       "outcome": "applied-wrong",
+       "worst": 273,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 1
+      },
+      {
+       "cut": 404,
+       "outcome": "applied-wrong",
+       "worst": 179.1,
+       "devMm": 161.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 405,
+       "outcome": "applied-wrong",
+       "worst": 147.6,
+       "devMm": 255.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 431,
+       "outcome": "applied-right",
+       "worst": 1.1,
+       "devMm": 44.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 435,
+       "outcome": "applied-wrong",
+       "worst": 186.5,
+       "devMm": 181.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 460,
+       "outcome": "applied-right",
+       "worst": 2.1,
+       "devMm": 16.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 461,
+       "outcome": "applied-right",
+       "worst": 2,
+       "devMm": 26.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 462,
+       "outcome": "applied-right",
+       "worst": 6.8,
+       "devMm": 37.8,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 471,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 24.1,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 472,
+       "outcome": "applied-right",
+       "worst": 1.9,
+       "devMm": 22.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 967,
+       "outcome": "applied-right",
+       "worst": 4.2,
+       "devMm": 23.9,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 983,
+       "outcome": "applied-wrong",
+       "worst": 15,
+       "devMm": 3.8,
+       "flagged": false,
+       "anchors": 2
+      },
+      {
+       "cut": 995,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 21.4,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "20": {
+     "applicable": 178,
+     "noAnchor": 38,
+     "wrong": 8,
+     "wrongStopped": 4,
+     "right": 110,
+     "rightStopped": 7,
+     "unref": 60,
+     "unrefStopped": 5,
+     "rows": [
+      {
+       "cut": 125,
+       "outcome": "applied-right",
+       "worst": 0.2,
+       "devMm": 23.5,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 126,
+       "outcome": "applied-right",
+       "worst": 4.5,
+       "devMm": 25,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 134,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 23.2,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 135,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 38.6,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 136,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 52.5,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 153,
+       "outcome": "applied-right",
+       "worst": 0.4,
+       "devMm": 25.1,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 154,
+       "outcome": "applied-right",
+       "worst": 3.6,
+       "devMm": 36.6,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 241,
+       "outcome": "applied-wrong",
+       "worst": 29,
+       "devMm": 7,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 398,
+       "outcome": "applied-wrong",
+       "worst": 159.9,
+       "devMm": 31.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 400,
+       "outcome": "applied-wrong",
+       "worst": 250,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 0
+      },
+      {
+       "cut": 402,
+       "outcome": "applied-wrong",
+       "worst": 273,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 1
+      },
+      {
+       "cut": 404,
+       "outcome": "applied-wrong",
+       "worst": 179.1,
+       "devMm": 161.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 405,
+       "outcome": "applied-wrong",
+       "worst": 147.6,
+       "devMm": 255.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 431,
+       "outcome": "applied-right",
+       "worst": 1.1,
+       "devMm": 44.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 435,
+       "outcome": "applied-wrong",
+       "worst": 186.5,
+       "devMm": 181.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 471,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 24.1,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 472,
+       "outcome": "applied-right",
+       "worst": 1.9,
+       "devMm": 22.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 967,
+       "outcome": "applied-right",
+       "worst": 4.2,
+       "devMm": 23.9,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 983,
+       "outcome": "applied-wrong",
+       "worst": 15,
+       "devMm": 3.8,
+       "flagged": false,
+       "anchors": 2
+      },
+      {
+       "cut": 995,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 21.4,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "30": {
+     "applicable": 178,
+     "noAnchor": 31,
+     "wrong": 8,
+     "wrongStopped": 4,
+     "right": 110,
+     "rightStopped": 1,
+     "unref": 60,
+     "unrefStopped": 0,
+     "rows": [
+      {
+       "cut": 241,
+       "outcome": "applied-wrong",
+       "worst": 29,
+       "devMm": 7,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 398,
+       "outcome": "applied-wrong",
+       "worst": 159.9,
+       "devMm": 31.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 400,
+       "outcome": "applied-wrong",
+       "worst": 250,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 0
+      },
+      {
+       "cut": 402,
+       "outcome": "applied-wrong",
+       "worst": 273,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 1
+      },
+      {
+       "cut": 404,
+       "outcome": "applied-wrong",
+       "worst": 179.1,
+       "devMm": 161.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 405,
+       "outcome": "applied-wrong",
+       "worst": 147.6,
+       "devMm": 255.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 431,
+       "outcome": "applied-right",
+       "worst": 1.1,
+       "devMm": 44.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 435,
+       "outcome": "applied-wrong",
+       "worst": 186.5,
+       "devMm": 181.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 983,
+       "outcome": "applied-wrong",
+       "worst": 15,
+       "devMm": 3.8,
+       "flagged": false,
+       "anchors": 2
+      }
+     ]
+    },
+    "50": {
+     "applicable": 178,
+     "noAnchor": 29,
+     "wrong": 8,
+     "wrongStopped": 3,
+     "right": 110,
+     "rightStopped": 0,
+     "unref": 60,
+     "unrefStopped": 0,
+     "rows": [
+      {
+       "cut": 241,
+       "outcome": "applied-wrong",
+       "worst": 29,
+       "devMm": 7,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 398,
+       "outcome": "applied-wrong",
+       "worst": 159.9,
+       "devMm": 31.3,
+       "flagged": false,
+       "anchors": 2
+      },
+      {
+       "cut": 400,
+       "outcome": "applied-wrong",
+       "worst": 250,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 1
+      },
+      {
+       "cut": 402,
+       "outcome": "applied-wrong",
+       "worst": 273,
+       "devMm": 94,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 404,
+       "outcome": "applied-wrong",
+       "worst": 179.1,
+       "devMm": 347.2,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 405,
+       "outcome": "applied-wrong",
+       "worst": 147.6,
+       "devMm": null,
+       "flagged": false,
+       "anchors": 1
+      },
+      {
+       "cut": 435,
+       "outcome": "applied-wrong",
+       "worst": 186.5,
+       "devMm": 182.3,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 983,
+       "outcome": "applied-wrong",
+       "worst": 15,
+       "devMm": 3.8,
+       "flagged": false,
+       "anchors": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "label": "natif-court-p20",
+   "window": 6,
+   "thresholds": {
+    "15": {
+     "applicable": 37,
+     "noAnchor": 11,
+     "wrong": 0,
+     "wrongStopped": 0,
+     "right": 36,
+     "rightStopped": 12,
+     "unref": 1,
+     "unrefStopped": 0,
+     "rows": [
+      {
+       "cut": 1105,
+       "outcome": "applied-right",
+       "worst": 1.4,
+       "devMm": 15.4,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 1107,
+       "outcome": "applied-right",
+       "worst": 0.2,
+       "devMm": 40.6,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 1108,
+       "outcome": "applied-right",
+       "worst": 1.5,
+       "devMm": 52.1,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1115,
+       "outcome": "applied-right",
+       "worst": 0.2,
+       "devMm": 15.3,
+       "flagged": true,
+       "anchors": 6
+      },
+      {
+       "cut": 1116,
+       "outcome": "applied-right",
+       "worst": 0.5,
+       "devMm": 22.7,
+       "flagged": true,
+       "anchors": 5
+      },
+      {
+       "cut": 1117,
+       "outcome": "applied-right",
+       "worst": 0.7,
+       "devMm": 33.7,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 1128,
+       "outcome": "applied-right",
+       "worst": 3.1,
+       "devMm": 31.1,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1129,
+       "outcome": "applied-right",
+       "worst": 0.6,
+       "devMm": 43.2,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1137,
+       "outcome": "applied-right",
+       "worst": 1,
+       "devMm": 19.8,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 1138,
+       "outcome": "applied-right",
+       "worst": 1.2,
+       "devMm": 21,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 1149,
+       "outcome": "applied-right",
+       "worst": 1.4,
+       "devMm": 17.2,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 1150,
+       "outcome": "applied-right",
+       "worst": 0.6,
+       "devMm": 22.7,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "20": {
+     "applicable": 37,
+     "noAnchor": 9,
+     "wrong": 0,
+     "wrongStopped": 0,
+     "right": 36,
+     "rightStopped": 8,
+     "unref": 1,
+     "unrefStopped": 0,
+     "rows": [
+      {
+       "cut": 1107,
+       "outcome": "applied-right",
+       "worst": 0.2,
+       "devMm": 28.2,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 1108,
+       "outcome": "applied-right",
+       "worst": 1.5,
+       "devMm": 39.3,
+       "flagged": true,
+       "anchors": 3
+      },
+      {
+       "cut": 1109,
+       "outcome": "applied-right",
+       "worst": 2.3,
+       "devMm": 53.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1120,
+       "outcome": "applied-right",
+       "worst": 4.9,
+       "devMm": 35.8,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 1128,
+       "outcome": "applied-right",
+       "worst": 3.1,
+       "devMm": 31.1,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1129,
+       "outcome": "applied-right",
+       "worst": 0.6,
+       "devMm": 43.2,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1142,
+       "outcome": "applied-right",
+       "worst": 1.2,
+       "devMm": 22.4,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1143,
+       "outcome": "applied-right",
+       "worst": 1.7,
+       "devMm": 32.8,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "30": {
+     "applicable": 37,
+     "noAnchor": 6,
+     "wrong": 0,
+     "wrongStopped": 0,
+     "right": 36,
+     "rightStopped": 3,
+     "unref": 1,
+     "unrefStopped": 0,
+     "rows": [
+      {
+       "cut": 1120,
+       "outcome": "applied-right",
+       "worst": 4.9,
+       "devMm": 35.8,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 1128,
+       "outcome": "applied-right",
+       "worst": 3.1,
+       "devMm": 31.1,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 1129,
+       "outcome": "applied-right",
+       "worst": 0.6,
+       "devMm": 43.2,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "50": {
+     "applicable": 37,
+     "noAnchor": 2,
+     "wrong": 0,
+     "wrongStopped": 0,
+     "right": 36,
+     "rightStopped": 0,
+     "unref": 1,
+     "unrefStopped": 0,
+     "rows": []
+    }
+   }
+  },
+  {
+   "label": "relecture-pilote-p19",
+   "window": 6,
+   "thresholds": {
+    "15": {
+     "applicable": 59,
+     "noAnchor": 24,
+     "wrong": 2,
+     "wrongStopped": 1,
+     "right": 11,
+     "rightStopped": 0,
+     "unref": 46,
+     "unrefStopped": 3,
+     "rows": [
+      {
+       "cut": 9024,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 16.9,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 9025,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 23.3,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 9033,
+       "outcome": "applied-wrong",
+       "worst": 28.9,
+       "devMm": 5.3,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 9047,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 20,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 9241,
+       "outcome": "applied-wrong",
+       "worst": 40,
+       "devMm": 32.3,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "20": {
+     "applicable": 59,
+     "noAnchor": 23,
+     "wrong": 2,
+     "wrongStopped": 1,
+     "right": 11,
+     "rightStopped": 0,
+     "unref": 46,
+     "unrefStopped": 1,
+     "rows": [
+      {
+       "cut": 9033,
+       "outcome": "applied-wrong",
+       "worst": 28.9,
+       "devMm": 5.3,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 9047,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 20,
+       "flagged": true,
+       "anchors": 4
+      },
+      {
+       "cut": 9241,
+       "outcome": "applied-wrong",
+       "worst": 40,
+       "devMm": 32.3,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "30": {
+     "applicable": 59,
+     "noAnchor": 22,
+     "wrong": 2,
+     "wrongStopped": 1,
+     "right": 11,
+     "rightStopped": 0,
+     "unref": 46,
+     "unrefStopped": 1,
+     "rows": [
+      {
+       "cut": 9033,
+       "outcome": "applied-wrong",
+       "worst": 28.9,
+       "devMm": 5.3,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 9051,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 59.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 9241,
+       "outcome": "applied-wrong",
+       "worst": 40,
+       "devMm": 32.3,
+       "flagged": true,
+       "anchors": 2
+      }
+     ]
+    },
+    "50": {
+     "applicable": 59,
+     "noAnchor": 20,
+     "wrong": 2,
+     "wrongStopped": 0,
+     "right": 11,
+     "rightStopped": 0,
+     "unref": 46,
+     "unrefStopped": 1,
+     "rows": [
+      {
+       "cut": 9033,
+       "outcome": "applied-wrong",
+       "worst": 28.9,
+       "devMm": 5.3,
+       "flagged": false,
+       "anchors": 6
+      },
+      {
+       "cut": 9051,
+       "outcome": "applied-unreferenced",
+       "worst": null,
+       "devMm": 59.7,
+       "flagged": true,
+       "anchors": 2
+      },
+      {
+       "cut": 9241,
+       "outcome": "applied-wrong",
+       "worst": 40,
+       "devMm": 32.3,
+       "flagged": false,
+       "anchors": 2
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

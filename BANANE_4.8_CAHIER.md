@@ -555,6 +555,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°3 — flanc partiel activé dans le Pilote ; contexte de voie (22/09) : tranche le §2.5 du n°2, déroge au §1.5 du n°1 pour cette seule règle
 - n°4 — audit 4.7.5 ; A1 redéfini en calage de convention (22/09) : remplace le §1.4 du n°1, mesure P5
 - n°5 — validation du calage et bilan des curseurs (23/09) : précise la règle d'arrêt du §4.4 du n°4
+- n°6 — premières mesures terrain de la 4.7.6 (23/09) : calage validé sur cuts inédits, P5 révisé, garde de continuité prioritaire
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -999,3 +1000,99 @@ flanc est desserré (flanc partiel) ; `minTop`, le competitive set et la pente
 sont conservés, avec leur coût mesuré. Desserrer le competitive set publierait 5
 rails faux sur 12, et `minTop` n'a pas encore de bilan de desserrage : C5 reste
 partiel sur ce point.
+
+## Amendement n°6 — premières mesures terrain de la 4.7.6
+
+**23 septembre 2026.** Éléments nouveaux : la collecte du 23/09 (`banane-data`,
+`collections/2026-09-23_v4.7.6_/`) — un lot Pilote 4.7.6 sur la partie 19
+(29 cuts) suivi de sa relecture Natif, et deux sessions Natif sur la partie 20
+(cuts 107–995 et 1099–1154, 399 visites) ; les relevés
+`audit/brain-audit-2026-09-23.json` et `audit/continuity-guard-2026-09-23.json`.
+Les cuts 9033 et 9241 sont exclus du bilan à la demande de l'opérateur.
+
+### 6.1 Le calage tient sur des cuts inédits
+
+Partie 20 déjà vue, mais cuts jamais utilisés pour l'ajustement (le
+chevauchement 126–140 est exclu) : c'est la mesure du §5.1 du n°5, sur une
+partie connue et non sur une partie nouvelle.
+
+| Cuts justes | Latéral médian | Vertical médian | Biais d'écartement |
+|---|---|---|---|
+| Natif long, 109 cuts : brut → calé | 2,8 → 1,3 mm | 3,1 → 0,7 mm | +4,9 → −0,2 mm |
+| Natif court, 36 cuts : brut → calé | 2,5 → 0,9 mm | 2,9 → 0,9 mm | +4,9 → −0,5 mm |
+
+Aucun cut n'est rendu faux par le calage ; un cut faux (397) est évité, son
+écartement calé sortant du contrat. La règle d'arrêt n'est pas déclenchée : le
+calage est maintenu. P2 est resserré : le bruit humain ne dépasse pas ≈ 1 mm
+médian.
+
+### 6.2 Le Pilote sur le terrain
+
+Partie 19 : 15 cuts appliqués sur 29 (52 %), 14 différés, dont 12 où la pose ESV
+de départ est à 20–47 mm de la pose humaine. Le rejeu reproduit les 29 décisions
+à l'identique, calage compris. Le cut 9047 est suspect et n'a pas été relu :
+écartement appliqué 1 453,8 mm contre 1 434,6 mm pour ses voisins ; son rail
+gauche était ambigu pour A_STAR (rapport de perte 1,05) et a été publié par S1.
+
+### 6.3 P5 révisé : des cuts appliqués faux existent
+
+Rejoué hors ligne sur la session Natif longue, le moteur 4.7.6 applique **8 cuts
+faux sur 118 jugés** (6,8 %). Le « 0 sur 76 » du n°4 ne tient plus sur cette
+partie :
+
+- **6 décalages communs des deux rails**, de 117 à 273 mm (cuts 398 à 405 et
+  435), écartement dans le contrat. Ils sont tous dans une zone en courbe où la
+  pose ESV de départ est à 100–260 mm de la pose humaine : la vraie position est
+  hors de la fenêtre de recherche, et le moteur trouve une autre paire cohérente.
+  C'est le mode d'échec que le §16 déclare invisible à la garde d'écartement ;
+- **1 rail posé 40 mm trop bas** (241), publié par S1, que le calage avait jugé
+  hors domaine ;
+- **1 rail à 15 mm** (983).
+
+Aucun n'est dû au calage. La couverture parmi les cuts avec entrée est de 70 %
+(178 sur 256) sur la session longue et 97 % (37 sur 38) sur la courte.
+
+### 6.4 Flanc partiel
+
+Sur la session longue, 18 cuts ne sont appliqués que grâce au flanc partiel :
+10 justes, 6 sans référence, **2 faux** (405 et 435, dans la zone de décalage
+commun : leur autre rail est faux aussi). La règle d'arrêt du n°3 §3.1 vise les
+cuts appliqués par le Pilote et n'est pas déclenchée au sens strict. Le flanc
+partiel n'est pas la cause de ces erreurs, mais il leur a ouvert la porte : son
+maintien est lié à la garde du §6.6.
+
+### 6.5 S1 repêche mal
+
+Un rail qu'A_STAR laisse ambigu et que S1 publie est faux bien plus souvent :
+2 sur 10 jugés le 22/09 contre 7 sur 184 pour les publications directes
+d'A_STAR ; le 23/09, deux des cuts faux (241, 404) ont un rail repêché par S1, et
+le cut suspect 9047 aussi. À instruire.
+
+### 6.6 Garde de continuité : première mesure
+
+Étude hors ligne (`tools/continuity-guard-study.cjs`) : chaque rail d'un cut
+appliquable est comparé à la droite tirée des cuts précédents acceptés (6 cuts,
+au moins 2) ; au-delà de 30 mm, le cut est différé et ne sert pas d'ancre. Sur la
+partie 20 : **4 des 8 cuts faux arrêtés** (398, 404, 405, 435), **4 cuts justes
+perdus sur 146**. Passent : 400 et 402, faute de cuts acceptés à proximité, 241
+et 983. Garde, jamais cible : elle ne fait que différer.
+
+### 6.7 Exports
+
+83 % du volume exporté est de la répétition : chaque segment automatique
+réécrit toutes les visites et tous les événements déjà exportés (1 651 Mo sur
+1 989 Mo pour les 41 segments Natif ; les nuages LiDAR ne font que 338 Mo).
+
+### 6.8 Ordre des suites
+
+1. **Garde de continuité**, avant tout nouveau gain de couverture : traiter le
+   cas « pas de cut accepté à proximité », mesurer sur d'autres zones, puis
+   activer. Elle ne fait que différer : aucun invariant du §7 n'est touché.
+2. **Exports allégés** : segments automatiques sans répétition des visites et
+   des événements, et compression.
+3. **S1** : instruire le repêchage des ambiguïtés, en commençant par 9047.
+4. Le temps moteur monte à 1,1 s médian et 2,0 s au p90 par cut sur les
+   captures denses de la partie 20 : relevé pour la 4.9.
+
+Sur le §2 : couverture Pilote mesurée à 52 % sur la partie 19. Sur le §15 : P5
+révisé (8 sur 118 hors ligne, partie 20) ; P2 resserré.
