@@ -11,8 +11,8 @@
     <header>
       <p class="brand"><span>BANANE</span><small>UI NEXT · MAQUETTE</small></p>
       <h1>Pilote</h1>
-      <p class="intro">Suivi du lot et état du cut en cours.</p>
-      <p class="preview-note">Aperçu statique · données d’exemple figées · aucune liaison à ESV</p>
+      <p class="intro">Suivi du lot et de ses derniers cuts.</p>
+      <p class="preview-note">Aperçu statique · exemples figés · aucune liaison à ESV</p>
     </header>
 
     <nav class="nav" aria-label="Vues Banane">
@@ -32,28 +32,24 @@
         <span class="status-pill">En cours</span>
       </div>
 
-      <p class="lot-count">
-        <strong>20</strong><span class="unit">/ 24</span>
-        <span class="count-caption">statuts enregistrés</span>
-      </p>
-      <div class="progress-track" role="img" aria-label="14 cuts traités, 4 différés, 2 refusés par l’écartement, 4 en cours ou à traiter">
+      <div class="progress-track" role="img" aria-label="14 cuts traités, 4 différés, 2 refusés par l’écartement, 4 à traiter">
         <span class="segment-treated"></span>
         <span class="segment-deferred"></span>
         <span class="segment-rejected"></span>
         <span class="segment-pending"></span>
       </div>
-      <div class="legend" aria-label="État du lot">
-        <div class="legend-item"><i class="swatch treated" aria-hidden="true"></i><span>Traités</span><strong>14</strong></div>
-        <div class="legend-item"><i class="swatch deferred" aria-hidden="true"></i><span>Différés</span><strong>4</strong></div>
-        <div class="legend-item"><i class="swatch" aria-hidden="true"></i><span>Refusés · écartement</span><strong>2</strong></div>
-        <div class="legend-item"><i class="swatch" aria-hidden="true"></i><span>En cours / à traiter</span><strong>4</strong></div>
+      <div class="legend" aria-label="Compteurs du lot">
+        <span class="legend-item">Traités : <strong>14</strong></span>
+        <span class="legend-item">Différés : <strong>4</strong></span>
+        <span class="legend-item">Refus d’écartement : <strong>2</strong></span>
+        <span class="legend-item">À traiter : <strong>4</strong></span>
       </div>
 
       <div class="policy">
         <div>
           <span class="policy-label">Politique effective</span>
           <p><strong>Propositions incertaines</strong> · pause du lot</p>
-          <p><strong>Rail non résolu</strong> · différer</p>
+          <p><strong>Rail non résolu</strong> · différer sans décision</p>
         </div>
         <div>
           <span class="policy-label">Contrat d’écartement</span>
@@ -62,7 +58,7 @@
         </div>
       </div>
       <div class="card-footer">
-        <span>Lot en cours · 20 statuts durables</span>
+        <span>Lot en cours</span>
         <div class="controls" aria-label="Commandes illustratives, inactives">
           <button type="button" disabled>Pause</button>
           <button type="button" disabled>Arrêter</button>
@@ -70,31 +66,63 @@
       </div>
     </section>
 
-    <section aria-labelledby="kpi-title">
-      <div class="kpi-heading">
+    <section class="kpi-section" aria-labelledby="kpi-title">
+      <div class="section-heading">
         <h2 id="kpi-title">Chiffres clés</h2>
-        <span>provenance indiquée par mesure</span>
+        <span>valeurs absentes laissées non mesurées</span>
       </div>
-      <div class="kpis">
-        <div class="kpi">
-          <span class="kpi-label">Couverture</span>
-          <span class="kpi-value">58<small>%</small></span>
-          <span class="kpi-source">14 cuts traités / 24</span>
+
+      <div class="kpi-group">
+        <div class="group-heading">
+          <h3>Ce lot</h3>
+          <span>source indiquée par mesure</span>
         </div>
-        <div class="kpi">
-          <span class="kpi-label">Erreur médiane</span>
-          <span class="kpi-value missing">non rapportée</span>
-          <span class="kpi-source">relecture absente</span>
+        <div class="kpis lot-kpis">
+          <div class="kpi">
+            <span class="kpi-label">Couverture</span>
+            <span class="kpi-value missing">non mesurée</span>
+            <span class="kpi-source">appliqués / traités</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Différés</span>
+            <span class="kpi-value">4</span>
+            <span class="kpi-source">état durable · ce lot</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Refus d’écartement</span>
+            <span class="kpi-value">2</span>
+            <span class="kpi-source">garde · ce lot</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Temps moteur médian</span>
+            <span class="kpi-value missing">non mesuré</span>
+            <span class="kpi-source">moteur · ce lot</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Calage appliqué</span>
+            <span class="kpi-value missing">non mesuré</span>
+            <span class="kpi-source">rails calés / rails publiés</span>
+            <span class="kpi-source">moteur, ce lot</span>
+          </div>
         </div>
-        <div class="kpi">
-          <span class="kpi-label">Biais d’écartement</span>
-          <span class="kpi-value">+0,8<small>mm</small></span>
-          <span class="kpi-source">8 paires relues · 22/09</span>
+      </div>
+
+      <div class="kpi-group review-group">
+        <div class="group-heading">
+          <h3>Dernière relecture</h3>
+          <span>Date : non rapportée · Source : non rapportée</span>
         </div>
-        <div class="kpi">
-          <span class="kpi-label">Rails calés</span>
-          <span class="kpi-value">28<small>/48</small></span>
-          <span class="kpi-source">14 paires complètes</span>
+        <div class="kpis review-kpis">
+          <div class="kpi">
+            <span class="kpi-label">Erreur médiane</span>
+            <span class="kpi-value missing">non mesuré</span>
+            <span class="kpi-source">mm · relecture non renseignée</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Biais d’écartement</span>
+            <span class="kpi-value missing">non mesuré</span>
+            <span class="kpi-source">mm · relecture non renseignée</span>
+          </div>
         </div>
       </div>
     </section>
@@ -102,55 +130,94 @@
     <section class="card cut-card" aria-labelledby="cut-title">
       <div class="card-heading cut-heading">
         <div>
-          <p class="eyebrow">Cut en cours</p>
-          <h2 id="cut-title">Cut 21 <span>sur 24</span></h2>
+          <p class="eyebrow">État du cut</p>
+          <h2 id="cut-title">Partie 22 · cut 1203</h2>
+          <p class="subtle">21ᵉ du lot</p>
         </div>
-        <span class="status-pill">Revue opérateur</span>
+        <span class="status-pill deferred-pill">Différé</span>
       </div>
 
+      <p class="deferred-message"><strong>Différé</strong> · navigation sans décision — aucune correction, aucun VALIDATE, aucun SKIP</p>
+
       <div class="rails">
-        <article class="rail" aria-label="Rail gauche 2162">
+        <article class="rail" aria-label="Rail gauche">
           <div class="rail-top">
-            <div class="rail-label">Rail 2162<span class="rail-side">Côté gauche</span></div>
+            <div class="rail-label">Rail gauche</div>
             <span class="rail-tag">Proposition</span>
           </div>
           <p class="rail-value">+4<small>mm</small></p>
-          <p class="rail-note">À examiner dans ESV · non appliquée</p>
+          <p class="rail-note">Exemple · non appliquée</p>
         </article>
-        <article class="rail" aria-label="Rail droit 2163">
+        <article class="rail" aria-label="Rail droit">
           <div class="rail-top">
-            <div class="rail-label">Rail 2163<span class="rail-side">Côté droit</span></div>
+            <div class="rail-label">Rail droit</div>
             <span class="rail-tag abstention">Abstention</span>
           </div>
-          <p class="rail-value">Aucune proposition</p>
+          <p class="rail-empty">Aucune proposition</p>
           <p class="rail-note">Flanc trop peu documenté</p>
         </article>
       </div>
 
       <div class="anomaly">
         <span class="anomaly-label">Anomalie</span>
-        <p><strong>Paire incomplète.</strong> Aucune position appliquée ; le rail droit reste à examiner.</p>
+        <p><strong>Paire incomplète.</strong> Aucune correction n’est appliquée.</p>
       </div>
 
-      <dl class="esv-state">
-        <div><dt>VALIDATE</dt><dd>non observé</dd></div>
-        <div><dt>SKIP</dt><dd>non observé</dd></div>
-        <div><dt>Décision opérateur</dt><dd>en attente dans ESV</dd></div>
-      </dl>
+      <div class="navigation-state">
+        <span class="navigation-label">Navigation · Partie 22 · cut 1203</span>
+        <span>navigation observée · confirmation serveur indisponible</span>
+      </div>
     </section>
 
-    <details class="card diagnostic">
+    <details class="card diagnostic" open>
       <summary>
         <span>Diagnostic GCV1</span>
-        <span class="diagnostic-hint">cut 21 · replié</span>
+        <span class="diagnostic-hint">Partie 22 · cut 1203</span>
       </summary>
       <div class="diagnostic-body">
-        <p>Contenu d’exemple uniquement. Aucun calcul ni export diagnostic n’est exécuté depuis cette page.</p>
+        <div class="diag-rails">
+          <section class="diag-rail" aria-labelledby="diag-left-title">
+            <h3 id="diag-left-title">Rail gauche</h3>
+            <dl class="diag-grid">
+              <div><dt>Motif d’abstention</dt><dd>Sans objet · proposition présente</dd></div>
+              <div><dt>Points du dessus</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Points du flanc</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Rapport de perte</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>S1</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Flanc partiel</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Calage vertical</dt><dd class="missing">non mesuré <small>mm</small></dd></div>
+              <div><dt>Calage latéral</dt><dd class="missing">non mesuré <small>mm</small></dd></div>
+              <div><dt>Écartement prévu</dt><dd class="missing">non mesuré <small>mm</small></dd></div>
+              <div><dt>Classe d’écartement</dt><dd>non déterminée</dd></div>
+              <div><dt>Empreinte courte du moteur</dt><dd class="missing">non rapportée</dd></div>
+              <div><dt>Temps de calcul</dt><dd class="missing">non mesuré <small>ms</small></dd></div>
+            </dl>
+          </section>
+
+          <section class="diag-rail" aria-labelledby="diag-right-title">
+            <h3 id="diag-right-title">Rail droit</h3>
+            <dl class="diag-grid">
+              <div><dt>Motif d’abstention</dt><dd>Flanc trop peu documenté</dd></div>
+              <div><dt>Points du dessus</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Points du flanc</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Rapport de perte</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>S1</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Flanc partiel</dt><dd class="missing">non mesuré</dd></div>
+              <div><dt>Calage vertical</dt><dd class="missing">non mesuré <small>mm</small></dd></div>
+              <div><dt>Calage latéral</dt><dd class="missing">non mesuré <small>mm</small></dd></div>
+              <div><dt>Écartement prévu</dt><dd class="missing">non mesuré <small>mm</small></dd></div>
+              <div><dt>Classe d’écartement</dt><dd>non déterminée</dd></div>
+              <div><dt>Empreinte courte du moteur</dt><dd class="missing">non rapportée</dd></div>
+              <div><dt>Temps de calcul</dt><dd class="missing">non mesuré <small>ms</small></dd></div>
+            </dl>
+          </section>
+        </div>
+        <p class="diagnostic-note">Détail ouvert à titre de maquette. Les valeurs absentes restent explicites ; aucun diagnostic n’est calculé ici.</p>
       </div>
     </details>
 
-    <p class="source-note">Données de démonstration locales · les mesures sont illustratives, pas un résultat du moteur.</p>
-    <footer>Maquette statique du panneau opérateur · commandes affichées à titre visuel.</footer>
+    <p class="source-note">Les compteurs et états sont des exemples statiques ; les mesures non fournies sont signalées comme telles.</p>
+    <footer>Maquette statique du panneau opérateur · commandes illustratives inactives.</footer>
   </main>
 </body>
 </html>
