@@ -54,6 +54,9 @@ Terrain (opérateur) :
   chacun relu en Natif (chaque cut validé).
 - **F2** — P2 : 30 cuts replacés en aveugle, quelques jours après leur première
   pose, sans regarder l'ancienne.
+  P2 se mesure avec **un seul opérateur** : ESV n'ouvre pas une même partie
+  dans deux projets (réponse de l'opérateur, 23/09). L'écart entre opérateurs
+  reste non mesuré et sera déclaré comme limite.
 
 Mesure : C1 réel du Pilote (dénominateur D-038), couverture qu'aurait donnée la
 décision sur le lot, faux 2D, parité hors ligne. **Arrêt** si la décision sur
