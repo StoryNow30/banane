@@ -30,7 +30,7 @@
  * (contrat [1405, 1470] mm). Le critère de choix est la POSITION du champignon
  * prédite par la voie, jamais un écartement. Même entrée que la 4.7.7
  * (src/continuity-observer.js). Jugement aux règles du banc (referenceFor) ;
- * latéral > 10 mm = faux.
+ * faux si l'erreur latérale OU verticale dépasse 10 mm (D-038).
  */
 const fs=require('node:fs'),path=require('node:path');
 const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs'),PS=require('./pair-search.cjs');
@@ -131,7 +131,9 @@ function studySession(session,label,{chooseMm=15,variant='A',chain='none'}={}){
       const through=(chunks.get(i.record.visitId)||[]).filter(c=>i.input.chunkIds.includes(c.chunkId)).map(c=>c.acquisition?.endedAt||c.capturedAt).filter(Boolean).sort().at(-1)||null;
       const refs=Object.fromEntries(SIDES.map(s=>[s,Lab.referenceFor(i.record,s,i.record.beforeEstablished.rails[s],through)]));
       row.referenced=SIDES.every(s=>refs[s].status==='candidate');
-      const worst=pos=>Math.max(...SIDES.map(s=>{const m=i.record.beforeEstablished.rails[s].sceneRelativeToProfileLocal,a=C.point(m,pos[s]),h=C.point(m,refs[s].finalRail.positionSceneRelative);return Math.abs(a[1]-h[1])*1000;}));
+      /* D-038 : faux si l'erreur LATÉRALE OU VERTICALE dépasse 10 mm (valeurs brutes). */
+      const worst=pos=>Math.max(...SIDES.map(s=>{const m=i.record.beforeEstablished.rails[s].sceneRelativeToProfileLocal,a=C.point(m,pos[s]),h=C.point(m,refs[s].finalRail.positionSceneRelative);
+        return Math.max(Math.abs(a[1]-h[1]),Math.abs(a[2]-h[2]))*1000;}));
       if(row.referenced){
         if(i.esv.applicable)row.esvWorstMm=r1(worst(i.positions));
         if(i.final.positions)row.worstMm=r1(worst(i.final.positions));
