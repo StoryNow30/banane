@@ -6,7 +6,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/continuity-observer.js','src/native-session.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/continuity-observer.js','src/lot-decision.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.7.7';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
@@ -71,9 +71,15 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
        fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
        geometrySha256:shadow.contract?.geometrySha256||null};
    }
+   /* 4.7.8 — décision sur le lot, EN OBSERVATION (amendement n°9, D-039) :
+    * calculée sur la capture du cut et les cuts déjà passés du lot, consignée
+    * avec l'observation GCV1, jamais appliquée. Une erreur ici n'arrête rien. */
+   let lotObservation=null;
+   if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
+    catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
-     proposalId:proposal?.id||null,shadow});
+     proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
    if(analysisError)throw analysisError;
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
      engine.s.proposal=null;
@@ -85,6 +91,22 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  };
  await engine.init();
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();})();
+/* Décision sur le lot en observation : l'état du lot (ancres) vit dans le lot
+ * lui-même, persisté avec lui, et disparaît avec lui. */
+async function observeLot(shadow){
+ const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
+ if(!L||!batch||S?.lot?.observe===false)return null;
+ const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
+ if(!capture?.rails?.left||!capture?.rails?.right||!Array.isArray(capture.pointsSceneRelative))return {stage:'no-capture',applied:false};
+ const identity=globalThis.BananeCore3.completeIdentity(capture.identity||engine.s.before?.identity||{});
+ const state=batch.lotObservation||(batch.lotObservation={version:L.DEFAULTS.version,anchors:[]});
+ const t0=Date.now();
+ const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
+   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
+ if(decision.anchor){state.anchors.push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage});
+  if(state.anchors.length>(S?.lot?.maxAnchors??40))state.anchors.shift();}
+ return {...decision,applied:false,displayed:false,engineMs:Date.now()-t0};
+}
 async function openPanel(which='home'){if(!VIEWS.includes(which))throw Error('Vue inconnue.');
  const url=chrome.runtime.getURL(PANEL)+'#'+which;
  // Une fenêtre Banane existe déjà : on la ramène au premier plan et on lui

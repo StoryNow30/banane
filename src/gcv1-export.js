@@ -248,6 +248,8 @@
     rails:Object.fromEntries(['left','right'].map(side=>[side,railView(side,shadow.rails?.[side],proposed)])),
     summary:clone(shadow.summary??null),
     comparison:clone(shadow.comparison??null),
+    // 4.7.8 : décision sur le lot, en observation seulement (amendement n°9).
+    lotObservation:clone(event.lotObservation??null),
    };
    // `state` porte l'intention différée encore persistée : elle sert à choisir
    // l'opération courante quand aucune finalisation durable ne tranche (D4).

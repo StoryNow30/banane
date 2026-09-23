@@ -1,8 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('./fixtures.cjs');
-function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore()}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
+function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={}}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
  const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../src/engine.js'),BananeManualSession4:require('../src/manual-session.js'),BananeNativeSession4:require('../src/native-session.js'),BananeGCV1Export:require('../src/gcv1-export.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../src/geometry-brain.js'),
-  BananeGCV1Shadow:shadow,
+  BananeGCV1Shadow:shadow,...globals,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:f=>onConnect=f}},
    action:{onClicked:{addListener:f=>click=f}},storage:{local:{get:async()=>({}),set:async()=>{}}},
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),query:async({url}={})=>!url?[{id:1,url:'https://esv.lidar.altametris.xyz/rails_validation/test',title:'ESV TEST'},...panelTabs]:
@@ -306,4 +306,34 @@ test('la politique « attempt » coupe les sélections, sauf accord explicite',(
   'le mode essai doit être un accord explicite, pas un défaut');
  assert.match(src,/configure\(\{selectionActive:!tente\|\|autorise\}\)/,
   'sélections coupées en « attempt », sauf si l’essai est explicitement autorisé');
+});
+
+/* 4.7.8 — décision sur le lot EN OBSERVATION dans le Pilote (amendement n°9) :
+ * consignée avec l'observation GCV1, ancres gardées dans le lot, rien appliqué
+ * au-delà de ce que le Pilote applique déjà. */
+test('a GCV1 pilot batch records the lot decision in observation, never applies it',async()=>{
+ const Shadow=require('../src/gcv1-shadow.js'),{base}=require('./fixtures.cjs');
+ const science=Shadow.scientificProposeBoth(base);
+ async function run(withLot){
+  const shadow=shadowHarness();const arm=shadow.armOnce.bind(shadow);
+  shadow.armOnce=selector=>{arm(selector);const out=shadow.consumeLast();shadow.consumeLast=()=>{shadow.calls.consume++;const o=shadow.pending;shadow.pending=null;return o;};
+   shadow.pending={...out,rails:science.rails,summary:science.summary};};
+  shadow.scientificProposeBoth=Shadow.scientificProposeBoth;
+  const globals=withLot?{BananeLotDecision:require('../src/lot-decision.js'),BananeSettings:require('../src/settings.js'),BananeCore3:require('../src/core.js')}:{};
+  const b=background({shadow,globals});
+  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
+  await b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1'});
+  while(!['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR','PAUSED'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));
+  return {b,view:await b.api('view'),observed:b.store.events.filter(e=>e.type==='gcv1-shadow-observed')};
+ }
+ const lot=await run(true),control=await run(false);
+ assert.ok(lot.observed.length>=1);
+ for(const event of lot.observed){assert.equal(event.lotObservation.applied,false);assert.equal(event.lotObservation.displayed,false);
+  assert.equal(event.lotObservation.stage,'first-pass');assert.ok(Number.isFinite(event.lotObservation.engineMs));}
+ assert.equal(lot.observed[0].lotObservation.guardMm,null,'premier cut du lot : aucune ancre');
+ if(lot.observed.length>1)assert.ok(lot.observed[1].lotObservation.guardMm<=30,'second cut confirmé par le premier');
+ // Aucune interférence : mêmes commandes, même état de lot qu'un Pilote sans observation.
+ assert.deepEqual(lot.b.adapter.calls,control.b.adapter.calls);
+ assert.equal(lot.view.batch.state,control.view.batch.state);
+ assert.ok(control.observed.every(e=>e.lotObservation===undefined));
 });

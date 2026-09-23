@@ -106,6 +106,14 @@
     drainAtEndMs: 15000,
   });
 
+  /* --- Décision sur le lot, en observation dans le Pilote (4.7.8, n°9) --- */
+  const lot = Object.freeze({
+    observe: true,
+    /* Ancres gardées en mémoire du lot : largement plus que les 3 numéros de
+     * cut de voisinage, sans faire grossir l'état persisté. */
+    maxAnchors: 40,
+  });
+
   const exportSettings = Object.freeze({
     /* Volume en attente déclenchant un vidage automatique pendant la collecte.
      * Sous la limite de téléchargement observée (~64 Mo) pour garder de la
@@ -179,6 +187,7 @@
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
+      { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'observée' : 'coupée', pourquoi: 'Calcule et consigne ce que le Pilote aurait fait en décidant sur le lot, sans l’appliquer (amendement n°9).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
       { groupe: 'Export', nom: 'Taille de segment visée', valeur: mo(exportSettings.segmentBytes), pourquoi: 'Réserve de ' + mo(exportSettings.segmentReserveBytes) + ', plancher de ' + exportSettings.minObjectsPerSegment + ' objets.' },
@@ -189,5 +198,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, export: exportSettings, reader, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, derived, describe };
 });
