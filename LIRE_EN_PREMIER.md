@@ -1,13 +1,26 @@
-# Démarrer avec Banane V4.7.12 TEST — le Pilote décide sur le lot
+# Démarrer avec Banane V4.7.13 TEST — la nouvelle interface
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.12-test.zip` dans Edge, exactement comme la 4.7.11.
+Installe `banane-v4.7.13-test.zip` dans Edge, exactement comme la 4.7.12.
 
-Vérifie d'abord **V4.7.12 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.12 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.13 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.13 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
+
+**4.7.13 — la nouvelle interface « La ligne ».** Le Pilote travaille exactement
+comme en 4.7.12 ; seul le panneau change. En haut, l'état du lot, le cut en
+cours en grand et les compteurs. Dessous, **la voie** : une traverse par cut —
+pleine, posé par le moteur ; creuse, posé par la voie ; pointillée, différé ;
+haute avec son numéro, le cut affiché (rouge « N ? » si le résultat est
+incertain). Au-dessus, **le profil** : l'écart de chaque cut à la voie de ses
+voisins, dans la bande de ±30 mm ; un point rouge au-dessus de la bande, c'est
+un cut qui sort de la voie. En bas, **un seul bouton plein** : l'action
+suivante (Pause pendant le lot, Archiver en cas d'incident, Télécharger à la
+fin) ; les autres choix sont des liens. SKIP explicite demande désormais une
+confirmation. Le thème suit celui de Windows (clair ou sombre).
+
 
 **Le Pilote place plus de cuts.** Quand le moteur diffère un cut, ou le refuse
 pour son écartement, le Pilote le reprend à partir de la voie tracée par les
@@ -34,7 +47,7 @@ déplace la vue au clic droit (D-043).
 que son calage de convention échoue sur la même paire, le cut est désormais
 différé : c'est la combinaison des faux 241 et 409 de la partie 20 (D-044).
 
-**Si le Pilote s'arrête sur une erreur** : **Archiver le résultat interrompu**,
+**Si le Pilote s'arrête sur une erreur** : **Archiver le résultat interrompu · cut N**,
 passe au cut suivant dans ESV, puis **Reprendre** (corrigé en 4.7.12, KI-052)
 ou lance un nouveau lot.
 

@@ -1,5 +1,26 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.13 — l'interface « La ligne », 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension — interface seulement** (chantier B, D-045). Le panneau prend le
+langage de la proposition « La ligne » : palette claire et thème sombre selon
+le système, police Inter embarquée (`fonts/`, SIL OFL, aucun appel réseau),
+blocs sans cadres. Dans le Pilote : l'état en capitales, le cut en grand, les
+compteurs (posés, dont par la voie, différés), la politique effective, **la
+voie** — une traverse par cut : pleine (moteur), creuse (voie), pointillée
+(différé), haute avec son numéro (cut affiché ; rouge « N ? » si incertain) —
+et au-dessus **le profil en long** (écart de chaque cut à la voie de ses
+voisins, bande de la garde 0–30 mm). Un seul bouton plein par état, les autres
+en liens ; « Démarrer » et les bornes masqués pendant un lot ; « Archiver le
+résultat interrompu · cut N » ; SKIP explicite confirmé. Placement, commandes et
+identifiants inchangés ; `background.js` consigne par cut l'écart et la
+commande de la décision sur le lot (`batch.lotCommands`).
+
+**Cahier.** Amendement n°10 (D-040 à D-045 dans le contrat ; seuil C4 de sortie
+à trancher). Tests du service worker découpés (10 s par fichier).
+
 ## 4.7.12 — garde de paire, reprise après archivage, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.
