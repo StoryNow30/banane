@@ -1,0 +1,35 @@
+# Rapport de sortie 4.8 — brouillon
+
+**24 septembre 2026.** Produit par `tools/sortie-report.cjs` à partir des rapports d'acceptation : aucun chiffre n'est recalculé ici. C1 à C5 sont rapportés ensemble ; C1 seul n'est pas un résultat (§14 G).
+
+Rôle « validation » : partie jamais utilisée pour régler, relue. Toutes les parties relues à ce jour ont servi au bilan des curseurs (D-047, D-050) : elles sont « réglage ». Les preuves de sortie viendront des prochains lots, sur des parties neuves.
+
+## Lots
+
+| Lot | Partie | Version | Rôle | Relecture | État | C1 | C4 faux / jugés | C3 hors contrat appliqués |
+|---|---|---|---|---|---|---|---|---|
+| pilote-p19-4.7.6 — 4.7.6, décision sur le lot absente | 19 | 4.7.6 | réglage | complète | STOPPED | 14/28 (50 %) | 0/1 (non évaluable) | 0 |
+| pilote-p31-4.7.8 | 31 | 4.7.8 | réglage | complète | STOPPED | 35/51 (68,6 %) | 0/34 | 0 |
+| pilote-p31-fin-4.7.9 — décision sur le lot observée seulement | 31 | 4.7.9 | réglage | complète | STOPPED | 47/78 (60,3 %) | 0/45 | 0 |
+| pilote-p34-4.7.11 — arrêté par l'opérateur | 34 | 4.7.11 | réglage | complète | STOPPED | 73/96 (76 %) | 1/71 | 0 |
+| pilote-p2-4.7.14 — pose ESV décalée, KI-054 | 2 | 4.7.14 | réglage | ciblée (110–138) | PAUSED | 25/42 (59,5 %) | 2/11 (non évaluable) | 0 |
+| pilote-p33-4.7.10 — 4.7.10, arrêt KI-051 | 33 | 4.7.10 | couverture | aucune | ERROR | 65/83 (78,3 %) | non jugé | 0 |
+| pilote-p35-4.7.12 — relecture non enregistrée (D-048) | 35 | 4.7.12 | couverture | aucune | STOPPED | 203/233 (87,1 %) | non jugé | 0 |
+
+## Critères
+
+| Critère | Statut | Détail |
+|---|---|---|
+| C1 | **non démontré** | aucun lot de validation : les parties relues ont servi au réglage |
+| C2 | **non publiable** | P2 non mesuré : aucune cible d'erreur publiée (§15) |
+| C3 | **tenu** | sur tous les lots : 0 paire(s) hors contrat appliquée(s), 47 refus d'écartement |
+| C4 | **non mesuré** | aucun lot de validation relu |
+| C5 | **bilans tenus** | décision sur le lot : audit/curseurs-lot-2026-09-24.md (D-047, D-050) ; garde d'écartement voisin : audit/ecartement-voisin-2026-09-24.md (D-050) ; garde de paire : audit/garde-paire-verification-2026-09-24.md (D-044) ; curseurs du moteur : D-035 (minTop du moteur sans bilan de desserrage) |
+
+## Ce qui manque pour la version candidate
+
+- Lots de validation : au moins deux lots 4.7.16 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne.
+- P2 : 30 cuts replacés à l'aveugle par l'opérateur, pour le plancher humain ; sans lui, aucun chiffre d'erreur n'est publié.
+- Seuil C4 de sortie : zéro faux strict, ou faux isolés expliqués tolérés (amendement n°10, point 5).
+- Matrice d'acceptation §14 et §7 (chantier 5) et relecture indépendante de la 4.7.13 à la 4.7.16 (chantier 6).
+- Cahier consolidé, contrôle Edge de la version candidate, paquet reproductible ; merge, tag et release sur autorisation explicite seulement.

@@ -9,7 +9,10 @@ Statut : développement expérimental, non qualifié pour la production.
 Interface « La ligne » complète (chantier B) : dernière commande en trois
 étapes, écartement dans l'Assisté, pastilles d'onglets, « Nouveau lot »,
 tiroir « Détails ». Deuxième vague de chantiers lancée (consignes 5, 6, 7 :
-tests d'acceptation, relecture 4.7.13–4.7.16, faux sans appui).
+tests d'acceptation, relecture 4.7.13–4.7.16, faux sans appui). Rapport de
+sortie en brouillon (`audit/rapport-sortie-4.8.md`, `tools/sortie-report.cjs`) :
+C3 et C5 tenus ; C1 et C4 sans lot de validation (toutes les parties relues ont
+servi au réglage) ; C2 non publiable sans P2.
 
 ## État 4.7.16
 

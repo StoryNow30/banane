@@ -1,0 +1,29 @@
+{
+ "format": "banane-sortie-lots-v1",
+ "date": "24 septembre 2026",
+ "regle": "Rôle « validation » : partie jamais utilisée pour régler, relue. Toutes les parties relues à ce jour ont servi au bilan des curseurs (D-047, D-050) : elles sont « réglage ». Les preuves de sortie viendront des prochains lots, sur des parties neuves.",
+ "lots": [
+  {"fichier": "audit/acceptance-p19-2026-09-23.json", "role": "réglage", "relecture": "complète", "note": "4.7.6, décision sur le lot absente"},
+  {"fichier": "audit/acceptance-p31-2026-09-24.json", "role": "réglage", "relecture": "complète"},
+  {"fichier": "audit/acceptance-p31b-2026-09-24.json", "role": "réglage", "relecture": "complète", "note": "décision sur le lot observée seulement"},
+  {"fichier": "audit/acceptance-p34-2026-09-24.json", "role": "réglage", "relecture": "complète", "note": "arrêté par l'opérateur"},
+  {"fichier": "audit/acceptance-p2-2026-09-24-relecture-ciblee.json", "role": "réglage", "relecture": "ciblée (110–138)", "note": "pose ESV décalée, KI-054"},
+  {"fichier": "audit/acceptance-p33b-2026-09-24-sans-relecture.json", "role": "couverture", "relecture": "aucune", "note": "4.7.10, arrêt KI-051"},
+  {"fichier": "audit/acceptance-p35-2026-09-24-sans-relecture.json", "role": "couverture", "relecture": "aucune", "note": "relecture non enregistrée (D-048)"}
+ ],
+ "p2": null,
+ "seuilC4": null,
+ "bilans": [
+  "décision sur le lot : audit/curseurs-lot-2026-09-24.md (D-047, D-050)",
+  "garde d'écartement voisin : audit/ecartement-voisin-2026-09-24.md (D-050)",
+  "garde de paire : audit/garde-paire-verification-2026-09-24.md (D-044)",
+  "curseurs du moteur : D-035 (minTop du moteur sans bilan de desserrage)"
+ ],
+ "conditions": [
+  "Lots de validation : au moins deux lots 4.7.16 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne.",
+  "P2 : 30 cuts replacés à l'aveugle par l'opérateur, pour le plancher humain ; sans lui, aucun chiffre d'erreur n'est publié.",
+  "Seuil C4 de sortie : zéro faux strict, ou faux isolés expliqués tolérés (amendement n°10, point 5).",
+  "Matrice d'acceptation §14 et §7 (chantier 5) et relecture indépendante de la 4.7.13 à la 4.7.16 (chantier 6).",
+  "Cahier consolidé, contrôle Edge de la version candidate, paquet reproductible ; merge, tag et release sur autorisation explicite seulement."
+ ]
+}
