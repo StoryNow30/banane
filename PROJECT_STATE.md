@@ -12,6 +12,11 @@ Bilan des curseurs de la décision sur le lot (C5, D-047,
 les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix en cours de mesure. Relecture
 ciblée des prochains lots (D-048).
 
+Lots 4.7.14 de la partie 2, relecture ciblée (110–138) : pose de départ d'ESV
+décalée (1500 mm, 60–200 mm des rails) ; 2 faux sur 11 jugés, dont 114 à
+207,6 mm (premier passage sans appui, KI-054) ; la 4.7.15 l'aurait différé et
+aurait placé 115 et 116 justes (`audit/cas-decalage-esv-p2-2026-09-24.md`).
+
 ## État 4.7.14
 
 Relecture indépendante de la 4.7.12 (chantier 3) intégrée : un défaut
