@@ -10,6 +10,13 @@ Relecture indépendante de la 4.7.12 (chantier 3) intégrée : un défaut
 bloquant (KI-053) et la reprise sur cut archivé (KI-052) corrigés ; questions
 ouvertes à la direction dans D-046.
 
+Premier lot 4.7.12 (partie 35, sans relecture, jamais vue) : 203 cuts traités
+sur 233 (87 %), dont 32 placés par la décision sur le lot (28 choix,
+4 reprises depuis la voie) ; 30 différés (21 moteur, 8 écartement, 1 sans
+entrée), dont 3 hors de la vue (8951–8953) ; aucune erreur, aucun déclenchement
+de la garde de paire, aucun cas KI-053 ; parité du rejeu 233/233
+(`audit/acceptance-p35-2026-09-24-sans-relecture.json`). En attente : relecture.
+
 ## État 4.7.13
 
 Interface « La ligne » intégrée (D-045). Amendement n°10 au cahier. Bilan
