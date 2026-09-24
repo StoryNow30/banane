@@ -1,5 +1,22 @@
 # Décisions techniques
 
+## D-050 - 4.7.16 : garde d'écartement voisin à 20 mm, choix à 5 points de dessus
+
+**24 septembre 2026, direction** (« ok pour les deux, je valide »), sur la
+recommandation du bilan (`audit/ecartement-voisin-2026-09-24.md`,
+`audit/curseurs-lot-2026-09-24.md`).
+
+- **Garde d'écartement voisin, 20 mm** : paire écartée si son écartement
+  s'éloigne de plus de 20 mm de la médiane des 3 appuis les plus proches ;
+  garde seulement, jamais cible (cahier §3.6, §7 invariant n°1). 15 mm
+  écarterait un cut juste où l'écartement change réellement (9047).
+- **`minTop` du choix : 5** (était 15). Filtre du choix seulement ; un choix
+  n'est jamais appui. 3 et 1 n'ajoutent que 2 justes, dont un au seuil.
+- Ensemble, 6 sessions Natif et 5 lots Pilote relus : 711 décidés au lieu de
+  690, +13 justes, −1 faux (7026), aucun juste perdu. Réserve : les gains du
+  choix viennent du banc Natif ; le premier lot 4.7.16 relu les confirme ou non.
+- Écartés : aide au choix par l'écartement et « cible » (aucun cut changé).
+
 ## D-049 - 4.9 : décentrer la caméra d'ESV pour atteindre le champignon
 
 **24 septembre 2026, direction.** « Quand l'écartement est trop important et

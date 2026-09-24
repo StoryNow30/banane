@@ -1,15 +1,22 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.15 TEST** (interface « La ligne » ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-048 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.16 TEST** (interface « La ligne » ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde d'écartement voisin 20 mm, choix à 5 points de dessus, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-050 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.16
+
+Garde d'écartement voisin à 20 mm et choix à 5 points de dessus, validés par
+la direction (D-050) : sur 6 sessions Natif et 5 lots Pilote relus, 711
+décidés au lieu de 690, +13 justes, −1 faux (7026), aucun juste perdu. À
+confirmer sur le premier lot 4.7.16 relu.
 
 ## État 4.7.15
 
 Bilan des curseurs de la décision sur le lot (C5, D-047,
 `audit/curseurs-lot-2026-09-24.md`) : sur 652 cuts décidés et 489 jugés,
 `chainMm` à 15 mm gagne 4 justes sans faux ni juste perdu ; il est desserré,
-les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix mesurés : `minTop` du choix à 5 gagne 11 justes sans faux (proposé, à trancher). Relecture
+les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix mesurés : `minTop` du choix à 5 gagne 11 justes sans faux (retenu en 4.7.16). Relecture
 ciblée des prochains lots (D-048).
 
 Lots 4.7.14 de la partie 2, relecture ciblée (110–138) : pose de départ d'ESV
@@ -19,9 +26,8 @@ aurait placé 115 et 116 justes (`audit/cas-decalage-esv-p2-2026-09-24.md`).
 
 Garde d'écartement voisin mesurée (`audit/ecartement-voisin-2026-09-24.md`) :
 à 20 mm, le faux 7026 est retiré, +2 justes, aucun perdu ; l'aide au choix et
-la cible ne changent aucun cut. Proposition 4.7.16 : garde à 20 mm et `minTop`
-du choix à 5 (ensemble : +13 justes, −1 faux, aucun perdu), en attente de
-décision. Cahier 4.9 ouvert en brouillon (D-049).
+la cible ne changent aucun cut. Garde à 20 mm et `minTop` du choix à 5
+activés en 4.7.16 (D-050). Cahier 4.9 ouvert en brouillon (D-049).
 
 ## État 4.7.14
 

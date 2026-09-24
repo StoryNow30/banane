@@ -1,13 +1,22 @@
-# Démarrer avec Banane V4.7.15 TEST — la voie s'appuie un peu plus loin
+# Démarrer avec Banane V4.7.16 TEST — l'écartement des voisins surveille
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.15-test.zip` dans Edge, exactement comme la 4.7.14.
+Installe `banane-v4.7.16-test.zip` dans Edge, exactement comme la 4.7.15.
 
-Vérifie d'abord **V4.7.15 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.15 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.16 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.16 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
+
+**4.7.16 — deux règles de la décision sur le lot.** Un cut dont l'écartement
+s'éloigne de plus de 20 mm de celui de ses voisins est repris depuis la voie ;
+s'il ne peut pas l'être, il est différé avec le motif « garde d'écartement
+voisin » (à poser à la main, comme un différé). Et le choix par la voie accepte
+un champignon vu avec 5 points de dessus au lieu de 15. Sur tout ce qui a été
+relu : 13 cuts justes de plus, un faux de moins, aucun juste perdu. À la
+relecture ciblée, mets dans la zone des cuts posés par la voie (traverses
+creuses) et note les différés « garde d'écartement voisin ».
 
 **4.7.15 — un seul réglage change.** Un cut que le Pilote a repris depuis la
 voie sert maintenant d'appui aux cuts suivants s'il tombe à 15 mm au plus de

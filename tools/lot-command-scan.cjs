@@ -37,13 +37,13 @@ function scanLot(lot,{ricochet=false}={}){
       direct:{n:ms(withLot).length-ms(relaunched).length,max:q(ms(withLot.filter(o=>!relaunched.includes(o))),1)}},
     cutDurationMs:{n:durations.length,median:q(durations,.5),p90:q(durations,.9)}};
   if(ricochet&&lot.corpus){
-    /* Seule la garde de paire varie ; `chainMm` reste celui du lot (D-047). */
-    const chainMm=A.lotRules(obs,out.version).chainMm;
-    const without=A.replayLot(obs,lot.corpus,{options:{pairGuard:false,chainMm}});
+    /* Seule la garde de paire varie ; les autres règles restent celles du lot (D-047, D-050). */
+    const {source,pairGuard,...lotRules}=A.lotRules(obs,out.version);
+    const without=A.replayLot(obs,lot.corpus,{options:{...lotRules,pairGuard:false}});
     let last=null;const spy={...Shadow,scientificProposeBoth:c=>(last=Shadow.scientificProposeBoth(c))},flagged=[];
     const Lspy={...L,decideCut:args=>{last=null;const d=L.decideCut({...args,Shadow:spy});
       if((d.stage==='window'||d.stage==='choice')&&L.pairFlagged(last))flagged.push(args.capture.identity.cut);return d;}};
-    const withGuard=A.replayLot(obs,lot.corpus,{L:Lspy,options:{pairGuard:true,chainMm}});
+    const withGuard=A.replayLot(obs,lot.corpus,{L:Lspy,options:{...lotRules,pairGuard:true}});
     out.ricochet={changed:obs.map((o,i)=>({o,a:without[i].decision,b:withGuard[i].decision}))
       .filter(({a,b})=>a?.stage!==b?.stage||JSON.stringify(a?.positions)!==JSON.stringify(b?.positions))
       .map(({o,a,b})=>({cut:o.identity.cut,without:a?.stage??null,withPairGuard:b?.stage??null,reason:b?.reason??null,anchors:b?.anchorsUsed??[]})),

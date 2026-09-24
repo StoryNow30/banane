@@ -26,8 +26,14 @@
   * `chainMm` : une reprise depuis la voie devient appui si elle tombe à 15 mm
   * au plus de la prédiction (10 mm jusqu'à la 4.7.14). Bilan des curseurs,
   * D-047 : +4 cuts justes, aucun faux, aucun juste perdu sur 6 sessions Natif
-  * et 4 lots Pilote relus (`audit/curseurs-lot-2026-09-24.md`). */
- const DEFAULTS=Object.freeze({version:'lot-decision-v3',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:null,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,
+  * et 4 lots Pilote relus (`audit/curseurs-lot-2026-09-24.md`).
+  *
+  * 4.7.16 (D-050) : garde d'écartement voisin active à 20 mm (`gaugeGuardMm`),
+  * et un minimum du choix accepté avec 5 points de dessus au lieu de 15
+  * (`minTop`, filtre du choix seulement : celui du moteur reste 15). Ensemble,
+  * sur 6 sessions Natif et 5 lots Pilote relus : +13 justes, −1 faux (7026),
+  * aucun juste perdu (`audit/ecartement-voisin-2026-09-24.md`). */
+ const DEFAULTS=Object.freeze({version:'lot-decision-v4',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -98,8 +104,8 @@
   * (celui du Pilote). `anchors` : cuts déjà passés du lot. Rend l'étape
   * atteinte et, si elle vient de la voie, les positions qui auraient été
   * appliquées ; `anchor` dit si le cut devient ancre pour la suite. */
- /* GARDE D'ÉCARTEMENT VOISIN (étude du 24/09, partie 2, KI-054 ; inactive tant
-  * que `gaugeGuardMm` est nul). L'écartement d'une paire est comparé à la
+ /* GARDE D'ÉCARTEMENT VOISIN (étude du 24/09, partie 2, KI-054 ; active à 20 mm
+  * depuis la 4.7.16, D-050 ; inactive si `gaugeGuardMm` est nul). L'écartement d'une paire est comparé à la
   * médiane de celui des `gaugeCount` appuis les plus proches, à `gaugeGap`
   * cuts au plus. L'écartement ne dépend pas de la pose de départ d'ESV : la
   * garde voit un premier passage même sans appui de position. Garde
@@ -119,7 +125,7 @@
  function decideCut({capture,science,anchors,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
-   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm};
+   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
    const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;

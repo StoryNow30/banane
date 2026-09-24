@@ -1,5 +1,28 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.16 — garde d'écartement voisin, choix à 5 points de dessus, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension** (D-050, validé par la direction).
+- **Garde d'écartement voisin, 20 mm** : l'écartement d'une paire est comparé
+  à la médiane de celui des 3 appuis les plus proches (10 cuts au plus). Au-delà
+  de 20 mm, un premier passage du moteur est repris depuis la voie, une reprise
+  ou un choix est écarté ; sans position commandable, le cut est différé, motif
+  « garde d'écartement voisin ». Garde seulement : aucune paire n'est choisie
+  pour son écartement (cahier §3.6, §7).
+- **Choix à 5 points de dessus** au lieu de 15 (filtre du choix seulement ;
+  celui du moteur reste 15).
+- Mesuré ensemble sur 6 sessions Natif et 5 lots Pilote relus : +13 justes,
+  −1 faux (7026, KI-050), aucun juste perdu. La décision consigne ses règles
+  (`lot-decision-v4`, `gaugeGuardMm`, `minTop`) ; le rejeu d'un lot antérieur
+  les garde telles qu'elles étaient.
+
+**Outils.** Bilans `audit/ecartement-voisin-2026-09-24.md` et
+`audit/curseurs-lot-2026-09-24.md`. Variantes mesurées et non retenues : aide au
+choix par l'écartement, et « cible » (mesure seulement, interdite dans le
+Pilote) — aucune ne change un cut.
+
 ## 4.7.15 — une reprise depuis la voie sert d'appui jusqu'à 15 mm, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

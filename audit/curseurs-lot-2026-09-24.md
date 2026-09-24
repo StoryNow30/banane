@@ -78,7 +78,7 @@ moteur reste 15, cahier §8). Base : 656 décidés, 489 justes, 4 faux.
 
 Tous les gains de `minTop` sont au banc Natif ; aucun lot Pilote relu ne
 change. Aucun faux n'apparaît même à 1 point, mais sous 5 les cuts gagnés se
-rapprochent du seuil (765 à 10,0 mm). **Proposé : 5**, avec la garde
+rapprochent du seuil (765 à 10,0 mm). **Retenu : 5** (4.7.16, D-050), avec la garde
 d'écartement voisin à 20 mm (`audit/ecartement-voisin-2026-09-24.md`). La
 combinaison, rejouée avec la partie 2 : 711 décidés, **+13 justes, −1 faux
 (7026), aucun juste perdu** ; les gains des deux réglages s'additionnent.
@@ -94,7 +94,7 @@ combinaison, rejouée avec la partie 2 : 711 décidés, **+13 justes, −1 faux
 | `gap` | 3 | **Conservé.** 2 coûte 14 justes ; 4 ajoute un faux sur un lot relu (1835). |
 | `anchors` | 2 | **Conservé.** 3 : −1 juste, placements moins stables. |
 | Garde de paire | active | **Conservée** (D-044) : bilan `audit/garde-paire-verification-2026-09-24.md`. |
-| `minTop` du choix | 15 | **Proposé : 5, à trancher par la direction** : +11 justes, 0 faux, 0 perdu (Natif seulement) ; 3 et 1 n'ajoutent que 2 justes, dont un au seuil. |
+| `minTop` du choix | **5** (était 15) | **Desserré en 4.7.16** (D-050) : +11 justes, 0 faux, 0 perdu (Natif seulement) ; 3 et 1 n'ajoutent que 2 justes, dont un au seuil. |
 | `minFace` du choix | 3 | **Conservé.** 2 gagne 2 justes dont un à 9 mm ; 5 coûte 6 justes. |
 | `maxDzMm` du choix | 20 | **Conservé.** 10 coûte 10 justes ; 30 n'apporte rien. |
 

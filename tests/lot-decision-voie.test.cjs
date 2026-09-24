@@ -28,8 +28,14 @@ test('pose ESV à 150 mm, voisins justes : la voie retrouve le rail à quelques 
  * elles, l'écartement restant dans le contrat. La protection est en amont :
  * ancres confirmées par la garde de continuité. */
 test('risque connu : des ancres fausses sur une paire parallèle entraînent le choix',()=>{
-  const rails=shifted(truth,150),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),wrong=shifted(truth,150);
-  const d=L.decideCut({capture:cap,science:sci,anchors:[anchorAt(104,wrong),anchorAt(103,wrong)],Shadow});
+  const rails=shifted(truth,150),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),wrong=shifted(truth,150),anchors=[anchorAt(104,wrong),anchorAt(103,wrong)];
+  const d=L.decideCut({capture:cap,science:sci,anchors,Shadow,options:{gaugeGuardMm:null}});
   assert.equal(d.stage,'choice');assert.ok(lateralMm(rails,d.positions,truth)>100);
+  /* 4.7.16 (D-050) : sur ce fixture, l'écartement de la paire parallèle est à
+   * 20,6 mm de celui des ancres — juste au-delà de la garde de 20 mm : le cut est
+   * différé. Protection de circonstance : une paire parallèle d'écartement
+   * voisin passerait. Le risque KI-047 reste ouvert. */
+  const g=L.decideCut({capture:cap,science:sci,anchors,Shadow});
+  assert.equal(g.stage,'deferred');assert.equal(g.reason,'gauge-guard');assert.ok(g.gaugeJumpMm>20&&g.gaugeJumpMm<25,String(g.gaugeJumpMm));
 });
 
