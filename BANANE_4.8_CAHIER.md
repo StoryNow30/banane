@@ -1032,7 +1032,11 @@ médian.
 ### 6.2 Le Pilote sur le terrain
 
 Partie 19 : 15 cuts appliqués sur 29 (52 %), 14 différés, dont 12 où la pose ESV
-de départ est à 20–47 mm de la pose humaine. Le rejeu reproduit les 29 décisions
+de départ met le rail le plus décalé à 33–47 mm de la pose humaine (l'autre rail
+à 0–34 mm). *Corrigé le 24/09 (relecture du chantier 4) : « 20–47 mm » mêlait les
+deux rails. Au dénominateur D-038, défini ensuite, le lot compte 14 appliqués sur
+28 cuts distincts (50 %) : 9407, atteint puis lot arrêté, y reste ; 9033 et 9241
+sont exclus.* Le rejeu reproduit les 29 décisions
 à l'identique, calage compris. Le cut 9047 est suspect et n'a pas été relu :
 écartement appliqué 1 453,8 mm contre 1 434,6 mm pour ses voisins ; son rail
 gauche était ambigu pour A_STAR (rapport de perte 1,05) et a été publié par S1.
