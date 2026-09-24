@@ -102,7 +102,8 @@ audit/navigation-esv-2026-09-23.json. Corrélation, pas causalité prouvée :
   geste (code physique)       gestes   cut ouvert ensuite
   Z  (KeyW, clavier AZERTY)     173    +1 : 172
   S  (KeyS)                      38    −1 : 36
-  D  (KeyD)                     165    +1 : 161   (rôle exact à établir)
+  D  (KeyD)                     165    +1 : 161   (D sélectionne le rail droit, dit par
+                                                l'opérateur le 24/09 : corrélation)
   Maj+Espace (valider)          591    +1 : 582, sauts avant : 8
   clic dans la vue 3D/carte     125    +1 : 98, sauts lointains : 25
 Dit par l'opérateur : Z et S correspondent à de vrais BOUTONS de l'interface

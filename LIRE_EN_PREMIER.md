@@ -28,9 +28,10 @@ collectées) :
 2. À la fin du lot, exporte le **diagnostic GCV1** et le **corpus LiDAR**.
 3. Puis **relis le lot en Natif** :
    - **valide chaque cut du lot** (Maj+Espace), **y compris ceux que le Pilote a
-     posés et validés** : sans ta validation, un cut appliqué ne peut pas être
-     jugé, et sous 80 % de cuts appliqués jugés le rapport déclare C4 non
-     évaluable ;
+     posés et validés**, même si tu n'y touches pas : le mode Natif enregistre
+     toute visite, mais seule ta validation dit que la pose est ta décision ;
+     un passage avec Z ne compte pas. Sous 80 % de cuts appliqués jugés, le
+     rapport déclare C4 non évaluable ;
    - **passe aussi (Z, sans valider) sur les 5 cuts de part et d'autre** de
      chaque cut du lot, même ceux que le Pilote a sautés : leurs poses servent à
      mesurer les appuis validés (`audit/appuis-valides-2026-09-24.md`).
