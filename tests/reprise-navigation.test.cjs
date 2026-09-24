@@ -62,6 +62,15 @@ test('adaptateur : cut atteint inattendu et repère cible divergent sont incerta
  assert.equal(frame.commandInvoked,true);assert.equal(frame.refusal.code,'UNEXPECTED_NAVIGATION_IDENTITY');
  assert.equal(frame.reconcileRequired,true);
 });
+test('adaptateur : absence de changement et cible invalide n’entraînent aucun rejeu',async()=>{
+ const f=page(),from=(await f.call('state')).identity;let clicks=0;
+ f.nodes.set('AssumedPrevious',{click(){clicks++;}});
+ const invalid=await f.call('previousWithoutDecision',from,{...from,cut:101},options,'invalid');
+ assert.equal(invalid.refusal.code,'INVALID_NAVIGATION_TARGET');assert.equal(clicks,0);
+ const uncertain=await f.call('previousWithoutDecision',from,target(from),options,'unchanged');
+ assert.equal(uncertain.refusal.code,'NO_NAVIGATION_OBSERVED');assert.equal(uncertain.reconcileRequired,true);
+ assert.equal(clicks,1);
+});
 test('adaptateur : cut validé ou statut inconnu restent en lecture seule',async()=>{
  const f=page(),identity=(await f.call('state')).identity;
  const node={value:'valid',getAttribute(){return this.value;}};f.nodes.set('AssumedValidation',node);
