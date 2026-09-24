@@ -1,5 +1,23 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.12 — garde de paire, reprise après archivage, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension.**
+- **Garde de paire** (chantier 2, D-044) : un premier passage dont un rail est
+  repêché par S1 et dont le calage de convention est hors domaine sur l'un des
+  deux rails est différé et ne devient pas appui. Mesuré : 241 et 409 (faux)
+  arrêtés, aucun juste perdu ; intégrée, elle rend exactement la simulation.
+- **Reprise après archivage** (KI-052) : « Reprendre » après « Archiver le
+  résultat interrompu » recommence le cut courant par sa capture, au lieu de
+  s'arrêter sur « Cannot read properties of null ».
+
+**Outils.** `tools/acceptance-report.cjs` : corpus exporté en segments réunis ;
+bilans ignorés quand le journal est là ; rejeu selon les règles de la version
+du lot (`--regles-actuelles` pour la version courante). Chantier 2 intégré :
+`tools/isolated-wrong-study.cjs`, `audit/chantiers/faux-isoles.{md,json}`.
+
 ## 4.7.11 — la décision sur le lot ne commande que dans la vue d'ESV, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

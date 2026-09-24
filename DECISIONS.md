@@ -1,5 +1,31 @@
 # Décisions techniques
 
+## D-045 - Interface de la 4.8 : « La ligne »
+
+**24 septembre 2026, direction.** Pour le chantier B (Banane UI Next), la
+direction retient la proposition « La ligne » (`design/ui-next-claude/`), de
+préférence aux maquettes de Luna. Son intégration au panneau est un chantier
+de la phase 3 (version candidate) ; les invariants du test H restent la
+condition : politique effective affichée, « Différés : N » fidèle, incertitude
+visible avec son cut, aucun bouton présenté comme réussi sur un simple accusé.
+
+## D-044 - Garde de paire active dans le Pilote (4.7.12)
+
+**24 septembre 2026, direction** (« ok »), sur la livraison du chantier 2
+(branche `chantier-48/faux-isoles`, commit `c434a9a`, intégrée). Un premier
+passage dont un rail est repêché par S1 **et** dont le calage de convention est
+hors domaine sur l'un des deux rails est **différé**, et ne devient pas appui
+(`src/lot-decision.js`, `pairGuard`). La garde ne fait que différer : son seul
+risque est une perte de couverture.
+
+- Mesure (`audit/garde-paire-verification-2026-09-24.md`) : dans le Pilote
+  actuel, 241 et 409 arrêtés (faux), aucun juste perdu, 243 gagné ; ne se
+  déclenche sur aucun des trois lots Pilote relus ni sur la partie 30.
+- Premier déclenchement sur un vrai lot : partie 34 (lot 4.7.11, rejoué avec
+  les règles de la 4.7.12), cut 1834 ; la relecture dira s'il était faux.
+- Le rejeu de l'outil d'acceptation suit les règles de la version de chaque
+  lot ; `--regles-actuelles` impose celles de la version courante.
+
 ## D-043 - Cibles hors de la vue d'ESV : pas de chantier 4.8
 
 **24 septembre 2026, direction.** Sur la partie 33, les poses de départ d'ESV

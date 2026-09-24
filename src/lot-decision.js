@@ -22,7 +22,7 @@
   *
   * Ce module ne commande rien : en 4.7.8, son résultat est seulement consigné
   * dans le journal du Pilote. */
- const DEFAULTS=Object.freeze({version:'lot-decision-v1',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:10,
+ const DEFAULTS=Object.freeze({version:'lot-decision-v1',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:10,pairGuard:true,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -88,6 +88,8 @@
   * (celui du Pilote). `anchors` : cuts déjà passés du lot. Rend l'étape
   * atteinte et, si elle vient de la voie, les positions qui auraient été
   * appliquées ; `anchor` dit si le cut devient ancre pour la suite. */
+ const pairFlagged=science=>SIDES.some(side=>science?.rails?.[side]?.next?.changed===true)
+   &&SIDES.some(side=>science?.rails?.[side]?.conventionCalibration?.reason==='shift-out-of-domain');
  function decideCut({capture,science,anchors,Shadow,options={}}){
    const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
@@ -95,7 +97,16 @@
    if(applicable){
      const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(rails[side],science.rails[side].next.delta)]));
      const guardMm=nb.length?r1(deviationMm(rails,nb.map(a=>({positions:a.positions})),positions)):null;
-     if(guardMm===null||guardMm<=cfg.guardMm)return {...base,stage:'first-pass',guardMm,anchorsUsed:nb.map(a=>a.identity.cut),positions,anchor:true};
+     if(guardMm===null||guardMm<=cfg.guardMm){
+       /* GARDE DE PAIRE (chantier 2, 4.7.12, D-044) : un rail repêché par S1 et un
+        * calage de convention hors domaine sur l'un des deux rails — le moteur
+        * cumule une ambiguïté tranchée et un déplacement de convention refusé.
+        * Le cut est différé et ne devient pas appui ; aucune position n'est
+        * cherchée à la place. Mesuré : 241 et 409 arrêtés, aucun juste perdu
+        * (`audit/garde-paire-verification-2026-09-24.md`). */
+       if(cfg.pairGuard&&pairFlagged(science))return {...base,stage:'deferred',reason:'pair-guard',pairGuarded:true,guardMm,anchorsUsed:nb.map(a=>a.identity.cut),anchor:false};
+       return {...base,stage:'first-pass',guardMm,anchorsUsed:nb.map(a=>a.identity.cut),positions,anchor:true};
+     }
      // Retiré par la garde : le cut est repris depuis la voie, comme un différé.
      base.guardMm=guardMm;base.guardDeferred=true;
    }
@@ -175,6 +186,11 @@
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
    if(!decision||!runtimeRails||!before||!SIDES.every(side=>runtimeRails[side]&&before[side]))return keep('no-decision');
    const note={stage:decision.stage,anchorsUsed:decision.anchorsUsed||[],version:decision.version??DEFAULTS.version};
+   if(decision.stage==='deferred'&&decision.pairGuarded){
+     const reason='décision sur le lot : garde de paire (rail repêché par S1 et calage de convention hors domaine)';
+     return {action:'defer',reason:'pair-guard',rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
+       reasons:[reason],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason:'pair-guard'}}]))};
+   }
    if(decision.stage==='deferred'&&decision.guardDeferred){
      const reason='décision sur le lot : retiré par la garde de continuité ('+decision.guardMm+' mm de la voie), sans reprise';
      return {action:'defer',reason:'guard',rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
@@ -201,5 +217,5 @@
      if(!view.inView)return {...keep('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN};
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN,pairFlagged};
 });

@@ -34,10 +34,10 @@ function localOf(C,rail,pos){const M=rail.sceneRelativeToProfileLocal,a=C.point(
  * branche chantier-48/faux-isoles) : un rail publié par S1 ET un calage de
  * convention « shift-out-of-domain » sur l'un des deux rails. */
 const pairFlag=science=>SIDES.some(s=>science?.rails?.[s]?.next?.changed===true)&&SIDES.some(s=>science?.rails?.[s]?.conventionCalibration?.reason==='shift-out-of-domain');
-/* Simulation exacte : un premier passage ainsi signalé est différé (jamais
- * appui), comme la garde de continuité sans reprise. */
-const guarded=L=>({...L,decideCut:args=>{const d=L.decideCut(args);
-  return d.stage==='first-pass'&&pairFlag(args.science)?{version:d.version,stage:'deferred',reason:'pair-guard',anchorsUsed:d.anchorsUsed,anchor:false}:d;}});
+/* Depuis la 4.7.12, la garde est dans `src/lot-decision.js` (D-044). L'étude
+ * la mesure donc en la coupant (`options.pairGuard:false`) ou en la laissant,
+ * sans la réimplémenter : mêmes décisions que le Pilote. */
+const guarded=(L,on=true)=>({...L,decideCut:args=>L.decideCut({...args,options:{...(args.options||{}),pairGuard:on}})});
 const describe=d=>({stage:d.stage,anchors:(d.anchorsUsed||[]).length,anchorsUsed:d.anchorsUsed||[],
   chosenMaxFromPredictionMm:d.chosen?Math.max(...Object.values(d.chosen).map(c=>c.fromPredictionMm)):null,
   chosenSides:d.chosen?Object.keys(d.chosen):[],fromPredictionMm:d.fromPredictionMm??null,guardMm:d.guardMm??null,gaugeMm:d.gaugeMm??null});
@@ -45,7 +45,7 @@ const describe=d=>({stage:d.stage,anchors:(d.anchorsUsed||[]).length,anchorsUsed
 function runNatif(file,label,{pairGuard=false}={}){
   const Segments=require(B+'tools/merge-segments.cjs'),Lab=require(B+'tools/placement-lab.cjs');
   const O=require(B+'src/continuity-observer.js'),Shadow=require(B+'src/gcv1-shadow.js'),L0=require(B+'src/lot-decision.js'),C=require(B+'vendor/capture-core.js');
-  const L=pairGuard?guarded(L0):L0;
+  const L=guarded(L0,pairGuard);
   const s=Segments.loadSession(file),records=(s.records||[]).slice().sort((a,b)=>a.visitIndex-b.visitIndex);
   const chunksByVisit=new Map();for(const c of s.clouds||[])if(c.pointsSceneRelative)(chunksByVisit.get(c.visitId)||chunksByVisit.set(c.visitId,[]).get(c.visitId)).push(c);
   const anchors=[],rows=[],seen=new Set();
@@ -73,7 +73,7 @@ function runNatif(file,label,{pairGuard=false}={}){
 }
 
 function runLot(dir,label,relecture,{pairGuard=false}={}){
-  const A=require(B+'tools/acceptance-report.cjs'),L0=require(B+'src/lot-decision.js'),L=pairGuard?guarded(L0):L0;
+  const A=require(B+'tools/acceptance-report.cjs'),L0=require(B+'src/lot-decision.js'),L=guarded(L0,pairGuard);
   const seen=new Map(),flags=new Map();
   const deps={L:{...L,decideCut:args=>{const d=L.decideCut(args);seen.set(args.capture.identity.cut,d);flags.set(args.capture.identity.cut,pairFlag(args.science));return d;}}};
   const r=A.report([A.loadLot(dir,label,relecture||null)],{replay:true,preferReplay:true,replayDeps:deps});
@@ -105,9 +105,9 @@ function rules(rows){
 }
 
 function run(argv=process.argv.slice(2)){
-  const out=argv[0],rows=[],pairGuard=argv.includes('--garde-paire');if(!out||out.startsWith('--'))throw Error('Usage : SORTIE.json [--garde-paire] --natif F=libellé [...] --lot DOSSIER=libellé[@RELECTURE] [...]');
+  const out=argv[0],rows=[],pairGuard=!argv.includes('--sans-garde-paire');if(!out||out.startsWith('--'))throw Error('Usage : SORTIE.json [--sans-garde-paire] --natif F=libellé [...] --lot DOSSIER=libellé[@RELECTURE] [...]');
   for(let i=1;i<argv.length;i++){const t=Date.now();
-    if(argv[i]==='--garde-paire')continue;
+    if(argv[i]==='--sans-garde-paire'||argv[i]==='--garde-paire')continue;
     if(argv[i]==='--natif'){const [f,l]=argv[++i].split('=');rows.push(...runNatif(f,l||f,{pairGuard}));console.log('natif',l,Math.round((Date.now()-t)/1000)+' s');}
     else if(argv[i]==='--lot'){const [f,rest]=argv[++i].split('='),[l,rel]=(rest||f).split('@');rows.push(...runLot(f,l,rel,{pairGuard}));console.log('lot',l,Math.round((Date.now()-t)/1000)+' s');}
     else throw Error('Argument inconnu : '+argv[i]);}

@@ -399,3 +399,21 @@ test('a GCV1 pilot batch created with lotDecision apply commands the lot decisio
  await assert.rejects(b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',
   geometryEngine:'geometry-candidate-v1',lotDecision:'toujours'}),/Décision sur le lot inconnue/);
 });
+
+/* KI-052 (partie 33, 24/09, cut 8090) : après « Archiver le résultat
+ * interrompu », « Reprendre » relançait la boucle à l'étape « apply » sans
+ * proposition (« Cannot read properties of null (reading 'rails') »). La
+ * reprise recommence désormais le cut courant par sa capture. */
+test('resume after closing an interrupted apply restarts the current cut from its capture',async()=>{
+ const b=background();let fail=true;const apply=b.adapter.apply.bind(b.adapter);
+ b.adapter.apply=async(...a)=>{if(fail){fail=false;throw Error('Position proposée hors de la vue : left');}return apply(...a);};
+ await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
+ await b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt'});
+ const settle=async()=>{while(['RUNNING'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));return b.api('view');};
+ let view=await settle();assert.equal(view.batch.state,'ERROR');assert.equal(view.batch.step,'apply');
+ await b.adapter.next();await b.api('close-uncertain');                    // l'opérateur passe au cut suivant et archive
+ view=await b.api('view');assert.equal(view.batch.state,'STOPPED');
+ await b.api('resume');view=await settle();
+ assert.ok(!/reading 'rails'/.test(view.batch.error?.message||''),view.batch.error?.message);
+ assert.equal(view.batch.processed.length,1);assert.equal(view.batch.processed[0].cut,101);
+});

@@ -1,11 +1,11 @@
-# Démarrer avec Banane V4.7.11 TEST — le Pilote décide sur le lot
+# Démarrer avec Banane V4.7.12 TEST — le Pilote décide sur le lot
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.11-test.zip` dans Edge, exactement comme la 4.7.10.
+Installe `banane-v4.7.12-test.zip` dans Edge, exactement comme la 4.7.11.
 
-Vérifie d'abord **V4.7.11 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.11 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.12 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.12 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
 
@@ -30,10 +30,13 @@ rail. Quand la position trouvée tombe hors de cette vue (pose ESV de départ tr
 d'arrêter le lot (KI-051). Pose-le à la main, comme tu le fais : dézoome et
 déplace la vue au clic droit (D-043).
 
+**4.7.12 — garde de paire.** Quand le moteur tranche une ambiguïté (S1) et
+que son calage de convention échoue sur la même paire, le cut est désormais
+différé : c'est la combinaison des faux 241 et 409 de la partie 20 (D-044).
+
 **Si le Pilote s'arrête sur une erreur** : **Archiver le résultat interrompu**,
-puis lance **un nouveau lot** à partir du cut suivant. N'utilise pas
-« Reprendre » après un archivage : il s'arrête sur une erreur sans rien faire
-(KI-052).
+passe au cut suivant dans ESV, puis **Reprendre** (corrigé en 4.7.12, KI-052)
+ou lance un nouveau lot.
 
 **Réglages du lot → Décision sur le lot** : « Appliquer » par défaut ;
 « Observer seulement » rend exactement le Pilote de la 4.7.9. Le réglage est

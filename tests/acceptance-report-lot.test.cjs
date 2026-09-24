@@ -123,3 +123,12 @@ test('corpus exporté en segments : captures réunies, complétude vérifiée ; 
   w('corpus-seg02.json',{...seg(2,['c','d'],4),sessionId:'session-b'});assert.throws(()=>A.loadLot(dir,'x'),/pas deux segments d'un même export/);
   fs.rmSync(path.join(dir,'journal.json'));w('corpus-seg02.json',seg(2,['c','d'],4));assert.throws(()=>A.loadLot(dir,'x'),/aucun journal/);
 });
+
+/* Le rejeu suit les règles de la version du lot : la garde de paire (D-044)
+ * n'existe qu'à partir de la 4.7.12 (lot 4.7.11 de la partie 34 : parité 96/96
+ * avec ses règles, 93/96 avec celles de la 4.7.12). */
+test('règles du rejeu selon la version du lot ; --regles-actuelles les impose',()=>{
+  assert.equal(A.versionAtLeast('4.7.12','4.7.12'),true);assert.equal(A.versionAtLeast('4.7.13','4.7.12'),true);assert.equal(A.versionAtLeast('4.8.0','4.7.12'),true);
+  assert.equal(A.versionAtLeast('4.7.11','4.7.12'),false);assert.equal(A.versionAtLeast('4.7.9','4.7.12'),false);assert.equal(A.versionAtLeast(null,'4.7.12'),false);
+  assert.deepEqual(A.rulesFor('4.7.11'),{pairGuard:false});assert.deepEqual(A.rulesFor('4.7.12'),{pairGuard:true});assert.deepEqual(A.rulesFor('4.7.11',true),{pairGuard:true});
+});

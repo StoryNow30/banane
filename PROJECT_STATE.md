@@ -1,8 +1,16 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.11 TEST** (le Pilote applique la décision sur le lot dans la vue d'ESV, D-041, D-042, KI-051 ; réglage « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.12 TEST** (décision sur le lot appliquée dans la vue d'ESV, garde de paire, D-041 à D-044 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.12
+
+Lots 4.7.10–4.7.11 sans relecture : partie 33 (20/21 puis 65/83, arrêts KI-051
+puis caméra), partie 34 (73/96, 76 %, 15 cuts placés par la décision sur le
+lot, aucun problème de vue). Chantier 2 intégré, garde de paire active (D-044).
+Interface retenue : « La ligne » (D-045). En attente : relectures des parties 33
+et 34, P2, lots complets.
 
 ## État 4.7.11
 

@@ -15,7 +15,7 @@ L'analyste a mesuré la variante à deux passages de l'étude de phase 0 ; le
 Pilote décide en **un seul passage**, cut après cut (`src/lot-decision.js`). La
 garde est donc rejouée ici dans cette architecture, appuis recalculés : un
 premier passage signalé est différé et ne devient pas appui
-(`tools/choice-anchor-study.cjs --garde-paire`), sur les six sessions Natif et
+(`tools/choice-anchor-study.cjs`, garde active par défaut, `--sans-garde-paire` pour la couper), sur les six sessions Natif et
 les trois lots Pilote relus — dont quatre jeux que l'analyste n'avait pas :
 Natif partie 30, lots Pilote de la partie 31 (4.7.8 et 4.7.9), lot Pilote de
 la partie 19.
@@ -45,3 +45,15 @@ La garde ne fait que différer : son seul risque est une perte de couverture,
 nulle partout où elle a été mesurée. Elle ne démontre pas « zéro faux » : trois
 faux du moteur restent au banc Natif de la partie 20, dont deux sans appui,
 que ni la garde de continuité ni celle-ci ne peuvent voir.
+
+## Intégrée en 4.7.12 (D-044)
+
+- Banc Natif de la partie 20 longue, garde intégrée à `src/lot-decision.js` :
+  165 appliqués, faux 398, 402 et 983 — exactement la simulation ci-dessus
+  (241 et 409 différés, 243 gagné).
+- Lots 4.7.10 de la partie 33 rejoués avec la garde : aucune décision changée
+  (21/21, 83/83).
+- Lot 4.7.11 de la partie 34 : parité 96/96 avec ses propres règles ; avec
+  celles de la 4.7.12, la garde différerait **1834**, et 1835 et 1837 seraient
+  décidés autrement (93/96). Premier déclenchement sur un lot Pilote : la
+  relecture de la partie 34 le jugera.

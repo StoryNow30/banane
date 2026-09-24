@@ -93,3 +93,18 @@ test('caméra de chaque rail : celle où il projette au centre, quel que soit l\
   assert.deepEqual(L.viewCameras({rails:capture.rails}),{left:null,right:null});
   const lone=L.viewCameras({...cap,viewCaptures:[cap.viewCaptures[0]]});assert.equal(lone.right,null,'aucune vue centrée sur le rail droit');
 });
+
+/* 4.7.12 — garde de paire (chantier 2, D-044) : un rail repêché par S1 et un
+ * calage de convention hors domaine sur l'un des deux rails → premier passage
+ * différé, jamais appui, et le Pilote diffère le cut. */
+test('garde de paire : S1 et calage hors domaine différent le premier passage ; l\'un sans l\'autre, non',()=>{
+  const science=(s1Side,oodSide)=>({summary:{pairGaugeRejected:false},rails:Object.fromEntries(SIDES.map(s=>[s,{ok:true,
+    next:{status:'candidate',delta:[0,.001,0],changed:s===s1Side},conventionCalibration:{applied:s!==oodSide,reason:s===oodSide?'shift-out-of-domain':null}}]))});
+  const decide=(sc,options)=>L.decideCut({capture,science:sc,anchors:[],Shadow,options});
+  for(const [s1,ood] of [['left','right'],['right','right'],['left','left']]){const d=decide(science(s1,ood));
+    assert.equal(d.stage,'deferred');assert.equal(d.reason,'pair-guard');assert.equal(d.anchor,false);assert.equal(d.positions,undefined);
+    const out=command(d,both(candidate));assert.equal(out.action,'defer');assert.equal(out.reason,'pair-guard');
+    for(const s of SIDES){assert.equal(out.rails[s].status,'unresolved');assert.equal(out.rails[s].source,'geometry-candidate-v1-abstention');}}
+  for(const [s1,ood] of [[null,'left'],['left',null],[null,null]])assert.equal(decide(science(s1,ood)).stage,'first-pass',`S1 ${s1}, hors domaine ${ood}`);
+  assert.equal(decide(science('left','right'),{pairGuard:false}).stage,'first-pass','coupure : options.pairGuard');
+});

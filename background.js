@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.11';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.12';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -230,7 +230,13 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Le mode Natif est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
- if(action==='resume'){assertPilotContract(engine.s.batch?.scope);await engine.resume();return engine.view();}
+ if(action==='resume'){assertPilotContract(engine.s.batch?.scope);
+  /* KI-052 : « Archiver le résultat interrompu » arrête le lot en laissant
+   * l'étape « apply » et efface la proposition ; reprendre relançait la boucle
+   * sur une proposition absente. Sans proposition, la reprise recommence le
+   * cut par sa capture. */
+  if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
+  await engine.resume();return engine.view();}
  if(action==='retry'){await engine.retryPaused();return engine.view();}
  if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
  // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.

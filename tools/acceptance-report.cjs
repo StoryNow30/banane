@@ -5,7 +5,7 @@
  * (cahier 4.8 §6 et §14 G, D-038). Le même calcul à chaque collecte F1 à F4.
  *
  *   node tools/acceptance-report.cjs --lot DOSSIER[=libellé] [--relecture DOSSIER|FICHIER] [--lot ...]
- *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot | --decision-par-rejeu] [--json SORTIE] [--md SORTIE]
+ *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json SORTIE] [--md SORTIE]
  *
  * `--decision-par-rejeu` : la décision sur le lot est lue dans le rejeu hors ligne
  * même quand l'export la consigne (lots 4.7.8 : choix par la voie privé de
@@ -260,7 +260,7 @@ function replayLot(observations,corpus,deps){deps=deps||{};
     const identity=K.completeIdentity(capture.identity||o.identity||{});
     const science={rails:Object.fromEntries(SIDES.map(s=>[s,o.rails[s]?.scientificRail])),summary:o.summary};
     const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
-      visibleByClipBoxes:capture.visibleByClipBoxes},science,anchors,Shadow});
+      visibleByClipBoxes:capture.visibleByClipBoxes},science,anchors,Shadow,...(deps.options?{options:deps.options}:{})});
     if(decision.anchor)(L.rememberAnchor||require('../src/lot-decision.js').rememberAnchor)(anchors,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage},maxAnchors);
     out.push({key:k,observationEventId:o.observationEventId,decision:{...decision,applied:false,displayed:false}});
   }
@@ -274,6 +274,13 @@ function sameDecision(a,b){
 }
 
 /* ---- un lot ---- */
+/* Règles de la décision sur le lot selon la version qui a produit le lot : le
+ * rejeu reproduit ce que le Pilote a fait. La garde de paire (D-044) n'existe
+ * qu'à partir de la 4.7.12 ; `currentRules` rejoue un lot ancien avec les
+ * règles actuelles (« que ferait la version courante ? »). */
+const versionAtLeast=(v,ref)=>{const a=String(v||'').split('.').map(Number),b=ref.split('.').map(Number);
+  for(let i=0;i<b.length;i++){if(!Number.isFinite(a[i]))return false;if(a[i]!==b[i])return a[i]>b[i];}return true;};
+const rulesFor=(version,current=false)=>({pairGuard:current||versionAtLeast(version,'4.7.12')});
 function analyseLot(lot,options={}){
   const exclusions=options.exclusions||EXCLUDED,excluded=new Map(exclusions.map(e=>[keyOf(e.part,e.cut),e]));
   const ctx=lotCuts(lot.diagnostic,lot.journal),journalBefore=new Map();
@@ -307,7 +314,8 @@ function analyseLot(lot,options={}){
   const recorded=lastObs.some(o=>o.lotObservation);
   let replay=null;
   if(options.replay&&lot.corpus){const all=rows.flatMap(r=>r._cut.observations);replay=new Map();
-    for(const x of replayLot(all,lot.corpus,options.replayDeps))replay.set(x.observationEventId,x.decision);}
+    const rules=rulesFor(lot.diagnostic?.version??lot.journal?.version,options.currentRules);lot.lotDecisionRules=rules;
+    for(const x of replayLot(all,lot.corpus,{...(options.replayDeps||{}),options:{...rules,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
   /* `preferReplay` : la 4.7.8 consigne un choix par la voie privé de sa grille
    * (KI-048) ; ses lots se mesurent sur le rejeu, la parité restant rapportée. */
   const lotSource=recorded&&!(options.preferReplay&&replay)?'observation':replay?'rejeu-hors-ligne':'absent';
@@ -337,7 +345,7 @@ function analyseLot(lot,options={}){
   return {label:lot.label,complete:ctx.batch?COMPLETE_STATES.has(ctx.batch.state):null,batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
       unresolvedPolicy:ctx.batch.scope?.unresolvedPolicy??null,startedAt:ctx.batch.startedAt??null}:null,
     version:lot.diagnostic?.version??lot.journal?.version??null,observationsOutsideLot:ctx.observationsOutsideLot,
-    relecture:lot.relecture?{...lot.relectureMerge,frame}:null,corpusSegments:lot.corpusSegments??null,lotDecisionSource:lotSource,lotDecisionParity:parity,journalConsistency:consistency,
+    relecture:lot.relecture?{...lot.relectureMerge,frame}:null,corpusSegments:lot.corpusSegments??null,lotDecisionRules:lot.lotDecisionRules??null,lotDecisionSource:lotSource,lotDecisionParity:parity,journalConsistency:consistency,
     inputs:lot.inputs,rows:rows.map(({_cut,_poses,...r})=>r)};
 }
 
@@ -383,10 +391,10 @@ function summarize(rows,p2){
     excluded:rows.filter(r=>r.excluded).map(r=>({cut:r.cut,outcome:r.outcome,motif:r.excluded})),
   };
 }
-function report(lots,{config=null,p2=null,replay=false,replayDeps=null,preferReplay=false}={}){
+function report(lots,{config=null,p2=null,replay=false,replayDeps=null,preferReplay=false,currentRules=false}={}){
   const exclusions=[...EXCLUDED,...(config?.exclusions||[]).filter(e=>!EXCLUDED.some(x=>x.part===e.part&&x.cut===e.cut))];
   const floor=p2?{...p2,label:p2.operators>1?`P2 (${p2.operators} opérateurs)`:'P2 (un opérateur)'}:null;
-  const analysed=lots.map(l=>analyseLot(l,{exclusions,replay:replay||preferReplay,replayDeps,preferReplay}));
+  const analysed=lots.map(l=>analyseLot(l,{exclusions,replay:replay||preferReplay,replayDeps,preferReplay,currentRules}));
   const allRows=analysed.flatMap(l=>l.rows.map(r=>({...r,lotLabel:l.label})));
   const tuning=new Set(config?.tuningParts||[]);
   const incomplete=analysed.filter(l=>l.complete===false).map(l=>({label:l.label,state:l.batch?.state??null}));
@@ -449,15 +457,15 @@ function parse(argv){
     if(a==='--lot'){const v=argv[++i],at=v.lastIndexOf('=');opt.lots.push(at>0?{dir:v.slice(0,at),label:v.slice(at+1)}:{dir:v,label:path.basename(path.resolve(v))});}
     else if(a==='--relecture'){if(!opt.lots.length)throw Error('--relecture suit un --lot.');opt.lots.at(-1).relecture=argv[++i];}
     else if(a==='--config')opt.config=argv[++i];else if(a==='--p2')opt.p2=argv[++i];
-    else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--decision-par-rejeu')opt.preferReplay=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
+    else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--decision-par-rejeu')opt.preferReplay=true;else if(a==='--regles-actuelles')opt.currentRules=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
     else throw Error('Argument inconnu : '+a);}
-  if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [...] [--config F] [--p2 F] [--rejeu-lot | --decision-par-rejeu] [--json F] [--md F]');
+  if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [...] [--config F] [--p2 F] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json F] [--md F]');
   return opt;
 }
 function run(argv=process.argv.slice(2)){
   const opt=parse(argv),read=f=>f?JSON.parse(fs.readFileSync(f,'utf8')):null;
   const lots=opt.lots.map(l=>loadLot(l.dir,l.label,l.relecture||null));
-  const result=report(lots,{config:read(opt.config),p2:read(opt.p2),replay:opt.replay,preferReplay:!!opt.preferReplay});
+  const result=report(lots,{config:read(opt.config),p2:read(opt.p2),replay:opt.replay,preferReplay:!!opt.preferReplay,currentRules:!!opt.currentRules});
   if(opt.json)fs.writeFileSync(opt.json,JSON.stringify(result,null,1)+'\n');
   if(opt.md)fs.writeFileSync(opt.md,toMarkdown(result)+'\n');
   for(const p of [...result.parts.map(p=>({...p,title:'partie '+p.part})),{...result.total,title:'total'}])
@@ -466,4 +474,4 @@ function run(argv=process.argv.slice(2)){
   return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={EXCLUDED,WRONG_MM,kindOf,loadLot,lotCuts,pilotOutcome,frameTranslation,poseResidual,errorsOf,replayLot,analyseLot,summarize,report,toMarkdown,run};
+module.exports={versionAtLeast,rulesFor,EXCLUDED,WRONG_MM,kindOf,loadLot,lotCuts,pilotOutcome,frameTranslation,poseResidual,errorsOf,replayLot,analyseLot,summarize,report,toMarkdown,run};
