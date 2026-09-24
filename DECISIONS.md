@@ -1,5 +1,23 @@
 # Décisions techniques
 
+## D-040 - Relecture : une visite sans correction ni validation vaut acceptation
+
+**24 septembre 2026, direction.** « Pour moi et tous les opérateurs, si on
+visite un cut sans le corriger ni le valider, c'est que le cut est bon et bien
+placé. » La relecture d'un lot Pilote suit donc la convention des opérateurs :
+
+- visite **sans validation et sans changement de pose**, d'au moins 0,5 s :
+  la pose vue est **acceptée** ; le cut est jugé, erreur nulle par
+  construction, compté « accepté sans retouche » à part des cuts validés ;
+- visite **retouchée sans validation** : pose finale incertaine, non jugeable ;
+- passage de moins de 0,5 s (touche Z en rafale) : non jugeable.
+
+C4 (faux) porte sur les cuts validés et acceptés ; **C2 (précision) reste
+mesuré sur les seuls cuts validés** : une acceptation dit « pas faux », pas « à
+combien de millimètres ». Mise en œuvre : `tools/acceptance-report.cjs`.
+Premier lot 4.7.8 de la partie 31 : 34 cuts appliqués jugés sur 35 (9 validés,
+25 acceptés), 0 faux.
+
 ## D-039 - D1 : choix par la voie autorisé ; 4.7.8 en observation dans le Pilote
 
 Date : 23 septembre 2026. Décision de la direction sur le résultat de la

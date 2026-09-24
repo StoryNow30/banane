@@ -177,6 +177,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 1,
@@ -212,6 +213,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 2,
       "validatedVisits": 1,
       "usedVisitIndex": 23,
@@ -234,15 +236,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.51,
+        "verticalMm": -0.26
+       },
+       "right": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.21
+       }
+      },
+      "worstMm": 0.51,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 25,
+      "dwellMs": 2576,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -275,6 +301,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 26,
@@ -297,15 +324,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 2.5
+      "guardMm": 2.5,
+      "errors": {
+       "left": {
+        "lateralMm": -0.47,
+        "verticalMm": 0.02
+       },
+       "right": {
+        "lateralMm": -0.26,
+        "verticalMm": -0.14
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 27,
+      "dwellMs": 2368,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -324,15 +375,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 0.9
+      "guardMm": 0.9,
+      "errors": {
+       "left": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.15
+       },
+       "right": {
+        "lateralMm": -0.39,
+        "verticalMm": -0.26
+       }
+      },
+      "worstMm": 0.39,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 28,
+      "dwellMs": 1757,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -351,15 +426,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 1.2
+      "guardMm": 1.2,
+      "errors": {
+       "left": {
+        "lateralMm": -0.39,
+        "verticalMm": -0.01
+       },
+       "right": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.11
+       }
+      },
+      "worstMm": 0.39,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 29,
+      "dwellMs": 1972,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -378,15 +477,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 1.5
+      "guardMm": 1.5,
+      "errors": {
+       "left": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.04
+       },
+       "right": {
+        "lateralMm": -0.12,
+        "verticalMm": -0.38
+       }
+      },
+      "worstMm": 0.38,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 30,
+      "dwellMs": 2196,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -405,15 +528,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 3.4
+      "guardMm": 3.4,
+      "errors": {
+       "left": {
+        "lateralMm": -0.32,
+        "verticalMm": -0.29
+       },
+       "right": {
+        "lateralMm": -0.37,
+        "verticalMm": -0.39
+       }
+      },
+      "worstMm": 0.39,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 31,
+      "dwellMs": 1724,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -432,15 +579,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 7.9
+      "guardMm": 7.9,
+      "errors": {
+       "left": {
+        "lateralMm": -0.25,
+        "verticalMm": -0.26
+       },
+       "right": {
+        "lateralMm": -0.41,
+        "verticalMm": -0.2
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 32,
+      "dwellMs": 1990,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -459,15 +630,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 3.6
+      "guardMm": 3.6,
+      "errors": {
+       "left": {
+        "lateralMm": -0.38,
+        "verticalMm": -0.12
+       },
+       "right": {
+        "lateralMm": -0.15,
+        "verticalMm": -0.05
+       }
+      },
+      "worstMm": 0.38,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 33,
+      "dwellMs": 1145,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -502,6 +697,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 34,
@@ -535,15 +731,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 11.3
+      "guardMm": 11.3,
+      "errors": {
+       "left": {
+        "lateralMm": -0.48,
+        "verticalMm": -0.27
+       },
+       "right": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.26
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 35,
+      "dwellMs": 17550,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -581,6 +801,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 36,
@@ -617,6 +838,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 37,
@@ -639,15 +861,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 3.4
+      "guardMm": 3.4,
+      "errors": {
+       "left": {
+        "lateralMm": -0.3,
+        "verticalMm": -0.13
+       },
+       "right": {
+        "lateralMm": -0.07,
+        "verticalMm": -0.5
+       }
+      },
+      "worstMm": 0.5,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 38,
+      "dwellMs": 1822,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -666,15 +912,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 1.1
+      "guardMm": 1.1,
+      "errors": {
+       "left": {
+        "lateralMm": -0.37,
+        "verticalMm": -0.01
+       },
+       "right": {
+        "lateralMm": -0.08,
+        "verticalMm": -0.27
+       }
+      },
+      "worstMm": 0.37,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 39,
+      "dwellMs": 1940,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -709,6 +979,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 41,
@@ -758,6 +1029,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 42,
@@ -810,6 +1082,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 43,
@@ -832,15 +1105,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 1.1
+      "guardMm": 1.1,
+      "errors": {
+       "left": {
+        "lateralMm": -0.45,
+        "verticalMm": -0.02
+       },
+       "right": {
+        "lateralMm": -0.02,
+        "verticalMm": -0.36
+       }
+      },
+      "worstMm": 0.45,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 44,
+      "dwellMs": 2111,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -859,15 +1156,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 1.2
+      "guardMm": 1.2,
+      "errors": {
+       "left": {
+        "lateralMm": -0.1,
+        "verticalMm": -0.02
+       },
+       "right": {
+        "lateralMm": -0.47,
+        "verticalMm": -0.33
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 45,
+      "dwellMs": 1409,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -886,15 +1207,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.43
+       },
+       "right": {
+        "lateralMm": -0.2,
+        "verticalMm": -0.48
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 62,
+      "dwellMs": 1247,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -927,6 +1272,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 63,
@@ -968,6 +1314,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 64,
@@ -1009,6 +1356,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 65,
@@ -1045,6 +1393,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 66,
@@ -1083,6 +1432,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 67,
@@ -1116,15 +1466,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.29,
+        "verticalMm": -0.22
+       },
+       "right": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.04
+       }
+      },
+      "worstMm": 0.29,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 78,
+      "dwellMs": 959,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1143,15 +1517,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.43,
+        "verticalMm": -0.42
+       },
+       "right": {
+        "lateralMm": -0.04,
+        "verticalMm": -0.02
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 88,
+      "dwellMs": 1486,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1170,15 +1568,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.34,
+        "verticalMm": -0.02
+       },
+       "right": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.42
+       }
+      },
+      "worstMm": 0.42,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 97,
+      "dwellMs": 1839,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1197,15 +1619,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 4.1
+      "guardMm": 4.1,
+      "errors": {
+       "left": {
+        "lateralMm": -0.16,
+        "verticalMm": -0.21
+       },
+       "right": {
+        "lateralMm": -0.01,
+        "verticalMm": -0.19
+       }
+      },
+      "worstMm": 0.21,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 98,
+      "dwellMs": 1839,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1240,6 +1686,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 99,
@@ -1273,15 +1720,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 9.3
+      "guardMm": 9.3,
+      "errors": {
+       "left": {
+        "lateralMm": -0.22,
+        "verticalMm": -0.06
+       },
+       "right": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.01
+       }
+      },
+      "worstMm": 0.23,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 100,
+      "dwellMs": 1402,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1316,6 +1787,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 101,
@@ -1349,15 +1821,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 16.1
+      "guardMm": 16.1,
+      "errors": {
+       "left": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.25
+       },
+       "right": {
+        "lateralMm": -0.43,
+        "verticalMm": -0.51
+       }
+      },
+      "worstMm": 0.51,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 102,
+      "dwellMs": 2070,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1376,15 +1872,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": 4.2
+      "guardMm": 4.2,
+      "errors": {
+       "left": {
+        "lateralMm": -0.42,
+        "verticalMm": 0.02
+       },
+       "right": {
+        "lateralMm": -0.47,
+        "verticalMm": -0.31
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 103,
+      "dwellMs": 1869,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1403,15 +1923,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.39,
+        "verticalMm": -0.41
+       },
+       "right": {
+        "lateralMm": -0.04,
+        "verticalMm": -0.18
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 114,
+      "dwellMs": 1572,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1437,6 +1981,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 2,
       "validatedVisits": 1,
       "usedVisitIndex": 124,
@@ -1459,15 +2004,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.12,
+        "verticalMm": -0.38
+       },
+       "right": {
+        "lateralMm": -0.3,
+        "verticalMm": -0.4
+       }
+      },
+      "worstMm": 0.4,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 125,
+      "dwellMs": 1855,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1502,6 +2071,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 133,
@@ -1535,15 +2105,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.36,
+        "verticalMm": -0.31
+       },
+       "right": {
+        "lateralMm": -0.05,
+        "verticalMm": -0.04
+       }
+      },
+      "worstMm": 0.36,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 142,
+      "dwellMs": 2048,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1562,15 +2156,39 @@
       "stage": "first-pass",
       "wouldApply": true,
       "reason": null,
-      "guardMm": null
+      "guardMm": null,
+      "errors": {
+       "left": {
+        "lateralMm": -0.45,
+        "verticalMm": -0.4
+       },
+       "right": {
+        "lateralMm": -0.19,
+        "verticalMm": -0.47
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
      },
      "judgement": {
-      "status": "unjudgeable",
-      "reason": "relu-sans-validation",
-      "poseChanged": false,
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
       "visits": 1,
       "validatedVisits": 0,
-      "usedVisitIndex": null
+      "usedVisitIndex": 147,
+      "dwellMs": 2320,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
      }
     },
     {
@@ -1593,7 +2211,7 @@
      },
      "judgement": {
       "status": "unjudgeable",
-      "reason": "relu-sans-validation",
+      "reason": "retouché-sans-validation",
       "poseChanged": true,
       "visits": 1,
       "validatedVisits": 0,
@@ -1632,6 +2250,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 160,
@@ -1669,6 +2288,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 166,
@@ -1695,6 +2315,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 177,
@@ -1721,6 +2342,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 179,
@@ -1747,6 +2369,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 180,
@@ -1773,6 +2396,7 @@
      },
      "judgement": {
       "status": "judged",
+      "basis": "validé",
       "visits": 1,
       "validatedVisits": 1,
       "usedVisitIndex": 181,
@@ -1851,16 +2475,21 @@
    },
    "c4": {
     "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
-    "judgedApplied": 9,
-    "appliedNotJudged": 26,
+    "judgedApplied": 34,
+    "appliedNotJudged": 1,
     "wrong": 0,
-    "judgedSharePct": 25.7,
+    "judgedByBasis": {
+     "validé": 9,
+     "accepté-sans-retouche": 25
+    },
+    "judgedSharePct": 97.1,
     "minJudgedSharePct": 80,
-    "evaluable": false,
+    "evaluable": true,
     "wrongCuts": []
    },
    "c2": {
     "rails": 18,
+    "basis": "cuts validés seulement",
     "lateralMm": {
      "count": 18,
      "median": 1.06,
@@ -1911,7 +2540,7 @@
    "lotDecision": {
     "wouldApply": 43,
     "coveragePct": 84.3,
-    "judged": 17,
+    "judged": 42,
     "wrong": 0,
     "wrongCuts": [],
     "newWrong": [],
@@ -1967,35 +2596,10 @@
     }
    },
    "unjudgeable": {
-    "relu-sans-validation": {
-     "cuts": 26,
-     "applied": 26,
+    "retouché-sans-validation": {
+     "cuts": 1,
+     "applied": 1,
      "list": [
-      1171,
-      1173,
-      1174,
-      1175,
-      1176,
-      1177,
-      1178,
-      1179,
-      1181,
-      1184,
-      1185,
-      1190,
-      1191,
-      2063,
-      2099,
-      3628,
-      3694,
-      3695,
-      3697,
-      3699,
-      3700,
-      4006,
-      4204,
-      4479,
-      4509,
       4514
      ]
     },
@@ -2103,16 +2707,21 @@
   },
   "c4": {
    "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
-   "judgedApplied": 9,
-   "appliedNotJudged": 26,
+   "judgedApplied": 34,
+   "appliedNotJudged": 1,
    "wrong": 0,
-   "judgedSharePct": 25.7,
+   "judgedByBasis": {
+    "validé": 9,
+    "accepté-sans-retouche": 25
+   },
+   "judgedSharePct": 97.1,
    "minJudgedSharePct": 80,
-   "evaluable": false,
+   "evaluable": true,
    "wrongCuts": []
   },
   "c2": {
    "rails": 18,
+   "basis": "cuts validés seulement",
    "lateralMm": {
     "count": 18,
     "median": 1.06,
@@ -2163,7 +2772,7 @@
   "lotDecision": {
    "wouldApply": 43,
    "coveragePct": 84.3,
-   "judged": 17,
+   "judged": 42,
    "wrong": 0,
    "wrongCuts": [],
    "newWrong": [],
@@ -2219,35 +2828,10 @@
    }
   },
   "unjudgeable": {
-   "relu-sans-validation": {
-    "cuts": 26,
-    "applied": 26,
+   "retouché-sans-validation": {
+    "cuts": 1,
+    "applied": 1,
     "list": [
-     1171,
-     1173,
-     1174,
-     1175,
-     1176,
-     1177,
-     1178,
-     1179,
-     1181,
-     1184,
-     1185,
-     1190,
-     1191,
-     2063,
-     2099,
-     3628,
-     3694,
-     3695,
-     3697,
-     3699,
-     3700,
-     4006,
-     4204,
-     4479,
-     4509,
      4514
     ]
    },

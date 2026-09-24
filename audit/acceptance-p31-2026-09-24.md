@@ -13,48 +13,48 @@ Contrôle journal : 35 traités et 15 différés au journal ; 35 appliqués et 1
 |---|---|---|---|---|---|---|
 | 1 | applied |  | 1433,2 | jugé (visite 1) | 4,17 | first-pass · 3,89 mm |
 | 1169 | deferred | right:slope | — | jugé (visite 23) | départ 31,43 | deferred |
-| 1171 | applied |  | 1432,7 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 1171 | applied |  | 1432,7 | jugé (visite 25) | 0 | first-pass · 0,51 mm |
 | 1172 | deferred | left:slope | — | jugé (visite 26) | départ 29,37 | choice · 1,04 mm |
-| 1173 | applied |  | 1432,9 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1174 | applied |  | 1433,5 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1175 | applied |  | 1434,6 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1176 | applied |  | 1432,4 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1177 | applied |  | 1428,9 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1178 | applied |  | 1432,7 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1179 | applied |  | 1433,5 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 1173 | applied |  | 1432,9 | jugé (visite 27) | 0 | first-pass · 0,47 mm |
+| 1174 | applied |  | 1433,5 | jugé (visite 28) | 0 | first-pass · 0,39 mm |
+| 1175 | applied |  | 1434,6 | jugé (visite 29) | 0 | first-pass · 0,39 mm |
+| 1176 | applied |  | 1432,4 | jugé (visite 30) | 0 | first-pass · 0,38 mm |
+| 1177 | applied |  | 1428,9 | jugé (visite 31) | 0 | first-pass · 0,39 mm |
+| 1178 | applied |  | 1432,7 | jugé (visite 32) | 0 | first-pass · 0,41 mm |
+| 1179 | applied |  | 1433,5 | jugé (visite 33) | 0 | first-pass · 0,38 mm |
 | 1180 | applied |  | 1427,8 | jugé (visite 34) | 5,01 | first-pass · 5,31 mm |
-| 1181 | applied |  | 1434 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 1181 | applied |  | 1434 | jugé (visite 35) | 0 | first-pass · 0,48 mm |
 | 1182 | gauge-rejected | left:gauge-out-of-contract right:gauge-out-of-contract | 1500,1 | jugé (visite 36) | départ 25,93 | choice · 4,24 mm |
 | 1183 | deferred | right:ambiguity | — | jugé (visite 37) | départ 33,84 | window · 0,94 mm |
-| 1184 | applied |  | 1432,5 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1185 | applied |  | 1432,5 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 1184 | applied |  | 1432,5 | jugé (visite 38) | 0 | first-pass · 0,5 mm |
+| 1185 | applied |  | 1432,5 | jugé (visite 39) | 0 | first-pass · 0,37 mm |
 | 1187 | applied |  | 1433,3 | jugé (visite 41) | 0 | first-pass · 0,49 mm |
 | 1188 | applied |  | 1433,6 | jugé (visite 42) | 1,86 | first-pass · 1,94 mm |
 | 1189 | gauge-rejected | left:gauge-out-of-contract right:gauge-out-of-contract | 1496,9 | jugé (visite 43) | départ 31,38 | choice · 0,84 mm |
-| 1190 | applied |  | 1433,1 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 1191 | applied |  | 1431,7 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 2063 | applied |  | 1435,6 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 1190 | applied |  | 1433,1 | jugé (visite 44) | 0 | first-pass · 0,45 mm |
+| 1191 | applied |  | 1431,7 | jugé (visite 45) | 0 | first-pass · 0,47 mm |
+| 2063 | applied |  | 1435,6 | jugé (visite 62) | 0 | first-pass · 0,48 mm |
 | 2064 | deferred | left:ambiguity | — | jugé (visite 63) | départ 27,31 | window · 2,64 mm |
 | 2065 | gauge-rejected | left:gauge-out-of-contract right:gauge-out-of-contract | 1564,6 | jugé (visite 64) | départ 31,23 | choice · 1,28 mm |
 | 2066 | gauge-rejected | left:gauge-out-of-contract right:gauge-out-of-contract | 1508,2 | jugé (visite 65) | départ 32,88 | choice · 1,48 mm |
 | 2067 | deferred | right:ambiguity | — | jugé (visite 66) | départ 32,86 | choice · 1,75 mm |
 | 2068 | applied |  | 1437 | jugé (visite 67) | 4,1 | first-pass · 4,11 mm |
-| 2099 | applied |  | 1430,2 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 3628 | applied |  | 1436,7 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 3694 | applied |  | 1438,9 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 3695 | applied |  | 1435,3 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 2099 | applied |  | 1430,2 | jugé (visite 78) | 0 | first-pass · 0,29 mm |
+| 3628 | applied |  | 1436,7 | jugé (visite 88) | 0 | first-pass · 0,43 mm |
+| 3694 | applied |  | 1438,9 | jugé (visite 97) | 0 | first-pass · 0,42 mm |
+| 3695 | applied |  | 1435,3 | jugé (visite 98) | 0 | first-pass · 0,21 mm |
 | 3696 | applied |  | 1433,4 | jugé (visite 99) | 6,09 | first-pass · 6,11 mm |
-| 3697 | applied |  | 1437,3 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 3697 | applied |  | 1437,3 | jugé (visite 100) | 0 | first-pass · 0,23 mm |
 | 3698 | applied |  | 1431,2 | jugé (visite 101) | 7,57 | first-pass · 7,96 mm |
-| 3699 | applied |  | 1435,3 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 3700 | applied |  | 1436,7 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 4006 | applied |  | 1436,2 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 3699 | applied |  | 1435,3 | jugé (visite 102) | 0 | first-pass · 0,51 mm |
+| 3700 | applied |  | 1436,7 | jugé (visite 103) | 0 | first-pass · 0,47 mm |
+| 4006 | applied |  | 1436,2 | jugé (visite 114) | 0 | first-pass · 0,41 mm |
 | 4203 | gauge-rejected | left:gauge-out-of-contract right:gauge-out-of-contract | 1504,7 | jugé (visite 124) | départ 38,35 | deferred |
-| 4204 | applied |  | 1433,5 | relu-sans-validation (pose inchangée) | — | first-pass |
+| 4204 | applied |  | 1433,5 | jugé (visite 125) | 0 | first-pass · 0,4 mm |
 | 4287 | applied |  | 1449,5 | jugé (visite 133) | 5,43 | first-pass · 5,05 mm |
-| 4479 | applied |  | 1441,4 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 4509 | applied |  | 1437,8 | relu-sans-validation (pose inchangée) | — | first-pass |
-| 4514 | applied |  | 1439,7 | relu-sans-validation | — | first-pass |
+| 4479 | applied |  | 1441,4 | jugé (visite 142) | 0 | first-pass · 0,36 mm |
+| 4509 | applied |  | 1437,8 | jugé (visite 147) | 0 | first-pass · 0,47 mm |
+| 4514 | applied |  | 1439,7 | retouché-sans-validation | — | first-pass |
 | 4549 | applied |  | 1452,8 | jugé (visite 160) | 2,92 | first-pass · 2,84 mm |
 | 5004 | no-input — différé-sans-point-lidar | left:input right:input | — | jugé (visite 166) | départ 46,79 | deferred |
 | 5056 | no-input — différé-sans-point-lidar | left:input right:input | — | jugé (visite 177) | départ 39,31 | deferred |
@@ -74,14 +74,14 @@ C1 à C4 sont rapportés ensemble ; C1 seul n’est pas un résultat (§14 G).
 | Critère | Mesure |
 |---|---|
 | C1 — couverture | **35 appliqués / 51 cuts distincts = 68,6 %** · différés 5 · refusés par l’écartement 5 · sans entrée 5 · autres 1 · cuts revisités 0 (comptés une fois) |
-| C4 — faux | **non évaluable** : 25,7 % des appliqués jugés, seuil 80 % · **0 faux sur 9 appliqués jugés** (latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 26 |
-| C2 — erreur des rails appliqués jugés (18 rails), médiane / p90 | latéral 1,06 / 5,628 (max 7,57) mm · vertical 0,44 / 2,668 (max 4,17) mm · plancher : P2 non mesuré |
+| C4 — faux | **0 faux sur 34 appliqués jugés** (9 validés, 25 acceptés sans retouche ; latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 1 |
+| C2 — erreur des rails appliqués validés (18 rails), médiane / p90 | latéral 1,06 / 5,628 (max 7,57) mm · vertical 0,44 / 2,668 (max 4,17) mm · plancher : P2 non mesuré |
 | C3 — paires hors contrat | refusées pendant le lot : 5 (1182 : 1500,1 mm HIGH_INVALID ; 1189 : 1496,9 mm HIGH_INVALID ; 2065 : 1564,6 mm HIGH_INVALID ; 2066 : 1508,2 mm HIGH_INVALID ; 4203 : 1504,7 mm HIGH_INVALID) · appliquées hors contrat : **0** |
-| Décision sur le lot | 43 appliqués / 51 = 84,3 % · **0 faux sur 17 jugés** · faux que le Pilote n’a pas faits : aucun · gagnés : 1172, 1182, 1183, 1189, 2064, 2065, 2066, 2067 · perdus : aucun |
+| Décision sur le lot | 43 appliqués / 51 = 84,3 % · **0 faux sur 42 jugés** · faux que le Pilote n’a pas faits : aucun · gagnés : 1172, 1182, 1183, 1189, 2064, 2065, 2066, 2067 · perdus : aucun |
 
 Sans entrée ou sans décision : 5004 (différé-sans-point-lidar), 5056 (différé-sans-point-lidar), 5058 (différé-sans-point-lidar), 5059 (différé-sans-point-lidar), 5060 (différé-sans-point-lidar), 5061 (atteint-sans-décision:lot-arrêté-sur-ce-cut).
 
-Non jugeables : relu-sans-validation — 26 cuts dont 26 appliqués (1171, 1173, 1174, 1175, 1176, 1177, 1178, 1179, 1181, 1184, 1185, 1190, 1191, 2063, 2099, 3628, 3694, 3695, 3697, 3699, 3700, 4006, 4204, 4479, 4509, 4514) ; pose-du-pilote-inconnue — 1 cuts dont 0 appliqués (5061).
+Non jugeables : retouché-sans-validation — 1 cuts dont 1 appliqués (4514) ; pose-du-pilote-inconnue — 1 cuts dont 0 appliqués (5061).
 
 Différés relus : écart entre la pose de départ et la pose humaine (pire rail, mm) : 1169 : 31,43 ; 1172 : 29,37 ; 1182 : 25,93 ; 1183 : 33,84 ; 1189 : 31,38 ; 2064 : 27,31 ; 2065 : 31,23 ; 2066 : 32,88 ; 2067 : 32,86 ; 4203 : 38,35.
 
@@ -98,14 +98,14 @@ C1 à C4 sont rapportés ensemble ; C1 seul n’est pas un résultat (§14 G).
 | Critère | Mesure |
 |---|---|
 | C1 — couverture | **35 appliqués / 51 cuts distincts = 68,6 %** · différés 5 · refusés par l’écartement 5 · sans entrée 5 · autres 1 · cuts revisités 0 (comptés une fois) |
-| C4 — faux | **non évaluable** : 25,7 % des appliqués jugés, seuil 80 % · **0 faux sur 9 appliqués jugés** (latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 26 |
-| C2 — erreur des rails appliqués jugés (18 rails), médiane / p90 | latéral 1,06 / 5,628 (max 7,57) mm · vertical 0,44 / 2,668 (max 4,17) mm · plancher : P2 non mesuré |
+| C4 — faux | **0 faux sur 34 appliqués jugés** (9 validés, 25 acceptés sans retouche ; latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 1 |
+| C2 — erreur des rails appliqués validés (18 rails), médiane / p90 | latéral 1,06 / 5,628 (max 7,57) mm · vertical 0,44 / 2,668 (max 4,17) mm · plancher : P2 non mesuré |
 | C3 — paires hors contrat | refusées pendant le lot : 5 (1182 : 1500,1 mm HIGH_INVALID ; 1189 : 1496,9 mm HIGH_INVALID ; 2065 : 1564,6 mm HIGH_INVALID ; 2066 : 1508,2 mm HIGH_INVALID ; 4203 : 1504,7 mm HIGH_INVALID) · appliquées hors contrat : **0** |
-| Décision sur le lot | 43 appliqués / 51 = 84,3 % · **0 faux sur 17 jugés** · faux que le Pilote n’a pas faits : aucun · gagnés : 1172, 1182, 1183, 1189, 2064, 2065, 2066, 2067 · perdus : aucun |
+| Décision sur le lot | 43 appliqués / 51 = 84,3 % · **0 faux sur 42 jugés** · faux que le Pilote n’a pas faits : aucun · gagnés : 1172, 1182, 1183, 1189, 2064, 2065, 2066, 2067 · perdus : aucun |
 
 Sans entrée ou sans décision : 5004 (différé-sans-point-lidar), 5056 (différé-sans-point-lidar), 5058 (différé-sans-point-lidar), 5059 (différé-sans-point-lidar), 5060 (différé-sans-point-lidar), 5061 (atteint-sans-décision:lot-arrêté-sur-ce-cut).
 
-Non jugeables : relu-sans-validation — 26 cuts dont 26 appliqués (1171, 1173, 1174, 1175, 1176, 1177, 1178, 1179, 1181, 1184, 1185, 1190, 1191, 2063, 2099, 3628, 3694, 3695, 3697, 3699, 3700, 4006, 4204, 4479, 4509, 4514) ; pose-du-pilote-inconnue — 1 cuts dont 0 appliqués (5061).
+Non jugeables : retouché-sans-validation — 1 cuts dont 1 appliqués (4514) ; pose-du-pilote-inconnue — 1 cuts dont 0 appliqués (5061).
 
 Différés relus : écart entre la pose de départ et la pose humaine (pire rail, mm) : 1169 : 31,43 ; 1172 : 29,37 ; 1182 : 25,93 ; 1183 : 33,84 ; 1189 : 31,38 ; 2064 : 27,31 ; 2065 : 31,23 ; 2066 : 32,88 ; 2067 : 32,86 ; 4203 : 38,35.
 

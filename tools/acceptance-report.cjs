@@ -42,7 +42,7 @@
  * vérifié indépendamment (§P2 du cahier).
  */
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs');
+const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs'),NativeExport=require('../src/native-export.js'),Legacy=require('./native-offline-evaluate.cjs');
 const Gauge=require('../src/gauge.js'),O=require('../src/continuity-observer.js'),K=require('../src/core.js'),C=require('../vendor/capture-core.js');
 const SIDES=['left','right'],WRONG_MM=10,MATCH_MM=1,ROTATION_TOLERANCE=1e-6;
 /* C4 n'est évaluable que si 80 % au moins des cuts appliqués ont été jugés à la
@@ -50,6 +50,15 @@ const SIDES=['left','right'],WRONG_MM=10,MATCH_MM=1,ROTATION_TOLERANCE=1e-6;
  * rapporté, mais il ne compte pas pour l'objectif, fixé sur des lots complets
  * (D-038). Décision de la direction du 24/09, relecture du chantier 4. */
 const MIN_JUDGED_SHARE=0.8,COMPLETE_STATES=new Set(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
+/* CONVENTION DES OPÉRATEURS (direction, 24/09, D-040) : un cut visité sans
+ * correction ni validation est jugé bon et bien placé. Une visite sans
+ * validation où la pose n'a pas bougé vaut donc acceptation de cette pose, si
+ * elle a duré au moins ACCEPT_MIN_MS (en deçà : passage en rafale, touche Z
+ * répétée). Retouché sans validation : pose finale incertaine, non jugeable.
+ * Ces cuts entrent dans C4 (« accepté sans retouche », compté à part) ; C2 reste
+ * mesuré sur les seuls cuts validés : une acceptation dit « pas faux », pas
+ * « à combien de millimètres ». */
+const ACCEPT_MIN_MS=500;
 /* Exclusions demandées par l'opérateur : jamais retirées, la configuration ne
  * peut qu'en ajouter. */
 const EXCLUDED=Object.freeze([
@@ -70,6 +79,10 @@ function kindOf(doc){
   if(doc?.format==='banane-gcv1-lidar-corpus-v1')return 'corpus';
   if(doc?.format==='banane-test-journal-v4')return 'journal';
   if(doc?.session&&Array.isArray(doc.records))return 'relecture';
+  /* Le bilan du lot (« Télécharger le bilan et les LiDAR »), compact : il porte
+   * l'état du lot, sa clôture et les passages du Pilote, comme le journal. Il
+   * ne sert qu'à défaut du journal. */
+  if(doc?.format==='banane-test-dataset-v4'&&doc.state?.batch)return 'bilan';
   return 'ignored';
 }
 const listJson=input=>fs.statSync(input).isDirectory()?fs.readdirSync(input).filter(f=>f.endsWith('.json')).sort().map(f=>path.join(input,f)):[input];
@@ -80,7 +93,7 @@ function describe(file,bytes,doc,kind){return {file:path.basename(file),kind,for
 function loadLot(dir,label,relecturePath=null){
   const lot={label,diagnostic:null,journal:null,corpus:null,relecture:null,inputs:[]},relectureFiles=[];
   for(const file of listJson(dir)){
-    const bytes=fs.readFileSync(file),doc=JSON.parse(bytes),kind=kindOf(doc);
+    const bytes=fs.readFileSync(file),raw=JSON.parse(bytes),doc=raw?.format===NativeExport.FORMAT?NativeExport.expand(raw):raw,kind=kindOf(doc);
     lot.inputs.push(describe(file,bytes,doc,kind));
     if(kind==='relecture'){relectureFiles.push(file);continue;}
     if(kind==='ignored')continue;
@@ -92,6 +105,9 @@ function loadLot(dir,label,relecturePath=null){
       lot.inputs.push({...describe(file,bytes,doc,kind),role:'relecture'});if(kind==='relecture')relectureFiles.push(file);}}
   if(relectureFiles.length){const merged=Segments.mergeFiles(relectureFiles).merged;lot.relecture=merged;
     lot.relectureMerge={segments:relectureFiles.length,records:merged.records.length,allDeclaredCloudsPresent:merged.mergeTrace.allDeclaredPresent};}
+  if(!lot.journal&&lot.bilan){lot.journal=lot.bilan;lot.journalFromBilan=true;
+    for(const i of lot.inputs)if(i.kind==='bilan')i.role='journal (bilan du lot, journal absent)';}
+  delete lot.bilan;
   if(!lot.diagnostic&&lot.corpus?.diagnostic)lot.diagnostic=lot.corpus.diagnostic;
   if(!lot.diagnostic&&!lot.journal)throw Error(`Ni diagnostic GCV1 ni journal du Pilote dans ${dir}.`);
   return lot;
@@ -188,13 +204,23 @@ function judgeCut(row,visits,T,frameStatus){
   const done=visits.filter(validated);
   const visitNote={visits:visits.length,validatedVisits:done.length,usedVisitIndex:done.at(-1)?.visitIndex??null,
     rule:done.length>1?'plusieurs visites validées : la dernière fait foi':undefined};
-  if(!done.length)return {status:'unjudgeable',reason:'relu-sans-validation',poseChanged:visits.some(v=>poseChangedDuringVisit(v)===true),...visitNote};
+  if(!done.length){
+    if(visits.some(v=>poseChangedDuringVisit(v)!==false))
+      return {status:'unjudgeable',reason:'retouché-sans-validation',poseChanged:true,...visitNote};
+    const dwell=v=>Date.parse(v.endedAt)-Date.parse(v.beforeEstablished?.capturedAt);
+    const seen=visits.filter(v=>dwell(v)>=ACCEPT_MIN_MS);
+    if(!seen.length)return {status:'unjudgeable',reason:'passage-trop-bref',poseChanged:false,...visitNote};
+    const visit=seen.at(-1),initial=moved(pilot,T),final=(visit.finalObserved||visit.lastObserved).rails;
+    const references=Object.fromEntries(SIDES.map(s=>[s,{status:'candidate',finalRail:final[s],deltaLocal:Legacy.humanDelta(initial[s],final[s])}]));
+    return {status:'judged',basis:'accepté-sans-retouche',visits:visits.length,validatedVisits:0,usedVisitIndex:visit.visitIndex??null,
+      dwellMs:dwell(visit),_initial:initial,_references:references};
+  }
   const visit=done.at(-1),initial=moved(pilot,T);
   // Jugement : la référence humaine n'est lue qu'ici, après toute décision du moteur.
   const references=Object.fromEntries(SIDES.map(s=>[s,Lab.referenceFor(visit,s,initial[s],visit.beforeEstablished?.capturedAt)]));
   const missing=SIDES.filter(s=>references[s].status!=='candidate');
   if(missing.length)return {status:'unjudgeable',reason:'référence-non-stricte',detail:missing.map(s=>`${s}:${references[s].reason}`),...visitNote};
-  return {status:'judged',...visitNote,_initial:initial,_references:references};
+  return {status:'judged',basis:'validé',...visitNote,_initial:initial,_references:references};
 }
 
 /* ---- décision sur le lot : observée (4.7.8) ou rejouée hors ligne ---- */
@@ -297,7 +323,8 @@ function analyseLot(lot,options={}){
 function summarize(rows,p2){
   const counted=rows.filter(r=>!r.excluded),n=counted.length,count=f=>counted.filter(f).length,pct=v=>n?r1(100*v/n):null;
   const applied=counted.filter(r=>r.outcome==='applied'),judged=applied.filter(r=>r.judgement?.status==='judged'&&Number.isFinite(r.judgement.worstMm));
-  const wrong=judged.filter(r=>r.judgement.wrong),axis=a=>Lab.distribution(judged.flatMap(r=>SIDES.map(s=>Math.abs(r.judgement.errors[s][a+'Mm']))));
+  const validatedJudged=judged.filter(r=>r.judgement.basis!=='accepté-sans-retouche');
+  const wrong=judged.filter(r=>r.judgement.wrong),axis=a=>Lab.distribution(validatedJudged.flatMap(r=>SIDES.map(s=>Math.abs(r.judgement.errors[s][a+'Mm']))));
   const unjudged={};for(const r of counted)if(r.judgement?.status==='unjudgeable'){const k=r.judgement.reason;(unjudged[k]||(unjudged[k]={cuts:0,applied:0,list:[]}));
     unjudged[k].cuts++;if(r.outcome==='applied')unjudged[k].applied++;unjudged[k].list.push(r.cut);}
   const lotRows=counted.filter(r=>r.lot),lotApplied=lotRows.filter(r=>r.lot.wouldApply),lotJudged=lotApplied.filter(r=>Number.isFinite(r.lot.worstMm));
@@ -308,10 +335,11 @@ function summarize(rows,p2){
       revisitedCuts:count(r=>r.pilotVisits>1||r.gcv1Observations>1),
       otherDetail:counted.filter(r=>r.outcome==='other'||r.outcome==='no-input').map(r=>({cut:r.cut,outcome:r.outcome,reason:r.reason}))},
     c4:{criterion:`latéral OU vertical > ${WRONG_MM} mm, valeurs brutes`,judgedApplied:judged.length,appliedNotJudged:applied.length-judged.length,wrong:wrong.length,
+      judgedByBasis:{validé:validatedJudged.length,'accepté-sans-retouche':judged.length-validatedJudged.length},
       judgedSharePct:applied.length?r1(100*judged.length/applied.length):null,minJudgedSharePct:100*MIN_JUDGED_SHARE,
       evaluable:applied.length?judged.length>=MIN_JUDGED_SHARE*applied.length:null,
       wrongCuts:wrong.map(r=>({cut:r.cut,worstMm:r.judgement.worstMm,errors:r.judgement.errors}))},
-    c2:{rails:judged.length*2,lateralMm:axis('lateral'),verticalMm:axis('vertical'),floor:p2?{label:p2.label,lateralMm:p2.lateralMm??null,verticalMm:p2.verticalMm??null}:{label:'P2 non mesuré'}},
+    c2:{rails:validatedJudged.length*2,basis:'cuts validés seulement',lateralMm:axis('lateral'),verticalMm:axis('vertical'),floor:p2?{label:p2.label,lateralMm:p2.lateralMm??null,verticalMm:p2.verticalMm??null}:{label:'P2 non mesuré'}},
     c3:{refused:counted.filter(r=>r.outcome==='gauge-rejected').map(r=>({cut:r.cut,...r.gauge})),
       appliedOutOfContract:applied.filter(r=>r.gauge&&!r.gauge.admissible).map(r=>({cut:r.cut,...r.gauge})),
       appliedGaugeUnmeasured:applied.filter(r=>!r.gauge).map(r=>r.cut)},
@@ -354,8 +382,8 @@ function section(title,s){
     ...(s.incompleteLots?.length?[`**Lot incomplet** (${s.incompleteLots.map(l=>`${l.label} : ${l.state}`).join(' ; ')}) : C1 est rapporté, mais ne compte pas pour l’objectif, fixé sur des lots complets (D-038).`,'']:[]),
     '| Critère | Mesure |','|---|---|',
     `| C1 — couverture | **${s.c1.applied} appliqués / ${s.c1.distinctCuts} cuts distincts = ${fmt(s.c1.coveragePct)} %** · différés ${s.c1.deferred} · refusés par l’écartement ${s.c1.gaugeRejected} · sans entrée ${s.c1.noInput} · autres ${s.c1.other} · cuts revisités ${s.c1.revisitedCuts} (comptés une fois) |`,
-    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged} |`,
-    `| C2 — erreur des rails appliqués jugés (${s.c2.rails} rails), médiane / p90 | latéral ${dist(s.c2.lateralMm)} mm · vertical ${dist(s.c2.verticalMm)} mm · plancher : ${s.c2.floor.label}${s.c2.floor.lateralMm?` (latéral ${fmt(s.c2.floor.lateralMm.median)} / ${fmt(s.c2.floor.lateralMm.p90)}, vertical ${fmt(s.c2.floor.verticalMm?.median)} / ${fmt(s.c2.floor.verticalMm?.p90)} mm)`:''} |`,
+    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.judgedByBasis?.validé??0} validés, ${s.c4.judgedByBasis?.['accepté-sans-retouche']??0} acceptés sans retouche ; ${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged} |`,
+    `| C2 — erreur des rails appliqués validés (${s.c2.rails} rails), médiane / p90 | latéral ${dist(s.c2.lateralMm)} mm · vertical ${dist(s.c2.verticalMm)} mm · plancher : ${s.c2.floor.label}${s.c2.floor.lateralMm?` (latéral ${fmt(s.c2.floor.lateralMm.median)} / ${fmt(s.c2.floor.lateralMm.p90)}, vertical ${fmt(s.c2.floor.verticalMm?.median)} / ${fmt(s.c2.floor.verticalMm?.p90)} mm)`:''} |`,
     `| C3 — paires hors contrat | refusées pendant le lot : ${s.c3.refused.length}${s.c3.refused.length?' ('+s.c3.refused.map(r=>`${r.cut} : ${fmt(r.predictedMm)} mm ${r.gaugeClass}`).join(' ; ')+')':''} · appliquées hors contrat : **${s.c3.appliedOutOfContract.length}**${s.c3.appliedGaugeUnmeasured.length?` · écartement appliqué non mesurable : ${s.c3.appliedGaugeUnmeasured.join(', ')}`:''} |`];
   if(s.lotDecision)L.push(`| Décision sur le lot | ${s.lotDecision.wouldApply} appliqués / ${s.c1.distinctCuts} = ${fmt(s.lotDecision.coveragePct)} % · **${s.lotDecision.wrong} faux sur ${s.lotDecision.judged} jugés** · faux que le Pilote n’a pas faits : ${s.lotDecision.newWrong.length?s.lotDecision.newWrong.join(', '):'aucun'} · gagnés : ${s.lotDecision.gained.map(g=>g.cut).join(', ')||'aucun'} · perdus : ${s.lotDecision.lost.join(', ')||'aucun'} |`);
   else L.push('| Décision sur le lot | absente des exports (antérieurs à la 4.7.8) et non rejouée |');

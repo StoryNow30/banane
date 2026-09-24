@@ -17,7 +17,7 @@ function scenario(){
     pilotCut(P,105,{outcome:'gauge',gaugeMm:1300}),   // refusé par l'écartement
     pilotCut(P,106,{outcome:'noinput'}),              // aucun point LiDAR
     pilotCut(P,107,{outcome:'none'}),                 // atteint, lot arrêté dessus
-    pilotCut(P,108),                                  // relu sans validation
+    pilotCut(P,108),                                  // relu sans validation ni retouche : accepté (D-040)
     pilotCut(P,109),                                  // deux intentions : référence non stricte
     pilotCut(P,110),                                  // jamais relu
   ];
@@ -47,7 +47,8 @@ test('C1 : cuts distincts, revisite comptée une fois, chaque issue au dénomina
 
 test('C4 : faux si latéral OU vertical au-delà de 10 mm, sur les seuls cuts appliqués jugés',()=>{
   const c4=A.report([scenario()]).total.c4;
-  assert.equal(c4.judgedApplied,4);assert.equal(c4.appliedNotJudged,3);
+  assert.equal(c4.judgedApplied,5);assert.equal(c4.appliedNotJudged,2);
+  assert.deepEqual(c4.judgedByBasis,{validé:4,'accepté-sans-retouche':1});
   assert.deepEqual(c4.wrongCuts.map(w=>[w.cut,w.worstMm]),[[101,12],[102,11]]);
   const w102=c4.wrongCuts.find(w=>w.cut===102);assert.equal(w102.errors.right.verticalMm,-11);assert.equal(w102.errors.right.lateralMm,0);
 });
@@ -74,7 +75,9 @@ test('C3 : une paire appliquée hors contrat est signalée',()=>{
 
 test('non jugeables : raison par cut ; plusieurs visites validées, la dernière fait foi',()=>{
   const r=A.report([scenario()]),u=r.total.unjudgeable;
-  assert.deepEqual(u['relu-sans-validation'].list,[108]);
+  assert.equal(u['relu-sans-validation'],undefined);
+  const accepted=r.lots[0].rows.find(x=>x.cut===108).judgement;
+  assert.equal(accepted.basis,'accepté-sans-retouche');assert.equal(accepted.worstMm,0);assert.equal(accepted.wrong,false);
   assert.deepEqual(u['référence-non-stricte'].list,[109]);
   assert.deepEqual(u['pas-de-relecture'].list,[106,107,110]);
   const row=r.lots[0].rows.find(x=>x.cut===103);
@@ -131,11 +134,11 @@ test('mêmes entrées, même rapport (§14 F)',()=>{
 });
 test('C4 non évaluable sous 80 % d’appliqués jugés ; lot arrêté marqué incomplet',()=>{
   const r=A.report([scenario()]),c4=r.total.c4;
-  // 7 appliqués (100 à 103, 108 à 110), 4 jugés : 57,1 %.
-  assert.equal(c4.judgedSharePct,57.1);assert.equal(c4.evaluable,false);
+  // 7 appliqués (100 à 103, 108 à 110), 5 jugés (108 accepté sans retouche) : 71,4 %.
+  assert.equal(c4.judgedSharePct,71.4);assert.equal(c4.evaluable,false);
   assert.deepEqual(r.total.incompleteLots,[{label:'synthétique',state:'STOPPED'}]);
   assert.equal(r.parts[0].incompleteLots.length,1);assert.equal(r.lots[0].complete,false);
-  const md=A.toMarkdown(r);assert.match(md,/\*\*non évaluable\*\* : 57,1 % des appliqués jugés, seuil 80 %/);assert.match(md,/\*\*Lot incomplet\*\*/);
+  const md=A.toMarkdown(r);assert.match(md,/\*\*non évaluable\*\* : 71,4 % des appliqués jugés, seuil 80 %/);assert.match(md,/\*\*Lot incomplet\*\*/);
   // Lot complet, tous les appliqués jugés : évaluable, aucune mention d'incomplétude.
   const lot=pilotLot(P,[pilotCut(P,200),pilotCut(P,201)]),T0=[0,0,0];
   const ok=A.report([{label:'complet',...lot,corpus:null,relecture:relecture([
@@ -143,4 +146,17 @@ test('C4 non évaluable sous 80 % d’appliqués jugés ; lot arrêté marqué i
     visit(P,201,{frameId:'cadre-pilote',before:pair(201,{},T0),final:pair(201,{},T0)})])}]);
   assert.equal(ok.total.c4.evaluable,true);assert.equal(ok.total.c4.judgedApplied,2);
   assert.deepEqual(ok.total.incompleteLots,[]);assert.doesNotMatch(A.toMarkdown(ok),/non évaluable|Lot incomplet/);
+});
+
+test('D-040 : visite sans correction ni validation = acceptée ; retouchée sans validation ou trop brève = non jugeable',()=>{
+  const cuts=[pilotCut(P,300),pilotCut(P,301),pilotCut(P,302)],lot=pilotLot(P,cuts),applied=c=>pair(c,{},T);
+  const records=[visit(P,300,{before:applied(300),intents:[]}),
+    visit(P,301,{before:applied(301),final:pair(301,{left:[3,0]},T),intents:[]}),
+    visit(P,302,{before:applied(302),intents:[]})];
+  records[2].endedAt=new Date(Date.parse(records[2].beforeEstablished.capturedAt)+300).toISOString();   // passage en rafale
+  const r=A.report([{label:'d040',...lot,corpus:null,relecture:relecture(records)}]),rows=r.lots[0].rows,j=c=>rows.find(x=>x.cut===c).judgement;
+  assert.equal(j(300).basis,'accepté-sans-retouche');assert.equal(j(300).worstMm,0);
+  assert.equal(j(301).reason,'retouché-sans-validation');assert.equal(j(302).reason,'passage-trop-bref');
+  assert.deepEqual(r.total.c4.judgedByBasis,{validé:0,'accepté-sans-retouche':1});
+  assert.equal(r.total.c2.rails,0);                                     // C2 : cuts validés seulement
 });

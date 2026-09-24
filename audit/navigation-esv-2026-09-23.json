@@ -186,7 +186,8 @@
   "KeyS (touche S)": "cut précédent, -1 (confirmé par l'opérateur)",
   "KeyD": "sélectionne le rail droit (dit par l'opérateur, 24/09) ; le +1 observé est une corrélation : D précède l'ajustement puis la validation",
   "Maj+Space": "valider et suivant : +1, ou saut vers le prochain cut non validé",
-  "clic:canvas": "la plupart suivis de +1 ; 25 sauts lointains (sélection sur la carte)"
+  "clic:canvas": "la plupart suivis de +1 ; 25 sauts lointains (sélection sur la carte)",
+  "KeyA (touche Q)": "repasse sur le rail gauche (dit par l'opérateur, 24/09)"
  },
  "outil": "script ponctuel de lecture des exports Natif (événements native-operator-event puis native-visit-started) ; relevé figé ici"
 }
