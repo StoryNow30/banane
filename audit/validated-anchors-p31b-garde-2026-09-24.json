@@ -1,0 +1,330 @@
+{
+ "format": "banane-validated-anchors-study-v1",
+ "gap": 3,
+ "stables": false,
+ "guard": {
+  "window": 5,
+  "tolerance": 8,
+  "minInliers": 3
+ },
+ "validatedNeighbours": 156,
+ "lotAnchorsOnly": {
+  "distinctCuts": 78,
+  "pilotApplied": 47,
+  "lotApplied": 72,
+  "coveragePct": 92.3,
+  "judged": 69,
+  "wrong": 1,
+  "newWrong": [
+   7026
+  ],
+  "gained": [
+   {
+    "cut": 5065,
+    "stage": "choice",
+    "worstMm": 6.11
+   },
+   {
+    "cut": 5324,
+    "stage": "window",
+    "worstMm": 2.6
+   },
+   {
+    "cut": 7025,
+    "stage": "choice",
+    "worstMm": 2.8
+   },
+   {
+    "cut": 7026,
+    "stage": "choice",
+    "worstMm": 20.12
+   },
+   {
+    "cut": 7028,
+    "stage": "choice",
+    "worstMm": 1.68
+   },
+   {
+    "cut": 7759,
+    "stage": "window",
+    "worstMm": 1.09
+   },
+   {
+    "cut": 7760,
+    "stage": "window",
+    "worstMm": 3.97
+   },
+   {
+    "cut": 8367,
+    "stage": "window",
+    "worstMm": 4.77
+   },
+   {
+    "cut": 8368,
+    "stage": "choice",
+    "worstMm": 1.94
+   },
+   {
+    "cut": 8371,
+    "stage": "choice",
+    "worstMm": 7.01
+   },
+   {
+    "cut": 8372,
+    "stage": "choice",
+    "worstMm": 2.58
+   },
+   {
+    "cut": 8374,
+    "stage": "choice",
+    "worstMm": 3.49
+   },
+   {
+    "cut": 8375,
+    "stage": "window",
+    "worstMm": 1.33
+   },
+   {
+    "cut": 8815,
+    "stage": "window",
+    "worstMm": 1.31
+   },
+   {
+    "cut": 8816,
+    "stage": "choice",
+    "worstMm": 4.37
+   },
+   {
+    "cut": 8817,
+    "stage": "window",
+    "worstMm": 4.43
+   },
+   {
+    "cut": 8835,
+    "stage": "window",
+    "worstMm": 0.45
+   },
+   {
+    "cut": 8836,
+    "stage": "choice",
+    "worstMm": 7.93
+   },
+   {
+    "cut": 8837,
+    "stage": "window",
+    "worstMm": 3.02
+   },
+   {
+    "cut": 8838,
+    "stage": "window",
+    "worstMm": 0.9
+   },
+   {
+    "cut": 8854,
+    "stage": "window",
+    "worstMm": 3.95
+   },
+   {
+    "cut": 8856,
+    "stage": "window",
+    "worstMm": null
+   },
+   {
+    "cut": 8858,
+    "stage": "window",
+    "worstMm": 2.51
+   },
+   {
+    "cut": 8885,
+    "stage": "window",
+    "worstMm": 2.88
+   },
+   {
+    "cut": 8887,
+    "stage": "first-pass",
+    "worstMm": 3.28
+   }
+  ]
+ },
+ "withValidatedNeighbours": {
+  "distinctCuts": 78,
+  "pilotApplied": 47,
+  "lotApplied": 72,
+  "coveragePct": 92.3,
+  "judged": 68,
+  "wrong": 1,
+  "newWrong": [
+   7026
+  ],
+  "gained": [
+   {
+    "cut": 5065,
+    "stage": "choice",
+    "worstMm": 5.96
+   },
+   {
+    "cut": 5318,
+    "stage": "choice",
+    "worstMm": 1.57
+   },
+   {
+    "cut": 5324,
+    "stage": "window",
+    "worstMm": 2.56
+   },
+   {
+    "cut": 5504,
+    "stage": "choice",
+    "worstMm": 2.04
+   },
+   {
+    "cut": 7026,
+    "stage": "choice",
+    "worstMm": 20.12
+   },
+   {
+    "cut": 7028,
+    "stage": "choice",
+    "worstMm": 1.68
+   },
+   {
+    "cut": 7759,
+    "stage": "choice",
+    "worstMm": 1.05
+   },
+   {
+    "cut": 7760,
+    "stage": "choice",
+    "worstMm": 3.84
+   },
+   {
+    "cut": 8367,
+    "stage": "window",
+    "worstMm": 4.77
+   },
+   {
+    "cut": 8368,
+    "stage": "choice",
+    "worstMm": 7.78
+   },
+   {
+    "cut": 8371,
+    "stage": "choice",
+    "worstMm": 7.01
+   },
+   {
+    "cut": 8372,
+    "stage": "choice",
+    "worstMm": 2.58
+   },
+   {
+    "cut": 8374,
+    "stage": "choice",
+    "worstMm": 3.49
+   },
+   {
+    "cut": 8375,
+    "stage": "choice",
+    "worstMm": 1.25
+   },
+   {
+    "cut": 8815,
+    "stage": "window",
+    "worstMm": 1.31
+   },
+   {
+    "cut": 8816,
+    "stage": "choice",
+    "worstMm": 4.37
+   },
+   {
+    "cut": 8817,
+    "stage": "window",
+    "worstMm": 4.43
+   },
+   {
+    "cut": 8835,
+    "stage": "window",
+    "worstMm": 0.59
+   },
+   {
+    "cut": 8836,
+    "stage": "choice",
+    "worstMm": 7.93
+   },
+   {
+    "cut": 8837,
+    "stage": "choice",
+    "worstMm": 3.23
+   },
+   {
+    "cut": 8854,
+    "stage": "window",
+    "worstMm": 4
+   },
+   {
+    "cut": 8856,
+    "stage": "window",
+    "worstMm": null
+   },
+   {
+    "cut": 8858,
+    "stage": "window",
+    "worstMm": 2.51
+   },
+   {
+    "cut": 8881,
+    "stage": "window",
+    "worstMm": null
+   },
+   {
+    "cut": 8885,
+    "stage": "window",
+    "worstMm": 2.88
+   },
+   {
+    "cut": 8887,
+    "stage": "first-pass",
+    "worstMm": 3.28
+   }
+  ]
+ },
+ "remaining": [
+  {
+   "cut": 5062,
+   "pilot": "deferred",
+   "stage": "deferred",
+   "reason": "no-anchor"
+  },
+  {
+   "cut": 7025,
+   "pilot": "gauge-rejected",
+   "stage": "deferred",
+   "reason": "left:no-qualified-minimum-near-prediction"
+  },
+  {
+   "cut": 7757,
+   "pilot": "applied",
+   "stage": "deferred",
+   "reason": "gauge-HIGH_INVALID"
+  },
+  {
+   "cut": 8819,
+   "pilot": "gauge-rejected",
+   "stage": "deferred",
+   "reason": "no-anchor"
+  },
+  {
+   "cut": 8820,
+   "pilot": "gauge-rejected",
+   "stage": "deferred",
+   "reason": "no-anchor"
+  },
+  {
+   "cut": 8838,
+   "pilot": "deferred",
+   "stage": "deferred",
+   "reason": "left:no-qualified-minimum-near-prediction"
+  }
+ ]
+}

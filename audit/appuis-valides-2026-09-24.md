@@ -129,6 +129,13 @@ jamais les validations de l'opérateur : c'est la décision sur le lot de la
    il valide une nouvelle pose. La source la plus simple est donc la donnée de
    la carte, à localiser par l'inspection d'ESV (fiche opérateur, étape 3 bis) ;
    à défaut, une visite en lecture seule du voisin (S puis Z, chantier 1).
+   **Direction (24/09)** : le Pilote se déplacera seul sur les voisins pour
+   lire leur pose (chantier ultérieur) ; l'opérateur fera l'inspection 3 bis.
 2. ~~Une garde sur les appuis validés~~ : faite et mesurée (§4).
 3. **Les appuis validés dans `src/lot-decision.js`**, en observation d'abord
    (comme la 4.7.8), avec leur provenance consignée.
+
+Lot 2 de la partie 31 (4.7.9, relu) : avec les voisins validés et la garde,
+72 / 78, 1 faux / 68 jugés — autant que sans eux ; le faux 7026 reste à un
+seul appui (`audit/validated-anchors-p31b-garde-2026-09-24.json`,
+`audit/choix-un-appui-2026-09-24.md`).

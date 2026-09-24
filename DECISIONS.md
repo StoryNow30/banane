@@ -12,6 +12,16 @@ développement avant cette relecture.
 La pause automatique quand ESV ne charge pas le nuage (KI-049) n'est pas
 retenue pour l'instant : le cas ne s'est pas reproduit depuis.
 
+**Relecture du lot 2 (24/09) : condition non remplie.** Décision sur le lot :
+1 faux sur 69 jugés, le cut 7026, un CHOIX à un seul appui (KI-050). La
+4.7.10 ne sort pas sous la forme prévue ; formes possibles et mesures :
+`audit/choix-un-appui-2026-09-24.md` §5, en attente de la direction.
+
+**Appuis validés (24/09, direction).** La voie retenue pour les lire est que
+le Pilote se déplace seul sur les cuts voisins pour y lire leur pose ;
+chantier ultérieur. L'inspection 3 bis (carte d'ESV) sera faite par
+l'opérateur.
+
 ## D-040 - Relecture : une visite sans correction ni validation vaut acceptation
 
 **24 septembre 2026, direction.** « Pour moi et tous les opérateurs, si on
