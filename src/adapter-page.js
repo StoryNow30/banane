@@ -382,7 +382,7 @@
  }
  function repriseGuard(identity,deferredIdentities,validationControl,reconcileRequired=false){
    let now;try{now=snapshot();}catch(e){return {writable:false,readOnly:true,reason:'IDENTITY_UNAVAILABLE'};}
-   if(K.key(identity)!==K.key(now.identity)||K.completeIdentity(identity).projectId!==now.identity.projectId)
+   if(K.differences(identity,now.identity).length)
      return {writable:false,readOnly:true,reason:'TARGET_MISMATCH'};
    const deferred=Array.isArray(deferredIdentities)&&deferredIdentities.find(item=>{
      const d=K.completeIdentity(item?.identity||item);
