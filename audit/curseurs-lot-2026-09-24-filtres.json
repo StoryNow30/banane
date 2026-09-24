@@ -1,0 +1,574 @@
+{
+ "format": "banane-cursor-sweep-v1",
+ "wrongMm": 10,
+ "base": "chainMm15",
+ "configs": {
+  "chainMm15": {
+   "natif": {
+    "applied": 450,
+    "judged": 295,
+    "right": 292,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 206,
+    "judged": 198,
+    "right": 197,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 656,
+    "judged": 493,
+    "right": 489,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 75
+   }
+  },
+  "c15-minTop10": {
+   "natif": {
+    "applied": 457,
+    "judged": 299,
+    "right": 296,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 206,
+    "judged": 198,
+    "right": 197,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 663,
+    "judged": 497,
+    "right": 493,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 82
+   },
+   "delta": {
+    "applied": 7,
+    "right": 4,
+    "wrong": 0
+   },
+   "gained": [
+    {
+     "cut": "natif-court-p20:1139",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 3.7
+    },
+    {
+     "cut": "relecture-p19:9305",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "relecture-p19:9335",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-p30:3779",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-long-p20:151",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2.9
+    },
+    {
+     "cut": "natif-long-p20:496",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 1.2
+    },
+    {
+     "cut": "natif-long-p20:528",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 3.9
+    }
+   ],
+   "lost": [],
+   "changed": []
+  },
+  "c15-minTop20": {
+   "natif": {
+    "applied": 447,
+    "judged": 293,
+    "right": 290,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 206,
+    "judged": 198,
+    "right": 197,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 653,
+    "judged": 491,
+    "right": 487,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 72
+   },
+   "delta": {
+    "applied": -3,
+    "right": -2,
+    "wrong": 0
+   },
+   "gained": [],
+   "lost": [
+    {
+     "cut": "relecture-p19:9302",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-p24:5893",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 6.3
+    },
+    {
+     "cut": "natif-p30:5430",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2.5
+    }
+   ],
+   "changed": []
+  },
+  "c15-minFace2": {
+   "natif": {
+    "applied": 455,
+    "judged": 297,
+    "right": 294,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 206,
+    "judged": 198,
+    "right": 197,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 661,
+    "judged": 495,
+    "right": 491,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 80
+   },
+   "delta": {
+    "applied": 5,
+    "right": 2,
+    "wrong": 0
+   },
+   "gained": [
+    {
+     "cut": "natif-court-p20:1104",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2.3
+    },
+    {
+     "cut": "relecture-p19:9248",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "relecture-p19:9343",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-long-p20:169",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-long-p20:477",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 9
+    }
+   ],
+   "lost": [],
+   "changed": []
+  },
+  "c15-minFace5": {
+   "natif": {
+    "applied": 444,
+    "judged": 292,
+    "right": 289,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 202,
+    "judged": 195,
+    "right": 194,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 646,
+    "judged": 487,
+    "right": 483,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 65
+   },
+   "delta": {
+    "applied": -10,
+    "right": -6,
+    "wrong": 0
+   },
+   "gained": [],
+   "lost": [
+    {
+     "cut": "relecture-p19:9302",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "relecture-p19:9312",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-p24:779",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 4.3
+    },
+    {
+     "cut": "natif-p24:2563",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 6
+    },
+    {
+     "cut": "natif-p30:5430",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2.5
+    },
+    {
+     "cut": "natif-p30:7669",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "pilote-p34-4.7.11:1847",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 0.49
+    },
+    {
+     "cut": "pilote-p34-4.7.11:4787",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 0.18
+    },
+    {
+     "cut": "pilote-p34-4.7.11:5023",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 0.33
+    },
+    {
+     "cut": "pilote-p34-4.7.11:5201",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    }
+   ],
+   "changed": []
+  },
+  "c15-maxDzMm10": {
+   "natif": {
+    "applied": 440,
+    "judged": 289,
+    "right": 286,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 202,
+    "judged": 194,
+    "right": 193,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 642,
+    "judged": 483,
+    "right": 479,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 61
+   },
+   "delta": {
+    "applied": -14,
+    "right": -10,
+    "wrong": 0
+   },
+   "gained": [],
+   "lost": [
+    {
+     "cut": "relecture-p19:9242",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2
+    },
+    {
+     "cut": "relecture-p19:9302",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "relecture-p19:9306",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "relecture-p19:9328",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "relecture-p19:9329",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    },
+    {
+     "cut": "natif-p24:1827",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 8.7
+    },
+    {
+     "cut": "natif-p24:4519",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 8.7
+    },
+    {
+     "cut": "natif-long-p20:156",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2.9
+    },
+    {
+     "cut": "natif-long-p20:160",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 1.6
+    },
+    {
+     "cut": "natif-long-p20:436",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 1.9
+    },
+    {
+     "cut": "pilote-p31-fin-4.7.9:8372",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 2.58
+    },
+    {
+     "cut": "pilote-p34-4.7.11:1835",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 6.17
+    },
+    {
+     "cut": "pilote-p34-4.7.11:4550",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 0.45
+    },
+    {
+     "cut": "pilote-p34-4.7.11:5017",
+     "stage": "choice",
+     "verdict": "juste",
+     "worstMm": 7.91
+    }
+   ],
+   "changed": []
+  },
+  "c15-maxDzMm30": {
+   "natif": {
+    "applied": 449,
+    "judged": 295,
+    "right": 292,
+    "wrong": 3,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)"
+    ]
+   },
+   "pilote": {
+    "applied": 206,
+    "judged": 198,
+    "right": 197,
+    "wrong": 1,
+    "wrongCuts": [
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "all": {
+    "applied": 655,
+    "judged": 493,
+    "right": 489,
+    "wrong": 4,
+    "wrongCuts": [
+     "natif-long-p20:398 (159.9 mm)",
+     "natif-long-p20:402 (273 mm)",
+     "natif-long-p20:983 (15 mm)",
+     "pilote-p31-fin-4.7.9:7026 (20.12 mm)"
+    ]
+   },
+   "stages": {
+    "first-pass": 532,
+    "window": 49,
+    "choice": 74
+   },
+   "delta": {
+    "applied": -1,
+    "right": 0,
+    "wrong": 0
+   },
+   "gained": [],
+   "lost": [
+    {
+     "cut": "relecture-p19:9230",
+     "stage": "choice",
+     "verdict": "non jugé",
+     "worstMm": null
+    }
+   ],
+   "changed": []
+  }
+ }
+}

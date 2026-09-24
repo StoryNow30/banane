@@ -1516,8 +1516,9 @@ isolé) ne dépendent d'aucun de ces curseurs dans les plages essayées.
 
 ### 11.3 Impact
 
-Sur C5 : complet pour la décision sur le lot dès que les filtres du choix sont
-mesurés (en cours) ; `minTop` du moteur reste sans bilan de desserrage (n°5).
+Sur C5 : chaque curseur de la décision sur le lot a son bilan ; `minTop` du
+choix (10 : +4 justes, 0 faux) attend une décision de la direction ; `minTop`
+du moteur reste sans bilan de desserrage (n°5).
 Sur C1 : la partie 35 (4.7.12, jamais vue, non relue) donne 203 cuts traités
 sur 233 (87 %), dont 32 placés par la décision sur le lot, sans erreur.
 

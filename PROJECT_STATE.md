@@ -9,7 +9,7 @@ Statut : développement expérimental, non qualifié pour la production.
 Bilan des curseurs de la décision sur le lot (C5, D-047,
 `audit/curseurs-lot-2026-09-24.md`) : sur 652 cuts décidés et 489 jugés,
 `chainMm` à 15 mm gagne 4 justes sans faux ni juste perdu ; il est desserré,
-les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix en cours de mesure. Relecture
+les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix mesurés : `minTop` du choix à 10 gagne 4 justes sans faux (à trancher). Relecture
 ciblée des prochains lots (D-048).
 
 Lots 4.7.14 de la partie 2, relecture ciblée (110–138) : pose de départ d'ESV

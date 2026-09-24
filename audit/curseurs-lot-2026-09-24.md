@@ -18,8 +18,9 @@ reste active partout.
 
 **Outils** : `tools/choice-anchor-study.cjs --option clé=valeur` (rejeu),
 `tools/cursor-sweep.cjs` (comparaison à la base). Relevé :
-`audit/curseurs-lot-2026-09-24.json` (cuts gagnés, perdus et décidés
-autrement, par configuration).
+`audit/curseurs-lot-2026-09-24.json` (base 4.7.14) et
+`audit/curseurs-lot-2026-09-24-filtres.json` (filtres du choix, base 4.7.15) :
+cuts gagnés, perdus et décidés autrement, par configuration.
 
 ## Base (règles de la 4.7.14)
 
@@ -48,18 +49,46 @@ autrement, par configuration).
 | | 4 | 655 | +3 | **+1** | faux 405 gagné, 402 perdu ; **1835 (partie 34) devient faux** (13,3 mm) |
 | `anchors` appuis (2) | 3 | 651 | −1 | 0 | 9 décisions changées, dont 8435 : 2,1 → 8,3 mm |
 
-<!-- COMPLEMENT -->
+Compléments, même base :
+
+| Essai | Décidés | Justes | Faux | Lecture |
+|---|---|---|---|---|
+| `chainMm` 30 | 658 | +5 | **+1** | gagne 1202 et 1204, mais **1205 (partie 22) faux à 21,5 mm** : au-delà de 20 mm, une reprise lointaine devient appui et entraîne la suivante |
+| `chainMm` 15 et `guardMm` 40 | 656 | +4 | 0 | identique à `chainMm` 15 seul : le gain de `guardMm` 40 disparaît |
+
+## Filtres du choix (base : règles de la 4.7.15)
+
+Un choix n'est jamais appui : ces filtres ne changent que les choix eux-mêmes,
+sans effet sur les cuts suivants. Ce sont les filtres propres à la décision
+sur le lot (`src/lot-decision.js`), pas les curseurs du moteur (`minTop` du
+moteur reste 15, cahier §8). Base : 656 décidés, 489 justes, 4 faux.
+
+| Curseur (base) | Essai | Décidés | Justes | Faux | Lecture |
+|---|---|---|---|---|---|
+| `minTop` points de dessus (15) | **10** | 663 | **+4** | 0 | 7 choix gagnés : 4 justes (1139, 151, 496, 528 ; 1,2 à 3,9 mm), 3 non jugés, aucun perdu |
+| | 20 | 653 | −2 | 0 | 2 choix justes perdus |
+| `minFace` points de flanc (3) | 2 | 661 | +2 | 0 | 5 choix gagnés : 2 justes, dont 477 à **9 mm** (au bord du seuil de 10), 3 non jugés |
+| | 5 | 646 | −6 | 0 | 6 choix justes perdus, dont 3 sur la partie 34 |
+| `maxDzMm` écart vertical (20) | 10 | 642 | −10 | 0 | 10 choix justes perdus |
+| | 30 | 655 | 0 | 0 | 1 choix non jugé perdu |
+
+Tous les gains de `minTop` 10 sont au banc Natif ; aucun lot Pilote relu ne
+change. Complément en cours : `minTop` 5, et `minTop` 10 avec `minFace` 2.
+
 
 ## Décisions (D-047)
 
 | Curseur | Valeur retenue | Décision |
 |---|---|---|
-| `chainMm` | **15** (était 10) | **Desserré en 4.7.15**, autorisé par la direction le 24/09 : +4 justes, 0 faux, 0 juste perdu ; 20 mm n'apporte rien de plus. |
-| `guardMm` | 30 | **Conservé.** 20 coûte 4 justes ; 40 ne gagne qu'un cut sur 653. |
+| `chainMm` | **15** (était 10) | **Desserré en 4.7.15**, autorisé par la direction le 24/09 : +4 justes, 0 faux, 0 juste perdu ; 20 mm n'apporte rien de plus, 30 mm ajoute un faux. |
+| `guardMm` | 30 | **Conservé.** 20 coûte 4 justes ; 40 ne gagne qu'un cut sur 653, gain qui disparaît avec `chainMm` 15. |
 | `chooseMm` | 15 | **Conservé.** 10 retire le faux isolé 7026 pour 5 justes : D-042 (un faux isolé est toléré) ; 20 coûte 2 justes. |
 | `gap` | 3 | **Conservé.** 2 coûte 14 justes ; 4 ajoute un faux sur un lot relu (1835). |
 | `anchors` | 2 | **Conservé.** 3 : −1 juste, placements moins stables. |
 | Garde de paire | active | **Conservée** (D-044) : bilan `audit/garde-paire-verification-2026-09-24.md`. |
+| `minTop` du choix | 15 | **À trancher par la direction** : 10 gagne 4 justes, 0 faux, 0 perdu (Natif seulement) ; complément en cours. |
+| `minFace` du choix | 3 | **Conservé.** 2 gagne 2 justes dont un à 9 mm ; 5 coûte 6 justes. |
+| `maxDzMm` du choix | 20 | **Conservé.** 10 coûte 10 justes ; 30 n'apporte rien. |
 
 ## Les faux qui restent
 
