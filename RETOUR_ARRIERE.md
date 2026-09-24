@@ -1,5 +1,15 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.11**, la cible de retour est la **4.7.10**, commit `69a554d`
+(paquet `banane-v4.7.10-test.zip`, SHA-256 `4d2dbc02…3276000`) ; la 4.7.11 n'y
+ajoute que le contrôle de la vue d'ESV avant commande (KI-051). Le réglage
+« Observer seulement » reste le retour sans réinstaller.
+
+```bash
+git archive 69a554d | tar -x -C /tmp/banane-4.7.10
+cd /tmp/banane-4.7.10 && python3 tools/package.py --output /tmp/banane-v4.7.10-test.zip
+```
+
 **Depuis la 4.7.10**, deux retours :
 
 1. **Sans changer de version** : dans Réglages du lot, **Décision sur le lot :

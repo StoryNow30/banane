@@ -1,11 +1,11 @@
-# Démarrer avec Banane V4.7.10 TEST — le Pilote décide sur le lot
+# Démarrer avec Banane V4.7.11 TEST — le Pilote décide sur le lot
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.10-test.zip` dans Edge, exactement comme la 4.7.9.
+Installe `banane-v4.7.11-test.zip` dans Edge, exactement comme la 4.7.10.
 
-Vérifie d'abord **V4.7.10 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.10 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.11 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.11 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
 
@@ -22,6 +22,12 @@ sans VALIDATE ni SKIP.
 **Un faux connu est accepté** (D-042) : sur ce même lot, un cut (7026) aurait
 été placé à 20 mm, un choix fait avec un seul cut voisin (KI-050). Relis donc
 comme d'habitude : un cut faux se corrige et se valide.
+
+**4.7.11 — plus d'arrêt « Position proposée hors de la vue ».** Le Pilote
+place un rail en cliquant dans la vue d'ESV, qui ne montre que ±20 cm autour du
+rail. Quand la position trouvée tombe hors de cette vue (pose ESV de départ très
+éloignée, comme sur la partie 33), le cut est désormais **différé** au lieu
+d'arrêter le lot (KI-051).
 
 **Réglages du lot → Décision sur le lot** : « Appliquer » par défaut ;
 « Observer seulement » rend exactement le Pilote de la 4.7.9. Le réglage est

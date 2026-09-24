@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.10';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.11';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -86,7 +86,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
    let lotObservation=null;
    if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
     catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
-   if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=commandLot(proposal,lotObservation);}
+   if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=await commandLot(proposal,lotObservation);}
     catch(e){lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
@@ -107,10 +107,12 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  * même identifiant, porte les rails de la décision et devient celle du lot.
  * `Engine.apply()` garde tous ses contrôles : état ESV inchangé, écartement
  * dans le contrat avant commande, relecture à 1 mm après. */
-function commandLot(proposal,lotObservation){
+async function commandLot(proposal,lotObservation){
  const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,before=engine.s.before?.rails;
- const command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses});
- lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{})};
+ /* 4.7.11 — caméras de la capture : la cible doit tomber dans la vue du rail (KI-051). */
+ const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
+ const command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
+ lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{})};
  lotObservation.applied=command.action==='lot';
  if(command.action==='engine')return proposal;
  engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,

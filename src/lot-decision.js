@@ -149,8 +149,29 @@
    if(i>=0)anchors.splice(i,1);
    anchors.push(entry);while(anchors.length>max)anchors.shift();return anchors;
  }
+ /* VUE D'ESV (KI-051, lot 4.7.10 du 24/09, partie 33, cut 8089). Le Pilote pose
+  * un rail en CLIQUANT la cible dans la vue orthographique qu'ESV centre sur ce
+  * rail, large de ±0,2 unité de scène : une cible plus loin de la pose ESV est
+  * refusée par l'adaptateur (« Position proposée hors de la vue ») et arrête le
+  * lot. La capture garde la caméra de chaque rail ; on y projette la cible
+  * avant de commander. Caméra du rail : celle où il projette au centre. Sur ce
+  * lot, la projection par la caméra de la capture rend celle de l'adaptateur à
+  * 0,001 près (8089 : 1,038 contre 1,0375), et des cibles à 0,93 et 0,98 ont
+  * été posées : marge de 1 % (2 mm) seulement. */
+ const VIEW_MARGIN=0.99;
+ function viewCameras(capture){
+   const cams=[capture?.camera,...(capture?.viewCaptures||[]).map(v=>v?.camera)].filter(c=>c?.projection&&c?.sceneRelativeToCamera);
+   const ndcOf=(cam,p)=>C.point(C.multiply(cam.projection,cam.sceneRelativeToCamera),p);
+   return Object.fromEntries(SIDES.map(side=>{const p=capture?.rails?.[side]?.positionSceneRelative;if(!Array.isArray(p))return [side,null];
+     const best=cams.map(cam=>({cam,d:Math.hypot(...ndcOf(cam,p).slice(0,2))})).sort((a,b)=>a.d-b.d)[0];
+     return [side,best&&best.d<=0.5?best.cam:null];}));
+ }
+ function inView(cam,point,margin=VIEW_MARGIN){
+   const ndc=C.point(C.multiply(cam.projection,cam.sceneRelativeToCamera),point);
+   return {ndc,inView:Math.abs(ndc[0])<=margin&&Math.abs(ndc[1])<=margin&&Math.abs(ndc[2])<=1};
+ }
  const MATCH_SCENE=1e-5;
- function commandRails({decision,runtimeRails,before,expectedPoses}){
+ function commandRails({decision,runtimeRails,before,expectedPoses,cameras}){
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
    if(!decision||!runtimeRails||!before||!SIDES.every(side=>runtimeRails[side]&&before[side]))return keep('no-decision');
    const note={stage:decision.stage,anchorsUsed:decision.anchorsUsed||[],version:decision.version??DEFAULTS.version};
@@ -173,7 +194,12 @@
    if(SIDES.some(side=>C.distance(expected[side].positionSceneRelative,decision.positions[side])>MATCH_SCENE))return keep('position-mismatch');
    const gaugeMm=Gauge.gaugeMmOf(expected,C),gaugeClass=Gauge.classifyMm(gaugeMm);
    if(!Gauge.admissible(gaugeClass))return keep('gauge-'+gaugeClass);
+   /* La cible doit tomber dans la vue du rail (KI-051) ; sinon le cut suit la
+    * proposition du moteur, comme en 4.7.9 (un rail non résolu : différé). */
+   for(const side of SIDES){const cam=cameras?.[side];if(!cam)return keep('vue-inconnue-'+side);
+     const view=inView(cam,decision.positions[side]);
+     if(!view.inView)return {...keep('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,rememberAnchor};
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN};
 });

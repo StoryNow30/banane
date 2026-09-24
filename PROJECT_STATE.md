@@ -1,8 +1,15 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.10 TEST** (le Pilote applique la décision sur le lot, D-041, D-042 ; réglage « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.11 TEST** (le Pilote applique la décision sur le lot dans la vue d'ESV, D-041, D-042, KI-051 ; réglage « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.11
+
+Premier lot 4.7.10 (partie 33) : 20 cuts traités, 0 différé, placements jugés
+très bons par l'opérateur (relecture à venir) ; arrêt au cut 8089 sur une cible
+hors de la vue d'ESV (KI-051), corrigé en 4.7.11 : la décision sur le lot ne
+commande que dans la vue, sinon le cut est différé.
 
 ## État 4.7.10
 

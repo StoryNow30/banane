@@ -21,4 +21,11 @@ function build(L,Shadow){
   return {capture:cap,decision:L.decideCut({capture:cap,science:Shadow.scientificProposeBoth(cap),anchors:[anchor(104),anchor(103)],Shadow})};
 }
 const scenario=(L,Shadow)=>build(L,Shadow).decision;
-module.exports={listed,load,build,scenario};
+/* Capture munie de caméras comme celles du Pilote (KI-051) : une vue par rail,
+ * centrée sur lui, ±`half` unité de scène en x et y. */
+function withCameras(capture,half=.2){
+  const cam=p=>({type:'OrthographicCamera',sceneRelativeToCamera:K.C.translation(p.map(v=>-v)),
+    projection:[1/half,0,0,0, 0,1/half,0,0, 0,0,1,0, 0,0,0,1],viewport:{left:0,top:0,width:796,height:740}});
+  return {...capture,viewCaptures:SIDES.map(s=>({camera:cam(capture.rails[s].positionSceneRelative)}))};
+}
+module.exports={listed,load,build,scenario,withCameras};

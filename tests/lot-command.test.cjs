@@ -5,14 +5,15 @@
  * retiré par la garde sans reprise = différé ; tout le reste = moteur. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const L=require('../src/lot-decision.js'),Shadow=require('../src/gcv1-shadow.js'),Gauge=require('../src/gauge.js'),{Engine}=require('../src/engine.js');
-const {K}=require('./fixtures.cjs'),{build}=require('./helpers/navigateur.cjs');
+const {K}=require('./fixtures.cjs'),{build,withCameras}=require('./helpers/navigateur.cjs');
 const SIDES=['left','right'];
 const {capture,decision}=build(L,Shadow);
 const abstention=side=>({side,status:'unresolved',delta:null,confidence:0,reasons:['GCV1 ne publie pas de position exploitable.'],method:'gcv1-method',
   source:'geometry-candidate-v1-abstention',parameters:{contractId:'GEOMETRY_CANDIDATE_V1'},geometryEngine:'geometry-candidate-v1',gcv1:{motif:'ambiguity'}});
 const candidate=side=>({...abstention(side),status:'candidate',delta:[0,.004,-.002],confidence:.8,reasons:[],source:'geometry-candidate-v1-astar'});
 const both=f=>Object.fromEntries(SIDES.map(s=>[s,f(s)]));
-const command=(d,runtimeRails=both(abstention),expectedPoses=K.expectedPoses)=>L.commandRails({decision:d,runtimeRails,before:capture.rails,expectedPoses});
+const cameras=L.viewCameras(withCameras(capture));
+const command=(d,runtimeRails=both(abstention),expectedPoses=K.expectedPoses,cams=cameras)=>L.commandRails({decision:d,runtimeRails,before:capture.rails,expectedPoses,cameras:cams});
 
 test('choix : les décalages reproduisent les positions de la décision, écartement admissible, provenance consignée',()=>{
   assert.equal(decision.stage,'choice',decision.reason);
@@ -74,4 +75,21 @@ test('mémoire des appuis : un cut analysé deux fois ne compte que pour un appu
   L.rememberAnchor(anchors,entry(104,4,'autre-repère'));assert.equal(anchors.length,3,'autre repère : autre voie');
   for(let c=0;c<5;c++)L.rememberAnchor(anchors,entry(200+c,0),4);assert.equal(anchors.length,4);
   assert.deepEqual(L.neighbours({part:23,cut:105,frameId:'f'},[entry(104,2),entry(104,3)].reduce((m,e)=>L.rememberAnchor(m,e),[]),L.DEFAULTS).length,1);
+});
+
+/* KI-051 — lot 4.7.10, partie 33, cut 8089 : cible à 21 cm de la pose ESV, hors
+ * de la vue de ±20 cm ; l'adaptateur refusait le clic et le lot s'arrêtait. */
+test('vue d\'ESV : une cible hors de la vue du rail n\'est pas commandée ; caméra inconnue non plus',()=>{
+  const narrow=L.viewCameras(withCameras(capture,.01));   // vue de ±1 cm : la cible du rail gauche est à 12 mm
+  const out=command(decision,both(abstention),K.expectedPoses,narrow);
+  assert.equal(out.action,'engine');assert.match(out.reason,/^hors-vue-(left|right)$/);assert.ok(Math.abs(out.ndc[0])>L.VIEW_MARGIN||Math.abs(out.ndc[1])>L.VIEW_MARGIN);
+  assert.equal(command(decision,both(abstention),K.expectedPoses,null).reason,'vue-inconnue-left');
+  assert.equal(command(decision,both(abstention),K.expectedPoses,{left:cameras.left,right:null}).reason,'vue-inconnue-right');
+});
+test('caméra de chaque rail : celle où il projette au centre, quel que soit l\'ordre des vues',()=>{
+  const cap=withCameras(capture),swapped={...cap,viewCaptures:cap.viewCaptures.slice().reverse()};
+  for(const c of [cap,swapped]){const cams=L.viewCameras(c);
+    for(const s of SIDES)assert.ok(Math.hypot(...L.inView(cams[s],capture.rails[s].positionSceneRelative).ndc.slice(0,2))<1e-9);}
+  assert.deepEqual(L.viewCameras({rails:capture.rails}),{left:null,right:null});
+  const lone=L.viewCameras({...cap,viewCaptures:[cap.viewCaptures[0]]});assert.equal(lone.right,null,'aucune vue centrée sur le rail droit');
 });

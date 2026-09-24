@@ -354,7 +354,7 @@ test('a GCV1 pilot batch records the lot decision in observation, never applies 
  * la proposition du moteur reste dans l'événement « proposed ». « Observer
  * seulement », ou un lot sans ce champ : exactement la 4.7.9. */
 test('a GCV1 pilot batch created with lotDecision apply commands the lot decision; observe changes nothing',async()=>{
- const Shadow=require('../src/gcv1-shadow.js'),L=require('../src/lot-decision.js'),K=require('../src/core.js'),{base}=require('./fixtures.cjs');
+ const Shadow=require('../src/gcv1-shadow.js'),L=require('../src/lot-decision.js'),K=require('../src/core.js'),{base}=require('./fixtures.cjs'),{withCameras}=require('./helpers/navigateur.cjs');
  const science=Shadow.scientificProposeBoth(base),SIDES=['left','right'];
  /* Décision factice : reprise depuis la voie, à 6 mm de la proposition V4.6 du
   * banc (42 mm vers l'intérieur par rail sur la fixture, écartée à 1 500 mm) ;
@@ -369,6 +369,9 @@ test('a GCV1 pilot batch created with lotDecision apply commands the lot decisio
   shadow.consumeLast=()=>{shadow.calls.consume++;const o=shadow.pending;shadow.pending=null;return o;};
   shadow.scientificProposeBoth=Shadow.scientificProposeBoth;
   const b=background({shadow,globals:{BananeLotDecision:fake,BananeSettings:require('../src/settings.js'),BananeCore3:K}});
+  /* Caméras de capture comme celles du Pilote : une vue par rail, ±0,2 (KI-051). */
+  const capture=b.adapter.capture.bind(b.adapter);
+  b.adapter.capture=async(...a)=>withCameras(await capture(...a));
   const applied=[],apply=b.adapter.apply.bind(b.adapter);
   b.adapter.apply=async(before,proposals)=>{applied.push({before:K.clone(before),proposals:K.clone(proposals)});return apply(before,proposals);};
   await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});

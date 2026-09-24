@@ -1,5 +1,21 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.11 — la décision sur le lot ne commande que dans la vue d'ESV, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension — correctif de la 4.7.10** (KI-051). Premier lot 4.7.10 (partie 33,
+20 cuts traités, 0 différé) arrêté au cut 8089 : la reprise depuis la voie
+plaçait le rail gauche à 21 cm de la pose ESV, hors de la vue de ±20 cm qu'ESV
+centre sur le rail ; l'adaptateur a refusé le clic avant toute commande (aucun
+rail déplacé) et le lot s'est arrêté en erreur. La décision sur le lot projette
+désormais chaque cible dans la caméra du rail enregistrée par la capture
+(`viewCameras`, `inView` ; marge 1 %) avant de commander : hors de la vue, ou
+caméra inconnue, le cut suit la proposition du moteur, comme en 4.7.9 (rail non
+résolu : différé). Sur ce lot, la projection par la caméra de la capture rend
+celle de l'adaptateur à 0,001 près ; 8087 et 8088 (0,93 et 0,98 du bord)
+restent commandés, 8089 (1,04) serait différé. Placement inchangé ailleurs.
+
 ## 4.7.10 — le Pilote décide sur le lot, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.
