@@ -1,14 +1,17 @@
-# Chantier 5 — prompt de l’ingénieur (tests d’acceptation), version 4.7.16
+# Chantier 6 — prompt du relecteur (relecture indépendante 4.7.13 à 4.7.16)
 
-**Pour :** un ingénieur logiciel, profil tests. **Branche :** `chantier-48/acceptation-4716`. **Rapport :** `audit/chantiers/acceptation.md`.
-Aucune intervention de ta part. Remplace la version du 23/09 (base 4.7.8), jamais lancée.
+**Pour :** Astra (relecteur indépendant), ou un autre relecteur qui n’a pas écrit ce code. **Branche :** `chantier-48/relecture-4716`. **Rapport :** `audit/chantiers/relecture-4716.md`.
+Aucune intervention de ta part. Ne lui donne pas les conclusions de l’équipe au-delà de ce que contient le dépôt.
 
 Copie tout le bloc ci-dessous, tel quel, comme premier message.
 
 ```text
 TON RÔLE
-Tu es ingénieur logiciel, spécialiste des tests. Tu prouves ce qui est
-couvert et tu écris ce qui manque ; tu ne modifies pas le code de production.
+Tu es relecteur indépendant : tu n'as écrit aucune ligne de ce que tu relis.
+Tu ne corriges pas, tu établis. Un test qui démontre un défaut est bienvenu
+sur ta branche ; une correction du code, non. La relecture précédente
+(audit/chantiers/relecture-478.md, sur la 4.7.12) sert de modèle de
+rapport ; elle ne couvre rien de ce qui suit.
 
 CONTEXTE
 Banane est une extension Chrome/Edge (Manifest V3) qui aide un opérateur à
@@ -96,49 +99,52 @@ MÉTHODE
 
 LIVRABLE COMMUN
 - Ta branche poussée, commits clairs.
-- Le rapport audit/chantiers/acceptation.md : fait, vérifié (commandes), supposé, questions pour
+- Le rapport audit/chantiers/relecture-4716.md : fait, vérifié (commandes), supposé, questions pour
   la direction.
 - En fin de travail, un résumé de 15 lignes au plus, en français.
 
-CHANTIER 5 — TESTS D'ACCEPTATION §14 ET INVARIANTS §7
+CHANTIER 6 — RELECTURE INDÉPENDANTE DE LA 4.7.13 À LA 4.7.16
 
-POURQUOI
-Le cahier exige que chacun des dix invariants du §7 et chacun des tests A à
-I du §14 ait son essai. Plus de 700 tests existent dans tests/, mais personne
-ne sait lesquels couvrent quoi. C'est une condition de la version candidate
-4.8.0-rc.
+PÉRIMÈTRE : git diff 7a2144c..155dbec, en particulier
+- 4.7.13 : interface « La ligne » (panel.html, panel.css, panel.js, fonts/) ;
+- 4.7.14 : KI-053 (commandRails : une paire retirée par une garde n'est
+  jamais rendue par un repli) et KI-052 (reprise après archivage) ;
+- 4.7.15 : chainMm 15 mm (D-047), règles consignées et rejeu
+  (tools/acceptance-report.cjs : rulesFor, lotRules) ;
+- 4.7.16 : garde d'écartement voisin 20 mm et minTop du choix 5 (D-050),
+  src/lot-decision.js (gaugeReference, gaugeSuspect, nearOf, commandRails) ;
+- outils de mesure : tools/choice-anchor-study.cjs (--option),
+  tools/cursor-sweep.cjs, tools/lot-command-scan.cjs.
 
-À FAIRE
-1. tests/ACCEPTANCE_MATRIX.md : une ligne par exigence (§7.1 à §7.10, §14 A
-   à I, et les règles conservées du §5.5 : politique effective affichée,
-   « Différés : N » fidèle, incertitude de navigation visible avec son cut,
-   aucun bouton présenté comme réussi sur un simple accusé). Ajoute les
-   règles de la décision sur le lot devenues contractuelles depuis : paire
-   retirée par une garde jamais appliquée par un repli (KI-053) ; garde
-   d'écartement voisin = garde, jamais cible (D-050) ; le Pilote ne passe
-   aucune option à la décision (la variante « cible » est de mesure
-   seulement) ; règles consignées par la décision et relues par le rejeu
-   (lot-decision-v1 à v4, tools/acceptance-report.cjs, lotRules). Pour
-   chacune : le ou les tests (fichier + nom exact), statut COUVERT /
-   PARTIEL / MANQUANT, et une phrase qui dit ce que le test prouve
-   réellement.
-2. Écris les tests MANQUANTS. Si un test révèle un défaut, ne corrige pas le
-   code de production : marque le test « todo » avec la référence d'un
-   nouveau KI proposé dans ton rapport.
-3. tools/acceptance-matrix-check.cjs : échoue si une ligne de la matrice
-   désigne un fichier ou un nom de test qui n'existe pas. Ajoute un test qui
-   l'exécute, pour que le banc (tools/verify.cjs) le fasse à chaque fois.
-4. Attention au §14 C (chaque valeur de curseur traçable jusqu'à son bilan :
-   audit/curseurs-lot-2026-09-24.md, audit/ecartement-voisin-2026-09-24.md,
-   D-035, D-047, D-050) et au §14 I (provenance : aucune position humaine
-   dans l'entrée d'une décision) : ce sont les plus faciles à déclarer
-   couverts à tort.
-5. L'équipe principale modifie en parallèle le panneau (panel.html,
-   panel.css, panel.js) pour finir l'interface « La ligne » : ne touche pas
-   ces fichiers ; pour le §14 H, appuie-toi sur tests/panel-ligne.test.cjs et
-   signale ce qui manque.
+QUESTIONS À TRANCHER, chacune avec une commande de reproduction
+1. Une paire retirée par une garde (continuité, écartement voisin, paire)
+   peut-elle encore être appliquée par un chemin quelconque (repli, erreur,
+   reprise, cut revisité, « Observer seulement ») ?
+2. La garde d'écartement voisin est-elle une garde et jamais une cible ?
+   Les options gaugeChoice et gaugeTargetStudy peuvent-elles s'activer dans
+   le Pilote par un chemin quelconque (background.js, réglages, messages) ?
+3. Rejeu : pour chaque version de décision (lot-decision-v1 à v4), le rejeu
+   applique-t-il les règles du lot et non celles du code courant ? Reproduis
+   la parité annoncée sur le lot de la partie 35 (233/233, 4.7.12) et sur
+   ceux des parties 34 et 2 avec leurs propres règles.
+4. Reproduis au moins une partie du bilan : base 4.7.15 (690 décidés, 507
+   justes, 5 faux) contre 4.7.16 (711 décidés, 520 justes, 4 faux), au
+   minimum sur les lots Pilote relus et la session Natif longue de la
+   partie 20. Le jugement est-il propre (référence stricte, doublons, fuite
+   de la pose humaine, ordre des cuts) ?
+5. minTop du choix à 5 : examine les 20 choix gagnés (11 jugés justes,
+   9 non jugés, tous au banc Natif ; liste dans
+   audit/curseurs-lot-2026-09-24-filtres.json). Y a-t-il un signe qu'un
+   choix à peu de points de dessus soit fragile ? Quelle mesure terrain
+   faudrait-il ?
+6. Interface : les exigences du §14 H (politique effective affichée,
+   « Différés : N » fidèle, incertitude visible avec son cut), SKIP explicite
+   confirmé, aucun identifiant ni comportement retiré par la 4.7.13.
+7. Que faut-il établir avant la version candidate 4.8.0-rc ? Liste les
+   mesures et leurs seuils, en tenant compte de D-048 (relecture ciblée) et
+   de la question ouverte du seuil C4 de sortie (amendement n°10, point 5).
 
-LIVRABLE PROPRE AU CHANTIER : la matrice, les tests ajoutés (banc vert, 10 s
-par fichier), l'outil de contrôle, et la liste des exigences qui restent
-sans preuve.
+LIVRABLE PROPRE AU CHANTIER : constats classés BLOQUANT / IMPORTANT /
+MINEUR, chacun avec fichier:ligne, commande de reproduction et sortie
+observée ; puis la liste des conditions de la 4.8.0-rc.
 ```

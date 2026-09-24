@@ -1,5 +1,23 @@
 # Consignes des chantiers parallèles 4.8
 
+## Deuxième vague — 24 septembre 2026, base `155dbec` (4.7.16)
+
+| Chantier | Qui | Fichier | Ce qu'il rend |
+|---|---|---|---|
+| 5 · Tests §14 et §7 (reprise) | ingénieur, profil tests | [`chantier-5-ingenieur.md`](chantier-5-ingenieur.md) | matrice d'acceptation, tests manquants, contrôle au banc |
+| 6 · Relecture 4.7.13 à 4.7.16 | Astra, relecteur | [`chantier-6-relecteur.md`](chantier-6-relecteur.md) | constats classés, conditions de la 4.8.0-rc |
+| 7 · Faux sans appui | analyste | [`chantier-7-analyste.md`](chantier-7-analyste.md) | règle candidate : faux arrêtés / justes perdus, par session |
+
+Les trois partent en même temps ; aucun n'attend l'opérateur. L'équipe
+principale finit en parallèle l'interface « La ligne » (panneau) et prépare
+le rapport de sortie : le chantier 5 ne touche pas au panneau.
+
+Première vague (base `a74c225`, 4.7.8) : chantiers 2, 3 et 4 livrés et
+intégrés ; chantier 1 reporté en 4.9 (D-049) ; chantier 5 jamais lancé,
+repris ci-dessus.
+
+## Première vague — 23 septembre 2026
+
 Un fichier par personne. Chaque prompt est **autonome** : on le copie en entier
 comme premier message, sans rien ajouter. Tous partent du même commit
 (`a74c225`), pour que les résultats se comparent.

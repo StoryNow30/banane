@@ -1,14 +1,15 @@
-# Chantier 5 — prompt de l’ingénieur (tests d’acceptation), version 4.7.16
+# Chantier 7 — prompt de l’analyste (faux de premier passage sans appui)
 
-**Pour :** un ingénieur logiciel, profil tests. **Branche :** `chantier-48/acceptation-4716`. **Rapport :** `audit/chantiers/acceptation.md`.
-Aucune intervention de ta part. Remplace la version du 23/09 (base 4.7.8), jamais lancée.
+**Pour :** un analyste de données. **Branche :** `chantier-48/faux-sans-appui`. **Rapport :** `audit/chantiers/faux-sans-appui.md`.
+Aucune intervention de ta part. Même méthode que le chantier 2 (`audit/chantiers/faux-isoles.md`), qui a donné la garde de paire.
 
 Copie tout le bloc ci-dessous, tel quel, comme premier message.
 
 ```text
 TON RÔLE
-Tu es ingénieur logiciel, spécialiste des tests. Tu prouves ce qui est
-couvert et tu écris ce qui manque ; tu ne modifies pas le code de production.
+Tu es analyste de données. Tu cherches dans les signaux internes du moteur
+une règle qui arrête des faux sans perdre de cuts justes, et tu la mesures
+honnêtement. Tu ne modifies pas le code de production.
 
 CONTEXTE
 Banane est une extension Chrome/Edge (Manifest V3) qui aide un opérateur à
@@ -96,49 +97,48 @@ MÉTHODE
 
 LIVRABLE COMMUN
 - Ta branche poussée, commits clairs.
-- Le rapport audit/chantiers/acceptation.md : fait, vérifié (commandes), supposé, questions pour
+- Le rapport audit/chantiers/faux-sans-appui.md : fait, vérifié (commandes), supposé, questions pour
   la direction.
 - En fin de travail, un résumé de 15 lignes au plus, en français.
 
-CHANTIER 5 — TESTS D'ACCEPTATION §14 ET INVARIANTS §7
+CHANTIER 7 — FAUX DE PREMIER PASSAGE SANS APPUI
 
 POURQUOI
-Le cahier exige que chacun des dix invariants du §7 et chacun des tests A à
-I du §14 ait son essai. Plus de 700 tests existent dans tests/, mais personne
-ne sait lesquels couvrent quoi. C'est une condition de la version candidate
-4.8.0-rc.
+Avec les règles de la 4.7.16, les faux qui restent sur tout ce qui a été
+relu sont des PREMIERS PASSAGES du moteur que la décision sur le lot ne peut
+pas juger, faute de cuts voisins posés (début de lot, après une série de
+différés) ou parce que la voie elle-même les confirme :
+  partie 20 longue : 398 (159,9 mm), 402 (273 mm), 983 (15 mm, à 3,9 mm de
+  la voie de ses deux voisins) ; selon les réglages, 400 (250 mm) et
+  405 (147,6 mm) ;
+  partie 2 (4.7.14) : 137 (10,2 mm) ; 114 (207,6 mm) sous les règles de la
+  4.7.14.
+Les gardes actuelles (continuité, paire, écartement voisin) ne les voient
+pas. Le chantier 2 avait trouvé, dans les signaux du moteur, la garde de
+paire (S1 a repêché un rail ET le calage de convention est hors domaine).
 
 À FAIRE
-1. tests/ACCEPTANCE_MATRIX.md : une ligne par exigence (§7.1 à §7.10, §14 A
-   à I, et les règles conservées du §5.5 : politique effective affichée,
-   « Différés : N » fidèle, incertitude de navigation visible avec son cut,
-   aucun bouton présenté comme réussi sur un simple accusé). Ajoute les
-   règles de la décision sur le lot devenues contractuelles depuis : paire
-   retirée par une garde jamais appliquée par un repli (KI-053) ; garde
-   d'écartement voisin = garde, jamais cible (D-050) ; le Pilote ne passe
-   aucune option à la décision (la variante « cible » est de mesure
-   seulement) ; règles consignées par la décision et relues par le rejeu
-   (lot-decision-v1 à v4, tools/acceptance-report.cjs, lotRules). Pour
-   chacune : le ou les tests (fichier + nom exact), statut COUVERT /
-   PARTIEL / MANQUANT, et une phrase qui dit ce que le test prouve
-   réellement.
-2. Écris les tests MANQUANTS. Si un test révèle un défaut, ne corrige pas le
-   code de production : marque le test « todo » avec la référence d'un
-   nouveau KI proposé dans ton rapport.
-3. tools/acceptance-matrix-check.cjs : échoue si une ligne de la matrice
-   désigne un fichier ou un nom de test qui n'existe pas. Ajoute un test qui
-   l'exécute, pour que le banc (tools/verify.cjs) le fasse à chaque fois.
-4. Attention au §14 C (chaque valeur de curseur traçable jusqu'à son bilan :
-   audit/curseurs-lot-2026-09-24.md, audit/ecartement-voisin-2026-09-24.md,
-   D-035, D-047, D-050) et au §14 I (provenance : aucune position humaine
-   dans l'entrée d'une décision) : ce sont les plus faciles à déclarer
-   couverts à tort.
-5. L'équipe principale modifie en parallèle le panneau (panel.html,
-   panel.css, panel.js) pour finir l'interface « La ligne » : ne touche pas
-   ces fichiers ; pour le §14 H, appuie-toi sur tests/panel-ligne.test.cjs et
-   signale ce qui manque.
+1. Reproduis la base : node tools/choice-anchor-study.cjs SORTIE.json
+   --natif … --lot … (règles 4.7.16 par défaut ; lis l'en-tête de l'outil)
+   sur les 6 sessions Natif et les 5 lots Pilote relus. Tu dois retrouver
+   711 décidés et 4 faux (398, 402, 983, 137). Sinon, arrête-toi et explique.
+2. Pour chaque premier passage (faux et justes), relève les signaux du
+   moteur disponibles dans la science GCV1 (rails[side].next, motifs, perte
+   relative, rang, points de dessus et de flanc, calage de convention, S1,
+   écartement, écart à la pose de départ d'ESV, présence d'appuis). Rien qui
+   vienne de la pose humaine.
+3. Cherche une règle simple qui sépare les faux des justes. Mesure-la EN UN
+   SEUL PASSAGE, appuis recalculés (un cut différé n'est plus appui et change
+   les décisions suivantes) : faux arrêtés, justes perdus, cuts gagnés ou
+   perdus par ricochet, par session. Écris l'outil de mesure dans tools/
+   (option de tools/choice-anchor-study.cjs ou outil à part, avec son test) ;
+   ne touche pas src/.
+4. Méfie-toi du sur-ajustement : 4 à 6 faux ne suffisent pas à fonder une
+   règle à plusieurs seuils. Donne pour chaque règle candidate sa marge
+   (distance du premier juste perdu) et ce qui la rendrait fragile.
+5. Si aucune règle ne tient, dis-le : c'est un résultat.
 
-LIVRABLE PROPRE AU CHANTIER : la matrice, les tests ajoutés (banc vert, 10 s
-par fichier), l'outil de contrôle, et la liste des exigences qui restent
-sans preuve.
+LIVRABLE PROPRE AU CHANTIER : les règles candidates avec, par session, faux
+arrêtés / justes perdus / ricochets, la commande de reproduction de chaque
+chiffre, et ta recommandation (activer, observer, abandonner).
 ```
