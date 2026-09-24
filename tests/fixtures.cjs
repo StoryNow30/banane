@@ -19,7 +19,9 @@ class SimulatedESV{
    * la même part, sans delta imposé. Les essais règlent `deferJump` pour un
    * saut, `deferOutcome` pour un refus, une absence de progression ou une
    * cible divergente. Aucun de ces chemins ne touche apply/validate/skip. */
-  this.deferJump=1;this.deferOutcome='navigate';this.deferCalls=[];this.deferIdentity=null;}
+  this.deferJump=1;this.deferOutcome='navigate';this.deferCalls=[];this.deferIdentity=null;
+  this.previousButton='available';this.previousIdentity=null;this.previousCalls=[];
+  this.previousInvoked=new Set();this.cancelledOperations=new Set();this.deferredCuts=new Set();this.validatedCuts=new Set();}
  async state(){return {identity:K.clone(this.identity),rails:K.clone(this.rails),capturedAt:new Date().toISOString()};}
  async ping(){return {version:K.VERSION,pageId:this.identity.pageId};}
  async capture(expected){K.assertTarget(expected.identity,this.identity);this.calls.push('capture');
@@ -59,11 +61,34 @@ class SimulatedESV{
   return {...evidence,navigationObserved:true,nextIdentity:next,nextIdentityComplete:true,
    nextReady:this.deferOutcome==='next-not-ready'?false:true,navigationAfter:{identity:next,label:{pageId:next.pageId,part:next.part,cut:next.cut}}};
  }
+ async previousWithoutDecision(identity,target,scope={},operationId){
+  const evidence={commandInvoked:false,commandSent:false,navigationObserved:false,targetReached:false,reconcileRequired:false,serverConfirmed:false};
+  const refuse=(code,uncertain=false)=>({...evidence,reconcileRequired:uncertain,refusal:{code}});
+  if(this.cancelledOperations.has(operationId))return refuse('CANCELLED_BEFORE_COMMAND');
+  if(this.previousInvoked.has(operationId))return refuse('OPERATION_ALREADY_INVOKED',true);
+  if(K.differences(identity,this.identity).length)return refuse('TARGET_MISMATCH_BEFORE_COMMAND');
+  if(target.cut>=identity.cut||target.part!==identity.part||target.pageId!==identity.pageId)return refuse('INVALID_NAVIGATION_TARGET');
+  if(!scope.navigation?.previousButtonId||scope.navigation.inspection!=='verified-dom-button-no-decision'||
+     scope.navigation.previousButtonId==='O2N3DCutValidate3DRail')return refuse('UNVERIFIED_DOM_PATH');
+  if(this.previousButton!=='available')return refuse('NAVIGATION_COMMAND_UNAVAILABLE');
+  this.previousInvoked.add(operationId);this.previousCalls.push({identity:K.clone(identity),target:K.clone(target)});
+  this.calls.push('previousWithoutDecision');this.identity=K.clone(this.previousIdentity||target);
+  const mismatch=K.differences(target,this.identity).length>0;
+  return {...evidence,commandInvoked:true,commandSent:true,navigationObserved:true,targetReached:!mismatch,
+   reconcileRequired:mismatch,nextIdentity:K.clone(this.identity),refusal:mismatch?{code:'UNEXPECTED_NAVIGATION_IDENTITY'}:null};
+ }
+ repriseGuard(identity,reconcileRequired=false){
+  if(K.key(identity)!==K.key(this.identity))return {writable:false,reason:'TARGET_MISMATCH'};
+  if(!this.deferredCuts.has(K.cutId(identity)))return {writable:false,reason:'NOT_OWN_DEFERRED_CUT'};
+  if(reconcileRequired)return {writable:false,reason:'RECONCILE_REQUIRED'};
+  if(this.validatedCuts.has(K.cutId(identity)))return {writable:false,reason:'ALREADY_VALIDATED'};
+  return {writable:true,reason:'OWN_DEFERRED_UNVALIDATED'};
+ }
  async nativeSnapshot(){return this.state();}
  async nativeStart(){this.calls.push('nativeStart');return {active:true};}
  async nativePause(){this.calls.push('nativePause');return {active:false,paused:true,metrics:{}};}
  async nativeResume(){this.calls.push('nativeResume');return {active:true};}
  async nativeFinish(){this.calls.push('nativeFinish');return {active:false,metrics:{}};}
- async cancel(){this.calls.push('cancel');}
+ async cancel(options){this.calls.push('cancel');if(options?.operationId)this.cancelledOperations.add(options.operationId);}
 }
 module.exports={MemoryStore,SimulatedESV,base,K};
