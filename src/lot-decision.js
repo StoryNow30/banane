@@ -250,13 +250,15 @@
     * ne peut pas être commandée (hors de la vue, caméra inconnue, repère ou
     * écartement non relus), le cut est différé. Sans retrait par la garde, le
     * repli reste la proposition du moteur, comme en 4.7.9. */
+   /* Quelle garde a retiré la paire : continuité (écart à la voie) ou écartement voisin. */
+   const why=decision.gaugeJumpMm!=null?'la garde d\'écartement voisin ('+decision.gaugeJumpMm+' mm de l\'écartement des voisins)':'la garde de continuité ('+decision.guardMm+' mm de la voie)';
    const fallback=reason=>decision.guardDeferred
-     ?deferRails(runtimeRails,decision,'guard-'+reason,'décision sur le lot : paire du moteur retirée par la garde de continuité ('+decision.guardMm+' mm de la voie) ; position de la voie non commandable ('+reason+')')
+     ?deferRails(runtimeRails,decision,'guard-'+reason,'décision sur le lot : paire du moteur retirée par '+why+' ; position de la voie non commandable ('+reason+')')
      :keep(reason);
    if(decision.stage==='deferred'&&decision.pairGuarded)
      return deferRails(runtimeRails,decision,'pair-guard','décision sur le lot : garde de paire (rail repêché par S1 et calage de convention hors domaine)');
    if(decision.stage==='deferred'&&decision.guardDeferred)
-     return deferRails(runtimeRails,decision,'guard','décision sur le lot : retiré par la garde de continuité ('+decision.guardMm+' mm de la voie), sans reprise');
+     return deferRails(runtimeRails,decision,decision.gaugeJumpMm!=null?'gauge-guard':'guard','décision sur le lot : retiré par '+why+', sans reprise');
    const note={stage:decision.stage,anchorsUsed:decision.anchorsUsed||[],version:decision.version??DEFAULTS.version};
    if(decision.stage!=='window'&&decision.stage!=='choice')return fallback(decision.stage||'no-stage');
    if(!decision.positions||typeof expectedPoses!=='function')return fallback('positions-missing');

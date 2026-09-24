@@ -23,3 +23,9 @@ test('le Pilote ne passe aucune option à la décision : la variante « cible »
   const calls=src.match(/L\.decideCut\(\{[\s\S]*?\}\);/g)||[];
   assert.ok(calls.length>=1);for(const c of calls)assert.ok(!/options|gaugeTarget/.test(c),c);
 });
+test('paire retirée par la garde d\'écartement voisin : différée, motif nommé',()=>{
+  const rails={left:{status:'candidate'},right:{status:'candidate'}};
+  const r=L.commandRails({decision:{stage:'deferred',reason:'gauge-guard',guardDeferred:true,gaugeJumpMm:22.4,guardMm:null},runtimeRails:rails,before:rails});
+  assert.equal(r.action,'defer');assert.equal(r.reason,'gauge-guard');
+  for(const s of ['left','right']){assert.equal(r.rails[s].status,'unresolved');assert.match(r.rails[s].reasons[0],/écartement voisin \(22\.4 mm/);}
+});
