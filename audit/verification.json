@@ -1,12 +1,12 @@
 {
-  "startedAt": "2026-09-24T07:00:20.540Z",
-  "finishedAt": "2026-09-24T07:00:59.460Z",
+  "startedAt": "2026-09-24T07:28:28.579Z",
+  "finishedAt": "2026-09-24T07:29:04.767Z",
   "node": "v22.22.2",
   "platform": "linux",
   "counts": {
-    "tests": 662,
+    "tests": 663,
     "suites": 0,
-    "pass": 660,
+    "pass": 661,
     "fail": 0,
     "cancelled": 0,
     "skipped": 2,
@@ -95,6 +95,7 @@
     "tests/segmentation.test.cjs",
     "tests/settings.test.cjs",
     "tests/terrain-reel.test.cjs",
+    "tests/validated-anchors-study.test.cjs",
     "tests/v242/bounding-box.test.cjs",
     "tests/v242/capture.test.cjs",
     "tests/v242/manual.test.cjs"

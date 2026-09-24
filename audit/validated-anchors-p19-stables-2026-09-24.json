@@ -1,0 +1,116 @@
+{
+ "format": "banane-validated-anchors-study-v1",
+ "gap": 3,
+ "stables": true,
+ "validatedNeighbours": 122,
+ "lotAnchorsOnly": {
+  "distinctCuts": 28,
+  "pilotApplied": 14,
+  "lotApplied": 16,
+  "coveragePct": 57.1,
+  "judged": 2,
+  "wrong": 0,
+  "newWrong": [],
+  "gained": [
+   {
+    "cut": 9044,
+    "stage": "choice",
+    "worstMm": 2.81
+   },
+   {
+    "cut": 9052,
+    "stage": "window",
+    "worstMm": null
+   }
+  ]
+ },
+ "withValidatedNeighbours": {
+  "distinctCuts": 28,
+  "pilotApplied": 14,
+  "lotApplied": 22,
+  "coveragePct": 78.6,
+  "judged": 7,
+  "wrong": 0,
+  "newWrong": [],
+  "gained": [
+   {
+    "cut": 9044,
+    "stage": "choice",
+    "worstMm": 2.89
+   },
+   {
+    "cut": 9050,
+    "stage": "choice",
+    "worstMm": null
+   },
+   {
+    "cut": 9052,
+    "stage": "window",
+    "worstMm": null
+   },
+   {
+    "cut": 9218,
+    "stage": "choice",
+    "worstMm": 3.43
+   },
+   {
+    "cut": 9220,
+    "stage": "window",
+    "worstMm": 3.12
+   },
+   {
+    "cut": 9242,
+    "stage": "choice",
+    "worstMm": 1.07
+   },
+   {
+    "cut": 9315,
+    "stage": "window",
+    "worstMm": 0.89
+   },
+   {
+    "cut": 9316,
+    "stage": "choice",
+    "worstMm": 4.34
+   }
+  ]
+ },
+ "remaining": [
+  {
+   "cut": 9048,
+   "pilot": "deferred",
+   "stage": "deferred",
+   "reason": "right:no-qualified-minimum-near-prediction"
+  },
+  {
+   "cut": 9049,
+   "pilot": "gauge-rejected",
+   "stage": "deferred",
+   "reason": "gauge-HIGH_INVALID"
+  },
+  {
+   "cut": 9317,
+   "pilot": "gauge-rejected",
+   "stage": "deferred",
+   "reason": "left:no-qualified-minimum-near-prediction"
+  },
+  {
+   "cut": 9405,
+   "pilot": "deferred",
+   "stage": "deferred",
+   "reason": "left:no-qualified-minimum-near-prediction right:no-qualified-minimum-near-prediction"
+  },
+  {
+   "cut": 9406,
+   "pilot": "no-input",
+   "stage": "deferred",
+   "reason": "left:frame right:frame"
+  },
+  {
+   "cut": 9407,
+   "pilot": "other",
+   "stage": null,
+   "reason": "aucune-observation"
+  }
+ ]
+}
