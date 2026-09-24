@@ -5,7 +5,11 @@
  * (cahier 4.8 §6 et §14 G, D-038). Le même calcul à chaque collecte F1 à F4.
  *
  *   node tools/acceptance-report.cjs --lot DOSSIER[=libellé] [--relecture DOSSIER|FICHIER] [--lot ...]
- *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot] [--json SORTIE] [--md SORTIE]
+ *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot | --decision-par-rejeu] [--json SORTIE] [--md SORTIE]
+ *
+ * `--decision-par-rejeu` : la décision sur le lot est lue dans le rejeu hors ligne
+ * même quand l'export la consigne (lots 4.7.8 : choix par la voie privé de
+ * grille, KI-048) ; la parité observation/rejeu reste rapportée.
  *
  * Un dossier de lot contient les exports JSON décompressés, reconnus par leur
  * format : diagnostic GCV1, corpus GCV1 + LiDAR, journal du Pilote, et, s'ils
@@ -259,13 +263,15 @@ function analyseLot(lot,options={}){
   let replay=null;
   if(options.replay&&lot.corpus){const all=rows.flatMap(r=>r._cut.observations);replay=new Map();
     for(const x of replayLot(all,lot.corpus,options.replayDeps))replay.set(x.observationEventId,x.decision);}
-  const lotSource=recorded?'observation':replay?'rejeu-hors-ligne':'absent';
+  /* `preferReplay` : la 4.7.8 consigne un choix par la voie privé de sa grille
+   * (KI-048) ; ses lots se mesurent sur le rejeu, la parité restant rapportée. */
+  const lotSource=recorded&&!(options.preferReplay&&replay)?'observation':replay?'rejeu-hors-ligne':'absent';
   let parity=null;
   if(recorded&&replay){let same=0,compared=0;for(const o of rows.flatMap(r=>r._cut.observations))if(o.lotObservation){compared++;if(sameDecision(o.lotObservation,replay.get(o.observationEventId)))same++;}
     parity={compared,identical:same};}
   // Jugement, cut par cut.
   for(const row of rows){
-    const o=row._cut.observations.at(-1),lo=!o?null:recorded?o.lotObservation||null:replay?replay.get(o.observationEventId)||null:null;
+    const o=row._cut.observations.at(-1),lo=!o?null:lotSource==='observation'?o.lotObservation||null:replay?replay.get(o.observationEventId)||null:null;
     if(lotSource!=='absent')row.lot=lo?{stage:lo.stage,wouldApply:APPLYING_STAGES.has(lo.stage),reason:lo.reason??null,guardMm:lo.guardMm??null,guardDeferred:lo.guardDeferred||undefined}:{stage:null,wouldApply:false,reason:'aucune-observation'};
     if(row.excluded)continue;
     const judgement=judgeCut(row,relecture.get(keyOf(row.part,row.cut)),T,frame);
@@ -321,10 +327,10 @@ function summarize(rows,p2){
     excluded:rows.filter(r=>r.excluded).map(r=>({cut:r.cut,outcome:r.outcome,motif:r.excluded})),
   };
 }
-function report(lots,{config=null,p2=null,replay=false,replayDeps=null}={}){
+function report(lots,{config=null,p2=null,replay=false,replayDeps=null,preferReplay=false}={}){
   const exclusions=[...EXCLUDED,...(config?.exclusions||[]).filter(e=>!EXCLUDED.some(x=>x.part===e.part&&x.cut===e.cut))];
   const floor=p2?{...p2,label:p2.operators>1?`P2 (${p2.operators} opérateurs)`:'P2 (un opérateur)'}:null;
-  const analysed=lots.map(l=>analyseLot(l,{exclusions,replay,replayDeps}));
+  const analysed=lots.map(l=>analyseLot(l,{exclusions,replay:replay||preferReplay,replayDeps,preferReplay}));
   const allRows=analysed.flatMap(l=>l.rows.map(r=>({...r,lotLabel:l.label})));
   const tuning=new Set(config?.tuningParts||[]);
   const incomplete=analysed.filter(l=>l.complete===false).map(l=>({label:l.label,state:l.batch?.state??null}));
@@ -387,15 +393,15 @@ function parse(argv){
     if(a==='--lot'){const v=argv[++i],at=v.lastIndexOf('=');opt.lots.push(at>0?{dir:v.slice(0,at),label:v.slice(at+1)}:{dir:v,label:path.basename(path.resolve(v))});}
     else if(a==='--relecture'){if(!opt.lots.length)throw Error('--relecture suit un --lot.');opt.lots.at(-1).relecture=argv[++i];}
     else if(a==='--config')opt.config=argv[++i];else if(a==='--p2')opt.p2=argv[++i];
-    else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
+    else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--decision-par-rejeu')opt.preferReplay=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
     else throw Error('Argument inconnu : '+a);}
-  if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [...] [--config F] [--p2 F] [--rejeu-lot] [--json F] [--md F]');
+  if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [...] [--config F] [--p2 F] [--rejeu-lot | --decision-par-rejeu] [--json F] [--md F]');
   return opt;
 }
 function run(argv=process.argv.slice(2)){
   const opt=parse(argv),read=f=>f?JSON.parse(fs.readFileSync(f,'utf8')):null;
   const lots=opt.lots.map(l=>loadLot(l.dir,l.label,l.relecture||null));
-  const result=report(lots,{config:read(opt.config),p2:read(opt.p2),replay:opt.replay});
+  const result=report(lots,{config:read(opt.config),p2:read(opt.p2),replay:opt.replay,preferReplay:!!opt.preferReplay});
   if(opt.json)fs.writeFileSync(opt.json,JSON.stringify(result,null,1)+'\n');
   if(opt.md)fs.writeFileSync(opt.md,toMarkdown(result)+'\n');
   for(const p of [...result.parts.map(p=>({...p,title:'partie '+p.part})),{...result.total,title:'total'}])

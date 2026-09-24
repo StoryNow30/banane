@@ -3,10 +3,16 @@
 // La composition V4.6 (géométrie gelée + cerveau) reste la décision runtime.
 // GCV1 est chargé ensuite comme copie scientifique figée. La façade conserve
 // V4.6 par défaut, et ne sélectionne GCV1 que pour un appel explicitement armé.
+/* ORDRE. `src/lot-decision.js` lit la grille d'A_STAR par `geometry-candidate-v1.js`,
+ * qu'il lie au chargement via `BananeGeometry3`. Or `src/gcv1-shadow.js`
+ * remplace ensuite `BananeGeometry3` par sa façade V4.6, qui ignore la demande
+ * de grille : chargé après lui, le choix par la voie ne voyait aucun minimum
+ * (défaut de la 4.7.8, KI-048). Il est donc chargé juste après la géométrie
+ * GCV1 et avant la composition. */
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
- 'src/geometry-candidate-v1.js','src/placement-convention.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/continuity-observer.js','src/lot-decision.js','src/native-session.js');
+ 'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.7.8';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];

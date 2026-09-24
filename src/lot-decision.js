@@ -35,11 +35,13 @@
      if(lowest)minima.push(cell);}
    return minima.sort((a,b)=>a.loss-b.loss);
  }
- /* Grille grossière d'A_STAR, mêmes centres de fenêtre que le moteur. */
+ /* Grille grossière d'A_STAR, mêmes centres de fenêtre que le moteur. `null`
+  * si le module lié ne rend pas sa grille (défaut de chargement, KI-048) : la
+  * raison est alors consignée comme telle, jamais confondue avec « aucun minimum ». */
  function gridOf(capture,side,uSeed){
    let grid=null;
    Candidate.propose(capture,side,{lab:{uSeeds:[uSeed],replaceOrigin:false,recenterWindow:true,partialFaceKeep:true,onCoarse(cells){grid=cells;}}});
-   return grid||[];
+   return grid;
  }
  /* Capture réduite à ce que le moteur lit : rails (contours compris), points, visibilité. */
  const minimalCapture=(capture,rails)=>({format:'banane-lot-decision-input-v1',identity:capture.identity??null,rails,
@@ -64,14 +66,16 @@
  /* Minima d'un rail, qualifiés par les points sous le gabarit posé à chacun. */
  function candidatesOf(capture,side,science,cfg=DEFAULTS){
    const rail=science?.rails?.[side];if(!rail?.ok)return [];
-   const sign=rail.frame.sign;
-   return localMinima(gridOf(capture,side,rail.frame.uSeed),Candidate.DEFAULTS.alternativeSeparation).slice(0,24).map((m,rank)=>{
+   const sign=rail.frame.sign,grid=gridOf(capture,side,rail.frame.uSeed);
+   if(!grid)return null;
+   return localMinima(grid,Candidate.DEFAULTS.alternativeSeparation).slice(0,24).map((m,rank)=>{
      const delta=[0,sign*m.u,m.z],band=Convention.bandOffsets(capture,side,delta);
      return {rank,uMm:r1(m.u*1000),zMm:r1(m.z*1000),loss:m.loss,top:band.ok?band.top.length:0,face:band.ok?band.face.length:0,delta};
    });
  }
  function chooseRail(capture,side,science,cfg=DEFAULTS,candidates=candidatesOf(capture,side,science,cfg)){
    if(!science?.rails?.[side]?.ok)return {ok:false,reason:'frame'};
+   if(candidates===null)return {ok:false,reason:'grid-unavailable'};
    const near=candidates.filter(c=>c.top>=cfg.minTop&&c.face>=cfg.minFace&&Math.abs(c.zMm)<=cfg.maxDzMm&&Math.abs(c.uMm)<=cfg.chooseMm);
    if(!near.length)return {ok:false,reason:'no-qualified-minimum-near-prediction'};
    if(near.length>1)return {ok:false,reason:'several-minima-near-prediction'};
@@ -79,7 +83,7 @@
    return {ok:true,delta:cal.applied?cal.delta:pick.delta,fromPredictionMm:Math.abs(pick.uMm),rank:pick.rank,top:pick.top,face:pick.face,
      lossRatio:candidates[0]?.loss?r1(pick.loss/candidates[0].loss):null};
  }
- const journal=candidates=>candidates.slice(0,DEFAULTS.maxCandidates).map(({delta,...c})=>({...c,loss:Number.isFinite(c.loss)?Math.round(c.loss*1e6)/1e6:null}));
+ const journal=candidates=>(candidates||[]).slice(0,DEFAULTS.maxCandidates).map(({delta,...c})=>({...c,loss:Number.isFinite(c.loss)?Math.round(c.loss*1e6)/1e6:null}));
  /* Un cut du lot. `science` : résultat de GCV1 sur la capture telle quelle
   * (celui du Pilote). `anchors` : cuts déjà passés du lot. Rend l'étape
   * atteinte et, si elle vient de la voie, les positions qui auraient été

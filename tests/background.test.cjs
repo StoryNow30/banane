@@ -283,6 +283,17 @@ test('le cerveau se charge entre la géométrie gelée et le moteur',()=>{
  assert.ok(rang('src/geometry-brain.js')<rang('src/engine.js'),
   'la composition doit être en place AVANT que le moteur lie sa géométrie');
 });
+/* KI-048 : la décision sur le lot lie la géométrie GCV1 au chargement ; placée
+ * après `gcv1-shadow.js`, elle recevait la façade V4.6, sans grille. */
+test('la décision sur le lot se charge après la géométrie GCV1 et avant la composition',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../background.js'),'utf8');
+ const liste=src.match(/importScripts\(([^)]*)\)/s)[1],rang=f=>liste.indexOf("'"+f+"'");
+ for(const f of ['src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js'])
+  assert.ok(rang(f)>=0,'fichier absent de importScripts : '+f);
+ assert.ok(rang('src/geometry-candidate-v1.js')<rang('src/lot-decision.js')&&rang('src/lot-decision.js')<rang('src/gcv1-shadow.js'),
+  'src/lot-decision.js doit être chargé entre geometry-candidate-v1.js et gcv1-shadow.js');
+ assert.ok(rang('src/continuity-observer.js')<rang('src/lot-decision.js'),'la continuité doit précéder la décision sur le lot');
+});
 /* Même raison, autre dépendance : `src/engine.js` et `src/gcv1-shadow.js`
  * lisent tous deux le contrat d'écartement depuis globalThis au chargement, et
  * refusent de se construire sans lui (« contrat d'écartement absent »). Une
