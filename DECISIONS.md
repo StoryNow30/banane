@@ -1,5 +1,17 @@
 # Décisions techniques
 
+## D-041 - 4.7.10 : le Pilote applique la décision sur le lot, après la relecture du lot 2
+
+**24 septembre 2026, direction.** Accord pour une grosse mise à jour du Pilote
+reprenant les avancées retenues : en 4.7.10, la décision sur le lot
+(`src/lot-decision.js`, D-039) **commande** au lieu d'être seulement consignée.
+Condition : la relecture du lot 2 de la partie 31 (4.7.9) juge **0 faux** sur
+les cuts que la décision sur le lot applique et que le Pilote laissait. Aucun
+développement avant cette relecture.
+
+La pause automatique quand ESV ne charge pas le nuage (KI-049) n'est pas
+retenue pour l'instant : le cas ne s'est pas reproduit depuis.
+
 ## D-040 - Relecture : une visite sans correction ni validation vaut acceptation
 
 **24 septembre 2026, direction.** « Pour moi et tous les opérateurs, si on
