@@ -51,3 +51,11 @@ test('rien d\'autre que des entiers n\'est écrit dans la voie',async()=>{
   const $=await panneau(lot({sequence:[...seq([100,101]),{cutId:'x',identity:{cut:'<img src=x onerror=alert(1)>'}}],activeIdentity:{cut:'<b>'}}));
   assert.doesNotMatch($('voie').innerHTML,/<img|onerror|<b>/);assert.equal($('lot-cut').textContent,'—');
 });
+
+test('profil en long : l\'écart de chaque cut à la voie, la bande de garde, un point rouge au-delà de 30 mm',async()=>{
+  const $=await panneau(lot({lotCommands:{100:{cut:100,stage:'first-pass',ecartMm:3.1},101:{cut:101,action:'lot',stage:'window',ecartMm:4.2},102:{cut:102,stage:'deferred',ecartMm:37}}}));
+  const svg=$('voie').innerHTML;
+  assert.match(svg,/class="bande"/);assert.match(svg,/garde 30 mm/);
+  assert.equal((svg.match(/<circle /g)||[]).length,3);assert.match(svg,/class="p hors"/);assert.match(svg,/class="p voie-l"/);
+  const sans=await panneau(lot({lotCommands:{}}));assert.doesNotMatch(sans('voie').innerHTML,/bande/,'sans écart consigné, pas de profil');
+});

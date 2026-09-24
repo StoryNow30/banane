@@ -90,13 +90,23 @@
    const cuts=[...new Set((b.sequence||[]).map(num).filter(Number.isFinite))];
    const classe=c=>fait.has(c)?(parVoie.has(c)?'voie-l':'moteur'):differe.has(c)?'differe':saute.has(c)?'skip':main.has(c)?'main'
      :c===actif?(incertain?'incertain':'actuel'):'avenir';
-   return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif};
+   const ecart=c=>{const v=Number(b.lotCommands?.[c]?.ecartMm);return Number.isFinite(v)?v:null;};
+   return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif,ecart};
  }
  function dessinerVoie(v){
    const W=512,x0=10,visibles=v.cuts.slice(-44),avenir=v.ouvert?4:0,n=visibles.length+avenir,pas=Math.min(22,(W-2*x0)/Math.max(n-1,1));
    const X=i=>Math.round((x0+i*pas)*10)/10;
-   let svg=`<svg viewBox="0 0 ${W} 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`
-     +`<line class="rail" x1="0" y1="26" x2="${W}" y2="26"/><line class="rail" x1="0" y1="42" x2="${W}" y2="42"/>`;
+   /* Profil en long : l'écart de chaque cut à la voie de ses voisins, au-dessus
+    * de la voie, avec la bande de la garde de continuité (0–30 mm). Échelle
+    * 0–45 mm ; au-delà, le point reste au plafond, plein rouge. */
+   const P0=40,PH=34,Y=mm=>Math.round((P0-Math.min(mm,45)/45*PH)*10)/10,avecProfil=visibles.some(c=>v.ecart(c)!==null);
+   const dy=avecProfil?46:0;
+   let svg=`<svg viewBox="0 0 ${W} ${68+dy}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
+   if(avecProfil){svg+=`<rect class="bande" x="0" y="${Y(30)}" width="${W}" height="${Math.round((P0-Y(30))*10)/10}"/>`
+     +`<line class="zero" x1="0" y1="${P0}" x2="${W}" y2="${P0}"/><text x="${W}" y="${Y(30)-3}" text-anchor="end">garde 30 mm</text>`;
+     visibles.forEach((c,i)=>{const e=v.ecart(c);if(e===null)return;const k=v.classe(c);
+       svg+=`<circle class="p ${e>30?'hors':k}" cx="${X(i)}" cy="${Y(e)}" r="2.4"/>`;});}
+   svg+=`<g transform="translate(0 ${dy})"><line class="rail" x1="0" y1="26" x2="${W}" y2="26"/><line class="rail" x1="0" y1="42" x2="${W}" y2="42"/>`;
    visibles.forEach((c,i)=>{const x=X(i),k=v.classe(c),haut=k==='actuel'||k==='incertain';
      svg+=k==='voie-l'?`<rect class="t voie-l" x="${x-2.2}" y="20" width="4.4" height="28" rx="1.6" stroke-width="1.5"/>`
        :`<line class="t ${k}" x1="${x}" y1="${haut?12:20}" x2="${x}" y2="${haut?56:48}"/>`;
@@ -105,7 +115,7 @@
    if(visibles.length&&!['actuel','incertain'].includes(v.classe(visibles[0])))svg+=`<text x="${X(0)}" y="10">${entier(visibles[0])}</text>`;
    const dernier=visibles.at(-1);
    if(visibles.length>1&&!['actuel','incertain'].includes(v.classe(dernier)))svg+=`<text x="${X(visibles.length-1)}" y="10" text-anchor="end">${entier(dernier)}</text>`;
-   return svg+'</svg>';
+   return svg+'</g></svg>';
  }
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
    $('context').textContent=id?`ESV · part ${id.part} · cut ${id.cut}`:'';

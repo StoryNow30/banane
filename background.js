@@ -117,7 +117,7 @@ async function commandLot(proposal,lotObservation){
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
  const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
- if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={cut,action:command.action,stage:lotObservation.stage};}
+ if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={...(b.lotCommands[cut]||{}),cut,action:command.action,stage:lotObservation.stage};}
  if(command.action==='engine')return proposal;
  engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
@@ -135,6 +135,13 @@ async function observeLot(shadow){
  const t0=Date.now();
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
    visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
+ /* « La ligne » : l'écart de chaque cut à la voie de ses voisins (garde du
+  * premier passage, ou distance à la prédiction pour une reprise ou un choix),
+  * pour le profil du panneau. Borné aux cuts du lot. */
+ const chosen=decision.chosen?Object.values(decision.chosen).map(c=>c.fromPredictionMm).filter(Number.isFinite):[];
+ const ecartMm=decision.guardMm??decision.fromPredictionMm??(chosen.length?Math.max(...chosen):null);
+ if(Number.isInteger(identity.cut)){batch.lotCommands=batch.lotCommands||{};
+   batch.lotCommands[identity.cut]={...(batch.lotCommands[identity.cut]||{}),cut:identity.cut,stage:decision.stage,ecartMm:Number.isFinite(ecartMm)?ecartMm:null};}
  if(decision.anchor)L.rememberAnchor(state.anchors,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage},S?.lot?.maxAnchors??40);
  return {...decision,applied:false,displayed:false,engineMs:Date.now()-t0};
 }

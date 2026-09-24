@@ -79,6 +79,10 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .voie svg{display:block;width:100%;height:auto;overflow:visible}
 .voie text{font-family:Inter,"Segoe UI",system-ui,sans-serif;font-feature-settings:"tnum" 1;font-size:10.5px;fill:var(--text-3)}
 .voie .rail{stroke:var(--hair-2);stroke-width:1.2}
+.voie .bande{fill:var(--accent-t)}
+.voie .zero{stroke:var(--hair-2);stroke-width:1;stroke-dasharray:2 3}
+.voie .p{fill:var(--accent)}.voie .p.differe{fill:var(--amber)}.voie .p.voie-l{fill:var(--bg);stroke:var(--accent);stroke-width:1.4}
+.voie .p.actuel{fill:var(--text)}.voie .p.hors,.voie .p.incertain{fill:var(--red)}.voie .p.avenir,.voie .p.skip,.voie .p.main{fill:var(--text-3)}
 .voie .t{stroke-width:3;stroke-linecap:round}
 .voie .t.moteur{stroke:var(--accent)}
 .voie .t.voie-l{stroke:var(--accent);fill:var(--bg)}
