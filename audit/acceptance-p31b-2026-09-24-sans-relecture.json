@@ -26,7 +26,7 @@
  "p2": null,
  "lots": [
   {
-   "label": "pilote-p31b-4.7.9",
+   "label": "pilote-p31-fin-4.7.9",
    "complete": false,
    "batch": {
     "id": "a112f939-dfdd-4d49-a260-469f1409d96d",
@@ -58,8 +58,7 @@
      "format": "banane-test-dataset-v4",
      "version": "4.7.9",
      "sha256": "b2290d2eb464b3ef0df81cd30fc68c990bf9b01559aa7eea3dbd1c3a71f5ff24",
-     "bytes": 103098712,
-     "role": "journal (bilan du lot, journal absent)"
+     "bytes": 103098712
     },
     {
      "file": "banane-gcv1-corpus-2026-09-24T08-25-54-seg01.json",
@@ -76,6 +75,14 @@
      "version": "4.7.9",
      "sha256": "f689561ab2a837ae394263c670f52fdd0c14de21a41670a5a6d5f7f991ad8293",
      "bytes": 1234021
+    },
+    {
+     "file": "banane-journal-v4-1790239609979.json",
+     "kind": "journal",
+     "format": "banane-test-journal-v4",
+     "version": "4.7.9",
+     "sha256": "a30999d089228efa6a27a5ed01a3aa5c1201f3c69d37bdc4513106cf75b26388",
+     "bytes": 4506228
     }
    ],
    "rows": [
@@ -1897,7 +1904,7 @@
    "part": 31,
    "holdout": "non déclaré (aucune configuration)",
    "lots": [
-    "pilote-p31b-4.7.9"
+    "pilote-p31-fin-4.7.9"
    ],
    "c1": {
     "distinctCuts": 78,
@@ -1921,6 +1928,10 @@
     "judgedApplied": 0,
     "appliedNotJudged": 47,
     "wrong": 0,
+    "judgedByBasis": {
+     "validé": 0,
+     "accepté-sans-retouche": 0
+    },
     "judgedSharePct": 0,
     "minJudgedSharePct": 80,
     "evaluable": false,
@@ -1928,6 +1939,7 @@
    },
    "c2": {
     "rails": 0,
+    "basis": "cuts validés seulement",
     "lateralMm": {
      "count": 0,
      "median": null,
@@ -2262,7 +2274,7 @@
    "excluded": [],
    "incompleteLots": [
     {
-     "label": "pilote-p31b-4.7.9",
+     "label": "pilote-p31-fin-4.7.9",
      "state": "STOPPED"
     }
    ]
@@ -2291,6 +2303,10 @@
    "judgedApplied": 0,
    "appliedNotJudged": 47,
    "wrong": 0,
+   "judgedByBasis": {
+    "validé": 0,
+    "accepté-sans-retouche": 0
+   },
    "judgedSharePct": 0,
    "minJudgedSharePct": 80,
    "evaluable": false,
@@ -2298,6 +2314,7 @@
   },
   "c2": {
    "rails": 0,
+   "basis": "cuts validés seulement",
    "lateralMm": {
     "count": 0,
     "median": null,
@@ -2632,7 +2649,7 @@
   "excluded": [],
   "incompleteLots": [
    {
-    "label": "pilote-p31b-4.7.9",
+    "label": "pilote-p31-fin-4.7.9",
     "state": "STOPPED"
    }
   ]
