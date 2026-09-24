@@ -65,15 +65,19 @@ moteur reste 15, cahier §8). Base : 656 décidés, 489 justes, 4 faux.
 
 | Curseur (base) | Essai | Décidés | Justes | Faux | Lecture |
 |---|---|---|---|---|---|
-| `minTop` points de dessus (15) | **10** | 663 | **+4** | 0 | 7 choix gagnés : 4 justes (1139, 151, 496, 528 ; 1,2 à 3,9 mm), 3 non jugés, aucun perdu |
+| `minTop` points de dessus (15) | **5** | 676 | **+11** | 0 | 20 choix gagnés : 11 justes (0,6 à 8,1 mm), 9 non jugés, aucun perdu |
+| | 10 | 663 | +4 | 0 | 7 choix gagnés : 4 justes (1139, 151, 496, 528 ; 1,2 à 3,9 mm), 3 non jugés, aucun perdu |
 | | 20 | 653 | −2 | 0 | 2 choix justes perdus |
 | `minFace` points de flanc (3) | 2 | 661 | +2 | 0 | 5 choix gagnés : 2 justes, dont 477 à **9 mm** (au bord du seuil de 10), 3 non jugés |
+| `minTop` 10 et `minFace` 2 | | 669 | +6 | 0 | la somme des deux, sans interaction |
 | | 5 | 646 | −6 | 0 | 6 choix justes perdus, dont 3 sur la partie 34 |
 | `maxDzMm` écart vertical (20) | 10 | 642 | −10 | 0 | 10 choix justes perdus |
 | | 30 | 655 | 0 | 0 | 1 choix non jugé perdu |
 
-Tous les gains de `minTop` 10 sont au banc Natif ; aucun lot Pilote relu ne
-change. Complément en cours : `minTop` 5, et `minTop` 10 avec `minFace` 2.
+Tous les gains de `minTop` sont au banc Natif ; aucun lot Pilote relu ne
+change. Complément en cours : `minTop` 3 et 1 (où la baisse casse-t-elle), et
+la combinaison candidate de la 4.7.16 (garde d'écartement voisin à 20 mm et
+`minTop` 5).
 
 
 ## Décisions (D-047)
@@ -86,7 +90,7 @@ change. Complément en cours : `minTop` 5, et `minTop` 10 avec `minFace` 2.
 | `gap` | 3 | **Conservé.** 2 coûte 14 justes ; 4 ajoute un faux sur un lot relu (1835). |
 | `anchors` | 2 | **Conservé.** 3 : −1 juste, placements moins stables. |
 | Garde de paire | active | **Conservée** (D-044) : bilan `audit/garde-paire-verification-2026-09-24.md`. |
-| `minTop` du choix | 15 | **À trancher par la direction** : 10 gagne 4 justes, 0 faux, 0 perdu (Natif seulement) ; complément en cours. |
+| `minTop` du choix | 15 | **À trancher par la direction** : 5 gagne 11 justes, 10 en gagne 4, 0 faux, 0 perdu (Natif seulement) ; complément en cours. |
 | `minFace` du choix | 3 | **Conservé.** 2 gagne 2 justes dont un à 9 mm ; 5 coûte 6 justes. |
 | `maxDzMm` du choix | 20 | **Conservé.** 10 coûte 10 justes ; 30 n'apporte rien. |
 
