@@ -1,5 +1,14 @@
 # Décisions techniques
 
+## D-049 - 4.9 : décentrer la caméra d'ESV pour atteindre le champignon
+
+**24 septembre 2026, direction.** « Quand l'écartement est trop important et
+que la correction à effectuer est hors de la caméra ESV, il faudrait un outil
+permettant de décentrer la caméra afin que le super cerveau aille chercher la
+portion où placer le champignon sur le nuage de points. » Chantier inscrit au
+cahier 4.9 (`BANANE_4.9_CAHIER.md`, §1), ouvert à cette date en brouillon avec
+les autres chantiers déjà renvoyés à la 4.9. Rien ne change en 4.8 (D-043).
+
 ## D-048 - Relecture ciblée des lots
 
 **24 septembre 2026, direction.** Le prochain lot Pilote (4.7.14) est relu sur
