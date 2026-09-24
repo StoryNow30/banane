@@ -62,6 +62,51 @@
  const manualActive=s=>openStatus(s.manual?.status),nativeActive=s=>openStatus(s.native?.status),active=s=>manualActive(s)||nativeActive(s);
  const recording=s=>['STARTING','RUNNING'].includes(s.manual?.status)||['STARTING','RUNNING'].includes(s.native?.status);
  function same(a,b){return a&&b&&['pageId','part','cut','shape','frameId'].every(k=>a[k]===b[k]);}
+ /* « LA LIGNE » (chantier B, D-045). Un bouton plein par écran : le premier
+  * bouton VISIBLE de la liste, dans l'ordre où l'état les rend utiles ; les
+  * autres sont des liens. Noir (ink) pour s'arrêter ou constater, rouge pour
+  * ce qui ne se défait pas. Aucun bouton n'est caché ou montré ici : la
+  * visibilité reste décidée par `button()`, comme avant. */
+ function hierarchie(ordre,{ink=[],danger=[]}={}){
+   let premier=true;
+   for(const id of ordre){const el=$(id);if(!el)continue;
+     if(!el.hidden&&premier){el.className='primary'+(ink.includes(id)?' ink':'');premier=false;}
+     else el.className=danger.includes(id)?'link danger':'link';}
+ }
+ const OUVERT=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER'];
+ const INCERTAIN=['PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','ERROR'];
+ const entier=v=>Number.isFinite(Number(v))?String(Math.trunc(Number(v))):'—';
+ /* La voie : une traverse par cut du lot, dans l'ordre où le Pilote les a
+  * ouverts (ESV saute les cuts déjà validés). La forme porte l'état : pleine,
+  * posé par le moteur ; creuse, posé par la voie (décision sur le lot) ;
+  * pointillée, différé ; fine et pâle, à venir ; haute et noire avec son
+  * numéro, le cut affiché — rouge et « ? » si le résultat est incertain.
+  * Les nombres viennent de l'état du lot et sont réécrits en entiers. */
+ function voieDuLot(s){
+   const b=s.batch,num=x=>Number(x?.cut??x?.identity?.cut),ens=l=>new Set((l||[]).map(num).filter(Number.isFinite));
+   const fait=ens(b.processed),differe=ens(b.deferred),saute=ens(b.skipped),main=ens(b.manuallyCompleted);
+   const parVoie=new Set(Object.values(b.lotCommands||{}).filter(c=>c?.action==='lot').map(c=>Number(c.cut)).filter(c=>fait.has(c)));
+   const actif=Number(b.activeIdentity?.cut),ouvert=OUVERT.includes(b.state),incertain=INCERTAIN.includes(b.state)||!!s.reconcileRequired;
+   const cuts=[...new Set((b.sequence||[]).map(num).filter(Number.isFinite))];
+   const classe=c=>fait.has(c)?(parVoie.has(c)?'voie-l':'moteur'):differe.has(c)?'differe':saute.has(c)?'skip':main.has(c)?'main'
+     :c===actif?(incertain?'incertain':'actuel'):'avenir';
+   return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif};
+ }
+ function dessinerVoie(v){
+   const W=512,x0=10,visibles=v.cuts.slice(-44),avenir=v.ouvert?4:0,n=visibles.length+avenir,pas=Math.min(22,(W-2*x0)/Math.max(n-1,1));
+   const X=i=>Math.round((x0+i*pas)*10)/10;
+   let svg=`<svg viewBox="0 0 ${W} 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`
+     +`<line class="rail" x1="0" y1="26" x2="${W}" y2="26"/><line class="rail" x1="0" y1="42" x2="${W}" y2="42"/>`;
+   visibles.forEach((c,i)=>{const x=X(i),k=v.classe(c),haut=k==='actuel'||k==='incertain';
+     svg+=k==='voie-l'?`<rect class="t voie-l" x="${x-2.2}" y="20" width="4.4" height="28" rx="1.6" stroke-width="1.5"/>`
+       :`<line class="t ${k}" x1="${x}" y1="${haut?12:20}" x2="${x}" y2="${haut?56:48}"/>`;
+     if(haut)svg+=`<text class="${k}" x="${x}" y="67" text-anchor="middle">${entier(c)}${k==='incertain'?' ?':''}</text>`;});
+   for(let i=0;i<avenir;i++){const x=X(visibles.length+i);svg+=`<line class="t avenir" x1="${x}" y1="20" x2="${x}" y2="48"/>`;}
+   if(visibles.length&&!['actuel','incertain'].includes(v.classe(visibles[0])))svg+=`<text x="${X(0)}" y="10">${entier(visibles[0])}</text>`;
+   const dernier=visibles.at(-1);
+   if(visibles.length>1&&!['actuel','incertain'].includes(v.classe(dernier)))svg+=`<text x="${X(visibles.length-1)}" y="10" text-anchor="end">${entier(dernier)}</text>`;
+   return svg+'</svg>';
+ }
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
    $('context').textContent=id?`ESV · part ${id.part} · cut ${id.cut}`:'';
    if(which==='native'){
@@ -80,6 +125,7 @@
       * c'est après l'avoir regardée qu'on décide de la jeter. */
      button('native-discard',{hidden:!n,disabled:working});
      if($('native-discard-note'))$('native-discard-note').hidden=!n;
+     hierarchie(['native-resume','native-end','native-download','native-start','native-pause']);
    }else if(which==='automatic'){
      note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||'Choisis les bornes de ton lot TEST.');
      const running=['RUNNING','PAUSED','STOPPED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state),range=running?b.scope:null;
@@ -133,6 +179,19 @@
       * tentative : une intention en attente ne s'y ajoute pas. */
      const differes=b?` · Différés : ${b.deferred?.length||0}`:'';
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
+     const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
+     if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state):'Aucun lot';$('lot-etat').className='eyebrow'+(ton?' '+ton:'');}
+     if($('lot-cut'))$('lot-cut').textContent=entier(b?.activeIdentity?.cut??id?.cut);
+     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`part ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${entier(b.scope.end)}`:'';
+     const v=b?voieDuLot(s):null;
+     if($('lot-compteurs')){$('lot-compteurs').hidden=!v;
+       $('lot-compteurs').innerHTML=!v?'':`<span><b>${v.fait.size}</b>posés</span>`
+         +(v.parVoie.size?`<span class="dim">dont <b>${v.parVoie.size}</b>par la voie</span>`:'')
+         +`<span class="amber"><b>${v.differe.size}</b>différés</span>`
+         +(v.saute.size?`<span><b>${v.saute.size}</b>SKIP</span>`:'')+(v.main.size?`<span><b>${v.main.size}</b>repris à la main</span>`:'');}
+     if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;$('voie').innerHTML=montrer?dessinerVoie(v):'';
+       if($('voie-legende'))$('voie-legende').hidden=!montrer;}
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -150,7 +209,12 @@
          +(differe?.commandInvoked===false?'n’a pas été émise.':'a peut-être été transmise, sans progression acceptée.')
          +' Elle ne sera pas renvoyée. Aucun cut n’est compté comme différé tant que la progression n’est pas acceptée. '
          +'Contrôle ce cut dans ESV, puis clôture ce résultat incertain.');
-     button('start-batch',{disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
+     /* « La ligne », règle 3 : pas de bouton grisé pour une action sans objet.
+      * Pendant un lot ouvert ou un résultat à réconcilier, « Démarrer » et les
+      * bornes disparaissent ; ils reviennent dès qu'un lot peut repartir. */
+     const lotOuvert=OUVERT.includes(b?.state)||!!s.reconcileRequired;
+     button('start-batch',{hidden:lotOuvert,disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
+     if($('lot-bornes'))$('lot-bornes').hidden=lotOuvert;
      button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
@@ -174,6 +238,12 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
          +'puis clique sur « Repris manuellement » — le lot repartira, et ce cut sera journalisé comme repris à la main, jamais comme validé par Banane.');
      button('explicit-skip',{hidden:!actionable,disabled:busy||active(s)});
      button('close-uncertain',{hidden:!s.reconcileRequired&&!differe,disabled:busy});
+     /* Règle 4 : un verbe, son objet, et le cut quand l'action le vise. */
+     const cutIncertain=differe?.identity?.cut??s.intent?.identity?.cut??b?.activeIdentity?.cut;
+     if($('close-uncertain'))$('close-uncertain').textContent='Archiver le résultat interrompu'+(Number.isFinite(Number(cutIncertain))?' · cut '+entier(cutIncertain):'');
+     const fini=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','STOPPED','ERROR'].includes(b?.state)&&!s.reconcileRequired;
+     hierarchie(['close-uncertain','manual-completion','retry','resume','pause',...(fini?['dataset','start-batch']:['start-batch','dataset']),'manual-takeover','explicit-skip','stop'],
+       {ink:['close-uncertain','manual-completion','pause'],danger:['explicit-skip','stop']});
      /* Terrain, cut 6/4245 : avec « Tenter la proposition expérimentale », le
       * moteur gelé applique malgré une confiance nulle. Les sélections du
       * cerveau sont donc coupées dans ce mode — il faut le dire, pas le taire. */
@@ -197,6 +267,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
      }
      button('accept',{hidden:!p||!!s.applied,disabled:busy||active(s)||Object.values(p?.rails||{}).some(r=>!r.delta)});
      button('reject',{hidden:!p||!!s.applied,disabled:busy});button('restore',{hidden:!s.applied||s.validationStarted||!same(s.snapshot?.identity,id),disabled:busy||active(s)});
+     hierarchie(['accept','analyze','restore','reject']);
    }
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
    button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
@@ -503,7 +574,11 @@ on('native-discard',async()=>{
    return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,
      lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',lotDecision:$('lot-decision')?.value==='observe'?'observe':'apply',geometryEngine:'geometry-candidate-v1'});});
  for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
- on('retry',()=>api('retry'));on('explicit-skip',()=>api('explicit-skip'));
+ on('retry',()=>api('retry'));
+ /* SKIP explicite : décision envoyée à ESV, qui ne se défait pas depuis Banane —
+  * jamais le bouton plein, toujours confirmée (« La ligne », règle 2). */
+ on('explicit-skip',()=>{if(typeof confirm==='function'&&!confirm('Passer ce cut en SKIP dans ESV ?\n\nLa décision est envoyée à ESV et ne se défait pas depuis Banane.'))
+   throw Error('SKIP annulé : rien n’a été envoyé.');return api('explicit-skip');});
  // Reprise manuelle : le pilote rend la main, sans ouvrir aucune fenêtre.
  on('manual-takeover',()=>api('manual-takeover'));
  /* V4.6.0 : l'opérateur déclare avoir traité le cut dans ESV. Banane journalise

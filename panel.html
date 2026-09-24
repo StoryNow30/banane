@@ -35,10 +35,13 @@
 
  <section id="native-health" class="health" hidden><h2>Santé de la collecte</h2><div class="health-grid"><div><span class="health-label">Volume conservé</span><strong id="h-bytes">—</strong><span id="h-pending" class="muted"></span></div><div><span class="health-label">Segments écrits</span><strong id="h-seg">0</strong><span id="h-clouds" class="muted"></span></div><div><span class="health-label">Captures</span><strong id="h-cap">—</strong><span id="h-caprate" class="muted"></span></div><div><span class="health-label">File d’envoi</span><strong id="h-queue">—</strong><span id="h-dropped" class="muted"></span></div><div><span class="health-label">Niveau du collecteur</span><strong id="h-level">—</strong><span id="h-peak" class="muted"></span></div><div id="h-aside-box" hidden><span class="health-label">Mis à l’écart</span><strong id="h-aside">0</strong><span class="muted">avec cause</span></div></div><p id="h-note" class="muted"></p></section>
 
- <button id="native-start" class="primary">Démarrer l’observation</button>
- <div class="row"><button id="native-pause" class="secondary" hidden>Pause</button><button id="native-resume" class="secondary" hidden>Reprendre</button></div>
- <button id="native-end" class="primary" hidden>Terminer et télécharger</button>
- <button id="native-download" class="secondary" hidden>Télécharger à nouveau la session</button>
+ <div class="actions" id="native-actions">
+  <button id="native-start" class="primary">Démarrer l’observation</button>
+  <button id="native-resume" class="secondary" hidden>Reprendre</button>
+  <button id="native-end" class="primary" hidden>Terminer et télécharger</button>
+  <button id="native-pause" class="secondary" hidden>Pause</button>
+  <button id="native-download" class="secondary" hidden>Télécharger à nouveau la session</button>
+ </div>
 
  <div class="guide"><p>Travaille ensuite normalement dans ESV. Aucun clic Banane n’est nécessaire entre les cuts.</p><p>Ce mode n’envoie aucun déplacement, changement de caméra, choix de rail, VALIDATE, SKIP ou navigation.</p></div>
 
@@ -57,27 +60,46 @@
 
 <!-- ---------------------------------------------------------------- pilote -->
 <section class="vue" data-vue="automatic" hidden>
- <p class="muted">Le recalage reste expérimental. Ce lot sert à tester des résultats que tu contrôles ensuite.</p>
- <div class="range"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0"></label></div>
+ <!-- « La ligne » (D-045) : l'état, le cut, les compteurs, la voie, puis UNE action. -->
+ <p id="lot-etat" class="eyebrow ink">Aucun lot</p>
+ <p class="big"><span id="lot-cut">—</span><small id="lot-plage"></small></p>
+ <p id="lot-compteurs" class="counts" hidden></p>
+ <p class="muted" id="lot-decision-effective" hidden></p>
+ <p class="muted" id="unresolved-policy-effective" hidden></p>
+ <p class="muted" id="policy-effective" hidden></p>
+ <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut" hidden></div>
+ <p id="voie-legende" class="legend" hidden><span><i></i>posé par le moteur</span><span><i class="creux"></i>posé par la voie</span><span><i class="differe"></i>différé</span><span><i class="refuse"></i>SKIP</span></p>
  <div id="batch" class="batch">Aucun lot en cours.</div>
- <button id="start-batch" class="primary">Démarrer le lot TEST</button>
- <div class="row"><button id="pause" class="secondary" hidden>Pause</button><button id="resume" class="secondary" hidden>Reprendre</button><button id="stop" class="danger" hidden>Arrêter</button></div>
- <div class="row"><button id="retry" class="secondary" hidden>Réessayer ce cut</button><button id="manual-takeover" class="secondary" hidden>Reprise manuelle</button><button id="manual-completion" class="secondary" hidden>Repris manuellement</button><button id="explicit-skip" class="danger" hidden>SKIP explicite</button></div>
- <button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button>
- <details id="cerveau"><summary>Cerveau de placement</summary><label class="interrupteur"><input type="checkbox" id="brain-toggle"> Activer le cerveau sur les propositions</label><p class="muted">Retire un biais vertical systématique mesuré sur le corpus de corrections, et tranche entre les candidats que le moteur expose déjà. Chaque proposition touchée est marquée dans l’export.</p><p class="warning" id="brain-caveat">Éteint par défaut. Ses réglages ont été ajustés sur les parts 17 et 20 d’un corpus de <em>corrections</em>, où les gestes sont 4,5 fois plus grands qu’en travail normal. Ils ne sont pas validés sur ta collecte Natif.</p><label class="interrupteur" id="brain-sanspause-box" hidden><input type="checkbox" id="brain-sanspause"> Autoriser les sélections en mode « Tenter » (essai)</label><p class="warning" id="brain-policy" hidden></p><p class="muted" id="brain-journal"></p></details><details><summary>Réglages du lot</summary><label>Si les deux propositions existent mais restent incertaines<select id="policy"><option value="pause">Mettre le lot en pause</option><option value="attempt">Tenter la proposition expérimentale</option></select></label><p class="muted" id="policy-effective" hidden></p><label>Lorsqu’un rail n’est pas résolu<select id="unresolved-policy"><option value="defer">Continuer et le différer</option><option value="pause">Mettre le lot en pause</option></select></label><p class="muted">Différer quitte le cut par une navigation sans décision : aucune correction appliquée, aucun VALIDATE, aucun SKIP. Le rail reste non résolu et le cut est enregistré pour revue. Aucun point inventé.</p><p class="muted" id="unresolved-policy-effective" hidden></p><label>Décision sur le lot<select id="lot-decision"><option value="apply">Appliquer</option><option value="observe">Observer seulement (comme la 4.7.9)</option></select></label><p class="muted">Appliquer : quand le moteur diffère ou s’écarte de la voie des cuts déjà placés du lot, le Pilote reprend le cut depuis cette voie et applique sa position ; tu relis comme d’habitude. Observer seulement : il consigne ce qu’il aurait fait, sans l’appliquer.</p><p class="muted" id="lot-decision-effective" hidden></p><label>Seuil de l’indice LiDAR / 100<input id="confidence" type="number" value="55" min="0" max="100"></label><p class="muted">Cet indice ne mesure pas la précision réelle du pointage.</p></details>
+ <div class="range" id="lot-bornes"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0"></label></div>
+ <div class="actions" id="lot-actions">
+  <button id="start-batch" class="primary">Démarrer le lot TEST</button>
+  <button id="pause" class="secondary" hidden>Pause</button>
+  <button id="resume" class="secondary" hidden>Reprendre</button>
+  <button id="retry" class="secondary" hidden>Réessayer ce cut</button>
+  <button id="manual-takeover" class="secondary" hidden>Reprise manuelle</button>
+  <button id="manual-completion" class="secondary" hidden>Repris manuellement</button>
+  <button id="close-uncertain" class="secondary" hidden>Archiver le résultat interrompu</button>
+  <button id="explicit-skip" class="danger" hidden>SKIP explicite</button>
+  <button id="stop" class="danger" hidden>Arrêter le lot</button>
+  <button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button>
+ </div>
+ <p class="muted">Le recalage reste expérimental. Ce lot sert à tester des résultats que tu contrôles ensuite. Changer de vue ne met pas le lot en pause.</p>
+ <details><summary>Réglages du lot</summary><label>Si les deux propositions existent mais restent incertaines<select id="policy"><option value="pause">Mettre le lot en pause</option><option value="attempt">Tenter la proposition expérimentale</option></select></label><label>Lorsqu’un rail n’est pas résolu<select id="unresolved-policy"><option value="defer">Continuer et le différer</option><option value="pause">Mettre le lot en pause</option></select></label><p class="muted">Différer quitte le cut par une navigation sans décision : aucune correction appliquée, aucun VALIDATE, aucun SKIP. Le rail reste non résolu et le cut est enregistré pour revue. Aucun point inventé.</p><label>Décision sur le lot<select id="lot-decision"><option value="apply">Appliquer</option><option value="observe">Observer seulement (comme la 4.7.9)</option></select></label><p class="muted">Appliquer : quand le moteur diffère ou s’écarte de la voie des cuts déjà placés du lot, le Pilote reprend le cut depuis cette voie et applique sa position ; tu relis comme d’habitude. Observer seulement : il consigne ce qu’il aurait fait, sans l’appliquer.</p><label>Seuil de l’indice LiDAR / 100<input id="confidence" type="number" value="55" min="0" max="100"></label><p class="muted">Cet indice ne mesure pas la précision réelle du pointage.</p></details>
+ <details id="cerveau"><summary>Cerveau de placement</summary><label class="interrupteur"><input type="checkbox" id="brain-toggle"> Activer le cerveau sur les propositions</label><p class="muted">Retire un biais vertical systématique mesuré sur le corpus de corrections, et tranche entre les candidats que le moteur expose déjà. Chaque proposition touchée est marquée dans l’export.</p><p class="warning" id="brain-caveat">Éteint par défaut. Ses réglages ont été ajustés sur les parts 17 et 20 d’un corpus de <em>corrections</em>, où les gestes sont 4,5 fois plus grands qu’en travail normal. Ils ne sont pas validés sur ta collecte Natif.</p><label class="interrupteur" id="brain-sanspause-box" hidden><input type="checkbox" id="brain-sanspause"> Autoriser les sélections en mode « Tenter » (essai)</label><p class="warning" id="brain-policy" hidden></p><p class="muted" id="brain-journal"></p></details>
  <details><summary>Diagnostic GCV1</summary><button id="gcv1-diagnostic-export" class="secondary">Export diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Export corpus GCV1 + LiDAR</button><p class="muted">Exports manuels de la session courante, construits uniquement depuis les observations et captures déjà enregistrées.</p></details>
- <details><summary>Dépannage</summary><button id="journal" class="secondary">Télécharger le journal</button><button id="close-uncertain" class="secondary" hidden>Archiver le résultat interrompu</button><p class="muted">La navigation est observée dans ESV. La confirmation de l’enregistrement serveur reste indisponible.</p></details>
- <p class="muted">Changer de vue ne met pas le lot en pause. Utilise Pause ou Arrêter.</p>
+ <details><summary>Dépannage</summary><button id="journal" class="secondary">Télécharger le journal</button><p class="muted">La navigation est observée dans ESV. La confirmation de l’enregistrement serveur reste indisponible.</p></details>
 </section>
 
 <!-- -------------------------------------------------------------- assisté -->
 <section class="vue" data-vue="assisted" hidden>
  <div class="guide"><p>Clique sur Proposer, examine le résultat, puis choisis de l’appliquer ou de l’ignorer. La validation du cut reste ton action dans ESV.</p></div>
- <button id="analyze" class="primary">Proposer pour ce cut</button>
  <div id="proposals" class="proposals"></div>
- <button id="accept" class="primary" hidden>Appliquer cette proposition</button>
- <button id="reject" class="secondary" hidden>Ignorer cette proposition</button>
- <button id="restore" class="secondary" hidden>Revenir aux positions initiales</button>
+ <div class="actions" id="assisted-actions">
+  <button id="accept" class="primary" hidden>Appliquer les deux rails</button>
+  <button id="analyze" class="primary">Proposer pour ce cut</button>
+  <button id="restore" class="secondary" hidden>Revenir aux positions initiales</button>
+  <button id="reject" class="secondary" hidden>Ignorer cette proposition</button>
+ </div>
  <p class="muted">Le retour aux positions initiales concerne le même cut, avant validation dans ESV.</p>
  <details><summary>Exporter cet essai</summary><button id="assisted-dataset" class="secondary">Télécharger le bilan et les LiDAR</button></details>
 </section>

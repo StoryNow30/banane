@@ -114,6 +114,10 @@ async function commandLot(proposal,lotObservation){
  const command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{})};
  lotObservation.applied=command.action==='lot';
+ /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
+  * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
+ const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
+ if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={cut,action:command.action,stage:lotObservation.stage};}
  if(command.action==='engine')return proposal;
  engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
