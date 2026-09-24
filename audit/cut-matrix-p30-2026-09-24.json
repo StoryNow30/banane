@@ -1,0 +1,4254 @@
+{
+ "format": "banane-cut-matrix-v1",
+ "engine": "gcv1-shadow 4.7.8",
+ "wrongMm": 10,
+ "criterion": "latéral OU vertical",
+ "excludedCuts": [
+  9033,
+  9241
+ ],
+ "reports": [
+  {
+   "label": "natif-p30",
+   "summary": {
+    "distinctCuts": 83,
+    "excludedByOperator": 0,
+    "revisitedCuts": 8,
+    "benchInput": 69,
+    "poseInput": 80,
+    "recoveredByPoseInput": 11,
+    "benchExclusionReasonsBySide": {
+     "no-qualified-snapshot": 17
+    },
+    "applied": 57,
+    "appliedRight": 44,
+    "appliedWrong": 0,
+    "coverageAllDistinctCuts": 68.7
+   },
+   "rows": [
+    {
+     "part": 30,
+     "cut": 2473,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1322
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "42a652cf-fec0-4f0f-9993-07058354bc02",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1306
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "42a652cf-fec0-4f0f-9993-07058354bc02",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2628,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 2474,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1095
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "4ca766d4-9419-44d5-83d9-22657a4949ec",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1082
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "4ca766d4-9419-44d5-83d9-22657a4949ec",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2177,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 2475,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1134
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 6,
+        "capture": "cb083449-f67d-4a52-a863-fbe7804b4d6a",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1328
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 5,
+        "capture": "2700c3aa-0085-4a99-91b3-2c8c297b0f40",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2462,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:19:56.245Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 1.8,
+       "verticalMm": -1.1
+      },
+      "right": {
+       "lateralMm": -1.3,
+       "verticalMm": 1
+      }
+     },
+     "worstMm": 1.8,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 2476,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1301
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "db7bcf11-07e6-43ab-a384-45a57b98af9b",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1300
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "db7bcf11-07e6-43ab-a384-45a57b98af9b",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2601,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:00.030Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "gauge-rejected",
+     "motifs": [
+      "gauge-out-of-contract",
+      "gauge-out-of-contract"
+     ],
+     "referenced": true,
+     "outcome": "gauge-rejected",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2477,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1305
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "eb7f0d0f-dce6-4988-9362-915f7413c7fe",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1306
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "eb7f0d0f-dce6-4988-9362-915f7413c7fe",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2611,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:03.528Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "ambiguity"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2478,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 660
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "ed0b59bd-041d-4315-a2b5-67d6f55b48fb",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 903
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "ed0b59bd-041d-4315-a2b5-67d6f55b48fb",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2668,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:07.478Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.4,
+       "verticalMm": -1.7
+      },
+      "right": {
+       "lateralMm": -2.3,
+       "verticalMm": -0.5
+      }
+     },
+     "worstMm": 2.3,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2479,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1326
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "1675a479-9740-435a-bd1e-801c9ccf8207",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1326
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "1675a479-9740-435a-bd1e-801c9ccf8207",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2652,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:10.945Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2480,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1306
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "31a89bce-e523-4c92-a529-d90fab4cf1d9",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1298
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "31a89bce-e523-4c92-a529-d90fab4cf1d9",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2604,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:14.844Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2.7,
+       "verticalMm": -0.1
+      },
+      "right": {
+       "lateralMm": -0.7,
+       "verticalMm": 0.8
+      }
+     },
+     "worstMm": 2.7,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2481,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1326
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1321
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2647,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:18.461Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.4,
+       "verticalMm": -1.4
+      },
+      "right": {
+       "lateralMm": -2.4,
+       "verticalMm": 0.3
+      }
+     },
+     "worstMm": 2.4,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2482,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 788
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "52402607-0834-42bf-a1ce-e13c2e9a37e5",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1017
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "a3a39b04-6700-41dc-b65c-8a8d0f92b0f7",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2358,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:22.245Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 1.4,
+       "verticalMm": 0.4
+      },
+      "right": {
+       "lateralMm": -0.6,
+       "verticalMm": -0.2
+      }
+     },
+     "worstMm": 1.4,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2483,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1385
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 5,
+        "capture": "75394dc4-cd74-465a-bcab-6fc4af6f645b",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1278
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "75394dc4-cd74-465a-bcab-6fc4af6f645b",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2663,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:26.728Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2.5,
+       "verticalMm": -2.4
+      },
+      "right": {
+       "lateralMm": -0.1,
+       "verticalMm": -0.8
+      }
+     },
+     "worstMm": 2.5,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2484,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1222
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "87423350-b74a-4eae-8835-9897567c6df0",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1266
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "87423350-b74a-4eae-8835-9897567c6df0",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2488,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:30.927Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.1,
+       "verticalMm": -1.2
+      },
+      "right": {
+       "lateralMm": 2,
+       "verticalMm": 1.3
+      }
+     },
+     "worstMm": 2,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2485,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1219
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "15100ef4-dad5-4eb7-9aef-f72879dffca2",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1207
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "a20b8b26-d95c-4f36-b15a-a0de39497f9d",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2426,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:20:34.110Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -1.6,
+       "verticalMm": 1.8
+      },
+      "right": {
+       "lateralMm": -3.3,
+       "verticalMm": -0.1
+      }
+     },
+     "worstMm": 3.3,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2780,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1564
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "60fbea79-28ab-445f-92c9-e20a5105e9b4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1575
+       },
+       "pose": {
+        "captures": 7,
+        "chunks": 10,
+        "capture": "60fbea79-28ab-445f-92c9-e20a5105e9b4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3139,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2.7,
+       "verticalMm": 0.6
+      },
+      "right": {
+       "lateralMm": -4.4,
+       "verticalMm": 1.6
+      }
+     },
+     "worstMm": 4.4,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 2781,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1548
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "c59c6555-2d7b-482a-afcf-60e9edb7423b",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 850
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "c59c6555-2d7b-482a-afcf-60e9edb7423b",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2398,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 2782,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1578
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "2c5564e1-c101-4b6a-8b1f-b448af429eef",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1587
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "2c5564e1-c101-4b6a-8b1f-b448af429eef",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3165,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3762,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1922
+       },
+       "pose": {
+        "captures": 8,
+        "chunks": 9,
+        "capture": "60572138-af6c-4ad5-97d7-5d38087344e4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 432
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 6,
+        "capture": "60572138-af6c-4ad5-97d7-5d38087344e4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2354,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:12.607Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.9,
+       "verticalMm": 1.3
+      },
+      "right": {
+       "lateralMm": -1.4,
+       "verticalMm": 2.5
+      }
+     },
+     "worstMm": 2.5,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 3763,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1980
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "8b6ba596-6555-468c-a38d-644ccdfd5bd3",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1480
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "8b6ba596-6555-468c-a38d-644ccdfd5bd3",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3460,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3764,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1812
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 5,
+        "capture": "ba976864-37ad-43ea-a683-4d33bcda1652",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1389
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 6,
+        "capture": "f1e0503c-6dc5-4e78-be3c-e6b167fdb9e7",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3667,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:16.558Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.8,
+       "verticalMm": 1.2
+      },
+      "right": {
+       "lateralMm": -2.4,
+       "verticalMm": -2.2
+      }
+     },
+     "worstMm": 2.4,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3778,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1892
+       },
+       "pose": {
+        "captures": 4,
+        "chunks": 6,
+        "capture": "42da6846-c4e9-4827-9682-03b039ba3b98",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1889
+       },
+       "pose": {
+        "captures": 4,
+        "chunks": 7,
+        "capture": "42da6846-c4e9-4827-9682-03b039ba3b98",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3781,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:20.457Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.1,
+       "verticalMm": 0.5
+      },
+      "right": {
+       "lateralMm": -3.7,
+       "verticalMm": -0.6
+      }
+     },
+     "worstMm": 3.7,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 3779,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1871
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "63fd3751-7315-41fb-89e5-dc1188ef0474",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "63fd3751-7315-41fb-89e5-dc1188ef0474",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2129,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "minTop"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3780,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1897
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 1,
+        "capture": "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2262,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:24.207Z"
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "minTop"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3861,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1806
+       },
+       "pose": {
+        "captures": 5,
+        "chunks": 8,
+        "capture": "3d24a657-762d-48fc-9a11-1c6582e5e041",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1818
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 9,
+        "capture": "3d24a657-762d-48fc-9a11-1c6582e5e041",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3624,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:31.856Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 1.2,
+       "verticalMm": -3.9
+      },
+      "right": {
+       "lateralMm": -1.2,
+       "verticalMm": -5.4
+      }
+     },
+     "worstMm": 5.4,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 3862,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1927
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "e6692357-6a23-4798-983a-bae4c5daa08f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1923
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 5,
+        "capture": "e6692357-6a23-4798-983a-bae4c5daa08f",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3850,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:36.172Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 3.3,
+       "verticalMm": 2.2
+      },
+      "right": {
+       "lateralMm": -2.1,
+       "verticalMm": 1.9
+      }
+     },
+     "worstMm": 3.3,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3863,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1759
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1783
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3542,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -1.7,
+       "verticalMm": 0.6
+      },
+      "right": {
+       "lateralMm": -0.7,
+       "verticalMm": 1.4
+      }
+     },
+     "worstMm": 1.7,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3885,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1887
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 9,
+        "capture": "6f8f97dc-7fe0-404d-b829-66b9df4054ae",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1826
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "c49c22f8-5b2c-4ab1-8ac4-c40f53376e8c",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3713,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:48.572Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 4.9,
+       "verticalMm": 1.7
+      },
+      "right": {
+       "lateralMm": 0.9,
+       "verticalMm": 1.1
+      }
+     },
+     "worstMm": 4.9,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 3886,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1763
+       },
+       "pose": {
+        "captures": 4,
+        "chunks": 7,
+        "capture": "fea63f16-41fe-488a-96bf-cdd3b1d9a773",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1806
+       },
+       "pose": {
+        "captures": 4,
+        "chunks": 7,
+        "capture": "fea63f16-41fe-488a-96bf-cdd3b1d9a773",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3569,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:22:51.589Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.4,
+       "verticalMm": 0.3
+      },
+      "right": {
+       "lateralMm": -0.1,
+       "verticalMm": 0.9
+      }
+     },
+     "worstMm": 0.9,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3887,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1854
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 4,
+        "capture": "220055bd-672b-436f-b479-883264c6842c",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1862
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "220055bd-672b-436f-b479-883264c6842c",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3716,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.6,
+       "verticalMm": 1.1
+      },
+      "right": {
+       "lateralMm": -1.8,
+       "verticalMm": -1.2
+      }
+     },
+     "worstMm": 1.8,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3901,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1853
+       },
+       "pose": {
+        "captures": 7,
+        "chunks": 9,
+        "capture": "e3336299-9874-41bb-94e7-a0e0b4d7f327",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1859
+       },
+       "pose": {
+        "captures": 7,
+        "chunks": 9,
+        "capture": "5ba9b5f5-c816-4213-9b00-fe81be1cfab9",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3712,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:23:00.189Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.6,
+       "verticalMm": -0.3
+      },
+      "right": {
+       "lateralMm": 0.9,
+       "verticalMm": 0.9
+      }
+     },
+     "worstMm": 0.9,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 3902,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1913
+       },
+       "pose": {
+        "captures": 3,
+        "chunks": 5,
+        "capture": "ce0cf021-c9d9-4c8a-8509-96489ae7ac81",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1849
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 4,
+        "capture": "ce0cf021-c9d9-4c8a-8509-96489ae7ac81",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3762,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3903,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1847
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 4,
+        "capture": "efb727b5-1ec4-4f93-9baf-8eff8e02f50b",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1846
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "efb727b5-1ec4-4f93-9baf-8eff8e02f50b",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3693,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:23:03.273Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 1.9,
+       "verticalMm": 2.5
+      },
+      "right": {
+       "lateralMm": 2.2,
+       "verticalMm": -0.1
+      }
+     },
+     "worstMm": 2.5,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3904,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 0,
+        "chunks": 0,
+        "capture": null,
+        "contours": false
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1886
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "10cbbe04-04aa-49e3-a0a8-e4060f0821ee",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 0,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:23:05.622Z"
+     },
+     "benchInput": false,
+     "poseInput": false,
+     "outcome": "no-input",
+     "continuity": "no-points"
+    },
+    {
+     "part": 30,
+     "cut": 3905,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 962
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 6,
+        "capture": "53e61fc7-81e8-4e44-9eca-e925b6b4359f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1334
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 6,
+        "capture": "53e61fc7-81e8-4e44-9eca-e925b6b4359f",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2952,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:24:02.855Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2,
+       "verticalMm": 2.8
+      },
+      "right": {
+       "lateralMm": 2,
+       "verticalMm": -0.2
+      }
+     },
+     "worstMm": 2.8,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3933,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1806
+       },
+       "pose": {
+        "captures": 7,
+        "chunks": 10,
+        "capture": "5396d793-670c-4d2f-a351-e74000da8aef",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1766
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 9,
+        "capture": "5396d793-670c-4d2f-a351-e74000da8aef",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3572,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2.8,
+       "verticalMm": 0.9
+      },
+      "right": {
+       "lateralMm": -2.8,
+       "verticalMm": -0.7
+      }
+     },
+     "worstMm": 2.8,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 3934,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 790
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "cc6053a4-1c2d-42df-ad62-c4e84ef907e9",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 1,
+        "capture": "cc6053a4-1c2d-42df-ad62-c4e84ef907e9",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1367,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 3935,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1759
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "5558757f-c0a4-422f-b43c-2ec07d8843c3",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 704
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "5558757f-c0a4-422f-b43c-2ec07d8843c3",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2463,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 4014,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1869
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "7b399d59-73bf-4d25-9e48-b23c1ccbd071",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1923
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "7b399d59-73bf-4d25-9e48-b23c1ccbd071",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3792,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:24:56.152Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "slope"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 4015,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1804
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "47c29857-e35f-403c-ab79-c92ccfea638b",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1848
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "47c29857-e35f-403c-ab79-c92ccfea638b",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3652,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.1,
+       "verticalMm": -0.7
+      },
+      "right": {
+       "lateralMm": -3,
+       "verticalMm": -0.6
+      }
+     },
+     "worstMm": 3,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 4016,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1055
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "f4331144-e830-4c17-ab89-a6a70cf39815",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 576
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 1,
+        "capture": "f105821c-8498-4e8b-9ed7-59c42c678cc8",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 576,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:00.102Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "frame",
+      "flank"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5036,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 832
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "d991536a-8115-428e-b562-9dd6738209d8",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 957
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "d991536a-8115-428e-b562-9dd6738209d8",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1789,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:08.786Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank",
+      "minTop"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5035,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1264
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 5,
+        "capture": "ede98705-57b4-4d15-9c2f-b022e56f8dd7",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1265
+       },
+       "pose": {
+        "captures": 3,
+        "chunks": 6,
+        "capture": "ede98705-57b4-4d15-9c2f-b022e56f8dd7",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2529,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5037,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1260
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "397bae97-00ed-4641-b763-3e0e510fde81",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1241
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "397bae97-00ed-4641-b763-3e0e510fde81",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2501,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:15.802Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.6,
+       "verticalMm": 1.4
+      },
+      "right": {
+       "lateralMm": -1.7,
+       "verticalMm": -0.3
+      }
+     },
+     "worstMm": 1.7,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5113,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 660
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "ec7501d9-fcf4-4f45-accb-c8ffea51f504",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 6,
+        "capture": "f076707a-a2ef-47bd-ad00-3794710f0e2d",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 877,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:22.668Z"
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "minTop"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5114,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1319
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "a445565a-6958-4417-bd55-98ee227360b4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1335
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "a445565a-6958-4417-bd55-98ee227360b4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2654,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:25.951Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 1.7,
+       "verticalMm": 3.7
+      },
+      "right": {
+       "lateralMm": 1.1,
+       "verticalMm": 1.9
+      }
+     },
+     "worstMm": 3.7,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5115,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1298
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 6,
+        "capture": "767a132b-57b7-4c98-88c7-86d8d042a154",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1293
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 5,
+        "capture": "767a132b-57b7-4c98-88c7-86d8d042a154",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2591,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:29.102Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.1,
+       "verticalMm": 0.1
+      },
+      "right": {
+       "lateralMm": -1.5,
+       "verticalMm": 5.3
+      }
+     },
+     "worstMm": 5.3,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5158,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 2,
+        "capture": "e3b4eb27-c667-45f7-8931-34ac70624fad",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 1,
+        "capture": "c45cae28-b410-4a9d-a96a-1be41dde3836",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 3,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "frame",
+      "frame"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5157,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1358
+       },
+       "pose": {
+        "captures": 5,
+        "chunks": 7,
+        "capture": "42f11ee9-e160-4f52-b2df-16bcc58db005",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1274
+       },
+       "pose": {
+        "captures": 5,
+        "chunks": 7,
+        "capture": "42f11ee9-e160-4f52-b2df-16bcc58db005",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2632,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2,
+       "verticalMm": 0.9
+      },
+      "right": {
+       "lateralMm": -4.5,
+       "verticalMm": -0.2
+      }
+     },
+     "worstMm": 4.5,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5159,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1384
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "6f318e1c-16b3-47e2-a59e-ccdbb24b856c",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1398
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "6f318e1c-16b3-47e2-a59e-ccdbb24b856c",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2782,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:40.851Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -4,
+       "verticalMm": -7.8
+      },
+      "right": {
+       "lateralMm": -1.4,
+       "verticalMm": -2.3
+      }
+     },
+     "worstMm": 7.8,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5160,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1299
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1342
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2641,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:44.567Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.3,
+       "verticalMm": -2.3
+      },
+      "right": {
+       "lateralMm": -1.8,
+       "verticalMm": -2.8
+      }
+     },
+     "worstMm": 2.8,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5161,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1342
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "499dcaa9-b7b4-435d-8bbe-6e1fa5a4c4d4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1131
+       },
+       "pose": {
+        "captures": 7,
+        "chunks": 8,
+        "capture": "65f27572-dd01-46e0-9258-5877dd18e8a1",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1342,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:25:52.650Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "frame"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5265,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1301
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "f7c38cb6-2806-45a7-8bac-6d63e174eff5",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1354
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "f7c38cb6-2806-45a7-8bac-6d63e174eff5",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2655,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5264,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1306
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "05be4283-645f-4407-8bd5-cb6dd0ad2b41",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1304
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "05be4283-645f-4407-8bd5-cb6dd0ad2b41",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2610,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 1.7,
+       "verticalMm": 0.4
+      },
+      "right": {
+       "lateralMm": -5,
+       "verticalMm": 0.2
+      }
+     },
+     "worstMm": 5,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5266,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1299
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "0f9554e0-7f03-4d4a-8a80-dfbea8b59047",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1330
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "0f9554e0-7f03-4d4a-8a80-dfbea8b59047",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2629,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:26:39.016Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.5,
+       "verticalMm": -2.6
+      },
+      "right": {
+       "lateralMm": -0.5,
+       "verticalMm": -1
+      }
+     },
+     "worstMm": 2.6,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5432,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1265
+       },
+       "pose": {
+        "captures": 5,
+        "chunks": 7,
+        "capture": "b07a9e54-1f32-493f-adf3-bd4e217132a3",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1022
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "b07a9e54-1f32-493f-adf3-bd4e217132a3",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2287,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:26:44.783Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.5,
+       "verticalMm": -1
+      },
+      "right": {
+       "lateralMm": -1.4,
+       "verticalMm": -1.4
+      }
+     },
+     "worstMm": 1.4,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5431,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1188
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "c09871b5-cf13-4906-a22d-e5b6cc8fb89f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1113
+       },
+       "pose": {
+        "captures": 3,
+        "chunks": 6,
+        "capture": "02924f76-12b0-4c66-ab02-cee043115d04",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2301,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:26:47.616Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -2,
+       "verticalMm": -0.9
+      },
+      "right": {
+       "lateralMm": -2.2,
+       "verticalMm": -0.5
+      }
+     },
+     "worstMm": 2.2,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5430,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1195
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "5e3e64da-0702-4d2d-863e-20f9dff1f7ac",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "5e3e64da-0702-4d2d-863e-20f9dff1f7ac",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1751,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:26:50.717Z"
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5433,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1214
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "8e9993cd-4b34-49b8-b15f-5263ca692edf",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1231
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "8e9993cd-4b34-49b8-b15f-5263ca692edf",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2445,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:26:55.365Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.7,
+       "verticalMm": 0.1
+      },
+      "right": {
+       "lateralMm": -0.8,
+       "verticalMm": -1.2
+      }
+     },
+     "worstMm": 1.2,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5780,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 2,
+        "capture": "bb07c849-218d-4f53-8c2c-ea3a13805ce4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 1,
+        "capture": "bb07c849-218d-4f53-8c2c-ea3a13805ce4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "frame",
+      "frame"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5779,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 0,
+        "chunks": 0,
+        "capture": null,
+        "contours": false
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 0,
+        "chunks": 0,
+        "capture": null,
+        "contours": false
+       }
+      }
+     },
+     "pose": {
+      "points": 0,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": false,
+     "outcome": "no-input",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5778,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1195
+       },
+       "pose": {
+        "captures": 5,
+        "chunks": 7,
+        "capture": "f7c505c0-f61d-41a7-ae5d-432b7262b9a4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1188
+       },
+       "pose": {
+        "captures": 5,
+        "chunks": 7,
+        "capture": "f7c505c0-f61d-41a7-ae5d-432b7262b9a4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2383,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2.8,
+       "verticalMm": 1.6
+      },
+      "right": {
+       "lateralMm": -6,
+       "verticalMm": -0.9
+      }
+     },
+     "worstMm": 6,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 5781,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1203
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "b278123b-f11d-420b-b760-2f66f88717fa",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "b278123b-f11d-420b-b760-2f66f88717fa",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1233,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:06.983Z"
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "minTop"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5782,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1211
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "6163db40-ebf1-48c7-bead-7f7c88dba42f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1212
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "6163db40-ebf1-48c7-bead-7f7c88dba42f",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2423,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:10.632Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "slope"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5783,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1201
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "96a7a528-b1b0-4e83-b05a-b62caf7c2879",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1210
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "96a7a528-b1b0-4e83-b05a-b62caf7c2879",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2411,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:13.801Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "gauge-rejected",
+     "motifs": [
+      "gauge-out-of-contract",
+      "gauge-out-of-contract"
+     ],
+     "referenced": true,
+     "outcome": "gauge-rejected",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5784,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1193
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1200
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2393,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:16.913Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "ambiguity"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:multi-intent-reference-ambiguous",
+      "right:multi-intent-reference-ambiguous"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5785,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 704
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "9f4ed8dd-d642-47ad-9add-35f58093bbc4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1049
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "9f4ed8dd-d642-47ad-9add-35f58093bbc4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1753,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:33.914Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 4.4,
+       "verticalMm": 1.7
+      },
+      "right": {
+       "lateralMm": -5.6,
+       "verticalMm": 0.3
+      }
+     },
+     "worstMm": 5.6,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 5786,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 0,
+        "chunks": 0,
+        "capture": null,
+        "contours": false
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1212
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": null,
+        "contours": false
+       }
+      }
+     },
+     "pose": {
+      "points": 0,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:36.381Z"
+     },
+     "benchInput": false,
+     "poseInput": false,
+     "outcome": "no-input",
+     "continuity": "no-points"
+    },
+    {
+     "part": 30,
+     "cut": 6481,
+     "visits": 2,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1391
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "411d10d6-9e11-4188-adad-dabd9156a37f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "411d10d6-9e11-4188-adad-dabd9156a37f",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1900,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "rsf"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 6480,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1377
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "a9914bb4-49ec-4523-843a-991e14f95947",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "a9914bb4-49ec-4523-843a-991e14f95947",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1426,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:53.080Z"
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "rsf"
+     ],
+     "referenced": true,
+     "outcome": "abstained",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 6482,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1371
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "069b41ce-b2f7-418d-b9cf-736412495b2f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1138
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "069b41ce-b2f7-418d-b9cf-736412495b2f",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2509,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:27:58.463Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7374,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1146
+       },
+       "pose": {
+        "captures": 7,
+        "chunks": 9,
+        "capture": "49ab88bf-28c9-4287-b834-fbebd05912fd",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1162
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "49ab88bf-28c9-4287-b834-fbebd05912fd",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2308,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:06.630Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.9,
+       "verticalMm": 1.7
+      },
+      "right": {
+       "lateralMm": -0.2,
+       "verticalMm": -0.7
+      }
+     },
+     "worstMm": 1.7,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 7375,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1184
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "f6e93723-246a-4259-907e-48776c592078",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1187
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "f6e93723-246a-4259-907e-48776c592078",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2371,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7376,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "excluded",
+        "reasons": [
+         "no-qualified-snapshot"
+        ]
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "6bc264cb-ae5d-418e-81a9-3ddbc43d2819",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1183
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "6bc264cb-ae5d-418e-81a9-3ddbc43d2819",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1830,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": false,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7555,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1157
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "31be0253-0afd-4d3d-89ff-65e819979cb4",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 683
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "31be0253-0afd-4d3d-89ff-65e819979cb4",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1840,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:14.079Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.4,
+       "verticalMm": 2.3
+      },
+      "right": {
+       "lateralMm": -2.8,
+       "verticalMm": 1.6
+      }
+     },
+     "worstMm": 2.8,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 7556,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1211
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1219
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2430,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:17.646Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7557,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1213
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "6bee89fd-0852-4562-bc77-a293647d613d",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1195
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "6bee89fd-0852-4562-bc77-a293647d613d",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2408,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:20.478Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 2.8,
+       "verticalMm": 4.3
+      },
+      "right": {
+       "lateralMm": -2.3,
+       "verticalMm": 3.1
+      }
+     },
+     "worstMm": 4.3,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7638,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1189
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "8dc0c82c-b3be-451c-a90c-b04349369c9e",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1192
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 8,
+        "capture": "8dc0c82c-b3be-451c-a90c-b04349369c9e",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2381,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:26.864Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.4,
+       "verticalMm": -2.2
+      },
+      "right": {
+       "lateralMm": -0.6,
+       "verticalMm": -2.5
+      }
+     },
+     "worstMm": 2.5,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 7639,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1151
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "9164b132-0afd-4a24-846f-a249cf8b06aa",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1143
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "9164b132-0afd-4a24-846f-a249cf8b06aa",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2294,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:29.696Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -0.5,
+       "verticalMm": 2.2
+      },
+      "right": {
+       "lateralMm": -1.5,
+       "verticalMm": -0.5
+      }
+     },
+     "worstMm": 2.2,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7640,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1058
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "be470596-ba21-4048-810f-731be060b3bc",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1209
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 4,
+        "capture": "be470596-ba21-4048-810f-731be060b3bc",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2267,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 0.8,
+       "verticalMm": 2.7
+      },
+      "right": {
+       "lateralMm": -0.1,
+       "verticalMm": 0
+      }
+     },
+     "worstMm": 2.7,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7667,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 926
+       },
+       "pose": {
+        "captures": 4,
+        "chunks": 7,
+        "capture": "6009d19b-dba8-4759-98af-cd91e308cdee",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1119
+       },
+       "pose": {
+        "captures": 4,
+        "chunks": 7,
+        "capture": "58830322-4a96-4078-b67c-0977f59cd94a",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2263,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": 3,
+       "verticalMm": 4.7
+      },
+      "right": {
+       "lateralMm": -5.1,
+       "verticalMm": 4.5
+      }
+     },
+     "worstMm": 5.1,
+     "outcome": "applied-right",
+     "continuity": "no-anchor"
+    },
+    {
+     "part": 30,
+     "cut": 7668,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1158
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 930
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2088,
+      "duplicatesRemoved": 0,
+      "cutoffAt": "2026-09-24T07:28:38.946Z"
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": true,
+     "errors": {
+      "left": {
+       "lateralMm": -1.8,
+       "verticalMm": 1.1
+      },
+      "right": {
+       "lateralMm": 0.4,
+       "verticalMm": -0.3
+      }
+     },
+     "worstMm": 1.8,
+     "outcome": "applied-right",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7669,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1097
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 2,
+        "capture": "f0b60a8f-a09c-4a0c-8446-85ef23710d46",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 832
+       },
+       "pose": {
+        "captures": 2,
+        "chunks": 3,
+        "capture": "dd5416b2-59e6-4ad2-bedd-f816b4a27dda",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 1929,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "abstained",
+     "motifs": [
+      "flank"
+     ],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "abstained",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 7670,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1164
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "cd561200-8053-438a-abe2-fb7ab6c46b03",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1181
+       },
+       "pose": {
+        "captures": 1,
+        "chunks": 3,
+        "capture": "cd561200-8053-438a-abe2-fb7ab6c46b03",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2345,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "computed"
+    },
+    {
+     "part": 30,
+     "cut": 8755,
+     "visits": 1,
+     "sides": {
+      "left": {
+       "bench": {
+        "status": "ready",
+        "points": 1126
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "ab31c10d-f517-4ee0-92c4-acb56680bd9f",
+        "contours": true
+       }
+      },
+      "right": {
+       "bench": {
+        "status": "ready",
+        "points": 1140
+       },
+       "pose": {
+        "captures": 6,
+        "chunks": 7,
+        "capture": "ab31c10d-f517-4ee0-92c4-acb56680bd9f",
+        "contours": true
+       }
+      }
+     },
+     "pose": {
+      "points": 2266,
+      "duplicatesRemoved": 0,
+      "cutoffAt": null
+     },
+     "benchInput": true,
+     "poseInput": true,
+     "engine": "applied",
+     "motifs": [],
+     "referenced": false,
+     "referenceReasons": [
+      "left:human-final-candidate-missing",
+      "right:human-final-candidate-missing"
+     ],
+     "outcome": "applied-unreferenced",
+     "continuity": "no-anchor"
+    }
+   ]
+  }
+ ]
+}

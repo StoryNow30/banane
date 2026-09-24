@@ -15,3 +15,13 @@ test('voisins hors du lot, ramenés dans le repère du Pilote ; --stables écart
   assert.deepEqual(all[0].positions.left,pair(99).left.positionSceneRelative); // translation retirée
   assert.deepEqual(V.validatedNeighbours(lot,analysed,{stables:true}).map(a=>a.identity.cut),[99]);
 });
+test('garde : un voisin incohérent avec les autres est écarté ; moins de 3 voisins cohérents, aucun appui',()=>{
+  const id={part:P,cut:100,frameId:'f'},rails=pair(100);
+  const anchor=(cut,d={})=>({identity:{part:P,cut,frameId:'f'},positions:Object.fromEntries(['left','right'].map(s=>[s,pair(cut,d)[s].positionSceneRelative]))});
+  const aligned=[97,98,99,101,102].map(c=>anchor(c)),faux=anchor(103,{left:[40,0]});
+  const kept=V.consistentAnchors(id,rails,[...aligned,faux]).map(a=>a.identity.cut);
+  assert.deepEqual(kept.sort((a,b)=>a-b),[97,98,99,101,102]);
+  assert.deepEqual(V.consistentAnchors(id,rails,[anchor(99),anchor(101)]),[]);          // deux voisins : incontrôlables
+  assert.deepEqual(V.consistentAnchors(id,rails,[anchor(99),anchor(101,{left:[40,0]}),anchor(102,{right:[0,-30]})]),[]);
+  assert.deepEqual(V.consistentAnchors({...id,frameId:'autre'},rails,aligned),[]);     // autre repère
+});

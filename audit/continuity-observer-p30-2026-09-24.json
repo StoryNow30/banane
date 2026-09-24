@@ -1,0 +1,3703 @@
+{
+ "format": "banane-continuity-seed-study-v1",
+ "engine": "gcv1-shadow 4.7.6",
+ "wrongMm": 10,
+ "gap": 3,
+ "points": "visit",
+ "excludedCuts": [
+  9033,
+  9241
+ ],
+ "modes": {
+  "observer": [
+   {
+    "label": "natif-p30",
+    "mode": "observer",
+    "summary": {
+     "visits": 83,
+     "statuses": {
+      "no-anchor": 28,
+      "computed": 53,
+      "no-points": 2
+     },
+     "judged": 37,
+     "esv": {
+      "right": 28,
+      "wrong": 0,
+      "abstained": 7,
+      "gaugeRejected": 2,
+      "deferred": 0,
+      "verticalOver10AmongRight": 0,
+      "wrongCuts": []
+     },
+     "continuity": {
+      "right": 27,
+      "wrong": 0,
+      "abstained": 7,
+      "gaugeRejected": 3,
+      "deferred": 0,
+      "verticalOver10AmongRight": 0,
+      "wrongCuts": []
+     },
+     "continuityGuarded30": {
+      "right": 27,
+      "wrong": 0,
+      "abstained": 7,
+      "gaugeRejected": 3,
+      "deferred": 0,
+      "verticalOver10AmongRight": 0,
+      "wrongCuts": []
+     },
+     "oneAnchor": {
+      "cuts": 14,
+      "right": 12,
+      "wrong": 0
+     },
+     "twoAnchors": {
+      "cuts": 23,
+      "right": 15,
+      "wrong": 0
+     },
+     "transitions": {
+      "gauge-rejected → rail-abstained": 1,
+      "rail-abstained → applied-right": 1,
+      "applied-right → applied-right": 26,
+      "applied-right → gauge-rejected": 2,
+      "rail-abstained → rail-abstained": 6,
+      "gauge-rejected → gauge-rejected": 1
+     },
+     "engineMsMedian": 200,
+     "engineMsP90": 437,
+     "duplicatesRemoved": 0
+    },
+    "rows": [
+     {
+      "cut": 2473,
+      "visitIndex": 0,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 2474,
+      "visitIndex": 1,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 2475,
+      "visitIndex": 2,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 2476,
+      "visitIndex": 3,
+      "anchors": [
+       2475
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:00.030Z",
+       "captureIds": {
+        "left": "db7bcf11-07e6-43ab-a384-45a57b98af9b",
+        "right": "db7bcf11-07e6-43ab-a384-45a57b98af9b"
+       },
+       "chunkIds": [
+        "db7bcf11-07e6-43ab-a384-45a57b98af9b:left:0",
+        "db7bcf11-07e6-43ab-a384-45a57b98af9b:left:2",
+        "db7bcf11-07e6-43ab-a384-45a57b98af9b:left:4",
+        "db7bcf11-07e6-43ab-a384-45a57b98af9b:right:1",
+        "db7bcf11-07e6-43ab-a384-45a57b98af9b:right:3",
+        "db7bcf11-07e6-43ab-a384-45a57b98af9b:right:5"
+       ],
+       "points": 2601,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "ambiguity"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 457
+      },
+      "esv": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "ambiguity"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 457
+      }
+     },
+     {
+      "cut": 2477,
+      "visitIndex": 4,
+      "anchors": [
+       2476,
+       2475
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:03.528Z",
+       "captureIds": {
+        "left": "eb7f0d0f-dce6-4988-9362-915f7413c7fe",
+        "right": "eb7f0d0f-dce6-4988-9362-915f7413c7fe"
+       },
+       "chunkIds": [
+        "eb7f0d0f-dce6-4988-9362-915f7413c7fe:left:0",
+        "eb7f0d0f-dce6-4988-9362-915f7413c7fe:left:2",
+        "eb7f0d0f-dce6-4988-9362-915f7413c7fe:left:4",
+        "eb7f0d0f-dce6-4988-9362-915f7413c7fe:right:1",
+        "eb7f0d0f-dce6-4988-9362-915f7413c7fe:right:3",
+        "eb7f0d0f-dce6-4988-9362-915f7413c7fe:right:5"
+       ],
+       "points": 2611,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.7,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.7,
+         "verticalMm": -1.7
+        },
+        "right": {
+         "lateralMm": -0.5,
+         "verticalMm": -0.8
+        }
+       },
+       "fromPredictionMm": 3.7,
+       "engineMs": 437
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "ambiguity"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.7,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.7,
+         "verticalMm": -1.7
+        },
+        "right": {
+         "lateralMm": -0.5,
+         "verticalMm": -0.8
+        }
+       },
+       "fromPredictionMm": 3.7,
+       "engineMs": 437
+      }
+     },
+     {
+      "cut": 2478,
+      "visitIndex": 5,
+      "anchors": [
+       2477,
+       2476
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:07.478Z",
+       "captureIds": {
+        "left": "ed0b59bd-041d-4315-a2b5-67d6f55b48fb",
+        "right": "ed0b59bd-041d-4315-a2b5-67d6f55b48fb"
+       },
+       "chunkIds": [
+        "ed0b59bd-041d-4315-a2b5-67d6f55b48fb:left:0",
+        "ed0b59bd-041d-4315-a2b5-67d6f55b48fb:left:2",
+        "ed0b59bd-041d-4315-a2b5-67d6f55b48fb:right:1",
+        "ed0b59bd-041d-4315-a2b5-67d6f55b48fb:right:3"
+       ],
+       "points": 2668,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.4,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.4,
+         "verticalMm": -1.7
+        },
+        "right": {
+         "lateralMm": -2.4,
+         "verticalMm": -0.5
+        }
+       },
+       "fromPredictionMm": 1.3,
+       "engineMs": 457
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.3,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.4,
+         "verticalMm": -1.7
+        },
+        "right": {
+         "lateralMm": -2.3,
+         "verticalMm": -0.5
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.4,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.4,
+         "verticalMm": -1.7
+        },
+        "right": {
+         "lateralMm": -2.4,
+         "verticalMm": -0.5
+        }
+       },
+       "fromPredictionMm": 1.3,
+       "engineMs": 457
+      }
+     },
+     {
+      "cut": 2479,
+      "visitIndex": 6,
+      "anchors": [
+       2478,
+       2477
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:10.945Z",
+       "captureIds": {
+        "left": "1675a479-9740-435a-bd1e-801c9ccf8207",
+        "right": "1675a479-9740-435a-bd1e-801c9ccf8207"
+       },
+       "chunkIds": [
+        "1675a479-9740-435a-bd1e-801c9ccf8207:left:0",
+        "1675a479-9740-435a-bd1e-801c9ccf8207:left:3",
+        "1675a479-9740-435a-bd1e-801c9ccf8207:right:1",
+        "1675a479-9740-435a-bd1e-801c9ccf8207:right:2",
+        "1675a479-9740-435a-bd1e-801c9ccf8207:right:4"
+       ],
+       "points": 2652,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 3.7,
+       "engineMs": 446
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 3.7,
+       "engineMs": 446
+      }
+     },
+     {
+      "cut": 2480,
+      "visitIndex": 7,
+      "anchors": [
+       2478,
+       2477
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:14.844Z",
+       "captureIds": {
+        "left": "31a89bce-e523-4c92-a529-d90fab4cf1d9",
+        "right": "31a89bce-e523-4c92-a529-d90fab4cf1d9"
+       },
+       "chunkIds": [
+        "31a89bce-e523-4c92-a529-d90fab4cf1d9:left:0",
+        "31a89bce-e523-4c92-a529-d90fab4cf1d9:left:2",
+        "31a89bce-e523-4c92-a529-d90fab4cf1d9:left:4",
+        "31a89bce-e523-4c92-a529-d90fab4cf1d9:right:1",
+        "31a89bce-e523-4c92-a529-d90fab4cf1d9:right:3",
+        "31a89bce-e523-4c92-a529-d90fab4cf1d9:right:5"
+       ],
+       "points": 2604,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.7,
+       "worstVerticalMm": 0.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.7,
+         "verticalMm": -0.1
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": 0.8
+        }
+       },
+       "fromPredictionMm": 4,
+       "engineMs": 433
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.7,
+       "worstVerticalMm": 0.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.7,
+         "verticalMm": -0.1
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": 0.8
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.7,
+       "worstVerticalMm": 0.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.7,
+         "verticalMm": -0.1
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": 0.8
+        }
+       },
+       "fromPredictionMm": 4,
+       "engineMs": 433
+      }
+     },
+     {
+      "cut": 2481,
+      "visitIndex": 8,
+      "anchors": [
+       2480,
+       2478
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:18.461Z",
+       "captureIds": {
+        "left": "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd",
+        "right": "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd"
+       },
+       "chunkIds": [
+        "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd:left:0",
+        "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd:left:2",
+        "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd:left:4",
+        "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd:right:1",
+        "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd:right:3",
+        "68329e3e-ddb5-4dc5-aea1-5b8026b6adfd:right:5"
+       ],
+       "points": 2647,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.5,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.3,
+         "verticalMm": -1.4
+        },
+        "right": {
+         "lateralMm": -2.5,
+         "verticalMm": 0.3
+        }
+       },
+       "fromPredictionMm": 5.8,
+       "engineMs": 474
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.4,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.4,
+         "verticalMm": -1.4
+        },
+        "right": {
+         "lateralMm": -2.4,
+         "verticalMm": 0.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.5,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.3,
+         "verticalMm": -1.4
+        },
+        "right": {
+         "lateralMm": -2.5,
+         "verticalMm": 0.3
+        }
+       },
+       "fromPredictionMm": 5.8,
+       "engineMs": 474
+      }
+     },
+     {
+      "cut": 2482,
+      "visitIndex": 9,
+      "anchors": [
+       2481,
+       2480
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:22.245Z",
+       "captureIds": {
+        "left": "52402607-0834-42bf-a1ce-e13c2e9a37e5",
+        "right": "a3a39b04-6700-41dc-b65c-8a8d0f92b0f7"
+       },
+       "chunkIds": [
+        "52402607-0834-42bf-a1ce-e13c2e9a37e5:left:0",
+        "52402607-0834-42bf-a1ce-e13c2e9a37e5:left:2",
+        "a3a39b04-6700-41dc-b65c-8a8d0f92b0f7:right:1",
+        "a3a39b04-6700-41dc-b65c-8a8d0f92b0f7:right:3"
+       ],
+       "points": 2358,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.4,
+       "worstVerticalMm": 0.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.4,
+         "verticalMm": 0.4
+        },
+        "right": {
+         "lateralMm": 0.4,
+         "verticalMm": -0.2
+        }
+       },
+       "fromPredictionMm": 4.6,
+       "engineMs": 328
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.4,
+       "worstVerticalMm": 0.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.4,
+         "verticalMm": 0.4
+        },
+        "right": {
+         "lateralMm": -0.6,
+         "verticalMm": -0.2
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.4,
+       "worstVerticalMm": 0.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.4,
+         "verticalMm": 0.4
+        },
+        "right": {
+         "lateralMm": 0.4,
+         "verticalMm": -0.2
+        }
+       },
+       "fromPredictionMm": 4.6,
+       "engineMs": 328
+      }
+     },
+     {
+      "cut": 2483,
+      "visitIndex": 10,
+      "anchors": [
+       2482,
+       2481
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:26.728Z",
+       "captureIds": {
+        "left": "75394dc4-cd74-465a-bcab-6fc4af6f645b",
+        "right": "75394dc4-cd74-465a-bcab-6fc4af6f645b"
+       },
+       "chunkIds": [
+        "75394dc4-cd74-465a-bcab-6fc4af6f645b:left:0",
+        "75394dc4-cd74-465a-bcab-6fc4af6f645b:left:2",
+        "75394dc4-cd74-465a-bcab-6fc4af6f645b:left:4",
+        "75394dc4-cd74-465a-bcab-6fc4af6f645b:right:1",
+        "75394dc4-cd74-465a-bcab-6fc4af6f645b:right:3",
+        "75394dc4-cd74-465a-bcab-6fc4af6f645b:right:5"
+       ],
+       "points": 2663,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 310
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.5,
+       "worstVerticalMm": 2.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.5,
+         "verticalMm": -2.4
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": -0.8
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 310
+      }
+     },
+     {
+      "cut": 2484,
+      "visitIndex": 11,
+      "anchors": [
+       2483,
+       2482
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:30.927Z",
+       "captureIds": {
+        "left": "87423350-b74a-4eae-8835-9897567c6df0",
+        "right": "87423350-b74a-4eae-8835-9897567c6df0"
+       },
+       "chunkIds": [
+        "87423350-b74a-4eae-8835-9897567c6df0:left:0",
+        "87423350-b74a-4eae-8835-9897567c6df0:left:2",
+        "87423350-b74a-4eae-8835-9897567c6df0:right:1",
+        "87423350-b74a-4eae-8835-9897567c6df0:right:3"
+       ],
+       "points": 2488,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.1,
+         "verticalMm": -1.2
+        },
+        "right": {
+         "lateralMm": 1.8,
+         "verticalMm": 1.3
+        }
+       },
+       "fromPredictionMm": 5,
+       "engineMs": 172
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2,
+       "worstVerticalMm": 1.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.1,
+         "verticalMm": -1.2
+        },
+        "right": {
+         "lateralMm": 2,
+         "verticalMm": 1.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.1,
+         "verticalMm": -1.2
+        },
+        "right": {
+         "lateralMm": 1.8,
+         "verticalMm": 1.3
+        }
+       },
+       "fromPredictionMm": 5,
+       "engineMs": 172
+      }
+     },
+     {
+      "cut": 2485,
+      "visitIndex": 12,
+      "anchors": [
+       2484,
+       2483
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:20:34.110Z",
+       "captureIds": {
+        "left": "15100ef4-dad5-4eb7-9aef-f72879dffca2",
+        "right": "a20b8b26-d95c-4f36-b15a-a0de39497f9d"
+       },
+       "chunkIds": [
+        "15100ef4-dad5-4eb7-9aef-f72879dffca2:left:0",
+        "15100ef4-dad5-4eb7-9aef-f72879dffca2:left:2",
+        "a20b8b26-d95c-4f36-b15a-a0de39497f9d:right:1",
+        "a20b8b26-d95c-4f36-b15a-a0de39497f9d:right:3"
+       ],
+       "points": 2426,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3.2,
+       "worstVerticalMm": 1.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.3,
+         "verticalMm": 1.8
+        },
+        "right": {
+         "lateralMm": -3.2,
+         "verticalMm": -0.1
+        }
+       },
+       "fromPredictionMm": 4.2,
+       "engineMs": 160
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3.3,
+       "worstVerticalMm": 1.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.6,
+         "verticalMm": 1.8
+        },
+        "right": {
+         "lateralMm": -3.3,
+         "verticalMm": -0.1
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3.2,
+       "worstVerticalMm": 1.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.3,
+         "verticalMm": 1.8
+        },
+        "right": {
+         "lateralMm": -3.2,
+         "verticalMm": -0.1
+        }
+       },
+       "fromPredictionMm": 4.2,
+       "engineMs": 160
+      }
+     },
+     {
+      "cut": 2780,
+      "visitIndex": 13,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 2781,
+      "visitIndex": 14,
+      "anchors": [
+       2780
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "c59c6555-2d7b-482a-afcf-60e9edb7423b",
+        "right": "c59c6555-2d7b-482a-afcf-60e9edb7423b"
+       },
+       "chunkIds": [
+        "c59c6555-2d7b-482a-afcf-60e9edb7423b:left:0",
+        "c59c6555-2d7b-482a-afcf-60e9edb7423b:left:2",
+        "c59c6555-2d7b-482a-afcf-60e9edb7423b:left:4",
+        "c59c6555-2d7b-482a-afcf-60e9edb7423b:right:1",
+        "c59c6555-2d7b-482a-afcf-60e9edb7423b:right:3"
+       ],
+       "points": 2398,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 169
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 169
+      }
+     },
+     {
+      "cut": 2782,
+      "visitIndex": 15,
+      "anchors": [
+       2780
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "2c5564e1-c101-4b6a-8b1f-b448af429eef",
+        "right": "2c5564e1-c101-4b6a-8b1f-b448af429eef"
+       },
+       "chunkIds": [
+        "2c5564e1-c101-4b6a-8b1f-b448af429eef:left:0",
+        "2c5564e1-c101-4b6a-8b1f-b448af429eef:left:2",
+        "2c5564e1-c101-4b6a-8b1f-b448af429eef:left:4",
+        "2c5564e1-c101-4b6a-8b1f-b448af429eef:right:1",
+        "2c5564e1-c101-4b6a-8b1f-b448af429eef:right:3",
+        "2c5564e1-c101-4b6a-8b1f-b448af429eef:right:5"
+       ],
+       "points": 3165,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 251
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 251
+      }
+     },
+     {
+      "cut": 3762,
+      "visitIndex": 16,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3763,
+      "visitIndex": 17,
+      "anchors": [
+       3762
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "8b6ba596-6555-468c-a38d-644ccdfd5bd3",
+        "right": "8b6ba596-6555-468c-a38d-644ccdfd5bd3"
+       },
+       "chunkIds": [
+        "8b6ba596-6555-468c-a38d-644ccdfd5bd3:left:0",
+        "8b6ba596-6555-468c-a38d-644ccdfd5bd3:left:2",
+        "8b6ba596-6555-468c-a38d-644ccdfd5bd3:right:1",
+        "8b6ba596-6555-468c-a38d-644ccdfd5bd3:right:3"
+       ],
+       "points": 3460,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 2.2,
+       "engineMs": 279
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 2.2,
+       "engineMs": 279
+      }
+     },
+     {
+      "cut": 3764,
+      "visitIndex": 18,
+      "anchors": [
+       3762
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:22:16.558Z",
+       "captureIds": {
+        "left": "ba976864-37ad-43ea-a683-4d33bcda1652",
+        "right": "f1e0503c-6dc5-4e78-be3c-e6b167fdb9e7"
+       },
+       "chunkIds": [
+        "ba976864-37ad-43ea-a683-4d33bcda1652:left:0",
+        "ba976864-37ad-43ea-a683-4d33bcda1652:left:2",
+        "ba976864-37ad-43ea-a683-4d33bcda1652:left:4",
+        "f1e0503c-6dc5-4e78-be3c-e6b167fdb9e7:right:1",
+        "f1e0503c-6dc5-4e78-be3c-e6b167fdb9e7:right:3",
+        "f1e0503c-6dc5-4e78-be3c-e6b167fdb9e7:right:4"
+       ],
+       "points": 3667,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.1,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.8,
+         "verticalMm": 1.2
+        },
+        "right": {
+         "lateralMm": -2.1,
+         "verticalMm": -2.2
+        }
+       },
+       "fromPredictionMm": 3.4,
+       "engineMs": 343
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.4,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.8,
+         "verticalMm": 1.2
+        },
+        "right": {
+         "lateralMm": -2.4,
+         "verticalMm": -2.2
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.1,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.8,
+         "verticalMm": 1.2
+        },
+        "right": {
+         "lateralMm": -2.1,
+         "verticalMm": -2.2
+        }
+       },
+       "fromPredictionMm": 3.4,
+       "engineMs": 343
+      }
+     },
+     {
+      "cut": 3778,
+      "visitIndex": 19,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3779,
+      "visitIndex": 20,
+      "anchors": [
+       3778
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "63fd3751-7315-41fb-89e5-dc1188ef0474",
+        "right": "63fd3751-7315-41fb-89e5-dc1188ef0474"
+       },
+       "chunkIds": [
+        "63fd3751-7315-41fb-89e5-dc1188ef0474:left:0",
+        "63fd3751-7315-41fb-89e5-dc1188ef0474:left:2",
+        "63fd3751-7315-41fb-89e5-dc1188ef0474:left:3",
+        "63fd3751-7315-41fb-89e5-dc1188ef0474:right:1",
+        "63fd3751-7315-41fb-89e5-dc1188ef0474:right:4"
+       ],
+       "points": 2129,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 173
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 173
+      }
+     },
+     {
+      "cut": 3780,
+      "visitIndex": 21,
+      "anchors": [
+       3778
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:22:24.207Z",
+       "captureIds": {
+        "left": "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf",
+        "right": "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf"
+       },
+       "chunkIds": [
+        "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf:left:0",
+        "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf:left:1",
+        "fa5a6cd0-95e9-4158-8f71-6495e94cd2cf:right:2"
+       ],
+       "points": 2262,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 157
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 157
+      }
+     },
+     {
+      "cut": 3861,
+      "visitIndex": 22,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3862,
+      "visitIndex": 23,
+      "anchors": [
+       3861
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:22:36.172Z",
+       "captureIds": {
+        "left": "e6692357-6a23-4798-983a-bae4c5daa08f",
+        "right": "e6692357-6a23-4798-983a-bae4c5daa08f"
+       },
+       "chunkIds": [
+        "e6692357-6a23-4798-983a-bae4c5daa08f:left:0",
+        "e6692357-6a23-4798-983a-bae4c5daa08f:left:3",
+        "e6692357-6a23-4798-983a-bae4c5daa08f:right:1",
+        "e6692357-6a23-4798-983a-bae4c5daa08f:right:2",
+        "e6692357-6a23-4798-983a-bae4c5daa08f:right:4"
+       ],
+       "points": 3850,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3.3,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 3.3,
+         "verticalMm": 2.2
+        },
+        "right": {
+         "lateralMm": 0.3,
+         "verticalMm": 1.9
+        }
+       },
+       "fromPredictionMm": 5.2,
+       "engineMs": 293
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3.3,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 3.3,
+         "verticalMm": 2.2
+        },
+        "right": {
+         "lateralMm": -2.1,
+         "verticalMm": 1.9
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3.3,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 3.3,
+         "verticalMm": 2.2
+        },
+        "right": {
+         "lateralMm": 0.3,
+         "verticalMm": 1.9
+        }
+       },
+       "fromPredictionMm": 5.2,
+       "engineMs": 293
+      }
+     },
+     {
+      "cut": 3863,
+      "visitIndex": 24,
+      "anchors": [
+       3862,
+       3861
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af",
+        "right": "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af"
+       },
+       "chunkIds": [
+        "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af:left:0",
+        "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af:left:2",
+        "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af:left:4",
+        "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af:right:1",
+        "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af:right:3",
+        "2a0e8928-d3cb-4ce6-8471-a5b0b666d8af:right:5"
+       ],
+       "points": 3542,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.7,
+       "worstVerticalMm": 1.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.7,
+         "verticalMm": 0.7
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": 1.3
+        }
+       },
+       "fromPredictionMm": 2,
+       "engineMs": 345
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.7,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.7,
+         "verticalMm": 0.6
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": 1.4
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.7,
+       "worstVerticalMm": 1.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.7,
+         "verticalMm": 0.7
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": 1.3
+        }
+       },
+       "fromPredictionMm": 2,
+       "engineMs": 345
+      }
+     },
+     {
+      "cut": 3885,
+      "visitIndex": 25,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3886,
+      "visitIndex": 26,
+      "anchors": [
+       3885
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:22:51.589Z",
+       "captureIds": {
+        "left": "fea63f16-41fe-488a-96bf-cdd3b1d9a773",
+        "right": "fea63f16-41fe-488a-96bf-cdd3b1d9a773"
+       },
+       "chunkIds": [
+        "fea63f16-41fe-488a-96bf-cdd3b1d9a773:left:0",
+        "fea63f16-41fe-488a-96bf-cdd3b1d9a773:left:2",
+        "fea63f16-41fe-488a-96bf-cdd3b1d9a773:left:5",
+        "fea63f16-41fe-488a-96bf-cdd3b1d9a773:right:1",
+        "fea63f16-41fe-488a-96bf-cdd3b1d9a773:right:3",
+        "fea63f16-41fe-488a-96bf-cdd3b1d9a773:right:4"
+       ],
+       "points": 3569,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.4,
+       "worstVerticalMm": 0.9,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.4,
+         "verticalMm": 0.3
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": 0.9
+        }
+       },
+       "fromPredictionMm": 8.4,
+       "engineMs": 283
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.4,
+       "worstVerticalMm": 0.9,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.4,
+         "verticalMm": 0.3
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": 0.9
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.4,
+       "worstVerticalMm": 0.9,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.4,
+         "verticalMm": 0.3
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": 0.9
+        }
+       },
+       "fromPredictionMm": 8.4,
+       "engineMs": 283
+      }
+     },
+     {
+      "cut": 3887,
+      "visitIndex": 27,
+      "anchors": [
+       3886,
+       3885
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "220055bd-672b-436f-b479-883264c6842c",
+        "right": "220055bd-672b-436f-b479-883264c6842c"
+       },
+       "chunkIds": [
+        "220055bd-672b-436f-b479-883264c6842c:left:0",
+        "220055bd-672b-436f-b479-883264c6842c:left:2",
+        "220055bd-672b-436f-b479-883264c6842c:left:4",
+        "220055bd-672b-436f-b479-883264c6842c:left:5",
+        "220055bd-672b-436f-b479-883264c6842c:right:1",
+        "220055bd-672b-436f-b479-883264c6842c:right:3",
+        "220055bd-672b-436f-b479-883264c6842c:right:6"
+       ],
+       "points": 3716,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.2,
+         "verticalMm": 1.1
+        },
+        "right": {
+         "lateralMm": -1.8,
+         "verticalMm": -1.2
+        }
+       },
+       "fromPredictionMm": 1.8,
+       "engineMs": 312
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.6,
+         "verticalMm": 1.1
+        },
+        "right": {
+         "lateralMm": -1.8,
+         "verticalMm": -1.2
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.2,
+         "verticalMm": 1.1
+        },
+        "right": {
+         "lateralMm": -1.8,
+         "verticalMm": -1.2
+        }
+       },
+       "fromPredictionMm": 1.8,
+       "engineMs": 312
+      }
+     },
+     {
+      "cut": 3901,
+      "visitIndex": 28,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3902,
+      "visitIndex": 29,
+      "anchors": [
+       3901
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "ce0cf021-c9d9-4c8a-8509-96489ae7ac81",
+        "right": "ce0cf021-c9d9-4c8a-8509-96489ae7ac81"
+       },
+       "chunkIds": [
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:left:0",
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:left:2",
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:left:5",
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:right:1",
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:right:3",
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:right:4",
+        "ce0cf021-c9d9-4c8a-8509-96489ae7ac81:right:6"
+       ],
+       "points": 3762,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 3.4,
+       "engineMs": 320
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 3.4,
+       "engineMs": 320
+      }
+     },
+     {
+      "cut": 3903,
+      "visitIndex": 30,
+      "anchors": [
+       3901
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:23:03.273Z",
+       "captureIds": {
+        "left": "efb727b5-1ec4-4f93-9baf-8eff8e02f50b",
+        "right": "efb727b5-1ec4-4f93-9baf-8eff8e02f50b"
+       },
+       "chunkIds": [
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:left:0",
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:left:3",
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:left:4",
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:left:5",
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:right:1",
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:right:2",
+        "efb727b5-1ec4-4f93-9baf-8eff8e02f50b:right:6"
+       ],
+       "points": 3693,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.2,
+       "worstVerticalMm": 2.5,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2,
+         "verticalMm": 2.5
+        },
+        "right": {
+         "lateralMm": 2.2,
+         "verticalMm": -0.2
+        }
+       },
+       "fromPredictionMm": 5.9,
+       "engineMs": 319
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.2,
+       "worstVerticalMm": 2.5,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.9,
+         "verticalMm": 2.5
+        },
+        "right": {
+         "lateralMm": 2.2,
+         "verticalMm": -0.1
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.2,
+       "worstVerticalMm": 2.5,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2,
+         "verticalMm": 2.5
+        },
+        "right": {
+         "lateralMm": 2.2,
+         "verticalMm": -0.2
+        }
+       },
+       "fromPredictionMm": 5.9,
+       "engineMs": 319
+      }
+     },
+     {
+      "cut": 3904,
+      "visitIndex": 31,
+      "anchors": [
+       3903,
+       3901
+      ],
+      "status": "no-points",
+      "input": {
+       "cutoffAt": "2026-09-24T07:23:05.622Z",
+       "captureIds": {
+        "right": "10cbbe04-04aa-49e3-a0a8-e4060f0821ee"
+       },
+       "chunkIds": [
+        "10cbbe04-04aa-49e3-a0a8-e4060f0821ee:right:0"
+       ],
+       "points": 0,
+       "duplicatesRemoved": 0
+      },
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3905,
+      "visitIndex": 32,
+      "anchors": [
+       3903
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:24:02.855Z",
+       "captureIds": {
+        "left": "53e61fc7-81e8-4e44-9eca-e925b6b4359f",
+        "right": "53e61fc7-81e8-4e44-9eca-e925b6b4359f"
+       },
+       "chunkIds": [
+        "53e61fc7-81e8-4e44-9eca-e925b6b4359f:left:0",
+        "53e61fc7-81e8-4e44-9eca-e925b6b4359f:left:2",
+        "53e61fc7-81e8-4e44-9eca-e925b6b4359f:left:4",
+        "53e61fc7-81e8-4e44-9eca-e925b6b4359f:right:1",
+        "53e61fc7-81e8-4e44-9eca-e925b6b4359f:right:3",
+        "53e61fc7-81e8-4e44-9eca-e925b6b4359f:right:5"
+       ],
+       "points": 2952,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2,
+         "verticalMm": 2.8
+        },
+        "right": {
+         "lateralMm": 1.4,
+         "verticalMm": 0
+        }
+       },
+       "fromPredictionMm": 2.3,
+       "engineMs": 201
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2,
+         "verticalMm": 2.8
+        },
+        "right": {
+         "lateralMm": 2,
+         "verticalMm": -0.2
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2,
+         "verticalMm": 2.8
+        },
+        "right": {
+         "lateralMm": 1.4,
+         "verticalMm": 0
+        }
+       },
+       "fromPredictionMm": 2.3,
+       "engineMs": 201
+      }
+     },
+     {
+      "cut": 3933,
+      "visitIndex": 33,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 3934,
+      "visitIndex": 34,
+      "anchors": [
+       3933
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "cc6053a4-1c2d-42df-ad62-c4e84ef907e9",
+        "right": "cc6053a4-1c2d-42df-ad62-c4e84ef907e9"
+       },
+       "chunkIds": [
+        "cc6053a4-1c2d-42df-ad62-c4e84ef907e9:left:0",
+        "cc6053a4-1c2d-42df-ad62-c4e84ef907e9:left:2",
+        "cc6053a4-1c2d-42df-ad62-c4e84ef907e9:right:1"
+       ],
+       "points": 1367,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 1.5,
+       "engineMs": 104
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 1.5,
+       "engineMs": 104
+      }
+     },
+     {
+      "cut": 3935,
+      "visitIndex": 35,
+      "anchors": [
+       3933
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "5558757f-c0a4-422f-b43c-2ec07d8843c3",
+        "right": "5558757f-c0a4-422f-b43c-2ec07d8843c3"
+       },
+       "chunkIds": [
+        "5558757f-c0a4-422f-b43c-2ec07d8843c3:left:0",
+        "5558757f-c0a4-422f-b43c-2ec07d8843c3:left:2",
+        "5558757f-c0a4-422f-b43c-2ec07d8843c3:left:4",
+        "5558757f-c0a4-422f-b43c-2ec07d8843c3:right:1",
+        "5558757f-c0a4-422f-b43c-2ec07d8843c3:right:3"
+       ],
+       "points": 2463,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 219
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 219
+      }
+     },
+     {
+      "cut": 4014,
+      "visitIndex": 36,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 4015,
+      "visitIndex": 37,
+      "anchors": [
+       4014
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "47c29857-e35f-403c-ab79-c92ccfea638b",
+        "right": "47c29857-e35f-403c-ab79-c92ccfea638b"
+       },
+       "chunkIds": [
+        "47c29857-e35f-403c-ab79-c92ccfea638b:left:0",
+        "47c29857-e35f-403c-ab79-c92ccfea638b:left:2",
+        "47c29857-e35f-403c-ab79-c92ccfea638b:left:4",
+        "47c29857-e35f-403c-ab79-c92ccfea638b:right:1",
+        "47c29857-e35f-403c-ab79-c92ccfea638b:right:3",
+        "47c29857-e35f-403c-ab79-c92ccfea638b:right:5"
+       ],
+       "points": 3652,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3,
+       "worstVerticalMm": 0.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.2,
+         "verticalMm": -0.7
+        },
+        "right": {
+         "lateralMm": -3,
+         "verticalMm": -0.4
+        }
+       },
+       "fromPredictionMm": 1.8,
+       "engineMs": 334
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3,
+       "worstVerticalMm": 0.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.1,
+         "verticalMm": -0.7
+        },
+        "right": {
+         "lateralMm": -3,
+         "verticalMm": -0.6
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 3,
+       "worstVerticalMm": 0.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.2,
+         "verticalMm": -0.7
+        },
+        "right": {
+         "lateralMm": -3,
+         "verticalMm": -0.4
+        }
+       },
+       "fromPredictionMm": 1.8,
+       "engineMs": 334
+      }
+     },
+     {
+      "cut": 4016,
+      "visitIndex": 38,
+      "anchors": [
+       4015,
+       4014
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:00.102Z",
+       "captureIds": {
+        "left": "f4331144-e830-4c17-ab89-a6a70cf39815",
+        "right": "f105821c-8498-4e8b-9ed7-59c42c678cc8"
+       },
+       "chunkIds": [
+        "f4331144-e830-4c17-ab89-a6a70cf39815:left:0",
+        "f105821c-8498-4e8b-9ed7-59c42c678cc8:right:2"
+       ],
+       "points": 576,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "frame",
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 57
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "frame",
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "frame",
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 57
+      }
+     },
+     {
+      "cut": 5036,
+      "visitIndex": 39,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5035,
+      "visitIndex": 40,
+      "anchors": [
+       5036
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "ede98705-57b4-4d15-9c2f-b022e56f8dd7",
+        "right": "ede98705-57b4-4d15-9c2f-b022e56f8dd7"
+       },
+       "chunkIds": [
+        "ede98705-57b4-4d15-9c2f-b022e56f8dd7:left:0",
+        "ede98705-57b4-4d15-9c2f-b022e56f8dd7:left:2",
+        "ede98705-57b4-4d15-9c2f-b022e56f8dd7:left:4",
+        "ede98705-57b4-4d15-9c2f-b022e56f8dd7:right:1",
+        "ede98705-57b4-4d15-9c2f-b022e56f8dd7:right:3",
+        "ede98705-57b4-4d15-9c2f-b022e56f8dd7:right:5"
+       ],
+       "points": 2529,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 2.9,
+       "engineMs": 175
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 2.9,
+       "engineMs": 175
+      }
+     },
+     {
+      "cut": 5037,
+      "visitIndex": 42,
+      "anchors": [
+       5036
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:15.802Z",
+       "captureIds": {
+        "left": "397bae97-00ed-4641-b763-3e0e510fde81",
+        "right": "397bae97-00ed-4641-b763-3e0e510fde81"
+       },
+       "chunkIds": [
+        "397bae97-00ed-4641-b763-3e0e510fde81:left:0",
+        "397bae97-00ed-4641-b763-3e0e510fde81:left:2",
+        "397bae97-00ed-4641-b763-3e0e510fde81:left:4",
+        "397bae97-00ed-4641-b763-3e0e510fde81:right:1",
+        "397bae97-00ed-4641-b763-3e0e510fde81:right:3",
+        "397bae97-00ed-4641-b763-3e0e510fde81:right:5"
+       ],
+       "points": 2501,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.6,
+         "verticalMm": 1.4
+        },
+        "right": {
+         "lateralMm": -1,
+         "verticalMm": -0.3
+        }
+       },
+       "fromPredictionMm": 3.7,
+       "engineMs": 193
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.7,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.6,
+         "verticalMm": 1.4
+        },
+        "right": {
+         "lateralMm": -1.7,
+         "verticalMm": -0.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1,
+       "worstVerticalMm": 1.4,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.6,
+         "verticalMm": 1.4
+        },
+        "right": {
+         "lateralMm": -1,
+         "verticalMm": -0.3
+        }
+       },
+       "fromPredictionMm": 3.7,
+       "engineMs": 193
+      }
+     },
+     {
+      "cut": 5113,
+      "visitIndex": 43,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5114,
+      "visitIndex": 44,
+      "anchors": [
+       5113
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:25.951Z",
+       "captureIds": {
+        "left": "a445565a-6958-4417-bd55-98ee227360b4",
+        "right": "a445565a-6958-4417-bd55-98ee227360b4"
+       },
+       "chunkIds": [
+        "a445565a-6958-4417-bd55-98ee227360b4:left:0",
+        "a445565a-6958-4417-bd55-98ee227360b4:left:2",
+        "a445565a-6958-4417-bd55-98ee227360b4:left:4",
+        "a445565a-6958-4417-bd55-98ee227360b4:right:1",
+        "a445565a-6958-4417-bd55-98ee227360b4:right:3",
+        "a445565a-6958-4417-bd55-98ee227360b4:right:5"
+       ],
+       "points": 2654,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.1,
+       "worstVerticalMm": 3.5,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.1,
+         "verticalMm": 3.5
+        },
+        "right": {
+         "lateralMm": 1.1,
+         "verticalMm": 1.9
+        }
+       },
+       "fromPredictionMm": 7.1,
+       "engineMs": 200
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.7,
+       "worstVerticalMm": 3.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 1.7,
+         "verticalMm": 3.7
+        },
+        "right": {
+         "lateralMm": 1.1,
+         "verticalMm": 1.9
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.1,
+       "worstVerticalMm": 3.5,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.1,
+         "verticalMm": 3.5
+        },
+        "right": {
+         "lateralMm": 1.1,
+         "verticalMm": 1.9
+        }
+       },
+       "fromPredictionMm": 7.1,
+       "engineMs": 200
+      }
+     },
+     {
+      "cut": 5115,
+      "visitIndex": 45,
+      "anchors": [
+       5114,
+       5113
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:29.102Z",
+       "captureIds": {
+        "left": "767a132b-57b7-4c98-88c7-86d8d042a154",
+        "right": "767a132b-57b7-4c98-88c7-86d8d042a154"
+       },
+       "chunkIds": [
+        "767a132b-57b7-4c98-88c7-86d8d042a154:left:0",
+        "767a132b-57b7-4c98-88c7-86d8d042a154:left:2",
+        "767a132b-57b7-4c98-88c7-86d8d042a154:left:4",
+        "767a132b-57b7-4c98-88c7-86d8d042a154:right:1",
+        "767a132b-57b7-4c98-88c7-86d8d042a154:right:3",
+        "767a132b-57b7-4c98-88c7-86d8d042a154:right:5"
+       ],
+       "points": 2591,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.5,
+       "worstVerticalMm": 5.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.1,
+         "verticalMm": 0.1
+        },
+        "right": {
+         "lateralMm": -1.5,
+         "verticalMm": 5.3
+        }
+       },
+       "fromPredictionMm": 2.4,
+       "engineMs": 193
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.5,
+       "worstVerticalMm": 5.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.1,
+         "verticalMm": 0.1
+        },
+        "right": {
+         "lateralMm": -1.5,
+         "verticalMm": 5.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.5,
+       "worstVerticalMm": 5.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.1,
+         "verticalMm": 0.1
+        },
+        "right": {
+         "lateralMm": -1.5,
+         "verticalMm": 5.3
+        }
+       },
+       "fromPredictionMm": 2.4,
+       "engineMs": 193
+      }
+     },
+     {
+      "cut": 5158,
+      "visitIndex": 46,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5157,
+      "visitIndex": 47,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5159,
+      "visitIndex": 49,
+      "anchors": [
+       5158,
+       5157
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:40.851Z",
+       "captureIds": {
+        "left": "6f318e1c-16b3-47e2-a59e-ccdbb24b856c",
+        "right": "6f318e1c-16b3-47e2-a59e-ccdbb24b856c"
+       },
+       "chunkIds": [
+        "6f318e1c-16b3-47e2-a59e-ccdbb24b856c:left:0",
+        "6f318e1c-16b3-47e2-a59e-ccdbb24b856c:left:3",
+        "6f318e1c-16b3-47e2-a59e-ccdbb24b856c:right:1",
+        "6f318e1c-16b3-47e2-a59e-ccdbb24b856c:right:2",
+        "6f318e1c-16b3-47e2-a59e-ccdbb24b856c:right:4"
+       ],
+       "points": 2782,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 654
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 4,
+       "worstVerticalMm": 7.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -4,
+         "verticalMm": -7.8
+        },
+        "right": {
+         "lateralMm": -1.4,
+         "verticalMm": -2.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 654
+      }
+     },
+     {
+      "cut": 5160,
+      "visitIndex": 50,
+      "anchors": [
+       5159,
+       5158
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:44.567Z",
+       "captureIds": {
+        "left": "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c",
+        "right": "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c"
+       },
+       "chunkIds": [
+        "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c:left:0",
+        "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c:left:2",
+        "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c:left:4",
+        "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c:right:1",
+        "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c:right:3",
+        "1ab9e3e2-67d1-47b2-b5ea-c123a5b51d2c:right:5"
+       ],
+       "points": 2641,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.3,
+         "verticalMm": -2.3
+        },
+        "right": {
+         "lateralMm": -1.8,
+         "verticalMm": -2.8
+        }
+       },
+       "fromPredictionMm": 6.2,
+       "engineMs": 197
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.3,
+         "verticalMm": -2.3
+        },
+        "right": {
+         "lateralMm": -1.8,
+         "verticalMm": -2.8
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.3,
+         "verticalMm": -2.3
+        },
+        "right": {
+         "lateralMm": -1.8,
+         "verticalMm": -2.8
+        }
+       },
+       "fromPredictionMm": 6.2,
+       "engineMs": 197
+      }
+     },
+     {
+      "cut": 5161,
+      "visitIndex": 51,
+      "anchors": [
+       5160,
+       5159
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:25:52.650Z",
+       "captureIds": {
+        "left": "499dcaa9-b7b4-435d-8bbe-6e1fa5a4c4d4",
+        "right": "65f27572-dd01-46e0-9258-5877dd18e8a1"
+       },
+       "chunkIds": [
+        "499dcaa9-b7b4-435d-8bbe-6e1fa5a4c4d4:left:0",
+        "499dcaa9-b7b4-435d-8bbe-6e1fa5a4c4d4:left:1",
+        "65f27572-dd01-46e0-9258-5877dd18e8a1:right:0"
+       ],
+       "points": 1342,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "frame"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 86
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "frame"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "frame"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 86
+      }
+     },
+     {
+      "cut": 5265,
+      "visitIndex": 52,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5264,
+      "visitIndex": 53,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5266,
+      "visitIndex": 55,
+      "anchors": [
+       5265,
+       5264
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:26:39.016Z",
+       "captureIds": {
+        "left": "0f9554e0-7f03-4d4a-8a80-dfbea8b59047",
+        "right": "0f9554e0-7f03-4d4a-8a80-dfbea8b59047"
+       },
+       "chunkIds": [
+        "0f9554e0-7f03-4d4a-8a80-dfbea8b59047:left:0",
+        "0f9554e0-7f03-4d4a-8a80-dfbea8b59047:left:1",
+        "0f9554e0-7f03-4d4a-8a80-dfbea8b59047:left:3",
+        "0f9554e0-7f03-4d4a-8a80-dfbea8b59047:right:2",
+        "0f9554e0-7f03-4d4a-8a80-dfbea8b59047:right:4"
+       ],
+       "points": 2629,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.5,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.5,
+         "verticalMm": -2.8
+        },
+        "right": {
+         "lateralMm": -0.5,
+         "verticalMm": -1.1
+        }
+       },
+       "fromPredictionMm": 1.3,
+       "engineMs": 213
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.5,
+       "worstVerticalMm": 2.6,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.5,
+         "verticalMm": -2.6
+        },
+        "right": {
+         "lateralMm": -0.5,
+         "verticalMm": -1
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.5,
+       "worstVerticalMm": 2.8,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.5,
+         "verticalMm": -2.8
+        },
+        "right": {
+         "lateralMm": -0.5,
+         "verticalMm": -1.1
+        }
+       },
+       "fromPredictionMm": 1.3,
+       "engineMs": 213
+      }
+     },
+     {
+      "cut": 5432,
+      "visitIndex": 56,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5431,
+      "visitIndex": 57,
+      "anchors": [
+       5432
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:26:47.616Z",
+       "captureIds": {
+        "left": "c09871b5-cf13-4906-a22d-e5b6cc8fb89f",
+        "right": "02924f76-12b0-4c66-ab02-cee043115d04"
+       },
+       "chunkIds": [
+        "c09871b5-cf13-4906-a22d-e5b6cc8fb89f:left:1",
+        "c09871b5-cf13-4906-a22d-e5b6cc8fb89f:left:3",
+        "02924f76-12b0-4c66-ab02-cee043115d04:right:0",
+        "02924f76-12b0-4c66-ab02-cee043115d04:right:2"
+       ],
+       "points": 2301,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2,
+       "worstVerticalMm": 0.9,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -2,
+         "verticalMm": -0.9
+        },
+        "right": {
+         "lateralMm": -2,
+         "verticalMm": -0.4
+        }
+       },
+       "fromPredictionMm": 1.3,
+       "engineMs": 186
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.2,
+       "worstVerticalMm": 0.9,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -2,
+         "verticalMm": -0.9
+        },
+        "right": {
+         "lateralMm": -2.2,
+         "verticalMm": -0.5
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2,
+       "worstVerticalMm": 0.9,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -2,
+         "verticalMm": -0.9
+        },
+        "right": {
+         "lateralMm": -2,
+         "verticalMm": -0.4
+        }
+       },
+       "fromPredictionMm": 1.3,
+       "engineMs": 186
+      }
+     },
+     {
+      "cut": 5430,
+      "visitIndex": 58,
+      "anchors": [
+       5431,
+       5432
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:26:50.717Z",
+       "captureIds": {
+        "left": "5e3e64da-0702-4d2d-863e-20f9dff1f7ac",
+        "right": "5e3e64da-0702-4d2d-863e-20f9dff1f7ac"
+       },
+       "chunkIds": [
+        "5e3e64da-0702-4d2d-863e-20f9dff1f7ac:left:0",
+        "5e3e64da-0702-4d2d-863e-20f9dff1f7ac:left:2",
+        "5e3e64da-0702-4d2d-863e-20f9dff1f7ac:right:1",
+        "5e3e64da-0702-4d2d-863e-20f9dff1f7ac:right:3"
+       ],
+       "points": 1751,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 142
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 142
+      }
+     },
+     {
+      "cut": 5433,
+      "visitIndex": 61,
+      "anchors": [
+       5432,
+       5431
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:26:55.365Z",
+       "captureIds": {
+        "left": "8e9993cd-4b34-49b8-b15f-5263ca692edf",
+        "right": "8e9993cd-4b34-49b8-b15f-5263ca692edf"
+       },
+       "chunkIds": [
+        "8e9993cd-4b34-49b8-b15f-5263ca692edf:left:0",
+        "8e9993cd-4b34-49b8-b15f-5263ca692edf:left:2",
+        "8e9993cd-4b34-49b8-b15f-5263ca692edf:left:4",
+        "8e9993cd-4b34-49b8-b15f-5263ca692edf:right:1",
+        "8e9993cd-4b34-49b8-b15f-5263ca692edf:right:3",
+        "8e9993cd-4b34-49b8-b15f-5263ca692edf:right:5"
+       ],
+       "points": 2445,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.7,
+       "worstVerticalMm": 1.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.7,
+         "verticalMm": 0.1
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": -1.2
+        }
+       },
+       "fromPredictionMm": 1.4,
+       "engineMs": 190
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.8,
+       "worstVerticalMm": 1.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.7,
+         "verticalMm": 0.1
+        },
+        "right": {
+         "lateralMm": -0.8,
+         "verticalMm": -1.2
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.7,
+       "worstVerticalMm": 1.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.7,
+         "verticalMm": 0.1
+        },
+        "right": {
+         "lateralMm": -0.7,
+         "verticalMm": -1.2
+        }
+       },
+       "fromPredictionMm": 1.4,
+       "engineMs": 190
+      }
+     },
+     {
+      "cut": 5780,
+      "visitIndex": 62,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5779,
+      "visitIndex": 63,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5778,
+      "visitIndex": 64,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 5781,
+      "visitIndex": 67,
+      "anchors": [
+       5780,
+       5779
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:06.983Z",
+       "captureIds": {
+        "left": "b278123b-f11d-420b-b760-2f66f88717fa",
+        "right": "b278123b-f11d-420b-b760-2f66f88717fa"
+       },
+       "chunkIds": [
+        "b278123b-f11d-420b-b760-2f66f88717fa:left:0",
+        "b278123b-f11d-420b-b760-2f66f88717fa:left:2",
+        "b278123b-f11d-420b-b760-2f66f88717fa:right:1",
+        "b278123b-f11d-420b-b760-2f66f88717fa:right:3"
+       ],
+       "points": 1233,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 242
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "minTop"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 242
+      }
+     },
+     {
+      "cut": 5782,
+      "visitIndex": 68,
+      "anchors": [
+       5781,
+       5780
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:10.632Z",
+       "captureIds": {
+        "left": "6163db40-ebf1-48c7-bead-7f7c88dba42f",
+        "right": "6163db40-ebf1-48c7-bead-7f7c88dba42f"
+       },
+       "chunkIds": [
+        "6163db40-ebf1-48c7-bead-7f7c88dba42f:left:0",
+        "6163db40-ebf1-48c7-bead-7f7c88dba42f:left:2",
+        "6163db40-ebf1-48c7-bead-7f7c88dba42f:right:1",
+        "6163db40-ebf1-48c7-bead-7f7c88dba42f:right:3"
+       ],
+       "points": 2423,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "slope"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 362
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "slope"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "slope"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 362
+      }
+     },
+     {
+      "cut": 5783,
+      "visitIndex": 69,
+      "anchors": [
+       5782,
+       5781
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:13.801Z",
+       "captureIds": {
+        "left": "96a7a528-b1b0-4e83-b05a-b62caf7c2879",
+        "right": "96a7a528-b1b0-4e83-b05a-b62caf7c2879"
+       },
+       "chunkIds": [
+        "96a7a528-b1b0-4e83-b05a-b62caf7c2879:left:0",
+        "96a7a528-b1b0-4e83-b05a-b62caf7c2879:left:2",
+        "96a7a528-b1b0-4e83-b05a-b62caf7c2879:right:1",
+        "96a7a528-b1b0-4e83-b05a-b62caf7c2879:right:3"
+       ],
+       "points": 2411,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 417
+      },
+      "esv": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "gauge-rejected",
+       "motifs": [
+        "gauge-out-of-contract",
+        "gauge-out-of-contract"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 417
+      }
+     },
+     {
+      "cut": 5784,
+      "visitIndex": 70,
+      "anchors": [
+       5783,
+       5782
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:16.913Z",
+       "captureIds": {
+        "left": "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d",
+        "right": "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d"
+       },
+       "chunkIds": [
+        "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d:left:0",
+        "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d:left:2",
+        "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d:right:1",
+        "d3f4da98-6b9a-4fd2-a971-fddf36f3db5d:right:3"
+       ],
+       "points": 2393,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:multi-intent-reference-ambiguous",
+       "right:multi-intent-reference-ambiguous"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 1.7,
+       "engineMs": 405
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "ambiguity"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 1.7,
+       "engineMs": 405
+      }
+     },
+     {
+      "cut": 5785,
+      "visitIndex": 71,
+      "anchors": [
+       5783,
+       5782
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:33.914Z",
+       "captureIds": {
+        "left": "9f4ed8dd-d642-47ad-9add-35f58093bbc4",
+        "right": "9f4ed8dd-d642-47ad-9add-35f58093bbc4"
+       },
+       "chunkIds": [
+        "9f4ed8dd-d642-47ad-9add-35f58093bbc4:left:0",
+        "9f4ed8dd-d642-47ad-9add-35f58093bbc4:left:2",
+        "9f4ed8dd-d642-47ad-9add-35f58093bbc4:right:1",
+        "9f4ed8dd-d642-47ad-9add-35f58093bbc4:right:3"
+       ],
+       "points": 1753,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 5.6,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 4.4,
+         "verticalMm": 1.7
+        },
+        "right": {
+         "lateralMm": -5.6,
+         "verticalMm": 0.4
+        }
+       },
+       "fromPredictionMm": 2.8,
+       "engineMs": 108
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 5.6,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 4.4,
+         "verticalMm": 1.7
+        },
+        "right": {
+         "lateralMm": -5.6,
+         "verticalMm": 0.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 5.6,
+       "worstVerticalMm": 1.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 4.4,
+         "verticalMm": 1.7
+        },
+        "right": {
+         "lateralMm": -5.6,
+         "verticalMm": 0.4
+        }
+       },
+       "fromPredictionMm": 2.8,
+       "engineMs": 108
+      }
+     },
+     {
+      "cut": 5786,
+      "visitIndex": 72,
+      "anchors": [
+       5785,
+       5783
+      ],
+      "status": "no-points",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:36.381Z",
+       "captureIds": {},
+       "chunkIds": [],
+       "points": 0,
+       "duplicatesRemoved": 0
+      },
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 6481,
+      "visitIndex": 73,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 6480,
+      "visitIndex": 74,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 6482,
+      "visitIndex": 76,
+      "anchors": [
+       6481,
+       6480
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:27:58.463Z",
+       "captureIds": {
+        "left": "069b41ce-b2f7-418d-b9cf-736412495b2f",
+        "right": "069b41ce-b2f7-418d-b9cf-736412495b2f"
+       },
+       "chunkIds": [
+        "069b41ce-b2f7-418d-b9cf-736412495b2f:left:0",
+        "069b41ce-b2f7-418d-b9cf-736412495b2f:left:2",
+        "069b41ce-b2f7-418d-b9cf-736412495b2f:right:1",
+        "069b41ce-b2f7-418d-b9cf-736412495b2f:right:3"
+       ],
+       "points": 2509,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 197
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 197
+      }
+     },
+     {
+      "cut": 7374,
+      "visitIndex": 77,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 7375,
+      "visitIndex": 78,
+      "anchors": [
+       7374
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "f6e93723-246a-4259-907e-48776c592078",
+        "right": "f6e93723-246a-4259-907e-48776c592078"
+       },
+       "chunkIds": [
+        "f6e93723-246a-4259-907e-48776c592078:left:0",
+        "f6e93723-246a-4259-907e-48776c592078:left:2",
+        "f6e93723-246a-4259-907e-48776c592078:left:4",
+        "f6e93723-246a-4259-907e-48776c592078:right:1",
+        "f6e93723-246a-4259-907e-48776c592078:right:3",
+        "f6e93723-246a-4259-907e-48776c592078:right:5"
+       ],
+       "points": 2371,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 4.2,
+       "engineMs": 165
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 4.2,
+       "engineMs": 165
+      }
+     },
+     {
+      "cut": 7376,
+      "visitIndex": 79,
+      "anchors": [
+       7374
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "6bc264cb-ae5d-418e-81a9-3ddbc43d2819",
+        "right": "6bc264cb-ae5d-418e-81a9-3ddbc43d2819"
+       },
+       "chunkIds": [
+        "6bc264cb-ae5d-418e-81a9-3ddbc43d2819:left:0",
+        "6bc264cb-ae5d-418e-81a9-3ddbc43d2819:left:2",
+        "6bc264cb-ae5d-418e-81a9-3ddbc43d2819:right:1",
+        "6bc264cb-ae5d-418e-81a9-3ddbc43d2819:right:3"
+       ],
+       "points": 1830,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 3.9,
+       "engineMs": 125
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 3.9,
+       "engineMs": 125
+      }
+     },
+     {
+      "cut": 7555,
+      "visitIndex": 80,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 7556,
+      "visitIndex": 81,
+      "anchors": [
+       7555
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:28:17.646Z",
+       "captureIds": {
+        "left": "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453",
+        "right": "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453"
+       },
+       "chunkIds": [
+        "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453:left:0",
+        "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453:left:2",
+        "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453:right:1",
+        "d7acfd1a-7cd2-4eff-bd87-7e0cfd864453:right:3"
+       ],
+       "points": 2430,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 2.3,
+       "engineMs": 185
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 2.3,
+       "engineMs": 185
+      }
+     },
+     {
+      "cut": 7557,
+      "visitIndex": 82,
+      "anchors": [
+       7555
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:28:20.478Z",
+       "captureIds": {
+        "left": "6bee89fd-0852-4562-bc77-a293647d613d",
+        "right": "6bee89fd-0852-4562-bc77-a293647d613d"
+       },
+       "chunkIds": [
+        "6bee89fd-0852-4562-bc77-a293647d613d:left:0",
+        "6bee89fd-0852-4562-bc77-a293647d613d:left:2",
+        "6bee89fd-0852-4562-bc77-a293647d613d:left:4",
+        "6bee89fd-0852-4562-bc77-a293647d613d:right:1",
+        "6bee89fd-0852-4562-bc77-a293647d613d:right:3",
+        "6bee89fd-0852-4562-bc77-a293647d613d:right:5"
+       ],
+       "points": 2408,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.9,
+       "worstVerticalMm": 4.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.9,
+         "verticalMm": 4.3
+        },
+        "right": {
+         "lateralMm": -2.3,
+         "verticalMm": 3.1
+        }
+       },
+       "fromPredictionMm": 3.8,
+       "engineMs": 189
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.8,
+       "worstVerticalMm": 4.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.8,
+         "verticalMm": 4.3
+        },
+        "right": {
+         "lateralMm": -2.3,
+         "verticalMm": 3.1
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 2.9,
+       "worstVerticalMm": 4.3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 2.9,
+         "verticalMm": 4.3
+        },
+        "right": {
+         "lateralMm": -2.3,
+         "verticalMm": 3.1
+        }
+       },
+       "fromPredictionMm": 3.8,
+       "engineMs": 189
+      }
+     },
+     {
+      "cut": 7638,
+      "visitIndex": 83,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 7639,
+      "visitIndex": 84,
+      "anchors": [
+       7638
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:28:29.696Z",
+       "captureIds": {
+        "left": "9164b132-0afd-4a24-846f-a249cf8b06aa",
+        "right": "9164b132-0afd-4a24-846f-a249cf8b06aa"
+       },
+       "chunkIds": [
+        "9164b132-0afd-4a24-846f-a249cf8b06aa:left:0",
+        "9164b132-0afd-4a24-846f-a249cf8b06aa:left:2",
+        "9164b132-0afd-4a24-846f-a249cf8b06aa:right:1",
+        "9164b132-0afd-4a24-846f-a249cf8b06aa:right:3"
+       ],
+       "points": 2294,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.3,
+       "worstVerticalMm": 3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.6,
+         "verticalMm": 2.2
+        },
+        "right": {
+         "lateralMm": 1.3,
+         "verticalMm": 3
+        }
+       },
+       "fromPredictionMm": 0.7,
+       "engineMs": 162
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.5,
+       "worstVerticalMm": 2.2,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.5,
+         "verticalMm": 2.2
+        },
+        "right": {
+         "lateralMm": -1.5,
+         "verticalMm": -0.5
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.3,
+       "worstVerticalMm": 3,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -0.6,
+         "verticalMm": 2.2
+        },
+        "right": {
+         "lateralMm": 1.3,
+         "verticalMm": 3
+        }
+       },
+       "fromPredictionMm": 0.7,
+       "engineMs": 162
+      }
+     },
+     {
+      "cut": 7640,
+      "visitIndex": 85,
+      "anchors": [
+       7639,
+       7638
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "be470596-ba21-4048-810f-731be060b3bc",
+        "right": "be470596-ba21-4048-810f-731be060b3bc"
+       },
+       "chunkIds": [
+        "be470596-ba21-4048-810f-731be060b3bc:left:0",
+        "be470596-ba21-4048-810f-731be060b3bc:left:2",
+        "be470596-ba21-4048-810f-731be060b3bc:right:1",
+        "be470596-ba21-4048-810f-731be060b3bc:right:3"
+       ],
+       "points": 2267,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.7,
+       "worstVerticalMm": 2.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.7,
+         "verticalMm": 2.7
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": 0
+        }
+       },
+       "fromPredictionMm": 2.4,
+       "engineMs": 181
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.8,
+       "worstVerticalMm": 2.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.8,
+         "verticalMm": 2.7
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": 0
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 0.7,
+       "worstVerticalMm": 2.7,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": 0.7,
+         "verticalMm": 2.7
+        },
+        "right": {
+         "lateralMm": -0.1,
+         "verticalMm": 0
+        }
+       },
+       "fromPredictionMm": 2.4,
+       "engineMs": 181
+      }
+     },
+     {
+      "cut": 7667,
+      "visitIndex": 86,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     },
+     {
+      "cut": 7668,
+      "visitIndex": 87,
+      "anchors": [
+       7667
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": "2026-09-24T07:28:38.946Z",
+       "captureIds": {
+        "left": "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5",
+        "right": "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5"
+       },
+       "chunkIds": [
+        "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5:left:0",
+        "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5:left:2",
+        "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5:left:4",
+        "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5:right:1",
+        "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5:right:3",
+        "d6d54cbd-c1b9-4484-abe5-5ab3a1be25a5:right:5"
+       ],
+       "points": 2088,
+       "duplicatesRemoved": 0
+      },
+      "referenced": true,
+      "referenceReasons": [],
+      "continuity": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.1,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.8,
+         "verticalMm": 1.1
+        },
+        "right": {
+         "lateralMm": 0.3,
+         "verticalMm": -0.3
+        }
+       },
+       "fromPredictionMm": 3.5,
+       "engineMs": 182
+      },
+      "esv": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.1,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.8,
+         "verticalMm": 1.1
+        },
+        "right": {
+         "lateralMm": 0.4,
+         "verticalMm": -0.3
+        }
+       }
+      },
+      "continuityGuarded": {
+       "outcome": "applied-right",
+       "worstLateralMm": 1.8,
+       "worstVerticalMm": 1.1,
+       "verticalOver10": false,
+       "errors": {
+        "left": {
+         "lateralMm": -1.8,
+         "verticalMm": 1.1
+        },
+        "right": {
+         "lateralMm": 0.3,
+         "verticalMm": -0.3
+        }
+       },
+       "fromPredictionMm": 3.5,
+       "engineMs": 182
+      }
+     },
+     {
+      "cut": 7669,
+      "visitIndex": 88,
+      "anchors": [
+       7668,
+       7667
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "f0b60a8f-a09c-4a0c-8446-85ef23710d46",
+        "right": "dd5416b2-59e6-4ad2-bedd-f816b4a27dda"
+       },
+       "chunkIds": [
+        "f0b60a8f-a09c-4a0c-8446-85ef23710d46:left:0",
+        "f0b60a8f-a09c-4a0c-8446-85ef23710d46:left:2",
+        "dd5416b2-59e6-4ad2-bedd-f816b4a27dda:right:0"
+       ],
+       "points": 1929,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 132
+      },
+      "esv": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ]
+      },
+      "continuityGuarded": {
+       "outcome": "rail-abstained",
+       "motifs": [
+        "flank"
+       ],
+       "fromPredictionMm": null,
+       "engineMs": 132
+      }
+     },
+     {
+      "cut": 7670,
+      "visitIndex": 89,
+      "anchors": [
+       7668,
+       7667
+      ],
+      "status": "computed",
+      "input": {
+       "cutoffAt": null,
+       "captureIds": {
+        "left": "cd561200-8053-438a-abe2-fb7ab6c46b03",
+        "right": "cd561200-8053-438a-abe2-fb7ab6c46b03"
+       },
+       "chunkIds": [
+        "cd561200-8053-438a-abe2-fb7ab6c46b03:left:0",
+        "cd561200-8053-438a-abe2-fb7ab6c46b03:left:2",
+        "cd561200-8053-438a-abe2-fb7ab6c46b03:left:4",
+        "cd561200-8053-438a-abe2-fb7ab6c46b03:right:1",
+        "cd561200-8053-438a-abe2-fb7ab6c46b03:right:3",
+        "cd561200-8053-438a-abe2-fb7ab6c46b03:right:5"
+       ],
+       "points": 2345,
+       "duplicatesRemoved": 0
+      },
+      "referenced": false,
+      "referenceReasons": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "continuity": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 10.5,
+       "engineMs": 181
+      },
+      "esv": {
+       "outcome": "applied-unreferenced"
+      },
+      "continuityGuarded": {
+       "outcome": "applied-unreferenced",
+       "fromPredictionMm": 10.5,
+       "engineMs": 181
+      }
+     },
+     {
+      "cut": 8755,
+      "visitIndex": 90,
+      "anchors": [],
+      "status": "no-anchor",
+      "input": null,
+      "outcome": "not-computed"
+     }
+    ]
+   }
+  ]
+ }
+}

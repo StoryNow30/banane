@@ -69,7 +69,47 @@ Restent : 9049 et 9317 (paires hors contrat, dont 9317 à 1 470,8 mm : le
 contrat ne bouge pas), 9048 et 9405 (pas de minimum qualifié), 9406 (aucun
 point), 9407 (lot arrêté dessus).
 
-## 4. Limites — à lire avant tout chiffre
+## 4. La garde sur les appuis validés (étape 2)
+
+Un voisin n'est gardé comme appui que s'il s'aligne, **sur les deux rails**,
+avec au moins deux autres voisins de la fenêtre : écart latéral et vertical à
+la droite des autres ≤ 8 mm, dans le repère du rail du cut décidé ; on retient
+le plus grand groupe cohérent, et moins de trois voisins cohérents ne donnent
+aucun appui validé (`consistentAnchors`, `--garde`).
+
+Avec **tous** les voisins hors du lot, y compris les douteux, et sans lire
+l'avenir :
+
+| Garde | Décision sur le lot | Faux / jugés |
+|---|---|---|
+| aucune (tous les voisins) | 19 / 28 (68 %) | 0 / 4 |
+| **cohérence 8 mm, ±5 cuts** | **22 / 28 (79 %)** | **0 / 7** |
+
+Le voisin faux (9219) est écarté par sa seule incohérence : le résultat est
+celui du filtre « non retouchés à la relecture », qui lisait l'avenir.
+Sensibilité : tolérance 5, 8, 12 ou 15 mm et fenêtre ±5 ou ±8 : 22 / 28 ;
+fenêtre ±3 : 21 / 28 ; toujours 0 faux.
+
+```sh
+node tools/validated-anchors-study.cjs --lot "DOSSIER_P19=pilote-p19-4.7.6" --garde [--tolerance 8] [--fenetre 5]
+```
+Relevé : `audit/validated-anchors-p19-garde-2026-09-24.json`.
+
+## 5. Partie 30, jamais vue (collecte 4.7.7 du 24/09)
+
+Banc Natif, 83 cuts distincts, aucun réglage fait sur cette partie
+(`audit/lot-choice-p30-2026-09-24.json`) :
+
+| | Cuts appliqués | Sur les 57 cuts jugés |
+|---|---|---|
+| Moteur depuis la pose ESV | 57 / 83 (68,7 %) | 44 justes, 0 faux |
+| **Décision sur le lot, deux passages** | **68 / 83 (81,9 %)** | **50 justes, 0 faux** |
+
+Au banc Natif, les appuis sont les cuts retenus par la décision elle-même,
+jamais les validations de l'opérateur : c'est la décision sur le lot de la
+4.7.8, sans le levier des appuis validés.
+
+## 6. Limites — à lire avant tout chiffre
 
 - **« Hors du lot » ne veut pas dire « validé ».** Le cut 9219, sauté par le
   Pilote, avait une pose fausse de 40 à 55 mm, corrigée à la relecture (sans
@@ -82,13 +122,13 @@ point), 9407 (lot arrêté dessus).
 - La relecture de la partie 19 a jugé peu de cuts appliqués (validation
   manquante) ; F1 corrige ce point.
 
-## 5. Ce qu'il faut pour en faire un levier du Pilote
+## 7. Ce qu'il faut pour en faire un levier du Pilote
 
-1. **Lire le statut et les rails des voisins dans ESV** : par un indicateur de
-   la page, par les données de la carte, ou par une visite en lecture seule du
-   voisin (S puis Z, chantier 1). C'est l'objet de l'inspection d'ESV.
-2. **Une garde sur les appuis validés** : deux appuis qui se contredisent (par
-   exemple de part et d'autre du cut) écartent la prédiction ; à régler hors
-   ligne sans créer de faux.
+1. **Lire les rails des voisins dans ESV.** L'opérateur confirme (24/09) que
+   les rails dessinés sur la carte sont les poses validées : ils bougent quand
+   il valide une nouvelle pose. La source la plus simple est donc la donnée de
+   la carte, à localiser par l'inspection d'ESV (fiche opérateur, étape 3 bis) ;
+   à défaut, une visite en lecture seule du voisin (S puis Z, chantier 1).
+2. ~~Une garde sur les appuis validés~~ : faite et mesurée (§4).
 3. **Les appuis validés dans `src/lot-decision.js`**, en observation d'abord
    (comme la 4.7.8), avec leur provenance consignée.

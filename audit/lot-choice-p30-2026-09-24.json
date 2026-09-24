@@ -1,0 +1,884 @@
+{
+ "format": "banane-lot-choice-study-v1",
+ "engine": "gcv1-shadow 4.7.7",
+ "wrongMm": 10,
+ "guardMm": 30,
+ "excludedCuts": [
+  9033,
+  9241
+ ],
+ "runs": [
+  {
+   "label": "natif-p30",
+   "chooseMm": 15,
+   "variant": "B",
+   "chain": "guarded",
+   "sides": "both",
+   "summary": {
+    "cuts": 83,
+    "judged": 57,
+    "esvOnly": {
+     "right": 44,
+     "wrong": 0
+    },
+    "lot": {
+     "right": 50,
+     "wrong": 0
+    },
+    "byStage": {
+     "first-pass": {
+      "cuts": 44,
+      "right": 44,
+      "wrong": 0
+     },
+     "second-pass-choice": {
+      "cuts": 5,
+      "right": 5,
+      "wrong": 0
+     },
+     "second-pass-window": {
+      "cuts": 1,
+      "right": 1,
+      "wrong": 0
+     },
+     "deferred": {
+      "cuts": 7,
+      "right": 0,
+      "wrong": 0
+     }
+    },
+    "wrongCuts": [],
+    "coverageAllCuts": {
+     "applied": 68,
+     "cuts": 83,
+     "rate": 81.9
+    },
+    "coverageEsvAllCuts": {
+     "applied": 57,
+     "cuts": 83,
+     "rate": 68.7
+    }
+   },
+   "rows": [
+    {
+     "cut": 2473,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 4.9,
+     "referenced": false
+    },
+    {
+     "cut": 2474,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.5,
+     "referenced": false
+    },
+    {
+     "cut": 2475,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 4.9,
+     "referenced": true,
+     "esvWorstMm": 1.8,
+     "worstMm": 1.8
+    },
+    {
+     "cut": 2476,
+     "stage": "second-pass-choice",
+     "esv": "gauge-rejected",
+     "chosen": {
+      "left": {
+       "fromPredictionMm": 2.1,
+       "top": 64,
+       "face": 9,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      2475,
+      2474
+     ],
+     "referenced": true,
+     "worstMm": 1.2
+    },
+    {
+     "cut": 2477,
+     "stage": "second-pass-window",
+     "esv": "abstained",
+     "anchors": [
+      2478,
+      2475
+     ],
+     "referenced": true,
+     "worstMm": 1.7
+    },
+    {
+     "cut": 2478,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.1,
+     "referenced": true,
+     "esvWorstMm": 2.3,
+     "worstMm": 2.3
+    },
+    {
+     "cut": 2479,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.5,
+     "referenced": false
+    },
+    {
+     "cut": 2480,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.7,
+     "referenced": true,
+     "esvWorstMm": 2.7,
+     "worstMm": 2.7
+    },
+    {
+     "cut": 2481,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.7,
+     "referenced": true,
+     "esvWorstMm": 2.4,
+     "worstMm": 2.4
+    },
+    {
+     "cut": 2482,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.6,
+     "referenced": true,
+     "esvWorstMm": 1.4,
+     "worstMm": 1.4
+    },
+    {
+     "cut": 2483,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.4,
+     "referenced": true,
+     "esvWorstMm": 2.5,
+     "worstMm": 2.5
+    },
+    {
+     "cut": 2484,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 4.1,
+     "referenced": true,
+     "esvWorstMm": 2,
+     "worstMm": 2
+    },
+    {
+     "cut": 2485,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 8.3,
+     "referenced": true,
+     "esvWorstMm": 3.3,
+     "worstMm": 3.3
+    },
+    {
+     "cut": 2780,
+     "stage": "first-pass",
+     "esv": "applied",
+     "referenced": true,
+     "esvWorstMm": 4.4,
+     "worstMm": 4.4
+    },
+    {
+     "cut": 2781,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "right": {
+       "fromPredictionMm": 2.4,
+       "top": 49,
+       "face": 11,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      2780
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 2782,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "left": {
+       "fromPredictionMm": 7.3,
+       "top": 82,
+       "face": 5,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      2780
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 3762,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 3.7,
+     "referenced": true,
+     "esvWorstMm": 2.5,
+     "worstMm": 2.5
+    },
+    {
+     "cut": 3763,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.8,
+     "referenced": false
+    },
+    {
+     "cut": 3764,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 3.5,
+     "referenced": true,
+     "esvWorstMm": 2.4,
+     "worstMm": 2.4
+    },
+    {
+     "cut": 3778,
+     "stage": "first-pass",
+     "esv": "applied",
+     "referenced": true,
+     "esvWorstMm": 3.7,
+     "worstMm": 3.7
+    },
+    {
+     "cut": 3779,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "right:no-qualified-minimum-near-prediction",
+     "anchors": [
+      3778
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 3780,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "right:no-qualified-minimum-near-prediction",
+     "anchors": [
+      3778
+     ],
+     "referenced": true
+    },
+    {
+     "cut": 3861,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 5,
+     "referenced": true,
+     "esvWorstMm": 5.4,
+     "worstMm": 5.4
+    },
+    {
+     "cut": 3862,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.5,
+     "referenced": true,
+     "esvWorstMm": 3.3,
+     "worstMm": 3.3
+    },
+    {
+     "cut": 3863,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 5,
+     "referenced": true,
+     "esvWorstMm": 1.7,
+     "worstMm": 1.7
+    },
+    {
+     "cut": 3885,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.7,
+     "referenced": true,
+     "esvWorstMm": 4.9,
+     "worstMm": 4.9
+    },
+    {
+     "cut": 3886,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.9,
+     "referenced": true,
+     "esvWorstMm": 0.9,
+     "worstMm": 0.9
+    },
+    {
+     "cut": 3887,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.7,
+     "referenced": true,
+     "esvWorstMm": 1.8,
+     "worstMm": 1.8
+    },
+    {
+     "cut": 3901,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.4,
+     "referenced": true,
+     "esvWorstMm": 0.9,
+     "worstMm": 0.9
+    },
+    {
+     "cut": 3902,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.7,
+     "referenced": false
+    },
+    {
+     "cut": 3903,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.4,
+     "referenced": true,
+     "esvWorstMm": 2.5,
+     "worstMm": 2.5
+    },
+    {
+     "cut": 3904,
+     "stage": "no-input",
+     "esv": "no-input"
+    },
+    {
+     "cut": 3905,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 5.1,
+     "referenced": true,
+     "esvWorstMm": 2.8,
+     "worstMm": 2.8
+    },
+    {
+     "cut": 3933,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.4,
+     "referenced": true,
+     "esvWorstMm": 2.8,
+     "worstMm": 2.8
+    },
+    {
+     "cut": 3934,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.3,
+     "referenced": false
+    },
+    {
+     "cut": 3935,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "right": {
+       "fromPredictionMm": 7,
+       "top": 36,
+       "face": 17,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      3934,
+      3933
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 4014,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "right": {
+       "fromPredictionMm": 1.8,
+       "top": 98,
+       "face": 14,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      4015
+     ],
+     "referenced": true,
+     "worstMm": 2.1
+    },
+    {
+     "cut": 4015,
+     "stage": "first-pass",
+     "esv": "applied",
+     "referenced": true,
+     "esvWorstMm": 3,
+     "worstMm": 3
+    },
+    {
+     "cut": 4016,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "left:frame right:no-qualified-minimum-near-prediction",
+     "anchors": [
+      4015
+     ],
+     "referenced": true
+    },
+    {
+     "cut": 5036,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "left:no-qualified-minimum-near-prediction",
+     "anchors": [
+      5035,
+      5037
+     ],
+     "referenced": true
+    },
+    {
+     "cut": 5035,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 3.1,
+     "referenced": false
+    },
+    {
+     "cut": 5037,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 11.2,
+     "referenced": true,
+     "esvWorstMm": 1.7,
+     "worstMm": 1.7
+    },
+    {
+     "cut": 5113,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "right:no-qualified-minimum-near-prediction",
+     "anchors": [
+      5114,
+      5115
+     ],
+     "referenced": true
+    },
+    {
+     "cut": 5114,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 5.7,
+     "referenced": true,
+     "esvWorstMm": 3.7,
+     "worstMm": 3.7
+    },
+    {
+     "cut": 5115,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 5.4,
+     "referenced": true,
+     "esvWorstMm": 5.3,
+     "worstMm": 5.3
+    },
+    {
+     "cut": 5158,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "left:frame right:frame",
+     "anchors": [
+      5157,
+      5159
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 5157,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 26.2,
+     "referenced": true,
+     "esvWorstMm": 4.5,
+     "worstMm": 4.5
+    },
+    {
+     "cut": 5159,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 8.7,
+     "referenced": true,
+     "esvWorstMm": 7.8,
+     "worstMm": 7.8
+    },
+    {
+     "cut": 5160,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 13.1,
+     "referenced": true,
+     "esvWorstMm": 2.8,
+     "worstMm": 2.8
+    },
+    {
+     "cut": 5161,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "right:frame",
+     "anchors": [
+      5160,
+      5159
+     ],
+     "referenced": true
+    },
+    {
+     "cut": 5265,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.4,
+     "referenced": false
+    },
+    {
+     "cut": 5264,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.9,
+     "referenced": true,
+     "esvWorstMm": 5,
+     "worstMm": 5
+    },
+    {
+     "cut": 5266,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.9,
+     "referenced": true,
+     "esvWorstMm": 2.6,
+     "worstMm": 2.6
+    },
+    {
+     "cut": 5432,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1,
+     "referenced": true,
+     "esvWorstMm": 1.4,
+     "worstMm": 1.4
+    },
+    {
+     "cut": 5431,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2,
+     "referenced": true,
+     "esvWorstMm": 2.2,
+     "worstMm": 2.2
+    },
+    {
+     "cut": 5430,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "right": {
+       "fromPredictionMm": 2.1,
+       "top": 16,
+       "face": 3,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      5431,
+      5432
+     ],
+     "referenced": true,
+     "worstMm": 2.5
+    },
+    {
+     "cut": 5433,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2,
+     "referenced": true,
+     "esvWorstMm": 1.2,
+     "worstMm": 1.2
+    },
+    {
+     "cut": 5780,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "left:frame right:frame",
+     "anchors": [
+      5778
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 5779,
+     "stage": "no-input",
+     "esv": "no-input"
+    },
+    {
+     "cut": 5778,
+     "stage": "first-pass",
+     "esv": "applied",
+     "referenced": true,
+     "esvWorstMm": 6,
+     "worstMm": 6
+    },
+    {
+     "cut": 5781,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "right:no-qualified-minimum-near-prediction",
+     "anchors": [
+      5778
+     ],
+     "referenced": true
+    },
+    {
+     "cut": 5782,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "right": {
+       "fromPredictionMm": 3,
+       "top": 63,
+       "face": 9,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      5785
+     ],
+     "referenced": true,
+     "worstMm": 1.9
+    },
+    {
+     "cut": 5783,
+     "stage": "second-pass-choice",
+     "esv": "gauge-rejected",
+     "chosen": {
+      "left": {
+       "fromPredictionMm": 1,
+       "top": 60,
+       "face": 8,
+       "lossRatio": 1.6,
+       "rankByLoss": 1
+      },
+      "right": {
+       "fromPredictionMm": 11.2,
+       "top": 60,
+       "face": 11,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      5785
+     ],
+     "referenced": true,
+     "worstMm": 1.2
+    },
+    {
+     "cut": 5784,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "left": {
+       "fromPredictionMm": 4,
+       "top": 61,
+       "face": 12,
+       "lossRatio": 1,
+       "rankByLoss": 1
+      }
+     },
+     "anchors": [
+      5785
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 5785,
+     "stage": "first-pass",
+     "esv": "applied",
+     "referenced": true,
+     "esvWorstMm": 5.6,
+     "worstMm": 5.6
+    },
+    {
+     "cut": 5786,
+     "stage": "no-input",
+     "esv": "no-input"
+    },
+    {
+     "cut": 6481,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "no-anchor",
+     "referenced": false
+    },
+    {
+     "cut": 6480,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "no-anchor",
+     "referenced": true
+    },
+    {
+     "cut": 6482,
+     "stage": "deferred",
+     "esv": "abstained",
+     "reason": "no-anchor",
+     "referenced": false
+    },
+    {
+     "cut": 7374,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.5,
+     "referenced": true,
+     "esvWorstMm": 1.7,
+     "worstMm": 1.7
+    },
+    {
+     "cut": 7375,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.2,
+     "referenced": false
+    },
+    {
+     "cut": 7376,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.5,
+     "referenced": false
+    },
+    {
+     "cut": 7555,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.6,
+     "referenced": true,
+     "esvWorstMm": 2.8,
+     "worstMm": 2.8
+    },
+    {
+     "cut": 7556,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 0.8,
+     "referenced": false
+    },
+    {
+     "cut": 7557,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.6,
+     "referenced": true,
+     "esvWorstMm": 4.3,
+     "worstMm": 4.3
+    },
+    {
+     "cut": 7638,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 4.8,
+     "referenced": true,
+     "esvWorstMm": 2.5,
+     "worstMm": 2.5
+    },
+    {
+     "cut": 7639,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.4,
+     "referenced": true,
+     "esvWorstMm": 2.2,
+     "worstMm": 2.2
+    },
+    {
+     "cut": 7640,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 4.7,
+     "referenced": true,
+     "esvWorstMm": 2.7,
+     "worstMm": 2.7
+    },
+    {
+     "cut": 7667,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 2.4,
+     "referenced": true,
+     "esvWorstMm": 5.1,
+     "worstMm": 5.1
+    },
+    {
+     "cut": 7668,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 1.6,
+     "referenced": true,
+     "esvWorstMm": 1.8,
+     "worstMm": 1.8
+    },
+    {
+     "cut": 7669,
+     "stage": "second-pass-choice",
+     "esv": "abstained",
+     "chosen": {
+      "right": {
+       "fromPredictionMm": 1,
+       "top": 43,
+       "face": 4,
+       "lossRatio": 1,
+       "rankByLoss": 0
+      }
+     },
+     "anchors": [
+      7668,
+      7670
+     ],
+     "referenced": false
+    },
+    {
+     "cut": 7670,
+     "stage": "first-pass",
+     "esv": "applied",
+     "guardMm": 4.9,
+     "referenced": false
+    },
+    {
+     "cut": 8755,
+     "stage": "first-pass",
+     "esv": "applied",
+     "referenced": false
+    }
+   ]
+  }
+ ]
+}
