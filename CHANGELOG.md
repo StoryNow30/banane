@@ -1,5 +1,28 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.17 — « La ligne » complète, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension — interface seulement** (chantier B, suite ; D-045). Le placement
+et les commandes sont ceux de la 4.7.16.
+- **La dernière commande en trois étapes** (Pilote, Assisté) : émise, effet,
+  serveur. Seul un effet observé passe au vert ; « Navigation observée » reste
+  noir (l'état final n'a pas été relu) ; une émission incertaine est rouge,
+  avec son cut ; le serveur est toujours « non disponible ».
+- **Écartement de la proposition dans l'Assisté** : la valeur, la plage
+  admissible 1405–1470 mm sans valeur centrale ni repère à 1435, et « dans le
+  contrat » ou « hors contrat : non applicable ». Calculé par le service worker
+  comme le garde du moteur.
+- **Pastilles d'état sur les onglets** : Natif (collecte en cours ou en
+  pause), Pilote (lot en cours, en pause, résultat à contrôler), Assisté
+  (proposition prête), chacune doublée d'un titre.
+- **Fin de lot** : « Télécharger le bilan et les LiDAR » en premier ; le lien
+  « Nouveau lot » rouvre les bornes et « Démarrer » sans rien lancer.
+- **« Détails › »** : les exports de diagnostic et le dépannage (Pilote),
+  « Ce qui est observé » et les réglages de la collecte (Natif) passent dans un
+  tiroir fermé par défaut. Aucun bouton ni identifiant retiré.
+
 ## 4.7.16 — garde d'écartement voisin, choix à 5 points de dessus, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

@@ -1,8 +1,15 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.16 TEST** (interface « La ligne » ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde d'écartement voisin 20 mm, choix à 5 points de dessus, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-050 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.17 TEST** (interface « La ligne » complète ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde d'écartement voisin 20 mm, choix à 5 points de dessus, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-050 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.17
+
+Interface « La ligne » complète (chantier B) : dernière commande en trois
+étapes, écartement dans l'Assisté, pastilles d'onglets, « Nouveau lot »,
+tiroir « Détails ». Deuxième vague de chantiers lancée (consignes 5, 6, 7 :
+tests d'acceptation, relecture 4.7.13–4.7.16, faux sans appui).
 
 ## État 4.7.16
 

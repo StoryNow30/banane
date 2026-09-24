@@ -100,6 +100,36 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .legend i.differe{background:none;border-left:2px dashed var(--amber)}
 .legend i.refuse{background:var(--red)}
 
+/* Onglets : pastille d'état, doublée d'un titre (vert : en cours ; ambre : en pause ; rouge : à contrôler). */
+.nav-tab[data-etat]::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;vertical-align:1px;background:var(--accent)}
+.nav-tab[data-etat=ambre]::before{background:var(--amber)}.nav-tab[data-etat=rouge]::before{background:var(--red)}
+
+/* La dernière commande en trois étapes : émise, effet, serveur. Vert seulement pour un effet observé. */
+.commande{margin:18px 0 0}
+.cmd{display:flex;align-items:baseline;gap:8px;margin:0;font-size:13px}
+.cmd b{font-weight:600}.cmd span{margin-left:auto;font-size:12px;color:var(--text-3)}
+.steps{display:flex;flex-wrap:wrap;align-items:center;row-gap:6px;margin:8px 0 0;font-size:12.5px;color:var(--text-2)}
+.step{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.step i{flex:none;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--text-3)}
+.step.done i{background:var(--text);border-color:var(--text)}
+.step.seen{color:var(--accent)}.step.seen i{background:var(--accent);border-color:var(--accent)}
+.step.unk{color:var(--red)}.step.unk i{border-color:var(--red);border-style:dashed}
+.step.na{color:var(--text-3)}.step.na i{border-style:dotted}
+.bar-sep{flex:1;min-width:16px;height:1px;margin:0 10px;background:var(--hair-2)}
+
+/* Écartement de la proposition (Assisté) : la plage 1405–1470 seule, sans valeur centrale. */
+.ecartement{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--hair);font-size:13px}
+.ecartement .k{color:var(--text-2)}
+.ecartement b{font-weight:600}.ecartement b small{margin-left:2px;font-size:12px;font-weight:400;color:var(--text-3)}
+.ecartement svg{display:block}
+.ecartement .plage{fill:var(--accent-t);stroke:var(--accent-2);stroke-width:.8}
+.ecartement circle{fill:var(--text);stroke:var(--bg);stroke-width:1.5}.ecartement circle.hors{fill:var(--red)}
+.ecartement .ok{font-size:12px;color:var(--accent)}.ecartement .ko{font-size:12px;color:var(--red)}
+
+/* « Détails › » : lien à droite de la barre d'action ; le tiroir s'ouvre dessous. */
+.actions .details-toggle{margin-left:auto}
+.tiroir{margin-top:4px}
+
 /* -------------------------------------------------------- formulaires, texte */
 .range{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 4px}
 label{display:flex;flex-direction:column;gap:6px;margin:12px 0 0;font-size:12.5px;color:var(--text-2)}

@@ -1,13 +1,21 @@
-# Démarrer avec Banane V4.7.16 TEST — l'écartement des voisins surveille
+# Démarrer avec Banane V4.7.17 TEST — « La ligne » complète
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.16-test.zip` dans Edge, exactement comme la 4.7.15.
+Installe `banane-v4.7.17-test.zip` dans Edge, exactement comme la 4.7.16.
 
-Vérifie d'abord **V4.7.16 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.16 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.17 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.17 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
+
+**4.7.17 — le panneau seulement.** Sous la voie, **la dernière commande** se
+lit en trois étapes : émise, effet, serveur (vert seulement si l'effet est
+vu). Dans l'Assisté, **l'écartement** de la proposition s'affiche sur la plage
+1405–1470. Une **pastille** sur les onglets dit ce qui tourne ailleurs. En fin
+de lot, **« Nouveau lot »** rouvre les bornes. Les exports de diagnostic et le
+dépannage sont rangés sous **« Détails › »**. Le Pilote place exactement comme
+en 4.7.16.
 
 **4.7.16 — deux règles de la décision sur le lot.** Un cut dont l'écartement
 s'éloigne de plus de 20 mm de celui de ses voisins est repris depuis la voie ;

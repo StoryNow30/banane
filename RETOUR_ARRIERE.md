@@ -1,5 +1,14 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.17**, la cible de retour est la **4.7.16**, commit `155dbec`
+(paquet `banane-v4.7.16-test.zip`, SHA-256 `5e23d35c…23f0b38b`). La 4.7.17 ne
+change que l'interface : placement et commandes identiques.
+
+```bash
+git archive 155dbec | tar -x -C /tmp/banane-4.7.16
+cd /tmp/banane-4.7.16 && python3 tools/package.py --output /tmp/banane-v4.7.16-test.zip
+```
+
 **Depuis la 4.7.16**, la cible de retour est la **4.7.15**, commit `d566fa8`
 (paquet `banane-v4.7.15-test.zip`, SHA-256 `67632d96…4583ead3`). La 4.7.16 ne
 change que deux règles de la décision sur le lot (garde d'écartement voisin

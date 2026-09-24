@@ -112,6 +112,13 @@ pendant un lot ; « Archiver le résultat interrompu · cut N » ; SKIP explicit
 confirmé. Aucun identifiant, aucun comportement retiré ; tests
 `tests/panel-ligne.test.cjs`.
 
-**Pas encore.** La commande en trois étapes (émise, effet, serveur) ; la
-plage d'écartement dessinée dans l'Assisté ; le tiroir « Détails › » ; les
-pastilles d'état sur les onglets ; « Nouveau lot » en fin de lot.
+**Intégré en 4.7.17.** La commande en trois étapes (émise, effet, serveur ;
+vert seulement pour un effet observé) ; la plage d'écartement dans l'Assisté
+(calculée par le service worker comme le garde du moteur) ; le tiroir
+« Détails › » (exports de diagnostic et dépannage ; en Natif, « Ce qui est
+observé » et réglages) ; les pastilles d'état sur les onglets ; « Nouveau lot »
+en fin de lot, qui rouvre les bornes sans rien lancer. Tests
+`tests/panel-ligne-suite.test.cjs`, `tests/background-assiste-ecartement.test.cjs`.
+
+**Pas repris.** La coupe dessinée des deux rails dans l'Assisté (planche 5) :
+les déplacements restent écrits en millimètres ; « Pourquoi › » de l'Assisté.

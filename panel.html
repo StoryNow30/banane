@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.7.16</title><link rel="stylesheet" href="panel.css"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.7.17</title><link rel="stylesheet" href="panel.css"></head>
 <body data-window="home"><main>
 
-<header><p class="brand">BANANE <span>V4.7.16 · TEST</span></p>
+<header><p class="brand">BANANE <span>V4.7.17 · TEST</span></p>
 <h1 id="vue-titre">Une tâche, une fenêtre.</h1>
 <p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p></header>
 
@@ -10,9 +10,9 @@
      par-dessus. L'onglet actif porte aria-current pour le lecteur d'écran. -->
 <nav id="nav" class="nav" aria-label="Vues Banane">
  <button class="nav-tab" data-view="home">Accueil</button>
- <button class="nav-tab" data-view="native">Natif</button>
- <button class="nav-tab" data-view="automatic">Pilote</button>
- <button class="nav-tab" data-view="assisted">Assisté</button>
+ <button class="nav-tab" id="tab-native" data-view="native">Natif</button>
+ <button class="nav-tab" id="tab-automatic" data-view="automatic">Pilote</button>
+ <button class="nav-tab" id="tab-assisted" data-view="assisted">Assisté</button>
 </nav>
 
 <p id="context" class="context"></p>
@@ -41,15 +41,18 @@
   <button id="native-end" class="primary" hidden>Terminer et télécharger</button>
   <button id="native-pause" class="secondary" hidden>Pause</button>
   <button id="native-download" class="secondary" hidden>Télécharger à nouveau la session</button>
+  <button id="native-details-toggle" class="link details-toggle" aria-expanded="false" aria-controls="native-details">Détails ›</button>
  </div>
 
  <div class="guide"><p>Travaille ensuite normalement dans ESV. Aucun clic Banane n’est nécessaire entre les cuts.</p><p>Ce mode n’envoie aucun déplacement, changement de caméra, choix de rail, VALIDATE, SKIP ou navigation.</p></div>
 
  <section id="native-quality" class="health" hidden><h2>Qualité de capture</h2><div class="health-grid"><div><span class="health-label">Repères avec instantané qualifié</span><strong id="q-rails">—</strong><span id="q-rails-note" class="muted"></span></div><div><span class="health-label">Instants de capture qualifiés</span><strong id="q-snap">—</strong><span id="q-snap-rate" class="muted"></span></div><div><span class="health-label">Points retirés au clipping</span><strong id="q-clip">—</strong><span class="muted">filtre de visibilité ESV</span></div><div><span class="health-label">Flanc interne conservé</span><strong id="q-face">—</strong><span id="q-face-note" class="muted"></span></div></div><p id="q-note" class="muted"></p></section>
 
+ <div id="native-details" class="tiroir" hidden>
  <details><summary>Ce qui est observé</summary><p>Chaque visite, y compris un retour sur un cut, reste distincte. Banane sépare l’état observé, l’intention clavier ou souris, l’effet ensuite observé et la confirmation serveur — qui reste indiquée comme non observée.</p><p>Les points déjà chargés sont lus par petites portions avec une mémoire bornée. Si la collecte ne suit plus, elle réduit son niveau et l’indique dans l’export. Pause ferme la période en cours ; Reprendre en ouvre une nouvelle sans inventer ce qui s’est passé pendant la pause.</p></details>
 
  <details id="reglages"><summary>Réglages de la collecte</summary><div id="reglages-liste" class="settings-list"></div><p class="muted settings-note">Ces valeurs pilotent la collecte et l’export. Les seuils géométriques du moteur ne sont pas ici : ils sont gelés et contrôlés par le banc.</p></details>
+ </div>
 
  <details class="danger-zone"><summary>Abandonner cette session</summary>
   <p class="muted">Supprime définitivement les nuages, visites et événements de cette session. Aucun export n’est produit. Les segments déjà téléchargés sur ton disque ne sont pas touchés.</p>
@@ -69,6 +72,8 @@
  <p class="muted" id="policy-effective" hidden></p>
  <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut" hidden></div>
  <p id="voie-legende" class="legend" hidden><span><i></i>posé par le moteur</span><span><i class="creux"></i>posé par la voie</span><span><i class="differe"></i>différé</span><span><i class="refuse"></i>SKIP</span></p>
+ <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
+ <div id="lot-commande" class="commande" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
  <div id="batch" class="batch">Aucun lot en cours.</div>
  <div class="range" id="lot-bornes"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0"></label></div>
  <div class="actions" id="lot-actions">
@@ -82,18 +87,25 @@
   <button id="explicit-skip" class="danger" hidden>SKIP explicite</button>
   <button id="stop" class="danger" hidden>Arrêter le lot</button>
   <button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button>
+  <button id="new-batch" class="link" hidden>Nouveau lot</button>
+  <button id="lot-details-toggle" class="link details-toggle" aria-expanded="false" aria-controls="lot-details">Détails ›</button>
  </div>
  <p class="muted">Le recalage reste expérimental. Ce lot sert à tester des résultats que tu contrôles ensuite. Changer de vue ne met pas le lot en pause.</p>
  <details><summary>Réglages du lot</summary><label>Si les deux propositions existent mais restent incertaines<select id="policy"><option value="pause">Mettre le lot en pause</option><option value="attempt">Tenter la proposition expérimentale</option></select></label><label>Lorsqu’un rail n’est pas résolu<select id="unresolved-policy"><option value="defer">Continuer et le différer</option><option value="pause">Mettre le lot en pause</option></select></label><p class="muted">Différer quitte le cut par une navigation sans décision : aucune correction appliquée, aucun VALIDATE, aucun SKIP. Le rail reste non résolu et le cut est enregistré pour revue. Aucun point inventé.</p><label>Décision sur le lot<select id="lot-decision"><option value="apply">Appliquer</option><option value="observe">Observer seulement (comme la 4.7.9)</option></select></label><p class="muted">Appliquer : quand le moteur diffère ou s’écarte de la voie des cuts déjà placés du lot, le Pilote reprend le cut depuis cette voie et applique sa position ; tu relis comme d’habitude. Observer seulement : il consigne ce qu’il aurait fait, sans l’appliquer.</p><label>Seuil de l’indice LiDAR / 100<input id="confidence" type="number" value="55" min="0" max="100"></label><p class="muted">Cet indice ne mesure pas la précision réelle du pointage.</p></details>
  <details id="cerveau"><summary>Cerveau de placement</summary><label class="interrupteur"><input type="checkbox" id="brain-toggle"> Activer le cerveau sur les propositions</label><p class="muted">Retire un biais vertical systématique mesuré sur le corpus de corrections, et tranche entre les candidats que le moteur expose déjà. Chaque proposition touchée est marquée dans l’export.</p><p class="warning" id="brain-caveat">Éteint par défaut. Ses réglages ont été ajustés sur les parts 17 et 20 d’un corpus de <em>corrections</em>, où les gestes sont 4,5 fois plus grands qu’en travail normal. Ils ne sont pas validés sur ta collecte Natif.</p><label class="interrupteur" id="brain-sanspause-box" hidden><input type="checkbox" id="brain-sanspause"> Autoriser les sélections en mode « Tenter » (essai)</label><p class="warning" id="brain-policy" hidden></p><p class="muted" id="brain-journal"></p></details>
+ <div id="lot-details" class="tiroir" hidden>
  <details><summary>Diagnostic GCV1</summary><button id="gcv1-diagnostic-export" class="secondary">Export diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Export corpus GCV1 + LiDAR</button><p class="muted">Exports manuels de la session courante, construits uniquement depuis les observations et captures déjà enregistrées.</p></details>
  <details><summary>Dépannage</summary><button id="journal" class="secondary">Télécharger le journal</button><p class="muted">La navigation est observée dans ESV. La confirmation de l’enregistrement serveur reste indisponible.</p></details>
+ </div>
 </section>
 
 <!-- -------------------------------------------------------------- assisté -->
 <section class="vue" data-vue="assisted" hidden>
  <div class="guide"><p>Clique sur Proposer, examine le résultat, puis choisis de l’appliquer ou de l’ignorer. La validation du cut reste ton action dans ESV.</p></div>
  <div id="proposals" class="proposals"></div>
+ <!-- Écartement de la proposition : la plage admissible 1405–1470, sans valeur centrale ni repère à 1435. -->
+ <p id="assiste-ecartement" class="ecartement" hidden></p>
+ <div id="assiste-commande" class="commande" hidden><p class="cmd"><b id="assiste-cmd-nom"></b><span id="assiste-cmd-cut"></span></p><p id="assiste-cmd-etapes" class="steps"></p></div>
  <div class="actions" id="assisted-actions">
   <button id="accept" class="primary" hidden>Appliquer les deux rails</button>
   <button id="analyze" class="primary">Proposer pour ce cut</button>

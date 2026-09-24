@@ -117,7 +117,66 @@
    if(visibles.length>1&&!['actuel','incertain'].includes(v.classe(dernier)))svg+=`<text x="${X(visibles.length-1)}" y="10" text-anchor="end">${entier(dernier)}</text>`;
    return svg+'</g></svg>';
  }
+ /* La dernière commande en trois étapes — émise, effet, serveur (toujours
+  * « non disponible » : ESV n'en fournit aucune). Seul un effet observé passe
+  * au vert ; une émission incertaine reste rouge, avec son cut. Lecture de
+  * l'état seulement : rien n'est décidé ici. */
+ const NOMS_COMMANDE={apply:'Appliquer les deux rails',validate:'Valider et passer au suivant',skip:'SKIP explicite',
+   restore:'Revenir aux positions initiales',VALIDATE:'Valider et passer au suivant',SKIP:'SKIP explicite'};
+ function commandeDerniere(s,vue){
+   const na=['na','Serveur : non disponible'],emise=v=>v===true?['done','Émise']:v===false?['','Non émise']:['unk','Émise ?'];
+   const encours=i=>({nom:NOMS_COMMANDE[i.kind]||'Commande',cut:i.identity?.cut,
+     etapes:s.reconcileRequired?[['unk','Émise ?'],['unk','Effet non observé'],na]:[['','Émission en cours'],['','Effet attendu'],na]});
+   const vu=e=>({effet:e.afterObserved===true?['seen','Effet observé']:e.navigationObserved===true?['done','Navigation observée','État final non relu : ESV a changé de cut avant la relecture.']:['unk','Effet non observé'],
+     serveur:e.serverConfirmed===true?['seen','Serveur : confirmé']:na});
+   if(vue==='assisted'){
+     if(s.intent&&['apply','restore'].includes(s.intent.kind))return encours(s.intent);
+     const a=s.applied;if(!a)return null;const v=vu(a);
+     return {nom:NOMS_COMMANDE.apply,cut:a.identity?.cut,etapes:[emise(a.commandSent),v.effet,v.serveur]};
+   }
+   const d=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
+   if(d)return {nom:'Suivant sans décision',cut:d.identity?.cut,etapes:[emise(d.commandInvoked),['unk','Effet non observé'],na]};
+   if(s.intent)return encours(s.intent);
+   const e=s.lastActionEvidence;if(!e||e.commandSent===undefined)return null;const v=vu(e);
+   return {nom:NOMS_COMMANDE[e.operatorDecision]||'Dernière commande',cut:e.beforeNavigationIdentity?.cut??e.identity?.cut,
+     etapes:[emise(e.commandSent),v.effet,v.serveur]};
+ }
+ function afficherCommande(prefixe,c){const boite=$(prefixe+'-commande');if(!boite)return;boite.hidden=!c;if(!c)return;
+   $(prefixe+'-cmd-nom').textContent=c.nom;
+   $(prefixe+'-cmd-cut').textContent=Number.isFinite(Number(c.cut))?'cut '+entier(c.cut):'';
+   /* Libellés fixes, classes fixes : rien de l'état n'est écrit tel quel en HTML. */
+   $(prefixe+'-cmd-etapes').innerHTML=c.etapes.map(([k,t,titre],i)=>(i?'<span class="bar-sep"></span>':'')+`<span class="step${k?' '+k:''}"${titre?` title="${titre}"`:''}><i></i>${t}</span>`).join('');
+ }
+ /* Écartement de la proposition : la plage admissible seule, sans valeur
+  * centrale ni repère à 1435 ; le point dit où tombe la paire. */
+ function ecartementHtml(g){
+   const lo=g.contract?.lowMm??1405,hi=g.contract?.maximumMm??1470,mm=Number(g.mm),W=130,X=v=>Math.round((5+(Math.min(Math.max(v,lo-8),hi+8)-lo)/(hi-lo)*(W-10))*10)/10;
+   const val=Number.isFinite(mm)?mm.toFixed(1).replace('.',','):'—';
+   return `<span class="k">Écartement</span><b>${val}<small>mm</small></b>`
+     +`<svg viewBox="0 0 ${W} 14" width="${W}" height="14" aria-hidden="true"><rect class="plage" x="1" y="5" width="${W-2}" height="4" rx="2"/>`
+     +(Number.isFinite(mm)?`<circle class="${g.admissible?'dans':'hors'}" cx="${X(mm)}" cy="7" r="4"/>`:'')+`</svg>`
+     +`<span class="${g.admissible?'ok':'ko'}">${g.admissible?'dans le contrat':'hors contrat : non applicable'}</span>`;
+ }
+ /* Pastilles d'état sur les onglets : ce qui tourne ou attend ailleurs se voit
+  * sans changer de vue. Couleur doublée d'un titre, jamais seule. */
+ function etatOnglets(s){
+   const b=s.batch,n=s.native,out={native:null,automatic:null,assisted:null};
+   if(['STARTING','RUNNING'].includes(n?.status))out.native=['vert','Collecte en cours'];
+   else if(['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status))out.native=['ambre','Collecte en pause'];
+   if(INCERTAIN.includes(b?.state)||s.reconcileRequired)out.automatic=['rouge','Résultat à contrôler'];
+   else if(b?.state==='RUNNING')out.automatic=['vert','Lot en cours'];
+   else if(OUVERT.includes(b?.state))out.automatic=['ambre','Lot en pause'];
+   if(s.mode==='assisted'&&s.proposal&&!s.applied&&same(s.proposal?.identity,s.current?.identity))out.assisted=['vert','Proposition prête'];
+   return out;
+ }
+ let nouveauLot=false;const tiroirs={lot:false,native:false};
+ function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
+   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer':'Détails ›';}
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
+   const onglets=etatOnglets(s);
+   for(const [vue,e] of Object.entries(onglets)){const t=$('tab-'+vue);if(!t)continue;
+     if(e){t.dataset.etat=e[0];t.setAttribute('title',e[1]);}else{delete t.dataset.etat;t.removeAttribute('title');}}
+   tiroir('lot');tiroir('native');
    $('context').textContent=id?`ESV · part ${id.part} · cut ${id.cut}`:'';
    if(which==='native'){
      const running=['STARTING','RUNNING'].includes(n?.status),paused=['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status),open=nativeActive(s);
@@ -202,6 +261,7 @@
          +(v.saute.size?`<span><b>${v.saute.size}</b>SKIP</span>`:'')+(v.main.size?`<span><b>${v.main.size}</b>repris à la main</span>`:'');}
      if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;$('voie').innerHTML=montrer?dessinerVoie(v):'';
        if($('voie-legende'))$('voie-legende').hidden=!montrer;}
+     afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -223,8 +283,14 @@
       * Pendant un lot ouvert ou un résultat à réconcilier, « Démarrer » et les
       * bornes disparaissent ; ils reviennent dès qu'un lot peut repartir. */
      const lotOuvert=OUVERT.includes(b?.state)||!!s.reconcileRequired;
-     button('start-batch',{hidden:lotOuvert,disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
-     if($('lot-bornes'))$('lot-bornes').hidden=lotOuvert;
+     /* Fin de lot : télécharger d'abord ; « Nouveau lot » (lien) rouvre les
+      * bornes et « Démarrer ». Aucun lot ne part sans que tu aies revu ses bornes. */
+     const fini=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','STOPPED','ERROR'].includes(b?.state)&&!s.reconcileRequired;
+     if(lotOuvert)nouveauLot=false;
+     const attendNouveau=fini&&!nouveauLot;
+     button('new-batch',{hidden:!attendNouveau,disabled:busy});
+     button('start-batch',{hidden:lotOuvert||attendNouveau,disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
+     if($('lot-bornes'))$('lot-bornes').hidden=lotOuvert||attendNouveau;
      button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
@@ -251,8 +317,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
      /* Règle 4 : un verbe, son objet, et le cut quand l'action le vise. */
      const cutIncertain=differe?.identity?.cut??s.intent?.identity?.cut??b?.activeIdentity?.cut;
      if($('close-uncertain'))$('close-uncertain').textContent='Archiver le résultat interrompu'+(Number.isFinite(Number(cutIncertain))?' · cut '+entier(cutIncertain):'');
-     const fini=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','STOPPED','ERROR'].includes(b?.state)&&!s.reconcileRequired;
-     hierarchie(['close-uncertain','manual-completion','retry','resume','pause',...(fini?['dataset','start-batch']:['start-batch','dataset']),'manual-takeover','explicit-skip','stop'],
+     hierarchie(['close-uncertain','manual-completion','retry','resume','pause',...(fini&&!nouveauLot?['dataset','new-batch','start-batch']:['start-batch','dataset','new-batch']),'manual-takeover','explicit-skip','stop'],
        {ink:['close-uncertain','manual-completion','pause'],danger:['explicit-skip','stop']});
      /* Terrain, cut 6/4245 : avec « Tenter la proposition expérimentale », le
       * moteur gelé applique malgré une confiance nulle. Les sélections du
@@ -275,6 +340,9 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
        const score=document.createElement('small');score.textContent=`Indice LiDAR : ${fit.confidence}/100. ${fit.reasons.join(' ')}`;
        box.append(title,delta,score);$('proposals').append(box);
      }
+     const g=p&&s.assistGauge&&(s.assistGauge.proposalId==null||s.assistGauge.proposalId===p.id)?s.assistGauge:null;
+     if($('assiste-ecartement')){$('assiste-ecartement').hidden=!g;$('assiste-ecartement').innerHTML=g?ecartementHtml(g):'';}
+     afficherCommande('assiste',commandeDerniere(s,'assisted'));
      button('accept',{hidden:!p||!!s.applied,disabled:busy||active(s)||Object.values(p?.rails||{}).some(r=>!r.delta)});
      button('reject',{hidden:!p||!!s.applied,disabled:busy});button('restore',{hidden:!s.applied||s.validationStarted||!same(s.snapshot?.identity,id),disabled:busy||active(s)});
      hierarchie(['accept','analyze','restore','reject']);
@@ -585,6 +653,9 @@ on('native-discard',async()=>{
      lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',lotDecision:$('lot-decision')?.value==='observe'?'observe':'apply',geometryEngine:'geometry-candidate-v1'});});
  for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
  on('retry',()=>api('retry'));
+ /* « Nouveau lot » ne lance rien : il rouvre les bornes et « Démarrer ». */
+ if($('new-batch'))$('new-batch').onclick=()=>{nouveauLot=true;edited.delete('start');edited.delete('end');if(state)render(state);};
+ for(const nom of ['lot','native'])if($(nom+'-details-toggle'))$(nom+'-details-toggle').onclick=()=>{tiroirs[nom]=!tiroirs[nom];tiroir(nom);};
  /* SKIP explicite : décision envoyée à ESV, qui ne se défait pas depuis Banane —
   * jamais le bouton plein, toujours confirmée (« La ligne », règle 2). */
  on('explicit-skip',()=>{if(typeof confirm==='function'&&!confirm('Passer ce cut en SKIP dans ESV ?\n\nLa décision est envoyée à ESV et ne se défait pas depuis Banane.'))

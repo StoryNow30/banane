@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.16';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.17';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -112,6 +112,16 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  * même identifiant, porte les rails de la décision et devient celle du lot.
  * `Engine.apply()` garde tous ses contrôles : état ESV inchangé, écartement
  * dans le contrat avant commande, relecture à 1 mm après. */
+/* « La ligne », Assisté : l'écartement de la proposition affichée, calculé comme
+ * le garde du moteur (poses attendues après application), pour la plage
+ * 1405–1470 du panneau. Lecture seule, aucune valeur centrale ni cible. */
+function assistGauge(v){
+ try{const K=globalThis.BananeCore3,G=globalThis.BananeGauge4,p=v?.proposal,b=v?.before;
+  if(!K||!G||!p?.rails||!b?.rails||!['left','right'].every(side=>p.rails[side]?.delta))return null;
+  const mm=G.gaugeMmOf(K.expectedPoses(b,p.rails),K.C),cls=G.classifyMm(mm);
+  return Number.isFinite(mm)?{proposalId:p.id??null,mm:Math.round(mm*10)/10,gaugeClass:cls,admissible:G.admissible(cls),contract:G.CONTRACT}:null;
+ }catch{return null;}
+}
 async function commandLot(proposal,lotObservation){
  const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,before=engine.s.before?.rails;
  /* 4.7.11 — caméras de la capture : la cible doit tomber dans la vue du rail (KI-051). */
@@ -193,7 +203,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
   const ping=await call('ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Banane ${VERSION}.`);
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
- if(action==='view'){pollCurrent();return engine.view();}
+ if(action==='view'){pollCurrent();const v=engine.view();return {...v,assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  if(action==='native-start'){engine.assertBatchContextFree('démarrer le mode Natif');return native.start();}
  if(action==='native-pause')return native.pause();
