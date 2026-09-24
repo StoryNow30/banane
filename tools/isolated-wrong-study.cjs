@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 /* Étude hors ligne des faux isolés. Les références ne jugent qu'après le
- * calcul du moteur ; aucun déplacement, validation ni SKIP. */
+ * calcul du moteur ; aucun déplacement, validation ni SKIP.
+ * node --max-old-space-size=8000 tools/isolated-wrong-study.cjs
+ *   --input DOSSIER=LIBELLE --baseline RELEVE_LOT.json --json SORTIE.json
+ * node tools/isolated-wrong-study.cjs --combine SORTIE.json [...]
+ *   --json audit/chantiers/faux-isoles.json
+ */
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs');
@@ -13,6 +18,8 @@ const SIDES=['left','right'],EXCLUDED=new Set([9033,9241]);
 const round=v=>Number.isFinite(v)?Math.round(v*100)/100:null;
 const APPLIED=new Set(['first-pass','second-pass-window','second-pass-choice']);
 const RULES=[
+ {id:'s1-et-calage-hors-domaine-paire',test:r=>['left','right'].some(s=>r.rails[s].s1Changed)&&
+  ['left','right'].some(s=>r.rails[s].calibration.reason==='shift-out-of-domain')},
  {id:'s1-hors-domaine',test:r=>['left','right'].some(s=>r.rails[s].s1Changed&&r.rails[s].calibration.reason==='shift-out-of-domain')},
  {id:'calage-hors-domaine',test:r=>['left','right'].some(s=>r.rails[s].calibration.reason==='shift-out-of-domain')},
  {id:'s1-tout',test:r=>['left','right'].some(s=>r.rails[s].s1Changed)},
@@ -34,7 +41,6 @@ function baselineRun(file,label){
  assert(run,'reproduction B/guarded/both/15 absente : '+label);
  return run;
 }
-module.exports={RULES,score,baselineRun,APPLIED};
 function sceneDelta(original,position){
  const M=original.sceneRelativeToProfileLocal,a=C.point(M,original.positionSceneRelative),b=C.point(M,position);
  return {lateralMm:round((b[1]-a[1])*1000),verticalMm:round((b[2]-a[2])*1000)};
@@ -123,7 +129,8 @@ function main(args=process.argv.slice(2)){
  assert(out,'--json SORTIE obligatoire');
  let sessions;
  if(args.includes('--combine')){
-  sessions=args.slice(args.indexOf('--combine')+1,args.indexOf('--json')).flatMap(f=>JSON.parse(fs.readFileSync(f,'utf8')).sessions);
+  sessions=args.slice(args.indexOf('--combine')+1,args.indexOf('--json')).flatMap(f=>JSON.parse(fs.readFileSync(f,'utf8')).sessions)
+   .map(s=>({...s,ruleScores:RULES.map(rule=>score(s.rows,rule))}));
  }else{
   const [dir,label]=(opt('--input')||'').split('='),baseline=opt('--baseline');
   assert(dir&&label&&baseline,'--input DOSSIER=LIBELLÉ et --baseline nécessaires');
