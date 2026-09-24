@@ -38,7 +38,7 @@ const pairFlag=science=>SIDES.some(s=>science?.rails?.[s]?.next?.changed===true)
  * la mesure donc en la coupant (`options.pairGuard:false`) ou en la laissant,
  * sans la réimplémenter : mêmes décisions que le Pilote. */
 const guarded=(L,on=true,extra={})=>({...L,decideCut:args=>L.decideCut({...args,options:{...(args.options||{}),...extra,pairGuard:on}})});
-const describe=d=>({stage:d.stage,anchors:(d.anchorsUsed||[]).length,anchorsUsed:d.anchorsUsed||[],
+const describe=d=>({stage:d.stage,anchors:(d.anchorsUsed||[]).length,anchorsUsed:d.anchorsUsed||[],gaugeJumpMm:d.gaugeJumpMm??null,byGaugeGuard:Object.values(d.chosen||{}).some(c=>c.byGaugeGuard),
   chosenMaxFromPredictionMm:d.chosen?Math.max(...Object.values(d.chosen).map(c=>c.fromPredictionMm)):null,
   chosenSides:d.chosen?Object.keys(d.chosen):[],fromPredictionMm:d.fromPredictionMm??null,guardMm:d.guardMm??null,gaugeMm:d.gaugeMm??null});
 
@@ -108,7 +108,7 @@ function rules(rows){
 
 function run(argv=process.argv.slice(2)){
   /* `--option clé=valeur` : curseur de `src/lot-decision.js` modifié pour ce rejeu (bilan des curseurs). */
-  const options={};for(let i=0;i<argv.length;i++)if(argv[i]==='--option'){const [k,v]=argv[i+1].split('=');options[k]=Number(v);}
+  const options={};for(let i=0;i<argv.length;i++)if(argv[i]==='--option'){const [k,v]=argv[i+1].split('=');options[k]=v==='true'?true:v==='false'?false:Number(v);}
   const out=argv[0],rows=[],pairGuard=!argv.includes('--sans-garde-paire');if(!out||out.startsWith('--'))throw Error('Usage : SORTIE.json [--sans-garde-paire] --natif F=libellé [...] --lot DOSSIER=libellé[@RELECTURE] [...]');
   for(let i=1;i<argv.length;i++){const t=Date.now();
     if(argv[i]==='--sans-garde-paire'||argv[i]==='--garde-paire')continue;

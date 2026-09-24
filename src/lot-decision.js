@@ -27,7 +27,7 @@
   * au plus de la prédiction (10 mm jusqu'à la 4.7.14). Bilan des curseurs,
   * D-047 : +4 cuts justes, aucun faux, aucun juste perdu sur 6 sessions Natif
   * et 4 lots Pilote relus (`audit/curseurs-lot-2026-09-24.md`). */
- const DEFAULTS=Object.freeze({version:'lot-decision-v3',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:15,pairGuard:true,
+ const DEFAULTS=Object.freeze({version:'lot-decision-v3',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:null,gaugeGap:10,gaugeCount:3,gaugeChoice:false,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -88,11 +88,32 @@
    return {ok:true,delta:cal.applied?cal.delta:pick.delta,fromPredictionMm:Math.abs(pick.uMm),rank:pick.rank,top:pick.top,face:pick.face,
      lossRatio:candidates[0]?.loss?r1(pick.loss/candidates[0].loss):null};
  }
+ /* Minima qualifiés près de la prédiction, calage de convention compris (mêmes filtres que `chooseRail`). */
+ function nearOf(capture,side,cfg,candidates){
+   return (candidates||[]).filter(c=>c.top>=cfg.minTop&&c.face>=cfg.minFace&&Math.abs(c.zMm)<=cfg.maxDzMm&&Math.abs(c.uMm)<=cfg.chooseMm)
+     .map(c=>{const cal=Convention.calibrate(capture,side,c.delta);return {...c,delta:cal.applied?cal.delta:c.delta};});
+ }
  const journal=candidates=>(candidates||[]).slice(0,DEFAULTS.maxCandidates).map(({delta,...c})=>({...c,loss:Number.isFinite(c.loss)?Math.round(c.loss*1e6)/1e6:null}));
  /* Un cut du lot. `science` : résultat de GCV1 sur la capture telle quelle
   * (celui du Pilote). `anchors` : cuts déjà passés du lot. Rend l'étape
   * atteinte et, si elle vient de la voie, les positions qui auraient été
   * appliquées ; `anchor` dit si le cut devient ancre pour la suite. */
+ /* GARDE D'ÉCARTEMENT VOISIN (étude du 24/09, partie 2, KI-054 ; inactive tant
+  * que `gaugeGuardMm` est nul). L'écartement d'une paire est comparé à la
+  * médiane de celui des `gaugeCount` appuis les plus proches, à `gaugeGap`
+  * cuts au plus. L'écartement ne dépend pas de la pose de départ d'ESV : la
+  * garde voit un premier passage même sans appui de position. Garde
+  * seulement, jamais une cible (D-033) : une paire trop loin de ses voisins
+  * est écartée, aucune n'est choisie parce qu'elle en est proche. */
+ const gaugeOf=positions=>C.distance(positions.left,positions.right)*1000;
+ function gaugeReference(identity,anchors,cfg=DEFAULTS){
+   const near=(anchors||[]).filter(a=>sameTrack(a.identity,identity)&&a.identity.cut!==identity.cut&&Math.abs(a.identity.cut-identity.cut)<=cfg.gaugeGap&&a.positions?.left&&a.positions?.right)
+     .sort((a,b)=>Math.abs(a.identity.cut-identity.cut)-Math.abs(b.identity.cut-identity.cut)).slice(0,cfg.gaugeCount);
+   if(!near.length)return null;
+   const g=near.map(a=>gaugeOf(a.positions)).sort((x,y)=>x-y),m=g.length>>1;
+   return {mm:g.length%2?g[m]:(g[m-1]+g[m])/2,cuts:near.map(a=>a.identity.cut)};
+ }
+ const gaugeJump=(ref,positions)=>ref?Math.abs(gaugeOf(positions)-ref.mm):null;
  const pairFlagged=science=>SIDES.some(side=>science?.rails?.[side]?.next?.changed===true)
    &&SIDES.some(side=>science?.rails?.[side]?.conventionCalibration?.reason==='shift-out-of-domain');
  function decideCut({capture,science,anchors,Shadow,options={}}){
@@ -100,7 +121,9 @@
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
    const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
-   const nb=neighbours(identity,anchors,cfg);
+   const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
+   const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;
+   if(gaugeRef)base.gaugeReference={mm:r1(gaugeRef.mm),cuts:gaugeRef.cuts};
    if(applicable){
      const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(rails[side],science.rails[side].next.delta)]));
      const guardMm=nb.length?r1(deviationMm(rails,nb.map(a=>({positions:a.positions})),positions)):null;
@@ -112,12 +135,14 @@
         * cherchée à la place. Mesuré : 241 et 409 arrêtés, aucun juste perdu
         * (`audit/garde-paire-verification-2026-09-24.md`). */
        if(cfg.pairGuard&&pairFlagged(science))return {...base,stage:'deferred',reason:'pair-guard',pairGuarded:true,guardMm,anchorsUsed:nb.map(a=>a.identity.cut),anchor:false};
-       return {...base,stage:'first-pass',guardMm,anchorsUsed:nb.map(a=>a.identity.cut),positions,anchor:true};
+       if(!gaugeSuspect(positions))return {...base,stage:'first-pass',guardMm,anchorsUsed:nb.map(a=>a.identity.cut),positions,anchor:true};
+       // Retiré par la garde d'écartement voisin : repris depuis la voie, comme un différé.
+       base.gaugeJumpMm=r1(gaugeJump(gaugeRef,positions));
      }
-     // Retiré par la garde : le cut est repris depuis la voie, comme un différé.
+     // Retiré par une garde : le cut est repris depuis la voie, comme un différé.
      base.guardMm=guardMm;base.guardDeferred=true;
    }
-   if(!nb.length)return {...base,stage:'deferred',reason:'no-anchor'};
+   if(!nb.length)return {...base,stage:'deferred',reason:base.gaugeJumpMm!=null?'gauge-guard':'no-anchor'};
    const anchorsUsed=nb.map(a=>a.identity.cut),predictionAnchors=nb.map(a=>({positions:a.positions}));
    const seeded=minimalCapture(capture,seededRails(rails,predictionAnchors));
    const again=Shadow.scientificProposeBoth(seeded);
@@ -126,10 +151,11 @@
      const dev=Math.max(...SIDES.map(side=>Math.abs(again.rails[side].next.delta[1])*1000));
      if(dev<=cfg.guardMm){
        const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],again.rails[side].next.delta)]));
-       return {...base,stage:'window',fromPredictionMm:r1(dev),anchorsUsed,positions,anchor:dev<=cfg.chainMm};
+       if(!gaugeSuspect(positions))return {...base,stage:'window',fromPredictionMm:r1(dev),anchorsUsed,positions,anchor:dev<=cfg.chainMm};
+       base.windowGaugeJumpMm=r1(gaugeJump(gaugeRef,positions));
      }
    }
-   const deltas={},chosen={},why=[],candidates={};
+   const deltas={},chosen={},why=[],candidates={},several={};
    for(const side of SIDES){
      const r=again.rails[side];if(!r?.ok){why.push(side+':frame');continue;}
      const next=r.next,beforeGate=r.pairGauge?.rejected?r.pairGauge.publishedBeforeGate?.delta:null,own=next.status==='candidate'?next.delta:beforeGate;
@@ -137,14 +163,30 @@
      const list=candidatesOf(seeded,side,again,cfg);candidates[side]=journal(list);
      if(!(own||cfg.eligibleMotifs.includes(next.motif))){why.push(side+':'+(next.motif||next.status));continue;}
      const pick=chooseRail(seeded,side,again,cfg,list);
+     if(!pick.ok&&pick.reason==='several-minima-near-prediction'&&cfg.gaugeChoice&&gaugeRef)several[side]=nearOf(seeded,side,cfg,list);
      if(!pick.ok){why.push(side+':'+pick.reason);continue;}
      deltas[side]=pick.delta;chosen[side]={fromPredictionMm:pick.fromPredictionMm,rank:pick.rank,top:pick.top,face:pick.face,lossRatio:pick.lossRatio};
+   }
+   /* Plusieurs minima près de la prédiction (option `gaugeChoice`) : les paires
+    * hors du contrat ou trop loin de l'écartement des voisins sont ÉCARTÉES ;
+    * s'il n'en reste qu'une, elle est retenue, sinon le cut reste différé.
+    * Aucune paire n'est préférée pour sa proximité (garde, jamais cible). */
+   if(Object.keys(several).length&&SIDES.every(side=>deltas[side]||several[side]?.length)){
+     const opts=side=>deltas[side]?[{delta:deltas[side],own:true}]:several[side];
+     const kept=[];for(const l of opts('left'))for(const r of opts('right')){const d={left:l.delta,right:r.delta},pr=Gauge.assessPair(seeded.rails,d,C);
+       if(!pr.admissible)continue;const pos=Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],d[side])]));
+       if(!gaugeSuspect(pos))kept.push({l,r,d});}
+     if(kept.length===1){const k=kept[0];for(const [side,c] of [['left',k.l],['right',k.r]])if(!c.own){deltas[side]=c.delta;
+       chosen[side]={fromPredictionMm:Math.abs(c.uMm),rank:c.rank,top:c.top,face:c.face,byGaugeGuard:true};}
+       why.length=0;}
+     else why.push('gauge-choice:'+kept.length);
    }
    if(!SIDES.every(side=>deltas[side]))return {...base,stage:'deferred',reason:why.join(' '),anchorsUsed,candidates};
    const pair=Gauge.assessPair(seeded.rails,deltas,C);
    if(!pair.admissible)return {...base,stage:'deferred',reason:'gauge-'+pair.gaugeClass,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates};
-   return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,
-     positions:Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],deltas[side])])),anchor:false};
+   const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],deltas[side])]));
+   if(gaugeSuspect(positions))return {...base,stage:'deferred',reason:'gauge-guard',gaugeJumpMm:r1(gaugeJump(gaugeRef,positions)),gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates};
+   return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,positions,anchor:false};
  }
  /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
   * décision en rails pour `Engine.apply()`, sans rien décider de plus :
@@ -232,5 +274,5 @@
      if(!view.inView)return {...fallback('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN,pairFlagged};
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
 });
