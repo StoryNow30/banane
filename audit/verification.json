@@ -1,18 +1,28 @@
 {
-  "startedAt": "2026-09-24T18:07:40.319Z",
-  "finishedAt": "2026-09-24T18:08:26.345Z",
+  "startedAt": "2026-09-24T19:40:10.462Z",
+  "finishedAt": "2026-09-24T19:41:12.784Z",
   "node": "v22.22.2",
   "platform": "linux",
   "counts": {
-    "tests": 712,
+    "tests": 739,
     "suites": 0,
-    "pass": 710,
+    "pass": 735,
     "fail": 0,
     "cancelled": 0,
     "skipped": 2,
-    "todo": 0
+    "todo": 2
   },
   "files": [
+    "tests/acceptance-commandes-dom.test.cjs",
+    "tests/acceptance-contrat.test.cjs",
+    "tests/acceptance-curseurs.test.cjs",
+    "tests/acceptance-decision-lot.test.cjs",
+    "tests/acceptance-matrix.test.cjs",
+    "tests/acceptance-non-regression.test.cjs",
+    "tests/acceptance-objectifs.test.cjs",
+    "tests/acceptance-pilote.test.cjs",
+    "tests/acceptance-provenance-pilote.test.cjs",
+    "tests/acceptance-provenance.test.cjs",
     "tests/acceptance-report-lot.test.cjs",
     "tests/acceptance-report.test.cjs",
     "tests/adapter.test.cjs",
