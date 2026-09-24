@@ -1,0 +1,162 @@
+{
+ "format": "banane-validated-anchors-study-v1",
+ "gap": 3,
+ "stables": false,
+ "guard": {
+  "window": 5,
+  "tolerance": 8,
+  "minInliers": 3
+ },
+ "validatedNeighbours": 120,
+ "lotAnchorsOnly": {
+  "distinctCuts": 51,
+  "pilotApplied": 35,
+  "lotApplied": 43,
+  "coveragePct": 84.3,
+  "judged": 17,
+  "wrong": 0,
+  "newWrong": [],
+  "gained": [
+   {
+    "cut": 1172,
+    "stage": "choice",
+    "worstMm": 1.04
+   },
+   {
+    "cut": 1182,
+    "stage": "choice",
+    "worstMm": 4.24
+   },
+   {
+    "cut": 1183,
+    "stage": "window",
+    "worstMm": 0.94
+   },
+   {
+    "cut": 1189,
+    "stage": "choice",
+    "worstMm": 0.84
+   },
+   {
+    "cut": 2064,
+    "stage": "window",
+    "worstMm": 2.64
+   },
+   {
+    "cut": 2065,
+    "stage": "choice",
+    "worstMm": 1.28
+   },
+   {
+    "cut": 2066,
+    "stage": "choice",
+    "worstMm": 1.48
+   },
+   {
+    "cut": 2067,
+    "stage": "choice",
+    "worstMm": 1.75
+   }
+  ]
+ },
+ "withValidatedNeighbours": {
+  "distinctCuts": 51,
+  "pilotApplied": 35,
+  "lotApplied": 44,
+  "coveragePct": 86.3,
+  "judged": 18,
+  "wrong": 0,
+  "newWrong": [],
+  "gained": [
+   {
+    "cut": 1172,
+    "stage": "choice",
+    "worstMm": 1.04
+   },
+   {
+    "cut": 1182,
+    "stage": "choice",
+    "worstMm": 4.24
+   },
+   {
+    "cut": 1183,
+    "stage": "window",
+    "worstMm": 0.94
+   },
+   {
+    "cut": 1189,
+    "stage": "choice",
+    "worstMm": 0.84
+   },
+   {
+    "cut": 2064,
+    "stage": "window",
+    "worstMm": 2.64
+   },
+   {
+    "cut": 2065,
+    "stage": "choice",
+    "worstMm": 1.28
+   },
+   {
+    "cut": 2066,
+    "stage": "choice",
+    "worstMm": 1.99
+   },
+   {
+    "cut": 2067,
+    "stage": "choice",
+    "worstMm": 2.52
+   },
+   {
+    "cut": 4203,
+    "stage": "window",
+    "worstMm": 1.64
+   }
+  ]
+ },
+ "remaining": [
+  {
+   "cut": 1169,
+   "pilot": "deferred",
+   "stage": "deferred",
+   "reason": "left:no-qualified-minimum-near-prediction"
+  },
+  {
+   "cut": 5004,
+   "pilot": "no-input",
+   "stage": "deferred",
+   "reason": "left:frame right:frame"
+  },
+  {
+   "cut": 5056,
+   "pilot": "no-input",
+   "stage": "deferred",
+   "reason": "left:frame right:frame"
+  },
+  {
+   "cut": 5058,
+   "pilot": "no-input",
+   "stage": "deferred",
+   "reason": "left:frame right:frame"
+  },
+  {
+   "cut": 5059,
+   "pilot": "no-input",
+   "stage": "deferred",
+   "reason": "no-anchor"
+  },
+  {
+   "cut": 5060,
+   "pilot": "no-input",
+   "stage": "deferred",
+   "reason": "no-anchor"
+  },
+  {
+   "cut": 5061,
+   "pilot": "other",
+   "stage": null,
+   "reason": "aucune-observation"
+  }
+ ]
+}
