@@ -37,15 +37,15 @@ const pairFlag=science=>SIDES.some(s=>science?.rails?.[s]?.next?.changed===true)
 /* Depuis la 4.7.12, la garde est dans `src/lot-decision.js` (D-044). L'étude
  * la mesure donc en la coupant (`options.pairGuard:false`) ou en la laissant,
  * sans la réimplémenter : mêmes décisions que le Pilote. */
-const guarded=(L,on=true)=>({...L,decideCut:args=>L.decideCut({...args,options:{...(args.options||{}),pairGuard:on}})});
+const guarded=(L,on=true,extra={})=>({...L,decideCut:args=>L.decideCut({...args,options:{...(args.options||{}),...extra,pairGuard:on}})});
 const describe=d=>({stage:d.stage,anchors:(d.anchorsUsed||[]).length,anchorsUsed:d.anchorsUsed||[],
   chosenMaxFromPredictionMm:d.chosen?Math.max(...Object.values(d.chosen).map(c=>c.fromPredictionMm)):null,
   chosenSides:d.chosen?Object.keys(d.chosen):[],fromPredictionMm:d.fromPredictionMm??null,guardMm:d.guardMm??null,gaugeMm:d.gaugeMm??null});
 
-function runNatif(file,label,{pairGuard=false}={}){
+function runNatif(file,label,{pairGuard=false,options={}}={}){
   const Segments=require(B+'tools/merge-segments.cjs'),Lab=require(B+'tools/placement-lab.cjs');
   const O=require(B+'src/continuity-observer.js'),Shadow=require(B+'src/gcv1-shadow.js'),L0=require(B+'src/lot-decision.js'),C=require(B+'vendor/capture-core.js');
-  const L=guarded(L0,pairGuard);
+  const L=guarded(L0,pairGuard,options);
   const s=Segments.loadSession(file),records=(s.records||[]).slice().sort((a,b)=>a.visitIndex-b.visitIndex);
   const chunksByVisit=new Map();for(const c of s.clouds||[])if(c.pointsSceneRelative)(chunksByVisit.get(c.visitId)||chunksByVisit.set(c.visitId,[]).get(c.visitId)).push(c);
   const anchors=[],rows=[],seen=new Set();
@@ -72,8 +72,8 @@ function runNatif(file,label,{pairGuard=false}={}){
   return rows;
 }
 
-function runLot(dir,label,relecture,{pairGuard=false}={}){
-  const A=require(B+'tools/acceptance-report.cjs'),L0=require(B+'src/lot-decision.js'),L=guarded(L0,pairGuard);
+function runLot(dir,label,relecture,{pairGuard=false,options={}}={}){
+  const A=require(B+'tools/acceptance-report.cjs'),L0=require(B+'src/lot-decision.js'),L=guarded(L0,pairGuard,options);
   const seen=new Map(),flags=new Map();
   const deps={L:{...L,decideCut:args=>{const d=L.decideCut(args);seen.set(args.capture.identity.cut,d);flags.set(args.capture.identity.cut,pairFlag(args.science));return d;}}};
   const r=A.report([A.loadLot(dir,label,relecture||null)],{replay:true,preferReplay:true,replayDeps:deps});
@@ -105,14 +105,17 @@ function rules(rows){
 }
 
 function run(argv=process.argv.slice(2)){
+  /* `--option clé=valeur` : curseur de `src/lot-decision.js` modifié pour ce rejeu (bilan des curseurs). */
+  const options={};for(let i=0;i<argv.length;i++)if(argv[i]==='--option'){const [k,v]=argv[i+1].split('=');options[k]=Number(v);}
   const out=argv[0],rows=[],pairGuard=!argv.includes('--sans-garde-paire');if(!out||out.startsWith('--'))throw Error('Usage : SORTIE.json [--sans-garde-paire] --natif F=libellé [...] --lot DOSSIER=libellé[@RELECTURE] [...]');
   for(let i=1;i<argv.length;i++){const t=Date.now();
     if(argv[i]==='--sans-garde-paire'||argv[i]==='--garde-paire')continue;
-    if(argv[i]==='--natif'){const [f,l]=argv[++i].split('=');rows.push(...runNatif(f,l||f,{pairGuard}));console.log('natif',l,Math.round((Date.now()-t)/1000)+' s');}
-    else if(argv[i]==='--lot'){const [f,rest]=argv[++i].split('='),[l,rel]=(rest||f).split('@');rows.push(...runLot(f,l,rel,{pairGuard}));console.log('lot',l,Math.round((Date.now()-t)/1000)+' s');}
+    if(argv[i]==='--option'){i++;continue;}
+    if(argv[i]==='--natif'){const [f,l]=argv[++i].split('=');rows.push(...runNatif(f,l||f,{pairGuard,options}));console.log('natif',l,Math.round((Date.now()-t)/1000)+' s');}
+    else if(argv[i]==='--lot'){const [f,rest]=argv[++i].split('='),[l,rel]=(rest||f).split('@');rows.push(...runLot(f,l,rel,{pairGuard,options}));console.log('lot',l,Math.round((Date.now()-t)/1000)+' s');}
     else throw Error('Argument inconnu : '+argv[i]);}
   const groups={natif:rows.filter(x=>x.kind==='natif'),pilote:rows.filter(x=>x.kind==='pilote')};
-  const result={format:'banane-choice-anchor-study-v1',wrongMm:WRONG_MM,pairGuard,
+  const result={format:'banane-choice-anchor-study-v1',wrongMm:WRONG_MM,pairGuard,options,
     byStageAndAnchors:{natif:tally(groups.natif),pilote:tally(groups.pilote),tout:tally(rows)},
     rules:{natif:rules(groups.natif),pilote:rules(groups.pilote),tout:rules(rows)},rows};
   fs.writeFileSync(out,JSON.stringify(result,null,1)+'\n');
