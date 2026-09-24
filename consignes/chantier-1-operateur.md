@@ -108,6 +108,22 @@ que tu rapportes va à l'ingénieur du chantier 1, qui n'a pas accès à ESV.
    jeton (mots `token`, `key`, `auth`, `session`, ou longue suite de
    caractères). Mets le tout dans **`reseau-esv.txt`**.
 
+### 3 bis. La carte et le statut des cuts (5 minutes) — pour le cerveau
+
+Le Pilote gagnerait beaucoup à s'appuyer sur les cuts **déjà validés** autour
+d'un cut difficile (étude du 24/09, `audit/appuis-valides-2026-09-24.md`). Il
+faut savoir où ESV garde ces informations :
+
+1. Toujours dans **Réseau**, effacer, puis **ouvre ou déplace la carte** :
+   note le chemin des requêtes qui arrivent (souvent un flux de géométries,
+   parfois `.json`, `.geojson` ou une liste de cuts). Clique sur l'une d'elles,
+   onglet **Aperçu** : contient-elle, pour chaque cut, un **statut** (validé,
+   à revoir, ignoré) et des **coordonnées de rails** ? Copie **un seul élément**
+   de la liste, jetons retirés, dans `reseau-esv.txt`.
+2. Réponds en une ligne chacune : les rails dessinés sur la carte bougent-ils
+   quand tu valides une nouvelle pose ? La couleur d'un cut sur la carte
+   change-t-elle quand tu le valides ou le passes en SKIP ?
+
 ## 4. Chercher dans le code d'ESV (10 minutes)
 
 1. Onglet **Sources**, puis **Ctrl+Maj+F** (recherche dans tous les fichiers).
