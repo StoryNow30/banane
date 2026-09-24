@@ -248,4 +248,4 @@ function run(argv=process.argv.slice(2)){const opt=parse(argv),bytes=fs.readFile
  fs.writeFileSync(path.join(out,'overlays.json'),JSON.stringify(overlays,null,2));
  return {manifest,results,overlays};}
 if(require.main===module)try{const r=run();console.log(JSON.stringify({witness:r.manifest.witness,summary:r.manifest.summary,overlays:r.overlays.length},null,2));}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={INPUT_MODES,DEFAULT_INPUT_MODE,engines,observedRailTransition,temporalBoundaries,prepareRail,prepareVisit,referenceFor,execute,evaluateVisit,score,metrics,overlay,run};
+module.exports={INPUT_MODES,DEFAULT_INPUT_MODE,engines,observedRailTransition,temporalBoundaries,prepareRail,prepareVisit,referenceFor,execute,evaluateVisit,score,distribution,metrics,overlay,run};
