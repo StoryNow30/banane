@@ -1,0 +1,18 @@
+sans pose : étude = 0 cut ; matrice = 1 cut
+10,04 mm > 10 ; étude faux = 0 ; matrice = applied-right
+étude ok=true rang=24 ; embarqué no-qualified-minimum-near-prediction
+vertical 50 mm ; garde = 0 ; first-pass ; anchor = true
+ancres 104,104,103 : sélection 104,104
+✔ D-038 : une visite sans pose initiale disparaît du dénominateur (2.926988ms)
+✔ D-038 : 10,04 mm devient juste dans étude et matrice (1.840849ms)
+✔ 25e minimum : étude accepte, embarqué refuse (1.380286ms)
+✔ garde seulement latérale : +50 mm vertical devient ancre (1.246734ms)
+✔ deux observations du même cut occupent les deux places d’ancre (0.769382ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132.718863
