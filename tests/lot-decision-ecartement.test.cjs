@@ -6,7 +6,7 @@ const L=require('../src/lot-decision.js');
 const pos=(g,x=0)=>({left:[x,0,0],right:[x,g/1000,0]});
 const anchor=(cut,g,part=2)=>({identity:{part,cut,frameId:'f'},positions:pos(g,cut)});
 test('inactive par défaut : aucune règle de la 4.7.15 ne change',()=>{
-  assert.equal(L.DEFAULTS.gaugeGuardMm,null);assert.equal(L.DEFAULTS.gaugeChoice,false);
+  assert.equal(L.DEFAULTS.gaugeGuardMm,null);assert.equal(L.DEFAULTS.gaugeChoice,false);assert.equal(L.DEFAULTS.gaugeTargetStudy,false);
   assert.equal(L.DEFAULTS.version,'lot-decision-v3');
 });
 test('écartement d\'une paire, référence par la médiane des appuis les plus proches',()=>{
@@ -17,4 +17,9 @@ test('écartement d\'une paire, référence par la médiane des appuis les plus 
   assert.equal(L.gaugeReference({part:2,cut:130,frameId:'f'},[anchor(110,1452)],cfg),null);
   const even=L.gaugeReference({part:2,cut:114,frameId:'f'},[anchor(112,1448),anchor(113,1456)],cfg);
   assert.ok(Math.abs(even.mm-1452)<1e-6);
+});
+test('le Pilote ne passe aucune option à la décision : la variante « cible » reste une mesure',()=>{
+  const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','background.js'),'utf8');
+  const calls=src.match(/L\.decideCut\(\{[\s\S]*?\}\);/g)||[];
+  assert.ok(calls.length>=1);for(const c of calls)assert.ok(!/options|gaugeTarget/.test(c),c);
 });

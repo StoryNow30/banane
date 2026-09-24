@@ -27,7 +27,7 @@
   * au plus de la prédiction (10 mm jusqu'à la 4.7.14). Bilan des curseurs,
   * D-047 : +4 cuts justes, aucun faux, aucun juste perdu sur 6 sessions Natif
   * et 4 lots Pilote relus (`audit/curseurs-lot-2026-09-24.md`). */
- const DEFAULTS=Object.freeze({version:'lot-decision-v3',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:null,gaugeGap:10,gaugeCount:3,gaugeChoice:false,
+ const DEFAULTS=Object.freeze({version:'lot-decision-v3',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:null,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -163,7 +163,7 @@
      const list=candidatesOf(seeded,side,again,cfg);candidates[side]=journal(list);
      if(!(own||cfg.eligibleMotifs.includes(next.motif))){why.push(side+':'+(next.motif||next.status));continue;}
      const pick=chooseRail(seeded,side,again,cfg,list);
-     if(!pick.ok&&pick.reason==='several-minima-near-prediction'&&cfg.gaugeChoice&&gaugeRef)several[side]=nearOf(seeded,side,cfg,list);
+     if(!pick.ok&&pick.reason==='several-minima-near-prediction'&&(cfg.gaugeChoice||cfg.gaugeTargetStudy)&&gaugeRef)several[side]=nearOf(seeded,side,cfg,list);
      if(!pick.ok){why.push(side+':'+pick.reason);continue;}
      deltas[side]=pick.delta;chosen[side]={fromPredictionMm:pick.fromPredictionMm,rank:pick.rank,top:pick.top,face:pick.face,lossRatio:pick.lossRatio};
    }
@@ -175,7 +175,12 @@
      const opts=side=>deltas[side]?[{delta:deltas[side],own:true}]:several[side];
      const kept=[];for(const l of opts('left'))for(const r of opts('right')){const d={left:l.delta,right:r.delta},pr=Gauge.assessPair(seeded.rails,d,C);
        if(!pr.admissible)continue;const pos=Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],d[side])]));
-       if(!gaugeSuspect(pos))kept.push({l,r,d});}
+       if(cfg.gaugeTargetStudy||!gaugeSuspect(pos))kept.push({l,r,d,jump:gaugeJump(gaugeRef,pos)});}
+     /* MESURE SEULEMENT (question de la direction, 24/09) : la paire la plus proche
+      * de l'écartement des voisins. C'est une CIBLE, interdite dans le Pilote par
+      * l'invariant n°1 du §7 et par le §3.6 du cahier 4.8 ; le Pilote ne passe
+      * jamais d'options à cette fonction. Sert à chiffrer ce que la règle coûte. */
+     if(cfg.gaugeTargetStudy&&kept.length>1)kept.splice(0,kept.length,kept.reduce((a,b)=>b.jump<a.jump?b:a));
      if(kept.length===1){const k=kept[0];for(const [side,c] of [['left',k.l],['right',k.r]])if(!c.own){deltas[side]=c.delta;
        chosen[side]={fromPredictionMm:Math.abs(c.uMm),rank:c.rank,top:c.top,face:c.face,byGaugeGuard:true};}
        why.length=0;}
