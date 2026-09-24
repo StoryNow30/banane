@@ -57,3 +57,15 @@ que ni la garde de continuité ni celle-ci ne peuvent voir.
   celles de la 4.7.12, la garde différerait **1834**, et 1835 et 1837 seraient
   décidés autrement (93/96). Premier déclenchement sur un lot Pilote : la
   relecture de la partie 34 le jugera.
+
+## Jugée sur le terrain : partie 34, relue (24/09)
+
+Lot 4.7.11 de la partie 34 (jamais vue), relu en Natif (19 segments, 369
+visites ; D-040) : **1 faux sur 71 cuts jugés, le cut 1834 (26,5 mm)**, premier
+passage du moteur. Rejoué avec les règles de la 4.7.12
+(`--regles-actuelles --decision-par-rejeu`) : la garde de paire le diffère, et
+le lot passe à **0 faux sur 71** ; 1835 est gagné (choix, 6,2 mm) et 1837 mieux
+placé (1,7 mm au lieu de 7,2). Premier déclenchement de la garde sur un lot
+Pilote, sur une partie jamais utilisée : un vrai faux arrêté, aucun juste
+perdu. Relevés : `audit/acceptance-p34-2026-09-24.{json,md}` (terrain),
+`audit/acceptance-p34-2026-09-24-regles-4712.json` (règles 4.7.12).

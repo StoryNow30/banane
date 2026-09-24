@@ -6,9 +6,11 @@ Statut : développement expérimental, non qualifié pour la production.
 
 ## État 4.7.12
 
-Lots 4.7.10–4.7.11 sans relecture : partie 33 (20/21 puis 65/83, arrêts KI-051
-puis caméra), partie 34 (73/96, 76 %, 15 cuts placés par la décision sur le
-lot, aucun problème de vue). Chantier 2 intégré, garde de paire active (D-044).
+Lots 4.7.10–4.7.11 : partie 33 sans relecture (20/21 puis 65/83, arrêts
+KI-051 puis caméra) ; **partie 34 relue** (jamais vue) : 73/96 (76 %), 1 faux
+sur 71 jugés (1834, 26,5 mm, premier passage du moteur), 0 faux sur les 14
+cuts jugés placés par la décision sur le lot ; avec la garde de paire de la
+4.7.12, 0 faux sur 71. Chantier 2 intégré, garde de paire active (D-044).
 Interface retenue : « La ligne » (D-045). En attente : relectures des parties 33
 et 34, P2, lots complets.
 

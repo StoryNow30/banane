@@ -22,7 +22,8 @@ risque est une perte de couverture.
   actuel, 241 et 409 arrêtés (faux), aucun juste perdu, 243 gagné ; ne se
   déclenche sur aucun des trois lots Pilote relus ni sur la partie 30.
 - Premier déclenchement sur un vrai lot : partie 34 (lot 4.7.11, rejoué avec
-  les règles de la 4.7.12), cut 1834 ; la relecture dira s'il était faux.
+  les règles de la 4.7.12), cut 1834. **Relu : faux de 26,5 mm**, seul faux du
+  lot ; avec la garde, 0 faux sur 71 jugés.
 - Le rejeu de l'outil d'acceptation suit les règles de la version de chaque
   lot ; `--regles-actuelles` impose celles de la version courante.
 
