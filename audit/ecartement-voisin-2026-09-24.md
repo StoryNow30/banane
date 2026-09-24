@@ -76,3 +76,7 @@ retire le faux 7026, +2 justes, aucun juste perdu ; marge sur le surécartement
 (9047 change de 15 à 20 mm). Pas d'aide au choix, pas de cible. La décision
 consignerait `gaugeGuardMm` ; le rejeu des lots antérieurs resterait sans garde.
 
+Combinée à `minTop` 5 pour le choix (bilan des curseurs), sur le même banc :
+711 décidés, **+13 justes, −1 faux, aucun juste perdu** ; faux restants 398,
+402, 983 (partie 20) et 137 (partie 2).
+

@@ -65,7 +65,9 @@ moteur reste 15, cahier §8). Base : 656 décidés, 489 justes, 4 faux.
 
 | Curseur (base) | Essai | Décidés | Justes | Faux | Lecture |
 |---|---|---|---|---|---|
-| `minTop` points de dessus (15) | **5** | 676 | **+11** | 0 | 20 choix gagnés : 11 justes (0,6 à 8,1 mm), 9 non jugés, aucun perdu |
+| `minTop` points de dessus (15) | 1 | 681 | +13 | 0 | comme 3, un non jugé de plus |
+| | 3 | 680 | +13 | 0 | 2 justes de plus qu'à 5, dont **765 à 10,0 mm**, au seuil du faux |
+| | **5** | 676 | **+11** | 0 | 20 choix gagnés : 11 justes (0,6 à 8,1 mm), 9 non jugés, aucun perdu |
 | | 10 | 663 | +4 | 0 | 7 choix gagnés : 4 justes (1139, 151, 496, 528 ; 1,2 à 3,9 mm), 3 non jugés, aucun perdu |
 | | 20 | 653 | −2 | 0 | 2 choix justes perdus |
 | `minFace` points de flanc (3) | 2 | 661 | +2 | 0 | 5 choix gagnés : 2 justes, dont 477 à **9 mm** (au bord du seuil de 10), 3 non jugés |
@@ -75,9 +77,11 @@ moteur reste 15, cahier §8). Base : 656 décidés, 489 justes, 4 faux.
 | | 30 | 655 | 0 | 0 | 1 choix non jugé perdu |
 
 Tous les gains de `minTop` sont au banc Natif ; aucun lot Pilote relu ne
-change. Complément en cours : `minTop` 3 et 1 (où la baisse casse-t-elle), et
-la combinaison candidate de la 4.7.16 (garde d'écartement voisin à 20 mm et
-`minTop` 5).
+change. Aucun faux n'apparaît même à 1 point, mais sous 5 les cuts gagnés se
+rapprochent du seuil (765 à 10,0 mm). **Proposé : 5**, avec la garde
+d'écartement voisin à 20 mm (`audit/ecartement-voisin-2026-09-24.md`). La
+combinaison, rejouée avec la partie 2 : 711 décidés, **+13 justes, −1 faux
+(7026), aucun juste perdu** ; les gains des deux réglages s'additionnent.
 
 
 ## Décisions (D-047)
@@ -90,7 +94,7 @@ la combinaison candidate de la 4.7.16 (garde d'écartement voisin à 20 mm et
 | `gap` | 3 | **Conservé.** 2 coûte 14 justes ; 4 ajoute un faux sur un lot relu (1835). |
 | `anchors` | 2 | **Conservé.** 3 : −1 juste, placements moins stables. |
 | Garde de paire | active | **Conservée** (D-044) : bilan `audit/garde-paire-verification-2026-09-24.md`. |
-| `minTop` du choix | 15 | **À trancher par la direction** : 5 gagne 11 justes, 10 en gagne 4, 0 faux, 0 perdu (Natif seulement) ; complément en cours. |
+| `minTop` du choix | 15 | **Proposé : 5, à trancher par la direction** : +11 justes, 0 faux, 0 perdu (Natif seulement) ; 3 et 1 n'ajoutent que 2 justes, dont un au seuil. |
 | `minFace` du choix | 3 | **Conservé.** 2 gagne 2 justes dont un à 9 mm ; 5 coûte 6 justes. |
 | `maxDzMm` du choix | 20 | **Conservé.** 10 coûte 10 justes ; 30 n'apporte rien. |
 

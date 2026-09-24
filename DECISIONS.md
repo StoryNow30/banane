@@ -41,9 +41,10 @@ passage (appuis recalculés), garde de paire active, sur 6 sessions Natif et
   983 est à 3,9 mm de la voie de ses voisins, 7026 est isolé (D-042).
 - Filtres du choix (base 4.7.15) : `minFace` 3 et `maxDzMm` 20 conservés
   (2 : +2 justes dont un à 9 mm ; 5 : −6 ; `maxDzMm` 10 : −10, 30 : 0).
-  `minTop` du choix à 10 : +4 justes, 0 faux, 0 perdu, au banc Natif
-  seulement — **à trancher par la direction**. `chainMm` 30 ajoute un faux
-  (1205) : 15 est confirmé.
+  `minTop` du choix : 5 donne +11 justes, 0 faux, 0 perdu, au banc Natif
+  seulement (3 et 1 : +13, dont un cut au seuil de 10 mm) — **proposé à 5,
+  à trancher par la direction**. `chainMm` 30 ajoute un faux (1205) : 15 est
+  confirmé.
 
 ## D-046 - Relecture indépendante de la 4.7.12 : corrections et questions ouvertes
 

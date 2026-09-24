@@ -9,7 +9,7 @@ Statut : développement expérimental, non qualifié pour la production.
 Bilan des curseurs de la décision sur le lot (C5, D-047,
 `audit/curseurs-lot-2026-09-24.md`) : sur 652 cuts décidés et 489 jugés,
 `chainMm` à 15 mm gagne 4 justes sans faux ni juste perdu ; il est desserré,
-les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix mesurés : `minTop` du choix à 10 gagne 4 justes sans faux (à trancher). Relecture
+les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix mesurés : `minTop` du choix à 5 gagne 11 justes sans faux (proposé, à trancher). Relecture
 ciblée des prochains lots (D-048).
 
 Lots 4.7.14 de la partie 2, relecture ciblée (110–138) : pose de départ d'ESV
@@ -19,7 +19,8 @@ aurait placé 115 et 116 justes (`audit/cas-decalage-esv-p2-2026-09-24.md`).
 
 Garde d'écartement voisin mesurée (`audit/ecartement-voisin-2026-09-24.md`) :
 à 20 mm, le faux 7026 est retiré, +2 justes, aucun perdu ; l'aide au choix et
-la cible ne changent aucun cut. Activation en 4.7.16 proposée, en attente de
+la cible ne changent aucun cut. Proposition 4.7.16 : garde à 20 mm et `minTop`
+du choix à 5 (ensemble : +13 justes, −1 faux, aucun perdu), en attente de
 décision. Cahier 4.9 ouvert en brouillon (D-049).
 
 ## État 4.7.14
