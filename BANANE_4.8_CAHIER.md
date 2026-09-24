@@ -559,6 +559,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°7 — la logique de l'opérateur : partir de la continuité de la voie (23/09) : mesure l'amorce par continuité, confirme le §3.7 du n°3, élargit le chantier du §6.8 du n°6
 - n°8 — première collecte 4.7.7 (23/09) : observation « continuité » mesurée sur le terrain, partie 24
 - n°9 — décider sur le lot (23/09) : lève la règle « la prédiction ne fait que déplacer la fenêtre » (n°3 §3.5) pour le choix par la voie ; objectif intermédiaire 80 % ; définitions de mesure D-038
+- n°10 — la décision sur le lot appliquée dans le Pilote (24/09) : relecture D-040, activation en un seul passage (D-041, D-042), vue d'ESV (D-043), garde de paire (D-044), interface « La ligne » (D-045) ; seuil C4 de sortie à trancher
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1399,4 +1400,74 @@ fin de lot), un seul passage mesuré en parallèle. Point ouvert pour tenir le
 Sur le §2 : la décision sur le lot est sûre mais ne suffit pas à 80 % sur ces
 données ; la mesure terrain de la 4.7.8 départagera observation et choix. Sur
 le §15 : P2 toujours à mesurer (session F2).
+
+## Amendement n°10 — la décision sur le lot appliquée dans le Pilote
+
+**24 septembre 2026.** Éléments nouveaux : les lots Pilote relus des parties 31
+(4.7.8 et 4.7.9) et 34 (4.7.11), les lots de la partie 33 (4.7.10), la
+livraison du chantier 2 (`audit/chantiers/faux-isoles.md`) et les décisions de
+la direction D-040 à D-045.
+
+### 10.1 Ce qui change
+
+1. **Relecture** (D-040). Une visite de relecture d'au moins 0,5 s sans
+   correction ni validation vaut acceptation de la pose vue ; retouchée sans
+   validation, elle n'est pas jugeable. C4 porte sur les cuts validés et
+   acceptés ; C2 sur les seuls cuts validés. C'est la convention des
+   opérateurs ; elle ne change aucun seuil.
+2. **Activation** (D-041, D-042). La décision sur le lot du n°9 **commande**
+   dans le Pilote depuis la 4.7.10, en **un seul passage** : chaque cut est
+   décidé à son ouverture, avec pour appuis les cuts déjà placés du même lot ;
+   le second passage (reprise des différés) n'est pas construit. Premier
+   passage gardé à 30 mm ; reprise depuis la voie ; choix par la voie, y
+   compris à un seul appui. Réglage de lot « Observer seulement » : le Pilote
+   de la 4.7.9. `src/engine.js` n'est pas modifié : `Engine.apply()` garde ses
+   contrôles (état ESV relu, écartement avant commande, relecture à 1 mm).
+3. **Vue d'ESV** (D-043). Le Pilote place un rail en cliquant dans la vue
+   qu'ESV centre sur ce rail (±0,2 unité de scène). Depuis la 4.7.11, une
+   position de la décision sur le lot hors de cette vue n'est pas commandée :
+   le cut est différé. Atteindre ces positions (recadrage, clic en deux temps)
+   est **hors 4.8**. Conséquence déclarée : sur une partie où ESV part loin des
+   rails, la couverture est bornée par la vue (partie 33 : 78 %).
+4. **Garde de paire** (D-044, chantier 2). Un premier passage dont un rail est
+   repêché par S1 et dont le calage de convention est hors domaine sur l'un des
+   deux rails est différé, et ne devient pas appui. C'est un curseur nouveau du
+   §8 ; son bilan est tenu (`audit/garde-paire-verification-2026-09-24.md`).
+5. **Lecture de C4** (D-042). La direction tolère un faux isolé de la décision
+   sur le lot ; un faux du **même type** qui se reproduit sur des lots relus
+   (deux ou trois fois) déclenche un correctif, mesuré sur toutes les données
+   relues ; tout faux d'un autre type est analysé et rapporté aussitôt. Zéro
+   faux reste la cible. **À trancher par la direction pour la sortie** : le
+   seuil C4 des lots de validation — zéro faux strict, ou faux isolés expliqués
+   tolérés. Dans les deux cas, chaque faux des lots de validation est nommé dans
+   le rapport de sortie avec son type.
+6. **Interface** (D-045). Le chantier B part de la proposition « La ligne »
+   (`design/ui-next-claude/`) ; les invariants du test H du §14 restent la
+   condition.
+7. **Report en 4.9.** Chantier 1 (revenir à un cut), appuis sur les cuts
+   voisins déjà validés (le Pilote irait lire leur pose lui-même), recadrage de
+   la vue d'ESV.
+
+### 10.2 Pourquoi
+
+| Lot relu | Pilote placé | Faux / jugés | Décision sur le lot |
+|---|---|---|---|
+| Partie 31, lot 2 (4.7.9, observation) | 47 / 78 | 0 / 45 | 72 / 78 ; 1 / 69 (7026, choix à un seul appui) |
+| Partie 34 (4.7.11, appliquée, jamais vue) | 73 / 96 (76 %) | 1 / 71 (1834, premier passage du moteur) | 0 / 14 sur les cuts qu'elle a placés |
+| Partie 34, règles de la 4.7.12 (rejeu) | 73 / 96 | **0 / 71** : la garde de paire diffère 1834 | — |
+
+Sur toutes les données relues, en un seul passage
+(`audit/choix-un-appui-2026-09-24.md`) : reprise depuis la voie 0 faux sur 36 ;
+choix à deux appuis 0 sur 23 ; choix à un appui 1 sur 19. La garde de paire
+arrête 241 et 409 au banc Natif et 1834 sur le terrain, sans perdre de cut
+juste mesuré. Restent au banc Natif de la partie 20 : 398 et 402 (premiers
+passages sans aucun appui) et 983 (15 mm).
+
+### 10.3 Impact
+
+Sur le §2 et l'objectif intermédiaire du n°9 (80 %) : aucun lot complet de
+validation n'est encore relu ; les lots arrêtés donnent 76 à 92 % selon la
+partie, la vue d'ESV bornant les parties où ESV part loin des rails. Sur le
+§15 : P2 reste à mesurer et bloque toute cible d'erreur publiée ; P5 est
+mesuré.
 
