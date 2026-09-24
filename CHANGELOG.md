@@ -1,5 +1,22 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.15 — une reprise depuis la voie sert d'appui jusqu'à 15 mm, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension** (D-047, bilan des curseurs). Un cut repris depuis la voie
+(moteur relancé depuis la position prédite par les voisins) devient appui pour
+les cuts suivants s'il tombe à **15 mm** au plus de la prédiction (10 mm
+jusqu'ici). Mesuré sur 6 sessions Natif et 4 lots Pilote relus : +4 cuts
+justes, aucun faux, aucun juste perdu. Aucun autre curseur ne change ; le
+contrat d'écartement reste une admissibilité. La décision consigne ses règles
+(`lot-decision-v3`, `chainMm`).
+
+**Outils.** Bilan des curseurs de la décision sur le lot
+(`tools/cursor-sweep.cjs`, `audit/curseurs-lot-2026-09-24.md`). Rejeu
+d'acceptation : `chainMm` lu dans le lot (10 mm pour tout lot antérieur).
+L'étude des choix rejoue les lots avec les règles actuelles.
+
 ## 4.7.14 — corrections de la relecture indépendante, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

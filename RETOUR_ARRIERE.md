@@ -1,5 +1,14 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.15**, la cible de retour est la **4.7.14**, commit `3e83fc4`
+(paquet `banane-v4.7.14-test.zip`, SHA-256 `4ef4ca3e…12e56b8a`). La 4.7.15 ne change
+qu'un curseur de la décision sur le lot (`chainMm` 10 → 15 mm, D-047).
+
+```bash
+git archive 3e83fc4 | tar -x -C /tmp/banane-4.7.14
+cd /tmp/banane-4.7.14 && python3 tools/package.py --output /tmp/banane-v4.7.14-test.zip
+```
+
 **Depuis la 4.7.14**, la cible de retour est la **4.7.13**, commit `71c262b`
 (paquet `banane-v4.7.13-test.zip`, SHA-256 `c4fc1190…6422757c`). Attention : la
 4.7.13 porte le défaut bloquant KI-053 ; « Observer seulement » l'évite.

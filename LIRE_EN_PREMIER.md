@@ -1,13 +1,19 @@
-# Démarrer avec Banane V4.7.14 TEST — la nouvelle interface, corrigée
+# Démarrer avec Banane V4.7.15 TEST — la voie s'appuie un peu plus loin
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.14-test.zip` dans Edge, exactement comme la 4.7.13.
+Installe `banane-v4.7.15-test.zip` dans Edge, exactement comme la 4.7.14.
 
-Vérifie d'abord **V4.7.14 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.14 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.15 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.15 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
+
+**4.7.15 — un seul réglage change.** Un cut que le Pilote a repris depuis la
+voie sert maintenant d'appui aux cuts suivants s'il tombe à 15 mm au plus de
+la position prédite (10 mm jusqu'ici). Sur tout ce qui a été relu, cela place
+4 cuts justes de plus, sans aucun faux. Rien d'autre ne change : ni
+l'interface, ni les contrôles, ni l'écartement.
 
 **4.7.14 — corrections de la relecture indépendante.** Quand la garde de
 continuité écarte la proposition du moteur et que la position retrouvée par la

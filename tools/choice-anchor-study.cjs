@@ -76,7 +76,9 @@ function runLot(dir,label,relecture,{pairGuard=false,options={}}={}){
   const A=require(B+'tools/acceptance-report.cjs'),L0=require(B+'src/lot-decision.js'),L=guarded(L0,pairGuard,options);
   const seen=new Map(),flags=new Map();
   const deps={L:{...L,decideCut:args=>{const d=L.decideCut(args);seen.set(args.capture.identity.cut,d);flags.set(args.capture.identity.cut,pairFlag(args.science));return d;}}};
-  const r=A.report([A.loadLot(dir,label,relecture||null)],{replay:true,preferReplay:true,replayDeps:deps});
+  /* Règles actuelles (`currentRules`) : un lot ancien est rejoué comme le Pilote
+   * d'aujourd'hui le déciderait ; les curseurs de `--option` priment. */
+  const r=A.report([A.loadLot(dir,label,relecture||null)],{replay:true,preferReplay:true,replayDeps:deps,currentRules:true});
   const rows=[];
   for(const x of r.lots[0].rows){if(x.excluded||!x.lot?.wouldApply)continue;const d=seen.get(x.cut);if(!d)continue;
     const judged=!!x.lot.errors;rows.push({source:label,kind:'pilote',cut:x.cut,...describe(d),pairFlag:flags.get(x.cut)===true,judged,

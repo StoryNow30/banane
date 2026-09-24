@@ -21,8 +21,13 @@
   * (`audit/lot-choice-2026-09-23.json`).
   *
   * Ce module ne commande rien : en 4.7.8, son résultat est seulement consigné
-  * dans le journal du Pilote. */
- const DEFAULTS=Object.freeze({version:'lot-decision-v2',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:10,pairGuard:true,
+  * dans le journal du Pilote.
+  *
+  * `chainMm` : une reprise depuis la voie devient appui si elle tombe à 15 mm
+  * au plus de la prédiction (10 mm jusqu'à la 4.7.14). Bilan des curseurs,
+  * D-047 : +4 cuts justes, aucun faux, aucun juste perdu sur 6 sessions Natif
+  * et 4 lots Pilote relus (`audit/curseurs-lot-2026-09-24.md`). */
+ const DEFAULTS=Object.freeze({version:'lot-decision-v3',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:15,pairGuard:true,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -93,7 +98,7 @@
  function decideCut({capture,science,anchors,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
-   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard};
+   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg);
    if(applicable){

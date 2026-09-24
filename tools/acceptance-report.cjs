@@ -276,20 +276,25 @@ function sameDecision(a,b){
 /* ---- un lot ---- */
 /* Règles de la décision sur le lot selon la version qui a produit le lot : le
  * rejeu reproduit ce que le Pilote a fait. La garde de paire (D-044) n'existe
- * qu'à partir de la 4.7.12 ; `currentRules` rejoue un lot ancien avec les
- * règles actuelles (« que ferait la version courante ? »). */
+ * qu'à partir de la 4.7.12 ; une reprise depuis la voie sert d'appui jusqu'à
+ * 15 mm à partir de la 4.7.15 (D-047), 10 mm avant ; `currentRules` rejoue un
+ * lot ancien avec les règles actuelles (« que ferait la version courante ? »). */
 const versionAtLeast=(v,ref)=>{const a=String(v||'').split('.').map(Number),b=ref.split('.').map(Number);
   for(let i=0;i<b.length;i++){if(!Number.isFinite(a[i]))return false;if(a[i]!==b[i])return a[i]>b[i];}return true;};
-const rulesFor=(version,current=false)=>({pairGuard:current||versionAtLeast(version,'4.7.12')});
-/* Règles consignées par la décision elle-même (4.7.14) ; à défaut, version
- * `lot-decision-v2` ; à défaut seulement, version de l'extension à l'export —
- * qui peut être postérieure au lot (relecture 4.7.12). */
+const CHAIN_MM={before:10,current:15};
+const rulesFor=(version,current=false)=>({pairGuard:current||versionAtLeast(version,'4.7.12'),
+  chainMm:current||versionAtLeast(version,'4.7.15')?CHAIN_MM.current:CHAIN_MM.before});
+/* Règles consignées par la décision elle-même (4.7.14 : garde de paire ;
+ * 4.7.15 : `chainMm`) ; à défaut, version `lot-decision-v2` ; à défaut
+ * seulement, version de l'extension à l'export — qui peut être postérieure au
+ * lot (relecture 4.7.12). */
 function lotRules(observations,exportVersion,current=false){
   if(current)return {...rulesFor(null,true),source:'actuelles'};
   const recorded=observations.map(o=>o?.lotObservation).filter(Boolean),consigned=recorded.find(x=>typeof x.pairGuard==='boolean');
-  if(consigned)return {pairGuard:consigned.pairGuard,source:'lot'};
-  if(recorded.some(x=>x.version==='lot-decision-v2'))return {pairGuard:true,source:'lot'};
-  return {...rulesFor(exportVersion),source:'export'};
+  const chain=recorded.find(x=>Number.isFinite(x.chainMm))?.chainMm??(recorded.some(x=>x.version==='lot-decision-v3')?CHAIN_MM.current:CHAIN_MM.before);
+  if(consigned)return {pairGuard:consigned.pairGuard,chainMm:chain,source:'lot'};
+  if(recorded.some(x=>x.version==='lot-decision-v2'||x.version==='lot-decision-v3'))return {pairGuard:true,chainMm:chain,source:'lot'};
+  return {...rulesFor(exportVersion),...(recorded.length?{chainMm:chain}:{}),source:'export'};
 }
 function analyseLot(lot,options={}){
   const exclusions=options.exclusions||EXCLUDED,excluded=new Map(exclusions.map(e=>[keyOf(e.part,e.cut),e]));
@@ -325,7 +330,7 @@ function analyseLot(lot,options={}){
   let replay=null;
   if(options.replay&&lot.corpus){const all=rows.flatMap(r=>r._cut.observations);replay=new Map();
     const rules=lotRules(all,lot.diagnostic?.version??lot.journal?.version,options.currentRules);lot.lotDecisionRules=rules;
-    for(const x of replayLot(all,lot.corpus,{...(options.replayDeps||{}),options:{pairGuard:rules.pairGuard,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
+    for(const x of replayLot(all,lot.corpus,{...(options.replayDeps||{}),options:{pairGuard:rules.pairGuard,chainMm:rules.chainMm,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
   /* `preferReplay` : la 4.7.8 consigne un choix par la voie privé de sa grille
    * (KI-048) ; ses lots se mesurent sur le rejeu, la parité restant rapportée. */
   const lotSource=recorded&&!(options.preferReplay&&replay)?'observation':replay?'rejeu-hors-ligne':'absent';

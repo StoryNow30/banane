@@ -130,16 +130,30 @@ test('corpus exporté en segments : captures réunies, complétude vérifiée ; 
 test('règles du rejeu selon la version du lot ; --regles-actuelles les impose',()=>{
   assert.equal(A.versionAtLeast('4.7.12','4.7.12'),true);assert.equal(A.versionAtLeast('4.7.13','4.7.12'),true);assert.equal(A.versionAtLeast('4.8.0','4.7.12'),true);
   assert.equal(A.versionAtLeast('4.7.11','4.7.12'),false);assert.equal(A.versionAtLeast('4.7.9','4.7.12'),false);assert.equal(A.versionAtLeast(null,'4.7.12'),false);
-  assert.deepEqual(A.rulesFor('4.7.11'),{pairGuard:false});assert.deepEqual(A.rulesFor('4.7.12'),{pairGuard:true});assert.deepEqual(A.rulesFor('4.7.11',true),{pairGuard:true});
+  assert.deepEqual(A.rulesFor('4.7.11'),{pairGuard:false,chainMm:10});assert.deepEqual(A.rulesFor('4.7.12'),{pairGuard:true,chainMm:10});
+  assert.deepEqual(A.rulesFor('4.7.11',true),{pairGuard:true,chainMm:15});assert.deepEqual(A.rulesFor('4.7.15'),{pairGuard:true,chainMm:15});
 });
 
 /* Relecture 4.7.12 : la version de l'export peut être postérieure au lot ; les
  * règles consignées par la décision (4.7.14) font foi. */
 test('règles du rejeu : consignées par le lot d\'abord, version de l\'export en dernier recours',()=>{
   const obs=lo=>[{lotObservation:lo}];
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14'),{pairGuard:false,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2'}),'4.7.11'),{pairGuard:true,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.12'),{pairGuard:true,source:'export'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.11'),{pairGuard:false,source:'export'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14',true),{pairGuard:true,source:'actuelles'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14'),{pairGuard:false,chainMm:10,source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2'}),'4.7.11'),{pairGuard:true,chainMm:10,source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.12'),{pairGuard:true,chainMm:10,source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.11'),{pairGuard:false,chainMm:10,source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14',true),{pairGuard:true,chainMm:15,source:'actuelles'});
+});
+
+/* 4.7.15 (D-047) : `chainMm` consigné par la décision ; un lot antérieur exporté
+ * par une version plus récente garde ses 10 mm. */
+test('règles du rejeu : chainMm consigné, 10 mm pour tout lot antérieur à la 4.7.15',()=>{
+  const obs=lo=>[{lotObservation:lo}];
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:15}),'4.7.15'),{pairGuard:true,chainMm:15,source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:12}),'4.7.15'),{pairGuard:true,chainMm:12,source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3'}),'4.7.15'),{pairGuard:true,chainMm:15,source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.15'),{pairGuard:true,chainMm:10,source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:true}),'4.7.15'),{pairGuard:true,chainMm:10,source:'lot'});
+  assert.deepEqual(A.lotRules([],'4.7.15'),{pairGuard:true,chainMm:15,source:'export'});
+  assert.deepEqual(A.lotRules([],'4.7.6'),{pairGuard:false,chainMm:10,source:'export'});
 });

@@ -1,5 +1,36 @@
 # Décisions techniques
 
+## D-048 - Relecture ciblée des lots
+
+**24 septembre 2026, direction.** Le prochain lot Pilote (4.7.14) est relu sur
+une zone ciblée, pas en entier : la direction juge la fiabilité suffisante pour
+ne plus tout relire. Conséquence : C4 et la précision portent sur les seuls
+cuts de la zone ; chaque rapport donne la zone, le nombre de cuts jugés et la
+part du lot qu'ils représentent, et n'extrapole pas au reste du lot. Le lot
+4.7.12 de la partie 35 (233 cuts, 203 placés) ne sera pas relu : relecture non
+enregistrée.
+
+## D-047 - Bilan des curseurs de la décision sur le lot ; reprise appui jusqu'à 15 mm (4.7.15)
+
+**24 septembre 2026.** Critère C5, `audit/curseurs-lot-2026-09-24.md`. Chaque
+curseur de `src/lot-decision.js` déplacé seul, décision rejouée en un seul
+passage (appuis recalculés), garde de paire active, sur 6 sessions Natif et
+4 lots Pilote relus. Base (4.7.14) : 652 cuts décidés, 489 jugés, 4 faux
+(398, 402, 983, 7026).
+
+- **`chainMm` 10 → 15 mm, desserré en 4.7.15** (autorisé par la direction le
+  24/09) : une reprise depuis la voie devient appui si elle tombe à 15 mm au
+  plus de la prédiction. +4 justes, 0 faux, 0 juste perdu. La décision consigne
+  ses règles (`lot-decision-v3`, `chainMm`) ; le rejeu d'un lot antérieur garde
+  10 mm.
+- **Conservés** : `guardMm` 30 (20 : −4 justes ; 40 : +1), `chooseMm` 15
+  (10 : retire le faux isolé 7026 pour 5 justes, D-042 ; 20 : −2), `gap` 3
+  (2 : −14 justes ; 4 : +1 faux, 1835), `anchors` 2 (3 : −1), garde de paire
+  (D-044).
+- Les quatre faux restants ne dépendent d'aucun de ces curseurs dans les
+  plages essayées : 398 et 402 sont des premiers passages sans aucun appui,
+  983 est à 3,9 mm de la voie de ses voisins, 7026 est isolé (D-042).
+
 ## D-046 - Relecture indépendante de la 4.7.12 : corrections et questions ouvertes
 
 **24 septembre 2026.** Livraison du chantier 3 (branche

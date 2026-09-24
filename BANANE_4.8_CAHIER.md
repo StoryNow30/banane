@@ -560,6 +560,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°8 — première collecte 4.7.7 (23/09) : observation « continuité » mesurée sur le terrain, partie 24
 - n°9 — décider sur le lot (23/09) : lève la règle « la prédiction ne fait que déplacer la fenêtre » (n°3 §3.5) pour le choix par la voie ; objectif intermédiaire 80 % ; définitions de mesure D-038
 - n°10 — la décision sur le lot appliquée dans le Pilote (24/09) : relecture D-040, activation en un seul passage (D-041, D-042), vue d'ESV (D-043), garde de paire (D-044), interface « La ligne » (D-045) ; seuil C4 de sortie à trancher
+- n°11 — bilan des curseurs de la décision sur le lot (24/09) : C5 pour les curseurs ajoutés par le n°9, `chainMm` desserré (D-047) ; relecture ciblée (D-048)
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1473,4 +1474,46 @@ validation n'est encore relu ; les lots arrêtés donnent 76 à 92 % selon la
 partie, la vue d'ESV bornant les parties où ESV part loin des rails. Sur le
 §15 : P2 reste à mesurer et bloque toute cible d'erreur publiée ; P5 est
 mesuré.
+
+## Amendement n°11 — bilan des curseurs de la décision sur le lot
+
+**24 septembre 2026.** Éléments nouveaux : le bilan chiffré des curseurs de la
+décision sur le lot (`audit/curseurs-lot-2026-09-24.md`), la décision de la
+direction sur `chainMm` et sur la relecture ciblée (D-047, D-048), le lot
+4.7.12 de la partie 35.
+
+### 11.1 Ce qui change
+
+1. **C5 pour la décision sur le lot.** Les curseurs ajoutés par le n°9 entrent
+   au §8 avec leur bilan : garde de continuité `guardMm` 30 mm, choix
+   `chooseMm` 15 mm, reprise appui `chainMm`, voisinage `gap` 3 cuts, `anchors`
+   2 appuis, filtres du choix (`minTop`, `minFace`, `maxDzMm`), garde de paire.
+   Chacun est déplacé seul, un cran de chaque côté, décision rejouée en un seul
+   passage sur tout ce qui a été relu.
+2. **`chainMm` desserré de 10 à 15 mm** (4.7.15, D-047) : +4 justes, aucun faux,
+   aucun juste perdu. Les autres curseurs sont conservés avec leur coût mesuré.
+3. **Relecture ciblée** (D-048). Un lot peut être relu sur une zone seulement.
+   C4 et la précision portent alors sur les cuts de la zone ; le rapport donne
+   la zone et la part du lot jugée, sans extrapoler. Le seuil C4 de sortie
+   reste à trancher (n°10, point 5).
+
+### 11.2 Pourquoi
+
+| Curseur | Essais | Meilleur écart à la base (652 décidés, 485 justes, 4 faux) |
+|---|---|---|
+| `chainMm` 10 | 5, 15 | 15 : +4 justes, 0 faux |
+| `guardMm` 30 | 20, 40 | 40 : +1 juste ; 20 : −4 |
+| `chooseMm` 15 | 10, 20 | 10 : −1 faux (7026), −5 justes |
+| `gap` 3 | 2, 4 | 4 : +3 justes, +1 faux (1835) |
+| `anchors` 2 | 3 | 3 : −1 juste |
+
+Les faux restants (398, 402 sans appui ; 983 à 3,9 mm de la voie ; 7026
+isolé) ne dépendent d'aucun de ces curseurs dans les plages essayées.
+
+### 11.3 Impact
+
+Sur C5 : complet pour la décision sur le lot dès que les filtres du choix sont
+mesurés (en cours) ; `minTop` du moteur reste sans bilan de desserrage (n°5).
+Sur C1 : la partie 35 (4.7.12, jamais vue, non relue) donne 203 cuts traités
+sur 233 (87 %), dont 32 placés par la décision sur le lot, sans erreur.
 

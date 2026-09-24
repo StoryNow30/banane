@@ -1,8 +1,16 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.14 TEST** (interface « La ligne » ; décision sur le lot appliquée, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-046 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.15 TEST** (interface « La ligne » ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-048 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.15
+
+Bilan des curseurs de la décision sur le lot (C5, D-047,
+`audit/curseurs-lot-2026-09-24.md`) : sur 652 cuts décidés et 489 jugés,
+`chainMm` à 15 mm gagne 4 justes sans faux ni juste perdu ; il est desserré,
+les autres curseurs sont conservés avec leur coût mesuré. Filtres du choix en cours de mesure. Relecture
+ciblée des prochains lots (D-048).
 
 ## État 4.7.14
 
@@ -15,14 +23,13 @@ sur 233 (87 %), dont 32 placés par la décision sur le lot (28 choix,
 4 reprises depuis la voie) ; 30 différés (21 moteur, 8 écartement, 1 sans
 entrée), dont 3 hors de la vue (8951–8953) ; aucune erreur, aucun déclenchement
 de la garde de paire, aucun cas KI-053 ; parité du rejeu 233/233
-(`audit/acceptance-p35-2026-09-24-sans-relecture.json`). En attente : relecture.
+(`audit/acceptance-p35-2026-09-24-sans-relecture.json`). Pas de relecture
+(non enregistrée, D-048).
 
 ## État 4.7.13
 
-Interface « La ligne » intégrée (D-045). Amendement n°10 au cahier. Bilan
-chiffré des curseurs de la décision sur le lot en cours (10 configurations,
-6 sessions Natif et 4 lots Pilote relus). Partie 34 relue : 1 faux sur 71, que
-la garde de paire de la 4.7.12 arrête.
+Interface « La ligne » intégrée (D-045). Amendement n°10 au cahier. Partie 34
+relue : 1 faux sur 71, que la garde de paire de la 4.7.12 arrête.
 
 ## État 4.7.12
 
