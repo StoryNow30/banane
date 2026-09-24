@@ -1,5 +1,27 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.9 — correctif de l'observation du Pilote, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension — sans effet sur le placement.** KI-048 : dans le service worker,
+`src/lot-decision.js` était chargé après `src/gcv1-shadow.js`, qui remplace
+`BananeGeometry3` par sa façade V4.6 ; le choix par la voie ne recevait jamais
+la grille d'A_STAR et consignait « aucun minimum ». Il est désormais chargé
+entre `geometry-candidate-v1.js` et la composition ; une grille absente est
+consignée « grid-unavailable ». La parité annoncée en 4.7.8 (312/312) valait
+sous Node, où les modules sont liés par `require`, pas dans l'extension :
+deux essais chargent désormais les modules comme le navigateur. Premier lot
+Pilote 4.7.8 (partie 31) : 6 décisions sur 50 différentes du rejeu, toutes des
+choix ; `tools/acceptance-report.cjs --decision-par-rejeu` mesure ces lots.
+
+**Outils et études** (hors extension) : `tools/acceptance-report.cjs`
+(chantier 4 : C1 à C4 par partie ; C4 non évaluable sous 80 % d'appliqués
+jugés ; lot incomplet signalé) ; `tools/deferred-diagnosis.cjs` ;
+`tools/validated-anchors-study.cjs` (appuis validés, garde de cohérence ;
+partie 19 : 57 → 79 %, 0 faux). Partie 30 (Natif, jamais vue) : décision sur le
+lot 81,9 % des cuts distincts, 0 faux sur 57 jugés.
+
 ## 4.7.8 — décision sur le lot en observation dans le Pilote, 23 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

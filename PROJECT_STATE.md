@@ -1,8 +1,20 @@
 # État du projet Banane
 
-Date : 23 septembre 2026  
-Version active de l'extension : **4.7.8 TEST** (décision sur le lot observée dans le Pilote ; observation « continuité » en Natif ; calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
+Date : 24 septembre 2026  
+Version active de l'extension : **4.7.9 TEST** (correctif : décision sur le lot observée dans le Pilote avec son choix par la voie, KI-048 ; observation « continuité » en Natif ; calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.9
+
+Premier lot Pilote 4.7.8 (partie 31, jamais vue) : Pilote 35 cuts sur 51
+(68,6 %), décision sur le lot rejouée 43 sur 51 (84,3 %) ; hors 5 cuts sans
+nuage ESV et le cut d'arrêt, 35 et 43 sur 45 ; justesse en attente de la
+relecture. Ce lot a révélé KI-048 (le choix par la voie privé de sa grille dans
+l'extension, observation seulement), corrigé en 4.7.9, et KI-049 (nuage ESV non
+chargé). Partie 30 (Natif 4.7.7, jamais vue) : décision sur le lot 81,9 % des
+cuts distincts, 0 faux sur 57 jugés. Étude des appuis validés (voisins déjà
+validés, avec garde de cohérence) : partie 19, 57 → 79 %, 0 faux
+(`audit/appuis-valides-2026-09-24.md`).
 
 ## État 4.7.8
 

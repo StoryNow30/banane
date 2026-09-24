@@ -1,32 +1,46 @@
-# Démarrer avec Banane V4.7.8 TEST — le Pilote observe sa décision sur le lot
+# Démarrer avec Banane V4.7.9 TEST — correctif de l'observation du Pilote
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.8-test.zip` dans Edge, exactement comme la 4.7.7.
+Installe `banane-v4.7.9-test.zip` dans Edge, exactement comme la 4.7.8.
 
-Vérifie d'abord **V4.7.8 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.8 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.9 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.9 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
 
-**Rien de visible, et le Pilote fait exactement ce qu'il faisait.** Pendant un
-lot Pilote, pour chaque cut, Banane calcule en plus ce qu'il aurait fait en
-décidant sur le lot (amendement n°9) : vérifier un cut appliqué contre les cuts
-déjà passés, et, pour un cut qu'il diffère, reprendre la position que la voie
-prédit. Il l'écrit dans le journal du Pilote. **Rien de cela n'est appliqué.**
-Le mode Natif garde l'observation de la 4.7.7.
+**Rien de visible : le Pilote pose exactement les mêmes cuts qu'en 4.7.8, avec
+le même moteur.** La 4.7.9 corrige seulement ce que le Pilote **écrit dans son
+journal** sur la décision sur le lot : en 4.7.8, le « choix par la voie » ne
+voyait jamais les positions calculées par le moteur (KI-048) ; sur ton lot de
+la partie 31, il sous-comptait 6 cuts. Ce calcul reste **consigné, jamais
+appliqué** ; c'est à partir de tes exports que je mesure ce qu'il aurait donné.
+
+Si tu vois moins de différés qu'avant, c'est la partie, pas la version : le
+Pilote de la 4.7.9 place comme celui de la 4.7.6.
 
 ## Ce qu'il faut faire avec ce build
 
-**F1 — deux ou trois lots Pilote sur des parties à appareils de voie**
-(idéalement une partie jamais collectée) :
+**F1 — deux ou trois lots Pilote complets** (idéalement sur des parties jamais
+collectées) :
 
-1. Lance un lot Pilote GCV1 complet, comme d'habitude.
-2. À la fin du lot, exporte le **diagnostic GCV1** et le **corpus LiDAR** du lot.
-3. Puis **relis les mêmes cuts en Natif**, en validant chaque cut (Maj+Espace),
-   **y compris ceux que le Pilote a posés et validés** : sans ta validation, un
-   cut appliqué ne peut pas être jugé, et sous 80 % de cuts appliqués jugés le
-   rapport déclare C4 non évaluable. Exporte ensuite la session Natif.
+1. Lance un lot Pilote GCV1, comme d'habitude.
+2. À la fin du lot, exporte le **diagnostic GCV1** et le **corpus LiDAR**.
+3. Puis **relis le lot en Natif** :
+   - **valide chaque cut du lot** (Maj+Espace), **y compris ceux que le Pilote a
+     posés et validés** : sans ta validation, un cut appliqué ne peut pas être
+     jugé, et sous 80 % de cuts appliqués jugés le rapport déclare C4 non
+     évaluable ;
+   - **passe aussi (Z, sans valider) sur les 5 cuts de part et d'autre** de
+     chaque cut du lot, même ceux que le Pilote a sautés : leurs poses servent à
+     mesurer les appuis validés (`audit/appuis-valides-2026-09-24.md`).
+   Exporte ensuite la session Natif.
+
+**Si ESV ne charge pas le nuage** (plusieurs cuts de suite « différés sans point
+LiDAR ») : arrête le lot, rafraîchis la page ESV, recharge si besoin l'onglet,
+puis relance un lot sur la suite. Le Pilote ne sait pas encore reconnaître ce
+défaut d'ESV (KI-049). Les cuts déjà différés restent non résolus dans ESV, et
+un lot suivant les reprendra.
 
 **F2 — P2, le plancher humain : 30 cuts replacés en aveugle**, quelques jours
 après leur première pose :
@@ -38,8 +52,7 @@ après leur première pose :
    écart : le plancher sous lequel aucune précision n'a de sens.
 
 **Arrêt :** si, sur un lot, la décision sur le lot produit un seul cut faux que
-le Pilote n'aurait pas fait, elle n'est pas activée (D2). Si le Pilote te semble
-plus lent, dis-le : le calcul ajouté est mesuré dans le journal.
+le Pilote n'aurait pas fait, elle n'est pas activée (D2).
 
 ## Mise à jour
 

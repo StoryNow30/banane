@@ -1,5 +1,16 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.9**, la cible de retour est la **4.7.8**, commit `5a204fa`
+(paquet `banane-v4.7.8-test.zip`, SHA-256 `f32806b3…bd93`) :
+
+```bash
+git archive 5a204fa | tar -x -C /tmp/banane-4.7.8
+cd /tmp/banane-4.7.8 && python3 tools/package.py --output /tmp/banane-v4.7.8-test.zip
+```
+
+La 4.7.9 ne change que l'ordre de chargement de la décision sur le lot et une
+raison consignée (KI-048) : le placement du Pilote est identique.
+
 **Depuis la 4.7.8**, la cible de retour est la **4.7.7**, commit `7a21a05`
 (extension 4.7.7, documentation à jour) :
 
