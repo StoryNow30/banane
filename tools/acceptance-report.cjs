@@ -90,16 +90,36 @@ function describe(file,bytes,doc,kind){return {file:path.basename(file),kind,for
   sha256:crypto.createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length};}
 /* Un dossier de lot : chaque fichier est reconnu par son format. Un seul
  * journal et un seul diagnostic par dossier : un lot, un dossier. */
+/* Corpus exporté en plusieurs segments (seg01, seg02… d'un même export, même
+ * session) : les captures sont réunies, sans doublon. Le dernier segment dit si
+ * toutes les captures demandées sont présentes. */
+const segmentOf=doc=>doc?.segment?.format==='banane-native-export-segment-v1'?doc.segment:null;
+function mergeCorpus(a,b,dir){
+  const sa=segmentOf(a),sb=segmentOf(b);
+  if(!sa||!sb||a.sessionId!==b.sessionId||sa.stamp!==sb.stamp||sa.index===sb.index)throw Error(`Deux fichiers « corpus » dans ${dir} qui ne sont pas deux segments d'un même export : un lot par dossier.`);
+  const [first,second]=sa.index<sb.index?[a,b]:[b,a],seen=new Set(first.clouds.map(c=>c.captureId));
+  const merged={...second,diagnostic:second.diagnostic||first.diagnostic,clouds:[...first.clouds,...second.clouds.filter(c=>!seen.has(c.captureId))]};
+  merged.segments=[...(first.segments||[first.segment]),second.segment];return merged;
+}
 function loadLot(dir,label,relecturePath=null){
-  const lot={label,diagnostic:null,journal:null,corpus:null,relecture:null,inputs:[]},relectureFiles=[];
+  const lot={label,diagnostic:null,journal:null,corpus:null,relecture:null,inputs:[]},relectureFiles=[],bilans=[];
   for(const file of listJson(dir)){
     const bytes=fs.readFileSync(file),raw=JSON.parse(bytes),doc=raw?.format===NativeExport.FORMAT?NativeExport.expand(raw):raw,kind=kindOf(doc);
     lot.inputs.push(describe(file,bytes,doc,kind));
     if(kind==='relecture'){relectureFiles.push(file);continue;}
     if(kind==='ignored')continue;
+    if(kind==='bilan'){bilans.push(doc);continue;}
+    if(kind==='corpus'&&lot.corpus){lot.corpus=mergeCorpus(lot.corpus,doc,dir);continue;}
     if(lot[kind])throw Error(`Deux fichiers « ${kind} » dans ${dir} : un lot par dossier.`);
     lot[kind]=doc;
   }
+  /* Le bilan ne sert qu'en l'absence de journal ; présent, le journal fait foi. */
+  if(bilans.length>1&&!lot.journal)throw Error(`Deux fichiers « bilan » dans ${dir} et aucun journal : exporte le journal du lot.`);
+  if(bilans.length&&!lot.journal)lot.bilan=bilans[0];
+  if(bilans.length&&lot.journal)for(const i of lot.inputs)if(i.kind==='bilan')i.role='ignoré (journal présent)';
+  if(lot.corpus?.segments){const last=lot.corpus.exportTrace||{};
+    lot.corpusSegments={segments:lot.corpus.segments.length,clouds:lot.corpus.clouds.length,declared:last.cloudObjects??null,allRequestedObjectsPresent:last.allRequestedObjectsPresent??null};
+    if(last.cloudObjects!=null&&last.cloudObjects!==lot.corpus.clouds.length)throw Error(`Corpus en segments incomplet dans ${dir} : ${lot.corpus.clouds.length} captures sur ${last.cloudObjects} déclarées.`);}
   if(relecturePath){relectureFiles.length=0;
     for(const file of listJson(relecturePath)){const bytes=fs.readFileSync(file),doc=JSON.parse(bytes),kind=kindOf(doc);
       lot.inputs.push({...describe(file,bytes,doc,kind),role:'relecture'});if(kind==='relecture')relectureFiles.push(file);}}
@@ -317,7 +337,7 @@ function analyseLot(lot,options={}){
   return {label:lot.label,complete:ctx.batch?COMPLETE_STATES.has(ctx.batch.state):null,batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
       unresolvedPolicy:ctx.batch.scope?.unresolvedPolicy??null,startedAt:ctx.batch.startedAt??null}:null,
     version:lot.diagnostic?.version??lot.journal?.version??null,observationsOutsideLot:ctx.observationsOutsideLot,
-    relecture:lot.relecture?{...lot.relectureMerge,frame}:null,lotDecisionSource:lotSource,lotDecisionParity:parity,journalConsistency:consistency,
+    relecture:lot.relecture?{...lot.relectureMerge,frame}:null,corpusSegments:lot.corpusSegments??null,lotDecisionSource:lotSource,lotDecisionParity:parity,journalConsistency:consistency,
     inputs:lot.inputs,rows:rows.map(({_cut,_poses,...r})=>r)};
 }
 

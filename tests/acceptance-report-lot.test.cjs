@@ -103,3 +103,23 @@ test('4.7.10 : faux des cuts appliqués par la décision sur le lot, à part',()
   assert.match(A.toMarkdown(r),/dont appliqués par la décision sur le lot : 1 faux sur 2 jugés/);
   assert.equal(A.report([scenario()]).total.c4.byLotCommand,null,'lot 4.7.8/4.7.9 : rien de commandé');
 });
+
+/* Export du corpus en segments (lot 4.7.10 de la partie 33 : seg01 + seg02) :
+ * réunis sans doublon ; deux corpus d'exports différents restent refusés. */
+test('corpus exporté en segments : captures réunies, complétude vérifiée ; bilans ignorés quand le journal est là',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'acceptance-seg-')),w=(f,o)=>fs.writeFileSync(path.join(dir,f),JSON.stringify(o));
+  const seg=(index,ids,declared,extra={})=>({format:'banane-gcv1-lidar-corpus-v1',version:'4.7.10',sessionId:'session-a',
+    segment:{index,stamp:'2026-09-24T10-31-16',objects:ids.length,format:'banane-native-export-segment-v1'},
+    exportTrace:{cloudObjects:declared,allRequestedObjectsPresent:index===2},clouds:ids.map(captureId=>({captureId})),...extra});
+  w('diag.json',{format:'banane-gcv1-diagnostic-v1',version:'4.7.10',observations:[]});
+  w('journal.json',{format:'banane-test-journal-v4',version:'4.7.10',state:{},events:[]});
+  w('bilan-seg01.json',{format:'banane-test-dataset-v4',state:{batch:{}}});w('bilan-seg02.json',{format:'banane-test-dataset-v4',state:{batch:{}}});
+  w('corpus-seg02.json',seg(2,['c','d'],4));w('corpus-seg01.json',seg(1,['a','b'],2));
+  const lot=A.loadLot(dir,'segments');
+  assert.deepEqual(lot.corpus.clouds.map(c=>c.captureId),['a','b','c','d']);
+  assert.deepEqual(lot.corpusSegments,{segments:2,clouds:4,declared:4,allRequestedObjectsPresent:true});
+  assert.equal(lot.inputs.filter(i=>i.role==='ignoré (journal présent)').length,2);
+  w('corpus-seg02.json',seg(2,['c'],4));assert.throws(()=>A.loadLot(dir,'x'),/3 captures sur 4/);
+  w('corpus-seg02.json',{...seg(2,['c','d'],4),sessionId:'session-b'});assert.throws(()=>A.loadLot(dir,'x'),/pas deux segments d'un même export/);
+  fs.rmSync(path.join(dir,'journal.json'));w('corpus-seg02.json',seg(2,['c','d'],4));assert.throws(()=>A.loadLot(dir,'x'),/aucun journal/);
+});

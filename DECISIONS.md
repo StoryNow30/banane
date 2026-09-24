@@ -1,5 +1,18 @@
 # Décisions techniques
 
+## D-043 - Cibles hors de la vue d'ESV : pas de chantier 4.8
+
+**24 septembre 2026, direction.** Sur la partie 33, les poses de départ d'ESV
+sont à 13–21 cm des rails ; la décision sur le lot les retrouve, mais hors de
+la vue de ±20 cm où le Pilote clique (KI-051). « Quand ça m'arrive, je déplace
+la caméra en dézoomant et en déplaçant la vue au clic droit. Je ne pense pas
+qu'on soit obligé de l'inclure dans les chantiers de la 4.8. »
+
+- La 4.7.11 diffère ces cuts au lieu d'arrêter le lot ; l'opérateur les pose.
+- Aucun déplacement automatique de la caméra ni clic en deux temps en 4.8.
+- Conséquence déclarée : sur une partie où ESV part loin des rails, la
+  couverture du Pilote est bornée par la vue (partie 33, second lot : 78 %).
+
 ## D-042 - 4.7.10 sous la forme prévue : un faux toléré, correctif s'il se répète
 
 **24 septembre 2026, direction.** « Franchement, un seul faux, on peut être

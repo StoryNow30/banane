@@ -27,7 +27,13 @@ comme d'habitude : un cut faux se corrige et se valide.
 place un rail en cliquant dans la vue d'ESV, qui ne montre que ±20 cm autour du
 rail. Quand la position trouvée tombe hors de cette vue (pose ESV de départ très
 éloignée, comme sur la partie 33), le cut est désormais **différé** au lieu
-d'arrêter le lot (KI-051).
+d'arrêter le lot (KI-051). Pose-le à la main, comme tu le fais : dézoome et
+déplace la vue au clic droit (D-043).
+
+**Si le Pilote s'arrête sur une erreur** : **Archiver le résultat interrompu**,
+puis lance **un nouveau lot** à partir du cut suivant. N'utilise pas
+« Reprendre » après un archivage : il s'arrête sur une erreur sans rien faire
+(KI-052).
 
 **Réglages du lot → Décision sur le lot** : « Appliquer » par défaut ;
 « Observer seulement » rend exactement le Pilote de la 4.7.9. Le réglage est
