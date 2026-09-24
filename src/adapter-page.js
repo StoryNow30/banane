@@ -327,6 +327,79 @@
  async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
    const target=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},'Aucun changement de cut après navigation.');
    return waitFor(()=>{const now=snapshot();return K.key(now.identity)===K.key(target)?now:false;},'Le cut suivant est affiché, mais ses rails ne sont pas encore disponibles.');}
+ /* Navigation de retour inactive tant que le bouton DOM non décisionnel n'a
+  * pas été observé. Le repère du cut cible est vérifié APRÈS la navigation. */
+ async function previousWithoutDecision(identity,target,scope={},operationId=null,progress=()=>{}){
+   const nav=scope?.navigation||{},id=nav.previousButtonId,expected=K.completeIdentity(target);
+   const evidence={format:'banane-previous-without-decision-v1',action:'PREVIOUS_WITHOUT_DECISION',operationId,
+     selectorStatus:'supposé',command:id?commandInfo(id):null,commandInvoked:false,commandSent:false,
+     operatorDecision:null,validationCommandSent:false,skipCommandSent:false,applyCommandSent:false,
+     beforeNavigationIdentity:null,requestedIdentity:expected,nextIdentity:null,navigationObserved:false,
+     targetReached:false,serverConfirmed:false,reconcileRequired:false,refusal:null};
+   const refuse=(code,message,uncertain=false)=>{evidence.refusal={code,message,at:new Date().toISOString()};
+     evidence.reconcileRequired=uncertain;return evidence;};
+   if(!operationId||typeof operationId!=='string')return refuse('OPERATION_ID_REQUIRED','Identifiant requis.');
+   if(cancelledOperations.has(operationId))return refuse('CANCELLED_BEFORE_COMMAND','Opération annulée.');
+   if(invokedOperations.has(operationId)){evidence.commandInvoked='unknown';return refuse('OPERATION_ALREADY_INVOKED','Opération déjà invoquée.',true);}
+   cancelled=false;
+   let before;try{before=assertExpected(identity);}catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
+   evidence.beforeNavigationIdentity=K.completeIdentity(before.identity);const source=before.identity;
+   if(!Number.isSafeInteger(expected.cut)||expected.cut<0||expected.cut>=source.cut||
+      expected.pageId!==source.pageId||expected.part!==source.part||!expected.shape||!expected.frameId||
+      expected.projectId!==source.projectId||
+      (scope.pageId!=null&&scope.pageId!==source.pageId)||(scope.part!=null&&scope.part!==source.part)||
+      (scope.start!=null&&expected.cut<scope.start)||(scope.end!=null&&expected.cut>scope.end))
+     return refuse('INVALID_NAVIGATION_TARGET','Cible précédente hors du lot ou identité incomplète.');
+   const forbidden=[selectors.validate,selectors.next,selectors.left,selectors.right];
+   if(!id||typeof id!=='string'||!/^[-A-Za-z0-9_]+$/.test(id)||forbidden.includes(id)||
+      nav.inspection!=='verified-dom-button-no-decision')
+     return refuse('UNVERIFIED_DOM_PATH','Bouton précédent non établi ou commande décisionnelle interdite.');
+   if(K.key(cutLabel())!==K.key(identity))return refuse('TARGET_MISMATCH_BEFORE_COMMAND','Libellé modifié.');
+   const button=document.getElementById(id);
+   if(!button||button.disabled)return refuse('NAVIGATION_COMMAND_UNAVAILABLE','Bouton absent ou désactivé : '+id);
+   progress('return-before-command',{identity:evidence.beforeNavigationIdentity,requestedIdentity:expected,operationId});
+   if(cancelledOperations.has(operationId)||cancelled)return refuse('CANCELLED_BEFORE_COMMAND','Annulée avant le clic.');
+   try{assertExpected(identity);if(K.key(cutLabel())!==K.key(identity))throw Error('Libellé modifié.');}
+   catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
+   evidence.commandInvoked='unknown';invokedOperations.set(operationId,new Date().toISOString());
+   try{button.click();}catch(e){return refuse('NAVIGATION_COMMAND_THREW',e.message,true);}
+   evidence.commandInvoked=true;evidence.commandSent=true;
+   let label;try{label=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},
+     'Bouton invoqué, aucun cut nouveau observé.',P.attenteNavigationMs);}
+   catch(e){return refuse(cancelled?'CANCELLED_DURING_OBSERVATION':'NO_NAVIGATION_OBSERVED',e.message,true);}
+   evidence.navigationObserved=true;evidence.navigationAfter={label,observedAt:new Date().toISOString()};
+   if(K.key(label)!==K.key(expected)){evidence.nextIdentity=K.completeIdentity(label);
+     return refuse('UNEXPECTED_NAVIGATION_TARGET','Libellé différent de la cible.',true);}
+   try{const ready=await waitFor(()=>{const n=snapshot();return K.key(n.identity)===K.key(label)?n:false;},
+     'Cut affiché, rails indisponibles.',12000);
+     evidence.nextIdentity=K.completeIdentity(ready.identity);evidence.nextIdentityComplete=true;
+     if(K.differences(expected,ready.identity).length)
+       return refuse('UNEXPECTED_NAVIGATION_IDENTITY','Identité ou repère de la cible différents.',true);
+     evidence.targetReached=true;evidence.navigationAfter.identity=evidence.nextIdentity;
+   }catch(e){evidence.nextIdentity=K.completeIdentity(label);
+     return refuse('NAVIGATION_IDENTITY_UNAVAILABLE',e.message,true);}
+   return evidence;
+ }
+ function repriseGuard(identity,deferredIdentities,validationControl,reconcileRequired=false){
+   let now;try{now=snapshot();}catch(e){return {writable:false,readOnly:true,reason:'IDENTITY_UNAVAILABLE'};}
+   if(K.key(identity)!==K.key(now.identity)||K.completeIdentity(identity).projectId!==now.identity.projectId)
+     return {writable:false,readOnly:true,reason:'TARGET_MISMATCH'};
+   const deferred=Array.isArray(deferredIdentities)&&deferredIdentities.find(item=>{
+     const d=K.completeIdentity(item?.identity||item);
+     return K.key(d)===K.key(now.identity)&&d.projectId===now.identity.projectId;});
+   if(!deferred)return {writable:false,readOnly:true,reason:'NOT_OWN_DEFERRED_CUT'};
+   if(reconcileRequired===true)return {writable:false,readOnly:true,reason:'RECONCILE_REQUIRED'};
+   if(K.completeIdentity(deferred?.identity||deferred).frameId!==now.identity.frameId)
+     return {writable:false,readOnly:true,reason:'FRAME_CHANGED_RECAPTURE_REQUIRED'};
+   const id=validationControl?.id,attr=validationControl?.attribute;
+   const el=id&&typeof id==='string'&&/^[-A-Za-z0-9_]+$/.test(id)?document.getElementById(id):null;
+   const value=el&&typeof attr==='string'?el.getAttribute?.(attr):null;
+   if(value==null||!validationControl?.unvalidatedValue||!validationControl?.validatedValue)
+     return {writable:false,readOnly:true,reason:'VALIDATION_STATE_UNKNOWN'};
+   if(value===validationControl.validatedValue)return {writable:false,readOnly:true,reason:'ALREADY_VALIDATED'};
+   if(value!==validationControl.unvalidatedValue)return {writable:false,readOnly:true,reason:'VALIDATION_STATE_UNKNOWN'};
+   return {writable:true,readOnly:false,reason:'OWN_DEFERRED_UNVALIDATED'};
+ }
  /* NAVIGATION SANS DÉCISION — Banane 4.7.
   *
   * CE QUE LE CODE ACCESSIBLE ÉTABLIT. `O2N3DCutNextInvalid3DRail` est un bouton
@@ -484,79 +557,6 @@
      progress('defer-next-geometry-unavailable',{operationId:evidence.operationId,message:e.message,nextIdentity:nextLabel});}
    evidence.meaning='Navigation ESV sans décision : Banane n’a émis pour ce cut ni application de rail, ni VALIDATE, ni SKIP ; confirmation serveur indisponible.';
    return evidence;
- }
- /* Navigation de retour inactive tant que le bouton DOM non décisionnel n'a
-  * pas été observé. Le repère du cut cible est vérifié APRÈS la navigation. */
- async function previousWithoutDecision(identity,target,scope={},operationId=null,progress=()=>{}){
-   const nav=scope?.navigation||{},id=nav.previousButtonId,expected=K.completeIdentity(target);
-   const evidence={format:'banane-previous-without-decision-v1',action:'PREVIOUS_WITHOUT_DECISION',operationId,
-     selectorStatus:'supposé',command:id?commandInfo(id):null,commandInvoked:false,commandSent:false,
-     operatorDecision:null,validationCommandSent:false,skipCommandSent:false,applyCommandSent:false,
-     beforeNavigationIdentity:null,requestedIdentity:expected,nextIdentity:null,navigationObserved:false,
-     targetReached:false,serverConfirmed:false,reconcileRequired:false,refusal:null};
-   const refuse=(code,message,uncertain=false)=>{evidence.refusal={code,message,at:new Date().toISOString()};
-     evidence.reconcileRequired=uncertain;return evidence;};
-   if(!operationId||typeof operationId!=='string')return refuse('OPERATION_ID_REQUIRED','Identifiant requis.');
-   if(cancelledOperations.has(operationId))return refuse('CANCELLED_BEFORE_COMMAND','Opération annulée.');
-   if(invokedOperations.has(operationId)){evidence.commandInvoked='unknown';return refuse('OPERATION_ALREADY_INVOKED','Opération déjà invoquée.',true);}
-   cancelled=false;
-   let before;try{before=assertExpected(identity);}catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
-   evidence.beforeNavigationIdentity=K.completeIdentity(before.identity);const source=before.identity;
-   if(!Number.isSafeInteger(expected.cut)||expected.cut<0||expected.cut>=source.cut||
-      expected.pageId!==source.pageId||expected.part!==source.part||!expected.shape||!expected.frameId||
-      expected.projectId!==source.projectId||
-      (scope.pageId!=null&&scope.pageId!==source.pageId)||(scope.part!=null&&scope.part!==source.part)||
-      (scope.start!=null&&expected.cut<scope.start)||(scope.end!=null&&expected.cut>scope.end))
-     return refuse('INVALID_NAVIGATION_TARGET','Cible précédente hors du lot ou identité incomplète.');
-   const forbidden=[selectors.validate,selectors.next,selectors.left,selectors.right];
-   if(!id||typeof id!=='string'||!/^[-A-Za-z0-9_]+$/.test(id)||forbidden.includes(id)||
-      nav.inspection!=='verified-dom-button-no-decision')
-     return refuse('UNVERIFIED_DOM_PATH','Bouton précédent non établi ou commande décisionnelle interdite.');
-   if(K.key(cutLabel())!==K.key(identity))return refuse('TARGET_MISMATCH_BEFORE_COMMAND','Libellé modifié.');
-   const button=document.getElementById(id);
-   if(!button||button.disabled)return refuse('NAVIGATION_COMMAND_UNAVAILABLE','Bouton absent ou désactivé : '+id);
-   progress('return-before-command',{identity:evidence.beforeNavigationIdentity,requestedIdentity:expected,operationId});
-   if(cancelledOperations.has(operationId)||cancelled)return refuse('CANCELLED_BEFORE_COMMAND','Annulée avant le clic.');
-   try{assertExpected(identity);if(K.key(cutLabel())!==K.key(identity))throw Error('Libellé modifié.');}
-   catch(e){return refuse('TARGET_MISMATCH_BEFORE_COMMAND',e.message);}
-   evidence.commandInvoked='unknown';invokedOperations.set(operationId,new Date().toISOString());
-   try{button.click();}catch(e){return refuse('NAVIGATION_COMMAND_THREW',e.message,true);}
-   evidence.commandInvoked=true;evidence.commandSent=true;
-   let label;try{label=await waitFor(()=>{const n=cutLabel();return n&&K.key(n)!==K.key(identity)?n:false;},
-     'Bouton invoqué, aucun cut nouveau observé.',P.attenteNavigationMs);}
-   catch(e){return refuse(cancelled?'CANCELLED_DURING_OBSERVATION':'NO_NAVIGATION_OBSERVED',e.message,true);}
-   evidence.navigationObserved=true;evidence.navigationAfter={label,observedAt:new Date().toISOString()};
-   if(K.key(label)!==K.key(expected)){evidence.nextIdentity=K.completeIdentity(label);
-     return refuse('UNEXPECTED_NAVIGATION_TARGET','Libellé différent de la cible.',true);}
-   try{const ready=await waitFor(()=>{const n=snapshot();return K.key(n.identity)===K.key(label)?n:false;},
-     'Cut affiché, rails indisponibles.',12000);
-     evidence.nextIdentity=K.completeIdentity(ready.identity);evidence.nextIdentityComplete=true;
-     if(K.differences(expected,ready.identity).length)
-       return refuse('UNEXPECTED_NAVIGATION_IDENTITY','Identité ou repère de la cible différents.',true);
-     evidence.targetReached=true;evidence.navigationAfter.identity=evidence.nextIdentity;
-   }catch(e){evidence.nextIdentity=K.completeIdentity(label);
-     return refuse('NAVIGATION_IDENTITY_UNAVAILABLE',e.message,true);}
-   return evidence;
- }
- function repriseGuard(identity,deferredIdentities,validationControl,reconcileRequired=false){
-   let now;try{now=snapshot();}catch(e){return {writable:false,readOnly:true,reason:'IDENTITY_UNAVAILABLE'};}
-   if(K.key(identity)!==K.key(now.identity)||K.completeIdentity(identity).projectId!==now.identity.projectId)
-     return {writable:false,readOnly:true,reason:'TARGET_MISMATCH'};
-   const deferred=Array.isArray(deferredIdentities)&&deferredIdentities.find(item=>{
-     const d=K.completeIdentity(item?.identity||item);
-     return K.key(d)===K.key(now.identity)&&d.projectId===now.identity.projectId;});
-   if(!deferred)return {writable:false,readOnly:true,reason:'NOT_OWN_DEFERRED_CUT'};
-   if(reconcileRequired===true)return {writable:false,readOnly:true,reason:'RECONCILE_REQUIRED'};
-   if(K.completeIdentity(deferred?.identity||deferred).frameId!==now.identity.frameId)
-     return {writable:false,readOnly:true,reason:'FRAME_CHANGED_RECAPTURE_REQUIRED'};
-   const id=validationControl?.id,attr=validationControl?.attribute;
-   const el=id&&typeof id==='string'&&/^[-A-Za-z0-9_]+$/.test(id)?document.getElementById(id):null;
-   const value=el&&typeof attr==='string'?el.getAttribute?.(attr):null;
-   if(value==null||!validationControl?.unvalidatedValue||!validationControl?.validatedValue)
-     return {writable:false,readOnly:true,reason:'VALIDATION_STATE_UNKNOWN'};
-   if(value===validationControl.validatedValue)return {writable:false,readOnly:true,reason:'ALREADY_VALIDATED'};
-   if(value!==validationControl.unvalidatedValue)return {writable:false,readOnly:true,reason:'VALIDATION_STATE_UNKNOWN'};
-   return {writable:true,readOnly:false,reason:'OWN_DEFERRED_UNVALIDATED'};
  }
  async function decisionAndNext(identity,operatorDecision,scope={},progress=()=>{}){
    cancelled=false;const beforeCommand=assertExpected(identity),startedAt=new Date().toISOString();
