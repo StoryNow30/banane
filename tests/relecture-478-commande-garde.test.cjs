@@ -4,8 +4,7 @@
  * Décision de banc : premier passage retiré par la garde de continuité
  * (guardDeferred, 156 mm), reprise depuis la voie aboutie à 25 cm de la pose
  * ESV, donc hors de la vue de ±0,2 (KI-051). Attendu : le cut est différé, la
- * proposition du moteur n'est pas appliquée. Marqué `todo` tant que le défaut
- * existe : le Pilote applique la proposition du moteur. */
+ * proposition du moteur n'est pas appliquée. Corrigé en 4.7.14 (KI-053). */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const Shadow=require('../src/gcv1-shadow.js'),L=require('../src/lot-decision.js'),K=require('../src/core.js'),{base}=require('./fixtures.cjs');
 const {withCameras}=require('./helpers/navigateur.cjs'),{background,gcv1Shadow}=require('./helpers/fond-relecture.cjs');
@@ -18,8 +17,7 @@ function farTarget(rails){
   const u=inner.right.map((v,i)=>v-inner.left[i]),n=Math.hypot(...u);
   return Object.fromEntries(SIDES.map(s=>[s,inner[s].map((v,i)=>v+u[i]/n*.25)]));
 }
-test('garde de continuité puis cible hors de la vue : le Pilote ne doit pas appliquer la proposition retirée',
-  {todo:'constat B1 de la relecture 4.7.12 : commandLot rend la proposition du moteur, appliquée par Engine.apply()'},async()=>{
+test('garde de continuité puis cible hors de la vue : le Pilote ne doit pas appliquer la proposition retirée',async()=>{
   const science=Shadow.scientificProposeBoth(base);
   const fake={...L,decideCut:({capture})=>({version:'lot-decision-v1',stage:'window',guardMm:156.2,guardDeferred:true,fromPredictionMm:3,
     anchorsUsed:[99,98],positions:farTarget(capture.rails),anchor:true})};

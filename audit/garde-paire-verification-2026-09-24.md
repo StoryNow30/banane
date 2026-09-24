@@ -41,8 +41,10 @@ Relevé : `audit/choice-anchors-garde-paire-2026-09-24.json` (lignes par cut),
 
 ## Lecture
 
-La garde ne fait que différer : son seul risque est une perte de couverture,
-nulle partout où elle a été mesurée. Elle ne démontre pas « zéro faux » : trois
+La garde diffère le cut ; son risque direct est une perte de couverture, nulle
+partout où elle a été mesurée. **Rectifié (relecture 4.7.12)** : en retirant un
+appui, elle change aussi les décisions des cuts suivants — sur la partie 34,
+1835 et 1837 deviennent des choix à un seul appui (justes à la relecture). Elle ne démontre pas « zéro faux » : trois
 faux du moteur restent au banc Natif de la partie 20, dont deux sans appui,
 que ni la garde de continuité ni celle-ci ne peuvent voir.
 

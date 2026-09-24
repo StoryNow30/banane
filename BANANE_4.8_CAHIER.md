@@ -1431,8 +1431,11 @@ la direction D-040 à D-045.
    rails, la couverture est bornée par la vue (partie 33 : 78 %).
 4. **Garde de paire** (D-044, chantier 2). Un premier passage dont un rail est
    repêché par S1 et dont le calage de convention est hors domaine sur l'un des
-   deux rails est différé, et ne devient pas appui. C'est un curseur nouveau du
-   §8 ; son bilan est tenu (`audit/garde-paire-verification-2026-09-24.md`).
+   deux rails est différé, et ne devient pas appui ; en retirant un appui, elle
+   change aussi les décisions des cuts suivants (relecture indépendante,
+   D-046). C'est un curseur nouveau du §8 ; son bilan est tenu
+   (`audit/garde-paire-verification-2026-09-24.md`). Une paire retirée par la
+   garde de continuité n'est jamais appliquée par un repli (KI-053, 4.7.14).
 5. **Lecture de C4** (D-042). La direction tolère un faux isolé de la décision
    sur le lot ; un faux du **même type** qui se reproduit sur des lots relus
    (deux ou trois fois) déclenche un correctif, mesuré sur toutes les données

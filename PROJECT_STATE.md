@@ -1,8 +1,14 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.13 TEST** (interface « La ligne » ; décision sur le lot appliquée dans la vue d'ESV, garde de paire, D-041 à D-045 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.14 TEST** (interface « La ligne » ; décision sur le lot appliquée, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-046 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.14
+
+Relecture indépendante de la 4.7.12 (chantier 3) intégrée : un défaut
+bloquant (KI-053) et la reprise sur cut archivé (KI-052) corrigés ; questions
+ouvertes à la direction dans D-046.
 
 ## État 4.7.13
 

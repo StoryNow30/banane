@@ -49,6 +49,8 @@ test('C4 : faux si latéral OU vertical au-delà de 10 mm, sur les seuls cuts ap
   const c4=A.report([scenario()]).total.c4;
   assert.equal(c4.judgedApplied,5);assert.equal(c4.appliedNotJudged,2);
   assert.deepEqual(c4.judgedByBasis,{validé:4,'accepté-sans-retouche':1});
+  assert.equal(c4.wrongByBasis.validé+c4.wrongByBasis['accepté-sans-retouche'],c4.wrong,'faux ventilés par base de jugement');
+  assert.match(A.toMarkdown(A.report([scenario()])),/sur les seuls validés : \d+ faux sur 4/);
   assert.deepEqual(c4.wrongCuts.map(w=>[w.cut,w.worstMm]),[[101,12],[102,11]]);
   const w102=c4.wrongCuts.find(w=>w.cut===102);assert.equal(w102.errors.right.verticalMm,-11);assert.equal(w102.errors.right.lateralMm,0);
 });

@@ -1,5 +1,27 @@
 # Décisions techniques
 
+## D-046 - Relecture indépendante de la 4.7.12 : corrections et questions ouvertes
+
+**24 septembre 2026.** Livraison du chantier 3 (branche
+`claude/banane-relecture-478-vnvl2u`, rapport `audit/chantiers/relecture-478.md`),
+intégrée. Corrigé en 4.7.14 :
+
+- **B1, bloquant (KI-053)** : une paire du moteur retirée par la garde de
+  continuité n'est plus jamais rendue par un repli (position de la voie hors de
+  la vue, caméra inconnue, repère ou écartement non relus, erreur) : le cut est
+  différé. C'est l'intention même de la garde ; aucun seuil ne change.
+- **I3 (KI-052)** : « Reprendre » sur le cut archivé est refusé avant tout
+  changement d'état ; le lot reste arrêté et reprend au cut suivant.
+- **Règles du rejeu** : la décision consigne ses règles (`lot-decision-v2`,
+  `pairGuard`) ; l'outil d'acceptation les lit dans le lot.
+- **C4** : l'outil rapporte aussi les faux sur les seuls cuts validés.
+
+Questions ouvertes à la direction : engager C4 sur les seuls cuts validés
+(les acceptations D-040 comptées à part) ; maintenir D-044 (recommandé :
+la partie 34, jamais vue, lui donne un faux arrêté et aucun juste perdu) ; les
+appuis validés (4.9) feraient entrer des poses humaines dans l'entrée de la
+décision : un amendement au test I du §14 serait nécessaire avant tout code.
+
 ## D-045 - Interface de la 4.8 : « La ligne »
 
 **24 septembre 2026, direction.** Pour le chantier B (Banane UI Next), la
@@ -15,8 +37,10 @@ visible avec son cut, aucun bouton présenté comme réussi sur un simple accus�
 (branche `chantier-48/faux-isoles`, commit `c434a9a`, intégrée). Un premier
 passage dont un rail est repêché par S1 **et** dont le calage de convention est
 hors domaine sur l'un des deux rails est **différé**, et ne devient pas appui
-(`src/lot-decision.js`, `pairGuard`). La garde ne fait que différer : son seul
-risque est une perte de couverture.
+(`src/lot-decision.js`, `pairGuard`). **Rectifié (relecture 4.7.12)** : la garde
+ne fait pas que différer — en retirant un appui, elle change les décisions des
+cuts suivants (partie 34 : 1835 et 1837 deviennent des choix à un seul appui,
+le cas de KI-050 ; justes tous deux à la relecture).
 
 - Mesure (`audit/garde-paire-verification-2026-09-24.md`) : dans le Pilote
   actuel, 241 et 409 arrêtés (faux), aucun juste perdu, 243 gagné ; ne se

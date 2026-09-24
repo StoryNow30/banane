@@ -1,5 +1,22 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.14 — corrections de la relecture indépendante, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension** (chantier 3, D-046).
+- **KI-053, bloquant** : une paire du moteur retirée par la garde de continuité
+  n'est plus jamais appliquée par un repli (position de la voie hors de la vue,
+  caméra inconnue, repère ou écartement non relus, erreur) : le cut est différé.
+- **KI-052, complété** : « Reprendre » sur le cut archivé est refusé avant tout
+  changement d'état ; le lot reste arrêté et reprend au cut suivant.
+- La décision sur le lot consigne ses règles (`lot-decision-v2`, `pairGuard`).
+
+**Outils.** Rejeu d'acceptation selon les règles consignées par le lot ; faux
+rapportés aussi sur les seuls cuts validés. Chantier 3 intégré : rapport
+`audit/chantiers/relecture-478.md`, essais de démonstration devenus essais
+(`tests/relecture-478-*.test.cjs`), outil `tools/lot-command-scan.cjs`.
+
 ## 4.7.13 — l'interface « La ligne », 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

@@ -281,6 +281,16 @@ function sameDecision(a,b){
 const versionAtLeast=(v,ref)=>{const a=String(v||'').split('.').map(Number),b=ref.split('.').map(Number);
   for(let i=0;i<b.length;i++){if(!Number.isFinite(a[i]))return false;if(a[i]!==b[i])return a[i]>b[i];}return true;};
 const rulesFor=(version,current=false)=>({pairGuard:current||versionAtLeast(version,'4.7.12')});
+/* Règles consignées par la décision elle-même (4.7.14) ; à défaut, version
+ * `lot-decision-v2` ; à défaut seulement, version de l'extension à l'export —
+ * qui peut être postérieure au lot (relecture 4.7.12). */
+function lotRules(observations,exportVersion,current=false){
+  if(current)return {...rulesFor(null,true),source:'actuelles'};
+  const recorded=observations.map(o=>o?.lotObservation).filter(Boolean),consigned=recorded.find(x=>typeof x.pairGuard==='boolean');
+  if(consigned)return {pairGuard:consigned.pairGuard,source:'lot'};
+  if(recorded.some(x=>x.version==='lot-decision-v2'))return {pairGuard:true,source:'lot'};
+  return {...rulesFor(exportVersion),source:'export'};
+}
 function analyseLot(lot,options={}){
   const exclusions=options.exclusions||EXCLUDED,excluded=new Map(exclusions.map(e=>[keyOf(e.part,e.cut),e]));
   const ctx=lotCuts(lot.diagnostic,lot.journal),journalBefore=new Map();
@@ -314,8 +324,8 @@ function analyseLot(lot,options={}){
   const recorded=lastObs.some(o=>o.lotObservation);
   let replay=null;
   if(options.replay&&lot.corpus){const all=rows.flatMap(r=>r._cut.observations);replay=new Map();
-    const rules=rulesFor(lot.diagnostic?.version??lot.journal?.version,options.currentRules);lot.lotDecisionRules=rules;
-    for(const x of replayLot(all,lot.corpus,{...(options.replayDeps||{}),options:{...rules,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
+    const rules=lotRules(all,lot.diagnostic?.version??lot.journal?.version,options.currentRules);lot.lotDecisionRules=rules;
+    for(const x of replayLot(all,lot.corpus,{...(options.replayDeps||{}),options:{pairGuard:rules.pairGuard,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
   /* `preferReplay` : la 4.7.8 consigne un choix par la voie privé de sa grille
    * (KI-048) ; ses lots se mesurent sur le rejeu, la parité restant rapportée. */
   const lotSource=recorded&&!(options.preferReplay&&replay)?'observation':replay?'rejeu-hors-ligne':'absent';
@@ -369,6 +379,10 @@ function summarize(rows,p2){
       otherDetail:counted.filter(r=>r.outcome==='other'||r.outcome==='no-input').map(r=>({cut:r.cut,outcome:r.outcome,reason:r.reason}))},
     c4:{criterion:`latéral OU vertical > ${WRONG_MM} mm, valeurs brutes`,judgedApplied:judged.length,appliedNotJudged:applied.length-judged.length,wrong:wrong.length,
       judgedByBasis:{validé:validatedJudged.length,'accepté-sans-retouche':judged.length-validatedJudged.length},
+      /* Relecture 4.7.12 : une acceptation sans retouche (D-040) n'a pas d'erreur
+       * mesurée, elle borne l'erreur par la tolérance de l'opérateur. Les faux
+       * sont donc aussi rapportés sur les seuls cuts validés. */
+      wrongByBasis:{validé:validatedJudged.filter(r=>r.judgement.wrong).length,'accepté-sans-retouche':wrong.length-validatedJudged.filter(r=>r.judgement.wrong).length},
       judgedSharePct:applied.length?r1(100*judged.length/applied.length):null,minJudgedSharePct:100*MIN_JUDGED_SHARE,
       evaluable:applied.length?judged.length>=MIN_JUDGED_SHARE*applied.length:null,
       wrongCuts:wrong.map(r=>({cut:r.cut,worstMm:r.judgement.worstMm,errors:r.judgement.errors})),
@@ -418,7 +432,7 @@ function section(title,s){
     ...(s.incompleteLots?.length?[`**Lot incomplet** (${s.incompleteLots.map(l=>`${l.label} : ${l.state}`).join(' ; ')}) : C1 est rapporté, mais ne compte pas pour l’objectif, fixé sur des lots complets (D-038).`,'']:[]),
     '| Critère | Mesure |','|---|---|',
     `| C1 — couverture | **${s.c1.applied} appliqués / ${s.c1.distinctCuts} cuts distincts = ${fmt(s.c1.coveragePct)} %** · différés ${s.c1.deferred} · refusés par l’écartement ${s.c1.gaugeRejected} · sans entrée ${s.c1.noInput} · autres ${s.c1.other} · cuts revisités ${s.c1.revisitedCuts} (comptés une fois) |`,
-    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.judgedByBasis?.validé??0} validés, ${s.c4.judgedByBasis?.['accepté-sans-retouche']??0} acceptés sans retouche ; ${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged}${s.c4.byLotCommand?` · **dont appliqués par la décision sur le lot : ${s.c4.byLotCommand.wrong} faux sur ${s.c4.byLotCommand.judged} jugés** (${s.c4.byLotCommand.applied} appliqués : ${Object.entries(s.c4.byLotCommand.byStage).map(([k,v])=>k+' '+v).join(', ')}${s.c4.byLotCommand.wrongCuts.length?' ; faux : '+s.c4.byLotCommand.wrongCuts.map(w=>`${w.cut} (${w.stage}, ${w.anchors} appui${w.anchors>1?'s':''}, ${fmt(w.worstMm)} mm)`).join(', '):''})`:''} |`,
+    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.judgedByBasis?.validé??0} validés, ${s.c4.judgedByBasis?.['accepté-sans-retouche']??0} acceptés sans retouche ; ${s.c4.criterion}) · **sur les seuls validés : ${s.c4.wrongByBasis?.validé??0} faux sur ${s.c4.judgedByBasis?.validé??0}** · appliqués non jugés : ${s.c4.appliedNotJudged}${s.c4.byLotCommand?` · **dont appliqués par la décision sur le lot : ${s.c4.byLotCommand.wrong} faux sur ${s.c4.byLotCommand.judged} jugés** (${s.c4.byLotCommand.applied} appliqués : ${Object.entries(s.c4.byLotCommand.byStage).map(([k,v])=>k+' '+v).join(', ')}${s.c4.byLotCommand.wrongCuts.length?' ; faux : '+s.c4.byLotCommand.wrongCuts.map(w=>`${w.cut} (${w.stage}, ${w.anchors} appui${w.anchors>1?'s':''}, ${fmt(w.worstMm)} mm)`).join(', '):''})`:''} |`,
     `| C2 — erreur des rails appliqués validés (${s.c2.rails} rails), médiane / p90 | latéral ${dist(s.c2.lateralMm)} mm · vertical ${dist(s.c2.verticalMm)} mm · plancher : ${s.c2.floor.label}${s.c2.floor.lateralMm?` (latéral ${fmt(s.c2.floor.lateralMm.median)} / ${fmt(s.c2.floor.lateralMm.p90)}, vertical ${fmt(s.c2.floor.verticalMm?.median)} / ${fmt(s.c2.floor.verticalMm?.p90)} mm)`:''} |`,
     `| C3 — paires hors contrat | refusées pendant le lot : ${s.c3.refused.length}${s.c3.refused.length?' ('+s.c3.refused.map(r=>`${r.cut} : ${fmt(r.predictedMm)} mm ${r.gaugeClass}`).join(' ; ')+')':''} · appliquées hors contrat : **${s.c3.appliedOutOfContract.length}**${s.c3.appliedGaugeUnmeasured.length?` · écartement appliqué non mesurable : ${s.c3.appliedGaugeUnmeasured.join(', ')}`:''} |`];
   if(s.lotDecision)L.push(`| Décision sur le lot | ${s.lotDecision.wouldApply} appliqués / ${s.c1.distinctCuts} = ${fmt(s.lotDecision.coveragePct)} % · **${s.lotDecision.wrong} faux sur ${s.lotDecision.judged} jugés** · faux que le Pilote n’a pas faits : ${s.lotDecision.newWrong.length?s.lotDecision.newWrong.join(', '):'aucun'} · gagnés : ${s.lotDecision.gained.map(g=>g.cut).join(', ')||'aucun'} · perdus : ${s.lotDecision.lost.join(', ')||'aucun'} |`);
@@ -474,4 +488,4 @@ function run(argv=process.argv.slice(2)){
   return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={versionAtLeast,rulesFor,EXCLUDED,WRONG_MM,kindOf,loadLot,lotCuts,pilotOutcome,frameTranslation,poseResidual,errorsOf,replayLot,analyseLot,summarize,report,toMarkdown,run};
+module.exports={versionAtLeast,rulesFor,lotRules,EXCLUDED,WRONG_MM,kindOf,loadLot,lotCuts,pilotOutcome,frameTranslation,poseResidual,errorsOf,replayLot,analyseLot,summarize,report,toMarkdown,run};

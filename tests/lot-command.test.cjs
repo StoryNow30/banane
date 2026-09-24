@@ -108,3 +108,20 @@ test('garde de paire : S1 et calage hors domaine différent le premier passage ;
   for(const [s1,ood] of [[null,'left'],['left',null],[null,null]])assert.equal(decide(science(s1,ood)).stage,'first-pass',`S1 ${s1}, hors domaine ${ood}`);
   assert.equal(decide(science('left','right'),{pairGuard:false}).stage,'first-pass','coupure : options.pairGuard');
 });
+
+/* KI-053 (relecture 4.7.12, B1) : une paire retirée par la garde de continuité
+ * n'est jamais rendue par un repli ; sans retrait, le repli reste le moteur. */
+test('repli après retrait par la garde : toujours différé ; sans retrait : proposition du moteur',()=>{
+  const retire={...decision,stage:'window',guardDeferred:true,guardMm:156.2};
+  const shifted=(before,rails)=>{const out=K.expectedPoses(before,rails);out.right.positionSceneRelative=out.right.positionSceneRelative.map(v=>v+.001);return out;};
+  const [a,b]=SIDES.map(s=>decision.positions[s]),u=b.map((v,i)=>v-a[i]),n=Math.hypot(...u);
+  const large={left:a,right:b.map((v,i)=>v+u[i]/n*.08)};
+  for(const [d,exp,cams,motif] of [[retire,K.expectedPoses,cameras,null],[retire,shifted,cameras,'guard-position-mismatch'],[{...retire,positions:large},K.expectedPoses,cameras,'guard-gauge-HIGH_INVALID'],
+    [retire,K.expectedPoses,null,'guard-vue-inconnue-left'],[retire,null,cameras,'guard-positions-missing']]){
+    const out=command(d,both(candidate),exp,cams);
+    if(motif===null){assert.equal(out.action,'lot');continue;}
+    assert.equal(out.action,'defer',motif);assert.equal(out.reason,motif);
+    for(const s of SIDES){assert.equal(out.rails[s].status,'unresolved');assert.equal(out.rails[s].delta,null);}}
+  const out=command({...decision,stage:'window'},both(candidate),K.expectedPoses,null);
+  assert.deepEqual([out.action,out.reason],['engine','vue-inconnue-left'],'sans retrait par la garde, le repli reste la proposition du moteur');
+});

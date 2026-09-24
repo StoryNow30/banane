@@ -7,8 +7,8 @@
  * `commandLot` la remet telle quelle à `Engine.apply()`.
  * Scénario : fixture du banc, pose ESV à +210 mm de la vraie position, deux
  * appuis justes, vues de ±0,2 comme celles du Pilote. L'essai affirme le
- * comportement ATTENDU (garde retirée ⇒ jamais la paire du moteur) ; marqué
- * `todo` tant que le défaut existe, il est rapporté sans faire tomber le banc. */
+ * comportement ATTENDU (garde retirée ⇒ jamais la paire du moteur) ; corrigé en
+ * 4.7.14 (KI-053) : la paire retirée n'est jamais commandée, le cut est différé. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const L=require('../src/lot-decision.js'),O=require('../src/continuity-observer.js'),Shadow=require('../src/gcv1-shadow.js');
 const {K,base}=require('./fixtures.cjs'),{withCameras}=require('./helpers/navigateur.cjs');
@@ -32,18 +32,18 @@ test('préalables du scénario : moteur applicable sur une paire fausse, retiré
   assert.ok(worstMm(rails,runtimeRails)>100,'paire du moteur fausse : '+worstMm(rails,runtimeRails).toFixed(1)+' mm');
   assert.equal(decision.guardDeferred,true);assert.ok(decision.guardMm>30,String(decision.guardMm));
   assert.equal(decision.stage,'window');
-  assert.match(command(L.viewCameras(withCameras(cap))).reason,/^hors-vue-/);
+  assert.match(command(L.viewCameras(withCameras(cap))).reason,/hors-vue-/);
 });
 
-test('garde retirée, cible hors de la vue : la paire retirée du moteur ne doit pas être commandée',
-  {todo:'constat B1 de la relecture 4.7.12 : commandRails rend runtimeRails (action « engine »)'},()=>{
+test('garde retirée, cible hors de la vue : la paire retirée du moteur ne doit pas être commandée',()=>{
   const out=command(L.viewCameras(withCameras(cap)));
-  assert.ok(!SIDES.every(s=>out.rails[s].status==='candidate'),
-    `action ${out.action}/${out.reason} : paire du moteur commandée à ${worstMm(rails,out.rails).toFixed(1)} mm de la vraie position`);
+  const commandee=SIDES.every(s=>out.rails[s].status==='candidate');
+  assert.ok(!commandee,commandee?`action ${out.action}/${out.reason} : paire du moteur commandée à ${worstMm(rails,out.rails).toFixed(1)} mm de la vraie position`:'');
+  assert.equal(out.action,'defer');assert.equal(out.reason,'guard-hors-vue-left');
 });
 
-test('garde retirée, caméra inconnue : même repli, même paire retirée',
-  {todo:'constat B1 : le repli « vue-inconnue » rend aussi runtimeRails'},()=>{
+test('garde retirée, caméra inconnue : même repli, même paire retirée',()=>{
   const out=command(null);
   assert.ok(!SIDES.every(s=>out.rails[s].status==='candidate'),`action ${out.action}/${out.reason}`);
+  assert.equal(out.action,'defer');assert.match(out.reason,/^guard-vue-inconnue/);
 });

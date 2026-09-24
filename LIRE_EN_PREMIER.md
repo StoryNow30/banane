@@ -1,13 +1,19 @@
-# Démarrer avec Banane V4.7.13 TEST — la nouvelle interface
+# Démarrer avec Banane V4.7.14 TEST — la nouvelle interface, corrigée
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.13-test.zip` dans Edge, exactement comme la 4.7.12.
+Installe `banane-v4.7.14-test.zip` dans Edge, exactement comme la 4.7.13.
 
-Vérifie d'abord **V4.7.13 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.13 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.14 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.14 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
+
+**4.7.14 — corrections de la relecture indépendante.** Quand la garde de
+continuité écarte la proposition du moteur et que la position retrouvée par la
+voie ne peut pas être commandée (hors de la vue d'ESV), le cut est différé :
+le Pilote n'applique plus la proposition écartée (KI-053). « Reprendre » sur un
+cut archivé est refusé avec un message : passe au cut suivant, puis Reprendre.
 
 **4.7.13 — la nouvelle interface « La ligne ».** Le Pilote travaille exactement
 comme en 4.7.12 ; seul le panneau change. En haut, l'état du lot, le cut en

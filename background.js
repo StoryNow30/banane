@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.13';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.14';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -87,7 +87,12 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
    if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
     catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
    if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=await commandLot(proposal,lotObservation);}
-    catch(e){lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
+    catch(e){/* KI-053 : une paire retirée par la garde n'est jamais rendue, même sur erreur. */
+     if(lotObservation.guardDeferred&&globalThis.BananeLotDecision?.deferRails){
+       const d=globalThis.BananeLotDecision.deferRails(proposal.rails,lotObservation,'guard-error','décision sur le lot : paire du moteur retirée par la garde ; commande impossible ('+(e?.message||String(e))+')');
+       engine.s.proposal=proposal={...proposal,rails:d.rails,lotCommand:{action:'defer',reason:'guard-error',stage:lotObservation.stage,engineRails:proposal.rails}};
+       lotObservation.command={action:'defer',reason:'guard-error: '+(e?.message||String(e))};lotObservation.applied=false;}
+     else lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
@@ -242,6 +247,14 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
  if(action==='resume'){assertPilotContract(engine.s.batch?.scope);
+  /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
+   * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
+   * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
+   * AVANT tout changement d'état : le lot reste arrêté, reprenable dès le cut
+   * suivant. */
+  const affiche=await adapter.state().catch(()=>null);
+  if(affiche?.identity)try{engine.writable(affiche.identity);}
+   catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Banane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
   /* KI-052 : « Archiver le résultat interrompu » arrête le lot en laissant
    * l'étape « apply » et efface la proposition ; reprendre relançait la boucle
    * sur une proposition absente. Sans proposition, la reprise recommence le

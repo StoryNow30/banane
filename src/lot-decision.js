@@ -22,7 +22,7 @@
   *
   * Ce module ne commande rien : en 4.7.8, son résultat est seulement consigné
   * dans le journal du Pilote. */
- const DEFAULTS=Object.freeze({version:'lot-decision-v1',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:10,pairGuard:true,
+ const DEFAULTS=Object.freeze({version:'lot-decision-v2',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:15,minFace:3,chainMm:10,pairGuard:true,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -91,7 +91,9 @@
  const pairFlagged=science=>SIDES.some(side=>science?.rails?.[side]?.next?.changed===true)
    &&SIDES.some(side=>science?.rails?.[side]?.conventionCalibration?.reason==='shift-out-of-domain');
  function decideCut({capture,science,anchors,Shadow,options={}}){
-   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version};
+   /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
+    * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
+   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg);
    if(applicable){
@@ -182,22 +184,30 @@
    return {ndc,inView:Math.abs(ndc[0])<=margin&&Math.abs(ndc[1])<=margin&&Math.abs(ndc[2])<=1};
  }
  const MATCH_SCENE=1e-5;
+ /* Deux abstentions GCV1 : le moteur diffère le cut (`Engine.deferEligibility`). */
+ function deferRails(runtimeRails,decision,reason,text){
+   const note={stage:decision?.stage??null,anchorsUsed:decision?.anchorsUsed||[],version:decision?.version??DEFAULTS.version};
+   return {action:'defer',reason,rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
+     reasons:[text],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason,...(decision?.guardMm!=null?{guardMm:decision.guardMm}:{})}}]))};
+ }
  function commandRails({decision,runtimeRails,before,expectedPoses,cameras}){
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
    if(!decision||!runtimeRails||!before||!SIDES.every(side=>runtimeRails[side]&&before[side]))return keep('no-decision');
+   /* RELECTURE 4.7.12, CONSTAT B1 (KI-053). La garde de continuité a RETIRÉ la
+    * paire du moteur : aucun repli ne doit la rendre. Si la position de la voie
+    * ne peut pas être commandée (hors de la vue, caméra inconnue, repère ou
+    * écartement non relus), le cut est différé. Sans retrait par la garde, le
+    * repli reste la proposition du moteur, comme en 4.7.9. */
+   const fallback=reason=>decision.guardDeferred
+     ?deferRails(runtimeRails,decision,'guard-'+reason,'décision sur le lot : paire du moteur retirée par la garde de continuité ('+decision.guardMm+' mm de la voie) ; position de la voie non commandable ('+reason+')')
+     :keep(reason);
+   if(decision.stage==='deferred'&&decision.pairGuarded)
+     return deferRails(runtimeRails,decision,'pair-guard','décision sur le lot : garde de paire (rail repêché par S1 et calage de convention hors domaine)');
+   if(decision.stage==='deferred'&&decision.guardDeferred)
+     return deferRails(runtimeRails,decision,'guard','décision sur le lot : retiré par la garde de continuité ('+decision.guardMm+' mm de la voie), sans reprise');
    const note={stage:decision.stage,anchorsUsed:decision.anchorsUsed||[],version:decision.version??DEFAULTS.version};
-   if(decision.stage==='deferred'&&decision.pairGuarded){
-     const reason='décision sur le lot : garde de paire (rail repêché par S1 et calage de convention hors domaine)';
-     return {action:'defer',reason:'pair-guard',rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
-       reasons:[reason],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason:'pair-guard'}}]))};
-   }
-   if(decision.stage==='deferred'&&decision.guardDeferred){
-     const reason='décision sur le lot : retiré par la garde de continuité ('+decision.guardMm+' mm de la voie), sans reprise';
-     return {action:'defer',reason:'guard',rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
-       reasons:[reason],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason:'guard',guardMm:decision.guardMm??null}}]))};
-   }
-   if(decision.stage!=='window'&&decision.stage!=='choice')return keep(decision.stage||'no-stage');
-   if(!decision.positions||typeof expectedPoses!=='function')return keep('positions-missing');
+   if(decision.stage!=='window'&&decision.stage!=='choice')return fallback(decision.stage||'no-stage');
+   if(!decision.positions||typeof expectedPoses!=='function')return fallback('positions-missing');
    const rails={};
    for(const side of SIDES){
      const init=before[side],M=init.sceneRelativeToProfileLocal,q=C.point(M,decision.positions[side]),o=C.point(M,init.positionSceneRelative);
@@ -206,16 +216,16 @@
        source:'lot-decision-'+decision.stage,lotDecision:{...note,...(decision.chosen?.[side]?{chosen:decision.chosen[side]}:{}),
          ...(decision.fromPredictionMm!=null?{fromPredictionMm:decision.fromPredictionMm}:{})}};
    }
-   let expected;try{expected=expectedPoses({rails:before},rails);}catch{return keep('expected-poses-failed');}
-   if(SIDES.some(side=>C.distance(expected[side].positionSceneRelative,decision.positions[side])>MATCH_SCENE))return keep('position-mismatch');
+   let expected;try{expected=expectedPoses({rails:before},rails);}catch{return fallback('expected-poses-failed');}
+   if(SIDES.some(side=>C.distance(expected[side].positionSceneRelative,decision.positions[side])>MATCH_SCENE))return fallback('position-mismatch');
    const gaugeMm=Gauge.gaugeMmOf(expected,C),gaugeClass=Gauge.classifyMm(gaugeMm);
-   if(!Gauge.admissible(gaugeClass))return keep('gauge-'+gaugeClass);
+   if(!Gauge.admissible(gaugeClass))return fallback('gauge-'+gaugeClass);
    /* La cible doit tomber dans la vue du rail (KI-051) ; sinon le cut suit la
     * proposition du moteur, comme en 4.7.9 (un rail non résolu : différé). */
-   for(const side of SIDES){const cam=cameras?.[side];if(!cam)return keep('vue-inconnue-'+side);
+   for(const side of SIDES){const cam=cameras?.[side];if(!cam)return fallback('vue-inconnue-'+side);
      const view=inView(cam,decision.positions[side]);
-     if(!view.inView)return {...keep('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
+     if(!view.inView)return {...fallback('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN,pairFlagged};
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN,pairFlagged};
 });
