@@ -48,10 +48,12 @@ Contrôle journal : 15 traités et 14 différés au journal ; 15 appliqués et 1
 
 C1 à C4 sont rapportés ensemble ; C1 seul n’est pas un résultat (§14 G).
 
+**Lot incomplet** (pilote-p19-4.7.6 : STOPPED) : C1 est rapporté, mais ne compte pas pour l’objectif, fixé sur des lots complets (D-038).
+
 | Critère | Mesure |
 |---|---|
 | C1 — couverture | **14 appliqués / 28 cuts distincts = 50 %** · différés 7 · refusés par l’écartement 5 · sans entrée 1 · autres 1 · cuts revisités 0 (comptés une fois) |
-| C4 — faux | **0 faux sur 1 appliqués jugés** (latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 13 |
+| C4 — faux | **non évaluable** : 7,1 % des appliqués jugés, seuil 80 % · **0 faux sur 1 appliqués jugés** (latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 13 |
 | C2 — erreur des rails appliqués jugés (2 rails), médiane / p90 | latéral 0 / 0 (max 0) mm · vertical 0 / 0 (max 0) mm · plancher : P2 non mesuré |
 | C3 — paires hors contrat | refusées pendant le lot : 5 (9049 : 1305,6 mm LOW_INVALID ; 9052 : 1286,1 mm LOW_INVALID ; 9218 : 1304,9 mm LOW_INVALID ; 9242 : 1311,4 mm LOW_INVALID ; 9317 : 1470,8 mm HIGH_INVALID) · appliquées hors contrat : **0** |
 | Décision sur le lot | 16 appliqués / 28 = 57,1 % · **0 faux sur 2 jugés** · faux que le Pilote n’a pas faits : aucun · gagnés : 9044, 9052 · perdus : aucun |
@@ -70,10 +72,12 @@ Exclus, comptés à part : 9033 (applied) — demande de l’opérateur : réfé
 
 C1 à C4 sont rapportés ensemble ; C1 seul n’est pas un résultat (§14 G).
 
+**Lot incomplet** (pilote-p19-4.7.6 : STOPPED) : C1 est rapporté, mais ne compte pas pour l’objectif, fixé sur des lots complets (D-038).
+
 | Critère | Mesure |
 |---|---|
 | C1 — couverture | **14 appliqués / 28 cuts distincts = 50 %** · différés 7 · refusés par l’écartement 5 · sans entrée 1 · autres 1 · cuts revisités 0 (comptés une fois) |
-| C4 — faux | **0 faux sur 1 appliqués jugés** (latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 13 |
+| C4 — faux | **non évaluable** : 7,1 % des appliqués jugés, seuil 80 % · **0 faux sur 1 appliqués jugés** (latéral OU vertical > 10 mm, valeurs brutes) · appliqués non jugés : 13 |
 | C2 — erreur des rails appliqués jugés (2 rails), médiane / p90 | latéral 0 / 0 (max 0) mm · vertical 0 / 0 (max 0) mm · plancher : P2 non mesuré |
 | C3 — paires hors contrat | refusées pendant le lot : 5 (9049 : 1305,6 mm LOW_INVALID ; 9052 : 1286,1 mm LOW_INVALID ; 9218 : 1304,9 mm LOW_INVALID ; 9242 : 1311,4 mm LOW_INVALID ; 9317 : 1470,8 mm HIGH_INVALID) · appliquées hors contrat : **0** |
 | Décision sur le lot | 16 appliqués / 28 = 57,1 % · **0 faux sur 2 jugés** · faux que le Pilote n’a pas faits : aucun · gagnés : 9044, 9052 · perdus : aucun |

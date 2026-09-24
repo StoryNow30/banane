@@ -206,3 +206,32 @@ est donc bien celle laissée par le Pilote.
   les décompresser avant.
 - Une relecture volumineuse est fusionnée en mémoire : pour la session Natif
   longue de la partie 20, `node --max-old-space-size=12000`.
+
+## 7. Relecture de la direction technique et suites (24/09)
+
+Relu et rejoué : les 17 essais, le banc complet (661 tests, 659 réussis,
+0 échec, 2 ignorés) et le relevé de la partie 19 sur les données réelles,
+identique à celui livré. Outil intégré sur `claude/banane-48-cahier` (commit
+`fa6952a`), sans les relevés du banc du commit d'origine.
+
+Réponses aux questions du §5 :
+
+1. **Repère** : la règle de l'outil est retenue (jointure par partie et cut,
+   translation unique vérifiée cut par cut, 1 mm, rotation identique). ESV
+   exprime ses coordonnées par rapport à une origine propre à chaque
+   ouverture de page : la translation relevée (737 962 ; 6 762 384 ; 86,9 m)
+   est un point en Lambert-93 avec son altitude.
+2. **Relecture sans validation** : la validation de chaque cut relu est déjà
+   la consigne de F1. L'outil déclare désormais **C4 non évaluable** quand
+   moins de 80 % des cuts appliqués sont jugés (partie 19 : 7,1 %). Question
+   ouverte à l'opérateur : ESV permet-il de valider à nouveau un cut déjà
+   validé par le Pilote ?
+3. **Cut atteint, lot arrêté** (9407) : gardé au dénominateur (D-038) ; le
+   lot est en plus marqué **incomplet** : son C1 est rapporté mais ne compte
+   pas pour l'objectif, fixé sur des lots complets.
+4. **9406 sans point LiDAR** : « sans entrée », retenu.
+5. **Seuils de rapprochement** : retenus.
+6. **C4** : « 0 faux » (D-038, plan) ; le cahier consolidé l'écrira.
+
+La borne « 20–47 mm » de l'amendement n°6 mêlait les deux rails ; corrigée
+dans le cahier (rail le plus décalé à 33–47 mm, l'autre à 0–34 mm).

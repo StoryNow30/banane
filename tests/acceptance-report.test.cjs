@@ -129,3 +129,18 @@ test('partie par partie puis total ; tenue à l’écart et P2 (un opérateur)',
 test('mêmes entrées, même rapport (§14 F)',()=>{
   assert.equal(JSON.stringify(A.report([scenario()])),JSON.stringify(A.report([scenario()])));
 });
+test('C4 non évaluable sous 80 % d’appliqués jugés ; lot arrêté marqué incomplet',()=>{
+  const r=A.report([scenario()]),c4=r.total.c4;
+  // 7 appliqués (100 à 103, 108 à 110), 4 jugés : 57,1 %.
+  assert.equal(c4.judgedSharePct,57.1);assert.equal(c4.evaluable,false);
+  assert.deepEqual(r.total.incompleteLots,[{label:'synthétique',state:'STOPPED'}]);
+  assert.equal(r.parts[0].incompleteLots.length,1);assert.equal(r.lots[0].complete,false);
+  const md=A.toMarkdown(r);assert.match(md,/\*\*non évaluable\*\* : 57,1 % des appliqués jugés, seuil 80 %/);assert.match(md,/\*\*Lot incomplet\*\*/);
+  // Lot complet, tous les appliqués jugés : évaluable, aucune mention d'incomplétude.
+  const lot=pilotLot(P,[pilotCut(P,200),pilotCut(P,201)]),T0=[0,0,0];
+  const ok=A.report([{label:'complet',...lot,corpus:null,relecture:relecture([
+    visit(P,200,{frameId:'cadre-pilote',before:pair(200,{},T0),final:pair(200,{},T0)}),
+    visit(P,201,{frameId:'cadre-pilote',before:pair(201,{},T0),final:pair(201,{},T0)})])}]);
+  assert.equal(ok.total.c4.evaluable,true);assert.equal(ok.total.c4.judgedApplied,2);
+  assert.deepEqual(ok.total.incompleteLots,[]);assert.doesNotMatch(A.toMarkdown(ok),/non évaluable|Lot incomplet/);
+});

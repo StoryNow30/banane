@@ -41,6 +41,11 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const Segments=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs');
 const Gauge=require('../src/gauge.js'),O=require('../src/continuity-observer.js'),K=require('../src/core.js'),C=require('../vendor/capture-core.js');
 const SIDES=['left','right'],WRONG_MM=10,MATCH_MM=1,ROTATION_TOLERANCE=1e-6;
+/* C4 n'est évaluable que si 80 % au moins des cuts appliqués ont été jugés à la
+ * relecture ; un lot arrêté avant la fin est « incomplet » : son C1 est
+ * rapporté, mais il ne compte pas pour l'objectif, fixé sur des lots complets
+ * (D-038). Décision de la direction du 24/09, relecture du chantier 4. */
+const MIN_JUDGED_SHARE=0.8,COMPLETE_STATES=new Set(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
 /* Exclusions demandées par l'opérateur : jamais retirées, la configuration ne
  * peut qu'en ajouter. */
 const EXCLUDED=Object.freeze([
@@ -275,7 +280,7 @@ function analyseLot(lot,options={}){
   }
   const consistency=lot.journal?{journalCompleted:lot.journal.closureSummary?.completed??null,journalDeferred:lot.journal.closureSummary?.deferred??null,
     applied:rows.filter(r=>r.outcome==='applied').length,deferredOrRefused:rows.filter(r=>r.outcome==='deferred'||r.outcome==='gauge-rejected'||r.reason==='différé-sans-point-lidar').length}:null;
-  return {label:lot.label,batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
+  return {label:lot.label,complete:ctx.batch?COMPLETE_STATES.has(ctx.batch.state):null,batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
       unresolvedPolicy:ctx.batch.scope?.unresolvedPolicy??null,startedAt:ctx.batch.startedAt??null}:null,
     version:lot.diagnostic?.version??lot.journal?.version??null,observationsOutsideLot:ctx.observationsOutsideLot,
     relecture:lot.relecture?{...lot.relectureMerge,frame}:null,lotDecisionSource:lotSource,lotDecisionParity:parity,journalConsistency:consistency,
@@ -297,6 +302,8 @@ function summarize(rows,p2){
       revisitedCuts:count(r=>r.pilotVisits>1||r.gcv1Observations>1),
       otherDetail:counted.filter(r=>r.outcome==='other'||r.outcome==='no-input').map(r=>({cut:r.cut,outcome:r.outcome,reason:r.reason}))},
     c4:{criterion:`latéral OU vertical > ${WRONG_MM} mm, valeurs brutes`,judgedApplied:judged.length,appliedNotJudged:applied.length-judged.length,wrong:wrong.length,
+      judgedSharePct:applied.length?r1(100*judged.length/applied.length):null,minJudgedSharePct:100*MIN_JUDGED_SHARE,
+      evaluable:applied.length?judged.length>=MIN_JUDGED_SHARE*applied.length:null,
       wrongCuts:wrong.map(r=>({cut:r.cut,worstMm:r.judgement.worstMm,errors:r.judgement.errors}))},
     c2:{rails:judged.length*2,lateralMm:axis('lateral'),verticalMm:axis('vertical'),floor:p2?{label:p2.label,lateralMm:p2.lateralMm??null,verticalMm:p2.verticalMm??null}:{label:'P2 non mesuré'}},
     c3:{refused:counted.filter(r=>r.outcome==='gauge-rejected').map(r=>({cut:r.cut,...r.gauge})),
@@ -320,15 +327,17 @@ function report(lots,{config=null,p2=null,replay=false,replayDeps=null}={}){
   const analysed=lots.map(l=>analyseLot(l,{exclusions,replay,replayDeps}));
   const allRows=analysed.flatMap(l=>l.rows.map(r=>({...r,lotLabel:l.label})));
   const tuning=new Set(config?.tuningParts||[]);
+  const incomplete=analysed.filter(l=>l.complete===false).map(l=>({label:l.label,state:l.batch?.state??null}));
   const parts=[...new Set(allRows.map(r=>r.part))].sort((a,b)=>a-b).map(part=>({part,
     holdout:config?(tuning.has(part)?'a servi au réglage':'tenue à l’écart'):'non déclaré (aucune configuration)',
-    lots:[...new Set(allRows.filter(r=>r.part===part).map(r=>r.lotLabel))],...summarize(allRows.filter(r=>r.part===part),floor)}));
+    lots:[...new Set(allRows.filter(r=>r.part===part).map(r=>r.lotLabel))],...summarize(allRows.filter(r=>r.part===part),floor)}))
+    .map(p=>({...p,incompleteLots:incomplete.filter(l=>p.lots.includes(l.label))}));
   return {format:'banane-acceptance-report-v1',tool:'tools/acceptance-report.cjs',
     rules:{wrongMm:WRONG_MM,criterion:'latéral OU vertical, valeurs brutes (D-038)',denominator:'cuts DISTINCTS du lot ; sans entrée, différés, refusés, sans décision au dénominateur ; revisite ≠ nouveau cut',
       reference:'dernière visite validée de la relecture, règles strictes referenceFor ; lue après coup, jamais en entrée moteur',
       units:'unités de scène × 1000 (mm), étalonnage physique non vérifié',gaugeContract:`[${Gauge.CONTRACT.lowMm}, ${Gauge.CONTRACT.maximumMm}] mm, admissibilité seulement`,
       exclusions,p2:floor?floor.label:'P2 non mesuré'},
-    config:config?{tuningParts:[...tuning]}:null,p2:floor,lots:analysed,parts,total:summarize(allRows,floor)};
+    config:config?{tuningParts:[...tuning]}:null,p2:floor,lots:analysed,parts,total:{...summarize(allRows,floor),incompleteLots:incomplete}};
 }
 
 /* ---- Markdown ---- */
@@ -336,9 +345,10 @@ const fmt=v=>v==null?'—':String(v).replace('.',',');
 const dist=d=>d?.count?`${fmt(d.median)} / ${fmt(d.p90)} (max ${fmt(d.maximum)})`:'—';
 function section(title,s){
   const L=[`### ${title}`,'','C1 à C4 sont rapportés ensemble ; C1 seul n’est pas un résultat (§14 G).','',
+    ...(s.incompleteLots?.length?[`**Lot incomplet** (${s.incompleteLots.map(l=>`${l.label} : ${l.state}`).join(' ; ')}) : C1 est rapporté, mais ne compte pas pour l’objectif, fixé sur des lots complets (D-038).`,'']:[]),
     '| Critère | Mesure |','|---|---|',
     `| C1 — couverture | **${s.c1.applied} appliqués / ${s.c1.distinctCuts} cuts distincts = ${fmt(s.c1.coveragePct)} %** · différés ${s.c1.deferred} · refusés par l’écartement ${s.c1.gaugeRejected} · sans entrée ${s.c1.noInput} · autres ${s.c1.other} · cuts revisités ${s.c1.revisitedCuts} (comptés une fois) |`,
-    `| C4 — faux | **${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged} |`,
+    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged} |`,
     `| C2 — erreur des rails appliqués jugés (${s.c2.rails} rails), médiane / p90 | latéral ${dist(s.c2.lateralMm)} mm · vertical ${dist(s.c2.verticalMm)} mm · plancher : ${s.c2.floor.label}${s.c2.floor.lateralMm?` (latéral ${fmt(s.c2.floor.lateralMm.median)} / ${fmt(s.c2.floor.lateralMm.p90)}, vertical ${fmt(s.c2.floor.verticalMm?.median)} / ${fmt(s.c2.floor.verticalMm?.p90)} mm)`:''} |`,
     `| C3 — paires hors contrat | refusées pendant le lot : ${s.c3.refused.length}${s.c3.refused.length?' ('+s.c3.refused.map(r=>`${r.cut} : ${fmt(r.predictedMm)} mm ${r.gaugeClass}`).join(' ; ')+')':''} · appliquées hors contrat : **${s.c3.appliedOutOfContract.length}**${s.c3.appliedGaugeUnmeasured.length?` · écartement appliqué non mesurable : ${s.c3.appliedGaugeUnmeasured.join(', ')}`:''} |`];
   if(s.lotDecision)L.push(`| Décision sur le lot | ${s.lotDecision.wouldApply} appliqués / ${s.c1.distinctCuts} = ${fmt(s.lotDecision.coveragePct)} % · **${s.lotDecision.wrong} faux sur ${s.lotDecision.judged} jugés** · faux que le Pilote n’a pas faits : ${s.lotDecision.newWrong.length?s.lotDecision.newWrong.join(', '):'aucun'} · gagnés : ${s.lotDecision.gained.map(g=>g.cut).join(', ')||'aucun'} · perdus : ${s.lotDecision.lost.join(', ')||'aucun'} |`);
@@ -389,8 +399,8 @@ function run(argv=process.argv.slice(2)){
   if(opt.json)fs.writeFileSync(opt.json,JSON.stringify(result,null,1)+'\n');
   if(opt.md)fs.writeFileSync(opt.md,toMarkdown(result)+'\n');
   for(const p of [...result.parts.map(p=>({...p,title:'partie '+p.part})),{...result.total,title:'total'}])
-    console.log(`${p.title} : C1 ${p.c1.applied}/${p.c1.distinctCuts} = ${p.c1.coveragePct} % · C4 ${p.c4.wrong} faux / ${p.c4.judgedApplied} jugés · C2 latéral ${dist(p.c2.lateralMm)} vertical ${dist(p.c2.verticalMm)} · ${p.c2.floor.label} · C3 refusées ${p.c3.refused.length}, appliquées hors contrat ${p.c3.appliedOutOfContract.length}`+
-      (p.lotDecision?` · lot ${p.lotDecision.wouldApply}/${p.c1.distinctCuts}, ${p.lotDecision.wrong} faux / ${p.lotDecision.judged}`:' · décision sur le lot absente')+` · exclus ${p.excluded.length}`);
+    console.log(`${p.title} : C1 ${p.c1.applied}/${p.c1.distinctCuts} = ${p.c1.coveragePct} % · C4 ${p.c4.wrong} faux / ${p.c4.judgedApplied} jugés${p.c4.evaluable===false?' (non évaluable)':''} · C2 latéral ${dist(p.c2.lateralMm)} vertical ${dist(p.c2.verticalMm)} · ${p.c2.floor.label} · C3 refusées ${p.c3.refused.length}, appliquées hors contrat ${p.c3.appliedOutOfContract.length}`+
+      (p.lotDecision?` · lot ${p.lotDecision.wouldApply}/${p.c1.distinctCuts}, ${p.lotDecision.wrong} faux / ${p.lotDecision.judged}`:' · décision sur le lot absente')+` · exclus ${p.excluded.length}`+(p.incompleteLots?.length?' · lot incomplet':''));
   return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}

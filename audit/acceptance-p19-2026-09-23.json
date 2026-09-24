@@ -27,6 +27,7 @@
  "lots": [
   {
    "label": "pilote-p19-4.7.6",
+   "complete": false,
    "batch": {
     "id": "c6e24847-cf33-4429-9da1-abb1d2386a79",
     "state": "STOPPED",
@@ -990,6 +991,9 @@
     "judgedApplied": 1,
     "appliedNotJudged": 13,
     "wrong": 0,
+    "judgedSharePct": 7.1,
+    "minJudgedSharePct": 80,
+    "evaluable": false,
     "wrongCuts": []
    },
    "c2": {
@@ -1153,6 +1157,12 @@
      "outcome": "deferred",
      "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
     }
+   ],
+   "incompleteLots": [
+    {
+     "label": "pilote-p19-4.7.6",
+     "state": "STOPPED"
+    }
    ]
   }
  ],
@@ -1184,6 +1194,9 @@
    "judgedApplied": 1,
    "appliedNotJudged": 13,
    "wrong": 0,
+   "judgedSharePct": 7.1,
+   "minJudgedSharePct": 80,
+   "evaluable": false,
    "wrongCuts": []
   },
   "c2": {
@@ -1346,6 +1359,12 @@
     "cut": 9241,
     "outcome": "deferred",
     "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   }
+  ],
+  "incompleteLots": [
+   {
+    "label": "pilote-p19-4.7.6",
+    "state": "STOPPED"
    }
   ]
  }
