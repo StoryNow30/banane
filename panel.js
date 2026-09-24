@@ -113,6 +113,16 @@
            :`Politique effective de ce lot : ${nom(applique)}.`;
      }
      if($('policy')&&running&&b.scope?.lowConfidence&&document.activeElement!==$('policy'))$('policy').value=b.scope.lowConfidence;
+     /* 4.7.10 — décision sur le lot, figée à la création du lot comme les
+      * politiques ci-dessus. Un lot créé avant la 4.7.10 n'a pas ce champ : il
+      * reste en observation. */
+     if($('lot-decision')){
+       const effective=running?(b.scope?.lotDecision==='apply'?'apply':'observe'):null;
+       if(effective&&document.activeElement!==$('lot-decision'))$('lot-decision').value=effective;
+       $('lot-decision').disabled=!!running;
+       if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
+         $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${effective==='apply'?'appliquée':'observée seulement'}.`:'';}
+     }
      const names={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
        PAUSED_DEFER_NAVIGATION_UNCERTAIN:'Navigation différée incertaine',
        PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',
@@ -491,7 +501,7 @@ on('native-discard',async()=>{
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
    await api('settings',{mode:'automatic-test',minConfidence:Number($('confidence').value)});
    return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,
-     lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',geometryEngine:'geometry-candidate-v1'});});
+     lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',lotDecision:$('lot-decision')?.value==='observe'?'observe':'apply',geometryEngine:'geometry-candidate-v1'});});
  for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
  on('retry',()=>api('retry'));on('explicit-skip',()=>api('explicit-skip'));
  // Reprise manuelle : le pilote rend la main, sans ouvrir aucune fenêtre.

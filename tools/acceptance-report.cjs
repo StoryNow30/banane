@@ -241,8 +241,7 @@ function replayLot(observations,corpus,deps){deps=deps||{};
     const science={rails:Object.fromEntries(SIDES.map(s=>[s,o.rails[s]?.scientificRail])),summary:o.summary};
     const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
       visibleByClipBoxes:capture.visibleByClipBoxes},science,anchors,Shadow});
-    if(decision.anchor){anchors.push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage});
-      if(anchors.length>maxAnchors)anchors.shift();}
+    if(decision.anchor)(L.rememberAnchor||require('../src/lot-decision.js').rememberAnchor)(anchors,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage},maxAnchors);
     out.push({key:k,observationEventId:o.observationEventId,decision:{...decision,applied:false,displayed:false}});
   }
   return out;
@@ -298,7 +297,10 @@ function analyseLot(lot,options={}){
   // Jugement, cut par cut.
   for(const row of rows){
     const o=row._cut.observations.at(-1),lo=!o?null:lotSource==='observation'?o.lotObservation||null:replay?replay.get(o.observationEventId)||null:null;
-    if(lotSource!=='absent')row.lot=lo?{stage:lo.stage,wouldApply:APPLYING_STAGES.has(lo.stage),reason:lo.reason??null,guardMm:lo.guardMm??null,guardDeferred:lo.guardDeferred||undefined}:{stage:null,wouldApply:false,reason:'aucune-observation'};
+    if(lotSource!=='absent')row.lot=lo?{stage:lo.stage,wouldApply:APPLYING_STAGES.has(lo.stage),reason:lo.reason??null,guardMm:lo.guardMm??null,guardDeferred:lo.guardDeferred||undefined,
+      anchors:Array.isArray(lo.anchorsUsed)?lo.anchorsUsed.length:null,
+      /* 4.7.10 : ce que la décision a commandé au Pilote (consigné seulement sur le terrain). */
+      command:lotSource==='observation'?o.lotObservation?.command?.action??null:null}:{stage:null,wouldApply:false,reason:'aucune-observation'};
     if(row.excluded)continue;
     const judgement=judgeCut(row,relecture.get(keyOf(row.part,row.cut)),T,frame);
     if(judgement.status==='judged'){const {_initial,_references,...rest}=judgement;
@@ -329,6 +331,9 @@ function summarize(rows,p2){
     unjudged[k].cuts++;if(r.outcome==='applied')unjudged[k].applied++;unjudged[k].list.push(r.cut);}
   const lotRows=counted.filter(r=>r.lot),lotApplied=lotRows.filter(r=>r.lot.wouldApply),lotJudged=lotApplied.filter(r=>Number.isFinite(r.lot.worstMm));
   const lotWrong=lotJudged.filter(r=>r.lot.wrong);
+  /* 4.7.10 (D-042) : appliqués par la décision sur le lot (reprise ou choix) —
+   * ceux que la 4.7.9 n'aurait pas placés —, à part des poses du moteur. */
+  const commanded=applied.filter(r=>r.lot?.command==='lot'),commandedJudged=commanded.filter(r=>judged.includes(r));
   return {
     c1:{distinctCuts:n,applied:applied.length,deferred:count(r=>r.outcome==='deferred'),gaugeRejected:count(r=>r.outcome==='gauge-rejected'),
       noInput:count(r=>r.outcome==='no-input'),other:count(r=>r.outcome==='other'),coveragePct:pct(applied.length),
@@ -338,7 +343,10 @@ function summarize(rows,p2){
       judgedByBasis:{validé:validatedJudged.length,'accepté-sans-retouche':judged.length-validatedJudged.length},
       judgedSharePct:applied.length?r1(100*judged.length/applied.length):null,minJudgedSharePct:100*MIN_JUDGED_SHARE,
       evaluable:applied.length?judged.length>=MIN_JUDGED_SHARE*applied.length:null,
-      wrongCuts:wrong.map(r=>({cut:r.cut,worstMm:r.judgement.worstMm,errors:r.judgement.errors}))},
+      wrongCuts:wrong.map(r=>({cut:r.cut,worstMm:r.judgement.worstMm,errors:r.judgement.errors})),
+      byLotCommand:commanded.length?{applied:commanded.length,judged:commandedJudged.length,wrong:commandedJudged.filter(r=>r.judgement.wrong).length,
+        byStage:commanded.reduce((m,r)=>(m[r.lot.stage]=(m[r.lot.stage]||0)+1,m),{}),
+        wrongCuts:commandedJudged.filter(r=>r.judgement.wrong).map(r=>({cut:r.cut,stage:r.lot.stage,anchors:r.lot.anchors,worstMm:r.judgement.worstMm}))}:null},
     c2:{rails:validatedJudged.length*2,basis:'cuts validés seulement',lateralMm:axis('lateral'),verticalMm:axis('vertical'),floor:p2?{label:p2.label,lateralMm:p2.lateralMm??null,verticalMm:p2.verticalMm??null}:{label:'P2 non mesuré'}},
     c3:{refused:counted.filter(r=>r.outcome==='gauge-rejected').map(r=>({cut:r.cut,...r.gauge})),
       appliedOutOfContract:applied.filter(r=>r.gauge&&!r.gauge.admissible).map(r=>({cut:r.cut,...r.gauge})),
@@ -382,7 +390,7 @@ function section(title,s){
     ...(s.incompleteLots?.length?[`**Lot incomplet** (${s.incompleteLots.map(l=>`${l.label} : ${l.state}`).join(' ; ')}) : C1 est rapporté, mais ne compte pas pour l’objectif, fixé sur des lots complets (D-038).`,'']:[]),
     '| Critère | Mesure |','|---|---|',
     `| C1 — couverture | **${s.c1.applied} appliqués / ${s.c1.distinctCuts} cuts distincts = ${fmt(s.c1.coveragePct)} %** · différés ${s.c1.deferred} · refusés par l’écartement ${s.c1.gaugeRejected} · sans entrée ${s.c1.noInput} · autres ${s.c1.other} · cuts revisités ${s.c1.revisitedCuts} (comptés une fois) |`,
-    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.judgedByBasis?.validé??0} validés, ${s.c4.judgedByBasis?.['accepté-sans-retouche']??0} acceptés sans retouche ; ${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged} |`,
+    `| C4 — faux | ${s.c4.evaluable===false?`**non évaluable** : ${fmt(s.c4.judgedSharePct)} % des appliqués jugés, seuil ${s.c4.minJudgedSharePct} % · `:''}**${s.c4.wrong} faux sur ${s.c4.judgedApplied} appliqués jugés** (${s.c4.judgedByBasis?.validé??0} validés, ${s.c4.judgedByBasis?.['accepté-sans-retouche']??0} acceptés sans retouche ; ${s.c4.criterion}) · appliqués non jugés : ${s.c4.appliedNotJudged}${s.c4.byLotCommand?` · **dont appliqués par la décision sur le lot : ${s.c4.byLotCommand.wrong} faux sur ${s.c4.byLotCommand.judged} jugés** (${s.c4.byLotCommand.applied} appliqués : ${Object.entries(s.c4.byLotCommand.byStage).map(([k,v])=>k+' '+v).join(', ')}${s.c4.byLotCommand.wrongCuts.length?' ; faux : '+s.c4.byLotCommand.wrongCuts.map(w=>`${w.cut} (${w.stage}, ${w.anchors} appui${w.anchors>1?'s':''}, ${fmt(w.worstMm)} mm)`).join(', '):''})`:''} |`,
     `| C2 — erreur des rails appliqués validés (${s.c2.rails} rails), médiane / p90 | latéral ${dist(s.c2.lateralMm)} mm · vertical ${dist(s.c2.verticalMm)} mm · plancher : ${s.c2.floor.label}${s.c2.floor.lateralMm?` (latéral ${fmt(s.c2.floor.lateralMm.median)} / ${fmt(s.c2.floor.lateralMm.p90)}, vertical ${fmt(s.c2.floor.verticalMm?.median)} / ${fmt(s.c2.floor.verticalMm?.p90)} mm)`:''} |`,
     `| C3 — paires hors contrat | refusées pendant le lot : ${s.c3.refused.length}${s.c3.refused.length?' ('+s.c3.refused.map(r=>`${r.cut} : ${fmt(r.predictedMm)} mm ${r.gaugeClass}`).join(' ; ')+')':''} · appliquées hors contrat : **${s.c3.appliedOutOfContract.length}**${s.c3.appliedGaugeUnmeasured.length?` · écartement appliqué non mesurable : ${s.c3.appliedGaugeUnmeasured.join(', ')}`:''} |`];
   if(s.lotDecision)L.push(`| Décision sur le lot | ${s.lotDecision.wouldApply} appliqués / ${s.c1.distinctCuts} = ${fmt(s.lotDecision.coveragePct)} % · **${s.lotDecision.wrong} faux sur ${s.lotDecision.judged} jugés** · faux que le Pilote n’a pas faits : ${s.lotDecision.newWrong.length?s.lotDecision.newWrong.join(', '):'aucun'} · gagnés : ${s.lotDecision.gained.map(g=>g.cut).join(', ')||'aucun'} · perdus : ${s.lotDecision.lost.join(', ')||'aucun'} |`);
@@ -433,7 +441,7 @@ function run(argv=process.argv.slice(2)){
   if(opt.json)fs.writeFileSync(opt.json,JSON.stringify(result,null,1)+'\n');
   if(opt.md)fs.writeFileSync(opt.md,toMarkdown(result)+'\n');
   for(const p of [...result.parts.map(p=>({...p,title:'partie '+p.part})),{...result.total,title:'total'}])
-    console.log(`${p.title} : C1 ${p.c1.applied}/${p.c1.distinctCuts} = ${p.c1.coveragePct} % · C4 ${p.c4.wrong} faux / ${p.c4.judgedApplied} jugés${p.c4.evaluable===false?' (non évaluable)':''} · C2 latéral ${dist(p.c2.lateralMm)} vertical ${dist(p.c2.verticalMm)} · ${p.c2.floor.label} · C3 refusées ${p.c3.refused.length}, appliquées hors contrat ${p.c3.appliedOutOfContract.length}`+
+    console.log(`${p.title} : C1 ${p.c1.applied}/${p.c1.distinctCuts} = ${p.c1.coveragePct} % · C4 ${p.c4.wrong} faux / ${p.c4.judgedApplied} jugés${p.c4.evaluable===false?' (non évaluable)':''}${p.c4.byLotCommand?` (dont décision sur le lot ${p.c4.byLotCommand.wrong} / ${p.c4.byLotCommand.judged})`:''} · C2 latéral ${dist(p.c2.lateralMm)} vertical ${dist(p.c2.verticalMm)} · ${p.c2.floor.label} · C3 refusées ${p.c3.refused.length}, appliquées hors contrat ${p.c3.appliedOutOfContract.length}`+
       (p.lotDecision?` · lot ${p.lotDecision.wouldApply}/${p.c1.distinctCuts}, ${p.lotDecision.wrong} faux / ${p.lotDecision.judged}`:' · décision sur le lot absente')+` · exclus ${p.excluded.length}`+(p.incompleteLots?.length?' · lot incomplet':''));
   return result;
 }

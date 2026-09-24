@@ -1,8 +1,19 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.9 TEST** (correctif : décision sur le lot observée dans le Pilote avec son choix par la voie, KI-048 ; observation « continuité » en Natif ; calage de convention et flanc partiel actifs dans le Pilote ; release officielle **4.7.0**, tag `v4.7.0`)  
+Version active de l'extension : **4.7.10 TEST** (le Pilote applique la décision sur le lot, D-041, D-042 ; réglage « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.10
+
+Lot 2 de la partie 31 (4.7.9, relu) : Pilote 47 cuts sur 78, 0 faux sur 45
+jugés ; décision sur le lot 72 sur 78, 1 faux sur 69 (7026, choix à un seul
+appui, KI-050). La direction accepte ce faux (D-042) : la 4.7.10 applique la
+décision sur le lot dans le Pilote, avec un réglage « Observer seulement » qui
+rend la 4.7.9. Toutes les données relues, par étape
+(`audit/choix-un-appui-2026-09-24.md`) : reprise depuis la voie 0 faux sur 36,
+choix à deux appuis 0 sur 23, à un appui 1 sur 19. Prochaine mesure : lots
+4.7.10 relus, faux des cuts placés par la décision comptés à part.
 
 ## État 4.7.9
 

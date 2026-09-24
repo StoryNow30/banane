@@ -1,5 +1,33 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.10 — le Pilote décide sur le lot, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension — le placement du Pilote change** (D-041, D-042). Dans un lot
+Pilote GCV1 créé avec « Décision sur le lot : Appliquer » (défaut), la décision
+sur le lot de la 4.7.8 commande : `background.js` (`commandLot`) remet au lot
+une nouvelle proposition, même identifiant, dont les rails sont ceux de la
+décision (`src/lot-decision.js`, `commandRails`) — premier passage : la
+proposition du moteur ; reprise depuis la voie ou choix par la voie : les
+positions de la décision, relues (mêmes positions à 0,01 mm, écartement dans le
+contrat), sinon repli sur le moteur ; retiré par la garde de continuité sans
+reprise : cut différé. `Engine.apply()` et `src/engine.js` sont inchangés :
+état ESV relu avant commande, écartement contrôlé avant commande, relecture à
+1 mm après. L'événement « proposed » garde la proposition du moteur ;
+l'observation GCV1 consigne la commande (`lotObservation.command`). « Observer
+seulement », ou un lot créé avant la 4.7.10, rend le Pilote de la 4.7.9.
+
+**Accepté par la direction** (D-042) : la relecture du lot 2 de la partie 31
+jugeait 1 faux sur 69 à la décision sur le lot (7026, choix à un seul appui,
+KI-050) ; la 4.7.10 sort sous la forme prévue, un correctif suivra si
+l'anomalie se reproduit.
+
+**Outils** : `tools/acceptance-report.cjs` compte à part les faux des cuts
+appliqués par la décision sur le lot (`c4.byLotCommand`) ;
+`tools/choice-anchor-study.cjs` (étape × nombre d'appuis, sur toutes les
+données relues).
+
 ## 4.7.9 — correctif de l'observation du Pilote, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

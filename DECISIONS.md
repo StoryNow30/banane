@@ -1,5 +1,25 @@
 # Décisions techniques
 
+## D-042 - 4.7.10 sous la forme prévue : un faux toléré, correctif s'il se répète
+
+**24 septembre 2026, direction.** « Franchement, un seul faux, on peut être
+tolérant : on peut sortir la 4.7.10 sous la forme initialement prévue, et si
+une anomalie identique se répète deux ou trois fois, on apportera un
+correctif. »
+
+- La 4.7.10 applique la décision sur le lot telle qu'observée en 4.7.8 et
+  4.7.9 — premier passage gardé, reprise depuis la voie, choix par la voie, y
+  compris à un seul appui. La condition de D-041 (0 faux) est levée par la
+  direction pour ce seul faux (7026, KI-050).
+- **Correctif** : dès que l'anomalie de KI-050 (choix à un seul appui, minimum
+  loin d'une prédiction juste) se reproduit sur des lots relus, deux ou trois
+  fois, je le propose, mesuré sur toutes les données relues
+  (`audit/choix-un-appui-2026-09-24.md` §4 donne les candidats). Tout faux d'une
+  autre nature est analysé et remonté aussitôt.
+- Les faux des cuts placés par la décision sur le lot sont comptés à part
+  (`tools/acceptance-report.cjs`, `c4.byLotCommand`).
+- Le réglage « Observer seulement » rend la 4.7.9 sans réinstaller.
+
 ## D-041 - 4.7.10 : le Pilote applique la décision sur le lot, après la relecture du lot 2
 
 **24 septembre 2026, direction.** Accord pour une grosse mise à jour du Pilote

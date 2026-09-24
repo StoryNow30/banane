@@ -85,3 +85,21 @@ test('ligne de commande : dossier de lot, relecture fusionnée, P2, configuratio
     assert.equal(fs.readFileSync(path.join(dir,'r.json'),'utf8'),JSON.stringify(result,null,1)+'\n');
   }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+/* 4.7.10 (D-042) : les cuts appliqués par la décision sur le lot sont comptés à
+ * part des poses du moteur — c'est là que se lit la règle de la direction. */
+test('4.7.10 : faux des cuts appliqués par la décision sur le lot, à part',()=>{
+  const commanded=(p,stage,anchors)=>({...choice(p,stage),anchorsUsed:anchors,command:{action:'lot',reason:stage},applied:true});
+  const cuts=[
+    pilotCut(P,300,{lotObservation:{...choice(pair(300),'first-pass'),command:{action:'engine',reason:'first-pass'}}}),
+    pilotCut(P,301,{applied:pair(301,{left:[2,0]}),lotObservation:commanded(pair(301,{left:[2,0]}),'window',[300,299])}),
+    pilotCut(P,302,{applied:pair(302,{right:[15,0]}),lotObservation:commanded(pair(302,{right:[15,0]}),'choice',[300])}),
+  ];
+  const records=[visit(P,300,{before:pair(300,{},T),final:pair(300,{},T)}),
+    visit(P,301,{before:pair(301,{left:[2,0]},T),final:pair(301,{},T)}),visit(P,302,{before:pair(302,{right:[15,0]},T),final:pair(302,{},T)})];
+  const r=A.report([{label:'lot 4.7.10',...pilotLot(P,cuts),corpus:null,relecture:relecture(records)}]),c=r.total.c4;
+  assert.equal(r.total.c1.applied,3);assert.equal(c.wrong,1);
+  assert.deepEqual(c.byLotCommand,{applied:2,judged:2,wrong:1,byStage:{window:1,choice:1},wrongCuts:[{cut:302,stage:'choice',anchors:1,worstMm:15}]});
+  assert.match(A.toMarkdown(r),/dont appliqués par la décision sur le lot : 1 faux sur 2 jugés/);
+  assert.equal(A.report([scenario()]).total.c4.byLotCommand,null,'lot 4.7.8/4.7.9 : rien de commandé');
+});

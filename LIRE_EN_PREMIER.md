@@ -1,46 +1,56 @@
-# Démarrer avec Banane V4.7.9 TEST — correctif de l'observation du Pilote
+# Démarrer avec Banane V4.7.10 TEST — le Pilote décide sur le lot
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.9-test.zip` dans Edge, exactement comme la 4.7.8.
+Installe `banane-v4.7.10-test.zip` dans Edge, exactement comme la 4.7.9.
 
-Vérifie d'abord **V4.7.9 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.9 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.10 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.10 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
 
-**Rien de visible : le Pilote pose exactement les mêmes cuts qu'en 4.7.8, avec
-le même moteur.** La 4.7.9 corrige seulement ce que le Pilote **écrit dans son
-journal** sur la décision sur le lot : en 4.7.8, le « choix par la voie » ne
-voyait jamais les positions calculées par le moteur (KI-048) ; sur ton lot de
-la partie 31, il sous-comptait 6 cuts. Ce calcul reste **consigné, jamais
-appliqué** ; c'est à partir de tes exports que je mesure ce qu'il aurait donné.
+**Le Pilote place plus de cuts.** Quand le moteur diffère un cut, ou le refuse
+pour son écartement, le Pilote le reprend à partir de la voie tracée par les
+cuts **qu'il vient de placer dans le même lot**, puis applique la position
+trouvée. Sur ton lot 2 de la partie 31, il aurait placé 72 cuts sur 78 au lieu
+de 47. Les règles ne changent pas : les deux rails sont exigés, l'écartement
+[1 405, 1 470] mm n'est qu'un contrôle d'admissibilité, jamais une cible.
+Comme tout cut que le Pilote place, un cut repris ainsi est **validé** dans ESV
+avant de passer au suivant ; un cut qu'il ne sait pas placer reste différé,
+sans VALIDATE ni SKIP.
 
-Si tu vois moins de différés qu'avant, c'est la partie, pas la version : le
-Pilote de la 4.7.9 place comme celui de la 4.7.6.
+**Un faux connu est accepté** (D-042) : sur ce même lot, un cut (7026) aurait
+été placé à 20 mm, un choix fait avec un seul cut voisin (KI-050). Relis donc
+comme d'habitude : un cut faux se corrige et se valide.
+
+**Réglages du lot → Décision sur le lot** : « Appliquer » par défaut ;
+« Observer seulement » rend exactement le Pilote de la 4.7.9. Le réglage est
+figé à la création du lot.
 
 ## Ce qu'il faut faire avec ce build
 
-**F1 — deux ou trois lots Pilote complets** (idéalement sur des parties jamais
-collectées) :
+**F1 — des lots Pilote, puis leur relecture** (idéalement sur des parties
+jamais collectées) :
 
-1. Lance un lot Pilote GCV1, comme d'habitude.
-2. À la fin du lot, exporte le **diagnostic GCV1** et le **corpus LiDAR**.
+1. Lance un lot Pilote GCV1 avec **Décision sur le lot : Appliquer**.
+2. À la fin du lot, exporte le **diagnostic GCV1**, le **corpus LiDAR** et le
+   **journal** (Dépannage → Télécharger le journal).
 3. Puis **relis le lot en Natif** :
-   - **passe sur chaque cut du lot** comme d'habitude : un cut que tu visites
-     sans le corriger ni le valider est compté comme bon (D-040) ; **si tu le
-     corriges, valide-le** (Maj+Espace), sinon il n'est pas jugeable. Ne
-     traverse pas un cut en rafale : il faut au moins une demi-seconde dessus ;
+   - **passe sur chaque cut du lot** : un cut que tu visites sans le corriger
+     ni le valider est compté comme bon (D-040) ; **si tu le corriges,
+     valide-le** (Maj+Espace), sinon il n'est pas jugeable. Au moins une
+     demi-seconde par cut ;
    - **passe aussi (Z, sans valider) sur les 5 cuts de part et d'autre** de
-     chaque cut du lot, même ceux que le Pilote a sautés : leurs poses servent à
-     mesurer les appuis validés (`audit/appuis-valides-2026-09-24.md`).
+     chaque cut du lot.
    Exporte ensuite la session Natif.
+
+Je compte à part les faux des cuts **placés par la décision sur le lot** (ceux
+que la 4.7.9 n'aurait pas placés). Si l'anomalie du 7026 (choix à un seul
+appui) se reproduit, je propose le correctif (D-042).
 
 **Si ESV ne charge pas le nuage** (plusieurs cuts de suite « différés sans point
 LiDAR ») : arrête le lot, rafraîchis la page ESV, recharge si besoin l'onglet,
-puis relance un lot sur la suite. Le Pilote ne sait pas encore reconnaître ce
-défaut d'ESV (KI-049). Les cuts déjà différés restent non résolus dans ESV, et
-un lot suivant les reprendra.
+puis relance un lot sur la suite (KI-049).
 
 **F2 — P2, le plancher humain : 30 cuts replacés en aveugle**, quelques jours
 après leur première pose :
@@ -50,9 +60,6 @@ après leur première pose :
    ne pas partir de ton ancienne pose, puis replace-les et valide.
 3. Exporte la session. La comparaison avec ta première pose donnera ton propre
    écart : le plancher sous lequel aucune précision n'a de sens.
-
-**Arrêt :** si, sur un lot, la décision sur le lot produit un seul cut faux que
-le Pilote n'aurait pas fait, elle n'est pas activée (D2).
 
 ## Mise à jour
 

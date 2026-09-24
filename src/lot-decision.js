@@ -128,5 +128,52 @@
    return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,
      positions:Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],deltas[side])])),anchor:false};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut};
+ /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
+  * décision en rails pour `Engine.apply()`, sans rien décider de plus :
+  *   - premier passage : la proposition du moteur, inchangée ;
+  *   - reprise depuis la voie ou choix : les positions de la décision, en
+  *     décalages du repère de profil de la pose ESV courante (ceux
+  *     qu'`expectedPoses` applique), relues ici — mêmes positions à 0,01 mm
+  *     près, écartement dans le contrat —, sinon repli sur la proposition du
+  *     moteur, comme en 4.7.9 ;
+  *   - retiré par la garde de continuité sans reprise possible : les deux rails
+  *     deviennent des abstentions, et le cut est différé comme tout rail non
+  *     résolu (`Engine.deferEligibility`, source d'abstention GCV1 : la décision
+  *     sur le lot fait partie de la chaîne GCV1 du Pilote) ;
+  *   - tout le reste : la proposition du moteur, inchangée.
+  * L'écartement n'est qu'un contrôle d'admissibilité, jamais une cible. */
+ /* Mémoire des appuis du lot : un cut analysé une seconde fois (« Réessayer ce
+  * cut », reprise) remplace son entrée au lieu de compter pour deux appuis. */
+ function rememberAnchor(anchors,entry,max=40){
+   const i=anchors.findIndex(a=>sameTrack(a.identity,entry.identity)&&a.identity.cut===entry.identity.cut);
+   if(i>=0)anchors.splice(i,1);
+   anchors.push(entry);while(anchors.length>max)anchors.shift();return anchors;
+ }
+ const MATCH_SCENE=1e-5;
+ function commandRails({decision,runtimeRails,before,expectedPoses}){
+   const keep=reason=>({action:'engine',reason,rails:runtimeRails});
+   if(!decision||!runtimeRails||!before||!SIDES.every(side=>runtimeRails[side]&&before[side]))return keep('no-decision');
+   const note={stage:decision.stage,anchorsUsed:decision.anchorsUsed||[],version:decision.version??DEFAULTS.version};
+   if(decision.stage==='deferred'&&decision.guardDeferred){
+     const reason='décision sur le lot : retiré par la garde de continuité ('+decision.guardMm+' mm de la voie), sans reprise';
+     return {action:'defer',reason:'guard',rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
+       reasons:[reason],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason:'guard',guardMm:decision.guardMm??null}}]))};
+   }
+   if(decision.stage!=='window'&&decision.stage!=='choice')return keep(decision.stage||'no-stage');
+   if(!decision.positions||typeof expectedPoses!=='function')return keep('positions-missing');
+   const rails={};
+   for(const side of SIDES){
+     const init=before[side],M=init.sceneRelativeToProfileLocal,q=C.point(M,decision.positions[side]),o=C.point(M,init.positionSceneRelative);
+     rails[side]={...runtimeRails[side],status:'candidate',delta:[q[0]-o[0],q[1]-o[1],q[2]-o[2]],confidence:0,
+       reasons:['décision sur le lot : '+(decision.stage==='window'?'reprise depuis la voie':'choix par la voie')],
+       source:'lot-decision-'+decision.stage,lotDecision:{...note,...(decision.chosen?.[side]?{chosen:decision.chosen[side]}:{}),
+         ...(decision.fromPredictionMm!=null?{fromPredictionMm:decision.fromPredictionMm}:{})}};
+   }
+   let expected;try{expected=expectedPoses({rails:before},rails);}catch{return keep('expected-poses-failed');}
+   if(SIDES.some(side=>C.distance(expected[side].positionSceneRelative,decision.positions[side])>MATCH_SCENE))return keep('position-mismatch');
+   const gaugeMm=Gauge.gaugeMmOf(expected,C),gaugeClass=Gauge.classifyMm(gaugeMm);
+   if(!Gauge.admissible(gaugeClass))return keep('gauge-'+gaugeClass);
+   return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
+ }
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,rememberAnchor};
 });

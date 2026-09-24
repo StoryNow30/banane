@@ -1,5 +1,18 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.10**, deux retours :
+
+1. **Sans changer de version** : dans Réglages du lot, **Décision sur le lot :
+   Observer seulement**, à la création du lot. Le Pilote est alors exactement
+   celui de la 4.7.9 (un essai le vérifie : mêmes commandes).
+2. **Retour à la 4.7.9**, commit `d6512f5` (paquet `banane-v4.7.9-test.zip`,
+   SHA-256 `8054f1af…5ac43`) :
+
+```bash
+git archive d6512f5 | tar -x -C /tmp/banane-4.7.9
+cd /tmp/banane-4.7.9 && python3 tools/package.py --output /tmp/banane-v4.7.9-test.zip
+```
+
 **Depuis la 4.7.9**, la cible de retour est la **4.7.8**, commit `5a204fa`
 (paquet `banane-v4.7.8-test.zip`, SHA-256 `f32806b3…bd93`) :
 

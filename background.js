@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.9';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.10';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -77,12 +77,17 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
        fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
        geometrySha256:shadow.contract?.geometrySha256||null};
    }
-   /* 4.7.8 — décision sur le lot, EN OBSERVATION (amendement n°9, D-039) :
-    * calculée sur la capture du cut et les cuts déjà passés du lot, consignée
-    * avec l'observation GCV1, jamais appliquée. Une erreur ici n'arrête rien. */
+   /* Décision sur le lot (amendement n°9, D-039), calculée sur la capture du
+    * cut et les cuts déjà passés du lot, consignée avec l'observation GCV1.
+    * 4.7.10 (D-041, D-042) : dans un lot créé avec « appliquer », elle COMMANDE
+    * — la proposition remise au lot porte ses positions (`commandLot`). Un lot
+    * « observer seulement », ou créé avant la 4.7.10, reste en observation.
+    * Une erreur ici n'arrête rien : la proposition du moteur reste la seule. */
    let lotObservation=null;
    if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
     catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
+   if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=commandLot(proposal,lotObservation);}
+    catch(e){lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
@@ -97,8 +102,23 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  };
  await engine.init();
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();})();
-/* Décision sur le lot en observation : l'état du lot (ancres) vit dans le lot
- * lui-même, persisté avec lui, et disparaît avec lui. */
+/* 4.7.10 — la décision commande. La proposition du moteur n'est pas modifiée
+ * (l'événement « proposed » la garde telle quelle) : une NOUVELLE proposition,
+ * même identifiant, porte les rails de la décision et devient celle du lot.
+ * `Engine.apply()` garde tous ses contrôles : état ESV inchangé, écartement
+ * dans le contrat avant commande, relecture à 1 mm après. */
+function commandLot(proposal,lotObservation){
+ const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,before=engine.s.before?.rails;
+ const command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses});
+ lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{})};
+ lotObservation.applied=command.action==='lot';
+ if(command.action==='engine')return proposal;
+ engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,
+   anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
+ return engine.s.proposal;
+}
+/* Décision sur le lot : l'état du lot (ancres) vit dans le lot lui-même,
+ * persisté avec lui, et disparaît avec lui. */
 async function observeLot(shadow){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
  if(!L||!batch||S?.lot?.observe===false)return null;
@@ -109,8 +129,7 @@ async function observeLot(shadow){
  const t0=Date.now();
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
    visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
- if(decision.anchor){state.anchors.push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage});
-  if(state.anchors.length>(S?.lot?.maxAnchors??40))state.anchors.shift();}
+ if(decision.anchor)L.rememberAnchor(state.anchors,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage},S?.lot?.maxAnchors??40);
  return {...decision,applied:false,displayed:false,engineMs:Date.now()-t0};
 }
 async function openPanel(which='home'){if(!VIEWS.includes(which))throw Error('Vue inconnue.');
@@ -242,7 +261,11 @@ async function dispatch(m){await ready;const {action,args={}}=m;
     // candidate finie, y compris S1 à confiance non calibrée, n'est pas
     // repassée dans le seuil de confiance historique V4.6.
     startArgs.lowConfidence='attempt';
-  }
+    /* 4.7.10 — décision sur le lot, figée dans le scope à la création : elle
+     * commande seulement si le lot est créé avec « appliquer » (D-041, D-042). */
+    if(args?.lotDecision!==undefined&&!['apply','observe'].includes(args.lotDecision))throw Error('Décision sur le lot inconnue.');
+    startArgs.lotDecision=args?.lotDecision==='apply'?'apply':'observe';
+  }else delete startArgs.lotDecision;
   const tente=startArgs.lowConfidence==='attempt';
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
