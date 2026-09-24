@@ -95,3 +95,23 @@ l'état où elle a un sens.
   chantier 1) ; la ligne en sera le support naturel, chaque tronçon différé
   étant une cible de navigation.
 - La police Inter (48 Ko, licence SIL OFL, `fonts/`).
+
+## Intégration dans l'extension (chantier B, 24/09, D-045)
+
+Retenue par la direction ; intégrée au panneau (`panel.html`, `panel.css`,
+`panel.js`), rendus réels dans `integration/` (données fictives).
+
+**Intégré.** Langage visuel (palette claire, thème sombre selon le système,
+Inter embarquée dans `fonts/`, blocs sans cadres). Pilote : état en capitales,
+cut en grand, compteurs (posés, dont par la voie, différés, SKIP, repris à la
+main), politique effective sous les compteurs, **la voie** (une traverse par
+cut, dans l'ordre d'ouverture) et **le profil en long** (écart de chaque cut à
+la voie de ses voisins, bande de la garde 0–30 mm). Un bouton plein par état
+dans les trois vues, les autres en liens ; « Démarrer » et les bornes masqués
+pendant un lot ; « Archiver le résultat interrompu · cut N » ; SKIP explicite
+confirmé. Aucun identifiant, aucun comportement retiré ; tests
+`tests/panel-ligne.test.cjs`.
+
+**Pas encore.** La commande en trois étapes (émise, effet, serveur) ; la
+plage d'écartement dessinée dans l'Assisté ; le tiroir « Détails › » ; les
+pastilles d'état sur les onglets ; « Nouveau lot » en fin de lot.
