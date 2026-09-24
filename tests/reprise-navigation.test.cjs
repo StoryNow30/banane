@@ -80,5 +80,6 @@ test('adaptateur : cut validé ou statut inconnu restent en lecture seule',async
  assert.equal((await f.call('repriseGuard',identity,[],control)).reason,'NOT_OWN_DEFERRED_CUT');
  assert.equal((await f.call('repriseGuard',identity,[identity],null)).reason,'VALIDATION_STATE_UNKNOWN');
  assert.equal((await f.call('repriseGuard',identity,[identity],control,true)).reason,'RECONCILE_REQUIRED');
+ assert.equal((await f.call('repriseGuard',{...identity,frameId:'wrong-request-frame'},[identity],control)).reason,'TARGET_MISMATCH');
  assert.equal((await f.call('repriseGuard',identity,[{...identity,frameId:'old-frame'}],control)).reason,'FRAME_CHANGED_RECAPTURE_REQUIRED');
 });
