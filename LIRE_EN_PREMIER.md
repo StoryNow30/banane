@@ -24,7 +24,9 @@ Le mode Natif garde l'observation de la 4.7.7.
 1. Lance un lot Pilote GCV1 complet, comme d'habitude.
 2. À la fin du lot, exporte le **diagnostic GCV1** et le **corpus LiDAR** du lot.
 3. Puis **relis les mêmes cuts en Natif**, en validant chaque cut (Maj+Espace),
-   et exporte la session Natif.
+   **y compris ceux que le Pilote a posés et validés** : sans ta validation, un
+   cut appliqué ne peut pas être jugé, et sous 80 % de cuts appliqués jugés le
+   rapport déclare C4 non évaluable. Exporte ensuite la session Natif.
 
 **F2 — P2, le plancher humain : 30 cuts replacés en aveugle**, quelques jours
 après leur première pose :
