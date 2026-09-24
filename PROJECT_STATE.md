@@ -17,6 +17,11 @@ décalée (1500 mm, 60–200 mm des rails) ; 2 faux sur 11 jugés, dont 114 à
 207,6 mm (premier passage sans appui, KI-054) ; la 4.7.15 l'aurait différé et
 aurait placé 115 et 116 justes (`audit/cas-decalage-esv-p2-2026-09-24.md`).
 
+Garde d'écartement voisin mesurée (`audit/ecartement-voisin-2026-09-24.md`) :
+à 20 mm, le faux 7026 est retiré, +2 justes, aucun perdu ; l'aide au choix et
+la cible ne changent aucun cut. Activation en 4.7.16 proposée, en attente de
+décision. Cahier 4.9 ouvert en brouillon (D-049).
+
 ## État 4.7.14
 
 Relecture indépendante de la 4.7.12 (chantier 3) intégrée : un défaut

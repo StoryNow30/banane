@@ -39,7 +39,15 @@ Base (4.7.15) : 690 cuts décidés, 507 justes, **5 faux** — 398, 402, 983
 | Garde et aide au choix, 15 mm | 691 | +3 | −1 | **identique à la garde seule** : l'élimination n'a tranché aucun cut |
 | Garde et aide au choix, 12 mm | 688 | +2 | −1 | identique à la garde seule |
 
-<!-- CIBLE -->
+| Cible (mesure seulement) | 690 | 0 | 0 | **aucun cut changé** |
+
+La cible et l'aide au choix ne changent rien pour la même raison : sur tout le
+banc, le cas où elles agissent — plusieurs minima du moteur à 15 mm au plus de
+la prédiction, avec un écartement de référence — ne s'est jamais présenté. La
+fenêtre de ±15 mm autour de la voie a déjà levé l'ambiguïté ; il ne reste rien
+à trancher par l'écartement. La règle du cahier (écartement jamais cible) ne
+coûte donc aucun cut sur ces données, et continue de protéger la mesure de
+l'écartement, qui est une donnée livrée.
 
 ## Lecture
 
@@ -60,3 +68,11 @@ Base (4.7.15) : 690 cuts décidés, 507 justes, **5 faux** — 398, 402, 983
 4. Sur la partie 2, le faux de 207,6 mm du cut 114 est déjà évité par la
    4.7.15 (`chainMm`, KI-054) ; la garde est un filet de plus pour les cas sans
    appui de position.
+
+## Proposition
+
+**Activer la garde seule à 20 mm** (4.7.16), sur décision de la direction :
+retire le faux 7026, +2 justes, aucun juste perdu ; marge sur le surécartement
+(9047 change de 15 à 20 mm). Pas d'aide au choix, pas de cible. La décision
+consignerait `gaugeGuardMm` ; le rejeu des lots antérieurs resterait sans garde.
+
