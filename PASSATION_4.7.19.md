@@ -45,6 +45,11 @@ conservée par l'utilisateur (historique complet) ; ce fichier suffit pour repre
   des reliquats (1,7 cut par suite), pas des règles
   (`audit/lot-4718-p3-2026-09-25.md`).
 
+- Lot terrain 4.7.18 p9 (346 cuts, 0–8539, sans relecture) : 262 appliqués,
+  parité 346/346, +12 au rejeu 4.7.19 (passages à niveau) ; fin 8504–8539
+  perdue hors de la vue (pose ESV à 20 cm du rail gauche, KI-051/D-043)
+  (`audit/lot-4718-p9-2026-09-25.md`).
+
 ## En attente de l'utilisateur
 
 1. **Retour terrain de la 4.7.19** (partie neuve avec passages à niveau, puis
