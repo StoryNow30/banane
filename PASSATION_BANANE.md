@@ -1,5 +1,7 @@
 # Banane — passation complète
 
+> **Obsolète (état 4.5.7).** Pour reprendre le projet, lire `PASSATION_4.7.19.md`.
+
 **Destinataire : un assistant IA reprenant le projet à froid (ChatGPT ou autre).**
 **Date : 15 septembre 2026. État à la version 4.5.7.**
 **Auteur : Claude Opus 5, qui a mené les versions 4.5.0 à 4.5.7.**
