@@ -71,6 +71,8 @@ conservée par l'utilisateur (historique complet) ; ce fichier suffit pour repre
 - `tools/choice-anchor-study.cjs` : banc de la décision sur le lot (Natif + lots relus).
 - `tools/passage-niveau-scan.cjs` : repérage des passages à niveau, lecteur contre pose humaine.
 - Données : banane-data `collections/*/manifest.json` (archives + empreintes).
+- Fichiers de travail de la session précédente (bancs, balayage C5 à finir,
+  relevés, scripts) : banane-data `travail/2026-09-25_session-4.7.19/` (voir son README).
 
 ## Consommation
 
