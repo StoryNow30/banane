@@ -259,9 +259,14 @@
        }
      }
    }
-   guard();const data=window.BananeMerge3.merge(...captures);guard();
+   const M=window.BananeMerge3;guard();const data=M.merge(...captures);guard();
    data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
-   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length});return data;
+   /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
+    * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
+    * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
+   const nodes=data.nodes.length,compacted=M.compactNodes(data),bytes=M.messageBytes(data);
+   if(bytes>M.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
+   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes});return data;
  }
  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
   * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de

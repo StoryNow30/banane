@@ -666,15 +666,36 @@ on('native-discard',async()=>{
   * la reprise sans prétendre l'avoir validée, puis repart au cut suivant. */
  on('manual-completion',()=>api('manual-completion'));
   on('analyze',async()=>{await api('settings',{mode:'assisted'});return api('analyze');});
- on('dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
-on('assisted-dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
+ on('dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
+on('assisted-dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
+ /* 4.7.19 (KI-059) — EXPORTS DU PILOTE SANS MESSAGE GÉANT.
+  * Journal, bilan, diagnostic et corpus passaient en UN message du service
+  * worker, limité à 64 Mio : un long lot (65 Ko de journal par cut) l'aurait
+  * dépassé. Comme le Natif depuis la 4.5.3, le panneau lit événements et
+  * enregistrements directement dans IndexedDB (même origine, même base) ; le
+  * message ne porte plus que l'état. Le fichier est assemblé par morceaux,
+  * sans chaîne géante. Stockage illisible d'ici : ancien chemin par message. */
+ async function lireStore(nom){const s=store();if(!s)return null;try{return await s.all(nom);}catch{return null;}}
+ function blobJson(meta,arrays){const head=JSON.stringify(meta),parts=[head.slice(0,-1)];let first=head==='{}';
+   for(const [name,items] of Object.entries(arrays)){parts.push(`${first?'':','}${JSON.stringify(name)}:[`);first=false;
+     items.forEach((x,i)=>parts.push((i?',':'')+JSON.stringify(x)));parts.push(']');}
+   parts.push('}');return new Blob(parts,{type:'application/json'});}
+ async function bilanPilote(){const [meta,events,records]=await Promise.all([api('dataset-meta'),lireStore('events'),lireStore('records')]);
+   return events&&records?{...meta,events,records}:api('dataset');}
+ async function diagnosticPilote(){const X=globalThis.BananeGCV1Export,events=X?await lireStore('events'):null;
+   if(!events)return api('gcv1-diagnostic-export');
+   return X.buildDiagnostic({...await api('gcv1-export-meta'),events});}
+ async function planCorpusPilote(){const X=globalThis.BananeGCV1Export,s=store();
+   if(!X||!s)return api('gcv1-corpus-export-plan');
+   let presents;try{presents=new Set(await s.keys('clouds'));}catch{return api('gcv1-corpus-export-plan');}
+   return X.buildCorpusPlan({diagnostic:await diagnosticPilote(),getCloud:async id=>presents.has(id)?{}:null});}
  on('gcv1-diagnostic-export',async()=>{
-   const diagnostic=await api('gcv1-diagnostic-export');
+   const diagnostic=await diagnosticPilote();
    saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`banane-gcv1-diagnostic-${Date.now()}.json`);
    note(`Diagnostic GCV1 exporté : ${diagnostic.observationCount} observation(s).`);
  });
  on('gcv1-corpus-export',async()=>{
-   const plan=await api('gcv1-corpus-export-plan');
+   const plan=await planCorpusPilote();
    if(plan.cloudIds.length)await dataset(plan,'banane-gcv1-corpus',{compact:false});
    else saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`banane-gcv1-corpus-${Date.now()}.json`);
    if(plan.missingCaptureIds.length)note(`Corpus GCV1 exporté ; ${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) sont absentes du store.`,true);
@@ -713,7 +734,10 @@ on('assisted-dataset',async()=>dataset(await api('dataset'),'banane-bilan-v4'));
      ? 'Cerveau activé. Chaque proposition qu’il touche est marquée dans l’export.'
      : 'Cerveau désactivé. Le moteur gelé propose seul.');
  });
- on('journal',async()=>saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),`banane-journal-v4-${Date.now()}.json`));
+ on('journal',async()=>{const name=`banane-journal-v4-${Date.now()}.json`;
+   const [meta,events,records]=await Promise.all([api('journal-meta'),lireStore('events'),lireStore('records')]);
+   if(events&&records){saveBlob(blobJson(meta,{events,records}),name);note(`Journal exporté : ${events.length} événements, ${records.length} enregistrements.`);return;}
+   saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);});
  for(const id of ['start','end','confidence'])if($(id))$(id).oninput=()=>edited.add(id);
  appliquerVue();
  void renderCerveau();

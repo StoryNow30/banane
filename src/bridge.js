@@ -8,6 +8,19 @@
   catch{if(generation===launcherGeneration)setLauncherVisible(false);}}
  const passive=new Set(['ping','state','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish']);
  function diagnostic(p){return {requestId:p.id,action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
+ /* 4.7.19 (KI-059) : un message chrome.runtime est limité à 64 Mio. Une réponse
+  * plus grosse échouait ici, dans la page, sans que le service worker reçoive
+  * rien : le lot restait suspendu. On mesure avant d'envoyer, et un envoi qui
+  * échoue quand même est remplacé par une erreur courte et explicite. Pour une
+  * capture, l'erreur est une « Lecture LiDAR instable » : le lot se met en
+  * pause reprenable, sans commande envoyée. */
+ const MESSAGE_BUDGET=56*1024*1024;
+ function tooBig(action,detail){return (action==='capture'?'Lecture LiDAR instable : ':'')+
+   `réponse de l’adaptateur trop grosse pour un message Chrome (${action}, ${detail} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':'');}
+ function reply(p,payload){
+   let size=0;try{size=JSON.stringify(payload).length;}catch{size=Infinity;}
+   if(size>MESSAGE_BUDGET)payload={error:tooBig(p.action,Number.isFinite(size)?Math.round(size/1048576)+' Mo':'taille illisible'),diagnostic:payload.diagnostic};
+   try{p.respond(payload);}catch(e){p.respond({error:tooBig(p.action,e.message),diagnostic:payload.diagnostic});}}
  window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin||e.data?.channel!==channel)return;
    if(e.data.kind==='banane4:manual-phase'){
      const gate=window.__banane4InputGate;if(gate){gate.phase=e.data.phase;if(e.data.phase==='FINISHED')gate.active=false;}return;
@@ -32,7 +45,7 @@
    if(e.data.kind==='banane3:result'){pending.delete(e.data.id);clearTimeout(p.timer);
      if(p.action==='manualFinish'||p.action==='manualStart'&&e.data.error){if(window.__banane4InputGate)window.__banane4InputGate.active=false;}
      if(['nativePause','nativeFinish'].includes(p.action)||['nativeStart','nativeResume'].includes(p.action)&&e.data.error){if(window.__banane4NativeGate)window.__banane4NativeGate.active=false;}
-     p.respond({...(e.data.error?{error:e.data.error}:{result:e.data.result}),diagnostic:diagnostic(p)});}});
+     reply(p,{...(e.data.error?{error:e.data.error}:{result:e.data.result}),diagnostic:diagnostic(p)});}});
  chrome.runtime.onMessage.addListener((m,sender,respond)=>{if(sender.id!==chrome.runtime.id)return;
    if(m.kind==='launcher-visibility'){
      // A delayed push may describe an earlier window set. Keep the pill absent

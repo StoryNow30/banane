@@ -14,9 +14,16 @@ function load(files){const ctx={console,setTimeout,clearTimeout};ctx.self=ctx;ct
  * fixture (écartement du choix à 20,6 mm de celui des ancres) ; les essais de
  * traduction et d'ordre de chargement la coupent pour garder un choix à
  * traduire. `lot-decision-voie.test.cjs` garde les deux cas visibles. */
+/* La vérité du fixture (pose du moteur sur la pose de base) est calculée une
+ * fois, par le module Node : sous `vm`, la même science prend 3,6 s au lieu de
+ * 1,5 s, et le fichier d'essai dépassait les 10 s sur une machine chargée.
+ * Mêmes deltas au bit près (vérifié le 25/09) ; seule la décision testée
+ * passe par les globales du service worker. */
+let truthScience=null;
+const fixtureScience=capture=>truthScience||(truthScience=require('../../src/gcv1-shadow.js').scientificProposeBoth(capture(base.rails)));
 function build(L,Shadow,options={gaugeGuardMm:null}){
   const capture=rails=>({identity:{part:23,cut:105,frameId:'f'},rails,pointsSceneRelative:base.pointsSceneRelative,visibleByClipBoxes:base.pointsSceneRelative.map(()=>true)});
-  const s0=Shadow.scientificProposeBoth(capture(base.rails));
+  const s0=fixtureScience(capture);
   const truth=Object.fromEntries(SIDES.map(side=>{const r=base.rails[side],P=r.profileLocalToSceneRelative,w=K.C.point(P,s0.rails[side].next.delta),o=K.C.point(P,[0,0,0]);
     return [side,O.translated(r,w.map((v,i)=>v-o[i]))];}));
   const shifted=Object.fromEntries(SIDES.map(side=>{const r=truth[side],P=r.profileLocalToSceneRelative,o=K.C.point(r.sceneRelativeToProfileLocal,r.positionSceneRelative);

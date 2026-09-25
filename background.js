@@ -44,7 +44,11 @@ async function syncLauncher(){const state=launcherState(),tabs=await chrome.tabs
  await Promise.allSettled(tabs.filter(tab=>esvURL(tab.url)).map(tab=>chrome.tabs.sendMessage(tab.id,{kind:'launcher-visibility',visible:state.visible})));return state;}
 async function call(action,...args){if(selectedTab===null)throw Error('Sélectionne un onglet ESV.');
  const tab=await chrome.tabs.get(selectedTab);if(!esvURL(tab.url))throw Error('L’onglet sélectionné n’est plus une page ESV autorisée.');
- const reply=await chrome.tabs.sendMessage(selectedTab,{kind:'page-command',action,args});
+ /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
+  * est dite en clair ; pour une capture, c'est une lecture à reprendre. */
+ const reply=await chrome.tabs.sendMessage(selectedTab,{kind:'page-command',action,args}).catch(e=>{
+   if(!/maximum allowed size/i.test(e?.message||''))throw e;
+   throw Error((action==='capture'?'Lecture LiDAR instable : ':'')+`réponse de l’adaptateur trop grosse pour un message Chrome (${action} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':''));});
  if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null});
  if(reply?.error)throw Error(reply.error);
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
@@ -199,6 +203,17 @@ chrome.runtime.onConnect.addListener(port=>{
 });
 chrome.windows.onRemoved?.addListener(id=>{panelWindows.delete(id);for(const [port,info] of panelPorts)if(info.windowId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
 chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(info.tabId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
+/* 4.7.19 (KI-059) — LA VUE ET LES EXPORTS TIENNENT DANS UN MESSAGE.
+ * Un message chrome.runtime est limité à 64 Mio. `records` et `incomplete`
+ * grandissent d'un enregistrement par cut (~9 Ko) et sont déjà dans le
+ * stockage : le panneau, qui ne les affiche pas, ne les reçoit plus à chaque
+ * rafraîchissement ; leur nombre reste donné. Les exports (journal, bilan,
+ * diagnostic, corpus) lisent événements et enregistrements directement dans
+ * IndexedDB, comme le Natif depuis la 4.5.3 : le message ne porte plus que
+ * l'état. */
+function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Object.hasOwn(v,'collection')||!Object.hasOwn(v,'batch'))return v;
+ const {records,incomplete,...rest}=v;return {...rest,recordsCount:records.length,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
+function exportState(){return panelView(engine.view());}
 function pollCurrent(){
  if(pollPromise||engine.busy||engine.task||manual?.active()||native?.active()||selectedTab===null)return;
  pollPromise=engine.observe().then(()=>{engine.s.connection={status:'ready',observedAt:new Date().toISOString()};})
@@ -217,7 +232,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
   const ping=await call('ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Banane ${VERSION}.`);
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
- if(action==='view'){pollCurrent();const v=engine.view();return {...v,assistGauge:assistGauge(v)};}
+ if(action==='view'){pollCurrent();const v=engine.view();return {...panelView(v),assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  if(action==='native-start'){engine.assertBatchContextFree('démarrer le mode Natif');return native.start();}
  if(action==='native-pause')return native.pause();
@@ -252,6 +267,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  }
  // Exports GCV1 strictement manuels : ils relisent les événements et les
  // captures déjà persistés. Aucun calcul géométrique ni appel adaptateur.
+ if(action==='gcv1-export-meta')return {version:VERSION,sessionId:engine.s.sessionId,state:exportState()};
  if(action==='gcv1-diagnostic-export')return BananeGCV1Export.buildDiagnostic({version:VERSION,
    sessionId:engine.s.sessionId,state:engine.view(),events:await store.all('events')});
  if(action==='gcv1-corpus-export-plan'){
@@ -338,6 +354,11 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
   await engine.startBatch(startArgs);return engine.view();}
  if(action==='cloud')return store.getCloud(args.id);
+ /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
+  * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque
+  * à l'état, rangé ailleurs dans le même fichier. */
+ if(action==='journal-meta')return {format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary()};
+ if(action==='dataset-meta')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
  if(action==='journal')return {format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary()};
  if(action==='dataset')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
  return engine.locked(async()=>{
@@ -388,5 +409,9 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(m.kind==='open-panel'){openPanel().then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;}
  // Le fragment d'URL porte la vue affichée ; seule l'origine de la page compte.
  if(m.kind!=='panel'||(sender.url||'').split('#')[0]!==chrome.runtime.getURL(PANEL))return;
- dispatch(m).then(result=>respond({result}),async e=>{if(engine){engine.s.notice=e.message;await engine.save().catch(()=>{});}respond({error:e.message});});return true;
+ /* 4.7.19 (KI-059) : une réponse trop grosse pour Chrome devient une erreur dite
+  * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
+ dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
+   catch(e){respond({error:`Réponse de Banane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
+  async e=>{if(engine){engine.s.notice=e.message;await engine.save().catch(()=>{});}respond({error:e.message});});return true;
 });

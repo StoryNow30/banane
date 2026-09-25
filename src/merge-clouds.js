@@ -23,5 +23,33 @@
   out.scope.completeLoadedRoi=out.status==='complete-loaded-roi';out.warnings=[...new Set([...(a.warnings||[]),...(b.warnings||[]),'Union des vues G/D ; les nœuds communs sont lus deux fois, les coordonnées de points identiques une seule fois.'])];
   return out;
  }
- return {merge};
+ /* 4.7.19 (KI-059) — UNE CAPTURE DOIT TENIR DANS UN MESSAGE CHROME.
+  *
+  * La capture passe de la page ESV au service worker par chrome.runtime, dont
+  * un message est limité à 64 Mio (« Message exceeded maximum allowed size of
+  * 64MiB »). Terrain du 25/09, partie 3, cut 8209 : lot suspendu, adaptateur
+  * « sans réponse ». Sur 1 500 captures relues, une capture pèse 1,6 Mo au
+  * plus (52 nœuds, 13 728 points) ; mais chaque nœud LiDAR chargé dans la vue
+  * y laisse un rapport d'environ 12 Ko (échantillons de diagnostic), même sans
+  * aucun point retenu. Une vue éloignée, qui charge des milliers de nœuds,
+  * dépasse la limite.
+  *
+  * `compactNodes` : au-delà de `FULL_NODES` nœuds, un nœud sans point retenu
+  * garde son identité et ses comptes, pas ses échantillons. Les indices de
+  * `pointSources` ne bougent pas. Une capture ordinaire n'est pas touchée.
+  * `messageBytes` : taille du message JSON (caractères ; le texte est ASCII
+  * hors avertissements). Au-delà de `MESSAGE_BUDGET`, l'adaptateur refuse la
+  * capture par une erreur explicite, reprenable, au lieu d'un envoi qui échoue
+  * sans que le service worker reçoive rien. */
+ const FULL_NODES=64,MESSAGE_LIMIT=64*1024*1024,MESSAGE_BUDGET=48*1024*1024;
+ function compactNodes(data,fullNodes=FULL_NODES){
+  if(!Array.isArray(data?.nodes)||data.nodes.length<=fullNodes||!data.pointsSceneRelative?.length)return 0;
+  let compacted=0;
+  data.nodes=data.nodes.map(n=>{if(n.retained>0)return n;compacted++;
+   return {id:n.id,cloudIndex:n.cloudIndex,source:n.source,inspection:n.inspection,inspected:n.inspected,retained:0,reportCompacted:true};});
+  (data.warnings||=[]).push(`${compacted} nœuds visibles sans point retenu sur ${data.nodes.length} : rapports réduits à leurs comptes (message Chrome limité à 64 Mo).`);
+  return compacted;
+ }
+ function messageBytes(value){try{return JSON.stringify(value).length;}catch{return Infinity;}}
+ return {merge,compactNodes,messageBytes,FULL_NODES,MESSAGE_LIMIT,MESSAGE_BUDGET};
 });
