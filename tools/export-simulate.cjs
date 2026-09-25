@@ -7,7 +7,11 @@
  * découpe et le même compactage sur un export complet, afin de vérifier la
  * chaîne sur données réelles : segmentation -> fusion -> rejeu du banc.
  *
- *   node tools/export-simulate.cjs --input SESSION.json --out-dir DOSSIER [--segment-bytes 32000000]
+ *   node tools/export-simulate.cjs --input SESSION.json --out-dir DOSSIER [--segment-bytes 32000000] [--avant-ki060]
+ *
+ * `--avant-ki060` reproduit l'écriture des versions ≤ 4.7.19 (le nuage qui ouvre
+ * un segment gardait les références du dictionnaire précédent), pour les essais
+ * de la réparation à la lecture.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -15,7 +19,7 @@ const X = require('../src/native-export.js');
 
 const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
-const input = opt('--input'), outDir = opt('--out-dir'), segmentBytes = Number(opt('--segment-bytes', 48 * 1024 * 1024));
+const input = opt('--input'), outDir = opt('--out-dir'), segmentBytes = Number(opt('--segment-bytes', 48 * 1024 * 1024)), legacy = argv.includes('--avant-ki060');
 if (!input || !outDir) { console.error('Usage : --input SESSION.json --out-dir DOSSIER [--segment-bytes N]'); process.exit(1); }
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -37,7 +41,9 @@ const openSegment = () => {
 const closeSegment = () => {
   if (!inSegment) return;
   segment++;
-  const info = ',"segment":' + JSON.stringify({ index: segment, stamp, objects: inSegment, format: 'banane-native-export-segment-v1' });
+  metadata.exportTrace = { cloudObjects: written.reduce((n, w) => n + w.objects, 0) + inSegment, segmentIndex: segment, segmentObjects: inSegment, cumulative: true };
+  head = JSON.stringify(X.foldRefs(metadata, interner)).slice(0, -1);
+  const info = ',"segment":' + JSON.stringify({ index: segment, stamp, objects: inSegment, format: 'banane-native-export-segment-v1', ...(legacy ? {} : { selfContained: true }) });
   const dict = ',"dictionaries":' + JSON.stringify(interner.dictionaries);
   const fmt = ',"format":"' + X.FORMAT + '","compactedFrom":"' + (metadata.format || 'banane-native-session-v2') + '"';
   const name = 'banane-native-v4-' + stamp + '-seg' + String(segment).padStart(2, '0') + '.json';
@@ -51,10 +57,14 @@ openSegment();
 const tous = clouds || [];
 for (let i = 0; i < tous.length; i++) {
   const cloud = tous[i];
-  const text = JSON.stringify(X.compactCloud(cloud, interner, {}));
+  let text = JSON.stringify(X.compactCloud(cloud, interner, {}));
   const restant = tous.length - i;
   if (inSegment >= MIN_OBJECTS_PER_SEGMENT && restant >= MIN_OBJECTS_PER_SEGMENT &&
-      fileBytes() + text.length + SEGMENT_RESERVE_BYTES > segmentBytes) { closeSegment(); openSegment(); }
+      fileBytes() + text.length + SEGMENT_RESERVE_BYTES > segmentBytes) {
+    closeSegment(); openSegment();
+    // KI-060 : comme panel.js, le nuage qui ouvre le segment est compacté à nouveau.
+    if (!legacy) text = JSON.stringify(X.compactCloud(cloud, interner, {}));
+  }
   if (inSegment) parts.push(',');
   parts.push(text); bytes += text.length + 1; inSegment++;
 }

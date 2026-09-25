@@ -8,7 +8,7 @@ const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('../fixtures.cjs');
 function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={}}={}){let onMessage;
  store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];
- const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../../src/engine.js'),BananeManualSession4:require('../../src/manual-session.js'),
+ const ctx={URL,console,setTimeout,clearTimeout,importScripts:()=>{},BananeEngine3:require('../../src/engine.js'),BananeManualSession4:require('../../src/manual-session.js'),
   BananeNativeSession4:require('../../src/native-session.js'),BananeGCV1Export:require('../../src/gcv1-export.js'),BananeStorage3:class{constructor(){return store;}},
   BananeGeometryBrain:require('../../src/geometry-brain.js'),BananeGCV1Shadow:shadow,...globals,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:()=>{}}},

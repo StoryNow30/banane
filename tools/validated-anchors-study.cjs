@@ -44,23 +44,9 @@ function validatedNeighbours(lot,analysed,{stables=false}={}){
  * repère du rail du cut décidé. On retient le plus grand groupe cohérent ; moins
  * de `minInliers` voisins cohérents : aucun appui validé pour ce cut. Un voisin
  * faux et isolé (pose jamais validée, SKIP) est ainsi écarté sans lire l'avenir. */
-const localMm=(rail,p)=>{const M=rail.sceneRelativeToProfileLocal,a=C.point(M,p),o=C.point(M,rail.positionSceneRelative);return [0,1,2].map(i=>(a[i]-o[i])*1000);};
-function consistentAnchors(identity,rails,validated,{window=5,tolerance=8,minInliers=3}={}){
-  const cands=validated.filter(a=>a.identity.part===identity.part&&(a.identity.frameId??null)===(identity.frameId??null)&&
-    a.identity.cut!==identity.cut&&Math.abs(a.identity.cut-identity.cut)<=window);
-  if(cands.length<minInliers)return [];
-  const pts=cands.map(a=>Object.fromEntries(SIDES.map(s=>[s,localMm(rails[s],a.positions[s])])));
-  let best=[],bestResidual=Infinity;
-  for(let i=0;i<cands.length;i++)for(let j=i+1;j<cands.length;j++){
-    const inliers=[];let residual=0;
-    for(let k=0;k<cands.length;k++){let ok=true,r=0;
-      for(const s of SIDES)for(const axis of [1,2]){const [a,b,c]=[pts[i][s],pts[j][s],pts[k][s]],dx=b[0]-a[0];
-        const at=Math.abs(dx)<1e-9?a[axis]:a[axis]+(b[axis]-a[axis])*(c[0]-a[0])/dx,e=Math.abs(c[axis]-at);r+=e;if(e>tolerance)ok=false;}
-      if(ok){inliers.push(k);residual+=r;}}
-    if(inliers.length>best.length||inliers.length===best.length&&residual<bestResidual){best=inliers;bestResidual=residual;}
-  }
-  return best.length>=minInliers?best.map(k=>cands[k]):[];
-}
+/* La garde est celle du runtime depuis la 4.7.20 (`consistentValidated`, D-054). */
+const consistentAnchors=(identity,rails,validated,{window=5,tolerance=8,minInliers=3}={})=>
+  L.consistentValidated(identity,rails,validated,{validatedWindow:window,validatedToleranceMm:tolerance,validatedMinInliers:minInliers});
 function study(lot,{gap=3,stables=false,guard=false,tolerance=8,window=5}={}){
   /* Décision sur le lot lue dans le rejeu (lots 4.7.8 : KI-048). */
   const base=A.report([lot],{replay:true,preferReplay:true}),validated=validatedNeighbours(lot,base.lots[0],{stables});

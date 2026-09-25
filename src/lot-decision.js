@@ -65,6 +65,7 @@
   * après le cut : rien ne change. */
  const DEFAULTS=Object.freeze({version:'lot-decision-v6',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,anchorRule:'placed',
    crossing:true,crossingVoieMm:10,framed:true,frameGap:8,frameAnchors:3,
+   validatedWindow:5,validatedToleranceMm:8,validatedMinInliers:3,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -216,11 +217,43 @@
    return {...rest,stage:'crossing',deferredReason:reason,anchorsUsed:pred.cuts,gaugeMm:r1(pair.predictedMm),fromPredictionMm:r1(dev),positions,anchor:true,
      ...(guardDeferred?{guardDeferred:true}:{})};
  }
- function decideCut({capture,science,anchors,Shadow,options={}}){
+ /* 4.7.20 — §14 I AMENDÉ (D-054, direction, 25/09) : des cuts VOISINS validés par
+  * l'opérateur peuvent servir d'appuis à la voie, jamais de pose du cut décidé ni
+  * d'écartement cible. Garde de cohérence (étude du 24/09,
+  * `audit/appuis-valides-2026-09-24.md`) : un voisin n'est gardé que s'il
+  * s'aligne, sur les DEUX rails, avec au moins deux autres voisins de la fenêtre
+  * (±`validatedWindow` cuts) : écart latéral et vertical à la droite des autres
+  * ≤ `validatedToleranceMm`, dans le repère du rail du cut décidé ; on retient le
+  * plus grand groupe cohérent ; moins de `validatedMinInliers` : aucun. Mesuré sur
+  * la partie 19 : 57 % → 79 %, 0 faux sur 7 jugés ; le voisin faux (9219, SKIP à
+  * 40–55 mm) est écarté par sa seule incohérence. */
+ const localMm=(rail,p)=>{const M=rail.sceneRelativeToProfileLocal,a=C.point(M,p),o=C.point(M,rail.positionSceneRelative);return [0,1,2].map(i=>(a[i]-o[i])*1000);};
+ function consistentValidated(identity,rails,validated,options={}){
+   const cfg={...DEFAULTS,...options};
+   const cands=(validated||[]).filter(a=>a?.identity?.part===identity.part&&(a.identity.frameId??null)===(identity.frameId??null)&&
+     a.identity.cut!==identity.cut&&Math.abs(a.identity.cut-identity.cut)<=cfg.validatedWindow&&SIDES.every(s=>Array.isArray(a.positions?.[s])));
+   if(cands.length<cfg.validatedMinInliers)return [];
+   const pts=cands.map(a=>Object.fromEntries(SIDES.map(s=>[s,localMm(rails[s],a.positions[s])])));
+   let best=[],bestResidual=Infinity;
+   for(let i=0;i<cands.length;i++)for(let j=i+1;j<cands.length;j++){
+     const inliers=[];let residual=0;
+     for(let k=0;k<cands.length;k++){let ok=true,r=0;
+       for(const s of SIDES)for(const axis of [1,2]){const [a,b,c]=[pts[i][s],pts[j][s],pts[k][s]],dx=b[0]-a[0];
+         const at=Math.abs(dx)<1e-9?a[axis]:a[axis]+(b[axis]-a[axis])*(c[0]-a[0])/dx,e=Math.abs(c[axis]-at);r+=e;if(e>cfg.validatedToleranceMm)ok=false;}
+       if(ok){inliers.push(k);residual+=r;}}
+     if(inliers.length>best.length||inliers.length===best.length&&residual<bestResidual){best=inliers;bestResidual=residual;}
+   }
+   return best.length>=cfg.validatedMinInliers?best.map(k=>cands[k]):[];
+ }
+ function decideCut({capture,science,anchors,validated,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
    const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop,anchorRule:cfg.anchorRule,
      crossing:!!cfg.crossing,framed:!!cfg.framed};
+   /* §14 I amendé (D-054) : voisins validés cohérents, en tête des appuis. */
+   if(validated?.length){const kept=consistentValidated(identity,rails,validated,cfg);
+     base.validatedAnchors=kept.map(a=>a.identity.cut);
+     if(kept.length)anchors=[...kept.map(a=>({identity:a.identity,positions:a.positions,stage:'validated'})),...(anchors||[])];}
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
    const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;
@@ -422,5 +455,5 @@
      if(!view.inView)return {...fallback('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,framedNeighbours,predictFramed,fitFramed,predictionAnchors,crossingOf,pairGapMm,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,commandsPositions,holdAnchor,promoteAnchors,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
+ return {DEFAULTS,consistentValidated,localMinima,gridOf,minimalCapture,positionOf,neighbours,framedNeighbours,predictFramed,fitFramed,predictionAnchors,crossingOf,pairGapMm,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,commandsPositions,holdAnchor,promoteAnchors,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
 });

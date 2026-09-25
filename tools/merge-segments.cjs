@@ -45,9 +45,15 @@ function mergeFiles(files) {
   let base = null, baseScore = -1, totalPoints = 0;
   const trace = [];
 
-  // Un segment à la fois : relu, fusionné, libéré.
-  for (const { file, seg } of loaded) {
-    const full = X.expand(JSON.parse(fs.readFileSync(file)));
+  // Un segment à la fois : relu, fusionné, libéré. Seuls les dictionnaires du
+  // segment précédent du même export sont gardés, pour KI-060.
+  let previous = null, repairs = 0;
+  for (const { file, seg, stampKey } of loaded) {
+    const raw = JSON.parse(fs.readFileSync(file));
+    const prev = previous && previous.stampKey === stampKey && previous.index === (seg.index || 0) - 1 ? previous.dictionaries : null;
+    const full = X.expand(raw, { previousDictionaries: prev });
+    if (full.segmentRepair) repairs++;
+    previous = raw.dictionaries ? { stampKey, index: seg.index || 0, dictionaries: raw.dictionaries } : null;
 
     // Nuages : incrémentaux, dédupliqués de façon non destructive.
     let added = 0, dup = 0;
@@ -69,11 +75,11 @@ function mergeFiles(files) {
     const score = (full.session?.cloudIds || full.declaredCloudIds || []).length;
     if (score >= baseScore) {
       baseScore = score;
-      const { clouds: _c, segment: _s, records: _r, events: _e, ...rest } = full;
+      const { clouds: _c, segment: _s, records: _r, events: _e, segmentRepair: _k, ...rest } = full;
       base = rest;
     }
 
-    trace.push({ file: path.basename(file), stamp: seg.stamp ?? null, index: seg.index ?? null, objets: added, doublons: dup, records: (full.records || []).length, events: (full.events || []).length });
+    trace.push({ file: path.basename(file), stamp: seg.stamp ?? null, index: seg.index ?? null, objets: added, doublons: dup, records: (full.records || []).length, events: (full.events || []).length, ...(full.segmentRepair ? { repair: full.segmentRepair.action } : {}) });
   }
 
   const mergedRecords = [...records.values()];
@@ -87,6 +93,7 @@ function mergeFiles(files) {
       records: mergedRecords.length, events: mergedEvents.length,
       declaredCloudIds: declared.size, missingCloudIds: missing.length,
       allDeclaredPresent: missing.length === 0,
+      ki060Repairs: repairs,
       note: 'Nuages incrémentaux dédupliqués ; records et événements en union sur tous les segments ; état de session le plus avancé retenu.',
     },
   };

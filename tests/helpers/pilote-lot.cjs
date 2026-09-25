@@ -11,8 +11,10 @@ class EngineGCV1 extends Engine{async analyze(...a){const p=await super.analyze(
   for(const s of SIDES)if(p?.rails?.[s])p.rails[s].geometryEngine='geometry-candidate-v1';return p;}}
 /* `decision` : module de décision injecté (réel, espion ou factice). `start`
  * seulement : l'essai conduit lui-même la suite (`b.settle()`). */
-async function pilote(decision,{start=100,end=101,policy='defer',lotDecision='apply'}={}){
-  const b=background({shadow:gcv1Shadow(science),globals:{BananeLotDecision:decision,BananeSettings:require('../../src/settings.js'),BananeCore3:K,BananeEngine3:{Engine:EngineGCV1}}});
+async function pilote(decision,{start=100,end=101,policy='defer',lotDecision='apply',settings=require('../../src/settings.js'),esv=null}={}){
+  const b=background({shadow:gcv1Shadow(science),globals:{BananeLotDecision:decision,BananeSettings:settings,BananeCore3:K,BananeEngine3:{Engine:EngineGCV1}}});
+  // `esv` : réglage de l'ESV simulé avant le lot (navigation, silence…).
+  if(esv)esv(b.adapter);
   const capture=b.adapter.capture.bind(b.adapter),captured=[];
   b.adapter.capture=async(...a)=>{const c=withCameras(await capture(...a));captured.push({cut:c.identity.cut,rails:K.clone(c.rails)});return c;};
   const applied=[],apply=b.adapter.apply.bind(b.adapter);

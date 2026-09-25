@@ -435,7 +435,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
        segmentIndex:startIndex+segment,segmentObjects:inSegment,
        cumulative:true,allRequestedObjectsPresent:exportTrace.cloudObjects===cloudIds.length};
      head=foldMeta();
-     const info=`,"segment":${JSON.stringify({index:startIndex+segment,stamp,objects:inSegment,format:'banane-native-export-segment-v1'})}`;
+     const info=`,"segment":${JSON.stringify({index:startIndex+segment,stamp,objects:inSegment,format:'banane-native-export-segment-v1',...(X?{selfContained:true}:{})})}`;
      const dict=X?`,"dictionaries":${JSON.stringify(interner.dictionaries)}`:'';
      const fmt=X?`,"format":"${X.FORMAT}","compactedFrom":"${metadata.format||'banane-native-session-v2'}"`:'';
      const blob=new Blob([head,info,fmt,',"clouds":[',...parts,']',dict,'}'],{type:'application/json'});
@@ -451,8 +451,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
        cloud.storageTrace={...(cloud.storageTrace||{}),pointsSaved:points,pointsExported:points};exportTrace.chunks++;exportTrace.pointsExported+=points;}
      if(cloud.format==='banane-native-lidar-capture-v2'){cloud.trace={...(cloud.trace||{}),pointsExported:cloud.trace?.pointsSaved||0};
        for(const side of ['left','right'])if(cloud.trace.perRail?.[side])cloud.trace.perRail[side].pointsExported=cloud.trace.perRail[side].pointsSaved||0;exportTrace.captureSummaries++;}
-     const text=JSON.stringify(X?X.compactCloud(cloud,interner,{}):cloud);
-     cloud=null; // relâché immédiatement : seul le texte reste en mémoire
+     let text=JSON.stringify(X?X.compactCloud(cloud,interner,{}):cloud);
      /* Deux planchers, pour la même raison : chaque segment répète les
       * métadonnées et reconstruit son dictionnaire. Terrain du 15/09 : un
       * segment de queue isolait 1,8 Mo de nuages au prix de 13,4 Mo de surcoût.
@@ -461,7 +460,12 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
       * par la queue non coupée, très en dessous de la limite de téléchargement. */
      const restant=cloudIds.length-i;
      if(inSegment>=MIN_OBJECTS_PER_SEGMENT&&restant>=MIN_OBJECTS_PER_SEGMENT&&
-        fileBytes()+text.length+SEGMENT_RESERVE_BYTES>segmentBytes){closeSegment();openSegment();}
+        fileBytes()+text.length+SEGMENT_RESERVE_BYTES>segmentBytes){closeSegment();openSegment();
+       /* KI-060 (4.7.20) : ce nuage ouvre le segment suivant ; il est compacté à
+        * nouveau avec le dictionnaire de ce segment, sinon ses références visent
+        * celui du segment qu'on vient de fermer. */
+       if(X)text=JSON.stringify(X.compactCloud(cloud,interner,{}));}
+     cloud=null; // relâché : seul le texte reste en mémoire
      if(inSegment)parts.push(',');
      parts.push(text);bytes+=text.length+1;inSegment++;exportTrace.cloudObjects++;acked.push(cloudIds[i]);
    }

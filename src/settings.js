@@ -112,6 +112,10 @@
     /* Ancres gardées en mémoire du lot : largement plus que les 3 numéros de
      * cut de voisinage, sans faire grossir l'état persisté. */
     maxAnchors: 40,
+    /* 4.7.20 (KI-061) : lecture d'état d'ESV restée sans réponse juste après une
+     * navigation : nouvelles lectures, à cet intervalle, avant de conclure. */
+    stateRetries: 2,
+    stateRetryMs: 3000,
   });
 
   const exportSettings = Object.freeze({

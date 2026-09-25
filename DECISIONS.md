@@ -1,5 +1,32 @@
 # Décisions techniques
 
+## D-054 - §14 I amendé : voisins validés comme appuis, sous garde de cohérence
+
+**25 septembre 2026, direction.** Question ouverte par l'amendement n°13
+(§13.3) : dans un reliquat, les cuts isolés n'ont d'appui que dans des cuts
+validés à la main. Réponse de la direction : **validé**.
+
+- Des cuts **voisins** validés par l'opérateur peuvent servir d'appuis à la
+  voie de la décision sur le lot. Jamais de pose du cut décidé, jamais
+  d'écartement cible : le contrat [1405, 1470] mm reste une admissibilité.
+- **Garde de cohérence** obligatoire : un voisin n'est gardé que s'il s'aligne,
+  sur les deux rails, avec au moins deux autres voisins de la fenêtre (±5 cuts),
+  à 8 mm (latéral et vertical, repère du rail du cut décidé) ; moins de trois
+  voisins cohérents : aucun appui validé. Mesuré sur la partie 19 : 57 % →
+  79 %, 0 faux sur 7 jugés ; le voisin faux (9219, SKIP à 40–55 mm) est écarté
+  (`audit/appuis-valides-2026-09-24.md`).
+- **4.7.20** : la garde et l'entrée « voisins validés » sont dans
+  `src/lot-decision.js` (`consistentValidated`, `decideCut({validated})`),
+  partagées par le banc et le Pilote ; décision consignée (`validatedAnchors`).
+  **Pas encore de source sur le terrain** : le Pilote ne voit que le cut
+  affiché, et ESV ne navigue que vers le « cut non validé suivant ». Lire un
+  voisin validé demande une navigation vers un cut donné, ou des poses validées
+  enregistrées par Banane dans la même page. À instruire avec l'opérateur
+  (cahier, amendement n°14).
+
+Parties 6 et 9 (25/09) : dans un reliquat, c'est le seul levier notable ; la
+reprise dans la même page n'ajoute que 3 cuts en partie 6.
+
 ## D-053 - Passage à niveau en dernier recours, voie encadrée, reprise des différés, arrêt au dernier cut (4.7.19)
 
 **25 septembre 2026.** Demande de l'opérateur après les deux lots 4.7.18

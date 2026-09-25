@@ -184,14 +184,45 @@
     };
   }
 
-  function expand(doc) {
+  /* KI-060 (4.7.20) — jusqu'à la 4.7.19, le nuage qui déclenchait la coupe d'un
+   * segment était compacté avec le dictionnaire du segment EN COURS, puis écrit
+   * en tête du segment SUIVANT, dont le dictionnaire est neuf : ses références
+   * visent le dictionnaire du segment précédent. Lu avec le sien, il échoue
+   * (« référence introuvable ») ou, pire, prend les entrées d'un autre nuage
+   * (terrain du 25/09, bilan de la partie 6 : pose de départ du rail gauche d'un
+   * autre cut). Un tel segment est reconnu par sa trace : ouvert au fil de
+   * l'export (plus d'objets écrits au total que dans le segment) et sans la
+   * marque `selfContained` des exports 4.7.20. Sans trace : index ≥ 2. */
+  function misfiledHead(doc) {
+    const seg = doc && doc.segment, t = doc && doc.exportTrace;
+    if (!seg || seg.selfContained === true || doc.format !== FORMAT || !(doc.clouds || []).length) return false;
+    if (!t || !Number.isFinite(t.cloudObjects) || !Number.isFinite(t.segmentObjects)) return (seg.index || 0) >= 2;
+    return t.cloudObjects > t.segmentObjects;
+  }
+
+  /* `options.previousDictionaries` : dictionnaires du segment précédent du même
+   * export (même `segment.stamp`, index − 1), pour relire le premier nuage d'un
+   * segment touché par KI-060. Sans eux, ce nuage est retiré plutôt que lu faux ;
+   * `segmentRepair` le dit dans le document. */
+  function expand(doc, options) {
     if (doc.format !== FORMAT) return doc;
-    const dictionaries = doc.dictionaries || {};
+    const dictionaries = doc.dictionaries || {}, previous = options && options.previousDictionaries;
     const { clouds, dictionaries: _d, compaction, compactedFrom, ...rest } = doc;
     const meta = unfoldRefs(rest, dictionaries);
     meta.format = compactedFrom || 'banane-native-session-v2';
-    return { ...meta, clouds: (clouds || []).map(c => expandCloud(c, dictionaries)) };
+    let list = clouds || [], head = [], repair = null;
+    if (misfiledHead(doc)) {
+      if (previous) {
+        head = [expandCloud(list[0], previous)];
+        repair = { issue: 'KI-060', action: 'reread', note: 'premier nuage relu avec le dictionnaire du segment précédent' };
+      } else {
+        repair = { issue: 'KI-060', action: 'dropped', note: 'premier nuage retiré : ses références visent le dictionnaire du segment précédent, absent' };
+      }
+      list = list.slice(1);
+    }
+    return { ...meta, ...(repair ? { segmentRepair: repair } : {}),
+      clouds: [...head, ...list.map(c => expandCloud(c, dictionaries))] };
   }
 
-  return { FORMAT, REF, SHAPES, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand };
+  return { FORMAT, REF, SHAPES, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
 });

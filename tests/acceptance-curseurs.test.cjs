@@ -19,7 +19,7 @@ const lire=f=>plat(fs.readFileSync(path.join(ROOT,f),'utf8'));
 function decision(id){const src=fs.readFileSync(path.join(ROOT,'DECISIONS.md'),'utf8'),i=src.indexOf(`## ${id} `);
   assert.ok(i>=0,`${id} absente de DECISIONS.md`);const j=src.indexOf('\n## D-',i+1);return plat(src.slice(i,j<0?undefined:j));}
 
-const LOT='audit/curseurs-lot-2026-09-24.md',VOISIN='audit/ecartement-voisin-2026-09-24.md',PN='audit/passage-niveau-lecteur-2026-09-25.md';
+const LOT='audit/curseurs-lot-2026-09-24.md',VOISIN='audit/ecartement-voisin-2026-09-24.md',PN='audit/passage-niveau-lecteur-2026-09-25.md',VAL='audit/appuis-valides-2026-09-24.md';
 /* Curseurs de la décision sur le lot : valeur, ligne du bilan, décision datée. */
 const CURSEURS=[
   {cle:'guardMm',valeur:30,bilan:LOT,extrait:'| `guardMm` | 30 | Conservé.',decision:'D-047',mention:'`guardMm` 30'},
@@ -43,7 +43,11 @@ const CURSEURS=[
   {cle:'crossingVoieMm',valeur:10,bilan:PN,extrait:'| `crossingVoieMm` | 10 |',decision:'D-053',mention:'`crossingVoieMm` 10',sansVariation:true},
   {cle:'framed',valeur:true,bilan:PN,extrait:'| `framed` | actif |',decision:'D-053',mention:'`framed` actif'},
   {cle:'frameGap',valeur:8,bilan:PN,extrait:'| `frameGap` | 8 |',decision:'D-053',mention:'`frameGap` 8',sansVariation:true},
-  {cle:'frameAnchors',valeur:3,bilan:PN,extrait:'| `frameAnchors` | 3 |',decision:'D-053',mention:'`frameAnchors` 3',sansVariation:true}];
+  {cle:'frameAnchors',valeur:3,bilan:PN,extrait:'| `frameAnchors` | 3 |',decision:'D-053',mention:'`frameAnchors` 3',sansVariation:true},
+  /* 4.7.20 : garde des voisins validés (§14 I amendé, D-054), mesurée le 24/09 avec sa sensibilité. */
+  {cle:'validatedWindow',valeur:5,bilan:VAL,extrait:'fenêtre ±5 ou ±8 : 22 / 28',decision:'D-054',mention:'fenêtre (±5 cuts)'},
+  {cle:'validatedToleranceMm',valeur:8,bilan:VAL,extrait:'tolérance 5, 8, 12 ou 15 mm',decision:'D-054',mention:'à 8 mm (latéral et vertical'},
+  {cle:'validatedMinInliers',valeur:3,bilan:VAL,extrait:'moins de trois voisins cohérents ne donnent aucun appui validé',decision:'D-054',mention:'moins de trois voisins cohérents : aucun appui validé',sansVariation:true}];
 /* Réglages qui ne sont pas des curseurs : identifiant des règles consignées,
  * options de MESURE écartées du Pilote (D-050), éligibilité (D-039), journal. */
 const HORS_CURSEURS={version:'lot-decision-v6',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,

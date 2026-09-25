@@ -72,6 +72,44 @@ function stopAtLotEnd(proposal){
    :`Dernier cut du lot (${cut}) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.`;
  return true;
 }
+/* 4.7.20 (KI-061) — FIN DE PARTIE APRÈS UNE VALIDATION. Dans un reliquat, le
+ * dernier cut non validé du lot n'est pas `scope.end` : sa validation fait
+ * charger par ESV le cut non validé suivant, au besoin dans la partie suivante,
+ * et l'arrêt au dernier cut (4.7.19) ne joue pas. Terrain du 25/09 : partie 6,
+ * 7634 validé, ESV affiche 8131 (fin du lot) puis ne répond plus ; même scène en
+ * partie 3 (4.7.18, 8209). `src/engine.js` ne contrôle la cible qu'après un
+ * différé : la navigation d'une validation est contrôlée ici. */
+function lotExitOf(next){const b=engine.s.batch,sc=b?.scope;
+ if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!next)return null;
+ if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
+ if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
+ return null;}
+async function closeAtExit(reason,last,next){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+ b.state='STOPPED';b.stoppedAtEnd={cut:last??null,reason,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:true};
+ const where=next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
+ engine.s.notice=reason==='adapter-lost-after-navigation'
+   ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
+   :`Fin du lot : après la validation du cut ${last}, ESV est passé ${where}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`;
+ await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});}
+const validateInESV=adapter.validateAndNext;
+adapter.validateAndNext=async(...args)=>{const evidence=await validateInESV(...args);
+ const next=evidence?.nextIdentity,exit=lotExitOf(next);
+ if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
+ return evidence;};
+const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.test(e?.message||'');
+adapter.state=async(...args)=>{
+ try{return await readState(...args);}catch(e){if(!unresponsive(e))throw e;
+   const S=globalThis.BananeSettings?.lot||{},b=engine.s.batch,last=b?.processed?.at(-1),next=last?.evidence?.nextIdentity;
+   if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE)throw e;
+   // ESV peut être occupé à charger le cut : nouvelles lectures avant de conclure.
+   for(let k=1;k<=(S.stateRetries??2);k++){await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));
+     try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});return r;}
+     catch(e2){if(!unresponsive(e2))throw e2;}}
+   // Muet juste après une navigation vers la fin du lot : ESV a quitté la partie.
+   if(next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end||next.part!==b.scope.part)){
+     await closeAtExit('adapter-lost-after-navigation',last.cut,next);
+     throw Error('Fin du lot : ESV ne répond plus après le dernier passage (KI-061).');}
+   throw e;}};
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{const result=await applyInESV(...args);
  if(stopAtLotEnd())await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true});return result;};
@@ -221,6 +259,7 @@ function rememberPosed(batch,state,cuts){
 /* Appuis de départ d'une reprise : les cuts posés par le lot précédent à
  * `frameGap` cuts au plus d'un de ses différés. Aucun cut validé à la main :
  * seulement ce que le Pilote a posé et validé lui-même (cahier §14 I). */
+async function currentFrameId(){try{return globalThis.BananeCore3.completeIdentity((await adapter.state()).identity||{}).frameId??null;}catch{return null;}}
 function repriseAnchors(prev,part){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings;
  if(!prev||prev.scope?.geometryEngine!==GCV1_ENGINE||prev.scope?.part!==part)throw Error('Reprise : aucun lot Pilote précédent sur cette partie. Décoche « Reprise » ou lance un lot ordinaire.');
@@ -411,7 +450,13 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
   delete startArgs.lotReprise;
   if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée au Pilote GCV1.');
-    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);}
+    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);
+    /* 4.7.20 — les appuis d'une reprise sont liés au repère de la page ESV
+     * (`frameId`) : après un rechargement, aucun ne sert (terrain du 25/09,
+     * partie 9). Refusé en clair plutôt que lancé sans effet. */
+    const frame=await currentFrameId(),seeds=startArgs.lotReprise.anchors||[];
+    if(frame&&seeds.length&&!seeds.some(a=>(a.identity?.frameId??null)===frame))
+      throw Error('Reprise : la page ESV a été rechargée depuis le lot précédent (autre repère) ; ses cuts posés ne peuvent plus servir d’appuis. Décoche « Reprise » ou lance un lot ordinaire.');}
   const tente=startArgs.lowConfidence==='attempt';
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});

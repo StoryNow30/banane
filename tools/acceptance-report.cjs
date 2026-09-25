@@ -104,8 +104,13 @@ function mergeCorpus(a,b,dir){
 }
 function loadLot(dir,label,relecturePath=null){
   const lot={label,diagnostic:null,journal:null,corpus:null,relecture:null,inputs:[]},relectureFiles=[],bilans=[];
+  /* KI-060 : un segment compact se relit avec les dictionnaires du segment
+   * précédent du même export (fichiers triés par nom : seg01, seg02…). */
+  const dicts=new Map(),segKey=(r,d=0)=>`${r?.segment?.stamp}|${(r?.segment?.index||0)+d}`;
   for(const file of listJson(dir)){
-    const bytes=fs.readFileSync(file),raw=JSON.parse(bytes),doc=raw?.format===NativeExport.FORMAT?NativeExport.expand(raw):raw,kind=kindOf(doc);
+    const bytes=fs.readFileSync(file),raw=JSON.parse(bytes),compact=raw?.format===NativeExport.FORMAT;
+    if(compact&&raw.segment)dicts.set(segKey(raw),raw.dictionaries);
+    const doc=compact?NativeExport.expand(raw,{previousDictionaries:raw.segment?dicts.get(segKey(raw,-1)):null}):raw,kind=kindOf(doc);
     lot.inputs.push(describe(file,bytes,doc,kind));
     if(kind==='relecture'){relectureFiles.push(file);continue;}
     if(kind==='ignored')continue;
