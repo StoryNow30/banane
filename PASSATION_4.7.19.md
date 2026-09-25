@@ -50,6 +50,12 @@ conservée par l'utilisateur (historique complet) ; ce fichier suffit pour repre
   perdue hors de la vue (pose ESV à 20 cm du rail gauche, KI-051/D-043)
   (`audit/lot-4718-p9-2026-09-25.md`).
 
+- Lot terrain 4.7.19 p9 sur les différés (lot ordinaire, pas « Reprise ») :
+  14/85 appliqués, parité 85/85 ; les 12 cuts du rejeu (passages à niveau)
+  appliqués à l'identique ; 8504–8541 toujours différés. Une reprise après
+  rechargement de la page ignore les appuis (autre `frameId`)
+  (`audit/lot-4719-p9-2026-09-25.md`).
+
 ## En attente de l'utilisateur
 
 1. **Retour terrain de la 4.7.19** (partie neuve avec passages à niveau, puis
