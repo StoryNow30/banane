@@ -433,13 +433,13 @@ function analyseLot(lot,options={}){
 /* Les curseurs retenus, leur bilan et leur décision datée, rapportés avec C1 à
  * C4 ; les règles que chaque lot a consignées (ou déduites de sa version).
  * Rien n'est recalculé ici : le bilan chiffré vit dans les relevés cités. */
-const C5_BILANS=['audit/curseurs-lot-2026-09-24.md','audit/ecartement-voisin-2026-09-24.md','audit/appui-pose-2026-09-24.md','audit/passage-niveau-lecteur-2026-09-25.md'];
-const C5_DECISIONS=['D-044 garde de paire','D-047 chainMm 15','D-050 garde d’écartement 20 mm et minTop 5','D-052 appui = cut posé','D-053 passage à niveau en dernier recours, voie encadrée'];
+const C5_BILANS=['audit/curseurs-lot-2026-09-24.md','audit/ecartement-voisin-2026-09-24.md','audit/appui-pose-2026-09-24.md','audit/passage-niveau-lecteur-2026-09-25.md','audit/appuis-valides-2026-09-24.md','audit/curseurs-c5-4720-2026-09-25.md'];
+const C5_DECISIONS=['D-044 garde de paire','D-047 chainMm 15','D-050 garde d’écartement 20 mm et minTop 5','D-052 appui = cut posé','D-053 passage à niveau en dernier recours, voie encadrée','D-054 voisins validés, garde de cohérence','D-055 gaugeGap, gaugeCount et crossingVoieMm conservés'];
 function c5For(lots){const D=require('../src/lot-decision.js').DEFAULTS;
   return {retained:{guardMm:D.guardMm,chooseMm:D.chooseMm,chainMm:D.chainMm,gap:D.gap,anchors:D.anchors,minTop:D.minTop,minFace:D.minFace,maxDzMm:D.maxDzMm,
       gaugeGuardMm:D.gaugeGuardMm,gaugeGap:D.gaugeGap,gaugeCount:D.gaugeCount,pairGuard:D.pairGuard,anchorRule:D.anchorRule,
       crossing:D.crossing,crossingVoieMm:D.crossingVoieMm,framed:D.framed,frameGap:D.frameGap,frameAnchors:D.frameAnchors},
-    withoutVariationReview:['gaugeGap','gaugeCount','crossingVoieMm','frameGap','frameAnchors'],reviews:C5_BILANS,decisions:C5_DECISIONS,
+    withoutVariationReview:['frameGap','frameAnchors','validatedMinInliers'],reviews:C5_BILANS,decisions:C5_DECISIONS,
     lotRules:lots.map(l=>({label:l.label,rules:l.lotDecisionRules??null}))};}
 
 /* ---- agrégation : une partie, ou le total ---- */

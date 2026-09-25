@@ -1639,6 +1639,10 @@ question ouverte du n°13 (§13.3), et la 4.7.20.
    antérieurs sont réparés à la lecture.
 5. **P2** : outil de mesure prêt (`tools/p2-plancher.cjs`) ; la session terrain
    (30 cuts replacés à l'aveugle) reste à faire.
+6. **C5** : `gaugeGap`, `gaugeCount` et `crossingVoieMm` ont leur bilan de
+   variation (D-055) : aucun effet sauf `crossingVoieMm` 15 (+1 cut juste) ;
+   conservés. Restent sans bilan : `frameGap`, `frameAnchors` (reprise seulement)
+   et `validatedMinInliers` (sans source terrain).
 
 ### 14.2 Pourquoi
 

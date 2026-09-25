@@ -19,7 +19,7 @@ const lire=f=>plat(fs.readFileSync(path.join(ROOT,f),'utf8'));
 function decision(id){const src=fs.readFileSync(path.join(ROOT,'DECISIONS.md'),'utf8'),i=src.indexOf(`## ${id} `);
   assert.ok(i>=0,`${id} absente de DECISIONS.md`);const j=src.indexOf('\n## D-',i+1);return plat(src.slice(i,j<0?undefined:j));}
 
-const LOT='audit/curseurs-lot-2026-09-24.md',VOISIN='audit/ecartement-voisin-2026-09-24.md',PN='audit/passage-niveau-lecteur-2026-09-25.md',VAL='audit/appuis-valides-2026-09-24.md';
+const LOT='audit/curseurs-lot-2026-09-24.md',VOISIN='audit/ecartement-voisin-2026-09-24.md',PN='audit/passage-niveau-lecteur-2026-09-25.md',VAL='audit/appuis-valides-2026-09-24.md',C5='audit/curseurs-c5-4720-2026-09-25.md';
 /* Curseurs de la décision sur le lot : valeur, ligne du bilan, décision datée. */
 const CURSEURS=[
   {cle:'guardMm',valeur:30,bilan:LOT,extrait:'| `guardMm` | 30 | Conservé.',decision:'D-047',mention:'`guardMm` 30'},
@@ -33,14 +33,14 @@ const CURSEURS=[
   {cle:'maxDzMm',valeur:20,bilan:LOT,extrait:'| `maxDzMm` du choix | 20 | Conservé.',decision:'D-047',mention:'`maxDzMm` 20'},
   {cle:'gaugeGuardMm',valeur:20,bilan:VOISIN,extrait:'Garde seule à 20 mm, activée en 4.7.16',decision:'D-050',mention:'Garde d\'écartement voisin, 20 mm'},
   /* Paramètres de la règle mesurée, jamais déplacés seuls : traçables, sans bilan de variation (rapport du chantier 5). */
-  {cle:'gaugeCount',valeur:3,bilan:VOISIN,extrait:'comparé à la médiane de celui des 3 appuis les plus proches',decision:'D-050',mention:'médiane des 3 appuis les plus proches',sansVariation:true},
-  {cle:'gaugeGap',valeur:10,bilan:VOISIN,extrait:'des 3 appuis les plus proches, à 10 cuts au plus',decision:null,sansVariation:true},
+  {cle:'gaugeCount',valeur:3,bilan:C5,extrait:'| `gaugeCount` | 5 | 192, 0 / 149 | 307, 3 / 273 | aucun |',decision:'D-055',mention:'`gaugeCount` 3 conservé'},
+  {cle:'gaugeGap',valeur:10,bilan:C5,extrait:'| `gaugeGap` | 15 | 192, 0 / 149 | 307, 3 / 273 | aucun |',decision:'D-055',mention:'`gaugeGap` 10 conservé'},
   /* 4.7.18 (KI-057) : règle d'appui, mesurée sur le même banc (`audit/appui-pose-2026-09-24.md`), D-052. */
   {cle:'anchorRule',valeur:'placed',bilan:'audit/appui-pose-2026-09-24.md',extrait:'Retenu : un appui est un cut posé',decision:'D-052',mention:'Un appui est un cut posé'},
   /* 4.7.19 (KI-058) : lecteur « passage à niveau » en dernier recours et voie encadrée, D-053.
    * Mesurés actifs contre coupés ; leurs seuils n'ont pas été déplacés seuls. */
   {cle:'crossing',valeur:true,bilan:PN,extrait:'| `crossing` | actif, en dernier recours |',decision:'D-053',mention:'`crossing` en dernier recours'},
-  {cle:'crossingVoieMm',valeur:10,bilan:PN,extrait:'| `crossingVoieMm` | 10 |',decision:'D-053',mention:'`crossingVoieMm` 10',sansVariation:true},
+  {cle:'crossingVoieMm',valeur:10,bilan:C5,extrait:'| `crossingVoieMm` | 15 | 192, 0 / 149 | 308, 3 / 274 | +1 juste (p31 fin, 7026) |',decision:'D-055',mention:'`crossingVoieMm` 10 conservé'},
   {cle:'framed',valeur:true,bilan:PN,extrait:'| `framed` | actif |',decision:'D-053',mention:'`framed` actif'},
   {cle:'frameGap',valeur:8,bilan:PN,extrait:'| `frameGap` | 8 |',decision:'D-053',mention:'`frameGap` 8',sansVariation:true},
   {cle:'frameAnchors',valeur:3,bilan:PN,extrait:'| `frameAnchors` | 3 |',decision:'D-053',mention:'`frameAnchors` 3',sansVariation:true},

@@ -29,7 +29,7 @@ Rôle « validation » : partie jamais utilisée pour régler, relue. Toutes les
 | C2 | **non publiable** | P2 non mesuré : aucune cible d'erreur publiée (§15) |
 | C3 | **tenu** | sur tous les lots : 0 paire(s) hors contrat appliquée(s), 103 refus d'écartement |
 | C4 | **non mesuré** | aucun lot de validation relu |
-| C5 | **bilans tenus** | décision sur le lot : audit/curseurs-lot-2026-09-24.md (D-047, D-050) ; garde d'écartement voisin : audit/ecartement-voisin-2026-09-24.md (D-050) ; garde de paire : audit/garde-paire-verification-2026-09-24.md (D-044) ; curseurs du moteur : D-035 (minTop du moteur sans bilan de desserrage) ; règle d'appui : audit/appui-pose-2026-09-24.md (D-052, un appui est un cut posé) ; faux de premier passage sans appui : audit/chantiers/faux-sans-appui.md (D-051, observer) |
+| C5 | **bilans tenus** | décision sur le lot : audit/curseurs-lot-2026-09-24.md (D-047, D-050) ; garde d'écartement voisin : audit/ecartement-voisin-2026-09-24.md (D-050) ; garde de paire : audit/garde-paire-verification-2026-09-24.md (D-044) ; curseurs du moteur : D-035 (minTop du moteur sans bilan de desserrage) ; règle d'appui : audit/appui-pose-2026-09-24.md (D-052, un appui est un cut posé) ; faux de premier passage sans appui : audit/chantiers/faux-sans-appui.md (D-051, observer) ; voisins validés (§14 I amendé) : audit/appuis-valides-2026-09-24.md (D-054) ; garde d'écartement voisin et lecteur passage à niveau, variation de gaugeGap, gaugeCount, crossingVoieMm : audit/curseurs-c5-4720-2026-09-25.md (D-055) |
 
 ## Ce qui manque pour la version candidate
 

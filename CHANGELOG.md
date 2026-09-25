@@ -49,6 +49,16 @@ maquettes `design/pistes-retenues/`).
   ±5 cuts, 3 voisins au moins) est dans `src/lot-decision.js`, partagée par le
   banc et le Pilote ; pas encore de source de voisins validés sur le terrain.
 
+**Outils et bilans.**
+- `tools/p2-plancher.cjs` : P2, le plancher humain, sur une session Natif de
+  replacement à l'aveugle (référence stricte, éloignement des rails prouvé),
+  lu par `acceptance-report --p2`. Reste la session terrain.
+- **C5** : `gaugeGap`, `gaugeCount` et `crossingVoieMm` déplacés un à la fois
+  (règles 4.7.20, banc D-053, partie 9 exclue) : aucun changement sauf
+  `crossingVoieMm` 15 (+1 juste) ; tous conservés (D-055,
+  `audit/curseurs-c5-4720-2026-09-25.md`).
+- Rapport de sortie 4.8 régénéré avec les lots du 25/09 (parties 3, 9, 6).
+
 **Analyses.** Parties 9 (4.7.18, 346 cuts ; 4.7.19, 85 cuts sur les différés)
 et 6 (4.7.19, reliquat de 125 cuts) : `audit/lot-4718-p9-2026-09-25.md`,
 `audit/lot-4719-p9-2026-09-25.md`, `audit/lot-4719-p6-2026-09-25.md`.

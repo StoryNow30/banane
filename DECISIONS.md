@@ -1,5 +1,23 @@
 # Décisions techniques
 
+## D-055 - Bilan C5 : `gaugeGap`, `gaugeCount` et `crossingVoieMm` conservés
+
+**25 septembre 2026.** Les trois réglages sans bilan de variation (C5, rapport
+de sortie) ont été déplacés un à la fois sur le banc du 25/09 (règles 4.7.20 ;
+jeux du banc D-053 ; partie 9 exclue, c'est la partie de validation) :
+`audit/curseurs-c5-4720-2026-09-25.md`.
+
+- `gaugeGap` 10 conservé : 5 ou 15 cuts, aucune décision ne change.
+- `gaugeCount` 3 conservé : 2 ou 5 appuis, aucune décision ne change.
+- `crossingVoieMm` 10 conservé : à 5 mm, rien ne change ; à 15 mm, un cut de
+  plus (partie 31, 7026), jugé juste. Un seul cut, sur des parties de réglage :
+  trop mince pour desserrer ; à revoir sur de nouveaux lots de réglage.
+
+Restent sans bilan de variation : `frameGap` et `frameAnchors` (sans effet en
+avancée normale ; ils n'agissent que dans un lot « Reprise », dont aucun n'a
+encore tourné dans la même page) et `validatedMinInliers` (règle mesurée, sans
+source terrain).
+
 ## D-054 - §14 I amendé : voisins validés comme appuis, sous garde de cohérence
 
 **25 septembre 2026, direction.** Question ouverte par l'amendement n°13
