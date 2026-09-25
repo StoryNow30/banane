@@ -13,7 +13,10 @@
  * les reprises depuis la voie à un seul appui sont-ils moins sûrs ?
  *
  * Banc Natif : un seul passage dans l'ordre des visites, appuis = cuts retenus
- * par la décision elle-même (comme `observeLot` et `tools/deferred-diagnosis.cjs`),
+ * par la décision elle-même (comme `observeLot` et `tools/deferred-diagnosis.cjs`) ;
+ * depuis la 4.7.18 (KI-057, `anchorRule:'placed'`), seulement ceux que le Pilote
+ * aurait posés : commande simulée par `tools/acceptance-report.cjs`
+ * (`placement`), écartement admissible, vue supposée bonne faute de caméra ;
  * jugement contre la référence stricte (`referenceFor`). Lots Pilote : rejeu de
  * `tools/acceptance-report.cjs` (décision rejouée, jugement de l'outil
  * d'acceptation, D-040 compris). Faux : latéral OU vertical > 10 mm (D-038).
@@ -45,7 +48,7 @@ const describe=d=>({stage:d.stage,anchors:(d.anchorsUsed||[]).length,anchorsUsed
 function runNatif(file,label,{pairGuard=false,options={}}={}){
   const Segments=require(B+'tools/merge-segments.cjs'),Lab=require(B+'tools/placement-lab.cjs');
   const O=require(B+'src/continuity-observer.js'),Shadow=require(B+'src/gcv1-shadow.js'),L0=require(B+'src/lot-decision.js'),C=require(B+'vendor/capture-core.js');
-  const L=guarded(L0,pairGuard,options);
+  const L=guarded(L0,pairGuard,options),A=require(B+'tools/acceptance-report.cjs'),anchorRule=options.anchorRule??L0.DEFAULTS.anchorRule;
   const s=Segments.loadSession(file),records=(s.records||[]).slice().sort((a,b)=>a.visitIndex-b.visitIndex);
   const chunksByVisit=new Map();for(const c of s.clouds||[])if(c.pointsSceneRelative)(chunksByVisit.get(c.visitId)||chunksByVisit.set(c.visitId,[]).get(c.visitId)).push(c);
   const anchors=[],rows=[],seen=new Set();
@@ -57,7 +60,7 @@ function runNatif(file,label,{pairGuard=false,options={}}={}){
     const rails=O.startRails(record,input,null).rails;
     const capture={identity:id,rails,pointsSceneRelative:input.points,visibleByClipBoxes:input.visible};
     const science=Shadow.scientificProposeBoth(capture),d=L.decideCut({capture,science,anchors,Shadow});
-    if(d.anchor)anchors.push({identity:id,positions:d.positions});
+    if(d.anchor&&(anchorRule!=='placed'||A.placement(d,null,capture,L0).placed))anchors.push({identity:id,positions:d.positions});
     if(!d.positions)continue;
     const row={source:label,kind:'natif',cut:id.cut,...describe(d),pairFlag:pairFlag(science),judged:false};
     const through=chunks.filter(c=>input.chunkIds.includes(c.chunkId)).map(c=>c.acquisition?.endedAt||c.capturedAt).filter(Boolean).sort().at(-1)||null;
@@ -75,7 +78,7 @@ function runNatif(file,label,{pairGuard=false,options={}}={}){
 function runLot(dir,label,relecture,{pairGuard=false,options={}}={}){
   const A=require(B+'tools/acceptance-report.cjs'),L0=require(B+'src/lot-decision.js'),L=guarded(L0,pairGuard,options);
   const seen=new Map(),flags=new Map();
-  const deps={L:{...L,decideCut:args=>{const d=L.decideCut(args);seen.set(args.capture.identity.cut,d);flags.set(args.capture.identity.cut,pairFlag(args.science));return d;}}};
+  const deps={...(options.anchorRule?{options:{anchorRule:options.anchorRule}}:{}),L:{...L,decideCut:args=>{const d=L.decideCut(args);seen.set(args.capture.identity.cut,d);flags.set(args.capture.identity.cut,pairFlag(args.science));return d;}}};
   /* Règles actuelles (`currentRules`) : un lot ancien est rejoué comme le Pilote
    * d'aujourd'hui le déciderait ; les curseurs de `--option` priment. */
   const r=A.report([A.loadLot(dir,label,relecture||null)],{replay:true,preferReplay:true,replayDeps:deps,currentRules:true});
@@ -108,7 +111,7 @@ function rules(rows){
 
 function run(argv=process.argv.slice(2)){
   /* `--option clé=valeur` : curseur de `src/lot-decision.js` modifié pour ce rejeu (bilan des curseurs). */
-  const options={};for(let i=0;i<argv.length;i++)if(argv[i]==='--option'){const [k,v]=argv[i+1].split('=');options[k]=v==='true'?true:v==='false'?false:Number(v);}
+  const options={};for(let i=0;i<argv.length;i++)if(argv[i]==='--option'){const [k,v]=argv[i+1].split('=');options[k]=v==='true'?true:v==='false'?false:v==='null'?null:Number.isFinite(Number(v))?Number(v):v;}
   const out=argv[0],rows=[],pairGuard=!argv.includes('--sans-garde-paire');if(!out||out.startsWith('--'))throw Error('Usage : SORTIE.json [--sans-garde-paire] --natif F=libellé [...] --lot DOSSIER=libellé[@RELECTURE] [...]');
   for(let i=1;i<argv.length;i++){const t=Date.now();
     if(argv[i]==='--sans-garde-paire'||argv[i]==='--garde-paire')continue;

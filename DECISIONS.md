@@ -1,5 +1,55 @@
 # Décisions techniques
 
+## D-052 - Un appui est un cut posé ; suites de la relecture 4.7.16 et du chantier 5 (4.7.18)
+
+**24 septembre 2026.** Relecture indépendante de la 4.7.13 à la 4.7.16
+(`audit/chantiers/relecture-4716.md`) et chantier 5 (`audit/chantiers/acceptation.md`),
+intégrés.
+
+- **Un appui est un cut posé** (constat B1, KI-057 ; question 2 du chantier 5).
+  La décision propose un appui ; il n'entre dans la mémoire du lot qu'une fois
+  ses positions commandées, appliquées et le cut validé. C'est la règle écrite
+  au n°10 (« les cuts déjà placés du même lot »). Mesure
+  (`audit/appui-pose-2026-09-24.md`) : Natif inchangé ; sur les lots Pilote,
+  434 décisions commandables au lieu de 436, 207 justes au lieu de 209, faux
+  inchangés (1). Les deux cuts perdus (partie 2 : 115, 116) n'avaient d'appuis
+  que grâce au défaut : 113 et 114, hors de la vue. Règle consignée
+  (`anchorRule:'placed'`, `lot-decision-v5`) ; le rejeu d'un lot antérieur garde
+  l'ancienne règle, et la parité de la partie 35 reste de 233/233.
+  **À confirmer par la direction** : c'est la lecture du cahier, et son seul coût
+  mesuré est de deux cuts justes.
+- **« Réessayer ce cut » refusé si les rails ont bougé pendant la pause**
+  (KI-055) : la pose de l'opérateur n'entre jamais dans le moteur (§10, §14 I).
+  Le correctif est dans le service worker ; `src/engine.js` est épinglé.
+- **Version de création du lot consignée** (`scope.extensionVersion`, constat
+  I1) : le rejeu la préfère à celle de l'export. Les lots déjà exportés restent
+  soumis à la limite décrite par le relecteur.
+- **C5 dans le rapport d'acceptation** (KI-056) : une ligne par section.
+- **Constat I2** (preuve terrain de la 4.7.16 manquante) : il est toujours
+  ouvert, et seul un lot neuf, complet et relu le lèvera.
+- **Constat M1** (provenance de la navigation dans le statut) : il est traité
+  par la 4.7.17 (commande en trois étapes, serveur toujours « non disponible »).
+  Le contrôle visuel dans Edge reste à faire.
+- Temps du banc (chantier 5, question 6) : les deux essais les plus longs
+  (`lot-decision-navigateur*`, 7,2 et 7,6 s sur 10) sont chacun un scénario
+  unique. Ils ne sont pas découpés.
+
+## D-051 - Faux de premier passage sans appui : observer, aucune garde
+
+**24 septembre 2026**, sur l'étude du chantier 7 (`audit/chantiers/faux-sans-appui.md`,
+branche `chantier-48/faux-sans-appui`, intégrée). Base reproduite : 711 cuts
+décidés, 4 faux (398, 402, 983 de la partie 20 ; 137 de la partie 2), tous des
+premiers passages. Six gardes simples mesurées en un seul passage, appuis
+recalculés : aucune n'arrête ces faux sans perdre de cuts justes. La plus large
+(écart à la pose ESV > 50 mm) en arrête trois, mais perd 110 justes et crée
+deux faux par ricochet (405, 114) ; celle du calage hors domaine arrête 137 et
+perd 12 justes ailleurs. Les seuils ESV ont été choisis après observation des
+faux : aucun n'est validé.
+
+- **Retenu : observer, ne rien activer.** Aucun code ne change.
+- Ces faux restent nommés dans chaque bilan ; le signal qui les séparerait
+  n'existe pas encore dans ce que le moteur publie en premier passage.
+
 ## D-050 - 4.7.16 : garde d'écartement voisin à 20 mm, choix à 5 points de dessus
 
 **24 septembre 2026, direction** (« ok pour les deux, je valide »), sur la

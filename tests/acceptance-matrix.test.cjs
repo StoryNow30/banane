@@ -29,10 +29,16 @@ test('contrôle : fichier absent, essai inconnu, exigence perdue, doublon ou sta
 });
 
 test('contrôle : COUVERT exige un essai qui s\'exécute ; un « todo » ou un « skip » ne prouve rien ; §14 B suit le plus faible des §7',()=>{
-  const todo=['tests/acceptance-objectifs.test.cjs','§14 G : C5, le bilan des curseurs, est rapporté avec C1 à C4'];
-  const skip=['tests/native-geometry-audit.test.cjs','the three read-only Terra exports reproduce the demonstrated geometry loss'];
-  const r=M.check(matrice([ligne('§7.1',[OK,todo],'COUVERT'),ligne('§7.2',[skip],'COUVERT'),ligne('§7.3',[],'COUVERT'),
-    ligne('§7.4',[OK],'MANQUANT'),ligne('§7.5',[todo],'MANQUANT'),'| §14 B | exigence | → §7.1 à §7.10 | COUVERT | dérivé |']),{required:[]});
+  /* Banc d'exemple autonome : depuis la 4.7.18, KI-055 et KI-056 sont corrigés
+   * et le banc réel n'a plus d'essai « todo ». */
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'matrice-statuts-'));
+  try{fs.mkdirSync(path.join(root,'tests'));
+    fs.writeFileSync(path.join(root,'tests/exemple.test.cjs'),["test('essai qui s\\'exécute',()=>{});","test('défaut connu',{todo:'KI-000'},()=>{});",
+      "test('corpus absent',{skip:'corpus privé'},()=>{});"].join('\n'));
+    const OK=['tests/exemple.test.cjs','essai qui s\'exécute'],todo=['tests/exemple.test.cjs','défaut connu'],skip=['tests/exemple.test.cjs','corpus absent'];
+    var r=M.check(matrice([ligne('§7.1',[OK,todo],'COUVERT'),ligne('§7.2',[skip],'COUVERT'),ligne('§7.3',[],'COUVERT'),
+      ligne('§7.4',[OK],'MANQUANT'),ligne('§7.5',[todo],'MANQUANT'),'| §14 B | exigence | → §7.1 à §7.10 | COUVERT | dérivé |']),{required:[],root});
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
   const e=r.errors.join('\n');
   assert.match(e,/§7\.1 : COUVERT avec un essai todo/);assert.match(e,/§7\.2 : COUVERT avec un essai skip/);
   assert.match(e,/§7\.3 : COUVERT sans aucun essai/);assert.match(e,/§7\.4 : MANQUANT alors que/);

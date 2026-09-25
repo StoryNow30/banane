@@ -561,6 +561,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°9 — décider sur le lot (23/09) : lève la règle « la prédiction ne fait que déplacer la fenêtre » (n°3 §3.5) pour le choix par la voie ; objectif intermédiaire 80 % ; définitions de mesure D-038
 - n°10 — la décision sur le lot appliquée dans le Pilote (24/09) : relecture D-040, activation en un seul passage (D-041, D-042), vue d'ESV (D-043), garde de paire (D-044), interface « La ligne » (D-045) ; seuil C4 de sortie à trancher
 - n°11 — bilan des curseurs de la décision sur le lot (24/09) : C5 pour les curseurs ajoutés par le n°9, `chainMm` desserré (D-047) ; relecture ciblée (D-048) ; cahier 4.9 ouvert (D-049) ; garde d'écartement voisin et `minTop` du choix (D-050)
+- n°12 — relecture 4.7.16 et tests d'acceptation (24/09) : un appui est un cut posé (D-052, KI-057) ; « Réessayer » refusé après déplacement manuel (KI-055) ; C5 au rapport (KI-056) ; faux sans appui observés (D-051) ; conditions de la candidate
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1526,4 +1527,51 @@ choix desserré à 5 (D-050) ; `minTop` du moteur reste sans bilan de
 desserrage (n°5).
 Sur C1 : la partie 35 (4.7.12, jamais vue, non relue) donne 203 cuts traités
 sur 233 (87 %), dont 32 placés par la décision sur le lot, sans erreur.
+
+## Amendement n°12 — relecture 4.7.16 et tests d'acceptation
+
+**24 septembre 2026.** Éléments nouveaux : la relecture indépendante de la
+4.7.13 à la 4.7.16 (`audit/chantiers/relecture-4716.md`), la matrice
+d'acceptation du chantier 5 (`tests/ACCEPTANCE_MATRIX.md`,
+`audit/chantiers/acceptation.md`), l'étude des faux sans appui du chantier 7
+(`audit/chantiers/faux-sans-appui.md`).
+
+### 12.1 Ce qui change
+
+1. **Un appui est un cut posé** (4.7.18, D-052, KI-057). Le n°10 disait « avec
+   pour appuis les cuts déjà placés du même lot » ; le code retenait toute
+   décision. Désormais, l'appui proposé attend que ses positions soient
+   commandées, appliquées et le cut validé. Règle consignée (`anchorRule`),
+   rejouée à l'identique ; lots antérieurs rejoués avec leur règle.
+2. **Aucune pose humaine par « Réessayer »** (KI-055) : refusé si les rails ont
+   bougé pendant la pause (§10, §14 I).
+3. **C5 rapporté avec C1 à C4** dans chaque section du rapport d'acceptation
+   (§14 G, KI-056).
+4. **Faux de premier passage sans appui : observer** (D-051). Aucune des six
+   gardes mesurées ne les arrête sans perdre de justes.
+5. **Matrice d'acceptation** : 44 exigences, contrôlée à chaque banc ; une
+   exigence perdue, un essai cité inexistant ou une exigence déclarée couverte
+   sur un essai « todo » font échouer le banc.
+
+### 12.2 Pourquoi
+
+Partie 35 : 8951, différé (cible hors de la vue), était appui de 8952 et 8953.
+Sur le banc relu, la règle « cut posé » ne change aucun faux et coûte deux cuts
+justes (partie 2 : 115, 116), qui ne tenaient qu'à des appuis hors de la vue
+(`audit/appui-pose-2026-09-24.md`).
+
+### 12.3 Conditions de la version candidate 4.8.0-rc
+
+1. Un lot Pilote **neuf** (partie jamais utilisée pour régler), **complet** et
+   **relu**, sous la 4.7.18 ou plus récente. C1 compté sur les cuts distincts,
+   C4 évaluable seulement si 80 % au moins des appliqués sont jugés. La
+   définition d'un lot complet est à trancher par la direction.
+2. Le seuil C4 de sortie, à trancher par la direction : zéro faux strict, ou
+   faux isolés expliqués tolérés (n°10, point 5).
+3. P2 : 30 cuts replacés à l'aveugle ; sans lui, aucun chiffre d'erreur (C2)
+   n'est publié.
+4. Les neuf choix `minTop` 5 non jugés, à juger sur le terrain, en priorité en
+   zone de faible densité et d'appareils de voie.
+5. Contrôle visuel du §14 H dans Edge ; banc vert sur le commit candidat ;
+   paquet reproductible.
 

@@ -1,8 +1,24 @@
 # État du projet Banane
 
 Date : 24 septembre 2026  
-Version active de l'extension : **4.7.17 TEST** (interface « La ligne » complète ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde d'écartement voisin 20 mm, choix à 5 points de dessus, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-050 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Version active de l'extension : **4.7.18 TEST** (un appui est un cut posé, D-052 ; « Réessayer » refusé après déplacement manuel des rails ; interface « La ligne » complète ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde d'écartement voisin 20 mm, choix à 5 points de dessus, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-052 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.18
+
+Un appui est un cut posé (KI-057, D-052) : la décision ne s'appuie plus que sur
+des cuts commandés, appliqués et validés. Mesure (`audit/appui-pose-2026-09-24.md`) :
+Natif inchangé ; lots Pilote, 434 décisions commandables au lieu de 436, 207
+justes au lieu de 209, faux inchangé (1) ; les deux cuts perdus (partie 2 : 115,
+116) n'avaient d'appuis que grâce au défaut. « Réessayer » refusé après
+déplacement manuel des rails (KI-055). Version de création du lot consignée
+(I1). C5 au rapport d'acceptation (KI-056). Intégrés : relecture 4.7.16,
+chantier 5 (matrice d'acceptation, 44 exigences), chantier 7 (faux sans appui :
+observer, D-051).
+
+Avant une candidate 4.8.0-rc : un lot neuf, complet, relu, sous la 4.7.18 ; le
+seuil C4 de sortie ; P2 ; la définition d'un lot complet ; le contrôle visuel
+dans Edge (§14 H).
 
 ## État 4.7.17
 
@@ -32,7 +48,9 @@ ciblée des prochains lots (D-048).
 Lots 4.7.14 de la partie 2, relecture ciblée (110–138) : pose de départ d'ESV
 décalée (1500 mm, 60–200 mm des rails) ; 2 faux sur 11 jugés, dont 114 à
 207,6 mm (premier passage sans appui, KI-054) ; la 4.7.15 l'aurait différé et
-aurait placé 115 et 116 justes (`audit/cas-decalage-esv-p2-2026-09-24.md`).
+aurait placé 115 et 116 justes (`audit/cas-decalage-esv-p2-2026-09-24.md`) —
+corrigé en 4.7.18 : ces deux gains s'appuyaient sur des cuts hors de la vue
+(KI-057).
 
 Garde d'écartement voisin mesurée (`audit/ecartement-voisin-2026-09-24.md`) :
 à 20 mm, le faux 7026 est retiré, +2 justes, aucun perdu ; l'aide au choix et

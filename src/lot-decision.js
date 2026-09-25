@@ -32,8 +32,16 @@
   * et un minimum du choix accepté avec 5 points de dessus au lieu de 15
   * (`minTop`, filtre du choix seulement : celui du moteur reste 15). Ensemble,
   * sur 6 sessions Natif et 5 lots Pilote relus : +13 justes, −1 faux (7026),
-  * aucun juste perdu (`audit/ecartement-voisin-2026-09-24.md`). */
- const DEFAULTS=Object.freeze({version:'lot-decision-v4',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,
+  * aucun juste perdu (`audit/ecartement-voisin-2026-09-24.md`).
+  *
+  * 4.7.18 (KI-057, relecture 4.7.16, constat B1) : un appui est un cut POSÉ
+  * du lot, pas une décision. `anchorRule:'placed'` : la décision propose un
+  * appui ; il n'entre dans la mémoire du lot qu'une fois ses positions
+  * commandées, appliquées et le cut validé (`holdAnchor`, `promoteAnchors`).
+  * Jusqu'à la 4.7.17 (`'decided'`), il y entrait dès la décision, même si la
+  * commande était ensuite repliée (partie 35 : 8951, cible hors de la vue,
+  * différé, servait d'appui à 8952 et 8953). */
+ const DEFAULTS=Object.freeze({version:'lot-decision-v5',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,anchorRule:'placed',
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -125,7 +133,7 @@
  function decideCut({capture,science,anchors,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
-   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop};
+   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop,anchorRule:cfg.anchorRule};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
    const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;
@@ -220,6 +228,35 @@
    if(i>=0)anchors.splice(i,1);
    anchors.push(entry);while(anchors.length>max)anchors.shift();return anchors;
  }
+ /* 4.7.18 (KI-057) — APPUI = CUT POSÉ. Les positions d'une décision sont-elles
+  * celles que le Pilote commande ? Premier passage : la paire du moteur, gardée
+  * telle quelle, sauf si le cut est différé. Reprise depuis la voie : seulement
+  * si la commande est « lot ». Un choix n'est jamais appui. `command` nul : lot
+  * en observation (ou décision non commandée) — la proposition du moteur est
+  * appliquée, donc seul un premier passage pose ses positions. */
+ function commandsPositions(decision,command){
+   if(!decision?.anchor||!decision.positions)return false;
+   if(decision.stage==='first-pass')return command?.action!=='defer'&&command?.action!=='lot';
+   if(decision.stage==='window')return command?.action==='lot';
+   return false;
+ }
+ /* L'appui proposé attend la validation du cut. Une nouvelle analyse du même
+  * cut (« Réessayer ce cut », reprise) remplace l'attente ; une attente qui ne
+  * sera jamais validée (cut différé, repris à la main, SKIP) ne sert à rien. */
+ const PENDING_MAX=8;
+ function holdAnchor(state,entry){
+   state.pending=(state.pending||[]).filter(p=>!(sameTrack(p.identity,entry.identity)&&p.identity.cut===entry.identity.cut));
+   state.pending.push(entry);while(state.pending.length>PENDING_MAX)state.pending.shift();return state;
+ }
+ /* Les attentes des cuts VALIDÉS par le Pilote (`batch.processed` : VALIDATE
+  * émis et navigation observée) deviennent appuis ; les autres restent en
+  * attente. Appelé avant chaque décision : le cut précédent est alors terminé. */
+ function promoteAnchors(state,validated,max=40){
+   const keep=[];
+   for(const p of state.pending||[])
+     if((validated||[]).some(v=>sameTrack(v,p.identity)&&v.cut===p.identity.cut))rememberAnchor(state.anchors,p,max);else keep.push(p);
+   state.pending=keep;return state;
+ }
  /* VUE D'ESV (KI-051, lot 4.7.10 du 24/09, partie 33, cut 8089). Le Pilote pose
   * un rail en CLIQUANT la cible dans la vue orthographique qu'ESV centre sur ce
   * rail, large de ±0,2 unité de scène : une cible plus loin de la pose ESV est
@@ -287,5 +324,5 @@
      if(!view.inView)return {...fallback('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,commandsPositions,holdAnchor,promoteAnchors,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
 });

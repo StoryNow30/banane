@@ -1,5 +1,18 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis la 4.7.18**, la cible de retour est la **4.7.17**, commit `e1bb7ef`
+(paquet `banane-v4.7.17-test.zip`, SHA-256 `46094629…41fe7d`, reconstruit à
+l'identique le 24/09). La 4.7.18 change la mémoire des appuis de la décision sur
+le lot (un appui est un cut posé, D-052), refuse « Réessayer » après un
+déplacement manuel des rails (KI-055) et consigne la version qui crée le lot ;
+interface et commandes inchangées. Un lot commencé en 4.7.18 et repris en 4.7.17
+repasserait à l'ancienne règle d'appui : terminer ou arrêter le lot d'abord.
+
+```bash
+git archive e1bb7ef | tar -x -C /tmp/banane-4.7.17
+cd /tmp/banane-4.7.17 && python3 tools/package.py --output /tmp/banane-v4.7.17-test.zip
+```
+
 **Depuis la 4.7.17**, la cible de retour est la **4.7.16**, commit `155dbec`
 (paquet `banane-v4.7.16-test.zip`, SHA-256 `5e23d35c…23f0b38b`). La 4.7.17 ne
 change que l'interface : placement et commandes identiques.

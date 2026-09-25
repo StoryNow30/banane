@@ -130,42 +130,44 @@ test('corpus exporté en segments : captures réunies, complétude vérifiée ; 
 test('règles du rejeu selon la version du lot ; --regles-actuelles les impose',()=>{
   assert.equal(A.versionAtLeast('4.7.12','4.7.12'),true);assert.equal(A.versionAtLeast('4.7.13','4.7.12'),true);assert.equal(A.versionAtLeast('4.8.0','4.7.12'),true);
   assert.equal(A.versionAtLeast('4.7.11','4.7.12'),false);assert.equal(A.versionAtLeast('4.7.9','4.7.12'),false);assert.equal(A.versionAtLeast(null,'4.7.12'),false);
-  const old={gaugeGuardMm:null,minTop:15},now={gaugeGuardMm:20,minTop:5};
+  const old={gaugeGuardMm:null,minTop:15,anchorRule:'decided'},now={gaugeGuardMm:20,minTop:5,anchorRule:'decided'};
   assert.deepEqual(A.rulesFor('4.7.11'),{pairGuard:false,chainMm:10,...old});assert.deepEqual(A.rulesFor('4.7.12'),{pairGuard:true,chainMm:10,...old});
-  assert.deepEqual(A.rulesFor('4.7.11',true),{pairGuard:true,chainMm:15,...now});assert.deepEqual(A.rulesFor('4.7.15'),{pairGuard:true,chainMm:15,...old});
+  assert.deepEqual(A.rulesFor('4.7.11',true),{pairGuard:true,chainMm:15,...now,anchorRule:'placed'});assert.deepEqual(A.rulesFor('4.7.15'),{pairGuard:true,chainMm:15,...old});
   assert.deepEqual(A.rulesFor('4.7.16'),{pairGuard:true,chainMm:15,...now});
+  // 4.7.18 (KI-057) : l'appui n'entre dans la mémoire du lot qu'une fois posé et validé.
+  assert.deepEqual(A.rulesFor('4.7.18'),{pairGuard:true,chainMm:15,...now,anchorRule:'placed'});
 });
 
 /* Relecture 4.7.12 : la version de l'export peut être postérieure au lot ; les
  * règles consignées par la décision (4.7.14) font foi. */
 test('règles du rejeu : consignées par le lot d\'abord, version de l\'export en dernier recours',()=>{
   const obs=lo=>[{lotObservation:lo}];
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14'),{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2'}),'4.7.11'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.12'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,source:'export'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.11'),{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,source:'export'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14',true),{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,source:'actuelles'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14'),{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2'}),'4.7.11'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.12'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.11'),{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:false}),'4.7.14',true),{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'placed',source:'actuelles'});
 });
 
 /* 4.7.15 (D-047) : `chainMm` consigné par la décision ; un lot antérieur exporté
  * par une version plus récente garde ses 10 mm. */
 test('règles du rejeu : chainMm consigné, 10 mm pour tout lot antérieur à la 4.7.15',()=>{
   const obs=lo=>[{lotObservation:lo}];
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:15}),'4.7.15'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:12}),'4.7.15'),{pairGuard:true,chainMm:12,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3'}),'4.7.15'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.15'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,source:'export'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:true}),'4.7.15'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules([],'4.7.15'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,source:'export'});
-  assert.deepEqual(A.lotRules([],'4.7.6'),{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:15}),'4.7.15'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:12}),'4.7.15'),{pairGuard:true,chainMm:12,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3'}),'4.7.15'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v1'}),'4.7.15'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v2',pairGuard:true}),'4.7.15'),{pairGuard:true,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules([],'4.7.15'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'export'});
+  assert.deepEqual(A.lotRules([],'4.7.6'),{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'export'});
 });
 
 /* 4.7.16 (D-050) : garde d'écartement voisin et minimum du choix consignés ;
  * un lot antérieur les rejoue sans garde et à 15 points. */
 test('règles du rejeu : garde d\'écartement voisin et minTop consignés, absents avant la 4.7.16',()=>{
   const obs=lo=>[{lotObservation:lo}];
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v4',pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5}),'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v4',pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15}),'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:15}),'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,source:'lot'});
-  assert.deepEqual(A.lotRules([],'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,source:'export'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v4',pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5}),'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v4',pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15}),'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules(obs({version:'lot-decision-v3',pairGuard:true,chainMm:15}),'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,anchorRule:'decided',source:'lot'});
+  assert.deepEqual(A.lotRules([],'4.7.16'),{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'decided',source:'export'});
 });

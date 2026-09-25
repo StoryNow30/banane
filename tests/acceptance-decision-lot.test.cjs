@@ -99,10 +99,11 @@ test('rejeu : les règles consignées par le lot arrivent telles quelles à la d
   const lot=rules=>{const cuts=[pilotCut(23,500,{lotObservation:lo(rules)}),pilotCut(23,501,{outcome:'deferred',lotObservation:lo(rules)})];
     const l=pilotLot(23,cuts);return {label:'règles',...l,relecture:null,corpus:{clouds:cuts.map(c=>({captureId:c.observation.lidar.captureId,identity:c.id,rails:c.before,pointsSceneRelative:[[0,0,0]],visibleByClipBoxes:[true]}))}};};
   const seen=[],L={decideCut(args){seen.push(args.options);return {stage:'deferred',reason:'x'};}};
-  const cas=[[{version:'lot-decision-v2',pairGuard:false},{},{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15}],
-    [{version:'lot-decision-v3',pairGuard:true,chainMm:15},{},{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15}],
-    [{version:'lot-decision-v4',pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5},{},{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5}],
-    [{version:'lot-decision-v2',pairGuard:false},{currentRules:true},{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5}]];
+  const cas=[[{version:'lot-decision-v2',pairGuard:false},{},{pairGuard:false,chainMm:10,gaugeGuardMm:null,minTop:15,anchorRule:'decided'}],
+    [{version:'lot-decision-v3',pairGuard:true,chainMm:15},{},{pairGuard:true,chainMm:15,gaugeGuardMm:null,minTop:15,anchorRule:'decided'}],
+    [{version:'lot-decision-v4',pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5},{},{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'decided'}],
+    [{version:'lot-decision-v5',pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'placed'},{},{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'placed'}],
+    [{version:'lot-decision-v2',pairGuard:false},{currentRules:true},{pairGuard:true,chainMm:15,gaugeGuardMm:20,minTop:5,anchorRule:'placed'}]];
   for(const [rules,opt,attendu] of cas){seen.length=0;
     const r=A.report([lot(rules)],{replay:true,replayDeps:{L,Shadow:{},maxAnchors:40},...opt});
     assert.equal(seen.length,2);for(const o of seen)assert.deepEqual(o,attendu,JSON.stringify(rules));

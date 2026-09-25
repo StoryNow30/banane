@@ -34,10 +34,12 @@ const CURSEURS=[
   {cle:'gaugeGuardMm',valeur:20,bilan:VOISIN,extrait:'Garde seule à 20 mm, activée en 4.7.16',decision:'D-050',mention:'Garde d\'écartement voisin, 20 mm'},
   /* Paramètres de la règle mesurée, jamais déplacés seuls : traçables, sans bilan de variation (rapport du chantier 5). */
   {cle:'gaugeCount',valeur:3,bilan:VOISIN,extrait:'comparé à la médiane de celui des 3 appuis les plus proches',decision:'D-050',mention:'médiane des 3 appuis les plus proches',sansVariation:true},
-  {cle:'gaugeGap',valeur:10,bilan:VOISIN,extrait:'des 3 appuis les plus proches, à 10 cuts au plus',decision:null,sansVariation:true}];
+  {cle:'gaugeGap',valeur:10,bilan:VOISIN,extrait:'des 3 appuis les plus proches, à 10 cuts au plus',decision:null,sansVariation:true},
+  /* 4.7.18 (KI-057) : règle d'appui, mesurée sur le même banc (`audit/appui-pose-2026-09-24.md`), D-052. */
+  {cle:'anchorRule',valeur:'placed',bilan:'audit/appui-pose-2026-09-24.md',extrait:'Retenu : un appui est un cut posé',decision:'D-052',mention:'Un appui est un cut posé'}];
 /* Réglages qui ne sont pas des curseurs : identifiant des règles consignées,
  * options de MESURE écartées du Pilote (D-050), éligibilité (D-039), journal. */
-const HORS_CURSEURS={version:'lot-decision-v4',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,
+const HORS_CURSEURS={version:'lot-decision-v5',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,
   eligibleMotifs:['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']};
 
 test('§14 C : chaque curseur de la décision sur le lot a sa valeur, son bilan et sa décision datée',()=>{
@@ -46,7 +48,7 @@ test('§14 C : chaque curseur de la décision sur le lot a sa valeur, son bilan 
     assert.ok(lire(c.bilan).includes(plat(c.extrait)),`${c.cle} : « ${c.extrait} » absent de ${c.bilan}`);
     if(c.decision)assert.ok(decision(c.decision).includes(plat(c.mention)),`${c.cle} : « ${c.mention} » absent de ${c.decision}`);}
   /* La décision consigne ses réglages : le rejeu d'un lot les relit (D-046, D-047, D-050). */
-  const consignes=['version','pairGuard','chainMm','gaugeGuardMm','minTop'];
+  const consignes=['version','pairGuard','chainMm','gaugeGuardMm','minTop','anchorRule'];
   assert.deepEqual(consignes.filter(k=>!(k in L.DEFAULTS)),[]);
 });
 
@@ -71,7 +73,7 @@ test('§14 C : curseurs du moteur (§8), valeurs du code et bilan D-035',()=>{
 });
 
 test('§14 C : le rejeu « règles actuelles » est exactement la décision du Pilote',()=>{
-  const {pairGuard,chainMm,gaugeGuardMm,minTop}=L.DEFAULTS;
-  assert.deepEqual(A.rulesFor(null,true),{pairGuard,chainMm,gaugeGuardMm,minTop});
-  assert.deepEqual(A.lotRules([],null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,source:'actuelles'});
+  const {pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule}=L.DEFAULTS;
+  assert.deepEqual(A.rulesFor(null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule});
+  assert.deepEqual(A.lotRules([],null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,source:'actuelles'});
 });

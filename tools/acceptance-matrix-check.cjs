@@ -32,7 +32,7 @@ const REQUIRED=Object.freeze([
   ...'ABCDEFGHI'.split('').map(l=>`§14 ${l}`),
   ...Array.from({length:11},(_,i)=>`§14 A.${i+1}`),
   '§5.4 a','§5.4 b','§5.4 c','§5.4 d','§5.5',
-  ...Array.from({length:8},(_,i)=>`LOT-${i+1}`)]);
+  ...Array.from({length:9},(_,i)=>`LOT-${i+1}`)]);
 
 /* ---- les essais déclarés dans un fichier source ---- */
 function readLiteral(src,i){

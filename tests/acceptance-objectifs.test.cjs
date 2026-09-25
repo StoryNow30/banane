@@ -24,11 +24,13 @@ test('§14 G : C1 n\'est jamais présenté seul : C2, C3, C4 et le plancher P2 l
       assert.equal(part.c2.floor.label,p2?'P2 (un opérateur)':'P2 non mesuré');}}
 });
 
-/* §14 G et C5 (cahier §6) : le rapport d'acceptation rapporte C1 à C4 ; C5, le
- * bilan des curseurs, vit dans `audit/curseurs-lot-2026-09-24.md` et
- * `audit/ecartement-voisin-2026-09-24.md`, sans lien depuis le rapport. */
-test('§14 G : C5, le bilan des curseurs, est rapporté avec C1 à C4',
-  {todo:'KI-056 proposé (audit/chantiers/acceptation.md) : le rapport d\'acceptation ne rapporte pas C5'},()=>{
-  const md=A.toMarkdown(A.report(lots()));
-  for(const {titre,texte} of sections(md))assert.match(texte,/\| C5 —/,`${titre} : C5 absent`);
+/* §14 G et C5 (cahier §6) : KI-056, corrigé en 4.7.18. Chaque section porte une
+ * ligne C5 : curseurs retenus (valeurs du code), règles consignées par les lots,
+ * bilans et décisions datées, curseurs sans bilan de variation. */
+test('§14 G : C5, le bilan des curseurs, est rapporté avec C1 à C4',()=>{
+  const r=A.report(lots()),md=A.toMarkdown(r),D=require('../src/lot-decision.js').DEFAULTS;
+  for(const {titre,texte} of sections(md)){assert.match(texte,/\| C5 —/,`${titre} : C5 absent`);assert.match(texte,/C1 à C5 sont rapportés ensemble/);}
+  for(const part of [...Object.values(r.parts),r.total]){
+    assert.equal(part.c5.retained.chainMm,D.chainMm);assert.equal(part.c5.retained.anchorRule,D.anchorRule);
+    assert.ok(part.c5.reviews.includes('audit/curseurs-lot-2026-09-24.md'));assert.deepEqual(part.c5.withoutVariationReview,['gaugeGap','gaugeCount']);}
 });

@@ -1,0 +1,186 @@
+{
+ "format": "banane-appui-pose-v1",
+ "date": "2026-09-24",
+ "regles": "4.7.16 (chainMm 15, garde d'écartement 20 mm, minTop 5, garde de paire), seule la règle d'appui varie",
+ "banc": {
+  "natif": [
+   "natif-p22",
+   "natif-court-p20",
+   "relecture-p19",
+   "natif-p24",
+   "natif-p30",
+   "natif-long-p20"
+  ],
+  "pilote": [
+   "pilote-p19-4.7.6",
+   "pilote-p31-4.7.8",
+   "pilote-p31-fin-4.7.9",
+   "pilote-p34-4.7.11",
+   "pilote-p2-4.7.14"
+  ],
+  "horsJugement": [
+   "pilote-p35-4.7.12"
+  ]
+ },
+ "decisions": {
+  "natif": {
+   "decide": {
+    "decides": 472,
+    "juges": 308,
+    "justes": 305,
+    "faux": 3,
+    "fauxCuts": [
+     "natif-long-p20:398 (159.9)",
+     "natif-long-p20:402 (273)",
+     "natif-long-p20:983 (15)"
+    ]
+   },
+   "pose": {
+    "decides": 472,
+    "juges": 308,
+    "justes": 305,
+    "faux": 3,
+    "fauxCuts": [
+     "natif-long-p20:398 (159.9)",
+     "natif-long-p20:402 (273)",
+     "natif-long-p20:983 (15)"
+    ]
+   }
+  },
+  "pilote": {
+   "decide": {
+    "decides": 239,
+    "juges": 216,
+    "justes": 215,
+    "faux": 1,
+    "fauxCuts": [
+     "pilote-p2-4.7.14:137 (10.23)"
+    ]
+   },
+   "pose": {
+    "decides": 232,
+    "juges": 209,
+    "justes": 208,
+    "faux": 1,
+    "fauxCuts": [
+     "pilote-p2-4.7.14:137 (10.23)"
+    ]
+   }
+  },
+  "p35": {
+   "decide": {
+    "decides": 206,
+    "juges": 0,
+    "justes": 0,
+    "faux": 0,
+    "fauxCuts": []
+   },
+   "pose": {
+    "decides": 205,
+    "juges": 0,
+    "justes": 0,
+    "faux": 0,
+    "fauxCuts": []
+   }
+  },
+  "relu": {
+   "decide": {
+    "decides": 711,
+    "juges": 524,
+    "justes": 520,
+    "faux": 4,
+    "fauxCuts": [
+     "natif-long-p20:398 (159.9)",
+     "natif-long-p20:402 (273)",
+     "natif-long-p20:983 (15)",
+     "pilote-p2-4.7.14:137 (10.23)"
+    ]
+   },
+   "pose": {
+    "decides": 704,
+    "juges": 517,
+    "justes": 513,
+    "faux": 4,
+    "fauxCuts": [
+     "natif-long-p20:398 (159.9)",
+     "natif-long-p20:402 (273)",
+     "natif-long-p20:983 (15)",
+     "pilote-p2-4.7.14:137 (10.23)"
+    ]
+   }
+  }
+ },
+ "decisionsChangees": [
+  {
+   "cut": "pilote-p2-4.7.14:114",
+   "avant": "window [113,112] juste 1.47",
+   "apres": "window [112,111] juste 1.47"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:115",
+   "avant": "window [114,113] juste 1.45",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:116",
+   "avant": "window [115,114] juste 2.59",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:117",
+   "avant": "window [116,115] juste 3.78",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:118",
+   "avant": "window [117,116] juste 7.09",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:119",
+   "avant": "window [118,117] juste 8.16",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:120",
+   "avant": "window [119,118] juste 1.61",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p2-4.7.14:121",
+   "avant": "window [120,119] juste 2.68",
+   "apres": "non décidé"
+  },
+  {
+   "cut": "pilote-p35-4.7.12:8952",
+   "avant": "choice [8951,8949] non jugé",
+   "apres": "choice [8949] non jugé"
+  },
+  {
+   "cut": "pilote-p35-4.7.12:8953",
+   "avant": "window [8951] non jugé",
+   "apres": "non décidé"
+  }
+ ],
+ "commandables": {
+  "decided": {
+   "decides": 446,
+   "commandables": 436,
+   "justes": 209,
+   "faux": 1,
+   "nonJuges": 226
+  },
+  "placed": {
+   "decides": 438,
+   "commandables": 434,
+   "justes": 207,
+   "faux": 1,
+   "nonJuges": 226
+  },
+  "perdus": [
+   "pilote-p2-4.7.14:115",
+   "pilote-p2-4.7.14:116"
+  ],
+  "gagnes": []
+ }
+}

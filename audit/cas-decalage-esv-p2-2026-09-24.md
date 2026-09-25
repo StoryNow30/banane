@@ -63,6 +63,13 @@ Sans la vue, la décision sur le lot placerait 34 cuts sur 42, 1 faux sur
 19 jugés (137). Avec la vue, le faux de 207,6 mm devient un différé et deux
 cuts justes sont gagnés.
 
+**Correction du 24/09 (4.7.18, KI-057).** Ces deux gains s'appuyaient sur 113
+et 114, dont les cibles sont hors de la vue : le Pilote ne pouvait pas les poser,
+et le rejeu les retenait comme appuis à tort (constat B1 de la relecture
+4.7.16). Avec la règle « appui = cut posé », 115 et 116 sont différés faute
+d'appui. Le faux de 207,6 mm reste évité. Mesure :
+`audit/appui-pose-2026-09-24.md`.
+
 ## Ce qui reste
 
 1. **La vue d'ESV.** ESV centre sa vue sur sa propre pose de départ ; à 200 mm

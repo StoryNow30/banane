@@ -34,16 +34,16 @@ test('§14 I : dans le Pilote, la décision ne reçoit que la capture ESV du cut
       const origine=calls.find(x=>x.cut===a.identity.cut&&x.positions&&memePose(x.positions,a.positions));
       assert.ok(origine,`cut ${c.cut} : appui ${a.identity.cut} sans décision d'origine`);
       assert.ok(!memePose(a.positions,humaine),`cut ${c.cut} : appui ${a.identity.cut} à la pose de l'opérateur`);}}
-  assert.ok(calls.at(-1).anchors.length>=1,'le cut 101 est décidé avec des appuis');
+  /* 4.7.18 (KI-057) : le cut 100, repris à la main, n'a pas été posé par le
+   * Pilote ; sa décision n'est pas un appui. Jusqu'à la 4.7.17, elle l'était. */
+  assert.deepEqual(calls.at(-1).anchors.map(a=>a.identity.cut),[],'le cut 101 n\'a pas pour appui le cut 100 repris à la main');
 });
 
-/* DÉFAUT CONSTATÉ (chantier 5), non corrigé ici : `Engine.retryPaused()` archive
- * la capture du cut puis en relit une nouvelle, sans comparer les rails à la
- * pose de départ (ce que fait `resume()`, « Rails modifiés depuis la lecture
- * interrompue »). Si l'opérateur a touché les rails pendant la pause, sa pose
- * devient l'entrée du moteur et de la décision sur le lot. */
-test('§14 I : « Réessayer ce cut » après un déplacement manuel des rails ne doit pas analyser la pose de l\'opérateur',
-  {todo:'KI-055 proposé (audit/chantiers/acceptation.md) : Engine.retryPaused relit la pose modifiée par l\'opérateur'},async()=>{
+/* KI-055 (chantier 5), corrigé en 4.7.18 : `Engine.retryPaused()` relit une
+ * capture sans comparer les rails à la pose de départ (ce que fait `resume()`).
+ * Le service worker refuse désormais « Réessayer » quand l'opérateur a touché
+ * les rails pendant la pause : sa pose n'entre jamais dans le moteur. */
+test('§14 I : « Réessayer ce cut » après un déplacement manuel des rails ne doit pas analyser la pose de l\'opérateur',async()=>{
   const calls=[],spy={...L,decideCut(args){calls.push(K.clone(args.capture.rails));return L.decideCut(args);}};
   const r=await pilote(spy,{start:100,end:100,policy:'pause'});
   r.b.adapter.noPoints=true;let view=await r.b.settle();
@@ -51,8 +51,15 @@ test('§14 I : « Réessayer ce cut » après un déplacement manuel des rails n
   const esv=K.clone(r.b.adapter.rails);
   const humaine=K.expectedPoses({rails:esv},{left:{delta:[0,.03,0]},right:{delta:[0,-.03,0]}});
   r.b.adapter.rails=K.clone(humaine);r.b.adapter.noPoints=false;
+  const avant=calls.length;
   const refus=await r.b.api('retry').then(()=>null,e=>e);view=await r.b.settle();
-  if(refus)return;                                   // refus explicite : conforme
+  assert.match(String(refus?.message),/Rails modifiés pendant la pause/,'« Réessayer » est refusé');
+  assert.equal(view.batch.state,'PAUSED_UNRESOLVED_RAIL','le lot reste en pause, sans nouvelle capture');
+  assert.equal(calls.length,avant,'aucune décision sur la pose de l\'opérateur');
+  /* Rails non touchés : « Réessayer » reste permis. */
+  const r2=await pilote(spy,{start:100,end:100,policy:'pause'});r2.b.adapter.noPoints=true;await r2.b.settle();
+  r2.b.adapter.noPoints=false;await r2.b.api('retry');const v2=await r2.b.settle();
+  assert.notEqual(v2.batch.state,'PAUSED_UNRESOLVED_RAIL','réessai sans déplacement : le cut est repris');
   const vus=[...calls,...r.captured.map(c=>c.rails)];
   for(const rails of vus)assert.ok(!K.equalPoses(rails,humaine),'la pose de l\'opérateur est entrée dans la capture analysée');
 });

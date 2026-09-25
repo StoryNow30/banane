@@ -1,5 +1,38 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.18 — un appui est un cut posé, 24 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension** (relecture indépendante 4.7.16 et chantier 5 ; D-052).
+- **Un appui est un cut posé** (KI-057, constat B1). La décision sur le lot
+  proposait un appui dès qu'elle était prise ; une reprise depuis la voie dont
+  la commande se repliait (cible hors de la vue, écartement, erreur), ou un cut
+  ensuite repris à la main, servait quand même d'appui aux cuts suivants
+  (partie 35 : 8951 → 8952, 8953). L'appui proposé attend désormais que ses
+  positions soient commandées, appliquées et le cut validé. Règle consignée
+  (`lot-decision-v5`, `anchorRule:'placed'`), rejouée à l'identique.
+  Mesure : Natif inchangé ; lots Pilote relus, 434 décisions commandables au
+  lieu de 436, 207 justes au lieu de 209, faux inchangé ; les deux cuts perdus
+  (partie 2 : 115, 116) n'avaient d'appuis que grâce au défaut
+  (`audit/appui-pose-2026-09-24.md`).
+- **« Réessayer ce cut » est refusé si les rails ont bougé pendant la pause**
+  (KI-055) : la pose de l'opérateur n'entre plus dans le moteur. Reprise
+  manuelle et SKIP explicite restent possibles.
+- **La version qui crée le lot est consignée** dans son périmètre
+  (`scope.extensionVersion`) ; le rejeu la préfère à celle de l'export
+  (relecture 4.7.16, I1).
+- Interface et commandes inchangées.
+
+**Outils.** Le rapport d'acceptation porte une ligne **C5** dans chaque
+section (KI-056). Le rejeu applique la règle d'appui du lot : issue consignée
+quand la décision rejouée est celle du lot, commande simulée et dite comme
+telle sinon. `--option` accepte `null` et les valeurs texte.
+
+**Intégré** : relecture 4.7.16 (`audit/chantiers/relecture-4716.md`), chantier 5
+(matrice d'acceptation, 27 essais, contrôle au banc), chantier 7 (faux sans
+appui : observer, D-051).
+
 ## 4.7.17 — « La ligne » complète, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

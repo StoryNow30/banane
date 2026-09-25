@@ -1,13 +1,24 @@
-# Démarrer avec Banane V4.7.17 TEST — « La ligne » complète
+# Démarrer avec Banane V4.7.18 TEST — un appui est un cut posé
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.17-test.zip` dans Edge, exactement comme la 4.7.16.
+Installe `banane-v4.7.18-test.zip` dans Edge, exactement comme la 4.7.17.
+Termine ou arrête d'abord tout lot en cours : un lot commencé en 4.7.17 se
+reprend, mais il garde les appuis déjà retenus avec l'ancienne règle.
 
-Vérifie d'abord **V4.7.17 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.17 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie d'abord **V4.7.18 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.18 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
 
 ## Ce qui change pour toi
+
+**4.7.18 — la mémoire du lot ne retient que ce qui est posé.** Le Pilote
+s'appuie sur les cuts voisins pour placer les suivants. Jusqu'ici, un cut qu'il
+avait décidé mais pas pu poser (cible hors de la vue, cut différé ou repris à
+la main) pouvait servir d'appui. Désormais, seul un cut posé et validé sert
+d'appui. Tu ne verras presque aucune différence : sur la partie 35, un seul
+appui sur 176 était dans ce cas. Et **« Réessayer ce cut »** est refusé si tu
+as bougé les rails pendant la pause : choisis alors Reprise manuelle ou SKIP
+explicite. L'interface ne change pas.
 
 **4.7.17 — le panneau seulement.** Sous la voie, **la dernière commande** se
 lit en trois étapes : émise, effet, serveur (vert seulement si l'effet est

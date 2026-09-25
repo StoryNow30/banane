@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.17';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.18';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -93,6 +93,9 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
        engine.s.proposal=proposal={...proposal,rails:d.rails,lotCommand:{action:'defer',reason:'guard-error',stage:lotObservation.stage,engineRails:proposal.rails}};
        lotObservation.command={action:'defer',reason:'guard-error: '+(e?.message||String(e))};lotObservation.applied=false;}
      else lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
+   /* 4.7.18 (KI-057) : l'appui proposé attend que le cut soit validé avec ces
+    * positions ; il ne compte qu'une fois posé (`promoteAnchors`). */
+   if(lotObservation&&pilotScope)holdLotAnchor(lotObservation,pilotScope.lotDecision==='apply'?lotObservation.command??null:null);
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
@@ -140,13 +143,24 @@ async function commandLot(proposal,lotObservation){
 }
 /* Décision sur le lot : l'état du lot (ancres) vit dans le lot lui-même,
  * persisté avec lui, et disparaît avec lui. */
+let lotAnchorCandidate=null;
+function holdLotAnchor(lotObservation,command){
+ const L=globalThis.BananeLotDecision,batch=engine.s.batch,candidate=lotAnchorCandidate;lotAnchorCandidate=null;
+ if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
+ lotObservation.anchorHeld=L.commandsPositions(lotObservation,command);
+ if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
+}
 async function observeLot(shadow){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
  if(!L||!batch||S?.lot?.observe===false)return null;
  const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
  if(!capture?.rails?.left||!capture?.rails?.right||!Array.isArray(capture.pointsSceneRelative))return {stage:'no-capture',applied:false};
  const identity=globalThis.BananeCore3.completeIdentity(capture.identity||engine.s.before?.identity||{});
- const state=batch.lotObservation||(batch.lotObservation={version:L.DEFAULTS.version,anchors:[]});
+ const state=batch.lotObservation||(batch.lotObservation={version:L.DEFAULTS.version,anchors:[],pending:[]});
+ lotAnchorCandidate=null;
+ /* 4.7.18 (KI-057) : les cuts validés depuis la décision précédente deviennent
+  * appuis ; une décision ne s'appuie que sur des cuts posés. */
+ if(typeof L.promoteAnchors==='function')L.promoteAnchors(state,(batch.processed||[]).map(p=>p.identity).filter(Boolean),S?.lot?.maxAnchors??40);
  const t0=Date.now();
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
    visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
@@ -157,7 +171,7 @@ async function observeLot(shadow){
  const ecartMm=decision.guardMm??decision.fromPredictionMm??(chosen.length?Math.max(...chosen):null);
  if(Number.isInteger(identity.cut)){batch.lotCommands=batch.lotCommands||{};
    batch.lotCommands[identity.cut]={...(batch.lotCommands[identity.cut]||{}),cut:identity.cut,stage:decision.stage,ecartMm:Number.isFinite(ecartMm)?ecartMm:null};}
- if(decision.anchor)L.rememberAnchor(state.anchors,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage},S?.lot?.maxAnchors??40);
+ if(decision.anchor)lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage};
  return {...decision,applied:false,displayed:false,engineMs:Date.now()-t0};
 }
 async function openPanel(which='home'){if(!VIEWS.includes(which))throw Error('Vue inconnue.');
@@ -271,7 +285,15 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    * cut par sa capture. */
   if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
   await engine.resume();return engine.view();}
- if(action==='retry'){await engine.retryPaused();return engine.view();}
+ /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
+  * l'opérateur a déplacé les rails pendant la pause, cette capture serait SA
+  * pose, qui entrerait dans le moteur et la décision sur le lot (cahier §10,
+  * §14 I) : refusé, comme « Reprendre » (« Rails modifiés depuis la lecture
+  * interrompue »). `src/engine.js` est épinglé : le contrôle vit ici. */
+ if(action==='retry'){const ref=engine.s.before?.rails;
+   if(ref){const now=await engine.adapter.state();
+     if(!globalThis.BananeCore3.equalPoses(ref,now.rails))throw Error('Rails modifiés pendant la pause : « Réessayer » analyserait ta pose, il est refusé. Choisis Reprise manuelle ou SKIP explicite.');}
+   await engine.retryPaused();return engine.view();}
  if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
  // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
  if(action==='manual-completion'){await engine.manualCompletion();return engine.view();}
@@ -308,6 +330,9 @@ async function dispatch(m){await ready;const {action,args={}}=m;
     if(args?.lotDecision!==undefined&&!['apply','observe'].includes(args.lotDecision))throw Error('Décision sur le lot inconnue.');
     startArgs.lotDecision=args?.lotDecision==='apply'?'apply':'observe';
   }else delete startArgs.lotDecision;
+  /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
+   * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
+  startArgs.extensionVersion=VERSION;
   const tente=startArgs.lowConfidence==='attempt';
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});

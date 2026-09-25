@@ -8,7 +8,7 @@ const anchor=(cut,g,part=2)=>({identity:{part,cut,frameId:'f'},positions:pos(g,c
 test('4.7.16 (D-050) : garde à 20 mm, choix à 5 points de dessus ; ni aide au choix ni cible',()=>{
   assert.equal(L.DEFAULTS.gaugeGuardMm,20);assert.equal(L.DEFAULTS.minTop,5);
   assert.equal(L.DEFAULTS.gaugeChoice,false);assert.equal(L.DEFAULTS.gaugeTargetStudy,false);
-  assert.equal(L.DEFAULTS.version,'lot-decision-v4');
+  assert.equal(L.DEFAULTS.version,'lot-decision-v5','v5 (4.7.18) : même règle d\'écartement, appui = cut posé');
 });
 test('écartement d\'une paire, référence par la médiane des appuis les plus proches',()=>{
   assert.ok(Math.abs(L.gaugeOf(pos(1452))-1452)<1e-6);
