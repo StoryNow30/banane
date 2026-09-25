@@ -12,8 +12,12 @@ l'utilisateur ; ce fichier suffit pour reprendre.
   `StoryNow30/banane-data` (branche `claude/banane-47-gate-audit-vaktr1`,
   collectes, relectures, références et fichiers de travail).
 - Release officielle : **4.7.0**. Les 4.7.x suivantes sont des builds TEST.
-- Version terrain : **4.7.20** (paquet `banane-v4.7.20-test.zip`, empreinte dans
-  le CHANGELOG et ci-dessous). Retour arrière : 4.7.19 (`RETOUR_ARRIERE.md`).
+- Version terrain : **4.7.20** (paquet `banane-v4.7.20-test.zip`, SHA-256
+  `b3a679da5c9a1479203eb14204eb09d3137772cbebab8379c996d40a3572f4cb`, construit
+  depuis `f859d8f` par `git archive` + `tools/package.py`, reproductible : deux
+  constructions identiques ; chargé dans Chromium comme extension MV3, service
+  worker 4.7.20, quatre vues sans erreur). Retour arrière : 4.7.19
+  (`RETOUR_ARRIERE.md`).
 
 ## Règles non négociables
 
