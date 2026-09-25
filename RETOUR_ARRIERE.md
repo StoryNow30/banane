@@ -1,5 +1,19 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Sur le terrain, la dernière version éprouvée est la 4.7.14** (25/09) : les
+4.7.15, 4.7.16 et 4.7.17 n'ont jamais été installées dans l'espace de travail,
+l'opérateur passe directement de la 4.7.14 à la 4.7.18. En cas de problème sur
+le terrain avec la 4.7.18, revenir à la **4.7.14**, commit `3e83fc4` (paquet
+`banane-v4.7.14-test.zip`, SHA-256 `4ef4ca3e…12e56b8a`), et non à la 4.7.17,
+qui n'a jamais tourné sur ESV. Terminer ou arrêter le lot en cours d'abord.
+
+```bash
+git archive 3e83fc4 | tar -x -C /tmp/banane-4.7.14
+cd /tmp/banane-4.7.14 && python3 tools/package.py --output /tmp/banane-v4.7.14-test.zip
+```
+
+Les cibles ci-dessous restent valables version par version.
+
 **Depuis la 4.7.18**, la cible de retour est la **4.7.17**, commit `e1bb7ef`
 (paquet `banane-v4.7.17-test.zip`, SHA-256 `46094629…41fe7d`, reconstruit à
 l'identique le 24/09). La 4.7.18 change la mémoire des appuis de la décision sur

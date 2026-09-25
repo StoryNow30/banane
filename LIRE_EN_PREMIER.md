@@ -3,11 +3,53 @@
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.18-test.zip` dans Edge, exactement comme la 4.7.17.
-Termine ou arrête d'abord tout lot en cours : un lot commencé en 4.7.17 se
-reprend, mais il garde les appuis déjà retenus avec l'ancienne règle.
+Installe `banane-v4.7.18-test.zip` dans Edge, à la place de la version en place (4.7.14 dans ton espace de travail).
+Avant d'installer : termine ou arrête le lot en cours, et télécharge son bilan
+et ses LiDAR s'ils ne sont pas encore exportés. Commence ensuite un lot neuf en
+4.7.18 : un lot repris d'une version antérieure garderait les appuis retenus
+avec l'ancienne règle.
 
 Vérifie d'abord **V4.7.18 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.18 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+
+## Tu viens de la 4.7.14 : ce qui change en une fois
+
+Tu n'as pas installé les 4.7.15, 4.7.16 et 4.7.17 : la 4.7.18 les contient
+toutes. Inutile de les essayer une par une : sur ton premier lot 4.7.18, le
+rejeu hors ligne peut couper chaque règle à tour de rôle et montrer ce que
+chacune a apporté.
+
+- **Le placement.**
+  - Un cut repris depuis la voie sert d'appui jusqu'à 15 mm de la prédiction,
+    au lieu de 10 (4.7.15).
+  - Un cut dont l'écartement s'éloigne de plus de 20 mm de celui de ses voisins
+    est repris depuis la voie, ou différé avec le motif « garde d'écartement
+    voisin » (4.7.16).
+  - Le choix par la voie accepte un champignon vu avec 5 points de dessus au
+    lieu de 15 (4.7.16).
+  - Seul un cut posé et validé sert d'appui (4.7.18).
+- **La conduite.** « Réessayer ce cut » est refusé si tu as bougé les rails
+  pendant la pause (4.7.18) : choisis Reprise manuelle ou SKIP explicite.
+- **L'écran** (4.7.17) :
+  - la dernière commande se lit en trois étapes (émise, effet, serveur) ;
+  - l'écartement de la proposition s'affiche dans l'Assisté ;
+  - des pastilles sur les onglets ;
+  - « Nouveau lot » en fin de lot ;
+  - les exports de diagnostic et le dépannage sont rangés sous « Détails › ».
+- **Ce qui ne change pas** : les contrôles avant commande, le contrat
+  d'écartement 1405–1470 (jamais une cible), les commandes envoyées à ESV.
+- **Mesuré hors ligne, pas encore sur le terrain** : +4 justes (4.7.15) ; +13
+  justes et un faux de moins (4.7.16) ; 2 justes de moins, sans faux de plus
+  (4.7.18).
+
+**Ton premier lot 4.7.18** vaut pour les quatre versions à la fois :
+- une partie jamais utilisée, sans t'arrêter avant au moins 100 cuts si possible ;
+- une relecture qui couvre au moins 80 % des cuts appliqués (en dessous, C4
+  n'est pas évaluable) ;
+- dans la relecture, les cuts posés par la voie (traverses creuses) et les
+  différés « garde d'écartement voisin ».
+
+En cas de problème, reviens à la 4.7.14 (`RETOUR_ARRIERE.md`) : c'est la
+dernière version que tu as éprouvée.
 
 ## Ce qui change pour toi
 

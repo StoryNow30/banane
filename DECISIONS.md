@@ -30,6 +30,10 @@ intégrés.
 - **Constat M1** (provenance de la navigation dans le statut) : il est traité
   par la 4.7.17 (commande en trois étapes, serveur toujours « non disponible »).
   Le contrôle visuel dans Edge reste à faire.
+- **Terrain** (25/09) : l'opérateur est resté en 4.7.14 ; les 4.7.15 à 4.7.17
+  n'ont jamais tourné sur ESV. Le premier lot 4.7.18 relu confirme ou non, en
+  une fois, les règles de D-047, D-050 et D-052 ; le rejeu isole l'effet de
+  chacune. Retour arrière de terrain : 4.7.14.
 - Temps du banc (chantier 5, question 6) : les deux essais les plus longs
   (`lot-decision-navigateur*`, 7,2 et 7,6 s sur 10) sont chacun un scénario
   unique. Ils ne sont pas découpés.

@@ -16,6 +16,11 @@ déplacement manuel des rails (KI-055). Version de création du lot consignée
 chantier 5 (matrice d'acceptation, 44 exigences), chantier 7 (faux sans appui :
 observer, D-051).
 
+Terrain : l'espace de travail de l'opérateur est resté en 4.7.14 ; les 4.7.15
+à 4.7.17 n'ont jamais tourné sur ESV. La 4.7.18 est donc la première version
+terrain depuis la 4.7.14, et le retour arrière de terrain vise la 4.7.14
+(`RETOUR_ARRIERE.md`).
+
 Avant une candidate 4.8.0-rc : un lot neuf, complet, relu, sous la 4.7.18 ; le
 seuil C4 de sortie ; P2 ; la définition d'un lot complet ; le contrôle visuel
 dans Edge (§14 H).
