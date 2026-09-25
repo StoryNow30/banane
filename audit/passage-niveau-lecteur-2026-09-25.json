@@ -1,0 +1,351 @@
+{
+ "format": "banane-passage-niveau-lecteur-v1",
+ "date": "2026-09-25",
+ "banc": "6 sessions Natif (a), lots p31 (b), p34 (c), lots 4.7.18 p2 et p3 (d)",
+ "coupe": {
+  "decides": 440,
+  "juges": 383,
+  "faux": [
+   "pilote-p2-4.7.18:772 first-pass 14.86",
+   "pilote-p2-4.7.18:773 choice 13.14"
+  ]
+ },
+ "arbitre": {
+  "decides": 409,
+  "juges": 347,
+  "faux": [
+   "pilote-p2-4.7.18:772 first-pass 14.86",
+   "pilote-p2-4.7.18:773 choice 13.14"
+  ]
+ },
+ "dernierRecours": {
+  "decides": 485,
+  "juges": 419,
+  "faux": [
+   "pilote-p34-4.7.11:4551 crossing 10.48",
+   "pilote-p2-4.7.18:772 first-pass 14.86",
+   "pilote-p2-4.7.18:773 choice 13.22"
+  ]
+ },
+ "gains": [
+  {
+   "cut": "natif-p24:1213",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": null
+  },
+  {
+   "cut": "natif-p24:1215",
+   "stage": "choice",
+   "anchors": [
+    1213
+   ],
+   "worstMm": 6.6
+  },
+  {
+   "cut": "natif-p24:1217",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 4.5
+  },
+  {
+   "cut": "natif-p24:1218",
+   "stage": "choice",
+   "anchors": [
+    1217
+   ],
+   "worstMm": null
+  },
+  {
+   "cut": "natif-p24:1219",
+   "stage": "choice",
+   "anchors": [
+    1217
+   ],
+   "worstMm": null
+  },
+  {
+   "cut": "natif-p24:1220",
+   "stage": "window",
+   "anchors": [
+    1217
+   ],
+   "worstMm": null
+  },
+  {
+   "cut": "natif-p24:1829",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 2.9
+  },
+  {
+   "cut": "natif-p24:1830",
+   "stage": "window",
+   "anchors": [
+    1829
+   ],
+   "worstMm": 1.9
+  },
+  {
+   "cut": "natif-p24:5890",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": null
+  },
+  {
+   "cut": "natif-p30:5782",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 2.4
+  },
+  {
+   "cut": "natif-p30:5783",
+   "stage": "choice",
+   "anchors": [
+    5782
+   ],
+   "worstMm": 2.1
+  },
+  {
+   "cut": "natif-p30:5784",
+   "stage": "window",
+   "anchors": [
+    5782
+   ],
+   "worstMm": null
+  },
+  {
+   "cut": "pilote-p31-4.7.8:1169",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 1.86
+  },
+  {
+   "cut": "pilote-p31-4.7.8:4203",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 3.35
+  },
+  {
+   "cut": "pilote-p31-fin-4.7.9:5062",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 1.63
+  },
+  {
+   "cut": "pilote-p31-fin-4.7.9:5318",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 4.95
+  },
+  {
+   "cut": "pilote-p34-4.7.11:3181",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 5.97
+  },
+  {
+   "cut": "pilote-p34-4.7.11:3183",
+   "stage": "choice",
+   "anchors": [
+    3181
+   ],
+   "worstMm": 8.09
+  },
+  {
+   "cut": "pilote-p34-4.7.11:3184",
+   "stage": "choice",
+   "anchors": [
+    3181
+   ],
+   "worstMm": 3.83
+  },
+  {
+   "cut": "pilote-p34-4.7.11:3185",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": null
+  },
+  {
+   "cut": "pilote-p34-4.7.11:3186",
+   "stage": "choice",
+   "anchors": [
+    3185
+   ],
+   "worstMm": null
+  },
+  {
+   "cut": "pilote-p34-4.7.11:4551",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 10.48
+  },
+  {
+   "cut": "pilote-p34-4.7.11:4553",
+   "stage": "choice",
+   "anchors": [
+    4551
+   ],
+   "worstMm": 3.7
+  },
+  {
+   "cut": "pilote-p34-4.7.11:4555",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 1.55
+  },
+  {
+   "cut": "pilote-p34-4.7.11:4556",
+   "stage": "choice",
+   "anchors": [
+    4555
+   ],
+   "worstMm": 4.6
+  },
+  {
+   "cut": "pilote-p34-4.7.11:4557",
+   "stage": "choice",
+   "anchors": [
+    4555
+   ],
+   "worstMm": 2.9
+  },
+  {
+   "cut": "pilote-p34-4.7.11:6140",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 1.68
+  },
+  {
+   "cut": "pilote-p2-4.7.18:768",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 1.86
+  },
+  {
+   "cut": "pilote-p2-4.7.18:769",
+   "stage": "choice",
+   "anchors": [
+    768
+   ],
+   "worstMm": 6.19
+  },
+  {
+   "cut": "pilote-p2-4.7.18:770",
+   "stage": "window",
+   "anchors": [
+    768
+   ],
+   "worstMm": 2.79
+  },
+  {
+   "cut": "pilote-p2-4.7.18:771",
+   "stage": "choice",
+   "anchors": [
+    770,
+    768
+   ],
+   "worstMm": 8.28
+  },
+  {
+   "cut": "pilote-p3-4.7.18:1450",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 7
+  },
+  {
+   "cut": "pilote-p3-4.7.18:1453",
+   "stage": "choice",
+   "anchors": [
+    1450
+   ],
+   "worstMm": 5.75
+  },
+  {
+   "cut": "pilote-p3-4.7.18:4273",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 1.24
+  },
+  {
+   "cut": "pilote-p3-4.7.18:4274",
+   "stage": "choice",
+   "anchors": [
+    4273
+   ],
+   "worstMm": 3.78
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5377",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 2.29
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5378",
+   "stage": "choice",
+   "anchors": [
+    5377
+   ],
+   "worstMm": 8.69
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5379",
+   "stage": "choice",
+   "anchors": [
+    5377
+   ],
+   "worstMm": 6.16
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5380",
+   "stage": "choice",
+   "anchors": [
+    5377
+   ],
+   "worstMm": 2.89
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5381",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 4.74
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5382",
+   "stage": "choice",
+   "anchors": [
+    5381
+   ],
+   "worstMm": 3.71
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5383",
+   "stage": "choice",
+   "anchors": [
+    5381
+   ],
+   "worstMm": 0.75
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5384",
+   "stage": "window",
+   "anchors": [
+    5381
+   ],
+   "worstMm": 5.24
+  },
+  {
+   "cut": "pilote-p3-4.7.18:5723",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": 3.63
+  },
+  {
+   "cut": "pilote-p3-4.7.18:6114",
+   "stage": "crossing",
+   "anchors": [],
+   "worstMm": null
+  }
+ ]
+}

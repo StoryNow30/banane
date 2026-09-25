@@ -1,16 +1,26 @@
 # Procédure de retour arrière — Banane 4.7.0
 
-**Sur le terrain, la dernière version éprouvée est la 4.7.14** (25/09) : les
-4.7.15, 4.7.16 et 4.7.17 n'ont jamais été installées dans l'espace de travail,
-l'opérateur passe directement de la 4.7.14 à la 4.7.18. En cas de problème sur
-le terrain avec la 4.7.18, revenir à la **4.7.14**, commit `3e83fc4` (paquet
-`banane-v4.7.14-test.zip`, SHA-256 `4ef4ca3e…12e56b8a`), et non à la 4.7.17,
-qui n'a jamais tourné sur ESV. Terminer ou arrêter le lot en cours d'abord.
+**Sur le terrain, la dernière version éprouvée est la 4.7.18** (25/09, deux
+lots Pilote relus, parties 2 et 3). En cas de problème sur le terrain avec la
+4.7.19, revenir à la **4.7.18**, commit `2b98481` (paquet
+`banane-v4.7.18-test.zip`, SHA-256 `07130cb6…9abcad4`). Terminer ou arrêter le
+lot en cours d'abord. La 4.7.18 garde le défaut KI-059 (message de plus de
+64 Mio) : pour un lot long, exporter souvent.
 
 ```bash
-git archive 3e83fc4 | tar -x -C /tmp/banane-4.7.14
-cd /tmp/banane-4.7.14 && python3 tools/package.py --output /tmp/banane-v4.7.14-test.zip
+git archive 2b98481 | tar -x -C /tmp/banane-4.7.18
+cd /tmp/banane-4.7.18 && python3 tools/package.py --output /tmp/banane-v4.7.18-test.zip
 ```
+
+**Depuis la 4.7.19**, la cible de retour est donc la **4.7.18**. La 4.7.19
+ajoute le lecteur « passage à niveau » en dernier recours et la voie encadrée
+(`lot-decision-v6`, D-053), le lot « Reprise des différés », l'arrêt au dernier
+cut du lot et le correctif KI-059. Un lot « Reprise » repris en 4.7.18 perdrait
+ses appuis de départ : terminer ou arrêter le lot d'abord.
+
+Avant la 4.7.18, la version éprouvée était la **4.7.14**, commit `3e83fc4`
+(paquet `banane-v4.7.14-test.zip`, SHA-256 `4ef4ca3e…12e56b8a`) ; les 4.7.15 à
+4.7.17 n'ont jamais tourné sur ESV.
 
 Les cibles ci-dessous restent valables version par version.
 

@@ -247,7 +247,9 @@
      /* Le compteur suit la FINALISATION durable, jamais le début d'une
       * tentative : une intention en attente ne s'y ajoute pas. */
      const differes=b?` · Différés : ${b.deferred?.length||0}`:'';
-     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     /* 4.7.19 : arrêt au dernier cut du lot, sans validation ni navigation. */
+     const fin=b?.stoppedAtEnd?` — dernier cut ${b.stoppedAtEnd.cut} ${b.stoppedAtEnd.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`:'';
+     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state):'Aucun lot';$('lot-etat').className='eyebrow'+(ton?' '+ton:'');}
@@ -291,6 +293,12 @@
      button('new-batch',{hidden:!attendNouveau,disabled:busy});
      button('start-batch',{hidden:lotOuvert||attendNouveau,disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
      if($('lot-bornes'))$('lot-bornes').hidden=lotOuvert||attendNouveau;
+     /* 4.7.19 — reprise : offerte après un lot Pilote fini qui a des différés et des cuts posés. */
+     const differesLot=(b?.deferred||[]).map(d=>d.identity?.cut).filter(Number.isInteger).sort((x,y)=>x-y);
+     const reprenable=fini&&b?.scope?.geometryEngine==='geometry-candidate-v1'&&differesLot.length>0&&(b.lotPosedCount||0)+(b.lotObservation?.anchors?.length||0)>0
+       &&(!id||id.part===b.scope.part);
+     if($('lot-reprise-row')){$('lot-reprise-row').hidden=!reprenable||lotOuvert||attendNouveau;if(!reprenable&&$('lot-reprise').checked)$('lot-reprise').checked=false;
+       $('lot-reprise-note').textContent=reprenable?`${differesLot.length} différé(s) dans le lot précédent, du cut ${differesLot[0]} au cut ${differesLot.at(-1)}. Coché : bornes ${differesLot[0]} → ${b.scope.end} ; ouvre le cut ${differesLot[0]} dans ESV. Seuls les cuts posés et validés par le Pilote servent d'appui.`:'';}
      button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
@@ -650,7 +658,11 @@ on('native-discard',async()=>{
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
    await api('settings',{mode:'automatic-test',minConfidence:Number($('confidence').value)});
    return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,
-     lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',lotDecision:$('lot-decision')?.value==='observe'?'observe':'apply',geometryEngine:'geometry-candidate-v1'});});
+     lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',lotDecision:$('lot-decision')?.value==='observe'?'observe':'apply',geometryEngine:'geometry-candidate-v1',
+     ...($('lot-reprise')?.checked&&!$('lot-reprise-row')?.hidden?{lotReprise:true}:{})});});
+ /* Reprise cochée : bornes du premier différé à la fin du lot précédent. */
+ if($('lot-reprise'))$('lot-reprise').onchange=()=>{const b=state?.batch,d=(b?.deferred||[]).map(x=>x.identity?.cut).filter(Number.isInteger).sort((x,y)=>x-y);
+   if($('lot-reprise').checked&&d.length){$('start').value=d[0];$('end').value=b.scope.end;edited.add('start');edited.add('end');}};
  for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
  on('retry',()=>api('retry'));
  /* « Nouveau lot » ne lance rien : il rouvre les bornes et « Démarrer ». */

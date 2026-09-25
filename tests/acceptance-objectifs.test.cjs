@@ -32,5 +32,5 @@ test('§14 G : C5, le bilan des curseurs, est rapporté avec C1 à C4',()=>{
   for(const {titre,texte} of sections(md)){assert.match(texte,/\| C5 —/,`${titre} : C5 absent`);assert.match(texte,/C1 à C5 sont rapportés ensemble/);}
   for(const part of [...Object.values(r.parts),r.total]){
     assert.equal(part.c5.retained.chainMm,D.chainMm);assert.equal(part.c5.retained.anchorRule,D.anchorRule);
-    assert.ok(part.c5.reviews.includes('audit/curseurs-lot-2026-09-24.md'));assert.deepEqual(part.c5.withoutVariationReview,['gaugeGap','gaugeCount']);}
+    assert.ok(part.c5.reviews.includes('audit/curseurs-lot-2026-09-24.md'));assert.deepEqual(part.c5.withoutVariationReview,['gaugeGap','gaugeCount','crossingVoieMm','frameGap','frameAnchors']);}
 });

@@ -37,7 +37,7 @@ test('KI-057 : l\'appui attend la validation du cut ; une nouvelle analyse rempl
   assert.deepEqual(state.anchors.map(a=>a.identity.cut),[101],'autre repère : autre voie');
   for(let c=200;c<220;c++)L.holdAnchor(state,entry(c));
   assert.ok(state.pending.length<=8,'attentes bornées');
-  assert.equal(L.DEFAULTS.anchorRule,'placed');assert.equal(L.DEFAULTS.version,'lot-decision-v5');
+  assert.equal(L.DEFAULTS.anchorRule,'placed');assert.equal(L.DEFAULTS.version,'lot-decision-v6','v6 (4.7.19) : même règle d\'appui');
 });
 
 /* Service worker réel : le cas de la partie 35, rejoué. Le cut 100 est décidé
@@ -64,7 +64,7 @@ test('KI-057 : service worker — un premier passage posé et validé devient ap
   const obs=r.observed();
   assert.deepEqual(seen.map(s=>s.cut),[100,101,102]);
   assert.ok(obs.every(o=>o.stage==='first-pass'&&o.anchorHeld===true),'premiers passages retenus en attente');
-  assert.equal(view.batch.processed.length,3,'les trois cuts sont validés');
+  assert.equal(view.batch.processed.length,2,'100 et 101 validés ; 102, dernier du lot, posé sans validation (4.7.19)');
   assert.deepEqual(seen.map(s=>s.anchors),[[],[100],[100,101]],'appuis = cuts validés avant la décision');
 });
 

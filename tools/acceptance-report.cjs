@@ -64,7 +64,8 @@ const ACCEPT_MIN_MS=500;
 const EXCLUDED=Object.freeze([
   Object.freeze({part:19,cut:9033,motif:'demande de l’opérateur : référence humaine fondée sur une information absente des données'}),
   Object.freeze({part:19,cut:9241,motif:'demande de l’opérateur : référence humaine fondée sur une information absente des données'})]);
-const APPLYING_STAGES=new Set(['first-pass','window','choice']);
+/* 4.7.19 : « crossing », la paire lue par l'ornière au passage à niveau, est commandée comme une reprise. */
+const APPLYING_STAGES=new Set(['first-pass','window','choice','crossing']);
 const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
 const r2=v=>Number.isFinite(v)?Math.round(v*100)/100:null;
 const keyOf=(part,cut)=>`${part}|${cut}`;
@@ -258,10 +259,10 @@ function judgeCut(row,visits,T,frameStatus){
 function simulatedCommand(decision,capture,L){
   const g=Gauge.classifyMm(L.gaugeOf(decision.positions));
   if(!Gauge.admissible(g))return {action:'engine',reason:'gauge-'+g};
-  if(decision.stage!=='window')return {action:'engine',reason:decision.stage};
+  if(decision.stage!=='window'&&decision.stage!=='crossing')return {action:'engine',reason:decision.stage};
   if(capture){const cams=L.viewCameras(capture);
     if(SIDES.some(s=>cams[s]))for(const s of SIDES)if(!cams[s]||!L.inView(cams[s],decision.positions[s]).inView)return {action:'engine',reason:'hors-vue-'+s};}
-  return {action:'lot',reason:'window'};
+  return {action:'lot',reason:decision.stage};
 }
 function placement(decision,o,capture,L,validatedKeys,mode='apply'){
   if(!decision?.anchor||!decision.positions)return {placed:false};
@@ -283,7 +284,7 @@ function replayLot(observations,corpus,deps){deps=deps||{};
   const L=deps.L||require('../src/lot-decision.js'),Shadow=deps.Shadow||require('../src/gcv1-shadow.js');
   const L0=require('../src/lot-decision.js'),Lp={commandsPositions:L.commandsPositions||L0.commandsPositions,gaugeOf:L.gaugeOf||L0.gaugeOf,viewCameras:L.viewCameras||L0.viewCameras,inView:L.inView||L0.inView};
   const anchorRule=deps.options?.anchorRule??deps.anchorRule??'decided';
-  const maxAnchors=deps.maxAnchors??require('../src/settings.js').lot.maxAnchors;
+  let maxAnchors=deps.maxAnchors??require('../src/settings.js').lot.maxAnchors;
   const captures=new Map((corpus?.clouds||[]).map(c=>[c.captureId,c])),anchors=[],out=[];
   for(const o of observations.slice().sort(byTime)){
     const k=keyOf(o.identity?.part,o.identity?.cut);
@@ -291,6 +292,10 @@ function replayLot(observations,corpus,deps){deps=deps||{};
     const capture=captures.get(o.lidar?.captureId);
     if(!capture?.rails?.left||!capture?.rails?.right||!Array.isArray(capture.pointsSceneRelative)){
       out.push({key:k,observationEventId:o.observationEventId,decision:{stage:'no-capture',applied:false}});continue;}
+    /* 4.7.19 : un lot « Reprise » part des appuis posés du lot précédent, consignés
+     * par sa première décision (`reprise.anchors`) ; le rejeu part des mêmes. */
+    const seeds=o.lotObservation?.reprise?.anchors||[];maxAnchors+=seeds.length;
+    for(const a of seeds)(L.rememberAnchor||L0.rememberAnchor)(anchors,a,maxAnchors);
     const identity=K.completeIdentity(capture.identity||o.identity||{});
     const science={rails:Object.fromEntries(SIDES.map(s=>[s,o.rails[s]?.scientificRail])),summary:o.summary};
     const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
@@ -323,9 +328,11 @@ const CHAIN_MM={before:10,current:15},GAUGE_GUARD_MM={before:null,current:20},MI
 const rules4716=(on)=>({gaugeGuardMm:on?GAUGE_GUARD_MM.current:GAUGE_GUARD_MM.before,minTop:on?MIN_TOP.current:MIN_TOP.before});
 /* 4.7.18 (KI-057) : un appui n'entre dans la mémoire du lot qu'une fois posé et validé. */
 const ANCHOR_RULE={before:'decided',current:'placed'};
+/* 4.7.19 (KI-058) : lecteur « passage à niveau » et voie encadrée ; absents avant. */
+const rules4719=on=>({crossing:!!on,framed:!!on});
 const rulesFor=(version,current=false)=>({pairGuard:current||versionAtLeast(version,'4.7.12'),
   chainMm:current||versionAtLeast(version,'4.7.15')?CHAIN_MM.current:CHAIN_MM.before,...rules4716(current||versionAtLeast(version,'4.7.16')),
-  anchorRule:current||versionAtLeast(version,'4.7.18')?ANCHOR_RULE.current:ANCHOR_RULE.before});
+  anchorRule:current||versionAtLeast(version,'4.7.18')?ANCHOR_RULE.current:ANCHOR_RULE.before,...rules4719(current||versionAtLeast(version,'4.7.19'))});
 /* Règles consignées par la décision elle-même (4.7.14 : garde de paire ;
  * 4.7.15 : `chainMm` ; 4.7.18 : règle d'appui) ; à défaut, version
  * `lot-decision-v2` ; à défaut seulement, version de l'extension — celle qui a
@@ -337,11 +344,13 @@ function lotRules(observations,exportVersion,current=false){
   const recorded=observations.map(o=>o?.lotObservation).filter(Boolean),consigned=recorded.find(x=>typeof x.pairGuard==='boolean');
   const chain=recorded.find(x=>Number.isFinite(x.chainMm))?.chainMm??(recorded.some(x=>x.version==='lot-decision-v3'||x.version==='lot-decision-v4')?CHAIN_MM.current:CHAIN_MM.before);
   /* 4.7.16 : garde d'écartement et minimum du choix consignés ; un lot antérieur n'a ni l'une ni l'autre. */
-  const v4=recorded.find(x=>/^lot-decision-v[45]$/.test(x.version)),later=v4?{gaugeGuardMm:v4.gaugeGuardMm??null,minTop:v4.minTop??MIN_TOP.current}:rules4716(false);
+  const v4=recorded.find(x=>/^lot-decision-v[456]$/.test(x.version)),later={...(v4?{gaugeGuardMm:v4.gaugeGuardMm??null,minTop:v4.minTop??MIN_TOP.current}:rules4716(false)),
+    /* 4.7.19 : lecteur et voie encadrée consignés à partir de la v6 ; avant, absents. */
+    ...(()=>{const v6=recorded.find(x=>x.version==='lot-decision-v6');return v6?{crossing:v6.crossing!==false,framed:v6.framed!==false}:rules4719(false);})()};
   /* Règle d'appui consignée à partir de la v5 (4.7.18) ; avant, l'appui entrait à la décision. */
   const anchorRule=recorded.find(x=>typeof x.anchorRule==='string')?.anchorRule??(recorded.length?ANCHOR_RULE.before:rulesFor(exportVersion).anchorRule);
   if(consigned)return {pairGuard:consigned.pairGuard,chainMm:chain,...later,anchorRule,source:'lot'};
-  if(recorded.some(x=>/^lot-decision-v[2345]$/.test(x.version)))return {pairGuard:true,chainMm:chain,...later,anchorRule,source:'lot'};
+  if(recorded.some(x=>/^lot-decision-v[23456]$/.test(x.version)))return {pairGuard:true,chainMm:chain,...later,anchorRule,source:'lot'};
   return {...rulesFor(exportVersion),...(recorded.length?{chainMm:chain,...later}:{}),anchorRule,source:'export'};
 }
 function analyseLot(lot,options={}){
@@ -380,7 +389,7 @@ function analyseLot(lot,options={}){
     const rules=lotRules(all,ctx.batch?.scope?.extensionVersion??lot.diagnostic?.version??lot.journal?.version,options.currentRules);lot.lotDecisionRules=rules;
     /* Mode du Pilote rejoué : celui du lot pour ses propres règles, « apply » pour la version courante. */
     const mode=options.currentRules||ctx.batch?.scope?.lotDecision==='apply'?'apply':'observe';
-    for(const x of replayLot(all,lot.corpus,{validatedKeys:ctx.processed,mode,...(options.replayDeps||{}),options:{pairGuard:rules.pairGuard,chainMm:rules.chainMm,gaugeGuardMm:rules.gaugeGuardMm,minTop:rules.minTop,anchorRule:rules.anchorRule,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
+    for(const x of replayLot(all,lot.corpus,{validatedKeys:ctx.processed,mode,...(options.replayDeps||{}),options:{pairGuard:rules.pairGuard,chainMm:rules.chainMm,gaugeGuardMm:rules.gaugeGuardMm,minTop:rules.minTop,anchorRule:rules.anchorRule,crossing:rules.crossing,framed:rules.framed,...(options.replayDeps?.options||{})}}))replay.set(x.observationEventId,x.decision);}
   /* `preferReplay` : la 4.7.8 consigne un choix par la voie privé de sa grille
    * (KI-048) ; ses lots se mesurent sur le rejeu, la parité restant rapportée. */
   const lotSource=recorded&&!(options.preferReplay&&replay)?'observation':replay?'rejeu-hors-ligne':'absent';
@@ -419,12 +428,13 @@ function analyseLot(lot,options={}){
 /* Les curseurs retenus, leur bilan et leur décision datée, rapportés avec C1 à
  * C4 ; les règles que chaque lot a consignées (ou déduites de sa version).
  * Rien n'est recalculé ici : le bilan chiffré vit dans les relevés cités. */
-const C5_BILANS=['audit/curseurs-lot-2026-09-24.md','audit/ecartement-voisin-2026-09-24.md','audit/appui-pose-2026-09-24.md'];
-const C5_DECISIONS=['D-044 garde de paire','D-047 chainMm 15','D-050 garde d’écartement 20 mm et minTop 5','D-052 appui = cut posé'];
+const C5_BILANS=['audit/curseurs-lot-2026-09-24.md','audit/ecartement-voisin-2026-09-24.md','audit/appui-pose-2026-09-24.md','audit/passage-niveau-lecteur-2026-09-25.md'];
+const C5_DECISIONS=['D-044 garde de paire','D-047 chainMm 15','D-050 garde d’écartement 20 mm et minTop 5','D-052 appui = cut posé','D-053 passage à niveau en dernier recours, voie encadrée'];
 function c5For(lots){const D=require('../src/lot-decision.js').DEFAULTS;
   return {retained:{guardMm:D.guardMm,chooseMm:D.chooseMm,chainMm:D.chainMm,gap:D.gap,anchors:D.anchors,minTop:D.minTop,minFace:D.minFace,maxDzMm:D.maxDzMm,
-      gaugeGuardMm:D.gaugeGuardMm,gaugeGap:D.gaugeGap,gaugeCount:D.gaugeCount,pairGuard:D.pairGuard,anchorRule:D.anchorRule},
-    withoutVariationReview:['gaugeGap','gaugeCount'],reviews:C5_BILANS,decisions:C5_DECISIONS,
+      gaugeGuardMm:D.gaugeGuardMm,gaugeGap:D.gaugeGap,gaugeCount:D.gaugeCount,pairGuard:D.pairGuard,anchorRule:D.anchorRule,
+      crossing:D.crossing,crossingVoieMm:D.crossingVoieMm,framed:D.framed,frameGap:D.frameGap,frameAnchors:D.frameAnchors},
+    withoutVariationReview:['gaugeGap','gaugeCount','crossingVoieMm','frameGap','frameAnchors'],reviews:C5_BILANS,decisions:C5_DECISIONS,
     lotRules:lots.map(l=>({label:l.label,rules:l.lotDecisionRules??null}))};}
 
 /* ---- agrégation : une partie, ou le total ---- */
@@ -504,7 +514,7 @@ function section(title,s){
     `| C2 — erreur des rails appliqués validés (${s.c2.rails} rails), médiane / p90 | latéral ${dist(s.c2.lateralMm)} mm · vertical ${dist(s.c2.verticalMm)} mm · plancher : ${s.c2.floor.label}${s.c2.floor.lateralMm?` (latéral ${fmt(s.c2.floor.lateralMm.median)} / ${fmt(s.c2.floor.lateralMm.p90)}, vertical ${fmt(s.c2.floor.verticalMm?.median)} / ${fmt(s.c2.floor.verticalMm?.p90)} mm)`:''} |`,
     `| C3 — paires hors contrat | refusées pendant le lot : ${s.c3.refused.length}${s.c3.refused.length?' ('+s.c3.refused.map(r=>`${r.cut} : ${fmt(r.predictedMm)} mm ${r.gaugeClass}`).join(' ; ')+')':''} · appliquées hors contrat : **${s.c3.appliedOutOfContract.length}**${s.c3.appliedGaugeUnmeasured.length?` · écartement appliqué non mesurable : ${s.c3.appliedGaugeUnmeasured.join(', ')}`:''} |`];
   if(s.c5){const R=s.c5.retained,rule=r=>r?`garde de paire ${r.pairGuard?'oui':'non'}, chainMm ${r.chainMm}, garde d’écartement ${r.gaugeGuardMm??'—'}, minTop ${r.minTop}, appui ${r.anchorRule==='placed'?'posé':'décidé'} (${r.source})`:'aucune décision consignée';
-    L.push(`| C5 — curseurs | retenus : guardMm ${R.guardMm}, chooseMm ${R.chooseMm}, chainMm ${R.chainMm}, gap ${R.gap}, anchors ${R.anchors}, minTop ${R.minTop}, minFace ${R.minFace}, maxDzMm ${R.maxDzMm}, garde d’écartement ${R.gaugeGuardMm} mm (${R.gaugeCount} voisins à ${R.gaugeGap} cuts), garde de paire ${R.pairGuard?'oui':'non'}, appui ${R.anchorRule==='placed'?'= cut posé':'= décision'} · règles des lots : ${s.c5.lotRules.map(l=>`${l.label} — ${rule(l.rules)}`).join(' ; ')||'—'} · bilans : ${s.c5.reviews.join(', ')} · décisions : ${s.c5.decisions.join(', ')} · sans bilan de variation : ${s.c5.withoutVariationReview.join(', ')} |`);}
+    L.push(`| C5 — curseurs | retenus : guardMm ${R.guardMm}, chooseMm ${R.chooseMm}, chainMm ${R.chainMm}, gap ${R.gap}, anchors ${R.anchors}, minTop ${R.minTop}, minFace ${R.minFace}, maxDzMm ${R.maxDzMm}, garde d’écartement ${R.gaugeGuardMm} mm (${R.gaugeCount} voisins à ${R.gaugeGap} cuts), garde de paire ${R.pairGuard?'oui':'non'}, appui ${R.anchorRule==='placed'?'= cut posé':'= décision'}, passage à niveau ${R.crossing?`en dernier recours (voie à ${R.crossingVoieMm} mm)`:'coupé'}, voie encadrée ${R.framed?`oui (${R.frameAnchors} appuis de chaque côté à ${R.frameGap} cuts)`:'non'} · règles des lots : ${s.c5.lotRules.map(l=>`${l.label} — ${rule(l.rules)}`).join(' ; ')||'—'} · bilans : ${s.c5.reviews.join(', ')} · décisions : ${s.c5.decisions.join(', ')} · sans bilan de variation : ${s.c5.withoutVariationReview.join(', ')} |`);}
   if(s.lotDecision)L.push(`| Décision sur le lot | ${s.lotDecision.wouldApply} appliqués / ${s.c1.distinctCuts} = ${fmt(s.lotDecision.coveragePct)} % · **${s.lotDecision.wrong} faux sur ${s.lotDecision.judged} jugés** · faux que le Pilote n’a pas faits : ${s.lotDecision.newWrong.length?s.lotDecision.newWrong.join(', '):'aucun'} · gagnés : ${s.lotDecision.gained.map(g=>g.cut).join(', ')||'aucun'} · perdus : ${s.lotDecision.lost.join(', ')||'aucun'} |`);
   else L.push('| Décision sur le lot | absente des exports (antérieurs à la 4.7.8) et non rejouée |');
   L.push('');

@@ -27,7 +27,8 @@ test('KI-053 : une erreur pendant la commande d\'une paire retirée par la garde
   const panne=()=>{throw Error('panne de commande');};
   const retiree={...L,decideCut:()=>({version:'lot-decision-v4',stage:'window',guardDeferred:true,guardMm:156.2,fromPredictionMm:3,anchorsUsed:[99,98],anchor:false,
     positions:Object.fromEntries(SIDES.map(s=>[s,base.rails[s].positionSceneRelative]))}),commandRails:panne};
-  const r=await lot(retiree,{end:100});
+  /* 4.7.19 : le dernier cut du lot n'est ni validé ni différé (arrêt au dernier cut) ; le cut testé n'est donc pas le dernier. */
+  const r=await lot(retiree,{end:101});
   assert.equal(r.applied.length,0,'aucune paire appliquée');
   assert.ok(r.observed.length>=1);
   for(const o of r.observed){assert.deepEqual(o.command,{action:'defer',reason:'guard-error: panne de commande'});assert.equal(o.applied,false);}

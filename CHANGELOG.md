@@ -1,5 +1,47 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.19 — passages à niveau, reprise des différés, arrêt au dernier cut, 25 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Extension** (retours terrain des lots 4.7.18, parties 2 et 3 ; D-053).
+- **Passage à niveau lu par l'ornière, en dernier recours** (KI-058). Sur un
+  cut de passage à niveau que la chaîne diffère, le Pilote pose la paire lue au
+  bord de l'ornière (`src/level-crossing.js`) si son écartement est dans le
+  contrat (admissibilité), si elle passe la garde d'écartement voisin et, avec
+  des appuis, si elle tombe à 10 mm de la voie. Il ne touche jamais à un cut que
+  la chaîne décide. Banc relu : +45 cuts décidés, 36 jugés, 1 faux à 10,5 mm
+  (partie 34, 4551), aucun juste perdu ; le passage à niveau 5377–5384
+  (partie 3) est décidé en entier au rejeu. Le lecteur utilisé en arbitre
+  retirait 43 cuts justes : écarté
+  (`audit/passage-niveau-lecteur-2026-09-25.md`).
+- **Voie encadrée** : un cut qui a des cuts posés des deux côtés est prédit par
+  une courbe passant par eux (jusqu'à 3 de chaque côté, à 8 cuts au plus).
+- **« Reprise des différés »** (case sous les bornes, après un lot Pilote qui a
+  des différés) : le nouveau lot part des cuts posés et validés par le lot
+  précédent autour de ses différés. Aucun cut validé à la main n'entre.
+- **Arrêt au dernier cut du lot** : la paire est posée, pas validée ; un cut
+  non résolu est laissé sans commande ni navigation. ESV ne passe plus à la
+  partie suivante à la fin du lot. La ligne d'état l'écrit.
+- **Messages de plus de 64 Mio** (KI-059, terrain du 25/09, partie 3, cut
+  8209) : capture bornée (rapports des nœuds sans point réduits au-delà de 64
+  nœuds ; au-delà de 48 Mo, pause reprenable « Lecture LiDAR instable »),
+  réponses du bridge et du service worker mesurées ou rattrapées, vue du
+  panneau sans `records` ni `incomplete`, journal, bilan, diagnostic et corpus
+  lus dans IndexedDB par le panneau.
+- Règles consignées : `lot-decision-v6` (`crossing`, `framed`) ; les lots
+  antérieurs sont rejoués sans lecteur ni voie encadrée.
+
+**Outils.** `tools/passage-niveau-scan.cjs` mesure le lecteur contre la pose
+humaine ; le rapport d'acceptation compte l'étape « crossing » et rejoue un lot
+« Reprise » depuis ses appuis de départ ; C5 rapporte les nouveaux réglages.
+Essai du navigateur allégé (9,7 → 7,7 s).
+
+**Analyse.** Lot 4.7.18 « long », partie 3 : 49/82 appliqués, 0 faux sur 48
+jugés ; mêmes décisions avec les règles de la 4.7.12, de la 4.7.14 et de la
+4.7.18 : les différés viennent du reliquat (1,7 cut par suite), pas des règles
+(`audit/lot-4718-p3-2026-09-25.md`).
+
 ## 4.7.18 — un appui est un cut posé, 24 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

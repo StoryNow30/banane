@@ -1,8 +1,26 @@
 # État du projet Banane
 
-Date : 24 septembre 2026  
-Version active de l'extension : **4.7.18 TEST** (un appui est un cut posé, D-052 ; « Réessayer » refusé après déplacement manuel des rails ; interface « La ligne » complète ; décision sur le lot appliquée, reprise appui jusqu'à 15 mm, garde d'écartement voisin 20 mm, choix à 5 points de dessus, garde de continuité sans repli sur la paire retirée, garde de paire ; D-041 à D-052 ; « Observer seulement » = 4.7.9 ; release officielle **4.7.0**, tag `v4.7.0`)
+Date : 25 septembre 2026  
+Version active de l'extension : **4.7.19 TEST** (passage à niveau lu par l'ornière en dernier recours et voie encadrée, D-053 ; lot « Reprise des différés » ; arrêt au dernier cut du lot ; messages sous 64 Mio, KI-059).
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.19
+
+Lecteur « passage à niveau » (`src/level-crossing.js`) en dernier recours sur
+les cuts que la chaîne diffère, voie encadrée, lot « Reprise des différés »,
+arrêt au dernier cut du lot, correctif KI-059 (D-053). Banc relu : +45 cuts
+décidés, 36 jugés, 1 faux à 10,5 mm, aucun juste perdu
+(`audit/passage-niveau-lecteur-2026-09-25.md`).
+
+Terrain : deux lots 4.7.18 relus, tous deux des reliquats. Partie 2 : 16/30,
+2 faux au passage à niveau. Partie 3 : 49/82, 0 faux sur 48 jugés, arrêté par
+KI-059 ; mêmes décisions avec les règles de la 4.7.12 et de la 4.7.14
+(`audit/lot-4718-p3-2026-09-25.md`). Retour arrière de terrain : 4.7.18.
+
+Prochain lot : une partie neuve avec des passages à niveau, sa reprise, la
+relecture. Après le retour de l'opérateur : 4.7.20 avec l'interface H animée.
+Direction : appuis validés à la main pour les cuts isolés (§14 I), seuil C4,
+lot complet, P2.
 
 ## État 4.7.18
 

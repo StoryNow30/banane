@@ -1,8 +1,8 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'),require('./gauge.js'),
-    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'));
-  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver);
-})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O){
+    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'));
+  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing);
+})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing){
  'use strict';
  /* DÉCIDER SUR LE LOT — cahier 4.8, amendement n°9 (D-039).
   *
@@ -41,7 +41,30 @@
   * Jusqu'à la 4.7.17 (`'decided'`), il y entrait dès la décision, même si la
   * commande était ensuite repliée (partie 35 : 8951, cible hors de la vue,
   * différé, servait d'appui à 8952 et 8953). */
- const DEFAULTS=Object.freeze({version:'lot-decision-v5',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,anchorRule:'placed',
+ /* 4.7.19 (KI-058) — PASSAGE À NIVEAU ET VOIE ENCADRÉE (`lot-decision-v6`).
+  *
+  * `crossing` : au passage à niveau (chaussée au niveau du champignon), le rail
+  * se lit par son ORNIÈRE (`src/level-crossing.js`). Le lecteur ne sert qu'en
+  * DERNIER RECOURS : sur un cut que la chaîne diffère (moteur abstenu ou retiré
+  * par une garde, sans reprise ni choix possibles), la paire de l'ornière est
+  * posée si son écartement est dans le contrat (admissibilité seulement), si
+  * elle passe la garde d'écartement voisin et, avec des appuis, si elle tombe à
+  * `crossingVoieMm` de la voie. Jamais sur un cut que la chaîne décide, jamais
+  * après la garde de paire. Banc du 25/09 : s'en servir d'arbitre (premier
+  * passage gardé seulement si le moteur s'accorde avec l'ornière, ni reprise ni
+  * choix au passage à niveau) retirait 43 cuts justes sans arrêter aucun faux ;
+  * en dernier recours, il pose des différés sans toucher au reste. L'écart du
+  * moteur à l'ornière est consigné (`levelCrossing.engineMm`), sans effet.
+  * Ni pose humaine, ni écartement cible : le lecteur ne lit que la capture.
+  * `framed` : un cut qui a des appuis POSÉS des deux côtés (reprise des
+  * différés, lot « Reprise ») est prédit par la voie ENCADRÉE — jusqu'à
+  * `frameAnchors` appuis de chaque côté à `frameGap` cuts au plus, courbe du
+  * second degré dès deux appuis de chaque côté, droite sinon. Mesuré sur la
+  * méthode de l'opérateur (7801–7806) : 6,4 mm au pire, contre 20 à 32 mm pour
+  * la voie prolongée par l'avant seul. En avancée normale, aucun appui n'est
+  * après le cut : rien ne change. */
+ const DEFAULTS=Object.freeze({version:'lot-decision-v6',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,anchorRule:'placed',
+   crossing:true,crossingVoieMm:10,framed:true,frameGap:8,frameAnchors:3,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
  const SIDES=['left','right'];
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
@@ -74,13 +97,58 @@
    return (anchors||[]).filter(a=>sameTrack(a.identity,identity)&&a.identity.cut!==identity.cut&&Math.abs(a.identity.cut-identity.cut)<=cfg.gap)
      .sort((a,b)=>Math.abs(a.identity.cut-identity.cut)-Math.abs(b.identity.cut-identity.cut)).slice(0,cfg.anchors);
  }
- /* Écart latéral (mm), le pire des deux rails, entre des positions et la droite des ancres. */
+ /* Voie encadrée : appuis posés avant ET après le cut (reprise des différés). */
+ function framedNeighbours(identity,anchors,cfg=DEFAULTS){
+   const same=(anchors||[]).filter(a=>sameTrack(a.identity,identity)&&a.identity.cut!==identity.cut&&Math.abs(a.identity.cut-identity.cut)<=cfg.frameGap);
+   const near=list=>list.sort((a,b)=>Math.abs(a.identity.cut-identity.cut)-Math.abs(b.identity.cut-identity.cut)).slice(0,cfg.frameAnchors);
+   const before=near(same.filter(a=>a.identity.cut<identity.cut)),after=near(same.filter(a=>a.identity.cut>identity.cut));
+   return cfg.framed&&before.length&&after.length?[...before,...after]:null;
+ }
+ /* Moindres carrés y = a + b·x + c·x², évalué en x = 0 ; droite à défaut. */
+ function fitFramed(points){
+   const n=points.length;if(n<4)return null;
+   const S=k=>points.reduce((t,[x])=>t+x**k,0),T=k=>points.reduce((t,[x,y])=>t+y*x**k,0);
+   const A=[[n,S(1),S(2)],[S(1),S(2),S(3)],[S(2),S(3),S(4)]],b=[T(0),T(1),T(2)];
+   const det=m=>m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);
+   const d=det(A);if(Math.abs(d)<1e-18)return null;
+   return det([[b[0],A[0][1],A[0][2]],[b[1],A[1][1],A[1][2]],[b[2],A[2][1],A[2][2]]])/d;
+ }
+ function predictFramed(initial,anchors,side){
+   const M=initial.sceneRelativeToProfileLocal,o=C.point(M,initial.positionSceneRelative);
+   const q=anchors.map(a=>{const p=C.point(M,a.positions[side]);return [p[0]-o[0],p[1]-o[1],p[2]-o[2]];});
+   const two=q.filter(p=>p[0]<0).length>=2&&q.filter(p=>p[0]>0).length>=2;
+   const lateral=two?fitFramed(q.map(p=>[p[0],p[1]])):null,vertical=two?fitFramed(q.map(p=>[p[0],p[2]])):null;
+   if(lateral===null||vertical===null)return O.predict(initial,anchors,side);
+   const P=initial.profileLocalToSceneRelative,a=C.point(P,o),b=C.point(P,[o[0],o[1]+lateral,o[2]+vertical]);
+   return {lateral,vertical,translation:[b[0]-a[0],b[1]-a[1],b[2]-a[2]]};
+ }
+ const predictOf=anchors=>anchors.framed?predictFramed:O.predict;
+ /* Écart latéral (mm), le pire des deux rails, entre des positions et la voie des ancres. */
  function deviationMm(rails,anchors,positions){
+   const predict=predictOf(anchors);
    return Math.max(...SIDES.map(side=>{const init=rails[side],M=init.sceneRelativeToProfileLocal,o=C.point(M,init.positionSceneRelative);
-     const p=O.predict(init,anchors,side),q=C.point(M,positions[side]);return Math.abs((q[1]-o[1]-p.lateral)*1000);}));
+     const p=predict(init,anchors,side),q=C.point(M,positions[side]);return Math.abs((q[1]-o[1]-p.lateral)*1000);}));
  }
  function seededRails(rails,anchors){
-   return Object.fromEntries(SIDES.map(side=>[side,O.translated(rails[side],O.predict(rails[side],anchors,side).translation)]));
+   const predict=predictOf(anchors);
+   return Object.fromEntries(SIDES.map(side=>[side,O.translated(rails[side],predict(rails[side],anchors,side).translation)]));
+ }
+ /* Appuis de prédiction : voie encadrée si possible, sinon les plus proches. */
+ function predictionAnchors(identity,anchors,nb,cfg){
+   const framed=framedNeighbours(identity,anchors,cfg);
+   const list=(framed||nb).map(a=>({positions:a.positions}));if(framed)list.framed=true;
+   return {list,cuts:(framed||nb).map(a=>a.identity.cut),framed:!!framed};
+ }
+ /* Écart latéral (mm) par rail entre deux paires, chacune dans le repère profil de sa pose ESV. */
+ function pairGapMm(rails,a,b){
+   return Math.max(...SIDES.map(side=>{const M=rails[side].sceneRelativeToProfileLocal,p=C.point(M,a[side]),q=C.point(M,b[side]);return Math.abs((p[1]-q[1])*1000);}));
+ }
+ /* Lecture du passage à niveau sur les points visibles de la capture. */
+ function crossingOf(capture,cfg){
+   if(!cfg.crossing||!Crossing)return null;
+   const vis=capture.visibleByClipBoxes,points=Array.isArray(vis)?capture.pointsSceneRelative.filter((_,i)=>vis[i]===true):capture.pointsSceneRelative;
+   const read=Crossing.read({rails:capture.rails,pointsSceneRelative:points});
+   return read.crossing?read:null;
  }
  /* Minima d'un rail, qualifiés par les points sous le gabarit posé à chacun. */
  function candidatesOf(capture,side,science,cfg=DEFAULTS){
@@ -130,17 +198,45 @@
  const gaugeJump=(ref,positions)=>ref?Math.abs(gaugeOf(positions)-ref.mm):null;
  const pairFlagged=science=>SIDES.some(side=>science?.rails?.[side]?.next?.changed===true)
    &&SIDES.some(side=>science?.rails?.[side]?.conventionCalibration?.reason==='shift-out-of-domain');
+ /* Passage à niveau, cut que la chaîne DIFFÈRE : la paire de l'ornière est posée
+  * si son écartement est dans le contrat (admissibilité seulement), si elle
+  * passe la garde d'écartement voisin et, quand il y a des appuis, si elle
+  * tombe à `crossingVoieMm` de la voie. Sinon le différé reste, motif du
+  * lecteur consigné. Jamais sur un cut que la chaîne décide ; jamais après la
+  * garde de paire. */
+ function crossingFallback(d,{rails,positions,pred,gaugeRef,gaugeSuspect,cfg}){
+   const deltas=Object.fromEntries(SIDES.map(side=>{const M=rails[side].sceneRelativeToProfileLocal,q=C.point(M,positions[side]),o=C.point(M,rails[side].positionSceneRelative);
+     return [side,[q[0]-o[0],q[1]-o[1],q[2]-o[2]]];}));
+   const pair=Gauge.assessPair(rails,deltas,C),refuse=reason=>({...d,levelCrossing:{...d.levelCrossing,refused:reason,gaugeMm:r1(pair.predictedMm)}});
+   if(!pair.admissible)return refuse('gauge-'+pair.gaugeClass);
+   if(gaugeSuspect(positions))return refuse('gauge-guard');
+   let dev=null;
+   if(pred.list.length){dev=deviationMm(rails,pred.list,positions);if(dev>cfg.crossingVoieMm)return {...refuse('voie'),levelCrossing:{...d.levelCrossing,refused:'voie',fromPredictionMm:r1(dev)}};}
+   const {reason,candidates,gaugeJumpMm,windowGaugeJumpMm,guardDeferred,...rest}=d;
+   return {...rest,stage:'crossing',deferredReason:reason,anchorsUsed:pred.cuts,gaugeMm:r1(pair.predictedMm),fromPredictionMm:r1(dev),positions,anchor:true,
+     ...(guardDeferred?{guardDeferred:true}:{})};
+ }
  function decideCut({capture,science,anchors,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
-   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop,anchorRule:cfg.anchorRule};
+   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop,anchorRule:cfg.anchorRule,
+     crossing:!!cfg.crossing,framed:!!cfg.framed};
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
    const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;
    if(gaugeRef)base.gaugeReference={mm:r1(gaugeRef.mm),cuts:gaugeRef.cuts};
+   /* 4.7.19 : voie encadrée si des appuis posés sont des deux côtés, sinon les
+    * plus proches (inchangé) ; passage à niveau lu par son ornière. */
+   const pred=predictionAnchors(identity,anchors,nb,cfg),pn=crossingOf(capture,cfg);
+   if(pred.framed)base.framedAnchors=pred.cuts;
+   if(pn)base.levelCrossing={flushPct:pn.flushPct,read:pn.ok,...(pn.ok?{}:{reason:pn.reason})};
    if(applicable){
      const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(rails[side],science.rails[side].next.delta)]));
-     const guardMm=nb.length?r1(deviationMm(rails,nb.map(a=>({positions:a.positions})),positions)):null;
+     const guardMm=pred.list.length?r1(deviationMm(rails,pred.list,positions)):null;
+     /* Passage à niveau lisible : écart du moteur à l'ornière, consigné seulement
+      * (banc du 25/09 : s'en servir comme garde retirait 7 premiers passages
+      * justes sans arrêter aucun faux). */
+     if(pn?.ok)base.levelCrossing.engineMm=r1(pairGapMm(rails,positions,pn.positions));
      if(guardMm===null||guardMm<=cfg.guardMm){
        /* GARDE DE PAIRE (chantier 2, 4.7.12, D-044) : un rail repêché par S1 et un
         * calage de convention hors domaine sur l'un des deux rails — le moteur
@@ -156,9 +252,11 @@
      // Retiré par une garde : le cut est repris depuis la voie, comme un différé.
      base.guardMm=guardMm;base.guardDeferred=true;
    }
-   if(!nb.length)return {...base,stage:'deferred',reason:base.gaugeJumpMm!=null?'gauge-guard':'no-anchor'};
-   const anchorsUsed=nb.map(a=>a.identity.cut),predictionAnchors=nb.map(a=>({positions:a.positions}));
-   const seeded=minimalCapture(capture,seededRails(rails,predictionAnchors));
+   /* Un différé au passage à niveau : l'ornière en dernier recours (voir `decideCut`). */
+   const deferred=d=>pn?.ok&&!d.pairGuarded?crossingFallback(d,{rails,positions:pn.positions,pred,gaugeRef,gaugeSuspect,cfg}):d;
+   if(!pred.list.length)return deferred({...base,stage:'deferred',reason:base.gaugeJumpMm!=null?'gauge-guard':'no-anchor'});
+   const anchorsUsed=pred.cuts;
+   const seeded=minimalCapture(capture,seededRails(rails,pred.list));
    const again=Shadow.scientificProposeBoth(seeded);
    const againOk=SIDES.every(side=>again.rails[side]?.ok&&again.rails[side].next.status==='candidate')&&!again.summary?.pairGaugeRejected;
    if(againOk){
@@ -200,11 +298,11 @@
        why.length=0;}
      else why.push('gauge-choice:'+kept.length);
    }
-   if(!SIDES.every(side=>deltas[side]))return {...base,stage:'deferred',reason:why.join(' '),anchorsUsed,candidates};
+   if(!SIDES.every(side=>deltas[side]))return deferred({...base,stage:'deferred',reason:why.join(' '),anchorsUsed,candidates});
    const pair=Gauge.assessPair(seeded.rails,deltas,C);
-   if(!pair.admissible)return {...base,stage:'deferred',reason:'gauge-'+pair.gaugeClass,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates};
+   if(!pair.admissible)return deferred({...base,stage:'deferred',reason:'gauge-'+pair.gaugeClass,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates});
    const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],deltas[side])]));
-   if(gaugeSuspect(positions))return {...base,stage:'deferred',reason:'gauge-guard',gaugeJumpMm:r1(gaugeJump(gaugeRef,positions)),gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates};
+   if(gaugeSuspect(positions))return deferred({...base,stage:'deferred',reason:'gauge-guard',gaugeJumpMm:r1(gaugeJump(gaugeRef,positions)),gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates});
    return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,positions,anchor:false};
  }
  /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
@@ -237,7 +335,7 @@
  function commandsPositions(decision,command){
    if(!decision?.anchor||!decision.positions)return false;
    if(decision.stage==='first-pass')return command?.action!=='defer'&&command?.action!=='lot';
-   if(decision.stage==='window')return command?.action==='lot';
+   if(decision.stage==='window'||decision.stage==='crossing')return command?.action==='lot';
    return false;
  }
  /* L'appui proposé attend la validation du cut. Une nouvelle analyse du même
@@ -303,13 +401,13 @@
    if(decision.stage==='deferred'&&decision.guardDeferred)
      return deferRails(runtimeRails,decision,decision.gaugeJumpMm!=null?'gauge-guard':'guard','décision sur le lot : retiré par '+why+', sans reprise');
    const note={stage:decision.stage,anchorsUsed:decision.anchorsUsed||[],version:decision.version??DEFAULTS.version};
-   if(decision.stage!=='window'&&decision.stage!=='choice')return fallback(decision.stage||'no-stage');
+   if(decision.stage!=='window'&&decision.stage!=='choice'&&decision.stage!=='crossing')return fallback(decision.stage||'no-stage');
    if(!decision.positions||typeof expectedPoses!=='function')return fallback('positions-missing');
    const rails={};
    for(const side of SIDES){
      const init=before[side],M=init.sceneRelativeToProfileLocal,q=C.point(M,decision.positions[side]),o=C.point(M,init.positionSceneRelative);
      rails[side]={...runtimeRails[side],status:'candidate',delta:[q[0]-o[0],q[1]-o[1],q[2]-o[2]],confidence:0,
-       reasons:['décision sur le lot : '+(decision.stage==='window'?'reprise depuis la voie':'choix par la voie')],
+       reasons:['décision sur le lot : '+(decision.stage==='window'?'reprise depuis la voie':decision.stage==='crossing'?'passage à niveau, lu par l\'ornière':'choix par la voie')],
        source:'lot-decision-'+decision.stage,lotDecision:{...note,...(decision.chosen?.[side]?{chosen:decision.chosen[side]}:{}),
          ...(decision.fromPredictionMm!=null?{fromPredictionMm:decision.fromPredictionMm}:{})}};
    }
@@ -324,5 +422,5 @@
      if(!view.inView)return {...fallback('hors-vue-'+side),ndc:view.ndc.slice(0,2).map(v=>Math.round(v*1000)/1000)};}
    return {action:'lot',reason:decision.stage,rails,gaugeMm:r1(gaugeMm)};
  }
- return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,commandsPositions,holdAnchor,promoteAnchors,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
+ return {DEFAULTS,localMinima,gridOf,minimalCapture,positionOf,neighbours,framedNeighbours,predictFramed,fitFramed,predictionAnchors,crossingOf,pairGapMm,deviationMm,seededRails,candidatesOf,chooseRail,decideCut,commandRails,deferRails,rememberAnchor,commandsPositions,holdAnchor,promoteAnchors,viewCameras,inView,VIEW_MARGIN,pairFlagged,gaugeOf,gaugeReference};
 });

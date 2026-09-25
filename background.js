@@ -11,10 +11,10 @@
  * GCV1 et avant la composition. */
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
- 'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/lot-decision.js','src/gcv1-shadow.js',
+ 'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.18';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.19';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -53,6 +53,28 @@ async function call(action,...args){if(selectedTab===null)throw Error('Sélectio
  if(reply?.error)throw Error(reply.error);
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
 const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
+/* 4.7.19 — LE PILOTE S'ARRÊTE AU DERNIER CUT DU LOT (retour terrain du 25/09).
+ * Le bouton de validation d'ESV valide ET charge le cut non validé suivant, au
+ * besoin dans la partie suivante : le lot finissait donc dans une autre partie.
+ * Au dernier cut du lot (`scope.end`), le Pilote pose la paire puis s'arrête
+ * sans valider ; un cut non résolu est laissé sans commande ni navigation.
+ * `src/engine.js` est épinglé : l'arrêt passe par l'état du lot, que la boucle
+ * relit entre deux étapes. */
+function stopAtLotEnd(proposal){
+ const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
+ if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(cut)||cut!==b.scope.end)return false;
+ const resolved=proposal===undefined||['left','right'].every(side=>proposal?.rails?.[side]?.delta);
+ /* Non résolu : seule la politique « différer » navigue ; « pause » reste déjà sur le cut. */
+ if(proposal!==undefined&&(resolved||b.scope.unresolvedPolicy!=='defer'))return false;
+ b.state='STOPPED';b.stoppedAtEnd={cut,at:new Date().toISOString(),applied:proposal===undefined};
+ engine.s.notice=proposal===undefined
+   ?`Dernier cut du lot (${cut}) : pose appliquée, non validée. Contrôle-la et valide-la toi-même dans ESV ; le Pilote ne passe pas à la partie suivante.`
+   :`Dernier cut du lot (${cut}) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.`;
+ return true;
+}
+const applyInESV=adapter.apply;
+adapter.apply=async(...args)=>{const result=await applyInESV(...args);
+ if(stopAtLotEnd())await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true});return result;};
 adapter.capabilities={serverConfirmation:false};
 const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
  // Le moteur reste inchangé. On enveloppe seulement l'appel public analyze()
@@ -104,6 +126,8 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
    if(analysisError)throw analysisError;
+   /* 4.7.19 — dernier cut du lot non résolu : laissé sans commande ni navigation. */
+   if(pilotScope&&proposal&&stopAtLotEnd(proposal))await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false});
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
      engine.s.proposal=null;
      const reason=shadow?.selection?.fallbackReason||shadow?.error||'sélection GCV1 absente';
@@ -160,11 +184,17 @@ async function observeLot(shadow){
  const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
  if(!capture?.rails?.left||!capture?.rails?.right||!Array.isArray(capture.pointsSceneRelative))return {stage:'no-capture',applied:false};
  const identity=globalThis.BananeCore3.completeIdentity(capture.identity||engine.s.before?.identity||{});
- const state=batch.lotObservation||(batch.lotObservation={version:L.DEFAULTS.version,anchors:[],pending:[]});
+ /* 4.7.19 — lot « Reprise » : la mémoire part des cuts posés par le lot précédent
+  * autour de ses différés (`scope.lotReprise`, figé à la création). */
+ const seeds=batch.scope?.lotReprise?.anchors||[],max=(S?.lot?.maxAnchors??40)+seeds.length;
+ const state=batch.lotObservation||(batch.lotObservation={version:L.DEFAULTS.version,anchors:seeds.map(a=>({...a})),pending:[]});
  lotAnchorCandidate=null;
  /* 4.7.18 (KI-057) : les cuts validés depuis la décision précédente deviennent
-  * appuis ; une décision ne s'appuie que sur des cuts posés. */
- if(typeof L.promoteAnchors==='function')L.promoteAnchors(state,(batch.processed||[]).map(p=>p.identity).filter(Boolean),S?.lot?.maxAnchors??40);
+  * appuis ; une décision ne s'appuie que sur des cuts posés. 4.7.19 : chaque
+  * cut posé est aussi gardé, en bref, pour une reprise ultérieure (`lotPosed`). */
+ if(typeof L.promoteAnchors==='function'){const waiting=(state.pending||[]).map(p=>p.identity.cut);
+   L.promoteAnchors(state,(batch.processed||[]).map(p=>p.identity).filter(Boolean),max);
+   rememberPosed(batch,state,waiting.filter(c=>!(state.pending||[]).some(p=>p.identity.cut===c)));}
  const t0=Date.now();
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
    visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
@@ -176,7 +206,33 @@ async function observeLot(shadow){
  if(Number.isInteger(identity.cut)){batch.lotCommands=batch.lotCommands||{};
    batch.lotCommands[identity.cut]={...(batch.lotCommands[identity.cut]||{}),cut:identity.cut,stage:decision.stage,ecartMm:Number.isFinite(ecartMm)?ecartMm:null};}
  if(decision.anchor)lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage};
- return {...decision,applied:false,displayed:false,engineMs:Date.now()-t0};
+ /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
+ const reprise=seeds.length&&!state.repriseLogged?{fromBatchId:batch.scope.lotReprise.fromBatchId??null,anchors:seeds}:null;
+ if(reprise)state.repriseLogged=true;
+ return {...decision,...(reprise?{reprise}:{}),applied:false,displayed:false,engineMs:Date.now()-t0};
+}
+/* 4.7.19 — cuts posés par le lot, en bref (identité et positions), pour une
+ * reprise des différés : la mémoire de décision n'en garde que 40. */
+function rememberPosed(batch,state,cuts){
+ for(const cut of cuts){const a=(state.anchors||[]).find(x=>x.identity.cut===cut);if(!a)continue;
+   const posed=batch.lotPosed||(batch.lotPosed=[]),i=posed.findIndex(x=>x.identity.cut===cut&&x.identity.part===a.identity.part);
+   const entry={identity:{...a.identity},positions:a.positions,stage:a.stage};if(i>=0)posed[i]=entry;else posed.push(entry);}
+}
+/* Appuis de départ d'une reprise : les cuts posés par le lot précédent à
+ * `frameGap` cuts au plus d'un de ses différés. Aucun cut validé à la main :
+ * seulement ce que le Pilote a posé et validé lui-même (cahier §14 I). */
+function repriseAnchors(prev,part){
+ const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings;
+ if(!prev||prev.scope?.geometryEngine!==GCV1_ENGINE||prev.scope?.part!==part)throw Error('Reprise : aucun lot Pilote précédent sur cette partie. Décoche « Reprise » ou lance un lot ordinaire.');
+ const memory=JSON.parse(JSON.stringify(prev.lotObservation||{anchors:[],pending:[]})),posed=JSON.parse(JSON.stringify(prev.lotPosed||[]));
+ const waiting=(memory.pending||[]).map(p=>p.identity.cut);
+ L.promoteAnchors(memory,(prev.processed||[]).map(p=>p.identity).filter(Boolean),1e6);
+ const tmp={lotPosed:posed};rememberPosed(tmp,memory,waiting.filter(c=>!(memory.pending||[]).some(p=>p.identity.cut===c)));
+ for(const a of memory.anchors||[])if(!tmp.lotPosed.some(x=>x.identity.cut===a.identity.cut))tmp.lotPosed.push({identity:{...a.identity},positions:a.positions,stage:a.stage});
+ const gap=L.DEFAULTS.frameGap,deferred=(prev.deferred||[]).map(d=>d.identity?.cut).filter(Number.isInteger);
+ if(!deferred.length)throw Error('Reprise : le lot précédent n\'a aucun cut différé.');
+ return {fromBatchId:prev.id??null,deferredCuts:deferred.length,anchors:tmp.lotPosed.filter(a=>deferred.some(c=>Math.abs(c-a.identity.cut)<=gap))
+   .sort((a,b)=>a.identity.cut-b.identity.cut)};
 }
 async function openPanel(which='home'){if(!VIEWS.includes(which))throw Error('Vue inconnue.');
  const url=chrome.runtime.getURL(PANEL)+'#'+which;
@@ -212,8 +268,11 @@ chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(i
  * IndexedDB, comme le Natif depuis la 4.5.3 : le message ne porte plus que
  * l'état. */
 function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Object.hasOwn(v,'collection')||!Object.hasOwn(v,'batch'))return v;
- const {records,incomplete,...rest}=v;return {...rest,recordsCount:records.length,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
-function exportState(){return panelView(engine.view());}
+ const {records,incomplete,...rest}=v;
+ /* `lotPosed` (4.7.19, un cut posé = une entrée) : son nombre suffit au panneau. */
+ if(Array.isArray(rest.batch?.lotPosed)){const {lotPosed,...batch}=rest.batch;rest.batch={...batch,lotPosedCount:lotPosed.length};}
+ return {...rest,recordsCount:records.length,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
+function exportState(){const {records,incomplete,...rest}=engine.view();return rest;}
 function pollCurrent(){
  if(pollPromise||engine.busy||engine.task||manual?.active()||native?.active()||selectedTab===null)return;
  pollPromise=engine.observe().then(()=>{engine.s.connection={status:'ready',observedAt:new Date().toISOString()};})
@@ -349,6 +408,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
    * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
   startArgs.extensionVersion=VERSION;
+  /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
+  delete startArgs.lotReprise;
+  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée au Pilote GCV1.');
+    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);}
   const tente=startArgs.lowConfidence==='attempt';
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});

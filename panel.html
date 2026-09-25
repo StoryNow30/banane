@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.7.18</title><link rel="stylesheet" href="panel.css"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.7.19</title><link rel="stylesheet" href="panel.css"></head>
 <body data-window="home"><main>
 
-<header><p class="brand">BANANE <span>V4.7.18 · TEST</span></p>
+<header><p class="brand">BANANE <span>V4.7.19 · TEST</span></p>
 <h1 id="vue-titre">Une tâche, une fenêtre.</h1>
 <p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p></header>
 
@@ -76,6 +76,8 @@
  <div id="lot-commande" class="commande" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
  <div id="batch" class="batch">Aucun lot en cours.</div>
  <div class="range" id="lot-bornes"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0"></label></div>
+ <!-- 4.7.19 : reprise des différés du lot précédent, encadrés par ses cuts posés. -->
+ <div id="lot-reprise-row" hidden><label><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
  <div class="actions" id="lot-actions">
   <button id="start-batch" class="primary">Démarrer le lot TEST</button>
   <button id="pause" class="secondary" hidden>Pause</button>

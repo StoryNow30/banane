@@ -19,7 +19,7 @@ const lire=f=>plat(fs.readFileSync(path.join(ROOT,f),'utf8'));
 function decision(id){const src=fs.readFileSync(path.join(ROOT,'DECISIONS.md'),'utf8'),i=src.indexOf(`## ${id} `);
   assert.ok(i>=0,`${id} absente de DECISIONS.md`);const j=src.indexOf('\n## D-',i+1);return plat(src.slice(i,j<0?undefined:j));}
 
-const LOT='audit/curseurs-lot-2026-09-24.md',VOISIN='audit/ecartement-voisin-2026-09-24.md';
+const LOT='audit/curseurs-lot-2026-09-24.md',VOISIN='audit/ecartement-voisin-2026-09-24.md',PN='audit/passage-niveau-lecteur-2026-09-25.md';
 /* Curseurs de la décision sur le lot : valeur, ligne du bilan, décision datée. */
 const CURSEURS=[
   {cle:'guardMm',valeur:30,bilan:LOT,extrait:'| `guardMm` | 30 | Conservé.',decision:'D-047',mention:'`guardMm` 30'},
@@ -36,10 +36,17 @@ const CURSEURS=[
   {cle:'gaugeCount',valeur:3,bilan:VOISIN,extrait:'comparé à la médiane de celui des 3 appuis les plus proches',decision:'D-050',mention:'médiane des 3 appuis les plus proches',sansVariation:true},
   {cle:'gaugeGap',valeur:10,bilan:VOISIN,extrait:'des 3 appuis les plus proches, à 10 cuts au plus',decision:null,sansVariation:true},
   /* 4.7.18 (KI-057) : règle d'appui, mesurée sur le même banc (`audit/appui-pose-2026-09-24.md`), D-052. */
-  {cle:'anchorRule',valeur:'placed',bilan:'audit/appui-pose-2026-09-24.md',extrait:'Retenu : un appui est un cut posé',decision:'D-052',mention:'Un appui est un cut posé'}];
+  {cle:'anchorRule',valeur:'placed',bilan:'audit/appui-pose-2026-09-24.md',extrait:'Retenu : un appui est un cut posé',decision:'D-052',mention:'Un appui est un cut posé'},
+  /* 4.7.19 (KI-058) : lecteur « passage à niveau » en dernier recours et voie encadrée, D-053.
+   * Mesurés actifs contre coupés ; leurs seuils n'ont pas été déplacés seuls. */
+  {cle:'crossing',valeur:true,bilan:PN,extrait:'| `crossing` | actif, en dernier recours |',decision:'D-053',mention:'`crossing` en dernier recours'},
+  {cle:'crossingVoieMm',valeur:10,bilan:PN,extrait:'| `crossingVoieMm` | 10 |',decision:'D-053',mention:'`crossingVoieMm` 10',sansVariation:true},
+  {cle:'framed',valeur:true,bilan:PN,extrait:'| `framed` | actif |',decision:'D-053',mention:'`framed` actif'},
+  {cle:'frameGap',valeur:8,bilan:PN,extrait:'| `frameGap` | 8 |',decision:'D-053',mention:'`frameGap` 8',sansVariation:true},
+  {cle:'frameAnchors',valeur:3,bilan:PN,extrait:'| `frameAnchors` | 3 |',decision:'D-053',mention:'`frameAnchors` 3',sansVariation:true}];
 /* Réglages qui ne sont pas des curseurs : identifiant des règles consignées,
  * options de MESURE écartées du Pilote (D-050), éligibilité (D-039), journal. */
-const HORS_CURSEURS={version:'lot-decision-v5',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,
+const HORS_CURSEURS={version:'lot-decision-v6',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,
   eligibleMotifs:['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']};
 
 test('§14 C : chaque curseur de la décision sur le lot a sa valeur, son bilan et sa décision datée',()=>{
@@ -48,7 +55,7 @@ test('§14 C : chaque curseur de la décision sur le lot a sa valeur, son bilan 
     assert.ok(lire(c.bilan).includes(plat(c.extrait)),`${c.cle} : « ${c.extrait} » absent de ${c.bilan}`);
     if(c.decision)assert.ok(decision(c.decision).includes(plat(c.mention)),`${c.cle} : « ${c.mention} » absent de ${c.decision}`);}
   /* La décision consigne ses réglages : le rejeu d'un lot les relit (D-046, D-047, D-050). */
-  const consignes=['version','pairGuard','chainMm','gaugeGuardMm','minTop','anchorRule'];
+  const consignes=['version','pairGuard','chainMm','gaugeGuardMm','minTop','anchorRule','crossing','framed'];
   assert.deepEqual(consignes.filter(k=>!(k in L.DEFAULTS)),[]);
 });
 
@@ -73,7 +80,7 @@ test('§14 C : curseurs du moteur (§8), valeurs du code et bilan D-035',()=>{
 });
 
 test('§14 C : le rejeu « règles actuelles » est exactement la décision du Pilote',()=>{
-  const {pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule}=L.DEFAULTS;
-  assert.deepEqual(A.rulesFor(null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule});
-  assert.deepEqual(A.lotRules([],null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,source:'actuelles'});
+  const {pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed}=L.DEFAULTS;
+  assert.deepEqual(A.rulesFor(null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed});
+  assert.deepEqual(A.lotRules([],null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed,source:'actuelles'});
 });

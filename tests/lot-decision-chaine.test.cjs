@@ -15,11 +15,11 @@ function shifted(rails,mm){return Object.fromEntries(SIDES.map(side=>{const r=ra
 const anchorAt=(cut,rails)=>({identity:{part:23,cut,frameId:'f'},positions:Object.fromEntries(SIDES.map(s=>[s,rails[s].positionSceneRelative]))});
 const rails=shifted(truth,150),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),anchors=[anchorAt(104,shifted(truth,12)),anchorAt(103,shifted(truth,12))];
 
-test('curseurs consignés : lot-decision-v5, reprise appui jusqu\'à 15 mm',()=>{
-  assert.equal(L.DEFAULTS.version,'lot-decision-v5');assert.equal(L.DEFAULTS.chainMm,15);
+test('curseurs consignés : lot-decision-v6, reprise appui jusqu\'à 15 mm',()=>{
+  assert.equal(L.DEFAULTS.version,'lot-decision-v6');assert.equal(L.DEFAULTS.chainMm,15);
   const d=L.decideCut({capture:cap,science:sci,anchors,Shadow});
   assert.equal(d.stage,'window');assert.ok(d.fromPredictionMm>10&&d.fromPredictionMm<=15,String(d.fromPredictionMm));
-  assert.equal(d.anchor,true);assert.deepEqual([d.version,d.chainMm,d.pairGuard,d.gaugeGuardMm,d.minTop,d.anchorRule],['lot-decision-v5',15,true,20,5,'placed']);
+  assert.equal(d.anchor,true);assert.deepEqual([d.version,d.chainMm,d.pairGuard,d.gaugeGuardMm,d.minTop,d.anchorRule,d.crossing,d.framed],['lot-decision-v6',15,true,20,5,'placed',true,true]);
 });
 test('rejeu d\'un lot antérieur : à 10 mm, la même reprise n\'est pas appui',()=>{
   const d=L.decideCut({capture:cap,science:sci,anchors,Shadow,options:{chainMm:10}});

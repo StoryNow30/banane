@@ -33,7 +33,8 @@ test('a GCV1 pilot batch created with lotDecision apply commands the lot decisio
   await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
   await b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1',
    ...(lotDecision?{lotDecision}:{})});
-  while(!['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR','PAUSED'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));
+  // 4.7.19 : le lot s'arrête au dernier cut (STOPPED), paire posée sans validation.
+  while(!['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR','PAUSED','STOPPED'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));
   return {b,view:await b.api('view'),applied,observed:b.store.events.filter(e=>e.type==='gcv1-shadow-observed'),
    proposed:b.store.events.filter(e=>e.type==='proposed')};
  }

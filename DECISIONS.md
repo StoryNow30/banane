@@ -1,5 +1,39 @@
 # Décisions techniques
 
+## D-053 - Passage à niveau en dernier recours, voie encadrée, reprise des différés, arrêt au dernier cut (4.7.19)
+
+**25 septembre 2026.** Demande de l'opérateur après les deux lots 4.7.18
+(parties 2 et 3) : un lecteur « passage à niveau » et la reprise encadrée des
+différés, à mettre en test sur le terrain. Mesure :
+`audit/passage-niveau-lecteur-2026-09-25.md`.
+
+- **`crossing` en dernier recours.** Au passage à niveau, le rail est lu par
+  son ornière (`src/level-crossing.js`), seulement sur un cut que la chaîne
+  diffère : paire posée si l'écartement est dans le contrat (admissibilité),
+  si elle passe la garde d'écartement voisin et, avec des appuis, si elle tombe
+  à la voie à `crossingVoieMm` 10 près. Jamais sur un cut décidé, jamais après
+  la garde de paire. Banc relu : +45 cuts décidés, 36 jugés, 1 faux (partie 34,
+  4551, 10,5 mm), aucun juste perdu ; lots 4.7.18 : +18, 17 jugés, 0 faux ; le
+  passage à niveau 5377–5384 est décidé en entier. **Écarté** : le lecteur
+  comme arbitre (premier passage gardé seulement si le moteur s'accorde avec
+  l'ornière, ni reprise ni choix au passage à niveau), qui retirait 43 cuts
+  justes sans arrêter aucun faux.
+- **`framed` actif** (`frameGap` 8, `frameAnchors` 3) : un cut qui a des
+  appuis posés des deux côtés est prédit par une courbe passant par eux. Sans
+  effet en avancée normale.
+- **Lot « Reprise des différés »** : il part des cuts posés et validés par le
+  lot précédent autour de ses différés, figés dans son périmètre et consignés
+  pour le rejeu. Aucun cut validé à la main n'entre (§14 I). Pas encore mesuré.
+- **Arrêt au dernier cut du lot** (retour terrain) : paire posée sans
+  validation, ou cut non résolu laissé sans commande ni navigation, pour
+  qu'ESV ne passe pas à la partie suivante. Par l'état du lot ;
+  `src/engine.js` reste épinglé.
+- **KI-059** : capture, réponses et exports sous la limite de 64 Mio.
+- Règles consignées (`lot-decision-v6` : `crossing`, `framed`) ; les lots
+  antérieurs sont rejoués sans lecteur ni voie encadrée.
+- **Non retenu, à décider par la direction** : des appuis validés à la main
+  pour les cuts isolés d'un reliquat (amendement au §14 I nécessaire).
+
 ## D-052 - Un appui est un cut posé ; suites de la relecture 4.7.16 et du chantier 5 (4.7.18)
 
 **24 septembre 2026.** Relecture indépendante de la 4.7.13 à la 4.7.16

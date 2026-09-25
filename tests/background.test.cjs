@@ -175,7 +175,8 @@ test('a GCV1 pilot batch persists its engine contract, selects it once per analy
  const pending=await b.api('view');assert.equal(pending.proposal.geometryEngine,'geometry-candidate-v1');
  assert.equal(pending.proposal.geometrySelection.selector,'active-pilot-test');assert.equal(pending.proposal.geometrySelection.fallback,false);
  releaseApply();
- while(!['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));
+ // 4.7.19 : dernier cut du lot posé sans validation, lot arrêté (STOPPED).
+ while(!['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR','STOPPED'].includes((await b.api('view')).batch?.state))await new Promise(r=>setImmediate(r));
  const view=await b.api('view'),started=b.store.events.find(e=>e.type==='batch-started'),observed=b.store.events.find(e=>e.type==='gcv1-shadow-observed');
  assert.equal(view.batch.scope.geometryEngine,'geometry-candidate-v1');assert.equal(view.batch.scope.geometryContract.geometrySha256,'candidate-hash');
  assert.equal(view.batch.scope.requestedLowConfidence,'pause');assert.equal(view.batch.scope.lowConfidence,'attempt');

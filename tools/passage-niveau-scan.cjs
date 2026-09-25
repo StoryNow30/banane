@@ -52,10 +52,23 @@ function flangewayEdge(capture,side,{binMm=5,dropMm=25,run=3}={}){
   return {topMm:Math.round(top),edgeMm:null};
 }
 const lateralMm=(capture,side,point)=>Math.round(frameOf(capture,side)(point).lat*1000);
+const verticalMm=(capture,side,point)=>Math.round(frameOf(capture,side)(point).z*10000)/10;
+/* 4.7.19 : le lecteur de `src/level-crossing.js` (pas de 2 mm, bord et dessus du
+ * champignon), mesuré à côté du relevé historique (pas de 5 mm). */
+const Crossing=require('../src/level-crossing.js');
 function describe(capture){
   const f=flushShare(capture),edges={};
   for(const side of SIDES)edges[side]=flangewayEdge(capture,side);
-  return {...f,levelCrossing:f.flushPct!=null&&f.flushPct>=50,edges};
+  const out={...f,levelCrossing:f.flushPct!=null&&f.flushPct>=50,edges};
+  if(out.levelCrossing)for(const side of SIDES){const r=Crossing.edgeOf(capture,side);
+    edges[side].reader=r.ok?{edgeMm:r.edgeMm,topMm:r.topMm,widthMm:r.widthMm,grooves:r.grooves}:{edgeMm:null,reason:r.reason};}
+  return out;
+}
+/* Écart d'une pose (humaine ou appliquée) au lecteur : latéral au bord, vertical au dessus. */
+function againstReader(capture,side,edge,point,prefix){
+  const r=edge.reader;if(!r||r.edgeMm==null)return;
+  edge[prefix+'MinusReaderMm']=lateralMm(capture,side,point)-r.edgeMm;
+  edge[prefix+'MinusReaderZMm']=Math.round((verticalMm(capture,side,point)-r.topMm)*10)/10;
 }
 
 function scanLot(dir,label){
@@ -65,7 +78,8 @@ function scanLot(dir,label){
     if(!cap?.rails?.left||!cap?.rails?.right||!Array.isArray(cap.pointsSceneRelative))continue;
     const d=describe(cap),row={source:label,kind:'pilote',cut:cut.cut,outcome:A.pilotOutcome(cut,ctx).outcome,stage:o.lotObservation?.stage??null,...d};
     for(const side of SIDES){const ap=o.runtime?.apply?.observed?.rails?.[side]?.positionSceneRelative;
-      if(ap){const lat=lateralMm(cap,side,ap);row.edges[side].appliedMm=lat;row.edges[side].appliedMinusEdgeMm=d.edges[side].edgeMm==null?null:lat-d.edges[side].edgeMm;}}
+      if(ap){const lat=lateralMm(cap,side,ap);row.edges[side].appliedMm=lat;row.edges[side].appliedMinusEdgeMm=d.edges[side].edgeMm==null?null:lat-d.edges[side].edgeMm;
+        againstReader(cap,side,row.edges[side],ap,'applied');}}
     rows.push(row);}
   return rows;
 }
@@ -82,7 +96,8 @@ function scanNatif(file,label){
     const through=ch.filter(c=>input.chunkIds.includes(c.chunkId)).map(c=>c.acquisition?.endedAt||c.capturedAt).filter(Boolean).sort().at(-1)||null;
     for(const side of SIDES){const ref=Lab.referenceFor(record,side,record.beforeEstablished.rails[side],through);
       if(ref.status==='candidate'){const lat=lateralMm(cap,side,ref.finalRail.positionSceneRelative);
-        row.edges[side].humanMm=lat;row.edges[side].humanMinusEdgeMm=d.edges[side].edgeMm==null?null:lat-d.edges[side].edgeMm;}}
+        row.edges[side].humanMm=lat;row.edges[side].humanMinusEdgeMm=d.edges[side].edgeMm==null?null:lat-d.edges[side].edgeMm;
+        againstReader(cap,side,row.edges[side],ref.finalRail.positionSceneRelative,'human');}}
     rows.push(row);}
   return rows;
 }
@@ -92,7 +107,11 @@ function summarize(rows){
   const dist=v=>v.length?{n:v.length,median:median(v),absMedian:median(v.map(Math.abs)),absMax:Math.max(...v.map(Math.abs))}:null;
   return {cuts:rows.length,levelCrossingCuts:pn.length,bySource:by(r=>r.source),pilotOutcomes:by(r=>r.outcome??'natif'),
     edgeFound:pn.reduce((n,r)=>n+SIDES.filter(s=>r.edges[s].edgeMm!=null).length,0),
-    appliedMinusEdge:dist(gaps('appliedMinusEdgeMm')),humanMinusEdge:dist(gaps('humanMinusEdgeMm'))};
+    appliedMinusEdge:dist(gaps('appliedMinusEdgeMm')),humanMinusEdge:dist(gaps('humanMinusEdgeMm')),
+    readerFound:pn.reduce((n,r)=>n+SIDES.filter(s=>r.edges[s].reader?.edgeMm!=null).length,0),
+    readerReasons:pn.flatMap(r=>SIDES.map(s=>r.edges[s].reader?.reason).filter(Boolean)).reduce((m,k)=>(m[k]=(m[k]||0)+1,m),{}),
+    humanMinusReader:dist(gaps('humanMinusReaderMm')),humanMinusReaderZ:dist(gaps('humanMinusReaderZMm')),
+    appliedMinusReader:dist(gaps('appliedMinusReaderMm')),appliedMinusReaderZ:dist(gaps('appliedMinusReaderZMm'))};
 }
 function run(argv=process.argv.slice(2)){
   const out=argv[0];if(!out||out.startsWith('--'))throw Error('Usage : SORTIE.json --lot DOSSIER=libellé [...] --natif SESSION=libellé [...]');
@@ -106,4 +125,4 @@ function run(argv=process.argv.slice(2)){
   return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={flushShare,flangewayEdge,describe,scanLot,scanNatif,summarize,run};
+module.exports={flushShare,flangewayEdge,describe,againstReader,scanLot,scanNatif,summarize,run};

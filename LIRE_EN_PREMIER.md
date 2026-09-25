@@ -1,55 +1,58 @@
-# Démarrer avec Banane V4.7.18 TEST — un appui est un cut posé
+# Démarrer avec Banane V4.7.19 TEST — passages à niveau, reprise des différés
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.18-test.zip` dans Edge, à la place de la version en place (4.7.14 dans ton espace de travail).
-Avant d'installer : termine ou arrête le lot en cours, et télécharge son bilan
-et ses LiDAR s'ils ne sont pas encore exportés. Commence ensuite un lot neuf en
-4.7.18 : un lot repris d'une version antérieure garderait les appuis retenus
-avec l'ancienne règle.
+Installe `banane-v4.7.19-test.zip` dans Edge **par-dessus la 4.7.18** (bouton
+« Recharger » de la page des extensions, ou remplacement du dossier) : ne
+supprime pas l'extension, sinon le stockage du lot de ce matin (partie 3) est
+perdu. Termine ou arrête le lot en cours avant.
 
-Vérifie d'abord **V4.7.18 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.18 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont fermées.
+Vérifie **V4.7.19 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.19 ·
+ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont
+fermées.
 
-## Tu viens de la 4.7.14 : ce qui change en une fois
+**Première chose à faire : exporter le journal** (Détails › Dépannage →
+Télécharger le journal). Il contient encore le lot de la partie 3 et dira ce qui
+s'est passé au cut 8209 ; la 4.7.19 le lit directement dans le stockage, sans
+le message géant qui échouait.
 
-Tu n'as pas installé les 4.7.15, 4.7.16 et 4.7.17 : la 4.7.18 les contient
-toutes. Inutile de les essayer une par une : sur ton premier lot 4.7.18, le
-rejeu hors ligne peut couper chaque règle à tour de rôle et montrer ce que
-chacune a apporté.
+## Ce que la 4.7.19 change sur le terrain
 
-- **Le placement.**
-  - Un cut repris depuis la voie sert d'appui jusqu'à 15 mm de la prédiction,
-    au lieu de 10 (4.7.15).
-  - Un cut dont l'écartement s'éloigne de plus de 20 mm de celui de ses voisins
-    est repris depuis la voie, ou différé avec le motif « garde d'écartement
-    voisin » (4.7.16).
-  - Le choix par la voie accepte un champignon vu avec 5 points de dessus au
-    lieu de 15 (4.7.16).
-  - Seul un cut posé et validé sert d'appui (4.7.18).
-- **La conduite.** « Réessayer ce cut » est refusé si tu as bougé les rails
-  pendant la pause (4.7.18) : choisis Reprise manuelle ou SKIP explicite.
-- **L'écran** (4.7.17) :
-  - la dernière commande se lit en trois étapes (émise, effet, serveur) ;
-  - l'écartement de la proposition s'affiche dans l'Assisté ;
-  - des pastilles sur les onglets ;
-  - « Nouveau lot » en fin de lot ;
-  - les exports de diagnostic et le dépannage sont rangés sous « Détails › ».
+- **Passages à niveau.** Quand la chaîne habituelle diffère un cut de passage à
+  niveau, le Pilote lit le rail par son ornière (le bord de la rainure côté
+  champignon) et pose cette paire si son écartement est dans le contrat, si
+  elle passe la garde d'écartement voisin et, quand il y a des cuts posés
+  autour, si elle tombe à 10 mm de la voie. Il ne remplace jamais une décision
+  que la chaîne prend déjà : un premier passage, une reprise ou un choix restent
+  ce qu'ils étaient. Dans la voie du panneau, ces cuts comptent parmi les
+  « posés par la voie ».
+- **Reprise des différés.** Après un lot Pilote qui a des différés, coche
+  « Reprise des différés » sous les bornes : elles passent du premier différé à
+  la fin du lot précédent ; ouvre ce cut dans ESV et démarre. Le Pilote repart
+  des cuts qu'il a posés et validés lui-même autour des différés : un différé
+  qui a des cuts posés **des deux côtés** est prédit par une courbe passant par
+  eux (ta méthode : 2–3 cuts avant, 2–3 après). Les cuts validés à la main ne
+  servent pas d'appui.
+- **Arrêt au dernier cut.** Au dernier cut du lot, le Pilote pose la paire et
+  **s'arrête sans valider** : ESV reste sur ce cut au lieu de passer à la partie
+  suivante. Contrôle-le et valide-le toi-même. Un dernier cut non résolu est
+  laissé sans commande ni navigation. La ligne d'état l'écrit (« dernier cut …
+  posé, non validé »). Un lot peut encore finir dans une autre partie si ESV y
+  saute avant la borne (validation du dernier cut non validé de la partie).
+- **Messages trop gros (KI-059).** La capture, les réponses d'ESV et les exports
+  tiennent sous la limite de 64 Mo de Chrome ; une capture trop grosse met le
+  lot en pause avec un message clair (« Lecture LiDAR instable : capture de …
+  Mo »), reprenable, au lieu de « Adaptateur sans réponse ».
 - **Ce qui ne change pas** : les contrôles avant commande, le contrat
-  d'écartement 1405–1470 (jamais une cible), les commandes envoyées à ESV.
-- **Mesuré hors ligne, pas encore sur le terrain** : +4 justes (4.7.15) ; +13
-  justes et un faux de moins (4.7.16) ; 2 justes de moins, sans faux de plus
-  (4.7.18).
+  d'écartement 1405–1470 (jamais une cible), les commandes envoyées à ESV,
+  l'interface « La ligne » (la maquette H viendra dans la version suivante).
 
-**Ton premier lot 4.7.18** vaut pour les quatre versions à la fois :
-- une partie jamais utilisée, sans t'arrêter avant au moins 100 cuts si possible ;
-- une relecture qui couvre au moins 80 % des cuts appliqués (en dessous, C4
-  n'est pas évaluable) ;
-- dans la relecture, les cuts posés par la voie (traverses creuses) et les
-  différés « garde d'écartement voisin ».
+**Ton prochain lot** : si possible une partie neuve (pas un reliquat) avec des
+passages à niveau, puis une « Reprise des différés » sur le même lot, puis la
+relecture Natif. Exporte journal, diagnostic et corpus.
 
-En cas de problème, reviens à la 4.7.14 (`RETOUR_ARRIERE.md`) : c'est la
-dernière version que tu as éprouvée.
+En cas de problème, reviens à la 4.7.18 (`RETOUR_ARRIERE.md`).
 
 ## Ce qui change pour toi
 

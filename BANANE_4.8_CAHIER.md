@@ -562,6 +562,7 @@ Un sujet qui n'est ni dans le corps ni dans un amendement est hors périmètre.
 - n°10 — la décision sur le lot appliquée dans le Pilote (24/09) : relecture D-040, activation en un seul passage (D-041, D-042), vue d'ESV (D-043), garde de paire (D-044), interface « La ligne » (D-045) ; seuil C4 de sortie à trancher
 - n°11 — bilan des curseurs de la décision sur le lot (24/09) : C5 pour les curseurs ajoutés par le n°9, `chainMm` desserré (D-047) ; relecture ciblée (D-048) ; cahier 4.9 ouvert (D-049) ; garde d'écartement voisin et `minTop` du choix (D-050)
 - n°12 — relecture 4.7.16 et tests d'acceptation (24/09) : un appui est un cut posé (D-052, KI-057) ; « Réessayer » refusé après déplacement manuel (KI-055) ; C5 au rapport (KI-056) ; faux sans appui observés (D-051) ; conditions de la candidate
+- n°13 — passages à niveau et reprise des différés (25/09) : ornière en dernier recours (D-053, KI-058) ; voie encadrée ; lot « Reprise » ; arrêt au dernier cut ; KI-059
 
 ## Amendement n°1 — doctrine de séquence et conséquences des premières mesures
 
@@ -1575,3 +1576,37 @@ justes (partie 2 : 115, 116), qui ne tenaient qu'à des appuis hors de la vue
 5. Contrôle visuel du §14 H dans Edge ; banc vert sur le commit candidat ;
    paquet reproductible.
 
+## Amendement n°13 — passages à niveau et reprise des différés
+
+**25 septembre 2026.** Éléments nouveaux : deux lots 4.7.18 relus (parties 2 et
+3, deux reliquats), la méthode de l'opérateur au passage à niveau (7801–7806),
+le banc du lecteur « passage à niveau » (`audit/passage-niveau-lecteur-2026-09-25.md`).
+
+### 13.1 Ce qui change
+
+1. **Passage à niveau** : sur un cut que la chaîne diffère, la paire lue à
+   l'ornière est posée si l'écartement est dans le contrat (admissibilité
+   seulement), si elle passe la garde d'écartement voisin et, avec des appuis,
+   si elle tombe à 10 mm de la voie. Jamais sur un cut décidé. Le lecteur ne lit
+   que la capture : ni pose humaine, ni écartement cible.
+2. **Voie encadrée** : un cut qui a des appuis posés des deux côtés est prédit
+   par une courbe passant par eux.
+3. **Lot « Reprise des différés »** : il part des cuts posés et validés par le
+   lot précédent autour de ses différés. Un appui reste un cut posé par le
+   Pilote (n°12, point 1) ; aucun cut validé à la main.
+4. **Arrêt au dernier cut du lot** : le Pilote ne valide pas le dernier cut ;
+   ESV ne passe plus à la partie suivante.
+
+### 13.2 Pourquoi
+
+Au banc relu, le lecteur en dernier recours décide 45 cuts de plus (36 jugés,
+1 faux à 10,5 mm) sans perdre de juste ; utilisé en arbitre, il en retirait 43.
+Les différés d'un reliquat viennent du manque d'appuis, pas des règles : les
+82 cuts de la partie 3 sont décidés de la même façon sous les règles de la
+4.7.12, de la 4.7.14 et de la 4.7.18.
+
+### 13.3 Question ouverte à la direction
+
+Les cuts isolés d'un reliquat n'ont d'appui que dans des cuts **validés à la
+main**. Les utiliser serait faire entrer une pose humaine dans la décision :
+c'est un amendement au §14 I, à décider (cahier 4.9 ou avant).
