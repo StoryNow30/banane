@@ -54,7 +54,11 @@ conservée par l'utilisateur (historique complet) ; ce fichier suffit pour repre
   14/85 appliqués, parité 85/85 ; les 12 cuts du rejeu (passages à niveau)
   appliqués à l'identique ; 8504–8541 toujours différés. Une reprise après
   rechargement de la page ignore les appuis (autre `frameId`)
-  (`audit/lot-4719-p9-2026-09-25.md`).
+  (`audit/lot-4719-p9-2026-09-25.md`). Partie 9 : 276/348 posés (79,3 %),
+  82,5 % estimés avec une Reprise dans la même page, 89 à 93 % hors fin hors
+  vue. **Partie de validation** (jamais réglée) : ne rien caler dessus.
+  Référence : banane-data `benchmarks/partie-9-2026-09-25/` ; relecture Natif
+  de l'opérateur attendue.
 
 ## En attente de l'utilisateur
 
