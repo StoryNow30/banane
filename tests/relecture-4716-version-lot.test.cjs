@@ -10,7 +10,7 @@ const {pilotCut,pilotLot}=require('./helpers/acceptance-lot.cjs');
 
 test('I1 : le lot garde la version qui l\'a créé',async()=>{
   const r=await pilote(L,{start:100,end:100});const view=await r.b.settle();
-  assert.equal(view.batch.scope.extensionVersion,K.VERSION);assert.equal(K.VERSION,'4.7.19');
+  assert.equal(view.batch.scope.extensionVersion,K.VERSION);assert.equal(K.VERSION,'4.7.20');
 });
 
 test('I1 : le rejeu d\'un lot v1 prend la version de création, pas celle de l\'export',()=>{

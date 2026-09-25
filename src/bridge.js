@@ -1,11 +1,20 @@
 (()=>{'use strict';if(window.__banane3Bridge)return;window.__banane3Bridge=true;
  const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
- let pill=null,launcherGeneration=0;
+ let pill=null,strip=null,launcherGeneration=0;
+ /* 4.7.20 (piste H) — bandeau d'état en bas de la page ESV, activé depuis le
+  * panneau. Il ne capte aucun clic (pointer-events: none) : le Pilote clique
+  * dans la vue d'ESV, rien ne doit s'interposer. Texte seulement, jamais de HTML. */
+ function setBandeau(b){
+  if(!b||!b.text){if(strip?.isConnected)strip.remove();return;}
+  if(!strip){strip=document.createElement('div');strip.setAttribute('aria-live','polite');
+   strip.style.cssText='position:fixed;left:16px;bottom:16px;z-index:2147483645;pointer-events:none;max-width:62vw;padding:7px 12px;border-radius:6px;background:rgba(0,0,0,.84);color:#fff;font:500 12px/1.3 ui-monospace,Consolas,monospace;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid #8a8a8a';}
+  strip.textContent=String(b.text);strip.style.borderLeftColor=b.ton==='vert'?'#2fd07a':b.ton==='ambre'?'#f5a524':b.ton==='rouge'?'#ff4d4d':'#8a8a8a';
+  if(!strip.isConnected)document.documentElement.append(strip);}
  function setLauncherVisible(visible){if(!pill)return;const shown=visible===true;pill.hidden=!shown;
   if(shown){if(!pill.isConnected)document.documentElement.append(pill);}else if(pill.isConnected)pill.remove();}
  async function refreshLauncher(){const generation=++launcherGeneration;
-  try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});if(generation===launcherGeneration)setLauncherVisible(state?.visible===true);}
-  catch{if(generation===launcherGeneration)setLauncherVisible(false);}}
+  try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});if(generation===launcherGeneration){setLauncherVisible(state?.visible===true);setBandeau(state?.bandeau||null);}}
+  catch{if(generation===launcherGeneration){setLauncherVisible(false);setBandeau(null);}}}
  const passive=new Set(['ping','state','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish']);
  function diagnostic(p){return {requestId:p.id,action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
  /* 4.7.19 (KI-059) : un message chrome.runtime est limité à 64 Mio. Une réponse
@@ -68,7 +77,7 @@
      const error=p.acknowledged?'Délai dépassé dans ESV à l’étape '+p.stage+' ; résultat à contrôler.':'Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','manualFinish'].includes(m.action)?90000:45000);
    pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,action:m.action,args:m.args||[]},location.origin);return true;});
- pill=document.createElement('button');pill.textContent='Banane 4.7.19 · ouvrir';pill.type='button';pill.hidden=true;
+ pill=document.createElement('button');pill.textContent='Banane 4.7.20 · ouvrir';pill.type='button';pill.hidden=true;
  pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#f5d65c;color:#172026;border:1px solid #7d712f;border-radius:9px;padding:10px 15px;font:600 13px Arial;cursor:pointer';
  pill.onclick=()=>{launcherGeneration++;setLauncherVisible(false);chrome.runtime.sendMessage({kind:'open-panel'}).then(reply=>{if(reply?.error)void refreshLauncher();},()=>refreshLauncher());};void refreshLauncher();
  // A heartbeat also makes interrupted background work observable; it never resumes a lot.

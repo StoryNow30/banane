@@ -1,5 +1,18 @@
 (()=>{'use strict';
  const $=id=>document.getElementById(id),edited=new Set();let state=null,working=false,refreshing=false,uiError=null;
+ /* 4.7.20 — piste H. Un bloc n'est réécrit que s'il change : le rafraîchissement
+  * de chaque seconde ne relance ni les animations ni le clignotement. */
+ function poser(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html;}
+ const r1=v=>Math.round(v*10)/10,fr1=v=>Number.isFinite(v)?v.toFixed(1).replace('.',','):'—';
+ const sg=v=>(v>=0?'+':'−')+fr1(Math.abs(v));
+ /* Quantile d'une liste triée, interpolé (médiane : 0,5 ; p90 : 0,9). */
+ const quantile=(t,f)=>{if(!t.length)return null;const p=f*(t.length-1),a=Math.floor(p),b=Math.ceil(p);return t[a]+(t[b]-t[a])*(p-a);};
+ const heure=t=>{const d=new Date(t);return t&&Number.isFinite(d.getTime())?d.toTimeString().slice(0,8):'—';};
+ const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+ /* Entrée d'une vue : les blocs montent en cascade, une seule fois (panel.css). */
+ let entreeMinuteur=null;
+ function entree(){const b=document.body;if(!b?.classList)return;b.classList.remove('entree');void b.offsetWidth;b.classList.add('entree');
+   if(entreeMinuteur)clearTimeout(entreeMinuteur);entreeMinuteur=setTimeout(()=>b.classList.remove('entree'),2600);}
  /* V4.5.4 — une seule fenêtre, navigation interne.
   *
   * Avant : cinq pages HTML, cinq fenêtres popup. Ouvrir le Natif depuis
@@ -13,6 +26,7 @@
    automatic:{titre:'Pilotage automatique',intro:'Choisis une plage, puis suis le lot.'},
    assisted:{titre:'Essai assisté',intro:'Une proposition sur le cut affiché, à ta demande.'},
  };
+ const SOUS={home:'V4.7.20 · TEST',native:'Natif',automatic:'Agent pilote',assisted:'Assisté'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -32,7 +46,7 @@
    if(!VUES.includes(vue)||vue===which)return;
    which=vue;uiError=null;
    if(pousser&&location.hash!=='#'+vue)location.hash='#'+vue;
-   appliquerVue();
+   appliquerVue();entree();
    if(state)render(state);
    void discover().catch(()=>{});
    if(which==='native'){renderReglages();void renderHealth();}
@@ -90,32 +104,67 @@
    const cuts=[...new Set((b.sequence||[]).map(num).filter(Number.isFinite))];
    const classe=c=>fait.has(c)?(parVoie.has(c)?'voie-l':'moteur'):differe.has(c)?'differe':saute.has(c)?'skip':main.has(c)?'main'
      :c===actif?(incertain?'incertain':'actuel'):'avenir';
-   const ecart=c=>{const v=Number(b.lotCommands?.[c]?.ecartMm);return Number.isFinite(v)?v:null;};
+   /* Un écart non consigné (null) n'est pas un écart nul : Number(null) vaut 0 (corrigé en 4.7.20). */
+   const ecart=c=>{const e=b.lotCommands?.[c]?.ecartMm,v=e===null||e===undefined||e===''?NaN:Number(e);return Number.isFinite(v)?v:null;};
    return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif,ecart};
  }
+ /* 4.7.20 (piste H) — LA LIGNE : un segment par cut, dans l'ordre où le Pilote
+  * les a ouverts ; sa couleur porte l'état (moteur, voie, différé, SKIP, à
+  * venir) ; le cut affiché est plus haut, clignote doucement et porte son
+  * numéro, « ? » si le résultat est incertain. Puis l'ÉCART À LA VOIE : la
+  * courbe de l'écart de chaque cut à la voie de ses voisins, la garde de
+  * continuité à 30 mm, en rouge au-delà. Rien de l'état n'est écrit tel quel :
+  * seulement des entiers et des nombres réécrits. */
  function dessinerVoie(v){
-   const W=512,x0=10,visibles=v.cuts.slice(-44),avenir=v.ouvert?4:0,n=visibles.length+avenir,pas=Math.min(22,(W-2*x0)/Math.max(n-1,1));
-   const X=i=>Math.round((x0+i*pas)*10)/10;
-   /* Profil en long : l'écart de chaque cut à la voie de ses voisins, au-dessus
-    * de la voie, avec la bande de la garde de continuité (0–30 mm). Échelle
-    * 0–45 mm ; au-delà, le point reste au plafond, plein rouge. */
-   const P0=40,PH=34,Y=mm=>Math.round((P0-Math.min(mm,45)/45*PH)*10)/10,avecProfil=visibles.some(c=>v.ecart(c)!==null);
-   const dy=avecProfil?46:0;
-   let svg=`<svg viewBox="0 0 ${W} ${68+dy}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
-   if(avecProfil){svg+=`<rect class="bande" x="0" y="${Y(30)}" width="${W}" height="${Math.round((P0-Y(30))*10)/10}"/>`
-     +`<line class="zero" x1="0" y1="${P0}" x2="${W}" y2="${P0}"/><text x="${W}" y="${Y(30)-3}" text-anchor="end">garde 30 mm</text>`;
-     visibles.forEach((c,i)=>{const e=v.ecart(c);if(e===null)return;const k=v.classe(c);
-       svg+=`<circle class="p ${e>30?'hors':k}" cx="${X(i)}" cy="${Y(e)}" r="2.4"/>`;});}
-   svg+=`<g transform="translate(0 ${dy})"><line class="rail" x1="0" y1="26" x2="${W}" y2="26"/><line class="rail" x1="0" y1="42" x2="${W}" y2="42"/>`;
-   visibles.forEach((c,i)=>{const x=X(i),k=v.classe(c),haut=k==='actuel'||k==='incertain';
-     svg+=k==='voie-l'?`<rect class="t voie-l" x="${x-2.2}" y="20" width="4.4" height="28" rx="1.6" stroke-width="1.5"/>`
-       :`<line class="t ${k}" x1="${x}" y1="${haut?12:20}" x2="${x}" y2="${haut?56:48}"/>`;
-     if(haut)svg+=`<text class="${k}" x="${x}" y="67" text-anchor="middle">${entier(c)}${k==='incertain'?' ?':''}</text>`;});
-   for(let i=0;i<avenir;i++){const x=X(visibles.length+i);svg+=`<line class="t avenir" x1="${x}" y1="20" x2="${x}" y2="48"/>`;}
-   if(visibles.length&&!['actuel','incertain'].includes(v.classe(visibles[0])))svg+=`<text x="${X(0)}" y="10">${entier(visibles[0])}</text>`;
-   const dernier=visibles.at(-1);
-   if(visibles.length>1&&!['actuel','incertain'].includes(v.classe(dernier)))svg+=`<text x="${X(visibles.length-1)}" y="10" text-anchor="end">${entier(dernier)}</text>`;
-   return svg+'</g></svg>';
+   const W=372,visibles=v.cuts.slice(-44),avenir=v.ouvert?4:0,n=visibles.length+avenir,pas=W/Math.max(n,1);
+   const X=i=>r1(i*pas+.5),L=r1(Math.max(pas-1,1));
+   let svg=`<svg viewBox="0 0 ${W} 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
+   visibles.forEach((c,i)=>{const k=v.classe(c),haut=k==='actuel'||k==='incertain';
+     svg+=`<rect class="t ${k}" x="${X(i)}" y="${haut?6:14}" width="${L}" height="${haut?24:10}"/>`;});
+   for(let i=0;i<avenir;i++)svg+=`<rect class="t avenir" x="${X(visibles.length+i)}" y="14" width="${L}" height="10"/>`;
+   const ia=visibles.findIndex(c=>['actuel','incertain'].includes(v.classe(c)));
+   if(visibles.length&&ia!==0)svg+=`<text class="axt" x="0" y="43">${entier(visibles[0])}</text>`;
+   if(ia>=0){const k=v.classe(visibles[ia]);
+     svg+=`<text class="axt ${k}" x="${r1(ia*pas+pas/2)}" y="43" text-anchor="${ia>=n-3?'end':'middle'}">${entier(visibles[ia])}${k==='incertain'?' ?':''}</text>`;}
+   else if(visibles.length>1)svg+=`<text class="axt" x="${W}" y="43" text-anchor="end">${entier(visibles.at(-1))}</text>`;
+   return svg+'</svg>'+profilVoie(v,visibles,pas,W);
+ }
+ function profilVoie(v,visibles,pas,W){
+   const pts=visibles.map((c,i)=>({c,i,e:v.ecart(c),k:v.classe(c)}));
+   if(!pts.some(p=>p.e!==null))return '';
+   const H=100,top=12,bot=H-22,Y=mm=>r1(bot-Math.min(mm,40)/40*(bot-top)),Xc=i=>r1(i*pas+pas/2);
+   const vals=pts.filter(p=>p.e!==null).map(p=>p.e).sort((a,b)=>a-b),med=quantile(vals,.5);
+   let s=`<p class="sous-tete"><span class="lbl">Écart à la voie</span><span class="legend">médiane <b>${fr1(med)} mm</b></span></p>`
+     +`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="ax" x1="0" y1="${bot}" x2="${W}" y2="${bot}"/>`
+     +`<line class="garde" x1="0" y1="${Y(30)}" x2="${W}" y2="${Y(30)}"/><text class="axt rouge" x="0" y="${r1(Y(30)-4)}">garde 30 mm</text>`;
+   /* Courbe continue entre deux cuts sans écart consigné. */
+   const segs=[];let cur=[];for(const p of pts){if(p.e===null){if(cur.length)segs.push(cur);cur=[];}else cur.push(p);}if(cur.length)segs.push(cur);
+   for(const g of segs)if(g.length>1){const xy=g.map(p=>`${Xc(p.i)},${Y(p.e)}`);
+     s+=`<polygon class="aire" points="${Xc(g[0].i)},${bot} ${xy.join(' ')} ${Xc(g.at(-1).i)},${bot}"/><path class="courbe" pathLength="1" d="M${xy.join(' L')}"/>`;}
+   for(const p of pts){
+     if(p.e===null){if(p.k==='differe')s+=`<rect class="d" x="${r1(Xc(p.i)-1.5)}" y="${bot-6}" width="3" height="6"/>`;continue;}
+     s+=`<circle class="p ${p.e>30?'hors':p.k}" cx="${Xc(p.i)}" cy="${Y(p.e)}" r="${p.e>30?3.5:1.8}"/>`;}
+   const pire=pts.filter(p=>p.e!==null&&p.e>30).at(-1);
+   if(pire)s+=`<text class="axt rouge" x="${r1(Math.min(Xc(pire.i)+7,W-110))}" y="${r1(Y(pire.e)+3.5)}">${entier(pire.c)} · ${fr1(pire.e)} mm</text>`;
+   if(visibles.length)s+=`<text class="axt" x="0" y="${H-4}">${entier(visibles[0])}</text>`;
+   if(visibles.length>1)s+=`<text class="axt fort" x="${W}" y="${H-4}" text-anchor="end">${entier(visibles.at(-1))}</text>`;
+   return s+'</svg>';
+ }
+ /* Tuiles : un libellé, un grand chiffre léger, une précision. */
+ const tuiles=l=>l.map(([lbl,val,ton,sous])=>`<div class="tuile"><span class="lbl">${esc(lbl)}</span><b${ton?` class="${ton}"`:''}>${esc(val)}</b><small>${esc(sous)}</small></div>`).join('');
+ /* Activité : heure, cut, ce qui s'est passé, valeur. */
+ const lignes=l=>l.map(x=>`<div class="l"><span class="h">${heure(x.t)}</span><span class="c">${entier(x.c)}</span><span class="quoi${x.k?' '+x.k:''}">${esc(x.quoi)}</span><span class="v">${esc(x.val)}</span></div>`).join('');
+ const QUOI={'first-pass':['posé · moteur',''],window:['posé · par la voie','voie-l'],choice:['posé · choix par la voie','voie-l'],crossing:['posé · ornière','voie-l']};
+ const COTES={left:'rail gauche',right:'rail droit'};
+ function activiteLot(b){
+   const out=[],num=x=>Number(x?.cut??x?.identity?.cut),ecart=c=>{const e=b.lotCommands?.[c]?.ecartMm,v=e===null||e===undefined?NaN:Number(e);return Number.isFinite(v)?fr1(v)+' mm':'—';};
+   for(const p of b.processed||[]){const c=num(p);if(!Number.isFinite(c))continue;const cmd=b.lotCommands?.[c];
+     const [quoi,k]=cmd?.action==='lot'&&QUOI[cmd.stage]?QUOI[cmd.stage]:QUOI['first-pass'];
+     out.push({t:p.evidence?.startedAt||p.evidence?.navigationAfter?.observedAt,c,quoi,k,val:ecart(c)});}
+   for(const d of b.deferred||[]){const c=num(d);if(!Number.isFinite(c))continue;const r=(d.unresolvedRails||[]).filter(x=>COTES[x]);
+     out.push({t:d.deferredAt,c,quoi:'différé'+(r.length===2?' · deux rails':r.length?' · '+COTES[r[0]]:''),k:'differe',val:'—'});}
+   for(const x of b.skipped||[]){const c=num(x);if(Number.isFinite(c))out.push({t:x.evidence?.startedAt||x.skippedAt,c,quoi:'SKIP',k:'refuse',val:'—'});}
+   return out.filter(x=>x.t).sort((a,b)=>String(b.t).localeCompare(String(a.t))).slice(0,3);
  }
  /* La dernière commande en trois étapes — émise, effet, serveur (toujours
   * « non disponible » : ESV n'en fournit aucune). Seul un effet observé passe
@@ -150,13 +199,22 @@
  /* Écartement de la proposition : la plage admissible seule, sans valeur
   * centrale ni repère à 1435 ; le point dit où tombe la paire. */
  function ecartementHtml(g){
-   const lo=g.contract?.lowMm??1405,hi=g.contract?.maximumMm??1470,mm=Number(g.mm),W=130,X=v=>Math.round((5+(Math.min(Math.max(v,lo-8),hi+8)-lo)/(hi-lo)*(W-10))*10)/10;
+   const lo=g.contract?.lowMm??1405,hi=g.contract?.maximumMm??1470,mm=Number(g.mm),W=372,pad=4;
+   const X=v=>r1(pad+(Math.min(Math.max(v,lo-8),hi+8)-lo)/(hi-lo)*(W-2*pad));
    const val=Number.isFinite(mm)?mm.toFixed(1).replace('.',','):'—';
-   return `<span class="k">Écartement</span><b>${val}<small>mm</small></b>`
-     +`<svg viewBox="0 0 ${W} 14" width="${W}" height="14" aria-hidden="true"><rect class="plage" x="1" y="5" width="${W-2}" height="4" rx="2"/>`
-     +(Number.isFinite(mm)?`<circle class="${g.admissible?'dans':'hors'}" cx="${X(mm)}" cy="7" r="4"/>`:'')+`</svg>`
-     +`<span class="${g.admissible?'ok':'ko'}">${g.admissible?'dans le contrat':'hors contrat : non applicable'}</span>`;
+   return `<p class="tete-bloc"><span class="lbl">Écartement</span><span class="${g.admissible?'ok':'ko'}">${g.admissible?'dans le contrat':'hors contrat : non applicable'}</span></p>`
+     +`<p class="valeur"><b>${val}</b><small>mm</small></p>`
+     +`<svg viewBox="0 0 ${W} 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="plage" x1="${pad}" y1="10" x2="${W-pad}" y2="10"/>`
+     +`<line class="borne" x1="${pad}" y1="5" x2="${pad}" y2="15"/><line class="borne" x1="${W-pad}" y1="5" x2="${W-pad}" y2="15"/>`
+     +(Number.isFinite(mm)?`<g class="pop"><circle class="${g.admissible?'dans':'hors'}" cx="${X(mm)}" cy="10" r="5"/></g>`:'')
+     +`<text class="axt" x="0" y="31">${entier(lo)}</text><text class="axt" x="${W}" y="31" text-anchor="end">${entier(hi)}</text></svg>`;
  }
+ /* Déplacement proposé d'un rail : latéral en abscisse, vertical en ordonnée (mm). */
+ function deltaSvg(lat,vert){const W=162,H=112,k=4.4,cx=W/2,cy=H/2,b=v=>Math.max(-17,Math.min(17,v)),ex=r1(cx+b(lat)*k),ey=r1(cy-b(vert)*k);
+   let g=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="ax" x1="0" y1="${cy}" x2="${W}" y2="${cy}"/><line class="ax" x1="${cx}" y1="0" x2="${cx}" y2="${H}"/>`;
+   for(const v of [-10,-5,5,10])g+=`<line class="ax2" x1="${r1(cx+v*k)}" y1="${cy-3}" x2="${r1(cx+v*k)}" y2="${cy+3}"/><line class="ax2" x1="${cx-3}" y1="${r1(cy-v*k)}" x2="${cx+3}" y2="${r1(cy-v*k)}"/>`;
+   g+=`<text class="axt" x="${r1(cx+10*k)}" y="${cy+15}" text-anchor="middle">10</text><text class="axt" x="${W}" y="${cy-6}" text-anchor="end">lat.</text><text class="axt" x="${cx+5}" y="10">vert.</text>`;
+   return g+`<path class="fleche" pathLength="1" d="M${cx},${cy} L${ex},${ey}"/><g class="pop"><circle class="bout" cx="${ex}" cy="${ey}" r="3.5"/></g><circle class="origine" cx="${cx}" cy="${cy}" r="1.8"/></svg>`;}
  /* Pastilles d'état sur les onglets : ce qui tourne ou attend ailleurs se voit
   * sans changer de vue. Couleur doublée d'un titre, jamais seule. */
  function etatOnglets(s){
@@ -169,7 +227,46 @@
    if(s.mode==='assisted'&&s.proposal&&!s.applied&&same(s.proposal?.identity,s.current?.identity))out.assisted=['vert','Proposition prête'];
    return out;
  }
- let nouveauLot=false;const tiroirs={lot:false,native:false};
+ const NOMS_ETAT={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
+   PAUSED_DEFER_NAVIGATION_UNCERTAIN:'Navigation différée incertaine',
+   PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',
+   FINISHED_WITH_UNCONFIRMED_ACTIONS:'Terminé avec actions non confirmées',ERROR:'Interrompu'};
+ const ETAPES={capture:'capture du LiDAR',apply:'pose des rails',validate:'validation'};
+ /* Bandeau dans ESV (piste H) : une ligne d'état en bas de la page ESV, qui ne
+  * capte aucun clic. Il suit cette fenêtre : fermée, il disparaît. */
+ let bandeau=false,bandeauEnvoye='';
+ function texteBandeau(s){const b=s.batch,n=s.native;
+   if(b&&OUVERT.includes(b.state)){const v=voieDuLot(s);
+     return {texte:`BANANE · PILOTE · ${NOMS_ETAT[b.state]||'lot'} · cut ${entier(b.activeIdentity?.cut)} · ${v.fait.size} posés · ${v.differe.size} différés`,
+       ton:INCERTAIN.includes(b.state)||s.reconcileRequired?'rouge':b.state==='RUNNING'?'vert':'ambre'};}
+   if(n&&nativeActive(s))return {texte:`BANANE · NATIF · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites`,ton:n.status==='RUNNING'?'vert':'ambre'};
+   if(b)return {texte:`BANANE · PILOTE · ${NOMS_ETAT[b.state]||'lot'} · ${b.processed?.length||0} traités · ${b.deferred?.length||0} différés`,ton:''};
+   return {texte:'BANANE · prêt',ton:''};}
+ let bandeauA=0;
+ function envoyerBandeau(s){if(!bandeau)return;const t=texteBandeau(s),cle=t.texte+'|'+t.ton;
+   // Renvoyé aussi toutes les 20 s : un service worker redémarré a perdu le texte.
+   if(cle===bandeauEnvoye&&Date.now()-bandeauA<20000)return;bandeauEnvoye=cle;bandeauA=Date.now();
+   void api('bandeau',{on:true,text:t.texte,ton:t.ton}).catch(()=>{bandeauEnvoye='';});}
+ /* Natif : durée de chaque visite (jusqu'au début de la suivante), et ce qui s'y est passé. */
+ const ISSUE={VALIDATE_NO_MOVEMENT:['validé',''],VALIDATE_CORRECTED_BOTH:['corrigé · 2 rails','voie-l'],VALIDATE_CORRECTED_LEFT_ONLY:['corrigé · rail gauche','voie-l'],
+   VALIDATE_CORRECTED_RIGHT_ONLY:['corrigé · rail droit','voie-l'],SKIP:['SKIP','refuse']};
+ function visitesNatif(n){const v=(n?.visits||[]).filter(x=>x&&x.startedAt),ms=t=>Date.parse(t);
+   return v.map((x,i)=>{const fin=v[i+1]?.startedAt||x.endedAt||null,d=fin?(ms(fin)-ms(x.startedAt))/1000:(Date.now()-ms(x.startedAt))/1000;
+     return {t:x.startedAt,c:x.identity?.cut,encours:!fin,d:Number.isFinite(d)&&d>=0?d:null,label:x.label||null};});}
+ function tempsParCut(vis){const der=vis.slice(-40);if(der.length<2)return '';
+   const W=372,H=110,PW=W-104,pas=PW/40,top=14,bot=H-20,fin=der.filter(x=>!x.encours&&x.d!==null).map(x=>x.d).sort((a,b)=>a-b);
+   if(!fin.length)return '';const med=quantile(fin,.5),p90=quantile(fin,.9),max=Math.max(30,Math.ceil(p90*1.4));
+   const Y=v=>r1(bot-Math.min(v,max)/max*(bot-top));
+   let g=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="ax" x1="0" y1="${bot}" x2="${PW}" y2="${bot}"/>`;
+   der.forEach((x,i)=>{if(x.d===null)return;const xx=r1(i*pas+pas/2-1.5),y=Y(x.d),h=r1(bot-y);
+     g+=x.encours?`<rect class="b encours" x="${xx}" y="${y}" width="3" height="${h}"/>`
+       :`<rect class="b${x.d>p90?' lent':''} grow" style="animation-delay:${250+i*18}ms" x="${xx}" y="${y}" width="3" height="${h}"/>`;});
+   g+=`<line class="med" x1="0" y1="${Y(med)}" x2="${PW+6}" y2="${Y(med)}"/><line class="p90" x1="0" y1="${Y(p90)}" x2="${PW+6}" y2="${Y(p90)}"/>`
+     +`<text class="axt fort" x="${W}" y="${r1(Y(med)+3.5)}" text-anchor="end">médiane ${fr1(med)} s</text><text class="axt ambre" x="${W}" y="${r1(Y(p90)+3.5)}" text-anchor="end">p90 ${fr1(p90)} s</text>`
+     +`<text class="axt" x="0" y="${H-4}">${entier(der[0].c)}</text><text class="axt fort" x="${r1((der.length-.5)*pas)}" y="${H-4}" text-anchor="middle">${entier(der.at(-1).c)}</text></svg>`;
+   return g;}
+ const ilya=t=>{const s=Math.max(0,Math.round((Date.now()-Date.parse(t))/1000));return !Number.isFinite(s)?'':s<60?`il y a ${s} s`:s<3600?`il y a ${Math.round(s/60)} min`:`il y a ${Math.round(s/3600)} h`;};
+ let nouveauLot=false,propositionAffichee=null;const tiroirs={lot:false,native:false};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer':'Détails ›';}
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
@@ -178,12 +275,25 @@
      if(e){t.dataset.etat=e[0];t.setAttribute('title',e[1]);}else{delete t.dataset.etat;t.removeAttribute('title');}}
    tiroir('lot');tiroir('native');
    $('context').textContent=id?`ESV · part ${id.part} · cut ${id.cut}`:'';
+   const partie=which==='automatic'?b?.scope?.part??id?.part:id?.part;
+   if($('sous-titre'))$('sous-titre').textContent=which==='home'?SOUS.home:`${SOUS[which]}${Number.isFinite(Number(partie))?' · Partie '+entier(partie):''}`;
+   envoyerBandeau(s);
    if(which==='native'){
      const running=['STARTING','RUNNING'].includes(n?.status),paused=['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status),open=nativeActive(s);
      note(n?.message||'Ouvre le premier cut à observer, puis démarre le mode Natif.',n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
      if(manualActive(s))note('Une session Mes corrections est active. Termine-la avant de démarrer le mode Natif.');
      if(['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer le mode Natif.');
      $('native-count').textContent=n?.visits.length||0;const count=n?.incomplete.length||0;$('native-incomplete').hidden=!count;
+     /* Piste H : l'état, la dernière visite, le temps par cut, l'activité. */
+     if($('native-etat')){const e=!n?['Aucune collecte','ink']:n.status==='RUNNING'?['Collecte en cours · observation',' live']:n.status==='STARTING'?['Démarrage de la collecte','']
+       :n.status==='PAUSED'?['Collecte en pause','amber']:n.status==='PAUSED_ADAPTER_UNRESPONSIVE'?['Adaptateur sans réponse','red']:n.status==='FINISHED'?['Session terminée','ink']:[String(n.status||'—'),'ink'];
+       $('native-etat').textContent=e[0];$('native-etat').className='eyebrow'+(e[1]?(e[1].startsWith(' ')?e[1]:' '+e[1]):'');}
+     const vis=visitesNatif(n),der=vis.at(-1);
+     if($('native-derniere')){$('native-derniere').hidden=!der;$('native-derniere').textContent=der?`Dernière · ${entier(der.c)} · ${der.encours?'en cours':ilya(der.t)}`:'';}
+     const tpc=tempsParCut(vis);if($('native-temps-bloc'))$('native-temps-bloc').hidden=!tpc;poser($('native-temps'),tpc);
+     const act=vis.slice(-5).reverse().map(x=>({t:x.t,c:x.c,quoi:x.encours?'visite en cours':(ISSUE[x.label]||['visité',''])[0],k:x.encours?'encours':(ISSUE[x.label]||['',''])[1],
+       val:x.d===null?'—':x.encours?`${String(Math.floor(x.d/60)).padStart(2,'0')}:${String(Math.floor(x.d%60)).padStart(2,'0')}`:fr1(x.d)+' s'}));
+     if($('native-activite-bloc'))$('native-activite-bloc').hidden=!act.length;poser($('native-activite'),lignes(act));
      $('native-incomplete').textContent=`${count} visite(s) partielle(s), conservée(s) avec leur motif.`;
      button('native-start',{hidden:open,disabled:busy||manualActive(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
      $('native-start').textContent=n?.status==='FINISHED'?'Démarrer une nouvelle session':'Démarrer l’observation';
@@ -238,10 +348,7 @@
        if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
          $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${effective==='apply'?'appliquée':'observée seulement'}.`:'';}
      }
-     const names={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
-       PAUSED_DEFER_NAVIGATION_UNCERTAIN:'Navigation différée incertaine',
-       PAUSED_ADAPTER_UNRESPONSIVE:'Adaptateur sans réponse',MANUAL_TAKEOVER:'Reprise manuelle',STOPPED:'Arrêté',COMPLETED:'Terminé confirmé',
-       FINISHED_WITH_UNCONFIRMED_ACTIONS:'Terminé avec actions non confirmées',ERROR:'Interrompu'};
+     const names=NOMS_ETAT;
      // Les cuts repris à la main sont comptés à part : Banane ne les a pas validés.
      const repris=b?.manuallyCompleted?.length?` · ${b.manuallyCompleted.length} repris à la main`:'';
      /* Le compteur suit la FINALISATION durable, jamais le début d'une
@@ -252,18 +359,26 @@
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
-     if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state):'Aucun lot';$('lot-etat').className='eyebrow'+(ton?' '+ton:'');}
+     if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';
+       $('lot-etat').className='eyebrow'+(ton?' '+ton:'')+(b?.state==='RUNNING'&&!s.reconcileRequired?' live':'');}
      if($('lot-cut'))$('lot-cut').textContent=entier(b?.activeIdentity?.cut??id?.cut);
      if($('lot-plage'))$('lot-plage').textContent=b?.scope?`part ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${entier(b.scope.end)}`:'';
+     /* Progression dans la plage du lot : du premier au dernier cut. */
+     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),z=Number(sc?.end),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
+       const ok=Number.isFinite(a)&&Number.isFinite(z)&&z>a&&Number.isFinite(c);$('lot-progres').hidden=!ok;
+       if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
+         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z);$('lot-pct').textContent=`${pct} % de la plage`;}}
      const v=b?voieDuLot(s):null;
+     /* Tuiles : posés, différés, couverture sur les cuts terminés du lot (D-038). */
      if($('lot-compteurs')){$('lot-compteurs').hidden=!v;
-       $('lot-compteurs').innerHTML=!v?'':`<span><b>${v.fait.size}</b>posés</span>`
-         +(v.parVoie.size?`<span class="dim">dont <b>${v.parVoie.size}</b>par la voie</span>`:'')
-         +`<span class="amber"><b>${v.differe.size}</b>différés</span>`
-         +(v.saute.size?`<span><b>${v.saute.size}</b>SKIP</span>`:'')+(v.main.size?`<span><b>${v.main.size}</b>repris à la main</span>`:'');}
-     if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;$('voie').innerHTML=montrer?dessinerVoie(v):'';
+       const finis=v?v.fait.size+v.differe.size+v.saute.size+v.main.size:0;
+       poser($('lot-compteurs'),!v?'':tuiles([['Posés',String(v.fait.size),'',v.parVoie.size?`dont ${v.parVoie.size} par la voie`:'par le moteur'],
+         ['Différés',String(v.differe.size),v.differe.size?'amber':'',[v.saute.size?`${v.saute.size} SKIP`:'',v.main.size?`${v.main.size} repris à la main`:''].filter(Boolean).join(' · ')||'à reprendre'],
+         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis}`]]));}
+     if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;poser($('voie'),montrer?dessinerVoie(v):'');
        if($('voie-legende'))$('voie-legende').hidden=!montrer;}
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
+     const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;poser($('lot-activite'),lignes(actLot));
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -342,12 +457,22 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
    }else if(which==='assisted'){
      note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer une proposition.':s.notice||'Ouvre un cut puis demande une proposition.');
      button('analyze',{disabled:busy||active(s)});const p=s.mode==='assisted'&&same(s.proposal?.identity,id)&&s.before?s.proposal:null;
-     $('proposals').replaceChildren();if(p)for(const side of ['left','right']){
+     /* Piste H : l'état, le cut affiché, le déplacement proposé de chaque rail. */
+     if($('assiste-etat')){const e=s.applied&&same(s.applied?.identity,id)?['Proposition appliquée · valide le cut dans ESV','']:p?['Proposition prête','ink']:['Aucune proposition','ink'];
+       $('assiste-etat').textContent=e[0];$('assiste-etat').className='eyebrow'+(e[1]?' '+e[1]:'');}
+     if($('assiste-cut'))$('assiste-cut').textContent=entier(id?.cut);
+     if($('proposals-bloc'))$('proposals-bloc').hidden=!p;if($('assiste-guide'))$('assiste-guide').hidden=!!p;
+     const cleProp=p?JSON.stringify([p.id,...['left','right'].map(k=>[p.rails[k]?.delta,p.rails[k]?.confidence])]):'';
+     if(cleProp!==propositionAffichee){if(cleProp&&propositionAffichee!==null)entree();propositionAffichee=cleProp;
+       $('proposals').replaceChildren();if(p)for(const side of ['left','right']){
        const fit=p.rails[side],box=document.createElement('div');box.className='proposal';const title=document.createElement('strong');title.textContent=side==='left'?'Rail gauche':'Rail droit';
-       const delta=document.createElement('p');delta.textContent=fit.delta?`Latéral : ${(fit.delta[1]*1000).toFixed(1)} mm · vertical : ${(fit.delta[2]*1000).toFixed(1)} mm`:'Pas de position exploitable.';
-       const score=document.createElement('small');score.textContent=`Indice LiDAR : ${fit.confidence}/100. ${fit.reasons.join(' ')}`;
-       box.append(title,delta,score);$('proposals').append(box);
-     }
+       const plot=document.createElement('div'),valeurs=document.createElement('p');valeurs.className='valeurs';
+       if(fit.delta){const lat=fit.delta[1]*1000,vert=fit.delta[2]*1000;plot.innerHTML=deltaSvg(lat,vert);
+         valeurs.innerHTML=`<span><b>${sg(lat)}</b> <small>lat.</small></span><span><b>${sg(vert)}</b> <small>vert.</small></span>`;}
+       else{valeurs.className='vide';valeurs.textContent='Pas de position exploitable.';}
+       const score=document.createElement('p');score.textContent=`Indice LiDAR ${fit.confidence}/100. ${fit.reasons.join(' ')}`;
+       box.append(title,plot,valeurs,score);$('proposals').append(box);
+     }}
      const g=p&&s.assistGauge&&(s.assistGauge.proposalId==null||s.assistGauge.proposalId===p.id)?s.assistGauge:null;
      if($('assiste-ecartement')){$('assiste-ecartement').hidden=!g;$('assiste-ecartement').innerHTML=g?ecartementHtml(g):'';}
      afficherCommande('assiste',commandeDerniere(s,'assisted'));
@@ -508,7 +633,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
    if(!$('native-health'))return;
    let h=null;
    try{h=await api('native-health');}catch{return;}
-   if(!h||!h.cloudsStored&&!h.visits){$('native-health').hidden=true;return;}
+   if(!h||!h.cloudsStored&&!h.visits){$('native-health').hidden=true;if($('native-tuiles'))$('native-tuiles').hidden=true;return;}
    $('native-health').hidden=false;
    const set=(id,v)=>{if($(id))$(id).textContent=v;};
    set('h-bytes',mo(h.bytesStored));
@@ -532,6 +657,11 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
    const ecartes=(h.setAside||0)+(h.refused||0);
    if($('h-aside-box')){$('h-aside-box').hidden=!ecartes;set('h-aside',String(ecartes));}
    renderQualite(h.quality);
+   /* Piste H : trois tuiles en tête de la vue Natif. */
+   if($('native-tuiles')){const q=h.quality;$('native-tuiles').hidden=false;
+     poser($('native-tuiles'),tuiles([['Captures',String(h.captureCompleted??0),'',`${h.captureFailed??0} en panne`],
+       ['Volume',fr1((h.bytesStored||0)/1048576),'','Mo conservés'],
+       ['Qualité',q&&q.railQualifiedRate!==null&&q.railQualifiedRate!==undefined?`${q.railQualifiedRate} %`:'—','',q?.railsObserved?`${q.railsQualified} sur ${q.railsObserved}`:'repères qualifiés']]));}
    /* La note doit NOMMER la cause. La capture du 15/09 montrait « niveau :
     * complet » au-dessus de « la collecte est gênée » : deux affirmations
     * contradictoires, dont aucune n'indiquait que l'alerte venait en réalité du
@@ -755,7 +885,20 @@ on('assisted-dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
    if(events&&records){saveBlob(blobJson(meta,{events,records}),name);note(`Journal exporté : ${events.length} événements, ${records.length} enregistrements.`);return;}
    saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);});
  for(const id of ['start','end','confidence'])if($(id))$(id).oninput=()=>edited.add(id);
- appliquerVue();
+ /* Thème : celui du système par défaut ; la bascule, instantanée, est gardée pour cette fenêtre. */
+ const CLE_THEME='banane.theme',sysSombre=()=>!!globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
+ function appliquerTheme(t){const r=document.documentElement;if(r?.dataset){if(t==='light'||t==='dark')r.dataset.theme=t;else delete r.dataset.theme;}
+   const sombre=t==='dark'||t!=='light'&&sysSombre();$('theme-toggle')?.setAttribute('aria-label',sombre?'Passer au thème clair':'Passer au thème sombre');}
+ try{appliquerTheme(globalThis.localStorage?.getItem(CLE_THEME));}catch{appliquerTheme(null);}
+ if($('theme-toggle'))$('theme-toggle').onclick=()=>{const actuel=document.documentElement?.dataset?.theme||(sysSombre()?'dark':'light'),suivant=actuel==='dark'?'light':'dark';
+   try{globalThis.localStorage?.setItem(CLE_THEME,suivant);}catch{/* fenêtre sans stockage : bascule le temps de la fenêtre */}appliquerTheme(suivant);};
+ /* Bandeau dans ESV : préférence gardée par le service worker. */
+ const marquerBandeau=()=>$('bandeau-toggle')?.setAttribute('aria-pressed',String(bandeau));
+ api('bandeau-etat').then(r=>{bandeau=r?.on===true;marquerBandeau();if(state)envoyerBandeau(state);}).catch(()=>{});
+ if($('bandeau-toggle'))$('bandeau-toggle').onclick=()=>action('bandeau-toggle',async()=>{bandeau=!bandeau;bandeauEnvoye='';marquerBandeau();
+   const t=state?texteBandeau(state):{texte:'BANANE',ton:''};await api('bandeau',{on:bandeau,text:t.texte,ton:t.ton});if(bandeau)bandeauEnvoye=t.texte+'|'+t.ton;
+   note(bandeau?'Bandeau affiché en bas de la page ESV : il suit cette fenêtre et ne capte aucun clic.':'Bandeau retiré de la page ESV.');});
+ appliquerVue();entree();
  void renderCerveau();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
  setInterval(()=>{if(!working)void refresh();},1000);

@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.19';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.20';
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -37,11 +37,17 @@ const esvURL=url=>{try{const u=new URL(url);return u.origin==='https://esv.lidar
 // The URL filter for extension pages is not reliable without a tabs permission. Track
 // windows created here and live extension-page ports instead of guessing from tabs.query({url}).
 const panelWindows=new Map(),panelPorts=new Map();
+/* 4.7.20 (piste H) — BANDEAU DANS ESV : une ligne d'état que le panneau compose
+ * et que la page ESV affiche en bas, sans capter aucun clic. Il suit la
+ * fenêtre Banane : fermée, il disparaît (la pastille « ouvrir » revient). La
+ * préférence est gardée ; le texte ne vient que du panneau. */
+let bandeau={on:false,text:'',ton:''};
+const bandeauVisible=()=>bandeau.on&&panelPorts.size+panelWindows.size>0&&bandeau.text?{text:bandeau.text,ton:bandeau.ton}:null;
 function launcherState(){const ids=new Set(panelWindows.keys());
  for(const [port,info] of panelPorts)ids.add(info.windowId??port);
- return {visible:ids.size===0,openWindows:ids.size};}
+ return {visible:ids.size===0,openWindows:ids.size,bandeau:ids.size?bandeauVisible():null};}
 async function syncLauncher(){const state=launcherState(),tabs=await chrome.tabs.query({});
- await Promise.allSettled(tabs.filter(tab=>esvURL(tab.url)).map(tab=>chrome.tabs.sendMessage(tab.id,{kind:'launcher-visibility',visible:state.visible})));return state;}
+ await Promise.allSettled(tabs.filter(tab=>esvURL(tab.url)).map(tab=>chrome.tabs.sendMessage(tab.id,{kind:'launcher-visibility',visible:state.visible,bandeau:state.bandeau})));return state;}
 async function call(action,...args){if(selectedTab===null)throw Error('Sélectionne un onglet ESV.');
  const tab=await chrome.tabs.get(selectedTab);if(!esvURL(tab.url))throw Error('L’onglet sélectionné n’est plus une page ESV autorisée.');
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
@@ -320,6 +326,9 @@ function pollCurrent(){
 }
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
+ if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
+ if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
+  await chrome.storage.local.set({banane4Bandeau:bandeau.on});await syncLauncher();return {on:bandeau.on};}
  if(action==='list-tabs')return (await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'})).map(t=>({id:t.id,title:t.title}));
  if(action==='connect'){
   if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer d’onglet.');

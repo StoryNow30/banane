@@ -195,7 +195,8 @@
     this.establishBefore(record,data.initialObserved);for(const reason of data.initialObserved?.partialReasons||[])this.partialReason(record,reason);
     const previousId=n.visits.at(-1)?.visitId;if(previousId){const previous=await this.recordById(previousId);
       if(previous&&previous.nativeSessionId===n.id&&previous.visitId===previousId){previous.nextVisitId=record.visitId;await this.saveRecord(previous);}}
-    n.current=record;n.visits.push({visitId:record.visitId,visitIndex,identity,observationPeriodId:record.observationPeriodId,relation:record.visitRelation.type});
+    /* 4.7.20 (piste H) : début de la visite, pour le temps par cut du panneau. */
+    n.current=record;n.visits.push({visitId:record.visitId,visitIndex,identity,observationPeriodId:record.observationPeriodId,relation:record.visitRelation.type,startedAt:record.startedAt});
     this.e.s.current=K.clone(data.initialObserved);await this.saveRecord(record);await this.e.save();return {saved:true,recordId:record.recordId,eventSeq:logged.eventSeq};
    }
    if(type==='observation-failed'){if(n.current){this.partialReason(n.current,data.reason||'observation-failed');await this.saveRecord(n.current);}
@@ -288,6 +289,8 @@
     record.navigationObserved=data.reason==='target-changed'&&!!record.nextObservedIdentity;
     if(record.navigationObserved)record.observedEffects.push({kind:'target-changed',nextIdentity:record.nextObservedIdentity,observedAt:record.endedAt,eventSeq:logged.eventSeq});
     this.classify(record);await this.saveRecord(record);if(record.status!=='complete')n.incomplete=unique([...n.incomplete,record.recordId]);
+    /* 4.7.20 (piste H) : fin et issue de la visite (validé, corrigé, SKIP), en bref, pour l'activité du panneau. */
+    const resume=n.visits.find(v=>v.visitId===record.visitId);if(resume){resume.endedAt=record.endedAt;resume.label=record.observedLabelCandidate||null;}
     if(n.current?.visitId===record.visitId)n.current=null;await this.e.save();this.scheduleContinuity(record.visitId);return {saved:true,eventSeq:logged.eventSeq};
    }
    if(type==='period-ended'){const period=n.observationPeriods.find(item=>item.observationPeriodId===data.observationPeriodId);

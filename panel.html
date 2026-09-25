@@ -1,39 +1,65 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.7.19</title><link rel="stylesheet" href="panel.css"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banane V4.7.20</title><link rel="stylesheet" href="panel.css"></head>
 <body data-window="home"><main>
 
-<header><p class="brand">BANANE <span>V4.7.19 · TEST</span></p>
-<h1 id="vue-titre">Une tâche, une fenêtre.</h1>
-<p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p></header>
+<!-- 4.7.20 — piste H « Sans le skill » (design/pistes-retenues, direction du 24/09) :
+     noir et traits fins, un grand chiffre, des tuiles, les graphiques du lot,
+     l'activité, puis la barre d'action en pied. Tous les identifiants de la
+     4.7.19 sont conservés : `panel.js` et les essais les lisent. -->
+<header class="tete">
+ <div class="marque">
+  <button class="nom" type="button" data-view="home" title="Accueil">BANANE</button>
+  <span class="lbl" id="sous-titre">Accueil</span>
+ </div>
+ <div class="outils">
+  <button class="ib" id="theme-toggle" type="button" aria-label="Passer au thème clair" title="Thème clair ou sombre">
+   <svg class="ico-soleil" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+   <svg class="ico-lune" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+  </button>
+  <button class="ib" id="bandeau-toggle" type="button" aria-label="Bandeau dans ESV" aria-pressed="false" title="Bandeau d’état dans ESV">
+   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15h18"/></svg>
+  </button>
+ </div>
+ <p class="brand">BANANE <span>V4.7.20 · TEST</span></p>
+ <h1 id="vue-titre">Une tâche, une fenêtre.</h1>
+ <p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p>
+</header>
 
 <!-- Navigation interne : une seule fenêtre, jamais une seconde qui s'ouvre
      par-dessus. L'onglet actif porte aria-current pour le lecteur d'écran. -->
 <nav id="nav" class="nav" aria-label="Vues Banane">
- <button class="nav-tab" data-view="home">Accueil</button>
  <button class="nav-tab" id="tab-native" data-view="native">Natif</button>
  <button class="nav-tab" id="tab-automatic" data-view="automatic">Pilote</button>
  <button class="nav-tab" id="tab-assisted" data-view="assisted">Assisté</button>
 </nav>
 
+<div class="corps">
 <p id="context" class="context"></p>
 <div id="notice" class="status" role="status" aria-live="polite">Prêt.</div>
 
 <!-- ------------------------------------------------------------- accueil -->
 <section class="vue" data-vue="home">
  <div class="choices">
-  <button class="choice" data-view="native"><span class="choice-title">Mode Natif <span aria-hidden="true">→</span></span><span>Observer ton travail manuel dans ESV sans piloter l’interface. C’est le mode de collecte.</span></button>
-  <button class="choice" data-view="automatic"><span class="choice-title">Pilotage automatique <span aria-hidden="true">→</span></span><span>Lancer et suivre un lot de cuts de test.</span></button>
-  <button class="choice" data-view="assisted"><span class="choice-title">Essai assisté <span aria-hidden="true">→</span></span><span>Une proposition sur le cut affiché, à ta demande.</span></button>
+  <button class="choice rise d1" data-view="native"><span class="choice-title">Mode Natif <span aria-hidden="true">→</span></span><span>Observer ton travail manuel dans ESV sans piloter l’interface. C’est le mode de collecte.</span></button>
+  <button class="choice rise d2" data-view="automatic"><span class="choice-title">Pilotage automatique <span aria-hidden="true">→</span></span><span>Lancer et suivre un lot de cuts de test.</span></button>
+  <button class="choice rise d3" data-view="assisted"><span class="choice-title">Essai assisté <span aria-hidden="true">→</span></span><span>Une proposition sur le cut affiché, à ta demande.</span></button>
  </div>
- <div class="guide"><p>Les données sont conservées quand tu fermes cette fenêtre.</p></div>
 </section>
 
 <!-- ---------------------------------------------------------------- natif -->
 <section class="vue" data-vue="native" hidden>
- <div class="count"><strong id="native-count">0</strong><span>visites de cuts enregistrées dans cette session</span></div>
+ <div class="bloc hero">
+  <p id="native-etat" class="eyebrow ink rise d0">Aucune collecte</p>
+  <div class="count rise d1"><strong id="native-count">0</strong><span>visites de cuts</span></div>
+  <p id="native-derniere" class="mono sous rise d2" hidden></p>
+ </div>
  <p id="native-incomplete" class="warning" hidden></p>
-
- <section id="native-health" class="health" hidden><h2>Santé de la collecte</h2><div class="health-grid"><div><span class="health-label">Volume conservé</span><strong id="h-bytes">—</strong><span id="h-pending" class="muted"></span></div><div><span class="health-label">Segments écrits</span><strong id="h-seg">0</strong><span id="h-clouds" class="muted"></span></div><div><span class="health-label">Captures</span><strong id="h-cap">—</strong><span id="h-caprate" class="muted"></span></div><div><span class="health-label">File d’envoi</span><strong id="h-queue">—</strong><span id="h-dropped" class="muted"></span></div><div><span class="health-label">Niveau du collecteur</span><strong id="h-level">—</strong><span id="h-peak" class="muted"></span></div><div id="h-aside-box" hidden><span class="health-label">Mis à l’écart</span><strong id="h-aside">0</strong><span class="muted">avec cause</span></div></div><p id="h-note" class="muted"></p></section>
+ <div id="native-tuiles" class="tuiles rise d3" hidden></div>
+ <div id="native-temps-bloc" class="bloc rise d4" hidden>
+  <p class="tete-bloc"><span class="lbl">Temps par cut</span><span class="legend">40 derniers · secondes</span></p>
+  <div id="native-temps" class="graphe" role="img" aria-label="Temps passé par cut, 40 dernières visites"></div>
+ </div>
+ <div id="native-activite-bloc" class="bloc rise d5" hidden><p class="lbl">Activité</p><div id="native-activite" class="activite"></div></div>
 
  <div class="actions" id="native-actions">
   <button id="native-start" class="primary">Démarrer l’observation</button>
@@ -45,6 +71,8 @@
  </div>
 
  <div class="guide"><p>Travaille ensuite normalement dans ESV. Aucun clic Banane n’est nécessaire entre les cuts.</p><p>Ce mode n’envoie aucun déplacement, changement de caméra, choix de rail, VALIDATE, SKIP ou navigation.</p></div>
+
+ <section id="native-health" class="health" hidden><h2>Santé de la collecte</h2><div class="health-grid"><div><span class="health-label">Volume conservé</span><strong id="h-bytes">—</strong><span id="h-pending" class="muted"></span></div><div><span class="health-label">Segments écrits</span><strong id="h-seg">0</strong><span id="h-clouds" class="muted"></span></div><div><span class="health-label">Captures</span><strong id="h-cap">—</strong><span id="h-caprate" class="muted"></span></div><div><span class="health-label">File d’envoi</span><strong id="h-queue">—</strong><span id="h-dropped" class="muted"></span></div><div><span class="health-label">Niveau du collecteur</span><strong id="h-level">—</strong><span id="h-peak" class="muted"></span></div><div id="h-aside-box" hidden><span class="health-label">Mis à l’écart</span><strong id="h-aside">0</strong><span class="muted">avec cause</span></div></div><p id="h-note" class="muted"></p></section>
 
  <section id="native-quality" class="health" hidden><h2>Qualité de capture</h2><div class="health-grid"><div><span class="health-label">Repères avec instantané qualifié</span><strong id="q-rails">—</strong><span id="q-rails-note" class="muted"></span></div><div><span class="health-label">Instants de capture qualifiés</span><strong id="q-snap">—</strong><span id="q-snap-rate" class="muted"></span></div><div><span class="health-label">Points retirés au clipping</span><strong id="q-clip">—</strong><span class="muted">filtre de visibilité ESV</span></div><div><span class="health-label">Flanc interne conservé</span><strong id="q-face">—</strong><span id="q-face-note" class="muted"></span></div></div><p id="q-note" class="muted"></p></section>
 
@@ -63,21 +91,29 @@
 
 <!-- ---------------------------------------------------------------- pilote -->
 <section class="vue" data-vue="automatic" hidden>
- <!-- « La ligne » (D-045) : l'état, le cut, les compteurs, la voie, puis UNE action. -->
- <p id="lot-etat" class="eyebrow ink">Aucun lot</p>
- <p class="big"><span id="lot-cut">—</span><small id="lot-plage"></small></p>
- <p id="lot-compteurs" class="counts" hidden></p>
+ <!-- L'état, le cut en grand, la plage, la dernière commande ; les tuiles ;
+      la ligne et l'écart à la voie ; l'activité ; puis UNE action en pied. -->
+ <div class="bloc hero">
+  <p id="lot-etat" class="eyebrow ink rise d0">Aucun lot</p>
+  <p class="big rise d1"><span id="lot-cut">—</span><small>cut</small></p>
+  <div id="lot-progres" class="progres rise d2" hidden><div class="barre"><i id="lot-progres-fill" class="fill"></i></div><p class="progres-l"><span id="lot-debut"></span><span id="lot-pct"></span><span id="lot-fin"></span></p></div>
+  <p id="lot-plage" class="mono sous rise d2"></p>
+  <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
+  <div id="lot-commande" class="commande rise d3" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
+ </div>
+ <div id="lot-compteurs" class="tuiles rise d4" hidden></div>
+ <div class="bloc rise d5" id="ligne-bloc">
+  <p class="tete-bloc"><span class="lbl">La ligne</span><span id="voie-legende" class="legend" hidden><span><i class="moteur"></i>moteur</span><span><i class="voie-l"></i>voie</span><span><i class="differe"></i>différé</span><span><i class="refuse"></i>SKIP</span></span></p>
+  <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut, et l’écart de chaque cut à la voie" hidden></div>
+ </div>
+ <div id="lot-activite-bloc" class="bloc rise d6" hidden><p class="lbl">Activité</p><div id="lot-activite" class="activite"></div></div>
  <p class="muted" id="lot-decision-effective" hidden></p>
  <p class="muted" id="unresolved-policy-effective" hidden></p>
  <p class="muted" id="policy-effective" hidden></p>
- <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut" hidden></div>
- <p id="voie-legende" class="legend" hidden><span><i></i>posé par le moteur</span><span><i class="creux"></i>posé par la voie</span><span><i class="differe"></i>différé</span><span><i class="refuse"></i>SKIP</span></p>
- <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
- <div id="lot-commande" class="commande" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
  <div id="batch" class="batch">Aucun lot en cours.</div>
  <div class="range" id="lot-bornes"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0"></label></div>
  <!-- 4.7.19 : reprise des différés du lot précédent, encadrés par ses cuts posés. -->
- <div id="lot-reprise-row" hidden><label><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
+ <div id="lot-reprise-row" hidden><label class="interrupteur"><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
  <div class="actions" id="lot-actions">
   <button id="start-batch" class="primary">Démarrer le lot TEST</button>
   <button id="pause" class="secondary" hidden>Pause</button>
@@ -103,23 +139,31 @@
 
 <!-- -------------------------------------------------------------- assisté -->
 <section class="vue" data-vue="assisted" hidden>
- <div class="guide"><p>Clique sur Proposer, examine le résultat, puis choisis de l’appliquer ou de l’ignorer. La validation du cut reste ton action dans ESV.</p></div>
- <div id="proposals" class="proposals"></div>
+ <div class="bloc hero">
+  <p id="assiste-etat" class="eyebrow ink rise d0">Aucune proposition</p>
+  <p class="big rise d1"><span id="assiste-cut">—</span><small>cut affiché</small></p>
+ </div>
+ <div id="assiste-guide" class="guide rise d2"><p>Clique sur Proposer, examine le résultat, puis choisis de l’appliquer ou de l’ignorer. La validation du cut reste ton action dans ESV.</p></div>
+ <div id="proposals-bloc" class="bloc rise d2" hidden>
+  <p class="tete-bloc"><span class="lbl">Déplacement proposé</span><span class="legend">mm</span></p>
+  <div id="proposals" class="proposals"></div>
+ </div>
  <!-- Écartement de la proposition : la plage admissible 1405–1470, sans valeur centrale ni repère à 1435. -->
- <p id="assiste-ecartement" class="ecartement" hidden></p>
- <div id="assiste-commande" class="commande" hidden><p class="cmd"><b id="assiste-cmd-nom"></b><span id="assiste-cmd-cut"></span></p><p id="assiste-cmd-etapes" class="steps"></p></div>
+ <div id="assiste-ecartement" class="ecartement rise d3" hidden></div>
+ <div id="assiste-commande" class="commande rise d4" hidden><p class="cmd"><b id="assiste-cmd-nom"></b><span id="assiste-cmd-cut"></span></p><p id="assiste-cmd-etapes" class="steps"></p></div>
  <div class="actions" id="assisted-actions">
   <button id="accept" class="primary" hidden>Appliquer les deux rails</button>
   <button id="analyze" class="primary">Proposer pour ce cut</button>
   <button id="restore" class="secondary" hidden>Revenir aux positions initiales</button>
   <button id="reject" class="secondary" hidden>Ignorer cette proposition</button>
  </div>
- <p class="muted">Le retour aux positions initiales concerne le même cut, avant validation dans ESV.</p>
+ <p class="muted">Le retour aux positions initiales concerne le même cut, avant validation dans ESV. La validation du cut reste ton action dans ESV.</p>
  <details><summary>Exporter cet essai</summary><button id="assisted-dataset" class="secondary">Télécharger le bilan et les LiDAR</button></details>
 </section>
 
 <!-- --------------------------------------------------- commun à toutes les vues -->
 <p id="export-status" class="muted" role="status"></p>
 <details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
-<footer>Les données sont conservées quand tu fermes cette fenêtre.</footer>
+<footer>Banane 4.7.20 TEST · les données sont conservées quand tu fermes cette fenêtre.</footer>
+</div>
 </main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/gcv1-export.js"></script><script src="panel.js"></script></body></html>

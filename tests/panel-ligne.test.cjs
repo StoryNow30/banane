@@ -30,7 +30,9 @@ test('la voie : une traverse par cut, sa forme dit son état ; les compteurs sui
   assert.equal((svg.match(/class="t avenir"/g)||[]).length,4,'quatre traverses à venir');
   assert.match(svg,/>103</,'le cut affiché porte son numéro');
   const c=$('lot-compteurs').innerHTML;
-  assert.match(c,/<b>2<\/b>posés/);assert.match(c,/dont <b>1<\/b>par la voie/);assert.match(c,/<b>1<\/b>différés/);
+  /* 4.7.20 (piste H) : les compteurs sont des tuiles — posés, différés, couverture. */
+  assert.match(c,/Posés<\/span><b>2<\/b><small>dont 1 par la voie/);assert.match(c,/Différés<\/span><b class="amber">1<\/b>/);
+  assert.match(c,/Couverture<\/span><b>67 %<\/b><small>2 sur 3/);
   assert.equal($('lot-etat').textContent,'En cours');assert.equal($('lot-cut').textContent,'103');
   assert.match($('batch').textContent,/Différés : 1/,'le compteur historique reste fidèle');
 });
@@ -55,7 +57,8 @@ test('rien d\'autre que des entiers n\'est écrit dans la voie',async()=>{
 test('profil en long : l\'écart de chaque cut à la voie, la bande de garde, un point rouge au-delà de 30 mm',async()=>{
   const $=await panneau(lot({lotCommands:{100:{cut:100,stage:'first-pass',ecartMm:3.1},101:{cut:101,action:'lot',stage:'window',ecartMm:4.2},102:{cut:102,stage:'deferred',ecartMm:37}}}));
   const svg=$('voie').innerHTML;
-  assert.match(svg,/class="bande"/);assert.match(svg,/garde 30 mm/);
+  /* 4.7.20 (piste H) : la garde est une ligne tiretée rouge à 30 mm, la courbe relie les écarts. */
+  assert.match(svg,/class="garde"/);assert.match(svg,/garde 30 mm/);assert.match(svg,/class="courbe"/);assert.match(svg,/Écart à la voie/);
   assert.equal((svg.match(/<circle /g)||[]).length,3);assert.match(svg,/class="p hors"/);assert.match(svg,/class="p voie-l"/);
-  const sans=await panneau(lot({lotCommands:{}}));assert.doesNotMatch(sans('voie').innerHTML,/bande/,'sans écart consigné, pas de profil');
+  const sans=await panneau(lot({lotCommands:{}}));assert.doesNotMatch(sans('voie').innerHTML,/garde/,'sans écart consigné, pas de profil');
 });
