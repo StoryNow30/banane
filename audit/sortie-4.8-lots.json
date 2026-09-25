@@ -43,6 +43,12 @@
    "role": "couverture",
    "relecture": "aucune",
    "note": "relecture non enregistrée (D-048)"
+  },
+  {
+   "fichier": "audit/acceptance-p2-2026-09-25-4718.json",
+   "role": "réglage",
+   "relecture": "complète",
+   "note": "4.7.18, reliquat de cuts non validés, passage à niveau 768–778"
   }
  ],
  "p2": null,

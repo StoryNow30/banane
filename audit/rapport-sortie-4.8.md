@@ -15,6 +15,7 @@ Rôle « validation » : partie jamais utilisée pour régler, relue. Toutes les
 | pilote-p2-4.7.14 — pose ESV décalée, KI-054 | 2 | 4.7.14 | réglage | ciblée (110–138) | PAUSED | 25/42 (59,5 %) | 2/11 (non évaluable) | 0 |
 | pilote-p33-4.7.10 — 4.7.10, arrêt KI-051 | 33 | 4.7.10 | couverture | aucune | ERROR | 65/83 (78,3 %) | non jugé | 0 |
 | pilote-p35-4.7.12 — relecture non enregistrée (D-048) | 35 | 4.7.12 | couverture | aucune | STOPPED | 203/233 (87,1 %) | non jugé | 0 |
+| p2-4.7.18 — 4.7.18, reliquat de cuts non validés, passage à niveau 768–778 | 2 | 4.7.18 | réglage | complète | STOPPED | 16/30 (53,3 %) | 2/12 (non évaluable) | 0 |
 
 ## Critères
 
@@ -22,7 +23,7 @@ Rôle « validation » : partie jamais utilisée pour régler, relue. Toutes les
 |---|---|---|
 | C1 | **non démontré** | aucun lot de validation : les parties relues ont servi au réglage |
 | C2 | **non publiable** | P2 non mesuré : aucune cible d'erreur publiée (§15) |
-| C3 | **tenu** | sur tous les lots : 0 paire(s) hors contrat appliquée(s), 47 refus d'écartement |
+| C3 | **tenu** | sur tous les lots : 0 paire(s) hors contrat appliquée(s), 50 refus d'écartement |
 | C4 | **non mesuré** | aucun lot de validation relu |
 | C5 | **bilans tenus** | décision sur le lot : audit/curseurs-lot-2026-09-24.md (D-047, D-050) ; garde d'écartement voisin : audit/ecartement-voisin-2026-09-24.md (D-050) ; garde de paire : audit/garde-paire-verification-2026-09-24.md (D-044) ; curseurs du moteur : D-035 (minTop du moteur sans bilan de desserrage) ; règle d'appui : audit/appui-pose-2026-09-24.md (D-052, un appui est un cut posé) ; faux de premier passage sans appui : audit/chantiers/faux-sans-appui.md (D-051, observer) |
 
