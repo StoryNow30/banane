@@ -1610,3 +1610,49 @@ Les différés d'un reliquat viennent du manque d'appuis, pas des règles : les
 Les cuts isolés d'un reliquat n'ont d'appui que dans des cuts **validés à la
 main**. Les utiliser serait faire entrer une pose humaine dans la décision :
 c'est un amendement au §14 I, à décider (cahier 4.9 ou avant).
+
+## Amendement n°14 — voisins validés, interface H, fin de partie
+
+**25 septembre 2026.** Éléments nouveaux : trois lots Pilote du 25/09 (partie 9
+en 4.7.18 et 4.7.19, partie 6 en 4.7.19), la décision de la direction sur la
+question ouverte du n°13 (§13.3), et la 4.7.20.
+
+### 14.1 Ce qui change
+
+1. **§14 I amendé (D-054)** : des cuts **voisins** validés par l'opérateur
+   peuvent servir d'appuis à la voie de la décision sur le lot, sous garde de
+   cohérence (au moins trois voisins alignés à 8 mm sur les deux rails, à ±5
+   cuts). Jamais la pose du cut décidé, jamais un écartement cible : le contrat
+   [1405, 1470] mm reste une admissibilité. La garde est dans
+   `src/lot-decision.js`, partagée par le banc et le Pilote ; la source terrain
+   des voisins validés reste à trouver (ESV n'ouvre que le « cut non validé
+   suivant »).
+2. **Interface H** (piste « Sans le skill », retenue le 24/09) livrée en 4.7.20
+   sur les trois modes, avec ses animations et le bandeau dans ESV. Les
+   invariants de l'interface (§ Phase 3 du plan) sont tenus : politique
+   effective affichée, « Différés : N » fidèle, incertitude de navigation
+   visible avec son cut, aucun bouton présenté comme réussi sur un simple
+   accusé, écartement sans valeur centrale.
+3. **Fin de partie** (KI-061) : une validation qui emmène ESV hors du lot clôt le
+   lot ; le passage d'ESV à la partie suivante est constaté, pas empêché.
+4. **Exports en segments** (KI-060) : chaque segment se relit seul ; les exports
+   antérieurs sont réparés à la lecture.
+5. **P2** : outil de mesure prêt (`tools/p2-plancher.cjs`) ; la session terrain
+   (30 cuts replacés à l'aveugle) reste à faire.
+
+### 14.2 Pourquoi
+
+Partie 9 (4.7.18, 346 cuts ; puis 4.7.19 sur les différés) : 276 cuts posés sur
+348 (79,3 %) ; les 12 cuts de passage à niveau annoncés par le rejeu de la
+4.7.19 sont appliqués à l'identique sur le terrain ; 36 cuts perdus hors de la
+vue en fin de partie (KI-051). Partie 6 (reliquat, 1,1 cut par suite) : 73/125,
+52 différés tous « sans appui » ; une reprise dans la même page n'en prendrait
+que 3 : dans un reliquat, les seuls appuis possibles sont les voisins validés à
+la main (partie 19, au banc : 57 % → 79 %, 0 faux).
+
+### 14.3 Impact
+
+Sur le §2 et l'objectif intermédiaire (80 %) : la partie 9, jamais réglée, est
+à 79,3 % sur le terrain, 82,5 % avec une reprise dans la même page, 89 à 93 %
+hors fin de partie hors vue ; elle deviendra le premier lot de validation dès
+sa relecture. Sur le §15 : P2 toujours à mesurer (outil prêt).
