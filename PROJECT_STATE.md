@@ -1,8 +1,24 @@
 # État du projet Banane
 
 Date : 25 septembre 2026  
-Version active de l'extension : **4.7.19 TEST** (passage à niveau lu par l'ornière en dernier recours et voie encadrée, D-053 ; lot « Reprise des différés » ; arrêt au dernier cut du lot ; messages sous 64 Mio, KI-059).
+Version active de l'extension : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.20
+
+Interface H (piste « Sans le skill ») sur les trois modes, avec ses animations,
+et bandeau d'état dans ESV. KI-060 (export compact en segments) corrigé à
+l'écriture et réparé à la lecture ; KI-061 (fin de partie dans un reliquat)
+constaté et clos proprement ; reprise des différés refusée après un
+rechargement d'ESV ; garde des voisins validés (§14 I amendé, D-054) dans
+`src/lot-decision.js`, sans source sur le terrain. Moteur et décision sur le lot
+inchangés.
+
+Lots du 25/09 : partie 9 (4.7.18, 262/346 ; 4.7.19 sur les différés, 14/85 ; les
+12 cuts de passage à niveau annoncés par le rejeu, appliqués), partie 6 (4.7.19,
+reliquat, 73/125). Partie 9 : 79,3 % des cuts posés par le Pilote, 89 à 93 %
+hors fin de partie hors vue (KI-051) ; partie de **validation**, relecture
+attendue. Parité terrain / rejeu : 346/346, 85/85, 125/125.
 
 ## État 4.7.19
 

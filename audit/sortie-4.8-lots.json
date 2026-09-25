@@ -1,6 +1,6 @@
 {
  "format": "banane-sortie-lots-v1",
- "date": "24 septembre 2026",
+ "date": "25 septembre 2026",
  "regle": "Rôle « validation » : partie jamais utilisée pour régler, relue. Toutes les parties relues à ce jour ont servi au bilan des curseurs (D-047, D-050) : elles sont « réglage ». Les preuves de sortie viendront des prochains lots, sur des parties neuves.",
  "lots": [
   {
@@ -49,6 +49,30 @@
    "role": "réglage",
    "relecture": "complète",
    "note": "4.7.18, reliquat de cuts non validés, passage à niveau 768–778"
+  },
+  {
+   "fichier": "audit/acceptance-p3-2026-09-25-4718.json",
+   "role": "réglage",
+   "relecture": "complète",
+   "note": "4.7.18, reliquat « long », arrêt KI-059 ; diagnostic réduit au lot (batchId) ; banc D-053"
+  },
+  {
+   "fichier": "audit/acceptance-p9-2026-09-25-4718-sans-relecture.json",
+   "role": "couverture",
+   "relecture": "aucune",
+   "note": "4.7.18, lot long 0–8539 ; partie de validation, relecture attendue ; diagnostic réduit au lot (batchId) ; fin 8504–8539 hors vue (KI-051)"
+  },
+  {
+   "fichier": "audit/acceptance-p9-2026-09-25-4719-sans-relecture.json",
+   "role": "couverture",
+   "relecture": "aucune",
+   "note": "4.7.19, lot ordinaire sur les différés du précédent ; les 12 cuts de passage à niveau annoncés par le rejeu, appliqués"
+  },
+  {
+   "fichier": "audit/acceptance-p6-2026-09-25-4719-sans-relecture.json",
+   "role": "couverture",
+   "relecture": "aucune",
+   "note": "4.7.19, reliquat pur (1,1 cut par suite) ; arrêt KI-061"
   }
  ],
  "p2": null,
@@ -62,11 +86,13 @@
   "faux de premier passage sans appui : audit/chantiers/faux-sans-appui.md (D-051, observer)"
  ],
  "conditions": [
-  "Lots de validation : au moins deux lots 4.7.18 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048) ; les lots 4.7.16 et 4.7.17 gardent l'ancienne règle d'appui (D-052). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne.",
-  "P2 : 30 cuts replacés à l'aveugle par l'opérateur, pour le plancher humain ; sans lui, aucun chiffre d'erreur n'est publié.",
+  "Lots de validation : au moins deux lots 4.7.18 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048) ; les lots 4.7.16 et 4.7.17 gardent l'ancienne règle d'appui (D-052). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne. Candidate : la partie 9 (jamais réglée ; lots 4.7.18 et 4.7.19), dès sa relecture Natif.",
+  "P2 : 30 cuts replacés à l'aveugle par l'opérateur, pour le plancher humain ; sans lui, aucun chiffre d'erreur n'est publié. Outil prêt en 4.7.20 (tools/p2-plancher.cjs, lu par --p2) : il manque la session terrain.",
   "Seuil C4 de sortie : zéro faux strict, ou faux isolés expliqués tolérés (amendement n°10, point 5).",
   "Cahier consolidé, contrôle Edge de la version candidate, paquet reproductible ; merge, tag et release sur autorisation explicite seulement.",
   "Fait le 24/09 : matrice d'acceptation (44 exigences, contrôlée au banc), relecture indépendante 4.7.13–4.7.16 (B1 corrigé en 4.7.18) ; reste le contrôle visuel du §14 H dans Edge.",
-  "Les neuf choix minTop 5 non jugés (relecture 4.7.16, I2) : à juger sur le terrain, en priorité en zone de faible densité et d'appareils de voie."
+  "Les neuf choix minTop 5 non jugés (relecture 4.7.16, I2) : à juger sur le terrain, en priorité en zone de faible densité et d'appareils de voie.",
+  "Voisins validés comme appuis (§14 I amendé, D-054, validé le 25/09) : garde en place dans src/lot-decision.js, source terrain à trouver (navigation d'ESV vers un cut donné). Seul levier notable des reliquats (partie 6 : 58 %).",
+  "Fin de partie hors vue (KI-051, D-043) : 36 cuts sur 346 en partie 9 (10 points) ; décision de la direction à revoir si le cas se répète."
  ]
 }

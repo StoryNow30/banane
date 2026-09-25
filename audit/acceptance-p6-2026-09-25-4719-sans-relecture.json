@@ -1,0 +1,3750 @@
+{
+ "format": "banane-acceptance-report-v1",
+ "tool": "tools/acceptance-report.cjs",
+ "rules": {
+  "wrongMm": 10,
+  "criterion": "latéral OU vertical, valeurs brutes (D-038)",
+  "denominator": "cuts DISTINCTS du lot ; sans entrée, différés, refusés, sans décision au dénominateur ; revisite ≠ nouveau cut",
+  "reference": "dernière visite validée de la relecture, règles strictes referenceFor ; lue après coup, jamais en entrée moteur",
+  "units": "unités de scène × 1000 (mm), étalonnage physique non vérifié",
+  "gaugeContract": "[1405, 1470] mm, admissibilité seulement",
+  "exclusions": [
+   {
+    "part": 19,
+    "cut": 9033,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   },
+   {
+    "part": 19,
+    "cut": 9241,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   }
+  ],
+  "p2": "P2 non mesuré"
+ },
+ "config": null,
+ "p2": null,
+ "lots": [
+  {
+   "label": "pilote-p6-4.7.19",
+   "complete": false,
+   "batch": {
+    "id": "13d9845f-4b9b-48e7-9cf6-9ed98524191d",
+    "state": "STOPPED",
+    "part": 6,
+    "start": 526,
+    "end": 8131,
+    "unresolvedPolicy": "defer",
+    "startedAt": "2026-09-25T12:05:35.673Z"
+   },
+   "version": "4.7.19",
+   "observationsOutsideLot": 85,
+   "relecture": null,
+   "corpusSegments": {
+    "segments": 4,
+    "clouds": 210,
+    "declared": 210,
+    "allRequestedObjectsPresent": true
+   },
+   "lotDecisionRules": {
+    "pairGuard": true,
+    "chainMm": 15,
+    "gaugeGuardMm": 20,
+    "minTop": 5,
+    "crossing": true,
+    "framed": true,
+    "anchorRule": "placed",
+    "source": "lot"
+   },
+   "lotDecisionSource": "observation",
+   "lotDecisionParity": null,
+   "journalConsistency": {
+    "journalCompleted": 73,
+    "journalDeferred": 52,
+    "applied": 73,
+    "deferredOrRefused": 52
+   },
+   "inputs": [
+    {
+     "file": "banane-bilan-v4-2026-09-25T12-58-49-seg01.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.19",
+     "sha256": "f8b954d4b08ba21ba9d1d8ddb8ae4fe1c5f20f4a143212f921a63f61c6b45ee7",
+     "bytes": 54803576,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-bilan-v4-2026-09-25T12-58-49-seg02.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.19",
+     "sha256": "4c03005121e2f296049bb3865039285ff4a39957ba27ca1705dcb7b6a74b1d5e",
+     "bytes": 52853802,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-bilan-v4-2026-09-25T12-58-49-seg03.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.19",
+     "sha256": "e5c705d2bbed8b19a1c2fe770b6a507b39edf24b3d883bd254a5eddefc23e81a",
+     "bytes": 53607080,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-bilan-v4-2026-09-25T12-58-49-seg04.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.19",
+     "sha256": "c6b92cfacc48f6d312d55670dfd07b2f6eff34f48a6e9656fb42d8dc6496e61c",
+     "bytes": 69107370,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-25T12-59-15-seg01.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.19",
+     "sha256": "8b0cf6ade656dae0a21b772979e9c5d73ac3eedcb8c167d5ce8803251ef4fe8a",
+     "bytes": 45592796
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-25T12-59-15-seg02.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.19",
+     "sha256": "620054df341360f48be76ee0cf0a79385e86d185b101be01c7458b31028f8bde",
+     "bytes": 49842069
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-25T12-59-15-seg03.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.19",
+     "sha256": "91d8be5f590d7c2b36af339ae685f5e88666bca78307dc065aaf0d4d44688b90",
+     "bytes": 49746813
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-25T12-59-15-seg04.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.19",
+     "sha256": "a3db8cdfecd3de692cc53d689d3aca067020352e23e741ba461f32bd12752cc0",
+     "bytes": 65189843
+    },
+    {
+     "file": "banane-gcv1-diagnostic-1790341152315.json",
+     "kind": "diagnostic",
+     "format": "banane-gcv1-diagnostic-v1",
+     "version": "4.7.19",
+     "sha256": "ba6bb25291afb576f4d16e0458db0dce43aac51fe903abd82eeba7406e9ecb20",
+     "bytes": 3165890
+    },
+    {
+     "file": "banane-journal-v4-1790341165611.json",
+     "kind": "journal",
+     "format": "banane-test-journal-v4",
+     "version": "4.7.19",
+     "sha256": "d8330ff0cc3535b24b558a4f2e0479a0802d2b50e374ee7fad93355e92386ca7",
+     "bytes": 9884173
+    }
+   ],
+   "rows": [
+    {
+     "part": 6,
+     "cut": 526,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1446.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 548,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1447.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 594,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 613,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 691,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 803,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 811,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 845,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1057,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1079,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1239,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1506,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1669,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1695,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1703,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1745,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1446.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1750,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1445.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1813,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 1852,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2036,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2062,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2067,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity",
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2322,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2326,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1433.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2833,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2847,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2955,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1450.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 2989,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3072,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1451.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3082,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3097,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3102,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3120,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3125,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3156,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1447.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3181,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3201,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3202,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3210,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3230,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3254,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3468,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3737,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1435.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3880,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3974,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1454.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3975,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1457.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.4,
+      "anchors": 1,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 3980,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1455.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4003,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1454.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4011,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1457.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4055,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4067,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4115,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1452.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4133,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1457,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4141,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1456.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4169,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4170,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4171,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1452.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4176,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4200,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4202,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4222,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4225,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4250,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4314,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1435.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4315,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.3,
+      "anchors": 1,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4316,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1426,
+      "gaugeClass": "TOLERANCE",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4395,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1445.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4536,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4550,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4834,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4951,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 4967,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5000,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1435.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5134,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1433.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5218,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5265,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5281,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5308,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5345,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5351,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5376,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5377,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5424,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5434,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5438,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5477,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5545,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5609,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5612,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5658,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5676,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5677,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5704,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5743,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5766,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5768,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5779,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5853,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1445,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5877,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5917,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 5941,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6036,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6062,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6066,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6067,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6068,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.2,
+      "anchors": 1,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6134,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6142,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1445.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6223,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6276,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 6321,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7169,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7175,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7265,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1453.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7314,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1459.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7318,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1453.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7351,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7389,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1458.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7407,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1456,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7443,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1459,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7491,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1455.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7501,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7591,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1458.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7592,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1454.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 7.7,
+      "anchors": 1,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 6,
+     "cut": 7634,
+     "frameId": "aa7f415c-1a62-4195-b7a3-66ac6d38c5ab",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1457.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    }
+   ]
+  }
+ ],
+ "parts": [
+  {
+   "part": 6,
+   "holdout": "non déclaré (aucune configuration)",
+   "lots": [
+    "pilote-p6-4.7.19"
+   ],
+   "c1": {
+    "distinctCuts": 125,
+    "applied": 73,
+    "deferred": 52,
+    "gaugeRejected": 0,
+    "noInput": 0,
+    "other": 0,
+    "coveragePct": 58.4,
+    "revisitedCuts": 0,
+    "otherDetail": []
+   },
+   "c4": {
+    "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+    "judgedApplied": 0,
+    "appliedNotJudged": 73,
+    "wrong": 0,
+    "judgedByBasis": {
+     "validé": 0,
+     "accepté-sans-retouche": 0
+    },
+    "wrongByBasis": {
+     "validé": 0,
+     "accepté-sans-retouche": 0
+    },
+    "judgedSharePct": 0,
+    "minJudgedSharePct": 80,
+    "evaluable": false,
+    "wrongCuts": [],
+    "byLotCommand": {
+     "applied": 3,
+     "judged": 0,
+     "wrong": 0,
+     "byStage": {
+      "choice": 2,
+      "window": 1
+     },
+     "wrongCuts": []
+    }
+   },
+   "c2": {
+    "rails": 0,
+    "basis": "cuts validés seulement",
+    "lateralMm": {
+     "count": 0,
+     "median": null,
+     "p90": null,
+     "maximum": null
+    },
+    "verticalMm": {
+     "count": 0,
+     "median": null,
+     "p90": null,
+     "maximum": null
+    },
+    "floor": {
+     "label": "P2 non mesuré"
+    }
+   },
+   "c3": {
+    "refused": [],
+    "appliedOutOfContract": [],
+    "appliedGaugeUnmeasured": []
+   },
+   "lotDecision": {
+    "wouldApply": 73,
+    "coveragePct": 58.4,
+    "judged": 0,
+    "wrong": 0,
+    "wrongCuts": [],
+    "newWrong": [],
+    "gained": [],
+    "lost": [],
+    "byStage": {
+     "first-pass": 70,
+     "deferred": 52,
+     "choice": 2,
+     "window": 1
+    }
+   },
+   "unjudgeable": {
+    "pas-de-relecture": {
+     "cuts": 125,
+     "applied": 73,
+     "list": [
+      526,
+      548,
+      594,
+      613,
+      691,
+      803,
+      811,
+      845,
+      1057,
+      1079,
+      1239,
+      1506,
+      1669,
+      1695,
+      1703,
+      1745,
+      1750,
+      1813,
+      1852,
+      2036,
+      2062,
+      2067,
+      2322,
+      2326,
+      2833,
+      2847,
+      2955,
+      2989,
+      3072,
+      3082,
+      3097,
+      3102,
+      3120,
+      3125,
+      3156,
+      3181,
+      3201,
+      3202,
+      3210,
+      3230,
+      3254,
+      3468,
+      3737,
+      3880,
+      3974,
+      3975,
+      3980,
+      4003,
+      4011,
+      4055,
+      4067,
+      4115,
+      4133,
+      4141,
+      4169,
+      4170,
+      4171,
+      4176,
+      4200,
+      4202,
+      4222,
+      4225,
+      4250,
+      4314,
+      4315,
+      4316,
+      4395,
+      4536,
+      4550,
+      4834,
+      4951,
+      4967,
+      5000,
+      5134,
+      5218,
+      5265,
+      5281,
+      5308,
+      5345,
+      5351,
+      5376,
+      5377,
+      5424,
+      5434,
+      5438,
+      5477,
+      5545,
+      5609,
+      5612,
+      5658,
+      5676,
+      5677,
+      5704,
+      5743,
+      5766,
+      5768,
+      5779,
+      5853,
+      5877,
+      5917,
+      5941,
+      6036,
+      6062,
+      6066,
+      6067,
+      6068,
+      6134,
+      6142,
+      6223,
+      6276,
+      6321,
+      7169,
+      7175,
+      7265,
+      7314,
+      7318,
+      7351,
+      7389,
+      7407,
+      7443,
+      7491,
+      7501,
+      7591,
+      7592,
+      7634
+     ]
+    }
+   },
+   "deferredStartGapsMm": [],
+   "excluded": [],
+   "incompleteLots": [
+    {
+     "label": "pilote-p6-4.7.19",
+     "state": "STOPPED"
+    }
+   ],
+   "c5": {
+    "retained": {
+     "guardMm": 30,
+     "chooseMm": 15,
+     "chainMm": 15,
+     "gap": 3,
+     "anchors": 2,
+     "minTop": 5,
+     "minFace": 3,
+     "maxDzMm": 20,
+     "gaugeGuardMm": 20,
+     "gaugeGap": 10,
+     "gaugeCount": 3,
+     "pairGuard": true,
+     "anchorRule": "placed",
+     "crossing": true,
+     "crossingVoieMm": 10,
+     "framed": true,
+     "frameGap": 8,
+     "frameAnchors": 3
+    },
+    "withoutVariationReview": [
+     "gaugeGap",
+     "gaugeCount",
+     "crossingVoieMm",
+     "frameGap",
+     "frameAnchors"
+    ],
+    "reviews": [
+     "audit/curseurs-lot-2026-09-24.md",
+     "audit/ecartement-voisin-2026-09-24.md",
+     "audit/appui-pose-2026-09-24.md",
+     "audit/passage-niveau-lecteur-2026-09-25.md"
+    ],
+    "decisions": [
+     "D-044 garde de paire",
+     "D-047 chainMm 15",
+     "D-050 garde d’écartement 20 mm et minTop 5",
+     "D-052 appui = cut posé",
+     "D-053 passage à niveau en dernier recours, voie encadrée"
+    ],
+    "lotRules": [
+     {
+      "label": "pilote-p6-4.7.19",
+      "rules": {
+       "pairGuard": true,
+       "chainMm": 15,
+       "gaugeGuardMm": 20,
+       "minTop": 5,
+       "crossing": true,
+       "framed": true,
+       "anchorRule": "placed",
+       "source": "lot"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "total": {
+  "c1": {
+   "distinctCuts": 125,
+   "applied": 73,
+   "deferred": 52,
+   "gaugeRejected": 0,
+   "noInput": 0,
+   "other": 0,
+   "coveragePct": 58.4,
+   "revisitedCuts": 0,
+   "otherDetail": []
+  },
+  "c4": {
+   "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+   "judgedApplied": 0,
+   "appliedNotJudged": 73,
+   "wrong": 0,
+   "judgedByBasis": {
+    "validé": 0,
+    "accepté-sans-retouche": 0
+   },
+   "wrongByBasis": {
+    "validé": 0,
+    "accepté-sans-retouche": 0
+   },
+   "judgedSharePct": 0,
+   "minJudgedSharePct": 80,
+   "evaluable": false,
+   "wrongCuts": [],
+   "byLotCommand": {
+    "applied": 3,
+    "judged": 0,
+    "wrong": 0,
+    "byStage": {
+     "choice": 2,
+     "window": 1
+    },
+    "wrongCuts": []
+   }
+  },
+  "c2": {
+   "rails": 0,
+   "basis": "cuts validés seulement",
+   "lateralMm": {
+    "count": 0,
+    "median": null,
+    "p90": null,
+    "maximum": null
+   },
+   "verticalMm": {
+    "count": 0,
+    "median": null,
+    "p90": null,
+    "maximum": null
+   },
+   "floor": {
+    "label": "P2 non mesuré"
+   }
+  },
+  "c3": {
+   "refused": [],
+   "appliedOutOfContract": [],
+   "appliedGaugeUnmeasured": []
+  },
+  "lotDecision": {
+   "wouldApply": 73,
+   "coveragePct": 58.4,
+   "judged": 0,
+   "wrong": 0,
+   "wrongCuts": [],
+   "newWrong": [],
+   "gained": [],
+   "lost": [],
+   "byStage": {
+    "first-pass": 70,
+    "deferred": 52,
+    "choice": 2,
+    "window": 1
+   }
+  },
+  "unjudgeable": {
+   "pas-de-relecture": {
+    "cuts": 125,
+    "applied": 73,
+    "list": [
+     526,
+     548,
+     594,
+     613,
+     691,
+     803,
+     811,
+     845,
+     1057,
+     1079,
+     1239,
+     1506,
+     1669,
+     1695,
+     1703,
+     1745,
+     1750,
+     1813,
+     1852,
+     2036,
+     2062,
+     2067,
+     2322,
+     2326,
+     2833,
+     2847,
+     2955,
+     2989,
+     3072,
+     3082,
+     3097,
+     3102,
+     3120,
+     3125,
+     3156,
+     3181,
+     3201,
+     3202,
+     3210,
+     3230,
+     3254,
+     3468,
+     3737,
+     3880,
+     3974,
+     3975,
+     3980,
+     4003,
+     4011,
+     4055,
+     4067,
+     4115,
+     4133,
+     4141,
+     4169,
+     4170,
+     4171,
+     4176,
+     4200,
+     4202,
+     4222,
+     4225,
+     4250,
+     4314,
+     4315,
+     4316,
+     4395,
+     4536,
+     4550,
+     4834,
+     4951,
+     4967,
+     5000,
+     5134,
+     5218,
+     5265,
+     5281,
+     5308,
+     5345,
+     5351,
+     5376,
+     5377,
+     5424,
+     5434,
+     5438,
+     5477,
+     5545,
+     5609,
+     5612,
+     5658,
+     5676,
+     5677,
+     5704,
+     5743,
+     5766,
+     5768,
+     5779,
+     5853,
+     5877,
+     5917,
+     5941,
+     6036,
+     6062,
+     6066,
+     6067,
+     6068,
+     6134,
+     6142,
+     6223,
+     6276,
+     6321,
+     7169,
+     7175,
+     7265,
+     7314,
+     7318,
+     7351,
+     7389,
+     7407,
+     7443,
+     7491,
+     7501,
+     7591,
+     7592,
+     7634
+    ]
+   }
+  },
+  "deferredStartGapsMm": [],
+  "excluded": [],
+  "incompleteLots": [
+   {
+    "label": "pilote-p6-4.7.19",
+    "state": "STOPPED"
+   }
+  ],
+  "c5": {
+   "retained": {
+    "guardMm": 30,
+    "chooseMm": 15,
+    "chainMm": 15,
+    "gap": 3,
+    "anchors": 2,
+    "minTop": 5,
+    "minFace": 3,
+    "maxDzMm": 20,
+    "gaugeGuardMm": 20,
+    "gaugeGap": 10,
+    "gaugeCount": 3,
+    "pairGuard": true,
+    "anchorRule": "placed",
+    "crossing": true,
+    "crossingVoieMm": 10,
+    "framed": true,
+    "frameGap": 8,
+    "frameAnchors": 3
+   },
+   "withoutVariationReview": [
+    "gaugeGap",
+    "gaugeCount",
+    "crossingVoieMm",
+    "frameGap",
+    "frameAnchors"
+   ],
+   "reviews": [
+    "audit/curseurs-lot-2026-09-24.md",
+    "audit/ecartement-voisin-2026-09-24.md",
+    "audit/appui-pose-2026-09-24.md",
+    "audit/passage-niveau-lecteur-2026-09-25.md"
+   ],
+   "decisions": [
+    "D-044 garde de paire",
+    "D-047 chainMm 15",
+    "D-050 garde d’écartement 20 mm et minTop 5",
+    "D-052 appui = cut posé",
+    "D-053 passage à niveau en dernier recours, voie encadrée"
+   ],
+   "lotRules": [
+    {
+     "label": "pilote-p6-4.7.19",
+     "rules": {
+      "pairGuard": true,
+      "chainMm": 15,
+      "gaugeGuardMm": 20,
+      "minTop": 5,
+      "crossing": true,
+      "framed": true,
+      "anchorRule": "placed",
+      "source": "lot"
+     }
+    }
+   ]
+  }
+ }
+}

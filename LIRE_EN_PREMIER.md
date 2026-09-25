@@ -1,58 +1,57 @@
-# Démarrer avec Banane V4.7.19 TEST — passages à niveau, reprise des différés
+# Démarrer avec Banane V4.7.20 TEST — interface H, fin de partie, exports
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.19-test.zip` dans Edge **par-dessus la 4.7.18** (bouton
+Installe `banane-v4.7.20-test.zip` dans Edge **par-dessus la 4.7.19** (bouton
 « Recharger » de la page des extensions, ou remplacement du dossier) : ne
-supprime pas l'extension, sinon le stockage du lot de ce matin (partie 3) est
-perdu. Termine ou arrête le lot en cours avant.
+supprime pas l'extension, sinon le stockage en cours est perdu. Termine ou
+arrête le lot en cours avant, puis **recharge la page ESV**.
 
-Vérifie **V4.7.19 · TEST** en haut de la fenêtre Banane, et **Banane 4.7.19 ·
-ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres Banane sont
-fermées.
+Vérifie **V4.7.20 · TEST** sur l'écran d'accueil de Banane (sous BANANE), et
+**Banane 4.7.20 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres
+Banane sont fermées.
 
-**Première chose à faire : exporter le journal** (Détails › Dépannage →
-Télécharger le journal). Il contient encore le lot de la partie 3 et dira ce qui
-s'est passé au cut 8209 ; la 4.7.19 le lit directement dans le stockage, sans
-le message géant qui échouait.
+## Ce que la 4.7.20 change sur le terrain
 
-## Ce que la 4.7.19 change sur le terrain
+- **L'interface H.** Noir et traits fins (ou clair : bouton soleil/lune en haut
+  à droite). Pilote : l'état, le cut en grand, la plage, trois tuiles (posés,
+  différés, couverture), **la ligne** (un segment par cut), **l'écart à la
+  voie**, l'activité, et en pied un seul bouton plein. Natif : les visites, le
+  **temps par cut** (médiane, p90) et l'activité (validé, corrigé, SKIP).
+  Assisté : le déplacement proposé de chaque rail et l'écartement sur la plage
+  1405–1470. Les boutons, leurs noms et leurs effets sont ceux de la 4.7.19.
+- **Le bandeau dans ESV** (bouton à droite du soleil) : une ligne d'état en bas
+  à gauche de la page ESV, pour suivre le lot sans regarder Banane. Il ne capte
+  aucun clic ; il disparaît quand tu fermes la fenêtre Banane.
+- **Fin de partie (KI-061).** Dans un reliquat, la validation du dernier cut non
+  validé fait passer ESV à la suite, parfois dans la partie suivante : le Pilote
+  ne peut pas le savoir d'avance. Désormais il le **constate** : lot clos, rien
+  n'est traité hors du lot, et le message le dit au lieu d'« Adaptateur sans
+  réponse ». Recharge ESV avant le lot suivant. Si tu vois ce qui se passe à
+  l'écran à ce moment-là (page qui se recharge, autre partie affichée, attente),
+  dis-le-moi.
+- **Exports en plusieurs segments (KI-060)** : chaque segment se relit seul ;
+  tes exports d'avant sont réparés à la lecture.
+- **Reprise des différés** : dans **la même page ESV**, sans la recharger
+  (après un rechargement, les cuts posés du lot précédent changent de repère :
+  Banane refuse la reprise et le dit). Sur la partie 9, une vraie reprise aurait
+  ajouté 11 cuts.
+- **Ce qui ne change pas** : la décision sur le lot, le moteur, les contrôles
+  avant commande, le contrat d'écartement 1405–1470 (jamais une cible), les
+  commandes envoyées à ESV.
 
-- **Passages à niveau.** Quand la chaîne habituelle diffère un cut de passage à
-  niveau, le Pilote lit le rail par son ornière (le bord de la rainure côté
-  champignon) et pose cette paire si son écartement est dans le contrat, si
-  elle passe la garde d'écartement voisin et, quand il y a des cuts posés
-  autour, si elle tombe à 10 mm de la voie. Il ne remplace jamais une décision
-  que la chaîne prend déjà : un premier passage, une reprise ou un choix restent
-  ce qu'ils étaient. Dans la voie du panneau, ces cuts comptent parmi les
-  « posés par la voie ».
-- **Reprise des différés.** Après un lot Pilote qui a des différés, coche
-  « Reprise des différés » sous les bornes : elles passent du premier différé à
-  la fin du lot précédent ; ouvre ce cut dans ESV et démarre. Le Pilote repart
-  des cuts qu'il a posés et validés lui-même autour des différés : un différé
-  qui a des cuts posés **des deux côtés** est prédit par une courbe passant par
-  eux (ta méthode : 2–3 cuts avant, 2–3 après). Les cuts validés à la main ne
-  servent pas d'appui.
-- **Arrêt au dernier cut.** Au dernier cut du lot, le Pilote pose la paire et
-  **s'arrête sans valider** : ESV reste sur ce cut au lieu de passer à la partie
-  suivante. Contrôle-le et valide-le toi-même. Un dernier cut non résolu est
-  laissé sans commande ni navigation. La ligne d'état l'écrit (« dernier cut …
-  posé, non validé »). Un lot peut encore finir dans une autre partie si ESV y
-  saute avant la borne (validation du dernier cut non validé de la partie).
-- **Messages trop gros (KI-059).** La capture, les réponses d'ESV et les exports
-  tiennent sous la limite de 64 Mo de Chrome ; une capture trop grosse met le
-  lot en pause avec un message clair (« Lecture LiDAR instable : capture de …
-  Mo »), reprenable, au lieu de « Adaptateur sans réponse ».
-- **Ce qui ne change pas** : les contrôles avant commande, le contrat
-  d'écartement 1405–1470 (jamais une cible), les commandes envoyées à ESV,
-  l'interface « La ligne » (la maquette H viendra dans la version suivante).
+**Tes prochaines étapes** :
+1. La **relecture Natif de la partie 9** : c'est la partie de validation (jamais
+   réglée). Passe sur chaque cut du lot 4.7.18 et du lot 4.7.19, surtout les
+   passages à niveau (3968–3975, 4890, 8472–8474) et la fin 8504–8541.
+2. Un lot sur une **partie neuve**, suivi d'une **Reprise des différés dans la
+   même page**, sans recharger.
+3. Pour les voisins validés (§14 I, que tu as validé) : dis-moi si ESV permet
+   d'**ouvrir un cut donné** (numéro, cut précédent, cut suivant même validé).
+   C'est ce qui manque au Pilote pour lire la pose des voisins.
 
-**Ton prochain lot** : si possible une partie neuve (pas un reliquat) avec des
-passages à niveau, puis une « Reprise des différés » sur le même lot, puis la
-relecture Natif. Exporte journal, diagnostic et corpus.
-
-En cas de problème, reviens à la 4.7.18 (`RETOUR_ARRIERE.md`).
+En cas de problème, reviens à la 4.7.19 (`RETOUR_ARRIERE.md`).
 
 ## Ce qui change pour toi
 

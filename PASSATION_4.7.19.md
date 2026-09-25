@@ -1,5 +1,7 @@
 # Passation — Banane au 25/09/2026 (4.7.19 TEST livrée)
 
+> **Remplacée par `PASSATION_4.7.20.md`** (4.7.20 livrée le 25/09). Gardée pour l'historique.
+
 À lire en premier par la conversation qui reprend. La conversation précédente est
 conservée par l'utilisateur (historique complet) ; ce fichier suffit pour reprendre.
 

@@ -1,5 +1,58 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.20 — interface H, export segmenté, fin de partie, 25 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+**Interface** (piste H « Sans le skill », retenue par la direction le 24/09 ;
+maquettes `design/pistes-retenues/`).
+- Noir et traits fins, clair ou sombre (bouton en haut à droite ; thème du
+  système par défaut), polices embarquées Hanken Grotesk et JetBrains Mono
+  (SIL OFL, `fonts/`), aucun appel réseau.
+- **Pilote** : l'état et son étape (« En cours · capture du LiDAR »), le cut en
+  grand, la progression dans la plage, la dernière commande (émise, effet,
+  serveur), trois tuiles (posés, différés, couverture), **la ligne** (un segment
+  par cut : moteur, voie, différé, SKIP, à venir ; le cut courant clignote),
+  **l'écart à la voie** (courbe, garde 30 mm, médiane), l'activité des trois
+  derniers cuts, puis la barre d'action en pied (un bouton plein ; Arrêter en
+  rouge cerclé).
+- **Natif** : collecte en cours, visites en grand, dernière visite, tuiles
+  (captures, volume, qualité), **temps par cut** des 40 dernières visites
+  (médiane, p90), activité avec l'issue de chaque visite (validé, corrigé, SKIP).
+- **Assisté** : déplacement proposé de chaque rail (latéral, vertical, flèche),
+  indice LiDAR, écartement sur la plage 1405–1470 **sans valeur centrale**.
+- **Animations** à l'ouverture d'une vue seulement (cascade de 70 ms, barre qui
+  se remplit, barres qui montent, courbe tracée, flèches, point d'écartement) ;
+  en continu, le point « en direct » et le cut courant ; tout est figé si le
+  système demande de réduire les animations.
+- **Bandeau dans ESV** (bouton à côté du thème) : une ligne d'état en bas de la
+  page ESV (« BANANE · PILOTE · En cours · cut 8455 · 35 posés · 4 différés »),
+  qui ne capte aucun clic et suit la fenêtre Banane.
+- Corrigé : un écart à la voie non consigné était dessiné comme un écart nul.
+
+**Pilote et exports** (terrain du 25/09, parties 6 et 9).
+- **KI-060** : dans un export compact en plusieurs segments (bilan, session
+  Natif), le premier nuage des segments 2 et suivants pointait dans le
+  dictionnaire du segment précédent (segment 2 du bilan de la partie 6
+  illisible ; segments 3 et 4 lus avec la pose d'un autre cut). Corrigé à
+  l'écriture ; les exports déjà faits sont réparés à la lecture (fusion, rapport
+  d'acceptation). Audit de toutes les collectes : 4 segments lus faux, tous des
+  bilans ; aucun banc publié n'est touché.
+- **KI-061** : fin de partie dans un reliquat. Une validation qui emmène ESV hors
+  du lot (autre partie, au-delà de la borne) clôt le lot ; une lecture d'ESV
+  muette est relue deux fois (3 s) avant de conclure, et, juste après une
+  navigation vers la fin du lot, le lot est clos avec un message clair au lieu
+  d'une panne « Adaptateur sans réponse ».
+- **Reprise des différés** refusée en clair après un rechargement de la page ESV
+  (autre repère : les cuts posés du lot précédent ne peuvent plus servir).
+- **§14 I amendé (D-054)** : la garde des voisins validés (cohérence 8 mm,
+  ±5 cuts, 3 voisins au moins) est dans `src/lot-decision.js`, partagée par le
+  banc et le Pilote ; pas encore de source de voisins validés sur le terrain.
+
+**Analyses.** Parties 9 (4.7.18, 346 cuts ; 4.7.19, 85 cuts sur les différés)
+et 6 (4.7.19, reliquat de 125 cuts) : `audit/lot-4718-p9-2026-09-25.md`,
+`audit/lot-4719-p9-2026-09-25.md`, `audit/lot-4719-p6-2026-09-25.md`.
+
 ## 4.7.19 — passages à niveau, reprise des différés, arrêt au dernier cut, 25 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

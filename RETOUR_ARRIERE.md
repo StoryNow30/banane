@@ -1,16 +1,24 @@
 # Procédure de retour arrière — Banane 4.7.0
 
-**Sur le terrain, la dernière version éprouvée est la 4.7.18** (25/09, deux
-lots Pilote relus, parties 2 et 3). En cas de problème sur le terrain avec la
-4.7.19, revenir à la **4.7.18**, commit `2b98481` (paquet
-`banane-v4.7.18-test.zip`, SHA-256 `07130cb6…9abcad4`). Terminer ou arrêter le
-lot en cours d'abord. La 4.7.18 garde le défaut KI-059 (message de plus de
-64 Mio) : pour un lot long, exporter souvent.
+**Sur le terrain, la dernière version éprouvée est la 4.7.19** (25/09, trois
+lots Pilote : partie 9 sur les différés, partie 6). En cas de problème sur le
+terrain avec la 4.7.20, revenir à la **4.7.19**, commit `a58c048` (paquet
+`banane-v4.7.19-test.zip`, SHA-256 `c2430279…0a1d65`). Terminer ou arrêter le
+lot en cours d'abord. La 4.7.19 garde KI-060 (export en segments : premier nuage
+des segments 2 et suivants mal référencé, réparé à la lecture par les outils) et
+KI-061 (fin de partie : « Adaptateur sans réponse »).
 
 ```bash
-git archive 2b98481 | tar -x -C /tmp/banane-4.7.18
-cd /tmp/banane-4.7.18 && python3 tools/package.py --output /tmp/banane-v4.7.18-test.zip
+git archive a58c048 | tar -x -C /tmp/banane-4.7.19
+cd /tmp/banane-4.7.19 && python3 tools/package.py --output /tmp/banane-v4.7.19-test.zip
 ```
+
+**Depuis la 4.7.20**, la cible de retour est donc la **4.7.19**. La 4.7.20
+change l'interface (piste H), ajoute le bandeau dans ESV, corrige l'écriture des
+exports en segments (KI-060), constate la fin de partie (KI-061), refuse une
+reprise après rechargement d'ESV et porte la garde des voisins validés (D-054,
+sans source sur le terrain). Le moteur et la décision sur le lot
+(`lot-decision-v6`) ne changent pas : un lot se reprend d'une version à l'autre.
 
 **Depuis la 4.7.19**, la cible de retour est donc la **4.7.18**. La 4.7.19
 ajoute le lecteur « passage à niveau » en dernier recours et la voie encadrée
