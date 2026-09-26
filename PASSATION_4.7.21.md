@@ -1,8 +1,6 @@
-# Passation — Banane au 26/09/2026 (4.7.20 TEST livrée ; partie 9 relue)
+# Passation — Banane au 26/09/2026 (4.7.21 TEST livrée)
 
-**Remplacée par `PASSATION_4.7.21.md` (26/09).** Gardée pour l'historique.
-
-À lire en premier par la conversation qui reprend. Remplace `PASSATION_4.7.19.md`
+À lire en premier par la conversation qui reprend. Remplace `PASSATION_4.7.20.md`
 (gardé pour l'historique). La conversation précédente est conservée par
 l'utilisateur ; ce fichier suffit pour reprendre.
 
@@ -14,12 +12,12 @@ l'utilisateur ; ce fichier suffit pour reprendre.
   `StoryNow30/banane-data` (branche `claude/banane-47-gate-audit-vaktr1`,
   collectes, relectures, références et fichiers de travail).
 - Release officielle : **4.7.0**. Les 4.7.x suivantes sont des builds TEST.
-- Version terrain : **4.7.20** (paquet `banane-v4.7.20-test.zip`, SHA-256
-  `b3a679da5c9a1479203eb14204eb09d3137772cbebab8379c996d40a3572f4cb`, construit
-  depuis `f859d8f` par `git archive` + `tools/package.py`, reproductible : deux
+- Version terrain : **4.7.21** (paquet `banane-v4.7.21-test.zip`, SHA-256
+  `24f8f1fe5c1616122d1c43c0eb175f34c93f57947ad791408737bc46f4ee2c06`, construit
+  depuis `b2e0e5b` par `git archive` + `tools/package.py`, reproductible : deux
   constructions identiques ; chargé dans Chromium comme extension MV3, service
-  worker 4.7.20, quatre vues sans erreur). Retour arrière : 4.7.19
-  (`RETOUR_ARRIERE.md`).
+  worker 4.7.21, cerveau actif, `lot-decision-v6`, vues sans erreur). Retour
+  arrière : 4.7.20 (`RETOUR_ARRIERE.md`).
 
 ## Règles non négociables
 
@@ -42,22 +40,28 @@ l'utilisateur ; ce fichier suffit pour reprendre.
   avant chaque commit (restaurer `audit/verification.*` si seuls les temps changent).
 - Pas de fichier non suivi en fin de tour (commit et push).
 
-## Ce que la 4.7.20 a livré
+## Ce que la 4.7.21 a livré (D-056, KI-062)
 
-- **Interface H** (piste « Sans le skill ») sur Natif, Pilote et Assisté, avec
-  ses animations (entrée seulement ; en continu : point « en direct » et cut
-  courant ; figé si le système réduit les animations), thème clair/sombre,
-  polices embarquées (OFL), **bandeau dans ESV** (ligne d'état sans clic).
-  Tous les identifiants de la 4.7.19 conservés ; essais `tests/panel-h.test.cjs`.
-- **KI-060** : export compact en segments (premier nuage des segments ≥ 2 mal
-  référencé) corrigé à l'écriture, réparé à la lecture. Audit de toutes les
-  collectes : 4 segments faux, tous des bilans ; aucun banc publié touché.
-- **KI-061** : fin de partie dans un reliquat constatée et close proprement.
-- **Reprise** refusée après rechargement d'ESV (autre `frameId`).
-- **D-054** : garde des voisins validés dans `src/lot-decision.js`
-  (`consistentValidated`, `decideCut({validated})`) ; pas de source terrain.
-- **C5** : balayage `gaugeGap`, `gaugeCount`, `crossingVoieMm` sur les règles
-  actuelles (bilan : `audit/curseurs-c5-4720-2026-09-25.md`).
+- **KI-062** : nouveau lot possible après un lot arrêté (le panneau gardait les
+  anciennes bornes ; il fallait réinstaller).
+- **Bornes remplies par Banane** : premier cut = cut affiché ; dernier cut =
+  fin retenue par partie (`bornes-partie`, `chrome.storage.local`
+  `banane4Parties` : saisie ou fin constatée), sinon « fin de partie »
+  (`endMode:'partie'`, borne 999999 ; clôture quand ESV quitte la partie).
+- **Réglages fixes** (différer, appliquer, tenter), **cerveau actif** par
+  défaut, **détails ouverts**, **Assisté retiré** de l'interface. Les 4 essais
+  4.7.0 de `panel-policies` sont gardés (§14 A) : lignes « politique effective »
+  pendant un lot, champ caché `#policy`.
+- **Mouvement** sans clignotement (panel.js, API Web Animations ; panel.css).
+- **Outils** : lot arrêté à sa borne = complet ; `acceptance-report --batch`.
+- Captures et vidéo : banane-data `travail/2026-09-26_interface-4721/`.
+
+## Lot 4.7.20 de la partie 12 (26/09)
+
+`audit/lot-4720-p12-2026-09-26.md` : premier lot mené à sa borne (1–8144),
+84/106 (79,2 %), parité 106/106, sans relecture ; 7852–7861 : 10 différés
+d'affilée (paires trop étroites, sans appui). Second lot 4.7.20 (partie 11,
+556–8146, arrêté au cut 712) : pas encore exporté.
 
 ## Relecture de la partie 9 (26/09)
 
@@ -89,19 +93,24 @@ l'utilisateur ; ce fichier suffit pour reprendre.
   Reprise dans la même page, 89 à 93 % hors fin de partie hors vue (KI-051).
   Relue le 25/09 (partielle) : 2 faux sur 66 jugés, C4 non évaluable.
 - Partie 6 (reliquat pur) : 73/125 (58,4 %) ; seul levier : voisins validés.
-- Rapport de sortie : C1 non démontré (aucun lot de validation relu), C2 non
-  publiable (P2), C3 tenu, C4 non mesuré, C5 à jour.
+- Partie 12 (4.7.20, neuve) : premier lot mené à sa borne, 84/106 (79,2 %),
+  sans relecture.
+- Rapport de sortie : C1 non démontré (aucun lot de validation complet et
+  relu), C2 non publiable (P2), C3 tenu, C4 seuil à trancher (2 faux sur 77
+  jugés, partie 9), C5 à jour.
 
 ## En attente de l'utilisateur
 
-1. **Fin de la relecture de la partie 9** : 8066–8502, 5151–5192 ; rail droit
-   de 8516 ; qui a validé les cuts hors lot avant le 25/09 ?
+1. **Relecture de la partie 12** (lot complet, partie neuve) ; export du lot de
+   la partie 11 ; fin de la relecture de la partie 9 (8066–8502, 5151–5192,
+   rail droit de 8516) ; qui a validé les cuts hors lot de la partie 9 ?
+   ESV affiche-t-il quelque part le dernier cut d'une partie ?
 2. **Source des voisins validés** : ESV permet-il d'ouvrir un cut donné (numéro,
    précédent/suivant même validé) ? Sans cela, la garde D-054 reste sans source.
 3. **KI-061** : ce que montre ESV à la fin de partie (rechargement, autre partie).
 4. Décisions : D-049 (décentrer la caméra) avancé en 4.8 ? ; voisins validés
    en dernier recours ; rotation réglage / validation (statut de la partie 9) ;
-   définition d'un lot complet (proposé ≥ 100 cuts consécutifs),
+   définition d'un lot complet pour un lot arrêté par l'opérateur,
    seuil C4, D4 (statut des 90 %), fin hors vue (D-043 à revoir : 10 points sur
    la partie 9), P2 (30 cuts replacés à l'aveugle).
 
@@ -112,7 +121,7 @@ l'utilisateur ; ce fichier suffit pour reprendre.
   (30 cuts déjà validés, rails éloignés d'au moins 5 cm puis replacés).
 - Les 9 choix `minTop` 5 à juger sur le terrain.
 - Version candidate : calage sur une autre partie, contrôle visuel §14 H dans
-  Edge (interface H), audit indépendant, cahier consolidé, paquet reproductible.
+  Edge (interface 4.7.21), audit indépendant, cahier consolidé, paquet reproductible.
 
 ## Outils utiles
 
