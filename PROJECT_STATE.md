@@ -1,6 +1,6 @@
 # État du projet Banane
 
-Date : 25 septembre 2026  
+Date : 26 septembre 2026  
 Version active de l'extension : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
 Statut : développement expérimental, non qualifié pour la production.
 
@@ -17,8 +17,19 @@ inchangés.
 Lots du 25/09 : partie 9 (4.7.18, 262/346 ; 4.7.19 sur les différés, 14/85 ; les
 12 cuts de passage à niveau annoncés par le rejeu, appliqués), partie 6 (4.7.19,
 reliquat, 73/125). Partie 9 : 79,3 % des cuts posés par le Pilote, 89 à 93 %
-hors fin de partie hors vue (KI-051) ; partie de **validation**, relecture
-attendue. Parité terrain / rejeu : 346/346, 85/85, 125/125.
+hors fin de partie hors vue (KI-051) ; partie de **validation**. Parité
+terrain / rejeu : 346/346, 85/85, 125/125.
+
+**Relecture Natif de la partie 9 (25/09, analysée le 26/09)**,
+`audit/relecture-p9-2026-09-26.md` : premier lot de validation jugé. 151 des
+346 cuts du lot 4.7.18 relus (8066–8502 sautés) : 2 faux sur 66 appliqués
+jugés (4903, 7523 : premiers passages, rail trop bas), 0 sur 11 pour le lot
+4.7.19 ; C4 non évaluable (25 % jugés), seuil à trancher. Rejeu aux règles
+4.7.20 jugé par la relecture : 80,3 % décidés ; avec la vue corrigée (D-049),
+85,8 % (8507–8526 justes) ; avec en plus les voisins validés en dernier
+recours, 90,8 % (4 faux réels sur 102). Un voisin validé n'est pas toujours
+juste : 62 des 360 cuts validés avant le lot corrigés à la relecture, en
+groupes cohérents que la garde D-054 ne voit pas.
 
 ## État 4.7.19
 

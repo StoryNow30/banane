@@ -45,6 +45,15 @@ validés à la main. Réponse de la direction : **validé**.
 Parties 6 et 9 (25/09) : dans un reliquat, c'est le seul levier notable ; la
 reprise dans la même page n'ajoute que 3 cuts en partie 6.
 
+Relecture de la partie 9 (mesure du 26/09, `audit/relecture-p9-2026-09-26.md`) :
+avec 360 voisins validés avant le lot, la garde livrée gagne 17 cuts (14 justes
+sur 15 jugés, 1 faux : 7889, 20 mm) mais retire 6 décisions justes au passage à
+niveau 4890–4902 et à 3971 : là, quatre voisins validés sont faux de 31 à 34 mm
+et cohérents entre eux, ce que la garde ne voit pas. Utilisés en dernier recours
+(seulement pour un cut sinon différé, comme le lecteur d'ornière, D-053) :
+aucune décision retirée, 85,3 % au lieu de 80,3 %. **Proposition, non décidée** :
+variante née de la partie 9, à confirmer ailleurs avant d'être adoptée.
+
 ## D-053 - Passage à niveau en dernier recours, voie encadrée, reprise des différés, arrêt au dernier cut (4.7.19)
 
 **25 septembre 2026.** Demande de l'opérateur après les deux lots 4.7.18

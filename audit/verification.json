@@ -1,18 +1,19 @@
 {
-  "startedAt": "2026-09-25T16:22:40.584Z",
-  "finishedAt": "2026-09-25T16:23:57.025Z",
+  "startedAt": "2026-09-26T06:17:07.272Z",
+  "finishedAt": "2026-09-26T06:18:04.092Z",
   "node": "v22.22.2",
   "platform": "linux",
   "counts": {
-    "tests": 796,
+    "tests": 798,
     "suites": 0,
-    "pass": 794,
+    "pass": 796,
     "fail": 0,
     "cancelled": 0,
     "skipped": 2,
     "todo": 0
   },
   "files": [
+    "tests/acceptance-batch.test.cjs",
     "tests/acceptance-commandes-dom.test.cjs",
     "tests/acceptance-contrat.test.cjs",
     "tests/acceptance-curseurs.test.cjs",

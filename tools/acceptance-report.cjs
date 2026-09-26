@@ -4,7 +4,7 @@
  * acceptance-report.cjs — rapport d'acceptation d'un lot Pilote relu en Natif
  * (cahier 4.8 §6 et §14 G, D-038). Le même calcul à chaque collecte F1 à F4.
  *
- *   node tools/acceptance-report.cjs --lot DOSSIER[=libellé] [--relecture DOSSIER|FICHIER] [--lot ...]
+ *   node tools/acceptance-report.cjs --lot DOSSIER[=libellé] [--relecture DOSSIER|FICHIER] [--batch ID] [--lot ...]
  *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json SORTIE] [--md SORTIE]
  *
  * `--decision-par-rejeu` : la décision sur le lot est lue dans le rejeu hors ligne
@@ -15,7 +15,8 @@
  * format : diagnostic GCV1, corpus GCV1 + LiDAR, journal du Pilote, et, s'ils
  * y sont, les segments de la relecture Natif (fusionnés en mémoire par
  * `tools/merge-segments.cjs`). `--relecture` désigne une relecture rangée
- * ailleurs ; elle s'attache au `--lot` qui la précède.
+ * ailleurs ; elle s'attache au `--lot` qui la précède, comme `--batch` (lot sans
+ * journal dont le diagnostic couvre plusieurs lots : seules ses observations).
  *
  * Sorties, partie par partie puis total, TOUJOURS ensemble (§14 G) :
  *   C1  cuts DISTINCTS du lot : appliqués, différés, refusés par l'écartement,
@@ -140,8 +141,10 @@ function loadLot(dir,label,relecturePath=null){
 }
 
 /* ---- le lot, cut par cut ---- */
-function lotCuts(diagnostic,journal){
-  const batch=journal?.state?.batch||null,batchId=batch?.id??null,all=(diagnostic?.observations||[]).slice().sort(byTime);
+/* `batchFilter` : lot sans journal dont le diagnostic couvre plusieurs lots
+ * (partie 9, 4.7.18 : parties 2, 3 et 9 dans le même diagnostic) ; `--batch`. */
+function lotCuts(diagnostic,journal,batchFilter=null){
+  const batch=journal?.state?.batch||null,batchId=batch?.id??batchFilter??null,all=(diagnostic?.observations||[]).slice().sort(byTime);
   const observations=all.filter(o=>!batchId||o.batchId===batchId),cuts=new Map();
   const touch=identity=>{const k=keyOf(identity.part,identity.cut);
     if(!cuts.has(k))cuts.set(k,{key:k,part:identity.part,cut:identity.cut,frameId:identity.frameId??null,observations:[],pilotVisits:0});
@@ -360,7 +363,7 @@ function lotRules(observations,exportVersion,current=false){
 }
 function analyseLot(lot,options={}){
   const exclusions=options.exclusions||EXCLUDED,excluded=new Map(exclusions.map(e=>[keyOf(e.part,e.cut),e]));
-  const ctx=lotCuts(lot.diagnostic,lot.journal),journalBefore=new Map();
+  const ctx=lotCuts(lot.diagnostic,lot.journal,lot.batchFilter??null),journalBefore=new Map();
   for(const r of (lot.journal?.records||[]).slice().sort((a,b)=>String(a.before?.capturedAt).localeCompare(String(b.before?.capturedAt))))
     if(r.identity&&railsOk(r.before?.rails)){const k=keyOf(r.identity.part,r.identity.cut);if(!journalBefore.has(k))journalBefore.set(k,r.before.rails);}
   const captures=new Map((lot.corpus?.clouds||[]).map(c=>[c.captureId,c]));
@@ -555,15 +558,16 @@ function parse(argv){
   for(let i=0;i<argv.length;i++){const a=argv[i];
     if(a==='--lot'){const v=argv[++i],at=v.lastIndexOf('=');opt.lots.push(at>0?{dir:v.slice(0,at),label:v.slice(at+1)}:{dir:v,label:path.basename(path.resolve(v))});}
     else if(a==='--relecture'){if(!opt.lots.length)throw Error('--relecture suit un --lot.');opt.lots.at(-1).relecture=argv[++i];}
+    else if(a==='--batch'){if(!opt.lots.length)throw Error('--batch suit un --lot.');opt.lots.at(-1).batch=argv[++i];}
     else if(a==='--config')opt.config=argv[++i];else if(a==='--p2')opt.p2=argv[++i];
     else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--decision-par-rejeu')opt.preferReplay=true;else if(a==='--regles-actuelles')opt.currentRules=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
     else throw Error('Argument inconnu : '+a);}
-  if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [...] [--config F] [--p2 F] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json F] [--md F]');
+  if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [--batch ID] [...] [--config F] [--p2 F] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json F] [--md F]');
   return opt;
 }
 function run(argv=process.argv.slice(2)){
   const opt=parse(argv),read=f=>f?JSON.parse(fs.readFileSync(f,'utf8')):null;
-  const lots=opt.lots.map(l=>loadLot(l.dir,l.label,l.relecture||null));
+  const lots=opt.lots.map(l=>Object.assign(loadLot(l.dir,l.label,l.relecture||null),l.batch?{batchFilter:l.batch}:{}));
   const result=report(lots,{config:read(opt.config),p2:read(opt.p2),replay:opt.replay,preferReplay:!!opt.preferReplay,currentRules:!!opt.currentRules});
   if(opt.json)fs.writeFileSync(opt.json,JSON.stringify(result,null,1)+'\n');
   if(opt.md)fs.writeFileSync(opt.md,toMarkdown(result)+'\n');

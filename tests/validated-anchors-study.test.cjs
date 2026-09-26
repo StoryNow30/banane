@@ -25,3 +25,8 @@ test('garde : un voisin incohérent avec les autres est écarté ; moins de 3 vo
   assert.deepEqual(V.consistentAnchors(id,rails,[anchor(99),anchor(101,{left:[40,0]}),anchor(102,{right:[0,-30]})]),[]);
   assert.deepEqual(V.consistentAnchors({...id,frameId:'autre'},rails,aligned),[]);     // autre repère
 });
+test('lot sans journal (partie 9, 4.7.18) : la partie est lue sur les cuts du lot',()=>{
+  const records=[visit(P,99,{before:pair(99,{},T)}),visit(P,100,{before:pair(100,{},T)})];
+  const lot={relecture:relecture(records)},analysed={batch:null,rows:[{part:P,cut:100,frameId:'cadre-pilote'}],relecture:{frame:{translationSceneUnits:T}}};
+  assert.deepEqual(V.validatedNeighbours(lot,analysed).map(a=>[a.identity.part,a.identity.cut]),[[P,99]]);
+});

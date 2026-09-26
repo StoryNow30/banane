@@ -1,4 +1,4 @@
-# Passation — Banane au 25/09/2026 (4.7.20 TEST livrée)
+# Passation — Banane au 26/09/2026 (4.7.20 TEST livrée ; partie 9 relue)
 
 À lire en premier par la conversation qui reprend. Remplace `PASSATION_4.7.19.md`
 (gardé pour l'historique). La conversation précédente est conservée par
@@ -57,23 +57,49 @@ l'utilisateur ; ce fichier suffit pour reprendre.
 - **C5** : balayage `gaugeGap`, `gaugeCount`, `crossingVoieMm` sur les règles
   actuelles (bilan : `audit/curseurs-c5-4720-2026-09-25.md`).
 
+## Relecture de la partie 9 (26/09)
+
+`audit/relecture-p9-2026-09-26.md` ; archives banane-data
+`collections/2026-09-25_v4.7.19_/relecture p9/` ; scénarios
+`travail/2026-09-26_relecture-p9/scenarios.cjs` (7 min, 13 Go).
+
+- Partielle : 151/346 cuts du lot 4.7.18 relus (8066–8502 et 5151–5192
+  sautés). 2 faux sur 66 appliqués jugés (4903, 7523 : premiers passages,
+  vertical, rail trop bas) ; lot 4.7.19 : 0/11. Rapports
+  `audit/acceptance-p9-2026-09-26-47{18,19}-relecture.json` ; rapport de sortie
+  régénéré (partie 9 en « validation »).
+- Rejeu 4.7.20 jugé : 80,3 % décidés ; vue corrigée (D-049) 85,8 % ; + voisins
+  validés en dernier recours 90,8 %, 4 faux réels sur 102.
+- Voisins validés : 62 des 360 cuts validés avant le lot corrigés à la
+  relecture, en groupes cohérents ; la garde D-054 livrée retire 6 décisions
+  justes au passage à niveau 4890–4902. « Dernier recours » proposé, non décidé.
+- Biais vertical propre à la partie 9 (24 rails retouchés sur 27 relevés, 16
+  dans les passages à niveau) ; absent des parties de réglage : hypothèse, pas
+  de calage.
+- Défauts de la relecture : 8516, rail droit validé sans correction (155 mm).
+- Outils : `acceptance-report.cjs --batch ID` (diagnostic couvrant plusieurs
+  lots) ; `validated-anchors-study.cjs --regles-actuelles`, partie lue sur les
+  cuts pour un lot sans journal.
+
 ## Où en est le cahier (objectif 80 %, cap 90 %)
 
 - Partie 9 : 276/348 cuts posés par le Pilote (79,3 %), 82,5 % estimés avec une
   Reprise dans la même page, 89 à 93 % hors fin de partie hors vue (KI-051).
-  Pas de relecture encore : C4 non mesuré.
+  Relue le 25/09 (partielle) : 2 faux sur 66 jugés, C4 non évaluable.
 - Partie 6 (reliquat pur) : 73/125 (58,4 %) ; seul levier : voisins validés.
 - Rapport de sortie : C1 non démontré (aucun lot de validation relu), C2 non
   publiable (P2), C3 tenu, C4 non mesuré, C5 à jour.
 
 ## En attente de l'utilisateur
 
-1. **Relecture Natif de la partie 9** (lots 4.7.18 et 4.7.19) : premier lot de
-   validation possible.
+1. **Fin de la relecture de la partie 9** : 8066–8502, 5151–5192 ; rail droit
+   de 8516 ; qui a validé les cuts hors lot avant le 25/09 ?
 2. **Source des voisins validés** : ESV permet-il d'ouvrir un cut donné (numéro,
    précédent/suivant même validé) ? Sans cela, la garde D-054 reste sans source.
 3. **KI-061** : ce que montre ESV à la fin de partie (rechargement, autre partie).
-4. Décisions : définition d'un lot complet (proposé ≥ 100 cuts consécutifs),
+4. Décisions : D-049 (décentrer la caméra) avancé en 4.8 ? ; voisins validés
+   en dernier recours ; rotation réglage / validation (statut de la partie 9) ;
+   définition d'un lot complet (proposé ≥ 100 cuts consécutifs),
    seuil C4, D4 (statut des 90 %), fin hors vue (D-043 à revoir : 10 points sur
    la partie 9), P2 (30 cuts replacés à l'aveugle).
 

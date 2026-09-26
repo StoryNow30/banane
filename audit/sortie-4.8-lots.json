@@ -57,16 +57,16 @@
    "note": "4.7.18, reliquat « long », arrêt KI-059 ; diagnostic réduit au lot (batchId) ; banc D-053"
   },
   {
-   "fichier": "audit/acceptance-p9-2026-09-25-4718-sans-relecture.json",
-   "role": "couverture",
-   "relecture": "aucune",
-   "note": "4.7.18, lot long 0–8539 ; partie de validation, relecture attendue ; diagnostic réduit au lot (batchId) ; fin 8504–8539 hors vue (KI-051)"
+   "fichier": "audit/acceptance-p9-2026-09-26-4718-relecture.json",
+   "role": "validation",
+   "relecture": "ciblée de fait (151/346 cuts relus, 66/262 appliqués jugés)",
+   "note": "4.7.18, lot long 0–8539 ; relecture Natif 25/09 (audit/relecture-p9-2026-09-26.md) ; 8066–8502 et 5151–5192 non relus ; fin 8504–8539 hors vue (KI-051)"
   },
   {
-   "fichier": "audit/acceptance-p9-2026-09-25-4719-sans-relecture.json",
-   "role": "couverture",
-   "relecture": "aucune",
-   "note": "4.7.19, lot ordinaire sur les différés du précédent ; les 12 cuts de passage à niveau annoncés par le rejeu, appliqués"
+   "fichier": "audit/acceptance-p9-2026-09-26-4719-relecture.json",
+   "role": "validation",
+   "relecture": "ciblée de fait (76/85 cuts relus, 11/14 appliqués jugés)",
+   "note": "4.7.19, lot ordinaire sur les différés du précédent ; 12 cuts de passage à niveau appliqués, 9 jugés, 0 faux"
   },
   {
    "fichier": "audit/acceptance-p6-2026-09-25-4719-sans-relecture.json",
@@ -88,7 +88,7 @@
   "garde d'écartement voisin et lecteur passage à niveau, variation de gaugeGap, gaugeCount, crossingVoieMm : audit/curseurs-c5-4720-2026-09-25.md (D-055)"
  ],
  "conditions": [
-  "Lots de validation : au moins deux lots 4.7.18 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048) ; les lots 4.7.16 et 4.7.17 gardent l'ancienne règle d'appui (D-052). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne. Candidate : la partie 9 (jamais réglée ; lots 4.7.18 et 4.7.19), dès sa relecture Natif.",
+  "Lots de validation : au moins deux lots 4.7.18 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048) ; les lots 4.7.16 et 4.7.17 gardent l'ancienne règle d'appui (D-052). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne. La partie 9 (jamais réglée) est relue le 25/09 : premier lot de validation jugé (2 faux sur 66 appliqués jugés, relecture ciblée de fait : 8066–8502 non relus) ; une seconde partie neuve reste à mener.",
   "P2 : 30 cuts replacés à l'aveugle par l'opérateur, pour le plancher humain ; sans lui, aucun chiffre d'erreur n'est publié. Outil prêt en 4.7.20 (tools/p2-plancher.cjs, lu par --p2) : il manque la session terrain.",
   "Seuil C4 de sortie : zéro faux strict, ou faux isolés expliqués tolérés (amendement n°10, point 5).",
   "Cahier consolidé, contrôle Edge de la version candidate, paquet reproductible ; merge, tag et release sur autorisation explicite seulement.",

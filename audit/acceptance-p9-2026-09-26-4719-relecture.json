@@ -1,0 +1,3937 @@
+{
+ "format": "banane-acceptance-report-v1",
+ "tool": "tools/acceptance-report.cjs",
+ "rules": {
+  "wrongMm": 10,
+  "criterion": "latéral OU vertical, valeurs brutes (D-038)",
+  "denominator": "cuts DISTINCTS du lot ; sans entrée, différés, refusés, sans décision au dénominateur ; revisite ≠ nouveau cut",
+  "reference": "dernière visite validée de la relecture, règles strictes referenceFor ; lue après coup, jamais en entrée moteur",
+  "units": "unités de scène × 1000 (mm), étalonnage physique non vérifié",
+  "gaugeContract": "[1405, 1470] mm, admissibilité seulement",
+  "exclusions": [
+   {
+    "part": 19,
+    "cut": 9033,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   },
+   {
+    "part": 19,
+    "cut": 9241,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   }
+  ],
+  "p2": "P2 non mesuré"
+ },
+ "config": null,
+ "p2": null,
+ "lots": [
+  {
+   "label": "pilote-p9-differes-4.7.19",
+   "complete": false,
+   "batch": {
+    "id": "ccbcb19f-6b24-417f-85d7-64d7d94ed1ce",
+    "state": "STOPPED",
+    "part": 9,
+    "start": 638,
+    "end": 8819,
+    "unresolvedPolicy": "defer",
+    "startedAt": "2026-09-25T11:02:34.716Z"
+   },
+   "version": "4.7.19",
+   "observationsOutsideLot": 0,
+   "relecture": {
+    "segments": 15,
+    "records": 548,
+    "allDeclaredCloudsPresent": true,
+    "frame": {
+     "pilotFrameIds": [
+      "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63"
+     ],
+     "relectureFrameIds": [
+      "46e5663b-7b10-47cc-8b28-33b13298b6b1"
+     ],
+     "sameFrameId": false,
+     "translationSceneUnits": [
+      886387.0916,
+      6254220.4439,
+      47.1787
+     ],
+     "cutsCompared": 76,
+     "cutsAgreeing": 76,
+     "usable": true,
+     "rule": "frameId différent : translation unique du lot acceptée si la majorité des cuts la vérifient (≤ 1 mm, rotation identique) ; chaque cut est contrôlé seul"
+    }
+   },
+   "corpusSegments": null,
+   "lotDecisionRules": {
+    "pairGuard": true,
+    "chainMm": 15,
+    "gaugeGuardMm": 20,
+    "minTop": 5,
+    "crossing": true,
+    "framed": true,
+    "anchorRule": "placed",
+    "source": "lot"
+   },
+   "lotDecisionSource": "observation",
+   "lotDecisionParity": null,
+   "journalConsistency": {
+    "journalCompleted": 14,
+    "journalDeferred": 71,
+    "applied": 14,
+    "deferredOrRefused": 71
+   },
+   "inputs": [
+    {
+     "file": "banane-bilan-v4-2026-09-25T11-16-14-seg01.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.19",
+     "sha256": "0ee90b4799891510e78b855c1a55d1303a667e84c2269fcb65baccc206a4b6b5",
+     "bytes": 105034283,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-25T11-16-30-seg01.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.19",
+     "sha256": "91cd5896b132f4b8f3c607124482d5125d14cc3b54967212e2de46db57b5071a",
+     "bytes": 102383874
+    },
+    {
+     "file": "banane-gcv1-diagnostic-1790334988434.json",
+     "kind": "diagnostic",
+     "format": "banane-gcv1-diagnostic-v1",
+     "version": "4.7.19",
+     "sha256": "0812c9f022b02b09d5ea06bf7b74b88819b8db0d6f5a841cc73de3897a56d90c",
+     "bytes": 1236922
+    },
+    {
+     "file": "banane-journal-v4-1790334998253.json",
+     "kind": "journal",
+     "format": "banane-test-journal-v4",
+     "version": "4.7.19",
+     "sha256": "446976c2f586e4473657cb4b9d38973ce42c48acbe819dbe1a062cec4bff6ad7",
+     "bytes": 4702338
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T14-54-22-auto-seg01.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "6986859de14a3ab2d009543860aa73719d44b799971f08e0e5b2514d5c9aaf4c",
+     "bytes": 28825727,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T14-58-53-auto-seg02.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "b4f76f50f525da72681ffe00283728c9386eacd3f90255bef8e87d0f06e4f598",
+     "bytes": 46130521,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T14-58-53-auto-seg03.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "957e7a3195838481c3faa27971c3b5338f8a6e62fd01f6b2457ee0bfa93fc290",
+     "bytes": 33999229,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg03.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "19e4ab1678ec3efa27972b00d2c6308fdf126f7382e71a1d2d1fcd3160170b0d",
+     "bytes": 48611576,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg04.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "9019789c0df6876597e84a50733e2369dea457dd9e9e8508d306fa0d7cd126a6",
+     "bytes": 48586627,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg05.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "fe47da91f6759c31672ad9242b18d1cc7a933a06c86bf228012857befb04b1bb",
+     "bytes": 48470547,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg06.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "e5854fceec03ff687feebab4939184f30be6e406f7b684d29e46b488d94ea64f",
+     "bytes": 48881557,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg07.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "9b171db67551e391ee630d6e486896f6d7ea1144c3fae665a18a5c7252395a6f",
+     "bytes": 48577762,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg08.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "80f1d71bf407059007164676f04f84a587094aa64ed61c70a36a9631e996b577",
+     "bytes": 48520518,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg09.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "179903e4ceff9f0cecc0f3bae0f552118ff45a9bf69a608355d67caf7644407e",
+     "bytes": 48447447,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-03-48-auto-seg10.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "0b614e259beff039f01bb0dfdf731dd085d4f5eeefb9c0831a662edeb3ff982d",
+     "bytes": 50174996,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-07-09-auto-seg04.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "80cc1da42e72b72872c8669824c4370af9b26fe44dd37ab5ff4c4f3fbb623614",
+     "bytes": 65391017,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-07-09-auto-seg05.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "580e38b0b29c3be880f3d90fffeca63c6da86e96d654d725d6f7ae79015d825d",
+     "bytes": 66144383,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-07-09-auto-seg06.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "e095627830ab7ba88961dbc52118fe818bff9d8df210f9a5933907bc9a4e80ea",
+     "bytes": 66916832,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-25T15-07-09-auto-seg07.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.19",
+     "sha256": "447d5853739e8cd90cdcafdba816ae1a27d55eef0b17c54e4a96f3ac2a2da19c",
+     "bytes": 69817080,
+     "role": "relecture"
+    }
+   ],
+   "rows": [
+    {
+     "part": 9,
+     "cut": 638,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:slope"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 16,
+      "startGapMm": 40.28
+     }
+    },
+    {
+     "part": 9,
+     "cut": 952,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 61,
+      "startGapMm": 43.38
+     }
+    },
+    {
+     "part": 9,
+     "cut": 1620,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 67,
+      "startGapMm": 99.92
+     }
+    },
+    {
+     "part": 9,
+     "cut": 2358,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1462.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.29,
+        "verticalMm": -0.47
+       },
+       "right": {
+        "lateralMm": -0.21,
+        "verticalMm": -0.52
+       }
+      },
+      "worstMm": 0.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 101,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 2367,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 2,
+      "validatedVisits": 1,
+      "usedVisitIndex": 112,
+      "startGapMm": 62.76
+     }
+    },
+    {
+     "part": 9,
+     "cut": 2972,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.11,
+        "verticalMm": -0.2
+       },
+       "right": {
+        "lateralMm": -0.25,
+        "verticalMm": -0.55
+       }
+      },
+      "worstMm": 0.55,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 135,
+      "dwellMs": 1043,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3006,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 2,
+      "validatedVisits": 1,
+      "usedVisitIndex": 152,
+      "startGapMm": 39.64
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3007,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1305.5,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 153,
+      "startGapMm": 40.01
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3008,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 154
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3009,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1343.6,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 155,
+      "startGapMm": 41.2
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3067,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1475.2,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 215,
+      "startGapMm": 38.53
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3665,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 248,
+      "startGapMm": 103.52
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3680,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 253,
+      "startGapMm": 82.63
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3685,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 258,
+      "startGapMm": 101.26
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3968,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "crossing",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.93,
+        "verticalMm": -4.83
+       },
+       "right": {
+        "lateralMm": -0.07,
+        "verticalMm": -6.36
+       }
+      },
+      "worstMm": 6.36,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 263,
+      "errors": {
+       "left": {
+        "lateralMm": -0.55,
+        "verticalMm": -4.61
+       },
+       "right": {
+        "lateralMm": -0.01,
+        "verticalMm": -6.26
+       }
+      },
+      "worstMm": 6.26,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3969,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "crossing",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.5,
+        "verticalMm": -0.57
+       },
+       "right": {
+        "lateralMm": -0.14,
+        "verticalMm": -0.2
+       }
+      },
+      "worstMm": 0.57,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 264,
+      "dwellMs": 960,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3970,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1447.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": 3.2,
+        "verticalMm": -8.22
+       },
+       "right": {
+        "lateralMm": -4.99,
+        "verticalMm": -1.64
+       }
+      },
+      "worstMm": 8.22,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 265,
+      "errors": {
+       "left": {
+        "lateralMm": 3.59,
+        "verticalMm": -8.06
+       },
+       "right": {
+        "lateralMm": -4.59,
+        "verticalMm": -1.09
+       }
+      },
+      "worstMm": 8.06,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3971,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": 3.44,
+        "verticalMm": -7.52
+       },
+       "right": {
+        "lateralMm": -0.25,
+        "verticalMm": -0.13
+       }
+      },
+      "worstMm": 7.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 266,
+      "errors": {
+       "left": {
+        "lateralMm": 3.62,
+        "verticalMm": -7.52
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 7.52,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3972,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.44,
+        "verticalMm": -0.04
+       },
+       "right": {
+        "lateralMm": -0.58,
+        "verticalMm": -0.62
+       }
+      },
+      "worstMm": 0.62,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 267,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3973,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.1,
+        "verticalMm": -0.48
+       },
+       "right": {
+        "lateralMm": -0.09,
+        "verticalMm": -0.32
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 268,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3974,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "crossing",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.44,
+        "verticalMm": -0.49
+       },
+       "right": {
+        "lateralMm": -0.48,
+        "verticalMm": -0.29
+       }
+      },
+      "worstMm": 0.49,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 269,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 3975,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": 1.38,
+        "verticalMm": -5.52
+       },
+       "right": {
+        "lateralMm": 0.3,
+        "verticalMm": -3.23
+       }
+      },
+      "worstMm": 5.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 270,
+      "errors": {
+       "left": {
+        "lateralMm": 1.57,
+        "verticalMm": -5.26
+       },
+       "right": {
+        "lateralMm": 0.9,
+        "verticalMm": -2.98
+       }
+      },
+      "worstMm": 5.26,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 4830,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 275
+     }
+    },
+    {
+     "part": 9,
+     "cut": 4890,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "crossing",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": 0.78,
+        "verticalMm": -3.44
+       },
+       "right": {
+        "lateralMm": -0.02,
+        "verticalMm": -0.17
+       }
+      },
+      "worstMm": 3.44,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 282,
+      "errors": {
+       "left": {
+        "lateralMm": 1.14,
+        "verticalMm": -3.08
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 3.08,
+      "wrong": false
+     }
+    },
+    {
+     "part": 9,
+     "cut": 5182,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1317.8,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 5183,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1295.2,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 5184,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 5185,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1314.7,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 5186,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6077,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6139,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 325,
+      "startGapMm": 104.92
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6181,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 332,
+      "startGapMm": 103.44
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6183,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1280.6,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 334,
+      "startGapMm": 108.69
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6197,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 336,
+      "startGapMm": 88.69
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6540,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 339,
+      "startGapMm": 39.48
+     }
+    },
+    {
+     "part": 9,
+     "cut": 6925,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:multi-intent-reference-ambiguous",
+       "right:multi-intent-reference-ambiguous"
+      ],
+      "visits": 2,
+      "validatedVisits": 1,
+      "usedVisitIndex": 345
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7279,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1482.5,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:multi-intent-reference-ambiguous",
+       "right:multi-intent-reference-ambiguous"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 348
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7280,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1309,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 349,
+      "startGapMm": 46.51
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7458,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 377,
+      "startGapMm": 55.01
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7459,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 3,
+      "validatedVisits": 2,
+      "usedVisitIndex": 380,
+      "rule": "plusieurs visites validées : la dernière fait foi",
+      "startGapMm": 53.88
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7864,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:slope"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 424,
+      "startGapMm": 88.61
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7865,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:slope",
+      "right:slope"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 425,
+      "startGapMm": 84.81
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7867,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:slope"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 427,
+      "startGapMm": 55.1
+     }
+    },
+    {
+     "part": 9,
+     "cut": 7889,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 449,
+      "startGapMm": 100.75
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8472,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1445.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "crossing",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "lot"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8473,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1432.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8474,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1433.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "pas-de-relecture"
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8504,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 2,
+      "validatedVisits": 1,
+      "usedVisitIndex": 501,
+      "startGapMm": 199.53
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8505,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1474.2,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 502,
+      "startGapMm": 202.64
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8506,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1472.1,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 503,
+      "startGapMm": 206.79
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8507,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1478.5,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 504,
+      "startGapMm": 208.13
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8508,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1476.7,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 505,
+      "startGapMm": 209.49
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8509,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 506,
+      "startGapMm": 207.81
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8510,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 507,
+      "startGapMm": 209.54
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8511,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 508,
+      "startGapMm": 211.32
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8512,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1481.9,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 509,
+      "startGapMm": 212.01
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8513,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 510,
+      "startGapMm": 211.43
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8514,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 511,
+      "startGapMm": 212.01
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8515,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 512,
+      "startGapMm": 208.92
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8516,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1482.1,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 513,
+      "startGapMm": 207.36
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8517,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 514,
+      "startGapMm": 211.54
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8518,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 515,
+      "startGapMm": 214.77
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8519,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 516,
+      "startGapMm": 219.44
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8520,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:rsf"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 517,
+      "startGapMm": 218.08
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8521,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 518
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8522,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 519,
+      "startGapMm": 214.49
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8523,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1474.3,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 520,
+      "startGapMm": 211.99
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8524,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1476.1,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 521,
+      "startGapMm": 208.72
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8525,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 522,
+      "startGapMm": 212.67
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8526,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:slope"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 523,
+      "startGapMm": 211.23
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8527,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 524,
+      "startGapMm": 213.75
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8528,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:rsf",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 525,
+      "startGapMm": 223.65
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8529,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 526,
+      "startGapMm": 228.47
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8530,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop",
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 527,
+      "startGapMm": 228.24
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8531,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:minTop"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 528,
+      "startGapMm": 221.81
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8532,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:rsf"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 529,
+      "startGapMm": 214.84
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8533,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:rsf"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 530,
+      "startGapMm": 212.59
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8534,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:rsf"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 531,
+      "startGapMm": 215.31
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8535,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 532,
+      "startGapMm": 214.74
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8536,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 533,
+      "startGapMm": 208.17
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8537,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 534,
+      "startGapMm": 204.21
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8538,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 535,
+      "startGapMm": 202.6
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8539,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 536,
+      "startGapMm": 198.79
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8540,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 537,
+      "startGapMm": 199.89
+     }
+    },
+    {
+     "part": 9,
+     "cut": 8541,
+     "frameId": "6f62b95a-6a8f-4dc8-89d7-7abdafd79a63",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1475.9,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 538,
+      "startGapMm": 200.02
+     }
+    }
+   ]
+  }
+ ],
+ "parts": [
+  {
+   "part": 9,
+   "holdout": "non déclaré (aucune configuration)",
+   "lots": [
+    "p9-4719"
+   ],
+   "c1": {
+    "distinctCuts": 85,
+    "applied": 14,
+    "deferred": 53,
+    "gaugeRejected": 18,
+    "noInput": 0,
+    "other": 0,
+    "coveragePct": 16.5,
+    "revisitedCuts": 0,
+    "otherDetail": []
+   },
+   "c4": {
+    "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+    "judgedApplied": 11,
+    "appliedNotJudged": 3,
+    "wrong": 0,
+    "judgedByBasis": {
+     "validé": 9,
+     "accepté-sans-retouche": 2
+    },
+    "wrongByBasis": {
+     "validé": 0,
+     "accepté-sans-retouche": 0
+    },
+    "judgedSharePct": 78.6,
+    "minJudgedSharePct": 80,
+    "evaluable": false,
+    "wrongCuts": [],
+    "byLotCommand": {
+     "applied": 12,
+     "judged": 9,
+     "wrong": 0,
+     "byStage": {
+      "crossing": 5,
+      "choice": 4,
+      "window": 3
+     },
+     "wrongCuts": []
+    }
+   },
+   "c2": {
+    "rails": 18,
+    "basis": "cuts validés seulement",
+    "lateralMm": {
+     "count": 18,
+     "median": 0,
+     "p90": 3.599,
+     "maximum": 4.59
+    },
+    "verticalMm": {
+     "count": 18,
+     "median": 0,
+     "p90": 6.638,
+     "maximum": 8.06
+    },
+    "floor": {
+     "label": "P2 non mesuré"
+    }
+   },
+   "c3": {
+    "refused": [
+     {
+      "cut": 3007,
+      "predictedMm": 1305.5,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 3009,
+      "predictedMm": 1343.6,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 3067,
+      "predictedMm": 1475.2,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 5182,
+      "predictedMm": 1317.8,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 5183,
+      "predictedMm": 1295.2,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 5185,
+      "predictedMm": 1314.7,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 6183,
+      "predictedMm": 1280.6,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 7279,
+      "predictedMm": 1482.5,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 7280,
+      "predictedMm": 1309,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 8505,
+      "predictedMm": 1474.2,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8506,
+      "predictedMm": 1472.1,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8507,
+      "predictedMm": 1478.5,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8508,
+      "predictedMm": 1476.7,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8512,
+      "predictedMm": 1481.9,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8516,
+      "predictedMm": 1482.1,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8523,
+      "predictedMm": 1474.3,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8524,
+      "predictedMm": 1476.1,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 8541,
+      "predictedMm": 1475.9,
+      "gaugeClass": "HIGH_INVALID"
+     }
+    ],
+    "appliedOutOfContract": [],
+    "appliedGaugeUnmeasured": []
+   },
+   "lotDecision": {
+    "wouldApply": 14,
+    "coveragePct": 16.5,
+    "judged": 11,
+    "wrong": 0,
+    "wrongCuts": [],
+    "newWrong": [],
+    "gained": [],
+    "lost": [],
+    "byStage": {
+     "deferred": 71,
+     "first-pass": 2,
+     "crossing": 5,
+     "choice": 4,
+     "window": 3
+    }
+   },
+   "unjudgeable": {
+    "référence-non-stricte": {
+     "cuts": 5,
+     "applied": 0,
+     "list": [
+      3008,
+      4830,
+      6925,
+      7279,
+      8521
+     ]
+    },
+    "pas-de-relecture": {
+     "cuts": 9,
+     "applied": 3,
+     "list": [
+      5182,
+      5183,
+      5184,
+      5185,
+      5186,
+      6077,
+      8472,
+      8473,
+      8474
+     ]
+    }
+   },
+   "deferredStartGapsMm": [
+    {
+     "cut": 638,
+     "startGapMm": 40.28
+    },
+    {
+     "cut": 952,
+     "startGapMm": 43.38
+    },
+    {
+     "cut": 1620,
+     "startGapMm": 99.92
+    },
+    {
+     "cut": 2367,
+     "startGapMm": 62.76
+    },
+    {
+     "cut": 3006,
+     "startGapMm": 39.64
+    },
+    {
+     "cut": 3007,
+     "startGapMm": 40.01
+    },
+    {
+     "cut": 3009,
+     "startGapMm": 41.2
+    },
+    {
+     "cut": 3067,
+     "startGapMm": 38.53
+    },
+    {
+     "cut": 3665,
+     "startGapMm": 103.52
+    },
+    {
+     "cut": 3680,
+     "startGapMm": 82.63
+    },
+    {
+     "cut": 3685,
+     "startGapMm": 101.26
+    },
+    {
+     "cut": 6139,
+     "startGapMm": 104.92
+    },
+    {
+     "cut": 6181,
+     "startGapMm": 103.44
+    },
+    {
+     "cut": 6183,
+     "startGapMm": 108.69
+    },
+    {
+     "cut": 6197,
+     "startGapMm": 88.69
+    },
+    {
+     "cut": 6540,
+     "startGapMm": 39.48
+    },
+    {
+     "cut": 7280,
+     "startGapMm": 46.51
+    },
+    {
+     "cut": 7458,
+     "startGapMm": 55.01
+    },
+    {
+     "cut": 7459,
+     "startGapMm": 53.88
+    },
+    {
+     "cut": 7864,
+     "startGapMm": 88.61
+    },
+    {
+     "cut": 7865,
+     "startGapMm": 84.81
+    },
+    {
+     "cut": 7867,
+     "startGapMm": 55.1
+    },
+    {
+     "cut": 7889,
+     "startGapMm": 100.75
+    },
+    {
+     "cut": 8504,
+     "startGapMm": 199.53
+    },
+    {
+     "cut": 8505,
+     "startGapMm": 202.64
+    },
+    {
+     "cut": 8506,
+     "startGapMm": 206.79
+    },
+    {
+     "cut": 8507,
+     "startGapMm": 208.13
+    },
+    {
+     "cut": 8508,
+     "startGapMm": 209.49
+    },
+    {
+     "cut": 8509,
+     "startGapMm": 207.81
+    },
+    {
+     "cut": 8510,
+     "startGapMm": 209.54
+    },
+    {
+     "cut": 8511,
+     "startGapMm": 211.32
+    },
+    {
+     "cut": 8512,
+     "startGapMm": 212.01
+    },
+    {
+     "cut": 8513,
+     "startGapMm": 211.43
+    },
+    {
+     "cut": 8514,
+     "startGapMm": 212.01
+    },
+    {
+     "cut": 8515,
+     "startGapMm": 208.92
+    },
+    {
+     "cut": 8516,
+     "startGapMm": 207.36
+    },
+    {
+     "cut": 8517,
+     "startGapMm": 211.54
+    },
+    {
+     "cut": 8518,
+     "startGapMm": 214.77
+    },
+    {
+     "cut": 8519,
+     "startGapMm": 219.44
+    },
+    {
+     "cut": 8520,
+     "startGapMm": 218.08
+    },
+    {
+     "cut": 8522,
+     "startGapMm": 214.49
+    },
+    {
+     "cut": 8523,
+     "startGapMm": 211.99
+    },
+    {
+     "cut": 8524,
+     "startGapMm": 208.72
+    },
+    {
+     "cut": 8525,
+     "startGapMm": 212.67
+    },
+    {
+     "cut": 8526,
+     "startGapMm": 211.23
+    },
+    {
+     "cut": 8527,
+     "startGapMm": 213.75
+    },
+    {
+     "cut": 8528,
+     "startGapMm": 223.65
+    },
+    {
+     "cut": 8529,
+     "startGapMm": 228.47
+    },
+    {
+     "cut": 8530,
+     "startGapMm": 228.24
+    },
+    {
+     "cut": 8531,
+     "startGapMm": 221.81
+    },
+    {
+     "cut": 8532,
+     "startGapMm": 214.84
+    },
+    {
+     "cut": 8533,
+     "startGapMm": 212.59
+    },
+    {
+     "cut": 8534,
+     "startGapMm": 215.31
+    },
+    {
+     "cut": 8535,
+     "startGapMm": 214.74
+    },
+    {
+     "cut": 8536,
+     "startGapMm": 208.17
+    },
+    {
+     "cut": 8537,
+     "startGapMm": 204.21
+    },
+    {
+     "cut": 8538,
+     "startGapMm": 202.6
+    },
+    {
+     "cut": 8539,
+     "startGapMm": 198.79
+    },
+    {
+     "cut": 8540,
+     "startGapMm": 199.89
+    },
+    {
+     "cut": 8541,
+     "startGapMm": 200.02
+    }
+   ],
+   "excluded": [],
+   "incompleteLots": [
+    {
+     "label": "p9-4719",
+     "state": "STOPPED"
+    }
+   ],
+   "c5": {
+    "retained": {
+     "guardMm": 30,
+     "chooseMm": 15,
+     "chainMm": 15,
+     "gap": 3,
+     "anchors": 2,
+     "minTop": 5,
+     "minFace": 3,
+     "maxDzMm": 20,
+     "gaugeGuardMm": 20,
+     "gaugeGap": 10,
+     "gaugeCount": 3,
+     "pairGuard": true,
+     "anchorRule": "placed",
+     "crossing": true,
+     "crossingVoieMm": 10,
+     "framed": true,
+     "frameGap": 8,
+     "frameAnchors": 3
+    },
+    "withoutVariationReview": [
+     "frameGap",
+     "frameAnchors",
+     "validatedMinInliers"
+    ],
+    "reviews": [
+     "audit/curseurs-lot-2026-09-24.md",
+     "audit/ecartement-voisin-2026-09-24.md",
+     "audit/appui-pose-2026-09-24.md",
+     "audit/passage-niveau-lecteur-2026-09-25.md",
+     "audit/appuis-valides-2026-09-24.md",
+     "audit/curseurs-c5-4720-2026-09-25.md"
+    ],
+    "decisions": [
+     "D-044 garde de paire",
+     "D-047 chainMm 15",
+     "D-050 garde d’écartement 20 mm et minTop 5",
+     "D-052 appui = cut posé",
+     "D-053 passage à niveau en dernier recours, voie encadrée",
+     "D-054 voisins validés, garde de cohérence",
+     "D-055 gaugeGap, gaugeCount et crossingVoieMm conservés"
+    ],
+    "lotRules": [
+     {
+      "label": "p9-4719",
+      "rules": {
+       "pairGuard": true,
+       "chainMm": 15,
+       "gaugeGuardMm": 20,
+       "minTop": 5,
+       "crossing": true,
+       "framed": true,
+       "anchorRule": "placed",
+       "source": "lot"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "total": {
+  "c1": {
+   "distinctCuts": 85,
+   "applied": 14,
+   "deferred": 53,
+   "gaugeRejected": 18,
+   "noInput": 0,
+   "other": 0,
+   "coveragePct": 16.5,
+   "revisitedCuts": 0,
+   "otherDetail": []
+  },
+  "c4": {
+   "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+   "judgedApplied": 11,
+   "appliedNotJudged": 3,
+   "wrong": 0,
+   "judgedByBasis": {
+    "validé": 9,
+    "accepté-sans-retouche": 2
+   },
+   "wrongByBasis": {
+    "validé": 0,
+    "accepté-sans-retouche": 0
+   },
+   "judgedSharePct": 78.6,
+   "minJudgedSharePct": 80,
+   "evaluable": false,
+   "wrongCuts": [],
+   "byLotCommand": {
+    "applied": 12,
+    "judged": 9,
+    "wrong": 0,
+    "byStage": {
+     "crossing": 5,
+     "choice": 4,
+     "window": 3
+    },
+    "wrongCuts": []
+   }
+  },
+  "c2": {
+   "rails": 18,
+   "basis": "cuts validés seulement",
+   "lateralMm": {
+    "count": 18,
+    "median": 0,
+    "p90": 3.599,
+    "maximum": 4.59
+   },
+   "verticalMm": {
+    "count": 18,
+    "median": 0,
+    "p90": 6.638,
+    "maximum": 8.06
+   },
+   "floor": {
+    "label": "P2 non mesuré"
+   }
+  },
+  "c3": {
+   "refused": [
+    {
+     "cut": 3007,
+     "predictedMm": 1305.5,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 3009,
+     "predictedMm": 1343.6,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 3067,
+     "predictedMm": 1475.2,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 5182,
+     "predictedMm": 1317.8,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 5183,
+     "predictedMm": 1295.2,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 5185,
+     "predictedMm": 1314.7,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 6183,
+     "predictedMm": 1280.6,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 7279,
+     "predictedMm": 1482.5,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 7280,
+     "predictedMm": 1309,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 8505,
+     "predictedMm": 1474.2,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8506,
+     "predictedMm": 1472.1,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8507,
+     "predictedMm": 1478.5,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8508,
+     "predictedMm": 1476.7,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8512,
+     "predictedMm": 1481.9,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8516,
+     "predictedMm": 1482.1,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8523,
+     "predictedMm": 1474.3,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8524,
+     "predictedMm": 1476.1,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 8541,
+     "predictedMm": 1475.9,
+     "gaugeClass": "HIGH_INVALID"
+    }
+   ],
+   "appliedOutOfContract": [],
+   "appliedGaugeUnmeasured": []
+  },
+  "lotDecision": {
+   "wouldApply": 14,
+   "coveragePct": 16.5,
+   "judged": 11,
+   "wrong": 0,
+   "wrongCuts": [],
+   "newWrong": [],
+   "gained": [],
+   "lost": [],
+   "byStage": {
+    "deferred": 71,
+    "first-pass": 2,
+    "crossing": 5,
+    "choice": 4,
+    "window": 3
+   }
+  },
+  "unjudgeable": {
+   "référence-non-stricte": {
+    "cuts": 5,
+    "applied": 0,
+    "list": [
+     3008,
+     4830,
+     6925,
+     7279,
+     8521
+    ]
+   },
+   "pas-de-relecture": {
+    "cuts": 9,
+    "applied": 3,
+    "list": [
+     5182,
+     5183,
+     5184,
+     5185,
+     5186,
+     6077,
+     8472,
+     8473,
+     8474
+    ]
+   }
+  },
+  "deferredStartGapsMm": [
+   {
+    "cut": 638,
+    "startGapMm": 40.28
+   },
+   {
+    "cut": 952,
+    "startGapMm": 43.38
+   },
+   {
+    "cut": 1620,
+    "startGapMm": 99.92
+   },
+   {
+    "cut": 2367,
+    "startGapMm": 62.76
+   },
+   {
+    "cut": 3006,
+    "startGapMm": 39.64
+   },
+   {
+    "cut": 3007,
+    "startGapMm": 40.01
+   },
+   {
+    "cut": 3009,
+    "startGapMm": 41.2
+   },
+   {
+    "cut": 3067,
+    "startGapMm": 38.53
+   },
+   {
+    "cut": 3665,
+    "startGapMm": 103.52
+   },
+   {
+    "cut": 3680,
+    "startGapMm": 82.63
+   },
+   {
+    "cut": 3685,
+    "startGapMm": 101.26
+   },
+   {
+    "cut": 6139,
+    "startGapMm": 104.92
+   },
+   {
+    "cut": 6181,
+    "startGapMm": 103.44
+   },
+   {
+    "cut": 6183,
+    "startGapMm": 108.69
+   },
+   {
+    "cut": 6197,
+    "startGapMm": 88.69
+   },
+   {
+    "cut": 6540,
+    "startGapMm": 39.48
+   },
+   {
+    "cut": 7280,
+    "startGapMm": 46.51
+   },
+   {
+    "cut": 7458,
+    "startGapMm": 55.01
+   },
+   {
+    "cut": 7459,
+    "startGapMm": 53.88
+   },
+   {
+    "cut": 7864,
+    "startGapMm": 88.61
+   },
+   {
+    "cut": 7865,
+    "startGapMm": 84.81
+   },
+   {
+    "cut": 7867,
+    "startGapMm": 55.1
+   },
+   {
+    "cut": 7889,
+    "startGapMm": 100.75
+   },
+   {
+    "cut": 8504,
+    "startGapMm": 199.53
+   },
+   {
+    "cut": 8505,
+    "startGapMm": 202.64
+   },
+   {
+    "cut": 8506,
+    "startGapMm": 206.79
+   },
+   {
+    "cut": 8507,
+    "startGapMm": 208.13
+   },
+   {
+    "cut": 8508,
+    "startGapMm": 209.49
+   },
+   {
+    "cut": 8509,
+    "startGapMm": 207.81
+   },
+   {
+    "cut": 8510,
+    "startGapMm": 209.54
+   },
+   {
+    "cut": 8511,
+    "startGapMm": 211.32
+   },
+   {
+    "cut": 8512,
+    "startGapMm": 212.01
+   },
+   {
+    "cut": 8513,
+    "startGapMm": 211.43
+   },
+   {
+    "cut": 8514,
+    "startGapMm": 212.01
+   },
+   {
+    "cut": 8515,
+    "startGapMm": 208.92
+   },
+   {
+    "cut": 8516,
+    "startGapMm": 207.36
+   },
+   {
+    "cut": 8517,
+    "startGapMm": 211.54
+   },
+   {
+    "cut": 8518,
+    "startGapMm": 214.77
+   },
+   {
+    "cut": 8519,
+    "startGapMm": 219.44
+   },
+   {
+    "cut": 8520,
+    "startGapMm": 218.08
+   },
+   {
+    "cut": 8522,
+    "startGapMm": 214.49
+   },
+   {
+    "cut": 8523,
+    "startGapMm": 211.99
+   },
+   {
+    "cut": 8524,
+    "startGapMm": 208.72
+   },
+   {
+    "cut": 8525,
+    "startGapMm": 212.67
+   },
+   {
+    "cut": 8526,
+    "startGapMm": 211.23
+   },
+   {
+    "cut": 8527,
+    "startGapMm": 213.75
+   },
+   {
+    "cut": 8528,
+    "startGapMm": 223.65
+   },
+   {
+    "cut": 8529,
+    "startGapMm": 228.47
+   },
+   {
+    "cut": 8530,
+    "startGapMm": 228.24
+   },
+   {
+    "cut": 8531,
+    "startGapMm": 221.81
+   },
+   {
+    "cut": 8532,
+    "startGapMm": 214.84
+   },
+   {
+    "cut": 8533,
+    "startGapMm": 212.59
+   },
+   {
+    "cut": 8534,
+    "startGapMm": 215.31
+   },
+   {
+    "cut": 8535,
+    "startGapMm": 214.74
+   },
+   {
+    "cut": 8536,
+    "startGapMm": 208.17
+   },
+   {
+    "cut": 8537,
+    "startGapMm": 204.21
+   },
+   {
+    "cut": 8538,
+    "startGapMm": 202.6
+   },
+   {
+    "cut": 8539,
+    "startGapMm": 198.79
+   },
+   {
+    "cut": 8540,
+    "startGapMm": 199.89
+   },
+   {
+    "cut": 8541,
+    "startGapMm": 200.02
+   }
+  ],
+  "excluded": [],
+  "incompleteLots": [
+   {
+    "label": "p9-4719",
+    "state": "STOPPED"
+   }
+  ],
+  "c5": {
+   "retained": {
+    "guardMm": 30,
+    "chooseMm": 15,
+    "chainMm": 15,
+    "gap": 3,
+    "anchors": 2,
+    "minTop": 5,
+    "minFace": 3,
+    "maxDzMm": 20,
+    "gaugeGuardMm": 20,
+    "gaugeGap": 10,
+    "gaugeCount": 3,
+    "pairGuard": true,
+    "anchorRule": "placed",
+    "crossing": true,
+    "crossingVoieMm": 10,
+    "framed": true,
+    "frameGap": 8,
+    "frameAnchors": 3
+   },
+   "withoutVariationReview": [
+    "frameGap",
+    "frameAnchors",
+    "validatedMinInliers"
+   ],
+   "reviews": [
+    "audit/curseurs-lot-2026-09-24.md",
+    "audit/ecartement-voisin-2026-09-24.md",
+    "audit/appui-pose-2026-09-24.md",
+    "audit/passage-niveau-lecteur-2026-09-25.md",
+    "audit/appuis-valides-2026-09-24.md",
+    "audit/curseurs-c5-4720-2026-09-25.md"
+   ],
+   "decisions": [
+    "D-044 garde de paire",
+    "D-047 chainMm 15",
+    "D-050 garde d’écartement 20 mm et minTop 5",
+    "D-052 appui = cut posé",
+    "D-053 passage à niveau en dernier recours, voie encadrée",
+    "D-054 voisins validés, garde de cohérence",
+    "D-055 gaugeGap, gaugeCount et crossingVoieMm conservés"
+   ],
+   "lotRules": [
+    {
+     "label": "p9-4719",
+     "rules": {
+      "pairGuard": true,
+      "chainMm": 15,
+      "gaugeGuardMm": 20,
+      "minTop": 5,
+      "crossing": true,
+      "framed": true,
+      "anchorRule": "placed",
+      "source": "lot"
+     }
+    }
+   ]
+  }
+ }
+}

@@ -41,6 +41,7 @@ clic droit.
 |---|---|---|
 | 33 (4.7.10, KI-051) | 13 à 21 cm des rails | 8090–8095, retrouvés avec les appuis du lot précédent ; 10 cuts différés en tête du lot 2 (8090–8099) |
 | 2 (4.7.14, KI-054) | gabarit à 1500 mm, 60 à 200 mm des rails ; saut à partir de 113 | 114 et 117–121 : positions justes au rejeu (1,5 à 8,2 mm), vue dépassée de 4 à 11 % (ndc −1,04 à −1,11) |
+| 9 (4.7.18, KI-051) | 18 à 22 cm du rail gauche, 12 à 16 cm du droit (fin de partie) | 8504–8506 trouvés hors de la vue ; vue supposée corrigée, la voie continue : 8507–8526, 19 décidés, 17 justes sur 18 jugés (0,8 à 6,4 mm), le 18e (8516) mal relu ; relecture Natif du 25/09 (`audit/relecture-p9-2026-09-26.md`) |
 
 Dans ces cas, les points étaient dans la capture : seul le clic manquait. Pour
 un écart plus grand, les points du vrai rail peuvent aussi sortir de la
