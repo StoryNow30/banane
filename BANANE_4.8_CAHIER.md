@@ -1660,3 +1660,35 @@ Sur le §2 et l'objectif intermédiaire (80 %) : la partie 9, jamais réglée, e
 à 79,3 % sur le terrain, 82,5 % avec une reprise dans la même page, 89 à 93 %
 hors fin de partie hors vue ; elle deviendra le premier lot de validation dès
 sa relecture. Sur le §15 : P2 toujours à mesurer (outil prêt).
+
+## Amendement n°15 — interface Pilote simplifiée, bornes remplies, premier lot complet
+
+**26 septembre 2026.** Éléments nouveaux : la relecture Natif de la partie 9
+(`audit/relecture-p9-2026-09-26.md`), le premier lot 4.7.20 (partie 12, menée à
+sa borne) et les demandes de la direction sur l'interface (D-056).
+
+### 15.1 Ce qui change
+
+1. **Interface Pilote (D-056)** : réglages du lot fixes (différer, appliquer,
+   tenter), cerveau de placement actif par défaut, détails ouverts par défaut,
+   Assisté retiré de l'interface. Les politiques effectives d'un lot en cours
+   restent affichées (cahier 4.7 §10).
+2. **Bornes remplies par Banane** : premier cut = cut affiché ; dernier cut =
+   fin retenue pour la partie, sinon « fin de partie » (le lot se clôt quand
+   ESV quitte la partie). Modifiables.
+3. **Lot complet** : un lot arrêté sur sa borne (`stoppedAtEnd`) compte comme
+   complet dans le rapport d'acceptation et le rapport de sortie.
+4. **KI-062 corrigé** : un nouveau lot démarre après un lot arrêté sans
+   réinstaller l'extension.
+
+### 15.2 Pourquoi
+
+Terrain du 26/09 : l'opérateur réactivait les mêmes réglages à chaque lot, et
+ne pouvait plus lancer de lot sans réinstaller après un arrêt. Dans un lot
+Pilote GCV1, les réglages retirés ne changeaient pas les positions posées.
+
+### 15.3 Impact
+
+Sur le §2 : premier lot mené à sa borne (partie 12, 79,2 %), à relire pour
+compter en validation. Partie 9 relue en partie : 2 faux sur 66 appliqués
+jugés ; C4 non évaluable (25 % jugés). Moteur et décision sur le lot inchangés.

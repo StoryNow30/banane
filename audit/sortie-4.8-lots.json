@@ -73,6 +73,12 @@
    "role": "couverture",
    "relecture": "aucune",
    "note": "4.7.19, reliquat pur (1,1 cut par suite) ; arrêt KI-061"
+  },
+  {
+   "fichier": "audit/acceptance-p12-2026-09-26-4720-sans-relecture.json",
+   "role": "couverture",
+   "relecture": "aucune",
+   "note": "4.7.20, partie neuve 1–8144, premier lot mené à sa borne (arrêté sur 8144) ; relecture attendue (partie de validation)"
   }
  ],
  "p2": null,
@@ -88,7 +94,7 @@
   "garde d'écartement voisin et lecteur passage à niveau, variation de gaugeGap, gaugeCount, crossingVoieMm : audit/curseurs-c5-4720-2026-09-25.md (D-055)"
  ],
  "conditions": [
-  "Lots de validation : au moins deux lots 4.7.18 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048) ; les lots 4.7.16 et 4.7.17 gardent l'ancienne règle d'appui (D-052). Aucun lot n'a encore atteint sa borne : tous ont été arrêtés par l'opérateur ; la direction doit dire si un lot arrêté compte (par exemple à partir d'un nombre de cuts consécutifs) ou s'il faut le mener à sa borne. La partie 9 (jamais réglée) est relue le 25/09 : premier lot de validation jugé (2 faux sur 66 appliqués jugés, relecture ciblée de fait : 8066–8502 non relus) ; une seconde partie neuve reste à mener.",
+  "Lots de validation : au moins deux lots 4.7.18 ou plus récents sur des parties jamais utilisées, relus (relecture ciblée admise, D-048) ; les lots 4.7.16 et 4.7.17 gardent l'ancienne règle d'appui (D-052). Premier lot mené à sa borne le 26/09 (partie 12, 4.7.20, 84/106 = 79,2 %), à relire ; pour les autres, arrêtés par l'opérateur, la direction doit dire si un lot arrêté compte. La partie 9 (jamais réglée) est relue le 25/09 : premier lot de validation jugé (2 faux sur 66 appliqués jugés, relecture ciblée de fait : 8066–8502 non relus) ; une seconde partie neuve reste à mener.",
   "P2 : 30 cuts replacés à l'aveugle par l'opérateur, pour le plancher humain ; sans lui, aucun chiffre d'erreur n'est publié. Outil prêt en 4.7.20 (tools/p2-plancher.cjs, lu par --p2) : il manque la session terrain.",
   "Seuil C4 de sortie : zéro faux strict, ou faux isolés expliqués tolérés (amendement n°10, point 5).",
   "Cahier consolidé, contrôle Edge de la version candidate, paquet reproductible ; merge, tag et release sur autorisation explicite seulement.",

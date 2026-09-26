@@ -1,59 +1,64 @@
-# Démarrer avec Banane V4.7.20 TEST — interface H, fin de partie, exports
+# Démarrer avec Banane V4.7.21 TEST — nouveau lot, interface simplifiée, mouvement
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.
 
-Installe `banane-v4.7.20-test.zip` dans Edge **par-dessus la 4.7.19** (bouton
+Installe `banane-v4.7.21-test.zip` dans Edge **par-dessus la 4.7.20** (bouton
 « Recharger » de la page des extensions, ou remplacement du dossier) : ne
 supprime pas l'extension, sinon le stockage en cours est perdu. Termine ou
 arrête le lot en cours avant, puis **recharge la page ESV**.
 
-Vérifie **V4.7.20 · TEST** sur l'écran d'accueil de Banane (sous BANANE), et
-**Banane 4.7.20 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres
+Vérifie **V4.7.21 · TEST** sur l'écran d'accueil de Banane (sous BANANE), et
+**Banane 4.7.21 · ouvrir** sur le bouton au bas d'ESV quand toutes les fenêtres
 Banane sont fermées.
 
-## Ce que la 4.7.20 change sur le terrain
+## Ce que la 4.7.21 change sur le terrain
 
-- **L'interface H.** Noir et traits fins (ou clair : bouton soleil/lune en haut
-  à droite). Pilote : l'état, le cut en grand, la plage, trois tuiles (posés,
-  différés, couverture), **la ligne** (un segment par cut), **l'écart à la
-  voie**, l'activité, et en pied un seul bouton plein. Natif : les visites, le
-  **temps par cut** (médiane, p90) et l'activité (validé, corrigé, SKIP).
-  Assisté : le déplacement proposé de chaque rail et l'écartement sur la plage
-  1405–1470. Les boutons, leurs noms et leurs effets sont ceux de la 4.7.19.
-- **Le bandeau dans ESV** (bouton à droite du soleil) : une ligne d'état en bas
-  à gauche de la page ESV, pour suivre le lot sans regarder Banane. Il ne capte
-  aucun clic ; il disparaît quand tu fermes la fenêtre Banane.
-- **Fin de partie (KI-061).** Dans un reliquat, la validation du dernier cut non
-  validé fait passer ESV à la suite, parfois dans la partie suivante : le Pilote
-  ne peut pas le savoir d'avance. Désormais il le **constate** : lot clos, rien
-  n'est traité hors du lot, et le message le dit au lieu d'« Adaptateur sans
-  réponse ». Recharge ESV avant le lot suivant. Si tu vois ce qui se passe à
-  l'écran à ce moment-là (page qui se recharge, autre partie affichée, attente),
-  dis-le-moi.
-- **Exports en plusieurs segments (KI-060)** : chaque segment se relit seul ;
-  tes exports d'avant sont réparés à la lecture.
-- **Reprise des différés** : dans **la même page ESV**, sans la recharger
-  (après un rechargement, les cuts posés du lot précédent changent de repère :
-  Banane refuse la reprise et le dit). Sur la partie 9, une vraie reprise aurait
-  ajouté 11 cuts.
+- **Un nouveau lot sans réinstaller.** Après un lot « Arrêté », « Nouveau lot »
+  gardait les bornes de l'ancien (premier cut 556 alors qu'ESV montrait 715) et
+  Banane refusait : « Ouvre le premier cut du lot dans ESV » (KI-062). Désormais
+  le premier cut est **celui qu'ESV affiche**, et la fin de l'ancien lot est
+  gardée si c'est la même partie. Tu peux toujours saisir d'autres bornes.
+- **Bornes remplies par Banane.** Premier cut : celui qu'ESV affiche. Dernier
+  cut : la fin que Banane a retenue pour la partie (celle que tu as saisie pour
+  un lot précédent, ou le cut après lequel ESV a quitté la partie). S'il n'en
+  connaît pas, le champ reste **vide = fin de partie** : le lot va jusqu'à ce
+  qu'ESV quitte la partie, puis se clôt seul. Tu modifies si besoin. ESV
+  n'affiche pas le dernier cut d'une partie (seulement « Cut N of part P ») :
+  si tu le vois quelque part dans ESV, dis-moi où, je le lirai.
+- **Moins de boutons.** Plus de « Réglages du lot » ni de « Cerveau de
+  placement » : tout ce que tu activais à chaque fois l'est d'office (rail non
+  résolu différé, décision sur le lot appliquée, proposition expérimentale
+  tentée, cerveau actif, sélections autorisées en essai). Dans un lot Pilote,
+  ces réglages ne changeaient d'ailleurs rien aux positions posées (D-056).
+- **Les détails sont ouverts par défaut** : journal, diagnostic GCV1 et corpus
+  GCV1 + LiDAR en un clic, sous la barre d'action (« Masquer » les replie).
+- **Le mode Assisté est retiré** de l'interface (onglet, accueil, section).
+- **Le mouvement.** Plus rien ne clignote. Le grand numéro de cut roule quand
+  le lot avance ; les trois étapes du cut (capture, pose, validation) se
+  remplissent, l'étape en cours parcourue d'un reflet ; sur la ligne, la piste
+  glisse, le cut posé se dresse puis prend sa couleur, un curseur file jusqu'au
+  cut affiché ; le nouvel écart à la voie éclôt sur la courbe ; les chiffres
+  des tuiles montent ; l'activité arrive par le haut ; un trait glisse sous
+  l'onglet actif. À l'ouverture d'une vue, la ligne se dresse en vague.
 - **Ce qui ne change pas** : la décision sur le lot, le moteur, les contrôles
   avant commande, le contrat d'écartement 1405–1470 (jamais une cible), les
   commandes envoyées à ESV.
 
 **Tes prochaines étapes** :
-1. La **relecture Natif de la partie 9** : c'est la partie de validation (jamais
-   réglée). Passe sur chaque cut du lot 4.7.18 et du lot 4.7.19, surtout les
-   passages à niveau (3968–3975, 4890, 8472–8474) et la fin 8504–8541.
-2. Un lot sur une **partie neuve**, suivi d'une **Reprise des différés dans la
-   même page**, sans recharger.
-3. Pour les voisins validés (§14 I, que tu as validé) : dis-moi si ESV permet
-   d'**ouvrir un cut donné** (numéro, cut précédent, cut suivant même validé).
-   C'est ce qui manque au Pilote pour lire la pose des voisins.
+1. **Relire le lot de la partie 12** (4.7.20, 1–8144) : c'est le premier lot
+   mené à sa borne, sur une partie neuve (`audit/lot-4720-p12-2026-09-26.md`).
+2. **Exporter le lot de la partie 11** (celui de ta capture, arrêté au cut 712).
+3. Finir la relecture de la partie 9 (8066–8502, 5151–5192, rail droit de 8516).
 
-En cas de problème, reviens à la 4.7.19 (`RETOUR_ARRIERE.md`).
+En cas de problème, reviens à la 4.7.20 (`RETOUR_ARRIERE.md`).
 
 ## Ce qui change pour toi
+
+**4.7.20 — interface H, fin de partie, exports.** Noir et traits fins (ou
+clair), la ligne, l'écart à la voie, le temps par cut en Natif, le bandeau dans
+ESV ; fin de partie constatée (KI-061) ; exports en segments corrigés (KI-060) ;
+reprise refusée après un rechargement d'ESV.
 
 **4.7.18 — la mémoire du lot ne retient que ce qui est posé.** Le Pilote
 s'appuie sur les cuts voisins pour placer les suivants. Jusqu'ici, un cut qu'il

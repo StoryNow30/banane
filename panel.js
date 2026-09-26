@@ -2,7 +2,59 @@
  const $=id=>document.getElementById(id),edited=new Set();let state=null,working=false,refreshing=false,uiError=null;
  /* 4.7.20 — piste H. Un bloc n'est réécrit que s'il change : le rafraîchissement
   * de chaque seconde ne relance ni les animations ni le clignotement. */
- function poser(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html;}
+ function poser(el,html){if(el&&el.innerHTML!==html){el.innerHTML=html;return true;}return false;}
+ /* 4.7.21 — LE MOUVEMENT (direction, 26/09 : « plus poussé », sans clignotement).
+  * Rien ne tourne en boucle sauf le reflet de l'étape en cours et le point « en
+  * direct ». Chaque autre mouvement suit un événement réel — un cut qui avance,
+  * un chiffre qui change, une ligne d'activité qui arrive — et ne joue qu'une
+  * fois, par l'API Web Animations, sur les seuls éléments neufs : un
+  * rafraîchissement sans changement ne rejoue rien. Figé si le système réduit
+  * les animations. */
+ const bouger=()=>{try{return !globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;}catch{return true;}};
+ const COURBE='cubic-bezier(.2,0,0,1)',REBOND='cubic-bezier(.34,1.56,.64,1)';
+ function animer(el,frames,opts={}){if(!el||typeof el.animate!=='function'||!bouger())return;
+   try{el.animate(frames,{duration:420,easing:COURBE,fill:'backwards',...opts});}catch{/* animation refusée : l'état final est déjà affiché */}}
+ const tous=(el,sel)=>typeof el?.querySelectorAll==='function'?[...el.querySelectorAll(sel)]:[];
+ /* Le grand chiffre roule : seuls les chiffres qui changent montent, en cascade de droite à gauche. */
+ function rouler(el,texte){if(!el)return;texte=String(texte);const d=el.dataset||{},avant=d.v;
+   if(avant===texte)return;el.textContent=texte;d.v=texte;
+   if(avant===undefined||avant==='—'||texte==='—'||typeof el.animate!=='function'||!bouger()||typeof document.createElement!=='function')return;
+   el.textContent='';const n=texte.length;
+   [...texte].forEach((ch,i)=>{const sp=document.createElement('span');sp.className='ch';sp.textContent=ch;el.append(sp);
+     if(avant[avant.length-(n-i)]!==ch)animer(sp,[{transform:'translateY(.55em)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'none'}],{duration:520,delay:(n-1-i)*55,easing:REBOND});});}
+ /* Tuiles : un chiffre qui change monte et se pose. */
+ let tuilesAvant={};
+ function animerTuiles(el,cle){const b=tous(el,'.tuile b'),avant=tuilesAvant[cle]||[],now=b.map(x=>x.textContent);tuilesAvant[cle]=now;
+   b.forEach((x,i)=>{if(avant[i]!==undefined&&avant[i]!==now[i])animer(x,[{transform:'translateY(10px)',opacity:0},{transform:'none',opacity:1}],{duration:480,easing:REBOND});});}
+ /* Activité : les lignes neuves glissent depuis le haut, les autres descendent d'un cran. */
+ let activiteAvant={};
+ function animerActivite(el,cle){const l=tous(el,'.l[data-k]'),avant=activiteAvant[cle],now=l.map(x=>x.dataset.k);activiteAvant[cle]=new Set(now);
+   if(!avant)return;let rang=0;
+   for(const x of l){if(!avant.has(x.dataset.k))animer(x,[{transform:'translateY(-14px)',opacity:0,backgroundColor:'var(--flash)'},{transform:'none',opacity:1,backgroundColor:'transparent'}],{duration:620,delay:rang++*70});
+     else if(rang)animer(x,[{transform:'translateY(-10px)'},{transform:'none'}],{duration:420});}}
+ /* LA LIGNE : la piste glisse quand un cut arrive, le cut posé se dresse puis
+  * prend sa couleur, le curseur file jusqu'au cut affiché, le nouvel écart à
+  * la voie éclôt sur la courbe. */
+ let voieAvant=null;
+ function animerVoie(el,v){const vis=v.cuts.slice(-44),cls=new Map(vis.map(c=>[c,v.classe(c)])),ecarts=new Set(vis.filter(c=>v.ecart(c)!==null));
+   const avant=voieAvant,ia=vis.findIndex(c=>['actuel','incertain'].includes(cls.get(c)));voieAvant={vis,cls,ecarts,ia};
+   if(!avant||!bouger())return;
+   const n=vis.length+(v.ouvert?4:0),pas=372/Math.max(n,1),sortis=avant.vis.filter(c=>!cls.has(c)).length;
+   if(sortis>0)for(const g of tous(el,'g.piste'))animer(g,[{transform:`translateX(${r1(sortis*pas)}px)`},{transform:'none'}],{duration:560});
+   for(const r of tous(el,'rect.t[data-c]')){const c=Number(r.dataset.c),k=cls.get(c);
+     if(avant.cls.get(c)!==k&&k!=='avenir')animer(r,[{transform:'scaleY(.1)',opacity:.3},{transform:'scaleY(1.25)',opacity:1,offset:.6},{transform:'none',opacity:1}],{duration:640,easing:COURBE});}
+   if(ia>=0&&avant.ia>=0){const dx=r1((avant.ia-sortis-ia)*pas);if(dx)for(const g of tous(el,'g.curseur'))animer(g,[{transform:`translateX(${dx}px)`},{transform:'none'}],{duration:600,easing:REBOND});}
+   for(const p of tous(el,'circle.p[data-c]'))if(!avant.ecarts.has(Number(p.dataset.c)))
+     animer(p,[{transform:'scale(0)',opacity:0},{transform:'scale(2.2)',opacity:1,offset:.55},{transform:'none',opacity:1}],{duration:700,delay:200});}
+ /* Les trois étapes du cut courant : faites, en cours (reflet continu), à venir. */
+ const ORDRE_ETAPES=['capture','apply','validate'];
+ function etapes(b,s){const el=$('lot-etapes');if(!el)return;const on=b?.state==='RUNNING'&&!s.reconcileRequired&&ORDRE_ETAPES.includes(b.step);
+   el.hidden=!on;if(!on)return;const k=ORDRE_ETAPES.indexOf(b.step);
+   for(const i of tous(el,'i[data-e]')){const j=ORDRE_ETAPES.indexOf(i.dataset.e);i.className=j<k?'fait':j===k?'actif':'';}}
+ /* Onglets : un trait unique glisse sous l'onglet actif. */
+ function placerIndicateur(){const ind=$('nav-ind'),t=typeof document.querySelector==='function'?document.querySelector('.nav-tab.actif'):null;
+   if(!ind?.style)return;if(!t||!Number.isFinite(t.offsetLeft)){ind.style.opacity='0';return;}
+   ind.style.opacity='1';ind.style.width=t.offsetWidth+'px';ind.style.transform=`translateX(${t.offsetLeft}px)`;$('nav')?.classList?.add?.('ind-pret');}
  const r1=v=>Math.round(v*10)/10,fr1=v=>Number.isFinite(v)?v.toFixed(1).replace('.',','):'—';
  const sg=v=>(v>=0?'+':'−')+fr1(Math.abs(v));
  /* Quantile d'une liste triée, interpolé (médiane : 0,5 ; p90 : 0,9). */
@@ -19,14 +71,15 @@
   * l'accueil laissait deux fenêtres empilées, et la reprise manuelle en ouvrait
   * une troisième. La vue est maintenant un état de CETTE page, porté par le
   * fragment d'URL pour qu'un rechargement la retrouve. */
- const VUES=['home','native','automatic','assisted'];
+ /* 4.7.21 : le mode Assisté est retiré de l'interface (direction, 26/09) ;
+  * un ancien lien « #assisted » ramène à l'accueil. */
+ const VUES=['home','native','automatic'];
  const TITRES={
    home:{titre:'Une tâche, une fenêtre.',intro:'Choisis ce que tu veux faire dans ESV.'},
    native:{titre:'Mode Natif',intro:'Banane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Pilotage automatique',intro:'Choisis une plage, puis suis le lot.'},
-   assisted:{titre:'Essai assisté',intro:'Une proposition sur le cut affiché, à ta demande.'},
  };
- const SOUS={home:'V4.7.20 · TEST',native:'Natif',automatic:'Agent pilote',assisted:'Assisté'};
+ const SOUS={home:'V4.7.21 · TEST',native:'Natif',automatic:'Agent pilote'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -41,12 +94,14 @@
    if($('vue-titre'))$('vue-titre').textContent=t.titre;
    if($('vue-intro'))$('vue-intro').textContent=t.intro;
    if($('connection'))$('connection').hidden=which==='home';
+   placerIndicateur();
  }
  function naviguer(vue,pousser=true){
    if(!VUES.includes(vue)||vue===which)return;
    which=vue;uiError=null;
    if(pousser&&location.hash!=='#'+vue)location.hash='#'+vue;
-   appliquerVue();entree();
+   addEventListener('resize',placerIndicateur);
+ appliquerVue();entree();
    if(state)render(state);
    void discover().catch(()=>{});
    if(which==='native'){renderReglages();void renderHealth();}
@@ -75,7 +130,6 @@
  const openStatus=status=>['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(status);
  const manualActive=s=>openStatus(s.manual?.status),nativeActive=s=>openStatus(s.native?.status),active=s=>manualActive(s)||nativeActive(s);
  const recording=s=>['STARTING','RUNNING'].includes(s.manual?.status)||['STARTING','RUNNING'].includes(s.native?.status);
- function same(a,b){return a&&b&&['pageId','part','cut','shape','frameId'].every(k=>a[k]===b[k]);}
  /* « LA LIGNE » (chantier B, D-045). Un bouton plein par écran : le premier
   * bouton VISIBLE de la liste, dans l'ordre où l'état les rend utiles ; les
   * autres sont des liens. Noir (ink) pour s'arrêter ou constater, rouge pour
@@ -83,7 +137,7 @@
   * visibilité reste décidée par `button()`, comme avant. */
  function hierarchie(ordre,{ink=[],danger=[]}={}){
    let premier=true;
-   for(const id of ordre){const el=$(id);if(!el)continue;
+   for(const id of new Set(ordre)){const el=$(id);if(!el)continue;
      if(!el.hidden&&premier){el.className='primary'+(ink.includes(id)?' ink':'');premier=false;}
      else el.className=danger.includes(id)?'link danger':'link';}
  }
@@ -118,11 +172,15 @@
  function dessinerVoie(v){
    const W=372,visibles=v.cuts.slice(-44),avenir=v.ouvert?4:0,n=visibles.length+avenir,pas=W/Math.max(n,1);
    const X=i=>r1(i*pas+.5),L=r1(Math.max(pas-1,1));
-   let svg=`<svg viewBox="0 0 ${W} 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`;
+   let svg=`<svg viewBox="0 0 ${W} 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g class="piste">`;
+   /* 4.7.21 : chaque traverse porte son cut (entier) pour le mouvement ; à l'ouverture de la vue, elles se dressent en vague. */
    visibles.forEach((c,i)=>{const k=v.classe(c),haut=k==='actuel'||k==='incertain';
-     svg+=`<rect class="t ${k}" x="${X(i)}" y="${haut?6:14}" width="${L}" height="${haut?24:10}"/>`;});
-   for(let i=0;i<avenir;i++)svg+=`<rect class="t avenir" x="${X(visibles.length+i)}" y="14" width="${L}" height="10"/>`;
+     svg+=`<rect class="t ${k}" data-c="${entier(c)}" style="--i:${i}" x="${X(i)}" y="${haut?6:14}" width="${L}" height="${haut?24:10}"/>`;});
+   for(let i=0;i<avenir;i++)svg+=`<rect class="t avenir" style="--i:${visibles.length+i}" x="${X(visibles.length+i)}" y="14" width="${L}" height="10"/>`;
+   svg+='</g>';
    const ia=visibles.findIndex(c=>['actuel','incertain'].includes(v.classe(c)));
+   /* Le curseur : un repère au-dessus du cut affiché, qui file d'un cut à l'autre. */
+   if(ia>=0){const cx=r1(ia*pas+pas/2);svg+=`<g class="curseur ${v.classe(visibles[ia])}"><path d="M${r1(cx-4)},0 L${r1(cx+4)},0 L${cx},4.5 Z"/></g>`;}
    if(visibles.length&&ia!==0)svg+=`<text class="axt" x="0" y="43">${entier(visibles[0])}</text>`;
    if(ia>=0){const k=v.classe(visibles[ia]);
      svg+=`<text class="axt ${k}" x="${r1(ia*pas+pas/2)}" y="43" text-anchor="${ia>=n-3?'end':'middle'}">${entier(visibles[ia])}${k==='incertain'?' ?':''}</text>`;}
@@ -143,7 +201,7 @@
      s+=`<polygon class="aire" points="${Xc(g[0].i)},${bot} ${xy.join(' ')} ${Xc(g.at(-1).i)},${bot}"/><path class="courbe" pathLength="1" d="M${xy.join(' L')}"/>`;}
    for(const p of pts){
      if(p.e===null){if(p.k==='differe')s+=`<rect class="d" x="${r1(Xc(p.i)-1.5)}" y="${bot-6}" width="3" height="6"/>`;continue;}
-     s+=`<circle class="p ${p.e>30?'hors':p.k}" cx="${Xc(p.i)}" cy="${Y(p.e)}" r="${p.e>30?3.5:1.8}"/>`;}
+     s+=`<circle class="p ${p.e>30?'hors':p.k}" data-c="${entier(p.c)}" cx="${Xc(p.i)}" cy="${Y(p.e)}" r="${p.e>30?3.5:1.8}"/>`;}
    const pire=pts.filter(p=>p.e!==null&&p.e>30).at(-1);
    if(pire)s+=`<text class="axt rouge" x="${r1(Math.min(Xc(pire.i)+7,W-110))}" y="${r1(Y(pire.e)+3.5)}">${entier(pire.c)} · ${fr1(pire.e)} mm</text>`;
    if(visibles.length)s+=`<text class="axt" x="0" y="${H-4}">${entier(visibles[0])}</text>`;
@@ -153,7 +211,7 @@
  /* Tuiles : un libellé, un grand chiffre léger, une précision. */
  const tuiles=l=>l.map(([lbl,val,ton,sous])=>`<div class="tuile"><span class="lbl">${esc(lbl)}</span><b${ton?` class="${ton}"`:''}>${esc(val)}</b><small>${esc(sous)}</small></div>`).join('');
  /* Activité : heure, cut, ce qui s'est passé, valeur. */
- const lignes=l=>l.map(x=>`<div class="l"><span class="h">${heure(x.t)}</span><span class="c">${entier(x.c)}</span><span class="quoi${x.k?' '+x.k:''}">${esc(x.quoi)}</span><span class="v">${esc(x.val)}</span></div>`).join('');
+ const lignes=l=>l.map(x=>`<div class="l" data-k="${entier(x.c)}-${x.k||'x'}-${entier(Date.parse(x.t))}"><span class="h">${heure(x.t)}</span><span class="c">${entier(x.c)}</span><span class="quoi${x.k?' '+x.k:''}">${esc(x.quoi)}</span><span class="v">${esc(x.val)}</span></div>`).join('');
  const QUOI={'first-pass':['posé · moteur',''],window:['posé · par la voie','voie-l'],choice:['posé · choix par la voie','voie-l'],crossing:['posé · ornière','voie-l']};
  const COTES={left:'rail gauche',right:'rail droit'};
  function activiteLot(b){
@@ -178,11 +236,6 @@
      etapes:s.reconcileRequired?[['unk','Émise ?'],['unk','Effet non observé'],na]:[['','Émission en cours'],['','Effet attendu'],na]});
    const vu=e=>({effet:e.afterObserved===true?['seen','Effet observé']:e.navigationObserved===true?['done','Navigation observée','État final non relu : ESV a changé de cut avant la relecture.']:['unk','Effet non observé'],
      serveur:e.serverConfirmed===true?['seen','Serveur : confirmé']:na});
-   if(vue==='assisted'){
-     if(s.intent&&['apply','restore'].includes(s.intent.kind))return encours(s.intent);
-     const a=s.applied;if(!a)return null;const v=vu(a);
-     return {nom:NOMS_COMMANDE.apply,cut:a.identity?.cut,etapes:[emise(a.commandSent),v.effet,v.serveur]};
-   }
    const d=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
    if(d)return {nom:'Suivant sans décision',cut:d.identity?.cut,etapes:[emise(d.commandInvoked),['unk','Effet non observé'],na]};
    if(s.intent)return encours(s.intent);
@@ -196,35 +249,15 @@
    /* Libellés fixes, classes fixes : rien de l'état n'est écrit tel quel en HTML. */
    $(prefixe+'-cmd-etapes').innerHTML=c.etapes.map(([k,t,titre],i)=>(i?'<span class="bar-sep"></span>':'')+`<span class="step${k?' '+k:''}"${titre?` title="${titre}"`:''}><i></i>${t}</span>`).join('');
  }
- /* Écartement de la proposition : la plage admissible seule, sans valeur
-  * centrale ni repère à 1435 ; le point dit où tombe la paire. */
- function ecartementHtml(g){
-   const lo=g.contract?.lowMm??1405,hi=g.contract?.maximumMm??1470,mm=Number(g.mm),W=372,pad=4;
-   const X=v=>r1(pad+(Math.min(Math.max(v,lo-8),hi+8)-lo)/(hi-lo)*(W-2*pad));
-   const val=Number.isFinite(mm)?mm.toFixed(1).replace('.',','):'—';
-   return `<p class="tete-bloc"><span class="lbl">Écartement</span><span class="${g.admissible?'ok':'ko'}">${g.admissible?'dans le contrat':'hors contrat : non applicable'}</span></p>`
-     +`<p class="valeur"><b>${val}</b><small>mm</small></p>`
-     +`<svg viewBox="0 0 ${W} 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="plage" x1="${pad}" y1="10" x2="${W-pad}" y2="10"/>`
-     +`<line class="borne" x1="${pad}" y1="5" x2="${pad}" y2="15"/><line class="borne" x1="${W-pad}" y1="5" x2="${W-pad}" y2="15"/>`
-     +(Number.isFinite(mm)?`<g class="pop"><circle class="${g.admissible?'dans':'hors'}" cx="${X(mm)}" cy="10" r="5"/></g>`:'')
-     +`<text class="axt" x="0" y="31">${entier(lo)}</text><text class="axt" x="${W}" y="31" text-anchor="end">${entier(hi)}</text></svg>`;
- }
- /* Déplacement proposé d'un rail : latéral en abscisse, vertical en ordonnée (mm). */
- function deltaSvg(lat,vert){const W=162,H=112,k=4.4,cx=W/2,cy=H/2,b=v=>Math.max(-17,Math.min(17,v)),ex=r1(cx+b(lat)*k),ey=r1(cy-b(vert)*k);
-   let g=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="ax" x1="0" y1="${cy}" x2="${W}" y2="${cy}"/><line class="ax" x1="${cx}" y1="0" x2="${cx}" y2="${H}"/>`;
-   for(const v of [-10,-5,5,10])g+=`<line class="ax2" x1="${r1(cx+v*k)}" y1="${cy-3}" x2="${r1(cx+v*k)}" y2="${cy+3}"/><line class="ax2" x1="${cx-3}" y1="${r1(cy-v*k)}" x2="${cx+3}" y2="${r1(cy-v*k)}"/>`;
-   g+=`<text class="axt" x="${r1(cx+10*k)}" y="${cy+15}" text-anchor="middle">10</text><text class="axt" x="${W}" y="${cy-6}" text-anchor="end">lat.</text><text class="axt" x="${cx+5}" y="10">vert.</text>`;
-   return g+`<path class="fleche" pathLength="1" d="M${cx},${cy} L${ex},${ey}"/><g class="pop"><circle class="bout" cx="${ex}" cy="${ey}" r="3.5"/></g><circle class="origine" cx="${cx}" cy="${cy}" r="1.8"/></svg>`;}
  /* Pastilles d'état sur les onglets : ce qui tourne ou attend ailleurs se voit
   * sans changer de vue. Couleur doublée d'un titre, jamais seule. */
  function etatOnglets(s){
-   const b=s.batch,n=s.native,out={native:null,automatic:null,assisted:null};
+   const b=s.batch,n=s.native,out={native:null,automatic:null};
    if(['STARTING','RUNNING'].includes(n?.status))out.native=['vert','Collecte en cours'];
    else if(['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status))out.native=['ambre','Collecte en pause'];
    if(INCERTAIN.includes(b?.state)||s.reconcileRequired)out.automatic=['rouge','Résultat à contrôler'];
    else if(b?.state==='RUNNING')out.automatic=['vert','Lot en cours'];
    else if(OUVERT.includes(b?.state))out.automatic=['ambre','Lot en pause'];
-   if(s.mode==='assisted'&&s.proposal&&!s.applied&&same(s.proposal?.identity,s.current?.identity))out.assisted=['vert','Proposition prête'];
    return out;
  }
  const NOMS_ETAT={RUNNING:'En cours',PAUSED:'En pause',PAUSED_UNRESOLVED_RAIL:'Rail non résolu',PAUSED_AFTER_STATE_MISSING:'État final manquant',
@@ -266,7 +299,17 @@
      +`<text class="axt" x="0" y="${H-4}">${entier(der[0].c)}</text><text class="axt fort" x="${r1((der.length-.5)*pas)}" y="${H-4}" text-anchor="middle">${entier(der.at(-1).c)}</text></svg>`;
    return g;}
  const ilya=t=>{const s=Math.max(0,Math.round((Date.now()-Date.parse(t))/1000));return !Number.isFinite(s)?'':s<60?`il y a ${s} s`:s<3600?`il y a ${Math.round(s/60)} min`:`il y a ${Math.round(s/3600)} h`;};
- let nouveauLot=false,propositionAffichee=null;const tiroirs={lot:false,native:false};
+ /* 4.7.21 — bornes remplies par Banane : le premier cut est celui qu'ESV
+  * affiche ; le dernier, la fin retenue pour la partie par le service worker
+  * (saisie d'un lot précédent, ou fin constatée quand ESV a quitté la partie),
+  * sinon « fin de partie » (champ vide) : le lot va jusqu'à ce qu'ESV quitte la
+  * partie et se clôt seul. Tout reste modifiable. */
+ const FIN_PARTIE=999999,finDePartie=sc=>sc?.endMode==='partie'||Number(sc?.end)>=FIN_PARTIE;
+ let bornesPartie={part:null,last:null,source:null},bornesDemandees=null;
+ function bornesDe(part){if(!Number.isInteger(part)||bornesDemandees===part)return;bornesDemandees=part;
+   void api('bornes-partie',{part}).then(r=>{bornesPartie={part,last:Number.isInteger(r?.last)?r.last:null,source:r?.source??null};if(state)render(state);}).catch(()=>{bornesDemandees=null;});}
+ /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages). */
+ let nouveauLot=false;const tiroirs={lot:true,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer':'Détails ›';}
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
@@ -280,10 +323,10 @@
    envoyerBandeau(s);
    if(which==='native'){
      const running=['STARTING','RUNNING'].includes(n?.status),paused=['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status),open=nativeActive(s);
-     note(n?.message||'Ouvre le premier cut à observer, puis démarre le mode Natif.',n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
+     note(n?.message||(running?'Collecte en cours : travaille normalement dans ESV.':'Ouvre le premier cut à observer, puis démarre le mode Natif.'),n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
      if(manualActive(s))note('Une session Mes corrections est active. Termine-la avant de démarrer le mode Natif.');
      if(['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer le mode Natif.');
-     $('native-count').textContent=n?.visits.length||0;const count=n?.incomplete.length||0;$('native-incomplete').hidden=!count;
+     rouler($('native-count'),String(n?.visits.length||0));const count=n?.incomplete.length||0;$('native-incomplete').hidden=!count;
      /* Piste H : l'état, la dernière visite, le temps par cut, l'activité. */
      if($('native-etat')){const e=!n?['Aucune collecte','ink']:n.status==='RUNNING'?['Collecte en cours · observation',' live']:n.status==='STARTING'?['Démarrage de la collecte','']
        :n.status==='PAUSED'?['Collecte en pause','amber']:n.status==='PAUSED_ADAPTER_UNRESPONSIVE'?['Adaptateur sans réponse','red']:n.status==='FINISHED'?['Session terminée','ink']:[String(n.status||'—'),'ink'];
@@ -293,7 +336,7 @@
      const tpc=tempsParCut(vis);if($('native-temps-bloc'))$('native-temps-bloc').hidden=!tpc;poser($('native-temps'),tpc);
      const act=vis.slice(-5).reverse().map(x=>({t:x.t,c:x.c,quoi:x.encours?'visite en cours':(ISSUE[x.label]||['visité',''])[0],k:x.encours?'encours':(ISSUE[x.label]||['',''])[1],
        val:x.d===null?'—':x.encours?`${String(Math.floor(x.d/60)).padStart(2,'0')}:${String(Math.floor(x.d%60)).padStart(2,'0')}`:fr1(x.d)+' s'}));
-     if($('native-activite-bloc'))$('native-activite-bloc').hidden=!act.length;poser($('native-activite'),lignes(act));
+     if($('native-activite-bloc'))$('native-activite-bloc').hidden=!act.length;if(poser($('native-activite'),lignes(act)))animerActivite($('native-activite'),'native');
      $('native-incomplete').textContent=`${count} visite(s) partielle(s), conservée(s) avec leur motif.`;
      button('native-start',{hidden:open,disabled:busy||manualActive(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
      $('native-start').textContent=n?.status==='FINISHED'?'Démarrer une nouvelle session':'Démarrer l’observation';
@@ -306,48 +349,46 @@
      if($('native-discard-note'))$('native-discard-note').hidden=!n;
      hierarchie(['native-resume','native-end','native-download','native-start','native-pause']);
    }else if(which==='automatic'){
-     note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||'Choisis les bornes de ton lot TEST.');
-     const running=['RUNNING','PAUSED','STOPPED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state),range=running?b.scope:null;
-     for(const [f,v] of [['start',range?.start??id?.cut],['end',range?.end??id?.cut],['confidence',s.settings?.minConfidence]])if(v!==undefined&&!edited.has(f)&&document.activeElement!==$(f))$(f).value=v;
+     /* 4.7.21 : pendant un lot, l'invite « Choisis les bornes » n'a pas de sens. */
+     note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||(b?.state==='RUNNING'?'Le Pilote enchaîne les cuts : tu peux suivre ici ou dans ESV.'
+       :'Choisis les bornes de ton lot TEST : le premier cut est celui qu’ESV affiche.'));
+     const running=['RUNNING','PAUSED','STOPPED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state);
+     /* 4.7.21 — terrain du 26/09 : après un lot « Arrêté », « Nouveau lot »
+      * gardait les bornes de l'ancien (premier cut 556 quand ESV montrait 715)
+      * et le moteur refusait : « Ouvre le premier cut du lot dans ESV ». Il
+      * fallait réinstaller l'extension. Un nouveau lot part du cut affiché ; il
+      * garde la fin de l'ancien lot dans la même partie si elle est plus loin. */
+     const bornesNeuves=!running||b?.state==='STOPPED'&&nouveauLot,range=bornesNeuves?null:b.scope;
+     bornesDe(id?.part);
+     const memo=bornesPartie.part===id?.part&&bornesPartie.last>=Number(id?.cut)?bornesPartie.last:undefined;
+     const finPrecedente=b?.scope&&b.scope.part===id?.part&&!finDePartie(b.scope)&&Number(b.scope.end)>Number(id?.cut)?b.scope.end:undefined;
+     const finProposee=range?(finDePartie(range)?'':range.end):memo??finPrecedente??'';
+     for(const [f,v] of [['start',range?.start??id?.cut],['end',finProposee]])if(v!==undefined&&!edited.has(f)&&document.activeElement!==$(f))$(f).value=v;
+     if($('bornes-note'))$('bornes-note').textContent=edited.has('end')||edited.has('start')?'Bornes saisies à la main.'
+       :memo!==undefined?`Dernier cut retenu pour la partie ${entier(id?.part)} (${bornesPartie.source==='saisie'?'saisi pour un lot précédent':'ESV a quitté la partie après ce cut'}). Modifiable.`
+       :finPrecedente!==undefined?'Dernier cut du lot précédent. Modifiable.'
+       :'Dernier cut vide : le lot va jusqu’à la fin de la partie, puis se clôt seul. Modifiable.';
      /* La politique du lot est FIGÉE à sa création : tant qu'il vit, le réglage
       * affiché est le sien, pas celui du prochain lot. Un lot antérieur à 4.7
       * n'a pas ce champ et garde la pause historique. */
-     if($('unresolved-policy')){
-       const effective=running?(b.scope?.unresolvedPolicy||'pause'):null;
-       if(effective&&document.activeElement!==$('unresolved-policy'))$('unresolved-policy').value=effective;
-       $('unresolved-policy').disabled=!!running;
-       if($('unresolved-policy-effective')){
-         $('unresolved-policy-effective').hidden=!running;
-         $('unresolved-policy-effective').textContent=running
-           ?`Politique effective de ce lot : ${effective==='defer'?'continuer et différer':'mettre le lot en pause'}.`:'';
-       }
-     }
-     /* Un lot Pilote GCV1 NEUTRALISE la question de faible confiance : la
-      * publication GCV1 est sa propre frontière d'admissibilité, et
-      * background.js force `lowConfidence` à « tenter ». Le réglage choisi
-      * restait alors affiché sans effet. On dit désormais ce qui s'applique
-      * vraiment, comme pour la politique des rails non résolus. */
-     if($('policy-effective')){
-       const demande=running?b.scope?.requestedLowConfidence:null;
-       const applique=running?(b.scope?.lowConfidence||'pause'):null;
-       const nom=v=>v==='attempt'?'tenter la proposition expérimentale':'mettre le lot en pause';
+     /* 4.7.21 : réglages du lot fixes (différer, appliquer, tenter) ; les
+      * sélecteurs sont retirés. Pendant un lot, ses politiques EFFECTIVES,
+      * figées à sa création, restent dites (cahier 4.7 §10, KI-033) : un lot
+      * créé par une version antérieure peut porter d'autres choix. */
+     if($('lot-reglages'))$('lot-reglages').hidden=!!running;
+     const nomPolitique=v=>v==='attempt'?'tenter la proposition expérimentale':'mettre le lot en pause';
+     if($('unresolved-policy-effective')){$('unresolved-policy-effective').hidden=!running;
+       $('unresolved-policy-effective').textContent=running?`Politique effective de ce lot : ${(b.scope?.unresolvedPolicy||'pause')==='defer'?'continuer et différer':'mettre le lot en pause'}.`:'';}
+     /* Un lot Pilote GCV1 NEUTRALISE la question de faible confiance :
+      * background.js force « tenter » et garde le choix demandé à part. */
+     if($('policy-effective')){const demande=running?b.scope?.requestedLowConfidence:null,applique=running?(b.scope?.lowConfidence||'pause'):null;
        $('policy-effective').hidden=!running;
-       $('policy-effective').textContent=!running?''
-         :demande&&demande!==applique
-           ?`Politique effective de ce lot : ${nom(applique)}. Le lot Pilote GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nom(demande)} » ne s’y applique pas.`
-           :`Politique effective de ce lot : ${nom(applique)}.`;
-     }
-     if($('policy')&&running&&b.scope?.lowConfidence&&document.activeElement!==$('policy'))$('policy').value=b.scope.lowConfidence;
-     /* 4.7.10 — décision sur le lot, figée à la création du lot comme les
-      * politiques ci-dessus. Un lot créé avant la 4.7.10 n'a pas ce champ : il
-      * reste en observation. */
-     if($('lot-decision')){
-       const effective=running?(b.scope?.lotDecision==='apply'?'apply':'observe'):null;
-       if(effective&&document.activeElement!==$('lot-decision'))$('lot-decision').value=effective;
-       $('lot-decision').disabled=!!running;
-       if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
-         $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${effective==='apply'?'appliquée':'observée seulement'}.`:'';}
-     }
+       $('policy-effective').textContent=!running?'':demande&&demande!==applique
+         ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Pilote GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
+         :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
+     if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
+     if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
+       $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${b.scope?.lotDecision==='apply'?'appliquée':'observée seulement'}.`:'';}
      const names=NOMS_ETAT;
      // Les cuts repris à la main sont comptés à part : Banane ne les a pas validés.
      const repris=b?.manuallyCompleted?.length?` · ${b.manuallyCompleted.length} repris à la main`:'';
@@ -361,24 +402,28 @@
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';
        $('lot-etat').className='eyebrow'+(ton?' '+ton:'')+(b?.state==='RUNNING'&&!s.reconcileRequired?' live':'');}
-     if($('lot-cut'))$('lot-cut').textContent=entier(b?.activeIdentity?.cut??id?.cut);
-     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`part ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${entier(b.scope.end)}`:'';
+     if($('lot-cut'))rouler($('lot-cut'),entier(b?.activeIdentity?.cut??id?.cut));
+     etapes(b,s);
+     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`part ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
      /* Progression dans la plage du lot : du premier au dernier cut. */
-     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),z=Number(sc?.end),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
+     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
+       /* « Fin de partie » : la progression se mesure sur la fin retenue pour la partie, si elle est connue. */
+       const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:NaN):Number(sc?.end);
        const ok=Number.isFinite(a)&&Number.isFinite(z)&&z>a&&Number.isFinite(c);$('lot-progres').hidden=!ok;
        if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z);$('lot-pct').textContent=`${pct} % de la plage`;}}
+         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');$('lot-pct').textContent=`${pct} % de la plage`;}}
      const v=b?voieDuLot(s):null;
      /* Tuiles : posés, différés, couverture sur les cuts terminés du lot (D-038). */
      if($('lot-compteurs')){$('lot-compteurs').hidden=!v;
        const finis=v?v.fait.size+v.differe.size+v.saute.size+v.main.size:0;
-       poser($('lot-compteurs'),!v?'':tuiles([['Posés',String(v.fait.size),'',v.parVoie.size?`dont ${v.parVoie.size} par la voie`:'par le moteur'],
+       const ecrit=poser($('lot-compteurs'),!v?'':tuiles([['Posés',String(v.fait.size),'',v.parVoie.size?`dont ${v.parVoie.size} par la voie`:'par le moteur'],
          ['Différés',String(v.differe.size),v.differe.size?'amber':'',[v.saute.size?`${v.saute.size} SKIP`:'',v.main.size?`${v.main.size} repris à la main`:''].filter(Boolean).join(' · ')||'à reprendre'],
-         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis}`]]));}
-     if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;poser($('voie'),montrer?dessinerVoie(v):'');
+         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis}`]]));
+       if(ecrit)animerTuiles($('lot-compteurs'),'lot');}
+     if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;if(poser($('voie'),montrer?dessinerVoie(v):'')&&montrer)animerVoie($('voie'),v);
        if($('voie-legende'))$('voie-legende').hidden=!montrer;}
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
-     const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;poser($('lot-activite'),lignes(actLot));
+     const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -413,7 +458,7 @@
      const reprenable=fini&&b?.scope?.geometryEngine==='geometry-candidate-v1'&&differesLot.length>0&&(b.lotPosedCount||0)+(b.lotObservation?.anchors?.length||0)>0
        &&(!id||id.part===b.scope.part);
      if($('lot-reprise-row')){$('lot-reprise-row').hidden=!reprenable||lotOuvert||attendNouveau;if(!reprenable&&$('lot-reprise').checked)$('lot-reprise').checked=false;
-       $('lot-reprise-note').textContent=reprenable?`${differesLot.length} différé(s) dans le lot précédent, du cut ${differesLot[0]} au cut ${differesLot.at(-1)}. Coché : bornes ${differesLot[0]} → ${b.scope.end} ; ouvre le cut ${differesLot[0]} dans ESV. Seuls les cuts posés et validés par le Pilote servent d'appui.`:'';}
+       $('lot-reprise-note').textContent=reprenable?`${differesLot.length} différé(s) dans le lot précédent, du cut ${differesLot[0]} au cut ${differesLot.at(-1)}. Coché : bornes ${differesLot[0]} → ${finDePartie(b.scope)?'fin de partie':b.scope.end} ; ouvre le cut ${differesLot[0]} dans ESV. Seuls les cuts posés et validés par le Pilote servent d'appui.`:'';}
      button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
@@ -440,45 +485,10 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
      /* Règle 4 : un verbe, son objet, et le cut quand l'action le vise. */
      const cutIncertain=differe?.identity?.cut??s.intent?.identity?.cut??b?.activeIdentity?.cut;
      if($('close-uncertain'))$('close-uncertain').textContent='Archiver le résultat interrompu'+(Number.isFinite(Number(cutIncertain))?' · cut '+entier(cutIncertain):'');
-     hierarchie(['close-uncertain','manual-completion','retry','resume','pause',...(fini&&!nouveauLot?['dataset','new-batch','start-batch']:['start-batch','dataset','new-batch']),'manual-takeover','explicit-skip','stop'],
+     /* 4.7.21 : « Nouveau lot » choisi, « Démarrer » devient le bouton plein, avant « Reprendre ». */
+     const demarrer=fini&&nouveauLot?['start-batch']:[];
+     hierarchie(['close-uncertain','manual-completion',...demarrer,'retry','resume','pause',...(fini&&!nouveauLot?['dataset','new-batch','start-batch']:['start-batch','dataset','new-batch']),'manual-takeover','explicit-skip','stop'],
        {ink:['close-uncertain','manual-completion','pause'],danger:['explicit-skip','stop']});
-     /* Terrain, cut 6/4245 : avec « Tenter la proposition expérimentale », le
-      * moteur gelé applique malgré une confiance nulle. Les sélections du
-      * cerveau sont donc coupées dans ce mode — il faut le dire, pas le taire. */
-     if($('brain-policy')){
-       const tente=$('policy')?.value==='attempt', allume=$('brain-toggle')?.checked;
-       const sansPause=$('brain-sanspause')?.checked;
-       if($('brain-sanspause-box'))$('brain-sanspause-box').hidden=!(tente&&allume);
-       $('brain-policy').hidden=!(tente&&allume);
-       $('brain-policy').textContent=sansPause
-         ? 'Mode essai : le pilote appliquera les sélections du cerveau sans te les montrer avant. Chacune reste marquée dans l’export, donc tu pourras vérifier après coup ce qu’il a choisi et pourquoi.'
-         : 'Politique « Tenter » : les sélections du cerveau sont désactivées, car le pilote les appliquerait sans pause. Le biais vertical reste appliqué. Coche ci-dessus pour les autoriser en essai, ou choisis « Mettre le lot en pause » pour les voir avant application.';
-     }
-   }else if(which==='assisted'){
-     note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer une proposition.':s.notice||'Ouvre un cut puis demande une proposition.');
-     button('analyze',{disabled:busy||active(s)});const p=s.mode==='assisted'&&same(s.proposal?.identity,id)&&s.before?s.proposal:null;
-     /* Piste H : l'état, le cut affiché, le déplacement proposé de chaque rail. */
-     if($('assiste-etat')){const e=s.applied&&same(s.applied?.identity,id)?['Proposition appliquée · valide le cut dans ESV','']:p?['Proposition prête','ink']:['Aucune proposition','ink'];
-       $('assiste-etat').textContent=e[0];$('assiste-etat').className='eyebrow'+(e[1]?' '+e[1]:'');}
-     if($('assiste-cut'))$('assiste-cut').textContent=entier(id?.cut);
-     if($('proposals-bloc'))$('proposals-bloc').hidden=!p;if($('assiste-guide'))$('assiste-guide').hidden=!!p;
-     const cleProp=p?JSON.stringify([p.id,...['left','right'].map(k=>[p.rails[k]?.delta,p.rails[k]?.confidence])]):'';
-     if(cleProp!==propositionAffichee){if(cleProp&&propositionAffichee!==null)entree();propositionAffichee=cleProp;
-       $('proposals').replaceChildren();if(p)for(const side of ['left','right']){
-       const fit=p.rails[side],box=document.createElement('div');box.className='proposal';const title=document.createElement('strong');title.textContent=side==='left'?'Rail gauche':'Rail droit';
-       const plot=document.createElement('div'),valeurs=document.createElement('p');valeurs.className='valeurs';
-       if(fit.delta){const lat=fit.delta[1]*1000,vert=fit.delta[2]*1000;plot.innerHTML=deltaSvg(lat,vert);
-         valeurs.innerHTML=`<span><b>${sg(lat)}</b> <small>lat.</small></span><span><b>${sg(vert)}</b> <small>vert.</small></span>`;}
-       else{valeurs.className='vide';valeurs.textContent='Pas de position exploitable.';}
-       const score=document.createElement('p');score.textContent=`Indice LiDAR ${fit.confidence}/100. ${fit.reasons.join(' ')}`;
-       box.append(title,plot,valeurs,score);$('proposals').append(box);
-     }}
-     const g=p&&s.assistGauge&&(s.assistGauge.proposalId==null||s.assistGauge.proposalId===p.id)?s.assistGauge:null;
-     if($('assiste-ecartement')){$('assiste-ecartement').hidden=!g;$('assiste-ecartement').innerHTML=g?ecartementHtml(g):'';}
-     afficherCommande('assiste',commandeDerniere(s,'assisted'));
-     button('accept',{hidden:!p||!!s.applied,disabled:busy||active(s)||Object.values(p?.rails||{}).some(r=>!r.delta)});
-     button('reject',{hidden:!p||!!s.applied,disabled:busy});button('restore',{hidden:!s.applied||s.validationStarted||!same(s.snapshot?.identity,id),disabled:busy||active(s)});
-     hierarchie(['accept','analyze','restore','reject']);
    }
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
    button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
@@ -790,14 +800,20 @@ on('native-discard',async()=>{
   note(`Session abandonnée : ${r.clouds} objet(s) LiDAR, ${r.records} visite(s) et ${r.events} événement(s) supprimés.`);
 });
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
-   await api('settings',{mode:'automatic-test',minConfidence:Number($('confidence').value)});
-   return api('start',{part:state.current.identity.part,start:Number($('start').value),end:Number($('end').value),testConfirmed:true,allowNavigationEvidence:true,
-     lowConfidence:$('policy').value,unresolvedPolicy:$('unresolved-policy')?.value||'defer',lotDecision:$('lot-decision')?.value==='observe'?'observe':'apply',geometryEngine:'geometry-candidate-v1',
+   await api('settings',{mode:'automatic-test'});
+   /* 4.7.21 : réglages fixes — rail non résolu différé, décision sur le lot
+    * appliquée, proposition expérimentale tentée (le lot GCV1 la force déjà).
+    * Premier cut : celui qu'ESV affiche, sauf s'il a été saisi à la main. */
+   const cut=Number(state.current.identity.cut),debut=edited.has('start')?Number($('start').value):cut;
+   const finTexte=String($('end').value??'').trim(),fin=finTexte===''?null:Number(finTexte);
+   if(fin!==null&&(!Number.isInteger(fin)||fin<debut))throw Error('Dernier cut : un numéro égal ou après le premier cut, ou vide pour aller jusqu’à la fin de la partie.');
+   return api('start',{part:state.current.identity.part,start:debut,...(fin===null?{end:FIN_PARTIE,endMode:'partie'}:{end:fin}),testConfirmed:true,allowNavigationEvidence:true,
+     lowConfidence:'attempt',unresolvedPolicy:'defer',lotDecision:'apply',geometryEngine:'geometry-candidate-v1',
      ...($('lot-reprise')?.checked&&!$('lot-reprise-row')?.hidden?{lotReprise:true}:{})});});
  /* Reprise cochée : bornes du premier différé à la fin du lot précédent. */
  if($('lot-reprise'))$('lot-reprise').onchange=()=>{const b=state?.batch,d=(b?.deferred||[]).map(x=>x.identity?.cut).filter(Number.isInteger).sort((x,y)=>x-y);
-   if($('lot-reprise').checked&&d.length){$('start').value=d[0];$('end').value=b.scope.end;edited.add('start');edited.add('end');}};
- for(const id of ['pause','resume','stop','accept','reject','restore','close-uncertain'])on(id,()=>api(id));
+   if($('lot-reprise').checked&&d.length){$('start').value=d[0];$('end').value=finDePartie(b.scope)?'':b.scope.end;edited.add('start');edited.add('end');}};
+ for(const id of ['pause','resume','stop','close-uncertain'])on(id,()=>api(id));
  on('retry',()=>api('retry'));
  /* « Nouveau lot » ne lance rien : il rouvre les bornes et « Démarrer ». */
  if($('new-batch'))$('new-batch').onclick=()=>{nouveauLot=true;edited.delete('start');edited.delete('end');if(state)render(state);};
@@ -811,9 +827,7 @@ on('native-discard',async()=>{
  /* V4.6.0 : l'opérateur déclare avoir traité le cut dans ESV. Banane journalise
   * la reprise sans prétendre l'avoir validée, puis repart au cut suivant. */
  on('manual-completion',()=>api('manual-completion'));
-  on('analyze',async()=>{await api('settings',{mode:'assisted'});return api('analyze');});
  on('dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
-on('assisted-dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
  /* 4.7.19 (KI-059) — EXPORTS DU PILOTE SANS MESSAGE GÉANT.
   * Journal, bilan, diagnostic et corpus passaient en UN message du service
   * worker, limité à 64 Mio : un long lot (65 Ko de journal par cut) l'aurait
@@ -847,44 +861,11 @@ on('assisted-dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
    if(plan.missingCaptureIds.length)note(`Corpus GCV1 exporté ; ${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) sont absentes du store.`,true);
    else note(`Corpus GCV1 exporté : ${plan.cloudIds.length} capture(s) LiDAR.`);
  });
- /* Cerveau : interrupteur explicite, et compte rendu de ce qu'il a fait au
-  * dernier passage. Un post-traitement qu'on ne voit pas agir serait pire que
-  * pas de post-traitement du tout. */
- async function renderCerveau(){
-   if(!$('brain-toggle'))return;
-   try{
-     const b=await api('brain-state');
-     if(document.activeElement!==$('brain-toggle'))$('brain-toggle').checked=b.actif===true;
-     if($('brain-sanspause')&&document.activeElement!==$('brain-sanspause'))
-       $('brain-sanspause').checked=b.autoriserSelectionSansPause===true;
-     const d=b.dernier;
-     $('brain-journal').textContent=!d?''
-       :d.actif!==true?'Dernier passage : le cerveau était éteint.'
-       :d.erreur?`Dernier passage : le cerveau a échoué (${d.erreur}). La proposition du moteur a été rendue telle quelle.`
-       :`Dernier passage : ${Object.entries(d.perRail||{}).map(([c,j])=>`${c==='left'?'gauche':'droite'} — ${j.action}${j.motif?' ('+j.motif+')':''}`).join(' · ')}`;
-   }catch{/* le cerveau peut ne pas être joignable : ce n'est pas bloquant */}
- }
- if($('brain-sanspause'))$('brain-sanspause').onchange=()=>action('brain-sanspause',async()=>{
-   await api('settings',{mode:state?.mode==='assisted'?'assisted':'automatic-test',
-     brainSelectionSansPause:$('brain-sanspause').checked});
-   if(state)render(state);
-   note($('brain-sanspause').checked
-     ? 'Sélections autorisées en mode « Tenter ». À utiliser pour observer le cerveau, pas en production.'
-     : 'Sélections à nouveau réservées au mode « Mettre le lot en pause ».');
- });
- if($('brain-toggle'))$('brain-toggle').onchange=()=>action('brain-toggle',async()=>{
-   await api('settings',{mode:state?.mode==='assisted'?'assisted':'automatic-test',brain:$('brain-toggle').checked});
-   if(state)render(state);
-   await renderCerveau();
-   note($('brain-toggle').checked
-     ? 'Cerveau activé. Chaque proposition qu’il touche est marquée dans l’export.'
-     : 'Cerveau désactivé. Le moteur gelé propose seul.');
- });
  on('journal',async()=>{const name=`banane-journal-v4-${Date.now()}.json`;
    const [meta,events,records]=await Promise.all([api('journal-meta'),lireStore('events'),lireStore('records')]);
    if(events&&records){saveBlob(blobJson(meta,{events,records}),name);note(`Journal exporté : ${events.length} événements, ${records.length} enregistrements.`);return;}
    saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);});
- for(const id of ['start','end','confidence'])if($(id))$(id).oninput=()=>edited.add(id);
+ for(const id of ['start','end'])if($(id))$(id).oninput=()=>edited.add(id);
  /* Thème : celui du système par défaut ; la bascule, instantanée, est gardée pour cette fenêtre. */
  const CLE_THEME='banane.theme',sysSombre=()=>!!globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
  function appliquerTheme(t){const r=document.documentElement;if(r?.dataset){if(t==='light'||t==='dark')r.dataset.theme=t;else delete r.dataset.theme;}
@@ -899,7 +880,6 @@ on('assisted-dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
    const t=state?texteBandeau(state):{texte:'BANANE',ton:''};await api('bandeau',{on:bandeau,text:t.texte,ton:t.ton});if(bandeau)bandeauEnvoye=t.texte+'|'+t.ton;
    note(bandeau?'Bandeau affiché en bas de la page ESV : il suit cette fenêtre et ne capte aucun clic.':'Bandeau retiré de la page ESV.');});
  appliquerVue();entree();
- void renderCerveau();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
  setInterval(()=>{if(!working)void refresh();},1000);
  // Contrôle du volume pendant la collecte : peu fréquent, jamais bloquant.

@@ -4,9 +4,11 @@
    barre d'action en pied. Polices embarquées (fonts/, SIL OFL) : Hanken
    Grotesk pour le texte, JetBrains Mono pour les chiffres ; aucun appel réseau.
    Thème du système par défaut, bascule clair / sombre instantanée, sans fondu.
-   Animations seulement à l'ouverture d'une vue (`body.entree`), sauf le point
-   « en direct » et le cut courant ; tout est figé si le système réduit les
-   animations. Invariants hérités de « la ligne » (D-045) : un bouton plein par
+   4.7.21 : plus rien ne clignote. À l'ouverture d'une vue (`body.entree`), les
+   blocs montent en cascade et la ligne se dresse en vague ; ensuite, chaque
+   mouvement suit un événement (panel.js, API Web Animations) ; en continu,
+   seuls le reflet de l'étape en cours et le point « en direct » ; tout est
+   figé si le système réduit les animations. Invariants hérités de « la ligne » (D-045) : un bouton plein par
    écran, les autres sont des liens ; rouge pour ce qui ne se défait pas. */
 @font-face{font-family:"Hanken Grotesk";src:url(fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url(fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800;font-display:swap}
@@ -14,15 +16,15 @@
  --sans:"Hanken Grotesk","Segoe UI Variable","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
  --bg:#ffffff;--text:#111111;--text-2:#4d4d4d;--text-3:#6b6b6b;--hair:#e6e6e6;--hair-2:#cfcfcf;--field:#f4f4f4;
  --voie:#3e6ae1;--ok:#138a4a;--amber:#b86e00;--red:#d0021b;--seg:#111111;--future:#e2e2e2;--inv:#ffffff;
- --amber-t:rgba(184,110,0,.10);--red-t:rgba(208,2,27,.07)}
+ --amber-t:rgba(184,110,0,.10);--red-t:rgba(208,2,27,.07);--flash:rgba(62,106,225,.10)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;
  --bg:#000000;--text:#ffffff;--text-2:#a6a6a6;--text-3:#8a8a8a;--hair:#262626;--hair-2:#3a3a3a;--field:#111111;
  --voie:#3e6ae1;--ok:#2fd07a;--amber:#f5a524;--red:#ff4d4d;--seg:#ffffff;--future:#2a2a2a;--inv:#000000;
- --amber-t:rgba(245,165,36,.10);--red-t:rgba(255,77,77,.08)}}
+ --amber-t:rgba(245,165,36,.10);--red-t:rgba(255,77,77,.08);--flash:rgba(62,106,225,.18)}}
 :root[data-theme=dark]{color-scheme:dark;
  --bg:#000000;--text:#ffffff;--text-2:#a6a6a6;--text-3:#8a8a8a;--hair:#262626;--hair-2:#3a3a3a;--field:#111111;
  --voie:#3e6ae1;--ok:#2fd07a;--amber:#f5a524;--red:#ff4d4d;--seg:#ffffff;--future:#2a2a2a;--inv:#000000;
- --amber-t:rgba(245,165,36,.10);--red-t:rgba(255,77,77,.08)}
+ --amber-t:rgba(245,165,36,.10);--red-t:rgba(255,77,77,.08);--flash:rgba(62,106,225,.18)}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{margin:0;color:var(--text);font:400 13.5px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;font-synthesis:none}
@@ -48,8 +50,12 @@ main{max-width:560px;margin:auto;padding:0 24px}
 h1{flex-basis:100%;margin:18px 0 0;font-size:24px;font-weight:300;letter-spacing:-.01em;line-height:1.25}
 .intro{flex-basis:100%;margin:2px 0 0;font-size:13.5px;color:var(--text-2)}
 body:not([data-window=home]) h1,body:not([data-window=home]) .intro{display:none}
-.nav{display:flex;gap:24px;margin:18px -24px 0;padding:0 24px;border-bottom:1px solid var(--hair)}
-.nav-tab{position:relative;margin-bottom:-1px;padding:0 0 10px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;font:500 13px var(--sans);color:var(--text-3);cursor:pointer}
+.nav{position:relative;display:flex;gap:24px;margin:18px -24px 0;padding:0 24px;border-bottom:1px solid var(--hair)}
+/* 4.7.21 : un trait unique glisse sous l'onglet actif. */
+.nav-ind{position:absolute;left:0;bottom:-1px;width:0;height:2px;background:var(--text);opacity:0;pointer-events:none;
+ transition:transform .45s cubic-bezier(.2,0,0,1),width .45s cubic-bezier(.2,0,0,1),opacity .2s}
+.nav.ind-pret .nav-tab.actif{border-bottom-color:transparent}
+.nav-tab{position:relative;margin-bottom:-1px;padding:0 0 10px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;font:500 13px var(--sans);color:var(--text-3);cursor:pointer;transition:color .25s}
 .nav-tab:hover{color:var(--text-2)}
 .nav-tab.actif{color:var(--text);border-bottom-color:var(--text)}
 /* Onglets : pastille d'état, doublée d'un titre (vert : en cours ; ambre : en pause ; rouge : à contrôler). */
@@ -71,18 +77,26 @@ body[data-window=home] #notice{display:none}
 .eyebrow.live::before{animation:ring 2.4s ease-out infinite}
 .big,.count{display:flex;align-items:baseline;gap:12px;margin:10px 0 0}
 .big>span,.count strong{font-size:76px;font-weight:300;letter-spacing:-.03em;line-height:.95;color:var(--text)}
+.ch{display:inline-block}
 .big small,.count>span{font-size:14px;font-weight:400;color:var(--text-3)}
 .sous{margin:10px 0 0;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;color:var(--text-2)}
 .progres{margin:14px 0 0}
 .barre{position:relative;height:2px;overflow:hidden;background:var(--hair)}
-.barre i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--text);transform-origin:0 50%}
+.barre i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--text);transform-origin:0 50%;transition:width .9s cubic-bezier(.2,0,0,1)}
+/* Les trois étapes du cut courant : faites (pleines), en cours (reflet qui court), à venir (filet). */
+.etapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 0}
+.etapes i{display:flex;flex-direction:column;gap:6px;font:500 10.5px var(--mono);font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);transition:color .4s}
+.etapes i::before{content:"";display:block;height:3px;border-radius:2px;background:var(--hair);transition:background-color .4s}
+.etapes i.fait{color:var(--text-2)}.etapes i.fait::before{background:var(--text)}
+.etapes i.actif{color:var(--text)}
+.etapes i.actif::before{background:linear-gradient(90deg,var(--hair) 0%,var(--text) 38%,var(--hair) 76%) 0 0/260% 100%;animation:reflet 1.35s linear infinite}
 .progres-l{display:flex;justify-content:space-between;margin:6px 0 0;font-size:12px;color:var(--text-3)}
 .progres-l span:first-child,.progres-l span:last-child{font-family:var(--mono)}
 
 /* --------------------------------------------------------------- tuiles */
 .tuiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:22px -16px 0}
 .tuile{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0 16px;border-left:1px solid var(--hair)}
-.tuile b{font-size:30px;font-weight:300;line-height:1;color:var(--text)}
+.tuile b{font-size:30px;font-weight:300;line-height:1;color:var(--text);transition:color .4s}
 .tuile b.amber{color:var(--amber)}.tuile b.red{color:var(--red)}
 .tuile small{font-size:12px;color:var(--text-3);overflow-wrap:anywhere}
 
@@ -98,7 +112,7 @@ svg .axt{font-family:var(--mono);font-size:10px;fill:var(--text-3)}
 svg .axt.actuel,svg .axt.fort{fill:var(--text)}svg .axt.incertain,svg .axt.rouge{fill:var(--red)}svg .axt.ambre{fill:var(--amber)}
 svg .ax{stroke:var(--hair)}svg .ax2{stroke:var(--hair-2)}
 /* La ligne : un segment par cut, dans l'ordre où le Pilote les a ouverts. */
-.voie .t{fill:var(--seg)}
+.voie .t{fill:var(--seg);transform-box:fill-box;transform-origin:50% 100%;transition:fill .5s}
 .voie .t.moteur{opacity:.55}
 .voie .t.voie-l{fill:var(--voie)}
 .voie .t.differe{fill:var(--amber)}
@@ -106,21 +120,22 @@ svg .ax{stroke:var(--hair)}svg .ax2{stroke:var(--hair-2)}
 .voie .t.skip,.voie .t.main{fill:var(--text-3)}
 .voie .t.avenir{fill:var(--future)}
 .voie .t.actuel{fill:var(--text)}
-.voie .t.actuel,.voie .t.incertain{animation:blink 1.8s ease-in-out infinite}
+/* 4.7.21 : le cut affiché ne clignote plus ; un curseur le désigne et file de cut en cut. */
+.voie .curseur{transform-box:fill-box}.voie .curseur path{fill:var(--text)}.voie .curseur.incertain path{fill:var(--red)}
 /* Écart à la voie : la courbe, la garde de continuité à 30 mm, les différés. */
 .voie .garde{stroke:var(--red);stroke-dasharray:4 4}
 .voie .aire{fill:var(--voie);opacity:.14}
 .voie .courbe{fill:none;stroke:var(--text);stroke-width:1.5;stroke-linejoin:round}
-.voie .p{fill:var(--text)}.voie .p.voie-l{fill:var(--voie)}.voie .p.differe{fill:var(--amber)}.voie .p.hors{fill:var(--red)}
+.voie .p{fill:var(--text);transform-box:fill-box;transform-origin:50% 50%}.voie .p.voie-l{fill:var(--voie)}.voie .p.differe{fill:var(--amber)}.voie .p.hors{fill:var(--red)}
 .voie .d{fill:var(--amber)}
 /* Temps par cut (Natif) : barres, médiane et p90. */
 .graphe .b{fill:var(--text);opacity:.55}.graphe .b.lent{fill:var(--amber);opacity:1}
-.graphe .b.encours{fill:none;stroke:var(--text);animation:blink 1.8s ease-in-out infinite}
+.graphe .b.encours{fill:none;stroke:var(--text)}
 .graphe .med{stroke:var(--text);stroke-dasharray:4 4;opacity:.7}.graphe .p90{stroke:var(--amber);stroke-dasharray:1.5 3}
 
 /* --------------------------------------------------------------- activité */
 .activite{display:flex;flex-direction:column;margin-top:6px}
-.activite .l{display:grid;grid-template-columns:64px 52px minmax(0,1fr) auto;align-items:baseline;gap:0 8px;padding:9px 0;border-top:1px solid var(--hair);font-size:13px}
+.activite .l{border-radius:3px;display:grid;grid-template-columns:64px 52px minmax(0,1fr) auto;align-items:baseline;gap:0 8px;padding:9px 0;border-top:1px solid var(--hair);font-size:13px}
 .activite .h{font-family:var(--mono);font-size:11.5px;color:var(--text-3)}
 .activite .c{font-family:var(--mono);font-weight:500}
 .activite .v{font-family:var(--mono);text-align:right;color:var(--text-2)}
@@ -169,10 +184,11 @@ button:disabled{opacity:.42;cursor:not-allowed}
 :focus-visible{outline:2px solid var(--voie);outline-offset:2px}
 /* Un bouton plein par écran : fond du texte, texte du fond. */
 .primary{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 18px;border:0;border-radius:6px;
- background:var(--text);color:var(--inv);font-size:14px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+ background:var(--text);color:var(--inv);font-size:14px;font-weight:600;letter-spacing:.02em;white-space:nowrap;transition:opacity .2s,transform .15s cubic-bezier(.2,0,0,1)}
 .primary:hover:not(:disabled){opacity:.88}
+.primary:active:not(:disabled){transform:scale(.97)}
 /* Les autres choix : des liens. Rouge pour ce qui ne se défait pas. */
-.link,.secondary{height:auto;padding:4px 2px;border:0;background:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap}
+.link,.secondary{height:auto;padding:4px 2px;border:0;background:none;color:var(--text-2);font-size:13px;font-weight:500;white-space:nowrap;transition:color .2s}
 .link:hover:not(:disabled),.secondary:hover:not(:disabled){color:var(--text);text-decoration:underline;text-underline-offset:3px}
 .danger,.link.danger{padding:4px 2px;border:0;background:none;color:var(--red);font-size:13px;font-weight:500}
 .danger:hover:not(:disabled){text-decoration:underline;text-underline-offset:3px}
@@ -187,8 +203,9 @@ button:disabled{opacity:.42;cursor:not-allowed}
 
 /* ---------------------------------------------------------------- accueil */
 .choices{display:grid;margin:8px 0 18px}
-.choice{display:flex;flex-direction:column;gap:3px;width:100%;padding:16px 0;text-align:left;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--text-2);font-size:13px;line-height:1.5}
-.choice:hover{color:var(--text)}
+.choice{display:flex;flex-direction:column;gap:3px;width:100%;padding:16px 0;text-align:left;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--text-2);font-size:13px;line-height:1.5;transition:color .25s,padding-left .35s cubic-bezier(.2,0,0,1)}
+.choice:hover{color:var(--text);padding-left:8px}
+.choice-title span{display:inline-block;transition:transform .35s cubic-bezier(.2,0,0,1)}.choice:hover .choice-title span{transform:translateX(4px)}
 .choice-title{font-size:17px;font-weight:500;color:var(--text)}
 .choice-title span{color:var(--text-3)}
 
@@ -198,6 +215,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
 #lot-decision-effective,#unresolved-policy-effective,#policy-effective{margin:3px 0 0;font-size:12px}
 #lot-activite-bloc+#lot-decision-effective,#ligne-bloc+#lot-decision-effective{margin-top:16px}
 .tiroir{margin-top:4px}
+.tiroir>.lbl{margin:18px 0 4px}.tiroir .row .secondary{padding-left:0}.reglages-titre{margin-top:18px!important}
 .range{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 4px}
 label{display:flex;flex-direction:column;gap:6px;margin:12px 0 0;font-size:12.5px;color:var(--text-2)}
 input,select{width:100%;height:40px;padding:0 10px;border:1px solid var(--hair-2);border-radius:6px;background:var(--field);color:var(--text)}
@@ -242,10 +260,12 @@ footer{margin:22px 0 0;padding:12px 0 20px;border-top:1px solid var(--hair)}
 #brain-caveat{color:var(--text-2)}
 
 /* ------------------------------------------------------------- animations */
-/* Une seule fois, à l'ouverture d'une vue : les blocs montent en cascade
-   (70 ms d'écart), la barre de progression se remplit, les barres montent, la
-   courbe se trace, les flèches se tracent, le point d'écartement apparaît. En
-   continu : le point « en direct » pulse et le cut courant clignote doucement. */
+/* À l'ouverture d'une vue : les blocs montent en cascade (70 ms d'écart), les
+   tuiles une à une, la ligne se dresse en vague de gauche à droite et son
+   curseur tombe en place, la barre de progression se remplit, les barres du
+   temps par cut montent, la courbe se trace, les points éclosent, l'activité
+   descend ligne à ligne. En continu : le point « en direct » et le reflet de
+   l'étape en cours. Le reste suit les événements (panel.js). */
 @media (prefers-reduced-motion:no-preference){
  body.entree .rise{animation:rise .5s cubic-bezier(.2,0,0,1) both}
  body.entree .d0{animation-delay:0ms}body.entree .d1{animation-delay:70ms}body.entree .d2{animation-delay:140ms}body.entree .d3{animation-delay:210ms}
@@ -255,6 +275,16 @@ footer{margin:22px 0 0;padding:12px 0 20px;border-top:1px solid var(--hair)}
  body.entree .aire{animation:fade .9s ease-out .8s both}
  body.entree .grow{transform-box:fill-box;transform-origin:50% 100%;animation:grow .5s cubic-bezier(.2,0,0,1) both}
  body.entree .pop{transform-box:fill-box;transform-origin:50% 50%;animation:pop .45s cubic-bezier(.2,0,0,1) .8s both}
+ body.entree .tuiles .tuile{animation:rise .55s cubic-bezier(.2,0,0,1) both}
+ body.entree .tuiles .tuile:nth-child(1){animation-delay:300ms}body.entree .tuiles .tuile:nth-child(2){animation-delay:380ms}body.entree .tuiles .tuile:nth-child(3){animation-delay:460ms}
+ body.entree .voie .t{animation:dresse .6s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(260ms + var(--i,0) * 11ms)}
+ body.entree .voie .curseur{animation:tombe .55s cubic-bezier(.34,1.56,.64,1) .8s both}
+ body.entree .voie .p{animation:pop .5s cubic-bezier(.34,1.56,.64,1) 1.1s both}
+ body.entree .activite .l{animation:rise .5s cubic-bezier(.2,0,0,1) both}
+ body.entree .activite .l:nth-child(1){animation-delay:520ms}body.entree .activite .l:nth-child(2){animation-delay:590ms}body.entree .activite .l:nth-child(3){animation-delay:660ms}
+ body.entree .activite .l:nth-child(4){animation-delay:730ms}body.entree .activite .l:nth-child(5){animation-delay:800ms}
+ body.entree .etapes i::before{animation:fill .7s cubic-bezier(.2,0,0,1) .35s both;transform-origin:0 50%}
+ body.entree .etapes i.actif::before{animation:fill .7s cubic-bezier(.2,0,0,1) .35s both,reflet 1.35s linear 1.05s infinite}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}}
@@ -263,7 +293,9 @@ footer{margin:22px 0 0;padding:12px 0 20px;border-top:1px solid var(--hair)}
 @keyframes fade{from{opacity:0}}
 @keyframes grow{from{transform:scaleY(0)}}
 @keyframes pop{from{opacity:0;transform:scale(.3)}}
-@keyframes blink{50%{opacity:.3}}
+@keyframes dresse{from{transform:scaleY(0);opacity:0}}
+@keyframes tombe{from{transform:translateY(-8px);opacity:0}}
+@keyframes reflet{from{background-position:100% 0}to{background-position:-160% 0}}
 @keyframes ring{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 
 @media (max-width:400px){main{padding:0 16px}.nav{gap:18px;margin:18px -16px 0;padding:0 16px}

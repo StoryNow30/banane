@@ -1,5 +1,29 @@
 # Décisions techniques
 
+## D-056 - Interface Pilote simplifiée : réglages fixes, cerveau actif, détails ouverts, Assisté retiré, bornes remplies (4.7.21)
+
+**26 septembre 2026, direction.** « Je ne devrais plus avoir à activer par
+défaut le cerveau de placement, le mode tenter (essai), tenter la proposition
+expérimentale… pour moi tout cela j'active par défaut à chaque fois » ;
+« afficher par défaut les détails » ; « on peut supprimer le mode assisté » ;
+« que Banane remplisse automatiquement le premier et dernier cut d'une partie
+[…] si j'ai besoin de modifier, je modifie ».
+
+- **Réglages du lot fixes** : rail non résolu différé, décision sur le lot
+  appliquée, proposition expérimentale tentée (le lot GCV1 la forçait déjà,
+  KI-033). Sélecteurs et seuil retirés ; pendant un lot, ses politiques
+  effectives restent affichées (cahier 4.7 §10).
+- **Cerveau de placement actif par défaut**, sélections autorisées en essai.
+  Constat : dans un lot Pilote GCV1 il ne change pas les positions posées (la
+  sélection est celle de GCV1) ; il agit sur la proposition V4.6 consignée.
+- **Détails ouverts par défaut** (journal, diagnostic et corpus GCV1).
+- **Assisté retiré de l'interface** ; le moteur garde le mode (épinglé).
+- **Bornes remplies par Banane** : premier cut = celui qu'ESV affiche ; dernier
+  cut = fin retenue pour la partie (saisie d'un lot précédent, ou fin
+  constatée quand ESV a quitté la partie), sinon « fin de partie » : le lot va
+  jusqu'à ce qu'ESV quitte la partie et se clôt seul (KI-061). Modifiables.
+- Ni le moteur ni la décision sur le lot (`lot-decision-v6`) ne changent.
+
 ## D-055 - Bilan C5 : `gaugeGap`, `gaugeCount` et `crossingVoieMm` conservés
 
 **25 septembre 2026.** Les trois réglages sans bilan de variation (C5, rapport

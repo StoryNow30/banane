@@ -6,13 +6,13 @@
  * banc qui publie la science de la fixture à chaque armement. */
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('../fixtures.cjs');
-function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={}}={}){let onMessage;
+function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={}}={}){let onMessage;const memoire={};/* chrome.storage.local simulé : ce qui est écrit se relit (4.7.21, fins de partie). */
  store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];
  const ctx={URL,console,setTimeout,clearTimeout,importScripts:()=>{},BananeEngine3:require('../../src/engine.js'),BananeManualSession4:require('../../src/manual-session.js'),
   BananeNativeSession4:require('../../src/native-session.js'),BananeGCV1Export:require('../../src/gcv1-export.js'),BananeStorage3:class{constructor(){return store;}},
   BananeGeometryBrain:require('../../src/geometry-brain.js'),BananeGCV1Shadow:shadow,...globals,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:()=>{}}},
-   action:{onClicked:{addListener:()=>{}}},storage:{local:{get:async()=>({}),set:async()=>{}}},
+   action:{onClicked:{addListener:()=>{}}},storage:{local:{get:async k=>{const l=typeof k==='string'?[k]:Array.isArray(k)?k:Object.keys(memoire);return Object.fromEntries(l.filter(x=>x in memoire).map(x=>[x,memoire[x]]));},set:async o=>{Object.assign(memoire,o);}}},
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),
     query:async({url}={})=>!url?[{id:1,url:'https://esv.lidar.altametris.xyz/rails_validation/test',title:'ESV TEST'}]:Array.isArray(url)||url.startsWith('chrome-extension:')?[]:[{id:1,title:'ESV TEST'}],
     sendMessage:async(id,m)=>m.kind==='launcher-visibility'?null:({result:await adapter[m.action](...m.args)}),onRemoved:{addListener:()=>{}}},

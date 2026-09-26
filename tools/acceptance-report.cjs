@@ -51,6 +51,12 @@ const SIDES=['left','right'],WRONG_MM=10,MATCH_MM=1,ROTATION_TOLERANCE=1e-6;
  * rapporté, mais il ne compte pas pour l'objectif, fixé sur des lots complets
  * (D-038). Décision de la direction du 24/09, relecture du chantier 4. */
 const MIN_JUDGED_SHARE=0.8,COMPLETE_STATES=new Set(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
+/* 4.7.21 — un lot ARRÊTÉ À SA BORNE est complet : depuis la 4.7.19 (D-053), le
+ * Pilote s'arrête sur le dernier cut du lot sans le valider, et depuis la
+ * 4.7.20 (KI-061) il se clôt quand ESV sort de la plage ; l'état est alors
+ * « STOPPED » avec `stoppedAtEnd`. Premier cas : partie 12, 4.7.20, 1–8144,
+ * arrêté sur 8144 le 26/09. Un lot arrêté par l'opérateur, lui, reste incomplet. */
+const lotComplete=batch=>!batch?null:COMPLETE_STATES.has(batch.state)||batch.state==='STOPPED'&&!!batch.stoppedAtEnd;
 /* CONVENTION DES OPÉRATEURS (direction, 24/09, D-040) : un cut visité sans
  * correction ni validation est jugé bon et bien placé. Une visite sans
  * validation où la pose n'a pas bougé vaut donc acceptation de cette pose, si
@@ -424,7 +430,7 @@ function analyseLot(lot,options={}){
   }
   const consistency=lot.journal?{journalCompleted:lot.journal.closureSummary?.completed??null,journalDeferred:lot.journal.closureSummary?.deferred??null,
     applied:rows.filter(r=>r.outcome==='applied').length,deferredOrRefused:rows.filter(r=>r.outcome==='deferred'||r.outcome==='gauge-rejected'||r.reason==='différé-sans-point-lidar').length}:null;
-  return {label:lot.label,complete:ctx.batch?COMPLETE_STATES.has(ctx.batch.state):null,batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
+  return {label:lot.label,complete:lotComplete(ctx.batch),batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
       unresolvedPolicy:ctx.batch.scope?.unresolvedPolicy??null,startedAt:ctx.batch.startedAt??null}:null,
     version:lot.diagnostic?.version??lot.journal?.version??null,observationsOutsideLot:ctx.observationsOutsideLot,
     relecture:lot.relecture?{...lot.relectureMerge,frame}:null,corpusSegments:lot.corpusSegments??null,
@@ -577,4 +583,4 @@ function run(argv=process.argv.slice(2)){
   return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={versionAtLeast,rulesFor,lotRules,simulatedCommand,placement,ANCHOR_RULE,EXCLUDED,WRONG_MM,kindOf,loadLot,lotCuts,pilotOutcome,frameTranslation,poseResidual,errorsOf,replayLot,analyseLot,summarize,report,toMarkdown,run};
+module.exports={lotComplete,versionAtLeast,rulesFor,lotRules,simulatedCommand,placement,ANCHOR_RULE,EXCLUDED,WRONG_MM,kindOf,loadLot,lotCuts,pilotOutcome,frameTranslation,poseResidual,errorsOf,replayLot,analyseLot,summarize,report,toMarkdown,run};

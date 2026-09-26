@@ -1,8 +1,20 @@
 # État du projet Banane
 
 Date : 26 septembre 2026  
-Version active de l'extension : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
+Version active de l'extension : **4.7.21 TEST** (nouveau lot corrigé, KI-062 ; bornes remplies par Banane ; réglages fixes et cerveau actif, D-056 ; Assisté retiré ; mouvement sans clignotement). Précédente : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.7.21
+
+Correctif du démarrage d'un nouveau lot après un lot arrêté (KI-062) ; bornes
+remplies par Banane (fin retenue par partie, sinon « fin de partie ») ; réglages
+du lot fixes, cerveau actif par défaut, détails ouverts, Assisté retiré (D-056) ;
+mouvement refait, sans clignotement. Moteur et décision sur le lot inchangés.
+
+Premier lot 4.7.20 (partie 12, neuve, 1–8144) : **premier lot mené à sa borne**,
+84/106 (79,2 %), parité 106/106, 8 paires refusées, aucune hors contrat
+appliquée ; 10 différés d'affilée en 7852–7861 (paires trop étroites, sans
+appui). Sans relecture (`audit/lot-4720-p12-2026-09-26.md`).
 
 ## État 4.7.20
 

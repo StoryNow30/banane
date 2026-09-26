@@ -1,5 +1,35 @@
 # Banane V4 TEST — journal des versions
 
+## 4.7.21 — nouveau lot, interface simplifiée, bornes remplies, mouvement, 26 septembre 2026
+
+**Ce n'est pas une release.** La release officielle reste la 4.7.0.
+
+- **KI-062** : après un lot « Arrêté », « Nouveau lot » gardait les bornes de
+  l'ancien et le moteur refusait de démarrer ; il fallait réinstaller. Le
+  premier cut est maintenant celui qu'ESV affiche ; « Démarrer » devient le
+  bouton plein.
+- **Bornes remplies par Banane** (D-056) : dernier cut retenu par partie (fin
+  saisie, ou fin constatée quand ESV quitte la partie), sinon « fin de partie »
+  (`endMode:'partie'`, borne 999999) : le lot avance jusqu'à ce qu'ESV quitte
+  la partie, puis se clôt seul. Nouvelle action `bornes-partie`.
+- **Réglages fixes** (D-056) : différer, appliquer, tenter ; cerveau de
+  placement actif par défaut, sélections autorisées en essai. Les sélecteurs
+  « Réglages du lot » et « Cerveau de placement » sont retirés ; les politiques
+  effectives d'un lot en cours restent affichées.
+- **Détails ouverts par défaut** : journal, diagnostic GCV1, corpus GCV1 + LiDAR.
+- **Assisté retiré** de l'interface (onglet, accueil, section).
+- **Mouvement** : plus aucun clignotement. Numéro de cut qui roule, étapes du
+  cut (capture, pose, validation) avec un reflet sur l'étape en cours, piste
+  qui glisse, cut posé qui se dresse, curseur qui file jusqu'au cut affiché,
+  écart qui éclôt, chiffres des tuiles qui montent, activité qui arrive par le
+  haut, trait sous l'onglet actif ; à l'ouverture, la ligne se dresse en vague.
+  API Web Animations, sur les seuls éléments neufs ; figé si le système réduit
+  les animations.
+- **Outils** : un lot arrêté à sa borne compte comme complet
+  (`acceptance-report.cjs`, rapport de sortie) ; premier cas : partie 12,
+  4.7.20 (`audit/lot-4720-p12-2026-09-26.md`).
+- Moteur et décision sur le lot inchangés.
+
 ## 4.7.20 — interface H, export segmenté, fin de partie, 25 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

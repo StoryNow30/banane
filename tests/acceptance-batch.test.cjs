@@ -11,3 +11,8 @@ test('--batch : seules les observations du lot désigné ; les autres sont compt
   const journal={state:{batch:{id:'b3',processed:[]}}};
   assert.deepEqual(A.lotCuts(diagnostic,journal,'b9').cuts.map(c=>c.cut),[50],'le journal prime sur --batch');
 });
+test('lot complet : terminé, ou arrêté à sa borne (4.7.19 et suivantes) ; arrêté par l\'opérateur : incomplet',()=>{
+  assert.equal(A.lotComplete({state:'COMPLETED'}),true);assert.equal(A.lotComplete({state:'FINISHED_WITH_UNCONFIRMED_ACTIONS'}),true);
+  assert.equal(A.lotComplete({state:'STOPPED',stoppedAtEnd:{cut:8144,applied:false}}),true,'partie 12, 4.7.20 : arrêté sur son dernier cut');
+  assert.equal(A.lotComplete({state:'STOPPED'}),false);assert.equal(A.lotComplete({state:'RUNNING'}),false);assert.equal(A.lotComplete(null),null);
+});

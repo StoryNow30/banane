@@ -22,7 +22,7 @@ const FINI=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
 function lotRow(entry,report){
   const lot=report.lots[0],t=report.total;
   return {label:lot.label,partie:lot.batch?.part??null,version:lot.version??null,role:entry.role,relecture:entry.relecture,note:entry.note||'',
-    etat:lot.batch?.state??null,complet:FINI.includes(lot.batch?.state),
+    etat:lot.batch?.state??null,complet:typeof lot.complete==='boolean'?lot.complete:FINI.includes(lot.batch?.state),
     c1:{appliques:t.c1.applied,cuts:t.c1.distinctCuts,pct:t.c1.coveragePct},
     c4:{faux:t.c4.wrong,juges:t.c4.judgedApplied,evaluable:!!t.c4.evaluable,partJugee:t.c4.judgedSharePct??null,
       nommes:(t.c4.wrongCuts||[]).map(w=>({cut:w.cut,pireMm:w.worstMm}))},

@@ -54,7 +54,7 @@ test('Natif : temps par cut sur les visites terminées, médiane et p90, activit
     label:['VALIDATE_NO_MOVEMENT','VALIDATE_CORRECTED_BOTH','SKIP','VALIDATE_NO_MOVEMENT',null][i],...(i<4?{endedAt:iso(s+5)}:{})}));
   const {$}=await panneau({native:{status:'RUNNING',visits,incomplete:[]},current:{identity:{part:34,cut:8454}}},'#native');
   assert.equal($('native-etat').textContent,'Collecte en cours · observation');assert.equal($('native-etat').className,'eyebrow live');
-  assert.equal($('native-count').textContent,5);assert.match($('native-derniere').textContent,/^Dernière · 8454 · en cours$/);
+  assert.equal($('native-count').textContent,'5');assert.match($('native-derniere').textContent,/^Dernière · 8454 · en cours$/);
   const g=$('native-temps').innerHTML;assert.equal($('native-temps-bloc').hidden,false);
   assert.equal((g.match(/class="b[ "]/g)||[]).length,5,'quatre visites terminées et la visite en cours');
   assert.equal((g.match(/class="b lent/g)||[]).length,1,'au-delà du p90 : 12 s');assert.match(g,/médiane 9,0 s/);assert.match(g,/p90 11,4 s/);

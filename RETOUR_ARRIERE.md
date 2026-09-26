@@ -1,17 +1,24 @@
 # Procédure de retour arrière — Banane 4.7.0
 
-**Sur le terrain, la dernière version éprouvée est la 4.7.19** (25/09, trois
-lots Pilote : partie 9 sur les différés, partie 6). En cas de problème sur le
-terrain avec la 4.7.20, revenir à la **4.7.19**, commit `a58c048` (paquet
-`banane-v4.7.19-test.zip`, SHA-256 `c2430279…0a1d65`). Terminer ou arrêter le
-lot en cours d'abord. La 4.7.19 garde KI-060 (export en segments : premier nuage
-des segments 2 et suivants mal référencé, réparé à la lecture par les outils) et
-KI-061 (fin de partie : « Adaptateur sans réponse »).
+**Sur le terrain, la dernière version éprouvée est la 4.7.20** (26/09, deux
+lots Pilote : partie 12 menée à sa borne, partie 11). En cas de problème sur le
+terrain avec la 4.7.21, revenir à la **4.7.20**, commit `f859d8f` (paquet
+`banane-v4.7.20-test.zip`, SHA-256 `b3a679da…a3572f4cb`). Terminer ou arrêter le
+lot en cours d'abord. La 4.7.20 garde KI-062 (après un lot arrêté, « Nouveau
+lot » garde les bornes de l'ancien : saisir le premier cut à la main, celui
+qu'ESV affiche) et les réglages du lot à cocher.
 
 ```bash
-git archive a58c048 | tar -x -C /tmp/banane-4.7.19
-cd /tmp/banane-4.7.19 && python3 tools/package.py --output /tmp/banane-v4.7.19-test.zip
+git archive f859d8f | tar -x -C /tmp/banane-4.7.20
+cd /tmp/banane-4.7.20 && python3 tools/package.py --output /tmp/banane-v4.7.20-test.zip
 ```
+
+**Depuis la 4.7.21**, la cible de retour est donc la **4.7.20**. La 4.7.21
+corrige le démarrage d'un nouveau lot (KI-062), fixe les réglages du lot et
+active le cerveau par défaut (D-056), ouvre les détails par défaut, retire
+l'Assisté de l'interface et refait le mouvement. Le moteur et la décision sur le
+lot (`lot-decision-v6`) ne changent pas : un lot se reprend d'une version à
+l'autre.
 
 **Depuis la 4.7.20**, la cible de retour est donc la **4.7.19**. La 4.7.20
 change l'interface (piste H), ajoute le bandeau dans ESV, corrige l'écriture des

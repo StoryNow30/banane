@@ -11,7 +11,7 @@ class EngineGCV1 extends Engine{async analyze(...a){const p=await super.analyze(
   for(const s of SIDES)if(p?.rails?.[s])p.rails[s].geometryEngine='geometry-candidate-v1';return p;}}
 /* `decision` : module de décision injecté (réel, espion ou factice). `start`
  * seulement : l'essai conduit lui-même la suite (`b.settle()`). */
-async function pilote(decision,{start=100,end=101,policy='defer',lotDecision='apply',settings=require('../../src/settings.js'),esv=null}={}){
+async function pilote(decision,{start=100,end=101,endMode=null,policy='defer',lotDecision='apply',settings=require('../../src/settings.js'),esv=null}={}){
   const b=background({shadow:gcv1Shadow(science),globals:{BananeLotDecision:decision,BananeSettings:settings,BananeCore3:K,BananeEngine3:{Engine:EngineGCV1}}});
   // `esv` : réglage de l'ESV simulé avant le lot (navigation, silence…).
   if(esv)esv(b.adapter);
@@ -20,7 +20,7 @@ async function pilote(decision,{start=100,end=101,policy='defer',lotDecision='ap
   const applied=[],apply=b.adapter.apply.bind(b.adapter);
   b.adapter.apply=async(before,proposals)=>{applied.push(K.clone(proposals));return apply(before,proposals);};
   await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
-  await b.api('start',{part:23,start,end,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',
+  await b.api('start',{part:23,start,end,...(endMode?{endMode}:{}),testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',
     geometryEngine:'geometry-candidate-v1',unresolvedPolicy:policy,lotDecision});
   return {b,captured,applied,observed:()=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>e.lotObservation)};
 }

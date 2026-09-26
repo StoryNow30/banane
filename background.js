@@ -14,7 +14,14 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.20';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.7.21';
+/* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
+ * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
+ * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
+ * Pilote GCV1, il ne touche pas les positions posées (la sélection est celle
+ * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
+ * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
+BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
@@ -78,6 +85,19 @@ function stopAtLotEnd(proposal){
    :`Dernier cut du lot (${cut}) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.`;
  return true;
 }
+/* 4.7.21 — BORNES DU LOT REMPLIES PAR BANANE (direction, 26/09 : « ne pas
+ * m'embêter à remplir à chaque fois »). ESV n'affiche que « Cut N of part P » :
+ * le dernier cut d'une partie ne se lit nulle part. Banane retient donc, par
+ * partie, la fin connue : celle que tu as saisie pour un lot, ou le cut après
+ * lequel ESV a quitté la partie (fin constatée). Sans fin connue, le lot va « à
+ * la fin de la partie » (`endMode:'partie'`, borne FIN_PARTIE) : il avance
+ * jusqu'à ce qu'ESV quitte la partie, puis se clôt seul (KI-061). Une valeur
+ * par défaut, jamais imposée : le panneau la propose, tu la modifies. Clé : le
+ * numéro de partie (ESV ne donne pas le projet). */
+const FIN_PARTIE=999999,CLE_PARTIES='banane4Parties';
+async function finsParties(){try{return (await chrome.storage.local.get(CLE_PARTIES))?.[CLE_PARTIES]||{};}catch{return {};}}
+async function retenirFinPartie(part,cut,source){if(!Number.isInteger(part)||!Number.isInteger(cut)||cut<0||cut>=FIN_PARTIE)return;
+ try{const t=await finsParties();t[part]={last:cut,source,at:new Date().toISOString()};await chrome.storage.local.set({[CLE_PARTIES]:t});}catch{/* mémoire indisponible : le panneau proposera « fin de partie » */}}
 /* 4.7.20 (KI-061) — FIN DE PARTIE APRÈS UNE VALIDATION. Dans un reliquat, le
  * dernier cut non validé du lot n'est pas `scope.end` : sa validation fait
  * charger par ESV le cut non validé suivant, au besoin dans la partie suivante,
@@ -96,7 +116,9 @@ async function closeAtExit(reason,last,next){const b=engine.s.batch;last=last??b
  engine.s.notice=reason==='adapter-lost-after-navigation'
    ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
    :`Fin du lot : après la validation du cut ${last}, ESV est passé ${where}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`;
- await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});}
+ await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});
+ /* ESV a quitté la partie après ce cut : c'est la fin de la partie pour le Pilote. */
+ if(reason==='navigation-other-part'||reason==='adapter-lost-after-navigation'&&b.scope.endMode==='partie')await retenirFinPartie(b.scope.part,last,'fin constatée');}
 const validateInESV=adapter.validateAndNext;
 adapter.validateAndNext=async(...args)=>{const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
@@ -112,7 +134,8 @@ adapter.state=async(...args)=>{
      try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});return r;}
      catch(e2){if(!unresponsive(e2))throw e2;}}
    // Muet juste après une navigation vers la fin du lot : ESV a quitté la partie.
-   if(next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end||next.part!==b.scope.part)){
+   /* Lot « à la fin de la partie » : ESV muet après une validation, c'est la sortie de la partie. */
+   if(next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end||next.part!==b.scope.part||b.scope.endMode==='partie')){
      await closeAtExit('adapter-lost-after-navigation',last.cut,next);
      throw Error('Fin du lot : ESV ne répond plus après le dernier passage (KI-061).');}
    throw e;}};
@@ -326,6 +349,7 @@ function pollCurrent(){
 }
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
+ if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
  if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
   await chrome.storage.local.set({banane4Bandeau:bandeau.on});await syncLauncher();return {on:bandeau.on};}
@@ -424,6 +448,9 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='start'){
   // Avant tout archivage : un lot en reprise manuelle garde son contexte.
   engine.assertBatchContextFree('un nouveau lot');
+  /* 4.7.21 : « fin de partie » demandée, ou fin saisie retenue pour la partie. */
+  const finPartie=args?.endMode==='partie';
+  if(!finPartie&&Number.isInteger(args?.end))await retenirFinPartie(args.part,args.end,'saisie');
   if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');
   /* GARDE-FOU DÉCOUVERT SUR LE TERRAIN, cut 6/4245.
    *
@@ -440,7 +467,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    * lot en pause par le chemin `missing`, avant même la question de confiance. */
   const geometryEngine=args?.geometryEngine||V46_ENGINE;
   if(![V46_ENGINE,GCV1_ENGINE].includes(geometryEngine))throw Error('Moteur géométrique de lot inconnu.');
-  const startArgs={...args,geometryEngine};
+  const startArgs={...args,geometryEngine,...(finPartie?{end:FIN_PARTIE}:{})};
   if(geometryEngine===GCV1_ENGINE){
     startArgs.geometryContract=liveGCV1Contract();
     startArgs.requestedLowConfidence=args?.lowConfidence||null;
@@ -456,6 +483,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
    * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
   startArgs.extensionVersion=VERSION;
+  if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
   /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
   delete startArgs.lotReprise;
   if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée au Pilote GCV1.');

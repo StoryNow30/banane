@@ -1,6 +1,6 @@
 /* « LA LIGNE », suite (chantier B) : la dernière commande en trois étapes,
- * l'écartement dans l'Assisté, les pastilles des onglets, « Nouveau lot » et
- * le tiroir « Détails ». Même banc que `panel-ligne.test.cjs` : panel.js réel
+ * les pastilles des onglets, « Nouveau lot » et le tiroir « Détails »
+ * (l'Assisté est retiré en 4.7.21). Même banc que `panel-ligne.test.cjs` : panel.js réel
  * dans un contexte `vm`, DOM et API Chrome simulés ; les gestionnaires de
  * clic sont conservés pour être déclenchés. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
@@ -62,23 +62,10 @@ test('fin de lot : télécharger d\'abord ; « Nouveau lot » rouvre les bornes 
   assert.equal($('new-batch').hidden,true);assert.equal($('dataset').className,'link');
 });
 
-test('Assisté : l\'écartement dans la plage admissible, sans valeur centrale ; hors contrat dit non applicable',async()=>{
-  const ident={pageId:'p',part:22,cut:1196,shape:'U50',frameId:'f'},rails={left:{delta:[0,-.012,.003],confidence:80,reasons:[]},right:{delta:[0,-.009,.005],confidence:80,reasons:[]}};
-  const vue=g=>({mode:'assisted',current:{identity:ident},before:{identity:ident,rails:{}},proposal:{id:'x',identity:ident,rails},assistGauge:g});
-  let $=await panneau(vue({proposalId:'x',mm:1438.2,gaugeClass:'NOMINAL',admissible:true,contract:{lowMm:1405,maximumMm:1470}}),'#assisted');
-  assert.equal($('assiste-ecartement').hidden,false);const h=$('assiste-ecartement').innerHTML;
-  assert.match(h,/1438,2/);assert.match(h,/dans le contrat/);assert.match(h,/class="plage"/);assert.doesNotMatch(h,/1435/);
-  assert.equal($('tab-assisted').dataset.etat,'vert');
-  $=await panneau(vue({proposalId:'x',mm:1492,gaugeClass:'HIGH_INVALID',admissible:false,contract:{lowMm:1405,maximumMm:1470}}),'#assisted');
-  assert.match($('assiste-ecartement').innerHTML,/hors contrat : non applicable/);assert.match($('assiste-ecartement').innerHTML,/class="hors"/);
-  $=await panneau(vue({proposalId:'autre',mm:1438,admissible:true}),'#assisted');assert.equal($('assiste-ecartement').hidden,true,'écartement d\'une autre proposition : rien');
-});
-
-test('« Détails › » : fermé par défaut, s\'ouvre et se referme sans toucher au lot',async()=>{
+test('« Détails » : ouverts par défaut (4.7.21), se referment et se rouvrent sans toucher au lot',async()=>{
   const $=await panneau(lot());
-  assert.equal($('lot-details').hidden,true);assert.equal($('lot-details-toggle').textContent,'Détails ›');
-  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,false);assert.equal($('lot-details-toggle').attrs['aria-expanded'],'true');
-  assert.equal($('lot-details-toggle').textContent,'Masquer');
-  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,true);
-  assert.equal($('native-details').hidden,true);
+  assert.equal($('lot-details').hidden,false);assert.equal($('lot-details-toggle').textContent,'Masquer');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'true');
+  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,true);assert.equal($('lot-details-toggle').textContent,'Détails ›');
+  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,false);
+  assert.equal($('native-details').hidden,false);
 });
