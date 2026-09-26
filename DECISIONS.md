@@ -1,5 +1,38 @@
 # Décisions techniques
 
+## D-057 - Sortie 4.8 : faux isolés tolérés, lot arrêté compté, P2 en 4.9, rotation réglage / validation
+
+**26 septembre 2026, direction**, après la relecture de la partie 12
+(`audit/relecture-p12-2026-09-26.md`).
+
+- **Seuil C4 de sortie : faux isolés expliqués tolérés.** « Ne pas exiger zéro
+  rail faux sur la 4.8, on a déjà considérablement réduit l'écart avec les
+  précédentes versions. » Zéro faux reste la cible, pas une condition de
+  sortie. Chaque faux des lots de validation est nommé avec son type dans le
+  rapport de sortie ; D-042 s'applique toujours (un type qui se répète appelle
+  un correctif). Mesure : 4 faux sur 161 cuts jugés (parties 9 et 12).
+- **Un lot arrêté en cours de route compte** (C1 et C4 sur ce qu'il a traité),
+  s'il est relu. Un reliquat qui repasse sur les différés d'un lot de la même
+  partie est compté par partie, pas en plus (`c1:false`).
+- **P2 (précision humaine) reporté en 4.9.** « Banane pose exactement comme un
+  autre opérateur l'aurait fait. » C2 est publié comme écart à la relecture de
+  l'opérateur, sans plancher humain, et dit comme tel.
+- **Rotation réglage / validation adoptée** (« je valide à 100 % »). Chaque
+  partie neuve est d'abord une partie de validation : sa mesure est consignée
+  avant tout réglage ; ensuite seulement elle entre au banc de réglage, et la
+  partie neuve suivante devient la validation. Parties 9 et 12 : mesures
+  consignées, elles passent au réglage pour la 4.8.5.
+- **Reportés en 4.8.5** : voisins validés comme appuis, en dernier recours
+  (D-054, relecture de la partie 9) ; les pistes des faux 7738 (choix à un
+  appui, 2e du type après 7026) et 7743 (premier passage à 27,7 mm de la
+  voie) ; le biais vertical aux passages à niveau (« je ne le trouve pas mais
+  on analysera » : au banc, aucun calage).
+- **Feuille de route** : 4.9 (vitesse, UI/UX, code, cerveau, vue réduite, P2
+  refait) ; après la 4.9, le « méga cerveau » (précision apprise) ; 5.0
+  multi-session ; suivi mobile en lecture seule, éventuellement en 5.5.
+- **Interface** : bouton d'ouverture dans ESV redessiné en blanc, discret
+  (contrôle Edge du 26/09 : rien d'autre à redire).
+
 ## D-056 - Interface Pilote simplifiée : réglages fixes, cerveau actif, détails ouverts, Assisté retiré, bornes remplies (4.7.21)
 
 **26 septembre 2026, direction.** « Je ne devrais plus avoir à activer par

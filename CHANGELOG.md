@@ -1,5 +1,14 @@
 # Banane V4 TEST — journal des versions
 
+## En cours (4.8.0 candidate)
+
+- **Bouton d'ouverture dans ESV** redessiné : blanc, discret (opacité 0,92,
+  plein au survol), police système, coins ronds (direction, 26/09).
+- **Rapport de sortie** (`tools/sortie-report.cjs`) : décisions D-057 lues
+  dans le manifeste — lot arrêté compté, reliquat exclu de C1, faux isolés
+  typés, C2 publié sans plancher P2.
+- **Relecture de la partie 12** : `audit/relecture-p12-2026-09-26.md`.
+
 ## 4.7.21 — nouveau lot, interface simplifiée, bornes remplies, mouvement, 26 septembre 2026
 
 **Ce n'est pas une release.** La release officielle reste la 4.7.0.

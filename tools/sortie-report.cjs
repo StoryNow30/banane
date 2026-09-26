@@ -13,6 +13,13 @@
  * et sa relecture (complète, ciblée, aucune). Rien n'est recalculé ici : le
  * rapport reprend les chiffres des rapports d'acceptation et dit, critère par
  * critère, ce qui est tenu, ce qui ne l'est pas et ce qui n'est pas mesurable.
+ *
+ * Décisions de la direction (D-057, 26/09), lues dans le manifeste :
+ * `lotArreteCompte` (un lot de validation arrêté compte pour C1), `c1:false`
+ * sur un lot (reliquat : sa partie est déjà comptée par un autre lot),
+ * `seuilC4.regle:'isolés expliqués'` (chaque faux doit avoir son type dans
+ * `seuilC4.types`, clé « lot:cut »), `p2Reporte` (C2 publié comme écart à la relecture, sans
+ * plancher humain, et dit comme tel).
  */
 const fs=require('node:fs'),path=require('node:path');
 const pct=v=>Number.isFinite(v)?String(Math.round(v*10)/10).replace('.',','):'—';
@@ -22,28 +29,33 @@ const FINI=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
 function lotRow(entry,report){
   const lot=report.lots[0],t=report.total;
   return {label:lot.label,partie:lot.batch?.part??null,version:lot.version??null,role:entry.role,relecture:entry.relecture,note:entry.note||'',
-    etat:lot.batch?.state??null,complet:typeof lot.complete==='boolean'?lot.complete:FINI.includes(lot.batch?.state),
+    etat:lot.batch?.state??null,c1Compte:entry.c1,complet:typeof lot.complete==='boolean'?lot.complete:FINI.includes(lot.batch?.state),
     c1:{appliques:t.c1.applied,cuts:t.c1.distinctCuts,pct:t.c1.coveragePct},
     c4:{faux:t.c4.wrong,juges:t.c4.judgedApplied,evaluable:!!t.c4.evaluable,partJugee:t.c4.judgedSharePct??null,
       nommes:(t.c4.wrongCuts||[]).map(w=>({cut:w.cut,pireMm:w.worstMm}))},
     c3:{refuses:(t.c3.refused||[]).length,horsContratAppliques:(t.c3.appliedOutOfContract||[]).length},
     c2:t.c2?{rails:t.c2.rails,lateralP90:t.c2.lateralMm?.p90??null,verticalP90:t.c2.verticalMm?.p90??null,plancher:t.c2.floor?.label??null}:null};
 }
+const typeC4=(manifest,w)=>manifest.seuilC4?.types?.[`${w.lot}:${w.cut}`]||null;
 function summarize(manifest,load){
   const rows=manifest.lots.map(e=>lotRow(e,load(e.fichier)));
   const val=rows.filter(r=>r.role==='validation'),valRelus=val.filter(r=>r.relecture!=='aucune');
-  const complets=val.filter(r=>r.complet);
+  const complets=val.filter(r=>r.c1Compte!==false&&(r.complet||manifest.lotArreteCompte&&r.relecture!=='aucune'));
   const horsContrat=rows.reduce((n,r)=>n+r.c3.horsContratAppliques,0);
-  const faux=valRelus.flatMap(r=>r.c4.nommes.map(w=>({...w,lot:r.label})));
+  const faux=valRelus.flatMap(r=>r.c4.nommes.map(w=>({...w,lot:r.label,partie:r.partie})));
   const criteres={
     C1:complets.length?{statut:complets.every(r=>r.c1.pct>=80)?'tenu':'non tenu',detail:complets.map(r=>`${r.label} : ${pct(r.c1.pct)} %`).join(' ; ')}
       :{statut:'non démontré',detail:val.length?`aucun lot de validation complet ; lots arrêtés : ${val.map(r=>`${r.label} ${pct(r.c1.pct)} %`).join(' ; ')}`
         :'aucun lot de validation : les parties relues ont servi au réglage'},
-    C2:{statut:manifest.p2?'mesurable':'non publiable',detail:manifest.p2?'plancher P2 fourni':'P2 non mesuré : aucune cible d\'erreur publiée (§15)'},
+    C2:manifest.p2?{statut:'mesurable',detail:'plancher P2 fourni'}
+      :manifest.p2Reporte?{statut:'publié sans plancher',detail:`écart à la relecture de l'opérateur, rails des cuts validés (retouchés) des lots de validation relus (${valRelus.filter(r=>r.c2).map(r=>`${r.label} : ${r.c2.rails} rails, p90 latéral ${mm(r.c2.lateralP90)}, vertical ${mm(r.c2.verticalP90)}`).join(' ; ')||'aucun'}) ; ${manifest.p2Reporte}`}
+      :{statut:'non publiable',detail:'P2 non mesuré : aucune cible d\'erreur publiée (§15)'},
     C3:{statut:horsContrat?'non tenu':'tenu',detail:`sur tous les lots : ${horsContrat} paire(s) hors contrat appliquée(s), ${rows.reduce((n,r)=>n+r.c3.refuses,0)} refus d'écartement`},
-    C4:{statut:!valRelus.length?'non mesuré':manifest.seuilC4?(faux.length<=manifest.seuilC4.maxFaux?'tenu':'non tenu'):'seuil à trancher',
+    C4:{statut:!valRelus.length?'non mesuré':!manifest.seuilC4?'seuil à trancher'
+        :manifest.seuilC4.regle==='isolés expliqués'?(faux.every(w=>typeC4(manifest,w))?'tenu (faux isolés expliqués)':'non tenu (faux sans type)')
+        :faux.length<=manifest.seuilC4.maxFaux?'tenu':'non tenu',
       detail:!valRelus.length?'aucun lot de validation relu'
-        :`${faux.length} faux sur ${valRelus.reduce((n,r)=>n+r.c4.juges,0)} cuts jugés des lots de validation relus`+(faux.length?' : '+faux.map(w=>`${w.cut} (${mm(w.pireMm)}, ${w.lot})`).join(', '):'')},
+        :`${faux.length} faux sur ${valRelus.reduce((n,r)=>n+r.c4.juges,0)} cuts jugés des lots de validation relus`+(faux.length?' : '+faux.map(w=>`${w.cut} (${mm(w.pireMm)}, ${w.lot}${typeC4(manifest,w)?', '+typeC4(manifest,w):''})`).join(', '):'')},
     C5:{statut:manifest.bilans?.length?'bilans tenus':'sans bilan',detail:(manifest.bilans||[]).join(' ; ')},
   };
   return {format:'banane-sortie-4.8-v1',regle:manifest.regle||null,rows,criteres,conditions:manifest.conditions||[]};

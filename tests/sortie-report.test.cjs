@@ -30,3 +30,16 @@ test('sans lot de validation : non démontré, non mesuré ; une paire hors cont
   const md=R.toMarkdown(R.summarize(manifeste(),f=>fichiers[f]),{date:'d'});
   assert.match(md,/\| C1 \| \*\*non tenu\*\*/);assert.match(md,/couverture \| aucune .*non jugé/);
 });
+test('décisions D-057 : lot arrêté compté, reliquat exclu de C1, faux isolés expliqués, P2 reporté',()=>{
+  const f={...fichiers,'r.json':rapport({label:'reliquat',part:40,applied:5,cuts:50,judged:5})};
+  const m=manifeste({lotArreteCompte:true,seuilC4:{regle:'isolés expliqués',types:{'valide-1:4001':'premier passage'}},p2Reporte:'P2 reporté en 4.9'});
+  m.lots.push({fichier:'r.json',role:'validation',relecture:'complète',c1:false});
+  f['b.json']=rapport({label:'valide-1',part:40,state:'STOPPED',applied:85,cuts:100,wrong:[[4001,12.3]],judged:60});
+  const s=R.summarize(m,x=>f[x]);
+  assert.match(s.criteres.C1.detail,/valide-1 : 85 %/,'lot arrêté relu : compté');assert.doesNotMatch(s.criteres.C1.detail,/reliquat/,'c1:false : exclu');
+  assert.equal(s.criteres.C4.statut,'tenu (faux isolés expliqués)');assert.match(s.criteres.C4.detail,/4001 \(12,3 mm, valide-1, premier passage\)/);
+  assert.equal(s.criteres.C2.statut,'publié sans plancher');assert.match(s.criteres.C2.detail,/P2 reporté en 4\.9/);
+  const sans=R.summarize({...m,seuilC4:{regle:'isolés expliqués',types:{}}},x=>f[x]);assert.equal(sans.criteres.C4.statut,'non tenu (faux sans type)');
+  const couverture=R.summarize({...m,lots:[...m.lots,{fichier:'d.json',role:'validation',relecture:'aucune'}]},x=>f[x]);
+  assert.doesNotMatch(couverture.criteres.C1.detail,/couverture/,'arrêté sans relecture : pas compté');
+});

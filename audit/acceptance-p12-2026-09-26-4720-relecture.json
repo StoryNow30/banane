@@ -1,0 +1,5917 @@
+{
+ "format": "banane-acceptance-report-v1",
+ "tool": "tools/acceptance-report.cjs",
+ "rules": {
+  "wrongMm": 10,
+  "criterion": "latéral OU vertical, valeurs brutes (D-038)",
+  "denominator": "cuts DISTINCTS du lot ; sans entrée, différés, refusés, sans décision au dénominateur ; revisite ≠ nouveau cut",
+  "reference": "dernière visite validée de la relecture, règles strictes referenceFor ; lue après coup, jamais en entrée moteur",
+  "units": "unités de scène × 1000 (mm), étalonnage physique non vérifié",
+  "gaugeContract": "[1405, 1470] mm, admissibilité seulement",
+  "exclusions": [
+   {
+    "part": 19,
+    "cut": 9033,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   },
+   {
+    "part": 19,
+    "cut": 9241,
+    "motif": "demande de l’opérateur : référence humaine fondée sur une information absente des données"
+   }
+  ],
+  "p2": "P2 non mesuré"
+ },
+ "config": null,
+ "p2": null,
+ "lots": [
+  {
+   "label": "pilote-p12-4.7.20",
+   "complete": true,
+   "batch": {
+    "id": "670758b4-a7ae-441f-8693-89061653c315",
+    "state": "STOPPED",
+    "part": 12,
+    "start": 1,
+    "end": 8144,
+    "unresolvedPolicy": "defer",
+    "startedAt": "2026-09-26T06:13:48.300Z"
+   },
+   "version": "4.7.20",
+   "observationsOutsideLot": 0,
+   "relecture": {
+    "segments": 2,
+    "records": 183,
+    "allDeclaredCloudsPresent": true,
+    "frame": {
+     "pilotFrameIds": [
+      "86508613-3e2d-4df0-9488-270e1ce38217"
+     ],
+     "relectureFrameIds": [
+      "0972d27d-bd9d-47aa-bad6-85f2f970169c"
+     ],
+     "sameFrameId": false,
+     "translationSceneUnits": [
+      900348.7282,
+      6246368.26,
+      52.3463
+     ],
+     "cutsCompared": 106,
+     "cutsAgreeing": 106,
+     "usable": true,
+     "rule": "frameId différent : translation unique du lot acceptée si la majorité des cuts la vérifient (≤ 1 mm, rotation identique) ; chaque cut est contrôlé seul"
+    }
+   },
+   "corpusSegments": {
+    "segments": 2,
+    "clouds": 106,
+    "declared": 106,
+    "allRequestedObjectsPresent": true
+   },
+   "lotDecisionRules": {
+    "pairGuard": true,
+    "chainMm": 15,
+    "gaugeGuardMm": 20,
+    "minTop": 5,
+    "crossing": true,
+    "framed": true,
+    "anchorRule": "placed",
+    "source": "lot"
+   },
+   "lotDecisionSource": "observation",
+   "lotDecisionParity": null,
+   "journalConsistency": {
+    "journalCompleted": 84,
+    "journalDeferred": 21,
+    "applied": 84,
+    "deferredOrRefused": 21
+   },
+   "inputs": [
+    {
+     "file": "banane-bilan-v4-2026-09-26T06-32-24-seg01.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.20",
+     "sha256": "ae420e2d5178fe29791fe3e48146223b07c52a912726830f49525ce6d12e06ef",
+     "bytes": 48276019,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-bilan-v4-2026-09-26T06-32-24-seg02.json",
+     "kind": "bilan",
+     "format": "banane-test-dataset-v4",
+     "version": "4.7.20",
+     "sha256": "10b87ee326c68cc10158c1623182ecb6b3a988e9360af1db9eeed85a25b0f47f",
+     "bytes": 58923245,
+     "role": "ignoré (journal présent)"
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-26T06-32-38-seg01.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.20",
+     "sha256": "71e8ffd248bbc3f7ad67e51a7d93170b25597cc43b1a914ece30490efa83390f",
+     "bytes": 46919090
+    },
+    {
+     "file": "banane-gcv1-corpus-2026-09-26T06-32-38-seg02.json",
+     "kind": "corpus",
+     "format": "banane-gcv1-lidar-corpus-v1",
+     "version": "4.7.20",
+     "sha256": "70cc1c9af19eb4cb1ca7501cb0fc763bde217cbb8e2325ecfceef684546ae6e5",
+     "bytes": 56269712
+    },
+    {
+     "file": "banane-gcv1-diagnostic-1790404355861.json",
+     "kind": "diagnostic",
+     "format": "banane-gcv1-diagnostic-v1",
+     "version": "4.7.20",
+     "sha256": "dd060495cd3f65e1e0602f1bfd33280ce55a7bf3eb33d3ed18fd7d0ef341f507",
+     "bytes": 1730391
+    },
+    {
+     "file": "banane-journal-v4-1790404362008.json",
+     "kind": "journal",
+     "format": "banane-test-journal-v4",
+     "version": "4.7.20",
+     "sha256": "8c4287c3c8fd1289125dacd32889f4e6e8ecd523725f125e15ee058245b177b3",
+     "bytes": 4534073
+    },
+    {
+     "file": "banane-native-v4-2026-09-26T19-48-36-auto-seg01.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.21",
+     "sha256": "bd1e2a99e21546c31bbf42cef78f211a55b038cace5cd7aa8887e73363d7b22f",
+     "bytes": 31075950,
+     "role": "relecture"
+    },
+    {
+     "file": "banane-native-v4-2026-09-26T19-52-16-seg01.json",
+     "kind": "relecture",
+     "format": "banane-native-session-v3-compact",
+     "version": "4.7.21",
+     "sha256": "0300271b46ac255902fe4f86e723112d0705911fcd8b657b6917da84139f4392",
+     "bytes": 40906385,
+     "role": "relecture"
+    }
+   ],
+   "rows": [
+    {
+     "part": 12,
+     "cut": 1,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 1,
+      "startGapMm": 0
+     }
+    },
+    {
+     "part": 12,
+     "cut": 210,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 6,
+      "startGapMm": 43.41
+     }
+    },
+    {
+     "part": 12,
+     "cut": 211,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.07,
+        "verticalMm": -0.36
+       },
+       "right": {
+        "lateralMm": -0.21,
+        "verticalMm": -0.29
+       }
+      },
+      "worstMm": 0.36,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 7,
+      "dwellMs": 1700,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 250,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.45,
+        "verticalMm": -0.49
+       },
+       "right": {
+        "lateralMm": -0.5,
+        "verticalMm": -0.08
+       }
+      },
+      "worstMm": 0.5,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 18,
+      "dwellMs": 1205,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 251,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 1.1,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.19,
+        "verticalMm": -0.3
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": -0.09
+       }
+      },
+      "worstMm": 0.3,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 19,
+      "dwellMs": 1918,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 252,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1450.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 8.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.11
+       },
+       "right": {
+        "lateralMm": -0.1,
+        "verticalMm": -0.52
+       }
+      },
+      "worstMm": 0.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 20,
+      "dwellMs": 1227,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 253,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1482.5,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null,
+      "anchors": 2,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:multi-intent-reference-ambiguous",
+       "right:multi-intent-reference-ambiguous"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 21
+     }
+    },
+    {
+     "part": 12,
+     "cut": 254,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "gauge-HIGH_INVALID",
+      "guardMm": null,
+      "anchors": 2,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 22,
+      "startGapMm": 45.97
+     }
+    },
+    {
+     "part": 12,
+     "cut": 255,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 15.9,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.05,
+        "verticalMm": -0.5
+       },
+       "right": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.55
+       }
+      },
+      "worstMm": 0.55,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 23,
+      "dwellMs": 1261,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 256,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.51,
+        "verticalMm": -0.43
+       },
+       "right": {
+        "lateralMm": -0.19,
+        "verticalMm": -0.28
+       }
+      },
+      "worstMm": 0.51,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 24,
+      "dwellMs": 1263,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 257,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 8.7,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.38,
+        "verticalMm": -0.03
+       },
+       "right": {
+        "lateralMm": -0.51,
+        "verticalMm": -0.55
+       }
+      },
+      "worstMm": 0.55,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 25,
+      "dwellMs": 1068,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 258,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.1,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.29,
+        "verticalMm": -0.15
+       },
+       "right": {
+        "lateralMm": -0.43,
+        "verticalMm": -0.26
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 26,
+      "dwellMs": 1240,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6815,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.54,
+        "verticalMm": -0.36
+       },
+       "right": {
+        "lateralMm": -0.05,
+        "verticalMm": -0.5
+       }
+      },
+      "worstMm": 0.54,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 32,
+      "dwellMs": 1624,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6816,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 1.1,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.31
+       },
+       "right": {
+        "lateralMm": -0.24,
+        "verticalMm": -0.39
+       }
+      },
+      "worstMm": 0.39,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 33,
+      "dwellMs": 1489,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6817,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.35,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -0.11,
+        "verticalMm": -0.17
+       }
+      },
+      "worstMm": 0.35,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 34,
+      "dwellMs": 1477,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6818,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 5.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.24,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -0.37,
+        "verticalMm": -0.41
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 35,
+      "dwellMs": 2803,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6819,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.5,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.88,
+        "verticalMm": 3.87
+       },
+       "right": {
+        "lateralMm": -0.45,
+        "verticalMm": -0.29
+       }
+      },
+      "worstMm": 3.87,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 36,
+      "errors": {
+       "left": {
+        "lateralMm": -0.55,
+        "verticalMm": 4.02
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 4.02,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6820,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null,
+      "anchors": 2,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 37,
+      "startGapMm": 48.28
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6821,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.15,
+        "verticalMm": -0.15
+       },
+       "right": {
+        "lateralMm": -0.32,
+        "verticalMm": -0.08
+       }
+      },
+      "worstMm": 0.32,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 38,
+      "dwellMs": 2646,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6822,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.24
+       },
+       "right": {
+        "lateralMm": -0.36,
+        "verticalMm": -0.29
+       }
+      },
+      "worstMm": 0.36,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 39,
+      "dwellMs": 797,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 6823,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.08,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -0.34,
+        "verticalMm": -0.39
+       }
+      },
+      "worstMm": 0.39,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 40,
+      "dwellMs": 973,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7678,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.37,
+        "verticalMm": -0.11
+       },
+       "right": {
+        "lateralMm": -0.27,
+        "verticalMm": -0.09
+       }
+      },
+      "worstMm": 0.37,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 48,
+      "dwellMs": 1274,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7679,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 6.8,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.11
+       },
+       "right": {
+        "lateralMm": -0.34,
+        "verticalMm": -0.21
+       }
+      },
+      "worstMm": 0.34,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 49,
+      "dwellMs": 1672,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7680,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 12.2,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.33,
+        "verticalMm": -0.19
+       },
+       "right": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.13
+       }
+      },
+      "worstMm": 0.33,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 50,
+      "dwellMs": 1491,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7681,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.3,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.42,
+        "verticalMm": -0.21
+       },
+       "right": {
+        "lateralMm": -0.31,
+        "verticalMm": -0.32
+       }
+      },
+      "worstMm": 0.42,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 51,
+      "dwellMs": 1409,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7682,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.03,
+        "verticalMm": -0.25
+       },
+       "right": {
+        "lateralMm": -0.49,
+        "verticalMm": -0.28
+       }
+      },
+      "worstMm": 0.49,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 52,
+      "dwellMs": 1511,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7683,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 3.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.24
+       },
+       "right": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.21
+       }
+      },
+      "worstMm": 0.24,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 53,
+      "dwellMs": 1880,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7737,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.45,
+        "verticalMm": -0.39
+       },
+       "right": {
+        "lateralMm": -0.28,
+        "verticalMm": -0.2
+       }
+      },
+      "worstMm": 0.45,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 59,
+      "dwellMs": 1246,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7738,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1449.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.54,
+        "verticalMm": -0.34
+       },
+       "right": {
+        "lateralMm": -3.87,
+        "verticalMm": -13.64
+       }
+      },
+      "worstMm": 13.64,
+      "wrong": true
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 60,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -3.86,
+        "verticalMm": -13.47
+       }
+      },
+      "worstMm": 13.47,
+      "wrong": true
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7739,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 12.8,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.5,
+        "verticalMm": -0.25
+       },
+       "right": {
+        "lateralMm": -0.43,
+        "verticalMm": -0.07
+       }
+      },
+      "worstMm": 0.5,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 61,
+      "dwellMs": 1106,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7740,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 5.5,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.31,
+        "verticalMm": -0.34
+       },
+       "right": {
+        "lateralMm": -0.05,
+        "verticalMm": -0.08
+       }
+      },
+      "worstMm": 0.34,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 62,
+      "dwellMs": 1121,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7741,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1431.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 6.2,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.24,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -0.42,
+        "verticalMm": -0.1
+       }
+      },
+      "worstMm": 0.42,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 63,
+      "dwellMs": 4645,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7742,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null,
+      "anchors": 2,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 64,
+      "startGapMm": 57.35
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7743,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 27.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -4.65,
+        "verticalMm": 3.42
+       },
+       "right": {
+        "lateralMm": 21.99,
+        "verticalMm": 4.62
+       }
+      },
+      "worstMm": 21.99,
+      "wrong": true
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 65,
+      "errors": {
+       "left": {
+        "lateralMm": -4.35,
+        "verticalMm": 3.67
+       },
+       "right": {
+        "lateralMm": 22.2,
+        "verticalMm": 5.11
+       }
+      },
+      "worstMm": 22.2,
+      "wrong": true
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7744,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 9.8,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.08,
+        "verticalMm": -0.42
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": -0.14
+       }
+      },
+      "worstMm": 0.42,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 66,
+      "dwellMs": 1409,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7745,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 7.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": 5.7,
+        "verticalMm": -5.73
+       },
+       "right": {
+        "lateralMm": -0.32,
+        "verticalMm": -0.2
+       }
+      },
+      "worstMm": 5.73,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 67,
+      "errors": {
+       "left": {
+        "lateralMm": 5.99,
+        "verticalMm": -5.48
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 5.99,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7746,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 8.9,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.43,
+        "verticalMm": -0.13
+       },
+       "right": {
+        "lateralMm": -0.41,
+        "verticalMm": -0.34
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 68,
+      "dwellMs": 1588,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7747,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.4,
+        "verticalMm": -0.31
+       },
+       "right": {
+        "lateralMm": -0.42,
+        "verticalMm": -0.12
+       }
+      },
+      "worstMm": 0.42,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 69,
+      "dwellMs": 1261,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7748,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.6,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.2,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -0.1,
+        "verticalMm": -0.5
+       }
+      },
+      "worstMm": 0.5,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 70,
+      "dwellMs": 1459,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7749,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1442.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.1,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.14,
+        "verticalMm": -0.03
+       },
+       "right": {
+        "lateralMm": -0.35,
+        "verticalMm": -0.43
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 71,
+      "dwellMs": 1295,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7782,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.19,
+        "verticalMm": -0.33
+       },
+       "right": {
+        "lateralMm": -0.16,
+        "verticalMm": -0.48
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 79,
+      "dwellMs": 886,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7783,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.28,
+        "verticalMm": -0.43
+       },
+       "right": {
+        "lateralMm": -0.31,
+        "verticalMm": -0.4
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 80,
+      "dwellMs": 785,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7784,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.36,
+        "verticalMm": -0.4
+       },
+       "right": {
+        "lateralMm": -0.4,
+        "verticalMm": -0.54
+       }
+      },
+      "worstMm": 0.54,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 81,
+      "dwellMs": 1325,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7785,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1445.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 7.3,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.31,
+        "verticalMm": -0.44
+       },
+       "right": {
+        "lateralMm": -0.08,
+        "verticalMm": -0.23
+       }
+      },
+      "worstMm": 0.44,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 82,
+      "dwellMs": 1000,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7786,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.6,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.33
+       },
+       "right": {
+        "lateralMm": -0.52,
+        "verticalMm": -0.08
+       }
+      },
+      "worstMm": 0.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 83,
+      "dwellMs": 835,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7787,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.39,
+        "verticalMm": -0.21
+       },
+       "right": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.52
+       }
+      },
+      "worstMm": 0.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 84,
+      "dwellMs": 1294,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7788,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.53,
+        "verticalMm": -0.09
+       },
+       "right": {
+        "lateralMm": -0.31,
+        "verticalMm": -0.42
+       }
+      },
+      "worstMm": 0.53,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 85,
+      "dwellMs": 1453,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7789,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.16,
+        "verticalMm": -0.05
+       },
+       "right": {
+        "lateralMm": -0.24,
+        "verticalMm": -0.46
+       }
+      },
+      "worstMm": 0.46,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 86,
+      "dwellMs": 1125,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7790,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.03,
+        "verticalMm": -0.37
+       },
+       "right": {
+        "lateralMm": -0.33,
+        "verticalMm": -0.13
+       }
+      },
+      "worstMm": 0.37,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 87,
+      "dwellMs": 1059,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7791,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 0.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.05,
+        "verticalMm": -0.1
+       },
+       "right": {
+        "lateralMm": -0.2,
+        "verticalMm": -0.18
+       }
+      },
+      "worstMm": 0.2,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 88,
+      "dwellMs": 1104,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7792,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.19
+       },
+       "right": {
+        "lateralMm": -0.51,
+        "verticalMm": -0.33
+       }
+      },
+      "worstMm": 0.51,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 89,
+      "dwellMs": 1095,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7793,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 1.2,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.14,
+        "verticalMm": -0.51
+       },
+       "right": {
+        "lateralMm": -0.5,
+        "verticalMm": -0.06
+       }
+      },
+      "worstMm": 0.51,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 90,
+      "dwellMs": 2656,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7794,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 1.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.24,
+        "verticalMm": -0.2
+       },
+       "right": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.45
+       }
+      },
+      "worstMm": 0.45,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 91,
+      "dwellMs": 978,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7795,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 5.3,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.51,
+        "verticalMm": -0.33
+       },
+       "right": {
+        "lateralMm": -0.2,
+        "verticalMm": -0.4
+       }
+      },
+      "worstMm": 0.51,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 92,
+      "dwellMs": 959,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7796,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1430.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 3.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.41,
+        "verticalMm": -0.31
+       },
+       "right": {
+        "lateralMm": -0.39,
+        "verticalMm": -0.42
+       }
+      },
+      "worstMm": 0.42,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 93,
+      "dwellMs": 892,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7803,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1433.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.02
+       },
+       "right": {
+        "lateralMm": -0.33,
+        "verticalMm": -0.54
+       }
+      },
+      "worstMm": 0.54,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 100,
+      "dwellMs": 1095,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7804,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.41,
+        "verticalMm": -0.41
+       },
+       "right": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.06
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 101,
+      "dwellMs": 1557,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7805,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 11.5,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.12,
+        "verticalMm": -0.11
+       },
+       "right": {
+        "lateralMm": -0.08,
+        "verticalMm": -0.53
+       }
+      },
+      "worstMm": 0.53,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 102,
+      "dwellMs": 2378,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7806,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 3,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.49,
+        "verticalMm": -0.21
+       },
+       "right": {
+        "lateralMm": -0.48,
+        "verticalMm": -0.4
+       }
+      },
+      "worstMm": 0.49,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 103,
+      "dwellMs": 1158,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7807,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1435,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 3.6,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.23
+       },
+       "right": {
+        "lateralMm": -0.12,
+        "verticalMm": -0.4
+       }
+      },
+      "worstMm": 0.4,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 104,
+      "dwellMs": 1248,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7808,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.09,
+        "verticalMm": -0.12
+       },
+       "right": {
+        "lateralMm": -0.14,
+        "verticalMm": -0.04
+       }
+      },
+      "worstMm": 0.14,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 105,
+      "dwellMs": 1177,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7809,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.44,
+        "verticalMm": -0.32
+       },
+       "right": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.09
+       }
+      },
+      "worstMm": 0.44,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 106,
+      "dwellMs": 1297,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7810,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 7.6,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.16
+       },
+       "right": {
+        "lateralMm": -0.41,
+        "verticalMm": -0.2
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 107,
+      "dwellMs": 1228,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7811,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 2.1,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.41,
+        "verticalMm": -0.04
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": -0.22
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 108,
+      "dwellMs": 2573,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7812,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.48,
+        "verticalMm": -0.19
+       },
+       "right": {
+        "lateralMm": -0.46,
+        "verticalMm": -0.25
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 109,
+      "dwellMs": 2035,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7813,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.18,
+        "verticalMm": -0.35
+       },
+       "right": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.11
+       }
+      },
+      "worstMm": 0.35,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 110,
+      "dwellMs": 1495,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7814,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1563.3,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null,
+      "anchors": 2,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 111
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7815,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 7.4,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.26,
+        "verticalMm": -0.11
+       },
+       "right": {
+        "lateralMm": -0.36,
+        "verticalMm": -0.43
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 112,
+      "dwellMs": 1011,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7816,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.09,
+        "verticalMm": -0.31
+       },
+       "right": {
+        "lateralMm": -0.04,
+        "verticalMm": -0.3
+       }
+      },
+      "worstMm": 0.31,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 113,
+      "dwellMs": 1056,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7817,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1437.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 3.3,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.37
+       },
+       "right": {
+        "lateralMm": -0.37,
+        "verticalMm": -0.14
+       }
+      },
+      "worstMm": 0.37,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 114,
+      "dwellMs": 1013,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7818,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 1.9,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.32
+       },
+       "right": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.03
+       }
+      },
+      "worstMm": 0.32,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 115,
+      "dwellMs": 891,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7819,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.48
+       },
+       "right": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.28
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 116,
+      "dwellMs": 1390,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7852,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1318,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 121
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7853,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 122,
+      "startGapMm": 31.48
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7854,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 123,
+      "startGapMm": 111.06
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7855,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1298.4,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 124,
+      "startGapMm": 128.99
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7856,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1336.2,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 125,
+      "startGapMm": 128.02
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7857,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1375.4,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 126,
+      "startGapMm": 121.53
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7858,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity",
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 127,
+      "startGapMm": 123.47
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7859,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1267.5,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 128,
+      "startGapMm": 124.09
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7860,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "gauge-rejected",
+     "motifs": [
+      "left:gauge-out-of-contract",
+      "right:gauge-out-of-contract"
+     ],
+     "gauge": {
+      "predictedMm": 1316,
+      "gaugeClass": "LOW_INVALID"
+     },
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 129,
+      "startGapMm": 119.51
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7861,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "left:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 130,
+      "startGapMm": 127.43
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7862,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.04,
+        "verticalMm": -0.35
+       },
+       "right": {
+        "lateralMm": -0.15,
+        "verticalMm": -0.08
+       }
+      },
+      "worstMm": 0.35,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 131,
+      "dwellMs": 1333,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7885,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.7,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.33,
+        "verticalMm": -0.17
+       },
+       "right": {
+        "lateralMm": -0.46,
+        "verticalMm": -0.38
+       }
+      },
+      "worstMm": 0.46,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 141,
+      "dwellMs": 1141,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7886,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.4,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.48,
+        "verticalMm": -0.32
+       },
+       "right": {
+        "lateralMm": -0.12,
+        "verticalMm": -0.22
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 142,
+      "dwellMs": 1120,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7887,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.8,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.5,
+        "verticalMm": -0.4
+       },
+       "right": {
+        "lateralMm": -0.36,
+        "verticalMm": -0.53
+       }
+      },
+      "worstMm": 0.53,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 143,
+      "dwellMs": 1162,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7888,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.03,
+        "verticalMm": -0.2
+       },
+       "right": {
+        "lateralMm": -0.27,
+        "verticalMm": -0.41
+       }
+      },
+      "worstMm": 0.41,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 144,
+      "dwellMs": 4441,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7889,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.28,
+        "verticalMm": -0.06
+       },
+       "right": {
+        "lateralMm": -0.06,
+        "verticalMm": -0.26
+       }
+      },
+      "worstMm": 0.28,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 145,
+      "dwellMs": 1930,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7890,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1446,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.17,
+        "verticalMm": -0.46
+       },
+       "right": {
+        "lateralMm": -0.47,
+        "verticalMm": -0.25
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 146,
+      "dwellMs": 1059,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7891,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1444.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "window",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 2,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.45,
+        "verticalMm": -0.05
+       },
+       "right": {
+        "lateralMm": -0.52,
+        "verticalMm": -0.06
+       }
+      },
+      "worstMm": 0.52,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 147,
+      "dwellMs": 1288,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7892,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 4.6,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.04,
+        "verticalMm": -0.17
+       },
+       "right": {
+        "lateralMm": -0.35,
+        "verticalMm": -0.16
+       }
+      },
+      "worstMm": 0.35,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 148,
+      "dwellMs": 1151,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7907,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.2,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.23,
+        "verticalMm": -0.47
+       },
+       "right": {
+        "lateralMm": -0.34,
+        "verticalMm": -0.33
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 153,
+      "dwellMs": 1720,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7908,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:flank"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "right:no-qualified-minimum-near-prediction",
+      "guardMm": null,
+      "anchors": 1,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 154,
+      "startGapMm": 86.61
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7909,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 3.9,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.47,
+        "verticalMm": -0.32
+       },
+       "right": {
+        "lateralMm": -0.24,
+        "verticalMm": -0.22
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 155,
+      "dwellMs": 1215,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7910,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1436.9,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 5.9,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.43
+       },
+       "right": {
+        "lateralMm": -0.14,
+        "verticalMm": -0.01
+       }
+      },
+      "worstMm": 0.43,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 156,
+      "dwellMs": 1246,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 7911,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.5,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 9.7,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.37,
+        "verticalMm": -0.5
+       },
+       "right": {
+        "lateralMm": -7.19,
+        "verticalMm": -9.29
+       }
+      },
+      "worstMm": 9.29,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "validé",
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 157,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -6.79,
+        "verticalMm": -8.76
+       }
+      },
+      "worstMm": 8.76,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8020,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "deferred",
+     "motifs": [
+      "right:ambiguity"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "unjudgeable",
+      "reason": "référence-non-stricte",
+      "detail": [
+       "left:human-final-candidate-missing",
+       "right:human-final-candidate-missing"
+      ],
+      "visits": 1,
+      "validatedVisits": 1,
+      "usedVisitIndex": 165
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8021,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1440.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.53,
+        "verticalMm": -0.12
+       },
+       "right": {
+        "lateralMm": -0.02,
+        "verticalMm": -0.05
+       }
+      },
+      "worstMm": 0.53,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 166,
+      "dwellMs": 967,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8022,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1434.3,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 5.3,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.39,
+        "verticalMm": -0.47
+       },
+       "right": {
+        "lateralMm": 0.01,
+        "verticalMm": -0.43
+       }
+      },
+      "worstMm": 0.47,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 167,
+      "dwellMs": 1089,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8024,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1441.6,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 19.9,
+      "anchors": 2,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.11,
+        "verticalMm": -0.05
+       },
+       "right": {
+        "lateralMm": -0.47,
+        "verticalMm": -0.48
+       }
+      },
+      "worstMm": 0.48,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 169,
+      "dwellMs": 1474,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8040,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1439.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 0,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.13,
+        "verticalMm": -0.11
+       },
+       "right": {
+        "lateralMm": -0.32,
+        "verticalMm": -0.08
+       }
+      },
+      "worstMm": 0.32,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 173,
+      "dwellMs": 1098,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8042,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1443.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "choice",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": null,
+      "anchors": 1,
+      "command": "lot",
+      "errors": {
+       "left": {
+        "lateralMm": -0.53,
+        "verticalMm": -0.25
+       },
+       "right": {
+        "lateralMm": -0.33,
+        "verticalMm": -0.33
+       }
+      },
+      "worstMm": 0.53,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 175,
+      "dwellMs": 3052,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8043,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "applied",
+     "gauge": {
+      "appliedMm": 1438.1,
+      "gaugeClass": "NOMINAL",
+      "admissible": true
+     },
+     "lot": {
+      "stage": "first-pass",
+      "wouldApply": true,
+      "reason": null,
+      "guardMm": 7.9,
+      "anchors": 1,
+      "command": "engine",
+      "errors": {
+       "left": {
+        "lateralMm": -0.21,
+        "verticalMm": -0.49
+       },
+       "right": {
+        "lateralMm": -0.12,
+        "verticalMm": -0.26
+       }
+      },
+      "worstMm": 0.49,
+      "wrong": false
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 176,
+      "dwellMs": 1316,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       }
+      },
+      "worstMm": 0,
+      "wrong": false
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8142,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "no-input",
+     "reason": "différé-sans-point-lidar",
+     "motifs": [
+      "left:input",
+      "right:input"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 180,
+      "dwellMs": 1089,
+      "startGapMm": 0
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8143,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "no-input",
+     "reason": "différé-sans-point-lidar",
+     "motifs": [
+      "left:input",
+      "right:input"
+     ],
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 181,
+      "dwellMs": 955,
+      "startGapMm": 0
+     }
+    },
+    {
+     "part": 12,
+     "cut": 8144,
+     "frameId": "86508613-3e2d-4df0-9488-270e1ce38217",
+     "pilotVisits": 1,
+     "gcv1Observations": 1,
+     "outcome": "other",
+     "reason": "aucune-décision-consignée",
+     "lot": {
+      "stage": "deferred",
+      "wouldApply": false,
+      "reason": "no-anchor",
+      "guardMm": null,
+      "anchors": null,
+      "command": "engine"
+     },
+     "judgement": {
+      "status": "judged",
+      "basis": "accepté-sans-retouche",
+      "visits": 1,
+      "validatedVisits": 0,
+      "usedVisitIndex": 182,
+      "dwellMs": 15823,
+      "startGapMm": 0
+     }
+    }
+   ]
+  }
+ ],
+ "parts": [
+  {
+   "part": 12,
+   "holdout": "non déclaré (aucune configuration)",
+   "lots": [
+    "pilote-p12-4.7.20"
+   ],
+   "c1": {
+    "distinctCuts": 106,
+    "applied": 84,
+    "deferred": 11,
+    "gaugeRejected": 8,
+    "noInput": 2,
+    "other": 1,
+    "coveragePct": 79.2,
+    "revisitedCuts": 0,
+    "otherDetail": [
+     {
+      "cut": 8142,
+      "outcome": "no-input",
+      "reason": "différé-sans-point-lidar"
+     },
+     {
+      "cut": 8143,
+      "outcome": "no-input",
+      "reason": "différé-sans-point-lidar"
+     },
+     {
+      "cut": 8144,
+      "outcome": "other",
+      "reason": "aucune-décision-consignée"
+     }
+    ]
+   },
+   "c4": {
+    "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+    "judgedApplied": 84,
+    "appliedNotJudged": 0,
+    "wrong": 2,
+    "judgedByBasis": {
+     "validé": 5,
+     "accepté-sans-retouche": 79
+    },
+    "wrongByBasis": {
+     "validé": 2,
+     "accepté-sans-retouche": 0
+    },
+    "judgedSharePct": 100,
+    "minJudgedSharePct": 80,
+    "evaluable": true,
+    "wrongCuts": [
+     {
+      "cut": 7738,
+      "worstMm": 13.47,
+      "errors": {
+       "left": {
+        "lateralMm": 0,
+        "verticalMm": 0
+       },
+       "right": {
+        "lateralMm": -3.86,
+        "verticalMm": -13.47
+       }
+      }
+     },
+     {
+      "cut": 7743,
+      "worstMm": 22.2,
+      "errors": {
+       "left": {
+        "lateralMm": -4.35,
+        "verticalMm": 3.67
+       },
+       "right": {
+        "lateralMm": 22.2,
+        "verticalMm": 5.11
+       }
+      }
+     }
+    ],
+    "byLotCommand": {
+     "applied": 23,
+     "judged": 23,
+     "wrong": 1,
+     "byStage": {
+      "choice": 7,
+      "window": 16
+     },
+     "wrongCuts": [
+      {
+       "cut": 7738,
+       "stage": "choice",
+       "anchors": 1,
+       "worstMm": 13.47
+      }
+     ]
+    }
+   },
+   "c2": {
+    "rails": 10,
+    "basis": "cuts validés seulement",
+    "lateralMm": {
+     "count": 10,
+     "median": 2.205,
+     "p90": 8.331,
+     "maximum": 22.2
+    },
+    "verticalMm": {
+     "count": 10,
+     "median": 3.845,
+     "p90": 9.231,
+     "maximum": 13.47
+    },
+    "floor": {
+     "label": "P2 non mesuré"
+    }
+   },
+   "c3": {
+    "refused": [
+     {
+      "cut": 253,
+      "predictedMm": 1482.5,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 7814,
+      "predictedMm": 1563.3,
+      "gaugeClass": "HIGH_INVALID"
+     },
+     {
+      "cut": 7852,
+      "predictedMm": 1318,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 7855,
+      "predictedMm": 1298.4,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 7856,
+      "predictedMm": 1336.2,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 7857,
+      "predictedMm": 1375.4,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 7859,
+      "predictedMm": 1267.5,
+      "gaugeClass": "LOW_INVALID"
+     },
+     {
+      "cut": 7860,
+      "predictedMm": 1316,
+      "gaugeClass": "LOW_INVALID"
+     }
+    ],
+    "appliedOutOfContract": [],
+    "appliedGaugeUnmeasured": []
+   },
+   "lotDecision": {
+    "wouldApply": 84,
+    "coveragePct": 79.2,
+    "judged": 84,
+    "wrong": 2,
+    "wrongCuts": [
+     {
+      "cut": 7738,
+      "stage": "choice",
+      "worstMm": 13.64,
+      "pilot": "applied",
+      "pilotWrong": true
+     },
+     {
+      "cut": 7743,
+      "stage": "first-pass",
+      "worstMm": 21.99,
+      "pilot": "applied",
+      "pilotWrong": true
+     }
+    ],
+    "newWrong": [],
+    "gained": [],
+    "lost": [],
+    "byStage": {
+     "deferred": 22,
+     "first-pass": 61,
+     "choice": 7,
+     "window": 16
+    }
+   },
+   "unjudgeable": {
+    "référence-non-stricte": {
+     "cuts": 4,
+     "applied": 0,
+     "list": [
+      253,
+      7814,
+      7852,
+      8020
+     ]
+    }
+   },
+   "deferredStartGapsMm": [
+    {
+     "cut": 1,
+     "startGapMm": 0
+    },
+    {
+     "cut": 210,
+     "startGapMm": 43.41
+    },
+    {
+     "cut": 254,
+     "startGapMm": 45.97
+    },
+    {
+     "cut": 6820,
+     "startGapMm": 48.28
+    },
+    {
+     "cut": 7742,
+     "startGapMm": 57.35
+    },
+    {
+     "cut": 7853,
+     "startGapMm": 31.48
+    },
+    {
+     "cut": 7854,
+     "startGapMm": 111.06
+    },
+    {
+     "cut": 7855,
+     "startGapMm": 128.99
+    },
+    {
+     "cut": 7856,
+     "startGapMm": 128.02
+    },
+    {
+     "cut": 7857,
+     "startGapMm": 121.53
+    },
+    {
+     "cut": 7858,
+     "startGapMm": 123.47
+    },
+    {
+     "cut": 7859,
+     "startGapMm": 124.09
+    },
+    {
+     "cut": 7860,
+     "startGapMm": 119.51
+    },
+    {
+     "cut": 7861,
+     "startGapMm": 127.43
+    },
+    {
+     "cut": 7908,
+     "startGapMm": 86.61
+    }
+   ],
+   "excluded": [],
+   "incompleteLots": [],
+   "c5": {
+    "retained": {
+     "guardMm": 30,
+     "chooseMm": 15,
+     "chainMm": 15,
+     "gap": 3,
+     "anchors": 2,
+     "minTop": 5,
+     "minFace": 3,
+     "maxDzMm": 20,
+     "gaugeGuardMm": 20,
+     "gaugeGap": 10,
+     "gaugeCount": 3,
+     "pairGuard": true,
+     "anchorRule": "placed",
+     "crossing": true,
+     "crossingVoieMm": 10,
+     "framed": true,
+     "frameGap": 8,
+     "frameAnchors": 3
+    },
+    "withoutVariationReview": [
+     "frameGap",
+     "frameAnchors",
+     "validatedMinInliers"
+    ],
+    "reviews": [
+     "audit/curseurs-lot-2026-09-24.md",
+     "audit/ecartement-voisin-2026-09-24.md",
+     "audit/appui-pose-2026-09-24.md",
+     "audit/passage-niveau-lecteur-2026-09-25.md",
+     "audit/appuis-valides-2026-09-24.md",
+     "audit/curseurs-c5-4720-2026-09-25.md"
+    ],
+    "decisions": [
+     "D-044 garde de paire",
+     "D-047 chainMm 15",
+     "D-050 garde d’écartement 20 mm et minTop 5",
+     "D-052 appui = cut posé",
+     "D-053 passage à niveau en dernier recours, voie encadrée",
+     "D-054 voisins validés, garde de cohérence",
+     "D-055 gaugeGap, gaugeCount et crossingVoieMm conservés"
+    ],
+    "lotRules": [
+     {
+      "label": "pilote-p12-4.7.20",
+      "rules": {
+       "pairGuard": true,
+       "chainMm": 15,
+       "gaugeGuardMm": 20,
+       "minTop": 5,
+       "crossing": true,
+       "framed": true,
+       "anchorRule": "placed",
+       "source": "lot"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "total": {
+  "c1": {
+   "distinctCuts": 106,
+   "applied": 84,
+   "deferred": 11,
+   "gaugeRejected": 8,
+   "noInput": 2,
+   "other": 1,
+   "coveragePct": 79.2,
+   "revisitedCuts": 0,
+   "otherDetail": [
+    {
+     "cut": 8142,
+     "outcome": "no-input",
+     "reason": "différé-sans-point-lidar"
+    },
+    {
+     "cut": 8143,
+     "outcome": "no-input",
+     "reason": "différé-sans-point-lidar"
+    },
+    {
+     "cut": 8144,
+     "outcome": "other",
+     "reason": "aucune-décision-consignée"
+    }
+   ]
+  },
+  "c4": {
+   "criterion": "latéral OU vertical > 10 mm, valeurs brutes",
+   "judgedApplied": 84,
+   "appliedNotJudged": 0,
+   "wrong": 2,
+   "judgedByBasis": {
+    "validé": 5,
+    "accepté-sans-retouche": 79
+   },
+   "wrongByBasis": {
+    "validé": 2,
+    "accepté-sans-retouche": 0
+   },
+   "judgedSharePct": 100,
+   "minJudgedSharePct": 80,
+   "evaluable": true,
+   "wrongCuts": [
+    {
+     "cut": 7738,
+     "worstMm": 13.47,
+     "errors": {
+      "left": {
+       "lateralMm": 0,
+       "verticalMm": 0
+      },
+      "right": {
+       "lateralMm": -3.86,
+       "verticalMm": -13.47
+      }
+     }
+    },
+    {
+     "cut": 7743,
+     "worstMm": 22.2,
+     "errors": {
+      "left": {
+       "lateralMm": -4.35,
+       "verticalMm": 3.67
+      },
+      "right": {
+       "lateralMm": 22.2,
+       "verticalMm": 5.11
+      }
+     }
+    }
+   ],
+   "byLotCommand": {
+    "applied": 23,
+    "judged": 23,
+    "wrong": 1,
+    "byStage": {
+     "choice": 7,
+     "window": 16
+    },
+    "wrongCuts": [
+     {
+      "cut": 7738,
+      "stage": "choice",
+      "anchors": 1,
+      "worstMm": 13.47
+     }
+    ]
+   }
+  },
+  "c2": {
+   "rails": 10,
+   "basis": "cuts validés seulement",
+   "lateralMm": {
+    "count": 10,
+    "median": 2.205,
+    "p90": 8.331,
+    "maximum": 22.2
+   },
+   "verticalMm": {
+    "count": 10,
+    "median": 3.845,
+    "p90": 9.231,
+    "maximum": 13.47
+   },
+   "floor": {
+    "label": "P2 non mesuré"
+   }
+  },
+  "c3": {
+   "refused": [
+    {
+     "cut": 253,
+     "predictedMm": 1482.5,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 7814,
+     "predictedMm": 1563.3,
+     "gaugeClass": "HIGH_INVALID"
+    },
+    {
+     "cut": 7852,
+     "predictedMm": 1318,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 7855,
+     "predictedMm": 1298.4,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 7856,
+     "predictedMm": 1336.2,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 7857,
+     "predictedMm": 1375.4,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 7859,
+     "predictedMm": 1267.5,
+     "gaugeClass": "LOW_INVALID"
+    },
+    {
+     "cut": 7860,
+     "predictedMm": 1316,
+     "gaugeClass": "LOW_INVALID"
+    }
+   ],
+   "appliedOutOfContract": [],
+   "appliedGaugeUnmeasured": []
+  },
+  "lotDecision": {
+   "wouldApply": 84,
+   "coveragePct": 79.2,
+   "judged": 84,
+   "wrong": 2,
+   "wrongCuts": [
+    {
+     "cut": 7738,
+     "stage": "choice",
+     "worstMm": 13.64,
+     "pilot": "applied",
+     "pilotWrong": true
+    },
+    {
+     "cut": 7743,
+     "stage": "first-pass",
+     "worstMm": 21.99,
+     "pilot": "applied",
+     "pilotWrong": true
+    }
+   ],
+   "newWrong": [],
+   "gained": [],
+   "lost": [],
+   "byStage": {
+    "deferred": 22,
+    "first-pass": 61,
+    "choice": 7,
+    "window": 16
+   }
+  },
+  "unjudgeable": {
+   "référence-non-stricte": {
+    "cuts": 4,
+    "applied": 0,
+    "list": [
+     253,
+     7814,
+     7852,
+     8020
+    ]
+   }
+  },
+  "deferredStartGapsMm": [
+   {
+    "cut": 1,
+    "startGapMm": 0
+   },
+   {
+    "cut": 210,
+    "startGapMm": 43.41
+   },
+   {
+    "cut": 254,
+    "startGapMm": 45.97
+   },
+   {
+    "cut": 6820,
+    "startGapMm": 48.28
+   },
+   {
+    "cut": 7742,
+    "startGapMm": 57.35
+   },
+   {
+    "cut": 7853,
+    "startGapMm": 31.48
+   },
+   {
+    "cut": 7854,
+    "startGapMm": 111.06
+   },
+   {
+    "cut": 7855,
+    "startGapMm": 128.99
+   },
+   {
+    "cut": 7856,
+    "startGapMm": 128.02
+   },
+   {
+    "cut": 7857,
+    "startGapMm": 121.53
+   },
+   {
+    "cut": 7858,
+    "startGapMm": 123.47
+   },
+   {
+    "cut": 7859,
+    "startGapMm": 124.09
+   },
+   {
+    "cut": 7860,
+    "startGapMm": 119.51
+   },
+   {
+    "cut": 7861,
+    "startGapMm": 127.43
+   },
+   {
+    "cut": 7908,
+    "startGapMm": 86.61
+   }
+  ],
+  "excluded": [],
+  "incompleteLots": [],
+  "c5": {
+   "retained": {
+    "guardMm": 30,
+    "chooseMm": 15,
+    "chainMm": 15,
+    "gap": 3,
+    "anchors": 2,
+    "minTop": 5,
+    "minFace": 3,
+    "maxDzMm": 20,
+    "gaugeGuardMm": 20,
+    "gaugeGap": 10,
+    "gaugeCount": 3,
+    "pairGuard": true,
+    "anchorRule": "placed",
+    "crossing": true,
+    "crossingVoieMm": 10,
+    "framed": true,
+    "frameGap": 8,
+    "frameAnchors": 3
+   },
+   "withoutVariationReview": [
+    "frameGap",
+    "frameAnchors",
+    "validatedMinInliers"
+   ],
+   "reviews": [
+    "audit/curseurs-lot-2026-09-24.md",
+    "audit/ecartement-voisin-2026-09-24.md",
+    "audit/appui-pose-2026-09-24.md",
+    "audit/passage-niveau-lecteur-2026-09-25.md",
+    "audit/appuis-valides-2026-09-24.md",
+    "audit/curseurs-c5-4720-2026-09-25.md"
+   ],
+   "decisions": [
+    "D-044 garde de paire",
+    "D-047 chainMm 15",
+    "D-050 garde d’écartement 20 mm et minTop 5",
+    "D-052 appui = cut posé",
+    "D-053 passage à niveau en dernier recours, voie encadrée",
+    "D-054 voisins validés, garde de cohérence",
+    "D-055 gaugeGap, gaugeCount et crossingVoieMm conservés"
+   ],
+   "lotRules": [
+    {
+     "label": "pilote-p12-4.7.20",
+     "rules": {
+      "pairGuard": true,
+      "chainMm": 15,
+      "gaugeGuardMm": 20,
+      "minTop": 5,
+      "crossing": true,
+      "framed": true,
+      "anchorRule": "placed",
+      "source": "lot"
+     }
+    }
+   ]
+  }
+ }
+}

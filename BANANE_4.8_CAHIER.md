@@ -1692,3 +1692,42 @@ Pilote GCV1, les réglages retirés ne changeaient pas les positions posées.
 Sur le §2 : premier lot mené à sa borne (partie 12, 79,2 %), à relire pour
 compter en validation. Partie 9 relue en partie : 2 faux sur 66 appliqués
 jugés ; C4 non évaluable (25 % jugés). Moteur et décision sur le lot inchangés.
+
+## Amendement n°16 — examen de sortie : relecture de la partie 12, décisions D-057
+
+**26 septembre 2026.** Éléments nouveaux : la relecture Natif complète du lot
+4.7.20 de la partie 12 (`audit/relecture-p12-2026-09-26.md`) et les décisions
+de la direction sur les conditions de la version candidate (§12.3, D-057).
+
+### 16.1 Ce qui change
+
+1. **Seuil C4 de sortie** (§12.3, point 2) : faux isolés expliqués tolérés ;
+   zéro faux reste la cible. Chaque faux des lots de validation est nommé
+   avec son type dans le rapport de sortie.
+2. **Lot complet** (§12.3, point 1) : un lot arrêté en cours de route compte
+   pour ce qu'il a traité, s'il est relu ; un reliquat de la même partie est
+   compté par partie.
+3. **P2** (§12.3, point 3) : reporté en 4.9. C2 est publié comme écart à la
+   relecture de l'opérateur, sans plancher humain, et dit comme tel.
+4. **Rotation réglage / validation** : la mesure d'une partie neuve est
+   consignée avant tout réglage ; parties 9 et 12 consignées, elles passent au
+   réglage pour la 4.8.5.
+5. **Reportés en 4.8.5** : voisins validés en dernier recours (D-054), pistes
+   des faux 7738 et 7743, biais vertical aux passages à niveau (au banc).
+6. **Contrôle Edge** (§12.3, point 5) : fait par la direction ; bouton
+   d'ouverture d'ESV redessiné en blanc, discret.
+
+### 16.2 Pourquoi
+
+La partie 12 est le premier lot de validation complet et entièrement jugé :
+84 appliqués, 84 jugés, 2 faux (7738, choix à un appui, 13,5 mm ; 7743,
+premier passage à 27,7 mm de la voie, 22,2 mm), 0 hors contrat. Parties 9 et
+12 ensemble : 4 faux sur 161 jugés, tous isolés et typés.
+
+### 16.3 Impact
+
+C3, C4 (seuil D-057) et C5 tenus ; C2 publié sans plancher. **C1** : 79,2 %
+(partie 12) et 79,3 % (partie 9, par partie), sous l'objectif intermédiaire
+de 80 % d'un cut sur la partie 12 : à accepter explicitement par la direction.
+Reste KI-063 (arrêts du Pilote 4.7.21), en analyse.
+

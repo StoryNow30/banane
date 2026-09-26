@@ -78,7 +78,11 @@
      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','manualFinish'].includes(m.action)?90000:45000);
    pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,action:m.action,args:m.args||[]},location.origin);return true;});
  pill=document.createElement('button');pill.textContent='Banane 4.7.21 · ouvrir';pill.type='button';pill.hidden=true;
- pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#f5d65c;color:#172026;border:1px solid #7d712f;border-radius:9px;padding:10px 15px;font:600 13px Arial;cursor:pointer';
+ /* 4.8.0 (direction, 26/09) : bouton blanc et discret, plein seulement au survol. */
+ const repos='0 1px 2px rgba(15,23,42,.10),0 2px 8px rgba(15,23,42,.08)',survol='0 2px 4px rgba(15,23,42,.12),0 6px 18px rgba(15,23,42,.14)';
+ pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#fff;color:#1f2328;border:1px solid rgba(15,23,42,.12);border-radius:999px;padding:6px 12px;font:500 12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.01em;cursor:pointer;opacity:.92;box-shadow:'+repos+';transition:opacity .16s ease,box-shadow .16s ease,transform .16s ease';
+ pill.onmouseenter=pill.onfocus=()=>Object.assign(pill.style,{opacity:'1',boxShadow:survol,transform:'translateY(-1px)'});
+ pill.onmouseleave=pill.onblur=()=>Object.assign(pill.style,{opacity:'.92',boxShadow:repos,transform:'none'});
  pill.onclick=()=>{launcherGeneration++;setLauncherVisible(false);chrome.runtime.sendMessage({kind:'open-panel'}).then(reply=>{if(reply?.error)void refreshLauncher();},()=>refreshLauncher());};void refreshLauncher();
  // A heartbeat also makes interrupted background work observable; it never resumes a lot.
  setInterval(()=>{chrome.runtime.sendMessage({kind:'heartbeat'}).catch(()=>{});void refreshLauncher();},15000);

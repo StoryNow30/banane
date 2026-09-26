@@ -4,6 +4,16 @@ Date : 26 septembre 2026
 Version active de l'extension : **4.7.21 TEST** (nouveau lot corrigé, KI-062 ; bornes remplies par Banane ; réglages fixes et cerveau actif, D-056 ; Assisté retiré ; mouvement sans clignotement). Précédente : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
 Statut : développement expérimental, non qualifié pour la production.
 
+## Examen de sortie 4.8 (26/09)
+
+Relecture Natif complète du lot 4.7.20 de la partie 12 : 84/84 appliqués
+jugés, **2 faux** (7738 choix à un appui, 7743 premier passage), C1 79,2 %
+(`audit/relecture-p12-2026-09-26.md`). Décisions D-057 : faux isolés tolérés,
+lot arrêté compté, P2 en 4.9, rotation réglage / validation ; D-054 et pistes
+des faux en 4.8.5. Rapport de sortie : C3, C4, C5 tenus ; C2 publié sans
+plancher ; C1 à 79 % (à accepter). Ouvert : KI-063 (arrêts Pilote 4.7.21).
+Bouton d'ouverture dans ESV redessiné (blanc, discret).
+
 ## État 4.7.21
 
 Correctif du démarrage d'un nouveau lot après un lot arrêté (KI-062) ; bornes
