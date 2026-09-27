@@ -1,4 +1,44 @@
-# Démarrer avec Banane V4.7.21 TEST — nouveau lot, interface simplifiée, mouvement
+# Démarrer avec Ariane 4.8.0
+
+**Banane devient Ariane.** Le mode Natif devient **Écho** (Ariane observe ton
+travail dans ESV et l'enregistre), le mode Pilote devient **Orbite** (Ariane
+place et valide les rails d'un lot de cuts). Candidate de la version
+officielle 4.8.0, en attente de ta confirmation (D-058).
+
+Installe `ariane-v4.8.0.zip` dans Edge **par-dessus la 4.7.21**, dans le même
+dossier (bouton « Recharger » de la page des extensions) : ne supprime pas
+l'extension, sinon le stockage en cours est perdu. Termine ou arrête le lot en
+cours avant, puis **recharge la page ESV**. Vérifie **4.8.0** sous ARIANE sur
+l'accueil, et **Ariane 4.8.0 · ouvrir** sur le bouton blanc au bas d'ESV.
+
+## Ce que la 4.8.0 change sur le terrain
+
+- **ESV lent, rafraîchi tout seul.** Quand les nuages n'apparaissent pas ou
+  que la vue ne se recentre pas, Ariane redemande d'abord le recentrage (trois
+  fois), puis rafraîchit la page ESV d'elle-même. ESV repart alors du premier
+  cut non validé : Ariane revient au cut du lot avec « cut non validé
+  suivant », **sans rien valider**, rattache le lot à la nouvelle page et
+  reprend. Une fois par cut, cinq par lot au plus. Si ça ne suffit pas : F5,
+  puis « Reprendre » fait la même chose.
+- **Plus d'arrêt sur un silence d'ESV** : Ariane attend jusqu'à environ
+  70 s (« ESV ne répond pas encore… ») et reprend seule ; une annulation en
+  retard ne coupe plus le lot suivant (KI-063).
+- **Tout télécharger pour l'analyse** : journal, bilan, diagnostic et corpus
+  en un clic, dans les détails d'Orbite. C'est ce qu'il faut m'envoyer après
+  un lot. Edge peut demander d'autoriser plusieurs téléchargements.
+- **Fichiers `ariane-…`** : les exports s'appellent désormais
+  `ariane-journal-v4-…`, `ariane-bilan-v4-…`, etc. Les anciens restent lisibles.
+- **Interface** : « Masquer / Afficher les détails », « partie » partout,
+  légende SKIP seulement si un SKIP a servi, bouton d'ouverture blanc et
+  discret dans ESV.
+- **Ce qui ne change pas** : le moteur, la décision sur le lot, les contrôles
+  avant commande, le contrat d'écartement, les formats de données.
+
+En cas de problème, reviens à la 4.7.21 (`RETOUR_ARRIERE.md`).
+
+---
+
+# Historique : Banane V4.7.21 TEST — nouveau lot, interface simplifiée, mouvement
 
 **Ce n'est pas une release.** La release officielle reste la **4.7.0**,
 étiquetée `v4.7.0` dans Git.

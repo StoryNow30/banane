@@ -1,6 +1,6 @@
 # Rapport de sortie 4.8 — brouillon
 
-**26 septembre 2026.** Produit par `tools/sortie-report.cjs` à partir des rapports d'acceptation : aucun chiffre n'est recalculé ici. C1 à C5 sont rapportés ensemble ; C1 seul n'est pas un résultat (§14 G).
+**27 septembre 2026.** Produit par `tools/sortie-report.cjs` à partir des rapports d'acceptation : aucun chiffre n'est recalculé ici. C1 à C5 sont rapportés ensemble ; C1 seul n'est pas un résultat (§14 G).
 
 Rôle « validation » : partie jamais utilisée pour régler, relue ; sa mesure est consignée avant tout réglage, puis elle entre au banc de réglage (rotation, D-057). Parties de validation de la 4.8 : 9 et 12.
 
@@ -27,7 +27,7 @@ Rôle « validation » : partie jamais utilisée pour régler, relue ; sa mesure
 
 | Critère | Statut | Détail |
 |---|---|---|
-| C1 | **non tenu** | pilote-p9-4.7.18 : 75,7 % ; pilote-p12-4.7.20 : 79,2 % |
+| C1 | **tenu** | pilote-p9-4.7.18 : 79,3 % par partie (276/348, audit/relecture-p9-2026-09-26.md et benchmarks/partie-9-2026-09-25 (banane-data) : 348 cuts distincts, 276 posés par les lots 4.7.18 et 4.7.19) ; pilote-p12-4.7.20 : 79,2 % (objectif retenu : 79 %) |
 | C2 | **publié sans plancher** | écart à la relecture de l'opérateur, rails des cuts validés (retouchés) des lots de validation relus (pilote-p9-4.7.18 : 48 rails, p90 latéral 4,2 mm, vertical 7,6 mm ; pilote-p9-differes-4.7.19 : 18 rails, p90 latéral 3,6 mm, vertical 6,6 mm ; pilote-p12-4.7.20 : 10 rails, p90 latéral 8,3 mm, vertical 9,2 mm) ; plancher humain P2 reporté en 4.9 (D-057) |
 | C3 | **tenu** | sur tous les lots : 0 paire(s) hors contrat appliquée(s), 116 refus d'écartement |
 | C4 | **tenu (faux isolés expliqués)** | 4 faux sur 161 cuts jugés des lots de validation relus : 4903 (12,3 mm, pilote-p9-4.7.18, premier passage, vertical (rail trop bas), passage à niveau 4890–4903), 7523 (19,9 mm, pilote-p9-4.7.18, premier passage, vertical (rail trop bas)), 7738 (13,5 mm, pilote-p12-4.7.20, choix à un appui, vertical (rail trop bas) ; 2e du type après 7026 (partie 31) : correctif à étudier (D-042), 4.8.5), 7743 (22,2 mm, pilote-p12-4.7.20, premier passage, rail à faible confiance (37) à 27,7 mm de la voie, sous la garde de 30 mm ; même cas que 1834 (partie 34) : garde à étudier, 4.8.5) |
@@ -35,8 +35,8 @@ Rôle « validation » : partie jamais utilisée pour régler, relue ; sa mesure
 
 ## Ce qui manque pour la version candidate
 
-- C1 : partie 12 à 79,2 % (84/106, lot complet), partie 9 à 79,3 % par partie (276/348, deux lots) ; objectif intermédiaire 80 % (n°9) manqué d'un cut sur la partie 12, cible du §6 (90 %) non atteinte. À accepter explicitement par la direction pour la sortie.
-- Arrêts du Pilote 4.7.21 (KI-063) : trois causes lues dans les bilans des parties 13 et 14, corrigées dans la 4.8.0 (audit/interruptions-4721-2026-09-26.md) ; à confirmer sur le terrain.
+- C1 : partie 12 à 79,2 %, partie 9 à 79,3 % par partie ; la direction retient l'objectif comme atteint (« 79 % c'est comme 80 % », D-058).
+- Arrêts du Pilote 4.7.21 (KI-063) : trois causes corrigées ; ESV lent : rafraîchissement automatique et retour au cut (4.8.0) ; à confirmer sur le terrain.
 - Contrôle visuel du §14 H dans Edge : fait par la direction le 26/09 (bouton d'ouverture d'ESV redessiné en blanc, discret) ; banc vert sur le commit candidat ; paquet reproductible ; merge, tag et release sur autorisation explicite seulement.
 - Fait : matrice d'acceptation (44 exigences), relecture indépendante 4.7.13–4.7.16, seuil C4 (D-057), lot arrêté compté (D-057), P2 reporté en 4.9 (D-057), rotation réglage / validation (D-057).
 - Reporté en 4.8.5 (D-057) : voisins validés comme appuis en dernier recours (D-054), garde de premier passage à 20 mm et choix à un appui (faux 7743 et 7738), biais vertical aux passages à niveau (banc, aucun calage).

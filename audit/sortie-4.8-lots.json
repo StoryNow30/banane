@@ -1,6 +1,6 @@
 {
  "format": "banane-sortie-lots-v1",
- "date": "26 septembre 2026",
+ "date": "27 septembre 2026",
  "regle": "Rôle « validation » : partie jamais utilisée pour régler, relue ; sa mesure est consignée avant tout réglage, puis elle entre au banc de réglage (rotation, D-057). Parties de validation de la 4.8 : 9 et 12.",
  "lots": [
   {
@@ -60,7 +60,13 @@
    "fichier": "audit/acceptance-p9-2026-09-26-4718-relecture.json",
    "role": "validation",
    "relecture": "ciblée de fait (151/346 cuts relus, 66/262 appliqués jugés)",
-   "note": "4.7.18, lot long 0–8539 ; relecture Natif 25/09 (audit/relecture-p9-2026-09-26.md) ; 8066–8502 et 5151–5192 non relus ; fin 8504–8539 hors vue (KI-051)"
+   "note": "4.7.18, lot long 0–8539 ; relecture Natif 25/09 (audit/relecture-p9-2026-09-26.md) ; 8066–8502 et 5151–5192 non relus ; fin 8504–8539 hors vue (KI-051)",
+   "c1Partie": {
+    "appliques": 276,
+    "cuts": 348,
+    "pct": 79.3,
+    "source": "audit/relecture-p9-2026-09-26.md et benchmarks/partie-9-2026-09-25 (banane-data) : 348 cuts distincts, 276 posés par les lots 4.7.18 et 4.7.19"
+   }
   },
   {
    "fichier": "audit/acceptance-p9-2026-09-26-4719-relecture.json",
@@ -110,13 +116,14 @@
   "garde d'écartement voisin et lecteur passage à niveau, variation de gaugeGap, gaugeCount, crossingVoieMm : audit/curseurs-c5-4720-2026-09-25.md (D-055)"
  ],
  "conditions": [
-  "C1 : partie 12 à 79,2 % (84/106, lot complet), partie 9 à 79,3 % par partie (276/348, deux lots) ; objectif intermédiaire 80 % (n°9) manqué d'un cut sur la partie 12, cible du §6 (90 %) non atteinte. À accepter explicitement par la direction pour la sortie.",
-  "Arrêts du Pilote 4.7.21 (KI-063) : trois causes lues dans les bilans des parties 13 et 14, corrigées dans la 4.8.0 (audit/interruptions-4721-2026-09-26.md) ; à confirmer sur le terrain.",
+  "C1 : partie 12 à 79,2 %, partie 9 à 79,3 % par partie ; la direction retient l'objectif comme atteint (« 79 % c'est comme 80 % », D-058).",
+  "Arrêts du Pilote 4.7.21 (KI-063) : trois causes corrigées ; ESV lent : rafraîchissement automatique et retour au cut (4.8.0) ; à confirmer sur le terrain.",
   "Contrôle visuel du §14 H dans Edge : fait par la direction le 26/09 (bouton d'ouverture d'ESV redessiné en blanc, discret) ; banc vert sur le commit candidat ; paquet reproductible ; merge, tag et release sur autorisation explicite seulement.",
   "Fait : matrice d'acceptation (44 exigences), relecture indépendante 4.7.13–4.7.16, seuil C4 (D-057), lot arrêté compté (D-057), P2 reporté en 4.9 (D-057), rotation réglage / validation (D-057).",
   "Reporté en 4.8.5 (D-057) : voisins validés comme appuis en dernier recours (D-054), garde de premier passage à 20 mm et choix à un appui (faux 7743 et 7738), biais vertical aux passages à niveau (banc, aucun calage).",
   "Les neuf choix minTop 5 de la relecture 4.7.16 (I2) restent non jugés ; la partie 12 en juge sept nouveaux sur le terrain : 6 justes, 1 faux (7738, choix à un appui)."
  ],
  "lotArreteCompte": true,
- "p2Reporte": "plancher humain P2 reporté en 4.9 (D-057)"
+ "p2Reporte": "plancher humain P2 reporté en 4.9 (D-057)",
+ "c1Seuil": 79
 }

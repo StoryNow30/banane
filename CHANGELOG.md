@@ -1,6 +1,24 @@
 # Banane V4 TEST — journal des versions
 
-## En cours (4.8.0 candidate)
+## 4.8.0 — Ariane (candidate, en attente de la confirmation de la direction), 27 septembre 2026
+
+- **Ariane, Écho, Orbite** (D-058) : Banane devient Ariane, Natif devient
+  Écho, Pilote devient Orbite. Fichiers exportés `ariane-…` ; formats et
+  identifiants internes inchangés.
+- **ESV rafraîchi pendant un lot** : sur une lecture instable (ESV lent),
+  Ariane rafraîchit ESV, revient du premier différé au cut du lot sans rien
+  valider, rattache le lot à la nouvelle page (appuis translatés) et reprend ;
+  F5 puis « Reprendre » fait la même chose. Une fois par cut, 5 par lot.
+- **Interface** : « Tout télécharger pour l’analyse » (journal, bilan,
+  diagnostic, corpus en un clic) ; « Masquer / Afficher les détails » ;
+  « partie » partout ; légende SKIP seulement si un SKIP a servi ; verbes
+  « Télécharger » ; accueil et textes d'Orbite réécrits ; mentions TEST
+  retirées.
+- **Revue de code** : « Arrêter » pendant un rafraîchissement n'est plus
+  annulé à sa fin ; une autre partie ouverte à la main ne fixe plus la fin
+  de partie.
+- **Rapport de sortie** : C1 par partie (lots cumulés) et objectif retenu par
+  la direction ; C1, C3, C4, C5 tenus, C2 publié sans plancher.
 
 - **KI-063, arrêts du Pilote** (terrain du 26/09, parties 13 et 14) :
   - ESV lent : le recentrage de la vue sur un rail est redemandé (3 clics au

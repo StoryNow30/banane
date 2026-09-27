@@ -1,6 +1,17 @@
 # Procédure de retour arrière — Banane 4.7.0
 
-**Sur le terrain, la dernière version éprouvée est la 4.7.20** (26/09, deux
+**Depuis Ariane 4.8.0, la cible de retour est Banane 4.7.21**, commit
+`ead1cd1` (paquet `banane-v4.7.21-test.zip`, SHA-256 `24f8f1fe…f4ee2c06`).
+La 4.7.21 garde KI-063 (arrêts sur un ESV lent ou muet) ; ses données et
+exports restent lisibles par la 4.8.0 (mêmes formats). Installer par-dessus,
+sans supprimer l'extension.
+
+```bash
+git archive ead1cd1 | tar -x -C /tmp/banane-4.7.21
+cd /tmp/banane-4.7.21 && python3 tools/package.py --output /tmp/banane-v4.7.21-test.zip
+```
+
+**Avant la 4.8.0, la dernière version éprouvée était la 4.7.20** (26/09, deux
 lots Pilote : partie 12 menée à sa borne, partie 11). En cas de problème sur le
 terrain avec la 4.7.21, revenir à la **4.7.20**, commit `f859d8f` (paquet
 `banane-v4.7.20-test.zip`, SHA-256 `b3a679da…a3572f4cb`). Terminer ou arrêter le

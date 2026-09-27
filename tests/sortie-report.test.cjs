@@ -43,3 +43,11 @@ test('décisions D-057 : lot arrêté compté, reliquat exclu de C1, faux isolé
   const couverture=R.summarize({...m,lots:[...m.lots,{fichier:'d.json',role:'validation',relecture:'aucune'}]},x=>f[x]);
   assert.doesNotMatch(couverture.criteres.C1.detail,/couverture/,'arrêté sans relecture : pas compté');
 });
+test('D-058 : objectif C1 retenu par la direction (c1Seuil), dit dans le détail',()=>{
+  const s=R.summarize(manifeste({c1Seuil:70}),f=>fichiers[f]);
+  assert.equal(s.criteres.C1.statut,'tenu','70 % ≥ 70 %');assert.match(s.criteres.C1.detail,/objectif retenu : 70 %/);
+});
+test('C1 par partie (lots cumulés) : repris tel que publié, avec sa source',()=>{
+  const m=manifeste();m.lots[2]={...m.lots[2],c1Partie:{appliques:85,cuts:100,pct:85,source:'rapport X'}};
+  const s=R.summarize(m,f=>fichiers[f]);assert.equal(s.criteres.C1.statut,'tenu');assert.match(s.criteres.C1.detail,/valide-2 : 85 % par partie \(85\/100, rapport X\)/);
+});

@@ -17,8 +17,11 @@
  * Décisions de la direction (D-057, 26/09), lues dans le manifeste :
  * `lotArreteCompte` (un lot de validation arrêté compte pour C1), `c1:false`
  * sur un lot (reliquat : sa partie est déjà comptée par un autre lot),
+ * `c1Partie` sur un lot (C1 de la partie entière, lots cumulés, tel que publié
+ * par le rapport d'acceptation, avec sa source),
  * `seuilC4.regle:'isolés expliqués'` (chaque faux doit avoir son type dans
- * `seuilC4.types`, clé « lot:cut »), `p2Reporte` (C2 publié comme écart à la relecture, sans
+ * `seuilC4.types`, clé « lot:cut »), `c1Seuil` (objectif C1 retenu, 80 par
+ * défaut ; D-058 : 79, « 79 % c'est comme 80 % »), `p2Reporte` (C2 publié comme écart à la relecture, sans
  * plancher humain, et dit comme tel).
  */
 const fs=require('node:fs'),path=require('node:path');
@@ -29,7 +32,7 @@ const FINI=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
 function lotRow(entry,report){
   const lot=report.lots[0],t=report.total;
   return {label:lot.label,partie:lot.batch?.part??null,version:lot.version??null,role:entry.role,relecture:entry.relecture,note:entry.note||'',
-    etat:lot.batch?.state??null,c1Compte:entry.c1,complet:typeof lot.complete==='boolean'?lot.complete:FINI.includes(lot.batch?.state),
+    etat:lot.batch?.state??null,c1Compte:entry.c1,c1Partie:entry.c1Partie??null,complet:typeof lot.complete==='boolean'?lot.complete:FINI.includes(lot.batch?.state),
     c1:{appliques:t.c1.applied,cuts:t.c1.distinctCuts,pct:t.c1.coveragePct},
     c4:{faux:t.c4.wrong,juges:t.c4.judgedApplied,evaluable:!!t.c4.evaluable,partJugee:t.c4.judgedSharePct??null,
       nommes:(t.c4.wrongCuts||[]).map(w=>({cut:w.cut,pireMm:w.worstMm}))},
@@ -44,7 +47,7 @@ function summarize(manifest,load){
   const horsContrat=rows.reduce((n,r)=>n+r.c3.horsContratAppliques,0);
   const faux=valRelus.flatMap(r=>r.c4.nommes.map(w=>({...w,lot:r.label,partie:r.partie})));
   const criteres={
-    C1:complets.length?{statut:complets.every(r=>r.c1.pct>=80)?'tenu':'non tenu',detail:complets.map(r=>`${r.label} : ${pct(r.c1.pct)} %`).join(' ; ')}
+    C1:complets.length?{statut:complets.every(r=>(r.c1Partie?.pct??r.c1.pct)>=(manifest.c1Seuil??80))?'tenu':'non tenu',detail:complets.map(r=>r.c1Partie?`${r.label} : ${pct(r.c1Partie.pct)} % par partie (${r.c1Partie.appliques}/${r.c1Partie.cuts}, ${r.c1Partie.source})`:`${r.label} : ${pct(r.c1.pct)} %`).join(' ; ')+(manifest.c1Seuil!=null?` (objectif retenu : ${manifest.c1Seuil} %)`:'')}
       :{statut:'non démontré',detail:val.length?`aucun lot de validation complet ; lots arrêtés : ${val.map(r=>`${r.label} ${pct(r.c1.pct)} %`).join(' ; ')}`
         :'aucun lot de validation : les parties relues ont servi au réglage'},
     C2:manifest.p2?{statut:'mesurable',detail:'plancher P2 fourni'}

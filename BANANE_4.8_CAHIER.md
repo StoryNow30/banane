@@ -1732,3 +1732,16 @@ de 80 % d'un cut sur la partie 12 : à accepter explicitement par la direction.
 KI-063 (arrêts du Pilote 4.7.21) : trois causes, corrigées en 4.8.0
 (`audit/interruptions-4721-2026-09-26.md`).
 
+## Amendement n°17 — Ariane 4.8.0 : noms, ESV rafraîchi, sortie
+
+**27 septembre 2026.** Décision de la direction D-058.
+
+- **Noms** : Ariane (extension), Écho (ex-Natif), Orbite (ex-Pilote) ;
+  identifiants internes et formats de données inchangés.
+- **§12.3, point 1** : C1 retenu comme atteint à 79 % (parties 9 et 12).
+- **ESV lent** : rafraîchissement automatique d'ESV et retour au cut du lot
+  (KI-063) ; « Arrêter » pendant le rafraîchissement gagne.
+- **Sortie** : C1, C3, C4 et C5 tenus, C2 publié sans plancher
+  (`audit/rapport-sortie-4.8.md`). Livraison définitive après confirmation
+  des photos et de la vidéo du menu par la direction.
+

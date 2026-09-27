@@ -1,8 +1,17 @@
 # État du projet Banane
 
-Date : 26 septembre 2026  
-Version active de l'extension : **4.7.21 TEST** (nouveau lot corrigé, KI-062 ; bornes remplies par Banane ; réglages fixes et cerveau actif, D-056 ; Assisté retiré ; mouvement sans clignotement). Précédente : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
+Date : 27 septembre 2026  
+Version candidate : **Ariane 4.8.0** (Banane devient Ariane, Natif Écho, Pilote Orbite ; ESV rafraîchi et lot rattaché ; arrêts KI-063 corrigés ; revue d'interface ; D-058), en attente de la confirmation de la direction (photos et vidéo du menu).  
+Version terrain : **4.7.21 TEST** (nouveau lot corrigé, KI-062 ; bornes remplies par Banane ; réglages fixes et cerveau actif, D-056 ; Assisté retiré ; mouvement sans clignotement). Précédente : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
 Statut : développement expérimental, non qualifié pour la production.
+
+## État 4.8.0 (27/09) : candidate
+
+Go de la direction (D-058), sous réserve des photos et de la vidéo du menu.
+Rapport de sortie : C1 tenu (objectif retenu 79 %), C2 publié sans plancher,
+C3, C4 et C5 tenus. Nouveau : rafraîchissement d'ESV pendant un lot, noms
+Ariane / Écho / Orbite, « Tout télécharger pour l’analyse ». Après la
+confirmation : merge, étiquette `v4.8.0`, publication.
 
 ## Examen de sortie 4.8 (26/09)
 

@@ -1,5 +1,37 @@
 # Décisions techniques
 
+## D-058 - 4.8.0 : Ariane, Écho, Orbite ; C1 atteint ; ESV rafraîchi ; revue d'interface
+
+**27 septembre 2026, direction.** « Comme la 4.8 est un tournant majeur, le
+nom de Banane devient ARIANE ; Natif devient Écho ; Pilote devient Orbite » ;
+« 79 % c'est comme 80 %, donc objectif atteint, c'est la même moyenne sur les
+autres lots » ; « je valide tout le reste » ; « je donne donc le go pour la
+4.8 » (photos et vidéo du menu à montrer avant la livraison définitive).
+
+- **Noms** : Ariane (l'extension), Écho (observation du travail manuel, ex-
+  Natif), Orbite (lots automatiques, ex-Pilote). Renommés : interface,
+  messages, bouton d'ouverture et bandeau dans ESV, manifeste, noms des
+  fichiers exportés (`ariane-…`). **Inchangés** : identifiants internes,
+  clés de stockage, champs `format` des exports (les outils reconnaissent un
+  export par son contenu), noms des dépôts. Le moteur épinglé garde ses
+  textes ; le service worker les traduit vers le panneau.
+- **C1** : objectif intermédiaire retenu comme atteint à 79 % (parties 9 et
+  12 : 79,3 % et 79,2 %). Rapport de sortie : `c1Seuil` 79.
+- **ESV lent** (nuages absents, vue qui ne se recentre pas) : le remède est de
+  rafraîchir ESV. Après F5, ESV repart du premier cut non validé (direction,
+  27/09). Ariane rafraîchit ESV d'elle-même (une fois par cut, 5 par lot au
+  plus), revient au cut du lot par « cut non validé suivant » sans rien
+  valider, rattache le lot à la nouvelle page (appuis translatés dans le
+  nouveau repère) et reprend ; sinon, F5 puis « Reprendre » fait la même
+  chose. « Arrêter » pendant le rafraîchissement gagne.
+- **Fin de partie lue dans ESV** : le panneau d'ESV affiche « N on M
+  treated » (photo du 27/09 : 6593 on 6732, partie 14). Le lire donnerait la
+  fin de partie dès le premier lot : **4.8.5**. Le correctif KI-063 suffit
+  pour la 4.8 (direction).
+- **Revue d'interface** (skills `artifact-design`, `code-review`) : libellés,
+  cohérence, export complet en un clic ; deux défauts de la revue de code
+  corrigés avant livraison.
+
 ## D-057 - Sortie 4.8 : faux isolés tolérés, lot arrêté compté, P2 en 4.9, rotation réglage / validation
 
 **26 septembre 2026, direction**, après la relecture de la partie 12

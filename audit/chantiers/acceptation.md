@@ -217,3 +217,15 @@ Ajouter une exigence : une ligne dans la matrice, son identifiant dans
 `REQUIRED` de l'outil. Retirer une ligne fait échouer le banc. Un essai qui
 révèle un défaut s'écrit `test(nom,{todo:'KI-… proposé'},…)` : il reste au banc,
 visible, et ne compte jamais comme preuve.
+
+## 8. Renommage 4.8.0 (D-058) et essais de la 4.7.0
+
+Le renommage (Banane → Ariane, Natif → Écho, Pilote → Orbite) change des
+libellés attendus dans des essais existants, jamais un nom d'essai ni un
+mode : `tests/background.test.cjs` (`/mode Natif/` → `/Écho/`, deux essais ;
+`/GCV1 Pilote TEST/` → `/GCV1 d’Orbite/`), `tests/package.test.cjs`
+(version 4.8.x, bouton « Ariane … · ouvrir »), `tests/settings.test.cjs`
+(version 4.8.x). Chaque assertion garde son objet : le mode d'observation
+bloque les commandes, l'erreur technique GCV1 arrête le lot avant la pose, le
+paquet est cohérent. La non-régression §14 A (547 essais, même fichier, même
+nom, exécutés) reste verte.
