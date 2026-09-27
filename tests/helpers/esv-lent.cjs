@@ -7,7 +7,7 @@
 const L=require('../../src/lot-decision.js'),S=require('../../src/settings.js'),K=require('../../src/core.js');
 const {pilote}=require('./pilote-lot.cjs');
 const MUET='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
-const reglages=extra=>({...S,lot:{...S.lot,stateRetryMs:1,rafraichirPauseMs:1,rafraichirAttenteMs:5000,...extra}});
+const reglages=extra=>({...S,lot:{...S.lot,stateRetryMs:1,rafraichirAttenteMs:5000,...extra}});
 /* 101 différé (garde), 102 : lecture instable une fois. */
 const espion={...L,decideCut(args){if(args.capture.identity.cut===101)return {version:L.DEFAULTS.version,stage:'deferred',reason:'guard',guardDeferred:true,guardMm:40,anchorsUsed:[100]};return L.decideCut(args);}};
 const DECALAGE=[12.5,-3,0.25];

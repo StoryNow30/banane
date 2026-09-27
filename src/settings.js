@@ -125,12 +125,11 @@
     stateRetriesNavigation: 10,
     /* 4.8.0 (D-058) — ESV rafraîchi pendant un lot : automatique sur une
      * lecture instable, une fois par cut, `rafraichirMaxParLot` par lot ;
-     * attente de la page et des rails ; au plus `rafraichirPasMax` « cut non
-     * validé suivant » pour revenir au cut du lot. */
+     * attente du rechargement, de la page et des rails ; au plus
+     * `rafraichirPasMax` « cut non validé suivant » pour revenir au cut du lot. */
     rafraichirAuto: true,
     rafraichirMaxParLot: 5,
     rafraichirAttenteMs: 90000,
-    rafraichirPauseMs: 2000,
     rafraichirPasMax: 400,
   });
 
