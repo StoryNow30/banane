@@ -13,10 +13,11 @@ function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),g
   BananeGeometryBrain:require('../../src/geometry-brain.js'),BananeGCV1Shadow:shadow,...globals,
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:()=>{}}},
    action:{onClicked:{addListener:()=>{}}},storage:{local:{get:async k=>{const l=typeof k==='string'?[k]:Array.isArray(k)?k:Object.keys(memoire);return Object.fromEntries(l.filter(x=>x in memoire).map(x=>[x,memoire[x]]));},set:async o=>{Object.assign(memoire,o);}}},
-   tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),
+   /* 4.8.0 : rafraîchissement d'ESV simulé (`onReload`, `onInject` de l'ESV simulé). */
+   tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test',status:'complete'}),reload:async()=>{await adapter.onReload?.();},
     query:async({url}={})=>!url?[{id:1,url:'https://esv.lidar.altametris.xyz/rails_validation/test',title:'ESV TEST'}]:Array.isArray(url)||url.startsWith('chrome-extension:')?[]:[{id:1,title:'ESV TEST'}],
     sendMessage:async(id,m)=>m.kind==='launcher-visibility'?null:({result:await adapter[m.action](...m.args)}),onRemoved:{addListener:()=>{}}},
-   scripting:{executeScript:async()=>{}},windows:{create:async()=>({id:1}),update:async()=>{},onRemoved:{addListener:()=>{}}}}};
+   scripting:{executeScript:async()=>{await adapter.onInject?.();}},windows:{create:async()=>({id:1}),update:async()=>{},onRemoved:{addListener:()=>{}}}}};
  vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../../background.js'),'utf8'),ctx);
  const sender={id:'test',url:'chrome-extension://test/panel.html',tab:{id:20}};
  const message=m=>new Promise(resolve=>{const ret=onMessage(m,sender,resolve);if(ret!==true)resolve(undefined);});
