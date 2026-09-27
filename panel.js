@@ -396,7 +396,10 @@
       * tentative : une intention en attente ne s'y ajoute pas. */
      const differes=b?` · Différés : ${b.deferred?.length||0}`:'';
      /* 4.7.19 : arrêt au dernier cut du lot, sans validation ni navigation. */
-     const fin=b?.stoppedAtEnd?` — dernier cut ${b.stoppedAtEnd.cut} ${b.stoppedAtEnd.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`:'';
+     /* Clôture par une sortie d'ESV (KI-061, KI-063) : le cut nommé est le dernier validé, pas un cut posé. */
+     const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus'};
+     const e=b?.stoppedAtEnd,fin=!e?'':e.reason&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${SORTIES[e.reason]||'sortie du lot'}`
+       :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
@@ -466,7 +469,8 @@
  * dans un état dont rien ne le faisait sortir. */
 button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:working});
      /* 4.8.0 : « adaptateur sans réponse » se règle par F5 puis Reprendre. */
-     button('resume',{hidden:!['PAUSED','STOPPED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state),disabled:busy||active(s)});
+     const debloquable=b?.state==='PAUSED_ADAPTER_UNRESPONSIVE'&&b.scope?.geometryEngine==='geometry-candidate-v1'&&!s.reconcileRequired&&!s.intent;
+     button('resume',{hidden:!(['PAUSED','STOPPED'].includes(b?.state)||debloquable),disabled:busy||active(s)});
      const actionable=b?.step==='apply'&&['unresolved-rail','low-confidence'].includes(b?.pauseReason);
      button('retry',{hidden:!actionable,disabled:busy||active(s)});
      /* « Reprise manuelle » est un ÉTAT DU PILOTE, pas une session de

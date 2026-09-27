@@ -111,10 +111,12 @@ function lotExitOf(next){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
- b.state='STOPPED';b.stoppedAtEnd={cut:last??null,reason,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:true};
+async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+ b.state='STOPPED';b.stoppedAtEnd={cut:finSansPose?next?.cut??null:last??null,reason,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:!finSansPose};
  const where=()=>next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
- engine.s.notice=reason==='adapter-lost-after-navigation'
+ engine.s.notice=finSansPose
+   ?`Fin du lot : ESV ne répond plus sur le dernier cut du lot (${next?.cut}), où rien n’a été posé. Contrôle-le dans ESV ; le lot est clos.`
+   :reason==='adapter-lost-after-navigation'
    ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
    :surNavigation?`Fin du lot : après la validation du cut ${last}, ESV est passé ${where()}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`
    :`Fin du lot : ESV affiche la partie ${next?.part} pendant le cut ${last}, qu’Ariane n’a pas validé. Le lot est clos ; contrôle ce cut dans ESV.`;
@@ -149,33 +151,35 @@ async function horsPartie(r,{attente=false}={}){const b=engine.s.batch,id=r?.ide
 adapter.state=async(...args)=>{
  try{return await horsPartie(await readState(...args));}catch(e){if(!unresponsive(e))throw e;
    const S=globalThis.BananeSettings?.lot||{},b=engine.s.batch,last=b?.processed?.at(-1),next=last?.evidence?.nextIdentity;
-   if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE)throw e;
-   /* ESV muet après une navigation du lot (4.7.20 KI-061, 4.8.0 KI-063).
-    * - Vers une AUTRE partie, juste après la navigation : ESV a quitté la
-    *   partie ; attente courte, puis lot clos.
-    * - Vers le cut de FIN du lot (lot borné), juste après la navigation ou
-    *   sans rien de posé sur ce cut : attente longue (ESV lent), puis lot
-    *   clos proprement si ESV ne revient pas.
-    * - Toute autre navigation dans la partie : attente longue (30 s de
-    *   silence sur le terrain, partie 13), puis erreur « sans réponse ».
-    * - Sans navigation préalable (adaptateur absent dès le premier cut) :
-    *   l'attente courte d'avant. */
+   /* Une pause demandée pendant cette lecture compte encore comme lot en cours. */
+   if(!['RUNNING','PAUSED'].includes(b?.state)||b.scope?.geometryEngine!==GCV1_ENGINE)throw e;
+   /* ESV muet pendant un lot (4.7.20 KI-061, 4.8.0 KI-063). Attente longue
+    * une fois le lot en route (ESV qui charge un cut : 30 s de silence sur le
+    * terrain, partie 13), sauf juste après une validation qui a fait passer ESV
+    * dans une AUTRE partie (attente courte). Ensuite :
+    * - autre partie : lot clos ;
+    * - cut de fin d'un lot borné, rien n'y étant posé : lot clos proprement ;
+    * - sinon : erreur « sans réponse », que F5 puis « Reprendre » règle. */
    const apres=!!last&&b.activeIdentity?.cut===last.cut,rienPose=!engine.s.applied&&!engine.s.intent,annonce=!!next&&Number.isInteger(next.cut);
    const autrePartie=annonce&&apres&&Number.isInteger(next.part)&&next.part!==b.scope.part;
-   const borne=annonce&&!autrePartie&&(apres||rienPose&&b.activeIdentity?.cut===next.cut)&&next.cut>=b.scope.end&&b.scope.endMode!=='partie';
-   const longue=annonce&&!autrePartie,essais=longue?(S.stateRetriesNavigation??10):(S.stateRetries??2);
+   const borne=annonce&&!autrePartie&&rienPose&&(apres||b.activeIdentity?.cut===next.cut)&&next.cut>=b.scope.end&&b.scope.endMode!=='partie';
+   /* Lot pas encore en route (aucun cut validé ni différé) : l'adaptateur est
+    * plutôt absent (ESV non rechargé après une mise à jour) ; attente courte. */
+   const enRoute=(b.processed?.length||0)+(b.deferred?.length||0)>0;
+   const longue=enRoute&&!autrePartie,essais=longue?(S.stateRetriesNavigation??10):(S.stateRetries??2);
+   const vise=[next?.cut,b.activeIdentity?.cut].filter(Number.isInteger).reduce((a,c)=>Math.max(a,c),-1);
    /* « Arrêter » pendant l'attente : on cesse d'attendre. « Pause » : on attend
     * encore ; si ESV répond, le moteur s'arrête proprement en pause. */
    const arrete=()=>engine.s.batch!==b||b.state==='STOPPED';
    for(let k=1;k<=essais;k++){if(arrete())throw e;
      if(longue)engine.s.notice=b.state==='PAUSED'
        ?`Pause demandée : Ariane attend encore la réponse d’ESV (lecture ${k} sur ${essais}), puis s’arrête.`
-       :`ESV ne répond pas encore (chargement du cut ${next.cut} ?) : nouvelle lecture ${k} sur ${essais}. Le lot reprend seul dès qu’ESV répond.`;
+       :`ESV ne répond pas encore${vise>=0?` (chargement du cut ${vise} ?)`:''} : nouvelle lecture ${k} sur ${essais}. Le lot reprend seul dès qu’ESV répond.`;
      await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));if(arrete())throw e;
      try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});
        if(longue&&b.state==='RUNNING')engine.s.notice='ESV répond de nouveau : le lot continue.';return await horsPartie(r,{attente:true});}
      catch(e2){if(!unresponsive(e2))throw e2;}}
-   if((autrePartie||borne)&&b.state==='RUNNING'){await closeAtExit('adapter-lost-after-navigation',last.cut,next);
+   if((autrePartie||borne)&&!arrete()){await closeAtExit('adapter-lost-after-navigation',last.cut,next,{finSansPose:borne});
      throw Error('Fin du lot : ESV ne répond plus après le dernier passage (KI-061).');}
    throw e;}};
 /* 4.8.0 — ESV RAFRAÎCHI PENDANT UN LOT (direction, 27/09). Quand ESV est lent
@@ -190,7 +194,7 @@ adapter.state=async(...args)=>{
  * sont écartés si elle ne se vérifie pas (la voie repart des cuts suivants).
  * Automatique une fois par cut quand le lot se met en pause sur une lecture
  * instable (`rafraichirAuto`) ; sinon F5 puis « Reprendre ». */
-let rafraichissement=null;
+let rafraichissement=null,repriseEnCours=false;
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /* Adaptateur et bridge dans l'onglet ESV, puis `ping` de la bonne version :
  * partagé par « Connecter » et la reconnexion après un rafraîchissement. Sur un
@@ -244,9 +248,10 @@ async function retablirApresRechargement({auto=false}={}){
  /* « Adaptateur sans réponse » : c'est justement ce qu'un rafraîchissement règle. */
  if(!b||b.scope?.geometryEngine!==GCV1_ENGINE||!['PAUSED','STOPPED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b.state))return {etat:null,rattache:false};
  let now=null;try{now=await readState();}catch{/* adaptateur absent ou occupé */}
- if(!now){await reconnecterESV(S.rafraichirAttenteMs??90000);now=await etatDansPartie(b.scope.part,S.rafraichirAttenteMs??90000);}
- const debloquer=()=>{if(b.state==='PAUSED_ADAPTER_UNRESPONSIVE')b.state='PAUSED';};
- if(now.identity.pageId===b.scope.pageId){debloquer();return {etat:now,rattache:false};}
+ if(!now){const fin=Date.now()+(S.rafraichirAttenteMs??90000);
+   engine.s.notice='Ariane attend la page ESV (rafraîchis-la si elle reste figée)…';await engine.save();
+   await reconnecterESV(fin-Date.now());now=await etatDansPartie(b.scope.part,Math.max(1000,fin-Date.now()));}
+ if(now.identity.pageId===b.scope.pageId)return {etat:now,rattache:false};
  /* Rien de posé sur un cut : capture à refaire, analyse sans pose, ou résultat
   * archivé (KI-052). Une pose commandée reste à contrôler dans ESV. */
  const libre=['capture','analyze'].includes(b.step)||b.step==='apply'&&!engine.s.proposal;
@@ -272,13 +277,16 @@ async function retablirApresRechargement({auto=false}={}){
  /* Lecture faite sur l'ancienne page, sans pose (étape « analyse ») : archivée,
   * proposition comprise ; le cut sera relu sur la nouvelle page. */
  if(b.step==='analyze'){await engine.archivePending('esv-reloaded');engine.s.proposal=null;engine.s.lidarId=null;}
- const r=rebaserLot(ici,avant);debloquer();
+ const r=rebaserLot(ici,avant);
  await engine.event('batch-rebased-after-reload',{identity:ici.identity,cut:exact??plancher,atteint:ici.identity.cut,pas,auto,...r});
  engine.s.notice=`ESV rafraîchi : lot rattaché à la nouvelle page, au cut ${ici.identity.cut}${r.appuisEcartes?` (${r.appuisEcartes} appuis écartés)`:''}.`;
  await engine.save();return {etat:ici,rattache:true,...r,pas};}
 /* « Reprendre », depuis le bouton ou après un rafraîchissement automatique :
  * mêmes gardes dans les deux cas. `garde()` faux : on ne relance rien. */
-async function reprendreLot({auto=false,garde=()=>true}={}){assertPilotContract(engine.s.batch?.scope);
+async function reprendreLot({auto=false,garde=null}={}){assertPilotContract(engine.s.batch?.scope);
+ /* « Arrêter » pendant l'attente d'ESV gagne : on ne relance que le même lot, non arrêté. */
+ const lot=engine.s.batch?.id,etatDepart=engine.s.batch?.state;
+ garde=garde||(()=>engine.s.batch?.id===lot&&engine.s.batch.state===etatDepart);
  /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
  const {etat}=await retablirApresRechargement({auto});
  /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
@@ -295,9 +303,13 @@ async function reprendreLot({auto=false,garde=()=>true}={}){assertPilotContract(
   * cut par sa capture. */
  if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
  if(!garde())return false;
- await engine.resume();return true;}
+ /* « Adaptateur sans réponse » : ESV répond de nouveau (état relu ci-dessus), le
+  * lot redevient une pause ordinaire ; refus du moteur : l'état est rendu. */
+ const b=engine.s.batch,bloque=b?.state==='PAUSED_ADAPTER_UNRESPONSIVE'&&!!etat;if(bloque)b.state='PAUSED';
+ try{await engine.resume();}catch(e){if(bloque&&engine.s.batch===b&&b.state==='PAUSED')b.state='PAUSED_ADAPTER_UNRESPONSIVE';throw e;}
+ return true;}
 async function rafraichirAuto(){const b=engine.s.batch,S=globalThis.BananeSettings?.lot||{};
- if(S.rafraichirAuto===false||rafraichissement||!selectedTab||!b||b.state!=='PAUSED'||!b.error?.retryableCapture||b.scope?.geometryEngine!==GCV1_ENGINE)return;
+ if(S.rafraichirAuto===false||rafraichissement||repriseEnCours||!selectedTab||!b||b.state!=='PAUSED'||!b.error?.retryableCapture||b.scope?.geometryEngine!==GCV1_ENGINE)return;
  const cut=engine.s.before?.identity?.cut??b.activeIdentity?.cut,fait=b.rafraichissements=b.rafraichissements||{};
  if((fait[cut]||0)>=1||Object.values(fait).reduce((n,v)=>n+v,0)>=(S.rafraichirMaxParLot??5))return;
  fait[cut]=(fait[cut]||0)+1;
@@ -556,7 +568,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='list-tabs')return (await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'})).map(t=>({id:t.id,title:t.title}));
  if(action==='connect'){
   if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer d’onglet.');
-  if(rafraichissement)throw Error('Rafraîchissement d’ESV en cours : attends qu’Ariane ait repris le lot.');
+  if(rafraichissement||repriseEnCours)throw Error('Reprise du lot en cours : attends qu’elle se termine.');
   const tab=await chrome.tabs.get(Number(args.tabId));if(!esvURL(tab.url))throw Error('Onglet ESV invalide.');
   // Only extension-origin UI requests can inject the fixed, bundled adapter.
   await equiperOnglet(tab.id);selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
@@ -616,7 +628,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
  if(action==='resume'){if(rafraichissement)throw Error('Rafraîchissement d’ESV en cours : Ariane reprendra seule.');
-  await reprendreLot();return engine.view();}
+  if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
+  repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();}
  /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
   * l'opérateur a déplacé les rails pendant la pause, cette capture serait SA
   * pose, qui entrerait dans le moteur et la décision sur le lot (cahier §10,

@@ -8,5 +8,6 @@ test('cut de fin lu une fois puis ESV muet, rien posé : lot clos proprement (KI
   const r=await pilote(L,{start:100,end:103,settings:reglages({rafraichirAuto:false}),esv:esv=>{const st=esv.state.bind(esv);let vu=0;
     esv.state=async(...a)=>{if(esv.identity.cut===103&&++vu>1)throw Error(MUET);return st(...a);};}});
   const view=await r.b.settle();const fin=await finMoteur(r);
-  assert.equal(fin.batch.state,'STOPPED');assert.equal(fin.batch.stoppedAtEnd?.reason,'adapter-lost-after-navigation');void view;
+  assert.equal(fin.batch.state,'STOPPED');assert.equal(fin.batch.stoppedAtEnd?.reason,'adapter-lost-after-navigation');
+  assert.equal(fin.batch.stoppedAtEnd.cut,103);assert.equal(fin.batch.stoppedAtEnd.applied,false,'rien posé sur le cut de fin');assert.match(fin.notice,/où rien n’a été posé/);void view;
 });
