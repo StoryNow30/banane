@@ -88,6 +88,9 @@
     lecturesStables: 3,
     /* Plafonds d'attente, par nature d'attente. */
     attenteMs: 12000,
+    /* Clics de sélection d'un rail avant de conclure « vue non recentrée »
+     * (4.8.0, KI-063 : ESV lent). Chaque clic attend `attenteMs`. */
+    recentrages: 3,
     attenteNavigationMs: 15000,
     attenteClicMs: 5000,
   });
@@ -116,6 +119,10 @@
      * navigation : nouvelles lectures, à cet intervalle, avant de conclure. */
     stateRetries: 2,
     stateRetryMs: 3000,
+    /* 4.8.0 (KI-063) : silence après une navigation DANS la partie (ESV qui
+     * charge un cut lourd) : nouvelles lectures avant de conclure, environ
+     * 70 s avec le délai de lecture du bridge (4 s). */
+    stateRetriesNavigation: 10,
   });
 
   const exportSettings = Object.freeze({

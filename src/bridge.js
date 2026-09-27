@@ -73,10 +73,15 @@
    p.timer=setTimeout(()=>{pending.delete(id);
      if(['manualStart','manualFinish'].includes(m.action)&&window.__banane4InputGate)window.__banane4InputGate.active=false;
      if(['nativeStart','nativePause','nativeResume','nativeFinish'].includes(m.action)&&window.__banane4NativeGate)window.__banane4NativeGate.active=false;
-     if(!passive.has(m.action))window.postMessage({kind:'banane3:command',id:crypto.randomUUID(),channel,action:'cancel',args:[]},location.origin);
+     /* 4.8.0 (KI-063) : l'annulation d'un délai vise la SEULE requête expirée ;
+      * la page l'ignore si cette requête ne tourne plus. Un `cancel` expiré
+      * n'en déclenche pas un autre : terrain du 26/09, un « Arrêter » resté sans
+      * réponse pendant qu'ESV changeait de partie a coupé 45 s plus tard la
+      * lecture du lot suivant (« Export interrompu. »). */
+     if(!passive.has(m.action)&&m.action!=='cancel')window.postMessage({kind:'banane3:command',id:crypto.randomUUID(),channel,action:'cancel',args:[{requestId:id,reason:'bridge-timeout'}],sentAt:Date.now()},location.origin);
      const error=p.acknowledged?'Délai dépassé dans ESV à l’étape '+p.stage+' ; résultat à contrôler.':'Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
-     respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','manualFinish'].includes(m.action)?90000:45000);
-   pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,action:m.action,args:m.args||[]},location.origin);return true;});
+     respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','apply','manualFinish'].includes(m.action)?90000:45000);
+   pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,action:m.action,args:m.args||[],sentAt:Date.now()},location.origin);return true;});
  pill=document.createElement('button');pill.textContent='Banane 4.7.21 · ouvrir';pill.type='button';pill.hidden=true;
  /* 4.8.0 (direction, 26/09) : bouton blanc et discret, plein seulement au survol. */
  const repos='0 1px 2px rgba(15,23,42,.10),0 2px 8px rgba(15,23,42,.08)',survol='0 2px 4px rgba(15,23,42,.12),0 6px 18px rgba(15,23,42,.14)';

@@ -22,7 +22,10 @@ function page(){
   addEventListener:(event,fn)=>listener=fn,postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else responses.get(m.id)(m);},crypto:{randomUUID:K.uid}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../../src/adapter-page.js'),'utf8'),ctx);
  async function call(action,...args){const id=K.uid();return new Promise((resolve,reject)=>{responses.set(id,m=>m.error?reject(Error(m.error)):resolve(m.result));listener({source:vm.runInContext('window',ctx),origin:ctx.location.origin,data:{kind:'banane3:command',channel:'fixture',id,action,args}});});}
- return {ctx,left,right,root,nodes,call,progress,keyboard,advance:ms=>{clock+=ms;},clock:()=>clock};
+ /* Commande brute : identifiant et champs du message choisis par l'essai (`sentAt`…). */
+ function raw(action,args=[],{id=K.uid(),...extra}={}){const promise=new Promise((resolve,reject)=>{responses.set(id,m=>m.error?reject(Error(m.error)):resolve(m.result));
+   listener({source:vm.runInContext('window',ctx),origin:ctx.location.origin,data:{kind:'banane3:command',channel:'fixture',id,action,args,...extra}});});return {id,promise};}
+ return {ctx,left,right,root,nodes,call,raw,progress,keyboard,advance:ms=>{clock+=ms;},clock:()=>clock};
 }
 
 module.exports={page};

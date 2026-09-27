@@ -110,33 +110,50 @@ function lotExitOf(next){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+async function closeAtExit(reason,last,next,annonce=null){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';b.stoppedAtEnd={cut:last??null,reason,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:true};
  const where=next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
  engine.s.notice=reason==='adapter-lost-after-navigation'
    ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
    :`Fin du lot : après la validation du cut ${last}, ESV est passé ${where}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`;
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});
- /* ESV a quitté la partie après ce cut : c'est la fin de la partie pour le Pilote. */
- if(reason==='navigation-other-part'||reason==='adapter-lost-after-navigation'&&b.scope.endMode==='partie')await retenirFinPartie(b.scope.part,last,'fin constatée');}
+ /* ESV a quitté la partie après ce cut : c'est la fin de la partie pour le
+  * Pilote. 4.8.0 (KI-063) : seulement quand ESV montre ou annonce une AUTRE
+  * partie. Terrain du 26/09 (partie 13) : ESV muet après 6629 alors qu'il
+  * annonçait 6758, même partie ; la 4.7.21 retenait 6629 comme fin. Si ESV a
+  * annoncé un cut plus loin dans la partie avant d'en sortir, c'est lui. */
+ if(Number.isInteger(next?.part)&&next.part!==b.scope.part)await retenirFinPartie(b.scope.part,Math.max(last??-1,annonce?.part===b.scope.part&&Number.isInteger(annonce.cut)?annonce.cut:-1),'fin constatée');}
 const validateInESV=adapter.validateAndNext;
 adapter.validateAndNext=async(...args)=>{const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
  return evidence;};
 const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.test(e?.message||'');
+/* 4.8.0 (KI-063) — ESV LU DANS UNE AUTRE PARTIE. Après un silence, ESV peut
+ * revenir sur une autre partie (terrain du 26/09 : partie 13 muette 30 s après
+ * 6629, puis partie 14, cut 1) : le lot sort de sa partie, il est clos, rien
+ * n'y est traité. */
+async function horsPartie(r){const b=engine.s.batch,id=r?.identity;
+ if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(id?.part)||id.part===b.scope.part)return r;
+ const last=b.processed?.at(-1);
+ await closeAtExit('navigation-other-part',undefined,{part:id.part,cut:id.cut},last?.evidence?.nextIdentity);
+ throw Error(`Fin du lot : ESV affiche la partie ${id.part}, hors du lot (KI-063).`);}
 adapter.state=async(...args)=>{
- try{return await readState(...args);}catch(e){if(!unresponsive(e))throw e;
+ try{return await horsPartie(await readState(...args));}catch(e){if(!unresponsive(e))throw e;
    const S=globalThis.BananeSettings?.lot||{},b=engine.s.batch,last=b?.processed?.at(-1),next=last?.evidence?.nextIdentity;
    if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE)throw e;
-   // ESV peut être occupé à charger le cut : nouvelles lectures avant de conclure.
-   for(let k=1;k<=(S.stateRetries??2);k++){await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));
-     try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});return r;}
+   /* Muet juste après une navigation vers la fin du lot ou hors de la partie :
+    * ESV a quitté la partie. Toute autre navigation (même partie, avant la
+    * borne, lot « à la fin de la partie » compris) : ESV charge le cut, on
+    * attend plus longtemps (4.8.0, KI-063 : 30 s de silence sur le terrain). */
+   const fin=!!next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end&&b.scope.endMode!=='partie'||Number.isInteger(next.part)&&next.part!==b.scope.part);
+   const essais=fin?(S.stateRetries??2):(S.stateRetriesNavigation??10);
+   for(let k=1;k<=essais;k++){if(!fin)engine.s.notice=`ESV ne répond pas encore (chargement du cut ${next?.cut??'suivant'} ?) : nouvelle lecture ${k} sur ${essais}. Le lot reprend seul dès qu'ESV répond.`;
+     await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));
+     try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});
+       if(!fin)engine.s.notice='ESV répond de nouveau : le lot continue.';return await horsPartie(r);}
      catch(e2){if(!unresponsive(e2))throw e2;}}
-   // Muet juste après une navigation vers la fin du lot : ESV a quitté la partie.
-   /* Lot « à la fin de la partie » : ESV muet après une validation, c'est la sortie de la partie. */
-   if(next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end||next.part!==b.scope.part||b.scope.endMode==='partie')){
-     await closeAtExit('adapter-lost-after-navigation',last.cut,next);
+   if(fin){await closeAtExit('adapter-lost-after-navigation',last.cut,next);
      throw Error('Fin du lot : ESV ne répond plus après le dernier passage (KI-061).');}
    throw e;}};
 const applyInESV=adapter.apply;

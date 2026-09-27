@@ -1729,5 +1729,6 @@ premier passage à 27,7 mm de la voie, 22,2 mm), 0 hors contrat. Parties 9 et
 C3, C4 (seuil D-057) et C5 tenus ; C2 publié sans plancher. **C1** : 79,2 %
 (partie 12) et 79,3 % (partie 9, par partie), sous l'objectif intermédiaire
 de 80 % d'un cut sur la partie 12 : à accepter explicitement par la direction.
-Reste KI-063 (arrêts du Pilote 4.7.21), en analyse.
+KI-063 (arrêts du Pilote 4.7.21) : trois causes, corrigées en 4.8.0
+(`audit/interruptions-4721-2026-09-26.md`).
 

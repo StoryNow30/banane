@@ -19,13 +19,15 @@ test('« fin de partie » : borne 999999 figée dans le scope ; ESV change de pa
   assert.equal(f.last,101);assert.equal(f.source,'fin constatée');
 });
 
-test('« fin de partie » : ESV muet après une validation, lot clos (sortie de partie probable), pas en panne',async()=>{
+test('« fin de partie » : ESV muet après une validation, cut suivant annoncé dans la partie : aucune fin inventée (4.8.0, KI-063)',async()=>{
   const r=await pilote(L,{start:100,end:0,endMode:'partie',settings:rapide,esv:esv=>{const v=esv.validateAndNext.bind(esv),st=esv.state.bind(esv);let muet=false;
     esv.validateAndNext=async(...a)=>{const e=await v(...a);muet=true;return e;};
     esv.state=async(...a)=>{if(muet)throw Error(MUET);return st(...a);};}});
   const view=await r.b.settle();
-  assert.equal(view.batch.state,'STOPPED');assert.equal(view.batch.stoppedAtEnd.reason,'adapter-lost-after-navigation');
-  assert.equal((await r.b.api('bornes-partie',{part:23})).source,'fin constatée');
+  /* 4.7.21 : lot clos et 100 retenu comme fin de la partie 23 ; terrain du 26/09
+   * (partie 13, 6629 → 6758) : ESV chargeait le cut suivant. */
+  assert.notEqual(view.batch.state,'RUNNING');assert.equal(view.batch.stoppedAtEnd??null,null);
+  assert.equal(await r.b.api('bornes-partie',{part:23}),null);
 });
 
 test('fin saisie : retenue pour la partie ; une autre partie reste inconnue',async()=>{

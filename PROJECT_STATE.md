@@ -11,7 +11,9 @@ jugés, **2 faux** (7738 choix à un appui, 7743 premier passage), C1 79,2 %
 (`audit/relecture-p12-2026-09-26.md`). Décisions D-057 : faux isolés tolérés,
 lot arrêté compté, P2 en 4.9, rotation réglage / validation ; D-054 et pistes
 des faux en 4.8.5. Rapport de sortie : C3, C4, C5 tenus ; C2 publié sans
-plancher ; C1 à 79 % (à accepter). Ouvert : KI-063 (arrêts Pilote 4.7.21).
+plancher ; C1 à 79 % (à accepter). KI-063 (arrêts du Pilote 4.7.21, trois
+causes lues dans les bilans des parties 13 et 14) corrigé
+(`audit/interruptions-4721-2026-09-26.md`) ; partie 11 : arrêts de l'opérateur.
 Bouton d'ouverture dans ESV redessiné (blanc, discret).
 
 ## État 4.7.21

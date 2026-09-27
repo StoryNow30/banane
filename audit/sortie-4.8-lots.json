@@ -80,6 +80,12 @@
    "role": "validation",
    "relecture": "complète (84/84 appliqués jugés)",
    "note": "4.7.20, partie neuve 1–8144, premier lot mené à sa borne (arrêté sur 8144) ; relecture Natif 4.7.21 du 26/09 (audit/relecture-p12-2026-09-26.md)"
+  },
+  {
+   "fichier": "audit/acceptance-p11-2026-09-26-4720-sans-relecture.json",
+   "role": "couverture",
+   "relecture": "aucune",
+   "note": "4.7.20, 556–8146, arrêté par l'opérateur au cut 703 (pauses de l'opérateur) ; lot bloqué ensuite (KI-062)"
   }
  ],
  "p2": null,
@@ -105,7 +111,7 @@
  ],
  "conditions": [
   "C1 : partie 12 à 79,2 % (84/106, lot complet), partie 9 à 79,3 % par partie (276/348, deux lots) ; objectif intermédiaire 80 % (n°9) manqué d'un cut sur la partie 12, cible du §6 (90 %) non atteinte. À accepter explicitement par la direction pour la sortie.",
-  "Arrêts du Pilote 4.7.21 en cours de session et passage à la partie suivante (KI-063) : lots attendus de l'opérateur ; correctif dans la 4.8.0 si la cause est confirmée.",
+  "Arrêts du Pilote 4.7.21 (KI-063) : trois causes lues dans les bilans des parties 13 et 14, corrigées dans la 4.8.0 (audit/interruptions-4721-2026-09-26.md) ; à confirmer sur le terrain.",
   "Contrôle visuel du §14 H dans Edge : fait par la direction le 26/09 (bouton d'ouverture d'ESV redessiné en blanc, discret) ; banc vert sur le commit candidat ; paquet reproductible ; merge, tag et release sur autorisation explicite seulement.",
   "Fait : matrice d'acceptation (44 exigences), relecture indépendante 4.7.13–4.7.16, seuil C4 (D-057), lot arrêté compté (D-057), P2 reporté en 4.9 (D-057), rotation réglage / validation (D-057).",
   "Reporté en 4.8.5 (D-057) : voisins validés comme appuis en dernier recours (D-054), garde de premier passage à 20 mm et choix à un appui (faux 7743 et 7738), biais vertical aux passages à niveau (banc, aucun calage).",

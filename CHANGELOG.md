@@ -2,6 +2,17 @@
 
 ## En cours (4.8.0 candidate)
 
+- **KI-063, arrêts du Pilote** (terrain du 26/09, parties 13 et 14) :
+  - ESV lent : le recentrage de la vue sur un rail est redemandé (3 clics au
+    plus) ; en lecture, un échec persistant met le lot en pause reprenable ;
+    délai de pose du bridge 45 → 90 s ;
+  - un silence d'ESV après une navigation dans la partie n'est plus pris pour
+    une fin de partie : relectures pendant environ 70 s (message au panneau),
+    lot clos seulement si ESV montre une autre partie ; fin de partie retenue
+    seulement sur une sortie observée ;
+  - annulation tardive : plus d'annulation d'une annulation, annulation de
+    délai ciblée, annulation périmée ignorée par la page ; message « Lecture
+    LiDAR annulée (arrêt demandé ou délai dépassé). ».
 - **Bouton d'ouverture dans ESV** redessiné : blanc, discret (opacité 0,92,
   plein au survol), police système, coins ronds (direction, 26/09).
 - **Rapport de sortie** (`tools/sortie-report.cjs`) : décisions D-057 lues

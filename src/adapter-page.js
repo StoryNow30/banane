@@ -7,14 +7,14 @@
   * anciennes valeurs codées en dur si le module n'est pas chargé, pour ne
   * jamais empêcher l'adaptateur de fonctionner. */
  const P=window.BananeSettings?.pilote||{tentativesParVue:3,stabiliteMs:800,budgetCaptureMs:60000,
-   sondageMs:80,lecturesStables:3,attenteMs:12000,attenteNavigationMs:15000,attenteClicMs:5000};
+   sondageMs:80,lecturesStables:3,attenteMs:12000,recentrages:3,attenteNavigationMs:15000,attenteClicMs:5000};
  const pageId=K.uid(),objects=new WeakMap(),frames=new WeakMap(),nativeFrames=new WeakMap(),nativeViews=new WeakMap();let frame=null,cancelled=false;
  /* D1. Annulations et invocations CORRÉLÉES À UNE OPÉRATION, par opposition au
   * drapeau `cancelled` que chaque entrée de l'adaptateur remet à faux. Ces deux
   * collections ne sont jamais vidées par une autre requête : une annulation
   * connue de la page reste connue, et une opération déjà invoquée ne peut pas
   * l'être une seconde fois. Elles vivent le temps du document, comme la page. */
- const cancelledOperations=new Set(),invokedOperations=new Map();
+ const cancelledOperations=new Set(),invokedOperations=new Map(),running=new Map();
  const selectors={label:'O2N3DCutDescription',shape:'O2N3DCutShapeInfo',left:'O2N3DCutLRClick',right:'O2N3DCutRRClick',validate:'O2N3DCutValidate3DRail',next:'O2N3DCutNextInvalid3DRail'};
  const objectId=o=>{if(!objects.has(o))objects.set(o,K.uid());return objects.get(o);};
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -232,11 +232,13 @@
  }
  async function capture(expected,progress=()=>{}){cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
    const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs;
-   const guard=()=>{if(cancelled)throw Error('Export interrompu.');const now=assertExpected(expected);
+   const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
      if(!K.equalPoses(now.rails,expected.rails))throw Error('Rails modifiés pendant la lecture.');
      if(Date.now()-startedAt>=budgetMs)throw Error('Lecture LiDAR instable : délai total de 60 secondes atteint.');};
    for(const side of ['left','right']){
-     guard();await select(side,expected,guard);
+     /* Lecture seule : une vue qui ne se recentre pas met le lot en pause
+      * reprenable (« Lecture LiDAR instable »), au lieu de l'arrêter en erreur. */
+     guard();await select(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut : attends la fin du chargement, puis clique sur Reprendre.');throw e;});
      for(let attempt=1;attempt<=maxAttemptsPerView;attempt++){
        const began=Date.now();guard();progress('capture-wait',{side,attempt,maxAttemptsPerView});
        try{
@@ -305,13 +307,22 @@
   *
   * Le prédicat reste la condition dont dépend le clic — aucun seuil d'amplitude
   * n'est introduit : le rail sélectionné projette à ndc ≈ 0, l'autre à ≈ 7,4. */
- async function select(side,expected,guard=()=>assertExpected(expected)){guard();nativeClick(selectors[side]);
-   let previous=null,stable=0;
-   await waitFor(()=>{const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
-     if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;
-     if(stable<P.lecturesStables)return false;
-     return !!projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView;},
-     'Vue ESV non recentrée sur le rail '+side+'.',P.attenteMs,guard);}
+/* 4.8.0 (KI-063) — ESV LENT : REDEMANDER LE RECENTRAGE. Terrain du 26/09
+  * (parties 13 et 14) : trois lots sur cinq arrêtés en erreur par « Vue ESV non
+  * recentrée », sur des cuts où ESV mettait 17 à 19 s à lire le nuage (4 s
+  * d'ordinaire). Le clic de sélection d'un rail ne déplace aucun rail : le
+  * répéter est sans effet sur la scène. Après une attente vaine, le clic est
+  * donc répété (`recentrages` clics au plus) avant de conclure. */
+ async function select(side,expected,guard=()=>assertExpected(expected)){
+   const essais=Math.max(1,P.recentrages??3);
+   for(let essai=1;;essai++){guard();nativeClick(selectors[side]);
+     let previous=null,stable=0;
+     try{return await waitFor(()=>{const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+       if(!cam)return false;const value=JSON.stringify(cam.cameraToSceneRelative);stable=value===previous?stable+1:0;previous=value;
+       if(stable<P.lecturesStables)return false;
+       return !!projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView;},
+       'Vue ESV non recentrée sur le rail '+side+'.',P.attenteMs,guard);}
+     catch(e){if(essai>=essais||!String(e?.message).startsWith('Vue ESV non recentrée'))throw e;}}}
  async function clickPosition(side,target,expected){
    await select(side,expected);const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
    const view=projectToView(cam,target);
@@ -625,9 +636,22 @@
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.
  window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
-   const {id,channel,action,args=[]}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
+   const {id,channel,action,args=[],sentAt}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
    if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
    const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
+   /* 4.8.0 (KI-063) — ANNULATION PÉRIMÉE. Un `cancel` sans identifiant
+    * d'opération est global : arrivé en retard, il coupait une requête
+    * étrangère (terrain du 26/09, partie 14 : « Export interrompu. » sur un lot
+    * neuf, 45 s après un « Arrêter » resté sans réponse). Il ne vaut plus que
+    * pour la requête qu'il vise (`requestId`, délai du bridge) ou, à défaut,
+    * pour une requête déjà en cours quand il a été émis (`sentAt`). Un `cancel`
+    * PORTANT un identifiant d'opération reste retenu, quel que soit l'ordre. */
+   if(action==='cancel'){const o=args[0]&&typeof args[0]==='object'?args[0]:{};
+     const target=typeof o.requestId==='string'?o.requestId:null,scoped=typeof o.operationId==='string';
+     const stale=!scoped&&(target?!running.has(target):Number.isFinite(sentAt)&&![...running.values()].some(t=>t<=sentAt));
+     if(stale){window.postMessage({kind:'banane3:result',id,channel,result:{cancelRequested:false,stale:true,requestId:target}},location.origin);return;}}
+   else running.set(id,Date.now());
    try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
-   catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}});
+   catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}
+   finally{running.delete(id);}});
 })();
