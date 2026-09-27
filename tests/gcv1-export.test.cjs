@@ -140,7 +140,7 @@ test('GCV1 exports are exposed only by explicit panel controls',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../panel.html'),'utf8');
  const panel=fs.readFileSync(path.join(__dirname,'../panel.js'),'utf8');
  const background=fs.readFileSync(path.join(__dirname,'../background.js'),'utf8');
- assert.match(html,/>Export diagnostic GCV1</);assert.match(html,/>Export corpus GCV1 \+ LiDAR</);
+ assert.match(html,/>Télécharger le diagnostic GCV1</);assert.match(html,/>Télécharger le corpus GCV1 \+ LiDAR</);assert.match(html,/id="export-tout"/);
  assert.match(panel,/on\('gcv1-diagnostic-export'/);assert.match(panel,/on\('gcv1-corpus-export'/);
  assert.doesNotMatch(background,/saveBlob|createObjectURL|downloads\.download/);
  assert.doesNotMatch(panel,/setInterval\([^)]*gcv1-(?:diagnostic|corpus)-export/);

@@ -115,7 +115,8 @@ test('a manual takeover holds the batch context against a new batch or native mo
 });
 test('native mode excludes corrections and pilot commands while remaining command-free',async()=>{
  const b=background();await b.api('connect',{tabId:1});await b.api('native-start');
- await assert.rejects(()=>b.api('manual-start'),/mode Natif/);await assert.rejects(()=>b.api('settings',{mode:'automatic-test'}),/mode Natif/);
+ /* 4.8.0 : le mode Natif s'appelle Écho (renommage, D-058). */
+ await assert.rejects(()=>b.api('manual-start'),/Écho/);await assert.rejects(()=>b.api('settings',{mode:'automatic-test'}),/Écho/);
  assert.ok(b.adapter.calls.includes('nativeStart'));assert.equal(b.adapter.calls.some(x=>['apply','next','validate','skip'].includes(x)),false);
  await b.api('native-pause');await b.api('native-resume');const data=await b.api('native-end');assert.equal(data.format,'banane-native-session-end-v1');assert.equal(data.status,'FINISHED');
  assert.ok(JSON.stringify(data).length<4096,'la fin de session ne renvoie qu’un résumé, jamais la session entière');
@@ -162,7 +163,7 @@ test('automatic-test remains V4.6 unless its batch scope explicitly selects GCV1
  assert.equal(shadow.calls.arm,0,'automatic analysis stays on V4.6');assert.equal(shadow.calls.consume,1);
  const nativeShadow=shadowHarness(),n=background({shadow:nativeShadow});await n.api('connect',{tabId:1});
  await n.api('gcv1-shadow-configure',{activeAssisted:true});await n.api('native-start');
- await assert.rejects(()=>n.api('analyze'),/mode Natif/);assert.equal(nativeShadow.calls.arm,0);
+ await assert.rejects(()=>n.api('analyze'),/Écho/);assert.equal(nativeShadow.calls.arm,0);
  await n.api('native-end');
 });
 
@@ -189,7 +190,7 @@ test('a GCV1 pilot technical error clears the V4.6 proposal and stops before app
  const b=background({shadow:shadowHarness({pilotFailure:true})});await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  await b.api('start',{part:23,start:100,end:100,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1'});
  while((await b.api('view')).batch?.state==='RUNNING')await new Promise(r=>setImmediate(r));
- const view=await b.api('view');assert.equal(view.batch.state,'ERROR');assert.match(view.batch.error.message,/GCV1 Pilote TEST/);
+ const view=await b.api('view');assert.equal(view.batch.state,'ERROR');assert.match(view.batch.error.message,/GCV1 d’Orbite/);
  assert.equal(view.proposal,null);assert.equal(b.adapter.calls.includes('apply'),false);assert.equal(b.adapter.calls.includes('skip'),false);
  assert.ok(b.store.events.some(e=>e.type==='gcv1-pilot-error'));
 });

@@ -76,10 +76,10 @@
  const VUES=['home','native','automatic'];
  const TITRES={
    home:{titre:'Une tâche, une fenêtre.',intro:'Choisis ce que tu veux faire dans ESV.'},
-   native:{titre:'Mode Natif',intro:'Banane observe. Tu gardes entièrement la main dans ESV.'},
-   automatic:{titre:'Pilotage automatique',intro:'Choisis une plage, puis suis le lot.'},
+   native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
+   automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'V4.7.21 · TEST',native:'Natif',automatic:'Agent pilote'};
+ const SOUS={home:'4.8.0',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -116,7 +116,7 @@
    port.onDisconnect.addListener(()=>{if(presencePort===port){presencePort=null;setTimeout(reportPresence,500);}});
   }catch{setTimeout(reportPresence,1000);}}
  reportPresence();
- async function api(action,args={}){const r=await chrome.runtime.sendMessage({kind:'panel',action,args});if(!r)throw Error('Banane ne répond pas. Rouvre la fenêtre.');if(r.error)throw Error(r.error);return r.result;}
+ async function api(action,args={}){const r=await chrome.runtime.sendMessage({kind:'panel',action,args});if(!r)throw Error('Ariane ne répond pas. Rouvre la fenêtre.');if(r.error)throw Error(r.error);return r.result;}
  /* Le moteur est gelé : ses messages renvoient encore vers « Mes corrections »,
   * mode retiré en 4.5.4. On ne peut pas les corriger à la source, donc on les
   * traduit ici vers ce que l'interface offre réellement. Afficher un message
@@ -270,11 +270,11 @@
  let bandeau=false,bandeauEnvoye='';
  function texteBandeau(s){const b=s.batch,n=s.native;
    if(b&&OUVERT.includes(b.state)){const v=voieDuLot(s);
-     return {texte:`BANANE · PILOTE · ${NOMS_ETAT[b.state]||'lot'} · cut ${entier(b.activeIdentity?.cut)} · ${v.fait.size} posés · ${v.differe.size} différés`,
+     return {texte:`ARIANE · ORBITE · ${NOMS_ETAT[b.state]||'lot'} · cut ${entier(b.activeIdentity?.cut)} · ${v.fait.size} posés · ${v.differe.size} différés`,
        ton:INCERTAIN.includes(b.state)||s.reconcileRequired?'rouge':b.state==='RUNNING'?'vert':'ambre'};}
-   if(n&&nativeActive(s))return {texte:`BANANE · NATIF · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites`,ton:n.status==='RUNNING'?'vert':'ambre'};
-   if(b)return {texte:`BANANE · PILOTE · ${NOMS_ETAT[b.state]||'lot'} · ${b.processed?.length||0} traités · ${b.deferred?.length||0} différés`,ton:''};
-   return {texte:'BANANE · prêt',ton:''};}
+   if(n&&nativeActive(s))return {texte:`ARIANE · ÉCHO · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites`,ton:n.status==='RUNNING'?'vert':'ambre'};
+   if(b)return {texte:`ARIANE · ORBITE · ${NOMS_ETAT[b.state]||'lot'} · ${b.processed?.length||0} traités · ${b.deferred?.length||0} différés`,ton:''};
+   return {texte:'ARIANE · prêt',ton:''};}
  let bandeauA=0;
  function envoyerBandeau(s){if(!bandeau)return;const t=texteBandeau(s),cle=t.texte+'|'+t.ton;
    // Renvoyé aussi toutes les 20 s : un service worker redémarré a perdu le texte.
@@ -311,21 +311,21 @@
  /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages). */
  let nouveauLot=false;const tiroirs={lot:true,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
-   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer':'Détails ›';}
+   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
    const onglets=etatOnglets(s);
    for(const [vue,e] of Object.entries(onglets)){const t=$('tab-'+vue);if(!t)continue;
      if(e){t.dataset.etat=e[0];t.setAttribute('title',e[1]);}else{delete t.dataset.etat;t.removeAttribute('title');}}
    tiroir('lot');tiroir('native');
-   $('context').textContent=id?`ESV · part ${id.part} · cut ${id.cut}`:'';
+   $('context').textContent=id?`ESV · partie ${id.part} · cut ${id.cut}`:'';
    const partie=which==='automatic'?b?.scope?.part??id?.part:id?.part;
    if($('sous-titre'))$('sous-titre').textContent=which==='home'?SOUS.home:`${SOUS[which]}${Number.isFinite(Number(partie))?' · Partie '+entier(partie):''}`;
    envoyerBandeau(s);
    if(which==='native'){
      const running=['STARTING','RUNNING'].includes(n?.status),paused=['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status),open=nativeActive(s);
-     note(n?.message||(running?'Collecte en cours : travaille normalement dans ESV.':'Ouvre le premier cut à observer, puis démarre le mode Natif.'),n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
-     if(manualActive(s))note('Une session Mes corrections est active. Termine-la avant de démarrer le mode Natif.');
-     if(['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer le mode Natif.');
+     note(n?.message||(running?'Collecte en cours : travaille normalement dans ESV.':'Ouvre le premier cut à observer, puis démarre Écho.'),n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
+     if(manualActive(s))note('Une session Mes corrections est active. Termine-la avant de démarrer Écho.');
+     if(['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer Écho.');
      rouler($('native-count'),String(n?.visits.length||0));const count=n?.incomplete.length||0;$('native-incomplete').hidden=!count;
      /* Piste H : l'état, la dernière visite, le temps par cut, l'activité. */
      if($('native-etat')){const e=!n?['Aucune collecte','ink']:n.status==='RUNNING'?['Collecte en cours · observation',' live']:n.status==='STARTING'?['Démarrage de la collecte','']
@@ -350,8 +350,8 @@
      hierarchie(['native-resume','native-end','native-download','native-start','native-pause']);
    }else if(which==='automatic'){
      /* 4.7.21 : pendant un lot, l'invite « Choisis les bornes » n'a pas de sens. */
-     note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||(b?.state==='RUNNING'?'Le Pilote enchaîne les cuts : tu peux suivre ici ou dans ESV.'
-       :'Choisis les bornes de ton lot TEST : le premier cut est celui qu’ESV affiche.'));
+     note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||(b?.state==='RUNNING'?'Orbite enchaîne les cuts : tu peux suivre ici ou dans ESV.'
+       :'Choisis les bornes du lot : le premier cut est celui qu’ESV affiche.'));
      const running=['RUNNING','PAUSED','STOPPED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state);
      /* 4.7.21 — terrain du 26/09 : après un lot « Arrêté », « Nouveau lot »
       * gardait les bornes de l'ancien (premier cut 556 quand ESV montrait 715)
@@ -384,7 +384,7 @@
      if($('policy-effective')){const demande=running?b.scope?.requestedLowConfidence:null,applique=running?(b.scope?.lowConfidence||'pause'):null;
        $('policy-effective').hidden=!running;
        $('policy-effective').textContent=!running?'':demande&&demande!==applique
-         ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Pilote GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
+         ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Orbite GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
          :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
      if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
      if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
@@ -404,7 +404,7 @@
        $('lot-etat').className='eyebrow'+(ton?' '+ton:'')+(b?.state==='RUNNING'&&!s.reconcileRequired?' live':'');}
      if($('lot-cut'))rouler($('lot-cut'),entier(b?.activeIdentity?.cut??id?.cut));
      etapes(b,s);
-     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`part ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
+     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`partie ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
      /* Progression dans la plage du lot : du premier au dernier cut. */
      if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
        /* « Fin de partie » : la progression se mesure sur la fin retenue pour la partie, si elle est connue. */
@@ -421,7 +421,9 @@
          ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis}`]]));
        if(ecrit)animerTuiles($('lot-compteurs'),'lot');}
      if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;if(poser($('voie'),montrer?dessinerVoie(v):'')&&montrer)animerVoie($('voie'),v);
-       if($('voie-legende'))$('voie-legende').hidden=!montrer;}
+       if($('voie-legende'))$('voie-legende').hidden=!montrer;
+       /* SKIP : jamais émis par Orbite ; la légende ne le montre que s'il a servi. */
+       if($('legende-skip'))$('legende-skip').hidden=!(v?.saute?.size>0);}
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
      const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
@@ -430,8 +432,8 @@
       * a avancé, et le pilote refuse de compter une réussite qu'il n'a pas
       * observée. Il faut le dire, et dire quoi faire. */
      if(b?.state==='PAUSED_AFTER_STATE_MISSING')
-       note('La commande est partie et ESV a changé de cut avant que Banane puisse relire l’état final. '
-         +'Le placement a probablement été appliqué, mais Banane ne compte jamais une réussite qu’il n’a pas vue. '
+       note('La commande est partie et ESV a changé de cut avant qu’Ariane puisse relire l’état final. '
+         +'Le placement a probablement été appliqué, mais Ariane ne compte jamais une réussite qu’elle n’a pas vue. '
          +'Vérifie le cut dans ESV, puis clique sur Arrêter pour clore le lot.');
      /* Un échec ou une incertitude de navigation reste visible AVEC le cut
       * concerné : aucun bouton n'est présenté comme réussi sur un simple accusé. */
@@ -458,7 +460,7 @@
      const reprenable=fini&&b?.scope?.geometryEngine==='geometry-candidate-v1'&&differesLot.length>0&&(b.lotPosedCount||0)+(b.lotObservation?.anchors?.length||0)>0
        &&(!id||id.part===b.scope.part);
      if($('lot-reprise-row')){$('lot-reprise-row').hidden=!reprenable||lotOuvert||attendNouveau;if(!reprenable&&$('lot-reprise').checked)$('lot-reprise').checked=false;
-       $('lot-reprise-note').textContent=reprenable?`${differesLot.length} différé(s) dans le lot précédent, du cut ${differesLot[0]} au cut ${differesLot.at(-1)}. Coché : bornes ${differesLot[0]} → ${finDePartie(b.scope)?'fin de partie':b.scope.end} ; ouvre le cut ${differesLot[0]} dans ESV. Seuls les cuts posés et validés par le Pilote servent d'appui.`:'';}
+       $('lot-reprise-note').textContent=reprenable?`${differesLot.length} différé(s) dans le lot précédent, du cut ${differesLot[0]} au cut ${differesLot.at(-1)}. Coché : bornes ${differesLot[0]} → ${finDePartie(b.scope)?'fin de partie':b.scope.end} ; ouvre le cut ${differesLot[0]} dans ESV. Seuls les cuts posés et validés par Orbite servent d'appui.`:'';}
      button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
@@ -478,8 +480,8 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
       * tant qu'ESV n'affiche pas le cut suivant. */
      button('manual-completion',{hidden:b?.state!=='MANUAL_TAKEOVER',disabled:busy||active(s)});
      if(b?.state==='MANUAL_TAKEOVER')
-       note('Ce cut t’est rendu : Banane n’a envoyé aucune commande dessus. Corrige-le dans ESV, ouvre le cut suivant, '
-         +'puis clique sur « Repris manuellement » — le lot repartira, et ce cut sera journalisé comme repris à la main, jamais comme validé par Banane.');
+       note('Ce cut t’est rendu : Ariane n’a envoyé aucune commande dessus. Corrige-le dans ESV, ouvre le cut suivant, '
+         +'puis clique sur « Repris manuellement » — le lot repartira, et ce cut sera journalisé comme repris à la main, jamais comme validé par Ariane.');
      button('explicit-skip',{hidden:!actionable,disabled:busy||active(s)});
      button('close-uncertain',{hidden:!s.reconcileRequired&&!differe,disabled:busy});
      /* Règle 4 : un verbe, son objet, et le cut quand l'action le vise. */
@@ -768,7 +770,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
      const manifeste=await api('native-export-manifest');
      if(!manifeste?.cloudIds?.length){autoExporting=false;return;}
      const plan=await assembler(manifeste);
-     const {acked}=await writeSegments(plan,'banane-native-v4',{label:'-auto',startIndex:advice.segments||0});
+     const {acked}=await writeSegments(plan,'ariane-native-v4',{label:'-auto',startIndex:advice.segments||0});
      await api('native-export-ack',{ids:acked});
      note(`Segment écrit automatiquement : ${acked.length} objets LiDAR mis à l’abri.`);
    }catch(e){note('Vidage automatique impossible : '+e.message,true);}
@@ -786,8 +788,8 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
    const manifeste=await api('native-export-manifest',{all:true});
    return dataset(await assembler(manifeste),prefix);
  }
- on('native-end',async()=>{await api('native-end');return exportComplet('banane-native-v4');});
- on('native-download',()=>exportComplet('banane-native-v4'));
+ on('native-end',async()=>{await api('native-end');return exportComplet('ariane-native-v4');});
+ on('native-download',()=>exportComplet('ariane-native-v4'));
 /* Abandon : irréversible, donc une confirmation qui dit ce qui disparaît et
  * combien. Le compte rendu du service worker est affiché tel quel — un
  * effacement muet ne serait pas vérifiable. */
@@ -820,14 +822,15 @@ on('native-discard',async()=>{
  for(const nom of ['lot','native'])if($(nom+'-details-toggle'))$(nom+'-details-toggle').onclick=()=>{tiroirs[nom]=!tiroirs[nom];tiroir(nom);};
  /* SKIP explicite : décision envoyée à ESV, qui ne se défait pas depuis Banane —
   * jamais le bouton plein, toujours confirmée (« La ligne », règle 2). */
- on('explicit-skip',()=>{if(typeof confirm==='function'&&!confirm('Passer ce cut en SKIP dans ESV ?\n\nLa décision est envoyée à ESV et ne se défait pas depuis Banane.'))
+ on('explicit-skip',()=>{if(typeof confirm==='function'&&!confirm('Passer ce cut en SKIP dans ESV ?\n\nLa décision est envoyée à ESV et ne se défait pas depuis Ariane.'))
    throw Error('SKIP annulé : rien n’a été envoyé.');return api('explicit-skip');});
  // Reprise manuelle : le pilote rend la main, sans ouvrir aucune fenêtre.
  on('manual-takeover',()=>api('manual-takeover'));
  /* V4.6.0 : l'opérateur déclare avoir traité le cut dans ESV. Banane journalise
   * la reprise sans prétendre l'avoir validée, puis repart au cut suivant. */
  on('manual-completion',()=>api('manual-completion'));
- on('dataset',async()=>dataset(await bilanPilote(),'banane-bilan-v4'));
+ const exporterBilan=async()=>dataset(await bilanPilote(),'ariane-bilan-v4');
+ on('dataset',exporterBilan);
  /* 4.7.19 (KI-059) — EXPORTS DU PILOTE SANS MESSAGE GÉANT.
   * Journal, bilan, diagnostic et corpus passaient en UN message du service
   * worker, limité à 64 Mio : un long lot (65 Ko de journal par cut) l'aurait
@@ -849,22 +852,28 @@ on('native-discard',async()=>{
    if(!X||!s)return api('gcv1-corpus-export-plan');
    let presents;try{presents=new Set(await s.keys('clouds'));}catch{return api('gcv1-corpus-export-plan');}
    return X.buildCorpusPlan({diagnostic:await diagnosticPilote(),getCloud:async id=>presents.has(id)?{}:null});}
- on('gcv1-diagnostic-export',async()=>{
+ async function exporterDiagnostic(){
    const diagnostic=await diagnosticPilote();
-   saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`banane-gcv1-diagnostic-${Date.now()}.json`);
-   note(`Diagnostic GCV1 exporté : ${diagnostic.observationCount} observation(s).`);
- });
- on('gcv1-corpus-export',async()=>{
+   saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`ariane-gcv1-diagnostic-${Date.now()}.json`);
+   note(`Diagnostic GCV1 téléchargé : ${diagnostic.observationCount} observation(s).`);
+ }
+ async function exporterCorpus(){
    const plan=await planCorpusPilote();
-   if(plan.cloudIds.length)await dataset(plan,'banane-gcv1-corpus',{compact:false});
-   else saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`banane-gcv1-corpus-${Date.now()}.json`);
-   if(plan.missingCaptureIds.length)note(`Corpus GCV1 exporté ; ${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) sont absentes du store.`,true);
-   else note(`Corpus GCV1 exporté : ${plan.cloudIds.length} capture(s) LiDAR.`);
- });
- on('journal',async()=>{const name=`banane-journal-v4-${Date.now()}.json`;
+   if(plan.cloudIds.length)await dataset(plan,'ariane-gcv1-corpus',{compact:false});
+   else saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`ariane-gcv1-corpus-${Date.now()}.json`);
+   if(plan.missingCaptureIds.length)note(`Corpus GCV1 téléchargé ; ${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) sont absentes du store.`,true);
+   else note(`Corpus GCV1 téléchargé : ${plan.cloudIds.length} capture(s) LiDAR.`);
+ }
+ async function exporterJournal(){const name=`ariane-journal-v4-${Date.now()}.json`;
    const [meta,events,records]=await Promise.all([api('journal-meta'),lireStore('events'),lireStore('records')]);
-   if(events&&records){saveBlob(blobJson(meta,{events,records}),name);note(`Journal exporté : ${events.length} événements, ${records.length} enregistrements.`);return;}
-   saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);});
+   if(events&&records){saveBlob(blobJson(meta,{events,records}),name);note(`Journal téléchargé : ${events.length} événements, ${records.length} enregistrements.`);return;}
+   saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);}
+ on('gcv1-diagnostic-export',exporterDiagnostic);on('gcv1-corpus-export',exporterCorpus);on('journal',exporterJournal);
+ /* 4.8.0 — TOUT POUR L'ANALYSE EN UN CLIC. Terrain du 26/09 (parties 13 et 14) :
+  * bilans sans journal, les causes d'arrêt se lisaient moins bien. Les quatre
+  * exports du lot, dans l'ordre, chacun avec son propre message. */
+ on('export-tout',async()=>{await exporterJournal();await exporterBilan();await exporterDiagnostic();await exporterCorpus();
+   note('Tout est téléchargé : journal, bilan, diagnostic et corpus. Envoie-les ensemble pour l’analyse.');});
  for(const id of ['start','end'])if($(id))$(id).oninput=()=>edited.add(id);
  /* Thème : celui du système par défaut ; la bascule, instantanée, est gardée pour cette fenêtre. */
  const CLE_THEME='banane.theme',sysSombre=()=>!!globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
@@ -877,7 +886,7 @@ on('native-discard',async()=>{
  const marquerBandeau=()=>$('bandeau-toggle')?.setAttribute('aria-pressed',String(bandeau));
  api('bandeau-etat').then(r=>{bandeau=r?.on===true;marquerBandeau();if(state)envoyerBandeau(state);}).catch(()=>{});
  if($('bandeau-toggle'))$('bandeau-toggle').onclick=()=>action('bandeau-toggle',async()=>{bandeau=!bandeau;bandeauEnvoye='';marquerBandeau();
-   const t=state?texteBandeau(state):{texte:'BANANE',ton:''};await api('bandeau',{on:bandeau,text:t.texte,ton:t.ton});if(bandeau)bandeauEnvoye=t.texte+'|'+t.ton;
+   const t=state?texteBandeau(state):{texte:'ARIANE',ton:''};await api('bandeau',{on:bandeau,text:t.texte,ton:t.ton});if(bandeau)bandeauEnvoye=t.texte+'|'+t.ton;
    note(bandeau?'Bandeau affiché en bas de la page ESV : il suit cette fenêtre et ne capte aucun clic.':'Bandeau retiré de la page ESV.');});
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});

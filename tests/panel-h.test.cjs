@@ -29,7 +29,7 @@ const lot=(extra={})=>({batch:{state:'RUNNING',step:'capture',scope:{part:23,sta
 test('bandeau : activé, il reçoit l\'état du lot en une ligne ; éteint, rien n\'est envoyé',async()=>{
   let {appels}=await panneau(lot(),'#automatic',{bandeau:true});
   const envoi=appels.find(a=>a.action==='bandeau');assert.ok(envoi,'texte envoyé au service worker');
-  assert.equal(envoi.args.on,true);assert.match(envoi.args.text,/^BANANE · PILOTE · En cours · cut 103 · 2 posés · 1 différés$/);assert.equal(envoi.args.ton,'vert');
+  assert.equal(envoi.args.on,true);assert.match(envoi.args.text,/^ARIANE · ORBITE · En cours · cut 103 · 2 posés · 1 différés$/);assert.equal(envoi.args.ton,'vert');
   ({appels}=await panneau(lot(),'#automatic',{bandeau:false}));assert.equal(appels.some(a=>a.action==='bandeau'),false);
 });
 

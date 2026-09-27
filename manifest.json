@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Banane V4.7 TEST",
-  "version": "4.7.21",
-  "description": "Observation native passive, corrections manuelles et pilotage TEST séparés pour ESV LiDAR. Collecte segmentée et export compact.",
+  "name": "Ariane",
+  "version": "4.8.0",
+  "description": "Ariane pour ESV LiDAR : Écho observe ton travail, Orbite place et valide les rails d’un lot. Collecte segmentée et export compact.",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -15,7 +15,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Ouvrir Banane 4.7.21 TEST"
+    "default_title": "Ouvrir Ariane 4.8.0"
   },
   "content_scripts": [
     {

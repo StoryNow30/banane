@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.7.21';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.8.0';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -26,7 +26,7 @@ const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 function liveGCV1Contract(){
  const contract=globalThis.BananeGCV1Shadow?.state?.().contract;
- if(!contract?.id||!contract?.geometrySha256)throw Error('Moteur GCV1 Pilote TEST indisponible.');
+ if(!contract?.id||!contract?.geometrySha256)throw Error('Moteur GCV1 d’Orbite indisponible.');
  return {id:contract.id,geometrySha256:contract.geometrySha256};
 }
 function assertPilotContract(scope){
@@ -81,7 +81,7 @@ function stopAtLotEnd(proposal){
  if(proposal!==undefined&&(resolved||b.scope.unresolvedPolicy!=='defer'))return false;
  b.state='STOPPED';b.stoppedAtEnd={cut,at:new Date().toISOString(),applied:proposal===undefined};
  engine.s.notice=proposal===undefined
-   ?`Dernier cut du lot (${cut}) : pose appliquée, non validée. Contrôle-la et valide-la toi-même dans ESV ; le Pilote ne passe pas à la partie suivante.`
+   ?`Dernier cut du lot (${cut}) : pose appliquée, non validée. Contrôle-la et valide-la toi-même dans ESV ; Orbite ne passe pas à la partie suivante.`
    :`Dernier cut du lot (${cut}) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.`;
  return true;
 }
@@ -300,7 +300,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
      engine.s.proposal=null;
      const reason=shadow?.selection?.fallbackReason||shadow?.error||'sélection GCV1 absente';
      await engine.event('gcv1-pilot-error',{identity:engine.s.before?.identity||null,message:reason,geometryEngine:GCV1_ENGINE});
-     throw Error('GCV1 Pilote TEST : '+reason);
+     throw Error('GCV1 d’Orbite : '+reason);
    }
    return proposal;
  };
@@ -392,7 +392,7 @@ function rememberPosed(batch,state,cuts){
 async function currentFrameId(){try{return globalThis.BananeCore3.completeIdentity((await adapter.state()).identity||{}).frameId??null;}catch{return null;}}
 function repriseAnchors(prev,part){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings;
- if(!prev||prev.scope?.geometryEngine!==GCV1_ENGINE||prev.scope?.part!==part)throw Error('Reprise : aucun lot Pilote précédent sur cette partie. Décoche « Reprise » ou lance un lot ordinaire.');
+ if(!prev||prev.scope?.geometryEngine!==GCV1_ENGINE||prev.scope?.part!==part)throw Error('Reprise : aucun lot Orbite précédent sur cette partie. Décoche « Reprise » ou lance un lot ordinaire.');
  const memory=JSON.parse(JSON.stringify(prev.lotObservation||{anchors:[],pending:[]})),posed=JSON.parse(JSON.stringify(prev.lotPosed||[]));
  const waiting=(memory.pending||[]).map(p=>p.identity.cut);
  L.promoteAnchors(memory,(prev.processed||[]).map(p=>p.identity).filter(Boolean),1e6);
@@ -436,8 +436,16 @@ chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(i
  * diagnostic, corpus) lisent événements et enregistrements directement dans
  * IndexedDB, comme le Natif depuis la 4.5.3 : le message ne porte plus que
  * l'état. */
+/* 4.8.0 — ARIANE, ÉCHO, ORBITE (direction, 27/09, D-058). Les textes du
+ * moteur épinglé et des modules plus anciens gardent parfois « Banane », « le
+ * mode Natif » ou « le Pilote » : ce qui part vers le panneau (message, erreur)
+ * passe par ce vocabulaire. Identifiants et formats de données ne changent pas. */
+const VOCABULAIRE=[[/\b[Ll]e mode Natif\b/g,'Écho'],[/\bdu mode Natif\b/g,'d’Écho'],[/\bau mode Natif\b/g,'à Écho'],[/\b[Mm]ode Natif\b/g,'Écho'],[/\bNatif\b/g,'Écho'],
+ [/\b[Ll]e Pilote\b/g,'Orbite'],[/\bdu Pilote\b/g,'d’Orbite'],[/\bau Pilote\b/g,'à Orbite'],[/\bPilote\b/g,'Orbite'],[/(^|[^A-Za-z0-9_])Banane(?![A-Za-z0-9_])/g,'$1Ariane']];
+const vocabulaire=t=>typeof t==='string'?VOCABULAIRE.reduce((x,[a,b])=>x.replace(a,b),t):t;
 function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Object.hasOwn(v,'collection')||!Object.hasOwn(v,'batch'))return v;
- const {records,incomplete,...rest}=v;
+ const {records,incomplete,...rest}=v;if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
+ if(typeof rest.native?.message==='string')rest.native={...rest.native,message:vocabulaire(rest.native.message)};
  /* `lotPosed` (4.7.19, un cut posé = une entrée) : son nombre suffit au panneau. */
  if(Array.isArray(rest.batch?.lotPosed)){const {lotPosed,...batch}=rest.batch;rest.batch={...batch,lotPosedCount:lotPosed.length};}
  return {...rest,recordsCount:records.length,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
@@ -462,11 +470,11 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   await chrome.scripting.executeScript({target:{tabId:tab.id},world:'MAIN',files:PAGE_FILES});
   await chrome.scripting.executeScript({target:{tabId:tab.id},world:'ISOLATED',files:['src/bridge.js']});
   selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
-  const ping=await call('ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Banane ${VERSION}.`);
+  const ping=await call('ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Ariane ${VERSION}.`);
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
  if(action==='view'){pollCurrent();const v=engine.view();return {...panelView(v),assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
- if(action==='native-start'){engine.assertBatchContextFree('démarrer le mode Natif');return native.start();}
+ if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');return native.start();}
  if(action==='native-pause')return native.pause();
  if(action==='native-resume')return native.resume();
  if(action==='native-end')return native.end({dataset:false});
@@ -512,10 +520,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  // téléchargement restent ouverts pour récupérer une session déjà enregistrée
  // avant la mise à jour : la retirer ne doit pas rendre ses données illisibles.
  if(['manual-start','manual-pause','manual-resume'].includes(action))
-  throw Error('Le mode Correction a été retiré en 4.5.4. Utilise le mode Natif.');
+  throw Error('Le mode Correction a été retiré en 4.5.4. Utilise Écho.');
  if(action==='manual-end')return manual.end();
  if(action==='manual-download')return manual.dataset();
- if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Le mode Natif est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
+ if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
  if(action==='resume'){assertPilotContract(engine.s.batch?.scope);
@@ -529,7 +537,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    * suivant. */
   const affiche=await adapter.state().catch(()=>null);
   if(affiche?.identity)try{engine.writable(affiche.identity);}
-   catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Banane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
+   catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Ariane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
   /* KI-052 : « Archiver le résultat interrompu » arrête le lot en laissant
    * l'étape « apply » et efface la proposition ; reprendre relançait la boucle
    * sur une proposition absente. Sans proposition, la reprise recommence le
@@ -590,7 +598,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
   /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
   delete startArgs.lotReprise;
-  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée au Pilote GCV1.');
+  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée à Orbite GCV1.');
     startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);
     /* 4.7.20 — les appuis d'une reprise sont liés au repère de la page ESV
      * (`frameId`) : après un rechargement, aucun ne sert (terrain du 25/09,
@@ -661,6 +669,6 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  /* 4.7.19 (KI-059) : une réponse trop grosse pour Chrome devient une erreur dite
   * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
  dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
-   catch(e){respond({error:`Réponse de Banane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
-  async e=>{if(engine){engine.s.notice=e.message;await engine.save().catch(()=>{});}respond({error:e.message});});return true;
+   catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
+  async e=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});return true;
 });

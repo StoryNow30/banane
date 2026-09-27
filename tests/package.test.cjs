@@ -2,16 +2,16 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const C=require('../tools/native-corpus.cjs');
 const root=path.resolve(__dirname,'..');
 test('manifest and bundled runtime form a self-contained MV3 extension without fixture dependencies',()=>{
- const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));assert.equal(manifest.manifest_version,3);assert.equal(manifest.version,require('../src/core.js').VERSION);assert.match(manifest.version,/^4\.7\.\d+$/);
+ const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));assert.equal(manifest.manifest_version,3);assert.equal(manifest.version,require('../src/core.js').VERSION);assert.match(manifest.version,/^4\.8\.\d+$/);
  assert.equal(manifest.action.default_popup,undefined);assert.equal(manifest.background.service_worker,'background.js');
  assert.deepEqual(manifest.host_permissions,['https://esv.lidar.altametris.xyz/rails_validation/*']);
  const runtime=['background.js','panel.html','panel.css','panel.js',...fs.readdirSync(path.join(root,'src')).map(x=>'src/'+x),...fs.readdirSync(path.join(root,'vendor')).map(x=>'vendor/'+x)];
  for(const file of runtime){assert.ok(fs.statSync(path.join(root,file)).size>0);assert.doesNotMatch(fs.readFileSync(path.join(root,file),'utf8'),/tests\/corpus|SimulatedESV|fixture-page/);}
- for(const page of ['panel.html']){const html=fs.readFileSync(path.join(root,page),'utf8');assert.ok(html.includes(`V${manifest.version} · TEST`));const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
+ for(const page of ['panel.html']){const html=fs.readFileSync(path.join(root,page),'utf8');assert.ok(html.includes(`<span>${manifest.version}</span>`));const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
  for(const match of html.matchAll(/(?:src|href)="([^"]+)"/g))assert.ok(fs.existsSync(path.join(root,match[1])));
  }
  for(const group of manifest.content_scripts)for(const p of group.js)assert.ok(fs.existsSync(path.join(root,p)));
- assert.ok(fs.readFileSync(path.join(root,'src/bridge.js'),'utf8').includes(`Banane ${manifest.version} · ouvrir`));
+ assert.ok(fs.readFileSync(path.join(root,'src/bridge.js'),'utf8').includes(`Ariane ${manifest.version} · ouvrir`));
 });
 test('built installable archive contains runtime sources, offline results and documentation without bulky reference fixtures',()=>{
  const temp=fs.mkdtempSync(path.join(os.tmpdir(),'banane-v3-package-')),zip=path.join(temp,'test.zip'),python=process.platform==='win32'?'python':'python3';

@@ -58,7 +58,7 @@
      });
    }else if(this.phase==='AWAITING_NAV'&&this.api.now()-this.navigationStarted>15000){
      const decision=this.visit?.operatorDecision||'commande';
-     this.work(()=>this.fail(Error(`${decision} transmis une fois, mais le cut n’a pas changé. Contrôle le résultat dans ESV ; Banane ne répétera pas la commande.`)));
+     this.work(()=>this.fail(Error(`${decision} transmis une fois, mais le cut n’a pas changé. Contrôle le résultat dans ESV ; Ariane ne répétera pas la commande.`)));
    }
   }
   input(event){
@@ -153,7 +153,7 @@
      }
    }
    if(failure)throw failure;
-   this.phase='FINISHED';this.api.paint('Session terminée · données conservées dans Banane.');return {active:false};
+   this.phase='FINISHED';this.api.paint('Session terminée · données conservées dans Ariane.');return {active:false};
   }
  }
  return {Collector};

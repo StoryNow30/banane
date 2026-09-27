@@ -215,7 +215,9 @@ button:disabled{opacity:.42;cursor:not-allowed}
 #lot-decision-effective,#unresolved-policy-effective,#policy-effective{margin:3px 0 0;font-size:12px}
 #lot-activite-bloc+#lot-decision-effective,#ligne-bloc+#lot-decision-effective{margin-top:16px}
 .tiroir{margin-top:4px}
-.tiroir>.lbl{margin:18px 0 4px}.tiroir .row .secondary{padding-left:0}.reglages-titre{margin-top:18px!important}
+.tiroir>.lbl{margin:18px 0 4px}.tiroir .row .secondary{padding-left:0}
+/* 4.8.0 : l’export complet, seul bouton cerné du tiroir. */
+.tiroir .row .secondary.fort{padding:8px 14px;border:1px solid var(--hair-2);border-radius:6px;color:var(--text);font-weight:600}.tiroir .row .secondary.fort:hover{border-color:var(--text)}.reglages-titre{margin-top:18px!important}
 .range{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 4px}
 label{display:flex;flex-direction:column;gap:6px;margin:12px 0 0;font-size:12.5px;color:var(--text-2)}
 input,select{width:100%;height:40px;padding:0 10px;border:1px solid var(--hair-2);border-radius:6px;background:var(--field);color:var(--text)}

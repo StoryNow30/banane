@@ -64,8 +64,8 @@ test('fin de lot : télécharger d\'abord ; « Nouveau lot » rouvre les bornes 
 
 test('« Détails » : ouverts par défaut (4.7.21), se referment et se rouvrent sans toucher au lot',async()=>{
   const $=await panneau(lot());
-  assert.equal($('lot-details').hidden,false);assert.equal($('lot-details-toggle').textContent,'Masquer');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'true');
-  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,true);assert.equal($('lot-details-toggle').textContent,'Détails ›');
+  assert.equal($('lot-details').hidden,false);assert.equal($('lot-details-toggle').textContent,'Masquer les détails');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'true');
+  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,true);assert.equal($('lot-details-toggle').textContent,'Afficher les détails');
   $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,false);
   assert.equal($('native-details').hidden,false);
 });

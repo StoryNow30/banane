@@ -132,14 +132,14 @@
        }
        this.setLevel(this.consecutiveFailures>=this.failuresBeforeMetadataOnly?'METADATA_ONLY':'DEGRADED');
        this.retryAt=this.now()+Math.min(this.retryBackoffMaxMs,this.retryBackoffMs*item.attempts);
-       if(!this.failureShown){this.failureShown=true;this.api.signalFailure?.('Mode Natif : enregistrement interrompu. Les événements en attente sont conservés dans la limite de la file.');}
+       if(!this.failureShown){this.failureShown=true;this.api.signalFailure?.('Écho : enregistrement interrompu. Les événements en attente sont conservés dans la limite de la file.');}
        break;
       }
      }}
     finally{this.flushing=false;this.flushPromise=null;}})();return this.flushPromise;}
   stateKey(state){const id=state?.identity||{};return K.identityFields.map(k=>id[k]??'not-observed').join('|');}
   railKey(state){return JSON.stringify(['left','right'].map(side=>{const r=state?.rails?.[side];return r?[r.railLocalToSceneRelative,r.profileLocalToSceneRelative]:null;}));}
-  async start({sessionId,observationPeriodId}){if(this.active)throw Error('Le mode Natif est déjà actif dans ESV.');
+  async start({sessionId,observationPeriodId}){if(this.active)throw Error('Écho est déjà actif dans ESV.');
    if(this.sessionId&&this.sessionId!==sessionId){this.queue=[];this.checkpointReceipts.clear();this.retryAt=0;this.failureShown=false;this.metrics={enqueued:0,sent:0,dropped:0,sendFailures:0,
      queueDepthMax:0,handlerDurationsMs:[],captureCompleted:0,captureFailed:0,captureBudgeted:0,captureRefused:0,captureCheckpoints:0,degradationLevel:'FULL'};this.collectorSeq=0;}
    this.sessionId=sessionId;this.periodId=observationPeriodId;this.active=true;this.paused=false;this.generation++;this.current=null;
@@ -261,7 +261,7 @@
    this.active=false;this.paused=reason==='pause';this.generation++;this.api.clearInterval(this.timer);this.timer=null;this.api.uninstall();
    this.closeVisit(reason,null);if(this.captureTask)await this.captureTask;
    this.enqueue('period-ended',{reason,endedAt:new Date().toISOString(),metrics:this.metricSnapshot()},true);
-   this.retryAt=0;await this.flush();if(this.queue.length)throw Error(`Mode Natif : ${this.queue.length} événement(s) restent en attente de sauvegarde.`);
+   this.retryAt=0;await this.flush();if(this.queue.length)throw Error(`Écho : ${this.queue.length} événement(s) restent en attente de sauvegarde.`);
    return {active:false,paused:this.paused,observationPeriodId:this.periodId,metrics:this.metricSnapshot()};}
   pause(){return this.stop('pause');}
   async resume(options){if(this.active)await this.stop('resume-boundary');return this.start(options);}

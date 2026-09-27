@@ -43,7 +43,7 @@
   * matrices monde à chaque fois, donc un rail déplacé est vu immédiatement. */
  const contextes=new WeakMap();
  function context(){
-   if(window.__BANANE_V24||window.__BANANE_V23||window.__BANANE_V231||window.__BANANE_V2_LOADED__||window.__BANANE_V21_LOADED__||window.__BANANE_V22_LOADED__)throw Error('Une ancienne Banane est active. Désactive-la puis recharge ESV après sauvegarde.');
+   if(window.__BANANE_V24||window.__BANANE_V23||window.__BANANE_V231||window.__BANANE_V2_LOADED__||window.__BANANE_V21_LOADED__||window.__BANANE_V22_LOADED__)throw Error('Une ancienne Banane (V2) est active. Désactive-la puis recharge ESV après sauvegarde.');
    const viewer=window.viewer,root=viewer?.scene?.scene;if(!root)throw Error('Ouvre une coupe dans ESV 3D.');
    const text=document.getElementById(selectors.label)?.textContent||'',m=/Cut\s+(\d+)\s+of\s+part\s+(\d+)/i.exec(text);
    if(!m)throw Error('Identité de cut introuvable.');
@@ -498,7 +498,7 @@
    catch(e){evidence.nextReady=false;evidence.nextIdentity=K.completeIdentity(nextLabel);
      evidence.nextIdentityComplete=false;evidence.nextIdentityUnavailableReason=e.message;
      progress('defer-next-geometry-unavailable',{operationId:evidence.operationId,message:e.message,nextIdentity:nextLabel});}
-   evidence.meaning='Navigation ESV sans décision : Banane n’a émis pour ce cut ni application de rail, ni VALIDATE, ni SKIP ; confirmation serveur indisponible.';
+   evidence.meaning='Navigation ESV sans décision : Ariane n’a émis pour ce cut ni application de rail, ni VALIDATE, ni SKIP ; confirmation serveur indisponible.';
    return evidence;
  }
  async function decisionAndNext(identity,operatorDecision,scope={},progress=()=>{}){
@@ -591,7 +591,7 @@
  }
  let native=null,nativeChannel=null,nativeFailureBanner=null;const nativeRequests=new Map(),nativeListeners=[];
  function nativeMessage(type,payload){const requestId=K.uid();return new Promise((resolve,reject)=>{
-   const timer=setTimeout(()=>{nativeRequests.delete(requestId);reject(Error('Sauvegarde Natif sans accusé de réception.'));},10000);
+   const timer=setTimeout(()=>{nativeRequests.delete(requestId);reject(Error('Sauvegarde Écho sans accusé de réception.'));},10000);
    nativeRequests.set(requestId,{resolve,reject,timer,channel:nativeChannel});
    window.postMessage({kind:'banane4:native-event',channel:nativeChannel,requestId,type,payload},location.origin);
  });}
@@ -617,7 +617,7 @@
    targetKind:el=>el?.kind|| (el?.closest?.('#O2N3DCutValidate3DRail')?'validation':el?.closest?.('canvas')?'canvas':el?.closest?.('button,a')?'control':'other'),
    signalFailure:message=>{if(nativeFailureBanner)return;nativeFailureBanner=document.createElement('div');nativeFailureBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#381f23;color:#ffd7dc;border:1px solid #8b5058;border-radius:8px;font:14px Arial;pointer-events:none';
      nativeFailureBanner.setAttribute('role','alert');nativeFailureBanner.textContent=message;document.documentElement.append(nativeFailureBanner);}};}
- async function nativeStart(options){if(native?.active)throw Error('Le mode Natif est déjà actif dans ESV.');nativeChannel=options.channel;
+ async function nativeStart(options){if(native?.active)throw Error('Écho est déjà actif dans ESV.');nativeChannel=options.channel;
    native=native||new window.BananeNativePage4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new window.BananeNativePage4.Observer(nativeApi());return native.resume(options);}
  const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
