@@ -110,7 +110,7 @@ function lotExitOf(next){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next,annonce=null){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+async function closeAtExit(reason,last,next,annonce=null,retenir=true){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';b.stoppedAtEnd={cut:last??null,reason,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:true};
  const where=next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
  engine.s.notice=reason==='adapter-lost-after-navigation'
@@ -122,7 +122,7 @@ async function closeAtExit(reason,last,next,annonce=null){const b=engine.s.batch
   * partie. Terrain du 26/09 (partie 13) : ESV muet après 6629 alors qu'il
   * annonçait 6758, même partie ; la 4.7.21 retenait 6629 comme fin. Si ESV a
   * annoncé un cut plus loin dans la partie avant d'en sortir, c'est lui. */
- if(Number.isInteger(next?.part)&&next.part!==b.scope.part)await retenirFinPartie(b.scope.part,Math.max(last??-1,annonce?.part===b.scope.part&&Number.isInteger(annonce.cut)?annonce.cut:-1),'fin constatée');}
+ if(retenir&&Number.isInteger(next?.part)&&next.part!==b.scope.part)await retenirFinPartie(b.scope.part,Math.max(last??-1,annonce?.part===b.scope.part&&Number.isInteger(annonce.cut)?annonce.cut:-1),'fin constatée');}
 const validateInESV=adapter.validateAndNext;
 adapter.validateAndNext=async(...args)=>{const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
@@ -136,7 +136,11 @@ const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.tes
 async function horsPartie(r){const b=engine.s.batch,id=r?.identity;
  if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(id?.part)||id.part===b.scope.part)return r;
  const last=b.processed?.at(-1);
- await closeAtExit('navigation-other-part',undefined,{part:id.part,cut:id.cut},last?.evidence?.nextIdentity);
+ /* Fin de partie retenue seulement si ESV sort juste après une navigation
+  * d'Ariane (le lot n'a pas encore commencé le cut annoncé) ; une autre partie
+  * ouverte à la main au milieu d'un cut ne dit rien de la fin (revue 4.8.0). */
+ const apresNavigation=!!last?.evidence?.navigationObserved&&b.activeIdentity?.cut===last.cut;
+ await closeAtExit('navigation-other-part',undefined,{part:id.part,cut:id.cut},last?.evidence?.nextIdentity,apresNavigation);
  throw Error(`Fin du lot : ESV affiche la partie ${id.part}, hors du lot (KI-063).`);}
 adapter.state=async(...args)=>{
  try{return await horsPartie(await readState(...args));}catch(e){if(!unresponsive(e))throw e;
@@ -226,11 +230,16 @@ async function rafraichirAuto(){const b=engine.s.batch,S=globalThis.BananeSettin
  if((fait[cut]||0)>=1||Object.values(fait).reduce((n,v)=>n+v,0)>=(S.rafraichirMaxParLot??5))return;
  fait[cut]=(fait[cut]||0)+1;
  rafraichissement=(async()=>{try{while(engine.task)await attendre(200);
+   /* « Arrêter » pendant le rafraîchissement gagne : on ne reprend qu'un lot
+    * toujours en pause, le même (revue 4.8.0). */
+   const lot=b.id,toujours=()=>engine.s.batch?.id===lot&&engine.s.batch.state==='PAUSED';
    const anciennePage=b.scope.pageId;
    engine.s.notice=`ESV est lent sur le cut ${cut} : Ariane rafraîchit la page ESV et reprendra seule.`;await engine.save();
    await engine.event('esv-refresh-requested',{identity:engine.s.before?.identity??null,cut,auto:true});
    await chrome.tabs.reload(selectedTab);await attendre(S.rafraichirPauseMs??2000);
+   if(!toujours())return;
    await retablirApresRechargement({auto:true,anciennePage});
+   if(!toujours()){engine.s.notice='Lot arrêté pendant le rafraîchissement d’ESV : il ne reprend pas.';await engine.save();return;}
    await engine.resume();}
   catch(e){engine.s.notice=`Rafraîchissement automatique sans succès (${e.message}) Rafraîchis ESV (F5), puis clique sur Reprendre.`;
    await engine.event('esv-refresh-failed',{identity:null,cut,message:e.message}).catch(()=>{});await engine.save().catch(()=>{});}
