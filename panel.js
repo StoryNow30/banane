@@ -75,7 +75,7 @@
   * un ancien lien « #assisted » ramène à l'accueil. */
  const VUES=['home','native','automatic'];
  const TITRES={
-   home:{titre:'Une tâche, une fenêtre.',intro:'Choisis ce que tu veux faire dans ESV.'},
+   home:{titre:'Écho observe. Orbite pose.',intro:'Choisis ce que tu veux faire dans ESV.'},
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
@@ -563,7 +563,9 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
    // L'en-tête est sérialisé à la FERMETURE du segment : sinon `exportTrace`,
      // calculé au fil de la boucle, n'atterrissait jamais dans le fichier.
      const openSegment=()=>{interner=X?X.createInterner():null;head=foldMeta();parts=[];bytes=head.length;inSegment=0;};
-   const closeSegment=()=>{if(!inSegment)return;segment++;
+   /* 4.8.0 : un export sans aucun nuage (lot sans LiDAR) s'écrivait nulle part,
+    * sans le dire ; hors vidage automatique, il donne un fichier de métadonnées. */
+   const closeSegment=(forcer=false)=>{if(!inSegment&&!(forcer&&!segment))return;segment++;
      // Terrain 15/09 : la trace n'était posée qu'après la boucle, donc seul le
      // DERNIER segment la portait. On la fige à chaque fermeture, avec l'état
      // cumulé à cet instant et ce que ce segment contient en propre.
@@ -606,7 +608,7 @@ button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTI
      if(inSegment)parts.push(',');
      parts.push(text);bytes+=text.length+1;inSegment++;exportTrace.cloudObjects++;acked.push(cloudIds[i]);
    }
-   closeSegment();
+   closeSegment(!label);
    return {written,acked,exportTrace,segments:segment};
  }
  /* Assemble le jeu d'export : manifeste léger par message, records et
@@ -873,7 +875,8 @@ on('native-discard',async()=>{
   * bilans sans journal, les causes d'arrêt se lisaient moins bien. Les quatre
   * exports du lot, dans l'ordre, chacun avec son propre message. */
  on('export-tout',async()=>{await exporterJournal();await exporterBilan();await exporterDiagnostic();await exporterCorpus();
-   note('Tout est téléchargé : journal, bilan, diagnostic et corpus. Envoie-les ensemble pour l’analyse.');});
+   const fait='Tout est téléchargé : journal, bilan, diagnostic et corpus. Envoie-les ensemble pour l’analyse.';
+   note(fait);if($('export-status'))$('export-status').textContent=fait;});
  for(const id of ['start','end'])if($(id))$(id).oninput=()=>edited.add(id);
  /* Thème : celui du système par défaut ; la bascule, instantanée, est gardée pour cette fenêtre. */
  const CLE_THEME='banane.theme',sysSombre=()=>!!globalThis.matchMedia?.('(prefers-color-scheme: dark)')?.matches;

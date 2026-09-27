@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-09-27T21:28:39.877Z",
-  "finishedAt": "2026-09-27T21:30:01.316Z",
+  "startedAt": "2026-09-27T21:34:41.100Z",
+  "finishedAt": "2026-09-27T21:36:06.492Z",
   "node": "v22.22.2",
   "platform": "linux",
   "counts": {
@@ -154,10 +154,10 @@
   "runtimeFilesSyntaxChecked": 37,
   "hashes": {
     "manifest.json": "fb807820051ac469b8112f4611a018820ed64abec41683936327d9620ba6116c",
-    "panel.html": "92e9df5a6e8c62f3320091d4e7d6dd1e47494d0aecff8a322752f7b919b9526d",
+    "panel.html": "aa89afc50d68d9927d7f7c173ea266649dba41ed092950ce562bcc10bf2526d9",
     "panel.css": "544bcc810d1c30f673478bf607d3c760e62501315514f5e5520659feb7205ad8",
     "background.js": "23b0b5349d54c73c60ad48befda45b312a5f841ab8a35e03df386db87b2f90d2",
-    "panel.js": "e2592cc2db988f0d5676af1490a3a7c6ec73e06a51cd226b714ecc90b7e4d0dc",
+    "panel.js": "a6aa973d1c9064b4a1dcac7610fa6b0d95b7868430c8ba75a4f4e124091498b9",
     "tools/offline-evaluate.cjs": "d8ea7e742dc32bfa0ea31cb0b85e24d5b55248ee37d02b60a8eb4bbfded2d538",
     "tools/native-offline-evaluate.cjs": "f90a34ce32157171e029e5171316a467d9f3de42334ab7cb680fda1c16c095fa",
     "tools/audit-native-geometry.cjs": "6d7a00a4ad2a6bb881f76334e040811cd94616758decbcd010712c625839b3d8",
