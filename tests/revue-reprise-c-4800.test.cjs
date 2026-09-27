@@ -6,7 +6,7 @@ const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const MUET='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
 
 test('silence passager au moment de « Reprendre » : même page, rien n\'est rattaché, le lot finit',async()=>{
-  const r=await pilote(L,{start:100,end:103,settings:reglages({rafraichirAuto:false}),esv:esvLent});
+  const r=await pilote(L,{start:100,end:103,settings:reglages(),esv:esvLent});
   let view=await r.b.settle();assert.equal(view.batch.state,'PAUSED');
   const state=r.b.adapter.state.bind(r.b.adapter);let une=true;r.b.adapter.state=async(...a)=>{if(une){une=false;throw Error(MUET);}return state(...a);};
   await r.b.api('resume');view=await attendreFin(r);

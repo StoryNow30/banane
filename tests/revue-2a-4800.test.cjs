@@ -5,7 +5,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 
 test('F5 juste après une validation : le lot reprend au premier cut non validé suivant',async()=>{
-  let r;r=await pilote(L,{start:100,end:103,settings:reglages({rafraichirAuto:false}),esv:esv=>{esvLent(esv,{lecturesInstables:false});const v=esv.validateAndNext.bind(esv);
+  let r;r=await pilote(L,{start:100,end:103,settings:reglages(),esv:esv=>{esvLent(esv,{lecturesInstables:false});const v=esv.validateAndNext.bind(esv);
     esv.validateAndNext=async(...a)=>{const e=await v(...a);if(esv.identity.cut===102)await r.b.api('pause');return e;};}});
   let view=await r.b.settle();assert.equal(view.batch.state,'PAUSED');
   /* F5 : ESV rouvre le premier cut non validé, 102. */

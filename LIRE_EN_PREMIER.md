@@ -13,16 +13,17 @@ l'accueil, et **Ariane 4.8.0 · ouvrir** sur le bouton blanc au bas d'ESV.
 
 ## Ce que la 4.8.0 change sur le terrain
 
-- **ESV lent, rafraîchi tout seul.** Quand les nuages n'apparaissent pas ou
-  que la vue ne se recentre pas, Ariane redemande d'abord le recentrage (trois
-  fois), puis rafraîchit la page ESV d'elle-même. ESV repart alors du premier
-  cut non validé : Ariane revient au cut du lot avec « cut non validé
-  suivant », **sans rien valider**, rattache le lot à la nouvelle page et
-  reprend. Une fois par cut, cinq par lot au plus. Si ça ne suffit pas : F5,
-  puis « Reprendre » fait la même chose.
+- **ESV lent : F5 puis « Reprendre ».** Quand les nuages n'apparaissent pas
+  ou que la vue ne se recentre pas, Ariane redemande d'abord le recentrage
+  (trois fois), puis se met en pause et te demande de rafraîchir ESV (F5).
+  ESV repart alors du premier cut non validé : clique sur « Reprendre »,
+  Ariane revient seule au cut du lot avec « cut non validé suivant », **sans
+  rien valider**, rattache le lot à la nouvelle page et reprend. Même chose
+  après « adaptateur sans réponse ».
 - **Plus d'arrêt sur un silence d'ESV** : Ariane attend jusqu'à environ
-  70 s (« ESV ne répond pas encore… ») et reprend seule ; une annulation en
-  retard ne coupe plus le lot suivant (KI-063).
+  70 s (« ESV ne répond pas encore… ») et reprend seule ; « Pause » et
+  « Arrêter » restent respectés ; une annulation en retard ne coupe plus le
+  lot suivant (KI-063).
 - **Tout télécharger pour l'analyse** : journal, bilan, diagnostic et corpus
   en un clic, dans les détails d'Orbite. C'est ce qu'il faut m'envoyer après
   un lot. Edge peut demander d'autoriser plusieurs téléchargements.

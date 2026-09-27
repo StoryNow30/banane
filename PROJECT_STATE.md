@@ -9,7 +9,7 @@ Statut : développement expérimental, non qualifié pour la production.
 
 Go de la direction (D-058), sous réserve des photos et de la vidéo du menu.
 Rapport de sortie : C1 tenu (objectif retenu 79 %), C2 publié sans plancher,
-C3, C4 et C5 tenus. Nouveau : rafraîchissement d'ESV pendant un lot, noms
+C3, C4 et C5 tenus. Nouveau : F5 puis « Reprendre » pendant un lot (retour au cut, lot rattaché), noms
 Ariane / Écho / Orbite, « Tout télécharger pour l’analyse ». Après la
 confirmation : merge, étiquette `v4.8.0`, publication.
 

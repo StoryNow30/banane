@@ -398,7 +398,10 @@
      /* 4.7.19 : arrêt au dernier cut du lot, sans validation ni navigation. */
      /* Clôture par une sortie d'ESV (KI-061, KI-063) : le cut nommé est le dernier validé, pas un cut posé. */
      const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus'};
-     const e=b?.stoppedAtEnd,fin=!e?'':e.reason&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${SORTIES[e.reason]||'sortie du lot'}`
+     const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
+     const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
+       :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
+       :e.issue==='sortie'||e.reason&&!e.issue?` — lot clos après le cut ${e.cut} : ${raison}`
        :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */

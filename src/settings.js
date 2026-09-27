@@ -123,12 +123,9 @@
      * charge un cut lourd) : nouvelles lectures avant de conclure, environ
      * 70 s avec le délai de lecture du bridge (4 s). */
     stateRetriesNavigation: 10,
-    /* 4.8.0 (D-058) — ESV rafraîchi pendant un lot : automatique sur une
-     * lecture instable, une fois par cut, `rafraichirMaxParLot` par lot ;
-     * attente du rechargement, de la page et des rails ; au plus
-     * `rafraichirPasMax` « cut non validé suivant » pour revenir au cut du lot. */
-    rafraichirAuto: true,
-    rafraichirMaxParLot: 5,
+    /* 4.8.0 (D-058) — ESV rafraîchi par l'opérateur pendant un lot : attente
+     * de la page et des rails ; au plus `rafraichirPasMax` « cut non validé
+     * suivant » pour revenir au cut du lot. */
     rafraichirAttenteMs: 90000,
     rafraichirPasMax: 400,
   });

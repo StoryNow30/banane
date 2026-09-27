@@ -5,7 +5,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {pilote,esvLent,reglages,L}=require('./helpers/esv-lent.cjs');
 
 test('cut du lot introuvable après F5 : refus en clair, rien n\'est rattaché ni relancé',async()=>{
-  const r=await pilote(L,{start:100,end:103,settings:reglages({rafraichirAuto:false}),esv:esv=>{esvLent(esv);const next=esv.next.bind(esv);
+  const r=await pilote(L,{start:100,end:103,settings:reglages(),esv:esv=>{esvLent(esv);const next=esv.next.bind(esv);
     esv.next=async(...a)=>{const s=await next(...a);if(esv.recharges&&esv.identity.cut===102){esv.identity.cut=103;return esv.state();}return s;};}});
   let view=await r.b.settle();assert.equal(view.batch.state,'PAUSED');
   r.b.adapter.onReload();

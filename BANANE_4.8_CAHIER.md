@@ -1739,8 +1739,8 @@ KI-063 (arrêts du Pilote 4.7.21) : trois causes, corrigées en 4.8.0
 - **Noms** : Ariane (extension), Écho (ex-Natif), Orbite (ex-Pilote) ;
   identifiants internes et formats de données inchangés.
 - **§12.3, point 1** : C1 retenu comme atteint à 79 % (parties 9 et 12).
-- **ESV lent** : rafraîchissement automatique d'ESV et retour au cut du lot
-  (KI-063) ; « Arrêter » pendant le rafraîchissement gagne.
+- **ESV lent** : pause et consigne F5 ; après F5, « Reprendre » revient au
+  cut du lot et rattache le lot à la nouvelle page (KI-063, option 1).
 - **Sortie** : C1, C3, C4 et C5 tenus, C2 publié sans plancher
   (`audit/rapport-sortie-4.8.md`). Livraison définitive après confirmation
   des photos et de la vidéo du menu par la direction.

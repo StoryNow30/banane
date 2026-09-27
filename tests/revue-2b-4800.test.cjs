@@ -6,7 +6,7 @@ const {pilote,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const MUET='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
 
 test('silence pendant le dernier cut (pas juste après la navigation) : le lot n\'est pas clos à tort',async()=>{
-  const r=await pilote(L,{start:100,end:103,settings:reglages({rafraichirAuto:false}),esv:esv=>{const c=esv.capture.bind(esv),st=esv.state.bind(esv);let muet=0;
+  const r=await pilote(L,{start:100,end:103,settings:reglages(),esv:esv=>{const c=esv.capture.bind(esv),st=esv.state.bind(esv);let muet=0;
     esv.capture=async(...a)=>{const x=await c(...a);if(esv.identity.cut===103&&!esv.fait){esv.fait=true;muet=3;}return x;};
     esv.state=async(...a)=>{if(muet>0){muet--;throw Error(MUET);}return st(...a);};}});
   const view=await attendreFin(r);

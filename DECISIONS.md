@@ -19,11 +19,14 @@ autres lots » ; « je valide tout le reste » ; « je donne donc le go pour la
   12 : 79,3 % et 79,2 %). Rapport de sortie : `c1Seuil` 79.
 - **ESV lent** (nuages absents, vue qui ne se recentre pas) : le remède est de
   rafraîchir ESV. Après F5, ESV repart du premier cut non validé (direction,
-  27/09). Ariane rafraîchit ESV d'elle-même (une fois par cut, 5 par lot au
-  plus), revient au cut du lot par « cut non validé suivant » sans rien
-  valider, rattache le lot à la nouvelle page (appuis translatés dans le
-  nouveau repère) et reprend ; sinon, F5 puis « Reprendre » fait la même
-  chose. « Arrêter » pendant le rafraîchissement gagne.
+  27/09). **Option 1 retenue** : Ariane se met en pause et le dit ; après F5,
+  « Reprendre » revient au cut du lot par « cut non validé suivant » sans
+  rien valider, rattache le lot à la nouvelle page (appuis translatés dans le
+  nouveau repère, écartés si la translation ne se vérifie pas) et reprend.
+  Le rafraîchissement automatique (option 2) a été écrit puis retiré : cinq
+  revues de code y trouvaient chaque fois une nouvelle interaction (lectures
+  du panneau, pause, arrêt, rechargement en cours) ; la direction avait
+  prévu ce repli (« vraiment juste si tu ne trouves aucune solution »).
 - **Fin de partie lue dans ESV** : le panneau d'ESV affiche « N on M
   treated » (photo du 27/09 : 6593 on 6732, partie 14). Le lire donnerait la
   fin de partie dès le premier lot : **4.8.5**. Le correctif KI-063 suffit
