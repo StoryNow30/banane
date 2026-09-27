@@ -110,12 +110,12 @@ function lotExitOf(next){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next,annonce=null,retenir=true,valide=true){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';b.stoppedAtEnd={cut:last??null,reason,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:true};
- const where=next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
+ const where=()=>next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
  engine.s.notice=reason==='adapter-lost-after-navigation'
    ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
-   :valide?`Fin du lot : après la validation du cut ${last}, ESV est passé ${where}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`
+   :surNavigation?`Fin du lot : après la validation du cut ${last}, ESV est passé ${where()}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`
    :`Fin du lot : ESV affiche la partie ${next?.part} pendant le cut ${last}, qu’Ariane n’a pas validé. Le lot est clos ; contrôle ce cut dans ESV.`;
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});
  /* ESV a quitté la partie après ce cut : c'est la fin de la partie pour le
@@ -123,7 +123,7 @@ async function closeAtExit(reason,last,next,annonce=null,retenir=true,valide=tru
   * partie. Terrain du 26/09 (partie 13) : ESV muet après 6629 alors qu'il
   * annonçait 6758, même partie ; la 4.7.21 retenait 6629 comme fin. Si ESV a
   * annoncé un cut plus loin dans la partie avant d'en sortir, c'est lui. */
- if(retenir&&Number.isInteger(next?.part)&&next.part!==b.scope.part)await retenirFinPartie(b.scope.part,Math.max(last??-1,annonce?.part===b.scope.part&&Number.isInteger(annonce.cut)?annonce.cut:-1),'fin constatée');}
+ if(surNavigation&&Number.isInteger(next?.part)&&next.part!==b.scope.part)await retenirFinPartie(b.scope.part,Math.max(last??-1,annonce?.part===b.scope.part&&Number.isInteger(annonce.cut)?annonce.cut:-1),'fin constatée');}
 const validateInESV=adapter.validateAndNext;
 adapter.validateAndNext=async(...args)=>{const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
@@ -141,7 +141,7 @@ async function horsPartie(r){const b=engine.s.batch,id=r?.identity;
   * d'Ariane (le lot n'a pas encore commencé le cut annoncé) ; une autre partie
   * ouverte à la main au milieu d'un cut ne dit rien de la fin (revue 4.8.0). */
  const apresNavigation=!!last?.evidence?.navigationObserved&&b.activeIdentity?.cut===last.cut;
- await closeAtExit('navigation-other-part',undefined,{part:id.part,cut:id.cut},last?.evidence?.nextIdentity,apresNavigation,apresNavigation);
+ await closeAtExit('navigation-other-part',undefined,{part:id.part,cut:id.cut},{annonce:last?.evidence?.nextIdentity,surNavigation:apresNavigation});
  throw Error(`Fin du lot : ESV affiche la partie ${id.part}, hors du lot (KI-063).`);}
 adapter.state=async(...args)=>{
  try{return await horsPartie(await readState(...args));}catch(e){if(!unresponsive(e))throw e;
@@ -151,17 +151,21 @@ adapter.state=async(...args)=>{
     * ESV a quitté la partie. Toute autre navigation (même partie, avant la
     * borne, lot « à la fin de la partie » compris) : ESV charge le cut, on
     * attend plus longtemps (4.8.0, KI-063 : 30 s de silence sur le terrain). */
-   const fin=!!next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end&&b.scope.endMode!=='partie'||Number.isInteger(next.part)&&next.part!==b.scope.part);
+   /* Juste après la navigation seulement : le lot n'a pas encore pris le cut annoncé. */
+   const apres=!!last&&b.activeIdentity?.cut===last.cut;
+   const fin=apres&&!!next&&Number.isInteger(next.cut)&&(next.cut>=b.scope.end&&b.scope.endMode!=='partie'||Number.isInteger(next.part)&&next.part!==b.scope.part);
    /* Attente longue seulement après une navigation dans la partie ; sans
     * navigation (adaptateur absent dès le premier cut), l'ancienne attente. */
    const dansPartie=!fin&&!!next&&Number.isInteger(next.cut),essais=dansPartie?(S.stateRetriesNavigation??10):(S.stateRetries??2);
-   /* « Arrêter » ou « Pause » pendant l'attente : on cesse d'attendre et de parler. */
-   const actif=()=>engine.s.batch===b&&b.state==='RUNNING';
-   for(let k=1;k<=essais;k++){if(!actif())throw e;
-     if(dansPartie)engine.s.notice=`ESV ne répond pas encore (chargement du cut ${next.cut} ?) : nouvelle lecture ${k} sur ${essais}. Le lot reprend seul dès qu’ESV répond.`;
-     await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));if(!actif())throw e;
+   /* « Arrêter » pendant l'attente : on cesse d'attendre. « Pause » : on attend
+    * encore, sans message ; si ESV répond, le moteur s'arrête proprement en
+    * pause (lever l'erreur le mettrait en « adaptateur sans réponse »). */
+   const arrete=()=>engine.s.batch!==b||b.state==='STOPPED',parle=()=>dansPartie&&b.state==='RUNNING';
+   for(let k=1;k<=essais;k++){if(arrete())throw e;
+     if(parle())engine.s.notice=`ESV ne répond pas encore (chargement du cut ${next.cut} ?) : nouvelle lecture ${k} sur ${essais}. Le lot reprend seul dès qu’ESV répond.`;
+     await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));if(arrete())throw e;
      try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});
-       if(dansPartie)engine.s.notice='ESV répond de nouveau : le lot continue.';return await horsPartie(r);}
+       if(parle())engine.s.notice='ESV répond de nouveau : le lot continue.';return await horsPartie(r);}
      catch(e2){if(!unresponsive(e2))throw e2;}}
    if(fin){await closeAtExit('adapter-lost-after-navigation',last.cut,next);
      throw Error('Fin du lot : ESV ne répond plus après le dernier passage (KI-061).');}
@@ -186,7 +190,8 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 async function equiperOnglet(tabId){
  await chrome.scripting.executeScript({target:{tabId},world:'MAIN',files:PAGE_FILES});
  await chrome.scripting.executeScript({target:{tabId},world:'ISOLATED',files:['src/bridge.js']});
- const ping=await call('ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Ariane ${VERSION}.`);}
+ const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action:'ping',args:[]});if(reply?.error)throw Error(reply.error);
+ if(reply?.result?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Ariane ${VERSION}.`);}
 async function reconnecterESV(delaiMs){const fin=Date.now()+delaiMs;let derniere=null;
  while(Date.now()<fin){try{const tab=await chrome.tabs.get(selectedTab);
    if(tab?.status&&tab.status!=='complete'){await attendre(500);continue;}
@@ -210,59 +215,68 @@ function translationRails(a,b){
  * validés deviennent d'abord appuis (dans l'ancien repère, comme
  * `observeLot`) ; les autres ne seront jamais validées sur l'ancienne page et
  * sont écartées. Puis les appuis passent dans le nouveau repère. */
-function rebaserLot(now){const b=engine.s.batch,avant=engine.s.before,L=globalThis.BananeLotDecision,S=globalThis.BananeSettings;
- const ancien=avant?.identity?.frameId??b.activeIdentity?.frameId??null,nouveau=now.identity.frameId??null;
+function rebaserLot(now,avant){const b=engine.s.batch,L=globalThis.BananeLotDecision,S=globalThis.BananeSettings;
+ const ancien=engine.s.before?.identity?.frameId??b.activeIdentity?.frameId??null,nouveau=now.identity.frameId??null;
+ /* Translation mesurée sur le MÊME cut, vu avant et après : sans lui, appuis écartés. */
  const T=avant?translationRails(avant.rails,now.rails):null,obs=b.lotObservation;let gardes=0,ecartes=0;
- if(obs&&typeof L?.promoteAnchors==='function'){const waiting=(obs.pending||[]).map(p=>p.identity.cut),max=(S?.lot?.maxAnchors??40)+(b.scope?.lotReprise?.anchors?.length||0);
-   L.promoteAnchors(obs,(b.processed||[]).map(p=>p.identity).filter(Boolean),max);
-   rememberPosed(b,obs,waiting.filter(c=>!(obs.pending||[]).some(p=>p.identity.cut===c)));}
+ if(obs&&typeof L?.promoteAnchors==='function')promouvoirAppuis(b,obs,b.processed,(S?.lot?.maxAnchors??40)+(b.scope?.lotReprise?.anchors?.length||0));
  const deplacer=a=>{if((a?.identity?.frameId??null)!==ancien)return [a];if(!T){ecartes++;return [];}gardes++;
    const positions=Object.fromEntries(Object.entries(a.positions||{}).map(([side,p])=>[side,Array.isArray(p)&&p.length===3?p.map((v,i)=>v+T[i]):p]));
    return [{...a,identity:{...a.identity,frameId:nouveau},positions}];};
  if(obs){obs.anchors=(obs.anchors||[]).flatMap(deplacer);obs.pending=[];}
  const de=b.scope.pageId;b.scope.pageId=now.identity.pageId;engine.s.before=now;b.step='capture';
  return {dePageId:de,versPageId:now.identity.pageId,deFrameId:ancien,versFrameId:nouveau,translation:T,appuisGardes:gardes,appuisEcartes:ecartes};}
-/* Rend le lot reprenable sur la page ESV affichée ; `null` si ce n'est pas une
- * autre page (un silence passager n'est pas un rechargement). Le lot n'est
- * rattaché que sur SON cut : sinon, refus en clair, rien n'est modifié. */
+/* Rend le lot reprenable sur la page ESV affichée. Rend l'état affiché, et
+ * `rattache` vrai seulement si c'était une autre page (un silence passager
+ * n'est pas un rechargement). Le cut à retrouver : celui dont la lecture a été
+ * interrompue (`before`, pas encore traité), exactement ; sinon le premier cut
+ * non validé après le dernier cut traité. Introuvable : refus en clair, rien
+ * n'est modifié. */
 async function retablirApresRechargement({auto=false}={}){
  const b=engine.s.batch,S=globalThis.BananeSettings?.lot||{};
- if(!b||b.scope?.geometryEngine!==GCV1_ENGINE||!['PAUSED','STOPPED'].includes(b.state))return null;
+ if(!b||b.scope?.geometryEngine!==GCV1_ENGINE||!['PAUSED','STOPPED'].includes(b.state))return {etat:null,rattache:false};
  let now=null;try{now=await readState();}catch{/* adaptateur absent ou occupé */}
  if(!now){await reconnecterESV(S.rafraichirAttenteMs??90000);now=await etatDansPartie(b.scope.part,S.rafraichirAttenteMs??90000);}
- if(now.identity.pageId===b.scope.pageId)return null;
- if(b.step!=='capture'||engine.s.intent||engine.s.applied||engine.s.reconcileRequired)
+ if(now.identity.pageId===b.scope.pageId)return {etat:now,rattache:false};
+ /* Rien en cours sur un cut : capture à refaire, ou résultat archivé (KI-052). */
+ const libre=b.step==='capture'||b.step==='apply'&&!engine.s.proposal;
+ if(!libre||engine.s.intent||engine.s.applied||engine.s.reconcileRequired)
    throw Error('ESV a été rechargé pendant une pose : contrôle le cut dans ESV, puis lance un nouveau lot.');
  if(now.identity.part!==b.scope.part)throw Error(`ESV affiche la partie ${now.identity.part}, pas la partie ${b.scope.part} du lot.`);
- const cible=engine.s.before?.identity?.cut??b.activeIdentity?.cut,max=S.rafraichirPasMax??400;
+ const traites=new Set([...(b.processed||[]),...(b.skipped||[]),...(b.manuallyCompleted||[]),...(b.deferred||[])].map(x=>x?.cut??x?.identity?.cut));
+ const avant=engine.s.before&&!traites.has(engine.s.before.identity?.cut)?engine.s.before:null;
+ const exact=avant?.identity?.cut??null,plancher=exact??b.activeIdentity?.cut,max=S.rafraichirPasMax??400;
+ const atteint=c=>exact!==null?c>=exact:c>plancher;
  let ici=now.rails?.left&&now.rails?.right?now:await etatDansPartie(b.scope.part,S.rafraichirAttenteMs??90000),pas=0;
- while(Number.isInteger(cible)&&ici.identity.cut<cible&&pas<max){
-   engine.s.notice=`ESV rafraîchi : retour au cut ${cible} du lot (cut ${ici.identity.cut} affiché, rien n’est validé).`;
+ while(Number.isInteger(plancher)&&!atteint(ici.identity.cut)&&pas<max){
+   engine.s.notice=`ESV rafraîchi : retour au lot (cut ${ici.identity.cut} affiché, rien n’est validé).`;
    ici=await adapter.next(ici.identity);pas++;
-   if(ici?.identity?.part!==b.scope.part)throw Error(`ESV est passé à la partie ${ici?.identity?.part} en revenant au cut ${cible}.`);}
- if(ici.identity.cut!==cible)throw Error(`ESV rafraîchi, mais le cut ${cible} du lot n’est pas retrouvé (ESV affiche le cut ${ici.identity.cut}${pas>=max?` après ${pas} cuts`:''}). Ouvre le cut ${cible} dans ESV, puis clique sur Reprendre.`);
- const r=rebaserLot(ici);
- await engine.event('batch-rebased-after-reload',{identity:ici.identity,cut:cible,atteint:ici.identity.cut,pas,auto,...r});
- engine.s.notice=`ESV rafraîchi : lot rattaché à la nouvelle page, au cut ${cible}${r.appuisEcartes?` (${r.appuisEcartes} appuis écartés)`:''}.`;
- await engine.save();return {...r,pas};}
+   if(ici?.identity?.part!==b.scope.part)throw Error(`ESV est passé à la partie ${ici?.identity?.part} en revenant au lot.`);}
+ const vise=exact??`après ${plancher}`;
+ if(exact!==null?ici.identity.cut!==exact:!(ici.identity.cut>plancher)||traites.has(ici.identity.cut))
+   throw Error(`ESV rafraîchi, mais le cut ${vise} du lot n’est pas retrouvé (ESV affiche le cut ${ici.identity.cut}${pas>=max?` après ${pas} cuts`:''}). Ouvre-le dans ESV, puis clique sur Reprendre.`);
+ const r=rebaserLot(ici,avant);
+ await engine.event('batch-rebased-after-reload',{identity:ici.identity,cut:exact??plancher,atteint:ici.identity.cut,pas,auto,...r});
+ engine.s.notice=`ESV rafraîchi : lot rattaché à la nouvelle page, au cut ${ici.identity.cut}${r.appuisEcartes?` (${r.appuisEcartes} appuis écartés)`:''}.`;
+ await engine.save();return {etat:ici,rattache:true,...r,pas};}
 /* « Reprendre », depuis le bouton ou après un rafraîchissement automatique :
  * mêmes gardes dans les deux cas. `garde()` faux : on ne relance rien. */
 async function reprendreLot({auto=false,garde=()=>true}={}){assertPilotContract(engine.s.batch?.scope);
+ /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
+ const {etat}=await retablirApresRechargement({auto});
+ /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
+  * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
+  * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
+  * avant de toucher à l'étape du lot : il reste arrêté, reprenable dès le cut
+  * suivant. */
+ const affiche=etat??await adapter.state().catch(()=>null);
+ if(affiche?.identity)try{engine.writable(affiche.identity);}
+  catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Ariane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
  /* KI-052 : « Archiver le résultat interrompu » arrête le lot en laissant
   * l'étape « apply » et efface la proposition ; reprendre relançait la boucle
   * sur une proposition absente. Sans proposition, la reprise recommence le
   * cut par sa capture. */
  if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
- /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
- await retablirApresRechargement({auto});
- /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
-  * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
-  * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
-  * AVANT tout changement d'état : le lot reste arrêté, reprenable dès le cut
-  * suivant. */
- const affiche=await adapter.state().catch(()=>null);
- if(affiche?.identity)try{engine.writable(affiche.identity);}
-  catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Ariane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
  if(!garde())return false;
  await engine.resume();return true;}
 async function rafraichirAuto(){const b=engine.s.batch,S=globalThis.BananeSettings?.lot||{};
@@ -276,12 +290,19 @@ async function rafraichirAuto(){const b=engine.s.batch,S=globalThis.BananeSettin
    const lot=b.id,toujours=()=>engine.s.batch?.id===lot&&engine.s.batch.state==='PAUSED',anciennePage=b.scope.pageId;
    engine.s.notice=`ESV est lent sur le cut ${cut} : Ariane rafraîchit la page ESV et reprendra seule.`;await engine.save();
    await engine.event('esv-refresh-requested',{identity:engine.s.before?.identity??null,cut,auto:true});
-   await chrome.tabs.reload(selectedTab);
-   /* Attendre que l'ancienne page soit partie : sinon on la relirait. */
-   for(const fin=Date.now()+(S.rafraichirAttenteMs??90000);;){await attendre(S.rafraichirPauseMs??2000);
-     let r=null;try{r=await readState();}catch{break;}
-     if(r?.identity?.pageId!==anciennePage)break;
-     if(Date.now()>fin)throw Error('la page ESV ne s’est pas rafraîchie.');}
+   /* Attendre que l'ancienne page soit partie : l'onglet passe par « loading »
+    * puis « complete » (événement de Chrome, écouté AVANT le rechargement pour
+    * ne pas rater un rechargement rapide). Une lecture en échec ne le prouve
+    * pas : la page lente peut simplement ne pas répondre ; la nouvelle ne répond
+    * qu'une fois l'adaptateur réinstallé. */
+   let vuChargement=false,charge=false;const suivi=(id,info)=>{if(id!==selectedTab)return;if(info?.status==='loading')vuChargement=true;else if(vuChargement&&info?.status==='complete')charge=true;};
+   chrome.tabs.onUpdated?.addListener(suivi);
+   try{await chrome.tabs.reload(selectedTab);
+     for(const fin=Date.now()+(S.rafraichirAttenteMs??90000);!charge;){await attendre(Math.min(S.rafraichirPauseMs??2000,500));
+       const tab=await chrome.tabs.get(selectedTab).catch(()=>null);
+       if(tab?.status==='loading')vuChargement=true;else if(vuChargement&&tab?.status==='complete')break;
+       if(Date.now()>fin)throw Error('la page ESV ne s’est pas rafraîchie.');}}
+   finally{chrome.tabs.onUpdated?.removeListener(suivi);}
    if(!toujours())return;
    if(!await reprendreLot({auto:true,garde:toujours})){engine.s.notice='Lot arrêté pendant le rafraîchissement d’ESV : il ne reprend pas.';await engine.save();}}
   catch(e){engine.s.notice=`Rafraîchissement automatique sans succès (${e.message}) Rafraîchis ESV (F5), puis clique sur Reprendre.`;
@@ -412,9 +433,7 @@ async function observeLot(shadow){
  /* 4.7.18 (KI-057) : les cuts validés depuis la décision précédente deviennent
   * appuis ; une décision ne s'appuie que sur des cuts posés. 4.7.19 : chaque
   * cut posé est aussi gardé, en bref, pour une reprise ultérieure (`lotPosed`). */
- if(typeof L.promoteAnchors==='function'){const waiting=(state.pending||[]).map(p=>p.identity.cut);
-   L.promoteAnchors(state,(batch.processed||[]).map(p=>p.identity).filter(Boolean),max);
-   rememberPosed(batch,state,waiting.filter(c=>!(state.pending||[]).some(p=>p.identity.cut===c)));}
+ if(typeof L.promoteAnchors==='function')promouvoirAppuis(batch,state,batch.processed,max);
  const t0=Date.now();
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
    visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
@@ -433,6 +452,11 @@ async function observeLot(shadow){
 }
 /* 4.7.19 — cuts posés par le lot, en bref (identité et positions), pour une
  * reprise des différés : la mémoire de décision n'en garde que 40. */
+/* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
+ * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
+function promouvoirAppuis(batch,state,processed,max){const L=globalThis.BananeLotDecision,waiting=(state.pending||[]).map(p=>p.identity.cut);
+ L.promoteAnchors(state,(processed||[]).map(p=>p.identity).filter(Boolean),max);
+ rememberPosed(batch,state,waiting.filter(c=>!(state.pending||[]).some(p=>p.identity.cut===c)));}
 function rememberPosed(batch,state,cuts){
  for(const cut of cuts){const a=(state.anchors||[]).find(x=>x.identity.cut===cut);if(!a)continue;
    const posed=batch.lotPosed||(batch.lotPosed=[]),i=posed.findIndex(x=>x.identity.cut===cut&&x.identity.part===a.identity.part);
@@ -446,9 +470,7 @@ function repriseAnchors(prev,part){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings;
  if(!prev||prev.scope?.geometryEngine!==GCV1_ENGINE||prev.scope?.part!==part)throw Error('Reprise : aucun lot Orbite précédent sur cette partie. Décoche « Reprise » ou lance un lot ordinaire.');
  const memory=JSON.parse(JSON.stringify(prev.lotObservation||{anchors:[],pending:[]})),posed=JSON.parse(JSON.stringify(prev.lotPosed||[]));
- const waiting=(memory.pending||[]).map(p=>p.identity.cut);
- L.promoteAnchors(memory,(prev.processed||[]).map(p=>p.identity).filter(Boolean),1e6);
- const tmp={lotPosed:posed};rememberPosed(tmp,memory,waiting.filter(c=>!(memory.pending||[]).some(p=>p.identity.cut===c)));
+ const tmp={lotPosed:posed};promouvoirAppuis(tmp,memory,prev.processed,1e6);
  for(const a of memory.anchors||[])if(!tmp.lotPosed.some(x=>x.identity.cut===a.identity.cut))tmp.lotPosed.push({identity:{...a.identity},positions:a.positions,stage:a.stage});
  const gap=L.DEFAULTS.frameGap,deferred=(prev.deferred||[]).map(d=>d.identity?.cut).filter(Number.isInteger);
  if(!deferred.length)throw Error('Reprise : le lot précédent n\'a aucun cut différé.');
@@ -520,7 +542,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer d’onglet.');
   const tab=await chrome.tabs.get(Number(args.tabId));if(!esvURL(tab.url))throw Error('Onglet ESV invalide.');
   // Only extension-origin UI requests can inject the fixed, bundled adapter.
-  selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});await equiperOnglet(tab.id);
+  await equiperOnglet(tab.id);selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
  if(action==='view'){pollCurrent();const v=engine.view();return {...panelView(v),assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.

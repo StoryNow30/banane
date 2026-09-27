@@ -1,7 +1,6 @@
 'use strict';
 /* 4.8.0 — revue de code approfondie (ead1cd1..83e2ebe), reprise après un
- * rafraîchissement d'ESV : suite : cut du lot introuvable, silence passager qui
- * n'est pas un rechargement. */
+ * rafraîchissement d'ESV : un silence passager n'est pas un rechargement. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const MUET='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';

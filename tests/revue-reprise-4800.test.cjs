@@ -4,7 +4,6 @@
  * silence passager qui n'est pas un rechargement. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
-const MUET='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
 
 test('rattachement : l\'appui en attente du dernier cut validé est promu puis translaté',async()=>{
   const r=await pilote(L,{start:100,end:103,settings:reglages(),esv:esvLent});await attendreFin(r);
