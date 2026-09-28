@@ -71,3 +71,30 @@ audit/chantiers/audit-orchestration-485-astra.md : synthèse en dix lignes, puis
 les quatre parties, puis trois à cinq questions pour la direction. Fin :
 résumé de dix lignes, en français.
 ```
+
+## Version courte (budget serré, recommandée)
+
+Une passe, sans code, sans banc, sans clone des données ; la réponse arrive
+dans la conversation et l'orchestrateur la verse au dépôt.
+
+```text
+Tu es le contre-regard de l'orchestrateur d'Ariane (extension Edge qui pose
+les rails sur ESV LiDAR ; 4.8.0 stable, 4.8.5 et 4.9 à venir). Budget serré :
+une seule passe, aucun code, aucun banc, aucun clone.
+
+LIS SEULEMENT (github.com/StoryNow30/banane, branche claude/banane-48-cahier) :
+- PLAN_SUITE.md (le plan à auditer) ;
+- DECISIONS.md, sections D-060 et D-061 ;
+- audit/chantiers/audit-orchestration-485.md (l'auto-audit de
+  l'orchestrateur : conteste-le).
+
+RÉPONDS DIRECTEMENT ICI (pas de branche, pas de commit), une page au plus :
+1. Synthèse en 5 lignes.
+2. Au plus 7 constats : problème -> preuve (fichier, section) -> amélioration
+   -> priorité (P1 avant le paquet 4.8.5, P2 pendant la 4.8.5, P3 en 4.9).
+3. Ce que tu changerais à l'ordre des chantiers D1 à D8 et à la 4.9
+   (5 lignes).
+4. Trois questions pour la direction.
+Marque chaque point VÉRIFIÉ ou SUPPOSÉ. Ne recalcule rien : si un chiffre te
+semble douteux, dis lequel et pourquoi. Aucune modification des dépôts.
+```
