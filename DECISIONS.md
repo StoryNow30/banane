@@ -20,6 +20,12 @@ l'audit de l'orchestration (`audit/chantiers/audit-orchestration-485.md`).
   évaluable (≥ 80 % des posés jugés), au plus 2 faux pour 100 jugés, chacun
   typé ; 0 interruption non reprenable ; refus de la garde à 1 420 mm comptés
   (0 à 2 attendus).
+- **Amendement après le contre-regard d'Astra (28/09, soir)** : le plafond
+  « 0 à 2 refus de la garde » n'est plus une porte : chaque refus est examiné
+  à la relecture (aucun refus d'une pose qui aurait été juste, sauf décision
+  nommée). **Proposé à la direction** : C4 exige au moins 100 posés jugés, pris
+  dans l'ordre du lot sans choix, les posés non jugés listés
+  (`audit/chantiers/audit-orchestration-485-astra.md`).
 - **Ordre des portes** : code gelé → banc et essais → essai terrain d'une
   version de test → audit indépendant (Astra) avant toute version **stable**
   → décision de la direction en dernier.

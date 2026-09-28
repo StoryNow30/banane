@@ -98,3 +98,31 @@ RÉPONDS DIRECTEMENT ICI (pas de branche, pas de commit), une page au plus :
 Marque chaque point VÉRIFIÉ ou SUPPOSÉ. Ne recalcule rien : si un chiffre te
 semble douteux, dis lequel et pourquoi. Aucune modification des dépôts.
 ```
+
+## Deuxième passe (avant le code de la 4.8.5)
+
+```text
+Deuxième passe, même rôle, même budget serré (aucune modification des
+dépôts, réponse directe ici). Tes constats de la première passe sont
+intégrés : audit/chantiers/audit-orchestration-485-astra.md, PLAN_SUITE.md.
+Branche claude/banane-48-cahier.
+
+1. SCÉNARIOS DE PANNE, avant que le code soit écrit. Lis PLAN_SUITE.md §2
+   (D1, D3, D4), puis dans background.js : equiperOnglet, closeAtExit,
+   lotExitOf, l'enveloppe adapter.state ; dans src/adapter-page.js : la
+   garde d'installation (window.__BANANE_V3_PAGE) et la lecture du cut.
+   Rends une table : scénario -> comportement attendu -> essai qui doit
+   échouer sans le correctif. Couvre au moins : deux Ariane actives (dans
+   les deux ordres de connexion) ; F5 pendant un lot ; page ESV quittée au
+   milieu d'une partie ; dernier cut différé avec et sans compteur
+   « N on M » lisible ; texte du compteur absent ou dans un autre format.
+2. PORTE C4. Avec n posés jugés et k faux, propose une porte de sortie
+   défendable (par exemple sur la borne haute d'un intervalle à 95 %) et
+   l'effectif minimal qui la rend atteignable ; calcule-le dans ton langage.
+   Repère : 2 faux sur 100 donnent une borne haute d'environ 7 %.
+3. FICHE DE L'OPÉRATEUR (consignes/operateur-suite.md, étape 6) : ce qui
+   est ambigu, ce qui peut être oublié (le 28/09, une relecture a été faite
+   sans l'observation Écho active), ce qui prend plus de temps qu'annoncé.
+   Au plus 5 points.
+Marque VÉRIFIÉ (lu dans un fichier) ou SUPPOSÉ. Deux pages au plus.
+```

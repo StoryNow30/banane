@@ -1,16 +1,17 @@
 # Plan de la suite — 4.8.5, 4.9 (plan vivant)
 
 Seul plan en vigueur ; `NEXT_TASKS.md` et `PLAN_4.8.md` sont clos. Règles de
-pilotage : D-060, D-061. Diagnostic et portes : `audit/chantiers/audit-orchestration-485.md`.
+pilotage : D-060, D-061. Diagnostic et portes : `audit/chantiers/audit-orchestration-485.md` ;
+contre-regard d'Astra et suites données : `audit/chantiers/audit-orchestration-485-astra.md`.
 Ta fiche pas à pas : `consignes/operateur-suite.md`.
 
 ## 0. Jalons
 
 | Jalon | Contenu | Porte |
 |---|---|---|
-| **J0** clôture 4.8.0 | étiquettes ; relectures p15 et p11 ; rapport de sortie complété | C4 de la partie 15 évaluable, chaque faux nommé |
+| **J0** clôture 4.8.0 — **faite** | étiquettes créées et vérifiées ; qualité finale validée par l'expertise de la direction, **C4 de la partie 15 non mesuré** (D-060) | clôture documentaire : le rapport de sortie le dit ; la mesure enregistrée reprend en J2 |
 | **J1** 4.8.5 test 1 | chantiers D1 à D7 ci-dessous | § 1 (définition de « fini ») pour chaque chantier ; banc : 633 cuts inchangés, 8 jeux : seuls 707, 711, 718 changent |
-| **J2** terrain 4.8.5 | un lot sur une partie neuve, puis sa relecture | C1 ≥ 79 % ; C3 = 0 ; C4 évaluable et ≤ 2 faux / 100 jugés ; 0 interruption non reprenable ; refus de la garde 0 à 2 |
+| **J2** terrain 4.8.5 | un lot sur une partie neuve, puis sa relecture | C1 ≥ 79 % ; C3 = 0 ; C4 : **au moins 100 posés jugés** et ≥ 80 % des posés, pris dans l'ordre du lot sans choix, ≤ 2 faux / 100 jugés, chacun typé, les posés non jugés listés ; 0 interruption non reprenable ; **chaque refus de la garde examiné** à la relecture : aucun refus d'une pose qui aurait été juste, sauf décision nommée |
 | **J3** 4.8.5 stable | audit Astra du diff, étiquette | portes J2 + aucun P1 d'Astra |
 | **J4** 4.9.0 | vitesse, exports, qualité (4.9 a et c) | § 3 |
 | **J5** 4.9.5 | cuts difficiles (4.9 b) | § 3 |
@@ -29,13 +30,15 @@ Ta fiche pas à pas : `consignes/operateur-suite.md`.
 
 | # | Chantier | Fichiers | Effort | Dépend de |
 |---|---|---|---|---|
+| KI-066 | Numéros de segment Écho | `panel.js`, `background.js`, `src/native-session.js` | **fait** (`bea32f0`, essais `budget-liberation`, `echo-vidage-audit-480`) ; part dans le paquet (D7) | — |
 | D1 | Numérotation et cohabitation | `manifest.json`, `src/core.js`, `panel.html`, `panel.js`, `background.js`, `tools/package.py` | S | — |
 | D2 | Garde d'écartement bas à 1 420 mm | `src/lot-decision.js`, `tools/acceptance-report.cjs` | S–M | — |
-| D3 | Fin de partie après un différé (KI-067) | `background.js` | M | D1 (même fichier) |
-| D4 | Instrumentation passive | `src/adapter-page.js`, `background.js` | M | D3 (même fichier) |
-| D5 | Outils de portes | `tools/perf-lot.cjs`, nouvel outil de portes | S–M | — (en parallèle) |
+| D3 | Fin de partie après un différé (KI-067) | `background.js` | M | D4 (preuve de fin de partie) |
+| D4 | Instrumentation passive | `src/adapter-page.js`, `background.js` | M | D1 (même fichier) |
+| D5 | Outils de portes | `tools/perf-lot.cjs`, nouvel outil de portes | S–M | — (en premier : les portes avant le code) |
 | D6 | Documents et état | rapport de sortie, `KNOWN_ISSUES.md`, `LIRE_EN_PREMIER.md` | S | J0 pour les chiffres |
-| D7 | Revue, paquet, essai Chromium | — | S | D1 à D6 |
+| D7 | Revue, paquet, essai Chromium | — | S | D1 à D6 (D8 si décidé) |
+| D8 | « Relire ce lot dans Écho » en fin de lot (**proposé, à décider**) | `panel.js`, `background.js` | S | D3 |
 
 **D1 — Numérotation et cohabitation.**
 - Manifeste `4.8.5.1`, nom « Ariane 4.8.5 TEST », `version_name` « 4.8.5 test 1 » ; la version affichée dans le panneau, les exports et le zip en découle (`ariane-4.8.5-test.1.zip`).
@@ -50,9 +53,10 @@ Ta fiche pas à pas : `consignes/operateur-suite.md`.
 - Porte : 633 cuts de validation inchangés ; 8 jeux : 707 et 711 refusés, 718 posé en ricochet, 0 juste perdu.
 
 **D3 — Fin de partie après un différé (KI-067).**
-- Dans un lot « jusqu'à la fin de la partie », si ESV quitte la page juste après le « suivant sans décision » d'un cut sans pose, le lot se clôt : « Fin du lot : ESV a quitté la partie après le cut N ». Pas de pause « navigation incertaine », aucune commande renvoyée.
-- Dans un lot borné, ou sur un cut posé, le comportement actuel reste : l'incertitude est réelle.
-- Essais : ESV simulé qui ferme la page sur le dernier différé → lot clos proprement ; même panne au milieu d'un lot borné → pause, comme aujourd'hui.
+- Dans un lot « jusqu'à la fin de la partie », si ESV quitte la page juste après le « suivant sans décision » d'un cut sans pose, le lot se clôt **seulement avec une preuve de fin de partie** : le compteur « N on M » relevé par D4 montre que ce cut était le dernier, ou ESV affiche une autre partie à la reconnexion. Le message dit alors : « Fin du lot : ESV a quitté la partie après le cut N ». Aucune commande n'est renvoyée.
+- **Sans preuve, la pause reste** (Astra, constat 3), avec un message clair : « ESV a quitté la page après le différé du cut N ; fin de partie probable : F5, puis Reprendre ou Nouveau lot ».
+- Dans un lot borné, ou sur un cut posé : comportement actuel, car l'incertitude y est réelle.
+- Essais : dernier différé avec preuve → lot clos ; sans preuve → pause et message ; même panne au milieu d'un lot borné → pause, comme aujourd'hui.
 - Réserve : le moteur (épinglé) gère le différé ; la correction se fait dans son enveloppe (`background.js`), avec une revue dédiée.
 
 **D4 — Instrumentation passive (D-061).**
@@ -60,7 +64,7 @@ Ta fiche pas à pas : `consignes/operateur-suite.md`.
   - le texte « N on M treated » s'il est lisible (M = nombre de cuts de la partie) ;
   - le nombre de cuts voisins dont la page garde les rails, dans la structure que l'adaptateur lit déjà pour le cut courant (des nombres, pas les poses).
 - Rangés dans le journal ; format inconnu → champ absent, jamais d'erreur.
-- Usage : (a) fin de partie connue dès le premier lot ; (b) décide si les voisins validés en ligne (D-054) sont faisables en 4.9.5 sans inspection.
+- Usage : (a) preuve de fin de partie pour D3, et fin connue dès le premier lot ; (b) **premier signal seulement** pour les voisins validés en ligne (D-054) : B1 exigera en plus l'identité des cuts, leur statut validé, des coordonnées lisibles et leur fraîcheur (Astra, constat 6).
 
 **D5 — Outils de portes (en parallèle).**
 - `tools/perf-lot.cjs` : décomposition du cycle par phase (script du 28/09 intégré).
@@ -78,7 +82,9 @@ Ta fiche pas à pas : `consignes/operateur-suite.md`.
 - Chargement dans Chromium avec la 4.8.0 à côté : refus attendu quand les deux sont actives.
 - Livraison dans banane-data `travail/…_ariane-485-test1/`.
 
-**Ordre** : jour 1 : D6 (partie J0), D1 → D2 → D3 → D4 en série (`background.js` commun), D5 en parallèle. Jour 2 : D7, paquet test 1, puis toi (J2). Astra relit le diff pendant J2. Un test 2 seulement en cas de panne au terrain.
+**D8 — « Relire ce lot dans Écho » (proposé).** En fin de lot, un bouton démarre l'observation Écho sur la partie du lot : une relecture ne peut plus se faire sans enregistrement (28/09, relectures p11 et p15 perdues).
+
+**Ordre** (revu après Astra) : **D5 d'abord** (les portes existent avant le code) et D6 (clôture J0) ; puis D1 → D2 → **D4 → D3** en série (`background.js` commun ; D3 s'appuie sur D4) ; D8 si décidé ; enfin D7, paquet test 1, puis toi (J2). Astra relit le diff pendant J2. Un test 2 seulement en cas de panne au terrain.
 
 **Hors 4.8.5** : garde de voie à 20 mm (sauf si, rejouée après D2, elle ne perd plus aucun juste) ; choix à un appui (7738, 7026) et biais vertical des passages à niveau : banc de fond pendant J2, sans code.
 
@@ -103,8 +109,9 @@ signé par la direction. Découpage proposé : **4.9.0** = a + c ; **4.9.5** = b
 | B3 | Coordinateur de lot (C01) | seulement si B2 l'exige | L | B2 |
 | P2 | Précision humaine (KI-038) | 30 cuts reposés en aveugle, une fois (15 min) | S | — |
 
-**Ordre de la 4.9.0** : V1, puis V2 et V4, puis V3 (un réglage par cycle).
-U1 à U3 en parallèle, sur des fichiers distincts. Stable aux portes.
+**Ordre de la 4.9.0** : **P2 au premier cycle** (avant toute conclusion sur la précision, Astra), V1, puis V2 et V4, puis V3 (un réglage par cycle). U1 à U3 en parallèle, sur des fichiers distincts, **seulement si le budget de l'opérateur le permet**.
+
+**Porte de version 4.9.0** : cycle médian −25 % (V3, V4 et le reste ensemble), C1 et C4 non dégradés. La capture seule ne suffit pas : elle pèse 48 % du cycle, et −30 % sur la capture n'en retire qu'environ 14 %.
 
 **Ordre de la 4.9.5** : B1 dès que les données de D4 le permettent, puis B2
 après sa tâche de 10 min, puis B3 si besoin. Stable aux portes.

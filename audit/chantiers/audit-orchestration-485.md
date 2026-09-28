@@ -1,5 +1,7 @@
 # Audit de l'orchestration de la suite d'Ariane (4.8.5, 4.9, au-delà)
 
+> **Mise à jour (28/09, soir)** : étiquettes `v4.8.0`, `v4.7.21` et `v4.7.0` créées par la direction et vérifiées (D-060) ; qualité finale de la 4.8.0 validée par l'expertise de la direction, C4 de la partie 15 non mesuré. Contre-regard d'Astra et suites : `audit-orchestration-485-astra.md` ; plan à jour : `PLAN_SUITE.md`.
+
 **28 septembre 2026.** Prompt : `consignes/chantier-9-auditeur.md`, appliqué à
 l'orchestrateur à la demande de la direction. Base : `main` à `ba7282d`.
 **Réserve d'indépendance** : l'auditeur est ici l'orchestrateur lui-même. Les
