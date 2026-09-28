@@ -38,5 +38,7 @@ pas de merge, d'étiquette, de publication ni de force push sans mon accord ;
 commits avec Co-Authored-By et Claude-Session ; aucun identifiant de modèle
 dans les fichiers.
 
-Commence par me dire en 5 lignes l'état que tu trouves et ton premier pas.
+Commence par vérifier que les plugins Superpowers et Design sont chargés dans
+cette session (liste tes plugins) ; puis dis-moi en 5 lignes l'état que tu
+trouves et ton premier pas.
 ```
