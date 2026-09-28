@@ -5,10 +5,13 @@
 **28 septembre 2026, direction**, sur l'audit d'orchestration
 (`audit/orchestration-480-485-490-2026-09-28.md`) : « je valide tout ».
 
-- **Fusion** (« go fusion ») : étiquette `v4.8.0` sur `fabd77e`, le code du
-  paquet `38aa29a2…` ; `main` avancé à la branche (avance rapide) ; étiquettes
-  historiques `v4.7.0` (`5928be4`) et `v4.7.21` (`ead1cd1`, cible de retour
-  arrière). banane-data : `main` avancé de même.
+- **Fusion** (« go fusion ») : `main` avancé à la branche (avance rapide,
+  `64f2d6e`) ; banane-data : `main` avancé de même (`ddc3282`). Étiquettes
+  `v4.8.0` sur `fabd77e` (le code du paquet `38aa29a2…`), `v4.7.21` sur
+  `ead1cd1` (cible de retour arrière) et `v4.7.0` sur `5928be4` : **refusées à
+  la session** (HTTP 403, la session ne pousse que des branches), à créer par
+  la direction sur GitHub (Releases → nouvelle publication → étiquette et
+  commit cible).
 - **La 4.8.0 reste la version stable** de l'opérateur, installée dans ESV.
   Les versions de test (4.8.5…) s'installent à côté, chacune depuis son
   propre dossier, **une seule Ariane active à la fois** (interrupteur de la
