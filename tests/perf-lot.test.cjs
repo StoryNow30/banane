@@ -78,3 +78,26 @@ test('D5 revue : sans nextIdentity, la navigation n’a pas de cible connue et l
 test('D5 revue : la décomposition n’est calculée que pour la fenêtre mesurée, pas pour chaque lot',()=>{
   const m=measure(journal(),{tous:true});assert.equal('phases' in m.lots[0],false);assert.equal(typeof m.phases.n,'number');
 });
+/* Seconde revue du 28/09 (D5). */
+test('revue 2 : un cycle lent est nommé même sans nextIdentity (cut quitté par la navigation suivante)',()=>{
+  const ev=[{type:'batch-started',timestamp:t(0),batch:{id:'A'}},{type:'cut-target-changed',timestamp:t(1),identity:id(4)},
+    {type:'cut-target-changed',timestamp:t(200),identity:id(5)}];
+  assert.deepEqual(measure({state:{batch:{id:'A'}},events:ev}).cyclesLents,[{cut:5,s:199}]);
+});
+test('revue 2 : une chaîne avec un silence (> 60 s) est exclue de la décomposition et comptée à part',()=>{
+  const nav=(s,de,vers)=>({type:'cut-target-changed',timestamp:t(s),identity:id(de),nextIdentity:id(vers)});
+  const chaine=(c,[b,p,o,a,ap,v])=>[['before-captured',b],['proposed',p],['gcv1-shadow-observed',o],['applied-verified',a],['after-captured',ap],['validation-accepted',v]]
+    .map(([type,s])=>({type,timestamp:t(s),identity:id(c)}));
+  const ev=[{type:'batch-started',timestamp:t(0),batch:{id:'A'}},nav(0,0,1),...chaine(1,[4.5,5.5,5.7,7,7.5,8.5]),nav(9,1,2),
+    /* cut 2 : pause de 2 min entre la pose relue et la capture après pose */
+    ...chaine(2,[13.5,14.5,14.7,16,136,137]),nav(137.5,2,3)];
+  const j={state:{batch:{id:'A'}},events:ev},p=measure(j).phases;
+  assert.equal(p.n,1);assert.equal(p.lents,1);
+  assert.match(toMarkdown(measure(j)),/1 exclu \(silence > 60 s\)/);
+});
+test('revue 2 : une chaîne aux jalons dans le désordre (durée négative) est exclue et comptée à part',()=>{
+  const nav=(s,de,vers)=>({type:'cut-target-changed',timestamp:t(s),identity:id(de),nextIdentity:id(vers)});
+  const ev=[{type:'batch-started',timestamp:t(0),batch:{id:'A'}},nav(0,0,1),
+    ...[['before-captured',4.5],['proposed',5.5],['applied-verified',5.6],['gcv1-shadow-observed',5.7],['after-captured',7.5],['validation-accepted',8.5]].map(([type,s])=>({type,timestamp:t(s),identity:id(1)})),nav(9,1,2)];
+  const p=measure({state:{batch:{id:'A'}},events:ev}).phases;assert.equal(p.n,0);assert.equal(p.desordre,1);
+});

@@ -79,7 +79,7 @@ function mesurer(events){
     if(e.type==='gcv1-shadow-observed'&&Number.isFinite(e.lotObservation?.engineMs))engine.push(e.lotObservation.engineMs);}
   /* Cycle par cut et silences. */
   const cibles=events.filter(e=>e.type==='cut-target-changed'),cycles=[];
-  for(let i=1;i<cibles.length;i++)cycles.push({cut:cibleOf(cibles[i-1]),ms:ms(cibles[i])-ms(cibles[i-1])});
+  for(let i=1;i<cibles.length;i++)cycles.push({cut:cutOf(cibles[i]),ms:ms(cibles[i])-ms(cibles[i-1])});
   const silences=[];for(let i=1;i<events.length;i++){const d=ms(events[i])-ms(events[i-1]);
     if(d>SILENCE_MS)silences.push({apres:events[i-1].type,cut:cutOf(events[i-1]),de:events[i-1].timestamp,ms:d});}
   const debut=ms(events[0]),fin=ms(events.at(-1)),silenceMs=silences.reduce((s,x)=>s+x.ms,0);
@@ -103,17 +103,20 @@ function mesurer(events){
  * comptent : un jalon répété (pose refaite, nouvelle capture, validation
  * reprise) exclut la chaîne, comptée à part (`repetes`). Un rechargement sur le
  * même cut émet aussi un `cut-target-changed` : la chaîne en cours est
- * abandonnée, ce n'est pas un cycle ordinaire. */
+ * abandonnée, ce n'est pas un cycle ordinaire. Sont aussi exclues et comptées
+ * à part : une chaîne de plus de 60 s (`lents`, comme les cycles hors silences)
+ * et une chaîne aux jalons dans le désordre (`desordre`). */
 const JALONS=['before-captured','proposed','gcv1-shadow-observed','applied-verified','after-captured','validation-accepted'];
 const PHASES=[['navigation-capture','Navigation → capture reçue','navigation','before-captured'],
   ['analyse-gcv1','Analyse GCV1','before-captured','proposed'],['decision-lot','Décision sur le lot (observation)','proposed','gcv1-shadow-observed'],
   ['pose','Décision → pose relue','gcv1-shadow-observed','applied-verified'],['capture-apres-pose','Capture après pose','applied-verified','after-captured'],
   ['validation','Validation (après capture → acceptée)','after-captured','validation-accepted'],['cut-suivant','Validation → cut suivant','validation-accepted','suivant']];
 function decomposer(events){
-  const chaines=[];let nav=null,cur=null,repetes=0;
+  const chaines=[];let nav=null,cur=null,repetes=0,lents=0,desordre=0;
   for(const e of events){
     if(e.type==='cut-target-changed'){
-      if(cur&&cur.t.navigation!=null&&JALONS.every(j=>cur.t[j]!=null)&&cutOf(e)===cur.cut){if(cur.repete)repetes++;else chaines.push({...cur.t,suivant:ms(e)});}
+      if(cur&&cur.t.navigation!=null&&JALONS.every(j=>cur.t[j]!=null)&&cutOf(e)===cur.cut){const c={...cur.t,suivant:ms(e)},o=['navigation',...JALONS,'suivant'].map(k=>c[k]);
+        if(cur.repete)repetes++;else if(o.some((v,i)=>i&&v<o[i-1]))desordre++;else if(c.suivant-c.navigation>SILENCE_MS)lents++;else chaines.push(c);}
       nav={at:ms(e),vers:cibleOf(e)};cur=null;continue;}
     if(!JALONS.includes(e.type))continue;
     if(e.type==='before-captured'&&cur?.cut!==cutOf(e)){cur={cut:cutOf(e),repete:false,t:{navigation:nav&&nav.vers===cutOf(e)?nav.at:null,'before-captured':ms(e)}};continue;}
@@ -121,7 +124,7 @@ function decomposer(events){
   const etapes=PHASES.map(([id,libelle,de,a])=>({id,libelle,ms:stats(chaines.map(c=>c[a]-c[de]))}));
   const sommeMedianesMs=chaines.length?etapes.reduce((s,e)=>s+e.ms.median,0):null;
   for(const e of etapes)e.part=sommeMedianesMs?e.ms.median/sommeMedianesMs:null;
-  return {n:chaines.length,repetes,cycleMs:stats(chaines.map(c=>c.suivant-c.navigation)),sommeMedianesMs,etapes};
+  return {n:chaines.length,repetes,lents,desordre,cycleMs:stats(chaines.map(c=>c.suivant-c.navigation)),sommeMedianesMs,etapes};
 }
 const n=v=>Number.isFinite(v)?String(Math.round(v)):'—';
 const sec=v=>!Number.isFinite(v)?'—':v<1000?Math.round(v)+' ms':(Math.round(v/100)/10).toFixed(1).replace('.',',')+' s';
@@ -141,7 +144,7 @@ function toMarkdown(m,titre){
     `| Capture : essais | ${m.capture.essais.n} | ${n(m.capture.essais.median)} | ${n(m.capture.essais.p90)} | ${n(m.capture.essais.max)} |`);
   const p=m.phases;
   if(!p.n)L.push('','Décomposition du cycle : aucun cut validé à chaîne complète.');
-  else{L.push('',`Décomposition du cycle (${p.n} cut${p.n>1?'s':''} validé${p.n>1?'s':''} à chaîne complète${p.repetes?` ; ${p.repetes} exclu${p.repetes>1?'s':''} (jalon répété)`:''} ; part = médiane de la phase / somme des médianes, ${sec(p.sommeMedianesMs)} ; cycle médian réel ${sec(p.cycleMs.median)}) :`,'',
+  else{L.push('',`Décomposition du cycle (${p.n} cut${p.n>1?'s':''} validé${p.n>1?'s':''} à chaîne complète${[[p.repetes,'jalon répété'],[p.lents,'silence > 60 s'],[p.desordre,'jalons dans le désordre']].filter(([k])=>k).map(([k,m])=>` ; ${k} exclu${k>1?'s':''} (${m})`).join('')} ; part = médiane de la phase / somme des médianes, ${sec(p.sommeMedianesMs)} ; cycle médian réel ${sec(p.cycleMs.median)}) :`,'',
       '| Phase | n | médiane | p90 | part |','|---|---|---|---|---|');
     for(const e of p.etapes)L.push(`| ${e.libelle} | ${e.ms.n} | ${sec(e.ms.median)} | ${sec(e.ms.p90)} | ${Math.round(e.part*100)} % |`);}
   if(m.lots.length>1){L.push('','Lot par lot :','','| Début | Partie | Départ | Fin | Cuts | Durée | Cycle médian / p90 | Capture médiane / p90 / max | Erreurs |','|---|---|---|---|---|---|---|---|---|');

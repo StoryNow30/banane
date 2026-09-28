@@ -80,3 +80,20 @@ test('revue : --figer refuse un relevé fait sur un code modifié (non commité)
   assert.throws(()=>P.run(['--releve',r,'--figer',path.join(d,'ref.json')]),/code modifié/);
   assert.equal(fs.existsSync(path.join(d,'ref.json')),false);
 });
+/* Seconde revue du 28/09 (D5). */
+test('revue 2 : --figer refuse un relevé sans commit connu (git absent) et exige un chemin',()=>{
+  const d=tmp(),r=path.join(d,'releve.json');
+  fs.writeFileSync(r,JSON.stringify({code:{commit:null,modifie:false},validation:validation(633),jeux:jeux(gBase)}));
+  assert.throws(()=>P.run(['--releve',r,'--figer',path.join(d,'ref.json')]),/code modifié ou inconnu/);
+  assert.throws(()=>P.run(['--releve',r,'--figer']),/--figer : chemin/);
+});
+test('revue 2 : chemins relatifs des entrées résolus depuis le dossier du fichier',()=>{
+  const d=tmp(),f=entrees(d,['DONNEES_C5=c5','KIT_EXTRAIT=kit','P9_4718R=/abs/p9r','ECHO_P11=./echo','SORTIE=sortie']);
+  const e=P.lireEntrees(f);assert.equal(e.DONNEES_C5,path.join(d,'c5'));assert.equal(e.ECHO_P11,path.join(d,'echo'));assert.equal(e.P9_4718R,'/abs/p9r');
+});
+test('revue 2 : l’empreinte des entrées change quand un fichier d’entrée change',()=>{
+  const d=tmp();fs.mkdirSync(path.join(d,'lot'));fs.writeFileSync(path.join(d,'lot','a.json'),'{}');
+  const e1=P.empreinteEntrees([path.join(d,'lot')]);
+  assert.equal(P.empreinteEntrees([path.join(d,'lot')]),e1);
+  fs.writeFileSync(path.join(d,'lot','a.json'),'{"x":1}');assert.notEqual(P.empreinteEntrees([path.join(d,'lot')]),e1);
+});
