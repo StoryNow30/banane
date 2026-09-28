@@ -1,5 +1,32 @@
 # Décisions techniques
 
+## D-060 - 4.8.0 fusionnée et stable ; 4.8.5 : garde d'écartement à 1 420 mm, KI-066 et KI-067
+
+**28 septembre 2026, direction**, sur l'audit d'orchestration
+(`audit/orchestration-480-485-490-2026-09-28.md`) : « je valide tout ».
+
+- **Fusion** (« go fusion ») : étiquette `v4.8.0` sur `fabd77e`, le code du
+  paquet `38aa29a2…` ; `main` avancé à la branche (avance rapide) ; étiquettes
+  historiques `v4.7.0` (`5928be4`) et `v4.7.21` (`ead1cd1`, cible de retour
+  arrière). banane-data : `main` avancé de même.
+- **La 4.8.0 reste la version stable** de l'opérateur, installée dans ESV.
+  Les versions de test (4.8.5…) s'installent à côté, chacune depuis son
+  propre dossier, **une seule Ariane active à la fois** (interrupteur de la
+  page des extensions, puis F5 sur ESV) : l'adaptateur est injecté dans la
+  page ESV, commune à toutes les extensions. Une version de test porte un nom
+  distinct et refuse de se connecter si une autre Ariane est active dans
+  l'onglet.
+- **Qualité finale de la 4.8.0** : relectures Écho de la partie 15 et des 37
+  cuts restants de la partie 11 par l'opérateur ; chiffres communiqués le
+  29/09.
+- **4.8.5** : KI-066 et KI-067 y entrent (le paquet 4.8.0 validé reste
+  intact) ; **garde d'écartement bas à 1 420 mm** sur les premiers passages
+  sans appui (garde seulement, jamais une cible ; banc : faux 10 → 9, 0 juste
+  perdu, `audit/relecture-p11-2026-09-28.md` §5). Partie de validation de la
+  4.8.5 : une partie jamais passée par Ariane, choisie par l'opérateur.
+- **Audit de l'orchestration de la suite** confié à Astra
+  (`consignes/chantier-9-auditeur.md`).
+
 ## D-059 - Audit qualité 4.8 (Astra) : P1 et P2 locaux corrigés dans la 4.8.0, avant sa sortie
 
 **28 septembre 2026.** Audit indépendant de la 4.8.0 demandé par la direction
