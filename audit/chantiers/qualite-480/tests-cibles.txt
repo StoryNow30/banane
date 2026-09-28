@@ -1,0 +1,13 @@
+✔ défaut caractérisé : le dernier cut sans décision est exclu de la couverture du panneau (11.609188ms)
+✔ défaut caractérisé : Tout télécharger écrase l’avertissement du corpus incomplet (6.93393ms)
+✔ défaut caractérisé : Écho propose un démarrage que le moteur refuse en reprise manuelle (5.144283ms)
+✔ mesure : analyseMs s’arrête avant la décision sur le lot, contrairement au commentaire de perf-lot (2.207393ms)
+✔ défaut : le vidage automatique purge le LiDAR sans preuve de téléchargement réussi (20.339589ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 152.017749
