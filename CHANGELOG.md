@@ -13,7 +13,12 @@
 - **ESV muet** : attente longue une fois le lot en route ; « Pause » et
   « Arrêter » respectés pendant l'attente ; cut de fin muet sans pose : lot
   clos proprement ; fins de lot dites selon leur issue au panneau.
-- **Cinq revues de code** sur le code de reprise : chaque constat a son essai,
+- **Page ESV rechargée ou fermée pendant une commande** (F5 pendant une
+  lecture ou une pose, onglet fermé) : l'erreur de connexion de Chrome devient
+  « adaptateur sans réponse » (pause reprenable, cause et remède dits), jamais
+  ERROR ; « Arrêter » reste cliquable pendant une action et interrompt une
+  reprise qui attend ESV.
+- **Sept revues de code** sur le code de reprise : chaque constat a son essai,
   rouge sans le correctif.
 - **Interface** : « Tout télécharger pour l’analyse » (journal, bilan,
   diagnostic, corpus en un clic) ; « Masquer / Afficher les détails » ;
@@ -21,7 +26,7 @@
   « Télécharger » ; accueil et textes d'Orbite réécrits ; mentions TEST
   retirées.
 - **Revue de code** : une autre partie ouverte à la main ne fixe plus la fin
-  de partie ; « Arrêter » pendant une reprise qui attend ESV gagne.
+  de partie.
 - **Rapport de sortie** : C1 par partie (lots cumulés) et objectif retenu par
   la direction ; C1, C3, C4, C5 tenus, C2 publié sans plancher.
 

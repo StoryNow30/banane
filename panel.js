@@ -401,6 +401,7 @@
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
      const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
+       :!e.issue&&e.reason==='adapter-lost-after-navigation'&&e.applied===false?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie'||e.reason&&!e.issue&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${raison}`
        :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
@@ -470,7 +471,8 @@
      button('pause',{hidden:b?.state!=='RUNNING',disabled:working});/* V4.6.0 : Arrêter reste offert pendant la reprise manuelle — c'est la seule
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
-button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:working});
+/* 4.8.0 : « Arrêter » reste cliquable pendant une action (une reprise qui attend ESV, par exemple). */
+     button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:false});
      /* 4.8.0 : « adaptateur sans réponse » se règle par F5 puis Reprendre. */
      const debloquable=b?.state==='PAUSED_ADAPTER_UNRESPONSIVE'&&b.scope?.geometryEngine==='geometry-candidate-v1'&&!s.reconcileRequired&&!s.intent;
      button('resume',{hidden:!(['PAUSED','STOPPED'].includes(b?.state)||debloquable),disabled:busy||active(s)});
@@ -825,7 +827,9 @@ on('native-discard',async()=>{
  /* Reprise cochée : bornes du premier différé à la fin du lot précédent. */
  if($('lot-reprise'))$('lot-reprise').onchange=()=>{const b=state?.batch,d=(b?.deferred||[]).map(x=>x.identity?.cut).filter(Number.isInteger).sort((x,y)=>x-y);
    if($('lot-reprise').checked&&d.length){$('start').value=d[0];$('end').value=finDePartie(b.scope)?'':b.scope.end;edited.add('start');edited.add('end');}};
- for(const id of ['pause','resume','stop','close-uncertain'])on(id,()=>api(id));
+ for(const id of ['pause','resume','close-uncertain'])on(id,()=>api(id));
+ /* « Arrêter » passe même pendant une autre action : c'est la sortie de secours. */
+ if($('stop'))$('stop').onclick=()=>{api('stop').then(()=>refresh(),e=>note(e.message,true));};
  on('retry',()=>api('retry'));
  /* « Nouveau lot » ne lance rien : il rouvre les bornes et « Démarrer ». */
  if($('new-batch'))$('new-batch').onclick=()=>{nouveauLot=true;edited.delete('start');edited.delete('end');if(state)render(state);};

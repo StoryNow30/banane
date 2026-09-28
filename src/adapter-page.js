@@ -238,7 +238,7 @@
    for(const side of ['left','right']){
      /* Lecture seule : une vue qui ne se recentre pas met le lot en pause
       * reprenable (« Lecture LiDAR instable »), au lieu de l'arrêter en erreur. */
-     guard();await select(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut.');throw e;});
+     guard();await select(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut : rafraîchis la page ESV (F5), puis clique sur Reprendre.');throw e;});
      for(let attempt=1;attempt<=maxAttemptsPerView;attempt++){
        const began=Date.now();guard();progress('capture-wait',{side,attempt,maxAttemptsPerView});
        try{

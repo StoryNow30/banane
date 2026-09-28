@@ -56,12 +56,19 @@ function launcherState(){const ids=new Set(panelWindows.keys());
 async function syncLauncher(){const state=launcherState(),tabs=await chrome.tabs.query({});
  await Promise.allSettled(tabs.filter(tab=>esvURL(tab.url)).map(tab=>chrome.tabs.sendMessage(tab.id,{kind:'launcher-visibility',visible:state.visible,bandeau:state.bandeau})));return state;}
 async function call(action,...args){return callSur(selectedTab,action,...args);}
+/* 4.8.0 — PAGE ESV RECHARGÉE OU FERMÉE pendant une commande (F5 de l'opérateur,
+ * onglet fermé) : Chrome rejette par une erreur de connexion, que le moteur
+ * classait en ERROR, non reprenable. Traduite ici, pour toutes les commandes,
+ * en « Adaptateur ESV sans réponse » (pause reprenable), cause et remède dits. */
+const PAGE_ABSENTE=/Could not establish connection|Receiving end does not exist|message (port|channel) (is )?closed|No tab with id|The frame was removed|Extension context invalidated|back\/forward cache/i;
+function pageEsvAbsente(e){if(!PAGE_ABSENTE.test(e?.message||''))return e;
+ return Object.assign(Error(`Adaptateur ESV sans réponse : page ESV rechargée ou fermée (${e.message}). Après un F5, clique sur Reprendre ; onglet fermé : rouvre ESV puis clique sur Connecter.`),{code:'ESV_PAGE_ABSENTE'});}
 async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélectionne un onglet ESV.');
- const tab=await chrome.tabs.get(tabId);if(!esvURL(tab.url))throw Error('L’onglet sélectionné n’est plus une page ESV autorisée.');
+ const tab=await chrome.tabs.get(tabId).catch(e=>{throw pageEsvAbsente(e);});if(!esvURL(tab.url))throw Error('L’onglet sélectionné n’est plus une page ESV autorisée.');
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
   * est dite en clair ; pour une capture, c'est une lecture à reprendre. */
  const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args}).catch(e=>{
-   if(!/maximum allowed size/i.test(e?.message||''))throw e;
+   if(!/maximum allowed size/i.test(e?.message||''))throw pageEsvAbsente(e);
    throw Error((action==='capture'?'Lecture LiDAR instable : ':'')+`réponse de l’adaptateur trop grosse pour un message Chrome (${action} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':''));});
  if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null});
  if(reply?.error)throw Error(reply.error);
@@ -153,19 +160,16 @@ async function horsPartie(r,{attente=false}={}){const b=engine.s.batch,id=r?.ide
  throw Error(`Fin du lot : ESV affiche la partie ${id.part}, hors du lot (KI-063).`);}
 /* Cuts traités par le lot (posés, différés, SKIP, repris à la main). */
 function cutsTraites(b){return new Set([...(b.processed||[]),...(b.skipped||[]),...(b.manuallyCompleted||[]),...(b.deferred||[])].map(x=>x?.cut??x?.identity?.cut).filter(Number.isInteger));}
-/* ESV muet, ou page rechargée par l'opérateur (F5) : le bridge a disparu et
- * Chrome répond par une erreur de connexion. Pour le moteur, c'est la même
- * chose : « Adaptateur ESV sans réponse » (pause reprenable), jamais ERROR. */
-const MUET_ESV='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
-const pageAbsente=e=>unresponsive(e)||/Could not establish connection|Receiving end does not exist|No tab with id|The frame was removed|message port closed/i.test(e?.message||'');
 adapter.state=async(...args)=>{
  /* Seul un lot EN COURS au moment de la lecture attend un ESV muet : une
   * lecture sur un lot déjà en pause (vue du panneau, reprise) échoue aussitôt,
   * comme avant (revue 4.8.0). */
  const lot=engine.s.batch,enCours=lot?.state==='RUNNING'&&lot.scope?.geometryEngine===GCV1_ENGINE;
- try{return await horsPartie(await readState(...args));}catch(e){if(!pageAbsente(e))throw e;
-   const S=globalThis.BananeSettings?.lot||{},b=engine.s.batch,sansReponse=Error(MUET_ESV);
-   if(!enCours||b!==lot||!['RUNNING','PAUSED'].includes(b.state))throw unresponsive(e)?e:sansReponse;
+ try{return await horsPartie(await readState(...args));}catch(e){if(!unresponsive(e))throw e;
+   const S=globalThis.BananeSettings?.lot||{},b=engine.s.batch;let sansReponse=e;
+   /* Page rechargée (F5) ou fermée : aucune relecture ne peut réussir avant la
+    * réinstallation d'Ariane ; « Reprendre » s'en charge. */
+   if(!enCours||b!==lot||!['RUNNING','PAUSED'].includes(b.state)||e.code==='ESV_PAGE_ABSENTE')throw e;
    /* ESV muet pendant un lot (4.7.20 KI-061, 4.8.0 KI-063). Attente longue une
     * fois le lot en route (30 s de silence sur le terrain, partie 13), courte
     * avant (adaptateur plutôt absent). Ensuite, si ESV s'est tu JUSTE APRÈS la
@@ -188,7 +192,7 @@ adapter.state=async(...args)=>{
      await new Promise(r=>setTimeout(r,S.stateRetryMs??3000));if(arrete())throw sansReponse;
      try{const r=await readState(...args);await engine.event('adapter-state-retry',{attempt:k,ok:true});
        if(longue&&b.state==='RUNNING')engine.s.notice='ESV répond de nouveau : le lot continue.';return await horsPartie(r,{attente:true});}
-     catch(e2){if(!pageAbsente(e2))throw e2;}}
+     catch(e2){if(!unresponsive(e2))throw e2;sansReponse=e2;if(e2.code==='ESV_PAGE_ABSENTE')throw e2;}}
    if(borne&&!arrete()){await closeAtExit('adapter-lost-after-navigation',b.processed?.at(-1)?.cut,{part:b.scope.part,cut:attendu},{finSansPose:true});
      throw Error('Fin du lot : ESV ne répond plus après le dernier passage (KI-061).');}
    throw sansReponse;}};
@@ -213,14 +217,14 @@ async function equiperOnglet(tabId){
  await chrome.scripting.executeScript({target:{tabId},world:'MAIN',files:PAGE_FILES});
  await chrome.scripting.executeScript({target:{tabId},world:'ISOLATED',files:['src/bridge.js']});
  const ping=await callSur(tabId,'ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Ariane ${VERSION}.`);}
-async function reconnecterESV(delaiMs){const fin=Date.now()+delaiMs;let derniere=null;
- while(Date.now()<fin){try{const tab=await chrome.tabs.get(selectedTab);
+async function reconnecterESV(delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
+ while(Date.now()<fin){garde();try{const tab=await chrome.tabs.get(selectedTab);
    if(tab?.status&&tab.status!=='complete'){await attendre(500);continue;}
    await equiperOnglet(selectedTab);return;}
   catch(e){derniere=e;}await attendre(1000);}
  throw Error('ESV ne répond pas après le rafraîchissement'+(derniere?.message?` (${derniere.message})`:'')+'.');}
-async function etatDansPartie(part,delaiMs){const fin=Date.now()+delaiMs;let derniere=null;
- while(Date.now()<fin){try{const r=await readState();
+async function etatDansPartie(part,delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
+ while(Date.now()<fin){garde();try{const r=await readState();
    if(Number.isInteger(r?.identity?.part)&&r.identity.part!==part)throw Object.assign(Error(`ESV affiche la partie ${r.identity.part}, pas la partie ${part} du lot.`),{definitif:true});
    if(r?.rails?.left&&r?.rails?.right)return r;}catch(e){if(e.definitif)throw e;derniere=e;}
   await attendre(1000);}
@@ -261,7 +265,7 @@ async function retablirApresRechargement(garde=()=>true){
  let now=null;try{now=await readState();}catch{/* adaptateur absent ou occupé */}
  if(!now){const fin=Date.now()+(S.rafraichirAttenteMs??90000);
    engine.s.notice='Ariane attend la page ESV (rafraîchis-la si elle reste figée)…';await engine.save();
-   await reconnecterESV(fin-Date.now());interrompu();now=await etatDansPartie(b.scope.part,Math.max(1000,fin-Date.now()));}
+   await reconnecterESV(fin-Date.now(),interrompu);now=await etatDansPartie(b.scope.part,Math.max(1000,fin-Date.now()),interrompu);}
  interrompu();
  if(now.identity.pageId===b.scope.pageId)return {etat:now,rattache:false};
  /* Rien de posé sur un cut : capture à refaire, analyse sans pose, ou résultat
@@ -278,7 +282,7 @@ async function retablirApresRechargement(garde=()=>true){
  const enCours=avant?.identity?.cut??(Number.isInteger(b.activeIdentity?.cut)&&!traites.has(b.activeIdentity.cut)?b.activeIdentity.cut:null);
  const exact=enCours,plancher=exact??Math.max(-1,...traites),max=S.rafraichirPasMax??400;
  const atteint=c=>exact!==null?c>=exact:c>plancher;
- let ici=now.rails?.left&&now.rails?.right?now:await etatDansPartie(b.scope.part,S.rafraichirAttenteMs??90000),pas=0;
+ let ici=now.rails?.left&&now.rails?.right?now:await etatDansPartie(b.scope.part,S.rafraichirAttenteMs??90000,interrompu),pas=0;
  while(Number.isInteger(plancher)&&!atteint(ici.identity.cut)&&pas<max){
    engine.s.notice=`ESV rafraîchi : retour au lot (cut ${ici.identity.cut} affiché, rien n’est validé).`;
    interrompu();ici=await adapter.next(ici.identity);pas++;
@@ -333,7 +337,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */
  const evenement=engine.event.bind(engine);
  engine.event=async(type,...rest)=>{const r=await evenement(type,...rest);
-   if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE)
+   if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
    return r;};
  // Le moteur reste inchangé. On enveloppe seulement l'appel public analyze()

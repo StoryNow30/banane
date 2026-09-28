@@ -40,3 +40,11 @@ test('ancienne fin muette enregistrée sans « issue » (applied:false) : pas pr
   const {$}=await panneau(lot('STOPPED',{stoppedAtEnd:{cut:102,reason:'adapter-lost-after-navigation',applied:false}}));
   assert.doesNotMatch($('batch').textContent,/lot clos après le cut 102/);assert.match($('batch').textContent,/dernier cut 102/);
 });
+
+/* 4.8.0 — septième revue : « Arrêter » reste la sortie de secours pendant une action. */
+test('« Arrêter » cliquable pendant une reprise qui attend ESV, et envoyé tout de suite',async()=>{
+  const {$,appels,attendre}=await panneau(lot('PAUSED_ADAPTER_UNRESPONSIVE'),'#automatic',{resume:new Promise(()=>{})});
+  $('resume').onclick();await attendre();
+  assert.equal($('stop').hidden,false);assert.equal($('stop').disabled,false);
+  $('stop').onclick();await attendre();assert.ok(appels.some(a=>a.action==='stop'),'stop envoyé malgré la reprise en cours');
+});
