@@ -20,8 +20,14 @@ désormais **Ariane** ; Natif → **Écho**, Pilote → **Orbite** (D-058).
 
 ## Paquet
 
-`ariane-v4.8.0.zip` corrigé : empreinte et commit de construction dans la
-section « Paquet final » ci-dessous. Le premier paquet 4.8.0 du matin
+`ariane-v4.8.0.zip` final, SHA-256
+`76e435e9eca61c5fd473aa8c25ed61fc55ecdff79067d1bd18c5d4703127c9e6`, construit
+depuis `c21636c` par `git archive` + `tools/package.py`, reproductible (deux
+constructions identiques) ; chargé dans Chromium comme extension MV3 :
+service worker 4.8.0, cerveau actif, `lot-decision-v6`, vues sans erreur ;
+téléchargements confirmés (4 fichiers) ou refus signalés
+(`tools/navigateur-telechargements.cjs`). Copie, captures et vidéo : banane-data
+`travail/2026-09-28_ariane-480-final/`. Le premier paquet 4.8.0 du matin
 (`d3874290…e1b1fe58f`, depuis `a68201a`) est **remplacé** : il garde KI-064.
 
 ## Règles non négociables
