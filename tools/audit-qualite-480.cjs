@@ -10,13 +10,14 @@ const ROOT=path.resolve(__dirname,'..'),SOURCE=fs.readFileSync(path.join(ROOT,'p
 const element=()=>({hidden:false,disabled:false,textContent:'',innerHTML:'',value:'',checked:false,open:false,className:'',onclick:null,oninput:null,
  attrs:{},style:{},classList:{toggle(){},add(){}},dataset:{},setAttribute(k,v){this.attrs[k]=String(v);},removeAttribute(k){delete this.attrs[k];},
  replaceChildren(){},append(){},addEventListener(){},click(){},set onchange(_){}});
-async function panneau(state,{hash='#automatic',reponses={},globals={}}={}){
+/* `chromeExtra` (4.8.1) : API chrome supplémentaires, par exemple un faux chrome.downloads. */
+async function panneau(state,{hash='#automatic',reponses={},globals={},chromeExtra={}}={}){
  const elements=new Map(),appels=[],notes=[],downloads=[],intervals=[];
  const document={body:{dataset:{}},activeElement:null,querySelectorAll:()=>[],createElement:()=>element(),
  getElementById(id){if(!elements.has(id))elements.set(id,element());return elements.get(id);}};
  Object.defineProperty(document.getElementById('notice'),'textContent',{get(){return notes.at(-1)||'';},set(v){notes.push(v);}});
  const chrome={runtime:{connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),sendMessage:async({action,args})=>{
- appels.push({action,args});return {result:action in reponses?(typeof reponses[action]==='function'?await reponses[action](args):reponses[action]):action==='view'?state:action==='list-tabs'?[]:{}};}}};
+ appels.push({action,args});return {result:action in reponses?(typeof reponses[action]==='function'?await reponses[action](args):reponses[action]):action==='view'?state:action==='list-tabs'?[]:{}};}},...chromeExtra};
  const context={document,chrome,location:{hash},addEventListener(){},setInterval:f=>intervals.push(f),setTimeout(){},clearTimeout(){},console,Date,Blob,
  URL:{createObjectURL:b=>{downloads.push(b);return 'blob:audit';},revokeObjectURL(){}},...globals};
  vm.createContext(context);vm.runInContext(SOURCE,context);

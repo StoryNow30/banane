@@ -813,16 +813,19 @@
      ? 'Le moteur exige au moins 6 points de flanc interne pour proposer un placement. Le filtre de visibilité en retire la majorité : c’est le premier frein au rendement, à vérifier côté réglage des boîtes de découpe ESV.'
      : `Chaque repère observé a obtenu un instantané qualifié.${q.coverageShort?` ${q.coverageShort} instant(s) de capture écarté(s) pour couverture réellement insuffisante.`:''}`);
  }
- let autoExporting=false;
+ /* 4.8.1 : `vidage` est la promesse du vidage en cours. L'export final
+  * l'attend : sinon il pourrait lister un nuage que le vidage purge ensuite,
+  * pendant qu'il attend la confirmation de son fichier. */
+ let autoExporting=false,vidage=null;
  async function autoExportIfAdvised(){
    if(autoExporting||working)return;
+   autoExporting=true;let finir=()=>{};vidage=new Promise(r=>{finir=r;});
    try{
      const advice=await api('native-export-advice');
      if(!advice?.due)return;
-     autoExporting=true;
      note(`Vidage automatique : ${(advice.bytesPending/1048576).toFixed(0)} Mo en attente, écriture d’un segment…`);
      const manifeste=await api('native-export-manifest');
-     if(!manifeste?.cloudIds?.length){autoExporting=false;return;}
+     if(!manifeste?.cloudIds?.length)return;
      const plan=await assembler(manifeste);
      const {acked,nonConfirmes,written}=await writeSegments(plan,'ariane-native-v4',{label:'-auto',startIndex:advice.segments||0});
      /* Tout ce qui est écrit sort de la file d'attente (sinon le vidage
@@ -832,7 +835,7 @@
      note(ko.length?`Vidage automatique : ${direFichiers(written)}. Les ${nonConfirmes.length} objets LiDAR restent dans Ariane et partiront avec l’export final.`
        :acked.length?`Segment enregistré : ${acked.length} objets LiDAR mis à l’abri.`:`Segment écrit : ${nonConfirmes.length} objets LiDAR, gardés dans Ariane jusqu’à l’export final.`,ko.length>0);
    }catch(e){note('Vidage automatique impossible : '+e.message,true);}
-   finally{autoExporting=false;}
+   finally{autoExporting=false;vidage=null;finir();}
  }
  async function action(id,fn){if(working)return;uiError=null;working=true;if(state)render(state);try{await fn();}catch(e){uiError=e.message;working=false;if(state)render(state);note(e.message,true);return;}working=false;await refresh();}
  function on(id,fn){if($(id))$(id).onclick=()=>action(id,fn);}
@@ -843,6 +846,7 @@
   * l'ancien chemin renvoyait toute la session en un message et échouait
   * au-delà de 64 MiB. */
  async function exportComplet(prefix){
+   if(vidage){note('Vidage automatique en cours : l’export final attend sa fin…');await vidage;}
    const manifeste=await api('native-export-manifest',{all:true});
    return dataset(await assembler(manifeste),prefix);
  }
