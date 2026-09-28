@@ -31,6 +31,11 @@ const RULES={
  'flanc-6':f=>SIDES.some(s=>f.rails[s].face!=null&&f.rails[s].face<6),
  'calage-hors-domaine':f=>SIDES.some(s=>f.rails[s].convention==='shift-out-of-domain'),
  'sans-appui-esv-100':f=>f.anchors===0&&max(f,'esvLateralMm')>100,
+ /* 28/09 (Écho de la partie 11, 707 et 711) : premier passage sans appui dont
+  * la paire est loin de l'écartement habituel. GARDE seulement (le cut est
+  * différé), jamais une cible : aucune pose n'est choisie pour son écartement. */
+ 'sans-appui-ecart-1420-1460':f=>f.anchors===0&&Number.isFinite(f.gaugeMm)&&(f.gaugeMm<1420||f.gaugeMm>1460),
+ 'sans-appui-ecart-1425-1455':f=>f.anchors===0&&Number.isFinite(f.gaugeMm)&&(f.gaugeMm<1425||f.gaugeMm>1455),
 };
 function ruled(capture,science,d,predicate){
  const f=features(capture,science,d);
