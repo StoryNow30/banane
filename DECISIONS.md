@@ -34,6 +34,15 @@ autres lots » ; « je valide tout le reste » ; « je donne donc le go pour la
 - **Revue d'interface** (skills `artifact-design`, `code-review`) : libellés,
   cohérence, export complet en un clic ; deux défauts de la revue de code
   corrigés avant livraison.
+- **Validation (28/09)** : « si tu as suffisamment tout rejoué et tout reçu et
+  trouvé aucun potentiel bug je valide la 4.8 ». Rejoué avec le code final :
+  tous les lots reçus (parties 9, 11, 12 ; 633 cuts), décisions identiques
+  ligne à ligne. Sept revues de code sur la reprise ; la dernière trouvait
+  encore la page rechargée **pendant** une commande (erreur Chrome classée
+  ERROR, non reprenable) et « Arrêter » grisé pendant une reprise : corrigés,
+  chacun avec son essai rouge sans le correctif. Reste simulé seulement :
+  le rechargement d'ESV et les textes d'erreur de Chrome (à confirmer au
+  premier lot terrain).
 
 ## D-057 - Sortie 4.8 : faux isolés tolérés, lot arrêté compté, P2 en 4.9, rotation réglage / validation
 

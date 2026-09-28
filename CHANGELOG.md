@@ -1,6 +1,6 @@
 # Banane V4 TEST — journal des versions
 
-## 4.8.0 — Ariane (candidate, en attente de la confirmation de la direction), 27 septembre 2026
+## 4.8.0 — Ariane, version officielle (validée par la direction, D-058), 28 septembre 2026
 
 - **Ariane, Écho, Orbite** (D-058) : Banane devient Ariane, Natif devient
   Écho, Pilote devient Orbite. Fichiers exportés `ariane-…` ; formats et

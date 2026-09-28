@@ -2,8 +2,8 @@
 
 **Banane devient Ariane.** Le mode Natif devient **Écho** (Ariane observe ton
 travail dans ESV et l'enregistre), le mode Pilote devient **Orbite** (Ariane
-place et valide les rails d'un lot de cuts). Candidate de la version
-officielle 4.8.0, en attente de ta confirmation (D-058).
+place et valide les rails d'un lot de cuts). Version officielle 4.8.0,
+validée par la direction le 28/09 (D-058).
 
 Installe `ariane-v4.8.0.zip` dans Edge **par-dessus la 4.7.21**, dans le même
 dossier (bouton « Recharger » de la page des extensions) : ne supprime pas
@@ -19,7 +19,10 @@ l'accueil, et **Ariane 4.8.0 · ouvrir** sur le bouton blanc au bas d'ESV.
   ESV repart alors du premier cut non validé : clique sur « Reprendre »,
   Ariane revient seule au cut du lot avec « cut non validé suivant », **sans
   rien valider**, rattache le lot à la nouvelle page et reprend. Même chose
-  après « adaptateur sans réponse ».
+  après « adaptateur sans réponse ». Si le F5 tombe **pendant une pose**,
+  Ariane ne sait pas si le rail a été posé : contrôle le cut dans ESV,
+  clique sur « Archiver le résultat interrompu », puis sur « Reprendre ».
+  En Écho : « Connecter » puis « Reprendre ».
 - **Plus d'arrêt sur un silence d'ESV** : Ariane attend jusqu'à environ
   70 s (« ESV ne répond pas encore… ») et reprend seule ; « Pause » et
   « Arrêter » restent respectés ; une annulation en retard ne coupe plus le
