@@ -77,7 +77,7 @@ de modèle dans les fichiers.
   4.7.19), 633 cuts, décisions identiques ligne à ligne ; moteur et décision
   sur le lot inchangés depuis la 4.7.21.
 - Sept revues de code sur la reprise ; chaque constat a son essai rouge sans
-  le correctif. Après l'audit : 864 essais, 862 passés, 2 sautés (corpus natif absent).
+  le correctif. Après l’audit : 865 essais, 863 passés, 2 sautés (corpus natif absent).
 - **Simulé seulement** : le rechargement d'ESV et les textes d'erreur de
   Chrome. À surveiller au premier lot terrain (bilan et journal via « Tout
   télécharger pour l'analyse »).

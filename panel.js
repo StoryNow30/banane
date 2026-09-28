@@ -508,7 +508,10 @@
      if($('close-uncertain'))$('close-uncertain').textContent='Archiver le résultat interrompu'+(Number.isFinite(Number(cutIncertain))?' · cut '+entier(cutIncertain):'');
      /* 4.7.21 : « Nouveau lot » choisi, « Démarrer » devient le bouton plein, avant « Reprendre ». */
      const demarrer=fini&&nouveauLot?['start-batch']:[];
-     hierarchie(['close-uncertain','manual-completion',...demarrer,'retry','resume','pause',...(fini&&!nouveauLot?['export-tout','new-batch','start-batch']:['start-batch','export-tout','new-batch']),'manual-takeover','explicit-skip','stop'],
+     /* 4.8.0 (audit qualité, U03) : un lot arrêté à sa borne est fini ; le
+      * dossier pour l'analyse passe avant « Reprendre ». */
+     const aSaBorne=fini&&!nouveauLot&&b?.state==='STOPPED'&&!!b.stoppedAtEnd;
+     hierarchie(['close-uncertain','manual-completion',...demarrer,'retry',...(aSaBorne?['export-tout']:[]),'resume','pause',...(fini&&!nouveauLot?['export-tout','new-batch','start-batch']:['start-batch','export-tout','new-batch']),'manual-takeover','explicit-skip','stop'],
        {ink:['close-uncertain','manual-completion','pause'],danger:['explicit-skip','stop']});
    }
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy){$('connection')?.setAttribute('open','');note(s.connection.message,true);}

@@ -48,3 +48,10 @@ test('« Arrêter » cliquable pendant une reprise qui attend ESV, et envoyé to
   assert.equal($('stop').hidden,false);assert.equal($('stop').disabled,false);
   $('stop').onclick();await attendre();assert.ok(appels.some(a=>a.action==='stop'),'stop envoyé malgré la reprise en cours');
 });
+
+/* Audit qualité (U03) : en fin de lot, le dossier pour l'analyse est l'action principale. */
+test('lot arrêté à sa borne : « Tout télécharger » plein, « Reprendre » en lien ; arrêté en route : « Reprendre » plein',async()=>{
+  let {$}=await panneau(lot('STOPPED',{stoppedAtEnd:{cut:8144,applied:false}}));
+  assert.equal($('export-tout').className,'primary');assert.equal($('resume').className,'link');
+  ({$}=await panneau(lot('STOPPED')));assert.equal($('resume').className,'primary');assert.equal($('export-tout').className,'link');
+});
