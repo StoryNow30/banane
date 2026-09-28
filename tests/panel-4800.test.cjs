@@ -35,3 +35,8 @@ test('fin de lot par une sortie d\'ESV : le cut nommé est le dernier validé, p
   const {$}=await panneau(lot('STOPPED',{stoppedAtEnd:{cut:6629,reason:'navigation-other-part',applied:true}}));
   assert.match($('batch').textContent,/lot clos après le cut 6629 : ESV a quitté la partie/);assert.doesNotMatch($('batch').textContent,/posé, non validé/);
 });
+
+test('ancienne fin muette enregistrée sans « issue » (applied:false) : pas présentée comme un cut traité',async()=>{
+  const {$}=await panneau(lot('STOPPED',{stoppedAtEnd:{cut:102,reason:'adapter-lost-after-navigation',applied:false}}));
+  assert.doesNotMatch($('batch').textContent,/lot clos après le cut 102/);assert.match($('batch').textContent,/dernier cut 102/);
+});
