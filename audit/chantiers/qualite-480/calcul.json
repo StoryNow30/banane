@@ -1,0 +1,130 @@
+{
+  "conditions": {
+    "node": "v24.19.0",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "at": "2026-09-28T05:02:04.206Z",
+    "scope": "Node local, captures p12 ; aucune mesure navigateur"
+  },
+  "rows": [
+    {
+      "cut": 1,
+      "repetition": 0,
+      "points": 3338,
+      "runtimeMs": 27.64356399999997,
+      "totalMs": 232.13723500000015,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 1,
+      "repetition": 1,
+      "points": 3338,
+      "runtimeMs": 14.465962999999647,
+      "totalMs": 148.90742999999975,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 1,
+      "repetition": 2,
+      "points": 3338,
+      "runtimeMs": 13.92836299999999,
+      "totalMs": 147.1457479999999,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 210,
+      "repetition": 0,
+      "points": 3455,
+      "runtimeMs": 31.747815999999602,
+      "totalMs": 189.02197999999999,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 210,
+      "repetition": 1,
+      "points": 3455,
+      "runtimeMs": 21.570971999999983,
+      "totalMs": 181.02231099999972,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 210,
+      "repetition": 2,
+      "points": 3455,
+      "runtimeMs": 23.455983000000288,
+      "totalMs": 168.87634400000024,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7738,
+      "repetition": 0,
+      "points": 4967,
+      "runtimeMs": 48.389108000000306,
+      "totalMs": 428.64933699999983,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7738,
+      "repetition": 1,
+      "points": 4967,
+      "runtimeMs": 33.05559399999947,
+      "totalMs": 420.77493500000037,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7738,
+      "repetition": 2,
+      "points": 4967,
+      "runtimeMs": 28.554118999999446,
+      "totalMs": 376.6263020000006,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7743,
+      "repetition": 0,
+      "points": 5022,
+      "runtimeMs": 38.96059100000002,
+      "totalMs": 597.3492770000003,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7743,
+      "repetition": 1,
+      "points": 5022,
+      "runtimeMs": 37.217405999999755,
+      "totalMs": 362.70394399999986,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7743,
+      "repetition": 2,
+      "points": 5022,
+      "runtimeMs": 38.03877800000009,
+      "totalMs": 371.4021190000003,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7852,
+      "repetition": 0,
+      "points": 5637,
+      "runtimeMs": 28.35731499999929,
+      "totalMs": 326.90808299999935,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7852,
+      "repetition": 1,
+      "points": 5637,
+      "runtimeMs": 27.02382100000068,
+      "totalMs": 308.8667669999995,
+      "selectedEngine": "geometry-candidate-v1"
+    },
+    {
+      "cut": 7852,
+      "repetition": 2,
+      "points": 5637,
+      "runtimeMs": 29.043665000000146,
+      "totalMs": 317.4597530000001,
+      "selectedEngine": "geometry-candidate-v1"
+    }
+  ]
+}

@@ -1,0 +1,613 @@
+{
+  "conditions": {
+    "at": "2026-09-28T05:03:02.774Z",
+    "node": "v24.19.0",
+    "os": "linux",
+    "arch": "x64",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "logicalCPUs": 9,
+    "totalMemoryGiB": 9.733711242675781,
+    "scope": "Node, DOM simulé ; aucune mesure ESV en direct"
+  },
+  "panneauP12": {
+    "compteurs": "<div class=\"tuile\"><span class=\"lbl\">Posés</span><b>84</b><small>dont 23 par la voie</small></div><div class=\"tuile\"><span class=\"lbl\">Différés</span><b class=\"amber\">21</b><small>à reprendre</small></div><div class=\"tuile\"><span class=\"lbl\">Couverture</span><b>80 %</b><small>84 sur 105</small></div>",
+    "batch": "Arrêté · 84 cuts traités · 0 ignorés · Différés : 21 — dernier cut 8144 non résolu, laissé sans commande",
+    "sequence": 106,
+    "processed": 84,
+    "deferred": 21,
+    "stoppedAtEnd": {
+      "cut": 8144,
+      "at": "2026-09-26T06:28:31.315Z",
+      "applied": false
+    }
+  },
+  "terrain": [
+    {
+      "file": "lots/p11-lot-4720/banane-journal-v4-1790402708275.json.gz",
+      "source": {
+        "format": "banane-test-journal-v4",
+        "version": "4.7.20",
+        "exportedAt": null,
+        "partie": 11,
+        "lot": "a66dd3e5-7e7e-404d-933c-c1c1a07e28dd",
+        "etat": "STOPPED",
+        "lotSeul": true,
+        "evenements": 2413,
+        "debut": "2026-09-26T05:49:33.806Z",
+        "fin": "2026-09-26T06:04:40.619Z"
+      },
+      "cycleMs": {
+        "n": 117,
+        "median": 8533,
+        "p90": 9722,
+        "max": 20477,
+        "min": 793,
+        "total": 888556
+      },
+      "analyseMs": {
+        "n": 95,
+        "median": 592,
+        "p90": 889,
+        "max": 3561,
+        "min": 370,
+        "total": 63043
+      },
+      "decisionMs": {
+        "n": 95,
+        "median": 3,
+        "p90": 703,
+        "max": 6388,
+        "min": 1,
+        "total": 31442
+      },
+      "captureMs": {
+        "n": 97,
+        "median": 6055,
+        "p90": 6784,
+        "max": 7534,
+        "min": 4732,
+        "total": 583651
+      },
+      "capture": {
+        "points": {
+          "n": 97,
+          "median": 10861,
+          "p90": 13236,
+          "max": 14571,
+          "min": 7077,
+          "total": 1080261
+        },
+        "octets": {
+          "n": 97,
+          "median": 1513336,
+          "p90": 1690814,
+          "max": 1822858,
+          "min": 1175011,
+          "total": 147348783
+        },
+        "essais": {
+          "n": 97,
+          "median": 2,
+          "p90": 2,
+          "max": 2,
+          "min": 2,
+          "total": 194
+        }
+      },
+      "note": null
+    },
+    {
+      "file": "lots/p12-lot-4720/banane-journal-v4-1790404362008.json.gz",
+      "source": {
+        "format": "banane-test-journal-v4",
+        "version": "4.7.20",
+        "exportedAt": null,
+        "partie": 12,
+        "lot": "670758b4-a7ae-441f-8693-89061653c315",
+        "etat": "STOPPED",
+        "lotSeul": true,
+        "evenements": 2619,
+        "debut": "2026-09-26T06:13:48.300Z",
+        "fin": "2026-09-26T06:28:31.557Z"
+      },
+      "cycleMs": {
+        "n": 104,
+        "median": 8264,
+        "p90": 9778,
+        "max": 13280,
+        "min": 5511,
+        "total": 872254
+      },
+      "analyseMs": {
+        "n": 106,
+        "median": 372,
+        "p90": 593,
+        "max": 2423,
+        "min": 103,
+        "total": 46229
+      },
+      "decisionMs": {
+        "n": 106,
+        "median": 1,
+        "p90": 215,
+        "max": 1631,
+        "min": 0,
+        "total": 8042
+      },
+      "captureMs": {
+        "n": 106,
+        "median": 5712,
+        "p90": 6430,
+        "max": 10051,
+        "min": 3704,
+        "total": 614003
+      },
+      "capture": {
+        "points": {
+          "n": 106,
+          "median": 5188,
+          "p90": 6113,
+          "max": 9135,
+          "min": 0,
+          "total": 540658
+        },
+        "octets": {
+          "n": 106,
+          "median": 941688,
+          "p90": 1150677,
+          "max": 1235700,
+          "min": 376148,
+          "total": 99707335
+        },
+        "essais": {
+          "n": 106,
+          "median": 2,
+          "p90": 2,
+          "max": 2,
+          "min": 2,
+          "total": 212
+        }
+      },
+      "note": null
+    },
+    {
+      "file": "lots/p13-4721/bilan-p13-4721-sans-nuages.json.gz",
+      "source": {
+        "format": "banane-test-dataset-v4",
+        "version": "4.7.21",
+        "exportedAt": "2026-09-26T15:47:40.778Z",
+        "partie": 14,
+        "lot": "11c16dc3-d4d1-4585-83d1-25c383ef5ec5",
+        "etat": "ERROR",
+        "lotSeul": false,
+        "evenements": 5173,
+        "debut": "2026-09-26T07:39:40.637Z",
+        "fin": "2026-09-26T15:43:22.739Z"
+      },
+      "cycleMs": {
+        "n": 218,
+        "median": 11425,
+        "p90": 17858,
+        "max": 40750,
+        "min": 949,
+        "total": 2676484
+      },
+      "analyseMs": {
+        "n": 208,
+        "median": 999,
+        "p90": 2021,
+        "max": 2835,
+        "min": 32,
+        "total": 238793
+      },
+      "decisionMs": {
+        "n": 208,
+        "median": 4,
+        "p90": 826,
+        "max": 2145,
+        "min": 0,
+        "total": 43605
+      },
+      "captureMs": {
+        "n": 210,
+        "median": 6912,
+        "p90": 9125,
+        "max": 29992,
+        "min": 1000,
+        "total": 1335673
+      },
+      "capture": {
+        "points": {
+          "n": 208,
+          "median": 5349,
+          "p90": 7459,
+          "max": 10456,
+          "min": 0,
+          "total": 1136310
+        },
+        "octets": {
+          "n": 208,
+          "median": 821344,
+          "p90": 1440660,
+          "max": 1741678,
+          "min": 153321,
+          "total": 195608211
+        },
+        "essais": {
+          "n": 208,
+          "median": 2,
+          "p90": 2,
+          "max": 3,
+          "min": 2,
+          "total": 418
+        }
+      },
+      "note": "Inclus dans p14 : ne pas additionner"
+    },
+    {
+      "file": "lots/p14-4721/bilan-p14-4721-sans-nuages.json.gz",
+      "source": {
+        "format": "banane-test-dataset-v4",
+        "version": "4.7.21",
+        "exportedAt": "2026-09-26T19:36:58.916Z",
+        "partie": 14,
+        "lot": "a3abff8a-f8fd-4f3b-be5d-87c87d79231f",
+        "etat": "STOPPED",
+        "lotSeul": false,
+        "evenements": 6764,
+        "debut": "2026-09-26T07:39:40.637Z",
+        "fin": "2026-09-26T19:36:55.390Z"
+      },
+      "cycleMs": {
+        "n": 280,
+        "median": 9929,
+        "p90": 17383,
+        "max": 40750,
+        "min": 949,
+        "total": 3273581
+      },
+      "analyseMs": {
+        "n": 272,
+        "median": 742,
+        "p90": 1933,
+        "max": 2835,
+        "min": 32,
+        "total": 282508
+      },
+      "decisionMs": {
+        "n": 272,
+        "median": 3,
+        "p90": 747,
+        "max": 2145,
+        "min": 0,
+        "total": 47684
+      },
+      "captureMs": {
+        "n": 274,
+        "median": 4645,
+        "p90": 9043,
+        "max": 29992,
+        "min": 1000,
+        "total": 1603483
+      },
+      "capture": {
+        "points": {
+          "n": 272,
+          "median": 5043,
+          "p90": 7285,
+          "max": 10456,
+          "min": 0,
+          "total": 1363652
+        },
+        "octets": {
+          "n": 272,
+          "median": 788289,
+          "p90": 1409445,
+          "max": 1741678,
+          "min": 153321,
+          "total": 244501365
+        },
+        "essais": {
+          "n": 272,
+          "median": 2,
+          "p90": 2,
+          "max": 3,
+          "min": 2,
+          "total": 546
+        }
+      },
+      "note": null
+    },
+    {
+      "file": "lots/p6-lot-4719/banane-journal-v4-1790341165611.json.gz",
+      "source": {
+        "format": "banane-test-journal-v4",
+        "version": "4.7.19",
+        "exportedAt": null,
+        "partie": 6,
+        "lot": "13d9845f-4b9b-48e7-9cf6-9ed98524191d",
+        "etat": "STOPPED",
+        "lotSeul": true,
+        "evenements": 3082,
+        "debut": "2026-09-25T12:05:35.673Z",
+        "fin": "2026-09-25T12:57:46.777Z"
+      },
+      "cycleMs": {
+        "n": 123,
+        "median": 13269,
+        "p90": 32968,
+        "max": 35811,
+        "min": 9345,
+        "total": 2560651
+      },
+      "analyseMs": {
+        "n": 125,
+        "median": 935,
+        "p90": 3515,
+        "max": 3897,
+        "min": 508,
+        "total": 236299
+      },
+      "decisionMs": {
+        "n": 125,
+        "median": 2,
+        "p90": 4,
+        "max": 954,
+        "min": 0,
+        "total": 1827
+      },
+      "captureMs": {
+        "n": 125,
+        "median": 5167,
+        "p90": 6651,
+        "max": 8195,
+        "min": 3768,
+        "total": 663485
+      },
+      "capture": {
+        "points": {
+          "n": 125,
+          "median": 3504,
+          "p90": 5245,
+          "max": 5924,
+          "min": 3068,
+          "total": 462851
+        },
+        "octets": {
+          "n": 125,
+          "median": 742899,
+          "p90": 916477,
+          "max": 1103907,
+          "min": 628802,
+          "total": 96498900
+        },
+        "essais": {
+          "n": 125,
+          "median": 2,
+          "p90": 2,
+          "max": 3,
+          "min": 2,
+          "total": 252
+        }
+      },
+      "note": null
+    },
+    {
+      "file": "lots/p9-lot-4719/banane-journal-v4-1790334998253.json.gz",
+      "source": {
+        "format": "banane-test-journal-v4",
+        "version": "4.7.19",
+        "exportedAt": null,
+        "partie": 9,
+        "lot": "ccbcb19f-6b24-417f-85d7-64d7d94ed1ce",
+        "etat": "STOPPED",
+        "lotSeul": true,
+        "evenements": 2070,
+        "debut": "2026-09-25T11:02:34.716Z",
+        "fin": "2026-09-25T11:16:11.954Z"
+      },
+      "cycleMs": {
+        "n": 84,
+        "median": 9777,
+        "p90": 11791,
+        "max": 13397,
+        "min": 5238,
+        "total": 804732
+      },
+      "analyseMs": {
+        "n": 85,
+        "median": 587,
+        "p90": 819,
+        "max": 2096,
+        "min": 230,
+        "total": 53030
+      },
+      "decisionMs": {
+        "n": 85,
+        "median": 2,
+        "p90": 263,
+        "max": 1484,
+        "min": 1,
+        "total": 6092
+      },
+      "captureMs": {
+        "n": 86,
+        "median": 5651,
+        "p90": 7671,
+        "max": 9143,
+        "min": 3846,
+        "total": 508333
+      },
+      "capture": {
+        "points": {
+          "n": 85,
+          "median": 8640,
+          "p90": 9249,
+          "max": 10447,
+          "min": 4783,
+          "total": 661367
+        },
+        "octets": {
+          "n": 85,
+          "median": 1232627,
+          "p90": 1328510,
+          "max": 1399300,
+          "min": 918151,
+          "total": 101137023
+        },
+        "essais": {
+          "n": 85,
+          "median": 2,
+          "p90": 2,
+          "max": 3,
+          "min": 2,
+          "total": 171
+        }
+      },
+      "note": null
+    }
+  ],
+  "exportIncomplet": {
+    "notes": [
+      "Dernier cut du lot (8144) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.",
+      "Dernier cut du lot (8144) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.",
+      "Dernier cut du lot (8144) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV.",
+      "Export terminé : ariane-bilan-v4-2026-09-28T05-03-03-seg01.json",
+      "Diagnostic GCV1 téléchargé : 1 observation(s).",
+      "Corpus GCV1 téléchargé ; 1 capture(s) LiDAR référencée(s) sont absentes du store.",
+      "Tout est téléchargé : journal, bilan, diagnostic et corpus. Envoie-les ensemble pour l’analyse.",
+      "Dernier cut du lot (8144) : rail non résolu, laissé sans commande ni navigation. À toi de le placer dans ESV."
+    ],
+    "statutFinal": "Tout est téléchargé : journal, bilan, diagnostic et corpus. Envoie-les ensemble pour l’analyse.",
+    "fichiersDemandes": 4
+  },
+  "transitionManuelle": {
+    "nativeStartHidden": false,
+    "nativeStartDisabled": false,
+    "notice": "Ouvre le premier cut à observer, puis démarre Écho."
+  },
+  "p12AnalyseAvecDecision": {
+    "n": 106,
+    "median": 512,
+    "p90": 861,
+    "max": 4254,
+    "min": 115,
+    "total": 62462
+  },
+  "contrastes": [
+    {
+      "text": "#138a4a",
+      "bg": "#ffffff",
+      "ratio": 4.4099456546130895
+    },
+    {
+      "text": "#b86e00",
+      "bg": "#ffffff",
+      "ratio": 3.9859984739490937
+    },
+    {
+      "text": "#3e6ae1",
+      "bg": "#000000",
+      "ratio": 4.353688804791048
+    },
+    {
+      "text": "#6b6b6b",
+      "bg": "#ffffff",
+      "ratio": 5.32921162976606
+    },
+    {
+      "text": "#8a8a8a",
+      "bg": "#000000",
+      "ratio": 6.0830418866165346
+    }
+  ],
+  "copies": [
+    {
+      "cuts": 106,
+      "synthetique": false,
+      "bytes": 1448528,
+      "viewMs": [
+        15.550957999999923,
+        13.783794000000057,
+        13.735554999999977,
+        17.65145499999994
+      ]
+    },
+    {
+      "cuts": 1000,
+      "synthetique": true,
+      "bytes": 11914429,
+      "viewMs": [
+        136.8465809999999,
+        144.37706200000002,
+        124.91716100000008,
+        124.7059139999999
+      ]
+    },
+    {
+      "cuts": 8000,
+      "synthetique": true,
+      "bytes": 94200638,
+      "viewMs": [
+        1136.443528,
+        1222.6858070000003,
+        1402.4915790000005,
+        2563.245064999999
+      ]
+    }
+  ],
+  "structure": [
+    {
+      "file": "background.js",
+      "lines": 755,
+      "bytes": 64098
+    },
+    {
+      "file": "panel.js",
+      "lines": 915,
+      "bytes": 79033
+    },
+    {
+      "file": "src/engine.js",
+      "lines": 1102,
+      "bytes": 94374
+    },
+    {
+      "file": "src/lot-decision.js",
+      "lines": 460,
+      "bytes": 35773
+    },
+    {
+      "file": "src/adapter-page.js",
+      "lines": 658,
+      "bytes": 57467
+    },
+    {
+      "file": "src/storage.js",
+      "lines": 29,
+      "bytes": 2391
+    }
+  ],
+  "tests": {
+    "files": 161,
+    "sourceReadingFiles": [
+      "tests/acceptance-curseurs.test.cjs",
+      "tests/background.test.cjs",
+      "tests/gauge-deferred.test.cjs",
+      "tests/gauge-scope.test.cjs",
+      "tests/gcv1-defer-export.test.cjs",
+      "tests/gcv1-export.test.cjs",
+      "tests/geometry-brain.test.cjs",
+      "tests/lot-decision-ecartement.test.cjs",
+      "tests/package.test.cjs",
+      "tests/panel-4800.test.cjs",
+      "tests/panel-h.test.cjs",
+      "tests/panel-ligne-suite.test.cjs",
+      "tests/panel-ligne.test.cjs",
+      "tests/panel-lot-neuf.test.cjs",
+      "tests/panel-policies.test.cjs",
+      "tests/panel-presence.test.cjs"
+    ],
+    "note": "Inventaire de lecture de sources, pas classement en tests purement textuels : certains exécutent le source en VM."
+  }
+}
