@@ -15,3 +15,12 @@ test('la garde ne touche pas une reprise par la voie',()=>{
  const capture={rails:{left:rail,right:rail}},science={rails:{left:{next:{}},right:{next:{}}}};
  assert.equal(Study.ruled(capture,science,d,()=>true).decision,d);
 });
+test('la garde d’écartement bas ne refuse qu’un premier passage sans appui sous le seuil',()=>{
+ const f=(anchors,gaugeMm)=>({anchors,gaugeMm});
+ for(const r of ['sans-appui-ecart-bas-1420','sans-appui-ecart-bas-1425']){const R=Study.RULES[r];
+  assert.equal(R(f(0,1405)),true);assert.equal(R(f(0,1414.5)),true);
+  assert.equal(R(f(0,1426.1)),false);assert.equal(R(f(0,1462.8)),false);
+  assert.equal(R(f(1,1405)),false);assert.equal(R(f(0,NaN)),false);}
+ assert.equal(Study.RULES['sans-appui-ecart-bas-1425'](f(0,1422)),true);
+ assert.equal(Study.RULES['sans-appui-ecart-bas-1420'](f(0,1422)),false);
+});

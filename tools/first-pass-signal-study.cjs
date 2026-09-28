@@ -3,7 +3,7 @@
 /* Étude hors ligne des premiers passages : aucune position humaine ne participe
  * à la décision. Les appuis sont refaits pour chaque règle, cut après cut.
  * Usage : node --max-old-space-size=12000 tools/first-pass-signal-study.cjs SORTIE.json
- *   --natif DOSSIER=nom [...] --lot DOSSIER=nom[@RELECTURE] [...]
+ *   --natif DOSSIER=nom [...] --lot DOSSIER=nom[@RELECTURE] [...] [--regles r1,r2]
  */
 const fs=require('node:fs'),path=require('node:path');
 const Seg=require('./merge-segments.cjs'),Lab=require('./placement-lab.cjs');
@@ -36,6 +36,11 @@ const RULES={
   * différé), jamais une cible : aucune pose n'est choisie pour son écartement. */
  'sans-appui-ecart-1420-1460':f=>f.anchors===0&&Number.isFinite(f.gaugeMm)&&(f.gaugeMm<1420||f.gaugeMm>1460),
  'sans-appui-ecart-1425-1455':f=>f.anchors===0&&Number.isFinite(f.gaugeMm)&&(f.gaugeMm<1425||f.gaugeMm>1455),
+ /* Bas seulement : sur le banc, les deux faux sont sous 1 420 mm et les justes
+  * sans appui les plus serrés à 1 426 mm ; les justes au-dessus de 1 455 mm
+  * (1252, 2358) ne sont pas touchés. */
+ 'sans-appui-ecart-bas-1420':f=>f.anchors===0&&Number.isFinite(f.gaugeMm)&&f.gaugeMm<1420,
+ 'sans-appui-ecart-bas-1425':f=>f.anchors===0&&Number.isFinite(f.gaugeMm)&&f.gaugeMm<1425,
 };
 function ruled(capture,science,d,predicate){
  const f=features(capture,science,d);
@@ -78,14 +83,15 @@ function pilote(input,label,relecture){
  }
  return compare(label,'pilote',replay);
 }
+let active=RULES;
 function compare(label,kind,replay){
  const base=replay(()=>false),baseBy=new Map(base.map(r=>[r.cut,r]));
- const variants={};for(const [name,pred] of Object.entries(RULES)){
+ const variants={};for(const [name,pred] of Object.entries(active)){
   const rows=replay(pred),direct=[],ricochet=[],gained=[];
   for(const r of rows){const b=baseBy.get(r.cut);if(!b)throw Error('cut absent de la base : '+label+'/'+r.cut);
    if(r.removed)direct.push({cut:r.cut,wrong:b.wrong,judged:b.judged,feature:b.feature});
    else if(r.applied!==b.applied||r.stage!==b.stage||r.wrong!==b.wrong||r.worstMm!==b.worstMm){
-    const detail={cut:r.cut,before:{stage:b.stage,applied:b.applied,wrong:b.wrong,worstMm:b.worstMm},after:{stage:r.stage,applied:r.applied,wrong:r.wrong,worstMm:r.worstMm}};
+    const detail={cut:r.cut,before:{stage:b.stage,applied:b.applied,wrong:b.wrong,worstMm:b.worstMm},after:{stage:r.stage,applied:r.applied,wrong:r.wrong,worstMm:r.worstMm,gaugeMm:r.feature?.gaugeMm??null}};
     (r.applied&&!b.applied?gained:ricochet).push(detail);
    }
   }
@@ -99,11 +105,15 @@ function compare(label,kind,replay){
 }
 function run(argv=process.argv.slice(2)){
  const out=argv[0];if(!out||out.startsWith('--'))throw Error('SORTIE.json requis');const sessions=[];
+ const r=argv.indexOf('--regles');active=RULES;
+ if(r>0){const noms=String(argv[r+1]||'').split(',').filter(Boolean),inconnue=noms.find(n=>!RULES[n]);
+  if(!noms.length||inconnue)throw Error('règle inconnue : '+(inconnue||'(aucune)'));
+  active=Object.fromEntries(noms.map(n=>[n,RULES[n]]));argv=[...argv.slice(0,r),...argv.slice(r+2)];}
  for(let i=1;i<argv.length;i++){const type=argv[i],arg=argv[++i],eq=arg.indexOf('=');if(eq<0)throw Error('libellé requis : '+arg);
   const p=arg.slice(0,eq),[label,rel]=arg.slice(eq+1).split('@'),t=Date.now();
   sessions.push(type==='--natif'?natif(p,label):type==='--lot'?pilote(p,label,rel):(()=>{throw Error(type);})());
   console.log(label,Math.round((Date.now()-t)/1000)+' s',sessions.at(-1).base.applied,'décidés');}
- const result={format:'banane-first-pass-signal-study-v1',rules:Object.keys(RULES),excluded:[...EXCLUDED],sessions};
+ const result={format:'banane-first-pass-signal-study-v1',rules:Object.keys(active),excluded:[...EXCLUDED],sessions};
  fs.writeFileSync(out,JSON.stringify(result,null,1)+'\n');return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}
