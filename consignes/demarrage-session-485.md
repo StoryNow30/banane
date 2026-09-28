@@ -1,7 +1,9 @@
 # Démarrage de la session de développement 4.8.5
 
-Pour une **nouvelle session** Claude Code, avec les plugins Superpowers
-(obra) et Design activés. Copie le bloc tel quel, comme premier message.
+Pour une **nouvelle session** Claude Code, avec les plugins **Superpowers** (obra)
+et **Modern Web Guidance** (Google Chrome) activés ; **playwright** (Microsoft)
+en option pour l'essai Chromium de D7. Design et Data attendront la 4.9.
+Copie le bloc tel quel, comme premier message.
 
 ```text
 Tu reprends Ariane (ex-Banane), extension Edge MV3 qui pose les rails sur ESV
@@ -28,7 +30,9 @@ ORDRE : D5 (outils de portes) et D6 (clôture J0) d'abord ; puis D1 → D2 →
 D4 → D3 ; puis D7 (revue, paquet « Ariane 4.8.5 TEST », version 4.8.5.1,
 essai Chromium de cohabitation). Un commit par chantier, préfixé [Dn].
 Utilise les skills test-driven-development, systematic-debugging et
-verification-before-completion (Superpowers), et code-review sur chaque diff.
+verification-before-completion (Superpowers), chrome-extensions (Modern Web
+Guidance) pour D1 (injection dans la page, monde principal, MV3), et
+code-review sur chaque diff.
 
 RÈGLES : `node tools/verify.cjs` à 0 avant chaque commit ; src/engine.js
 épinglé ; écartement [1405, 1470] mm en admissibilité seulement ; deux rails
@@ -38,7 +42,7 @@ pas de merge, d'étiquette, de publication ni de force push sans mon accord ;
 commits avec Co-Authored-By et Claude-Session ; aucun identifiant de modèle
 dans les fichiers.
 
-Commence par vérifier que les plugins Superpowers et Design sont chargés dans
-cette session (liste tes plugins) ; puis dis-moi en 5 lignes l'état que tu
+Commence par vérifier que les plugins Superpowers et Modern Web Guidance sont
+chargés dans cette session (liste tes plugins) ; puis dis-moi en 5 lignes l'état que tu
 trouves et ton premier pas.
 ```
