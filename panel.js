@@ -79,7 +79,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.8.1',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.8.0',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -327,7 +327,7 @@
      const running=['STARTING','RUNNING'].includes(n?.status),paused=['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status),open=nativeActive(s);
      note(n?.message||(running?'Collecte en cours : travaille normalement dans ESV.':'Ouvre le premier cut à observer, puis démarre Écho.'),n?.status==='PAUSED_ADAPTER_UNRESPONSIVE');
      if(manualActive(s))note('Une session Mes corrections est active. Termine-la avant de démarrer Écho.');
-     /* 4.8.1 (audit qualité 4.8, U01) : la reprise manuelle garde le lot ; le moteur refuse alors Écho. */
+     /* 4.8.0 (audit qualité, U01) : la reprise manuelle garde le lot ; le moteur refuse alors Écho. */
      if(b?.state==='MANUAL_TAKEOVER')note(`Reprise manuelle en cours dans Orbite (cut ${entier(b.manualTakeover?.identity?.cut??b.activeIdentity?.cut)}) : déclare « Repris manuellement » ou arrête le lot avant de démarrer Écho.`);
      else if(LOT_TIENT_ECHO.includes(b?.state))note('Un lot automatique est actif. Termine-le avant de démarrer Écho.');
      rouler($('native-count'),String(n?.visits.length||0));const count=n?.incomplete.length||0;$('native-incomplete').hidden=!count;
@@ -424,7 +424,7 @@
        if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
          $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');$('lot-pct').textContent=`${pct} % de la plage`;}}
      const v=b?voieDuLot(s):null;
-     /* Tuiles : posés, différés, couverture. 4.8.1 (audit qualité 4.8, D02) :
+     /* Tuiles : posés, différés, couverture. 4.8.0 (audit qualité, D02) :
       * la couverture est C1 (D-038) : posés sur les cuts DISTINCTS du lot, le
       * dernier cut laissé sans décision compris ; seul le cut en cours d'un lot
       * encore ouvert n'y est pas encore. p12 : 84 sur 106, comme le rapport. */
@@ -522,7 +522,7 @@
    const s=await api('view');if(tabs.length===1&&!active(s)&&!s.busy&&!['RUNNING','PAUSED'].includes(s.batch?.state))await connect();
    else if(!tabs.length||tabs.length>1&&!s.current)$('connection').open=true;
  }
- /* 4.8.1 (audit qualité 4.8, D01) — TÉLÉCHARGEMENT CONFIRMÉ. Un lien cliqué ne
+ /* 4.8.0 (audit qualité, D01) — TÉLÉCHARGEMENT CONFIRMÉ. Un lien cliqué ne
   * dit pas si le fichier a été écrit : Edge peut bloquer une série de
   * téléchargements, l'opérateur annuler, le disque manquer. Écho purgeait
   * pourtant ses nuages sur cette seule demande. Le fichier passe désormais par
@@ -813,7 +813,7 @@
      ? 'Le moteur exige au moins 6 points de flanc interne pour proposer un placement. Le filtre de visibilité en retire la majorité : c’est le premier frein au rendement, à vérifier côté réglage des boîtes de découpe ESV.'
      : `Chaque repère observé a obtenu un instantané qualifié.${q.coverageShort?` ${q.coverageShort} instant(s) de capture écarté(s) pour couverture réellement insuffisante.`:''}`);
  }
- /* 4.8.1 : `vidage` est la promesse du vidage en cours. L'export final
+ /* 4.8.0 (audit qualité) : `vidage` est la promesse du vidage en cours. L'export final
   * l'attend : sinon il pourrait lister un nuage que le vidage purge ensuite,
   * pendant qu'il attend la confirmation de son fichier. */
  let autoExporting=false,vidage=null;
@@ -893,7 +893,7 @@ on('native-discard',async()=>{
  /* V4.6.0 : l'opérateur déclare avoir traité le cut dans ESV. Banane journalise
   * la reprise sans prétendre l'avoir validée, puis repart au cut suivant. */
  on('manual-completion',()=>api('manual-completion'));
- /* 4.8.1 (audit qualité 4.8, D03) : chaque export d'Orbite rend
+ /* 4.8.0 (audit qualité, D03) : chaque export d'Orbite rend
   * { quoi, fichiers, alerte } ; « Tout télécharger » en fait le bilan. */
  const exporterBilan=async()=>({quoi:'bilan',fichiers:(await dataset(await bilanPilote(),'ariane-bilan-v4')).written,alerte:null});
  on('dataset',exporterBilan);
@@ -943,7 +943,7 @@ on('native-discard',async()=>{
  /* 4.8.0 — TOUT POUR L'ANALYSE EN UN CLIC. Terrain du 26/09 (parties 13 et 14) :
   * bilans sans journal, les causes d'arrêt se lisaient moins bien. Les quatre
   * exports du lot, dans l'ordre, chacun avec son propre message. */
- /* 4.8.1 (audit qualité 4.8, D03) : un export qui échoue n'arrête pas les
+ /* 4.8.0 (audit qualité, D03) : un export qui échoue n'arrête pas les
   * autres, et le message final dit ce qui manque (fichier non enregistré,
   * capture absente) au lieu d'un succès global. Il reste affiché. */
  on('export-tout',async()=>{const bilans=[];

@@ -1,4 +1,4 @@
-# Passation — Ariane au 28/09/2026 (4.8.0 validée)
+# Passation — Ariane au 28/09/2026 (4.8.0 validée, audit qualité intégré)
 
 À lire en premier par la conversation qui reprend. Remplace `PASSATION_4.7.21.md`
 (gardé pour l'historique, ses règles restent valables). Banane s'appelle
@@ -10,19 +10,19 @@ désormais **Ariane** ; Natif → **Écho**, Pilote → **Orbite** (D-058).
   SIG, parle français, opérateur terrain et direction du projet.
 - Dépôts : `StoryNow30/banane` (branche `claude/banane-48-cahier`),
   `StoryNow30/banane-data` (branche `claude/banane-47-gate-audit-vaktr1`).
-- **4.8.0 validée par la direction le 28/09** (D-058). Paquet
-  `ariane-v4.8.0.zip` : voir « Paquet » plus bas. Retour arrière : 4.7.21
+- **4.8.0 validée par la direction le 28/09** (D-058) ; **audit qualité
+  d'Astra** le même jour (`audit/chantiers/audit-qualite-480.md`) : un P1
+  (KI-064) et des P2 corrigés **dans la 4.8.0**, avant sa sortie ; la
+  version reste 4.8.0 (direction ; D-059 ; réponse :
+  `audit/chantiers/qualite-480/reponse.md`). Retour arrière : 4.7.21
   (`RETOUR_ARRIERE.md`).
 - Reste, **sur autorisation explicite** : merge dans `main`, étiquette `v4.8.0`.
 
 ## Paquet
 
-`ariane-v4.8.0.zip`, SHA-256
-`d38742903b9ecaf3910ec34846cdc72b6ba1646586a1b549fad54c6e1b1fe58f`, construit
-depuis `a68201a` par `git archive` + `tools/package.py`, reproductible (deux
-constructions identiques) ; chargé dans Chromium comme extension MV3 :
-service worker 4.8.0, cerveau actif, `lot-decision-v6`, quatre vues du panneau
-sans erreur. Copie : banane-data `travail/2026-09-27_ariane-480/`.
+`ariane-v4.8.0.zip` corrigé : empreinte et commit de construction dans la
+section « Paquet final » ci-dessous. Le premier paquet 4.8.0 du matin
+(`d3874290…e1b1fe58f`, depuis `a68201a`) est **remplacé** : il garde KI-064.
 
 ## Règles non négociables
 
@@ -34,6 +34,21 @@ rien ; pas de VALIDATE/SKIP automatique d'un cut non résolu ; `src/engine.js`
 D-057) ; essais < 10 s par fichier ; `node tools/verify.cjs` à 0 avant chaque
 commit ; commits avec `Co-Authored-By` et `Claude-Session`, aucun identifiant
 de modèle dans les fichiers.
+
+## Corrections de l'audit qualité (D-059)
+
+- Téléchargements par `chrome.downloads` (permission `downloads`) : chaque
+  fichier est confirmé écrit ou signalé ; Écho ne purge que les segments
+  confirmés (`panel.js` saveBlob/writeSegments, `src/native-session.js`
+  ackExported).
+- « Tout télécharger pour l'analyse » en action principale de fin de lot,
+  bilan fichier par fichier ; couverture du panneau = C1 ; Écho indisponible
+  pendant une reprise manuelle ; contrastes WCAG ; vue du panneau allégée
+  avant copie (`vuePanneau` dans `background.js`).
+- Outils : `tools/perf-lot.cjs` (intervalles GCV1 / décision / complète),
+  `tools/navigateur-telechargements.cjs` (Chromium réel, hors banc).
+- Reportés : C02 en 4.8.x ; C01, P01 stockage, P03, U04, provenance D04 en
+  4.9 (`BANANE_4.9_CAHIER.md` §2).
 
 ## Ce que la 4.8.0 a livré
 
@@ -62,7 +77,7 @@ de modèle dans les fichiers.
   4.7.19), 633 cuts, décisions identiques ligne à ligne ; moteur et décision
   sur le lot inchangés depuis la 4.7.21.
 - Sept revues de code sur la reprise ; chaque constat a son essai rouge sans
-  le correctif. 853 essais, 851 passés, 2 sautés (corpus natif absent).
+  le correctif. Après l'audit : 864 essais, 862 passés, 2 sautés (corpus natif absent).
 - **Simulé seulement** : le rechargement d'ESV et les textes d'erreur de
   Chrome. À surveiller au premier lot terrain (bilan et journal via « Tout
   télécharger pour l'analyse »).

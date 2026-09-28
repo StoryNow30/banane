@@ -10,7 +10,7 @@ const ROOT=path.resolve(__dirname,'..'),SOURCE=fs.readFileSync(path.join(ROOT,'p
 const element=()=>({hidden:false,disabled:false,textContent:'',innerHTML:'',value:'',checked:false,open:false,className:'',onclick:null,oninput:null,
  attrs:{},style:{},classList:{toggle(){},add(){}},dataset:{},setAttribute(k,v){this.attrs[k]=String(v);},removeAttribute(k){delete this.attrs[k];},
  replaceChildren(){},append(){},addEventListener(){},click(){},set onchange(_){}});
-/* `chromeExtra` (4.8.1) : API chrome supplémentaires, par exemple un faux chrome.downloads. */
+/* `chromeExtra` (4.8.0) : API chrome supplémentaires, par exemple un faux chrome.downloads. */
 async function panneau(state,{hash='#automatic',reponses={},globals={},chromeExtra={}}={}){
  const elements=new Map(),appels=[],notes=[],downloads=[],intervals=[];
  const document={body:{dataset:{}},activeElement:null,querySelectorAll:()=>[],createElement:()=>element(),

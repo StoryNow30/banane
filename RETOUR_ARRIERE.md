@@ -1,8 +1,8 @@
 # Procédure de retour arrière — Banane 4.7.0
 
-**Depuis Ariane 4.8.1, la cible de retour reste Banane 4.7.21** : la 4.8.0
-n'a pas servi sur le terrain et garde KI-064 (Écho peut purger un nuage sans
-fichier confirmé). Mêmes formats de données ; installer par-dessus.
+Le premier paquet 4.8.0 du 28/09 (`d3874290…`, depuis `a68201a`) n'est pas
+une cible de retour : il garde KI-064 (Écho peut purger un nuage sans fichier
+confirmé) ; il est remplacé par le paquet 4.8.0 corrigé après l'audit (D-059).
 
 **Depuis Ariane 4.8.0, la cible de retour est Banane 4.7.21**, commit
 `ead1cd1` (paquet `banane-v4.7.21-test.zip`, SHA-256 `24f8f1fe…f4ee2c06`).

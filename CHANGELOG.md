@@ -1,9 +1,11 @@
 # Banane V4 TEST — journal des versions
 
-## 4.8.1 — corrections de l'audit qualité 4.8 (Astra), 28 septembre 2026
+## 4.8.0 — Ariane, version officielle (validée par la direction, D-058), 28 septembre 2026
+
+### Corrections de l'audit qualité (Astra), avant la sortie (D-059)
 
 Audit indépendant de la 4.8.0 : `audit/chantiers/audit-qualite-480.md` ;
-réponse constat par constat : `audit/chantiers/qualite-480/reponse-4810.md`
+réponse constat par constat : `audit/chantiers/qualite-480/reponse.md`
 (D-059). Moteur, décision sur le lot et reprise après F5 inchangés.
 
 - **P1 — Écho ne purge plus un nuage sans fichier confirmé** (KI-064) : les
@@ -26,7 +28,7 @@ réponse constat par constat : `audit/chantiers/qualite-480/reponse-4810.md`
   complète ; `navigateur-telechargements.cjs` (essai dans Chromium) ; texte F5
   du rapport de sortie corrigé.
 
-## 4.8.0 — Ariane, version officielle (validée par la direction, D-058), 28 septembre 2026
+### Livré avec la validation du 28/09
 
 - **Ariane, Écho, Orbite** (D-058) : Banane devient Ariane, Natif devient
   Écho, Pilote devient Orbite. Fichiers exportés `ariane-…` ; formats et

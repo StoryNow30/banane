@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.8.1';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.8.0';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -547,7 +547,7 @@ function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Ob
  if(Array.isArray(rest.batch?.lotPosed)){const {lotPosed,...batch}=rest.batch;rest.batch={...batch,lotPosedCount:lotPosed.length};}
  return {...rest,recordsCount:records.length,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
 function exportState(){const {records,incomplete,...rest}=engine.view();return rest;}
-/* 4.8.1 (audit qualité 4.8, P01) — la vue du panneau, demandée chaque seconde,
+/* 4.8.0 (audit qualité, P01) — la vue du panneau, demandée chaque seconde,
  * clonait TOUT l'état (enregistrements compris, un par cut) avant d'en retirer
  * le lourd : 1,1 s par vue à 8 000 cuts sous Node (audit). On retire d'abord
  * (records, incomplete, lotPosed), on clone ensuite ; le panneau n'en lit que

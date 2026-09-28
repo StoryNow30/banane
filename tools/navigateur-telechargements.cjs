@@ -2,7 +2,7 @@
 'use strict';
 /*
  * navigateur-telechargements.cjs — essai, dans un vrai Chromium, des
- * téléchargements confirmés du panneau (4.8.1, audit qualité 4.8, D01 et D03).
+ * téléchargements confirmés du panneau (4.8.0, audit qualité 4.8, D01 et D03).
  * L'extension est chargée depuis DOSSIER (dépôt ou paquet décompressé), le
  * panneau Orbite est ouvert, un export est cliqué, puis la ligne d'état et
  * l'état final de chaque téléchargement (chrome.downloads) sont relevés.

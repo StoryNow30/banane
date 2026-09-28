@@ -1,7 +1,7 @@
 {
  "accepte": true,
  "bouton": "journal",
- "version": "4.8.1",
+ "version": "4.8.0",
  "statut": "Journal téléchargé : 0 événements, 0 enregistrements.",
  "telechargements": [
   {
@@ -14,7 +14,7 @@
 {
  "accepte": true,
  "bouton": "export-tout",
- "version": "4.8.1",
+ "version": "4.8.0",
  "statut": "Journal, bilan, diagnostic et corpus : 4 fichier(s) enregistrés dans Téléchargements. Envoie-les ensemble pour l’analyse.",
  "telechargements": [
   {
@@ -39,8 +39,8 @@
 {
  "accepte": false,
  "bouton": "journal",
- "version": "4.8.1",
- "statut": "Journal non enregistré : ariane-journal-v4-1790575873351.json (interrompu (USER_CANCELED)).",
+ "version": "4.8.0",
+ "statut": "Journal non enregistré : ariane-journal-v4-1790576510592.json (interrompu (USER_CANCELED)).",
  "telechargements": [
   {
    "etat": "interrupted",
@@ -52,7 +52,7 @@
 {
  "accepte": false,
  "bouton": "export-tout",
- "version": "4.8.1",
+ "version": "4.8.0",
  "statut": "Export incomplet — journal non enregistré (interrompu (USER_CANCELED)) ; bilan non enregistré (interrompu (USER_CANCELED)) ; diagnostic non enregistré (interrompu (USER_CANCELED)) ; corpus non enregistré (interrompu (USER_CANCELED)). Relance l’export concerné avant d’envoyer.",
  "telechargements": [
   {

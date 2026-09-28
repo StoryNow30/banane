@@ -10,7 +10,7 @@
    seuls le reflet de l'étape en cours et le point « en direct » ; tout est
    figé si le système réduit les animations. Invariants hérités de « la ligne » (D-045) : un bouton plein par
    écran, les autres sont des liens ; rouge pour ce qui ne se défait pas.
-   4.8.1 (audit qualité 4.8, U02) : vert et ambre du thème clair, bleu de la
+   4.8.0 (audit qualité, U02) : vert et ambre du thème clair, bleu de la
    voie du thème sombre foncés ou éclaircis à 4,5:1 au moins (WCAG 1.4.3) :
    #11834a 4,81 ; #a46200 4,85 ; #4a74e6 sur noir 4,93. */
 @font-face{font-family:"Hanken Grotesk";src:url(fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:swap}

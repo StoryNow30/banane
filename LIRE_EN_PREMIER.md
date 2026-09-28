@@ -1,24 +1,25 @@
-# Démarrer avec Ariane 4.8.1
+# Démarrer avec Ariane 4.8.0
 
 **Banane devient Ariane.** Le mode Natif devient **Écho** (Ariane observe ton
 travail dans ESV et l'enregistre), le mode Pilote devient **Orbite** (Ariane
-place et valide les rails d'un lot de cuts). Version officielle **4.8.1** :
-la 4.8.0 validée par la direction le 28/09 (D-058), plus les corrections de
-l'audit qualité d'Astra (D-059).
+place et valide les rails d'un lot de cuts). Version officielle **4.8.0**,
+validée par la direction le 28/09 (D-058), avec les corrections de l'audit
+qualité d'Astra (D-059).
 
-Installe `ariane-v4.8.1.zip` dans Edge **par-dessus la 4.7.21** (ou la
-4.8.0), dans le même dossier (bouton « Recharger » de la page des
-extensions) : ne supprime pas l'extension, sinon le stockage en cours est
-perdu. Termine ou arrête le lot en cours avant, puis **recharge la page ESV**.
-Vérifie **4.8.1** sous ARIANE sur l'accueil, et **Ariane 4.8.1 · ouvrir** sur
-le bouton blanc au bas d'ESV.
+Installe `ariane-v4.8.0.zip` **du 28/09 au soir** (empreinte dans
+`PASSATION_4.8.0.md` ; le paquet du matin, `d3874290…`, est remplacé) dans
+Edge **par-dessus la 4.7.21** ou le paquet du matin, dans le même dossier
+(bouton « Recharger » de la page des extensions) : ne supprime pas
+l'extension, sinon le stockage en cours est perdu. Termine ou arrête le lot en
+cours avant, puis **recharge la page ESV**. Vérifie **4.8.0** sous ARIANE sur
+l'accueil, et **Ariane 4.8.0 · ouvrir** sur le bouton blanc au bas d'ESV.
 
 **Nouvelle permission « Téléchargements »** : Ariane enregistre ses fichiers
 par le gestionnaire de téléchargements d'Edge, qui lui dit si chaque fichier
 est bien écrit. Écho ne supprime plus rien de son stockage sans cette
 confirmation, et chaque export te dit s'il est enregistré.
 
-## Ce que la 4.8.1 corrige (audit qualité, D-059)
+## Ce que l'audit qualité a fait corriger (D-059)
 
 - Écho ne purge plus un nuage LiDAR tant que le fichier qui le contient n'est
   pas confirmé écrit (KI-064).

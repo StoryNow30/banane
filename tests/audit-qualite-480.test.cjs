@@ -2,8 +2,9 @@
 /* Tests de caractérisation des défauts, pas corrections. Ils décrivent le
  * comportement constaté ; inverser l'assertion signalée donne le test rouge
  * du comportement souhaité. Aucun corpus privé nécessaire.
- * 4.8.1 : défauts corrigés, assertions inversées ; chaque essai exige
- * désormais le comportement souhaité (rouge sur la 4.8.0). */
+ * Défauts corrigés avant la sortie de la 4.8.0 (D-059) : assertions
+ * inversées ; chaque essai exige désormais le comportement souhaité (rouge
+ * sur le code audité, 9ab18e7). */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {panneau}=require('../tools/audit-qualite-480.cjs');
 const {Engine}=require('../src/engine.js');

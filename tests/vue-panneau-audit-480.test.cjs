@@ -1,5 +1,5 @@
 'use strict';
-/* 4.8.1 (audit qualité 4.8, P01) : la vue du panneau retire le lourd AVANT de
+/* 4.8.0 (audit qualité, P01) : la vue du panneau retire le lourd AVANT de
  * copier l'état, et rend exactement ce que rendait panelView(engine.view()). */
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const {pilote,espion,esvLent,reglages,attendreFin}=require('./helpers/esv-lent.cjs');

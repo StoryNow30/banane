@@ -157,7 +157,7 @@ test('acquitter un segment libère réellement la place', async () => {
   assert.equal(n.exportState.bytesPending, 0);
 });
 
-/* 4.8.1 (audit qualité 4.8, D01) : seul un fichier confirmé autorise la purge. */
+/* 4.8.0 (audit qualité, D01) : seul un fichier confirmé autorise la purge. */
 test('acquittement SANS confirmation : rien n’est purgé, le nuage reste pour l’export final', async () => {
   const s = sessionStub(), n = s.e.s.native;
   const ids = await remplir(s, 20);

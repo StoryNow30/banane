@@ -1,6 +1,6 @@
 # Décisions techniques
 
-## D-059 - Audit qualité 4.8 (Astra) : P1 corrigé avant la sortie, qui devient la 4.8.1
+## D-059 - Audit qualité 4.8 (Astra) : P1 et P2 locaux corrigés dans la 4.8.0, avant sa sortie
 
 **28 septembre 2026.** Audit indépendant de la 4.8.0 demandé par la direction
 (code, performances, données, UX/UI ; `consignes/chantier-8-auditeur.md`).
@@ -13,11 +13,13 @@ nuages sans preuve de téléchargement (KI-064).
 - **Les P2 locaux sont corrigés dans la même version** (D02, D03, U01, U02,
   U03, P01 pour la vue du panneau, P02, texte de D04) : chacun est petit, et
   deux touchent ce que l'opérateur envoie pour l'analyse.
-- **Le paquet validé le 28/09 (4.8.0) n'est pas réédité sous le même
-  numéro** : le code a changé, la version officielle devient la **4.8.1**.
-  Aucune règle métier ni décision sur le lot ne change ; la validation D-058
-  porte sur ce qui est inchangé.
-- **Reportés** (réponse : `audit/chantiers/qualite-480/reponse-4810.md`) :
+- **La version reste 4.8.0** (direction : « ça restera une 4.8.0 pas
+  .1 ») : les corrections entrent dans la 4.8.0 avant sa sortie. Le paquet
+  du matin du 28/09 (`d3874290…`, construit depuis `a68201a`) est **remplacé**
+  et ne doit plus être installé ; le nouveau paquet 4.8.0 a sa propre
+  empreinte (`PASSATION_4.8.0.md`). Aucune règle métier ni décision sur le
+  lot ne change ; la validation D-058 porte sur ce qui est inchangé.
+- **Reportés** (réponse : `audit/chantiers/qualite-480/reponse.md`) :
   C02 en 4.8.x ; C01, P01 (stockage), P03, U04 et la provenance de D04 en
   4.9 (`BANANE_4.9_CAHIER.md` §2). La question P03 (comparaison V4.6 à chaque
   cut) et les budgets de latence et de mémoire (questions 3 et 4 de l'audit)

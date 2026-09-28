@@ -565,7 +565,7 @@
    *     il est signalé nommément au lieu de disparaître en silence.
    * La purge ne masque donc jamais une perte : elle la rend détectable.
    *
-   * 4.8.1 (audit qualité 4.8, D01) : un objet n'est purgé que si le fichier qui
+   * 4.8.0 (audit qualité, D01) : un objet n'est purgé que si le fichier qui
    * le contient est CONFIRMÉ écrit (`confirmes`, rendu par chrome.downloads au
    * panneau). Un objet écrit sans confirmation sort de la file d'attente mais
    * reste dans IndexedDB : l'export final le reprend. Sans `confirmes`, rien

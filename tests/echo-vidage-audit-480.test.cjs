@@ -1,5 +1,5 @@
 'use strict';
-/* 4.8.1 (audit qualité 4.8, D01) — Écho avec de vrais téléchargements confirmés
+/* 4.8.0 (audit qualité, D01) — Écho avec de vrais téléchargements confirmés
  * (faux chrome.downloads piloté par l'essai) : purge après confirmation
  * seulement, et l'export final attend la fin d'un vidage en cours. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
