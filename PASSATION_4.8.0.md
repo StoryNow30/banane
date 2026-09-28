@@ -15,6 +15,15 @@ désormais **Ariane** ; Natif → **Écho**, Pilote → **Orbite** (D-058).
   (`RETOUR_ARRIERE.md`).
 - Reste, **sur autorisation explicite** : merge dans `main`, étiquette `v4.8.0`.
 
+## Paquet
+
+`ariane-v4.8.0.zip`, SHA-256
+`d38742903b9ecaf3910ec34846cdc72b6ba1646586a1b549fad54c6e1b1fe58f`, construit
+depuis `a68201a` par `git archive` + `tools/package.py`, reproductible (deux
+constructions identiques) ; chargé dans Chromium comme extension MV3 :
+service worker 4.8.0, cerveau actif, `lot-decision-v6`, quatre vues du panneau
+sans erreur. Copie : banane-data `travail/2026-09-27_ariane-480/`.
+
 ## Règles non négociables
 
 Celles de `PASSATION_4.7.21.md`, sans changement : pas de reset destructif,
