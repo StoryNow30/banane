@@ -121,7 +121,9 @@ Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
    la partie). **Démarrer le lot**.
 4. À la fin : **Tout télécharger pour l'analyse**.
 
-**Sa relecture (≈ 15 min)** : Écho, même règle qu'aux étapes 2 et 3, sur les
+**Sa relecture (≈ 15 min)** : d'abord **Démarrer l'observation** dans Écho, et
+vérifie après deux cuts que le nombre de visites monte (sans observation
+active, rien n'est enregistré). Puis même règle qu'aux étapes 2 et 3, sur les
 cuts posés par Orbite (au moins 80 % d'entre eux). Puis **Terminer et télécharger**.
 
 **Envoi** : une archive avec les deux exports, et une ligne (temps passé,

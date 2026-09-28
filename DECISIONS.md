@@ -51,9 +51,12 @@ l'audit de l'orchestration (`audit/chantiers/audit-orchestration-485.md`).
   page ESV, commune à toutes les extensions. Une version de test porte un nom
   distinct et refuse de se connecter si une autre Ariane est active dans
   l'onglet.
-- **Qualité finale de la 4.8.0** : relectures Écho de la partie 15 et des 37
-  cuts restants de la partie 11 par l'opérateur ; chiffres communiqués le
-  29/09.
+- **Qualité finale de la 4.8.0** : relectures de la partie 15 et des 37 cuts
+  restants de la partie 11 faites par l'opérateur le 28/09, mais sans
+  l'observation Écho active : **validée à 100 % par l'expertise de la
+  direction, non enregistrée**. C4 de la partie 15 reste donc non mesuré ; la
+  partie 15 n'entre pas au banc comme partie jugée (pas de référence
+  enregistrée). La mesure enregistrée reprend avec la partie neuve de la 4.8.5.
 - **4.8.5** : KI-066 et KI-067 y entrent (le paquet 4.8.0 validé reste
   intact) ; **garde d'écartement bas à 1 420 mm** sur les premiers passages
   sans appui (garde seulement, jamais une cible ; banc : faux 10 → 9, 0 juste
