@@ -114,11 +114,9 @@ Banane sont fermées.
   avant commande, le contrat d'écartement 1405–1470 (jamais une cible), les
   commandes envoyées à ESV.
 
-**Tes prochaines étapes** :
-1. **Relire le lot de la partie 12** (4.7.20, 1–8144) : c'est le premier lot
-   mené à sa borne, sur une partie neuve (`audit/lot-4720-p12-2026-09-26.md`).
-2. **Exporter le lot de la partie 11** (celui de ta capture, arrêté au cut 712).
-3. Finir la relecture de la partie 9 (8066–8502, 5151–5192, rail droit de 8516).
+**Tes prochaines étapes** : `consignes/operateur-suite.md` (étiquettes,
+relectures des parties 11 et 15, puis la 4.8.5 de test installée à côté de la
+4.8.0). Plan de développement : `PLAN_SUITE.md`.
 
 En cas de problème, reviens à la 4.7.20 (`RETOUR_ARRIERE.md`).
 

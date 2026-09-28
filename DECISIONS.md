@@ -1,5 +1,37 @@
 # Décisions techniques
 
+## D-061 - Pilotage de la suite : une version de test à la fois, portes chiffrées, instrumentation passive
+
+**28 septembre 2026, direction** : « je valide toutes tes décisions », sur
+l'audit de l'orchestration (`audit/chantiers/audit-orchestration-485.md`).
+
+- **Cadence** : une seule version de test sur le terrain à la fois ; cycle de
+  2 à 3 jours (paquet → un lot et sa relecture → mesure et fiche de décision →
+  décisions). Pas de nouveau paquet sans retour du précédent, sauf panne
+  bloquante.
+- **Temps de l'opérateur** : un créneau d'environ 1 h 15 par cycle, dont 20 à
+  30 min d'attention ; une seule tâche par cycle (un lot, puis sa relecture) ;
+  le reste par l'instrumentation ou une tâche de 10 min au plus.
+- **Instrumenter au lieu d'inspecter** : les versions de test relèvent
+  passivement des textes et états d'ESV (compteur « N on M treated », présence
+  des rails d'autres cuts dans la page), sans aucune commande ni modification
+  d'ESV, et les rangent dans le journal. Aucun code d'ESV dans les dépôts.
+- **Portes de la 4.8.5 stable** : C1 ≥ 79 % ; C3 : 0 hors contrat ; C4
+  évaluable (≥ 80 % des posés jugés), au plus 2 faux pour 100 jugés, chacun
+  typé ; 0 interruption non reprenable ; refus de la garde à 1 420 mm comptés
+  (0 à 2 attendus).
+- **Ordre des portes** : code gelé → banc et essais → essai terrain d'une
+  version de test → audit indépendant (Astra) avant toute version **stable**
+  → décision de la direction en dernier.
+- **Numérotation** : version stable = étiquette `vX.Y.Z`, jamais
+  reconstruite ; version de test = manifeste `4.8.5.N`, nom « Ariane 4.8.5
+  TEST », `version_name` « 4.8.5 test N » ; un nouveau paquet prend N+1.
+- **Étiquettes** : créées par la direction sur GitHub (la session ne peut pas
+  en pousser) ; l'orchestrateur prépare une branche `release/vX.Y.Z` sur le
+  commit à étiqueter.
+- Plan de développement et fiche de l'opérateur : `PLAN_SUITE.md`,
+  `consignes/operateur-suite.md`.
+
 ## D-060 - 4.8.0 fusionnée et stable ; 4.8.5 : garde d'écartement à 1 420 mm, KI-066 et KI-067
 
 **28 septembre 2026, direction**, sur l'audit d'orchestration

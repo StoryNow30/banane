@@ -5,8 +5,9 @@
 | Chantier | Qui | Fichier | Ce qu'il rend |
 |---|---|---|---|
 | 9 · Audit de l'orchestration de la suite (4.8.5, 4.9, au-delà) | Astra, auditeur | [`chantier-9-auditeur.md`](chantier-9-auditeur.md) | diagnostic du cycle 4.7 → 4.8 ; feuille de route orchestrée (jalons, chemin critique, voies parallèles, portes go / no-go) ; système de pilotage (boucle, cadence, décisions, tableau de bord, charge de l'opérateur) ; place de l'audit indépendant |
+| Suite · Fiche pas à pas | **toi, l'opérateur** | [`operateur-suite.md`](operateur-suite.md) | étiquettes ; relectures p11 et p15 ; 4.8.5 de test à côté de la 4.8.0 ; un lot et sa relecture par cycle |
 
-Plan audité : `audit/orchestration-480-485-490-2026-09-28.md`.
+Plan audité : `PLAN_SUITE.md` (développement), `audit/orchestration-480-485-490-2026-09-28.md`.
 
 ## Troisième vague — 28 septembre 2026, 4.8.0 validée
 

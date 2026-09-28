@@ -1,7 +1,7 @@
 # Chantier 9 — prompt de l'auditeur (orchestration de la suite : 4.8.5, 4.9, au-delà)
 
-**Pour :** Astra. **Branche :** `chantier-485/audit-orchestration`. **Rapport :**
-`audit/chantiers/audit-orchestration-485.md`. Copie le bloc tel quel, comme
+**Pour :** Astra. **Branche :** `chantier-485/audit-orchestration-astra`. **Rapport :**
+`audit/chantiers/audit-orchestration-485-astra.md`. Copie le bloc tel quel, comme
 premier message.
 
 ```text
@@ -25,12 +25,15 @@ fois. Quatre acteurs :
 Contraintes : une partie qui a servi à régler ne valide jamais (rotation,
 D-057) ; moteur épinglé ; dépôts publics.
 
-À LIRE (github.com/StoryNow30/banane, branche main ; données :
-StoryNow30/banane-data)
-audit/orchestration-480-485-490-2026-09-28.md (le plan actuel),
-BANANE_4.9_CAHIER.md, DECISIONS.md D-057 à D-059, PASSATION_4.8.0.md,
+À LIRE (github.com/StoryNow30/banane, branche claude/banane-48-cahier ;
+données : StoryNow30/banane-data)
+PLAN_SUITE.md (le plan de développement à auditer), DECISIONS.md D-057 à
+D-061, audit/orchestration-480-485-490-2026-09-28.md,
+BANANE_4.9_CAHIER.md, PASSATION_4.8.0.md,
 consignes/README.md (les chantiers déjà menés), CHANGELOG.md de 4.7.0 à
-4.8.0 (le rythme réel du dernier cycle).
+4.8.0 (le rythme réel du dernier cycle). L'orchestrateur s'est déjà
+audité (audit/chantiers/audit-orchestration-485.md) : ne le lis qu'après
+avoir écrit ton propre diagnostic, puis dis où tu diverges.
 
 CE QUE TU RENDS
 1. DIAGNOSTIC du pilotage du cycle 4.7 -> 4.8 : ce qui a marché, ce qui a
@@ -63,8 +66,8 @@ admissibilité seulement, deux rails ou rien, pas de VALIDATE ni de SKIP
 automatique) ; aucun identifiant de modèle d'IA.
 
 LIVRABLE
-Branche chantier-485/audit-orchestration, rapport
-audit/chantiers/audit-orchestration-485.md : synthèse en dix lignes, puis
+Branche chantier-485/audit-orchestration-astra, rapport
+audit/chantiers/audit-orchestration-485-astra.md : synthèse en dix lignes, puis
 les quatre parties, puis trois à cinq questions pour la direction. Fin :
 résumé de dix lignes, en français.
 ```

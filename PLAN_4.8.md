@@ -1,3 +1,5 @@
+> **Clos le 28/09/2026.** Plan en vigueur : `PLAN_SUITE.md` (4.8.5, 4.9). Ce document est gardé pour l'historique.
+
 # Plan jusqu'à la sortie de la 4.8
 
 **Établi le 23 septembre 2026**, après les deux audits à mi-parcours
