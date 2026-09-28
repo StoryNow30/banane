@@ -1,5 +1,17 @@
 # Consignes des chantiers parallèles 4.8
 
+## Troisième vague — 28 septembre 2026, 4.8.0 validée
+
+| Chantier | Qui | Fichier | Ce qu'il rend |
+|---|---|---|---|
+| 8 · Audit qualité globale | Astra, auditeur | [`chantier-8-auditeur.md`](chantier-8-auditeur.md) | constats (problème → preuve → conséquence → amélioration → effort → priorité) sur le code, les performances, les données et l'UX ; feuille de route P1 / P2 / P3 |
+| 8 · Session réelle | **toi, l'opérateur** | [`chantier-8-operateur.md`](chantier-8-operateur.md) | une session de 50 min dans ESV : vidéos, mémoire, notes ; exports dans banane-data, vidéos en privé à l'auditeur |
+
+Matériel : banane-data `travail/2026-09-28_kit-audit-480/` (lots
+représentatifs, mesures de temps, extraction). L'auditeur commence sans
+attendre la session réelle ; ses constats sur la mémoire et le parcours dans
+ESV restent supposés tant qu'elle n'est pas arrivée.
+
 ## Deuxième vague — 24 septembre 2026, base `155dbec` (4.7.16)
 
 | Chantier | Qui | Fichier | Ce qu'il rend |
