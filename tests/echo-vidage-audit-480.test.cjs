@@ -24,7 +24,8 @@ test('vidage confirmé : le nuage est purgé ; refusé : il reste',async()=>{
   for(const [etat,reste] of [['complete',false],['interrupted',true]]){
     const {p,dl,clouds}=await echo();const vidage=p.intervals[1]();await attendre(p);
     assert.equal(dl.faits.length,1);assert.equal(clouds.has('A'),true,'rien de purgé avant la fin du fichier');
-    dl.finir(0,etat);await vidage;await attendre(p);assert.equal(clouds.has('A'),reste,etat);}
+    dl.finir(0,etat);await vidage;await attendre(p);assert.equal(clouds.has('A'),reste,etat);
+    assert.equal(p.appels.find(a=>a.action==='native-export-ack')?.args?.fichiers,1,'l’acquittement dit le nombre de fichiers écrits');}
 });
 test('l’export final attend la fin du vidage en cours',async()=>{
   const {p,dl}=await echo();const vidage=p.intervals[1]();await attendre(p);

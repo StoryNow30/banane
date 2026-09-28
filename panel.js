@@ -833,7 +833,7 @@
      const {acked,nonConfirmes,written}=await writeSegments(plan,'ariane-native-v4',{label:'-auto',startIndex:advice.segments||0});
      /* Tout ce qui est écrit sort de la file d'attente (sinon le vidage
       * reprendrait toutes les 5 s) ; seul le confirmé est purgé. */
-     await api('native-export-ack',{ids:[...acked,...nonConfirmes],confirmed:acked});
+     await api('native-export-ack',{ids:[...acked,...nonConfirmes],confirmed:acked,fichiers:written.length});
      const ko=nonEnregistres(written);
      note(ko.length?`Vidage automatique : ${direFichiers(written)}. Les ${nonConfirmes.length} objets LiDAR restent dans Ariane et partiront avec l’export final.`
        :acked.length?`Segment enregistré : ${acked.length} objets LiDAR mis à l’abri.`:`Segment écrit : ${nonConfirmes.length} objets LiDAR, gardés dans Ariane jusqu’à l’export final.`,ko.length>0);

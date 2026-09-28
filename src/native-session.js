@@ -570,12 +570,16 @@
    * panneau). Un objet écrit sans confirmation sort de la file d'attente mais
    * reste dans IndexedDB : l'export final le reprend. Sans `confirmes`, rien
    * n'est purgé. */
-  async ackExported(ids,{confirmes=[]}={}){
+  /* 4.8.0 (terrain du 28/09) : `fichiers` = nombre de fichiers écrits par ce
+   * vidage. Le compteur de segments comptait les vidages, pas les fichiers :
+   * un vidage de neuf fichiers laissait le suivant repartir trop bas (deux
+   * « auto-seg04 » le 28/09 ; rien de perdu, mais trompeur). */
+  async ackExported(ids,{confirmes=[],fichiers=1}={}){
    const n=this.e.s.native;if(!n)throw Error('Aucune session Natif conservée.');
    n.exportState??={bytesStored:0,bytesPending:0,exportedCloudIds:[],releasedCloudIds:[],segments:0,lastAdviceAt:null};
    const x=n.exportState;x.releasedCloudIds??=[];const added=[];
    for(const id of ids||[])if(!x.exportedCloudIds.includes(id)){x.exportedCloudIds.push(id);added.push(id);}
-   x.segments+=1;x.bytesPending=0;x.lastAdviceAt=iso();
+   x.segments+=Math.max(1,Number.isInteger(fichiers)?fichiers:1);x.bytesPending=0;x.lastAdviceAt=iso();
    let libere=0,octets=0;
    const purgeables=new Set(confirmes||[]);let gardes=0;
    if(S.export.releaseAfterExport){

@@ -591,7 +591,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='native-export-advice')return native.exportAdvice();
  if(action==='native-export-manifest')return native.exportManifest(args?.all===true);
  if(action==='native-export-plan')return native.exportPlan();
- if(action==='native-export-ack')return native.ackExported(args?.ids||[],{confirmes:Array.isArray(args?.confirmed)?args.confirmed:[]});
+ if(action==='native-export-ack')return native.ackExported(args?.ids||[],{confirmes:Array.isArray(args?.confirmed)?args.confirmed:[],fichiers:args?.fichiers});
  // Abandon : irréversible, sans export. La confirmation est demandée côté panneau.
  if(action==='native-discard')return native.discard();
  // État du cerveau : ce qu'il est réglé à faire, et ce qu'il a fait au dernier passage.

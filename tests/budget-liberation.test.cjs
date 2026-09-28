@@ -173,6 +173,16 @@ test('acquittement SANS confirmation : rien n’est purgé, le nuage reste pour 
   assert.equal((await s.ackExported(['x'])).released, 0, 'sans confirmation déclarée, aucune purge');
 });
 
+/* 4.8.0 (terrain du 28/09) : le compteur de segments suit les FICHIERS écrits. */
+test('un vidage de plusieurs fichiers avance la numérotation d’autant', async () => {
+  const s = sessionStub(), n = s.e.s.native;
+  const ids = await remplir(s, 6);
+  await s.ackExported(ids.slice(0, 2), { confirmes: ids.slice(0, 2), fichiers: 3 });
+  assert.equal(n.exportState.segments, 3, 'le vidage suivant commence au segment 4');
+  await s.ackExported(ids.slice(2, 3), { confirmes: ids.slice(2, 3) });
+  assert.equal(n.exportState.segments, 4, 'sans nombre de fichiers, un seul');
+});
+
 test('les identifiants purgés restent DÉCLARÉS, donc une perte reste détectable', async () => {
   const s = sessionStub(), n = s.e.s.native;
   const ids = await remplir(s, 20);
