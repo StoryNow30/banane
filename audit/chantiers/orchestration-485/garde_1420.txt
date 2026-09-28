@@ -1,0 +1,6 @@
+lignes de premier passage : 736 ; drapeaux « faux » incohérents avec > 10 mm : 0
+premiers passages sans appui appliqués : 242 ; jugés justes : 168 ; faux : 3
+  juste le plus serré : 1426.1 mm ; faux : 707 (natif-p11) 1405.0 mm, 711 (natif-p11) 1414.5 mm, 7523 (pilote-p9-4.7.18) 1437.2 mm
+  sous 1 420 mm : 707 (natif-p11) 1405.0 mm faux, 711 (natif-p11) 1414.5 mm faux
+  marge : 6.1 mm au-dessus du seuil, 5.5 mm en dessous
+bilans de l'outil recalculés : identiques
