@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-09-28T11:57:25.356Z",
-  "finishedAt": "2026-09-28T11:59:24.495Z",
+  "startedAt": "2026-09-28T12:20:19.534Z",
+  "finishedAt": "2026-09-28T12:22:35.440Z",
   "node": "v22.22.2",
   "platform": "linux",
   "counts": {
@@ -157,6 +157,7 @@
     "tests/revue-4800.test.cjs",
     "tests/revue-4a-4800.test.cjs",
     "tests/revue-4b-4800.test.cjs",
+    "tests/revue-4c-4800.test.cjs",
     "tests/revue-5-4800.test.cjs",
     "tests/revue-6a-4800.test.cjs",
     "tests/revue-6b-4800.test.cjs",
