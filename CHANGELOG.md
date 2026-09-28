@@ -1,5 +1,23 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.5 test 1 — en cours (PLAN_SUITE §2)
+
+### Outils de portes (D5)
+
+- **`tools/portes-j1.cjs`** : imprime les portes de banc de J1 en VERT ou
+  ROUGE : les 633 cuts de validation (parties 9, 11 et 12) rejoués avec les
+  règles de leur lot, décisions et parité rejeu/observation identiques à la
+  référence figée sur le code de la 4.8.0
+  (`audit/portes-j1/reference-4.8.0.json`) ; les 8 jeux du banc 4.8.5 : seuls
+  707 et 711 refusés et 718 posé, 0 juste perdu ; `verify` avec `--verify`.
+  Entrées : banane-data `travail/2026-09-28_banc-485/preparer.sh`.
+- **`tools/perf-lot.cjs`** : décomposition du cycle d'un cut validé, phase
+  par phase (navigation → capture, GCV1, décision, pose, capture après pose,
+  validation, cut suivant). Partie 15 : 191 cuts, 4,5 s de navigation →
+  capture sur 9,5 s (48 %), comme le relevé du 28/09.
+- **`tools/first-pass-signal-study.cjs`** : la base est rendue cut par cut ;
+  `--base-seule` ne rejoue aucune variante.
+
 ## 4.8.0 — Ariane, version officielle (validée par la direction, D-058), 28 septembre 2026
 
 ### Corrections de l'audit qualité (Astra), avant la sortie (D-059)

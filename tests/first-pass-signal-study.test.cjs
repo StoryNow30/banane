@@ -24,3 +24,17 @@ test('la garde d’écartement bas ne refuse qu’un premier passage sans appui 
  assert.equal(Study.RULES['sans-appui-ecart-bas-1425'](f(0,1422)),true);
  assert.equal(Study.RULES['sans-appui-ecart-bas-1420'](f(0,1422)),false);
 });
+/* D5 : l'outil de portes J1 compare la base cut par cut ; `--base-seule` ne rejoue aucune variante. */
+test('D5 : la base est rendue ligne à ligne, et sans variante quand aucune règle n’est demandée',()=>{
+ const rows=[{cut:7,stage:'first-pass',feature:{anchors:0},removed:false,applied:true,judged:true,wrong:false,worstMm:2.5},
+  {cut:8,stage:'deferred',feature:null,removed:false,applied:false,judged:false,wrong:null,worstMm:null}];
+ const r=Study.compare('natif-x','natif',()=>rows.map(x=>({...x})),{});
+ assert.deepEqual(r.variants,{});
+ assert.deepEqual(r.base.rows,[{cut:7,stage:'first-pass',applied:true,judged:true,wrong:false,worstMm:2.5},{cut:8,stage:'deferred',applied:false,judged:false,wrong:null,worstMm:null}]);
+});
+test('D5 : --base-seule vide la liste des règles ; --regles la garde',()=>{
+ assert.deepEqual(Study.regles(['o.json','--base-seule','--natif','a=b']),{rules:{},argv:['o.json','--natif','a=b']});
+ const r=Study.regles(['o.json','--regles','esv-100','--lot','a=b']);
+ assert.deepEqual(Object.keys(r.rules),['esv-100']);assert.deepEqual(r.argv,['o.json','--lot','a=b']);
+ assert.throws(()=>Study.regles(['o.json','--base-seule','--regles','esv-100']),/--base-seule/);
+});

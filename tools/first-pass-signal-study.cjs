@@ -48,7 +48,7 @@ function ruled(capture,science,d,predicate){
  return {decision:d,feature:f,removed:false};
 }
 function local(rail,pos){const M=rail.sceneRelativeToProfileLocal,o=C.point(M,rail.positionSceneRelative),q=C.point(M,pos);return [q[1]-o[1],q[2]-o[2]];}
-function natif(input,label){
+function natif(input,label,rules){
  const session=Seg.loadSession(input),records=session.records.slice().sort((a,b)=>a.visitIndex-b.visitIndex),seen=new Set(),chunks=new Map(),prepared=[];
  for(const c of session.clouds||[])if(c.pointsSceneRelative){if(!chunks.has(c.visitId))chunks.set(c.visitId,[]);chunks.get(c.visitId).push(c);}
  for(const r of records){const id=r.identity||{},key=id.part+'|'+id.cut;if(seen.has(key))continue;seen.add(key);
@@ -69,9 +69,9 @@ function natif(input,label){
    if(decision.positions&&judged)worst=Math.max(...SIDES.flatMap(s=>{const a=local(x.capture.rails[s],decision.positions[s]),b=local(x.capture.rails[s],x.refs[s].finalRail.positionSceneRelative);return [Math.abs(a[0]-b[0]),Math.abs(a[1]-b[1])].map(v=>v*1000);}));
    rows.push({cut:x.capture.identity.cut,stage:decision.stage,feature:d.stage==='first-pass'?feature:null,removed,applied:!!decision.positions,judged:!!decision.positions&&judged,wrong:worst!=null?worst>10:null,worstMm:round(worst)});
   }return rows;}
- return compare(label,'natif',replay);
+ return compare(label,'natif',replay,rules);
 }
-function pilote(input,label,relecture){
+function pilote(input,label,relecture,rules){
  const lot=A.loadLot(input,label,relecture||null);
  function replay(pred){const observations=new Map(),deps={L:{...L,decideCut:args=>{
   const d=L.decideCut(args),result=ruled(args.capture,args.science,d,pred),cut=args.capture.identity.cut;
@@ -81,12 +81,11 @@ function pilote(input,label,relecture){
    feature:observations.get(x.cut)?.feature??null,removed:observations.get(x.cut)?.removed??false,
    applied:!!x.lot?.wouldApply,judged:!!x.lot?.errors,wrong:x.lot?.errors?!!x.lot.wrong:null,worstMm:x.lot?.worstMm??null}));
  }
- return compare(label,'pilote',replay);
+ return compare(label,'pilote',replay,rules);
 }
-let active=RULES;
-function compare(label,kind,replay){
+function compare(label,kind,replay,rules){
  const base=replay(()=>false),baseBy=new Map(base.map(r=>[r.cut,r]));
- const variants={};for(const [name,pred] of Object.entries(active)){
+ const variants={};for(const [name,pred] of Object.entries(rules)){
   const rows=replay(pred),direct=[],ricochet=[],gained=[];
   for(const r of rows){const b=baseBy.get(r.cut);if(!b)throw Error('cut absent de la base : '+label+'/'+r.cut);
    if(r.removed)direct.push({cut:r.cut,wrong:b.wrong,judged:b.judged,feature:b.feature});
@@ -100,21 +99,29 @@ function compare(label,kind,replay){
    removedUnjudged:direct.filter(r=>!r.judged).map(r=>r.cut),direct,ricochet,gained,
    newWrong:rows.filter(r=>r.wrong&&!baseBy.get(r.cut).wrong).map(r=>r.cut)};
  }
+ /* D5 : la base cut par cut, pour l'outil de portes J1 (tools/portes-j1.cjs). */
  return {label,kind,base:{applied:base.filter(r=>r.applied).length,judged:base.filter(r=>r.judged).length,
-  wrong:base.filter(r=>r.wrong).map(r=>r.cut),firstPass:base.filter(r=>r.stage==='first-pass')},variants};
+  wrong:base.filter(r=>r.wrong).map(r=>r.cut),firstPass:base.filter(r=>r.stage==='first-pass'),
+  rows:base.map(({cut,stage,applied,judged,wrong,worstMm})=>({cut,stage,applied,judged,wrong,worstMm}))},variants};
+}
+/* `--regles r1,r2` : les variantes rejouées ; `--base-seule` : aucune (D5). */
+function regles(argv){
+ const r=argv.indexOf('--regles'),b=argv.indexOf('--base-seule');
+ if(b>=0){if(r>=0)throw Error('--base-seule exclut --regles');return {rules:{},argv:argv.filter((_,i)=>i!==b)};}
+ if(r<0)return {rules:RULES,argv};
+ const noms=String(argv[r+1]||'').split(',').filter(Boolean),inconnue=noms.find(n=>!RULES[n]);
+ if(!noms.length||inconnue)throw Error('règle inconnue : '+(inconnue||'(aucune)'));
+ return {rules:Object.fromEntries(noms.map(n=>[n,RULES[n]])),argv:[...argv.slice(0,r),...argv.slice(r+2)]};
 }
 function run(argv=process.argv.slice(2)){
  const out=argv[0];if(!out||out.startsWith('--'))throw Error('SORTIE.json requis');const sessions=[];
- const r=argv.indexOf('--regles');active=RULES;
- if(r>0){const noms=String(argv[r+1]||'').split(',').filter(Boolean),inconnue=noms.find(n=>!RULES[n]);
-  if(!noms.length||inconnue)throw Error('règle inconnue : '+(inconnue||'(aucune)'));
-  active=Object.fromEntries(noms.map(n=>[n,RULES[n]]));argv=[...argv.slice(0,r),...argv.slice(r+2)];}
+ let rules;({rules,argv}=regles(argv));
  for(let i=1;i<argv.length;i++){const type=argv[i],arg=argv[++i],eq=arg.indexOf('=');if(eq<0)throw Error('libellé requis : '+arg);
   const p=arg.slice(0,eq),[label,rel]=arg.slice(eq+1).split('@'),t=Date.now();
-  sessions.push(type==='--natif'?natif(p,label):type==='--lot'?pilote(p,label,rel):(()=>{throw Error(type);})());
+  sessions.push(type==='--natif'?natif(p,label,rules):type==='--lot'?pilote(p,label,rel,rules):(()=>{throw Error(type);})());
   console.log(label,Math.round((Date.now()-t)/1000)+' s',sessions.at(-1).base.applied,'décidés');}
- const result={format:'banane-first-pass-signal-study-v1',rules:Object.keys(active),excluded:[...EXCLUDED],sessions};
+ const result={format:'banane-first-pass-signal-study-v1',rules:Object.keys(rules),excluded:[...EXCLUDED],sessions};
  fs.writeFileSync(out,JSON.stringify(result,null,1)+'\n');return result;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.stack||e);process.exitCode=1;}
-module.exports={RULES,features,ruled,compare,run};
+module.exports={RULES,features,ruled,compare,regles,run};

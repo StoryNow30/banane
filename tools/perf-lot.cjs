@@ -25,7 +25,13 @@
  *     médianes ne s'additionnent pas : chaque intervalle a la sienne ;
  *   - cycle (`cut-target-changed` → suivant) : temps par cut vu de l'opérateur ;
  *   - silences : écarts de plus de 60 s entre deux événements (pause, attente,
- *     opérateur) ; comptés à part, hors cadence.
+ *     opérateur) ; comptés à part, hors cadence ;
+ *   - décomposition du cycle (D5) : pour chaque cut validé dont la chaîne est
+ *     complète (navigation vers ce cut → capture reçue → proposition →
+ *     observation → pose relue → capture après pose → validation acceptée →
+ *     navigation suivante), la durée de chaque phase. Part = médiane de la
+ *     phase / somme des médianes (tableau du 28/09, partie 15) ; le cycle
+ *     médian réel des mêmes cuts est donné à côté.
  * Les événements d'un export ne sont pas rangés dans l'ordre : ils sont triés
  * par horodatage.
  */
@@ -33,6 +39,8 @@ const fs=require('node:fs'),zlib=require('node:zlib');
 const SILENCE_MS=60000;
 const ms=e=>Date.parse(e.timestamp);
 const cutOf=e=>Number.isInteger(e?.identity?.cut)?e.identity.cut:null;
+/* `cut-target-changed` : `identity` est le cut quitté, `nextIdentity` le cut visé (moteur). */
+const cibleOf=e=>Number.isInteger(e?.nextIdentity?.cut)?e.nextIdentity.cut:null;
 function stats(values){const v=values.filter(Number.isFinite).sort((a,b)=>a-b);if(!v.length)return {n:0};
   const q=p=>v[Math.min(v.length-1,Math.floor(p*(v.length-1)+0.5))];
   return {n:v.length,median:q(0.5),p90:q(0.9),max:v.at(-1),min:v[0],total:v.reduce((s,x)=>s+x,0)};}
@@ -46,7 +54,7 @@ function measure(data,{tous=false}={}){
   const tries=(data.events||[]).filter(e=>Number.isFinite(ms(e))).sort((a,b)=>ms(a)-ms(b));
   const batch=data.state?.batch||null,{events,filtre}=tous?{events:tries,filtre:false}:fenetreDuLot(tries,batch);
   if(!events.length)throw Error('Aucun événement horodaté dans cet export.');
-  const m=mesurer(events);
+  const m={...mesurer(events),phases:decomposer(events)};
   /* Lot par lot : chaque `batch-started` ouvre une fenêtre jusqu'au suivant. */
   const debuts=events.filter(e=>e.type==='batch-started'),lots=debuts.map((d,i)=>{const de=ms(d),a=debuts[i+1]?ms(debuts[i+1]):Infinity;
     const w=events.filter(e=>ms(e)>=de&&ms(e)<a),x=mesurer(w),etats=w.filter(e=>e.type==='batch-state');
@@ -71,7 +79,7 @@ function mesurer(events){
     if(e.type==='gcv1-shadow-observed'&&Number.isFinite(e.lotObservation?.engineMs))engine.push(e.lotObservation.engineMs);}
   /* Cycle par cut et silences. */
   const cibles=events.filter(e=>e.type==='cut-target-changed'),cycles=[];
-  for(let i=1;i<cibles.length;i++)cycles.push({cut:cutOf(cibles[i-1]),ms:ms(cibles[i])-ms(cibles[i-1])});
+  for(let i=1;i<cibles.length;i++)cycles.push({cut:cibleOf(cibles[i-1]),ms:ms(cibles[i])-ms(cibles[i-1])});
   const silences=[];for(let i=1;i<events.length;i++){const d=ms(events[i])-ms(events[i-1]);
     if(d>SILENCE_MS)silences.push({apres:events[i-1].type,cut:cutOf(events[i-1]),de:events[i-1].timestamp,ms:d});}
   const debut=ms(events[0]),fin=ms(events.at(-1)),silenceMs=silences.reduce((s,x)=>s+x.ms,0);
@@ -89,6 +97,32 @@ function mesurer(events){
     silences:silences.map(s=>({...s,s:Math.round(s.ms/1000)})),
   };
 }
+/* Décomposition du cycle d'un cut validé (D5). La navigation vers le cut est
+ * le `cut-target-changed` dont la cible (`nextIdentity`) est ce cut ; sans
+ * cible, la chaîne n'est pas mesurée. Seules les chaînes complètes et simples
+ * comptent : un jalon répété (pose refaite, nouvelle capture, validation
+ * reprise) exclut la chaîne, comptée à part (`repetes`). Un rechargement sur le
+ * même cut émet aussi un `cut-target-changed` : la chaîne en cours est
+ * abandonnée, ce n'est pas un cycle ordinaire. */
+const JALONS=['before-captured','proposed','gcv1-shadow-observed','applied-verified','after-captured','validation-accepted'];
+const PHASES=[['navigation-capture','Navigation → capture reçue','navigation','before-captured'],
+  ['analyse-gcv1','Analyse GCV1','before-captured','proposed'],['decision-lot','Décision sur le lot (observation)','proposed','gcv1-shadow-observed'],
+  ['pose','Décision → pose relue','gcv1-shadow-observed','applied-verified'],['capture-apres-pose','Capture après pose','applied-verified','after-captured'],
+  ['validation','Validation (après capture → acceptée)','after-captured','validation-accepted'],['cut-suivant','Validation → cut suivant','validation-accepted','suivant']];
+function decomposer(events){
+  const chaines=[];let nav=null,cur=null,repetes=0;
+  for(const e of events){
+    if(e.type==='cut-target-changed'){
+      if(cur&&cur.t.navigation!=null&&JALONS.every(j=>cur.t[j]!=null)&&cutOf(e)===cur.cut){if(cur.repete)repetes++;else chaines.push({...cur.t,suivant:ms(e)});}
+      nav={at:ms(e),vers:cibleOf(e)};cur=null;continue;}
+    if(!JALONS.includes(e.type))continue;
+    if(e.type==='before-captured'&&cur?.cut!==cutOf(e)){cur={cut:cutOf(e),repete:false,t:{navigation:nav&&nav.vers===cutOf(e)?nav.at:null,'before-captured':ms(e)}};continue;}
+    if(cur&&cutOf(e)===cur.cut){if(cur.t[e.type]!=null)cur.repete=true;else cur.t[e.type]=ms(e);}}
+  const etapes=PHASES.map(([id,libelle,de,a])=>({id,libelle,ms:stats(chaines.map(c=>c[a]-c[de]))}));
+  const sommeMedianesMs=chaines.length?etapes.reduce((s,e)=>s+e.ms.median,0):null;
+  for(const e of etapes)e.part=sommeMedianesMs?e.ms.median/sommeMedianesMs:null;
+  return {n:chaines.length,repetes,cycleMs:stats(chaines.map(c=>c.suivant-c.navigation)),sommeMedianesMs,etapes};
+}
 const n=v=>Number.isFinite(v)?String(Math.round(v)):'—';
 const sec=v=>!Number.isFinite(v)?'—':v<1000?Math.round(v)+' ms':(Math.round(v/100)/10).toFixed(1).replace('.',',')+' s';
 function toMarkdown(m,titre){
@@ -105,6 +139,11 @@ function toMarkdown(m,titre){
   L.push(`| Capture : points | ${m.capture.points.n} | ${n(m.capture.points.median)} | ${n(m.capture.points.p90)} | ${n(m.capture.points.max)} |`,
     `| Capture : Mo | ${m.capture.octets.n} | ${m.capture.octets.n?(m.capture.octets.median/1048576).toFixed(2).replace('.',','):'—'} | ${m.capture.octets.n?(m.capture.octets.p90/1048576).toFixed(2).replace('.',','):'—'} | ${m.capture.octets.n?(m.capture.octets.max/1048576).toFixed(2).replace('.',','):'—'} |`,
     `| Capture : essais | ${m.capture.essais.n} | ${n(m.capture.essais.median)} | ${n(m.capture.essais.p90)} | ${n(m.capture.essais.max)} |`);
+  const p=m.phases;
+  if(!p.n)L.push('','Décomposition du cycle : aucun cut validé à chaîne complète.');
+  else{L.push('',`Décomposition du cycle (${p.n} cut${p.n>1?'s':''} validé${p.n>1?'s':''} à chaîne complète${p.repetes?` ; ${p.repetes} exclu${p.repetes>1?'s':''} (jalon répété)`:''} ; part = médiane de la phase / somme des médianes, ${sec(p.sommeMedianesMs)} ; cycle médian réel ${sec(p.cycleMs.median)}) :`,'',
+      '| Phase | n | médiane | p90 | part |','|---|---|---|---|---|');
+    for(const e of p.etapes)L.push(`| ${e.libelle} | ${e.ms.n} | ${sec(e.ms.median)} | ${sec(e.ms.p90)} | ${Math.round(e.part*100)} % |`);}
   if(m.lots.length>1){L.push('','Lot par lot :','','| Début | Partie | Départ | Fin | Cuts | Durée | Cycle médian / p90 | Capture médiane / p90 / max | Erreurs |','|---|---|---|---|---|---|---|---|---|');
     for(const l of m.lots)L.push(`| ${l.debut} | ${l.partie??'?'} | ${l.depart??'?'} | ${l.fin??'—'} | ${l.cuts} | ${n(l.dureeMin)} min${l.silencesMin>=1?` (${n(l.silencesMin)} de silences)`:''} | ${sec(l.cycleMs.median)} / ${sec(l.cycleMs.p90)} | ${sec(l.captureMs.median)} / ${sec(l.captureMs.p90)} / ${sec(l.captureMs.max)} | ${l.erreurs} |`);}
   const err=Object.entries(m.erreurs);if(err.length){L.push('','Erreurs de commande :','');for(const [a,l] of err)L.push(`- ${a} : ${l.length} (${l.slice(0,3).map(x=>`cut ${x.cut} : ${x.message}`).join(' ; ')}${l.length>3?' ; …':''})`);}
