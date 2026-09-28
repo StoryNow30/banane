@@ -323,15 +323,40 @@
        return !!projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView;},
        'Vue ESV non recentrée sur le rail '+side+'.',P.attenteMs,guard);}
      catch(e){if(essai>=essais||!String(e?.message).startsWith('Vue ESV non recentrée'))throw e;}}}
+ /* 4.8.0 (terrain du 28/09, partie 15) — CLIC AU PIXEL PRÈS. ESV pose le rail
+  * sur le pixel ENTIER du clic : sur les 122 rails posés de la partie 12,
+  * l'écart pose/cible va de −1 à 0 pixel en horizontal et de 0 à +1 en
+  * vertical. Vue habituelle (0,54 mm par pixel) : l'écart reste sous 1 mm.
+  * Fenêtre d'ESV rétrécie (416 px, 0,96 mm par pixel) : il le dépassait, deux
+  * poses sur six refusées (« le clic n'a pas produit le déplacement
+  * demandé »), lot arrêté. Un rail posé à plus de 1 mm de la cible est donc
+  * recliqué, décalé d'un demi-pixel dans un sens puis dans l'autre (la règle
+  * d'arrondi d'ESV n'est pas supposée) ; dès que le rail s'est posé, l'écart
+  * est lu, sans attendre les 5 s. Même tolérance qu'avant (1 mm), relue ensuite
+  * par le moteur. */
+ const DECALAGES_CLIC=[[0,0],[.5,.5],[-.5,-.5]];
+ const pixelMm=cam=>cam?.viewport?.width&&Array.isArray(cam.projection)&&cam.projection[0]?2/cam.projection[0]/cam.viewport.width*1000:NaN;
  async function clickPosition(side,target,expected){
-   await select(side,expected);const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
-   const view=projectToView(cam,target);
-   if(!view?.inView)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view));
-   const r=view.viewport,ndc=view.ndc;
-   c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
-     clientX:r.left+(ndc[0]+1)*r.width/2,clientY:r.top+(1-ndc[1])*r.height/2,button:0,buttons:1}));
-   return waitFor(()=>{const now=assertExpected(expected);return C.distance(now.rails[side].positionSceneRelative,target)<=.001?now:false;},
-     'Le clic n’a pas produit le déplacement demandé pour '+side+'. État à réconcilier.',P.attenteClicMs);
+   await select(side,expected);let dernier=null,pixel=NaN;
+   for(const [dx,dy] of DECALAGES_CLIC){
+     const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+     const view=projectToView(cam,target);
+     if(!view?.inView)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view));
+     const r=view.viewport,ndc=view.ndc,avant=now.rails[side].positionSceneRelative;pixel=pixelMm(cam);
+     c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
+       clientX:r.left+(ndc[0]+1)*r.width/2+dx,clientY:r.top+(1-ndc[1])*r.height/2+dy,button:0,buttons:1}));
+     /* Posé : à 1 mm de la cible ; ou déplacé, puis immobile sur trois lectures. */
+     let precedent=null,stable=0;
+     const pose=await waitFor(()=>{const s=assertExpected(expected),p=s.rails[side].positionSceneRelative;
+       if(C.distance(p,target)<=.001)return {s,ok:true};
+       const cle=JSON.stringify(p);stable=cle===precedent?stable+1:0;precedent=cle;
+       return C.distance(p,avant)>1e-6&&stable>=P.lecturesStables?{s,ok:false}:false;},
+       'Le clic n’a pas produit le déplacement demandé pour '+side+'. État à réconcilier.',P.attenteClicMs)
+       .catch(e=>{if(dernier)return {s:dernier,ok:false};throw e;});
+     if(pose.ok)return pose.s;dernier=pose.s;}
+   const ecart=C.distance(dernier.rails[side].positionSceneRelative,target)*1000;
+   throw Error(`Le clic n’a pas produit le déplacement demandé pour ${side} : rail posé à ${ecart.toFixed(1).replace('.',',')} mm de la cible`
+     +(Number.isFinite(pixel)?`, vue ESV à ${pixel.toFixed(2).replace('.',',')} mm par pixel${pixel>.9?' (agrandis la fenêtre d’ESV)':''}`:'')+'. État à réconcilier.');
  }
  async function apply(before,proposals){cancelled=false;const now=assertExpected(before);
    if(!K.equalPoses(now.rails,before.rails))throw Error('Rails modifiés avant l’application.');

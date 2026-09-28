@@ -28,6 +28,14 @@ réponse constat par constat : `audit/chantiers/qualite-480/reponse.md`
   complète ; `navigateur-telechargements.cjs` (essai dans Chromium) ; texte F5
   du rapport de sortie corrigé.
 
+### Essai terrain du 28/09 : pose au pixel près (KI-065)
+
+- **« Le clic n'a pas produit le déplacement demandé »** (partie 15, deux
+  poses sur six) : ESV pose le rail sur le pixel entier du clic ; fenêtre
+  d'ESV rétrécie (0,96 mm par pixel), l'écart dépassait parfois 1 mm. Un rail
+  posé à plus de 1 mm est recliqué, décalé d'un demi-pixel ; le refus dit
+  l'écart et la taille du pixel. `audit/terrain-4800-2026-09-28.md`.
+
 ### Livré avec la validation du 28/09
 
 - **Ariane, Écho, Orbite** (D-058) : Banane devient Ariane, Natif devient

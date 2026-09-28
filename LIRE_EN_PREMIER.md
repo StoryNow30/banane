@@ -19,6 +19,11 @@ par le gestionnaire de téléchargements d'Edge, qui lui dit si chaque fichier
 est bien écrit. Écho ne supprime plus rien de son stockage sans cette
 confirmation, et chaque export te dit s'il est enregistré.
 
+**Taille de la fenêtre d'ESV** : Ariane pose les rails en cliquant dans la
+vue d'ESV ; plus cette vue est large, plus la pose est précise. Garde-la
+d'au moins 600 pixels de large (la 4.8.0 finale tolère jusqu'à 300 ; en
+dessous, la pose peut être refusée et le message le dit).
+
 ## Ce que l'audit qualité a fait corriger (D-059)
 
 - Écho ne purge plus un nuage LiDAR tant que le fichier qui le contient n'est
