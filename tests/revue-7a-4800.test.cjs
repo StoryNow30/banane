@@ -30,3 +30,15 @@ test('« Arrêter » pendant l\'attente de la page rafraîchie : la reprise s\'i
   await r.b.api('stop');const e=await reprise;const view=await r.b.api('view');
   assert.ok(Date.now()-t0<10000,'la reprise ne va pas au bout des 60 s');assert.ok(e,'la reprise signale l\'arrêt');assert.equal(view.batch.state,'STOPPED');
 });
+/* F5 pendant la pose : résultat incertain (réconciliation), « Archiver le
+ * résultat interrompu », puis « Reprendre » : le lot revient au cut, le repose
+ * et finit comme sans F5 (dernier cut posé, non validé). */
+test('F5 pendant la pose, archivage puis « Reprendre » : le lot finit comme sans F5',async()=>{
+  const r=await pilote(espion,{start:100,end:102,settings:reglages(),esv:esv=>{esvLent(esv,{lecturesInstables:false});const a0=esv.apply.bind(esv);
+    esv.apply=async(...a)=>{if(esv.identity.cut===100&&!esv.recharges){esv.onReload();esv.identity.cut=99;throw Error(CANAL);}return a0(...a);};}});
+  await r.b.settle();let view=await finMoteur(r);
+  assert.equal(view.batch.state,'PAUSED_ADAPTER_UNRESPONSIVE');assert.equal(view.reconcileRequired,true,'pose incertaine : à contrôler');
+  await r.b.api('close-uncertain');await r.b.api('resume');view=await attendreFin(r);
+  assert.deepEqual(view.batch.processed.map(x=>x.cut),[100]);assert.deepEqual(view.batch.deferred.map(x=>x.identity?.cut),[101]);
+  assert.deepEqual(view.batch.stoppedAtEnd&&{cut:view.batch.stoppedAtEnd.cut,applied:view.batch.stoppedAtEnd.applied},{cut:102,applied:true});
+});

@@ -15,12 +15,14 @@ function decaler(rails,d){const r=K.clone(rails);for(const side of ['left','righ
   x.positionSceneRelative=x.positionSceneRelative.map((v,i)=>v+d[i]);
   for(const k of ['railLocalToSceneRelative','profileLocalToSceneRelative'])if(Array.isArray(x[k]))[12,13,14].forEach((j,i)=>x[k][j]+=d[i]);}return r;}
 /* ESV simulé : lecture instable au 1er passage sur 102 ; F5 → nouvelle page, adaptateur absent jusqu'à la réinjection, premier non validé affiché. */
-const esvLent=(esv,{lecturesInstables=true}={})=>{const capture=esv.capture.bind(esv),state=esv.state.bind(esv),next=esv.next.bind(esv);let instable=lecturesInstables,absent=false,decalage=null;
+const esvLent=(esv,{lecturesInstables=true}={})=>{const capture=esv.capture.bind(esv),state=esv.state.bind(esv);let instable=lecturesInstables,absent=false,decalage=null;
   esv.capture=async(...a)=>{if(esv.identity.cut===102&&instable){instable=false;throw Error('Niveau de détail non stabilisé.');}return capture(...a);};
   esv.onReload=()=>{absent=true;decalage=DECALAGE;Object.assign(esv.identity,{pageId:'page-apres-F5',frameId:'repere-apres-F5',cut:101});esv.rails=decaler(esv.rails,DECALAGE);esv.recharges=(esv.recharges||0)+1;};
   esv.onInject=()=>{absent=false;};
   esv.state=async(...a)=>{if(absent)throw Error(MUET);return state(...a);};
-  esv.next=async(...a)=>{const r=await next(...a);if(decalage){esv.rails=decaler(esv.rails,decalage);return state();}return r;};};
+  /* Après F5, tout cut s'affiche dans le repère de la nouvelle page (valider ou SKIP passent par `next`). */
+  for(const nom of ['next','nextWithoutDecision']){const f=esv[nom].bind(esv);
+    esv[nom]=async(...a)=>{const r=await f(...a);if(!decalage)return r;esv.rails=decaler(esv.rails,decalage);return nom==='next'?state():r;};}};
 const attendreFin=async r=>{for(let i=0;i<400;i++){const v=await r.b.api('view');if(!['RUNNING','PAUSED'].includes(v.batch?.state)||v.batch?.stoppedAtEnd)return v;await new Promise(x=>setTimeout(x,5));}return r.b.api('view');};
 
 module.exports={pilote,espion,esvLent,reglages,attendreFin,DECALAGE,L};
