@@ -21,9 +21,10 @@ désormais **Ariane** ; Natif → **Écho**, Pilote → **Orbite** (D-058).
 ## Paquet
 
 `ariane-v4.8.0.zip` final, SHA-256
-`76e435e9eca61c5fd473aa8c25ed61fc55ecdff79067d1bd18c5d4703127c9e6`, construit
-depuis `c21636c` par `git archive` + `tools/package.py`, reproductible (deux
-constructions identiques) ; chargé dans Chromium comme extension MV3 :
+`38aa29a28bc0695258dd444adb2844752a340ef3c6de30c22939ef6b8575e25b`, construit
+depuis `fabd77e` par `git archive` + `tools/package.py`, reproductible (deux
+constructions identiques ; inclut la pose au pixel près, KI-065, essai
+terrain du 28/09 ; remplace `76e435e9…`, depuis `c21636c`) ; chargé dans Chromium comme extension MV3 :
 service worker 4.8.0, cerveau actif, `lot-decision-v6`, vues sans erreur ;
 téléchargements confirmés (4 fichiers) ou refus signalés
 (`tools/navigateur-telechargements.cjs`). Copie, captures et vidéo : banane-data
@@ -83,7 +84,7 @@ de modèle dans les fichiers.
   4.7.19), 633 cuts, décisions identiques ligne à ligne ; moteur et décision
   sur le lot inchangés depuis la 4.7.21.
 - Sept revues de code sur la reprise ; chaque constat a son essai rouge sans
-  le correctif. Après l’audit : 865 essais, 863 passés, 2 sautés (corpus natif absent).
+  le correctif. Après l’audit et l’essai du 28/09 : 870 essais, 868 passés, 2 sautés (corpus natif absent).
 - **Simulé seulement** : le rechargement d'ESV et les textes d'erreur de
   Chrome. À surveiller au premier lot terrain (bilan et journal via « Tout
   télécharger pour l'analyse »).

@@ -6,7 +6,7 @@ place et valide les rails d'un lot de cuts). Version officielle **4.8.0**,
 validée par la direction le 28/09 (D-058), avec les corrections de l'audit
 qualité d'Astra (D-059).
 
-Installe `ariane-v4.8.0.zip` **final du 28/09** (`76e435e9…`, empreinte dans
+Installe `ariane-v4.8.0.zip` **final du 28/09** (`38aa29a2…`, empreinte dans
 `PASSATION_4.8.0.md` ; le paquet du matin, `d3874290…`, est remplacé) dans
 Edge **par-dessus la 4.7.21** ou le paquet du matin, dans le même dossier
 (bouton « Recharger » de la page des extensions) : ne supprime pas
