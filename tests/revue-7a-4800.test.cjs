@@ -42,3 +42,14 @@ test('F5 pendant la pose, archivage puis « Reprendre » : le lot finit comme sa
   assert.deepEqual(view.batch.processed.map(x=>x.cut),[100]);assert.deepEqual(view.batch.deferred.map(x=>x.identity?.cut),[101]);
   assert.deepEqual(view.batch.stoppedAtEnd&&{cut:view.batch.stoppedAtEnd.cut,applied:view.batch.stoppedAtEnd.applied},{cut:102,applied:true});
 });
+/* Écho : F5 pendant l'observation. La consigne dit « Connecter puis Reprendre »,
+ * et c'est bien ce qui la relance. */
+test('Écho, page rechargée : « sans réponse » avec la consigne Connecter puis Reprendre, qui la relance',async()=>{
+  const {background}=require('./helpers/fond-relecture.cjs'),b=background();let absent=false;
+  for(const nom of ['nativeSnapshot','nativePause','nativeResume','state','ping']){const f=b.adapter[nom].bind(b.adapter);b.adapter[nom]=async(...a)=>{if(absent)throw Error(CANAL);return f(...a);};}
+  b.adapter.onInject=()=>{absent=false;};
+  await b.api('connect',{tabId:1});await b.api('native-start');absent=true;
+  await assert.rejects(()=>b.api('native-pause'),/rechargée ou fermée.*Écho, clique sur Connecter puis Reprendre/);
+  assert.equal((await b.api('view')).native.status,'PAUSED_ADAPTER_UNRESPONSIVE');
+  await b.api('connect',{tabId:1});await b.api('native-resume');assert.equal((await b.api('view')).native.status,'RUNNING');
+});

@@ -62,7 +62,7 @@ async function call(action,...args){return callSur(selectedTab,action,...args);}
  * en « Adaptateur ESV sans réponse » (pause reprenable), cause et remède dits. */
 const PAGE_ABSENTE=/Could not establish connection|Receiving end does not exist|message (port|channel) (is )?closed|No tab with id|The frame was removed|Extension context invalidated|back\/forward cache/i;
 function pageEsvAbsente(e){if(!PAGE_ABSENTE.test(e?.message||''))return e;
- return Object.assign(Error(`Adaptateur ESV sans réponse : page ESV rechargée ou fermée (${e.message}). Après un F5, clique sur Reprendre ; onglet fermé : rouvre ESV puis clique sur Connecter.`),{code:'ESV_PAGE_ABSENTE'});}
+ return Object.assign(Error(`Adaptateur ESV sans réponse : page ESV rechargée ou fermée (${e.message}). Après un F5 : lot Orbite, clique sur Reprendre ; Écho, clique sur Connecter puis Reprendre. Onglet fermé : rouvre ESV puis clique sur Connecter.`),{code:'ESV_PAGE_ABSENTE'});}
 async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélectionne un onglet ESV.');
  const tab=await chrome.tabs.get(tabId).catch(e=>{throw pageEsvAbsente(e);});if(!esvURL(tab.url))throw Error('L’onglet sélectionné n’est plus une page ESV autorisée.');
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
