@@ -121,13 +121,24 @@ Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
    la partie). **Démarrer le lot**.
 4. À la fin : **Tout télécharger pour l'analyse**.
 
-**Sa relecture (≈ 15 min)** : d'abord **Démarrer l'observation** dans Écho, et
-vérifie après deux cuts que le nombre de visites monte (sans observation
-active, rien n'est enregistré). Puis même règle qu'aux étapes 2 et 3, sur les
-cuts posés par Orbite (au moins 80 % d'entre eux). Puis **Terminer et télécharger**.
+**Sa relecture (≈ 15 à 25 min)**
+1. **Démarrer l'observation** dans Écho ; vérifie que le panneau affiche la
+   **même partie** que le lot, et, après deux cuts, que le nombre de visites
+   monte. Sans observation active, rien n'est enregistré.
+2. Pars du **premier cut du lot** et avance dans l'ordre, sans en choisir :
+   relis **tous les cuts validés par Orbite**, jusqu'à en avoir relu **au moins
+   100** (tous s'il y en a moins). Règle habituelle : bon → suivant sans
+   valider ; faux → corrigé puis validé.
+3. **Les différés « écartement bas »** (motif affiché dans le panneau
+   d'Orbite) : ce sont les refus de la nouvelle garde. Pose-les toi-même et
+   valide : c'est ainsi que je saurai si le refus était juste.
+4. Si tu dois faire **F5** pendant la relecture : relance l'observation et
+   revérifie que les visites montent.
+5. **Terminer et télécharger**, puis vérifie que les fichiers sont bien dans
+   Téléchargements **avant** de revenir à la version stable.
 
-**Envoi** : une archive avec les deux exports, et une ligne (temps passé,
-surprises). Je mesure, puis je te donne une **fiche de décision** de 5 points
+**Envoi** : une archive avec les deux exports, et trois temps notés à part :
+le lot, la relecture, l'export et l'envoi ; plus tes surprises. Je mesure, puis je te donne une **fiche de décision** de 5 points
 au plus.
 
 **Pour revenir à la stable** : désactive « Ariane 4.8.5 TEST », active

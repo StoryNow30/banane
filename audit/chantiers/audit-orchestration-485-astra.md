@@ -54,3 +54,46 @@ d'Astra.
 | Ordre | **Accepté** : D5 d'abord, D1 → D2 → D4 → D3, D8 si décidé, D7 ; en 4.9, P2 au premier cycle, U1 à U3 selon le budget de l'opérateur. | §2, §3 |
 | −25 % / −30 % | **Réconcilié** : la porte de la 4.9.0 est le cycle (−25 %) ; la capture (−30 %) n'en retire qu'environ 14 %, d'autres chantiers doivent compléter. | §3 |
 | Auto-audit dépassé | **Accepté** : note de mise à jour en tête de l'auto-audit. | `audit-orchestration-485.md` |
+
+## Deuxième passe d'Astra (avant le code de la 4.8.5)
+
+Réponse transmise par la direction, résumée fidèlement ; Astra a exécuté les
+calculs de C4 en JavaScript, sans essai logiciel.
+
+**Scénarios de panne.**
+- [VÉRIFIÉ] `equiperOnglet` injecte les fichiers avant de vérifier la version ;
+  la garde de `adapter-page.js` empêche seulement la réinstallation, et son
+  écouteur accepte plusieurs canaux sans propriétaire unique.
+- [VÉRIFIÉ] `cutLabel` lit un identifiant de cut, pas un rang : la signification
+  de « N on M treated » n'est pas établie ; la preuve prévue par D3 est à qualifier.
+- Table de scénarios (SUPPOSÉ) : TEST après 4.8.0 → refus avant toute
+  injection ; 4.8.0 après TEST → le seul refus côté test ne suffit pas,
+  l'adaptateur doit ignorer un canal étranger ; F5 → pause reprenable
+  (non-régression) ; sortie d'ESV en milieu de partie → erreur reprenable (hors
+  ESV, `callSur` renvoie une erreur distincte) ; autre partie ouverte à la main
+  → protection, sans affirmer une fin ; dernier différé avec compteur → clôture
+  seulement si la preuve est qualifiée ; sans compteur → pause ; compteur
+  absent, autre format ou périmé → champ absent, jamais de réemploi.
+- P1 : la protection dans l'ordre TEST → stable ; la distinction entre sortie
+  de partie et preuve de fin.
+
+**Porte C4** (Clopper–Pearson bilatéral à 95 %, borne haute ≤ 2 %) : 183 jugés
+sans faux, 277 avec un, 359 avec deux ; à 100 jugés, 2 faux → 7,038 %, 0 faux →
+3,622 %. Effectif et sélection fixés avant le terrain, sans arrêt
+opportuniste ; cuts voisins corrélés : une seule partie limite la portée.
+
+**Fiche de l'opérateur, étape 6** : vérifier la bonne partie et une référence
+exploitable (pas seulement le compteur de visites) ; donner l'ordre et
+l'effectif à relire ; traiter à part les refus de la garde ; contrôler Écho
+après F5 et les fichiers avant de revenir à la stable ; mesurer séparément lot,
+relecture, export.
+
+## Suites de la deuxième passe
+
+| Point | Suite | Où |
+|---|---|---|
+| Vérifier avant d'injecter ; propriétaire unique de l'adaptateur | **Accepté (P1).** Vérifié dans le code. D1 : vérification avant injection ; l'adaptateur de test n'obéit qu'à l'extension qui l'a installé et garde ses modules dès l'installation ; essais dans les deux ordres. | `PLAN_SUITE.md` D1 |
+| Compteur « N on M » non qualifié | **Accepté (P1).** Le compteur n'est plus une preuve. La fin est prouvée par une autre partie affichée à la reprise, après la navigation depuis le dernier cut ; sinon, pause et message. D4 sert à qualifier le compteur. | D3, D4 |
+| Onglet hors ESV | **Accepté.** Vérifié dans `callSur` : erreur reprenable à prévoir, avec son essai. | D3 |
+| Porte C4 statistique | **Calcul refait, identique** (183 / 277 / 359 ; 7,0 % à 100 jugés). La direction garde 100 jugés en ordre et chaque refus examiné ; la borne haute est publiée à chaque mesure ; « sous 2 % » devient un objectif cumulé sur plusieurs parties (la 4.8 elle-même : 4 sur 161, borne 6,2 %). | D-061, §0 |
+| Fiche de l'opérateur | **Accepté** : même partie vérifiée, ordre et effectif (≥ 100 validés par Orbite), refus « écartement bas » posés par l'opérateur, contrôle après F5, fichiers vérifiés avant retour à la stable, trois temps notés. | `consignes/operateur-suite.md` |

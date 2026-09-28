@@ -23,8 +23,14 @@ l'audit de l'orchestration (`audit/chantiers/audit-orchestration-485.md`).
 - **Amendement après le contre-regard d'Astra (28/09, soir)** : le plafond
   « 0 à 2 refus de la garde » n'est plus une porte : chaque refus est examiné
   à la relecture (aucun refus d'une pose qui aurait été juste, sauf décision
-  nommée). **Proposé à la direction** : C4 exige au moins 100 posés jugés, pris
-  dans l'ordre du lot sans choix, les posés non jugés listés
+  nommée). **Décidé par la direction** : C4 exige au moins 100 posés jugés, pris
+  dans l'ordre du lot sans choix, les posés non jugés listés ; **D8 (« Relire ce
+  lot dans Écho ») non retenu**. Chaque mesure publie aussi la borne haute de
+  Clopper–Pearson à 95 % (information, pas une porte) : 2 faux sur 100 jugés
+  donnent 7,0 %, et la 4.8 elle-même (4 faux sur 161) 6,2 %. Démontrer un taux
+  sous 2 % demanderait 183 jugés sans faux, 277 avec un, 359 avec deux : c'est
+  un objectif cumulé sur plusieurs parties, pas une porte de version (Astra,
+  deuxième passe, calcul refait par l'orchestrateur).
   (`audit/chantiers/audit-orchestration-485-astra.md`).
 - **Ordre des portes** : code gelé → banc et essais → essai terrain d'une
   version de test → audit indépendant (Astra) avant toute version **stable**
