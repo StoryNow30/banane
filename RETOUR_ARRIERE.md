@@ -4,8 +4,8 @@ Le premier paquet 4.8.0 du 28/09 (`d3874290…`, depuis `a68201a`) n'est pas
 une cible de retour : il garde KI-064 (Écho peut purger un nuage sans fichier
 confirmé) ; il est remplacé par le paquet 4.8.0 corrigé après l'audit (D-059).
 
-**Depuis Ariane 4.8.0, la cible de retour est Banane 4.7.21**, commit
-`ead1cd1` (paquet `banane-v4.7.21-test.zip`, SHA-256 `24f8f1fe…f4ee2c06`).
+**Depuis Ariane 4.8.0, la cible de retour est Banane 4.7.21**, étiquette
+`v4.7.21`, commit `ead1cd1` (paquet `banane-v4.7.21-test.zip`, SHA-256 `24f8f1fe…f4ee2c06`).
 La 4.7.21 garde KI-063 (arrêts sur un ESV lent ou muet) ; ses données et
 exports restent lisibles par la 4.8.0 (mêmes formats). Installer par-dessus,
 sans supprimer l'extension.

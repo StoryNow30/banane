@@ -40,10 +40,10 @@ l'audit de l'orchestration (`audit/chantiers/audit-orchestration-485.md`).
 - **Fusion** (« go fusion ») : `main` avancé à la branche (avance rapide,
   `64f2d6e`) ; banane-data : `main` avancé de même (`ddc3282`). Étiquettes
   `v4.8.0` sur `fabd77e` (le code du paquet `38aa29a2…`), `v4.7.21` sur
-  `ead1cd1` (cible de retour arrière) et `v4.7.0` sur `5928be4` : **refusées à
-  la session** (HTTP 403, la session ne pousse que des branches), à créer par
-  la direction sur GitHub (Releases → nouvelle publication → étiquette et
-  commit cible).
+  `ead1cd1` (cible de retour arrière) et `v4.7.0` sur `5928be4` : refusées à
+  la session (HTTP 403, la session ne pousse que des branches) ; **créées par
+  la direction le 28/09** avec leurs publications GitHub (zip joint à
+  `v4.8.0`), vérifiées par l'orchestrateur (`git ls-remote --tags`).
 - **La 4.8.0 reste la version stable** de l'opérateur, installée dans ESV.
   Les versions de test (4.8.5…) s'installent à côté, chacune depuis son
   propre dossier, **une seule Ariane active à la fois** (interrupteur de la
