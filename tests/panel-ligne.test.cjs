@@ -44,7 +44,7 @@ test('un bouton plein par état : Pause en cours, constater l\'incertain, télé
   assert.equal($('close-uncertain').className,'primary ink');assert.equal($('lot-etat').className,'eyebrow red');
   assert.match($('voie').innerHTML,/class="t incertain"/);assert.match($('voie').innerHTML,/>103 \?</);
   $=await panneau(lot({state:'FINISHED_WITH_UNCONFIRMED_ACTIONS'}));
-  assert.equal($('dataset').className,'primary');assert.equal($('start-batch').className,'link');
+  assert.equal($('export-tout').className,'primary');assert.equal($('start-batch').className,'link');
   $=await panneau({});
   assert.equal($('start-batch').className,'primary');assert.equal($('voie').hidden,true);assert.equal($('lot-etat').textContent,'Aucun lot');
 });

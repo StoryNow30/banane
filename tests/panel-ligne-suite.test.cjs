@@ -55,11 +55,11 @@ test('pastilles des onglets : lot en cours, résultat à contrôler, collecte en
 
 test('fin de lot : télécharger d\'abord ; « Nouveau lot » rouvre les bornes sans rien lancer',async()=>{
   const $=await panneau(lot({state:'COMPLETED'}));
-  assert.equal($('dataset').className,'primary');assert.equal($('new-batch').hidden,false);assert.equal($('new-batch').className,'link');
+  assert.equal($('export-tout').className,'primary');assert.equal($('new-batch').hidden,false);assert.equal($('new-batch').className,'link');
   assert.equal($('start-batch').hidden,true);assert.equal($('lot-bornes').hidden,true);
   $('new-batch').onclick();
   assert.equal($('start-batch').hidden,false);assert.equal($('start-batch').className,'primary');assert.equal($('lot-bornes').hidden,false);
-  assert.equal($('new-batch').hidden,true);assert.equal($('dataset').className,'link');
+  assert.equal($('new-batch').hidden,true);assert.equal($('export-tout').className,'link');
 });
 
 test('« Détails » : ouverts par défaut (4.7.21), se referment et se rouvrent sans toucher au lot',async()=>{

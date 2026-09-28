@@ -1,17 +1,36 @@
-# Démarrer avec Ariane 4.8.0
+# Démarrer avec Ariane 4.8.1
 
 **Banane devient Ariane.** Le mode Natif devient **Écho** (Ariane observe ton
 travail dans ESV et l'enregistre), le mode Pilote devient **Orbite** (Ariane
-place et valide les rails d'un lot de cuts). Version officielle 4.8.0,
-validée par la direction le 28/09 (D-058).
+place et valide les rails d'un lot de cuts). Version officielle **4.8.1** :
+la 4.8.0 validée par la direction le 28/09 (D-058), plus les corrections de
+l'audit qualité d'Astra (D-059).
 
-Installe `ariane-v4.8.0.zip` dans Edge **par-dessus la 4.7.21**, dans le même
-dossier (bouton « Recharger » de la page des extensions) : ne supprime pas
-l'extension, sinon le stockage en cours est perdu. Termine ou arrête le lot en
-cours avant, puis **recharge la page ESV**. Vérifie **4.8.0** sous ARIANE sur
-l'accueil, et **Ariane 4.8.0 · ouvrir** sur le bouton blanc au bas d'ESV.
+Installe `ariane-v4.8.1.zip` dans Edge **par-dessus la 4.7.21** (ou la
+4.8.0), dans le même dossier (bouton « Recharger » de la page des
+extensions) : ne supprime pas l'extension, sinon le stockage en cours est
+perdu. Termine ou arrête le lot en cours avant, puis **recharge la page ESV**.
+Vérifie **4.8.1** sous ARIANE sur l'accueil, et **Ariane 4.8.1 · ouvrir** sur
+le bouton blanc au bas d'ESV.
 
-## Ce que la 4.8.0 change sur le terrain
+**Nouvelle permission « Téléchargements »** : Ariane enregistre ses fichiers
+par le gestionnaire de téléchargements d'Edge, qui lui dit si chaque fichier
+est bien écrit. Écho ne supprime plus rien de son stockage sans cette
+confirmation, et chaque export te dit s'il est enregistré.
+
+## Ce que la 4.8.1 corrige (audit qualité, D-059)
+
+- Écho ne purge plus un nuage LiDAR tant que le fichier qui le contient n'est
+  pas confirmé écrit (KI-064).
+- En fin de lot, le bouton principal est **« Tout télécharger pour
+  l'analyse »** ; s'il manque un fichier ou une capture, le message le dit et
+  reste affiché.
+- La tuile « Couverture » compte comme le rapport (C1) : posés sur tous les
+  cuts du lot, dernier cut compris.
+- Écho n'est plus proposé pendant une reprise manuelle d'Orbite ; couleurs
+  d'état plus lisibles.
+
+## Ce que la 4.8 change sur le terrain
 
 - **ESV lent : F5 puis « Reprendre ».** Quand les nuages n'apparaissent pas
   ou que la vue ne se recentre pas, Ariane redemande d'abord le recentrage

@@ -36,7 +36,7 @@ Rôle « validation » : partie jamais utilisée pour régler, relue ; sa mesure
 ## Ce qui manque pour la version candidate
 
 - C1 : partie 12 à 79,2 %, partie 9 à 79,3 % par partie ; la direction retient l'objectif comme atteint (« 79 % c'est comme 80 % », D-058).
-- Arrêts du Pilote 4.7.21 (KI-063) : trois causes corrigées ; ESV lent : rafraîchissement automatique et retour au cut (4.8.0) ; à confirmer sur le terrain.
+- Arrêts du Pilote 4.7.21 (KI-063) : trois causes corrigées ; ESV lent : pause, F5 par l’opérateur puis « Reprendre », retour au cut sans rien valider (4.8.0, D-058 option 1) ; à confirmer sur le terrain.
 - Contrôle visuel du §14 H dans Edge : fait par la direction le 26/09 (bouton d'ouverture d'ESV redessiné en blanc, discret) ; banc vert sur le commit candidat ; paquet reproductible ; merge, tag et release sur autorisation explicite seulement.
 - Fait : matrice d'acceptation (44 exigences), relecture indépendante 4.7.13–4.7.16, seuil C4 (D-057), lot arrêté compté (D-057), P2 reporté en 4.9 (D-057), rotation réglage / validation (D-057).
 - Reporté en 4.8.5 (D-057) : voisins validés comme appuis en dernier recours (D-054), garde de premier passage à 20 mm et choix à un appui (faux 7743 et 7738), biais vertical aux passages à niveau (banc, aucun calage).

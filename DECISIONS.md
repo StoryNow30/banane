@@ -1,5 +1,31 @@
 # Décisions techniques
 
+## D-059 - Audit qualité 4.8 (Astra) : P1 corrigé avant la sortie, qui devient la 4.8.1
+
+**28 septembre 2026.** Audit indépendant de la 4.8.0 demandé par la direction
+(code, performances, données, UX/UI ; `consignes/chantier-8-auditeur.md`).
+Rapport : `audit/chantiers/audit-qualite-480.md`. Un P1 : Écho purgeait ses
+nuages sans preuve de téléchargement (KI-064).
+
+- **Le P1 est corrigé avant la sortie**, par le téléchargement confirmé
+  (`chrome.downloads`) plutôt que par la seule neutralisation de la purge :
+  la purge garde son rôle (session qui repart de zéro) sans risque de perte.
+- **Les P2 locaux sont corrigés dans la même version** (D02, D03, U01, U02,
+  U03, P01 pour la vue du panneau, P02, texte de D04) : chacun est petit, et
+  deux touchent ce que l'opérateur envoie pour l'analyse.
+- **Le paquet validé le 28/09 (4.8.0) n'est pas réédité sous le même
+  numéro** : le code a changé, la version officielle devient la **4.8.1**.
+  Aucune règle métier ni décision sur le lot ne change ; la validation D-058
+  porte sur ce qui est inchangé.
+- **Reportés** (réponse : `audit/chantiers/qualite-480/reponse-4810.md`) :
+  C02 en 4.8.x ; C01, P01 (stockage), P03, U04 et la provenance de D04 en
+  4.9 (`BANANE_4.9_CAHIER.md` §2). La question P03 (comparaison V4.6 à chaque
+  cut) et les budgets de latence et de mémoire (questions 3 et 4 de l'audit)
+  restent à la direction.
+- La fluidité réelle dans ESV et la mémoire sur un long lot ne sont pas
+  certifiées : première mesure avec la session de
+  `consignes/chantier-8-operateur.md`.
+
 ## D-058 - 4.8.0 : Ariane, Écho, Orbite ; C1 atteint ; ESV rafraîchi ; revue d'interface
 
 **27 septembre 2026, direction.** « Comme la 4.8 est un tournant majeur, le

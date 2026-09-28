@@ -9,21 +9,24 @@
    mouvement suit un événement (panel.js, API Web Animations) ; en continu,
    seuls le reflet de l'étape en cours et le point « en direct » ; tout est
    figé si le système réduit les animations. Invariants hérités de « la ligne » (D-045) : un bouton plein par
-   écran, les autres sont des liens ; rouge pour ce qui ne se défait pas. */
+   écran, les autres sont des liens ; rouge pour ce qui ne se défait pas.
+   4.8.1 (audit qualité 4.8, U02) : vert et ambre du thème clair, bleu de la
+   voie du thème sombre foncés ou éclaircis à 4,5:1 au moins (WCAG 1.4.3) :
+   #11834a 4,81 ; #a46200 4,85 ; #4a74e6 sur noir 4,93. */
 @font-face{font-family:"Hanken Grotesk";src:url(fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url(fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800;font-display:swap}
 :root{color-scheme:light;
  --sans:"Hanken Grotesk","Segoe UI Variable","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
  --bg:#ffffff;--text:#111111;--text-2:#4d4d4d;--text-3:#6b6b6b;--hair:#e6e6e6;--hair-2:#cfcfcf;--field:#f4f4f4;
- --voie:#3e6ae1;--ok:#138a4a;--amber:#b86e00;--red:#d0021b;--seg:#111111;--future:#e2e2e2;--inv:#ffffff;
- --amber-t:rgba(184,110,0,.10);--red-t:rgba(208,2,27,.07);--flash:rgba(62,106,225,.10)}
+ --voie:#3e6ae1;--ok:#11834a;--amber:#a46200;--red:#d0021b;--seg:#111111;--future:#e2e2e2;--inv:#ffffff;
+ --amber-t:rgba(164,98,0,.10);--red-t:rgba(208,2,27,.07);--flash:rgba(62,106,225,.10)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;
  --bg:#000000;--text:#ffffff;--text-2:#a6a6a6;--text-3:#8a8a8a;--hair:#262626;--hair-2:#3a3a3a;--field:#111111;
- --voie:#3e6ae1;--ok:#2fd07a;--amber:#f5a524;--red:#ff4d4d;--seg:#ffffff;--future:#2a2a2a;--inv:#000000;
+ --voie:#4a74e6;--ok:#2fd07a;--amber:#f5a524;--red:#ff4d4d;--seg:#ffffff;--future:#2a2a2a;--inv:#000000;
  --amber-t:rgba(245,165,36,.10);--red-t:rgba(255,77,77,.08);--flash:rgba(62,106,225,.18)}}
 :root[data-theme=dark]{color-scheme:dark;
  --bg:#000000;--text:#ffffff;--text-2:#a6a6a6;--text-3:#8a8a8a;--hair:#262626;--hair-2:#3a3a3a;--field:#111111;
- --voie:#3e6ae1;--ok:#2fd07a;--amber:#f5a524;--red:#ff4d4d;--seg:#ffffff;--future:#2a2a2a;--inv:#000000;
+ --voie:#4a74e6;--ok:#2fd07a;--amber:#f5a524;--red:#ff4d4d;--seg:#ffffff;--future:#2a2a2a;--inv:#000000;
  --amber-t:rgba(245,165,36,.10);--red-t:rgba(255,77,77,.08);--flash:rgba(62,106,225,.18)}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}

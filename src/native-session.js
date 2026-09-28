@@ -563,16 +563,24 @@
    *   — `tools/merge-segments.cjs` contrôle l'intégrité sur l'UNION des
    *     identifiants déclarés : si un segment automatique manque à la fusion,
    *     il est signalé nommément au lieu de disparaître en silence.
-   * La purge ne masque donc jamais une perte : elle la rend détectable. */
-  async ackExported(ids){
+   * La purge ne masque donc jamais une perte : elle la rend détectable.
+   *
+   * 4.8.1 (audit qualité 4.8, D01) : un objet n'est purgé que si le fichier qui
+   * le contient est CONFIRMÉ écrit (`confirmes`, rendu par chrome.downloads au
+   * panneau). Un objet écrit sans confirmation sort de la file d'attente mais
+   * reste dans IndexedDB : l'export final le reprend. Sans `confirmes`, rien
+   * n'est purgé. */
+  async ackExported(ids,{confirmes=[]}={}){
    const n=this.e.s.native;if(!n)throw Error('Aucune session Natif conservée.');
    n.exportState??={bytesStored:0,bytesPending:0,exportedCloudIds:[],releasedCloudIds:[],segments:0,lastAdviceAt:null};
    const x=n.exportState;x.releasedCloudIds??=[];const added=[];
    for(const id of ids||[])if(!x.exportedCloudIds.includes(id)){x.exportedCloudIds.push(id);added.push(id);}
    x.segments+=1;x.bytesPending=0;x.lastAdviceAt=iso();
    let libere=0,octets=0;
+   const purgeables=new Set(confirmes||[]);let gardes=0;
    if(S.export.releaseAfterExport){
     for(const id of added){
+     if(!purgeables.has(id)){gardes++;continue;}
      try{
       const cloud=await this.store.getCloud(id);
       if(cloud)octets+=this.cloudBytes(cloud);
@@ -587,7 +595,7 @@
    n.metrics.bytesStored=x.bytesStored;n.metrics.cloudsReleased=x.releasedCloudIds.length;
    await this.e.save();
    return {acknowledged:added.length,segments:x.segments,exported:x.exportedCloudIds.length,
-    released:libere,releasedTotal:x.releasedCloudIds.length,bytesFreed:octets,total:n.cloudIds.length};
+    released:libere,kept:gardes,releasedTotal:x.releasedCloudIds.length,bytesFreed:octets,total:n.cloudIds.length};
   }
   /* V4.5.3 — manifeste d'export SANS les records ni les événements.
    *

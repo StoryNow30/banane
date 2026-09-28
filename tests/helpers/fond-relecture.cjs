@@ -28,7 +28,8 @@ function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),g
  const message=m=>new Promise(resolve=>{const ret=onMessage(m,sender,resolve);if(ret!==true)resolve(undefined);});
  const api=async(action,args={})=>{const r=await message({kind:'panel',action,args});if(r.error)throw Error(r.error);return r.result;};
  const settle=async()=>{while(((await api('view')).batch?.state)==='RUNNING')await new Promise(r=>setImmediate(r));return api('view');};
- return {adapter,store,api,settle};
+ /* `ctx` : le contexte vm du service worker, pour comparer ses fonctions internes. */
+ return {adapter,store,api,settle,ctx};
 }
 /* Composition GCV1 de banc : sélection GCV1 et science de la fixture à chaque armement. */
 function gcv1Shadow(science){let armed=false,pending=null;

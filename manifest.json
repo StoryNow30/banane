@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Ariane",
-  "version": "4.8.0",
+  "version": "4.8.1",
   "description": "Ariane pour ESV LiDAR : Écho observe ton travail, Orbite place et valide les rails d’un lot. Collecte segmentée et export compact.",
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
   "host_permissions": [
     "https://esv.lidar.altametris.xyz/rails_validation/*"
@@ -15,7 +16,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Ouvrir Ariane 4.8.0"
+    "default_title": "Ouvrir Ariane 4.8.1"
   },
   "content_scripts": [
     {

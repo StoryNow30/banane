@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.8.0';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.8.1';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -547,6 +547,16 @@ function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Ob
  if(Array.isArray(rest.batch?.lotPosed)){const {lotPosed,...batch}=rest.batch;rest.batch={...batch,lotPosedCount:lotPosed.length};}
  return {...rest,recordsCount:records.length,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
 function exportState(){const {records,incomplete,...rest}=engine.view();return rest;}
+/* 4.8.1 (audit qualité 4.8, P01) — la vue du panneau, demandée chaque seconde,
+ * clonait TOUT l'état (enregistrements compris, un par cut) avant d'en retirer
+ * le lourd : 1,1 s par vue à 8 000 cuts sous Node (audit). On retire d'abord
+ * (records, incomplete, lotPosed), on clone ensuite ; le panneau n'en lit que
+ * les nombres. Même forme que panelView(engine.view()). */
+function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=Array.isArray(b?.lotPosed)?b.lotPosed:null;
+ /* La copie est celle du moteur : engine.view() appliqué à l'état allégé. */
+ const leger=poses?{...s,batch:(({lotPosed,...x})=>x)(b)}:s,v=engine.view.call({s:leger,busy:engine.busy});
+ if(poses)v.batch.lotPosedCount=poses.length;
+ return {...panelView({...v,records:[],incomplete:[]}),recordsCount:Array.isArray(records)?records.length:0,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
 function pollCurrent(){
  /* Pendant une reprise (retour au cut après F5), la vue ne lit pas ESV. */
  if(pollPromise||engine.busy||engine.task||repriseEnCours||manual?.active()||native?.active()||selectedTab===null)return;
@@ -568,7 +578,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   // Only extension-origin UI requests can inject the fixed, bundled adapter.
   await equiperOnglet(tab.id);selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
- if(action==='view'){pollCurrent();const v=engine.view();return {...panelView(v),assistGauge:assistGauge(v)};}
+ if(action==='view'){pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');return native.start();}
  if(action==='native-pause')return native.pause();
@@ -581,7 +591,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='native-export-advice')return native.exportAdvice();
  if(action==='native-export-manifest')return native.exportManifest(args?.all===true);
  if(action==='native-export-plan')return native.exportPlan();
- if(action==='native-export-ack')return native.ackExported(args?.ids||[]);
+ if(action==='native-export-ack')return native.ackExported(args?.ids||[],{confirmes:Array.isArray(args?.confirmed)?args.confirmed:[]});
  // Abandon : irréversible, sans export. La confirmation est demandée côté panneau.
  if(action==='native-discard')return native.discard();
  // État du cerveau : ce qu'il est réglé à faire, et ce qu'il a fait au dernier passage.

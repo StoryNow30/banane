@@ -1,7 +1,7 @@
 # État du projet Banane
 
 Date : 28 septembre 2026  
-Version officielle : **Ariane 4.8.0** (Banane devient Ariane, Natif Écho, Pilote Orbite ; ESV rafraîchi et lot rattaché ; arrêts KI-063 corrigés ; revue d'interface ; D-058), validée par la direction le 28/09 (photos et vidéo du menu vues ; tout rejoué ; sept revues de code).  
+Version officielle : **Ariane 4.8.1** = 4.8.0 (Banane devient Ariane, Natif Écho, Pilote Orbite ; ESV rafraîchi et lot rattaché ; arrêts KI-063 corrigés ; revue d'interface ; D-058, validée le 28/09) + corrections de l'audit qualité d'Astra (P1 : purge d'Écho seulement sur fichier confirmé, KI-064 ; P2 locaux ; D-059).  
 Version terrain : **4.7.21 TEST** (nouveau lot corrigé, KI-062 ; bornes remplies par Banane ; réglages fixes et cerveau actif, D-056 ; Assisté retiré ; mouvement sans clignotement). Précédente : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  
 Statut : développement expérimental, non qualifié pour la production.
 
@@ -11,9 +11,15 @@ Go de la direction (D-058), photos et vidéo du menu vues, validation du 28/09
 (« tout rejoué, aucun potentiel bug »).
 Rapport de sortie : C1 tenu (objectif retenu 79 %), C2 publié sans plancher,
 C3, C4 et C5 tenus. Nouveau : F5 puis « Reprendre » pendant un lot (retour au cut, lot rattaché), noms
-Ariane / Écho / Orbite, « Tout télécharger pour l’analyse ». Paquet
-`ariane-v4.8.0.zip` reproductible (`PASSATION_4.8.0.md`). Reste, sur
-autorisation explicite : merge dans `main`, étiquette `v4.8.0`.
+Ariane / Écho / Orbite, « Tout télécharger pour l’analyse ».
+
+## État 4.8.1 (28/09) : corrections de l'audit qualité
+
+Audit indépendant d'Astra (`audit/chantiers/audit-qualite-480.md`) : un P1
+(KI-064, purge d'Écho sans fichier confirmé) et des P2 locaux, corrigés ;
+réponse : `audit/chantiers/qualite-480/reponse-4810.md` (D-059). Paquet
+`ariane-v4.8.1.zip` reproductible (`PASSATION_4.8.1.md`). Reste, sur
+autorisation explicite : merge dans `main`, étiquette `v4.8.1`.
 
 ## Examen de sortie 4.8 (26/09)
 

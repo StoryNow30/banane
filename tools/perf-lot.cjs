@@ -16,8 +16,13 @@
  *   - commandes ESV (`adapter-result`) : durée par action (capture, apply,
  *     validateAndNext, nextWithoutDecision…), erreurs, et pour la capture les
  *     points, octets et essais ;
- *   - analyse (`before-captured` → `proposed`, même cut) : moteur, décision
- *     sur le lot et écritures comprises ; `engineMs` : décision seule ;
+ *   - GCV1 (`before-captured` → `proposed`, même cut) : lecture de la capture
+ *     et calcul du moteur, jusqu'à la proposition ; la décision sur le lot
+ *     vient APRÈS (audit qualité 4.8, P02) ;
+ *   - décision sur le lot (`proposed` → `gcv1-shadow-observed`) : observation
+ *     et décision, écritures comprises ; `engineMs` : calcul de la décision seul ;
+ *   - analyse complète (`before-captured` → `gcv1-shadow-observed`). Les
+ *     médianes ne s'additionnent pas : chaque intervalle a la sienne ;
  *   - cycle (`cut-target-changed` → suivant) : temps par cut vu de l'opérateur ;
  *   - silences : écarts de plus de 60 s entre deux événements (pause, attente,
  *     opérateur) ; comptés à part, hors cadence.
@@ -56,10 +61,13 @@ function mesurer(events){
   for(const e of events.filter(x=>x.type==='adapter-result')){const a=e.action||'?';(actions[a]=actions[a]||[]).push(e.elapsedMs);
     if(e.error)(errors[a]=errors[a]||[]).push({cut:cutOf(e),at:e.timestamp,message:String(e.error).slice(0,160)});
     if(a==='capture'&&!e.error&&e.lastDetail){capture.points.push(e.lastDetail.points);capture.bytes.push(e.lastDetail.bytes);capture.attempts.push(e.lastDetail.attempts);}}
-  /* Analyse : du dernier `before-captured` d'un cut à son `proposed`. */
-  const analyse=[],engine=[];let avant=null;
-  for(const e of events){if(e.type==='before-captured')avant=e;
-    else if(e.type==='proposed'&&avant&&cutOf(avant)===cutOf(e)){analyse.push(ms(e)-ms(avant));avant=null;}
+  /* GCV1 : du dernier `before-captured` d'un cut à son `proposed` ; décision
+   * sur le lot : de `proposed` à `gcv1-shadow-observed` (même cut). */
+  const analyse=[],observation=[],complete=[],engine=[];let avant=null,propose=null,debutCut=null;
+  for(const e of events){if(e.type==='before-captured'){avant=e;debutCut=e;}
+    else if(e.type==='proposed'&&avant&&cutOf(avant)===cutOf(e)){analyse.push(ms(e)-ms(avant));avant=null;propose=e;}
+    else if(e.type==='gcv1-shadow-observed'&&propose&&cutOf(propose)===cutOf(e)){observation.push(ms(e)-ms(propose));
+      if(debutCut&&cutOf(debutCut)===cutOf(e))complete.push(ms(e)-ms(debutCut));propose=null;debutCut=null;}
     if(e.type==='gcv1-shadow-observed'&&Number.isFinite(e.lotObservation?.engineMs))engine.push(e.lotObservation.engineMs);}
   /* Cycle par cut et silences. */
   const cibles=events.filter(e=>e.type==='cut-target-changed'),cycles=[];
@@ -77,7 +85,7 @@ function mesurer(events){
     commandesMs:Object.fromEntries(Object.entries(actions).map(([a,v])=>[a,stats(v)])),
     erreurs:errors,
     capture:{points:stats(capture.points),octets:stats(capture.bytes),essais:stats(capture.attempts)},
-    analyseMs:stats(analyse),decisionMs:stats(engine),
+    analyseMs:stats(analyse),observationMs:stats(observation),analyseCompleteMs:stats(complete),decisionMs:stats(engine),
     silences:silences.map(s=>({...s,s:Math.round(s.ms/1000)})),
   };
 }
@@ -89,8 +97,10 @@ function toMarkdown(m,titre){
     `${m.cuts.distincts} cuts distincts, ${m.source.evenements} événements. Durée ${n(m.dureeMin.totale)} min, dont ${n(m.dureeMin.silences)} min de silences (> 60 s) ; cadence ${n(m.cadence.cutsParHeureActive)} cuts/h hors silences.`,'',
     '| Mesure | n | médiane | p90 | max |','|---|---|---|---|---|',
     `| Cycle par cut (hors silences) | ${m.cycleMs.n} | ${sec(m.cycleMs.median)} | ${sec(m.cycleMs.p90)} | ${sec(m.cycleMs.max)} |`,
-    `| Analyse (capture reçue → proposition) | ${m.analyseMs.n} | ${sec(m.analyseMs.median)} | ${sec(m.analyseMs.p90)} | ${sec(m.analyseMs.max)} |`,
-    `| Décision sur le lot (engineMs) | ${m.decisionMs.n} | ${sec(m.decisionMs.median)} | ${sec(m.decisionMs.p90)} | ${sec(m.decisionMs.max)} |`];
+    `| GCV1 (capture reçue → proposition) | ${m.analyseMs.n} | ${sec(m.analyseMs.median)} | ${sec(m.analyseMs.p90)} | ${sec(m.analyseMs.max)} |`,
+    `| Décision sur le lot (proposition → observation) | ${m.observationMs.n} | ${sec(m.observationMs.median)} | ${sec(m.observationMs.p90)} | ${sec(m.observationMs.max)} |`,
+    `| Analyse complète (capture reçue → observation) | ${m.analyseCompleteMs.n} | ${sec(m.analyseCompleteMs.median)} | ${sec(m.analyseCompleteMs.p90)} | ${sec(m.analyseCompleteMs.max)} |`,
+    `| dont calcul de la décision (engineMs) | ${m.decisionMs.n} | ${sec(m.decisionMs.median)} | ${sec(m.decisionMs.p90)} | ${sec(m.decisionMs.max)} |`];
   for(const [a,s] of Object.entries(m.commandesMs))L.push(`| Commande ESV « ${a} » | ${s.n} | ${sec(s.median)} | ${sec(s.p90)} | ${sec(s.max)} |`);
   L.push(`| Capture : points | ${m.capture.points.n} | ${n(m.capture.points.median)} | ${n(m.capture.points.p90)} | ${n(m.capture.points.max)} |`,
     `| Capture : Mo | ${m.capture.octets.n} | ${m.capture.octets.n?(m.capture.octets.median/1048576).toFixed(2).replace('.',','):'—'} | ${m.capture.octets.n?(m.capture.octets.p90/1048576).toFixed(2).replace('.',','):'—'} | ${m.capture.octets.n?(m.capture.octets.max/1048576).toFixed(2).replace('.',','):'—'} |`,

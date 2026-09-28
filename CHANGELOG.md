@@ -1,5 +1,31 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.1 — corrections de l'audit qualité 4.8 (Astra), 28 septembre 2026
+
+Audit indépendant de la 4.8.0 : `audit/chantiers/audit-qualite-480.md` ;
+réponse constat par constat : `audit/chantiers/qualite-480/reponse-4810.md`
+(D-059). Moteur, décision sur le lot et reprise après F5 inchangés.
+
+- **P1 — Écho ne purge plus un nuage sans fichier confirmé** (KI-064) : les
+  téléchargements passent par `chrome.downloads` (nouvelle permission
+  « downloads »), qui dit si le fichier est écrit ; seul un segment confirmé
+  est purgé. Un segment non confirmé reste dans Ariane et part avec l'export
+  final. Essayé dans Chromium : fichiers confirmés, refus signalés.
+- **Exports d'Orbite** : « Tout télécharger pour l'analyse » est l'action
+  principale de la barre en fin de lot ; son message final dit ce qui manque
+  (fichier non enregistré, capture absente) et reste affiché ; chaque export
+  dit s'il est enregistré.
+- **Couverture du panneau = C1** : posés sur les cuts distincts du lot, dernier
+  cut sans décision compris (partie 12 : 84 sur 106).
+- **Écho** n'est plus proposé pendant une reprise manuelle d'Orbite.
+- **Contrastes** : vert et ambre du thème clair, bleu de la voie du thème
+  sombre à 4,5:1 au moins.
+- **Vue du panneau plus légère** : le lourd est retiré avant la copie (une par
+  seconde pendant un lot).
+- **Outils** : `perf-lot.cjs` sépare GCV1, décision sur le lot et analyse
+  complète ; `navigateur-telechargements.cjs` (essai dans Chromium) ; texte F5
+  du rapport de sortie corrigé.
+
 ## 4.8.0 — Ariane, version officielle (validée par la direction, D-058), 28 septembre 2026
 
 - **Ariane, Écho, Orbite** (D-058) : Banane devient Ariane, Natif devient

@@ -150,17 +150,33 @@ test('acquitter un segment libère réellement la place', async () => {
   const ids = await remplir(s, 20);
   const avant = n.exportState.bytesStored;
   assert.equal(s.clouds.size, 20);
-  const r = await s.ackExported(ids.slice(0, 12));
+  const r = await s.ackExported(ids.slice(0, 12), { confirmes: ids.slice(0, 12) });
   assert.equal(r.released, 12, 'les objets acquittés sont purgés');
   assert.equal(s.clouds.size, 8, 'il ne reste que ce qui n’est pas encore écrit');
   assert.ok(n.exportState.bytesStored < avant, 'le volume stocké doit baisser');
   assert.equal(n.exportState.bytesPending, 0);
 });
 
+/* 4.8.1 (audit qualité 4.8, D01) : seul un fichier confirmé autorise la purge. */
+test('acquittement SANS confirmation : rien n’est purgé, le nuage reste pour l’export final', async () => {
+  const s = sessionStub(), n = s.e.s.native;
+  const ids = await remplir(s, 20);
+  const r = await s.ackExported(ids.slice(0, 12), { confirmes: ids.slice(0, 5) });
+  assert.equal(r.released, 5, 'seuls les 5 objets du fichier confirmé sont purgés');
+  assert.equal(r.kept, 7, 'les 7 autres restent dans le stockage');
+  assert.equal(s.clouds.size, 15);
+  assert.equal(n.exportState.exportedCloudIds.length, 12, 'tous sortent de la file du vidage automatique');
+  s.dataset = async () => ({ session: n, records: [], events: [], cloudIds: n.cloudIds.slice() });
+  s.exportAdvice = () => ({ due: false });
+  const m = await s.exportManifest(true);
+  assert.equal(m.cloudIds.length, 15, 'l’export final reprend les 7 non confirmés et les 8 non écrits');
+  assert.equal((await s.ackExported(['x'])).released, 0, 'sans confirmation déclarée, aucune purge');
+});
+
 test('les identifiants purgés restent DÉCLARÉS, donc une perte reste détectable', async () => {
   const s = sessionStub(), n = s.e.s.native;
   const ids = await remplir(s, 20);
-  await s.ackExported(ids.slice(0, 12));
+  await s.ackExported(ids.slice(0, 12), { confirmes: ids.slice(0, 12) });
   assert.equal(n.cloudIds.length, 20,
     'la session doit continuer à déclarer les 20 objets, sinon un segment manquant disparaît en silence');
   assert.equal(n.exportState.releasedCloudIds.length, 12);
@@ -171,7 +187,7 @@ test('le manifeste ne redemande pas ce qui est déjà écrit', async () => {
   const ids = await remplir(s, 20);
   s.dataset = async () => ({ session: n, records: [], events: [], cloudIds: n.cloudIds.slice() });
   s.exportAdvice = () => ({ due: false });
-  await s.ackExported(ids.slice(0, 12));
+  await s.ackExported(ids.slice(0, 12), { confirmes: ids.slice(0, 12) });
   const m = await s.exportManifest(true);
   assert.equal(m.cloudIds.length, 8, 'seuls les objets encore lisibles sont demandés');
   assert.equal(m.declaredCloudIds.length, 20, 'la déclaration complète accompagne le manifeste');
@@ -182,7 +198,7 @@ test('un objet impossible à purger ne bloque pas l’acquittement', async () =>
   const s = sessionStub(), n = s.e.s.native;
   const ids = await remplir(s, 5);
   s.store.deleteCloud = async () => { throw Error('stockage occupé'); };
-  const r = await s.ackExported(ids);
+  const r = await s.ackExported(ids, { confirmes: ids });
   assert.equal(r.acknowledged, 5, 'l’acquittement reste acquis');
   assert.equal(r.released, 0, 'aucune purge annoncée à tort');
 });

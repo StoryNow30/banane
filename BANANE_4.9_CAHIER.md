@@ -107,3 +107,9 @@ capture ; l'outil doit couvrir les deux.
 | Recadrage de la vue d'ESV | D-043, KI-051 — repris au §1 |
 | Faux placés par le moteur sans aucun appui (398, 402 de la partie 20) | Bilan des curseurs (D-047) : aucun curseur ne les touche |
 | Régresseur de position appris | Cahier 4.8, §4 ; `PLAN_4.8.md` |
+| Coordinateur de lot et transitions nommées autour du moteur épinglé (enveloppes de `background.js`) | Audit qualité 4.8, C01 (`audit/chantiers/audit-qualite-480.md`) |
+| État sauvegardé sans historiques volumineux, enregistrements incrémentaux ; export paginé | Audit qualité 4.8, P01 (stockage), §3 |
+| Comparaison V4.6 à chaque cut, ou à la demande (seul GCV1 commande Orbite) | Audit qualité 4.8, P03 ; décision de la direction |
+| Résumé de partie : lots, cuts distincts, différés restants, inconnus | Audit qualité 4.8, U04 |
+| Provenance du rapport de sortie : commit, empreintes et commande de chaque entrée du manifeste ; partie réservée avant réglage | Audit qualité 4.8, D04 |
+| Essais du vrai panneau dans Chromium (clavier, focus, mouvement réduit, 200 %) | Audit qualité 4.8, C02 (4.8.x) |
