@@ -76,7 +76,7 @@ function esv({migrationPolls=0}={}){
   /* 4.8.5 (D1) : tampon du propriétaire, posé par le service worker avant l'adaptateur. */
   __ARIANE_PROPRIETAIRE:{id:'test',version:K.VERSION},
   addEventListener:(event,fn)=>listener=fn,
-  postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else responses.get(m.id)(m);},
+  postMessage:m=>{if(m.kind==='banane3:progress'||m.kind==='banane3:releve')progress.push(m);else responses.get(m.id)(m);},
   crypto:{randomUUID:K.uid}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(ADAPTER,'utf8'),ctx);
  const call=(action,...args)=>{const id=K.uid();return new Promise((resolve,reject)=>{

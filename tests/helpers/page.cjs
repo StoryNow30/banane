@@ -6,7 +6,7 @@ function page({globals={},proprietaire='test'}={}){
  const left=F.rail(0,[0,0,0],0),right=F.rail(1.435,[0,0,0],0);right.children[1].children[0].geometry.attributes.position=F.buffer([[0,0,0],[0,-.035,0],[0,-.035,-.05]]);
  const root=F.object([0,0,0],'Scene');F.add(root,left);F.add(root,right);
  const camera=F.object([.2,0,0],'OrthographicCamera');camera.quaternion={x:.5,y:.5,z:.5,w:.5};camera.projectionMatrix={elements:C.identity()};
- let selected='left',clock=0,listener;const nodes=new Map(),responses=new Map(),progress=[],keyboard=[];
+ let selected='left',clock=0,listener;const nodes=new Map(),responses=new Map(),progress=[],keyboard=[],reponses=[],releves=[];
  const canvas={getBoundingClientRect:()=>({left:0,top:0,width:800,height:600}),dispatchEvent:e=>{
   const rail=selected==='left'?left:right;const world=C.point(C.worldMatrix(camera),[e.clientX/400-1,1-e.clientY/300,-.2]);
   [rail.position.x,rail.position.y,rail.position.z]=world;
@@ -22,13 +22,13 @@ function page({globals={},proprietaire='test'}={}){
   Date:class extends Date{static now(){return clock;}},setTimeout:(fn,ms=0)=>{clock+=ms;queueMicrotask(()=>{ctx.onTick?.();fn();});},
   MouseEvent:class{constructor(type,args){this.type=type;Object.assign(this,args);}},KeyboardEvent:class{constructor(type,args){this.type=type;Object.assign(this,args);}},
   ...globals,...(proprietaire!==null?{__ARIANE_PROPRIETAIRE:{id:proprietaire,version:K.VERSION}}:{}),
-  addEventListener:(event,fn)=>listener=fn,postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else responses.get(m.id)(m);},crypto:{randomUUID:K.uid}};
+  addEventListener:(event,fn)=>listener=fn,postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else if(m.kind==='banane3:releve')releves.push(m);else{reponses.push(m);responses.get(m.id)(m);}},crypto:{randomUUID:K.uid}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../../src/adapter-page.js'),'utf8'),ctx);
  async function call(action,...args){const id=K.uid();return new Promise((resolve,reject)=>{responses.set(id,m=>m.error?reject(Error(m.error)):resolve(m.result));listener({source:vm.runInContext('window',ctx),origin:ctx.location.origin,data:{kind:'banane3:command',channel:'fixture',proprietaire:'test',id,action,args}});});}
  /* Commande brute : identifiant et champs du message choisis par l'essai (`sentAt`…). */
  function raw(action,args=[],{id=K.uid(),...extra}={}){const promise=new Promise((resolve,reject)=>{responses.set(id,m=>m.error?reject(Error(m.error)):resolve(m.result));
    listener({source:vm.runInContext('window',ctx),origin:ctx.location.origin,data:{kind:'banane3:command',channel:'fixture',proprietaire:'test',id,action,args,...extra}});});return {id,promise};}
- return {ctx,left,right,root,nodes,call,raw,progress,keyboard,advance:ms=>{clock+=ms;},clock:()=>clock};
+ return {ctx,left,right,root,nodes,call,raw,progress,keyboard,reponses,releves,advance:ms=>{clock+=ms;},clock:()=>clock};
 }
 
 module.exports={page};

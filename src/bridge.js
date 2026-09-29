@@ -46,6 +46,8 @@
        window.postMessage({kind:'banane4:native-ack',channel,requestId,...(reply?.error?{error:reply.error}:{result:reply?.result})},location.origin);
      },error=>window.postMessage({kind:'banane4:native-ack',channel,requestId,error:error.message},location.origin));return;
    }
+   /* D4 (4.8.5) : relevé passif d'ESV, après la réponse d'une capture ; transmis tel quel au journal. */
+   if(e.data.kind==='banane3:releve'){if(e.data.releve&&typeof e.data.releve==='object')chrome.runtime.sendMessage({kind:'esv-releve',releve:e.data.releve}).catch(()=>{});return;}
    const p=pending.get(e.data.id);if(!p)return;
    if(e.data.kind==='banane3:progress'){
      p.acknowledged=true;p.stage=e.data.stage;p.detail=e.data.detail;

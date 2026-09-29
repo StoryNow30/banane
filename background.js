@@ -73,6 +73,21 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
  if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null});
  if(reply?.error)throw Error(reply.error);
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
+/* D4 (4.8.5, D-061) : le relevé passif d'ESV, rangé au journal (`esv-releve`)
+ * directement dans le stockage : ni la capture, ni l'état du moteur (épinglé),
+ * ni sa fenêtre d'événements n'en dépendent ; une écriture qui échoue ne bloque
+ * rien. Seuls les champs du relevé sont gardés, vérifiés ; l'identité est celle
+ * que la page a lue (complétée comme celle des autres événements), sinon aucune. */
+const entierOuNul=v=>Number.isInteger(v)?v:null;
+function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThis.BananeCore3;
+ const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-releve',
+   at:typeof r.at==='string'?r.at:null,requestId:typeof r.requestId==='string'?r.requestId:null,
+   identity:Number.isInteger(r.identity?.cut)?K.completeIdentity({pageId:typeof r.identity.pageId==='string'?r.identity.pageId:undefined,part:entierOuNul(r.identity.part),cut:r.identity.cut}):null};
+ if(Number.isInteger(r.demande?.cut))e.demande={part:entierOuNul(r.demande.part),cut:r.demande.cut};
+ if(Number.isInteger(r.compteur?.traites)&&Number.isInteger(r.compteur?.total))e.compteur={traites:r.compteur.traites,total:r.compteur.total};
+ for(const k of ['compteurIllisible','textesTronques'])if(r[k]===true)e[k]=true;
+ for(const k of ['compteursVus','objetsRail'])if(Number.isInteger(r[k]))e[k]=r[k];
+ void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
 const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
 /* 4.7.19 — LE PILOTE S'ARRÊTE AU DERNIER CUT DU LOT (retour terrain du 25/09).
  * Le bouton de validation d'ESV valide ET charge le cut non validé suivant, au
@@ -770,6 +785,7 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(m.kind==='launcher-status'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
   respond(launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
+ if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
  if(m.kind==='manual-event'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
   ready.then(()=>manual.receive(m.type,m.payload)).then(result=>respond({result}),e=>respond({error:e.message}));return true;
  }

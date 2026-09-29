@@ -50,6 +50,22 @@
   bas) : 707, 711 ») pour la relecture ; l'activité dit « différé · écartement
   bas ».
 
+### Instrumentation passive (D4, D-061)
+
+- **Relevé d'ESV après chaque capture**, réussie ou non, en lecture seule
+  (aucune commande, aucune écriture) : le texte « N on M treated » s'il est
+  lisible (réparti sur plusieurs éléments ou chiffres groupés compris ;
+  masqué : ignoré ; plusieurs : comptés) et le nombre d'objets « rail » que la
+  scène garde, filtrés comme la lecture du cut (deux attendus ; des nombres,
+  jamais des poses).
+- **Rangé au journal** (événement `esv-releve`) avec l'identité lue, le cut
+  demandé, la requête et l'heure ; refait à chaque capture, jamais réemployé ;
+  format inconnu → champ absent (`compteurIllisible`), jamais d'erreur.
+- Envoyé **après** la réponse, dans son propre message : la capture n'est ni
+  retardée, ni modifiée ; le moteur épinglé et sa fenêtre d'événements n'en
+  dépendent pas. Usage : qualifier le compteur au premier lot (ce n'est pas une
+  preuve de fin de partie) ; premier signal seulement pour les voisins (B1).
+
 ### Documents et état (D6, clôture J0)
 
 - **Rapport de sortie 4.8** complété (`audit/rapport-sortie-4.8.md`) : partie

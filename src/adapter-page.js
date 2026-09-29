@@ -54,6 +54,12 @@
   * Les POSES des rails, elles, restent relues à neuf : `railState()` lit les
   * matrices monde à chaque fois, donc un rail déplacé est vu immédiatement. */
  const contextes=new WeakMap();
+ /* Objet « rail » de la scène : un Object3D avec un maillage et un profil qui
+  * porte au moins une ligne. Partagé par `context()` et le relevé passif (D4). */
+ function railCandidat(o){if(o.type!=='Object3D'||!o.children?.some(c=>c.type==='Mesh'))return null;
+   return o.children.find(p=>p.children?.some(c=>c.type==='Line'))||null;}
+ /* Ce que `context()` retient : un profil dont une ligne a ses sommets. */
+ const railLu=o=>{const p=o&&railCandidat(o);return !!p&&p.children.some(c=>c.type==='Line'&&c.geometry?.attributes?.position);};
  function context(){
    if(window.__BANANE_V24||window.__BANANE_V23||window.__BANANE_V231||window.__BANANE_V2_LOADED__||window.__BANANE_V21_LOADED__||window.__BANANE_V22_LOADED__)throw Error('Une ancienne Banane (V2) est active. Désactive-la puis recharge ESV après sauvegarde.');
    const viewer=window.viewer,root=viewer?.scene?.scene;if(!root)throw Error('Ouvre une coupe dans ESV 3D.');
@@ -69,9 +75,7 @@
      return {viewer,root,pair:garde.pair,frame:garde.frame,
        identity:{pageId,part:garde.part,cut:garde.cut,shape,frameId:garde.frame.id,projectId:null}};
    const candidates=[];
-   for(const o of root.children||[]){if(o.type!=='Object3D')continue;
-     const profile=o.children?.find(p=>p.children?.some(c=>c.type==='Line'));
-     if(!profile||!o.children?.some(c=>c.type==='Mesh'))continue;
+   for(const o of root.children||[]){if(o.type!=='Object3D')continue;const profile=railCandidat(o);if(!profile)continue;
      const lines=profile.children.filter(c=>c.type==='Line'&&c.geometry?.attributes?.position);
      const line=lines.sort((a,b)=>b.geometry.attributes.position.count-a.geometry.attributes.position.count)[0];
      if(!line)continue;const reader=C.attribute(line.geometry.attributes.position),inv=C.inverse(C.worldMatrix(profile)),world=C.worldMatrix(line),ys=[];
@@ -671,6 +675,35 @@
      if(operationId)cancelledOperations.add(operationId);
      return {cancelRequested:true,operationId,scopedCancelledOperations:cancelledOperations.size};}};
  window.__BANANE_V3_PAGE=Object.freeze({version:K.VERSION,proprietaire:PROPRIO});
+ /* D4 (4.8.5, D-061) — RELEVÉ PASSIF D'ESV, après CHAQUE capture, réussie ou
+  * non : envoyé APRÈS la réponse, dans son propre message (la capture n'est ni
+  * retardée, ni modifiée, ni transformable en erreur). LECTURE SEULE : aucune
+  * commande, aucune écriture. (1) Le texte « N on M treated » s'il est lisible
+  * (sa signification reste à qualifier : ce n'est pas une preuve de fin de
+  * partie) ; `compteursVus` s'il y en a plusieurs ; un texte « treated » d'un
+  * autre format → `compteurIllisible`. (2) Le nombre d'objets « rail » que la
+  * scène garde, filtrés comme `context()` (deux attendus ; des nombres, jamais
+  * des poses). Chaque relevé porte l'identité lue, le cut demandé, la requête
+  * et l'heure ; refait à chaque capture, jamais réemployé ; champ absent si
+  * illisible, jamais d'erreur. */
+ const COMPTEUR=/^\s*(\d[\d.,\u00a0\u202f ]{0,12}?)\s+on\s+(\d[\d.,\u00a0\u202f ]{0,12}?)\s+treated\s*$/i,MAX_TEXTES=20000;
+ const nombre=t=>{const d=String(t).replace(/\D/g,'');return d.length&&d.length<=7?Number(d):NaN;};
+ function releverEsv(requestId,demande){const r={at:new Date().toISOString(),requestId};
+   if(Number.isInteger(demande?.cut))r.demande={part:demande.part??null,cut:demande.cut};
+   try{const l=cutLabel();if(l)r.identity={pageId:l.pageId,part:l.part,cut:l.cut};}catch{}
+   try{if(typeof document.createTreeWalker==='function'&&document.body){
+     const w=document.createTreeWalker(document.body,typeof NodeFilter!=='undefined'?NodeFilter.SHOW_TEXT:4);let i=0,n=w.nextNode(),vus=0;
+     for(;n&&i<MAX_TEXTES;n=w.nextNode(),i++){if(!/\btreated\b/i.test(String(n.nodeValue||'')))continue;
+       const el=n.parentElement;if(el&&typeof el.checkVisibility==='function'&&el.checkVisibility()===false)continue;
+       /* Le compteur peut être réparti sur plusieurs éléments : le texte, puis son parent, puis le parent de celui-ci. */
+       const m=[n.nodeValue,el?.textContent,el?.parentElement?.textContent].map(t=>COMPTEUR.exec(String(t??''))).find(Boolean);
+       const traites=m?nombre(m[1]):NaN,total=m?nombre(m[2]):NaN;
+       if(Number.isFinite(traites)&&Number.isFinite(total)){vus++;if(!r.compteur)r.compteur={traites,total};}else r.compteurIllisible=true;}
+     if(r.compteur)delete r.compteurIllisible;if(vus>1)r.compteursVus=vus;
+     if(n&&i>=MAX_TEXTES)r.textesTronques=true;}}
+   catch{delete r.compteur;delete r.compteurIllisible;delete r.compteursVus;delete r.textesTronques;}
+   try{const root=window.viewer?.scene?.scene;if(root)r.objetsRail=(root.children||[]).filter(railLu).length;}catch{delete r.objetsRail;}
+   return r;}
  /* Commande d'un autre propriétaire (une autre Ariane active dans l'onglet) :
   * refusée, sans rien faire dans ESV, avec la cause et le remède. Si elle
   * aurait agi sur ESV, l'adaptateur se met en sécurité : il ne commande plus
@@ -704,5 +737,7 @@
    else running.set(id,Date.now());
    try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
    catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}
-   finally{running.delete(id);}});
+   finally{running.delete(id);
+     /* D4 : le relevé passif, après la réponse ; rien de ce qui suit ne peut la toucher. */
+     if(action==='capture')try{window.postMessage({kind:'banane3:releve',channel,requestId:id,releve:releverEsv(id,args[0]?.identity)},location.origin);}catch{}}});
 })();
