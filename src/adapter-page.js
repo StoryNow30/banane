@@ -733,7 +733,8 @@
   * qu'à l'entrée d'une commande) ; la commande suivante est refusée, avec ce
   * qu'elle laisse : validation refusée après la pose → pose faite, non validée,
   * à contrôler puis archiver (D-062 d) ; pose refusée → rien posé. */
- const SUITE={validateAndNext:'Validation refusée : la pose de ce cut est faite, non validée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
+ const SUITE={validateAndNext:'Validation refusée : la pose de ce cut est faite, non validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l’effacer ; valide-la toi-même si elle est juste). Puis désactive l’autre Ariane dans edge://extensions, F5 sur ESV, et Archiver le résultat interrompu.',
+   nextWithoutDecision:'Navigation refusée : rien n’a été envoyé à ESV pour ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',
    restore:'Restauration refusée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.'};

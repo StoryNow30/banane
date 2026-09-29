@@ -21,21 +21,24 @@ paquet test 1 déjà livré n'est pas modifié.
   test 2 dira lequel ESV affiche, et s'il faut revoir cette règle.
 - **Au départ d'ESV** après le différé du cut N : M et N journalisés
   (`fin-partie-depart`) ; le message dit « fin de partie probable » si N vaut
-  M−1 (ou si M est illisible), sinon « ce n'est pas le dernier cut de la
-  partie (M cuts) ».
+  M−1, sinon « fin de partie à vérifier » (M illisible ou N ≠ M−1).
 - **À la reprise**, le lot se ferme toujours, sans aucune commande renvoyée.
   La fin de la partie n'est **mémorisée** que si ESV affiche une partie
   **supérieure** et que N vaut **M−1** : « Fin du lot : ESV est passée à la
   partie P ; le cut N est le dernier de la partie (M cuts, de 0 à M−1) ».
   Sinon rien n'est mémorisé : « Lot fermé sans fin de partie (raison) : le cut
   N pourrait être le dernier de la partie ; saisis-le comme dernier cut si tu
-  veux le retenir » (M illisible, N ≠ M−1, ou partie antérieure ; plus de
+  veux le retenir ». La raison nomme la cause : « M cuts relevés : le dernier
+  serait le M−1 », nombre de cuts illisible, incohérent, relevé sur un autre
+  cut, plusieurs compteurs dans la page, ou partie antérieure (plus de
   conseil « rouvre la partie suivante »). Dans ces cas, N reste compté parmi
   les différés du panneau.
 - **ESV encore dans la partie du lot** à la reprise : lot fermé aussi, sans
-  fin ni différé compté (rien ne dit que la navigation a eu lieu) : « Lot
-  fermé sans fin de partie : ESV affiche encore la partie P (cut X). Contrôle
-  le cut N dans ESV ».
+  fin. Au cut N ou avant : même message, plus « Contrôle le cut N dans ESV »,
+  et N n'est pas compté comme différé (rien ne dit que la navigation a eu
+  lieu). Plus loin que N : « ESV affiche encore la partie P, au cut X, après
+  le cut N : ce n'est pas le dernier. Contrôle le cut N dans ESV », et N est
+  compté parmi les différés.
 
 ### Mise en sécurité pendant une pose (D-062 c et d)
 
@@ -44,15 +47,18 @@ paquet test 1 déjà livré n'est pas modifié.
   sécurité ne s'applique qu'à l'entrée d'une commande). La **validation
   suivante est refusée**, sans aucune commande envoyée à ESV : « Ariane 4.8.5
   test 2 en sécurité : … Validation refusée : la pose de ce cut est faite, non
-  validée. Désactive l'autre Ariane dans edge://extensions, puis F5 sur ESV ;
-  contrôle ce cut dans ESV, puis Archiver le résultat interrompu ». Le lot
+  validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l'effacer ;
+  valide-la toi-même si elle est juste). Puis désactive l'autre Ariane dans
+  edge://extensions, F5 sur ESV, et Archiver le résultat interrompu ». Le lot
   **passe en pause** (« adaptateur sans réponse », avec un résultat incertain
   à réconcilier) : « Reprendre » n'est pas proposé, « Archiver le résultat
   interrompu » l'est. Aucune validation, aucun SKIP, aucune commande
   renvoyée.
 - Intrusion **avant** une pose : « Pose refusée : rien n'a été posé sur ce
-  cut » ; avant un SKIP ou une restauration, message propre à chacun ; avant
-  une lecture de cut ou une navigation : F5, puis Reprendre, comme au test 1.
+  cut » ; avant un SKIP, une restauration ou un « suivant sans décision »
+  (« Navigation refusée : rien n'a été envoyé à ESV pour ce cut »), message
+  propre à chacun, avec archivage du résultat interrompu ; avant une lecture
+  de cut : F5, puis Reprendre, comme au test 1.
 - **Risque restant, accepté par la direction (D-062 d)** : autre Ariane
   pendant une pose : la pose se termine, la validation est refusée,
   l'opérateur contrôle le cut.
@@ -65,9 +71,12 @@ paquet test 1 déjà livré n'est pas modifié.
 - **Entrelacement contrôlé de deux installations** (deux identifiants
   d'extension, un même onglet ; `tests/cohabitation-p2-485.test.cjs`) :
   chaque injection (sonde et tampon, fichiers de la page, bridge) attend son
-  tour ; les 20 ordres possibles sont joués. Dans chacun : une seule se
-  connecte, elle est propriétaire de l'adaptateur, l'autre reçoit un refus
-  définitif qui la nomme ; chacune gagne selon l'ordre.
+  tour ; les 20 ordres de libération sont joués, soit 6 entrelacements
+  distincts (l'installation refusée s'arrête dès sa sonde, le plus souvent),
+  sondes croisées comprises. Dans chacun : une seule se connecte, elle est
+  propriétaire de l'adaptateur, l'autre reçoit un refus définitif qui la
+  nomme ; chacune gagne selon l'ordre. Les fichiers de la page y sont
+  simulés, selon les règles de l'adaptateur réel éprouvées ailleurs.
 - **Reprise complète après une intrusion**
   (`tests/reprise-intrusion-485.test.cjs`) : intrusion pendant un lot (refus
   exact de l'adaptateur réel) → pause reprenable, rien d'incertain → F5 →

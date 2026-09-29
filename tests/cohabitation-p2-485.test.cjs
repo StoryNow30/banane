@@ -2,10 +2,14 @@
 /* D-062, P2 (version de test 2) — cohabitation poussée.
  * 1. ENTRELACEMENT CONTRÔLÉ de deux installations d'Ariane (deux identifiants
  *    d'extension) qui se connectent au même onglet : chaque injection
- *    (sonde et tampon, fichiers de la page, bridge) attend son tour, et TOUS les
- *    ordres possibles sont joués. Invariant : une seule se connecte, elle est
+ *    (sonde et tampon, fichiers de la page, bridge) attend son tour ; les 20
+ *    ordres de libération sont joués. Une installation refusée s'arrête (dès
+ *    sa sonde, le plus souvent) : les entrelacements réellement joués sont
+ *    relevés et comptés. Invariant : une seule se connecte, elle est
  *    propriétaire de l'adaptateur, l'autre reçoit un refus définitif qui la
- *    nomme.
+ *    nomme. Les fichiers de la page sont simulés (règles de
+ *    src/adapter-page.js, éprouvées sur l'adaptateur réel dans
+ *    cohabitation-485 et revue-globale-485).
  * La reprise complète après une intrusion : tests/reprise-intrusion-485.test.cjs. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const {background,shadowHarness}=require('./helpers/background-harness.cjs');
@@ -43,15 +47,18 @@ function scenario(ordre){const fenetre={},attentes={A:[],B:[]},faits=[];
 /* Tous les ordres de trois injections par installation : C(6,3) = 20. */
 function ordres(){const out=[];(function rec(s,a,b){if(!a&&!b){out.push(s);return;}if(a)rec(s+'A',a-1,b);if(b)rec(s+'B',a,b-1);})('',3,3);return out;}
 
-test('entrelacement contrôlé de deux installations : dans les 20 ordres, une seule connectée, l’autre refusée en la nommant',async()=>{
-  const vus=new Set();
+test('entrelacement contrôlé de deux installations : 20 ordres de libération, une seule connectée, l’autre refusée en la nommant',async()=>{
+  const vus=new Set(),joues=new Set();
   for(const ordre of ordres()){const s=scenario(ordre),r=await s.run();
     const connectees=['A','B'].filter(n=>r[n].ok);
     assert.equal(connectees.length,1,`${ordre} : ${JSON.stringify(r)} (${s.faits.join(' ')})`);
     const gagnante=connectees[0],autre=gagnante==='A'?'B':'A',id={A:'ext-a',B:'ext-b'};
     assert.equal(s.fenetre.__BANANE_V3_PAGE?.proprietaire,id[gagnante],`${ordre} : l’adaptateur est à la connectée`);
     assert.match(r[autre].erreur,/Une autre Ariane \(4\.8\.5 test 2\) est active dans cet onglet/,`${ordre} : refus nommé`);
-    vus.add(gagnante);}
+    vus.add(gagnante);joues.add(s.faits.join(' '));}
   assert.equal(vus.size,2,'chacune gagne selon l’ordre : aucune n’est favorisée par construction');
+  /* Entrelacements distincts réellement joués (la perdante s'arrête tôt) : 6 aujourd'hui. */
+  assert.ok(joues.size>=6,`${joues.size} entrelacements distincts : ${[...joues].join(' | ')}`);
+  assert.ok([...joues].some(j=>/A:sonde B:sonde/.test(j))&&[...joues].some(j=>/B:sonde A:sonde/.test(j)),'sondes croisées jouées dans les deux sens');
 });
 

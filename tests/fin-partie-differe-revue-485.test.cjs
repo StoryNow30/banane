@@ -36,7 +36,7 @@ test('revue : marque d’une autre intention (résultat clôturé, nouveau diff�
   assert.equal($('resume').hidden,true);assert.doesNotMatch($('notice').textContent,/fin de partie probable/);
 });
 test('revue : ESV indisponible (page quittée) : la marche à suivre reste affichée, Reprendre en premier',async()=>{
-  const {$}=await panneau(vueLot({departApresDiffere:{part:15,cut:9056,operationId:'op-9056',at:'t'}},{connection:{status:'unavailable',message:'Adaptateur ESV sans réponse : page ESV rechargée ou fermée.'}}));
+  const {$}=await panneau(vueLot({departApresDiffere:{part:15,cut:9056,operationId:'op-9056',total:9057,dernier:true,at:'t'}},{connection:{status:'unavailable',message:'Adaptateur ESV sans réponse : page ESV rechargée ou fermée.'}}));
   assert.match($('notice').textContent,/fin de partie probable/);assert.equal($('resume').hidden,false);
 });
 test('revue : un résultat incertain d’une pose reste à clôturer à la main : pas de clôture automatique',async()=>{

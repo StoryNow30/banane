@@ -27,7 +27,7 @@ test('partie supérieure ouverte à la main après un départ qui n’est pas un
   const {r,view}=await dernierDiffere({},{total:6732});
   assert.match(view.notice,/ESV a quitté la page après le différé du cut 100/);assert.doesNotMatch(view.notice,/fin de partie probable/,'100 n’est pas 6731');
   const v=await reprise(r,24);
-  assert.equal(v.batch.state,'STOPPED');assert.match(v.notice,PEUT_ETRE);assert.match(v.notice,/6732 cuts : le dernier est le 6731/);
+  assert.equal(v.batch.state,'STOPPED');assert.match(v.notice,PEUT_ETRE);assert.match(v.notice,/6732 cuts relevés : le dernier serait le 6731/);
   assert.equal(await fin(r),null,'rien mémorisé');assert.equal(navs(r),1);
   assert.equal(r.b.store.events.filter(e=>e.type==='batch-stopped-at-end').at(-1).finMemorisee,false);
 });
@@ -49,8 +49,8 @@ test('partie inférieure : lot fermé, rien mémorisé, aucun conseil de rouvrir
 test('même partie affichée : lot fermé, rien mémorisé, contrôle du cut demandé, pas compté comme différé',async()=>{
   const {r}=await dernierDiffere({},{total:101});
   const v=await reprise(r,23,100);
-  assert.equal(v.batch.state,'STOPPED');assert.match(v.notice,/Lot fermé sans fin de partie : ESV affiche encore la partie 23 \(cut 100\)\. Contrôle le cut 100 dans ESV/);
-  assert.doesNotMatch(v.notice,/pourrait être le dernier/,'ESV encore dans la partie : pas une fin possible à saisir');
+  assert.equal(v.batch.state,'STOPPED');assert.match(v.notice,/Lot fermé sans fin de partie \(ESV affiche encore la partie 23, cut 100\)/);
+  assert.match(v.notice,PEUT_ETRE,'message de la direction (D-062 b)');assert.match(v.notice,/Contrôle le cut 100 dans ESV/);
   assert.equal(await fin(r),null);assert.equal(navs(r),1);
   assert.equal(v.batch.interrupted.at(-1).status,'DEFER_NAVIGATION_CLOSED_SAME_PART');
   const {$}=await panneau(v);assert.doesNotMatch($('lot-compteurs').innerHTML,/écartement bas\) : 100/,'pas un différé');
@@ -68,16 +68,8 @@ test('« M cuts » seul (un « 101 cuts » peut compter autre chose, et vaudrait
 });
 test('M incohérent (N ≥ M) : rien mémorisé, dit comme tel',async()=>{
   const {r,view}=await dernierDiffere({},{total:100});
-  assert.equal(view.batch.departApresDiffere.totalSource,'incoherent');assert.match(view.notice,/fin de partie probable/);
+  assert.equal(view.batch.departApresDiffere.totalSource,'incoherent');assert.match(view.notice,/fin de partie à vérifier/);
   const v=await reprise(r,24);assert.match(v.notice,/nombre de cuts de la partie incohérent/);assert.equal(await fin(r),null);
-});
-test('relevé d’un autre cut, ou sans identité, au dernier passage : M non pris',async()=>{
-  const {r,view}=await dernierDiffere({},{total:101});
-  assert.equal(view.batch.departApresDiffere.total,101);
-  const {releve}=require('./helpers/fin-partie.cjs');
-  const b3=(await dernierDiffere({},{total:101})).r;
-  await releve(b3.b,{pageId:'p',part:null,cut:null},{total:101});
-  assert.equal(b3.b.fonction('engine').s.batch.totalReleve.cut,null,'un relevé sans identité remplace le précédent');
 });
 test('panneau : la fermeture sans preuve est dite, et compte le cut parmi les différés',async()=>{
   const {r}=await dernierDiffere({},{total:6732});const v=await reprise(r,24);
@@ -85,4 +77,20 @@ test('panneau : la fermeture sans preuve est dite, et compte le cut parmi les di
   const {$}=await panneau(v);
   assert.match($('batch').textContent,/lot clos après le cut 100 : ESV a quitté la partie après le différé, sans preuve de fin/);
   assert.match($('lot-compteurs').innerHTML,/refusés \(écartement bas\) : 100/);
+});
+test('même partie, ESV plus loin que N : la navigation a eu lieu, N n’est pas le dernier ; compté parmi les différés',async()=>{
+  const {r}=await dernierDiffere({},{total:6732});
+  const v=await reprise(r,23,101);
+  assert.equal(v.batch.state,'STOPPED');assert.match(v.notice,/ESV affiche encore la partie 23, au cut 101, après le cut 100 : ce n’est pas le dernier/);
+  assert.doesNotMatch(v.notice,/pourrait être le dernier/);assert.equal(await fin(r),null);
+  assert.equal(v.batch.interrupted.at(-1).status,'DEFER_NAVIGATION_CLOSED_NO_END_PROOF');
+  const {$}=await panneau(v);assert.match($('lot-compteurs').innerHTML,/refusés \(écartement bas\) : 100/);
+});
+test('relevé d’un AUTRE cut au dernier passage : M non pris, cause dite',async()=>{
+  const {quitte,releve,pilote,differe}=require('./helpers/fin-partie.cjs');
+  const r=await pilote(differe,{start:100,end:0,endMode:'partie',esv:(esv,b)=>{quitte(esv);const c=esv.capture.bind(esv);
+    esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},{total:101});await releve(b,{...esv.identity,cut:99},{total:101});return out;};}});
+  const view=await r.b.settle();
+  assert.equal(view.batch.departApresDiffere.total,null);assert.equal(view.batch.departApresDiffere.totalSource,'autre-cut');
+  const v=await reprise(r,24);assert.match(v.notice,/nombre de cuts relevé sur un autre cut/);assert.equal(await fin(r),null);
 });

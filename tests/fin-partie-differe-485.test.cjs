@@ -11,7 +11,7 @@ const {L,pilote,differe,quitte,navs,dernierDiffere,panneau,vueLot}=require('./he
 test('dernier différé, ESV quitte la page : pause, message clair, aucune commande renvoyée',async()=>{
   const {r,view}=await dernierDiffere();
   assert.equal(view.batch.state,'PAUSED_DEFER_NAVIGATION_UNCERTAIN');
-  assert.match(view.notice,/ESV a quitté la page après le différé du cut 100 ; fin de partie probable : clique sur Reprendre \(F5 seulement si ESV reste figée\)/);
+  assert.match(view.notice,/ESV a quitté la page après le différé du cut 100 ; fin de partie à vérifier : clique sur Reprendre \(F5 seulement si ESV reste figée\)/,'M inconnu : à vérifier');
   assert.equal(navs(r),1,'une seule navigation');assert.equal(await r.b.api('bornes-partie',{part:23}),null,'aucune fin affirmée sans preuve');
   assert.equal((await r.b.api('view')).batch.departApresDiffere.cut,100,'le panneau reçoit le départ');
 });
@@ -29,7 +29,7 @@ test('reprise sur la MÊME partie : pas de preuve de fin, lot fermé sans rien m
   const {r}=await dernierDiffere({},{total:101});
   Object.assign(r.b.adapter.identity,{pageId:'apres-F5',cut:100});
   const view=await r.b.api('resume');assert.equal(view.batch.state,'STOPPED');
-  assert.match(view.notice,/ESV affiche encore la partie 23 \(cut 100\)\. Contrôle le cut 100 dans ESV/);
+  assert.match(view.notice,/ESV affiche encore la partie 23, cut 100\)[^]*Contrôle le cut 100 dans ESV/);
   assert.equal(view.batch.departApresDiffere,undefined);
   assert.equal(await r.b.api('bornes-partie',{part:23}),null);assert.equal(navs(r),1);
 });
@@ -53,7 +53,7 @@ test('onglet sorti d’ESV pendant une lecture : erreur reprenable, comme une pa
   await assert.rejects(b.fonction('callSur')(1,'state'),e=>e.code==='ESV_PAGE_ABSENTE'&&/n’affiche plus ESV/.test(e.message));
 });
 test('panneau : après le départ d’ESV au différé, « Reprendre » est proposé et la marche à suivre est dite',async()=>{
-  const {$,textes}=await panneau(vueLot({departApresDiffere:{part:15,cut:9056,operationId:'op-9056',at:'t'}}));
+  const {$,textes}=await panneau(vueLot({departApresDiffere:{part:15,cut:9056,operationId:'op-9056',total:9057,dernier:true,at:'t'}}));
   assert.equal($('resume').hidden,false);assert.match($('notice').textContent,/fin de partie probable : clique sur Reprendre/);
   const sans=await panneau(vueLot({}));assert.equal(sans.$('resume').hidden,true,'navigation incertaine ordinaire : pas de reprise');
 });

@@ -416,7 +416,8 @@
      const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus',
        'navigation-other-part-after-defer':'ESV a quitté la partie après le différé',
        'navigation-away-after-defer-unproven':'ESV a quitté la partie après le différé, sans preuve de fin',
-       'defer-closed-same-part':'différé non confirmé, ESV encore dans la partie ; contrôle ce cut'};
+       'defer-closed-same-part':'différé non confirmé, ESV encore dans la partie ; contrôle ce cut',
+       'defer-moved-within-part':'ESV est allée plus loin dans la partie ; ce cut n’est pas le dernier'};
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
      const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
@@ -476,8 +477,8 @@
 {const d=b.departApresDiffere,M=Number.isInteger(d.total)?d.total:null;
        /* D-062 (b) : la reprise ferme le lot ; la fin n'est retenue que sur preuve (partie
         * supérieure, N = M−1). `dernier` est calculé par le service worker. */
-       note(`ESV a quitté la page après le différé du cut ${entier(d.cut)} ; `+(d.dernier===false?`ce n’est pas le dernier cut de la partie (${entier(M)} cuts)`:'fin de partie probable')
-         +' : clique sur Reprendre (F5 seulement si ESV reste figée). Le lot se fermera ; ce cut n’est retenu comme fin de la partie que si ESV affiche la partie suivante et que c’est le dernier cut'
+       note(`ESV a quitté la page après le différé du cut ${entier(d.cut)} ; fin de partie ${d.dernier===true?'probable':'à vérifier'}`
+         +' : clique sur Reprendre (F5 seulement si ESV reste figée). Le lot se fermera ; ce cut n’est retenu comme fin de la partie que si ESV affiche une partie supérieure et que c’est le dernier cut'
          +(M===null?' (nombre de cuts de la partie illisible ou incohérent : rien ne sera retenu)':` (${entier(M-1)})`)+'. Aucune commande n’est renvoyée.');}
      else if(b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||differe)
        note(`Cut ${differe?.identity?.cut??b?.activeIdentity?.cut??'?'} : la navigation sans décision `
