@@ -1,5 +1,38 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis Ariane 4.8.5, la cible de retour est Ariane 4.8.0**, étiquette
+`v4.8.0`, commit `fabd77e`, paquet final `ariane-v4.8.0.zip` du 28/09
+(SHA-256 `38aa29a28bc0695258dd444adb2844752a340ef3c6de30c22939ef6b8575e25b` ;
+copie dans banane-data `travail/2026-09-28_ariane-480-final/`). Même
+extension, même dossier :
+
+1. **Termine ou arrête le lot en cours**, et télécharge ses exports. Un lot
+   commencé en 4.8.5 et repris en 4.8.0 perdrait la garde d'écartement bas
+   (`lot-decision-v7` → `v6`).
+2. Remplace le contenu du dossier de l'extension par le paquet 4.8.0, puis
+   « Recharger » dans `edge://extensions` : **ne supprime pas l'extension**
+   (le stockage d'Écho et d'Orbite serait perdu).
+3. **F5 sur ESV, obligatoire** : l'adaptateur de la 4.8.5 resté dans la page
+   n'obéit qu'à la 4.8.5 et refuse les commandes de toute autre version.
+4. Vérifie **4.8.0** sous ARIANE sur l'accueil et **Ariane 4.8.0 · ouvrir**
+   sur le bouton blanc au bas d'ESV.
+
+Ce que le retour annule : la garde d'écartement bas, la fin de partie après un
+différé (KI-067 revient : pause « navigation incertaine »), la cohabitation
+(refus nommé, mise en sécurité), le relevé passif d'ESV et le correctif des
+numéros de segment d'Écho (KI-066). `src/engine.js` est le même fichier dans
+les deux versions ; les données du stockage et les exports gardent leur format
+(la 4.8.5 n'ajoute que des événements au journal : `esv-releve`,
+`fin-partie-depart`).
+
+```bash
+git archive fabd77e | tar -x -C /tmp/ariane-4.8.0
+cd /tmp/ariane-4.8.0 && python3 tools/package.py --output /tmp/ariane-v4.8.0.zip
+```
+
+**Depuis Ariane 4.8.0**, la cible de retour reste Banane 4.7.21 (ci-dessous).
+
+
 Le premier paquet 4.8.0 du 28/09 (`d3874290…`, depuis `a68201a`) n'est pas
 une cible de retour : il garde KI-064 (Écho peut purger un nuage sans fichier
 confirmé) ; il est remplacé par le paquet 4.8.0 corrigé après l'audit (D-059).

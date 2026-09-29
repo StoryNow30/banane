@@ -1,5 +1,31 @@
 # Décisions techniques
 
+## D-063 - Préparer la 4.8.5 stable ; C4 validé sur l'expertise de la direction (partie 25)
+
+**29 septembre 2026, direction** : « go » pour préparer la 4.8.5 stable.
+
+- **Porte C4** : la relecture de la partie 25 (test 1 : 62 posés jugés,
+  2 faux, cuts 112 et 113) est jugée suffisante pour la porte C4 de la 4.8.5.
+  La qualité est validée **sur l'expertise de la direction**, sans mesure
+  conforme à la lettre de la porte (moins de 100 posés jugés) : le rapport de
+  sortie le dit (`audit/rapport-sortie-4.8.5.md`), comme D-060 pour la 4.8.0.
+- **Lot 33** (test 1) : pas de relecture ; observation de l'opérateur « RAS »
+  (non enregistrée).
+- **Moteur de décision identique** entre le test 1 et le test 2 (aucun
+  changement de `src/lot-decision.js` ni de `src/engine.js` entre `36b8242` et
+  `0d29e54`) : la validation de la partie 25 vaut pour le code du test 2. Les
+  lots 25 et 33 ont tourné sous le test 1 : le code de fin de partie de
+  D-062 (test 2) n'a pas été exercé en réel.
+- **Candidat stable** : même code que `0d29e54` (test 2) ; seuls la version
+  et le nom changent (`4.8.5`, « Ariane », conventions de D-061). Paquet
+  reproductible, portes J1, `verify` à 0, CHANGELOG, retour arrière vers la
+  4.8.0, fiche d'installation. **Ni merge, ni étiquette, ni publication** sans
+  accord de la direction.
+- **KI-068** consigné sans changement de code (export du journal d'Orbite
+  alourdi par les données d'Écho) ; correction après la 4.8.5.
+- Détail et chiffres : `audit/lot-485-p25-2026-09-29.md` et
+  `audit/lots-20-24-33-2026-09-29.md`, branche `claude/banane-48-cahier`.
+
 ## D-062 - Fin de partie mémorisée seulement sur preuve M−1 ; mise en sécurité pendant une pose (4.8.5 test 2)
 
 **29 septembre 2026, direction**, après la livraison du paquet test 1 ;

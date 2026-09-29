@@ -11,8 +11,8 @@ Ta fiche pas à pas : `consignes/operateur-suite.md`.
 |---|---|---|
 | **J0** clôture 4.8.0 — **faite** | étiquettes créées et vérifiées ; qualité finale validée par l'expertise de la direction, **C4 de la partie 15 non mesuré** (D-060) | clôture documentaire : le rapport de sortie le dit ; la mesure enregistrée reprend en J2 |
 | **J1** 4.8.5 test 1 | chantiers D1 à D7 ci-dessous | § 1 (définition de « fini ») pour chaque chantier ; banc : 633 cuts inchangés, 8 jeux : seuls 707, 711, 718 changent |
-| **J2** terrain 4.8.5 | un lot sur une partie neuve, puis sa relecture | C1 ≥ 79 % ; C3 = 0 ; C4 : **au moins 100 posés jugés** et ≥ 80 % des posés, pris dans l'ordre du lot sans choix, ≤ 2 faux / 100 jugés, chacun typé, les posés non jugés listés, borne haute de Clopper–Pearson publiée (information) ; 0 interruption non reprenable ; **chaque refus de la garde examiné** à la relecture : aucun refus d'une pose qui aurait été juste, sauf décision nommée |
-| **J3** 4.8.5 stable | audit Astra du diff, étiquette | portes J2 + aucun P1 d'Astra |
+| **J2** terrain 4.8.5 — **fait** (D-063 : lots 25 et 33 sous le test 1 ; C4 de la partie 25 validé sur l'expertise de la direction, moins de 100 jugés) | un lot sur une partie neuve, puis sa relecture | C1 ≥ 79 % ; C3 = 0 ; C4 : **au moins 100 posés jugés** et ≥ 80 % des posés, pris dans l'ordre du lot sans choix, ≤ 2 faux / 100 jugés, chacun typé, les posés non jugés listés, borne haute de Clopper–Pearson publiée (information) ; 0 interruption non reprenable ; **chaque refus de la garde examiné** à la relecture : aucun refus d'une pose qui aurait été juste, sauf décision nommée |
+| **J3** 4.8.5 stable — **candidat prêt** (D-063), en attente de la direction | audit Astra du diff, étiquette | portes J2 + aucun P1 d'Astra |
 | **J4** 4.9.0 | vitesse, exports, qualité (4.9 a et c) | § 3 |
 | **J5** 4.9.5 | cuts difficiles (4.9 b) | § 3 |
 

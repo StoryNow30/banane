@@ -1,6 +1,43 @@
 # Banane V4 TEST — journal des versions
 
-## 4.8.5 test 2 — en cours (D-062)
+## 4.8.5 — candidat stable (29/09, D-063)
+
+**Même code que le test 2** (`0d29e54`) ; seuls changent la version et le nom :
+manifeste `4.8.5`, nom « Ariane », sans « TEST » ni numéro de test (D-061) ;
+paquet `ariane-v4.8.5.zip`. Il remplace la 4.8.0 **dans le même dossier** ;
+retour arrière vers la 4.8.0 (`RETOUR_ARRIERE.md`) ; installation :
+`consignes/installation-4.8.5.md`.
+
+Ce que la 4.8.5 apporte par rapport à la 4.8.0 (détail : sections test 2 et
+test 1 ci-dessous) :
+
+- **Garde d'écartement bas à 1 420 mm** (`lot-decision-v7`, D-060) : un premier
+  passage sans appui sous 1 420 mm est différé, nommé « refusés (écartement
+  bas) » pour la relecture.
+- **Fin de partie après un différé** (KI-067, D3 puis D-062) : pause claire ;
+  à la reprise, le lot se ferme ; la fin n'est mémorisée que si ESV affiche une
+  partie supérieure et que le cut vaut M−1 (M lu dans « N on M treated »).
+- **Une seule Ariane par onglet** : refus nommé, adaptateur à propriétaire
+  unique, mise en sécurité si une autre Ariane commande l'onglet ; pendant une
+  pose, la pose va à son terme, la validation est refusée, le lot passe en
+  pause (D-062 c, risque accepté d) ; la pause est reprenable (F5, puis
+  Reprendre).
+- **Relevé passif d'ESV** après chaque capture (compteur « N on M treated »,
+  texte « M cuts », objets rail), rangé au journal, sans aucune commande.
+- **Outils** : portes J1, décomposition du temps de cycle, essai de
+  cohabitation dans Chromium.
+
+**Mesure** (`audit/rapport-sortie-4.8.5.md`) : lots 25 et 33, **tous deux sous
+le test 1** : C1 85,2 % et 84,0 %, C3 0 ; C4 sur la partie 25 : 2 faux sur 62
+jugés, **validé sur l'expertise de la direction** sans mesure conforme à la
+lettre (moins de 100 jugés, D-063). Le code de fin de partie du test 2 (D-062)
+n'a pas été exercé en réel.
+
+**Problème connu accepté** : KI-068 (export du journal d'Orbite alourdi par les
+données d'Écho ; contournement `tools/filtrer-journal.cjs` ; correction après
+la 4.8.5).
+
+## 4.8.5 test 2 (D-062)
 
 Version `4.8.5.2`, « 4.8.5 test 2 », paquet `ariane-4.8.5-test.2.zip`. Le
 paquet test 1 déjà livré n'est pas modifié.
@@ -85,7 +122,7 @@ paquet test 1 déjà livré n'est pas modifié.
 - Ces deux essais vérifient le code existant (verts dès l'écriture) : aucun
   défaut trouvé.
 
-## 4.8.5 test 1 — en cours (PLAN_SUITE §2)
+## 4.8.5 test 1 (PLAN_SUITE §2)
 
 ### Outils de portes (D5)
 

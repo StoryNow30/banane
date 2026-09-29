@@ -10,12 +10,13 @@ dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le
 | | |
 |---|---|
 | **Version stable** | **Ariane 4.8.0**, étiquette `v4.8.0` (`fabd77e`), paquet final `38aa29a2…` ; installée chez l'opérateur |
-| **Retour arrière** | 4.7.21, étiquette `v4.7.21` (`ead1cd1`), `RETOUR_ARRIERE.md` |
-| **En cours** | **4.8.5 test 2** (D-062), branche `claude/friendly-gauss-1p9c6q` : **paquet `ariane-4.8.5-test.2.zip` livré** (`3b65f1d0…`, depuis `0d29e54`, deux constructions identiques ; banane-data `travail/2026-09-29_ariane-485-test2/`) ; fin de partie mémorisée seulement sur preuve M−1, mise en sécurité pendant une pose ; essais Chromium avec la 4.8.0 et le test 1 : refus dans les deux ordres. Test 1 (`0e7c8f8a…`, `36b8242`) livré et inchangé ; ni merge ni étiquette |
-| **Portes de J1** | `node tools/portes-j1.cjs` (`audit/portes-j1/`) : depuis D2 (29/09), toutes VERTES, jusqu'au code du paquet test 2 (`0d29e54`) : 633 cuts inchangés ; 8 jeux : 707, 711 refusés, 718 posé, 0 juste perdu |
+| **Retour arrière** | depuis la 4.8.0 : 4.7.21, étiquette `v4.7.21` (`ead1cd1`) ; **depuis la 4.8.5 : 4.8.0**, étiquette `v4.8.0` (`fabd77e`, paquet `38aa29a2…`, reconstruit à l'identique le 29/09) ; `RETOUR_ARRIERE.md` |
+| **En cours** | **Candidat Ariane 4.8.5 stable** (D-063), branche `claude/friendly-gauss-1p9c6q` : même code que le test 2 (`0d29e54`), seuls la version et le nom changent (`4.8.5`, « Ariane ») ; paquet `ariane-v4.8.5.zip` ; **ni merge, ni étiquette, ni publication** avant le feu vert de la direction. Installation : `consignes/installation-4.8.5.md` ; retour : `RETOUR_ARRIERE.md` (cible 4.8.0). Paquets de test 1 et 2 livrés, inchangés |
+| **Portes de J1** | `node tools/portes-j1.cjs` (`audit/portes-j1/`) : depuis D2 (29/09), toutes VERTES : 633 cuts inchangés ; 8 jeux : 707, 711 refusés, 718 posé, 0 juste perdu |
 | **Mesures 4.8** | `audit/rapport-sortie-4.8.md` : C1 tenu (parties 9 et 12 : 79,3 % et 79,2 %), C4 4 faux sur 161 jugés, C3 0 hors contrat. Après la sortie : partie 11, 44 jugés, 0 faux ; partie 15, C1 76,5 %, **C4 non mesuré** (D-060) |
-| **Problème ouvert du terrain** | KI-067 (fin de partie après un différé), corrigé par D3, à confirmer en J2 |
-| **Prochaine tâche de l'opérateur** | J2 avec le paquet test 2 : un lot sur une partie neuve, puis sa relecture Écho (`consignes/operateur-suite.md`) ; la 4.8.0 reste installée à côté, **une seule Ariane active à la fois** (D-060) |
+| **Mesures 4.8.5** | `audit/rapport-sortie-4.8.5.md` : lots 25 et 33 (test 1) : C1 85,2 % et 84,0 %, C3 0 ; C4 partie 25 : 2 faux sur 62 jugés, **validé sur l'expertise de la direction**, sans mesure conforme à la lettre (moins de 100 jugés, D-063) ; lot 33 sans relecture (« RAS ») |
+| **Problèmes ouverts** | KI-067 corrigé (D3, D-062), **non exercé en réel** (lots 25 et 33 sous le test 1) ; KI-068 (export du journal d'Orbite alourdi par Écho), accepté pour la 4.8.5 |
+| **Prochaine tâche de l'opérateur** | après le feu vert de la direction : installer la 4.8.5 à la place de la 4.8.0 (`consignes/installation-4.8.5.md`) |
 
 ## Démarrer avec Ariane 4.8.0 (version stable)
 
