@@ -63,7 +63,7 @@ test('onglet vierge : tampon du propriétaire, puis modules et adaptateur, puis 
   /* Sonde et tampon en un seul passage dans la page : rien ne peut s'intercaler. */
   const ordre=t.injecte.map(o=>o.files?o.files.at(-1):'sonde-et-tampon');
   assert.deepEqual(ordre,['sonde-et-tampon','src/adapter-page.js','src/bridge.js']);
-  const sonde=t.injecte[0];assert.equal(sonde.world,'MAIN');assert.deepEqual(JSON.parse(JSON.stringify(sonde.args)),['test',K.VERSION]);
+  const sonde=t.injecte[0];assert.equal(sonde.world,'MAIN');assert.deepEqual(JSON.parse(JSON.stringify(sonde.args)),['test',K.VERSION,K.VERSION_NAME]);
   assert.deepEqual({...t.fenetre.__BANANE_V3_PAGE},{version:K.VERSION,proprietaire:'test'});
 });
 test('ping d’un adaptateur sans le bon propriétaire après injection : refus',async()=>{

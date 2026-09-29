@@ -14,6 +14,7 @@
  const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
  const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4;
  const PROPRIO=typeof window.__ARIANE_PROPRIETAIRE?.id==='string'?window.__ARIANE_PROPRIETAIRE.id:null;
+ const PROPRIO_NOM=typeof window.__ARIANE_PROPRIETAIRE?.versionName==='string'?window.__ARIANE_PROPRIETAIRE.versionName:null;
  try{delete window.__ARIANE_PROPRIETAIRE;}catch{}
  /* Réglages du pilote : source unique dans src/settings.js. Repli sur les
   * anciennes valeurs codées en dur si le module n'est pas chargé, pour ne
@@ -662,7 +663,7 @@
    native=native||new NP4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
  let intrusion=null;
- const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
+ const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
@@ -674,7 +675,7 @@
      const operationId=options&&typeof options==='object'&&typeof options.operationId==='string'?options.operationId:null;
      if(operationId)cancelledOperations.add(operationId);
      return {cancelRequested:true,operationId,scopedCancelledOperations:cancelledOperations.size};}};
- window.__BANANE_V3_PAGE=Object.freeze({version:K.VERSION,proprietaire:PROPRIO});
+ window.__BANANE_V3_PAGE=Object.freeze({version:K.VERSION,versionName:K.VERSION_NAME??null,proprietaire:PROPRIO});
  /* D4 (4.8.5, D-061) — RELEVÉ PASSIF D'ESV, après CHAQUE capture, réussie ou
   * non : envoyé APRÈS la réponse, dans son propre message (la capture n'est ni
   * retardée, ni modifiée, ni transformable en erreur). LECTURE SEULE : aucune
@@ -708,12 +709,18 @@
   * refusée, sans rien faire dans ESV, avec la cause et le remède. Si elle
   * aurait agi sur ESV, l'adaptateur se met en sécurité : il ne commande plus
   * ESV pour personne, son propriétaire compris, jusqu'au F5 ; lectures,
-  * annulations et arrêts (Écho, session manuelle) restent permis. */
+  * annulations et arrêts (Écho, session manuelle) restent permis. Revue
+  * globale 4.8.5 : le refus EN SÉCURITÉ, adressé à notre propre lot, commence
+  * par « Adaptateur ESV sans réponse » : c'est ce texte qui fait mettre le lot
+  * en pause reprenable par le moteur épinglé, au lieu d'une erreur définitive.
+  * Le refus à une AUTRE Ariane n'est pas un silence : il le dit tel quel. Il
+  * nomme l'Ariane propriétaire de l'onglet (son tampon), pas ce code. */
  const LECTURES=new Set(['ping','state','nativeSnapshot']),EN_SECURITE=new Set([...LECTURES,'cancel','nativePause','nativeFinish','manualPause','manualFinish']);
- const nomVersion=K.VERSION_NAME||K.VERSION;
+ const nomVersion=K.VERSION_NAME||K.VERSION,nomProprietaire=PROPRIO_NOM||nomVersion;
+ const SANS_REPONSE='Adaptateur ESV sans réponse : ';
  const refusEtranger=()=>PROPRIO===null?'Adaptateur ESV installé sans propriétaire : F5 sur ESV, puis Connecter.'
-   :`Une autre Ariane (${nomVersion}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`;
- const refusSecurite=()=>`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`;
+   :`Une autre Ariane (${nomProprietaire}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`;
+ const refusSecurite=()=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre (pose interrompue : Archiver le résultat interrompu).`;
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.
  window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;

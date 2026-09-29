@@ -2,7 +2,7 @@ const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const C=require('../../vendor/capture-core.js'),K=require('../../src/core.js'),F=require('../v242/fixtures.cjs');
 /* D1 (4.8.5) : l'adaptateur n'obéit qu'à l'extension qui l'a installé ; le
  * service worker pose son tampon (`__ARIANE_PROPRIETAIRE`) avant les fichiers. */
-function page({globals={},proprietaire='test'}={}){
+function page({globals={},proprietaire='test',tampon={}}={}){
  const left=F.rail(0,[0,0,0],0),right=F.rail(1.435,[0,0,0],0);right.children[1].children[0].geometry.attributes.position=F.buffer([[0,0,0],[0,-.035,0],[0,-.035,-.05]]);
  const root=F.object([0,0,0],'Scene');F.add(root,left);F.add(root,right);
  const camera=F.object([.2,0,0],'OrthographicCamera');camera.quaternion={x:.5,y:.5,z:.5,w:.5};camera.projectionMatrix={elements:C.identity()};
@@ -21,7 +21,7 @@ function page({globals={},proprietaire='test'}={}){
   viewer:{scene:{scene:root,pointclouds:[],getActiveCamera:()=>camera},renderer:{domElement:canvas}},
   Date:class extends Date{static now(){return clock;}},setTimeout:(fn,ms=0)=>{clock+=ms;queueMicrotask(()=>{ctx.onTick?.();fn();});},
   MouseEvent:class{constructor(type,args){this.type=type;Object.assign(this,args);}},KeyboardEvent:class{constructor(type,args){this.type=type;Object.assign(this,args);}},
-  ...globals,...(proprietaire!==null?{__ARIANE_PROPRIETAIRE:{id:proprietaire,version:K.VERSION}}:{}),
+  ...globals,...(proprietaire!==null?{__ARIANE_PROPRIETAIRE:{id:proprietaire,version:K.VERSION,...tampon}}:{}),
   addEventListener:(event,fn)=>listener=fn,postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else if(m.kind==='banane3:releve')releves.push(m);else{reponses.push(m);responses.get(m.id)(m);}},crypto:{randomUUID:K.uid}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../../src/adapter-page.js'),'utf8'),ctx);
  async function call(action,...args){const id=K.uid();return new Promise((resolve,reject)=>{responses.set(id,m=>m.error?reject(Error(m.error)):resolve(m.result));listener({source:vm.runInContext('window',ctx),origin:ctx.location.origin,data:{kind:'banane3:command',channel:'fixture',proprietaire:'test',id,action,args}});});}

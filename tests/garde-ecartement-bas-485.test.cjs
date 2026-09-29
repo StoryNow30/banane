@@ -68,7 +68,7 @@ test('panneau : les différés « écartement bas » sont nommés, cut par cut',
   const state={current:{identity:id(712)},batch:{state:'RUNNING',scope:{part:11,start:700,end:999999,endMode:'partie',geometryEngine:'geometry-candidate-v1'},
     processed:[{cut:706}],skipped:[],paused:[],interrupted:[],manuallyCompleted:[],sequence:[706,707,711,712].map(c=>({cut:c})),activeIdentity:id(712),
     deferred:[{identity:id(707),deferredAt:'2026-09-29T08:00:00Z'},{identity:id(711),deferredAt:'2026-09-29T08:00:10Z'}],
-    lotCommands:{707:{cut:707,stage:'deferred',reason:'first-pass-low-gauge'},711:{cut:711,stage:'deferred',reason:'first-pass-low-gauge'}}}};
+    lotCommands:{707:{cut:707,action:'defer',stage:'deferred',reason:'first-pass-low-gauge'},711:{cut:711,action:'defer',stage:'deferred',reason:'first-pass-low-gauge'}}}};
   const $=await panneau(state);
   assert.match($('lot-compteurs').innerHTML,/refusés \(écartement bas\) : 707, 711/);
 });

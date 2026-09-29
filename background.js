@@ -240,26 +240,33 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
  * les fichiers : l'adaptateur n'obéira qu'à cette extension. */
 /* Refus DÉFINITIFS (`definitif`) : la reconnexion après F5 ne les retente pas. */
 const definitif=message=>Object.assign(Error(message),{definitif:true});
+/* `v` : le nom de version de l'autre Ariane, tel qu'edge://extensions
+ * l'affiche, ou son numéro si elle ne le donne pas (4.8.0). */
 const autreAriane=(v,sansProprietaire=false)=>definitif(`Une autre Ariane (${v||'version inconnue'}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`+
   /* Un adaptateur sans propriétaire est celui d'une Ariane d'avant la 4.8.5 : la 4.8.0 installée à côté, ou cette Ariane avant sa mise à jour. */
   (sansProprietaire?' Si c’est une mise à jour de cette Ariane, F5 suffit.':''));
 const aRecharger=()=>definitif(`Recharge la page ESV (F5) pour activer Ariane ${VERSION_NAME}.`);
 /* Sonde ET tampon en un seul passage dans la page : entre la lecture du
  * marqueur et la pose du tampon, aucune autre injection ne peut s'intercaler. */
+/* Revue globale : le tampon d'une AUTRE Ariane déjà posé (connexion simultanée,
+ * adaptateur pas encore installé) vaut refus : on ne l'écrase pas. */
 async function sondeEtTampon(tabId){
- const r=await chrome.scripting.executeScript({target:{tabId},world:'MAIN',args:[chrome.runtime.id,VERSION],func:(id,version)=>{const p=window.__BANANE_V3_PAGE;
-   if(p)return {version:String(p.version??''),proprietaire:typeof p.proprietaire==='string'?p.proprietaire:null};
-   window.__ARIANE_PROPRIETAIRE={id,version};return null;}});
+ const r=await chrome.scripting.executeScript({target:{tabId},world:'MAIN',args:[chrome.runtime.id,VERSION,VERSION_NAME],func:(id,version,versionName)=>{const p=window.__BANANE_V3_PAGE;
+   if(p)return {version:String(p.version??''),versionName:typeof p.versionName==='string'?p.versionName:null,proprietaire:typeof p.proprietaire==='string'?p.proprietaire:null};
+   const t=window.__ARIANE_PROPRIETAIRE;
+   if(typeof t?.id==='string'&&t.id!==id)return {version:String(t.version??''),versionName:typeof t.versionName==='string'?t.versionName:null,proprietaire:t.id};
+   window.__ARIANE_PROPRIETAIRE={id,version,versionName};return null;}});
  return r?.[0]?.result??null;}
 async function equiperOnglet(tabId){
  const deja=await sondeEtTampon(tabId);
- if(deja&&deja.proprietaire!==chrome.runtime.id)throw autreAriane(deja.version,deja.proprietaire===null);
+ if(deja&&deja.proprietaire!==chrome.runtime.id)throw autreAriane(deja.versionName||deja.version,deja.proprietaire===null);
  if(deja&&deja.version!==VERSION)throw aRecharger();
  if(!deja)await chrome.scripting.executeScript({target:{tabId},world:'MAIN',files:PAGE_FILES});
  await chrome.scripting.executeScript({target:{tabId},world:'ISOLATED',files:['src/bridge.js']});
- const ping=await callSur(tabId,'ping');
- /* Une autre Ariane a pu s'installer entre le tampon et nos fichiers : le ping le dit. */
- if(ping?.proprietaire!==chrome.runtime.id)throw autreAriane(ping?.version,!ping?.proprietaire);
+ const ping=await callSur(tabId,'ping').catch(e=>{throw /^Une autre Ariane/.test(e?.message||'')?definitif(e.message):e;});
+ /* Une autre Ariane a pu s'installer entre le tampon et nos fichiers : le ping le
+  * dit, ou l'adaptateur refuse notre ping en la nommant (refus définitif). */
+ if(ping?.proprietaire!==chrome.runtime.id)throw autreAriane(ping?.versionName||ping?.version,!ping?.proprietaire);
  if(ping?.version!==VERSION)throw aRecharger();
  if(ping?.intrusion)throw definitif(`Ariane ${VERSION_NAME} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${ping.intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`);}
 async function reconnecterESV(delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
@@ -391,6 +398,11 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
    throw Error(`ESV affiche encore la partie ${b.scope.part} : pas de fin de partie. Contrôle le cut ${d.cut} dans ESV, puis clôture ce résultat incertain.`);}
  if(now.identity.part<b.scope.part)
    throw Error(`ESV affiche la partie ${now.identity.part}, antérieure au lot : pas une preuve de fin. Rouvre la partie suivante dans ESV puis Reprendre, ou contrôle le cut ${d.cut} et clôture ce résultat incertain.`);
+ /* Le moteur journalise la clôture (non comptée comme différé confirmé :
+  * exports et rapport d'acceptation inchangés) ; l'interruption est renommée
+  * ci-dessous, et le panneau compte ce cut parmi les différés (voieDuLot). Un
+  * arrêt du service worker entre les deux écritures laisse un lot clos par
+  * l'opérateur, sans fin retenue : le cas de la 4.8.0, sans perte. */
  await engine.locked(()=>engine.closeUncertain());
  const it=(b.interrupted||[]).findLast(x=>x.operationId===d.operationId&&x.status==='DEFER_NAVIGATION_CLOSED_BY_OPERATOR');
  if(it)it.status='DEFER_NAVIGATION_CLOSED_END_OF_PART';
@@ -643,7 +655,9 @@ const VOCABULAIRE=[[/\b[Ll]e mode Natif\b/g,'Écho'],[/\bdu mode Natif\b/g,'d’
  [/\b[Ll]e Pilote\b/g,'Orbite'],[/\bdu Pilote\b/g,'d’Orbite'],[/\bau Pilote\b/g,'à Orbite'],[/\bPilote\b/g,'Orbite'],[/(^|[^A-Za-z0-9_])Banane(?![A-Za-z0-9_]| \(V2\))/g,'$1Ariane']];
 const vocabulaire=t=>typeof t==='string'?VOCABULAIRE.reduce((x,[a,b])=>x.replace(a,b),t):t;
 function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Object.hasOwn(v,'collection')||!Object.hasOwn(v,'batch'))return v;
- const {records,incomplete,...rest}=v;if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
+ const {records,incomplete,...rest}=v;
+ /* D3 : « fin de partie probable » : une seule règle, celle de la reprise. */
+ rest.finDePartieProbable=departOuvert(engine.s.batch);if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
  if(typeof rest.native?.message==='string')rest.native={...rest.native,message:vocabulaire(rest.native.message)};
  if(typeof rest.batch?.error?.message==='string')rest.batch={...rest.batch,error:{...rest.batch.error,message:vocabulaire(rest.batch.error.message)}};
  /* `lotPosed` (4.7.19, un cut posé = une entrée) : son nombre suffit au panneau. */

@@ -89,6 +89,30 @@
 - Onglet sorti d'ESV pendant une lecture : erreur reprenable (« n'affiche
   plus ESV »), comme une page absente.
 
+### Revue de tout le diff 4.8.5 (D7)
+
+- **Adaptateur en sécurité pendant un lot** : son refus dit « Adaptateur
+  ESV sans réponse : … » ; le moteur (épinglé) met donc le lot en pause
+  reprenable (désactive l'autre Ariane, F5, Reprendre ; pose interrompue :
+  archiver le résultat) au lieu d'une erreur définitive qui le perdait. Le
+  refus adressé à une autre Ariane reste un refus, pas un silence.
+- **Connexion simultanée de deux Ariane** : le tampon d'une autre Ariane déjà
+  posé vaut refus (il n'est plus écrasé) ; si la course a lieu quand même,
+  l'adaptateur refuse notre ping en nommant l'autre, et la reconnexion
+  s'arrête. L'autre Ariane est nommée comme dans edge://extensions
+  (« 4.8.5 test 1 ») : l'adaptateur donne son nom de version (marqueur, ping).
+- **Garde × fin de partie** : le dernier cut, différé puis quitté par ESV
+  vers la partie suivante, reste compté parmi les différés du panneau
+  (compteur, refus « écartement bas » à relire) ; exports et rapport
+  d'acceptation inchangés (le moteur ne l'a pas confirmé).
+- **« Écartement bas »** n'est affiché que si la commande du lot a bien
+  différé le cut (pas quand le moteur a gardé la main).
+- « Fin de partie probable » : une seule règle, dite par le service worker
+  au panneau. Un essai garde le nom de version identique partout.
+- **Essai Chromium de cohabitation** (`tools/navigateur-cohabitation.cjs`) :
+  deux Ariane chargées, onglet ESV synthétique (aucun code d'ESV), les deux
+  ordres de connexion.
+
 ### Documents et état (D6, clôture J0)
 
 - **Rapport de sortie 4.8** complété (`audit/rapport-sortie-4.8.md`) : partie

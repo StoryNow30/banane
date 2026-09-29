@@ -136,11 +136,9 @@
   * ce qui ne se défait pas. Aucun bouton n'est caché ou montré ici : la
   * visibilité reste décidée par `button()`, comme avant. */
  /* 4.8.5 (D3, KI-067) : ESV a quitté la page après le différé d'un lot « jusqu'à
-  * la fin de la partie » : fin de partie probable, Reprendre. La marque ne
-  * vaut que pour l'intention de navigation encore ouverte qui l'a posée. */
- function finDePartieProbable(s){const b=s?.batch,d=b?.departApresDiffere;
-   return b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'&&!!d&&b.scope?.endMode==='partie'
-     &&!!s.deferIntent&&s.deferIntent.phase!=='FINALIZED'&&s.deferIntent.operationId===d.operationId;}
+  * la fin de la partie » : fin de partie probable, Reprendre. Le service worker
+  * le dit (`departOuvert`, la règle même de la reprise). */
+ function finDePartieProbable(s){return s?.finDePartieProbable===true&&!!s.batch?.departApresDiffere;}
  function hierarchie(ordre,{ink=[],danger=[]}={}){
    let premier=true;
    for(const id of new Set(ordre)){const el=$(id);if(!el)continue;
@@ -158,10 +156,15 @@
   * Les nombres viennent de l'état du lot et sont réécrits en entiers. */
  /* États d'un lot qui interdisent de démarrer Écho (avec MANUAL_TAKEOVER, dit à part). */
  const LOT_TIENT_ECHO=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'];
- const refusBas=(b,c)=>b?.lotCommands?.[c]?.reason==='first-pass-low-gauge';
+ /* Revue globale : seulement si la commande du lot a bien différé le cut (le moteur
+  * a pu garder la main, ou la commande n'être jamais émise). */
+ const refusBas=(b,c)=>b?.lotCommands?.[c]?.reason==='first-pass-low-gauge'&&b.lotCommands[c].action==='defer';
  function voieDuLot(s){
    const b=s.batch,num=x=>Number(x?.cut??x?.identity?.cut),ens=l=>new Set((l||[]).map(num).filter(Number.isFinite));
-   const fait=ens(b.processed),differe=ens(b.deferred),saute=ens(b.skipped),main=ens(b.manuallyCompleted);
+   /* D3 : le dernier cut d'une partie, différé puis quitté par ESV, compte parmi les
+    * différés de la vue (pas des exports : le moteur ne l'a pas confirmé). */
+   const finPartie=(b.interrupted||[]).filter(x=>x?.status==='DEFER_NAVIGATION_CLOSED_END_OF_PART');
+   const fait=ens(b.processed),differe=ens([...(b.deferred||[]),...finPartie]),saute=ens(b.skipped),main=ens(b.manuallyCompleted);
    const parVoie=new Set(Object.values(b.lotCommands||{}).filter(c=>c?.action==='lot').map(c=>Number(c.cut)).filter(c=>fait.has(c)));
    const actif=Number(b.activeIdentity?.cut),ouvert=OUVERT.includes(b.state),incertain=INCERTAIN.includes(b.state)||!!s.reconcileRequired;
    const cuts=[...new Set((b.sequence||[]).map(num).filter(Number.isFinite))];

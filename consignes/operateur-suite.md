@@ -110,6 +110,8 @@ Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
 2. **F5** sur ESV.
 3. Vérifie le nom sur le bouton blanc au bas d'ESV. Si les deux sont actives,
    la version de test refuse de se connecter et te le dit.
+   Si le panneau dit « Ariane 4.8.5 test 1 **en sécurité** » : l'autre Ariane
+   a tenté de commander l'onglet. Désactive-la, F5, puis **Reprendre**.
 
 **Le lot de validation (≈ 45 min, surveillance légère)**
 1. Choisis une **partie jamais passée par Ariane** : ni 2, 3, 6, 9, 11, 12, 13,
@@ -119,7 +121,11 @@ Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
 2. Fenêtre d'ESV d'au moins 600 pixels de large.
 3. Orbite : premier cut = celui affiché ; dernier cut = vide (jusqu'à la fin de
    la partie). **Démarrer le lot**.
-4. À la fin : **Tout télécharger pour l'analyse**.
+4. Si le lot s'arrête sur « fin de partie probable : clique sur Reprendre » :
+   clique sur **Reprendre** (F5 seulement si ESV reste figée). Si ESV montre
+   la partie suivante, le lot se clôt seul ; sinon, contrôle le cut dans ESV
+   puis **Archiver le résultat interrompu**.
+5. À la fin : **Tout télécharger pour l'analyse**.
 
 **Sa relecture (≈ 15 à 25 min)**
 1. **Démarrer l'observation** dans Écho ; vérifie que le panneau affiche la
