@@ -29,7 +29,7 @@ conservée par l'utilisateur (historique complet) ; ce fichier suffit pour repre
 - Cuts 9033 et 9241 exclus. Dépôts publics : jamais de code source d'ESV.
 - `src/engine.js` épinglé : les correctifs vont dans `background.js` ou
   `src/lot-decision.js`.
-- Commits terminés par `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
+- Commits terminés par la ligne `Co-Authored-By` de la session
   et la ligne `Claude-Session` ; aucun identifiant de modèle dans les fichiers.
 - Chaque fichier d'essai tient en 10 s. `node tools/verify.cjs` doit sortir en 0
   avant chaque commit (restaurer `audit/verification.*` si seuls les temps changent).

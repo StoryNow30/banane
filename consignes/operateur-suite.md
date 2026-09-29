@@ -120,7 +120,8 @@ remplace le test 1 pour ce lot). Ensuite :
 
 **Le lot de validation (≈ 45 min, surveillance légère)**
 1. Choisis une **partie jamais passée par Ariane** : ni 2, 3, 6, 9, 11, 12, 13,
-   14, 15, 18, 19, 20, 22, 24, 30, 31, 33, 34, 35. De préférence une partie dont
+   14, 15, 18, 19, 20, 21, 22, 23, 24, 25, 30, 31, 33, 34, 35 (registre :
+   `audit/rotation-parties.md`), avec **au moins ~200 cuts non validés**. De préférence une partie dont
    la plupart des cuts ne sont pas validés, avec des courbes et si possible un
    passage à niveau.
 2. Fenêtre d'ESV d'au moins 600 pixels de large.

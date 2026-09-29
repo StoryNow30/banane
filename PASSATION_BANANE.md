@@ -4,7 +4,7 @@
 
 **Destinataire : un assistant IA reprenant le projet à froid (ChatGPT ou autre).**
 **Date : 15 septembre 2026. État à la version 4.5.7.**
-**Auteur : Claude Opus 5, qui a mené les versions 4.5.0 à 4.5.7.**
+**Auteur : l'assistant qui a mené les versions 4.5.0 à 4.5.7.**
 **Mis à jour le 16 septembre 2026 pour le lot V4.6.0 : moteur dégelé puis
 ré-épinglé, et deux modes de banc. Les sections concernées le disent.**
 

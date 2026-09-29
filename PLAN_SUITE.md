@@ -92,6 +92,22 @@ D8 (« Relire ce lot dans Écho ») : non retenu par la direction (28/09).
 
 **Hors 4.8.5** : garde de voie à 20 mm (sauf si, rejouée après D2, elle ne perd plus aucun juste) ; choix à un appui (7738, 7026) et biais vertical des passages à niveau : banc de fond pendant J2, sans code.
 
+**Après le lot J2** (avec son résultat ; pas de test 3 avant) :
+- **(a) Message de fin de partie contradictoire** quand M est connu et que le
+  cut n'est pas M−1 : « M cuts relevés : le dernier serait le M−1 », puis « le
+  cut N pourrait être le dernier de la partie ; saisis-le comme dernier cut ».
+  Dans ce cas, le message ne doit plus inviter à saisir ce cut.
+- **(b) « Lot terminé, sauf les différés »** : quand le compteur D4 donne total
+  − traités = nombre de cuts différés du lot, clore proprement (« Fin du lot : il
+  ne reste que N cuts différés ») au lieu d'une pause « Adaptateur ESV sans
+  réponse ». Constaté sur le lot 25 (29/09, test 1 : total − traités = 12 =
+  différés), `audit/lot-485-p25-2026-09-29.md` de la branche
+  `claude/banane-48-cahier`.
+
+**D9 — registre de rotation des parties** : `audit/rotation-parties.md` (fait le
+29/09), à tenir à jour à chaque lot ; le lot J2 suivant prend une partie neuve
+avec au moins ~200 cuts non validés (la partie 25 était validée à 99 %).
+
 ## 3. 4.9 — chantiers de développement
 
 Préalable : cahier 4.9 v0.2 (ordonné, portes chiffrées), écrit par

@@ -36,7 +36,7 @@ l'utilisateur ; ce fichier suffit pour reprendre.
 - `src/engine.js` épinglé : les correctifs vont dans `background.js`,
   `src/lot-decision.js` ou les modules autour.
 - **La partie 9 est une partie de validation** : ne caler aucun réglage dessus.
-- Commits terminés par `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
+- Commits terminés par la ligne `Co-Authored-By` de la session
   et la ligne `Claude-Session` ; aucun identifiant de modèle dans les fichiers.
 - Chaque fichier d'essai tient en 10 s. `node tools/verify.cjs` doit sortir en 0
   avant chaque commit (restaurer `audit/verification.*` si seuls les temps changent).
