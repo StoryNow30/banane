@@ -41,6 +41,7 @@ Rouge attendu : la garde d'écartement bas (D2) n'est pas encore codée.
 |---|---|---|---|
 | `d8455fc` | D1 (numérotation, cohabitation) | VERT, 0 décision changée | ROUGE attendu : 707, 711, 718 inchangés (D2 pas encore codé) ; 0 juste perdu |
 | `ed9f01f` | D2 (garde d'écartement bas) | VERT, 0 décision changée, parités inchangées | **VERT** : 707 et 711 refusés, 718 posé (ricochet, nouveau faux attendu : faux 10 → 9), 0 juste perdu |
+| `307b9a5` | D4 (instrumentation passive) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
 
 ## Question ouverte
 

@@ -66,6 +66,29 @@
   dépendent pas. Usage : qualifier le compteur au premier lot (ce n'est pas une
   preuve de fin de partie) ; premier signal seulement pour les voisins (B1).
 
+### Fin de partie après un différé (D3, KI-067)
+
+- **Lot « jusqu'à la fin de la partie »**, cut **sans pose**, « suivant sans
+  décision » : si ESV quitte la page (canal fermé, page mise en cache arrière)
+  ou annonce une autre partie, la pause dit « ESV a quitté la page après le
+  différé du cut N ; fin de partie probable : clique sur Reprendre (F5
+  seulement si ESV reste figée) » ; le panneau propose « Reprendre » en
+  premier. La marque est liée à cette intention de navigation : un nouveau
+  différé ou une clôture l'efface. Un canal fermé sans départ de page n'en
+  pose pas.
+- **Reprendre** (Ariane s'installe seule sur la page où ESV est allée) : ESV
+  affiche une **partie suivante** → l'intention est clôturée
+  sans renvoi, le lot est clos « Fin du lot : ESV a quitté la partie après le
+  cut N », N est retenu comme fin de la partie (jamais en deçà d'une fin déjà
+  connue), plus d'erreur affichée. **Même partie** → aucune preuve, la pause
+  reste (contrôle le cut, puis clôture le résultat incertain). Partie
+  antérieure (ouverte à la main), action en cours, résultat incertain de
+  pose : pas de clôture automatique.
+- Inchangé : lot borné, cut posé, erreur de connexion avant l'envoi. Aucune
+  commande renvoyée ; le compteur « N on M » n'est pas une preuve.
+- Onglet sorti d'ESV pendant une lecture : erreur reprenable (« n'affiche
+  plus ESV »), comme une page absente.
+
 ### Documents et état (D6, clôture J0)
 
 - **Rapport de sortie 4.8** complété (`audit/rapport-sortie-4.8.md`) : partie

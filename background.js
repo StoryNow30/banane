@@ -64,7 +64,10 @@ const PAGE_ABSENTE=/Could not establish connection|Receiving end does not exist|
 function pageEsvAbsente(e){if(!PAGE_ABSENTE.test(e?.message||''))return e;
  return Object.assign(Error(`Adaptateur ESV sans réponse : page ESV rechargée ou fermée (${e.message}). Après un F5 : lot Orbite, clique sur Reprendre ; Écho, clique sur Connecter puis Reprendre. Onglet fermé : rouvre ESV puis clique sur Connecter.`),{code:'ESV_PAGE_ABSENTE'});}
 async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélectionne un onglet ESV.');
- const tab=await chrome.tabs.get(tabId).catch(e=>{throw pageEsvAbsente(e);});if(!esvURL(tab.url))throw Error('L’onglet sélectionné n’est plus une page ESV autorisée.');
+ const tab=await chrome.tabs.get(tabId).catch(e=>{throw pageEsvAbsente(e);});
+ /* D3 (4.8.5) : onglet sorti d'ESV pendant une lecture (ESV a quitté la page, ou
+  * l'onglet a été emmené ailleurs) : erreur reprenable, comme une page absente. */
+ if(!esvURL(tab.url))throw Object.assign(Error('Adaptateur ESV sans réponse : l’onglet sélectionné n’affiche plus ESV. Rouvre ESV dans cet onglet (ou F5), puis : lot Orbite, clique sur Reprendre ; Écho, clique sur Connecter puis Reprendre.'),{code:'ESV_PAGE_ABSENTE'});
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
   * est dite en clair ; pour une capture, c'est une lecture à reprendre. */
  const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args}).catch(e=>{
@@ -343,7 +346,64 @@ async function retablirApresRechargement(garde=()=>true){
 /* « Reprendre » (après F5 le cas échéant). « Arrêter » pendant l'attente d'ESV
  * ou le retour au cut gagne : on ne relance que le même lot, dans l'état où
  * il était. */
+/* 4.8.5 (D3, KI-067) — FIN DE PARTIE APRÈS UN DIFFÉRÉ. Terrain du 28/09
+ * (partie 15) : le « suivant sans décision » envoyé depuis le dernier cut
+ * (9056, sans point LiDAR) fait quitter la page à ESV ; le moteur (épinglé) le
+ * lit comme une navigation sans progression et met le lot en pause. Dans un lot
+ * « jusqu'à la fin de la partie », sur un cut SANS POSE, on retient ce départ
+ * quand la commande a pu partir et qu'ESV a quitté la page (page mise en cache
+ * de navigation, comme le 28/09) ou annonce une autre partie. Une erreur de
+ * connexion AVANT l'envoi, ou un canal fermé sans départ, n'est pas un départ. La marque est liée à l'intention
+ * (operationId) : elle ne vaut que tant que cette intention reste ouverte. La
+ * preuve vient à la reprise (`finApresDiffere`). Le compteur « N on M » n'est
+ * pas une preuve (D4). Aucune commande n'est renvoyée. Lot borné, ou cut posé :
+ * rien ne change, l'incertitude y est réelle. */
+const PAGE_QUITTEE=/back\/forward cache/i;
+async function departApresDiffere(ev){const b=engine.s.batch,sc=b?.scope;
+ if(!ev||!b||b.state!=='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||sc?.geometryEngine!==GCV1_ENGINE||sc.endMode!=='partie'||engine.s.applied)return;
+ if(ev.identity?.part!==sc.part||!Number.isInteger(ev.identity?.cut)||!ev.operationId)return;
+ const autre=Number.isInteger(ev.observedIdentity?.part)&&ev.observedIdentity.part!==sc.part;
+ if(!autre&&!PAGE_QUITTEE.test(ev.refusal?.message||''))return;
+ b.departApresDiffere={part:ev.identity.part,cut:ev.identity.cut,operationId:ev.operationId,at:new Date().toISOString()};
+ engine.s.notice=`ESV a quitté la page après le différé du cut ${ev.identity.cut} ; fin de partie probable : clique sur Reprendre (F5 seulement si ESV reste figée).`;
+ await engine.save();}
+const departOuvert=b=>{const d=b?.departApresDiffere;return !!d&&b.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'&&b.scope?.endMode==='partie'
+  &&engine.deferPending?.()?.operationId===d.operationId;};
+/* D3 : « Reprendre » après ce départ. Sans F5 d'abord : Ariane s'installe seule
+ * sur la page où ESV est allée (un F5 pourrait ramener ESV dans la partie du lot).
+ * PREUVE DE FIN : ESV affiche une partie SUIVANTE ET la dernière action du lot est la navigation depuis le cut N
+ * (intention de navigation encore ouverte sur N). Alors l'intention est
+ * clôturée sans renvoi, le lot est clos et N est retenu comme fin de la partie
+ * (jamais en deçà d'une fin déjà connue ; même lecture que la sortie après une
+ * validation, KI-061). Même partie ou partie antérieure (ouverte à la main),
+ * action en cours, résultat incertain à clôturer : aucune clôture automatique ;
+ * même partie : la marque tombe, la marche à suivre redevient la clôture. */
+async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.BananeSettings?.lot||{};
+ const lot=b.id,garde=()=>{if(engine.s.batch?.id!==lot||engine.s.batch.state!=='PAUSED_DEFER_NAVIGATION_UNCERTAIN')throw Error('Reprise interrompue : le lot a changé.');};
+ if(engine.task)throw Error('Attends la fin de l’action en cours.');
+ if(engine.s.reconcileRequired||engine.s.intent)throw Error('Un résultat incertain reste à clôturer à la main : contrôle ESV, puis clôture ce résultat incertain. Aucune fin de partie n’est affirmée.');
+ let now=null;try{now=await readState();}catch{/* page rechargée : Ariane s'y réinstalle */}
+ if(!now){engine.s.notice='Ariane attend la page ESV (rafraîchis-la si elle reste figée)…';await engine.save();
+   await reconnecterESV(S.rafraichirAttenteMs??90000,garde);now=await readState();}
+ garde();if(!departOuvert(engine.s.batch))throw Error('Reprise interrompue : la navigation différée a changé.');
+ if(!Number.isInteger(now?.identity?.part))throw Error('ESV illisible après le rafraîchissement : contrôle la page, puis clique sur Reprendre.');
+ if(now.identity.part===b.scope.part){delete b.departApresDiffere;await engine.save();
+   throw Error(`ESV affiche encore la partie ${b.scope.part} : pas de fin de partie. Contrôle le cut ${d.cut} dans ESV, puis clôture ce résultat incertain.`);}
+ if(now.identity.part<b.scope.part)
+   throw Error(`ESV affiche la partie ${now.identity.part}, antérieure au lot : pas une preuve de fin. Rouvre la partie suivante dans ESV puis Reprendre, ou contrôle le cut ${d.cut} et clôture ce résultat incertain.`);
+ await engine.locked(()=>engine.closeUncertain());
+ const it=(b.interrupted||[]).findLast(x=>x.operationId===d.operationId&&x.status==='DEFER_NAVIGATION_CLOSED_BY_OPERATOR');
+ if(it)it.status='DEFER_NAVIGATION_CLOSED_END_OF_PART';
+ b.error=null;delete b.departApresDiffere;
+ b.stoppedAtEnd={cut:d.cut,reason:'navigation-other-part-after-defer',issue:'sortie',target:{part:now.identity.part,cut:now.identity.cut??null},at:new Date().toISOString(),applied:false};
+ engine.s.notice=`Fin du lot : ESV a quitté la partie après le cut ${d.cut}. Le lot est clos ; aucun cut hors du lot n’est traité.`;
+ await engine.event('batch-stopped-at-end',{identity:null,reason:'navigation-other-part-after-defer',lastCut:d.cut,target:b.stoppedAtEnd.target});
+ const connue=(await finsParties())[b.scope.part];
+ if(!(Number.isInteger(connue?.last)&&connue.last>d.cut))await retenirFinPartie(b.scope.part,d.cut,'fin constatée après différé');
+ await engine.save();return true;}
 async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
+ const b0=engine.s.batch;
+ if(departOuvert(b0))return finApresDiffere(b0);
  const lot=engine.s.batch?.id,etatDepart=engine.s.batch?.state;
  const garde=()=>engine.s.batch?.id===lot&&engine.s.batch.state===etatDepart;
  /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
@@ -379,6 +439,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */
  const evenement=engine.event.bind(engine);
  engine.event=async(type,...rest)=>{const r=await evenement(type,...rest);
+   if(type==='defer-navigation-uncertain')await departApresDiffere(rest[0]);
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
    return r;};

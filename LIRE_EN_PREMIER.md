@@ -11,10 +11,10 @@ dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le
 |---|---|
 | **Version stable** | **Ariane 4.8.0**, étiquette `v4.8.0` (`fabd77e`), paquet final `38aa29a2…` ; installée chez l'opérateur |
 | **Retour arrière** | 4.7.21, étiquette `v4.7.21` (`ead1cd1`), `RETOUR_ARRIERE.md` |
-| **En cours** | **4.8.5 test 1** (J1), branche `claude/friendly-gauss-1p9c6q` : D5 (outils de portes), D6 (documents), D1 (numérotation, cohabitation), D2 (garde d'écartement bas) et D4 (instrumentation passive) faits ; D3 en cours, puis D7 (revue, paquet `4.8.5.1`, essai Chromium) ; aucun paquet avant la fin des chantiers |
-| **Portes de J1** | `node tools/portes-j1.cjs` (`audit/portes-j1/`) : au 28/09, 633 cuts de validation VERT ; 8 jeux ROUGE (attendu tant que D2 n'est pas codé) |
+| **En cours** | **4.8.5 test 1** (J1), branche `claude/friendly-gauss-1p9c6q` : D5 (outils de portes), D6 (documents), D1 (numérotation, cohabitation), D2 (garde d'écartement bas), D4 (instrumentation passive) et D3 (fin de partie après un différé) faits ; reste D7 (revue, paquet `4.8.5.1`, essai Chromium) ; aucun paquet avant la fin des chantiers |
+| **Portes de J1** | `node tools/portes-j1.cjs` (`audit/portes-j1/`) : depuis D2 (29/09), toutes VERTES : 633 cuts inchangés ; 8 jeux : 707, 711 refusés, 718 posé, 0 juste perdu |
 | **Mesures 4.8** | `audit/rapport-sortie-4.8.md` : C1 tenu (parties 9 et 12 : 79,3 % et 79,2 %), C4 4 faux sur 161 jugés, C3 0 hors contrat. Après la sortie : partie 11, 44 jugés, 0 faux ; partie 15, C1 76,5 %, **C4 non mesuré** (D-060) |
-| **Problème ouvert du terrain** | KI-067 (fin de partie après un différé), corrigé par D3 |
+| **Problème ouvert du terrain** | KI-067 (fin de partie après un différé), corrigé par D3, à confirmer en J2 |
 | **Prochaine tâche de l'opérateur** | J2, quand le paquet test 1 sera livré : un lot sur une partie neuve, puis sa relecture Écho (`consignes/operateur-suite.md`) ; la 4.8.0 reste installée à côté, **une seule Ariane active à la fois** (D-060) |
 
 ## Démarrer avec Ariane 4.8.0 (version stable)

@@ -135,6 +135,12 @@
   * autres sont des liens. Noir (ink) pour s'arrêter ou constater, rouge pour
   * ce qui ne se défait pas. Aucun bouton n'est caché ou montré ici : la
   * visibilité reste décidée par `button()`, comme avant. */
+ /* 4.8.5 (D3, KI-067) : ESV a quitté la page après le différé d'un lot « jusqu'à
+  * la fin de la partie » : fin de partie probable, Reprendre. La marque ne
+  * vaut que pour l'intention de navigation encore ouverte qui l'a posée. */
+ function finDePartieProbable(s){const b=s?.batch,d=b?.departApresDiffere;
+   return b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'&&!!d&&b.scope?.endMode==='partie'
+     &&!!s.deferIntent&&s.deferIntent.phase!=='FINALIZED'&&s.deferIntent.operationId===d.operationId;}
  function hierarchie(ordre,{ink=[],danger=[]}={}){
    let premier=true;
    for(const id of new Set(ordre)){const el=$(id);if(!el)continue;
@@ -404,7 +410,8 @@
      const differes=b?` · Différés : ${b.deferred?.length||0}`:'';
      /* 4.7.19 : arrêt au dernier cut du lot, sans validation ni navigation. */
      /* Clôture par une sortie d'ESV (KI-061, KI-063) : le cut nommé est le dernier validé, pas un cut posé. */
-     const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus'};
+     const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus',
+       'navigation-other-part-after-defer':'ESV a quitté la partie après le différé'};
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
      const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
@@ -459,7 +466,11 @@
      /* Un échec ou une incertitude de navigation reste visible AVEC le cut
       * concerné : aucun bouton n'est présenté comme réussi sur un simple accusé. */
      const differe=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
-     if(b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||differe)
+     const finProbable=finDePartieProbable(s);
+     if(finProbable)
+       note(`ESV a quitté la page après le différé du cut ${entier(b.departApresDiffere.cut)} ; fin de partie probable : clique sur Reprendre (F5 seulement si ESV reste figée). `
+         +'Si ESV affiche une autre partie, le lot se clôt et ce cut est retenu comme fin de la partie ; sinon, contrôle le cut dans ESV, puis clôture ce résultat incertain. Aucune commande n’est renvoyée.');
+     else if(b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||differe)
        note(`Cut ${differe?.identity?.cut??b?.activeIdentity?.cut??'?'} : la navigation sans décision `
          +(differe?.commandInvoked===false?'n’a pas été émise.':'a peut-être été transmise, sans progression acceptée.')
          +' Elle ne sera pas renvoyée. Aucun cut n’est compté comme différé tant que la progression n’est pas acceptée. '
@@ -489,7 +500,7 @@
      button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:false});
      /* 4.8.0 : « adaptateur sans réponse » se règle par F5 puis Reprendre. */
      const debloquable=b?.state==='PAUSED_ADAPTER_UNRESPONSIVE'&&b.scope?.geometryEngine==='geometry-candidate-v1'&&!s.reconcileRequired&&!s.intent;
-     button('resume',{hidden:!(['PAUSED','STOPPED'].includes(b?.state)||debloquable),disabled:busy||active(s)});
+     button('resume',{hidden:!(['PAUSED','STOPPED'].includes(b?.state)||debloquable||finProbable),disabled:busy||active(s)});
      const actionable=b?.step==='apply'&&['unresolved-rail','low-confidence'].includes(b?.pauseReason);
      button('retry',{hidden:!actionable,disabled:busy||active(s)});
      /* « Reprise manuelle » est un ÉTAT DU PILOTE, pas une session de
@@ -516,10 +527,12 @@
      /* 4.8.0 (audit qualité, U03) : un lot arrêté à sa borne est fini ; le
       * dossier pour l'analyse passe avant « Reprendre ». */
      const aSaBorne=fini&&!nouveauLot&&b?.state==='STOPPED'&&!!b.stoppedAtEnd;
-     hierarchie(['close-uncertain','manual-completion',...demarrer,'retry',...(aSaBorne?['export-tout']:[]),'resume','pause',...(fini&&!nouveauLot?['export-tout','new-batch','start-batch']:['start-batch','export-tout','new-batch']),'manual-takeover','explicit-skip','stop'],
+     const reprendreDabord=finProbable?['resume','close-uncertain']:['close-uncertain'];
+     hierarchie([...reprendreDabord,'manual-completion',...demarrer,'retry',...(aSaBorne?['export-tout']:[]),...(finProbable?[]:['resume']),'pause',...(fini&&!nouveauLot?['export-tout','new-batch','start-batch']:['start-batch','export-tout','new-batch']),'manual-takeover','explicit-skip','stop'],
        {ink:['close-uncertain','manual-completion','pause'],danger:['explicit-skip','stop']});
    }
-   if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
+   /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
+   if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
    button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{render(await api('view'));}catch(e){note(e.message,true);}finally{refreshing=false;}}
