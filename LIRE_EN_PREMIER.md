@@ -9,14 +9,14 @@ dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le
 
 | | |
 |---|---|
-| **Version stable** | **Ariane 4.8.0**, étiquette `v4.8.0` (`fabd77e`), paquet final `38aa29a2…` ; installée chez l'opérateur |
-| **Retour arrière** | depuis la 4.8.0 : 4.7.21, étiquette `v4.7.21` (`ead1cd1`) ; **depuis la 4.8.5 : 4.8.0**, étiquette `v4.8.0` (`fabd77e`, paquet `38aa29a2…`, reconstruit à l'identique le 29/09) ; `RETOUR_ARRIERE.md` |
-| **En cours** | **Candidat Ariane 4.8.5 stable** (D-063), branche `claude/friendly-gauss-1p9c6q` : même code que le test 2 (`0d29e54`), à la version et au nom près (`4.8.5`, « Ariane ») et à un texte de fin de partie corrigé sur la relecture indépendante de D-062 ; paquet `ariane-v4.8.5.zip` construit depuis **`323356c`**, SHA-256 **`cf4401bf003d3a3ba7902c65062b84ef9a853ff3a60f2e7f84f0c47ff304484d`** (trois constructions identiques ; banane-data `travail/2026-09-29_ariane-485-candidat/`) ; l'étiquette `v4.8.5`, si la direction la donne, va sur `323356c` ; le premier candidat (`8911282`, `ac931b5d…`) est remplacé, ni étiqueté ni publié ; **ni merge, ni étiquette, ni publication** avant le feu vert de la direction. Installation : `consignes/installation-4.8.5.md` ; retour : `RETOUR_ARRIERE.md` (cible 4.8.0). Paquets de test 1 et 2 livrés, inchangés |
+| **Version stable** | **Ariane 4.8.5**, étiquette `v4.8.5` (`323356c`), publication GitHub « Ariane 4.8.5 — stable » du 29/09 avec `ariane-v4.8.5.zip` (SHA-256 `cf4401bf003d3a3ba7902c65062b84ef9a853ff3a60f2e7f84f0c47ff304484d`, vérifiée sur la publication) ; feu vert de la direction le 29/09 (D-063) ; à installer à la place de la 4.8.0 : `consignes/installation-4.8.5.md` |
+| **Retour arrière** | **Ariane 4.8.0**, étiquette `v4.8.0` (`fabd77e`, paquet `38aa29a2…`, reconstruit à l'identique le 29/09) ; `RETOUR_ARRIERE.md` |
+| **En cours** | 4.8.5 publiée ; la suite (4.9) démarre selon `consignes/demarrage-session-49.md`. Les paquets de test 1 et 2 et le premier candidat (`8911282`) ne sont pas des versions : ni étiquetés ni publiés |
 | **Portes de J1** | `node tools/portes-j1.cjs` (`audit/portes-j1/`) : depuis D2 (29/09), toutes VERTES : 633 cuts inchangés ; 8 jeux : 707, 711 refusés, 718 posé, 0 juste perdu |
 | **Mesures 4.8** | `audit/rapport-sortie-4.8.md` : C1 tenu (parties 9 et 12 : 79,3 % et 79,2 %), C4 4 faux sur 161 jugés, C3 0 hors contrat. Après la sortie : partie 11, 44 jugés, 0 faux ; partie 15, C1 76,5 %, **C4 non mesuré** (D-060) |
 | **Mesures 4.8.5** | `audit/rapport-sortie-4.8.5.md` : lots 25 et 33 (test 1) : C1 85,2 % et 84,0 %, C3 0 ; C4 partie 25 : 2 faux sur 62 jugés, **validé sur l'expertise de la direction**, sans mesure conforme à la lettre (moins de 100 jugés, D-063) ; lot 33 sans relecture (« RAS ») |
 | **Problèmes ouverts** | KI-067 corrigé (D3, D-062), **non exercé en réel** (lots 25 et 33 sous le test 1) ; KI-068 (export du journal d'Orbite alourdi par Écho), accepté pour la 4.8.5 |
-| **Prochaine tâche de l'opérateur** | après le feu vert de la direction : installer la 4.8.5 à la place de la 4.8.0 (`consignes/installation-4.8.5.md`) |
+| **Prochaine tâche de l'opérateur** | installer la 4.8.5 à la place de la 4.8.0 (`consignes/installation-4.8.5.md`), puis désactiver les versions de test |
 
 ## Démarrer avec Ariane 4.8.0 (version stable)
 

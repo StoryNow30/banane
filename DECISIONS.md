@@ -1,5 +1,15 @@
 # Décisions techniques
 
+## D-064 - 4.8.5 stable : feu vert, étiquette et publication
+
+**29 septembre 2026, direction** : « feu vert ». La 4.8.5 devient la version
+stable : `main` fusionné (`da89e8b`), étiquette `v4.8.5` sur `323356c` (le
+code du paquet), publication GitHub « Ariane 4.8.5 — stable » avec
+`ariane-v4.8.5.zip` (SHA-256 `cf4401bf…484d`, empreinte de la publication
+vérifiée par l'orchestrateur, identique aux trois constructions). Cible de
+retour : 4.8.0 (`v4.8.0`, `fabd77e`). Installation :
+`consignes/installation-4.8.5.md`.
+
 ## D-063 - Préparer la 4.8.5 stable ; C4 validé sur l'expertise de la direction (partie 25)
 
 **29 septembre 2026, direction** : « go » pour préparer la 4.8.5 stable.
