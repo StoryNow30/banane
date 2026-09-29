@@ -729,14 +729,23 @@
  const SANS_REPONSE='Adaptateur ESV sans réponse : ';
  const refusEtranger=()=>PROPRIO===null?'Adaptateur ESV installé sans propriétaire : F5 sur ESV, puis Connecter.'
    :`Une autre Ariane (${nomProprietaire}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`;
- const refusSecurite=()=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre (pose interrompue : Archiver le résultat interrompu).`;
+ /* D-062 (c) : la pose en cours va à son terme (la mise en sécurité ne vaut
+  * qu'à l'entrée d'une commande) ; la commande suivante est refusée, avec ce
+  * qu'elle laisse : validation refusée après la pose → pose faite, non validée,
+  * à contrôler puis archiver (D-062 d) ; pose refusée → rien posé. */
+ const SUITE={validateAndNext:'Validation refusée : la pose de ce cut est faite, non validée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
+   skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
+   apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',
+   restore:'Restauration refusée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.'};
+ const refusSecurite=action=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). `
+   +(SUITE[action]||'Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.');
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.
  window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
    const {id,channel,action,args=[],sentAt,proprietaire}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
    if(PROPRIO===null||proprietaire!==PROPRIO){if(PROPRIO!==null&&!EN_SECURITE.has(action)&&!intrusion)intrusion={action,at:new Date().toISOString()};
      window.postMessage({kind:'banane3:result',id,channel,error:refusEtranger()},location.origin);return;}
-   if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite()},location.origin);return;}
+   if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite(action)},location.origin);return;}
    if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
    const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
    /* 4.8.0 (KI-063) — ANNULATION PÉRIMÉE. Un `cancel` sans identifiant

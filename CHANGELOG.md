@@ -37,6 +37,29 @@ paquet test 1 déjà livré n'est pas modifié.
   fermé sans fin de partie : ESV affiche encore la partie P (cut X). Contrôle
   le cut N dans ESV ».
 
+### Mise en sécurité pendant une pose (D-062 c et d)
+
+- **Comportement** : quand une autre Ariane commande l'onglet pendant une
+  pose, la pose en cours **va à son terme** (les deux rails ; la mise en
+  sécurité ne s'applique qu'à l'entrée d'une commande). La **validation
+  suivante est refusée**, sans aucune commande envoyée à ESV : « Ariane 4.8.5
+  test 2 en sécurité : … Validation refusée : la pose de ce cut est faite, non
+  validée. Désactive l'autre Ariane dans edge://extensions, puis F5 sur ESV ;
+  contrôle ce cut dans ESV, puis Archiver le résultat interrompu ». Le lot
+  **passe en pause** (« adaptateur sans réponse », avec un résultat incertain
+  à réconcilier) : « Reprendre » n'est pas proposé, « Archiver le résultat
+  interrompu » l'est. Aucune validation, aucun SKIP, aucune commande
+  renvoyée.
+- Intrusion **avant** une pose : « Pose refusée : rien n'a été posé sur ce
+  cut » ; avant un SKIP ou une restauration, message propre à chacun ; avant
+  une lecture de cut ou une navigation : F5, puis Reprendre, comme au test 1.
+- **Risque restant, accepté par la direction (D-062 d)** : autre Ariane
+  pendant une pose : la pose se termine, la validation est refusée,
+  l'opérateur contrôle le cut.
+- Essai `tests/securite-pose-485.test.cjs` : pose suspendue entre les deux
+  clics, intrusion pendant la suspension, paire terminée, validation refusée,
+  lot en pause avec ce message.
+
 ## 4.8.5 test 1 — en cours (PLAN_SUITE §2)
 
 ### Outils de portes (D5)
