@@ -81,3 +81,30 @@ test('regrouper en vrac : le contenu, pas le nom, range journal, diagnostic et r
   assert.deepEqual(r.inconnus.map(i=>i.fichier).sort(),['f.json.gz','g.json.gz']);assert.equal(r.relectures[0].parties[0],20);
   const {lots}=L.decouvrir(racine);assert.deepEqual(lots.map(l=>l.part).sort(),[20,33,33]);
 });
+
+test('filtrer le journal : les événements et visites d’Écho partent, ceux du lot restent, sortie identique sinon',async()=>{
+  const F=require('../tools/filtrer-journal.cjs'),dir=tmp(),ent=path.join(dir,'j.json'),sor=path.join(dir,'s.json');
+  const orbite={format:'banane-test-journal-v4',version:'4.8.5.1',state:{batch:{id:'b',scope:{part:33}}},stateOmits:[],closureSummary:{completed:1},
+    events:[{eventId:'1',type:'proposed',note:'a"b,{c}'},{eventId:'2',type:'validation-accepted'}],records:[{identity:{part:33,cut:1},before:{rails:null}}]};
+  fs.writeFileSync(ent,JSON.stringify(orbite));
+  let st=await F.filtrer(ent,sor);assert.deepEqual(JSON.parse(fs.readFileSync(sor,'utf8')),orbite,'un journal sans Écho sort identique');assert.equal(st.events.gardes,2);
+  const mixte={...orbite,events:[...orbite.events,{type:'native-state-observed',nativeSessionId:'n',blob:'x'.repeat(50)},{type:'native-operator-event',observationPeriodId:'p'}],
+    records:[...orbite.records,{recordId:'r',visitId:'v',railSnapshots:{left:[1]}}]};
+  fs.writeFileSync(ent,JSON.stringify(mixte));
+  st=await F.filtrer(ent,sor);const s=JSON.parse(fs.readFileSync(sor,'utf8'));
+  assert.deepEqual(s.events.map(e=>e.eventId),['1','2']);assert.equal(s.records.length,1);assert.deepEqual(s.state,orbite.state);assert.deepEqual(s.closureSummary,orbite.closureSummary);
+  assert.deepEqual([st.events.lus,st.events.gardes,st.records.lus,st.records.gardes],[4,2,2,1]);
+  fs.writeFileSync(ent+'.gz',require('node:zlib').gzipSync(JSON.stringify(mixte)));
+  await F.filtrer(ent+'.gz',sor);assert.equal(JSON.parse(fs.readFileSync(sor,'utf8')).events.length,2,'lit aussi les .gz');
+});
+
+test('regrouper : le diagnostic cumulatif de la session va au journal le plus proche dans le temps',()=>{
+  const zlib=require('node:zlib'),G=require('../tools/regrouper-reduits.cjs'),vrac=tmp(),racine=path.join(tmp(),'racine');
+  const gz=(nom,doc)=>fs.writeFileSync(path.join(vrac,nom),zlib.gzipSync(JSON.stringify(doc)));
+  const journal=part=>({format:'banane-test-journal-v4',version:'4.8.0',state:{sessionId:'S',batch:{scope:{part}}},events:[],records:[]}),diag={format:'banane-gcv1-diagnostic-v1',sessionId:'S',observations:[]};
+  gz('ariane-journal-v4-1790668357663.json.gz',journal(20));gz('ariane-gcv1-diagnostic-1790668359501.json.gz',diag);
+  gz('ariane-journal-v4-1790670925402.json.gz',journal(21));gz('ariane-gcv1-diagnostic-1790670933990.json.gz',diag);
+  G.regrouper(vrac,racine);
+  assert.deepEqual(fs.readdirSync(path.join(racine,'lot 20')).sort(),['ariane-gcv1-diagnostic-1790668359501.json','ariane-journal-v4-1790668357663.json']);
+  assert.deepEqual(fs.readdirSync(path.join(racine,'lot 21')).sort(),['ariane-gcv1-diagnostic-1790670933990.json','ariane-journal-v4-1790670925402.json']);
+});

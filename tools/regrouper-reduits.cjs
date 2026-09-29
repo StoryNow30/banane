@@ -9,7 +9,9 @@
  *   node tools/analyse-locale.cjs DOSSIER_RACINE
  *
  * Le classement vient du contenu, jamais du nom : le journal donne la partie (`state.batch.scope.part`),
- * le diagnostic se rattache à son journal par `sessionId`, la relecture donne la partie de ses visites.
+ * le diagnostic se rattache à son journal par l'horodatage de son nom (exporté juste après le journal ; le
+ * diagnostic couvre toute la session du moteur, donc plusieurs lots partagent le même `sessionId`), à défaut
+ * par `sessionId`, la relecture donne la partie de ses visites.
  * Deux lots de la même partie (rejeu, reprise) restent séparés : `lot 25`, `lot 25 (2)`.
  */
 const fs = require('node:fs'), path = require('node:path'), zlib = require('node:zlib');
@@ -17,6 +19,7 @@ const R = require('./reducteur-exports-core.js');
 
 const lire = f => { const b = fs.readFileSync(f); return /\.gz$/i.test(f) ? zlib.gunzipSync(b) : b; };
 const nomSansGz = f => path.basename(f).replace(/\.gz$/i, '');
+const horodatage = f => { const m = /-(\d{12,14})\.json(\.gz)?$/i.exec(path.basename(f)); return m ? Number(m[1]) : null; };
 
 function regrouper(vrac, racine) {
   const fichiers = fs.readdirSync(vrac).filter(n => /\.json(\.gz)?$/i.test(n)).sort().map(n => path.join(vrac, n));
@@ -36,7 +39,12 @@ function regrouper(vrac, racine) {
     if (!Number.isInteger(j.part)) { inconnus.push({ fichier: path.basename(j.f), type: 'journal sans partie' }); continue; }
     const d = dossier('lot', j.part); fs.mkdirSync(d, { recursive: true });
     fs.writeFileSync(path.join(d, nomSansGz(j.f)), j.brut);
-    const diag = diagnostics.filter(x => x.session && x.session === j.session);
+    /* Un seul diagnostic par lot : le plus proche dans le temps du journal (exportés à quelques secondes d'écart) ; sans
+     * horodatage lisible, un diagnostic de la même session. */
+    const tj = horodatage(j.f), libres = diagnostics.filter(x => !x.pris);
+    const proches = tj === null ? [] : libres.filter(x => horodatage(x.f) !== null).sort((a, b) => Math.abs(horodatage(a.f) - tj) - Math.abs(horodatage(b.f) - tj));
+    const choisi = proches[0] || libres.find(x => x.session && x.session === j.session) || null;
+    const diag = choisi ? [choisi] : [];
     for (const x of diag) { fs.writeFileSync(path.join(d, nomSansGz(x.f)), x.brut); x.pris = true; }
     rapport.lots.push({ partie: j.part, dossier: path.basename(d), journal: path.basename(j.f), diagnostics: diag.length });
   }
