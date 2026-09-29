@@ -51,7 +51,7 @@ test('lot : validation refusée après la pose (adaptateur en sécurité) : lot 
   const view=await r.b.settle();
   assert.equal(r.applied.length,1,'la pose en cours est allée à son terme');
   assert.equal(r.b.adapter.calls.filter(c=>c==='validateAndNext').length,1,'une seule tentative, jamais renvoyée');
-  assert.ok(!r.b.adapter.calls.includes('skipAndNext'),'aucun SKIP');
+  assert.ok(!r.b.adapter.calls.includes('skip'),'aucun SKIP');
   assert.equal(view.batch.state,'PAUSED_ADAPTER_UNRESPONSIVE','le lot passe en pause');assert.equal(view.reconcileRequired,true);
   assert.match(view.notice,/Validation refusée : la pose de ce cut est faite, non validée/);
   const {$}=await panneau(view);

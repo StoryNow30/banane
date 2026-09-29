@@ -60,6 +60,22 @@ paquet test 1 déjà livré n'est pas modifié.
   clics, intrusion pendant la suspension, paire terminée, validation refusée,
   lot en pause avec ce message.
 
+### Essais de cohabitation poussés (P2)
+
+- **Entrelacement contrôlé de deux installations** (deux identifiants
+  d'extension, un même onglet ; `tests/cohabitation-p2-485.test.cjs`) :
+  chaque injection (sonde et tampon, fichiers de la page, bridge) attend son
+  tour ; les 20 ordres possibles sont joués. Dans chacun : une seule se
+  connecte, elle est propriétaire de l'adaptateur, l'autre reçoit un refus
+  définitif qui la nomme ; chacune gagne selon l'ordre.
+- **Reprise complète après une intrusion**
+  (`tests/reprise-intrusion-485.test.cjs`) : intrusion pendant un lot (refus
+  exact de l'adaptateur réel) → pause reprenable, rien d'incertain → F5 →
+  réinstallation → retour au cut du lot → reprise ; le cut interrompu est
+  traité, le lot va jusqu'à sa fin.
+- Ces deux essais vérifient le code existant (verts dès l'écriture) : aucun
+  défaut trouvé.
+
 ## 4.8.5 test 1 — en cours (PLAN_SUITE §2)
 
 ### Outils de portes (D5)
