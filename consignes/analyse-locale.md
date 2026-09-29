@@ -1,5 +1,17 @@
 # Analyse locale des exports (quand ils pèsent des Go)
 
+Deux voies, selon ce que l'ordinateur de l'opérateur permet :
+
+- **Sans rien installer ni exécuter (poste de travail restreint)** : la page
+  `tools/navigateur/reducteur-exports.html` (assemblée par
+  `python3 tools/navigateur/construire-reducteur.py`), à ouvrir dans Edge. L'opérateur y dépose
+  un dossier à la fois ; elle garde le journal et le diagnostic d'un lot (compressés), allège une
+  relecture (visites seules), écarte le corpus et le bilan. Un lot de 200 Mo devient 0,6 Mo ; une
+  relecture de 72 Mo, 0,4 Mo ; 990 Mo de relecture, environ 1 Mo. Les rapports que j'en tire sont
+  identiques à ceux des exports complets (`tests/reducteur-exports.test.cjs`, et comparaison sur des
+  exports réels). Rien ne quitte le navigateur.
+- **Avec Node.js** : le kit ci-dessous, qui fait tout d'un coup et calcule aussi les extraits.
+
 Un lot Orbite pèse environ 1,2 Mo par cut visité, une relecture Écho autant par
 visite. Au-delà de quelques centaines de cuts, l'envoi est impossible (la session
 n'a ni le disque ni le canal). L'analyse se fait donc chez l'opérateur, et seuls

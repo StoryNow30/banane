@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ariane — réducteur d'exports</title>
+<style>
+:root{--fond:#f7f8fa;--carte:#fff;--texte:#1f2328;--doux:#5b6470;--trait:#d8dde3;--accent:#1f6feb;--ok:#1a7f37;--alerte:#b35900}
+@media (prefers-color-scheme:dark){:root{--fond:#14171b;--carte:#1c2026;--texte:#e6e8eb;--doux:#98a2ad;--trait:#323944;--accent:#58a6ff;--ok:#3fb950;--alerte:#e3a13a}}
+*{box-sizing:border-box}body{margin:0;background:var(--fond);color:var(--texte);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 64px}h1{font-size:22px;margin:0 0 4px}.doux{color:var(--doux)}
+.carte{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:16px;margin:16px 0}
+label.zone{display:block;border:2px dashed var(--trait);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer}
+label.zone.survol{border-color:var(--accent)}input[type=file]{display:none}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}button:disabled{opacity:.5;cursor:default}
+ol{padding-left:20px;margin:8px 0}li{margin:4px 0}table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:5px 6px;border-bottom:1px solid var(--trait)}
+.ok{color:var(--ok)}.alerte{color:var(--alerte)}progress{width:100%;height:10px}a.tel{display:block;margin:6px 0;color:var(--accent);word-break:break-all}
+</style></head>
+<body><main>
+<h1>Ariane — réducteur d'exports</h1>
+<p class="doux">Rend un export assez léger pour être envoyé. <b>Rien n'est envoyé sur Internet</b> : tout se passe dans ce navigateur, sur ton ordinateur. Rien à installer.</p>
+<div class="carte"><ol>
+<li>Un dossier à la fois : un lot Orbite <b>ou</b> une relecture Écho.</li>
+<li>Glisse ici tous les fichiers .json du dossier (sélectionne-les tous avec Ctrl+A dans l'Explorateur), ou clique.</li>
+<li>Clique sur « Réduire », attends la fin (quelques minutes par Go), puis télécharge les fichiers proposés.</li>
+<li>Recommence pour chaque dossier, puis dépose tous les fichiers téléchargés dans la conversation.</li>
+</ol></div>
+<label class="zone" id="zone"><input type="file" id="fichiers" multiple accept=".json,application/json"><b>Choisir ou déposer les fichiers .json</b><br><span class="doux" id="choix">aucun fichier</span></label>
+<p><button id="go" disabled>Réduire</button> <span class="doux" id="etat"></span></p>
+<progress id="barre" value="0" max="1" hidden></progress>
+<div class="carte" id="journal" hidden><table><thead><tr><th>Fichier</th><th>Type</th><th>Poids</th><th>Suite</th></tr></thead><tbody id="lignes"></tbody></table></div>
+<div class="carte" id="resultats" hidden><b>À télécharger et à m'envoyer</b><div id="liens"></div><p class="doux" id="bilan"></p></div>
+</main>
+<script>/*CAPTURE*/</script>
+<script>/*CORE*/</script>
+<script>/*NATIF*/</script>
+<script>/*COEUR*/</script>
+<script>
+(function(){'use strict';
+const R=self.ArianeReducteur,$=id=>document.getElementById(id),Mo=n=>n>=1e9?(n/1e9).toFixed(2)+' Go':(n/1e6).toFixed(n<1e7?2:0)+' Mo';
+let fichiers=[];
+const choisir=l=>{fichiers=[...l].filter(f=>/\.json$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{numeric:true}));
+  $('choix').textContent=fichiers.length?`${fichiers.length} fichier(s), ${Mo(fichiers.reduce((n,f)=>n+f.size,0))}`:'aucun fichier .json';$('go').disabled=!fichiers.length;};
+$('fichiers').addEventListener('change',e=>choisir(e.target.files));
+const zone=$('zone');['dragover','dragenter'].forEach(t=>zone.addEventListener(t,e=>{e.preventDefault();zone.classList.add('survol');}));
+['dragleave','drop'].forEach(t=>zone.addEventListener(t,e=>{e.preventDefault();zone.classList.remove('survol');}));
+zone.addEventListener('drop',e=>choisir(e.dataTransfer.files));
+async function gz(blob){return new Response(blob.stream().pipeThrough(new CompressionStream('gzip'))).blob();}
+function lien(nom,blob){const a=document.createElement('a');a.className='tel';a.href=URL.createObjectURL(blob);a.download=nom;a.textContent=`${nom} (${Mo(blob.size)})`;$('liens').appendChild(a);}
+function ligne(nom,type,taille,suite,cls){const tr=document.createElement('tr');for(const [t,c] of [[nom],[type],[Mo(taille)],[suite,cls]]){const td=document.createElement('td');td.textContent=t;if(c)td.className=c;tr.appendChild(td);}$('lignes').appendChild(tr);return tr;}
+$('go').addEventListener('click',async()=>{
+  $('go').disabled=true;$('journal').hidden=false;$('resultats').hidden=false;$('lignes').innerHTML='';$('liens').innerHTML='';$('bilan').textContent='';
+  const barre=$('barre');barre.hidden=false;barre.max=fichiers.length;barre.value=0;
+  const rel=new R.Relecture(),bilans=[];let avant=0,garde=0,journaux=0,fait=0,relus=0;
+  try{
+    for(const f of fichiers){
+      $('etat').textContent=`${f.name}…`;avant+=f.size;
+      const type=R.classer(await f.slice(0,700).text());
+      if(type==='journal'||type==='diagnostic'){const b=await gz(f);lien(f.name+'.gz',b);garde+=b.size;if(type==='journal')journaux++;ligne(f.name,type,f.size,'gardé, compressé','ok');}
+      else if(type==='bilan'){bilans.push(f);ligne(f.name,type,f.size,'écarté (le journal suffit)','doux');}
+      else if(type==='corpus')ligne(f.name,type,f.size,'écarté (nuages de points inutiles)','doux');
+      else if(type==='relecture'){rel.ajouter(JSON.parse(await f.text()));relus++;ligne(f.name,type,f.size,'allégé','ok');}
+      else ligne(f.name,'inconnu',f.size,'ignoré','alerte');
+      barre.value=++fait;await new Promise(r=>setTimeout(r));
+    }
+    if(relus){$('etat').textContent='compression de la relecture…';const docs=rel.documents(),parties=rel.parties().join('-')||'x';
+      for(let i=0;i<docs.length;i++){const b=await gz(new Blob([JSON.stringify(docs[i])]));lien(`relecture-reduite-p${parties}${docs.length>1?'-'+(i+1):''}.json.gz`,b);garde+=b.size;}}
+    if(!journaux&&bilans.length&&!relus){const total=bilans.reduce((n,f)=>n+f.size,0);
+      $('bilan').innerHTML='<span class="alerte">Aucun journal dans ce dossier : je n\'ai gardé que les bilans ci-dessous.</span>';
+      for(const f of bilans){const b=await gz(f);lien(f.name+'.gz',b);garde+=b.size;}void total;}
+    $('etat').textContent='terminé';
+    $('bilan').textContent+=` ${Mo(avant)} lus, ${Mo(garde)} à envoyer.`+(relus&&!journaux?' (Relecture : visites seules, sans nuages.)':'');
+  }catch(e){$('etat').textContent='';$('bilan').innerHTML='<span class="alerte">Erreur : '+String(e&&e.message||e).replace(/[<>&]/g,'')+' — recopie ce message pour moi. Si le navigateur manque de mémoire, ferme les autres onglets et réessaie avec moins de fichiers.</span>';}
+  finally{$('go').disabled=false;barre.hidden=true;}
+});
+})();
+</script></body></html>
