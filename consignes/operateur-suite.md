@@ -94,11 +94,12 @@ rapport arrivera sur sa propre branche ; je l'intègre avant d'écrire le cahier
 
 ## Étape 6 — La 4.8.5 de test, à côté de la 4.8.0 (quand je te la livre, ≈ 1 h 15)
 
-Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
+Je te dirai où télécharger `ariane-4.8.5-test.2.zip` (le test 2, D-062 ; il
+remplace le test 1 pour ce lot). Ensuite :
 
 **Installer à côté (une seule fois, 5 min)**
 1. Décompresse le zip dans un **nouveau dossier**, par exemple
-   `Documents\Ariane\4.8.5-test1`. Ne touche pas au dossier de la 4.8.0 : ne
+   `Documents\Ariane\4.8.5-test2`. Ne touche pas au dossier de la 4.8.0 : ne
    remplace rien dedans.
 2. `edge://extensions` → **Mode développeur** activé → **Charger l'extension
    décompressée** → choisis le nouveau dossier.
@@ -110,8 +111,12 @@ Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
 2. **F5** sur ESV.
 3. Vérifie le nom sur le bouton blanc au bas d'ESV. Si les deux sont actives,
    la version de test refuse de se connecter et te le dit.
-   Si le panneau dit « Ariane 4.8.5 test 1 **en sécurité** » : l'autre Ariane
+   Si le panneau dit « Ariane 4.8.5 test 2 **en sécurité** » : l'autre Ariane
    a tenté de commander l'onglet. Désactive-la, F5, puis **Reprendre**.
+   Si c'était pendant une pose (« Validation refusée : la pose de ce cut est
+   faite, non validée ») : **contrôle d'abord la pose dans ESV, avant tout
+   F5** (valide-la toi-même si elle est juste), puis désactive l'autre, F5,
+   **Archiver le résultat interrompu**.
 
 **Le lot de validation (≈ 45 min, surveillance légère)**
 1. Choisis une **partie jamais passée par Ariane** : ni 2, 3, 6, 9, 11, 12, 13,
@@ -121,10 +126,12 @@ Je te dirai où télécharger `ariane-4.8.5-test.1.zip`. Ensuite :
 2. Fenêtre d'ESV d'au moins 600 pixels de large.
 3. Orbite : premier cut = celui affiché ; dernier cut = vide (jusqu'à la fin de
    la partie). **Démarrer le lot**.
-4. Si le lot s'arrête sur « fin de partie probable : clique sur Reprendre » :
-   clique sur **Reprendre** (F5 seulement si ESV reste figée). Si ESV montre
-   la partie suivante, le lot se clôt seul ; sinon, contrôle le cut dans ESV
-   puis **Archiver le résultat interrompu**.
+4. Si le lot s'arrête sur « fin de partie probable » (ou « à vérifier ») :
+   clique sur **Reprendre** (F5 seulement si ESV reste figée). Le lot se
+   ferme. La fin de partie n'est retenue que si ESV montre une partie
+   supérieure et que c'est le dernier cut ; sinon le panneau dit que ce cut
+   « pourrait être le dernier » : saisis-le comme dernier cut si tu veux le
+   retenir. Si le panneau dit « Contrôle le cut N dans ESV », fais-le.
 5. À la fin : **Tout télécharger pour l'analyse**.
 
 **Sa relecture (≈ 15 à 25 min)**

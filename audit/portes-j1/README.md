@@ -44,6 +44,7 @@ Rouge attendu : la garde d'écartement bas (D2) n'est pas encore codée.
 | `307b9a5` | D4 (instrumentation passive) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
 | `02f75ec` | D3 (fin de partie après un différé) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
 | `36b8242` | D7 (revue globale ; code du paquet test 1) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
+| `0d29e54` | D-062 (code du paquet test 2 : service worker, panneau, adaptateur) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
 
 ## Question ouverte
 
