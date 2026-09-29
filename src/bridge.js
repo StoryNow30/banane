@@ -78,11 +78,12 @@
       * n'en déclenche pas un autre : terrain du 26/09, un « Arrêter » resté sans
       * réponse pendant qu'ESV changeait de partie a coupé 45 s plus tard la
       * lecture du lot suivant (« Export interrompu. »). */
-     if(!passive.has(m.action)&&m.action!=='cancel')window.postMessage({kind:'banane3:command',id:crypto.randomUUID(),channel,action:'cancel',args:[{requestId:id,reason:'bridge-timeout'}],sentAt:Date.now()},location.origin);
+     if(!passive.has(m.action)&&m.action!=='cancel')window.postMessage({kind:'banane3:command',id:crypto.randomUUID(),channel,proprietaire:chrome.runtime.id,action:'cancel',args:[{requestId:id,reason:'bridge-timeout'}],sentAt:Date.now()},location.origin);
      const error=p.acknowledged?'Délai dépassé dans ESV à l’étape '+p.stage+' ; résultat à contrôler.':'Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','apply','manualFinish'].includes(m.action)?90000:45000);
-   pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,action:m.action,args:m.args||[],sentAt:Date.now()},location.origin);return true;});
- pill=document.createElement('button');pill.textContent='Ariane 4.8.0 · ouvrir';pill.type='button';pill.hidden=true;
+   /* D1 (4.8.5) : l'adaptateur n'obéit qu'à l'extension qui l'a installé. */
+   pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,proprietaire:chrome.runtime.id,action:m.action,args:m.args||[],sentAt:Date.now()},location.origin);return true;});
+ pill=document.createElement('button');pill.textContent='Ariane 4.8.5 test 1 · ouvrir';pill.type='button';pill.hidden=true;
  /* 4.8.0 (direction, 26/09) : bouton blanc et discret, plein seulement au survol. */
  const repos='0 1px 2px rgba(15,23,42,.10),0 2px 8px rgba(15,23,42,.08)',survol='0 2px 4px rgba(15,23,42,.12),0 6px 18px rgba(15,23,42,.14)';
  pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#fff;color:#1f2328;border:1px solid rgba(15,23,42,.12);border-radius:999px;padding:6px 12px;font:500 12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.01em;cursor:pointer;opacity:.92;box-shadow:'+repos+';transition:opacity .16s ease,box-shadow .16s ease,transform .16s ease';

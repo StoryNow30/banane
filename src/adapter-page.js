@@ -1,8 +1,20 @@
 /* Real ESV page adapter. Selectors originate in Banane V2–V2.4.2 sources.
  * No server URL/payload is invented. Canvas clicks and navigation require readback.
  */
-(()=>{'use strict';if(window.__BANANE_V3_PAGE)return;
+(()=>{'use strict';
+ /* Une autre Ariane s'est installée entre notre tampon et nos fichiers : on
+  * n'installe rien, et notre tampon ne doit pas rester dans la page. */
+ if(window.__BANANE_V3_PAGE){try{delete window.__ARIANE_PROPRIETAIRE;}catch{}return;}
+ /* D1 (4.8.5, D-060) — L'ADAPTATEUR GARDE SES MODULES ET N'OBÉIT QU'À SON
+  * PROPRIÉTAIRE. Le monde principal de la page est commun à toutes les
+  * extensions : une autre Ariane qui injecte ses fichiers après nous remplace
+  * les modules globaux (`window.Banane…`), et son bridge envoie ses commandes
+  * sur la même page. Les modules sont donc lus UNE fois, ici ; le tampon posé
+  * par le service worker juste avant l'injection désigne le propriétaire. */
  const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
+ const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4;
+ const PROPRIO=typeof window.__ARIANE_PROPRIETAIRE?.id==='string'?window.__ARIANE_PROPRIETAIRE.id:null;
+ try{delete window.__ARIANE_PROPRIETAIRE;}catch{}
  /* Réglages du pilote : source unique dans src/settings.js. Repli sur les
   * anciennes valeurs codées en dur si le module n'est pas chargé, pour ne
   * jamais empêcher l'adaptateur de fonctionner. */
@@ -261,13 +273,13 @@
        }
      }
    }
-   const M=window.BananeMerge3;guard();const data=M.merge(...captures);guard();
+   guard();const data=M3.merge(...captures);guard();
    data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
    /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
     * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
-   const nodes=data.nodes.length,compacted=M.compactNodes(data),bytes=M.messageBytes(data);
-   if(bytes>M.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
+   const nodes=data.nodes.length,compacted=M3.compactNodes(data),bytes=M3.messageBytes(data);
+   if(bytes>M3.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
    progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes});return data;
  }
  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
@@ -594,7 +606,7 @@
  async function manualStart(options){
    if(manual?.active)throw Error('Une session de corrections est déjà active dans ESV.');
    manualChannel=options.channel;cancelled=false;
-   manual=new window.BananeManualPage4.Collector({state:snapshot,label:cutLabel,capture,
+   manual=new MP4.Collector({state:snapshot,label:cutLabel,capture,
      settle:async label=>{let previous=null,stable=0;return waitFor(()=>{
        const now=snapshot();if(K.key(now.identity)!==K.key(label))return false;
        const signature=JSON.stringify([now.mapping,now.rails]);stable=signature===previous?stable+1:0;previous=signature;return stable>=P.lecturesStables?now:false;
@@ -643,9 +655,10 @@
    signalFailure:message=>{if(nativeFailureBanner)return;nativeFailureBanner=document.createElement('div');nativeFailureBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#381f23;color:#ffd7dc;border:1px solid #8b5058;border-radius:8px;font:14px Arial;pointer-events:none';
      nativeFailureBanner.setAttribute('role','alert');nativeFailureBanner.textContent=message;document.documentElement.append(nativeFailureBanner);}};}
  async function nativeStart(options){if(native?.active)throw Error('Écho est déjà actif dans ESV.');nativeChannel=options.channel;
-   native=native||new window.BananeNativePage4.Observer(nativeApi());return native.start(options);}
- async function nativeResume(options){nativeChannel=options.channel;native=native||new window.BananeNativePage4.Observer(nativeApi());return native.resume(options);}
- const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel()}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
+   native=native||new NP4.Observer(nativeApi());return native.start(options);}
+ async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
+ let intrusion=null;
+ const methods={ping:()=>({version:K.VERSION,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
@@ -657,11 +670,24 @@
      const operationId=options&&typeof options==='object'&&typeof options.operationId==='string'?options.operationId:null;
      if(operationId)cancelledOperations.add(operationId);
      return {cancelRequested:true,operationId,scopedCancelledOperations:cancelledOperations.size};}};
- window.__BANANE_V3_PAGE={version:K.VERSION};
+ window.__BANANE_V3_PAGE=Object.freeze({version:K.VERSION,proprietaire:PROPRIO});
+ /* Commande d'un autre propriétaire (une autre Ariane active dans l'onglet) :
+  * refusée, sans rien faire dans ESV, avec la cause et le remède. Si elle
+  * aurait agi sur ESV, l'adaptateur se met en sécurité : il ne commande plus
+  * ESV pour personne, son propriétaire compris, jusqu'au F5 ; lectures,
+  * annulations et arrêts (Écho, session manuelle) restent permis. */
+ const LECTURES=new Set(['ping','state','nativeSnapshot']),EN_SECURITE=new Set([...LECTURES,'cancel','nativePause','nativeFinish','manualPause','manualFinish']);
+ const nomVersion=K.VERSION_NAME||K.VERSION;
+ const refusEtranger=()=>PROPRIO===null?'Adaptateur ESV installé sans propriétaire : F5 sur ESV, puis Connecter.'
+   :`Une autre Ariane (${nomVersion}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`;
+ const refusSecurite=()=>`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`;
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.
  window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
-   const {id,channel,action,args=[],sentAt}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
+   const {id,channel,action,args=[],sentAt,proprietaire}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
+   if(PROPRIO===null||proprietaire!==PROPRIO){if(PROPRIO!==null&&!EN_SECURITE.has(action)&&!intrusion)intrusion={action,at:new Date().toISOString()};
+     window.postMessage({kind:'banane3:result',id,channel,error:refusEtranger()},location.origin);return;}
+   if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite()},location.origin);return;}
    if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
    const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
    /* 4.8.0 (KI-063) — ANNULATION PÉRIMÉE. Un `cancel` sans identifiant

@@ -1,6 +1,7 @@
 """Build an installable, source-readable extension ZIP with manifest.json at root."""
 import argparse
 import json
+import re
 from pathlib import Path
 import zipfile
 
@@ -49,10 +50,24 @@ def build(destination, include_tests=False):
     return destination
 
 
+def nom_paquet(manifest):
+    """D1 (4.8.5, D-061) : nom du paquet tiré du manifeste. Version de test :
+    `4.8.5.N` et « 4.8.5 test N » -> `ariane-4.8.5-test.N.zip` ; stable :
+    `ariane-vX.Y.Z.zip`. Un numéro de test qui ne concorde pas est refusé."""
+    version, nom = manifest['version'], manifest.get('version_name')
+    if not nom or nom == version:
+        return f'ariane-v{version}.zip'
+    m = re.fullmatch(r'(\d+\.\d+\.\d+) test (\d+)', nom)
+    if not m or version != f'{m[1]}.{m[2]}':
+        raise ValueError(f'version {version} et version_name « {nom} » ne concordent pas')
+    return f'ariane-{m[1]}-test.{m[2]}.zip'
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output', default=str(ROOT.parent / (ROOT.name + '.zip')))
+    parser.add_argument('--output', default=None, help='Défaut : ariane-<version>.zip à côté du dépôt (nom_paquet).')
     parser.add_argument('--source', action='store_true', help='Include runnable Node tests and fixtures for an auditable source archive.')
     args = parser.parse_args()
-    result = build(args.output, include_tests=args.source)
+    output = args.output or str(ROOT.parent / nom_paquet(json.loads((ROOT / 'manifest.json').read_text())))
+    result = build(output, include_tests=args.source)
     print(f'{result.name}: {result.stat().st_size} bytes; manifest.json at archive root; CRC OK')

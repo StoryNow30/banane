@@ -2,7 +2,9 @@
  if(typeof module==='object')module.exports=api;else root.BananeCore3=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(C){
  'use strict';
- const VERSION='4.8.0';
+ /* D1 (4.8.5, D-061) : version de test = manifeste `4.8.5.N`, nom affiché
+  * « 4.8.5 test N » ; une version stable garde `X.Y.Z`. */
+ const VERSION='4.8.5.1',VERSION_NAME='4.8.5 test 1';
  const clone=x=>JSON.parse(JSON.stringify(x)),uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;
  const key=x=>`${x.pageId}|${x.part}|${x.cut}`;
  const identityFields=['pageId','part','cut','shape','frameId','projectId'];
@@ -87,5 +89,5 @@
    const left=!!rails?.left?.positionChanged,right=!!rails?.right?.positionChanged;
    return left&&right?'VALIDATE_CORRECTED_BOTH':left?'VALIDATE_CORRECTED_LEFT_ONLY':right?'VALIDATE_CORRECTED_RIGHT_ONLY':'VALIDATE_NO_MOVEMENT';
  }
- return {C,VERSION,identityFields,clone,uid,key,cutId,completeIdentity,differences,assertTarget,transientCaptureError,equalPoses,reference,expectedPoses,manualDecision,parse,pairCorpus};
+ return {C,VERSION,VERSION_NAME,identityFields,clone,uid,key,cutId,completeIdentity,differences,assertTarget,transientCaptureError,equalPoses,reference,expectedPoses,manualDecision,parse,pairCorpus};
 });

@@ -73,6 +73,8 @@ function esv({migrationPolls=0}={}){
     fn();});},
   MouseEvent:class{constructor(type,args){this.type=type;Object.assign(this,args);}},
   KeyboardEvent:class{constructor(type,args){this.type=type;Object.assign(this,args);}},
+  /* 4.8.5 (D1) : tampon du propriétaire, posé par le service worker avant l'adaptateur. */
+  __ARIANE_PROPRIETAIRE:{id:'test',version:K.VERSION},
   addEventListener:(event,fn)=>listener=fn,
   postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else responses.get(m.id)(m);},
   crypto:{randomUUID:K.uid}};
@@ -80,7 +82,7 @@ function esv({migrationPolls=0}={}){
  const call=(action,...args)=>{const id=K.uid();return new Promise((resolve,reject)=>{
    responses.set(id,m=>m.error?reject(Error(m.error)):resolve(m.result));
    listener({source:vm.runInContext('window',ctx),origin:ctx.location.origin,
-     data:{kind:'banane3:command',channel:'fixture',id,action,args}});});};
+     data:{kind:'banane3:command',channel:'fixture',proprietaire:'test',id,action,args}});});};
  return {call,canvasClicks,validateClicks,keyboard,left,right,camera,
    camSide:()=>camSide,ndcOf:p=>C.point(C.multiply(C.matrix(camera.projectionMatrix),
      C.inverse(C.rebase(C.worldMatrix(camera),railPosition('left')))),p)};

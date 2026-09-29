@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.8.0';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.8.5.1',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.5 test 1';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -212,16 +212,43 @@ let repriseEnCours=false;
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /* Adaptateur et bridge dans l'onglet ESV, puis `ping` de la bonne version :
  * partagé par « Connecter » et la reconnexion après un rafraîchissement. Sur un
- * document déjà équipé, l'adaptateur ne se réinstalle pas (même `pageId`). */
+ * document déjà équipé, l'adaptateur ne se réinstalle pas (même `pageId`).
+ * D1 (4.8.5, D-060) — COHABITATION. Le monde principal de la page est commun à
+ * toutes les extensions : une seule Ariane peut y avoir son adaptateur. On
+ * regarde AVANT d'injecter (lecture seule du marqueur de l'adaptateur) : celui
+ * d'une autre Ariane (autre extension) → refus, rien n'est injecté ; le nôtre
+ * d'une autre version → recharger ESV ; le nôtre de cette version → seul le
+ * bridge est remis. Sur un onglet vierge, le tampon du propriétaire précède
+ * les fichiers : l'adaptateur n'obéira qu'à cette extension. */
+/* Refus DÉFINITIFS (`definitif`) : la reconnexion après F5 ne les retente pas. */
+const definitif=message=>Object.assign(Error(message),{definitif:true});
+const autreAriane=(v,sansProprietaire=false)=>definitif(`Une autre Ariane (${v||'version inconnue'}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`+
+  /* Un adaptateur sans propriétaire est celui d'une Ariane d'avant la 4.8.5 : la 4.8.0 installée à côté, ou cette Ariane avant sa mise à jour. */
+  (sansProprietaire?' Si c’est une mise à jour de cette Ariane, F5 suffit.':''));
+const aRecharger=()=>definitif(`Recharge la page ESV (F5) pour activer Ariane ${VERSION_NAME}.`);
+/* Sonde ET tampon en un seul passage dans la page : entre la lecture du
+ * marqueur et la pose du tampon, aucune autre injection ne peut s'intercaler. */
+async function sondeEtTampon(tabId){
+ const r=await chrome.scripting.executeScript({target:{tabId},world:'MAIN',args:[chrome.runtime.id,VERSION],func:(id,version)=>{const p=window.__BANANE_V3_PAGE;
+   if(p)return {version:String(p.version??''),proprietaire:typeof p.proprietaire==='string'?p.proprietaire:null};
+   window.__ARIANE_PROPRIETAIRE={id,version};return null;}});
+ return r?.[0]?.result??null;}
 async function equiperOnglet(tabId){
- await chrome.scripting.executeScript({target:{tabId},world:'MAIN',files:PAGE_FILES});
+ const deja=await sondeEtTampon(tabId);
+ if(deja&&deja.proprietaire!==chrome.runtime.id)throw autreAriane(deja.version,deja.proprietaire===null);
+ if(deja&&deja.version!==VERSION)throw aRecharger();
+ if(!deja)await chrome.scripting.executeScript({target:{tabId},world:'MAIN',files:PAGE_FILES});
  await chrome.scripting.executeScript({target:{tabId},world:'ISOLATED',files:['src/bridge.js']});
- const ping=await callSur(tabId,'ping');if(ping?.version!==VERSION)throw Error(`Recharge la page ESV pour activer Ariane ${VERSION}.`);}
+ const ping=await callSur(tabId,'ping');
+ /* Une autre Ariane a pu s'installer entre le tampon et nos fichiers : le ping le dit. */
+ if(ping?.proprietaire!==chrome.runtime.id)throw autreAriane(ping?.version,!ping?.proprietaire);
+ if(ping?.version!==VERSION)throw aRecharger();
+ if(ping?.intrusion)throw definitif(`Ariane ${VERSION_NAME} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${ping.intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`);}
 async function reconnecterESV(delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
  while(Date.now()<fin){garde();try{const tab=await chrome.tabs.get(selectedTab);
    if(tab?.status&&tab.status!=='complete'){await attendre(500);continue;}
    await equiperOnglet(selectedTab);return;}
-  catch(e){derniere=e;}await attendre(1000);}
+  catch(e){if(e.definitif)throw e;derniere=e;}await attendre(1000);}
  throw Error('ESV ne répond pas après le rafraîchissement'+(derniere?.message?` (${derniere.message})`:'')+'.');}
 async function etatDansPartie(part,delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
  while(Date.now()<fin){garde();try{const r=await readState();

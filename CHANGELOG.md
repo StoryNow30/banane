@@ -18,6 +18,24 @@
 - **`tools/first-pass-signal-study.cjs`** : la base est rendue cut par cut ;
   `--base-seule` ne rejoue aucune variante.
 
+### Numérotation et cohabitation (D1)
+
+- **Version de test** : manifeste `4.8.5.1`, nom « Ariane 4.8.5 TEST »,
+  affichée « 4.8.5 test 1 » (panneau, bouton dans ESV) ; exports en
+  `4.8.5.1` ; paquet `ariane-4.8.5-test.1.zip` (`tools/package.py`, numéro de
+  test et version contrôlés) (D-061).
+- **Une seule Ariane dans l'onglet** (D-060) : avant toute injection, Ariane
+  lit le marqueur de l'adaptateur déjà présent. Celui d'une autre Ariane →
+  refus, rien d'injecté : « Une autre Ariane (4.8.0) est active dans cet
+  onglet : désactive-la dans edge://extensions, puis F5 sur ESV ». Lecture et
+  tampon du propriétaire en un seul passage.
+- **Adaptateur à propriétaire unique** : il garde ses modules dès
+  l'installation et n'obéit qu'à l'extension qui l'a installé. Une commande
+  d'une autre Ariane est refusée sans rien faire dans ESV ; si elle aurait
+  agi sur ESV, l'adaptateur se met en sécurité (plus aucune commande sur ESV
+  jusqu'au F5, lectures et arrêts permis) et la connexion le dit.
+- La reconnexion après F5 abandonne tout de suite devant une autre Ariane.
+
 ### Documents et état (D6, clôture J0)
 
 - **Rapport de sortie 4.8** complété (`audit/rapport-sortie-4.8.md`) : partie

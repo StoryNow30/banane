@@ -83,7 +83,7 @@ test('le mode Correction est retiré, mais ses données restent récupérables',
  const b=background();await b.api('connect',{tabId:1});
  for(const action of ['manual-start','manual-pause','manual-resume'])
   await assert.rejects(()=>b.api(action),/retiré en 4\.5\.4/,action+' doit être refusé');
- const injecte=b.injected.find(i=>i.world==='MAIN')?.files||[];
+ const injecte=b.injected.find(i=>i.world==='MAIN'&&i.files)?.files||[];
  assert.ok(!injecte.some(f=>f.includes('manual-page')),
   'manual-page.js ne doit plus être injecté dans la page ESV');
  assert.ok(injecte.includes('src/native-page.js'),'la collecte Natif reste injectée');

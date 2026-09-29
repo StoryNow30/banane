@@ -21,7 +21,7 @@ class SimulatedESV{
    * cible divergente. Aucun de ces chemins ne touche apply/validate/skip. */
   this.deferJump=1;this.deferOutcome='navigate';this.deferCalls=[];this.deferIdentity=null;}
  async state(){return {identity:K.clone(this.identity),rails:K.clone(this.rails),capturedAt:new Date().toISOString()};}
- async ping(){return {version:K.VERSION,pageId:this.identity.pageId};}
+ async ping(){return {version:K.VERSION,pageId:this.identity.pageId,proprietaire:'test'};}
  async capture(expected){K.assertTarget(expected.identity,this.identity);this.calls.push('capture');
   const d=K.clone(base);d.identity=K.clone(this.identity);Object.assign(d,this.identity);d.captureId=K.uid();d.rails=K.clone(this.rails);if(this.noPoints)d.pointsSceneRelative=[];return d;}
  async apply(before,proposals){this.calls.push('apply');this.rails=K.expectedPoses(before,proposals);
