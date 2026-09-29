@@ -5,7 +5,7 @@
  * (cahier 4.8 §6 et §14 G, D-038). Le même calcul à chaque collecte F1 à F4.
  *
  *   node tools/acceptance-report.cjs --lot DOSSIER[=libellé] [--relecture DOSSIER|FICHIER] [--batch ID] [--lot ...]
- *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json SORTIE] [--md SORTIE]
+ *        [--config REGLAGE.json] [--p2 P2.json] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--leger] [--json SORTIE] [--md SORTIE]
  *
  * `--decision-par-rejeu` : la décision sur le lot est lue dans le rejeu hors ligne
  * même quand l'export la consigne (lots 4.7.8 : choix par la voie privé de
@@ -109,8 +109,11 @@ function mergeCorpus(a,b,dir){
   const merged={...second,diagnostic:second.diagnostic||first.diagnostic,clouds:[...first.clouds,...second.clouds.filter(c=>!seen.has(c.captureId))]};
   merged.segments=[...(first.segments||[first.segment]),second.segment];return merged;
 }
-function loadLot(dir,label,relecturePath=null){
-  const lot={label,diagnostic:null,journal:null,corpus:null,relecture:null,inputs:[]},relectureFiles=[],bilans=[];
+/* `leger` (--leger) : analyse sans rejeu hors ligne. Les nuages du corpus et de la
+ * relecture perdent leurs points bruts dès la lecture (Segments.alleger), et un
+ * seul bilan est gardé : la mémoire ne grossit plus avec le nombre de cuts. */
+function loadLot(dir,label,relecturePath=null,leger=false){
+  const lot={label,diagnostic:null,journal:null,corpus:null,relecture:null,inputs:[],...(leger?{leger:true}:{})},relectureFiles=[],bilans=[];let nbBilans=0;
   /* KI-060 : un segment compact se relit avec les dictionnaires du segment
    * précédent du même export (fichiers triés par nom : seg01, seg02…). */
   const dicts=new Map(),segKey=(r,d=0)=>`${r?.segment?.stamp}|${(r?.segment?.index||0)+d}`;
@@ -121,13 +124,14 @@ function loadLot(dir,label,relecturePath=null){
     lot.inputs.push(describe(file,bytes,doc,kind));
     if(kind==='relecture'){relectureFiles.push(file);continue;}
     if(kind==='ignored')continue;
-    if(kind==='bilan'){bilans.push(doc);continue;}
+    if(kind==='bilan'){nbBilans++;if(!leger||!bilans.length)bilans.push(doc);continue;}
+    if(kind==='corpus'&&leger)doc.clouds=(doc.clouds||[]).map(Segments.alleger);
     if(kind==='corpus'&&lot.corpus){lot.corpus=mergeCorpus(lot.corpus,doc,dir);continue;}
     if(lot[kind])throw Error(`Deux fichiers « ${kind} » dans ${dir} : un lot par dossier.`);
     lot[kind]=doc;
   }
   /* Le bilan ne sert qu'en l'absence de journal ; présent, le journal fait foi. */
-  if(bilans.length>1&&!lot.journal)throw Error(`Deux fichiers « bilan » dans ${dir} et aucun journal : exporte le journal du lot.`);
+  if(nbBilans>1&&!lot.journal)throw Error(`Deux fichiers « bilan » dans ${dir} et aucun journal : exporte le journal du lot.`);
   if(bilans.length&&!lot.journal)lot.bilan=bilans[0];
   if(bilans.length&&lot.journal)for(const i of lot.inputs)if(i.kind==='bilan')i.role='ignoré (journal présent)';
   if(lot.corpus?.segments){const last=lot.corpus.exportTrace||{};
@@ -136,7 +140,7 @@ function loadLot(dir,label,relecturePath=null){
   if(relecturePath){relectureFiles.length=0;
     for(const file of listJson(relecturePath)){const bytes=fs.readFileSync(file),doc=JSON.parse(bytes),kind=kindOf(doc);
       lot.inputs.push({...describe(file,bytes,doc,kind),role:'relecture'});if(kind==='relecture')relectureFiles.push(file);}}
-  if(relectureFiles.length){const merged=Segments.mergeFiles(relectureFiles).merged;lot.relecture=merged;
+  if(relectureFiles.length){const merged=Segments.mergeFiles(relectureFiles,{leger}).merged;lot.relecture=merged;
     lot.relectureMerge={segments:relectureFiles.length,records:merged.records.length,allDeclaredCloudsPresent:merged.mergeTrace.allDeclaredPresent};}
   if(!lot.journal&&lot.bilan){lot.journal=lot.bilan;lot.journalFromBilan=true;
     for(const i of lot.inputs)if(i.kind==='bilan')i.role='journal (bilan du lot, journal absent)';}
@@ -438,7 +442,7 @@ function analyseLot(lot,options={}){
   return {label:lot.label,complete:lotComplete(ctx.batch),batch:ctx.batch?{id:ctx.batch.id,state:ctx.batch.state,part:ctx.batch.scope?.part??null,start:ctx.batch.scope?.start??null,end:ctx.batch.scope?.end??null,
       unresolvedPolicy:ctx.batch.scope?.unresolvedPolicy??null,startedAt:ctx.batch.startedAt??null}:null,
     version:lot.diagnostic?.version??lot.journal?.version??null,observationsOutsideLot:ctx.observationsOutsideLot,
-    relecture:lot.relecture?{...lot.relectureMerge,frame}:null,corpusSegments:lot.corpusSegments??null,
+    relecture:lot.relecture?{...lot.relectureMerge,frame}:null,corpusSegments:lot.corpusSegments??null,...(lot.leger?{leger:true}:{}),
     lotDecisionRules:lot.lotDecisionRules??(recorded?lotRules(rows.flatMap(r=>r._cut.observations),ctx.batch?.scope?.extensionVersion??lot.diagnostic?.version??lot.journal?.version):null),lotDecisionSource:lotSource,lotDecisionParity:parity,journalConsistency:consistency,
     inputs:lot.inputs,rows:rows.map(({_cut,_poses,...r})=>r)};
 }
@@ -565,20 +569,21 @@ function toMarkdown(r){
 
 /* ---- ligne de commande ---- */
 function parse(argv){
-  const opt={lots:[],config:null,p2:null,replay:false,json:null,md:null};
+  const opt={lots:[],config:null,p2:null,replay:false,leger:false,json:null,md:null};
   for(let i=0;i<argv.length;i++){const a=argv[i];
     if(a==='--lot'){const v=argv[++i],at=v.lastIndexOf('=');opt.lots.push(at>0?{dir:v.slice(0,at),label:v.slice(at+1)}:{dir:v,label:path.basename(path.resolve(v))});}
     else if(a==='--relecture'){if(!opt.lots.length)throw Error('--relecture suit un --lot.');opt.lots.at(-1).relecture=argv[++i];}
     else if(a==='--batch'){if(!opt.lots.length)throw Error('--batch suit un --lot.');opt.lots.at(-1).batch=argv[++i];}
     else if(a==='--config')opt.config=argv[++i];else if(a==='--p2')opt.p2=argv[++i];
-    else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--decision-par-rejeu')opt.preferReplay=true;else if(a==='--regles-actuelles')opt.currentRules=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
+    else if(a==='--leger')opt.leger=true;else if(a==='--rejeu-lot')opt.replay=true;else if(a==='--decision-par-rejeu')opt.preferReplay=true;else if(a==='--regles-actuelles')opt.currentRules=true;else if(a==='--json')opt.json=argv[++i];else if(a==='--md')opt.md=argv[++i];
     else throw Error('Argument inconnu : '+a);}
   if(!opt.lots.length)throw Error('Usage : --lot DOSSIER[=libellé] [--relecture DOSSIER] [--batch ID] [...] [--config F] [--p2 F] [--rejeu-lot | --decision-par-rejeu] [--regles-actuelles] [--json F] [--md F]');
+  if(opt.leger&&(opt.replay||opt.preferReplay))throw Error('--leger : les points bruts ne sont pas gardés, le rejeu hors ligne est impossible.');
   return opt;
 }
 function run(argv=process.argv.slice(2)){
   const opt=parse(argv),read=f=>f?JSON.parse(fs.readFileSync(f,'utf8')):null;
-  const lots=opt.lots.map(l=>Object.assign(loadLot(l.dir,l.label,l.relecture||null),l.batch?{batchFilter:l.batch}:{}));
+  const lots=opt.lots.map(l=>Object.assign(loadLot(l.dir,l.label,l.relecture||null,opt.leger),l.batch?{batchFilter:l.batch}:{}));
   const result=report(lots,{config:read(opt.config),p2:read(opt.p2),replay:opt.replay,preferReplay:!!opt.preferReplay,currentRules:!!opt.currentRules});
   if(opt.json)fs.writeFileSync(opt.json,JSON.stringify(result,null,1)+'\n');
   if(opt.md)fs.writeFileSync(opt.md,toMarkdown(result)+'\n');

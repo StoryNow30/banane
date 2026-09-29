@@ -24,10 +24,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 const X = require('../src/native-export.js');
 
+/* Mode léger (analyse sans rejeu) : un nuage garde ses métadonnées, ses rails et son
+ * identité, mais perd les points bruts, qui pèsent 90 % d'un export. Les rapports
+ * qui ne rejouent pas la décision n'en ont pas besoin. */
+const POIDS_LOURDS = ['nodes', 'pointsSceneRelative', 'pointsProfileLocal', 'pointSources', 'visibleByClipBoxes', 'attributes'];
+function alleger(cloud) {
+  const c = { ...cloud };
+  for (const k of POIDS_LOURDS) if (k in c) delete c[k];
+  c.allege = true;
+  return c;
+}
+
 /* Fusion en mémoire, réutilisable par les outils d'analyse : une session
  * fusionnée peut dépasser la taille maximale d'une chaîne JavaScript
  * (≈ 512 Mo), donc ne jamais passer par un fichier intermédiaire. */
-function mergeFiles(files) {
+function mergeFiles(files, options = {}) {
   const loaded = files.map(f => {
     const doc = JSON.parse(fs.readFileSync(f));
     return { file: f, seg: doc.segment || {}, stampKey: String((doc.segment || {}).stamp || '') };
@@ -61,8 +72,8 @@ function mergeFiles(files) {
       const id = c.chunkId || c.captureId;
       if (id && seenClouds.has(id)) { dup++; continue; }
       if (id) seenClouds.add(id);
-      clouds.push(c); added++;
       totalPoints += (c.pointsSceneRelative || []).length;
+      clouds.push(options.leger ? alleger(c) : c); added++;
     }
 
     // Records et événements : union par identifiant, le plus récent l'emporte.
@@ -133,4 +144,4 @@ console.log('écrit : ' + out + '  (' + (buf.length / 1e6).toFixed(1) + ' Mo)');
 if (missing.length) { console.error('ATTENTION : segments incomplets, ne pas présenter ce fichier comme une session entière.'); process.exit(2); }
 }
 if (require.main === module) main();
-module.exports = { mergeFiles, loadSession };
+module.exports = { mergeFiles, loadSession, alleger, POIDS_LOURDS };
