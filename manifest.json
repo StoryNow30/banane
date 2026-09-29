@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Ariane 4.8.5 TEST",
-  "version": "4.8.5.1",
-  "version_name": "4.8.5 test 1",
+  "version": "4.8.5.2",
+  "version_name": "4.8.5 test 2",
   "description": "Ariane pour ESV LiDAR : Écho observe ton travail, Orbite place et valide les rails d’un lot. Collecte segmentée et export compact.",
   "permissions": [
     "storage",

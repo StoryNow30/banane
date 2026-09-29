@@ -9,7 +9,7 @@
  *   A. l'ANCIENNE se connecte d'abord, puis la NOUVELLE : refus attendu,
  *      avant toute injection (« Une autre Ariane (<ancienne>) est active… ») ;
  *   B. la NOUVELLE d'abord, puis l'ANCIENNE : l'adaptateur refuse les
- *      commandes de l'ancienne (« Une autre Ariane (4.8.5 test 1)… ») et la
+ *      commandes de l'ancienne (« Une autre Ariane (4.8.5 test N)… ») et la
  *      nouvelle reste connectable, sans mise en sécurité (un ping est une
  *      lecture).
  * Relevé : réponse de chaque « Connecter », marqueur de l'adaptateur, erreurs.

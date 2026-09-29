@@ -9,26 +9,26 @@ const K=require('../src/core.js');
 const root=path.resolve(__dirname,'..'),manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
 const AUTRE=/Une autre Ariane \(4\.8\.0\) est active dans cet onglet : désactive-la dans edge:\/\/extensions, puis F5 sur ESV/;
 
-test('numérotation : manifeste 4.8.5.1, « Ariane 4.8.5 TEST », « 4.8.5 test 1 », repris partout',()=>{
-  assert.equal(manifest.version,'4.8.5.1');assert.equal(manifest.name,'Ariane 4.8.5 TEST');assert.equal(manifest.version_name,'4.8.5 test 1');
+test('numérotation : manifeste 4.8.5.2, « Ariane 4.8.5 TEST », « 4.8.5 test 2 », repris partout (D-062)',()=>{
+  assert.equal(manifest.version,'4.8.5.2');assert.equal(manifest.name,'Ariane 4.8.5 TEST');assert.equal(manifest.version_name,'4.8.5 test 2');
   assert.equal(K.VERSION,manifest.version);assert.equal(K.VERSION_NAME,manifest.version_name);
   assert.equal(manifest.action.default_title,'Ouvrir Ariane 4.8.5 TEST');
   const html=fs.readFileSync(path.join(root,'panel.html'),'utf8');
-  assert.match(html,/<title>Ariane 4\.8\.5 test 1<\/title>/);assert.match(html,/<span>4\.8\.5 test 1<\/span>/);assert.match(html,/<footer>Ariane 4\.8\.5 test 1 ·/);
-  assert.match(fs.readFileSync(path.join(root,'panel.js'),'utf8'),/home:'4\.8\.5 test 1'/);
-  assert.ok(fs.readFileSync(path.join(root,'src/bridge.js'),'utf8').includes("'Ariane 4.8.5 test 1 · ouvrir'"));
-  assert.ok(fs.readFileSync(path.join(root,'background.js'),'utf8').includes("BananeCore3?.VERSION||'4.8.5.1',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.5 test 1'"),'repli du service worker');
+  assert.match(html,/<title>Ariane 4\.8\.5 test 2<\/title>/);assert.match(html,/<span>4\.8\.5 test 2<\/span>/);assert.match(html,/<footer>Ariane 4\.8\.5 test 2 ·/);
+  assert.match(fs.readFileSync(path.join(root,'panel.js'),'utf8'),/home:'4\.8\.5 test 2'/);
+  assert.ok(fs.readFileSync(path.join(root,'src/bridge.js'),'utf8').includes("'Ariane 4.8.5 test 2 · ouvrir'"));
+  assert.ok(fs.readFileSync(path.join(root,'background.js'),'utf8').includes("BananeCore3?.VERSION||'4.8.5.2',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.5 test 2'"),'repli du service worker');
 });
-test('paquet : nom tiré du manifeste (ariane-4.8.5-test.1.zip) ; numéro de test et version doivent concorder',()=>{
+test('paquet : nom tiré du manifeste (ariane-4.8.5-test.2.zip) ; numéro de test et version doivent concorder',()=>{
   const py=`import importlib.util,json,sys
 s=importlib.util.spec_from_file_location('p',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 print(m.nom_paquet(json.loads(sys.argv[2])))
 print(m.nom_paquet({'version':'4.8.0'}))
 try:
-  m.nom_paquet({'version':'4.8.5.2','version_name':'4.8.5 test 1'});print('accepté')
+  m.nom_paquet({'version':'4.8.5.3','version_name':'4.8.5 test 2'});print('accepté')
 except ValueError as e:print('refusé')`;
   const r=spawnSync('python3',['-c',py,path.join(root,'tools/package.py'),JSON.stringify(manifest)],{encoding:'utf8'});
-  assert.equal(r.status,0,r.stderr);assert.deepEqual(r.stdout.trim().split('\n'),['ariane-4.8.5-test.1.zip','ariane-v4.8.0.zip','refusé']);
+  assert.equal(r.status,0,r.stderr);assert.deepEqual(r.stdout.trim().split('\n'),['ariane-4.8.5-test.2.zip','ariane-v4.8.0.zip','refusé']);
 });
 
 /* Onglet ESV simulé pour chrome.scripting : le marqueur de l'adaptateur déjà
@@ -49,7 +49,7 @@ test('4.8.0 connectée puis TEST : refus avant toute injection, message clair',a
 });
 test('adaptateur de la même extension mais d’une autre version : recharger ESV, rien d’injecté',async()=>{
   const t=onglet({version:'4.8.5.0',proprietaire:'test'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
-  await assert.rejects(b.api('connect',{tabId:1}),/Recharge la page ESV \(F5\) pour activer Ariane 4\.8\.5 test 1/);
+  await assert.rejects(b.api('connect',{tabId:1}),/Recharge la page ESV \(F5\) pour activer Ariane 4\.8\.5 test 2/);
   assert.equal(t.injecte.filter(o=>o.files).length,0);
 });
 test('même version, même extension : connexion, sans réinjecter les modules de la page',async()=>{
@@ -78,7 +78,7 @@ test('TEST installée, puis commande d’un canal étranger (4.8.0) : aucune act
   assert.equal(p.ctx.__BANANE_V3_PAGE.proprietaire,'test');assert.equal(p.ctx.__BANANE_V3_PAGE.version,K.VERSION);
   assert.equal(Object.isFrozen(p.ctx.__BANANE_V3_PAGE),true);
   const avant=p.nodes.get('O2N3DCutDescription').textContent;
-  await assert.rejects(p.raw('next',[],{proprietaire:undefined}).promise,/Une autre Ariane \(4\.8\.5 test 1\) est active dans cet onglet/);
+  await assert.rejects(p.raw('next',[],{proprietaire:undefined}).promise,/Une autre Ariane \(4\.8\.5 test 2\) est active dans cet onglet/);
   assert.equal(p.nodes.get('O2N3DCutDescription').textContent,avant,'aucune navigation');
   await assert.rejects(p.call('next'),/en sécurité : une autre Ariane a tenté de commander cet onglet \(« next »\)/);
   assert.equal(p.nodes.get('O2N3DCutDescription').textContent,avant,'le propriétaire lui-même ne commande plus ESV');
@@ -86,7 +86,7 @@ test('TEST installée, puis commande d’un canal étranger (4.8.0) : aucune act
 });
 test('un ping étranger reçoit le refus, sans mettre l’adaptateur en sécurité',async()=>{
   const p=page();
-  await assert.rejects(p.raw('ping',[],{proprietaire:'autre'}).promise,/Une autre Ariane \(4\.8\.5 test 1\)/);
+  await assert.rejects(p.raw('ping',[],{proprietaire:'autre'}).promise,/Une autre Ariane \(4\.8\.5 test 2\)/);
   assert.equal((await p.call('ping')).intrusion,null);
 });
 test('l’adaptateur garde ses modules : une réinjection d’une autre version ne les remplace pas',async()=>{

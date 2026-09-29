@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * portes-j1.cjs — portes de banc de J1 (4.8.5 test 1, PLAN_SUITE §0 et D5),
+ * portes-j1.cjs — portes de banc de J1 (4.8.5 test 1 et 2, PLAN_SUITE §0 et D5),
  * imprimées en VERT ou ROUGE :
  *   1. les 633 cuts de validation (lots des parties 9, 11 et 12), rejoués avec
  *      les règles de leur lot, donnent les mêmes décisions que la référence

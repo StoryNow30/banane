@@ -1,5 +1,26 @@
 # Décisions techniques
 
+## D-062 - Fin de partie mémorisée seulement sur preuve M−1 ; mise en sécurité pendant une pose (4.8.5 test 2)
+
+**29 septembre 2026, direction**, après la livraison du paquet test 1 ;
+appliquée par la version de test 2 (`4.8.5.2`, « 4.8.5 test 2 ») ; le
+paquet test 1 déjà livré n'est pas modifié.
+
+- **(a) Total de la partie** : le total M affiché par ESV est le nombre de
+  cuts de la partie ; la numérotation part de 0 ; le dernier cut est M−1
+  (confirmé par la direction).
+- **(b) Fin de partie après un différé** : la fin de partie n'est mémorisée
+  que si, à la reprise, ESV affiche une partie **supérieure** ET le cut du
+  dernier différé est **M−1**, M relevé par l'instrumentation passive (D4).
+  Sinon le lot se ferme sans rien mémoriser, et le panneau dit que ce cut
+  pourrait être le dernier, à saisir comme dernier cut si l'opérateur veut le
+  retenir.
+- **(c) Mise en sécurité pendant une pose** : la pose en cours va à son
+  terme ; la validation suivante est refusée ; le lot passe en pause.
+- **(d) Risque restant, accepté par la direction** : « autre Ariane pendant
+  une pose : la pose se termine, la validation est refusée, l'opérateur
+  contrôle le cut ».
+
 ## D-061 - Pilotage de la suite : une version de test à la fois, portes chiffrées, instrumentation passive
 
 **28 septembre 2026, direction** : « je valide toutes tes décisions », sur
