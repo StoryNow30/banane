@@ -22,7 +22,11 @@ const startedAt=new Date().toISOString(),log=[`Started: ${startedAt}\nNode: ${pr
 function run(args){log.push(`\n$ node ${args.join(' ')}\n`);const p=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8',maxBuffer:20*1024*1024});log.push(p.stdout||'',p.stderr||'',`Exit code: ${p.status}\n`);if(p.status!==0){fs.writeFileSync(path.join(audit,'verification.txt'),log.join(''));throw Error('Failed: '+args.join(' '));}return p.stdout;}
 // V4 uses separate Node fixtures for input interception and the recording session.
 const files=['tests','tests/v242'].flatMap(d=>fs.readdirSync(path.join(root,d)).filter(f=>f.endsWith('.test.cjs')).sort().map(f=>`${d}/${f}`));
-const output=run(['--test','--test-reporter=tap','--test-timeout=10000',...files]);
+/* 4.8.5 (29/09) : délai par fichier de test 10 → 20 s. Il garde contre un
+ * blocage, ce n'est pas un critère de qualité : sur un conteneur plus lent, le
+ * code de 307b9a5 (vert au commit) dépassait 10 s sur cinq fichiers sans lien
+ * avec le changement (engine-v46 : 10,06 s seul). */
+const output=run(['--test','--test-reporter=tap','--test-timeout=20000',...files]);
 const counts={};for(const name of ['tests','suites','pass','fail','cancelled','skipped','todo'])counts[name]=Number(output.match(new RegExp(`# ${name} (\\d+)`))?.[1]??-1);
 // En mode complet, un test ignoré est un échec : rien ne doit manquer au relevé.
 if(full&&counts.skipped>0){fs.writeFileSync(path.join(audit,'verification.txt'),log.join(''));throw Error(`Mode complet : ${counts.skipped} test(s) ignoré(s). Le banc complet n'en tolère aucun.`);}
