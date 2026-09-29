@@ -1,0 +1,494 @@
+diff --git a/background.js b/background.js
+index b22d1f3..3e65a59 100644
+--- a/background.js
++++ b/background.js
+@@ -2,31 +2,31 @@
+ // L'ORDRE COMPTE. `src/engine.js` est gelé et lie sa géométrie au chargement.
+ // La composition V4.6 (géométrie gelée + cerveau) reste la décision runtime.
+ // GCV1 est chargé ensuite comme copie scientifique figée. La façade conserve
+ // V4.6 par défaut, et ne sélectionne GCV1 que pour un appel explicitement armé.
+ /* ORDRE. `src/lot-decision.js` lit la grille d'A_STAR par `geometry-candidate-v1.js`,
+  * qu'il lie au chargement via `BananeGeometry3`. Or `src/gcv1-shadow.js`
+  * remplace ensuite `BananeGeometry3` par sa façade V4.6, qui ignore la demande
+  * de grille : chargé après lui, le choix par la voie ne voyait aucun minimum
+  * (défaut de la 4.7.8, KI-048). Il est donc chargé juste après la géométrie
+  * GCV1 et avant la composition. */
+ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
+  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
+  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
+  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
+ const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
+-const VERSION=globalThis.BananeCore3?.VERSION||'4.8.5.1',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.5 test 1';
++const VERSION=globalThis.BananeCore3?.VERSION||'4.8.5.2',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.5 test 2';
+ /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
+  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
+  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
+  * Pilote GCV1, il ne touche pas les positions posées (la sélection est celle
+  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
+  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
+ BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
+ const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
+ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
+ function liveGCV1Contract(){
+  const contract=globalThis.BananeGCV1Shadow?.state?.().contract;
+  if(!contract?.id||!contract?.geometrySha256)throw Error('Moteur GCV1 d’Orbite indisponible.');
+  return {id:contract.id,geometrySha256:contract.geometrySha256};
+ }
+ function assertPilotContract(scope){
+@@ -77,32 +77,44 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
+  if(reply?.error)throw Error(reply.error);
+  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
+ /* D4 (4.8.5, D-061) : le relevé passif d'ESV, rangé au journal (`esv-releve`)
+  * directement dans le stockage : ni la capture, ni l'état du moteur (épinglé),
+  * ni sa fenêtre d'événements n'en dépendent ; une écriture qui échoue ne bloque
+  * rien. Seuls les champs du relevé sont gardés, vérifiés ; l'identité est celle
+  * que la page a lue (complétée comme celle des autres événements), sinon aucune. */
+ const entierOuNul=v=>Number.isInteger(v)?v:null;
+ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThis.BananeCore3;
+  const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-releve',
+    at:typeof r.at==='string'?r.at:null,requestId:typeof r.requestId==='string'?r.requestId:null,
+    identity:Number.isInteger(r.identity?.cut)?K.completeIdentity({pageId:typeof r.identity.pageId==='string'?r.identity.pageId:undefined,part:entierOuNul(r.identity.part),cut:r.identity.cut}):null};
+  if(Number.isInteger(r.demande?.cut))e.demande={part:entierOuNul(r.demande.part),cut:r.demande.cut};
+  if(Number.isInteger(r.compteur?.traites)&&Number.isInteger(r.compteur?.total))e.compteur={traites:r.compteur.traites,total:r.compteur.total};
+  for(const k of ['compteurIllisible','textesTronques'])if(r[k]===true)e[k]=true;
+- for(const k of ['compteursVus','objetsRail'])if(Number.isInteger(r[k]))e[k]=r[k];
++ for(const k of ['compteursVus','objetsRail','cutsAffiches','cutsAffichesVus'])if(Number.isInteger(r[k]))e[k]=r[k];
++ /* D-062 : le dernier relevé pendant un lot, quel qu'il soit, remplace le précédent
++  * (jamais réemployé) ; le départ ne s'en sert que s'il est celui du cut N. */
++ const b=engine.s.batch;if(b?.state==='RUNNING')b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),at:e.at||e.timestamp};
+  void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
++/* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
++ * total du compteur « N on M treated » (le texte confirmé par la direction,
++ * photo du 27/09), lu une seule fois. Le texte « M cuts » est journalisé pour
++ * qualification mais ne sert jamais seul : un autre nombre suivi de « cuts »
++ * (cuts validés, par exemple) vaudrait N+1 au cut N et ferait mémoriser une
++ * fausse fin. */
++function totalPartie(e){const a=e.compteur?.total;
++ if((e.compteursVus??1)>1)return {total:null,totalSource:'plusieurs'};
++ return Number.isInteger(a)&&a>0?{total:a,totalSource:'compteur'}:{total:null,totalSource:'illisible'};}
+ const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
+ /* 4.7.19 — LE PILOTE S'ARRÊTE AU DERNIER CUT DU LOT (retour terrain du 25/09).
+  * Le bouton de validation d'ESV valide ET charge le cut non validé suivant, au
+  * besoin dans la partie suivante : le lot finissait donc dans une autre partie.
+  * Au dernier cut du lot (`scope.end`), le Pilote pose la paire puis s'arrête
+  * sans valider ; un cut non résolu est laissé sans commande ni navigation.
+  * `src/engine.js` est épinglé : l'arrêt passe par l'état du lot, que la boucle
+  * relit entre deux étapes. */
+ function stopAtLotEnd(proposal){
+  const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
+  if(b?.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(cut)||cut!==b.scope.end)return false;
+  const resolved=proposal===undefined||['left','right'].every(side=>proposal?.rails?.[side]?.delta);
+  /* Non résolu : seule la politique « différer » navigue ; « pause » reste déjà sur le cut. */
+  if(proposal!==undefined&&(resolved||b.scope.unresolvedPolicy!=='defer'))return false;
+  b.state='STOPPED';b.stoppedAtEnd={cut,at:new Date().toISOString(),applied:proposal===undefined};
+@@ -350,80 +362,99 @@ async function retablirApresRechargement(garde=()=>true){
+  await engine.event('batch-rebased-after-reload',{identity:ici.identity,cut:exact??plancher,atteint:ici.identity.cut,pas,...r});
+  engine.s.notice=`ESV rafraîchi : lot rattaché à la nouvelle page, au cut ${ici.identity.cut}${r.appuisEcartes?` (${r.appuisEcartes} appuis écartés)`:''}.`;
+  await engine.save();return {etat:ici,rattache:true,...r,pas};}
+ /* « Reprendre » (après F5 le cas échéant). « Arrêter » pendant l'attente d'ESV
+  * ou le retour au cut gagne : on ne relance que le même lot, dans l'état où
+  * il était. */
+ /* 4.8.5 (D3, KI-067) — FIN DE PARTIE APRÈS UN DIFFÉRÉ. Terrain du 28/09
+  * (partie 15) : le « suivant sans décision » envoyé depuis le dernier cut
+  * (9056, sans point LiDAR) fait quitter la page à ESV ; le moteur (épinglé) le
+  * lit comme une navigation sans progression et met le lot en pause. Dans un lot
+  * « jusqu'à la fin de la partie », sur un cut SANS POSE, on retient ce départ
+  * quand la commande a pu partir et qu'ESV a quitté la page (page mise en cache
+  * de navigation, comme le 28/09) ou annonce une autre partie. Une erreur de
+  * connexion AVANT l'envoi, ou un canal fermé sans départ, n'est pas un départ. La marque est liée à l'intention
+  * (operationId) : elle ne vaut que tant que cette intention reste ouverte. La
+- * preuve vient à la reprise (`finApresDiffere`). Le compteur « N on M » n'est
+- * pas une preuve (D4). Aucune commande n'est renvoyée. Lot borné, ou cut posé :
++ * preuve vient à la reprise (`finApresDiffere`) : D-062, le compteur « N on M »
++ * seul n'en est pas une ; avec une partie supérieure affichée, N = M−1 en est
++ * une. Aucune commande n'est renvoyée. Lot borné, ou cut posé :
+  * rien ne change, l'incertitude y est réelle. */
+ const PAGE_QUITTEE=/back\/forward cache/i;
+ async function departApresDiffere(ev){const b=engine.s.batch,sc=b?.scope;
+  if(!ev||!b||b.state!=='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||sc?.geometryEngine!==GCV1_ENGINE||sc.endMode!=='partie'||engine.s.applied)return;
+  if(ev.identity?.part!==sc.part||!Number.isInteger(ev.identity?.cut)||!ev.operationId)return;
+  const autre=Number.isInteger(ev.observedIdentity?.part)&&ev.observedIdentity.part!==sc.part;
+  if(!autre&&!PAGE_QUITTEE.test(ev.refusal?.message||''))return;
+- b.departApresDiffere={part:ev.identity.part,cut:ev.identity.cut,operationId:ev.operationId,at:new Date().toISOString()};
+- engine.s.notice=`ESV a quitté la page après le différé du cut ${ev.identity.cut} ; fin de partie probable : clique sur Reprendre (F5 seulement si ESV reste figée).`;
++ /* D-062 : M et N journalisés au départ. M vient du relevé du cut N lui-même
++  * (même partie, même cut) ; N ≥ M le rend incohérent. `dernier` : N = M−1
++  * (vrai), N < M−1 (faux), M inconnu (null) ; seule base de la mémorisation
++  * (finApresDiffere) et du panneau. */
++ const N=ev.identity.cut,t=b.totalReleve,duCut=t?.part===sc.part&&t?.cut===N;
++ let total=duCut&&Number.isInteger(t.total)?t.total:null,totalSource=!t?'absent':!duCut?'autre-cut':t.totalSource;
++ if(total!==null&&N>=total){total=null;totalSource='incoherent';}
++ const dernier=total===null?null:N===total-1;
++ b.departApresDiffere={part:ev.identity.part,cut:N,operationId:ev.operationId,total,totalSource,dernier,at:new Date().toISOString()};
++ await engine.event('fin-partie-depart',{identity:null,part:sc.part,cut:N,total,totalSource,dernier,releveCut:t?.cut??null,operationId:ev.operationId});
++ engine.s.notice=`ESV a quitté la page après le différé du cut ${N} ; fin de partie ${dernier===true?'probable':'à vérifier'} : clique sur Reprendre (F5 seulement si ESV reste figée).`;
+  await engine.save();}
+ const departOuvert=b=>{const d=b?.departApresDiffere;return !!d&&b.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'&&b.scope?.endMode==='partie'
+   &&engine.deferPending?.()?.operationId===d.operationId;};
+-/* D3 : « Reprendre » après ce départ. Sans F5 d'abord : Ariane s'installe seule
+- * sur la page où ESV est allée (un F5 pourrait ramener ESV dans la partie du lot).
+- * PREUVE DE FIN : ESV affiche une partie SUIVANTE ET la dernière action du lot est la navigation depuis le cut N
+- * (intention de navigation encore ouverte sur N). Alors l'intention est
+- * clôturée sans renvoi, le lot est clos et N est retenu comme fin de la partie
+- * (jamais en deçà d'une fin déjà connue ; même lecture que la sortie après une
+- * validation, KI-061). Même partie ou partie antérieure (ouverte à la main),
+- * action en cours, résultat incertain à clôturer : aucune clôture automatique ;
+- * même partie : la marque tombe, la marche à suivre redevient la clôture. */
++/* D3, puis D-062 (b) : « Reprendre » après ce départ. Sans F5 d'abord : Ariane
++ * s'installe seule sur la page où ESV est allée (un F5 pourrait ramener ESV dans
++ * la partie du lot). L'intention de navigation encore ouverte sur N est clôturée
++ * sans renvoi et le lot se ferme. La fin de la partie n'est MÉMORISÉE que si ESV
++ * affiche une partie SUPÉRIEURE et que N vaut M−1 (M relevé au départ, D4) ;
++ * jamais en deçà d'une fin déjà connue. Sinon rien n'est mémorisé : le panneau
++ * dit que N pourrait être le dernier cut, à saisir comme borne si l'opérateur
++ * veut le retenir. ESV encore dans la partie du lot : lot fermé aussi (D-062 b),
++ * sans fin ni différé compté ; contrôle du cut N demandé. ESV illisible, action
++ * en cours, résultat de POSE incertain à clôturer : aucune clôture automatique. */
+ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.BananeSettings?.lot||{};
+  const lot=b.id,garde=()=>{if(engine.s.batch?.id!==lot||engine.s.batch.state!=='PAUSED_DEFER_NAVIGATION_UNCERTAIN')throw Error('Reprise interrompue : le lot a changé.');};
+  if(engine.task)throw Error('Attends la fin de l’action en cours.');
+  if(engine.s.reconcileRequired||engine.s.intent)throw Error('Un résultat incertain reste à clôturer à la main : contrôle ESV, puis clôture ce résultat incertain. Aucune fin de partie n’est affirmée.');
+  let now=null;try{now=await readState();}catch{/* page rechargée : Ariane s'y réinstalle */}
+  if(!now){engine.s.notice='Ariane attend la page ESV (rafraîchis-la si elle reste figée)…';await engine.save();
+    await reconnecterESV(S.rafraichirAttenteMs??90000,garde);now=await readState();}
+  garde();if(!departOuvert(engine.s.batch))throw Error('Reprise interrompue : la navigation différée a changé.');
+- if(!Number.isInteger(now?.identity?.part))throw Error('ESV illisible après le rafraîchissement : contrôle la page, puis clique sur Reprendre.');
+- if(now.identity.part===b.scope.part){delete b.departApresDiffere;await engine.save();
+-   throw Error(`ESV affiche encore la partie ${b.scope.part} : pas de fin de partie. Contrôle le cut ${d.cut} dans ESV, puis clôture ce résultat incertain.`);}
+- if(now.identity.part<b.scope.part)
+-   throw Error(`ESV affiche la partie ${now.identity.part}, antérieure au lot : pas une preuve de fin. Rouvre la partie suivante dans ESV puis Reprendre, ou contrôle le cut ${d.cut} et clôture ce résultat incertain.`);
++ const P=now?.identity?.part;if(!Number.isInteger(P))throw Error('ESV illisible après le rafraîchissement : contrôle la page, puis clique sur Reprendre.');
++ const part=b.scope.part,N=d.cut,M=Number.isInteger(d.total)?d.total:null,memoriser=P>part&&d.dernier===true,meme=P===part;
++ /* Même partie, cut plus loin que N : la navigation a eu lieu, N n'est pas le dernier. */
++ const X=now.identity.cut,plusLoin=meme&&Number.isInteger(X)&&X>N;
+  /* Le moteur journalise la clôture (non comptée comme différé confirmé :
+   * exports et rapport d'acceptation inchangés) ; l'interruption est renommée
+   * ci-dessous, et le panneau compte ce cut parmi les différés (voieDuLot). Un
+   * arrêt du service worker entre les deux écritures laisse un lot clos par
+   * l'opérateur, sans fin retenue : le cas de la 4.8.0, sans perte. */
+  await engine.locked(()=>engine.closeUncertain());
+  const it=(b.interrupted||[]).findLast(x=>x.operationId===d.operationId&&x.status==='DEFER_NAVIGATION_CLOSED_BY_OPERATOR');
+- if(it)it.status='DEFER_NAVIGATION_CLOSED_END_OF_PART';
++ /* Même partie : rien ne dit que la navigation a eu lieu ; ce n'est pas un différé. */
++ if(it)it.status=memoriser?'DEFER_NAVIGATION_CLOSED_END_OF_PART':meme&&!plusLoin?'DEFER_NAVIGATION_CLOSED_SAME_PART':'DEFER_NAVIGATION_CLOSED_NO_END_PROOF';
+  b.error=null;delete b.departApresDiffere;
+- b.stoppedAtEnd={cut:d.cut,reason:'navigation-other-part-after-defer',issue:'sortie',target:{part:now.identity.part,cut:now.identity.cut??null},at:new Date().toISOString(),applied:false};
+- engine.s.notice=`Fin du lot : ESV a quitté la partie après le cut ${d.cut}. Le lot est clos ; aucun cut hors du lot n’est traité.`;
+- await engine.event('batch-stopped-at-end',{identity:null,reason:'navigation-other-part-after-defer',lastCut:d.cut,target:b.stoppedAtEnd.target});
+- const connue=(await finsParties())[b.scope.part];
+- if(!(Number.isInteger(connue?.last)&&connue.last>d.cut))await retenirFinPartie(b.scope.part,d.cut,'fin constatée après différé');
++ const reason=memoriser?'navigation-other-part-after-defer':meme?(plusLoin?'defer-moved-within-part':'defer-closed-same-part'):'navigation-away-after-defer-unproven',target={part:P,cut:X??null};
++ b.stoppedAtEnd={cut:N,reason,issue:'sortie',target,total:M,at:new Date().toISOString(),applied:false};
++ if(memoriser){
++   engine.s.notice=`Fin du lot : ESV est passée à la partie ${P} ; le cut ${N} est le dernier de la partie ${part} (${M} cuts, de 0 à ${M-1}) ; fin de partie retenue. Aucune commande n’a été renvoyée.`;
++   const connue=(await finsParties())[part];
++   if(!(Number.isInteger(connue?.last)&&connue.last>N))await retenirFinPartie(part,N,'fin constatée après différé (M−1)');}
++ else if(plusLoin)engine.s.notice=`Lot fermé sans fin de partie : ESV affiche encore la partie ${part}, au cut ${X}, après le cut ${N} : ce n’est pas le dernier. Contrôle le cut ${N} dans ESV. Aucune commande n’a été renvoyée.`;
++ else{const POURQUOI={incoherent:'nombre de cuts de la partie incohérent',plusieurs:'plusieurs compteurs de cuts dans la page','autre-cut':'nombre de cuts relevé sur un autre cut'};
++   const pourquoi=meme?`ESV affiche encore la partie ${part}${Number.isInteger(X)?`, cut ${X}`:''}`:P<part?`ESV affiche la partie ${P}, antérieure au lot`
++     :M===null?(POURQUOI[d.totalSource]||'nombre de cuts de la partie illisible'):`${M} cuts relevés : le dernier serait le ${M-1}`;
++   engine.s.notice=`Lot fermé sans fin de partie (${pourquoi}) : le cut ${N} pourrait être le dernier de la partie ; saisis-le comme dernier cut si tu veux le retenir.`
++     +(meme?` Contrôle le cut ${N} dans ESV.`:'')+' Aucune commande n’a été renvoyée.';}
++ await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:N,target,total:M,finMemorisee:memoriser});
+  await engine.save();return true;}
+ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
+  const b0=engine.s.batch;
+  if(departOuvert(b0))return finApresDiffere(b0);
+  const lot=engine.s.batch?.id,etatDepart=engine.s.batch?.state;
+  const garde=()=>engine.s.batch?.id===lot&&engine.s.batch.state===etatDepart;
+  /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
+  const {etat}=await retablirApresRechargement(garde);
+  /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
+   * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
+   * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
+   * avant de toucher à l'étape du lot : il reste arrêté, reprenable dès le cut
+   * suivant. */
+  const affiche=etat??await adapter.state().catch(()=>null);
+  if(affiche?.identity)try{engine.writable(affiche.identity);}
+diff --git a/panel.js b/panel.js
+index ec40faa..a0a905a 100644
+--- a/panel.js
++++ b/panel.js
+@@ -67,31 +67,31 @@
+    if(entreeMinuteur)clearTimeout(entreeMinuteur);entreeMinuteur=setTimeout(()=>b.classList.remove('entree'),2600);}
+  /* V4.5.4 — une seule fenêtre, navigation interne.
+   *
+   * Avant : cinq pages HTML, cinq fenêtres popup. Ouvrir le Natif depuis
+   * l'accueil laissait deux fenêtres empilées, et la reprise manuelle en ouvrait
+   * une troisième. La vue est maintenant un état de CETTE page, porté par le
+   * fragment d'URL pour qu'un rechargement la retrouve. */
+  /* 4.7.21 : le mode Assisté est retiré de l'interface (direction, 26/09) ;
+   * un ancien lien « #assisted » ramène à l'accueil. */
+  const VUES=['home','native','automatic'];
+  const TITRES={
+    home:{titre:'Écho observe. Orbite pose.',intro:'Choisis ce que tu veux faire dans ESV.'},
+    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
+    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
+  };
+- const SOUS={home:'4.8.5 test 1',native:'Écho',automatic:'Orbite'};
++ const SOUS={home:'4.8.5 test 2',native:'Écho',automatic:'Orbite'};
+  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
+  let which=routeDemandee();
+  function appliquerVue(){
+    document.body.dataset.window=which;
+    for(const s of document.querySelectorAll('.vue'))s.hidden=s.dataset.vue!==which;
+    for(const t of document.querySelectorAll('.nav-tab')){
+      const actif=t.dataset.view===which;
+      t.classList.toggle('actif',actif);
+      if(actif)t.setAttribute('aria-current','page');else t.removeAttribute('aria-current');
+    }
+    const t=TITRES[which]||TITRES.home;
+    if($('vue-titre'))$('vue-titre').textContent=t.titre;
+    if($('vue-intro'))$('vue-intro').textContent=t.intro;
+    if($('connection'))$('connection').hidden=which==='home';
+    placerIndicateur();
+@@ -151,31 +151,31 @@
+  /* La voie : une traverse par cut du lot, dans l'ordre où le Pilote les a
+   * ouverts (ESV saute les cuts déjà validés). La forme porte l'état : pleine,
+   * posé par le moteur ; creuse, posé par la voie (décision sur le lot) ;
+   * pointillée, différé ; fine et pâle, à venir ; haute et noire avec son
+   * numéro, le cut affiché — rouge et « ? » si le résultat est incertain.
+   * Les nombres viennent de l'état du lot et sont réécrits en entiers. */
+  /* États d'un lot qui interdisent de démarrer Écho (avec MANUAL_TAKEOVER, dit à part). */
+  const LOT_TIENT_ECHO=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'];
+  /* Revue globale : seulement si la commande du lot a bien différé le cut (le moteur
+   * a pu garder la main, ou la commande n'être jamais émise). */
+  const refusBas=(b,c)=>b?.lotCommands?.[c]?.reason==='first-pass-low-gauge'&&b.lotCommands[c].action==='defer';
+  function voieDuLot(s){
+    const b=s.batch,num=x=>Number(x?.cut??x?.identity?.cut),ens=l=>new Set((l||[]).map(num).filter(Number.isFinite));
+    /* D3 : le dernier cut d'une partie, différé puis quitté par ESV, compte parmi les
+     * différés de la vue (pas des exports : le moteur ne l'a pas confirmé). */
+-   const finPartie=(b.interrupted||[]).filter(x=>x?.status==='DEFER_NAVIGATION_CLOSED_END_OF_PART');
++   const finPartie=(b.interrupted||[]).filter(x=>['DEFER_NAVIGATION_CLOSED_END_OF_PART','DEFER_NAVIGATION_CLOSED_NO_END_PROOF'].includes(x?.status));
+    const fait=ens(b.processed),differe=ens([...(b.deferred||[]),...finPartie]),saute=ens(b.skipped),main=ens(b.manuallyCompleted);
+    const parVoie=new Set(Object.values(b.lotCommands||{}).filter(c=>c?.action==='lot').map(c=>Number(c.cut)).filter(c=>fait.has(c)));
+    const actif=Number(b.activeIdentity?.cut),ouvert=OUVERT.includes(b.state),incertain=INCERTAIN.includes(b.state)||!!s.reconcileRequired;
+    const cuts=[...new Set((b.sequence||[]).map(num).filter(Number.isFinite))];
+    const classe=c=>fait.has(c)?(parVoie.has(c)?'voie-l':'moteur'):differe.has(c)?'differe':saute.has(c)?'skip':main.has(c)?'main'
+      :c===actif?(incertain?'incertain':'actuel'):'avenir';
+    /* Un écart non consigné (null) n'est pas un écart nul : Number(null) vaut 0 (corrigé en 4.7.20). */
+    const ecart=c=>{const e=b.lotCommands?.[c]?.ecartMm,v=e===null||e===undefined||e===''?NaN:Number(e);return Number.isFinite(v)?v:null;};
+    /* D-060 : chaque refus de la garde est examiné à la relecture, même repris à la main. */
+    const bas=[...differe].filter(c=>refusBas(b,c)).sort((x,y)=>x-y);
+    return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif,ecart,bas};
+  }
+  /* 4.7.20 (piste H) — LA LIGNE : un segment par cut, dans l'ordre où le Pilote
+   * les a ouverts ; sa couleur porte l'état (moteur, voie, différé, SKIP, à
+   * venir) ; le cut affiché est plus haut, clignote doucement et porte son
+@@ -402,31 +402,34 @@
+        $('policy-effective').textContent=!running?'':demande&&demande!==applique
+          ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Orbite GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
+          :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
+      if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
+      if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
+        $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${b.scope?.lotDecision==='apply'?'appliquée':'observée seulement'}.`:'';}
+      const names=NOMS_ETAT;
+      // Les cuts repris à la main sont comptés à part : Banane ne les a pas validés.
+      const repris=b?.manuallyCompleted?.length?` · ${b.manuallyCompleted.length} repris à la main`:'';
+      /* Le compteur suit la FINALISATION durable, jamais le début d'une
+       * tentative : une intention en attente ne s'y ajoute pas. */
+      const differes=b?` · Différés : ${b.deferred?.length||0}`:'';
+      /* 4.7.19 : arrêt au dernier cut du lot, sans validation ni navigation. */
+      /* Clôture par une sortie d'ESV (KI-061, KI-063) : le cut nommé est le dernier validé, pas un cut posé. */
+      const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus',
+-       'navigation-other-part-after-defer':'ESV a quitté la partie après le différé'};
++       'navigation-other-part-after-defer':'ESV a quitté la partie après le différé',
++       'navigation-away-after-defer-unproven':'ESV a quitté la partie après le différé, sans preuve de fin',
++       'defer-closed-same-part':'différé non confirmé, ESV encore dans la partie ; contrôle ce cut',
++       'defer-moved-within-part':'ESV est allée plus loin dans la partie ; ce cut n’est pas le dernier'};
+      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
+      const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
+        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
+        :!e.issue&&e.reason==='adapter-lost-after-navigation'&&e.applied===false?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
+        :e.issue==='sortie'||e.reason&&!e.issue&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${raison}`
+        :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
+      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
+      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
+      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';
+        $('lot-etat').className='eyebrow'+(ton?' '+ton:'')+(b?.state==='RUNNING'&&!s.reconcileRequired?' live':'');}
+      if($('lot-cut'))rouler($('lot-cut'),entier(b?.activeIdentity?.cut??id?.cut));
+      etapes(b,s);
+      if($('lot-plage'))$('lot-plage').textContent=b?.scope?`partie ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
+      /* Progression dans la plage du lot : du premier au dernier cut. */
+@@ -459,32 +462,36 @@
+      const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
+      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
+       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
+       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
+       * a avancé, et le pilote refuse de compter une réussite qu'il n'a pas
+       * observée. Il faut le dire, et dire quoi faire. */
+      if(b?.state==='PAUSED_AFTER_STATE_MISSING')
+        note('La commande est partie et ESV a changé de cut avant qu’Ariane puisse relire l’état final. '
+          +'Le placement a probablement été appliqué, mais Ariane ne compte jamais une réussite qu’elle n’a pas vue. '
+          +'Vérifie le cut dans ESV, puis clique sur Arrêter pour clore le lot.');
+      /* Un échec ou une incertitude de navigation reste visible AVEC le cut
+       * concerné : aucun bouton n'est présenté comme réussi sur un simple accusé. */
+      const differe=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
+      const finProbable=finDePartieProbable(s);
+      if(finProbable)
+-       note(`ESV a quitté la page après le différé du cut ${entier(b.departApresDiffere.cut)} ; fin de partie probable : clique sur Reprendre (F5 seulement si ESV reste figée). `
+-         +'Si ESV affiche une autre partie, le lot se clôt et ce cut est retenu comme fin de la partie ; sinon, contrôle le cut dans ESV, puis clôture ce résultat incertain. Aucune commande n’est renvoyée.');
++{const d=b.departApresDiffere,M=Number.isInteger(d.total)?d.total:null;
++       /* D-062 (b) : la reprise ferme le lot ; la fin n'est retenue que sur preuve (partie
++        * supérieure, N = M−1). `dernier` est calculé par le service worker. */
++       note(`ESV a quitté la page après le différé du cut ${entier(d.cut)} ; fin de partie ${d.dernier===true?'probable':'à vérifier'}`
++         +' : clique sur Reprendre (F5 seulement si ESV reste figée). Le lot se fermera ; ce cut n’est retenu comme fin de la partie que si ESV affiche une partie supérieure et que c’est le dernier cut'
++         +(M===null?' (nombre de cuts de la partie illisible ou incohérent : rien ne sera retenu)':` (${entier(M-1)})`)+'. Aucune commande n’est renvoyée.');}
+      else if(b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||differe)
+        note(`Cut ${differe?.identity?.cut??b?.activeIdentity?.cut??'?'} : la navigation sans décision `
+          +(differe?.commandInvoked===false?'n’a pas été émise.':'a peut-être été transmise, sans progression acceptée.')
+          +' Elle ne sera pas renvoyée. Aucun cut n’est compté comme différé tant que la progression n’est pas acceptée. '
+          +'Contrôle ce cut dans ESV, puis clôture ce résultat incertain.');
+      /* « La ligne », règle 3 : pas de bouton grisé pour une action sans objet.
+       * Pendant un lot ouvert ou un résultat à réconcilier, « Démarrer » et les
+       * bornes disparaissent ; ils reviennent dès qu'un lot peut repartir. */
+      const lotOuvert=OUVERT.includes(b?.state)||!!s.reconcileRequired;
+      /* Fin de lot : télécharger d'abord ; « Nouveau lot » (lien) rouvre les
+       * bornes et « Démarrer ». Aucun lot ne part sans que tu aies revu ses bornes. */
+      const fini=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','STOPPED','ERROR'].includes(b?.state)&&!s.reconcileRequired;
+      if(lotOuvert)nouveauLot=false;
+      const attendNouveau=fini&&!nouveauLot;
+      button('new-batch',{hidden:!attendNouveau,disabled:busy});
+diff --git a/src/adapter-page.js b/src/adapter-page.js
+index fdaf079..560c5f6 100644
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -668,78 +668,97 @@
+    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
+    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
+    /* Un `cancel` PORTANT un identifiant d'opération est retenu pour elle seule
+     * et définitivement : plus aucune requête, si tardive soit-elle, ne la
+     * réautorise. Sans identifiant — un délai de bridge, par exemple — il garde
+     * son ancien sens global, qui ne concerne que l'attente en cours. */
+    cancel:async(options=null)=>{cancelled=true;
+      const operationId=options&&typeof options==='object'&&typeof options.operationId==='string'?options.operationId:null;
+      if(operationId)cancelledOperations.add(operationId);
+      return {cancelRequested:true,operationId,scopedCancelledOperations:cancelledOperations.size};}};
+  window.__BANANE_V3_PAGE=Object.freeze({version:K.VERSION,versionName:K.VERSION_NAME??null,proprietaire:PROPRIO});
+  /* D4 (4.8.5, D-061) — RELEVÉ PASSIF D'ESV, après CHAQUE capture, réussie ou
+   * non : envoyé APRÈS la réponse, dans son propre message (la capture n'est ni
+   * retardée, ni modifiée, ni transformable en erreur). LECTURE SEULE : aucune
+   * commande, aucune écriture. (1) Le texte « N on M treated » s'il est lisible
+-  * (sa signification reste à qualifier : ce n'est pas une preuve de fin de
+-  * partie) ; `compteursVus` s'il y en a plusieurs ; un texte « treated » d'un
+-  * autre format → `compteurIllisible`. (2) Le nombre d'objets « rail » que la
++  * (D-062 a : M, son total, est le nombre de cuts de la partie ; il sert à la
++  * preuve de fin avec l'autre partie affichée à la reprise) ; `compteursVus` s'il y en a plusieurs ; un texte « treated » d'un
++  * autre format → `compteurIllisible`. D-062 (4.8.5 test 2) : aussi le texte
++  * « M cuts » (un nombre seul suivi de « cuts » ; ESV l'affiche peut-être,
++  * « 7956 cuts ») → `cutsAffiches`, `cutsAffichesVus` s'il y en a plusieurs ;
++  * « Cut N of part P » n'en est pas un. Journalisé pour qualification : le
++  * service worker tire M (D-062 a) du seul compteur, jamais de ce texte.
++  * (2) Le nombre d'objets « rail » que la
+   * scène garde, filtrés comme `context()` (deux attendus ; des nombres, jamais
+   * des poses). Chaque relevé porte l'identité lue, le cut demandé, la requête
+   * et l'heure ; refait à chaque capture, jamais réemployé ; champ absent si
+   * illisible, jamais d'erreur. */
+  const COMPTEUR=/^\s*(\d[\d.,\u00a0\u202f ]{0,12}?)\s+on\s+(\d[\d.,\u00a0\u202f ]{0,12}?)\s+treated\s*$/i,MAX_TEXTES=20000;
++ const TOTAL_CUTS=/^\s*(\d[\d.,\u00a0\u202f ]{0,12}?)\s+cuts\s*$/i;
+  const nombre=t=>{const d=String(t).replace(/\D/g,'');return d.length&&d.length<=7?Number(d):NaN;};
+  function releverEsv(requestId,demande){const r={at:new Date().toISOString(),requestId};
+    if(Number.isInteger(demande?.cut))r.demande={part:demande.part??null,cut:demande.cut};
+    try{const l=cutLabel();if(l)r.identity={pageId:l.pageId,part:l.part,cut:l.cut};}catch{}
+    try{if(typeof document.createTreeWalker==='function'&&document.body){
+-     const w=document.createTreeWalker(document.body,typeof NodeFilter!=='undefined'?NodeFilter.SHOW_TEXT:4);let i=0,n=w.nextNode(),vus=0;
+-     for(;n&&i<MAX_TEXTES;n=w.nextNode(),i++){if(!/\btreated\b/i.test(String(n.nodeValue||'')))continue;
++     const w=document.createTreeWalker(document.body,typeof NodeFilter!=='undefined'?NodeFilter.SHOW_TEXT:4);let i=0,n=w.nextNode(),vus=0,cutsVus=0;
++     for(;n&&i<MAX_TEXTES;n=w.nextNode(),i++){const texte=String(n.nodeValue||''),traite=/\btreated\b/i.test(texte),cuts=/\bcuts\b/i.test(texte);
++       if(!traite&&!cuts)continue;
+        const el=n.parentElement;if(el&&typeof el.checkVisibility==='function'&&el.checkVisibility()===false)continue;
++       if(!traite){const t=[n.nodeValue,el?.textContent,el?.parentElement?.textContent].map(x=>TOTAL_CUTS.exec(String(x??''))).find(Boolean);
++         const total=t?nombre(t[1]):NaN;if(Number.isFinite(total)){cutsVus++;if(!('cutsAffiches' in r))r.cutsAffiches=total;}continue;}
+        /* Le compteur peut être réparti sur plusieurs éléments : le texte, puis son parent, puis le parent de celui-ci. */
+        const m=[n.nodeValue,el?.textContent,el?.parentElement?.textContent].map(t=>COMPTEUR.exec(String(t??''))).find(Boolean);
+        const traites=m?nombre(m[1]):NaN,total=m?nombre(m[2]):NaN;
+        if(Number.isFinite(traites)&&Number.isFinite(total)){vus++;if(!r.compteur)r.compteur={traites,total};}else r.compteurIllisible=true;}
+-     if(r.compteur)delete r.compteurIllisible;if(vus>1)r.compteursVus=vus;
++     if(r.compteur)delete r.compteurIllisible;if(vus>1)r.compteursVus=vus;if(cutsVus>1)r.cutsAffichesVus=cutsVus;
+      if(n&&i>=MAX_TEXTES)r.textesTronques=true;}}
+-   catch{delete r.compteur;delete r.compteurIllisible;delete r.compteursVus;delete r.textesTronques;}
++   catch{delete r.compteur;delete r.compteurIllisible;delete r.compteursVus;delete r.cutsAffiches;delete r.cutsAffichesVus;delete r.textesTronques;}
+    try{const root=window.viewer?.scene?.scene;if(root)r.objetsRail=(root.children||[]).filter(railLu).length;}catch{delete r.objetsRail;}
+    return r;}
+  /* Commande d'un autre propriétaire (une autre Ariane active dans l'onglet) :
+   * refusée, sans rien faire dans ESV, avec la cause et le remède. Si elle
+   * aurait agi sur ESV, l'adaptateur se met en sécurité : il ne commande plus
+   * ESV pour personne, son propriétaire compris, jusqu'au F5 ; lectures,
+   * annulations et arrêts (Écho, session manuelle) restent permis. Revue
+   * globale 4.8.5 : le refus EN SÉCURITÉ, adressé à notre propre lot, commence
+   * par « Adaptateur ESV sans réponse » : c'est ce texte qui fait mettre le lot
+   * en pause reprenable par le moteur épinglé, au lieu d'une erreur définitive.
+   * Le refus à une AUTRE Ariane n'est pas un silence : il le dit tel quel. Il
+   * nomme l'Ariane propriétaire de l'onglet (son tampon), pas ce code. */
+  const LECTURES=new Set(['ping','state','nativeSnapshot']),EN_SECURITE=new Set([...LECTURES,'cancel','nativePause','nativeFinish','manualPause','manualFinish']);
+  const nomVersion=K.VERSION_NAME||K.VERSION,nomProprietaire=PROPRIO_NOM||nomVersion;
+  const SANS_REPONSE='Adaptateur ESV sans réponse : ';
+  const refusEtranger=()=>PROPRIO===null?'Adaptateur ESV installé sans propriétaire : F5 sur ESV, puis Connecter.'
+    :`Une autre Ariane (${nomProprietaire}) est active dans cet onglet : désactive-la dans edge://extensions, puis F5 sur ESV.`;
+- const refusSecurite=()=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre (pose interrompue : Archiver le résultat interrompu).`;
++ /* D-062 (c) : la pose en cours va à son terme (la mise en sécurité ne vaut
++  * qu'à l'entrée d'une commande) ; la commande suivante est refusée, avec ce
++  * qu'elle laisse : validation refusée après la pose → pose faite, non validée,
++  * à contrôler puis archiver (D-062 d) ; pose refusée → rien posé. */
++ const SUITE={validateAndNext:'Validation refusée : la pose de ce cut est faite, non validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l’effacer ; valide-la toi-même si elle est juste). Puis désactive l’autre Ariane dans edge://extensions, F5 sur ESV, et Archiver le résultat interrompu.',
++   nextWithoutDecision:'Navigation refusée : rien n’a été envoyé à ESV pour ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
++   skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
++   apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',
++   restore:'Restauration refusée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.'};
++ const refusSecurite=action=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). `
++   +(SUITE[action]||'Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.');
+  // The isolated content script supplies a fresh per-document channel. It is a
+  // routing nonce, not a claim that a hostile page is a security boundary.
+  window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
+    const {id,channel,action,args=[],sentAt,proprietaire}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
+    if(PROPRIO===null||proprietaire!==PROPRIO){if(PROPRIO!==null&&!EN_SECURITE.has(action)&&!intrusion)intrusion={action,at:new Date().toISOString()};
+      window.postMessage({kind:'banane3:result',id,channel,error:refusEtranger()},location.origin);return;}
+-   if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite()},location.origin);return;}
++   if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite(action)},location.origin);return;}
+    if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
+    const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
+    /* 4.8.0 (KI-063) — ANNULATION PÉRIMÉE. Un `cancel` sans identifiant
+     * d'opération est global : arrivé en retard, il coupait une requête
+     * étrangère (terrain du 26/09, partie 14 : « Export interrompu. » sur un lot
+     * neuf, 45 s après un « Arrêter » resté sans réponse). Il ne vaut plus que
+     * pour la requête qu'il vise (`requestId`, délai du bridge) ou, à défaut,
+     * pour une requête déjà en cours quand il a été émis (`sentAt`). Un `cancel`
+     * PORTANT un identifiant d'opération reste retenu, quel que soit l'ordre. */
+    if(action==='cancel'){const o=args[0]&&typeof args[0]==='object'?args[0]:{};
+      const target=typeof o.requestId==='string'?o.requestId:null,scoped=typeof o.operationId==='string';
+      const stale=!scoped&&(target?!running.has(target):Number.isFinite(sentAt)&&![...running.values()].some(t=>t<=sentAt));
+      if(stale){window.postMessage({kind:'banane3:result',id,channel,result:{cancelRequested:false,stale:true,requestId:target}},location.origin);return;}}
+    else running.set(id,Date.now());
+    try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
+diff --git a/src/bridge.js b/src/bridge.js
+index 4b47214..e775f32 100644
+--- a/src/bridge.js
++++ b/src/bridge.js
+@@ -73,25 +73,25 @@
+    }
+    const id=crypto.randomUUID(),p={id,action:m.action,startedAt:Date.now(),respond,acknowledged:false,stage:'sent',detail:null};
+    p.timer=setTimeout(()=>{pending.delete(id);
+      if(['manualStart','manualFinish'].includes(m.action)&&window.__banane4InputGate)window.__banane4InputGate.active=false;
+      if(['nativeStart','nativePause','nativeResume','nativeFinish'].includes(m.action)&&window.__banane4NativeGate)window.__banane4NativeGate.active=false;
+      /* 4.8.0 (KI-063) : l'annulation d'un délai vise la SEULE requête expirée ;
+       * la page l'ignore si cette requête ne tourne plus. Un `cancel` expiré
+       * n'en déclenche pas un autre : terrain du 26/09, un « Arrêter » resté sans
+       * réponse pendant qu'ESV changeait de partie a coupé 45 s plus tard la
+       * lecture du lot suivant (« Export interrompu. »). */
+      if(!passive.has(m.action)&&m.action!=='cancel')window.postMessage({kind:'banane3:command',id:crypto.randomUUID(),channel,proprietaire:chrome.runtime.id,action:'cancel',args:[{requestId:id,reason:'bridge-timeout'}],sentAt:Date.now()},location.origin);
+      const error=p.acknowledged?'Délai dépassé dans ESV à l’étape '+p.stage+' ; résultat à contrôler.':'Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
+      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','apply','manualFinish'].includes(m.action)?90000:45000);
+    /* D1 (4.8.5) : l'adaptateur n'obéit qu'à l'extension qui l'a installé. */
+    pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,proprietaire:chrome.runtime.id,action:m.action,args:m.args||[],sentAt:Date.now()},location.origin);return true;});
+- pill=document.createElement('button');pill.textContent='Ariane 4.8.5 test 1 · ouvrir';pill.type='button';pill.hidden=true;
++ pill=document.createElement('button');pill.textContent='Ariane 4.8.5 test 2 · ouvrir';pill.type='button';pill.hidden=true;
+  /* 4.8.0 (direction, 26/09) : bouton blanc et discret, plein seulement au survol. */
+  const repos='0 1px 2px rgba(15,23,42,.10),0 2px 8px rgba(15,23,42,.08)',survol='0 2px 4px rgba(15,23,42,.12),0 6px 18px rgba(15,23,42,.14)';
+  pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#fff;color:#1f2328;border:1px solid rgba(15,23,42,.12);border-radius:999px;padding:6px 12px;font:500 12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.01em;cursor:pointer;opacity:.92;box-shadow:'+repos+';transition:opacity .16s ease,box-shadow .16s ease,transform .16s ease';
+  pill.onmouseenter=pill.onfocus=()=>Object.assign(pill.style,{opacity:'1',boxShadow:survol,transform:'translateY(-1px)'});
+  pill.onmouseleave=pill.onblur=()=>Object.assign(pill.style,{opacity:'.92',boxShadow:repos,transform:'none'});
+  pill.onclick=()=>{launcherGeneration++;setLauncherVisible(false);chrome.runtime.sendMessage({kind:'open-panel'}).then(reply=>{if(reply?.error)void refreshLauncher();},()=>refreshLauncher());};void refreshLauncher();
+  // A heartbeat also makes interrupted background work observable; it never resumes a lot.
+  setInterval(()=>{chrome.runtime.sendMessage({kind:'heartbeat'}).catch(()=>{});void refreshLauncher();},15000);
+ })();
