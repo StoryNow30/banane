@@ -2,9 +2,20 @@
 
 ## 4.8.5 — candidat stable (29/09, D-063)
 
-**Même code que le test 2** (`0d29e54`) ; seuls changent la version et le nom :
-manifeste `4.8.5`, nom « Ariane », sans « TEST » ni numéro de test (D-061) ;
-paquet `ariane-v4.8.5.zip`. Il remplace la 4.8.0 **dans le même dossier** ;
+**Même code que le test 2** (`0d29e54`), à deux choses près : la version et le
+nom (manifeste `4.8.5`, nom « Ariane », sans « TEST » ni numéro de test,
+D-061 ; paquet `ariane-v4.8.5.zip`), et **un texte de fin de partie corrigé
+avant l'étiquette** (relecture indépendante de D-062, texte seul) : quand ESV
+affiche une partie supérieure, que M est lisible et que le cut N n'est pas
+M−1, le panneau disait « M cuts relevés : le dernier serait le M−1 » puis « le
+cut N pourrait être le dernier ; saisis-le comme dernier cut », invitant à
+borner un cut que le code venait d'écarter. Il dit maintenant : « Lot fermé
+sans fin de partie : la partie P compte M cuts, son dernier cut est le M−1 ;
+le cut N n'est pas le dernier. Rien n'est retenu. » L'invitation à saisir N
+reste quand M est inconnu (illisible, incohérent, plusieurs compteurs, relevé
+sur un autre cut) ou que la partie affichée n'est pas supérieure. Le premier
+paquet candidat (`8911282`, `ac931b5d…`) est remplacé ; il n'a été ni
+étiqueté ni publié. Il remplace la 4.8.0 **dans le même dossier** ;
 retour arrière vers la 4.8.0 (`RETOUR_ARRIERE.md`) ; installation :
 `consignes/installation-4.8.5.md`.
 

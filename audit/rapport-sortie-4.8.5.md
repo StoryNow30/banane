@@ -6,8 +6,9 @@ branche `claude/banane-48-cahier`, rapports de `tools/acceptance-report.cjs` et
 `tools/analyse-locale.cjs`) ; aucun n'est recalculé ici. C1 à C4 sont rapportés
 ensemble.
 
-**Candidat** : même code que le test 2 (`0d29e54`), seuls la version et le nom
-changent (`4.8.5`, « Ariane »). Le moteur de décision (`src/lot-decision.js`,
+**Candidat** : même code que le test 2 (`0d29e54`), à deux choses près : la
+version et le nom (`4.8.5`, « Ariane »), et un texte de fin de partie corrigé
+sur la relecture indépendante de D-062 (texte seul, `background.js`). Le moteur de décision (`src/lot-decision.js`,
 `lot-decision-v7`) et `src/engine.js` sont identiques entre le test 1
 (`36b8242`) et le test 2 : les mesures du test 1 valent pour ce code.
 
@@ -59,9 +60,12 @@ bloque pas la 4.8.5 (D-063).
   (départ d'ESV après un dernier cut **différé**, puis « Reprendre »). Lot 25 :
   départ après un dernier cut **validé** (comportement de la 4.8.0) ; lot 33 :
   navigation vers le cut M−1, puis perte de l'adaptateur pendant sa capture.
-- **Après le lot J2** (`PLAN_SUITE.md`) : message de fin de partie
-  contradictoire quand M est connu et que le cut n'est pas M−1 ; détection
-  « lot terminé, sauf les différés » (lot 25 : total − traités = 12 = différés).
+- **Après le lot J2** (`PLAN_SUITE.md`) : détection « lot terminé, sauf les
+  différés » (lot 25 : total − traités = 12 = différés). Le message de fin de
+  partie contradictoire (M connu, cut ≠ M−1, partie supérieure) est **corrigé
+  dans ce candidat**, sur la relecture indépendante de D-062 : il dit que la
+  partie compte M cuts, que son dernier est le M−1, que le cut N n'est pas le
+  dernier, et n'invite plus à le saisir.
 
 ## Problèmes connus acceptés pour la 4.8.5
 

@@ -45,6 +45,19 @@ Rouge attendu : la garde d'écartement bas (D2) n'est pas encore codée.
 | `02f75ec` | D3 (fin de partie après un différé) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
 | `36b8242` | D7 (revue globale ; code du paquet test 1) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
 | `0d29e54` | D-062 (code du paquet test 2 : service worker, panneau, adaptateur) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
+| `5176887` | D-063, candidat 4.8.5 stable (version et nom seulement ; code identique à `8911282`) | VERT, 0 décision changée, parités inchangées | VERT, inchangé |
+
+**Portes du candidat 4.8.5 corrigé** (29/09, relecture indépendante de D-062 :
+un texte de fin de partie corrigé dans `background.js`). Les portes de
+`5176887` valent pour le candidat `8911282` et pour le candidat corrigé :
+`git diff` est vide sur `src/lot-decision.js`, `src/engine.js` et
+`src/gauge.js` entre `5176887`, `8911282` et le candidat corrigé (0 ligne),
+et `git diff 5176887 8911282` ne touche que des documents. Empreintes des trois
+fichiers : `src/lot-decision.js` `5bc8bab8…3f97`, `src/engine.js`
+`be155763…da33`, `src/gauge.js` `248ee81c…8393`. Les portes rejouent la
+décision (`src/lot-decision.js`, via `tools/acceptance-report.cjs` et
+`tools/first-pass-signal-study.cjs`) : un texte du service worker n'y entre
+pas.
 
 ## Question ouverte
 

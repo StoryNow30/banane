@@ -23,11 +23,16 @@ test('N = M−1 et partie supérieure : lot fermé, fin de partie mémorisée, r
   assert.equal(navs(r),1,'aucune navigation renvoyée');
   const ev=r.b.store.events.filter(e=>e.type==='batch-stopped-at-end').at(-1);assert.equal(ev.total,101);assert.equal(ev.finMemorisee,true);
 });
-test('partie supérieure ouverte à la main après un départ qui n’est pas une fin : lot fermé, rien mémorisé',async()=>{
+test('partie supérieure, M connu, N ≠ M−1 : lot fermé, rien mémorisé, et AUCUNE invitation à saisir N (relecture indépendante de D-062)',async()=>{
   const {r,view}=await dernierDiffere({},{total:6732});
   assert.match(view.notice,/ESV a quitté la page après le différé du cut 100/);assert.doesNotMatch(view.notice,/fin de partie probable/,'100 n’est pas 6731');
   const v=await reprise(r,24);
-  assert.equal(v.batch.state,'STOPPED');assert.match(v.notice,PEUT_ETRE);assert.match(v.notice,/6732 cuts relevés : le dernier serait le 6731/);
+  assert.equal(v.batch.state,'STOPPED');
+  assert.match(v.notice,/Lot fermé sans fin de partie : la partie 23 compte 6732 cuts, son dernier cut est le 6731 ; le cut 100 n’est pas le dernier\. Rien n’est retenu\. Aucune commande n’a été renvoyée\./);
+  assert.doesNotMatch(v.notice,/pourrait être le dernier|saisis-le|serait le/,'le code vient d’écarter ce cut : ne pas inviter à le borner');
+  /* Le panneau ne dit pas le contraire : ni invitation, ni « fin de partie » pour ce cut. */
+  const {$}=await panneau(v);const vu=$('notice').textContent+' '+$('batch').textContent;
+  assert.doesNotMatch(vu,/pourrait être le dernier|saisis-le|fin de partie probable/);
   assert.equal(await fin(r),null,'rien mémorisé');assert.equal(navs(r),1);
   assert.equal(r.b.store.events.filter(e=>e.type==='batch-stopped-at-end').at(-1).finMemorisee,false);
 });

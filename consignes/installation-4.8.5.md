@@ -41,9 +41,10 @@ dossier** : même extension, mêmes données.
 - **Fin de partie** : si le lot s'arrête sur « fin de partie probable » (ou
   « à vérifier »), clique sur **Reprendre** (F5 seulement si ESV reste
   figée). Le lot se ferme. La fin n'est retenue que si ESV affiche une partie
-  supérieure et que c'est le dernier cut ; sinon le panneau dit que ce cut
-  « pourrait être le dernier » : saisis-le comme dernier cut si tu veux le
-  retenir.
+  supérieure et que c'est le dernier cut. Si Ariane sait que ce n'est pas le
+  dernier (« le cut N n'est pas le dernier »), rien à faire. Si elle ne peut
+  pas le savoir, le panneau dit que ce cut « pourrait être le dernier » :
+  saisis-le comme dernier cut si tu veux le retenir.
 - **Une seule Ariane active à la fois.** Si le panneau dit « Ariane 4.8.5
   **en sécurité** » : une autre Ariane a tenté de commander l'onglet ;
   désactive-la, F5, puis **Reprendre**. Pendant une pose (« Validation

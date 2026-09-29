@@ -96,7 +96,10 @@ D8 (« Relire ce lot dans Écho ») : non retenu par la direction (28/09).
 - **(a) Message de fin de partie contradictoire** quand M est connu et que le
   cut n'est pas M−1 : « M cuts relevés : le dernier serait le M−1 », puis « le
   cut N pourrait être le dernier de la partie ; saisis-le comme dernier cut ».
-  Dans ce cas, le message ne doit plus inviter à saisir ce cut.
+  **Corrigé avant l'étiquette** (relecture indépendante de D-062, 29/09) pour
+  une partie supérieure affichée : « la partie compte M cuts, son dernier cut
+  est le M−1 ; le cut N n'est pas le dernier. Rien n'est retenu », sans
+  invitation ; l'invitation reste quand M est inconnu.
 - **(b) « Lot terminé, sauf les différés »** : quand le compteur D4 donne total
   − traités = nombre de cuts différés du lot, clore proprement (« Fin du lot : il
   ne reste que N cuts différés ») au lieu d'une pause « Adaptateur ESV sans

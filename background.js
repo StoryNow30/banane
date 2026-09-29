@@ -437,6 +437,9 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
    const connue=(await finsParties())[part];
    if(!(Number.isInteger(connue?.last)&&connue.last>N))await retenirFinPartie(part,N,'fin constatée après différé (M−1)');}
  else if(plusLoin)engine.s.notice=`Lot fermé sans fin de partie : ESV affiche encore la partie ${part}, au cut ${X}, après le cut ${N} : ce n’est pas le dernier. Contrôle le cut ${N} dans ESV. Aucune commande n’a été renvoyée.`;
+ /* Relecture indépendante de D-062 : partie supérieure, M connu, N ≠ M−1 : le code
+  * vient d'écarter N ; le message le dit et n'invite pas à le saisir comme borne. */
+ else if(P>part&&M!==null&&N!==M-1)engine.s.notice=`Lot fermé sans fin de partie : la partie ${part} compte ${M} cuts, son dernier cut est le ${M-1} ; le cut ${N} n’est pas le dernier. Rien n’est retenu. Aucune commande n’a été renvoyée.`;
  else{const POURQUOI={incoherent:'nombre de cuts de la partie incohérent',plusieurs:'plusieurs compteurs de cuts dans la page','autre-cut':'nombre de cuts relevé sur un autre cut'};
    const pourquoi=meme?`ESV affiche encore la partie ${part}${Number.isInteger(X)?`, cut ${X}`:''}`:P<part?`ESV affiche la partie ${P}, antérieure au lot`
      :M===null?(POURQUOI[d.totalSource]||'nombre de cuts de la partie illisible'):`${M} cuts relevés : le dernier serait le ${M-1}`;

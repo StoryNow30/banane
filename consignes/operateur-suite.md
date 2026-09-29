@@ -130,9 +130,10 @@ remplace le test 1 pour ce lot). Ensuite :
 4. Si le lot s'arrête sur « fin de partie probable » (ou « à vérifier ») :
    clique sur **Reprendre** (F5 seulement si ESV reste figée). Le lot se
    ferme. La fin de partie n'est retenue que si ESV montre une partie
-   supérieure et que c'est le dernier cut ; sinon le panneau dit que ce cut
-   « pourrait être le dernier » : saisis-le comme dernier cut si tu veux le
-   retenir. Si le panneau dit « Contrôle le cut N dans ESV », fais-le.
+   supérieure et que c'est le dernier cut. Si le panneau dit « le cut N n'est
+   pas le dernier », rien à faire ; s'il dit que ce cut « pourrait être le
+   dernier », saisis-le comme dernier cut si tu veux le retenir. Si le
+   panneau dit « Contrôle le cut N dans ESV », fais-le.
 5. À la fin : **Tout télécharger pour l'analyse**.
 
 **Sa relecture (≈ 15 à 25 min)**

@@ -25,6 +25,16 @@
   alourdi par les données d'Écho) ; correction après la 4.8.5.
 - Détail et chiffres : `audit/lot-485-p25-2026-09-29.md` et
   `audit/lots-20-24-33-2026-09-29.md`, branche `claude/banane-48-cahier`.
+- **Amendement (29/09, relecture indépendante de D-062)** : D-062 est jugée
+  conforme, sauf un message à corriger avant l'étiquette (texte seul) : partie
+  supérieure affichée, M connu, cut N ≠ M−1 → « la partie compte M cuts, son
+  dernier cut est le M−1 ; le cut N n'est pas le dernier ; rien n'est retenu »,
+  sans inviter à saisir N ; l'invitation reste quand M est inconnu. Nouveau
+  paquet candidat ; le premier (`8911282`, `ac931b5d…`) n'est ni étiqueté ni
+  publié. `SUITE` et la commande `next` restent telles quelles (`next` est
+  inatteignable après une pose). Les portes J1 de `8911282` valent pour le
+  candidat corrigé : aucun changement de `src/lot-decision.js`,
+  `src/engine.js` ni `src/gauge.js` entre les deux.
 
 ## D-062 - Fin de partie mémorisée seulement sur preuve M−1 ; mise en sécurité pendant une pose (4.8.5 test 2)
 
