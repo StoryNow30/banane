@@ -65,3 +65,19 @@ test('de bout en bout : un lot synthétique donne un fichier de résultats lisib
   assert.equal(d.lots[0].acceptation.rapport.total.c1.applied,2);assert.ok(d.lots[0].extraits);
   assert.match(fs.readFileSync(path.join(racine,'resultats','RESUME.md'),'utf8'),/\| p32 \| 2 \| 2 \|/);
 });
+
+test('regrouper en vrac : le contenu, pas le nom, range journal, diagnostic et relecture par partie',()=>{
+  const zlib=require('node:zlib'),G=require('../tools/regrouper-reduits.cjs'),R=require('../tools/reducteur-exports-core.js');
+  const {pair,visit,relecture}=require('./helpers/acceptance-lot.cjs');
+  const vrac=tmp(),racine=path.join(tmp(),'racine'),gz=(nom,doc)=>fs.writeFileSync(path.join(vrac,nom),zlib.gzipSync(JSON.stringify(doc)));
+  const journal=(part,session)=>({format:'banane-test-journal-v4',version:'4.8.5.2',state:{sessionId:session,batch:{scope:{part}}},events:[],records:[]});
+  gz('a.json.gz',journal(33,'s33'));gz('b.json.gz',{format:'banane-gcv1-diagnostic-v1',sessionId:'s33',observations:[]});
+  gz('c.json.gz',journal(33,'s33bis'));gz('d.json.gz',journal(20,'s20'));
+  const rel=new R.Relecture();rel.ajouter({...relecture([visit(20,5,{before:pair(5)})]),version:'x',exportedAt:'2026'});
+  gz('e.json.gz',rel.documents()[0]);gz('f.json.gz',{format:'banane-gcv1-lidar-corpus-v1'});gz('g.json.gz',{format:'inconnu'});
+  const r=G.regrouper(vrac,racine);
+  assert.deepEqual(fs.readdirSync(racine).sort(),['echo 20','lot 20','lot 33','lot 33 (2)']);
+  assert.deepEqual(fs.readdirSync(path.join(racine,'lot 33')).sort(),['a.json','b.json'],'le diagnostic suit son journal (sessionId)');
+  assert.deepEqual(r.inconnus.map(i=>i.fichier).sort(),['f.json.gz','g.json.gz']);assert.equal(r.relectures[0].parties[0],20);
+  const {lots}=L.decouvrir(racine);assert.deepEqual(lots.map(l=>l.part).sort(),[20,33,33]);
+});
