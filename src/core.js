@@ -4,7 +4,7 @@
  'use strict';
  /* D1 (4.8.5, D-061) : version de test = manifeste `4.8.5.N`, nom affiché
   * « 4.8.5 test N » ; une version stable garde `X.Y.Z`. */
- const VERSION='4.8.5',VERSION_NAME='4.8.5';
+ const VERSION='4.8.6.1',VERSION_NAME='4.8.6 test 1';
  const clone=x=>JSON.parse(JSON.stringify(x)),uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;
  const key=x=>`${x.pageId}|${x.part}|${x.cut}`;
  const identityFields=['pageId','part','cut','shape','frameId','projectId'];

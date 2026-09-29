@@ -1,5 +1,17 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.6 test 1 — KI-069 : dernier cut d'une partie (30/09, D-065)
+
+Manifeste `4.8.6.1`, « 4.8.6 test 1 », paquet `ariane-4.8.6-test.1.zip`, à installer **à côté de la 4.8.5**.
+Un seul changement : au dernier cut certain d'une partie (N = M−1, M lu dans le relevé du cut N),
+Orbite valide par **Ctrl+Entrée** (sans passer au suivant) au lieu de « valider et suivant », et n'envoie
+plus « suivant » après un différé ; le lot se ferme sur « dernier cut de la partie (M−1) validé ; ESV est
+resté sur ce cut » ou « …, différé ; rien n'a été envoyé à ESV ». Preuve : compteur N → N+1, jamais de
+navigation affirmée. Ctrl+Entrée sans effet : arrêt explicite, jamais de repli. Autres cas : 4.8.5 inchangée.
+Repli réglable par `validationDernierCut` (`'bouton'`). Question de terrain : Ctrl+Entrée valide-t-il le
+dernier cut sans changer de partie ? `engine.js`, `lot-decision.js`, `gauge.js` inchangés. Essais :
+`tests/ki069-*-486.test.cjs`, `tools/navigateur-dernier-cut.cjs` (Chromium, page synthétique).
+
 ## 4.8.5 — candidat stable (29/09, D-063)
 
 **Même code que le test 2** (`0d29e54`), à deux choses près : la version et le

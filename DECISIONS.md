@@ -1,5 +1,46 @@
 # Décisions techniques
 
+## D-065 - KI-069 : au dernier cut d'une partie, valider par Ctrl+Entrée, sans passer au suivant (4.8.6 test 1)
+
+**30 septembre 2026, opérateur et direction** (retour terrain, partie 36, 4.8.5 stable). Au dernier cut à
+valider d'une partie, « valider et passer au suivant » fait charger la partie suivante ; idem pour le
+« suivant » d'un différé. Décision : sur le dernier cut de la partie, valider par le raccourci d'ESV
+Ctrl+Entrée, qui valide SANS passer au suivant, et n'envoyer JAMAIS « suivant » après un différé sur ce cut.
+
+- **Déclenchement, conservateur** (même exigence que D-062) : le cut N est certainement le dernier quand
+  N = M−1, M lu dans le relevé passif du cut N lui-même (même partie, même cut, un seul compteur
+  « N on M treated », N < M, relevé postérieur au début du cut). Sinon : comportement de la 4.8.5, inchangé.
+  Le dernier cut non validé plus tôt que M−1 (partie 25 : 8338 pour M = 8530) n'est pas détectable : ESV
+  quittera encore la partie, accepté.
+- **Mécanique** : action `validateInPlace` (`src/adapter-page.js`) ; Ctrl+Entrée relayé comme le raccourci de
+  SKIP (keydown puis keyup sur `document`, key/code « Enter », keyCode et which 13, ctrl seul, bubbles,
+  cancelable, composed). **Hypothèse de l'opérateur, non vérifiée (aucun accès à ESV ici)** : ce raccourci
+  appelle `buttonValidateRail()`, « valider sans suivant ». À confirmer sur le terrain (test 1).
+- **Preuve** (moteur `src/engine.js` inchangé) : identité inchangée et compteur « N on M treated » passé de N
+  à N+1 (`serverConfirmed`) ; `navigationObserved` n'est JAMAIS vrai. Sans compteur lisible avant, rien n'est
+  émis. Sans effet, cut changé ou erreur : arrêt explicite du lot (état d'erreur du moteur, message : pose
+  gardée non validée, à valider dans ESV) ; JAMAIS de repli vers « valider et suivant ».
+- **Fin de lot** (`lotExitOf`, `closeAtExit`) : « Fin du lot : dernier cut de la partie (M−1) validé ; ESV est
+  resté sur ce cut. » Différé à N = M−1 : `engine.deferUnresolved` est enveloppé dans `background.js` (le
+  moteur n'est pas modifié) ; aucune commande n'est envoyée, aucune intention de navigation n'est ouverte ;
+  « Fin du lot : dernier cut de la partie (M−1), différé ; rien n'a été envoyé à ESV. » Le cut est consigné
+  (`DEFER_DERNIER_CUT_SANS_ENVOI`), non compté comme différé confirmé.
+- **Repli sélectionnable** (test seulement) : réglage `validationDernierCut: 'bouton'` (`src/settings.js`),
+  qui clique le bouton d'ESV dont l'identifiant est `boutonValiderSansSuivant` (celui de
+  `buttonValidateRail()`, à relever dans ESV, jamais deviné : nul = refus avant émission). Par défaut :
+  Ctrl+Entrée. À n'employer que si l'essai montre que Ctrl+Entrée n'a pas l'effet attendu.
+- **Sécurité (D-062 c, d)** : `validateInPlace` n'est PAS dans `EN_SECURITE` (ensemble des actions permises
+  une fois l'adaptateur en sécurité) : elle est refusée comme `validateAndNext`, avec « pose faite, non validée ».
+- **Journal** : `dernier-cut-detecte`, `validation-en-place` (M, N, commande « ctrl-entrée », compteurs) ou
+  `dernier-cut-differe`. Rien d'autre ne change.
+- **Conséquence sur D-062 (b)** : à N = M−1 avec relevé frais, ESV ne quitte plus la page au différé ; la fin
+  de partie n'est donc plus mémorisée par ce chemin (le code de D-062 est inchangé et reste atteignable
+  quand le relevé est périmé). La mémorisation de la fin de partie reste celle de D-062.
+- **Hors périmètre** : KI-068 (export) et la détection « lot terminé sauf différés » restent en 4.9. Une
+  politique de faible confiance « SKIP » sur le dernier cut enverrait encore le raccourci de SKIP.
+- `src/lot-decision.js`, `src/engine.js`, `src/gauge.js` : `git diff` vide. Version de test 4.8.6.1
+  (« 4.8.6 test 1 », D-061), à installer à côté de la 4.8.5 ; cible de retour : 4.8.5.
+
 ## D-064 - 4.8.5 stable : feu vert, étiquette et publication
 
 **29 septembre 2026, direction** : « feu vert ». La 4.8.5 devient la version

@@ -13,12 +13,15 @@ const navs=r=>r.b.adapter.calls.filter(c=>c==='nextWithoutDecision').length;
 /* Relevé passif d'ESV (D4) tel que l'adaptateur l'envoie après une capture :
  * `total` → compteur « N on M treated » ; `cuts` → texte « M cuts ». */
 const ESV_SENDER={id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}};
-function releve(b,identity,{total,cuts,traites=0}={}){const r={at:new Date().toISOString(),requestId:'r-'+identity.cut,identity:{pageId:identity.pageId,part:identity.part,cut:identity.cut}};
+function releve(b,identity,{total,cuts,traites=0,at=new Date().toISOString()}={}){const r={at,requestId:'r-'+identity.cut,identity:{pageId:identity.pageId,part:identity.part,cut:identity.cut}};
   if(Number.isInteger(total))r.compteur={traites,total};if(Number.isInteger(cuts))r.cutsAffiches=cuts;
   return b.message({kind:'esv-releve',releve:r},ESV_SENDER);}
+/* 4.8.6 (KI-069) : un relevé FRAIS avec N = M−1 fait fermer le lot AVANT tout « suivant » (ki069-b) ; ces essais
+ * gardent le départ d'ESV au différé et D-062 (b), inchangés : leur relevé est donc antérieur au cut (détection refusée). */
+const RELEVE_ANTERIEUR='2020-01-01T00:00:00.000Z';
 /* ESV quitte la page au « suivant sans décision » ; après chaque capture, le relevé part. */
 const quitteAvecReleve=(mesure={})=>(esv,b)=>{quitte(esv);if(!mesure||(!('total' in mesure)&&!('cuts' in mesure)))return;const c=esv.capture.bind(esv);
-  esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},mesure);return out;};};
+  esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},{...mesure,at:RELEVE_ANTERIEUR});return out;};};
 /* `mesure` : ce que D4 relève d'ESV ({total}, {cuts}, ou rien). */
 async function dernierDiffere(options={},mesure={}){const r=await pilote(differe,{start:100,end:0,endMode:'partie',esv:quitteAvecReleve(mesure),...options});return {r,view:await r.b.settle()};}
 

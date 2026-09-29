@@ -1,5 +1,21 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis Ariane 4.8.6 test 1, la cible de retour est Ariane 4.8.5**, étiquette
+`v4.8.5`, commit `323356c`, paquet `ariane-v4.8.5.zip` (SHA-256
+`cf4401bf…484d`). Le test 1 s'installe à côté de la 4.8.5 (autre extension,
+autre mémoire) : le retour consiste à **désactiver « Ariane 4.8.6 TEST »** dans
+`edge://extensions`, réactiver la 4.8.5, puis F5 sur ESV (une seule Ariane
+active à la fois). Ce que le retour annule : Ctrl+Entrée au dernier cut d'une
+partie (KI-069 revient : « valider et suivant » fait quitter la partie).
+`src/engine.js`, `src/lot-decision.js` et `src/gauge.js` sont les mêmes
+fichiers ; formats du stockage et des exports inchangés (événements ajoutés :
+`dernier-cut-detecte`, `validation-en-place`, `dernier-cut-differe`).
+
+```bash
+git archive v4.8.5 | tar -x -C /tmp/ariane-4.8.5
+cd /tmp/ariane-4.8.5 && python3 tools/package.py --output /tmp/ariane-v4.8.5.zip
+```
+
 **Depuis Ariane 4.8.5, la cible de retour est Ariane 4.8.0**, étiquette
 `v4.8.0`, commit `fabd77e`, paquet final `ariane-v4.8.0.zip` du 28/09
 (SHA-256 `38aa29a28bc0695258dd444adb2844752a340ef3c6de30c22939ef6b8575e25b` ;

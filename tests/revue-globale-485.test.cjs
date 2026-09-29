@@ -15,9 +15,9 @@ const root=path.resolve(__dirname,'..'),manifest=JSON.parse(fs.readFileSync(path
 test('adaptateur en sécurité pendant un lot : pause reprenable (F5 puis Reprendre), jamais ERROR',async()=>{
   const p=page();
   /* Le refus à une autre Ariane n'est pas un silence : il ne passe pas pour « sans réponse ». */
-  await assert.rejects(p.raw('next',[],{proprietaire:'autre'}).promise,e=>/^Une autre Ariane \(4\.8\.5\)/.test(e.message));
+  await assert.rejects(p.raw('next',[],{proprietaire:'autre'}).promise,e=>/^Une autre Ariane \(4\.8\.6 test 1\)/.test(e.message));
   let refus=null;await p.call('capture',{identity:{part:23,cut:100}}).catch(e=>{refus=e.message;});
-  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.5 en sécurité/);
+  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.6 test 1 en sécurité/);
   const r=await pilote(L,{start:100,end:105,esv:esv=>{esv.capture=async function(){this.calls.push('capture');throw Error(refus);};}});
   const view=await r.b.settle();
   assert.equal(view.batch.state,'PAUSED_ADAPTER_UNRESPONSIVE');
@@ -28,10 +28,10 @@ function onglet(marqueur,tampon){const injecte=[],fenetre=marqueur?{__BANANE_V3_
   return {injecte,fenetre,executeScript:async o=>{injecte.push(o);
     if(o.func)return [{frameId:0,result:vm.runInNewContext(`(${o.func})(...args)`,{window:fenetre,args:o.args||[]})}];
     return [{frameId:0,result:undefined}];}};}
-test('une autre Ariane de test est nommée comme dans edge://extensions (« 4.8.5 test 2 »), marqueur et ping compris',async()=>{
-  const t=onglet({version:'4.8.5.2',versionName:'4.8.5 test 2',proprietaire:'autre'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
-  await assert.rejects(b.api('connect',{tabId:1}),/Une autre Ariane \(4\.8\.5 test 2\) est active/);
-  const p=page();assert.equal(p.ctx.__BANANE_V3_PAGE.versionName,'4.8.5');assert.equal((await p.call('ping')).versionName,'4.8.5');
+test('une autre Ariane de test est nommée comme dans edge://extensions (« 4.8.6 test 1 »), marqueur et ping compris',async()=>{
+  const t=onglet({version:'4.8.6.1',versionName:'4.8.6 test 1',proprietaire:'autre'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
+  await assert.rejects(b.api('connect',{tabId:1}),/Une autre Ariane \(4\.8\.6 test 1\) est active/);
+  const p=page();assert.equal(p.ctx.__BANANE_V3_PAGE.versionName,'4.8.6 test 1');assert.equal((await p.call('ping')).versionName,'4.8.6 test 1');
 });
 test('tampon d’une autre Ariane déjà posé (connexion simultanée) : refus, rien d’injecté, son tampon gardé',async()=>{
   const t=onglet(null,{id:'autre',version:'4.8.5.1',versionName:'4.8.5 test 1'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
@@ -39,8 +39,8 @@ test('tampon d’une autre Ariane déjà posé (connexion simultanée) : refus, 
   assert.equal(t.injecte.filter(o=>o.files).length,0);assert.equal(t.fenetre.__ARIANE_PROPRIETAIRE.id,'autre');
 });
 test('course : notre adaptateur installé avec le tampon d’une autre Ariane refuse notre ping en la nommant ; refus définitif',async()=>{
-  const p=page({proprietaire:'autre',tampon:{versionName:'4.8.5 test 2'}});
-  await assert.rejects(p.call('ping'),e=>/^Une autre Ariane \(4\.8\.5 test 2\)/.test(e.message));
+  const p=page({proprietaire:'autre',tampon:{versionName:'4.8.6 test 1'}});
+  await assert.rejects(p.call('ping'),e=>/^Une autre Ariane \(4\.8\.6 test 1\)/.test(e.message));
   const src=fs.readFileSync(path.join(root,'background.js'),'utf8');
   assert.ok(src.includes("callSur(tabId,'ping').catch(e=>{throw /^Une autre Ariane/.test(e?.message||'')?definitif(e.message):e;})"),'le ping refusé arrête la reconnexion');
 });
@@ -68,13 +68,11 @@ test('« écartement bas » seulement si le cut a vraiment été différé par l
   assert.doesNotMatch((await panneau(vue(null))).$('lot-compteurs').innerHTML,/écartement bas/,'commande jamais émise');
 });
 
-test('nom de version : une seule valeur, celle du manifeste, partout où il est écrit (stable : aucun nom de test)',()=>{
-  const nom=manifest.version_name||manifest.version;assert.equal(K.VERSION_NAME,nom);
+test('nom de version : une seule valeur, celle du manifeste, partout où il est écrit',()=>{
+  const nom=manifest.version_name;assert.equal(K.VERSION_NAME,nom);
   for(const f of ['panel.html','panel.js','src/bridge.js','background.js']){
-    const s=fs.readFileSync(path.join(root,f),'utf8'),tests=[...s.matchAll(/\d+\.\d+\.\d+ test \d+/g)].map(m=>m[0]);
-    if(manifest.version_name)for(const v of tests)assert.equal(v,nom,`${f} : « ${v} »`);
-    else assert.deepEqual(tests,[],`${f} : nom de test dans une stable`);
-    assert.ok(s.includes(nom),`${f} : ${nom}`);}
+    const s=fs.readFileSync(path.join(root,f),'utf8'),vus=[...s.matchAll(/\d+\.\d+\.\d+ test \d+/g)].map(m=>m[0]);
+    assert.ok(vus.length>0,f);for(const v of vus)assert.equal(v,nom,`${f} : « ${v} »`);}
 });
 
 test('panneau : « fin de partie probable » vient du service worker (une seule règle)',async()=>{

@@ -13,7 +13,7 @@ test('revue : erreur AVANT l’envoi (onglet fermé, autre partie ouverte à la 
   await assert.rejects(r.b.api('resume'));assert.equal(await r.b.api('bornes-partie',{part:23}),null);
 });
 test('revue : ESV annonce une autre partie sans quitter la page : même preuve, même clôture',async()=>{
-  const annonce=(esv,b)=>{const c=esv.capture.bind(esv);esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},{total:101});return out;};
+  const annonce=(esv,b)=>{const c=esv.capture.bind(esv);esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},{total:101,at:'2020-01-01T00:00:00.000Z'});return out;};
     const n=esv.nextWithoutDecision.bind(esv);esv.nextWithoutDecision=async(...a)=>{Object.assign(esv.identity,{part:24,cut:1});const e=await n(...a);
     return {...e,navigationObserved:true,nextIdentity:{...esv.identity},navigationAfter:{identity:{...esv.identity}}};};};
   const r=await pilote(differe,{start:100,end:0,endMode:'partie',esv:annonce});const view=await r.b.settle();
