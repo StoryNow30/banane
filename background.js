@@ -492,7 +492,7 @@ async function observeLot(shadow){
  const chosen=decision.chosen?Object.values(decision.chosen).map(c=>c.fromPredictionMm).filter(Number.isFinite):[];
  const ecartMm=decision.guardMm??decision.fromPredictionMm??(chosen.length?Math.max(...chosen):null);
  if(Number.isInteger(identity.cut)){batch.lotCommands=batch.lotCommands||{};
-   batch.lotCommands[identity.cut]={...(batch.lotCommands[identity.cut]||{}),cut:identity.cut,stage:decision.stage,ecartMm:Number.isFinite(ecartMm)?ecartMm:null};}
+   batch.lotCommands[identity.cut]={...(batch.lotCommands[identity.cut]||{}),cut:identity.cut,stage:decision.stage,reason:decision.reason??null,ecartMm:Number.isFinite(ecartMm)?ecartMm:null};}
  if(decision.anchor)lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage};
  /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
  const reprise=seeds.length&&!state.repriseLogged?{fromBatchId:batch.scope.lotReprise.fromBatchId??null,anchors:seeds}:null;

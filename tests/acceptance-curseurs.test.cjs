@@ -41,6 +41,8 @@ const CURSEURS=[
    * Mesurés actifs contre coupés ; leurs seuils n'ont pas été déplacés seuls. */
   {cle:'crossing',valeur:true,bilan:PN,extrait:'| `crossing` | actif, en dernier recours |',decision:'D-053',mention:'`crossing` en dernier recours'},
   {cle:'crossingVoieMm',valeur:10,bilan:C5,extrait:'| `crossingVoieMm` | 15 | 192, 0 / 149 | 308, 3 / 274 | +1 juste (p31 fin, 7026) |',decision:'D-055',mention:'`crossingVoieMm` 10 conservé'},
+  /* 4.8.5 (D-060) : garde d'écartement bas des premiers passages sans appui. */
+  {cle:'lowGaugeGuardMm',valeur:1420,bilan:'audit/relecture-p11-2026-09-28.md',extrait:'à 1 420 comme à 1 425 mm, faux 10 → 9 (707 et 711 arrêtés, 718 posé), 0 juste perdu, 0 non jugé perdu',decision:'D-060',mention:'garde d\'écartement bas à 1 420 mm sur les premiers passages sans appui'},
   {cle:'framed',valeur:true,bilan:PN,extrait:'| `framed` | actif |',decision:'D-053',mention:'`framed` actif'},
   {cle:'frameGap',valeur:8,bilan:PN,extrait:'| `frameGap` | 8 |',decision:'D-053',mention:'`frameGap` 8',sansVariation:true},
   {cle:'frameAnchors',valeur:3,bilan:PN,extrait:'| `frameAnchors` | 3 |',decision:'D-053',mention:'`frameAnchors` 3',sansVariation:true},
@@ -50,7 +52,7 @@ const CURSEURS=[
   {cle:'validatedMinInliers',valeur:3,bilan:VAL,extrait:'moins de trois voisins cohérents ne donnent aucun appui validé',decision:'D-054',mention:'moins de trois voisins cohérents : aucun appui validé',sansVariation:true}];
 /* Réglages qui ne sont pas des curseurs : identifiant des règles consignées,
  * options de MESURE écartées du Pilote (D-050), éligibilité (D-039), journal. */
-const HORS_CURSEURS={version:'lot-decision-v6',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,
+const HORS_CURSEURS={version:'lot-decision-v7',gaugeChoice:false,gaugeTargetStudy:false,maxCandidates:6,
   eligibleMotifs:['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']};
 
 test('§14 C : chaque curseur de la décision sur le lot a sa valeur, son bilan et sa décision datée',()=>{
@@ -59,7 +61,7 @@ test('§14 C : chaque curseur de la décision sur le lot a sa valeur, son bilan 
     assert.ok(lire(c.bilan).includes(plat(c.extrait)),`${c.cle} : « ${c.extrait} » absent de ${c.bilan}`);
     if(c.decision)assert.ok(decision(c.decision).includes(plat(c.mention)),`${c.cle} : « ${c.mention} » absent de ${c.decision}`);}
   /* La décision consigne ses réglages : le rejeu d'un lot les relit (D-046, D-047, D-050). */
-  const consignes=['version','pairGuard','chainMm','gaugeGuardMm','minTop','anchorRule','crossing','framed'];
+  const consignes=['version','pairGuard','chainMm','gaugeGuardMm','minTop','anchorRule','crossing','framed','lowGaugeGuardMm'];
   assert.deepEqual(consignes.filter(k=>!(k in L.DEFAULTS)),[]);
 });
 
@@ -84,7 +86,7 @@ test('§14 C : curseurs du moteur (§8), valeurs du code et bilan D-035',()=>{
 });
 
 test('§14 C : le rejeu « règles actuelles » est exactement la décision du Pilote',()=>{
-  const {pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed}=L.DEFAULTS;
-  assert.deepEqual(A.rulesFor(null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed});
-  assert.deepEqual(A.lotRules([],null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed,source:'actuelles'});
+  const {pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed,lowGaugeGuardMm}=L.DEFAULTS;
+  assert.deepEqual(A.rulesFor(null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed,lowGaugeGuardMm});
+  assert.deepEqual(A.lotRules([],null,true),{pairGuard,chainMm,gaugeGuardMm,minTop,anchorRule,crossing,framed,lowGaugeGuardMm,source:'actuelles'});
 });

@@ -55,6 +55,9 @@
   * choix au passage à niveau) retirait 43 cuts justes sans arrêter aucun faux ;
   * en dernier recours, il pose des différés sans toucher au reste. L'écart du
   * moteur à l'ornière est consigné (`levelCrossing.engineMm`), sans effet.
+  * 4.8.5 : pas d'ornière non plus après un refus de la garde d'écartement bas
+  * (`first-pass-low-gauge`, D-060) : comme après la garde de paire, le cut est
+  * repris par l'opérateur.
   * Ni pose humaine, ni écartement cible : le lecteur ne lit que la capture.
   * `framed` : un cut qui a des appuis POSÉS des deux côtés (reprise des
   * différés, lot « Reprise ») est prédit par la voie ENCADRÉE — jusqu'à
@@ -63,7 +66,14 @@
   * méthode de l'opérateur (7801–7806) : 6,4 mm au pire, contre 20 à 32 mm pour
   * la voie prolongée par l'avant seul. En avancée normale, aucun appui n'est
   * après le cut : rien ne change. */
- const DEFAULTS=Object.freeze({version:'lot-decision-v6',gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,anchorRule:'placed',
+ /* 4.8.5 (D-060, `lot-decision-v7`) — GARDE D'ÉCARTEMENT BAS. Un premier
+  * passage SANS APPUI dont la paire est sous `lowGaugeGuardMm` (1 420 mm) est
+  * différé, motif `first-pass-low-gauge`. Garde seulement, jamais une cible :
+  * aucune pose n'est cherchée à la place, le cut est repris par l'opérateur.
+  * Banc 4.8.5 (8 jeux, 1 029 poses) : faux 10 → 9 (707 et 711 arrêtés, 718
+  * posé en ricochet), 0 juste perdu (`audit/relecture-p11-2026-09-28.md` §5).
+  * La règle est consignée ; `null` l'éteint (lots antérieurs rejoués). */
+ const DEFAULTS=Object.freeze({version:'lot-decision-v7',lowGaugeGuardMm:1420,gap:3,anchors:2,guardMm:30,chooseMm:15,maxDzMm:20,minTop:5,minFace:3,chainMm:15,pairGuard:true,gaugeGuardMm:20,gaugeGap:10,gaugeCount:3,gaugeChoice:false,gaugeTargetStudy:false,anchorRule:'placed',
    crossing:true,crossingVoieMm:10,framed:true,frameGap:8,frameAnchors:3,
    validatedWindow:5,validatedToleranceMm:8,validatedMinInliers:3,
    eligibleMotifs:Object.freeze(['ambiguity','gauge-out-of-contract','flank','minTop','slope','window']),maxCandidates:6});
@@ -248,7 +258,7 @@
  function decideCut({capture,science,anchors,validated,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
-   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,minTop:cfg.minTop,anchorRule:cfg.anchorRule,
+   const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,lowGaugeGuardMm:cfg.lowGaugeGuardMm??null,minTop:cfg.minTop,anchorRule:cfg.anchorRule,
      crossing:!!cfg.crossing,framed:!!cfg.framed};
    /* §14 I amendé (D-054) : voisins validés cohérents, en tête des appuis. */
    if(validated?.length){const kept=consistentValidated(identity,rails,validated,cfg);
@@ -278,7 +288,14 @@
         * cherchée à la place. Mesuré : 241 et 409 arrêtés, aucun juste perdu
         * (`audit/garde-paire-verification-2026-09-24.md`). */
        if(cfg.pairGuard&&pairFlagged(science))return {...base,stage:'deferred',reason:'pair-guard',pairGuarded:true,guardMm,anchorsUsed:nb.map(a=>a.identity.cut),anchor:false};
-       if(!gaugeSuspect(positions))return {...base,stage:'first-pass',guardMm,anchorsUsed:nb.map(a=>a.identity.cut),positions,anchor:true};
+       if(!gaugeSuspect(positions)){
+         /* D-060 : premier passage sans appui (aucun appui de prédiction, voie
+          * encadrée comprise), paire sous le seuil → différé (garde, jamais
+          * cible). Pas de repli sur l'ornière : un refus est repris par l'opérateur. */
+         const g=gaugeOf(positions);
+         if(cfg.lowGaugeGuardMm!=null&&!pred.list.length&&g<cfg.lowGaugeGuardMm)
+           return {...base,stage:'deferred',reason:'first-pass-low-gauge',gaugeMm:r1(g),guardMm,anchorsUsed:[],anchor:false};
+         return {...base,stage:'first-pass',guardMm,anchorsUsed:nb.map(a=>a.identity.cut),positions,anchor:true};}
        // Retiré par la garde d'écartement voisin : repris depuis la voie, comme un différé.
        base.gaugeJumpMm=r1(gaugeJump(gaugeRef,positions));
      }
@@ -418,6 +435,10 @@
  }
  function commandRails({decision,runtimeRails,before,expectedPoses,cameras}){
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
+   /* D-060 : un refus de la garde d'écartement bas est TOUJOURS un différé, même
+    * sans capture de départ ; sans ce renvoi, il suivrait la paire du moteur. */
+   if(decision?.stage==='deferred'&&decision.reason==='first-pass-low-gauge'&&runtimeRails&&SIDES.every(side=>runtimeRails[side]))
+     return deferRails(runtimeRails,decision,'first-pass-low-gauge','décision sur le lot : premier passage sans appui, écartement bas ('+decision.gaugeMm+' mm, sous '+decision.lowGaugeGuardMm+' mm)');
    if(!decision||!runtimeRails||!before||!SIDES.every(side=>runtimeRails[side]&&before[side]))return keep('no-decision');
    /* RELECTURE 4.7.12, CONSTAT B1 (KI-053). La garde de continuité a RETIRÉ la
     * paire du moteur : aucun repli ne doit la rendre. Si la position de la voie

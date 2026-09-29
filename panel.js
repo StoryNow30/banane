@@ -152,6 +152,7 @@
   * Les nombres viennent de l'état du lot et sont réécrits en entiers. */
  /* États d'un lot qui interdisent de démarrer Écho (avec MANUAL_TAKEOVER, dit à part). */
  const LOT_TIENT_ECHO=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'];
+ const refusBas=(b,c)=>b?.lotCommands?.[c]?.reason==='first-pass-low-gauge';
  function voieDuLot(s){
    const b=s.batch,num=x=>Number(x?.cut??x?.identity?.cut),ens=l=>new Set((l||[]).map(num).filter(Number.isFinite));
    const fait=ens(b.processed),differe=ens(b.deferred),saute=ens(b.skipped),main=ens(b.manuallyCompleted);
@@ -162,7 +163,9 @@
      :c===actif?(incertain?'incertain':'actuel'):'avenir';
    /* Un écart non consigné (null) n'est pas un écart nul : Number(null) vaut 0 (corrigé en 4.7.20). */
    const ecart=c=>{const e=b.lotCommands?.[c]?.ecartMm,v=e===null||e===undefined||e===''?NaN:Number(e);return Number.isFinite(v)?v:null;};
-   return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif,ecart};
+   /* D-060 : chaque refus de la garde est examiné à la relecture, même repris à la main. */
+   const bas=[...differe].filter(c=>refusBas(b,c)).sort((x,y)=>x-y);
+   return {fait,differe,saute,main,parVoie,cuts,classe,ouvert,incertain,actif,ecart,bas};
  }
  /* 4.7.20 (piste H) — LA LIGNE : un segment par cut, dans l'ordre où le Pilote
   * les a ouverts ; sa couleur porte l'état (moteur, voie, différé, SKIP, à
@@ -222,7 +225,7 @@
      const [quoi,k]=cmd?.action==='lot'&&QUOI[cmd.stage]?QUOI[cmd.stage]:QUOI['first-pass'];
      out.push({t:p.evidence?.startedAt||p.evidence?.navigationAfter?.observedAt,c,quoi,k,val:ecart(c)});}
    for(const d of b.deferred||[]){const c=num(d);if(!Number.isFinite(c))continue;const r=(d.unresolvedRails||[]).filter(x=>COTES[x]);
-     out.push({t:d.deferredAt,c,quoi:'différé'+(r.length===2?' · deux rails':r.length?' · '+COTES[r[0]]:''),k:'differe',val:'—'});}
+     out.push({t:d.deferredAt,c,quoi:'différé'+(refusBas(b,c)?' · écartement bas':r.length===2?' · deux rails':r.length?' · '+COTES[r[0]]:''),k:'differe',val:'—'});}
    for(const x of b.skipped||[]){const c=num(x);if(Number.isFinite(c))out.push({t:x.evidence?.startedAt||x.skippedAt,c,quoi:'SKIP',k:'refuse',val:'—'});}
    return out.filter(x=>x.t).sort((a,b)=>String(b.t).localeCompare(String(a.t))).slice(0,3);
  }
@@ -433,7 +436,9 @@
        if(v&&v.ouvert&&!v.fait.has(v.actif)&&!v.differe.has(v.actif)&&!v.saute.has(v.actif)&&!v.main.has(v.actif))vus.delete(v.actif);
        const finis=vus.size;
        const ecrit=poser($('lot-compteurs'),!v?'':tuiles([['Posés',String(v.fait.size),'',v.parVoie.size?`dont ${v.parVoie.size} par la voie`:'par le moteur'],
-         ['Différés',String(v.differe.size),v.differe.size?'amber':'',[v.saute.size?`${v.saute.size} SKIP`:'',v.main.size?`${v.main.size} repris à la main`:''].filter(Boolean).join(' · ')||'à reprendre'],
+         ['Différés',String(v.differe.size),v.differe.size?'amber':'',[v.saute.size?`${v.saute.size} SKIP`:'',v.main.size?`${v.main.size} repris à la main`:'',
+           /* D-060 : les refus de la garde d'écartement bas, nommés pour la relecture. */
+           v.bas.length?`refusés (écartement bas) : ${v.bas.slice(0,8).map(entier).join(', ')}${v.bas.length>8?', …':''}`:''].filter(Boolean).join(' · ')||'à reprendre'],
          ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis} cuts du lot`]]));
        if(ecrit)animerTuiles($('lot-compteurs'),'lot');}
      if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;if(poser($('voie'),montrer?dessinerVoie(v):'')&&montrer)animerVoie($('voie'),v);

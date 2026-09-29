@@ -74,6 +74,12 @@ l'audit de l'orchestration (`audit/chantiers/audit-orchestration-485.md`).
   sans appui (garde seulement, jamais une cible ; banc : faux 10 → 9, 0 juste
   perdu, `audit/relecture-p11-2026-09-28.md` §5). Partie de validation de la
   4.8.5 : une partie jamais passée par Ariane, choisie par l'opérateur.
+  *Mise en œuvre (D2, 29/09, orchestrateur)* : `lot-decision-v7` ;
+  « sans appui » = aucun appui de prédiction (voie encadrée comprise) ; un
+  refus n'est jamais reposé par Ariane (ni reprise, ni ornière). Limite
+  connue : sur une voie réellement étroite (1 405 à 1 419 mm), sans appui,
+  tous les premiers passages seraient refusés ; chaque refus est examiné à la
+  relecture (porte J2).
 - **Audit de l'orchestration de la suite** confié à Astra
   (`consignes/chantier-9-auditeur.md`).
 

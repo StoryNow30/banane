@@ -46,12 +46,14 @@ test('lecteur : chaussée extérieure plus basse que le champignon (772 droit), 
 test('moteur d\'accord avec l\'ornière (≤ 8 mm) : premier passage inchangé',()=>{
   const d=decide(coupe(10),science(0.030));
   assert.equal(d.stage,'first-pass');assert.equal(d.levelCrossing.read,true);assert.equal(d.levelCrossing.engineMm,3);
-  assert.equal(d.version,'lot-decision-v6');assert.equal(d.crossing,true);assert.equal(d.framed,true);
+  assert.equal(d.version,'lot-decision-v7');assert.equal(d.crossing,true);assert.equal(d.framed,true);
 });
 
 test('moteur en désaccord avec l\'ornière : premier passage inchangé, écart seulement consigné',()=>{
-  /* Banc du 25/09 : s'en servir de garde retirait 7 premiers passages justes, sans arrêter aucun faux. */
-  const d=decide(coupe(10),science(0.045));
+  /* Banc du 25/09 : s'en servir de garde retirait 7 premiers passages justes, sans arrêter aucun faux.
+   * 4.8.5 : la paire fait ici 1 405 mm, sans appui ; la garde d'écartement bas
+   * (D-060, essayée à part) est éteinte pour que l'essai ne porte que sur l'ornière. */
+  const d=decide(coupe(10),science(0.045),[],{lowGaugeGuardMm:null});
   assert.equal(d.stage,'first-pass');assert.equal(d.levelCrossing.engineMm,18);
 });
 
@@ -73,7 +75,7 @@ test('avec appuis, cut différé par la chaîne : l\'ornière est posée si elle
 });
 
 test('lecteur coupé (rejeu d\'un lot antérieur) : décision de la 4.7.18',()=>{
-  const d=decide(coupe(10),science(0.045),[],{crossing:false});
+  const d=decide(coupe(10),science(0.045),[],{crossing:false,lowGaugeGuardMm:null});
   assert.equal(d.stage,'first-pass');assert.equal(d.levelCrossing,undefined);assert.equal(d.crossing,false);
 });
 

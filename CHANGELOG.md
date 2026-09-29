@@ -36,6 +36,20 @@
   jusqu'au F5, lectures et arrêts permis) et la connexion le dit.
 - La reconnexion après F5 abandonne tout de suite devant une autre Ariane.
 
+### Garde d'écartement bas à 1 420 mm (D2, D-060)
+
+- **Décision sur le lot `lot-decision-v7`** : un premier passage **sans
+  appui** (aucun appui de prédiction, voie encadrée comprise) dont la paire
+  est sous 1 420 mm est différé, motif « écartement bas au premier passage »
+  (`first-pass-low-gauge`). Garde seulement, jamais une cible : aucune pose
+  n'est cherchée à la place, pas de repli sur l'ornière ; le Pilote diffère
+  toujours (jamais la paire du moteur), même sans capture de départ.
+- **Règle consignée** (`lowGaugeGuardMm`) : le rejeu d'un lot la relit ; les
+  lots v2 à v6 et les exports antérieurs à la 4.8.5 se rejouent sans elle.
+- **Panneau** : la tuile « Différés » nomme les refus (« refusés (écartement
+  bas) : 707, 711 ») pour la relecture ; l'activité dit « différé · écartement
+  bas ».
+
 ### Documents et état (D6, clôture J0)
 
 - **Rapport de sortie 4.8** complété (`audit/rapport-sortie-4.8.md`) : partie
