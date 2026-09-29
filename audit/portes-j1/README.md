@@ -35,6 +35,13 @@ chacun). Code de sortie 0 si toutes les portes sont vertes.
 
 Rouge attendu : la garde d'écartement bas (D2) n'est pas encore codée.
 
+## Passages suivants (29/09)
+
+| Code | Chantier | 633 cuts de validation | 8 jeux |
+|---|---|---|---|
+| `d8455fc` | D1 (numérotation, cohabitation) | VERT, 0 décision changée | ROUGE attendu : 707, 711, 718 inchangés (D2 pas encore codé) ; 0 juste perdu |
+| `ed9f01f` | D2 (garde d'écartement bas) | VERT, 0 décision changée, parités inchangées | **VERT** : 707 et 711 refusés, 718 posé (ricochet, nouveau faux attendu : faux 10 → 9), 0 juste perdu |
+
 ## Question ouverte
 
 Parité rejeu/observation du lot 4.7.18 de la partie 9 : **313 sur 346**. La
