@@ -38,7 +38,19 @@ Rouge attendu : la garde d'écartement bas (D2) n'est pas encore codée.
 ## Question ouverte
 
 Parité rejeu/observation du lot 4.7.18 de la partie 9 : **313 sur 346**. La
-porte exige seulement qu'elle ne bouge pas. Hypothèse, non vérifiée : le lot
-est réduit à ses observations (recette, étape 3), et le rejeu ne voit plus les
-appuis validés dans les deux autres lots du même diagnostic. À
-confirmer au banc de fond, sans effet sur J1.
+porte exige seulement qu'elle ne bouge pas.
+
+**Hypothèse « diagnostic réduit » testée le 29/09 : réfutée.** Rejeu sur le
+diagnostic complet de la partie 9 (458 observations, trois lots ; les deux
+autres, 55c7e97e à 06:27 et 884d6dc5 à 06:59, précèdent le lot 4.7.18 de
+08:20, leurs appuis sont donc disponibles), parité mesurée sur les 346
+observations du lot : **313/346, les 33 mêmes écarts**. Le rejeu réduit, fait
+par le même script, redonne bien 313/346.
+
+Les 33 écarts : 20 reprises par la voie rejouées en différé
+(`window → deferred`), 9 reprises par la voie aux positions différentes
+(`window → window`), 2 choix rejoués par la voie, 2 choix rejoués en différé.
+Nouvelle hypothèse, **non vérifiée** : le calcul de la voie a changé après la
+4.7.18 sans être consigné dans les règles du lot, donc le rejeu « avec les
+règles du lot » ne reproduit pas exactement la 4.7.18 sur ce point. Sans effet
+sur J1 ; à regarder au banc de fond, si la direction le demande.

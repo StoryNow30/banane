@@ -1,6 +1,6 @@
 {
  "format": "banane-sortie-lots-v1",
- "date": "27 septembre 2026",
+ "date": "27 septembre 2026, complété le 29 septembre (clôture J0, D-060)",
  "regle": "Rôle « validation » : partie jamais utilisée pour régler, relue ; sa mesure est consignée avant tout réglage, puis elle entre au banc de réglage (rotation, D-057). Parties de validation de la 4.8 : 9 et 12.",
  "lots": [
   {
@@ -88,10 +88,16 @@
    "note": "4.7.20, partie neuve 1–8144, premier lot mené à sa borne (arrêté sur 8144) ; relecture Natif 4.7.21 du 26/09 (audit/relecture-p12-2026-09-26.md)"
   },
   {
-   "fichier": "audit/acceptance-p11-2026-09-26-4720-sans-relecture.json",
+   "fichier": "audit/acceptance-p11-2026-09-28-4720-relecture-echo.json",
+   "role": "réglage",
+   "relecture": "ciblée (Écho du 28/09 : 44/82 appliqués jugés, 0 faux ; 37 cuts relus ensuite sans Écho, non enregistrés, D-060)",
+   "note": "4.7.20, 556–8146, arrêté par l'opérateur au cut 703 (pauses de l'opérateur) ; lot bloqué ensuite (KI-062) ; relu après la sortie (audit/relecture-p11-2026-09-28.md), entre au banc de réglage 4.8.5"
+  },
+  {
+   "fichier": "audit/acceptance-p15-2026-09-28-4800-sans-relecture.json",
    "role": "couverture",
    "relecture": "aucune",
-   "note": "4.7.20, 556–8146, arrêté par l'opérateur au cut 703 (pauses de l'opérateur) ; lot bloqué ensuite (KI-062)"
+   "note": "4.8.0, 106 → fin de la partie, cuts non validés d'une partie déjà entamée (sauts) ; fin de partie lue comme navigation incertaine (KI-067) ; relecture du 28/09 faite sans Écho, validée à 100 % par l’expertise de la direction, non enregistrée : **C4 non mesuré** (D-060) ; audit/lot-4800-p15-2026-09-28.md"
   }
  ],
  "p2": null,
@@ -121,7 +127,8 @@
   "Contrôle visuel du §14 H dans Edge : fait par la direction le 26/09 (bouton d'ouverture d'ESV redessiné en blanc, discret) ; banc vert sur le commit candidat ; paquet reproductible ; merge, tag et release sur autorisation explicite seulement.",
   "Fait : matrice d'acceptation (44 exigences), relecture indépendante 4.7.13–4.7.16, seuil C4 (D-057), lot arrêté compté (D-057), P2 reporté en 4.9 (D-057), rotation réglage / validation (D-057).",
   "Reporté en 4.8.5 (D-057) : voisins validés comme appuis en dernier recours (D-054), garde de premier passage à 20 mm et choix à un appui (faux 7743 et 7738), biais vertical aux passages à niveau (banc, aucun calage).",
-  "Les neuf choix minTop 5 de la relecture 4.7.16 (I2) restent non jugés ; la partie 12 en juge sept nouveaux sur le terrain : 6 justes, 1 faux (7738, choix à un appui)."
+  "Les neuf choix minTop 5 de la relecture 4.7.16 (I2) restent non jugés ; la partie 12 en juge sept nouveaux sur le terrain : 6 justes, 1 faux (7738, choix à un appui).",
+  "Clôture J0 (28/09, D-060) : étiquettes v4.8.0 et v4.7.21 créées par la direction et vérifiées ; parties 11 et 15 ajoutées après la sortie. Partie 11 : 44 poses jugées par l'Écho du 28/09, 0 faux ; les 37 autres cuts relus sans Écho (validés par l'expertise de la direction, non enregistrés). Partie 15 : C1 192/251 (76,5 %, cuts non validés d'une partie entamée, information) ; C4 non mesuré, la partie n'entre pas au banc comme partie jugée. La mesure enregistrée reprend avec la partie neuve de la 4.8.5 (J2)."
  ],
  "lotArreteCompte": true,
  "p2Reporte": "plancher humain P2 reporté en 4.9 (D-057)",

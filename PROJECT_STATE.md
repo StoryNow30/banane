@@ -1,5 +1,8 @@
 # État du projet Banane
 
+> **Historique seulement** depuis le 29/09/2026 (D6) : l'état vivant est dans
+> `LIRE_EN_PREMIER.md`.
+
 Date : 28 septembre 2026  
 Version officielle : **Ariane 4.8.0** (Banane devient Ariane, Natif Écho, Pilote Orbite ; ESV rafraîchi et lot rattaché ; arrêts KI-063 corrigés ; revue d'interface ; D-058, validée le 28/09), avec les corrections de l'audit qualité d'Astra (P1 : purge d'Écho seulement sur fichier confirmé, KI-064 ; P2 locaux ; D-059).  
 Version terrain : **4.7.21 TEST** (nouveau lot corrigé, KI-062 ; bornes remplies par Banane ; réglages fixes et cerveau actif, D-056 ; Assisté retiré ; mouvement sans clignotement). Précédente : **4.7.20 TEST** (interface H avec ses animations et bandeau dans ESV ; export en segments corrigé, KI-060 ; fin de partie constatée, KI-061 ; reprise refusée après rechargement ; garde des voisins validés, D-054)  

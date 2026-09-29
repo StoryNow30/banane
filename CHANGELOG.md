@@ -18,6 +18,20 @@
 - **`tools/first-pass-signal-study.cjs`** : la base est rendue cut par cut ;
   `--base-seule` ne rejoue aucune variante.
 
+### Documents et état (D6, clôture J0)
+
+- **Rapport de sortie 4.8** complété (`audit/rapport-sortie-4.8.md`) : partie
+  11 jugée par l'Écho du 28/09 (44 poses jugées, 0 faux ; 37 cuts relus sans
+  Écho, non enregistrés) ; partie 15 (C1 192/251, **C4 non mesuré**, D-060).
+  Verdicts de la sortie inchangés.
+- **`KNOWN_ISSUES.md`** trié : KI-001 à KI-023 (V4.4 à 4.6) closes ou
+  obsolètes, chacune avec l'entrée qui la reprend ; KI-066 et KI-067 à jour.
+- **`LIRE_EN_PREMIER.md`** redevient le seul état ; l'historique 4.7.21 part
+  dans `audit/historique/`, `PROJECT_STATE.md` n'est plus que l'historique.
+- Parité 313/346 du lot 4.7.18 de la partie 9 : l'hypothèse du diagnostic
+  réduit est réfutée (même parité sur le diagnostic complet ;
+  `audit/portes-j1/README.md`).
+
 ## 4.8.0 — Ariane, version officielle (validée par la direction, D-058), 28 septembre 2026
 
 ### Corrections de l'audit qualité (Astra), avant la sortie (D-059)
