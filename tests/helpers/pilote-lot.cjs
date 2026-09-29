@@ -14,7 +14,7 @@ class EngineGCV1 extends Engine{async analyze(...a){const p=await super.analyze(
 async function pilote(decision,{start=100,end=101,endMode=null,policy='defer',lotDecision='apply',settings=require('../../src/settings.js'),esv=null}={}){
   const b=background({shadow:gcv1Shadow(science),globals:{BananeLotDecision:decision,BananeSettings:settings,BananeCore3:K,BananeEngine3:{Engine:EngineGCV1}}});
   // `esv` : réglage de l'ESV simulé avant le lot (navigation, silence…).
-  if(esv)esv(b.adapter);
+  if(esv)esv(b.adapter,b);
   const capture=b.adapter.capture.bind(b.adapter),captured=[];
   b.adapter.capture=async(...a)=>{const c=withCameras(await capture(...a));captured.push({cut:c.identity.cut,rails:K.clone(c.rails)});return c;};
   const applied=[],apply=b.adapter.apply.bind(b.adapter);

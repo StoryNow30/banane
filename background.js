@@ -89,8 +89,20 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
  if(Number.isInteger(r.demande?.cut))e.demande={part:entierOuNul(r.demande.part),cut:r.demande.cut};
  if(Number.isInteger(r.compteur?.traites)&&Number.isInteger(r.compteur?.total))e.compteur={traites:r.compteur.traites,total:r.compteur.total};
  for(const k of ['compteurIllisible','textesTronques'])if(r[k]===true)e[k]=true;
- for(const k of ['compteursVus','objetsRail'])if(Number.isInteger(r[k]))e[k]=r[k];
+ for(const k of ['compteursVus','objetsRail','cutsAffiches','cutsAffichesVus'])if(Number.isInteger(r[k]))e[k]=r[k];
+ /* D-062 : le dernier relevé pendant un lot, quel qu'il soit, remplace le précédent
+  * (jamais réemployé) ; le départ ne s'en sert que s'il est celui du cut N. */
+ const b=engine.s.batch;if(b)b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),at:e.at||e.timestamp};
  void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
+/* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
+ * total du compteur « N on M treated » (le texte confirmé par la direction,
+ * photo du 27/09), lu une seule fois. Le texte « M cuts » est journalisé pour
+ * qualification mais ne sert jamais seul : un autre nombre suivi de « cuts »
+ * (cuts validés, par exemple) vaudrait N+1 au cut N et ferait mémoriser une
+ * fausse fin. */
+function totalPartie(e){const a=e.compteur?.total;
+ if((e.compteursVus??1)>1)return {total:null,totalSource:'plusieurs'};
+ return Number.isInteger(a)&&a>0?{total:a,totalSource:'compteur'}:{total:null,totalSource:'illisible'};}
 const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
 /* 4.7.19 — LE PILOTE S'ARRÊTE AU DERNIER CUT DU LOT (retour terrain du 25/09).
  * Le bouton de validation d'ESV valide ET charge le cut non validé suivant, au
@@ -362,8 +374,9 @@ async function retablirApresRechargement(garde=()=>true){
  * de navigation, comme le 28/09) ou annonce une autre partie. Une erreur de
  * connexion AVANT l'envoi, ou un canal fermé sans départ, n'est pas un départ. La marque est liée à l'intention
  * (operationId) : elle ne vaut que tant que cette intention reste ouverte. La
- * preuve vient à la reprise (`finApresDiffere`). Le compteur « N on M » n'est
- * pas une preuve (D4). Aucune commande n'est renvoyée. Lot borné, ou cut posé :
+ * preuve vient à la reprise (`finApresDiffere`) : D-062, le compteur « N on M »
+ * seul n'en est pas une ; avec une partie supérieure affichée, N = M−1 en est
+ * une. Aucune commande n'est renvoyée. Lot borné, ou cut posé :
  * rien ne change, l'incertitude y est réelle. */
 const PAGE_QUITTEE=/back\/forward cache/i;
 async function departApresDiffere(ev){const b=engine.s.batch,sc=b?.scope;
@@ -371,20 +384,30 @@ async function departApresDiffere(ev){const b=engine.s.batch,sc=b?.scope;
  if(ev.identity?.part!==sc.part||!Number.isInteger(ev.identity?.cut)||!ev.operationId)return;
  const autre=Number.isInteger(ev.observedIdentity?.part)&&ev.observedIdentity.part!==sc.part;
  if(!autre&&!PAGE_QUITTEE.test(ev.refusal?.message||''))return;
- b.departApresDiffere={part:ev.identity.part,cut:ev.identity.cut,operationId:ev.operationId,at:new Date().toISOString()};
- engine.s.notice=`ESV a quitté la page après le différé du cut ${ev.identity.cut} ; fin de partie probable : clique sur Reprendre (F5 seulement si ESV reste figée).`;
+ /* D-062 : M et N journalisés au départ. M vient du relevé du cut N lui-même
+  * (même partie, même cut) ; N ≥ M le rend incohérent. `dernier` : N = M−1
+  * (vrai), N < M−1 (faux), M inconnu (null) ; le panneau le lit tel quel. */
+ const N=ev.identity.cut,t=b.totalReleve,duCut=t?.part===sc.part&&t?.cut===N;
+ let total=duCut&&Number.isInteger(t.total)?t.total:null,totalSource=!t?'absent':!duCut?'autre-cut':t.totalSource;
+ if(total!==null&&N>=total){total=null;totalSource='incoherent';}
+ const dernier=total===null?null:N===total-1;
+ b.departApresDiffere={part:ev.identity.part,cut:N,operationId:ev.operationId,total,totalSource,dernier,at:new Date().toISOString()};
+ await engine.event('fin-partie-depart',{identity:null,part:sc.part,cut:N,total,totalSource,dernier,releveCut:t?.cut??null,operationId:ev.operationId});
+ engine.s.notice=`ESV a quitté la page après le différé du cut ${N} ; `+(dernier===false?`ce n’est pas le dernier cut de la partie (${total} cuts)`:'fin de partie probable')
+   +' : clique sur Reprendre (F5 seulement si ESV reste figée).';
  await engine.save();}
 const departOuvert=b=>{const d=b?.departApresDiffere;return !!d&&b.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'&&b.scope?.endMode==='partie'
   &&engine.deferPending?.()?.operationId===d.operationId;};
-/* D3 : « Reprendre » après ce départ. Sans F5 d'abord : Ariane s'installe seule
- * sur la page où ESV est allée (un F5 pourrait ramener ESV dans la partie du lot).
- * PREUVE DE FIN : ESV affiche une partie SUIVANTE ET la dernière action du lot est la navigation depuis le cut N
- * (intention de navigation encore ouverte sur N). Alors l'intention est
- * clôturée sans renvoi, le lot est clos et N est retenu comme fin de la partie
- * (jamais en deçà d'une fin déjà connue ; même lecture que la sortie après une
- * validation, KI-061). Même partie ou partie antérieure (ouverte à la main),
- * action en cours, résultat incertain à clôturer : aucune clôture automatique ;
- * même partie : la marque tombe, la marche à suivre redevient la clôture. */
+/* D3, puis D-062 (b) : « Reprendre » après ce départ. Sans F5 d'abord : Ariane
+ * s'installe seule sur la page où ESV est allée (un F5 pourrait ramener ESV dans
+ * la partie du lot). L'intention de navigation encore ouverte sur N est clôturée
+ * sans renvoi et le lot se ferme. La fin de la partie n'est MÉMORISÉE que si ESV
+ * affiche une partie SUPÉRIEURE et que N vaut M−1 (M relevé au départ, D4) ;
+ * jamais en deçà d'une fin déjà connue. Sinon rien n'est mémorisé : le panneau
+ * dit que N pourrait être le dernier cut, à saisir comme borne si l'opérateur
+ * veut le retenir. ESV encore dans la partie du lot : lot fermé aussi (D-062 b),
+ * sans fin ni différé compté ; contrôle du cut N demandé. ESV illisible, action
+ * en cours, résultat de POSE incertain à clôturer : aucune clôture automatique. */
 async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.BananeSettings?.lot||{};
  const lot=b.id,garde=()=>{if(engine.s.batch?.id!==lot||engine.s.batch.state!=='PAUSED_DEFER_NAVIGATION_UNCERTAIN')throw Error('Reprise interrompue : le lot a changé.');};
  if(engine.task)throw Error('Attends la fin de l’action en cours.');
@@ -393,11 +416,8 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
  if(!now){engine.s.notice='Ariane attend la page ESV (rafraîchis-la si elle reste figée)…';await engine.save();
    await reconnecterESV(S.rafraichirAttenteMs??90000,garde);now=await readState();}
  garde();if(!departOuvert(engine.s.batch))throw Error('Reprise interrompue : la navigation différée a changé.');
- if(!Number.isInteger(now?.identity?.part))throw Error('ESV illisible après le rafraîchissement : contrôle la page, puis clique sur Reprendre.');
- if(now.identity.part===b.scope.part){delete b.departApresDiffere;await engine.save();
-   throw Error(`ESV affiche encore la partie ${b.scope.part} : pas de fin de partie. Contrôle le cut ${d.cut} dans ESV, puis clôture ce résultat incertain.`);}
- if(now.identity.part<b.scope.part)
-   throw Error(`ESV affiche la partie ${now.identity.part}, antérieure au lot : pas une preuve de fin. Rouvre la partie suivante dans ESV puis Reprendre, ou contrôle le cut ${d.cut} et clôture ce résultat incertain.`);
+ const P=now?.identity?.part;if(!Number.isInteger(P))throw Error('ESV illisible après le rafraîchissement : contrôle la page, puis clique sur Reprendre.');
+ const part=b.scope.part,N=d.cut,M=Number.isInteger(d.total)?d.total:null,memoriser=P>part&&d.dernier===true&&M!==null&&N===M-1,meme=P===part;
  /* Le moteur journalise la clôture (non comptée comme différé confirmé :
   * exports et rapport d'acceptation inchangés) ; l'interruption est renommée
   * ci-dessous, et le panneau compte ce cut parmi les différés (voieDuLot). Un
@@ -405,13 +425,20 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
   * l'opérateur, sans fin retenue : le cas de la 4.8.0, sans perte. */
  await engine.locked(()=>engine.closeUncertain());
  const it=(b.interrupted||[]).findLast(x=>x.operationId===d.operationId&&x.status==='DEFER_NAVIGATION_CLOSED_BY_OPERATOR');
- if(it)it.status='DEFER_NAVIGATION_CLOSED_END_OF_PART';
+ /* Même partie : rien ne dit que la navigation a eu lieu ; ce n'est pas un différé. */
+ if(it)it.status=memoriser?'DEFER_NAVIGATION_CLOSED_END_OF_PART':meme?'DEFER_NAVIGATION_CLOSED_SAME_PART':'DEFER_NAVIGATION_CLOSED_NO_END_PROOF';
  b.error=null;delete b.departApresDiffere;
- b.stoppedAtEnd={cut:d.cut,reason:'navigation-other-part-after-defer',issue:'sortie',target:{part:now.identity.part,cut:now.identity.cut??null},at:new Date().toISOString(),applied:false};
- engine.s.notice=`Fin du lot : ESV a quitté la partie après le cut ${d.cut}. Le lot est clos ; aucun cut hors du lot n’est traité.`;
- await engine.event('batch-stopped-at-end',{identity:null,reason:'navigation-other-part-after-defer',lastCut:d.cut,target:b.stoppedAtEnd.target});
- const connue=(await finsParties())[b.scope.part];
- if(!(Number.isInteger(connue?.last)&&connue.last>d.cut))await retenirFinPartie(b.scope.part,d.cut,'fin constatée après différé');
+ const reason=memoriser?'navigation-other-part-after-defer':meme?'defer-closed-same-part':'navigation-away-after-defer-unproven',target={part:P,cut:now.identity.cut??null};
+ b.stoppedAtEnd={cut:N,reason,issue:'sortie',target,total:M,at:new Date().toISOString(),applied:false};
+ if(memoriser){
+   engine.s.notice=`Fin du lot : ESV est passée à la partie ${P} ; le cut ${N} est le dernier de la partie ${part} (${M} cuts, de 0 à ${M-1}) ; fin de partie retenue. Aucune commande n’a été renvoyée.`;
+   const connue=(await finsParties())[part];
+   if(!(Number.isInteger(connue?.last)&&connue.last>N))await retenirFinPartie(part,N,'fin constatée après différé (M−1)');}
+ else if(meme)engine.s.notice=`Lot fermé sans fin de partie : ESV affiche encore la partie ${part}${Number.isInteger(now.identity.cut)?` (cut ${now.identity.cut})`:''}. Contrôle le cut ${N} dans ESV. Aucune commande n’a été renvoyée.`;
+ else{const pourquoi=P<part?`ESV affiche la partie ${P}, antérieure au lot`
+     :M===null?(d.totalSource==='incoherent'?'nombre de cuts de la partie incohérent':'nombre de cuts de la partie illisible'):`${M} cuts : le dernier est le ${M-1}`;
+   engine.s.notice=`Lot fermé sans fin de partie (${pourquoi}) : le cut ${N} pourrait être le dernier de la partie ; saisis-le comme dernier cut si tu veux le retenir. Aucune commande n’a été renvoyée.`;}
+ await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:N,target,total:M,finMemorisee:memoriser});
  await engine.save();return true;}
 async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const b0=engine.s.batch;

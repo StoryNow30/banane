@@ -80,3 +80,17 @@ test('service worker : un journal indisponible ne lève rien',async()=>{
   await b.message({kind:'esv-releve',releve:{at:'t',objetsRail:2}},{id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}});
   await new Promise(r=>setImmediate(r));
 });
+test('D-062 : le texte « M cuts » (total de la partie) est lu aussi ; « Cut N of part P » n’en est pas un',async()=>{
+  const f=lidarPage();
+  f.textes(['Cut 100 of part 23','7956 cuts','6593 on 6732 treated']);
+  let r=(await f.capturer()).releve;assert.equal(r.cutsAffiches,7956);assert.deepEqual({...r.compteur},{traites:6593,total:6732});
+  f.textes([{nodeValue:' cuts',parentElement:{textContent:'7 956 cuts'}}]);r=(await f.capturer()).releve;assert.equal(r.cutsAffiches,7956,'réparti, chiffres groupés');
+  f.textes(['Cut 100 of part 23','Validated cuts','cuts']);r=(await f.capturer()).releve;assert.equal('cutsAffiches' in r,false);
+  f.textes(['101 cuts','101 cuts']);r=(await f.capturer()).releve;assert.equal(r.cutsAffiches,101);assert.equal(r.cutsAffichesVus,2);
+});
+test('D-062 : service worker : « M cuts » rangé au journal',async()=>{
+  const b=background({shadow:shadowHarness(),globals:{BananeCore3:K}});await b.api('connect',{tabId:1});
+  await b.message({kind:'esv-releve',releve:{at:'t',identity:{pageId:'p',part:23,cut:100},cutsAffiches:7956,cutsAffichesVus:1}},{id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}});
+  await new Promise(r=>setImmediate(r));
+  const e=b.store.events.find(x=>x.type==='esv-releve');assert.equal(e.cutsAffiches,7956);assert.equal(e.cutsAffichesVus,1);
+});

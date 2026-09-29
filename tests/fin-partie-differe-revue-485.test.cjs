@@ -3,6 +3,7 @@
  * d'ESV, ce qui n'est PAS une preuve de fin, et une clôture propre. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {L,pilote,differe,quitte,navs,dernierDiffere,panneau,vueLot}=require('./helpers/fin-partie.cjs');
+const {releve}=require('./helpers/fin-partie.cjs');
 /* Revue dédiée de D3 (29/09). */
 test('revue : erreur AVANT l’envoi (onglet fermé, autre partie ouverte à la main) : pas un départ, aucune fin affirmée',async()=>{
   const avant=esv=>{esv.nextWithoutDecision=async function(){this.calls.push('nextWithoutDecision');throw Error('Could not establish connection. Receiving end does not exist.');};};
@@ -12,14 +13,15 @@ test('revue : erreur AVANT l’envoi (onglet fermé, autre partie ouverte à la 
   await assert.rejects(r.b.api('resume'));assert.equal(await r.b.api('bornes-partie',{part:23}),null);
 });
 test('revue : ESV annonce une autre partie sans quitter la page : même preuve, même clôture',async()=>{
-  const annonce=esv=>{const n=esv.nextWithoutDecision.bind(esv);esv.nextWithoutDecision=async(...a)=>{Object.assign(esv.identity,{part:24,cut:1});const e=await n(...a);
+  const annonce=(esv,b)=>{const c=esv.capture.bind(esv);esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},{total:101});return out;};
+    const n=esv.nextWithoutDecision.bind(esv);esv.nextWithoutDecision=async(...a)=>{Object.assign(esv.identity,{part:24,cut:1});const e=await n(...a);
     return {...e,navigationObserved:true,nextIdentity:{...esv.identity},navigationAfter:{identity:{...esv.identity}}};};};
   const r=await pilote(differe,{start:100,end:0,endMode:'partie',esv:annonce});const view=await r.b.settle();
   assert.equal(view.batch.state,'PAUSED_DEFER_NAVIGATION_UNCERTAIN');assert.match(view.notice,/fin de partie probable/);
   const fin=await r.b.api('resume');assert.equal(fin.batch.state,'STOPPED');assert.equal((await r.b.api('bornes-partie',{part:23})).last,100);
 });
 test('revue : clôture propre (erreur effacée, interruption nommée) et fin connue plus loin jamais abaissée',async()=>{
-  const {r}=await dernierDiffere();
+  const {r}=await dernierDiffere({},{total:101});
   await r.b.fonction('retenirFinPartie')(23,9100,'fin constatée');
   Object.assign(r.b.adapter.identity,{pageId:'apres-F5',part:24,cut:1});
   const view=await r.b.api('resume');
@@ -42,11 +44,11 @@ test('revue : un résultat incertain d’une pose reste à clôturer à la main 
   Object.assign(r.b.adapter.identity,{pageId:'apres-F5',part:24,cut:1});
   await assert.rejects(r.b.api('resume'),/résultat incertain/);assert.equal(await r.b.api('bornes-partie',{part:23}),null);
 });
-test('revue 2 : partie ANTÉRIEURE affichée à la reprise (ouverte à la main) : pas de preuve, rien retenu',async()=>{
-  const {r}=await dernierDiffere();
+test('revue 2 : partie ANTÉRIEURE affichée à la reprise (ouverte à la main) : pas de preuve, lot fermé, rien retenu (D-062 b)',async()=>{
+  const {r}=await dernierDiffere({},{total:101});
   Object.assign(r.b.adapter.identity,{pageId:'apres-F5',part:22,cut:5});
-  await assert.rejects(r.b.api('resume'),/partie 22[^]*pas une preuve de fin/);
-  assert.equal((await r.b.api('view')).batch.state,'PAUSED_DEFER_NAVIGATION_UNCERTAIN');assert.equal(await r.b.api('bornes-partie',{part:23}),null);
+  const v=await r.b.api('resume');assert.match(v.notice,/partie 22, antérieure au lot[^]*pourrait être le dernier/);
+  assert.equal(v.batch.state,'STOPPED');assert.equal(await r.b.api('bornes-partie',{part:23}),null);
 });
 test('revue 2 : canal fermé sans départ de page (« message port closed ») : pas de fin de partie probable',async()=>{
   const port=esv=>{esv.nextWithoutDecision=async function(){this.calls.push('nextWithoutDecision');throw Error('The message port closed before a response was received.');};};

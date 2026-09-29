@@ -10,7 +10,17 @@ const differe={...L,decideCut:()=>({version:'lot-decision-v7',stage:'deferred',r
 /* ESV quitte la page au « suivant sans décision ». */
 const quitte=esv=>{esv.nextWithoutDecision=async function(){this.calls.push('nextWithoutDecision');throw Error(BFCACHE);};};
 const navs=r=>r.b.adapter.calls.filter(c=>c==='nextWithoutDecision').length;
-async function dernierDiffere(options={}){const r=await pilote(differe,{start:100,end:0,endMode:'partie',esv:quitte,...options});return {r,view:await r.b.settle()};}
+/* Relevé passif d'ESV (D4) tel que l'adaptateur l'envoie après une capture :
+ * `total` → compteur « N on M treated » ; `cuts` → texte « M cuts ». */
+const ESV_SENDER={id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}};
+function releve(b,identity,{total,cuts,traites=0}={}){const r={at:new Date().toISOString(),requestId:'r-'+identity.cut,identity:{pageId:identity.pageId,part:identity.part,cut:identity.cut}};
+  if(Number.isInteger(total))r.compteur={traites,total};if(Number.isInteger(cuts))r.cutsAffiches=cuts;
+  return b.message({kind:'esv-releve',releve:r},ESV_SENDER);}
+/* ESV quitte la page au « suivant sans décision » ; après chaque capture, le relevé part. */
+const quitteAvecReleve=(mesure={})=>(esv,b)=>{quitte(esv);if(!mesure||(!('total' in mesure)&&!('cuts' in mesure)))return;const c=esv.capture.bind(esv);
+  esv.capture=async(...a)=>{const out=await c(...a);await releve(b,{...esv.identity},mesure);return out;};};
+/* `mesure` : ce que D4 relève d'ESV ({total}, {cuts}, ou rien). */
+async function dernierDiffere(options={},mesure={}){const r=await pilote(differe,{start:100,end:0,endMode:'partie',esv:quitteAvecReleve(mesure),...options});return {r,view:await r.b.settle()};}
 
 /* Panneau : « Reprendre » est proposé dans ce cas (seulement), avec la marche à suivre. */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
@@ -28,4 +38,4 @@ async function panneau(state){const elements=new Map(),crees=[];
 const vueLot=(extra,autre={})=>({finDePartieProbable:!!extra?.departApresDiffere&&extra.departApresDiffere.operationId==='op-9056',current:{identity:{pageId:'p',part:15,cut:9056,shape:'U50',frameId:'f'}},deferIntent:{identity:{part:15,cut:9056},operationId:'op-9056',phase:'COMMAND_MAY_HAVE_BEEN_SENT',commandInvoked:'unknown'},...autre,
   batch:{state:'PAUSED_DEFER_NAVIGATION_UNCERTAIN',scope:{part:15,start:106,end:999999,endMode:'partie',geometryEngine:'geometry-candidate-v1'},
     processed:[],skipped:[],paused:[],interrupted:[],manuallyCompleted:[],deferred:[],sequence:[],activeIdentity:{part:15,cut:9056},...extra}});
-module.exports={L,pilote,BFCACHE,differe,quitte,navs,dernierDiffere,panneau,vueLot};
+module.exports={L,pilote,BFCACHE,differe,quitte,quitteAvecReleve,releve,navs,dernierDiffere,panneau,vueLot};

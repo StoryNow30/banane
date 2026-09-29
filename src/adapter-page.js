@@ -680,29 +680,38 @@
   * non : envoyé APRÈS la réponse, dans son propre message (la capture n'est ni
   * retardée, ni modifiée, ni transformable en erreur). LECTURE SEULE : aucune
   * commande, aucune écriture. (1) Le texte « N on M treated » s'il est lisible
-  * (sa signification reste à qualifier : ce n'est pas une preuve de fin de
-  * partie) ; `compteursVus` s'il y en a plusieurs ; un texte « treated » d'un
-  * autre format → `compteurIllisible`. (2) Le nombre d'objets « rail » que la
+  * (D-062 a : M, son total, est le nombre de cuts de la partie ; il sert à la
+  * preuve de fin avec l'autre partie affichée à la reprise) ; `compteursVus` s'il y en a plusieurs ; un texte « treated » d'un
+  * autre format → `compteurIllisible`. D-062 (4.8.5 test 2) : aussi le texte
+  * « M cuts » (un nombre seul suivi de « cuts » ; ESV l'affiche peut-être,
+  * « 7956 cuts ») → `cutsAffiches`, `cutsAffichesVus` s'il y en a plusieurs ;
+  * « Cut N of part P » n'en est pas un. Journalisé pour qualification : le
+  * service worker tire M (D-062 a) du seul compteur, jamais de ce texte.
+  * (2) Le nombre d'objets « rail » que la
   * scène garde, filtrés comme `context()` (deux attendus ; des nombres, jamais
   * des poses). Chaque relevé porte l'identité lue, le cut demandé, la requête
   * et l'heure ; refait à chaque capture, jamais réemployé ; champ absent si
   * illisible, jamais d'erreur. */
  const COMPTEUR=/^\s*(\d[\d.,\u00a0\u202f ]{0,12}?)\s+on\s+(\d[\d.,\u00a0\u202f ]{0,12}?)\s+treated\s*$/i,MAX_TEXTES=20000;
+ const TOTAL_CUTS=/^\s*(\d[\d.,\u00a0\u202f ]{0,12}?)\s+cuts\s*$/i;
  const nombre=t=>{const d=String(t).replace(/\D/g,'');return d.length&&d.length<=7?Number(d):NaN;};
  function releverEsv(requestId,demande){const r={at:new Date().toISOString(),requestId};
    if(Number.isInteger(demande?.cut))r.demande={part:demande.part??null,cut:demande.cut};
    try{const l=cutLabel();if(l)r.identity={pageId:l.pageId,part:l.part,cut:l.cut};}catch{}
    try{if(typeof document.createTreeWalker==='function'&&document.body){
-     const w=document.createTreeWalker(document.body,typeof NodeFilter!=='undefined'?NodeFilter.SHOW_TEXT:4);let i=0,n=w.nextNode(),vus=0;
-     for(;n&&i<MAX_TEXTES;n=w.nextNode(),i++){if(!/\btreated\b/i.test(String(n.nodeValue||'')))continue;
+     const w=document.createTreeWalker(document.body,typeof NodeFilter!=='undefined'?NodeFilter.SHOW_TEXT:4);let i=0,n=w.nextNode(),vus=0,cutsVus=0;
+     for(;n&&i<MAX_TEXTES;n=w.nextNode(),i++){const texte=String(n.nodeValue||''),traite=/\btreated\b/i.test(texte),cuts=/\bcuts\b/i.test(texte);
+       if(!traite&&!cuts)continue;
        const el=n.parentElement;if(el&&typeof el.checkVisibility==='function'&&el.checkVisibility()===false)continue;
+       if(!traite){const t=[n.nodeValue,el?.textContent,el?.parentElement?.textContent].map(x=>TOTAL_CUTS.exec(String(x??''))).find(Boolean);
+         const total=t?nombre(t[1]):NaN;if(Number.isFinite(total)){cutsVus++;if(!('cutsAffiches' in r))r.cutsAffiches=total;}continue;}
        /* Le compteur peut être réparti sur plusieurs éléments : le texte, puis son parent, puis le parent de celui-ci. */
        const m=[n.nodeValue,el?.textContent,el?.parentElement?.textContent].map(t=>COMPTEUR.exec(String(t??''))).find(Boolean);
        const traites=m?nombre(m[1]):NaN,total=m?nombre(m[2]):NaN;
        if(Number.isFinite(traites)&&Number.isFinite(total)){vus++;if(!r.compteur)r.compteur={traites,total};}else r.compteurIllisible=true;}
-     if(r.compteur)delete r.compteurIllisible;if(vus>1)r.compteursVus=vus;
+     if(r.compteur)delete r.compteurIllisible;if(vus>1)r.compteursVus=vus;if(cutsVus>1)r.cutsAffichesVus=cutsVus;
      if(n&&i>=MAX_TEXTES)r.textesTronques=true;}}
-   catch{delete r.compteur;delete r.compteurIllisible;delete r.compteursVus;delete r.textesTronques;}
+   catch{delete r.compteur;delete r.compteurIllisible;delete r.compteursVus;delete r.cutsAffiches;delete r.cutsAffichesVus;delete r.textesTronques;}
    try{const root=window.viewer?.scene?.scene;if(root)r.objetsRail=(root.children||[]).filter(railLu).length;}catch{delete r.objetsRail;}
    return r;}
  /* Commande d'un autre propriétaire (une autre Ariane active dans l'onglet) :

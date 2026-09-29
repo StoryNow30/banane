@@ -163,7 +163,7 @@
    const b=s.batch,num=x=>Number(x?.cut??x?.identity?.cut),ens=l=>new Set((l||[]).map(num).filter(Number.isFinite));
    /* D3 : le dernier cut d'une partie, différé puis quitté par ESV, compte parmi les
     * différés de la vue (pas des exports : le moteur ne l'a pas confirmé). */
-   const finPartie=(b.interrupted||[]).filter(x=>x?.status==='DEFER_NAVIGATION_CLOSED_END_OF_PART');
+   const finPartie=(b.interrupted||[]).filter(x=>['DEFER_NAVIGATION_CLOSED_END_OF_PART','DEFER_NAVIGATION_CLOSED_NO_END_PROOF'].includes(x?.status));
    const fait=ens(b.processed),differe=ens([...(b.deferred||[]),...finPartie]),saute=ens(b.skipped),main=ens(b.manuallyCompleted);
    const parVoie=new Set(Object.values(b.lotCommands||{}).filter(c=>c?.action==='lot').map(c=>Number(c.cut)).filter(c=>fait.has(c)));
    const actif=Number(b.activeIdentity?.cut),ouvert=OUVERT.includes(b.state),incertain=INCERTAIN.includes(b.state)||!!s.reconcileRequired;
@@ -414,7 +414,9 @@
      /* 4.7.19 : arrêt au dernier cut du lot, sans validation ni navigation. */
      /* Clôture par une sortie d'ESV (KI-061, KI-063) : le cut nommé est le dernier validé, pas un cut posé. */
      const SORTIES={'navigation-other-part':'ESV a quitté la partie','navigation-beyond-end':'ESV est allé au-delà du lot','adapter-lost-after-navigation':'ESV ne répond plus',
-       'navigation-other-part-after-defer':'ESV a quitté la partie après le différé'};
+       'navigation-other-part-after-defer':'ESV a quitté la partie après le différé',
+       'navigation-away-after-defer-unproven':'ESV a quitté la partie après le différé, sans preuve de fin',
+       'defer-closed-same-part':'différé non confirmé, ESV encore dans la partie ; contrôle ce cut'};
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
      const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
@@ -471,8 +473,12 @@
      const differe=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
      const finProbable=finDePartieProbable(s);
      if(finProbable)
-       note(`ESV a quitté la page après le différé du cut ${entier(b.departApresDiffere.cut)} ; fin de partie probable : clique sur Reprendre (F5 seulement si ESV reste figée). `
-         +'Si ESV affiche une autre partie, le lot se clôt et ce cut est retenu comme fin de la partie ; sinon, contrôle le cut dans ESV, puis clôture ce résultat incertain. Aucune commande n’est renvoyée.');
+{const d=b.departApresDiffere,M=Number.isInteger(d.total)?d.total:null;
+       /* D-062 (b) : la reprise ferme le lot ; la fin n'est retenue que sur preuve (partie
+        * supérieure, N = M−1). `dernier` est calculé par le service worker. */
+       note(`ESV a quitté la page après le différé du cut ${entier(d.cut)} ; `+(d.dernier===false?`ce n’est pas le dernier cut de la partie (${entier(M)} cuts)`:'fin de partie probable')
+         +' : clique sur Reprendre (F5 seulement si ESV reste figée). Le lot se fermera ; ce cut n’est retenu comme fin de la partie que si ESV affiche la partie suivante et que c’est le dernier cut'
+         +(M===null?' (nombre de cuts de la partie illisible ou incohérent : rien ne sera retenu)':` (${entier(M-1)})`)+'. Aucune commande n’est renvoyée.');}
      else if(b?.state==='PAUSED_DEFER_NAVIGATION_UNCERTAIN'||differe)
        note(`Cut ${differe?.identity?.cut??b?.activeIdentity?.cut??'?'} : la navigation sans décision `
          +(differe?.commandInvoked===false?'n’a pas été émise.':'a peut-être été transmise, sans progression acceptée.')

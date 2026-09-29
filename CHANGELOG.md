@@ -1,5 +1,42 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.5 test 2 — en cours (D-062)
+
+Version `4.8.5.2`, « 4.8.5 test 2 », paquet `ariane-4.8.5-test.2.zip`. Le
+paquet test 1 déjà livré n'est pas modifié.
+
+### Fin de partie mémorisée seulement sur preuve (D-062 a et b)
+
+- **Texte lu dans ESV** (relevé passif D4, après chaque capture, sans aucune
+  commande) : le compteur « N on M treated » (photo du 27/09 : « 6593 on 6732
+  treated ») et, depuis le test 2, le texte « M cuts » (un nombre seul suivi de
+  « cuts », par exemple « 7956 cuts » ; « Cut 100 of part 23 » n'en est pas
+  un). Les deux sont rangés au journal (`esv-releve` : `compteur`,
+  `cutsAffiches`). **M, le nombre de cuts de la partie** (numérotés de 0 à
+  M−1), est le total du **compteur seul**, relevé sur le cut N lui-même ;
+  plusieurs compteurs, ou N ≥ M : M illisible ou incohérent. « M cuts » ne
+  sert jamais seul : un autre nombre suivi de « cuts » (cuts validés, par
+  exemple) vaudrait N+1 au cut N et ferait mémoriser une fausse fin. Aucun des
+  deux textes n'a encore été vu dans un relevé du terrain : le premier lot du
+  test 2 dira lequel ESV affiche, et s'il faut revoir cette règle.
+- **Au départ d'ESV** après le différé du cut N : M et N journalisés
+  (`fin-partie-depart`) ; le message dit « fin de partie probable » si N vaut
+  M−1 (ou si M est illisible), sinon « ce n'est pas le dernier cut de la
+  partie (M cuts) ».
+- **À la reprise**, le lot se ferme toujours, sans aucune commande renvoyée.
+  La fin de la partie n'est **mémorisée** que si ESV affiche une partie
+  **supérieure** et que N vaut **M−1** : « Fin du lot : ESV est passée à la
+  partie P ; le cut N est le dernier de la partie (M cuts, de 0 à M−1) ».
+  Sinon rien n'est mémorisé : « Lot fermé sans fin de partie (raison) : le cut
+  N pourrait être le dernier de la partie ; saisis-le comme dernier cut si tu
+  veux le retenir » (M illisible, N ≠ M−1, ou partie antérieure ; plus de
+  conseil « rouvre la partie suivante »). Dans ces cas, N reste compté parmi
+  les différés du panneau.
+- **ESV encore dans la partie du lot** à la reprise : lot fermé aussi, sans
+  fin ni différé compté (rien ne dit que la navigation a eu lieu) : « Lot
+  fermé sans fin de partie : ESV affiche encore la partie P (cut X). Contrôle
+  le cut N dans ESV ».
+
 ## 4.8.5 test 1 — en cours (PLAN_SUITE §2)
 
 ### Outils de portes (D5)

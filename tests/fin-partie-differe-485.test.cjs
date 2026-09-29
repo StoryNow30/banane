@@ -15,22 +15,22 @@ test('dernier différé, ESV quitte la page : pause, message clair, aucune comma
   assert.equal(navs(r),1,'une seule navigation');assert.equal(await r.b.api('bornes-partie',{part:23}),null,'aucune fin affirmée sans preuve');
   assert.equal((await r.b.api('view')).batch.departApresDiffere.cut,100,'le panneau reçoit le départ');
 });
-test('reprise sur une autre partie après ce différé : lot clos, fin de partie retenue, rien renvoyé',async()=>{
-  const {r}=await dernierDiffere();
+test('reprise sur la partie suivante, dernier cut (M−1) : lot clos, fin de partie retenue, rien renvoyé',async()=>{
+  const {r}=await dernierDiffere({},{total:101});
   Object.assign(r.b.adapter.identity,{pageId:'apres-F5',part:24,cut:1});
   const view=await r.b.api('resume');
-  assert.equal(view.batch.state,'STOPPED');assert.match(view.notice,/Fin du lot : ESV a quitté la partie après le cut 100/);
+  assert.equal(view.batch.state,'STOPPED');assert.match(view.notice,/Fin du lot : ESV est passée à la partie 24 ; le cut 100 est le dernier de la partie 23/);
   assert.equal(view.batch.stoppedAtEnd.cut,100);assert.equal(view.batch.stoppedAtEnd.reason,'navigation-other-part-after-defer');
-  const f=await r.b.api('bornes-partie',{part:23});assert.equal(f.last,100);assert.equal(f.source,'fin constatée après différé');
+  const f=await r.b.api('bornes-partie',{part:23});assert.equal(f.last,100);assert.equal(f.source,'fin constatée après différé (M−1)');
   assert.equal(navs(r),1,'aucune navigation renvoyée');assert.equal(r.b.adapter.calls.filter(c=>c==='capture').length,1,'aucune capture dans la partie 24');
   assert.ok(r.b.store.events.some(e=>e.type==='defer-intent-closed'),'intention clôturée, sans renvoi');
 });
-test('reprise sur la MÊME partie : pas de preuve de fin, la pause reste, rien renvoyé',async()=>{
-  const {r}=await dernierDiffere();
+test('reprise sur la MÊME partie : pas de preuve de fin, lot fermé sans rien mémoriser (D-062 b), rien renvoyé',async()=>{
+  const {r}=await dernierDiffere({},{total:101});
   Object.assign(r.b.adapter.identity,{pageId:'apres-F5',cut:100});
-  await assert.rejects(r.b.api('resume'),/ESV affiche encore la partie 23 : pas de fin de partie[^]*clôture ce résultat incertain/);
-  const view=await r.b.api('view');assert.equal(view.batch.state,'PAUSED_DEFER_NAVIGATION_UNCERTAIN');
-  assert.equal(view.batch.departApresDiffere,undefined,'plus de « fin de partie probable » : la marche à suivre redevient la clôture');
+  const view=await r.b.api('resume');assert.equal(view.batch.state,'STOPPED');
+  assert.match(view.notice,/ESV affiche encore la partie 23 \(cut 100\)\. Contrôle le cut 100 dans ESV/);
+  assert.equal(view.batch.departApresDiffere,undefined);
   assert.equal(await r.b.api('bornes-partie',{part:23}),null);assert.equal(navs(r),1);
 });
 test('lot borné : comportement de la 4.8.0 (incertitude réelle, pas de fin de partie)',async()=>{
