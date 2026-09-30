@@ -54,7 +54,7 @@ test('entrelacement contrôlé de deux installations : 20 ordres de libération,
     assert.equal(connectees.length,1,`${ordre} : ${JSON.stringify(r)} (${s.faits.join(' ')})`);
     const gagnante=connectees[0],autre=gagnante==='A'?'B':'A',id={A:'ext-a',B:'ext-b'};
     assert.equal(s.fenetre.__BANANE_V3_PAGE?.proprietaire,id[gagnante],`${ordre} : l’adaptateur est à la connectée`);
-    assert.match(r[autre].erreur,/Une autre Ariane \(4\.8\.6 test 2\) est active dans cet onglet/,`${ordre} : refus nommé`);
+    assert.match(r[autre].erreur,/Une autre Ariane \(4\.8\.6\) est active dans cet onglet/,`${ordre} : refus nommé`);
     vus.add(gagnante);joues.add(s.faits.join(' '));}
   assert.equal(vus.size,2,'chacune gagne selon l’ordre : aucune n’est favorisée par construction');
   /* Entrelacements distincts réellement joués (la perdante s'arrête tôt) : 6 aujourd'hui. */

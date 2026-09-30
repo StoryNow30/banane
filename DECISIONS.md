@@ -45,6 +45,13 @@ Ctrl+Entrée, qui valide SANS passer au suivant, et n'envoyer JAMAIS « suivant 
   (jamais de faux zéro) ; écartés : cut différé situé devant, SKIP ou reprise à la main dans le lot, traités
   illisibles ou ≥ M. Le cas de la partie 25 (8338 pour M = 8530), jugé non détectable plus haut, l'est donc.
   Réserve : un cut validé à la main dans ESV pendant le lot dégonflerait « devant » ; non couvert.
+- **Feu vert de l'opérateur (30/09, lot 39)** : journal du test 2 relu : partie 39, cut 8643 = M−1 (M = 8644), différé :
+  événement `dernier-cut-differe`, aucune commande « suivant », lot clos sur « Fin du lot : dernier cut de la partie
+  (8643), différé ; rien n'a été envoyé à ESV » ; ESV est resté sur la partie. **Non observé sur le terrain** : la
+  validation par Ctrl+Entrée elle-même (le cut du lot 39 était un différé) ; l'hypothèse `buttonValidateRail()` reste
+  à confirmer au premier dernier cut posé. La 4.8.6 stable reprend le code du test 2 (`69b31c9`) : seuls la version
+  et le nom changent (manifeste `4.8.6`, « Ariane »). Cible de retour : 4.8.5. Sans étiquette ni fusion ni publication
+  avant l'accord de l'opérateur.
 - **Hors périmètre** : KI-068 (export) et la détection « lot terminé sauf différés » restent en 4.9. Une
   politique de faible confiance « SKIP » sur le dernier cut enverrait encore le raccourci de SKIP.
 - `src/lot-decision.js`, `src/engine.js`, `src/gauge.js` : `git diff` vide. Version de test 4.8.6.1

@@ -1,5 +1,14 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.6 — stable (30/09, D-065)
+
+**Même code que le test 2** (`69b31c9`) ; seuls la version et le nom changent (manifeste `4.8.6`, nom « Ariane »,
+paquet `ariane-v4.8.6.zip`). Au dernier cut à valider d'une partie (M−1, ou aucun cut à valider devant, lu dans le
+compteur « N on M treated »), Orbite valide par Ctrl+Entrée puis s'arrête, ou, pour un différé, n'envoie rien à ESV
+et ferme le lot : ESV ne passe plus à la partie suivante (KI-069). Terrain (lot 39, partie 39, cut 8643) : différé
+sans « suivant » confirmé. Retour arrière vers la 4.8.5 (`RETOUR_ARRIERE.md`) ; installation :
+`consignes/installation-4.8.6.md`.
+
 ## 4.8.6 test 2 — KI-069 : dernier cut à valider (30/09, D-065)
 
 Manifeste `4.8.6.2`. Retour terrain du test 1 (partie 37) : le dernier cut à valider (8504 pour M = 8640) n'est pas
