@@ -32,7 +32,7 @@ Trois mesures sont publiées ensemble :
 
 Une réduction du temps habituel par cut ne suffit pas si le traitement total se rallonge ou si les interruptions augmentent. La règle de comparaison de ces deux contrôles complémentaires doit être précisée dans le cahier avant V3, sans inventer ici une tolérance chiffrée.
 
-**VÉRIFIÉ :** le dossier indique environ 48 % pour la capture dans une mesure antérieure. Le retour du 30 septembre précise que cette mesure vient de la 4.8.0, partie 15, et fournit 4,3 s sur 6,7 s pour « navigation vers capture » du lot 25. Ces durées ne couvrent pas exactement la même étape. V1 doit vérifier leur définition et les confirmer sur plusieurs lots ; aucune de ces proportions ne constitue une constante de référence pour la 4.9.
+**Correction du 30 septembre, fournie après vérification de l'orchestrateur dans le dépôt :** les deux mesures portent sur la **même étape, « Navigation → capture reçue »**. Le tableau de la partie 15 (4.8.0, `audit/orchestration-480-485-490-2026-09-28.md`, ligne 118) donne **4,54 s, soit 48 % du cycle** ; le lot 25 (4.8.5) donne **4,3 s pour un cycle de 6,7 s**. La durée de cette étape est proche sur ces deux lots, mais sa part dans le cycle a augmenté parce que le reste du cycle a raccourci, notamment l'analyse (environ 1,8 s puis 0,5 s, d'après ce retour). Cette observation ne démontre pas une durée stable sur toutes les parties. L'estimation fournie pour atteindre −40 % est une réduction d'environ 60 % de cette étape si le reste ne change pas. V1 doit vérifier ces chiffres et les confirmer sur plusieurs lots ; aucune de ces proportions ne constitue une constante de référence pour la 4.9. Cette correction remplace l'affirmation antérieure selon laquelle les deux durées mesuraient des étapes différentes.
 
 La règle C4 doit être recopiée précisément dans le cahier. Le dossier donne notamment au moins 100 posés jugés et 80 % des posés, dans l'ordre sans sélection, au plus 2 faux pour 100 jugés, avec les faux et les posés non jugés listés. La validation par expertise de la 4.8.5 ne remplace pas cette mesure pour la 4.9. Le cahier doit aussi préciser comment contrôler la non-dégradation de qualité souhaitée sans confondre respect du seuil et démonstration statistique.
 
@@ -116,19 +116,12 @@ Le moteur épinglé et les protections existantes restent respectés : deux rail
 
 ## Vérification par l'orchestrateur (30/09/2026), à intégrer au cahier
 
-Le texte ci-dessus est celui de la direction, inchangé. Vérifié contre le dépôt (`banane`, `main`) :
+Le texte ci-dessus est celui de la direction (version corrigée du 30/09). Vérifié contre le dépôt (`banane`, `main`) :
 
-1. **Correction du §1 (« ne couvrent pas exactement la même étape ») : c'est bien la MÊME étape.** Le tableau de
-   `audit/orchestration-480-485-490-2026-09-28.md` (ligne 118) donne, pour la partie 15 (4.8.0), « Navigation → capture
-   reçue » : **4,54 s, 48 %** du cycle. Le lot 25 (4.8.5.1, `audit/lot-485-p25-2026-09-29.md`) donne « navigation → capture
-   reçue » : **4,3 s, 63 %** de 6,7 s. La durée de la capture est **stable** (4,3 à 4,5 s) ; sa **part** a augmenté parce que le
-   reste du cycle a raccourci (analyse 1,8 s → 0,5 s). Deux lots, deux parties : à confirmer par V1 sur plusieurs lots.
-2. **Conséquence chiffrée** (à mesurer, non promise) : sur 6,7 s, −40 % vise environ 4,0 s ; le reste du cycle (analyse, pose,
-   validation, ≈ 2,4 s) étant déjà court, il faudrait réduire « navigation → capture » d'environ 60 % si rien d'autre ne bouge.
-3. **Cycle médian mesuré (hors silences), pour la base de départ** : 6,0 à 14,5 s selon les lots 4.8.0 (parties 20 à 24) ; 6,7 s
-   (partie 25) et 8,7 s (partie 33) en 4.8.5.1. La variation entre parties est plus grande que le gain visé : le protocole de
-   comparaison (mêmes cuts ou même partie, même machine) est donc indispensable. Source : `audit/lots-20-24-33-2026-09-29.md`.
-4. **Exports** : 1,2 Mo environ par cut visité ; le journal du lot 33 a pesé 1,03 Go pour 100 cuts (KI-068 : données d'Écho
-   embarquées). Limites de message de 64 Mio (KI-059) et exports en segments (KI-060) : ce sont les contraintes du ZIP unique.
-5. **Les autres points du texte** (règle C4, V2 −40 %, ordre, B1 à B3, KI-064, règles du moteur) sont conformes à
-   `PLAN_SUITE.md`, `DECISIONS.md` et `KNOWN_ISSUES.md`.
+1. **Étape « navigation → capture reçue »** : partie 15 (4.8.0) 4,54 s, 48 % (`audit/orchestration-480-485-490-2026-09-28.md`, ligne 118) ;
+   lot 25 (4.8.5.1) 4,3 s, 63 % de 6,7 s (`audit/lot-485-p25-2026-09-29.md`). Deux lots seulement : durée proche, à confirmer par V1.
+2. **Cycle médian mesuré (hors silences)** : 6,0 à 14,5 s selon les lots 4.8.0 (parties 20 à 24) ; 6,7 s (partie 25) et 8,7 s (partie 33) en
+   4.8.5.1. La variation entre parties dépasse le gain visé : le protocole de comparaison est indispensable. Source : `audit/lots-20-24-33-2026-09-29.md`.
+3. **Exports** : environ 1,2 Mo par cut visité ; le journal du lot 33 a pesé 1,03 Go pour 100 cuts (KI-068 : données d'Écho embarquées). Limite de message
+   de 64 Mio (KI-059) et exports en segments (KI-060) : contraintes du ZIP unique.
+4. **Les autres points du texte** (règle C4, V2 −40 %, ordre, B1 à B3, KI-064, règles du moteur) sont conformes à `PLAN_SUITE.md`, `DECISIONS.md` et `KNOWN_ISSUES.md`.
