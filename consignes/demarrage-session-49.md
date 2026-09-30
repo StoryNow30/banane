@@ -1,5 +1,8 @@
 # Démarrage de la session de développement 4.9
 
+> **Remplacé le 30/09 par** `demarrage-developpeur-sol.md`, `demarrage-orchestrateur-sol.md` et `demarrage-analyste-luna.md` (le développeur de la 4.9 est une session Sol ; ce fichier visait une session Claude). Gardé pour l'historique et la décision B.
+
+
 À lancer **après** la 4.8.5 stable (fusionnée, étiquette créée par la direction), dans une **session neuve** :
 un contexte court coûte bien moins de quota qu'une longue conversation. Plugins : **Superpowers** (obra) et
 **Modern Web Guidance** (Google Chrome) ; playwright en option. Modèle : **Sonnet** par défaut ; **Opus**
