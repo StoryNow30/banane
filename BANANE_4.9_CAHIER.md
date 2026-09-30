@@ -1,7 +1,7 @@
 # ARIANE 4.9 — CAHIER DES CHARGES
 
-**Version du cahier : v0.2, décisions de la direction du 30/09 intégrées (§ 2.4), en attente de l'audit d'orchestration (session Sol 6.1
-séparée de l'exécutant) puis de la signature de la direction.**
+**Version du cahier : v0.2, signée par la direction le 30/09 (§ 2.4), sous réserve du cadrage de trois chantiers (point 6) ; audit d'orchestration
+par une session Sol 6.1 séparée conseillé, corrections en avenants.**
 Rédigé le 30 septembre 2026, documents seuls : aucun code, aucun outil modifié. Remplace le brouillon 0.1 du
 24 septembre (dernier état : `b0b2b1b`, dans l'historique git).
 **Révision de l'orchestrateur du 30/09** (même version 0.2) : le développeur de la 4.9 est une **session Sol**, pas une session
@@ -137,12 +137,14 @@ U3 se font donc **en série** (proposition, § 11 n° 17). Jamais deux chantiers
 4. **ZIP unique** : l'essai de faisabilité passe d'abord (§ 8.2) ; la solution de remplacement n'est décidée que s'il échoue.
 5. **Exécutant** : U1 à U3 **en série** ; trailer de commit `Session:` (lien ou identifiant de la session, sans nom de modèle)
    et branches `sol/49-<chantier>` adoptés.
-6. **Éléments du brouillon 0.1 absents des besoins** (« revenir à un cut », faux 398 et 402, régresseur de position) : la
-   direction a répondu « non » à la question « hors périmètre ? » ; **le sens de cette réponse est à confirmer** avant la
-   signature (aucun chantier n'est ajouté tant qu'il n'est pas confirmé).
-7. **Cahier** : le reste est validé par la direction ; l'audit d'orchestration est confié à une session Sol 6.1 séparée de
-   l'exécutant (consigne : `consignes/audit-cahier-49.md`) ; la signature de la version définitive suit l'audit. Aucun code de
-   la 4.9 avant la signature.
+6. **Éléments du brouillon 0.1 absents des besoins** (« revenir à un cut », faux sans appui 398 et 402 de la partie 20,
+   régresseur de position) : **ils ne sont pas hors périmètre** (réponse A de la direction, 30/09). Ils entrent dans la 4.9 comme
+   **chantiers à cadrer** : l'orchestrateur écrit pour chacun l'objectif, la porte chiffrée, la mesure et la place dans l'ordre,
+   puis les soumet à la direction **avant toute exécution**. Aucun chiffre n'est inventé ici. Point d'attention : les besoins
+   (101) renvoient le régresseur après la 4.9 ; la direction tranche au cadrage.
+7. **Signature** : la direction a dit « vas-y » le 30/09 : **le cahier v0.2 est signé**, sous la réserve du point 6 (cadrage des
+   trois chantiers). L'audit d'orchestration par une session Sol 6.1 séparée (`consignes/audit-cahier-49.md`) reste conseillé ;
+   ses corrections passent en avenants écrits. **À partir de là, l'orchestration est reprise par Sol 6.1** (`consignes/relais-orchestrateur-sol.md`).
 
 ## 3. Mesures de départ
 
