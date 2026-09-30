@@ -1,5 +1,25 @@
 # Procédure de retour arrière — Banane 4.7.0
 
+**Depuis Ariane 4.8.6, la cible de retour est Ariane 4.8.5**, étiquette `v4.8.5`, commit `323356c`, paquet
+`ariane-v4.8.5.zip` (SHA-256 `cf4401bf…484d`). Même extension, même dossier :
+
+1. **Termine ou arrête le lot en cours** et télécharge ses exports.
+2. Remplace le contenu du dossier de l'extension par le paquet 4.8.5, puis « Recharger » dans `edge://extensions` :
+   **ne supprime pas l'extension** (le stockage d'Écho et d'Orbite serait perdu).
+3. **F5 sur ESV, obligatoire** (l'adaptateur de la 4.8.6 resté dans la page n'obéit qu'à la 4.8.6).
+4. Vérifie **4.8.5** sous ARIANE et **Ariane 4.8.5 · ouvrir** sur le bouton blanc au bas d'ESV.
+
+Ce que le retour annule : la détection du dernier cut à valider d'une partie (KI-069 revient : « valider et
+suivant » fait quitter la partie). `src/engine.js`, `src/lot-decision.js`, `src/gauge.js` sont les mêmes fichiers ;
+formats du stockage et des exports inchangés (événements ajoutés : `dernier-cut-detecte`, `validation-en-place`,
+`dernier-cut-differe`).
+
+```bash
+git archive v4.8.5 | tar -x -C /tmp/ariane-4.8.5
+cd /tmp/ariane-4.8.5 && python3 tools/package.py --output /tmp/ariane-v4.8.5.zip
+```
+
+**Depuis Ariane 4.8.5 (avant la 4.8.6)**, la cible de retour est Ariane 4.8.0 :
 **Depuis Ariane 4.8.5, la cible de retour est Ariane 4.8.0**, étiquette
 `v4.8.0`, commit `fabd77e`, paquet final `ariane-v4.8.0.zip` du 28/09
 (SHA-256 `38aa29a28bc0695258dd444adb2844752a340ef3c6de30c22939ef6b8575e25b` ;

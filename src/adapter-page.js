@@ -596,6 +596,57 @@
    evidence.meaning=evidence.afterObserved?'État après commande relu sur la même identité ; navigation observée ; confirmation serveur indisponible.':'Navigation observée avant relecture de l’état après ; confirmation serveur indisponible.';
    return evidence;
  }
+
+ /* KI-069 (4.8.6) — VALIDER SANS PASSER AU CUT SUIVANT, sur le DERNIER cut d'une
+  * partie. Le bouton d'ESV « valider » valide ET charge le cut non validé
+  * suivant ; au dernier cut il n'y en a plus et ESV charge la partie suivante
+  * (terrain du 30/09, partie 36). Sur demande de l'opérateur, Ctrl+Entrée, le
+  * raccourci d'ESV qui valide SANS passer au suivant, est relayé comme le
+  * raccourci de SKIP (`nativeDecision`) : keydown puis keyup sur `document`.
+  * HYPOTHÈSE À CONFIRMER SUR LE TERRAIN (aucun accès au code d'ESV ici) : le
+  * gestionnaire d'ESV lit `e.which` (inspection du 20/09) et Ctrl+Entrée
+  * appelle `buttonValidateRail()`, « valider sans suivant ». Si l'essai montre
+  * un autre effet, le repli `commande:'bouton'` (réglage `validationDernierCut`)
+  * clique un bouton dont l'identifiant est réglé (`boutonValiderSansSuivant`) :
+  * aucun identifiant n'est deviné. Jamais de repli vers `selectors.validate`.
+  *
+  * PREUVE, sans jamais affirmer de navigation : identité inchangée ET compteur
+  * « N on M treated » passé de N à N+1 (un seul compteur, même total). Sans
+  * compteur lisible AVANT, rien n'est émis. Sans effet, ou cut changé : erreur,
+  * le moteur s'arrête, l'opérateur valide lui-même. */
+ const lireCompteur=()=>{const r=releverEsv(null);
+   return r.compteur&&!(r.compteursVus>1)&&!r.compteurIllisible?{traites:r.compteur.traites,total:r.compteur.total}:null;};
+ async function validateInPlace(identity,scope={},options={},progress=()=>{}){
+   cancelled=false;const bouton=options?.commande==='bouton';
+   const before=assertExpected(identity),startedAt=new Date().toISOString();
+   const avant=lireCompteur();
+   if(!avant)throw Error('Validation sans passage au suivant refusée : le compteur « N on M treated » n’est pas lisible (un seul compteur attendu) ; rien n’a été envoyé à ESV.');
+   let command;
+   if(bouton){const id=options.boutonId;
+     if(typeof id!=='string'||!id)throw Error('Repli buttonValidateRail() : l’identifiant du bouton « valider sans suivant » d’ESV n’est pas réglé (réglage boutonValiderSansSuivant) ; rien n’a été envoyé à ESV.');
+     command={id,exists:!!document.getElementById(id),disabled:!!document.getElementById(id)?.disabled};
+   }else command={id:'Ctrl+Enter',exists:true,disabled:false};
+   progress('validate-in-place-before-command',{identity:before.identity,command,compteur:avant});
+   if(bouton)nativeClick(options.boutonId);
+   else{const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
+     for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
+       /* Le gestionnaire d'ESV lit e.which : réglé explicitement si le constructeur ne le renseigne pas. */
+       for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
+       document.dispatchEvent(e);}}
+   let apres=null,compteur=null;
+   try{compteur=await waitFor(()=>{const c=lireCompteur();return c&&c.traites!==avant.traites?c:false;},'',P.attenteNavigationMs);}catch{compteur=lireCompteur();}
+   const nom=bouton?'Le bouton « valider sans suivant »':'Ctrl+Entrée',label=cutLabel();
+   if(label&&K.key(label)!==K.key(identity))throw Error(`${nom} a fait changer le cut affiché (partie ${label.part}, cut ${label.cut}) : rien n’est affirmé validé. Contrôle le cut ${identity.cut} dans ESV.`);
+   if(!compteur||compteur.total!==avant.total||compteur.traites!==avant.traites+1)
+     throw Error(`${nom} sans effet constaté (compteur ${avant.traites} → ${compteur?compteur.traites:'illisible'} sur ${avant.total}) : le cut ${identity.cut} n’est pas confirmé validé.`);
+   apres=snapshot();K.assertTarget(identity,apres.identity);
+   return {format:'banane-validate-in-place-v1',trigger:bouton?'configured-validate-rail-button':'relayed-native-validate-shortcut',startedAt,
+     operatorDecision:'VALIDATE',decisionCommand:command,command:bouton?'bouton':'ctrl-entrée',commandSent:true,
+     navigationSemantics:'VALIDATE_IN_PLACE',afterObserved:true,afterState:apres,afterStateStatus:'OBSERVED_SAME_TARGET',
+     beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,serverConfirmed:true,
+     nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
+     meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
+ }
  const validateAndNext=(identity,scope,progress)=>decisionAndNext(identity,'VALIDATE',scope,progress);
  const skipAndNext=(identity,scope,progress)=>decisionAndNext(identity,'SKIP',scope,progress);
  let manual=null,manualChannel=null,manualBanner=null;const manualRequests=new Map(),manualListeners=[];
@@ -663,7 +714,7 @@
    native=native||new NP4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
  let intrusion=null;
- const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,skipAndNext,
+ const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
@@ -734,6 +785,7 @@
   * qu'elle laisse : validation refusée après la pose → pose faite, non validée,
   * à contrôler puis archiver (D-062 d) ; pose refusée → rien posé. */
  const SUITE={validateAndNext:'Validation refusée : la pose de ce cut est faite, non validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l’effacer ; valide-la toi-même si elle est juste). Puis désactive l’autre Ariane dans edge://extensions, F5 sur ESV, et Archiver le résultat interrompu.',
+   validateInPlace:'Validation refusée : la pose de ce cut est faite, non validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l’effacer ; valide-la toi-même si elle est juste). Puis désactive l’autre Ariane dans edge://extensions, F5 sur ESV, et Archiver le résultat interrompu.',
    nextWithoutDecision:'Navigation refusée : rien n’a été envoyé à ESV pour ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',

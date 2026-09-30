@@ -1,5 +1,33 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.6 — stable (30/09, D-065)
+
+**Même code que le test 2** (`69b31c9`) ; seuls la version et le nom changent (manifeste `4.8.6`, nom « Ariane »,
+paquet `ariane-v4.8.6.zip`). Au dernier cut à valider d'une partie (M−1, ou aucun cut à valider devant, lu dans le
+compteur « N on M treated »), Orbite valide par Ctrl+Entrée puis s'arrête, ou, pour un différé, n'envoie rien à ESV
+et ferme le lot : ESV ne passe plus à la partie suivante (KI-069). Terrain (lot 39, partie 39, cut 8643) : différé
+sans « suivant » confirmé. Retour arrière vers la 4.8.5 (`RETOUR_ARRIERE.md`) ; installation :
+`consignes/installation-4.8.6.md`.
+
+## 4.8.6 test 2 — KI-069 : dernier cut à valider (30/09, D-065)
+
+Manifeste `4.8.6.2`. Retour terrain du test 1 (partie 37) : le dernier cut à valider (8504 pour M = 8640) n'est pas
+M−1 ; Ariane l'a différé et ESV a quitté la partie. Le compteur « N on M treated » donne le nombre de cuts à
+valider devant le cut courant (M − traités − différés du lot − 1) : à 0, même traitement que M−1 (Ctrl+Entrée puis
+arrêt, ou rien envoyé si différé). `tests/ki069-g-dernier-invalide-486.test.cjs`.
+
+## 4.8.6 test 1 — KI-069 : dernier cut d'une partie (30/09, D-065)
+
+Manifeste `4.8.6.1`, « 4.8.6 test 1 », paquet `ariane-4.8.6-test.1.zip`, à installer **à côté de la 4.8.5**.
+Un seul changement : au dernier cut certain d'une partie (N = M−1, M lu dans le relevé du cut N),
+Orbite valide par **Ctrl+Entrée** (sans passer au suivant) au lieu de « valider et suivant », et n'envoie
+plus « suivant » après un différé ; le lot se ferme sur « dernier cut de la partie (M−1) validé ; ESV est
+resté sur ce cut » ou « …, différé ; rien n'a été envoyé à ESV ». Preuve : compteur N → N+1, jamais de
+navigation affirmée. Ctrl+Entrée sans effet : arrêt explicite, jamais de repli. Autres cas : 4.8.5 inchangée.
+Repli réglable par `validationDernierCut` (`'bouton'`). Question de terrain : Ctrl+Entrée valide-t-il le
+dernier cut sans changer de partie ? `engine.js`, `lot-decision.js`, `gauge.js` inchangés. Essais :
+`tests/ki069-*-486.test.cjs`, `tools/navigateur-dernier-cut.cjs` (Chromium, page synthétique).
+
 ## 4.8.5 — candidat stable (29/09, D-063)
 
 **Même code que le test 2** (`0d29e54`), à deux choses près : la version et le

@@ -1,0 +1,40 @@
+{
+ "reponse": {
+  "command": "ctrl-entrée",
+  "serverConfirmed": true,
+  "navigationObserved": false,
+  "compteurAvant": {
+   "traites": 100,
+   "total": 101
+  },
+  "compteurApres": {
+   "traites": 101,
+   "total": 101
+  }
+ },
+ "bilan": {
+  "clics": 0,
+  "touches": [
+   {
+    "type": "keydown",
+    "which": 13,
+    "ctrl": true
+   },
+   {
+    "type": "keyup",
+    "which": 13,
+    "ctrl": true
+   }
+  ],
+  "libelle": "Cut 100 of part 23",
+  "compteur": "101 on 101 treated"
+ },
+ "erreurs": [],
+ "verdicts": {
+  "Ctrl+Entrée relayé (keydown puis keyup, which 13, ctrl)": true,
+  "aucun changement de partie ni de cut": true,
+  "bouton « valider et suivant » non cliqué": true,
+  "validation prouvée par le compteur (100 → 101), sans navigation": true,
+  "aucune erreur de page": true
+ }
+}

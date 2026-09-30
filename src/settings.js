@@ -128,6 +128,17 @@
      * suivant » pour revenir au cut du lot. */
     rafraichirAttenteMs: 90000,
     rafraichirPasMax: 400,
+    /* 4.8.6 (KI-069, D-065) — VALIDATION DU DERNIER CUT D'UNE PARTIE, seul cut où
+     * « valider et passer au suivant » fait quitter la partie. 'ctrl-entree' :
+     * raccourci d'ESV Ctrl+Entrée, qui valide sans passer au suivant (défaut,
+     * hypothèse de l'opérateur à confirmer sur le terrain). 'bouton' : repli,
+     * à n'employer que si l'essai montre que Ctrl+Entrée n'a pas l'effet
+     * attendu : clique le bouton d'ESV dont l'identifiant est
+     * `boutonValiderSansSuivant` (celui de buttonValidateRail(), « valider sans
+     * suivant » ; à relever dans ESV, jamais deviné : nul = refus avant toute
+     * émission). Jamais de repli automatique de l'un vers l'autre. */
+    validationDernierCut: 'ctrl-entree',
+    boutonValiderSansSuivant: null,
   });
 
   const exportSettings = Object.freeze({

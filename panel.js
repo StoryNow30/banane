@@ -79,7 +79,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.8.5',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.8.6',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -419,7 +419,9 @@
        'defer-closed-same-part':'différé non confirmé, ESV encore dans la partie ; contrôle ce cut',
        'defer-moved-within-part':'ESV est allée plus loin dans la partie ; ce cut n’est pas le dernier'};
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
-     const fin=!e?'':e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
+     const fin=!e?'':e.issue==='dernier-cut-valide'?` — dernier cut de la partie (${e.cut}) validé ; ESV est resté sur ce cut`
+       :e.issue==='dernier-cut-differe'?` — dernier cut de la partie (${e.cut}), différé ; rien n’a été envoyé à ESV`
+       :e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
        :!e.issue&&e.reason==='adapter-lost-after-navigation'&&e.applied===false?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie'||e.reason&&!e.issue&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${raison}`

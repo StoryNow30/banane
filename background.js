@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.8.5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.5';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.8.6',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.6';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -92,7 +92,7 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
  for(const k of ['compteursVus','objetsRail','cutsAffiches','cutsAffichesVus'])if(Number.isInteger(r[k]))e[k]=r[k];
  /* D-062 : le dernier relevé pendant un lot, quel qu'il soit, remplace le précédent
   * (jamais réemployé) ; le départ ne s'en sert que s'il est celui du cut N. */
- const b=engine.s.batch;if(b?.state==='RUNNING')b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),at:e.at||e.timestamp};
+ const b=engine.s.batch;if(b?.state==='RUNNING')b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),traites:(e.compteursVus??1)>1?null:(e.compteur?.traites??null),at:e.at||e.timestamp};
  void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
@@ -103,7 +103,7 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
 function totalPartie(e){const a=e.compteur?.total;
  if((e.compteursVus??1)>1)return {total:null,totalSource:'plusieurs'};
  return Number.isInteger(a)&&a>0?{total:a,totalSource:'compteur'}:{total:null,totalSource:'illisible'};}
-const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
+const adapter=Object.fromEntries(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel'].map(a=>[a,(...args)=>call(a,...args)]));
 /* 4.7.19 — LE PILOTE S'ARRÊTE AU DERNIER CUT DU LOT (retour terrain du 25/09).
  * Le bouton de validation d'ESV valide ET charge le cut non validé suivant, au
  * besoin dans la partie suivante : le lot finissait donc dans une autre partie.
@@ -143,13 +143,21 @@ async function retenirFinPartie(part,cut,source){if(!Number.isInteger(part)||!Nu
  * 7634 validé, ESV affiche 8131 (fin du lot) puis ne répond plus ; même scène en
  * partie 3 (4.7.18, 8209). `src/engine.js` ne contrôle la cible qu'après un
  * différé : la navigation d'une validation est contrôlée ici. */
-function lotExitOf(next){const b=engine.s.batch,sc=b?.scope;
+function lotExitOf(next,dernier=null){const b=engine.s.batch,sc=b?.scope;
+ /* 4.8.6 (KI-069) : dernier cut de la partie, validé sur place, sans navigation. */
+ if(dernier&&b?.state==='RUNNING'&&sc?.geometryEngine===GCV1_ENGINE)return 'dernier-cut-valide';
  if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!next)return null;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false,dernier=null}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';
+ if(dernier){/* KI-069 : ESV est resté sur le dernier cut ; rien d'autre n'est ni envoyé ni mémorisé (D-062 b reste celle de D-062). */
+   b.stoppedAtEnd={cut:last,reason,issue:reason,motif:dernier.motif,target:null,total:dernier.total,at:new Date().toISOString(),applied:reason==='dernier-cut-valide'};
+   const quel=dernier.motif==='dernier-invalide'?'dernier cut à valider de la partie':'dernier cut de la partie';
+   engine.s.notice=reason==='dernier-cut-valide'?`Fin du lot : ${quel} (${last}) validé ; ESV est resté sur ce cut.`
+     :`Fin du lot : ${quel} (${last}), différé ; rien n’a été envoyé à ESV.`;
+   await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:null,total:dernier.total});return;}
  /* `issue` : sortie d'ESV après une validation, pendant un cut, ou fin muette sans pose (4.8.0). */
  const issue=finSansPose?'fin-sans-pose':surNavigation?'sortie':'sortie-pendant-cut';
  b.stoppedAtEnd={cut:finSansPose?next?.cut??null:last??null,reason,issue,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:issue==='sortie'||issue==='sortie-pendant-cut'&&!!engine.s.applied};
@@ -167,8 +175,45 @@ async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true,fin
   * annonçait 6758, même partie ; la 4.7.21 retenait 6629 comme fin. Si ESV a
   * annoncé un cut plus loin dans la partie avant d'en sortir, c'est lui. */
  if(surNavigation&&Number.isInteger(next?.part)&&next.part!==b.scope.part)await retenirFinPartie(b.scope.part,Math.max(last??-1,annonce?.part===b.scope.part&&Number.isInteger(annonce.cut)?annonce.cut:-1),'fin constatée');}
-const validateInESV=adapter.validateAndNext;
-adapter.validateAndNext=async(...args)=>{const evidence=await validateInESV(...args);
+/* 4.8.6 (KI-069, D-065) — DERNIER CUT DE LA PARTIE CERTAIN : le cut N vaut M−1,
+ * M lu dans le relevé passif du cut N lui-même (même partie, même cut, un seul
+ * compteur « N on M treated », N < M, relevé postérieur au début du cut). Tout
+ * autre cas (M inconnu, illisible, incohérent, plusieurs compteurs, relevé d'un
+ * autre cut ou périmé) : comportement de la 4.8.5, inchangé. */
+function dernierCutCertain(cut){const b=engine.s.batch,sc=b?.scope,t=b?.totalReleve;
+ if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(cut)||!t)return null;
+ if(t.part!==sc.part||t.cut!==cut||t.totalSource!=='compteur'||!Number.isInteger(t.total)||t.total<1||cut>=t.total)return null;
+ const depuis=Date.parse(b.cutStartedAt),relevé=Date.parse(t.at);
+ if(!Number.isFinite(depuis)||!Number.isFinite(relevé)||relevé<depuis)return null;
+ if(cut===t.total-1)return {part:sc.part,cut,total:t.total,motif:'dernier-cut'};
+ /* Retour terrain du 30/09 (partie 37) : le dernier cut À VALIDER n'est pas toujours M−1 (8504 pour M = 8640 ; ESV a quitté
+  * la partie). Le compteur « N on M treated » le dit : restants = M − traités ; devant = restants − cuts déjà différés par ce
+  * lot (ils restent à valider, derrière) − 1 (le cut courant). Devant = 0 : aucun cut à valider après celui-ci. Sûr par
+  * excès : un cut à valider hors lot, ou différé par un lot antérieur, GONFLE « devant » (jamais de faux zéro) ; les
+  * cas qui le dégonfleraient (cut différé situé devant, SKIP ou reprise à la main dont le compte est inconnu) sont écartés. */
+ const traites=t.traites,differes=[...new Set((b.deferred||[]).map(d=>d?.cut??d?.identity?.cut))];
+ if(!Number.isInteger(traites)||traites<0||traites>=t.total||(b.skipped?.length||0)>0||(b.manuallyCompleted?.length||0)>0)return null;
+ if(differes.some(c=>!Number.isInteger(c)||c>=cut))return null;
+ return t.total-traites-differes.length-1===0?{part:sc.part,cut,total:t.total,motif:'dernier-invalide'}:null;}
+const validateInESV=adapter.validateAndNext,validateInPlaceInESV=adapter.validateInPlace;
+/* Ctrl+Entrée valide sans passer au suivant. Preuve : identité inchangée et compteur N → N+1
+ * (serverConfirmed) ; jamais navigationObserved. Sans effet ou erreur : le moteur (épinglé) arrête le lot avec ce message ; JAMAIS de repli vers « valider et suivant ». */
+async function validerSurPlace(identity,d,scope){const S=globalThis.BananeSettings?.lot||{},K=globalThis.BananeCore3;
+ const commande=S.validationDernierCut==='bouton'?'bouton':'ctrl-entree';
+ await engine.event('dernier-cut-detecte',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,action:'validation',commande});
+ const echec=m=>Error(/^Adaptateur ESV sans réponse|^Une autre Ariane/.test(m)?m
+   :`Dernier cut ${d.motif==='dernier-invalide'?'à valider ':''}de la partie (${d.cut}) : ${m} Le cut ${d.cut} reste posé, non validé : valide-le toi-même dans ESV. Aucun repli vers « valider et suivant » : ce bouton ferait quitter la partie.`);
+ let e;try{e=await validateInPlaceInESV(identity,scope,{commande,boutonId:S.boutonValiderSansSuivant??null});}catch(err){throw echec(err.message);}
+ const av=e?.compteurAvant,ap=e?.compteurApres;
+ if(!(e?.commandSent===true&&e.serverConfirmed===true&&e.navigationObserved!==true&&e.afterState?.identity&&K.key(e.afterState.identity)===K.key(identity)
+   &&Number.isInteger(av?.traites)&&ap?.traites===av.traites+1&&ap.total===av.total&&av.total===d.total))
+   throw echec('Ctrl+Entrée n’a pas produit l’effet attendu : la validation n’est pas confirmée (identité ou compteur « N on M treated » inattendus).');
+ await engine.event('validation-en-place',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:e.command??'ctrl-entrée',compteurAvant:av,compteurApres:ap});
+ await closeAtExit('dernier-cut-valide',d.cut,null,{dernier:d});
+ return e;}
+adapter.validateAndNext=async(...args)=>{
+ const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return validerSurPlace(args[0],dernier,args[1]);
+ const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
  return evidence;};
@@ -483,6 +528,15 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */
+ /* 4.8.6 (KI-069) : différé sur le dernier cut de la partie : aucune commande « suivant »
+  * (le moteur épinglé attendrait un changement de cut) ; le lot se ferme ici, rien n'est envoyé à ESV. */
+ const differer=engine.deferUnresolved.bind(engine);
+ engine.deferUnresolved=async(now,b,eligibility)=>{const d=dernierCutCertain(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
+   await engine.event('dernier-cut-differe',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:null});
+   b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
+   b.interrupted.push({identity:globalThis.BananeCore3.completeIdentity(now.identity),status:'DEFER_DERNIER_CUT_SANS_ENVOI',commandInvoked:false,total:d.total});
+   await closeAtExit('dernier-cut-differe',d.cut,null,{dernier:d});await engine.save();
+   return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};};
  const evenement=engine.event.bind(engine);
  engine.event=async(type,...rest)=>{const r=await evenement(type,...rest);
    if(type==='defer-navigation-uncertain')await departApresDiffere(rest[0]);

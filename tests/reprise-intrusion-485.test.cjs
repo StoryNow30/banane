@@ -10,7 +10,7 @@ test('reprise complète : intrusion pendant un lot → pause → F5 → réinsta
   /* Le refus exact de l'adaptateur réel en sécurité, sur une lecture de cut. */
   const p=page();await p.raw('next',[],{proprietaire:'autre'}).promise.catch(()=>{});
   const refus=await p.call('capture',{identity:{part:23,cut:102}}).then(()=>null,e=>e.message);
-  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.5 en sécurité[^]*F5 sur ESV, puis Reprendre/);
+  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.6 en sécurité[^]*F5 sur ESV, puis Reprendre/);
   let enSecurite=false;
   const r=await pilote(espion,{start:101,end:103,settings:reglages(),esv:esv=>{esv.identity.cut=101;esvLent(esv,{lecturesInstables:false});
     const capture=esv.capture.bind(esv),reload=esv.onReload;
