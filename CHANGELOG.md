@@ -1,5 +1,12 @@
 # Banane V4 TEST — journal des versions
 
+## 4.8.6 test 2 — KI-069 : dernier cut à valider (30/09, D-065)
+
+Manifeste `4.8.6.2`. Retour terrain du test 1 (partie 37) : le dernier cut à valider (8504 pour M = 8640) n'est pas
+M−1 ; Ariane l'a différé et ESV a quitté la partie. Le compteur « N on M treated » donne le nombre de cuts à
+valider devant le cut courant (M − traités − différés du lot − 1) : à 0, même traitement que M−1 (Ctrl+Entrée puis
+arrêt, ou rien envoyé si différé). `tests/ki069-g-dernier-invalide-486.test.cjs`.
+
 ## 4.8.6 test 1 — KI-069 : dernier cut d'une partie (30/09, D-065)
 
 Manifeste `4.8.6.1`, « 4.8.6 test 1 », paquet `ariane-4.8.6-test.1.zip`, à installer **à côté de la 4.8.5**.

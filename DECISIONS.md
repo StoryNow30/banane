@@ -36,6 +36,15 @@ Ctrl+Entrée, qui valide SANS passer au suivant, et n'envoyer JAMAIS « suivant 
 - **Conséquence sur D-062 (b)** : à N = M−1 avec relevé frais, ESV ne quitte plus la page au différé ; la fin
   de partie n'est donc plus mémorisée par ce chemin (le code de D-062 est inchangé et reste atteignable
   quand le relevé est périmé). La mémorisation de la fin de partie reste celle de D-062.
+- - **Retour terrain du 30/09 (test 1, partie 37, M = 8640) et extension du déclenchement (test 2)** : 8504 était le
+  dernier cut À VALIDER de la partie, pas M−1 ; Ariane l'a différé, ESV a quitté la partie (le test 1 n'a jamais
+  envoyé Ctrl+Entrée). Le compteur le dit : devant = (M − traités) − (cuts déjà différés par le lot) − 1 ; sur ce
+  journal : 75, 74, …, 3, 2, 1, puis 0 à 8504. Devant = 0 : dernier cut à valider (`motif: 'dernier-invalide'`),
+  même traitement que M−1 (Ctrl+Entrée puis arrêt ; différé : rien envoyé, arrêt), message « dernier cut à valider
+  de la partie (N) ». Sûr par excès : un cut à valider hors lot ou différé par un lot antérieur gonfle « devant »
+  (jamais de faux zéro) ; écartés : cut différé situé devant, SKIP ou reprise à la main dans le lot, traités
+  illisibles ou ≥ M. Le cas de la partie 25 (8338 pour M = 8530), jugé non détectable plus haut, l'est donc.
+  Réserve : un cut validé à la main dans ESV pendant le lot dégonflerait « devant » ; non couvert.
 - **Hors périmètre** : KI-068 (export) et la détection « lot terminé sauf différés » restent en 4.9. Une
   politique de faible confiance « SKIP » sur le dernier cut enverrait encore le raccourci de SKIP.
 - `src/lot-decision.js`, `src/engine.js`, `src/gauge.js` : `git diff` vide. Version de test 4.8.6.1

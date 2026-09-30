@@ -30,7 +30,7 @@ test('adaptateur : intrusion entre les deux clics : la paire se termine, la vali
   lacher();const apres=await pose;
   for(const s of ['left','right'])assert.ok(C.distance(apres.rails[s].positionSceneRelative,attendu[s].positionSceneRelative)<=.001,`rail ${s} posé`);
   let refus=null;await f.call('validateAndNext',before.identity,{}).catch(e=>{refus=e.message;});
-  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.6 test 1 en sécurité : une autre Ariane a tenté de commander cet onglet \(« validateAndNext »\)\. Validation refusée : la pose de ce cut est faite, non validée\./);
+  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.6 test 2 en sécurité : une autre Ariane a tenté de commander cet onglet \(« validateAndNext »\)\. Validation refusée : la pose de ce cut est faite, non validée\./);
   assert.match(refus,/Contrôle-la dans ESV AVANT tout F5[^]*Archiver le résultat interrompu/);
   assert.equal(f.nodes.get('O2N3DCutDescription').textContent,'Cut 100 of part 23','aucune validation, aucune navigation');
 });

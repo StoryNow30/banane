@@ -12,16 +12,17 @@ function releveBrut(b,r){return b.message({kind:'esv-releve',releve:{requestId:'
 const avecReleve=(mesure={})=>(esv,b)=>{const c=esv.capture.bind(esv);
   esv.capture=async(...a)=>{const out=await c(...a);
     if(mesure===null)return out;
-    if(typeof mesure==='function')await releveBrut(b,mesure({...esv.identity}));else await releve(b,{...esv.identity},mesure);return out;};};
+    if(typeof mesure==='function'){const r=mesure({...esv.identity});esv.dernierCompteur=r.compteur??null;await releveBrut(b,r);}
+    else{esv.dernierCompteur={traites:mesure.traites??0,total:mesure.total};await releve(b,{...esv.identity},mesure);}return out;};};
 /* ESV simulé : Ctrl+Entrée valide sans changer de cut ; le compteur passe de `traites` à `traites`+1. */
 function validationEnPlace(esv,{effet='valide',traites=8760,total=8786}={}){esv.commandes=[];esv.enPlace=[];
   esv.validateInPlace=async function(identity,scope,commande){this.calls.push('validateInPlace');this.commandes.push(commande);
     if(effet==='erreur')throw Error('Ctrl+Entrée : commande refusée par la page.');
-    const apres=await this.state(),valide=effet==='valide';
+    const apres=await this.state(),valide=effet==='valide',avant=this.dernierCompteur??{traites,total};
     const e={format:'banane-validate-in-place-v1',operatorDecision:'VALIDATE',command:'ctrl-entrée',commandSent:true,
       decisionCommand:{id:'Ctrl+Enter',exists:true,disabled:false},afterObserved:true,afterState:apres,afterStateStatus:'OBSERVED_SAME_TARGET',
       beforeNavigationIdentity:K.completeIdentity(identity),navigationObserved:false,serverConfirmed:valide,nextIdentity:null,
-      compteurAvant:{traites,total},compteurApres:{traites:valide?traites+1:traites,total}};
+      compteurAvant:avant,compteurApres:{traites:valide?avant.traites+1:avant.traites,total:avant.total}};
     this.enPlace.push(e);return e;};}
 /* Lot Orbite « jusqu'à la fin de la partie » sur le dernier cut (100 = M−1, M = 101). */
 async function dernierCut({mesure={total:101,traites:100},decision=L,esv=null,options={}}={}){
