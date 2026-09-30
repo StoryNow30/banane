@@ -1,6 +1,7 @@
 # ARIANE 4.9 — CAHIER DES CHARGES
 
-**Version du cahier : v0.2, non signé, brouillon pour l'audit d'orchestration d'Astra puis la signature de la direction.**
+**Version du cahier : v0.2, décisions de la direction du 30/09 intégrées (§ 2.4), en attente de l'audit d'orchestration (session Sol 6.1
+séparée de l'exécutant) puis de la signature de la direction.**
 Rédigé le 30 septembre 2026, documents seuls : aucun code, aucun outil modifié. Remplace le brouillon 0.1 du
 24 septembre (dernier état : `b0b2b1b`, dans l'historique git).
 **Révision de l'orchestrateur du 30/09** (même version 0.2) : le développeur de la 4.9 est une **session Sol**, pas une session
@@ -21,8 +22,8 @@ cahier n'est une décision : les critères ouverts sont dans le § 11.
 | **4.9.5** | cuts difficiles : B1, B2, B3 (conditionnel). Jalon J5 (`PLAN_SUITE.md:17`). |
 | **Après la 4.9** | apprentissage d'un nouveau moteur (régresseur appris, données qualifiées par la rotation) : besoins:101, `PLAN_SUITE.md:142`. |
 | **5.0** | fonctionnement sur plusieurs sessions, onglets et parties (besoins:101). Un suivi mobile en lecture seule est évoqué pour une 5.5 éventuelle (D-057, `DECISIONS.md:254`) : hors périmètre. |
-| **Exécutant** | une **session Sol** (décision de la direction, 30/09), avec accès au dépôt `banane` et à l'exécution (Node, `tools/verify.cjs`, bancs) : § 2.3. Orchestration : l'orchestrateur ; audit d'orchestration : Astra ; relecture indépendante de chaque diff : Claude ou Grok. |
-| **Base de code** | **à trancher avant tout chantier** (§ 9) : 4.8.5 stable (`v4.8.5`, `323356c`) ou 4.8.6. |
+| **Exécutant** | une **session Sol** (décision de la direction, 30/09), avec accès au dépôt `banane` et à l'exécution (Node, `tools/verify.cjs`, bancs) : § 2.3. Orchestration : l'orchestrateur ; audit d'orchestration du cahier : **une session Sol 6.1 séparée de l'exécutant** (Astra est indisponible) ; relecture indépendante de chaque diff : Claude ou Grok. |
+| **Base de code** | **4.8.6 stable** (`654209d`, D-065), décision de la direction du 30/09 (§ 2.4, § 9) ; à fusionner et étiqueter par la direction avant V1. La 4.8.5 (`v4.8.5`, `323356c`) reste le retour arrière. |
 | **Numérotation** | version stable = étiquette `vX.Y.Z` jamais reconstruite ; version de test = manifeste `X.Y.Z.N` (D-061, `DECISIONS.md:105-107`). Pour la 4.9, `4.9.0.N` est **SUPPOSÉ** (convention non écrite pour la 4.9). |
 | **Étapes réservées à la direction** | merge, étiquette, publication : jamais sans accord explicite (besoins:113, `PASSATION_4.8.0.md:36`). |
 
@@ -75,7 +76,7 @@ du code du § 14 sont sa seule mémoire**. Si un point manque pour agir, elle le
 rapport, elle ne l'invente pas.
 
 **Rôles.** L'exécutant écrit le code et ses essais. L'orchestrateur tient le cahier, relit chaque diff, prépare les paquets de
-test et dépose les données ; Claude ou Grok font la relecture indépendante des diffs ; Astra audite l'orchestration ; la
+test et dépose les données ; Claude ou Grok font la relecture indépendante des diffs ; une session Sol 6.1 séparée audite le cahier (Astra étant indisponible) ; la
 direction décide, signe, fusionne, étiquette et publie. L'exécutant ne relit jamais son propre diff comme relecture
 indépendante.
 
@@ -122,6 +123,27 @@ restaurer.
 **Une chose à la fois.** Une seule session exécutante, un chantier à la fois, pas de travail parallèle (besoins:105-109) : U1 à
 U3 se font donc **en série** (proposition, § 11 n° 17). Jamais deux chantiers sur `background.js` en même temps.
 
+### 2.4 Décisions de la direction du 30/09, après lecture du cahier v0.2
+
+1. **Base de code : la 4.8.6 stable** (`654209d`, D-065, branche `claude/banane-486-ki069`), validée par la direction. La
+   référence de mesure de la 4.9 devient **4.8.6 stable + V1** (et non plus 4.8.5 + V1). Le changement est décidé et écrit,
+   donc pas « silencieux » (besoins:99). Précondition : la direction fusionne la 4.8.6 dans `main` et crée l'étiquette **avant
+   le début de V1** ; l'exécutant part de cet état.
+2. **Comparaison des vitesses** : d'abord l'essai à blanc de la référence contre elle-même (A/A, M3), puis les blocs
+   alternés (M1). Le seuil de tolérance sur la durée totale et les arrêts est **le bruit mesuré à l'A/A (T3)**, validé par la
+   direction après lecture de la mesure. C1 est comparé à la référence sur le même protocole et la même partie.
+3. **Base du −40 % de V2** : les seules données utiles, contre l'export actuel « Tout télécharger » du même lot, mêmes cuts ;
+   le gain dû à KI-068 est publié à part.
+4. **ZIP unique** : l'essai de faisabilité passe d'abord (§ 8.2) ; la solution de remplacement n'est décidée que s'il échoue.
+5. **Exécutant** : U1 à U3 **en série** ; trailer de commit `Session:` (lien ou identifiant de la session, sans nom de modèle)
+   et branches `sol/49-<chantier>` adoptés.
+6. **Éléments du brouillon 0.1 absents des besoins** (« revenir à un cut », faux 398 et 402, régresseur de position) : la
+   direction a répondu « non » à la question « hors périmètre ? » ; **le sens de cette réponse est à confirmer** avant la
+   signature (aucun chantier n'est ajouté tant qu'il n'est pas confirmé).
+7. **Cahier** : le reste est validé par la direction ; l'audit d'orchestration est confié à une session Sol 6.1 séparée de
+   l'exécutant (consigne : `consignes/audit-cahier-49.md`) ; la signature de la version définitive suit l'audit. Aucun code de
+   la 4.9 avant la signature.
+
 ## 3. Mesures de départ
 
 | Mesure | Valeur | Source |
@@ -152,10 +174,11 @@ proportions comme constante** (besoins:35).
 
 ### 4.1 Cadre (besoins:21-33)
 
-- **Référence** : la 4.8.5 stable **équipée de V1 (mesure par phase), sans accélération et sans changement des règles de
-  décision**. Ce n'est donc pas l'étiquette `v4.8.5` telle quelle mais une construction dérivée : le rapport donne son
-  commit exact, et le banc (633 cuts, 8 jeux) prouve que ses décisions sont identiques à celles de `v4.8.5`. La version
-  accélérée est mesurée avec la même instrumentation.
+- **Référence** : la **4.8.6 stable** (`654209d`, décision du 30/09, § 2.4) **équipée de V1 (mesure par phase), sans
+  accélération et sans changement des règles de décision**. Ce n'est donc pas l'étiquette de la 4.8.6 telle quelle mais une
+  construction dérivée : le rapport donne son commit exact, et le banc (633 cuts, 8 jeux) prouve que ses décisions sont
+  identiques à celles de la 4.8.6 stable. La version accélérée est mesurée avec la même instrumentation. Les mesures de départ
+  du § 3 datent de la 4.8.0 et de la 4.8.5.1 : la première mesure de V1 sur la 4.8.6 fixe la vraie référence.
 - **Mêmes conditions** : même machine, même poste, mêmes réglages d'affichage, **fenêtre ESV d'au moins 600 pixels de
   large**, mêmes cuts ou même partie. Noter dans chaque rapport : taille de fenêtre, zoom, extensions actives, heure.
 - **Partie de mesure** : neuve pour la porte (rotation D-057) et avec assez de cuts non validés pour les deux mesures
@@ -172,7 +195,7 @@ proportions comme constante** (besoins:35).
 | **M2 — lots successifs, ordre contrebalancé** | deux lots sur la même partie (plages de cuts distinctes), l'ordre référence/accélérée inversé d'une partie à l'autre | simple pour l'opérateur | l'écart de profil entre plages (cuts plus ou moins difficiles) reste ; il faut plusieurs parties |
 | **M3 — A/A d'abord** | deux blocs de la **référence seule** avant tout essai : mesure le bruit propre au protocole | donne une base empirique pour fixer les tolérances du § 4.4, sans inventer de chiffre | coûte un lot de l'opérateur |
 
-Proposition : **M3 puis M1**, M2 en repli. C'est une proposition, pas une décision.
+**Décision de la direction (30/09, § 2.4) : M3 puis M1**, M2 en repli.
 
 ### 4.3 Trois mesures publiées ensemble (besoins:27-31)
 
@@ -188,8 +211,8 @@ Proposition : **M3 puis M1**, M2 en repli. C'est une proposition, pas une décis
 ### 4.4 Règle de comparaison des deux contrôles complémentaires
 
 Besoins:33 : une réduction du temps par cut ne suffit pas si le traitement total se rallonge ou si les interruptions
-augmentent ; la règle doit être précisée **sans inventer de tolérance**. **Tolérance chiffrée : à fixer par la direction
-avant V3.** Options :
+augmentent ; la règle doit être précisée **sans inventer de tolérance**. **Tolérance chiffrée : T3 retenue (décision du 30/09, § 2.4) ; la
+valeur sort de l'A/A et est validée par la direction avant V3.** Options :
 
 - **T1 — sans dégradation** : durée totale et arrêts/100 de la version accélérée ne dépassent pas ceux de la référence.
   Stricte ; la durée totale contient des pauses de l'opérateur (bruit).
@@ -237,7 +260,7 @@ sans que la mesure le voie. Le cahier distingue trois niveaux ; le rapport dit l
    V3, sans réutiliser la relecture pour régler). Les faux s'accumulent aussi d'une partie à l'autre (objectif cumulé,
    D-061).
 
-**Tolérance sur C1 (« sans baisse ») : à fixer par la direction avant V3.** C1 varie de 66,7 % à 85,2 % selon les lots
+**Tolérance sur C1 (« sans baisse ») : C1 comparé à la référence sur le même protocole et la même partie (décision du 30/09, § 2.4) ; la valeur de la tolérance sort de l'A/A et est validée par la direction avant V3.** C1 varie de 66,7 % à 85,2 % selon les lots
 (`lots-20-24-33…:12-19`) : une baisse d'un lot à l'autre peut être du bruit de partie. Options : C1 ≥ 79 % (porte
 existante) ; C1 non inférieur à la référence mesurée sur le même protocole (A/A) ; les deux. C1 pris sur le même protocole
 et la même partie, pas comparé aux lots passés.
@@ -275,7 +298,7 @@ qualité 4.8 (provenance du rapport de sortie).
   référence de comparaison (§ 4) et **confirmer ou infirmer** la part de « navigation → capture reçue » (4,54 s / 48 %,
   4,3 s / 63 %) sur plusieurs lots.
 - **Porte.** *MINIMUM DE SORTIE* : toutes les phases du § 3 présentes dans le journal pour 100 % des cuts d'un lot ; une
-  table de répartition du cycle sur **plusieurs lots** ; **décisions identiques** à `v4.8.5` (banc 633 cuts, 8 jeux) ;
+  table de répartition du cycle sur **plusieurs lots** ; **décisions identiques** à la 4.8.6 stable (banc 633 cuts, 8 jeux) ;
   aucune commande ni écriture ajoutée dans ESV (D-061, instrumentation passive). *OBJECTIF* : aucun chiffre fixé.
   *POINTS À VÉRIFIER PAR LE DÉVELOPPEMENT* : écart entre la somme des phases et le cycle mesuré, publié (aucun seuil
   fixé par le dépôt) ; coût propre de l'instrumentation (il est dans les deux mesures, mais à publier) ; nombre de lots
@@ -302,10 +325,10 @@ Voir § 8, qui décrit les exigences complètes.
   de −40 %. *POINTS À VÉRIFIER PAR LE DÉVELOPPEMENT* : construction en flux sans réunir plusieurs Go en mémoire ;
   écriture progressive sur le poste réel de l'opérateur (restrictions) ; contraintes KI-059 et KI-060 ; noms uniques ;
   sessions multi-parties (§ 8.4).
-- **Base du −40 %** (le cahier la fixe, besoins:58 ; **valeur de la base à valider par la direction**) : deux comparaisons
+- **Base du −40 %** (le cahier la fixe, besoins:58 ; **base validée par la direction le 30/09, § 2.4**) : deux comparaisons
   distinctes, publiées séparément — **(a)** gain dû à la suppression des données étrangères (KI-068 : lot 33, 1,03 Go →
   7,8 Mo sur le journal seul, `lots-20-24-33…:5,46`) ; **(b)** gain sur les **seules données utiles** (dédoublonnage,
-  compression), mesuré sur un lot sans contamination (type lot 25). Proposition : le **−40 % s'applique à (b)**, avec
+  compression), mesuré sur un lot sans contamination (type lot 25). Décision : le **−40 % s'applique à (b)**, avec
   comme référence l'export actuel « Tout télécharger pour l'analyse » du même lot, mêmes cuts. Écho : **aucun pourcentage
   présumé**, à mesurer.
 - **Mesure** : `tools/acceptance-report.cjs` et `tools/analyse-locale.cjs` (mode complet et léger ; l'égalité de ce mode
@@ -462,15 +485,17 @@ segments d'avant 4.7.20 (KI-060) et le journal alourdi (KI-068).
 
 ## 9. Base de code (KI-069, 4.8.6)
 
-Le correctif de fin de partie **KI-069** (le dernier cut à valider d'une partie fait quitter la partie à ESV, terrain du 30/09,
-partie 36, `KNOWN_ISSUES.md:41`) est **en essai en 4.8.6** sur la branche `claude/banane-486-ki069` (tête au moment de la
-rédaction : `654209d`) ; **D-065 n'est pas dans `main`**. **Il n'est pas intégré ici.**
+**Décision de la direction (30/09, § 2.4) : la base de code de la 4.9 est la 4.8.6 stable** (`654209d`, D-065, branche
+`claude/banane-486-ki069`). Elle corrige **KI-069** (le dernier cut à valider d'une partie fait quitter la partie à ESV, terrain du
+30/09, partie 36, `KNOWN_ISSUES.md:41`) : au dernier cut certain d'une partie, Orbite valide par Ctrl+Entrée sans passer au
+suivant, un différé n'envoie pas de commande ; la 4.8.6 test 2 détecte aussi le dernier cut à valider quand ce n'est pas M−1
+(retour terrain de la partie 37). Ce chemin touche `background.js`, comme V1 : c'est une raison de l'intégrer **avant** V1
+plutôt que pendant.
 
-**Il faut trancher, avant les chantiers, quelle base de code (4.8.5 ou 4.8.6) sert de référence de mesure.** Options :
-(A) référence = `v4.8.5` + V1 seul (conforme aux besoins:23), la 4.8.6 rejoint la 4.9 après sa propre validation ; (B) référence
-= 4.8.6 + V1, si la direction valide la 4.8.6 **avant V1**. Effets : le chemin de fin de partie touche `background.js`,
-comme V1 (jamais deux chantiers ensemble, `PLAN_SUITE.md:154`) ; la référence de vitesse ne doit pas changer en cours de
-route (besoins:99 : « sans changer silencieusement la référence de mesure 4.8.5 »).
+**Précondition.** `main` ne contient pas encore D-065 ni la 4.8.6 : la direction fusionne et étiquette (étape qui lui est
+réservée) avant le début de V1 ; une relecture indépendante du diff de la 4.8.6 (Grok) est souhaitable avant. La référence
+de vitesse ne change pas en cours de route : elle est fixée **une fois**, sur la 4.8.6 + V1 (besoins:99 : « sans changer
+silencieusement la référence de mesure 4.8.5 » — ici le changement est décidé et écrit).
 
 ## 10. 4.9.5 : cuts difficiles
 
@@ -516,36 +541,36 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
 
 | # | Critère | Pourquoi il est ouvert | Qui tranche | Comment (mesure prévue) | Avant |
 |---|---|---|---|---|---|
-| 1 | Base de code de référence (4.8.5 ou 4.8.6) | KI-069 en essai, D-065 absent de `main` | direction | essai de la 4.8.6 sur le terrain ; comparaison des diffs avec `v4.8.5` | V1 |
+| 1 | **TRANCHÉ 30/09 : 4.8.6 stable** (§ 2.4) — base de code de référence (4.8.5 ou 4.8.6) | KI-069 en essai, D-065 absent de `main` | direction | essai de la 4.8.6 sur le terrain ; comparaison des diffs avec `v4.8.5` | V1 |
 | 2 | Définition des silences exclus | les besoins veulent une définition fixe ; l'outil utilise 60 s | direction | V1 publie la distribution des écarts entre événements pour confirmer 60 s | fin de V1 |
 | 3 | Part réelle de « navigation → capture » | deux lots seulement (48 %, 63 %) | V1 | V1 sur plusieurs lots (nombre à fixer, proposition : ≥ 3, parties différentes) | conception de V3 |
 | 4 | Part du calcul V4.6 dans le cycle | non mesurée | V1 | mesure de la phase d'analyse avant/après V4 | porte de V4 |
-| 5 | Méthode de comparaison (M1, M2, M3) | mêmes cuts impossibles après validation | direction | essai à blanc A/A sur la partie de mesure | V3 |
-| 6 | Tolérance sur durée totale et arrêts/100 | non donnée par la direction | direction | écart A/A publié, options T1 à T3 | V3 |
-| 7 | Taille d'échantillon et intervalle de la médiane | variance des cycles (6,0 à 14,5 s selon les lots) | direction avec l'audit d'Astra | variance mesurée par l'A/A | V3 |
-| 8 | Tolérance « sans baisse de C1 » | C1 varie de 66,7 % à 85,2 % selon les lots | direction | C1 A/A sur la même partie ; comparaison sur le même protocole | V3 |
+| 5 | **TRANCHÉ 30/09 : M3 puis M1** (§ 2.4) — méthode de comparaison (M1, M2, M3) | mêmes cuts impossibles après validation | direction | essai à blanc A/A sur la partie de mesure | V3 |
+| 6 | **TRANCHÉ 30/09 : T3, valeur issue de l'A/A** (§ 2.4) — tolérance sur durée totale et arrêts/100 | non donnée par la direction | direction | écart A/A publié, options T1 à T3 | V3 |
+| 7 | Taille d'échantillon et intervalle de la médiane | variance des cycles (6,0 à 14,5 s selon les lots) | direction avec l'audit | variance mesurée par l'A/A | V3 |
+| 8 | **TRANCHÉ 30/09 : même protocole, même partie** (§ 2.4) — tolérance « sans baisse de C1 » | C1 varie de 66,7 % à 85,2 % selon les lots | direction | C1 A/A sur la même partie ; comparaison sur le même protocole | V3 |
 | 9 | Non-dégradation de C4 (§ 5.2) | 100 jugés ne démontrent rien contre 0,28 % | direction | niveaux 1 à 3 du § 5.2 ; faisabilité d'une capture appariée à établir | V3 |
 | 10 | Partie neuve de validation de la 4.9.0 | ≥ 100 posés jugés, ~200 cuts non validés | direction (choix de l'opérateur) | registre `audit/rotation-parties.md` (D9) : nombre de cuts non validés lu par le compteur passif | mesure finale de V3 |
-| 11 | Périmètre et base du −40 % de V2 | données étrangères et données utiles mêlées | direction | ventilation du poids par composant au démarrage de V2 (§ 6, V2) | V2 |
-| 12 | Faisabilité du ZIP unique en flux | mémoire du navigateur, 64 Mio, segments, poste restreint | développement, puis direction si impossible | essai de faisabilité sur le poste de l'opérateur (§ 8.2) | promesse de V2 |
+| 11 | **TRANCHÉ 30/09 : données utiles seules** (§ 2.4) — périmètre et base du −40 % de V2 | données étrangères et données utiles mêlées | direction | ventilation du poids par composant au démarrage de V2 (§ 6, V2) | V2 |
+| 12 | **Essai d'abord ; remplacement seulement si échec** (§ 2.4) — faisabilité du ZIP unique en flux | mémoire du navigateur, 64 Mio, segments, poste restreint | développement, puis direction si impossible | essai de faisabilité sur le poste de l'opérateur (§ 8.2) | promesse de V2 |
 | 13 | Nom des sessions multi-parties ; collisions de noms | non précisés | direction / développement | essai de nommage sur une session réelle | livraison de V2 |
 | 14 | Gain de taille pour Écho | aucune mesure | V2 | poids par composant d'une session Écho avant/après | porte de V2 |
 | 15 | Seuil de « dérive » et longueur du « long lot » (V5) | rien dans le dépôt | direction | V1 : vitesse par rang de cut et taille de stockage sur le lot le plus long | décision V5 |
 | 16 | Action de `D` ; comportement de `Maj + Espace` dans ESV | non définie / dite dans les échanges | direction ; l'opérateur confirme (10 min) | essai clavier dans le panneau réel | U3 |
-| 17 | Séquencement U1 à U3 : en série ou en parallèle | `PLAN_SUITE.md:135` et le démarrage 4.9 disent « en parallèle » ; les besoins disent « une chose à la fois » | direction | — (décision de cadence) ; **proposition : en série**, il n'y a qu'un exécutant (§ 2.3) | U1 |
+| 17 | **TRANCHÉ 30/09 : en série** (§ 2.4) — séquencement U1 à U3 | `PLAN_SUITE.md:135` et le démarrage 4.9 disent « en parallèle » ; les besoins disent « une chose à la fois » | direction | — (décision de cadence) ; **proposition : en série**, il n'y a qu'un exécutant (§ 2.3) | U1 |
 | 18 | Ce que « C1 en hausse » veut dire pour B1 | aucun seuil | direction | C1 sur une partie neuve vs référence même protocole | B1 |
 | 19 | Faisabilité du déplacement de la vue | jamais inspecté | opérateur | tâche de 10 min | B2 |
 | 20 | Nécessité de B3 | dépend de B2 | orchestrateur, direction | revue de B2 | B3 |
 | 21 | Usage du résultat P2 | interdit de régler les seuils automatiquement | direction | lecture du rapport P2 | conclusion sur la précision |
-| 22 | Trailer de commit et nom des branches de l'exécutant Sol | les règles du dépôt visent les sessions Claude (`Co-Authored-By`, `Claude-Session`) ; aucun nom de branche n'est fixé pour Sol | direction | proposition : trailer `Session:` avec le lien ou l'identifiant de la session, sans nom de modèle ; branches `sol/49-<chantier>` | premier commit |
-| 23 | Autonomie du cahier pour un exécutant sans historique | le cahier est la seule mémoire de la session Sol (§ 2.3) | Astra (question 9), puis la direction | lecture de l'audit d'Astra ; premier rapport de chantier (les questions posées montrent ce qui manquait) | signature |
+| 22 | **TRANCHÉ 30/09 : `Session:` et `sol/49-<chantier>`** (§ 2.4) — trailer de commit et nom des branches de l'exécutant Sol | les règles du dépôt visent les sessions Claude (`Co-Authored-By`, `Claude-Session`) ; aucun nom de branche n'est fixé pour Sol | direction | proposition : trailer `Session:` avec le lien ou l'identifiant de la session, sans nom de modèle ; branches `sol/49-<chantier>` | premier commit |
+| 23 | Autonomie du cahier pour un exécutant sans historique | le cahier est la seule mémoire de la session Sol (§ 2.3) | l'audit (question 9), puis la direction | lecture de l'audit d'Astra ; premier rapport de chantier (les questions posées montrent ce qui manquait) | signature |
 
-## 12. Questions pour l'audit d'Astra
+## 12. Questions pour l'audit d'orchestration (session Sol 6.1 séparée)
 
 1. **Ordre** : V4 avant V3 est justifié par le calcul du § 3 (V3 seul insuffisant) : l'ordre P2, V1, V2, V4, V3 est-il le bon,
    ou V2 (long, risqué) doit-il passer après V3 pour ne pas retarder la porte de 4.9.0 ?
-2. **Référence** : « 4.8.5 + V1 » n'est pas l'étiquette `v4.8.5` : la preuve « décisions identiques » suffit-elle ? La question
-   4.8.5/4.8.6 (§ 9) bloque-t-elle V1 ?
+2. **Référence** : « 4.8.6 stable + V1 » (décision du 30/09) est une construction dérivée : la preuve « décisions identiques »
+   suffit-elle ? La 4.8.6 n'a pas de mesure de vitesse propre : la première mesure de V1 sur elle suffit-elle à fixer la référence ?
 3. **Portes de V3** : la porte de chantier (capture −30 %) et la porte de version (cycle −25 %) sont-elles cohérentes ?
    Le critère « 0 capture perdue » est-il mesurable sans capture appariée ?
 4. **Non-dégradation C4** : les niveaux du § 5.2 sont-ils acceptables ? La capture appariée est-elle réalisable sans réutiliser
@@ -562,7 +587,7 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
    livraison et la carte du code (§ 14) sont-ils assez autonomes ? Que manque-t-il pour que la première question de
    l'exécutant ne soit pas « où est-ce » ?
 10. **Séparation des rôles** : l'exécutant code, Claude ou Grok relisent, l'orchestrateur accepte, la direction décide
-    (§ 2.3). Est-ce une séparation suffisante pour V3, V2 et B2 (profil « conception »), ou faut-il une relecture d'Astra ?
+    (§ 2.3). Est-ce une séparation suffisante pour V3, V2 et B2 (profil « conception »), ou faut-il une relecture d'Astra à son retour ?
 
 ## 13. Journal de vérification
 
@@ -609,8 +634,9 @@ le mode « aveugle » de `p2-plancher.cjs` ; le fait que V4.6 ne soit pas une v�
 cycles et le C1 des huit lots (`lots-20-24-33…:12-24`), les phases de la partie 15 (`orchestration…:118-125`), les 6,7 s / 4,3 s
 du lot 25 (`lot-485-p25…:16,21`), `SILENCE_MS = 60000` (`tools/perf-lot.cjs:27,39`), les lignes citées de `KNOWN_ISSUES.md` et de
 `PLAN_SUITE.md`. Le « ≈ 1,8 s » de l'analyse GCV1 vient de mon propre document de besoins (« d'après ce retour ») ; il n'a pas
-de source, le dépôt donne 1,43 s. Ajouts : § 1 (ligne exécutant), § 2.3, § 14, profils d'exécutant, questions 9 et 10 pour Astra,
-critères 22 et 23.
+de source, le dépôt donne 1,43 s. Ajouts : § 1 (ligne exécutant), § 2.3, § 14, profils d'exécutant, questions 9 et 10 pour l'audit,
+critères 22 et 23. **Décisions du 30/09 intégrées (§ 2.4)** dans les §§ 1, 2.3, 4.1, 4.2, 4.4, 5.2, 6 (V1, V2), 9, 11 et 12 ; le point 6 du
+§ 2.4 reste à confirmer.
 
 ## 14. Annexe A — Carte du code par chantier (pour un exécutant sans l'historique)
 
