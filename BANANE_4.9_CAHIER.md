@@ -3,6 +3,9 @@
 **Version du cahier : v0.2, non signé, brouillon pour l'audit d'orchestration d'Astra puis la signature de la direction.**
 Rédigé le 30 septembre 2026, documents seuls : aucun code, aucun outil modifié. Remplace le brouillon 0.1 du
 24 septembre (dernier état : `b0b2b1b`, dans l'historique git).
+**Révision de l'orchestrateur du 30/09** (même version 0.2) : le développeur de la 4.9 est une **session Sol**, pas une session
+Claude ; le cahier est donc rendu autonome (§ 2.3 protocole avec un exécutant externe, § 14 carte du code) et les modèles
+proposés par chantier sont remplacés par un profil d'exécutant.
 
 Sources : `consignes/besoins-4.9-2026-09-30.md` (besoins de la direction, source principale, notée « besoins »),
 `PASSATION_4.8.0.md`, `PLAN_SUITE.md`, `DECISIONS.md` (D-054, D-057 à D-064), `KNOWN_ISSUES.md`, les audits de mesure
@@ -18,6 +21,7 @@ cahier n'est une décision : les critères ouverts sont dans le § 11.
 | **4.9.5** | cuts difficiles : B1, B2, B3 (conditionnel). Jalon J5 (`PLAN_SUITE.md:17`). |
 | **Après la 4.9** | apprentissage d'un nouveau moteur (régresseur appris, données qualifiées par la rotation) : besoins:101, `PLAN_SUITE.md:142`. |
 | **5.0** | fonctionnement sur plusieurs sessions, onglets et parties (besoins:101). Un suivi mobile en lecture seule est évoqué pour une 5.5 éventuelle (D-057, `DECISIONS.md:254`) : hors périmètre. |
+| **Exécutant** | une **session Sol** (décision de la direction, 30/09), avec accès au dépôt `banane` et à l'exécution (Node, `tools/verify.cjs`, bancs) : § 2.3. Orchestration : l'orchestrateur ; audit d'orchestration : Astra ; relecture indépendante de chaque diff : Claude ou Grok. |
 | **Base de code** | **à trancher avant tout chantier** (§ 9) : 4.8.5 stable (`v4.8.5`, `323356c`) ou 4.8.6. |
 | **Numérotation** | version stable = étiquette `vX.Y.Z` jamais reconstruite ; version de test = manifeste `X.Y.Z.N` (D-061, `DECISIONS.md:105-107`). Pour la 4.9, `4.9.0.N` est **SUPPOSÉ** (convention non écrite pour la 4.9). |
 | **Étapes réservées à la direction** | merge, étiquette, publication : jamais sans accord explicite (besoins:113, `PASSATION_4.8.0.md:36`). |
@@ -57,10 +61,66 @@ Moteur `src/engine.js` épinglé ; **deux rails ou rien** ; **aucune validation 
 résolu** ; écartement **[1405, 1470] mm en admissibilité seulement**, jamais une cible ; **cuts 9033 et 9241 exclus** ;
 parties de validation jamais utilisées pour régler (rotation, D-057) ; pas de reset destructif, force push, merge,
 étiquette ni publication sans autorisation explicite ; `node tools/verify.cjs` à 0 avant chaque commit (commandes
-chaînées avec `&&`) ; commits avec `Co-Authored-By` et `Claude-Session` ; aucun identifiant de modèle, aucune capture
+chaînées avec `&&`) ; commits portant le trailer de session de l'exécutant (forme à confirmer, § 11 n° 22 ; les commits
+des sessions Claude gardent `Co-Authored-By` et `Claude-Session`) ; aucun identifiant de modèle, aucune capture
 d'écran ni code d'ESV dans les dépôts ; essais courts (7 s par fichier, `PLAN_SUITE.md:23`, plus strict que les 10 s de
 `PASSATION_4.8.0.md:42`). Les protections existantes de la 4.8.5 (garde d'écartement 1 420 mm, D-060/D2 ; fin de partie
 D-062) restent en vigueur.
+
+### 2.3 Protocole avec un exécutant externe (session Sol)
+
+**Décision de la direction (30/09)** : le développeur de la 4.9 est une session Sol qui a accès au dépôt `banane` et peut
+exécuter du code. Cette session n'a ni notre historique ni notre conversation : **ce cahier, les documents cités et la carte
+du code du § 14 sont sa seule mémoire**. Si un point manque pour agir, elle le pose comme question à la direction dans son
+rapport, elle ne l'invente pas.
+
+**Rôles.** L'exécutant écrit le code et ses essais. L'orchestrateur tient le cahier, relit chaque diff, prépare les paquets de
+test et dépose les données ; Claude ou Grok font la relecture indépendante des diffs ; Astra audite l'orchestration ; la
+direction décide, signe, fusionne, étiquette et publie. L'exécutant ne relit jamais son propre diff comme relecture
+indépendante.
+
+**Profils d'exécutant** (utilisés par chantier au § 6) : **bornée** = périmètre étroit, spécification complète dans le cahier,
+aucune décision d'architecture ; **conception** = décisions d'architecture, risque de perte de données ou de lecture d'un
+autre cut ; la relecture indépendante du diff est alors obligatoire avant acceptation.
+
+**Livraison.**
+- Une branche par chantier, issue de la base de code tranchée (§ 9), au nom préfixé par le chantier (par exemple
+  `sol/49-v1-mesure-par-phase` : **proposition**, à confirmer par la direction). Jamais `main`.
+- Un commit final par chantier, préfixé `[Vn]` ; des commits intermédiaires sont permis, la branche reste lisible.
+- **Rapport de fin de chantier** dans `audit/chantiers/` (un fichier par chantier) avec : ce qui est fait ; commit(s) ; fichiers
+  touchés ; essais ajoutés, dont **la sortie de l'essai rouge avant le correctif** ; **la sortie de `node tools/verify.cjs`
+  collée** (comptes `tests`, `pass`, `fail`, `skipped`, mode du banc) ; mesures avec leur origine (§ 6, règle transversale) ;
+  écarts au cahier ; questions pour la direction ; ce qui n'est pas fait.
+- Rien n'est déclaré « fini » sans ce rapport. Le chantier est **accepté** quand l'orchestrateur et la relecture indépendante
+  ont lu le diff et que la direction l'a dit. Le chantier suivant ne commence pas avant.
+
+**Vérification.** `node tools/verify.cjs` doit finir à 0 échec. Sans le corpus natif privé (absent d'un clone propre), il tourne
+en mode « partiel » : les 2 tests qui en dépendent sont **sautés, non réussis** — à écrire tel quel. Le mode complet
+(`--full`) n'est possible que sur le poste qui a le corpus. Relevé de départ, pris sur la branche de ce cahier le 30/09 :
+**986 réussis, 0 échec, 2 sautés**. Le banc réécrit `audit/verification.txt` et `audit/verification.json` (versionnés) : les
+inclure dans le commit du chantier quand ils reflètent le résultat final (précédents : `00a07cc`, `e7256ef`), sinon les
+restaurer.
+
+**Méthode, écrite comme règles du cahier** (aucun plugin ni outil propre à un assistant n'est supposé) :
+1. **Essai rouge d'abord** : l'essai qui prouve le défaut ou le comportement attendu échoue avant le code, la sortie est
+   collée dans le rapport ; les essais respectent la règle des 7 s par fichier.
+2. **Cause racine avant correctif** : la cause est écrite dans le rapport avant le correctif. « Instable » ou « flake » n'est
+   pas une cause ; un essai n'est jamais sauté, désactivé ni mis en quarantaine pour passer au vert.
+3. **Preuve avant de déclarer fini** : chaque affirmation du rapport renvoie à une sortie de commande ou à fichier:ligne ; ce
+   qui n'est pas mesuré s'écrit « non mesuré », jamais zéro ; aucun chiffre n'est inventé (« à mesurer »).
+4. **Un correctif = ce que le défaut demande** : pas de refactorisation ni d'amélioration voisine dans le même commit.
+5. **Relecture adverse de son propre diff** avant de pousser : « qu'est-ce qui ferait rejeter ceci ? », y compris les règles
+   du § 2.2 (aucune validation ni SKIP automatique d'un cut non résolu ; aucune pose partielle).
+6. **Fichiers gelés** : `src/engine.js` est épinglé sur `audit/v4.6.0-engine-baseline.json`, et le placement, les
+   transformations de coordonnées et le lecteur LiDAR sur `audit/v4.4.0-frozen-engine-hashes.json` : le banc échoue à la
+   moindre dérive. Toute instrumentation ou tout changement de comportement passe **hors** de ces fichiers (`background.js`,
+   `src/adapter-page.js`, `src/bridge.js`, `panel.js`) ; changer la baseline exige une décision écrite de la direction.
+7. **Ne jamais** (`PASSATION_4.8.0.md:34-43`) : merge, étiquette, publication, force push, reset destructif, sans autorisation
+   explicite de la direction ; déposer des exports d'opérateur, des captures d'écran ou du code d'ESV dans un dépôt ;
+   modifier un critère, une porte ou un seuil du cahier ; toucher au dépôt `banane-data`.
+
+**Une chose à la fois.** Une seule session exécutante, un chantier à la fois, pas de travail parallèle (besoins:105-109) : U1 à
+U3 se font donc **en série** (proposition, § 11 n° 17). Jamais deux chantiers sur `background.js` en même temps.
 
 ## 3. Mesures de départ
 
@@ -207,7 +267,7 @@ qualité 4.8 (provenance du rapport de sortie).
 - **Dépendances** : aucune ; **au premier cycle**, avant toute conclusion sur la précision (`PLAN_SUITE.md:135`).
 - **Risques** : 30 cuts donnent une estimation large ; usage abusif du résultat pour régler les seuils (interdit :
   besoins:92).
-- **Effort** : S. **Modèle** : Sonnet.
+- **Effort** : S. **Profil** : bornée.
 
 ### V1 — Mesure par phase dans l'extension
 
@@ -225,7 +285,7 @@ qualité 4.8 (provenance du rapport de sortie).
   méthode : écarts médians entre événements, silences selon § 4.3.
 - **Dépendances** : base de code tranchée (§ 9) ; aucune autre. **Risques** : touche `background.js` et
   `src/adapter-page.js` (fichiers partagés) ; dérive du journal (taille : KI-059 — un message `chrome.runtime` ≤ 64 Mio).
-- **Effort** : S. **Modèle** : Sonnet.
+- **Effort** : S. **Profil** : bornée.
 
 ### V2 — Exports allégés : « Sauvegarder tout » et « Préparer pour analyse » (avec KI-068)
 
@@ -255,7 +315,7 @@ Voir § 8, qui décrit les exigences complètes.
 - **Dépendances** : V1 ; décision de base (§ 9) ; KI-068. **Risques** : perte de données à l'export (KI-064) ; ZIP non
   réalisable en flux ; segments (KI-060, corrigé en 4.7.20 avec réparation à la lecture) ; message de 64 Mio (KI-059).
 - **Effort** : **L** (le plan dit M ; l'écriture en flux et le poste restreint justifient L, estimation de la rédaction).
-  **Modèle** : **Opus** pour l'export en flux et le format ; Sonnet pour le petit fichier et les noms une fois le format figé.
+  **Profil** : **conception** pour l'export en flux et le format ; bornée pour le petit fichier et les noms une fois le format figé.
 
 ### V4 — Comparaison V4.6 à la demande (P03), avant V3
 
@@ -268,7 +328,7 @@ Voir § 8, qui décrit les exigences complètes.
   (la relecture de lots anciens continue à marcher).
 - **Mesure** : V1 (phase d'analyse) ; banc de rejeu ; `tools/portes-j1.cjs` (portes du banc). **Dépendances** : V1.
   **Risques** : dérive de périmètre (une « accélération » qui retire une vérification interdite : non, V4.6 n'est pas une
-  vérification avant pose, à confirmer par l'analyse du chemin de décision). **Effort** : S–M. **Modèle** : Sonnet.
+  vérification avant pose, à confirmer par l'analyse du chemin de décision). **Effort** : S–M. **Profil** : bornée.
 
 ### V3 — Capture plus rapide (une expérience par cycle)
 
@@ -290,8 +350,8 @@ Voir § 8, qui décrit les exigences complètes.
 - **Dépendances** : V1 (référence), V4 (retirer d'abord le coût de l'analyse), § 4.4 et § 5.2 fixés par la direction **avant
   V3**. **Risques** : le plus élevé de la 4.9.0 ; toucher à l'ordre des lectures d'ESV peut introduire une lecture d'un
   autre cut ; le gain sur une partie peut n'être que le bruit du § 3. Un cycle de terrain par expérience, de 2 à 3 jours.
-- **Effort** : M–L. **Modèle** : **Opus** (conception, préchargement, relecture avant étiquette) ; Sonnet pour les réglages
-  simples une fois l'expérience spécifiée.
+- **Effort** : M–L. **Profil** : **conception** (préchargement, lecture de l'identité du cut, relecture avant étiquette) ; bornée pour
+  les réglages simples une fois l'expérience spécifiée.
 
 ### U1 — Résumé de partie (U04)
 
@@ -302,7 +362,7 @@ Voir § 8, qui décrit les exigences complètes.
   compte, `lots-20-24-33…:15-16`). *OBJECTIF* : aucun. *À VÉRIFIER* : règle « une reprise ne se compte pas deux fois »
   (D-057 : compté par partie, `DECISIONS.md:236-238`) ; les inconnus sont écrits comme inconnus, pas comme zéro.
 - **Mesure** : comparaison avec `tools/analyse-locale.cjs` sur les lots du dépôt de données ; **dépendances** : aucune.
-  **Risques** : compter un cut différé puis posé deux fois. **Effort** : M. **Modèle** : Sonnet.
+  **Risques** : compter un cut différé puis posé deux fois. **Effort** : M. **Profil** : bornée.
 
 ### U2 — Essais du vrai panneau (C02)
 
@@ -311,7 +371,7 @@ Voir § 8, qui décrit les exigences complètes.
 - **Porte.** *MINIMUM* : la liste d'essais ci-dessus passe dans Chromium réel, avant livraison (besoins:108) ; les essais
   rouges sans correctif. *OBJECTIF* : aucun. *À VÉRIFIER* : contrastes WCAG déjà corrigés en 4.8.0 (D-059) non régressés.
 - **Mesure** : essais navigateur sur le modèle de `tools/navigateur-telechargements.cjs` (Chromium réel, hors banc).
-  **Dépendances** : aucune. **Risques** : essais trop longs (règle de 7 s). **Effort** : M. **Modèle** : Sonnet.
+  **Dépendances** : aucune. **Risques** : essais trop longs (règle de 7 s). **Effort** : M. **Profil** : bornée.
 
 ### U3 — Raccourcis `D` et `Maj + Espace`
 
@@ -321,7 +381,7 @@ Voir § 8, qui décrit les exigences complètes.
   *OBJECTIF* : aucun. *À VÉRIFIER* : « `Maj + Espace` valide déjà dans ESV » (dit dans les échanges, **SUPPOSÉ**, non
   vérifiable dans le dépôt) ; **l'action de `D` n'est pas définie dans les fichiers lus** (à fixer avant U3).
 - **Mesure** : essai de clavier dans le panneau réel (avec U2) ; confirmation de l'opérateur (tâche de 10 min).
-  **Dépendances** : U2 (même banc). **Risques** : conflit avec une touche d'ESV. **Effort** : S. **Modèle** : Sonnet.
+  **Dépendances** : U2 (même banc). **Risques** : conflit avec une touche d'ESV. **Effort** : S. **Profil** : bornée.
 
 ### V5 — Stockage incrémental (P01) — conditionnel
 
@@ -334,8 +394,7 @@ Voir § 8, qui décrit les exigences complètes.
   **SUPPOSÉE** possible).
 - **Mesure** : V1 ; un lot long fourni par l'opérateur (les lots connus : 47 à 213 cuts en 4.8.0, `lots-20-24-33…:12-17`,
   donc probablement trop courts). **Dépendances** : V1 et cette mesure. **Risques** : chantier de stockage = risque de perte
-  de données. **Effort** : L. **Modèle** : proposition **Opus** si lancé (le risque est de la même classe que KI-064 ; écart
-  avec la consigne « Sonnet pour le reste » signalé pour décision).
+  de données. **Effort** : L. **Profil** : **conception** si lancé (le risque est de la même classe que KI-064).
 
 ## 7. Porte de version 4.9.0
 
@@ -429,7 +488,7 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
 - **Mesure** : banc puis lot sur une partie neuve, relecture Écho, C1 et C4 selon § 5 ; outils : `tools/validated-anchors-study.cjs`,
   `tools/analyse-locale.cjs`. **Dépendances** : D4 (livré en 4.8.5), 4.9.0 stable. **Risques** : appuis faux propagés
   (partie 9, voisin à 31-34 mm) ; interaction avec la dérive en chaîne observée sur la partie 25 (cuts 108 à 114, `lot-485-p25…:77-84`,
-  non démontrée). **Effort** : M. **Modèle** : Sonnet, avec relecture du diff par Opus (proposition).
+  non démontrée). **Effort** : M. **Profil** : bornée, avec relecture indépendante renforcée du diff.
 
 ### B2 — Décentrer la vue d'ESV (D-049)
 
@@ -443,7 +502,7 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
 - **Mesure** : prototype en version de test ; entrées : lots sur les zones décalées + une partie neuve ; temps par cut décentré
   via V1. **Dépendances** : tâche de 10 min de l'opérateur ; 4.9.0. **Risques** : dépendance à des symboles internes d'ESV
   (KI-026) ; caméra qui bouge pendant la capture ; les parties 2, 11 et 33 servent au réglage : la validation exige une partie neuve.
-  **Effort** : L. **Modèle** : **Opus** (proposition ; risque comparable à V3).
+  **Effort** : L. **Profil** : **conception** (risque comparable à V3).
 
 ### B3 — Organisation des transitions du lot (C01), conditionnel
 
@@ -451,7 +510,7 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
   moteur épinglé (enveloppes de `background.js`).
 - **Porte.** *MINIMUM* : décisions inchangées (banc) ; reprise, pause, arrêt, F5 : essais existants inchangés. *OBJECTIF* :
   aucun. *À VÉRIFIER* : la nécessité même (décidée après B2). **Dépendances** : B2. **Risques** : conflit avec toute autre
-  modification de `background.js`. **Effort** : L. **Modèle** : Opus.
+  modification de `background.js`. **Effort** : L. **Profil** : conception.
 
 ## 11. Critères ouverts
 
@@ -473,11 +532,13 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
 | 14 | Gain de taille pour Écho | aucune mesure | V2 | poids par composant d'une session Écho avant/après | porte de V2 |
 | 15 | Seuil de « dérive » et longueur du « long lot » (V5) | rien dans le dépôt | direction | V1 : vitesse par rang de cut et taille de stockage sur le lot le plus long | décision V5 |
 | 16 | Action de `D` ; comportement de `Maj + Espace` dans ESV | non définie / dite dans les échanges | direction ; l'opérateur confirme (10 min) | essai clavier dans le panneau réel | U3 |
-| 17 | Séquencement U1 à U3 : en série ou en parallèle | `PLAN_SUITE.md:135` et le démarrage 4.9 disent « en parallèle » ; les besoins disent « une chose à la fois » | direction | — (décision de cadence) | U1 |
+| 17 | Séquencement U1 à U3 : en série ou en parallèle | `PLAN_SUITE.md:135` et le démarrage 4.9 disent « en parallèle » ; les besoins disent « une chose à la fois » | direction | — (décision de cadence) ; **proposition : en série**, il n'y a qu'un exécutant (§ 2.3) | U1 |
 | 18 | Ce que « C1 en hausse » veut dire pour B1 | aucun seuil | direction | C1 sur une partie neuve vs référence même protocole | B1 |
 | 19 | Faisabilité du déplacement de la vue | jamais inspecté | opérateur | tâche de 10 min | B2 |
 | 20 | Nécessité de B3 | dépend de B2 | orchestrateur, direction | revue de B2 | B3 |
 | 21 | Usage du résultat P2 | interdit de régler les seuils automatiquement | direction | lecture du rapport P2 | conclusion sur la précision |
+| 22 | Trailer de commit et nom des branches de l'exécutant Sol | les règles du dépôt visent les sessions Claude (`Co-Authored-By`, `Claude-Session`) ; aucun nom de branche n'est fixé pour Sol | direction | proposition : trailer `Session:` avec le lien ou l'identifiant de la session, sans nom de modèle ; branches `sol/49-<chantier>` | premier commit |
+| 23 | Autonomie du cahier pour un exécutant sans historique | le cahier est la seule mémoire de la session Sol (§ 2.3) | Astra (question 9), puis la direction | lecture de l'audit d'Astra ; premier rapport de chantier (les questions posées montrent ce qui manquait) | signature |
 
 ## 12. Questions pour l'audit d'Astra
 
@@ -497,6 +558,11 @@ Ordre : **B1 dès que les données de D4 le permettent, puis B2 après sa tâche
    parties de réglage puis une partie de validation neuve ; le nombre de cycles opérateur (V3 : au moins trois expériences, soit
    plusieurs créneaux de 1 h 15) est-il compatible avec la cadence D-061 ?
 8. **Portes chiffrées manquantes** : V4 et V1 n'ont pas d'objectif chiffré (aucune mesure de départ) ; est-ce acceptable ?
+9. **Autonomie** : le développeur est une session externe qui n'a pas notre historique (§ 2.3). Le cahier, le protocole de
+   livraison et la carte du code (§ 14) sont-ils assez autonomes ? Que manque-t-il pour que la première question de
+   l'exécutant ne soit pas « où est-ce » ?
+10. **Séparation des rôles** : l'exécutant code, Claude ou Grok relisent, l'orchestrateur accepte, la direction décide
+    (§ 2.3). Est-ce une séparation suffisante pour V3, V2 et B2 (profil « conception »), ou faut-il une relecture d'Astra ?
 
 ## 13. Journal de vérification
 
@@ -536,5 +602,43 @@ le mode « aveugle » de `p2-plancher.cjs` ; le fait que V4.6 ne soit pas une v�
    comme hors périmètre.
 10. **Provenance (D04)** : reprise comme règle transversale (§ 6), pas comme chantier.
 11. **Porte de V3** : capture −30 % (plan) contre cycle −25 % (direction) : cohérentes seulement avec V4 (§ 3).
-12. **Modèle** : Opus proposé aussi pour V5 et B2, en plus de V3, du préchargement et de l'export en flux : écart avec la
-    consigne, signalé pour décision.
+12. **Modèle** : le cahier 0.2 initial proposait des modèles par chantier (Opus, Sonnet). Le développeur étant une session
+    Sol (décision de la direction, 30/09), ils sont remplacés par un **profil d'exécutant** (§ 2.3) : *bornée* ou *conception*.
+
+**Révision de l'orchestrateur (30/09, après le rapport de rédaction).** Contrôle par sondage dans le dépôt, tous exacts : les
+cycles et le C1 des huit lots (`lots-20-24-33…:12-24`), les phases de la partie 15 (`orchestration…:118-125`), les 6,7 s / 4,3 s
+du lot 25 (`lot-485-p25…:16,21`), `SILENCE_MS = 60000` (`tools/perf-lot.cjs:27,39`), les lignes citées de `KNOWN_ISSUES.md` et de
+`PLAN_SUITE.md`. Le « ≈ 1,8 s » de l'analyse GCV1 vient de mon propre document de besoins (« d'après ce retour ») ; il n'a pas
+de source, le dépôt donne 1,43 s. Ajouts : § 1 (ligne exécutant), § 2.3, § 14, profils d'exécutant, questions 9 et 10 pour Astra,
+critères 22 et 23.
+
+## 14. Annexe A — Carte du code par chantier (pour un exécutant sans l'historique)
+
+Chemins relatifs à la racine du dépôt `banane`, **vérifiés présents au 30/09** ; les numéros de ligne sont ceux de cette
+branche et peuvent bouger. « Premier pas » = ce que l'exécutant fait avant d'écrire du code. Le point d'entrée d'un chantier
+est indicatif : **la cartographie exacte est le premier livrable de l'exécutant** (à écrire dans son rapport).
+
+**Architecture, en cinq lignes.** `background.js` (service worker, racine, 916 lignes) charge les modules `src/*.js` et pilote
+le lot ; `src/adapter-page.js` est injecté dans la page d'ESV (monde MAIN) et exécute les commandes (navigation, capture,
+pose, validation) ; `src/bridge.js` relie la page et le service worker ; `panel.js` et `panel.html` sont le panneau (tous les
+exports y sont écrits) ; `src/engine.js` (épinglé) tient l'état du lot et consigne les événements dans le journal.
+
+| Chantier | Fichiers à lire ou modifier | Essais existants proches | Premier pas et vérification |
+|---|---|---|---|
+| **P2** | `tools/p2-plancher.cjs` (`mesurer`, `toMarkdown`, `run`) ; `KNOWN_ISSUES.md` KI-038 | `tests/p2-plancher.test.cjs` | Lire KI-038 ; vérifier le mode « aveugle » et le tirage de 30 cuts sans choix. `node --test tests/p2-plancher.test.cjs` |
+| **V1** | `tools/perf-lot.cjs` (`SILENCE_MS`, décomposition D5) ; événements du cycle : `cut-target-changed` (`src/engine.js:123`), `before-captured` (`:150`), `proposed` (`:172`), `gcv1-shadow-observed` (`background.js:537`), résultats des commandes d'ESV avec durée (`adapter-result`, à partir de `background.js:76` et `src/bridge.js`) ; relevé passif `esv-releve` (`background.js:79-86,897`) | `tests/perf-lot.test.cjs`, `tests/audit-qualite-480.test.cjs`, `tests/acceptance-provenance*.test.cjs` | Lister les phases déjà horodatées et celles qui manquent ; **`src/engine.js` est épinglé** : l'instrumentation se place hors moteur. `node tools/perf-lot.cjs EXPORT.json` sur un journal allégé ; banc `node tools/verify.cjs` ; décisions identiques à `v4.8.5` |
+| **V2 + KI-068** | `panel.js` : `writeSegments` (`:631`), `autoExportIfAdvised` (`:851`), `exportComplet` (`:879`), « Tout télécharger » (`:928`), `exporterDiagnostic`/`exporterCorpus`/`exporterJournal` (`:952-968`) ; `src/native-export.js` ; `src/gcv1-export.js` ; `background.js:700` (`exportState`) ; outils de référence : `tools/filtrer-journal.cjs`, `tools/reducteur-exports-core.js`, `tools/merge-segments.cjs`, `tools/analyse-locale.cjs` | `tests/export-manifeste.test.cjs`, `tests/audit-qualite-480.test.cjs`, `tests/budget-liberation.test.cjs`, `tests/analyse-locale.test.cjs`, `tests/reducteur-exports.test.cjs` ; navigateur réel : `tools/navigateur-telechargements.cjs` | Faisabilité du fichier unique (§ 8.2) **avant tout code de format** ; ventiler le poids par composant (`KNOWN_ISSUES.md` KI-059, 060, 064, 068). Comparaison JSON de `analyse-locale` sur petit fichier et sur sauvegarde complète : zéro différence |
+| **V4** | `src/gcv1-shadow-bootstrap.js:6` (`BananeGeometryRuntimeV46`), `src/gcv1-shadow.js:8-11` (façade qui garde V4.6 par défaut), `src/lot-decision.js`, `background.js:3-8,22,494,829` | `tests/engine-v46*.test.cjs`, `tests/gcv1-*.test.cjs` ; `tools/portes-j1.cjs` | Cartographier qui appelle V4.6 pendant un lot et ce qu'il produit avant de rien retirer (le cahier suppose que V4.6 n'est pas une vérification avant pose : **à démontrer**). Décisions identiques au banc (633 cuts, 8 jeux) |
+| **V3** | réglages `pilote` de `src/settings.js` (valeurs de repli dans `src/adapter-page.js:22-23` : `tentativesParVue` 3, `stabiliteMs` 800, `budgetCaptureMs` 60 000, `sondageMs` 80, `lecturesStables` 3, `attenteMs` 12 000, `recentrages` 3, `attenteNavigationMs` 15 000, `attenteClicMs` 5 000) ; lecture après sélection de vue, `src/adapter-page.js:256-258` ; caméra et viewport `:294-329` | `tests/capture-retry.test.cjs`, `tests/adapter.test.cjs`, `tests/esv-*-4800.test.cjs`, `tests/background-lot*.test.cjs` | Un seul réglage par version de test ; protocole du § 4 ; comparaison appariée du § 5.2 niveau 3. Version de test = manifeste `4.9.0.N` |
+| **U1** | `panel.js`, `panel.html`, `panel.css` ; vérité de comparaison : `tools/analyse-locale.cjs` (`analyserLot`, `resume`) | `tests/panel-*.test.cjs` | Comptes identiques à l'outil d'analyse sur les lots de référence du § 6 |
+| **U2** | `panel.js`, `panel.html`, `panel.css`, `tests/browser/` (banc Chromium réel : `harness.js`, `panel.html`) | `tests/panel-4800.test.cjs`, `tests/panel-h.test.cjs` | Liste d'essais du chantier passée dans Chromium réel |
+| **U3** | `src/early-input.js:5-17` (touches d'ESV surveillées : `d`, `a`, `q`, `s`, `g` et flèches pour l'édition ; Maj+Espace, Maj+Retour arrière et Entrée comme décisions) ; `panel.js` | `tests/early-input.test.cjs` | Décision de la direction sur l'action de `D` **avant** le code (§ 11 n° 16) ; essai : aucune action d'ESV doublée |
+| **V5** | `src/storage.js` (`BananeStorage3`, 28 lignes), stockage IndexedDB via `background.js` ; `KNOWN_ISSUES.md` KI-064 | `tests/budget-liberation.test.cjs`, `tests/echo-vidage-audit-480.test.cjs` | Seulement si V1 montre une dérive (seuil à fixer, § 11 n° 15) |
+| **B1** | `tools/validated-anchors-study.cjs` ; `src/lot-decision.js`, `src/continuity-observer.js` ; relevé passif `esv-releve` (D4) ; `DECISIONS.md` D-054 | `tests/continuity-*.test.cjs` | Lire D-054 en entier (le cahier n'en a lu que le début) ; sur une partie neuve, C1 en hausse et 0 faux ajouté |
+| **B2** | `src/adapter-page.js:256-258,294-329` (caméra, recentrage, viewport) ; `KNOWN_ISSUES.md` KI-026 ; `audit/cas-decalage-esv-p2-2026-09-24.md` | `tests/adapter.test.cjs` | Tâche de 10 min de l'opérateur d'abord : ESV permet-il de déplacer la vue par programme ? |
+| **B3** | enveloppes de commandes de `background.js` | `tests/background*.test.cjs` | Seulement si B2 l'exige ; décisions inchangées au banc |
+
+**Commande unique de contrôle** : `node tools/verify.cjs` (2 à 3 min ; § 2.3). **Documents à lire avant le premier chantier**, dans
+cet ordre : `PASSATION_4.8.0.md` (règles), `DECISIONS.md` (D-054, D-057 à la dernière), `PLAN_SUITE.md` § 3, `KNOWN_ISSUES.md`
+(KI-059, 060, 064, 066 à 069), `consignes/besoins-4.9-2026-09-30.md`, `audit/lots-20-24-33-2026-09-29.md`,
+`consignes/analyse-locale.md`.
