@@ -10,10 +10,10 @@
  * (défaut de la 4.7.8, KI-048). Il est donc chargé juste après la géométrie
  * GCV1 et avant la composition. */
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
- 'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
+ 'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
-const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
+const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.8.6',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.6';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
@@ -70,9 +70,12 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
  if(!esvURL(tab.url))throw Object.assign(Error('Adaptateur ESV sans réponse : l’onglet sélectionné n’affiche plus ESV. Rouvre ESV dans cet onglet (ou F5), puis : lot Orbite, clique sur Reprendre ; Écho, clique sur Connecter puis Reprendre.'),{code:'ESV_PAGE_ABSENTE'});
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
   * est dite en clair ; pour une capture, c'est une lecture à reprendre. */
- const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args}).catch(e=>{
+ const trace=timing?.startRequest(action,args);
+ const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args,...(trace?{traceId:trace.id}:{})}).catch(e=>{
+   timing?.endRequest(trace,null,e);
    if(!/maximum allowed size/i.test(e?.message||''))throw pageEsvAbsente(e);
    throw Error((action==='capture'?'Lecture LiDAR instable : ':'')+`réponse de l’adaptateur trop grosse pour un message Chrome (${action} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':''));});
+ timing?.endRequest(trace,reply?.result,reply?.error||(!reply||!Object.hasOwn(reply,'result')?'missing-result':null),reply?.diagnostic);
  if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null});
  if(reply?.error)throw Error(reply.error);
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
@@ -554,6 +557,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
      ?engine.s.batch.scope:null;
    if(pilotScope)assertPilotContract(pilotScope);
    const selector=pilotScope?'active-pilot-test':activeAssisted?'active-assisted':null;
+   if(timing)timing.selector=selector||'runtime-default';
    let proposal,analysisError=null;
    try{if(selector)gcv1.armOnce(selector);proposal=await analyzeV46(...args);}
    catch(e){analysisError=e;}
@@ -602,6 +606,11 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
    }
    return proposal;
  };
+ timing=globalThis.BananePhaseTiming?.install(engine,store)||null;
+ if(timing){const observer=observeLot,commander=commandLot;
+  observeLot=function(...args){return timing.trackTask('observe-lot',()=>observer.apply(this,args));};
+  commandLot=function(...args){return timing.trackTask('command-lot',()=>commander.apply(this,args));};
+ }
  await engine.init();
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();})();
 /* 4.7.10 — la décision commande. La proposition du moteur n'est pas modifiée
@@ -909,10 +918,12 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
   * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque
   * à l'état, rangé ailleurs dans le même fichier. */
- if(action==='journal-meta')return {format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary()};
- if(action==='dataset-meta')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
- if(action==='journal')return {format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary()};
- if(action==='dataset')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
+ const v1TimingExport=['journal-meta','dataset-meta','journal','dataset'].includes(action)?await timing?.flush():null;
+ const timingMeta=v1TimingExport?{v1TimingExport}:{};
+ if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary()};
+ if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
+ if(action==='journal')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary()};
+ if(action==='dataset')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
  return engine.locked(async()=>{
   let result;
   if(action==='settings'){
@@ -956,6 +967,7 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   ready.then(()=>native.receive(m.type,m.payload)).then(result=>respond({result}),e=>respond({error:e.message}));return true;
  }
  if(m.kind==='adapter-trace'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
+  timing?.progress(m);
   ready.then(()=>{if(m.action==='capture')engine.s.captureProgress={stage:m.lastStage,...m.lastDetail};
     return engine.event('adapter-progress',{requestId:m.requestId,action:m.action,elapsedMs:m.elapsedMs,acknowledged:m.acknowledged,lastStage:m.lastStage,lastDetail:m.lastDetail});}).then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;
  }

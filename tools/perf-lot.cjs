@@ -36,6 +36,7 @@
  * par horodatage.
  */
 const fs=require('node:fs'),zlib=require('node:zlib');
+const V1=require('./perf-phases.cjs');
 const SILENCE_MS=60000;
 const ms=e=>Date.parse(e.timestamp);
 const cutOf=e=>Number.isInteger(e?.identity?.cut)?e.identity.cut:null;
@@ -61,7 +62,7 @@ function measure(data,{tous=false}={}){
     return {lot:d.batch?.id??null,partie:d.batch?.scope?.part??null,depart:d.batch?.scope?.start??null,debut:d.timestamp,
       fin:etats.at(-1)?.state??null,cuts:x.cuts.distincts,dureeMin:x.dureeMin.totale,silencesMin:x.dureeMin.silences,
       cycleMs:x.cycleMs,captureMs:x.commandesMs.capture||{n:0},erreurs:Object.values(x.erreurs).reduce((s,l)=>s+l.length,0)};});
-  return {source:{format:data.format??null,version:data.version??null,exportedAt:data.exportedAt??null,partie:batch?.scope?.part??null,
+  return {v1:V1.measure(data,{tous}),source:{format:data.format??null,version:data.version??null,exportedAt:data.exportedAt??null,partie:batch?.scope?.part??null,
       lot:batch?.id??null,etat:batch?.state??null,lotSeul:filtre,evenements:events.length,debut:events[0].timestamp,fin:events.at(-1).timestamp},...m,lots};
 }
 function mesurer(events){
@@ -151,7 +152,7 @@ function toMarkdown(m,titre){
     for(const l of m.lots)L.push(`| ${l.debut} | ${l.partie??'?'} | ${l.depart??'?'} | ${l.fin??'—'} | ${l.cuts} | ${n(l.dureeMin)} min${l.silencesMin>=1?` (${n(l.silencesMin)} de silences)`:''} | ${sec(l.cycleMs.median)} / ${sec(l.cycleMs.p90)} | ${sec(l.captureMs.median)} / ${sec(l.captureMs.p90)} / ${sec(l.captureMs.max)} | ${l.erreurs} |`);}
   const err=Object.entries(m.erreurs);if(err.length){L.push('','Erreurs de commande :','');for(const [a,l] of err)L.push(`- ${a} : ${l.length} (${l.slice(0,3).map(x=>`cut ${x.cut} : ${x.message}`).join(' ; ')}${l.length>3?' ; …':''})`);}
   if(m.silences.length){L.push('',`Silences (> 60 s) : ${m.silences.length}`,'');for(const s of m.silences.slice(0,12))L.push(`- ${s.de}, après « ${s.apres} » (cut ${s.cut??'?'}) : ${s.s} s`);if(m.silences.length>12)L.push('- …');}
-  return L.join('\n')+'\n';
+  return L.join('\n')+'\n'+V1.toMarkdown(m.v1||{available:false,reason:'Mesures V1 non mesurées.'});
 }
 function run(argv=process.argv.slice(2)){
   const file=argv.find((a,i)=>!a.startsWith('--')&&!['--json','--md','--titre'].includes(argv[i-1]));if(!file)throw Error('Usage : EXPORT.json [--json SORTIE.json] [--md SORTIE.md]');

@@ -16,7 +16,7 @@
   try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});if(generation===launcherGeneration){setLauncherVisible(state?.visible===true);setBandeau(state?.bandeau||null);}}
   catch{if(generation===launcherGeneration){setLauncherVisible(false);setBandeau(null);}}}
  const passive=new Set(['ping','state','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish']);
- function diagnostic(p){return {requestId:p.id,action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
+ function diagnostic(p){return {requestId:p.id,...(p.traceId?{traceId:p.traceId}:{}),action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
  /* 4.7.19 (KI-059) : un message chrome.runtime est limité à 64 Mio. Une réponse
   * plus grosse échouait ici, dans la page, sans que le service worker reçoive
   * rien : le lot restait suspendu. On mesure avant d'envoyer, et un envoi qui
@@ -71,7 +71,7 @@
      const gate=window.__banane4NativeGate;if(!gate){respond({error:'Recharge ESV pour activer l’observation native V4.'});return;}
      Object.assign(gate,{active:true,channel});
    }
-   const id=crypto.randomUUID(),p={id,action:m.action,startedAt:Date.now(),respond,acknowledged:false,stage:'sent',detail:null};
+   const id=crypto.randomUUID(),p={id,traceId:typeof m.traceId==='string'&&m.traceId.length<=80?m.traceId:null,action:m.action,startedAt:Date.now(),respond,acknowledged:false,stage:'sent',detail:null};
    p.timer=setTimeout(()=>{pending.delete(id);
      if(['manualStart','manualFinish'].includes(m.action)&&window.__banane4InputGate)window.__banane4InputGate.active=false;
      if(['nativeStart','nativePause','nativeResume','nativeFinish'].includes(m.action)&&window.__banane4NativeGate)window.__banane4NativeGate.active=false;
