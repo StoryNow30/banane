@@ -1,5 +1,230 @@
 # Décisions techniques
 
+## D-074 - Reprise complète par Claude Code ; ESV reconstruit indépendamment ; réécriture du code GPT
+
+**Instruction de Mic du 4 octobre 2026** (`00_DEMARRAGE_CLAUDE_CODE.md` de la passation révisée, consignée par
+l'orchestrateur Claude Code le 4 octobre au soir ; cette entrée consigne une instruction reçue, pas une décision
+nouvelle de l'orchestrateur).
+
+- Claude Code reprend le pilotage après l'intérim GPT. Mic a demandé l'arrêt des relances aux développeurs GPT ;
+  aucun nouveau retour n'est envoyé au précédent développeur ESV.
+- Les missions indépendantes sont lancées en parallèle (D-072 et instruction actuelle), sans nouveau go de principe.
+- ESV est reconstruit localement à partir des seuls originaux récupérés le 4 octobre, avec une conception
+  indépendante ; le précédent prototype est exclu. Le banc reste privé, hors des dépôts Ariane.
+- Le code modifié ou apporté par les sessions GPT (tout ce qui suit `042aee6`) est à réécrire pour une architecture
+  claire et efficace, sans changer le moteur épinglé ni les décisions ; les réécritures sont des candidats, relus
+  indépendamment, non acceptés d'office.
+- Étude approfondie d'ESV et d'Ariane (fonctions, efficacité opérateur, captures, géométrie, moteur, super cerveau,
+  apprentissage, exports, fiabilité) et feuille de route argumentée (4.9 / expériences / gains mesurés ou espérés).
+- Restent réservés à Mic : périmètre, critères d'acceptation, fichiers gelés, activation d'un nouveau comportement,
+  nouvelle séance terrain, publication. Les correctifs V1 proposés ne sont pas adoptés. Aucune fusion, étiquette,
+  publication, envoi de branche ou écriture dans banane-data sans accord explicite.
+- Pilotage : `PILOTAGE_REPRISE.md` (état, propriétaires de fichiers, statuts, preuves).
+
+## D-073 - Présentation des mesures et préparation du test V1
+
+**Décision de Mic du 4 octobre 2026, 08 h 01 (Europe/Paris)** : « C'est OK ». Texte adopté, intact :
+`consignes/avenant-D073-presentation-mesures-v1-2026-10-04.md`. Projet absent du fichier : déclaration séparée,
+sans inventer `projectId` ; étapes qui se chevauchent : chronologie réelle conservée, aucun double compte ni zéro
+fabriqué. Autorise la préparation locale du paquet de test V1 (candidat relu `baa548d`) ; ne relâche pas
+`coverage.complete`, n'accepte pas V1 et n'autorise ni séance ESV, ni publication, ni écriture dans banane-data.
+Consignée ici par l'orchestrateur Claude Code le 4 octobre au soir (numéro vérifié sans collision).
+
+## D-072 - Développement parallèle de chantiers indépendants
+
+**Décision de Mic du 2 octobre 2026, 08 h 09 (Europe/Paris).**
+Le développement indépendant de V1, U1 et de la préparation U2 est autorisé,
+avec copies isolées et fichiers réservés. Les portes de qualité, relectures,
+acceptations et conditions terrain restent obligatoires. Aucun accord de
+fusion ou de publication n’en découle. L’inventaire D-067 reste après
+acceptation V1 ; aucun apprentissage anticipé.
+
+Avenant faisant foi : `consignes/avenant-49-d072-parallele-2026-10-02.md`,
+restitué exactement depuis l’annexe 1 de la mission U1 remise le 2 octobre.
+Cette entrée consigne de nouveau une décision déjà prise, pas une nouvelle
+décision de la direction. La copie locale retrouvée à la réception des
+livraisons s’arrêtait à D-070 ; D-071 a été restituée textuellement depuis
+sa mission, D-072 depuis son avenant. Les anciens objets commits locaux
+ne sont pas prétendus retrouvés.
+
+## D-071 - P2 accepté ; démarrage de V1 autorisé
+
+**2 octobre 2026, 07 h 40 (Europe/Paris), opérateur et direction.**
+Accord explicite de Mic : **« P2 accepté, go V1 »**, en réponse à la
+proposition d'acceptation et au bloc V1 préparés au commit `2f2cc45`.
+
+- **P2 accepté comme mesure d'information** : 31 coupes complètes, 62 rails.
+  Latéral absolu médiane/p90/max : 1,45 / 3,84 / 6,05 mm ; vertical :
+  1,39 / 4,77 / 8,15 mm. Les limites de D-070 et du rapport indépendant
+  restent conservées : déclarations humaines, choix de liste non établi,
+  projet absent de l'export, absence d'acquittement serveur et d'étalonnage
+  physique indépendant. Aucun seuil modifié ni nouvelle séance P2 demandée.
+- La correction d'heure et l'avenant indépendant favorable sont les pièces
+  retenues. Les rapports initiaux et le cahier signé restent intacts.
+  Fiche d'acceptation : `consignes/acceptation-p2-2026-10-02.md`.
+- **V1 autorisé**, conformément au bloc proposé : développement et
+  vérification de la mesure par phase, sur la 4.8.6 stable
+  `042aee649bc25b89c46a26def481f87f46d047ac`, sans accélération ni changement
+  des décisions ou des commandes ESV. Branche retenue :
+  `sol/49-v1-mesure-par-phase`, issue de cette base ; jamais `main`.
+- Mission de référence à remettre au développeur :
+  `consignes/mission-v1-2026-10-02.md`, avec avenants locaux joints.
+  Lecture de banane-data autorisée, écriture interdite. Avant le premier
+  commit V1 : environnement privé vérifié, relevé portes-j1 et verify sur
+  4.8.6 non modifiée. La comparaison d'identité utilise ce relevé 4.8.6,
+  sans remplacer la référence historique 4.8.0 de portes-j1.
+- Le go ne vaut pas acceptation de V1. Son diff sera relu par l'orchestrateur
+  et un relecteur indépendant ; les projets/parties et le nombre de lots
+  terrain seront soumis avant les mesures. L'acceptation exige les portes du
+  cahier, dont la couverture de 100 % des coupes d'un lot, plusieurs lots
+  mesurés et zéro décision changée sur 633 coupes et huit jeux.
+- Aucun chantier parallèle, inventaire ou apprentissage lancé. L'inventaire
+  D-067 reste après acceptation de V1, avant V2. Aucun dépôt de données,
+  paquet terrain, fusion, étiquette, publication ou envoi de branche
+  autorisé par cette décision. L'orchestrateur remet la mission ; il n'écrit
+  pas le code de l'extension et ne prétend pas avoir lancé la session externe.
+
+## D-070 - Méthode P2 avec validation intermédiaire ; réception de 31 paires
+
+**1er octobre 2026, opérateur et direction.** Mic demande une validation
+avec Maj+Espace de la position déplacée, une navigation puis sa propre revisite,
+repose et validation. Il indique aussi avoir navigué après sa validation finale.
+Le pilote 3717 a été contrôlé séparément avant la séance complète.
+
+- Pour cette séance, cette instruction remplace l'interdiction de valider
+  la position déplacée écrite dans D-069. L'historique de D-069 est conservé.
+  Écho doit conserver l'origine du premier passage avant tout déplacement.
+  Le calcul compare cette origine à la pose finale de Mic, et non à la
+  position déplacée qui a été validée entre les deux.
+- Projet confirmé par Mic : `RAIL-260826_060933_E_701`, partie 24. L'export
+  déclare 4.8.6 ; son `projectId` est absent. Cette absence ne constitue pas
+  une preuve de changement de projet.
+- Mic confirme les poses d'origine manuelles, l'absence de vue des anciennes
+  positions et une liste fixée avant séance : déclarations humaines conservées
+  comme telles, sans les attribuer aux journaux. Le mode de constitution de
+  la liste n'est pas documenté ; aucun tirage aléatoire n'est revendiqué.
+- Réception : 31 paires techniques complètes / 62 rails ; 2 paires descriptives,
+  2 non mesurées, 1 coupe seulement traversée. Toutes les paires admissibles
+  sont retenues, sans choisir après coup les 30 meilleurs résultats.
+- Les calculs publiés concordent avec le recalcul de l'orchestrateur sur le CSV :
+  latéral médiane/p90/max 1,45 / 3,84 / 6,05 mm ; vertical 1,39 / 4,77 / 8,15 mm.
+  Variation enregistrée entre poses manuelles, sans étalonnage physique indépendant.
+- Une correction de colonne d'heure est demandée à l'analyste, sans changement
+  attendu des mesures. Relecture indépendante puis acceptation par la direction
+  restent requises. **P2 n'est pas accepté par cette réception.** Aucun seuil
+  modifié, entraînement, démarrage de V1 ou nouvelle séance demandée à ce stade.
+- Pièces : `audit/chantiers/p2-mesure-2026-10-01/` ; transmission préparée dans
+  `consignes/relecture-mesure-p2-2026-10-01.md`. L'orchestrateur n'a pas lu le
+  fichier brut de la séance complète. Aucun envoi ou dépôt de données autorisé
+  implicitement, aucune fusion, étiquette, publication ou modification de code.
+
+**Complément de réception, 01/10 :** correction de la colonne d'heure reçue
+et vérifiée par l'orchestrateur. Sur 72 lignes, seules les 66 heures de capture
+renseignées changent ; les six cellules vides restent vides. Tous les autres
+champs, les classes, les écarts et les statistiques sont identiques.
+Les empreintes annoncées concordent ; les originaux sont conservés.
+La réserve de présentation est levée, sans acceptation de P2 et sans lancement
+de V1. Pièces : `audit/chantiers/p2-mesure-2026-10-01/correction/` ; dossier
+de transmission à jour : `consignes/dossier-relecture-mesure-p2-2026-10-01-v02.md`.
+
+**Réception de la relecture indépendante, 02/10 :** son rejeu confirme
+31 paires / 62 rails. Les classes, 66 écarts signés, fraîcheurs et distributions
+concordent avec les livrables corrigés. Son verdict reste « Correction
+nécessaire » : il a examiné le CSV et la méthode initiaux et précise que
+les pièces corrigées n'étaient pas jointes. Les autres réserves limitent
+la portée de la mesure, sans demander une nouvelle séance.
+Un complément ciblé du même relecteur sur les pièces déjà corrigées est
+préparé dans `consignes/complement-relecture-p2-2026-10-02.md`. Son rapport
+initial est conservé dans `audit/chantiers/p2-mesure-2026-10-01/relecture-independante/`.
+P2 reste en attente d'acceptation par la direction ; aucun démarrage de V1.
+
+## D-069 - Préparation P2 par un autre opérateur ; choix délégué de la partie
+
+**1er octobre 2026, opérateur et direction :** « je vais demander à un opérateur
+de les déplacer lui-même puis je ferai la nouvelle pose. Choisi seulement
+quelle partie. » La direction propose l'aide humaine et délègue le choix
+de la partie à l'orchestrateur.
+
+- Partie retenue : **24**, déjà utilisée en Natif et par Orbite ; elle n'est
+  pas indiquée comme partie de validation dans le registre consulté
+  (`audit/rotation-parties.md:32-33,48`). Cela évite de consommer une partie
+  neuve pour P2. Le lot récent a posé 107 coupes et sa relecture en a jugé 103
+  (`audit/lots-20-24-33-2026-09-29.md:17`) : ces nombres ne prouvent pas
+  30 anciennes poses manuelles indépendantes admissibles.
+- But de l'aide : déplacer les deux rails avant que l'opérateur de mesure
+  voie la pose initiale. Écho doit déjà enregistrer la session et conserver
+  la pose initiale puis l'éloignement d'au moins 50 mm de chaque rail ;
+  l'état éloigné ne doit pas être validé. Aucun lot Orbite actif.
+- Une coupe pilote hors de la liste reste à cadrer pour vérifier ce chemin.
+  Le choix de partie ne prouve pas que le protocole terrain fonctionne.
+- Les 30 identités et leur provenance manuelle, la règle des tentatives,
+  la préservation des références, la version installée et le transfert
+  complet à l'analyste restent à confirmer avant la séance complète.
+- P2 reste non mesuré. Aucun chantier V1, code, publication ou dépôt de données
+  autorisé par cette décision. Aucun résultat terrain inventé.
+
+## D-068 - Coupes difficiles avancées dans la livraison principale 4.9
+
+**1er octobre 2026, opérateur et direction : « non en 4.9 ».** Correction du
+palier 4.9.5 présenté pour les coupes difficiles : retour à une coupe,
+étude 398/402, voisins fiables B1, rails hors écran B2, B3 si nécessaire,
+font partie de la livraison principale 4.9, sans attendre une 4.9.5.
+
+- Ordre relatif conservé : après les mesures, exports, accélération, U1 à U3
+  et V5 conditionnel ; retour à une coupe, étude 398/402, B1, B2, B3 conditionnel.
+- Les portes, dépendances, protections et relectures restent exigées ; aucune
+  activation de garde ou changement de moteur autorisé par ce déplacement.
+- Apprentissage inclus dans la 4.9 selon D-066 ; place précise toujours à
+  confirmer, intégration sur décision distincte.
+- Avenant : `consignes/avenant-49-d068-2026-10-01.md`, à joindre aux missions
+  après D-066 et D-067. Les textes signés ne sont pas réécrits.
+- Aucun développement, changement de manifeste, paquet ou publication effectué.
+
+## D-067 - Compléments après audit ; inventaire tôt en série et navigation sûre
+
+**30 septembre 2026, opérateur et direction : « Oui ».** Accord sur les cinq
+compléments présentés après le retour d'audit, avec les précautions vérifiées
+par l'orchestrateur.
+
+- Réserver et faire approuver les parties nécessaires aux portes avant V3 ;
+  les parties 9 et 12 ont déjà servi au réglage, elles ne sont pas neuves.
+- Inventorier les exemples réellement exploitables ; 150 rails ne constituent
+  pas un seuil d'autorisation du régresseur. Si le volume est insuffisant,
+  continuer qualification/collecte ; aucune activation apprise autorisée.
+- Vérifier l'environnement réel de l'étude 398/402 par reproduction complète ;
+  une annonce de 16 Go de mémoire ne suffit pas.
+- Après acceptation de V1, avant V2 : mission d'inventaire et de qualification
+  confiée à l'analyste, sans entraînement ni travail parallèle.
+- Lire D-066 et son avenant, puis D-067, avant les documents historiques ;
+  l'apprentissage est dans la 4.9, sans réécriture du cahier signé.
+- Retour à un cut : aucune navigation de consultation pendant pose, validation
+  ou déplacement ; pause effective du lot et contrôle d'identité avant reprise.
+- Texte adopté : `consignes/avenant-49-d067-2026-09-30.md`. Attendre confirmation
+  de l'auditeur puis soumettre la mission P2/V1. Aucun développement lancé,
+  aucune autorisation de publication, d'envoi de branche ou de dépôt de données.
+
+## D-066 - Cadrages complémentaires validés ; apprentissage avancé dans la 4.9
+
+**30 septembre 2026, opérateur et direction.** Les cadrages « revenir à un cut »
+et « faux 398/402 » sont validés. Pour l'apprentissage des positions, la
+direction précise : « Je veux avancer ça dans la 4.9 ». Le report après la
+4.9 ne s'applique donc plus à ce chantier.
+
+- Retour à un cut puis étude des faux, au début de la 4.9.5 avant B1, selon
+  `consignes/cadrages-complementaires-49-2026-09-30.md`.
+- Apprentissage dans la 4.9 : qualification des exemples, essais hors ligne,
+  comparaison puis intégration conditionnelle. Sa place précise reste à
+  auditer et confirmer ; proposition : après B1 à B3, avant clôture de 4.9.5.
+- Aucun changement du moteur épinglé ni activation dans ESV autorisés par cet
+  accord de principe. Les critères ouverts seront fixés sur les mesures.
+- « S » permet le déplacement vers une coupe voisine selon l'opérateur ; le
+  chemin utilisable par l'extension et son contrôle d'identité restent à vérifier.
+- Organisation : conversations de cadrage, d'analyse des exports et de
+  développement ; transmissions par l'opérateur ; relectures indépendantes.
+- Avenant : `consignes/avenant-49-d066-2026-09-30.md`. Cahier signé conservé.
+  Prochaine étape : audit séparé avant développement. Aucun accord de merge,
+  étiquette, publication, envoi de branche ou dépôt de données à ce stade.
+
 ## D-065 - KI-069 : au dernier cut d'une partie, valider par Ctrl+Entrée, sans passer au suivant (4.8.6 test 1)
 
 **30 septembre 2026, opérateur et direction** (retour terrain, partie 36, 4.8.5 stable). Au dernier cut à
