@@ -1,0 +1,270 @@
+{
+  "schema": "ariane-u2-ui-1",
+  "startedAt": "2026-10-02T06:58:15.140Z",
+  "target": {
+    "folder": "/workspace/scratch/af20bbad9a17/ariane-u2",
+    "commit": "042aee649bc25b89c46a26def481f87f46d047ac",
+    "gitStatus": "M audit/verification.json\n M audit/verification.txt\n?? tests/browser/u2-49/\n?? tools/navigateur-panneau-49.cjs",
+    "version": "4.8.6",
+    "name": "Ariane",
+    "hashes": {
+      "manifest.json": "da8cbfae7778ab43ead5d0e91c44cbecc4d9e02ffff9adb6e4110d184435f91e",
+      "panel.html": "657b8052b3c431991cf8520815fcf09d0eca7f3043d6f47d486e428e12046c26",
+      "panel.js": "6c9983deafea736e6c881ba0ff543bac3001b59aaebaaabf07ad1b0b7bc2c1b5",
+      "panel.css": "5805d69ade0d34b155fb1b4b6c91efc35125d934147dade1d252032b94680486"
+    }
+  },
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "headed": false,
+    "viewport": {
+      "width": 560,
+      "height": 900
+    },
+    "playwrightModule": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.js",
+    "playwrightVersion": "1.62.1",
+    "chromiumExecutable": "/root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+  },
+  "simulation": "API panel.sendMessage remplacée ; lots synthétiques sans géométrie, aucun onglet ESV, réseau HTTP(S) bloqué",
+  "extension": {
+    "loaded": false
+  },
+  "browserVersion": null,
+  "scenarioLimitMs": 7000,
+  "results": [
+    {
+      "id": "tab-home",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Toutes les commandes visibles et disponibles atteintes dans l’ordre DOM, retour inverse, focus visible.",
+      "source": "panel.js:334-549 ; panel.html:1-167",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "tab-echo",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Toutes les commandes visibles et disponibles atteintes dans l’ordre DOM, retour inverse, focus visible.",
+      "source": "panel.js:334-549 ; panel.html:1-167",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "tab-orbite-running",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Toutes les commandes visibles et disponibles atteintes dans l’ordre DOM, retour inverse, focus visible.",
+      "source": "panel.js:334-549 ; panel.html:1-167",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "tab-orbite-paused",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Toutes les commandes visibles et disponibles atteintes dans l’ordre DOM, retour inverse, focus visible.",
+      "source": "panel.js:334-549 ; panel.html:1-167",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "tab-orbite-unresolved",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Toutes les commandes visibles et disponibles atteintes dans l’ordre DOM, retour inverse, focus visible.",
+      "source": "panel.js:334-549 ; panel.html:1-167",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "enter-start",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Une activation clavier transmet exactement une commande au double, sans émission à ESV.",
+      "source": "panel.js:873-918",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "space-pause",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Une activation clavier transmet exactement une commande au double, sans émission à ESV.",
+      "source": "panel.js:873-918",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "enter-resume",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Une activation clavier transmet exactement une commande au double, sans émission à ESV.",
+      "source": "panel.js:873-918",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "space-stop",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Une activation clavier transmet exactement une commande au double, sans émission à ESV.",
+      "source": "panel.js:873-918",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "enter-echo-start",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Une activation clavier transmet exactement une commande au double, sans émission à ESV.",
+      "source": "panel.js:873-918",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "space-echo-pause",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Une activation clavier transmet exactement une commande au double, sans émission à ESV.",
+      "source": "panel.js:873-918",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "hidden-disabled",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Start désactivé et Pause cachée exclus de la tabulation ; Start ne produit aucune commande.",
+      "source": "panel.js:334-549 ; panel.html:1-167",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "focus-view",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Focus conservé sur l’onglet déclencheur après changement de vue ; Tab atteint une commande disponible.",
+      "source": "panel.js:94-117 ; panel.html:35-42",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "focus-details",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Le tiroir est cohérent avec aria-expanded, garde le focus du bouton, exclut ses enfants fermés.",
+      "source": "panel.js:325-329,919 ; panel.html:149-163",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "focus-pause",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Après disparition de Pause, le focus reste sur une commande visible/disponible du panneau ; il ne se perd pas sur body.",
+      "source": "panel.js:334,495-516,873-875,914",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "focus-error",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Erreur de reprise affichée dans la région live ; focus disponible sur Reprendre, erreur conservée au rafraîchissement.",
+      "source": "panel.js:131-135,548,873-875",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "zoom-home",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Zoom natif confirmé à 2, texte non tronqué et commandes atteignables après défilement.",
+      "source": "panel.css:32-36,187-211",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "zoom-native",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Zoom natif confirmé à 2, texte non tronqué et commandes atteignables après défilement.",
+      "source": "panel.css:32-36,187-211",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "zoom-automatic",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Zoom natif confirmé à 2, texte non tronqué et commandes atteignables après défilement.",
+      "source": "panel.css:32-36,187-211",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Préférence reduce réellement émulée ; CSS/pseudoéléments et Web Animations restent figés sur un cut qui change.",
+      "source": "panel.js:13-24 ; panel.css:294",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "motion-control",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Le témoin no-preference présente une animation réelle : la vérification reduce n’est pas vide.",
+      "source": "panel.css:95,274-294",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "contrast-light",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Tokens corrigés et couleurs calculées live/muted respectent le seuil 4,5:1 déjà adopté.",
+      "source": "panel.css:13-30,78 ; audit/chantiers/qualite-480/reponse.md:19",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "id": "contrast-dark",
+      "status": "BLOCKED",
+      "executed": false,
+      "durationMs": null,
+      "expected": "Tokens corrigés et couleurs calculées live/muted respectent le seuil 4,5:1 déjà adopté.",
+      "source": "panel.css:13-30,78 ; audit/chantiers/qualite-480/reponse.md:19",
+      "reason": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    }
+  ],
+  "infrastructureError": "Chromium absent : /root/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome",
+  "targetAfter": {
+    "folder": "/workspace/scratch/af20bbad9a17/ariane-u2",
+    "commit": "042aee649bc25b89c46a26def481f87f46d047ac",
+    "gitStatus": "M audit/verification.json\n M audit/verification.txt\n?? tests/browser/u2-49/\n?? tools/navigateur-panneau-49.cjs",
+    "version": "4.8.6",
+    "name": "Ariane",
+    "hashes": {
+      "manifest.json": "da8cbfae7778ab43ead5d0e91c44cbecc4d9e02ffff9adb6e4110d184435f91e",
+      "panel.html": "657b8052b3c431991cf8520815fcf09d0eca7f3043d6f47d486e428e12046c26",
+      "panel.js": "6c9983deafea736e6c881ba0ff543bac3001b59aaebaaabf07ad1b0b7bc2c1b5",
+      "panel.css": "5805d69ade0d34b155fb1b4b6c91efc35125d934147dade1d252032b94680486"
+    }
+  },
+  "targetUnchanged": true,
+  "counts": {
+    "total": 23,
+    "pass": 0,
+    "fail": 0,
+    "blocked": 23,
+    "executed": 0
+  },
+  "selection": "all",
+  "executedScopeGate": "NOT_PASSED",
+  "u2Acceptance": "NOT_GRANTED: préparation ; rejeu du commit U1 et de l’assemblage requis",
+  "finishedAt": "2026-10-02T06:58:15.382Z"
+}

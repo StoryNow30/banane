@@ -1,0 +1,235 @@
+{
+  "baseCommit": "042aee649bc25b89c46a26def481f87f46d047ac",
+  "filesCount": 38,
+  "allIdentical": true,
+  "files": [
+    {
+      "file": "background.js",
+      "baseSha256": "17777f1c3249a3eb0e6acaae505fe0a99c1040e0267a74e4c4e64a0760208016",
+      "workingSha256": "17777f1c3249a3eb0e6acaae505fe0a99c1040e0267a74e4c4e64a0760208016",
+      "identical": true
+    },
+    {
+      "file": "fonts/HankenGrotesk-latin-wght.woff2",
+      "baseSha256": "e9201eddf1d41d0b62253295d869ce3cf65768f7102b797f02c7f8c876b4a9d5",
+      "workingSha256": "e9201eddf1d41d0b62253295d869ce3cf65768f7102b797f02c7f8c876b4a9d5",
+      "identical": true
+    },
+    {
+      "file": "fonts/JetBrainsMono-latin-wght.woff2",
+      "baseSha256": "18be452724bfdc236c074ca94a249a7f41a86752c7d04ab258ce9ed5651f6a7e",
+      "workingSha256": "18be452724bfdc236c074ca94a249a7f41a86752c7d04ab258ce9ed5651f6a7e",
+      "identical": true
+    },
+    {
+      "file": "fonts/OFL-HankenGrotesk.txt",
+      "baseSha256": "f45f60ca871850c58d8dc9c973bd6fcad40c137e9d037172b961e8ca68c87ef7",
+      "workingSha256": "f45f60ca871850c58d8dc9c973bd6fcad40c137e9d037172b961e8ca68c87ef7",
+      "identical": true
+    },
+    {
+      "file": "fonts/OFL-JetBrainsMono.txt",
+      "baseSha256": "403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b",
+      "workingSha256": "403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b",
+      "identical": true
+    },
+    {
+      "file": "manifest.json",
+      "baseSha256": "da8cbfae7778ab43ead5d0e91c44cbecc4d9e02ffff9adb6e4110d184435f91e",
+      "workingSha256": "da8cbfae7778ab43ead5d0e91c44cbecc4d9e02ffff9adb6e4110d184435f91e",
+      "identical": true
+    },
+    {
+      "file": "panel.css",
+      "baseSha256": "5805d69ade0d34b155fb1b4b6c91efc35125d934147dade1d252032b94680486",
+      "workingSha256": "5805d69ade0d34b155fb1b4b6c91efc35125d934147dade1d252032b94680486",
+      "identical": true
+    },
+    {
+      "file": "panel.html",
+      "baseSha256": "657b8052b3c431991cf8520815fcf09d0eca7f3043d6f47d486e428e12046c26",
+      "workingSha256": "657b8052b3c431991cf8520815fcf09d0eca7f3043d6f47d486e428e12046c26",
+      "identical": true
+    },
+    {
+      "file": "panel.js",
+      "baseSha256": "6c9983deafea736e6c881ba0ff543bac3001b59aaebaaabf07ad1b0b7bc2c1b5",
+      "workingSha256": "6c9983deafea736e6c881ba0ff543bac3001b59aaebaaabf07ad1b0b7bc2c1b5",
+      "identical": true
+    },
+    {
+      "file": "src/adapter-page.js",
+      "baseSha256": "5121725f541ef3017bc32820315b63cb3f4c4b0ea80225bfa5ab549a9323dfc9",
+      "workingSha256": "5121725f541ef3017bc32820315b63cb3f4c4b0ea80225bfa5ab549a9323dfc9",
+      "identical": true
+    },
+    {
+      "file": "src/brain.js",
+      "baseSha256": "bced4a7a8560afa7608f758d1735c5e12590c1c15de9c75a29d0c279a1102c4e",
+      "workingSha256": "bced4a7a8560afa7608f758d1735c5e12590c1c15de9c75a29d0c279a1102c4e",
+      "identical": true
+    },
+    {
+      "file": "src/bridge.js",
+      "baseSha256": "6eff9cc9c4cba9a7b8c4474c09211e5c28ad54ade0665bb7e86bcd55acf60c1f",
+      "workingSha256": "6eff9cc9c4cba9a7b8c4474c09211e5c28ad54ade0665bb7e86bcd55acf60c1f",
+      "identical": true
+    },
+    {
+      "file": "src/continuity-observer.js",
+      "baseSha256": "3a4fe4f1b151f7ff876520650de15741ff980bbe58743a3a47a516f7dc7af7ee",
+      "workingSha256": "3a4fe4f1b151f7ff876520650de15741ff980bbe58743a3a47a516f7dc7af7ee",
+      "identical": true
+    },
+    {
+      "file": "src/core.js",
+      "baseSha256": "aac6d6d0fc2269dff30b0135c6fefce16ff423d8d8d88c5a16e5002412ca09ed",
+      "workingSha256": "aac6d6d0fc2269dff30b0135c6fefce16ff423d8d8d88c5a16e5002412ca09ed",
+      "identical": true
+    },
+    {
+      "file": "src/early-input.js",
+      "baseSha256": "a3d90c794f9a82977218844f84baaf3c90b134e2f58067758d90d1a80a7344e8",
+      "workingSha256": "a3d90c794f9a82977218844f84baaf3c90b134e2f58067758d90d1a80a7344e8",
+      "identical": true
+    },
+    {
+      "file": "src/engine.js",
+      "baseSha256": "be15576321f7a1bf7b0c727281b7f8a882eeea254382c83cf96590220740da33",
+      "workingSha256": "be15576321f7a1bf7b0c727281b7f8a882eeea254382c83cf96590220740da33",
+      "identical": true
+    },
+    {
+      "file": "src/gauge.js",
+      "baseSha256": "248ee81c4f353c264d0ad6c9eebfe9ee0c43635c7532ac3945cf638757f48393",
+      "workingSha256": "248ee81c4f353c264d0ad6c9eebfe9ee0c43635c7532ac3945cf638757f48393",
+      "identical": true
+    },
+    {
+      "file": "src/gcv1-export.js",
+      "baseSha256": "10f57e4aa28dbe11d71f9fb457bb0f88a5bde329e43c92d65ad30e2c49ce359e",
+      "workingSha256": "10f57e4aa28dbe11d71f9fb457bb0f88a5bde329e43c92d65ad30e2c49ce359e",
+      "identical": true
+    },
+    {
+      "file": "src/gcv1-shadow-bootstrap.js",
+      "baseSha256": "5fc09ab60192a0454441479dc50fa1942c97cf8e7a9326ecc0e609178daf8c91",
+      "workingSha256": "5fc09ab60192a0454441479dc50fa1942c97cf8e7a9326ecc0e609178daf8c91",
+      "identical": true
+    },
+    {
+      "file": "src/gcv1-shadow.js",
+      "baseSha256": "d3a5a6b2214a88dfda6e232ecffa1968281e959d6a4d7645064f0d80ebe2b6b2",
+      "workingSha256": "d3a5a6b2214a88dfda6e232ecffa1968281e959d6a4d7645064f0d80ebe2b6b2",
+      "identical": true
+    },
+    {
+      "file": "src/geometry-brain.js",
+      "baseSha256": "fb5a2a120e6e38025d239c896d33b40e93b33a8f25dbef26efc76c91c2ece430",
+      "workingSha256": "fb5a2a120e6e38025d239c896d33b40e93b33a8f25dbef26efc76c91c2ece430",
+      "identical": true
+    },
+    {
+      "file": "src/geometry-candidate-v1.js",
+      "baseSha256": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "workingSha256": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "identical": true
+    },
+    {
+      "file": "src/geometry.js",
+      "baseSha256": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+      "workingSha256": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+      "identical": true
+    },
+    {
+      "file": "src/level-crossing.js",
+      "baseSha256": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0",
+      "workingSha256": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0",
+      "identical": true
+    },
+    {
+      "file": "src/lod-signature.js",
+      "baseSha256": "910b8779d06130006aa7d801c5de2240348ea0cd7357b1611da322bca4ef945a",
+      "workingSha256": "910b8779d06130006aa7d801c5de2240348ea0cd7357b1611da322bca4ef945a",
+      "identical": true
+    },
+    {
+      "file": "src/lot-decision.js",
+      "baseSha256": "5bc8bab8975cdf52d3584e1d7491708f90894d148b57c11256d99ce707333f97",
+      "workingSha256": "5bc8bab8975cdf52d3584e1d7491708f90894d148b57c11256d99ce707333f97",
+      "identical": true
+    },
+    {
+      "file": "src/manual-page.js",
+      "baseSha256": "8d8065e3ce80ebb882ff69e6a2d5c18a0c39db6ae6ad595d622ac12ee966edcb",
+      "workingSha256": "8d8065e3ce80ebb882ff69e6a2d5c18a0c39db6ae6ad595d622ac12ee966edcb",
+      "identical": true
+    },
+    {
+      "file": "src/manual-session.js",
+      "baseSha256": "82ca2664820286a96ec19d4859876598d84150f412e3542743392f66f3cd9ef5",
+      "workingSha256": "82ca2664820286a96ec19d4859876598d84150f412e3542743392f66f3cd9ef5",
+      "identical": true
+    },
+    {
+      "file": "src/merge-clouds.js",
+      "baseSha256": "c90e26304931167820e0c1c7fb2cacbbe25475c62c0af7827f718464296da58c",
+      "workingSha256": "c90e26304931167820e0c1c7fb2cacbbe25475c62c0af7827f718464296da58c",
+      "identical": true
+    },
+    {
+      "file": "src/native-export.js",
+      "baseSha256": "b7bdbda10e17eec9a33dcc1daf1ba882593b1450e02fee02272ba88047b8cbb5",
+      "workingSha256": "b7bdbda10e17eec9a33dcc1daf1ba882593b1450e02fee02272ba88047b8cbb5",
+      "identical": true
+    },
+    {
+      "file": "src/native-lidar.js",
+      "baseSha256": "64ea73db343bc8f8ea67dbcb3ae5b5e3fd9efe4fa389b4d17994436ff228f9c4",
+      "workingSha256": "64ea73db343bc8f8ea67dbcb3ae5b5e3fd9efe4fa389b4d17994436ff228f9c4",
+      "identical": true
+    },
+    {
+      "file": "src/native-page.js",
+      "baseSha256": "07bbfbc8cc4066d84e7f1545a158e690052716a2e4a294b4c9739fc288e3b201",
+      "workingSha256": "07bbfbc8cc4066d84e7f1545a158e690052716a2e4a294b4c9739fc288e3b201",
+      "identical": true
+    },
+    {
+      "file": "src/native-session.js",
+      "baseSha256": "60661d48f4f2ce9ed3ffa21197a9348247b80515b1cfa5440df21be505974a98",
+      "workingSha256": "60661d48f4f2ce9ed3ffa21197a9348247b80515b1cfa5440df21be505974a98",
+      "identical": true
+    },
+    {
+      "file": "src/placement-convention.js",
+      "baseSha256": "0f67efbd8eb627082bb32e25e46e96927682bcf70575ff630217d50a71f2aece",
+      "workingSha256": "0f67efbd8eb627082bb32e25e46e96927682bcf70575ff630217d50a71f2aece",
+      "identical": true
+    },
+    {
+      "file": "src/settings.js",
+      "baseSha256": "9136808b1b6c1eb29e522ab98b337aff01e90444c4faddea0c0380bdc0d59392",
+      "workingSha256": "9136808b1b6c1eb29e522ab98b337aff01e90444c4faddea0c0380bdc0d59392",
+      "identical": true
+    },
+    {
+      "file": "src/storage.js",
+      "baseSha256": "55dc55a49e66eb10b232f9cd2936cd1cfc39f63ed3212a86d518ada3c68273d9",
+      "workingSha256": "55dc55a49e66eb10b232f9cd2936cd1cfc39f63ed3212a86d518ada3c68273d9",
+      "identical": true
+    },
+    {
+      "file": "vendor/capture-core.js",
+      "baseSha256": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+      "workingSha256": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+      "identical": true
+    },
+    {
+      "file": "vendor/lidar.js",
+      "baseSha256": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311",
+      "workingSha256": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311",
+      "identical": true
+    }
+  ]
+}

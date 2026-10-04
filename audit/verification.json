@@ -1,7 +1,7 @@
 {
-  "startedAt": "2026-09-30T09:41:26.273Z",
-  "finishedAt": "2026-09-30T09:43:42.541Z",
-  "node": "v22.22.2",
+  "startedAt": "2026-10-02T07:05:56.124Z",
+  "finishedAt": "2026-10-02T07:06:42.749Z",
+  "node": "v24.19.0",
   "platform": "linux",
   "counts": {
     "tests": 1024,
