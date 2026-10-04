@@ -1,3 +1,11 @@
+# Ariane 4.9.0 test 1 — préparation V1 locale
+
+Ce paquet de test dérive de la 4.8.6 (042aee64…) et du V1 corrigé relu (baa548d8…). Il chronomètre Orbite sans accélération ni changement des règles de pose. Son manifeste et ses métadonnées internes annoncent 4.9.0.1 ; les affichages annoncent « 4.9.0 test 1 ». Le numéro est proposé localement : réservation globale non vérifiée, aucun déploiement ni sortie stable.
+
+Lire TEST_V1_PREPARATION.md. Terrain V1 non mesuré/non accepté ; aucune installation ou séance ESV lancée par cette livraison. Le contenu historique ci-dessous reste conservé et ne donne pas les modalités d'une séance V1 actuelle.
+
+---
+
 # Banane V4 TEST — 4.7.8
 
 La V4 sépare les tâches dans des fenêtres sombres. Le nouveau **Mode Natif** observe le travail manuel dans ESV sans le piloter. **Mes corrections** conserve le workflow guidé avec capture avant la décision. **Pilotage automatique** gère les lots TEST. L’**assisté** sert à essayer une proposition sur un seul cut.

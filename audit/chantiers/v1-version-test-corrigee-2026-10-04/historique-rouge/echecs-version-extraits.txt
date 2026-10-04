@@ -1,0 +1,140 @@
+not ok 192 - numérotation de la stable (D-061, D-063) : manifeste 4.8.6, « Ariane », sans « TEST » ni nom de test, repris partout
+  ---
+  duration_ms: 5.618334
+  type: 'test'
+  location: '/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/cohabitation-485.test.cjs:12:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '4.9.0.1' !== '4.8.6'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '4.8.6'
+  actual: '4.9.0.1'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/cohabitation-485.test.cjs:13:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+
+not ok 193 - paquet : nom tiré du manifeste (ariane-v4.8.6.zip) ; numéro de test et version doivent concorder
+  ---
+  duration_ms: 96.244761
+  type: 'test'
+  location: '/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/cohabitation-485.test.cjs:22:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    +   'ariane-4.9.0-test.1.zip',
+    -   'ariane-v4.8.6.zip',
+        'ariane-v4.8.0.zip',
+        'refusé'
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'ariane-v4.8.6.zip'
+    1: 'ariane-v4.8.0.zip'
+    2: 'refusé'
+  actual:
+    0: 'ariane-4.9.0-test.1.zip'
+    1: 'ariane-v4.8.0.zip'
+    2: 'refusé'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/cohabitation-485.test.cjs:31:44)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+
+not ok 787 - manifest and bundled runtime form a self-contained MV3 extension without fixture dependencies
+  ---
+  duration_ms: 4.209887
+  type: 'test'
+  location: '/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/package.test.cjs:4:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '4.9.0.1' !== '4.8.6'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '4.8.6'
+  actual: '4.9.0.1'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/package.test.cjs:5:127)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+
+not ok 990 - nom de version : une seule valeur, celle du manifeste, partout où il est écrit (stable : aucun nom de test)
+  ---
+  duration_ms: 1.6886
+  type: 'test'
+  location: '/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/revue-globale-485.test.cjs:71:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '4.8.6'
+    - '4.9.0 test 1'
+         ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '4.9.0 test 1'
+  actual: '4.8.6'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/revue-globale-485.test.cjs:72:60)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+
+not ok 1016 - la version officielle est cohérente entre le code et le manifeste
+  ---
+  duration_ms: 2.441857
+  type: 'test'
+  location: '/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/settings.test.cjs:95:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    manifeste et core.js doivent annoncer la même version
+    
+    '4.9.0.1' !== '4.8.6'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '4.8.6'
+  actual: '4.9.0.1'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code/tests/settings.test.cjs:97:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...

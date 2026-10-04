@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "tools/verify.cjs"
+  ],
+  "cwd": "/workspace/scratch/c7981facc17e/v1-preparation-test-2026-10-04/code",
+  "startedAt": "2026-10-04T06:27:12.046429+00:00",
+  "finishedAt": "2026-10-04T06:28:17.860181+00:00",
+  "elapsedSeconds": 65.81382971000016,
+  "exitCode": 1,
+  "node": "v24.19.0",
+  "privateCorpusReplayed": false
+}

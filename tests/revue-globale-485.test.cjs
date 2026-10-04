@@ -15,9 +15,9 @@ const root=path.resolve(__dirname,'..'),manifest=JSON.parse(fs.readFileSync(path
 test('adaptateur en sécurité pendant un lot : pause reprenable (F5 puis Reprendre), jamais ERROR',async()=>{
   const p=page();
   /* Le refus à une autre Ariane n'est pas un silence : il ne passe pas pour « sans réponse ». */
-  await assert.rejects(p.raw('next',[],{proprietaire:'autre'}).promise,e=>/^Une autre Ariane \(4\.8\.6\)/.test(e.message));
+  await assert.rejects(p.raw('next',[],{proprietaire:'autre'}).promise,e=>new RegExp(`^Une autre Ariane \\(${K.VERSION_NAME.replaceAll('.', '\\.')}\\)`).test(e.message));
   let refus=null;await p.call('capture',{identity:{part:23,cut:100}}).catch(e=>{refus=e.message;});
-  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.6 en sécurité/);
+  assert.match(refus,new RegExp(`^Adaptateur ESV sans réponse : Ariane ${K.VERSION_NAME.replaceAll('.', '\\.')} en sécurité`));
   const r=await pilote(L,{start:100,end:105,esv:esv=>{esv.capture=async function(){this.calls.push('capture');throw Error(refus);};}});
   const view=await r.b.settle();
   assert.equal(view.batch.state,'PAUSED_ADAPTER_UNRESPONSIVE');
@@ -31,7 +31,7 @@ function onglet(marqueur,tampon){const injecte=[],fenetre=marqueur?{__BANANE_V3_
 test('une autre Ariane de test est nommée comme dans edge://extensions (« 4.8.6 test 2 »), marqueur et ping compris',async()=>{
   const t=onglet({version:'4.8.6.2',versionName:'4.8.6 test 2',proprietaire:'autre'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
   await assert.rejects(b.api('connect',{tabId:1}),/Une autre Ariane \(4\.8\.6 test 2\) est active/);
-  const p=page();assert.equal(p.ctx.__BANANE_V3_PAGE.versionName,'4.8.6');assert.equal((await p.call('ping')).versionName,'4.8.6');
+  const p=page();assert.equal(p.ctx.__BANANE_V3_PAGE.versionName,K.VERSION_NAME);assert.equal((await p.call('ping')).versionName,K.VERSION_NAME);
 });
 test('tampon d’une autre Ariane déjà posé (connexion simultanée) : refus, rien d’injecté, son tampon gardé',async()=>{
   const t=onglet(null,{id:'autre',version:'4.8.6.1',versionName:'4.8.6 test 1'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
