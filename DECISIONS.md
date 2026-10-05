@@ -1,5 +1,19 @@
 # Décisions techniques
 
+## D-076 - Plan de la suite validé par Mic ; lecture directe du code ESV demandée
+
+**Réponse de Mic du 5 octobre 2026** : « Très bien je valide ton plan », à la recommandation de l'orchestrateur Claude
+Code : (1) terminer V1 proprement, car la mesure fiable conditionne tout ; (2) tenter en premier l'idée « lecture des
+points » de l'étude de performance (une seule modification par version de test) ; (3) observer le signal de fin de
+chargement avant de s'en servir. Rejetés : V4 comme levier de vitesse, raccourcissement aveugle des attentes.
+
+Portée exacte : ordre de travail uniquement. L'idée de lecture touche l'option de pause du lecteur gelé : **la sortie
+du gel reste une décision écrite distincte, non prise**. Aucun gain n'est acquis avant un essai terrain.
+
+Mic demande aussi que l'orchestrateur lise lui-même le code source d'ESV pour trouver ce qui améliorerait Ariane ou
+simplifierait son usage interne, et joint un complément de collecte (navigation et validation réelles, 4 octobre).
+Les résultats sont des propositions à décider, pas des changements. Rapport privé hors dépôt (code ESV).
+
 ## D-075 - Envoi des branches de travail sur GitHub autorisé
 
 **Réponse de Mic du 4 octobre 2026 au soir : « Oui »**, à la question de l'orchestrateur Claude Code : envoyer sur
