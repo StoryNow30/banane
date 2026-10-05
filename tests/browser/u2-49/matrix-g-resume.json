@@ -1,0 +1,11 @@
+[
+  "g-resume-complet.cjs",
+  "g-resume-indisponible.cjs",
+  "g-resume-partiel.cjs",
+  "g-resume-autrePartieDansESV.cjs",
+  "g-resume-sansLot.cjs",
+  "g-resume-lotEnCours.cjs",
+  "g-resume-changement-partie.cjs",
+  "g-resume-clavier-zoom.cjs",
+  "g-resume-sombre.cjs"
+]

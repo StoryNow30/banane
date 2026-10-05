@@ -17,6 +17,9 @@ xvfb-run -a -s '-screen 0 1280x1024x24' \
 # Suite du résumé de partie U1 (sans objet sur une cible sans src/part-summary-49.js)
 xvfb-run -a -s '-screen 0 1280x1024x24' \
   node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --headed --suite u1-resume --output u1.json
+# Suite du résumé réécrit par la mission G
+xvfb-run -a -s '-screen 0 1280x1024x24' \
+  node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --headed --suite g-resume --output g.json
 # Quelques scénarios seulement
 node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --scenario focus-pause,focus-error
 ```
@@ -75,6 +78,17 @@ indisponible (panne IndexedDB injectée dans la page de test), changement de
 partie 23 → 24 → 23, historique partiel (début de lot manquant, identité
 incomplète), identité de coupe incomplète, clavier et zoom 200 % du résumé.
 Chaque scénario exige `src/part-summary-49.js` : « NOT_APPLICABLE » sinon.
+
+`matrix-g-resume.json` (suite `g-resume`, 9 scénarios) : réécriture U1 de la mission G
+(libellés propres à G). Les six cas et leurs attendus viennent de G, copiés tels quels
+dans `fixtures-resume-g.cjs` (source `missions/G_PANNEAU/pour-F/fixtures-resume.cjs`,
+SHA-256 `31789d73…f87603`). F ajoute à chaque cas : nombres exacts seulement si
+l'historique est lu en entier, sinon « au moins N » ou « inconnu » ; transactions
+IndexedDB du panneau toutes en lecture seule (relevé passif) ; aucune commande
+envoyée. Et trois contrôles F : changement de partie 23 → 24 → 23 avec mouvement
+réduit, clavier et zoom 200 % du résumé, thème sombre (contraste 4,5:1).
+Les suites `u1-resume` et `g-resume` vérifient des libellés différents : chacune ne
+vaut que pour sa réécriture.
 
 ## Limites
 

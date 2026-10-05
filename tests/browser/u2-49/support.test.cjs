@@ -28,6 +28,7 @@ test('sélection inconnue et options ambiguës sont refusées',async()=>{
  assert.throws(()=>suite('inconnue'),/Suite inconnue/);
  const u1=suite('u1-resume');assert.equal(new Set(u1.map(x=>x.id)).size,u1.length);
  assert.ok(u1.every(s=>s.requires==='partSummary'),'suite U1 : sans objet sur une cible sans résumé');
+ const g=suite('g-resume');assert.equal(new Set(g.map(x=>x.id)).size,g.length);assert.ok(g.every(s=>s.requires==='partSummary'));
  assert.equal(blockedRows(matrix,'absent').every(r=>!r.executed&&r.status==='BLOCKED'&&r.durationMs===null),true);
 });
 test('Chromium absent : zéro réussite, chaque scénario bloqué, cible intacte, aucune extension déclarée chargée',async()=>{
@@ -44,5 +45,5 @@ test('refus réseau déclaré : mandataire local fermé, boucle locale non exemp
  assert.ok(RESEAU_ARGS.includes('--proxy-server=http://127.0.0.1:9'));assert.ok(RESEAU_ARGS.includes('--proxy-bypass-list=<-loopback>'));
 });
 test('chaque scénario déclare attendu, source, vue et une fonction run',()=>{
- for(const s of [...matrix,...suite('u1-resume')]){assert.ok(s.id&&s.expected&&s.source&&s.view,s.id);assert.equal(typeof s.run,'function',s.id);}
+ for(const s of [...matrix,...suite('u1-resume'),...suite('g-resume')]){assert.ok(s.id&&s.expected&&s.source&&s.view,s.id);assert.equal(typeof s.run,'function',s.id);}
 });

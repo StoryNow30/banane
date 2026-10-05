@@ -81,6 +81,10 @@ function installer(options) {
         }
       }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['hidden', 'disabled'] });
     });
+    // Transactions IndexedDB ouvertes par la page (mode) : relevé passif.
+    backend.idb = [];
+    const tx0 = IDBDatabase.prototype.transaction;
+    IDBDatabase.prototype.transaction = function (stores, mode) { backend.idb.push({ stores: [].concat(stores).join(','), mode: mode || 'readonly' }); return tx0.apply(this, arguments); };
     let actif = null;
     const veille = () => { const a = nom(document.activeElement); if (a !== actif) { log('actif', { el: a, avant: actif }); actif = a; } requestAnimationFrame(veille); };
     requestAnimationFrame(veille);

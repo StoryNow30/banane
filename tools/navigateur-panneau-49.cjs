@@ -11,7 +11,7 @@ const { fixture, installer } = require(path.join(SUPPORT, 'backend.cjs'));
 const H = require(path.join(SUPPORT, 'helpers.cjs'));
 const { Blocked } = H;
 
-const SUITES = { u2: 'matrix.json', 'u1-resume': 'matrix-u1-resume.json' };
+const SUITES = { u2: 'matrix.json', 'u1-resume': 'matrix-u1-resume.json', 'g-resume': 'matrix-g-resume.json' };
 function suite(name) {
   if (!SUITES[name]) throw Error('Suite inconnue : ' + name);
   return JSON.parse(fs.readFileSync(path.join(SUPPORT, SUITES[name]))).map(f => require(path.join(SUPPORT, f)));
@@ -224,7 +224,7 @@ async function run(folder, { scenario, headed = false, suite: suiteName = 'u2', 
 
 function options(argv) {
   const [folder, ...args] = argv;
-  if (!folder || folder.startsWith('--')) throw Error('Usage : DOSSIER [--suite u2|u1-resume] [--scenario ID[,ID]] [--output JSON] [--captures DOSSIER] [--headed]');
+  if (!folder || folder.startsWith('--')) throw Error('Usage : DOSSIER [--suite u2|u1-resume|g-resume] [--scenario ID[,ID]] [--output JSON] [--captures DOSSIER] [--headed]');
   const opts = {};
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
