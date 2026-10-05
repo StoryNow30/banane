@@ -1,5 +1,14 @@
 # Décisions techniques
 
+## D-075 - Envoi des branches de travail sur GitHub autorisé
+
+**Réponse de Mic du 4 octobre 2026 au soir : « Oui »**, à la question de l'orchestrateur Claude Code : envoyer sur
+GitHub les branches de travail `claude/…` (pilotage puis équipes, au fur et à mesure), jamais `main`, sans fusion.
+But : un point de sauvegarde durable hors du conteneur temporaire (recommandation des trois audits).
+Portée : envoi de branches de travail seulement. Ni fusion, ni étiquette, ni publication, ni paquet terrain, ni
+écriture dans banane-data ; une branche envoyée n'est pas une branche acceptée. Verify à zéro échec avant chaque
+commit envoyé.
+
 ## D-074 - Reprise complète par Claude Code ; ESV reconstruit indépendamment ; réécriture du code GPT
 
 **Instruction de Mic du 4 octobre 2026** (`00_DEMARRAGE_CLAUDE_CODE.md` de la passation révisée, consignée par

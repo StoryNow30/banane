@@ -19,7 +19,8 @@ sont pas réécrits. Ordre de lecture des règles : D-066, D-067, D-068, D-072, 
 
 Les commits U1 (`0bcc4c5`) et U2 (`39dd8d4`) d'origine ne sont pas recréés : seuls leurs arbres le sont.
 Branches locales d'import : `livre/v1-test-1ba79d4`, `livre/v1-corrige-baa548d`, `livre/u1-corrige`,
-`livre/u2-preparation`. Aucune n'est envoyée sur GitHub sans accord (D-072, D-074).
+`livre/u2-preparation` (non envoyées : ce sont des copies des livraisons). Les branches de travail `claude/…` sont
+envoyées sur GitHub au fur et à mesure (D-075), jamais `main`, sans fusion.
 
 ## 2. Statut des chantiers
 
@@ -53,7 +54,7 @@ Vocabulaire : **accepté** = dit par Mic ; **livré** = remis, relu ou non ; **e
 | G — Panneau | Réécrire U1 ; propriétaire unique du panneau | `claude/49-panneau-reecriture` | voir § 4 |
 
 Chaque auteur livre un rapport et s'arrête ; une autre équipe relit. L'orchestrateur relit chaque diff ; Mic
-accepte, fusionne, étiquette et publie.
+accepte, fusionne, étiquette et publie. Les branches de travail sont envoyées sur GitHub (D-075) ; envoyée ne veut pas dire acceptée.
 
 ## 4. Propriétaires des fichiers de production
 
