@@ -123,10 +123,42 @@ function inspectLot(es,vs,data,exportMeta,conflicts){
  const sizes=es.map(bytes);
  return {sessionId:first.sessionId,batchId:first.batchId,clocks,coverage,totalMs,cycleMs:stats(vs.map(v=>v.activeCycleMs)),
   excludedCycles:stats(vs.map(v=>v.slowCycleMs)),silences:{count:silences.length,totalMs:silences.reduce((n,e)=>n+e.ms,0),rows:silences},
-  stops:stopsOf(es,vs),
+  stops:stopsOf(es,vs),executions:executionsOf(es,vs),
   instrumentation:{eventCount:es.length,utf8Bytes:sizes.reduce((n,x)=>n+x,0)+Math.max(0,es.length-1)+2,lost,  // = octets de JSON.stringify(es)
    localMs:health.reduce((n,h)=>n+(h?.instrumentationMs||0),0),maxEventBytes:sizes.reduce((max,x)=>Math.max(max,x),0),
    asynchronousStoreCostMs:null,healthPresent:health.every(Boolean)}};
+}
+/* Correction proposée (3) : exécutions successives d'un même lot. Ouvrent :
+ * start, restored, reopened, resumed. Ferment : end (fin connue), suspended
+ * (ERROR, fin inconnue) ; journaux antérieurs sans « suspended » : un arrêt
+ * `halt` en ERROR en tient lieu. `replaced` dit seulement que le suivi a changé
+ * de lot. Aucune fin n'est inventée : une exécution sans borne reste ouverte et
+ * la vie complète du lot n'est mesurée que si la dernière fin est connue. */
+const OPENS=['start','restored','reopened','resumed'];
+function executionsOf(es,vs){
+ const clocks=[...new Set(es.map(e=>e.clockId))],order=e=>[clocks.indexOf(e.clockId),Number.isInteger(e.batchSeq)?e.batchSeq:e.ms];
+ const sorted=es.slice().sort((a,b)=>{const x=order(a),y=order(b);return x[0]-y[0]||x[1]-y[1];});
+ const explicit=sorted.some(e=>e.kind==='batch'&&e.point==='suspended');
+ const rows=[];let cur=null,replaced=null;
+ const mark=e=>({point:e.kind==='control'?'halt':e.point,ms:e.ms,clockId:e.clockId,...(e.state!==undefined?{state:e.state}:{}),knownBoundary:e.kind==='batch'&&e.point==='end'&&e.knownBoundary===true});
+ for(const e of sorted){
+  if(e.kind==='batch'&&OPENS.includes(e.point)){cur={segment:Number.isInteger(e.segment)?e.segment:rows.length+1,from:{point:e.point,ms:e.ms,clockId:e.clockId},to:null,durationMs:null};rows.push(cur);continue;}
+  if(e.kind==='batch'&&e.point==='replaced'){replaced={ms:e.ms,clockId:e.clockId,byBatchId:e.byBatchId??null,lastState:e.lastState??null,closedAtReplacement:e.closedAtReplacement??null};continue;}
+  const closes=e.kind==='batch'&&(e.point==='end'||e.point==='suspended')||!explicit&&e.kind==='control'&&e.name==='halt'&&e.state==='ERROR';
+  if(!closes)continue;
+  if(!cur||cur.to){cur={segment:rows.length+1,from:null,to:null,durationMs:null};rows.push(cur);}
+  cur.to=mark(e);if(cur.from&&cur.from.clockId===e.clockId&&e.ms>=cur.from.ms)cur.durationMs=e.ms-cur.from.ms;
+ }
+ const last=rows.at(-1),sameClock=rows.every(r=>r.from&&r.to&&r.from.clockId===rows[0].from.clockId&&r.to.clockId===rows[0].from.clockId);
+ const lifetimeReason=!rows.length?'no-boundary':rows.some(r=>!r.from)?'start-unknown':!last.to||last.to.point!=='end'||!last.to.knownBoundary?'end-unknown':!sameClock?'clock-changed':null;
+ const lifetimeMs=lifetimeReason===null&&last.to.ms>=rows[0].from.ms?last.to.ms-rows[0].from.ms:null;
+ const executionMs=lifetimeMs!==null&&rows.every(r=>finite(r.durationMs))?rows.reduce((n,r)=>n+r.durationMs,0):null;
+ // Visites ouvertes hors d'une exécution : gardées dans la couverture, seulement nommées.
+ const opens=new Map(es.filter(e=>e.kind==='visit'&&e.point==='open').map(e=>[e.visitId,e]));
+ const inside=e=>rows.some(r=>r.from&&r.from.clockId===e.clockId&&e.ms>=r.from.ms&&(!r.to||e.ms<=r.to.ms));
+ const visitsOutsideExecution=vs.flatMap(v=>{const o=opens.get(v.visitId);if(!o)return [];
+  const reason=o.lotSuspended?'lot-suspended':rows.length&&!inside(o)?'between-executions':null;return reason?[{visitId:v.visitId,identity:v.identity,reason}]:[];});
+ return {rows:rows.map(({segment,from,to,durationMs})=>({segment,from,to,durationMs})),replaced,lifetimeMs,lifetimeReason,executionMs,visitsOutsideExecution};
 }
 /* Arrêts pour 100 coupes distinctes : une interruption répétée ou une pause
  * hors exécution ne compte pas deux fois. */
@@ -186,6 +218,7 @@ function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n';
   `Lot ${l.batchId} / session ${l.sessionId} : ${c.visits} visites ; attendues ${n(c.expectedVisits)} ; ${c.missing.length} phases manquantes, ${c.overlap.length} chevauchements, ${c.lost} événements perdus. Couverture complète démontrée : ${c.complete?'oui':'non'}.`,
   `Durée totale : ${n(l.totalMs)} ms ; cycle actif n=${l.cycleMs.n}, médiane/P90/max ${n(l.cycleMs.median)}/${n(l.cycleMs.p90)}/${n(l.cycleMs.max)} ms. Cycles >60 s exclus : ${l.excludedCycles.n}, total ${n(l.excludedCycles.total)} ms ; silences : ${l.silences.count}, ${n(l.silences.totalMs)} ms.`,
   `Arrêts : ${l.stops.count} / ${l.stops.distinctCuts} coupes distinctes = ${n(l.stops.per100)} pour 100 ; causes ${JSON.stringify(l.stops.causes)}.`,
+  executionsLine(l.executions,n),
   `Instrumentation : ${l.instrumentation.eventCount} événements, ${l.instrumentation.utf8Bytes} octets UTF-8, coût local ${n(l.instrumentation.localMs)} ms ; stockage asynchrone non isolé.`);}
  lines.push('',`Même cohorte de sept phases mesurées : n=${m.cohort.n} ; somme des médianes ${n(m.cohort.sumMediansMs)} ms ; médiane des sommes ${n(m.cohort.medianSumMs)} ms ; cycle médian ${n(m.cohort.medianCycleMs)} ms ; résidu ${n(m.cohort.residualMs)} ms.`,
   '','V4.6 : spans imbriqués ; union temporelle, jamais ajoutés une seconde fois au cycle.','',
@@ -194,4 +227,10 @@ function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n';
  lines.push('','Les mesures de ce fichier ne certifient pas la porte terrain sur plusieurs lots, ni un acquittement serveur.');
  return lines.join('\n')+'\n';
 }
+function executionsLine(x,n){if(!x)return 'Exécutions : non mesurées.';
+ const rows=x.rows.map(r=>`${r.segment}) ${r.from?.point??'début inconnu'} → ${r.to?`${r.to.point}${r.to.state?' '+r.to.state:''}${r.to.knownBoundary?'':' (fin non connue)'}`:'ouverte'} : ${n(r.durationMs)} ms`);
+ const reasons={'end-unknown':'fin inconnue','start-unknown':'début inconnu','clock-changed':'horloge changée','no-boundary':'aucune borne'};
+ return `Exécutions : ${rows.join(' ; ')||'aucune borne'}.${x.replaced?` Remplacé par un autre lot (dernier état ${x.replaced.lastState??'inconnu'}${x.replaced.closedAtReplacement?', fin connue avant':', aucune fin connue'}).`:''}`+
+  ` Vie complète ${x.lifetimeMs===null?`non mesurée (${reasons[x.lifetimeReason]})`:`${n(x.lifetimeMs)} ms, dont exécution ${n(x.executionMs)} ms`}.`+
+  (x.visitsOutsideExecution.length?` Visites hors exécution : ${x.visitsOutsideExecution.length} (coupes ${x.visitsOutsideExecution.map(v=>v.identity?.cut).join(', ')}), gardées dans la couverture.`:'');}
 module.exports={measure,toMarkdown,inspectVisit,stats,union,IDS};

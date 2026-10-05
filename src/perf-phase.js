@@ -126,7 +126,7 @@
   }
   point(point,detail={},v=this.visit){return this.emit('point',{point,...detail},this.context(v));}
   span(label,fromMs,toMs,context=this.context(),detail={}){if(Number.isFinite(fromMs)&&Number.isFinite(toMs))this.emit('span',{label,fromMs,toMs,...detail},context);}
-  control(name,detail={}){return this.emit('control',{name,...detail});}
+  control(name,detail={},context=this.context()){return this.emit('control',{name,...detail},context);}
 
   /* -- lots ------------------------------------------------------------ */
   /* Suit le lot courant du moteur (Orbite, ou reprise manuelle de ce lot). */
@@ -134,16 +134,26 @@
    const s=this.engine.s,b=s.batch;
    if(!b?.id||!s.sessionId||s.mode!=='automatic-test'&&b.state!=='MANUAL_TAKEOVER')return;
    if(this.batch?.id===b.id)return;
-   if(this.batch)this.emit('batch',{point:'replaced',knownBoundary:false},this.batchContext());
-   const item={id:b.id,sessionId:s.sessionId,knownStart,seq:0,lost:0,emitted:0,bytes:0,maxEventBytes:0,pendingPeak:0,instrumentationMs:0,visits:0,closed:false};
+   // Remplacement : motif (nouveau lot), dernier état vu, et si une fin était connue. Aucune fin fabriquée.
+   const old=this.batch;
+   if(old)this.emit('batch',{point:'replaced',knownBoundary:false,segment:old.segment,byBatchId:b.id,lastState:old.lastState,closedAtReplacement:old.closed},this.batchContext());
+   const item={id:b.id,sessionId:s.sessionId,knownStart,seq:0,lost:0,emitted:0,bytes:0,maxEventBytes:0,pendingPeak:0,instrumentationMs:0,visits:0,closed:false,
+    segment:1,suspended:null,lastState:b.state??null};
    this.batch=item;this.batches.set(b.id,item);this.visit=null;this.next=null;this.lastHalt=null;
    // Historique borné : un lot sorti a déjà émis sa santé ; une santé absente
    // d'un export tronqué ne certifie jamais la complétude.
    if(this.batches.size>MAX_BATCHES)this.batches.delete(this.batches.keys().next().value);
-   this.emit('batch',{point:knownStart?'start':'restored',knownBoundary:knownStart},this.batchContext());
+   this.emit('batch',{point:knownStart?'start':'restored',knownBoundary:knownStart,segment:1},this.batchContext());
    if(!knownStart&&CLOSED_STATES.has(b.state))this.batch.closed=true;
   });}
-  closeBatch(state){this.emit('batch',{point:'end',knownBoundary:true,state},this.batchContext());this.batch.closed=true;this.health(this.batch);}
+  closeBatch(state){this.emit('batch',{point:'end',knownBoundary:true,state,segment:this.batch.segment},this.batchContext());this.batch.closed=true;
+   if(this.visit?.inPlace)this.visit.closedWithLot=true;this.health(this.batch);}
+  /* Correction proposée (3) : un ERROR suspend l'exécution sans clore le lot
+   * (il peut redevenir reprenable) ; pas de fin, pas d'instantané final. */
+  suspendBatch(state){if(this.batch.closed||this.batch.suspended)return;this.batch.suspended=state;
+   this.emit('batch',{point:'suspended',knownBoundary:false,state,segment:this.batch.segment},this.batchContext());this.health(this.batch);}
+  /* Nouvelle exécution du même lot : réouverture après une fin, ou reprise après une suspension. */
+  nextSegment(point){this.batch.segment++;this.batch.suspended=null;this.emit('batch',{point,knownBoundary:false,segment:this.batch.segment},this.batchContext());}
   health(b=this.batch,final=false){if(b)return this.emit('health',{emitted:b.emitted,lost:b.lost,visits:b.visits,bytes:b.bytes,maxEventBytes:b.maxEventBytes,
    pendingPeak:b.pendingPeak,instrumentationMs:b.instrumentationMs,finalSnapshot:final&&b.closed,requestsPending:this.requestsPendingFor(b.id)},this.batchContext(b));}
   requestsPendingFor(batchId){let n=0;for(const r of this.requests.values())if(r.context.batchId===batchId)n++;return n;}
@@ -160,14 +170,14 @@
    const visit={...this.batchContext(),visitId:this.uid(),identity:id,captureId:null,proposalId:null,captured:false};
    this.visit=visit;this.batch.visits++;this.next=null;
    const reason=recapture?'recapture':seen?'observed-target':this.batch.knownStart&&this.batch.visits===1?'already-visible':'unobserved';
-   this.emit('visit',{point:'open',navigationMs:seen?.ms??null,navigationReason:reason},this.context(visit));
+   this.emit('visit',{point:'open',navigationMs:seen?.ms??null,navigationReason:reason,...(this.batch.suspended?{lotSuspended:this.batch.suspended}:{})},this.context(visit));
    return visit;
   });}
   /* Première cible différente vue pendant une visite : `next-observed`, et
    * départ de navigation de la visite suivante. */
   targetSeen(target,v=this.visit,ms=this.now()){return safe(()=>{
    if(!v||!Number.isInteger(target?.cut)||key(v.identity)===key(target))return;
-   if(!v.nextSeen){v.nextSeen=true;this.point('next-observed',{atMs:ms,nextIdentity:identity(target)},v);}
+   if(!v.nextSeen){v.nextSeen=true;this.point(v.closedWithLot?'navigation-after-close':'next-observed',{atMs:ms,nextIdentity:identity(target)},v);}
    if(v===this.visit)this.next={identity:identity(target),ms};
   });}
 
@@ -189,7 +199,7 @@
     this.span('after-state-read',this.finishing.fromMs,to,r.context,{commandId:r.id});this.point('after-read',{atMs:to,commandId:r.id},v);this.finishing=null;}
    if(result?.navigationObserved&&result.nextIdentity)this.targetSeen(result.nextIdentity,v,to);
    else if(r.action==='state'&&id)this.targetSeen(id,v,to);
-   if(r.action==='validateInPlace'&&result?.serverConfirmed)this.point('in-place',{atMs:to,commandId:r.id},v);
+   if(r.action==='validateInPlace'&&result?.serverConfirmed){v.inPlace=true;this.point('in-place',{atMs:to,commandId:r.id},v);}
   });}
   /* Heure de réception seulement : `elapsedMs` appartient à la page. */
   progress(m){return safe(()=>{const r=this.requests.get(m?.traceId);if(!r||r.action!==m.action)return;
@@ -202,7 +212,10 @@
    const manual=type.startsWith('batch-manual-');
    if(this.engine.s.mode!=='automatic-test'&&!manual)return;
    if(this.batch?.closed&&!this.engine.task&&!manual)return;
-   this.syncBatch();if(!this.visit)return;
+   this.syncBatch();
+   // Correction proposée (3) : l'état du lot vaut pour tout le lot, quelle que soit la coupe active.
+   if(type==='batch-state'){if(this.batch)this.batchState(detail.state);return;}
+   if(!this.visit)return;
    if(type==='cut-target-changed'){this.targetSeen(detail.nextIdentity);this.ensureVisit(detail.nextIdentity);return;}
    if(detail.identity&&key(detail.identity)!==key(this.visit.identity))return;
    this.visitEvent(type,detail);
@@ -223,18 +236,18 @@
      if(detail.applied===false||detail.reason==='dernier-cut-differe')this.point('deferred',{reason:'last-unresolved'});
      if(detail.applied===true)this.point('last-unvalidated',{reason:'lot-boundary'});
      break;
-    case 'batch-state':this.batchState(detail.state);break;
    }
   }
   /* Arrêt : une seule cause comptée par interruption ; une action opérateur
    * en cours (pause, stop…) a sa propre ligne `control`. */
-  batchState(state){
+  batchState(state){this.batch.lastState=state??null;
    if(state?.startsWith('PAUSED')||state==='ERROR'){
     const b=this.engine.s.batch,message=b?.error?.message||b?.pauseReason||'';
-    const cause=state==='PAUSED_ADAPTER_UNRESPONSIVE'?'adapter-unresponsive':this.visit.haltCause||haltCause(message);
-    if(!this.operatorPending&&!this.lastHalt)this.control('halt',{cause,state});
+    const cause=state==='PAUSED_ADAPTER_UNRESPONSIVE'?'adapter-unresponsive':this.visit?.haltCause||haltCause(message);
+    if(!this.operatorPending&&!this.lastHalt)this.control('halt',{cause,state},this.context()||this.batchContext());
     this.lastHalt=state;
-   }else if(state==='RUNNING'){this.lastHalt=null;this.visit.haltCause=null;}
+    if(state==='ERROR')this.suspendBatch(state);
+   }else if(state==='RUNNING'){this.lastHalt=null;if(this.visit)this.visit.haltCause=null;}
    if(CLOSED_STATES.has(state)&&!this.batch.closed)this.closeBatch(state);
   }
 
@@ -291,7 +304,7 @@
  /* Action opérateur : un lot fermé qu'on reprend est rouvert pendant l'appel,
   * refermé si la reprise échoue. */
  function operatorBefore(r,engine,name){const state=engine.s.batch?.state;
-  const t={context:r.context(),wasRunning:state==='RUNNING',wasStopped:state==='STOPPED',wasClosed:r.batch?.closed};
+  const t={context:r.context(),wasRunning:state==='RUNNING',wasStopped:state==='STOPPED',wasClosed:r.batch?.closed,wasSuspended:!!r.batch?.suspended};
   if(name==='resume'&&r.batch?.closed)r.batch.closed=false;
   r.operatorPending=name;return t;
  }
@@ -299,7 +312,8 @@
   if(e&&name==='resume'&&t?.wasClosed&&r.batch)r.batch.closed=true;
   r.operatorPending=null;if(e)return;
   r.emit('control',{name,cause:name==='stop'?'permanent':'operator',wasRunning:t?.wasRunning,repeated:name==='stop'&&t?.wasStopped},t?.context);
-  if(name==='resume'&&t?.wasClosed)r.emit('batch',{point:'reopened',knownBoundary:false},r.batchContext());
+  if(name==='resume'&&t?.wasClosed)r.nextSegment('reopened');
+  else if(name==='resume'&&t?.wasSuspended&&r.batch)r.nextSegment('resumed');
   r.lastHalt=name==='pause'||name==='stop'?name:null;
   // Stop hors tâche : fin connue ici ; pendant une tâche, à l'état STOPPED.
   if(name==='stop'&&!engine.task&&r.batch&&!r.batch.closed)r.closeBatch('STOPPED');
