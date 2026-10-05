@@ -76,7 +76,24 @@ function inspectVisit(events){
  const cycle=valid&&finite(open.navigationMs)&&next&&at(next)>=open.navigationMs?at(next)-open.navigationMs:null;
  return {sessionId:ctx.sessionId,batchId:ctx.batchId,clockId:ctx.clockId,visitId:ctx.visitId,identity:ctx.identity,phases,
   cycleMs:cycle,activeCycleMs:finite(cycle)&&cycle<=ACTIVE_CYCLE_MS?cycle:null,slowCycleMs:finite(cycle)&&cycle>ACTIVE_CYCLE_MS?cycle:null,
-  nextOverlapMs:phases[6].overlapMs??null,v46:v46OfVisit(spans,c,p),validContext:!!valid};
+  nextOverlapMs:phases[6].overlapMs??null,v46:v46OfVisit(spans,c,p),validContext:!!valid,
+  chronology:valid?chronologyOf(open,{c,p,d,pose,after,accepted,next}):null};
+}
+/* Correction proposée (2) : chronologie concurrente (D-073). Jalons dans
+ * l'ordre réel ; décalage signé navigation suivante − acceptation durable
+ * (négatif : la navigation arrive d'abord) ; fin de visite : fenêtres
+ * après → acceptation et après → navigation, réunies (union) et communes
+ * (intersection), jamais additionnées. Un jalon absent laisse null. */
+const span=(a,b)=>finite(a)&&finite(b)&&b>=a?[a,b]:null;
+const length=w=>w?w[1]-w[0]:null;
+function chronologyOf(open,x){
+ const nav=open.navigationMs,after=at(x.after),accepted=at(x.accepted),next=at(x.next);
+ const milestones=[['navigation',nav],['capture-received',at(x.c)],['proposed',at(x.p)],['decision',at(x.d)],['pose-readback',at(x.pose)],['after-read',after],['accepted',accepted],['next-observed',next]]
+  .filter(([,ms])=>finite(ms)).map(([point,ms])=>({point,ms})).sort((a,b)=>a.ms-b.ms);
+ const toAccepted=span(after,accepted),toNext=span(after,next),both=toAccepted&&toNext;
+ return {milestones,nextMinusAcceptedMs:finite(accepted)&&finite(next)?next-accepted:null,untilNextMs:length(span(nav,next)),untilAcceptedMs:length(span(nav,accepted)),
+  end:{from:'after-read',acceptanceMs:length(toAccepted),navigationMs:length(toNext),unionMs:both?union([toAccepted,toNext]):null,
+   intersectionMs:both?Math.max(0,Math.min(toAccepted[1],toNext[1])-Math.max(toAccepted[0],toNext[0])):null}};
 }
 /* Appels V4.6 de l'analyse de la visite : spans imbriqués réunis en temps
  * (union), découpés à la fenêtre capture → proposition ; jamais additionnés. */
@@ -199,8 +216,14 @@ function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=
  return {available:true,quantiles:'floor(p*(n-1)+0.5)',silenceThresholdMs:SILENCE_MS,scopeLimited:visits.some(v=>!v.identity?.projectId),conflictingEventIds:conflicts,
   lots,visits,etapes,cohort:{n:cohort.length,sumMediansMs:sumMedians,medianSumMs:summed.median,medianCycleMs:cycles.median,
    residualMs:cohort.length?cycles.median-summed.median:null},
+  concurrence:concurrenceOf(visits),
   v46:{categories:v46Categories(events),insideAnalysisMs:stats(visits.map(v=>v.v46.insideAnalysisMs)),outsideAnalysisMs:stats(visits.map(v=>v.v46.outsideAnalysisMs))}};
 }
+/* Correction proposée (2) : synthèse de la chronologie concurrente. Les
+ * médianes de lignes différentes ne s'additionnent pas. */
+function concurrenceOf(visits){const c=visits.map(v=>v.chronology).filter(Boolean),both=c.filter(x=>finite(x.nextMinusAcceptedMs));
+ return {visits:both.length,navigationBeforeAcceptance:both.filter(x=>x.nextMinusAcceptedMs<0).length,signedDeltaMs:stats(both.map(x=>x.nextMinusAcceptedMs)),
+  untilNextMs:stats(c.map(x=>x.untilNextMs)),untilAcceptedMs:stats(c.map(x=>x.untilAcceptedMs)),endUnionMs:stats(c.map(x=>x.end.unionMs)),endIntersectionMs:stats(c.map(x=>x.end.intersectionMs))};}
 /* Appels par catégorie « libellé:provenance » ; durée seulement si le span est valide. */
 function v46Categories(events){
  const spans=events.filter(e=>e.kind==='span'&&V46_CATEGORIES.includes(e.label));
@@ -221,12 +244,19 @@ function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n';
   executionsLine(l.executions,n),
   `Instrumentation : ${l.instrumentation.eventCount} événements, ${l.instrumentation.utf8Bytes} octets UTF-8, coût local ${n(l.instrumentation.localMs)} ms ; stockage asynchrone non isolé.`);}
  lines.push('',`Même cohorte de sept phases mesurées : n=${m.cohort.n} ; somme des médianes ${n(m.cohort.sumMediansMs)} ms ; médiane des sommes ${n(m.cohort.medianSumMs)} ms ; cycle médian ${n(m.cohort.medianCycleMs)} ms ; résidu ${n(m.cohort.residualMs)} ms.`,
+  ...concurrenceLines(m.concurrence,n),
   '','V4.6 : spans imbriqués ; union temporelle, jamais ajoutés une seconde fois au cycle.','',
   '| Catégorie | Appels | Invalides | Succès | Exceptions | Médiane ms | P90 ms | Max ms |','|---|---:|---:|---:|---:|---:|---:|---:|---:|');
  for(const c of m.v46.categories)lines.push(`| ${c.name} | ${c.calls} | ${c.invalid} | ${c.success} | ${c.exceptions} | ${n(c.ms.median)} | ${n(c.ms.p90)} | ${n(c.ms.max)} |`);
  lines.push('','Les mesures de ce fichier ne certifient pas la porte terrain sur plusieurs lots, ni un acquittement serveur.');
  return lines.join('\n')+'\n';
 }
+function concurrenceLines(c,n){if(!c)return [];const row=(label,s)=>`| ${label} | ${s.n} | ${n(s.median)} | ${n(s.p90)} | ${n(s.max)} |`;
+ return ['','Chronologie concurrente (D-073) : acceptation durable et navigation suivante avancent en même temps ; durées réunies, jamais additionnées.','',
+  '| Mesure | n | Médiane ms | P90 ms | Max ms |','|---|---:|---:|---:|---:|',
+  row('Navigation suivante − acceptation (signé)',c.signedDeltaMs),row('Navigation → navigation suivante',c.untilNextMs),row('Navigation → acceptation durable',c.untilAcceptedMs),
+  row('Après pose lue → les deux faits (union)',c.endUnionMs),row('Après pose lue → temps commun (intersection)',c.endIntersectionMs),
+  '',`Navigation suivante avant l’acceptation durable : ${c.navigationBeforeAcceptance} visite(s) sur ${c.visits}.`];}
 function executionsLine(x,n){if(!x)return 'Exécutions : non mesurées.';
  const rows=x.rows.map(r=>`${r.segment}) ${r.from?.point??'début inconnu'} → ${r.to?`${r.to.point}${r.to.state?' '+r.to.state:''}${r.to.knownBoundary?'':' (fin non connue)'}`:'ouverte'} : ${n(r.durationMs)} ms`);
  const reasons={'end-unknown':'fin inconnue','start-unknown':'début inconnu','clock-changed':'horloge changée','no-boundary':'aucune borne'};
