@@ -1,6 +1,7 @@
 [
   "tab-home.cjs",
   "tab-echo.cjs",
+  "tab-echo-running.cjs",
   "tab-orbite-running.cjs",
   "tab-orbite-paused.cjs",
   "tab-orbite-unresolved.cjs",

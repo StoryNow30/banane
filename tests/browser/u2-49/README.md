@@ -1,94 +1,99 @@
-# U2 4.9 : banc du panneau de production, préparation
+# Banc U2 (et résumé U1) — le vrai panneau d'Ariane dans Chromium
 
-Ce support est indépendant de `tests/browser/harness.js` et de la fixture web
-historique. Il ne recopie aucun HTML/CSS/JS du panneau. L’outil charge le
-`panel.html` de **DOSSIER_CIBLE** sous `chrome-extension://`, vérifie le service
-worker MV3 et les URLs de `panel.js` / `panel.css`, et publie commit, manifeste
-et empreintes SHA-256. Il ne teste jamais une page ESV.
+Ce banc charge le `panel.html` d'un **dossier cible** (un arbre Ariane) comme
+extension MV3 dans un Chromium réel, sous l'origine `chrome-extension://`. Il ne
+recopie aucun HTML, CSS ou JS du panneau. Il n'ouvre jamais de page ESV et ne
+capture jamais ESV : seules les pages de l'extension sont ouvertes et capturées.
+
+Préparé par la livraison U2 du 2 octobre 2026 (jamais exécuté alors), réécrit et
+exécuté par la mission F (qualification) le 5 octobre 2026.
 
 ## Exécution
 
 ```sh
-node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --output /chemin/u2-resultats.json
-node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --scenario focus-pause
-node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --headed
+# Fenêtre réelle (recommandé) : Chromium à fenêtre sous Xvfb
+xvfb-run -a -s '-screen 0 1280x1024x24' \
+  node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --headed --output u2.json --captures captures/
+# Suite du résumé de partie U1 (sans objet sur une cible sans src/part-summary-49.js)
+xvfb-run -a -s '-screen 0 1280x1024x24' \
+  node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --headed --suite u1-resume --output u1.json
+# Quelques scénarios seulement
+node tools/navigateur-panneau-49.cjs DOSSIER_CIBLE --scenario focus-pause,focus-error
 ```
 
-Prérequis : Node, Playwright avec `chromium`, Chromium compatible avec le
-chargement MV3. L’outil cherche `PLAYWRIGHT_MODULE`, le module `playwright`,
-le runtime puis l’emplacement historique `/opt/node22`. `CHROMIUM` peut
-indiquer un binaire **déjà installé et autorisé** ; sinon l’emplacement fourni
-par Playwright est utilisé. Les installations restent à faire séparément,
-aucune installation ni repli web simulé dans le banc.
+Sur la machine partagée, toute exécution passe par le verrou commun (`flock`).
+Prérequis : Node, Playwright (`PLAYWRIGHT_MODULE` sinon `playwright`), Chromium
+(`CHROMIUM` sinon celui de Playwright). Aucune installation n'est faite par le banc.
 
-Le profil navigateur est temporaire, neuf et supprimé après le test. Aucun
-profil opérateur n’est réutilisé. Le viewport initial est 560 × 900 pixels ;
-le réseau HTTP(S) des pages est refusé. Les commandes du panneau ne traversent
-jamais le double du backend. Aucun téléchargement/corpus n’est nécessaire.
+Codes de sortie : 0 = sélection exécutée sans échec ni blocage ; 1 = échec ou
+cible modifiée pendant l'essai ; 2 = blocage, ou rien d'exécuté (tout « sans objet »).
+`executedScopeGate` ne vaut que pour la sélection et **ne déclare jamais U2 accepté**.
 
-`backend.cjs` remplace uniquement `chrome.runtime.sendMessage` de la vraie
-page **avant** son script. Chaque action est journalisée ; les actions non
-simulées rendent une erreur et ne sont jamais transmises au service worker.
-La connexion de présence et l’extension restent réelles. Les états sont
-synthétiques : aucune géométrie, aucun export brut, aucun onglet ESV.
+## Ce que le banc garantit
 
-## Résultats et limites
+- **Extension réelle** : service worker MV3 vérifié (identifiant, nom, version du
+  manifeste égaux à la cible), `panel.js` et `panel.css` chargés depuis la cible
+  vérifiés avant chaque assertion ; commit, arbre, `git status` et empreintes de la
+  cible publiés avant et après (`targetUnchanged`).
+- **Profil neuf** pour chaque exécution, supprimé ensuite ; viewport 560 × 900,
+  la largeur réelle de la fenêtre du panneau (`background.js` : `width:560`).
+- **Réseau refusé** : mandataire local fermé (`--proxy-server=http://127.0.0.1:9`,
+  boucle locale non exemptée), résolution DNS coupée, pages interceptées par
+  Playwright. Une **sonde** le prouve à chaque exécution : un serveur local compte
+  les requêtes ; Node l'atteint (témoin), la page d'extension et le service worker
+  ne doivent jamais l'atteindre (`network.refuse`). Sinon : BLOCKED.
+- **Backend synthétique** (`backend.cjs`) : seule `chrome.runtime.sendMessage` du
+  panneau est remplacée ; les actions non simulées rendent une erreur et ne vont
+  jamais au service worker. DOM, CSS, IndexedDB et scripts restent réels.
+- **Journal de focus** sur chaque page : focusin/focusout, changements
+  `hidden`/`disabled` des boutons, et tout changement d'`activeElement` (même
+  silencieux). Il figure dans le diagnostic de tout échec.
+- **Zoom 200 %** par `chrome.tabs.setZoom` (même niveau de zoom que Ctrl + ou le
+  menu), confirmé par `getZoom() === 2` et par les métriques (largeur CSS, DPR),
+  viewport inchangé. Ce zoom est mémorisé **par origine** : chaque scénario
+  vérifie au départ un zoom de 100 % (`zoomInitial`, sinon BLOCKED) et le banc
+  remet le zoom à 100 % après chaque scénario (`zoomAfterReset`).
+- **Mise en page** : débordement horizontal, texte tronqué, puis chaque commande
+  rendue atteinte au centre après défilement (hit-test, barre d'actions collante
+  comprise). Une commande dans un `<details>` fermé n'est pas rendue et n'est pas
+  comptée ; les tiroirs sont ensuite ouverts au clavier et le contrôle refait.
+- **Captures** (`--captures`) : panneau seulement. Sous zoom, Playwright cadre en
+  pixels CSS sans le facteur de zoom (images tronquées ou blanches) : le banc
+  capture alors l'écran visible par CDP, sans cadrage.
+- Budget de 7 s par scénario (navigation comprise) ; lancement de Chromium à part.
 
-`matrix.json` énumère les 23 fichiers de scénarios. Chaque fichier est isolé
-sur une nouvelle page, limité à 7 s (navigation/chargement/essai inclus) ; le
-lancement Chromium est relevé séparément, avec un timeout de 15 s. Chaque
-résultat porte un comportement attendu, des références source, sa durée et
-les observations/appels. Une erreur de chargement ou d’assertion est conservée.
-Une infrastructure absente rend **BLOCKED**, `executed: false`, durée inconnue.
-Les scénarios restants sont bloqués si l’infrastructure tombe après un résultat.
+## Suites
 
-Codes de sortie : 0 = périmètre sélectionné exécuté sans échec ni blocage ;
-1 = échec ou cible altérée ; 2 = infrastructure/scénario bloqué. Le champ
-`executedScopeGate` ne vaut que pour la sélection ; **il ne déclare jamais U2
-accepté**, même avec tous les scénarios verts. Un `--scenario` ne vaut pas
-exécution de la matrice complète.
+`matrix.json` (suite `u2`, 24 scénarios) : les 23 scénarios de la préparation U2,
+mêmes identifiants et mêmes attendus, plus `tab-echo-running` (ajout F : Écho en
+cours, tiroir d'abandon fermé).
 
-Le zoom est obtenu par **chrome.tabs.setZoom(tabId, 2)** dans la vraie extension,
-confirmé par `getZoom() === 2` et par les métriques CSS/DPR, sans diminuer le
-viewport et sans `style.zoom`. Un refus de cette API rend le scénario bloqué.
-Cela vérifie le zoom Chromium dans ce profil ; le comportement du menu de zoom
-Edge, son popup et le poste réel restent à contrôler. Les tests de layout
-mesurent débordement/troncature et accès après défilement (hit-test des commandes),
-pas une certification générale de lisibilité ou de lecteur d’écran.
+`matrix-u1-resume.json` (suite `u1-resume`, 6 scénarios) : résumé de partie U1
+dans le vrai panneau, historique synthétique écrit dans l'IndexedDB réelle de
+l'extension (profil jetable) : historique complet avec reprise, historique
+indisponible (panne IndexedDB injectée dans la page de test), changement de
+partie 23 → 24 → 23, historique partiel (début de lot manquant, identité
+incomplète), identité de coupe incomplète, clavier et zoom 200 % du résumé.
+Chaque scénario exige `src/part-summary-49.js` : « NOT_APPLICABLE » sinon.
 
-La tabulation couvre les commandes disponibles dans les états testés ;
-les activations avec décompte portent sur Démarrer/Pause/Reprendre/Arrêter Orbite,
-Démarrer/Pause Écho. Les exports, l’abandon confirmé, SKIP explicite, la reprise
-manuelle et les nouveaux contrôles ajoutés par U1 demandent des scénarios
-complémentaires d’activation avant une couverture exhaustive. Aucun scénario
-n’est désactivé pour rendre une livraison verte.
+## Limites
 
-La réduction des animations est réellement émulée par Playwright ; styles de
-tous les éléments/pseudoéléments et animations actives sont interrogés après
-un changement synthétique de cut. Le témoin no-preference vérifie que
-l’animation existe sans réduction. Les contrastes utilisent le seuil de texte
-ordinaire **4,5:1 déjà adopté D-059/U02**, les tokens corrigés et des couleurs
-calculées live/muted ; pas de seuil nouveau, ni certification de tous les SVG,
-états superposés et fonds colorés.
+États synthétiques : pas de connexion ESV, pas de géométrie, pas de conservation
+terrain. Pas de lecteur d'écran. Le zoom par le menu d'Edge et le poste de Mic ne
+sont pas reproduits (Chromium seulement). La version de Chromium change certains
+comportements de focus : elle est publiée dans chaque rapport (`browserVersion`).
 
-## Situation de cette préparation
-
-`resultat-486.json` : 0 exécuté, 0 réussi, 0 échec UI observé, 23 bloqués.
-Chromium manque ; son installation standard a échoué. Le banc est écrit et
-ses contrôles d’infrastructure sont vérifiés, **sa première exécution réelle
-reste à faire**. Aucun diagnostic UI positif/négatif ne découle de ces blocages.
-
-Contrôle local du double, des refus et de la comptabilisation :
+Contrôles d'infrastructure (hors navigateur, hors verify) :
 
 ```sh
 node --test --test-reporter=tap --test-timeout=7000 tests/browser/u2-49/support.test.cjs
 ```
 
-Ces quatre tests Node ne remplissent aucune porte navigateur. Ils restent
-hors `verify`, comme les scénarios navigateur : ne pas additionner leurs
-réussites aux comptes de ce banc.
+## Fichiers historiques de la préparation (2 octobre 2026)
 
-Après disponibilité du navigateur : exécuter toute la matrice sur 4.8.6,
-consigner les défauts réels pour attribution à U1 sans corriger le panneau,
-puis compléter/rejouer sur le commit U1 exact et sur le commit d’assemblage.
-U3 attend toujours U2 et la définition des actions clavier.
+`resultat-486.json` (23 bloqués, 0 exécuté : Chromium absent alors),
+`installation-chromium.log`, `support-resultats.tap`, `support-rouge-chemin.log`,
+`syntaxe.log`, `empreintes-production.json` : preuves de la livraison de
+préparation, citées par `audit/chantiers/u2-preparation-panneau.md`. Conservés
+tels quels ; ils ne décrivent pas le banc actuel. Les résultats de qualification
+sont livrés hors dépôt (dossier de la mission F).
