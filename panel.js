@@ -224,6 +224,80 @@
  }
  /* Tuiles : un libellé, un grand chiffre léger, une précision. */
  const tuiles=l=>l.map(([lbl,val,ton,sous])=>`<div class="tuile"><span class="lbl">${esc(lbl)}</span><b${ton?` class="${ton}"`:''}>${esc(val)}</b><small>${esc(sous)}</small></div>`).join('');
+ /* 4.9 U1 (réécrit, mission G) — RÉSUMÉ DE LA PARTIE, en lecture seule.
+  * Le calcul est dans src/part-summary-49.js (module pur, règles R1 à R9). Ici :
+  * lire l'historique conservé et afficher. Aucune commande à ESV, aucun message
+  * au service worker en plus de la vue ; sans module ou sans stockage, le reste
+  * du panneau est inchangé. Un compte non prouvé complet n'est jamais affiché
+  * comme exact : « au moins N », ou « inconnu » à la place d'un zéro. */
+ const moduleResume=()=>globalThis.ArianePartSummary49||null;
+ const TRANCHE_HISTOIRE=128,RELIRE_HISTOIRE_MS=5000;
+ let histoire={cle:null,session:null,statut:'loading',events:[],lu:0,version:0},lectureHistoire=false,resumeMemo=null;
+ const cleHistoire=s=>`${s?.sessionId??''}|${s?.batch?.id??''}`;
+ /* Une tranche de l'historique : une transaction en lecture seule, 128 objets
+  * au plus, pour laisser Orbite écrire entre deux tranches. La clé de stockage
+  * sert à reprendre la lecture, jamais à ordonner les événements. */
+ function trancheHistoire(db,apres,R){return new Promise((resolve,reject)=>{
+   const lus=[],tx=db.transaction('events','readonly'),req=tx.objectStore('events').openCursor(apres===null?null:IDBKeyRange.lowerBound(apres,true));
+   let n=0,derniere=apres,suite=false;
+   req.onsuccess=()=>{const c=req.result;if(!c)return;derniere=c.key;const p=R.projectEvent(c.value);if(p)lus.push(p);
+     if(++n<TRANCHE_HISTOIRE)c.continue();else suite=true;};
+   req.onerror=()=>reject(req.error||Error('Lecture impossible.'));tx.onerror=()=>reject(tx.error||Error('Lecture impossible.'));
+   tx.onabort=()=>reject(tx.error||Error('Lecture annulée.'));tx.oncomplete=()=>resolve({lus,derniere,suite});});}
+ /* Lecture entière à l'ouverture de la vue Orbite et à chaque nouveau lot ;
+  * entre-temps, la fenêtre récente de l'état et les listes du lot courant
+  * suffisent. Un échec est retenté au plus toutes les 5 s. */
+ async function lireHistoire(s){const R=moduleResume();if(!R||!s?.sessionId||lectureHistoire)return;
+   const cle=cleHistoire(s);
+   if(histoire.cle===cle&&(histoire.statut==='available'||histoire.statut==='unavailable'&&Date.now()-histoire.lu<RELIRE_HISTOIRE_MS))return;
+   lectureHistoire=true;const garder=histoire.session===s.sessionId?histoire.events:[];
+   try{const S=store();if(!S)throw Error('Stockage indisponible.');const db=await S.open(),lus=[];let apres=null,suite=true;
+     while(suite){const t=await trancheHistoire(db,apres,R);lus.push(...t.lus);apres=t.derniere;suite=t.suite;}
+     histoire={cle,session:s.sessionId,statut:'available',events:lus,lu:Date.now(),version:histoire.version+1};
+   }catch{histoire={cle,session:s.sessionId,statut:'unavailable',events:garder,lu:Date.now(),version:histoire.version+1};}
+   finally{lectureHistoire=false;if(state&&which==='automatic')afficherResume(state);}}
+ /* Complet : le nombre exact. Sinon : « au moins N », et « inconnu » pour zéro. */
+ const compte=(v,complet)=>complet?String(v):v>0?'au moins '+v:'inconnu';
+ const pluriel=(n,mot)=>`${mot}${n>1?'s':''}`;
+ function afficherResume(s){const el=$('part-summary'),R=moduleResume();if(!el)return;el.hidden=!R;if(!R)return;
+   const cle=cleHistoire(s),b=s.batch,memeSession=histoire.session===s.sessionId,recents=Array.isArray(s.events)?s.events:[];
+   const statut=histoire.cle===cle?histoire.statut:memeSession&&histoire.statut==='unavailable'?'unavailable':'loading';
+   /* Le résumé n'est recalculé que si ses entrées ont changé. */
+   const memo=JSON.stringify([cle,statut,histoire.version,recents.length,recents.at(-1)?.eventId??null,b?.state??null,
+     ...['processed','deferred','skipped','manuallyCompleted','interrupted','paused'].map(k=>b?.[k]?.length??0),b?.activeIdentity??null,s.current?.identity??null]);
+   if(memo===resumeMemo)return;resumeMemo=memo;
+   const r=R.summarize({sessionId:s.sessionId??null,batch:b??null,identity:s.current?.identity??null,
+     events:[...(memeSession?histoire.events:[]),...recents],historyStatus:statut});
+   const titre=$('part-summary-title');
+   if(!r.counts){titre.textContent='Résumé de la partie';poser($('part-summary-counts'),'');poser($('part-summary-lots'),'');
+     $('part-summary-deferred').textContent='Partie non identifiée : résumé inconnu.';$('part-summary-unknown').textContent='';
+     $('part-summary-lots-title').textContent='Lots de la partie (inconnu)';
+     $('part-summary-note').textContent='Ariane ne connaît pas encore la page, le repère ou la session : rien n’est compté.';return;}
+   const c=r.counts,ok=r.historyComplete,n=v=>compte(v,ok),p=r.scope.part;
+   titre.textContent=`Résumé de la partie ${entier(p)}`;
+   if(poser($('part-summary-counts'),tuiles([['Lots',n(r.lots.length),'','de cette partie'],
+     ['Coupes traitées',n(c.distinct),'','chacune comptée une fois'],
+     ['Posées par Ariane',n(c.posed),'','validation acceptée'],
+     ['Différés restants',n(c.deferred),c.deferred?'amber':'',`${n(c.engineDeferred)} moteur · ${n(c.gaugeRejected)} écartement · ${n(c.noInput)} sans points · ${n(c.unclassifiedDeferred)} motif inconnu`],
+     ['Reprises à la main',n(c.manual),'','déclarées'],
+     ['SKIP envoyés',n(c.skipped),'','commande explicite']])))animerTuiles($('part-summary-counts'),'resume');
+   const liste=r.deferredCuts.map(entier).join(', ');
+   $('part-summary-deferred').textContent=r.deferredCuts.length?(ok?`Différés restants : ${liste}.`:`Différés restants connus : ${liste} (liste peut-être incomplète).`)
+     :ok?'Aucun différé restant.':'Différés restants : inconnu (aucun dans ce qui a été lu).';
+   const inconnues=r.unknownCuts.length&&r.unknownCuts.length<=12?` (${r.unknownCuts.map(entier).join(', ')})`:'';
+   $('part-summary-unknown').textContent=`Issue inconnue : ${n(c.unknown)}${inconnues} · En cours maintenant : ${r.activeCut!==null?'cut '+entier(r.activeCut):'aucun cut'} · Événements sans identité complète : ${n(r.identityUnknown)}.`;
+   const manques=[r.missingStarts?'début de lot absent':'',r.identityUnknown?'identités incomplètes':'',r.otherPageLots?'autre page non rapprochée':''].filter(Boolean);
+   $('part-summary-note').textContent=[
+     statut==='loading'?'Lecture de l’historique en cours : comptes partiels.':statut==='unavailable'?'Historique indisponible : seuls le lot courant et les derniers événements sont comptés.'
+       :ok?'Historique lu en entier.':`Historique incomplet (${manques.join(', ')}) : comptes partiels.`,
+     r.scope.projectId?'Compté pour ce projet, dans cette session d’Ariane.':'Projet non identifié : compté pour cette page d’ESV (et ses rechargements repris par Ariane), dans cette session.',
+     r.otherPageLots?`${r.otherPageLots} ${pluriel(r.otherPageLots,'autre lot')} de la partie ${entier(p)} sur une autre page d’ESV : non ${pluriel(r.otherPageLots,'compté')} ici.`:'',
+     'Nombre total de coupes de la partie : inconnu.'].filter(Boolean).join(' ');
+   $('part-summary-lots-title').textContent=`Lots de la partie (${n(r.lots.length)})`;
+   poser($('part-summary-lots'),r.lots.slice().reverse().map(l=>{const m=v=>compte(v,l.complete),k=l.counts;
+     return `<li><span class="mono">${esc(heure(l.startedAt))} · ${esc(String(l.id).slice(0,8))}${l.current?' · lot courant':''}</span>`
+       +`<span>${esc(NOMS_ETAT[l.state]||'état inconnu')} · coupes ${m(k.distinct)} · posées ${m(k.posed)} · différées ${m(k.deferred)} · issue inconnue ${m(k.unknown)}</span></li>`;}).join(''));
+ }
  /* Activité : heure, cut, ce qui s'est passé, valeur. */
  const lignes=l=>l.map(x=>`<div class="l" data-k="${entier(x.c)}-${x.k||'x'}-${entier(Date.parse(x.t))}"><span class="h">${heure(x.t)}</span><span class="c">${entier(x.c)}</span><span class="quoi${x.k?' '+x.k:''}">${esc(x.quoi)}</span><span class="v">${esc(x.val)}</span></div>`).join('');
  const QUOI={'first-pass':['posé · moteur',''],window:['posé · par la voie','voie-l'],choice:['posé · choix par la voie','voie-l'],crossing:['posé · ornière','voie-l']};
@@ -462,6 +536,7 @@
        if($('legende-skip'))$('legende-skip').hidden=!(v?.saute?.size>0);}
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
      const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
+     afficherResume(s);
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -547,7 +622,7 @@
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
    button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
  }
- async function refresh(){if(refreshing)return;refreshing=true;try{render(await api('view'));}catch(e){note(e.message,true);}finally{refreshing=false;}}
+ async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
  async function discover(){if(which==='home')return;const tabs=await api('list-tabs');$('tabs').replaceChildren();
    if(tabs.length!==1){const o=document.createElement('option');o.value='';o.textContent=tabs.length?'Choisir l’onglet à utiliser…':'Ouvre ESV dans Edge';$('tabs').append(o);}

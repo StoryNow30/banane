@@ -98,6 +98,16 @@ body[data-window=home] #notice{display:none}
 
 /* --------------------------------------------------------------- tuiles */
 .tuiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:22px -16px 0}
+/* 4.9 U1 : résumé de la partie. Deux colonnes ; les listes de cuts et les
+   identifiants se coupent plutôt que de faire déborder la fenêtre (zoom 200 %). */
+.resume-partie h2{margin:0}
+.resume-partie .tuiles{margin:14px 0 12px;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 0}
+.resume-partie .tuile{padding:0 12px 0 0;min-width:0}
+.resume-partie .tuile b{font-size:24px;overflow-wrap:anywhere}
+.resume-partie p,.resume-partie li{overflow-wrap:anywhere}
+.resume-liste{font-size:12px;line-height:1.6}
+.resume-partie ul{list-style:none;margin:0;padding:0}
+.resume-partie li{display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--hair);font-size:11px;line-height:1.6}
 .tuile{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0 16px;border-left:1px solid var(--hair)}
 .tuile b{font-size:30px;font-weight:300;line-height:1;color:var(--text);transition:color .4s}
 .tuile b.amber{color:var(--amber)}.tuile b.red{color:var(--red)}
