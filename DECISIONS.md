@@ -1,5 +1,27 @@
 # Décisions techniques
 
+## D-077 - Observateur passif autorisé en version de test ; ordre ; retour à une coupe ; « le reste » validé
+
+**Réponse de Mic du 5 octobre 2026** : « 1) oui j'autorise ; 2) ça marche 3) ça marche. Je valide le reste », aux trois
+décisions posées par l'orchestrateur après sa lecture du code d'ESV (`missions/ANGLES_ESV_RAPPORT.md`, privé).
+
+1. **Observateur passif autorisé**, en version de test, **sans aucune commande ajoutée** : écoute de l'écriture de
+   validation d'ESV (statut HTTP et corps), lecture des pages de la liste des coupes de la partie, mesure des
+   chargements de points par visite, événements internes pour l'identité. Ouvre le développement de ces lectures
+   dans le périmètre de V1 ; il ne change aucune règle de pose.
+2. **Ordre** : preuve d'écriture et liste des coupes avant V2.
+3. **Retour à une coupe** : saut direct par l'événement interne d'ESV si l'essai du banc le confirme, sinon pas à pas.
+4. **« Le reste » : interprété par l'orchestrateur comme l'acceptation de ses recommandations présentées à Mic**, soit :
+   correction du débordement du tiroir « Réglages de la collecte » à 200 % et du focus après Pause/Reprendre (patchs
+   proposés par la mission F, à appliquer par G, propriétaire du panneau, après sa relecture) ; deux choix d'affichage
+   proposés par G (pas de rapprochement de deux pages ESV par le seul numéro de partie après rechargement sans reprise
+   du lot ; comptage des coupes 9033 et 9241 de la partie 19 dans le résumé, réversible).
+
+**Non couvert par cette réponse, donc non autorisé** : sortie du gel du lecteur de points (option de pause), activation
+en production d'un nouveau comportement, séance terrain, fusion, étiquette, publication, activation de
+l'apprentissage, changement de seuil ou de porte, collecte ciblée supplémentaire. Chacun demande sa décision écrite.
+Si Mic entendait « le reste » plus largement, il le dira. Consignée par l'orchestrateur Claude Code.
+
 ## D-076 - Plan de la suite validé par Mic ; lecture directe du code ESV demandée
 
 **Réponse de Mic du 5 octobre 2026** : « Très bien je valide ton plan », à la recommandation de l'orchestrateur Claude

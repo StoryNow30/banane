@@ -22,39 +22,61 @@ Branches locales d'import : `livre/v1-test-1ba79d4`, `livre/v1-corrige-baa548d`,
 `livre/u2-preparation` (non envoyées : ce sont des copies des livraisons). Les branches de travail `claude/…` sont
 envoyées sur GitHub au fur et à mesure (D-075), jamais `main`, sans fusion.
 
-## 2. Statut des chantiers
+## 2. Statut des chantiers (5 octobre, soir)
 
-Vocabulaire : **accepté** = dit par Mic ; **livré** = remis, relu ou non ; **en cours** = mission active ;
-**à cadrer** = rien d'autorisé au-delà du cadrage. Aucun pourcentage d'avancement ni date de sortie.
+Vocabulaire : **accepté** = dit par Mic ; **livré** = remis ; **relu** = relu par une équipe autre que l'auteur ;
+**à l'étude** = étude livrée, aucun code adopté. Un code réécrit par Claude Code n'est pas accepté d'office : il
+attend sa relecture indépendante, puis Mic.
 
-| Chantier | Statut | Ce qui manque avant acceptation |
-|---|---|---|
-| P2 | **Accepté** (D-071) | Rien ; ne pas refaire |
-| V1 mesure par phase | Livré, testé terrain partie 23, **non accepté** | Relecture du diagnostic, correctifs de mesure (proposés, non adoptés), plusieurs lots, couverture 100 %, décisions identiques |
-| U1 résumé de partie | Livré et relu (27 essais), **non accepté** | Contrôle dans le vrai panneau ; réécriture en cours |
-| U2 essais du vrai panneau | Banc livré ; 20 PASS, `focus-pause` FAIL dès 4.8.6, 2 zooms BLOCKED (headless) | Exécution à fenêtre ; diagnostic du focus et des zooms |
-| V4 | Préparation et relecture livrées | Périmètre : seule la paire comparative est candidate ; gain réel à chiffrer avec V1 |
-| Inventaire D-067 | À faire après V1 accepté, avant V2 | Acceptation V1 |
-| V2, V3, U3 | À cadrer / dépendances | V1 ; A/A et réservations avant V3 ; action de `D` avant U3 |
-| V5, B3 | Conditionnels | Mesure de dérive (V5) ; besoin issu de B2 (B3) |
-| Retour à une coupe, 398/402, B1, B2 | Dans la 4.9 (D-068), à cadrer | Études en cours ; environnement 398/402 à qualifier |
-| Apprentissage | Dans la 4.9 (D-066), activation conditionnelle | Inventaire, seuils approuvés, aucune activation |
-| Banc ESV local | En construction (privé, hors dépôt) | Relecture indépendante avant tout usage pour Ariane |
-
-## 3. Missions lancées le 4 octobre (espaces séparés, une branche par auteur)
-
-| Mission | But | Branche locale | Écrit en production |
+| # | Chantier | Statut | Ce qui manque avant acceptation |
 |---|---|---|---|
-| A — V1 | Relire le diagnostic, réécrire le code V1, préparer les correctifs (non adoptés) | `claude/49-v1-reecriture`, `claude/49-v1-corrections-proposees` | voir § 4 |
-| B — ESV | Banc ESV local depuis les originaux, confiné | hors dépôt | rien |
-| C — Performance | Coûts du cycle, capture, V4 réévalué | aucune | rien |
-| D — Géométrie | Repères, données, candidats, confiance, apprentissage, 398/402 | aucune | rien |
-| E — Fonctions | Identité, sauvegarde, navigation, raccourcis, hors écran, exports | aucune | rien |
-| F — Qualification U1/U2 | Vrai panneau sous fenêtre, focus, zooms, résumé | `claude/49-u2-qualification` | outils de banc seulement |
-| G — Panneau | Réécrire U1 ; propriétaire unique du panneau | `claude/49-panneau-reecriture` | voir § 4 |
+| 1 | P2 | **Accepté** (D-071) | Rien ; ne pas refaire |
+| 2 | V1 mesure par phase | Livré (GPT), testé terrain partie 23, **non accepté**. Diagnostic relu par A : 3 défauts de mesure confirmés. Réécriture (A) et correctifs 2 et 3 prêts en local, non relus | Relecture indépendante de A ; correctif d'export (patch panneau) ; plusieurs lots ; couverture 100 % ; décisions identiques au banc ; attestation du projet |
+| 3 | Inventaire D-067 | Pas commencé (après V1 accepté) | V1 accepté. La liste des coupes d'ESV donnerait des comptes exacts (D-077) |
+| 4 | V2 exports allégés + KI-068 | Pas commencé | Essai de faisabilité du fichier unique ; l'observateur passif simplifie les données (D-077) |
+| 5 | V4 | Préparation relue. Part mesurée : 0,3 % du cycle : levier de vitesse écarté (D-076) | Décider ce qui reste de V4 |
+| 6 | V3 capture | Étude faite (C) ; idée « lecture des points » prête ; **aucun essai terrain** | Décision de sortie du gel du lecteur (non prise) ; A/A ; réservation de parties ; 3 expériences au moins |
+| 7 | U1 résumé de partie | Livré (GPT) puis réécrit (G, `022954d`) : comptes identiques à l'outil ; 9 cas sur 9 dans le vrai panneau (F). **Non accepté** | Relecture indépendante de G (en cours) ; acceptation |
+| 8 | U2 essais du vrai panneau | Banc réécrit (F) : 21 réussis, 3 échecs sur 24, tous défauts produit présents dès 4.8.6 (focus après Pause/Reprendre ; tiroir Réglages qui dépasse de 21 px à 200 %) | Correctifs (accord Mic, D-077) appliqués par G après sa relecture ; nouveau passage du banc |
+| 9 | U3 raccourcis | Pas commencé | L'étude E a établi les actions réelles d'ESV (D = rail droit ; Maj+Espace = valider sans bouger) : décider l'action de D |
+| 10 | Retour à une coupe | À l'étude : saut par l'événement interne d'ESV, essai au banc B | Résultat du banc ; conditions de sécurité D-067 |
+| 11 | Étude 398/402 | À l'étude : la 4.8.6 les poserait encore ; rejeu non fait | Rejeu avec extracteur 7z (disponible) |
+| 12 | B1 voisins validés | À l'étude : la source existe (liste des coupes d'ESV) | Observateur passif ; partie neuve |
+| 13 | B2 rails hors écran | À l'étude : déplacement par la caméra Potree | Tâche opérateur de 10 min |
+| 14 | Apprentissage | À l'étude : environ 500 à 650 rails exacts (zone 150 à 1 000 de D-067) | Fiche de faisabilité ; aucune activation |
+| – | V5 (conditionnel) | Condition probablement remplie : cut de 5,5 à 7,4 s sur 85 visites | Seuil de dérive à fixer par Mic |
+| – | B3 (conditionnel) | Dépend de B2 | B2 |
+| – | Banc ESV local (privé) | Construit, confiné ; essais serveur et F1 à F4 : 113 sur 113 ; second jeu intégré | Relecture indépendante avant tout usage pour Ariane |
+
+**Chantiers obligatoires : 1 accepté sur 14** (3 livrés non acceptés : V1, U1, U2 ; 7 à l'étude ou préparés : V4, V3,
+retour à une coupe, 398/402, B1, B2, apprentissage ; 3 non commencés : inventaire, V2, U3). Chiffre de comptage, pas
+d'avancement : les chantiers n'ont ni la même taille ni la même part de terrain.
+
+**Portes de la version 4.9.0 (cahier § 7) : 0 franchie sur 9.** Cycle médian −25 % ; C1 et C4 non dégradés ; C3 = 0 ;
+trois mesures publiées ensemble ; 0 capture perdue ; exports conformes (petit fichier à zéro différence) ; U1 à U3
+livrés ; V5 selon la mesure ; audit Astra du diff. Aucune n'est mesurée sur la 4.9.
+
+**Pourquoi aucun pourcentage** : le cahier et l'instruction de reprise l'interdisent tant que la base de calcul
+n'existe pas. Il n'y a pas encore de mesure de gain, et la sortie dépend de cycles terrain successifs (A/A, au moins
+trois expériences V3, une partie neuve de validation). L'avenant D-067 avait compté 11 à 16 cycles de 2 à 3 jours, soit
+3 à 7 semaines avant délais, sans promettre de date ; ce calcul n'a pas été refait.
+
+## 3. Missions (4-5 octobre) et état au 5 octobre, soir
+
+| Mission | Statut | Livrable | Branche locale (envoyée ?) |
+|---|---|---|---|
+| A — V1 | En cours (reprise après coupure de quota) | Réécriture, correctifs 2 et 3 ; reste correctif 1, coût, rapport | `claude/49-v1-reecriture`, `claude/49-v1-corrections-proposees` (non envoyées : après relecture) |
+| B — ESV | En cours (rapport final) | Banc confiné, matrice, 2 jeux de données | hors dépôt |
+| C — Performance | Livrée ; contre-vérification en cours | `missions/C_PERF/RAPPORT.md` (privé) | aucune |
+| D — Géométrie | Livrée ; contre-vérification en cours | `missions/D_GEOM/RAPPORT.md` (privé) | aucune |
+| E — Fonctions | Livrée ; contre-vérification en cours | `missions/E_FONCTIONS/RAPPORT.md` (privé) | aucune |
+| F — Qualification | Livrée | Banc réel + rapport + 3 patchs proposés | `claude/49-u2-qualification` (envoyée) |
+| G — Panneau | Livrée ; relecture indépendante en cours | `022954d` | `claude/49-panneau-reecriture` (envoyée) |
+| Lecture directe d'ESV (orchestrateur) | Livrée | `missions/ANGLES_ESV_RAPPORT.md` (privé) | aucune |
 
 Chaque auteur livre un rapport et s'arrête ; une autre équipe relit. L'orchestrateur relit chaque diff ; Mic
-accepte, fusionne, étiquette et publie. Les branches de travail sont envoyées sur GitHub (D-075) ; envoyée ne veut pas dire acceptée.
+accepte, fusionne, étiquette et publie. Les branches de travail sont envoyées sur GitHub (D-075) ; envoyée ne veut
+pas dire acceptée.
 
 ## 4. Propriétaires des fichiers de production
 
