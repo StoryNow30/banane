@@ -117,6 +117,7 @@ function seanceObservateur(){
 const obsInt=(v,max=1e12)=>Number.isInteger(v)&&v>=0&&v<=max?v:null;
 const obsNum=v=>Number.isFinite(v)&&Math.abs(v)<1e15?v:null;
 const obsStr=(v,n)=>typeof v==='string'&&v.length<=n?v:null;
+const obsKey=v=>typeof v==='string'&&v.length<=80&&/^[\w.+\-]+$/.test(v)?v:null;
 const obsOutcome=v=>['done','error','abort','timeout'].includes(v)?v:null;
 function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;const out={};let n=0;
  for(const k of Object.keys(b)){const v=b[k];if(n>=24||k.length>40||!/^[\w.\-]+$/.test(k))continue;
@@ -128,8 +129,15 @@ function obsFields(x){
   case 'write':return {kind:'write',via:'xhr',urlClass:'rail-pair-write',method:obsStr(x.method,8),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),attempt:obsInt(x.attempt,1000),
    railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),...time};
   case 'list-page':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
-   return {kind:'list-page',via:'xhr',urlClass:'rail-list',status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
+   return {kind:'list-page',via:'xhr',urlClass:'rail-list',listKey:obsKey(x.listKey),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
     skipped:['oversize','unreadable'].includes(x.skipped)?x.skipped:null,basis:'row-string-values',...time};}
+  case 'list-summary':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
+   return {kind:'list-summary',listKey:obsKey(x.listKey),pages:obsInt(x.pages,1e6),okPages:obsInt(x.okPages,1e6),rows:obsInt(x.rows,1e8),chars:obsInt(x.chars,1e10),counts:c,
+    firstStartedEpochMs:obsNum(x.firstStartedEpochMs),lastEndedEpochMs:obsNum(x.lastEndedEpochMs),durationMs:obsNum(x.durationMs),beforeSession:typeof x.beforeSession==='boolean'?x.beforeSession:null};}
+  case 'fetch-rails':return {kind:'fetch-rails',n:obsInt(x.n,1e7),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
+  case 'observer':return {kind:'observer',version:obsInt(x.version,1000),world:x.world==='MAIN'?'MAIN':null,installedBeforePageScripts:typeof x.installedBeforePageScripts==='boolean'?x.installedBeforePageScripts:null,
+   readyState:['loading','interactive','complete'].includes(x.readyState)?x.readyState:null,scriptsAtInstall:obsInt(x.scriptsAtInstall,1e6),enabled:typeof x.enabled==='boolean'?x.enabled:null,
+   afterDenial:typeof x.afterDenial==='boolean'?x.afterDenial:null,dropped:obsInt(x.dropped,1e9),ignored:obsInt(x.ignored,1e12)};
   case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
@@ -1026,7 +1034,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
 chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(sender.id!==chrome.runtime.id)return;
  if(m.kind==='launcher-status'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
-  respond(launcherState());return;}
+  // Onglet choisi : en plus, l'état de séance de l'observateur passif (le pont en tire sa demande de marque).
+  respond(sender.tab.id===selectedTab?{...launcherState(),observation:{seance:globalThis.BananeSettings?.observateurPassif?.actif!==false&&!!seanceObservateur()}}:launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
  if(m.kind==='esv-observation'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){respond(rangerObservations(m));return;}

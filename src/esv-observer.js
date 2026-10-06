@@ -27,6 +27,12 @@
  *                   lignes et comptes par valeur de statut, sans les lignes ;
  *  - `resource`     fichiers de points : nombre, octets, début et fin, par
  *                   fenêtres de 250 ms (API de mesure des ressources) ;
+ *  - `list-summary` résumé compact (comptes seulement) des listes chargées AVANT une séance,
+ *                   posé une fois au début de la séance : jamais les lignes, jamais les écritures
+ *                   ni les fichiers de points d'avant la séance ;
+ *  - `observer`     marque « observateur présent » (version, installé avant les scripts de la page) ;
+ *  - `fetch-rails`  filet : nombre de requêtes `fetch` de chemin rails (ces
+ *                   requêtes ne sont pas observées, seulement comptées) ;
  *  - tout le reste (connexion, jeton, autres) : compté, jamais noté.
  *
  * Les événements du bus jQuery d'ESV (identité) ne sont pas pris ici : jQuery
@@ -36,12 +42,13 @@
  else api.install(root);
 })(typeof globalThis!=='undefined'?globalThis:this,function(){'use strict';
  const LIMITS=Object.freeze({ringEntries:256,ringChars:1048576,entryChars:4096,resourceWindowMs:250,
-  bodyKeys:24,bodyKeyChars:40,bodyStringChars:32,idChars:80,listChars:8000000,retryWindowMs:15000});
+  bodyKeys:24,bodyKeyChars:40,bodyStringChars:32,idChars:80,listChars:8000000,retryWindowMs:15000,listKeys:16});
  /* Classes d'URL : seul le CHEMIN compte, jamais la chaîne de requête. À
   * confirmer sur le banc ESV (mission B) avant toute conclusion. */
  const AUTH=/(^|\.)login\.microsoftonline\.com$|(^|\.)b2clogin\.com$|(^|\.)login\.live\.com$|\/oauth2\/|\/token(\/|$)|\/authorize(\/|$)|\/devicecode/i;
  const POINTS=/(?:^|\/)ept\.json$|\/ept-(?:data|hierarchy)\//i;
  const STATUS_VALUES=['valid','invalid','skipped'];
+ const OBSERVER_VERSION=1;
 
  function pathOf(url,base){try{const u=new URL(String(url),base);return {host:u.hostname,path:u.pathname};}catch{return null;}}
  function classify(method,url,base){
@@ -53,6 +60,14 @@
   if(m==='GET'&&POINTS.test(u.path))return 'point-resource';
   return 'other';
  }
+ /* Chemin de classe « rails » (écriture, liste ou lecture d'une coupe), hors connexion et jeton. */
+ function isRailsPath(url,base){const u=pathOf(url,base);return !!u&&!AUTH.test(u.host)&&!AUTH.test(u.path)&&/\/rails(\/|$)/.test(u.path);}
+ /* Clé de liste : le segment du chemin juste avant `/rails`, caractères sûrs seulement ; sinon rien.
+  * Chaque chargement de partie recharge la page, donc un observateur = une partie. */
+ function listKey(url,base){
+  const u=pathOf(url,base),m=u&&/\/([^/]+)\/rails\/?$/.exec(u.path);if(!m)return null;
+  let k;try{k=decodeURIComponent(m[1]);}catch{return null;}
+  return k.length<=LIMITS.idChars&&/^[\w.+\-]+$/.test(k)?k:null;}
  /* Identifiant de coupe d'ESV : fin du chemin après `/rails/`, caractères
   * sûrs seulement ; sinon rien. Ce n'est ni un jeton ni la chaîne de requête. */
  function railPairId(url,base){
@@ -92,7 +107,13 @@
   const base=()=>{try{return win.location.href;}catch{return undefined;}};
   const perfNow=()=>win.performance.now(),epoch=t=>win.performance.timeOrigin+t;
   let observerId;try{observerId=win.crypto.randomUUID();}catch{observerId=String(Math.random()).slice(2)+String(Date.now());}
-  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],lastWrite=new Map();
+  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],lastWrite=new Map(),listSums=new Map();
+  /* État de la page à l'installation : l'observateur est-il arrivé avant les scripts de la page ?
+   * oui = document en cours de chargement et aucun script encore analysé ; non = déjà chargé ou des
+   * scripts analysés ; inconnu (null) = document illisible : jamais deviné. */
+  const start=(()=>{try{const d=win.document;if(!d)return {readyState:null,scripts:null,before:null};
+   const readyState=typeof d.readyState==='string'?d.readyState:null,scripts=d.scripts&&Number.isInteger(d.scripts.length)?d.scripts.length:null;
+   return {readyState,scripts,before:readyState!==null&&scripts!==null?readyState==='loading'&&scripts===0:null};}catch{return {readyState:null,scripts:null,before:null};}})();
 
   /* ------------------------------------------------ tampon et envoi */
   function post(entry){try{win.postMessage({kind:'banane5:esv-observation',v:1,observer:observerId,entry},origin());}catch{}}
@@ -105,6 +126,30 @@
    while(ring.length>LIMITS.ringEntries||ringChars>LIMITS.ringChars){const x=ring.shift();ringChars-=x.chars;dropped++;}
    post(e);
   }
+  /* Marque « observateur présent » : posée à la demande du pont, au début d'une séance. Elle distingue
+   * « aucune écriture » d'« observateur absent » (navigateur trop ancien, page non rechargée après
+   * l'installation, extension non rechargée) : sans marque dans une séance, l'observateur n'y était pas. */
+  function snapshot(afterDenial){
+   record({kind:'observer',version:OBSERVER_VERSION,world:'MAIN',installedBeforePageScripts:start.before,readyState:start.readyState,scriptsAtInstall:start.scripts,
+    enabled,afterDenial:afterDenial===true,dropped,ignored});
+   // Séance démarrée APRÈS le chargement des listes : leur résumé (comptes seulement), rien d'autre d'avant la séance.
+   if(afterDenial===true)postListSummaries();
+  }
+  /* Résumé compact par chargement de liste (jamais les lignes), tenu à part du tampon : il n'est pas évincé par
+   * les écritures. Une valeur inconnue (page illisible, en erreur, trop grosse) rend le total « non mesuré »
+   * (null), jamais zéro. Au plus 16 clés. */
+  function addListSummary(key,e){
+   const k=key??'?';let v=listSums.get(k);if(!v){if(listSums.size>=LIMITS.listKeys)return;
+    v={key,pages:0,ok:0,rows:0,rowsKnown:true,chars:0,charsKnown:true,counts:{valid:0,invalid:0,skipped:0},countsKnown:true,first:null,last:null};listSums.set(k,v);}
+   v.pages++;if(e.status>=200&&e.status<300)v.ok++;
+   if(Number.isFinite(e.rows))v.rows+=e.rows;else v.rowsKnown=false;
+   if(Number.isFinite(e.chars))v.chars+=e.chars;else v.charsKnown=false;
+   if(e.counts&&typeof e.counts==='object')for(const c of STATUS_VALUES)v.counts[c]+=e.counts[c]||0;else v.countsKnown=false;
+   if(Number.isFinite(e.startedEpochMs))v.first=v.first===null?e.startedEpochMs:Math.min(v.first,e.startedEpochMs);
+   if(Number.isFinite(e.endedEpochMs))v.last=v.last===null?e.endedEpochMs:Math.max(v.last,e.endedEpochMs);
+  }
+  function postListSummaries(){for(const v of listSums.values())record({kind:'list-summary',listKey:v.key,pages:v.pages,okPages:v.ok,rows:v.rowsKnown?v.rows:null,chars:v.charsKnown?v.chars:null,
+   counts:v.countsKnown?{...v.counts}:null,firstStartedEpochMs:v.first,lastEndedEpochMs:v.last,durationMs:v.first!==null&&v.last!==null?Math.round((v.last-v.first)*100)/100:null,beforeSession:true});}
   /* Le pont se signale (ou se re-signale) : rejouer ce que le tampon garde. */
   function replay(afterSeq){for(const x of ring)if(x.seq>afterSeq){try{post(JSON.parse(x.json));}catch{}}}
 
@@ -120,14 +165,18 @@
   }
   function onOpen(xhr,args){
    const cls=classify(args[0],args[1],base());
-   meta.set(xhr,{cls,method:String(args[0]||'GET').toUpperCase(),url:args[1]});
+   meta.set(xhr,{cls,method:String(args[0]||'GET').toUpperCase(),url:args[1],attached:false,done:false});
   }
   function onSend(xhr,args){
    const m=meta.get(xhr);if(!m||m.cls!=='write'&&m.cls!=='list-page'){ignored++;return;}
+   // Une note par requête : un envoi relancé (le premier a levé) ou répété sans `open` n'ajoute rien.
+   if(m.attached)return;m.attached=true;
    const started=perfNow(),body=m.cls==='write'?writeBody(args[0]):null;let outcome='done';
    const flag=name=>()=>{outcome=name;};
    xhr.addEventListener('abort',flag('abort'));xhr.addEventListener('timeout',flag('timeout'));
    xhr.addEventListener('loadend',()=>{
+    // Un XHR réutilisé garde les écouteurs de sa requête précédente : seul compte celui de l'`open` courant.
+    if(meta.get(xhr)!==m||m.done)return;m.done=true;
     // Après les écouteurs d'ESV : la lecture éventuellement lourde ne les retarde pas.
     try{win.setTimeout(()=>{try{finish(xhr,m,started,perfNow(),outcome,body);}catch{}},0);}catch{}
    });
@@ -144,21 +193,28 @@
    }else{
     let text=null;try{text=xhr.responseType===''||xhr.responseType==='text'?xhr.responseText:xhr.responseType==='json'&&xhr.response?JSON.stringify(xhr.response):null;}catch{}
     const s=status>=200&&status<300?listSummary(text):{rows:null,counts:null};
-    record({kind:'list-page',urlClass:'rail-list',chars:typeof text==='string'?text.length:null,basis:'row-string-values',...s,...common});
+    const key=listKey(m.url,base()),entry={kind:'list-page',urlClass:'rail-list',listKey:key,chars:typeof text==='string'?text.length:null,basis:'row-string-values',...s,...common};
+    record(entry);addListSummary(key,entry);
    }
   }
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'open',onOpen);
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'send',onSend);
 
   /* ------------------------------------------------ fichiers de points */
-  let windowTimer=null,agg=null;
-  function flushResources(){windowTimer=null;const a=agg;agg=null;if(!a)return;
-   record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs});}
+  let windowTimer=null,agg=null,aggFetch=null;
+  function flushResources(){windowTimer=null;const a=agg,f=aggFetch;agg=null;aggFetch=null;
+   if(a)record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs});
+   if(f)record({kind:'fetch-rails',n:f.n,startedEpochMs:epoch(f.start),endedEpochMs:epoch(f.end),windowMs:LIMITS.resourceWindowMs});}
+  /* Filet passif pour `fetch` (non enveloppé) : l'API de mesure des ressources voit aussi les requêtes
+   * `fetch`. On COMPTE celles dont le chemin est de classe « rails » (jamais l'URL, jamais le contenu) :
+   * un « 0 écriture » se distingue ainsi d'une écriture passée par `fetch` et non vue. */
   function onResources(entries){
-   for(const e of entries){if(classify('GET',e.name,base())!=='point-resource')continue;
-    const start=Number(e.startTime),end=Number(e.responseEnd);if(!Number.isFinite(start)||!Number.isFinite(end))continue;
-    if(!agg)agg={n:0,bytes:0,start,end};agg.n++;agg.bytes+=Number(e.transferSize)||Number(e.encodedBodySize)||0;agg.start=Math.min(agg.start,start);agg.end=Math.max(agg.end,end);}
-   if(agg&&!windowTimer)windowTimer=win.setTimeout(()=>{try{flushResources();}catch{}},LIMITS.resourceWindowMs);
+   for(const e of entries){const start=Number(e.startTime),end=Number(e.responseEnd);if(!Number.isFinite(start)||!Number.isFinite(end))continue;
+    if(classify('GET',e.name,base())==='point-resource'){
+     if(!agg)agg={n:0,bytes:0,start,end};agg.n++;agg.bytes+=Number(e.transferSize)||Number(e.encodedBodySize)||0;agg.start=Math.min(agg.start,start);agg.end=Math.max(agg.end,end);
+    }else if(e.initiatorType==='fetch'&&isRailsPath(e.name,base())){
+     if(!aggFetch)aggFetch={n:0,start,end};aggFetch.n++;aggFetch.start=Math.min(aggFetch.start,start);aggFetch.end=Math.max(aggFetch.end,end);}}
+   if((agg||aggFetch)&&!windowTimer)windowTimer=win.setTimeout(()=>{try{flushResources();}catch{}},LIMITS.resourceWindowMs);
   }
   try{if(win.PerformanceObserver){const po=new win.PerformanceObserver(list=>{try{if(enabled)onResources(list.getEntries());}catch{}});po.observe({type:'resource',buffered:true});}}catch{}
 
@@ -166,11 +222,12 @@
   try{win.addEventListener('message',ev=>{try{
    if(ev.source!==win||ev.origin!==origin())return;const d=ev.data;if(!d||typeof d!=='object')return;
    if(d.kind==='banane5:hello')replay(Number.isInteger(d.afterSeq)&&d.afterSeq>=0?d.afterSeq:0);
+   else if(d.kind==='banane5:snapshot')snapshot(d.afterDenial===true);
    else if(d.kind==='banane5:config')enabled=d.enabled!==false;
   }catch{}});}catch{}
 
   return {record,replay,ring:()=>ring.map(x=>JSON.parse(x.json)),setEnabled:v=>{enabled=!!v;},
    stats:()=>({observer:observerId,seq,dropped,ringEntries:ring.length,ringChars,ignored,enabled})};
  }
- return {install,classify,railPairId,writeBody,listSummary,LIMITS};
+ return {install,classify,isRailsPath,railPairId,listKey,writeBody,listSummary,LIMITS};
 });

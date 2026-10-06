@@ -7,7 +7,7 @@
 const {install}=require('../../src/esv-observer.js');
 const ORIGIN='https://esv.test',HREF=ORIGIN+'/rails_validation/part';
 const tick=()=>new Promise(r=>setImmediate(r));
-function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,failTimers=false}={}){
+function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,failTimers=false,document}={}){
  const log=[],network=[],posts=[],listeners=[],observerTimers=[];let clock=0,po=null;
  class XHR{
   constructor(){this.L={};this.status=0;this.readyState=0;this.responseType='';this.responseText='';this.onreadystatechange=null;}
@@ -17,7 +17,8 @@ function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,
   getAllResponseHeaders(){log.push(['getAllResponseHeaders']);return '';}
   addEventListener(t,fn){(this.L[t]=this.L[t]||[]).push(fn);}
   fire(t){for(const fn of this.L[t]||[])fn.call(this,{type:t});}
-  send(body){log.push(['send',this._m,this._u,body===undefined?null:body]);network.push([this._m,this._u,body===undefined?null:body]);
+  send(body){if(this.throwOnce){this.throwOnce=false;log.push(['send-leve']);throw new Error('send-invalide-une-fois');}
+   log.push(['send',this._m,this._u,body===undefined?null:body]);network.push([this._m,this._u,body===undefined?null:body]);
    if(this._m==='BOOM')throw new Error('send-invalide');
    queueMicrotask(()=>{const r=routes(this._m,this._u,body)||{status:200,text:'{}'};this.status=r.status;this.responseText=r.text??'';this.readyState=4;
     if(this.onreadystatechange)this.onreadystatechange();this.fire('readystatechange');this.fire(r.status===0?'error':'load');this.fire('loadend');});}
@@ -30,7 +31,7 @@ function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,
   postMessage:(m,o)=>{if(failPost)throw new Error('postMessage-en-panne');posts.push({m,o});},
   addEventListener:(t,fn)=>{listeners.push({t,fn});},
   setTimeout:(fn,ms)=>{if(failTimers)throw new Error('minuterie-en-panne');observerTimers.push({fn,ms});return observerTimers.length;}};
- win.self=win;
+ win.self=win;if(document!==undefined)win.document=document;
  const ctl=observe?install(win):null;
  return {win,XHR,po:()=>po,log,network,posts,observerTimers,ctl,originalFetch,
   runTimers:()=>{while(observerTimers.length){const t=observerTimers.shift();t.fn();}},
@@ -49,8 +50,8 @@ async function pageScript(w){
  w.rows=rows;
  call('open-invalide',()=>{const x=new win.XMLHttpRequest();x.open('GET','THROW');});
  call('send-invalide',()=>{const x=new win.XMLHttpRequest();x.open('BOOM','https://esv.test/api/x');x.send(null);});
- xhr('PUT',ORIGIN+'/api/u3d/projects/p-secret/rails/traj__00+0071551.725/00071552.685?merge=true',JSON.stringify({a:1.5,b:-2.25,c:0,RailType:'U50',SeenByOperator:true,nested:{x:1},arr:[1],tok:'Bearer '+'a'.repeat(60),['bad key']:3}));
- xhr('GET',ORIGIN+'/api/u3d/projects/p-secret/rails?status=invalid&top=1000&$skiptoken=zzz',undefined,{headers:true});
+ xhr('PUT',ORIGIN+'/api/u3d/projects/p-key/rails/traj__00+0071551.725/00071552.685?merge=true',JSON.stringify({a:1.5,b:-2.25,c:0,RailType:'U50',SeenByOperator:true,nested:{x:1},arr:[1],tok:'Bearer '+'a'.repeat(60),['bad key']:3}));
+ xhr('GET',ORIGIN+'/api/u3d/projects/p-key/rails?status=invalid&top=1000&$skiptoken=zzz',undefined,{headers:true});
  xhr('GET','https://login.microsoftonline.com/tenant/oauth2/v2.0/token?client_id=secret-client',null,{headers:false});
  xhr('GET',ORIGIN+'/other/thing?x=1',null);
  call('fetch',()=>win.fetch(ORIGIN+'/api/ept.json'));

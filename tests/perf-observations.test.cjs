@@ -61,3 +61,28 @@ test('observations sans aucun jalon V1 : V1 non mesuré, observations quand mêm
  const m=measure({events:[write()]},{tous:true});assert.equal(m.available,false);assert.equal(m.observations.writes.n,1);assert.equal(m.observations.writes.rows[0].link,null);
  const md=toMarkdown(m);assert.match(md,/Mesures V1 non mesurées/);assert.match(md,/Observateur passif/);
 });
+test('filet fetch : compté dans le bilan, dit pour ce qu’il est (écritures par fetch non vues) ; 0 dit aussi',()=>{
+ const j=journal();j.events.push(obs('fetch-rails',{n:2,startedEpochMs:1100,endedEpochMs:1140,windowMs:250}),obs('fetch-rails',{eventId:'f2',n:3,startedEpochMs:1500,endedEpochMs:1600,windowMs:250}));
+ const o=measure(j,{tous:true}).observations;assert.deepEqual([o.available,o.counts['fetch-rails'],o.fetchRails],[true,2,{windows:2,n:5}]);
+ const md=toMarkdown(measure(j,{tous:true}));assert.match(md,/Requêtes fetch sur les chemins rails : 5 sur 2 fenêtre\(s\)/);assert.match(md,/non observées : l’observateur n’enveloppe pas fetch/);
+ const k=journal();k.events.push(write());assert.deepEqual(measure(k,{tous:true}).observations.fetchRails,{windows:0,n:0});assert.match(toMarkdown(measure(k,{tous:true})),/Requêtes fetch sur les chemins rails : 0/);
+});
+test('marque de l’observateur (M6) : « aucune écriture » distinct de « observateur absent » ; installé avant les scripts oui/non/inconnu',()=>{
+ const j=journal(),a=measure(j).observations;assert.equal(a.available,false);assert.match(a.reason,/observateur absent/i);assert.match(toMarkdown(measure(j)),/observateur absent/i);
+ const mark=(o={})=>obs('observer',{version:1,world:'MAIN',installedBeforePageScripts:true,readyState:'loading',scriptsAtInstall:0,enabled:true,afterDenial:false,dropped:0,ignored:3,...o});
+ j.events.push(mark());let o=measure(j).observations;
+ assert.deepEqual([o.available,o.writes.n,o.observer.present,o.observer.marks,o.observer.version,o.observer.installedBeforePageScripts],[true,0,true,1,1,true]);
+ let md=toMarkdown(measure(j));assert.match(md,/Observateur : présent \(version 1, installé avant les scripts de la page : oui\)/);assert.match(md,/Écritures : 0/);assert.doesNotMatch(md,/observateur absent/i);
+ j.events.push(mark({eventId:'m2',installedBeforePageScripts:false,readyState:'complete',scriptsAtInstall:9}));o=measure(j).observations;assert.deepEqual([o.observer.marks,o.observer.installedBeforePageScripts,o.observer.late],[2,false,true]);
+ assert.match(toMarkdown(measure(j)),/installé avant les scripts de la page : non \(au moins une marque tardive\)/);
+ const k=journal();k.events.push(mark({installedBeforePageScripts:null,readyState:null,scriptsAtInstall:null}));assert.match(toMarkdown(measure(k)),/installé avant les scripts de la page : inconnu/);
+});
+test('résumé des listes avant la séance : par chargement et par clé, dernier résumé gardé, comptes seulement',()=>{
+ const j=journal(),sum=(o={})=>obs('list-summary',{listKey:'p-key',pages:11,okPages:11,rows:10269,chars:12450000,counts:{valid:10154,invalid:115,skipped:0},firstStartedEpochMs:1000,lastEndedEpochMs:15000,durationMs:14000,beforeSession:true,observer:{id:'A',seq:7},receivedMs:1700,...o});
+ j.events.push(sum(),sum({eventId:'s2',receivedMs:1800,pages:11,rows:10269}),sum({eventId:'s3',observer:{id:'B',seq:2},listKey:'q',pages:1,rows:null,counts:null,beforeSession:false}));
+ const o=measure(j,{tous:true}).observations,s=o.listPages.summaries;
+ assert.equal(o.counts['list-summary'],3);assert.deepEqual(s.map(x=>[x.observer,x.listKey,x.pages,x.rows,x.beforeSession]),[['A','p-key',11,10269,true],['B','q',1,null,false]],'doublon écarté (dernier reçu gardé)');
+ assert.deepEqual([s[0].counts,s[0].durationMs,s[0].chars],[{valid:10154,invalid:115,skipped:0},14000,12450000]);
+ const md=toMarkdown(measure(j,{tous:true}));assert.match(md,/Résumé des listes de coupes \(comptes seulement\) — chargement A, clé p-key, observé avant la séance : 11 page\(s\), 10269 ligne\(s\), valeurs de statut \{"valid":10154,"invalid":115,"skipped":0\}, 12450000 caractères, 14000 ms/);
+ assert.match(md,/chargement B, clé q, vu pendant la séance : 1 page\(s\), non mesuré ligne\(s\), comptes non mesurés/);assert.doesNotMatch(md,/secret/);
+});

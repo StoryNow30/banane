@@ -40,8 +40,10 @@ test('aucun en-tête lu ni écrit par l’observateur ; le jeton n’apparaît n
 test('classes : seule la classe est notée ; connexion, jeton et autres comptés sans trace ; jamais l’URL',async()=>{
  const {w}=await run(true),e=w.observed(),kinds=e.map(x=>x.kind);
  assert.deepEqual(kinds,['write','list-page'],'écriture et page de liste seulement');
- const texte=JSON.stringify(e);for(const secret of ['p-secret','skiptoken','login.microsoftonline','oauth2','client_id','secret-client','/other/','esv.test','merge=true','status=invalid'])assert.ok(!texte.includes(secret),'jamais '+secret);
+ const texte=JSON.stringify(e);for(const secret of ['skiptoken','login.microsoftonline','oauth2','client_id','secret-client','/other/','esv.test','merge=true','status=invalid'])assert.ok(!texte.includes(secret),'jamais '+secret);
  assert.ok(w.ctl.stats().ignored>=2,'connexion et autre : comptées, pas notées');
+ assert.equal(e.find(x=>x.kind==='list-page').listKey,'p-key','la liste porte sa clé (segment avant /rails), et elle seule');
+ assert.ok(!JSON.stringify(e.filter(x=>x.kind==='write')).includes('p-key'),'le segment de projet ne fuit pas dans les écritures (identifiant de coupe seulement)');
  assert.deepEqual(['write','list-page','point-resource','auth','other','other'],[
   classify('PUT',ORIGIN+'/api/u3d/projects/x/rails/a/b'),classify('GET',ORIGIN+'/api/u3d/projects/x/rails?top=1'),classify('GET',ORIGIN+'/data/ept.json'),
   classify('GET','https://login.microsoftonline.com/t/oauth2/token'),classify('GET',ORIGIN+'/api/u3d/projects/x/rails/a/b'),classify('GET','::pas-une-url')]);
@@ -112,4 +114,71 @@ test('réglage : arrêt demandé = enveloppes inertes ; messages d’une autre s
 test('mémoire de la page : pas de fuite de requêtes terminées (WeakMap), tentatives bornées',async()=>{
  const w=world({routes:()=>({status:503,text:''})});for(let i=0;i<200;i++){const x=new w.win.XMLHttpRequest();x.open('PUT',ORIGIN+'/api/rails/id'+i+'/1');x.send('{"a":1}');await tick();w.runTimers();}
  assert.equal(w.ctl.stats().ringEntries,200);assert.ok(w.ctl.stats().ringChars<=LIMITS.ringChars);
+});
+test('XHR réutilisé ou envoi relancé : une note par requête, jamais de doublon (relecture M2)',async()=>{
+ const w=world({routes:()=>({status:204,text:''})}),x=new w.win.XMLHttpRequest();
+ x.open('PUT',ORIGIN+'/api/rails/a/1');x.send('{"a":1}');await tick();w.runTimers();
+ x.open('PUT',ORIGIN+'/api/rails/b/2');x.send('{"a":2}');await tick();w.runTimers();
+ assert.deepEqual(w.observed().map(e=>[e.railPairId,e.status]),[['a/1',204],['b/2',204]],'deux requêtes, deux notes (et non trois)');
+ const y=new w.win.XMLHttpRequest();y.open('PUT',ORIGIN+'/api/rails/c/3');y.throwOnce=true;assert.throws(()=>y.send('{"a":3}'),/une-fois/);y.send('{"a":3}');await tick();w.runTimers();
+ assert.deepEqual(w.observed().slice(2).map(e=>e.railPairId),['c/3'],'envoi qui lève puis réussit : une seule note');
+ const z=new w.win.XMLHttpRequest();z.open('PUT',ORIGIN+'/api/rails/d/4');z.send('{"a":4}');z.send('{"a":4}');await tick();w.runTimers();
+ assert.equal(w.observed().filter(e=>e.railPairId==='d/4').length,1,'deux send sans open : une note');
+});
+test('filet pour fetch (relecture b) : compte les ressources fetch sur les chemins rails, par fenêtre, sans aucune URL',async()=>{
+ const w=world(),mk=(name,t,r,type)=>({name:ORIGIN+name,startTime:t,responseEnd:r,transferSize:100,encodedBodySize:0,initiatorType:type});
+ w.po().emit([mk('/api/u3d/projects/secret-p/rails/traj__1/2?merge=true',10,40,'fetch'),mk('/api/u3d/projects/secret-p/rails?top=1&sig=SECRETSIG',20,50,'fetch'),
+  mk('/api/u3d/projects/secret-p/rails/x/1',5,9,'xmlhttprequest'),mk('/api/other/thing',5,9,'fetch'),mk('/d/ept.json',1,2,'fetch'),
+  {name:'https://login.microsoftonline.com/t/oauth2/rails/token',startTime:1,responseEnd:2,initiatorType:'fetch'}]);
+ w.runTimers();const e=w.observed(),f=e.filter(x=>x.kind==='fetch-rails');
+ assert.deepEqual(f.map(x=>[x.n,x.windowMs,x.startedEpochMs,x.endedEpochMs]),[[2,250,1e12+10,1e12+50]],'deux fetch sur rails ; XHR, autre chemin et connexion ignorés');
+ assert.equal(e.filter(x=>x.kind==='resource').length,1,'ept.json reste un fichier de points');
+ const texte=JSON.stringify(e);for(const secret of ['secret-p','SECRETSIG','traj__1','oauth2','merge='])assert.ok(!texte.includes(secret),'jamais '+secret);
+ w.po().emit([mk('/api/u3d/projects/p/rails/a/b',100,120,'fetch')]);w.runTimers();assert.deepEqual(w.observed().filter(x=>x.kind==='fetch-rails').map(x=>x.n),[2,1],'seconde fenêtre distincte');
+ // observateur coupé : rien
+ const off=world();off.deliver({kind:'banane5:config',enabled:false});off.po().emit([mk('/api/p/rails/a/b',1,2,'fetch')]);off.runTimers();assert.equal(off.observed().length,0);
+});
+test('marque « observateur présent » (M6) : version, installé avant les scripts de la page oui/non/inconnu, posée à la demande de l’instantané',()=>{
+ const mark=(doc,data={})=>{const w=world({document:doc});assert.equal(w.observed().length,0,'rien posé à l’installation');w.deliver({kind:'banane5:snapshot',afterDenial:false,...data});return {w,m:w.observed().filter(e=>e.kind==='observer')};};
+ let {m}=mark({readyState:'loading',scripts:{length:0}});
+ assert.deepEqual([m.length,m[0].version,m[0].world,m[0].installedBeforePageScripts,m[0].readyState,m[0].scriptsAtInstall,m[0].afterDenial,m[0].enabled],[1,1,'MAIN',true,'loading',0,false,true]);
+ assert.deepEqual(['dropped','ignored','seq'].map(k=>typeof m[0][k]),['number','number','number']);
+ ({m}=mark({readyState:'complete',scripts:{length:12}}));assert.deepEqual([m[0].installedBeforePageScripts,m[0].readyState,m[0].scriptsAtInstall],[false,'complete',12]);
+ ({m}=mark({readyState:'loading',scripts:{length:3}}));assert.equal(m[0].installedBeforePageScripts,false,'des scripts de la page ont déjà été analysés');
+ ({m}=mark(undefined));assert.deepEqual([m[0].installedBeforePageScripts,m[0].readyState,m[0].scriptsAtInstall],[null,null,null],'inconnu : jamais deviné');
+ ({m}=mark({readyState:'loading',scripts:{length:0}},{afterDenial:true}));assert.equal(m[0].afterDenial,true);
+ const {w}=mark({readyState:'loading',scripts:{length:0}});w.deliver({kind:'banane5:snapshot'});w.deliver({kind:'banane5:config',enabled:false});w.deliver({kind:'banane5:snapshot'});
+ const all=w.observed().filter(e=>e.kind==='observer');assert.deepEqual(all.map(e=>e.enabled),[true,true,false],'chaque demande pose une marque neuve (nouveau numéro) ; coupé = dit');
+ assert.ok(all[1].seq>all[0].seq&&!JSON.stringify(all).includes('esv.test'));
+});
+const rowsJson=(n,seed=0)=>JSON.stringify({value:Array.from({length:n},(_,i)=>({Id:'secret-row-'+i,Status:['valid','invalid','skipped'][(i+seed)%3===0?1:(i+seed)%5===0?2:0],Free:'texte libre '+i}))});
+async function listes(w,keys,n=1000){for(const k of keys){const x=new w.win.XMLHttpRequest();x.open('GET',ORIGIN+'/api/u3d/projects/'+k+'/rails?status=invalid&top=1000&sig=SECRETSIG');x.send();await tick();await tick();w.runTimers();}}
+test('résumé des listes avant la séance : un résumé compact par page chargée, posé seulement après un refus (afterDenial), jamais les lignes ni les écritures',async()=>{
+ let page=0;const w=world({routes:(m,u)=>/\/rails\?/.test(u)?{status:200,text:rowsJson(page++<2?1000:269,page)}:{status:204,text:''}});
+ await listes(w,['p-key','p-key','p-key']);
+ const wr=new w.win.XMLHttpRequest();wr.open('PUT',ORIGIN+'/api/u3d/projects/p-key/rails/id/1');wr.send('{"a":1}');await tick();w.runTimers();
+ w.po().emit([{name:ORIGIN+'/d/ept.json',startTime:1,responseEnd:2,transferSize:5,initiatorType:'fetch'}]);w.runTimers();
+ assert.deepEqual(w.observed().filter(e=>e.kind==='list-page').map(e=>e.listKey),['p-key','p-key','p-key'],'les pages portent la clé de liste (segment avant /rails)');
+ w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:false});assert.deepEqual(w.observed().map(e=>e.kind),['observer'],'séance déjà ouverte : pas de résumé (les pages ont été vues en direct)');
+ w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:true});const e=w.observed(),s=e.filter(x=>x.kind==='list-summary');
+ assert.deepEqual(e.map(x=>x.kind),['observer','list-summary'],'ni écriture, ni fichier de points, ni page seule rejoués avant la séance');
+ assert.deepEqual([s[0].listKey,s[0].pages,s[0].okPages,s[0].rows,s[0].beforeSession],['p-key',3,3,2269,true]);
+ assert.equal(s[0].counts.valid+s[0].counts.invalid+s[0].counts.skipped,2269);assert.ok(s[0].chars>100000&&s[0].durationMs>=0&&s[0].lastEndedEpochMs>=s[0].firstStartedEpochMs&&s[0].firstStartedEpochMs>1e12);
+ const texte=JSON.stringify(e);for(const secret of ['secret-row','texte libre','SECRETSIG','esv.test','status=invalid'])assert.ok(!texte.includes(secret),'jamais '+secret);assert.ok(texte.length<1200,'compact : '+texte.length);
+});
+test('résumé des listes : une clé par chargement ; clé douteuse = aucune ; comptes ou lignes inconnus = non mesuré ; 16 clés au plus',async()=>{
+ const w=world({routes:(m,u)=>/bad/.test(u)?{status:200,text:'pas du json'}:{status:200,text:rowsJson(10)}});
+ await listes(w,['k1','a%20b','k2-bad','k3']);w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:true});
+ const s=w.observed().filter(x=>x.kind==='list-summary'),by=Object.fromEntries(s.map(x=>[String(x.listKey),x]));
+ assert.deepEqual(Object.keys(by).sort(),['k1','k2-bad','k3','null'],'« a%20b » : caractère non sûr, clé nulle');assert.deepEqual([by.k1.rows,by.k1.counts!==null],[10,true]);
+ assert.deepEqual([by['k2-bad'].rows,by['k2-bad'].counts,by['k2-bad'].pages,by['k2-bad'].okPages],[null,null,1,1],'illisible : non mesuré, jamais zéro');
+ const g=world({routes:()=>({status:200,text:rowsJson(2)})});await listes(g,Array.from({length:20},(_,i)=>'key'+i));g.posts.length=0;g.deliver({kind:'banane5:snapshot',afterDenial:true});
+ assert.equal(g.observed().filter(x=>x.kind==='list-summary').length,16,'au plus 16 clés');
+ const e=world({routes:()=>({status:503,text:''})});await listes(e,['k']);e.posts.length=0;e.deliver({kind:'banane5:snapshot',afterDenial:true});
+ const r=e.observed().find(x=>x.kind==='list-summary');assert.deepEqual([r.pages,r.okPages,r.rows,r.counts],[1,0,null,null],'page en erreur : comptée, non lue');
+});
+test('listKey, ses limites : segment avant /rails, caractères sûrs seulement',()=>{
+ const {listKey}=require('../src/esv-observer.js');
+ assert.equal(listKey(ORIGIN+'/api/u3d/projects/abc_1.2-x/rails?top=1'),'abc_1.2-x');assert.equal(listKey(ORIGIN+'/rails'),null);assert.equal(listKey(ORIGIN+'/a/b%2Fc/rails'),null);
+ assert.equal(listKey(ORIGIN+'/api/'+'a'.repeat(81)+'/rails'),null);assert.equal(listKey('::'),null);assert.equal(listKey(ORIGIN+'/api/u3d/projects/p/rails/x/1'),null,'écriture : pas une liste');
 });

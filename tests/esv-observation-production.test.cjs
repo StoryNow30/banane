@@ -37,6 +37,32 @@ test('séance : écriture, liste et points rangés avec contexte de lot ; revali
  deq([e[1].rows,e[1].counts],[1000,{valid:900,invalid:60,skipped:40}]);deq([e[2].n,e[2].bytes],[19,1500000]);deq([e[3].lost,e[3].reason],[3,'ring-overflow']);
  assert.equal(b.store.events.length-before,4,'ni événement métier, ni état touché');release();await b.settle();
 });
+test('filet fetch : « fetch-rails » rangé en liste blanche (n, fenêtre) ; rien d’autre',async()=>{
+ const {b,release}=await lotOuvert();
+ const r=send(b,[{seq:1,kind:'fetch-rails',n:3,startedEpochMs:1e12,endedEpochMs:1e12+40,windowMs:250,url:'https://esv.test/secret/rails/x',extra:{a:1}},{seq:2,kind:'fetch-rails',n:'trois',startedEpochMs:Infinity}]).out;
+ deq(r,{accept:true,stored:2});const e=stored(b).filter(x=>x.kind==='fetch-rails');deq(e.map(x=>[x.n,x.startedEpochMs,x.endedEpochMs,x.windowMs]),[[3,1e12,1e12+40,250],[null,null,null,null]]);
+ assert.ok(!JSON.stringify(e).includes('secret')&&!('url' in e[0])&&!('extra' in e[0]));release();await b.settle();
+});
+test('marque « observer » (M6) rangée en liste blanche ; état de séance donné au pont par launcher-status, onglet choisi seulement',async()=>{
+ const {b,release}=await lotOuvert(),mark=(o={})=>({seq:1,kind:'observer',version:1,world:'MAIN',installedBeforePageScripts:true,readyState:'loading',scriptsAtInstall:0,enabled:true,afterDenial:true,dropped:2,ignored:5,...o});
+ deq(send(b,[{...mark(),url:'https://esv.test/secret',extra:{a:1}}]).out,{accept:true,stored:1});const e=stored(b)[0];
+ deq([e.kind,e.version,e.world,e.installedBeforePageScripts,e.readyState,e.scriptsAtInstall,e.enabled,e.afterDenial,e.dropped,e.ignored],['observer',1,'MAIN',true,'loading',0,true,true,2,5]);
+ assert.ok(!('url' in e)&&!('extra' in e));
+ send(b,[mark({seq:2,version:'x',world:'ISOLATED',installedBeforePageScripts:'oui',readyState:'<script>',scriptsAtInstall:-1,enabled:'non',afterDenial:1,dropped:1.5})]);
+ const m=stored(b)[1];deq([m.version,m.world,m.installedBeforePageScripts,m.readyState,m.scriptsAtInstall,m.enabled,m.afterDenial,m.dropped],[null,null,null,null,null,null,null,null]);
+ const autre={id:'test',tab:{id:99},url:'https://esv.lidar.altametris.xyz/rails_validation/x'},st=x=>b.raw({kind:'launcher-status'},x).out;
+ assert.equal(st(undefined).observation.seance,true,'séance en cours, onglet choisi');assert.equal(st(autre).observation,undefined,'autre onglet : rien');assert.equal(typeof st(undefined).visible,'boolean','réponse existante inchangée');
+ b.get('engine').s.batch.state='STOPPED';assert.equal(st(undefined).observation.seance,false);b.get('engine').s.batch.state='RUNNING';
+ b.ctx.BananeSettings={...b.ctx.BananeSettings,observateurPassif:{actif:false}};assert.equal(st(undefined).observation.seance,false,'réglage coupé : pas de séance d’observation');release();await b.settle();
+});
+test('« list-summary » rangé en liste blanche (comptes seulement) ; « list-page » porte sa clé de liste ; valeurs douteuses = null',async()=>{
+ const {b,release}=await lotOuvert();
+ const sum=(o={})=>({seq:1,kind:'list-summary',listKey:'p-key',pages:3,okPages:3,rows:2269,chars:2500000,counts:{valid:2000,invalid:200,skipped:69},firstStartedEpochMs:1e12,lastEndedEpochMs:1e12+900,durationMs:900,beforeSession:true,...o});
+ deq(send(b,[{...sum(),rowsList:[{Id:'secret-row'}],url:'https://esv.test/x'},sum({seq:2,listKey:'../etc',pages:-1,rows:'x',counts:{valid:'a'},beforeSession:'oui',durationMs:NaN}),list({seq:3,listKey:'p-key'})]).out,{accept:true,stored:3});
+ const e=stored(b);deq([e[0].listKey,e[0].pages,e[0].okPages,e[0].rows,e[0].chars,e[0].counts,e[0].durationMs,e[0].beforeSession],['p-key',3,3,2269,2500000,{valid:2000,invalid:200,skipped:69},900,true]);
+ assert.ok(!JSON.stringify(e[0]).includes('secret')&&!('url' in e[0])&&!('rowsList' in e[0]));
+ deq([e[1].listKey,e[1].pages,e[1].rows,e[1].counts,e[1].beforeSession,e[1].durationMs],[null,null,null,{valid:null,invalid:null,skipped:null},null,null]);assert.equal(e[2].listKey,'p-key');release();await b.settle();
+});
 test('source non fiable : champs inconnus, types faux, URL, jeton et objets imbriqués jamais rangés',async()=>{
  const {b,release}=await lotOuvert();
  const bad={...write(),url:'https://esv.test/secret/rails/x?token=abc',authorization:'Bearer SECRET',status:'204',attempt:-1,method:'PUT'.repeat(5),outcome:'pirate',
