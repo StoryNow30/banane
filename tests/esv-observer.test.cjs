@@ -182,3 +182,46 @@ test('listKey, ses limites : segment avant /rails, caractères sûrs seulement',
  assert.equal(listKey(ORIGIN+'/api/u3d/projects/abc_1.2-x/rails?top=1'),'abc_1.2-x');assert.equal(listKey(ORIGIN+'/rails'),null);assert.equal(listKey(ORIGIN+'/a/b%2Fc/rails'),null);
  assert.equal(listKey(ORIGIN+'/api/'+'a'.repeat(81)+'/rails'),null);assert.equal(listKey('::'),null);assert.equal(listKey(ORIGIN+'/api/u3d/projects/p/rails/x/1'),null,'écriture : pas une liste');
 });
+/* ---- Test 2 final (mission F, banc ESV local) : liste d'une partie et numéro de tentative ---- */
+const TABLE='traj__00+0071551.725',COUPE='/api/u3d/projects/p-key/rails/'+TABLE+'/00071552.685?merge=true';
+/* ESV relance l'écriture DEPUIS le rappel de la précédente (avant `loadend`) : le numéro doit être décidé à l'envoi. */
+async function relances(statuts,{coupe=COUPE}={}){
+ let i=0;const w=world({routes:()=>({status:statuts[i++]??204,text:''})});let essais=0;
+ const put=()=>{const x=new w.win.XMLHttpRequest();x.open('PUT',ORIGIN+coupe,true);
+  x.onreadystatechange=()=>{if(x.readyState===4&&x.status!==200&&x.status!==204&&++essais<3)put();};x.send('{"a":1}');};
+ put();for(let k=0;k<4;k++)await tick();w.runTimers();
+ return w.observed().filter(e=>e.kind==='write').map(e=>[e.status,e.attempt]);
+}
+test('tentatives 1, 2, 3 quand ESV relance depuis le rappel de la requête précédente : 503×3 et 503-503-204',async()=>{
+ assert.deepEqual(await relances([503,503,503]),[[503,1],[503,2],[503,3]]);
+ assert.deepEqual(await relances([503,503,204]),[[503,1],[503,2],[204,3]]);
+ assert.deepEqual(await relances([0,0,0]),[[0,1],[0,2],[0,3]],'coupure : le statut 0 est un échec comme un autre');
+ assert.deepEqual(await relances([204]),[[204,1]],'une écriture réussie : tentative 1, pas de relance');
+});
+test('tentative : une écriture réussie clôt la série ; au-delà de la fenêtre de 15 s ou sans coupe lisible : repart à 1',async()=>{
+ let t=0,i=0;const seq=[503,204,204,503,503,503,503];const w=world({routes:()=>({status:seq[i++],text:''})});w.win.performance.now=()=>t+=0.5;
+ const put=async id=>{const x=new w.win.XMLHttpRequest();x.open('PUT',ORIGIN+'/api/rails/'+id,true);x.send('{"a":1}');await tick();await tick();w.runTimers();};
+ await put('p/1');await put('p/1');await put('p/1');            // 503 puis 204 puis 204 : 1, 2, 1
+ await put('p/2');t+=20000;await put('p/2');                    // 503, puis 20 s plus tard : nouvelle série
+ await put('a b/1');await put('a b/1');                         // identifiant illisible : jamais rapproché d'une autre coupe
+ assert.deepEqual(w.observed().map(e=>[e.railPairId,e.status,e.attempt]),[['p/1',503,1],['p/1',204,2],['p/1',204,1],['p/2',503,1],['p/2',503,1],[null,503,1],[null,503,1]]);
+});
+test('liste d’une partie : GET …/rails/<table> est une liste, clé = la table ; une coupe (deux segments) n’en est pas une',()=>{
+ const {classify,listKey}=require('../src/esv-observer.js'),L='/api/u3d/projects/p-key/rails/'+TABLE;
+ assert.equal(classify('GET',ORIGIN+L+'?npk=a&nrk=b'),'list-page');assert.equal(listKey(ORIGIN+L+'?npk=a&nrk=b'),TABLE);assert.equal(listKey(ORIGIN+L+'/'),TABLE);
+ assert.equal(classify('GET',ORIGIN+L+'/00071552.685'),'other','lecture d’une coupe : pas une liste');assert.equal(listKey(ORIGIN+L+'/00071552.685'),null);
+ assert.equal(classify('PUT',ORIGIN+L+'/00071552.685?merge=true'),'write','l’écriture ne change pas');assert.equal(classify('PUT',ORIGIN+L),'write');
+ assert.equal(listKey(ORIGIN+'/api/rails/'+'a'.repeat(81)),null);assert.equal(listKey(ORIGIN+'/api/rails/a%20b'),null,'caractère non sûr : aucune clé');
+});
+test('résumé d’une partie : 11 pages chaînées sous …/rails/<table>, clé = la table ; la requête « invalides » (projet undefined) reste à part',async()=>{
+ const w=world({routes:(m,u)=>/status=invalid/.test(u)?{status:200,text:'{"value":[]}'}:{status:200,text:rowsJson(100,1)}});
+ const get=async u=>{const x=new w.win.XMLHttpRequest();x.open('GET',ORIGIN+u);x.send();await tick();await tick();w.runTimers();};
+ await get('/api/u3d/projects/undefined/rails?&status=invalid&top=1');
+ for(let p=0;p<11;p++)await get('/api/u3d/projects/p-key/rails/'+TABLE+(p?'?npk=k'+p+'&nrk=r'+p:''));
+ assert.equal(w.observed().filter(x=>x.kind==='list-page'&&x.listKey===TABLE).length,11,'11 pages vues en direct, clé = la table');
+ w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:true});
+ const s=w.observed().filter(x=>x.kind==='list-summary'),by=Object.fromEntries(s.map(x=>[String(x.listKey),x]));
+ assert.deepEqual(Object.keys(by).sort(),[TABLE,'undefined'].sort(),'deux clés : la partie, et la question « invalides » à part');
+ assert.deepEqual([by[TABLE].pages,by[TABLE].okPages,by[TABLE].rows],[11,11,1100],'la partie : ses 11 pages, sans la requête « invalides »');
+ assert.deepEqual([by.undefined.pages,by.undefined.rows],[1,0],'« invalides » : 1 page, 0 ligne, jamais prise pour une partie');
+});

@@ -56,16 +56,22 @@
   if(AUTH.test(u.host)||AUTH.test(u.path))return 'auth';
   const m=String(method||'GET').toUpperCase();
   if(m!=='GET'&&m!=='HEAD'&&/\/rails\/[^/]/.test(u.path))return 'write';
-  if(m==='GET'&&/\/rails\/?$/.test(u.path))return 'list-page';
+  /* Mesuré sur le banc ESV local (mission F) : la liste d'une partie est un GET `.../rails/<table de la partie>`
+   * (pages chaînées par `?npk=...&nrk=...`), pas un GET `.../rails` ; ce dernier n'est que la question « y a-t-il
+   * des invalides ? » (`?&status=invalid&top=1`). Les deux sont des listes ; un GET à deux segments après `rails`
+   * (une coupe) reste « autre ». */
+  if(m==='GET'&&/\/rails(\/[^/]+)?\/?$/.test(u.path))return 'list-page';
   if(m==='GET'&&POINTS.test(u.path))return 'point-resource';
   return 'other';
  }
  /* Chemin de classe « rails » (écriture, liste ou lecture d'une coupe), hors connexion et jeton. */
  function isRailsPath(url,base){const u=pathOf(url,base);return !!u&&!AUTH.test(u.host)&&!AUTH.test(u.path)&&/\/rails(\/|$)/.test(u.path);}
- /* Clé de liste : le segment du chemin juste avant `/rails`, caractères sûrs seulement ; sinon rien.
-  * Chaque chargement de partie recharge la page, donc un observateur = une partie. */
+ /* Clé de liste : `.../rails/<table>` = la table de la partie (une clé par partie) ; `.../<projet>/rails` = le
+  * segment avant `/rails` (la question « invalides », que la page d'ESV pose avec `projects/undefined` : clé à part,
+  * jamais prise pour une partie). Caractères sûrs seulement ; sinon rien. Chaque chargement de partie recharge la
+  * page, donc un observateur = une partie. */
  function listKey(url,base){
-  const u=pathOf(url,base),m=u&&/\/([^/]+)\/rails\/?$/.exec(u.path);if(!m)return null;
+  const u=pathOf(url,base),m=u&&(/\/rails\/([^/]+)\/?$/.exec(u.path)||/\/([^/]+)\/rails\/?$/.exec(u.path));if(!m)return null;
   let k;try{k=decodeURIComponent(m[1]);}catch{return null;}
   return k.length<=LIMITS.idChars&&/^[\w.+\-]+$/.test(k)?k:null;}
  /* Identifiant de coupe d'ESV : fin du chemin après `/rails/`, caractères
@@ -107,7 +113,7 @@
   const base=()=>{try{return win.location.href;}catch{return undefined;}};
   const perfNow=()=>win.performance.now(),epoch=t=>win.performance.timeOrigin+t;
   let observerId;try{observerId=win.crypto.randomUUID();}catch{observerId=String(Math.random()).slice(2)+String(Date.now());}
-  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],lastWrite=new Map(),listSums=new Map();
+  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],listSums=new Map();
   /* État de la page à l'installation : l'observateur est-il arrivé avant les scripts de la page ?
    * oui = document en cours de chargement et aucun script encore analysé ; non = déjà chargé ou des
    * scripts analysés ; inconnu (null) = document illisible : jamais deviné. */
@@ -154,7 +160,7 @@
   function replay(afterSeq){for(const x of ring)if(x.seq>afterSeq){try{post(JSON.parse(x.json));}catch{}}}
 
   /* ------------------------------------------------ XMLHttpRequest */
-  const meta=new WeakMap();
+  const meta=new WeakMap(),lastSend=new Map();
   function patch(obj,name,before){
    const d=obj&&Object.getOwnPropertyDescriptor(obj,name);if(!d||typeof d.value!=='function')return false;
    const original=d.value;
@@ -172,11 +178,20 @@
    // Une note par requête : un envoi relancé (le premier a levé) ou répété sans `open` n'ajoute rien.
    if(m.attached)return;m.attached=true;
    const started=perfNow(),body=m.cls==='write'?writeBody(args[0]):null;let outcome='done';
+   /* Tentative : décidée À L'ENVOI. ESV relance l'écriture depuis le rappel de la précédente, avant `loadend` et avant
+    * la note de celle-ci : comparer des heures de FIN (prises plus tard) donnait toujours « tentative 1 ». On regarde
+    * donc si la précédente écriture de la même coupe est déjà terminée sans 200 ni 204 (statut 0 compris). Fin connue
+    * par `loadend` si la relance vient après ; sinon la relance part du rappel même (fin = maintenant). Coupe illisible
+    * (identifiant nul) : jamais rapprochée d'une autre, tentative 1. */
+   if(m.cls==='write'){const id=railPairId(m.url,base()),key=m.method+' '+id,prev=id===null?undefined:lastSend.get(key),
+     st=prev&&prev.xhr!==xhr&&prev.xhr.readyState===4&&Number.isInteger(prev.xhr.status)?prev.xhr.status:null;
+    m.attempt=st!==null&&st!==200&&st!==204&&started-(prev.endedAt??started)<LIMITS.retryWindowMs?prev.attempt+1:1;
+    if(id!==null){m.sent={xhr,attempt:m.attempt,endedAt:null};lastSend.set(key,m.sent);if(lastSend.size>64)lastSend.delete(lastSend.keys().next().value);}}
    const flag=name=>()=>{outcome=name;};
    xhr.addEventListener('abort',flag('abort'));xhr.addEventListener('timeout',flag('timeout'));
    xhr.addEventListener('loadend',()=>{
     // Un XHR réutilisé garde les écouteurs de sa requête précédente : seul compte celui de l'`open` courant.
-    if(meta.get(xhr)!==m||m.done)return;m.done=true;
+    if(meta.get(xhr)!==m||m.done)return;m.done=true;if(m.sent)m.sent.endedAt=perfNow();
     // Après les écouteurs d'ESV : la lecture éventuellement lourde ne les retarde pas.
     try{win.setTimeout(()=>{try{finish(xhr,m,started,perfNow(),outcome,body);}catch{}},0);}catch{}
    });
@@ -186,9 +201,7 @@
    const status=Number.isInteger(xhr.status)?xhr.status:0;if(status===0&&outcome==='done')outcome='error';
    const common={via:'xhr',method:m.method,status,outcome,startedEpochMs:epoch(started),endedEpochMs:epoch(ended),durationMs:Math.round((ended-started)*100)/100};
    if(m.cls==='write'){
-    const id=railPairId(m.url,base()),key=m.method+' '+id,prev=lastWrite.get(key),ok=status===200||status===204;
-    const attempt=prev&&!prev.ok&&common.startedEpochMs>=prev.endedEpochMs&&common.startedEpochMs-prev.endedEpochMs<LIMITS.retryWindowMs?prev.attempt+1:1;
-    lastWrite.set(key,{ok,attempt,endedEpochMs:common.endedEpochMs});if(lastWrite.size>64)lastWrite.delete(lastWrite.keys().next().value);
+    const id=railPairId(m.url,base()),attempt=m.attempt||1;
     record({kind:'write',urlClass:'rail-pair-write',railPairId:id,attempt,bodyKeys:body?.keys??null,body:body?.values??null,...common});
    }else{
     let text=null;try{text=xhr.responseType===''||xhr.responseType==='text'?xhr.responseText:xhr.responseType==='json'&&xhr.response?JSON.stringify(xhr.response):null;}catch{}
