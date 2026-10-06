@@ -33,3 +33,27 @@ test('listes chargées avant le lot : résumé et marque au début de séance, r
  const texte=JSON.stringify(stored());for(const secret of ['secret-row','SECRETSIG','esv.test','p-key/rails/old'])assert.ok(!texte.includes(secret),'jamais '+secret);
  assert.ok(sw.commands.length>=0);
 });
+/* Mission F (banc ESV local) : l'onglet est chargé AVANT d'être choisi dans Ariane ; le service worker ne répond pas à un onglet non
+ * choisi ; la séance démarre tout de suite après le choix, avant le premier battement de 15 s. Les listes d'avant doivent être résumées. */
+test('démarrage immédiat après le choix de l’onglet : le résumé des listes d’avant la séance est rangé sans attendre le battement',async()=>{
+ const sw=production(),autre={id:'test',tab:{id:99},url:'https://esv.lidar.altametris.xyz/rails_validation/x'};let sender=autre;
+ const f=bridge({observationReply:m=>sw.raw({kind:'esv-observation',observer:m.observer,entries:m.entries},sender).out,launcherStatus:()=>sw.raw({kind:'launcher-status'},sender).out});
+ let page=0;const w=world({document:{readyState:'loading',scripts:{length:0}},routes:(mm,u)=>/\/rails\//.test(u)&&mm==='GET'?{status:200,text:rows(page++<2?1000:269,page)}:{status:204,text:''}});
+ let nSent=0,nPost=0;const pump=()=>{for(;nPost<w.posts.length;)f.emit(w.posts[nPost++].m);for(;nSent<f.sent.length;){const m=f.sent[nSent++];if(String(m.kind).startsWith('banane5:'))w.deliver(m);}};
+ const flush=async()=>{pump();const t=[...f.timers.entries()].at(-1);if(t&&t[1].ms===250){f.timers.delete(t[0]);await t[1].fn();}pump();};
+ const refresh=async()=>{f.uiMessage({kind:'launcher-visibility',visible:true});await tick();pump();};
+ const xhr=async(m,u,b)=>{const x=new w.win.XMLHttpRequest();x.open(m,ORIGIN+u);x.send(b);await tick();await tick();w.runTimers();pump();};
+ const stored=()=>sw.store.events.filter(e=>e.type==='esv-observation');
+ pump();
+ // Page chargée, onglet pas encore choisi : trois pages de la liste d'une partie (…/rails/<table>), la question « invalides », puis le premier envoi au service worker.
+ await xhr('GET','/api/u3d/projects/undefined/rails?&status=invalid&top=1');for(let i=0;i<3;i++)await xhr('GET','/api/u3d/projects/p-key/rails/traj__00+X?npk='+i);
+ await flush();await refresh();assert.equal(stored().length,0,'onglet non choisi : rien rangé');
+ // L'onglet est choisi et la séance démarre aussitôt : un seul battement, qui apprend la séance.
+ await sw.api('connect',{tabId:1});await sw.api('settings',{mode:'automatic-test'});sender=undefined;
+ sw.get('engine').s.batch={id:'lot-imm',state:'RUNNING',scope:{part:23,start:100,end:101}};
+ await refresh();await flush();await flush();
+ const e=stored(),o=e.find(x=>x.kind==='observer'),s=e.filter(x=>x.kind==='list-summary'),by=Object.fromEntries(s.map(x=>[x.listKey,x]));
+ assert.ok(o,'la marque est rangée');assert.equal(o.afterDenial,true);
+ assert.deepEqual([by['traj__00+X']?.pages,by['traj__00+X']?.rows,by['traj__00+X']?.beforeSession,by.undefined?.pages],[3,2269,true,1],'résumé de la partie (clé = la table) et « invalides » à part');
+ assert.equal(s.length,2,'un résumé par clé, une seule fois');assert.equal(e.filter(x=>x.kind==='list-page').length,0,'aucune page d’avant la séance rejouée');
+});

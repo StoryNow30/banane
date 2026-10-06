@@ -37,12 +37,17 @@
   * sinon (`accept:false`) la file est vidée ici, sans rien garder. Trous de numérotation
   * et file pleine sont dits par un jalon « gap », jamais passés sous silence. */
  const OBS={maxQueue:100,maxEntryChars:4096,maxPerMessage:50,maxMessageChars:65536,flushMs:250};
- const obs={observer:null,last:0,queue:[],timer:null,lost:0,known:null};
+ const obs={observer:null,last:0,queue:[],timer:null,lost:0,known:null,refused:false};
  /* État de séance connu du service worker (réponse à un lot d'entrées, ou battement `launcher-status`) :
-  * au DÉBUT d'une séance, demander à l'observateur sa marque (« observateur présent »). `afterDenial` dit
-  * si l'on savait qu'il n'y avait pas de séance juste avant. Une seule demande par début de séance. */
+  * au DÉBUT d'une séance, demander à l'observateur sa marque (« observateur présent ») et, s'il y a lieu, le résumé
+  * des listes d'avant. `afterDenial` dit que des observations d'avant la séance n'ont pas été rangées : on savait
+  * qu'il n'y avait pas de séance juste avant, OU un lot d'entrées est parti sans recevoir accept:true (refus ;
+  * aucune réponse, par exemple onglet pas encore choisi dans Ariane ; service worker absent). Ne pas exiger d'avoir
+  * VU « pas de séance » : démarrer tout de suite après le choix de l'onglet, avant le premier battement de 15 s,
+  * ne laisse aucune trace de refus à observer. Une page chargée pendant une séance déjà ouverte (changement de
+  * partie en plein lot) a tout rangé en direct : aucun refus, aucun résumé. Une seule demande par début de séance. */
  function obsSeance(on){if(typeof on!=='boolean')return;
-  if(on&&obs.known!==true){const afterDenial=obs.known===false;obs.known=true;try{window.postMessage({kind:'banane5:snapshot',afterDenial},location.origin);}catch{}}
+  if(on&&obs.known!==true){const afterDenial=obs.known===false||obs.refused;obs.known=true;obs.refused=false;try{window.postMessage({kind:'banane5:snapshot',afterDenial},location.origin);}catch{}}
   else if(!on)obs.known=false;}
  function obsCopy(x){
   if(!x||typeof x!=='object'||!Number.isInteger(x.seq)||x.seq<0||typeof x.kind!=='string'||x.kind.length>24)return null;
@@ -62,11 +67,14 @@
   while(obs.queue.length&&entries.length<OBS.maxPerMessage){const n=JSON.stringify(obs.queue[0]).length;if(entries.length&&chars+n>OBS.maxMessageChars)break;chars+=n;entries.push(obs.queue.shift());}
   if(!entries.length)return;
   if(obs.queue.length)obs.timer=setTimeout(obsFlush,OBS.flushMs);
-  try{const r=await chrome.runtime.sendMessage({kind:'esv-observation',observer:obs.observer,entries});
+  let r;
+  try{r=await chrome.runtime.sendMessage({kind:'esv-observation',observer:obs.observer,entries});
+   // Ces entrées sont parties sans être rangées (refus, aucune réponse) : le début de séance en tiendra compte.
+   if(!(r&&r.accept===true))obs.refused=true;
    if(r&&r.accept===false)obs.queue.length=0;
    if(r&&typeof r.accept==='boolean')obsSeance(r.accept);
    if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
-  }catch{}}
+  }catch{if(!(r&&r.accept===true))obs.refused=true;}}
  try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}
  window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin)return;
    if(e.data?.kind==='banane5:esv-observation'){relayObservation(e.data);return;}

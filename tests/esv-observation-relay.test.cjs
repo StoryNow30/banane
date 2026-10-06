@@ -86,3 +86,25 @@ test('début de séance appris par le battement (launcher-status) : même demand
  assert.equal(out(f).length,0,'aucun message d’observation envoyé');
  const g=bridge({launcherStatus:()=>({visible:true})});g.uiMessage({kind:'launcher-visibility',visible:true});await tick();assert.equal(snaps(g).length,0,'réponse sans état de séance : rien');
 });
+/* ---- Test 2 final (mission F) : démarrage immédiat, avant le premier battement de 15 s ---- */
+test('démarrage immédiat : entrées d’avant la séance restées sans réponse (onglet pas encore choisi) ou refusées ; la séance apprise sans « pas de séance » vu avant → résumés demandés, une seule fois',async()=>{
+ const tk=()=>new Promise(r=>setImmediate(r));
+ // Le service worker ne répond pas aux messages d'un onglet non choisi (réponse indéfinie) ; le battement n'y ajoute pas d'état de séance.
+ let seance=false,reply;const f=bridge({observationReply:()=>reply,launcherStatus:()=>({visible:true,...(seance?{observation:{seance:true}}:{})})});
+ f.emit(msg(1));await flush(f);f.emit(msg(2));await flush(f);assert.equal(snaps(f).length,0,'aucun état de séance appris : pas de marque');
+ seance=true;f.uiMessage({kind:'launcher-visibility',visible:true});await tk();
+ deq(snaps(f),[{kind:'banane5:snapshot',afterDenial:true}],'les entrées d’avant n’ont pas été rangées : le résumé doit partir');
+ f.uiMessage({kind:'launcher-visibility',visible:true});await tk();assert.equal(snaps(f).length,1,'une seule fois par séance, aucun message continu');
+ // Même chose quand c'est une réponse accept:true (et non le battement) qui apprend la séance.
+ let accept;const g=bridge({observationReply:()=>accept});g.emit(msg(1));await flush(g);accept={accept:true};g.emit(msg(2));await flush(g);
+ deq(snaps(g),[{kind:'banane5:snapshot',afterDenial:true}],'réponse indéfinie puis accept:true');g.emit(msg(3));await flush(g);assert.equal(snaps(g).length,1);
+ // Service worker absent (échec d'envoi) : même chose.
+ let marche=false;const h=bridge({observationReply:()=>{if(!marche)throw Error('service worker absent');return {accept:true};}});
+ h.emit(msg(1));await flush(h);marche=true;h.emit(msg(2));await flush(h);deq(snaps(h),[{kind:'banane5:snapshot',afterDenial:true}]);
+});
+test('séance déjà ouverte au chargement de la page (changement de partie en plein lot) : tout a été rangé en direct, aucun résumé demandé',async()=>{
+ const f=bridge({observationReply:()=>({accept:true})});f.emit(msg(1));await flush(f);f.emit(msg(2));await flush(f);
+ deq(snaps(f),[{kind:'banane5:snapshot',afterDenial:false}],'première réponse accept:true : rien de perdu avant');
+ const tk=()=>new Promise(r=>setImmediate(r)),g=bridge({launcherStatus:()=>({visible:true,observation:{seance:true}})});g.uiMessage({kind:'launcher-visibility',visible:true});
+ return tk().then(()=>deq(snaps(g),[{kind:'banane5:snapshot',afterDenial:false}],'séance connue d’emblée, rien envoyé avant : rien de perdu'));
+});
