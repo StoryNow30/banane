@@ -269,12 +269,14 @@
    const r=R.summarize({sessionId:s.sessionId??null,batch:b??null,identity:s.current?.identity??null,
      events:[...(memeSession?histoire.events:[]),...recents],historyStatus:statut});
    const titre=$('part-summary-title');
-   if(!r.counts){titre.textContent='Résumé de la partie';poser($('part-summary-counts'),'');poser($('part-summary-lots'),'');
+   if(!r.counts){titre.textContent='Résumé de la partie';$('part-summary-line').textContent='Partie non identifiée : résumé inconnu.';poser($('part-summary-counts'),'');poser($('part-summary-lots'),'');
      $('part-summary-deferred').textContent='Partie non identifiée : résumé inconnu.';$('part-summary-unknown').textContent='';
      $('part-summary-lots-title').textContent='Lots de la partie (inconnu)';
      $('part-summary-note').textContent='Ariane ne connaît pas encore la page, le repère ou la session : rien n’est compté.';return;}
    const c=r.counts,ok=r.historyComplete,n=v=>compte(v,ok),p=r.scope.part;
    titre.textContent=`Résumé de la partie ${entier(p)}`;
+   /* Le bloc est replié : cette ligne reste visible, avec les mêmes règles que les tuiles. */
+   $('part-summary-line').textContent=`Coupes traitées ${n(c.distinct)} · Posées ${n(c.posed)} · Différés restants ${n(c.deferred)}`;
    if(poser($('part-summary-counts'),tuiles([['Lots',n(r.lots.length),'','de cette partie'],
      ['Coupes traitées',n(c.distinct),'','chacune comptée une fois'],
      ['Posées par Ariane',n(c.posed),'','validation acceptée'],

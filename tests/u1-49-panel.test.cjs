@@ -109,3 +109,17 @@ test('G : panneau sans module de résumé : bloc masqué, reste du panneau incha
  vm.createContext(ctx);vm.runInContext(SOURCE,ctx);for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));
  assert.equal(document.getElementById('part-summary').hidden,true);assert.equal(document.getElementById('start-batch').disabled,false);
 });
+
+/* ---- Après relecture : bloc replié par défaut, une ligne de comptes toujours visible ---- */
+test('G : bloc replié par défaut, la ligne de comptes est hors du repli (bornes et exports restent en haut)',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../panel.html'),'utf8'),block=html.match(/<section id="part-summary"[\s\S]*?<\/section>/)?.[0];assert.ok(block);
+ const repli=block.match(/<details id="part-summary-details"(?<attrs>[^>]*)>/);assert.ok(repli,'repli du détail');assert.doesNotMatch(repli.groups.attrs,/\bopen\b/);
+ const avant=block.slice(0,repli.index);
+ assert.match(avant,/id="part-summary-title"/);assert.match(avant,/id="part-summary-line"/);
+ for(const k of ['part-summary-counts','part-summary-deferred','part-summary-unknown','part-summary-note','part-summary-lots'])assert.ok(block.indexOf(`id="${k}"`)>repli.index,k+' dans le repli');
+});
+test('G : ligne de comptes : exacte si complet, « au moins » et « inconnu » sinon, jamais un zéro inventé',async()=>{
+ let p=await panel();assert.equal(p.$('part-summary-line').textContent,'Coupes traitées 1 · Posées 1 · Différés restants 0');
+ p=await panel({fail:true});assert.equal(p.$('part-summary-line').textContent,'Coupes traitées au moins 1 · Posées au moins 1 · Différés restants inconnu');
+ p=await panel({statePatch:{batch:null,sessionId:null}});assert.equal(p.$('part-summary-line').textContent,'Partie non identifiée : résumé inconnu.');
+});

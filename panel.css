@@ -105,6 +105,7 @@ body[data-window=home] #notice{display:none}
 .resume-partie .tuile{padding:0 12px 0 0;min-width:0}
 .resume-partie .tuile b{font-size:24px;overflow-wrap:anywhere}
 .resume-partie p,.resume-partie li{overflow-wrap:anywhere}
+.resume-ligne{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--text)}
 .resume-liste{font-size:12px;line-height:1.6}
 .resume-partie ul{list-style:none;margin:0;padding:0}
 .resume-partie li{display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--hair);font-size:11px;line-height:1.6}

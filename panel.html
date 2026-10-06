@@ -111,11 +111,14 @@
  <!-- 4.9 U1 : résumé de la partie, tous lots confondus. Lecture seule : aucun bouton, aucune commande. -->
  <section id="part-summary" class="bloc resume-partie" aria-labelledby="part-summary-title" hidden>
   <h2 id="part-summary-title" class="lbl">Résumé de la partie</h2>
-  <div id="part-summary-counts" class="tuiles"></div>
-  <p id="part-summary-deferred" class="resume-liste"></p>
-  <p id="part-summary-unknown" class="muted"></p>
-  <p id="part-summary-note" class="muted"></p>
-  <details><summary id="part-summary-lots-title">Lots de la partie</summary><ul id="part-summary-lots"></ul></details>
+  <p id="part-summary-line" class="resume-ligne"></p>
+  <details id="part-summary-details"><summary id="part-summary-details-toggle">Détail du résumé</summary>
+   <div id="part-summary-counts" class="tuiles"></div>
+   <p id="part-summary-deferred" class="resume-liste"></p>
+   <p id="part-summary-unknown" class="muted"></p>
+   <p id="part-summary-note" class="muted"></p>
+   <details><summary id="part-summary-lots-title">Lots de la partie</summary><ul id="part-summary-lots"></ul></details>
+  </details>
  </section>
  <div id="batch" class="batch">Aucun lot en cours.</div>
  <div id="lot-bornes"><div class="range"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0" placeholder="fin de partie"></label></div>
