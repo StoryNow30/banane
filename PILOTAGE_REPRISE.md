@@ -22,7 +22,7 @@ Branches locales d'import : `livre/v1-test-1ba79d4`, `livre/v1-corrige-baa548d`,
 `livre/u2-preparation` (non envoyées : ce sont des copies des livraisons). Les branches de travail `claude/…` sont
 envoyées sur GitHub au fur et à mesure (D-075), jamais `main`, sans fusion.
 
-## 2. Statut des chantiers (5 octobre, soir)
+## 2. Statut des chantiers (6 octobre)
 
 Vocabulaire : **accepté** = dit par Mic ; **livré** = remis ; **relu** = relu par une équipe autre que l'auteur ;
 **à l'étude** = étude livrée, aucun code adopté. Un code réécrit par Claude Code n'est pas accepté d'office : il
@@ -31,13 +31,13 @@ attend sa relecture indépendante, puis Mic.
 | # | Chantier | Statut | Ce qui manque avant acceptation |
 |---|---|---|---|
 | 1 | P2 | **Accepté** (D-071) | Rien ; ne pas refaire |
-| 2 | V1 mesure par phase | Livré (GPT), testé terrain partie 23, **non accepté**. Diagnostic relu par A : 3 défauts de mesure confirmés. Réécriture (A) et correctifs 2 et 3 prêts en local, non relus | Relecture indépendante de A ; correctif d'export (patch panneau) ; plusieurs lots ; couverture 100 % ; décisions identiques au banc ; attestation du projet |
+| 2 | V1 mesure par phase | Livré (GPT), testé terrain partie 23, **non accepté**. Diagnostic relu par A : 3 défauts de mesure confirmés. Réécriture (A, `37dd5df`) **relue par une équipe indépendante : acceptable pour adoption** (gel intact, 9 + 5 scénarios identiques octet pour octet, verify 0 échec). Correction (3) segments et ERROR (`6b9ed26`) : acceptable ; correction (2) chronologie concurrente (`86dc727`) : **réserves** (publie le chevauchement sans le supprimer ; critère D-073 à signer) ; patch d'export du panneau : acceptable après intégration par G. Branches envoyées, non fusionnées, non adoptées | Accord de Mic sur l'adoption et sur les critères (lot rouvert, chronologies concurrentes) ; intégration du patch d'export par G ; un `try/catch` autour de `timing.flush()` (mineur) ; plusieurs lots terrain ; couverture 100 % ; attestation du projet |
 | 3 | Inventaire D-067 | Pas commencé (après V1 accepté) | V1 accepté. La liste des coupes d'ESV donnerait des comptes exacts (D-077) |
 | 4 | V2 exports allégés + KI-068 | Pas commencé | Essai de faisabilité du fichier unique ; l'observateur passif simplifie les données (D-077) |
 | 5 | V4 | Préparation relue. Part mesurée : 0,3 % du cycle : levier de vitesse écarté (D-076) | Décider ce qui reste de V4 |
 | 6 | V3 capture | Étude faite (C) ; idée « lecture des points » prête ; **aucun essai terrain** | Décision de sortie du gel du lecteur (non prise) ; A/A ; réservation de parties ; 3 expériences au moins |
-| 7 | U1 résumé de partie | Livré (GPT) puis réécrit (G, `022954d`) : comptes identiques à l'outil ; 9 cas sur 9 dans le vrai panneau (F). **Non accepté** | Relecture indépendante de G (en cours) ; acceptation |
-| 8 | U2 essais du vrai panneau | Banc réécrit (F) : 21 réussis, 3 échecs sur 24, tous défauts produit présents dès 4.8.6 (focus après Pause/Reprendre ; tiroir Réglages qui dépasse de 21 px à 200 %) | Correctifs (accord Mic, D-077) appliqués par G après sa relecture ; nouveau passage du banc |
+| 7 | U1 résumé de partie | Livré (GPT) puis réécrit (G) : comptes identiques à l'outil sur 14 lots réels (0 différence). **Deux relectures indépendantes : acceptable.** Bloc résumé replié par défaut (`3f8a79d`, branche envoyée). **Non accepté** | Acceptation par Mic |
+| 8 | U2 essais du vrai panneau | Banc réécrit (F) ; défauts 4.8.6 corrigés (focus après Pause/Reprendre ; tiroir Réglages à 200 %) ; requalifié contre `3f8a79d` : 24 sur 24 et 9 sur 9, 3 passes (Chromium 141 seulement ; branche `4da97cd` envoyée). **Non accepté** | Acceptation par Mic ; Chromium 153 et Edge non mesurés |
 | 9 | U3 raccourcis | Pas commencé | L'étude E a établi les actions réelles d'ESV (D = rail droit ; Maj+Espace = valider sans bouger) : décider l'action de D |
 | 10 | Retour à une coupe | À l'étude : saut par l'événement interne d'ESV, essai au banc B | Résultat du banc ; conditions de sécurité D-067 |
 | 11 | Étude 398/402 | À l'étude : rejeu direct sous 4.8.6 par un vérificateur indépendant : 398 et 402 posées à tort (159,9 et 273 mm, 0 appui) ; aucun lot réel de la partie 20 ne les contient ; levier « voisines » non vérifié | Décider du traitement (hors gel) ; levier voisines à essayer au banc |
@@ -46,7 +46,7 @@ attend sa relecture indépendante, puis Mic.
 | 14 | Apprentissage | À l'étude : recompte indépendant 902 rails exacts (partie 20 : 488, soit 54 %), au sommet de la zone 150 à 1 000 de D-067 ; l'estimation initiale de 500 à 650 est corrigée | Fiche de faisabilité non établie ; aucune activation |
 | – | V5 (conditionnel) | Condition probablement remplie : cut de 5,5 à 7,4 s sur 85 visites | Seuil de dérive à fixer par Mic |
 | – | B3 (conditionnel) | Dépend de B2 | B2 |
-| – | Banc ESV local (privé) | Construit, confiné ; essais serveur et F1 à F4 : 113 sur 113 ; second jeu intégré | Relecture indépendante avant tout usage pour Ariane |
+| – | Banc ESV local (privé) | Construit, confiné ; 113 sur 113 ; second jeu E1 à E6 : 24 sur 24 + 10 sur 10 ; saut par événement interne confirmé (partie en texte) | Relecture indépendante avant tout usage pour Ariane |
 
 **Chantiers obligatoires : 1 accepté sur 14** (3 livrés non acceptés : V1, U1, U2 ; 7 à l'étude ou préparés : V4, V3,
 retour à une coupe, 398/402, B1, B2, apprentissage ; 3 non commencés : inventaire, V2, U3). Chiffre de comptage, pas
@@ -65,13 +65,13 @@ trois expériences V3, une partie neuve de validation). L'avenant D-067 avait co
 
 | Mission | Statut | Livrable | Branche locale (envoyée ?) |
 |---|---|---|---|
-| A — V1 | En cours (reprise après coupure de quota) | Réécriture, correctifs 2 et 3 ; reste correctif 1, coût, rapport | `claude/49-v1-reecriture`, `claude/49-v1-corrections-proposees` (non envoyées : après relecture) |
-| B — ESV | En cours (rapport final) | Banc confiné, matrice, 2 jeux de données | hors dépôt |
-| C — Performance | Livrée ; contre-vérification en cours | `missions/C_PERF/RAPPORT.md` (privé) | aucune |
-| D — Géométrie | Livrée ; contre-vérification en cours | `missions/D_GEOM/RAPPORT.md` (privé) | aucune |
-| E — Fonctions | Livrée ; contre-vérification en cours | `missions/E_FONCTIONS/RAPPORT.md` (privé) | aucune |
-| F — Qualification | Livrée | Banc réel + rapport + 3 patchs proposés | `claude/49-u2-qualification` (envoyée) |
-| G — Panneau | Livrée ; relecture indépendante en cours | `022954d` | `claude/49-panneau-reecriture` (envoyée) |
+| A — V1 | Livrée ; relue par une équipe indépendante (réécriture acceptable) | Réécriture, correctifs 2 et 3, patch d'export, plan de l'observateur passif | `claude/49-v1-reecriture` (`37dd5df`), `claude/49-v1-corrections-proposees` (`86dc727`) : envoyées, non fusionnées |
+| B — ESV | Livrée ; relecture indépendante à faire | Banc confiné, matrice, 2 jeux de données | hors dépôt |
+| C — Performance | Livrée ; contre-vérifiée (errata) | `missions/C_PERF/RAPPORT.md` (privé) | aucune |
+| D — Géométrie | Livrée ; contre-vérifiée (errata : 902 rails exacts, 398/402 rejoué) | `missions/D_GEOM/RAPPORT.md` (privé) | aucune |
+| E — Fonctions | Livrée ; contre-vérifiée (errata) | `missions/E_FONCTIONS/RAPPORT.md` (privé) | aucune |
+| F — Qualification | Livrée ; requalifiée après `3f8a79d` | Banc réel + rapport | `claude/49-u2-qualification` (`4da97cd`, envoyée) |
+| G — Panneau | Livrée ; relue (2 relectures indépendantes : acceptable) ; patchs de F et repli appliqués | `3f8a79d` | `claude/49-panneau-reecriture` (envoyée) |
 | Lecture directe d'ESV (orchestrateur) | Livrée | `missions/ANGLES_ESV_RAPPORT.md` (privé) | aucune |
 
 Chaque auteur livre un rapport et s'arrête ; une autre équipe relit. L'orchestrateur relit chaque diff ; Mic
