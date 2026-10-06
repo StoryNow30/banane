@@ -44,6 +44,7 @@
  const AUTH=/(^|\.)login\.microsoftonline\.com$|(^|\.)b2clogin\.com$|(^|\.)login\.live\.com$|\/oauth2\/|\/token(\/|$)|\/authorize(\/|$)|\/devicecode/i;
  const POINTS=/(?:^|\/)ept\.json$|\/ept-(?:data|hierarchy)\//i;
  const STATUS_VALUES=['valid','invalid','skipped'];
+ const OBSERVER_VERSION=1;
 
  function pathOf(url,base){try{const u=new URL(String(url),base);return {host:u.hostname,path:u.pathname};}catch{return null;}}
  function classify(method,url,base){
@@ -97,6 +98,12 @@
   const perfNow=()=>win.performance.now(),epoch=t=>win.performance.timeOrigin+t;
   let observerId;try{observerId=win.crypto.randomUUID();}catch{observerId=String(Math.random()).slice(2)+String(Date.now());}
   let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],lastWrite=new Map();
+  /* État de la page à l'installation : l'observateur est-il arrivé avant les scripts de la page ?
+   * oui = document en cours de chargement et aucun script encore analysé ; non = déjà chargé ou des
+   * scripts analysés ; inconnu (null) = document illisible : jamais deviné. */
+  const start=(()=>{try{const d=win.document;if(!d)return {readyState:null,scripts:null,before:null};
+   const readyState=typeof d.readyState==='string'?d.readyState:null,scripts=d.scripts&&Number.isInteger(d.scripts.length)?d.scripts.length:null;
+   return {readyState,scripts,before:readyState!==null&&scripts!==null?readyState==='loading'&&scripts===0:null};}catch{return {readyState:null,scripts:null,before:null};}})();
 
   /* ------------------------------------------------ tampon et envoi */
   function post(entry){try{win.postMessage({kind:'banane5:esv-observation',v:1,observer:observerId,entry},origin());}catch{}}
@@ -108,6 +115,13 @@
    ring.push({seq:e.seq,json,chars:json.length});ringChars+=json.length;
    while(ring.length>LIMITS.ringEntries||ringChars>LIMITS.ringChars){const x=ring.shift();ringChars-=x.chars;dropped++;}
    post(e);
+  }
+  /* Marque « observateur présent » : posée à la demande du pont, au début d'une séance. Elle distingue
+   * « aucune écriture » d'« observateur absent » (navigateur trop ancien, page non rechargée après
+   * l'installation, extension non rechargée) : sans marque dans une séance, l'observateur n'y était pas. */
+  function snapshot(afterDenial){
+   record({kind:'observer',version:OBSERVER_VERSION,world:'MAIN',installedBeforePageScripts:start.before,readyState:start.readyState,scriptsAtInstall:start.scripts,
+    enabled,afterDenial:afterDenial===true,dropped,ignored});
   }
   /* Le pont se signale (ou se re-signale) : rejouer ce que le tampon garde. */
   function replay(afterSeq){for(const x of ring)if(x.seq>afterSeq){try{post(JSON.parse(x.json));}catch{}}}
@@ -180,6 +194,7 @@
   try{win.addEventListener('message',ev=>{try{
    if(ev.source!==win||ev.origin!==origin())return;const d=ev.data;if(!d||typeof d!=='object')return;
    if(d.kind==='banane5:hello')replay(Number.isInteger(d.afterSeq)&&d.afterSeq>=0?d.afterSeq:0);
+   else if(d.kind==='banane5:snapshot')snapshot(d.afterDenial===true);
    else if(d.kind==='banane5:config')enabled=d.enabled!==false;
   }catch{}});}catch{}
 

@@ -136,3 +136,16 @@ test('filet pour fetch (relecture b) : compte les ressources fetch sur les chemi
  // observateur coupé : rien
  const off=world();off.deliver({kind:'banane5:config',enabled:false});off.po().emit([mk('/api/p/rails/a/b',1,2,'fetch')]);off.runTimers();assert.equal(off.observed().length,0);
 });
+test('marque « observateur présent » (M6) : version, installé avant les scripts de la page oui/non/inconnu, posée à la demande de l’instantané',()=>{
+ const mark=(doc,data={})=>{const w=world({document:doc});assert.equal(w.observed().length,0,'rien posé à l’installation');w.deliver({kind:'banane5:snapshot',afterDenial:false,...data});return {w,m:w.observed().filter(e=>e.kind==='observer')};};
+ let {m}=mark({readyState:'loading',scripts:{length:0}});
+ assert.deepEqual([m.length,m[0].version,m[0].world,m[0].installedBeforePageScripts,m[0].readyState,m[0].scriptsAtInstall,m[0].afterDenial,m[0].enabled],[1,1,'MAIN',true,'loading',0,false,true]);
+ assert.deepEqual(['dropped','ignored','seq'].map(k=>typeof m[0][k]),['number','number','number']);
+ ({m}=mark({readyState:'complete',scripts:{length:12}}));assert.deepEqual([m[0].installedBeforePageScripts,m[0].readyState,m[0].scriptsAtInstall],[false,'complete',12]);
+ ({m}=mark({readyState:'loading',scripts:{length:3}}));assert.equal(m[0].installedBeforePageScripts,false,'des scripts de la page ont déjà été analysés');
+ ({m}=mark(undefined));assert.deepEqual([m[0].installedBeforePageScripts,m[0].readyState,m[0].scriptsAtInstall],[null,null,null],'inconnu : jamais deviné');
+ ({m}=mark({readyState:'loading',scripts:{length:0}},{afterDenial:true}));assert.equal(m[0].afterDenial,true);
+ const {w}=mark({readyState:'loading',scripts:{length:0}});w.deliver({kind:'banane5:snapshot'});w.deliver({kind:'banane5:config',enabled:false});w.deliver({kind:'banane5:snapshot'});
+ const all=w.observed().filter(e=>e.kind==='observer');assert.deepEqual(all.map(e=>e.enabled),[true,true,false],'chaque demande pose une marque neuve (nouveau numéro) ; coupé = dit');
+ assert.ok(all[1].seq>all[0].seq&&!JSON.stringify(all).includes('esv.test'));
+});

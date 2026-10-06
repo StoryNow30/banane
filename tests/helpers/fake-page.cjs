@@ -7,7 +7,7 @@
 const {install}=require('../../src/esv-observer.js');
 const ORIGIN='https://esv.test',HREF=ORIGIN+'/rails_validation/part';
 const tick=()=>new Promise(r=>setImmediate(r));
-function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,failTimers=false}={}){
+function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,failTimers=false,document}={}){
  const log=[],network=[],posts=[],listeners=[],observerTimers=[];let clock=0,po=null;
  class XHR{
   constructor(){this.L={};this.status=0;this.readyState=0;this.responseType='';this.responseText='';this.onreadystatechange=null;}
@@ -31,7 +31,7 @@ function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,
   postMessage:(m,o)=>{if(failPost)throw new Error('postMessage-en-panne');posts.push({m,o});},
   addEventListener:(t,fn)=>{listeners.push({t,fn});},
   setTimeout:(fn,ms)=>{if(failTimers)throw new Error('minuterie-en-panne');observerTimers.push({fn,ms});return observerTimers.length;}};
- win.self=win;
+ win.self=win;if(document!==undefined)win.document=document;
  const ctl=observe?install(win):null;
  return {win,XHR,po:()=>po,log,network,posts,observerTimers,ctl,originalFetch,
   runTimers:()=>{while(observerTimers.length){const t=observerTimers.shift();t.fn();}},

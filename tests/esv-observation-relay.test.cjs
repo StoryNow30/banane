@@ -69,3 +69,20 @@ test('hors séance avec plus de 50 entrées en attente : le reste de la file est
  await flush(f);assert.equal(out(f)[0].entries.length,50);const reste=[...f.timers.entries()].at(-1);f.timers.delete(reste[0]);await reste[1].fn();
  assert.equal(out(f).length,1,'la suite de la file n’est pas envoyée : hors séance, rien n’est gardé');
 });
+const snaps=f=>f.sent.filter(x=>x.kind==='banane5:snapshot');
+test('début de séance (M6) : la première réponse accept:true demande l’instantané ; après une absence de séance, afterDenial:true ; jamais de répétition',async()=>{
+ let accept=true;const f=bridge({observationReply:()=>({accept})});
+ f.emit(msg(1));await flush(f);deq(snaps(f),[{kind:'banane5:snapshot',afterDenial:false}]);
+ f.emit(msg(2));await flush(f);assert.equal(snaps(f).length,1,'pas de répétition tant que la séance dure');
+ accept=false;f.emit(msg(3));await flush(f);assert.equal(snaps(f).length,1);
+ accept=true;f.emit(msg(4));await flush(f);deq(snaps(f).at(-1),{kind:'banane5:snapshot',afterDenial:true});assert.equal(snaps(f).length,2);
+});
+test('début de séance appris par le battement (launcher-status) : même demande, sans message d’observation',async()=>{
+ let seance=false;const f=bridge({launcherStatus:()=>({visible:true,observation:{seance}})}),tick=()=>new Promise(r=>setImmediate(r));
+ f.uiMessage({kind:'launcher-visibility',visible:true});await tick();assert.equal(snaps(f).length,0);
+ seance=true;f.uiMessage({kind:'launcher-visibility',visible:true});await tick();deq(snaps(f),[{kind:'banane5:snapshot',afterDenial:true}]);
+ f.uiMessage({kind:'launcher-visibility',visible:true});await tick();assert.equal(snaps(f).length,1,'une seule demande par début de séance');
+ seance=false;f.uiMessage({kind:'launcher-visibility',visible:true});await tick();seance=true;f.uiMessage({kind:'launcher-visibility',visible:true});await tick();assert.equal(snaps(f).length,2,'nouvelle séance : nouvelle demande');
+ assert.equal(out(f).length,0,'aucun message d’observation envoyé');
+ const g=bridge({launcherStatus:()=>({visible:true})});g.uiMessage({kind:'launcher-visibility',visible:true});await tick();assert.equal(snaps(g).length,0,'réponse sans état de séance : rien');
+});

@@ -13,7 +13,7 @@
  function setLauncherVisible(visible){if(!pill)return;const shown=visible===true;pill.hidden=!shown;
   if(shown){if(!pill.isConnected)document.documentElement.append(pill);}else if(pill.isConnected)pill.remove();}
  async function refreshLauncher(){const generation=++launcherGeneration;
-  try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});if(generation===launcherGeneration){setLauncherVisible(state?.visible===true);setBandeau(state?.bandeau||null);}}
+  try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});obsSeance(state?.observation?.seance);if(generation===launcherGeneration){setLauncherVisible(state?.visible===true);setBandeau(state?.bandeau||null);}}
   catch{if(generation===launcherGeneration){setLauncherVisible(false);setBandeau(null);}}}
  const passive=new Set(['ping','state','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish']);
  function diagnostic(p){return {requestId:p.id,...(p.traceId?{traceId:p.traceId}:{}),action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
@@ -37,7 +37,13 @@
   * sinon (`accept:false`) la file est vidée ici, sans rien garder. Trous de numérotation
   * et file pleine sont dits par un jalon « gap », jamais passés sous silence. */
  const OBS={maxQueue:100,maxEntryChars:4096,maxPerMessage:50,maxMessageChars:65536,flushMs:250};
- const obs={observer:null,last:0,queue:[],timer:null,lost:0};
+ const obs={observer:null,last:0,queue:[],timer:null,lost:0,known:null};
+ /* État de séance connu du service worker (réponse à un lot d'entrées, ou battement `launcher-status`) :
+  * au DÉBUT d'une séance, demander à l'observateur sa marque (« observateur présent »). `afterDenial` dit
+  * si l'on savait qu'il n'y avait pas de séance juste avant. Une seule demande par début de séance. */
+ function obsSeance(on){if(typeof on!=='boolean')return;
+  if(on&&obs.known!==true){const afterDenial=obs.known===false;obs.known=true;try{window.postMessage({kind:'banane5:snapshot',afterDenial},location.origin);}catch{}}
+  else if(!on)obs.known=false;}
  function obsCopy(x){
   if(!x||typeof x!=='object'||!Number.isInteger(x.seq)||x.seq<0||typeof x.kind!=='string'||x.kind.length>24)return null;
   try{const json=JSON.stringify(x);return json.length>OBS.maxEntryChars?null:JSON.parse(json);}catch{return null;}}
@@ -58,6 +64,7 @@
   if(obs.queue.length)obs.timer=setTimeout(obsFlush,OBS.flushMs);
   try{const r=await chrome.runtime.sendMessage({kind:'esv-observation',observer:obs.observer,entries});
    if(r&&r.accept===false)obs.queue.length=0;
+   if(r&&typeof r.accept==='boolean')obsSeance(r.accept);
    if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
   }catch{}}
  try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}

@@ -217,13 +217,13 @@ function v46Categories(events){
  * ni qualité de pose, ni preuve de relecture. Les époques de la page
  * (`performance.timeOrigin + now`) et du service worker (`timeOrigin + ms`) viennent
  * de deux processus : l'écart d'horloge n'est pas corrigé, il est déclaré. */
-const OBS_KINDS=['write','list-page','resource','fetch-rails','gap'];
+const OBS_KINDS=['write','list-page','resource','fetch-rails','observer','gap'];
 function observationsOf(data,phaseEvents,visits){
  const seen=new Set(),obs=[];
  for(const e of data.events||[]){
   if(e?.type!=='esv-observation'||e.schema!==1||!OBS_KINDS.includes(e.kind))continue;
   if(e.eventId){if(seen.has(e.eventId))continue;seen.add(e.eventId);}obs.push(e);}
- if(!obs.length)return {available:false,reason:'Aucune observation passive (observateur absent, coupé ou hors séance). Non mesuré.'};
+ if(!obs.length)return {available:false,reason:'Aucune observation passive ni marque d’observateur : observateur absent (navigateur sans la clé world, page non rechargée après l’installation) ou coupé, ou hors séance. Non mesuré.'};
  const epoch=e=>finite(e.timeOrigin)&&finite(e.ms)?e.timeOrigin+e.ms:null;
  // Fenêtres de visite en époque : de l'ouverture à l'ouverture suivante du même lot et de la même horloge.
  const byLot=groupBy((phaseEvents||[]).filter(e=>e.kind==='visit'&&e.point==='open'&&epoch(e)!==null),e=>e.batchId);
@@ -247,8 +247,9 @@ function observationsOf(data,phaseEvents,visits){
  const perVisit=(visits||[]).map(v=>{const w=rows.filter(r=>r.visitId===v.visitId),r=res.filter(x=>x.visitId===v.visitId);
   return {visitId:v.visitId,identity:v.identity,writes:w.length,serverWrite:w.length?{observed:true,status:w.at(-1).status,attempt:w.at(-1).attempt,durationMs:w.at(-1).durationMs,writeEndMinusAcceptedMs:w.at(-1).writeEndMinusAcceptedMs}:{observed:false},
    resources:{windows:r.length,n:r.reduce((n,x)=>n+x.n,0),bytes:r.reduce((n,x)=>n+x.bytes,0)}};});
- const fr=of('fetch-rails');
- return {available:true,counts,fetchRails:{windows:fr.length,n:fr.reduce((n,e)=>n+(finite(e.n)?e.n:0),0)},gaps:{count:gaps.length,lost:Object.values(byReason).reduce((n,x)=>n+x,0),byReason},
+ const fr=of('fetch-rails'),marks=of('observer'),lastMark=marks.at(-1),late=marks.some(m=>m.installedBeforePageScripts===false),
+  before=marks.length?(late?false:marks.every(m=>m.installedBeforePageScripts===true)?true:null):null;
+ return {available:true,counts,observer:{present:marks.length>0,marks:marks.length,version:lastMark?.version??null,installedBeforePageScripts:before,late,readyState:lastMark?.readyState??null,enabled:lastMark?.enabled??null,dropped:lastMark?.dropped??null},fetchRails:{windows:fr.length,n:fr.reduce((n,e)=>n+(finite(e.n)?e.n:0),0)},gaps:{count:gaps.length,lost:Object.values(byReason).reduce((n,x)=>n+x,0),byReason},
   writes:{n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
    attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,rows},
   listPages:{pages:of('list-page').length,loads},resources:{windows:res.length,n:res.reduce((n,x)=>n+x.n,0),bytes:res.reduce((n,x)=>n+x.bytes,0),
@@ -257,7 +258,10 @@ function observationsOf(data,phaseEvents,visits){
 }
 function observationsLines(o,n){
  if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',o.reason]:[];
+ const yn=v=>v===true?'oui':v===false?'non':'inconnu';
  const L=['','## Observateur passif (journalisation seule)','',
+  o.observer.present?`Observateur : présent (version ${n(o.observer.version)}, installé avant les scripts de la page : ${yn(o.observer.installedBeforePageScripts)}${o.observer.late?' (au moins une marque tardive)':''}).`
+   :'Observateur : marque absente (observateur absent ou coupé, page non rechargée, navigateur trop ancien, ou séance démarrée sans message) : non mesuré.',
   `Observations : ${o.counts.write} écriture(s), ${o.counts['list-page']} page(s) de liste, ${o.counts.resource} fenêtre(s) de fichiers de points, ${o.counts['fetch-rails']} fenêtre(s) de requêtes fetch comptées, ${o.gaps.count} jalon(s) de perte (${o.gaps.lost} observation(s) perdue(s)${Object.keys(o.gaps.byReason).length?' : '+JSON.stringify(o.gaps.byReason):''}).`,
   `Écritures : ${o.writes.n} dont ${o.writes.ok} acquittée(s) (statut HTTP 200 ou 204, acquittement de la requête de la page, ni qualité de pose ni relecture), ${o.writes.failed} autre(s) ; statuts ${JSON.stringify(o.writes.byStatus)} ; tentatives max ${o.writes.attemptsMax} ; reliée(s) à une visite par fenêtre de temps : ${o.writes.linked}/${o.writes.n}.`];
  if(o.writes.n){L.push('','| Coupe d’ESV | Statut | Tentative | Durée ms | Champs numériques | Visite | Écriture − acceptation ms |','|---|---:|---:|---:|---:|---|---:|');

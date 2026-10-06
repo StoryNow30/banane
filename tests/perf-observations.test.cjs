@@ -67,3 +67,13 @@ test('filet fetch : compté dans le bilan, dit pour ce qu’il est (écritures p
  const md=toMarkdown(measure(j,{tous:true}));assert.match(md,/Requêtes fetch sur les chemins rails : 5 sur 2 fenêtre\(s\)/);assert.match(md,/non observées : l’observateur n’enveloppe pas fetch/);
  const k=journal();k.events.push(write());assert.deepEqual(measure(k,{tous:true}).observations.fetchRails,{windows:0,n:0});assert.match(toMarkdown(measure(k,{tous:true})),/Requêtes fetch sur les chemins rails : 0/);
 });
+test('marque de l’observateur (M6) : « aucune écriture » distinct de « observateur absent » ; installé avant les scripts oui/non/inconnu',()=>{
+ const j=journal(),a=measure(j).observations;assert.equal(a.available,false);assert.match(a.reason,/observateur absent/i);assert.match(toMarkdown(measure(j)),/observateur absent/i);
+ const mark=(o={})=>obs('observer',{version:1,world:'MAIN',installedBeforePageScripts:true,readyState:'loading',scriptsAtInstall:0,enabled:true,afterDenial:false,dropped:0,ignored:3,...o});
+ j.events.push(mark());let o=measure(j).observations;
+ assert.deepEqual([o.available,o.writes.n,o.observer.present,o.observer.marks,o.observer.version,o.observer.installedBeforePageScripts],[true,0,true,1,1,true]);
+ let md=toMarkdown(measure(j));assert.match(md,/Observateur : présent \(version 1, installé avant les scripts de la page : oui\)/);assert.match(md,/Écritures : 0/);assert.doesNotMatch(md,/observateur absent/i);
+ j.events.push(mark({eventId:'m2',installedBeforePageScripts:false,readyState:'complete',scriptsAtInstall:9}));o=measure(j).observations;assert.deepEqual([o.observer.marks,o.observer.installedBeforePageScripts,o.observer.late],[2,false,true]);
+ assert.match(toMarkdown(measure(j)),/installé avant les scripts de la page : non \(au moins une marque tardive\)/);
+ const k=journal();k.events.push(mark({installedBeforePageScripts:null,readyState:null,scriptsAtInstall:null}));assert.match(toMarkdown(measure(k)),/installé avant les scripts de la page : inconnu/);
+});

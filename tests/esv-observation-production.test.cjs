@@ -43,6 +43,18 @@ test('filet fetch : « fetch-rails » rangé en liste blanche (n, fenêtre) ; ri
  deq(r,{accept:true,stored:2});const e=stored(b).filter(x=>x.kind==='fetch-rails');deq(e.map(x=>[x.n,x.startedEpochMs,x.endedEpochMs,x.windowMs]),[[3,1e12,1e12+40,250],[null,null,null,null]]);
  assert.ok(!JSON.stringify(e).includes('secret')&&!('url' in e[0])&&!('extra' in e[0]));release();await b.settle();
 });
+test('marque « observer » (M6) rangée en liste blanche ; état de séance donné au pont par launcher-status, onglet choisi seulement',async()=>{
+ const {b,release}=await lotOuvert(),mark=(o={})=>({seq:1,kind:'observer',version:1,world:'MAIN',installedBeforePageScripts:true,readyState:'loading',scriptsAtInstall:0,enabled:true,afterDenial:true,dropped:2,ignored:5,...o});
+ deq(send(b,[{...mark(),url:'https://esv.test/secret',extra:{a:1}}]).out,{accept:true,stored:1});const e=stored(b)[0];
+ deq([e.kind,e.version,e.world,e.installedBeforePageScripts,e.readyState,e.scriptsAtInstall,e.enabled,e.afterDenial,e.dropped,e.ignored],['observer',1,'MAIN',true,'loading',0,true,true,2,5]);
+ assert.ok(!('url' in e)&&!('extra' in e));
+ send(b,[mark({seq:2,version:'x',world:'ISOLATED',installedBeforePageScripts:'oui',readyState:'<script>',scriptsAtInstall:-1,enabled:'non',afterDenial:1,dropped:1.5})]);
+ const m=stored(b)[1];deq([m.version,m.world,m.installedBeforePageScripts,m.readyState,m.scriptsAtInstall,m.enabled,m.afterDenial,m.dropped],[null,null,null,null,null,null,null,null]);
+ const autre={id:'test',tab:{id:99},url:'https://esv.lidar.altametris.xyz/rails_validation/x'},st=x=>b.raw({kind:'launcher-status'},x).out;
+ assert.equal(st(undefined).observation.seance,true,'séance en cours, onglet choisi');assert.equal(st(autre).observation,undefined,'autre onglet : rien');assert.equal(typeof st(undefined).visible,'boolean','réponse existante inchangée');
+ b.get('engine').s.batch.state='STOPPED';assert.equal(st(undefined).observation.seance,false);b.get('engine').s.batch.state='RUNNING';
+ b.ctx.BananeSettings={...b.ctx.BananeSettings,observateurPassif:{actif:false}};assert.equal(st(undefined).observation.seance,false,'réglage coupé : pas de séance d’observation');release();await b.settle();
+});
 test('source non fiable : champs inconnus, types faux, URL, jeton et objets imbriqués jamais rangés',async()=>{
  const {b,release}=await lotOuvert();
  const bad={...write(),url:'https://esv.test/secret/rails/x?token=abc',authorization:'Bearer SECRET',status:'204',attempt:-1,method:'PUT'.repeat(5),outcome:'pirate',
