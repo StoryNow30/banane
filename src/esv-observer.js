@@ -120,14 +120,18 @@
   }
   function onOpen(xhr,args){
    const cls=classify(args[0],args[1],base());
-   meta.set(xhr,{cls,method:String(args[0]||'GET').toUpperCase(),url:args[1]});
+   meta.set(xhr,{cls,method:String(args[0]||'GET').toUpperCase(),url:args[1],attached:false,done:false});
   }
   function onSend(xhr,args){
    const m=meta.get(xhr);if(!m||m.cls!=='write'&&m.cls!=='list-page'){ignored++;return;}
+   // Une note par requête : un envoi relancé (le premier a levé) ou répété sans `open` n'ajoute rien.
+   if(m.attached)return;m.attached=true;
    const started=perfNow(),body=m.cls==='write'?writeBody(args[0]):null;let outcome='done';
    const flag=name=>()=>{outcome=name;};
    xhr.addEventListener('abort',flag('abort'));xhr.addEventListener('timeout',flag('timeout'));
    xhr.addEventListener('loadend',()=>{
+    // Un XHR réutilisé garde les écouteurs de sa requête précédente : seul compte celui de l'`open` courant.
+    if(meta.get(xhr)!==m||m.done)return;m.done=true;
     // Après les écouteurs d'ESV : la lecture éventuellement lourde ne les retarde pas.
     try{win.setTimeout(()=>{try{finish(xhr,m,started,perfNow(),outcome,body);}catch{}},0);}catch{}
    });

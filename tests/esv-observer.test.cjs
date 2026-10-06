@@ -113,3 +113,13 @@ test('mémoire de la page : pas de fuite de requêtes terminées (WeakMap), tent
  const w=world({routes:()=>({status:503,text:''})});for(let i=0;i<200;i++){const x=new w.win.XMLHttpRequest();x.open('PUT',ORIGIN+'/api/rails/id'+i+'/1');x.send('{"a":1}');await tick();w.runTimers();}
  assert.equal(w.ctl.stats().ringEntries,200);assert.ok(w.ctl.stats().ringChars<=LIMITS.ringChars);
 });
+test('XHR réutilisé ou envoi relancé : une note par requête, jamais de doublon (relecture M2)',async()=>{
+ const w=world({routes:()=>({status:204,text:''})}),x=new w.win.XMLHttpRequest();
+ x.open('PUT',ORIGIN+'/api/rails/a/1');x.send('{"a":1}');await tick();w.runTimers();
+ x.open('PUT',ORIGIN+'/api/rails/b/2');x.send('{"a":2}');await tick();w.runTimers();
+ assert.deepEqual(w.observed().map(e=>[e.railPairId,e.status]),[['a/1',204],['b/2',204]],'deux requêtes, deux notes (et non trois)');
+ const y=new w.win.XMLHttpRequest();y.open('PUT',ORIGIN+'/api/rails/c/3');y.throwOnce=true;assert.throws(()=>y.send('{"a":3}'),/une-fois/);y.send('{"a":3}');await tick();w.runTimers();
+ assert.deepEqual(w.observed().slice(2).map(e=>e.railPairId),['c/3'],'envoi qui lève puis réussit : une seule note');
+ const z=new w.win.XMLHttpRequest();z.open('PUT',ORIGIN+'/api/rails/d/4');z.send('{"a":4}');z.send('{"a":4}');await tick();w.runTimers();
+ assert.equal(w.observed().filter(e=>e.railPairId==='d/4').length,1,'deux send sans open : une note');
+});

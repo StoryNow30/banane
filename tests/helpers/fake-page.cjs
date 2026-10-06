@@ -17,7 +17,8 @@ function world({observe=true,routes=()=>({status:200,text:'{}'}),failPost=false,
   getAllResponseHeaders(){log.push(['getAllResponseHeaders']);return '';}
   addEventListener(t,fn){(this.L[t]=this.L[t]||[]).push(fn);}
   fire(t){for(const fn of this.L[t]||[])fn.call(this,{type:t});}
-  send(body){log.push(['send',this._m,this._u,body===undefined?null:body]);network.push([this._m,this._u,body===undefined?null:body]);
+  send(body){if(this.throwOnce){this.throwOnce=false;log.push(['send-leve']);throw new Error('send-invalide-une-fois');}
+   log.push(['send',this._m,this._u,body===undefined?null:body]);network.push([this._m,this._u,body===undefined?null:body]);
    if(this._m==='BOOM')throw new Error('send-invalide');
    queueMicrotask(()=>{const r=routes(this._m,this._u,body)||{status:200,text:'{}'};this.status=r.status;this.responseText=r.text??'';this.readyState=4;
     if(this.onreadystatechange)this.onreadystatechange();this.fire('readystatechange');this.fire(r.status===0?'error':'load');this.fire('loadend');});}
