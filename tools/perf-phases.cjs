@@ -218,12 +218,20 @@ function v46Categories(events){
  * (`performance.timeOrigin + now`) et du service worker (`timeOrigin + ms`) viennent
  * de deux processus : l'écart d'horloge n'est pas corrigé, il est déclaré. */
 const OBS_KINDS=['write','list-page','list-summary','resource','fetch-rails','observer','gap'];
+/* Un journal d'une version qui porte l'observateur (4.9.0.2 ou plus) doit TOUJOURS dire l'état de l'observateur, même
+ * sans aucun événement d'observation (onglet ESV non rechargé après l'installation : l'observateur n'y est pas, et
+ * le bilan ne disait rien). Version lue dans le journal (`version`, sinon `state.version`) ; illisible ou plus
+ * ancienne : rien n'est ajouté, le format des anciens journaux ne change pas. */
+const OBSERVER_FROM=[4,9,0,2];
+function observerExpected(data){
+ const v=data?.version??data?.state?.version,m=typeof v==='string'?/^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?![\d.])/.exec(v.trim()):null;if(!m)return false;
+ const a=[+m[1],+m[2],+m[3],+(m[4]??0)];for(let i=0;i<4;i++){if(a[i]!==OBSERVER_FROM[i])return a[i]>OBSERVER_FROM[i];}return true;}
 function observationsOf(data,phaseEvents,visits){
  const seen=new Set(),obs=[];
  for(const e of data.events||[]){
   if(e?.type!=='esv-observation'||e.schema!==1||!OBS_KINDS.includes(e.kind))continue;
   if(e.eventId){if(seen.has(e.eventId))continue;seen.add(e.eventId);}obs.push(e);}
- if(!obs.length)return {available:false,reason:'Aucune observation passive ni marque d’observateur : observateur absent (navigateur sans la clé world, page non rechargée après l’installation) ou coupé, ou hors séance. Non mesuré.'};
+ if(!obs.length)return {available:false,reason:'Aucune observation passive ni marque d’observateur : observateur absent (navigateur sans la clé world, page non rechargée après l’installation) ou coupé, ou hors séance. Non mesuré.',...(observerExpected(data)?{observerExpected:true}:{})};
  const epoch=e=>finite(e.timeOrigin)&&finite(e.ms)?e.timeOrigin+e.ms:null;
  // Fenêtres de visite en époque : de l'ouverture à l'ouverture suivante du même lot et de la même horloge.
  const byLot=groupBy((phaseEvents||[]).filter(e=>e.kind==='visit'&&e.point==='open'&&epoch(e)!==null),e=>e.batchId);
@@ -263,8 +271,9 @@ function listSummaries(events){
  for(const e of events){const k=JSON.stringify([e.observer?.id??null,e.listKey??null,e.beforeSession===true]),prev=m.get(k);if(!prev||order(e)>=order(prev))m.set(k,e);}
  return [...m.values()].map(e=>({observer:e.observer?.id??null,listKey:e.listKey??null,pages:e.pages??null,okPages:e.okPages??null,rows:e.rows??null,chars:e.chars??null,counts:e.counts??null,
   firstStartedEpochMs:e.firstStartedEpochMs??null,lastEndedEpochMs:e.lastEndedEpochMs??null,durationMs:e.durationMs??null,beforeSession:e.beforeSession===true}));}
+const OBSERVER_ABSENT='Observateur : absent (aucun événement d’observation) : l’onglet ESV n’a probablement pas été rechargé après l’installation ; ces mesures n’ont pas d’observation d’écriture';
 function observationsLines(o,n){
- if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',o.reason]:[];
+ if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',...(o.observerExpected?[OBSERVER_ABSENT,'']:[]),o.reason]:[];
  const yn=v=>v===true?'oui':v===false?'non':'inconnu';
  const L=['','## Observateur passif (journalisation seule)','',
   o.observer.present?`Observateur : présent (version ${n(o.observer.version)}, installé avant les scripts de la page : ${yn(o.observer.installedBeforePageScripts)}${o.observer.late?' (au moins une marque tardive)':''}).`
@@ -279,7 +288,7 @@ function observationsLines(o,n){
  L.push('',`Fichiers de points : ${o.resources.windows} fenêtre(s), ${o.resources.n} fichier(s), ${o.resources.bytes} octets.`,
   `Requêtes fetch sur les chemins rails : ${o.fetchRails.n} sur ${o.fetchRails.windows} fenêtre(s)${o.fetchRails.n?' (non observées : l’observateur n’enveloppe pas fetch ; si ESV écrit par fetch, aucune écriture n’est vue)':' (aucune)'}.`,o.clockNote+'.');return L;}
 /* --------------------------------------------------------- restitution */
-function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n'+(m.observations?.available?observationsLines(m.observations,x=>finite(x)?String(Math.round(x*100)/100):'non mesuré').join('\n')+'\n':'');
+function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n'+(m.observations?.available||m.observations?.observerExpected?observationsLines(m.observations,x=>finite(x)?String(Math.round(x*100)/100):'non mesuré').join('\n')+'\n':'');
  const n=x=>finite(x)?String(Math.round(x*100)/100):'non mesuré';
  const lines=['','## V1 — horloge SW et visites corrélées','',m.scopeLimited?'Projet absent sur certaines visites : portée limitée.':'Projet identifié.','',
   '| Phase | n | Médiane ms | P90 ms | Max ms | Manquantes | Inapplicables | Chevauchements |','|---|---:|---:|---:|---:|---:|---:|---:|'];

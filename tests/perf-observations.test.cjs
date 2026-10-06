@@ -86,3 +86,30 @@ test('résumé des listes avant la séance : par chargement et par clé, dernier
  const md=toMarkdown(measure(j,{tous:true}));assert.match(md,/Résumé des listes de coupes \(comptes seulement\) — chargement A, clé p-key, observé avant la séance : 11 page\(s\), 10269 ligne\(s\), valeurs de statut \{"valid":10154,"invalid":115,"skipped":0\}, 12450000 caractères, 14000 ms/);
  assert.match(md,/chargement B, clé q, vu pendant la séance : 1 page\(s\), non mesuré ligne\(s\), comptes non mesurés/);assert.doesNotMatch(md,/secret/);
 });
+/* ---- Test 2 final (mission F, § 8.3) : état de l'observateur toujours écrit pour un journal 4.9.0.2 ou plus ---- */
+const ABSENT='Observateur : absent (aucun événement d’observation) : l’onglet ESV n’a probablement pas été rechargé après l’installation ; ces mesures n’ont pas d’observation d’écriture';
+const avec=(version,j=withVisits())=>{if(version!==undefined)j.version=version;return j;};
+test('journal 4.9.0.2 ou plus sans aucun événement d’observation (Orbite simulé : jalons V1 présents) : la ligne « Observateur : absent » est TOUJOURS écrite',()=>{
+ for(const v of ['4.9.0.2','4.9.0.3','4.9.1.0','4.10.0.0','5.0.0.0']){
+  const m=measure(avec(v),{tous:true}),t=toMarkdown(m);assert.equal(m.available,true,'jalons V1 présents : mesure disponible');assert.equal(m.observations.available,false);
+  assert.ok(t.includes(ABSENT),v+' : ligne d’état écrite');assert.equal(t.split(ABSENT).length-1,1,'une seule fois');
+  assert.match(t,/## Observateur passif \(journalisation seule\)\n\nObservateur : absent/,'en tête de la section d’observation');}
+});
+test('journal 4.9.0.2 ou plus, Écho sans jalon V1 ni observation : la mesure V1 reste « non mesurée », et l’état de l’observateur est dit',()=>{
+ for(const j of [{version:'4.9.0.2',events:[]},{state:{version:'4.9.0.2'},events:[]}]){
+  const m=measure(j),t=toMarkdown(m);assert.equal(m.available,false);assert.match(t,/Aucun jalon V1 corrélé/);assert.ok(t.includes(ABSENT));
+  assert.match(t,/## V1\n\nAucun jalon V1 corrélé[^\n]*\n\n## Observateur passif \(journalisation seule\)\n\nObservateur : absent/);}
+});
+test('journal plus ancien, sans version ou version illisible : rien de plus écrit, sortie identique à celle d’aujourd’hui',()=>{
+ const sans=t=>t.replace(/^Instrumentation :.*$/m,'');   // la taille en octets compte le champ « version » lui-même
+ const ref=sans(toMarkdown(measure(avec(undefined),{tous:true}))),refEcho=toMarkdown(measure({events:[]}));
+ for(const v of ['4.9.0.1','4.9.0','4.8.6','3.0.0.9','abc',4.9,null,'']){
+  const t=sans(toMarkdown(measure(avec(v),{tous:true})));assert.equal(t,ref,String(v));assert.ok(!t.includes('Observateur : absent'));
+  assert.equal(toMarkdown(measure({version:v,events:[]})),refEcho,'Écho, '+String(v));}
+ assert.ok(!ref.includes('Observateur : absent'));assert.match(ref,/## Observateur passif \(journalisation seule\)\n\nAucune observation passive/,'la section existante est inchangée');
+});
+test('avec événements d’observation : la ligne « absent » n’apparaît pas ; marque présente ou « marque absente » comme avant',()=>{
+ const m1=obs('observer',{version:1,installedBeforePageScripts:true,readyState:'loading',enabled:true,dropped:0}),j=avec('4.9.0.2');j.events.push(m1,write());
+ let t=toMarkdown(measure(j,{tous:true}));assert.ok(!t.includes('Observateur : absent'));assert.match(t,/Observateur : présent \(version 1, installé avant les scripts de la page : oui\)/);
+ const k=avec('4.9.0.2');k.events.push(write());t=toMarkdown(measure(k,{tous:true}));assert.ok(!t.includes('Observateur : absent'));assert.match(t,/Observateur : marque absente/);
+});
