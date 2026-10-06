@@ -46,7 +46,7 @@ attend sa relecture indépendante, puis Mic.
 | 14 | Apprentissage | À l'étude : recompte indépendant 902 rails exacts (partie 20 : 488, soit 54 %), au sommet de la zone 150 à 1 000 de D-067 ; l'estimation initiale de 500 à 650 est corrigée | Fiche de faisabilité non établie ; aucune activation |
 | – | V5 (conditionnel) | Dérive confirmée (5,5 → 7,4 s sur 85 visites) ; cause non démontrée ; attend la mesure de V3 ; en 4.9 : diagnostics I4 seulement (D-078) | Mesure de V3 |
 | – | B3 (conditionnel) | Dépend de B2 | B2 |
-| – | Banc ESV local (privé) | Construit, confiné ; 113 sur 113 ; second jeu E1 à E6 : 24 sur 24 + 10 sur 10 ; saut par événement interne confirmé (partie en texte) | Relecture indépendante avant tout usage pour Ariane |
+| – | Banc ESV local (privé) | Construit, confiné ; 113 sur 113 ; second jeu E1 à E6 : 24 sur 24 + 10 sur 10 ; saut par événement interne confirmé (partie en texte). **Rôle fixé avec Mic (6 octobre) : banc fonctionnel (nouvelles fonctions, parcours et erreurs d'ESV, cas où la pose dépend du chargement des points), pas banc de vitesse ; points complets seulement pour les coupes 0 à 3 de la partie 21, donc élargissement par collecte ciblée = décision de Mic** | Relecture indépendante avant tout usage pour Ariane ; essai de la vraie extension (F) |
 
 **Chantiers obligatoires : 3 acceptés sur 14** (P2, U1, U2) ; 1 adopté pour test, non accepté (V1) ; 7 à l'étude ou préparés : V4, V3,
 retour à une coupe, 398/402, B1, B2, apprentissage ; 3 non commencés : inventaire, V2, U3). Chiffre de comptage, pas
