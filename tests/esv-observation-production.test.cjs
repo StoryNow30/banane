@@ -55,6 +55,14 @@ test('marque « observer » (M6) rangée en liste blanche ; état de séance don
  b.get('engine').s.batch.state='STOPPED';assert.equal(st(undefined).observation.seance,false);b.get('engine').s.batch.state='RUNNING';
  b.ctx.BananeSettings={...b.ctx.BananeSettings,observateurPassif:{actif:false}};assert.equal(st(undefined).observation.seance,false,'réglage coupé : pas de séance d’observation');release();await b.settle();
 });
+test('« list-summary » rangé en liste blanche (comptes seulement) ; « list-page » porte sa clé de liste ; valeurs douteuses = null',async()=>{
+ const {b,release}=await lotOuvert();
+ const sum=(o={})=>({seq:1,kind:'list-summary',listKey:'p-key',pages:3,okPages:3,rows:2269,chars:2500000,counts:{valid:2000,invalid:200,skipped:69},firstStartedEpochMs:1e12,lastEndedEpochMs:1e12+900,durationMs:900,beforeSession:true,...o});
+ deq(send(b,[{...sum(),rowsList:[{Id:'secret-row'}],url:'https://esv.test/x'},sum({seq:2,listKey:'../etc',pages:-1,rows:'x',counts:{valid:'a'},beforeSession:'oui',durationMs:NaN}),list({seq:3,listKey:'p-key'})]).out,{accept:true,stored:3});
+ const e=stored(b);deq([e[0].listKey,e[0].pages,e[0].okPages,e[0].rows,e[0].chars,e[0].counts,e[0].durationMs,e[0].beforeSession],['p-key',3,3,2269,2500000,{valid:2000,invalid:200,skipped:69},900,true]);
+ assert.ok(!JSON.stringify(e[0]).includes('secret')&&!('url' in e[0])&&!('rowsList' in e[0]));
+ deq([e[1].listKey,e[1].pages,e[1].rows,e[1].counts,e[1].beforeSession,e[1].durationMs],[null,null,null,{valid:null,invalid:null,skipped:null},null,null]);assert.equal(e[2].listKey,'p-key');release();await b.settle();
+});
 test('source non fiable : champs inconnus, types faux, URL, jeton et objets imbriqués jamais rangés',async()=>{
  const {b,release}=await lotOuvert();
  const bad={...write(),url:'https://esv.test/secret/rails/x?token=abc',authorization:'Bearer SECRET',status:'204',attempt:-1,method:'PUT'.repeat(5),outcome:'pirate',

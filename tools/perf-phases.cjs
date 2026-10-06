@@ -217,7 +217,7 @@ function v46Categories(events){
  * ni qualité de pose, ni preuve de relecture. Les époques de la page
  * (`performance.timeOrigin + now`) et du service worker (`timeOrigin + ms`) viennent
  * de deux processus : l'écart d'horloge n'est pas corrigé, il est déclaré. */
-const OBS_KINDS=['write','list-page','resource','fetch-rails','observer','gap'];
+const OBS_KINDS=['write','list-page','list-summary','resource','fetch-rails','observer','gap'];
 function observationsOf(data,phaseEvents,visits){
  const seen=new Set(),obs=[];
  for(const e of data.events||[]){
@@ -252,10 +252,17 @@ function observationsOf(data,phaseEvents,visits){
  return {available:true,counts,observer:{present:marks.length>0,marks:marks.length,version:lastMark?.version??null,installedBeforePageScripts:before,late,readyState:lastMark?.readyState??null,enabled:lastMark?.enabled??null,dropped:lastMark?.dropped??null},fetchRails:{windows:fr.length,n:fr.reduce((n,e)=>n+(finite(e.n)?e.n:0),0)},gaps:{count:gaps.length,lost:Object.values(byReason).reduce((n,x)=>n+x,0),byReason},
   writes:{n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
    attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,rows},
-  listPages:{pages:of('list-page').length,loads},resources:{windows:res.length,n:res.reduce((n,x)=>n+x.n,0),bytes:res.reduce((n,x)=>n+x.bytes,0),
+  listPages:{pages:of('list-page').length,loads,summaries:listSummaries(of('list-summary'))},resources:{windows:res.length,n:res.reduce((n,x)=>n+x.n,0),bytes:res.reduce((n,x)=>n+x.bytes,0),
    firstStartMs:res.length?Math.min(...res.map(x=>x.startedEpochMs).filter(finite)):null,lastEndMs:res.length?Math.max(...res.map(x=>x.endedEpochMs).filter(finite)):null},
   perVisit,clockNote:'époque page = performance.timeOrigin + now ; époque service worker = timeOrigin + ms ; écart d’horloge entre processus non corrigé'};
 }
+/* Résumés d'avant séance : par chargement (observateur) et par clé ; le dernier reçu est gardé (une marque
+ * d'instantané peut être redemandée à un nouveau début de séance). Comptes seulement, jamais les lignes. */
+function listSummaries(events){
+ const m=new Map(),order=e=>finite(e.receivedMs)?e.receivedMs:(finite(e.ms)?e.ms:0);
+ for(const e of events){const k=JSON.stringify([e.observer?.id??null,e.listKey??null,e.beforeSession===true]),prev=m.get(k);if(!prev||order(e)>=order(prev))m.set(k,e);}
+ return [...m.values()].map(e=>({observer:e.observer?.id??null,listKey:e.listKey??null,pages:e.pages??null,okPages:e.okPages??null,rows:e.rows??null,chars:e.chars??null,counts:e.counts??null,
+  firstStartedEpochMs:e.firstStartedEpochMs??null,lastEndedEpochMs:e.lastEndedEpochMs??null,durationMs:e.durationMs??null,beforeSession:e.beforeSession===true}));}
 function observationsLines(o,n){
  if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',o.reason]:[];
  const yn=v=>v===true?'oui':v===false?'non':'inconnu';
@@ -267,6 +274,7 @@ function observationsLines(o,n){
  if(o.writes.n){L.push('','| Coupe d’ESV | Statut | Tentative | Durée ms | Champs numériques | Visite | Écriture − acceptation ms |','|---|---:|---:|---:|---:|---|---:|');
   for(const r of o.writes.rows.slice(0,40))L.push(`| ${r.railPairId??'—'} | ${r.status??'—'} | ${r.attempt??'—'} | ${n(r.durationMs)} | ${r.numericFields} | ${r.visitId??r.linkReason??'—'} | ${n(r.writeEndMinusAcceptedMs)} |`);
   if(o.writes.rows.length>40)L.push(`| … ${o.writes.rows.length-40} autre(s) | | | | | | |`);}
+ for(const x of o.listPages.summaries)L.push('',`Résumé des listes de coupes (comptes seulement) — chargement ${x.observer??'?'}, clé ${x.listKey??'sans clé'}, ${x.beforeSession?'observé avant la séance':'vu pendant la séance'} : ${n(x.pages)} page(s), ${n(x.rows)} ligne(s), ${x.counts?`valeurs de statut ${JSON.stringify(x.counts)}`:'comptes non mesurés'}, ${n(x.chars)} caractères, ${n(x.durationMs)} ms.`);
  for(const l of o.listPages.loads)L.push('',`Liste des coupes (chargement ${l.observer}) : ${l.pages} page(s), ${n(l.rows)} ligne(s)${l.counts?`, valeurs de statut ${JSON.stringify(l.counts)}`:', comptes non mesurés'} (comptage de valeurs de texte, à confirmer sur le banc).`);
  L.push('',`Fichiers de points : ${o.resources.windows} fenêtre(s), ${o.resources.n} fichier(s), ${o.resources.bytes} octets.`,
   `Requêtes fetch sur les chemins rails : ${o.fetchRails.n} sur ${o.fetchRails.windows} fenêtre(s)${o.fetchRails.n?' (non observées : l’observateur n’enveloppe pas fetch ; si ESV écrit par fetch, aucune écriture n’est vue)':' (aucune)'}.`,o.clockNote+'.');return L;}

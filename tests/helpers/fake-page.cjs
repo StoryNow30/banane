@@ -50,8 +50,8 @@ async function pageScript(w){
  w.rows=rows;
  call('open-invalide',()=>{const x=new win.XMLHttpRequest();x.open('GET','THROW');});
  call('send-invalide',()=>{const x=new win.XMLHttpRequest();x.open('BOOM','https://esv.test/api/x');x.send(null);});
- xhr('PUT',ORIGIN+'/api/u3d/projects/p-secret/rails/traj__00+0071551.725/00071552.685?merge=true',JSON.stringify({a:1.5,b:-2.25,c:0,RailType:'U50',SeenByOperator:true,nested:{x:1},arr:[1],tok:'Bearer '+'a'.repeat(60),['bad key']:3}));
- xhr('GET',ORIGIN+'/api/u3d/projects/p-secret/rails?status=invalid&top=1000&$skiptoken=zzz',undefined,{headers:true});
+ xhr('PUT',ORIGIN+'/api/u3d/projects/p-key/rails/traj__00+0071551.725/00071552.685?merge=true',JSON.stringify({a:1.5,b:-2.25,c:0,RailType:'U50',SeenByOperator:true,nested:{x:1},arr:[1],tok:'Bearer '+'a'.repeat(60),['bad key']:3}));
+ xhr('GET',ORIGIN+'/api/u3d/projects/p-key/rails?status=invalid&top=1000&$skiptoken=zzz',undefined,{headers:true});
  xhr('GET','https://login.microsoftonline.com/tenant/oauth2/v2.0/token?client_id=secret-client',null,{headers:false});
  xhr('GET',ORIGIN+'/other/thing?x=1',null);
  call('fetch',()=>win.fetch(ORIGIN+'/api/ept.json'));

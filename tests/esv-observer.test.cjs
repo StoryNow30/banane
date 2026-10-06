@@ -40,8 +40,10 @@ test('aucun en-tête lu ni écrit par l’observateur ; le jeton n’apparaît n
 test('classes : seule la classe est notée ; connexion, jeton et autres comptés sans trace ; jamais l’URL',async()=>{
  const {w}=await run(true),e=w.observed(),kinds=e.map(x=>x.kind);
  assert.deepEqual(kinds,['write','list-page'],'écriture et page de liste seulement');
- const texte=JSON.stringify(e);for(const secret of ['p-secret','skiptoken','login.microsoftonline','oauth2','client_id','secret-client','/other/','esv.test','merge=true','status=invalid'])assert.ok(!texte.includes(secret),'jamais '+secret);
+ const texte=JSON.stringify(e);for(const secret of ['skiptoken','login.microsoftonline','oauth2','client_id','secret-client','/other/','esv.test','merge=true','status=invalid'])assert.ok(!texte.includes(secret),'jamais '+secret);
  assert.ok(w.ctl.stats().ignored>=2,'connexion et autre : comptées, pas notées');
+ assert.equal(e.find(x=>x.kind==='list-page').listKey,'p-key','la liste porte sa clé (segment avant /rails), et elle seule');
+ assert.ok(!JSON.stringify(e.filter(x=>x.kind==='write')).includes('p-key'),'le segment de projet ne fuit pas dans les écritures (identifiant de coupe seulement)');
  assert.deepEqual(['write','list-page','point-resource','auth','other','other'],[
   classify('PUT',ORIGIN+'/api/u3d/projects/x/rails/a/b'),classify('GET',ORIGIN+'/api/u3d/projects/x/rails?top=1'),classify('GET',ORIGIN+'/data/ept.json'),
   classify('GET','https://login.microsoftonline.com/t/oauth2/token'),classify('GET',ORIGIN+'/api/u3d/projects/x/rails/a/b'),classify('GET','::pas-une-url')]);
@@ -148,4 +150,35 @@ test('marque « observateur présent » (M6) : version, installé avant les scri
  const {w}=mark({readyState:'loading',scripts:{length:0}});w.deliver({kind:'banane5:snapshot'});w.deliver({kind:'banane5:config',enabled:false});w.deliver({kind:'banane5:snapshot'});
  const all=w.observed().filter(e=>e.kind==='observer');assert.deepEqual(all.map(e=>e.enabled),[true,true,false],'chaque demande pose une marque neuve (nouveau numéro) ; coupé = dit');
  assert.ok(all[1].seq>all[0].seq&&!JSON.stringify(all).includes('esv.test'));
+});
+const rowsJson=(n,seed=0)=>JSON.stringify({value:Array.from({length:n},(_,i)=>({Id:'secret-row-'+i,Status:['valid','invalid','skipped'][(i+seed)%3===0?1:(i+seed)%5===0?2:0],Free:'texte libre '+i}))});
+async function listes(w,keys,n=1000){for(const k of keys){const x=new w.win.XMLHttpRequest();x.open('GET',ORIGIN+'/api/u3d/projects/'+k+'/rails?status=invalid&top=1000&sig=SECRETSIG');x.send();await tick();await tick();w.runTimers();}}
+test('résumé des listes avant la séance : un résumé compact par page chargée, posé seulement après un refus (afterDenial), jamais les lignes ni les écritures',async()=>{
+ let page=0;const w=world({routes:(m,u)=>/\/rails\?/.test(u)?{status:200,text:rowsJson(page++<2?1000:269,page)}:{status:204,text:''}});
+ await listes(w,['p-key','p-key','p-key']);
+ const wr=new w.win.XMLHttpRequest();wr.open('PUT',ORIGIN+'/api/u3d/projects/p-key/rails/id/1');wr.send('{"a":1}');await tick();w.runTimers();
+ w.po().emit([{name:ORIGIN+'/d/ept.json',startTime:1,responseEnd:2,transferSize:5,initiatorType:'fetch'}]);w.runTimers();
+ assert.deepEqual(w.observed().filter(e=>e.kind==='list-page').map(e=>e.listKey),['p-key','p-key','p-key'],'les pages portent la clé de liste (segment avant /rails)');
+ w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:false});assert.deepEqual(w.observed().map(e=>e.kind),['observer'],'séance déjà ouverte : pas de résumé (les pages ont été vues en direct)');
+ w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:true});const e=w.observed(),s=e.filter(x=>x.kind==='list-summary');
+ assert.deepEqual(e.map(x=>x.kind),['observer','list-summary'],'ni écriture, ni fichier de points, ni page seule rejoués avant la séance');
+ assert.deepEqual([s[0].listKey,s[0].pages,s[0].okPages,s[0].rows,s[0].beforeSession],['p-key',3,3,2269,true]);
+ assert.equal(s[0].counts.valid+s[0].counts.invalid+s[0].counts.skipped,2269);assert.ok(s[0].chars>100000&&s[0].durationMs>=0&&s[0].lastEndedEpochMs>=s[0].firstStartedEpochMs&&s[0].firstStartedEpochMs>1e12);
+ const texte=JSON.stringify(e);for(const secret of ['secret-row','texte libre','SECRETSIG','esv.test','status=invalid'])assert.ok(!texte.includes(secret),'jamais '+secret);assert.ok(texte.length<1200,'compact : '+texte.length);
+});
+test('résumé des listes : une clé par chargement ; clé douteuse = aucune ; comptes ou lignes inconnus = non mesuré ; 16 clés au plus',async()=>{
+ const w=world({routes:(m,u)=>/bad/.test(u)?{status:200,text:'pas du json'}:{status:200,text:rowsJson(10)}});
+ await listes(w,['k1','a%20b','k2-bad','k3']);w.posts.length=0;w.deliver({kind:'banane5:snapshot',afterDenial:true});
+ const s=w.observed().filter(x=>x.kind==='list-summary'),by=Object.fromEntries(s.map(x=>[String(x.listKey),x]));
+ assert.deepEqual(Object.keys(by).sort(),['k1','k2-bad','k3','null'],'« a%20b » : caractère non sûr, clé nulle');assert.deepEqual([by.k1.rows,by.k1.counts!==null],[10,true]);
+ assert.deepEqual([by['k2-bad'].rows,by['k2-bad'].counts,by['k2-bad'].pages,by['k2-bad'].okPages],[null,null,1,1],'illisible : non mesuré, jamais zéro');
+ const g=world({routes:()=>({status:200,text:rowsJson(2)})});await listes(g,Array.from({length:20},(_,i)=>'key'+i));g.posts.length=0;g.deliver({kind:'banane5:snapshot',afterDenial:true});
+ assert.equal(g.observed().filter(x=>x.kind==='list-summary').length,16,'au plus 16 clés');
+ const e=world({routes:()=>({status:503,text:''})});await listes(e,['k']);e.posts.length=0;e.deliver({kind:'banane5:snapshot',afterDenial:true});
+ const r=e.observed().find(x=>x.kind==='list-summary');assert.deepEqual([r.pages,r.okPages,r.rows,r.counts],[1,0,null,null],'page en erreur : comptée, non lue');
+});
+test('listKey, ses limites : segment avant /rails, caractères sûrs seulement',()=>{
+ const {listKey}=require('../src/esv-observer.js');
+ assert.equal(listKey(ORIGIN+'/api/u3d/projects/abc_1.2-x/rails?top=1'),'abc_1.2-x');assert.equal(listKey(ORIGIN+'/rails'),null);assert.equal(listKey(ORIGIN+'/a/b%2Fc/rails'),null);
+ assert.equal(listKey(ORIGIN+'/api/'+'a'.repeat(81)+'/rails'),null);assert.equal(listKey('::'),null);assert.equal(listKey(ORIGIN+'/api/u3d/projects/p/rails/x/1'),null,'écriture : pas une liste');
 });

@@ -27,6 +27,10 @@
  *                   lignes et comptes par valeur de statut, sans les lignes ;
  *  - `resource`     fichiers de points : nombre, octets, début et fin, par
  *                   fenêtres de 250 ms (API de mesure des ressources) ;
+ *  - `list-summary` résumé compact (comptes seulement) des listes chargées AVANT une séance,
+ *                   posé une fois au début de la séance : jamais les lignes, jamais les écritures
+ *                   ni les fichiers de points d'avant la séance ;
+ *  - `observer`     marque « observateur présent » (version, installé avant les scripts de la page) ;
  *  - `fetch-rails`  filet : nombre de requêtes `fetch` de chemin rails (ces
  *                   requêtes ne sont pas observées, seulement comptées) ;
  *  - tout le reste (connexion, jeton, autres) : compté, jamais noté.
@@ -38,7 +42,7 @@
  else api.install(root);
 })(typeof globalThis!=='undefined'?globalThis:this,function(){'use strict';
  const LIMITS=Object.freeze({ringEntries:256,ringChars:1048576,entryChars:4096,resourceWindowMs:250,
-  bodyKeys:24,bodyKeyChars:40,bodyStringChars:32,idChars:80,listChars:8000000,retryWindowMs:15000});
+  bodyKeys:24,bodyKeyChars:40,bodyStringChars:32,idChars:80,listChars:8000000,retryWindowMs:15000,listKeys:16});
  /* Classes d'URL : seul le CHEMIN compte, jamais la chaîne de requête. À
   * confirmer sur le banc ESV (mission B) avant toute conclusion. */
  const AUTH=/(^|\.)login\.microsoftonline\.com$|(^|\.)b2clogin\.com$|(^|\.)login\.live\.com$|\/oauth2\/|\/token(\/|$)|\/authorize(\/|$)|\/devicecode/i;
@@ -58,6 +62,12 @@
  }
  /* Chemin de classe « rails » (écriture, liste ou lecture d'une coupe), hors connexion et jeton. */
  function isRailsPath(url,base){const u=pathOf(url,base);return !!u&&!AUTH.test(u.host)&&!AUTH.test(u.path)&&/\/rails(\/|$)/.test(u.path);}
+ /* Clé de liste : le segment du chemin juste avant `/rails`, caractères sûrs seulement ; sinon rien.
+  * Chaque chargement de partie recharge la page, donc un observateur = une partie. */
+ function listKey(url,base){
+  const u=pathOf(url,base),m=u&&/\/([^/]+)\/rails\/?$/.exec(u.path);if(!m)return null;
+  let k;try{k=decodeURIComponent(m[1]);}catch{return null;}
+  return k.length<=LIMITS.idChars&&/^[\w.+\-]+$/.test(k)?k:null;}
  /* Identifiant de coupe d'ESV : fin du chemin après `/rails/`, caractères
   * sûrs seulement ; sinon rien. Ce n'est ni un jeton ni la chaîne de requête. */
  function railPairId(url,base){
@@ -97,7 +107,7 @@
   const base=()=>{try{return win.location.href;}catch{return undefined;}};
   const perfNow=()=>win.performance.now(),epoch=t=>win.performance.timeOrigin+t;
   let observerId;try{observerId=win.crypto.randomUUID();}catch{observerId=String(Math.random()).slice(2)+String(Date.now());}
-  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],lastWrite=new Map();
+  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],lastWrite=new Map(),listSums=new Map();
   /* État de la page à l'installation : l'observateur est-il arrivé avant les scripts de la page ?
    * oui = document en cours de chargement et aucun script encore analysé ; non = déjà chargé ou des
    * scripts analysés ; inconnu (null) = document illisible : jamais deviné. */
@@ -122,7 +132,24 @@
   function snapshot(afterDenial){
    record({kind:'observer',version:OBSERVER_VERSION,world:'MAIN',installedBeforePageScripts:start.before,readyState:start.readyState,scriptsAtInstall:start.scripts,
     enabled,afterDenial:afterDenial===true,dropped,ignored});
+   // Séance démarrée APRÈS le chargement des listes : leur résumé (comptes seulement), rien d'autre d'avant la séance.
+   if(afterDenial===true)postListSummaries();
   }
+  /* Résumé compact par chargement de liste (jamais les lignes), tenu à part du tampon : il n'est pas évincé par
+   * les écritures. Une valeur inconnue (page illisible, en erreur, trop grosse) rend le total « non mesuré »
+   * (null), jamais zéro. Au plus 16 clés. */
+  function addListSummary(key,e){
+   const k=key??'?';let v=listSums.get(k);if(!v){if(listSums.size>=LIMITS.listKeys)return;
+    v={key,pages:0,ok:0,rows:0,rowsKnown:true,chars:0,charsKnown:true,counts:{valid:0,invalid:0,skipped:0},countsKnown:true,first:null,last:null};listSums.set(k,v);}
+   v.pages++;if(e.status>=200&&e.status<300)v.ok++;
+   if(Number.isFinite(e.rows))v.rows+=e.rows;else v.rowsKnown=false;
+   if(Number.isFinite(e.chars))v.chars+=e.chars;else v.charsKnown=false;
+   if(e.counts&&typeof e.counts==='object')for(const c of STATUS_VALUES)v.counts[c]+=e.counts[c]||0;else v.countsKnown=false;
+   if(Number.isFinite(e.startedEpochMs))v.first=v.first===null?e.startedEpochMs:Math.min(v.first,e.startedEpochMs);
+   if(Number.isFinite(e.endedEpochMs))v.last=v.last===null?e.endedEpochMs:Math.max(v.last,e.endedEpochMs);
+  }
+  function postListSummaries(){for(const v of listSums.values())record({kind:'list-summary',listKey:v.key,pages:v.pages,okPages:v.ok,rows:v.rowsKnown?v.rows:null,chars:v.charsKnown?v.chars:null,
+   counts:v.countsKnown?{...v.counts}:null,firstStartedEpochMs:v.first,lastEndedEpochMs:v.last,durationMs:v.first!==null&&v.last!==null?Math.round((v.last-v.first)*100)/100:null,beforeSession:true});}
   /* Le pont se signale (ou se re-signale) : rejouer ce que le tampon garde. */
   function replay(afterSeq){for(const x of ring)if(x.seq>afterSeq){try{post(JSON.parse(x.json));}catch{}}}
 
@@ -166,7 +193,8 @@
    }else{
     let text=null;try{text=xhr.responseType===''||xhr.responseType==='text'?xhr.responseText:xhr.responseType==='json'&&xhr.response?JSON.stringify(xhr.response):null;}catch{}
     const s=status>=200&&status<300?listSummary(text):{rows:null,counts:null};
-    record({kind:'list-page',urlClass:'rail-list',chars:typeof text==='string'?text.length:null,basis:'row-string-values',...s,...common});
+    const key=listKey(m.url,base()),entry={kind:'list-page',urlClass:'rail-list',listKey:key,chars:typeof text==='string'?text.length:null,basis:'row-string-values',...s,...common};
+    record(entry);addListSummary(key,entry);
    }
   }
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'open',onOpen);
@@ -201,5 +229,5 @@
   return {record,replay,ring:()=>ring.map(x=>JSON.parse(x.json)),setEnabled:v=>{enabled=!!v;},
    stats:()=>({observer:observerId,seq,dropped,ringEntries:ring.length,ringChars,ignored,enabled})};
  }
- return {install,classify,isRailsPath,railPairId,writeBody,listSummary,LIMITS};
+ return {install,classify,isRailsPath,railPairId,listKey,writeBody,listSummary,LIMITS};
 });

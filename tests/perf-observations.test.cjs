@@ -77,3 +77,12 @@ test('marque de l’observateur (M6) : « aucune écriture » distinct de « obs
  assert.match(toMarkdown(measure(j)),/installé avant les scripts de la page : non \(au moins une marque tardive\)/);
  const k=journal();k.events.push(mark({installedBeforePageScripts:null,readyState:null,scriptsAtInstall:null}));assert.match(toMarkdown(measure(k)),/installé avant les scripts de la page : inconnu/);
 });
+test('résumé des listes avant la séance : par chargement et par clé, dernier résumé gardé, comptes seulement',()=>{
+ const j=journal(),sum=(o={})=>obs('list-summary',{listKey:'p-key',pages:11,okPages:11,rows:10269,chars:12450000,counts:{valid:10154,invalid:115,skipped:0},firstStartedEpochMs:1000,lastEndedEpochMs:15000,durationMs:14000,beforeSession:true,observer:{id:'A',seq:7},receivedMs:1700,...o});
+ j.events.push(sum(),sum({eventId:'s2',receivedMs:1800,pages:11,rows:10269}),sum({eventId:'s3',observer:{id:'B',seq:2},listKey:'q',pages:1,rows:null,counts:null,beforeSession:false}));
+ const o=measure(j,{tous:true}).observations,s=o.listPages.summaries;
+ assert.equal(o.counts['list-summary'],3);assert.deepEqual(s.map(x=>[x.observer,x.listKey,x.pages,x.rows,x.beforeSession]),[['A','p-key',11,10269,true],['B','q',1,null,false]],'doublon écarté (dernier reçu gardé)');
+ assert.deepEqual([s[0].counts,s[0].durationMs,s[0].chars],[{valid:10154,invalid:115,skipped:0},14000,12450000]);
+ const md=toMarkdown(measure(j,{tous:true}));assert.match(md,/Résumé des listes de coupes \(comptes seulement\) — chargement A, clé p-key, observé avant la séance : 11 page\(s\), 10269 ligne\(s\), valeurs de statut \{"valid":10154,"invalid":115,"skipped":0\}, 12450000 caractères, 14000 ms/);
+ assert.match(md,/chargement B, clé q, vu pendant la séance : 1 page\(s\), non mesuré ligne\(s\), comptes non mesurés/);assert.doesNotMatch(md,/secret/);
+});
