@@ -1,5 +1,30 @@
 # Décisions techniques
 
+## D-078 - Décisions du 6 octobre validées : V1 adopté pour test, U1 et U2 acceptés, lecteur hors gel (test), séance terrain, V4
+
+**Réponse de Mic du 6 octobre 2026** : « Je valide les décisions proposées, tu peux continuer le pilotage », aux cinq
+décisions du message de synthèse (voir `FEUILLE_DE_ROUTE_49.md`), avec les recommandations de l'orchestrateur Claude Code :
+
+1. **V1 : réécriture (`37dd5df`) et correction (3) segments et ERROR (`6b9ed26`) adoptées pour la prochaine version de test.**
+   Critère « lot rouvert ou en ERROR » **signé** : seuls les intervalles fermés sont publiés, la vie complète d'un lot reste
+   « non mesurée » tant que sa dernière fin n'est pas connue, une substitution de lot ne vaut jamais clôture. Patch d'export du
+   panneau : **la mission G l'intègre** après sa propre relecture. **Correction (2) chronologie concurrente : non adoptée** ; le critère D-073
+   « chronologie complète et expliquée » reste **à signer** par Mic. V1 reste **non accepté** : il le sera après plusieurs lots
+   terrain (couverture 100 %, décisions identiques au banc, attestation du projet).
+2. **U1 et U2 acceptés** : panneau `3f8a79d` (G) et banc `4da97cd` (F), relus par des équipes indépendantes.
+3. **Lecteur de points gelé** : l'appel de `vendor/lidar.js` avec son option de pause existante, fichier inchangé, est
+   **hors du gel**, en version de test, avec A/A préalable, un seul changement par version, mêmes points qu'au banc. L'idée I1
+   (lecture sans attendre une image d'ESV) est donc autorisée à l'essai, **pas** en production.
+4. **Séance terrain de test autorisée** pour V1 adopté plus observateur passif (D-077), en journalisation seulement, aucune décision
+   d'Ariane changée, sur une partie à réserver. Le paquet de test est préparé par l'orchestrateur ; Mic lance la séance.
+5. **V4** : abandonné comme levier de vitesse (0,3 % du cycle) ; gardé seulement pour la clarté « seul GCV1 commande », après V3.
+   V5 : attend la mesure de V3 ; en 4.9 seulement les diagnostics sans réécriture d'état (I4).
+
+**Non couvert, donc non autorisé** : fusion, étiquette, publication, activation en production d'un nouveau comportement,
+activation de l'apprentissage, changement de seuil, de porte ou de critère du cahier, collecte ciblée supplémentaire, adoption de
+la correction (2), signature du critère D-073. Propriété du manifeste pour l'observateur : mission A (entrée `content_scripts` et version
+seulement). Consignée par l'orchestrateur Claude Code.
+
 ## D-077 - Observateur passif autorisé en version de test ; ordre ; retour à une coupe ; « le reste » validé
 
 **Réponse de Mic du 5 octobre 2026** : « 1) oui j'autorise ; 2) ça marche 3) ça marche. Je valide le reste », aux trois
