@@ -621,6 +621,7 @@
    /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
    button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   rendreFocus();
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
@@ -945,7 +946,23 @@
    }catch(e){note('Vidage automatique impossible : '+e.message,true);}
    finally{autoExporting=false;vidage=null;finir();}
  }
- async function action(id,fn){if(working)return;uiError=null;working=true;if(state)render(state);try{await fn();}catch(e){uiError=e.message;working=false;if(state)render(state);note(e.message,true);return;}working=false;await refresh();}
+ /* U2 (proposition F, focus-pause / focus-error) : la commande activée est
+  * désactivée pendant l'action, puis peut disparaître (Pause → Reprendre).
+  * Chromium rend alors le focus à body : l'utilisateur du clavier perd sa place.
+  * On le rend à la commande, ou à celle qui la remplace, au premier rendu où
+  * elle est disponible ; jamais à une autre commande (Arrêter, SKIP), jamais si
+  * le focus a été placé ailleurs entre-temps, et au plus 3 s après l'action. */
+ const RELAIS={pause:'resume',resume:'pause','native-pause':'native-resume','native-resume':'native-pause','native-start':'native-pause'};
+ let focusARendre=null;
+ const disponible=el=>!!el&&el.isConnected&&!el.hidden&&!el.disabled&&el.getClientRects().length>0;
+ function rendreFocus(){const f=focusARendre;if(!f||working)return;
+   const actif=document.activeElement;
+   if(Date.now()>f.jusqua||actif&&actif!==document.body&&actif!==f.el){focusARendre=null;return;}
+   const cible=[f.el,$(RELAIS[f.el.id])].find(disponible);
+   if(cible&&cible!==actif)cible.focus();}
+ async function action(id,fn){if(working)return;const origine=document.activeElement;
+   focusARendre=origine?.tagName==='BUTTON'?{el:origine,jusqua:Date.now()+3000}:null;
+   uiError=null;working=true;if(state)render(state);try{await fn();}catch(e){uiError=e.message;working=false;if(state)render(state);note(e.message,true);return;}working=false;await refresh();}
  function on(id,fn){if($(id))$(id).onclick=()=>action(id,fn);}
  /* Navigation interne : plus aucune fenetre n'est ouverte depuis l'interface. */
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>naviguer(b.dataset.view));
