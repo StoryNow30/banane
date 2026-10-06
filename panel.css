@@ -98,6 +98,17 @@ body[data-window=home] #notice{display:none}
 
 /* --------------------------------------------------------------- tuiles */
 .tuiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:22px -16px 0}
+/* 4.9 U1 : résumé de la partie. Deux colonnes ; les listes de cuts et les
+   identifiants se coupent plutôt que de faire déborder la fenêtre (zoom 200 %). */
+.resume-partie h2{margin:0}
+.resume-partie .tuiles{margin:14px 0 12px;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 0}
+.resume-partie .tuile{padding:0 12px 0 0;min-width:0}
+.resume-partie .tuile b{font-size:24px;overflow-wrap:anywhere}
+.resume-partie p,.resume-partie li{overflow-wrap:anywhere}
+.resume-ligne{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--text)}
+.resume-liste{font-size:12px;line-height:1.6}
+.resume-partie ul{list-style:none;margin:0;padding:0}
+.resume-partie li{display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--hair);font-size:11px;line-height:1.6}
 .tuile{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0 16px;border-left:1px solid var(--hair)}
 .tuile b{font-size:30px;font-weight:300;line-height:1;color:var(--text);transition:color .4s}
 .tuile b.amber{color:var(--amber)}.tuile b.red{color:var(--red)}
@@ -258,6 +269,10 @@ footer{margin:22px 0 0;padding:12px 0 20px;border-top:1px solid var(--hair)}
 .setting dt{font-size:13px;color:var(--text-2)}
 .setting dd{margin:0;font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--text);white-space:nowrap}
 .setting p{grid-column:1/-1;margin:0;font-size:12px;color:var(--text-3);line-height:1.5}
+/* U2 (proposition F, zoom-native) : à 200 % dans la fenêtre de 560 px (280 px CSS),
+   « Captures par visite · 8 une fois qualifié, 24 sinon » exige 285 px pour 241 :
+   la valeur passe sous son nom et peut aller à la ligne. Rien ne change au-delà de 320 px. */
+@media (max-width:320px){.setting{grid-template-columns:minmax(0,1fr)}.setting dd{white-space:normal}}
 .settings-group{margin:16px 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
 .settings-group:first-child{margin-top:4px}
 .settings-note{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--hair)}

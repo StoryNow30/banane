@@ -108,6 +108,18 @@
   <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut, et l’écart de chaque cut à la voie" hidden></div>
  </div>
  <div id="lot-activite-bloc" class="bloc rise d6" hidden><p class="lbl">Activité</p><div id="lot-activite" class="activite"></div></div>
+ <!-- 4.9 U1 : résumé de la partie, tous lots confondus. Lecture seule : aucun bouton, aucune commande. -->
+ <section id="part-summary" class="bloc resume-partie" aria-labelledby="part-summary-title" hidden>
+  <h2 id="part-summary-title" class="lbl">Résumé de la partie</h2>
+  <p id="part-summary-line" class="resume-ligne"></p>
+  <details id="part-summary-details"><summary id="part-summary-details-toggle">Détail du résumé</summary>
+   <div id="part-summary-counts" class="tuiles"></div>
+   <p id="part-summary-deferred" class="resume-liste"></p>
+   <p id="part-summary-unknown" class="muted"></p>
+   <p id="part-summary-note" class="muted"></p>
+   <details><summary id="part-summary-lots-title">Lots de la partie</summary><ul id="part-summary-lots"></ul></details>
+  </details>
+ </section>
  <div id="batch" class="batch">Aucun lot en cours.</div>
  <div id="lot-bornes"><div class="range"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0" placeholder="fin de partie"></label></div>
   <p class="muted" id="bornes-note">Rempli par Ariane : le cut affiché dans ESV, et la fin de la partie. Modifiable.</p></div>
@@ -149,4 +161,4 @@
 <details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
 <footer>Ariane 4.9.0 test 2 · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
 </div>
-</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/gcv1-export.js"></script><script src="panel.js"></script></body></html>
+</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="panel.js"></script></body></html>
