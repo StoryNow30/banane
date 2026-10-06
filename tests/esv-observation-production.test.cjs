@@ -37,6 +37,12 @@ test('séance : écriture, liste et points rangés avec contexte de lot ; revali
  deq([e[1].rows,e[1].counts],[1000,{valid:900,invalid:60,skipped:40}]);deq([e[2].n,e[2].bytes],[19,1500000]);deq([e[3].lost,e[3].reason],[3,'ring-overflow']);
  assert.equal(b.store.events.length-before,4,'ni événement métier, ni état touché');release();await b.settle();
 });
+test('filet fetch : « fetch-rails » rangé en liste blanche (n, fenêtre) ; rien d’autre',async()=>{
+ const {b,release}=await lotOuvert();
+ const r=send(b,[{seq:1,kind:'fetch-rails',n:3,startedEpochMs:1e12,endedEpochMs:1e12+40,windowMs:250,url:'https://esv.test/secret/rails/x',extra:{a:1}},{seq:2,kind:'fetch-rails',n:'trois',startedEpochMs:Infinity}]).out;
+ deq(r,{accept:true,stored:2});const e=stored(b).filter(x=>x.kind==='fetch-rails');deq(e.map(x=>[x.n,x.startedEpochMs,x.endedEpochMs,x.windowMs]),[[3,1e12,1e12+40,250],[null,null,null,null]]);
+ assert.ok(!JSON.stringify(e).includes('secret')&&!('url' in e[0])&&!('extra' in e[0]));release();await b.settle();
+});
 test('source non fiable : champs inconnus, types faux, URL, jeton et objets imbriqués jamais rangés',async()=>{
  const {b,release}=await lotOuvert();
  const bad={...write(),url:'https://esv.test/secret/rails/x?token=abc',authorization:'Bearer SECRET',status:'204',attempt:-1,method:'PUT'.repeat(5),outcome:'pirate',

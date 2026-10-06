@@ -27,6 +27,8 @@
  *                   lignes et comptes par valeur de statut, sans les lignes ;
  *  - `resource`     fichiers de points : nombre, octets, début et fin, par
  *                   fenêtres de 250 ms (API de mesure des ressources) ;
+ *  - `fetch-rails`  filet : nombre de requêtes `fetch` de chemin rails (ces
+ *                   requêtes ne sont pas observées, seulement comptées) ;
  *  - tout le reste (connexion, jeton, autres) : compté, jamais noté.
  *
  * Les événements du bus jQuery d'ESV (identité) ne sont pas pris ici : jQuery
@@ -53,6 +55,8 @@
   if(m==='GET'&&POINTS.test(u.path))return 'point-resource';
   return 'other';
  }
+ /* Chemin de classe « rails » (écriture, liste ou lecture d'une coupe), hors connexion et jeton. */
+ function isRailsPath(url,base){const u=pathOf(url,base);return !!u&&!AUTH.test(u.host)&&!AUTH.test(u.path)&&/\/rails(\/|$)/.test(u.path);}
  /* Identifiant de coupe d'ESV : fin du chemin après `/rails/`, caractères
   * sûrs seulement ; sinon rien. Ce n'est ni un jeton ni la chaîne de requête. */
  function railPairId(url,base){
@@ -155,14 +159,20 @@
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'send',onSend);
 
   /* ------------------------------------------------ fichiers de points */
-  let windowTimer=null,agg=null;
-  function flushResources(){windowTimer=null;const a=agg;agg=null;if(!a)return;
-   record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs});}
+  let windowTimer=null,agg=null,aggFetch=null;
+  function flushResources(){windowTimer=null;const a=agg,f=aggFetch;agg=null;aggFetch=null;
+   if(a)record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs});
+   if(f)record({kind:'fetch-rails',n:f.n,startedEpochMs:epoch(f.start),endedEpochMs:epoch(f.end),windowMs:LIMITS.resourceWindowMs});}
+  /* Filet passif pour `fetch` (non enveloppé) : l'API de mesure des ressources voit aussi les requêtes
+   * `fetch`. On COMPTE celles dont le chemin est de classe « rails » (jamais l'URL, jamais le contenu) :
+   * un « 0 écriture » se distingue ainsi d'une écriture passée par `fetch` et non vue. */
   function onResources(entries){
-   for(const e of entries){if(classify('GET',e.name,base())!=='point-resource')continue;
-    const start=Number(e.startTime),end=Number(e.responseEnd);if(!Number.isFinite(start)||!Number.isFinite(end))continue;
-    if(!agg)agg={n:0,bytes:0,start,end};agg.n++;agg.bytes+=Number(e.transferSize)||Number(e.encodedBodySize)||0;agg.start=Math.min(agg.start,start);agg.end=Math.max(agg.end,end);}
-   if(agg&&!windowTimer)windowTimer=win.setTimeout(()=>{try{flushResources();}catch{}},LIMITS.resourceWindowMs);
+   for(const e of entries){const start=Number(e.startTime),end=Number(e.responseEnd);if(!Number.isFinite(start)||!Number.isFinite(end))continue;
+    if(classify('GET',e.name,base())==='point-resource'){
+     if(!agg)agg={n:0,bytes:0,start,end};agg.n++;agg.bytes+=Number(e.transferSize)||Number(e.encodedBodySize)||0;agg.start=Math.min(agg.start,start);agg.end=Math.max(agg.end,end);
+    }else if(e.initiatorType==='fetch'&&isRailsPath(e.name,base())){
+     if(!aggFetch)aggFetch={n:0,start,end};aggFetch.n++;aggFetch.start=Math.min(aggFetch.start,start);aggFetch.end=Math.max(aggFetch.end,end);}}
+   if((agg||aggFetch)&&!windowTimer)windowTimer=win.setTimeout(()=>{try{flushResources();}catch{}},LIMITS.resourceWindowMs);
   }
   try{if(win.PerformanceObserver){const po=new win.PerformanceObserver(list=>{try{if(enabled)onResources(list.getEntries());}catch{}});po.observe({type:'resource',buffered:true});}}catch{}
 
@@ -176,5 +186,5 @@
   return {record,replay,ring:()=>ring.map(x=>JSON.parse(x.json)),setEnabled:v=>{enabled=!!v;},
    stats:()=>({observer:observerId,seq,dropped,ringEntries:ring.length,ringChars,ignored,enabled})};
  }
- return {install,classify,railPairId,writeBody,listSummary,LIMITS};
+ return {install,classify,isRailsPath,railPairId,writeBody,listSummary,LIMITS};
 });

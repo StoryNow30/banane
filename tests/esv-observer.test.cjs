@@ -123,3 +123,16 @@ test('XHR réutilisé ou envoi relancé : une note par requête, jamais de doubl
  const z=new w.win.XMLHttpRequest();z.open('PUT',ORIGIN+'/api/rails/d/4');z.send('{"a":4}');z.send('{"a":4}');await tick();w.runTimers();
  assert.equal(w.observed().filter(e=>e.railPairId==='d/4').length,1,'deux send sans open : une note');
 });
+test('filet pour fetch (relecture b) : compte les ressources fetch sur les chemins rails, par fenêtre, sans aucune URL',async()=>{
+ const w=world(),mk=(name,t,r,type)=>({name:ORIGIN+name,startTime:t,responseEnd:r,transferSize:100,encodedBodySize:0,initiatorType:type});
+ w.po().emit([mk('/api/u3d/projects/secret-p/rails/traj__1/2?merge=true',10,40,'fetch'),mk('/api/u3d/projects/secret-p/rails?top=1&sig=SECRETSIG',20,50,'fetch'),
+  mk('/api/u3d/projects/secret-p/rails/x/1',5,9,'xmlhttprequest'),mk('/api/other/thing',5,9,'fetch'),mk('/d/ept.json',1,2,'fetch'),
+  {name:'https://login.microsoftonline.com/t/oauth2/rails/token',startTime:1,responseEnd:2,initiatorType:'fetch'}]);
+ w.runTimers();const e=w.observed(),f=e.filter(x=>x.kind==='fetch-rails');
+ assert.deepEqual(f.map(x=>[x.n,x.windowMs,x.startedEpochMs,x.endedEpochMs]),[[2,250,1e12+10,1e12+50]],'deux fetch sur rails ; XHR, autre chemin et connexion ignorés');
+ assert.equal(e.filter(x=>x.kind==='resource').length,1,'ept.json reste un fichier de points');
+ const texte=JSON.stringify(e);for(const secret of ['secret-p','SECRETSIG','traj__1','oauth2','merge='])assert.ok(!texte.includes(secret),'jamais '+secret);
+ w.po().emit([mk('/api/u3d/projects/p/rails/a/b',100,120,'fetch')]);w.runTimers();assert.deepEqual(w.observed().filter(x=>x.kind==='fetch-rails').map(x=>x.n),[2,1],'seconde fenêtre distincte');
+ // observateur coupé : rien
+ const off=world();off.deliver({kind:'banane5:config',enabled:false});off.po().emit([mk('/api/p/rails/a/b',1,2,'fetch')]);off.runTimers();assert.equal(off.observed().length,0);
+});

@@ -61,3 +61,9 @@ test('observations sans aucun jalon V1 : V1 non mesuré, observations quand mêm
  const m=measure({events:[write()]},{tous:true});assert.equal(m.available,false);assert.equal(m.observations.writes.n,1);assert.equal(m.observations.writes.rows[0].link,null);
  const md=toMarkdown(m);assert.match(md,/Mesures V1 non mesurées/);assert.match(md,/Observateur passif/);
 });
+test('filet fetch : compté dans le bilan, dit pour ce qu’il est (écritures par fetch non vues) ; 0 dit aussi',()=>{
+ const j=journal();j.events.push(obs('fetch-rails',{n:2,startedEpochMs:1100,endedEpochMs:1140,windowMs:250}),obs('fetch-rails',{eventId:'f2',n:3,startedEpochMs:1500,endedEpochMs:1600,windowMs:250}));
+ const o=measure(j,{tous:true}).observations;assert.deepEqual([o.available,o.counts['fetch-rails'],o.fetchRails],[true,2,{windows:2,n:5}]);
+ const md=toMarkdown(measure(j,{tous:true}));assert.match(md,/Requêtes fetch sur les chemins rails : 5 sur 2 fenêtre\(s\)/);assert.match(md,/non observées : l’observateur n’enveloppe pas fetch/);
+ const k=journal();k.events.push(write());assert.deepEqual(measure(k,{tous:true}).observations.fetchRails,{windows:0,n:0});assert.match(toMarkdown(measure(k,{tous:true})),/Requêtes fetch sur les chemins rails : 0/);
+});

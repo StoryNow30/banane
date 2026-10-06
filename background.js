@@ -130,6 +130,7 @@ function obsFields(x){
   case 'list-page':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
    return {kind:'list-page',via:'xhr',urlClass:'rail-list',status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
     skipped:['oversize','unreadable'].includes(x.skipped)?x.skipped:null,basis:'row-string-values',...time};}
+  case 'fetch-rails':return {kind:'fetch-rails',n:obsInt(x.n,1e7),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
   case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
