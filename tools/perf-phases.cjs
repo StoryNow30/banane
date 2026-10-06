@@ -185,7 +185,7 @@ function select(data,{tous,batchId,sessionId}){
 /* --------------------------------------------------------- bilan d'ensemble */
 function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=data.state?.sessionId??data.sessionId??null}={}){
  const {events,conflicts}=select(data,{tous,batchId,sessionId});
- if(!events.length)return {available:false,reason:'Aucun jalon V1 corrélé ; ancien journal ou événements absents. Mesures V1 non mesurées.',lots:[],visits:[]};
+ if(!events.length)return {available:false,reason:'Aucun jalon V1 corrélé ; ancien journal ou événements absents. Mesures V1 non mesurées.',lots:[],visits:[],observations:observationsOf(data,[],[])};
  const lotKey=x=>JSON.stringify([x.sessionId,x.batchId]);
  const groups=groupBy(events.filter(e=>e.visitId),e=>JSON.stringify([e.sessionId,e.batchId,e.clockId,e.visitId,identityKey(e.identity)]));
  const visits=[...groups.values()].map(inspectVisit),visitsByLot=groupBy(visits,lotKey);
@@ -199,7 +199,8 @@ function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=
  return {available:true,quantiles:'floor(p*(n-1)+0.5)',silenceThresholdMs:SILENCE_MS,scopeLimited:visits.some(v=>!v.identity?.projectId),conflictingEventIds:conflicts,
   lots,visits,etapes,cohort:{n:cohort.length,sumMediansMs:sumMedians,medianSumMs:summed.median,medianCycleMs:cycles.median,
    residualMs:cohort.length?cycles.median-summed.median:null},
-  v46:{categories:v46Categories(events),insideAnalysisMs:stats(visits.map(v=>v.v46.insideAnalysisMs)),outsideAnalysisMs:stats(visits.map(v=>v.v46.outsideAnalysisMs))}};
+  v46:{categories:v46Categories(events),insideAnalysisMs:stats(visits.map(v=>v.v46.insideAnalysisMs)),outsideAnalysisMs:stats(visits.map(v=>v.v46.outsideAnalysisMs))},
+  observations:observationsOf(data,events,visits)};
 }
 /* Appels par catégorie « libellé:provenance » ; durée seulement si le span est valide. */
 function v46Categories(events){
@@ -208,8 +209,63 @@ function v46Categories(events){
   success:a.filter(e=>e.success===true).length,exceptions:a.filter(e=>e.success===false).length,ms:stats(a.filter(validSpan).map(e=>e.toMs-e.fromMs))}));
 }
 
+/* ------------------------------------------- observateur passif (test 2) */
+/* Lecture HORS LIGNE des événements `esv-observation` (D-077, D-078), rangés par le
+ * service worker pendant une séance. Rien ici ne change `phases`, `coverage`,
+ * cohorte ni D5 : ces événements ne sont pas des jalons V1. Une écriture observée
+ * avec le statut 204 est l'ACQUITTEMENT HTTP de la requête de la page, rien de plus :
+ * ni qualité de pose, ni preuve de relecture. Les époques de la page
+ * (`performance.timeOrigin + now`) et du service worker (`timeOrigin + ms`) viennent
+ * de deux processus : l'écart d'horloge n'est pas corrigé, il est déclaré. */
+const OBS_KINDS=['write','list-page','resource','gap'];
+function observationsOf(data,phaseEvents,visits){
+ const seen=new Set(),obs=[];
+ for(const e of data.events||[]){
+  if(e?.type!=='esv-observation'||e.schema!==1||!OBS_KINDS.includes(e.kind))continue;
+  if(e.eventId){if(seen.has(e.eventId))continue;seen.add(e.eventId);}obs.push(e);}
+ if(!obs.length)return {available:false,reason:'Aucune observation passive (observateur absent, coupé ou hors séance). Non mesuré.'};
+ const epoch=e=>finite(e.timeOrigin)&&finite(e.ms)?e.timeOrigin+e.ms:null;
+ // Fenêtres de visite en époque : de l'ouverture à l'ouverture suivante du même lot et de la même horloge.
+ const byLot=groupBy((phaseEvents||[]).filter(e=>e.kind==='visit'&&e.point==='open'&&epoch(e)!==null),e=>e.batchId);
+ const windows=[...byLot].flatMap(([batchId,opens])=>{const a=opens.slice().sort((x,y)=>epoch(x)-epoch(y));
+  return a.map((o,i)=>({batchId,visitId:o.visitId,identity:o.identity,from:epoch(o),to:i+1<a.length?epoch(a[i+1]):Infinity}));});
+ const acceptedAt=new Map((phaseEvents||[]).filter(e=>e.kind==='point'&&e.point==='accepted'&&epoch(e)!==null).map(e=>[e.visitId,epoch(e)]));
+ const link=e=>{const t=e.startedEpochMs;if(!finite(t))return {link:null,linkReason:'no-time'};
+  const hit=windows.filter(w=>(!e.batchId||w.batchId===e.batchId)&&t>=w.from&&t<w.to);
+  return hit.length===1?{link:'time-window',visitId:hit[0].visitId,identity:hit[0].identity}:{link:null,linkReason:hit.length?'ambiguous':'no-window'};};
+ const of=kind=>obs.filter(e=>e.kind===kind),counts=Object.fromEntries(OBS_KINDS.map(k=>[k,of(k).length]));
+ const gaps=of('gap'),byReason={};for(const g of gaps)byReason[g.reason??'unknown']=(byReason[g.reason??'unknown']||0)+(finite(g.lost)?g.lost:0);
+ const rows=of('write').map(e=>{const l=link(e),body=e.body&&typeof e.body==='object'?Object.values(e.body):[],accepted=l.visitId?acceptedAt.get(l.visitId):undefined;
+  return {railPairId:e.railPairId??null,status:e.status??null,outcome:e.outcome??null,attempt:e.attempt??null,durationMs:e.durationMs??null,
+   numericFields:body.filter(v=>typeof v==='number').length,bodyKeys:e.bodyKeys??null,startedEpochMs:e.startedEpochMs??null,endedEpochMs:e.endedEpochMs??null,...l,
+   writeEndMinusAcceptedMs:finite(accepted)&&finite(e.endedEpochMs)?e.endedEpochMs-accepted:null};});
+ const byStatus={};for(const r of rows)byStatus[r.status]=(byStatus[r.status]||0)+1;
+ const loads=[...groupBy(of('list-page'),e=>e.observer?.id??'?')].map(([observer,pages])=>{const p=pages.slice().sort((a,b)=>(a.startedEpochMs??0)-(b.startedEpochMs??0)),ok=p.every(x=>finite(x.rows)&&x.counts);
+  return {observer,pages:p.length,rows:p.every(x=>finite(x.rows))?p.reduce((n,x)=>n+x.rows,0):null,
+   counts:ok?Object.fromEntries(['valid','invalid','skipped'].map(k=>[k,p.reduce((n,x)=>n+(x.counts[k]||0),0)])):null,firstEpochMs:p[0].startedEpochMs??null,lastEpochMs:p.at(-1).endedEpochMs??null};});
+ const res=of('resource').map(e=>({...link(e),n:finite(e.n)?e.n:0,bytes:finite(e.bytes)?e.bytes:0,startedEpochMs:e.startedEpochMs??null,endedEpochMs:e.endedEpochMs??null}));
+ const perVisit=(visits||[]).map(v=>{const w=rows.filter(r=>r.visitId===v.visitId),r=res.filter(x=>x.visitId===v.visitId);
+  return {visitId:v.visitId,identity:v.identity,writes:w.length,serverWrite:w.length?{observed:true,status:w.at(-1).status,attempt:w.at(-1).attempt,durationMs:w.at(-1).durationMs,writeEndMinusAcceptedMs:w.at(-1).writeEndMinusAcceptedMs}:{observed:false},
+   resources:{windows:r.length,n:r.reduce((n,x)=>n+x.n,0),bytes:r.reduce((n,x)=>n+x.bytes,0)}};});
+ return {available:true,counts,gaps:{count:gaps.length,lost:Object.values(byReason).reduce((n,x)=>n+x,0),byReason},
+  writes:{n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
+   attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,rows},
+  listPages:{pages:of('list-page').length,loads},resources:{windows:res.length,n:res.reduce((n,x)=>n+x.n,0),bytes:res.reduce((n,x)=>n+x.bytes,0),
+   firstStartMs:res.length?Math.min(...res.map(x=>x.startedEpochMs).filter(finite)):null,lastEndMs:res.length?Math.max(...res.map(x=>x.endedEpochMs).filter(finite)):null},
+  perVisit,clockNote:'époque page = performance.timeOrigin + now ; époque service worker = timeOrigin + ms ; écart d’horloge entre processus non corrigé'};
+}
+function observationsLines(o,n){
+ if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',o.reason]:[];
+ const L=['','## Observateur passif (journalisation seule)','',
+  `Observations : ${o.counts.write} écriture(s), ${o.counts['list-page']} page(s) de liste, ${o.counts.resource} fenêtre(s) de fichiers de points, ${o.gaps.count} jalon(s) de perte (${o.gaps.lost} observation(s) perdue(s)${Object.keys(o.gaps.byReason).length?' : '+JSON.stringify(o.gaps.byReason):''}).`,
+  `Écritures : ${o.writes.n} dont ${o.writes.ok} acquittée(s) (statut HTTP 200 ou 204, acquittement de la requête de la page, ni qualité de pose ni relecture), ${o.writes.failed} autre(s) ; statuts ${JSON.stringify(o.writes.byStatus)} ; tentatives max ${o.writes.attemptsMax} ; reliée(s) à une visite par fenêtre de temps : ${o.writes.linked}/${o.writes.n}.`];
+ if(o.writes.n){L.push('','| Coupe d’ESV | Statut | Tentative | Durée ms | Champs numériques | Visite | Écriture − acceptation ms |','|---|---:|---:|---:|---:|---|---:|');
+  for(const r of o.writes.rows.slice(0,40))L.push(`| ${r.railPairId??'—'} | ${r.status??'—'} | ${r.attempt??'—'} | ${n(r.durationMs)} | ${r.numericFields} | ${r.visitId??r.linkReason??'—'} | ${n(r.writeEndMinusAcceptedMs)} |`);
+  if(o.writes.rows.length>40)L.push(`| … ${o.writes.rows.length-40} autre(s) | | | | | | |`);}
+ for(const l of o.listPages.loads)L.push('',`Liste des coupes (chargement ${l.observer}) : ${l.pages} page(s), ${n(l.rows)} ligne(s)${l.counts?`, valeurs de statut ${JSON.stringify(l.counts)}`:', comptes non mesurés'} (comptage de valeurs de texte, à confirmer sur le banc).`);
+ L.push('',`Fichiers de points : ${o.resources.windows} fenêtre(s), ${o.resources.n} fichier(s), ${o.resources.bytes} octets.`,o.clockNote+'.');return L;}
 /* --------------------------------------------------------- restitution */
-function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n';
+function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n'+(m.observations?.available?observationsLines(m.observations,x=>finite(x)?String(Math.round(x*100)/100):'non mesuré').join('\n')+'\n':'');
  const n=x=>finite(x)?String(Math.round(x*100)/100):'non mesuré';
  const lines=['','## V1 — horloge SW et visites corrélées','',m.scopeLimited?'Projet absent sur certaines visites : portée limitée.':'Projet identifié.','',
   '| Phase | n | Médiane ms | P90 ms | Max ms | Manquantes | Inapplicables | Chevauchements |','|---|---:|---:|---:|---:|---:|---:|---:|'];
@@ -224,7 +280,8 @@ function toMarkdown(m){if(!m.available)return '\n## V1\n\n'+m.reason+'\n';
   '','V4.6 : spans imbriqués ; union temporelle, jamais ajoutés une seconde fois au cycle.','',
   '| Catégorie | Appels | Invalides | Succès | Exceptions | Médiane ms | P90 ms | Max ms |','|---|---:|---:|---:|---:|---:|---:|---:|---:|');
  for(const c of m.v46.categories)lines.push(`| ${c.name} | ${c.calls} | ${c.invalid} | ${c.success} | ${c.exceptions} | ${n(c.ms.median)} | ${n(c.ms.p90)} | ${n(c.ms.max)} |`);
- lines.push('','Les mesures de ce fichier ne certifient pas la porte terrain sur plusieurs lots, ni un acquittement serveur.');
+ lines.push(...observationsLines(m.observations,n));
+ lines.push('','Les mesures de ce fichier ne certifient pas la porte terrain sur plusieurs lots, ni un acquittement serveur'+(m.observations?.available?' (sauf l’acquittement HTTP observé ci-dessus, qui ne prouve ni la relecture ni la qualité de la pose)':'')+'.');
  return lines.join('\n')+'\n';
 }
 function executionsLine(x,n){if(!x)return 'Exécutions : non mesurées.';
