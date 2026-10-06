@@ -778,6 +778,18 @@ function pollCurrent(){
   .catch(e=>{engine.s.connection={status:'unavailable',message:e.message};})
   .finally(()=>{pollPromise=null;});
 }
+/* V1 (test 2) — la mesure ne bloque ni ne fait échouer un export. `timing.flush()`
+ * attend déjà au plus 250 ms ses propres écritures ; ici on garde l'appel lui-même :
+ * une exception, ou une Promise qui ne se règle jamais, donne une métadonnée
+ * « incomplète » (status flush-error ou timeout, flushComplete:false, aucun lot
+ * certifié) et l'export continue. Borne dure : 1 s (une valeur inférieure peut être
+ * posée par un essai, jamais supérieure). Mesure absente : rien de plus qu'avant. */
+async function flushMesure(){if(!timing)return null;
+ const limite=Number.isFinite(timing.hardLimitMs)&&timing.hardLimitMs>0?Math.min(1000,timing.hardLimitMs):1000;let timer;
+ const incomplet=(status,error)=>({schema:1,status,maxWaitMs:limite,flushComplete:false,pendingWrites:null,lots:[],...(error?{error:String(error?.message||error).slice(0,200)}:{})});
+ try{return await Promise.race([Promise.resolve().then(()=>timing.flush()),new Promise(resolve=>{timer=setTimeout(()=>resolve(incomplet('timeout')),limite);})]);}
+ catch(e){return incomplet('flush-error',e);}
+ finally{clearTimeout(timer);}}
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
@@ -918,7 +930,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
   * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque
   * à l'état, rangé ailleurs dans le même fichier. */
- const v1TimingExport=['journal-meta','dataset-meta','journal','dataset'].includes(action)?await timing?.flush():null;
+ const v1TimingExport=['journal-meta','dataset-meta','journal','dataset'].includes(action)?await flushMesure():null;
  const timingMeta=v1TimingExport?{v1TimingExport}:{};
  if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary()};
  if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
