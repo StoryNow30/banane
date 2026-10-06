@@ -40,10 +40,10 @@ attend sa relecture indépendante, puis Mic.
 | 8 | U2 essais du vrai panneau | Banc réécrit (F) : 21 réussis, 3 échecs sur 24, tous défauts produit présents dès 4.8.6 (focus après Pause/Reprendre ; tiroir Réglages qui dépasse de 21 px à 200 %) | Correctifs (accord Mic, D-077) appliqués par G après sa relecture ; nouveau passage du banc |
 | 9 | U3 raccourcis | Pas commencé | L'étude E a établi les actions réelles d'ESV (D = rail droit ; Maj+Espace = valider sans bouger) : décider l'action de D |
 | 10 | Retour à une coupe | À l'étude : saut par l'événement interne d'ESV, essai au banc B | Résultat du banc ; conditions de sécurité D-067 |
-| 11 | Étude 398/402 | À l'étude : la 4.8.6 les poserait encore ; rejeu non fait | Rejeu avec extracteur 7z (disponible) |
+| 11 | Étude 398/402 | À l'étude : rejeu direct sous 4.8.6 par un vérificateur indépendant : 398 et 402 posées à tort (159,9 et 273 mm, 0 appui) ; aucun lot réel de la partie 20 ne les contient ; levier « voisines » non vérifié | Décider du traitement (hors gel) ; levier voisines à essayer au banc |
 | 12 | B1 voisins validés | À l'étude : la source existe (liste des coupes d'ESV) | Observateur passif ; partie neuve |
 | 13 | B2 rails hors écran | À l'étude : déplacement par la caméra Potree | Tâche opérateur de 10 min |
-| 14 | Apprentissage | À l'étude : environ 500 à 650 rails exacts (zone 150 à 1 000 de D-067) | Fiche de faisabilité ; aucune activation |
+| 14 | Apprentissage | À l'étude : recompte indépendant 902 rails exacts (partie 20 : 488, soit 54 %), au sommet de la zone 150 à 1 000 de D-067 ; l'estimation initiale de 500 à 650 est corrigée | Fiche de faisabilité non établie ; aucune activation |
 | – | V5 (conditionnel) | Condition probablement remplie : cut de 5,5 à 7,4 s sur 85 visites | Seuil de dérive à fixer par Mic |
 | – | B3 (conditionnel) | Dépend de B2 | B2 |
 | – | Banc ESV local (privé) | Construit, confiné ; essais serveur et F1 à F4 : 113 sur 113 ; second jeu intégré | Relecture indépendante avant tout usage pour Ariane |
