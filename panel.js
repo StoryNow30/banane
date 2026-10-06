@@ -325,7 +325,9 @@
    const encours=i=>({nom:NOMS_COMMANDE[i.kind]||'Commande',cut:i.identity?.cut,
      etapes:s.reconcileRequired?[['unk','Émise ?'],['unk','Effet non observé'],na]:[['','Émission en cours'],['','Effet attendu'],na]});
    const vu=e=>({effet:e.afterObserved===true?['seen','Effet observé']:e.navigationObserved===true?['done','Navigation observée','État final non relu : ESV a changé de cut avant la relecture.']:['unk','Effet non observé'],
-     serveur:e.serverConfirmed===true?['seen','Serveur : confirmé']:na});
+     /* Relecture E : `serverConfirmed` vient du compteur d'ESV (preuve du moteur « server-confirmed ») : c'est une
+      * acceptation LOCALE. Le texte le dit ; la valeur de la preuve ne change pas. */
+     serveur:e.serverConfirmed===true?['seen','Acceptée par ESV (compteur local)','Acceptation constatée par le compteur d’ESV dans cette fenêtre ; ce n’est pas une confirmation du serveur.']:na});
    const d=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
    if(d)return {nom:'Suivant sans décision',cut:d.identity?.cut,etapes:[emise(d.commandInvoked),['unk','Effet non observé'],na]};
    if(s.intent)return encours(s.intent);
