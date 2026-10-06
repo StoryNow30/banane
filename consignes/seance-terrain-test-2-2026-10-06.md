@@ -37,6 +37,12 @@ dont Ariane pose ou valide** : le paquet mesure et observe, il ne décide rien d
 - Si le bilan dit « Observateur : absent » ou « marque absente » : recharge l'onglet ESV (F5), choisis-le dans Ariane et
   recommence le lot suivant.
 
+## À noter dans ton retour
+
+Le poste (pro ou perso), le navigateur (Chrome ou Edge) et sa version, et si une autre fenêtre ESV était ouverte pendant le lot. La vitesse
+dépend de ces conditions (observations de Mic du 6 octobre : sur le poste pro, Edge avec une 2e fenêtre ESV manuelle ralentit tout,
+Chrome non ; le poste perso, plus puissant, est très rapide).
+
 ## Si quelque chose d'anormal arrive
 
 Ariane se bloque, ESV se comporte autrement, une fenêtre d'erreur apparaît : **arrête**, note l'heure et ce que tu as vu, envoie-moi

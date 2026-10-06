@@ -101,3 +101,7 @@ d'origine ; corpus natif privé (`datasets/native/`) : verify tourne en mode par
 Verify à zéro échec avant chaque commit ; sautés et bloqués distincts des réussites ; un chiffre sans source s'écrit
 « non mesuré » ; un résultat local ne vaut pas gain terrain ; aucun code, capture ou donnée d'ESV ni identifiant de
 modèle dans les fichiers du dépôt ; aucune écriture dans banane-data.
+
+## 7. Observations de terrain de Mic (6 octobre, version 4.8.6), non mesurées
+
+Poste pro sous Edge : Orbite lent quand une 2e fenêtre ESV est traitée en manuel. Même poste sous Chrome : plus de lenteur. Poste perso plus puissant : Orbite très rapide. À mesurer plus tard avec V1 (même lot, Edge puis Chrome, une puis deux fenêtres). Les mesures de vitesse se comparent sur un même poste et un même navigateur.
