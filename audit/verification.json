@@ -1,12 +1,12 @@
 {
-  "startedAt": "2026-10-06T05:27:02.425Z",
-  "finishedAt": "2026-10-06T05:29:16.352Z",
+  "startedAt": "2026-10-06T05:33:02.526Z",
+  "finishedAt": "2026-10-06T05:35:15.527Z",
   "node": "v22.22.0",
   "platform": "linux",
   "counts": {
-    "tests": 1076,
+    "tests": 1087,
     "suites": 0,
-    "pass": 1074,
+    "pass": 1085,
     "fail": 0,
     "cancelled": 0,
     "skipped": 2,
@@ -56,6 +56,7 @@
     "tests/engine-v46.test.cjs",
     "tests/engine.test.cjs",
     "tests/esv-lent-pause-4800.test.cjs",
+    "tests/esv-observer.test.cjs",
     "tests/esv-rafraichi-main-4800.test.cjs",
     "tests/esv-rafraichi-meme-page-4800.test.cjs",
     "tests/export-manifeste.test.cjs",
@@ -211,7 +212,7 @@
     "tests/v242/capture.test.cjs",
     "tests/v242/manual.test.cjs"
   ],
-  "runtimeFilesSyntaxChecked": 38,
+  "runtimeFilesSyntaxChecked": 39,
   "hashes": {
     "manifest.json": "0990d6b12f0651a64fc4c21e275c38cbd470a3d58d37649e004a39ea78aae907",
     "panel.html": "30152cc6247d8032091292c599bdd22445a0509128e47e08d2c3cf6ed5938798",
@@ -231,6 +232,7 @@
     "src/core.js": "7fb9675ac1ac9e10560472ef8625b12ae0f1a7c5bd63b4e656b70ded390ed923",
     "src/early-input.js": "a3d90c794f9a82977218844f84baaf3c90b134e2f58067758d90d1a80a7344e8",
     "src/engine.js": "be15576321f7a1bf7b0c727281b7f8a882eeea254382c83cf96590220740da33",
+    "src/esv-observer.js": "634d6cece02e083f8b351dbfe29ca445c982136cd00d4cbd87918706be91c57c",
     "src/gauge.js": "248ee81c4f353c264d0ad6c9eebfe9ee0c43635c7532ac3945cf638757f48393",
     "src/gcv1-export.js": "10f57e4aa28dbe11d71f9fb457bb0f88a5bde329e43c92d65ad30e2c49ce359e",
     "src/gcv1-shadow-bootstrap.js": "5fc09ab60192a0454441479dc50fa1942c97cf8e7a9326ecc0e609178daf8c91",
