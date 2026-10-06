@@ -195,6 +195,21 @@
   });
 
   /* Valeurs dérivées, pour éviter de recalculer les mêmes ratios partout. */
+  /* V1 (test 2, D-077/D-078) — OBSERVATEUR PASSIF DE LA PAGE ESV. Il écoute, sans
+   * rien commander : écriture de validation (statut, corps réduit), pages de la liste
+   * des coupes (comptes), fichiers de points (nombre, octets). JOURNALISATION SEULE,
+   * pendant une séance (lot Orbite non clos, session Écho active), jamais hors séance.
+   * `actif:false` : le service worker ne range rien et le pont coupe l'observateur.
+   * Activé par défaut dans cette version de test. NE CONCERNE NI LE MOTEUR NI LA POSE ;
+   * aucun seuil. Les bornes du pont (50 entrées, 64 Ko par message, file de 100) et de la
+   * page (256 entrées, 1 Mo) vivent dans leurs fichiers, hors du service worker. */
+  const observateurPassif = Object.freeze({
+    actif: true,
+    /* Service worker : au plus ce nombre d'entrées rangées par séance (au-delà : un
+     * jalon « gap »), et cette taille maximale (caractères) d'un événement rangé. */
+    entreesParSeanceMax: 20000,
+    caracteresParEntree: 4096,
+  });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
@@ -225,5 +240,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, derived, describe };
 });

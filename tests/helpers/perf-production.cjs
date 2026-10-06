@@ -17,8 +17,11 @@ function production({enabled=true,adapter=new SimulatedESV()}={}){
  const sender={id:'test',url:'chrome-extension://test/panel.html',tab:{id:20}};
  const api=(action,args={})=>new Promise((resolve,reject)=>{message({kind:'panel',action,args},sender,r=>r.error?reject(Error(r.error)):resolve(r.result));});
  const get=name=>vm.runInContext(name,ctx);
+ /* Message brut au service worker, réponse synchrone ou aucune (sender réglable). */
+ const esvSender={id:'test',tab:{id:1},url:'https://esv.lidar.altametris.xyz/rails_validation/test'};
+ const raw=(m,sender=esvSender)=>{let out;const returned=message(m,sender,v=>{out=v;});return {out,returned};};
  const settle=async()=>{const e=get('engine');if(e.task)await e.task;return api('view');};
- return {ctx,api,get,store,adapter,commands,settle};
+ return {ctx,api,raw,get,store,adapter,commands,settle};
 }
 function normalize(x){return JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v));}
 module.exports={production,normalize};

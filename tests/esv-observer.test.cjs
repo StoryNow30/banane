@@ -35,7 +35,7 @@ test('aucun en-tête lu ni écrit par l’observateur ; le jeton n’apparaît n
  assert.equal(w.log.filter(x=>x[0]==='setRequestHeader').length,a.w.log.filter(x=>x[0]==='setRequestHeader').length,'seuls les appels de la page');
  const all=JSON.stringify([w.observed(),w.posts]);assert.ok(!/SECRET|Bearer|Authorization/i.test(all.replace(/"Authorization"/g,'')),'jeton absent des messages');
  const code=strip(SOURCE);for(const interdit of ['getResponseHeader','getAllResponseHeaders','setRequestHeader','Authorization','stopPropagation','preventDefault','.trigger(','.open(','fetch=','eval(','new Function'])assert.ok(!code.includes(interdit),'code : '+interdit);
- assert.ok(!/\bchrome\./.test(code),'monde principal : aucun accès à chrome.*');
+ assert.ok(!/\bchrome\.(storage|tabs|scripting|downloads|runtime\.(sendMessage|connect|getURL|onMessage))/.test(code),'monde principal : aucun appel de chrome.* (seule la lecture de chrome.runtime.id, pour s’abstenir en monde isolé)');
 });
 test('classes : seule la classe est notée ; connexion, jeton et autres comptés sans trace ; jamais l’URL',async()=>{
  const {w}=await run(true),e=w.observed(),kinds=e.map(x=>x.kind);
@@ -52,7 +52,7 @@ test('écriture : tentative, durée, identifiant de coupe, corps réduit aux nom
  assert.deepEqual(x.body,{a:1.5,b:-2.25,c:0,RailType:'U50',SeenByOperator:true},'objet, tableau, longue chaîne, clé douteuse : écartés');
  assert.equal(x.bodyKeys,9);assert.ok(x.durationMs>0&&x.endedEpochMs>x.startedEpochMs&&x.startedEpochMs>1e12);
  assert.deepEqual(writeBody('pas du json'),{keys:null,values:null});assert.deepEqual(writeBody(JSON.stringify([1,2])),{keys:null,values:null});assert.deepEqual(writeBody(null),{keys:null,values:null});
- assert.equal(railPairId(ORIGIN+'/x/rails/ok_1.2/3?y=1'),'ok_1.2/3');assert.equal(railPairId(ORIGIN+'/x/rails/'+'a'.repeat(200)),null);assert.equal(railPairId(ORIGIN+'/x/rails/a b'),null);
+ assert.equal(railPairId(ORIGIN+'/x/rails/ok_1.2/3?y=1'),'ok_1.2/3');assert.equal(railPairId(ORIGIN+'/x/rails/'+'a'.repeat(200)),null);assert.equal(railPairId(ORIGIN+'/x/rails/a b'),null);assert.equal(railPairId(ORIGIN+'/x/rails/..%2F..%2Fetc'),null);assert.equal(railPairId(ORIGIN+'/x/rails/%2Fabs'),null);
 });
 test('tentatives successives : 1, 2, 3 après deux échecs ; une autre coupe repart à 1 ; la 204 clôt',async()=>{
  const seq=[503,500,204,204];let i=0;const w=world({routes:()=>({status:seq[i++],text:''})});

@@ -58,7 +58,7 @@
  function railPairId(url,base){
   const u=pathOf(url,base),m=u&&/\/rails\/([^?#]+)$/.exec(u.path);if(!m)return null;
   let id;try{id=decodeURIComponent(m[1]);}catch{return null;}
-  return id.length<=LIMITS.idChars&&/^[\w.+\-/]+$/.test(id)?id:null;
+  return id.length<=LIMITS.idChars&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(id)?id:null;
  }
  /* Corps d'une écriture : nombres finis, booléens et chaînes courtes seulement. */
  function writeBody(body){
@@ -83,6 +83,10 @@
 
  function install(win){
   if(!win||win.__banane5ObserverInstalled)return null;
+  /* Dans le monde ISOLÉ (navigateur trop ancien pour `world:'MAIN'` en manifeste, qui
+   * ignore alors la clé), les prototypes sont des copies : y envelopper XMLHttpRequest ne
+   * verrait rien de la page. `chrome.runtime` n'existe que dans ce monde : s'abstenir. */
+  try{if(win.chrome&&win.chrome.runtime&&win.chrome.runtime.id)return null;}catch{}
   try{Object.defineProperty(win,'__banane5ObserverInstalled',{value:true});}catch{return null;}
   const origin=()=>{try{return win.location.origin;}catch{return '*';}};
   const base=()=>{try{return win.location.href;}catch{return undefined;}};

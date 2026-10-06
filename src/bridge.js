@@ -30,7 +30,40 @@
    let size=0;try{size=JSON.stringify(payload).length;}catch{size=Infinity;}
    if(size>MESSAGE_BUDGET)payload={error:tooBig(p.action,Number.isFinite(size)?Math.round(size/1048576)+' Mo':'taille illisible'),diagnostic:payload.diagnostic};
    try{p.respond(payload);}catch(e){p.respond({error:tooBig(p.action,e.message),diagnostic:payload.diagnostic});}}
- window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin||e.data?.channel!==channel)return;
+ /* V1 (test 2, D-077/D-078) — RELAIS DE L'OBSERVATEUR PASSIF DE LA PAGE. L'observateur
+  * (src/esv-observer.js, monde principal) poste ce qu'il voit ; ce message vient de la
+  * PAGE, donc d'une source NON AUTHENTIFIÉE : copie profonde, schéma et tailles bornés,
+  * jamais utilisé pour une décision. Le service worker ne range que pendant une séance ;
+  * sinon (`accept:false`) la file est vidée ici, sans rien garder. Trous de numérotation
+  * et file pleine sont dits par un jalon « gap », jamais passés sous silence. */
+ const OBS={maxQueue:100,maxEntryChars:4096,maxPerMessage:50,maxMessageChars:65536,flushMs:250};
+ const obs={observer:null,last:0,queue:[],timer:null,lost:0};
+ function obsCopy(x){
+  if(!x||typeof x!=='object'||!Number.isInteger(x.seq)||x.seq<0||typeof x.kind!=='string'||x.kind.length>24)return null;
+  try{const json=JSON.stringify(x);return json.length>OBS.maxEntryChars?null:JSON.parse(json);}catch{return null;}}
+ function relayObservation(d){
+  if(d.v!==1||typeof d.observer!=='string'||d.observer.length>80)return;
+  if(obs.observer!==d.observer){obs.observer=d.observer;obs.last=0;}
+  const x=obsCopy(d.entry);if(!x||x.seq<1||x.seq<=obs.last)return;
+  if(x.seq>obs.last+1)obs.queue.push({seq:0,kind:'gap',lost:x.seq-obs.last-1,reason:'ring-overflow'});
+  obs.last=x.seq;obs.queue.push(x);
+  while(obs.queue.length>OBS.maxQueue){obs.queue.shift();obs.lost++;}
+  if(!obs.timer)obs.timer=setTimeout(obsFlush,OBS.flushMs);}
+ async function obsFlush(){
+  obs.timer=null;const entries=[];
+  if(obs.lost){entries.push({seq:0,kind:'gap',lost:obs.lost,reason:'bridge-queue'});obs.lost=0;}
+  let chars=0;
+  while(obs.queue.length&&entries.length<OBS.maxPerMessage){const n=JSON.stringify(obs.queue[0]).length;if(entries.length&&chars+n>OBS.maxMessageChars)break;chars+=n;entries.push(obs.queue.shift());}
+  if(!entries.length)return;
+  if(obs.queue.length)obs.timer=setTimeout(obsFlush,OBS.flushMs);
+  try{const r=await chrome.runtime.sendMessage({kind:'esv-observation',observer:obs.observer,entries});
+   if(r&&r.accept===false)obs.queue.length=0;
+   if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
+  }catch{}}
+ try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}
+ window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin)return;
+   if(e.data?.kind==='banane5:esv-observation'){relayObservation(e.data);return;}
+   if(e.data?.channel!==channel)return;
    if(e.data.kind==='banane4:manual-phase'){
      const gate=window.__banane4InputGate;if(gate){gate.phase=e.data.phase;if(e.data.phase==='FINISHED')gate.active=false;}return;
    }

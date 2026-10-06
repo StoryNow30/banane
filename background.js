@@ -97,6 +97,63 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
   * (jamais réemployé) ; le départ ne s'en sert que s'il est celui du cut N. */
  const b=engine.s.batch;if(b?.state==='RUNNING')b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),traites:(e.compteursVus??1)>1?null:(e.compteur?.traites??null),at:e.at||e.timestamp};
  void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
+/* V1 (test 2, D-077/D-078) — RANGEMENT DE L'OBSERVATEUR PASSIF DE LA PAGE ESV.
+ * Le pont relaie ce que l'observateur de la page a vu (écriture de validation, pages de
+ * la liste des coupes, fichiers de points). Ici : JOURNALISATION SEULE.
+ *  - rien n'est rangé hors séance (lot Orbite non clos, session Écho active) ni si le
+ *    réglage `observateurPassif.actif` est faux : réponse `accept:false` ;
+ *  - le message vient de la page (source non fiable) : chaque entrée est revalidée champ
+ *    par champ (liste blanche, nombres finis, chaînes bornées) ;
+ *  - rangé comme `esv-releve` (`store.putEvent`, sans attente), jamais par `engine.event` :
+ *    ni état, ni décision, ni commande ne dépendent de ces événements ; un échec
+ *    d'écriture est compté et dit par un jalon « gap » ;
+ *  - borne par séance : au-delà, un seul jalon « gap ». */
+const OBS_REASONS=new Set(['ring-overflow','bridge-queue','oversize','unserializable','store-rejected','rejected','session-cap']);
+const obsState={lost:0,perSeance:new Map()};
+function seanceObservateur(){
+ const b=engine?.s?.batch;
+ if(engine?.s?.mode==='automatic-test'&&b&&!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state))return 'lot:'+(b.id||'');
+ return manual?.active?.()?'ecoute-manuelle':native?.active?.()?'ecoute-native':null;}
+const obsInt=(v,max=1e12)=>Number.isInteger(v)&&v>=0&&v<=max?v:null;
+const obsNum=v=>Number.isFinite(v)&&Math.abs(v)<1e15?v:null;
+const obsStr=(v,n)=>typeof v==='string'&&v.length<=n?v:null;
+const obsOutcome=v=>['done','error','abort','timeout'].includes(v)?v:null;
+function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;const out={};let n=0;
+ for(const k of Object.keys(b)){const v=b[k];if(n>=24||k.length>40||!/^[\w.\-]+$/.test(k))continue;
+  if(typeof v==='number'&&Number.isFinite(v)||typeof v==='boolean'||typeof v==='string'&&v.length<=32){out[k]=v;n++;}}
+ return out;}
+function obsFields(x){
+ const time={startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),durationMs:obsNum(x.durationMs)};
+ switch(x.kind){
+  case 'write':return {kind:'write',via:'xhr',urlClass:'rail-pair-write',method:obsStr(x.method,8),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),attempt:obsInt(x.attempt,1000),
+   railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),...time};
+  case 'list-page':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
+   return {kind:'list-page',via:'xhr',urlClass:'rail-list',status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
+    skipped:['oversize','unreadable'].includes(x.skipped)?x.skipped:null,basis:'row-string-values',...time};}
+  case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
+  case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
+ }return null;}
+function rangerObservations(m){try{
+ if(globalThis.BananeSettings?.observateurPassif?.actif===false)return {accept:false,enabled:false,reason:'setting-off'};
+ const seance=seanceObservateur();if(!seance)return {accept:false,reason:'no-session'};
+ if(typeof m.observer!=='string'||m.observer.length>80||!Array.isArray(m.entries)||m.entries.length>100)return {accept:true,stored:0,reason:'malformed'};
+ const K=globalThis.BananeCore3,cfg=globalThis.BananeSettings?.observateurPassif||{},cap=cfg.entreesParSeanceMax||20000,maxChars=cfg.caracteresParEntree||4096;
+ const ctx=(()=>{try{const v=timing?.context?.()||timing?.batchContext?.();return v?{sessionId:v.sessionId??null,batchId:v.batchId??null,visitId:v.visitId??null,clockId:timing?.clockId??null}:{};}catch{return {};}})();
+ const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??performance.timeOrigin;
+ const seen=obsState.perSeance.get(seance)||{n:0,capped:false},events=[];let rejected=0;
+ const add=(fields,seq)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...ctx};
+  if(JSON.stringify(e).length>maxChars){rejected++;return;}events.push(e);};
+ if(obsState.lost){add({kind:'gap',lost:obsState.lost,reason:'store-rejected',of:null},null);obsState.lost=0;}
+ for(const x of m.entries){
+  if(!x||typeof x!=='object'){rejected++;continue;}
+  const fields=obsFields(x);if(!fields){rejected++;continue;}
+  if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null);}rejected++;continue;}
+  add(fields,x.seq);if(fields.kind!=='gap')seen.n++;}
+ if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
+ obsState.perSeance.set(seance,seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);
+ for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
+ return {accept:true,stored:events.length};
+}catch{return {accept:true,stored:0,reason:'error'};}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
  * photo du 27/09), lu une seule fois. Le texte « M cuts » est journalisé pour
@@ -972,6 +1029,7 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   respond(launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
+ if(m.kind==='esv-observation'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){respond(rangerObservations(m));return;}
  if(m.kind==='manual-event'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
   ready.then(()=>manual.receive(m.type,m.payload)).then(result=>respond({result}),e=>respond({error:e.message}));return true;
  }

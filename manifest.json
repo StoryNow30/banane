@@ -24,6 +24,16 @@
         "https://esv.lidar.altametris.xyz/rails_validation/*"
       ],
       "js": [
+        "src/esv-observer.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://esv.lidar.altametris.xyz/rails_validation/*"
+      ],
+      "js": [
         "src/early-input.js"
       ],
       "run_at": "document_start"
