@@ -1032,12 +1032,38 @@ on('native-discard',async()=>{
   * message ne porte plus que l'état. Le fichier est assemblé par morceaux,
   * sans chaîne géante. Stockage illisible d'ici : ancien chemin par message. */
  async function lireStore(nom){const s=store();if(!s)return null;try{return await s.all(nom);}catch{return null;}}
+ /* V1 (correction 1) — INSTANTANÉ D'EXPORT COHÉRENT. Pendant `…-meta`, le service
+  * worker attend ses écritures de mesure (250 ms au plus) et ajoute une santé V1
+  * par lot suivi. Lire `events` en même temps pouvait figer l'instantané AVANT
+  * cette écriture : la métadonnée annonçait une santé absente de son propre
+  * fichier (partie 23). Ordre voulu : métadonnée (donc flush), PUIS lecture ;
+  * puis contrôle que chaque santé annoncée comme stockée est bien dans ce qui a
+  * été lu. Sinon l'export est déclaré incomplet, dit à l'opérateur, jamais
+  * corrigé en silence : rien n'est supprimé, rien n'est inventé, aucune
+  * commande ESV, budget de 250 ms et compteur de pertes inchangés. */
+ function verifierSanteExportee(meta,events){
+   const t=meta?.v1TimingExport;if(!t||!Array.isArray(t.lots)||!Array.isArray(events))return meta;
+   const presente=l=>events.some(e=>e?.type==='phase-timing'&&e.kind==='health'&&e.sessionId===l.sessionId&&e.batchId===l.batchId&&e.clockId===l.clockId&&e.batchSeq===l.healthSeq);
+   const absentes=t.lots.filter(l=>l.healthStored===true&&!presente(l));
+   if(!absentes.length)return {...meta,v1TimingExport:{...t,snapshot:{coherent:true,missing:[]}}};
+   const perdu=new Set(absentes.map(l=>l.batchId+'|'+l.clockId));
+   return {...meta,v1TimingExport:{...t,status:'snapshot-incomplete',flushComplete:false,
+     lots:t.lots.map(l=>perdu.has(l.batchId+'|'+l.clockId)?{...l,complete:false}:l),
+     snapshot:{coherent:false,missing:absentes.map(l=>({sessionId:l.sessionId,batchId:l.batchId,clockId:l.clockId,healthSeq:l.healthSeq}))}}};
+ }
+ /* Métadonnée d'abord, lecture ensuite : jamais en parallèle. `null` si le
+  * stockage direct est illisible (l'appelant repasse alors par l'API, qui
+  * attend aussi son flush avant de lire). */
+ async function lirePilote(actionMeta){
+   const meta=await api(actionMeta),events=await lireStore('events'),records=await lireStore('records');
+   return events&&records?{meta:verifierSanteExportee(meta,events),events,records}:null;
+ }
  function blobJson(meta,arrays){const head=JSON.stringify(meta),parts=[head.slice(0,-1)];let first=head==='{}';
    for(const [name,items] of Object.entries(arrays)){parts.push(`${first?'':','}${JSON.stringify(name)}:[`);first=false;
      items.forEach((x,i)=>parts.push((i?',':'')+JSON.stringify(x)));parts.push(']');}
    parts.push('}');return new Blob(parts,{type:'application/json'});}
- async function bilanPilote(){const [meta,events,records]=await Promise.all([api('dataset-meta'),lireStore('events'),lireStore('records')]);
-   return events&&records?{...meta,events,records}:api('dataset');}
+ async function bilanPilote(){const lu=await lirePilote('dataset-meta');
+   return lu?{...lu.meta,events:lu.events,records:lu.records}:api('dataset');}
  async function diagnosticPilote(){const X=globalThis.BananeGCV1Export,events=X?await lireStore('events'):null;
    if(!events)return api('gcv1-diagnostic-export');
    return X.buildDiagnostic({...await api('gcv1-export-meta'),events});}
@@ -1062,9 +1088,11 @@ on('native-discard',async()=>{
    return {quoi:'corpus',fichiers,alerte};
  }
  async function exporterJournal(){const name=`ariane-journal-v4-${Date.now()}.json`;
-   const [meta,events,records]=await Promise.all([api('journal-meta'),lireStore('events'),lireStore('records')]);
-   const f=events&&records?await saveBlob(blobJson(meta,{events,records}),name):await saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
-   statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:events&&records?`Journal téléchargé : ${events.length} événements, ${records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0);
+   const lu=await lirePilote('journal-meta');
+   const f=lu?await saveBlob(blobJson(lu.meta,{events:lu.events,records:lu.records}),name):await saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
+   const incoherent=lu?.meta?.v1TimingExport?.snapshot?.coherent===false;
+   statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:incoherent?'Journal téléchargé, mais la mesure V1 est incomplète (bilan de santé absent de l’instantané) : relance l’export.'
+     :lu?`Journal téléchargé : ${lu.events.length} événements, ${lu.records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0||incoherent);
    return {quoi:'journal',fichiers:[f],alerte:null};}
  on('gcv1-diagnostic-export',exporterDiagnostic);on('gcv1-corpus-export',exporterCorpus);on('journal',exporterJournal);
  /* 4.8.0 — TOUT POUR L'ANALYSE EN UN CLIC. Terrain du 26/09 (parties 13 et 14) :
