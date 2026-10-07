@@ -126,6 +126,8 @@
    let texte=String(message??'');
    for(const [motif,remplacement] of NOTICES)texte=texte.replace(motif,remplacement);
    $('notice').textContent=texte;$('notice').classList.toggle('error',error);}
+ /* V2 : un lot RUNNING, en pause, repris à la main ou en erreur interdit le vidage du cache. */
+ const lotNonTermine=s=>{const e=s?.batch?.state;return !!e&&e!=='STOPPED';};
  function button(id,{hidden=false,disabled=false}={}){if($(id)){$(id).hidden=hidden;$(id).disabled=disabled;}}
  const openStatus=status=>['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(status);
  const manualActive=s=>openStatus(s.manual?.status),nativeActive=s=>openStatus(s.native?.status),active=s=>manualActive(s)||nativeActive(s);
@@ -624,7 +626,7 @@
    }
    /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
-   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
    rendreFocus();
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
@@ -1140,17 +1142,37 @@ on('native-discard',async()=>{
   * parce qu'un autre fichier a échoué. Au-delà de `zipMaxBytes`, l'archive est
   * fermée et une suivante est ouverte (« -partie02 »). Sans l'écrivain zip
   * (essais, ancien navigateur), repli sur l'ancien chemin fichier par fichier. */
+ /* V2 — cache des exports : instantané des clés, et vidage manuel avec confirmation chiffrée. */
+ async function instantaneCache(){const s=store();if(!s)return null;
+   try{const [events,records,clouds]=[await s.keys('events'),await s.keys('records'),await s.keys('clouds')];return Array.isArray(events)&&Array.isArray(records)&&Array.isArray(clouds)?{events,records,clouds}:null;}catch{return null;}}
+ async function resumeCache(snap){const s=store(),out={lots:0,coupes:0,octets:null};
+   try{const lots=new Set(),coupes=new Set(),ev=new Set(snap.events),rc=new Set(snap.records);
+     for(const e of await s.all('events'))if(ev.has(e.eventId)&&e.batchId)lots.add(e.batchId);
+     for(const r of await s.all('records'))if(rc.has(r.recordId||r.id)&&r.identity)coupes.add(r.identity.part+'|'+r.identity.cut);
+     out.lots=lots.size;out.coupes=coupes.size;}catch{out.lots=out.coupes=null;}
+   try{let points=0;for(const id of snap.clouds){const c=await s.getCloud(id);points+=c?.pointsSceneRelative?.length||0;}out.octets=points*(SET()?.export.bytesPerPointEstimate??113);}catch{out.octets=null;}
+   return out;}
+ on('export-cache-clear',async()=>{
+   const info=await api('export-cache-info');if(info?.refus)throw Error('Vidage impossible : '+info.refus+'.');
+   const snap=await instantaneCache();if(!snap)throw Error('Stockage illisible depuis le panneau : rien n’est vidé.');
+   if(!snap.events.length&&!snap.records.length&&!snap.clouds.length){statutExport('Le cache des exports est déjà vide.');return;}
+   const r=await resumeCache(snap),nb=x=>x===null?'nombre inconnu':x;
+   if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${snap.records.length} visites, ${snap.events.length} événements, ${snap.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.`))return;
+   const out=await api('export-cache-clear',{ids:snap,exportAt:null,manuel:true});
+   statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.`);});
  const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??1024*1024*1024;
  const dateCompacte=d=>d.toISOString().replace(/[:.]/g,'-').slice(0,19);
  async function exportToutZip(Z){
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
+   /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
+   const instantane=await instantaneCache(),periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
    let zip=Z.createZip({date:maintenant}),total=0;
    const mo1=n=>(n/1048576).toFixed(1)+' Mo';
    const fermer=async final=>{if(zip.vide)return;
      const liste=zip.entrees,mode=modeDe().nom;
      await zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${maintenant.toISOString()}\n`+
        `Archive ${final&&!volumes.length?'unique':'n° '+(volumes.length+1)} : ${liste.length} fichier(s) JSON, méthode ${zip.methode}.\n`+
-       liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
+       periode+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
        'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'],{type:'text/plain'}));
      const blob=zip.terminer(),nom=final&&!volumes.length?`${base}.zip`:`${base}-partie${String(volumes.length+1).padStart(2,'0')}.zip`;
      const f=await saveBlob(blob,nom);volumes.push({...f,entrees:liste.length,octets:blob.size});
@@ -1174,8 +1196,17 @@ on('native-discard',async()=>{
    const zipsKo=nonEnregistres(volumes),zipsOk=volumes.filter(f=>!nonEnregistres([f]).length);
    for(const f of zipsKo)manques.push(`${f.name} non enregistré (${f.etat})`);
    const nb=bilans.reduce((n,b)=>n+b.fichiers.length,0);
-   const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.`
-     :`Journal, bilan, diagnostic et corpus : ${volumes.length} archive(s) zip (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?'les':'la'} pour l’analyse.`;
+   /* Vidage automatique : SEULEMENT si tout est confirmé complet par le navigateur. */
+   let vidage='';
+   if(SET()?.export.viderApresExport!==false){
+     const confirme=!manques.length&&volumes.length>0&&volumes.every(v=>v.confirme===true);
+     if(!confirme)vidage=' Cache d’export NON vidé : l’export n’est pas confirmé complet par le navigateur.';
+     else if(!instantane)vidage=' Cache d’export non vidé : stockage illisible depuis le panneau.';
+     else try{const r=await api('export-cache-clear',{ids:instantane,exportAt:maintenant.toISOString()});
+       vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.`;}
+     catch(e){vidage=` Cache d’export non vidé : ${e?.message||e}`;}}
+   const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.${vidage}`
+     :`Journal, bilan, diagnostic et corpus : ${volumes.length} archive(s) zip (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?'les':'la'} pour l’analyse.${vidage}`;
    statutExport(texte,manques.length>0);
  }
  on('export-tout',async()=>{const Z=globalThis.BananeZip;if(Z?.createZip&&typeof Blob==='function')return exportToutZip(Z);

@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.2',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 2';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -855,8 +855,38 @@ async function flushMesure(){if(!timing)return null;
  try{return await Promise.race([Promise.resolve().then(()=>timing.flush()),new Promise(resolve=>{timer=setTimeout(()=>resolve(incomplet('timeout')),limite);})]);}
  catch(e){return incomplet('flush-error',e);}
  finally{clearTimeout(timer);}}
+/* V2 — VIDAGE DU CACHE DES EXPORTS (frontière écrite dans src/export-cache.js).
+ * Le marqueur (chrome.storage.local, clé à part : l'état du moteur n'est pas touché)
+ * dit quand le cache a été vidé ; les exports le recopient (`exportPeriod`). Les lots
+ * dont la mesure V1 a été vidée sortent de `v1TimingExport.lots` (leur santé n'est
+ * plus dans le journal, ce n'est pas une perte à signaler à chaque export). */
+const cacheExport=()=>globalThis.BananeExportCache;
+const contexteVidage=()=>({state:engine.s,busy:engine.busy,task:engine.task,nativeActive:native.active(),manualActive:manual.active(),timing});
+async function periodeExport(v1){
+ const EC=cacheExport();let mq=null;try{mq=EC?await EC.lire(chrome.storage.local):null;}catch{/* marqueur illisible : période inconnue */}
+ const vides=new Set(mq?.lotsVides||[]);let t=v1;
+ if(t&&vides.size&&Array.isArray(t.lots))t={...t,lots:t.lots.filter(l=>!vides.has(l.batchId)),lotsVidesDuCache:t.lots.filter(l=>vides.has(l.batchId)).map(l=>l.batchId)};
+ return {v1TimingExport:t,exportPeriod:{startedAt:mq?.at??null,previousDataCleared:mq?{at:mq.at,afterExportAt:mq.afterExportAt??null,text:EC.texte(mq),counts:mq.counts??null}:null}};
+}
+async function viderCacheExport(args){
+ const EC=cacheExport();if(!EC)throw Error('Vidage indisponible (module absent).');
+ const raison=EC.refus(contexteVidage());if(raison)throw Error('Vidage refusé : '+raison+'.');
+ const garder={events:[],records:[],clouds:[]};
+ /* Une session Écho ou Correction conservée garde ses données (son propre abandon les efface). */
+ if(engine.s.native||engine.s.manual){
+  garder.clouds.push(...(engine.s.native?.cloudIds||[]),...(engine.s.manual?.cloudIds||[]));
+  for(const r of await store.all('records'))if(r.nativeSessionId||r.manualSessionId)garder.records.push(r.recordId||r.id);
+  for(const e of await store.all('events'))if(e.nativeSessionId||e.manualSessionId)garder.events.push(e.eventId);}
+ const avant=await EC.lire(chrome.storage.local),lots=[...(timing?.batches?.keys?.()||[])];
+ const counts=await EC.supprimer(store,args?.ids||{},garder);
+ const marqueur={at:new Date().toISOString(),afterExportAt:args?.exportAt||null,manuel:args?.manuel===true,counts,lotsVides:[...new Set([...(avant?.lotsVides||[]),...lots])]};
+ await EC.ecrire(chrome.storage.local,marqueur);
+ return {cleared:true,...counts,at:marqueur.at,text:EC.texte(marqueur)};
+}
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
+ if(action==='export-cache-info'){const EC=cacheExport();return {refus:EC?EC.refus(contexteVidage()):'module absent',marqueur:EC?await EC.lire(chrome.storage.local):null};}
+ if(action==='export-cache-clear')return viderCacheExport(args);
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
  if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
@@ -995,8 +1025,9 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
   * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque
   * à l'état, rangé ailleurs dans le même fichier. */
- const v1TimingExport=['journal-meta','dataset-meta','journal','dataset'].includes(action)?await flushMesure():null;
- const timingMeta=v1TimingExport?{v1TimingExport}:{};
+ const exporte=['journal-meta','dataset-meta','journal','dataset'].includes(action),periode=exporte?await periodeExport(await flushMesure()):null;
+ const v1TimingExport=periode?.v1TimingExport??null;
+ const timingMeta={...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{})};
  if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary()};
  if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
  if(action==='journal')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary()};

@@ -23,6 +23,10 @@ class BananeStorage3{
  /* Lecture par clé : un enregistrement, sans charger toute la base (4.7.2). */
  async getRecord(id){return this.transaction('records','readonly',s=>s.get(id));}
  async all(name){return this.transaction(name,'readonly',s=>s.getAll());}
+ /* V2 : suppression de plusieurs clés en UNE transaction (vidage du cache d'export). */
+ async deleteMany(name,ids){const db=await this.open();return new Promise((resolve,reject)=>{
+   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name);let n=0;for(const id of ids){os.delete(id);n++;}
+   tx.oncomplete=()=>resolve(n);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
  async keys(name){return this.transaction(name,'readonly',s=>s.getAllKeys());}
 }
 globalThis.BananeStorage3=BananeStorage3;
