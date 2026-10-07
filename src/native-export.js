@@ -224,5 +224,44 @@
       clouds: [...head, ...list.map(c => expandCloud(c, dictionaries))] };
   }
 
-  return { FORMAT, REF, SHAPES, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
+  /* --- Ariane 4.9 (V2, D-079) : modes d'export et en-tête écrit une seule fois ---
+   *
+   * MODE. `mode: 'complet'` est le mode de cette version : intensité, classe,
+   * pointSources, probes, tout est conservé. Le paramètre existe pour qu'un
+   * autre mode (plus léger) puisse s'ajouter plus tard SANS toucher au flux
+   * d'écriture : un mode est un objet { nom, nuage(cloud) }, où `nuage` rend le
+   * nuage à écrire. Aucun autre mode n'est défini ici, et un nom inconnu est
+   * REFUSÉ (jamais remplacé en silence par « complet »).
+   */
+  const MODES = Object.freeze({
+    complet: Object.freeze({ nom: 'complet', nuage: cloud => cloud }),
+  });
+  const MODE_DEFAUT = 'complet';
+  function exportMode(nom) {
+    const mode = MODES[nom === undefined || nom === null ? MODE_DEFAUT : nom];
+    if (!mode) throw Error('Mode d’export inconnu : ' + nom + ' (disponible : ' + Object.keys(MODES).join(', ') + ').');
+    return mode;
+  }
+
+  /* EN-TÊTE UNIQUE. Un export en plusieurs segments recopiait dans CHAQUE
+   * segment les mêmes `events`, `records`, `state`, diagnostic… (mesuré sur le
+   * lot 7 : 3 x 8,9 Mo d'événements, 3 x 2,6 Mo de diagnostic). Désormais seul
+   * le premier segment d'un export porte ces parties ; les suivants gardent un
+   * en-tête mince (même format, mêmes clés d'identification) et la marque
+   * `segment.headerIn` = index du segment qui les porte. Les listes sont
+   * laissées vides (`[]`) pour que la forme du document reste reconnue par les
+   * lecteurs (ex. `Array.isArray(doc.records)`), les objets sont retirés.
+   * Aucune information n'est perdue : le premier segment est un instantané
+   * complet, les suivants n'ont jamais eu que la même copie. */
+  const UNE_FOIS = ['events', 'records', 'state', 'stateOmits', 'closureSummary', 'v1TimingExport', 'diagnostic'];
+  function enteteMince(metadata) {
+    const out = {};
+    for (const k of Object.keys(metadata)) {
+      if (!UNE_FOIS.includes(k)) out[k] = metadata[k];
+      else if (Array.isArray(metadata[k])) out[k] = [];
+    }
+    return out;
+  }
+
+  return { FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
 });
