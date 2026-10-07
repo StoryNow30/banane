@@ -112,3 +112,19 @@ test('session Écho active (manuelle) : comptée comme séance ; session arrêt�
  const b=production();await b.api('connect',{tabId:1});const m=b.get('manual');m.active=()=>true;assert.equal(send(b,[write()]).out.accept,true);m.active=()=>false;assert.equal(send(b,[write({seq:2})]).out.accept,false);
  assert.equal(stored(b).length,1);
 });
+/* Dernière écriture de validation (lots 7 à 10, 4 sur 4) : le lot est clos (STOPPED, `stoppedAtEnd.at`) AVANT que le pont ait
+ * relayé l'écriture (≥ 158 ms de latence mesurée entre la fin de l'écriture et sa réception, 250 ms de tampon du pont). Une courte
+ * grâce après l'arrêt au dernier cut range cette écriture ; au-delà, ou sans arrêt au dernier cut, rien n'est rangé. */
+test('arrêt au dernier cut : l’écriture arrivée juste après est rangée, avec le contexte du lot ; plus rien après la grâce', async () => {
+ const {b,release}=await lotOuvert(),e=b.get('engine'),lot=e.s.batch;
+ lot.state='STOPPED';lot.stoppedAtEnd={cut:100,at:new Date(Date.now()-300).toISOString(),applied:true};
+ const r=send(b,[write({seq:1})]).out;deq(r,{accept:true,stored:1});
+ const w=stored(b).filter(x=>x.kind==='write');assert.equal(w.length,1);assert.equal(w[0].batchId,'lot-obs','attribuée au lot clos');assert.equal(w[0].status,204);
+ assert.equal(b.raw({kind:'launcher-status'}).out.observation.seance,false,'le battement ne dit pas « séance » après l’arrêt : seule la réception tardive est acceptée');
+ lot.stoppedAtEnd.at=new Date(Date.now()-60000).toISOString();
+ deq(send(b,[write({seq:2})]).out,{accept:false,reason:'no-session'});assert.equal(stored(b).filter(x=>x.kind==='write').length,1,'après la grâce : rien');
+ lot.state='COMPLETED';lot.stoppedAtEnd=undefined;deq(send(b,[write({seq:3})]).out,{accept:false,reason:'no-session'});
+ lot.state='STOPPED';lot.stoppedAtEnd={cut:100,at:'illisible'};assert.equal(send(b,[write({seq:4})]).out.accept,false,'date illisible : jamais deviné');
+ lot.stoppedAtEnd={cut:100,at:new Date(Date.now()+60000).toISOString()};assert.equal(send(b,[write({seq:5})]).out.accept,false,'date future : refus');
+ release();await b.settle();
+});

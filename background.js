@@ -110,9 +110,17 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
  *  - borne par séance : au-delà, un seul jalon « gap ». */
 const OBS_REASONS=new Set(['ring-overflow','bridge-queue','oversize','unserializable','store-rejected','rejected','session-cap']);
 const obsState={lost:0,perSeance:new Map()};
-function seanceObservateur(){
+/* Grâce de réception après l'arrêt au dernier cut du lot. La dernière validation du lot (Ctrl+Entrée en place) clôt le lot
+ * (`closeAtExit`, état STOPPED) avant que son écriture PUT ait été relayée : l'observateur la poste à la fin de l'écriture, le pont
+ * la tient 250 ms avant de l'envoyer (mesuré : 158 à 343 ms entre la fin de l'écriture et sa réception ; lots 7 à 10, 4 sur 4 perdues).
+ * Pendant cette courte fenêtre, et pour ce seul lot, le rangement accepte encore ce que l'observateur avait DÉJÀ vu : rien n'est
+ * demandé à ESV, la séance n'est pas rouverte (`launcher-status` ne l'annonce pas). Date absente, illisible ou future : jamais devinée. */
+const OBS_GRACE_MS=5000;
+function seanceObservateur({grace=false}={}){
  const b=engine?.s?.batch;
  if(engine?.s?.mode==='automatic-test'&&b&&!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state))return 'lot:'+(b.id||'');
+ if(grace&&engine?.s?.mode==='automatic-test'&&b?.state==='STOPPED'&&b.stoppedAtEnd?.at){
+  const age=Date.now()-Date.parse(b.stoppedAtEnd.at);if(Number.isFinite(age)&&age>=-1000&&age<=OBS_GRACE_MS)return 'lot:'+(b.id||'');}
  return manual?.active?.()?'ecoute-manuelle':native?.active?.()?'ecoute-native':null;}
 const obsInt=(v,max=1e12)=>Number.isInteger(v)&&v>=0&&v<=max?v:null;
 const obsNum=v=>Number.isFinite(v)&&Math.abs(v)<1e15?v:null;
@@ -143,7 +151,7 @@ function obsFields(x){
  }return null;}
 function rangerObservations(m){try{
  if(globalThis.BananeSettings?.observateurPassif?.actif===false)return {accept:false,enabled:false,reason:'setting-off'};
- const seance=seanceObservateur();if(!seance)return {accept:false,reason:'no-session'};
+ const seance=seanceObservateur({grace:true});if(!seance)return {accept:false,reason:'no-session'};
  if(typeof m.observer!=='string'||m.observer.length>80||!Array.isArray(m.entries)||m.entries.length>100)return {accept:true,stored:0,reason:'malformed'};
  const K=globalThis.BananeCore3,cfg=globalThis.BananeSettings?.observateurPassif||{},cap=cfg.entreesParSeanceMax||20000,maxChars=cfg.caracteresParEntree||4096;
  const ctx=(()=>{try{const v=timing?.context?.()||timing?.batchContext?.();return v?{sessionId:v.sessionId??null,batchId:v.batchId??null,visitId:v.visitId??null,clockId:timing?.clockId??null}:{};}catch{return {};}})();
