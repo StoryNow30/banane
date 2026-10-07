@@ -12,8 +12,10 @@
 2. **Exports allégés (V2) : lancement autorisé.** Étape A (une seule copie des nuages, événements et diagnostic une fois, sans perte)
    et « Sauvegarder tout » en un clic (un zip). Mode complet : intensité et classe conservées ; mode léger : retirées. Le mode léger
    avec arrondi des points reste conditionné à un rejeu comparé complet/léger. Étude : mesures privées hors dépôt.
-3. **Données de la partie 7 pour l'ESV local : lecture seule par l'extension Claude, autorisée**, à lancer après la fin du lot de la
-   partie 10 et la remise de ses exports, jamais pendant une mesure. Pas d'écriture ni de validation, pas de lecture de jeton ; données privées, hors dépôts.
+3. **Données de la partie 7 pour l'ESV local : mises de côté (décision de Mic du 7 octobre).** L'extension Claude ne convient pas (elle ne doit
+   pas lire le jeton de connexion, et naviguer dans ESV n'est pas une lecture pure). Méthode retenue pour plus tard : HAR enregistré par Mic
+   dans Chrome sur les coupes laissées de côté, nettoyé des échanges `login.microsoftonline.com` avant envoi (le HAR « nettoyé » de Chrome garde
+   les jetons dans le corps de ces réponses ; l'original reçu a été supprimé, copie propre privée sans jeton). Reprise seulement sur besoin précis.
 4. **Séance terrain test 2, partie 7 (projet 260903_122817_E_WIMSV_1), poste perso, Chrome 154, 4.9.0.2** : 156 coupes invalides visées,
    121 validées, 35 mises de côté (écartement hors contrat, placements concurrents) ; observateur présent et sans perte ; 120 écritures de
    validation observées avec statut 204 (aucun échec, aucune nouvelle tentative), la 121e validée en place sans écriture dans l'export ;
