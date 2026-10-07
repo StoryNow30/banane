@@ -177,9 +177,10 @@
      * tout : intensité, classe, pointSources, probes. Un autre mode s'ajoutera
      * dans src/native-export.js (MODES) sans toucher au flux d'écriture. */
     mode: 'complet',
-    /* V2 : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
+    /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
+     * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
      * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */
-    viderApresExport: true,
+    viderApresExport: false,
     /* V2 : volume maximal (compressé, pire cas) d'une archive « Tout télécharger ».
      * Au-delà, une archive suivante est ouverte. Le zip simple s'arrête à 4 Gio. */
     zipMaxBytes: 1024 * Mo,

@@ -27,6 +27,13 @@ class BananeStorage3{
  async deleteMany(name,ids){const db=await this.open();return new Promise((resolve,reject)=>{
    const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name);let n=0;for(const id of ids){os.delete(id);n++;}
    tx.oncomplete=()=>resolve(n);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
+ /* V2 : lit, compare la signature et supprime dans UNE transaction (rien ne s'écrit entre
+  * le contrôle et la suppression). Rend { supprimes:[ids], gardes:[ids modifiés] }. */
+ async deleteIfUnchanged(name,ids,signatures,signature){const db=await this.open();return new Promise((resolve,reject)=>{
+   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name),supprimes=[],gardes=[];
+   for(const id of ids){const r=os.get(id);r.onsuccess=()=>{if(r.result===undefined)return;
+     if(signature(r.result)===signatures[id]){os.delete(id);supprimes.push(id);}else gardes.push(id);};}
+   tx.oncomplete=()=>resolve({supprimes,gardes});tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
  async keys(name){return this.transaction(name,'readonly',s=>s.getAllKeys());}
 }
 globalThis.BananeStorage3=BananeStorage3;

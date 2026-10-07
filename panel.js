@@ -1048,7 +1048,8 @@ on('native-discard',async()=>{
  }
  const exporterBilan=async({save=saveBlob,mode,horsCorpus=null}={})=>{
    let data=await bilanPilote();if(horsCorpus)data=sansNuagesDuCorpus(data,horsCorpus);
-   return {quoi:'bilan',fichiers:(await dataset(data,'ariane-bilan-v4',{save,mode})).written,alerte:null};};
+   const incoherent=data?.v1TimingExport?.snapshot?.coherent===false;
+   return {quoi:'bilan',fichiers:(await dataset(data,'ariane-bilan-v4',{save,mode})).written,alerte:incoherent?'mesure V1 incomplète (bilan de santé absent de l’instantané)':null};};
  on('dataset',()=>exporterBilan());
  /* 4.7.19 (KI-059) — EXPORTS DU PILOTE SANS MESSAGE GÉANT.
   * Journal, bilan, diagnostic et corpus passaient en UN message du service
@@ -1125,7 +1126,8 @@ on('native-discard',async()=>{
    const incoherent=lu?.meta?.v1TimingExport?.snapshot?.coherent===false;
    statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:incoherent?'Journal téléchargé, mais la mesure V1 est incomplète (bilan de santé absent de l’instantané) : relance l’export.'
      :lu?`Journal téléchargé : ${lu.events.length} événements, ${lu.records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0||incoherent);
-   return {quoi:'journal',fichiers:[f],alerte:null};}
+   /* Une mesure V1 incohérente est un MANQUE : « Tout télécharger » ne vide pas le cache. */
+   return {quoi:'journal',fichiers:[f],alerte:incoherent?'mesure V1 incomplète (bilan de santé absent de l’instantané)':null};}
  on('gcv1-diagnostic-export',()=>exporterDiagnostic());on('gcv1-corpus-export',()=>exporterCorpus());on('journal',()=>exporterJournal());
  /* 4.8.0 — TOUT POUR L'ANALYSE EN UN CLIC. Terrain du 26/09 (parties 13 et 14) :
   * bilans sans journal, les causes d'arrêt se lisaient moins bien. Les quatre
@@ -1144,7 +1146,15 @@ on('native-discard',async()=>{
   * (essais, ancien navigateur), repli sur l'ancien chemin fichier par fichier. */
  /* V2 — cache des exports : instantané des clés, et vidage manuel avec confirmation chiffrée. */
  async function instantaneCache(){const s=store();if(!s)return null;
-   try{const [events,records,clouds]=[await s.keys('events'),await s.keys('records'),await s.keys('clouds')];return Array.isArray(events)&&Array.isArray(records)&&Array.isArray(clouds)?{events,records,clouds}:null;}catch{return null;}}
+   const EC=globalThis.BananeExportCache;if(!EC?.signature)return null;
+   try{const [events,records,clouds]=[await s.keys('events'),await s.keys('records'),await s.keys('clouds')];
+     if(!(Array.isArray(events)&&Array.isArray(records)&&Array.isArray(clouds)))return null;
+     /* Signature de chaque événement/visite : un enregistrement modifié après cet instantané n'est jamais supprimé. */
+     const sig=(liste,id)=>Object.fromEntries(liste.map(o=>[id(o),EC.signature(o)]));
+     const signatures={events:sig(await s.all('events'),o=>o.eventId),records:sig(await s.all('records'),o=>o.recordId||o.id)};
+     return {events:events.filter(id=>id in signatures.events),records:records.filter(id=>id in signatures.records),clouds,signatures};}catch{return null;}}
+ const demandeVidage=(snap,extra)=>api('export-cache-clear',{ids:{events:snap.events,records:snap.records,clouds:snap.clouds},signatures:snap.signatures,...extra});
+ const phraseGardes=r=>{const n=(r?.modifies?.events?.length||0)+(r?.modifies?.records?.length||0);return n?` ${n} enregistrement(s) modifié(s) depuis l’export ont été GARDÉS (pas dans l’export).`:'';};
  async function resumeCache(snap){const s=store(),out={lots:0,coupes:0,octets:null};
    try{const lots=new Set(),coupes=new Set(),ev=new Set(snap.events),rc=new Set(snap.records);
      for(const e of await s.all('events'))if(ev.has(e.eventId)&&e.batchId)lots.add(e.batchId);
@@ -1157,15 +1167,16 @@ on('native-discard',async()=>{
    const snap=await instantaneCache();if(!snap)throw Error('Stockage illisible depuis le panneau : rien n’est vidé.');
    if(!snap.events.length&&!snap.records.length&&!snap.clouds.length){statutExport('Le cache des exports est déjà vide.');return;}
    const r=await resumeCache(snap),nb=x=>x===null?'nombre inconnu':x;
-   if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${snap.records.length} visites, ${snap.events.length} événements, ${snap.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.`))return;
-   const out=await api('export-cache-clear',{ids:snap,exportAt:null,manuel:true});
-   statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.`);});
+   const alerteLot=info?.reprenable?'\n\nATTENTION : ce lot est arrêté mais pas terminé : il peut être repris. Vider maintenant retire ses données de l’export suivant.':'';
+   if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${snap.records.length} visites, ${snap.events.length} événements, ${snap.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.${alerteLot}`))return;
+   const out=await demandeVidage(snap,{exportAt:null,manuel:true});
+   statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.${phraseGardes(out)}${out.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`);});
  const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??1024*1024*1024;
  const dateCompacte=d=>d.toISOString().replace(/[:.]/g,'-').slice(0,19);
  async function exportToutZip(Z){
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
    /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
-   const instantane=await instantaneCache(),periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
+   const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
    let zip=Z.createZip({date:maintenant}),total=0;
    const mo1=n=>(n/1048576).toFixed(1)+' Mo';
    const fermer=async final=>{if(zip.vide)return;
@@ -1198,12 +1209,12 @@ on('native-discard',async()=>{
    const nb=bilans.reduce((n,b)=>n+b.fichiers.length,0);
    /* Vidage automatique : SEULEMENT si tout est confirmé complet par le navigateur. */
    let vidage='';
-   if(SET()?.export.viderApresExport!==false){
+   if(SET()?.export.viderApresExport===true){
      const confirme=!manques.length&&volumes.length>0&&volumes.every(v=>v.confirme===true);
      if(!confirme)vidage=' Cache d’export NON vidé : l’export n’est pas confirmé complet par le navigateur.';
      else if(!instantane)vidage=' Cache d’export non vidé : stockage illisible depuis le panneau.';
-     else try{const r=await api('export-cache-clear',{ids:instantane,exportAt:maintenant.toISOString()});
-       vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.`;}
+     else try{const r=await demandeVidage(instantane,{exportAt:maintenant.toISOString(),auto:true});
+       vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.${phraseGardes(r)}${r.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`;}
      catch(e){vidage=` Cache d’export non vidé : ${e?.message||e}`;}}
    const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.${vidage}`
      :`Journal, bilan, diagnostic et corpus : ${volumes.length} archive(s) zip (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?'les':'la'} pour l’analyse.${vidage}`;
