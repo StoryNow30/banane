@@ -7,7 +7,11 @@
  * estimé : chaque chiffre vient d'un horodatage ou d'un `elapsedMs` mesuré par
  * le bridge dans la page ESV.
  *
- *   node tools/perf-lot.cjs EXPORT.json [--json SORTIE.json] [--md SORTIE.md] [--titre T] [--tous]
+ *   node tools/perf-lot.cjs EXPORT.json [--json SORTIE.json] [--md SORTIE.md] [--titre T] [--tous] [--sans-coupes] [--par-lot DOSSIER]
+ *
+ * `--sans-coupes` n'imprime pas le tableau de chronologie par coupe (V1) ; `--par-lot DOSSIER`
+ * écrit un rapport markdown et JSON par lot (lot-<identifiant>.md / .json). Les références de
+ * dictionnaire d'un bilan v4 ({"__ref":"identities:N"}) sont développées avant toute mesure.
  *
  * Un export compressé (`.json.gz`) est lu tel quel. Par défaut, seul le lot exporté (`state.batch`) est mesuré ; `--tous` garde
  * tous les événements de l'export.
@@ -129,7 +133,7 @@ function decomposer(events){
 }
 const n=v=>Number.isFinite(v)?String(Math.round(v)):'—';
 const sec=v=>!Number.isFinite(v)?'—':v<1000?Math.round(v)+' ms':(Math.round(v/100)/10).toFixed(1).replace('.',',')+' s';
-function toMarkdown(m,titre){
+function toMarkdown(m,titre,opts={}){
   const L=[`# Temps terrain — ${titre||m.source.lot||'lot'}`,'',
     `Export ${m.source.format||'?'} ${m.source.version||''}, partie ${m.source.partie??'?'}, état ${m.source.etat||'?'} ; ${m.source.debut} → ${m.source.fin}${m.source.lotSeul?' (lot exporté seul)':' (tous les événements de l’export)'}.`,
     `${m.cuts.distincts} cuts distincts, ${m.source.evenements} événements. Durée ${n(m.dureeMin.totale)} min, dont ${n(m.dureeMin.silences)} min de silences (> 60 s) ; cadence ${n(m.cadence.cutsParHeureActive)} cuts/h hors silences.`,'',
@@ -152,15 +156,22 @@ function toMarkdown(m,titre){
     for(const l of m.lots)L.push(`| ${l.debut} | ${l.partie??'?'} | ${l.depart??'?'} | ${l.fin??'—'} | ${l.cuts} | ${n(l.dureeMin)} min${l.silencesMin>=1?` (${n(l.silencesMin)} de silences)`:''} | ${sec(l.cycleMs.median)} / ${sec(l.cycleMs.p90)} | ${sec(l.captureMs.median)} / ${sec(l.captureMs.p90)} / ${sec(l.captureMs.max)} | ${l.erreurs} |`);}
   const err=Object.entries(m.erreurs);if(err.length){L.push('','Erreurs de commande :','');for(const [a,l] of err)L.push(`- ${a} : ${l.length} (${l.slice(0,3).map(x=>`cut ${x.cut} : ${x.message}`).join(' ; ')}${l.length>3?' ; …':''})`);}
   if(m.silences.length){L.push('',`Silences (> 60 s) : ${m.silences.length}`,'');for(const s of m.silences.slice(0,12))L.push(`- ${s.de}, après « ${s.apres} » (cut ${s.cut??'?'}) : ${s.s} s`);if(m.silences.length>12)L.push('- …');}
-  return L.join('\n')+'\n'+V1.toMarkdown(m.v1||{available:false,reason:'Mesures V1 non mesurées.'});
+  return L.join('\n')+'\n'+V1.toMarkdown(m.v1||{available:false,reason:'Mesures V1 non mesurées.'},opts);
 }
 function run(argv=process.argv.slice(2)){
-  const file=argv.find((a,i)=>!a.startsWith('--')&&!['--json','--md','--titre'].includes(argv[i-1]));if(!file)throw Error('Usage : EXPORT.json [--json SORTIE.json] [--md SORTIE.md]');
+  const file=argv.find((a,i)=>!a.startsWith('--')&&!['--json','--md','--titre','--par-lot'].includes(argv[i-1]));if(!file)throw Error('Usage : EXPORT.json [--json SORTIE.json] [--md SORTIE.md]');
   const opt=k=>{const i=argv.indexOf(k);return i>=0?argv[i+1]:null;};
   const brut=fs.readFileSync(file),texte=(file.endsWith('.gz')?zlib.gunzipSync(brut):brut).toString('utf8');
-  const m=measure(JSON.parse(texte),{tous:argv.includes('--tous')});
+  const data=JSON.parse(texte);
+  if(data.dictionaries&&Array.isArray(data.events))data.events=V1.resolveRefs(data.events,data.dictionaries).value;
+  const m=measure(data,{tous:argv.includes('--tous')});
   if(opt('--json'))fs.writeFileSync(opt('--json'),JSON.stringify(m,null,1)+'\n');
-  const md=toMarkdown(m,opt('--titre'));if(opt('--md'))fs.writeFileSync(opt('--md'),md);else process.stdout.write(md);
+  if(opt('--par-lot')&&m.v1?.available){const dir=opt('--par-lot');fs.mkdirSync(dir,{recursive:true});
+    for(const l of m.v1.lots){const id=String(l.batchId).slice(0,8);
+      fs.writeFileSync(`${dir}/lot-${id}.md`,V1.toMarkdown(m.v1,{coupes:true,batchId:l.batchId}));
+      fs.writeFileSync(`${dir}/lot-${id}.json`,JSON.stringify({lot:{sessionId:l.sessionId,batchId:l.batchId,coverage:l.coverage,totalMs:l.totalMs,executions:l.executions,attribution:l.attribution},
+        coupes:m.v1.coupes.filter(r=>r.batchId===l.batchId)},null,1)+'\n');}}
+  const md=toMarkdown(m,opt('--titre'),{coupes:!argv.includes('--sans-coupes')});if(opt('--md'))fs.writeFileSync(opt('--md'),md);else process.stdout.write(md);
   return m;
 }
 if(require.main===module)try{run();}catch(e){console.error(e.message);process.exitCode=1;}
