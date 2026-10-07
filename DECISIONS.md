@@ -1,5 +1,26 @@
 # Décisions techniques
 
+## D-079 - Séance terrain test 2 (partie 7) : résultats ; D-073 signé ; exports allégés ; données de la partie 7 pour l'ESV local
+
+**Réponse de Mic du 7 octobre 2026** : « je valide tout », aux propositions de l'orchestrateur Claude Code.
+
+1. **Critère D-073 « chronologie complète et expliquée » : signé.** Pour chaque coupe, chronologie réelle avec les chevauchements,
+   aucun temps compté deux fois, durée non calculable = « non mesuré » (jamais zéro), aucune commande ESV ajoutée pour séquentialiser,
+   chaque seconde attribuée à une étape ou marquée « non expliquée ». La correction (2) de V1 (branche `claude/49-v1-corrections-proposees`,
+   `86dc727`) devient **adoptable après relecture indépendante** ; elle n'est pas encore adoptée. V1 reste non accepté (plusieurs lots,
+   couverture 100 %, décisions identiques au banc, attestation).
+2. **Exports allégés (V2) : lancement autorisé.** Étape A (une seule copie des nuages, événements et diagnostic une fois, sans perte)
+   et « Sauvegarder tout » en un clic (un zip). Mode complet : intensité et classe conservées ; mode léger : retirées. Le mode léger
+   avec arrondi des points reste conditionné à un rejeu comparé complet/léger. Étude : mesures privées hors dépôt.
+3. **Données de la partie 7 pour l'ESV local : lecture seule par l'extension Claude, autorisée**, à lancer après la fin du lot de la
+   partie 10 et la remise de ses exports, jamais pendant une mesure. Pas d'écriture ni de validation, pas de lecture de jeton ; données privées, hors dépôts.
+4. **Séance terrain test 2, partie 7 (projet 260903_122817_E_WIMSV_1), poste perso, Chrome 154, 4.9.0.2** : 156 coupes invalides visées,
+   121 validées, 35 mises de côté (écartement hors contrat, placements concurrents) ; observateur présent et sans perte ; 120 écritures de
+   validation observées avec statut 204 (aucun échec, aucune nouvelle tentative), la 121e validée en place sans écriture dans l'export ;
+   V1 cohérent (0 perdue, 0 en attente) ; cycle médian 7,9 s (indicatif : lecture de l'extension à 09:35 pendant les premières minutes, sans effet visible).
+   Le lot suivant (partie 10) est lancé sans l'extension. Un script chargé dynamiquement (chemin aléatoire) est vu sur la page ; nature non établie, contenu non lu.
+   Aucun merge, tag, publication, activation de production ou d'apprentissage, aucun changement de seuil ou de porte.
+
 ## D-078 - Décisions du 6 octobre validées : V1 adopté pour test, U1 et U2 acceptés, lecteur hors gel (test), séance terrain, V4
 
 **Réponse de Mic du 6 octobre 2026** : « Je valide les décisions proposées, tu peux continuer le pilotage », aux cinq
