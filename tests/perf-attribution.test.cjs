@@ -29,6 +29,13 @@ test('un span annexe réduit le trou ; sinon le trou reste déclaré',()=>{
  const c=attr(span(journal(),'command:state',1e9,1e9+5));ok(c);assert.equal(c.unexplainedMs,50,'span hors cycle : sans effet');
  const d=attr(span(journal(),'command:state',1000,Infinity));assert.equal(d.unexplainedMs,50,'span invalide : ignoré');
 });
+test('R1 : un span enveloppe (facade-total, science-public-total, observe-lot, command-lot) n’explique rien ; commande et analyse, si',()=>{
+ for(const label of ['facade-total','science-public-total','observe-lot','command-lot','étiquette-inconnue','command']){
+  const a=attr(span(journal(),label,0,1600));ok(a);assert.equal(a.unexplainedMs,50,label+' : le trou reste déclaré');assert.equal(a.ownedMs.annexes,0,label);assert.ok(!a.annexLabels.includes(label),label);}
+ // enveloppe couvrant tout le cycle + un vrai span de commande : seul le span de commande compte
+ const j=span(span(journal(),'facade-total',0,1600),'command:state',1000,1030),b=attr(j);ok(b);assert.deepEqual([b.unexplainedMs,b.ownedMs.annexes],[20,30]);
+ for(const label of ['analysis-envelope','v46-scientific','v46-pair-complete']){const c=attr(span(journal(),label,1000,1050));ok(c);assert.deepEqual([c.unexplainedMs,c.ownedMs.annexes],[0,50],label);}
+});
 test('étapes qui se chevauchent : temps commun compté une fois',()=>{
  const j=journal();j.events.find(e=>e.label==='after-state-read').fromMs=900;const a=attr(j);ok(a);
  assert.deepEqual([a.unexplainedMs,a.phaseOverlapMs,a.ownedMs.pose,a.ownedMs['capture-apres-pose']],[0,100,650,100]);

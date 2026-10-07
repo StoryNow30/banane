@@ -121,6 +121,11 @@ function chronologyOf(open,x){
  * navigation suivante n'est pas du temps du cycle : publié à part. Durée du
  * cycle inconnue, ordre impossible ou contexte invalide : « non mesuré ». */
 const STAGE_IDS=[...IDS,'annexes'];
+/* Étape « annexes » : seulement les spans de commande ou d'analyse (R1 de la 2e revue). Les spans ENVELOPPES (`facade-total`,
+ * `science-public-total`, `observe-lot`, `command-lot`) couvrent d'autres étapes ou tout le cycle : les accepter ramènerait le
+ * « non expliqué » à zéro sans rien expliquer. `after-state-read` reste accepté (déjà prévu quand il n'est pas la phase de lecture). */
+const ANNEX_LABELS=new Set(['analysis-envelope','after-state-read',...V46_CALLS]);
+const isAnnexLabel=l=>typeof l==='string'&&(l.startsWith('command:')||ANNEX_LABELS.has(l));
 function attributionOf(open,phases,spans,chrono,flags){
  const outcome=flags.accepted?'validée':flags.inPlace&&!flags.pose&&!flags.accepted?'sur place':flags.deferred&&!flags.pose?'reportée sans pose':flags.manual?'reprise manuelle':'autre';
  const base={outcome,cycleMs:null,attributedMs:null,unexplainedMs:null};
@@ -129,7 +134,7 @@ function attributionOf(open,phases,spans,chrono,flags){
  if(!finite(nav)||!finite(next)||next<nav)return {...base,status:'non mesuré',reason:!finite(nav)?'navigation-absente':!finite(next)?'navigation-suivante-absente':'navigation-suivante-avant-navigation'};
  const lo=nav,hi=next,clip=([x,y])=>[Math.max(x,lo),Math.min(y,hi)];
  const raw=phases.map(p=>p.status==='measured'&&finite(p.startMs)&&finite(p.endMs)?[p.startMs,p.endMs]:null);
- const annex=spans.filter(s=>validSpan(s)&&!(s.label==='after-state-read'&&raw[4])).map(s=>({label:s.label,iv:[s.fromMs,s.toMs]}));
+ const annex=spans.filter(s=>validSpan(s)&&isAnnexLabel(s.label)&&!(s.label==='after-state-read'&&raw[4])).map(s=>({label:s.label,iv:[s.fromMs,s.toMs]}));
  const stages=[...raw,...annex.map(a=>a.iv)],owner=[...raw.map((_,i)=>i),...annex.map(()=>7)];
  const clipped=stages.map(iv=>iv&&clip(iv)).map(iv=>iv&&iv[1]>iv[0]?iv:null);
  const cuts=[...new Set([lo,hi,...clipped.flatMap(iv=>iv||[])])].sort((a,b)=>a-b),owned=new Array(8).fill(0),gaps=[];
