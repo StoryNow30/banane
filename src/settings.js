@@ -173,6 +173,13 @@
      * déclarée, donc un segment manquant à la fusion est signalé. */
     releaseAfterExport: true,
     compact: true,
+    /* V2 (D-079) : mode d'export. « complet » (seul mode de cette version) garde
+     * tout : intensité, classe, pointSources, probes. Un autre mode s'ajoutera
+     * dans src/native-export.js (MODES) sans toucher au flux d'écriture. */
+    mode: 'complet',
+    /* V2 : volume maximal (compressé, pire cas) d'une archive « Tout télécharger ».
+     * Au-delà, une archive suivante est ouverte. Le zip simple s'arrête à 4 Gio. */
+    zipMaxBytes: 1024 * Mo,
     /* Cadence de contrôle du seuil par le panneau, pendant la collecte. */
     advicePollMs: 5000,
   });

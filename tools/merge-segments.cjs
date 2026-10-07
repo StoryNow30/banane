@@ -87,7 +87,10 @@ function mergeFiles(files, options = {}) {
     if (score >= baseScore) {
       baseScore = score;
       const { clouds: _c, segment: _s, records: _r, events: _e, segmentRepair: _k, ...rest } = full;
-      base = rest;
+      /* V2 : un segment à en-tête mince (`segment.headerIn`) n'a plus les parties
+       * écrites une seule fois (state, closureSummary, diagnostic…) ; elles restent
+       * celles du premier segment du même export, ses autres clés les remplacent. */
+      base = seg.headerIn && base ? { ...base, ...rest } : rest;
     }
 
     trace.push({ file: path.basename(file), stamp: seg.stamp ?? null, index: seg.index ?? null, objets: added, doublons: dup, records: (full.records || []).length, events: (full.events || []).length, ...(full.segmentRepair ? { repair: full.segmentRepair.action } : {}) });

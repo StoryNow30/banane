@@ -710,8 +710,15 @@
  // 50,3 Mo pour un budget de 48. On vise donc un fichier réellement sous budget.
  const SEGMENT_RESERVE_BYTES=SET()?.export.segmentReserveBytes??4*1024*1024;
  const compactor=()=>globalThis.BananeNativeExport||null;
- async function writeSegments(data,prefix,{segmentBytes=EXPORT_SEGMENT_BYTES,compact=SET()?.export.compact!==false,label='',startIndex=0}={}){
-   const {cloudIds,...metadata}=data,X=compact?compactor():null;
+ /* Ariane 4.9 (V2, D-079) : `mode` (défaut : réglage, « complet ») est rendu par
+  * BananeNativeExport.exportMode, qui refuse un nom inconnu. `save` remplace
+  * saveBlob (« Tout télécharger » y met les fichiers dans UN zip). Seul le
+  * premier segment d'un export porte events, records, state et diagnostic. */
+ const MODE_EXPORT=()=>SET()?.export.mode??'complet';
+ const modeDe=nom=>globalThis.BananeNativeExport?.exportMode?globalThis.BananeNativeExport.exportMode(nom??MODE_EXPORT()):{nom:nom??MODE_EXPORT(),nuage:c=>c};
+ async function writeSegments(data,prefix,{segmentBytes=EXPORT_SEGMENT_BYTES,compact=SET()?.export.compact!==false,label='',startIndex=0,save=saveBlob,mode}={}){
+   const {cloudIds,...metadata}=data,X=compact?compactor():null,M=modeDe(mode),Nx=globalThis.BananeNativeExport||null;
+   metadata.exportMode=M.nom;
    const stamp=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
    const exportTrace={cloudObjects:0,chunks:0,captureSummaries:0,pointsExported:0};
    /* `acked` : nuages des segments dont le fichier est confirmé (purgeables) ;
@@ -721,14 +728,16 @@
    // Taille réelle du fichier en cours : en-tête REPLIÉ + nuages + dictionnaires.
    // Mesurer les métadonnées non repliées serait très pessimiste (50 Mo contre
    // 6 Mo repliés sur une session de 58 visites) et découperait à l'infini.
-   const foldMeta=()=>JSON.stringify(X?X.foldRefs(metadata,interner):metadata).slice(0,-1);
+   /* Premier segment : tout l'en-tête. Suivants : en-tête mince (V2). */
+   let mince=false;
+   const foldMeta=()=>{const m=mince&&Nx?.enteteMince?Nx.enteteMince(metadata):metadata;return JSON.stringify(X?X.foldRefs(m,interner):m).slice(0,-1);};
    const fileBytes=()=>bytes+(interner?interner.bytes:0);
    // L'en-tête est sérialisé à la FERMETURE du segment : sinon `exportTrace`,
      // calculé au fil de la boucle, n'atterrissait jamais dans le fichier.
-     const openSegment=()=>{interner=X?X.createInterner():null;head=foldMeta();parts=[];bytes=head.length;inSegment=0;idsSegment=[];};
+     const openSegment=()=>{mince=segment>0;interner=X?X.createInterner():null;head=foldMeta();parts=[];bytes=head.length;inSegment=0;idsSegment=[];};
    /* 4.8.0 : un export sans aucun nuage (lot sans LiDAR) s'écrivait nulle part,
     * sans le dire ; hors vidage automatique, il donne un fichier de métadonnées. */
-   const closeSegment=async(forcer=false)=>{if(!inSegment&&!(forcer&&!segment))return;segment++;
+   const closeSegment=async(forcer=false)=>{if(!inSegment&&!(forcer&&!segment))return;mince=segment>0;segment++;
      // Terrain 15/09 : la trace n'était posée qu'après la boucle, donc seul le
      // DERNIER segment la portait. On la fige à chaque fermeture, avec l'état
      // cumulé à cet instant et ce que ce segment contient en propre.
@@ -737,12 +746,12 @@
        segmentIndex:startIndex+segment,segmentObjects:inSegment,
        cumulative:true,allRequestedObjectsPresent:exportTrace.cloudObjects===cloudIds.length};
      head=foldMeta();
-     const info=`,"segment":${JSON.stringify({index:startIndex+segment,stamp,objects:inSegment,format:'banane-native-export-segment-v1',...(X?{selfContained:true}:{})})}`;
+     const info=`,"segment":${JSON.stringify({index:startIndex+segment,stamp,objects:inSegment,format:'banane-native-export-segment-v1',...(X?{selfContained:true}:{}),...(mince?{headerIn:startIndex+1}:{})})}`;
      const dict=X?`,"dictionaries":${JSON.stringify(interner.dictionaries)}`:'';
      const fmt=X?`,"format":"${X.FORMAT}","compactedFrom":"${metadata.format||'banane-native-session-v2'}"`:'';
      const blob=new Blob([head,info,fmt,',"clouds":[',...parts,']',dict,'}'],{type:'application/json'});
      const name=`${prefix}-${stamp}${label}-seg${String(startIndex+segment).padStart(2,'0')}.json`;
-     parts=[];const f=await saveBlob(blob,name);written.push({name,objects:inSegment,approxBytes:bytes,confirme:f.confirme,etat:f.etat});
+     parts=[];const f=await save(blob,name);written.push({name,objects:inSegment,approxBytes:bytes,confirme:f.confirme,etat:f.etat});
      (f.confirme?acked:nonConfirmes).push(...idsSegment);};
    openSegment();
    for(let i=0;i<cloudIds.length;i++){
@@ -750,6 +759,7 @@
        note(`Préparation du fichier : ${i+1} / ${cloudIds.length} objets LiDAR${segment?` · ${segment} segment(s) écrit(s)`:''}…`);
      let cloud=await lireNuage(cloudIds[i]);
      if(!cloud)throw Error('Un LiDAR manque dans le stockage. Les autres données restent conservées.');
+     cloud=M.nuage(cloud);
      if(cloud.format==='banane-native-lidar-chunk-v1'){const points=cloud.pointsSceneRelative?.length||0;
        cloud.storageTrace={...(cloud.storageTrace||{}),pointsSaved:points,pointsExported:points};exportTrace.chunks++;exportTrace.pointsExported+=points;}
      if(cloud.format==='banane-native-lidar-capture-v2'){cloud.trace={...(cloud.trace||{}),pointsExported:cloud.trace?.pointsSaved||0};
@@ -1024,8 +1034,20 @@ on('native-discard',async()=>{
  on('manual-completion',()=>api('manual-completion'));
  /* 4.8.0 (audit qualité, D03) : chaque export d'Orbite rend
   * { quoi, fichiers, alerte } ; « Tout télécharger » en fait le bilan. */
- const exporterBilan=async()=>({quoi:'bilan',fichiers:(await dataset(await bilanPilote(),'ariane-bilan-v4')).written,alerte:null});
- on('dataset',exporterBilan);
+ /* V2 (D-079) : dans « Tout télécharger » (zip), les nuages sont écrits UNE fois,
+  * dans le corpus ; le bilan n'en recopie aucun mais garde `cloudsInCorpus` (les
+  * captureId, à retrouver dans le corpus du même zip). Bilan seul (bouton
+  * « Télécharger le bilan et les LiDAR ») : il garde ses nuages, rien ne manque. */
+ function sansNuagesDuCorpus(data,idsCorpus){
+   const dans=new Set(idsCorpus),tous=data.cloudIds||[];
+   return {...data,cloudIds:tous.filter(id=>!dans.has(id)),
+     cloudsInCorpus:{file:'ariane-gcv1-corpus-*.json',captureIds:tous.filter(id=>dans.has(id)),
+       note:'Ces nuages LiDAR sont dans le corpus GCV1 du même export (même captureId) ; ils ne sont pas recopiés ici.'}};
+ }
+ const exporterBilan=async({save=saveBlob,mode,horsCorpus=null}={})=>{
+   let data=await bilanPilote();if(horsCorpus)data=sansNuagesDuCorpus(data,horsCorpus);
+   return {quoi:'bilan',fichiers:(await dataset(data,'ariane-bilan-v4',{save,mode})).written,alerte:null};};
+ on('dataset',()=>exporterBilan());
  /* 4.7.19 (KI-059) — EXPORTS DU PILOTE SANS MESSAGE GÉANT.
   * Journal, bilan, diagnostic et corpus passaient en UN message du service
   * worker, limité à 64 Mio : un long lot (65 Ko de journal par cut) l'aurait
@@ -1069,42 +1091,96 @@ on('native-discard',async()=>{
  async function diagnosticPilote(){const X=globalThis.BananeGCV1Export,events=X?await lireStore('events'):null;
    if(!events)return api('gcv1-diagnostic-export');
    return X.buildDiagnostic({...await api('gcv1-export-meta'),events});}
- async function planCorpusPilote(){const X=globalThis.BananeGCV1Export,s=store();
+ async function planCorpusPilote(diagnostic=null){const X=globalThis.BananeGCV1Export,s=store();
    if(!X||!s)return api('gcv1-corpus-export-plan');
    let presents;try{presents=new Set(await s.keys('clouds'));}catch{return api('gcv1-corpus-export-plan');}
-   return X.buildCorpusPlan({diagnostic:await diagnosticPilote(),getCloud:async id=>presents.has(id)?{}:null});}
- async function exporterDiagnostic(){
-   const diagnostic=await diagnosticPilote();
-   const f=await saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`ariane-gcv1-diagnostic-${Date.now()}.json`);
+   return X.buildCorpusPlan({diagnostic:diagnostic||await diagnosticPilote(),getCloud:async id=>presents.has(id)?{}:null});}
+ async function exporterDiagnostic({save=saveBlob,diagnostic=null,nom=`ariane-gcv1-diagnostic-${Date.now()}.json`}={}){
+   diagnostic=diagnostic||await diagnosticPilote();
+   const f=await save(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),nom);
    statutExport(nonEnregistres([f]).length?`Diagnostic GCV1 ${direFichiers([f])}.`:`Diagnostic GCV1 téléchargé : ${diagnostic.observationCount} observation(s).`,nonEnregistres([f]).length>0);
-   return {quoi:'diagnostic',fichiers:[f],alerte:null};
+   return {quoi:'diagnostic',fichiers:[f],alerte:null,nom};
  }
- async function exporterCorpus(){
-   const plan=await planCorpusPilote();
-   const fichiers=plan.cloudIds.length?(await dataset(plan,'ariane-gcv1-corpus',{compact:false})).written
-     :[await saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`ariane-gcv1-corpus-${Date.now()}.json`)];
+ /* V2 : `diagnosticRef` remplace le diagnostic recopié dans le corpus quand le
+  * diagnostic est déjà dans le même zip (une seule copie). `ids` rend les nuages
+  * réellement écrits, pour que le bilan n'omette que ceux-là. */
+ async function exporterCorpus({save=saveBlob,plan=null,mode,diagnosticRef=null}={}){
+   plan=plan||await planCorpusPilote();
+   if(diagnosticRef){const {diagnostic,...reste}=plan;plan={...reste,diagnosticRef:{...diagnosticRef,observationCount:diagnostic?.observationCount??null}};}
+   let ids=[];
+   const fichiers=plan.cloudIds.length?await(async()=>{const r=await dataset(plan,'ariane-gcv1-corpus',{compact:false,save,mode});
+       if(r.exportTrace.cloudObjects===plan.cloudIds.length&&!nonEnregistres(r.written).length)ids=plan.cloudIds.slice();return r.written;})()
+     :[await save(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`ariane-gcv1-corpus-${Date.now()}.json`)];
    const alerte=plan.missingCaptureIds.length?`${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) absente(s) du store`:null;
    if(nonEnregistres(fichiers).length)statutExport(`Corpus GCV1 ${direFichiers(fichiers)}.`,true);
    else if(alerte)statutExport(`Corpus GCV1 téléchargé ; ${alerte}.`,true);
    else statutExport(`Corpus GCV1 téléchargé : ${plan.cloudIds.length} capture(s) LiDAR.`);
-   return {quoi:'corpus',fichiers,alerte};
+   return {quoi:'corpus',fichiers,alerte,ids};
  }
- async function exporterJournal(){const name=`ariane-journal-v4-${Date.now()}.json`;
+ async function exporterJournal({save=saveBlob}={}){const name=`ariane-journal-v4-${Date.now()}.json`;
    const lu=await lirePilote('journal-meta');
-   const f=lu?await saveBlob(blobJson(lu.meta,{events:lu.events,records:lu.records}),name):await saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
+   const f=lu?await save(blobJson(lu.meta,{events:lu.events,records:lu.records}),name):await save(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
    const incoherent=lu?.meta?.v1TimingExport?.snapshot?.coherent===false;
    statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:incoherent?'Journal téléchargé, mais la mesure V1 est incomplète (bilan de santé absent de l’instantané) : relance l’export.'
      :lu?`Journal téléchargé : ${lu.events.length} événements, ${lu.records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0||incoherent);
    return {quoi:'journal',fichiers:[f],alerte:null};}
- on('gcv1-diagnostic-export',exporterDiagnostic);on('gcv1-corpus-export',exporterCorpus);on('journal',exporterJournal);
+ on('gcv1-diagnostic-export',()=>exporterDiagnostic());on('gcv1-corpus-export',()=>exporterCorpus());on('journal',()=>exporterJournal());
  /* 4.8.0 — TOUT POUR L'ANALYSE EN UN CLIC. Terrain du 26/09 (parties 13 et 14) :
   * bilans sans journal, les causes d'arrêt se lisaient moins bien. Les quatre
   * exports du lot, dans l'ordre, chacun avec son propre message. */
  /* 4.8.0 (audit qualité, D03) : un export qui échoue n'arrête pas les
   * autres, et le message final dit ce qui manque (fichier non enregistré,
   * capture absente) au lieu d'un succès global. Il reste affiché. */
- on('export-tout',async()=>{const bilans=[];
-   for(const [quoi,f] of [['journal',exporterJournal],['bilan',exporterBilan],['diagnostic',exporterDiagnostic],['corpus',exporterCorpus]]){
+ /* V2 (D-079) — UN CLIC, UN ZIP. Les quatre exports restent des fichiers JSON
+  * distincts, mais ils sont rangés dans une seule archive (src/zip-writer.js,
+  * écrite à la main, en flux : aucune dépendance, aucune permission de plus).
+  * Les nuages LiDAR n'y sont qu'une fois (le corpus) ; le diagnostic non plus
+  * n'est pas recopié dans le corpus. Si le diagnostic ou le corpus échoue, le
+  * bilan garde ses nuages et le corpus garde son diagnostic : rien ne manque
+  * parce qu'un autre fichier a échoué. Au-delà de `zipMaxBytes`, l'archive est
+  * fermée et une suivante est ouverte (« -partie02 »). Sans l'écrivain zip
+  * (essais, ancien navigateur), repli sur l'ancien chemin fichier par fichier. */
+ const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??1024*1024*1024;
+ const dateCompacte=d=>d.toISOString().replace(/[:.]/g,'-').slice(0,19);
+ async function exportToutZip(Z){
+   const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
+   let zip=Z.createZip({date:maintenant}),total=0;
+   const mo1=n=>(n/1048576).toFixed(1)+' Mo';
+   const fermer=async final=>{if(zip.vide)return;
+     const liste=zip.entrees,mode=modeDe().nom;
+     await zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${maintenant.toISOString()}\n`+
+       `Archive ${final&&!volumes.length?'unique':'n° '+(volumes.length+1)} : ${liste.length} fichier(s) JSON, méthode ${zip.methode}.\n`+
+       liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
+       'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'],{type:'text/plain'}));
+     const blob=zip.terminer(),nom=final&&!volumes.length?`${base}.zip`:`${base}-partie${String(volumes.length+1).padStart(2,'0')}.zip`;
+     const f=await saveBlob(blob,nom);volumes.push({...f,entrees:liste.length,octets:blob.size});
+     zip=Z.createZip({date:maintenant});};
+   const save=async(blob,name)=>{
+     if(!zip.vide&&zip.octets+blob.size+4096>ZIP_MAX_BYTES())await fermer(false);
+     const e=await zip.ajouter(name,blob);total+=e.taille;
+     return {name,confirme:true,etat:'complete',dansZip:true,taille:e.taille,tailleCompressee:e.tailleCompressee};};
+   const essai=async(quoi,f)=>{try{const b=await f();bilans.push(b);return b;}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});return null;}};
+   await essai('journal',()=>exporterJournal({save}));
+   /* Diagnostic calculé une fois : fichier, plan du corpus. */
+   let diagnostic=null,plan=null;
+   try{diagnostic=await diagnosticPilote();plan=await planCorpusPilote(diagnostic);}
+   catch(e){bilans.push({quoi:'corpus',fichiers:[],alerte:null,erreur:e?.message||String(e)});}
+   const nomDiag=`ariane-gcv1-diagnostic-${Date.now()}.json`;
+   const d=diagnostic?await essai('diagnostic',()=>exporterDiagnostic({save,diagnostic,nom:nomDiag})):null;
+   const c=plan?await essai('corpus',()=>exporterCorpus({save,plan,...(d?{diagnosticRef:{file:nomDiag}}:{})})):null;
+   await essai('bilan',()=>exporterBilan({save,horsCorpus:c&&c.ids.length?c.ids:null}));
+   try{await fermer(true);}catch(e){bilans.push({quoi:'zip',fichiers:[],alerte:null,erreur:e?.message||String(e)});}
+   const manques=bilans.flatMap(b=>[...(b.erreur?[`${b.quoi} : ${b.erreur}`]:[]),...nonEnregistres(b.fichiers).map(f=>`${b.quoi} non enregistré (${f.etat})`),...(b.alerte?[`${b.quoi} : ${b.alerte}`]:[])]);
+   const zipsKo=nonEnregistres(volumes),zipsOk=volumes.filter(f=>!nonEnregistres([f]).length);
+   for(const f of zipsKo)manques.push(`${f.name} non enregistré (${f.etat})`);
+   const nb=bilans.reduce((n,b)=>n+b.fichiers.length,0);
+   const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.`
+     :`Journal, bilan, diagnostic et corpus : ${volumes.length} archive(s) zip (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?'les':'la'} pour l’analyse.`;
+   statutExport(texte,manques.length>0);
+ }
+ on('export-tout',async()=>{const Z=globalThis.BananeZip;if(Z?.createZip&&typeof Blob==='function')return exportToutZip(Z);
+   const bilans=[];
+   for(const [quoi,f] of [['journal',()=>exporterJournal()],['bilan',()=>exporterBilan()],['diagnostic',()=>exporterDiagnostic()],['corpus',()=>exporterCorpus()]]){
      try{bilans.push(await f());}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});}}
    const fichiers=bilans.flatMap(b=>b.fichiers),manques=bilans.flatMap(b=>[
      ...(b.erreur?[`${b.quoi} : ${b.erreur}`]:[]),...nonEnregistres(b.fichiers).map(f=>`${b.quoi} non enregistré (${f.etat})`),...(b.alerte?[`${b.quoi} : ${b.alerte}`]:[])]);
