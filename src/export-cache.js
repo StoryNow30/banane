@@ -22,7 +22,7 @@
   const COLLECTIONS_LIBRES = [undefined, null, 'IDLE', 'AFTER_CAPTURED'];
 
   /* Raison du refus (texte pour l'opérateur), ou null si le vidage est permis.
-   * `c` : { state, busy, task, nativeActive, manualActive, timing }. */
+   * `c` : { state, busy, task, nativeActive, manualActive, timing, graceObservations }. */
   function refus(c, options) {
     const s = c.state || {}, b = s.batch;
     /* Vidage AUTOMATIQUE : un lot « STOPPED » n'est pas fini pour autant (arrêté à la
@@ -38,6 +38,10 @@
     const t = c.timing;
     if (t && t.batch && !t.batch.closed) return 'la clôture de la mesure V1 du lot n’est pas terminée';
     if (t && t.pending && t.pending.size > 0) return 'des écritures de mesure sont encore en cours';
+    /* 4.9.0.3 : grâce de réception de l'observateur (5 s après la fin du lot). Vider pendant ce temps laisserait la
+     * dernière écriture arriver APRÈS l'instantané : seule dans le cache, sans son lot, au prochain export. */
+    if (c.graceObservations === 'en-cours') return 'les dernières observations du lot qui vient de finir peuvent encore arriver (5 s au plus) : réessaie dans quelques secondes';
+    if (c.graceObservations === 'depuis-instantane') return 'des observations du lot qui venait de finir ont pu arriver après le début de l’export (5 s au plus après sa fin) : elles ne sont pas dans cet export ; refais l’export avant de vider';
     return null;
   }
 

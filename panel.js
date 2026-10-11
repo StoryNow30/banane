@@ -1147,13 +1147,14 @@ on('native-discard',async()=>{
  /* V2 — cache des exports : instantané des clés, et vidage manuel avec confirmation chiffrée. */
  async function instantaneCache(){const s=store();if(!s)return null;
    const EC=globalThis.BananeExportCache;if(!EC?.signature)return null;
+   const at=Date.now();   // instant de l'instantané : le service worker refuse le vidage si une grâce d'observation a couru depuis
    try{const [events,records,clouds]=[await s.keys('events'),await s.keys('records'),await s.keys('clouds')];
      if(!(Array.isArray(events)&&Array.isArray(records)&&Array.isArray(clouds)))return null;
      /* Signature de chaque événement/visite : un enregistrement modifié après cet instantané n'est jamais supprimé. */
      const sig=(liste,id)=>Object.fromEntries(liste.map(o=>[id(o),EC.signature(o)]));
      const signatures={events:sig(await s.all('events'),o=>o.eventId),records:sig(await s.all('records'),o=>o.recordId||o.id)};
-     return {events:events.filter(id=>id in signatures.events),records:records.filter(id=>id in signatures.records),clouds,signatures};}catch{return null;}}
- const demandeVidage=(snap,extra)=>api('export-cache-clear',{ids:{events:snap.events,records:snap.records,clouds:snap.clouds},signatures:snap.signatures,...extra});
+     return {events:events.filter(id=>id in signatures.events),records:records.filter(id=>id in signatures.records),clouds,signatures,at};}catch{return null;}}
+ const demandeVidage=(snap,extra)=>api('export-cache-clear',{ids:{events:snap.events,records:snap.records,clouds:snap.clouds},signatures:snap.signatures,instantaneAt:snap.at,...extra});
  const phraseGardes=r=>{const n=(r?.modifies?.events?.length||0)+(r?.modifies?.records?.length||0);return n?` ${n} enregistrement(s) modifié(s) depuis l’export ont été GARDÉS (pas dans l’export).`:'';};
  async function resumeCache(snap){const s=store(),out={lots:0,coupes:0,octets:null};
    try{const lots=new Set(),coupes=new Set(),ev=new Set(snap.events),rc=new Set(snap.records);

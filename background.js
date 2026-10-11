@@ -115,13 +115,49 @@ const obsState={lost:0,perSeance:new Map()};
  * la tient 250 ms avant de l'envoyer (mesuré : 158 à 343 ms entre la fin de l'écriture et sa réception ; lots 7 à 10, 4 sur 4 perdues).
  * Pendant cette courte fenêtre, et pour ce seul lot, le rangement accepte encore ce que l'observateur avait DÉJÀ vu : rien n'est
  * demandé à ESV, la séance n'est pas rouverte (`launcher-status` ne l'annonce pas). Date absente, illisible ou future : jamais devinée. */
-const OBS_GRACE_MS=5000;
+const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
+/* 4.9.0.3 (test 3) — MÊME GRÂCE après l'arrêt MANUEL (« Arrêter ») et après la fin naturelle du lot (COMPLETED, ou
+ * FINISHED_WITH_UNCONFIRMED_ACTIONS : même fin, nommée par `closingState` selon la confirmation serveur). `src/engine.js`
+ * (épinglé) ne date ni l'un ni l'autre : l'instant est relevé ICI, quand le service worker voit la fin (clic « Arrêter »
+ * sur un lot non clos ; sortie de la boucle du moteur, jalon `batch-state`). Clé : l'identifiant du lot, aucun autre lot
+ * n'en hérite. Le contexte de mesure du lot est gardé avec : si un NOUVEAU lot démarre pendant la grâce, ce que la page a
+ * vu AVANT son début reste à l'ancien ; ce qu'elle a vu après, ou sans date, va au nouveau (jamais l'inverse). Le vidage
+ * du cache des exports est refusé tant qu'une grâce court, ou si une grâce a couru depuis l'instantané de l'export
+ * (sinon une écriture arrivée après l'instantané resterait seule, sans son lot). Rien de demandé à ESV. */
+const obsFins=new Map();
+function obsContexte(){try{const v=timing?.context?.()||timing?.batchContext?.();return v?{sessionId:v.sessionId??null,batchId:v.batchId??null,visitId:v.visitId??null,clockId:timing?.clockId??null}:{};}catch{return {};}}
+function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
+ const ctx=c.batchId===b.id?c:prev?.ctx||{sessionId:engine?.s?.sessionId??null,batchId:b.id,visitId:null,clockId:timing?.clockId??null};
+ obsFins.delete(b.id);obsFins.set(b.id,{at,cause,ctx});while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);}
+function marquerFinLot(b,cause){if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
+/* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
+function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;
+ if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')marquerFinLot(b,'fin-naturelle');
+ else if(state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel')marquerFinLot(b,'arret-manuel');}
+/* Avant un nouveau lot : l'ancien, clos, garde son instant de fin (arrêt au dernier cut compris) et son contexte. */
+function retenirLotClos(){const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
+ const at=finDuLot(b);if(Number.isFinite(at))poserFin(b,at,obsFins.get(b.id)?.cause||'dernier-cut');}
+/* Instant de fin du lot (ms) : arrêt au dernier cut = `stoppedAtEnd.at` (absente ou illisible : NaN, jamais devinée) ; sinon fin relevée ici. */
+function finDuLot(b){if(b.state==='STOPPED'&&b.stoppedAtEnd)return Date.parse(b.stoppedAtEnd.at);const f=obsFins.get(b.id);return f?f.at:NaN;}
+const dansFenetre=(at,now)=>{const age=now-at;return Number.isFinite(age)&&age>=-1000&&age<=OBS_GRACE_MS;};
+function dansGrace(b,now=Date.now()){if(dansFenetre(finDuLot(b),now))return true;
+ /* « Arrêter » pendant une action : la boucle du moteur finit l'action en cours de CE lot (comme la mesure V1, `runtimeContext`). */
+ return b.state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel'&&!!engine?.task;}
 function seanceObservateur({grace=false}={}){
  const b=engine?.s?.batch;
- if(engine?.s?.mode==='automatic-test'&&b&&!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state))return 'lot:'+(b.id||'');
- if(grace&&engine?.s?.mode==='automatic-test'&&b?.state==='STOPPED'&&b.stoppedAtEnd?.at){
-  const age=Date.now()-Date.parse(b.stoppedAtEnd.at);if(Number.isFinite(age)&&age>=-1000&&age<=OBS_GRACE_MS)return 'lot:'+(b.id||'');}
+ if(engine?.s?.mode==='automatic-test'&&b&&!OBS_CLOS.includes(b.state))return 'lot:'+(b.id||'');
+ if(grace&&engine?.s?.mode==='automatic-test'&&b&&OBS_CLOS.includes(b.state)&&dansGrace(b))return 'lot:'+(b.id||'');
  return manual?.active?.()?'ecoute-manuelle':native?.active?.()?'ecoute-native':null;}
+/* Lot précédent encore en grâce quand la séance est celle d'un lot plus récent : { seance, ctx, debut } ou null. */
+function ancienLotEnGrace(seance){const b=engine?.s?.batch;if(!b?.id||seance!=='lot:'+b.id)return null;
+ const debut=Date.parse(b.startedAt),now=Date.now();if(!Number.isFinite(debut))return null;let best=null;
+ for(const [id,f] of obsFins)if(id!==b.id&&f.at<=debut+1000&&dansFenetre(f.at,now)&&(!best||f.at>best.at))best={id,...f};
+ return best?{seance:'lot:'+best.id,ctx:best.ctx,debut}:null;}
+/* Une grace a-t-elle couru entre `depuis` et maintenant ? 'en-cours', 'depuis-instantane' ou null (vidage du cache). */
+function graceObservations(depuis=Date.now()){const now=Date.now(),b=engine?.s?.batch,fins=[...obsFins.values()].map(f=>f.at);
+ if(engine?.s?.mode==='automatic-test'&&b&&OBS_CLOS.includes(b.state)){if(dansGrace(b,now))return 'en-cours';fins.push(finDuLot(b));}
+ if(fins.some(at=>dansFenetre(at,now)))return 'en-cours';
+ return fins.some(at=>Number.isFinite(at)&&at+OBS_GRACE_MS>=depuis&&at-1000<=now)?'depuis-instantane':null;}
 const obsInt=(v,max=1e12)=>Number.isInteger(v)&&v>=0&&v<=max?v:null;
 const obsNum=v=>Number.isFinite(v)&&Math.abs(v)<1e15?v:null;
 const obsStr=(v,n)=>typeof v==='string'&&v.length<=n?v:null;
@@ -154,19 +190,22 @@ function rangerObservations(m){try{
  const seance=seanceObservateur({grace:true});if(!seance)return {accept:false,reason:'no-session'};
  if(typeof m.observer!=='string'||m.observer.length>80||!Array.isArray(m.entries)||m.entries.length>100)return {accept:true,stored:0,reason:'malformed'};
  const K=globalThis.BananeCore3,cfg=globalThis.BananeSettings?.observateurPassif||{},cap=cfg.entreesParSeanceMax||20000,maxChars=cfg.caracteresParEntree||4096;
- const ctx=(()=>{try{const v=timing?.context?.()||timing?.batchContext?.();return v?{sessionId:v.sessionId??null,batchId:v.batchId??null,visitId:v.visitId??null,clockId:timing?.clockId??null}:{};}catch{return {};}})();
  const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??performance.timeOrigin;
- const seen=obsState.perSeance.get(seance)||{n:0,capped:false},events=[];let rejected=0;
- const add=(fields,seq)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...ctx};
+ const vu=s=>obsState.perSeance.get(s)||{n:0,capped:false},courant={seance,ctx:obsContexte(),seen:vu(seance)},events=[];let rejected=0;
+ /* Nouveau lot pendant la grâce de l'ancien : ce que la page a vu (début, sinon fin) AVANT le début du nouveau lot reste à l'ancien. */
+ const ancien=(a=>a&&{...a,seen:vu(a.seance)})(ancienLotEnGrace(seance));
+ const cible=f=>{if(!ancien)return courant;const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:f.endedEpochMs;return Number.isFinite(t)&&t<ancien.debut?ancien:courant;};
+ const add=(fields,seq,c=courant)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...c.ctx};
   if(JSON.stringify(e).length>maxChars){rejected++;return;}events.push(e);};
  if(obsState.lost){add({kind:'gap',lost:obsState.lost,reason:'store-rejected',of:null},null);obsState.lost=0;}
  for(const x of m.entries){
   if(!x||typeof x!=='object'){rejected++;continue;}
   const fields=obsFields(x);if(!fields){rejected++;continue;}
-  if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null);}rejected++;continue;}
-  add(fields,x.seq);if(fields.kind!=='gap')seen.n++;}
+  const c=cible(fields),seen=c.seen;
+  if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
+  add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;}
  if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
- obsState.perSeance.set(seance,seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);
+ for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  return {accept:true,stored:events.length};
 }catch{return {accept:true,stored:0,reason:'error'};}}
@@ -614,7 +653,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
    await closeAtExit('dernier-cut-differe',d.cut,null,{dernier:d});await engine.save();
    return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};};
  const evenement=engine.event.bind(engine);
- engine.event=async(type,...rest)=>{const r=await evenement(type,...rest);
+ engine.event=async(type,...rest)=>{if(type==='batch-state')finVueParLaBoucle(rest[0]?.state);const r=await evenement(type,...rest);
    if(type==='defer-navigation-uncertain')await departApresDiffere(rest[0]);
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
@@ -869,7 +908,7 @@ async function flushMesure(){if(!timing)return null;
  * dont la mesure V1 a été vidée sortent de `v1TimingExport.lots` (leur santé n'est
  * plus dans le journal, ce n'est pas une perte à signaler à chaque export). */
 const cacheExport=()=>globalThis.BananeExportCache;
-const contexteVidage=()=>({state:engine.s,busy:engine.busy,task:engine.task,nativeActive:native.active(),manualActive:manual.active(),timing});
+const contexteVidage=depuis=>({state:engine.s,busy:engine.busy,task:engine.task,nativeActive:native.active(),manualActive:manual.active(),timing,graceObservations:graceObservations(depuis)});
 /* Un lot vidé n'est masqué de la mesure V1 que s'il est CLOS et dans le même segment qu'au vidage :
  * repris ou rouvert, sa santé redevient visible (aucune mesure V1 masquée). */
 const lotVideMasque=(e,t)=>{const id=typeof e==='string'?e:e.id,b=t?.batches?.get?.(id);
@@ -895,7 +934,8 @@ async function closureExport(){
 async function viderCacheExport(args){
  const EC=cacheExport();if(!EC)throw Error('Vidage indisponible (module absent).');
  const auto=!!args?.auto&&args?.manuel!==true;
- const raison=EC.refus(contexteVidage(),{auto});if(raison)throw Error('Vidage refusé : '+raison+'.');
+ const t0=args?.instantaneAt,depuis=Number.isFinite(t0)&&t0<=Date.now()+1000?t0:Date.now();
+ const raison=EC.refus(contexteVidage(depuis),{auto});if(raison)throw Error('Vidage refusé : '+raison+'.');
  const garder={events:[],records:[],clouds:[]};
  /* Une session Écho ou Correction conservée garde ses données (son propre abandon les efface). */
  if(engine.s.native||engine.s.manual){
@@ -981,7 +1021,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='manual-download')return manual.dataset();
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
- if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
+ if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
+  if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();}
  if(action==='resume'){if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
   repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();}
  /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
@@ -1049,7 +1090,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   const tente=startArgs.lowConfidence==='attempt';
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
-  await engine.startBatch(startArgs);return engine.view();}
+  retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
  if(action==='cloud')return store.getCloud(args.id);
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
   * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque

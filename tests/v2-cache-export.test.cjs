@@ -148,6 +148,7 @@ test('vidage manuel : confirmation chiffrée et irréversible ; refusée = rien 
   assert.match(txt,/état du lot, les réglages et la reprise ne sont pas touchés/);
   const oui=await ouvrir({confirmer:true});await oui.p.$('export-cache-clear').onclick();await oui.p.attendre();
   assert.equal(oui.appels.length,1);assert.equal(oui.appels[0].manuel,true);assert.deepEqual(oui.appels[0].ids.clouds,['cap-0','cap-1','cap-2']);
+  assert.ok(Number.isFinite(oui.appels[0].instantaneAt)&&oui.appels[0].instantaneAt<=Date.now(),'4.9.0.3 : instant de l’instantané transmis (grâce de l’observateur)');
   assert.match(oui.p.$('export-status').textContent,/Cache des exports vidé : 20 événements, 3 visites, 3 nuages/);
 });
 
