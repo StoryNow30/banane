@@ -116,6 +116,10 @@ const obsState={lost:0,perSeance:new Map()};
  * Pendant cette courte fenêtre, et pour ce seul lot, le rangement accepte encore ce que l'observateur avait DÉJÀ vu : rien n'est
  * demandé à ESV, la séance n'est pas rouverte (`launcher-status` ne l'annonce pas). Date absente, illisible ou future : jamais devinée. */
 const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
+/* OBS-4 (relecture du test 3) : « Arrêter » pendant une action prolonge la grâce tant que la boucle finit l'action de ce
+ * lot, mais 120 s au plus après l'arrêt (sans plafond : mesuré accepté 10 min après) ; ensuite, seuls les 5 s après la
+ * sortie de la boucle (jalon `batch-state`) comptent. */
+const OBS_TACHE_MAX_MS=120000;
 /* 4.9.0.3 (test 3) — MÊME GRÂCE après l'arrêt MANUEL (« Arrêter ») et après la fin naturelle du lot (COMPLETED, ou
  * FINISHED_WITH_UNCONFIRMED_ACTIONS : même fin, nommée par `closingState` selon la confirmation serveur). `src/engine.js`
  * (épinglé) ne date ni l'un ni l'autre : l'instant est relevé ICI, quand le service worker voit la fin (clic « Arrêter »
@@ -142,7 +146,8 @@ function finDuLot(b){if(b.state==='STOPPED'&&b.stoppedAtEnd)return Date.parse(b.
 const dansFenetre=(at,now)=>{const age=now-at;return Number.isFinite(age)&&age>=-1000&&age<=OBS_GRACE_MS;};
 function dansGrace(b,now=Date.now()){if(dansFenetre(finDuLot(b),now))return true;
  /* « Arrêter » pendant une action : la boucle du moteur finit l'action en cours de CE lot (comme la mesure V1, `runtimeContext`). */
- return b.state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel'&&!!engine?.task;}
+ const f=obsFins.get(b.id),age=now-(f?.at??NaN);
+ return b.state==='STOPPED'&&!b.stoppedAtEnd&&f?.cause==='arret-manuel'&&!!engine?.task&&Number.isFinite(age)&&age>=-1000&&age<=OBS_TACHE_MAX_MS;}
 function seanceObservateur({grace=false}={}){
  const b=engine?.s?.batch;
  if(engine?.s?.mode==='automatic-test'&&b&&!OBS_CLOS.includes(b.state))return 'lot:'+(b.id||'');

@@ -40,3 +40,13 @@ test('OBS-1 témoin : SKIP explicite qui ne clôt pas le lot (cut avant la borne
  assert.equal(b.get('obsFins').has(e.s.batch.id),false,'lot pas clos par le SKIP : pas de fin');
  await b.settle();
 });
+
+/* OBS-4 : après « Arrêter » pendant une action, la grâce suivait la tâche du moteur sans borne (mesuré : acceptée 10 min
+ * après l'arrêt). Plafond : 120 s après l'arrêt ; ensuite, seuls les 5 s après la sortie de la boucle comptent. */
+test('OBS-4 arrêt pendant une action sans fin : accepté jusqu’à 120 s après l’arrêt, refusé au-delà',async()=>{
+ const {b,e}=await lotOuvert();e.task=new Promise(()=>{});await b.api('stop');
+ vieillir(b,'lot-A',60000);assert.equal(send(b,[write({seq:1})]).accept,true,'60 s : action en cours, accepté');
+ vieillir(b,'lot-A',61000);deq(send(b,[write({seq:2})]),REFUS,'121 s : au-delà du plafond, refusé');
+ assert.equal((await b.api('export-cache-info')).refus!==null,true,'le vidage reste refusé tant que l’action tourne (« Ariane travaille encore »)');
+ e.task=null;
+});
