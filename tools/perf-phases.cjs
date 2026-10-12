@@ -424,7 +424,7 @@ function observationsOf(data,phaseEvents,visits){
  const of=kind=>obs.filter(e=>e.kind===kind),counts=Object.fromEntries(OBS_KINDS.map(k=>[k,of(k).length]));
  const gaps=of('gap'),byReason={};for(const g of gaps)byReason[g.reason??'unknown']=(byReason[g.reason??'unknown']||0)+(finite(g.lost)?g.lost:0);
  const rows=of('write').map(e=>{const l=link(e),body=e.body&&typeof e.body==='object'?Object.values(e.body):[],accepted=l.visitId?acceptedAt.get(l.visitId):undefined;
-  return {railPairId:e.railPairId??null,status:e.status??null,outcome:e.outcome??null,attempt:e.attempt??null,durationMs:e.durationMs??null,
+  return {batchId:e.batchId??null,railPairId:e.railPairId??null,status:e.status??null,outcome:e.outcome??null,attempt:e.attempt??null,durationMs:e.durationMs??null,
    numericFields:body.filter(v=>typeof v==='number').length,bodyKeys:e.bodyKeys??null,startedEpochMs:e.startedEpochMs??null,endedEpochMs:e.endedEpochMs??null,...l,
    writeEndMinusAcceptedMs:finite(accepted)&&finite(e.endedEpochMs)?e.endedEpochMs-accepted:null};});
  const byStatus={};for(const r of rows)byStatus[r.status]=(byStatus[r.status]||0)+1;
@@ -451,11 +451,18 @@ function listSummaries(events){
  for(const e of events){const k=JSON.stringify([e.observer?.id??null,e.listKey??null,e.beforeSession===true]),prev=m.get(k);if(!prev||order(e)>=order(prev))m.set(k,e);}
  return [...m.values()].map(e=>({observer:e.observer?.id??null,listKey:e.listKey??null,pages:e.pages??null,okPages:e.okPages??null,rows:e.rows??null,chars:e.chars??null,counts:e.counts??null,
   firstStartedEpochMs:e.firstStartedEpochMs??null,lastEndedEpochMs:e.lastEndedEpochMs??null,durationMs:e.durationMs??null,beforeSession:e.beforeSession===true}));}
+/* F3 (relecture du test 3) : rapport d'UN lot (`perf-lot --par-lot`) : écritures de ce lot seulement (rangées avec son
+ * `batchId`) ; les autres comptes (marques, pages de liste, fichiers de points, pertes, fetch) restent ceux du fichier, dit tel quel. */
+function observationsForLot(o,batchId){if(!o?.available||!batchId)return o;const rows=o.writes.rows.filter(r=>r.batchId===batchId),byStatus={};
+ for(const r of rows)byStatus[r.status]=(byStatus[r.status]||0)+1;
+ return {...o,lotScope:batchId,counts:{...o.counts,write:rows.length},writes:{n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
+  attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,rows}};}
 const OBSERVER_ABSENT='Observateur : absent (aucun événement d’observation) : l’onglet ESV n’a probablement pas été rechargé après l’installation ; ces mesures n’ont pas d’observation d’écriture';
 function observationsLines(o,n){
  if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',...(o.observerExpected?[OBSERVER_ABSENT,'']:[]),o.reason]:[];
  const yn=v=>v===true?'oui':v===false?'non':'inconnu';
- const L=['','## Observateur passif (journalisation seule)','',
+ const L=['','## Observateur passif (journalisation seule)'+(o.lotScope?` — lot ${o.lotScope}`:''),'',
+  ...(o.lotScope?[`Écritures : celles du lot ${o.lotScope} seulement ; les autres comptes (marques, pages de liste, fichiers de points, requêtes fetch, pertes) portent sur tout le fichier.`]:[]),
   o.observer.present?`Observateur : présent (version ${n(o.observer.version)}, installé avant les scripts de la page : ${yn(o.observer.installedBeforePageScripts)}${o.observer.late?' (au moins une marque tardive)':''}).`
    :'Observateur : marque absente (observateur absent ou coupé, page non rechargée, navigateur trop ancien, ou séance démarrée sans message) : non mesuré.',
   `Observations : ${o.counts.write} écriture(s), ${o.counts['list-page']} page(s) de liste, ${o.counts.resource} fenêtre(s) de fichiers de points, ${o.counts['fetch-rails']} fenêtre(s) de requêtes fetch comptées, ${o.gaps.count} jalon(s) de perte (${o.gaps.lost} observation(s) perdue(s)${Object.keys(o.gaps.byReason).length?' : '+JSON.stringify(o.gaps.byReason):''}).`,
@@ -485,7 +492,7 @@ function toMarkdown(m,{coupes=true,batchId=null}={}){if(!m.available)return '\n#
   '','V4.6 : spans imbriqués ; union temporelle, jamais ajoutés une seconde fois au cycle.','',
   '| Catégorie | Appels | Invalides | Succès | Exceptions | Médiane ms | P90 ms | Max ms |','|---|---:|---:|---:|---:|---:|---:|---:|---:|');
  for(const c of m.v46.categories)lines.push(`| ${c.name} | ${c.calls} | ${c.invalid} | ${c.success} | ${c.exceptions} | ${n(c.ms.median)} | ${n(c.ms.p90)} | ${n(c.ms.max)} |`);
- lines.push(...observationsLines(m.observations,n));
+ lines.push(...observationsLines(batchId?observationsForLot(m.observations,batchId):m.observations,n));
  lines.push('','Les mesures de ce fichier ne certifient pas la porte terrain sur plusieurs lots, ni un acquittement serveur'+(m.observations?.available?' (sauf l’acquittement HTTP observé ci-dessus, qui ne prouve ni la relecture ni la qualité de la pose)':'')+'.');
  return lines.join('\n')+'\n';
 }
