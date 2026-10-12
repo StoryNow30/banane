@@ -8,7 +8,8 @@
  * résumés, compteur d'événements, records de l'état), l'onglet choisi, le
  * bandeau, les fins de parties, les réglages ; la mesure V1 en mémoire du
  * service worker ; et tout ce qui appartient à une session Écho ou Correction
- * conservée (ses visites, événements et nuages restent).
+ * conservée (ses visites, événements et nuages restent) ; et, depuis la 4.9.0.4, tout ce que tient la capture « avant »
+ * restée ouverte sur un lot fini (voir `capturesAGarder`).
  *
  * Aucune donnée d'ESV ici : module générique, testé avec un faux stockage. */
 (function (root, factory) {
@@ -24,6 +25,28 @@
    * reprennent pas et « Arrêter » y est caché : les refuser bloquait le vidage jusqu'au lot suivant. */
   const TERMINES = [LOT_TERMINE, 'COMPLETED', 'FINISHED_WITH_UNCONFIRMED_ACTIONS'];
   const COLLECTIONS_LIBRES = [undefined, null, 'IDLE', 'AFTER_CAPTURED'];
+  /* 4.9.0.4 (retour de la séance du 12 octobre) : une capture « avant » peut rester OUVERTE quand un lot se termine. Le
+   * service worker clôt le lot (`closeAtExit` : dernier cut différé, `stopAtLotEnd` : dernier cut posé ou non résolu, sortie
+   * d'ESV pendant un cut) sans la refermer : collection READY_FOR_AFTER, puis STALE dès que l'opérateur navigue dans ESV
+   * (`Engine.observe`), lidarId présent, le nuage dans IndexedDB. Le moteur ne l'archive qu'au prochain `begin()`
+   * (`archivePending`, qui écrit une visite « incomplete-no-after » nommant ce nuage). */
+  const CAPTURES_OUVERTES = ['BEFORE_CAPTURED', 'READY_FOR_AFTER', 'STALE'];
+  /* Lot fini POUR DE BON : fin naturelle, ou arrêt à son dernier cut (`stoppedAtEnd`, posé par le service worker). Un STOPPED
+   * sans `stoppedAtEnd` est un arrêt à la main : il se reprend. */
+  const finiPourDeBon = b => !!b && (b.state === 'COMPLETED' || b.state === 'FINISHED_WITH_UNCONFIRMED_ACTIONS' || (b.state === LOT_TERMINE && !!b.stoppedAtEnd));
+  /* Résultat d'une commande à contrôler dans ESV (état du moteur : intention, réconciliation, navigation différée non finalisée). */
+  const incertain = s => !!(s.intent || s.reconcileRequired || (s.deferIntent && s.deferIntent.phase !== 'FINALIZED'));
+
+  /* Refus lié à une capture « avant » ouverte (collection hors COLLECTIONS_LIBRES), ou null : permis. Seul un lot FINI pour de
+   * bon, sans résultat incertain, laisse vider avec une capture ouverte (`capturesAGarder` en protège alors tout le contenu). */
+  function refusCapture(s, b) {
+    const base = 'une capture est en cours (' + s.collection + ')';
+    if (!CAPTURES_OUVERTES.includes(s.collection)) return base;
+    if (!b || !b.state) return base + ' : enregistre l’après ou annule la capture, puis réessaie';
+    if (!finiPourDeBon(b)) return base + ' : le lot est arrêté à la main au milieu d’un cut et peut être repris. Clique sur « Reprendre » (ou lance un nouveau lot) et laisse-le aller jusqu’à sa fin, puis vide le cache';
+    if (incertain(s)) return 'un résultat reste à contrôler dans ESV et une capture est ouverte (' + s.collection + ') : clique d’abord sur « Archiver le résultat interrompu », puis réessaie';
+    return null;
+  }
 
   /* Raison du refus (texte pour l'opérateur), ou null si le vidage est permis.
    * `c` : { state, busy, task, nativeActive, manualActive, timing, graceObservations }. */
@@ -38,7 +61,7 @@
     if (c.busy || c.task) return 'Ariane travaille encore (action en cours)';
     if (c.nativeActive) return 'Écho est actif';
     if (c.manualActive) return 'une session Mes corrections est active';
-    if (!COLLECTIONS_LIBRES.includes(s.collection)) return 'une capture est en cours (' + s.collection + ')';
+    if (!COLLECTIONS_LIBRES.includes(s.collection)) { const r = refusCapture(s, b); if (r) return r; }
     const t = c.timing;
     if (t && t.batch && !t.batch.closed) return 'la clôture de la mesure V1 du lot n’est pas terminée';
     if (t && t.pending && t.pending.size > 0) return 'des écritures de mesure sont encore en cours';
@@ -50,6 +73,34 @@
   }
 
   const reprenable = c => { const b = c.state && c.state.batch; return !!(b && b.state === LOT_TERMINE && !b.stoppedAtEnd); };
+
+  /* CE QUE TIENT LA CAPTURE « AVANT » OUVERTE (à ne jamais vider tant qu'elle est ouverte) :
+   *  - son nuage LiDAR (`s.lidarId`, dans IndexedDB `clouds`) : `analyze()` et `commandLot()` le relisent (« LiDAR absent du
+   *    stockage » sinon), et `archivePending()` écrira une visite qui le NOMME : sans lui, le prochain export listerait une
+   *    visite dont le nuage manque ;
+   *  - les événements qui le nomment (`lidarId`, `lidarCaptureId`, `captureId`) ou nomment sa proposition (`proposalId`,
+   *    `proposal.id`), et ceux de la MÊME visite (`visitId` : jalons de mesure V1, observations de la page) : l'analyse du
+   *    cut ne les retrouverait pas sinon ;
+   *  - les visites (`records`) qui le nomment (`lidarCaptureId`) : aucune normalement, jamais supprimées si elles existent.
+   * Le reste de l'état d'une capture ouverte (`before`, `proposal`, `snapshot`, `applied`) vit dans chrome.storage.local, que le
+   * vidage ne touche pas. Rien n'est perdu : ces éléments restent dans le cache et partent au PROCHAIN export. Une capture
+   * refermée (AFTER_CAPTURED : visite finale écrite) ou sans nuage ne retient rien : sa visite et son nuage partent ensemble.
+   * `s` : état du moteur ; `events`, `records` : contenu actuel d'IndexedDB. */
+  function capturesAGarder(s, events, records) {
+    const vide = { clouds: [], events: [], records: [] };
+    if (!s || !CAPTURES_OUVERTES.includes(s.collection) || !s.lidarId) return vide;
+    const id = s.lidarId, pid = s.proposal && s.proposal.id;
+    const nomme = o => !!o && (o.lidarId === id || o.lidarCaptureId === id || o.captureId === id
+      || (!!o.paused && o.paused.lidarCaptureId === id)
+      || (!!pid && (o.proposalId === pid || (!!o.proposal && o.proposal.id === pid) || (!!o.paused && !!o.paused.proposal && o.paused.proposal.id === pid))));
+    const evs = Array.isArray(events) ? events : [];
+    const visites = new Set(evs.filter(nomme).map(e => e.visitId).filter(Boolean));
+    return {
+      clouds: [id],
+      events: evs.filter(e => nomme(e) || (!!e && !!e.visitId && visites.has(e.visitId))).map(e => e.eventId).filter(x => x !== undefined),
+      records: (Array.isArray(records) ? records : []).filter(nomme).map(r => r.recordId || r.id).filter(x => x !== undefined)
+    };
+  }
 
   /* SIGNATURE d'un enregistrement (taille + empreinte FNV-1a du JSON) : prise à
    * l'instantané, contrôlée à la suppression. Un enregistrement modifié depuis
@@ -99,14 +150,19 @@
   /* Deux textes distincts : vidage après un export confirmé, ou à la main sans export. */
   function texte(marqueur) {
     if (!marqueur || !marqueur.at) return null;
-    return marqueur.manuel || !marqueur.afterExportAt
+    const base = marqueur.manuel || !marqueur.afterExportAt
       ? 'données précédentes vidées manuellement le ' + heure(marqueur.at) + ', sans export confirmé par Ariane'
       : 'données précédentes vidées après export du ' + heure(marqueur.afterExportAt);
+    /* 4.9.0.4 : le prochain export contiendra de nouveau le nuage de la capture ouverte (volontairement gardé). */
+    const g = marqueur.captureGardee, n = g && g.nuages || 0, ev = g && g.evenements || 0, vi = g && g.visites || 0;
+    if (!(n || ev || vi)) return base;
+    const liste = [n ? n + (n > 1 ? ' nuages LiDAR' : ' nuage LiDAR') : '', ev ? ev + (ev > 1 ? ' événements' : ' événement') : '', vi ? vi + (vi > 1 ? ' visites' : ' visite') : ''].filter(Boolean).join(', ');
+    return base + ' ; capture ouverte du dernier cut gardée (' + liste + '), qui figure de nouveau dans l’export suivant';
   }
   async function lire(storage) {
     try { return (await storage.get(CLE))?.[CLE] || null; } catch (_) { return null; }
   }
   async function ecrire(storage, marqueur) { await storage.set({ [CLE]: marqueur }); }
 
-  return { CLE, LOT_TERMINE, TERMINES, refus, reprenable, signature, supprimer, texte, lire, ecrire };
+  return { CLE, LOT_TERMINE, TERMINES, CAPTURES_OUVERTES, refus, reprenable, finiPourDeBon, capturesAGarder, signature, supprimer, texte, lire, ecrire };
 });

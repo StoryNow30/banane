@@ -959,30 +959,51 @@ async function closureExport(){
    closureScope:'enregistrements depuis le dernier vidage du cache (withoutFinalState, withoutServerConfirmation)'};}
  catch{return c;}
 }
+/* 4.9.0.4 — CAPTURE « AVANT » RESTÉE OUVERTE sur un lot fini (dernier cut différé, posé non validé, sortie d'ESV pendant un cut) :
+ * `closeAtExit` / `stopAtLotEnd` ne la referment pas ; le moteur (épinglé) l'archive au prochain `begin()`. Le vidage est permis
+ * (src/export-cache.js `refus`) À CONDITION de garder son nuage LiDAR, les événements et visites qui le nomment : ils restent
+ * dans le cache et partent au prochain export. Rien n'est lu si aucune capture n'est ouverte. */
+async function captureOuverteAGarder(){const EC=cacheExport(),s=engine?.s;
+ if(!EC?.capturesAGarder||!s?.lidarId||!(EC.CAPTURES_OUVERTES||[]).includes(s.collection))return null;
+ const g=EC.capturesAGarder(s,await store.all('events'),await store.all('records'));
+ return g.clouds.length?{collection:s.collection,...g}:null;}
 async function viderCacheExport(args){
  const EC=cacheExport();if(!EC)throw Error('Vidage indisponible (module absent).');
  const auto=!!args?.auto&&args?.manuel!==true;
  const t0=args?.instantaneAt,depuis=Number.isFinite(t0)&&t0<=Date.now()+1000?t0:Date.now();
  const raison=EC.refus(contexteVidage(depuis),{auto});if(raison)throw Error('Vidage refusé : '+raison+'.');
  const garder={events:[],records:[],clouds:[]};
+ const capt=await captureOuverteAGarder();
+ if(capt){garder.clouds.push(...capt.clouds);garder.events.push(...capt.events);garder.records.push(...capt.records);}
  /* Une session Écho ou Correction conservée garde ses données (son propre abandon les efface). */
  if(engine.s.native||engine.s.manual){
   garder.clouds.push(...(engine.s.native?.cloudIds||[]),...(engine.s.manual?.cloudIds||[]));
   for(const r of await store.all('records'))if(r.nativeSessionId||r.manualSessionId)garder.records.push(r.recordId||r.id);
   for(const e of await store.all('events'))if(e.nativeSessionId||e.manualSessionId)garder.events.push(e.eventId);}
+ /* Les lectures ci-dessus ont rendu la main : si l'état du moteur a changé entre-temps (lot repris, capture refermée ou autre),
+  * le refus est réévalué et la capture à garder relue AVANT de supprimer quoi que ce soit. */
+ const raison2=EC.refus(contexteVidage(depuis),{auto});if(raison2)throw Error('Vidage refusé : '+raison2+'.');
+ const ouverte=engine.s.lidarId&&(EC.CAPTURES_OUVERTES||[]).includes(engine.s.collection)?engine.s.lidarId:null;
+ if((capt?.clouds[0]??null)!==ouverte)throw Error('Vidage refusé : la capture ouverte a changé pendant la préparation du vidage ; réessaie.');
  const avant=await EC.lire(chrome.storage.local);
  const lots=[...(timing?.batches?.entries?.()||[])].filter(([,b])=>b.closed===true).map(([id,b])=>({id,segment:b.segment}));
  const counts=await EC.supprimer(store,args?.ids||{},garder,args?.signatures);
+ /* Gardé à cause de la capture ouverte (parmi ce qui était demandé) : dit au panneau, noté dans le marqueur. */
+ const demande=nom=>new Set(args?.ids?.[nom]||[]),compte=(nom,liste)=>{const d=demande(nom);return (liste||[]).filter(i=>d.has(i)).length;};
+ const captureGardee=capt?{collection:capt.collection,nuages:compte('clouds',capt.clouds),evenements:compte('events',capt.events),visites:compte('records',capt.records)}:null;
  const marqueur={at:new Date().toISOString(),afterExportAt:auto||args?.manuel!==true?(args?.exportAt||null):null,manuel:args?.manuel===true||!args?.exportAt,
   counts:{events:counts.events,records:counts.records,clouds:counts.clouds},
+  ...(captureGardee&&(captureGardee.nuages||captureGardee.evenements||captureGardee.visites)?{captureGardee}:{}),
   lotsVides:[...(avant?.lotsVides||[]).filter(e=>typeof e==='object'&&!lots.some(l=>l.id===e.id)),...lots]};
  /* Le marqueur n'est écrit qu'APRÈS une suppression réussie. */
  let marqueurEcrit=true;try{await EC.ecrire(chrome.storage.local,marqueur);}catch{marqueurEcrit=false;}
- return {cleared:true,...counts,at:marqueur.at,text:EC.texte(marqueur),marqueurEcrit};
+ return {cleared:true,...counts,at:marqueur.at,text:EC.texte(marqueur),marqueurEcrit,captureGardee};
 }
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
- if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage();return {refus:EC?EC.refus(c,{auto:args?.auto===true}):'module absent',reprenable:EC?EC.reprenable(c):false,marqueur:EC?await EC.lire(chrome.storage.local):null};}
+ if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage(),refus=EC?EC.refus(c,{auto:args?.auto===true}):'module absent';
+  /* 4.9.0.4 : ce que la capture ouverte retient (identifiants), pour que la confirmation le dise et ne le compte pas parmi ce qui sera supprimé. */
+  return {refus,reprenable:EC?EC.reprenable(c):false,marqueur:EC?await EC.lire(chrome.storage.local):null,capture:refus===null?await captureOuverteAGarder():null};}
  if(action==='export-cache-clear')return viderCacheExport(args);
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}

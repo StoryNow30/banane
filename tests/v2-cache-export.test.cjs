@@ -42,7 +42,9 @@ test('clôture V1 non terminée, action en cours, Écho actif : vidage refusé',
   const x=await sw(),ids=x.ids();
   x.r.batch.closed=false;await assert.rejects(x.b.api('export-cache-clear',{ids,signatures:x.sigs()}),/clôture de la mesure V1/);x.r.batch.closed=true;
   x.e.busy=true;await assert.rejects(x.b.api('export-cache-clear',{ids,signatures:x.sigs()}),/travaille encore/);x.e.busy=false;
-  x.e.s.collection='READY_FOR_AFTER';await assert.rejects(x.b.api('export-cache-clear',{ids,signatures:x.sigs()}),/capture est en cours/);x.e.s.collection='IDLE';
+  /* 4.9.0.4 : une capture ouverte ne bloque plus un lot FINI (stoppedAtEnd : voir tests/vidage-capture-ouverte.test.cjs) ; elle bloque encore un lot arrêté à la main. */
+  const fin=x.e.s.batch.stoppedAtEnd;delete x.e.s.batch.stoppedAtEnd;
+  x.e.s.collection='READY_FOR_AFTER';await assert.rejects(x.b.api('export-cache-clear',{ids,signatures:x.sigs()}),/capture est en cours/);x.e.s.collection='IDLE';x.e.s.batch.stoppedAtEnd=fin;
   assert.deepEqual(x.ids(),ids);
 });
 

@@ -1157,6 +1157,11 @@ on('native-discard',async()=>{
      return {events:events.filter(id=>id in signatures.events),records:records.filter(id=>id in signatures.records),clouds,signatures,at};}catch{return null;}}
  const demandeVidage=(snap,extra)=>api('export-cache-clear',{ids:{events:snap.events,records:snap.records,clouds:snap.clouds},signatures:snap.signatures,instantaneAt:snap.at,...extra});
  const phraseGardes=r=>{const n=(r?.modifies?.events?.length||0)+(r?.modifies?.records?.length||0);return n?` ${n} enregistrement(s) modifié(s) depuis l’export ont été GARDÉS (pas dans l’export).`:'';};
+ /* 4.9.0.4 : la capture « avant » restée ouverte sur un lot fini (dernier cut différé, posé non validé…) est GARDÉE par le
+  * vidage : son nuage LiDAR et ce qui le nomme restent dans le cache et partent avec le prochain export. */
+ const phraseCapture=r=>{const c=r?.captureGardee,n=c?.nuages||0,ev=c?.evenements||0,vi=c?.visites||0;if(!(n||ev||vi))return '';
+   const liens=[ev?`${ev} événement${ev>1?'s':''}`:'',vi?`${vi} visite${vi>1?'s':''}`:''].filter(Boolean).join(' et ');
+   return ` ${n===1?'1 nuage gardé':n>1?`${n} nuages gardés`:'Données gardées'} : capture du dernier cut${liens?` (${liens} liés gardé${ev+vi>1?'s':''} aussi)`:''}. Elle partira avec le prochain export.`;};
  async function resumeCache(snap){const s=store(),out={lots:0,coupes:0,octets:null};
    try{const lots=new Set(),coupes=new Set(),ev=new Set(snap.events),rc=new Set(snap.records);
      for(const e of await s.all('events'))if(ev.has(e.eventId)&&e.batchId)lots.add(e.batchId);
@@ -1167,12 +1172,19 @@ on('native-discard',async()=>{
  on('export-cache-clear',async()=>{
    const info=await api('export-cache-info');if(info?.refus)throw Error('Vidage impossible : '+info.refus+'.');
    const snap=await instantaneCache();if(!snap)throw Error('Stockage illisible depuis le panneau : rien n’est vidé.');
+   /* 4.9.0.4 : ce que le service worker gardera (capture ouverte du dernier cut) n'est pas compté parmi ce qui sera supprimé. */
+   const gardes=info?.capture||null,sauf=(liste,nom)=>{const g=new Set(gardes?.[nom]||[]);return liste.filter(i=>!g.has(i));};
+   const aVider={...snap,events:sauf(snap.events,'events'),records:sauf(snap.records,'records'),clouds:sauf(snap.clouds,'clouds')};
+   const nGardes={nuages:snap.clouds.length-aVider.clouds.length,evenements:snap.events.length-aVider.events.length,visites:snap.records.length-aVider.records.length};
+   const gardeQuelqueChose=nGardes.nuages+nGardes.evenements+nGardes.visites>0;
    if(!snap.events.length&&!snap.records.length&&!snap.clouds.length){statutExport('Le cache des exports est déjà vide.');return;}
-   const r=await resumeCache(snap),nb=x=>x===null?'nombre inconnu':x;
+   if(!aVider.events.length&&!aVider.records.length&&!aVider.clouds.length){statutExport(`Rien d’autre à vider.${phraseCapture({captureGardee:nGardes})}`);return;}
+   const r=await resumeCache(aVider),nb=x=>x===null?'nombre inconnu':x;
    const alerteLot=info?.reprenable?'\n\nATTENTION : ce lot est arrêté mais pas terminé : il peut être repris. Vider maintenant retire ses données de l’export suivant.':'';
-   if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${snap.records.length} visites, ${snap.events.length} événements, ${snap.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.${alerteLot}`))return;
+   const alerteCapture=gardeQuelqueChose?`\n\nSera GARDÉ : la capture ouverte du dernier cut (${nGardes.nuages} nuage${nGardes.nuages>1?'s':''} LiDAR, ${nGardes.evenements} événement${nGardes.evenements>1?'s':''} liés). Ce n’est pas une perte : elle reste dans le cache et partira avec le prochain export.`:'';
+   if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${aVider.records.length} visites, ${aVider.events.length} événements, ${aVider.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).${alerteCapture}\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.${alerteLot}`))return;
    const out=await demandeVidage(snap,{exportAt:null,manuel:true});
-   statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.${phraseGardes(out)}${out.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`);});
+   statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.${phraseGardes(out)}${phraseCapture(out)}${out.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`);});
  const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??1024*1024*1024;
  const dateCompacte=d=>d.toISOString().replace(/[:.]/g,'-').slice(0,19);
  async function exportToutZip(Z){
@@ -1216,7 +1228,7 @@ on('native-discard',async()=>{
      if(!confirme)vidage=' Cache d’export NON vidé : l’export n’est pas confirmé complet par le navigateur.';
      else if(!instantane)vidage=' Cache d’export non vidé : stockage illisible depuis le panneau.';
      else try{const r=await demandeVidage(instantane,{exportAt:maintenant.toISOString(),auto:true});
-       vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.${phraseGardes(r)}${r.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`;}
+       vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.${phraseGardes(r)}${phraseCapture(r)}${r.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`;}
      catch(e){vidage=` Cache d’export non vidé : ${e?.message||e}`;}}
    const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.${vidage}`
      :`Journal, bilan, diagnostic et corpus : ${volumes.length} archive(s) zip (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?'les':'la'} pour l’analyse.${vidage}`;
