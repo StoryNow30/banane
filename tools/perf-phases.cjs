@@ -277,10 +277,13 @@ function select(data,{tous,batchId,sessionId}){
 /* --------------------------------------------------------- bilan d'ensemble */
 function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=data.state?.sessionId??data.sessionId??null}={}){
  let refs={resolved:0,unresolved:0};
+ /* F1 (relecture du test 3) : seuls les jalons sont remplacés par leur copie développée ; les observations passives sont
+  * lues dans le journal d'origine (sinon un bilan v4 à dictionnaire les perdait : « observateur absent »). */
+ const source=data;
  if(data.dictionaries){const pt=(data.events||[]).filter(e=>e?.type==='phase-timing');
   if(JSON.stringify(pt).includes('"__ref"')){const r=resolveRefs(pt,data.dictionaries);refs=r.stat;data={...data,events:r.value};}}
  const {events,conflicts}=select(data,{tous,batchId,sessionId});
- if(!events.length)return {available:false,reason:'Aucun jalon V1 corrélé ; ancien journal ou événements absents. Mesures V1 non mesurées.',lots:[],visits:[],observations:observationsOf(data,[],[])};
+ if(!events.length)return {available:false,reason:'Aucun jalon V1 corrélé ; ancien journal ou événements absents. Mesures V1 non mesurées.',lots:[],visits:[],observations:observationsOf(source,[],[])};
  const lotKey=x=>JSON.stringify([x.sessionId,x.batchId]);
  const groups=groupBy(events.filter(e=>e.visitId),e=>JSON.stringify([e.sessionId,e.batchId,e.clockId,e.visitId,identityKey(e.identity)]));
  const visits=[...groups.values()].map(inspectVisit),visitsByLot=groupBy(visits,lotKey);
@@ -297,7 +300,7 @@ function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=
   refs,concurrence:concurrenceOf(visits),attribution:attributionTotals(visits),coupes:visits.map(v=>({...coupeRow(v),
    execution:lots.flatMap(l=>l.executions.visitsOutsideExecution).find(o=>o.visitId===v.visitId)?.reason??null})),
   v46:{categories:v46Categories(events),insideAnalysisMs:stats(visits.map(v=>v.v46.insideAnalysisMs)),outsideAnalysisMs:stats(visits.map(v=>v.v46.outsideAnalysisMs))},
-  observations:observationsOf(data,events,visits)};
+  observations:observationsOf(source,events,visits)};
 }
 /* Correction proposée (2) : synthèse de la chronologie concurrente. Les
  * médianes de lignes différentes ne s'additionnent pas. */
