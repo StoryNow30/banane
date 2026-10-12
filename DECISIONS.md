@@ -1,5 +1,33 @@
 # Décisions techniques
 
+## D-087 - A/A calculé sur les exports reçus ; V3 : expérience I1 tirée cut par cut (4.9.0.6) ; dérive mesurée, V5 déclenchable (13 octobre 2026)
+
+**Instructions de Mic du 12 et 13 octobre 2026** : « Tu peux lancer la suite des chantiers notamment sur celui du gain de temps » ; « Tu as eu assez d'exports pour le faire » ;
+« Ok après la 4906 continue les chantiers ». Consignées par l'orchestrateur Claude Code, sans agent.
+
+1. **A/A (cahier § 4.2, M3) calculé sur les exports reçus**, au lieu de deux lots neufs : cinq lots d'au moins 40 cuts en 4.9.0.2, 4.9.0.3 et 4.9.0.4 (capture, analyse et décision
+   inchangées depuis le 29/09), cycle V1 (navigation → cut suivant observé, ≤ 60 s, la définition des portes). Scripts privés, résultats :
+   - **Entre parties** (lots d'au moins 150 cuts) : cycles médians de 7,16 à 8,30 s. Comparer deux versions sur deux parties différentes est inutilisable.
+   - **Blocs alternés simulés (M1)**, blocs de 10 à 30 cuts : écart P95 de 12,5 à 18,7 %.
+   - **Tirage fixe cut par cut** (règle de la 4.9.0.6) : écarts réalisés de 0,4 à 1,6 % ; P95 sur 500 autres tirages de 4 à 7 % (lots d'au moins 150 cuts). **T3 proposé : 7 %** sur le
+     cycle médian. **C1** (part posée) entre deux moitiés tirées : P95 de 8 à 13 points ; tolérance proposée **8 points** sur un lot d'au moins 300 cuts.
+   - **Dérive dans un lot** : du 1er au 3e tiers, +30 % et +38 % sur le cycle des deux plus longs lots, toute dans le service worker (analyse, décision, pose, validation). Voir 4.
+2. **Méthode de comparaison proposée** (change la décision M1 du 30/09, cahier § 2.4, **à valider par Mic**) : les deux modes sont comparés **dans un même lot**, chaque cut tiré une fois
+   pour toutes d'après son numéro. Bruit deux à trois fois plus faible que les blocs alternés, aucun changement d'extension entre blocs, ni partie, ni heure, ni dérive dans l'écart.
+   « Une seule modification par version » est tenu : la moitié « référence » lit exactement comme la 4.9.0.5.
+3. **V3, expérience I1** (D-078 : option de pause existante de `vendor/lidar.js`, fichier inchangé, version de test seulement) : version **4.9.0.6** « 4.9.0 test 6 » = 4.9.0.5 + I1 tirée cut par cut
+   (`pilote.lectureI1 = 'tirage'`). Mêmes points lus quelle que soit la pause (essai sur le banc de 500 000 points). Mode consigné par cut dans le journal. Outil de mesure :
+   `tools/perf-v3.cjs` (deux modes d'un même lot : cycle, C1, étapes de la capture par rail, intervalle à 95 %). Sur la partie 5 (sans I1), l'outil rend 1,9 % d'écart, dans le bruit.
+   Décomposition de la capture (8 lots) : par rail, sélection 0,30 s, stabilité 0,83 s (à 67 % exactement le délai de 800 ms), lecture 0,95 s ; I1 vise la lecture (labo 0,90 → 0,29 s).
+4. **V5** : cause probable lue dans le code, `save()` réécrit tout l'état à chaque événement (environ 30 par cut) et l'état garde tous les enregistrements depuis le dernier vidage
+   (2 Mo et 30 ms de copie par sauvegarde avec 432 enregistrements, contre 0,4 Mo et 7 ms au départ). Fiche : `fiches/FICHE_V5.md`. **Seuil de dérive proposé : +10 % du 1er au 3e tiers
+   d'un lot d'au moins 150 cuts** (cahier § 11 n° 15) ; mesuré +30 et +38 % : V5 serait déclenché. Décision de Mic.
+
+Réalisé : branche `claude/49-test-6` (base `claude/49-test-5`, tête `81e6e6f`, poussée, non fusionnée), `verify` 1372 essais, 1370 réussis, 0 échec, 2 sautés (corpus natif privé absent) ;
+paquet `ariane-4.9.0-test.6.zip` (SHA-256 `91b4240627bf3b1456cf54b5aded5a6d9943e04b16be39c54c443a4b238ca7b2`, 1 269 166 octets, sans `tests/`) ; non essayé dans Chromium ni sur le vrai ESV ; consigne
+`consignes/seance-terrain-test-6-2026-10-13.md` (un lot d'au moins 300 cuts, partie neuve). **Non autorisé** : fusion, étiquette, publication, production ; I1 hors version de test ; tout seuil
+ou porte du cahier (T3, tolérance C1, méthode et seuil V5 restent des propositions jusqu'à la réponse de Mic).
+
 ## D-086 - Sessions courtes par chantier, routage des modèles, compaction ; coupes difficiles et apprentissage maintenus en 4.9 (12 octobre 2026)
 
 **Réponses de Mic du 12 octobre 2026** au point d'étape de l'orchestrateur Claude Code :

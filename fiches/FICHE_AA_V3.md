@@ -1,5 +1,8 @@
 # Fiche de reprise : A/A puis V3 (capture plus rapide) : 12 octobre 2026
 
+**État au 13 octobre (D-087).** A/A fait sur les exports reçus (T3 proposé 7 %) ; V3 expérience I1 livrée en 4.9.0.6, tirée cut par cut dans un même lot ; en attente du lot de Mic,
+mesuré par `node tools/perf-v3.cjs BILAN.json`. Les étapes 1 à 3 ci-dessous sont remplacées par la consigne du test 6. Suite : V5 (`fiches/FICHE_V5.md`).
+
 **But.** (1) Mesurer le bruit du protocole : test A/A = la même version, sans accélération, sur deux lots comparables (cahier § 4.2, M3). (2) Puis V3 : une
 expérience de capture par version de test, comparée à la référence (M1, blocs alternés). Porte 4.9.0 : cycle médian −25 %, C1 non dégradé (C4 retiré, D-085),
 C3 = 0, zéro capture perdue.
