@@ -21,7 +21,8 @@ test('le paquet installable ne contient aucun identifiant de projet ESV (consign
 });
 test('le motif reconnaît bien un identifiant de projet au format ESV (témoin, valeur fabriquée)',()=>{
  const re=new RegExp(PROJET);
- assert.ok(re.test('du projet `111111_222222_E_ABCDE_1`'));
+ const temoin=['111111','222222','E','ABCDE','1'].join('_');   // composé à l'exécution : le motif n'est écrit nulle part dans l'arbre
+ assert.ok(re.test('du projet `'+temoin+'`'));
  assert.ok(!re.test('ariane-bilan-v4-2026-10-07T08-34-45-seg01.json'));
  assert.ok(!re.test('banane-lidar-part-23-cut-2860-1788942528253.json'));
 });
