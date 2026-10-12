@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.4',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 4';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 5';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -125,7 +125,7 @@ const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRM
  * lot, mais 120 s au plus après l'arrêt (sans plafond : mesuré accepté 10 min après) ; ensuite, seuls les 5 s après la
  * sortie de la boucle (jalon `batch-state`) comptent. */
 const OBS_TACHE_MAX_MS=120000;
-/* 4.9.0.3 (test 3) — MÊME GRÂCE après l'arrêt MANUEL (« Arrêter ») et après la fin naturelle du lot (COMPLETED, ou
+/* Test 3 — MÊME GRÂCE après l'arrêt MANUEL (« Arrêter ») et après la fin naturelle du lot (COMPLETED, ou
  * FINISHED_WITH_UNCONFIRMED_ACTIONS : même fin, nommée par `closingState` selon la confirmation serveur). `src/engine.js`
  * (épinglé) ne date ni l'un ni l'autre : l'instant est relevé ICI, quand le service worker voit la fin (clic « Arrêter »
  * sur un lot non clos ; sortie de la boucle du moteur, jalon `batch-state`). Clé : l'identifiant du lot, aucun autre lot
@@ -959,7 +959,7 @@ async function closureExport(){
    closureScope:'enregistrements depuis le dernier vidage du cache (withoutFinalState, withoutServerConfirmation)'};}
  catch{return c;}
 }
-/* 4.9.0.4 — CAPTURE « AVANT » RESTÉE OUVERTE sur un lot fini (dernier cut différé, posé non validé, sortie d'ESV pendant un cut) :
+/* 4.9.0.5 — CAPTURE « AVANT » RESTÉE OUVERTE sur un lot fini (dernier cut différé, posé non validé, sortie d'ESV pendant un cut) :
  * `closeAtExit` / `stopAtLotEnd` ne la referment pas ; le moteur (épinglé) l'archive au prochain `begin()`. Le vidage est permis
  * (src/export-cache.js `refus`) À CONDITION de garder son nuage LiDAR, les événements et visites qui le nomment : ils restent
  * dans le cache et partent au prochain export. Rien n'est lu si aucune capture n'est ouverte. */
@@ -1006,7 +1006,7 @@ async function viderCacheExport(args){
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
  if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage(),refus=EC?EC.refus(c,{auto:args?.auto===true}):'module absent';
-  /* 4.9.0.4 : ce que la capture ouverte retient (identifiants), pour que la confirmation le dise et ne le compte pas parmi ce qui sera supprimé. */
+  /* 4.9.0.5 : ce que la capture ouverte retient (identifiants), pour que la confirmation le dise et ne le compte pas parmi ce qui sera supprimé. */
   return {refus,reprenable:EC?EC.reprenable(c):false,marqueur:EC?await EC.lire(chrome.storage.local):null,capture:refus===null?await captureOuverteAGarder():null};}
  if(action==='export-cache-clear')return viderCacheExport(args);
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
