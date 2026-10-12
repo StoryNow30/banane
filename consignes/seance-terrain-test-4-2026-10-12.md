@@ -59,6 +59,22 @@ Si tu lis « 4.9.0 test 3 » (ou 4.9.0.3) quelque part, ou si le bouton blanc n'
 Désactive l'Ariane en trop, recharge ESV (F5), vérifie de nouveau, et préviens-moi si rien ne change. Sinon tu risquerais de
 refaire un lot avec la test 3 et de retrouver « Vidage impossible » sans que la correction y soit pour quelque chose.
 
+## Contrôler l'empreinte d'un paquet (SHA-256)
+
+Avant d'installer un zip (la test 4, ou une version de retour arrière), compare son empreinte avec celle que je t'ai donnée.
+Cela compte surtout pour la **test 3** : il en existe **deux paquets de même numéro 4.9.0.3** (11 et 12 octobre). Seul celui du
+**12 octobre** convient, et seule l'empreinte les distingue.
+
+1. Ouvre **PowerShell** dans le dossier du zip (Téléchargements) et tape :
+   `Get-FileHash .\ariane-4.9.0-test.3.zip -Algorithm SHA256`
+   (ou, dans l'invite de commandes : `certutil -hashfile ariane-4.9.0-test.3.zip SHA256`).
+2. Lis les **64 caractères** affichés (majuscules ou minuscules, c'est pareil ; certutil peut les couper en groupes) : ils
+   doivent être **identiques** à l'empreinte donnée.
+3. S'ils sont différents : **n'installe pas** ce zip et dis-le-moi.
+
+**Garde** dans Téléchargements, jusqu'à la fin de la séance, le zip de la **test 3 du 12 octobre** et celui de la test 2 : ils
+servent au retour arrière. Si tu ne les retrouves plus, dis-le-moi : je te les renvoie.
+
 ## La partie et les lots
 
 - **Un lot par partie NEUVE** : une partie que personne n'a encore traitée. Ne reprends **aucune partie déjà traitée** :
@@ -130,7 +146,9 @@ installe, **dans un nouveau dossier** (pas par-dessus la test 4, qui garde ainsi
 `3612bd3886e86777aad5c4923021bf93ef131edb94db472a9f1143d18c2fabba`) ou, si je te le demande, la 4.9.0 test 2
 (`ariane-4.9.0-test.2.zip`, SHA-256 `06b1f2f728f584e7b05322a99301441e80712bcfa195f1cb39e05c55000f5ab2`) ; recharge ESV (F5)
 et choisis l'onglet. Ne supprime la test 4 qu'après mon accord. Avec la test 3, « Vider le cache des exports » reste refusé
-après un lot terminé sur un dernier cut différé (c'est le défaut corrigé ici).
+après un lot terminé sur un dernier cut différé (c'est le défaut corrigé ici). **Contrôle l'empreinte** du zip avant de
+l'installer (voir « Contrôler l'empreinte d'un paquet (SHA-256) » plus haut).
+
 ## Petites précautions (limites connues)
 
 - Cette séance se fait avec **Orbite seulement** : pas d'Écho (ses observations seraient rangées avec le dernier lot).
@@ -151,6 +169,7 @@ après un lot terminé sur un dernier cut différé (c'est le défaut corrigé i
 - **Deux panneaux Ariane ouverts en même temps : non vérifié.** Garde un seul panneau ouvert.
 - **Edge : non essayé.**
 - **Le bouton « Recharger » de chrome://extensions et d'edge://extensions : non essayé** (essayé seulement : fichiers remplacés dans
-  le même dossier, navigateur relancé).
+  le même dossier, navigateur relancé). **Les commandes d'empreinte** (PowerShell `Get-FileHash`, `certutil`) sont des commandes
+  Windows usuelles, **non essayées ici** : si elles ne donnent rien de lisible, dis-le-moi.
 - La dernière validation après « Arrêter le lot » ou en fin normale de lot a été essayée avec un lot posé par script dans
   la copie locale, pas avec un vrai lot Orbite complet.

@@ -72,3 +72,12 @@ test('P-2 : section « Vérifier » — la version active se constate avec les r
  // La section vient avant la première séance de lots.
  assert.ok(texte.indexOf('## Vérifier que la bonne version est active')<texte.indexOf('## La partie et les lots'));
 });
+test('P-3 : comment calculer et comparer une empreinte SHA-256 (Windows), garder les paquets de retour arrière, refuser si elle diffère',()=>{
+ const e=section("Contrôler l'empreinte d'un paquet (SHA-256)");
+ for(const mot of ['Get-FileHash','certutil -hashfile','SHA256','64 caractères','majuscules','n\'installe pas'])assert.ok(e.includes(mot),'empreinte sans « '+mot+' »');
+ const r=section("Si quelque chose d'anormal arrive");
+ assert.match(r,/Contrôler l'empreinte/,'le retour arrière renvoie à la section');
+ assert.match(r+e,/garde.*zip.*test 3/is,'garder le zip de la test 3');assert.match(r+e,/12 octobre/);assert.match(r+e,/11 et 12 octobre/,'dit que deux paquets « test 3 » existent');
+ // Seules les deux empreintes de retour arrière figurent (test du paquet plus haut) : les commandes n'en ajoutent pas.
+ assert.doesNotMatch(e,/[0-9a-f]{64}/);
+});
