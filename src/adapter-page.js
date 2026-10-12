@@ -171,6 +171,17 @@
    if(typeof scheduler!=='undefined'&&typeof scheduler.yield==='function')return scheduler.yield();
    if(typeof MessageChannel==='function')return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();resolve();};channel.port2.postMessage(0);});
    return new Promise(resolve=>setTimeout(resolve,0));}
+ /* V3, expérience I1 (D-078, D-087 ; version de test) : mode de lecture d'un cut.
+  * Tirage fixe sur le numéro du cut (bit haut du hachage multiplicatif de Knuth) :
+  * une relecture, une reprise ou un F5 gardent le mode, l'analyse le recalcule, et
+  * les deux modes se mélangent tout au long du lot (pas de blocs : la vitesse dérive
+  * de 19 à 22 % entre la première et la seconde moitié d'un lot). « rapide » passe
+  * à `vendor/lidar.js`, inchangé, son option de pause existante ; « reference » ne
+  * lui passe rien, comme la 4.9.0.5. Réglage absent ou inconnu : référence. */
+ function lectureDuCut(identity){const regle=P.lectureI1;
+   if(regle==='toujours')return 'rapide';if(regle!=='tirage')return 'reference';
+   const cut=identity?.cut;if(!Number.isInteger(cut))return 'reference';
+   return Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';}
  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
    const c=nativeContext(),railInputs={},associationByRail={};
    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
@@ -218,8 +229,8 @@
    document.dispatchEvent(new KeyboardEvent('keyup',init));
    return {commandSent:true,command:'SKIP'};
  }
- async function captureOnce(expected,guard){guard();const c=context();
-   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,
+ async function captureOnce(expected,guard,lecture='reference'){guard();const c=context();
+   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,...(lecture==='rapide'?{pause:yieldToPage}:{}),
      meta:{version:K.VERSION,captureId:K.uid(),sessionId:pageId,visitId:`${c.frame.id}:${c.identity.part}:${c.identity.cut}`,
        identity:c.identity,part:c.identity.part,cut:c.identity.cut,shape:c.identity.shape,railStateProvenance:'observed-before',
        coordinateBridge:{sceneFrameId:c.frame.id,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
@@ -248,7 +259,7 @@
    return SIG.signature(L.inventory(context().viewer),id);
  }
  async function capture(expected,progress=()=>{}){cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
-   const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs;
+   const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs,lecture=lectureDuCut(expected?.identity);
    const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
      if(!K.equalPoses(now.rails,expected.rails))throw Error('Rails modifiés pendant la lecture.');
      if(Date.now()-startedAt>=budgetMs)throw Error('Lecture LiDAR instable : délai total de 60 secondes atteint.');};
@@ -264,8 +275,8 @@
            if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
            return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
          },'Niveau de détail non stabilisé.',12000,guard);
-         guard();progress('capture-read',{side,attempt});
-         const data=await captureOnce(expected,guard);guard();
+         guard();progress('capture-read',{side,attempt,lecture});
+         const data=await captureOnce(expected,guard,lecture);guard();
          attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began});captures.push(data);
          progress('capture-view-ready',{side,attempt,points:data.pointsSceneRelative.length});break;
        }catch(e){
@@ -279,13 +290,13 @@
      }
    }
    guard();const data=M3.merge(...captures);guard();
-   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
+   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts,lecture,regleLecture:P.lectureI1??null};
    /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
     * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
    const nodes=data.nodes.length,compacted=M3.compactNodes(data),bytes=M3.messageBytes(data);
    if(bytes>M3.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
-   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes});return data;
+   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture});return data;
  }
  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
   * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de

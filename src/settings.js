@@ -93,6 +93,13 @@
     recentrages: 3,
     attenteNavigationMs: 15000,
     attenteClicMs: 5000,
+    /* V3, expérience I1 (D-078, D-087), version de test seulement : lecture
+     * sans attendre une image d'ESV. « tirage » : chaque cut est tiré une fois
+     * pour toutes à partir de son numéro, une moitié lit comme avant
+     * (« référence »), l'autre rend la main à ESV par `scheduler.yield`
+     * (« rapide »). Mêmes points lus dans les deux modes ; seule la vitesse
+     * change. « reference » : aucun cut rapide. « toujours » : tous rapides. */
+    lectureI1: 'tirage',
   });
 
   /* --- Export : vidage automatique et segmentation --- */
@@ -239,6 +246,7 @@
       { groupe: 'Pilote', nom: 'Tentatives par vue', valeur: String(pilote.tentativesParVue), pourquoi: 'Relectures d’un rail avant abandon.' },
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
+      { groupe: 'Pilote', nom: 'Lecture rapide (V3, I1)', valeur: { tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.lectureI1] || 'aucun cut', pourquoi: 'Mesure de vitesse de la version de test : les mêmes points, lus sans attendre une image d’ESV. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
