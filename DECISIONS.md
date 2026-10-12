@@ -1,5 +1,24 @@
 # Décisions techniques
 
+## D-084 - Limites d'écartement 1420 à 1470 mm ; C4 à faire évoluer (12 octobre 2026)
+
+**Instruction de Mic du 12 octobre 2026**, consignée par l'orchestrateur Claude Code :
+1. « Mise à jour des limites d'écartement : **1420 à 1470** » (elles étaient [1405, 1470]).
+2. **C4 doit évoluer** : « on ne pourra pas toujours attendre la correction humaine » ; Mic estime que les coupes posées par Ariane sont exactes à environ 97 %.
+
+État au moment de l'enregistrement (lu dans le dépôt, **rien n'est modifié dans le code**) :
+- La borne basse 1405 est dans `src/gauge.js` (`lowMm`), dans l'outil de rapport d'acceptation (classe `LOW_INVALID`) et dans les textes signés (cahier, passations,
+  `PROJECT_STATE.md`) ; ces textes ne sont pas réécrits, cette entrée fait foi à partir d'aujourd'hui. `src/lot-decision.js` a déjà une garde de première passe
+  `lowGaugeGuardMm: 1420`. Passer la borne à 1420 change des décisions pour les paires comprises entre 1405 et 1420 mm : l'effet doit être mesuré par un rejeu du banc
+  (633 cuts, 8 jeux) avant adoption, et les critères « décisions identiques » des chantiers V1, V2, V4, U1 à U3 se lisent désormais contre la nouvelle borne.
+- C4 actuel (cahier § 5.1) : au moins 100 posés jugés par une relecture humaine, au moins 80 % des posés jugés, au plus 2 faux pour 100 jugés. Références du cahier : 4.8.0 =
+  1 faux sur 353 (0,28 %), partie 25 = 2 faux sur 62 (3,2 %, soit 96,8 % exactes). Un taux de 3 % dépasserait le seuil actuel de 2 pour 100.
+- Options pour faire évoluer C4 (à choisir par Mic, rien n'est décidé) : (a) relecture humaine d'un échantillon tiré au hasard (30 à 40 coupes par partie) au lieu de 100 et plus,
+  avec cumul sur plusieurs parties (D-061) ; (b) pour les chantiers qui changent la capture (V3), comparaison appariée de deux versions sur les mêmes coupes, « zéro écart non
+  expliqué », sans relecture humaine (cahier § 5.2, niveau 3) ; (c) étude d'un indicateur sans humain : reprise ultérieure d'une pose par l'opérateur, vue par l'observateur passif ;
+  (d) score de justesse hors ligne, sans activation (feuille de route, idée D I-3).
+- Aucun changement de seuil, de porte ou de critère n'est appliqué tant que Mic n'a pas choisi.
+
 ## D-083 - Consommation de tokens : mode économe (12 octobre 2026)
 
 **Instruction de Mic du 12 octobre 2026** : « Je veux que mes tokens soient utilisés intelligemment, de sorte à ne pas niquer ma consommation
