@@ -81,3 +81,13 @@ test('P-3 : comment calculer et comparer une empreinte SHA-256 (Windows), garder
  // Seules les deux empreintes de retour arrière figurent (test du paquet plus haut) : les commandes n'en ajoutent pas.
  assert.doesNotMatch(e,/[0-9a-f]{64}/);
 });
+test('N-1 et N-2 : la version affichée par le navigateur est « 4.9.0 test 4 », et l’empreinte de la test 4 se contrôle AVANT l’installation',()=>{
+ const v=section('Vérifier que la bonne version est active'),a=section('Avant de commencer'),e=section("Contrôler l'empreinte d'un paquet (SHA-256)");
+ assert.match(v,/carte \*\*Ariane\*\*, la version affichée est « \*\*4\.9\.0 test 4\*\* »/,'le navigateur affiche le nom de version, pas le numéro du manifeste');
+ assert.doesNotMatch(v,/la version est \*\*4\.9\.0\.4\*\*/);
+ assert.match(a,/Contrôle d'abord l'empreinte du zip de la test 4/);
+ assert.ok(a.indexOf("Contrôle d'abord l'empreinte")<a.indexOf('Pose la test 4'),'le contrôle vient avant la pose');
+ assert.match(e,/Get-FileHash \.\\ariane-4\.9\.0-test\.4\.zip/,'l’exemple vise le zip de la test 4');
+ assert.match(a,/Chargée depuis/,'comment retrouver le dossier de la test 3');
+ assert.match(a,/prochain\s+« Tout télécharger » le contiendra/,'par-dessus, le cache non vidé de la test 3 est gardé');
+});
