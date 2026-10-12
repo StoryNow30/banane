@@ -74,7 +74,7 @@ test('zip : noms dangereux, doublons et archive terminée sont refusés',async()
 const N_POINTS=300;
 function nuage(i){
   const id='cap-'+i,pts=Array.from({length:N_POINTS},(_,j)=>[i+j*0.12345678901234,2.5+j/7,1.000000000001*j]);
-  return {format:'banane-native-lidar-capture-v2',version:'4.9.0.3',captureId:id,sessionId:'s1',visitId:'v'+i,
+  return {format:'banane-native-lidar-capture-v2',version:'4.9.0.4',captureId:id,sessionId:'s1',visitId:'v'+i,
     identity:{pageId:'p',part:7,cut:100+i,shape:'U50',frameId:'f',projectId:null,viewEpochId:'view-'+i},part:7,cut:100+i,shape:'U50',
     coordinateSystem:{name:'scene-relative',matrixLayout:'column-major; column vectors',units:'u',frameId:'f'},
     rails:{left:K.clone(base.rails.left),right:K.clone(base.rails.right)},camera:{type:'OrthographicCamera',fov:i},
@@ -96,15 +96,15 @@ async function exporter({zip=true,data=jeu(),reglages={},lectureCapricieuse=null
   const lectures=new Map();
   const store={all:async n=>structuredClone(n==='events'?data.events:n==='records'?data.records:[]),keys:async n=>n==='clouds'?[...data.clouds.keys()]:[],
     getCloud:async id=>{lectures.set(id,(lectures.get(id)||0)+1);if(lectureCapricieuse?.(id,lectures.get(id)))throw Error('lecture refusée');return structuredClone(data.clouds.get(id));}};
-  const diagnostic={format:'banane-gcv1-diagnostic-v1',version:'4.9.0.3',exportedAt:'2026-10-07T07:59:00.000Z',scope:'current-engine-session',sessionId:'s1',
+  const diagnostic={format:'banane-gcv1-diagnostic-v1',version:'4.9.0.4',exportedAt:'2026-10-07T07:59:00.000Z',scope:'current-engine-session',sessionId:'s1',
     observationCount:data.clouds.size,observations:[...data.clouds.keys()].map((id,i)=>({observationEventId:'o'+i,lidar:{captureId:id,association:'x'},identity:{part:7,cut:100+i}}))};
   const reglagesPanneau={...Settings,export:{...Settings.export,...reglages}};
   const globals={BananeStorage3:class{constructor(){return store;}},BananeSettings:reglagesPanneau,BananeNativeExport:X,
     BananeGCV1Export:{buildDiagnostic:()=>structuredClone(diagnostic),buildCorpusPlan:GCV1.buildCorpusPlan},...(zip?{BananeZip:Z}:{})};
   const state={current:{identity:{part:7,cut:100}},batch:{state:'STOPPED',scope:{part:7,start:100,end:105},processed:[],deferred:[],skipped:[],manuallyCompleted:[],paused:[],interrupted:[],sequence:[],activeIdentity:null}};
-  const meta={format:'banane-test-dataset-v4',version:'4.9.0.3',exportedAt:'2026-10-07T07:58:00.000Z',state:{batch:{id:'lot-7',state:'STOPPED'},sessionId:'s1'},stateOmits:['records','incomplete'],
+  const meta={format:'banane-test-dataset-v4',version:'4.9.0.4',exportedAt:'2026-10-07T07:58:00.000Z',state:{batch:{id:'lot-7',state:'STOPPED'},sessionId:'s1'},stateOmits:['records','incomplete'],
     closureSummary:{visits:data.records.length},cloudIds:[...data.clouds.keys()]};
-  const p=await panneau(state,{globals,reponses:{'dataset-meta':meta,'journal-meta':{...meta,format:'banane-test-journal-v4',cloudIds:undefined},'gcv1-export-meta':{version:'4.9.0.3',sessionId:'s1'},cloud:null}});
+  const p=await panneau(state,{globals,reponses:{'dataset-meta':meta,'journal-meta':{...meta,format:'banane-test-journal-v4',cloudIds:undefined},'gcv1-export-meta':{version:'4.9.0.4',sessionId:'s1'},cloud:null}});
   await p.$(bouton).onclick();await p.attendre();
   return {p,data,diagnostic,lectures,statut:p.$('export-status').textContent,blobs:p.downloads};
 }
