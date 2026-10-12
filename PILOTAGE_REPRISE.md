@@ -106,6 +106,8 @@ modèle dans les fichiers du dépôt ; aucune écriture dans banane-data.
 
 Relecture proportionnée au risque (D-081, 12 octobre) : une relecture indépendante ciblée pour ce qui efface ou peut perdre des données, une seule pour la mesure et l'observateur, aucune équipe pour les textes et l'affichage ; essais complets à zéro échec dans tous les cas, puis séance terrain.
 
+Mode économe en tokens (D-083, 12 octobre) : analyses d'exports faites sans agent ; au plus 4 agents et environ 25 appels par agent ; estimation et accord de Mic avant tout chantier de plus de 2 agents.
+
 ## 7. Observations de terrain de Mic (6 octobre, version 4.8.6), non mesurées
 
 Poste pro sous Edge : Orbite lent quand une 2e fenêtre ESV est traitée en manuel. Même poste sous Chrome : plus de lenteur. Poste perso plus puissant : Orbite très rapide. À mesurer plus tard avec V1 (même lot, Edge puis Chrome, une puis deux fenêtres). Les mesures de vitesse se comparent sur un même poste et un même navigateur.

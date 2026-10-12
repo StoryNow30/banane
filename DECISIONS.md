@@ -1,5 +1,26 @@
 # Décisions techniques
 
+## D-083 - Consommation de tokens : mode économe (12 octobre 2026)
+
+**Instruction de Mic du 12 octobre 2026** : « Je veux que mes tokens soient utilisés intelligemment, de sorte à ne pas niquer ma consommation
+avec tes multi et revérification avec 30 agents à la fois. » Cette entrée consigne cette instruction ; les règles d'application sont celles de
+l'orchestrateur Claude Code, qui les applique dès maintenant.
+
+Mesure faite le même jour sur la transcription de la session (estimation, prix des modèles non connus) : environ 59 % du coût vient des
+missions d'étude du début (23 agents), 17 % du test 3 (19 agents lancés), 14 % du fil principal, 8 % du test 4. Cause principale : chaque appel
+d'outil d'un agent relit tout son contexte (900 M de tokens relus pour 0,5 M produits) ; viennent ensuite les enchaînements
+intégrer-relire-vérifier-corriger-revérifier et les arrêts sur limite d'utilisation (21 agents échoués).
+
+Règles :
+1. **Analyse d'un export de séance : faite par l'orchestrateur avec les outils du dépôt (`analyse-locale.cjs`, `perf-lot.cjs`), sans agent.**
+2. **Chantier de code : un agent d'implémentation. Une relecture indépendante ciblée seulement si le code efface ou peut perdre des données (D-081).**
+3. **Au plus 4 agents par chantier, environ 25 appels d'outil par agent (écrit dans le prompt), jamais de relecture en cascade, un seul contrôle complet
+   (`verify`) par version.**
+4. **Avant tout chantier de plus de 2 agents : estimation du coût donnée à Mic, et accord de Mic.**
+5. Lecture par extraits (`grep`, `sed`) plutôt que de fichiers entiers ; rapports courts.
+6. Choix du modèle par tâche (proposé à Mic, pas encore décidé) : le plus fort pour la relecture et la correction qui touchent aux données, un modèle
+   plus léger pour le mécanique (texte, rapport, relevé, paquet).
+
 ## D-082 - Séance terrain test 3 (12 octobre) : résultats ; défaut du vidage ; paquet 4.9.0.4 : enregistrement de l'orchestrateur
 
 Enregistrement, pas une décision nouvelle de Mic. Rien d'autorisé au-delà de D-078, D-079 et D-081 : aucun merge, tag, publication,
