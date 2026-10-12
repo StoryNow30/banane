@@ -16,7 +16,7 @@
    pas lire le jeton de connexion, et naviguer dans ESV n'est pas une lecture pure). Méthode retenue pour plus tard : HAR enregistré par Mic
    dans Chrome sur les coupes laissées de côté, nettoyé des échanges `login.microsoftonline.com` avant envoi (le HAR « nettoyé » de Chrome garde
    les jetons dans le corps de ces réponses ; l'original reçu a été supprimé, copie propre privée sans jeton). Reprise seulement sur besoin précis.
-4. **Séance terrain test 2, partie 7 (projet 260903_122817_E_WIMSV_1), poste perso, Chrome 154, 4.9.0.2** : 156 coupes invalides visées,
+4. **Séance terrain test 2, partie 7 d’un projet neuf (identifiant de projet ESV tenu hors dépôt), poste perso, Chrome 154, 4.9.0.2** : 156 coupes invalides visées,
    121 validées, 35 mises de côté (écartement hors contrat, placements concurrents) ; observateur présent et sans perte ; 120 écritures de
    validation observées avec statut 204 (aucun échec, aucune nouvelle tentative), la 121e validée en place sans écriture dans l'export ;
    V1 cohérent (0 perdue, 0 en attente) ; cycle médian 7,9 s (indicatif : lecture de l'extension à 09:35 pendant les premières minutes, sans effet visible).
