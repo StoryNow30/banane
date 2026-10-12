@@ -274,12 +274,19 @@ function select(data,{tous,batchId,sessionId}){
  return {events,conflicts};
 }
 
+/* F6 (relecture du test 3) : depuis la V2, seul le PREMIER segment d'un export porte events, state, v1TimingExport…
+ * (src/native-export.js, UNE_FOIS) ; les suivants ont un en-tête mince (`segment.headerIn`). Sur un tel segment, rien ne
+ * se mesure : on dit où sont les données, jamais « observateur absent ». */
+function thinSegmentReason(data){const s=data?.segment;if(!s||!Number.isInteger(s.headerIn)||s.index===s.headerIn)return null;
+ const n=x=>String(x).padStart(2,'0');
+ return `Segment ${n(s.index)} à en-tête mince (export 4.9.0.3 ou plus) : les jalons V1, l’état du lot et les observations sont dans le segment ${n(s.headerIn)} du même export (fichier …-seg${n(s.headerIn)}.json). Lance l’analyse sur ce segment-là, ou fusionne les segments (tools/merge-segments.cjs). Rien n’est mesuré sur ce segment seul (l’observateur n’est pas en cause).`;}
 /* --------------------------------------------------------- bilan d'ensemble */
 function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=data.state?.sessionId??data.sessionId??null}={}){
  let refs={resolved:0,unresolved:0};
  /* F1 (relecture du test 3) : seuls les jalons sont remplacés par leur copie développée ; les observations passives sont
   * lues dans le journal d'origine (sinon un bilan v4 à dictionnaire les perdait : « observateur absent »). */
- const source=data;
+ const source=data,thin=thinSegmentReason(data);
+ if(thin&&!(data.events||[]).length)return {available:false,reason:thin,thinSegment:true,lots:[],visits:[],observations:{available:false,reason:thin}};
  if(data.dictionaries){const pt=(data.events||[]).filter(e=>e?.type==='phase-timing');
   if(JSON.stringify(pt).includes('"__ref"')){const r=resolveRefs(pt,data.dictionaries);refs=r.stat;data={...data,events:r.value};}}
  const {events,conflicts}=select(data,{tous,batchId,sessionId});
@@ -538,4 +545,4 @@ function executionsLine(x,n){if(!x)return 'Exécutions : non mesurées.';
  return `Exécutions : ${rows.join(' ; ')||'aucune borne'}.${x.replaced?` Remplacé par un autre lot (dernier état ${x.replaced.lastState??'inconnu'}${x.replaced.closedAtReplacement?', fin connue avant':', aucune fin connue'}).`:''}`+
   ` Vie complète ${x.lifetimeMs===null?`non mesurée (${reasons[x.lifetimeReason]})`:`${n(x.lifetimeMs)} ms, dont exécution ${n(x.executionMs)} ms`}.`+
   (x.visitsOutsideExecution.length?` Visites hors exécution : ${x.visitsOutsideExecution.length} (coupes ${x.visitsOutsideExecution.map(v=>v.identity?.cut).join(', ')}), gardées dans la couverture.`:'');}
-module.exports={measure,toMarkdown,inspectVisit,stats,union,IDS,resolveRefs};
+module.exports={measure,toMarkdown,inspectVisit,stats,union,IDS,resolveRefs,thinSegmentReason};

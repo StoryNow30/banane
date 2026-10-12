@@ -58,7 +58,7 @@ function fenetreDuLot(events,batch){
 function measure(data,{tous=false}={}){
   const tries=(data.events||[]).filter(e=>Number.isFinite(ms(e))).sort((a,b)=>ms(a)-ms(b));
   const batch=data.state?.batch||null,{events,filtre}=tous?{events:tries,filtre:false}:fenetreDuLot(tries,batch);
-  if(!events.length)throw Error('Aucun événement horodaté dans cet export.');
+  if(!events.length)throw Error(V1.thinSegmentReason(data)||'Aucun événement horodaté dans cet export.');
   const m={...mesurer(events),phases:decomposer(events)};
   /* Lot par lot : chaque `batch-started` ouvre une fenêtre jusqu'au suivant. */
   const debuts=events.filter(e=>e.type==='batch-started'),lots=debuts.map((d,i)=>{const de=ms(d),a=debuts[i+1]?ms(debuts[i+1]):Infinity;
