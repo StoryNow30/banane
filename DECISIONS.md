@@ -1,5 +1,22 @@
 # Décisions techniques
 
+## D-081 - Relecture proportionnée au risque (12 octobre 2026)
+
+**Réponse de Mic du 12 octobre 2026** : « Oui go », à la proposition de l'orchestrateur Claude Code (même jour), après la question « Il y a réellement besoin autant de relecture à chaque fois ? ».
+
+Constat : pour le test 3 (4.9.0.3) cinq relectures indépendantes ont trouvé cinq points à corriger, mais n'ont pas vu le blocage du vidage du cache rencontré par Mic sur le terrain (lot fini sur un dernier cut différé) ; pour le test 4 (4.9.0.4), trois relectures ont trouvé une perte de données possible (course) et des valeurs de séance dans des essais. Elles ont aussi coûté plusieurs heures et deux arrêts sur limite d'utilisation.
+
+Règle à partir de maintenant :
+
+| Type de changement | Contrôle |
+|---|---|
+| Ce qui efface ou peut perdre des données (vidage, export, enregistrement) | une relecture indépendante ciblée, parfois deux |
+| Mesure, observateur | une relecture ciblée |
+| Texte, consigne, affichage | essais et relecture de l'orchestrateur, sans équipe |
+| Tout | essais complets à zéro échec, puis séance terrain de Mic |
+
+Rien ne change à la règle « zéro donnée perdue », ni aux portes, seuils et critères du cahier. L'audit d'Astra du diff avant toute version stable (cahier § 7) reste exigé : cette règle ne concerne que les relectures de développement.
+
 ## D-080 - Paquet de test 4.9.0.3 prêt pour la séance terrain (12 octobre 2026) : enregistrement de l'orchestrateur
 
 Enregistrement, pas une décision nouvelle de Mic. Rien d'autorisé au-delà de D-078 et D-079 : aucun merge, tag, publication, activation de production
