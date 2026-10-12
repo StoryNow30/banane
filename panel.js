@@ -126,8 +126,9 @@
    let texte=String(message??'');
    for(const [motif,remplacement] of NOTICES)texte=texte.replace(motif,remplacement);
    $('notice').textContent=texte;$('notice').classList.toggle('error',error);}
- /* V2 : un lot RUNNING, en pause, repris à la main ou en erreur interdit le vidage du cache. */
- const lotNonTermine=s=>{const e=s?.batch?.state;return !!e&&e!=='STOPPED';};
+ /* V2 : un lot RUNNING, en pause, repris à la main ou en erreur interdit le vidage du cache. A2 (relecture du test 3) :
+  * une fin naturelle (COMPLETED, FINISHED_WITH_UNCONFIRMED_ACTIONS) est une fin, comme STOPPED (même liste que src/export-cache.js). */
+ const lotNonTermine=s=>{const e=s?.batch?.state;return !!e&&!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(e);};
  function button(id,{hidden=false,disabled=false}={}){if($(id)){$(id).hidden=hidden;$(id).disabled=disabled;}}
  const openStatus=status=>['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(status);
  const manualActive=s=>openStatus(s.manual?.status),nativeActive=s=>openStatus(s.native?.status),active=s=>manualActive(s)||nativeActive(s);

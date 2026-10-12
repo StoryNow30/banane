@@ -19,6 +19,10 @@
 
   const CLE = 'banane49ExportCache';
   const LOT_TERMINE = 'STOPPED';
+  /* A2 (relecture du test 3) : un lot est aussi TERMINÉ après sa fin naturelle (COMPLETED, ou
+   * FINISHED_WITH_UNCONFIRMED_ACTIONS : même fin, nommée selon la confirmation serveur). Ces états ne se
+   * reprennent pas et « Arrêter » y est caché : les refuser bloquait le vidage jusqu'au lot suivant. */
+  const TERMINES = [LOT_TERMINE, 'COMPLETED', 'FINISHED_WITH_UNCONFIRMED_ACTIONS'];
   const COLLECTIONS_LIBRES = [undefined, null, 'IDLE', 'AFTER_CAPTURED'];
 
   /* Raison du refus (texte pour l'opérateur), ou null si le vidage est permis.
@@ -30,7 +34,7 @@
      * fin de la partie) ou l'absence de lot l'autorise. Le vidage manuel, lui, est
      * permis sur STOPPED, avec confirmation et avertissement (`reprenable`). */
     if (options && options.auto && b && b.state === LOT_TERMINE && !b.stoppedAtEnd) return 'le lot est arrêté mais pas terminé : il peut être repris (vidage automatique refusé)';
-    if (b && b.state && b.state !== LOT_TERMINE) return 'un lot n’est pas terminé (' + b.state + ') : arrête-le ou termine-le d’abord';
+    if (b && b.state && !TERMINES.includes(b.state)) return 'un lot n’est pas terminé (' + b.state + ') : arrête-le ou termine-le d’abord';
     if (c.busy || c.task) return 'Ariane travaille encore (action en cours)';
     if (c.nativeActive) return 'Écho est actif';
     if (c.manualActive) return 'une session Mes corrections est active';
@@ -103,5 +107,5 @@
   }
   async function ecrire(storage, marqueur) { await storage.set({ [CLE]: marqueur }); }
 
-  return { CLE, LOT_TERMINE, refus, reprenable, signature, supprimer, texte, lire, ecrire };
+  return { CLE, LOT_TERMINE, TERMINES, refus, reprenable, signature, supprimer, texte, lire, ecrire };
 });

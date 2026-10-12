@@ -133,6 +133,11 @@ test('bouton « Vider le cache des exports » : désactivé tant qu’un lot est
   for(const etat of ['RUNNING','PAUSED','MANUAL_TAKEOVER','ERROR']){const t=await ouvrir({etatLot:etat});assert.equal(t.p.$('export-cache-clear').disabled,true,etat);}
   const t=await ouvrir({etatLot:'STOPPED'});assert.equal(t.p.$('export-cache-clear').disabled,false);
 });
+/* A2 (relecture du test 3) : une fin naturelle est une fin ; « Arrêter » est caché dans ces états, rien ne débloquait le bouton. */
+test('bouton « Vider le cache des exports » : actif après une fin naturelle (COMPLETED, FINISHED_WITH_UNCONFIRMED_ACTIONS)',async()=>{
+  for(const etat of ['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS']){const t=await ouvrir({etatLot:etat});
+    assert.equal(t.p.$('export-cache-clear').disabled,false,etat);assert.equal(t.p.$('stop').hidden,true,etat+' : Arrêter caché');}
+});
 
 test('vidage manuel : le service worker refuse => erreur, rien n’est supprimé ni demandé',async()=>{
   const t=await ouvrir({refus:'un lot n’est pas terminé (RUNNING) : arrête-le ou termine-le d’abord'});
