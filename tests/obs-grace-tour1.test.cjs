@@ -84,3 +84,31 @@ test('OBS-2 lecture hors ligne : perf-phases compte les écritures reçues penda
  const m=V1.measure(j,{tous:true});assert.equal(m.observations.writes.inGrace,2);assert.equal(m.observations.writes.startedAfterEnd,1);
  assert.match(V1.toMarkdown(m),/dont 2 reçue\(s\) pendant la grâce de fin de lot, 1 commencée\(s\) après la fin du lot/);
 });
+
+/* OBS-5 : pendant la grâce, le battement `launcher-status` (sans grâce) met la séance du pont à « non » ; la réponse
+ * accept:true d'un envoi en grâce la remettait à « oui » : nouvelle marque de l'observateur (afterDenial) et résumés
+ * « d'avant séance » rangés avec le lot fini. Le service worker dit maintenant `grace:true`, et le pont n'en tire aucun
+ * début de séance. */
+test('OBS-5 service worker : réponse grace:true pendant la grâce seulement',async()=>{
+ const {b,e}=await lotOuvert();deq(send(b,[write({seq:1})]),{accept:true,stored:1},'lot ouvert : pas de grâce');
+ await b.api('stop');deq(send(b,[write({seq:2})]),{accept:true,stored:1,grace:true},'après « Arrêter » : grâce');
+ assert.equal(b.raw({kind:'launcher-status'}).out.observation.seance,false,'battement inchangé');
+ await new Promise(r=>setTimeout(r,5));
+ await b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt'});
+ const debutB=Date.parse(e.s.batch.startedAt),r=send(b,[write({seq:3,startedEpochMs:debutB-3,endedEpochMs:debutB+40})]);
+ assert.equal(r.accept,true);assert.equal(r.grace,undefined,'nouveau lot ouvert : séance réelle, même si l’entrée va à l’ancien lot');
+ await b.settle();
+});
+test('OBS-5 pont : une réponse en grâce ne rouvre pas la séance (ni marque, ni résumés d’avant séance)',async()=>{
+ const {bridge}=require('./helpers/bridge.cjs'),tick=()=>new Promise(r=>setImmediate(r));
+ let seance=true,reply={accept:true,stored:1};
+ const f=bridge({observationReply:()=>reply,launcherStatus:()=>({visible:true,observation:{seance}})});
+ const snaps=()=>f.sent.filter(x=>x.kind==='banane5:snapshot'),flush=async()=>{const t=[...f.timers.entries()].at(-1);f.timers.delete(t[0]);await t[1].fn();};
+ const msg=seq=>({kind:'banane5:esv-observation',v:1,observer:'obs-1',entry:{seq,kind:'resource',n:1,bytes:10}});
+ f.uiMessage({kind:'launcher-visibility',visible:true});await tick();assert.equal(snaps().length,1,'début de séance : une marque');
+ seance=false;f.uiMessage({kind:'launcher-visibility',visible:true});await tick();   // battement après la fin du lot
+ reply={accept:true,stored:1,grace:true};f.emit(msg(1));await flush();
+ assert.equal(snaps().length,1,'réponse en grâce : aucune nouvelle marque');
+ reply={accept:true,stored:1};f.emit(msg(2));await flush();
+ assert.equal(snaps().length,2,'vraie nouvelle séance ensuite : marque demandée');deq(snaps().at(-1),{kind:'banane5:snapshot',afterDenial:true});
+});

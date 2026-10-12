@@ -118,7 +118,7 @@ test('session Écho active (manuelle) : comptée comme séance ; session arrêt�
 test('arrêt au dernier cut : l’écriture arrivée juste après est rangée, avec le contexte du lot ; plus rien après la grâce', async () => {
  const {b,release}=await lotOuvert(),e=b.get('engine'),lot=e.s.batch;
  lot.state='STOPPED';lot.stoppedAtEnd={cut:100,at:new Date(Date.now()-300).toISOString(),applied:true};
- const r=send(b,[write({seq:1})]).out;deq(r,{accept:true,stored:1});
+ const r=send(b,[write({seq:1})]).out;deq(r,{accept:true,stored:1,grace:true});
  const w=stored(b).filter(x=>x.kind==='write');assert.equal(w.length,1);assert.equal(w[0].batchId,'lot-obs','attribuée au lot clos');assert.equal(w[0].status,204);
  assert.equal(b.raw({kind:'launcher-status'}).out.observation.seance,false,'le battement ne dit pas « séance » après l’arrêt : seule la réception tardive est acceptée');
  lot.stoppedAtEnd.at=new Date(Date.now()-60000).toISOString();

@@ -26,10 +26,10 @@ const finDe=(e,etat)=>e.event('batch-state',{identity:null,state:etat,step:'capt
 test('arrêt manuel (« Arrêter ») : l’écriture arrivée juste après est rangée avec le lot ; battement inchangé ; plus rien après 5 s',async()=>{
  const {b,e}=await lotOuvert();
  await b.api('stop');assert.equal(e.s.batch.state,'STOPPED');assert.equal(e.s.batch.stoppedAtEnd??null,null,'pas un arrêt au dernier cut');
- deq(send(b,[write({seq:1})]),{accept:true,stored:1});
+ deq(send(b,[write({seq:1})]),{accept:true,stored:1,grace:true});
  const w=writes(b);assert.equal(w.length,1);assert.equal(w[0].batchId,'lot-A','attribuée au lot arrêté');assert.equal(w[0].sessionId,e.s.sessionId);
  assert.equal(b.raw({kind:'launcher-status'}).out.observation.seance,false,'le battement n’annonce pas de séance après l’arrêt');
- vieillir(b,'lot-A',4000);deq(send(b,[write({seq:2})]),{accept:true,stored:1},'encore dans les 5 s');
+ vieillir(b,'lot-A',4000);deq(send(b,[write({seq:2})]),{accept:true,stored:1,grace:true},'encore dans les 5 s');
  vieillir(b,'lot-A',1500);deq(send(b,[write({seq:3})]),REFUS,'après 5 s : rien');assert.equal(writes(b).length,2);
  await b.settle();
 });
@@ -39,7 +39,7 @@ test('fin naturelle (COMPLETED, FINISHED_WITH_UNCONFIRMED_ACTIONS) vue au jalon 
   const id='lot-'+etat,{b,e}=await lotOuvert(id);
   deq(send(b,[write({seq:1})]),{accept:true,stored:1},etat+' : lot ouvert');
   e.s.batch.state=etat;deq(send(b,[write({seq:2})]),REFUS,etat+' : fin pas encore vue par le service worker (le moteur n’a rien daté)');
-  await finDe(e,etat);deq(send(b,[write({seq:3})]),{accept:true,stored:1},etat+' : fin vue');
+  await finDe(e,etat);deq(send(b,[write({seq:3})]),{accept:true,stored:1,grace:true},etat+' : fin vue');
   assert.deepEqual(writes(b).map(w=>w.batchId),[id,id],etat);
   vieillir(b,id,5500);deq(send(b,[write({seq:4})]),REFUS,etat+' : après 5 s');
   await b.settle();}
@@ -49,16 +49,16 @@ test('vrai lot (moteur réel, ESV simulé) jusqu’à sa fin naturelle : l’éc
  const b=production();await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  await b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt'});
  const v=await b.settle();assert.ok(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(v.batch.state),v.batch.state);
- deq(send(b,[write({seq:1})]),{accept:true,stored:1});assert.equal(writes(b)[0].batchId,v.batch.id);
+ deq(send(b,[write({seq:1})]),{accept:true,stored:1,grace:true});assert.equal(writes(b)[0].batchId,v.batch.id);
  vieillir(b,v.batch.id,6000);deq(send(b,[write({seq:2})]),REFUS);
 });
 
 test('arrêt manuel pendant une action : accepté tant que la boucle du moteur finit l’action de CE lot, puis 5 s après sa sortie',async()=>{
  const {b,e}=await lotOuvert();e.task=new Promise(()=>{});   // boucle du moteur encore dans l'action en cours
  await b.api('stop');vieillir(b,'lot-A',60000);
- deq(send(b,[write({seq:1})]),{accept:true,stored:1},'action en cours du lot arrêté');
+ deq(send(b,[write({seq:1})]),{accept:true,stored:1,grace:true},'action en cours du lot arrêté');
  e.task=null;deq(send(b,[write({seq:2})]),REFUS,'boucle finie sans sortie vue, fin ancienne : rien');
- await finDe(e,'STOPPED');deq(send(b,[write({seq:3})]),{accept:true,stored:1},'sortie de la boucle : la grâce repart');
+ await finDe(e,'STOPPED');deq(send(b,[write({seq:3})]),{accept:true,stored:1,grace:true},'sortie de la boucle : la grâce repart');
  assert.deepEqual(writes(b).map(w=>w.batchId),['lot-A','lot-A']);
 });
 
@@ -74,7 +74,7 @@ test('garde-fous : ce seul lot ; « Arrêter » sur un lot déjà clos ne crée 
   assert.equal(send(b,[write()]).accept,false,'réglage coupé');}
  {/* Arrêt au dernier cut (test 2) : inchangé, date illisible toujours refusée même si une fin a été relevée avant. */
   const {b,e}=await lotOuvert();await b.api('stop');e.s.batch.stoppedAtEnd={cut:101,at:'illisible'};deq(send(b,[write()]),REFUS,'date illisible : jamais devinée');
-  e.s.batch.stoppedAtEnd={cut:101,at:new Date(Date.now()-300).toISOString()};deq(send(b,[write({seq:2})]),{accept:true,stored:1});}
+  e.s.batch.stoppedAtEnd={cut:101,at:new Date(Date.now()-300).toISOString()};deq(send(b,[write({seq:2})]),{accept:true,stored:1,grace:true});}
 });
 
 test('nouveau lot lancé pendant la grâce : l’ancien garde ce que la page a vu avant le début du nouveau, le nouveau garde le reste, jamais l’inverse',async()=>{
@@ -116,7 +116,7 @@ async function swCache(){
 test('vidage manuel pendant la grâce : refusé (rien supprimé) ; après la grâce, l’instantané contient la dernière écriture et tout part : aucune observation orpheline',async()=>{
  const {b,e,r,st,mem,snap}=await swCache();
  await b.api('stop');await Promise.allSettled([...r.pending]);
- deq(send(b,[write({seq:1})]),{accept:true,stored:1},'dernière écriture reçue pendant la grâce');
+ deq(send(b,[write({seq:1})]),{accept:true,stored:1,grace:true},'dernière écriture reçue pendant la grâce');
  const info=await b.api('export-cache-info');assert.match(info.refus,/observations/,'le panneau dit pourquoi');
  const s1=snap(),avant=st.events.length;
  await assert.rejects(b.api('export-cache-clear',{ids:s1.ids,signatures:s1.signatures,manuel:true,exportAt:null,instantaneAt:s1.at}),/Vidage refusé : .*observations/);
@@ -136,7 +136,7 @@ test('vidage automatique après un export commencé pendant la grâce : refusé 
  e.s.batch.state='STOPPED';e.s.batch.stoppedAtEnd={cut:101,at:new Date(Date.now()-100).toISOString(),applied:true};r.closeBatch('STOPPED');await Promise.allSettled([...r.pending]);
  assert.match((await b.api('export-cache-info',{auto:true})).refus,/observations/,'grâce en cours');
  const s1=snap();   // instantané pris au début de l'export, pendant la grâce
- deq(send(b,[write({seq:1})]),{accept:true,stored:1},'arrivée APRÈS l’instantané');
+ deq(send(b,[write({seq:1})]),{accept:true,stored:1,grace:true},'arrivée APRÈS l’instantané');
  const a=Date.parse(e.s.batch.stoppedAtEnd.at)-5200;e.s.batch.stoppedAtEnd.at=new Date(a).toISOString();   // la grâce est finie
  assert.equal((await b.api('export-cache-info',{auto:true})).refus,null);
  await assert.rejects(b.api('export-cache-clear',{ids:s1.ids,signatures:s1.signatures,auto:true,exportAt:new Date(a+4000).toISOString(),instantaneAt:a+4000}),

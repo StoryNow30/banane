@@ -72,7 +72,9 @@
    // Ces entrées sont parties sans être rangées (refus, aucune réponse) : le début de séance en tiendra compte.
    if(!(r&&r.accept===true))obs.refused=true;
    if(r&&r.accept===false)obs.queue.length=0;
-   if(r&&typeof r.accept==='boolean')obsSeance(r.accept);
+   /* OBS-5 (relecture du test 3) : une réponse pendant la grâce de fin de lot (`grace:true`) ne dit pas qu'une séance
+    * commence : sans cela, après le battement « pas de séance », elle redemandait marque et résumés d'avant séance. */
+   if(r&&typeof r.accept==='boolean'&&r.grace!==true)obsSeance(r.accept);
    if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
   }catch{if(!(r&&r.accept===true))obs.refused=true;}}
  try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}

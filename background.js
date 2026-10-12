@@ -221,7 +221,8 @@ function rangerObservations(m){try{
  if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
  for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
- return {accept:true,stored:events.length};
+ /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
+ return {accept:true,stored:events.length,...(enGrace?{grace:true}:{})};
 }catch{return {accept:true,stored:0,reason:'error'};}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
