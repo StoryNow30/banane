@@ -1,5 +1,25 @@
 # Décisions techniques
 
+## D-080 - Paquet de test 4.9.0.3 prêt pour la séance terrain (12 octobre 2026) : enregistrement de l'orchestrateur
+
+Enregistrement, pas une décision nouvelle de Mic. Rien d'autorisé au-delà de D-078 et D-079 : aucun merge, tag, publication, activation de production
+ou d'apprentissage, aucun changement de seuil, de porte ou de critère.
+
+1. **Contenu** (branche `claude/49-test-3`, tête `3cbf304`, poussée) : V2 (exports allégés, zip unique, bouton « Vider le cache des exports »,
+   vidage automatique **désactivé par défaut**), grâce de 5 s de l'observateur (dernière écriture rangée), V1 correction (2) (critère D-073 signé),
+   corrections du tour 1 de relecture (vidage permis après une fin naturelle, compteurs de vidage exacts, grâce gardée au redémarrage du service worker,
+   temps entre cycles publié par l'outil, identifiant de projet ESV retiré de la consigne).
+2. **Paquet** : `ariane-4.9.0-test.3.zip`, version 4.9.0.3, 1 245 159 octets, SHA-256 `3612bd38…2fabba`.
+   verify : 1296 essais, 1294 réussis, 0 échec, 2 sautés (mode partiel), géométrie inchangée, moteur conforme à la baseline V4.6.0.
+3. **Relecture indépendante** : cinq angles, contre-vérification des constats, 16 constats corrigés ou tranchés au tour 1, tous résolus à la revérification
+   (rapport privé hors dépôt). Deux observations restantes, sans perte de capture : une écriture tardive d'une autre coupe, rangée pendant la grâce,
+   reste rattachée à la dernière visite dans l'outil d'analyse ; un lot en ERROR garde le bouton « Vider » grisé (côté sûr).
+4. **Mesure V1 rejouée** sur le lot réel de la partie 10 : identique à la milliseconde (258 cycles, 61,0 s non expliquées sur 1 997,4 s, soit 3,05 %).
+   Nouveau : le temps entre deux cycles est publié à part (262 transitions, 199,0 s, dont 112,4 s sans étape) ; l'enregistreur n'est pas modifié.
+5. **Non vérifié** : vrai ESV et vrai serveur, Edge, lot Orbite complet jusqu'à sa fin, mémoire sur un export de 400 Mo et plus.
+6. **Question ouverte pour Mic** : activer le vidage automatique par défaut ? Recommandation : non, pour le premier test terrain.
+   Test A/A (même version sur deux parties neuves) : quand Mic le souhaite.
+
 ## D-079 - Séance terrain test 2 (partie 7) : résultats ; D-073 signé ; exports allégés ; données de la partie 7 pour l'ESV local
 
 **Réponse de Mic du 7 octobre 2026** : « je valide tout », aux propositions de l'orchestrateur Claude Code.
