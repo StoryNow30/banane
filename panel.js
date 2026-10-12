@@ -79,7 +79,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 5',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 6',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -1157,7 +1157,7 @@ on('native-discard',async()=>{
      return {events:events.filter(id=>id in signatures.events),records:records.filter(id=>id in signatures.records),clouds,signatures,at};}catch{return null;}}
  const demandeVidage=(snap,extra)=>api('export-cache-clear',{ids:{events:snap.events,records:snap.records,clouds:snap.clouds},signatures:snap.signatures,instantaneAt:snap.at,...extra});
  const phraseGardes=r=>{const n=(r?.modifies?.events?.length||0)+(r?.modifies?.records?.length||0);return n?` ${n} enregistrement(s) modifié(s) depuis l’export ont été GARDÉS (pas dans l’export).`:'';};
- /* 4.9.0.5 : la capture « avant » restée ouverte sur un lot fini (dernier cut différé, posé non validé…) est GARDÉE par le
+ /* Test 4 : la capture « avant » restée ouverte sur un lot fini (dernier cut différé, posé non validé…) est GARDÉE par le
   * vidage : son nuage LiDAR et ce qui le nomme restent dans le cache et partent avec le prochain export. */
  const phraseCapture=r=>{const c=r?.captureGardee,n=c?.nuages||0,ev=c?.evenements||0,vi=c?.visites||0;if(!(n||ev||vi))return '';
    const liens=[ev?`${ev} événement${ev>1?'s':''}`:'',vi?`${vi} visite${vi>1?'s':''}`:''].filter(Boolean).join(' et ');
@@ -1172,7 +1172,7 @@ on('native-discard',async()=>{
  on('export-cache-clear',async()=>{
    const info=await api('export-cache-info');if(info?.refus)throw Error('Vidage impossible : '+info.refus+'.');
    const snap=await instantaneCache();if(!snap)throw Error('Stockage illisible depuis le panneau : rien n’est vidé.');
-   /* 4.9.0.5 : ce que le service worker gardera (capture ouverte du dernier cut) n'est pas compté parmi ce qui sera supprimé. */
+   /* Test 4 : ce que le service worker gardera (capture ouverte du dernier cut) n'est pas compté parmi ce qui sera supprimé. */
    const gardes=info?.capture||null,sauf=(liste,nom)=>{const g=new Set(gardes?.[nom]||[]);return liste.filter(i=>!g.has(i));};
    const aVider={...snap,events:sauf(snap.events,'events'),records:sauf(snap.records,'records'),clouds:sauf(snap.clouds,'clouds')};
    const nGardes={nuages:snap.clouds.length-aVider.clouds.length,evenements:snap.events.length-aVider.events.length,visites:snap.records.length-aVider.records.length};
