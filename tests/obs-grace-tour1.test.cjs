@@ -112,3 +112,38 @@ test('OBS-5 pont : une réponse en grâce ne rouvre pas la séance (ni marque, n
  reply={accept:true,stored:1};f.emit(msg(2));await flush();
  assert.equal(snaps().length,2,'vraie nouvelle séance ensuite : marque demandée');deq(snaps().at(-1),{kind:'banane5:snapshot',afterDenial:true});
 });
+
+/* T3D-7 / OBS-3 : la fin relevée (obsFins) vivait en mémoire du service worker ; un redémarrage pendant la grâce la perdait
+ * (arrêt manuel, fin naturelle : dernière écriture refusée), et le message qui réveille le service worker, reçu avant
+ * `ready`, était ignoré sans réponse (perte muette : le pont a déjà retiré ces entrées de sa file). Désormais : fins
+ * gardées dans chrome.storage.session (instant, cause, contexte de mesure), message d'observation traité après `ready`. */
+const {MemoryStore}=require('./fixtures.cjs'),{memoire}=require('./helpers/perf-production.cjs');
+const tick=()=>new Promise(r=>setImmediate(r));
+test('T3D-7/OBS-3 redémarrage du service worker pendant la grâce de « Arrêter » : la dernière écriture est rangée avec le lot et sa visite',async()=>{
+ const store=new MemoryStore(),local=memoire(),session=memoire();
+ const {b,e}=await lotOuvert('lot-A',{store,local,session});send(b,[write({seq:1})]);const visite=writes(b)[0].visitId;assert.ok(visite);
+ await b.api('stop');await e.save();await b.settle();await tick();
+ const b2=production({store,local,session});   // nouvelle vie du service worker : même stockage, mémoire vide
+ const t=b2.raw({kind:'esv-observation',observer:'obs-1',entries:[write({seq:2})]});   // c'est ce message qui le réveille
+ assert.equal(t.returned,true,'réponse différée jusqu’à ready (plus de perte muette)');
+ await b2.api('view');await tick();
+ deq(t.out,{accept:true,stored:1,grace:true},'rangée pendant la grâce, après le redémarrage');
+ const w=b2.store.events.filter(x=>x.type==='esv-observation'&&x.observer?.seq===2);assert.equal(w.length,1);
+ assert.equal(w[0].batchId,'lot-A');assert.equal(w[0].visitId,visite,'contexte de mesure gardé : la visite du lot');assert.equal(w[0].recuEnGrace,true);
+ const f=b2.get('obsFins').get('lot-A');f.at-=5500;deq(send(b2,[write({seq:3})]),REFUS,'après 5 s : rien');
+});
+test('OBS-3 redémarrage pendant la grâce de l’arrêt au dernier cut : rangée avec la visite (plus de visitId nul)',async()=>{
+ const store=new MemoryStore(),local=memoire(),session=memoire();
+ const {b,e}=await lotOuvert('lot-D',{store,local,session});send(b,[write({seq:1})]);const visite=writes(b)[0].visitId;
+ e.s.batch.state='STOPPED';e.s.batch.stoppedAtEnd={cut:101,at:new Date().toISOString(),applied:true};
+ await e.event('batch-stopped-at-end',{identity:null,applied:true});await e.save();await tick();
+ const b2=production({store,local,session});const t=b2.raw({kind:'esv-observation',observer:'obs-1',entries:[write({seq:2})]});
+ await b2.api('view');await tick();assert.equal(t.out?.accept,true);
+ const w=b2.store.events.filter(x=>x.type==='esv-observation'&&x.observer?.seq===2);assert.equal(w[0]?.batchId,'lot-D');assert.equal(w[0]?.visitId,visite);
+});
+test('OBS-3 témoins : sans stockage de session (navigateur ancien, harnais) rien ne casse ; autre onglet avant ready : refus explicite',async()=>{
+ const {b}=await lotOuvert();await b.api('stop');assert.equal(send(b,[write({seq:1})]).accept,true,'sans chrome.storage.session : grâce en mémoire comme avant');
+ const store=new MemoryStore(),local=memoire();await local.set({banane3Tab:1});
+ const b2=production({store,local});const t=b2.raw({kind:'esv-observation',observer:'obs-1',entries:[write()]},{id:'test',tab:{id:9},url:'https://esv.lidar.altametris.xyz/rails_validation/test'});
+ await b2.api('view');await tick();assert.equal(t.out?.accept,false,'onglet non choisi : refusé, la file du pont est vidée');
+});

@@ -134,10 +134,18 @@ const OBS_TACHE_MAX_MS=120000;
  * du cache des exports est refusé tant qu'une grâce court, ou si une grâce a couru depuis l'instantané de l'export
  * (sinon une écriture arrivée après l'instantané resterait seule, sans son lot). Rien de demandé à ESV. */
 const obsFins=new Map();
+/* T3D-7 / OBS-3 (relecture du test 3) : les fins relevées (instant, cause, contexte de mesure) sont aussi gardées dans
+ * chrome.storage.session : un redémarrage du service worker pendant la grâce ne les perd plus (relues avant `ready`).
+ * Sans chrome.storage.session (navigateur ancien) : mémoire seule, comme avant. Jamais dans chrome.storage.local. */
+const OBS_FINS_CLE='banane49ObsFins';
+function sauverObsFins(){try{const s=chrome?.storage?.session;if(s?.set)Promise.resolve(s.set({[OBS_FINS_CLE]:[...obsFins]})).catch(()=>{});}catch{/* mémoire seule */}}
+async function restaurerObsFins(){try{const s=chrome?.storage?.session;if(!s?.get)return;const v=(await s.get(OBS_FINS_CLE))?.[OBS_FINS_CLE];if(!Array.isArray(v))return;
+ for(const x of v){const [id,f]=Array.isArray(x)?x:[];if(typeof id==='string'&&Number.isFinite(f?.at)&&!obsFins.has(id))obsFins.set(id,{at:f.at,cause:typeof f.cause==='string'?f.cause:null,ctx:f.ctx&&typeof f.ctx==='object'?f.ctx:{}});}
+ while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);}catch{/* rien de relu : comme avant */}}
 function obsContexte(){try{const v=timing?.context?.()||timing?.batchContext?.();return v?{sessionId:v.sessionId??null,batchId:v.batchId??null,visitId:v.visitId??null,clockId:timing?.clockId??null}:{};}catch{return {};}}
 function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
  const ctx=c.batchId===b.id?c:prev?.ctx||{sessionId:engine?.s?.sessionId??null,batchId:b.id,visitId:null,clockId:timing?.clockId??null};
- obsFins.delete(b.id);obsFins.set(b.id,{at,cause,ctx});while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);}
+ obsFins.delete(b.id);obsFins.set(b.id,{at,cause,ctx});while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);sauverObsFins();}
 function marquerFinLot(b,cause){if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
 /* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
 function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;
@@ -203,7 +211,9 @@ function rangerObservations(m){try{
  const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??performance.timeOrigin;
  /* OBS-2 : séance tenue seulement par la grâce de fin du lot courant → entrées marquées (écart à la fin de CE lot). */
  const lot=engine?.s?.batch,enGrace=seance!==seanceObservateur();
- const vu=s=>obsState.perSeance.get(s)||{n:0,capped:false},courant={seance,ctx:obsContexte(),seen:vu(seance),fin:enGrace&&lot?finDuLot(lot):null},events=[];let rejected=0;
+ /* OBS-3 : en grâce, le contexte de mesure relevé à la fin du lot (gardé au redémarrage) ; sinon celui de la mesure en cours. */
+ const ctxFin=enGrace&&lot?.id?obsFins.get(lot.id)?.ctx:null,ctxCourant=ctxFin&&ctxFin.batchId===lot.id?ctxFin:obsContexte();
+ const vu=s=>obsState.perSeance.get(s)||{n:0,capped:false},courant={seance,ctx:ctxCourant,seen:vu(seance),fin:enGrace&&lot?finDuLot(lot):null},events=[];let rejected=0;
  const marqueGrace=(f,fin)=>{const t=f.startedEpochMs;return {recuEnGrace:true,debutMoinsFinLotMs:Number.isFinite(t)&&Number.isFinite(fin)?Math.round((t-fin)*10)/10:null};};
  /* Nouveau lot pendant la grâce de l'ancien : ce que la page a vu (début, sinon fin) AVANT le début du nouveau lot reste à l'ancien. */
  const ancien=(a=>a&&{...a,seen:vu(a.seance)})(ancienLotEnGrace(seance));
@@ -654,7 +664,7 @@ const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{const result=await applyInESV(...args);
  if(stopAtLotEnd())await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true});return result;};
 adapter.capabilities={serverConfirmation:false};
-const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
+const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */
@@ -668,7 +678,10 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
    await closeAtExit('dernier-cut-differe',d.cut,null,{dernier:d});await engine.save();
    return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};};
  const evenement=engine.event.bind(engine);
- engine.event=async(type,...rest)=>{if(type==='batch-state')finVueParLaBoucle(rest[0]?.state);const r=await evenement(type,...rest);
+ engine.event=async(type,...rest)=>{if(type==='batch-state')finVueParLaBoucle(rest[0]?.state);
+   /* OBS-3 : arrêt au dernier cut : l'instant reste `stoppedAtEnd.at` ; on garde aussi le contexte de mesure (redémarrage). */
+   if(type==='batch-stopped-at-end'){const b=engine.s.batch,at=Date.parse(b?.stoppedAtEnd?.at);if(b?.id&&b.state==='STOPPED'&&Number.isFinite(at)&&engine.s.mode==='automatic-test')poserFin(b,at,'dernier-cut');}
+   const r=await evenement(type,...rest);
    if(type==='defer-navigation-uncertain')await departApresDiffere(rest[0]);
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
@@ -1150,6 +1163,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   else throw Error('Commande inconnue.');return result;
  });
 }
+let swPret=false;ready.then(()=>{swPret=true;},()=>{});
 chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(sender.id!==chrome.runtime.id)return;
  if(m.kind==='launcher-status'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
@@ -1157,7 +1171,12 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   respond(sender.tab.id===selectedTab?{...launcherState(),observation:{seance:globalThis.BananeSettings?.observateurPassif?.actif!==false&&!!seanceObservateur()}}:launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
- if(m.kind==='esv-observation'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){respond(rangerObservations(m));return;}
+ /* OBS-3 (relecture du test 3) : le message qui réveille le service worker arrive avant `ready` (onglet choisi et fins
+  * pas encore relus) ; il était ignoré sans réponse et ses entrées, déjà retirées de la file du pont, perdues sans trace.
+  * Il est maintenant traité une fois `ready` résolu. */
+ if(m.kind==='esv-observation'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
+  if(swPret){if(sender.tab.id===selectedTab)respond(rangerObservations(m));return;}
+  ready.then(()=>respond(sender.tab.id===selectedTab?rangerObservations(m):{accept:false,reason:'other-tab'}),()=>respond({accept:false,reason:'not-ready'}));return true;}
  if(m.kind==='manual-event'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
   ready.then(()=>manual.receive(m.type,m.payload)).then(result=>respond({result}),e=>respond({error:e.message}));return true;
  }
