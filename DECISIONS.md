@@ -1,5 +1,33 @@
 # Décisions techniques
 
+## D-082 - Séance terrain test 3 (12 octobre) : résultats ; défaut du vidage ; paquet 4.9.0.4 : enregistrement de l'orchestrateur
+
+Enregistrement, pas une décision nouvelle de Mic. Rien d'autorisé au-delà de D-078, D-079 et D-081 : aucun merge, tag, publication,
+activation de production ou d'apprentissage, aucun changement de seuil, de porte ou de critère. L'identifiant du projet et les valeurs
+de la séance restent hors dépôt.
+
+1. **Séance du 12 octobre, 4.9.0.3, poste pro, Chrome, extension Claude désactivée, partie 3 d'un projet neuf.** Lot 1 : 192 coupes visées,
+   174 validées, 18 reportées, fin de partie. Lot 2 (reprise des 18) : 9 validées, 8 reportées de nouveau, 1 interrompue, fin sur dernier cut
+   différé. Total : 183 coupes validées sur 192.
+2. **Observateur et exports.** Écritures d'ESV : 375 sur 375 acceptées (statut 204), aucune perdue ; les 174 validations du lot 1 sont toutes
+   relevées, dont la dernière, arrivée pendant la grâce de 5 s (c'était le défaut du test 2). Un seul zip par export, chaque nuage une seule fois
+   (192 puis 210), aucun nuage manquant, zips intacts. Mesure V1 : 3,0 % de temps non expliqué sur le lot 1 (3,05 % sur le lot de la partie 10).
+   Cycle médian 8,3 s (lot 1) : indicatif, pas comparable sans A/A. Qualité des poses (C1 à C4) : non analysée.
+3. **Défaut trouvé par Mic : « Vidage impossible : une capture est en cours (STALE) »** après un lot terminé sur son dernier cut différé (la
+   capture « avant » de ce cut reste ouverte). Cause : `src/export-cache.js`, règle de refus trop large. Aucune perte (refus côté sûr), mais le vidage
+   manuel était inutilisable après ce type de fin de lot, qui est courant. Les cinq relectures du test 3 ne l'avaient pas vu.
+4. **Correction : paquet 4.9.0.4** (« 4.9.0 test 4 », branche `claude/49-test-4`, tête `0fcc4f6`, poussée). Après un lot fini pour de bon, une capture
+   ouverte ne bloque plus le vidage ; son nuage et ce qui s'y rapporte sont gardés et repartent au prochain export. Refus inchangés : lot arrêté à
+   la main avec capture ouverte, lot en cours, en pause ou en erreur, action en cours, Écho, grâce de 5 s. Une course trouvée à la relecture (nuage
+   supprimé alors que sa visite reste) est corrigée et revérifiée. verify : 1352 essais, 1350 réussis, 0 échec, 2 sautés (mode partiel). Paquet :
+   `ariane-4.9.0-test.4.zip`, 1 258 402 octets, SHA-256 `ddf94276…be8dd`, sans tests ni identifiant de projet. Non vérifié : vrai ESV, Edge, bouton
+   « Recharger » du navigateur, lot Orbite complet dans le vrai ESV.
+5. **Points ouverts.** (a) Données héritées d'ESV dans l'ancien dépôt (`tests/corpus/` depuis le 15 septembre, `datasets/automatic/` et `audit/native-offline-*`
+   dans les paquets) : nature réelle ou fabriquée non vérifiée, en tension avec la règle « aucune donnée d'ESV dans les dépôts » ; à trancher par
+   Mic. (b) L'historique de la branche `claude/49-test-4` contient, dans un commit intermédiaire d'essais, des valeurs de la séance (numéro de coupe,
+   total, heure de fin de lot), retirées à la tête ; pas d'identifiant de projet. (c) Vidage automatique par défaut : toujours désactivé, décision à
+   prendre. (d) Test A/A et V3 : pas commencés.
+
 ## D-081 - Relecture proportionnée au risque (12 octobre 2026)
 
 **Réponse de Mic du 12 octobre 2026** : « Oui go », à la proposition de l'orchestrateur Claude Code (même jour), après la question « Il y a réellement besoin autant de relecture à chaque fois ? ».
