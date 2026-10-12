@@ -1,5 +1,16 @@
 # Décisions techniques
 
+## D-086 - Sessions courtes par chantier, routage des modèles, compaction ; coupes difficiles et apprentissage maintenus en 4.9 (12 octobre 2026)
+
+**Réponses de Mic du 12 octobre 2026** au point d'étape de l'orchestrateur Claude Code :
+1. **Non** : les coupes difficiles (retour à une coupe, 398/402, B1, B2, B3), l'apprentissage et V5 **ne sont pas déplacés hors de la 4.9** (D-066, D-068 maintenus).
+2. **Oui, très d'accord** pour une session courte par chantier avec fiche de reprise ; et « pour chaque tâche tu saches évaluer quel modèle Claude utiliser avec le niveau d'effort adéquat,
+   auto-compact lorsque nécessaire ou opportun ». Règles écrites dans `PILOTAGE_SESSIONS.md` ; première fiche : `fiches/FICHE_AA_V3.md`.
+3. **On enchaîne** : version installée par Mic, puis test A/A (la même version sur deux lots comparables), puis V3.
+
+Limites dites à Mic : l'orchestrateur règle le modèle et l'effort de ses agents ; le modèle et l'effort de la conversation, `/compact` et `/clear` restent des commandes de Mic, l'orchestrateur
+signale les points de compaction recommandés. Le routage est une recommandation, à corriger avec les coûts mesurés par chantier. Rien d'autre ne change : portes, seuils et critères (D-085 compris).
+
 ## D-085 - Borne 1420 mm mesurée puis adoptée ; C4 retiré des portes de la 4.9 ; C4 à retravailler pour la 5.0 (12 octobre 2026)
 
 **Réponses de Mic du 12 octobre 2026** à l'orchestrateur Claude Code (suite de D-084) : sur les paires entre 1405 et 1420 mm, « il y en a quasiment pas » ;
