@@ -965,8 +965,12 @@ async function closureExport(){
  * dans le cache et partent au prochain export. Rien n'est lu si aucune capture n'est ouverte. */
 async function captureOuverteAGarder(){const EC=cacheExport(),s=engine?.s;
  if(!EC?.capturesAGarder||!s?.lidarId||!(EC.CAPTURES_OUVERTES||[]).includes(s.collection))return null;
- const g=EC.capturesAGarder(s,await store.all('events'),await store.all('records'));
- return g.clouds.length?{collection:s.collection,...g}:null;}
+ /* DON-1 : l'état de la capture est RELEVÉ ici, avant les deux lectures d'IndexedDB (qui rendent la main au moteur). Relu sur
+  * `engine.s` APRÈS les attentes, une capture refermée entre-temps ne donnait plus rien à garder (capt = null) et le « second
+  * contrôle » de viderCacheExport comparait null à null. Avec ce relevé, il voit la différence et refuse (« réessaie »). */
+ const releve={collection:s.collection,lidarId:s.lidarId,proposal:s.proposal};
+ const g=EC.capturesAGarder(releve,await store.all('events'),await store.all('records'));
+ return g.clouds.length?{collection:releve.collection,...g}:null;}
 async function viderCacheExport(args){
  const EC=cacheExport();if(!EC)throw Error('Vidage indisponible (module absent).');
  const auto=!!args?.auto&&args?.manuel!==true;

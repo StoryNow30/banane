@@ -112,14 +112,25 @@
     return t.length + ':' + h.toString(16);
   }
   const CLE_ID = { events: o => o.eventId, records: o => o.recordId || o.id };
+  /* Identifiants de nuages (`clouds`) que nomment des visites : `lidarCaptureId`, `lidarCaptureIds`, `lidarChunkIds`. */
+  function nuagesNommes(records) {
+    const ids = new Set();
+    for (const r of Array.isArray(records) ? records : []) {
+      if (!r) continue;
+      if (r.lidarCaptureId) ids.add(r.lidarCaptureId);
+      for (const id of [...(Array.isArray(r.lidarCaptureIds) ? r.lidarCaptureIds : []), ...(Array.isArray(r.lidarChunkIds) ? r.lidarChunkIds : [])]) if (id) ids.add(id);
+    }
+    return ids;
+  }
 
   /* Supprime exactement les clés demandées, hors `garder` (identifiants à ne pas
    * toucher, par magasin) et hors enregistrements modifiés depuis l'instantané
    * (`signatures` : { events:{id:sig}, records:{id:sig} }, OBLIGATOIRES pour events
    * et records). Les nuages sont écrits une fois (captureId unique) : sans signature.
-   * Rend les comptes supprimés et `modifies` (gardés parce que modifiés). */
+   * Rend les comptes supprimés, `modifies` (gardés parce que modifiés) et `nuagesGardesParVisite` (nuages demandés mais gardés
+   * parce qu'une visite qui reste les nomme). */
   async function supprimer(store, ids, garder, signatures) {
-    const out = { events: 0, records: 0, clouds: 0, modifies: { events: [], records: [] } };
+    const out = { events: 0, records: 0, clouds: 0, modifies: { events: [], records: [] }, nuagesGardesParVisite: [] };
     for (const nom of ['events', 'records', 'clouds']) {
       const g = new Set((garder && garder[nom]) || []);
       let liste = [...new Set(ids && ids[nom] || [])].filter(id => !g.has(id));
@@ -136,6 +147,17 @@
         out.modifies[nom] = gardes;
         const interdits = new Set(gardes);
         liste = liste.filter(id => !interdits.has(id));
+      }
+      /* Constat DON-1 (4.9.0.4) : intégrité visite -> nuage. Un nuage que NOMME une visite qui
+       * RESTE n'est jamais supprimé. Les visites ont été traitées juste avant (supprimées si inchangées, sinon gardées) : celles qui
+       * restent sont lues ICI, à l'instant de supprimer. Cas visés : visite écrite APRÈS l'instantané du panneau (capture « avant »
+       * archivée, refermée ou annulée entre-temps : `archivePending` / `finish` écrivent la visite AVANT de fermer la collection) ;
+       * visite de l'instantané modifiée depuis (gardée par `deleteIfUnchanged`). Sans cela le nuage partait et la visite restait,
+       * nommant un nuage absent. Le nuage gardé part avec le prochain export, comme sa visite. */
+      if (nom === 'clouds' && liste.length && typeof store.all === 'function') {
+        const nommes = nuagesNommes(await store.all('records'));
+        out.nuagesGardesParVisite = liste.filter(id => nommes.has(id));
+        liste = liste.filter(id => !nommes.has(id));
       }
       if (!liste.length) continue;
       /* T3D-5 : compte rendu par le stockage (clés présentes et supprimées) ; sans compte rendu, la liste demandée. */
