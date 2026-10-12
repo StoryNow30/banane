@@ -286,8 +286,10 @@ function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=
  if(!events.length)return {available:false,reason:'Aucun jalon V1 corrélé ; ancien journal ou événements absents. Mesures V1 non mesurées.',lots:[],visits:[],observations:observationsOf(source,[],[])};
  const lotKey=x=>JSON.stringify([x.sessionId,x.batchId]);
  const groups=groupBy(events.filter(e=>e.visitId),e=>JSON.stringify([e.sessionId,e.batchId,e.clockId,e.visitId,identityKey(e.identity)]));
- const visits=[...groups.values()].map(inspectVisit),visitsByLot=groupBy(visits,lotKey);
- const lots=[...groupBy(events,lotKey)].map(([k,es])=>inspectLot(es,visitsByLot.get(k)||[],data,data.v1TimingExport,conflicts));
+ const groupList=[...groups.values()],visits=groupList.map(inspectVisit),visitsByLot=groupBy(visits,lotKey);
+ const eventsOf=new Map(visits.map((v,i)=>[v,groupList[i]]));
+ const lots=[...groupBy(events,lotKey)].map(([k,es])=>{const l=inspectLot(es,visitsByLot.get(k)||[],data,data.v1TimingExport,conflicts);
+  const x=betweenCyclesOf(es,visitsByLot.get(k)||[],eventsOf);l.attribution.betweenCycles=x.betweenCycles;l.attribution.partition=x.partition;return l;});
  // Même cohorte : sept phases mesurées et cycle actif ; les médianes ne s'additionnent pas.
  const cohort=visits.filter(v=>v.phases.every(p=>p.status==='measured')&&finite(v.activeCycleMs));
  const count=(i,status)=>visits.filter(v=>v.phases[i].status===status).length;
@@ -297,10 +299,58 @@ function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=
  return {available:true,quantiles:'floor(p*(n-1)+0.5)',silenceThresholdMs:SILENCE_MS,scopeLimited:visits.some(v=>!v.identity?.projectId),conflictingEventIds:conflicts,
   lots,visits,etapes,cohort:{n:cohort.length,sumMediansMs:sumMedians,medianSumMs:summed.median,medianCycleMs:cycles.median,
    residualMs:cohort.length?cycles.median-summed.median:null},
-  refs,concurrence:concurrenceOf(visits),attribution:attributionTotals(visits),coupes:visits.map(v=>({...coupeRow(v),
+  refs,concurrence:concurrenceOf(visits),attribution:{...attributionTotals(visits),...betweenCyclesTotals(lots)},coupes:visits.map(v=>({...coupeRow(v),
    execution:lots.flatMap(l=>l.executions.visitsOutsideExecution).find(o=>o.visitId===v.visitId)?.reason??null})),
   v46:{categories:v46Categories(events),insideAnalysisMs:stats(visits.map(v=>v.v46.insideAnalysisMs)),outsideAnalysisMs:stats(visits.map(v=>v.v46.outsideAnalysisMs))},
   observations:observationsOf(source,events,visits)};
+}
+/* M1 (relecture du test 3) : temps ENTRE deux cycles consécutifs d'un lot. Le cycle k finit à `next-observed` (PREMIÈRE vue
+ * de la cible suivante) ; le cycle k+1 commence à `navigationMs` de sa visite, qui est la DERNIÈRE vue de cette cible
+ * (`src/perf-phase.js`, `this.next` réécrit à chaque vue) : les deux bornes ne se touchent pas (vrai lot : 262 transitions
+ * sur 262, 199 s). Ce temps n'est PAS ajouté au cycle : il est publié à part. Visites k et k+1 reliées seulement si le lien
+ * est sûr : même session, lot et horloge, visite k+1 ouverte par `observed-target`, `next-observed.nextIdentity` de k =
+ * identité de k+1 ; sinon « non reliée » (comptée, jamais devinée). Couvert = union des étapes de k et de k+1 (phases
+ * mesurées, spans annexes acceptés par l'attribution) dans [fin de k, début de k+1] ; le reste est « sans étape entre
+ * cycles ». Découpage de la durée du lot (début → fin connus, même horloge) : avant le premier cycle ou la première
+ * transition, cycles mesurés, entre cycles reliés, après le dernier, autres trous (cycles non mesurés, transitions non
+ * reliées) ; la somme, moins un éventuel recouvrement publié, vaut la durée du lot. */
+const clipTo=(ivs,lo,hi)=>ivs.map(([x,y])=>[Math.max(x,lo),Math.min(y,hi)]).filter(([x,y])=>y>x);
+function boundsOf(es){const open=es.filter(e=>e.kind==='visit'&&e.point==='open'),next=es.filter(e=>e.kind==='point'&&e.point==='next-observed');
+ const o=open.length===1?open[0]:null,n=next.length===1?next[0]:null;
+ return {openMs:o?.ms??null,navigationMs:o?.navigationMs??null,navigationReason:o?.navigationReason??null,nextMs:n?at(n):null,nextIdentity:n?.nextIdentity??null};}
+function stepIntervals(v,es){return v.phases.filter(p=>p.status==='measured'&&finite(p.startMs)&&finite(p.endMs)).map(p=>[p.startMs,p.endMs])
+ .concat(es.filter(e=>e.kind==='span'&&validSpan(e)&&isAnnexLabel(e.label)).map(e=>[e.fromMs,e.toMs]));}
+function betweenCyclesOf(lotEvents,vs,eventsOf){
+ const rows=vs.map(v=>{const es=eventsOf.get(v)||[];return {v,es,b:boundsOf(es)};}).filter(r=>finite(r.b.openMs)).sort((x,y)=>x.b.openMs-y.b.openMs);
+ const out={transitions:0,ms:0,coveredMs:0,validationMs:0,uncoveredMs:0,unlinked:0,reversed:0,byOutcome:{}},links=[];
+ for(let i=1;i<rows.length;i++){const k=rows[i-1],n=rows[i];
+  const linked=k.v.sessionId===n.v.sessionId&&k.v.batchId===n.v.batchId&&k.v.clockId===n.v.clockId&&n.b.navigationReason==='observed-target'
+   &&finite(k.b.nextMs)&&finite(n.b.navigationMs)&&!!k.b.nextIdentity&&identityKey(k.b.nextIdentity)===identityKey(n.v.identity);
+  if(!linked){out.unlinked++;continue;}
+  const a=k.b.nextMs,z=n.b.navigationMs;if(z<a){out.reversed++;continue;}
+  const ms=z-a,covered=union(clipTo([...stepIntervals(k.v,k.es),...stepIntervals(n.v,n.es)],a,z)),val=k.v.phases[5];
+  const validation=val.status==='measured'?union(clipTo([[val.startMs,val.endMs]],a,z)):0;
+  out.transitions++;out.ms+=ms;out.coveredMs+=covered;out.validationMs+=validation;out.uncoveredMs+=ms-covered;links.push({clockId:k.v.clockId,iv:[a,z]});
+  const o=k.v.attribution?.outcome??'autre',g=out.byOutcome[o]??={transitions:0,ms:0,uncoveredMs:0};g.transitions++;g.ms+=ms;g.uncoveredMs+=ms-covered;}
+ // Découpage de la durée du lot : bornes connues seulement (même règle que `totalMs` d'inspectLot), horloge du lot seulement.
+ const boundary=point=>lotEvents.filter(e=>e.kind==='batch'&&e.point===point&&e.knownBoundary);
+ const st=boundary('start'),en=boundary('end');let partition=null;
+ if(st.length===1&&en.length===1&&st[0].clockId===en[0].clockId&&en[0].ms>=st[0].ms){const lo=st[0].ms,hi=en[0].ms,clock=st[0].clockId;
+  const cycles=vs.filter(v=>v.attribution?.status==='mesurée'&&v.clockId===clock).map(v=>{const b=boundsOf(eventsOf.get(v)||[]);return [b.navigationMs,b.navigationMs+v.attribution.cycleMs];});
+  const between=links.filter(l=>l.clockId===clock).map(l=>l.iv),inside=clipTo([...cycles,...between],lo,hi),coveredMs=union(inside);
+  const cyclesMs=union(clipTo(cycles,lo,hi)),betweenMs=union(clipTo(between,lo,hi));
+  const first=inside.length?Math.min(...inside.map(i=>i[0])):hi,last=inside.length?Math.max(...inside.map(i=>i[1])):hi;
+  const beforeMs=first-lo,afterMs=hi-last,overlapMs=cyclesMs+betweenMs-coveredMs;
+  partition={lotMs:hi-lo,beforeMs,cyclesMs,betweenMs,afterMs,otherMs:(hi-lo)-coveredMs-beforeMs-afterMs,overlapMs};}
+ return {betweenCycles:out,partition};
+}
+function betweenCyclesTotals(lots){
+ const b=lots.map(l=>l.attribution.betweenCycles).filter(Boolean),p=lots.map(l=>l.attribution.partition).filter(Boolean);if(!b.length)return {};
+ const sum=(list,k)=>list.reduce((n,x)=>n+x[k],0),byOutcome={};
+ for(const x of b)for(const [o,g] of Object.entries(x.byOutcome)){const t=byOutcome[o]??={transitions:0,ms:0,uncoveredMs:0};t.transitions+=g.transitions;t.ms+=g.ms;t.uncoveredMs+=g.uncoveredMs;}
+ return {betweenCycles:{transitions:sum(b,'transitions'),ms:sum(b,'ms'),coveredMs:sum(b,'coveredMs'),validationMs:sum(b,'validationMs'),uncoveredMs:sum(b,'uncoveredMs'),
+   unlinked:sum(b,'unlinked'),reversed:sum(b,'reversed'),byOutcome},
+  partition:p.length?{lots:p.length,lotsWithoutBounds:lots.length-p.length,...Object.fromEntries(['lotMs','beforeMs','cyclesMs','betweenMs','afterMs','otherMs','overlapMs'].map(k=>[k,sum(p,k)]))}:null};
 }
 /* Correction proposée (2) : synthèse de la chronologie concurrente. Les
  * médianes de lignes différentes ne s'additionnent pas. */
@@ -441,13 +491,19 @@ function toMarkdown(m,{coupes=true,batchId=null}={}){if(!m.available)return '\n#
 }
 const sec=x=>finite(x)?(Math.round(x/100)/10).toFixed(1).replace('.',',')+' s':'non mesuré';
 const pct=x=>finite(x)?(Math.round(x*1000)/10).toFixed(1).replace('.',',')+' %':'non mesuré';
-function totalsLine(label,t){return `${label} : ${t.cycles} cycle(s), ${sec(t.cycleMs)} ; attribué ${sec(t.attributedMs)} ; non expliqué ${sec(t.unexplainedMs)} (${pct(t.unexplainedShare)}) ; recouvrement entre étapes écarté ${sec(t.phaseOverlapMs)}, au-delà de la navigation suivante ${sec(t.beyondCycleMs)}.`;}
+function totalsLine(label,t){return `${label} : ${t.cycles} cycle(s), ${sec(t.cycleMs)} ; attribué ${sec(t.attributedMs)} ; non expliqué ${sec(t.unexplainedMs)} (${pct(t.unexplainedShare)})${t.betweenCycles?` ; sans étape entre cycles ${sec(t.betweenCycles.uncoveredMs)} (hors cycle, voir « Entre cycles »)`:''} ; recouvrement entre étapes écarté ${sec(t.phaseOverlapMs)}, au-delà de la navigation suivante ${sec(t.beyondCycleMs)}.`;}
+function betweenLines(t){const b=t.betweenCycles,p=t.partition,out=[];if(!b)return out;
+ out.push(`Entre cycles : ${b.transitions} transition(s) reliée(s), ${sec(b.ms)} (de la navigation suivante vue par la visite k à la navigation de la visite k+1 ; compté hors cycle) ; couvert par une étape de k ou de k+1 ${sec(b.coveredMs)}, dont validation de k ${sec(b.validationMs)} ; sans étape entre cycles ${sec(b.uncoveredMs)} ; non reliées ${b.unlinked}${b.reversed?` ; ordre inversé ${b.reversed}`:''}.`
+  +(Object.keys(b.byOutcome).length?' Par issue de la visite k : '+Object.entries(b.byOutcome).sort().map(([o,g])=>`${o} ${g.transitions}, ${sec(g.ms)} dont sans étape ${sec(g.uncoveredMs)}`).join(' ; ')+'.':''));
+ if(p)out.push(`Durée des lots ${sec(p.lotMs)} = avant le premier cycle ${sec(p.beforeMs)} + cycles mesurés ${sec(p.cyclesMs)} + entre cycles ${sec(p.betweenMs)} + après le dernier ${sec(p.afterMs)} + autres trous ${sec(p.otherMs)} (cycles non mesurés, transitions non reliées)${p.overlapMs>1e-6?` − recouvrement ${sec(p.overlapMs)}`:''}${p.lotsWithoutBounds?` ; ${p.lotsWithoutBounds} lot(s) sans début ou fin connus, hors découpage`:''}.`);
+ return out;}
 function attributionLines(m,n,{coupes,batchId}){const out=['','Temps attribué (D-073, chaque seconde d’un cycle navigation → navigation suivante) : chaque seconde est donnée à une étape (première étape qui la couvre, sans double compte) ou marquée « non expliquée ». Attribué + non expliqué = durée du cycle.',''];
  const partOf=l=>{const r=m.coupes.find(x=>x.batchId===l.batchId&&x.part!==null);return r?` (partie ${r.part})`:'';};
  const scope=batchId?m.lots.filter(l=>l.batchId===batchId):null,visits=batchId?m.coupes.filter(r=>r.batchId===batchId):m.coupes;
  const block=(label,t)=>{out.push(totalsLine(label,t));for(const [o,g] of Object.entries(t.byOutcome))out.push(`- ${o} : ${totalsLine('cycles',g).slice(9)}`);
   out.push(`Non mesurés (cycle inconnu ou contexte invalide) : ${t.notMeasured} ; ordre impossible : ${t.impossibleOrder} ; sommes non réconciliées : ${t.notReconciled}.`);
-  if(t.gaps.length)out.push('Trous (non expliqués) par intervalle de jalons : '+t.gaps.slice(0,6).map(g=>`${g.between} ${sec(g.ms)} (${g.count})`).join(' ; ')+'.');};
+  if(t.gaps.length)out.push('Trous (non expliqués) par intervalle de jalons : '+t.gaps.slice(0,6).map(g=>`${g.between} ${sec(g.ms)} (${g.count})`).join(' ; ')+'.');
+  out.push(...betweenLines(t));};
  if(scope)for(const l of scope)block(`Lot ${l.batchId}${partOf(l)}`,l.attribution);
  else{block('Ensemble',m.attribution);for(const l of m.lots)block(`Lot ${l.batchId}${partOf(l)}`,l.attribution);}
  const bad=(batchId?m.concurrence.anomalies.rows.filter(r=>r.batchId===batchId):m.concurrence.anomalies.rows);
