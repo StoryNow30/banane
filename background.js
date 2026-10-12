@@ -1037,7 +1037,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
  // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
  if(action==='manual-completion'){await engine.manualCompletion();return engine.view();}
- if(action==='explicit-skip'){await engine.skipPaused();return engine.view();}
+ /* OBS-1 (relecture du test 3) : un SKIP explicite du dernier cut d'un lot borné clôt le lot HORS de la boucle du moteur
+  * (pas de jalon `batch-state`) : la fin est relevée ici, comme pour « Arrêter », sinon l'écriture SKIP arrive sans grâce. */
+ if(action==='explicit-skip'){const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
+  if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'))marquerFinLot(b,'fin-naturelle');return engine.view();}
  if(action==='start'){
   // Avant tout archivage : un lot en reprise manuelle garde son contexte.
   engine.assertBatchContextFree('un nouveau lot');
