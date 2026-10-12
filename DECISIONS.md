@@ -1,5 +1,26 @@
 # Décisions techniques
 
+## D-085 - Borne 1420 mm mesurée puis adoptée ; C4 retiré des portes de la 4.9 ; C4 à retravailler pour la 5.0 (12 octobre 2026)
+
+**Réponses de Mic du 12 octobre 2026** à l'orchestrateur Claude Code (suite de D-084) : sur les paires entre 1405 et 1420 mm, « il y en a quasiment pas » ;
+(1) « Oui » : mesurer l'effet de la borne 1420, puis l'adopter ; (2) tout ce que prévoit le cahier de la 4.9 « n'aura pas de grandes influences sur le placement
+du champignon par le super cerveau d'Ariane » : **C4 est retiré des portes de la 4.9**, exclusivement pour la 4.9 ; (3) **C4 sera retravaillé entièrement** : Mic a des orientations
+différentes de ce qui était prévu pour la 5.0.
+
+Effet : la porte « C1 et C4 non dégradés » du cahier (§ 7) devient « **C1 non dégradé** ». Les autres portes, C3 = 0 et zéro capture perdue compris, sont inchangées. C4 reste
+calculé à titre d'information quand une relecture existe ; il ne bloque plus rien en 4.9.
+
+Mesure de la borne 1420 (orchestrateur, sans agent) :
+- Lots du 12 octobre (210 coupes, parties neuves) : 0 paire appliquée entre 1405 et 1420 mm (appliquées de 1426,2 à 1465,4 mm) ; les 6 refus d'écartement sont tous sous 1350 mm.
+  **Aucune décision ne change sur ces lots.**
+- Rapports historiques du dépôt : 1 cas dans la zone, partie 34 coupe 1834, appliquée à 1411,2 mm et jugée FAUSSE (26,5 mm).
+- Essais synthétiques : les paires fausses du moteur (poses ESV décalées de 150 à 250 mm) sont à 1415 à 1418 mm ; la nouvelle borne les abstient en amont.
+- **Non mesuré** : rejeu du banc de 633 coupes (corpus natif privé absent ici, `verify` en mode partiel).
+
+Réalisé : branche `claude/49-ecartement-1420` (tête `4aa5167`, poussée, base `claude/49-test-4`, non fusionnée) : `src/gauge.js` (`lowMm` 1420), essais de frontière mis à jour, deux essais de fixture
+recalés (choix par la voie à 140 mm au lieu de 150 ; instantané sous 1405 pour le chemin KI-053), `verify` 1354 essais, 1352 réussis, 0 échec, 2 sautés. Pas de paquet : la borne partira dans la prochaine
+version de test. Les textes signés ne sont pas réécrits.
+
 ## D-084 - Limites d'écartement 1420 à 1470 mm ; C4 à faire évoluer (12 octobre 2026)
 
 **Instruction de Mic du 12 octobre 2026**, consignée par l'orchestrateur Claude Code :
