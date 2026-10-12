@@ -23,8 +23,16 @@ const anchorAt=cut=>({identity:{part:23,cut,frameId:'f'},positions:Object.fromEn
 const worstMm=(rails,runtime)=>{const e=K.expectedPoses({rails},runtime);return Math.max(...SIDES.map(s=>{const m=rails[s].sceneRelativeToProfileLocal,
   a=K.C.point(m,e[s].positionSceneRelative),h=K.C.point(m,truth[s].positionSceneRelative);return Math.max(Math.abs(a[1]-h[1]),Math.abs(a[2]-h[2]))*1000;}));};
 
-const rails=shifted(truth,210),cap=capture(rails),science=Shadow.scientificProposeBoth(cap),runtimeRails=Shadow.toRuntimeRails(science);
-const decision=L.decideCut({capture:cap,science,anchors:[anchorAt(104),anchorAt(103)],Shadow});
+/* D-084 (12 octobre 2026) : la borne basse du contrat d'écartement passe de 1405 à 1420 mm. La paire FAUSSE du moteur de ce
+ * scénario (+210 mm) est à 1415,8 mm : admissible avec 1405, elle est maintenant hors contrat et GCV1 s'abstient en amont
+ * (aucun candidat, rien à retirer par la garde). Le chemin testé ici — `commandRails` se replie sur la paire du moteur que la
+ * garde vient de retirer (KI-053) — existe toujours ; l'instantané « paire du moteur + décision » calculé sous 1405 par la version
+ * 4.9.0.4 (`tests/fixtures/relecture-478-contrat-1405.json`) le garde sous essai. Le scénario vivant, lui, est asserté dans le
+ * dernier essai : sous 1420 le moteur s'abstient. */
+const rails=shifted(truth,210),cap=capture(rails);
+const vivant=Shadow.toRuntimeRails(Shadow.scientificProposeBoth(cap));
+const figé=JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname,'fixtures','relecture-478-contrat-1405.json'),'utf8'));
+const runtimeRails=figé.runtimeRails,decision=figé.decision;
 const command=cameras=>L.commandRails({decision,runtimeRails,before:rails,expectedPoses:K.expectedPoses,cameras});
 
 test('préalables du scénario : moteur applicable sur une paire fausse, retirée par la garde, cible de la voie hors de la vue',()=>{
@@ -46,4 +54,8 @@ test('garde retirée, caméra inconnue : même repli, même paire retirée',()=>
   const out=command(null);
   assert.ok(!SIDES.every(s=>out.rails[s].status==='candidate'),`action ${out.action}/${out.reason}`);
   assert.equal(out.action,'defer');assert.match(out.reason,/^guard-vue-inconnue/);
+});
+
+test('D-084 : sous le contrat 1420, la paire fausse du moteur à +210 mm (1415,8 mm) est abstenue en amont',()=>{
+  assert.ok(SIDES.every(s=>vivant[s].status!=='candidate'),'GCV1 ne publie plus cette paire : '+SIDES.map(s=>vivant[s].status).join('/'));
 });
