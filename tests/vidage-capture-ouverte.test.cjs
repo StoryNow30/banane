@@ -20,12 +20,12 @@ const Settings=require('../src/settings.js'),GCV1=require('../src/gcv1-export.js
 const {panneau}=require('../tools/audit-qualite-480.cjs');
 
 /* ---------- 1. refus() : chaque couple (état du lot × collection) ---------- */
-const FIN_DIFFERE={cut:7198,reason:'dernier-cut-differe',issue:'dernier-cut-differe',motif:'dernier-invalide',target:null,total:9209,at:'2026-10-12T12:33:05.966Z',applied:false};
+const FIN_DIFFERE={cut:105,reason:'dernier-cut-differe',issue:'dernier-cut-differe',motif:'dernier-invalide',target:null,total:500,at:'2026-01-01T09:00:00.000Z',applied:false};
 const LOTS_FINIS={                                  // lots finis pour de bon
   'STOPPED + dernier-cut-differe':{state:'STOPPED',stoppedAtEnd:FIN_DIFFERE},
-  'STOPPED + dernier-cut-valide':{state:'STOPPED',stoppedAtEnd:{cut:7198,reason:'dernier-cut-valide',issue:'dernier-cut-valide',applied:true}},
-  'STOPPED + dernier cut non résolu laissé (stopAtLotEnd)':{state:'STOPPED',stoppedAtEnd:{cut:101,at:'2026-10-12T12:33:05.966Z',applied:false}},
-  'STOPPED + dernier cut posé non validé (stopAtLotEnd)':{state:'STOPPED',stoppedAtEnd:{cut:101,at:'2026-10-12T12:33:05.966Z',applied:true}},
+  'STOPPED + dernier-cut-valide':{state:'STOPPED',stoppedAtEnd:{cut:105,reason:'dernier-cut-valide',issue:'dernier-cut-valide',applied:true}},
+  'STOPPED + dernier cut non résolu laissé (stopAtLotEnd)':{state:'STOPPED',stoppedAtEnd:{cut:101,at:'2026-01-01T09:00:00.000Z',applied:false}},
+  'STOPPED + dernier cut posé non validé (stopAtLotEnd)':{state:'STOPPED',stoppedAtEnd:{cut:101,at:'2026-01-01T09:00:00.000Z',applied:true}},
   'STOPPED + sortie pendant un cut':{state:'STOPPED',stoppedAtEnd:{cut:101,reason:'navigation-other-part',issue:'sortie-pendant-cut',applied:true}},
   'COMPLETED':{state:'COMPLETED'},
   'FINISHED_WITH_UNCONFIRMED_ACTIONS':{state:'FINISHED_WITH_UNCONFIRMED_ACTIONS'}};
