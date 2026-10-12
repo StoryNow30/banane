@@ -45,6 +45,20 @@ une seule chose : le bouton « Vider le cache des exports » marche maintenant a
    l'observateur n'est pas en place (le bilan dirait « Observateur : absent »).
 4. Un seul onglet ESV si possible.
 
+## Vérifier que la bonne version est active
+
+À faire une fois l'installation et le F5 faits, **avant le premier lot** :
+
+1. `chrome://extensions` (ou `edge://extensions`) : sur la carte **Ariane**, la version est **4.9.0.4**, et **une seule Ariane**
+   est activée (la test 3 est désactivée, ou a été remplacée par-dessus).
+2. Ouvre le panneau Ariane : le titre en haut est « **ARIANE 4.9.0 test 4** » et le pied de page commence par
+   « Ariane 4.9.0 test 4 ».
+3. Sur la page ESV rechargée (F5), panneau fermé : le bouton blanc, en bas à droite, dit « **Ariane 4.9.0 test 4 · ouvrir** ».
+
+Si tu lis « 4.9.0 test 3 » (ou 4.9.0.3) quelque part, ou si le bouton blanc n'apparaît pas : **ne lance pas de lot**.
+Désactive l'Ariane en trop, recharge ESV (F5), vérifie de nouveau, et préviens-moi si rien ne change. Sinon tu risquerais de
+refaire un lot avec la test 3 et de retrouver « Vidage impossible » sans que la correction y soit pour quelque chose.
+
 ## La partie et les lots
 
 - **Un lot par partie NEUVE** : une partie que personne n'a encore traitée. Ne reprends **aucune partie déjà traitée** :

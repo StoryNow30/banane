@@ -62,3 +62,13 @@ test('P-1 : la consigne dit comment poser la test 4 PAR-DESSUS la test 3 (même 
  // Les mots de la consigne sont ceux de l'interface du navigateur : bouton « Recharger » de chrome://extensions (fiches 4.8.5 et 4.8.6).
  assert.ok(lire('consignes/installation-4.8.6.md').includes('**Recharger**'));
 });
+test('P-2 : section « Vérifier » — la version active se constate avec les repères du paquet (manifeste, panneau, bouton blanc)',()=>{
+ const v=section('Vérifier que la bonne version est active');
+ for(const mot of ['4.9.0.4','4.9.0 test 4','ARIANE 4.9.0 test 4','Ariane 4.9.0 test 4 · ouvrir','une seule Ariane','chrome://extensions','ne lance pas de lot','F5'])assert.ok(v.includes(mot),'« Vérifier » sans « '+mot+' »');
+ assert.match(v,/4\.9\.0 test 3/,'dit ce qu’on voit si la test 3 est encore active');
+ // Repères = chaînes réellement livrées.
+ assert.ok(lire('panel.html').includes('ARIANE <span>4.9.0 test 4</span>'));assert.ok(lire('src/bridge.js').includes('Ariane 4.9.0 test 4 · ouvrir'));
+ const m=JSON.parse(lire('manifest.json'));assert.equal(m.version,'4.9.0.4');assert.equal(m.version_name,'4.9.0 test 4');
+ // La section vient avant la première séance de lots.
+ assert.ok(texte.indexOf('## Vérifier que la bonne version est active')<texte.indexOf('## La partie et les lots'));
+});
