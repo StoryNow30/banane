@@ -29,8 +29,18 @@ une seule chose : le bouton « Vider le cache des exports » marche maintenant a
    (fichier dans Téléchargements, taille non nulle, aucun message « Export incomplet ») et envoie-le-moi.
    **Si l'export n'est pas complet ou pas envoyé, ne désinstalle pas l'ancienne Ariane** : désactive-la (interrupteur
    dans chrome://extensions ou edge://extensions) et préviens-moi.
-2. **Désinstalle l'ancienne Ariane** (4.9.0 test 3) seulement après l'étape 1 : une seule Ariane active à la fois. Puis
-   installe ce paquet comme d'habitude.
+2. **Pose la test 4 d'UNE seule de ces deux façons** (pas les deux). Après l'étape 1 dans tous les cas :
+   - **Par-dessus l'ancienne Ariane** (4.9.0 test 3, la plus simple, comme les fiches d'installation 4.8.x) : décompresse le zip
+     de la test 4 **dans le même dossier** que celui où tu as installé la test 3, en remplaçant les fichiers. **Ne désinstalle rien.**
+     Puis, dans `chrome://extensions` (ou `edge://extensions`), clique sur **Recharger** sur la carte « Ariane ». C'est la
+     **même extension** : elle garde son cache. (Mesuré dans Chromium : mêmes fichiers remplacés dans le même dossier,
+     navigateur relancé avec le même profil. Le bouton « Recharger » lui-même : non essayé.)
+   - **Dans un nouveau dossier** : décompresse le zip dans un dossier neuf, puis « Charger l'extension non empaquetée »
+     (Chrome) ou « Charger l'extension décompressée » (Edge) et choisis ce dossier. C'est une **autre** extension, avec un
+     **cache vide**. La test 3 garde le sien tant que tu ne la supprimes pas (les deux points sont mesurés dans Chromium,
+     même profil) : **désactive-la** (interrupteur). Tu ne peux la désinstaller qu'après l'étape 1 (désinstaller efface son
+     cache) ; tu peux aussi la laisser désactivée.
+   Dans les deux cas : **une seule Ariane active à la fois**.
 3. **Recharge l'onglet ESV (F5) juste après l'installation**, puis choisis cet onglet dans Ariane. Sans rechargement,
    l'observateur n'est pas en place (le bilan dirait « Observateur : absent »).
 4. Un seul onglet ESV si possible.
@@ -101,12 +111,12 @@ Ariane se bloque, ESV se comporte autrement, une fenêtre d'erreur apparaît : *
 envoie-moi l'export. **Retour arrière** : exporte, puis vérifie que le zip est dans Téléchargements, que sa taille
 n'est pas nulle et qu'aucun message « Export incomplet » n'est apparu, et envoie-le-moi. Ensuite seulement,
 **DÉSACTIVE** la 4.9.0 test 4 (interrupteur dans chrome://extensions ou edge://extensions), **sans la supprimer**, puis
-installe la 4.9.0 test 3 (`ariane-4.9.0-test.3.zip`, SHA-256
+installe, **dans un nouveau dossier** (pas par-dessus la test 4, qui garde ainsi son cache), la 4.9.0 test 3
+(`ariane-4.9.0-test.3.zip`, SHA-256
 `3612bd3886e86777aad5c4923021bf93ef131edb94db472a9f1143d18c2fabba`) ou, si je te le demande, la 4.9.0 test 2
 (`ariane-4.9.0-test.2.zip`, SHA-256 `06b1f2f728f584e7b05322a99301441e80712bcfa195f1cb39e05c55000f5ab2`) ; recharge ESV (F5)
 et choisis l'onglet. Ne supprime la test 4 qu'après mon accord. Avec la test 3, « Vider le cache des exports » reste refusé
 après un lot terminé sur un dernier cut différé (c'est le défaut corrigé ici).
-
 ## Petites précautions (limites connues)
 
 - Cette séance se fait avec **Orbite seulement** : pas d'Écho (ses observations seraient rangées avec le dernier lot).
@@ -126,5 +136,7 @@ après un lot terminé sur un dernier cut différé (c'est le défaut corrigé i
 - **Mémoire du navigateur sur un export de 400 Mo et plus : non mesurée.**
 - **Deux panneaux Ariane ouverts en même temps : non vérifié.** Garde un seul panneau ouvert.
 - **Edge : non essayé.**
+- **Le bouton « Recharger » de chrome://extensions et d'edge://extensions : non essayé** (essayé seulement : fichiers remplacés dans
+  le même dossier, navigateur relancé).
 - La dernière validation après « Arrêter le lot » ou en fin normale de lot a été essayée avec un lot posé par script dans
   la copie locale, pas avec un vrai lot Orbite complet.

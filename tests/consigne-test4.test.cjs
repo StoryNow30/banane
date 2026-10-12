@@ -49,3 +49,16 @@ test('limites dites : pas essayé sur le vrai ESV ; STALE posé à la main dans 
  const l=section('Ce qui n\'est pas vérifié (à savoir avant de partir)');
  assert.match(l,/Pas essayé sur le vrai ESV/);assert.match(l,/STALE/);assert.match(l,/posé à la main/);assert.match(l,/Edge : non essayé/);
 });
+
+/* ---- Relecture du test 4 (constats P-1, P-2, P-3) ---- */
+test('P-1 : la consigne dit comment poser la test 4 PAR-DESSUS la test 3 (même dossier + Recharger) et dans un NOUVEAU dossier, sans ambiguïté sur la désinstallation',()=>{
+ const a=section('Avant de commencer');
+ for(const mot of ['par-dessus','même dossier','Recharger','nouveau dossier','cache vide','même extension','ne désinstalle rien'])assert.ok(a.toLowerCase().includes(mot.toLowerCase()),'« Avant de commencer » sans « '+mot+' »');
+ // La désinstallation n'est jamais demandée « comme d'habitude » : elle dépend du chemin choisi, et après l'export vérifié.
+ assert.doesNotMatch(a,/comme d'habitude/,'« comme d’habitude » est ambigu');
+ assert.match(a,/Dans les deux cas/);
+ // Ordre : l'export (étape 1) vient avant le choix de la façon de poser.
+ assert.ok(a.indexOf('Exporte d\'abord')>=0&&a.indexOf('Exporte d\'abord')<a.toLowerCase().indexOf('par-dessus'),'l’export vient avant l’installation');
+ // Les mots de la consigne sont ceux de l'interface du navigateur : bouton « Recharger » de chrome://extensions (fiches 4.8.5 et 4.8.6).
+ assert.ok(lire('consignes/installation-4.8.6.md').includes('**Recharger**'));
+});
