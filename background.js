@@ -113,8 +113,13 @@ const obsState={lost:0,perSeance:new Map()};
 /* Grâce de réception après l'arrêt au dernier cut du lot. La dernière validation du lot (Ctrl+Entrée en place) clôt le lot
  * (`closeAtExit`, état STOPPED) avant que son écriture PUT ait été relayée : l'observateur la poste à la fin de l'écriture, le pont
  * la tient 250 ms avant de l'envoyer (mesuré : 158 à 343 ms entre la fin de l'écriture et sa réception ; lots 7 à 10, 4 sur 4 perdues).
- * Pendant cette courte fenêtre, et pour ce seul lot, le rangement accepte encore ce que l'observateur avait DÉJÀ vu : rien n'est
- * demandé à ESV, la séance n'est pas rouverte (`launcher-status` ne l'annonce pas). Date absente, illisible ou future : jamais devinée. */
+ * Pendant cette courte fenêtre, et pour ce seul lot, le rangement accepte encore ce que l'observateur RELAIE : rien n'est
+ * demandé à ESV, la séance n'est pas rouverte (`launcher-status` ne l'annonce pas). Date absente, illisible ou future : jamais devinée.
+ * OBS-2 (relecture du test 3) : cela comprend une requête COMMENCÉE après la fin du lot (validation ou navigation dans ESV
+ * juste après « Arrêter ») ; un filtre sur la date de début perdrait de vraies écritures (vrai lot : PUT commencé après
+ * l'acceptation 63 fois sur 208, jusqu'à +1,5 s). Chaque entrée rangée pendant la grâce porte donc `recuEnGrace:true` et
+ * `debutMoinsFinLotMs` (début de la requête, horloge de la page − fin du lot, horloge du service worker ; écart d'horloge
+ * non corrigé ; null sans date de début) : l'analyse les sépare. */
 const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
 /* OBS-4 (relecture du test 3) : « Arrêter » pendant une action prolonge la grâce tant que la boucle finit l'action de ce
  * lot, mais 120 s au plus après l'arrêt (sans plafond : mesuré accepté 10 min après) ; ensuite, seuls les 5 s après la
@@ -157,7 +162,7 @@ function seanceObservateur({grace=false}={}){
 function ancienLotEnGrace(seance){const b=engine?.s?.batch;if(!b?.id||seance!=='lot:'+b.id)return null;
  const debut=Date.parse(b.startedAt),now=Date.now();if(!Number.isFinite(debut))return null;let best=null;
  for(const [id,f] of obsFins)if(id!==b.id&&f.at<=debut+1000&&dansFenetre(f.at,now)&&(!best||f.at>best.at))best={id,...f};
- return best?{seance:'lot:'+best.id,ctx:best.ctx,debut}:null;}
+ return best?{seance:'lot:'+best.id,ctx:best.ctx,debut,fin:best.at}:null;}
 /* Une grace a-t-elle couru entre `depuis` et maintenant ? 'en-cours', 'depuis-instantane' ou null (vidage du cache). */
 function graceObservations(depuis=Date.now()){const now=Date.now(),b=engine?.s?.batch,fins=[...obsFins.values()].map(f=>f.at);
  if(engine?.s?.mode==='automatic-test'&&b&&OBS_CLOS.includes(b.state)){if(dansGrace(b,now))return 'en-cours';fins.push(finDuLot(b));}
@@ -196,11 +201,15 @@ function rangerObservations(m){try{
  if(typeof m.observer!=='string'||m.observer.length>80||!Array.isArray(m.entries)||m.entries.length>100)return {accept:true,stored:0,reason:'malformed'};
  const K=globalThis.BananeCore3,cfg=globalThis.BananeSettings?.observateurPassif||{},cap=cfg.entreesParSeanceMax||20000,maxChars=cfg.caracteresParEntree||4096;
  const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??performance.timeOrigin;
- const vu=s=>obsState.perSeance.get(s)||{n:0,capped:false},courant={seance,ctx:obsContexte(),seen:vu(seance)},events=[];let rejected=0;
+ /* OBS-2 : séance tenue seulement par la grâce de fin du lot courant → entrées marquées (écart à la fin de CE lot). */
+ const lot=engine?.s?.batch,enGrace=seance!==seanceObservateur();
+ const vu=s=>obsState.perSeance.get(s)||{n:0,capped:false},courant={seance,ctx:obsContexte(),seen:vu(seance),fin:enGrace&&lot?finDuLot(lot):null},events=[];let rejected=0;
+ const marqueGrace=(f,fin)=>{const t=f.startedEpochMs;return {recuEnGrace:true,debutMoinsFinLotMs:Number.isFinite(t)&&Number.isFinite(fin)?Math.round((t-fin)*10)/10:null};};
  /* Nouveau lot pendant la grâce de l'ancien : ce que la page a vu (début, sinon fin) AVANT le début du nouveau lot reste à l'ancien. */
  const ancien=(a=>a&&{...a,seen:vu(a.seance)})(ancienLotEnGrace(seance));
  const cible=f=>{if(!ancien)return courant;const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:f.endedEpochMs;return Number.isFinite(t)&&t<ancien.debut?ancien:courant;};
- const add=(fields,seq,c=courant)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...c.ctx};
+ const add=(fields,seq,c=courant)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...c.ctx,
+  ...(c.fin!==null&&c.fin!==undefined?marqueGrace(fields,c.fin):{})};
   if(JSON.stringify(e).length>maxChars){rejected++;return;}events.push(e);};
  if(obsState.lost){add({kind:'gap',lost:obsState.lost,reason:'store-rejected',of:null},null);obsState.lost=0;}
  for(const x of m.entries){

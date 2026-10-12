@@ -50,3 +50,37 @@ test('OBS-4 arrêt pendant une action sans fin : accepté jusqu’à 120 s aprè
  assert.equal((await b.api('export-cache-info')).refus!==null,true,'le vidage reste refusé tant que l’action tourne (« Ariane travaille encore »)');
  e.task=null;
 });
+
+/* OBS-2 : pendant la grâce, TOUT ce que la page relaie est rangé, y compris une écriture COMMENCÉE après la fin du lot
+ * (mesuré : 629 ms après « Arrêter »). Un filtre sur la date de début perdrait de vraies écritures (vrai lot : le PUT
+ * commence après l'acceptation 63 fois sur 208, jusqu'à +1,5 s) : on marque `recuEnGrace:true` et l'écart début de la
+ * requête − fin du lot, pour séparer ces entrées à l'analyse. */
+test('OBS-2 entrée rangée pendant la grâce : recuEnGrace et écart début − fin du lot ; rien de tel lot ouvert',async()=>{
+ const {b}=await lotOuvert();
+ send(b,[write({seq:1})]);assert.equal(stored(b)[0].recuEnGrace,undefined,'lot ouvert : pas de marque');
+ await b.api('stop');const fin=b.get('obsFins').get('lot-A').at;
+ send(b,[write({seq:2,startedEpochMs:fin+629,endedEpochMs:fin+700}),write({seq:3,startedEpochMs:fin-300,endedEpochMs:fin+50}),
+  {seq:4,kind:'observer',version:1,world:'MAIN',installedBeforePageScripts:true,readyState:'complete',scriptsAtInstall:0,enabled:true,afterDenial:false,dropped:0,ignored:0}]);
+ const of=seq=>stored(b).find(x=>x.observer.seq===seq);
+ assert.equal(of(2).recuEnGrace,true);assert.equal(of(2).debutMoinsFinLotMs,629,'commencée 629 ms APRÈS la fin du lot');
+ assert.equal(of(3).recuEnGrace,true);assert.equal(of(3).debutMoinsFinLotMs,-300,'commencée avant la fin');
+ assert.equal(of(4).recuEnGrace,true);assert.equal(of(4).debutMoinsFinLotMs,null,'sans date de début : écart non mesuré');
+});
+test('OBS-2 nouveau lot pendant la grâce : seules les entrées rangées avec l’ANCIEN lot sont marquées, écart à SA fin',async()=>{
+ const {b,e}=await lotOuvert('lot-A');await b.api('stop');const finA=b.get('obsFins').get('lot-A').at;await new Promise(r=>setTimeout(r,5));
+ await b.api('start',{part:23,start:100,end:101,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt'});
+ const B=e.s.batch.id,debutB=Date.parse(e.s.batch.startedAt);
+ send(b,[write({seq:2,startedEpochMs:debutB-3,endedEpochMs:debutB+60}),write({seq:3,startedEpochMs:debutB+5,endedEpochMs:debutB+50})]);
+ const of=seq=>stored(b).find(x=>x.observer.seq===seq);
+ assert.equal(of(2).batchId,'lot-A');assert.equal(of(2).recuEnGrace,true);assert.equal(of(2).debutMoinsFinLotMs,debutB-3-finA);
+ assert.equal(of(3).batchId,B);assert.equal(of(3).recuEnGrace,undefined,'lot B ouvert : pas de marque');
+ await b.settle();
+});
+test('OBS-2 lecture hors ligne : perf-phases compte les écritures reçues pendant la grâce et celles commencées après la fin',()=>{
+ const V1=require('../tools/perf-phases.cjs'),{journal}=require('./helpers/perf-phases.cjs');
+ const w=(id,o)=>({type:'esv-observation',schema:1,eventId:id,kind:'write',timeOrigin:1000,ms:600,sessionId:'S',batchId:'B',observer:{id:'o',seq:1},status:204,outcome:'done',attempt:1,
+  railPairId:'r',bodyKeys:1,body:{a:1},startedEpochMs:2450,endedEpochMs:2600,durationMs:150,...o});
+ const j=journal();j.events.push(w('w1',{}),w('w2',{recuEnGrace:true,debutMoinsFinLotMs:-120}),w('w3',{recuEnGrace:true,debutMoinsFinLotMs:629}));
+ const m=V1.measure(j,{tous:true});assert.equal(m.observations.writes.inGrace,2);assert.equal(m.observations.writes.startedAfterEnd,1);
+ assert.match(V1.toMarkdown(m),/dont 2 reçue\(s\) pendant la grâce de fin de lot, 1 commencée\(s\) après la fin du lot/);
+});

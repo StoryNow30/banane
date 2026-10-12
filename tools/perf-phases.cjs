@@ -433,6 +433,7 @@ function observationsOf(data,phaseEvents,visits){
  const rows=of('write').map(e=>{const l=link(e),body=e.body&&typeof e.body==='object'?Object.values(e.body):[],accepted=l.visitId?acceptedAt.get(l.visitId):undefined;
   return {batchId:e.batchId??null,railPairId:e.railPairId??null,status:e.status??null,outcome:e.outcome??null,attempt:e.attempt??null,durationMs:e.durationMs??null,
    numericFields:body.filter(v=>typeof v==='number').length,bodyKeys:e.bodyKeys??null,startedEpochMs:e.startedEpochMs??null,endedEpochMs:e.endedEpochMs??null,...l,
+   recuEnGrace:e.recuEnGrace===true,debutMoinsFinLotMs:finite(e.debutMoinsFinLotMs)?e.debutMoinsFinLotMs:null,
    writeEndMinusAcceptedMs:finite(accepted)&&finite(e.endedEpochMs)?e.endedEpochMs-accepted:null};});
  const byStatus={};for(const r of rows)byStatus[r.status]=(byStatus[r.status]||0)+1;
  const loads=[...groupBy(of('list-page'),e=>e.observer?.id??'?')].map(([observer,pages])=>{const p=pages.slice().sort((a,b)=>(a.startedEpochMs??0)-(b.startedEpochMs??0)),ok=p.every(x=>finite(x.rows)&&x.counts);
@@ -445,12 +446,17 @@ function observationsOf(data,phaseEvents,visits){
  const fr=of('fetch-rails'),marks=of('observer'),lastMark=marks.at(-1),late=marks.some(m=>m.installedBeforePageScripts===false),
   before=marks.length?(late?false:marks.every(m=>m.installedBeforePageScripts===true)?true:null):null;
  return {available:true,counts,observer:{present:marks.length>0,marks:marks.length,version:lastMark?.version??null,installedBeforePageScripts:before,late,readyState:lastMark?.readyState??null,enabled:lastMark?.enabled??null,dropped:lastMark?.dropped??null},fetchRails:{windows:fr.length,n:fr.reduce((n,e)=>n+(finite(e.n)?e.n:0),0)},gaps:{count:gaps.length,lost:Object.values(byReason).reduce((n,x)=>n+x,0),byReason},
-  writes:{n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
-   attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,rows},
+  writes:writesOf(rows),
   listPages:{pages:of('list-page').length,loads,summaries:listSummaries(of('list-summary'))},resources:{windows:res.length,n:res.reduce((n,x)=>n+x.n,0),bytes:res.reduce((n,x)=>n+x.bytes,0),
    firstStartMs:res.length?Math.min(...res.map(x=>x.startedEpochMs).filter(finite)):null,lastEndMs:res.length?Math.max(...res.map(x=>x.endedEpochMs).filter(finite)):null},
   perVisit,clockNote:'époque page = performance.timeOrigin + now ; époque service worker = timeOrigin + ms ; écart d’horloge entre processus non corrigé'};
 }
+/* Bilan des écritures. OBS-2 : `inGrace` = rangées pendant la grâce de fin de lot (4.9.0.3 et plus), `startedAfterEnd` = dont la
+ * requête a commencé APRÈS la fin du lot (validation ou navigation faite après « Arrêter » ; peut viser une autre coupe). */
+function writesOf(rows){const byStatus={};for(const r of rows)byStatus[r.status]=(byStatus[r.status]||0)+1;
+ return {n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
+  attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,
+  inGrace:rows.filter(r=>r.recuEnGrace).length,startedAfterEnd:rows.filter(r=>r.recuEnGrace&&r.debutMoinsFinLotMs>0).length,rows};}
 /* Résumés d'avant séance : par chargement (observateur) et par clé ; le dernier reçu est gardé (une marque
  * d'instantané peut être redemandée à un nouveau début de séance). Comptes seulement, jamais les lignes. */
 function listSummaries(events){
@@ -460,10 +466,8 @@ function listSummaries(events){
   firstStartedEpochMs:e.firstStartedEpochMs??null,lastEndedEpochMs:e.lastEndedEpochMs??null,durationMs:e.durationMs??null,beforeSession:e.beforeSession===true}));}
 /* F3 (relecture du test 3) : rapport d'UN lot (`perf-lot --par-lot`) : écritures de ce lot seulement (rangées avec son
  * `batchId`) ; les autres comptes (marques, pages de liste, fichiers de points, pertes, fetch) restent ceux du fichier, dit tel quel. */
-function observationsForLot(o,batchId){if(!o?.available||!batchId)return o;const rows=o.writes.rows.filter(r=>r.batchId===batchId),byStatus={};
- for(const r of rows)byStatus[r.status]=(byStatus[r.status]||0)+1;
- return {...o,lotScope:batchId,counts:{...o.counts,write:rows.length},writes:{n:rows.length,byStatus,ok:rows.filter(r=>r.status===200||r.status===204).length,failed:rows.filter(r=>r.status!==200&&r.status!==204).length,
-  attemptsMax:rows.reduce((m,r)=>Math.max(m,r.attempt||0),0),linked:rows.filter(r=>r.link).length,rows}};}
+function observationsForLot(o,batchId){if(!o?.available||!batchId)return o;const rows=o.writes.rows.filter(r=>r.batchId===batchId);
+ return {...o,lotScope:batchId,counts:{...o.counts,write:rows.length},writes:writesOf(rows)};}
 const OBSERVER_ABSENT='Observateur : absent (aucun événement d’observation) : l’onglet ESV n’a probablement pas été rechargé après l’installation ; ces mesures n’ont pas d’observation d’écriture';
 function observationsLines(o,n){
  if(!o?.available)return o?['','## Observateur passif (journalisation seule)','',...(o.observerExpected?[OBSERVER_ABSENT,'']:[]),o.reason]:[];
@@ -473,7 +477,7 @@ function observationsLines(o,n){
   o.observer.present?`Observateur : présent (version ${n(o.observer.version)}, installé avant les scripts de la page : ${yn(o.observer.installedBeforePageScripts)}${o.observer.late?' (au moins une marque tardive)':''}).`
    :'Observateur : marque absente (observateur absent ou coupé, page non rechargée, navigateur trop ancien, ou séance démarrée sans message) : non mesuré.',
   `Observations : ${o.counts.write} écriture(s), ${o.counts['list-page']} page(s) de liste, ${o.counts.resource} fenêtre(s) de fichiers de points, ${o.counts['fetch-rails']} fenêtre(s) de requêtes fetch comptées, ${o.gaps.count} jalon(s) de perte (${o.gaps.lost} observation(s) perdue(s)${Object.keys(o.gaps.byReason).length?' : '+JSON.stringify(o.gaps.byReason):''}).`,
-  `Écritures : ${o.writes.n} dont ${o.writes.ok} acquittée(s) (statut HTTP 200 ou 204, acquittement de la requête de la page, ni qualité de pose ni relecture), ${o.writes.failed} autre(s) ; statuts ${JSON.stringify(o.writes.byStatus)} ; tentatives max ${o.writes.attemptsMax} ; reliée(s) à une visite par fenêtre de temps : ${o.writes.linked}/${o.writes.n}.`];
+  `Écritures : ${o.writes.n} dont ${o.writes.ok} acquittée(s) (statut HTTP 200 ou 204, acquittement de la requête de la page, ni qualité de pose ni relecture), ${o.writes.failed} autre(s) ; statuts ${JSON.stringify(o.writes.byStatus)} ; tentatives max ${o.writes.attemptsMax} ; reliée(s) à une visite par fenêtre de temps : ${o.writes.linked}/${o.writes.n}${o.writes.inGrace?` ; dont ${o.writes.inGrace} reçue(s) pendant la grâce de fin de lot, ${o.writes.startedAfterEnd} commencée(s) après la fin du lot (à séparer : peut viser une autre coupe)`:''}.`];
  if(o.writes.n){L.push('','| Coupe d’ESV | Statut | Tentative | Durée ms | Champs numériques | Visite | Écriture − acceptation ms |','|---|---:|---:|---:|---:|---|---:|');
   for(const r of o.writes.rows.slice(0,40))L.push(`| ${r.railPairId??'—'} | ${r.status??'—'} | ${r.attempt??'—'} | ${n(r.durationMs)} | ${r.numericFields} | ${r.visitId??r.linkReason??'—'} | ${n(r.writeEndMinusAcceptedMs)} |`);
   if(o.writes.rows.length>40)L.push(`| … ${o.writes.rows.length-40} autre(s) | | | | | | |`);}
