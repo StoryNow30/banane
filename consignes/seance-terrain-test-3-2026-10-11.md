@@ -1,14 +1,17 @@
-# Séance terrain « test 3 » : consigne pour Mic (11 octobre 2026)
+# Séance terrain « test 3 » : consigne pour Mic (11 octobre 2026, mise à jour le 12 octobre)
 
 **Rien ne change dans la façon dont Ariane pose ou valide** : même moteur, mêmes réglages qu'au test 2. Ce paquet change
 les exports (un seul fichier zip, cache qu'on peut vider) et la façon de noter la dernière validation d'un lot.
 
 ## Le paquet
 
-- Fichier : `ariane-4.9.0-test.3.zip` (version 4.9.0.3, « 4.9.0 test 3 »), 1 234 508 octets (environ 1,2 Mo).
-- SHA-256 : `2fa6442908e5ee2e857dd51914f12f6e90595d5c2d93b0ba8ca6a2e4e86f3799`.
-- Construit avec `tools/package.py` depuis la tête `53aff3f` de la branche `claude/49-test-3` (verify : 1 263 essais,
-  1 261 réussis, 0 échec, 2 sautés non réussis). Rien n'est publié ni fusionné.
+- Fichier : `ariane-4.9.0-test.3.zip` (version 4.9.0.3, « 4.9.0 test 3 »), environ 1,2 Mo. **Paquet refait le 12 octobre**
+  (corrections après relecture) : il remplace celui du 11 octobre, qui portait le même numéro de version ; n'installe que
+  celui du 12, reconnu par son SHA-256.
+- Taille exacte et SHA-256 : dans le fichier `ariane-4.9.0-test.3.zip.sha256` livré avec le paquet et dans mon message
+  (cette consigne est dans le paquet : elle ne peut pas porter sa propre empreinte).
+- Construit avec `tools/package.py` depuis la branche `claude/49-test-3` (commit donné dans mon message ; verify : 0 échec,
+  relevé dans `audit/verification.txt` du paquet). Rien n'est publié ni fusionné.
 - Nouveau par rapport au test 2 :
   - « Tout télécharger pour l'analyse » produit **un seul fichier zip** au lieu de plusieurs fichiers ;
   - un bouton **« Vider le cache des exports »**, avec une demande de confirmation ;
@@ -47,13 +50,14 @@ les exports (un seul fichier zip, cache qu'on peut vider) et la façon de noter 
    - Le **vidage automatique est DÉSACTIVÉ** (réglage par défaut) : rien n'est jamais effacé tout seul après un export.
    - **Ne vide qu'APRÈS avoir vérifié** que le zip est bien enregistré (il est dans Téléchargements et sa taille n'est pas
      nulle) **ET envoyé** dans cette conversation. Dans le doute, ne vide pas : garder le cache ne gêne pas le lot suivant.
-   - Pendant un lot en cours ou en pause, le bouton est grisé : c'est normal.
+   - Pendant un lot en cours ou en pause, le bouton est grisé : c'est normal. Il redevient utilisable dès que le lot est
+     fini : arrêté, arrivé en fin de partie ou terminé tout seul.
    - Juste après la fin d'un lot, Ariane peut répondre « Vidage impossible : les dernières observations du lot qui vient
      de finir peuvent encore arriver (5 s au plus) : réessaie dans quelques secondes ». Attends 5 secondes et recommence.
 
 ## À la fin de chaque lot
 
-1. Clique sur « Tout télécharger pour l'analyse ».
+1. Attends 5 secondes après la fin du lot, puis clique sur « Tout télécharger pour l'analyse ».
 2. Vérifie le zip dans Téléchargements, puis **envoie-le-moi dans cette conversation**.
 3. Seulement ensuite, si tu veux, « Vider le cache des exports » (voir plus haut).
 
@@ -79,6 +83,14 @@ n'est pas nulle et qu'aucun message « Export incomplet » n'est apparu, et envo
 installe la 4.9.0 test 2 (`ariane-4.9.0-test.2.zip`, SHA-256
 `06b1f2f728f584e7b05322a99301441e80712bcfa195f1cb39e05c55000f5ab2`), recharge ESV (F5) et choisis l'onglet. Ne supprime
 la test 3 qu'après mon accord.
+
+## Petites précautions (limites connues)
+
+- Cette séance se fait avec **Orbite seulement** : pas d'Écho (ses observations seraient rangées avec le dernier lot).
+- **Ne change pas l'heure de l'ordinateur** pendant un lot : la dernière validation pourrait ne pas être notée.
+- Si un lot passe **en erreur**, exporte avant d'en lancer un autre, et dis-le-moi.
+- Si tu vides le cache puis **reprends un lot que tu avais arrêté**, garde et envoie **les deux zips** (avant et après le
+  vidage) : chacun n'a qu'une partie du lot.
 
 ## Ce qui n'est pas vérifié (à savoir avant de partir)
 
