@@ -14,7 +14,7 @@
   * qu'aucun chemin automatique ne doit pouvoir dériver un SKIP d'une mesure.
   * Le SKIP reste une décision de l'opérateur seul. */
  const CONTRACT=Object.freeze({version:'gauge-contract-v2',
-   lowMm:1405,      // en dessous : hors contrat
+   lowMm:1420,      // en dessous : hors contrat (1420 depuis le 12 octobre 2026, D-084 ; 1405 avant)
    nominalMm:1430,  // à partir d'ici : nominal
    maximumMm:1470});// au-delà : hors contrat
  const CLASSES=Object.freeze({LOW:'LOW_INVALID',TOLERANCE:'TOLERANCE',NOMINAL:'NOMINAL',
