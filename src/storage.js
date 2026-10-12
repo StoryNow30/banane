@@ -23,9 +23,11 @@ class BananeStorage3{
  /* Lecture par clé : un enregistrement, sans charger toute la base (4.7.2). */
  async getRecord(id){return this.transaction('records','readonly',s=>s.get(id));}
  async all(name){return this.transaction(name,'readonly',s=>s.getAll());}
- /* V2 : suppression de plusieurs clés en UNE transaction (vidage du cache d'export). */
+ /* V2 : suppression de plusieurs clés en UNE transaction (vidage du cache d'export). T3D-5 : rend le nombre de clés
+  * PRÉSENTES et supprimées (une clé déjà absente n'est pas comptée), lu dans la même transaction. */
  async deleteMany(name,ids){const db=await this.open();return new Promise((resolve,reject)=>{
-   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name);let n=0;for(const id of ids){os.delete(id);n++;}
+   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name);let n=0;
+   for(const id of ids){const r=os.count(id);r.onsuccess=()=>{if(r.result>0){os.delete(id);n++;}};}
    tx.oncomplete=()=>resolve(n);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
  /* V2 : lit, compare la signature et supprime dans UNE transaction (rien ne s'écrit entre
   * le contrôle et la suppression). Rend { supprimes:[ids], gardes:[ids modifiés] }. */

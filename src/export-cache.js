@@ -87,7 +87,8 @@
         liste = liste.filter(id => !interdits.has(id));
       }
       if (!liste.length) continue;
-      if (typeof store.deleteMany === 'function') { await store.deleteMany(nom, liste); out[nom] = liste.length; continue; }
+      /* T3D-5 : compte rendu par le stockage (clés présentes et supprimées) ; sans compte rendu, la liste demandée. */
+      if (typeof store.deleteMany === 'function') { const n = await store.deleteMany(nom, liste); out[nom] = Number.isInteger(n) ? n : liste.length; continue; }
       const f = { events: 'deleteEvent', records: 'deleteRecord', clouds: 'deleteCloud' }[nom];
       for (const id of liste) { await store[f](id); out[nom]++; }
     }
