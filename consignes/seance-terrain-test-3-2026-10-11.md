@@ -18,8 +18,12 @@ les exports (un seul fichier zip, cache qu'on peut vider) et la façon de noter 
 ## Avant de commencer
 
 1. **Exporte d'abord ce qui reste dans l'ancienne Ariane** (« Tout télécharger pour l'analyse ») si ce n'est pas déjà
-   envoyé : désinstaller une extension efface ce qu'elle gardait sur l'ordinateur.
-2. **Désinstalle l'ancienne Ariane** (4.9.0 test 2) : une seule Ariane à la fois. Puis installe ce paquet comme d'habitude.
+   envoyé : désinstaller une extension efface ce qu'elle gardait sur l'ordinateur. Vérifie que l'export est arrivé
+   (fichier dans Téléchargements, taille non nulle, aucun message « Export incomplet ») et envoie-le-moi.
+   **Si l'export n'est pas complet ou pas envoyé, ne désinstalle pas l'ancienne Ariane** : désactive-la (interrupteur
+   dans chrome://extensions ou edge://extensions) et préviens-moi.
+2. **Désinstalle l'ancienne Ariane** (4.9.0 test 2) seulement après l'étape 1 : une seule Ariane active à la fois. Puis
+   installe ce paquet comme d'habitude.
 3. **Recharge l'onglet ESV (F5) juste après l'installation**, puis choisis cet onglet dans Ariane. Sans rechargement,
    l'observateur n'est pas en place (le bilan dirait « Observateur : absent »).
 4. Un seul onglet ESV si possible.
@@ -55,8 +59,9 @@ les exports (un seul fichier zip, cache qu'on peut vider) et la façon de noter 
 
 ## Si un export échoue
 
-Message « Export incomplet … », fichier absent ou de taille nulle : **ne vide rien**. Envoie-moi le message exact (copie ou
-photo) et les fichiers qui sont arrivés. Tu peux relancer « Tout télécharger pour l'analyse ».
+Message « Export incomplet … », fichier absent ou de taille nulle : **ne vide rien** et **ne désinstalle pas Ariane**
+(désinstaller efface tout ce qu'elle garde) : si tu dois l'écarter, désactive-la seulement, et préviens-moi. Envoie-moi
+le message exact (copie ou photo) et les fichiers qui sont arrivés. Tu peux relancer « Tout télécharger pour l'analyse ».
 
 ## À noter dans ton retour
 
@@ -68,9 +73,12 @@ photo) et les fichiers qui sont arrivés. Tu peux relancer « Tout télécharger
 ## Si quelque chose d'anormal arrive
 
 Ariane se bloque, ESV se comporte autrement, une fenêtre d'erreur apparaît : **arrête**, note l'heure et ce que tu as vu,
-envoie-moi l'export. **Retour arrière** : exporte, désinstalle la 4.9.0 test 3, réinstalle la 4.9.0 test 2
-(`ariane-4.9.0-test.2.zip`, SHA-256 `06b1f2f728f584e7b05322a99301441e80712bcfa195f1cb39e05c55000f5ab2`), puis recharge
-ESV (F5) et choisis l'onglet.
+envoie-moi l'export. **Retour arrière** : exporte, puis vérifie que le zip est dans Téléchargements, que sa taille
+n'est pas nulle et qu'aucun message « Export incomplet » n'est apparu, et envoie-le-moi. Ensuite seulement,
+**DÉSACTIVE** la 4.9.0 test 3 (interrupteur dans chrome://extensions ou edge://extensions), **sans la supprimer**, puis
+installe la 4.9.0 test 2 (`ariane-4.9.0-test.2.zip`, SHA-256
+`06b1f2f728f584e7b05322a99301441e80712bcfa195f1cb39e05c55000f5ab2`), recharge ESV (F5) et choisis l'onglet. Ne supprime
+la test 3 qu'après mon accord.
 
 ## Ce qui n'est pas vérifié (à savoir avant de partir)
 
