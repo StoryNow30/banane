@@ -3,7 +3,7 @@
 const path=require('node:path');
 let pw;try{pw=require('playwright');}catch{pw=require('/opt/node22/lib/node_modules/playwright');}
 const dir=__dirname;
-const pages=[['A-tuiles'],['B-filet'],['C-onglets'],['C-onglets','exports'],['D-tableau']];
+const pages=[['A-accueil'],['B-recharge'],['B-recharge','exports'],['C-grille'],['D-onglets'],['D-onglets','exports']];
 (async()=>{
  const b=await pw.chromium.launch();
  const ctx=await b.newContext({viewport:{width:480,height:200},deviceScaleFactor:2});
@@ -14,7 +14,7 @@ const pages=[['A-tuiles'],['B-filet'],['C-onglets'],['C-onglets','exports'],['D-
    const p=await ctx.newPage();
    const fs=require('node:fs');if(!fs.existsSync(path.join(dir,nom+'.html'))){await p.close();continue;}
    await p.goto('file://'+path.join(dir,nom+'.html')+'?theme='+theme+(onglet?'&onglet='+onglet:''));
-   await p.evaluate(()=>document.fonts.ready);
+   p.on('pageerror',e=>console.log('ERR',e.message));await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(200);
    const out=`${nom}${onglet?'-'+onglet:''}-${theme}.png`;
    await p.screenshot({path:path.join(dir,out),fullPage:true});
    console.log(out);await p.close();

@@ -1,0 +1,73 @@
+/* Socle commun des quatre variantes « Porsche » : fond à dégradé vert très
+   profond (jamais un aplat), tuiles arrondies translucides, gros chiffres et
+   petites unités, un seul vert vif (le progrès), libellés de section en
+   capitales fines, lignes icône + libellé + chevron. Aucune marque reprise. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ --bg:linear-gradient(180deg,#f6f8f6 0,#edf2ee 45%,#e1eae4 100%);--text:#101512;--text-2:#46504a;--text-3:#6a746e;
+ --tile:rgba(16,40,26,.055);--tile-2:rgba(16,40,26,.10);--hair:rgba(16,40,26,.10);--glow:rgba(17,131,74,.16);
+ --vert:#11834a;--vert-2:#0d6b3c;--amber:#a46200;--red:#c4001a;--voie:#3e6ae1;--inv:#fff;--fill:#101512;--seg:#101512}
+:root[data-theme=sombre]{
+ --bg:linear-gradient(180deg,#0a120d 0,#0c1a11 35%,#0f2216 70%,#112819 100%);--text:#fff;--text-2:#b4bdb7;--text-3:#86918a;
+ --tile:rgba(255,255,255,.065);--tile-2:rgba(255,255,255,.11);--hair:rgba(255,255,255,.08);--glow:rgba(47,208,122,.22);
+ --vert:#2fd07a;--vert-2:#1b8f50;--amber:#f5a524;--red:#ff5c5c;--voie:#6b8ff0;--inv:#000;--fill:#fff;--seg:#fff}
+*{box-sizing:border-box}
+html{background:#000}
+body{margin:0;width:480px;background:var(--bg);color:var(--text);font:400 14px/1.45 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+main{padding:20px 20px 0}
+svg{display:block}
+.mono{font-family:var(--mono)}
+.sec{margin:28px 4px 10px;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}
+.tile{border-radius:16px;background:var(--tile);padding:18px}
+.tile+.tile{margin-top:10px}
+.amb{color:var(--amber)}.vert{color:var(--vert)}
+/* Boutons-tuiles */
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:14px;background:var(--tile);color:var(--text);font:500 15px var(--sans)}
+.btn.plein{background:var(--fill);color:var(--inv);font-weight:600}
+.btn.stop{color:var(--red)}
+/* Lignes d'action */
+.liste{border-radius:16px;background:var(--tile);overflow:hidden}
+.liste+.liste{margin-top:10px}
+.row{display:flex;align-items:center;gap:16px;min-height:60px;padding:0 20px;border-top:1px solid var(--hair);font-size:16px}
+.row:first-child{border-top:0}
+.row .i{flex:none;color:var(--text)}.row .l{flex:1;min-width:0}
+.row .val{font-size:13.5px;color:var(--text-2);text-align:right}
+.row .chev{flex:none;color:var(--text-2)}
+.row.fort .i{color:var(--vert)}
+.row.dis{color:var(--text-3);font-size:14px;min-height:52px}.row.dis .i{color:var(--text-3)}
+.liste.sep .row{border-top:0}.liste.sep{background:none;overflow:visible}.liste.sep .row{border-radius:16px;background:var(--tile)}.liste.sep .row+.row{margin-top:10px}
+.note{margin:10px 4px 0;font-size:12px;color:var(--text-3)}
+.pt{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--vert);margin-right:8px;vertical-align:1px}
+/* Grands chiffres */
+.n{font-weight:300;letter-spacing:-.03em;line-height:1}
+.u{font-size:16px;font-weight:400;letter-spacing:0;color:var(--text-2);margin-left:4px}
+/* Interrupteur */
+.sw{position:relative;flex:none;width:58px;height:34px;border:1.5px solid var(--text-2);border-radius:17px}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:var(--text)}
+.sw.on{background:var(--vert);border-color:var(--vert)}.sw.on::after{left:auto;right:3px;background:#fff}
+/* La ligne et l'écart à la voie (dessinés par commun.js) */
+.leg{display:flex;gap:12px;font-size:12px;color:var(--text-3)}
+.leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--seg);opacity:.5}.leg .v{background:var(--voie);opacity:1}.leg .d{background:var(--amber);opacity:1}
+.ligne-svg .t{fill:var(--seg);opacity:.42}.ligne-svg .t.voie{fill:var(--voie);opacity:1}.ligne-svg .t.differe{fill:var(--amber);opacity:1}
+.ligne-svg .t.actuel{fill:var(--vert);opacity:1}.ligne-svg .t.avenir{fill:var(--tile-2);opacity:1}
+.axt{font:400 10px var(--mono);fill:var(--text-3)}.axt.fort{fill:var(--text)}.axt.rouge{fill:var(--red)}
+.profil-svg .ax{stroke:var(--hair)}.profil-svg .garde{stroke:var(--red);stroke-dasharray:4 4;opacity:.8}
+.profil-svg .aire{fill:var(--vert);opacity:.12}.profil-svg .courbe{fill:none;stroke:var(--text);stroke-width:1.4;stroke-linejoin:round}
+.profil-svg .p.voie{fill:var(--voie)}.profil-svg .d{fill:var(--amber)}
+/* Commande en trois étapes : seul l'effet observé est vert. */
+.trois{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.trois span{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text-2)}
+.trois span::before{content:"";height:4px;border-radius:2px;background:var(--text)}
+.trois .vu{color:var(--vert)}.trois .vu::before{background:var(--vert)}
+.trois .na{color:var(--text-3)}.trois .na::before{background:none;border-top:2px dotted var(--text-3);height:0;margin-top:1px}
+/* Activité */
+.act{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:0 14px;padding:11px 0;border-top:1px solid var(--hair)}
+.act:first-child{border-top:0;padding-top:0}
+.act .c{font:500 19px var(--mono)}.act .q{color:var(--text-2);font-size:13.5px}
+.act .v{font:400 14px var(--mono)}.act .h{grid-column:2;font:400 11px var(--mono);color:var(--text-3)}
+.act.voie .q{color:var(--voie)}.act.differe .c,.act.differe .q{color:var(--amber)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;padding:12px 0;border-top:1px solid var(--hair)}
+.kv:first-child{border-top:0;padding-top:0}.kv:last-child{padding-bottom:0}
+.kv span{color:var(--text-2);font-size:13.5px}.kv b{font-weight:500}
+footer{margin:28px 4px 0;padding:0 0 26px;font-size:12px;color:var(--text-3)}

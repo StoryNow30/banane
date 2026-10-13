@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbite · B · Recharge</title>
+<!-- Variante B « Recharge » : l'écran de recharge de l'application Porsche
+     transposé. Titre centré entre retour et réglages, une phrase d'état et son
+     heure en gras, la grande jauge verticale (le lot) entre deux chiffres, une
+     tuile « processus » avec sa barre, puis des lignes à chevron qui ouvrent
+     chacune une page (ici, la page Exports : &onglet=exports).
+     Données fictives (commun.js). ?theme=clair|sombre -->
+<script src="commun.js"></script>
+<link rel="stylesheet" href="porsche.css">
+<style>
+.nav{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;height:44px;color:var(--text)}
+.nav b{text-align:center;font-size:21px;font-weight:600}
+.nav .d{justify-self:end}
+.nav .g{display:flex;align-items:center;gap:6px}
+.vues{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.vues span{padding:6px 16px;border-radius:20px;background:var(--tile);font-size:13px;color:var(--text-2)}
+.vues .on{background:var(--tile-2);color:var(--text)}.vues .on::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;border-radius:50%;background:var(--vert);vertical-align:1px}
+.phrase{margin:26px 0 0;text-align:center;font-size:17px;line-height:1.35;color:var(--text-2)}
+.phrase b{display:block;margin:2px 0;font-size:38px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+/* La jauge verticale, flanquée de deux chiffres. */
+.jauge{display:grid;grid-template-columns:1fr 250px 1fr;align-items:center;margin:28px 0 0}
+.jauge .cote{text-align:center}.jauge .cote .n{display:block;font-size:40px}.jauge .cote small{display:block;margin-top:6px;font-size:16px;color:var(--text-2)}
+.cuve{position:relative;height:300px;border-radius:22px;background:linear-gradient(180deg,var(--tile-2),var(--tile));overflow:hidden;box-shadow:inset 0 0 0 4px rgba(0,0,0,.18)}
+.cuve i{position:absolute;left:5px;right:5px;bottom:5px;height:20%;border-radius:4px 4px 18px 18px;background:linear-gradient(180deg,var(--vert) 0,var(--vert-2) 60%,var(--vert-2) 100%)}
+.cuve i::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--vert);box-shadow:0 0 14px var(--vert)}
+.cuve .rep{position:absolute;left:14px;right:14px;font:400 10.5px var(--mono);color:var(--text-3);display:flex;justify-content:space-between}
+.cuve .r1{top:12px}.cuve .r2{bottom:calc(20% + 14px);color:var(--text)}
+.cmds{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.cmds .btn{height:56px}
+.proc .t{display:flex;align-items:center;gap:8px;font-size:30px;font-weight:400;color:var(--vert)}.proc .t .u{color:var(--vert)}
+.proc .t .r{margin-left:auto;font-size:14px;color:var(--text-2)}
+.barre{height:10px;margin-top:16px;border-radius:5px;background:var(--tile-2);overflow:hidden}.barre i{display:block;height:100%;width:93%;border-radius:5px;background:var(--vert)}
+.proc .l{display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:var(--text-2)}
+.dc .t{display:flex;justify-content:space-between;align-items:baseline}.dc .t b{font-weight:500;font-size:15.5px}.dc .t span{font:400 12.5px var(--mono);color:var(--text-3)}
+.row .sous{display:block;font-size:12.5px;color:var(--text-3)}
+.kvrow{display:flex;justify-content:space-between;align-items:center;min-height:56px;padding:0 20px;border-top:1px solid var(--hair);font-size:15px}
+.kvrow:first-child{border-top:0}.kvrow span{color:var(--text-2)}.kvrow b{font-weight:500}
+</style></head>
+<body><main>
+
+<div data-pane="lot">
+ <div class="nav"><span class="g"><i data-ic="retour" data-s="24"></i></span><b>Orbite</b><span class="d"><i data-ic="reglages" data-s="24"></i></span></div>
+ <div class="vues"><span>Écho</span><span class="on">Orbite</span></div>
+
+ <p class="phrase">Orbite pose le cut<b>8455</b>Partie 34 · lot 8410 → 8640</p>
+
+ <div class="jauge">
+  <div class="cote"><span class="n">20</span><small>%</small></div>
+  <div class="cuve"><span class="rep r1"><span>8640</span><span>fin</span></span><i></i><span class="rep r2"><span>8455</span><span>ici</span></span></div>
+  <div class="cote"><span class="n">45</span><small>cuts</small></div>
+ </div>
+
+ <div class="cmds"><button class="btn plein"><i data-ic="pause" data-s="20"></i>Pause</button><button class="btn stop"><i data-ic="stop" data-s="16"></i>Arrêter le lot</button></div>
+
+ <p class="sec">Processus du lot</p>
+ <div class="tile proc">
+  <div class="t"><i data-ic="eclair" data-s="22"></i>42<span class="u">posés</span><span class="r"><b class="amb">Différés : 3</b></span></div>
+  <div class="barre"><i></i></div>
+  <div class="l"><span>Couverture 93 % · 9 par la voie</span><span>0 ignoré</span></div>
+ </div>
+ <div class="tile dc">
+  <div class="t"><b>Valider et passer au suivant</b><span>cut 8454</span></div>
+  <div class="trois"><span>Émise</span><span class="vu">Navigation observée</span><span class="na">Serveur : non disponible</span></div>
+ </div>
+
+ <p class="sec">Ce lot applique</p>
+ <div class="liste">
+  <div class="kvrow"><span>Rail non résolu</span><b>continuer et différer</b></div>
+  <div class="kvrow"><span>Faible confiance</span><b>mettre en pause</b></div>
+  <div class="kvrow"><span>Décision sur le lot</span><b>appliquée</b></div>
+ </div>
+
+ <p class="sec">Suivi</p>
+ <div class="liste sep">
+  <div class="row"><i class="i" data-ic="horloge" data-s="26"></i><span class="l">Activité<span class="sous">8454 posé · moteur · 2,6 mm</span></span><i class="chev" data-ic="chev" data-s="22"></i></div>
+  <div class="row"><i class="i" data-ic="rail" data-s="26"></i><span class="l">La ligne<span class="sous">écart médian 4,8 mm · garde 30 mm</span></span><i class="chev" data-ic="chev" data-s="22"></i></div>
+  <div class="row"><i class="i" data-ic="partie" data-s="26"></i><span class="l">Partie 34<span class="sous">208 posées · <span class="amb">4 différés</span></span></span><i class="chev" data-ic="chev" data-s="22"></i></div>
+ </div>
+ <p class="sec">Données</p>
+ <div class="liste sep">
+  <div class="row fort"><i class="i" data-ic="dl" data-s="26"></i><span class="l">Exports</span><span class="val">5</span><i class="chev" data-ic="chev" data-s="22"></i></div>
+  <div class="row"><i class="i" data-ic="prise" data-s="26"></i><span class="l">ESV<span class="sous"><span class="pt"></span>onglet Edge</span></span><i class="chev" data-ic="chev" data-s="22"></i></div>
+ </div>
+ <footer>Changer de vue ne met pas le lot en pause.</footer>
+</div>
+
+<!-- La page Exports, ouverte depuis la ligne « Exports ». -->
+<div data-pane="exports" hidden>
+ <div class="nav"><span class="g"><i data-ic="retour" data-s="24"></i></span><b>Exports</b><span></span></div>
+ <p class="phrase">Dernier export<b>14:20</b>Aujourd’hui · sur ce poste</p>
+ <p class="sec">Tout</p>
+ <div class="liste sep"><div class="row fort"><i class="i" data-ic="dl" data-s="26"></i><span class="l">Tout télécharger pour l’analyse</span><i class="chev" data-ic="chev" data-s="22"></i></div></div>
+ <p class="sec">Un par un</p>
+ <div class="liste sep">
+  <div class="row"><i class="i" data-ic="doc" data-s="26"></i><span class="l">Journal</span><i class="chev" data-ic="chev" data-s="22"></i></div>
+  <div class="row"><i class="i" data-ic="nuage" data-s="26"></i><span class="l">Bilan et LiDAR</span><i class="chev" data-ic="chev" data-s="22"></i></div>
+  <div class="row"><i class="i" data-ic="courbe" data-s="26"></i><span class="l">Diagnostic GCV1</span><i class="chev" data-ic="chev" data-s="22"></i></div>
+  <div class="row"><i class="i" data-ic="couches" data-s="26"></i><span class="l">Corpus GCV1 + LiDAR</span><i class="chev" data-ic="chev" data-s="22"></i></div>
+ </div>
+ <p class="sec">Départs des parties</p>
+ <div class="liste">
+  <div class="kvrow"><span>Partie 34 · 13/10 12:58</span><b class="mono" style="font-size:13px">1 284 val · 37 inv</b></div>
+  <div class="kvrow"><span>Partie 33 · 12/10 16:04</span><b class="mono" style="font-size:13px">2 015 val · 12 inv</b></div>
+ </div>
+ <div class="liste sep" style="margin-top:22px"><div class="row dis"><i class="i" data-ic="poubelle" data-s="22"></i><span class="l">Vider le cache des exports</span></div></div>
+ <p class="note">Construits depuis ce qu’Ariane a enregistré sur ce poste. ESV ne donne aucune confirmation serveur.</p>
+ <footer></footer>
+</div>
+</main></body></html>
