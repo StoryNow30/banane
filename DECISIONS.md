@@ -10,7 +10,13 @@ redéfinir avec toi »). **Lecture retenue** par l'orchestrateur (à corriger pa
    (b) **retour à une coupe**. **Renvoyés à la 5.0** (définie avec Mic) : **B2, B3 et l'apprentissage**. Cela modifie D-086 point 1 (« non déplacés hors de la 4.9 »), sur l'accord de Mic.
 3. **Trois mesures du cahier (§ 4.3)** : publiées avec la comparaison de `tools/perf-v3.cjs` (cycle médian hors silences avec P90, max et silences ; durée totale du lot ; arrêts pour 100 cuts avec causes séparées).
    Les interventions manuelles restent « non mesurées » (leur liste d'événements n'est pas établie). Essai ajouté ; tête `claude/49-test-10` ; le paquet test 10 n'est pas modifié (outil seulement).
-4. **Relecture indépendante ciblée du diff de moteur V5** (`src/engine.js`, 87 lignes depuis la 4.8.6) lancée : un agent, lecture seule, (D-081, D-083). Résultat consigné à son arrivée.
+4. **Relecture indépendante ciblée du diff de moteur V5** (`src/engine.js`, 87 lignes depuis la 4.8.6) lancée : un agent, lecture seule, (D-081, D-083). Résultat (un agent, 92 000 jetons, 16 appels) : **aucune perte de donnée dans le chemin normal** (arrêt entre l'écriture IndexedDB et la sauvegarde d'état, échec d'écriture, ordre, doublons, clé
+   `recordId||id` identique : vérifiés ; `tests/v5-sauvegarde.test.cjs` 12/12). Trois constats, relus par l'orchestrateur sur le code : (i) **défaut latent** (`src/engine.js` `init`/`save`) : si la relecture des
+   visites échoue au démarrage, un `save()` ultérieur réécrirait `recordIds` et `incompleteIds` vides (les visites restent dans IndexedDB, leur lien à l'état se perdrait) ; risque faible, le service worker n'accepte aucun
+   message avant la fin de l'initialisation, et l'essai existant qui devait couvrir ce cas ne prouve rien (il vérifie un état jamais modifié) ; (ii) après un vidage puis un redémarrage, la validation du cut courant ne
+   retrouve plus sa visite supprimée et n'en met pas à jour les champs (gênant, aucune donnée perdue, la visite avait été vidée après export) ; (iii) en migration depuis la 4.9.0.7, une visite jamais écrite dans IndexedDB
+   est archivée dans `banane3VisitesHorsCache`, clé que rien ne relit ni n'exporte. **Correctif proposé, non appliqué** (3 lignes dans `src/engine.js` + essai réel + ré-épinglage du moteur, donc accord de Mic) : (i) ; (ii)
+   et (iii) sont notés dans `KNOWN_ISSUES.md`.
 5. **Accord requis avant B1** : la lecture de la liste des coupes d'ESV (bords X/Y/Z, statut) n'a aucun chemin trouvé hors d'un objet interne d'ESV ; la piste passive est de lire les réponses de la liste que l'observateur
    hooke déjà (`list-page`), en lecture seule, sans stocker d'adresse. C'est une lecture d'ESV hors du périmètre actuel de l'observateur (comptes seulement) : **décision de Mic demandée**.
 
