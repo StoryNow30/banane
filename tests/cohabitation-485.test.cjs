@@ -17,10 +17,10 @@ function versionAffichee(m){
 }
 test('numérotation stable/test : format MV3, nom exact et identités courantes cohérentes',()=>{
   for(const version of ['4.8.0','4.8.6'])assert.equal(versionAffichee({version}),version,'stable historique conservée');
-  assert.equal(versionAffichee({version:'4.9.0.7',version_name:'4.9.0 test 7'}),'4.9.0 test 7');
-  for(const m of [{version:'4.9.0.7'},{version:'4.9.0.7',version_name:'4.9.0 test 3'},
-    {version:'4.9.0',version_name:'4.9.0 test 1'},{version:'4.9.0.7',version_name:'4.8.6 test 1'},
-    {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.75536',version_name:'4.9.0 test 75536'}])assert.throws(()=>versionAffichee(m));
+  assert.equal(versionAffichee({version:'4.9.0.8',version_name:'4.9.0 test 8'}),'4.9.0 test 8');
+  for(const m of [{version:'4.9.0.8'},{version:'4.9.0.8',version_name:'4.9.0 test 3'},
+    {version:'4.9.0',version_name:'4.9.0 test 1'},{version:'4.9.0.8',version_name:'4.8.6 test 1'},
+    {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.85536',version_name:'4.9.0 test 85536'}])assert.throws(()=>versionAffichee(m));
   const nom=versionAffichee(manifest);assert.equal(manifest.name,'Ariane');
   assert.equal(K.VERSION,manifest.version);assert.equal(K.VERSION_NAME,nom);
   const titre=`Ouvrir Ariane ${nom}`;assert.ok(manifest.action.default_title===titre||manifest.action.default_title.startsWith(titre+' — '));
@@ -38,14 +38,14 @@ s=importlib.util.spec_from_file_location('p',sys.argv[1]);m=importlib.util.modul
 print(m.nom_paquet(json.loads(sys.argv[2])))
 for version in ['4.8.0','4.8.6']:
   print(m.nom_paquet({'version':version}))
-print(m.nom_paquet({'version':'4.9.0.7','version_name':'4.9.0 test 7'}))
-for version,nom in [('4.8.6.3','4.8.6 test 2'),('4.9.0.7','4.9.0 test 3'),('4.9.0.7','4.8.6 test 1'),('4.9.0.7','test libre')]:
+print(m.nom_paquet({'version':'4.9.0.8','version_name':'4.9.0 test 8'}))
+for version,nom in [('4.8.6.3','4.8.6 test 2'),('4.9.0.8','4.9.0 test 3'),('4.9.0.8','4.8.6 test 1'),('4.9.0.8','test libre')]:
   try:
     m.nom_paquet({'version':version,'version_name':nom});print('accepté')
   except ValueError:
     print('refusé')`;
   const r=spawnSync('python3',['-c',py,path.join(root,'tools/package.py'),JSON.stringify(manifest)],{encoding:'utf8'});
-  assert.equal(r.status,0,r.stderr);assert.deepEqual(r.stdout.trim().split('\n'),[nomAttendu,'ariane-v4.8.0.zip','ariane-v4.8.6.zip','ariane-4.9.0-test.7.zip','refusé','refusé','refusé','refusé']);
+  assert.equal(r.status,0,r.stderr);assert.deepEqual(r.stdout.trim().split('\n'),[nomAttendu,'ariane-v4.8.0.zip','ariane-v4.8.6.zip','ariane-4.9.0-test.8.zip','refusé','refusé','refusé','refusé']);
 });
 
 /* Onglet ESV simulé pour chrome.scripting : le marqueur de l'adaptateur déjà

@@ -86,8 +86,8 @@ async function ouvrir({etatLot='STOPPED',downloads='complete',confirmer=true,ref
   const data=jeu(),appels=[],confirmations=[];
   const store={all:async n=>structuredClone(n==='events'?data.events:n==='records'?data.records:[]),keys:async n=>n==='clouds'?[...data.clouds.keys()]:n==='events'?data.events.map(e=>e.eventId):data.records.map(r=>r.recordId),
     getCloud:async id=>structuredClone(data.clouds.get(id))};
-  const diagnostic={format:'banane-gcv1-diagnostic-v1',version:'4.9.0.7',sessionId:'s',observationCount:3,observations:[...data.clouds.keys()].map(id=>({lidar:{captureId:id}}))};
-  const meta={format:'banane-test-dataset-v4',version:'4.9.0.7',exportedAt:'2026-10-07T07:58:00.000Z',state:{batch:{id:'lot-A'}},cloudIds:[...data.clouds.keys()]};
+  const diagnostic={format:'banane-gcv1-diagnostic-v1',version:'4.9.0.8',sessionId:'s',observationCount:3,observations:[...data.clouds.keys()].map(id=>({lidar:{captureId:id}}))};
+  const meta={format:'banane-test-dataset-v4',version:'4.9.0.8',exportedAt:'2026-10-07T07:58:00.000Z',state:{batch:{id:'lot-A'}},cloudIds:[...data.clouds.keys()]};
   const globals={BananeStorage3:class{constructor(){return store;}},BananeExportCache:EC,BananeSettings:{...Settings,export:{...Settings.export,viderApresExport:true,...reglages}},BananeNativeExport:X,BananeZip:Z,
     BananeGCV1Export:{buildDiagnostic:()=>diagnostic,buildCorpusPlan:GCV1.buildCorpusPlan},confirm:t=>{confirmations.push(t);return confirmer;}};
   const chromeExtra=downloads?{downloads:{download:async()=>7,search:async()=>[{state:downloads,error:downloads==='interrupted'?'USER_CANCELED':undefined}],onChanged:{addListener(){},removeListener(){}}}}:{};
@@ -225,7 +225,7 @@ test('bilan après vidage : closureSummary ne cite que les visites depuis le vid
 test('journal « mesure V1 incohérente » : compté comme manque, aucun vidage automatique',async()=>{
   const t=await ouvrir();
   // le service worker annonce une santé V1 stockée qui n'est pas dans les événements lus
-  const meta={format:'banane-test-journal-v4',version:'4.9.0.7',state:{},v1TimingExport:{lots:[{sessionId:'s',batchId:'b',clockId:'c',healthSeq:9,healthStored:true}]}};
+  const meta={format:'banane-test-journal-v4',version:'4.9.0.8',state:{},v1TimingExport:{lots:[{sessionId:'s',batchId:'b',clockId:'c',healthSeq:9,healthStored:true}]}};
   const p=(await ouvrir({}));void p;
   const t2=await ouvrir({reponsesPlus:{'journal-meta':meta}});
   await t2.p.$('export-tout').onclick();await t2.p.attendre();
