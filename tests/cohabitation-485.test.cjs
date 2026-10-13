@@ -18,9 +18,9 @@ function versionAffichee(m){
 test('numérotation stable/test : format MV3, nom exact et identités courantes cohérentes',()=>{
   for(const version of ['4.8.0','4.8.6'])assert.equal(versionAffichee({version}),version,'stable historique conservée');
   assert.equal(versionAffichee({version:'4.9.0.7',version_name:'4.9.0 test 7'}),'4.9.0 test 7');
-  for(const m of [{version:'4.9.0.6'},{version:'4.9.0.6',version_name:'4.9.0 test 3'},
-    {version:'4.9.0',version_name:'4.9.0 test 1'},{version:'4.9.0.6',version_name:'4.8.6 test 1'},
-    {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.65536',version_name:'4.9.0 test 65536'}])assert.throws(()=>versionAffichee(m));
+  for(const m of [{version:'4.9.0.7'},{version:'4.9.0.7',version_name:'4.9.0 test 3'},
+    {version:'4.9.0',version_name:'4.9.0 test 1'},{version:'4.9.0.7',version_name:'4.8.6 test 1'},
+    {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.75536',version_name:'4.9.0 test 75536'}])assert.throws(()=>versionAffichee(m));
   const nom=versionAffichee(manifest);assert.equal(manifest.name,'Ariane');
   assert.equal(K.VERSION,manifest.version);assert.equal(K.VERSION_NAME,nom);
   const titre=`Ouvrir Ariane ${nom}`;assert.ok(manifest.action.default_title===titre||manifest.action.default_title.startsWith(titre+' — '));
@@ -39,7 +39,7 @@ print(m.nom_paquet(json.loads(sys.argv[2])))
 for version in ['4.8.0','4.8.6']:
   print(m.nom_paquet({'version':version}))
 print(m.nom_paquet({'version':'4.9.0.7','version_name':'4.9.0 test 7'}))
-for version,nom in [('4.8.6.3','4.8.6 test 2'),('4.9.0.6','4.9.0 test 3'),('4.9.0.6','4.8.6 test 1'),('4.9.0.6','test libre')]:
+for version,nom in [('4.8.6.3','4.8.6 test 2'),('4.9.0.7','4.9.0 test 3'),('4.9.0.7','4.8.6 test 1'),('4.9.0.7','test libre')]:
   try:
     m.nom_paquet({'version':version,'version_name':nom});print('accepté')
   except ValueError:
