@@ -5,12 +5,17 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(K,G,Gauge){
  'use strict';
  if(!Gauge||typeof Gauge.classifyMm!=='function')throw Error('Moteur : contrat d’écartement absent.');
+ const EVENEMENTS_SANS_SAUVEGARDE=new Set(['adapter-progress','adapter-result']);
  class Engine{
   constructor(adapter,store){this.adapter=adapter;this.store=store;this.busy=false;this.task=null;
+   /* V5 : identifiants des visites dont l'écriture dans IndexedDB a réussi (toute écriture, d'où qu'elle vienne). */
+   this.enBase=new Set();const ecrire=typeof store?.putRecord==='function'?store.putRecord.bind(store):null;
+   if(ecrire)store.putRecord=async r=>{const resultat=await ecrire(r),id=r?.recordId||r?.id;if(typeof id==='string')this.enBase.add(id);return resultat;};
    this.s={schemaVersion:4,version:K.VERSION,sessionId:K.uid(),mode:'observation',collection:'IDLE',
      before:null,after:null,lidarId:null,records:[],incomplete:[],proposal:null,snapshot:null,applied:null,
      validationStarted:false,batch:null,notice:'Prêt. Sélectionne un onglet ESV.',events:[],settings:{...G.DEFAULTS}};}
   async init(){const old=await this.store.getState();if(old){this.s=old;this.s.version=K.VERSION;this.s.schemaVersion=4;
+    await this.relireVisites();
     this.s.settings={...G.DEFAULTS,...this.s.settings,method:G.DEFAULTS.method};
     /* `deferred` rejoint les collections du lot. Un lot ancien se relit donc
      * avec une liste vide — et, faute de `scope.unresolvedPolicy`, conserve la
@@ -102,7 +107,38 @@
     }
     await this.save();}return this.s;}
   view(){return {...K.clone(this.s),busy:this.busy};}
-  async save(){await this.store.setState(K.clone(this.s));}
+  /* V5 (D-089) — SAUVEGARDE À TAILLE CONSTANTE. Mesuré dans un vrai Chromium : `chrome.storage.local.set`
+   * coûte environ 50 ms par Mo, et l'état était réécrit en entier à chaque événement (une trentaine par
+   * cut), visites comprises, depuis le début de la session et même après un vidage du cache : plusieurs
+   * secondes par cut après quelques lots. Une visite (`records`) ou capture abandonnée (`incomplete`)
+   * dont l'écriture dans IndexedDB est CONFIRMÉE (`enBase`, tenu par `putRecord`) n'est plus recopiée :
+   * l'état garde son identifiant, à sa place. Toute autre entrée reste recopiée telle quelle. */
+  async save(){const {records,incomplete,...reste}=this.s,ref=r=>{const id=r?.recordId||r?.id;return typeof id==='string'&&this.enBase.has(id)?id:r;};
+   await this.store.setState({...K.clone(reste),recordIds:K.clone((records||[]).map(ref)),incompleteIds:K.clone((incomplete||[]).map(ref))});}
+  /* Au démarrage. Identifiant : la visite est relue dans IndexedDB ; absente, elle a été vidée après
+   * export : elle n'est plus gardée, et le nombre est consigné. Entrée recopiée dans un état au nouveau
+   * format : gardée telle quelle. ANCIEN FORMAT (toutes les visites recopiées, y compris celles vidées
+   * depuis) : une visite encore dans IndexedDB est gardée ; les autres sont archivées UNE fois, hors de
+   * l'état (`archiverVisites`, rien n'est perdu) et ne sont plus réécrites ; sans archive possible,
+   * elles restent dans l'état comme avant. */
+  async relireVisites(){const ids=this.s.recordIds,idsAb=this.s.incompleteIds;delete this.s.recordIds;delete this.s.incompleteIds;
+   const ancien={records:Array.isArray(this.s.records),incomplete:Array.isArray(this.s.incomplete)};
+   const listes={records:ancien.records?this.s.records:Array.isArray(ids)?ids:[],incomplete:ancien.incomplete?this.s.incomplete:Array.isArray(idsAb)?idsAb:[]};
+   const cle=x=>typeof x==='string'?x:typeof(x?.recordId||x?.id)==='string'?(x.recordId||x.id):null;
+   if(![...listes.records,...listes.incomplete].some(x=>cle(x)!==null)){this.s.records=listes.records;this.s.incomplete=listes.incomplete;return;}
+   const presentes=new Map();for(const r of await this.store.all('records'))if(r&&cle(r)!==null)presentes.set(cle(r),r);
+   let absentes=0;const aArchiver=[];
+   for(const nom of ['records','incomplete'])this.s[nom]=listes[nom].flatMap(x=>{const id=cle(x);
+     if(id===null)return x&&typeof x==='object'?[x]:[];
+     if(presentes.has(id)){this.enBase.add(id);return [typeof x==='string'?presentes.get(id):x];}
+     if(typeof x==='string'){absentes++;return [];}
+     if(ancien[nom]){aArchiver.push({liste:nom,entree:x});return [];}
+     return [x];});
+   if(aArchiver.length){
+     try{if(typeof this.store.archiverVisites!=='function')throw Error('archive absente');
+       await this.store.archiverVisites(aArchiver.map(a=>a.entree));this.s.visitesArchivees=(this.s.visitesArchivees||0)+aArchiver.length;}
+     catch{for(const a of aArchiver)this.s[a.liste].push(a.entree);}}
+   this.s.recordsAbsentsAuRedemarrage=absentes;}
   async event(type,detail={}){const identity=detail.identity===null?null:K.completeIdentity(detail.identity||this.s.current?.identity||this.s.before?.identity||{});
    const e={eventId:K.uid(),timestamp:new Date().toISOString(),type,identity,...detail};
    /* D3. Un événement peut porter un identifiant DÉTERMINISTE, dérivé de son
@@ -112,7 +148,10 @@
    await this.store.putEvent(e);
    const existant=this.s.events.findIndex(x=>x.eventId===e.eventId);
    if(existant>=0)this.s.events[existant]=e;else this.s.events.push(e);
-   if(this.s.events.length>150)this.s.events.shift();await this.save();}
+   if(this.s.events.length>150)this.s.events.shift();
+   /* V5 : un événement d'information (étape de la page, diagnostic du pont) est déjà dans IndexedDB ;
+    * il n'impose pas de réécrire l'état, qui l'emportera à la prochaine sauvegarde. */
+   if(!EVENEMENTS_SANS_SAUVEGARDE.has(type))await this.save();}
   async locked(fn){if(this.busy)throw Error('Une opération est déjà en cours.');this.busy=true;
    try{return await fn();}catch(e){this.s.notice=e.message;await this.event('error',{message:e.message});throw e;}finally{this.busy=false;await this.save();}}
   async observe(){const previous=this.s.current?.identity,now=await this.adapter.state();now.identity=K.completeIdentity(now.identity);

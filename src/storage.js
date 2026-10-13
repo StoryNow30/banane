@@ -8,6 +8,11 @@ class BananeStorage3{
    req.onsuccess=()=>{result=req.result;};tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
  async getState(){return (await chrome.storage.local.get('banane3State')).banane3State||null;}
  async setState(s){await chrome.storage.local.set({banane3State:s});}
+ /* V5 (D-089) : visites d'un ancien état absentes d'IndexedDB (vidées après export, ou jamais écrites),
+  * mises de côté UNE fois au passage au nouveau format, pour que rien ne soit perdu sans les réécrire
+  * à chaque sauvegarde. */
+ async archiverVisites(liste){const cle='banane3VisitesHorsCache',avant=(await chrome.storage.local.get(cle))[cle];
+  await chrome.storage.local.set({[cle]:[...(Array.isArray(avant)?avant:[]),...liste]});}
  async putCloud(id,data){return this.transaction('clouds','readwrite',s=>s.put(data,id));}
  async getCloud(id){return this.transaction('clouds','readonly',s=>s.get(id));}
  /* Un nuage acquitté et écrit sur disque est retiré de la base : sans cela la

@@ -11,6 +11,9 @@ class MemoryStore{
  async putCloud(id,c){this.clouds.set(id,K.clone(c));}async getCloud(id){return this.clouds.has(id)?K.clone(this.clouds.get(id)):undefined;}
  async putEvent(e){this.events.push(K.clone(e));}async putRecord(r){const copy=K.clone(r),id=copy.recordId||copy.id,index=this.records.findIndex(x=>(x.recordId||x.id)===id);
   if(index<0)this.records.push(copy);else this.records[index]=copy;}
+ async archiverVisites(liste){this.archive=[...(this.archive||[]),...K.clone(liste)];}
+ async getRecord(id){const r=this.records.find(x=>(x.recordId||x.id)===id);return r?K.clone(r):undefined;}
+ async all(name){return K.clone(name==='records'?this.records:name==='events'?this.events:name==='clouds'?[...this.clouds.values()]:[]);}
 }
 class SimulatedESV{
  constructor(){this.identity={pageId:'fixture-page',part:23,cut:100,shape:'U50',frameId:'fixture-frame',projectId:null};
