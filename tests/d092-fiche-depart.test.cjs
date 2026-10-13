@@ -49,7 +49,7 @@ test('service worker : le résumé de liste d’avant séance devient une fiche 
  const {b,local}=await lotOuvert('lot-A',13);
  const out=send(b,[resume({seq:1,rows:0,counts:{valid:0,invalid:0,skipped:0}}),resume({seq:2})]);assert.equal(out.accept,true);await tick();
  const l=local.m.banane3FichesDepart;assert.equal(l.length,1);
- deq({...l[0],at:typeof l[0].at},{at:'string',batchId:'lot-A',partie:13,version:'4.9.0.10',valides:7602,invalides:137,ignores:0,total:7739});
+ deq({...l[0],at:typeof l[0].at},{at:'string',batchId:'lot-A',partie:13,version:require('../manifest.json').version,valides:7602,invalides:137,ignores:0,total:7739});
  send(b,[resume({seq:3})],'obs-2');await tick();assert.equal(local.m.banane3FichesDepart.length,1,'même lot, mêmes comptes : une seule fiche');
  send(b,[resume({seq:4,beforeSession:false})]);await tick();assert.equal(local.m.banane3FichesDepart.length,1,'un résumé hors départ de séance n’est pas un départ');
  deq(await b.api('fiches-depart'),{fiches:local.m.banane3FichesDepart});

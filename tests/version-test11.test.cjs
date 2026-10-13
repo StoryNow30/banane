@@ -1,5 +1,5 @@
 'use strict';
-/* Version de test 10 : 4.9.0.10, nom « 4.9.0 test 10 », partout où la version de
+/* Version de test 11 : 4.9.0.11, nom « 4.9.0 test 11 », partout où la version de
  * test 9 apparaissait (même liste qu'aux tests 2 à 9 : manifeste, core, repli du
  * service worker, pastille du pont, chaîne de version du panneau). Jamais deux
  * paquets de même numéro et de comportement différent. Pas de numéro ni de nom
@@ -9,8 +9,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.0.10',NOM='4.9.0 test 10';
-test('manifeste et core : 4.9.0.10 / « 4.9.0 test 10 »',()=>{
+const VERSION='4.9.0.11',NOM='4.9.0 test 11';
+test('manifeste et core : 4.9.0.11 / « 4.9.0 test 11 »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
  assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
 });
@@ -23,8 +23,8 @@ test('aucune trace des noms et numéros des tests 1 à 9 dans les chaînes de ve
  for(const f of ['manifest.json','src/core.js','src/bridge.js','background.js','panel.js','panel.html'])
   assert.ok(!/4\.9\.0\.[123456789]\b|4\.9\.0 test [123456789]\b/.test(read(f)),f);
 });
-test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.10 portent encore l’observateur',()=>{
+test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.11 portent encore l’observateur',()=>{
  const {measure}=require('../tools/perf-phases.cjs');
- for(const v of ['4.9.0.2','4.9.0.3','4.9.0.4','4.9.0.5','4.9.0.6','4.9.0.7','4.9.0.8','4.9.0.9','4.9.0.10'])assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);
+ for(const v of ['4.9.0.2','4.9.0.3','4.9.0.4','4.9.0.5','4.9.0.6','4.9.0.7','4.9.0.8','4.9.0.9','4.9.0.10','4.9.0.11'])assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);
  assert.equal(measure({version:'4.9.0.1',events:[]}).observations.observerExpected,undefined,'4.9.0.1 : avant l’observateur');
 });
