@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbite bas · C · Onglets</title>
+<!-- Variante C « Une chose à la fois » : les commandes d'abord, l'état du lot
+     en une ligne, la politique toujours visible, puis une commande segmentée
+     (Activité · Partie · Exports · Départs) qui ne montre qu'un contenu à la fois.
+     Données fictives. ?theme=clair|sombre &onglet=activite|exports -->
+<style>
+@font-face{font-family:"Hanken Grotesk";src:url(../../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ --bg:#fff;--text:#111;--text-2:#4d4d4d;--text-3:#6b6b6b;--hair:#e6e6e6;--hair-2:#cfcfcf;--field:#f2f2f2;--amber:#a46200;--red:#d0021b;--voie:#3e6ae1;--ok:#11834a;--inv:#fff}
+:root[data-theme=sombre]{--bg:#000;--text:#fff;--text-2:#a6a6a6;--text-3:#8a8a8a;--hair:#262626;--hair-2:#3a3a3a;--field:#141414;--amber:#f5a524;--red:#ff4d4d;--voie:#4a74e6;--ok:#2fd07a;--inv:#000}
+*{box-sizing:border-box}
+body{margin:0;width:480px;background:var(--bg);color:var(--text);font:400 14px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+main{padding:24px 24px 0}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.cmds{display:flex;gap:10px}
+.primary{flex:1;height:52px;border:0;border-radius:8px;background:var(--text);color:var(--inv);font:600 15px var(--sans)}
+.danger{height:52px;padding:0 20px;border:1px solid var(--hair-2);border-radius:8px;background:none;color:var(--red);font:600 15px var(--sans)}
+/* L'état du lot : une ligne, les différés à droite, toujours fidèles. */
+.etat{display:flex;align-items:baseline;gap:16px;margin:20px 0 0;font-size:14px;color:var(--text-2)}
+.etat b{color:var(--text);font-weight:600}.etat .amb{margin-left:auto;color:var(--amber);font-weight:600}
+/* La politique effective : trois pastilles, jamais repliées. */
+.pol{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+.pol span{padding:4px 10px;border:1px solid var(--hair-2);border-radius:20px;font-size:12px;color:var(--text-2)}
+.pol span b{font-weight:500;color:var(--text)}
+/* Commande segmentée. */
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin:26px 0 0;padding:3px;border-radius:10px;background:var(--field)}
+.seg button{height:36px;border:0;border-radius:8px;background:none;color:var(--text-2);font:500 13px var(--sans)}
+.seg button.on{background:var(--bg);color:var(--text);font-weight:600;box-shadow:0 0 0 1px var(--hair-2)}
+.seg button .n{margin-left:5px;font:500 11px var(--mono);color:var(--amber)}
+.pane{margin-top:8px}
+.l{display:grid;grid-template-columns:62px 56px 1fr auto;align-items:baseline;gap:0 10px;padding:13px 0;border-bottom:1px solid var(--hair)}
+.l .h{font:400 11.5px var(--mono);color:var(--text-3)}.l .c{font:500 15px var(--mono)}
+.l .v{font:400 13px var(--mono);color:var(--text-2)}.l .voie{color:var(--voie)}.l .amb{color:var(--amber)}
+.plus{margin:12px 0 0;font-size:13px;color:var(--text-2)}
+.r{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;border-bottom:1px solid var(--hair);font-size:14.5px}
+.r .fl{font-family:var(--mono);color:var(--text-3)}
+.r.fort{font-weight:600}.r.fort .fl{color:var(--text)}
+.r.discret{font-size:13px;color:var(--text-3)}
+.note{margin:10px 0 0;font-size:12px;color:var(--text-3)}
+.connex{display:flex;align-items:center;gap:8px;margin:30px 0 0;padding:14px 0;border-top:1px solid var(--hair);font-size:13px;color:var(--text-2)}
+.connex i{width:6px;height:6px;border-radius:50%;background:var(--ok)}.connex b{margin-left:auto;font-weight:500;color:var(--text)}
+footer{padding:0 0 20px;font-size:12px;color:var(--text-3)}
+</style></head>
+<body><main>
+ <div class="cmds"><button class="primary">Pause</button><button class="danger">Arrêter le lot</button></div>
+ <p class="etat"><b>En cours</b><span>47 traités</span><span>0 ignoré</span><span class="amb">Différés : 1</span></p>
+ <div class="pol"><span>Rail non résolu : <b>différer</b></span><span>Faible confiance : <b>pause</b></span><span>Décision sur le lot : <b>appliquée</b></span></div>
+
+ <div class="seg"><button data-o="activite">Activité</button><button data-o="partie">Partie<span class="n">3</span></button><button data-o="exports">Exports</button><button data-o="departs">Départs</button></div>
+
+ <div class="pane" data-o="activite">
+  <div class="l"><span class="h">14:32:08</span><span class="c">8455</span><span>posé · moteur</span><span class="v">3,1 mm</span></div>
+  <div class="l"><span class="h">14:31:51</span><span class="c">8453</span><span class="voie">posé · par la voie</span><span class="v">12,4 mm</span></div>
+  <div class="l"><span class="h">14:31:30</span><span class="c amb">8451</span><span class="amb">différé · deux rails</span><span class="v">—</span></div>
+  <p class="plus">Partie 34, tous lots : 205 posées sur 212 traitées · 3 différés restants</p>
+ </div>
+ <div class="pane" data-o="exports" hidden>
+  <div class="r fort">Tout télécharger pour l’analyse<span class="fl">↓</span></div>
+  <div class="r">Journal<span class="fl">↓</span></div>
+  <div class="r">Bilan et LiDAR<span class="fl">↓</span></div>
+  <div class="r">Diagnostic GCV1<span class="fl">↓</span></div>
+  <div class="r">Corpus GCV1 + LiDAR<span class="fl">↓</span></div>
+  <div class="r discret">Vider le cache des exports<span class="fl">×</span></div>
+  <p class="note">Construits sur ce poste. ESV ne donne aucune confirmation serveur.</p>
+ </div>
+
+ <div class="connex"><i></i>ESV · onglet Edge<b>Reconnecter ›</b></div>
+ <footer>Changer de vue ne met pas le lot en pause.</footer>
+</main>
+<script>const q=new URLSearchParams(location.search),t=q.get('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'sombre':'clair');document.documentElement.dataset.theme=t;
+const o=q.get('onglet')||'activite';document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.o!==o);document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.o===o));</script>
+</body></html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbite bas · B · Filet</title>
+<!-- Variante B « Filet » : la ligne H poussée au bout. Noir, filets fins, aucun
+     cadre ; tout s'aligne sur deux colonnes (libellé à gauche, valeur à droite).
+     Les actions en barre de pied. Données fictives. ?theme=clair|sombre -->
+<style>
+@font-face{font-family:"Hanken Grotesk";src:url(../../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ --bg:#fff;--text:#111;--text-2:#4d4d4d;--text-3:#6b6b6b;--hair:#e6e6e6;--hair-2:#cfcfcf;--amber:#a46200;--red:#d0021b;--voie:#3e6ae1;--ok:#11834a;--inv:#fff}
+:root[data-theme=sombre]{--bg:#000;--text:#fff;--text-2:#a6a6a6;--text-3:#8a8a8a;--hair:#262626;--hair-2:#3a3a3a;--amber:#f5a524;--red:#ff4d4d;--voie:#4a74e6;--ok:#2fd07a;--inv:#000}
+*{box-sizing:border-box}
+body{margin:0;width:480px;background:var(--bg);color:var(--text);font:400 14px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+main{padding:24px 24px 0}
+.mono{font-family:var(--mono)}
+.blk{margin-top:34px}.blk:first-child{margin-top:0}
+.tb{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4px}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.tb .r{font-size:12.5px;color:var(--text-3)}
+/* Activité : 3 lignes, cut en mono, écart aligné à droite. */
+.l{display:grid;grid-template-columns:62px 56px 1fr auto;align-items:baseline;gap:0 10px;padding:11px 0;border-top:1px solid var(--hair)}
+.l .h{font:400 11.5px var(--mono);color:var(--text-3)}
+.l .c{font:500 14px var(--mono)}
+.l .v{font:400 13px var(--mono);color:var(--text-2)}
+.l .voie{color:var(--voie)}.l .amb{color:var(--amber)}
+.etat{display:flex;gap:18px;align-items:baseline;padding:12px 0 0;border-top:1px solid var(--hair);font-size:13px;color:var(--text-2)}
+.etat b{font-weight:600;color:var(--text)}.etat .amb{margin-left:auto;font-weight:600;color:var(--amber)}
+/* Partie : une rangée de trois chiffres séparés d'un filet. */
+.nums{display:grid;grid-template-columns:repeat(3,1fr);margin:10px -16px 0}
+.nums div{padding:0 16px;border-left:1px solid var(--hair)}.nums div:first-child{border-left:0}
+.nums b{display:block;font-size:34px;font-weight:300;line-height:1.05;letter-spacing:-.02em}
+.nums b.amb{color:var(--amber)}
+.nums small{font-size:12px;color:var(--text-3)}
+.liste{margin:14px 0 0;font-size:13px;color:var(--text-2)}.liste b{font:500 13px var(--mono);color:var(--text)}
+/* Rangées : libellé à gauche, valeur ou flèche à droite. Plus aucun lien gris. */
+.r2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--hair);font-size:14px}
+.r2:last-child{border-bottom:1px solid var(--hair)}
+.r2 span{color:var(--text-2)}.r2 b{font-weight:500;text-align:right}
+.r2 .fl{font-family:var(--mono);color:var(--text-3)}
+.r2.fort{font-weight:600}.r2.fort .fl{color:var(--text)}
+.r2.discret{font-size:13px;color:var(--text-3)}
+.r2 .m{font:400 12.5px var(--mono);color:var(--text-2)}
+.note{margin:8px 0 0;font-size:12px;color:var(--text-3)}
+.pt{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:7px;vertical-align:1px}
+/* Barre d'action en pied, comme dans tout le panneau. */
+.actions{display:flex;gap:12px;margin:36px -24px 0;padding:16px 24px 18px;border-top:1px solid var(--hair)}
+.primary{flex:1;height:48px;border:0;border-radius:6px;background:var(--text);color:var(--inv);font:600 14px var(--sans)}
+.danger{height:48px;padding:0 18px;border:1px solid var(--hair-2);border-radius:6px;background:none;color:var(--red);font:600 14px var(--sans)}
+.plus{height:48px;padding:0 6px;border:0;background:none;color:var(--text-2);font:500 13px var(--sans)}
+footer{padding:0 0 20px;font-size:12px;color:var(--text-3)}
+</style></head>
+<body><main>
+
+ <section class="blk">
+  <div class="tb"><span class="lbl">Activité</span><span class="r">écart à la voie</span></div>
+  <div class="l"><span class="h">14:32:08</span><span class="c">8455</span><span>posé · moteur</span><span class="v">3,1 mm</span></div>
+  <div class="l"><span class="h">14:31:51</span><span class="c">8453</span><span class="voie">posé · par la voie</span><span class="v">12,4 mm</span></div>
+  <div class="l"><span class="h">14:31:30</span><span class="c amb">8451</span><span class="amb">différé · deux rails</span><span class="v">—</span></div>
+  <p class="etat"><b>En cours</b><span>47 traités</span><span>0 ignoré</span><span class="amb">Différés : 1</span></p>
+ </section>
+
+ <section class="blk">
+  <div class="tb"><span class="lbl">Partie 34</span><span class="r">4 lots · tous confondus</span></div>
+  <div class="nums">
+   <div><b>212</b><small>traitées</small></div>
+   <div><b>205</b><small>posées</small></div>
+   <div><b class="amb">3</b><small>différés restants</small></div>
+  </div>
+  <p class="liste">Différés restants : <b>8102</b>, <b>8431</b>, <b>8451</b> · 2 reprises à la main · 0 SKIP</p>
+ </section>
+
+ <section class="blk">
+  <div class="tb"><span class="lbl">Ce lot applique</span></div>
+  <div class="r2"><span>Rail non résolu</span><b>continuer et différer</b></div>
+  <div class="r2"><span>Faible confiance</span><b>mettre le lot en pause</b></div>
+  <div class="r2"><span>Décision sur le lot</span><b>appliquée</b></div>
+ </section>
+
+ <section class="blk">
+  <div class="tb"><span class="lbl">Télécharger</span><span class="r">construit sur ce poste</span></div>
+  <div class="r2 fort">Tout, pour l’analyse<span class="fl">↓</span></div>
+  <div class="r2">Journal<span class="fl">↓</span></div>
+  <div class="r2">Bilan et LiDAR<span class="fl">↓</span></div>
+  <div class="r2">Diagnostic GCV1<span class="fl">↓</span></div>
+  <div class="r2">Corpus GCV1 + LiDAR<span class="fl">↓</span></div>
+  <div class="r2 discret">Vider le cache des exports<span class="fl">×</span></div>
+  <p class="note">ESV ne donne aucune confirmation serveur.</p>
+ </section>
+
+ <section class="blk">
+  <div class="tb"><span class="lbl">Départs des parties</span></div>
+  <div class="r2">Partie 34 <span class="m">13/10 12:58 · 1 284 validés · 37 invalides</span></div>
+  <div class="r2">Partie 33 <span class="m">12/10 16:04 · 2 015 validés · 12 invalides</span></div>
+ </section>
+
+ <section class="blk">
+  <div class="tb"><span class="lbl">ESV</span></div>
+  <div class="r2"><span><span class="pt"></span>Onglet ESV · Edge</span><b>Reconnecter ›</b></div>
+ </section>
+
+ <div class="actions"><button class="primary">Pause</button><button class="danger">Arrêter le lot</button></div>
+ <footer>Changer de vue ne met pas le lot en pause.</footer>
+</main>
+<script>const t=new URLSearchParams(location.search).get('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'sombre':'clair');document.documentElement.dataset.theme=t;</script>
+</body></html>
