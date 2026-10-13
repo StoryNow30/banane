@@ -1,5 +1,24 @@
 # Décisions techniques
 
+## D-090 - Premier lot terrain en 4.9.0.8 : mode rapide −64 % sur le temps par cut, qualité identique (13 octobre 2026)
+
+**Lot de Mic** du 13 octobre (export privé, hors dépôt) : 4.9.0.8, une partie, 112 cuts (95 posés, 17 différés) en 8 min 24 s, fin de partie traitée (dernier cut validé
+en place, compteur passé de N à N+1). Tirage cut par cut : 46 référence (comme la 4.9.0.5), 66 rapides. Calculs de l'orchestrateur (`tools/perf-v3.cjs`, scripts privés) ;
+le workflow d'analyse à 4 agents s'est arrêté sur la limite de session sans rendre de résultat (environ 426 000 jetons dépensés) : vérifications refaites sans agent.
+
+1. **Vitesse** : cycle médian V1 **2,44 s** en rapide contre **6,73 s** en référence (**−63,7 %**, intervalle à 95 % de −4,77 à −3,63 s ; bruit A/A 7 %). Mesure indépendante
+   (intervalle entre deux changements de cut) : 2,79 s contre 7,05 s (−60 %). Capture 1,35 s contre 5,11 s ; pose (phase V1) 0,19 s contre 0,86 s. 132 vues lues au signal, 0 repli
+   sur 800 ms en rapide ; 0 relecture, 0 erreur, 0 repli de pose. Voisinage : un cut rapide après un rapide 2,32 s, une référence après une référence 6,55 s (−65 % si tout était rapide).
+2. **Qualité** (même lot, deux moitiés) : part posée 84,8 % dans les deux bras ; points par capture 3 574 contre 3 579 ; écartement des paires posées médiane 1 436,7 mm dans
+   les deux bras (1 429 à 1 448 mm) ; reports au même taux (rails « flanc interne insuffisamment observé » : 10,6 % des cuts rapides, 10,9 % des cuts référence) ; un cut rapide reporté
+   pour écartement hors contrat (1 312 mm), cas unique, non attribuable sans relecture ; preuves de validation identiques (navigation). Aucun incident.
+3. **V5** (deux bras) : phases des cuts posés, analyse 0,51 à 0,54 s et validation 0,21 à 0,24 s, contre 1,25 s et 1,04 s sur le lot du 12 octobre (autre partie, lot long avec
+   historique) ; tiers du cycle rapide 2,79 / 2,56 / 2,29 s : pas de dérive sur ce lot court. À confirmer sur un lot d'au moins 300 cuts.
+4. **Artefact de mesure** : en rapide, la lecture par rail apparaît à 0,00 s (l'étape « capture-read » est horodatée par le pont après la lecture, la suite de `scheduler.yield`
+   passant avant la tâche de message) ; la durée totale de capture est juste. Correctif proposé : horodater les étapes dans la page.
+5. **Proposé à Mic** : (a) généraliser le mode rapide (`modeRapide: 'toujours'`) en gardant un échantillon de référence d'un cut sur dix pour la surveillance ; (b) allègement A
+   des exports (−48 % du corpus sur ce lot) ; (c) horodatage des étapes dans la page ; puis préchargement du cut suivant et réduction du transfert de la capture.
+
 ## D-089 - V5 : sauvegarde de l'état à taille constante (4.9.0.8) ; inventaire du poids des exports (13 octobre 2026)
 
 **Instruction de Mic du 13 octobre 2026** : « Constat confirmé sur terrain, quand on ne pouvait pas vider le cache et qu'Ariane conservait l'historique des précédents lots, au bout
