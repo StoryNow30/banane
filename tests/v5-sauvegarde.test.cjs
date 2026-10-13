@@ -24,7 +24,7 @@ test('la sauvegarde garde une taille constante, quel que soit le nombre de visit
  const zero=await avecVisites(0),mille=await avecVisites(1000);
  const t0=taille(zero.store.state),t1=taille(mille.store.state);
  assert.ok(t1-t0<1000*40,`état sauvegardé : ${t0} octets sans visite, ${t1} avec 1 000 visites`);
- assert.ok(!('records' in mille.store.state)&&!('incomplete' in mille.store.state),'ni visites ni captures abandonnées recopiées');
+ assert.deepEqual([mille.store.state.records,mille.store.state.incomplete],[[],[]],'ni visites ni captures abandonnées recopiées');
  assert.equal(mille.store.state.recordIds.length,1000);assert.equal(mille.engine.s.records.length,1000,'le moteur les garde en mémoire');
 });
 
@@ -46,7 +46,7 @@ test('ancien format (visites recopiées dans l\'état, même vidées) : seules l
  for(const r of anciennes.slice(1))await store.putRecord(r);
  store.state={schemaVersion:4,version:'4.9.0.7',sessionId:'s',mode:'observation',collection:'IDLE',records:anciennes,incomplete:[],events:[],batch:null};
  const a=await app(store);assert.deepEqual(a.engine.s.records.map(r=>r.recordId),['rec-1','rec-2']);assert.equal(a.engine.s.recordsAbsentsAuRedemarrage,0);
- await a.engine.save();assert.deepEqual(store.state.recordIds,['rec-1','rec-2']);assert.ok(!('records' in store.state));
+ await a.engine.save();assert.deepEqual(store.state.recordIds,['rec-1','rec-2']);assert.deepEqual(store.state.records,[]);
  assert.deepEqual(store.records.map(r=>r.recordId).sort(),['rec-1','rec-2'],'rien de vidé ne revient dans le cache des exports');
  assert.deepEqual(store.archive.map(r=>r.recordId),['rec-0'],'la visite vidée est archivée une fois, hors de l\'état');assert.equal(a.engine.s.visitesArchivees,1);
  const b=await app(store);assert.deepEqual(b.engine.s.records.map(r=>r.recordId),['rec-1','rec-2']);
@@ -80,4 +80,45 @@ test('ancien format sans archive possible : les visites absentes d\'IndexedDB re
  const store=new MemoryStore();store.archiverVisites=async()=>{throw Error('quota');};
  store.state={schemaVersion:4,version:'4.9.0.7',sessionId:'s',mode:'observation',collection:'IDLE',records:[visite(0)],incomplete:[],events:[],batch:null};
  const a=await app(store);assert.deepEqual(a.engine.s.records.map(r=>r.recordId),['rec-0']);await a.engine.save();assert.equal(typeof store.state.recordIds[0],'object');
+});
+
+/* Relecture indépendante de V5 (13 octobre) : pannes d'IndexedDB et retour arrière. */
+test('IndexedDB illisible au démarrage : rien n\'est retiré de l\'état ; une sauvegarde de secours réécrit les listes telles quelles',async()=>{
+ const a=await avecVisites(2);const r=visite(9);a.engine.s.records.push(r);await a.engine.save();
+ const avant=JSON.parse(JSON.stringify(a.store.state.recordIds));
+ const panne=Object.create(a.store);panne.all=async()=>{throw Error('IndexedDB illisible');};
+ const e=new Engine(new SimulatedESV(),panne);await assert.rejects(e.init(),/IndexedDB illisible/);
+ await e.save();assert.deepEqual(a.store.state.recordIds,avant,'le gestionnaire d\'erreur du service worker sauvegarde : identifiants et entrée recopiée gardés');
+ const b=await app(a.store);assert.deepEqual(b.engine.s.records.map(x=>x.recordId),['rec-0','rec-1','rec-9']);
+});
+
+test('réécriture IndexedDB échouée après une première réussie : la version modifiée reste recopiée et survit au redémarrage',async()=>{
+ const a=await avecVisites(1);const r=a.engine.s.records[0];
+ Object.assign(r,{commandSent:true,status:'validated-after-change'});
+ /* L'écriture sous-jacente échoue ; l'enveloppe du moteur reste en place. */
+ a.store.panneEcriture='quota';await assert.rejects(a.store.putRecord(r),/quota/);a.store.panneEcriture=null;
+ await a.engine.save();assert.equal(typeof a.store.state.recordIds[0],'object');
+ const b=await app(a.store);assert.equal(b.engine.s.records[0].commandSent,true);assert.equal(b.engine.s.records[0].status,'validated-after-change');
+ const c=await app(a.store);assert.equal(c.engine.s.records[0].commandSent,true,'toujours la version modifiée au second redémarrage');
+});
+
+test('retour arrière : l\'état sauvegardé garde des listes vides lisibles par une version antérieure ; ses ajouts sont repris à la remise à jour',async()=>{
+ const a=await avecVisites(2);
+ assert.deepEqual([a.store.state.records,a.store.state.incomplete],[[],[]]);
+ /* Une version antérieure relit l'état, ajoute une visite à `records` (et dans IndexedDB), sauvegarde tout. */
+ const ancien=K.clone(a.store.state),v=visite(7);ancien.records.push(v);await a.store.putRecord(v);a.store.state=ancien;
+ const b=await app(a.store);assert.deepEqual(b.engine.s.records.map(x=>x.recordId),['rec-0','rec-1','rec-7']);
+});
+
+test('archive sans doublon quand un démarrage interrompu recommence la migration',async()=>{
+ const store=new MemoryStore();const ancien={schemaVersion:4,version:'4.9.0.7',sessionId:'s',mode:'observation',collection:'IDLE',records:[visite(0)],incomplete:[],events:[],batch:null};
+ store.state=K.clone(ancien);await app(store);store.state=K.clone(ancien);await app(store);
+ assert.deepEqual(store.archive.map(r=>r.recordId),['rec-0']);
+});
+
+test('ancien format relu de chrome.storage (clés triées) : une visite identique à IndexedDB est confirmée malgré l\'ordre des clés',async()=>{
+ const store=new MemoryStore(),r=visite(1);await store.putRecord(r);
+ const trie=x=>Array.isArray(x)?x.map(trie):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,trie(x[k])])):x;
+ store.state={schemaVersion:4,version:'4.9.0.7',sessionId:'s',mode:'observation',collection:'IDLE',records:[trie(r)],incomplete:[],events:[],batch:null};
+ const a=await app(store);await a.engine.save();assert.deepEqual(store.state.recordIds,['rec-1']);
 });

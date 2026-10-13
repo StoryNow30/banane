@@ -12,7 +12,9 @@ class BananeStorage3{
   * mises de côté UNE fois au passage au nouveau format, pour que rien ne soit perdu sans les réécrire
   * à chaque sauvegarde. */
  async archiverVisites(liste){const cle='banane3VisitesHorsCache',avant=(await chrome.storage.local.get(cle))[cle];
-  await chrome.storage.local.set({[cle]:[...(Array.isArray(avant)?avant:[]),...liste]});}
+  /* Sans doublon : un démarrage interrompu avant la sauvegarde recommence l'archivage. */
+  const id=r=>r?.recordId||r?.id,deja=new Set((Array.isArray(avant)?avant:[]).map(id).filter(Boolean));
+  await chrome.storage.local.set({[cle]:[...(Array.isArray(avant)?avant:[]),...liste.filter(r=>!id(r)||!deja.has(id(r)))]});}
  async putCloud(id,data){return this.transaction('clouds','readwrite',s=>s.put(data,id));}
  async getCloud(id){return this.transaction('clouds','readonly',s=>s.get(id));}
  /* Un nuage acquitté et écrit sur disque est retiré de la base : sans cela la

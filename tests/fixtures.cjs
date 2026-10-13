@@ -9,9 +9,9 @@ class MemoryStore{
  async getState(){return K.clone(this.state);}
  async setState(s){if(this.onSetState)await this.onSetState(K.clone(s));this.state=K.clone(s);}
  async putCloud(id,c){this.clouds.set(id,K.clone(c));}async getCloud(id){return this.clouds.has(id)?K.clone(this.clouds.get(id)):undefined;}
- async putEvent(e){this.events.push(K.clone(e));}async putRecord(r){const copy=K.clone(r),id=copy.recordId||copy.id,index=this.records.findIndex(x=>(x.recordId||x.id)===id);
+ async putEvent(e){this.events.push(K.clone(e));}async putRecord(r){if(this.panneEcriture)throw Error(this.panneEcriture);const copy=K.clone(r),id=copy.recordId||copy.id,index=this.records.findIndex(x=>(x.recordId||x.id)===id);
   if(index<0)this.records.push(copy);else this.records[index]=copy;}
- async archiverVisites(liste){this.archive=[...(this.archive||[]),...K.clone(liste)];}
+ async archiverVisites(liste){const id=r=>r?.recordId||r?.id,deja=new Set((this.archive||[]).map(id));this.archive=[...(this.archive||[]),...K.clone(liste.filter(r=>!deja.has(id(r))))];}
  async getRecord(id){const r=this.records.find(x=>(x.recordId||x.id)===id);return r?K.clone(r):undefined;}
  async all(name){return K.clone(name==='records'?this.records:name==='events'?this.events:name==='clouds'?[...this.clouds.values()]:[]);}
 }
