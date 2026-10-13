@@ -20,7 +20,8 @@
      before:null,after:null,lidarId:null,records:[],incomplete:[],proposal:null,snapshot:null,applied:null,
      validationStarted:false,batch:null,notice:'Prêt. Sélectionne un onglet ESV.',events:[],settings:{...G.DEFAULTS}};}
   async init(){const old=await this.store.getState();if(old){this.s=old;this.s.version=K.VERSION;this.s.schemaVersion=4;
-    await this.relireVisites();
+    /* KI-070 : tant que la relecture des visites n'a pas réussi, `save()` réécrit l'état tel que chargé (identifiants gardés). */
+    this.visitesRelues=false;await this.relireVisites();this.visitesRelues=true;
     this.s.settings={...G.DEFAULTS,...this.s.settings,method:G.DEFAULTS.method};
     /* `deferred` rejoint les collections du lot. Un lot ancien se relit donc
      * avec une liste vide — et, faute de `scope.unresolvedPolicy`, conserve la
@@ -120,7 +121,8 @@
    * recopiée : `recordIds` garde son identifiant, à sa place ; toute autre entrée reste recopiée.
    * `records` et `incomplete` restent écrits VIDES : une version antérieure (retour arrière) relit
    * l'état sans planter. Listes encore non relues (IndexedDB illisible au démarrage) : réécrites telles quelles. */
-  async save(){const {records,incomplete,...reste}=this.s,ref=r=>{const id=r?.recordId||r?.id;return typeof id==='string'&&this.enBase.has(id)?id:r;};
+  async save(){if(this.visitesRelues===false){await this.store.setState(K.clone(this.s));return;}
+   const {records,incomplete,...reste}=this.s,ref=r=>{const id=r?.recordId||r?.id;return typeof id==='string'&&this.enBase.has(id)?id:r;};
    const liste=(l,brute)=>Array.isArray(l)?l.map(ref):Array.isArray(brute)?brute:[];
    await this.store.setState({...K.clone(reste),records:[],incomplete:[],recordIds:K.clone(liste(records,reste.recordIds)),incompleteIds:K.clone(liste(incomplete,reste.incompleteIds))});}
   /* Au démarrage. Identifiant : la visite est relue dans IndexedDB ; absente, elle a été vidée après

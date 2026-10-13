@@ -86,9 +86,11 @@ test('ancien format sans archive possible : les visites absentes d\'IndexedDB re
 test('IndexedDB illisible au démarrage : rien n\'est retiré de l\'état ; une sauvegarde de secours réécrit les listes telles quelles',async()=>{
  const a=await avecVisites(2);const r=visite(9);a.engine.s.records.push(r);await a.engine.save();
  const avant=JSON.parse(JSON.stringify(a.store.state.recordIds));
- const panne=Object.create(a.store);panne.all=async()=>{throw Error('IndexedDB illisible');};
+ /* KI-070 : le magasin de panne écrit dans l'état du vrai magasin (un `Object.create` écrivait sur l'objet dérivé : l'essai ne prouvait rien). */
+ const panne={getState:()=>a.store.getState(),setState:s=>a.store.setState(s),all:async()=>{throw Error('IndexedDB illisible');},putRecord:r=>a.store.putRecord(r)};
  const e=new Engine(new SimulatedESV(),panne);await assert.rejects(e.init(),/IndexedDB illisible/);
- await e.save();assert.deepEqual(a.store.state.recordIds,avant,'le gestionnaire d\'erreur du service worker sauvegarde : identifiants et entrée recopiée gardés');
+ const etatCharge=JSON.parse(JSON.stringify(a.store.state));await e.save();assert.notEqual(a.store.state,etatCharge,'la sauvegarde de secours a bien écrit');
+ assert.deepEqual(a.store.state.recordIds,avant,'le gestionnaire d\'erreur du service worker sauvegarde : identifiants et entrée recopiée gardés');
  const b=await app(a.store);assert.deepEqual(b.engine.s.records.map(x=>x.recordId),['rec-0','rec-1','rec-9']);
 });
 
