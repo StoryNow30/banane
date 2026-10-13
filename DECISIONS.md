@@ -9,15 +9,20 @@
    référence pour surveiller la qualité ; répartition régulière (un cut de référence tous les 5, 8 ou 13 cuts, 28 à 32 sur 300). L'échantillon pourra être réduit ou
    supprimé avec le temps et la confiance (Mic). La règle est consignée à la fin de chaque capture (`regleLecture`).
 2. **Allègement A des exports** (réglage `export.mode: 'allege'`) : sondes de diagnostic retirées des seuls nœuds sans point retenu dont aucune sonde ne touche la zone ;
-   points arrondis au micromètre (écart ≤ 0,5 µm ; précision d'ESV au mieux 61 µm) ; `nearestToRailOrigin`, intensité, classe, pointSources, visibilité inchangés ; chaque
-   nuage allégé porte `exportLightening`. Rejoué sur l'export du lot 4.9.0.8 : corpus 21,7 → 12,1 Mo compressés (−44 %), 2 711 nœuds allégés, touches de zone des sondes
-   inchangées (357), aucun autre champ modifié, nuage source intact. Variante retenue plus prudente que celle chiffrée en D-090 (−48 %) : les 121 nœuds vides dont une sonde
-   touche la zone (anomalie à comprendre) gardent leurs sondes.
-3. **Moteur** : le changement de `src/engine.js` fait pour V5 (D-089) est validé pour toute version, de test ou stable ; la baseline le note.
+   `nearestToRailOrigin`, points, intensité, classe, pointSources, visibilité inchangés au bit près ; chaque nuage allégé porte `exportLightening`. Rejoué sur l'export du lot
+   4.9.0.8 : corpus 21,7 → 14,6 Mo compressés (−33 %), 2 711 nœuds allégés, touches de zone des sondes inchangées (357), aucun autre champ modifié, nuage source intact, rejeu
+   des décisions du lot (acceptance-report) fidèle sur 112 cuts sur 112. Écarts à ce que D-090 chiffrait (−48 %) : les 121 nœuds vides dont une sonde touche la zone (anomalie
+   à comprendre) gardent leurs sondes ; l'arrondi des points au micromètre est abandonné après relecture indépendante (il faisait échouer le rejeu exact à 0,3 µm : 103 sur 112).
+3. **Moteur** : le changement de `src/engine.js` fait pour V5 (D-089) peut aller au-delà des versions de test ; l'audit indépendant avant toute version stable reste dû ; la
+   baseline le note.
 4. **Mesure** : chaque étape de la page porte son heure (`pageMs`) ; `tools/perf-v3.cjs` l'utilise. Au banc ESV local, vrai code de page : lecture par rail en rapide 0,17 à
    0,48 s à l'heure de la page, contre 0 à 11 ms à l'heure de réception (artefact de D-090) ; en référence les deux concordent.
-5. **Version de test 4.9.0.9** « 4.9.0 test 9 » = 4.9.0.8 + points 1, 2 et 4 (branche `claude/49-test-9`). Consigne `consignes/seance-terrain-test-9-2026-10-13.md` (retour
-   arrière vers la 4.9.0.8). Recette d'analyse d'un lot pour toute session : `PILOTAGE_REPRISE.md` § 8.
+5. **Analyse** : `tools/perf-v3.cjs` range chaque visite selon le mode consigné de sa capture (un lot repris après retour arrière ou lu avec `--tous` peut mêler deux règles,
+   et le rapport le dit) ; rapport du lot 4.9.0.8 inchangé.
+6. **Version de test 4.9.0.9** « 4.9.0 test 9 » = 4.9.0.8 + points 1, 2, 4 et 5 : `ariane-4.9.0-test.9.zip`, SHA-256 `0d9637b0…5fba7`, 1 290 817 octets, tête `4faf5a2`
+   (`claude/49-test-9`, poussée) ; verify 1424/1422/0/2 ; relecture indépendante (un agent : deux défauts d'analyse corrigés et revérifiés, aucun défaut de pose) ; banc ESV local
+   avec le vrai code de page. Consigne `consignes/seance-terrain-test-9-2026-10-13.md` (retour arrière vers la 4.9.0.8). Recette d'analyse d'un lot pour toute session :
+   `PILOTAGE_REPRISE.md` § 8.
 
 ## D-090 - Premier lot terrain en 4.9.0.8 : mode rapide −64 % sur le temps par cut, qualité identique (13 octobre 2026)
 
