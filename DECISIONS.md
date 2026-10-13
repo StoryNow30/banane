@@ -1,5 +1,25 @@
 # Décisions techniques
 
+## D-093 - Réponses de Mic sur U3 et lancement de la 4.9.0.10 : fiche de départ des parties, raccourcis écrits ; préchargement non inclus (13 octobre 2026)
+
+**Réponse de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « D c'est pour passer au cut de droite. Maj + espace c'est pour valider un cut. […] Tu peux lancer la 0.10. »
+Sur l'identifiant de projet de `DECISIONS.md` (ligne 487, session ancienne) : « m'en fou » : **laissé tel quel**, aucune modification.
+
+1. **U3** : actions écrites : `D` = passer au cut de droite, `Maj + Espace` = valider un cut (actions d'ESV ; elles corrigent la lecture « rail droit » de l'étude E). Aucun
+   raccourci ajouté ; essais que ni l'un ni l'autre n'est doublé ou détourné (`tests/u3-raccourcis.test.cjs`). Fiche : `fiches/FICHE_U3_RACCOURCIS.md`. Porte MINIMUM de U3 atteinte
+   en essais hors ligne ; le comportement réel d'ESV sur ces touches repose sur la parole de l'opérateur.
+2. **Fiche de départ des parties** (demande de Mic : retrouver les validés et invalides de chaque partie, oubliés avant une séance) : le résumé de liste d'ESV d'avant séance
+   (`list-summary`, déjà observé) alimente une fiche (heure, partie, validés, invalides, total), gardée dans une clé à part de `chrome.storage.local` (`banane3FichesDepart`, 200
+   fiches au plus), que le vidage du cache ne touche pas ; affichée dans le panneau (bloc « Départs des parties »), recopiée dans chaque export (`fichesDepart` du bilan,
+   `CONTENU.txt`). Cette fiche ne peut pas remonter les parties passées : elle ne couvre que les séances faites avec la 4.9.0.10.
+3. **Préchargement du cut suivant : non inclus.** Rien ne démontre qu'il soit faisable sans toucher à ce qu'ESV charge : la vue d'un cut ne se charge qu'une fois la navigation
+   faite, et la pose du cut courant exige que ce cut reste affiché pendant l'analyse (0,6 à 0,9 s). Le transfert de la capture ne pèse que ~0,1 s. Piste à étudier à part : relever,
+   par cut, quels nœuds de points ESV charge (sans stocker d'adresse) pour voir si un chargement anticipé par le cache HTTP est possible. Décision de Mic nécessaire avant tout essai.
+4. **Version de test 4.9.0.10** « 4.9.0 test 10 » = 4.9.0.9 + points 1 et 2 : `ariane-4.9.0-test.10.zip`, SHA-256 `09c32aaf…03949`, 1 296 165 octets, tête `2698492`
+   (`claude/49-test-10`, poussée) ; verify 1442/1440/0/2 (moteur et géométrie inchangés) ; **aucune relecture par agent** (D-081, D-083 : lecture de données sans suppression, essais
+   sur le service worker réel, relecture du diff par l'orchestrateur ; un défaut trouvé par le banc : une minuterie du panneau décalait le rang que des essais lui attribuent, corrigé).
+   Consigne `consignes/seance-terrain-test-10-2026-10-13.md` (retour arrière vers la 4.9.0.9).
+
 ## D-092 - Fin des essais de volume : la direction juge suffisants les lots reçus ; passage à la suite du cycle (13 octobre 2026)
 
 **Décision de Mic du 13 octobre 2026** : « On va s'arrêter là. Nous n'avons pas besoin d'aller jusqu'à 300 cuts, la direction estime ce nombre suffisant. Nous pouvons passer à la
