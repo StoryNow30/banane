@@ -119,7 +119,13 @@ function comparer(data,{tous=false}={}){
   const ecart={cycleMs:delta,pct:delta!==null&&a.cycleMedianMs?100*delta/a.cycleMedianMs:null,intervalle95:intervalle(a._cy,b._cy),bruitAAPct:BRUIT_AA_PCT,
     auDelaDuBruit:delta!==null&&a.cycleMedianMs?Math.abs(100*delta/a.cycleMedianMs)>BRUIT_AA_PCT:null};
   for(const mode of MODES)delete bras[mode]._cy;
-  return {lot:batchId,version:data.version??null,bras,ecart,controle};}
+  /* D-095 : les trois mesures du cahier (§ 4.3), publiées avec la comparaison : cycle médian hors silences (avec p90, max et les silences écartés),
+   * durée totale du lot attentes comprises, arrêts pour 100 cuts avec leurs causes séparées. Une valeur non calculable reste null (« non mesuré »). */
+  const troisMesures=(m.lots||[]).filter(l=>tous||!batchId||l.batchId===batchId).map(l=>({lot:l.batchId,
+    cycle:{n:l.cycleMs?.n??0,medianMs:l.cycleMs?.median??null,p90Ms:l.cycleMs?.p90??null,maxMs:l.cycleMs?.max??null},
+    silences:{n:l.silences?.count??0,totalMs:l.silences?.totalMs??0},dureeTotaleMs:l.totalMs??null,
+    arrets:{n:l.stops?.count??0,pour100Cuts:l.stops?.per100??null,causes:l.stops?.causes??{}}}));
+  return {lot:batchId,version:data.version??null,bras,ecart,controle,troisMesures};}
 
 const s=x=>x===null||x===undefined?'—':(x/1000).toFixed(2).replace('.',',')+' s';
 const pc=x=>x===null||x===undefined?'—':(100*x).toFixed(1).replace('.',',')+' %';
@@ -140,6 +146,11 @@ function toMarkdown(r){const a=r.bras.reference,b=r.bras.rapide,L=[];
   L.push(e.cycleMs===null?'Écart du cycle médian : non mesuré.':`Écart du cycle médian (rapide − référence) : ${s(e.cycleMs)} (${e.pct.toFixed(1).replace('.',',')} %)`
     +(e.intervalle95?`, intervalle à 95 % de ${s(e.intervalle95.bas)} à ${s(e.intervalle95.haut)}`:'')+`. Bruit A/A : ${e.bruitAAPct} % ; `
     +(e.auDelaDuBruit?'écart au-delà du bruit.':'écart dans le bruit.'));
+  if(Array.isArray(r.troisMesures)&&r.troisMesures.length){
+    const minutes=x=>x===null||x===undefined?'—':(x/60000).toFixed(1).replace('.',',')+' min',causes=o=>Object.entries(o||{}).filter(([,n])=>n).map(([k,n])=>`${k} ${n}`).join(', ')||'aucune';
+    L.push('','## Les trois mesures du cahier (§ 4.3)','','| Lot | Cycle médian hors silences (P90, max) | Silences écartés | Durée totale du lot | Arrêts pour 100 cuts (causes) |','|---|---:|---:|---:|---:|');
+    for(const l of r.troisMesures)L.push(`| ${String(l.lot??'?').slice(0,8)} | ${s(l.cycle.medianMs)} (${s(l.cycle.p90Ms)}, ${s(l.cycle.maxMs)}) sur ${l.cycle.n} cycles | ${l.silences.n} (${minutes(l.silences.totalMs)}) | ${minutes(l.dureeTotaleMs)} | ${l.arrets.pour100Cuts===null?'—':l.arrets.pour100Cuts.toFixed(1).replace('.',',')} (${causes(l.arrets.causes)}) |`);
+    L.push('','Interventions manuelles : non mesurées (la liste des événements qui les marquent reste à établir, cahier § 4.3).');}
   const c=r.controle,nomRegle={tirage:'un cut sur deux',echantillon:'un cut sur dix en référence',toujours:'tous rapides',reference:'aucun rapide'}[c.regle]??c.regle;
   const vues=Object.entries(c.reglesVues||{});
   L.push('',`Règle du lot : « ${c.regle} » (${nomRegle})${vues.length>1?` ; ATTENTION, plusieurs règles dans ces captures : ${vues.map(([n,k])=>`${n} (${k})`).join(', ')} ; chaque visite est rangée selon le mode consigné de sa capture`:c.regleConsignee?', consignée par la page':', déduite (export d\'avant la 4.9.0.9)'} ; étapes datées par la page : ${c.etapesDateesParLaPage??0} capture(s) ; visites sans capture consignée : ${c.visitesSansCaptureConsignee??0}.`);

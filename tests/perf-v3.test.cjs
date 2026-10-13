@@ -45,6 +45,11 @@ test('deux cuts, un par mode : visites, étapes par rail et contrôle du tirage'
  assert.equal(r.bras.rapide.partPosee,1);assert.equal(r.ecart.cycleMs,0);
  assert.deepEqual(r.controle,{capturesSansMode:0,desaccords:0,modesVus:['rapide','reference'],regle:'tirage',regleConsignee:false,reglesVues:{tirage:2},etapesDateesParLaPage:0,visitesSansCaptureConsignee:0});
  const md=T.toMarkdown(r);assert.match(md,/Lecture par rail \(médiane \/ P90\) \| 0,90 s \/ 0,90 s \| 0,30 s \/ 0,30 s/);
+ /* D-095 : les trois mesures du cahier (§ 4.3) sont publiées avec la comparaison, une ligne par lot ; l'absence de valeur reste « non mesuré ». */
+ assert.ok(Array.isArray(r.troisMesures)&&r.troisMesures.length>=1);
+ for(const l of r.troisMesures){assert.deepEqual(Object.keys(l).sort(),['arrets','cycle','dureeTotaleMs','lot','silences']);assert.deepEqual(Object.keys(l.cycle).sort(),['maxMs','medianMs','n','p90Ms']);
+  assert.deepEqual(Object.keys(l.arrets).sort(),['causes','n','pour100Cuts']);assert.ok(Object.keys(l.arrets.causes).includes('operator'),'causes séparées');}
+ assert.match(md,/## Les trois mesures du cahier \(§ 4\.3\)/);assert.match(md,/Arrêts pour 100 cuts \(causes\)/);assert.match(md,/Interventions manuelles : non mesurées/);
  assert.match(md,/Écart du cycle médian \(rapide − référence\) : 0,00 s/);assert.match(md,/0 capture\(s\) dont le mode consigné diffère du tirage/);
 });
 
