@@ -171,17 +171,37 @@
    if(typeof scheduler!=='undefined'&&typeof scheduler.yield==='function')return scheduler.yield();
    if(typeof MessageChannel==='function')return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();resolve();};channel.port2.postMessage(0);});
    return new Promise(resolve=>setTimeout(resolve,0));}
- /* V3, expérience I1 (D-078, D-087 ; version de test) : mode de lecture d'un cut.
+ /* V3, expériences I1 puis « turbo » (D-078, D-087, D-088 ; versions de test) : mode d'un cut.
   * Tirage fixe sur le numéro du cut (bit haut du hachage multiplicatif de Knuth) :
   * une relecture, une reprise ou un F5 gardent le mode, l'analyse le recalcule, et
   * les deux modes se mélangent tout au long du lot (pas de blocs : la vitesse dérive
   * de 19 à 22 % entre la première et la seconde moitié d'un lot). « rapide » passe
   * à `vendor/lidar.js`, inchangé, son option de pause existante ; « reference » ne
   * lui passe rien, comme la 4.9.0.5. Réglage absent ou inconnu : référence. */
- function lectureDuCut(identity){const regle=P.lectureI1;
+ function lectureDuCut(identity){const regle=P.modeRapide??P.lectureI1;
    if(regle==='toujours')return 'rapide';if(regle!=='tirage')return 'reference';
    const cut=identity?.cut;if(!Number.isInteger(cut))return 'reference';
    return Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';}
+ /* D-088 (4.9.0.7, version de test) : ce que le mode « rapide » change, pièce par pièce, d'après les
+  * mesures du banc ESV local (13 octobre, code d'origine d'ESV) :
+  *   lecture   (I1) : lire sans attendre une image d'ESV (4.9.0.6) ;
+  *   selection (I2) : le rail demandé est dans la vue dès l'image qui suit le clic (6 sur 6) ; on
+  *                    attend cette image, et non plus trois sondages immobiles à 80 ms ;
+  *   signal    (I3) : lire dès que plus rien ne charge (aucun chargement en cours et mêmes nœuds sur
+  *                    deux images de suite) ; mêmes nœuds qu'après 800 ms dans 32 vues sur 32 ; la
+  *                    règle des 800 ms reste le repli (chargement d'ESV pendu : le signal ne vient jamais) ;
+  *   pose      (P1) : ESV pose le rail du côté courant au point du plan de coupe visé par le clic, même
+  *                    hors de la vue : le bouton de rail fixe le côté, le clic part dans la même tâche,
+  *                    calculé avec la caméra active ; sans attendre le recentrage (< 0,6 mm, 1 à 4 ms).
+  * Chaque pièce se coupe seule dans les réglages ; une pièce qui ne conclut pas retombe sur la 4.9.0.5. */
+ const RAPIDE={lecture:true,selection:true,signal:true,pose:true,...(P.rapide||{})};
+ const piece=(mode,nom)=>mode==='rapide'&&RAPIDE[nom]!==false;
+ /* Prochaine image d'ESV ; repli à 100 ms si la page ne dessine plus (onglet caché). */
+ function prochaineImage(){return new Promise(resolve=>{let fini=false,minuterie=null;
+   const fin=()=>{if(fini)return;fini=true;if(minuterie!==null)try{clearTimeout(minuterie);}catch{}resolve();};
+   try{if(typeof requestAnimationFrame==='function')requestAnimationFrame(fin);}catch{}minuterie=setTimeout(fin,100);});}
+ const imageEsv=()=>{const f=window.Potree?.framenumber;return Number.isFinite(f)?f:null;};
+ const chargementsEsv=()=>{const n=window.Potree?.numNodesLoading;return Number.isFinite(n)?n:null;};
  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
    const c=nativeContext(),railInputs={},associationByRail={};
    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
@@ -258,6 +278,36 @@
    const id=o=>o&&typeof o==='object'?objectId(o):'';
    return SIG.signature(L.inventory(context().viewer),id);
  }
+ /* I3 : lire dès que plus rien ne charge. Prédicat (code de Potree 1.8 d'ESV) : au moins trois
+  * images après le début de l'attente, puis deux images DISTINCTES de suite avec aucun chargement
+  * en cours et la même signature. Un nœud visible non chargé aurait lancé un chargement à l'image
+  * (compteur > 0) ; un nœud chargé non encore transféré l'aurait été (signature changée, deux par
+  * image au plus). Repli inchangé : signature immobile pendant `stableForMs` (règle de la 4.9.0.5),
+  * seule issue quand un chargement d'ESV reste pendu (un bloc en échec ne libère jamais sa place). */
+ async function attendreChargement(guard,stableForMs){const debut=Date.now(),f0=imageEsv();
+   let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0;
+   while(Date.now()-debut<12000){
+     if(cancelled)throw Error('Action interrompue.');guard();
+     const sig=loadedSignature(),f=imageEsv(),libre=chargementsEsv()===0;
+     if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}
+     if(f!==null&&f!==imagePrecedente){images++;
+       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&sig.count>0)return {regle:'signal',images};
+       precedente={valeur:sig.value,libre};imagePrecedente=f;}
+     if(sig.count>0&&Date.now()-depuis>=stableForMs)return {regle:'stabilite',images,chargementsEnCours:chargementsEsv()};
+     await prochaineImage();}
+   throw Error('Niveau de détail non stabilisé.');}
+ /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
+  * que `select` (incident du cut 3560 : une caméra immobile n'est pas un rail sélectionné), au
+  * rythme des images au lieu de trois sondages à 80 ms ; clic répété comme en 4.8.0 (KI-063). */
+ async function selectImage(side,expected,guard=()=>assertExpected(expected)){
+   const essais=Math.max(1,P.recentrages??3);
+   for(let essai=1;essai<=essais;essai++){guard();nativeClick(selectors[side]);
+     let precedente=null;const debut=Date.now();
+     while(Date.now()-debut<P.attenteMs){await prochaineImage();if(cancelled)throw Error('Action interrompue.');guard();
+       const now=assertExpected(expected),c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);if(!cam){precedente=null;continue;}
+       const valeur=JSON.stringify(cam.cameraToSceneRelative);
+       if(valeur===precedente&&projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView)return now;precedente=valeur;}}
+   throw Error('Vue ESV non recentrée sur le rail '+side+'.');}
  async function capture(expected,progress=()=>{}){cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
    const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs,lecture=lectureDuCut(expected?.identity);
    const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
@@ -266,18 +316,27 @@
    for(const side of ['left','right']){
      /* Lecture seule : une vue qui ne se recentre pas met le lot en pause
       * reprenable (« Lecture LiDAR instable »), au lieu de l'arrêter en erreur. */
-     guard();await select(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut : rafraîchis la page ESV (F5), puis clique sur Reprendre.');throw e;});
+     const debutVue=Date.now();
+     guard();await (piece(lecture,'selection')?selectImage:select)(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut : rafraîchis la page ESV (F5), puis clique sur Reprendre.');throw e;});
      for(let attempt=1;attempt<=maxAttemptsPerView;attempt++){
        const began=Date.now();guard();progress('capture-wait',{side,attempt,maxAttemptsPerView});
        try{
-         let previous=null,unchangedSince=Date.now();
-         await waitFor(()=>{const signature=loadedSignature();
-           if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
-           return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
-         },'Niveau de détail non stabilisé.',12000,guard);
-         guard();progress('capture-read',{side,attempt,lecture});
-         const data=await captureOnce(expected,guard,lecture);guard();
-         attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began});captures.push(data);
+         let attente;
+         /* Signal à la première tentative seulement : une relecture attend comme la 4.9.0.5. */
+         if(piece(lecture,'signal')&&attempt===1)attente=await attendreChargement(guard,stableForMs);
+         else{let previous=null,unchangedSince=Date.now();
+           await waitFor(()=>{const signature=loadedSignature();
+             if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
+             return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
+           },'Niveau de détail non stabilisé.',12000,guard);attente={regle:'stabilite'};}
+         guard();progress('capture-read',{side,attempt,lecture,regle:attente.regle});
+         const avantLecture=attente.regle==='signal'?loadedSignature().value:null;
+         const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference');guard();
+         /* Lu au signal : rien ne doit avoir changé pendant la lecture (elle rend la main à ESV à
+          * chaque tranche). Sinon la vue était incomplète : relecture, comme toute lecture instable. */
+         if(avantLecture!==null&&(loadedSignature().value!==avantLecture||chargementsEsv()!==0))
+           throw Error('Lecture LiDAR instable : niveau de détail changé pendant la lecture.');
+         attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began,vueMs:Date.now()-debutVue,regle:attente.regle,...(attente.images!=null?{images:attente.images}:{})});captures.push(data);
          progress('capture-view-ready',{side,attempt,points:data.pointsSceneRelative.length});break;
        }catch(e){
          // Never retain points from a failed attempt or retry after a moved rail,
@@ -290,7 +349,8 @@
      }
    }
    guard();const data=M3.merge(...captures);guard();
-   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts,lecture,regleLecture:P.lectureI1??null};
+   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts,lecture,regleLecture:P.modeRapide??P.lectureI1??null,
+     pieces:lecture==='rapide'?Object.keys(RAPIDE).filter(n=>RAPIDE[n]!==false):[]};
    /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
     * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
@@ -386,10 +446,37 @@
    throw Error(`Le clic n’a pas produit le déplacement demandé pour ${side} : rail posé à ${ecart.toFixed(1).replace('.',',')} mm de la cible`
      +(Number.isFinite(pixel)?`, vue ESV à ${pixel.toFixed(2).replace('.',',')} mm par pixel${pixel>.9?' (agrandis la fenêtre d’ESV)':''}`:'')+'. État à réconcilier.');
  }
- async function apply(before,proposals){cancelled=false;const now=assertExpected(before);
+ /* P1 : pose sans recentrage. ESV pose le rail du côté COURANT au point où le rayon du clic coupe
+  * son plan de coupe (5 × 7 m, les deux rails dedans) ; il ne vérifie pas que ce point soit dans
+  * la vue. Le bouton de rail fixe le côté de façon synchrone ; la caméra, elle, ne suit qu'à
+  * l'image suivante. Le clic part donc dans la MÊME tâche, calculé avec la caméra encore active :
+  * celle qu'ESV utilise pour son rayon. Garde : côté d'ESV relu sur son bouton avant le clic ;
+  * l'autre rail ne doit pas bouger. Ne conclut pas (`null`) : pose avec recentrage, comme avant. */
+ const CLASSE_COTE={left:['O2N3DCutLRClick','leftRailSClass'],right:['O2N3DCutRRClick','rightRailSClass']};
+ function poseDirecte(side,target,expected){
+   const autre=side==='left'?'right':'left',avant=assertExpected(expected),[id,classe]=CLASSE_COTE[side];
+   /* Sans témoin du côté d'ESV (classe du bouton), rien n'est tenté : pose avec recentrage. */
+   if(typeof document.getElementById(id)?.classList?.contains!=='function')return null;
+   nativeClick(selectors[side]);if(!document.getElementById(id).classList.contains(classe))return null;
+   const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin),view=projectToView(cam,target);
+   if(!view||!view.ndc.every(v=>Number.isFinite(v)&&Math.abs(v)<50))return null;
+   const r=view.viewport,ndc=view.ndc;
+   for(const [dx,dy] of DECALAGES_CLIC){
+     c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
+       clientX:r.left+(ndc[0]+1)*r.width/2+dx,clientY:r.top+(1-ndc[1])*r.height/2+dy,button:0,buttons:1}));
+     const s=assertExpected(expected);
+     if(C.distance(s.rails[autre].positionSceneRelative,avant.rails[autre].positionSceneRelative)>1e-9)
+       throw Error('Le clic a déplacé le rail '+(autre==='left'?'gauche':'droit')+' au lieu du rail '+(side==='left'?'gauche':'droit')+'. État à réconcilier.');
+     if(C.distance(s.rails[side].positionSceneRelative,target)<=.001)return s;
+     if(C.distance(s.rails[side].positionSceneRelative,avant.rails[side].positionSceneRelative)<=1e-9)return null;}
+   return null;}
+ async function apply(before,proposals,progress=()=>{}){cancelled=false;const now=assertExpected(before);
    if(!K.equalPoses(now.rails,before.rails))throw Error('Rails modifiés avant l’application.');
-   const expected=K.expectedPoses(before,proposals);
-   for(const s of ['left','right']){if(cancelled)throw Error('Action interrompue.');await clickPosition(s,expected[s].positionSceneRelative,before.identity);}
+   const expected=K.expectedPoses(before,proposals),directe=piece(lectureDuCut(before.identity),'pose');
+   for(const s of ['left','right']){if(cancelled)throw Error('Action interrompue.');
+     if(directe&&poseDirecte(s,expected[s].positionSceneRelative,before.identity))continue;
+     if(directe)progress('apply-repli',{side:s});
+     await clickPosition(s,expected[s].positionSceneRelative,before.identity);}
    return snapshot();}
  async function restore(before){cancelled=false;assertExpected(before);
    for(const s of ['left','right'])await clickPosition(s,before.rails[s].positionSceneRelative,before.identity);return snapshot();}

@@ -29,7 +29,7 @@ test('le tirage de l\'outil est celui de la page, cut par cut',async()=>{
    pc.material={clipBoxes:[],clipTask:0,clipMethod:0};pc.visibleNodes=[{sceneNode:n}];f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree=F.enums;
    f.nodes.get('O2N3DCutDescription').textContent=`Cut ${cut} of part 23`;f.ctx.BananeLidar.capture=opts=>L.capture(opts);
    const out=await f.call('capture',await f.call('state'));
-   assert.equal(out.readStrategy.lecture,T.tirage(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,S.pilote.lectureI1);
+   assert.equal(out.readStrategy.lecture,T.tirage(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,S.pilote.modeRapide);
  }
 });
 
@@ -62,4 +62,16 @@ test('intervalle de l\'écart : reproductible, absent sous deux valeurs',()=>{
  const a=[7000,7100,7200,7300,7400,7500],b=[6000,6100,6200,6300,6400,6500];
  assert.deepEqual(T.intervalle(a,b),T.intervalle(a,b));const i=T.intervalle(a,b);assert.ok(i.bas<-1000&&i.haut>-1000&&i.haut<0);
  assert.equal(T.intervalle([1],b),null);assert.equal(T.BRUIT_AA_PCT,7);
+});
+
+test('4.9.0.7 : vues lues au signal ou à la règle des 800 ms, poses retombées sur le recentrage, pose médiane, par mode',()=>{
+ const j=deuxVisites(),r1=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8)),r2=capture('r2',101,'reference',900,Date.UTC(2026,9,13,8,1));
+ for(const e of r1)if(e.lastStage==='capture-read')e.lastDetail.regle=e.lastDetail.side==='left'?'signal':'stabilite';
+ for(const e of r2)if(e.lastStage==='capture-read')e.lastDetail.regle='stabilite';
+ j.events.push(...r1,...r2,{type:'adapter-progress',timestamp:new Date(Date.UTC(2026,9,13,8,0,30)).toISOString(),identity:id(100),requestId:'a1',action:'apply',elapsedMs:2,lastStage:'apply-repli',lastDetail:{side:'right'}});
+ const r=T.comparer(j);
+ assert.deepEqual([r.bras.rapide.vuesAuSignal,r.bras.rapide.vuesALaStabilite,r.bras.reference.vuesAuSignal,r.bras.reference.vuesALaStabilite],[1,1,0,2]);
+ assert.deepEqual([r.bras.rapide.posesReplis,r.bras.reference.posesReplis],[1,0]);
+ assert.ok(Number.isFinite(r.bras.rapide.poseMedianeMs)&&Number.isFinite(r.bras.reference.poseMedianeMs));
+ const md=T.toMarkdown(r);assert.match(md,/Vues lues au signal \/ à la règle des 800 ms \| 0 \/ 2 \| 1 \/ 1 \|/);assert.match(md,/Poses retombées sur le recentrage \| 0 \| 1 \|/);
 });

@@ -1,5 +1,10 @@
 'use strict';
-/* V3, expérience I1 (D-078, D-087) : comparer les deux modes de lecture d'UN MÊME lot.
+/* V3, expériences I1 puis « turbo » (D-078, D-087, D-088) : comparer les deux modes d'UN MÊME lot.
+ *
+ * 4.9.0.7 : le mode « rapide » ajoute la sélection à l'image (I2), la lecture au signal de fin
+ * de chargement (I3) et la pose sans recentrage (P1). L'outil compte en plus, par mode : la
+ * durée de la pose (phase V1), les vues lues au signal ou à la règle des 800 ms, les poses
+ * retombées sur le recentrage.
  *
  * La 4.9.0.6 tire chaque cut une fois pour toutes à partir de son numéro :
  * « référence » (lecture de la 4.9.0.5) ou « rapide » (même lecteur, pause qui
@@ -39,12 +44,12 @@ function captures(events){const parRequete=new Map(),resultats=new Map();
     if(e.type==='adapter-progress'){if(!parRequete.has(e.requestId))parRequete.set(e.requestId,[]);parRequete.get(e.requestId).push(e);}
     else if(e.type==='adapter-result')resultats.set(e.requestId,e);}
   return [...parRequete].map(([requestId,etapes])=>{etapes.sort((a,b)=>a.elapsedMs-b.elapsedMs);
-    const c={requestId,cut:Number.isInteger(etapes[0].identity?.cut)?etapes[0].identity.cut:null,lecture:null,selection:[],stabilite:[],lecture_ms:[],relectures:0,points:null,
+    const c={requestId,cut:Number.isInteger(etapes[0].identity?.cut)?etapes[0].identity.cut:null,lecture:null,selection:[],stabilite:[],lecture_ms:[],relectures:0,points:null,regles:[],
       erreur:resultats.get(requestId)?.error??null,totalMs:resultats.get(requestId)?.elapsedMs??null};
     let precedent=0,attente=null,lu=null;
     for(const p of etapes){const s=p.lastStage,t=p.elapsedMs,d=p.lastDetail||{};if(d.lecture&&!c.lecture)c.lecture=d.lecture;
       if(s==='capture-wait'){if(d.attempt===1)c.selection.push(t-precedent);attente=t;}
-      else if(s==='capture-read'&&attente!==null){c.stabilite.push(t-attente);lu=t;}
+      else if(s==='capture-read'&&attente!==null){c.stabilite.push(t-attente);lu=t;if(d.regle)c.regles.push(d.regle);}
       else if(s==='capture-view-ready'&&lu!==null){c.lecture_ms.push(t-lu);precedent=t;attente=lu=null;}
       else if(s==='capture-retry')c.relectures++;
       else if(s==='capture-ready')c.points=d.points??null;}
@@ -57,19 +62,25 @@ function comparer(data,{tous=false}={}){
   const visites=m.visits.filter(v=>(tous||!batchId||v.batchId===batchId)&&Number.isInteger(v.identity?.cut));
   const evts=(data.events||[]).filter(e=>Number.isFinite(ms(e))).sort((a,b)=>ms(a)-ms(b)),caps=captures(tous||!batchId?evts:fenetre(evts,batchId));
   const regles=new Set(caps.map(c=>c.lecture).filter(Boolean));
+  /* Poses du mode rapide retombées sur le recentrage (une par rail), par cut. */
+  const replis=(tous||!batchId?evts:fenetre(evts,batchId)).filter(e=>e.type==='adapter-progress'&&e.action==='apply'&&e.lastStage==='apply-repli')
+    .map(e=>Number.isInteger(e.identity?.cut)?e.identity.cut:null);
   const controle={capturesSansMode:caps.filter(c=>!c.lecture).length,desaccords:caps.filter(c=>c.lecture&&c.cut!==null&&c.lecture!==tirage(c.cut)).length,
     modesVus:[...regles]};
   const bras={};
   for(const mode of MODES){const vs=visites.filter(v=>tirage(v.identity.cut)===mode),cy=vs.map(v=>v.activeCycleMs).filter(Number.isFinite);
     /* Mode d'une capture : celui consigné par la page ; à défaut (export d'avant la 4.9.0.6), celui du tirage. */
     const cs=caps.filter(c=>(c.lecture||(c.cut!==null?tirage(c.cut):null))===mode),ok=cs.filter(c=>!c.erreur);
+    const poses=vs.map(v=>v.phases[3]).filter(p=>p.status==='measured').map(p=>p.ms),regles=cs.flatMap(c=>c.regles);
     bras[mode]={visites:vs.length,cycles:cy.length,cycleMedianMs:median(cy),cycleP90Ms:quantile(cy,.9),
       posees:vs.filter(v=>v.phases[3].status==='measured').length,differees:vs.filter(v=>v.phases[3].reason==='deferred-without-apply').length,
       partPosee:vs.length?vs.filter(v=>v.phases[3].status==='measured').length/vs.length:null,
       captures:cs.length,capturesEnErreur:cs.length-ok.length,relectures:cs.reduce((n,c)=>n+c.relectures,0),
       captureMedianeMs:median(ok.map(c=>c.totalMs)),selectionParRailMs:median(ok.flatMap(c=>c.selection)),
       stabiliteParRailMs:median(ok.flatMap(c=>c.stabilite)),lectureParRailMs:median(ok.flatMap(c=>c.lecture_ms)),
-      lectureParRailP90Ms:quantile(ok.flatMap(c=>c.lecture_ms),.9),pointsMedian:median(ok.map(c=>c.points))};
+      lectureParRailP90Ms:quantile(ok.flatMap(c=>c.lecture_ms),.9),pointsMedian:median(ok.map(c=>c.points)),
+      poseMedianeMs:median(poses),vuesAuSignal:regles.filter(r=>r==='signal').length,vuesALaStabilite:regles.filter(r=>r==='stabilite').length,
+      posesReplis:replis.filter(c=>c===null?false:tirage(c)===mode).length};
     bras[mode]._cy=cy;}
   const a=bras.reference,b=bras.rapide,delta=a.cycleMedianMs!==null&&b.cycleMedianMs!==null?b.cycleMedianMs-a.cycleMedianMs:null;
   const ecart={cycleMs:delta,pct:delta!==null&&a.cycleMedianMs?100*delta/a.cycleMedianMs:null,intervalle95:intervalle(a._cy,b._cy),bruitAAPct:BRUIT_AA_PCT,
@@ -80,7 +91,7 @@ function comparer(data,{tous=false}={}){
 const s=x=>x===null||x===undefined?'—':(x/1000).toFixed(2).replace('.',',')+' s';
 const pc=x=>x===null||x===undefined?'—':(100*x).toFixed(1).replace('.',',')+' %';
 function toMarkdown(r){const a=r.bras.reference,b=r.bras.rapide,L=[];
-  L.push(`# V3, expérience I1 : lecture rapide contre référence (même lot)`,'',`Lot ${r.lot??'tous'} ; version ${r.version??'?'}.`,'',
+  L.push(`# V3 : mode rapide contre référence (même lot)`,'',`Lot ${r.lot??'tous'} ; version ${r.version??'?'}.`,'',
     '| Mesure | Référence | Rapide |','|---|---:|---:|',
     `| Cuts (visites) | ${a.visites} | ${b.visites} |`,`| Cycle médian (V1) | ${s(a.cycleMedianMs)} | ${s(b.cycleMedianMs)} |`,
     `| Cycle P90 | ${s(a.cycleP90Ms)} | ${s(b.cycleP90Ms)} |`,`| Part posée (C1) | ${pc(a.partPosee)} | ${pc(b.partPosee)} |`,
@@ -88,7 +99,10 @@ function toMarkdown(r){const a=r.bras.reference,b=r.bras.rapide,L=[];
     `| Relectures d'une vue | ${a.relectures} | ${b.relectures} |`,`| Capture médiane | ${s(a.captureMedianeMs)} | ${s(b.captureMedianeMs)} |`,
     `| Sélection par rail | ${s(a.selectionParRailMs)} | ${s(b.selectionParRailMs)} |`,`| Stabilité par rail | ${s(a.stabiliteParRailMs)} | ${s(b.stabiliteParRailMs)} |`,
     `| Lecture par rail (médiane / P90) | ${s(a.lectureParRailMs)} / ${s(a.lectureParRailP90Ms)} | ${s(b.lectureParRailMs)} / ${s(b.lectureParRailP90Ms)} |`,
-    `| Points par capture | ${a.pointsMedian??'—'} | ${b.pointsMedian??'—'} |`,'');
+    `| Points par capture | ${a.pointsMedian??'—'} | ${b.pointsMedian??'—'} |`,
+    `| Pose médiane (phase V1) | ${s(a.poseMedianeMs)} | ${s(b.poseMedianeMs)} |`,
+    `| Vues lues au signal / à la règle des 800 ms | ${a.vuesAuSignal} / ${a.vuesALaStabilite} | ${b.vuesAuSignal} / ${b.vuesALaStabilite} |`,
+    `| Poses retombées sur le recentrage | ${a.posesReplis} | ${b.posesReplis} |`,'');
   const e=r.ecart;
   L.push(e.cycleMs===null?'Écart du cycle médian : non mesuré.':`Écart du cycle médian (rapide − référence) : ${s(e.cycleMs)} (${e.pct.toFixed(1).replace('.',',')} %)`
     +(e.intervalle95?`, intervalle à 95 % de ${s(e.intervalle95.bas)} à ${s(e.intervalle95.haut)}`:'')+`. Bruit A/A : ${e.bruitAAPct} % ; `

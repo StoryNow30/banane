@@ -13,9 +13,9 @@ const {page}=require('./helpers/page.cjs'),F=require('./v242/fixtures.cjs');
 const S=require('../src/settings.js'),L=require('../vendor/lidar.js'),B=require('../tools/native-capture-bench.cjs');
 
 function points(rows){const n=F.object([0,0,0],'Points');n.geometry={attributes:{position:F.buffer(rows)}};return {sceneNode:n};}
-function lidarPage({lectureI1,cut=100}={}){
+function lidarPage({modeRapide,cut=100}={}){
  const marks=[],globals={scheduler:{yield:()=>{marks.push('scheduler.yield');return Promise.resolve();}}};
- if(lectureI1!==undefined)globals.BananeSettings={...S,pilote:{...S.pilote,lectureI1}};
+ if(modeRapide!==undefined)globals.BananeSettings={...S,pilote:{...S.pilote,modeRapide}};
  const f=page({globals}),pc=F.object([0,0,0],'PointCloudOctree');
  pc.material={clipBoxes:[],clipTask:0,clipMethod:0};pc.visibleNodes=[points([[0,.01,.01],[0,1.425,.01]])];
  f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree=F.enums;f.nodes.get('O2N3DCutDescription').textContent=`Cut ${cut} of part 23`;
@@ -24,8 +24,8 @@ function lidarPage({lectureI1,cut=100}={}){
 const tirage=cut=>Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';
 
 test('réglage de la version de test : tirage cut par cut, affiché dans les réglages',()=>{
- assert.equal(S.pilote.lectureI1,'tirage');
- const ligne=S.describe().find(l=>l.nom==='Lecture rapide (V3, I1)');
+ assert.equal(S.pilote.modeRapide,'tirage');
+ const ligne=S.describe().find(l=>l.nom==='Mode rapide (V3)');
  assert.ok(ligne,'ligne de réglage affichée');assert.equal(ligne.valeur,'un cut sur deux, tiré au sort');
 });
 
@@ -54,7 +54,7 @@ test('cut tiré « référence » : lecture identique à la 4.9.0.5, sans option
 
 test('réglage « reference » : aucun cut rapide ; « toujours » : tous rapides ; valeur inconnue : référence',async()=>{
  for(const [regle,cut,attendu] of [['reference',100,'reference'],['toujours',101,'rapide'],['n-importe',100,'reference'],[undefined,100,'rapide']]){
-   const f=lidarPage({lectureI1:regle,cut}),before=await f.call('state');const out=await f.call('capture',before);
+   const f=lidarPage({modeRapide:regle,cut}),before=await f.call('state');const out=await f.call('capture',before);
    assert.equal(out.readStrategy.lecture,attendu,`${regle} / cut ${cut}`);
    assert.equal(f.pauses.every(p=>attendu==='rapide'?typeof p==='function':p===undefined),true,`${regle} / cut ${cut}`);
  }

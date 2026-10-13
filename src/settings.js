@@ -100,6 +100,13 @@
      * (« rapide »). Mêmes points lus dans les deux modes ; seule la vitesse
      * change. « reference » : aucun cut rapide. « toujours » : tous rapides. */
     lectureI1: 'tirage',
+    /* D-088 (4.9.0.7, version de test) : mode « rapide », même tirage cut par cut que la 4.9.0.6.
+     * Un cut « rapide » lit sans attendre une image (I1), sélectionne sa vue au rythme des images
+     * (I2), lit dès que plus rien ne charge (I3, repli : la stabilité ci-dessus) et pose sans
+     * attendre le recentrage de la vue (P1). Un cut « référence » fait tout comme la 4.9.0.5.
+     * `rapide` : chaque pièce peut être coupée seule (false) pour isoler un effet. */
+    modeRapide: 'tirage',
+    rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true }),
   });
 
   /* --- Export : vidage automatique et segmentation --- */
@@ -246,7 +253,7 @@
       { groupe: 'Pilote', nom: 'Tentatives par vue', valeur: String(pilote.tentativesParVue), pourquoi: 'Relectures d’un rail avant abandon.' },
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
-      { groupe: 'Pilote', nom: 'Lecture rapide (V3, I1)', valeur: { tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.lectureI1] || 'aucun cut', pourquoi: 'Mesure de vitesse de la version de test : les mêmes points, lus sans attendre une image d’ESV. Le mode de chaque cut est consigné dans l’export.' },
+      { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Mesure de vitesse de la version de test : sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
