@@ -136,3 +136,12 @@ sortie ; analyse **sans agent** (D-083) ; réponse à Mic en français simple, c
    (bras par la règle du lot ; pour un lot mêlant deux règles, se fier à perf-v3, qui range chaque visite selon sa capture).
 5. **Dérive (V5)** : comparer le cycle des premiers et derniers tiers du lot, et d'un lot à l'autre quand Mic n'a pas vidé le cache entre eux.
 6. **Exports** : depuis la 4.9.0.9, chaque nuage allégé porte `exportLightening` (sondes sans information retirées ; points exacts).
+
+## 9. État de reprise au 13 octobre (soir), après D-096 — pour toute session qui reprend
+
+- **Pleins pouvoirs** de Mic jusqu'à la livraison de la 4.9 (D-096) ; **à demander** : fusion dans `main`, étiquette, publication, mise en production de la stable. Pas de PR sans demande. Économie de jetons (D-081, D-083).
+- **Test 10 livrée à Mic** (`ariane-4.9.0-test.10.zip`, SHA-256 `09c32aaf…03949`, branche `claude/49-test-10`) : fiche de départ des parties + U3 écrit. Attente du lot terrain de Mic (ligne « Départs des parties » ; validés + invalides = total).
+- **En cours** : agent B1 (modèle fort) sur `claude/49-test-11` (worktree `scratchpad/wt/T11`), mode ombre, fiche `fiches/FICHE_B1.md`. Déjà sur cette branche : correctif KI-070 (`8806f05`). Ne pas toucher T11 tant que l'agent n'a pas rendu son rapport.
+- **Ensuite** : relire le diff de l'agent, `verify`, version 4.9.0.11 (manifest, core, panel, background, pont, essais `version-test*`, consigne, paquet) ; puis retour à une coupe ; activation de B1 selon l'ombre ; version stable 4.9.0 (portes du cahier § 7 à présenter à Mic) ; 4.9.5 déclarée ; 5.0 à redéfinir avec Mic (B2, B3, apprentissage, V4, C4).
+- **Analyse d'un lot** : § 8 ci-dessus ; scripts privés `scratchpad/outils/verif-lot.cjs`, `scratchpad/lot14/parties.cjs` (fiches de départ), `scratchpad/lot14/offset.cjs` (translation monde − scène).
+- **Données** : exports privés dans `scratchpad/lot14/{u,w,y,x,v,t,s}` (jamais dans un dépôt).
