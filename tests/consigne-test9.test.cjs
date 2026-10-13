@@ -16,7 +16,7 @@ test('installation : empreinte avant la pose, par-dessus sans désinstaller, ver
 });
 test('ce que l\'opérateur verra : neuf cuts sur dix rapides, un sur dix en référence, la vue ne suit pas toujours, exports plus légers',()=>{
  const debut=texte.slice(0,texte.indexOf('## Le paquet'));
- for(const m of ['neuf cuts sur dix','Un cut sur','référence','la vue d\'ESV ne suit pas toujours','relue','2,44 s','6,73 s','40 %','micromètre','Rien de ce que la pose utilise','21,7 à 12,1 Mo'])assert.ok(debut.includes(m),m);
+ for(const m of ['neuf cuts sur dix','Un cut sur','référence','la vue d\'ESV ne suit pas toujours','relue','2,44 s','6,73 s','30 %','restent exacts','mêmes poses','21,7 à 14,6 Mo'])assert.ok(debut.includes(m),m);
 });
 test('le lot : partie neuve, 300 coupes, 600 pixels, onglet au premier plan, arrêt sur un rail déplacé à tort, lots sans vidage ; fin : vérifier avant de vider',()=>{
  const a=section('2. Le lot'),f=section('3. À la fin du lot');

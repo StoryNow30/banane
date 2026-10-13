@@ -234,37 +234,29 @@
    */
   /* D-091 (4.9.0.9) : mode « allege » (allègement A, validé par la direction le 13 octobre).
    * Sur le lot de 112 cuts de la 4.9.0.8, les nuages font 88 % du zip ; ce mode les allège
-   * d'environ 44 % sans toucher à ce que la pose, le moteur ou l'analyse utilisent :
-   *  - SONDES de diagnostic (`probes`) retirées des seuls nœuds qui n'ont retenu aucun point
-   *    (`retained === 0`) ET dont aucune sonde ne touche la zone d'intérêt (`roiHit`,
-   *    `hierarchyRoiHit`) : 2 711 nœuds sur 3 692 dans ce lot, sans information. Un nœud vide
-   *    dont une sonde touche la zone (anomalie à comprendre : 121 dans ce lot) garde ses
-   *    sondes ; un nœud sans `retained` aussi ; `nearestToRailOrigin` est toujours gardé ;
-   *  - POINTS (`pointsSceneRelative`) arrondis au micromètre : écart d'au plus 0,5 µm, quand la
-   *    précision des positions d'ESV (Float32) est au mieux de 61 µm à ces distances (244 µm
-   *    au-delà de 2 km). Intensité, classe, pointSources, visibilité : inchangés.
-   * Le nuage porte `exportLightening`, qui dit ce qui a été fait ; le nuage stocké n'est pas
+   * d'environ un tiers sans toucher à une seule valeur que la pose, le moteur ou l'analyse
+   * utilisent : il retire les SONDES de diagnostic (`probes`) des seuls nœuds qui n'ont retenu
+   * aucun point (`retained === 0`) ET dont aucune sonde ne touche la zone d'intérêt (`roiHit`,
+   * `hierarchyRoiHit`) : 2 711 nœuds sur 3 692 dans ce lot, sans information. Un nœud vide
+   * dont une sonde touche la zone (anomalie à comprendre : 121 dans ce lot) garde ses sondes ;
+   * un nœud sans `retained` aussi ; `nearestToRailOrigin` est toujours gardé. Les points, eux,
+   * restent au bit près : l'arrondi au micromètre d'abord prévu (−11 points de plus) faisait
+   * échouer, à 0,3 µm, le contrôle de rejeu exact d'acceptance-report (relecture du 13 octobre).
+   * Le nuage porte `exportLightening`, qui dit ce qui a été retiré ; le nuage stocké n'est pas
    * modifié (copie). Un nuage sans rien à alléger est rendu tel quel. */
-  const MICRO = 1e6;
   const vrai = v => v === true || (!!v && typeof v === 'object' && Object.values(v).some(x => x === true));
   const toucheLaZone = node => Array.isArray(node.probes) &&
     node.probes.some(p => !!p && typeof p === 'object' && (vrai(p.roiHit) || vrai(p.hierarchyRoiHit)));
-  const arrondi = v => typeof v === 'number' && Number.isFinite(v) ? Math.round(v * MICRO) / MICRO : v;
   function alleger(cloud) {
-    if (!cloud || typeof cloud !== 'object') return cloud;
-    let noeuds = 0, points = 0;
-    const out = { ...cloud };
-    if (Array.isArray(cloud.nodes)) out.nodes = cloud.nodes.map(node => {
+    if (!cloud || typeof cloud !== 'object' || !Array.isArray(cloud.nodes)) return cloud;
+    let noeuds = 0;
+    const nodes = cloud.nodes.map(node => {
       if (!node || typeof node !== 'object' || !('probes' in node) || node.retained !== 0 || toucheLaZone(node)) return node;
       const { probes, ...reste } = node; noeuds++; return reste;
     });
-    if (Array.isArray(cloud.pointsSceneRelative)) out.pointsSceneRelative = cloud.pointsSceneRelative.map(p => {
-      if (!Array.isArray(p)) return p; points++; return p.map(arrondi);
-    });
-    if (!noeuds && !points) return cloud;
-    out.exportLightening = { mode: 'allege', decision: 'D-091', pointsRoundedToMetres: 1 / MICRO, maxRoundingErrorMetres: 0.5 / MICRO,
-      roundedPoints: points, probesRemovedFromNodes: noeuds, probesRule: 'retained === 0 et aucune sonde roiHit ni hierarchyRoiHit' };
-    return out;
+    if (!noeuds) return cloud;
+    return { ...cloud, nodes, exportLightening: { mode: 'allege', decision: 'D-091', probesRemovedFromNodes: noeuds,
+      probesRule: 'retained === 0 et aucune sonde roiHit ni hierarchyRoiHit', pointsUnchanged: true } };
   }
   const MODES = Object.freeze({
     complet: Object.freeze({ nom: 'complet', nuage: cloud => cloud }),

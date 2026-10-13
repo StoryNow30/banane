@@ -193,9 +193,8 @@
     compact: true,
     /* V2 (D-079) : mode d'export. « complet » garde tout : intensité, classe,
      * pointSources, probes. D-091 (4.9.0.9) : « allege » (allègement A) retire les
-     * sondes des nœuds vides qui ne touchent pas la zone et arrondit les points au
-     * micromètre ; environ −44 % sur les nuages, rien de ce que la pose utilise
-     * (src/native-export.js, MODES). */
+     * sondes des nœuds vides qui ne touchent pas la zone ; points au bit près ;
+     * environ −33 % sur les nuages (src/native-export.js, MODES). */
     mode: 'allege',
     /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
      * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
@@ -264,7 +263,7 @@
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
-      { groupe: 'Export', nom: 'Allègement des nuages', valeur: exportSettings.mode === 'allege' ? 'actif (sondes sans information retirées, points au micromètre)' : 'aucun (tout est conservé)', pourquoi: 'D-091 : environ −44 % sur les nuages LiDAR du zip. Rien de ce que la pose utilise n’est retiré ; chaque nuage allégé le dit (exportLightening).' },
+      { groupe: 'Export', nom: 'Allègement des nuages', valeur: exportSettings.mode === 'allege' ? 'actif (sondes sans information retirées)' : 'aucun (tout est conservé)', pourquoi: 'D-091 : environ un tiers de moins sur les nuages LiDAR du zip. Les points restent exacts ; chaque nuage allégé le dit (exportLightening).' },
       { groupe: 'Export', nom: 'Taille de segment visée', valeur: mo(exportSettings.segmentBytes), pourquoi: 'Réserve de ' + mo(exportSettings.segmentReserveBytes) + ', plancher de ' + exportSettings.minObjectsPerSegment + ' objets.' },
       { groupe: 'Export', nom: 'Compactage', valeur: exportSettings.compact ? 'activé' : 'désactivé', pourquoi: 'Retire les champs dérivables, sans effet sur le moteur.' },
       { groupe: 'Lecteur', nom: 'Budget de lecture', valeur: exportSettings.compact === null ? '' : reader.maxMillis + ' ms', pourquoi: 'Par capture, points déjà chargés seulement.' },

@@ -1,9 +1,10 @@
 'use strict';
 /* D-091 (4.9.0.9) : allègement A des exports (mode « allege » de src/native-export.js), validé par la direction le
- * 13 octobre. Retire seulement les sondes sans information (nœud sans point retenu, aucune sonde dans la zone) et
- * arrondit les points au micromètre (écart ≤ 0,5 µm ; précision d'ESV : 61 µm au mieux). Ne modifie jamais le nuage
- * stocké ; le nuage allégé le dit. Mesure sur le lot de 112 cuts de la 4.9.0.8 : corpus 21,7 → 12,1 Mo compressés
- * (−44 %), 2 711 nœuds allégés, touches de zone des sondes inchangées (357), aucun autre champ modifié. */
+ * 13 octobre. Retire seulement les sondes sans information (nœud sans point retenu, aucune sonde dans la zone). Les points
+ * restent au bit près : l'arrondi au micromètre d'abord prévu faisait échouer le rejeu exact d'acceptance-report (9 cuts
+ * sur 112 à 0,3 µm, relecture indépendante). Ne modifie jamais le nuage stocké ; le nuage allégé le dit. Mesure sur le lot de
+ * 112 cuts de la 4.9.0.8 : corpus 21,7 → 14,6 Mo compressés (−33 %), 2 711 nœuds allégés, touches de zone des sondes
+ * inchangées (357), aucun autre champ modifié, rejeu du lot fidèle sur 112 cuts sur 112. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const X=require('../src/native-export.js'),S=require('../src/settings.js');
 const gele=o=>{if(o&&typeof o==='object'){Object.freeze(o);Object.values(o).forEach(gele);}return o;};
@@ -33,25 +34,19 @@ test('sondes retirées seulement d’un nœud sans point retenu dont aucune sond
   assert.equal(a.exportLightening.probesRemovedFromNodes,1);
 });
 
-test('points arrondis au micromètre, écart ≤ 0,5 µm, rien d’autre ne change, le nuage stocké reste intact',()=>{
-  let graine=7;const hasard=()=>{graine=(Math.imul(graine,1664525)+1013904223)>>>0;return graine/4294967296;};
-  const pts=Array.from({length:4000},(_,i)=>[(hasard()-.5)*8000,(hasard()-.5)*2,i%2?Math.fround(hasard()*30):-hasard()]);
-  const c=gele(nuage([],pts)),avant=JSON.stringify(c),a=X.alleger(c);
-  assert.equal(JSON.stringify(c),avant);
-  let ecart=0;pts.forEach((p,i)=>p.forEach((v,k)=>{ecart=Math.max(ecart,Math.abs(v-a.pointsSceneRelative[i][k]));
-    assert.equal(Math.round(a.pointsSceneRelative[i][k]*1e6),Math.round(v*1e6));}));
-  assert.ok(ecart<=5.0001e-7,`écart ${ecart}`);
-  for(const k of ['pointSources','attributes','format','captureId','nodes'])assert.deepEqual(a[k],c[k],k);
-  assert.deepEqual(a.exportLightening,{mode:'allege',decision:'D-091',pointsRoundedToMetres:1e-6,maxRoundingErrorMetres:5e-7,roundedPoints:4000,
-    probesRemovedFromNodes:0,probesRule:'retained === 0 et aucune sonde roiHit ni hierarchyRoiHit'});
-  assert.deepEqual(X.alleger(a).pointsSceneRelative,a.pointsSceneRelative,'un second passage ne change plus rien');
-  assert.ok(JSON.stringify(a.pointsSceneRelative).length<JSON.stringify(pts).length*0.7,'plus court à l’écriture');
+test('points, intensité, classe, sources : au bit près ; le nuage stocké reste intact ; la marque dit ce qui est retiré',()=>{
+  const pts=[[3481.5495554931695,1086.1717523196712,25.628759189648463],[-0.12345649999,0,1e-7]];
+  const c=gele(nuage([{id:'v',retained:0,probes:[{sourceIndex:0,roiHit:{left:false}}]}],pts)),avant=JSON.stringify(c),a=X.alleger(c);
+  assert.equal(JSON.stringify(c),avant);assert.notEqual(a,c);
+  for(const k of ['pointsSceneRelative','pointSources','attributes','format','captureId','nearest'])assert.equal(a[k],c[k],k+' : même valeur, non recopiée');
+  assert.equal(JSON.stringify(a.pointsSceneRelative),JSON.stringify(pts),'17 chiffres gardés');
+  assert.deepEqual(a.exportLightening,{mode:'allege',decision:'D-091',probesRemovedFromNodes:1,
+    probesRule:'retained === 0 et aucune sonde roiHit ni hierarchyRoiHit',pointsUnchanged:true});
+  assert.equal(X.alleger(a),a,'un second passage ne retire plus rien');
 });
 
-test('valeurs non numériques gardées ; nuage sans rien à alléger ou non objet : rendu tel quel, sans marque',()=>{
-  const a=X.alleger(nuage([],[[1.23456789,null,'x'],'pas-un-point',[Infinity,NaN,-0.0000004]]));
-  assert.deepEqual(a.pointsSceneRelative,[[1.234568,null,'x'],'pas-un-point',[Infinity,NaN,-0]]);assert.equal(a.exportLightening.roundedPoints,2);
-  const vide={format:'banane-native-lidar-chunk-v1',captureId:'z'};assert.equal(X.alleger(vide),vide);
+test('nuage sans nœud, sans rien à alléger ou non objet : rendu tel quel, sans marque',()=>{
+  const vide={format:'banane-native-lidar-chunk-v1',captureId:'z',pointsSceneRelative:[[1.23456789,2,3]]};assert.equal(X.alleger(vide),vide);
   assert.equal(X.alleger(null),null);assert.equal(X.alleger('x'),'x');
-  const plein=nuage([{id:'n',retained:2,probes:[]}],[]);assert.equal(X.alleger(plein),plein,'ni sonde à retirer ni point : même objet');
+  const plein=nuage([{id:'n',retained:2,probes:[]}]);assert.equal(X.alleger(plein),plein,'aucune sonde à retirer : même objet');
 });

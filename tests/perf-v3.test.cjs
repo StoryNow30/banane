@@ -43,7 +43,7 @@ test('deux cuts, un par mode : visites, étapes par rail et contrôle du tirage'
  assert.equal(r.bras.rapide.stabiliteParRailMs,800);assert.equal(r.bras.rapide.selectionParRailMs,300);
  assert.equal(r.bras.rapide.captures,1);assert.equal(r.bras.reference.captureMedianeMs,2*(300+800+900)+10);
  assert.equal(r.bras.rapide.partPosee,1);assert.equal(r.ecart.cycleMs,0);
- assert.deepEqual(r.controle,{capturesSansMode:0,desaccords:0,modesVus:['rapide','reference'],regle:'tirage',regleConsignee:false,reglesVues:[],etapesDateesParLaPage:0});
+ assert.deepEqual(r.controle,{capturesSansMode:0,desaccords:0,modesVus:['rapide','reference'],regle:'tirage',regleConsignee:false,reglesVues:{tirage:2},etapesDateesParLaPage:0,visitesSansCaptureConsignee:0});
  const md=T.toMarkdown(r);assert.match(md,/Lecture par rail \(médiane \/ P90\) \| 0,90 s \/ 0,90 s \| 0,30 s \/ 0,30 s/);
  assert.match(md,/Écart du cycle médian \(rapide − référence\) : 0,00 s/);assert.match(md,/0 capture\(s\) dont le mode consigné diffère du tirage/);
 });
@@ -92,8 +92,8 @@ test('4.9.0.9 : deux règles consignées dans un lot : la plus fréquente, et l�
  const j=deuxVisites(),c1=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8)),c2=capture('r2',101,'rapide',300,Date.UTC(2026,9,13,8,1)),c3=capture('r3',101,'rapide',300,Date.UTC(2026,9,13,8,2));
  const regle=(ev,nom)=>{for(const e of ev)if(e.lastStage==='capture-ready'&&e.lastDetail)e.lastDetail.regleLecture=nom;};
  regle(c1,'echantillon');regle(c2,'echantillon');regle(c3,'tirage');j.events.push(...c1,...c2,...c3);
- const r=T.comparer(j);assert.equal(r.controle.regle,'echantillon');assert.deepEqual(r.controle.reglesVues.sort(),['echantillon','tirage']);
- assert.match(T.toMarkdown(r),/ATTENTION, plusieurs règles consignées/);
+ const r=T.comparer(j);assert.equal(r.controle.regle,'echantillon');assert.deepEqual(r.controle.reglesVues,{echantillon:2,tirage:1});
+ assert.match(T.toMarkdown(r),/ATTENTION, plusieurs règles dans ces captures : echantillon \(2\), tirage \(1\)/);
  regle(c1,'inventee');regle(c2,'inventee');assert.throws(()=>T.comparer(j),/Règle de tirage inconnue de l'outil : inventee/);
 });
 
@@ -105,4 +105,15 @@ test('4.9.0.9 : étapes datées par la page : la lecture par rail est mesurée m
  assert.equal(r.bras.rapide.lectureParRailMs,300,'heure de la page');assert.equal(r.controle.etapesDateesParLaPage,1);
  const sans=deuxVisites(),c0=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8));for(const e of c0)if(e.lastStage==='capture-read')e.elapsedMs+=300;
  sans.events.push(...c0);assert.equal(T.comparer(sans).bras.rapide.lectureParRailMs,0,'sans heure de la page : l’artefact de la 4.9.0.8');
+});
+
+test('4.9.0.9 : lot mêlant deux versions (retour arrière, ou --tous) : chaque visite suit le mode consigné de sa capture, et l’alerte le dit',()=>{
+ const j=deuxVisites(),c1=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8)),c2=capture('r2',101,'reference',900,Date.UTC(2026,9,13,8,1));
+ // Cut 100 lu par une 4.9.0.9 (echantillon : rapide) ; cut 101 par une 4.9.0.8 (tirage : référence, rien de consigné sur la règle).
+ // Avec une seule règle pour le lot (« echantillon », la seule consignée), le cut 101 serait rangé à tort en rapide.
+ for(const e of c1)if(e.lastStage==='capture-ready'&&e.lastDetail)e.lastDetail.regleLecture='echantillon';j.events.push(...c1,...c2);
+ const r=T.comparer(j);
+ assert.equal(r.bras.rapide.visites,1);assert.equal(r.bras.reference.visites,1,'le cut 101 reste en référence, comme sa capture');
+ assert.equal(r.controle.desaccords,0);assert.deepEqual(r.controle.reglesVues,{echantillon:1,tirage:1});assert.equal(r.controle.visitesSansCaptureConsignee,0);
+ assert.match(T.toMarkdown(r),/ATTENTION, plusieurs règles dans ces captures/);
 });

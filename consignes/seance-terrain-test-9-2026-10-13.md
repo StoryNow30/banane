@@ -9,10 +9,10 @@ les mêmes points lus et le même écartement.
 le rail qu'Ariane pose, et c'est maintenant presque tous les cuts. La pose est relue au millimètre après chaque clic, comme avant.
 Un cut sur dix environ est plus lent : c'est un cut de référence.
 
-**Nouveau dans la test 9 : des exports plus légers.** Le zip de « Tout télécharger » pèse environ 40 % de moins. Ariane retire les sondes
-de diagnostic qui ne disent rien (nœuds sans aucun point retenu, aucune sonde dans la zone du rail) et écrit les points au micromètre
-(au lieu de 17 chiffres, pour une précision d'ESV d'au mieux 61 µm). Rien de ce que la pose utilise n'est retiré, et chaque nuage allégé
-le dit. Sur ton lot du matin, rejoué : nuages de 21,7 à 12,1 Mo, aucun autre champ modifié.
+**Nouveau dans la test 9 : des exports plus légers.** Le zip de « Tout télécharger » pèse environ 30 % de moins. Ariane retire les sondes
+de diagnostic qui ne disent rien (nœuds sans aucun point retenu, aucune sonde dans la zone du rail). Les points restent exacts au chiffre
+près, et chaque nuage allégé le dit. Sur ton lot du matin, rejoué : nuages de 21,7 à 14,6 Mo, aucun autre champ modifié, et le rejeu
+des 112 décisions donne exactement les mêmes poses.
 
 **Invisible pour toi** : chaque étape de la page porte maintenant sa propre heure, ce qui corrige la mesure de la lecture en mode rapide.
 
@@ -31,7 +31,7 @@ est dans le paquet : elle ne peut pas porter sa propre empreinte).
 4. **Recharge l'onglet ESV (F5)**, puis choisis cet onglet dans Ariane. Un seul onglet ESV.
 5. **Vérifie la version** : la carte dans `chrome://extensions` dit « 4.9.0 test 9 », le panneau dit « ARIANE 4.9.0 test 9 » et le bouton blanc sur la page ESV dit
    « Ariane 4.9.0 test 9 · ouvrir ». Dans les réglages du panneau, la ligne « Mode rapide (V3) » dit « neuf cuts sur dix (un sur dix en référence, tiré au sort) »
-   et la ligne « Allègement des nuages » dit « actif (sondes sans information retirées, points au micromètre) ». Sinon, ne lance rien et dis-le-moi.
+   et la ligne « Allègement des nuages » dit « actif (sondes sans information retirées) ». Sinon, ne lance rien et dis-le-moi.
 6. **Vide le cache seulement après ma confirmation** que tes zips précédents sont reçus et complets : « Vider le cache des exports », confirme avec OK,
    et envoie-moi le message affiché. En attendant, tu peux lancer le lot sans vider : Ariane ne ralentit plus avec l'historique.
 
@@ -73,7 +73,8 @@ Get-ChildItem "$env:USERPROFILE\Downloads\ariane-lot-*.zip" | ForEach-Object {
 ```
 
 Je mesure alors le mode rapide contre l'échantillon de référence (`node tools/perf-v3.cjs`) : temps par cut, part posée, poses,
-lectures au signal, points lus, et cette fois la lecture par rail réelle.
+lectures au signal, points lus, et cette fois la lecture par rail réelle. Chaque cut est rangé selon le mode qu'Ariane a consigné pour lui,
+même si un lot mêle deux versions.
 
 ## 4. Si quelque chose ne va pas
 
@@ -83,6 +84,6 @@ Arrête, note l'heure et le message exact, exporte et envoie-moi le zip. **Ne d�
 
 ## 5. Ce qui n'est pas vérifié
 
-L'échantillon d'un cut sur dix et l'heure des étapes : essayés hors ligne et dans la page simulée, jamais sur le vrai ESV. L'allègement : rejoué sur
+L'échantillon d'un cut sur dix et l'heure des étapes : essayés hors ligne et au banc ESV local (vrai code de page), jamais sur le vrai ESV. L'allègement : rejoué sur
 l'export de ton lot de 112 cuts, jamais produit sur ton poste. Toujours non vérifiés : Edge, Chrome et Edge avant la version 129 (lecture avec un
 repli), un vrai réseau lent ou en panne (repli prévu : l'attente de 0,8 seconde de la test 5).
