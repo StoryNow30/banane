@@ -116,3 +116,20 @@ Mode économe en tokens (D-083, 12 octobre) : analyses d'exports faites sans age
 ## 7. Observations de terrain de Mic (6 octobre, version 4.8.6), non mesurées
 
 Poste pro sous Edge : Orbite lent quand une 2e fenêtre ESV est traitée en manuel. Même poste sous Chrome : plus de lenteur. Poste perso plus puissant : Orbite très rapide. À mesurer plus tard avec V1 (même lot, Edge puis Chrome, une puis deux fenêtres). Les mesures de vitesse se comparent sur un même poste et un même navigateur.
+
+## 8. Recette d'analyse d'un lot terrain (D-091, 13 octobre) : pour toute session, quel que soit le modèle
+
+Règles : données d'export **privées**, dans le scratchpad seulement (jamais dans un dépôt) ; aucun identifiant de projet ESV dans une
+sortie ; analyse **sans agent** (D-083) ; réponse à Mic en français simple, courte, chiffres clés et décisions groupées.
+
+1. **Recoller** les morceaux envoyés par Mic (script de découpe de la consigne test 9 : `….zip.001`, `.002`, `.003`, coupure brute) :
+   `cat <nom>.zip.001 <nom>.zip.002 <nom>.zip.003 > <nom>.zip` (les fichiers reçus portent un préfixe aléatoire `xxxxxxxx-` : trier par
+   suffixe). `sha256sum <nom>.zip` doit donner la ligne SHA-256 affichée chez Mic (majuscules chez lui). Sinon : redemander le morceau.
+2. **Décompresser** dans un dossier neuf du scratchpad (`lotNN/x`), avec `unzip -q`. Contenu : journal, bilan (`ariane-bilan-v4-…-seg01.json`),
+   diagnostic, corpus en segments, `CONTENU.txt`.
+3. **Vitesse** : `node tools/perf-v3.cjs <bilan-seg01.json> --json <sortie>.json` depuis la branche `claude/49-test-9` (ou plus récente).
+   La règle du lot est lue dans le journal (4.9.0.9 : « echantillon », un cut sur dix en référence) ; avant la 4.9.0.9 : « tirage ».
+   Lecture par rail : juste depuis la 4.9.0.9 (heures de la page), à 0 s en rapide avant (artefact connu, D-090).
+4. **Qualité par bras** (écartement, reports, incidents, fin de partie) : script privé `scratchpad/outils/verif-lot.cjs <bilan-seg01.json>`.
+5. **Dérive (V5)** : comparer le cycle des premiers et derniers tiers du lot, et d'un lot à l'autre quand Mic n'a pas vidé le cache entre eux.
+6. **Exports** : depuis la 4.9.0.9, chaque nuage allégé porte `exportLightening` (sondes sans information retirées, points au micromètre).
