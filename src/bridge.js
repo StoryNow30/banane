@@ -76,10 +76,26 @@
     * commence : sans cela, après le battement « pas de séance », elle redemandait marque et résumés d'avant séance. */
    if(r&&typeof r.accept==='boolean'&&r.grace!==true)obsSeance(r.accept);
    if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
+   if(r&&r.tableListe===false)window.postMessage({kind:'banane5:config',table:false},location.origin);
   }catch{if(!(r&&r.accept===true))obs.refused=true;}}
+ /* B1 (D-095) — VOISINS DE LA LISTE DES COUPES. Le service worker demande, pour le cut décidé, une fenêtre de
+  * ±10 lignes au plus et la ligne la plus proche d'une paire de points ; l'observateur (monde principal) répond
+  * depuis la mémoire de la page. Aucune requête vers ESV. La réponse vient de la PAGE (source non fiable) : copie
+  * bornée ici (taille), relue champ par champ par le service worker ; elle ne sert qu'à l'hypothèse consignée. */
+ const B1={delaiMs:500,maxChars:16384},b1Attente=new Map();
+ function b1Demande(m,respond){
+  const p=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite)?[...v]:null,world={left:p(m.world?.left),right:p(m.world?.right)};
+  if(!Number.isInteger(m.cut)||m.cut<0||!Number.isInteger(m.fenetre)||m.fenetre<1||m.fenetre>10||!world.left||!world.right){respond({ok:false,reason:'demande-invalide'});return;}
+  const id=crypto.randomUUID(),timer=setTimeout(()=>{b1Attente.delete(id);respond({ok:false,reason:'page-sans-reponse'});},B1.delaiMs);
+  b1Attente.set(id,{respond,timer});
+  try{window.postMessage({kind:'banane5:voisins',id,cut:m.cut,fenetre:m.fenetre,world},location.origin);}catch{clearTimeout(timer);b1Attente.delete(id);respond({ok:false,reason:'pont'});}}
+ function b1Reponse(d){const w=typeof d.id==='string'?b1Attente.get(d.id):null;if(!w)return;b1Attente.delete(d.id);clearTimeout(w.timer);
+  let copie=null;try{const json=JSON.stringify(d);copie=json.length<=B1.maxChars?JSON.parse(json):{ok:false,reason:'trop-gros'};}catch{copie={ok:false,reason:'illisible'};}
+  w.respond(copie);}
  try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}
  window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin)return;
    if(e.data?.kind==='banane5:esv-observation'){relayObservation(e.data);return;}
+   if(e.data?.kind==='banane5:voisins-reponse'){b1Reponse(e.data);return;}
    if(e.data?.channel!==channel)return;
    if(e.data.kind==='banane4:manual-phase'){
      const gate=window.__banane4InputGate;if(gate){gate.phase=e.data.phase;if(e.data.phase==='FINISHED')gate.active=false;}return;
@@ -112,6 +128,7 @@
      // A delayed push may describe an earlier window set. Keep the pill absent
      // until the current background state answers this fresh read.
      launcherGeneration++;setLauncherVisible(false);void refreshLauncher();respond({ok:true});return;}
+   if(m.kind==='b1-voisins'){b1Demande(m,respond);return true;}
    if(m.kind!=='page-command'||!allowed.has(m.action))return;
    if(m.action==='manualStart'){
      const gate=window.__banane4InputGate;if(!gate){respond({error:'Recharge ESV pour activer l’enregistrement de session V4.'});return;}

@@ -35,6 +35,17 @@
  *                   requêtes ne sont pas observées, seulement comptées) ;
  *  - tout le reste (connexion, jeton, autres) : compté, jamais noté.
  *
+ * B1 (D-095) — TABLE DES COUPES, EN MÉMOIRE DE LA PAGE SEULEMENT. À la lecture d'une
+ * page de la liste d'une partie (`…/rails/<table>`), une table compacte est tenue ici,
+ * par table : clé de ligne, ordre de réception (= indice dans la liste d'ESV, donc le
+ * numéro de cut affiché « Cut N »), statut, drapeaux opérateur et bords gauche/droit
+ * (MONDE). Elle n'est jamais postée en bloc, jamais stockée, jamais accompagnée d'une
+ * URL : le pont n'en reçoit, à sa demande (`banane5:voisins`), qu'une fenêtre de ±10
+ * lignes au plus et l'indice de la ligne la plus proche d'un point donné. Les écritures
+ * de validation réussies vues ici la tiennent à jour (fraîcheur : ESV fait de même dans
+ * sa propre copie). Mémoire bornée (`tableRows` lignes, `tables` tables). Aucune requête
+ * émise, aucun en-tête lu, aucun original modifié : rien ne change pour la page.
+ *
  * Les événements du bus jQuery d'ESV (identité) ne sont pas pris ici : jQuery
  * n'existe pas encore à `document_start` (voir le rapport de la mission A). */
 (function(root,factory){'use strict';const api=factory();
@@ -42,7 +53,9 @@
  else api.install(root);
 })(typeof globalThis!=='undefined'?globalThis:this,function(){'use strict';
  const LIMITS=Object.freeze({ringEntries:256,ringChars:1048576,entryChars:4096,resourceWindowMs:250,
-  bodyKeys:24,bodyKeyChars:40,bodyStringChars:32,idChars:80,listChars:8000000,retryWindowMs:15000,listKeys:16});
+  bodyKeys:24,bodyKeyChars:40,bodyStringChars:32,idChars:80,listChars:8000000,retryWindowMs:15000,listKeys:16,
+  tableRows:40000,tables:4,rowKeyChars:40,voisinsMax:10});
+ const EDGES=['XLeftEdge','YLeftEdge','ZLeftEdge','XRightEdge','YRightEdge','ZRightEdge'],STATUS_CODE={valid:0,invalid:1,skipped:2};
  /* Classes d'URL : seul le CHEMIN compte, jamais la chaîne de requête. À
   * confirmer sur le banc ESV (mission B) avant toute conclusion. */
  const AUTH=/(^|\.)login\.microsoftonline\.com$|(^|\.)b2clogin\.com$|(^|\.)login\.live\.com$|\/oauth2\/|\/token(\/|$)|\/authorize(\/|$)|\/devicecode/i;
@@ -92,14 +105,67 @@
   }catch{return {keys:null,values:null};}
  }
  /* Page de liste : lignes et comptes par valeur de statut (texte), sans les lignes. */
- function listSummary(text){
+ function listSummary(text,sink){
   if(typeof text!=='string')return {rows:null,counts:null};
   if(text.length>LIMITS.listChars)return {rows:null,counts:null,skipped:'oversize'};
   try{const j=JSON.parse(text),rows=Array.isArray(j)?j:Array.isArray(j?.value)?j.value:null;if(!rows)return {rows:null,counts:null};
    const counts={valid:0,invalid:0,skipped:0};
    for(const r of rows){if(!r||typeof r!=='object')continue;for(const k in r){const v=r[k];if(typeof v==='string'&&STATUS_VALUES.includes(v)){counts[v]++;break;}}}
+   // B1 : la même lecture alimente la table de la page (aucun second décodage).
+   if(typeof sink==='function')try{sink(rows);}catch{}
    return {rows:rows.length,counts};
   }catch{return {rows:null,counts:null,skipped:'unreadable'};}
+ }
+ /* ------------------------------------------------ B1 : table des coupes (mémoire de la page) */
+ /* Table d'une partie : GET `…/rails/<table>` seulement (pas la question « invalides » `…/<projet>/rails`). */
+ function tableKey(url,base){
+  const u=pathOf(url,base),m=u&&/\/rails\/([^/]+)\/?$/.exec(u.path);if(!m)return null;
+  let k;try{k=decodeURIComponent(m[1]);}catch{return null;}
+  return k.length<=LIMITS.idChars&&/^[\w.+\-]+$/.test(k)?k:null;}
+ /* Première page d'une lecture : sans suite chaînée (`npk`). La chaîne de requête est lue ici, jamais notée. */
+ function firstPage(url,base){try{return !new URL(String(url),base).searchParams.has('npk');}catch{return null;}}
+ const finite=v=>typeof v==='number'&&Number.isFinite(v);
+ function newTable(debut){return {rk:[],st:[],fl:[],ed:[],idx:new Map(),pages:0,debut:debut===true,rompue:false,tronquee:false,fraiches:0};}
+ /* Une ligne par élément reçu, dans l'ordre (ESV range chaque élément de la même façon) : l'indice suit le sien. */
+ function addRows(t,rows){
+  for(const r of rows){if(t.rk.length>=LIMITS.tableRows){t.tronquee=true;return;}
+   const o=r&&typeof r==='object'?r:{},k=typeof o.RowKey==='string'&&o.RowKey.length<=LIMITS.rowKeyChars?o.RowKey:null,i=t.rk.length;
+   t.rk.push(k);if(k!==null&&!t.idx.has(k))t.idx.set(k,i);
+   t.st.push(STATUS_CODE[o.ExtractionStatus]??3);t.fl.push((o.TreatedByOperator===true?1:0)|(o.SeenByOperator===true?2:0));
+   for(const e of EDGES)t.ed.push(finite(o[e])?o[e]:NaN);}
+ }
+ /* Écriture réussie sur une ligne connue : statut, drapeaux et bords tels qu'écrits (ESV fait de même chez lui). */
+ function applyWrite(t,rk,v){
+  const i=t.idx.get(rk);if(i===undefined||!v)return null;
+  if(typeof v.ExtractionStatus==='string'){t.st[i]=STATUS_CODE[v.ExtractionStatus]??3;
+   if(v.TreatedByOperator===true)t.fl[i]|=1;if(v.SeenByOperator===true)t.fl[i]|=2;
+   const e=EDGES.map(k=>v[k]);if(e.every(finite)){for(let j=0;j<6;j++)t.ed[6*i+j]=e[j];if(!(t.fl[i]&4))t.fraiches++;t.fl[i]|=4;}}
+  else if(v.SeenByOperator===true)t.fl[i]|=2;
+  return i;
+ }
+ /* Ligne la plus proche d'une paire de points (monde), toutes tables : pire des deux rails, en mm. */
+ function nearest(tables,world){
+  let best=null,second=Infinity;
+  for(const [key,t] of tables){const n=t.rk.length;
+   for(let i=0;i<n;i++){const o=6*i;
+    const dl=Math.hypot(t.ed[o]-world.left[0],t.ed[o+1]-world.left[1],t.ed[o+2]-world.left[2]),dr=Math.hypot(t.ed[o+3]-world.right[0],t.ed[o+4]-world.right[1],t.ed[o+5]-world.right[2]),d=Math.max(dl,dr);
+    if(!(d===d))continue;
+    if(!best||d<best.d){if(best)second=Math.min(second,best.d);best={key,index:i,d};}else if(d<second)second=d;}}
+  return best?{key:best.key,index:best.index,mm:best.d*1000,secondMm:Number.isFinite(second)?second*1000:null}:null;
+ }
+ const STATUS_NAME=['valid','invalid','skipped','autre'];
+ /* Réponse au pont : résumé de la table retenue, ligne la plus proche, fenêtre de ±`fenetre` lignes autour du cut demandé. */
+ function voisins(tables,req){
+  const point=p=>Array.isArray(p)&&p.length===3&&p.every(finite)?p:null,world=req&&{left:point(req.world?.left),right:point(req.world?.right)};
+  const cut=req?.cut,w=req?.fenetre;
+  if(!Number.isInteger(cut)||cut<0||!Number.isInteger(w)||w<1||w>LIMITS.voisinsMax||!world.left||!world.right)return {ok:false,reason:'demande-invalide'};
+  if(!tables.size)return {ok:false,reason:'sans-table'};
+  const geo=nearest(tables,world);if(!geo)return {ok:false,reason:'sans-ligne'};
+  const t=tables.get(geo.key),rows=[];
+  for(let i=Math.max(0,cut-w);i<=Math.min(t.rk.length-1,cut+w);i++){const o=6*i,e=t.ed.slice(o,o+6);
+   rows.push({i,s:STATUS_NAME[t.st[i]]??'autre',t:!!(t.fl[i]&1),v:!!(t.fl[i]&2),f:!!(t.fl[i]&4),e:e.every(finite)?e:null});}
+  return {ok:true,table:{lignes:t.rk.length,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee,tables:tables.size},
+   geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows};
  }
 
  function install(win){
@@ -113,7 +179,7 @@
   const base=()=>{try{return win.location.href;}catch{return undefined;}};
   const perfNow=()=>win.performance.now(),epoch=t=>win.performance.timeOrigin+t;
   let observerId;try{observerId=win.crypto.randomUUID();}catch{observerId=String(Math.random()).slice(2)+String(Date.now());}
-  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0;const ring=[],listSums=new Map();
+  let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0,tablesOn=true;const ring=[],listSums=new Map(),tables=new Map();
   /* État de la page à l'installation : l'observateur est-il arrivé avant les scripts de la page ?
    * oui = document en cours de chargement et aucun script encore analysé ; non = déjà chargé ou des
    * scripts analysés ; inconnu (null) = document illisible : jamais deviné. */
@@ -202,14 +268,26 @@
    const common={via:'xhr',method:m.method,status,outcome,startedEpochMs:epoch(started),endedEpochMs:epoch(ended),durationMs:Math.round((ended-started)*100)/100};
    if(m.cls==='write'){
     const id=railPairId(m.url,base()),attempt=m.attempt||1;
-    record({kind:'write',urlClass:'rail-pair-write',railPairId:id,attempt,bodyKeys:body?.keys??null,body:body?.values??null,...common});
+    /* B1 : écriture réussie → la ligne de la table est mise à jour ; son indice (un nombre) est noté. */
+    let rowIndex=null;
+    if(tablesOn&&status>=200&&status<300&&id!==null&&body?.values){const k=id.lastIndexOf('/'),t=k>0?tables.get(id.slice(0,k)):null;if(t)rowIndex=applyWrite(t,id.slice(k+1),body.values);}
+    record({kind:'write',urlClass:'rail-pair-write',railPairId:id,attempt,bodyKeys:body?.keys??null,body:body?.values??null,rowIndex,...common});
    }else{
     let text=null;try{text=xhr.responseType===''||xhr.responseType==='text'?xhr.responseText:xhr.responseType==='json'&&xhr.response?JSON.stringify(xhr.response):null;}catch{}
-    const s=status>=200&&status<300?listSummary(text):{rows:null,counts:null};
+    const tk=tablesOn?tableKey(m.url,base()):null;let read=false;
+    const s=status>=200&&status<300?listSummary(text,tk===null?null:rows=>{read=true;pageInto(tk,m.url,rows);}):{rows:null,counts:null};
+    if(tk!==null&&!read)pageBroken(tk,m.url);
     const key=listKey(m.url,base()),entry={kind:'list-page',urlClass:'rail-list',listKey:key,chars:typeof text==='string'?text.length:null,basis:'row-string-values',...s,...common};
     record(entry);addListSummary(key,entry);
    }
   }
+  /* B1 : une première page ouvre une table neuve (relecture de la liste) ; une suite sans début vu ne sert jamais
+   * à l'indice (`debut:false`) ; une page illisible ou en erreur rompt la table. Au plus `LIMITS.tables` tables. */
+  function tableFor(tk,url){const first=firstPage(url,base());let t=tables.get(tk);
+   if(first===true||!t){if(t)tables.delete(tk);t=newTable(first===true);tables.set(tk,t);while(tables.size>LIMITS.tables)tables.delete(tables.keys().next().value);}
+   return t;}
+  function pageInto(tk,url,rows){const t=tableFor(tk,url);t.pages++;addRows(t,rows);}
+  function pageBroken(tk,url){const t=tableFor(tk,url);t.pages++;t.rompue=true;}
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'open',onOpen);
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'send',onSend);
 
@@ -236,11 +314,19 @@
    if(ev.source!==win||ev.origin!==origin())return;const d=ev.data;if(!d||typeof d!=='object')return;
    if(d.kind==='banane5:hello')replay(Number.isInteger(d.afterSeq)&&d.afterSeq>=0?d.afterSeq:0);
    else if(d.kind==='banane5:snapshot')snapshot(d.afterDenial===true);
-   else if(d.kind==='banane5:config')enabled=d.enabled!==false;
+   else if(d.kind==='banane5:config'){
+    if(!('table' in d)||typeof d.enabled==='boolean')enabled=d.enabled!==false;
+    // B1 : appuis de la liste coupés (réglage `appuisListe:'off'`) : la table est oubliée et n'est plus tenue.
+    if(d.table===false){tablesOn=false;tables.clear();}}
+   /* B1 : demande du pont (fenêtre de voisins et ligne la plus proche d'un point monde). Réponse bornée. */
+   else if(d.kind==='banane5:voisins'&&typeof d.id==='string'&&d.id.length<=80){
+    const r=!enabled||!tablesOn?{ok:false,reason:'coupe'}:voisins(tables,d);
+    win.postMessage({kind:'banane5:voisins-reponse',v:1,id:d.id,...r},origin());}
   }catch{}});}catch{}
 
   return {record,replay,ring:()=>ring.map(x=>JSON.parse(x.json)),setEnabled:v=>{enabled=!!v;},
-   stats:()=>({observer:observerId,seq,dropped,ringEntries:ring.length,ringChars,ignored,enabled})};
+   stats:()=>({observer:observerId,seq,dropped,ringEntries:ring.length,ringChars,ignored,enabled}),
+   tables:()=>[...tables.values()].map(t=>({lignes:t.rk.length,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee}))};
  }
- return {install,classify,isRailsPath,railPairId,listKey,writeBody,listSummary,LIMITS};
+ return {install,classify,isRailsPath,railPairId,listKey,writeBody,listSummary,tableKey,firstPage,voisins,LIMITS};
 });

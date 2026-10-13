@@ -263,7 +263,10 @@
    /* §14 I amendé (D-054) : voisins validés cohérents, en tête des appuis. */
    if(validated?.length){const kept=consistentValidated(identity,rails,validated,cfg);
      base.validatedAnchors=kept.map(a=>a.identity.cut);
-     if(kept.length)anchors=[...kept.map(a=>({identity:a.identity,positions:a.positions,stage:'validated'})),...(anchors||[])];}
+     /* B1 (D-095) : un cut à la fois validé (ligne de la liste d'ESV, tenue à jour par l'écriture) et appui posé
+      * du lot ne compte qu'une fois — sa ligne, gardée par la cohérence. */
+     const vus=new Set(kept.map(a=>a.identity.cut));
+     if(kept.length)anchors=[...kept.map(a=>({identity:a.identity,positions:a.positions,stage:'validated'})),...(anchors||[]).filter(a=>!(sameTrack(a.identity,identity)&&vus.has(a.identity.cut)))];}
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
    const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;

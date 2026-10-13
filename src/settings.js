@@ -240,6 +240,14 @@
     entreesParSeanceMax: 20000,
     caracteresParEntree: 4096,
   });
+  /* B1 (D-095) — APPUIS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
+   * 'ombre' : à chaque décision du lot, l'hypothèse « avec les voisins validés de la
+   * liste » est calculée À CÔTÉ et consignée (`b1-ombre`) ; la décision réelle, donc
+   * la pose, ne change pas. 'actif' : l'hypothèse devient la décision (dernier
+   * recours et garde de continuité du premier passage seulement). 'off' : rien,
+   * et la page oublie sa table. Livré à 'ombre' : passer à 'actif' attend le
+   * rejeu de l'ombre (justes perdus, faux ajoutés) et l'accord de la direction. */
+  const appuisListe = 'ombre';
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
@@ -260,6 +268,7 @@
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
       { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { echantillon: 'neuf cuts sur dix (un sur dix en référence, tiré au sort)', tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Les cuts de référence surveillent la qualité. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
+      { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
@@ -272,5 +281,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, derived, describe };
 });

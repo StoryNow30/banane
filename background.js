@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.10',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 10';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -71,7 +71,10 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
   * est dite en clair ; pour une capture, c'est une lecture à reprendre. */
  const trace=timing?.startRequest(action,args);
- const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args,...(trace?{traceId:trace.id}:{})}).catch(e=>{
+ const envoi=chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args,...(trace?{traceId:trace.id}:{})});
+ /* B1 (D-095) : la capture part, la page travaille ; l'hypothèse en ombre du cut précédent se conclut pendant ce temps. */
+ if(action==='capture'&&b1File.length)setTimeout(b1Vider,0);
+ const reply=await envoi.catch(e=>{
    timing?.endRequest(trace,null,e);
    if(!/maximum allowed size/i.test(e?.message||''))throw pageEsvAbsente(e);
    throw Error((action==='capture'?'Lecture LiDAR instable : ':'')+`réponse de l’adaptateur trop grosse pour un message Chrome (${action} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':''));});
@@ -189,7 +192,7 @@ function obsFields(x){
  const time={startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),durationMs:obsNum(x.durationMs)};
  switch(x.kind){
   case 'write':return {kind:'write',via:'xhr',urlClass:'rail-pair-write',method:obsStr(x.method,8),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),attempt:obsInt(x.attempt,1000),
-   railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),...time};
+   railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),rowIndex:obsInt(x.rowIndex,1e7),...time};
   case 'list-page':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
    return {kind:'list-page',via:'xhr',urlClass:'rail-list',listKey:obsKey(x.listKey),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
     skipped:['oversize','unreadable'].includes(x.skipped)?x.skipped:null,basis:'row-string-values',...time};}
@@ -227,7 +230,8 @@ function rangerObservations(m){try{
   const fields=obsFields(x);if(!fields){rejected++;continue;}
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
-  add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;}
+  add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;
+  if(fields.kind==='write')b1NoterEcriture(fields);}
  if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
  for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
  /* 4.9.0.10 (D-092) : fiche de départ de la partie (validés, invalides, total), gardée hors du cache : le vidage ne la touche pas. */
@@ -236,7 +240,7 @@ function rangerObservations(m){try{
   if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});}catch{/* la fiche n'est pas critique */}}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
- return {accept:true,stored:events.length,...(enGrace?{grace:true}:{})};
+ return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{})};
 }catch{return {accept:true,stored:0,reason:'error'};}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
@@ -797,6 +801,70 @@ function holdLotAnchor(lotObservation,command){
  lotObservation.anchorHeld=L.commandsPositions(lotObservation,command);
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
 }
+/* B1 (D-095) — VOISINS VALIDÉS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
+ * La liste vit en mémoire de la PAGE (src/esv-observer.js) ; le service worker n'en
+ * demande, par le pont, qu'une fenêtre de ±5 lignes autour du cut décidé et la ligne
+ * la plus proche de sa pose de départ (monde = scène + T). T, la translation monde −
+ * scène de la page, est mesurée ici sur les écritures de validation relevées par
+ * l'observateur (corps de l'écriture − pose corrigée d'Ariane du même cut) : elle
+ * reste en mémoire du service worker, n'est jamais consignée ni exportée, et se
+ * recalibre à la validation suivante après un redémarrage. Le journal (`b1-ombre`) ne
+ * garde que des écarts en mm, des numéros de cut et des comptes. Aucune requête vers
+ * ESV : le pont lit la mémoire de la page. */
+const b1={repere:null,sansPaire:0};
+function b1Reglage(){const v=globalThis.BananeSettings?.appuisListe;return v==='ombre'||v==='actif'?v:'off';}
+function b1NoterEcriture(f){try{const B=globalThis.BananeAppuisListe;
+ if(!B||b1Reglage()==='off'||!(f.status>=200&&f.status<300)||!Number.isInteger(f.rowIndex)||f.body?.ExtractionStatus!=='valid')return;
+ const bords=B.bordsCorps(f.body);if(!bords)return;
+ const corrige=r=>['left','right'].every(x=>Array.isArray(r?.rails?.[x]?.corrected?.positionSceneRelative));
+ const rec=(engine?.s?.records||[]).slice(-40).reverse().find(r=>r?.identity?.cut===f.rowIndex&&corrige(r));
+ if(!rec){b1.sansPaire++;return;}
+ b1.repere=B.noterRepere(b1.repere,rec.identity.frameId??null,B.mesurerT(bords,{left:rec.rails.left.corrected.positionSceneRelative,right:rec.rails.right.corrected.positionSceneRelative}));
+}catch{/* jamais bloquant */}}
+async function b1Voisins(cut,world){const B=globalThis.BananeAppuisListe;if(selectedTab===null)return {ok:false,reason:'sans-onglet'};let timer;
+ try{return await Promise.race([chrome.tabs.sendMessage(selectedTab,{kind:'b1-voisins',cut,fenetre:B.DEFAULTS.fenetre,world}),
+   new Promise(r=>{timer=setTimeout(()=>r({ok:false,reason:'delai'}),B.DEFAULTS.delaiPageMs);})]);}
+ catch{return {ok:false,reason:'page-sans-reponse'};}finally{clearTimeout(timer);}}
+/* Préparation, LÉGÈRE : repère, demande à la page (quelques millisecondes), appariement, voisins et garde de
+ * cohérence. Elle se fait au moment de la décision, avant toute écriture du cut décidé (la ligne N est encore
+ * la pose de départ d'ESV). Rend soit un événement final, soit de quoi conclure. */
+async function b1Preparer(args,d0,mode){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t0=Date.now(),id=args.capture.identity;
+ const base={mode,identity:{part:id.part??null,cut:id.cut??null},reel:B.resumeDecision(d0)};
+ try{const R=b1.repere;
+  if(!R||R.frameId!==(id.frameId??null)||!R.T)return {evenement:{...base,etat:'sans-repere',ecrituresSansPaire:b1.sansPaire}};
+  if(R.etat!=='calibre')return {evenement:{...base,etat:'repere-instable',repere:B.resumeRepere(R)}};
+  const world=Object.fromEntries(['left','right'].map(x=>[x,args.capture.rails[x].positionSceneRelative.map((v,i)=>v+R.T[i])]));
+  const rep=B.lireReponse(await b1Voisins(id.cut,world),{cut:id.cut,fenetre:B.DEFAULTS.fenetre});
+  if(!rep.ok)return {evenement:{...base,etat:'page',raison:rep.reason,repere:B.resumeRepere(R),ms:Date.now()-t0}};
+  const apparie=B.accord(rep,id.cut),validated=apparie.ok?B.appuis(rep.rows,R.T,id):[];
+  const gardes=validated.length?L.consistentValidated(id,args.capture.rails,validated).map(a=>a.identity.cut):[];
+  return {validated,regle:validated.length?B.regle(d0):'inchange',t0,evenement:{...base,etat:apparie.ok?'calcule':'desaccord',repere:B.resumeRepere(R),table:rep.table,appariement:apparie,
+   fenetre:B.compter(rep.rows,id.cut),candidats:validated.map(a=>a.identity.cut),gardes,msPage:Date.now()-t0}};
+ }catch(e){return {evenement:{...base,etat:'erreur',message:String(e?.message||e).slice(0,200)}};}}
+/* Conclusion : la décision avec les voisins, selon la règle d'emploi. Elle peut relancer le moteur depuis la voie
+ * (jusqu'à 2,5 s mesurées sur le terrain pour une reprise) : en ombre, elle attend que la page travaille. */
+function b1Conclure(prep,args,d0){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t=Date.now();
+ if(!prep.validated)return {evenement:prep.evenement};
+ try{const pol=B.politique(d0,prep.validated,v=>L.decideCut({...args,validated:v}));
+  return {decision:pol.decision,evenement:{...prep.evenement,regle:pol.regle,hypothese:pol.regle==='inchange'?null:B.resumeDecision(pol.decision),...B.comparer(d0,pol.decision),msCalcul:Date.now()-t}};}
+ catch(e){return {evenement:{...prep.evenement,etat:'erreur',message:String(e?.message||e).slice(0,200)}};}}
+/* Ombre : les conclusions lourdes attendent que la page travaille (envoi de la capture suivante), sinon 4 s. */
+const b1File=[];let b1Minuterie=null;
+function b1Planifier(f){b1File.push(f);while(b1File.length>8)try{b1File.shift()();}catch{}clearTimeout(b1Minuterie);b1Minuterie=setTimeout(b1Vider,4000);}
+function b1Vider(){clearTimeout(b1Minuterie);b1Minuterie=null;for(const f of b1File.splice(0))try{f();}catch{/* jamais bloquant */}}
+function b1Journal(ev,ctx){try{if(!ev)return;const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'b1-ombre',schema:1,...ctx,...ev})).catch(()=>{});}catch{/* le journal n'est pas critique */}}
+/* Décision réelle `d0` : rendue telle quelle en ombre (calcul différé, consigné seulement) ; en actif, remplacée par
+ * l'hypothèse quand la règle d'emploi s'applique. Une panne ici ne change jamais la décision réelle. */
+async function b1Decision(args,d0){
+ const mode=b1Reglage();if(mode==='off'||!globalThis.BananeAppuisListe)return d0;
+ const snap={...args,anchors:(args.anchors||[]).slice()},ctx={batchId:engine?.s?.batch?.id??null,sessionId:engine?.s?.sessionId??null};
+ if(mode==='ombre'){void b1Preparer(snap,d0,mode).then(prep=>{
+   if(!prep.validated||prep.regle==='inchange')b1Journal(b1Conclure(prep,snap,d0).evenement,ctx);
+   else b1Planifier(()=>b1Journal(b1Conclure(prep,snap,d0).evenement,ctx));},()=>{});
+  return d0;}
+ const r=b1Conclure(await b1Preparer(snap,d0,mode),snap,d0);b1Journal(r.evenement,ctx);
+ return r.decision&&r.decision!==d0?{...r.decision,appuisListe:{regle:r.evenement.regle,gardes:r.evenement.gardes}}:d0;}
 async function observeLot(shadow){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
  if(!L||!batch||S?.lot?.observe===false)return null;
@@ -813,8 +881,11 @@ async function observeLot(shadow){
   * cut posé est aussi gardé, en bref, pour une reprise ultérieure (`lotPosed`). */
  if(typeof L.promoteAnchors==='function')promouvoirAppuis(batch,state,batch.processed,max);
  const t0=Date.now();
- const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
-   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
+ const lotArgs={capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
+   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow};
+ /* B1 (D-095) : en ombre (réglage livré), la décision réelle est celle-ci, inchangée ; l'hypothèse « voisins de la
+  * liste d'ESV » est calculée à côté, après coup, et seulement consignée (`b1-ombre`). */
+ const decision=await b1Decision(lotArgs,L.decideCut(lotArgs));
  /* « La ligne » : l'écart de chaque cut à la voie de ses voisins (garde du
   * premier passage, ou distance à la prédiction pour une reprise ou un choix),
   * pour le profil du panneau. Borné aux cuts du lot. */
