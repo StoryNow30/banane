@@ -1,5 +1,41 @@
 # Décisions techniques
 
+## D-088 - V3 « mode rapide » : trois attentes de prudence retirées sur un cut sur deux (4.9.0.7), prouvé au banc ESV local (13 octobre 2026)
+
+**Instruction de Mic du 13 octobre 2026** : « J'ai l'impression qu'on rame vraiment sur cette mission du gain de temps […] tu dois innover, réfléchir à des solutions que
+personne n'aurait pensé, exploiter le code au mieux, trouver des failles (pour ça qu'on a fait un ESV local), cherche […] sans relâche, cette mission ne doit pas être un échec. »
+Consignée par l'orchestrateur Claude Code ; travail fait sans autre agent qu'une relecture indépendante du diff (D-081 : le code touche la pose).
+
+1. **Où part le temps** (lot du 12 octobre, 181 cuts posés, cycle médian 8,49 s) : capture 4,83 s (par rail : sélection 0,29 s, stabilité 0,85 s, lecture 1,05 à 1,11 s),
+   analyse 1,25 s, décision 0,18 s, pose 1,35 s (dont 0,65 s de recentrages), validation 1,04 s. Les attentes de prudence (sélection, 800 ms de stabilité, recentrages de la pose)
+   font environ 2,5 s par cut ; le service worker (analyse, pose, validation hors commandes ESV) environ 3 s, en dérive (V5).
+2. **Trois failles d'ESV exploitables, lues dans son code et prouvées au banc ESV local** (code d'origine d'ESV et de Potree, essai `x_turbo`) :
+   - **Pose sans recentrage (P1)** : le clic sur le canevas pose le rail du côté COURANT au point où le rayon de la caméra coupe le plan de coupe (5 × 7 m, les deux rails dedans) ;
+     ESV ne vérifie pas que ce point est dans la vue. Le bouton de rail change le côté tout de suite, la caméra ne suit qu'à l'image suivante. Un clic calculé avec la caméra active,
+     dans la même tâche, pose donc le rail visé même hors de la vue : 5 poses sur 5 sous 0,6 mm, 1 à 4 ms chacune ; l'écriture de validation porte exactement ces positions.
+   - **Sélection à l'image (I2)** : le rail demandé est dans la vue dès l'image qui suit le clic (6 sur 6), au lieu de trois sondages immobiles à 80 ms.
+   - **Signal de fin de chargement (I3)** : « aucun chargement en cours et mêmes nœuds sur deux images de suite » donne les mêmes nœuds qu'après 800 ms dans 32 vues sur 32 ;
+     il ne conclut jamais quand un bloc d'ESV reste pendu (4 sur 4) : la règle des 800 ms reste le repli.
+3. **Version de test 4.9.0.7** « 4.9.0 test 7 » = 4.9.0.6 + I2, I3, P1, sur le **même tirage cut par cut** (`pilote.modeRapide = 'tirage'`) : un cut « rapide » a les quatre pièces
+   (I1 compris), un cut « référence » fait tout comme la 4.9.0.5. Chaque pièce se coupe seule (`pilote.rapide`). Gardes : côté d'ESV relu sur la classe de son bouton avant le clic,
+   l'autre rail ne doit pas bouger (sinon arrêt, état à réconcilier), pose à 1 mm sinon recentrage comme avant ; lecture au signal contrôlée (rien ne change pendant la lecture,
+   sinon relecture à la règle des 800 ms). **Le mode rapide groupe trois changements dans un bras** : écart à la règle « une modification par version » du cahier, proposé parce que
+   le tirage cut par cut mesure le tout dans un seul lot et que chaque pièce reste isolable par réglage. **À valider par Mic.**
+4. **Preuve de bout en bout au banc** (essai `x_ariane` : le vrai code de page d'Ariane injecté dans le vrai ESV, cache de Potree vidé avant chaque coupe, latence simulée 40 et
+   120 ms par bloc, une session par mode, mêmes coupes) : **points lus identiques 12 visites sur 12** ; capture médiane 2,96 s contre 5,45 s (120 ms) et 2,25 s contre 4,66 s (40 ms) ;
+   pose 7 ms contre 655 ms ; écart des poses rapides au plus 0,64 mm. Gain au banc : environ 3 s par cut. **Non mesuré sur le vrai ESV** (carte graphique, réseau, Edge).
+5. **Relecture indépendante** (un agent, lecture seule, confrontée au code d'ESV et de Potree) : rien de bloquant. Appliqué : le signal exige aussi la même caméra et la même
+   découpe sur ses deux images (Potree choisit les nœuds avec celles de l'image précédente) ; une lecture de la scène qui échoue est réessayée à l'image suivante. Banc après
+   correction : mêmes empreintes de points 6 visites sur 6, lecture au signal sur les deux vues.
+6. **Suite proposée** : V5 (stockage incrémental, dérive du service worker) en 4.9.0.8 après la mesure de la 4.9.0.7 ; puis, selon ce que la 4.9.0.7 laissera dans
+   l'attente de chargement, préchargement des nœuds du cut suivant (I6, idée nouvelle, non essayée).
+
+Réalisé : branche `claude/49-test-7` (base `claude/49-test-6`, tête `adfcd8d`, poussée, non fusionnée), `verify` 1391 essais, 1389 réussis, 0 échec, 2 sautés (corpus natif privé absent) ;
+paquet `ariane-4.9.0-test.7.zip` (SHA-256 `f2d01aef4d4eb65d0a9f0d7a2931d975ec2d2fef7a7a65bcb6397b1cab26876a`, 1 276 335 octets, sans `tests/`) ; consigne
+`consignes/seance-terrain-test-7-2026-10-13.md` (un lot d'au moins 300 cuts, partie neuve ; la test 7 contient la test 6, qui n'a pas été essayée sur le terrain). Essais du banc privés
+(`missions/B_ESV/banc/essais/x_turbo.cjs`, `x_ariane.cjs`, hors dépôt). **Non autorisé** : fusion, étiquette, publication, production ; mode rapide hors version de test ; tout seuil ou porte du
+cahier (le regroupement de trois changements dans un bras reste une proposition jusqu'à la réponse de Mic).
+
 ## D-087 - A/A calculé sur les exports reçus ; V3 : expérience I1 tirée cut par cut (4.9.0.6) ; dérive mesurée, V5 déclenchable (13 octobre 2026)
 
 **Instructions de Mic du 12 et 13 octobre 2026** : « Tu peux lancer la suite des chantiers notamment sur celui du gain de temps » ; « Tu as eu assez d'exports pour le faire » ;
