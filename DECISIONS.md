@@ -1,5 +1,38 @@
 # Décisions techniques
 
+## D-089 - V5 : sauvegarde de l'état à taille constante (4.9.0.8) ; inventaire du poids des exports (13 octobre 2026)
+
+**Instruction de Mic du 13 octobre 2026** : « Constat confirmé sur terrain, quand on ne pouvait pas vider le cache et qu'Ariane conservait l'historique des précédents lots, au bout
+de quelques lots, Ariane devenait affreusement long à poser. […] quel que soit le poids des données, elles ne devraient pas ralentir la pose. Deuxièmement, […] poursuivre le
+développement des json contenus dans le ZIP, trouver des pistes d'allègement sans pour autant perdre en qualité et précision des données capturées. » Consignée par l'orchestrateur.
+
+1. **Cause mesurée dans un vrai Chromium** (extension de mesure, privée) : `chrome.storage.local.set` coûte environ **50 ms par Mo** (0,14 Mo : 4,5 ms ; 1,1 Mo : 57 ms ; 2,1 Mo : 133 ms ;
+   4 Mo : 220 ms ; 7,9 Mo : 470 ms ; 2 Ko : 0,6 ms). Le moteur réécrivait **tout** son état à chaque événement (une vingtaine par cut), **visites de tous les lots comprises** :
+   `s.records` n'était jamais réduit, **même après « Vider le cache des exports »** (le vidage ne touche que IndexedDB ; `background.js` le disait : « l'état du moteur, lui, garde tout »).
+   Export du 12 octobre : 235 visites = 1,6 Mo (environ 7 Ko chacune) ; quelques lots = plusieurs Mo, donc plusieurs secondes de sauvegarde par cut. Le constat de Mic est expliqué.
+2. **Version de test 4.9.0.8** « 4.9.0 test 8 » = 4.9.0.7 + V5 :
+   - une visite ou capture abandonnée dont l'écriture IndexedDB est **confirmée** n'est sauvegardée que par son identifiant, à sa place ; toute autre entrée reste recopiée (rien ne repose
+     sur une écriture non sûre) ;
+   - au démarrage, visites relues dans IndexedDB ; une visite absente a été vidée après export : retirée et comptée. **Ancien format** : les visites absentes d'IndexedDB (déjà vidées)
+     sont **archivées une fois** hors de l'état (`banane3VisitesHorsCache`), rien n'est effacé ; sans archive possible, elles restent comme avant ;
+   - les événements d'information (étapes de la page, diagnostics du pont), déjà dans IndexedDB, ne réécrivent plus l'état.
+   - `records` et `incomplete` restent écrits vides : une version antérieure (retour arrière) relit l'état sans planter ; ses ajouts sont repris à la remise à jour.
+   **Moteur ré-épinglé** (`audit/v4.6.0-engine-baseline.json`, périmètre déclaré) : `src/engine.js` change ; géométrie, GCV1 et lecteur LiDAR inchangés. **À valider par Mic.**
+   **Relecture indépendante** (un agent, lecture seule) : rien de bloquant en marche normale ; deux pertes possibles sur panne d'IndexedDB (identifiants effacés si la base est
+   illisible au démarrage ; modification perdue si une réécriture échoue), **corrigées avec essais**. **Vrai Chromium, vraie extension** : chrome.storage rend les objets clés triées
+   (défaut trouvé et corrigé) ; ancien état de 600 visites (4,3 Mo, 104 ms par sauvegarde) migré en 4,6 Ko et **0,97 ms par sauvegarde** ; 200 visites vidées archivées, 400 relues.
+3. **Inventaire du poids des exports** (export du 12 octobre, 219 Mo bruts, 54 Mo compressés) : le corpus LiDAR fait 88 % du ZIP. Dans un nuage : les nœuds 52 %, dont 85 % de **sondes
+   de diagnostic** (« for diagnostics only ») surtout sur des nœuds sans point retenu (6 nœuds sur 30 ont des points) ; les points 27 %, écrits avec 17 chiffres alors que la source
+   (Float32 de Potree) n'a qu'une précision de 61 µm ou plus à ces distances. Chiffré sur un vrai segment (11,3 Mo compressés) : sondes des nœuds sans point retirées → 7,0 Mo ;
+   + textes répétés et doublons exacts factorisés, visibilité en 0/1 → 7,0 Mo ; + points arrondis au micromètre (écart max 0,5 µm, sous le pas Float32 : rien de mesuré n'est perdu)
+   → **5,7 Mo (−49 %)** ; toutes les sondes retirées → 4,5 Mo (−60 %). **Propositions, non appliquées : décision de Mic** (les sondes sont des diagnostics du lecteur ; le lecteur
+   `vendor/lidar.js` reste gelé : l'allègement se ferait à l'export, ou à la réception dans le service worker).
+
+Réalisé : branche `claude/49-test-8` (base `claude/49-test-7`, tête `e95dbae`, poussée, non fusionnée), `verify` 1407 essais, 1405 réussis, 0 échec, 2 sautés ; paquet
+`ariane-4.9.0-test.8.zip` (SHA-256 `c58af02781c0a5a7caf81cd11e772e8e63a571d37323c0f60696d0f9bfcb53a4`, 1 283 050 octets, sans `tests/`) ; consigne `consignes/seance-terrain-test-8-2026-10-13.md`
+(un lot d'au moins 300 cuts, puis si possible un second lot sans vider le cache entre les deux ; la test 8 contient les tests 5 à 7, non essayées sur le terrain). Mesures privées
+(`scratchpad/v5/`, hors dépôt). **Non autorisé** : fusion, étiquette, publication, production ; allègement des exports (propositions du point 3) avant la décision de Mic.
+
 ## D-088 - V3 « mode rapide » : trois attentes de prudence retirées sur un cut sur deux (4.9.0.7), prouvé au banc ESV local (13 octobre 2026)
 
 **Instruction de Mic du 13 octobre 2026** : « J'ai l'impression qu'on rame vraiment sur cette mission du gain de temps […] tu dois innover, réfléchir à des solutions que
