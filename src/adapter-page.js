@@ -284,18 +284,26 @@
   * (compteur > 0) ; un nœud chargé non encore transféré l'aurait été (signature changée, deux par
   * image au plus). Repli inchangé : signature immobile pendant `stableForMs` (règle de la 4.9.0.5),
   * seule issue quand un chargement d'ESV reste pendu (un bloc en échec ne libère jamais sa place). */
+ /* Relecture indépendante : Potree choisit les nœuds avec la caméra et la découpe de l'image
+  * précédente. Les deux images du signal doivent donc aussi avoir la même caméra et la même
+  * découpe, sinon un recadrage d'ESV à cette image-là passerait inaperçu. */
+ function sceneEsv(){const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   const boites=(c.viewer.scene?.pointclouds||[]).map(pc=>(pc.material?.clipBoxes||[]).map(b=>Array.from(b?.inverse?.elements||[]).join(',')).join(';')).join('|');
+   return JSON.stringify(cam?.cameraToSceneRelative??null)+'#'+boites;}
  async function attendreChargement(guard,stableForMs){const debut=Date.now(),f0=imageEsv();
-   let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0;
+   let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0,derniere=null;
    while(Date.now()-debut<12000){
      if(cancelled)throw Error('Action interrompue.');guard();
-     const sig=loadedSignature(),f=imageEsv(),libre=chargementsEsv()===0;
+     /* Une lecture qui échoue est réessayée à l'image suivante, comme `waitFor` le faisait. */
+     let sig,vue;try{sig=loadedSignature();vue=sceneEsv();}catch(e){derniere=e;precedente=null;await prochaineImage();continue;}
+     const f=imageEsv(),libre=chargementsEsv()===0;
      if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}
      if(f!==null&&f!==imagePrecedente){images++;
-       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&sig.count>0)return {regle:'signal',images};
-       precedente={valeur:sig.value,libre};imagePrecedente=f;}
+       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)return {regle:'signal',images};
+       precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
      if(sig.count>0&&Date.now()-depuis>=stableForMs)return {regle:'stabilite',images,chargementsEnCours:chargementsEsv()};
      await prochaineImage();}
-   throw Error('Niveau de détail non stabilisé.');}
+   throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
  /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
   * que `select` (incident du cut 3560 : une caméra immobile n'est pas un rail sélectionné), au
   * rythme des images au lieu de trois sondages à 80 ms ; clic répété comme en 4.8.0 (KI-063). */

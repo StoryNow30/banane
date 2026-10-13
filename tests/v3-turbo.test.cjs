@@ -130,3 +130,18 @@ test('I2 : vue qui ne se recentre jamais sur un cut rapide : trois clics puis pa
  await assert.rejects(f.call('capture',before),e=>{assert.match(e.message,/^Lecture LiDAR instable : Vue ESV non recentrée sur le rail left\./);return true;});
  assert.equal(n,S.pilote.recentrages);
 });
+
+test('I3 (relecture) : la caméra bouge entre les deux images du signal : pas de signal sur ces deux images',async()=>{
+ const f=esv({cut:100});nuage(f);const before=await f.call('state'),cam=f.ctx.viewer.scene.getActiveCamera();
+ /* ESV recadre la vue à chaque image pendant 200 ms, puis s'arrête : le signal attend la fin du recadrage. */
+ let n=0;const tic=f.ctx.requestAnimationFrame;
+ f.ctx.requestAnimationFrame=fn=>tic(()=>{if(f.progress.some(p=>p.stage==='capture-wait')&&n++<12)cam.position={...cam.position,z:cam.position.z+1e-4*(n%2?1:-1)};fn();});
+ const out=await f.call('capture',before);
+ assert.equal(J(out.readStrategy.attempts)[0].regle,'signal');assert.ok(J(out.readStrategy.attempts)[0].images>12,'pas de signal pendant le recadrage');
+});
+
+test('I3 (relecture) : une lecture de la scène qui échoue est réessayée à l\'image suivante',async()=>{
+ const f=esv({cut:100});const pc=nuage(f);const before=await f.call('state');let pannes=3;
+ const vn=pc.visibleNodes;Object.defineProperty(pc,'visibleNodes',{configurable:true,get(){if(pannes>0){pannes--;throw Error('lecture impossible');}return vn;}});
+ const out=await f.call('capture',before);assert.equal(J(out.readStrategy.attempts)[0].status,'captured');assert.equal(pannes,0);
+});

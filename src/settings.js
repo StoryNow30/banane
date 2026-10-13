@@ -104,7 +104,8 @@
      * Un cut « rapide » lit sans attendre une image (I1), sélectionne sa vue au rythme des images
      * (I2), lit dès que plus rien ne charge (I3, repli : la stabilité ci-dessus) et pose sans
      * attendre le recentrage de la vue (P1). Un cut « référence » fait tout comme la 4.9.0.5.
-     * `rapide` : chaque pièce peut être coupée seule (false) pour isoler un effet. */
+     * `rapide` : chaque pièce peut être coupée seule (false) pour isoler un effet.
+     * `modeRapide` remplace `lectureI1` (gardé pour lire les réglages de la 4.9.0.6). */
     modeRapide: 'tirage',
     rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true }),
   });
