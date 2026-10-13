@@ -1,5 +1,18 @@
 # Décisions techniques
 
+## D-096 - Pleins pouvoirs de décision à l'orchestrateur jusqu'à la livraison de la 4.9 ; B1 accepté en lecture de la liste des coupes ; B1 lancé en mode ombre (13 octobre 2026)
+
+**Réponses de Mic du 13 octobre 2026** (consignées par l'orchestrateur) : 398/402, B1, retour à une coupe, B2, B3 et apprentissage : « ok » ; report de B2, B3 et de l'apprentissage dans la définition de la 5.0 : « ok » ;
+lecture des bords et du statut des cuts voisins dans la liste des coupes d'ESV, en lecture seule, sans rien stocker d'autre, aucune commande ni échange ajouté : « complètement ok ». Et : « Tout le reste est ok, je t'accorde
+la liberté de valider, pousser et entreprendre sans l'attente de mon accord ce que tu veux jusqu'à la livraison finale de la 4.9. Les décisions t'appartiennent. » Il laisse aussi le choix du modèle, tâche par tâche.
+
+1. **Portée de l'autonomie** : validation, poussée sur les branches de travail, lancement de chantiers et d'agents (en gardant l'économie de jetons de Mic : agents rares, relectures proportionnées, D-081, D-083), choix du
+   modèle et de l'effort. **Non couvert, à demander** : fusion dans `main`, étiquette, publication, mise en production de la version stable (règle antérieure maintenue, aucune parole de Mic ne la lève nommément) ; pas de PR sans demande.
+2. **KI-070 corrigé** (`claude/49-test-11`, `8806f05`) : `src/engine.js` (4 lignes), vrai essai (il échoue sans le correctif), baseline moteur ré-épinglée. Le correctif est dans la future 4.9.0.11, pas dans la test 10.
+3. **B1 + 398/402** : constats mesurés sur un lot réel de 125 cuts (monde − scène = translation constante) ; fiche `fiches/FICHE_B1.md` ; implémentation confiée à un agent (modèle fort, mandat borné, branche `claude/49-test-11`)
+   en **mode ombre** (réglage `appuisListe` à `ombre` : rien ne change dans les poses ; la décision hypothétique est seulement consignée) ; l'activation exigera le rejeu 398/402 et un lot terrain en ombre.
+4. **Ordre de la suite** : B1 en ombre (4.9.0.11) → retour à une coupe → activation de B1 selon l'ombre → version stable 4.9.0 → 4.9.5 déclarée. V4, B2, B3, l'apprentissage : 5.0 (D-095).
+
 ## D-095 - Périmètre de la 4.9.5 rapide ; V4 sorti de la 4.9.0 ; trois mesures publiées ; relecture ciblée du moteur V5 lancée (13 octobre 2026)
 
 **Réponse de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « Je valide tout le reste sinon », à la suite de mes recommandations : la 4.9.5 doit être rapide et efficace pour bouger sur la 5.0 (« que je vais
