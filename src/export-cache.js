@@ -186,5 +186,43 @@
   }
   async function ecrire(storage, marqueur) { await storage.set({ [CLE]: marqueur }); }
 
-  return { CLE, LOT_TERMINE, TERMINES, CAPTURES_OUVERTES, refus, reprenable, finiPourDeBon, capturesAGarder, signature, supprimer, texte, lire, ecrire };
+  /* FICHE DE DÉPART (4.9.0.10, D-092). Au démarrage d'une séance, ESV charge la liste des cuts de la partie ; l'observateur
+   * passif en compte les validés et les invalides (`list-summary`). Ces chiffres sont gardés ICI, dans une clé à part de
+   * chrome.storage.local : le vidage du cache ne la touche jamais (elle ne porte aucun nuage ni événement, quelques octets par
+   * partie), chaque export la recopie (`fichesDepart` du bilan, CONTENU.txt) et le panneau l'affiche. */
+  const CLE_DEPARTS = 'banane3FichesDepart', MAX_DEPARTS = 200;
+  const entier = v => (Number.isInteger(v) && v >= 0 && v < 1e8 ? v : null);
+  /* Une fiche depuis une observation `list-summary` d'avant séance ; null si la liste est vide ou sans comptes. */
+  function ficheDepart(obs, ctx) {
+    const c = obs && obs.kind === 'list-summary' && obs.counts && typeof obs.counts === 'object' ? obs.counts : null;
+    const valides = c ? entier(c.valid) : null, invalides = c ? entier(c.invalid) : null, lignes = entier(obs && obs.rows);
+    if (valides === null || invalides === null || !lignes) return null;
+    const at = typeof obs.timestamp === 'string' ? obs.timestamp : null, k = ctx || {};
+    return { at, batchId: typeof k.batchId === 'string' ? k.batchId : typeof obs.batchId === 'string' ? obs.batchId : null,
+      partie: entier(k.partie), version: typeof k.version === 'string' ? k.version.slice(0, 20) : null,
+      valides, invalides, ignores: entier(obs.counts.skipped), total: lignes };
+  }
+  /* Ajoute sans doublon (même lot, mêmes comptes) et borne la liste aux plus récentes. */
+  function ajouterDepart(liste, fiche) {
+    const l = Array.isArray(liste) ? liste.filter(x => x && typeof x === 'object') : [];
+    if (!fiche) return l;
+    if (l.some(x => x.batchId === fiche.batchId && x.valides === fiche.valides && x.invalides === fiche.invalides && x.total === fiche.total)) return l;
+    return [...l, fiche].slice(-MAX_DEPARTS);
+  }
+  const milliers = n => (Number.isInteger(n) ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : '?');
+  function texteDepart(f) {
+    const h = typeof f.at === 'string' ? f.at.replace('T', ' ').slice(0, 19) + ' UTC' : 'heure inconnue';
+    return `${h} · partie ${Number.isInteger(f.partie) ? f.partie : '?'} · validés ${milliers(f.valides)} · invalides ${milliers(f.invalides)} · total ${milliers(f.total)}`;
+  }
+  async function lireDeparts(storage) {
+    try { const v = (await storage.get(CLE_DEPARTS))?.[CLE_DEPARTS]; return Array.isArray(v) ? v : []; } catch (_) { return []; }
+  }
+  async function noterDepart(storage, fiche) {
+    if (!fiche) return null;
+    const avant = await lireDeparts(storage), apres = ajouterDepart(avant, fiche);
+    if (apres.length !== avant.length || apres.at(-1) !== avant.at(-1)) await storage.set({ [CLE_DEPARTS]: apres });
+    return fiche;
+  }
+
+  return { CLE, CLE_DEPARTS, ficheDepart, ajouterDepart, texteDepart, lireDeparts, noterDepart, LOT_TERMINE, TERMINES, CAPTURES_OUVERTES, refus, reprenable, finiPourDeBon, capturesAGarder, signature, supprimer, texte, lire, ecrire };
 });

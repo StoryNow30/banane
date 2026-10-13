@@ -79,7 +79,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 9',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 10',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -1191,13 +1191,15 @@ on('native-discard',async()=>{
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
    /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
    const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
+   /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
+   const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}) :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
    let zip=Z.createZip({date:maintenant}),total=0;
    const mo1=n=>(n/1048576).toFixed(1)+' Mo';
    const fermer=async final=>{if(zip.vide)return;
      const liste=zip.entrees,mode=modeDe().nom;
      await zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${maintenant.toISOString()}\n`+
        `Archive ${final&&!volumes.length?'unique':'n° '+(volumes.length+1)} : ${liste.length} fichier(s) JSON, méthode ${zip.methode}.\n`+
-       periode+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
+       periode+departs+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
        'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'],{type:'text/plain'}));
      const blob=zip.terminer(),nom=final&&!volumes.length?`${base}.zip`:`${base}-partie${String(volumes.length+1).padStart(2,'0')}.zip`;
      const f=await saveBlob(blob,nom);volumes.push({...f,entrees:liste.length,octets:blob.size});
@@ -1260,10 +1262,15 @@ on('native-discard',async()=>{
    note(bandeau?'Bandeau affiché en bas de la page ESV : il suit cette fenêtre et ne capte aucun clic.':'Bandeau retiré de la page ESV.');});
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
+ /* 4.9.0.10 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
+ async function majDeparts(){const el=$('departs-liste');if(!el)return;try{const r=await api('fiches-depart'),f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;
+  if(!f.length||!EC)return;const lignes=f.slice(-6).reverse().map(x=>EC.texteDepart(x));el.replaceChildren(...lignes.flatMap((l,i)=>i?[document.createElement('br'),document.createTextNode(l)]:[document.createTextNode(l)]));}catch{/* affichage seulement */}}
  setInterval(()=>{if(!working)void refresh();},1000);
  // Contrôle du volume pendant la collecte : peu fréquent, jamais bloquant.
  // Le suivi continue quelle que soit la vue affichée : quitter l'onglet Natif
  // ne doit pas interrompre le vidage automatique d'une session en cours.
  setInterval(()=>{if(state&&nativeActive(state)){void autoExportIfAdvised();if(which==='native')void renderHealth();}},SET()?.export.advicePollMs??5000);
+ /* Après les autres minuteries (les essais du panneau les désignent par leur rang). */
+ void majDeparts();setInterval(()=>{if(!working)void majDeparts();},5000);
  if(which==='native'){renderReglages();void renderHealth();}
 })();
