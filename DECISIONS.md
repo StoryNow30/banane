@@ -1,5 +1,10 @@
 # Décisions techniques
 
+## D-097 - Test 11 (4.9.0.11) livrée ; chantier UX lancé en session séparée (13 octobre 2026, nuit)
+
+**Décision de l'orchestrateur (pleins pouvoirs D-096).** La test 11 = test 10 + B1 en mode ombre (calculé à côté, consigné `b1-ombre`, jamais appliqué) + correctif de sauvegarde KI-070. Branche `claude/49-test-11` (286d924 + version), verify 1465 réussis / 0 échec / 2 sautés. Le travail de l'agent B1 (coupé par un redémarrage du conteneur) était déjà commité : relu par l'orchestrateur, poussé, vérifié. Paquet `ariane-4.9.0-test.11.zip`, SHA-256 `a9675f286a14fcdba2e1acf8521241ccc5dc8a734d29a1d88bd2f7f1b36c1a1c`. Activation de B1 : seulement après lecture des notes `b1-ombre` d'un lot de terrain (justes perdus, faux ajoutés).
+**Chantier UX (demande de Mic)** : la moitié basse de la vue Orbite est jugée illisible. Session dédiée (Opus 5.5), branche `claude/ux-variantes`, brief `design/ux-2026-10/BRIEF.md`, références Porsche et capture actuelle dans `design/references/ux-2026-10/` : quatre variantes, Mic choisit, puis intégration sans toucher aux identifiants du panneau. L'intégration au panneau sera rapatriée dans la ligne de test après le choix (merge des fichiers `panel.*` seulement).
+
 ## D-096 - Pleins pouvoirs de décision à l'orchestrateur jusqu'à la livraison de la 4.9 ; B1 accepté en lecture de la liste des coupes ; B1 lancé en mode ombre (13 octobre 2026)
 
 **Réponses de Mic du 13 octobre 2026** (consignées par l'orchestrateur) : 398/402, B1, retour à une coupe, B2, B3 et apprentissage : « ok » ; report de B2, B3 et de l'apprentissage dans la définition de la 5.0 : « ok » ;
