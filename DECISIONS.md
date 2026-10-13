@@ -1,5 +1,18 @@
 # Décisions techniques
 
+## D-094 - Départ d'Astra : plus d'audit d'Astra ; 4.9 bientôt délivrée, 4.9.5 à suivre (13 octobre 2026)
+
+**Déclaration de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « Astra nous quitte, nous n'aurons plus besoin de ses audits. […] Je considère que nous avons bientôt délivré la 4.9 :
+il reste seulement à aboutir et peaufiner ce qui reste à faire pour la livraison d'une version stable. Nous allons pouvoir aussi bientôt effectuer les chantiers de la 4.9.5. »
+
+1. **Audit d'Astra du diff avant toute version stable (D-061, cahier § 7) : retiré** des portes de la 4.9.0, par décision de la direction. Le texte signé du cahier n'est pas réécrit ; cette décision le remplace.
+2. **L'audit indépendant du changement de moteur (V5, `src/engine.js`, D-089, D-091 point 3)** est lié à ce départ : il n'était pas nommé « Astra » mais restait dû avant toute version stable. Le seul
+   changement de code gelé de la 4.9 est le diff de V5. **Proposition de l'orchestrateur, non décidée** : une seule relecture indépendante ciblée de ce diff (un agent, D-081, accord de Mic requis par D-083), ou l'abandon de cette
+   relecture sur décision de Mic.
+3. **Reste pour la version stable (4.9.0)** : test 10 sur une partie (fiche de départ, confirmation de la vitesse sur partie neuve, § 4) ; signature par Mic du critère D-073 (V1) ; publication des trois mesures ensemble (durée
+   totale, arrêts pour 100 cuts) ; sortie de V4 de la 4.9.0 (recommandé, en attente de Mic) ; signature des portes ; fusion, étiquette et publication : décisions de Mic, jamais faites sans lui.
+4. **4.9.5** : chantiers B1, B2, 398/402, apprentissage, retour à une coupe, un à la fois après la stable ; ordre à décider avec Mic.
+
 ## D-093 - Réponses de Mic sur U3 et lancement de la 4.9.0.10 : fiche de départ des parties, raccourcis écrits ; préchargement non inclus (13 octobre 2026)
 
 **Réponse de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « D c'est pour passer au cut de droite. Maj + espace c'est pour valider un cut. […] Tu peux lancer la 0.10. »
