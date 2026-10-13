@@ -105,8 +105,11 @@
      * (I2), lit dès que plus rien ne charge (I3, repli : la stabilité ci-dessus) et pose sans
      * attendre le recentrage de la vue (P1). Un cut « référence » fait tout comme la 4.9.0.5.
      * `rapide` : chaque pièce peut être coupée seule (false) pour isoler un effet.
-     * `modeRapide` remplace `lectureI1` (gardé pour lire les réglages de la 4.9.0.6). */
-    modeRapide: 'tirage',
+     * `modeRapide` remplace `lectureI1` (gardé pour lire les réglages de la 4.9.0.6).
+     * D-091 (4.9.0.9) : « echantillon », mode rapide sur neuf cuts sur dix ; un cut sur dix, tiré au
+     * sort d'après son numéro, reste en référence pour surveiller la qualité (validé le 13 octobre :
+     * −64 % par cut sur le lot de 112 cuts de la 4.9.0.8, qualité identique). « tirage » reste lisible. */
+    modeRapide: 'echantillon',
     rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true }),
   });
 
@@ -188,10 +191,12 @@
      * déclarée, donc un segment manquant à la fusion est signalé. */
     releaseAfterExport: true,
     compact: true,
-    /* V2 (D-079) : mode d'export. « complet » (seul mode de cette version) garde
-     * tout : intensité, classe, pointSources, probes. Un autre mode s'ajoutera
-     * dans src/native-export.js (MODES) sans toucher au flux d'écriture. */
-    mode: 'complet',
+    /* V2 (D-079) : mode d'export. « complet » garde tout : intensité, classe,
+     * pointSources, probes. D-091 (4.9.0.9) : « allege » (allègement A) retire les
+     * sondes des nœuds vides qui ne touchent pas la zone et arrondit les points au
+     * micromètre ; environ −44 % sur les nuages, rien de ce que la pose utilise
+     * (src/native-export.js, MODES). */
+    mode: 'allege',
     /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
      * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
      * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */
@@ -254,11 +259,12 @@
       { groupe: 'Pilote', nom: 'Tentatives par vue', valeur: String(pilote.tentativesParVue), pourquoi: 'Relectures d’un rail avant abandon.' },
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
-      { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Mesure de vitesse de la version de test : sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Le mode de chaque cut est consigné dans l’export.' },
+      { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { echantillon: 'neuf cuts sur dix (un sur dix en référence, tiré au sort)', tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Les cuts de référence surveillent la qualité. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
+      { groupe: 'Export', nom: 'Allègement des nuages', valeur: exportSettings.mode === 'allege' ? 'actif (sondes sans information retirées, points au micromètre)' : 'aucun (tout est conservé)', pourquoi: 'D-091 : environ −44 % sur les nuages LiDAR du zip. Rien de ce que la pose utilise n’est retiré ; chaque nuage allégé le dit (exportLightening).' },
       { groupe: 'Export', nom: 'Taille de segment visée', valeur: mo(exportSettings.segmentBytes), pourquoi: 'Réserve de ' + mo(exportSettings.segmentReserveBytes) + ', plancher de ' + exportSettings.minObjectsPerSegment + ' objets.' },
       { groupe: 'Export', nom: 'Compactage', valeur: exportSettings.compact ? 'activé' : 'désactivé', pourquoi: 'Retire les champs dérivables, sans effet sur le moteur.' },
       { groupe: 'Lecteur', nom: 'Budget de lecture', valeur: exportSettings.compact === null ? '' : reader.maxMillis + ' ms', pourquoi: 'Par capture, points déjà chargés seulement.' },

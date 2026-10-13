@@ -1,6 +1,6 @@
 {
   "version": "4.6.0",
-  "note": "Baseline moteur V4.6.0, ré-épinglée en G8.1 après correction du contrat ESV VALIDATE vers le prochain cut non validé, puis en 4.7 pour le report des unresolved GCV1, puis en 4.7 pour le garde d'ecartement de paire. audit/v4.4.0-frozen-engine-hashes.json n'est pas modifié ; les trois autres fichiers y restent gelés octet pour octet et leurs empreintes sont recopiées ci-dessous à l'identique. Le nom du fichier reste celui de la baseline ; aucun bump de version produit n'est déclaré ici. Ré-épinglée en 4.9 pour V5 (sauvegarde à taille constante, D-089).",
+  "note": "Baseline moteur V4.6.0, ré-épinglée en G8.1 après correction du contrat ESV VALIDATE vers le prochain cut non validé, puis en 4.7 pour le report des unresolved GCV1, puis en 4.7 pour le garde d'ecartement de paire. audit/v4.4.0-frozen-engine-hashes.json n'est pas modifié ; les trois autres fichiers y restent gelés octet pour octet et leurs empreintes sont recopiées ci-dessous à l'identique. Le nom du fichier reste celui de la baseline ; aucun bump de version produit n'est déclaré ici. Ré-épinglée en 4.9 pour V5 (sauvegarde à taille constante, D-089) ; changement validé par la direction le 13 octobre 2026 (D-091).",
   "historicalReference": "audit/v4.4.0-frozen-engine-hashes.json",
   "unchangedSince440": {
     "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
@@ -11,7 +11,7 @@
     "src/engine.js": "8b2d27088ead560375dd3086697cc8534d0c7d9df76c4a161220069fca01a061",
     "previousHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
     "previousHashG8": "7e0faf584cd627d1e20efe49097cc6a212dd53138f948f945a2564b30a434698",
-    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision ; 4.7 correctif Astra — D1 autorisation de dispatch, D2 borne contre STOP/PAUSE, D3 finalisation réparable ; 4.7 garde d'ecartement : refus de commander une paire hors du contrat metier ; 4.9 V5 (D-089, version de test 4.9.0.8) — sauvegarde de l'état à taille constante",
+    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision ; 4.7 correctif Astra — D1 autorisation de dispatch, D2 borne contre STOP/PAUSE, D3 finalisation réparable ; 4.7 garde d'ecartement : refus de commander une paire hors du contrat metier ; 4.9 V5 (D-089, version de test 4.9.0.8) — sauvegarde de l'état à taille constante ; validé par la direction le 13 octobre 2026 (D-091) pour toute version, de test ou stable",
     "scope": [
       "validateAndNext : la politique allowNavigationEvidence est consultée avant le refus sur relecture manquée",
       "expectedTransition : même onglet, même part et mouvement avant ; un saut exige la provenance déterministe VALIDATE_NEXT_NON_VALIDATED_CUT du bouton ESV observé",

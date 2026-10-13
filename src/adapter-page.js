@@ -177,11 +177,18 @@
   * les deux modes se mélangent tout au long du lot (pas de blocs : la vitesse dérive
   * de 19 à 22 % entre la première et la seconde moitié d'un lot). « rapide » passe
   * à `vendor/lidar.js`, inchangé, son option de pause existante ; « reference » ne
-  * lui passe rien, comme la 4.9.0.5. Réglage absent ou inconnu : référence. */
+  * lui passe rien, comme la 4.9.0.5. Réglage absent ou inconnu : référence.
+  * D-091 (4.9.0.9) : « echantillon » généralise le mode rapide et garde UN cut sur dix en
+  * référence, pour surveiller la qualité : le cut est « référence » si son hachage tombe dans
+  * le premier dixième (même hachage, lu comme une fraction). Le hachage de Fibonacci répartit
+  * ces cuts régulièrement (un tous les 8 à 13 cuts consécutifs), sans paquets. */
+ const DIXIEME=429496730; // ⌈2^32 / 10⌉
  function lectureDuCut(identity){const regle=P.modeRapide??P.lectureI1;
-   if(regle==='toujours')return 'rapide';if(regle!=='tirage')return 'reference';
+   if(regle==='toujours')return 'rapide';if(regle!=='tirage'&&regle!=='echantillon')return 'reference';
    const cut=identity?.cut;if(!Number.isInteger(cut))return 'reference';
-   return Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';}
+   const h=Math.imul(cut>>>0,2654435761)>>>0;
+   if(regle==='echantillon')return h<DIXIEME?'reference':'rapide';
+   return h>>>31?'rapide':'reference';}
  /* D-088 (4.9.0.7, version de test) : ce que le mode « rapide » change, pièce par pièce, d'après les
   * mesures du banc ESV local (13 octobre, code d'origine d'ESV) :
   *   lecture   (I1) : lire sans attendre une image d'ESV (4.9.0.6) ;
@@ -364,7 +371,7 @@
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
    const nodes=data.nodes.length,compacted=M3.compactNodes(data),bytes=M3.messageBytes(data);
    if(bytes>M3.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
-   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture});return data;
+   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture,regleLecture:data.readStrategy.regleLecture});return data;
  }
  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
   * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de
@@ -906,7 +913,12 @@
      window.postMessage({kind:'banane3:result',id,channel,error:refusEtranger()},location.origin);return;}
    if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite(action)},location.origin);return;}
    if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
-   const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
+   /* D-091 (4.9.0.9) : chaque étape porte son heure dans la page (`pageMs`, depuis la réception de
+    * la commande). Le pont horodatait à la réception du message : en mode rapide, la suite de
+    * `scheduler.yield` passe avant ce message, et la lecture d'un rail paraissait durer 0 s. */
+   const recueA=Date.now();
+   const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,
+     detail:{...(detail&&typeof detail==='object'?detail:{}),pageMs:Date.now()-recueA}},location.origin);
    /* 4.8.0 (KI-063) — ANNULATION PÉRIMÉE. Un `cancel` sans identifiant
     * d'opération est global : arrivé en retard, il coupait une requête
     * étrangère (terrain du 26/09, partie 14 : « Export interrompu. » sur un lot

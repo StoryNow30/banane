@@ -11,7 +11,10 @@ test('installation : empreinte avant la pose, par-dessus sans désinstaller, ver
  assert.ok(s.indexOf('Contrôle l\'empreinte')<s.indexOf('Pose la test 7'),'le contrôle vient avant la pose');
  for(const m of ['Get-FileHash','ariane-4.9.0-test.7.zip','Ne désinstalle rien','Recharger','4.9.0 test 7','Vider le cache des exports'])assert.ok(s.includes(m),m);
  // Le libellé et la valeur annoncés sont ceux que le panneau affiche réellement.
- const ligne=S.describe().find(l=>l.nom==='Mode rapide (V3)');assert.ok(s.includes(`« ${ligne.nom} » dit « ${ligne.valeur} »`));
+ // Le libellé est celui que le panneau affiche ; la valeur, celle qu'il affichait pour le réglage de la 4.9.0.7
+ // (« tirage ») : la 4.9.0.9 règle « echantillon » (D-091), et le panneau garde ce libellé pour « tirage ».
+ const ligne=S.describe().find(l=>l.nom==='Mode rapide (V3)');assert.ok(s.includes(`« ${ligne.nom} » dit « un cut sur deux, tiré au sort »`));
+ assert.ok(fs.readFileSync(path.resolve(__dirname,'..','src/settings.js'),'utf8').includes("tirage: 'un cut sur deux, tiré au sort'"));
 });
 test('ce que l\'opérateur verra : la vue ne suit pas toujours la pose, c\'est normal ; la test 7 contient la test 6',()=>{
  const debut=texte.slice(0,texte.indexOf('## Le paquet'));

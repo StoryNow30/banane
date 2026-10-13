@@ -98,7 +98,9 @@ async function exporter({zip=true,data=jeu(),reglages={},lectureCapricieuse=null
     getCloud:async id=>{lectures.set(id,(lectures.get(id)||0)+1);if(lectureCapricieuse?.(id,lectures.get(id)))throw Error('lecture refusée');return structuredClone(data.clouds.get(id));}};
   const diagnostic={format:'banane-gcv1-diagnostic-v1',version:'4.9.0.8',exportedAt:'2026-10-07T07:59:00.000Z',scope:'current-engine-session',sessionId:'s1',
     observationCount:data.clouds.size,observations:[...data.clouds.keys()].map((id,i)=>({observationEventId:'o'+i,lidar:{captureId:id,association:'x'},identity:{part:7,cut:100+i}}))};
-  const reglagesPanneau={...Settings,export:{...Settings.export,...reglages}};
+  /* Les essais V2 vérifient le flux d'écriture en mode « complet » (rien n'est retiré) ; le mode
+   * « allege », réglage de la 4.9.0.9 (D-091), est essayé à part, plus bas. */
+  const reglagesPanneau={...Settings,export:{...Settings.export,mode:'complet',...reglages}};
   const globals={BananeStorage3:class{constructor(){return store;}},BananeSettings:reglagesPanneau,BananeNativeExport:X,
     BananeGCV1Export:{buildDiagnostic:()=>structuredClone(diagnostic),buildCorpusPlan:GCV1.buildCorpusPlan},...(zip?{BananeZip:Z}:{})};
   const state={current:{identity:{part:7,cut:100}},batch:{state:'STOPPED',scope:{part:7,start:100,end:105},processed:[],deferred:[],skipped:[],manuallyCompleted:[],paused:[],interrupted:[],sequence:[],activeIdentity:null}};
@@ -262,14 +264,35 @@ test('ancien export (avant V2) : segments à en-tête complet et corpus à diagn
   const lot2=A.loadLot(dir,'nouveau-corpus');assert.equal(lot2.diagnostic.observationCount,5);assert.equal(lot2.corpus.clouds.length,5);
 });
 
-test('mode d’export : « complet » par défaut et conservé tel quel ; un nom inconnu est refusé',()=>{
-  assert.equal(X.MODE_DEFAUT,'complet');assert.equal(Settings.export.mode,'complet');
+test('mode d’export : « complet » repli du code et conservé tel quel ; « allege » réglé depuis la 4.9.0.9 ; un nom inconnu est refusé',()=>{
+  assert.equal(X.MODE_DEFAUT,'complet');assert.equal(Settings.export.mode,'allege');
   const c=nuage(1);assert.equal(X.exportMode().nuage(c),c,'complet : le nuage n’est ni copié ni modifié');assert.equal(X.exportMode('complet').nom,'complet');
   assert.throws(()=>X.exportMode('leger'),/Mode d’export inconnu : leger/);assert.throws(()=>X.exportMode('arrondi'),/inconnu/);
-  assert.deepEqual(Object.keys(X.MODES),['complet'],'aucun autre mode dans cette version');
+  assert.deepEqual(Object.keys(X.MODES),['complet','allege'],'aucun autre mode dans cette version');
 });
 
 test('mode inconnu dans un réglage : l’export échoue au lieu de passer en silence en « complet »',async()=>{
   const r=await exporter({reglages:{mode:'leger'},bouton:'dataset'});
   assert.equal(r.blobs.length,0);assert.match(r.p.$('notice').textContent,/Mode d’export inconnu : leger/);
+});
+
+/* D-091 (4.9.0.9) : « Tout télécharger » avec le réglage livré (mode « allege »). Chaque nuage du corpus est
+ * exactement le nuage complet passé par l'allègement ; l'en-tête le dit ; tout le reste est identique. */
+test('allègement A par le réglage livré : nuages du corpus = complet allégé, rien d’autre ne change',{skip:!PYTHON&&'python3 absent'},async()=>{
+  const prepare=()=>{const d=jeu();for(const c of d.clouds.values())c.nodes=[
+    {id:'vide',retained:0,probes:[{sourceIndex:0,roiHit:{left:false,right:false},pointSceneRelative:[1,2,3]}],nearestToRailOrigin:{left:null,right:null}},
+    {id:'vide-qui-touche',retained:0,probes:[{sourceIndex:1,roiHit:{left:false,right:true}}]},
+    {id:'plein',retained:12,probes:[{sourceIndex:2,roiHit:{left:true,right:false}}]}];return d;};
+  const complet=await exporter({data:prepare(),reglages:SEGMENT_PETIT}),allege=await exporter({data:prepare(),reglages:{...SEGMENT_PETIT,mode:Settings.export.mode}});
+  assert.equal(Settings.export.mode,'allege');
+  const D0=await documents(complet),D1=await documents(allege),corpus=l=>l.filter(d=>(d.format===X.FORMAT?d.compactedFrom:d.format)==='banane-gcv1-lidar-corpus-v1');
+  const n0=corpus(D0).flatMap(nuagesDe),n1=corpus(D1).flatMap(nuagesDe),par=l=>new Map(l.map(c=>[c.captureId,c]));
+  assert.equal(n1.length,6);const m0=par(n0);
+  for(const c of n1){assert.deepEqual(c,X.alleger(m0.get(c.captureId)),'nuage '+c.captureId);
+    assert.deepEqual(c.nodes.map(n=>[n.id,'probes' in n]),[['vide',false],['vide-qui-touche',true],['plein',true]]);
+    assert.ok('nearestToRailOrigin' in c.nodes[0],'nearestToRailOrigin gardé');assert.equal(c.exportLightening.probesRemovedFromNodes,1);}
+  for(const d of corpus(D1))assert.equal(d.exportMode,'allege');for(const d of corpus(D0))assert.equal(d.exportMode,'complet');
+  // Journal et diagnostic : identiques (les dates d'export mises à part).
+  const autres=l=>l.filter(d=>!corpus(l).includes(d)&&!(d.format===X.FORMAT)).map(d=>JSON.stringify({...d,exportedAt:null,exportMode:null}).replace(/\d{13}/g,'T'));
+  const a0=autres(D0);assert.ok(a0.length>=2,'journal et diagnostic comparés');assert.deepEqual(autres(D1),a0);
 });

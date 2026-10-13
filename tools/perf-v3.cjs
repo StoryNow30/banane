@@ -22,11 +22,26 @@
  * diffèrent de 0,4 à 1,6 % ; sur 500 autres tirages, P95 de 4 à 7 % pour un lot
  * d'au moins 150 cuts. Seuil proposé : 7 %, validé par la direction.
  *
+ * D-091 (4.9.0.9) : réglage « echantillon », un cut sur dix en référence (même hachage, premier
+ * dixième). La règle du lot est celle que la page consigne à la fin de chaque capture
+ * (`regleLecture`, depuis la 4.9.0.9) ; avant, le terrain n'a connu que le tirage. Les
+ * étapes d'une capture sont datées par la page (`pageMs`) quand elle le fait : le pont les datait
+ * à la réception du message, après la lecture en mode rapide (lecture par rail affichée à 0 s).
+ *
  * Usage : node tools/perf-v3.cjs BILAN.json [--tous] [--json SORTIE.json] [--md SORTIE.md]
  */
 const fs=require('node:fs'),zlib=require('node:zlib'),V1=require('./perf-phases.cjs');
 const BRUIT_AA_PCT=7,MODES=['reference','rapide'];
-const tirage=cut=>Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';
+const hache=cut=>Math.imul(cut>>>0,2654435761)>>>0;
+const tirage=cut=>hache(cut)>>>31?'rapide':'reference';
+/* Règles de la page (src/adapter-page.js, lectureDuCut). */
+const REGLES={tirage,echantillon:cut=>hache(cut)<429496730?'reference':'rapide',toujours:()=>'rapide',reference:()=>'reference'};
+/* Règle consignée la plus fréquente ; aucune (avant la 4.9.0.9) : « tirage ». Une règle inconnue de
+ * l'outil est refusée, jamais remplacée en silence. */
+function regleDuLot(caps){const n=new Map();for(const c of caps)if(c.regleLecture)n.set(c.regleLecture,(n.get(c.regleLecture)||0)+1);
+  const nom=n.size?[...n].sort((a,b)=>b[1]-a[1])[0][0]:'tirage';
+  if(!REGLES[nom])throw Error('Règle de tirage inconnue de l\'outil : '+nom+'.');
+  return {nom,consignee:n.size>0,reglesVues:[...n.keys()]};}
 const ms=e=>Date.parse(e.timestamp);
 function quantile(values,p){const v=values.filter(Number.isFinite).sort((a,b)=>a-b);return v.length?v[Math.min(v.length-1,Math.floor(p*(v.length-1)+0.5))]:null;}
 function median(values){const v=values.filter(Number.isFinite).sort((a,b)=>a-b);if(!v.length)return null;const m=v.length>>1;return v.length%2?v[m]:(v[m-1]+v[m])/2;}
@@ -43,16 +58,19 @@ function captures(events){const parRequete=new Map(),resultats=new Map();
   for(const e of events){if(e.action!=='capture')continue;
     if(e.type==='adapter-progress'){if(!parRequete.has(e.requestId))parRequete.set(e.requestId,[]);parRequete.get(e.requestId).push(e);}
     else if(e.type==='adapter-result')resultats.set(e.requestId,e);}
-  return [...parRequete].map(([requestId,etapes])=>{etapes.sort((a,b)=>a.elapsedMs-b.elapsedMs);
+  return [...parRequete].map(([requestId,etapes])=>{
+    /* Heure de la page si toutes les étapes la portent (4.9.0.9), sinon celle du pont. */
+    const page=etapes.every(p=>Number.isFinite(p.lastDetail?.pageMs)),heure=p=>page?p.lastDetail.pageMs:p.elapsedMs;
+    etapes.sort((a,b)=>heure(a)-heure(b));
     const c={requestId,cut:Number.isInteger(etapes[0].identity?.cut)?etapes[0].identity.cut:null,lecture:null,selection:[],stabilite:[],lecture_ms:[],relectures:0,points:null,regles:[],
-      erreur:resultats.get(requestId)?.error??null,totalMs:resultats.get(requestId)?.elapsedMs??null};
+      erreur:resultats.get(requestId)?.error??null,totalMs:resultats.get(requestId)?.elapsedMs??null,horloge:page?'page':'pont'};
     let precedent=0,attente=null,lu=null;
-    for(const p of etapes){const s=p.lastStage,t=p.elapsedMs,d=p.lastDetail||{};if(d.lecture&&!c.lecture)c.lecture=d.lecture;
+    for(const p of etapes){const s=p.lastStage,t=heure(p),d=p.lastDetail||{};if(d.lecture&&!c.lecture)c.lecture=d.lecture;
       if(s==='capture-wait'){if(d.attempt===1)c.selection.push(t-precedent);attente=t;}
       else if(s==='capture-read'&&attente!==null){c.stabilite.push(t-attente);lu=t;if(d.regle)c.regles.push(d.regle);}
       else if(s==='capture-view-ready'&&lu!==null){c.lecture_ms.push(t-lu);precedent=t;attente=lu=null;}
       else if(s==='capture-retry')c.relectures++;
-      else if(s==='capture-ready')c.points=d.points??null;}
+      else if(s==='capture-ready'){c.points=d.points??null;c.regleLecture=d.regleLecture??null;}}
     return c;});}
 
 function comparer(data,{tous=false}={}){
@@ -65,12 +83,13 @@ function comparer(data,{tous=false}={}){
   /* Poses du mode rapide retombées sur le recentrage (une par rail), par cut. */
   const replis=(tous||!batchId?evts:fenetre(evts,batchId)).filter(e=>e.type==='adapter-progress'&&e.action==='apply'&&e.lastStage==='apply-repli')
     .map(e=>Number.isInteger(e.identity?.cut)?e.identity.cut:null);
-  const controle={capturesSansMode:caps.filter(c=>!c.lecture).length,desaccords:caps.filter(c=>c.lecture&&c.cut!==null&&c.lecture!==tirage(c.cut)).length,
-    modesVus:[...regles]};
+  const regle=regleDuLot(caps),modeDe=REGLES[regle.nom];
+  const controle={capturesSansMode:caps.filter(c=>!c.lecture).length,desaccords:caps.filter(c=>c.lecture&&c.cut!==null&&c.lecture!==modeDe(c.cut)).length,
+    modesVus:[...regles],regle:regle.nom,regleConsignee:regle.consignee,reglesVues:regle.reglesVues,etapesDateesParLaPage:caps.filter(c=>c.horloge==='page').length};
   const bras={};
-  for(const mode of MODES){const vs=visites.filter(v=>tirage(v.identity.cut)===mode),cy=vs.map(v=>v.activeCycleMs).filter(Number.isFinite);
+  for(const mode of MODES){const vs=visites.filter(v=>modeDe(v.identity.cut)===mode),cy=vs.map(v=>v.activeCycleMs).filter(Number.isFinite);
     /* Mode d'une capture : celui consigné par la page ; à défaut (export d'avant la 4.9.0.6), celui du tirage. */
-    const cs=caps.filter(c=>(c.lecture||(c.cut!==null?tirage(c.cut):null))===mode),ok=cs.filter(c=>!c.erreur);
+    const cs=caps.filter(c=>(c.lecture||(c.cut!==null?modeDe(c.cut):null))===mode),ok=cs.filter(c=>!c.erreur);
     const poses=vs.map(v=>v.phases[3]).filter(p=>p.status==='measured').map(p=>p.ms),regles=cs.flatMap(c=>c.regles);
     bras[mode]={visites:vs.length,cycles:cy.length,cycleMedianMs:median(cy),cycleP90Ms:quantile(cy,.9),
       posees:vs.filter(v=>v.phases[3].status==='measured').length,differees:vs.filter(v=>v.phases[3].reason==='deferred-without-apply').length,
@@ -80,7 +99,7 @@ function comparer(data,{tous=false}={}){
       stabiliteParRailMs:median(ok.flatMap(c=>c.stabilite)),lectureParRailMs:median(ok.flatMap(c=>c.lecture_ms)),
       lectureParRailP90Ms:quantile(ok.flatMap(c=>c.lecture_ms),.9),pointsMedian:median(ok.map(c=>c.points)),
       poseMedianeMs:median(poses),vuesAuSignal:regles.filter(r=>r==='signal').length,vuesALaStabilite:regles.filter(r=>r==='stabilite').length,
-      posesReplis:replis.filter(c=>c===null?false:tirage(c)===mode).length};
+      posesReplis:replis.filter(c=>c===null?false:modeDe(c)===mode).length};
     bras[mode]._cy=cy;}
   const a=bras.reference,b=bras.rapide,delta=a.cycleMedianMs!==null&&b.cycleMedianMs!==null?b.cycleMedianMs-a.cycleMedianMs:null;
   const ecart={cycleMs:delta,pct:delta!==null&&a.cycleMedianMs?100*delta/a.cycleMedianMs:null,intervalle95:intervalle(a._cy,b._cy),bruitAAPct:BRUIT_AA_PCT,
@@ -107,7 +126,9 @@ function toMarkdown(r){const a=r.bras.reference,b=r.bras.rapide,L=[];
   L.push(e.cycleMs===null?'Écart du cycle médian : non mesuré.':`Écart du cycle médian (rapide − référence) : ${s(e.cycleMs)} (${e.pct.toFixed(1).replace('.',',')} %)`
     +(e.intervalle95?`, intervalle à 95 % de ${s(e.intervalle95.bas)} à ${s(e.intervalle95.haut)}`:'')+`. Bruit A/A : ${e.bruitAAPct} % ; `
     +(e.auDelaDuBruit?'écart au-delà du bruit.':'écart dans le bruit.'));
-  const c=r.controle;L.push('',`Contrôle du tirage : ${c.desaccords} capture(s) dont le mode consigné diffère du tirage ; ${c.capturesSansMode} capture(s) sans mode consigné`
+  const c=r.controle,nomRegle={tirage:'un cut sur deux',echantillon:'un cut sur dix en référence',toujours:'tous rapides',reference:'aucun rapide'}[c.regle]??c.regle;
+  L.push('',`Règle du lot : « ${c.regle} » (${nomRegle})${c.regleConsignee?(c.reglesVues.length>1?` ; ATTENTION, plusieurs règles consignées : ${c.reglesVues.join(', ')}`:', consignée par la page'):', déduite (export d\'avant la 4.9.0.9)'} ; étapes datées par la page : ${c.etapesDateesParLaPage??0} capture(s).`);
+  L.push('',`Contrôle du tirage : ${c.desaccords} capture(s) dont le mode consigné diffère du tirage ; ${c.capturesSansMode} capture(s) sans mode consigné`
     +(c.capturesSansMode?' (export d\'avant la 4.9.0.6 : mode recalculé par le tirage)':'')+'.');
   return L.join('\n')+'\n';}
 
@@ -118,4 +139,4 @@ function run(argv=process.argv.slice(2)){const file=argv.find((x,i)=>!x.startsWi
   if(opt('--json'))fs.writeFileSync(opt('--json'),JSON.stringify(r,null,1)+'\n');
   const md=toMarkdown(r);if(opt('--md'))fs.writeFileSync(opt('--md'),md);else process.stdout.write(md);return r;}
 if(require.main===module)try{run();}catch(e){console.error(e.message);process.exitCode=1;}
-module.exports={tirage,comparer,toMarkdown,intervalle,captures,BRUIT_AA_PCT,run};
+module.exports={tirage,REGLES,regleDuLot,comparer,toMarkdown,intervalle,captures,BRUIT_AA_PCT,run};

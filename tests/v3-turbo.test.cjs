@@ -14,7 +14,9 @@ const PROPOSALS={left:{delta:[0,.012,.003]},right:{delta:[0,-.01,.004]}};
  * elle échoit (et non quand elle est posée), une minuterie annulée ne coûte rien. */
 function esv({cut=100,pilote={},chargements=0}={}){
  const potree={framenumber:0,numNodesLoading:chargements};
- const globals={Potree:potree,...(Object.keys(pilote).length?{BananeSettings:{...S,pilote:{...S.pilote,...pilote}}}:{})};
+ /* Ces essais isolent les pièces du mode rapide d'après le tirage de la 4.9.0.7 (cut 100 rapide, cut 101 référence) ;
+  * le réglage de la 4.9.0.9 (« echantillon », D-091) est essayé dans v9-echantillon. */
+ const globals={Potree:potree,BananeSettings:{...S,pilote:{...S.pilote,modeRapide:'tirage',...pilote}}};
  const f=page({globals}),cam=f.ctx.viewer.scene.getActiveCamera(),images=[],clics=[];
  const minuteries=new Map();let numero=0,prevu=false,prochaine=16;
  const tourner=()=>{prevu=false;if(!minuteries.size)return;
@@ -40,9 +42,9 @@ function nuage(f){const F=require('./v242/fixtures.cjs'),L=require('../vendor/li
  n.geometry={attributes:{position:F.buffer([[0,.01,.01],[0,1.425,.01]])}};pc.material={clipBoxes:[],clipTask:0,clipMethod:0};pc.visibleNodes=[{sceneNode:n}];
  f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree.ClipTask=F.enums.ClipTask;f.ctx.Potree.ClipMethod=F.enums.ClipMethod;f.ctx.BananeLidar.capture=opts=>L.capture(opts);return pc;}
 
-test('réglage : mode rapide tiré cut par cut, quatre pièces actives, ligne du panneau',()=>{
- assert.equal(S.pilote.modeRapide,'tirage');assert.deepEqual({...S.pilote.rapide},{lecture:true,selection:true,signal:true,pose:true});
- const l=S.describe().find(x=>x.nom==='Mode rapide (V3)');assert.equal(l.valeur,'un cut sur deux, tiré au sort');
+test('réglage : mode rapide tiré cut par cut (neuf sur dix depuis la 4.9.0.9), quatre pièces actives, ligne du panneau',()=>{
+ assert.equal(S.pilote.modeRapide,'echantillon');assert.deepEqual({...S.pilote.rapide},{lecture:true,selection:true,signal:true,pose:true});
+ const l=S.describe().find(x=>x.nom==='Mode rapide (V3)');assert.equal(l.valeur,'neuf cuts sur dix (un sur dix en référence, tiré au sort)');
  assert.match(l.pourquoi,/mêmes contrôles, mêmes points/);
 });
 

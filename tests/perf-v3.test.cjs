@@ -22,14 +22,15 @@ function capture(requestId,cut,lecture,lu,t0){const ev=[],at=(stage,elapsedMs,la
  ev.push({type:'adapter-result',timestamp:new Date(t0+t).toISOString(),identity:id(cut),requestId,action:'capture',elapsedMs:t,acknowledged:true,lastStage:'capture-ready',error:null});
  return ev;}
 
-test('le tirage de l\'outil est celui de la page, cut par cut',async()=>{
+test('le tirage de l\'outil est celui de la page, cut par cut, pour chaque règle',async()=>{
  const S=require('../src/settings.js');
- for(let cut=100;cut<108;cut++){
-   const f=page(),pc=F.object([0,0,0],'PointCloudOctree');const n=F.object([0,0,0],'Points');n.geometry={attributes:{position:F.buffer([[0,.01,.01],[0,1.425,.01]])}};
+ for(const regle of [undefined,'tirage','echantillon','toujours','reference'])for(let cut=100;cut<108;cut++){
+   const f=page(regle?{globals:{BananeSettings:{...S,pilote:{...S.pilote,modeRapide:regle}}}}:undefined),pc=F.object([0,0,0],'PointCloudOctree');const n=F.object([0,0,0],'Points');n.geometry={attributes:{position:F.buffer([[0,.01,.01],[0,1.425,.01]])}};
    pc.material={clipBoxes:[],clipTask:0,clipMethod:0};pc.visibleNodes=[{sceneNode:n}];f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree=F.enums;
    f.nodes.get('O2N3DCutDescription').textContent=`Cut ${cut} of part 23`;f.ctx.BananeLidar.capture=opts=>L.capture(opts);
    const out=await f.call('capture',await f.call('state'));
-   assert.equal(out.readStrategy.lecture,T.tirage(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,S.pilote.modeRapide);
+   const r=regle??S.pilote.modeRapide;assert.equal(out.readStrategy.lecture,T.REGLES[r](cut),`${r} / cut ${cut}`);assert.equal(out.readStrategy.regleLecture,r);
+   assert.equal(f.progress.find(p=>p.stage==='capture-ready').detail.regleLecture,r,'règle consignée dans le journal');
  }
 });
 
@@ -42,7 +43,7 @@ test('deux cuts, un par mode : visites, étapes par rail et contrôle du tirage'
  assert.equal(r.bras.rapide.stabiliteParRailMs,800);assert.equal(r.bras.rapide.selectionParRailMs,300);
  assert.equal(r.bras.rapide.captures,1);assert.equal(r.bras.reference.captureMedianeMs,2*(300+800+900)+10);
  assert.equal(r.bras.rapide.partPosee,1);assert.equal(r.ecart.cycleMs,0);
- assert.deepEqual(r.controle,{capturesSansMode:0,desaccords:0,modesVus:['rapide','reference']});
+ assert.deepEqual(r.controle,{capturesSansMode:0,desaccords:0,modesVus:['rapide','reference'],regle:'tirage',regleConsignee:false,reglesVues:[],etapesDateesParLaPage:0});
  const md=T.toMarkdown(r);assert.match(md,/Lecture par rail \(médiane \/ P90\) \| 0,90 s \/ 0,90 s \| 0,30 s \/ 0,30 s/);
  assert.match(md,/Écart du cycle médian \(rapide − référence\) : 0,00 s/);assert.match(md,/0 capture\(s\) dont le mode consigné diffère du tirage/);
 });
@@ -74,4 +75,34 @@ test('4.9.0.7 : vues lues au signal ou à la règle des 800 ms, poses retombées
  assert.deepEqual([r.bras.rapide.posesReplis,r.bras.reference.posesReplis],[1,0]);
  assert.ok(Number.isFinite(r.bras.rapide.poseMedianeMs)&&Number.isFinite(r.bras.reference.poseMedianeMs));
  const md=T.toMarkdown(r);assert.match(md,/Vues lues au signal \/ à la règle des 800 ms \| 0 \/ 2 \| 1 \/ 1 \|/);assert.match(md,/Poses retombées sur le recentrage \| 0 \| 1 \|/);
+});
+
+/* D-091 (4.9.0.9) : règle consignée par la page, étapes datées par la page. */
+test('4.9.0.9 : règle « echantillon » consignée : les cuts 100 et 101 sont rapides, aucun désaccord, et dit',()=>{
+ const j=deuxVisites(),c1=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8)),c2=capture('r2',101,'rapide',300,Date.UTC(2026,9,13,8,1));
+ for(const e of [...c1,...c2])if(e.lastStage==='capture-ready'&&e.lastDetail)e.lastDetail.regleLecture='echantillon';j.events.push(...c1,...c2);
+ const r=T.comparer(j);assert.equal(r.controle.regle,'echantillon');assert.equal(r.controle.regleConsignee,true);assert.equal(r.controle.desaccords,0);
+ assert.equal(r.bras.rapide.visites,2);assert.equal(r.bras.reference.visites,0);assert.match(T.toMarkdown(r),/« echantillon » \(un cut sur dix en référence\), consignée par la page/);
+ // La même capture lue avec le tirage de la 4.9.0.7 : le cut 101 serait compté en désaccord.
+ for(const e of [...c1,...c2])if(e.lastStage==='capture-ready'&&e.lastDetail)delete e.lastDetail.regleLecture;
+ assert.equal(T.comparer(j).controle.desaccords,1);
+});
+
+test('4.9.0.9 : deux règles consignées dans un lot : la plus fréquente, et l’alerte ; règle inconnue : refusée',()=>{
+ const j=deuxVisites(),c1=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8)),c2=capture('r2',101,'rapide',300,Date.UTC(2026,9,13,8,1)),c3=capture('r3',101,'rapide',300,Date.UTC(2026,9,13,8,2));
+ const regle=(ev,nom)=>{for(const e of ev)if(e.lastStage==='capture-ready'&&e.lastDetail)e.lastDetail.regleLecture=nom;};
+ regle(c1,'echantillon');regle(c2,'echantillon');regle(c3,'tirage');j.events.push(...c1,...c2,...c3);
+ const r=T.comparer(j);assert.equal(r.controle.regle,'echantillon');assert.deepEqual(r.controle.reglesVues.sort(),['echantillon','tirage']);
+ assert.match(T.toMarkdown(r),/ATTENTION, plusieurs règles consignées/);
+ regle(c1,'inventee');regle(c2,'inventee');assert.throws(()=>T.comparer(j),/Règle de tirage inconnue de l'outil : inventee/);
+});
+
+test('4.9.0.9 : étapes datées par la page : la lecture par rail est mesurée même si le pont reçoit tout d’un coup',()=>{
+ const j=deuxVisites(),c=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8));
+ // Le pont reçoit la lecture et la fin de vue en même temps (mode rapide) ; la page, elle, a daté chaque étape.
+ for(const e of c)if(e.lastDetail){e.lastDetail.pageMs=e.elapsedMs-5;if(e.lastStage==='capture-read')e.elapsedMs+=300;}
+ j.events.push(...c);const r=T.comparer(j);
+ assert.equal(r.bras.rapide.lectureParRailMs,300,'heure de la page');assert.equal(r.controle.etapesDateesParLaPage,1);
+ const sans=deuxVisites(),c0=capture('r1',100,'rapide',300,Date.UTC(2026,9,13,8));for(const e of c0)if(e.lastStage==='capture-read')e.elapsedMs+=300;
+ sans.events.push(...c0);assert.equal(T.comparer(sans).bras.rapide.lectureParRailMs,0,'sans heure de la page : l’artefact de la 4.9.0.8');
 });

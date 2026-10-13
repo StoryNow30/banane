@@ -23,10 +23,10 @@ function lidarPage({modeRapide,cut=100}={}){
  return {...f,marks,pauses};}
 const tirage=cut=>Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';
 
-test('réglage de la version de test : tirage cut par cut, affiché dans les réglages',()=>{
- assert.equal(S.pilote.modeRapide,'tirage');
+test('réglage de la version de test : tirage cut par cut (« echantillon » depuis la 4.9.0.9, D-091), affiché dans les réglages',()=>{
+ assert.equal(S.pilote.modeRapide,'echantillon');
  const ligne=S.describe().find(l=>l.nom==='Mode rapide (V3)');
- assert.ok(ligne,'ligne de réglage affichée');assert.equal(ligne.valeur,'un cut sur deux, tiré au sort');
+ assert.ok(ligne,'ligne de réglage affichée');assert.equal(ligne.valeur,'neuf cuts sur dix (un sur dix en référence, tiré au sort)');
 });
 
 test('le tirage est fixe, équilibré et se refait à partir du seul numéro de cut',()=>{
@@ -36,7 +36,7 @@ test('le tirage est fixe, équilibré et se refait à partir du seul numéro de 
 });
 
 test('cut tiré « rapide » : les deux vues lisent avec la pause qui rend la main à ESV, et le mode est consigné',async()=>{
- const f=lidarPage({cut:100}),before=await f.call('state');const out=await f.call('capture',before);
+ const f=lidarPage({modeRapide:'tirage',cut:100}),before=await f.call('state');const out=await f.call('capture',before);
  assert.equal(f.pauses.length,2);assert.ok(f.pauses.every(p=>typeof p==='function'));
  assert.ok(f.marks.length>=2,'scheduler.yield appelé par la pause');
  assert.equal(out.readStrategy.lecture,'rapide');assert.equal(out.readStrategy.regleLecture,'tirage');
@@ -45,7 +45,7 @@ test('cut tiré « rapide » : les deux vues lisent avec la pause qui rend la ma
 });
 
 test('cut tiré « référence » : lecture identique à la 4.9.0.5, sans option de pause',async()=>{
- const f=lidarPage({cut:101}),before=await f.call('state');const out=await f.call('capture',before);
+ const f=lidarPage({modeRapide:'tirage',cut:101}),before=await f.call('state');const out=await f.call('capture',before);
  assert.equal(f.pauses.length,2);assert.ok(f.pauses.every(p=>p===undefined));assert.equal(f.marks.length,0);
  assert.equal(out.readStrategy.lecture,'reference');
  assert.ok(f.progress.filter(p=>p.stage==='capture-read').every(p=>p.detail.lecture==='reference'));
@@ -53,7 +53,7 @@ test('cut tiré « référence » : lecture identique à la 4.9.0.5, sans option
 });
 
 test('réglage « reference » : aucun cut rapide ; « toujours » : tous rapides ; valeur inconnue : référence',async()=>{
- for(const [regle,cut,attendu] of [['reference',100,'reference'],['toujours',101,'rapide'],['n-importe',100,'reference'],[undefined,100,'rapide']]){
+ for(const [regle,cut,attendu] of [['reference',100,'reference'],['toujours',101,'rapide'],['n-importe',100,'reference'],[undefined,100,'rapide'],[undefined,102,'reference'],['echantillon',101,'rapide']]){
    const f=lidarPage({modeRapide:regle,cut}),before=await f.call('state');const out=await f.call('capture',before);
    assert.equal(out.readStrategy.lecture,attendu,`${regle} / cut ${cut}`);
    assert.equal(f.pauses.every(p=>attendu==='rapide'?typeof p==='function':p===undefined),true,`${regle} / cut ${cut}`);

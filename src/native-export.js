@@ -226,15 +226,49 @@
 
   /* --- Ariane 4.9 (V2, D-079) : modes d'export et en-tête écrit une seule fois ---
    *
-   * MODE. `mode: 'complet'` est le mode de cette version : intensité, classe,
-   * pointSources, probes, tout est conservé. Le paramètre existe pour qu'un
-   * autre mode (plus léger) puisse s'ajouter plus tard SANS toucher au flux
-   * d'écriture : un mode est un objet { nom, nuage(cloud) }, où `nuage` rend le
-   * nuage à écrire. Aucun autre mode n'est défini ici, et un nom inconnu est
-   * REFUSÉ (jamais remplacé en silence par « complet »).
+   * MODE. `mode: 'complet'` : intensité, classe, pointSources, probes, tout est
+   * conservé. Un mode est un objet { nom, nuage(cloud) }, où `nuage` rend le
+   * nuage à écrire, SANS toucher au flux d'écriture. Depuis la 4.9.0.9 (D-091),
+   * le réglage choisit « allege » (ci-dessous) ; « complet » reste le repli
+   * du code. Un nom inconnu est REFUSÉ (jamais remplacé en silence).
    */
+  /* D-091 (4.9.0.9) : mode « allege » (allègement A, validé par la direction le 13 octobre).
+   * Sur le lot de 112 cuts de la 4.9.0.8, les nuages font 88 % du zip ; ce mode les allège
+   * d'environ 44 % sans toucher à ce que la pose, le moteur ou l'analyse utilisent :
+   *  - SONDES de diagnostic (`probes`) retirées des seuls nœuds qui n'ont retenu aucun point
+   *    (`retained === 0`) ET dont aucune sonde ne touche la zone d'intérêt (`roiHit`,
+   *    `hierarchyRoiHit`) : 2 711 nœuds sur 3 692 dans ce lot, sans information. Un nœud vide
+   *    dont une sonde touche la zone (anomalie à comprendre : 121 dans ce lot) garde ses
+   *    sondes ; un nœud sans `retained` aussi ; `nearestToRailOrigin` est toujours gardé ;
+   *  - POINTS (`pointsSceneRelative`) arrondis au micromètre : écart d'au plus 0,5 µm, quand la
+   *    précision des positions d'ESV (Float32) est au mieux de 61 µm à ces distances (244 µm
+   *    au-delà de 2 km). Intensité, classe, pointSources, visibilité : inchangés.
+   * Le nuage porte `exportLightening`, qui dit ce qui a été fait ; le nuage stocké n'est pas
+   * modifié (copie). Un nuage sans rien à alléger est rendu tel quel. */
+  const MICRO = 1e6;
+  const vrai = v => v === true || (!!v && typeof v === 'object' && Object.values(v).some(x => x === true));
+  const toucheLaZone = node => Array.isArray(node.probes) &&
+    node.probes.some(p => !!p && typeof p === 'object' && (vrai(p.roiHit) || vrai(p.hierarchyRoiHit)));
+  const arrondi = v => typeof v === 'number' && Number.isFinite(v) ? Math.round(v * MICRO) / MICRO : v;
+  function alleger(cloud) {
+    if (!cloud || typeof cloud !== 'object') return cloud;
+    let noeuds = 0, points = 0;
+    const out = { ...cloud };
+    if (Array.isArray(cloud.nodes)) out.nodes = cloud.nodes.map(node => {
+      if (!node || typeof node !== 'object' || !('probes' in node) || node.retained !== 0 || toucheLaZone(node)) return node;
+      const { probes, ...reste } = node; noeuds++; return reste;
+    });
+    if (Array.isArray(cloud.pointsSceneRelative)) out.pointsSceneRelative = cloud.pointsSceneRelative.map(p => {
+      if (!Array.isArray(p)) return p; points++; return p.map(arrondi);
+    });
+    if (!noeuds && !points) return cloud;
+    out.exportLightening = { mode: 'allege', decision: 'D-091', pointsRoundedToMetres: 1 / MICRO, maxRoundingErrorMetres: 0.5 / MICRO,
+      roundedPoints: points, probesRemovedFromNodes: noeuds, probesRule: 'retained === 0 et aucune sonde roiHit ni hierarchyRoiHit' };
+    return out;
+  }
   const MODES = Object.freeze({
     complet: Object.freeze({ nom: 'complet', nuage: cloud => cloud }),
+    allege: Object.freeze({ nom: 'allege', nuage: alleger }),
   });
   const MODE_DEFAUT = 'complet';
   function exportMode(nom) {
@@ -263,5 +297,5 @@
     return out;
   }
 
-  return { FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
+  return { FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, alleger, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
 });
