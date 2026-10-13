@@ -66,7 +66,8 @@ lectures au signal, points lus.
 
 Arrête, note l'heure et le message exact, exporte et envoie-moi le zip. **Ne désinstalle pas Ariane** (ça efface le cache). Retour arrière : exporte, vérifie et envoie le zip, puis
 **désactive** la test 8 (interrupteur dans `chrome://extensions`, sans la supprimer) et pose la 4.9.0.5 (`ariane-4.9.0-test.5.zip`, SHA-256
-`77dfb592323f02f8c9dcd2897c344750b488db1c43c41a39721059627630d3fc`), puis F5 sur ESV.
+`77dfb592323f02f8c9dcd2897c344750b488db1c43c41a39721059627630d3fc`), puis F5 sur ESV. Après la test 8, la 4.9.0.5 démarre avec
+une liste de visites vide dans son panneau : c'est normal, les visites restent dans le cache des exports et dans le prochain export.
 
 ## 5. Ce qui n'est pas vérifié
 
