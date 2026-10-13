@@ -1,5 +1,23 @@
 # Décisions techniques
 
+## D-092 - Fin des essais de volume : la direction juge suffisants les lots reçus ; passage à la suite du cycle (13 octobre 2026)
+
+**Décision de Mic du 13 octobre 2026** : « On va s'arrêter là. Nous n'avons pas besoin d'aller jusqu'à 300 cuts, la direction estime ce nombre suffisant. Nous pouvons passer à la
+suite du cycle de développement du projet. » Consignée par l'orchestrateur. Le critère « un lot d'au moins 300 cuts sans vidage » (D-087, D-089) est **levé** par la direction ; il n'a
+pas été atteint en un seul lot, et le texte ne prétend pas le contraire.
+
+Preuves terrain disponibles (aucune n'est un lot unique de 300 cuts) :
+- 4.9.0.8 (tirage un cut sur deux) : cinq lots du 13 octobre, environ 600 cuts : rapide −60 à −62 % du cycle médian, part posée égale ou meilleure, écartement identique, aucune dérive
+  (cycle stable par tiers de lot), un incident en mode référence (recentrage refusé par ESV, hors rapide).
+- 4.9.0.9 (un cut sur dix en référence, `echantillon`) : partie 13 (138 cuts) et partie 15 (139 cuts), 277 cuts dont 252 en rapide : −53 à −64 %, part posée 80,7 % et 89,8 % en rapide,
+  C3 observé à 0 (écartements posés de 1 424 à 1 465 mm), 0 capture en erreur, lecture par rail mesurée (0,26 s), exports allégés produits sur le poste (environ −25 % par cut ;
+  les nuages denses pèsent plus). Les trois derniers cuts de la partie 13 à 0 point sont une fin de ligne normale (confirmé par Mic) ; une partie des reports de la partie 13 vient d'une
+  coupure de connexion de l'opérateur (Ariane a reporté sans poser).
+- Non vérifié : lot unique de 300 cuts ou plus, Edge, Chrome/Edge avant la version 129, réseau lent, audit indépendant du moteur.
+
+Suite du cycle (propositions, rien d'autre n'est décidé) : (1) U3, bloqué par l'action de `D` à fixer par Mic ; (2) 4.9.0.10 : préchargement du cut suivant et fiche de départ des parties
+(validés, invalides, total, conservée hors du cache et exportée) ; (3) audit d'Astra du diff avant toute version stable ; (4) signature des portes du cahier § 7.
+
 ## D-091 - Décisions de Mic sur le lot 4.9.0.8 : mode rapide sur neuf cuts sur dix, allègement A des exports, moteur V5 validé ; version de test 4.9.0.9 (13 octobre 2026)
 
 **Réponse de Mic du 13 octobre 2026** aux trois décisions de D-090 : « 1. Je valide et avec le temps et la confiance nous pourrions l'étendre voire supprimer cela.

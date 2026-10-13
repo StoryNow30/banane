@@ -61,7 +61,7 @@ attend sa relecture indépendante, puis Mic.
 retour à une coupe, 398/402, B1, B2, apprentissage ; 3 non commencés : inventaire, V2, U3). Chiffre de comptage, pas
 d'avancement : les chantiers n'ont ni la même taille ni la même part de terrain.
 
-**Portes de la version 4.9.0 (cahier § 7) : 0 franchie sur 9. D-085 (12 octobre) : C4 est retiré des portes de la 4.9, la porte devient « C1 non dégradé » ; borne d'écartement 1420 mm (D-084, D-085).** Cycle médian −25 % ; C1 et C4 non dégradés ; C3 = 0 ;
+**Portes de la version 4.9.0 (cahier § 7), état du 13 octobre au soir (D-092) : mesurées sur le terrain, pas encore signées par Mic. Cycle médian −25 % : dépassé en interne (−53 à −64 % du rapide contre la référence), formalisation sur une partie neuve (§ 4) à faire ; C1 non dégradé : tenu ; C3 = 0 : tenu sur les lots reçus ; trois mesures publiées ensemble : partiel (durée totale et arrêts pour 100 cuts à publier) ; 0 capture perdue : tenu ; exports conformes : allégé rejoué 112/112 ; U1, U2 acceptés, U3 non commencé (action de `D` à fixer) ; V5 livré, aucune dérive vue ; audit d'Astra : dû. Le critère « 300 cuts en un lot » est levé par la direction (D-092). Ligne de l'ancien état :** 0 franchie sur 9. D-085 (12 octobre) : C4 est retiré des portes de la 4.9, la porte devient « C1 non dégradé » ; borne d'écartement 1420 mm (D-084, D-085).** Cycle médian −25 % ; C1 et C4 non dégradés ; C3 = 0 ;
 trois mesures publiées ensemble ; 0 capture perdue ; exports conformes (petit fichier à zéro différence) ; U1 à U3
 livrés ; V5 selon la mesure ; audit Astra du diff. Aucune n'est mesurée sur la 4.9.
 
