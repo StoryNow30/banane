@@ -1750,3 +1750,11 @@ Lot indépendant (partie 20, version 4.7.6, 238 cuts à pose finale humaine, cut
 ## D-101 - Règles métier de validation sauvegardées pour la 5.0 (14 octobre 2026)
 
 Mic a partagé la conversation de formation d'un opérateur (ADV, rouges isolés, passages à niveau, « un vert n'est pas forcément bon »). Sauvegardée dans `fiches/METHODES_METIER_5.0.md`, avec la limite qu'elle impose à D-098 à D-100 : les zones à risque (ADV, PN, voisinage d'un invalide) n'ont pas été séparées dans les mesures, et un voisin posé y peut être faux. Pas de gros travaux avant la 5.0 (décision de Mic). Priorité : terminer la 4.9.
+
+## D-102 - Réponses de Mic du 14 octobre 2026 : B3 dans la 4.9, UX renforcée, accord sur le reste
+
+Décisions de Mic :
+1. **B3 (transitions du lot) entre dans la 4.9 finale** (modifie D-095 : B3 n'est plus renvoyé à la 5.0). B2 et l'apprentissage restent en 5.0. Porte du cahier § 10 : décisions inchangées au banc ; reprise, pause, arrêt, F5 inchangés. Chantier confié à une session dédiée (`claude/49-b3-transitions`, base test 12), sans changement de comportement, version distincte de l'UX.
+2. **UX** : (a) la tuile du lot du maquette retenu (« Lot », progression en %, nombre de cuts, plage premier → dernier cut, pagination) manque dans le panneau réel ; (b) « Départs des parties » doit avoir plus d'importance et de cohérence (une carte par partie, même langage visuel) ; (c) soin général : clarté, lisibilité, couleurs, thèmes clair et sombre. Confié à la session UX (`claude/ux-variantes`, cible 4.9.0.13), aucune fonction nouvelle.
+3. **Accord de Mic sur le reste** de la proposition du même jour : B1 reste en ombre dans la 4.9.0 (une bonne pose retirée, partie 18 cut 5290 ; la pose proposée n'est pas consignée) ; B1 doit consigner la pose qu'il proposerait ; relecture ciblée du moteur V5 ; recalcul de C1 et C3 sur les parties 17 et 18 ; rejeu de l'export allégé sur la partie 17.
+4. Rappel : fusion dans `main`, étiquette et publication de la 4.9.0 stable restent à demander à Mic en une ligne, avec l'état complet.
