@@ -403,10 +403,13 @@
  let bornesPartie={part:null,last:null,source:null},bornesDemandees=null;
  function bornesDe(part){if(!Number.isInteger(part)||bornesDemandees===part)return;bornesDemandees=part;
    void api('bornes-partie',{part}).then(r=>{bornesPartie={part,last:Number.isInteger(r?.last)?r.last:null,source:r?.source??null};if(state)render(state);}).catch(()=>{bornesDemandees=null;});}
- /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages). */
- let nouveauLot=false;const tiroirs={lot:true,native:true};
+ /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
+  * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, « Détails du lot » est fermé
+  * par défaut et garde son nom ; son état se lit dans aria-expanded. */
+ let nouveauLot=false;const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
-   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
+   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
+   bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
    const onglets=etatOnglets(s);
    for(const [vue,e] of Object.entries(onglets)){const t=$('tab-'+vue);if(!t)continue;
@@ -484,6 +487,13 @@
          ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Orbite GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
          :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
      if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
+     /* 4.9 (chantier UX) : la politique effective est dans « Détails du lot » ;
+      * si elle n'est pas celle par défaut, une pastille courte le dit sur la vue. */
+     if($('lot-politique-pastille')){const sc=b?.scope,ecarts=!running?[]:[
+         (sc?.unresolvedPolicy||'pause')!=='defer'?'rail non résolu : pause':'',
+         sc?.lotDecision!=='apply'?'décision sur le lot : observée':'',
+         (sc?.lowConfidence||'pause')!=='attempt'?'faible confiance : pause':''].filter(Boolean);
+       $('lot-politique-pastille').hidden=!ecarts.length;$('lot-politique-pastille').textContent=ecarts.length?'Politique : '+ecarts.join(' · '):'';}
      if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
        $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${b.scope?.lotDecision==='apply'?'appliquée':'observée seulement'}.`:'';}
      const names=NOMS_ETAT;
@@ -521,7 +531,7 @@
        const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:NaN):Number(sc?.end);
        const ok=Number.isFinite(a)&&Number.isFinite(z)&&z>a&&Number.isFinite(c);$('lot-progres').hidden=!ok;
        if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');$('lot-pct').textContent=`${pct} % de la plage`;}}
+         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');$('lot-pct').textContent=`${pct} %`;}}
      const v=b?voieDuLot(s):null;
      /* Tuiles : posés, différés, couverture. 4.8.0 (audit qualité, D02) :
       * la couverture est C1 (D-038) : posés sur les cuts DISTINCTS du lot, le

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbite · C · Grille</title>
+<!-- Variante C « Grille » : les tuiles de l'application Porsche en damier.
+     Deux colonnes, une tuile = une idée : une icône en haut, un grand chiffre
+     et sa petite unité en bas, un libellé court. Le lot est la tuile héros
+     (toute la largeur, remplie de vert). Les commandes sont des tuiles.
+     Données fictives (commun.js). ?theme=clair|sombre -->
+<script src="commun.js"></script>
+<link rel="stylesheet" href="porsche.css">
+<style>
+.tete{display:flex;align-items:center;justify-content:space-between}
+.tete h1{margin:0;font-size:30px;font-weight:600;display:flex;align-items:center;gap:8px}
+.tete .ib{display:flex;gap:8px}.tete .ib .btn{width:44px;height:44px;border-radius:12px}
+.vues{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.vues .btn{height:44px;color:var(--text-2)}.vues .on{background:var(--tile-2);color:var(--text)}
+.vues .on::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--vert)}
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.case{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:150px;padding:16px;border-radius:18px;background:var(--tile);overflow:hidden}
+.case.l2{grid-column:1/-1}
+.case .i{color:var(--text-2)}
+.case .n{font-size:44px}
+.case .lib{margin-top:6px;font-size:14px}.case .s{font-size:12px;color:var(--text-3)}
+.case .coin{position:absolute;top:16px;right:16px;font:400 12px var(--mono);color:var(--text-3)}
+/* La tuile héros : le cut, remplie de vert jusqu'où en est le lot. */
+.heros{min-height:210px}
+.heros::before{content:"";position:absolute;inset:0 auto 0 0;width:20%;background:linear-gradient(180deg,var(--vert) 0,var(--vert-2) 100%)}
+.heros::after{content:"";position:absolute;top:0;bottom:0;left:20%;width:2px;background:var(--vert)}
+.heros>*{position:relative}
+.heros .h{display:flex;justify-content:space-between;align-items:baseline}
+.heros .h b{font-size:17px;font-weight:500}.heros .h span{font-size:13px;color:var(--text-2)}
+.heros .bas{display:flex;align-items:flex-end;justify-content:space-between}
+.heros .n{font-size:76px}
+.heros .pc{width:20%;font-size:12px;color:var(--text)}.heros .pc b{display:block;font-size:30px;font-weight:300;line-height:1}.heros .pc .u{font-size:13px;color:var(--text)}
+.etapes{display:flex;gap:6px;margin-top:4px}
+.etapes span{padding:3px 10px;border-radius:12px;background:var(--tile-2);font-size:12px;color:var(--text-3)}
+.etapes .f{color:var(--text-2)}.etapes .a{color:#000;background:var(--vert);font-weight:600}
+.cmd{min-height:96px;flex-direction:row;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:600}
+.cmd.plein{background:var(--fill);color:var(--inv)}
+.cmd.stop{color:var(--red)}
+.case.ligne{min-height:0}
+.case.ligne .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}.case.ligne .h b{font-size:15px;font-weight:500}
+.case.dc{min-height:0}
+.dc .t{display:flex;justify-content:space-between}.dc .t b{font-weight:500}.dc .t span{font:400 12px var(--mono);color:var(--text-3)}
+.case.pol{min-height:0;gap:0}
+</style></head>
+<body><main>
+ <div class="tete"><h1>Orbite <i data-ic="bas" data-s="22"></i></h1>
+  <div class="ib"><button class="btn"><i data-ic="soleil"></i></button><button class="btn"><i data-ic="bandeau"></i></button></div></div>
+ <div class="vues"><button class="btn">Écho</button><button class="btn on">Orbite</button></div>
+
+ <div class="grille">
+  <div class="case l2 heros">
+   <div class="h"><b style="margin-left:24%">En cours · partie 34</b><span>8410 → 8640</span></div>
+   <div class="etapes" style="margin-left:24%"><span class="f">capture ✓</span><span class="a">pose</span><span>validation</span></div>
+   <div class="bas"><div class="pc"><b>20<span class="u">%</span></b><span>45 cuts</span></div><span class="n">8455</span></div>
+  </div>
+
+  <button class="case cmd plein"><i data-ic="pause" data-s="22"></i>Pause</button>
+  <button class="case cmd stop"><i data-ic="stop" data-s="18"></i>Arrêter le lot</button>
+
+  <div class="case"><i class="i" data-ic="ok" data-s="24"></i><div><span class="n">42</span><div class="lib">posés</div><div class="s">dont 9 par la voie</div></div></div>
+  <div class="case"><i class="i" data-ic="horloge" data-s="24"></i><div><span class="n amb">3</span><div class="lib">différés</div><div class="s">8420 · 8438 · 8451</div></div></div>
+  <div class="case"><i class="i" data-ic="eclair" data-s="24"></i><div><span class="n vert">93</span><span class="u">%</span><div class="lib">couverture</div><div class="s">42 sur 45 · 0 ignoré</div></div></div>
+  <div class="case"><i class="i" data-ic="rail" data-s="24"></i><div><span class="n">4,8</span><span class="u">mm</span><div class="lib">écart médian</div><div class="s">à la voie · garde 30 mm</div></div></div>
+
+  <div class="case l2 ligne">
+   <div class="h"><b>La ligne</b><span class="leg"><span><i></i>moteur</span><span><i class="v"></i>voie</span><span><i class="d"></i>différé</span></span></div>
+   <div data-svg="ligne" data-o='{"w":408,"h":28,"gap":3,"r":2}'></div>
+   <div style="margin-top:14px" data-svg="profil" data-o='{"w":408,"h":70}'></div>
+  </div>
+
+  <div class="case l2 dc">
+   <div class="t"><b>Valider et passer au suivant</b><span>cut 8454</span></div>
+   <div class="trois"><span>Émise</span><span class="vu">Navigation observée</span><span class="na">Serveur : non disponible</span></div>
+  </div>
+
+  <div class="case"><i class="i" data-ic="partie" data-s="24"></i><span class="coin">4 lots</span><div><span class="n">208</span><div class="lib">posées · partie 34</div><div class="s"><span class="amb">4 différés</span> · 214 traitées</div></div></div>
+  <div class="case"><i class="i" data-ic="liste" data-s="24"></i><span class="coin">14:32</span><div><span class="n" style="font-size:34px">8454</span><div class="lib">posé · moteur</div><div class="s">2,6 mm · dernière activité</div></div></div>
+
+  <div class="case l2 pol">
+   <div class="kv"><span>Rail non résolu</span><b>continuer et différer</b></div>
+   <div class="kv"><span>Faible confiance</span><b>mettre le lot en pause</b></div>
+   <div class="kv"><span>Décision sur le lot</span><b>appliquée</b></div>
+  </div>
+ </div>
+
+ <p class="sec">Exports</p>
+ <div class="liste">
+  <div class="row fort"><i class="i" data-ic="dl" data-s="24"></i><span class="l">Tout télécharger pour l’analyse</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="doc" data-s="22"></i><span class="l">Journal</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="nuage" data-s="22"></i><span class="l">Bilan et LiDAR</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="courbe" data-s="22"></i><span class="l">Diagnostic GCV1</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="couches" data-s="22"></i><span class="l">Corpus GCV1 + LiDAR</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row dis"><i class="i" data-ic="poubelle" data-s="20"></i><span class="l">Vider le cache des exports</span></div>
+ </div>
+ <p class="note">Construits sur ce poste. ESV ne confirme rien.</p>
+ <p class="sec">Plus</p>
+ <div class="liste">
+  <div class="row"><i class="i" data-ic="drapeau" data-s="22"></i><span class="l">Départs des parties</span><span class="val">P34 · 13/10</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="prise" data-s="22"></i><span class="l">ESV</span><span class="val"><span class="pt"></span>Edge</span><i class="chev" data-ic="chev"></i></div>
+ </div>
+ <footer>Changer de vue ne met pas le lot en pause. · Ariane 4.9.0</footer>
+</main></body></html>
