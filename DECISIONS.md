@@ -1746,3 +1746,7 @@ Même lot (partie 17, Écho). Voisins = poses de départ d'Ariane (192 cuts pos�
 ## D-100 - Confirmation de l'interpolation sur un autre lot : partie 20, Écho du 23 septembre (14 octobre 2026)
 
 Lot indépendant (partie 20, version 4.7.6, 238 cuts à pose finale humaine, cuts 109 à 989). Voisins = poses finales humaines. Interpolation entre les deux voisins les plus proches (écart jusqu'à ±3 cuts) : 208 cuts sur 238 couverts, erreur médiane 2,8 mm, P90 7,1 mm, P99 13,9 mm, maximum 152 mm. Pose de départ : médiane 4,9 mm mais P90 115 mm. Même conclusion que D-098 et D-099 : la méthode corrige les grosses erreurs sans abîmer les bonnes poses. Réserve : voisins pris dans les finales humaines ; la classe « posé ou différé par Ariane » n'existe pas pour ce lot (4.7.6). Deux lots concordent ; il reste à tester avec des voisins posés par Ariane sur un deuxième lot 4.9.
+
+## D-101 - Règles métier de validation sauvegardées pour la 5.0 (14 octobre 2026)
+
+Mic a partagé la conversation de formation d'un opérateur (ADV, rouges isolés, passages à niveau, « un vert n'est pas forcément bon »). Sauvegardée dans `fiches/METHODES_METIER_5.0.md`, avec la limite qu'elle impose à D-098 à D-100 : les zones à risque (ADV, PN, voisinage d'un invalide) n'ont pas été séparées dans les mesures, et un voisin posé y peut être faux. Pas de gros travaux avant la 5.0 (décision de Mic). Priorité : terminer la 4.9.
