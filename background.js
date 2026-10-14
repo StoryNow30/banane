@@ -24,6 +24,24 @@ const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.12',VERSION_NAME=globalThi
 BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
+/* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
+ * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
+ * inchangé) et de ses enveloppes ci-dessous. `transition(nom, f)` appelle `f`
+ * tout de suite et rend son résultat tel quel (aucune attente ajoutée, aucun
+ * effet sur ESV ni sur les exports) ; le nom est noté dans `journal`, en
+ * mémoire seulement (64 entrées), pour que l'ordre soit lisible et testé.
+ *   demarrage    « Démarrer » (start)              pause        « Pause »
+ *   reprise      « Reprendre » (resume)            arret        « Arrêter »
+ *   rechargement F5 : lot rattaché à la page (dans la reprise)
+ *   cut-suivant  validation et passage au cut suivant (validateAndNext)
+ *   differe      cut différé ; départ d'ESV après un différé
+ *   fin-de-lot   lot clos : dernier cut, sortie d'ESV, fin naturelle de la boucle
+ *   erreur       refus ou échec d'une action du panneau, dit dans l'avis */
+const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
+const coordinateurLot={journal:[],
+ transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
+  const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null});if(this.journal.length>64)this.journal.shift();
+  return f();}};
 function liveGCV1Contract(){
  const contract=globalThis.BananeGCV1Shadow?.state?.().contract;
  if(!contract?.id||!contract?.geometrySha256)throw Error('Moteur GCV1 d’Orbite indisponible.');
@@ -1167,6 +1185,60 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  if(l&&o.pageId!=null&&l.pageId!=null&&l.pageId!==o.pageId){delete b.retourCut;await engine.save();return;}
  if(!partCut(l)||l.part!==o.part||l.cut!==o.cut)throw Error(`${quoi} refusé : le lot est en pause sur le cut ${o.cut} de la partie ${o.part}, ESV affiche ${partCut(l)?`le cut ${l.cut} de la partie ${l.part}`:'un cut illisible'} (consultation). Reviens au cut ${o.cut} dans ESV, puis recommence ; rien n’a été validé.`);
  delete b.retourCut;await engine.save();}
+/* B3 — transition « demarrage » : le corps de « Démarrer », inchangé (déplacé de `dispatch`). */
+async function demarrerLot(args){
+  // Avant tout archivage : un lot en reprise manuelle garde son contexte.
+  engine.assertBatchContextFree('un nouveau lot');
+  /* 4.7.21 : « fin de partie » demandée, ou fin saisie retenue pour la partie. */
+  const finPartie=args?.endMode==='partie';
+  if(!finPartie&&Number.isInteger(args?.end))await retenirFinPartie(args.part,args.end,'saisie');
+  if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');
+  /* GARDE-FOU DÉCOUVERT SUR LE TERRAIN, cut 6/4245.
+   *
+   * Une sélection du cerveau porte `confidence: 0` pour que le pilote la mette
+   * en pause. Mais `src/engine.js` — gelé, ligne 233 — ne met en pause que
+   * si `scope.lowConfidence !== 'attempt'`. Avec la politique « Tenter la
+   * proposition expérimentale », le pilote a donc appliqué tout seul une
+   * sélection explicitement marquée « jamais à appliquer automatiquement ».
+   *
+   * La confiance nulle ne suffit pas : on coupe la sélection à la source quand
+   * la politique permet de tenter. Le cerveau continue de retirer le biais
+   * vertical — cette correction-là garde la confiance du moteur et n'a jamais
+   * été en cause. Un rail ambigu redevient alors `unresolved`, ce qui met le
+   * lot en pause par le chemin `missing`, avant même la question de confiance. */
+  const geometryEngine=args?.geometryEngine||V46_ENGINE;
+  if(![V46_ENGINE,GCV1_ENGINE].includes(geometryEngine))throw Error('Moteur géométrique de lot inconnu.');
+  const startArgs={...args,geometryEngine,...(finPartie?{end:FIN_PARTIE}:{})};
+  if(geometryEngine===GCV1_ENGINE){
+    startArgs.geometryContract=liveGCV1Contract();
+    startArgs.requestedLowConfidence=args?.lowConfidence||null;
+    // La publication GCV1 est la frontière d'admissibilité du lot TEST : une
+    // candidate finie, y compris S1 à confiance non calibrée, n'est pas
+    // repassée dans le seuil de confiance historique V4.6.
+    startArgs.lowConfidence='attempt';
+    /* 4.7.10 — décision sur le lot, figée dans le scope à la création : elle
+     * commande seulement si le lot est créé avec « appliquer » (D-041, D-042). */
+    if(args?.lotDecision!==undefined&&!['apply','observe'].includes(args.lotDecision))throw Error('Décision sur le lot inconnue.');
+    startArgs.lotDecision=args?.lotDecision==='apply'?'apply':'observe';
+  }else delete startArgs.lotDecision;
+  /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
+   * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
+  startArgs.extensionVersion=VERSION;
+  if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
+  /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
+  delete startArgs.lotReprise;
+  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée à Orbite GCV1.');
+    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);
+    /* 4.7.20 — les appuis d'une reprise sont liés au repère de la page ESV
+     * (`frameId`) : après un rechargement, aucun ne sert (terrain du 25/09,
+     * partie 9). Refusé en clair plutôt que lancé sans effet. */
+    const frame=await currentFrameId(),seeds=startArgs.lotReprise.anchors||[];
+    if(frame&&seeds.length&&!seeds.some(a=>(a.identity?.frameId??null)===frame))
+      throw Error('Reprise : la page ESV a été rechargée depuis le lot précédent (autre repère) ; ses cuts posés ne peuvent plus servir d’appuis. Décoche « Reprise » ou lance un lot ordinaire.');}
+  const tente=startArgs.lowConfidence==='attempt';
+  const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
+  BananeGeometryBrain.configure({selectionActive:!tente||autorise});
+  retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
 async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
   await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
@@ -1243,10 +1315,11 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
- if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
-  if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();}
- if(action==='resume'){if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
-  repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();}
+ if(action==='pause')return coordinateurLot.transition('pause',async()=>{await engine.pause();return engine.view();});
+ if(action==='stop')return coordinateurLot.transition('arret',async()=>{const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
+  if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();});
+ if(action==='resume')return coordinateurLot.transition('reprise',async()=>{if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
+  repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();});
  /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
   * l'opérateur a déplacé les rails pendant la pause, cette capture serait SA
   * pose, qui entrerait dans le moteur et la décision sur le lot (cahier §10,
@@ -1263,59 +1336,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   * (pas de jalon `batch-state`) : la fin est relevée ici, comme pour « Arrêter », sinon l'écriture SKIP arrive sans grâce. */
  if(action==='explicit-skip'){await gardeRetourCut('« SKIP explicite »');const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
   if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'))marquerFinLot(b,'fin-naturelle');return engine.view();}
- if(action==='start'){
-  // Avant tout archivage : un lot en reprise manuelle garde son contexte.
-  engine.assertBatchContextFree('un nouveau lot');
-  /* 4.7.21 : « fin de partie » demandée, ou fin saisie retenue pour la partie. */
-  const finPartie=args?.endMode==='partie';
-  if(!finPartie&&Number.isInteger(args?.end))await retenirFinPartie(args.part,args.end,'saisie');
-  if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');
-  /* GARDE-FOU DÉCOUVERT SUR LE TERRAIN, cut 6/4245.
-   *
-   * Une sélection du cerveau porte `confidence: 0` pour que le pilote la mette
-   * en pause. Mais `src/engine.js` — gelé, ligne 233 — ne met en pause que
-   * si `scope.lowConfidence !== 'attempt'`. Avec la politique « Tenter la
-   * proposition expérimentale », le pilote a donc appliqué tout seul une
-   * sélection explicitement marquée « jamais à appliquer automatiquement ».
-   *
-   * La confiance nulle ne suffit pas : on coupe la sélection à la source quand
-   * la politique permet de tenter. Le cerveau continue de retirer le biais
-   * vertical — cette correction-là garde la confiance du moteur et n'a jamais
-   * été en cause. Un rail ambigu redevient alors `unresolved`, ce qui met le
-   * lot en pause par le chemin `missing`, avant même la question de confiance. */
-  const geometryEngine=args?.geometryEngine||V46_ENGINE;
-  if(![V46_ENGINE,GCV1_ENGINE].includes(geometryEngine))throw Error('Moteur géométrique de lot inconnu.');
-  const startArgs={...args,geometryEngine,...(finPartie?{end:FIN_PARTIE}:{})};
-  if(geometryEngine===GCV1_ENGINE){
-    startArgs.geometryContract=liveGCV1Contract();
-    startArgs.requestedLowConfidence=args?.lowConfidence||null;
-    // La publication GCV1 est la frontière d'admissibilité du lot TEST : une
-    // candidate finie, y compris S1 à confiance non calibrée, n'est pas
-    // repassée dans le seuil de confiance historique V4.6.
-    startArgs.lowConfidence='attempt';
-    /* 4.7.10 — décision sur le lot, figée dans le scope à la création : elle
-     * commande seulement si le lot est créé avec « appliquer » (D-041, D-042). */
-    if(args?.lotDecision!==undefined&&!['apply','observe'].includes(args.lotDecision))throw Error('Décision sur le lot inconnue.');
-    startArgs.lotDecision=args?.lotDecision==='apply'?'apply':'observe';
-  }else delete startArgs.lotDecision;
-  /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
-   * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
-  startArgs.extensionVersion=VERSION;
-  if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
-  /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
-  delete startArgs.lotReprise;
-  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée à Orbite GCV1.');
-    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);
-    /* 4.7.20 — les appuis d'une reprise sont liés au repère de la page ESV
-     * (`frameId`) : après un rechargement, aucun ne sert (terrain du 25/09,
-     * partie 9). Refusé en clair plutôt que lancé sans effet. */
-    const frame=await currentFrameId(),seeds=startArgs.lotReprise.anchors||[];
-    if(frame&&seeds.length&&!seeds.some(a=>(a.identity?.frameId??null)===frame))
-      throw Error('Reprise : la page ESV a été rechargée depuis le lot précédent (autre repère) ; ses cuts posés ne peuvent plus servir d’appuis. Décoche « Reprise » ou lance un lot ordinaire.');}
-  const tente=startArgs.lowConfidence==='attempt';
-  const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
-  BananeGeometryBrain.configure({selectionActive:!tente||autorise});
-  retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
+ if(action==='start')return coordinateurLot.transition('demarrage',()=>demarrerLot(args));
  if(action==='cloud')return store.getCloud(args.id);
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
   * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque
