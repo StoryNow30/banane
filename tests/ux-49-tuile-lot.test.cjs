@@ -54,3 +54,17 @@ test('le vert avance quand le cut change, et ne recule pas sur un retour à un c
   /* Un autre lot repart de zéro. */
   await $.etat({...lot({end:220,start:200},205),batch:{...lot({end:220,start:200},205).batch,id:'autre'}});assert.equal(vert($).largeur,'25%');
 });
+
+/* Cas réel (export de la test 13, partie 23) : lot parti du cut 1, « fin de partie »
+ * (fin factice 999999, jamais prise pour une fin) ; un seul relevé du compteur, tardif :
+ * {cut:7591, total:9260}. Jusqu'au relevé, la bande « fin de partie inconnue » ; ensuite,
+ * le vert sur 1 → 9259 (M−1, D-062). */
+test('relevé du compteur tardif : bande « fin de partie inconnue » jusque-là, puis le vert ; 999999 n’est jamais une fin',async()=>{
+  const reel=(cut,extra={})=>({...lot({start:1,end:999999,endMode:'partie'},cut,extra),current:{identity:{part:23,cut}}});
+  const $=await panneau(reel(7000));
+  assert.deepEqual(vert($),{cache:false,largeur:'100%',pct:'',note:'fin de partie inconnue',inconnu:true});
+  await $.etat(reel(7400));assert.equal(vert($).inconnu,true,'toujours aucun relevé : toujours la bande');
+  await $.etat(reel(7591,releve(7591,9260)));
+  assert.deepEqual(vert($),{cache:false,largeur:'82%',pct:'82',note:'',inconnu:false},'(7591 − 1) / (9259 − 1)');
+  await $.etat(reel(7721,releve(7591,9260)));assert.equal(vert($).largeur,'83%','le relevé reste valable pour les cuts suivants du lot');
+});
