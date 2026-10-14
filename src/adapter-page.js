@@ -760,6 +760,142 @@
      nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
      meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
  }
+ /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-066, D-067, D-077 point 3) —
+  * LECTURE SEULE. « Aller au cut N de la partie chargée, et confirmer son identité. »
+  * Aucune décision : ni VALIDATE, ni SKIP, ni pose, ni bouton de rail, ni touche. Aller
+  * sur un cut déjà validé est permis (consultation) ; Ariane n'y écrit rien.
+  *
+  * DEUX CHEMINS, puis le refus :
+  *  1. ÉVÉNEMENT. La carte d'ESV change de cut en émettant son événement interne
+  *     `railPairSelected` (partie, index) sur `#globalcontainer`, par la copie de jQuery
+  *     exposée dans la page (`window.$`). HYPOTHÈSES, établies au banc ESV local (code
+  *     d'origine d'ESV, serveur simulé, essai E1 du 6 octobre) et JAMAIS vérifiées sur
+  *     le vrai ESV : l'index est le N de « Cut N of part P » ; la partie est passée en
+  *     TEXTE, celui du numéro affiché (en nombre, le cut s'affiche mais ESV ne sait plus
+  *     le valider ensuite) ; un index hors de la partie fait lever ESV. Le chemin n'est
+  *     pris que si un écouteur de cet événement est visible sur l'élément (`$._data`,
+  *     interne à jQuery) ; sinon, repli. Symboles internes non documentés (KI-026).
+  *  2. PAS À PAS. Boutons « cut précédent » / « cut suivant » d'ESV, quel que soit le
+  *     statut du cut (`O2N3DCutPrevious3DRail`, `O2N3DCutNext3DRail` : relevés au banc
+  *     ESV local, HYPOTHÈSE sur le vrai ESV). Un clic par pas, chaque pas confirmé (le
+  *     cut affiché avance d'exactement un, même partie) avant le suivant ; un pas raté
+  *     n'est jamais recliqué. Ni `O2N3DCutNextInvalid3DRail` (il saute les cuts validés),
+  *     ni raccourci clavier (cahier §5.5 : bouton vérifié avant d'agir).
+  *  3. REFUS RENDU, avec la raison de chaque chemin écarté. Rien n'est émis.
+  *
+  * BORNES. 0 ≤ N et N < M, M lu dans le compteur « N on M treated » (comme `releverEsv`).
+  * Sans compteur lisible, N ne dépasse pas le plus grand cut connu de la partie (le cut
+  * affiché, ou `borneConnue` donné par le service worker) : un index au-delà ferait
+  * lever ESV, et un « suivant » après le dernier cut quitterait la partie.
+  *
+  * PREUVE. Identité relue avant (« Cut N of part P »), contrôlée contre la cible, puis
+  * relue après. Succès SEULEMENT si la partie ET le cut affichés sont la cible ; sinon
+  * `incertain` et pause explicite, sans réémission. Les refus sont RENDUS, pas levés
+  * (comme `nextWithoutDecision`). Une demande à la fois : une autre demande en vol, une
+  * opération déjà invoquée, une action d'Ariane en cours dans la page (pose,
+  * validation, navigation, lecture) ou une session Écho : refus. Annulation portée par
+  * l'opération (`cancel({operationId})`) : avant l'émission, rien ne part ; entre deux
+  * pas, le pas suivant ne part pas. Un événement déjà émis ne se rattrape pas : le cut
+  * atteint est relu et dit. */
+ const RETOUR={chemin:'auto',pasMax:40,...(window.BananeSettings?.retourCut||{})};
+ const navigation={precedent:'O2N3DCutPrevious3DRail',suivant:'O2N3DCutNext3DRail',conteneur:'globalcontainer',evenement:'railPairSelected'};
+ /* Actions de la page en cours, par requête : `goToCut` refuse de partir pendant l'une d'elles. */
+ const actionsEnCours=new Map();let retourEnVol=null;
+ function cheminEvenement(){try{const $=window.$;if(typeof $!=='function')return {disponible:false,raison:'jquery-absent'};
+   const el=document.getElementById(navigation.conteneur);if(!el)return {disponible:false,raison:'conteneur-absent'};
+   if(typeof $._data!=='function')return {disponible:false,raison:'ecouteurs-illisibles'};
+   const ecouteurs=$._data(el,'events')?.[navigation.evenement];
+   if(!Array.isArray(ecouteurs)||!ecouteurs.length)return {disponible:false,raison:'sans-ecouteur'};
+   return {disponible:true,raison:null,jquery:typeof $.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null};}
+   catch{return {disponible:false,raison:'lecture-impossible'};}}
+ function bornesPartie(courant,borneConnue){const r=releverEsv(null),total=r.compteur&&!(r.compteursVus>1)?r.compteur.total:null;
+   if(Number.isInteger(total)&&total>0)return {total,max:total-1,source:'compteur'};
+   return {total:null,max:Math.max(...[courant,borneConnue].filter(Number.isInteger)),source:'cut-connu'};}
+ /* Attente d'un AUTRE cut affiché que `depuis`. Lecture seule : une annulation ne
+  * l'interrompt pas (la commande est déjà partie), le délai la borne. */
+ async function attendreAutreCut(depuis,delai=P.attenteNavigationMs){const debut=Date.now();
+   for(;;){const l=cutLabel();if(l&&K.key(l)!==K.key(depuis))return l;if(Date.now()-debut>=delai)return null;await sleep(P.sondageMs);}}
+ async function goToCut(target,options={},operationId=null,progress=()=>{}){
+   const t0=Date.now(),o=options&&typeof options==='object'?options:{},pc=x=>x?{part:x.part,cut:x.cut}:null;
+   const evidence={format:'ariane-goto-cut-v1',operationId:operationId??null,action:'GO_TO_CUT',lectureSeule:true,startedAt:new Date(t0).toISOString(),
+     cible:{part:Number.isInteger(target?.part)?target.part:null,cut:Number.isInteger(target?.cut)?target.cut:null},identiteAvant:null,identiteApres:null,
+     chemin:null,commande:'aucune',emissions:0,pas:null,cheminEvenement:null,cheminPas:null,bornes:null,commandInvoked:false,
+     applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,railCommandSent:false,keyboardSent:false,
+     source:'symboles internes d’ESV relevés au banc ESV local (hypothèses), non vérifiés sur ESV',
+     resultat:null,confirme:false,pauseExplicite:false,pret:null,refusal:null,endedAt:null,durationMs:null};
+   const fin=(resultat,code=null,message=null)=>{evidence.resultat=resultat;evidence.confirme=resultat==='confirme';evidence.pauseExplicite=resultat==='incertain';
+     if(code)evidence.refusal={code,message,at:new Date().toISOString()};evidence.endedAt=new Date().toISOString();evidence.durationMs=Date.now()-t0;return evidence;};
+   const refuse=(code,message)=>fin('refuse',code,message+' Rien n’a été envoyé à ESV.');
+   const annule=()=>!!operationId&&cancelledOperations.has(operationId)||cancelled;
+   if(operationId&&cancelledOperations.has(operationId))return refuse('CANCELLED_BEFORE_COMMAND','Retour annulé avant toute émission.');
+   if(operationId&&invokedOperations.has(operationId)){evidence.commandInvoked='unknown';evidence.firstInvokedAt=invokedOperations.get(operationId);
+     return fin('refuse','OPERATION_ALREADY_INVOKED','Cette demande a déjà été invoquée une fois ; aucune seconde émission.');}
+   if(retourEnVol)return refuse('ALREADY_RUNNING','Un retour à un cut est déjà en cours : une seule demande à la fois.');
+   const autres=[...actionsEnCours.values()].filter(a=>a!=='goToCut'&&a!=='cancel'&&!LECTURES.has(a));
+   if(autres.length)return refuse('ADAPTER_BUSY',`Action d’Ariane en cours dans ESV (${autres[0]}) : aucune navigation pendant une pose, une validation, une lecture ou un déplacement.`);
+   if(native?.active||manual?.active)return refuse('SESSION_ACTIVE','Une session Écho est active : la navigation de consultation est refusée.');
+   if(evidence.cible.part===null||evidence.cible.cut===null)return refuse('INVALID_TARGET','Cible invalide : partie et cut entiers attendus.');
+   evidence.inheritedBlanketCancel=cancelled===true;cancelled=false;
+   const avant=cutLabel();if(!avant)return refuse('IDENTITY_UNAVAILABLE_BEFORE','« Cut N of part P » illisible : cut de départ inconnu.');
+   evidence.identiteAvant=pc(avant);
+   if(target.pageId!=null&&target.pageId!==avant.pageId)return refuse('PAGE_MISMATCH','Page ESV différente de celle de la demande (rechargée ?).');
+   if(target.part!==avant.part)return refuse('WRONG_PART',`Partie ${target.part} demandée, partie ${avant.part} chargée : seul un cut de la partie chargée est accessible.`);
+   const bornes=bornesPartie(avant.cut,o.borneConnue);evidence.bornes=bornes;
+   if(target.cut<0||target.cut>bornes.max)return refuse('OUT_OF_BOUNDS',`Cut ${target.cut} hors des bornes de la partie ${avant.part} (0 à ${bornes.max}${bornes.source==='compteur'?`, ${bornes.total} cuts au compteur`:', plus grand cut connu : compteur illisible'}).`);
+   if(target.cut===avant.cut){evidence.chemin='aucun';evidence.identiteApres=pc(avant);return fin('confirme');}
+   const sens=target.cut>avant.cut?1:-1,ecart=Math.abs(target.cut-avant.cut),bouton=commandInfo(sens>0?navigation.suivant:navigation.precedent);
+   const pasMax=Number.isInteger(RETOUR.pasMax)&&RETOUR.pasMax>0?RETOUR.pasMax:40,choix=['auto','evenement','pas','off'].includes(o.chemin)?o.chemin:RETOUR.chemin;
+   const ev=cheminEvenement(),pas={disponible:bouton.exists&&!bouton.disabled&&ecart<=pasMax,
+     raison:!bouton.exists?'bouton-absent':bouton.disabled?'bouton-desactive':ecart>pasMax?'trop-de-pas':null,bouton:bouton.id,sens,ecart,pasMax};
+   evidence.cheminEvenement=ev;evidence.cheminPas=pas;
+   if(choix==='off')return refuse('PATH_DISABLED','Retour à un cut coupé dans les réglages (retourCut.chemin).');
+   const chemin=choix!=='pas'&&ev.disponible?'evenement':choix!=='evenement'&&pas.disponible?'pas-a-pas':null;
+   if(!chemin){const pourquoi=`événement : ${ev.raison}${choix==='evenement'?'':` ; pas à pas : ${pas.raison}`}`;
+     if(choix==='evenement')return refuse('NAVIGATION_PATH_UNAVAILABLE','Événement interne d’ESV indisponible ('+pourquoi+').');
+     return refuse({'bouton-absent':'NAVIGATION_COMMAND_UNAVAILABLE','bouton-desactive':'NAVIGATION_COMMAND_DISABLED','trop-de-pas':'TOO_MANY_STEPS'}[pas.raison]||'NAVIGATION_PATH_UNAVAILABLE',
+       `Aucun chemin vers le cut ${target.cut} (${pourquoi}).`);}
+   evidence.chemin=chemin;
+   progress('goto-before-command',{operationId:evidence.operationId,chemin,identity:evidence.identiteAvant,cible:evidence.cible});
+   /* Dernier instant révocable : rien ne s'intercale plus entre ce contrôle et l'émission. */
+   if(annule())return refuse('CANCELLED_BEFORE_COMMAND','Retour annulé avant toute émission.');
+   retourEnVol={operationId,depuis:t0};evidence.commandInvoked='unknown';
+   if(operationId)invokedOperations.set(operationId,new Date().toISOString());
+   /* Le cut atteint, relu ; succès seulement si c'est la cible, puis rails prêts (sans effet sur le succès). */
+   const conclure=async l=>{const apres=l||cutLabel();evidence.identiteApres=pc(apres);
+     if(!apres)return fin('incertain','IDENTITY_UNAVAILABLE_AFTER','« Cut N of part P » illisible après la commande : cut atteint inconnu. Contrôle ESV ; aucune commande renvoyée.');
+     if(apres.part!==target.part||apres.cut!==target.cut)return fin('incertain',K.key(apres)===K.key(avant)?'NO_NAVIGATION_OBSERVED':'WRONG_TARGET_REACHED',
+       K.key(apres)===K.key(avant)?`Commande émise, cut ${avant.cut} toujours affiché. Contrôle ESV ; aucune commande renvoyée.`
+       :`ESV affiche le cut ${apres.cut} de la partie ${apres.part}, pas le cut ${target.cut} demandé. Contrôle ESV ; aucune commande renvoyée.`);
+     try{evidence.pret=!!await waitFor(()=>{const s=snapshot();return K.key(s.identity)===K.key(apres)?s:false;},'',P.attenteMs);}catch{evidence.pret=false;}
+     const final=cutLabel();evidence.identiteApres=pc(final);
+     if(!final||final.part!==target.part||final.cut!==target.cut)return fin('incertain','TARGET_LEFT_AFTER_ARRIVAL',`Le cut ${target.cut} a été atteint puis quitté (${final?`cut ${final.cut} affiché`:'cut illisible'}). Contrôle ESV.`);
+     return fin('confirme');};
+   try{
+     if(chemin==='evenement'){evidence.commande='evenement';
+       try{evidence.emissions=1;window.$(document.getElementById(navigation.conteneur)).trigger(navigation.evenement,[String(target.part),target.cut]);}
+       catch(e){evidence.identiteApres=pc(cutLabel());return fin('incertain','NAVIGATION_COMMAND_THREW',`L’événement interne d’ESV a levé (${String(e?.message||e).slice(0,160)}) : cut atteint à contrôler dans ESV ; aucune commande renvoyée.`);}
+       evidence.commandInvoked=true;evidence.invokedAt=new Date().toISOString();
+       progress('goto-command-returned',{operationId:evidence.operationId,chemin,label:pc(cutLabel())});
+       return await conclure(await attendreAutreCut(avant));}
+     evidence.commande='pas-a-pas';evidence.pas={sens,demandes:ecart,faits:0,bouton:bouton.id};let courant=avant;
+     for(let i=0;i<ecart;i++){
+       if(annule()){evidence.identiteApres=pc(cutLabel());if(i===0)evidence.commandInvoked=false;
+         return fin(i?'interrompu':'refuse','CANCELLED_BETWEEN_STEPS',`Retour annulé après ${i} pas sur ${ecart} : cut ${courant.cut} affiché, aucun pas de plus.`);}
+       const b=document.getElementById(bouton.id);
+       if(!b||b.disabled){evidence.identiteApres=pc(cutLabel());
+         return fin('interrompu',b?'NAVIGATION_COMMAND_DISABLED':'NAVIGATION_COMMAND_UNAVAILABLE',`Bouton ${bouton.id} ${b?'désactivé':'absent'} au pas ${i+1} sur ${ecart} : cut ${courant.cut} affiché, aucun pas de plus.`);}
+       try{evidence.emissions++;b.click();}
+       catch(e){evidence.identiteApres=pc(cutLabel());return fin('incertain','NAVIGATION_COMMAND_THREW',`Le bouton ${bouton.id} a levé au pas ${i+1} (${String(e?.message||e).slice(0,160)}) : contrôle ESV ; aucun pas de plus.`);}
+       evidence.commandInvoked=true;
+       const vu=await attendreAutreCut(courant),attendu=courant.cut+sens;
+       if(!vu||vu.part!==target.part||vu.cut!==attendu){const l=vu||cutLabel();evidence.identiteApres=pc(l);
+         return fin('incertain',!l?'IDENTITY_UNAVAILABLE_AFTER':!vu?'NO_NAVIGATION_OBSERVED':'WRONG_TARGET_REACHED',
+           !l?`Cut illisible après le pas ${i+1} : contrôle ESV ; aucun pas de plus.`:!vu?`Pas ${i+1} sans effet : cut ${courant.cut} toujours affiché ; aucun pas de plus.`
+           :`Pas ${i+1} : ESV affiche le cut ${vu.cut} de la partie ${vu.part} au lieu du cut ${attendu} ; aucun pas de plus.`);}
+       courant=vu;evidence.pas.faits++;progress('goto-step',{operationId:evidence.operationId,pas:i+1,sur:ecart,identity:pc(vu)});}
+     return await conclure(courant);
+   }finally{retourEnVol=null;}
+ }
  const validateAndNext=(identity,scope,progress)=>decisionAndNext(identity,'VALIDATE',scope,progress);
  const skipAndNext=(identity,scope,progress)=>decisionAndNext(identity,'SKIP',scope,progress);
  let manual=null,manualChannel=null,manualBanner=null;const manualRequests=new Map(),manualListeners=[];
@@ -827,7 +963,7 @@
    native=native||new NP4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
  let intrusion=null;
- const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,
+ const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
@@ -902,6 +1038,7 @@
    nextWithoutDecision:'Navigation refusée : rien n’a été envoyé à ESV pour ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',
+   goToCut:'Retour à un cut refusé : rien n’a été envoyé à ESV. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV.',
    restore:'Restauration refusée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.'};
  const refusSecurite=action=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). `
    +(SUITE[action]||'Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.');
@@ -930,10 +1067,10 @@
      const target=typeof o.requestId==='string'?o.requestId:null,scoped=typeof o.operationId==='string';
      const stale=!scoped&&(target?!running.has(target):Number.isFinite(sentAt)&&![...running.values()].some(t=>t<=sentAt));
      if(stale){window.postMessage({kind:'banane3:result',id,channel,result:{cancelRequested:false,stale:true,requestId:target}},location.origin);return;}}
-   else running.set(id,Date.now());
+   else{running.set(id,Date.now());actionsEnCours.set(id,action);}
    try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
    catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}
-   finally{running.delete(id);
+   finally{running.delete(id);actionsEnCours.delete(id);
      /* D4 : le relevé passif, après la réponse ; rien de ce qui suit ne peut la toucher. */
      if(action==='capture')try{window.postMessage({kind:'banane3:releve',channel,requestId:id,releve:releverEsv(id,args[0]?.identity)},location.origin);}catch{}}});
 })();

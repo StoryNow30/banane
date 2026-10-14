@@ -646,13 +646,15 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const lot=engine.s.batch?.id,etatDepart=engine.s.batch?.state;
  const garde=()=>engine.s.batch?.id===lot&&engine.s.batch.state===etatDepart;
  /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
- const {etat}=await retablirApresRechargement(garde);
+ const {etat,rattache}=await retablirApresRechargement(garde);
  /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
   * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
   * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
   * avant de toucher à l'étape du lot : il reste arrêté, reprenable dès le cut
   * suivant. */
  const affiche=etat??await adapter.state().catch(()=>null);
+ /* D-067 : après un retour à un cut pendant la pause, le lot ne repart que du cut où il était. */
+ await gardeRetourCut('« Reprendre »',affiche,{rattache});
  if(affiche?.identity)try{engine.writable(affiche.identity);}
   catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Ariane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
  /* KI-052 : « Archiver le résultat interrompu » arrête le lot en laissant
@@ -987,8 +989,8 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
  if(poses)v.batch.lotPosedCount=poses.length;
  return {...panelView({...v,records:[],incomplete:[]}),recordsCount:Array.isArray(records)?records.length:0,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
 function pollCurrent(){
- /* Pendant une reprise (retour au cut après F5), la vue ne lit pas ESV. */
- if(pollPromise||engine.busy||engine.task||repriseEnCours||manual?.active()||native?.active()||selectedTab===null)return;
+ /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
+ if(pollPromise||engine.busy||engine.task||repriseEnCours||retourCutEnCours||manual?.active()||native?.active()||selectedTab===null)return;
  pollPromise=engine.observe().then(()=>{engine.s.connection={status:'ready',observedAt:new Date().toISOString()};})
   .catch(e=>{engine.s.connection={status:'unavailable',message:e.message};})
   .finally(()=>{pollPromise=null;});
@@ -1079,7 +1081,96 @@ async function viderCacheExport(args){
  let marqueurEcrit=true;try{await EC.ecrire(chrome.storage.local,marqueur);}catch{marqueurEcrit=false;}
  return {cleared:true,...counts,at:marqueur.at,text:EC.texte(marqueur),marqueurEcrit,captureGardee};
 }
+/* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-067, D-077 point 3) — LECTURE SEULE.
+ * Action de panneau `goto-cut` {part, cut} : la page va au cut N de la partie CHARGÉE et
+ * en confirme l'identité (`goToCut`, src/adapter-page.js : événement interne d'ESV, sinon
+ * pas à pas, sinon refus). Rien n'est validé, skippé ni posé ; le moteur, la pose et la
+ * décision sur le lot n'en savent rien ; aucune reprise automatique des différés (hors
+ * périmètre, à soumettre séparément). Refusée, sans rien envoyer à ESV, quand :
+ *  - un lot Orbite tourne, ou sa pause n'est pas EFFECTIVE (action du moteur encore en
+ *    cours), ou la reprise du lot (retour au cut après F5 compris) est en cours ;
+ *  - un résultat est à clôturer (navigation différée incertaine, état final manquant,
+ *    intention ou réconciliation), une pose est appliquée sans validation, ou une
+ *    reprise manuelle tient le contexte du lot ;
+ *  - hors d'un lot en pause, une capture assistée ou une proposition est ouverte ;
+ *  - une autre demande de retour est en cours (double appel) ;
+ *  - Écho est actif (refus général de `dispatch`, plus haut que l'action).
+ * Journal `goto-cut`, rangé directement (comme `b1-ombre`, jamais par `engine.event`) :
+ * cible, identité avant et après (partie et cut SEULEMENT : ni position, ni repère, ni
+ * projet ESV), commande émise (evenement, pas-a-pas, aucune, refus), résultat, durée.
+ * CONTRÔLE D'IDENTITÉ AVANT REPRISE (D-067) : la première demande pendant la pause d'un
+ * lot retient le cut affiché au départ (`b.retourCut`) ; « Reprendre », « Réessayer »,
+ * « SKIP explicite » et « Reprise manuelle » sont refusés tant qu'ESV n'affiche pas de
+ * nouveau ce cut. Page rechargée (autre page ESV) : la reprise après F5 ramène elle-même
+ * le lot à son cut ; la garde s'efface. */
+const PAUSES_LOT=new Set(['PAUSED','STOPPED','PAUSED_ADAPTER_UNRESPONSIVE']);
+/* Pendant un retour en vol, ces actions attendent son résultat (elles agiraient sur un cut en mouvement). */
+const PENDANT_RETOUR=new Set(['connect','native-start','native-resume','start','resume','retry','manual-takeover','manual-completion','explicit-skip',
+ 'before','after','lidar','analyze','accept','restore','reconcile','close-uncertain','cancel-before']);
+let retourCutEnCours=null;
+const partCut=x=>Number.isInteger(x?.part)&&Number.isInteger(x?.cut)?{part:x.part,cut:x.cut}:null;
+function journalRetour(ev){try{const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'goto-cut',schema:1,...ev})).catch(()=>{});}catch{/* le journal n'est pas critique */}}
+function refusRetour(){const b=engine.s.batch,s=engine.s;
+ if(retourCutEnCours)return ['DEJA_EN_COURS','Un retour à un cut est déjà en cours : attends son résultat (une seule demande à la fois).'];
+ if(selectedTab===null)return ['SANS_ONGLET','Sélectionne un onglet ESV.'];
+ if(repriseEnCours)return ['REPRISE_EN_COURS','Reprise du lot en cours : aucune navigation de consultation.'];
+ if(b?.state==='RUNNING')return ['LOT_EN_COURS','Lot Orbite en cours : mets-le en pause avant d’aller à un autre cut.'];
+ if(engine.task||engine.busy)return ['PAUSE_NON_EFFECTIVE','Une action d’Ariane est encore en cours (lecture, pose, validation ou déplacement) : attends que la pause soit effective.'];
+ if(b?.state==='MANUAL_TAKEOVER')return ['REPRISE_MANUELLE',`Reprise manuelle en cours sur le cut ${b.manualTakeover?.identity?.cut??b.activeIdentity?.cut} : termine-la avant d’aller à un autre cut.`];
+ if(['PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING'].includes(b?.state)||engine.deferPending?.()||s.intent||s.reconcileRequired)
+  return ['INCERTITUDE_A_CLORE','Un résultat incertain reste à clôturer : contrôle ESV et clôture-le avant toute navigation.'];
+ if(s.applied)return ['POSE_NON_VALIDEE','Une pose d’Ariane est appliquée et pas encore validée : valide-la, restaure-la ou archive-la avant d’aller à un autre cut.'];
+ const enPause=!!b&&PAUSES_LOT.has(b.state);
+ if(!enPause&&s.before&&['BEFORE_CAPTURED','READY_FOR_AFTER'].includes(s.collection))return ['CAPTURE_OUVERTE','Une capture est ouverte : termine-la ou annule-la avant d’aller à un autre cut.'];
+ if(!enPause&&s.proposal)return ['PROPOSITION_OUVERTE','Une proposition est ouverte : applique-la, rejette-la ou annule la capture avant d’aller à un autre cut.'];
+ return null;}
+/* Plus grand cut connu de la partie (cut du lot, cuts traités, cut retenu) : borne de la cible quand le compteur d'ESV est illisible. */
+function borneConnue(part){const b=engine.s.batch,vus=[];
+ if(b?.scope?.part===part)for(const x of [b.activeIdentity,...(b.processed||[]),...(b.skipped||[]),...(b.deferred||[])]){const c=x?.cut??x?.identity?.cut;if(Number.isInteger(c))vus.push(c);}
+ const o=b?.retourCut?.origine;if(o?.part===part)vus.push(o.cut);return vus.length?Math.max(...vus):null;}
+async function allerAuCut(args){const t0=Date.now(),K=globalThis.BananeCore3,S=globalThis.BananeSettings?.retourCut||{};
+ const cible={part:Number.isInteger(args?.part)?args.part:null,cut:Number.isInteger(args?.cut)?args.cut:null},b=engine.s.batch;
+ const base={cible,lotId:b?.id??null,etatLot:b?.state??null};
+ const refus=(code,message,avant=null)=>{journalRetour({...base,operationId:null,identiteAvant:avant,identiteApres:null,commande:'refus',chemin:null,emissions:0,resultat:'refuse',code,message,dureeMs:Date.now()-t0});
+  return {ok:false,resultat:'refuse',code,message,cible,identiteAvant:avant,identiteApres:null,commande:'refus',emissions:0,dureeMs:Date.now()-t0};};
+ if(cible.part===null||cible.cut===null||cible.cut<0)return refus('CIBLE_INVALIDE','Cible invalide : une partie et un cut entiers, cut positif ou nul.');
+ const r=refusRetour();if(r)return refus(...r);
+ const operationId=K.uid();retourCutEnCours={operationId,depuis:t0,cible};
+ try{
+  /* Cut affiché AVANT toute émission (lecture seule) : la garde de reprise en a besoin même si la page ne répond pas ensuite. */
+  let lu=null;try{lu=(await call('ping'))?.label||null;}catch(e){return refus('ESV_ILLISIBLE',`ESV ne répond pas (${e.message}) : aucune navigation.`);}
+  if(!partCut(lu))return refus('ESV_ILLISIBLE','« Cut N of part P » illisible dans ESV : aucune navigation.');
+  const enPause=!!b&&PAUSES_LOT.has(b.state)&&engine.s.batch===b,garde=enPause&&!b.retourCut;
+  if(garde){b.retourCut={origine:{pageId:lu.pageId??null,part:lu.part,cut:lu.cut},depuis:new Date().toISOString()};await engine.save();}
+  let ev=null,erreur=null;
+  try{ev=await call('goToCut',cible,{chemin:S.chemin,borneConnue:borneConnue(cible.part)},operationId);}catch(e){erreur=e;}
+  /* Rien n'est parti : la garde posée par cette demande n'a pas lieu d'être. */
+  if(garde&&ev&&ev.emissions===0&&ev.commandInvoked===false&&b.retourCut){delete b.retourCut;await engine.save();}
+  const commande=erreur?'inconnue':ev.chemin==='evenement'?'evenement':ev.chemin==='pas-a-pas'?'pas-a-pas':ev.resultat==='refuse'?'refus':'aucune';
+  const resultat=erreur?'incertain':ev.resultat,code=erreur?'ADAPTATEUR':ev.refusal?.code??null,message=erreur?erreur.message:ev.refusal?.message??null;
+  const out={ok:resultat==='confirme',resultat,code,message,cible,operationId,identiteAvant:partCut(ev?.identiteAvant)||partCut(lu),identiteApres:partCut(ev?.identiteApres),
+   commande,chemin:ev?.chemin??null,emissions:ev?.emissions??null,pas:ev?.pas?{demandes:ev.pas.demandes,faits:ev.pas.faits}:null,pret:ev?.pret??null,
+   pauseExplicite:erreur?true:ev.pauseExplicite===true,gardeReprise:partCut(b?.retourCut?.origine),dureeMs:Date.now()-t0};
+  journalRetour({...base,operationId,identiteAvant:out.identiteAvant,identiteApres:out.identiteApres,commande,chemin:out.chemin,emissions:out.emissions,pas:out.pas,
+   cheminEvenement:ev?.cheminEvenement?.raison??(ev?.cheminEvenement?.disponible?'disponible':null),cheminPas:ev?.cheminPas?.raison??(ev?.cheminPas?.disponible?'disponible':null),
+   bornes:ev?.bornes?{source:ev.bornes.source,total:ev.bornes.total}:null,pret:out.pret,resultat,code,message,dureeMs:out.dureeMs,dureePageMs:ev?.durationMs??null,gardeReprise:out.gardeReprise});
+  return out;
+ }finally{retourCutEnCours=null;}}
+/* D-067 : contrôle d'identité avant toute action du lot qui part du cut affiché. `affiche` : l'état déjà relu
+ * (reprise) ; sinon le libellé est relu ici. Illisible : la reprise est refusée ; pour les autres actions, le
+ * moteur relit et contrôle lui-même le cut du lot. */
+async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const b=engine.s.batch,o=b?.retourCut?.origine;if(!o)return;
+ if(rattache){delete b.retourCut;await engine.save();return;}
+ let l=affiche===undefined?null:affiche?.identity??null;
+ if(affiche===undefined){try{l=(await call('ping'))?.label||null;}catch{return;}if(!partCut(l))return;}
+ if(l&&o.pageId!=null&&l.pageId!=null&&l.pageId!==o.pageId){delete b.retourCut;await engine.save();return;}
+ if(!partCut(l)||l.part!==o.part||l.cut!==o.cut)throw Error(`${quoi} refusé : le lot est en pause sur le cut ${o.cut} de la partie ${o.part}, ESV affiche ${partCut(l)?`le cut ${l.cut} de la partie ${l.part}`:'un cut illisible'} (consultation). Reviens au cut ${o.cut} dans ESV, puis recommence ; rien n’a été validé.`);
+ delete b.retourCut;await engine.save();}
 async function dispatch(m){await ready;const {action,args={}}=m;
+ if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
+  await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
+ if(retourCutEnCours&&PENDANT_RETOUR.has(action))throw Error('Retour à un cut en cours : attends son résultat, ou annule-le.');
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
  if(action==='fiches-depart'){const EC=cacheExport();return {fiches:EC?await EC.lireDeparts(chrome.storage.local):[]};}
  if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage(),refus=EC?EC.refus(c,{auto:args?.auto===true}):'module absent';
@@ -1151,6 +1242,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='manual-download')return manual.dataset();
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
+ if(action==='goto-cut')return allerAuCut(args);
  if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
   if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();}
  if(action==='resume'){if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
@@ -1160,16 +1252,16 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   * pose, qui entrerait dans le moteur et la décision sur le lot (cahier §10,
   * §14 I) : refusé, comme « Reprendre » (« Rails modifiés depuis la lecture
   * interrompue »). `src/engine.js` est épinglé : le contrôle vit ici. */
- if(action==='retry'){const ref=engine.s.before?.rails;
+ if(action==='retry'){await gardeRetourCut('« Réessayer »');const ref=engine.s.before?.rails;
    if(ref){const now=await engine.adapter.state();
      if(!globalThis.BananeCore3.equalPoses(ref,now.rails))throw Error('Rails modifiés pendant la pause : « Réessayer » analyserait ta pose, il est refusé. Choisis Reprise manuelle ou SKIP explicite.');}
    await engine.retryPaused();return engine.view();}
- if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
+ if(action==='manual-takeover'){await gardeRetourCut('« Reprise manuelle »');await engine.manualTakeover();return engine.view();}
  // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
  if(action==='manual-completion'){await engine.manualCompletion();return engine.view();}
  /* OBS-1 (relecture du test 3) : un SKIP explicite du dernier cut d'un lot borné clôt le lot HORS de la boucle du moteur
   * (pas de jalon `batch-state`) : la fin est relevée ici, comme pour « Arrêter », sinon l'écriture SKIP arrive sans grâce. */
- if(action==='explicit-skip'){const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
+ if(action==='explicit-skip'){await gardeRetourCut('« SKIP explicite »');const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
   if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'))marquerFinLot(b,'fin-naturelle');return engine.view();}
  if(action==='start'){
   // Avant tout archivage : un lot en reprise manuelle garde son contexte.

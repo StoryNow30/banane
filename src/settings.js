@@ -248,6 +248,17 @@
    * et la page oublie sa table. Livré à 'ombre' : passer à 'actif' attend le
    * rejeu de l'ombre (justes perdus, faux ajoutés) et l'accord de la direction. */
   const appuisListe = 'ombre';
+  /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
+   * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
+   * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.
+   * `chemin` : 'auto' (événement interne d'ESV s'il est visible dans la page, sinon pas
+   * à pas par les boutons précédent/suivant), 'evenement' ou 'pas' (ce chemin seul),
+   * 'off' (refus). `pasMax` : au-delà de ce nombre de pas, le pas à pas est refusé (un
+   * clic et une relecture par pas). Coupable sans reconstruire le moteur. */
+  const retourCut = Object.freeze({
+    chemin: 'auto',
+    pasMax: 40,
+  });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
@@ -281,5 +292,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, retourCut, derived, describe };
 });
