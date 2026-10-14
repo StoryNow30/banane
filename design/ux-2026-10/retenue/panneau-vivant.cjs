@@ -35,7 +35,10 @@ const simulation=()=>{
 (async()=>{
  const b=await pw.chromium.launch();
  const ouvrir=async(ctx,theme)=>{const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));
-  await p.addInitScript(simulation);await p.addInitScript(t=>{try{localStorage.setItem('banane-theme',t);}catch{}},theme);
+  await p.addInitScript(simulation);
+  /* Scénarios de la tuile du lot (4.9.0.14) : SCENARIO=fin-inconnue | fin-compteur. */
+  await p.addInitScript(m=>{const b=globalThis.__demo?.S?.batch;if(!b||!m)return;b.scope.end=999999;b.scope.endMode='partie';
+   if(m==='fin-compteur')b.totalReleve={part:34,cut:8455,total:8641,totalSource:'compteur',at:'2026-10-14T14:20:00Z'};},process.env.SCENARIO||'');await p.addInitScript(t=>{try{localStorage.setItem('banane-theme',t);}catch{}},theme);
   await p.goto('file://'+path.join(root,'panel.html')+'#automatic');
   await p.evaluate(t=>{document.documentElement.dataset.theme=t;},theme==='sombre'?'dark':'light');
   await p.evaluate(()=>document.fonts.ready);return p;};
@@ -43,7 +46,7 @@ const simulation=()=>{
  for(const theme of ['sombre','clair']){
   const ctx=await b.newContext({viewport:{width:480,height:880},deviceScaleFactor:2});const p=await ouvrir(ctx,theme);
   await p.waitForTimeout(3200);await p.evaluate(()=>{__demo.S.batch.step='apply';});await p.waitForTimeout(1500);
-  await p.screenshot({path:path.join(dir,`vivant-${theme}.png`),fullPage:true});console.log(`vivant-${theme}.png`);await ctx.close();
+  await p.screenshot({path:path.join(dir,`vivant${process.env.SCENARIO?'-'+process.env.SCENARIO:''}-${theme}.png`),fullPage:true});console.log(`vivant-${theme}.png`);await ctx.close();
  }
  // Le film : la fenêtre réelle, en temps réel, capturée image par image par le
  // protocole de Chromium (Page.startScreencast), aux pixels de l'écran (×2).

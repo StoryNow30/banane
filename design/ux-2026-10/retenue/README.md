@@ -113,3 +113,17 @@ Demandes de Mic après la test 12, et ce qui est fait :
 - `rendre-panneau.cjs` : rendu statique (`panneau-*.png`, et `panneau-fin-*.png` pour un lot « jusqu’à la fin de partie »).
 - Essais : `tests/d092-fiche-depart.test.cjs` (la structure du bloc change) et `tests/panel-h.test.cjs` (`#lot-pct` porte le nombre, le « % » est à côté). `tests/ux-49-orbite.test.cjs` gagne un essai qui rend les cartes de départ.
 - `node tools/verify.cjs` : 1491 réussis, 0 échec, 2 ignorés (corpus privé absent).
+
+## 4.9.0.14 — le vert de la tuile du lot (retour de Mic sur la test 13)
+
+« Le vert ne se remplit pas » : le lot de Mic allait « jusqu’à la fin de partie », et le panneau ne connaissait pas la fin, donc le vert restait vide et muet.
+
+L’essai `tests/ux-49-tuile-lot.test.cjs` a d’abord échoué sur 3 cas sur 4. La règle est maintenant :
+
+- **Plage fixe** : comme avant.
+- **« Jusqu’à la fin de partie »** : la fin retenue pour la partie si elle est connue. Sinon, le dernier cut est M−1, avec M lu au compteur d’ESV « cut N sur M » pendant le lot (`b.totalReleve` : même partie, source « compteur », cuts < M). C’est la règle de D-062.
+  - La fiche de départ n’est pas utilisée : son total est le nombre de lignes de la liste d’ESV, et rien ne prouve qu’il donne le dernier cut.
+- **Fin inconnue** : bande animée et « fin de partie inconnue » (`#lot-progres-note`, seul identifiant ajouté), jamais un faux pourcentage.
+- Le vert avance à chaque cut et **ne recule pas** sur un retour à un cut. Il garde le plus loin atteint dans le lot, puis repart de zéro au lot suivant.
+
+Rendus du vrai panneau : `vivant-fin-compteur-*.png` et `vivant-fin-inconnue-*.png` (`SCENARIO=… node panneau-vivant.cjs`).

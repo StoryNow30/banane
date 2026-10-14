@@ -79,7 +79,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 13',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 14',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -406,7 +406,7 @@
  /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
   * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, « Détails du lot » est fermé
   * par défaut et garde son nom ; son état se lit dans aria-expanded. */
- let nouveauLot=false,departsPartie=null;const tiroirs={lot:false,native:true};
+ let nouveauLot=false,departsPartie=null,progresLot={cle:null,max:0};const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
    bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
@@ -527,12 +527,25 @@
      /* 4.9 (chantier UX) : la partie est dans le titre de la vue ; la tuile du lot ne porte que la plage. */
      if($('lot-plage'))$('lot-plage').textContent=b?.scope?`${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
      /* Progression dans la plage du lot : du premier au dernier cut. */
-     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
-       /* « Fin de partie » : la progression se mesure sur la fin retenue pour la partie, si elle est connue. */
-       const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:NaN):Number(sc?.end);
-       const ok=Number.isFinite(a)&&Number.isFinite(z)&&z>a&&Number.isFinite(c);$('lot-progres').hidden=!ok;
-       if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');rouler($('lot-pct'),String(pct));}}
+     /* 4.9.0.14 (retour de Mic sur la test 13 : « le vert ne se remplit pas ») — la
+      * part de la plage parcourue. Plage fixe : son dernier cut. « Fin de partie » :
+      * la fin retenue pour la partie si elle est connue, sinon M−1, M lu au compteur
+      * d'ESV « cut N sur M » pendant ce lot (b.totalReleve, même partie, source
+      * « compteur », cut courant < M) : la règle de D-062. Fin inconnue : bande
+      * indéterminée et « fin de partie inconnue », jamais un faux pourcentage. Le
+      * vert ne recule pas sur un retour à un cut : il garde le plus loin atteint
+      * dans ce lot. */
+     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut),t=b?.totalReleve;
+       const parCompteur=t&&t.part===sc?.part&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&(!Number.isInteger(t.cut)||t.cut<t.total)&&Number.isFinite(c)&&c<t.total?t.total-1:NaN;
+       const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:parCompteur):Number(sc?.end);
+       const lotOk=!!sc&&Number.isFinite(a)&&Number.isFinite(c),ok=lotOk&&Number.isFinite(z)&&z>a,inconnu=lotOk&&!ok&&finDePartie(sc);
+       $('lot-progres').hidden=!ok&&!inconnu;$('lot-progres').className='progres'+(inconnu?' indetermine':'');
+       if($('lot-progres-note'))$('lot-progres-note').textContent=inconnu?'fin de partie inconnue':'';
+       const cle=b?.id??`${sc?.part}|${sc?.start}`;if(progresLot.cle!==cle)progresLot={cle,max:0};
+       if(ok){const brut=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100),pct=Math.max(brut,progresLot.max);progresLot.max=pct;
+         if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
+         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');rouler($('lot-pct'),String(pct));}
+       else if(inconnu){if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width='100%';$('lot-pct').textContent='';if($('lot-pct').dataset)delete $('lot-pct').dataset.v;$('lot-debut').textContent=entier(a);$('lot-fin').textContent='';}}
      /* 4.9 (chantier UX) : la tuile du lot dit toujours combien de cuts sont traités, même quand la fin du lot n'est pas connue. */
      if($('lot-traites'))rouler($('lot-traites'),b?entier(b.processed?.length??0):'—');
      const v=b?voieDuLot(s):null;

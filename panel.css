@@ -435,6 +435,14 @@ body[data-window=automatic] .context{display:none}
 .tuile-lot #lot-pct{font:300 46px/1 var(--sans);letter-spacing:-.02em;color:var(--sur-vert)}
 .tuile-lot .lot-sep{position:relative;z-index:1;align-self:stretch;width:1.5px;margin:4px 0 3px;border-radius:1px;background:var(--text-3);opacity:.6}
 .tuile-lot:has(#lot-progres[hidden]) .lot-sep{display:none}
+/* 4.9.0.14 : fin de partie inconnue. Une bande verte qui glisse, jamais un faux pourcentage ; le texte le dit. */
+.tuile-lot .lot-note{position:relative;z-index:1;align-self:flex-end;margin-bottom:6px;font-size:14.5px;color:var(--text-2)}
+.tuile-lot .lot-note:empty{display:none}
+.tuile-lot #lot-progres.indetermine .progres-l{display:none}
+.tuile-lot #lot-progres.indetermine .barre i{width:100%!important;background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--ok) 16%,transparent) 0 14px,transparent 14px 36px);opacity:1}
+.tuile-lot #lot-progres.indetermine .barre i::after,.tuile-lot #lot-progres.indetermine .barre i::before{display:none}
+@media (prefers-reduced-motion:no-preference){.tuile-lot #lot-progres.indetermine .barre i{animation:bande 2.4s linear infinite}}
+@keyframes bande{from{background-position:0 0}to{background-position:-39.72px 0}}
 .tuile-lot .lot-traites{position:relative;z-index:1;display:flex;align-items:baseline;gap:6px;margin:0;white-space:nowrap}
 .tuile-lot .lot-traites b{font:300 46px/1 var(--sans);letter-spacing:-.02em;color:var(--text)}
 .tuile-lot .lot-traites small{font-size:16px;color:var(--text-2)}
