@@ -170,7 +170,7 @@ function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
 function marquerFinLot(b,cause){if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
 /* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
 function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;
- if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')marquerFinLot(b,'fin-naturelle');
+ if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));
  else if(state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel')marquerFinLot(b,'arret-manuel');}
 /* Avant un nouveau lot : l'ancien, clos, garde son instant de fin (arrêt au dernier cut compris) et son contexte. */
 function retenirLotClos(){const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
@@ -316,7 +316,8 @@ function lotExitOf(next,dernier=null){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false,dernier=null}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+function closeAtExit(...args){return coordinateurLot.transition('fin-de-lot',()=>clore(...args));}
+async function clore(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false,dernier=null}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';
  if(dernier){/* KI-069 : ESV est resté sur le dernier cut ; rien d'autre n'est ni envoyé ni mémorisé (D-062 b reste celle de D-062). */
    b.stoppedAtEnd={cut:last,reason,issue:reason,motif:dernier.motif,target:null,total:dernier.total,at:new Date().toISOString(),applied:reason==='dernier-cut-valide'};
@@ -377,12 +378,12 @@ async function validerSurPlace(identity,d,scope){const S=globalThis.BananeSettin
  await engine.event('validation-en-place',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:e.command??'ctrl-entrée',compteurAvant:av,compteurApres:ap});
  await closeAtExit('dernier-cut-valide',d.cut,null,{dernier:d});
  return e;}
-adapter.validateAndNext=async(...args)=>{
+adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',async()=>{
  const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return validerSurPlace(args[0],dernier,args[1]);
  const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
- return evidence;};
+ return evidence;});
 const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.test(e?.message||'');
 /* 4.8.0 (KI-063) — ESV LU DANS UNE AUTRE PARTIE. Après un silence, ESV peut
  * revenir sur une autre partie (terrain du 26/09 : partie 13 muette 30 s après
@@ -660,11 +661,11 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
  await engine.save();return true;}
 async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const b0=engine.s.batch;
- if(departOuvert(b0))return finApresDiffere(b0);
+ if(departOuvert(b0))return coordinateurLot.transition('fin-de-lot',()=>finApresDiffere(b0));
  const lot=engine.s.batch?.id,etatDepart=engine.s.batch?.state;
  const garde=()=>engine.s.batch?.id===lot&&engine.s.batch.state===etatDepart;
  /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
- const {etat,rattache}=await retablirApresRechargement(garde);
+ const {etat,rattache}=await coordinateurLot.transition('rechargement',()=>retablirApresRechargement(garde));
  /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
   * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
   * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
@@ -690,7 +691,7 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  return true;}
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{const result=await applyInESV(...args);
- if(stopAtLotEnd())await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true});return result;};
+ if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
@@ -699,18 +700,18 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
  /* 4.8.6 (KI-069) : différé sur le dernier cut de la partie : aucune commande « suivant »
   * (le moteur épinglé attendrait un changement de cut) ; le lot se ferme ici, rien n'est envoyé à ESV. */
  const differer=engine.deferUnresolved.bind(engine);
- engine.deferUnresolved=async(now,b,eligibility)=>{const d=dernierCutCertain(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
+ engine.deferUnresolved=(now,b,eligibility)=>coordinateurLot.transition('differe',async()=>{const d=dernierCutCertain(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
    await engine.event('dernier-cut-differe',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:null});
    b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
    b.interrupted.push({identity:globalThis.BananeCore3.completeIdentity(now.identity),status:'DEFER_DERNIER_CUT_SANS_ENVOI',commandInvoked:false,total:d.total});
    await closeAtExit('dernier-cut-differe',d.cut,null,{dernier:d});await engine.save();
-   return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};};
+   return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};});
  const evenement=engine.event.bind(engine);
  engine.event=async(type,...rest)=>{if(type==='batch-state')finVueParLaBoucle(rest[0]?.state);
    /* OBS-3 : arrêt au dernier cut : l'instant reste `stoppedAtEnd.at` ; on garde aussi le contexte de mesure (redémarrage). */
    if(type==='batch-stopped-at-end'){const b=engine.s.batch,at=Date.parse(b?.stoppedAtEnd?.at);if(b?.id&&b.state==='STOPPED'&&Number.isFinite(at)&&engine.s.mode==='automatic-test')poserFin(b,at,'dernier-cut');}
    const r=await evenement(type,...rest);
-   if(type==='defer-navigation-uncertain')await departApresDiffere(rest[0]);
+   if(type==='defer-navigation-uncertain')await coordinateurLot.transition('differe',()=>departApresDiffere(rest[0]));
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
    return r;};
@@ -765,7 +766,7 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
    if(analysisError)throw analysisError;
    /* 4.7.19 — dernier cut du lot non résolu : laissé sans commande ni navigation. */
-   if(pilotScope&&proposal&&stopAtLotEnd(proposal))await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false});
+   if(pilotScope&&proposal&&stopAtLotEnd(proposal))await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false}));
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
      engine.s.proposal=null;
      const reason=shadow?.selection?.fallbackReason||shadow?.error||'sélection GCV1 absente';
@@ -1335,7 +1336,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* OBS-1 (relecture du test 3) : un SKIP explicite du dernier cut d'un lot borné clôt le lot HORS de la boucle du moteur
   * (pas de jalon `batch-state`) : la fin est relevée ici, comme pour « Arrêter », sinon l'écriture SKIP arrive sans grâce. */
  if(action==='explicit-skip'){await gardeRetourCut('« SKIP explicite »');const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
-  if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'))marquerFinLot(b,'fin-naturelle');return engine.view();}
+  if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'))coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));return engine.view();}
  if(action==='start')return coordinateurLot.transition('demarrage',()=>demarrerLot(args));
  if(action==='cloud')return store.getCloud(args.id);
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
@@ -1410,5 +1411,5 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
  dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
    catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
-  async e=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});return true;
+  e=>coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});}));return true;
 });

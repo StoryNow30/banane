@@ -13,7 +13,7 @@ const {dernierCut}=require('./helpers/dernier-cut.cjs');
 const {espion,esvLent,reglages,attendreFin}=require('./helpers/esv-lent.cjs');
 
 const NOMS=['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur'];
-const trace=b=>b.fonction('coordinateurLot.journal.map(t=>t.nom)');
+const trace=b=>[...b.fonction('coordinateurLot.journal.map(t=>t.nom)')];
 const types=b=>b.store.events.map(e=>e.type).filter(t=>!/adapter-progress|gcv1-shadow|esv-releve/.test(t));
 const sousSuite=(liste,attendus)=>{let i=0;for(const x of liste)if(x===attendus[i])i++;return i===attendus.length;};
 const libre=async b=>{for(let i=0;i<500&&b.fonction('engine.task');i++)await new Promise(r=>setImmediate(r));};
