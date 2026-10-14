@@ -65,3 +65,30 @@ D-045 exige que **la politique effective soit affichée**, et ce bloc était
 cette preuve. Il est retiré comme demandé. Deux options :
 - le mettre dans « Détails du lot » (un toucher) ;
 - lever l’invariant (décision à inscrire dans `DECISIONS.md`).
+
+## Intégration au panneau (14 octobre)
+
+Décision de la session de pilotage sur D-045 : la règle n’est pas levée. La
+politique effective quitte la vue principale et va dans « Détails du lot »
+(fermé par défaut), avec les mêmes libellés et les mêmes `id=`. Si la
+politique du lot n’est pas celle par défaut, une pastille courte le dit sur la
+vue (`#lot-politique-pastille`, seul identifiant ajouté).
+
+- `panel.html` : vue Orbite réordonnée (Détails du lot, héros avec la ligne et
+  l’écart, commandes en tuiles, tuile du lot, Ce lot, dernière commande,
+  activité, résumé de la partie). Tous les `id=` sont conservés.
+- `panel.css` : nouveaux jetons (fond vert profond, tuiles), section « 4.9 —
+  chantier UX » ; en pause, le halo et le vert du lot s’éteignent ; en cours,
+  un reflet lent traverse le vert. Tout est figé si le système réduit les
+  animations.
+- `panel.js` : « Détails du lot » fermé par défaut ; `#lot-pct` écrit
+  « 20 % » ; la pastille de politique.
+- Essais : `tests/panel-ligne-suite.test.cjs` (Détails fermé par défaut),
+  `tests/panel-h.test.cjs` (texte du pourcentage), nouveau
+  `tests/ux-49-orbite.test.cjs` (pastille, politique dans les détails).
+- `panneau-sombre.png`, `panneau-clair.png` : rendu du vrai `panel.html` et du
+  vrai `panel.css` (sans `panel.js`, données fictives) par `rendre-panneau.cjs`.
+- `node tools/verify.cjs` : 1444 réussis, 0 échec, 2 ignorés (corpus privé
+  absent, comme avant le chantier).
+
+Intouchés : `background.js`, `src/`, `vendor/`.
