@@ -406,7 +406,7 @@
  /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
   * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, « Détails du lot » est fermé
   * par défaut et garde son nom ; son état se lit dans aria-expanded. */
- let nouveauLot=false;const tiroirs={lot:false,native:true};
+ let nouveauLot=false,departsPartie=null;const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
    bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
@@ -524,14 +524,17 @@
        $('lot-etat').className='eyebrow'+(ton?' '+ton:'')+(b?.state==='RUNNING'&&!s.reconcileRequired?' live':'');}
      if($('lot-cut'))rouler($('lot-cut'),entier(b?.activeIdentity?.cut??id?.cut));
      etapes(b,s);
-     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`partie ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
+     /* 4.9 (chantier UX) : la partie est dans le titre de la vue ; la tuile du lot ne porte que la plage. */
+     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
      /* Progression dans la plage du lot : du premier au dernier cut. */
      if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
        /* « Fin de partie » : la progression se mesure sur la fin retenue pour la partie, si elle est connue. */
        const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:NaN):Number(sc?.end);
        const ok=Number.isFinite(a)&&Number.isFinite(z)&&z>a&&Number.isFinite(c);$('lot-progres').hidden=!ok;
        if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');$('lot-pct').textContent=`${pct} %`;}}
+         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');rouler($('lot-pct'),String(pct));}}
+     /* 4.9 (chantier UX) : la tuile du lot dit toujours combien de cuts sont traités, même quand la fin du lot n'est pas connue. */
+     if($('lot-traites'))rouler($('lot-traites'),b?entier(b.processed?.length??0):'—');
      const v=b?voieDuLot(s):null;
      /* Tuiles : posés, différés, couverture. 4.8.0 (audit qualité, D02) :
       * la couverture est C1 (D-038) : posés sur les cuts DISTINCTS du lot, le
@@ -554,6 +557,8 @@
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
      const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
      afficherResume(s);
+     /* La carte de départ de la partie en cours passe en tête dès que la partie est connue. */
+     if((b?.scope?.part??id?.part??null)!==departsPartie)void majDeparts();
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -1273,8 +1278,20 @@ on('native-discard',async()=>{
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
  /* 4.9.0.10 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
+ /* D-092, 4.9 (chantier UX) : une carte par partie, la fiche la plus récente ; la
+  * partie en cours d'abord. Les chiffres sont ceux qu'ESV affichait au départ du
+  * lot, posés en texte (jamais en HTML). */
+ const milliersFr=n=>Number.isInteger(n)?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f'):'?';
+ function carteDepart(x,n,enCours){const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
+   const c=el('div','depart'+(enCours?' en-cours':''));const t=el('p','d-t');
+   t.append(el('b','',`Partie ${Number.isInteger(x.partie)?x.partie:'?'}`),el('span','',(enCours?'en cours · ':'')+(typeof x.at==='string'?`${x.at.slice(8,10)}/${x.at.slice(5,7)} ${x.at.slice(11,16)} UTC`:'heure inconnue')+(n>1?` · ${n} départs`:'')));
+   const g=el('div','d-n');for(const [v,l] of [[x.valides,'validés'],[x.invalides,'invalides'],[x.total,'total']]){const k=el('span');k.append(el('b','',milliersFr(v)),el('small','',l));g.append(k);}
+   c.append(t,g);if(Number.isInteger(x.ignores)&&x.ignores>0)c.append(el('p','d-i',`dont ${milliersFr(x.ignores)} ignorés`));return c;}
  async function majDeparts(){const el=$('departs-liste');if(!el)return;try{const r=await api('fiches-depart'),f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;
-  if(!f.length||!EC)return;const lignes=f.slice(-6).reverse().map(x=>EC.texteDepart(x));el.replaceChildren(...lignes.flatMap((l,i)=>i?[document.createElement('br'),document.createTextNode(l)]:[document.createTextNode(l)]));}catch{/* affichage seulement */}}
+  if(!f.length||!EC)return;const par=new Map();for(const x of f){const k=Number.isInteger(x?.partie)?x.partie:'?',p=par.get(k);par.delete(k);par.set(k,{x,n:(p?.n||0)+1});}
+  const enCours=state?.batch?.scope?.part??state?.current?.identity?.part;departsPartie=enCours??null;const cartes=[...par.entries()].reverse().slice(0,6);
+  cartes.sort((a,b)=>(b[0]===enCours)-(a[0]===enCours));
+  el.replaceChildren(...cartes.map(([k,{x,n}])=>carteDepart(x,n,k===enCours)));}catch{/* affichage seulement */}}
  setInterval(()=>{if(!working)void refresh();},1000);
  // Contrôle du volume pendant la collecte : peu fréquent, jamais bloquant.
  // Le suivi continue quelle que soit la vue affichée : quitter l'onglet Natif

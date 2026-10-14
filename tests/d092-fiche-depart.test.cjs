@@ -82,7 +82,7 @@ test('sans fiche, les exports ne portent pas de champ `fichesDepart`',async()=>{
 });
 test('panneau : bloc « Départs des parties », CONTENU.txt et rafraîchissement ; la clé n’est jamais supprimée par le vidage',()=>{
  const html=lire('panel.html'),js=lire('panel.js'),bg=lire('background.js'),cache=lire('src/export-cache.js');
- assert.match(html,/Départs des parties<\/p>\s*<p class="muted" id="departs-liste">/);
+ assert.match(html,/Départs des parties<\/p>\s*<div id="departs-liste" class="departs[^"]*">/);
  assert.match(js,/Départs des parties \(\$\{f\.length\}\)/);assert.match(js,/periode\+departs\+liste\.map/);assert.match(js,/function majDeparts/);
  assert.match(bg,/action==='fiches-depart'/);assert.match(bg,/noterDepart\(chrome\.storage\.local,fiche\)/);
  assert.ok(!/banane3FichesDepart|CLE_DEPARTS/.test(bg.slice(bg.indexOf('async function viderCacheExport'),bg.indexOf('async function viderCacheExport')+3000)),'le vidage ne cite jamais la clé');

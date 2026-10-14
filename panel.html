@@ -101,8 +101,6 @@
   <p class="lbl">Exports du lot</p>
   <div class="row"><button id="journal" class="secondary">Télécharger le journal</button><button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button><button id="gcv1-diagnostic-export" class="secondary">Télécharger le diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Télécharger le corpus GCV1 + LiDAR</button><button id="export-cache-clear" class="secondary">Vider le cache des exports</button></div>
   <p class="muted">Construits sur ce poste. ESV ne donne aucune confirmation serveur.</p>
-  <p class="lbl">Départs des parties</p>
-  <p class="muted" id="departs-liste">Aucune partie enregistrée pour l’instant. Les validés et invalides de chaque partie sont notés ici au démarrage, et restent même si tu vides le cache.</p>
   <p class="lbl reglages-titre">Réglages du lot</p>
   <p class="muted" id="lot-reglages">Rail non résolu : différé · décision sur le lot : appliquée · proposition expérimentale : tentée · cerveau de placement : actif. Réglages fixes depuis la 4.7.21.</p>
   <!-- Pendant un lot : ses politiques EFFECTIVES, figées à sa création (cahier 4.7 §10, KI-033). -->
@@ -141,8 +139,13 @@
 
  <!-- La tuile du lot : elle se remplit de vert jusqu'où en est le lot. -->
  <div class="tuile-lot rise d4">
-  <div id="lot-progres" class="progres" hidden><div class="barre"><i id="lot-progres-fill" class="fill"></i></div><p class="progres-l"><span id="lot-debut"></span><span id="lot-pct"></span><span id="lot-fin"></span></p></div>
   <p class="lot-t"><b>Lot</b><span id="lot-plage" class="mono"></span></p>
+  <!-- En bas : la part de la plage parcourue (si la fin du lot est connue) et les cuts traités. -->
+  <div class="lot-bas">
+   <div id="lot-progres" class="progres" hidden><div class="barre"><i id="lot-progres-fill" class="fill"></i></div><p class="progres-l"><span id="lot-debut"></span><span id="lot-pct"></span><small class="u">%</small><span id="lot-fin"></span></p></div>
+   <span class="lot-sep" aria-hidden="true"></span>
+   <p class="lot-traites" title="cuts traités dans ce lot"><b id="lot-traites">—</b><small>cuts</small></p>
+  </div>
   <!-- 4.7.21 : les trois étapes du cut courant ; l'étape en cours est parcourue d'un reflet continu (jamais un clignotement). -->
   <div id="lot-etapes" class="etapes" hidden><i data-e="capture"><span>capture</span></i><i data-e="apply"><span>pose</span></i><i data-e="validate"><span>validation</span></i></div>
  </div>
@@ -156,6 +159,11 @@
  <div id="lot-compteurs" class="tuiles rise d5" hidden></div>
  <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
  <div id="lot-commande" class="commande carte rise d5" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
+
+ <!-- D-092 : les fiches de départ, une carte par partie (la plus récente), la partie en cours d'abord.
+      Les chiffres sont ceux qu'ESV affichait au démarrage du lot : à comparer avec sa liste. -->
+ <p class="sec rise d6">Départs des parties</p>
+ <div id="departs-liste" class="departs rise d6"><p class="muted">Aucune partie enregistrée pour l’instant. Les validés et invalides de chaque partie sont notés ici au démarrage, et restent même si tu vides le cache.</p></div>
 
  <p class="sec rise d6">Activité</p>
  <div class="carte rise d6">

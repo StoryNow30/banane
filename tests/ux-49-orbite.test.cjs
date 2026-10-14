@@ -44,7 +44,29 @@ test('panel.html : la politique effective est dans « Détails du lot », fermé
   const html=fs.readFileSync(path.join(__dirname,'../panel.html'),'utf8');
   const tiroir=html.match(/<div id="lot-details" class="tiroir" hidden>[\s\S]*?<input type="hidden" id="policy" value="attempt">\s*<\/div>/)?.[0];
   assert.ok(tiroir,'tiroir « Détails du lot » fermé dans le HTML');
-  for(const id of ['lot-decision-effective','unresolved-policy-effective','policy-effective','lot-reglages','departs-liste','journal','dataset'])assert.match(tiroir,new RegExp(`id="${id}"`),id);
+  for(const id of ['lot-decision-effective','unresolved-policy-effective','policy-effective','lot-reglages','journal','dataset'])assert.match(tiroir,new RegExp(`id="${id}"`),id);
+  assert.doesNotMatch(tiroir,/id="departs-liste"/,'les départs sont sur la vue, plus dans les détails');assert.match(html,/<div id="departs-liste" class="departs/);
   assert.match(html,/<p id="lot-politique-pastille" class="pastille" hidden><\/p>/);
   assert.match(html,/id="lot-details-toggle" class="pill details-toggle" aria-expanded="false"[^>]*>Détails du lot</);
+});
+
+/* Départs des parties (D-092) : une carte par partie, la fiche la plus récente, la partie en cours d'abord. */
+test('départs : une carte par partie, la plus récente, partie en cours en tête ; texte seulement',async()=>{
+  const elements=new Map(),cree=tag=>({tag,className:'',textContent:'',children:[],append(...c){this.children.push(...c);},replaceChildren(...c){this.children=c;},
+    hidden:false,disabled:false,innerHTML:'',value:'',checked:false,open:false,classList:{toggle(){}},dataset:{},setAttribute(){},removeAttribute(){},addEventListener(){},set onchange(_){},set oninput(_){},set onclick(_){}});
+  const document={body:{dataset:{}},activeElement:null,querySelectorAll:()=>[],createElement:cree,getElementById(id){if(!elements.has(id))elements.set(id,cree('div'));return elements.get(id);}};
+  const fiches=[{at:'2026-10-12T16:04:40Z',partie:33,valides:2015,invalides:12,total:2310},{at:'2026-10-13T09:00:00Z',partie:34,valides:1200,invalides:30,total:2140},
+    {at:'2026-10-13T12:58:02Z',partie:34,valides:1284,invalides:37,ignores:5,total:2140},{at:'2026-10-13T14:00:00Z',partie:35,valides:'<img>',invalides:0,total:900}];
+  const state=lot({unresolvedPolicy:'defer',lotDecision:'apply',lowConfidence:'attempt'});state.batch.scope.part=34;
+  const chrome={runtime:{connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
+    sendMessage:async({action})=>({result:action==='view'?state:action==='fiches-depart'?{fiches}:action==='list-tabs'?[]:{}})}};
+  const context={document,chrome,location:{hash:'#automatic'},addEventListener:()=>{},setInterval:()=>{},setTimeout:()=>{},console,BananeExportCache:{}};
+  vm.createContext(context);vm.runInContext(SOURCE,context);
+  for(let i=0;i<12;i++)await new Promise(resolve=>setImmediate(resolve));
+  const cartes=document.getElementById('departs-liste').children,txt=e=>e.textContent+e.children.map(txt).join(' ');
+  assert.equal(cartes.length,3,'une carte par partie');
+  assert.equal(cartes[0].className,'depart en-cours');assert.match(txt(cartes[0]),/Partie 34/);assert.match(txt(cartes[0]),/en cours · 13\/10 12:58 UTC · 2 départs/);
+  assert.match(txt(cartes[0]),/1\u202f284.*validés.*37.*invalides.*2\u202f140.*total/s);assert.match(txt(cartes[0]),/dont 5 ignorés/);
+  assert.equal(cartes[1].className,'depart');assert.match(txt(cartes[1]),/Partie 35/);assert.match(txt(cartes[1]),/\?/,'une valeur illisible s’écrit « ? », jamais en HTML');
+  assert.match(txt(cartes[2]),/Partie 33/);
 });

@@ -29,7 +29,10 @@ const remplir=`(()=>{const D=globalThis.D;const $=id=>document.getElementById(id
  for(const id of ['start-batch','export-tout'])$(id).hidden=id==='start-batch';$('pause').hidden=false;$('stop').hidden=false;$('stop').className='link danger';$('pause').className='primary ink';$('export-tout').className='link';
  for(const id of ['lot-decision-effective','unresolved-policy-effective','policy-effective'])$(id).hidden=false;
  $('lot-decision-effective').textContent='Décision sur le lot dans ce lot : appliquée.';$('unresolved-policy-effective').textContent='Politique effective de ce lot : continuer et différer.';$('policy-effective').textContent='Politique effective de ce lot : mettre le lot en pause.';
- $('departs-liste').innerHTML='2026-10-13 12:58:02 UTC · partie 34 · validés 1 284 · invalides 37 · total 2 140<br>2026-10-12 16:04:40 UTC · partie 33 · validés 2 015 · invalides 12 · total 2 310';
+ $('lot-traites').textContent='45';
+ const carte=(p,h,v,i,t,en,n)=>'<div class="depart'+(en?' en-cours':'')+'"><p class="d-t"><b>Partie '+p+'</b><span>'+(en?'en cours · ':'')+h+' UTC'+(n?' · '+n+' départs':'')+'</span></p><div class="d-n"><span><b>'+v+'</b><small>validés</small></span><span><b>'+i+'</b><small>invalides</small></span><span><b>'+t+'</b><small>total</small></span></div></div>';
+ $('departs-liste').innerHTML=carte(34,'13/10 12:58','1 284','37','2 140',true,2)+carte(33,'12/10 16:04','2 015','12','2 310',false);
+ if(new URLSearchParams(location.search).has('fin')){$('lot-progres').hidden=true;$('lot-plage').textContent='Partie 34 · 8410 → fin de partie';}
  $('tabs').innerHTML='<option>Ouvre ESV dans Edge</option>';
 })();`;
 (async()=>{
@@ -37,14 +40,14 @@ const remplir=`(()=>{const D=globalThis.D;const $=id=>document.getElementById(id
  for(const theme of ['sombre','clair']){
   const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));
   await p.route('**/*.js',r=>r.request().url().endsWith('/commun.js')?r.continue():r.abort());
-  await p.goto('file://'+path.join(root,'panel.html'));
+  await p.goto('file://'+path.join(root,'panel.html')+(process.env.FIN?'?fin':''));
   await p.addScriptTag({path:path.join(dir,'../variantes/commun.js')});
   await p.addScriptTag({content:remplir});
   await p.evaluate(t=>document.documentElement.dataset.theme=t==='sombre'?'dark':'light',theme);
   await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(700);
   // La barre d'action est collante : en pleine page, on la remet dans le flux.
   await p.addStyleTag({content:'.actions{position:static!important}'});
-  await p.screenshot({path:path.join(dir,`panneau-${theme}.png`),fullPage:true});console.log(`panneau-${theme}.png`);await p.close();
+  await p.screenshot({path:path.join(dir,`panneau${process.env.FIN?'-fin':''}-${theme}.png`),fullPage:true});console.log(`panneau-${theme}.png`);await p.close();
  }
  await b.close();
 })();

@@ -36,7 +36,7 @@ test('bandeau : activé, il reçoit l\'état du lot en une ligne ; éteint, rien
 test('Pilote : l\'état dit l\'étape, la plage avance, l\'activité liste les derniers cuts',async()=>{
   const {$}=await panneau(lot(),'#automatic');
   assert.equal($('lot-etat').textContent,'En cours · capture du LiDAR');assert.equal($('lot-etat').className,'eyebrow live');
-  assert.equal($('lot-progres').hidden,false);assert.equal($('lot-pct').textContent,'15 %');assert.equal($('lot-progres-fill').style.width,'15%');
+  assert.equal($('lot-progres').hidden,false);assert.equal($('lot-pct').textContent,'15');assert.equal($('lot-progres-fill').style.width,'15%');
   const a=$('lot-activite').innerHTML;assert.equal($('lot-activite-bloc').hidden,false);
   assert.match(a,/<span class="c">102<\/span><span class="quoi differe">différé · rail gauche<\/span>/);
   assert.match(a,/<span class="c">101<\/span><span class="quoi voie-l">posé · par la voie<\/span><span class="v">4,2 mm<\/span>/);

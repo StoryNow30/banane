@@ -92,3 +92,24 @@ vue (`#lot-politique-pastille`, seul identifiant ajouté).
   absent, comme avant le chantier).
 
 Intouchés : `background.js`, `src/`, `vendor/`.
+
+## Suite après la test 12 (14 octobre) — validée par Mic
+
+Demandes de Mic après la test 12, et ce qui est fait :
+
+1. **La tuile du lot**, grande, comme la maquette. Elle affiche :
+   - le vert qui se remplit avec « 20 % », puis « 42 cuts » (les cuts traités) ;
+   - la plage seule (« 8410 → 8640 ») ;
+   - les trois points de l’étape du cut (capture, pose, validation).
+
+   Les chiffres roulent quand ils changent.
+   - Pourcentage : c’est la même règle qu’avant (position du cut courant dans la plage).
+   - Lot « jusqu’à la fin de partie » : tant que la fin n’est pas connue, le panneau ne la connaît pas. La tuile montre alors les cuts traités, sans pourcentage ; rien n’est inventé.
+   - Les trois points sont les étapes du cut, pas une pagination.
+2. **Départs des parties** : la liste passe de « Détails du lot » à la vue. Il y a une carte par partie, avec sa fiche la plus récente : validés, invalides et total en grands chiffres, puis « dont N ignorés ». La partie en cours vient en tête et est cernée. Les chiffres restent posés en texte, jamais en HTML.
+3. **Contrastes WCAG AA** (texte ≥ 4,5:1 sur le fond et sur les tuiles, dans les deux thèmes) : ambre, rouge, vert et gris tertiaire ajustés. Le blanc sur le vert du lot vaut 3,6:1, ce qui suffit pour du grand texte (3:1).
+
+- `panneau-vivant.cjs` : le **vrai** panneau, `panel.js` compris, dans Chromium avec un ESV simulé. Il produit `vivant-*.png` et `vivant-motion-*.mp4` (le mouvement réel : entrée, cut suivant, défilement, pause, reprise).
+- `rendre-panneau.cjs` : rendu statique (`panneau-*.png`, et `panneau-fin-*.png` pour un lot « jusqu’à la fin de partie »).
+- Essais : `tests/d092-fiche-depart.test.cjs` (la structure du bloc change) et `tests/panel-h.test.cjs` (`#lot-pct` porte le nombre, le « % » est à côté). `tests/ux-49-orbite.test.cjs` gagne un essai qui rend les cartes de départ.
+- `node tools/verify.cjs` : 1491 réussis, 0 échec, 2 ignorés (corpus privé absent).
