@@ -1730,3 +1730,7 @@ Date : 13 septembre 2026.
 
 Date : 13 septembre 2026.  
 Le banc Natif reconstruit l'entrée du moteur depuis les portions géométriques et l'état initial, génère les propositions puis seulement compare à la position humaine finale. Les anciens exports V4.4 restent des preuves de panne, pas un nouveau jeu comparable. Aucune amélioration de précision n'est annoncée sans essai ESV 4.4.1 et comparaison sur les mêmes cuts.
+
+## D-097 - Parties 17 et 18 corrigées en Écho : référence d'entraînement (14 octobre 2026)
+
+Mic corrigera à la main, en mode Écho, les parties 17 et 18 (test 12, 4.9.0.12). Ces corrections servent de **vérité terrain** : (1) juger B1 en ombre (28 poses ajoutées à juger, 1 pose retirée sur le cut 5290, partie 18 ; critère d'activation : 0 mauvaise pose ajoutée, 0 bonne pose perdue) ; (2) entraîner le « cerveau » (GCV2) ; (3) analyser le comportement métier pour la 5.0 (déplacement autonome, correction des voisins). Les prochaines sessions Écho sont traitées en priorité d'analyse, avant toute autre mesure. Les exports d'origine (états de pose d'Ariane avant correction) doivent être conservés par Mic : sans eux, la comparaison avant/après est impossible. Aucune donnée de partie dans les dépôts publics.
