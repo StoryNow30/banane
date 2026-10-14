@@ -147,3 +147,5 @@ sortie ; analyse **sans agent** (D-083) ; réponse à Mic en français simple, c
 - **Données** : exports privés dans `scratchpad/lot14/{u,w,y,x,v,t,s}` (jamais dans un dépôt).
 
 **Mise à jour (13 octobre, nuit).** Test 11 livrée (D-097) : B1 en ombre + KI-070, paquet dans le scratchpad `paquets/ariane-4.9.0-test.11.zip`. Session UX lancée (`session_01EkDdiR4LCbooBkVmQuxHfi`, branche `claude/ux-variantes`) : en attente du choix de Mic. Prochaines étapes : analyser le lot test 11 (notes `b1-ombre`), retour à une coupe, activer B1 selon l'ombre, intégrer l'UX choisie, puis stable 4.9.0 (merge/tag/publication : demander à Mic).
+
+**Mise à jour (14 octobre, 03 h UTC).** Retour à une coupe livré (D-098, `claude/49-retour-coupe` 977108e, à fusionner dans la ligne de test avec la 4.9.0.12). UX : variante A « Accueil » retenue par Mic (`design/ux-2026-10/retenue/`) ; intégration au panneau en cours dans la session UX (`claude/ux-variantes`). Ensuite : 4.9.0.12 = test 11 + retour à une coupe + panneau UX ; lots test 11 de Mic à analyser (notes `b1-ombre`) ; activation de B1 selon l'ombre ; portes du cahier § 7 ; stable (merge/tag/publication : demander à Mic).
