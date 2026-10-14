@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.11',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 11';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.12',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 12';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -234,7 +234,7 @@ function rangerObservations(m){try{
   if(fields.kind==='write')b1NoterEcriture(fields);}
  if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
  for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
- /* 4.9.0.11 (D-092) : fiche de départ de la partie (validés, invalides, total), gardée hors du cache : le vidage ne la touche pas. */
+ /* 4.9.0.10 (D-092) : fiche de départ de la partie (validés, invalides, total), gardée hors du cache : le vidage ne la touche pas. */
  for(const e of events){if(e.kind!=='list-summary'||e.beforeSession!==true)continue;try{const EC=cacheExport(),lotE=engine?.s?.batch,
    fiche=EC?.ficheDepart?.(e,{batchId:e.batchId??lotE?.id??null,partie:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
   if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});}catch{/* la fiche n'est pas critique */}}

@@ -79,7 +79,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 11',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 12',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -1201,7 +1201,7 @@ on('native-discard',async()=>{
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
    /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
    const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
-   /* 4.9.0.11 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
+   /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
    const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}) :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
    let zip=Z.createZip({date:maintenant}),total=0;
    const mo1=n=>(n/1048576).toFixed(1)+' Mo';
@@ -1272,7 +1272,7 @@ on('native-discard',async()=>{
    note(bandeau?'Bandeau affiché en bas de la page ESV : il suit cette fenêtre et ne capte aucun clic.':'Bandeau retiré de la page ESV.');});
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
- /* 4.9.0.11 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
+ /* 4.9.0.10 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
  async function majDeparts(){const el=$('departs-liste');if(!el)return;try{const r=await api('fiches-depart'),f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;
   if(!f.length||!EC)return;const lignes=f.slice(-6).reverse().map(x=>EC.texteDepart(x));el.replaceChildren(...lignes.flatMap((l,i)=>i?[document.createElement('br'),document.createTextNode(l)]:[document.createTextNode(l)]));}catch{/* affichage seulement */}}
  setInterval(()=>{if(!working)void refresh();},1000);
