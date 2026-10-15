@@ -204,6 +204,11 @@
      * sondes des nœuds vides qui ne touchent pas la zone ; points au bit près ;
      * environ −33 % sur les nuages (src/native-export.js, MODES). */
     mode: 'allege',
+    /* 4.9.5.3 (S7) : jalons `phase-timing` repliés par visite dans le journal exporté (src/phase-pli.js) : le contexte de la visite
+     * n'est écrit qu'une fois, chaque jalon devient une ligne de nombres, un résumé de visite est joint. Rien n'est perdu pour
+     * l'analyse (tools/perf-phases.cjs et perf-v3.cjs lisent les deux formats, mêmes chiffres). Mesuré sur un export réel
+     * (partie 27, 606 visites) : jalons −84 %, journal −36 %. `false` : un événement par jalon, comme avant. */
+    phaseTimingReplie: true,
     /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
      * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
      * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */

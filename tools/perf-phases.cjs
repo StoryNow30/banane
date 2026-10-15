@@ -10,6 +10,8 @@
  * phases d'une visite → bilan d'un lot (couverture, santé, silences, arrêts,
  * instrumentation) → bilan d'ensemble (étapes, cohorte, V4.6).
  */
+/* 4.9.5.3 (S7) : les exports repliés (`phase-timing-pli`, src/phase-pli.js) sont dépliés avant toute mesure : mêmes chiffres que l'ancien format. */
+const Pli=require('../src/phase-pli.js');
 const PHASES=[
  ['navigation-capture','Navigation → capture reçue'],
  ['analyse-gcv1','Analyse : capture → proposition'],
@@ -271,6 +273,8 @@ function select(data,{tous,batchId,sessionId}){
  const seen=new Map(),events=[],conflicts=[];
  for(const e of selected){if(!e.eventId){events.push(e);continue;}const prev=seen.get(e.eventId);
   if(prev){if(JSON.stringify(prev)!==JSON.stringify(e))conflicts.push(e.eventId);continue;}seen.set(e.eventId,e);events.push(e);}
+ /* 4.9.5.3 (S7) : ordre canonique (horloge, numéro d'ordre), le même pour l'ancien format (ordre aléatoire de la base) et le replié. */
+ events.sort((a,b)=>a.clockId<b.clockId?-1:a.clockId>b.clockId?1:(a.seq??0)-(b.seq??0));
  return {events,conflicts};
 }
 
@@ -287,6 +291,7 @@ function measure(data,{tous=false,batchId=data.state?.batch?.id??null,sessionId=
   * lues dans le journal d'origine (sinon un bilan v4 à dictionnaire les perdait : « observateur absent »). */
  const source=data,thin=thinSegmentReason(data);
  if(thin&&!(data.events||[]).length)return {available:false,reason:thin,thinSegment:true,lots:[],visits:[],observations:{available:false,reason:thin}};
+ if(Pli.estPlie(data.events))data={...data,events:Pli.deplier(data.events)};
  if(data.dictionaries){const pt=(data.events||[]).filter(e=>e?.type==='phase-timing');
   if(JSON.stringify(pt).includes('"__ref"')){const r=resolveRefs(pt,data.dictionaries);refs=r.stat;data={...data,events:r.value};}}
  const {events,conflicts}=select(data,{tous,batchId,sessionId});
@@ -550,4 +555,4 @@ function executionsLine(x,n){if(!x)return 'Exécutions : non mesurées.';
  return `Exécutions : ${rows.join(' ; ')||'aucune borne'}.${x.replaced?` Remplacé par un autre lot (dernier état ${x.replaced.lastState??'inconnu'}${x.replaced.closedAtReplacement?', fin connue avant':', aucune fin connue'}).`:''}`+
   ` Vie complète ${x.lifetimeMs===null?`non mesurée (${reasons[x.lifetimeReason]})`:`${n(x.lifetimeMs)} ms, dont exécution ${n(x.executionMs)} ms`}.`+
   (x.visitsOutsideExecution.length?` Visites hors exécution : ${x.visitsOutsideExecution.length} (coupes ${x.visitsOutsideExecution.map(v=>v.identity?.cut).join(', ')}), gardées dans la couverture.`:'');}
-module.exports={measure,toMarkdown,inspectVisit,stats,union,IDS,resolveRefs,thinSegmentReason};
+module.exports={deplierEvenements:Pli.deplier,measure,toMarkdown,inspectVisit,stats,union,IDS,resolveRefs,thinSegmentReason};

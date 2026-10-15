@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 2',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 3',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -1229,8 +1229,17 @@ on('native-discard',async()=>{
    for(const [name,items] of Object.entries(arrays)){parts.push(`${first?'':','}${JSON.stringify(name)}:[`);first=false;
      items.forEach((x,i)=>parts.push((i?',':'')+JSON.stringify(x)));parts.push(']');}
    parts.push('}');return new Blob(parts,{type:'application/json'});}
+ /* 4.9.5.3 (S7) : les jalons `phase-timing` sont repliés par visite à l'export (src/phase-pli.js) : même information, contexte écrit une
+  * fois par visite (mesuré : −84 % sur ces jalons, −36 % sur le journal d'une partie). Réglage `export.phaseTimingReplie`. Un groupe qui ne
+  * se redéplie pas à l'identique reste tel quel. Le bilan de l'opération est joint à l'en-tête (`phaseTimingPli`). */
+ function eventsExport(meta,events){
+   const P=globalThis.BananePhasePli,S=globalThis.BananeSettings?.export;
+   if(!P||S?.phaseTimingReplie===false||!Array.isArray(events))return {meta,events};
+   try{const r=P.plier(events);return {meta:{...meta,phaseTimingPli:r.bilan},events:r.events};}catch{return {meta,events};}
+ }
  async function bilanPilote(){const lu=await lirePilote('dataset-meta');
-   return lu?{...lu.meta,events:lu.events,records:lu.records}:api('dataset');}
+   if(!lu)return api('dataset');const e=eventsExport(lu.meta,lu.events);
+   return {...e.meta,events:e.events,records:lu.records};}
  async function diagnosticPilote(){const X=globalThis.BananeGCV1Export,events=X?await lireStoreOrbite('events'):null;
    if(!events)return api('gcv1-diagnostic-export');
    return X.buildDiagnostic({...await api('gcv1-export-meta'),events});}
@@ -1262,7 +1271,8 @@ on('native-discard',async()=>{
  }
  async function exporterJournal({save=saveBlob}={}){const name=`ariane-journal-v4-${Date.now()}.json`;
    const lu=await lirePilote('journal-meta');
-   const f=lu?await save(blobJson(lu.meta,{events:lu.events,records:lu.records}),name):await save(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
+   const e=lu?eventsExport(lu.meta,lu.events):null;
+   const f=lu?await save(blobJson(e.meta,{events:e.events,records:lu.records}),name):await save(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
    const incoherent=lu?.meta?.v1TimingExport?.snapshot?.coherent===false;
    statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:incoherent?'Journal téléchargé, mais la mesure V1 est incomplète (bilan de santé absent de l’instantané) : relance l’export.'
      :lu?`Journal téléchargé : ${lu.events.length} événements, ${lu.records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0||incoherent);
