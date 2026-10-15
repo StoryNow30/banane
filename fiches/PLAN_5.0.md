@@ -18,6 +18,8 @@ Conventions : base de code = `claude/495-test-2` (4.9.5.2) tant que la 4.9.5 n'e
 | V7 | G0, G1 ombre, G2 (→ 5.0 test 10 à 12) | méga cerveau | ≥ 500 corrections (E1), E5 |
 | V8 | F3 si Q6 oui ; stable 5.0 | fin | tout |
 
+**Règle ajoutée par Mic (D-123)** : chaque vague est aussi testée sur un **second projet ESV** (autre chantier, autre nuage) avant d'être tenue pour acquise ; la V0 (jointure Écho ↔ Orbite) le sera dès qu'un lot Orbite et un Écho d'un autre projet sont reçus.
+
 Une vague ne démarre que si la précédente a livré ses portes **ou** si ses chantiers n'en dépendent pas. Deux chantiers au plus en parallèle par fenêtre de 5 h (un lourd, un léger).
 
 ## 1. Socle 4.9.5
@@ -25,7 +27,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | Code | Chantier | Branche | Niveau / effort | Entrées | Livrables | Porte | Jetons | État |
 |---|---|---|---|---|---|---|---|---|
 | S1+S2 | 4.9.5 test 2 | `claude/495-test-2` | rapide / moyen | .20 + 4.9.5.1 | paquet, consigne | verify 0 échec ; séance terrain | 112 k + correction de consigne (constaté) | **livré** (5c775b7), au terrain |
-| S3 | Jointure Écho ↔ Orbite par cut | `claude/50-s3-jointure` | rapide / moyen | Écho 17 (7 segments), 20 ; journaux Orbite des mêmes parties ; `echo17/cmp.cjs` (prototype) ; `tools/native-offline-evaluate.cjs` | `tools/jointure-echo-orbite.cjs` : table par cut (classe Ariane posée/différée, pose Ariane, pose humaine finale, écart par rail en repère profil, B1 ombre, zone si connue) ; `fiches/JOINTURE_ECHO_ORBITE.md` ; essai sur fixture | sur Écho 17 : chaque cut joint à son journal, écart humain retrouvé à < 1 mm par rapport au prototype ; sortie sans identifiant | 196 k (constaté) | **livré 15/10** (`claude/50-s3-jointure`, 5aa2ccb) : 266/268 cuts joints, écarts à 0,1 mm du prototype |
+| S3 | Jointure Écho ↔ Orbite par cut | `claude/50-s3-jointure` | rapide / moyen | Écho 17 (7 segments), 20 ; journaux Orbite des mêmes parties ; `echo17/cmp.cjs` (prototype) ; `tools/native-offline-evaluate.cjs` | `tools/jointure-echo-orbite.cjs` : table par cut (classe Ariane posée/différée, pose Ariane, pose humaine finale, écart par rail en repère profil, B1 ombre, zone si connue) ; `fiches/JOINTURE_ECHO_ORBITE.md` ; essai sur fixture | sur Écho 17 : chaque cut joint à son journal, écart humain retrouvé à < 1 mm par rapport au prototype ; sortie sans identifiant | 196 k (constaté) | **livré 15/10** (`claude/50-s3-jointure`, 5aa2ccb) : 266/268 cuts joints, écarts à 0,1 mm du prototype ; **à rejouer sur un second projet** (D-123) |
 | S4 | Maquette ESV dans verify + campagne de pannes | `claude/50-s4-banc` | rapide / haut ; relecteur fort sur `tools/verify.cjs` | `claude/esv-locale-audit` (maquette, banc), § 8-9 de l'audit | rejeu court (~40 cuts) dans verify ; rejeu complet avant paquet ; campagne de 8 pannes scriptée | verify passe avec le rejeu ; campagne verte sur 4.9.5.2 | 600 k + 150 k | à faire (V2) |
 | S5 | Banc B sauvé | hors dépôt (`banane-banc`) | Mic + orchestrateur | copie privée chez Mic | dépôt privé, README | clonable, rejeu lancé une fois | 50 k | à faire avec Mic |
 | S6 | Relevés en lecture seule (→ 4.9.5 test 3) | `claude/495-test-3` | rapide / moyen | liste au § 4 du cahier | 12 relevés consignés dans le journal/diag ; réglages à défaut ; essais | aucun changement de pose ; verify 0 ; export relu | 400 k | à faire (V1) |
