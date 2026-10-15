@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Ariane · logo</title>
+<!-- Quatre pistes de logo pour Ariane, dans le langage du panneau 4.9 : tuile
+     arrondie sur vert profond, traits blancs, un seul vert vif (le cut, le
+     progrès). Chaque piste : l'icône en grand, aux tailles de l'extension
+     (128, 48, 32, 16 px), sur fond sombre et clair, et avec le nom. -->
+<style>
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+body{margin:0;padding:40px 44px 48px;background:#0a100c;color:#f4f7f5;font:400 15px/1.4 "Hanken Grotesk",sans-serif}
+h1{margin:0;font-size:24px;font-weight:600}
+.s{margin:4px 0 30px;color:#a9b3ad}
+.g{display:grid;grid-template-columns:repeat(4,400px);gap:28px}
+.c{padding:24px;border-radius:22px;background:rgba(255,255,255,.04)}
+.c h2{margin:0;font-size:18px;font-weight:600}.c h2 span{color:#34d27f;margin-right:8px}
+.c p{margin:4px 0 20px;min-height:42px;color:#a9b3ad;font-size:13.5px}
+.grand{display:flex;justify-content:center;padding:22px 0;border-radius:16px;background:radial-gradient(60% 70% at 50% 55%,rgba(52,210,127,.12),transparent 70%)}
+.tailles{display:flex;align-items:flex-end;gap:18px;margin-top:18px;padding:16px;border-radius:14px;background:#0f1f15}
+.tailles.clair{background:#eef2ef}
+.tailles span{font-size:11px;color:#86918a;margin-left:auto}
+.nom{display:flex;align-items:center;gap:14px;margin-top:18px;padding:18px;border-radius:14px;background:#eef2ef;color:#0e1310}
+.nom b{font-size:22px;font-weight:700;letter-spacing:.26em}
+.nom.sombre{background:#0f1f15;color:#f4f7f5}
+</style></head><body>
+<h1>Ariane — quatre pistes de logo</h1>
+<p class="s">Langage du panneau : tuile arrondie, vert profond, traits blancs, un seul vert vif. Tailles réelles de l’extension : 128, 48, 32, 16 px.</p>
+<div class="g" id="g"></div>
+<script>
+/* Chaque icône : 64 × 64, tuile arrondie (rayon 15) au dégradé vert profond. */
+const tuile=(id,corps)=>`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="f${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b3a27"/><stop offset="1" stop-color="#0b1a11"/></linearGradient>
+<radialGradient id="h${id}" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="#34d27f" stop-opacity=".22"/><stop offset="1" stop-color="#34d27f" stop-opacity="0"/></radialGradient></defs>
+<rect width="64" height="64" rx="15" fill="url(#f${id})"/><rect width="64" height="64" rx="15" fill="url(#h${id})"/><rect x=".5" y=".5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity=".08"/>${corps}</svg>`;
+const P=[
+ {n:'A',titre:'La voie',idee:'Deux rails qui fuient vers l’horizon forment un A ; les traverses sont sa barre ; le point vert, le cut posé.',
+  corps:`<g fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"><path d="M14 52 L30 15 M50 52 L34 15"/></g>
+   <g stroke="#fff" stroke-linecap="round"><path d="M18.6 43.5 H45.4" stroke-width="3.2"/><path d="M23.3 33 H40.7" stroke-width="2.6" stroke-opacity=".75"/><path d="M26.8 25 H37.2" stroke-width="2" stroke-opacity=".5"/></g>
+   <circle cx="32" cy="12.5" r="4.4" fill="#34d27f"/>`},
+ {n:'B',titre:'L’orbite',idee:'Un A dont la barre est une orbite inclinée, en vert, qui passe derrière puis devant : Orbite pose, le lot tourne.',
+  corps:`<path d="M10.65 42.3 A22 7.5 -14 0 1 53.35 31.7" fill="none" stroke="#34d27f" stroke-width="3" stroke-opacity=".55"/>
+   <path d="M17 51 L32 13 L47 51" fill="none" stroke="#fff" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+   <path d="M53.35 31.7 A22 7.5 -14 0 1 10.65 42.3" fill="none" stroke="#34d27f" stroke-width="3.2"/>
+   <circle cx="52.3" cy="31.6" r="3.4" fill="#34d27f"/>`},
+ {n:'C',titre:'Le fil',idee:'Le fil d’Ariane : un seul trait qui sort du labyrinthe et s’arrête sur un point vert.',
+  corps:`<path d="M13 51 V17 H51 V47 H23 V27 H41 V37 H32" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+   <circle cx="31.5" cy="37" r="4.2" fill="#34d27f"/>`},
+ {n:'D',titre:'La tuile du lot',idee:'La tuile du panneau en miniature : un A blanc sur un vert qui se remplit.',
+  corps:`<clipPath id="cD"><rect width="64" height="64" rx="15"/></clipPath><g clip-path="url(#cD)"><rect width="27" height="64" fill="#1f9a57"/><rect x="26" width="2.2" height="64" fill="#34d27f"/></g>
+   <path d="M18 50 L32 15 L46 50 M23.2 38 H40.8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`},
+];
+document.getElementById('g').innerHTML=P.map(p=>{const t=tuile(p.n,p.corps);
+ const taille=(s,k)=>t.replace('<svg ',`<svg width="${s}" height="${s}" `).replaceAll(`id="f${p.n}"`,`id="f${p.n}${k}${s}"`).replaceAll(`url(#f${p.n})`,`url(#f${p.n}${k}${s})`).replaceAll(`id="h${p.n}"`,`id="h${p.n}${k}${s}"`).replaceAll(`url(#h${p.n})`,`url(#h${p.n}${k}${s})`).replaceAll(`id="cD"`,`id="cD${k}${s}"`).replaceAll(`url(#cD)`,`url(#cD${k}${s})`);
+ return `<div class="c"><h2><span>${p.n}</span>${p.titre}</h2><p>${p.idee}</p>
+  <div class="grand">${taille(220,'g')}</div>
+  <div class="tailles">${[128,48,32,16].map(s=>taille(s,'s')).join('')}<span>sombre</span></div>
+  <div class="tailles clair">${[128,48,32,16].map(s=>taille(s,'c')).join('')}<span>clair</span></div>
+  <div class="nom">${taille(44,'n')}<b>ARIANE</b></div>
+  <div class="nom sombre">${taille(44,'m')}<b>ARIANE</b></div></div>`;}).join('');
+</script>
+</body></html>
