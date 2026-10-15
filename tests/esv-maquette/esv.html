@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Maquette ESV (Ariane) — aucun code ni contenu d'ESV</title>
+<style>
+ body{margin:0;font:13px system-ui,Segoe UI,Arial,sans-serif;background:#1b1d21;color:#e8e8e8}
+ header{display:flex;gap:16px;align-items:center;padding:8px 12px;background:#26292f;border-bottom:1px solid #3a3e46}
+ header .titre{font-weight:600;color:#f4db72}
+ #O2N3DCutDescription{font-size:15px;font-weight:600}
+ #O2N3DCutShapeInfo{padding:2px 6px;border:1px solid #555;border-radius:4px}
+ .compteur{margin-left:auto;color:#bcd}
+ main{display:grid;grid-template-columns:1fr 280px;gap:0}
+ canvas{display:block;background:#0e0f12;cursor:crosshair}
+ aside{padding:10px;background:#202228;border-left:1px solid #3a3e46;font-size:12px}
+ aside h2{font-size:12px;margin:10px 0 4px;color:#aab}
+ button{font:inherit;padding:4px 8px;margin:2px;background:#3a3e46;color:#eee;border:1px solid #555;border-radius:4px;cursor:pointer}
+ button.active{background:#f4db72;color:#222;border-color:#f4db72}
+ button:disabled{opacity:.4;cursor:default}
+ #journal{max-height:260px;overflow:auto;font:11px ui-monospace,monospace;color:#9ab;white-space:pre-wrap}
+ .note{color:#889;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+ <span class="titre">MAQUETTE ESV</span>
+ <span id="O2N3DCutDescription">Cut – of part –</span>
+ <span id="O2N3DCutShapeInfo">U50</span>
+ <button id="O2N3DCutLRClick" title="Rail gauche">L</button>
+ <button id="O2N3DCutRRClick" title="Rail droit">R</button>
+ <button id="O2N3DCutValidate3DRail" title="Press ↵ to validate both rails (Load next non validated cut)">Valider</button>
+ <button id="O2N3DCutNextInvalid3DRail" title="Maj+Z">Invalide suivant</button>
+ <button id="maquette-cut-precedent" title="Coupe précédente (hypothèse)">◀</button>
+ <button id="maquette-cut-suivant" title="Coupe suivante (hypothèse)">▶</button>
+ <span class="compteur"><span id="maquette-compteur">– on – treated</span> · <span id="maquette-total">– cuts</span></span>
+</header>
+<main>
+ <canvas id="maquette-vue" width="900" height="700"></canvas>
+ <aside>
+  <h2>Maquette</h2>
+  <div id="maquette-etat" class="note">chargement…</div>
+  <h2>Réglages (URL)</h2>
+  <div class="note">cuts, debut, part, cut, latence (ms par lot de nœuds), lots, latenceRails, decoupeTardive (0/1)</div>
+  <h2>Journal de la page</h2>
+  <div id="journal"></div>
+ </aside>
+</main>
+<script src="esv-maquette.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Audit « ESV locale » : quoi faire d'un banc qui imite ESV pour tester Ariane (14 octobre 2026)
 
-Statut : **audit, aucune décision prise, aucun code écrit.** Auteur : session Claude Code `claude/esv-locale-audit`. Base lue : `DECISIONS.md` (D-074 à D-105), `fiches/`, `consignes/`, `tools/`, `tests/`, `src/adapter-page.js`, `manifest.json`.
+Statut : **audit du 14 octobre, puis solution construite le 15 octobre (§ 8 et § 9) à la demande de Mic.** Auteur : session Claude Code `claude/esv-locale-audit`. Base lue : `DECISIONS.md` (D-074 à D-105), `fiches/`, `consignes/`, `tools/`, `tests/`, `src/adapter-page.js`, `manifest.json`.
 
 Limites de cet audit, à savoir avant de lire :
 - La branche de départ porte le **code 4.8.6** (manifeste, `src/`). Le code 4.9 (observateur passif `src/esv-observer.js`, mode rapide, B3, retour à une coupe, `tools/perf-v3.cjs`) n'est **pas** sur cette branche : je l'ai lu à travers DECISIONS et les fiches, pas dans le code.
@@ -41,6 +41,8 @@ Formats produits par Ariane que le banc doit savoir lire ou rejouer : `banane-na
 
 Le point important : **l'ESV locale existe déjà**, et c'est elle qui a produit les preuves les plus utiles de la 4.9. Le problème n'est pas d'en construire une, c'est que celle qui existe est **hors dépôt, non relue, pauvre en données** et qu'elle dépend d'un espace de travail qui peut disparaître.
 
+**Réponse de Mic (15 octobre) : les deux problèmes (banc B fragile ; doubles du dépôt sans DOM, sans compteur, sans Potree) doivent être résolus.** Le second l'est (§ 8). Le premier a sa solution écrite et outillée (§ 9) ; il reste une action de Mic.
+
 ## 3. Ce qui manque pour une simulation fidèle
 
 | Besoin | Connu | Supposé | Inconnu |
@@ -71,7 +73,7 @@ Choix du dépôt, en une ligne par cas :
 
 ## 5. Recommandation
 
-**Faire A dans `banane`, sauver C dans `banane-banc`, garder B pour la 5.0.**
+**Faire A dans `banane` (fait le 15 octobre, § 8), sauver C dans `banane-banc` (§ 9), garder B pour la 5.0.**
 
 1. C est la seule chose urgente : le banc qui a prouvé la 4.9 n'est ni versionné ni relu. Le mettre à l'abri coûte une demi-journée.
 2. A donne à la 4.9 ce qui lui manque aujourd'hui : une preuve automatique, à chaque `verify`, que B3, le compteur, la fiche de départ et le retour à une coupe tiennent contre un DOM qui ressemble à ESV. Le banc complet « sur le poste de Mic » (D-104) n'est pas lancé : A le remplace pour tout ce qui ne dépend pas de Potree.
@@ -93,10 +95,42 @@ Ce que A ne prouvera **jamais** : la vitesse, le chargement des points, Edge, le
 
 Total pour la 4.9 (étapes 0 à 4) : **environ 3 jours d'agent et 40 minutes de Mic**.
 
-## 7. Ce que je demande à Mic (le minimum)
+## 7. Ce que je demande à Mic (le minimum, mis à jour le 15 octobre)
 
-1. **Où est le banc B aujourd'hui** (poste, archive, espace de session) et : d'accord pour un dépôt privé `banane-banc` qui contient du code de l'éditeur d'ESV ? Oui / non / archive chez toi seulement.
-2. **D'accord pour la maquette A dans `banane`** (zéro contenu ESV, données = captures déjà versionnées dans `tests/corpus/`) ? Oui / non.
-3. **10 minutes sur le vrai ESV** avec l'extrait A existant, pour trois questions : l'élément qui porte « N on M treated », les boutons précédent/suivant, le nom de l'événement interne de saut. Résultat remis en privé, jamais dans le dépôt.
+1. **Où est le banc B aujourd'hui** (poste, archive, espace de session) et : d'accord pour un dépôt privé `banane-banc` qui contient du code de l'éditeur d'ESV ? Oui / non / archive chez toi seulement. Procédure prête au § 9.
+2. **10 minutes sur le vrai ESV** avec l'extrait A de `consignes/chantier-1-operateur.md`, pour les hypothèses listées dans `tests/esv-maquette/README.md` (élément du compteur, boutons précédent/suivant, événement de saut, classe du bouton de rail). Résultat remis en privé, jamais dans le dépôt.
 
-Rien d'autre n'est bloquant. Sans réponse à la question 1, le risque de perte du banc B reste entier.
+La maquette A est dans `banane` (zéro contenu ESV, données déjà versionnées) : si Mic la refuse là, elle se déplace telle quelle dans `banane-banc`.
+
+Sans réponse à la question 1, le risque de perte du banc B reste entier.
+
+## 8. Réalisé le 15 octobre 2026 : la maquette ESV dans `banane` (option A, et plus)
+
+Dossier `tests/esv-maquette/` (README avec le tableau connu / supposé / inconnu), outil `tools/banc-esv.cjs`, outil `tools/controle-confinement.cjs`. Aucun code ni contenu d'ESV ; données = les captures déjà versionnées dans `tests/corpus/` (repère scène), posées dans un monde factice. `src/`, `background.js`, `panel.*`, `vendor/`, `tools/verify.cjs` : **non touchés** (`verify` : 1 022 réussis, 0 échec, 2 sautés, comme avant).
+
+| Niveau | Ce qui tourne | Résultat mesuré (Chromium 141, conteneur) |
+|---|---|---|
+| Page seule | DOM d'ESV (6 commandes, compteur « N on M treated », « M cuts »), scène (2 rails `Object3D` + profil + contours du corpus), Potree factice (16 nœuds par cut, chargés par lots avec latence, boîte de découpe, `numNodesLoading`), caméra orthographique, clic = pose du rail courant dans le plan de coupe au pixel entier, raccourcis `Maj+Z`, `Maj+Retour`, `Ctrl+Entrée`, `Maj+Espace`, `D`, boutons précédent/suivant, liste des coupes `GET` paginée, écriture `PUT` → 204 journalisée | utilisable à la main : `node tests/esv-maquette/serveur.cjs 8124` |
+| Adaptateur réel | `src/adapter-page.js` et ses modules injectés tels quels (comme `background.js` le fait), 9 essais | **9 / 9** : identité et poses identiques au corpus ; **capture identique à la capture d'origine : 4 764 points, 2 322 gauche / 2 442 droit** ; pose par clics à moins de 1 mm puis restauration ; navigation sans décision (refus du doublon d'opération) ; valider et suivant (écriture `valid`, compteur N → N+1, cut non validé suivant) ; SKIP (écriture `skipped`) ; valider sur place ; retour à une coupe ; aucune erreur de page |
+| Extension réelle | l'extension du dépôt chargée dans Chromium, l'hôte d'ESV **routé** vers la maquette, lot Orbite lancé par les messages du panneau (`connect`, `settings`, `start`), suivi jusqu'à la fin, journal et écritures rendus | lot de 10 cuts : **5 posés et validés, 3 différés (rail non résolu), fin de lot détectée** quand la maquette passe hors du lot ; 45 s ; 6,3 à 6,8 s par cut posé, 3,9 à 4,5 s par cut différé (latence factice 40 ms) ; 0 erreur. Essai automatique : lot de 2 cuts posés |
+
+Ce que cela règle : **toute version d'Ariane peut maintenant être essayée de bout en bout sans ESV et sans le poste de Mic** (B3, compteur et tuile du lot, fiche de départ, retour à une coupe, U3, exports), à condition de rester sur ce que la maquette reproduit. Ce que cela ne règle pas : la vitesse réelle, le vrai Potree, Edge, le vrai serveur ; et les hypothèses du README restent à confirmer sur ESV (10 minutes de Mic).
+
+Observation à vérifier par l'orchestrateur : sur le lot de 10 cuts, la vue du panneau rend `lotPosedCount` = 4 pour 5 poses appliquées et validées (événements `applied-verified` et écritures `valid` sur 103, 105, 106, 107, 108). Comptage de la 4.8.6 ou effet du dernier cut : non instruit ici.
+
+Suites possibles, par ordre d'utilité : (1) rejouer le code 4.9 (branches `claude/49-test-*`, test 15) sur ce banc : `node tools/banc-esv.cjs --extension DOSSIER_DU_PAQUET` ; (2) corpus privé plus large par `BANANE_MAQUETTE_CORPUS` (captures d'un export Écho, hors dépôt) ; (3) erreurs d'ESV par réglage (écriture refusée, nuage jamais chargé) ; (4) option B (rejeu Écho) pour la 5.0.
+
+## 9. Solution pour le banc B privé (code ESV + Potree) : procédure prête, une action de Mic
+
+Le banc B ne peut pas entrer dans `banane` (code de l'éditeur, dépôts Banane traités comme publics). La solution est un **dépôt privé `banane-banc`**, ou, si Mic refuse qu'une copie du code de l'éditeur existe sur GitHub, une **archive chiffrée sur son poste** avec SHA-256 consigné dans DECISIONS. Dans les deux cas :
+
+| Étape | Qui | Durée | Détail |
+|---|---|---|---|
+| 1. Retrouver le banc | Mic | 5 min | dire où est `missions/B_ESV/banc` (poste, archive, espace de session de l'orchestrateur) ; s'il est perdu, les originaux du 4 octobre suffisent à le reconstruire (D-074) |
+| 2. Contrôler avant tout dépôt | orchestrateur | 5 min | `node tools/controle-confinement.cjs DOSSIER_DU_BANC` : refuse jetons, identifiants de projet, échanges d'authentification, HAR bruts |
+| 3. Créer `banane-banc` privé | Mic | 5 min | dépôt privé GitHub, collaborateurs : Mic seul (l'orchestrateur y pousse par ses branches `claude/…`, comme ici) |
+| 4. Structure | orchestrateur | 1 h | `originaux/` (code ESV et Potree du 4 octobre, jamais modifiés), `banc/` (serveur confiné, latence simulée), `donnees/` (HAR nettoyés, points de la partie 21), `essais/` (`x_turbo`, `x_ariane`, matrice 113/113, E1 à E6), `README.md` (provenance, interdictions, comment lancer), le contrôle de confinement en pré-commit |
+| 5. Relecture indépendante | agent | 0,5 j | jamais faite (PILOTAGE_REPRISE § 2) : à faire avant tout nouvel usage comme preuve |
+| 6. Élargir les données | Mic | 20 à 30 min par partie | HAR nettoyé selon la méthode D-079, puis `BANANE_MAQUETTE_CORPUS` et `donnees/` |
+
+Partage des rôles entre les deux bancs, pour ne pas les confondre : **la maquette (`banane`) sert à tout ce qui est fonctionnel et automatique à chaque version ; le banc B (`banane-banc`) sert aux preuves qui dépendent du vrai code d'ESV et de Potree** (vitesse, failles, signal de fin de chargement, événements internes). Une preuve du banc B reste « non vérifiée sur le vrai ESV » tant qu'une séance terrain ne l'a pas confirmée (D-088).

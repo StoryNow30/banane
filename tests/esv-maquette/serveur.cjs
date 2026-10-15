@@ -1,0 +1,55 @@
+'use strict';
+/*
+ * serveur.cjs — serveur local de la maquette ESV : fichiers du dépôt (statique)
+ * + « serveur ESV » factice (liste des coupes paginée, écriture de validation).
+ * Aucun code ni contenu d'ESV. Rien n'est écrit sur disque.
+ *
+ *   node tests/esv-maquette/serveur.cjs [port]      → http://localhost:PORT/tests/esv-maquette/esv.html
+ *
+ * API (chemins relatifs à l'origine, comme ceux qu'Ariane observe) :
+ *   GET  /maquette/scenario.json?cuts=12&debut=100&part=23   scénario (tests/esv-maquette/scenario.cjs)
+ *   GET  /rails/<table>?page=N          page de 1 000 lignes de la liste des coupes (vide au-delà)
+ *   PUT  /rails/<table>/<RowKey>        écriture de validation : corps JSON, réponse 204, journalisée
+ *   GET  /maquette/journal              {ecritures:[…], requetes:[…]}
+ *   POST /maquette/reset                vide le journal et les statuts modifiés
+ */
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const S=require('./scenario.cjs');
+const racine=path.resolve(__dirname,'../..');
+const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.cjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.svg':'image/svg+xml','.woff2':'font/woff2'};
+const PAGE=1000;
+function demarrer(options={}){
+  const journal={ecritures:[],requetes:[]};const scenarios=new Map();const statuts=new Map();
+  const scenario=q=>{const cle=JSON.stringify([q.cuts,q.debut,q.part,q.partie2]);if(!scenarios.has(cle))scenarios.set(cle,S.construire(q));return scenarios.get(cle);};
+  const tables=()=>[...scenarios.values()].flatMap(s=>s.parties);
+  const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(body));};
+  const serveur=http.createServer((req,res)=>{
+    const u=new URL(req.url,'http://localhost'),p=u.pathname,q=Object.fromEntries(u.searchParams);
+    journal.requetes.push({methode:req.method,chemin:p+u.search,at:new Date().toISOString()});
+    const corps=[];req.on('data',c=>corps.push(c));
+    req.on('end',()=>{try{
+      if(p==='/favicon.ico'){res.writeHead(204);return res.end();}
+      if(p==='/maquette/scenario.json')return json(res,200,scenario(q));
+      if(p==='/maquette/journal')return json(res,200,journal);
+      if(p==='/maquette/reset'){journal.ecritures.length=0;journal.requetes.length=0;statuts.clear();return json(res,200,{ok:true});}
+      let m=/^\/rails\/([^/]+)$/.exec(p);
+      if(m&&req.method==='GET'){const t=tables().find(x=>x.table===m[1]);if(!t)return json(res,404,{error:'table inconnue'});
+        const page=Math.max(1,Number(q.page||1)),lignes=S.lignes(t).map(l=>statuts.has(l.RowKey)?{...l,...statuts.get(l.RowKey)}:l);
+        return json(res,200,{value:lignes.slice((page-1)*PAGE,page*PAGE),page,pageSize:PAGE,total:lignes.length});}
+      m=/^\/rails\/([^/]+)\/([^/]+)$/.exec(p);
+      if(m&&req.method==='PUT'){let body=null;try{body=JSON.parse(Buffer.concat(corps).toString('utf8')||'null');}catch{body={illisible:true};}
+        journal.ecritures.push({table:m[1],rowKey:m[2],body,status:204,at:new Date().toISOString()});
+        if(body&&typeof body==='object'){const s={};for(const k of ['ExtractionStatus','TreatedByOperator','SeenByOperator','XLeftEdge','YLeftEdge','ZLeftEdge','XRightEdge','YRightEdge','ZRightEdge'])if(k in body)s[k]=body[k];statuts.set(m[2],{...(statuts.get(m[2])||{}),...s});}
+        res.writeHead(204);return res.end();}
+      /* statique */
+      const fichier=path.normalize(path.join(racine,decodeURIComponent(p==='/'?'/tests/esv-maquette/esv.html':p)));
+      if(!fichier.startsWith(racine)||!fs.existsSync(fichier)||fs.statSync(fichier).isDirectory()){res.writeHead(404);return res.end('introuvable');}
+      res.writeHead(200,{'content-type':MIME[path.extname(fichier)]||'application/octet-stream','cache-control':'no-store'});
+      fs.createReadStream(fichier).pipe(res);
+    }catch(e){json(res,500,{error:e.message});}});
+  });
+  return new Promise((resolve,reject)=>{serveur.on('error',reject);serveur.listen(options.port??0,'127.0.0.1',()=>{const port=serveur.address().port;
+    resolve({port,url:`http://127.0.0.1:${port}`,journal,fermer:()=>new Promise(r=>serveur.close(r)),scenario});});});
+}
+module.exports={demarrer};
+if(require.main===module)demarrer({port:Number(process.argv[2]||8124)}).then(s=>console.log(`Maquette ESV : ${s.url}/tests/esv-maquette/esv.html`),e=>{console.error(e.message);process.exit(1);});
