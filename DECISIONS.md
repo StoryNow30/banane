@@ -1828,3 +1828,9 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 8. **Oui** à l'instantané du nuage après une grosse correction.
 9. Question de Mic : **faire tourner Orbite en même temps qu'une session Écho** (candidat 5.0 ; exige des états séparés par onglet ; en contradiction partielle avec 7 et avec le retrait des multi-onglets : à trancher dans le cahier 5.0).
 10. Demande de Mic : **améliorer Écho** (les quatre étapes 4.9.5 de l'audit, puis les chantiers 5.0 : contexte métier, poses comparées, raison, manifeste de corpus).
+
+## D-113 — Première récolte d'idées pour la 5.0 ; correction de D-110 sur les écritures refusées (15 octobre 2026)
+
+- `fiches/IDEES_5.0.md` : 17 idées (causes mesurées des 399 différés des 4 lots 4.9 : flanc absent 29 %, pente 18 %, garde de paire 20 %, paire/ambiguïté 10 % ; angles morts d'ESV : événements jQuery non écoutés, colonnes de liste jetées, appariement cut ↔ ligne établi à 0 mm, SeenByOperator/TreatedByOperator). Deux angles de recherche sur six menés ; les quatre autres arrêtés pour le budget de jetons, relançables.
+- **Correction de D-110** : deux écritures de validation refusées (HTTP 502) ont bien eu lieu sur le terrain (partie 25, test 16, cuts 760 et 770) ; ESV a relancé seul et obtenu 204 ; Ariane a accepté les deux sans le voir. Compte juste : 2 refus sur 3 530 écritures observées. Le correctif D3 de la 4.9.5.1 (fenêtre 2 s) tolère cette relance.
+- Trois questions posées à Mic (relevé Success*/RailSpacing/RailType ; trace laissée dans ESV ; export d'un relevé de liste).
