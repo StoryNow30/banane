@@ -10,9 +10,9 @@ test('installation : empreinte avant la pose, par-dessus sans désinstaller, ver
  assert.ok(s.indexOf('Contrôle l\'empreinte')<s.indexOf('Pose la 4.9.5 test 3'));
  for(const m of ['Get-FileHash','ariane-4.9.5-test.3.zip','Ne désinstalle rien','Recharger','« 4.9.5 test 3 »','ARIANE 4.9.5 test 3','Ariane 4.9.5 test 3 · ouvrir'])assert.ok(s.includes(m),m);
 });
-test('ce qui est nouveau : rien de visible sauf l\'avis de contrat ESV, cité tel qu\'Ariane l\'écrit ; rien ne change dans la pose',()=>{
+test('ce qui est nouveau : le logo, puis rien de visible sauf l\'avis de contrat ESV, cité tel qu\'Ariane l\'écrit ; rien ne change dans la pose',()=>{
  const debut=texte.slice(0,texte.indexOf('## Le paquet')).replace(/\s+/g,' ');
- for(const m of ['Rien ne change dans ce qu\'Orbite décide, lit, pose ou valide','Le moteur n\'est pas modifié','rien, sauf un avis possible','lecture seule','plus léger'])assert.ok(debut.includes(m),m);
+ for(const m of ['Rien ne change dans ce qu\'Orbite décide, lit, pose ou valide','Le moteur n\'est pas modifié','Le nouveau logo','rien de nouveau à l\'écran, sauf un avis possible','lecture seule','plus léger'])assert.ok(debut.includes(m),m);
  const bg=fs.readFileSync(path.resolve(__dirname,'..','background.js'),'utf8').replace(/\s+/g,' ');
  /* Les deux avis sont ceux que le service worker écrit (début de phrase identique). */
  assert.ok(debut.includes('ESV n’a plus le même contrat qu’à la dernière connexion (empreinte …, puis …). Rien ne s’arrête ; préviens-moi avant de lancer un lot.'));

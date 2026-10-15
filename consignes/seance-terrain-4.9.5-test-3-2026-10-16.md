@@ -2,7 +2,8 @@
 
 La 4.9.5 test 3 ajoute des **relevés en lecture seule** et allège le journal exporté. **Rien ne change dans ce qu'Orbite décide, lit, pose ou valide, ni dans ce qu'Écho observe.** Le moteur n'est pas modifié. Ariane n'envoie aucune commande de plus à ESV.
 
-- **Ce que tu vois de nouveau : rien, sauf un avis possible** sous le message d'état du panneau. Il apparaît seulement si ESV a changé de façon qui compte pour Ariane :
+- **Le nouveau logo** (« La voie », celui que tu as choisi) sur la carte Ariane et dans la barre d'outils.
+- **Pour le reste, rien de nouveau à l'écran, sauf un avis possible** sous le message d'état du panneau. Il apparaît seulement si ESV a changé de façon qui compte pour Ariane :
   « ESV n’a plus le même contrat qu’à la dernière connexion (empreinte …, puis …). Rien ne s’arrête ; préviens-moi avant de lancer un lot. »
   ou « ESV a changé : des requêtes de rails passent par « fetch » (N vues), qu’Ariane ne voit pas. Les validations ne sont plus contrôlées : préviens-moi avant de lancer un lot. »
   S'il apparaît : ne lance pas de lot, note l'heure et le texte exact, et envoie-moi les exports.

@@ -5,7 +5,9 @@
 Manifeste `4.9.5.3`, « 4.9.5 test 3 », paquet `ariane-4.9.5-test.3.zip` ; base : `claude/50-base` (4.9.5 test 2 + S3 et S8). **Aucun changement de pose, de validation ni de navigation** ;
 `src/engine.js` inchangé (identique à `origin/main`). Consigne : `consignes/seance-terrain-4.9.5-test-3-2026-10-16.md` ; retour arrière : la 4.9.5 test 2.
 Tout ce qui est nouveau est LECTURE SEULE ou consigné en ombre, chacun derrière un réglage (`src/settings.js` : `releves`, `esvEvents`, `export.phaseTimingReplie`), actif par défaut.
-Aucune commande ESV nouvelle. Seul ce qu'on voit à l'écran : l'avis de contrat ESV, s'il se produit.
+Aucune commande ESV nouvelle. Seul ce qu'on voit à l'écran : l'avis de contrat ESV, s'il se produit, et le nouveau logo.
+
+- **Logo** : piste A « La voie », retenue par Mic (`icons/ariane.svg`, icônes 16, 32, 48 et 128 px), déclarée dans `icons` et `action.default_icon` du manifeste.
 
 - **S6, relevés (plan 5.0, § 4)**
   1. *Ressources Potree* (`src/esv-observer.js`) : pour les nœuds `ept-data`, le statut HTTP (`responseStatus`, si le navigateur le donne), la durée (total, maximum), les échecs (statut 0 ou ≥ 400) et leur cumul, dans l'événement `resource`.

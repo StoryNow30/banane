@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+ <!-- Logo d'Ariane, piste A « La voie » (choisie par Mic, 15/10/2026) : deux rails
+      qui fuient vers l'horizon forment un A, les traverses sont sa barre, le point
+      vert est le cut posé. Tuile arrondie au vert profond du panneau 4.9. -->
+ <defs>
+  <linearGradient id="fond" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b3a27"/><stop offset="1" stop-color="#0b1a11"/></linearGradient>
+  <radialGradient id="halo" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="#34d27f" stop-opacity=".22"/><stop offset="1" stop-color="#34d27f" stop-opacity="0"/></radialGradient>
+ </defs>
+ <rect width="64" height="64" rx="15" fill="url(#fond)"/>
+ <rect width="64" height="64" rx="15" fill="url(#halo)"/>
+ <rect x=".5" y=".5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity=".08"/>
+ <g fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"><path d="M14 52 L30 15 M50 52 L34 15"/></g>
+ <g stroke="#fff" stroke-linecap="round"><path d="M18.6 43.5 H45.4" stroke-width="3.2"/><path d="M23.3 33 H40.7" stroke-width="2.6" stroke-opacity=".75"/><path d="M26.8 25 H37.2" stroke-width="2" stroke-opacity=".5"/></g>
+ <circle cx="32" cy="12.5" r="4.4" fill="#34d27f"/>
+</svg>

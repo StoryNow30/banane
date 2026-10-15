@@ -15,8 +15,10 @@ test('manifeste : une entrée, monde MAIN, document_start, même hôte, fichier 
  assert.deepEqual(autres.map(c=>[c.js[0],c.run_at,c.world]),[['src/early-input.js','document_start',undefined],['src/bridge.js','document_idle',undefined]],'les deux autres scripts inchangés, dans le monde isolé');
 });
 test('version minimale de Chrome/Edge déclarée : 111 (clé world des scripts de contenu), sans autre changement de clés',()=>{
+ assert.deepEqual(manifest.icons,{16:'icons/ariane-16.png',32:'icons/ariane-32.png',48:'icons/ariane-48.png',128:'icons/ariane-128.png'},'logo « La voie » (4.9.5.3)');assert.deepEqual(manifest.action.default_icon,manifest.icons);
+ for(const f of Object.values(manifest.icons))assert.ok(fs.existsSync(path.join(root,f)),f);
  assert.equal(manifest.minimum_chrome_version,'111');assert.ok(Number(manifest.minimum_chrome_version)>=111,'world:MAIN en manifeste : Chrome et Edge 111 minimum');
- assert.deepEqual(Object.keys(manifest).sort(),['action','background','content_scripts','description','host_permissions','manifest_version','minimum_chrome_version','name','permissions','version',...(manifest.version.split('.').length===4?['version_name']:[])].sort(),'aucune autre clé (version_name : version de test seulement ; une stable comme la 4.9.0 n’en porte pas)');
+ assert.deepEqual(Object.keys(manifest).sort(),['action','background','content_scripts','description','host_permissions','icons','manifest_version','minimum_chrome_version','name','permissions','version',...(manifest.version.split('.').length===4?['version_name']:[])].sort(),'aucune autre clé (version_name : version de test seulement ; une stable comme la 4.9.0 n’en porte pas ; icons depuis la 4.9.5.3)');
 });
 test('réglage observateurPassif : gelé, actif par défaut dans cette version de test, bornes sans seuil de décision',()=>{
  assert.equal(Object.isFrozen(S.observateurPassif),true);assert.equal(S.observateurPassif.actif,true);
