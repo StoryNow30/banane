@@ -138,5 +138,6 @@ function construire(entree,options={}){
       exclus:{total:exclus.length,parRaison:exclus.reduce((a,x)=>(a[x.raison]=(a[x.raison]||0)+1,a),{}),exemples:exclus.slice(0,20)}},parties};
 }
 module.exports={construire,charger,cutsOrbite,cutsEcho};
-if(require.main===module){const a=process.argv.slice(2),i=a.indexOf('--part'),v=a.indexOf('--valides');const s=construire(a[0],{part:i>=0?Number(a[i+1]):undefined,valides:v>=0?Number(a[v+1]):0});
+if(require.main===module){const a=process.argv.slice(2);if(!a[0]||a[0].startsWith('--')){console.error('Usage : node tests/esv-maquette/lecteur-export.cjs FICHIER_OU_DOSSIER_EXPORT [--part N] [--valides K]');process.exit(2);}
+  const i=a.indexOf('--part'),v=a.indexOf('--valides');const s=construire(a[0],{part:i>=0?Number(a[i+1]):undefined,valides:v>=0?Number(a[v+1]):0});
   console.log(JSON.stringify({provenance:s.provenance,parties:s.parties.map(p=>({part:p.part,cuts:p.cuts.map(c=>({cut:c.cut,status:c.status,monde:c.monde,noeuds:c.noeuds.length,points:c.noeuds.reduce((n,x)=>n+x.positions.length/3,0),decoupe:!!c.decoupe,reference:c.reference?.source||null,intent:c.intent}))}))},null,1));}
