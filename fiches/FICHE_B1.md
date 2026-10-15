@@ -19,6 +19,7 @@ Aujourd'hui `background.js` (~ligne 816) appelle `L.decideCut({capture:…})` SA
    (`records[].rails.*.corrected.positionSceneRelative`) donne une **translation constante** (même valeur à 1 mm près sur les cuts bien appariés, aucune rotation) : monde = scène + T.
    Script de mesure : `/tmp/claude-0/-home-user/cc0e4631-960e-5f55-b126-e7123e84b5ca/scratchpad/lot14/offset.cjs <repo> <export décompressé>` (export du lot 14h : `scratchpad/lot14/s`). T est constante par page (`sceneFrameId`). Elle se calibre donc à la première validation de la séance.
 3. **Appariement cut ↔ ligne** : NON établi. Ne pas supposer que le numéro de cut d'ESV est l'indice de la ligne. À instruire et à PROUVER (voir étape 2).
+   > Note du 15 octobre 2026 : Dépassé : les b1-ombre des quatre lots 4.9 (tests 15 à 17) donnent geoMm = 0,0 mm sur 100 % des cuts : la ligne N de la liste porte la pose de départ du cut N (D-115).
 4. **Fraîcheur** : la copie de la liste lue au chargement ne voit pas les validations faites pendant la séance (celles d'Ariane sont déjà connues du moteur comme appuis posés ;
    `promoteAnchors`).
 

@@ -386,6 +386,7 @@ ou d'apprentissage, aucun changement de seuil, de porte ou de critère.
 2. **Exports allégés (V2) : lancement autorisé.** Étape A (une seule copie des nuages, événements et diagnostic une fois, sans perte)
    et « Sauvegarder tout » en un clic (un zip). Mode complet : intensité et classe conservées ; mode léger : retirées. Le mode léger
    avec arrondi des points reste conditionné à un rejeu comparé complet/léger. Étude : mesures privées hors dépôt.
+   Inexact : le mode allégé conserve l'intensité (D-091, D-115).
 3. **Données de la partie 7 pour l'ESV local : mises de côté (décision de Mic du 7 octobre).** L'extension Claude ne convient pas (elle ne doit
    pas lire le jeton de connexion, et naviguer dans ESV n'est pas une lecture pure). Méthode retenue pour plus tard : HAR enregistré par Mic
    dans Chrome sur les coupes laissées de côté, nettoyé des échanges `login.microsoftonline.com` avant envoi (le HAR « nettoyé » de Chrome garde
@@ -1807,3 +1808,4 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - **B3, quatre derniers essais validés sur le terrain par Mic le 15 octobre avec la 4.9.0.17, sans export** : Arrêter puis Reprendre refusé si les rails ont bougé ; Reprendre après la fin → « Lot déjà terminé » ; lot à plage fixe jusqu'à sa fin ; erreur dans l'avis. Mic confirme aussi la reprise automatique au bon endroit après une mise en veille du PC suivie d'un F5.
 - **Exports non tenus (porte, lignes 8b et 8c) : décision de Mic du 15 octobre** : il accepte la 4.9.0 sans « Préparer pour analyse » à zéro différence ni le −40 % de taille ; les deux critères sont renvoyés à la 4.9.5.
 - Fusion dans `main`, étiquette et publication : toujours à la décision de Mic.
+- Correction (D-113) : 2 écritures refusées (HTTP 502) sur ~3 530, relancées par ESV et acceptées en 204 ; voir D-113.
