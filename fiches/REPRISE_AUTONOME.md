@@ -24,3 +24,7 @@ Demande de Mic (D-124) : avancer sur tous les chantiers possibles pendant son ab
 - Volumes de l'Écho partie 24 des tests 19/20 (Q5).
 - Lot Orbite et Écho d'un second projet ESV (D-123).
 - Exports de la séance 4.9.5 test 2.
+
+## À intégrer au prochain numéro de test
+
+- Logo retenu par Mic (piste A « La voie ») : commit a426771 sur `claude/ux-variantes`. Prendre `icons/` (`git checkout a426771 -- icons/`), puis déclarer dans `manifest.json` `"icons": {"16":"icons/ariane-16.png","32":"icons/ariane-32.png","48":"icons/ariane-48.png","128":"icons/ariane-128.png"}` et la même liste sous `action.default_icon`. Cible : 4.9.5 test 3 si elle n'est pas encore remise à Mic, sinon le numéro suivant.
