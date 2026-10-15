@@ -157,6 +157,14 @@
      * émission). Jamais de repli automatique de l'un vers l'autre. */
     validationDernierCut: 'ctrl-entree',
     boutonValiderSansSuivant: null,
+    /* 4.9.5.1 (D3, D-110) — ÉCRITURE DE VALIDATION REFUSÉE PAR ESV, vue par l'observateur passif
+     * (HTTP non 2xx ou statut 0) pour un cut que le lot vient de valider. 'pause' : si aucune
+     * écriture réussie de la même ligne ne suit dans `ecritureRefuseeRelanceMs` (ESV relance parfois),
+     * le lot se met en pause comme avec le bouton Pause (au prochain point sûr du moteur), avec un
+     * avis clair et un événement `ecriture-refusee`. Aucune attente ajoutée au lot, rien renvoyé à
+     * ESV. 'off' : comportement de la 4.9.0 (le refus n'est pas suivi). */
+    ecritureRefusee: 'pause',
+    ecritureRefuseeRelanceMs: 2000,
   });
 
   const exportSettings = Object.freeze({

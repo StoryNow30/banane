@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.1',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 1';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -255,6 +255,8 @@ function rangerObservations(m){try{
  for(const x of m.entries){
   if(!x||typeof x!=='object'){rejected++;continue;}
   const fields=obsFields(x);if(!fields){rejected++;continue;}
+  /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
+  if(fields.kind==='write')try{ecritureObservee(fields);}catch{}
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
   add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;
@@ -387,12 +389,64 @@ async function validerSurPlace(identity,d,scope){const S=globalThis.BananeSettin
  await engine.event('validation-en-place',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:e.command??'ctrl-entrée',compteurAvant:av,compteurApres:ap});
  await closeAtExit('dernier-cut-valide',d.cut,null,{dernier:d});
  return e;}
+/* 4.9.5.1 (D3, renvoyé par la relecture finale de la 4.9.0, D-110) — ÉCRITURE DE VALIDATION REFUSÉE PAR ESV.
+ * Avant : ESV refusait l'écriture (HTTP 500), l'observateur passif le voyait (`kind:'write', status:500`), mais le lot
+ * acceptait le cut (preuve `navigation-only`) et continuait. Désormais, SANS AUCUNE ATTENTE AJOUTÉE :
+ *  1. chaque validation envoyée par le lot est notée (cut, heure d'envoi, heure de retour) ;
+ *  2. chaque écriture observée (rangerObservations) est rapprochée d'une ligne : `rowIndex` s'il est donné (hypothèse
+ *     de banc : rowIndex = numéro du cut, comme pour B1) ; sinon la ligne déjà vue pour le même `railPairId` (écriture
+ *     réussie antérieure) ; sinon la DERNIÈRE validation envoyée dont la fenêtre contient le début de l'écriture
+ *     (500 ms avant l'envoi, 1 s après le retour). En pratique, l'observateur ne donne `rowIndex` que pour une
+ *     écriture réussie (seule appliquée à sa table) : pour un refus, c'est la fenêtre qui joue. Une écriture dont le
+ *     corps est lu et ne porte pas `ExtractionStatus` (« SeenByOperator » du cut suivant, par exemple) n'est pas une
+ *     validation : jamais prise pour un refus. Un cut que le lot n'a pas validé n'est jamais concerné ;
+ *  3. écriture non 2xx (ou statut 0) d'un cut validé : si aucune écriture 2xx de la même ligne (même `railPairId`, ou
+ *     même cut) ne suit dans `ecritureRefuseeRelanceMs` (2 s, ESV relance parfois), le refus est confirmé : événement
+ *     `ecriture-refusee` (cut, statut, heure) et, si le lot tourne, PAUSE comme le bouton Pause (le moteur s'arrête à
+ *     son prochain point sûr, jamais au milieu d'une capture, d'une pose ou d'une validation), avec l'avis
+ *     « ESV a refusé d'enregistrer la validation du cut N (erreur serveur). Vérifie ce cut dans ESV, puis Reprendre. »
+ * Rien n'est renvoyé à ESV. Sans observation (observateur absent ou coupé) : comportement de la 4.9.0. En mémoire
+ * seulement : un redémarrage du service worker oublie un refus non encore confirmé. */
+const ecrituresLot={validations:[],lignes:new Map(),echecs:new Map(),refusees:[]};
+const reglageEcriture=()=>{const S=globalThis.BananeSettings?.lot||{};return {mode:S.ecritureRefusee==='off'?'off':'pause',
+ relanceMs:Number.isFinite(S.ecritureRefuseeRelanceMs)&&S.ecritureRefuseeRelanceMs>=0?S.ecritureRefuseeRelanceMs:2000};};
+function ecritureNoterValidation(identity){if(reglageEcriture().mode==='off'||!Number.isInteger(identity?.cut))return null;
+ const v={cut:identity.cut,part:identity.part??null,lot:engine?.s?.batch?.id??null,envoiMs:Date.now(),retourMs:null};
+ ecrituresLot.validations.push(v);if(ecrituresLot.validations.length>16)ecrituresLot.validations.shift();return v;}
+const ecritureOk=s=>Number.isInteger(s)&&s>=200&&s<300;
+function ecritureLigne(f,t){
+ if(Number.isInteger(f.rowIndex))return {cut:f.rowIndex,par:'rowIndex'};
+ if(f.railPairId&&ecrituresLot.lignes.has(f.railPairId))return {cut:ecrituresLot.lignes.get(f.railPairId),par:'railPairId'};
+ const v=ecrituresLot.validations.findLast(v=>t>=v.envoiMs-500&&t<=(v.retourMs??Infinity)+1000);
+ return v?{cut:v.cut,par:'fenetre'}:null;}
+function ecritureObservee(f){const R=reglageEcriture();if(R.mode==='off'||!f||f.kind!=='write')return;
+ const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:Date.now(),ok=ecritureOk(f.status);
+ if(ok&&f.railPairId&&Number.isInteger(f.rowIndex)){ecrituresLot.lignes.set(f.railPairId,f.rowIndex);if(ecrituresLot.lignes.size>256)ecrituresLot.lignes.delete(ecrituresLot.lignes.keys().next().value);}
+ /* Corps lu sans `ExtractionStatus` : pas une écriture de validation. */
+ if(f.body&&typeof f.body==='object'&&!Object.hasOwn(f.body,'ExtractionStatus'))return;
+ const l=ecritureLigne(f,t);
+ if(ok){for(const [cle,e] of ecrituresLot.echecs)if(t>=e.debutMs-1&&(f.railPairId&&f.railPairId===e.railPairId||l&&l.cut===e.cut))ecrituresLot.echecs.delete(cle);return;}
+ if(f.status===null||f.status===undefined||!l||!ecrituresLot.validations.some(v=>v.cut===l.cut))return;
+ const e={cut:l.cut,par:l.par,statut:f.status,railPairId:f.railPairId??null,debutMs:t,lot:engine?.s?.batch?.id??null};
+ ecrituresLot.echecs.set(l.cut,e);setTimeout(()=>{void ecritureConfirmer(l.cut,e).catch(()=>{});},R.relanceMs);}
+async function ecritureConfirmer(cut,e){if(ecrituresLot.echecs.get(cut)!==e)return;ecrituresLot.echecs.delete(cut);
+ const b=engine?.s?.batch,heure=new Date(e.debutMs).toISOString(),tourne=b?.state==='RUNNING'&&b.id===e.lot;
+ const avis=`ESV a refusé d’enregistrer la validation du cut ${cut} (${e.statut===0?'pas de réponse du serveur':'erreur serveur'}). Vérifie ce cut dans ESV, puis Reprendre.`;
+ ecrituresLot.refusees.push({cut,statut:e.statut,heure});if(ecrituresLot.refusees.length>32)ecrituresLot.refusees.shift();
+ await engine.event('ecriture-refusee',{identity:null,cut,statut:e.statut,heure,rapprochement:e.par,lot:e.lot,pause:tourne});
+ if(tourne)await coordinateurLot.transition('pause',async()=>{await engine.pause();});
+ /* L'avis est posé tout de suite, puis de nouveau quand le moteur s'est arrêté (une étape finie entre-temps, la capture
+  * par exemple, écrit le sien). */
+ const poser=async()=>{if(engine?.s?.batch?.id!==e.lot)return;engine.s.notice=avis;await engine.save();};
+ await poser();if(tourne&&engine.task)void engine.task.then(poser,poser).catch(()=>{});}
 adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',async()=>{
- const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return validerSurPlace(args[0],dernier,args[1]);
+ const envoi=ecritureNoterValidation(args[0]);
+ try{
+ const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return await validerSurPlace(args[0],dernier,args[1]);
  const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
- return evidence;});
+ return evidence;}finally{if(envoi)envoi.retourMs=Date.now();}});
 const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.test(e?.message||'');
 /* 4.8.0 (KI-063) — ESV LU DANS UNE AUTRE PARTIE. Après un silence, ESV peut
  * revenir sur une autre partie (terrain du 26/09 : partie 13 muette 30 s après

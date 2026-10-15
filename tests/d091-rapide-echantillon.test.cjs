@@ -31,5 +31,6 @@ test('réglage livré : la page suit la même règle que l’outil, la consigne,
 
 test('une étape sans détail reçoit aussi son heure ; un détail existant est gardé tel quel',async()=>{
   const f=lidarPage(100);await f.call('capture',await f.call('state'));
-  const lu=f.progress.find(p=>p.stage==='capture-read');assert.deepEqual(Object.keys(lu.detail).sort(),['attempt','lecture','pageMs','regle','side']);
+  const lu=f.progress.find(p=>p.stage==='capture-read');/* 4.9.5.1 (D-109) : + `diag`, le relevé du signal de fin de chargement. */
+  assert.deepEqual(Object.keys(lu.detail).sort(),['attempt','diag','lecture','pageMs','regle','side']);
 });

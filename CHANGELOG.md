@@ -1,5 +1,38 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.1 — 4.9.5 test 1 (15/10)
+
+Manifeste `4.9.5.1`, « 4.9.5 test 1 », paquet `ariane-4.9.5-test.1.zip` ; base : la 4.9.0 stable (`main`, 5444245).
+`src/engine.js` inchangé (baseline épinglée), décision de lecture et de pose inchangées. Consigne :
+`consignes/seance-terrain-4.9.5-test-1-2026-10-15.md` ; retour arrière : la 4.9.0 stable.
+
+- **A. Diagnostic du signal de fin de chargement (D-109), sans rien changer à la lecture** (`src/adapter-page.js`).
+  Chaque lecture d'une vue porte un petit relevé `diag` dans le détail de l'étape `capture-read` (donc dans
+  `lastDetail` du journal exporté) : âge de l'adaptateur dans la page (`ageS`) et de la page ESV depuis sa navigation
+  (`navS`, remis à zéro par un F5) ; images vues (`img`) ; `numNodesLoading` à la fin et maximum (`nl`) ; paires
+  d'images comparées et, parmi elles, celles avec chargement en cours, nœuds changés, vue changée (`paires`, `pc`,
+  `nc`, `vc`) ; au repli 800 ms, la condition qui manquait (`m` : `images`, `chargements`, `noeuds`, `vue`, `aucune` ;
+  `hors-signal` pour une lecture qui n'attend pas le signal) ; nœuds visibles, points visibles et en cache de Potree,
+  mémoire JS (Chrome). Coût : quelques comparaisons de nombres par image et un relevé de compteurs par lecture, aucune
+  attente ni boucle ajoutée ; environ 150 à 200 octets par lecture, 300 à 400 par cut. Même règle, même temps simulé,
+  mêmes vues que la 4.9.0 sur le banc (signal, chargement pendu, compteur alterné, vue mobile, référence).
+- **Nouvel outil `tools/signal-age.cjs`** : part des vues lues au signal par page ESV et par tranche de 5 min d'âge de
+  page, condition manquante dominante au repli, repli avec chargement encore en cours. Âge lu dans `diag.navS` (4.9.5.1)
+  ou, pour les anciens exports, depuis la première action d'Ariane sur la page (borne basse). Sur la test 17 (partie
+  27) : page 1 à 84 % au signal de 0 à 5 min puis 0 % ; page 2 (après F5) à 100 % jusqu'à 10 min.
+- **B. D3 : écriture de validation refusée par ESV** (`background.js`, réglages `lot.ecritureRefusee` et
+  `lot.ecritureRefuseeRelanceMs`). Les validations envoyées par le lot sont notées ; chaque écriture observée par
+  l'observateur passif est rapprochée d'une ligne (`rowIndex` = cut, hypothèse de banc ; sinon `railPairId` déjà vu ;
+  sinon la dernière validation dont la fenêtre contient l'écriture). Écriture non 2xx (ou statut 0) d'un cut validé,
+  sans écriture 2xx de la même ligne dans les 2 s : événement `ecriture-refusee` (cut, statut, heure) et pause du lot
+  comme le bouton Pause (prochain point sûr du moteur), avis « ESV a refusé d’enregistrer la validation du cut N
+  (erreur serveur). Vérifie ce cut dans ESV, puis Reprendre. ». Aucune attente ajoutée, rien renvoyé à ESV ; sans
+  observation : comportement de la 4.9.0. Une écriture dont le corps ne porte pas `ExtractionStatus` (« vu » du cut
+  suivant) n'est jamais prise pour un refus.
+- Version 4.9.5.1 (manifeste avec `version_name`, core, repli du service worker, pont, panneau) ; essai de version
+  `version-4951` (remplace `version-490`) ; essais `t951-diag-signal`, `t951-signal-age`, `t951-d3-ecriture-refusee`,
+  `t951-d3-sans-pause`, `consigne-4951` ; captures du panneau `design/ux-2026-10/retenue/captures-t951.cjs`.
+
 ## 4.9.0 — version candidate stable (15/10)
 
 **Code de la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27), plus deux corrections de la
