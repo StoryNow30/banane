@@ -204,6 +204,11 @@
      * sondes des nœuds vides qui ne touchent pas la zone ; points au bit près ;
      * environ −33 % sur les nuages (src/native-export.js, MODES). */
     mode: 'allege',
+    /* 4.9.5.3 (S7) : jalons `phase-timing` repliés par visite dans le journal exporté (src/phase-pli.js) : le contexte de la visite
+     * n'est écrit qu'une fois, chaque jalon devient une ligne de nombres, un résumé de visite est joint. Rien n'est perdu pour
+     * l'analyse (tools/perf-phases.cjs et perf-v3.cjs lisent les deux formats, mêmes chiffres). Mesuré sur un export réel
+     * (partie 27, 606 visites) : jalons −84 %, journal −36 %. `false` : un événement par jalon, comme avant. */
+    phaseTimingReplie: true,
     /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
      * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
      * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */
@@ -273,6 +278,31 @@
     chemin: 'auto',
     pasMax: 40,
   });
+  /* --- Relevés en LECTURE SEULE de la 4.9.5.3 (S6, plan 5.0) ---
+   * Chacun consigne, dans le journal ou le diagnostic de capture, une mesure de plus. AUCUN ne change la pose, la validation
+   * ni la navigation ; aucun n'envoie de commande à ESV. Tous actifs par défaut dans cette version de test ; `false` coupe le
+   * relevé sans autre effet. Les relevés de la page ESV (observateur) sont coupés par le service worker, qui le dit au pont.
+   *   ressources    : statut HTTP (`responseStatus`, si le navigateur le donne) et durée des nœuds ept-data, compteur d'échecs.
+   *   flushPct      : part de points « au ras » du passage à niveau, lue à CHAQUE cut (pas seulement au-dessus de 50 %).
+   *   diagCapture   : profondeur d'octree des nœuds lus et budget de points du lecteur, dans le `diag` de `capture-read`.
+   *   champsListe   : RailSpacing, TrajAzimuth, RailType, Success*, PK gardés de la liste, et inventaire des noms de champs.
+   *   compteurBloque: `numNodesLoading` identique et > 0 au début de `cuts` cuts de suite : `diag-compteur-bloque`.
+   *   avisFetch     : écriture passée par `fetch` (compteur `fetch-rails` non nul) : `avis-contrat-esv` et avis du panneau.
+   *   empreinte     : empreinte du contrat ESV à « Connecter », comparée à la précédente ; avis si elle change.
+   *   translationDepart : T monde/scène sur la pose de départ du cut, consignée à côté de l'actuelle (B1 reste sur l'actuelle).
+   *   revisiteSansSource: revisite d'un différé sans source nouvelle, consignée seulement (rien n'est sauté).
+   *   auditServeur  : au rechargement de la liste, validés côté serveur contre validations d'Ariane (`audit-serveur`).
+   *   enteteMachine : navigateur, plateforme, mémoire, GPU dans l'en-tête de l'export. */
+  const releves = Object.freeze({
+    ressources: true, flushPct: true, diagCapture: true, champsListe: true,
+    compteurBloque: Object.freeze({ actif: true, cuts: 3 }),
+    avisFetch: true, empreinte: true, translationDepart: true, revisiteSansSource: true, auditServeur: true, enteteMachine: true,
+  });
+  /* Écouteurs jQuery EN OMBRE sur les événements internes d'ESV (`railPairSelected`, `railPairUpdated`, `railPairSeen`,
+   * `loading`, `newPart`), posés par l'adaptateur sur `#globalcontainer` : événement `esv-event` (nom, arguments réduits aux
+   * nombres et chaînes courtes, heure de la page). L'écouteur ne retourne rien, n'arrête rien, ne lève jamais : les
+   * gestionnaires d'ESV passent comme avant. `ombre:false` : aucun écouteur posé. */
+  const esvEvents = Object.freeze({ ombre: true, noms: Object.freeze(['railPairSelected', 'railPairUpdated', 'railPairSeen', 'loading', 'newPart']), parSecondeMax: 30 });
   /* --- Écho (4.9.0.18, audit fiches/AUDIT_ECHO_5.0.md) --- */
   const echo = Object.freeze({
     /* Gestes d'ESV lus comme une validation (AM-01) : Maj+Espace (valider et passer au
@@ -334,5 +364,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, listeMemoire, retourCut, echo, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });

@@ -77,6 +77,8 @@
    if(r&&typeof r.accept==='boolean'&&r.grace!==true)obsSeance(r.accept);
    if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
    if(r&&r.tableListe===false)window.postMessage({kind:'banane5:config',table:false},location.origin);
+   /* 4.9.5.3 (S6) : relevés de l'observateur coupés par les réglages du service worker (liste de noms). */
+   if(r&&Array.isArray(r.relevesOff))window.postMessage({kind:'banane5:config',relevesOff:r.relevesOff.filter(n=>typeof n==='string'&&n.length<=24).slice(0,16)},location.origin);
   }catch{if(!(r&&r.accept===true))obs.refused=true;}}
  /* B1 (D-095) — VOISINS DE LA LISTE DES COUPES. Le service worker demande, pour le cut décidé, une fenêtre de
   * ±10 lignes au plus et la ligne la plus proche d'une paire de points ; l'observateur (monde principal) répond
@@ -162,7 +164,7 @@
      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','apply','manualFinish'].includes(m.action)?90000:45000);
    /* D1 (4.8.5) : l'adaptateur n'obéit qu'à l'extension qui l'a installé. */
    pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,proprietaire:chrome.runtime.id,action:m.action,args:m.args||[],sentAt:Date.now()},location.origin);return true;});
- pill=document.createElement('button');pill.textContent='Ariane 4.9.5 test 2 · ouvrir';pill.type='button';pill.hidden=true;
+ pill=document.createElement('button');pill.textContent='Ariane 4.9.5 test 3 · ouvrir';pill.type='button';pill.hidden=true;
  /* 4.8.0 (direction, 26/09) : bouton blanc et discret, plein seulement au survol. */
  const repos='0 1px 2px rgba(15,23,42,.10),0 2px 8px rgba(15,23,42,.08)',survol='0 2px 4px rgba(15,23,42,.12),0 6px 18px rgba(15,23,42,.14)';
  pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#fff;color:#1f2328;border:1px solid rgba(15,23,42,.12);border-radius:999px;padding:6px 12px;font:500 12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.01em;cursor:pointer;opacity:.92;box-shadow:'+repos+';transition:opacity .16s ease,box-shadow .16s ease,transform .16s ease';

@@ -9,7 +9,7 @@ function production({enabled=true,adapter=new SimulatedESV(),store=new MemorySto
   chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>message=f},onConnect:{addListener:()=>{}}},
    action:{onClicked:{addListener:()=>{}}},storage:{local:local||{get:async()=>({}),set:async()=>{}},...(session?{session}:{})},
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),query:async()=>[],onRemoved:{addListener:()=>{}},
-    sendMessage:async(id,m)=>{if(m.kind==='launcher-visibility')return {ok:true};commands.push({action:m.action,args:m.args});return {result:await adapter[m.action](...m.args)};}},
+    sendMessage:async(id,m)=>{if(m.kind==='launcher-visibility')return {ok:true};if(m.kind==='liste-instantane')return {ok:false,reason:'banc-sans-table'};/* E1 : lecture de la mémoire de la page par le pont, pas une commande ESV */commands.push({action:m.action,args:m.args});return {result:await adapter[m.action](...m.args)};}},
    scripting:{executeScript:async options=>[{frameId:0,result:options.func?null:undefined}]},windows:{onRemoved:{addListener:()=>{}},create:async()=>({id:1}),update:async()=>{}}}};
  vm.createContext(ctx);ctx.importScripts=(...files)=>{for(const f of files){if(f==='src/perf-phase.js'&&!enabled)continue;
   if(f==='src/storage.js'){ctx.BananeStorage3=class{constructor(){return store;}};continue;}

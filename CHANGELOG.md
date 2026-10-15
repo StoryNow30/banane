@@ -1,5 +1,30 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.3 — 4.9.5 test 3 (16/10)
+
+Manifeste `4.9.5.3`, « 4.9.5 test 3 », paquet `ariane-4.9.5-test.3.zip` ; base : `claude/50-base` (4.9.5 test 2 + S3 et S8). **Aucun changement de pose, de validation ni de navigation** ;
+`src/engine.js` inchangé (identique à `origin/main`). Consigne : `consignes/seance-terrain-4.9.5-test-3-2026-10-16.md` ; retour arrière : la 4.9.5 test 2.
+Tout ce qui est nouveau est LECTURE SEULE ou consigné en ombre, chacun derrière un réglage (`src/settings.js` : `releves`, `esvEvents`, `export.phaseTimingReplie`), actif par défaut.
+Aucune commande ESV nouvelle. Seul ce qu'on voit à l'écran : l'avis de contrat ESV, s'il se produit, et le nouveau logo.
+
+- **Logo** : piste A « La voie », retenue par Mic (`icons/ariane.svg`, icônes 16, 32, 48 et 128 px), déclarée dans `icons` et `action.default_icon` du manifeste.
+
+- **S6, relevés (plan 5.0, § 4)**
+  1. *Ressources Potree* (`src/esv-observer.js`) : pour les nœuds `ept-data`, le statut HTTP (`responseStatus`, si le navigateur le donne), la durée (total, maximum), les échecs (statut 0 ou ≥ 400) et leur cumul, dans l'événement `resource`.
+  2. *`flushPct`* du lecteur du passage à niveau (`src/lot-decision.js`) consigné à chaque cut dans la décision du lot (avant : seulement au-dessus de 50 %).
+  3. *Diag de capture* (`src/adapter-page.js`, `capture-read.diag`) : `niv` = niveau d'octree des nœuds lus [min, médiane, max, connus, total] et `bud` = budget de points du lecteur (`null` si absent).
+  4. *Liste d'ESV* : `RailSpacing`, `TrajAzimuth`, `RailType`, `Success*`, `PK` gardés en mémoire de la page (B1 et les comptes inchangés) ; une fois par chargement de liste, événement `list-fields` : noms des champs d'une ligne (jamais les valeurs) et résumé des champs gardés.
+  5. *Compteur Potree bloqué* : `numNodesLoading` identique et > 0 au début de 3 cuts de suite = `diag-compteur-bloque`, une fois par épisode.
+  6. *Avis `fetch-rails`* : si le compteur d'écritures passées par `fetch` devient non nul, événement `avis-contrat-esv` et ligne dans l'avis du panneau.
+  7. *Empreinte du contrat ESV* à « Connecter » : boutons de navigation et titres, classes de rail, écouteurs jQuery par événement, versions de jQuery et de Potree, hachés (8 caractères) ; événement `contrat-esv` ; avis si elle change depuis la connexion précédente.
+  8. *Écouteurs jQuery en ombre* sur `railPairSelected`, `railPairUpdated`, `railPairSeen`, `loading`, `newPart` (`#globalcontainer`) : événement `esv-event` (nom, arguments réduits, heure de la page). Espace de noms `banane53`, aucune valeur retournée, jamais d'exception ; au plus 30 événements par seconde ; exclus des comptes de l'empreinte et du chemin `goToCut`.
+  9. *T monde/scène sur la pose de départ* du cut (ligne N de la liste) dès le premier cut : `tDepart` dans `b1-ombre`, à côté de la T actuelle (écriture) ; B1 continue d'employer l'actuelle.
+  10. *Revisite d'un différé sans source nouvelle*, en ombre : événement `revisite-differe` (`revisite-sans-source-nouvelle:true|false`) ; rien n'est sauté.
+  11. *Audit serveur* : à chaque lecture complète de la liste (F5), validés côté serveur contre validations d'Ariane depuis la lecture précédente : événement `audit-serveur` (attendus, constatés, écart).
+  12. *En-tête de l'export* (journal et bilan Orbite, export Écho) : navigateur, plateforme, cœurs, mémoire (appareil et JS), GPU.
+- **S7, export allégé** (`src/phase-pli.js`) : les jalons `phase-timing` sont repliés par visite dans le journal exporté (un événement `phase-timing-pli` par visite : contexte écrit une fois, jalons en lignes de nombres, résumé de visite ; formes rangées dans `phase-timing-pli-formes`). Dépliage sans perte pour l'analyse. `tools/perf-phases.cjs` et `tools/perf-v3.cjs` lisent les deux formats et donnent les mêmes chiffres (essai `tests/phase-pli.test.cjs`, fixture fabriquée). Mesuré sur un export réel rejoué (partie 27, 606 visites) : jalons −84 %, journal −36 %.
+- Essais : `tests/releves-4953-*.test.cjs` (observateur, adaptateur, service worker, B1, export, `flushPct`), `tests/phase-pli.test.cjs`, `tests/version-4953.test.cjs` (remplace `version-4952`), `tests/consigne-4953.test.cjs`.
+
 ## 4.9.5.2 — 4.9.5 test 2 (15/10)
 
 Manifeste `4.9.5.2`, « 4.9.5 test 2 », paquet `ariane-4.9.5-test.2.zip`. 4.9.5 test 2 = corrections Écho de la 4.9.0.20 + D3 et diagnostic du signal de la 4.9.5.1 ;

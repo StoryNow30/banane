@@ -155,11 +155,16 @@
    return Math.max(...SIDES.map(side=>{const M=rails[side].sceneRelativeToProfileLocal,p=C.point(M,a[side]),q=C.point(M,b[side]);return Math.abs((p[1]-q[1])*1000);}));
  }
  /* Lecture du passage à niveau sur les points visibles de la capture. */
- function crossingOf(capture,cfg){
+ /* 4.9.5.3 (S6) : la lecture complète (`flushPct` compris) est gardée pour que la décision consigne la part « au ras » À CHAQUE CUT, pas
+  * seulement au-dessus de 50 % ; `crossingOf` rend exactement ce qu'il rendait (la lecture seulement si elle est un passage à niveau). */
+ function crossingRead(capture,cfg){
    if(!cfg.crossing||!Crossing)return null;
    const vis=capture.visibleByClipBoxes,points=Array.isArray(vis)?capture.pointsSceneRelative.filter((_,i)=>vis[i]===true):capture.pointsSceneRelative;
-   const read=Crossing.read({rails:capture.rails,pointsSceneRelative:points});
-   return read.crossing?read:null;
+   return Crossing.read({rails:capture.rails,pointsSceneRelative:points});
+ }
+ function crossingOf(capture,cfg){
+   const read=crossingRead(capture,cfg);
+   return read&&read.crossing?read:null;
  }
  /* Minima d'un rail, qualifiés par les points sous le gabarit posé à chacun. */
  function candidatesOf(capture,side,science,cfg=DEFAULTS){
@@ -273,7 +278,9 @@
    if(gaugeRef)base.gaugeReference={mm:r1(gaugeRef.mm),cuts:gaugeRef.cuts};
    /* 4.7.19 : voie encadrée si des appuis posés sont des deux côtés, sinon les
     * plus proches (inchangé) ; passage à niveau lu par son ornière. */
-   const pred=predictionAnchors(identity,anchors,nb,cfg),pn=crossingOf(capture,cfg);
+   const rd=crossingRead(capture,cfg),pred=predictionAnchors(identity,anchors,nb,cfg),pn=rd&&rd.crossing?rd:null;
+   /* 4.9.5.3 (S6) : `flushPct` à chaque cut (null si illisible ou lecteur coupé), consigné seulement ; la décision ne le lit pas. */
+   if(cfg.flushPctChaqueCut!==false&&globalThis.BananeSettings?.releves?.flushPct!==false&&rd)base.flushPct=Number.isFinite(rd.flushPct)?rd.flushPct:null;
    if(pred.framed)base.framedAnchors=pred.cuts;
    if(pn)base.levelCrossing={flushPct:pn.flushPct,read:pn.ok,...(pn.ok?{}:{reason:pn.reason})};
    if(applicable){
