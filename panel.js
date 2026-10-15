@@ -292,7 +292,12 @@
  /* Complet : le nombre exact. Sinon : « au moins N », et « inconnu » pour zéro. */
  const compte=(v,complet)=>complet?String(v):v>0?'au moins '+v:'inconnu';
  const pluriel=(n,mot)=>`${mot}${n>1?'s':''}`;
- function afficherResume(s){const el=$('part-summary'),R=moduleResume();if(!el)return;el.hidden=!R;if(!R)return;
+ /* E1 : corrections constatées dans la liste d'ESV depuis le dernier passage (comptes seulement), lues au plus toutes les 5 s. */
+ let listeLu={partie:null,t:0};
+ function listeLigne(s){const p=s.batch?.scope?.part??s.current?.identity?.part,el=$('part-summary-liste');if(!el||!Number.isInteger(p)||globalThis.BananeSettings?.listeMemoire?.actif===false)return;
+  if(listeLu.partie===p&&Date.now()-listeLu.t<5000)return;listeLu={partie:p,t:Date.now()};
+  api('liste-resume',{partie:p}).then(r=>{const q=r?.passage;el.textContent=q?`Liste d’ESV relue : ${q.constatees} correction(s) constatée(s) sur ${q.comparees} cut(s) d’Ariane comparés, dont ${q.nouvelles} depuis le dernier passage.`:r?.memorises?`Liste d’ESV : ${r.memorises} cut(s) d’Ariane mémorisés, pas encore comparés (recharge la liste après ta relecture).`:'';},()=>{});}
+ function afficherResume(s){const el=$('part-summary'),R=moduleResume();if(!el)return;el.hidden=!R;if(!R)return;listeLigne(s);
    const cle=cleHistoire(s),b=s.batch,memeSession=histoire.session===s.sessionId,recents=Array.isArray(s.events)?s.events:[];
    const statut=histoire.cle===cle?histoire.statut:memeSession&&histoire.statut==='unavailable'?'unavailable':'loading';
    /* Le résumé n'est recalculé que si ses entrées ont changé. */
@@ -1381,12 +1386,14 @@ on('native-discard',async()=>{
    const partieNom=parties.length?`-partie${parties.join('-')}`:'',base=`ariane-echo${partieNom}-${dateCompacte(maintenant)}${label}`;
    const departs=await api('fiches-depart').then(r=>{const f=(Array.isArray(r?.fiches)?r.fiches:[]).filter(x=>!parties.length||parties.includes(x.partie)),EC=globalThis.BananeExportCache;
      return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
+   const L=await exportListe(parties);
    const debut=session.startedAt?dateHeureParis(session.startedAt):'?',periode=session.finishedAt?`du ${debut} au ${dateHeureParis(session.finishedAt)}`:`depuis le ${debut} (session en cours)`;
    const corps=`Session Écho ${session.id||'?'} · version ${data.version||K_VERSION()} · ${records.length} visite(s) · partie(s) ${parties.length?parties.join(', '):'?'} · ${periode}.\n`+
-     (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+departs;
+     (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+departs+L.texte;
    let r;
    const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode Écho (relecture) — ${dateHeureParis(maintenant)}\n`,corps,
      pied:()=>r?.segments>1?'Plusieurs segments JSON : node tools/merge-segments.cjs --out SESSION.json --dir DOSSIER (les zip sont lus tels quels). Les visites et les événements sont dans le premier segment.\n':''});
+   await L.sauver(V.save).catch(()=>{});
    segmentPlafond=Math.max(2*V.max,2*SEGMENT_RESERVE_BYTES);
    try{r=await writeSegments(data,'ariane-echo',{label,startIndex,save:V.save});}finally{segmentPlafond=null;}
    const volumes=await V.fermerTout(),ko=nonEnregistres(volumes),confirme=volumes.length>0&&!ko.length;
@@ -1394,6 +1401,9 @@ on('native-discard',async()=>{
    const acked=confirme?r.acked:[],nonConfirmes=confirme?r.nonConfirmes:[...r.acked,...r.nonConfirmes];
    return {...r,acked,nonConfirmes,volumes,confirme,trop:V.trop,max:V.max,mo1:V.mo1,total:V.total,base};
  }
+ /* E1 : instantanés de la liste d'ESV (src/liste-memoire.js) rangés dans les volumes, et leur résumé dans CONTENU.txt. */
+ const exportListe=async parties=>{const LM=globalThis.BananeListeMemoire;if(!LM||globalThis.BananeSettings?.listeMemoire?.actif===false)return {texte:'',sauver:async()=>{}};
+   try{return await LM.exportPanneau(api,parties,iso=>globalThis.BananeExportCache?.heureParis?.(iso));}catch{return {texte:'',sauver:async()=>{}};}};
  const K_VERSION=()=>globalThis.BananeCore3?.VERSION||'';
  async function exportToutZip(Z){
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,bilans=[];let volumes=[];
@@ -1401,9 +1411,11 @@ on('native-discard',async()=>{
    const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${dateHeureParis(i.marqueur.at)} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+dateHeureParis(i.marqueur.afterExportAt):'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
    /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
    const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
-   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs,
+   const L=await exportListe(null);
+   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte,
      pied:'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'});
    const {save,fermerTout,trop,max,mo1}=V,total=()=>V.total;
+   await L.sauver(save).catch(()=>{});
    const essai=async(quoi,f)=>{try{const b=await f();bilans.push(b);return b;}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});return null;}};
    segmentPlafond=Math.max(2*max,2*SEGMENT_RESERVE_BYTES);
    try{

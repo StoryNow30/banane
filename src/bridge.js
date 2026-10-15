@@ -92,10 +92,19 @@
  function b1Reponse(d){const w=typeof d.id==='string'?b1Attente.get(d.id):null;if(!w)return;b1Attente.delete(d.id);clearTimeout(w.timer);
   let copie=null;try{const json=JSON.stringify(d);copie=json.length<=B1.maxChars?JSON.parse(json):{ok:false,reason:'trop-gros'};}catch{copie={ok:false,reason:'illisible'};}
   w.respond(copie);}
+ /* E1 — table entière de la liste des coupes (mémoire de la page), pour src/liste-memoire.js. Réponse bornée en taille. */
+ const LISTE={delaiMs:3000,maxChars:6000000},listeAttente=new Map();
+ function listeDemande(respond){const id=crypto.randomUUID(),timer=setTimeout(()=>{listeAttente.delete(id);respond({ok:false,reason:'page-sans-reponse'});},LISTE.delaiMs);
+  listeAttente.set(id,{respond,timer});
+  try{window.postMessage({kind:'banane5:liste',id},location.origin);}catch{clearTimeout(timer);listeAttente.delete(id);respond({ok:false,reason:'pont'});}}
+ function listeReponse(d){const w=typeof d.id==='string'?listeAttente.get(d.id):null;if(!w)return;listeAttente.delete(d.id);clearTimeout(w.timer);
+  let copie;try{const json=JSON.stringify({ok:d.ok===true,reason:d.reason,tables:d.tables});copie=json.length<=LISTE.maxChars?JSON.parse(json):{ok:false,reason:'trop-gros'};}catch{copie={ok:false,reason:'illisible'};}
+  w.respond(copie);}
  try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}
  window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin)return;
    if(e.data?.kind==='banane5:esv-observation'){relayObservation(e.data);return;}
    if(e.data?.kind==='banane5:voisins-reponse'){b1Reponse(e.data);return;}
+   if(e.data?.kind==='banane5:liste-reponse'){listeReponse(e.data);return;}
    if(e.data?.channel!==channel)return;
    if(e.data.kind==='banane4:manual-phase'){
      const gate=window.__banane4InputGate;if(gate){gate.phase=e.data.phase;if(e.data.phase==='FINISHED')gate.active=false;}return;
@@ -129,6 +138,7 @@
      // until the current background state answers this fresh read.
      launcherGeneration++;setLauncherVisible(false);void refreshLauncher();respond({ok:true});return;}
    if(m.kind==='b1-voisins'){b1Demande(m,respond);return true;}
+   if(m.kind==='liste-instantane'){listeDemande(respond);return true;}
    if(m.kind!=='page-command'||!allowed.has(m.action))return;
    if(m.action==='manualStart'){
      const gate=window.__banane4InputGate;if(!gate){respond({error:'Recharge ESV pour activer l’enregistrement de session V4.'});return;}

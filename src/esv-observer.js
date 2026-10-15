@@ -322,6 +322,10 @@
    else if(d.kind==='banane5:voisins'&&typeof d.id==='string'&&d.id.length<=80){
     const r=!enabled||!tablesOn?{ok:false,reason:'coupe'}:voisins(tables,d);
     win.postMessage({kind:'banane5:voisins-reponse',v:1,id:d.id,...r},origin());}
+   /* E1 : la table entière, bords arrondis au dixième de mm (mémoire de la liste, src/liste-memoire.js). Lecture seule. */
+   else if(d.kind==='banane5:liste'&&typeof d.id==='string'&&d.id.length<=80){
+    const r=!enabled||!tablesOn?{ok:false,reason:'coupe'}:{ok:true,tables:[...tables].map(([key,t])=>({key,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee,st:t.st,fl:t.fl,ed:t.ed.map(v=>finite(v)?Math.round(v*1e4):null)}))};
+    win.postMessage({kind:'banane5:liste-reponse',v:1,id:d.id,...r},origin());}
   }catch{}});}catch{}
 
   return {record,replay,ring:()=>ring.map(x=>JSON.parse(x.json)),setEnabled:v=>{enabled=!!v;},
