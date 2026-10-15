@@ -93,7 +93,10 @@ function kindOf(doc){
   if(doc?.format==='banane-test-dataset-v4'&&doc.state?.batch)return 'bilan';
   return 'ignored';
 }
-const listJson=input=>fs.statSync(input).isDirectory()?fs.readdirSync(input).filter(f=>f.endsWith('.json')).sort().map(f=>path.join(input,f)):[input];
+/* 4.9.0.18 : un dossier de lot ou de relecture peut contenir des volumes zip (export en volumes d'Orbite et d'Écho) : leurs
+ * entrées JSON sont lues comme des fichiers posés (tools/lire-volumes.cjs). Une entrée a `chemin` et `lire()`. */
+const Volumes=require('./lire-volumes.cjs');
+const listJson=input=>Volumes.entrees(input);
 function describe(file,bytes,doc,kind){return {file:path.basename(file),kind,format:doc?.format??null,version:doc?.version??null,
   sha256:crypto.createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length};}
 /* Un dossier de lot : chaque fichier est reconnu par son format. Un seul
@@ -117,12 +120,12 @@ function loadLot(dir,label,relecturePath=null,leger=false){
   /* KI-060 : un segment compact se relit avec les dictionnaires du segment
    * précédent du même export (fichiers triés par nom : seg01, seg02…). */
   const dicts=new Map(),segKey=(r,d=0)=>`${r?.segment?.stamp}|${(r?.segment?.index||0)+d}`;
-  for(const file of listJson(dir)){
-    const bytes=fs.readFileSync(file),raw=JSON.parse(bytes),compact=raw?.format===NativeExport.FORMAT;
+  for(const entree of listJson(dir)){const file=entree.chemin;
+    const bytes=entree.lire(),raw=JSON.parse(bytes),compact=raw?.format===NativeExport.FORMAT;
     if(compact&&raw.segment)dicts.set(segKey(raw),raw.dictionaries);
     const doc=compact?NativeExport.expand(raw,{previousDictionaries:raw.segment?dicts.get(segKey(raw,-1)):null}):raw,kind=kindOf(doc);
     lot.inputs.push(describe(file,bytes,doc,kind));
-    if(kind==='relecture'){relectureFiles.push(file);continue;}
+    if(kind==='relecture'){relectureFiles.push(entree);continue;}
     if(kind==='ignored')continue;
     if(kind==='bilan'){nbBilans++;if(!leger||!bilans.length)bilans.push(doc);continue;}
     if(kind==='corpus'&&leger)doc.clouds=(doc.clouds||[]).map(Segments.alleger);
@@ -138,8 +141,8 @@ function loadLot(dir,label,relecturePath=null,leger=false){
     lot.corpusSegments={segments:lot.corpus.segments.length,clouds:lot.corpus.clouds.length,declared:last.cloudObjects??null,allRequestedObjectsPresent:last.allRequestedObjectsPresent??null};
     if(last.cloudObjects!=null&&last.cloudObjects!==lot.corpus.clouds.length)throw Error(`Corpus en segments incomplet dans ${dir} : ${lot.corpus.clouds.length} captures sur ${last.cloudObjects} déclarées.`);}
   if(relecturePath){relectureFiles.length=0;
-    for(const file of listJson(relecturePath)){const bytes=fs.readFileSync(file),doc=JSON.parse(bytes),kind=kindOf(doc);
-      lot.inputs.push({...describe(file,bytes,doc,kind),role:'relecture'});if(kind==='relecture')relectureFiles.push(file);}}
+    for(const entree of listJson(relecturePath)){const file=entree.chemin,bytes=entree.lire(),doc=JSON.parse(bytes),kind=kindOf(doc);
+      lot.inputs.push({...describe(file,bytes,doc,kind),role:'relecture'});if(kind==='relecture')relectureFiles.push(entree);}}
   if(relectureFiles.length){const merged=Segments.mergeFiles(relectureFiles,{leger}).merged;lot.relecture=merged;
     lot.relectureMerge={segments:relectureFiles.length,records:merged.records.length,allDeclaredCloudsPresent:merged.mergeTrace.allDeclaredPresent};}
   if(!lot.journal&&lot.bilan){lot.journal=lot.bilan;lot.journalFromBilan=true;

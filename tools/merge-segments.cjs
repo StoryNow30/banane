@@ -23,6 +23,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const X = require('../src/native-export.js');
+/* 4.9.0.18 : les segments peuvent être rangés dans des volumes zip (export Écho en volumes, comme Orbite). */
+const V = require('./lire-volumes.cjs');
 
 /* Mode léger (analyse sans rejeu) : un nuage garde ses métadonnées, ses rails et son
  * identité, mais perd les points bruts, qui pèsent 90 % d'un export. Les rapports
@@ -40,8 +42,8 @@ function alleger(cloud) {
  * (≈ 512 Mo), donc ne jamais passer par un fichier intermédiaire. */
 function mergeFiles(files, options = {}) {
   const loaded = files.map(f => {
-    const doc = JSON.parse(fs.readFileSync(f));
-    return { file: f, seg: doc.segment || {}, stampKey: String((doc.segment || {}).stamp || '') };
+    const doc = JSON.parse(V.lire(f));
+    return { file: V.nomDe(f), source: f, seg: doc.segment || {}, stampKey: String((doc.segment || {}).stamp || '') };
   });
   /* Ordre de fusion : par horodatage de segment puis par index. Le nom de fichier
    * n'est pas fiable — chaque vidage automatique repart à seg01. */
@@ -59,8 +61,8 @@ function mergeFiles(files, options = {}) {
   // Un segment à la fois : relu, fusionné, libéré. Seuls les dictionnaires du
   // segment précédent du même export sont gardés, pour KI-060.
   let previous = null, repairs = 0;
-  for (const { file, seg, stampKey } of loaded) {
-    const raw = JSON.parse(fs.readFileSync(file));
+  for (const { file, source, seg, stampKey } of loaded) {
+    const raw = JSON.parse(V.lire(source));
     const prev = previous && previous.stampKey === stampKey && previous.index === (seg.index || 0) - 1 ? previous.dictionaries : null;
     const full = X.expand(raw, { previousDictionaries: prev });
     if (full.segmentRepair) repairs++;
@@ -115,10 +117,7 @@ function mergeFiles(files, options = {}) {
 }
 /* Une session d'entrée : un fichier JSON, ou un dossier de segments fusionnés en mémoire. */
 function loadSession(input) {
-  if (fs.statSync(input).isDirectory()) {
-    const files = fs.readdirSync(input).filter(f => f.endsWith('.json')).sort().map(f => path.join(input, f));
-    return mergeFiles(files).merged;
-  }
+  if (fs.statSync(input).isDirectory() || /\.zip$/i.test(input)) return mergeFiles(V.entrees(input)).merged;
   // Un export compact (v3) se relit développé, comme dans la fusion.
   const doc = JSON.parse(fs.readFileSync(input, 'utf8'));
   return doc.format === X.FORMAT ? X.expand(doc) : doc;
@@ -129,9 +128,9 @@ const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
 const out = opt('--out');
 const dir = opt('--dir');
-let files = argv.filter(a => a.endsWith('.json') && a !== out);
-if (dir) files = fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort().map(f => path.join(dir, f));
-if (!out || !files.length) { console.error('Usage : --out SESSION.json seg01.json seg02.json…  (ou --dir DOSSIER)'); process.exit(1); }
+let files = argv.filter(a => (a.endsWith('.json') || a.endsWith('.zip')) && a !== out).flatMap(a => V.entreesFichier(a));
+if (dir) files = V.entrees(dir);
+if (!out || !files.length) { console.error('Usage : --out SESSION.json seg01.json seg02.json… ou volume01.zip…  (ou --dir DOSSIER, JSON et zip mêlés)'); process.exit(1); }
 const { merged, trace, missing, totalPoints } = mergeFiles(files);
 const clouds = merged.clouds, mergedRecords = merged.records, mergedEvents = merged.events, declared = { size: merged.mergeTrace.declaredCloudIds };
 const loaded = trace;

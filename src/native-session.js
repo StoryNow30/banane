@@ -12,6 +12,16 @@
   Array.isArray(a?.[name])&&Array.isArray(b?.[name])&&a[name].length===16&&b[name].length===16&&
   a[name].every((value,index)=>Number.isFinite(value)&&Number.isFinite(b[name][index])&&Math.abs(value-b[name][index])<=tolerance));
  const eventTime=event=>Date.parse(event?.observedAt||event?.timestamp||'');
+ /* 4.9.0.18 (AM-13) : déplacement d'un rail entre deux poses, en millimètres, dans le repère profil
+  * de la pose de départ (latéral, vertical, longitudinal) et en distance ; `changed` applique le seuil
+  * métier (`settings.echo.movementThresholdM`), `identical` la comparaison exacte d'avant (1e-7). */
+ const railDelta=(from,to,thresholdM=S.echo?.movementThresholdM??0.001)=>{
+  const a=from?.positionSceneRelative,b=to?.positionSceneRelative,inv=from?.sceneRelativeToProfileLocal;
+  if(!Array.isArray(a)||!Array.isArray(b)||a.length!==3||b.length!==3)return {status:'unavailable',changed:!poseEqual(from,to),identical:poseEqual(from,to),distanceMm:null,localMm:null};
+  const distance=Math.hypot(...b.map((v,i)=>v-a[i])),mm=v=>Math.round(v*1e4)/10;
+  let local=null;if(Array.isArray(inv)&&inv.length===16){const f=K.C.point(inv,a),t=K.C.point(inv,b);local=t.map((v,i)=>mm(v-f[i]));}
+  return {status:'measured',changed:distance>thresholdM,identical:poseEqual(from,to),distanceMm:mm(distance),localMm:local,thresholdMm:thresholdM*1000};};
+ const sameCutKey=(a,b)=>K.cutKey(a)===K.cutKey(b);
  class Sessions{
   /* Réglages centralisés dans src/settings.js ; ces alias restent exposés pour
    * les tests et les outils qui les lisaient déjà. */
@@ -54,6 +64,10 @@
    n.observationPeriods.push(period);n.currentPeriodId=period.observationPeriodId;return period;}
   async start(){if(this.starting||this.ending)throw Error('Le mode Natif est déjà en cours de démarrage ou de fermeture.');this.starting=true;
    try{const old=this.e.s.native;if(['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(old?.status))return this.resume();
+    /* 4.9.0.18 (AM-19) : une session finie, avec des visites, jamais téléchargée en entier, n'est pas remplacée :
+     * elle deviendrait inaccessible depuis le panneau (manifeste et « Télécharger à nouveau » visent la session courante). */
+    if(old?.status==='FINISHED'&&(old.visits||[]).length&&!old.exportState?.finalExportAt)
+      throw Error(`La session Écho précédente (${old.visits.length} visite(s)) n’a pas été téléchargée en entier : clique d’abord sur « Télécharger à nouveau la session », ou abandonne-la.`);
     if(this.active()||this.e.busy||this.e.task||this.e.s.manual&&OPEN.includes(this.e.s.manual.status)||
       ['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(this.e.s.batch?.state))
       throw Error('Termine ou arrête l’activité en cours avant de démarrer le mode Natif.');
@@ -152,10 +166,13 @@
   async crossSessionIndex(n){if(this.crossIndex?.sessionId===n.id)return this.crossIndex.map;const map=new Map();
    for(const record of await this.store.all('records'))
     if(record.source==='native-passive-observation'&&record.visitId&&record.nativeSessionId!==n.id)
-     map.set(K.cutId(record.identity),{visitId:record.visitId,nativeSessionId:record.nativeSessionId});
+     map.set(K.cutKey(record.identity),{visitId:record.visitId,nativeSessionId:record.nativeSessionId});
    this.crossIndex={sessionId:n.id,map};return map;}
-  visitRelation(n,identity,periodId,cross){const cut=K.cutId(identity);
-   const previous=(n.visits||[]).slice().reverse().find(visit=>visit.visitId&&K.cutId(visit.identity)===cut);
+  /* 4.9.0.18 (AM-08) : la relation entre visites se fait sur la clé métier (partie, cut) : `pageId` et
+   * `frameId` changent à chaque F5 ou recentrage, et rendaient toute revisite d'une autre page « première
+   * observation » (et la revisite inter-session impossible). */
+  visitRelation(n,identity,periodId,cross){const cut=K.cutKey(identity);
+   const previous=(n.visits||[]).slice().reverse().find(visit=>visit.visitId&&K.cutKey(visit.identity)===cut);
    if(previous)return {type:previous.observationPeriodId===periodId?'revisit':'pause-continuation',relatedVisitId:previous.visitId,relatedSessionId:n.id};
    const other=cross?.get(cut);
    if(other)return {type:'cross-session-revisit',relatedVisitId:other.visitId,relatedSessionId:other.nativeSessionId};
@@ -168,6 +185,7 @@
       acquiredThroughAt:chunk.qualification.acquiredThroughAt,coverage:chunk.qualification.coverage}:null,points:chunk.pointsSceneRelative?.length||0}};}
    return data;}
   async handle(type,data){const n=this.e.s.native;if(!n||n.id!==data.sessionId||!this.active())throw Error('La session Natif n’est plus active.');
+   if(n.status==='PAUSED'&&data.observationPeriodId&&n.currentPeriodId===null)await this.heal(data);
    this.mergeMetrics(data.collectorMetrics);n.eventCount++;
    // A checkpoint event represents a completed storage write; other events
    // retain their ordinary arrival order. This is not a physical cut order.
@@ -183,6 +201,9 @@
       startedAt:data.initialObserved?.capturedAt||iso(),endedAt:null,endTimeStatus:'open',firstObserved:K.clone(data.initialObserved),beforeEstablished:null,beforeEstablishedByRail:{left:null,right:null},
       beforeEstablishment:{status:'not-established',observedAt:null,immutable:true},lastObserved:K.clone(data.initialObserved),humanFinalReference:null,
       initialObserved:K.clone(data.initialObserved),finalObserved:K.clone(data.initialObserved),stateTransitions:[],operatorEvents:[],operatorIntents:[],multiIntent:false,observedEffects:[],
+      /* 4.9.0.18 : pose de départ = dernier état observé AVANT le premier geste (AM-03) ; toutes les références
+       * de validation (AM-02) ; écritures de validation d'ESV jointes (AM-14) ; poses de chaque transition (AM-03). */
+      startPose:null,humanFinalReferences:[],serverWrites:[],railPoseHistory:[],
       operatorIntent:null,commandSentByBanane:false,commandSent:'not-observed',serverConfirmed:false,serverConfirmationStatus:'not-observed',
       navigationObserved:false,nextObservedIdentity:null,lidarCaptureIds:[],lidarChunkIds:[],geometryCaptures:{},geometryObservations:{left:[],right:[]},
       railSnapshots:{left:[],right:[]},
@@ -206,17 +227,34 @@
    if(type==='operator-event'){
     const observed={...K.clone(data.event),eventSeq:logged.eventSeq,event_seq:logged.eventSeq,collectorSeq:data.collectorSeq??null};record.operatorEvents.push(observed);
     if(record.operatorEvents.length>128){record.operatorEvents.shift();this.partialReason(record,'operator-events-truncated');}
+    /* 4.9.0.18 (AM-16) : résumé des gestes, jamais tronqué : compte par touche, premier et dernier. */
+    this.summariseGesture(record,observed);
+    /* 4.9.0.18 (AM-03) : la pose de départ est le dernier état observé avant le PREMIER geste (hors intention :
+     * une validation sans aucun geste vu avant garde le premier état établi, pour ne cacher aucune correction) ;
+     * l'ancien `beforeEstablished` (premier état vu, immuable) reste consigné pour comparaison. */
+    if(!record.startPose&&data.stateObservedBeforeInput&&anyRail(data.stateObservedBeforeInput)){
+     /* Premier événement = une intention, alors que les rails ont déjà bougé sans geste vu : on ne cache aucune
+      * correction, la pose de départ reste le premier état établi, et le cas est nommé. */
+     const sansGeste=!!observed.intent&&(record.railPoseHistory||[]).length>0&&record.beforeEstablished?.rails;
+     const st=sansGeste?{rails:record.beforeEstablished.rails,capturedAt:record.beforeEstablished.capturedAt||null,identity:record.identity}:data.stateObservedBeforeInput;
+     record.startPose={rails:K.clone(st.rails),capturedAt:st.capturedAt||null,identity:K.completeIdentity(st.identity),source:sansGeste?'before-established-no-gesture-seen':'last-state-before-first-gesture',
+      eventSeq:logged.eventSeq,firstGesture:{type:observed.type,key:observed.key??null,targetKind:observed.targetKind??null,observedAt:observed.observedAt||logged.timestamp},
+      differsFromBeforeEstablished:SIDES.some(side=>record.beforeEstablished?.rails?.[side]&&st.rails?.[side]&&!poseEqual(record.beforeEstablished.rails[side],st.rails[side]))};}
     if(observed.intent){const state=K.clone(data.stateObservedBeforeInput||record.lastObserved||null),intent={intent:observed.intent,observedAt:observed.observedAt||logged.timestamp,
        eventSeq:logged.eventSeq,collectorSeq:data.collectorSeq??null,repeat:!!observed.repeat,stateObservedBeforeInput:state};
       if(state){try{K.assertTarget(record.identity,state.identity);}catch{state.identityAssociation='mismatch';}}
       record.operatorIntents.push(intent);record.multiIntent=record.operatorIntents.length>1;record.operatorIntent=record.multiIntent?'AMBIGUOUS_MULTIPLE':observed.intent;
-      record.operatorIntentObservedAt=intent.observedAt;if(observed.intent==='VALIDATE'&&!record.humanFinalReference){
+      record.operatorIntentObservedAt=intent.observedAt;if(observed.intent==='VALIDATE'){
+       /* 4.9.0.18 (AM-02) : chaque validation a sa référence ; `humanFinalReference` est la DERNIÈRE
+        * (avant : la première, jamais mise à jour : valider, bouger encore, revalider gardait l'ancienne pose). */
        const freshness=state&&Number.isFinite(eventTime(intent))&&Number.isFinite(Date.parse(state.capturedAt||''))?eventTime(intent)-Date.parse(state.capturedAt):null;
-       record.humanFinalReference={status:freshness!==null&&freshness<0?'candidate-timing-uncertain':'candidate-observed',state,
-        observedAt:intent.observedAt,eventSeq:intent.eventSeq,
+       const reference={status:freshness!==null&&freshness<0?'candidate-timing-uncertain':'candidate-observed',state,
+        observedAt:intent.observedAt,eventSeq:intent.eventSeq,decisionKey:observed.decisionKey??null,
         association:{identityMatched:state?.identityAssociation!=='mismatch',freshnessMs:freshness,
          source:freshness!==null&&freshness<0?'cached-state-arrived-after-operator-input':'last-passively-observed-state-before-intent',
          eventTimeStamp:observed.eventTimeStamp??null,stateCapturedAt:state?.capturedAt||null,reviewed:false}};
+       (record.humanFinalReferences??=[]).push(reference);record.humanFinalReference=reference;
+       record.humanFinalReferenceSource=record.humanFinalReferences.length>1?'last-validate-intent':'sole-validate-intent';
        if(freshness!==null&&freshness<0)this.partialReason(record,'cached-state-observed-after-operator-input');}}
     await this.saveRecord(record);return {saved:true,eventSeq:logged.eventSeq};
    }
@@ -224,6 +262,11 @@
     K.assertTarget(record.identity,data.state.identity);record.lastObserved=K.clone(data.state);record.finalObserved=K.clone(data.state);this.establishBefore(record,data.state);
     record.stateTransitions.push({observedAt:data.state.capturedAt,trigger:data.trigger,effect:data.effect,eventSeq:logged.eventSeq});record.observedEffects.push(K.clone(data.effect));
     if(record.stateTransitions.length>64){record.stateTransitions.shift();this.partialReason(record,'state-transitions-truncated');}
+    /* 4.9.0.18 (AM-03, C-02) : la pose de chaque transition de rails, pour la trajectoire du geste. */
+    if(/rail/.test(data.effect?.kind||'')){(record.railPoseHistory??=[]).push({observedAt:data.state.capturedAt,eventSeq:logged.eventSeq,afterGesture:record.operatorEvents.length>0,
+      rails:Object.fromEntries(SIDES.map(side=>[side,data.state.rails?.[side]?{positionSceneRelative:K.clone(data.state.rails[side].positionSceneRelative),
+       railLocalToSceneRelative:K.clone(data.state.rails[side].railLocalToSceneRelative),profileLocalToSceneRelative:K.clone(data.state.rails[side].profileLocalToSceneRelative)}:null]))});
+     if(record.railPoseHistory.length>64){record.railPoseHistory.shift();this.partialReason(record,'rail-pose-history-truncated');}}
     for(const reason of data.state.partialReasons||[])this.partialReason(record,reason);this.e.s.current=K.clone(data.state);await this.saveRecord(record);return {saved:true,eventSeq:logged.eventSeq};
    }
    if(type==='capture-checkpoint'){
@@ -339,24 +382,39 @@
    if(!initial)this.partialReason(record,'initial-state-not-established');if(!last)this.partialReason(record,'last-state-missing');
    if(initial&&last)try{K.assertTarget(initial.identity,last.identity);}catch{this.partialReason(record,'initial-last-identity-mismatch');}
    if(!completeRails(initial)||!completeRails(last))this.partialReason(record,'one-or-both-rails-missing');
-   const intents=record.operatorIntents||[],sole=intents.length===1?intents[0]:null;record.multiIntent=intents.length>1;
-   record.operatorIntent=intents.length===0?null:record.multiIntent?'AMBIGUOUS_MULTIPLE':sole.intent;
+   const intents=record.operatorIntents||[],kinds=unique(intents.map(item=>item.intent));record.multiIntent=intents.length>1;
+   /* 4.9.0.18 (AM-02) : plusieurs validations SANS autre intention = une seule décision, la dernière ; des intentions de
+    * natures différentes (VALIDATE puis SKIP) restent ambiguës. */
+   const repeatedValidate=intents.length>1&&kinds.length===1&&kinds[0]==='VALIDATE';
+   const sole=intents.length===1?intents[0]:repeatedValidate?intents.at(-1):null;
+   record.intentCollapse=repeatedValidate?{kind:'repeated-validate',count:intents.length,referenceFrom:'last-validate-intent'}:null;
+   record.operatorIntent=intents.length===0?null:kinds.length>1?'AMBIGUOUS_MULTIPLE':kinds[0];
+   /* 4.9.0.18 (AM-03) : l'étiquette compare la pose finale à la pose de départ = dernier état avant le premier geste ;
+    * à défaut (aucun geste), au premier état établi. */
+   const start=record.startPose?.rails?record.startPose:initial;record.labelBasis={startPose:record.startPose?.source||'before-established',thresholdMm:(S.echo?.movementThresholdM??0.001)*1000};
    if(!intents.length){record.observedLabelCandidate='PASS_NO_DECISION';this.partialReason(record,'operator-decision-not-observed');}
-   else if(record.multiIntent){record.observedLabelCandidate='AMBIGUOUS_MULTIPLE_INTENTS';this.partialReason(record,'multiple-operator-intents-observed');}
+   else if(kinds.length>1){record.observedLabelCandidate='AMBIGUOUS_MULTIPLE_INTENTS';this.partialReason(record,'multiple-operator-intents-observed');}
    else if(sole.intent==='SKIP'){record.observedLabelCandidate='SKIP';record.humanFinalReference=null;}
    else if(sole.intent==='VALIDATE'){
     const reference=record.humanFinalReference?.state;if(!reference){this.partialReason(record,'human-final-reference-missing');record.observedLabelCandidate=null;}
     else{try{K.assertTarget(record.identity,reference.identity);}catch{this.partialReason(record,'human-final-reference-identity-mismatch');}
-     const rails={};for(const side of SIDES)if(initial?.rails?.[side]&&reference.rails?.[side])rails[side]={positionChanged:!poseEqual(initial.rails[side],reference.rails[side])};
-     record.observedLabelCandidate=K.manualDecision(rails,'VALIDATE');}}
+     const rails={};record.humanDelta={};for(const side of SIDES)if(start?.rails?.[side]&&reference.rails?.[side]){const d=railDelta(start.rails[side],reference.rails[side]);
+      rails[side]={positionChanged:d.changed};record.humanDelta[side]=d;}
+     record.observedLabelCandidate=K.manualDecision(rails,'VALIDATE');
+     /* Pour comparaison hors ligne : l'étiquette qu'aurait donnée l'ancienne règle (premier état vu, comparaison exacte). */
+     const legacy={};for(const side of SIDES)if(initial?.rails?.[side]&&reference.rails?.[side])legacy[side]={positionChanged:!poseEqual(initial.rails[side],reference.rails[side])};
+     record.labelBasis.legacyLabel=K.manualDecision(legacy,'VALIDATE');}}
    else{record.observedLabelCandidate='UNKNOWN_INTENT';this.partialReason(record,'unknown-operator-intent');}
-   if(intents.length&&!record.navigationObserved)this.partialReason(record,'decision-effect-not-observed');
+   /* 4.9.0.18 (AM-14, AM-18) : une écriture de validation d'ESV observée vaut effet de la décision ; le motif est
+    * recalculé à chaque classification (une écriture arrive après la clôture de la visite). */
+   record.partialReasons=record.partialReasons.filter(reason=>reason!=='decision-effect-not-observed');
+   if(intents.length&&!record.navigationObserved&&!record.serverConfirmed)this.partialReason(record,'decision-effect-not-observed');
    for(const side of SIDES)record.geometryEligibility[side]=this.chooseGeometry(record,side);
    const reference=record.humanFinalReference,referenceReasons=[];
    if(!sole||sole.intent!=='VALIDATE')referenceReasons.push(record.multiIntent?'multiple-operator-intents-observed':sole?.intent==='SKIP'?'operator-skip-observed':'validated-reference-not-observed');
    if(!reference?.state)referenceReasons.push('human-final-reference-missing');if(reference?.association?.identityMatched===false)referenceReasons.push('human-final-reference-identity-mismatch');
    if(reference?.association?.freshnessMs===null||reference?.association?.freshnessMs<0||reference?.association?.freshnessMs>1500)referenceReasons.push('human-final-reference-not-freshly-observed');
-   if(!record.navigationObserved)referenceReasons.push('decision-effect-not-observed');
+   if(!record.navigationObserved&&!record.serverConfirmed)referenceReasons.push('decision-effect-not-observed');
    for(const side of SIDES){const eligibility=record.geometryEligibility[side],reasons=[...eligibility.reasons,...referenceReasons];
     if(!reference?.state?.rails?.[side])reasons.push('human-final-rail-state-missing');eligibility.referenceStatus=reference?.status||'not-observed';eligibility.reasons=unique(reasons);
     eligibility.status=eligibility.status==='qualified-candidate'&&!eligibility.reasons.length?'comparable-candidate':'excluded';record.usableForOfflineEvaluationByRail[side]=eligibility.status==='comparable-candidate';}
@@ -366,10 +424,58 @@
    record.geometryEligibility.pair={status:!pairReasons.length?'comparable-candidate':'excluded',leftCaptureId:left.captureId,rightCaptureId:right.captureId,
     simultaneousRequired:false,sameViewEpoch:left.viewEpochId===right.viewEpochId,compatibilityChecked:true,reasons:unique(pairReasons)};
    record.usableAsNativeReference=record.geometryEligibility.pair.status==='comparable-candidate';record.usableForTraining=false;
-   record.trainingExclusionReason=sole?.intent==='SKIP'?'operator-skip-observed':record.multiIntent?'multiple-operator-intents-observed':'native-reference-requires-explicit-review';
+   record.trainingExclusionReason=sole?.intent==='SKIP'?'operator-skip-observed':kinds.length>1?'multiple-operator-intents-observed':'native-reference-requires-explicit-review';
    if(!record.lidarCaptureIds?.length&&!record.lidarChunkIds?.length)this.partialReason(record,'lidar-missing');
    const metadataComplete=!!initial&&!!last&&!!record.endedAt&&record.endTimeStatus!=='unknown';record.status=metadataComplete&&!record.partialReasons.length?'complete':'partial';
   }
+  /* 4.9.0.18 (AM-16) : résumé des gestes par touche, jamais tronqué. */
+  summariseGesture(record,observed){const g=record.gestureSummary??={count:0,firstAt:null,lastAt:null,byKey:{},editable:0};
+   g.count++;const at=observed.observedAt||null;if(!g.firstAt)g.firstAt=at;g.lastAt=at;if(observed.editable){g.editable++;return;}
+   const name=observed.type==='keydown'?(observed.decisionKey||observed.key||observed.code||'key'):observed.type;
+   const k=g.byKey[name]??={n:0,firstAt:at,lastAt:at};k.n++;k.lastAt=at;}
+  /* 4.9.0.18 (AM-14) : écriture de validation d'ESV vue par l'observateur de page pendant Écho, jointe à la visite
+   * en cours, sinon à la dernière visite close depuis moins de `ecritureJointeMs` (l'écriture part après la
+   * navigation). La visite devient `serverConfirmed`, et sa classification est refaite si elle était close. Passe par la
+   * file des événements : une écriture de l'observation « continuité » ne doit jamais écraser la sienne, ni l'inverse. */
+  noteServerWrite(write){const next=this.queue.then(()=>this.noteServerWriteNow(write));this.queue=next.catch(()=>{});return next;}
+  async noteServerWriteNow(write){const n=this.e.s.native;if(!n||!this.active()||!write)return null;
+   const at=Date.parse(write.timestamp||'')||Date.now();let record=n.current;
+   if(!record){const last=n.visits.at(-1);if(last){const r=await this.recordById(last.visitId);
+     if(r&&r.nativeSessionId===n.id&&(!r.endedAt||at-Date.parse(r.endedAt)<=(S.echo?.ecritureJointeMs??5000)))record=r;}}
+   if(!record)return null;
+   const entry={eventId:write.eventId||null,at:write.timestamp||iso(),status:write.status??null,method:write.method||null,outcome:write.outcome||null,
+    attempt:write.attempt??null,rowIndex:Number.isInteger(write.rowIndex)?write.rowIndex:null,body:write.body&&typeof write.body==='object'?K.clone(write.body):null,
+    joinedTo:n.current===record?'current-visit':'last-closed-visit',durationMs:write.durationMs??null};
+   (record.serverWrites??=[]).push(entry);if(record.serverWrites.length>16)record.serverWrites.shift();
+   if(Number.isInteger(entry.status)&&entry.status>=200&&entry.status<300){record.serverConfirmed=true;record.serverConfirmationStatus='observed-write-'+entry.status;
+    record.serverConfirmedAt=entry.at;}
+   if(record.endedAt!==null)this.classify(record);await this.saveRecord(record);return entry;}
+  /* 4.9.0.18 (AM-05) : la page ESV observée a été rechargée, a quitté ESV ou l'onglet a été fermé. L'observateur de la
+   * page a disparu avec elle : la visite en cours est close telle qu'elle est (rien d'inventé), la période interrompue,
+   * la session mise en pause « adaptateur sans réponse ». La reprise (automatique ou « Reprendre ») ouvre une période neuve. */
+  async pageLost(reason='page-reloaded'){const n=this.e.s.native;if(!n||!this.running())return null;
+   await this.queue.catch(()=>{});
+   const period=n.observationPeriods?.find(item=>item.observationPeriodId===n.currentPeriodId);
+   if(period&&!period.endedAt){period.status='INTERRUPTED';period.endedAt=iso();period.endTimeStatus='observed';period.reason=reason;}
+   if(n.current){const record=n.current;record.leaveReason=reason;record.endedAt=iso();record.endTimeStatus='observed-page-lost';this.partialReason(record,reason);
+    this.classify(record);await this.saveRecord(record);n.incomplete=unique([...(n.incomplete||[]),record.recordId]);n.current=null;}
+   n.status='PAUSED_ADAPTER_UNRESPONSIVE';n.currentPeriodId=null;n.pageLost={reason,at:iso()};n.interruptions=(n.interruptions||0)+1;
+   n.message=reason==='tab-closed'?'Écho : l’onglet ESV a été fermé. La capture est arrêtée ; rouvre ESV, puis Connecter et Reprendre.'
+     :'Écho : la page ESV a été rechargée (F5). La capture est arrêtée jusqu’à la reprise'+(S.echo?.repriseAutomatique?' automatique…':' : clique sur Connecter puis Reprendre.');
+   await this.nativeEvent('page-lost',{sessionId:n.id,observationPeriodId:period?.observationPeriodId||null,identity:null,reason});await this.e.save();return n.pageLost;}
+  /* 4.9.0.18 (AM-07) : le service worker a redémarré (veille, onglet en arrière-plan) mais la page observe toujours et
+   * renvoie des événements de la période déclarée interrompue : la période et la session reprennent, la visite close par
+   * `init()` est rouverte si elle est encore en cours dans la page. */
+  async heal(data){const n=this.e.s.native;const period=n.observationPeriods?.find(item=>item.observationPeriodId===data.observationPeriodId);
+   if(!period||period.status!=='INTERRUPTED_RECOVERED')return false;
+   period.status='RUNNING';period.endTimeStatus='open';period.healedAt=iso();period.reason='worker-restart-healed-page-still-observing';
+   n.status='RUNNING';n.currentPeriodId=period.observationPeriodId;n.message='Observation native active (reprise après redémarrage du service worker : la page observait toujours).';
+   n.healed=(n.healed||0)+1;
+   if(data.visitId&&!n.current){const record=await this.recordById(data.visitId);
+    if(record&&record.nativeSessionId===n.id&&record.recoveredClosure&&record.endedAt===null){record.recoveredClosure.healed=true;record.recoveredClosure.healedAt=iso();
+     record.leaveReason=null;record.endTimeStatus='open';record.partialReasons=(record.partialReasons||[]).filter(r=>r!=='worker-restarted-before-visit-closure');
+     n.incomplete=(n.incomplete||[]).filter(id=>id!==record.recordId);n.current=record;await this.saveRecord(record);}}
+   await this.nativeEvent('worker-restart-healed',{sessionId:n.id,observationPeriodId:period.observationPeriodId,identity:null});await this.e.save();return true;}
   async pause(){const n=this.e.s.native;if(!n||n.status!=='RUNNING')throw Error('Aucune observation Natif active à mettre en pause.');
    try{const result=await this.adapter.nativePause();await this.queue;this.mergeMetrics(result?.metrics);n.status='PAUSED';n.currentPeriodId=null;
     n.message='Observation en pause. Reprendre ouvrira une nouvelle période, sans continuité supposée.';await this.e.save();return this.e.view();}
@@ -574,9 +680,12 @@
    * vidage. Le compteur de segments comptait les vidages, pas les fichiers :
    * un vidage de neuf fichiers laissait le suivant repartir trop bas (deux
    * « auto-seg04 » le 28/09 ; rien de perdu, mais trompeur). */
-  async ackExported(ids,{confirmes=[],fichiers=1}={}){
+  async ackExported(ids,{confirmes=[],fichiers=1,final=false}={}){
    const n=this.e.s.native;if(!n)throw Error('Aucune session Natif conservée.');
    n.exportState??={bytesStored:0,bytesPending:0,exportedCloudIds:[],releasedCloudIds:[],segments:0,lastAdviceAt:null};
+   /* 4.9.0.18 (AM-19) : l'export FINAL confirmé est noté ; sans lui, « Démarrer une nouvelle session » est refusé. */
+   if(final){n.exportState.finalExportAt=iso();n.exportState.finalExportFiles=Number.isInteger(fichiers)?fichiers:null;
+    if(!(ids||[]).length){await this.e.save();return {acknowledged:0,final:true,finalExportAt:n.exportState.finalExportAt};}}
    const x=n.exportState;x.releasedCloudIds??=[];const added=[];
    for(const id of ids||[])if(!x.exportedCloudIds.includes(id)){x.exportedCloudIds.push(id);added.push(id);}
    x.segments+=Math.max(1,Number.isInteger(fichiers)?fichiers:1);x.bytesPending=0;x.lastAdviceAt=iso();

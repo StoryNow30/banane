@@ -262,6 +262,25 @@
     chemin: 'auto',
     pasMax: 40,
   });
+  /* --- Écho (4.9.0.18, audit fiches/AUDIT_ECHO_5.0.md) --- */
+  const echo = Object.freeze({
+    /* Gestes d'ESV lus comme une validation (AM-01) : Maj+Espace (valider et passer au
+     * suivant), Ctrl+Entrée (valider sans passer au suivant, celui qu'Orbite relaie),
+     * Entrée (annoncé par le titre du bouton d'ESV), clic sur le bouton de validation.
+     * Une touche répétée (`repeat`) n'est jamais une intention de plus (AM-02). */
+    validateKeys: Object.freeze(['Shift+Space', 'Ctrl+Enter', 'Enter', 'click']),
+    /* Seuil en mètres au-dessous duquel un rail est dit « non déplacé » (AM-13) : une
+     * re-pose numérique d'ESV (1e-6 m) n'est pas une correction. La comparaison exacte
+     * (1e-7) reste consignée (`poseIdentical`). */
+    movementThresholdM: 0.001,
+    /* Après un rechargement de la page ESV (F5) ou une navigation vers une autre page
+     * d'ESV, Écho se remet en observation tout seul (AM-05) : réinstallation de
+     * l'observateur, nouvelle période, aucune commande envoyée à ESV. */
+    repriseAutomatique: true,
+    /* Délai (ms) pendant lequel une écriture de validation vue dans ESV est jointe à la
+     * dernière visite close (AM-14) : l'écriture part après la navigation. */
+    ecritureJointeMs: 5000,
+  });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
@@ -284,6 +303,9 @@
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
+      { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
+      { groupe: 'Écho', nom: 'Seuil de déplacement', valeur: (echo.movementThresholdM * 1000) + ' mm', pourquoi: 'En dessous, le rail est dit non déplacé ; la pose exacte reste consignée.' },
+      { groupe: 'Écho', nom: 'Reprise après F5', valeur: echo.repriseAutomatique ? 'automatique' : 'à la main', pourquoi: 'Écho se remet à observer après un rechargement de la page ESV, sans rien commander.' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
       { groupe: 'Export', nom: 'Allègement des nuages', valeur: exportSettings.mode === 'allege' ? 'actif (sondes sans information retirées)' : 'aucun (tout est conservé)', pourquoi: 'D-091 : environ un tiers de moins sur les nuages LiDAR du zip. Les points restent exacts ; chaque nuage allégé le dit (exportLightening).' },
@@ -296,5 +318,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, retourCut, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, retourCut, echo, derived, describe };
 });

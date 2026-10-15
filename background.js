@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.17',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 17';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.18',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 18';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -70,10 +70,14 @@ const panelWindows=new Map(),panelPorts=new Map();
  * fenêtre Banane : fermée, il disparaît (la pastille « ouvrir » revient). La
  * préférence est gardée ; le texte ne vient que du panneau. */
 let bandeau={on:false,text:'',ton:''};
-const bandeauVisible=()=>bandeau.on&&panelPorts.size+panelWindows.size>0&&bandeau.text?{text:bandeau.text,ton:bandeau.ton}:null;
+/* 4.9.0.18 (AM-05, AM-06) : quand Écho a perdu sa page (F5, onglet parti), l'alerte vient du service worker lui-même,
+ * panneau ouvert ou non ; sinon le texte ne vient que du panneau. */
+const alerteEcho=()=>{const n=engine?.s?.native;if(!n||n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||!n.pageLost)return null;
+ return {text:'ARIANE · ÉCHO · CAPTURE ARRÊTÉE · '+(n.pageLost.reason==='tab-closed'?'onglet fermé : Connecter puis Reprendre':n.pageLost.repriseEnCours?'page rechargée, reprise en cours…':'page rechargée : Connecter puis Reprendre'),ton:'rouge'};};
+const bandeauVisible=()=>alerteEcho()||(bandeau.on&&panelPorts.size+panelWindows.size>0&&bandeau.text?{text:bandeau.text,ton:bandeau.ton}:null);
 function launcherState(){const ids=new Set(panelWindows.keys());
  for(const [port,info] of panelPorts)ids.add(info.windowId??port);
- return {visible:ids.size===0,openWindows:ids.size,bandeau:ids.size?bandeauVisible():null};}
+ return {visible:ids.size===0,openWindows:ids.size,bandeau:ids.size?bandeauVisible():alerteEcho()};}
 async function syncLauncher(){const state=launcherState(),tabs=await chrome.tabs.query({});
  await Promise.allSettled(tabs.filter(tab=>esvURL(tab.url)).map(tab=>chrome.tabs.sendMessage(tab.id,{kind:'launcher-visibility',visible:state.visible,bandeau:state.bandeau})));return state;}
 async function call(action,...args){return callSur(selectedTab,action,...args);}
@@ -227,12 +231,17 @@ function obsFields(x){
   case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
+/* 4.9.0.18 (KI-068) : événements et visites du lot seulement (ni Écho, ni Correction : `nativeSessionId`, `manualSessionId`,
+ * `observationPeriodId`, `railSnapshots`), avec le compte de ce qui est écarté. */
+const horsEcho=x=>!x||!(x.nativeSessionId||x.manualSessionId||x.observationPeriodId||x.railSnapshots);
+async function lotSeul(){const events=await store.all('events'),records=await store.all('records'),e=events.filter(horsEcho),r=records.filter(horsEcho);
+ const exclus=events.length-e.length+records.length-r.length;return {events:e,records:r,scope:exclus?{exportScope:{lotOnly:true,excludedEchoItems:exclus,rule:'KI-068'}}:{}};}
 function rangerObservations(m){try{
  if(globalThis.BananeSettings?.observateurPassif?.actif===false)return {accept:false,enabled:false,reason:'setting-off'};
  const seance=seanceObservateur({grace:true});if(!seance)return {accept:false,reason:'no-session'};
  if(typeof m.observer!=='string'||m.observer.length>80||!Array.isArray(m.entries)||m.entries.length>100)return {accept:true,stored:0,reason:'malformed'};
  const K=globalThis.BananeCore3,cfg=globalThis.BananeSettings?.observateurPassif||{},cap=cfg.entreesParSeanceMax||20000,maxChars=cfg.caracteresParEntree||4096;
- const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??performance.timeOrigin;
+ const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??(typeof performance!=='undefined'?performance.timeOrigin:null);
  /* OBS-2 : séance tenue seulement par la grâce de fin du lot courant → entrées marquées (écart à la fin de CE lot). */
  const lot=engine?.s?.batch,enGrace=seance!==seanceObservateur();
  /* OBS-3 : en grâce, le contexte de mesure relevé à la fin du lot (gardé au redémarrage) ; sinon celui de la mesure en cours. */
@@ -242,7 +251,10 @@ function rangerObservations(m){try{
  /* Nouveau lot pendant la grâce de l'ancien : ce que la page a vu (début, sinon fin) AVANT le début du nouveau lot reste à l'ancien. */
  const ancien=(a=>a&&{...a,seen:vu(a.seance)})(ancienLotEnGrace(seance));
  const cible=f=>{if(!ancien)return courant;const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:f.endedEpochMs;return Number.isFinite(t)&&t<ancien.debut?ancien:courant;};
- const add=(fields,seq,c=courant)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...c.ctx,
+ /* 4.9.0.18 (AM-14) : pendant Écho, les observations portent `nativeSessionId` : elles sortent dans l'export d'Écho (et plus
+  * dans le journal d'Orbite, KI-068) ; une écriture de validation réussie est jointe à la visite (`serverWrites`). */
+ const echoId=seance==='ecoute-native'?engine?.s?.native?.id??null:null;
+ const add=(fields,seq,c=courant)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...c.ctx,...(echoId?{nativeSessionId:echoId}:{}),
   ...(c.fin!==null&&c.fin!==undefined?marqueGrace(fields,c.fin):{})};
   if(JSON.stringify(e).length>maxChars){rejected++;return;}events.push(e);};
  if(obsState.lost){add({kind:'gap',lost:obsState.lost,reason:'store-rejected',of:null},null);obsState.lost=0;}
@@ -252,17 +264,20 @@ function rangerObservations(m){try{
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
   add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;
-  if(fields.kind==='write')b1NoterEcriture(fields);}
+  if(fields.kind==='write')b1NoterEcriture(fields);
+  if(fields.kind==='write'&&echoId&&events.at(-1)?.kind==='write')void Promise.resolve(native.noteServerWrite(events.at(-1))).catch(()=>{});}
  if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
  for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
  /* 4.9.0.10 (D-092) : fiche de départ de la partie (validés, invalides, total), gardée hors du cache : le vidage ne la touche pas. */
  for(const e of events){if(e.kind!=='list-summary'||e.beforeSession!==true)continue;try{const EC=cacheExport(),lotE=engine?.s?.batch,
-   fiche=EC?.ficheDepart?.(e,{batchId:e.batchId??lotE?.id??null,partie:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
+   fiche=EC?.ficheDepart?.(e,{batchId:e.batchId??lotE?.id??(echoId?'echo:'+echoId:null),
+    /* 4.9.0.18 : en Écho, la partie est celle du cut affiché (aucun lot). */
+    partie:echoId?engine?.s?.current?.identity?.part??null:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
   if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});}catch{/* la fiche n'est pas critique */}}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
  return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{})};
-}catch{return {accept:true,stored:0,reason:'error'};}}
+}catch(e){return {accept:true,stored:0,reason:'error',error:String(e?.message||e).slice(0,200)};}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
  * photo du 27/09), lu une seule fois. Le texte « M cuts » est journalisé pour
@@ -999,7 +1014,25 @@ chrome.runtime.onConnect.addListener(port=>{
  void syncLauncher().catch(()=>{});
 });
 chrome.windows.onRemoved?.addListener(id=>{panelWindows.delete(id);for(const [port,info] of panelPorts)if(info.windowId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
-chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(info.tabId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
+chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(info.tabId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});
+ if(id===selectedTab)void ready.then(()=>echoPagePerdue('tab-closed')).catch(()=>{});});
+/* 4.9.0.18 (AM-05, audit Écho) — PAGE ESV RECHARGÉE PENDANT ÉCHO. La barrière d'entrée et l'observateur vivent dans le document :
+ * après un F5 ils n'existent plus et rien ne le disait (Écho n'envoie aucune commande qui aurait échoué). La session est
+ * mise en pause « page perdue », l'alerte s'affiche dans ESV, puis l'observation REPREND TOUTE SEULE quand la page est
+ * chargée (réglage `echo.repriseAutomatique`) : réinstallation de l'adaptateur, nouvelle période, aucune commande à ESV. */
+async function echoPagePerdue(reason){if(!native?.running())return null;const r=await native.pageLost(reason);await syncLauncher().catch(()=>{});return r;}
+async function echoReprise(tabId){const n=engine?.s?.native;if(!n||n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||!n.pageLost||n.pageLost.reason==='tab-closed')return;
+ if(globalThis.BananeSettings?.echo?.repriseAutomatique===false||n.pageLost.repriseEnCours)return;
+ n.pageLost.repriseEnCours=true;await syncLauncher().catch(()=>{});let derniere=null;
+ for(let essai=1;essai<=5;essai++){try{const tab=await chrome.tabs.get(tabId);if(!esvURL(tab.url))throw Error('l’onglet n’affiche plus ESV');
+   await equiperOnglet(tabId);await native.resume();n.pageLost=null;n.message='Observation native reprise après le rechargement de la page ESV (nouvelle période, rien d’inventé pendant l’interruption).';
+   await engine.save();await syncLauncher().catch(()=>{});return;}
+  catch(e){derniere=e;await new Promise(r=>setTimeout(r,1500*essai));}}
+ n.pageLost.repriseEnCours=false;n.message='Écho : reprise automatique impossible après le rechargement ('+(derniere?.message||'?')+'). Clique sur Connecter puis Reprendre.';
+ await engine.save();await syncLauncher().catch(()=>{});}
+chrome.tabs.onUpdated?.addListener((tabId,info,tab)=>{if(tabId!==selectedTab)return;
+ void ready.then(async()=>{if(info.status==='loading'&&native?.running())await echoPagePerdue('page-reloaded');
+  else if(info.status==='complete'&&esvURL(tab?.url))await echoReprise(tabId);}).catch(()=>{});});
 /* 4.7.19 (KI-059) — LA VUE ET LES EXPORTS TIENNENT DANS UN MESSAGE.
  * Un message chrome.runtime est limité à 64 Mio. `records` et `incomplete`
  * grandissent d'un enregistrement par cut (~9 Ko) et sont déjà dans le
@@ -1295,7 +1328,14 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
  if(action==='view'){pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
- if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');return native.start();}
+ if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');
+  /* 4.9.0.18 (AM-23, AM-06) : libellé du cut illisible = aucune identité pour toute la séance : refus ; plusieurs onglets ESV : dit. */
+  const vu=await call('nativeSnapshot').catch(()=>null);
+  if(vu&&(!Number.isInteger(vu.identity?.part)||!Number.isInteger(vu.identity?.cut)))throw Error('Écho refusé : le libellé du cut n’est pas lisible dans ESV (« Cut N of part M » attendu). Ouvre un cut, puis réessaie.');
+  const onglets=(await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'}).catch(()=>[])).length;
+  const v=await native.start();const n=engine.s.native;
+  if(n&&onglets>1){n.message=`Observation native active sur l’onglet choisi seulement (${onglets} onglets ESV ouverts : travaille dans celui-ci).`;await engine.save();}
+  return v;}
  if(action==='native-pause')return native.pause();
  if(action==='native-resume')return native.resume();
  if(action==='native-end')return native.end({dataset:false});
@@ -1381,8 +1421,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  const transitionsLot=coordinateurLot.journal.map(t=>({nom:t.nom,lot:t.lot,etat:t.etat,at:t.at??null}));
  if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),transitionsLot};
  if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
- if(action==='journal')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport(),transitionsLot};
- if(action==='dataset')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
+ /* 4.9.0.18 (KI-068) : le journal et le bilan d'Orbite rendus par message (repli du panneau) ne portent plus les visites ni les
+  * événements d'Écho et de Correction ; même règle que le panneau (`lireStoreOrbite`) et tools/filtrer-journal.cjs. */
+ if(action==='journal'){const o=await lotSeul();return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:o.events,records:o.records,...o.scope,closureSummary:await closureExport(),transitionsLot};}
+ if(action==='dataset'){const o=await lotSeul();return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:o.events,records:o.records,...o.scope,closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};}
  return engine.locked(async()=>{
   let result;
   if(action==='settings'){

@@ -150,13 +150,22 @@
    const editable=this.api.editable?.(event.target)===true,targetKind=this.api.targetKind?.(event.target)||'other';
    if(this.current&&!editable)this.current.operatorInputs=(this.current.operatorInputs||0)+1;
    const shiftOnly=!!event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey;
-   const validate=event.type==='keydown'&&shiftOnly&&(event.code==='Space'||event.key===' ')||event.type==='click'&&targetKind==='validation';
+   /* 4.9.0.18 (AM-01, audit Écho) : ESV valide aussi par Ctrl+Entrée (sans passer au suivant,
+    * le raccourci qu'Orbite relaie lui-même) et par Entrée (annoncé par le titre de son bouton).
+    * Avant, seuls Maj+Espace et le clic sur le bouton comptaient : le dernier cut d'une partie,
+    * validé en place, finissait PASS_NO_DECISION. La touche est consignée (`decisionKey`). */
+   const ctrlOnly=!!event.ctrlKey&&!event.shiftKey&&!event.metaKey&&!event.altKey,noModifier=!event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey;
+   const isSpace=event.code==='Space'||event.key===' ',isEnter=event.code==='Enter'||event.code==='NumpadEnter'||event.key==='Enter';
+   const validateKey=event.type==='keydown'?(shiftOnly&&isSpace?'Shift+Space':ctrlOnly&&isEnter?'Ctrl+Enter':noModifier&&isEnter?'Enter':null):event.type==='click'&&targetKind==='validation'?'click':null;
    const skip=event.type==='keydown'&&shiftOnly&&(event.code==='Backspace'||event.key==='Backspace');
-   const intent=editable?null:skip?'SKIP':validate?'VALIDATE':null;
+   /* AM-02 : une touche maintenue (`repeat`) n'est pas une seconde intention. */
+   const repeated=!!event.repeat&&event.type==='keydown';
+   const intent=editable||repeated?null:skip?'SKIP':validateKey?'VALIDATE':null;
    const key=editable?null:(event.key?.length===1?'character':event.key||null);
    this.enqueue('operator-event',{visitId:this.current?.visitId||null,identity:this.current?.state?.identity||null,stateObservedBeforeInput:this.current?.state?K.clone(this.current.state):null,event:{type:event.type,
      code:editable?null:event.code||null,key,shiftKey:!!event.shiftKey,ctrlKey:!!event.ctrlKey,metaKey:!!event.metaKey,altKey:!!event.altKey,
-     repeat:!!event.repeat,targetKind,editable,intent,observedAt:event.observedAt||new Date().toISOString(),
+     repeat:!!event.repeat,targetKind,editable,intent,decisionKey:editable?null:validateKey||(skip?'Shift+Backspace':null),repeatOfIntent:repeated&&!editable&&!!(validateKey||skip),
+     observedAt:event.observedAt||new Date().toISOString(),
      eventTimeStamp:Number.isFinite(event.eventTimeStamp)?event.eventTimeStamp:null,
      stateCapturedAt:this.current?.state?.capturedAt||null}},!!intent);
    const elapsed=Math.max(0,(this.api.performanceNow?this.api.performanceNow():this.now())-began);this.metrics.handlerDurationsMs.push(elapsed);

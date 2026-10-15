@@ -1,5 +1,47 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0.18 — test 18 (15/10)
+
+Manifeste `4.9.0.18`, « 4.9.0 test 18 », paquet `ariane-4.9.0-test.18.zip` ; base : test 17 (`9a329b6`). Corrections de l'audit du mode
+Écho (`fiches/AUDIT_ECHO_5.0.md`, étapes 1 à 4 de la 4.9.5). **Rien ne change pour Orbite** : `src/engine.js`, `src/geometry.js` et la décision
+de pose sont inchangés ; seul l'export du journal et du bilan d'Orbite perd les données d'Écho (KI-068). Consigne :
+`consignes/seance-terrain-test-18-2026-10-15.md` ; retour arrière : test 17.
+
+- **Écho reconnaît toutes les validations** (AM-01, `src/native-page.js`) : Maj+Espace, **Ctrl+Entrée** (valider sans passer au suivant) et
+  **Entrée**, en plus du clic sur le bouton d'ESV ; la touche est consignée (`decisionKey`). Une touche maintenue (`repeat`) n'est plus une
+  seconde intention (AM-02). Réglage `settings.echo.validateKeys`.
+- **Plusieurs validations sans autre intention = une seule décision, la dernière** (AM-02, `src/native-session.js`) : `humanFinalReference`
+  est la dernière validation, toutes sont gardées dans `humanFinalReferences[]`, l'étiquette n'est plus `AMBIGUOUS_MULTIPLE_INTENTS`
+  (`intentCollapse`). VALIDATE puis SKIP reste ambigu.
+- **Pose de départ = dernier état observé avant le premier geste** (AM-03) : `startPose` ; un recalage des rails par ESV au chargement, sans
+  geste, n'est plus compté comme une correction. `beforeEstablished` (premier état vu) reste consigné, et `labelBasis.legacyLabel` dit
+  l'étiquette de l'ancienne règle. Les poses de chaque transition de rails sont gardées (`railPoseHistory`), les gestes résumés par touche
+  (`gestureSummary`, jamais tronqué).
+- **Seuil de déplacement : 1 mm** (AM-13) : `humanDelta` par rail (mm, distance et repère profil) ; au-dessous, « non déplacé » ; la
+  comparaison exacte reste (`identical`). Réglage `settings.echo.movementThresholdM`.
+- **Page ESV rechargée (F5) ou onglet fermé pendant Écho** (AM-05, `background.js`) : la session passe en pause « page perdue », la visite en
+  cours est close telle quelle, un **bandeau rouge** s'affiche dans ESV (panneau ouvert ou non), puis **Écho reprend tout seul** quand la page
+  est chargée (nouvelle période, aucune commande à ESV ; réglage `settings.echo.repriseAutomatique`). Onglet fermé : Connecter puis Reprendre.
+- **Redémarrage du service worker guéri** (AM-07) : si la page observe toujours, la période « interrompue » redevient active et la visite
+  close par le redémarrage est rouverte ; plus de fausse interruption pendant une pause de l'opérateur.
+- **Relation des visites par (partie, cut)** (AM-08, `K.cutKey`) : une revisite après F5 ou depuis une autre session est reconnue.
+- **Écriture de validation d'ESV jointe à la visite** (AM-14, AM-18) : pendant Écho, les observations ESV (`esv-observation`) portent
+  `nativeSessionId`, sortent dans l'export d'Écho, et une écriture 2xx confirme la visite (`serverWrites`, `serverConfirmed`,
+  `serverConfirmationStatus:'observed-write-200'`) ; une validation sans navigation (dernier cut, validation en place) reste comparable.
+- **Écho refusé si le libellé du cut n'est pas lisible** (AM-23) ; plusieurs onglets ESV : dit dans le message (AM-06).
+- **Une session finie, jamais téléchargée en entier, n'est pas remplacée** (AM-19) : « Démarrer une nouvelle session » le dit ; l'export
+  final confirmé est acquitté (`exportState.finalExportAt`).
+- **Export Écho en volumes zip, comme Orbite** (parité, `panel.js`) : « Terminer et télécharger », « Télécharger à nouveau la session » et le
+  vidage automatique écrivent des volumes autonomes de 17 Mo au plus (`ariane-echo-partieN-<date>-volumeNN-surNN.zip`), chacun avec un
+  `CONTENU.txt` en heure de Paris (session, visites, parties, période, départs des parties relues, liste des fichiers, crc32). Les nuages ne
+  sont purgés que si tous les volumes sont confirmés. La fiche de départ notée pendant Écho porte la partie.
+- **KI-068 corrigé** : le journal et le bilan d'Orbite (panneau et service worker) ne portent plus les visites ni les événements d'Écho et de
+  Correction ; `exportScope` le dit avec le compte écarté.
+- **Outils** : `tools/lire-volumes.cjs` (lecture des volumes zip sans dépendance) ; `tools/merge-segments.cjs` et
+  `tools/acceptance-report.cjs` (donc `analyse-locale.cjs`) lisent un dossier de volumes zip comme des JSON posés.
+- Essais : `tests/echo-4918.test.cjs` (17 essais : page, session, service worker, panneau, zip) ; harnais `tests/helpers/background-harness.cjs`
+  (événements d'onglet) ; `tests/d092-fiche-depart.test.cjs` ajusté au CONTENU commun.
+
 ## 4.9.0.17 — test 17 (15/10)
 
 Manifeste `4.9.0.17`, « 4.9.0 test 17 », paquet `ariane-4.9.0-test.17.zip` ; base : test 16 (`6c61bdb`) + bornes alignées (`0147f29`).

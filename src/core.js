@@ -4,12 +4,16 @@
  'use strict';
  /* D1 (4.8.5, D-061) : version de test = manifeste `4.8.5.N`, nom affiché
   * « 4.8.5 test N » ; une version stable garde `X.Y.Z`. */
- const VERSION='4.9.0.17',VERSION_NAME='4.9.0 test 17';
+ const VERSION='4.9.0.18',VERSION_NAME='4.9.0 test 18';
  const clone=x=>JSON.parse(JSON.stringify(x)),uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;
  const key=x=>`${x.pageId}|${x.part}|${x.cut}`;
  const identityFields=['pageId','part','cut','shape','frameId','projectId'];
  const identityValue=(x,k)=>k==='projectId'?(x?.projectId??(x?.project&&x.project!=='not-observed'?x.project:null)):x?.[k];
  const cutId=x=>identityFields.map(k=>identityValue(x,k)??'not-observed').join('|');
+ /* 4.9.0.18 (AM-08) : clé MÉTIER d'un cut, partie et numéro seulement. `pageId` et `frameId`
+  * changent à chaque chargement de page ou recentrage de scène : ils restent une provenance,
+  * pas une identité pour relier deux visites du même cut. */
+ const cutKey=x=>['part','cut'].map(k=>identityValue(x,k)??'not-observed').join('|');
  function completeIdentity(x){return Object.fromEntries(identityFields.map(k=>[k,identityValue(x,k)??null]));}
  function differences(a,b){return identityFields.filter(k=>identityValue(a,k)!==identityValue(b,k));}
  function assertTarget(a,b){const changed=differences(a,b);if(changed.length)throw Error('Cible différente : '+changed.join(', '));}
@@ -89,5 +93,5 @@
    const left=!!rails?.left?.positionChanged,right=!!rails?.right?.positionChanged;
    return left&&right?'VALIDATE_CORRECTED_BOTH':left?'VALIDATE_CORRECTED_LEFT_ONLY':right?'VALIDATE_CORRECTED_RIGHT_ONLY':'VALIDATE_NO_MOVEMENT';
  }
- return {C,VERSION,VERSION_NAME,identityFields,clone,uid,key,cutId,completeIdentity,differences,assertTarget,transientCaptureError,equalPoses,reference,expectedPoses,manualDecision,parse,pairCorpus};
+ return {C,VERSION,VERSION_NAME,identityFields,clone,uid,key,cutId,cutKey,completeIdentity,differences,assertTarget,transientCaptureError,equalPoses,reference,expectedPoses,manualDecision,parse,pairCorpus};
 });
