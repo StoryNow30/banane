@@ -36,7 +36,7 @@ Mêmes conditions que d'habitude pour toute la séance : fenêtre ESV d'au moins
 Pour chaque point, note en une phrase si c'est **bien**, **pas bien** (et quoi), ou **pas vu**.
 
 1. **Démarre Écho** sur un cut affiché. Le compteur « visites de cuts » monte à chaque changement de cut.
-2. **Valide de plusieurs façons**, chacune sur un cut différent : Maj+Espace, **Ctrl+Entrée**, **Entrée** et le bouton d'ESV. Puis, sur deux autres cuts, **passe au suivant et au précédent sans valider avec Ctrl+flèche** : Écho doit les compter comme « passage sans décision », pas comme des validations. Note quel cut avec quelle touche.
+2. **Valide de plusieurs façons**, chacune sur un cut différent : Maj+Espace, **Ctrl+Entrée**, **Entrée** et le bouton d'ESV. Puis, sur deux autres cuts, passe au suivant et au précédent sans valider avec **Ctrl+flèche** : Écho doit les compter comme « passage sans décision », pas comme des validations. Note quel cut avec quelle touche.
    Note quel cut avec quelle touche.
 3. **Corrige un cut** (bouge un rail, valide), puis sur un autre cut **valide, bouge encore, revalide**.
 4. **F5 sur ESV en plein Écho** : un bandeau rouge « CAPTURE ARRÊTÉE » apparaît en bas d'ESV, puis disparaît quand la page est rechargée ;
