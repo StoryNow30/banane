@@ -1924,3 +1924,10 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Rejeu sur un journal réel (test 17) : 418 validations exploitables lues ; décalages injectés retrouvés exactement. Pas encore d'instantané réel : il en faudra un au terrain.
 - Protocole pour Mic (dans `fiches/E1_LISTE.md`) : relire la partie, F5, démarrer une séance Ariane sur la partie, exporter. Limites : la mémoire ne voit que les écritures d'un lot en cours (pas la pause ni Écho) ; un autre opérateur ou une ré-extraction change aussi des lignes.
 - Chantier léger suivant lancé : M6 outil (`coherence-voisins.cjs`, liste « à relire »).
+
+## D-126 — M6 outil livré : la liste « à relire » n'atteint pas la cible ; le calage de convention refusé est le meilleur indice (15 octobre 2026, nuit)
+
+- `claude/50-m6-relire` (9ed71cf), intégré à `claude/50-base` : `tools/coherence-voisins.cjs`, essai, `fiches/M6_A_RELIRE.md`. verify 1 631 réussis, 0 échec. Retrouve la mesure de l'idée 8 sur le test 15 (latéral 1,8/4,4/12,2 mm ; vertical 3,0/9,5/34,2 ; zone de 12 cuts). Ajout utile : les voisins d'un autre cadre (après F5) sont écartés, sinon 934 mm d'écart fictif.
+- **Jugé sur la vérité terrain (partie 17, 47 poses corrigées de plus de 10 mm par Mic)** : à 5 % des cuts posés, le score n'en retient que 10,6 % ; il faut 30 % des cuts pour en retenir 60 % (AUC 0,71). **Porte du cahier (≥ 60 % dans ≤ 5 %) non atteinte.** Causes : corrections de Mic petites (médiane 5 mm) et surtout verticales ; les voisins d'Ariane portent le même biais vertical ; la moitié des cuts posés n'a pas de voisins posés à ±3.
+- **Résultat le plus utile** : quand le calage de convention est refusé, **38 %** des cuts posés sont corrigés de plus de 10 mm par Mic, contre **12 %** quand il est appliqué (meilleur terme du score, AUC 0,70). Cela confirme l'idée 2 : le chantier P0(b)/P1 (convention refusée, biais ~9 mm) est le premier levier de justesse.
+- Décision : le panneau « à relire » (M6 étape 2) est suspendu jusqu'à ce que P1 et E2 aient changé la donne ; P0(b) avance en tête de la vague V2.

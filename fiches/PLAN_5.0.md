@@ -43,7 +43,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | M3 méthodes par zone | `claude/50-m3-zones` | fort pour la conception, rapide pour le code | M1, D-098 à D-100, Q9 (marges ADV) | mesures par zone (note) ; puis règles en ombre | erreur médiane ≤ 5 mm voie courante ; ADV/PN mesurés | 300 k mesure + 600 k code + 150 k relecture | V4 puis V6 |
 | M4 seconde passe utile | `claude/50-m4-seconde-passe` | rapide / haut ; relecteur fort | B3, `retablirApresRechargement`, D-109, Q1 | (1) règle « rien de neuf » ; (2) mémoire par partie ; (3)(4) prédiction encadrée et double lancement | re-différé < 20 % ; 0 mauvaise pose | 100 k + 400 k + 500 k | (1) V1 ; (2)(3)(4) V4/V6 |
 | M5 visite de verts | `claude/50-m5-verts` | rapide / moyen | Q4, maquette | navigation lecture seule ciblée par M1 ; relevé maquette | 0 écriture autre que `SeenByOperator` | 250 k | Q4 |
-| M6 liste « à relire » | `claude/50-m6-relire` | rapide / moyen | bilans des 4 lots, S3 | outil `coherence-voisins.cjs` ; puis score et section du panneau | corrigés ≥ 60 % dans ≤ 5 % des cuts | 200 k + 250 k | V1 outil, V6 panneau |
+| M6 liste « à relire » | `claude/50-m6-relire` | rapide / moyen | bilans des 4 lots, S3 | outil `coherence-voisins.cjs` ; puis score et section du panneau | corrigés ≥ 60 % dans ≤ 5 % des cuts | outil livré 15/10 (`claude/50-m6-relire`, 9ed71cf) ; **porte non atteinte** : rappel 10,6 % à 5 % des cuts (AUC 0,71) sur la partie 17 ; panneau suspendu tant que le score n'atteint pas la cible | V6 panneau, après P0/P1 et E2 |
 
 ## 3. Lot P — Poser juste
 
