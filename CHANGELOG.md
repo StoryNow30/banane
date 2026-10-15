@@ -1,5 +1,41 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0 — version candidate stable (15/10)
+
+**Même code que la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27) ; seuls la version et les
+documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
+« Ariane 4.9.0 · ouvrir » sur le bouton blanc d'ESV, paquet `ariane-v4.9.0.zip`. `src/engine.js` identique à la test 17.
+Notes pour l'opérateur : `NOTES_4.9.0.md` ; porte de version : `fiches/PORTE_4.9.0.md`. Fusion, étiquette et publication :
+décision de Mic. Retour arrière : la 4.8.6 (`v4.8.6`).
+
+Ce que la 4.9 apporte depuis la 4.8.6, en bref :
+
+- **Vitesse (V3, « mode rapide »)** : sélection du rail à l'image, lecture au signal de fin de chargement d'ESV (repli : la
+  règle des 800 ms), pose sans recentrage, lecture des points sans attendre une image (D-087, D-088). Neuf cuts sur dix en
+  rapide ; un sur dix, tiré d'après son numéro, reste en référence pour surveiller la qualité (D-091). Mesuré sur le terrain,
+  même lot, rapide contre référence : −54 % (test 15), −71 % (test 16, partie 26), −48 % (test 16, partie 25), −57 % sur la
+  séance de la test 17 et −71 % sur une page ESV fraîche ; part posée (C1) au niveau de la référence ; 0 capture perdue.
+- **Sauvegarde à taille constante (V5)** : Ariane ne ralentit plus au fil des lots quand le cache n'est pas vidé (D-089) ;
+  KI-070 corrigé (D-096).
+- **Mesure par phase (V1)** et **observateur passif** d'ESV (écritures de validation, liste des coupes, chargements), en
+  lecture seule, sans commande ajoutée (D-073, D-077, D-079). Chrome ou Edge 111 au moins.
+- **Écartement** : limites 1420 à 1470 mm (D-084, D-085).
+- **B3, transitions du lot** : neuf transitions nommées (démarrage, pause, reprise, arrêt, rechargement, cut suivant, différé,
+  fin de lot, erreur) ; « Reprendre » après la fin répond « Lot déjà terminé » ; « Reprendre » après un arrêt en plein cut refuse
+  si les rails ont bougé ; les transitions partent dans le journal exporté (D-102, D-104, D-106).
+- **Exports** : un clic sur « Tout télécharger pour l'analyse » ; une seule copie des nuages ; nuages allégés des sondes sans
+  information, points exacts (environ un tiers de moins sur les nuages, D-091) ; **export découpé tout seul** en volumes zip
+  autonomes de 17 Mo au plus (D-106) ; vidage du cache seulement si tous les volumes sont confirmés.
+- **Départs des parties** : validés, invalides et total relevés au départ de chaque partie, gardés hors du cache, historique
+  par partie, recopiés dans les exports (D-093, D-106).
+- **Panneau** (variante « Accueil » choisie par Mic) : grande tuile du lot (pourcentage des invalides traités sur un lot de toute
+  la partie, position sinon), cartes des départs, thèmes clair et sombre, contrastes, sélecteur d'onglet lisible, résumé de la
+  partie (U1), essais du vrai panneau (U2), raccourcis `D` et `Maj + Espace` d'ESV ni doublés ni détournés (U3) (D-078,
+  D-093, D-103, D-105, D-107).
+- **Heure de Paris** partout à l'écran et dans `CONTENU.txt` ; les JSON restent en UTC (test 17).
+- **B1 (voisins de la liste d'ESV) en ombre** : calculé et consigné, sans effet sur la pose (D-096, D-102). **Retour à une
+  coupe** : livré en lecture seule, sans bouton, jamais appelé (D-098).
+
 ## 4.9.0.17 — test 17 (15/10)
 
 Manifeste `4.9.0.17`, « 4.9.0 test 17 », paquet `ariane-4.9.0-test.17.zip` ; base : test 16 (`6c61bdb`) + bornes alignées (`0147f29`).
