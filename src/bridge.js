@@ -77,6 +77,8 @@
    if(r&&typeof r.accept==='boolean'&&r.grace!==true)obsSeance(r.accept);
    if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
    if(r&&r.tableListe===false)window.postMessage({kind:'banane5:config',table:false},location.origin);
+   /* 4.9.5.3 (S6) : relevés de l'observateur coupés par les réglages du service worker (liste de noms). */
+   if(r&&Array.isArray(r.relevesOff))window.postMessage({kind:'banane5:config',relevesOff:r.relevesOff.filter(n=>typeof n==='string'&&n.length<=24).slice(0,16)},location.origin);
   }catch{if(!(r&&r.accept===true))obs.refused=true;}}
  /* B1 (D-095) — VOISINS DE LA LISTE DES COUPES. Le service worker demande, pour le cut décidé, une fenêtre de
   * ±10 lignes au plus et la ligne la plus proche d'une paire de points ; l'observateur (monde principal) répond

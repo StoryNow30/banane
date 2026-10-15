@@ -30,6 +30,13 @@
  *  - `list-summary` résumé compact (comptes seulement) des listes chargées AVANT une séance,
  *                   posé une fois au début de la séance : jamais les lignes, jamais les écritures
  *                   ni les fichiers de points d'avant la séance ;
+ *  - `resource` (4.9.5.3) porte aussi, pour les nœuds `ept-data` : `statuts` (nombre de ressources par statut HTTP, `responseStatus` de
+ *                   l'API de mesure des ressources quand le navigateur le donne), `sansStatut`, `echecs` (statut ≥ 400 ou 0), `echecsCumules`
+ *                   (depuis l'installation), `dureeTotMs` et `dureeMaxMs` (relevé en lecture seule, S6) ;
+ *  - `list-fields` (4.9.5.3) une fois par chargement de liste : NOMS des champs d'une ligne (jamais les valeurs) et résumé des champs gardés
+ *                   (`RailSpacing`, `TrajAzimuth`, `RailType`, `Success*`, `PK` : présence, extrêmes, valeurs de `RailType`) ;
+ *  - `esv-event`, `diag-compteur-bloque` (4.9.5.3) : relayés tels que l'adaptateur de la page (même monde) les poste (`banane5:evt`),
+ *                   après réduction (nombres, courtes chaînes) ; l'adaptateur pose des écouteurs jQuery en ombre sur les événements d'ESV ;
  *  - `observer`     marque « observateur présent » (version, installé avant les scripts de la page) ;
  *  - `fetch-rails`  filet : nombre de requêtes `fetch` de chemin rails (ces
  *                   requêtes ne sont pas observées, seulement comptées) ;
@@ -62,6 +69,11 @@
  const POINTS=/(?:^|\/)ept\.json$|\/ept-(?:data|hierarchy)\//i;
  const STATUS_VALUES=['valid','invalid','skipped'];
  const OBSERVER_VERSION=1;
+ /* 4.9.5.3 (S6) — champs de liste gardés en plus (lecture seule) et événements relayés depuis l'adaptateur. */
+ const EXTRA_NUM=['RailSpacing','TrajAzimuth'],EXTRA_STR='RailType',EXTRA_PK='PK',SUCCESS=/^Success/;
+ const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null});
+ const EPT_DATA=/\/ept-data\//i;
+ function argsReduits(a){if(!Array.isArray(a))return [];return a.slice(0,6).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='string'&&v.length<=24?v:typeof v==='boolean'?v:null);}
 
  function pathOf(url,base){try{const u=new URL(String(url),base);return {host:u.hostname,path:u.pathname};}catch{return null;}}
  function classify(method,url,base){
@@ -125,14 +137,35 @@
  /* Première page d'une lecture : sans suite chaînée (`npk`). La chaîne de requête est lue ici, jamais notée. */
  function firstPage(url,base){try{return !new URL(String(url),base).searchParams.has('npk');}catch{return null;}}
  const finite=v=>typeof v==='number'&&Number.isFinite(v);
- function newTable(debut){return {rk:[],st:[],fl:[],ed:[],idx:new Map(),pages:0,debut:debut===true,rompue:false,tronquee:false,fraiches:0};}
+ function newTable(debut){return {rk:[],st:[],fl:[],ed:[],idx:new Map(),pages:0,debut:debut===true,rompue:false,tronquee:false,fraiches:0,
+  /* 4.9.5.3 : champs gardés en plus, parallèles à `rk` (NaN / null si absents) ; jamais postés en bloc. */
+  sp:[],az:[],rt:[],pk:[],su:new Map()};}
  /* Une ligne par élément reçu, dans l'ordre (ESV range chaque élément de la même façon) : l'indice suit le sien. */
  function addRows(t,rows){
   for(const r of rows){if(t.rk.length>=LIMITS.tableRows){t.tronquee=true;return;}
    const o=r&&typeof r==='object'?r:{},k=typeof o.RowKey==='string'&&o.RowKey.length<=LIMITS.rowKeyChars?o.RowKey:null,i=t.rk.length;
    t.rk.push(k);if(k!==null&&!t.idx.has(k))t.idx.set(k,i);
    t.st.push(STATUS_CODE[o.ExtractionStatus]??3);t.fl.push((o.TreatedByOperator===true?1:0)|(o.SeenByOperator===true?2:0));
-   for(const e of EDGES)t.ed.push(finite(o[e])?o[e]:NaN);}
+   for(const e of EDGES)t.ed.push(finite(o[e])?o[e]:NaN);
+   if(t.extras!==false)gardeExtras(t,o,i);}
+ }
+ /* 4.9.5.3 (S6) : RailSpacing, TrajAzimuth, RailType, Success*, PK de la ligne, si présents. Aucun effet sur les comptes ni sur B1. */
+ function gardeExtras(t,o,i){
+  t.sp.push(finite(o.RailSpacing)?o.RailSpacing:NaN);t.az.push(finite(o.TrajAzimuth)?o.TrajAzimuth:NaN);
+  t.rt.push(typeof o[EXTRA_STR]==='string'&&o[EXTRA_STR].length<=24?o[EXTRA_STR]:null);
+  const pk=o[EXTRA_PK];t.pk.push(finite(pk)?pk:typeof pk==='string'&&pk.length<=24?pk:null);
+  for(const k in o){if(!SUCCESS.test(k)||k.length>40||!/^[\w.\-]+$/.test(k))continue;
+   let col=t.su.get(k);if(!col){if(t.su.size>=8)continue;col=[];t.su.set(k,col);}
+   while(col.length<i)col.push(null);const v=o[k];col[i]=finite(v)||typeof v==='boolean'?v:typeof v==='string'&&v.length<=24?v:null;}
+ }
+ /* Noms des champs d'UNE ligne (jamais les valeurs) et résumé des champs gardés : consigné une fois par chargement de liste. */
+ function inventaireChamps(rows,t){
+  const premiere=rows.find(r=>r&&typeof r==='object'&&!Array.isArray(r)),noms=premiere?Object.keys(premiere).filter(k=>k.length<=40&&/^[\w.\-]+$/.test(k)).sort().slice(0,64):[];
+  const ext=(a)=>{const v=a.filter(Number.isFinite);return v.length?{n:v.length,min:Math.min(...v),max:Math.max(...v)}:{n:0};};
+  const types={};for(const x of t.rt)if(x!==null){types[x]=(types[x]||0)+1;if(Object.keys(types).length>8)break;}
+  const succes={};for(const [k,col] of t.su){const v=col.filter(x=>x!==null&&x!==undefined);succes[k]={n:v.length,vrai:v.filter(x=>x===true).length};}
+  return {noms,champs:Object.keys(premiere||{}).length,
+   gardes:{RailSpacing:ext(t.sp),TrajAzimuth:ext(t.az),RailType:{n:t.rt.filter(x=>x!==null).length,valeurs:types},PK:{n:t.pk.filter(x=>x!==null).length},Success:succes}};
  }
  /* Écriture réussie sur une ligne connue : statut, drapeaux et bords tels qu'écrits (ESV fait de même chez lui). */
  function applyWrite(t,rk,v){
@@ -180,6 +213,9 @@
   const perfNow=()=>win.performance.now(),epoch=t=>win.performance.timeOrigin+t;
   let observerId;try{observerId=win.crypto.randomUUID();}catch{observerId=String(Math.random()).slice(2)+String(Date.now());}
   let enabled=true,seq=0,ringChars=0,dropped=0,ignored=0,tablesOn=true;const ring=[],listSums=new Map(),tables=new Map();
+  /* 4.9.5.3 (S6) : relevés coupés par le service worker (`banane5:config`, `relevesOff`) ; tous actifs au départ. */
+  const off=new Set();let echecsCumules=0;
+  const releveOn=nom=>!off.has(nom);
   /* État de la page à l'installation : l'observateur est-il arrivé avant les scripts de la page ?
    * oui = document en cours de chargement et aucun script encore analysé ; non = déjà chargé ou des
    * scripts analysés ; inconnu (null) = document illisible : jamais deviné. */
@@ -284,9 +320,11 @@
   /* B1 : une première page ouvre une table neuve (relecture de la liste) ; une suite sans début vu ne sert jamais
    * à l'indice (`debut:false`) ; une page illisible ou en erreur rompt la table. Au plus `LIMITS.tables` tables. */
   function tableFor(tk,url){const first=firstPage(url,base());let t=tables.get(tk);
-   if(first===true||!t){if(t)tables.delete(tk);t=newTable(first===true);tables.set(tk,t);while(tables.size>LIMITS.tables)tables.delete(tables.keys().next().value);}
+   if(first===true||!t){if(t)tables.delete(tk);t=newTable(first===true);t.extras=releveOn('champsListe');tables.set(tk,t);while(tables.size>LIMITS.tables)tables.delete(tables.keys().next().value);}
    return t;}
-  function pageInto(tk,url,rows){const t=tableFor(tk,url);t.pages++;addRows(t,rows);}
+  function pageInto(tk,url,rows){const t=tableFor(tk,url);t.pages++;addRows(t,rows);
+   /* 4.9.5.3 : inventaire des noms de champs, une fois par chargement de liste (première page). Noms seulement, jamais de valeurs. */
+   if(t.pages===1&&t.debut&&t.extras!==false&&!t.inventaire){t.inventaire=true;try{record({kind:'list-fields',listKey:listKey(url,base()),rows:rows.length,...inventaireChamps(rows,t)});}catch{}}}
   function pageBroken(tk,url){const t=tableFor(tk,url);t.pages++;t.rompue=true;}
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'open',onOpen);
   patch(win.XMLHttpRequest&&win.XMLHttpRequest.prototype,'send',onSend);
@@ -294,7 +332,9 @@
   /* ------------------------------------------------ fichiers de points */
   let windowTimer=null,agg=null,aggFetch=null;
   function flushResources(){windowTimer=null;const a=agg,f=aggFetch;agg=null;aggFetch=null;
-   if(a)record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs});
+   if(a)record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs,
+    /* 4.9.5.3 (S6) : nœuds ept-data seulement ; absent si le relevé est coupé ou si la fenêtre n'en compte aucun. */
+    ...(a.ept?{ept:a.ept.n,statuts:a.ept.statuts,sansStatut:a.ept.sansStatut,echecs:a.ept.echecs,echecsCumules,dureeTotMs:Math.round(a.ept.dur*10)/10,dureeMaxMs:Math.round(a.ept.max*10)/10}:{})});
    if(f)record({kind:'fetch-rails',n:f.n,startedEpochMs:epoch(f.start),endedEpochMs:epoch(f.end),windowMs:LIMITS.resourceWindowMs});}
   /* Filet passif pour `fetch` (non enveloppé) : l'API de mesure des ressources voit aussi les requêtes
    * `fetch`. On COMPTE celles dont le chemin est de classe « rails » (jamais l'URL, jamais le contenu) :
@@ -303,6 +343,12 @@
    for(const e of entries){const start=Number(e.startTime),end=Number(e.responseEnd);if(!Number.isFinite(start)||!Number.isFinite(end))continue;
     if(classify('GET',e.name,base())==='point-resource'){
      if(!agg)agg={n:0,bytes:0,start,end};agg.n++;agg.bytes+=Number(e.transferSize)||Number(e.encodedBodySize)||0;agg.start=Math.min(agg.start,start);agg.end=Math.max(agg.end,end);
+     if(releveOn('ressources')&&EPT_DATA.test(pathOf(e.name,base())?.path||'')){
+      /* `responseStatus` (Chrome ≥ 109) : absent = non disponible (jamais compté comme échec) ; 0 ou ≥ 400 = échec. Durée = fin − début. */
+      const x=agg.ept||(agg.ept={n:0,statuts:{},sansStatut:0,echecs:0,dur:0,max:0});x.n++;
+      const rs=e.responseStatus,d=Number(e.duration);if(Number.isFinite(d)&&d>=0){x.dur+=d;x.max=Math.max(x.max,d);}
+      if(Number.isInteger(rs)&&rs>=0&&rs<=999){const k=String(rs);if(k in x.statuts||Object.keys(x.statuts).length<8)x.statuts[k]=(x.statuts[k]||0)+1;if(rs===0||rs>=400){x.echecs++;echecsCumules++;}}
+      else x.sansStatut++;}
     }else if(e.initiatorType==='fetch'&&isRailsPath(e.name,base())){
      if(!aggFetch)aggFetch={n:0,start,end};aggFetch.n++;aggFetch.start=Math.min(aggFetch.start,start);aggFetch.end=Math.max(aggFetch.end,end);}}
    if((agg||aggFetch)&&!windowTimer)windowTimer=win.setTimeout(()=>{try{flushResources();}catch{}},LIMITS.resourceWindowMs);
@@ -314,8 +360,17 @@
    if(ev.source!==win||ev.origin!==origin())return;const d=ev.data;if(!d||typeof d!=='object')return;
    if(d.kind==='banane5:hello')replay(Number.isInteger(d.afterSeq)&&d.afterSeq>=0?d.afterSeq:0);
    else if(d.kind==='banane5:snapshot')snapshot(d.afterDenial===true);
+   /* 4.9.5.3 (S6) : l'adaptateur de la page (même monde) poste ses relevés (écouteurs jQuery en ombre, compteur bloqué) ; réduits ici. */
+   else if(d.kind==='banane5:evt'&&d.event&&typeof d.event==='object'){
+    const x=d.event,k=typeof x.kind==='string'?x.kind:'';if(!Object.hasOwn(EVT_KINDS,k)||!enabled)return;
+    if(k==='esv-event'){if(!releveOn('esvEvents')||!EVT_KINDS[k].includes(x.nom))return;
+     record({kind:k,nom:x.nom,args:argsReduits(x.args),pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null,...(Number.isInteger(x.perdus)&&x.perdus>0?{perdus:Math.min(x.perdus,1e6)}:{})});}
+    else if(k==='diag-compteur-bloque'){if(!releveOn('compteurBloque'))return;
+     record({kind:k,valeur:Number.isInteger(x.valeur)&&x.valeur>0&&x.valeur<1e6?x.valeur:null,cuts:Number.isInteger(x.cuts)&&x.cuts>0&&x.cuts<1000?x.cuts:null,
+      cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}}
    else if(d.kind==='banane5:config'){
-    if(!('table' in d)||typeof d.enabled==='boolean')enabled=d.enabled!==false;
+    if(Array.isArray(d.relevesOff)){off.clear();for(const n of d.relevesOff)if(typeof n==='string'&&n.length<=24)off.add(n);}
+    if(!Array.isArray(d.relevesOff)&&(!('table' in d)||typeof d.enabled==='boolean'))enabled=d.enabled!==false;
     // B1 : appuis de la liste coupés (réglage `appuisListe:'off'`) : la table est oubliée et n'est plus tenue.
     if(d.table===false){tablesOn=false;tables.clear();}}
    /* B1 : demande du pont (fenêtre de voisins et ligne la plus proche d'un point monde). Réponse bornée. */
@@ -328,5 +383,5 @@
    stats:()=>({observer:observerId,seq,dropped,ringEntries:ring.length,ringChars,ignored,enabled}),
    tables:()=>[...tables.values()].map(t=>({lignes:t.rk.length,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee}))};
  }
- return {install,classify,isRailsPath,railPairId,listKey,writeBody,listSummary,tableKey,firstPage,voisins,LIMITS};
+ return {install,classify,isRailsPath,railPairId,listKey,writeBody,listSummary,tableKey,firstPage,voisins,inventaireChamps,newTable,addRows,argsReduits,LIMITS};
 });

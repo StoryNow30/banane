@@ -281,9 +281,11 @@
   * Voir ce fichier pour le raisonnement et tests/lod-signature.test.cjs pour les
   * sept propriétés de discrimination vérifiées. */
  const SIG=window.BananeLodSignature;
+ let inventaireRecent=null;
  function loadedSignature(){
    const id=o=>o&&typeof o==='object'?objectId(o):'';
-   return SIG.signature(L.inventory(context().viewer),id);
+   const inv=L.inventory(context().viewer);inventaireRecent=inv;   // 4.9.5.3 : gardé pour le relevé de profondeur (diag), sans second parcours
+   return SIG.signature(inv,id);
  }
  /* I3 : lire dès que plus rien ne charge. Prédicat (code de Potree 1.8 d'ESV) : au moins trois
   * images après le début de l'attente, puis deux images DISTINCTES de suite avec aucun chargement
@@ -316,12 +318,33 @@
   * aucune boucle ajoutée ; ~200 octets par lecture. Lu par `tools/signal-age.cjs`. */
  const ADAPTATEUR_CHARGE_A=Date.now();
  const nombreFini=v=>Number.isFinite(v)?v:undefined;
+ /* 4.9.5.3 (S6) — relevés en lecture seule de la page ESV. Réglages : `BananeSettings.releves` / `.esvEvents`. */
+ const REL=window.BananeSettings?.releves||{},ESVEV={ombre:true,noms:['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],parSecondeMax:30,...(window.BananeSettings?.esvEvents||{})};
+ const relOn=nom=>REL[nom]!==false,NS_OMBRE='banane53';
+ /* Posté à l'observateur (même monde) qui le réduit et le range ; jamais une commande, jamais une écriture. */
+ const heurePage=()=>{try{const t=performance.now();return Number.isFinite(t)?t:null;}catch{return null;}};
+ function posterObservateur(event){try{window.postMessage({kind:'banane5:evt',event},location.origin);}catch{}}
+ /* Niveau d'un nœud Potree : `geometryNode.level` (ou `getLevel()`, ou `key.d` pour EPT), sinon la longueur du nom « r0123 » moins un. */
+ function niveauNoeud(n){const g=n?.geometryNode||null;
+   const essais=[()=>g?.level,()=>typeof g?.getLevel==='function'?g.getLevel():undefined,()=>g?.key?.d,()=>n?.level];
+   for(const f of essais){try{const v=f();if(Number.isInteger(v)&&v>=0&&v<=64)return v;}catch{}}
+   try{const nom=typeof g?.name==='string'?g.name:null;if(nom&&/^r[0-7]*$/.test(nom))return nom.length-1;}catch{}
+   return null;}
+ function niveauxNoeuds(inv){const nodes=inv?.nodes;if(!Array.isArray(nodes))return null;
+   const v=nodes.map(niveauNoeud).filter(x=>x!==null).sort((a,b)=>a-b);
+   return [v.length?v[0]:null,v.length?v[Math.floor((v.length-1)/2)]:null,v.length?v[v.length-1]:null,v.length,nodes.length];}
+ function budgetPoints(){const vw=window.viewer;if(!vw)return null;
+   let b;try{b=typeof vw.getPointBudget==='function'?vw.getPointBudget():vw.pointBudget;}catch{b=undefined;}
+   return Number.isFinite(b)&&b>0?b:null;}
  function compteursEsv(sig){const d={ageS:Math.round((Date.now()-ADAPTATEUR_CHARGE_A)/1000)};
    try{const t=performance?.now?.();if(Number.isFinite(t))d.navS=Math.round(t/1000);}catch{}
    if(sig&&Number.isFinite(sig.count))d.noeuds=sig.count;
    try{let pts=0,vu=false;for(const pc of window.viewer?.scene?.pointclouds||context().viewer?.scene?.pointclouds||[]){const n=pc?.numVisiblePoints;if(Number.isFinite(n)){pts+=n;vu=true;}}if(vu)d.pts=pts;}catch{}
    try{const l=window.Potree?.lru;if(l){const a=nombreFini(l.numPoints),b=nombreFini(typeof l.size==='function'?l.size():l.elements);if(a!==undefined)d.lruPts=a;if(b!==undefined)d.lruNoeuds=b;}}catch{}
    try{const m=performance?.memory?.usedJSHeapSize;if(Number.isFinite(m))d.memMo=Math.round(m/1048576);}catch{}
+   /* 4.9.5.3 (S6) : niveau d'octree des nœuds lus [min, médiane, max, nœuds au niveau connu, nœuds] (null si illisible) et budget de points du
+    * lecteur (`getPointBudget()` ; null si absent). Lecture seule, sur l'inventaire déjà pris pour la signature. */
+   if(relOn('diagCapture')){try{d.niv=niveauxNoeuds(inventaireRecent);}catch{d.niv=null;}try{d.bud=budgetPoints();}catch{d.bud=null;}}
    return d;}
  async function attendreChargement(guard,stableForMs){const debut=Date.now(),f0=imageEsv();
    let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0,derniere=null;
@@ -357,7 +380,18 @@
        const valeur=JSON.stringify(cam.cameraToSceneRelative);
        if(valeur===precedente&&projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView)return now;precedente=valeur;}}
    throw Error('Vue ESV non recentrée sur le rail '+side+'.');}
- async function capture(expected,progress=()=>{}){cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
+ /* 4.9.5.3 (S6) — COMPTEUR POTREE BLOQUÉ. `numNodesLoading` lu AU DÉBUT de chaque nouveau cut ; la même valeur > 0 au début de `cuts` cuts
+  * de suite (défaut 3) : un chargement qui ne redescend plus (hypothèse D-109). Un événement `diag-compteur-bloque` par épisode (l'épisode
+  * finit quand la valeur change ou retombe à 0). Aucune action : seul un événement posté à l'observateur. */
+ const compteurCuts={cle:null,hist:[],episode:false};
+ function noterCompteurDebutCut(){try{const C=REL.compteurBloque;if(C?.actif===false)return;
+   const l=cutLabel();if(!l)return;const cle=l.part+':'+l.cut;if(cle===compteurCuts.cle)return;compteurCuts.cle=cle;
+   const n=chargementsEsv(),N=Number.isInteger(C?.cuts)&&C.cuts>=2?C.cuts:3;compteurCuts.hist.push(n);while(compteurCuts.hist.length>N)compteurCuts.hist.shift();
+   const h=compteurCuts.hist,bloque=h.length>=N&&n!==null&&n>0&&h.every(v=>v===n);
+   if(!bloque){compteurCuts.episode=false;return;}
+   if(compteurCuts.episode)return;compteurCuts.episode=true;
+   posterObservateur({kind:'diag-compteur-bloque',valeur:n,cuts:N,cut:l.cut,pageMs:heurePage()});}catch{}}
+ async function capture(expected,progress=()=>{}){noterCompteurDebutCut();try{installerOmbreEsv();}catch{}cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
    const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs,lecture=lectureDuCut(expected?.identity);
    const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
      if(!K.equalPoses(now.rails,expected.rails))throw Error('Rails modifiés pendant la lecture.');
@@ -840,8 +874,9 @@
  function cheminEvenement(){try{const $=window.$;if(typeof $!=='function')return {disponible:false,raison:'jquery-absent'};
    const el=document.getElementById(navigation.conteneur);if(!el)return {disponible:false,raison:'conteneur-absent'};
    if(typeof $._data!=='function')return {disponible:false,raison:'ecouteurs-illisibles'};
-   const ecouteurs=$._data(el,'events')?.[navigation.evenement];
-   if(!Array.isArray(ecouteurs)||!ecouteurs.length)return {disponible:false,raison:'sans-ecouteur'};
+   /* 4.9.5.3 : notre écouteur en ombre (espace de noms `banane53`) n'est pas un écouteur d'ESV : il ne rend jamais ce chemin disponible. */
+   const ecouteurs=($._data(el,'events')?.[navigation.evenement]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE));
+   if(!ecouteurs.length)return {disponible:false,raison:'sans-ecouteur'};
    return {disponible:true,raison:null,jquery:typeof $.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null};}
    catch{return {disponible:false,raison:'lecture-impossible'};}}
  function bornesPartie(courant,borneConnue){const r=releverEsv(null),total=r.compteur&&!(r.compteursVus>1)?r.compteur.total:null;
@@ -998,8 +1033,42 @@
  async function nativeStart(options){if(native?.active)throw Error('Écho est déjà actif dans ESV.');nativeChannel=options.channel;
    native=native||new NP4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
+ /* 4.9.5.3 (S6) — ÉCOUTEURS jQUERY EN OMBRE sur les événements internes d'ESV (`#globalcontainer`, par `window.$`). Le gestionnaire ne retourne
+  * rien, n'arrête rien (ni `stopPropagation`, ni `preventDefault`, ni valeur retournée), est posé APRÈS ceux d'ESV et attrape toute
+  * exception : les gestionnaires d'ESV passent comme avant. Espace de noms `banane53` (écouteurs retirés par lui seul, exclus des comptes de
+  * l'empreinte et du chemin `goToCut`). Au plus `parSecondeMax` événements par seconde (le reste est compté, `perdus`). Arguments réduits
+  * aux nombres, booléens et chaînes courtes. Posé au premier `ping` / `capture` où le conteneur existe (40 essais au plus). */
+ const ombreEsv={installe:false,essais:0,fenetre:[],perdus:0};
+ function installerOmbreEsv(){
+   if(ESVEV.ombre===false||ombreEsv.installe||ombreEsv.essais>=40)return;ombreEsv.essais++;
+   try{const $=window.$;if(typeof $!=='function')return;const el=document.getElementById('globalcontainer');if(!el)return;
+     const jq=$(el);if(typeof jq?.on!=='function')return;
+     jq.on(ESVEV.noms.map(n=>n+'.'+NS_OMBRE).join(' '),function(ev){
+       try{const now=Date.now();while(ombreEsv.fenetre.length&&now-ombreEsv.fenetre[0]>1000)ombreEsv.fenetre.shift();
+         if(ombreEsv.fenetre.length>=(ESVEV.parSecondeMax||30)){ombreEsv.perdus++;return;}ombreEsv.fenetre.push(now);
+         const args=Array.prototype.slice.call(arguments,1,7).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='boolean'?v:typeof v==='string'&&v.length<=24?v:null);
+         const perdus=ombreEsv.perdus;ombreEsv.perdus=0;
+         posterObservateur({kind:'esv-event',nom:String(ev?.type||''),args,pageMs:heurePage(),...(perdus?{perdus}:{})});}catch{}
+       /* aucune valeur retournée : jQuery ne s'en sert pas, mais un `false` aurait arrêté la propagation. */
+     });
+     ombreEsv.installe=true;}catch{}}
+ /* 4.9.5.3 (S6) — EMPREINTE DU CONTRAT ESV, à « Connecter » (lecture seule, aucune commande, aucune valeur de projet) : boutons de navigation d'ESV
+  * (`O2N3Dcut…3DRail`) et leurs titres, classes des deux boutons de rail, nombre d'écouteurs jQuery de chacun des cinq événements sur
+  * `#globalcontainer` (les nôtres exclus), versions de jQuery et de Potree. Haché (FNV-1a, 8 caractères) ; le détail part avec lui pour dire ce
+  * qui a changé. Comparée par le service worker à la précédente. */
+ function empreinteContrat(){const d={};
+   try{d.boutons=[...document.querySelectorAll('[id^="O2N3DCut"]')].filter(el=>/3DRail$/.test(el.id)).slice(0,16).map(el=>[el.id,(el.title||'').slice(0,60)]);}catch{d.boutons=null;}
+   try{d.rails=['O2N3DCutLRClick','O2N3DCutRRClick'].map(id=>{const el=document.getElementById(id);return el?[...el.classList].sort().join(' ').slice(0,80):null;});}catch{d.rails=null;}
+   try{const $=window.$;d.jquery=typeof $?.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null;
+     const el=document.getElementById('globalcontainer'),ev=typeof $==='function'&&typeof $._data==='function'&&el?$._data(el,'events'):null;
+     d.ecouteurs=Object.fromEntries(ESVEV.noms.map(n=>[n,ev?(ev[n]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE)).length:null]));}catch{d.jquery=null;d.ecouteurs=null;}
+   try{const v=window.Potree?.version;d.potree=v&&typeof v==='object'?[v.major,v.minor].filter(x=>Number.isFinite(x)).join('.')+(typeof v.suffix==='string'?String(v.suffix).slice(0,12):''):typeof v==='string'?v.slice(0,16):null;}catch{d.potree=null;}
+   const texte=JSON.stringify(d);let h=2166136261>>>0;for(let i=0;i<texte.length;i++){h^=texte.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+   return {hash:h.toString(16).padStart(8,'0'),detail:d};}
  let intrusion=null;
- const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,
+ const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
+   const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
+   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,
    manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},

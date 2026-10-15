@@ -454,6 +454,9 @@
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
    bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
+   /* 4.9.5.3 (S6) : avis de contrat ESV (empreinte changée, écritures par fetch), une ligne par motif ; absent tant que rien n'a changé. */
+   {const el=$('avis-contrat'),l=Array.isArray(s.avisContrat)?s.avisContrat.filter(x=>typeof x==='string'):[];
+    if(el){el.hidden=!l.length;el.textContent=l.join(' ');el.classList.toggle('error',l.length>0);}}
    const onglets=etatOnglets(s);
    for(const [vue,e] of Object.entries(onglets)){const t=$('tab-'+vue);if(!t)continue;
      if(e){t.dataset.etat=e[0];t.setAttribute('title',e[1]);}else{delete t.dataset.etat;t.removeAttribute('title');}}
@@ -1115,6 +1118,7 @@
  async function exportComplet(prefix){
    if(vidage){note('Vidage automatique en cours : l’export final attend sa fin…');await vidage;}
    const manifeste=await api('native-export-manifest',{all:true}),data=await assembler(manifeste),Z=globalThis.BananeZip;
+   try{const mach=enteteMachine();if(mach&&data&&typeof data==='object'&&!data.machine)data.machine=mach;}catch{/* en-tête seulement */}
    if(!(Z?.createZip&&typeof Blob==='function'))return dataset(data,prefix);
    /* 4.9.0.18 : volumes zip ≤ 17 Mo avec CONTENU.txt, comme Orbite ; l'export final confirmé est noté (AM-19). */
    const r=await exportEchoZip(Z,data);
@@ -1232,10 +1236,27 @@ on('native-discard',async()=>{
  /* 4.9.5.3 (S7) : les jalons `phase-timing` sont repliés par visite à l'export (src/phase-pli.js) : même information, contexte écrit une
   * fois par visite (mesuré : −84 % sur ces jalons, −36 % sur le journal d'une partie). Réglage `export.phaseTimingReplie`. Un groupe qui ne
   * se redéplie pas à l'identique reste tel quel. Le bilan de l'opération est joint à l'en-tête (`phaseTimingPli`). */
+ /* 4.9.5.3 (S6, relevé 12) — EN-TÊTE « MACHINE » de l'export : navigateur, plateforme, mémoire, GPU. Lecture seule, au moment de l'export, dans la
+  * page du panneau (jamais dans ESV) ; chaque champ absent reste absent (jamais deviné). Ni nom d'utilisateur, ni adresse, ni identifiant. */
+ function enteteMachine(){
+   if(globalThis.BananeSettings?.releves?.enteteMachine===false)return null;
+   const m={};
+   try{const n=navigator;
+     if(Array.isArray(n.userAgentData?.brands))m.navigateur=n.userAgentData.brands.slice(0,5).map(b=>`${String(b.brand).slice(0,40)} ${String(b.version).slice(0,16)}`);
+     if(typeof n.userAgent==='string')m.userAgent=n.userAgent.slice(0,200);
+     const pf=n.userAgentData?.platform||n.platform;if(typeof pf==='string')m.plateforme=pf.slice(0,40);
+     if(Number.isFinite(n.hardwareConcurrency))m.coeurs=n.hardwareConcurrency;
+     if(Number.isFinite(n.deviceMemory))m.memoireGo=n.deviceMemory;}catch{/* absent */}
+   try{const pm=performance.memory;if(pm&&Number.isFinite(pm.usedJSHeapSize))m.memoireJsMo={utilisee:Math.round(pm.usedJSHeapSize/1048576),totale:Math.round(pm.totalJSHeapSize/1048576),limite:Math.round(pm.jsHeapSizeLimit/1048576),source:'panneau'};}catch{/* absent */}
+   try{const c=document.createElement('canvas'),gl=c.getContext('webgl')||c.getContext('experimental-webgl'),ext=gl&&gl.getExtension('WEBGL_debug_renderer_info');
+     m.gpu=ext?{fabricant:String(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)).slice(0,80),rendu:String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)).slice(0,120)}:null;
+     try{gl&&gl.getExtension('WEBGL_lose_context')?.loseContext();}catch{}}catch{m.gpu=null;}
+   return m;}
  function eventsExport(meta,events){
-   const P=globalThis.BananePhasePli,S=globalThis.BananeSettings?.export;
-   if(!P||S?.phaseTimingReplie===false||!Array.isArray(events))return {meta,events};
-   try{const r=P.plier(events);return {meta:{...meta,phaseTimingPli:r.bilan},events:r.events};}catch{return {meta,events};}
+   const P=globalThis.BananePhasePli,S=globalThis.BananeSettings?.export,machine=enteteMachine();
+   const m={...meta,...(machine?{machine}:{})};
+   if(!P||S?.phaseTimingReplie===false||!Array.isArray(events))return {meta:m,events};
+   try{const r=P.plier(events);return {meta:{...m,phaseTimingPli:r.bilan},events:r.events};}catch{return {meta:m,events};}
  }
  async function bilanPilote(){const lu=await lirePilote('dataset-meta');
    if(!lu)return api('dataset');const e=eventsExport(lu.meta,lu.events);

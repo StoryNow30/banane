@@ -215,6 +215,13 @@ const obsNum=v=>Number.isFinite(v)&&Math.abs(v)<1e15?v:null;
 const obsStr=(v,n)=>typeof v==='string'&&v.length<=n?v:null;
 const obsKey=v=>typeof v==='string'&&v.length<=80&&/^[\w.+\-]+$/.test(v)?v:null;
 const obsOutcome=v=>['done','error','abort','timeout'].includes(v)?v:null;
+/* 4.9.5.3 (S6) : sous-objets relevés par l'observateur, relus champ par champ (source non fiable). */
+function obsStatuts(o){if(!o||typeof o!=='object'||Array.isArray(o))return null;const out={};let n=0;
+ for(const k of Object.keys(o)){if(n>=8||!/^\d{1,3}$/.test(k))continue;const v=obsInt(o[k],1e7);if(v!==null){out[k]=v;n++;}}return out;}
+function obsGardes(g){if(!g||typeof g!=='object')return null;const ext=e=>e&&typeof e==='object'?{n:obsInt(e.n,1e7),...(e.min!==undefined?{min:obsNum(e.min),max:obsNum(e.max)}:{})}:null;
+ const types={};let n=0;if(g.RailType?.valeurs&&typeof g.RailType.valeurs==='object')for(const k of Object.keys(g.RailType.valeurs)){if(n>=8||k.length>24||!/^[\w.\-]+$/.test(k))continue;const v=obsInt(g.RailType.valeurs[k],1e7);if(v!==null){types[k]=v;n++;}}
+ const succes={};n=0;if(g.Success&&typeof g.Success==='object')for(const k of Object.keys(g.Success)){if(n>=8||k.length>40||!/^[\w.\-]+$/.test(k))continue;succes[k]={n:obsInt(g.Success[k]?.n,1e7),vrai:obsInt(g.Success[k]?.vrai,1e7)};n++;}
+ return {RailSpacing:ext(g.RailSpacing),TrajAzimuth:ext(g.TrajAzimuth),RailType:{n:obsInt(g.RailType?.n,1e7),valeurs:types},PK:{n:obsInt(g.PK?.n,1e7)},Success:succes};}
 function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;const out={};let n=0;
  for(const k of Object.keys(b)){const v=b[k];if(n>=24||k.length>40||!/^[\w.\-]+$/.test(k))continue;
   if(typeof v==='number'&&Number.isFinite(v)||typeof v==='boolean'||typeof v==='string'&&v.length<=32){out[k]=v;n++;}}
@@ -234,7 +241,14 @@ function obsFields(x){
   case 'observer':return {kind:'observer',version:obsInt(x.version,1000),world:x.world==='MAIN'?'MAIN':null,installedBeforePageScripts:typeof x.installedBeforePageScripts==='boolean'?x.installedBeforePageScripts:null,
    readyState:['loading','interactive','complete'].includes(x.readyState)?x.readyState:null,scriptsAtInstall:obsInt(x.scriptsAtInstall,1e6),enabled:typeof x.enabled==='boolean'?x.enabled:null,
    afterDenial:typeof x.afterDenial==='boolean'?x.afterDenial:null,dropped:obsInt(x.dropped,1e9),ignored:obsInt(x.ignored,1e12)};
-  case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
+  case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5),
+   /* 4.9.5.3 (S6) : statut et durée des nœuds ept-data (champs absents si le relevé est coupé). */
+   ...(x.ept!==undefined?{ept:obsInt(x.ept,1e7),statuts:obsStatuts(x.statuts),sansStatut:obsInt(x.sansStatut,1e7),echecs:obsInt(x.echecs,1e7),echecsCumules:obsInt(x.echecsCumules,1e9),dureeTotMs:obsNum(x.dureeTotMs),dureeMaxMs:obsNum(x.dureeMaxMs)}:{})};
+  case 'list-fields':return {kind:'list-fields',listKey:obsKey(x.listKey),rows:obsInt(x.rows,1e7),champs:obsInt(x.champs,1e4),
+   noms:Array.isArray(x.noms)?x.noms.slice(0,64).filter(n=>typeof n==='string'&&n.length<=40&&/^[\w.\-]+$/.test(n)):[],gardes:obsGardes(x.gardes)};
+  case 'esv-event':return ['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'].includes(x.nom)
+   ?{kind:'esv-event',nom:x.nom,args:Array.isArray(x.args)?x.args.slice(0,6).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='boolean'?v:typeof v==='string'&&v.length<=24?v:null):[],pageMs:obsNum(x.pageMs),perdus:obsInt(x.perdus,1e6)}:null;
+  case 'diag-compteur-bloque':return {kind:'diag-compteur-bloque',valeur:obsInt(x.valeur,1e6),cuts:obsInt(x.cuts,1000),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
 /* 4.9.0.18 (KI-068) : événements et visites du lot seulement (ni Écho, ni Correction : `nativeSessionId`, `manualSessionId`,
@@ -242,6 +256,78 @@ function obsFields(x){
 const horsEcho=x=>!x||!(x.nativeSessionId||x.manualSessionId||x.observationPeriodId||x.railSnapshots);
 async function lotSeul(){const events=await store.all('events'),records=await store.all('records'),e=events.filter(horsEcho),r=records.filter(horsEcho);
  const exclus=events.length-e.length+records.length-r.length;return {events:e,records:r,scope:exclus?{exportScope:{lotOnly:true,excludedEchoItems:exclus,rule:'KI-068'}}:{}};}
+/* 4.9.5.3 (S6) — AVIS DE CONTRAT ESV, EMPREINTE À « CONNECTER », AUDIT SERVEUR AU RECHARGEMENT DE LA LISTE. LECTURE SEULE : rien n'est
+ * envoyé à ESV, rien ne change dans la pose, la validation ni la navigation ; un avis est une ligne de texte au panneau et un
+ * événement du journal (`avis-contrat-esv`). Une ligne par motif et par vie du service worker.
+ *  - `fetch-rails` : l'observateur compte les requêtes `fetch` de chemin « rails » (non enveloppé, jamais lu). Aujourd'hui toujours 0 :
+ *    s'il devient non nul, les écritures d'ESV ont changé de voie et D3, B1 (fraîcheur) et la preuve d'écriture seraient muets ;
+ *  - empreinte du contrat (`ping` de « Connecter », adaptateur) : boutons de navigation et titres, classes de rail, nombre d'écouteurs
+ *    jQuery par événement, versions de jQuery et de Potree. Hachée (8 caractères), gardée avec la précédente dans chrome.storage.local ;
+ *    un changement dit lesquels des éléments ont bougé ;
+ *  - audit serveur : chaque lecture complète de la liste d'une partie (au F5, ou au début de la séance) donne les validés côté serveur ;
+ *    leur écart avec la lecture précédente est comparé aux validations qu'Ariane a faites entre les deux (événements
+ *    `validation-accepted` de la partie) : `audit-serveur` (attendus, constatés, écart). Les validations d'un humain, ou un refus
+ *    du serveur, se voient dans l'écart ; aucune conclusion n'est tirée ici. */
+const avisContrat={lignes:[],vus:new Set()};
+const releveOn=nom=>globalThis.BananeSettings?.releves?.[nom]!==false;
+function journalerSimple(type,champs){try{const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type,schema:1,sessionId:engine?.s?.sessionId??null,batchId:engine?.s?.batch?.id??null,...champs})).catch(()=>{});}catch{/* le journal n'est pas critique */}}
+function avisContratEsv(motif,texte,detail={}){try{if(avisContrat.vus.has(motif))return;avisContrat.vus.add(motif);
+ avisContrat.lignes.push(texte);while(avisContrat.lignes.length>4)avisContrat.lignes.shift();journalerSimple('avis-contrat-esv',{motif,texte,...detail});}catch{}}
+/* Copie bornée d'une valeur venue de la page (source non fiable) : nombres finis, booléens, chaînes courtes, objets et listes bornés. */
+function reduireContrat(v,profondeur=0){
+ if(typeof v==='number')return Number.isFinite(v)?v:null;if(typeof v==='boolean')return v;if(typeof v==='string')return v.slice(0,80);
+ if(profondeur>=4||!v||typeof v!=='object')return null;
+ if(Array.isArray(v))return v.slice(0,16).map(x=>reduireContrat(x,profondeur+1));
+ const out={};let n=0;for(const k of Object.keys(v)){if(n>=24)break;if(k.length>48)continue;out[k]=reduireContrat(v[k],profondeur+1);n++;}return out;}
+function aplatirContrat(v,prefixe='',out={}){
+ if(v&&typeof v==='object')for(const k of Object.keys(v))aplatirContrat(v[k],prefixe?prefixe+'.'+k:k,out);else out[prefixe]=v;return out;}
+const CLE_CONTRAT='banane53Contrat';
+async function contratNoter(c){try{
+ if(!releveOn('empreinte')||!c||typeof c.hash!=='string'||!/^[0-9a-f]{8}$/.test(c.hash))return;
+ const S=chrome?.storage?.local,detail=reduireContrat(c.detail);
+ let prev=null;try{prev=(await S.get(CLE_CONTRAT))?.[CLE_CONTRAT]||null;}catch{prev=null;}
+ const change=!!prev&&typeof prev.hash==='string'&&prev.hash!==c.hash;
+ const a=aplatirContrat(prev?.detail||{}),b=aplatirContrat(detail||{}),bouge=change?[...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).slice(0,12):[];
+ journalerSimple('contrat-esv',{hash:c.hash,precedent:prev?.hash??null,change,changements:bouge,detail});
+ try{await S.set({[CLE_CONTRAT]:{hash:c.hash,at:new Date().toISOString(),version:VERSION,detail}});}catch{}
+ for(const m of [...avisContrat.vus])if(m.startsWith('empreinte:')){avisContrat.vus.delete(m);}   // un nouveau « Connecter » réévalue l'avis d'empreinte
+ avisContrat.lignes=avisContrat.lignes.filter(l=>!l.startsWith('ESV n’a plus le même contrat'));
+ if(change)avisContratEsv('empreinte:'+c.hash,`ESV n’a plus le même contrat qu’à la dernière connexion (empreinte ${prev.hash}, puis ${c.hash}${bouge.length?' ; ce qui a bougé : '+bouge.slice(0,4).join(', '):''}). Rien ne s’arrête ; préviens-moi avant de lancer un lot.`,{hash:c.hash,precedent:prev.hash,changements:bouge});
+}catch{/* relevé seulement */}}
+const CLE_LECTURES='banane53Lectures',lectures={pend:new Map(),memoire:null};
+async function lecturesLire(){if(lectures.memoire)return lectures.memoire;
+ try{const v=(await chrome.storage.local.get(CLE_LECTURES))?.[CLE_LECTURES];lectures.memoire=v&&typeof v==='object'?v:{};}catch{lectures.memoire={};}return lectures.memoire;}
+async function validationsAriane(partie,deMs,aMs){
+ const evs=await store.all('events');let n=0;
+ for(const e of evs){if(e?.type!=='validation-accepted')continue;const t=Date.parse(e.timestamp);
+  if(Number.isFinite(t)&&t>deMs&&t<=aMs&&(partie===null||e.identity?.part===partie))n++;}return n;}
+async function auditLecture(p){
+ if(!releveOn('auditServeur')||!p||!p.listKey||p.listKey==='undefined'||!(p.rows>=2)||!Number.isFinite(p.atMs))return;
+ const m=await lecturesLire(),prev=m[p.listKey];
+ m[p.listKey]={atMs:p.atMs,valid:p.valid,invalid:p.invalid,rows:p.rows};
+ const cles=Object.keys(m);while(cles.length>8)delete m[cles.shift()];
+ try{await chrome.storage.local.set({[CLE_LECTURES]:m});}catch{}
+ if(!prev||!Number.isFinite(prev.atMs)||p.atMs<=prev.atMs)return;
+ const partie=Number.isInteger(engine?.s?.batch?.scope?.part)?engine.s.batch.scope.part:Number.isInteger(engine?.s?.before?.identity?.part)?engine.s.before.identity.part:null;
+ let attendus=null;try{attendus=await validationsAriane(partie,prev.atMs,p.atMs);}catch{attendus=null;}
+ const constates=p.valid-prev.valid;
+ journalerSimple('audit-serveur',{listKey:p.listKey,partie,depuis:new Date(prev.atMs).toISOString(),jusqua:new Date(p.atMs).toISOString(),
+  validesAvant:prev.valid,validesApres:p.valid,invalidesAvant:prev.invalid,invalidesApres:p.invalid,attendus,constates,ecart:attendus===null?null:constates-attendus,
+  avantSeance:p.avantSeance===true,pages:p.pages??null});}
+/* Une observation rangée : avis `fetch-rails`, pages de liste (lecture complète = silence de 4 s après la dernière page). */
+function relevesObservation(f,observer){
+ if(f.kind==='fetch-rails'&&releveOn('avisFetch')&&Number.isInteger(f.n)&&f.n>0)
+  avisContratEsv('fetch-rails',`ESV a changé : des requêtes de rails passent par « fetch » (${f.n} vue${f.n>1?'s':''}), qu’Ariane ne voit pas. Les validations ne sont plus contrôlées : préviens-moi avant de lancer un lot.`,{n:f.n});
+ else if(f.kind==='list-page'&&releveOn('auditServeur')&&f.listKey&&f.status>=200&&f.status<300&&f.counts&&Number.isInteger(f.rows)){
+  const k=String(observer)+'|'+f.listKey,p=lectures.pend.get(k)||{listKey:f.listKey,pages:0,rows:0,valid:0,invalid:0,atMs:null,timer:null};
+  p.pages++;p.rows+=f.rows;p.valid+=f.counts.valid||0;p.invalid+=f.counts.invalid||0;if(Number.isFinite(f.endedEpochMs))p.atMs=Math.max(p.atMs??0,f.endedEpochMs);
+  clearTimeout(p.timer);p.timer=setTimeout(()=>{lectures.pend.delete(k);void auditLecture(p).catch(()=>{});},Number.isFinite(globalThis.BananeSettings?.releves?.auditSilenceMs)?globalThis.BananeSettings.releves.auditSilenceMs:4000);lectures.pend.set(k,p);}
+ else if(f.kind==='list-summary'&&f.beforeSession===true&&f.counts&&Number.isInteger(f.rows)&&Number.isFinite(f.lastEndedEpochMs))
+  void auditLecture({listKey:f.listKey,pages:f.pages,rows:f.rows,valid:f.counts.valid||0,invalid:f.counts.invalid||0,atMs:f.lastEndedEpochMs,avantSeance:true}).catch(()=>{});}
+/* 4.9.5.3 (S6) : relevés de l'observateur de la page coupés par les réglages (`releves`, `esvEvents`) : noms rendus au pont. */
+function relevesOff(){const R=globalThis.BananeSettings?.releves||{},E=globalThis.BananeSettings?.esvEvents||{},o=[];
+ if(R.ressources===false)o.push('ressources');if(R.champsListe===false)o.push('champsListe');if(R.compteurBloque?.actif===false)o.push('compteurBloque');if(E.ombre===false)o.push('esvEvents');return o;}
 function rangerObservations(m){try{
  if(globalThis.BananeSettings?.observateurPassif?.actif===false)return {accept:false,enabled:false,reason:'setting-off'};
  const seance=seanceObservateur({grace:true});if(!seance)return {accept:false,reason:'no-session'};
@@ -269,6 +355,7 @@ function rangerObservations(m){try{
   const fields=obsFields(x);if(!fields){rejected++;continue;}
   /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
   if(fields.kind==='write')try{ecritureObservee(fields);}catch{}
+  try{relevesObservation(fields,m.observer);}catch{}
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
   add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;
@@ -284,7 +371,7 @@ function rangerObservations(m){try{
   if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});}catch{/* la fiche n'est pas critique */}}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
- return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{})};
+ return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{}),...(relevesOff().length?{relevesOff:relevesOff()}:{})};
 }catch(e){return {accept:true,stored:0,reason:'error',error:String(e?.message||e).slice(0,200)};}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
@@ -570,7 +657,9 @@ async function equiperOnglet(tabId){
   * dit, ou l'adaptateur refuse notre ping en la nommant (refus définitif). */
  if(ping?.proprietaire!==chrome.runtime.id)throw autreAriane(ping?.versionName||ping?.version,!ping?.proprietaire);
  if(ping?.version!==VERSION)throw aRecharger();
- if(ping?.intrusion)throw definitif(`Ariane ${VERSION_NAME} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${ping.intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`);}
+ if(ping?.intrusion)throw definitif(`Ariane ${VERSION_NAME} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${ping.intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`);
+ /* 4.9.5.3 (S6) : empreinte du contrat ESV, demandée par un second ping (lecture seule) ; une panne n'empêche jamais la connexion. */
+ if(releveOn('empreinte'))void callSur(tabId,'ping',{contrat:true}).then(r=>contratNoter(r?.contrat),()=>{});}
 async function reconnecterESV(delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
  while(Date.now()<fin){garde();try{const tab=await chrome.tabs.get(selectedTab);
    if(tab?.status&&tab.status!=='complete'){await attendre(500);continue;}
@@ -952,13 +1041,40 @@ async function b1Voisins(cut,world){const B=globalThis.BananeAppuisListe;if(sele
 /* Préparation, LÉGÈRE : repère, demande à la page (quelques millisecondes), appariement, voisins et garde de
  * cohérence. Elle se fait au moment de la décision, avant toute écriture du cut décidé (la ligne N est encore
  * la pose de départ d'ESV). Rend soit un événement final, soit de quoi conclure. */
-async function b1Preparer(args,d0,mode){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t0=Date.now(),id=args.capture.identity;
+/* 4.9.5.3 (S6, idée 6a) — T CALCULÉE SUR LA POSE DE DÉPART DU CUT, dès le premier cut, consignée À CÔTÉ de celle d'aujourd'hui
+ * (`tDepart` dans l'événement `b1-ombre`) ; B1 continue d'employer l'actuelle (écriture de validation + pose corrigée), rien ne change
+ * dans les voisins ni dans la décision. La ligne N de la liste est la pose de départ du cut N (prouvé à 0,0 mm sur quatre parties) tant
+ * qu'elle est `invalid` et qu'aucune écriture ne l'a rafraîchie : T = bords de cette ligne (monde) − pose de départ de la capture
+ * (scène). Aucune écriture à attendre : la mesure existe au premier cut. T n'est jamais consignée : seulement son état, sa rigidité
+ * (écart des deux rails, mm) et son écart à la T actuelle (mm). */
+const b1Depart={repere:null};
+async function b1TDepart(args,trace){const B=globalThis.BananeAppuisListe,id=args.capture.identity;
+ try{const scene={left:args.capture.rails.left.positionSceneRelative,right:args.capture.rails.right.positionSceneRelative};
+  let rep=trace.rep;
+  if(!rep)rep=B.lireReponse(await b1Voisins(id.cut,scene),{cut:id.cut,fenetre:B.DEFAULTS.fenetre});
+  if(!rep.ok)return {etat:'page',raison:rep.reason};
+  const ligne=rep.rows.find(x=>x.i===id.cut);
+  if(!ligne)return {etat:'sans-ligne'};if(!ligne.bords)return {etat:'sans-bords'};
+  if(ligne.statut!=='invalid'||ligne.fraiche)return {etat:'ligne-non-depart',statut:ligne.statut,fraiche:ligne.fraiche};
+  const m=B.mesurerT(ligne.bords,scene);if(!m)return {etat:'mesure-impossible'};
+  b1Depart.repere=B.noterRepere(b1Depart.repere,id.frameId??null,m);
+  const R=b1.repere,ecart=R?.T&&R.frameId===(id.frameId??null)?Math.hypot(...m.T.map((v,i)=>v-R.T[i]))*1000:null;
+  return {etat:m.ok?'calibre':'non-rigide',rigideMm:Math.round(m.rigideMm*10)/10,repere:B.resumeRepere(b1Depart.repere),
+   ecartAActuelleMm:ecart===null?null:Math.round(ecart*10)/10};
+ }catch(e){return {etat:'erreur',message:String(e?.message||e).slice(0,120)};}}
+async function b1Preparer(args,d0,mode){
+ const trace={},prep=await b1PreparerBase(args,d0,mode,trace);
+ if(!releveOn('translationDepart')||!prep?.evenement)return prep;
+ try{prep.evenement={...prep.evenement,tDepart:await b1TDepart(args,trace)};}catch{/* relevé seulement */}
+ return prep;}
+async function b1PreparerBase(args,d0,mode,trace={}){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t0=Date.now(),id=args.capture.identity;
  const base={mode,identity:{part:id.part??null,cut:id.cut??null},reel:B.resumeDecision(d0)};
  try{const R=b1.repere;
   if(!R||R.frameId!==(id.frameId??null)||!R.T)return {evenement:{...base,etat:'sans-repere',ecrituresSansPaire:b1.sansPaire}};
   if(R.etat!=='calibre')return {evenement:{...base,etat:'repere-instable',repere:B.resumeRepere(R)}};
   const world=Object.fromEntries(['left','right'].map(x=>[x,args.capture.rails[x].positionSceneRelative.map((v,i)=>v+R.T[i])]));
   const rep=B.lireReponse(await b1Voisins(id.cut,world),{cut:id.cut,fenetre:B.DEFAULTS.fenetre});
+  trace.rep=rep;
   if(!rep.ok)return {evenement:{...base,etat:'page',raison:rep.reason,repere:B.resumeRepere(R),ms:Date.now()-t0}};
   const apparie=B.accord(rep,id.cut),validated=apparie.ok?B.appuis(rep.rows,R.T,id):[];
   const gardes=validated.length?L.consistentValidated(id,args.capture.rails,validated).map(a=>a.identity.cut):[];
@@ -989,6 +1105,25 @@ async function b1Decision(args,d0){
   return d0;}
  const r=b1Conclure(await b1Preparer(snap,d0,mode),snap,d0);b1Journal(r.evenement,ctx);
  return r.decision&&r.decision!==d0?{...r.decision,appuisListe:{regle:r.evenement.regle,gardes:r.evenement.gardes}}:d0;}
+/* 4.9.5.3 (S6, idée 9 (1)) — « NE PAS REVISITER UN DIFFÉRÉ SANS SOURCE NOUVELLE », EN OMBRE. Quand le lot revisite un cut déjà différé
+ * (une visite précédente, d'un lot précédent de la session, l'a laissé sans pose), l'événement `revisite-differe` dit si quelque chose de
+ * neuf existe depuis : un autre cadre de scène (F5), un voisin validé par ce lot à `frameGap` cuts au plus, un appui utilisé par la
+ * décision d'aujourd'hui et pas par la précédente. `revisite-sans-source-nouvelle:true` = rien de neuf. RIEN N'EST SAUTÉ : la décision,
+ * la pose et la navigation restent celles du moteur ; c'est le taux de re-différé qui décidera de la règle. */
+function revisiteDiffere(identity,batch,decision){try{
+ if(!releveOn('revisiteSansSource')||!Number.isInteger(identity?.cut)||!batch)return;
+ const avant=(engine?.s?.records||[]).filter(r=>(r?.status==='deferred-unresolved'||r?.decision==='DEFERRED_UNRESOLVED')&&r.identity?.part===identity.part&&r.identity?.cut===identity.cut&&r.batchId!==batch.id);
+ if(!avant.length)return;
+ const dernier=avant.reduce((a,b)=>String(b.deferredAt||'')>=String(a.deferredAt||'')?b:a);
+ const gap=globalThis.BananeLotDecision?.DEFAULTS?.frameGap??8;
+ const cadre=(dernier.identity?.frameId??null)!==(identity.frameId??null)||(dernier.identity?.pageId??null)!==(identity.pageId??null);
+ const voisins=[...new Set((batch.processed||[]).map(p=>p?.cut??p?.identity?.cut).filter(c=>Number.isInteger(c)&&c!==identity.cut&&Math.abs(c-identity.cut)<=gap))].sort((a,b)=>a-b);
+ const prec=new Set(Array.isArray(dernier.proposal?.lotCommand?.anchorsUsed)?dernier.proposal.lotCommand.anchorsUsed:[]);
+ const nouveaux=(Array.isArray(decision?.anchorsUsed)?decision.anchorsUsed:[]).filter(c=>Number.isInteger(c)&&!prec.has(c));
+ journalerSimple('revisite-differe',{identity:{part:identity.part??null,cut:identity.cut},'revisite-sans-source-nouvelle':!cadre&&!voisins.length&&!nouveaux.length,
+  cadreChange:cadre,voisinsValidesDepuis:voisins.slice(0,12),appuisNouveaux:nouveaux.slice(0,12),fois:avant.length+1,differeAvant:{batchId:dernier.batchId??null,at:dernier.deferredAt??null},
+  stage:decision?.stage??null,reason:decision?.reason??null,rienSaute:true});
+}catch{/* relevé seulement */}}
 async function observeLot(shadow){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
  if(!L||!batch||S?.lot?.observe===false)return null;
@@ -1010,6 +1145,7 @@ async function observeLot(shadow){
  /* B1 (D-095) : en ombre (réglage livré), la décision réelle est celle-ci, inchangée ; l'hypothèse « voisins de la
   * liste d'ESV » est calculée à côté, après coup, et seulement consignée (`b1-ombre`). */
  const decision=await b1Decision(lotArgs,L.decideCut(lotArgs));
+ revisiteDiffere(identity,batch,decision);
  /* « La ligne » : l'écart de chaque cut à la voie de ses voisins (garde du
   * premier passage, ou distance à la prédiction pour une reprise ou un choix),
   * pour le profil du panneau. Borné aux cuts du lot. */
@@ -1111,7 +1247,7 @@ const vocabulaire=t=>typeof t==='string'?VOCABULAIRE.reduce((x,[a,b])=>x.replace
 function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Object.hasOwn(v,'collection')||!Object.hasOwn(v,'batch'))return v;
  const {records,incomplete,...rest}=v;
  /* D3 : « fin de partie probable » : une seule règle, celle de la reprise. */
- rest.finDePartieProbable=departOuvert(engine.s.batch);if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
+ rest.finDePartieProbable=departOuvert(engine.s.batch);if(avisContrat.lignes.length)rest.avisContrat=avisContrat.lignes.slice();if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
  if(typeof rest.native?.message==='string')rest.native={...rest.native,message:vocabulaire(rest.native.message)};
  if(typeof rest.batch?.error?.message==='string')rest.batch={...rest.batch,error:{...rest.batch.error,message:vocabulaire(rest.batch.error.message)}};
  /* `lotPosed` (4.7.19, un cut posé = une entrée) : son nombre suffit au panneau. */
