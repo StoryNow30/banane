@@ -62,7 +62,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 
 | Code | Branche | Niveau / effort | Entrées | Livrables | Porte | Jetons | Attend |
 |---|---|---|---|---|---|---|---|
-| E1 relire la liste | `claude/50-e1-liste` | rapide / moyen (étape 1) ; rapide / haut + relecteur (étape 2, Q1) | `esv-observer.js` table, fiches de départ, journaux | étape 1 : instantané compact + `diff-liste.cjs` ; étape 2 : mémoire par partie, événement `ecart-liste`, compteur | correction humaine retrouvée < 1 mm | 300 k + 500 k | V1 ; étape 2 Q1 |
+| E1 relire la liste | `claude/50-e1-liste` | rapide / moyen (étape 1) ; rapide / haut + relecteur (étape 2, Q1) | `esv-observer.js` table, fiches de départ, journaux | étape 1 : instantané compact + `diff-liste.cjs` ; étape 2 : mémoire par partie, événement `ecart-liste`, compteur | correction humaine retrouvée < 1 mm | 170 k (constaté, étapes 1 et 2) | **livré 15/10** (`claude/50-e1-liste`, 6323954 ; intégré à `claude/50-base`) : instantané 326 Ko / 106 Ko zippé ; rejeu réel 418 validations lues |
 | E2 ombre GCV1 en Écho | `claude/50-e2-ombre-echo` | rapide / haut ; relecteur fort (anti-fuite) | `continuity-observer.js`, `native-session.js`, `native-offline-evaluate.cjs` | bloc `ombreGCV1` + `humanDeltaMm` ; B1 et interpolation ; essai anti-fuite | bloc = rejeu ; ≤ 0,8 s/visite | 500 k + 150 k | V3 |
 | E3 raison de la correction | `claude/50-e3-raison` | rapide / moyen | D-112 p.4, panel | 4 pastilles + « bon tel quel », consignées dans la visite | ≥ 80 % étiquetées sans ralentir | 250 k | V3 |
 | E4 manifeste DEV/RÉSERVÉ | `claude/50-e4-manifeste` | rapide / moyen | CORPUS_V2 § 5, D-057 | manifeste versionné, outil de revue, essai « 0 fuite » | essai passe | 250 k | V3 |

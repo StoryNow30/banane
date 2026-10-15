@@ -1917,3 +1917,10 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Session orchestratrice passée au niveau fort (modèle changé par Mic) ; règles de `fiches/ORGANISATION_DEV_5.0.md` inchangées.
 - Branche `claude/50-base` = 4.9.5 test 2 + S3 + S8 (essais ciblés verts, moteur inchangé) : base de tous les chantiers 5.0.
 - Vague V1 lancée : S6+S7 (relevés en lecture seule et repli `phase-timing`, → 4.9.5 test 3) et E1 (instantané de liste, `diff-liste`, puis mémoire locale des bords, Q1 = oui).
+
+## D-125 — E1 livré (relire la liste ESV) ; M6 lancé (15 octobre 2026, nuit)
+
+- `claude/50-e1-liste` (6323954), intégré à `claude/50-base` (17d7579) : instantané compact de la liste à chaque chargement complet (326 Ko brut, 106 Ko zippé pour 9 000 lignes) exporté dans les volumes Orbite et Écho ; `tools/diff-liste.cjs` (deux instantanés, ou instantané contre les écritures d'un journal) ; `src/liste-memoire.js` : mémoire par partie des bords écrits par Ariane (≈ 100 octets par cut), événement `ecart-liste` et compteur « corrections constatées » au démarrage d'une séance sur une partie connue (Q1 = oui). verify 1 623 réussis, 0 échec. Niveau rapide, ≈ 170 000 jetons, 10 min.
+- Rejeu sur un journal réel (test 17) : 418 validations exploitables lues ; décalages injectés retrouvés exactement. Pas encore d'instantané réel : il en faudra un au terrain.
+- Protocole pour Mic (dans `fiches/E1_LISTE.md`) : relire la partie, F5, démarrer une séance Ariane sur la partie, exporter. Limites : la mémoire ne voit que les écritures d'un lot en cours (pas la pause ni Écho) ; un autre opérateur ou une ré-extraction change aussi des lignes.
+- Chantier léger suivant lancé : M6 outil (`coherence-voisins.cjs`, liste « à relire »).
