@@ -1812,3 +1812,19 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 
 - Feu vert de Mic (15 octobre) : `claude/49-rc` fusionnée dans main (PR #5, 5444245) après fusion des documents de cadrage du 30/09 présents sur main (code inchangé, verify 1 560 / 0 échec). Paquet final `ariane-v4.9.0.zip`, SHA-256 341a0d0bf4957face8fa072d772ee5e2b72c3af2648c71c6e20fd7a5db75b3ac. L'étiquette `v4.9.0` n'a pas pu être poussée depuis le conteneur (403) : Mic crée l'étiquette et la publication depuis GitHub.
 - 4.9.5 test 1 (branche `claude/495-test-1`, 543279d ; SHA-256 2c78f3d1bc12008b7db0c46a571d87443ec1e9a4e6de42296f6a462b67650269) : (A) relevé `diag` à chaque lecture de vue (condition manquante au repli, `numNodesLoading`, âge de la page, compteurs Potree, mémoire), décision de lecture inchangée, ≈ 0,4 % de journal en plus, outil `tools/signal-age.cjs` ; (B) D3 sans attente : écriture de validation non 2xx observée sans 2xx dans les 2 s → événement `ecriture-refusee` et pause au prochain point sûr avec message ; sans observation, comportement 4.9.0. verify 1 580 / 0 échec. Séance demandée : 30 min d'Orbite sans F5, puis un F5 et 10 min.
+
+## D-112 — Réponses de Mic à l'audit Écho ; cadrage 5.0 (15 octobre 2026)
+
+**Cadrage 5.0** : priorités de Mic = (A) poser juste plus souvent, (B) traiter seul les zones difficiles (ADV, PN, voisinage des rouges), (D) apprendre des corrections Écho sans réglage manuel. « Plusieurs sessions, onglets et parties » est **retiré** du cahier. Écho parfait (audit `fiches/AUDIT_ECHO_5.0.md`, branche `claude/echo-audit`) et l'ESV locale comme banc de preuve (`fiches/AUDIT_ESV_LOCALE.md`, branche `claude/esv-locale-audit`) sont **nécessaires en 4.9.5** pour développer la 5.0.
+
+**Réponses de Mic aux demandes de l'audit Écho (§ 4.4)** :
+1. Validation en Écho : **Maj+Espace = valider** (sa commande habituelle) ; **Ctrl+Entrée = valider et passer au suivant** ; **Ctrl+flèche avant/arrière = passer au cut suivant/précédent sans valider**. À modéliser dans la maquette ESV locale (relevé à confirmer sur le vrai ESV : les gestionnaires clavier n'ont pas été relevés).
+2. Mic ne corrige **que quand Écho est actif** (jamais avant le démarrage, ni pendant une pause, ni après un F5 sans reprise).
+3. **Oui** à la reprise automatique d'Écho après un F5 (Écho n'envoie rien à ESV).
+4. **Oui** à un signalement de la raison de la correction, **sur l'interface d'Écho** (panneau Ariane), pas dans ESV.
+5. **Oui** à l'export Écho en volumes zip de 17 Mo avec CONTENU.txt, comme Orbite.
+6. **Oui** à la lecture passive de la liste des coupes à chaque visite (±10 lignes, rien d'écrit).
+7. ESV reste en anglais ; un seul onglet ESV pendant Écho.
+8. **Oui** à l'instantané du nuage après une grosse correction.
+9. Question de Mic : **faire tourner Orbite en même temps qu'une session Écho** (candidat 5.0 ; exige des états séparés par onglet ; en contradiction partielle avec 7 et avec le retrait des multi-onglets : à trancher dans le cahier 5.0).
+10. Demande de Mic : **améliorer Écho** (les quatre étapes 4.9.5 de l'audit, puis les chantiers 5.0 : contexte métier, poses comparées, raison, manifeste de corpus).
