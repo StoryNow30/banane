@@ -49,7 +49,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 
 | Code | Branche | Niveau / effort | Entrées | Livrables | Porte | Jetons | Attend |
 |---|---|---|---|---|---|---|---|
-| P0 mesures (a)(b)(c) | `claude/50-p0-mesures` | rapide / moyen, note relue par fort | S3, Échos 17/18/20, `convention-fit.cjs`, rejeu `Candidate.propose` | trois notes chiffrées ; décision écrite par mesure | décisions prises | 450 k | V2 |
+| P0 mesures (a)(b)(c) | `claude/50-p0-mesures` | rapide / moyen, note relue par fort | S3, Échos 17/18/20, `convention-fit.cjs`, rejeu `Candidate.propose` | trois notes chiffrées ; décision écrite par mesure | décisions prises | 450 k | en cours (V2, réveil du 16/10 1 h 15) |
 | P1 convention / garde de paire | `claude/50-p1-convention` | rapide / haut ; relecteur fort | P0(b), Q2 | plafond ou domaine 12 mm ; garde portée par le rail repêché | rejeu 4 lots sans régression ; 0 mauvaise pose ; ≥ 50/89 récupérés | 200 k + 150 k | V5 |
 | P2 porte de pente | `claude/50-p2-pente` | rapide / haut ; relecteur fort ; ré-épinglage avec Q2 | P0(c) | borne relâchée pour le flanc ou pente sur bande 14-30 mm | idem ; ≥ 40/68 | 350 k + 150 k | V5 |
 | P3 dessus seul | `claude/50-p3-dessus-seul` | rapide / haut ; relecteur fort | P4, 66 rails Écho 17, 4 lots | module après `gcv1-shadow`, statut distinct, 3 preuves | ≤ 10 mm ; ombre un lot ; 0 mauvaise pose | 700 k + 200 k | V5 |
@@ -66,7 +66,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | E2 ombre GCV1 en Écho | `claude/50-e2-ombre-echo` | rapide / haut ; relecteur fort (anti-fuite) | `continuity-observer.js`, `native-session.js`, `native-offline-evaluate.cjs` | bloc `ombreGCV1` + `humanDeltaMm` ; B1 et interpolation ; essai anti-fuite | bloc = rejeu ; ≤ 0,8 s/visite | 500 k + 150 k | V3 |
 | E3 raison de la correction | `claude/50-e3-raison` | rapide / moyen | D-112 p.4, panel | 4 pastilles + « bon tel quel », consignées dans la visite | ≥ 80 % étiquetées sans ralentir | 250 k | V3 |
 | E4 manifeste DEV/RÉSERVÉ | `claude/50-e4-manifeste` | rapide / moyen | CORPUS_V2 § 5, D-057 | manifeste versionné, outil de revue, essai « 0 fuite » | essai passe | 250 k | V3 |
-| E5 jeu d'apprentissage et métriques | `claude/50-e5-metriques` | rapide / moyen | `jeu-apprentissage` (branche maquette), S3, E1 | jeu v1 ; métriques par version | calculées sur Échos + relectures | 350 k | V1 |
+| E5 jeu d'apprentissage et métriques | `claude/50-e5-metriques` | rapide / moyen | `jeu-apprentissage` (branche maquette), S3, E1 | jeu v1 ; métriques par version | calculées sur Échos + relectures | 350 k | en cours (réveil du 16/10 1 h 15) |
 | E6 caméra au VALIDATE | avec E2 | rapide / moyen | `adapter-page.js:142`, `native-session.js:215` | vue dans l'état observé | +0,2 Ko ; essai | 120 k | V3 |
 
 ## 5. Lot G — Méga cerveau
