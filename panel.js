@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 19',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 20',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -1374,12 +1374,15 @@ on('native-discard',async()=>{
   * (purgeables) que si TOUS les volumes sont confirmés écrits par le navigateur. */
  async function exportEchoZip(Z,data,{label='',startIndex=0}={}){
    const maintenant=new Date(),session=data.session||{},records=Array.isArray(data.records)?data.records:[];
-   const parties=[...new Set(records.map(r=>r.identity?.part).filter(Number.isInteger))].sort((a,b)=>a-b);
+   /* Parties relues : celles des visites où l'opérateur a décidé quelque chose ; à défaut, toute partie numérotée au-dessus de 0
+    * (le chargement d'ESV passe par un « cut 0 / partie 0 » ou un libellé illisible, sans rapport avec le travail). */
+   const decidees=records.filter(r=>(r.operatorIntents||[]).length),sources=decidees.length?decidees:records.filter(r=>r.identity?.part>0);
+   const parties=[...new Set(sources.map(r=>r.identity?.part).filter(Number.isInteger))].sort((a,b)=>a-b);
    const partieNom=parties.length?`-partie${parties.join('-')}`:'',base=`ariane-echo${partieNom}-${dateCompacte(maintenant)}${label}`;
    const departs=await api('fiches-depart').then(r=>{const f=(Array.isArray(r?.fiches)?r.fiches:[]).filter(x=>!parties.length||parties.includes(x.partie)),EC=globalThis.BananeExportCache;
      return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
-   const debut=session.startedAt?dateHeureParis(session.startedAt):'?',fin=session.finishedAt?dateHeureParis(session.finishedAt):'en cours';
-   const corps=`Session Écho ${session.id||'?'} · version ${data.version||K_VERSION()} · ${records.length} visite(s) · partie(s) ${parties.length?parties.join(', '):'?'} · du ${debut} au ${fin}.\n`+
+   const debut=session.startedAt?dateHeureParis(session.startedAt):'?',periode=session.finishedAt?`du ${debut} au ${dateHeureParis(session.finishedAt)}`:`depuis le ${debut} (session en cours)`;
+   const corps=`Session Écho ${session.id||'?'} · version ${data.version||K_VERSION()} · ${records.length} visite(s) · partie(s) ${parties.length?parties.join(', '):'?'} · ${periode}.\n`+
      (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+departs;
    let r;
    const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode Écho (relecture) — ${dateHeureParis(maintenant)}\n`,corps,

@@ -248,14 +248,15 @@
        /* 4.9.0.18 (AM-02) : chaque validation a sa référence ; `humanFinalReference` est la DERNIÈRE
         * (avant : la première, jamais mise à jour : valider, bouger encore, revalider gardait l'ancienne pose). */
        const freshness=state&&Number.isFinite(eventTime(intent))&&Number.isFinite(Date.parse(state.capturedAt||''))?eventTime(intent)-Date.parse(state.capturedAt):null;
-       const reference={status:freshness!==null&&freshness<0?'candidate-timing-uncertain':'candidate-observed',state,
+       const skew=S.echo?.freshnessSkewMs??50,uncertain=freshness!==null&&freshness<-skew;
+       const reference={status:uncertain?'candidate-timing-uncertain':'candidate-observed',state,
         observedAt:intent.observedAt,eventSeq:intent.eventSeq,decisionKey:observed.decisionKey??null,
         association:{identityMatched:state?.identityAssociation!=='mismatch',freshnessMs:freshness,
-         source:freshness!==null&&freshness<0?'cached-state-arrived-after-operator-input':'last-passively-observed-state-before-intent',
+         source:uncertain?'cached-state-arrived-after-operator-input':freshness!==null&&freshness<0?'state-read-within-skew-after-input':'last-passively-observed-state-before-intent',
          eventTimeStamp:observed.eventTimeStamp??null,stateCapturedAt:state?.capturedAt||null,reviewed:false}};
        (record.humanFinalReferences??=[]).push(reference);record.humanFinalReference=reference;
        record.humanFinalReferenceSource=record.humanFinalReferences.length>1?'last-validate-intent':'sole-validate-intent';
-       if(freshness!==null&&freshness<0)this.partialReason(record,'cached-state-observed-after-operator-input');}}
+       if(uncertain)this.partialReason(record,'cached-state-observed-after-operator-input');}}
     await this.saveRecord(record);return {saved:true,eventSeq:logged.eventSeq};
    }
    if(type==='state-observed'){
@@ -413,7 +414,7 @@
    const reference=record.humanFinalReference,referenceReasons=[];
    if(!sole||sole.intent!=='VALIDATE')referenceReasons.push(record.multiIntent?'multiple-operator-intents-observed':sole?.intent==='SKIP'?'operator-skip-observed':'validated-reference-not-observed');
    if(!reference?.state)referenceReasons.push('human-final-reference-missing');if(reference?.association?.identityMatched===false)referenceReasons.push('human-final-reference-identity-mismatch');
-   if(reference?.association?.freshnessMs===null||reference?.association?.freshnessMs<0||reference?.association?.freshnessMs>1500)referenceReasons.push('human-final-reference-not-freshly-observed');
+   if(reference?.association?.freshnessMs===null||reference?.association?.freshnessMs<-(S.echo?.freshnessSkewMs??50)||reference?.association?.freshnessMs>1500)referenceReasons.push('human-final-reference-not-freshly-observed');
    if(!record.navigationObserved&&!record.serverConfirmed)referenceReasons.push('decision-effect-not-observed');
    for(const side of SIDES){const eligibility=record.geometryEligibility[side],reasons=[...eligibility.reasons,...referenceReasons];
     if(!reference?.state?.rails?.[side])reasons.push('human-final-rail-state-missing');eligibility.referenceStatus=reference?.status||'not-observed';eligibility.reasons=unique(reasons);

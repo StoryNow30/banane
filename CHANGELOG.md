@@ -1,5 +1,20 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0.20 — test 20 (15/10)
+
+Manifeste `4.9.0.20`, « 4.9.0 test 20 », paquet `ariane-4.9.0-test.20.zip` ; base : test 19 (`06cd533`). Trois correctifs trouvés dans l'export Écho de la
+partie 24 sous la test 19 (124 visites, 103 validations, un F5 réel, une validation à la touche Entrée). `src/engine.js` inchangé. Retour arrière : test 19.
+
+- **Fraîcheur de la référence humaine** (`src/native-session.js`, `settings.echo.freshnessSkewMs` = 50 ms) : un état lu jusqu'à 50 ms APRÈS la touche de validation
+  reste une référence fraîche (source `state-read-within-skew-after-input`). Mesure : 2 validations sur 103 (cuts 1925 et 1960) étaient à −6 ms et écartées
+  du rejeu à tort ; la validation ne peut pas avoir bougé un rail en 6 ms. Au-delà de 50 ms, la référence reste « horaire incertaine ».
+- **CONTENU.txt d'un vidage en cours** (`panel.js`) : « depuis le … (session en cours) » au lieu de « au en cours » ; les parties relues sont celles des visites
+  où l'opérateur a décidé quelque chose (à défaut, au-dessus de 0) : le chargement d'ESV après un F5 passe par un « cut 0 / partie 0 » et un libellé illisible,
+  qui ajoutaient « partie 0 » à la liste.
+- Constats de l'export, sans changement de code : le F5 est repris tout seul (visite close `page-reloaded`, nouvelle période 275 ms plus tard) ; **Entrée valide
+  dans ESV** (écriture « valid » 0,58 s après) ; 103 validations = 103 visites confirmées ; 0 nuage manquant sur les 3 zips fusionnés.
+- Essais : `tests/echo-4918.test.cjs` (20 essais), `tests/version-test20.test.cjs`.
+
 ## 4.9.0.19 — test 19 (15/10)
 
 Manifeste `4.9.0.19`, « 4.9.0 test 19 », paquet `ariane-4.9.0-test.19.zip` ; base : test 18 (`7b17083`). Un correctif, trouvé en relisant l'export Écho de la

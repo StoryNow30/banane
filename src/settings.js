@@ -280,6 +280,10 @@
     /* Délai (ms) pendant lequel une écriture de validation vue dans ESV est jointe à la
      * dernière visite close (AM-14) : l'écriture part après la navigation. */
     ecritureJointeMs: 5000,
+    /* Décalage toléré (ms) entre la touche de validation et la lecture d'état de la page : le relevé de 125 ms peut tomber
+     * quelques millisecondes APRÈS la touche (−6 ms sur 2 validations de la partie 24), avant que la validation ait pu
+     * changer quoi que ce soit. Au-delà, la référence reste « horaire incertaine » (saut d'horloge, état en retard). */
+    freshnessSkewMs: 50,
   });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),

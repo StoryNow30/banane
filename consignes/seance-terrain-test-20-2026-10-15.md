@@ -1,6 +1,11 @@
-# Séance terrain « test 19 » : Écho corrigé (15 octobre 2026)
+# Séance terrain « test 20 » : Écho corrigé (15 octobre 2026)
 
-La test 19 est la test 18 avec un seul correctif : les écritures d'ESV sont rattachées au bon cut (par numéro de ligne), et seule une vraie validation confirme un cut (ton export de la partie 24 l'a montré). Le reste est la test 18 : les corrections de l'audit d'Écho. **Rien ne change dans ce qu'Orbite décide, pose ou valide.** Le moteur n'est pas modifié.
+La test 20 est la test 19 avec trois petits correctifs trouvés dans ton export de la partie 24 (F5 réel, Entrée, 103 validations) :
+- une validation lue **6 ms après ta touche** n'est plus écartée (2 validations sur 103 l'étaient à tort) ;
+- le `CONTENU.txt` d'un vidage en cours dit « depuis le … (session en cours) » et ne compte plus la « partie 0 » du chargement d'ESV ;
+- **Rien ne change dans ce qu'Orbite décide, pose ou valide.** Le moteur n'est pas modifié.
+
+La test 19 corrigeait déjà le rattachement des écritures d'ESV au bon cut. La test 18 apportait les corrections de l'audit d'Écho.
 
 Ce qui change, en Écho seulement :
 - Écho reconnaît **toutes** tes façons de valider : Maj+Espace, **Ctrl+Entrée**, **Entrée**, le bouton d'ESV ;
@@ -12,18 +17,18 @@ Ce qui change, en Écho seulement :
 
 ## Le paquet
 
-`ariane-4.9.0-test.19.zip`, version 4.9.0.19, nom « 4.9.0 test 19 ». L'empreinte SHA-256 et la taille sont dans mon message (cette consigne
+`ariane-4.9.0-test.20.zip`, version 4.9.0.20, nom « 4.9.0 test 20 ». L'empreinte SHA-256 et la taille sont dans mon message (cette consigne
 est dans le paquet : elle ne peut pas porter sa propre empreinte).
 
 ## 1. Installer et vérifier (environ 10 minutes)
 
 1. Tout ce que l'ancienne Ariane garde doit être **déjà exporté** (lot Orbite et session Écho).
-2. **Contrôle l'empreinte du zip.** PowerShell, dans le dossier du zip : `Get-FileHash .\ariane-4.9.0-test.19.zip -Algorithm SHA256`.
+2. **Contrôle l'empreinte du zip.** PowerShell, dans le dossier du zip : `Get-FileHash .\ariane-4.9.0-test.20.zip -Algorithm SHA256`.
    Les 64 caractères doivent être identiques à ceux de mon message. Sinon, n'installe pas et dis-le-moi.
-3. **Pose la test 19 par-dessus l'ancienne** : décompresse le zip dans le même dossier, en remplaçant les fichiers. Ne désinstalle rien.
+3. **Pose la test 20 par-dessus l'ancienne** : décompresse le zip dans le même dossier, en remplaçant les fichiers. Ne désinstalle rien.
    Puis, dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane. Une seule Ariane active à la fois.
 4. **Recharge l'onglet ESV (F5)**, puis choisis cet onglet dans Ariane.
-5. **Vérifie la version** : la carte dit « 4.9.0 test 19 », le panneau dit « ARIANE 4.9.0 test 19 » et le bouton blanc sur la page ESV dit « Ariane 4.9.0 test 19 · ouvrir ».
+5. **Vérifie la version** : la carte dit « 4.9.0 test 20 », le panneau dit « ARIANE 4.9.0 test 20 » et le bouton blanc sur la page ESV dit « Ariane 4.9.0 test 20 · ouvrir ».
    Sinon, ne lance rien et dis-le-moi.
 
 ## 2. Ce que tu essaies en Écho (une partie déjà traitée par Orbite, une quarantaine de cuts)
@@ -50,4 +55,4 @@ et dis-moi quel cut tu as validé avec quelle touche (point 2), et lesquels tu a
 ## 4. Si quelque chose ne va pas
 
 Arrête, note l'heure et le message exact, exporte et envoie-moi les zips. **Ne désinstalle pas Ariane** (ça efface le cache). Retour arrière : exporte, vérifie et envoie les zips, puis
-pose la test 18 par-dessus et recharge l'extension.
+pose la test 19 par-dessus et recharge l'extension.

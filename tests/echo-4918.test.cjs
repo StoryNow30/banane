@@ -169,14 +169,17 @@ test('AM-23 (service worker) : libellé de cut illisible = Écho refusé',async(
 function nuage(i){const pts=Array.from({length:400},(_,j)=>[i+j*0.123456789,2.5+j/7,j*1.0000001]);
  return {format:'banane-native-lidar-chunk-v1',version:'4.9.0.18',chunkId:'c'+i,captureId:'cap'+i,visitId:'v'+i,side:'left',nativeSessionId:'echo-1',identity:{pageId:'p',part:7,cut:100+i,shape:'U50',frameId:'f',projectId:null},
   rail:K.clone(base.rails.left),coordinateSystem:{name:'scene-relative',matrixLayout:'column-major; column vectors',units:'u',frameId:'f'},pointsSceneRelative:pts,pointsProfileLocal:pts,pointSources:pts.map((_,j)=>[0,j]),visibleByClipBoxes:pts.map(()=>true),storageTrace:{pointsSaved:400,pointsExported:0}};}
-async function exportEcho({n=8,zipMaxBytes=60000,etat='complete'}={}){
+async function exportEcho({n=8,zipMaxBytes=60000,etat='complete',enCours=false,parasites=false}={}){
  const clouds=new Map(Array.from({length:n},(_,i)=>['c'+i,nuage(i)]));
  const records=Array.from({length:n},(_,i)=>({recordId:'v'+i,visitId:'v'+i,visitIndex:i,nativeSessionId:'echo-1',observationPeriodId:'per-1',identity:{pageId:'p',part:7,cut:100+i,shape:'U50',frameId:'f',projectId:null},observedLabelCandidate:'VALIDATE_NO_MOVEMENT',railSnapshots:{left:[],right:[]}}));
+ if(parasites){records[0].operatorIntents=[{intent:'VALIDATE'}];                               // le travail réel est sur la partie 7 ; ESV a chargé « cut 0 / partie 0 » puis un libellé illisible
+  records.push({recordId:'p0',visitId:'p0',visitIndex:n,nativeSessionId:'echo-1',identity:{pageId:'p',part:0,cut:0,frameId:'f'},railSnapshots:{left:[],right:[]}},
+   {recordId:'pn',visitId:'pn',visitIndex:n+1,nativeSessionId:'echo-1',identity:{pageId:'p',part:null,cut:null,frameId:'f'},railSnapshots:{left:[],right:[]}});}
  const events=[...Array.from({length:40},(_,i)=>({eventId:'e'+i,eventSeq:i+1,type:'native-state-observed',nativeSessionId:'echo-1',timestamp:'2026-10-15T08:00:00.000Z'})),
   {eventId:'o1',type:'esv-observation',kind:'write',nativeSessionId:'echo-1',timestamp:'2026-10-15T08:00:01.000Z',status:200},
   {eventId:'lot1',type:'proposed',eventSeq:1,timestamp:'2026-10-15T07:00:00.000Z',identity:{part:7,cut:1}}];
  const store={all:async t=>structuredClone(t==='events'?events:t==='records'?records:[]),keys:async t=>t==='clouds'?[...clouds.keys()]:[],getCloud:async id=>structuredClone(clouds.get(id))};
- const session={id:'echo-1',status:'FINISHED',startedAt:'2026-10-15T07:30:00.000Z',finishedAt:'2026-10-15T08:10:00.000Z',visits:records.map(r=>({visitId:r.visitId,identity:r.identity})),incomplete:[],cloudIds:[...clouds.keys()],metrics:{}};
+ const session={id:'echo-1',status:enCours?'RUNNING':'FINISHED',startedAt:'2026-10-15T07:30:00.000Z',finishedAt:enCours?null:'2026-10-15T08:10:00.000Z',visits:records.map(r=>({visitId:r.visitId,identity:r.identity})),incomplete:[],cloudIds:[...clouds.keys()],metrics:{}};
  const manifeste={format:'banane-native-session-v2',version:'4.9.0.18',exportedAt:'2026-10-15T08:11:00.000Z',session,sessionId:'echo-1',cloudIds:[...clouds.keys()],declaredCloudIds:[...clouds.keys()],recordCount:n,eventCount:events.length-1,alreadyExported:0,released:0,closureSummary:{visits:n},exportAdvice:null};
  const globals={BananeStorage3:class{constructor(){return store;}},BananeExportCache:EC,BananeNativeExport:X,BananeZip:Z,BananeCore3:K,
   BananeSettings:{...Settings,export:{...Settings.export,segmentBytes:30000,segmentReserveBytes:500,minObjectsPerSegment:1,zipMaxBytes}}};
@@ -203,6 +206,21 @@ test('parité d’export : « Télécharger à nouveau la session » écrit des 
  const merged=Segments.mergeFiles(entrees).merged;assert.equal(merged.clouds.length,r.n);assert.equal(merged.records.length,r.n);assert.equal(merged.mergeTrace.allDeclaredPresent,true);
  assert.ok(merged.events.some(e=>e.type==='esv-observation'),'l’écriture ESV taguée est dans l’export Écho');assert.ok(!merged.events.some(e=>e.type==='proposed'),'rien d’Orbite');
  assert.equal(Segments.loadSession(dossier).clouds.length,r.n,'loadSession lit un dossier de volumes zip');
+});
+test('CONTENU.txt d’un vidage en cours : « depuis le … (session en cours) », jamais « au en cours » ; les visites parasites du chargement d’ESV (partie 0, libellé illisible) ne sont pas des parties relues',async()=>{
+ const r=await exportEcho({enCours:true,parasites:true,zipMaxBytes:200000});const dossier=tmp();fs.writeFileSync(path.join(dossier,'v.zip'),Buffer.from(await r.blobs[0].arrayBuffer()));
+ const c=Volumes.entreesZip(path.join(dossier,'v.zip')).find(e=>e.nom==='CONTENU.txt').lire().toString('utf8');
+ assert.match(c,/partie\(s\) 7 · depuis le 15\/10\/2026 09:30:00 heure de Paris \(session en cours\)\./);assert.doesNotMatch(c,/au en cours|partie\(s\) 0|null/);assert.match(c,/10 visite\(s\)/);
+});
+test('4.9.0.20 (partie 24) : un état lu 6 ms après la touche de validation reste une référence fraîche ; 200 ms après, elle reste incertaine',async()=>{
+ const f=await session();await f.sessions.start();
+ for(const [cut,skew] of [[100,6],[101,200]]){const a=await f.open('v'+cut,cut);const t0=Date.now(),tard={...K.clone(a),capturedAt:new Date(t0+skew).toISOString()};
+  await f.gesture('v'+cut,a,{key:'d'});await f.sessions.receive('operator-event',{...{sessionId:f.engine.s.native.id,observationPeriodId:f.engine.s.native.currentPeriodId},visitId:'v'+cut,identity:a.identity,stateObservedBeforeInput:tard,event:{type:'keydown',intent:'VALIDATE',decisionKey:'Shift+Space',observedAt:new Date(t0).toISOString()}});
+  await f.close('v'+cut,a,cut+1);}
+ const ok=f.record('v100'),tard=f.record('v101');
+ assert.equal(ok.humanFinalReference.status,'candidate-observed');assert.equal(ok.humanFinalReference.association.source,'state-read-within-skew-after-input');assert.ok(!ok.partialReasons.includes('cached-state-observed-after-operator-input'));
+ assert.ok(!ok.geometryEligibility.left.reasons.includes('human-final-reference-not-freshly-observed'));
+ assert.equal(tard.humanFinalReference.status,'candidate-timing-uncertain');assert.ok(tard.geometryEligibility.left.reasons.includes('human-final-reference-not-freshly-observed'));
 });
 test('export Écho : un volume non confirmé par le navigateur = export incomplet, aucun acquittement final',async()=>{
  const r=await exportEcho({zipMaxBytes:60000,etat:'interrupted'});assert.match(r.statut,/Export Écho incomplet/);assert.equal(r.acks.filter(a=>a.final===true).length,0);
