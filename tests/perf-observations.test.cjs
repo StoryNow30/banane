@@ -90,7 +90,8 @@ test('résumé des listes avant la séance : par chargement et par clé, dernier
 const ABSENT='Observateur : absent (aucun événement d’observation) : l’onglet ESV n’a probablement pas été rechargé après l’installation ; ces mesures n’ont pas d’observation d’écriture';
 const avec=(version,j=withVisits())=>{if(version!==undefined)j.version=version;return j;};
 test('journal 4.9.0.2 ou plus sans aucun événement d’observation (Orbite simulé : jalons V1 présents) : la ligne « Observateur : absent » est TOUJOURS écrite',()=>{
- for(const v of ['4.9.0.2','4.9.0.3','4.9.1.0','4.10.0.0','5.0.0.0']){
+ /* 4.9.0 stable (trois nombres) vient APRÈS ses versions de test 4.9.0.N : l'observateur y est (relecture finale de la 4.9.0). */
+ for(const v of ['4.9.0.2','4.9.0.3','4.9.1.0','4.10.0.0','5.0.0.0','4.9.0','4.9.5','4.10.0']){
   const m=measure(avec(v),{tous:true}),t=toMarkdown(m);assert.equal(m.available,true,'jalons V1 présents : mesure disponible');assert.equal(m.observations.available,false);
   assert.ok(t.includes(ABSENT),v+' : ligne d’état écrite');assert.equal(t.split(ABSENT).length-1,1,'une seule fois');
   assert.match(t,/## Observateur passif \(journalisation seule\)\n\nObservateur : absent/,'en tête de la section d’observation');}
@@ -103,7 +104,7 @@ test('journal 4.9.0.2 ou plus, Écho sans jalon V1 ni observation : la mesure V1
 test('journal plus ancien, sans version ou version illisible : rien de plus écrit, sortie identique à celle d’aujourd’hui',()=>{
  const sans=t=>t.replace(/^Instrumentation :.*$/m,'');   // la taille en octets compte le champ « version » lui-même
  const ref=sans(toMarkdown(measure(avec(undefined),{tous:true}))),refEcho=toMarkdown(measure({events:[]}));
- for(const v of ['4.9.0.1','4.9.0','4.8.6','3.0.0.9','abc',4.9,null,'']){
+ for(const v of ['4.9.0.1','4.9.0.0','4.8.6','4.8.9','3.0.0.9','abc',4.9,null,'']){
   const t=sans(toMarkdown(measure(avec(v),{tous:true})));assert.equal(t,ref,String(v));assert.ok(!t.includes('Observateur : absent'));
   assert.equal(toMarkdown(measure({version:v,events:[]})),refEcho,'Écho, '+String(v));}
  assert.ok(!ref.includes('Observateur : absent'));assert.match(ref,/## Observateur passif \(journalisation seule\)\n\nAucune observation passive/,'la section existante est inchangée');

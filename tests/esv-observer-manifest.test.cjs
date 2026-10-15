@@ -16,7 +16,7 @@ test('manifeste : une entrée, monde MAIN, document_start, même hôte, fichier 
 });
 test('version minimale de Chrome/Edge déclarée : 111 (clé world des scripts de contenu), sans autre changement de clés',()=>{
  assert.equal(manifest.minimum_chrome_version,'111');assert.ok(Number(manifest.minimum_chrome_version)>=111,'world:MAIN en manifeste : Chrome et Edge 111 minimum');
- assert.deepEqual(Object.keys(manifest).sort(),['action','background','content_scripts','description','host_permissions','manifest_version','minimum_chrome_version','name','permissions','version','version_name'],'aucune autre clé');
+ assert.deepEqual(Object.keys(manifest).sort(),['action','background','content_scripts','description','host_permissions','manifest_version','minimum_chrome_version','name','permissions','version',...(manifest.version.split('.').length===4?['version_name']:[])].sort(),'aucune autre clé (version_name : version de test seulement ; une stable comme la 4.9.0 n’en porte pas)');
 });
 test('réglage observateurPassif : gelé, actif par défaut dans cette version de test, bornes sans seuil de décision',()=>{
  assert.equal(Object.isFrozen(S.observateurPassif),true);assert.equal(S.observateurPassif.actif,true);

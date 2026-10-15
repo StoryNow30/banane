@@ -197,6 +197,10 @@
     const c = obs && obs.kind === 'list-summary' && obs.counts && typeof obs.counts === 'object' ? obs.counts : null;
     const valides = c ? entier(c.valid) : null, invalides = c ? entier(c.invalid) : null, lignes = entier(obs && obs.rows);
     if (valides === null || invalides === null || !lignes) return null;
+    /* D2 (relecture finale de la 4.9.0) : la question « y a-t-il des invalides ? » d'ESV (`projects/undefined/rails?status=invalid&top=1`,
+     * une ligne au plus) n'est pas la liste de la partie : clé 'undefined' ou absente, ou moins de 2 lignes → aucune fiche. */
+    const cle = obs.listKey;
+    if (typeof cle !== 'string' || !cle || cle === 'undefined' || lignes < 2) return null;
     const at = typeof obs.timestamp === 'string' ? obs.timestamp : null, k = ctx || {};
     return { at, batchId: typeof k.batchId === 'string' ? k.batchId : typeof obs.batchId === 'string' ? obs.batchId : null,
       partie: entier(k.partie), version: typeof k.version === 'string' ? k.version.slice(0, 20) : null,
@@ -230,11 +234,17 @@
   async function lireDeparts(storage) {
     try { const v = (await storage.get(CLE_DEPARTS))?.[CLE_DEPARTS]; return Array.isArray(v) ? v : []; } catch (_) { return []; }
   }
-  async function noterDepart(storage, fiche) {
-    if (!fiche) return null;
-    const avant = await lireDeparts(storage), apres = ajouterDepart(avant, fiche);
-    if (apres.length !== avant.length || apres.at(-1) !== avant.at(-1)) await storage.set({ [CLE_DEPARTS]: apres });
-    return fiche;
+  /* D2 : écritures des fiches EN FILE (lire, modifier, écrire) : deux résumés reçus ensemble ne s'écrasent plus. */
+  let fileDeparts = Promise.resolve();
+  function noterDepart(storage, fiche) {
+    if (!fiche) return Promise.resolve(null);
+    const p = fileDeparts.then(async () => {
+      const avant = await lireDeparts(storage), apres = ajouterDepart(avant, fiche);
+      if (apres.length !== avant.length || apres.at(-1) !== avant.at(-1)) await storage.set({ [CLE_DEPARTS]: apres });
+      return fiche;
+    });
+    fileDeparts = p.catch(() => {});
+    return p;
   }
 
   return { CLE, CLE_DEPARTS, ficheDepart, ajouterDepart, texteDepart, heureParis, lireDeparts, noterDepart, LOT_TERMINE, TERMINES, CAPTURES_OUVERTES, refus, reprenable, finiPourDeBon, capturesAGarder, signature, supprimer, texte, lire, ecrire };

@@ -15,7 +15,7 @@ const send=(b,entries,observer='obs-1')=>b.raw({kind:'esv-observation',observer,
 const tick=()=>new Promise(r=>setTimeout(r,5));
 
 test('fiche : valides, invalides, total ; liste vide, comptes absents ou absurdes : aucune fiche',()=>{
- const f=EC.ficheDepart({kind:'list-summary',timestamp:'2026-10-13T11:51:55.000Z',rows:7739,counts:{valid:7602,invalid:137,skipped:0}},{batchId:'b1',partie:13,version:'4.9.0.10'});
+ const f=EC.ficheDepart({kind:'list-summary',listKey:'traj__liste',timestamp:'2026-10-13T11:51:55.000Z',rows:7739,counts:{valid:7602,invalid:137,skipped:0}},{batchId:'b1',partie:13,version:'4.9.0.10'});
  deq(f,{at:'2026-10-13T11:51:55.000Z',batchId:'b1',partie:13,version:'4.9.0.10',valides:7602,invalides:137,ignores:0,total:7739});
  assert.equal(7602+137,7739,'les deux comptes font le total de la liste');
  for(const o of [null,{},{kind:'list-page',rows:5,counts:{valid:1,invalid:1}},{kind:'list-summary',rows:0,counts:{valid:0,invalid:0}},

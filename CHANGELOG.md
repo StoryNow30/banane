@@ -1,5 +1,45 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.2 — 4.9.5 test 2 (15/10)
+
+Manifeste `4.9.5.2`, « 4.9.5 test 2 », paquet `ariane-4.9.5-test.2.zip`. 4.9.5 test 2 = corrections Écho de la 4.9.0.20 + D3 et diagnostic du signal de la 4.9.5.1 ;
+aucun changement de pose ; `src/engine.js` inchangé. Fusion de `claude/49-echo-corrections` (4.9.0.20) et de `claude/495-test-1` (4.9.5.1) : seuls les libellés de version, ce
+journal, les rapports de vérification et l'essai de version ont été touchés (`tests/version-4952.test.cjs` remplace `version-test20` et `version-4951`). Consigne :
+`consignes/seance-terrain-4.9.5-test-2-2026-10-15.md` ; retour arrière : la 4.9.5 test 1 ou la 4.9.0 stable.
+
+## 4.9.5.1 — 4.9.5 test 1 (15/10)
+
+Manifeste `4.9.5.1`, « 4.9.5 test 1 », paquet `ariane-4.9.5-test.1.zip` ; base : la 4.9.0 stable (`main`, 5444245).
+`src/engine.js` inchangé (baseline épinglée), décision de lecture et de pose inchangées. Consigne :
+`consignes/seance-terrain-4.9.5-test-1-2026-10-15.md` ; retour arrière : la 4.9.0 stable.
+
+- **A. Diagnostic du signal de fin de chargement (D-109), sans rien changer à la lecture** (`src/adapter-page.js`).
+  Chaque lecture d'une vue porte un petit relevé `diag` dans le détail de l'étape `capture-read` (donc dans
+  `lastDetail` du journal exporté) : âge de l'adaptateur dans la page (`ageS`) et de la page ESV depuis sa navigation
+  (`navS`, remis à zéro par un F5) ; images vues (`img`) ; `numNodesLoading` à la fin et maximum (`nl`) ; paires
+  d'images comparées et, parmi elles, celles avec chargement en cours, nœuds changés, vue changée (`paires`, `pc`,
+  `nc`, `vc`) ; au repli 800 ms, la condition qui manquait (`m` : `images`, `chargements`, `noeuds`, `vue`, `aucune` ;
+  `hors-signal` pour une lecture qui n'attend pas le signal) ; nœuds visibles, points visibles et en cache de Potree,
+  mémoire JS (Chrome). Coût : quelques comparaisons de nombres par image et un relevé de compteurs par lecture, aucune
+  attente ni boucle ajoutée ; environ 150 à 200 octets par lecture, 300 à 400 par cut. Même règle, même temps simulé,
+  mêmes vues que la 4.9.0 sur le banc (signal, chargement pendu, compteur alterné, vue mobile, référence).
+- **Nouvel outil `tools/signal-age.cjs`** : part des vues lues au signal par page ESV et par tranche de 5 min d'âge de
+  page, condition manquante dominante au repli, repli avec chargement encore en cours. Âge lu dans `diag.navS` (4.9.5.1)
+  ou, pour les anciens exports, depuis la première action d'Ariane sur la page (borne basse). Sur la test 17 (partie
+  27) : page 1 à 84 % au signal de 0 à 5 min puis 0 % ; page 2 (après F5) à 100 % jusqu'à 10 min.
+- **B. D3 : écriture de validation refusée par ESV** (`background.js`, réglages `lot.ecritureRefusee` et
+  `lot.ecritureRefuseeRelanceMs`). Les validations envoyées par le lot sont notées ; chaque écriture observée par
+  l'observateur passif est rapprochée d'une ligne (`rowIndex` = cut, hypothèse de banc ; sinon `railPairId` déjà vu ;
+  sinon la dernière validation dont la fenêtre contient l'écriture). Écriture non 2xx (ou statut 0) d'un cut validé,
+  sans écriture 2xx de la même ligne dans les 2 s : événement `ecriture-refusee` (cut, statut, heure) et pause du lot
+  comme le bouton Pause (prochain point sûr du moteur), avis « ESV a refusé d’enregistrer la validation du cut N
+  (erreur serveur). Vérifie ce cut dans ESV, puis Reprendre. ». Aucune attente ajoutée, rien renvoyé à ESV ; sans
+  observation : comportement de la 4.9.0. Une écriture dont le corps ne porte pas `ExtractionStatus` (« vu » du cut
+  suivant) n'est jamais prise pour un refus.
+- Version 4.9.5.1 (manifeste avec `version_name`, core, repli du service worker, pont, panneau) ; essai de version
+  `version-4951` (remplace `version-490`) ; essais `t951-diag-signal`, `t951-signal-age`, `t951-d3-ecriture-refusee`,
+  `t951-d3-sans-pause`, `consigne-4951` ; captures du panneau `design/ux-2026-10/retenue/captures-t951.cjs`.
+
 ## 4.9.0.20 — test 20 (15/10)
 
 Manifeste `4.9.0.20`, « 4.9.0 test 20 », paquet `ariane-4.9.0-test.20.zip` ; base : test 19 (`06cd533`). Trois correctifs trouvés dans l'export Écho de la
@@ -71,6 +111,48 @@ de pose sont inchangés ; seul l'export du journal et du bilan d'Orbite perd les
   `tools/acceptance-report.cjs` (donc `analyse-locale.cjs`) lisent un dossier de volumes zip comme des JSON posés.
 - Essais : `tests/echo-4918.test.cjs` (17 essais : page, session, service worker, panneau, zip) ; harnais `tests/helpers/background-harness.cjs`
   (événements d'onglet) ; `tests/d092-fiche-depart.test.cjs` ajusté au CONTENU commun.
+
+## 4.9.0 — version candidate stable (15/10)
+
+**Code de la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27), plus deux corrections de la
+relecture finale (D-110, ci-dessous) ; la version et les documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
+« Ariane 4.9.0 · ouvrir » sur le bouton blanc d'ESV, paquet `ariane-v4.9.0.zip`. `src/engine.js` identique à la test 17.
+Notes pour l'opérateur : `NOTES_4.9.0.md` ; porte de version : `fiches/PORTE_4.9.0.md`. Fusion, étiquette et publication :
+décision de Mic. Retour arrière : la 4.8.6 (`v4.8.6`).
+
+Corrections de la relecture finale (D-110) :
+
+- **D1** : le vidage du cache n'est plus refusé sans fin après « Clôturer le résultat incertain », une fin de partie après un différé ou un SKIP explicite du dernier cut (la mesure V1 du lot y est désormais close).
+- **D2** : la fiche de départ d'une partie ne peut plus être écrasée par la réponse d'ESV à « y a-t-il des invalides ? » (0 / 1 / 1) ; écritures des fiches mises en file.
+- Limite connue, renvoyée à la 4.9.5 : **D3**, une écriture refusée par ESV (HTTP 500) est quand même comptée comme acceptée (identique en 4.8.6, jamais vue sur 924 écritures).
+
+Ce que la 4.9 apporte depuis la 4.8.6, en bref :
+
+- **Vitesse (V3, « mode rapide »)** : sélection du rail à l'image, lecture au signal de fin de chargement d'ESV (repli : la
+  règle des 800 ms), pose sans recentrage, lecture des points sans attendre une image (D-087, D-088). Neuf cuts sur dix en
+  rapide ; un sur dix, tiré d'après son numéro, reste en référence pour surveiller la qualité (D-091). Mesuré sur le terrain,
+  même lot, rapide contre référence : −54 % (test 15), −71 % (test 16, partie 26), −48 % (test 16, partie 25), −57 % sur la
+  séance de la test 17 et −71 % sur une page ESV fraîche ; part posée (C1) au niveau de la référence ; 0 capture perdue.
+- **Sauvegarde à taille constante (V5)** : Ariane ne ralentit plus au fil des lots quand le cache n'est pas vidé (D-089) ;
+  KI-070 corrigé (D-096).
+- **Mesure par phase (V1)** et **observateur passif** d'ESV (écritures de validation, liste des coupes, chargements), en
+  lecture seule, sans commande ajoutée (D-073, D-077, D-079). Chrome ou Edge 111 au moins.
+- **Écartement** : limites 1420 à 1470 mm (D-084, D-085).
+- **B3, transitions du lot** : neuf transitions nommées (démarrage, pause, reprise, arrêt, rechargement, cut suivant, différé,
+  fin de lot, erreur) ; « Reprendre » après la fin répond « Lot déjà terminé » ; « Reprendre » après un arrêt en plein cut refuse
+  si les rails ont bougé ; les transitions partent dans le journal exporté (D-102, D-104, D-106).
+- **Exports** : un clic sur « Tout télécharger pour l'analyse » ; une seule copie des nuages ; nuages allégés des sondes sans
+  information, points exacts (environ un tiers de moins sur les nuages, D-091) ; **export découpé tout seul** en volumes zip
+  autonomes de 17 Mo au plus (D-106) ; vidage du cache seulement si tous les volumes sont confirmés.
+- **Départs des parties** : validés, invalides et total relevés au départ de chaque partie, gardés hors du cache, historique
+  par partie, recopiés dans les exports (D-093, D-106).
+- **Panneau** (variante « Accueil » choisie par Mic) : grande tuile du lot (pourcentage des invalides traités sur un lot de toute
+  la partie, position sinon), cartes des départs, thèmes clair et sombre, contrastes, sélecteur d'onglet lisible, résumé de la
+  partie (U1), essais du vrai panneau (U2), raccourcis `D` et `Maj + Espace` d'ESV ni doublés ni détournés (U3) (D-078,
+  D-093, D-103, D-105, D-107).
+- **Heure de Paris** partout à l'écran et dans `CONTENU.txt` ; les JSON restent en UTC (test 17).
+- **B1 (voisins de la liste d'ESV) en ombre** : calculé et consigné, sans effet sur la pose (D-096, D-102). **Retour à une
+  coupe** : livré en lecture seule, sans bouton, jamais appelé (D-098).
 
 ## 4.9.0.17 — test 17 (15/10)
 

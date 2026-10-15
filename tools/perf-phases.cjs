@@ -412,7 +412,8 @@ const OBS_KINDS=['write','list-page','list-summary','resource','fetch-rails','ob
 const OBSERVER_FROM=[4,9,0,2];
 function observerExpected(data){
  const v=data?.version??data?.state?.version,m=typeof v==='string'?/^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?![\d.])/.exec(v.trim()):null;if(!m)return false;
- const a=[+m[1],+m[2],+m[3],+(m[4]??0)];for(let i=0;i<4;i++){if(a[i]!==OBSERVER_FROM[i])return a[i]>OBSERVER_FROM[i];}return true;}
+ /* Version stable à trois nombres (4.9.0, 4.9.5) : elle vient APRÈS toutes ses versions de test (4.9.0.N) : 4e rang infini. */
+ const a=[+m[1],+m[2],+m[3],m[4]===undefined?Infinity:+m[4]];for(let i=0;i<4;i++){if(a[i]!==OBSERVER_FROM[i])return a[i]>OBSERVER_FROM[i];}return true;}
 function observationsOf(data,phaseEvents,visits){
  const seen=new Set(),obs=[];
  for(const e of data.events||[]){

@@ -297,18 +297,52 @@
  function sceneEsv(){const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
    const boites=(c.viewer.scene?.pointclouds||[]).map(pc=>(pc.material?.clipBoxes||[]).map(b=>Array.from(b?.inverse?.elements||[]).join(',')).join(';')).join('|');
    return JSON.stringify(cam?.cameraToSceneRelative??null)+'#'+boites;}
+ /* 4.9.5.1 (D-109) — DIAGNOSTIC DU SIGNAL, SANS RIEN CHANGER À LA DÉCISION. Sur le terrain, le signal
+  * de fin de chargement s'éteint ~10 min après le chargement de la page ESV (tout passe au repli 800 ms),
+  * et un F5 le rétablit. Pour savoir pourquoi, chaque lecture porte un petit relevé (`diag`), publié avec
+  * l'étape `capture-read` (donc dans `lastDetail` du journal exporté) :
+  *   ageS / navS : âge en secondes de l'adaptateur dans la page (chargement de ce script) / de la page
+  *                 ESV (`performance.now()`, depuis la navigation : remis à zéro par un F5) ;
+  *   img         : images d'ESV vues pendant l'attente ; nl : [chargements en cours à la fin, maximum vu] ;
+  *   paires      : comparaisons d'une image à la précédente ; puis, parmi elles, celles où des chargements
+  *                 étaient en cours (pc), où les nœuds avaient changé (nc), où la vue avait changé (vc) ;
+  *   m           : au repli, la condition qui manquait à la dernière image comparée (« images » : moins
+  *                 de 3 images ou compteur d'images absent ; « chargements » : `numNodesLoading` ≠ 0 ;
+  *                 « noeuds » ; « vue » ; « aucune » : tout réuni sauf la seconde image) ; « hors-signal »
+  *                 pour une lecture qui n'attend pas le signal (référence, relecture) ;
+  *   noeuds, pts, lruPts, lruNoeuds, memMo : nœuds visibles lus, points visibles de Potree, points et nœuds
+  *                 gardés par son cache (LRU), mémoire JS utilisée en Mo (Chrome seulement).
+  * Coût : quelques comparaisons de nombres par image, un relevé de compteurs par lecture ; aucune attente,
+  * aucune boucle ajoutée ; ~200 octets par lecture. Lu par `tools/signal-age.cjs`. */
+ const ADAPTATEUR_CHARGE_A=Date.now();
+ const nombreFini=v=>Number.isFinite(v)?v:undefined;
+ function compteursEsv(sig){const d={ageS:Math.round((Date.now()-ADAPTATEUR_CHARGE_A)/1000)};
+   try{const t=performance?.now?.();if(Number.isFinite(t))d.navS=Math.round(t/1000);}catch{}
+   if(sig&&Number.isFinite(sig.count))d.noeuds=sig.count;
+   try{let pts=0,vu=false;for(const pc of window.viewer?.scene?.pointclouds||context().viewer?.scene?.pointclouds||[]){const n=pc?.numVisiblePoints;if(Number.isFinite(n)){pts+=n;vu=true;}}if(vu)d.pts=pts;}catch{}
+   try{const l=window.Potree?.lru;if(l){const a=nombreFini(l.numPoints),b=nombreFini(typeof l.size==='function'?l.size():l.elements);if(a!==undefined)d.lruPts=a;if(b!==undefined)d.lruNoeuds=b;}}catch{}
+   try{const m=performance?.memory?.usedJSHeapSize;if(Number.isFinite(m))d.memMo=Math.round(m/1048576);}catch{}
+   return d;}
  async function attendreChargement(guard,stableForMs){const debut=Date.now(),f0=imageEsv();
    let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0,derniere=null;
+   /* Diagnostic seulement (voir plus haut) : jamais lu par la décision. */
+   let nlMax=null,paires=0,pc=0,nc=0,vc=0,manque='images';
    while(Date.now()-debut<12000){
      if(cancelled)throw Error('Action interrompue.');guard();
      /* Une lecture qui échoue est réessayée à l'image suivante, comme `waitFor` le faisait. */
      let sig,vue;try{sig=loadedSignature();vue=sceneEsv();}catch(e){derniere=e;precedente=null;await prochaineImage();continue;}
-     const f=imageEsv(),libre=chargementsEsv()===0;
+     const f=imageEsv(),nl=chargementsEsv(),libre=nl===0;
+     if(nl!==null&&(nlMax===null||nl>nlMax))nlMax=nl;
      if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}
      if(f!==null&&f!==imagePrecedente){images++;
-       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)return {regle:'signal',images};
+       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
+         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc}};
+       if(precedente){paires++;const charge=!libre||!precedente.libre,noeuds=precedente.valeur!==sig.value,change=precedente.vue!==vue;
+         if(charge)pc++;if(noeuds)nc++;if(change)vc++;
+         manque=f0===null||f-f0<3?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
        precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
-     if(sig.count>0&&Date.now()-depuis>=stableForMs)return {regle:'stabilite',images,chargementsEnCours:chargementsEsv()};
+     if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEsv();
+       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque}};}
      await prochaineImage();}
    throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
  /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
@@ -339,12 +373,14 @@
          let attente;
          /* Signal à la première tentative seulement : une relecture attend comme la 4.9.0.5. */
          if(piece(lecture,'signal')&&attempt===1)attente=await attendreChargement(guard,stableForMs);
-         else{let previous=null,unchangedSince=Date.now();
-           await waitFor(()=>{const signature=loadedSignature();
+         else{let previous=null,unchangedSince=Date.now(),derniere=null;
+           await waitFor(()=>{const signature=loadedSignature();derniere=signature;
              if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
              return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
-           },'Niveau de détail non stabilisé.',12000,guard);attente={regle:'stabilite'};}
-         guard();progress('capture-read',{side,attempt,lecture,regle:attente.regle});
+           },'Niveau de détail non stabilisé.',12000,guard);
+           let diag;try{diag={...compteursEsv(derniere),nl:[chargementsEsv(),null],m:'hors-signal'};}catch{diag={m:'hors-signal'};}
+           attente={regle:'stabilite',diag};}
+         guard();progress('capture-read',{side,attempt,lecture,regle:attente.regle,...(attente.diag?{diag:attente.diag}:{})});
          const avantLecture=attente.regle==='signal'?loadedSignature().value:null;
          const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference');guard();
          /* Lu au signal : rien ne doit avoir changé pendant la lecture (elle rend la main à ESV à
