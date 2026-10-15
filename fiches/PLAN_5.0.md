@@ -66,7 +66,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | E2 ombre GCV1 en Écho | `claude/50-e2-ombre-echo` | rapide / haut ; relecteur fort (anti-fuite) | `continuity-observer.js`, `native-session.js`, `native-offline-evaluate.cjs` | bloc `ombreGCV1` + `humanDeltaMm` ; B1 et interpolation ; essai anti-fuite | bloc = rejeu ; ≤ 0,8 s/visite | 500 k + 150 k | V3 |
 | E3 raison de la correction | `claude/50-e3-raison` | rapide / moyen | D-112 p.4, panel | 4 pastilles + « bon tel quel », consignées dans la visite | ≥ 80 % étiquetées sans ralentir | 250 k | V3 |
 | E4 manifeste DEV/RÉSERVÉ | `claude/50-e4-manifeste` | rapide / moyen | CORPUS_V2 § 5, D-057 | manifeste versionné, outil de revue, essai « 0 fuite » | essai passe | 250 k | V3 |
-| E5 jeu d'apprentissage et métriques | `claude/50-e5-metriques` | rapide / moyen | `jeu-apprentissage` (branche maquette), S3, E1 | jeu v1 ; métriques par version | calculées sur Échos + relectures | 350 k | en cours (réveil du 16/10 1 h 15) |
+| E5 jeu d'apprentissage et métriques | `claude/50-e5-metriques` | rapide / moyen | `jeu-apprentissage` (branche maquette), S3, E1 | jeu v1 ; métriques par version | calculées sur Échos + relectures | 350 k | livré (D-128) ; relectures E1 à brancher |
 | E6 caméra au VALIDATE | avec E2 | rapide / moyen | `adapter-page.js:142`, `native-session.js:215` | vue dans l'état observé | +0,2 Ko ; essai | 120 k | V3 |
 
 ## 5. Lot G — Méga cerveau
