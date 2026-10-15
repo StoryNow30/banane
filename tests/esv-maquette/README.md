@@ -10,7 +10,7 @@
 | 2. Adaptateur réel | `node --test --test-timeout=60000 tests/esv-maquette/adaptateur.test.cjs` | `src/adapter-page.js` et ses modules injectés dans la page (comme `background.js` le fait, monde principal), commandes envoyées par un pont d'essai | état, capture, pose par clics, validation, SKIP, navigation, relevé passif, retour à une coupe |
 | 3. Extension réelle | `node tools/banc-esv.cjs --cuts 3` ou `node --test --test-timeout=120000 tests/esv-maquette/extension.test.cjs` | l'extension du dépôt (ou `--extension DOSSIER` d'un paquet décompressé) chargée dans Chromium, l'hôte d'ESV **routé** vers la maquette, un lot Orbite lancé par les messages du panneau | la chaîne service worker → pont → adaptateur → page, de bout en bout, avec un rapport par cut |
 
-Prérequis : Playwright et Chromium (`PLAYWRIGHT_MODULE`, `PLAYWRIGHT_BROWSERS_PATH` ou `CHROMIUM`). Sans eux, les essais se **sautent** avec leur raison ; ils sont volontairement hors de `node tools/verify.cjs` (le banc complet refuse les essais sautés).
+Prérequis : Node 22 et, pour les niveaux 2 et 3, Playwright avec Chromium. Sur un poste neuf : `npm install playwright` puis `npx playwright install chromium` (ou `PLAYWRIGHT_MODULE=/chemin/vers/playwright`, `CHROMIUM=/chemin/vers/chrome`). Sans eux, les essais navigateur se **sautent** avec leur raison. Tous les essais de la maquette : `node tests/esv-maquette/essais.cjs` ; ils sont volontairement hors de `node tools/verify.cjs` (le banc complet refuse les essais sautés).
 
 Réglages de la page (paramètres d'URL) : `cuts` (nombre de coupes de la partie), `debut` (premier numéro), `part`, `cut` (coupe affichée au départ), `latence` (ms par lot de nœuds de points), `lots` (nombre de lots), `latenceRails` (ms avant l'arrivée des rails après le libellé), `decoupeTardive` (0/1 : ESV déplace sa boîte de découpe 150 ms après le changement de cut, constat 4.7.3).
 
@@ -40,6 +40,13 @@ Fidélité mesurée : un lot joué sur la maquette, exporté en bilan avec ses n
 ## Jeu d'apprentissage
 
 `node tools/jeu-apprentissage.cjs EXPORT [EXPORT…] [--rejeu RAPPORT.json] [--fenetre 3] [--points] [--sortie JEU.json]` (hors ligne, sans navigateur) rend `banane-apprentissage-v1` : par cut, repère, pose de départ d'ESV, référence (humaine en Écho, Ariane en Orbite), écart départ → référence en mm et en repère profil (le long de la voie, en travers, vertical), points par rail, voisins à référence dans la fenêtre, prédiction par interpolation entre les deux voisins les plus proches (D-098 à D-100) et son écart, et l'écart de la pose rejouée par Ariane si un rapport `--json` du banc est donné ; `--points` ajoute les points en scène. Résumé : médiane, P90, max par rail. Les cuts sans nuage ou sans pose de départ sont listés dans `provenance.exclus`, jamais inventés. Un export Écho de terrain n'a pas encore été rejoué (les formats sont ceux du code source ; l'essai `lecteur-export.test.cjs` les couvre sur une session synthétique) : le premier rejeu réel dira ce qui manque.
+
+## Points, pannes, comparaison, contrat
+
+- **Points par cut** : le scénario servi à la page est un squelette ; les nœuds d'un cut sont demandés au serveur au chargement du cut (`/maquette/ept-data/<part>/<cut>/noeuds.json`, gardés en cache ensuite), comme Potree charge les siens ; l'observateur 4.9 les classe « ressource de points ».
+- **Pannes simulées** (`POST /maquette/pannes`, ou `node tools/banc-esv.cjs --pannes '{…}'`) : `ecritureRefusee {cuts|'toutes', http}` (ESV navigue quand même, la ligne reprend son statut : hypothèse), `ecritureLenteMs`, `listeIllisible`, `railsAbsents {cuts}`, `nuageInstable {cuts, dureeMs}` (nœuds remplacés toutes les 250 ms), `nuageVide {cuts}`, `changementPartie {apresCut}`. Essais : `pannes.test.cjs` (ce qu'Ariane fait dans chaque cas).
+- **Comparer deux versions** : `node tools/banc-comparer.cjs A.json B.json [--md SORTIE.md]` sur deux rapports `--json` du banc (même lot) : issue par cut, durées, écarts à la référence, cuts d'issue différente.
+- **Contrat ESV vérifiable** : `tests/esv-maquette/contrat-esv.json` liste chaque hypothèse ; `tools/esv-contrat-releve.js` est un relevé **en lecture seule** à coller dans la console du vrai ESV (aucune adresse, aucun jeton) ; `node tools/esv-contrat-comparer.cjs RELEVE.json` dit ce qui est confirmé, infirmé, non relevé, et quoi changer dans la maquette. Le relevé reste privé.
 
 ## Ce que la maquette reproduit, et avec quelle certitude
 

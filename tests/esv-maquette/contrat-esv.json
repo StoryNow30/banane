@@ -1,0 +1,21 @@
+{
+  "format": "banane-esv-contrat-v1",
+  "note": "Chaque hypothèse de la maquette, avec la valeur qu'elle suppose et la clé du relevé (tools/esv-contrat-releve.js, lecture seule, à coller dans la console du vrai ESV) qui la confirme ou l'infirme. tools/esv-contrat-comparer.cjs RELEVE.json fait la comparaison. Aucune clé ne porte d'adresse, de jeton ni d'identifiant de projet.",
+  "hypotheses": [
+    {"id": "H01", "sujet": "libellé du cut", "attendu": {"cle": "libelle.format", "valeur": "Cut N of part P"}, "statut": "connu", "maquette": "O2N3DCutDescription"},
+    {"id": "H02", "sujet": "profil U50", "attendu": {"cle": "profil.texte", "valeur": "U50"}, "statut": "connu", "maquette": "O2N3DCutShapeInfo"},
+    {"id": "H03", "sujet": "six commandes présentes", "attendu": {"cle": "commandes.manquantes", "valeur": []}, "statut": "connu", "maquette": "LR, RR, Validate, NextInvalid"},
+    {"id": "H04", "sujet": "compteur « N on M treated » : un seul élément", "attendu": {"cle": "compteur.nombre", "valeur": 1}, "statut": "supposé", "maquette": "un span unique"},
+    {"id": "H05", "sujet": "texte « M cuts » affiché", "attendu": {"cle": "totalCuts.nombre", "valeur": 1}, "statut": "supposé", "maquette": "un span « M cuts »"},
+    {"id": "H06", "sujet": "M du compteur = nombre de lignes de la partie", "attendu": {"cle": "compteur.total", "valeur": "= liste.lignes"}, "statut": "supposé", "maquette": "liste indexée, cut N = ligne N"},
+    {"id": "H07", "sujet": "bouton de rail actif : classe", "attendu": {"cle": "railActif.classe", "valeur": "active"}, "statut": "supposé", "maquette": "classe active"},
+    {"id": "H08", "sujet": "boutons précédent/suivant de coupe", "attendu": {"cle": "navigation.candidats", "valeur": "≥ 2"}, "statut": "supposé", "maquette": "maquette-cut-precedent / -suivant (identifiants inventés)"},
+    {"id": "H09", "sujet": "deux rails Object3D à la racine de la scène", "attendu": {"cle": "scene.rails", "valeur": 2}, "statut": "connu", "maquette": "2"},
+    {"id": "H10", "sujet": "un seul nuage Potree, visibleNodes présent", "attendu": {"cle": "potree.nuages", "valeur": 1}, "statut": "connu", "maquette": "1"},
+    {"id": "H11", "sujet": "découpe : une boîte, SHOW_INSIDE", "attendu": {"cle": "potree.clipTask", "valeur": "SHOW_INSIDE"}, "statut": "connu", "maquette": "SHOW_INSIDE, 1 boîte"},
+    {"id": "H12", "sujet": "caméra orthographique, échelle 5 (0,4 unité de large)", "attendu": {"cle": "camera.projection0", "valeur": 5}, "statut": "connu", "maquette": "5"},
+    {"id": "H13", "sujet": "nœuds visibles par cut (ordre de grandeur)", "attendu": {"cle": "potree.noeudsVisibles", "valeur": "10 à 40"}, "statut": "supposé", "maquette": "16 à 36"},
+    {"id": "H14", "sujet": "titre du bouton valider : « Load next non validated cut »", "attendu": {"cle": "commandes.titreValider", "valeur": "load next non validated cut"}, "statut": "connu", "maquette": "identique"},
+    {"id": "H15", "sujet": "gestionnaire clavier sur document (e.which)", "attendu": {"cle": "clavier.ecouteurs", "valeur": "≥ 1"}, "statut": "connu", "maquette": "keydown sur document"}
+  ]
+}

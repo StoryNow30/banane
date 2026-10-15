@@ -46,7 +46,8 @@
  const journal=[],log=(type,detail={})=>{const e={at:new Date().toISOString(),type,...detail};journal.push(e);
    const el=$('journal');if(el){el.textContent=journal.slice(-40).map(x=>`${x.at.slice(11,23)} ${x.type} ${JSON.stringify({...x,at:undefined,type:undefined})}`).join('\n');el.scrollTop=el.scrollHeight;}};
  /* ---------- état ---------- */
- const etat={scenario:null,partie:null,index:-1,side:null,chargements:0,minuteries:[],listes:new Map(),ecritures:0};
+ const etat={scenario:null,partie:null,index:-1,side:null,chargements:0,minuteries:[],listes:new Map(),ecritures:0,pannes:{},cacheNoeuds:new Map(),generation:0};
+ const concerne=(regle,cut)=>!!regle&&(regle.cuts==='toutes'||Array.isArray(regle.cuts)&&regle.cuts.includes(cut));
  const root=objet('Scene'),camera=objet('OrthographicCamera');camera.projectionMatrix={elements:I()};
  const pc=objet('PointCloudOctree');pc.visibleNodes=[];pc.material={clipBoxes:[],clipTask:2,clipMethod:0};ajouter(root,pc);
  for(const [i,p] of [[0,[0,0,0]],[1,[1.5,0,0]]].entries()){const m=objet('Mesh',{position:p});m.geometry={type:'SphereGeometry',parameters:{radius:.0015}};m.material={color:{getHex:()=>[16302520,10606282][i]}};ajouter(root,m);}
@@ -81,16 +82,29 @@
   ajouter(r,objet('Mesh'));const profil=ajouter(r,objet('Object3D',{position:desc.profil.position,quaternion:desc.profil.quaternion,scale:desc.profil.scale,rotation:desc.profil.rotation}));
   for(const contour of desc.contours){const l=ajouter(profil,objet('Line'));l.geometry={attributes:{position:tampon(contour.flat())}};}
   r.__side=side;return r;}
- function chargerCut(index,raison){const c=etat.partie.cuts[index];if(!c)return false;viderCut();etat.index=index;etat.chargements++;
+ function chargerCut(index,raison){const c=etat.partie.cuts[index];if(!c)return false;viderCut();etat.index=index;etat.chargements++;const generation=++etat.generation;
   $('O2N3DCutDescription').textContent=`Cut ${c.cut} of part ${etat.partie.part}`;$('O2N3DCutShapeInfo').textContent=c.shape||'U50';
   majCompteur();log('cut-charge',{cut:c.cut,part:etat.partie.part,raison,status:c.status});
-  /* Les rails arrivent après le libellé (Ariane attend « ses rails ne sont pas encore disponibles »). */
-  const t=setTimeout(()=>{for(const s of ['left','right']){rails[s]=ajouter(root,construireRail(s,c.rails[s]));}majMonde(root);decoupe(etat.scenario.decoupe.dimensions[2]);recentrer('left');etat.side=null;log('rails-prets',{cut:c.cut});},options.latenceRails);
-  etat.minuteries.push(t);
-  /* Nœuds de points : par lots, avec latence ; Potree.numNodesLoading pendant le chargement. */
-  const lots=Math.max(1,options.lots),parLot=Math.ceil(c.noeuds.length/lots);window.Potree.numNodesLoading=c.noeuds.length;
-  for(let i=0;i<lots;i++){const tranche=c.noeuds.slice(i*parLot,(i+1)*parLot);if(!tranche.length)continue;
-   etat.minuteries.push(setTimeout(()=>{for(const n of tranche)pc.visibleNodes.push(noeud(n,c));window.Potree.numNodesLoading-=tranche.length;dessiner();log('noeuds-charges',{cut:c.cut,lot:i+1,noeuds:pc.visibleNodes.length});},options.latence*(i+1)+options.latenceRails));}
+  /* Les rails arrivent après le libellé (Ariane attend « ses rails ne sont pas encore disponibles ») ; panne railsAbsents : jamais. */
+  if(concerne(etat.pannes.railsAbsents,c.cut))log('panne',{cut:c.cut,panne:'railsAbsents'});
+  else etat.minuteries.push(setTimeout(()=>{for(const s of ['left','right']){rails[s]=ajouter(root,construireRail(s,c.rails[s]));}majMonde(root);decoupe(etat.scenario.decoupe.dimensions[2]);recentrer('left');etat.side=null;log('rails-prets',{cut:c.cut});},options.latenceRails));
+  /* Nœuds de points : demandés au serveur AU CHARGEMENT DU CUT (comme Potree), gardés en cache (comme Potree), puis
+   * rendus visibles par lots avec latence ; Potree.numNodesLoading pendant le chargement. */
+  window.Potree.numNodesLoading=c.points?.noeuds??c.noeuds?.length??0;
+  const servir=noeuds=>{if(etat.generation!==generation)return;const lots=Math.max(1,options.lots),parLot=Math.ceil(noeuds.length/lots);
+   if(!noeuds.length){window.Potree.numNodesLoading=0;log('noeuds-aucun',{cut:c.cut});}
+   for(let i=0;i<lots;i++){const tranche=noeuds.slice(i*parLot,(i+1)*parLot);if(!tranche.length)continue;
+    etat.minuteries.push(setTimeout(()=>{for(const n of tranche)pc.visibleNodes.push(noeud(n,c));window.Potree.numNodesLoading-=tranche.length;dessiner();log('noeuds-charges',{cut:c.cut,lot:i+1,noeuds:pc.visibleNodes.length});},options.latence*(i+1)+options.latenceRails));}
+   /* Panne nuageInstable : pendant dureeMs, les nœuds sont remplacés toutes les 250 ms (nouveaux objets, mêmes points) : niveau de détail jamais stable. */
+   const inst=etat.pannes.nuageInstable;if(concerne(inst,c.cut)){const fin=Date.now()+(Number(inst.dureeMs)||5000);
+    const remplacer=()=>{if(etat.generation!==generation||Date.now()>fin)return;pc.visibleNodes=noeuds.map(n=>noeud(n,c));log('panne',{cut:c.cut,panne:'nuageInstable'});etat.minuteries.push(setTimeout(remplacer,250));};
+    etat.minuteries.push(setTimeout(remplacer,options.latence*(lots+1)+options.latenceRails));}};
+  const cleCache=`${etat.partie.part}|${c.cut}`;
+  if(c.noeuds)servir(c.noeuds);
+  else if(etat.cacheNoeuds.has(cleCache))servir(etat.cacheNoeuds.get(cleCache));
+  else if(!c.noeudsUrl){log('noeuds-echec',{cut:c.cut,message:'scénario sans adresse de nœuds'});servir([]);}
+  else xhr('GET',c.noeudsUrl).then(r=>{let n=[];try{if(r.status===200){const j=JSON.parse(r.texte);n=Array.isArray(j?.noeuds)?j.noeuds:[];}else log('noeuds-echec',{cut:c.cut,http:r.status});}
+     catch(e){log('noeuds-echec',{cut:c.cut,message:'réponse illisible'});}etat.cacheNoeuds.set(cleCache,n);servir(n);}).catch(e=>{log('noeuds-echec',{cut:c.cut,message:e.message});servir([]);});
   if(options.decoupeTardive&&!c.decoupe)etat.minuteries.push(setTimeout(()=>{if(cutCourant()===c){decoupe(etat.scenario.decoupe.dimensions[2]+.1);log('decoupe-deplacee',{cut:c.cut});}},options.latenceRails+150));
   majEtat();return true;}
  function noeud(n,c){const p=objet('Points',{position:c.origine});p.isPoints=true;p.parent=pc;p.matrixWorld.elements=mul(pc.matrixWorld.elements,compose(p));
@@ -106,17 +120,20 @@
   $('O2N3DCutNextInvalid3DRail').disabled=prochain('invalid')<0;}
  const prochain=(critere,depuis=etat.index)=>{for(let i=depuis+1;i<etat.partie.cuts.length;i++){const s=etat.partie.cuts[i].status;if(critere==='invalid'?s==='invalid':s!=='valid')return i;}return -1;};
  /* ---------- écritures vers le « serveur » ---------- */
- async function ecrire(status){const c=cutCourant();c.status=status;const ligne=liste()[c.cut];const L=pt(rails.left.matrixWorld.elements,[0,0,0]),R=pt(rails.right.matrixWorld.elements,[0,0,0]);
+ async function ecrire(status){const c=cutCourant(),ligne=liste()[c.cut],avant={status:c.status,ligne:ligne?{...ligne}:null};c.status=status;const L=pt(rails.left.matrixWorld.elements,[0,0,0]),R=pt(rails.right.matrixWorld.elements,[0,0,0]);
   const body={RowKey:`${etat.partie.part}-${c.cut}`,ExtractionStatus:status,TreatedByOperator:true,SeenByOperator:true,XLeftEdge:L[0],YLeftEdge:L[1],ZLeftEdge:L[2],XRightEdge:R[0],YRightEdge:R[1],ZRightEdge:R[2]};
   if(ligne)Object.assign(ligne,body);majCompteur();etat.ecritures++;log('ecriture',{cut:c.cut,status});
-  try{const r=await xhr('PUT',`/rails/${etat.partie.table}/${body.RowKey}`,body);log('ecriture-reponse',{cut:c.cut,http:r.status});}
+  try{const r=await xhr('PUT',`/rails/${etat.partie.table}/${body.RowKey}`,body);log('ecriture-reponse',{cut:c.cut,http:r.status});
+   /* Refus du serveur : la ligne et le cut reprennent leur statut (hypothèse : ESV ne revient pas sur la navigation déjà faite). */
+   if(r.status<200||r.status>=300){c.status=avant.status;if(ligne&&avant.ligne){for(const k of Object.keys(ligne))delete ligne[k];Object.assign(ligne,avant.ligne);}majCompteur();log('ecriture-refusee',{cut:c.cut,http:r.status});}}
   catch(e){log('ecriture-echec',{cut:c.cut,message:e.message});}}
  /* ---------- actions (équivalents de ce qu'Ariane observe dans ESV) ---------- */
  function choisirRail(side){etat.side=side;$('O2N3DCutLRClick').classList.toggle('active',side==='left');$('O2N3DCutRRClick').classList.toggle('active',side==='right');
   log('rail-choisi',{side});requestAnimationFrame(()=>recentrer(side)); /* la caméra suit à l'image suivante (D-088) */}
  function invalideSuivant(){const i=prochain('invalid');if(i<0){log('invalide-suivant-aucun');return;}chargerCut(i,'invalide-suivant');}
  function validerEtSuivant(){if(!rails.left)return;void ecrire('valid');const i=prochain('non-valide');
-  if(i>=0)return chargerCut(i,'valider-et-suivant');
+  const cp=etat.pannes.changementPartie;
+  if(i>=0&&!(cp&&Number(cp.apresCut)===cutCourant().cut))return chargerCut(i,'valider-et-suivant');
   const suivante=etat.scenario.parties[etat.scenario.parties.indexOf(etat.partie)+1];
   if(suivante){etat.partie=suivante;const j=prochain('non-valide',-1);chargerCut(j>=0?j:0,'partie-suivante');} /* terrain du 30/09 : au dernier cut, ESV charge la partie suivante */
   else log('valider-dernier-sans-suite');}
@@ -159,6 +176,7 @@
   if(!r0.ok)throw Error((await r0.json().catch(()=>({}))).error||('scénario : HTTP '+r0.status));const s=await r0.json();etat.scenario=s;
   for(const p of s.parties){const lignes=[];let url=`/rails/${p.table}`;for(;;){const r=JSON.parse((await xhr('GET',url)).texte);lignes.push(...r.value);if(!r.suite)break;url=`/rails/${p.table}?npk=${encodeURIComponent(r.suite.npk)}&nrk=${r.suite.nrk}`;}
    etat.listes.set(p.part,lignes);for(const c of p.cuts){const l=lignes[c.cut];if(l&&l.ExtractionStatus)c.status=l.ExtractionStatus;}}
+  try{etat.pannes=JSON.parse((await xhr('GET','/maquette/pannes')).texte)||{};}catch{etat.pannes={};}
   etat.partie=s.parties[0];
   let index=Number.isFinite(options.cut)?etat.partie.cuts.findIndex(c=>c.cut===options.cut):-1;
   if(index<0){index=etat.partie.cuts.findIndex(c=>c.status==='invalid');if(index<0)index=0;}
@@ -166,7 +184,7 @@
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
    compteur:$('maquette-compteur').textContent,traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
    statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),
-   reference:c?.reference?.monde||null,provenance:etat.scenario?.provenance||null,cuts:etat.partie?.cuts.map(x=>x.cut)||[]};},
+   reference:c?.reference?.monde||null,provenance:etat.scenario?.provenance||null,cuts:etat.partie?.cuts.map(x=>x.cut)||[],pannes:etat.pannes};},
   allerA:cut=>{const i=etat.partie.cuts.findIndex(c=>c.cut===cut);return i>=0?allerA(i,'maquette.allerA'):false;},scenario:()=>etat.scenario,pret:null};
  window.__maquette.pret=demarrer().then(()=>true,e=>{log('erreur-demarrage',{message:e.message});$('maquette-etat').textContent='Erreur : '+e.message;throw e;});
 })();

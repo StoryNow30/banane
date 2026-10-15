@@ -13,6 +13,7 @@
  *
  *   node tools/banc-esv.cjs [--cuts 3] [--debut 100] [--decalage 0] [--latence 40] [--extension DOSSIER] [--json SORTIE.json] [--dataset BILAN.json] [--entete]
  *   --dataset : écrit aussi le bilan du lot avec ses nuages (format `banane-test-dataset-v4` + `clouds`, comme « Télécharger le bilan et les LiDAR »)
+ *   --pannes '{"ecritureRefusee":{"cuts":[105],"http":500}}' : pannes simulées (serveur.cjs) ; rendues dans le rapport
  *   --export FICHIER_OU_DOSSIER [--part N] [--valides K] : REJEU (--valides K : un cut sur K déjà validé à sa pose de référence, appui pour B1) d'un vrai export (Orbite ou Écho, tests/esv-maquette/lecteur-export.cjs) ;
  *     le lot couvre toute la partie (ou --cuts à partir de --decalage) ; le rapport donne l'écart de chaque pose d'Ariane à la référence de l'export (mm)
  *
@@ -21,15 +22,17 @@
 const path=require('node:path'),fs=require('node:fs');
 const N=require('../tests/esv-maquette/navigateur.cjs');
 const racine=N.racine;
-function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,valides:0,entete:false,delai:120000};
+function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,valides:0,pannes:null,entete:false,delai:120000};
   for(let i=0;i<argv.length;i++){const a=argv[i];if(a==='--entete')o.entete=true;else if(a.startsWith('--')){o[a.slice(2)]=argv[++i];}}
-  for(const k of ['cuts','debut','decalage','latence','delai','valides'])o[k]=Number(o[k]);if(o.part!==null)o.part=Number(o.part);o.extension=path.resolve(o.extension);if(o.export)o.export=path.resolve(o.export);return o;}
+  for(const k of ['cuts','debut','decalage','latence','delai','valides'])o[k]=Number(o[k]);if(o.part!==null)o.part=Number(o.part);
+  if(typeof o.pannes==='string'){try{o.pannes=JSON.parse(o.pannes);}catch(e){throw Error('--pannes : JSON invalide ('+e.message+')');}}o.extension=path.resolve(o.extension);if(o.export)o.export=path.resolve(o.export);return o;}
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
 async function banc(options={}){
   const o={...args([]),...options},pw=N.playwright();if(!pw)throw Error('Playwright introuvable.');
   const manifeste=JSON.parse(fs.readFileSync(path.join(o.extension,'manifest.json'),'utf8'));
   const origine=new URL(manifeste.host_permissions[0].replace(/\*$/,'')).origin,prefixe=new URL(manifeste.host_permissions[0].replace(/\*$/,'')).pathname;
   const {demarrer}=require('../tests/esv-maquette/serveur.cjs');const serveur=await demarrer({exportation:o.export});
+  if(o.pannes)o.pannes=serveur.pannes(o.pannes);
   const ctx=await pw.chromium.launchPersistentContext('',{executablePath:N.executable(),headless:true,viewport:{width:1200,height:800},
     args:['--headless=new',`--disable-extensions-except=${o.extension}`,`--load-extension=${o.extension}`]});
   const erreurs=[],debutBanc=Date.now();
@@ -76,7 +79,7 @@ async function banc(options={}){
     const resume={version:manifeste.version,extension:o.extension,lot,etatFinal:vue?.batch?.state??null,notice:vue?.notice??null,dureeLotMs:dureeLot,
       cutsPoses:vue?.batch?.lotPosedCount??null,differes:(vue?.batch?.deferred||[]).length,ecrituresServeur:serveur.journal.ecritures.map(e=>({rowKey:e.rowKey,status:e.body?.ExtractionStatus})),
       commandes,cuts,evenements:ev.length,maquette:{cut:maquette.etat.cut,compteur:maquette.etat.compteur,statuts:maquette.etat.statuts,chargements:maquette.etat.chargements,provenance:maquette.etat.provenance},
-      ecartsReferenceMm:ecarts,erreurs,dureeBancMs:Date.now()-debutBanc};
+      ecartsReferenceMm:ecarts,pannes:o.pannes?{reglees:o.pannes,refus:serveur.journal.refus}:null,erreurs,dureeBancMs:Date.now()-debutBanc};
     if(o.json)fs.writeFileSync(o.json,JSON.stringify({resume,journal,maquetteJournal:maquette.journal},null,1));
     if(o.dataset){const d=await api('dataset');const clouds=[];for(const id of d.cloudIds||[]){const c=await api('cloud',{id});if(c)clouds.push(c);}
       fs.writeFileSync(o.dataset,JSON.stringify({...d,clouds}));resume.dataset={fichier:o.dataset,nuages:clouds.length,records:(d.records||[]).length};}
@@ -84,5 +87,5 @@ async function banc(options={}){
   }finally{await ctx.close().catch(()=>{});await serveur.fermer();}
 }
 module.exports={banc,args};
-if(require.main===module){const o=args(process.argv.slice(2));
+if(require.main===module){let o;try{o=args(process.argv.slice(2));}catch(e){console.error(e.message);process.exit(2);}
   banc(o).then(r=>{console.log(JSON.stringify(r,null,1));process.exitCode=r.erreurs.length?2:0;},e=>{console.error(e.stack||e.message);process.exitCode=1;});}
