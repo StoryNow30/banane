@@ -1910,3 +1910,10 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 ## D-123 — Chaque vague testée sur un second projet ESV (15 octobre 2026, nuit)
 
 Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également. » Règle ajoutée au plan : toute vague (outils, relevés, poses) est rejouée sur un **second projet ESV** avant d'être tenue pour acquise. Tous les exports disponibles à ce jour (parties 7 à 27, Échos 17, 20, 24) viennent d'un même projet ; les résultats de la jointure (D-121) valent donc pour ce projet seul. Il faut de Mic : un lot Orbite (4.9.5 test 2) et un Écho sur une partie d'un autre projet, avec le relevé des cuts ADV/PN s'il y en a.
+
+## D-124 — Mode autonome pendant l'absence de Mic ; base 5.0 ; vague V1 lancée (15 octobre 2026, nuit)
+
+- Mic : « avance sur tous les projets que tu peux avancer et relance automatiquement une session chaque fois après la limite de 5 h ; programme la prochaine dans 1 h 35 et ainsi de suite ». Protocole écrit dans `fiches/REPRISE_AUTONOME.md` (réveil suivant programmé en premier, recueil, relance, lancement, 60 % de fenêtre, compte rendu, conditions d'arrêt). Premier réveil : 23 h 14 UTC.
+- Session orchestratrice passée au niveau fort (modèle changé par Mic) ; règles de `fiches/ORGANISATION_DEV_5.0.md` inchangées.
+- Branche `claude/50-base` = 4.9.5 test 2 + S3 + S8 (essais ciblés verts, moteur inchangé) : base de tous les chantiers 5.0.
+- Vague V1 lancée : S6+S7 (relevés en lecture seule et repli `phase-timing`, → 4.9.5 test 3) et E1 (instantané de liste, `diff-liste`, puis mémoire locale des bords, Q1 = oui).
