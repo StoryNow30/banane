@@ -23,7 +23,7 @@ const path=require('node:path'),fs=require('node:fs');
 const N=require('../tests/esv-maquette/navigateur.cjs');
 const racine=N.racine;
 function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,valides:0,pannes:null,entete:false,delai:120000};
-  for(let i=0;i<argv.length;i++){const a=argv[i];if(a==='--entete')o.entete=true;else if(a.startsWith('--')){o[a.slice(2)]=argv[++i];}}
+  for(let i=0;i<argv.length;i++){const a=argv[i];if(a==='--entete')o.entete=true;else if(a.startsWith('--')){o[a.slice(2)]=argv[++i];if(a==='--cuts')o.cutsDonne=true;}}
   for(const k of ['cuts','debut','decalage','latence','delai','valides'])o[k]=Number(o[k]);if(o.part!==null)o.part=Number(o.part);
   if(typeof o.pannes==='string'){try{o.pannes=JSON.parse(o.pannes);}catch(e){throw Error('--pannes : JSON invalide ('+e.message+')');}}o.extension=path.resolve(o.extension);if(o.export)o.export=path.resolve(o.export);return o;}
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
@@ -50,7 +50,8 @@ async function banc(options={}){
     await esv.goto(`${origine}${prefixe}maquette?${requete}`);
     await esv.evaluate(()=>window.__maquette.pret);await esv.waitForFunction(()=>window.__maquette.etat().railsPrets);
     /* Rejeu : bornes du lot = les cuts de la partie rejouée (tous, ou --cuts à partir de --decalage), ouverts sur le premier. */
-    if(o.export){const e0=await esv.evaluate(()=>window.__maquette.etat());const limite=options.cuts??(process.argv.includes('--cuts')?o.cuts:null);const liste=e0.cuts.slice(o.decalage,limite?o.decalage+limite:undefined);
+    if(o.export){const e0=await esv.evaluate(()=>window.__maquette.etat());/* En rejeu, le lot couvre toute la partie, sauf si --cuts (ligne de commande) ou cuts (appel programmé) est donné explicitement. */
+      const limite=o.cutsDonne||Object.hasOwn(options,'cuts')?o.cuts:null;const liste=e0.cuts.slice(o.decalage,limite?o.decalage+limite:undefined);
       if(!liste.length)throw Error('Aucun cut à rejouer.');o.debut=liste[0];o.decalage=0;o.cuts=liste.length;o.fin=liste.at(-1);
       await esv.evaluate(cut=>window.__maquette.allerA(cut),o.debut);await esv.waitForFunction(()=>window.__maquette.etat().railsPrets);}
     const panneau=await ctx.newPage();panneau.on('pageerror',e=>erreurs.push('panneau: '+e.message));

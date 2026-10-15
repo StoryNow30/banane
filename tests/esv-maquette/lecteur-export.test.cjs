@@ -27,7 +27,7 @@ function sessionEcho(captures){const records=[],clouds=[];
 const corpus=S.corpus().slice(0,4).map(c=>c.capture);
 const fichierEcho=path.join(tmp,'echo.json');fs.writeFileSync(fichierEcho,JSON.stringify(sessionEcho(corpus)));
 test('Écho : visites, blocs par rail, référence humaine, intention',()=>{
-  const s=L.construire(fichierEcho);assert.equal(s.provenance.nature,'echo');assert.equal(s.provenance.rejouables,4);assert.deepEqual(s.provenance.exclus,[]);
+  const s=L.construire(fichierEcho);assert.equal(s.provenance.nature,'echo');assert.equal(s.provenance.rejouables,4);assert.equal(s.provenance.exclus.total,0);
   const cuts=s.parties[0].cuts;assert.deepEqual(cuts.map(c=>c.cut),corpus.map(c=>c.cut).sort((a,b)=>a-b));
   const c0=cuts[0];assert.equal(c0.noeuds.length,2,'un nœud par bloc (gauche, droit)');assert.equal(c0.reference.source,'humaine');assert.equal(c0.intent,'VALIDATE');
   assert.ok(cuts.some(c=>c.intent==='SKIP'&&c.reference===null),'une visite passée sans référence');

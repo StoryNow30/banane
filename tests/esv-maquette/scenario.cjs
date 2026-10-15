@@ -83,11 +83,11 @@ function construire(options={}){
 }
 /* Lignes de la liste des coupes (forme de fiches/FICHE_B1.md, valeurs factices). La page d'ESV affiche
  * « Cut N » pour la ligne d'indice N (lecture du code d'ESV, mission B ; B1 s'y fie) : la liste porte donc une
- * ligne par indice de 0 au plus grand cut, et les indices sans cut rejouable sont des lignes « skipped » sans bords. */
+ * ligne par indice de 0 au plus grand cut, et les indices sans cut rejouable sont des lignes « valid » sans bords (validées avant le lot ; sans bords, B1 ne s'y appuie pas). */
 function lignes(partie){
   const parCut=new Map(partie.cuts.map(c=>[c.cut,c])),max=Math.max(-1,...partie.cuts.map(c=>c.cut)),out=[];
   for(let i=0;i<=max;i++){const c=parCut.get(i);
-    if(!c){out.push({RowKey:`${partie.part}-${i}`,PK:partie.table,CutNumber:i,ExtractionStatus:'skipped',TreatedByOperator:true,SeenByOperator:true,Index:i});continue;}
+    if(!c){out.push({RowKey:`${partie.part}-${i}`,PK:partie.table,CutNumber:i,ExtractionStatus:'valid',TreatedByOperator:true,SeenByOperator:true,Index:i});continue;} /* ligne validée hors rejeu, sans bords : jamais un appui */
     const L=c.rails.left.position,R=c.rails.right.position;
     out.push({RowKey:`${partie.part}-${i}`,PK:partie.table,CutNumber:i,ExtractionStatus:c.status,
       TreatedByOperator:c.status!=='invalid',SeenByOperator:c.status!=='invalid',SuccessLeft:c.status==='valid',SuccessRight:c.status==='valid',

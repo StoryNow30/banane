@@ -29,15 +29,22 @@ const lireJson=f=>JSON.parse(fs.readFileSync(f,'utf8'));
 /* Charge un fichier ou un dossier : un document unique {records, events, clouds, …}. */
 function charger(entree){
   const st=fs.statSync(entree);
-  if(st.isDirectory()){const fichiers=fs.readdirSync(entree).filter(f=>f.endsWith('.json')).sort().map(f=>path.join(entree,f));
-    const compacts=[],autres=[];for(const f of fichiers){const tete=fs.readFileSync(f,{encoding:'utf8',flag:'r'}).slice(0,4000);(/"format"\s*:\s*"banane-native-session-v3-compact"|"segment"\s*:/.test(tete)?compacts:autres).push(f);}
-    const docs=autres.map(lireJson);if(compacts.length)docs.push(mergeFiles(compacts).merged);
-    return fusionner(docs);}
-  const doc=lireJson(entree);return fusionner([doc.format===X.FORMAT?X.expand(doc):doc]);
+  const fichiers=st.isDirectory()?fs.readdirSync(entree).filter(f=>f.endsWith('.json')).sort().map(f=>path.join(entree,f)):[entree];
+  /* Un fichier compact (`banane-native-session-v3-compact`, dictionnaires) se reconnaît une fois lu, pas à son en-tête :
+   * le bilan allégé 4.9 porte sa clé `format` en fin de fichier. Les compacts sont relus et chaînés par mergeFiles (KI-060). */
+  const compacts=[],docs=[];
+  for(const f of fichiers){const d=lireJson(f);if(d&&(d.format===X.FORMAT||d.dictionaries))compacts.push(f);else docs.push(d);}
+  if(compacts.length)docs.push(mergeFiles(compacts).merged);
+  return fusionner(docs);
 }
-function fusionner(docs){const out={formats:[],records:[],events:[],clouds:[],state:null,session:null};
+function fusionner(docs){const out={formats:[],records:[],events:[],clouds:[],state:null,session:null,doublons:0};
   for(const d of docs){out.formats.push(d.format||'?');for(const k of ['records','events','clouds'])if(Array.isArray(d[k]))out[k].push(...d[k]);
     if(d.state)out.state=d.state;if(d.session)out.session=d.session;}
+  /* Un même enregistrement peut figurer dans plusieurs fichiers d'un export (journal et bilan) : une seule copie,
+   * celle qui porte une identité. Idem pour les nuages (captureId) et les événements (eventId). */
+  const dedup=(liste,cle,mieux)=>{const m=new Map();for(const x of liste){const k=cle(x);if(k===undefined||k===null){m.set(Symbol(),x);continue;}
+    const prev=m.get(k);if(!prev||mieux&&mieux(x)&&!mieux(prev))m.set(k,x);else if(prev)out.doublons++;}return [...m.values()];};
+  out.records=dedup(out.records,r=>r.recordId||r.id,r=>!!identite(r)?.cut);out.clouds=dedup(out.clouds,c=>c.captureId||c.chunkId);out.events=dedup(out.events,e=>e.eventId);
   return out;}
 const identite=r=>r.identity||r.before?.identity||(Number.isInteger(r.cut)?{part:r.part,cut:r.cut}:null);
 const EDGES=['XLeftEdge','YLeftEdge','ZLeftEdge','XRightEdge','YRightEdge','ZRightEdge'];
@@ -127,7 +134,8 @@ function construire(entree,options={}){
   const direction=cuts.find(c=>c.part===parts[0]).capture.rails.left.railLocalToSceneRelative.slice(0,3);
   return {format:'banane-esv-maquette-scenario-v1',monde:{origine:S.ORIGINE_MONDE,pas:S.PAS_M,direction,reperes:Object.fromEntries(reperes)},camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,1.2]},
     provenance:{entree:path.basename(entree),formats:[...new Set(doc.formats)],nature:echo?'echo':'orbite',records:doc.records.length,nuages:doc.clouds.length,rejouables:cuts.length,
-      reperes:reperes.size,mondeReel:[...reperes.values()].filter(r=>r.monde==='reel').length,preValides:valides,exclus},parties};
+      reperes:reperes.size,mondeReel:[...reperes.values()].filter(r=>r.monde==='reel').length,preValides:valides,doublons:doc.doublons,
+      exclus:{total:exclus.length,parRaison:exclus.reduce((a,x)=>(a[x.raison]=(a[x.raison]||0)+1,a),{}),exemples:exclus.slice(0,20)}},parties};
 }
 module.exports={construire,charger,cutsOrbite,cutsEcho};
 if(require.main===module){const a=process.argv.slice(2),i=a.indexOf('--part'),v=a.indexOf('--valides');const s=construire(a[0],{part:i>=0?Number(a[i+1]):undefined,valides:v>=0?Number(a[v+1]):0});

@@ -66,4 +66,4 @@ function construire(o){
 module.exports={construire,args};
 if(require.main===module){const o=args(process.argv.slice(2));if(!o.exports.length){console.error('Usage : EXPORT [EXPORT…] [--rejeu RAPPORT.json] [--fenetre 3] [--points] [--sortie JEU.json]');process.exit(2);}
   const jeu=construire(o);if(o.sortie)fs.writeFileSync(o.sortie,JSON.stringify(jeu,null,1));
-  console.log(JSON.stringify({resume:jeu.resume,parties:jeu.parties.map(p=>({export:p.export,nature:p.nature,part:p.part,cuts:p.cuts.length,exclus:p.exclus.length}))},null,1));}
+  console.log(JSON.stringify({resume:jeu.resume,parties:jeu.parties.map(p=>({export:p.export,nature:p.nature,part:p.part,cuts:p.cuts.length,exclus:p.exclus.total}))},null,1));}
