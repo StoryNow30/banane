@@ -171,3 +171,21 @@ Hors 4.9.5, mais **petits et sans risque** si une version de test passe par là 
 - Observation ESV : `src/esv-observer.js`, `background.js` (`rangerObservations`, `seanceObservateur`, écouteur `native-event`).
 - Outils : `tools/merge-segments.cjs`, `tools/export-compact.cjs`, `tools/native-offline-evaluate.cjs`, `tools/native-gauge-report.cjs`, `tools/acceptance-report.cjs`, `tools/analyse-locale.cjs`, `tools/filtrer-journal.cjs`, `tools/reducteur-exports-core.js`.
 - Décisions : D-097 à D-102, D-106 à D-109 ; KI-042, KI-064, KI-066, KI-068 ; cahier 4.9 § 7 (base du −40 %, « Écho : aucun pourcentage présumé ») et § 8 (exports).
+
+## 6. Suite donnée : corrections livrées en 4.9.0.18 (15 octobre 2026, branche `claude/49-echo-corrections`)
+
+Sur demande de Mic (« tu peux tout corriger »), les étapes 1 à 4 du § 4.1 sont codées dans la **4.9.0.18 (test 18)**, sans toucher
+`src/engine.js` ni `src/geometry.js`. Détail dans `CHANGELOG.md` et `consignes/seance-terrain-test-18-2026-10-15.md` de cette branche.
+
+| Angle mort | État en 4.9.0.18 |
+|---|---|
+| AM-01, AM-02, AM-03, AM-13, AM-15 (en partie), AM-16 | corrigés (`src/native-page.js`, `src/native-session.js`, `settings.echo`) |
+| AM-05, AM-06 (message), AM-07, AM-08, AM-23 | corrigés (`background.js` : page perdue, reprise automatique, bandeau ; `K.cutKey`) |
+| AM-14, AM-18, KI-068 | corrigés (observations ESV taguées et jointes ; exports d'Orbite sans Écho) |
+| AM-19 | corrigé (refus de remplacer une session finie non téléchargée) |
+| Parité d'export § 3.1 points 1 à 4 | corrigée (volumes zip Écho, CONTENU.txt, fiche de départ, `tools/lire-volumes.cjs`, outils qui lisent les zip) ; point 5 (noms `Ariane_…`) non fait |
+| AM-04, AM-09 (`projectKey`), AM-10, AM-11, AM-12, AM-17, AM-20, AM-21, AM-22 ; C-03, C-05, C-06, C-09 ; manifeste de corpus | **restent à faire** (5.0, § 4.2), ou hors ligne |
+
+Essais : `tests/echo-4918.test.cjs` (17 essais) ; `node tools/verify.cjs` à zéro échec (voir le commit de la branche). Les demandes à Mic du
+§ 4.4 restent posées : la version de test applique des **choix par défaut** (Entrée et Ctrl+Entrée valent validation, reprise automatique
+après F5, seuil 1 mm), à confirmer sur le terrain.
