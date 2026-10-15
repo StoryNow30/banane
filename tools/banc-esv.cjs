@@ -22,11 +22,16 @@
 const path=require('node:path'),fs=require('node:fs');
 const N=require('../tests/esv-maquette/navigateur.cjs');
 const racine=N.racine;
-function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,valides:0,pannes:null,entete:false,delai:120000};
+function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,valides:0,pannes:null,entete:false,delai:120000,cutsDonne:false};
   for(let i=0;i<argv.length;i++){const a=argv[i];if(a==='--entete')o.entete=true;else if(a.startsWith('--')){o[a.slice(2)]=argv[++i];if(a==='--cuts')o.cutsDonne=true;}}
   for(const k of ['cuts','debut','decalage','latence','delai','valides'])o[k]=Number(o[k]);if(o.part!==null)o.part=Number(o.part);
   if(typeof o.pannes==='string'){try{o.pannes=JSON.parse(o.pannes);}catch(e){throw Error('--pannes : JSON invalide ('+e.message+')');}}o.extension=path.resolve(o.extension);if(o.export)o.export=path.resolve(o.export);return o;}
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
+/* Borne du rejeu : options venues de la ligne de commande (`cutsDonne` présent) → seulement si --cuts a été écrit ;
+ * options d'un appel programmé → seulement si `cuts` y figure. Sinon : toute la partie. */
+function limiteRejeu(options){const cuts=Number(options.cuts);
+  if(Object.hasOwn(options,'cutsDonne'))return options.cutsDonne&&cuts>0?cuts:null;
+  return Object.hasOwn(options,'cuts')&&cuts>0?cuts:null;}
 async function banc(options={}){
   const o={...args([]),...options},pw=N.playwright();if(!pw)throw Error('Playwright introuvable.');
   const manifeste=JSON.parse(fs.readFileSync(path.join(o.extension,'manifest.json'),'utf8'));
@@ -51,7 +56,7 @@ async function banc(options={}){
     await esv.evaluate(()=>window.__maquette.pret);await esv.waitForFunction(()=>window.__maquette.etat().railsPrets);
     /* Rejeu : bornes du lot = les cuts de la partie rejouée (tous, ou --cuts à partir de --decalage), ouverts sur le premier. */
     if(o.export){const e0=await esv.evaluate(()=>window.__maquette.etat());/* En rejeu, le lot couvre toute la partie, sauf si --cuts (ligne de commande) ou cuts (appel programmé) est donné explicitement. */
-      const limite=o.cutsDonne||Object.hasOwn(options,'cuts')?o.cuts:null;const liste=e0.cuts.slice(o.decalage,limite?o.decalage+limite:undefined);
+      const limite=limiteRejeu(options);const liste=e0.cuts.slice(o.decalage,limite?o.decalage+limite:undefined);
       if(!liste.length)throw Error('Aucun cut à rejouer.');o.debut=liste[0];o.decalage=0;o.cuts=liste.length;o.fin=liste.at(-1);
       await esv.evaluate(cut=>window.__maquette.allerA(cut),o.debut);await esv.waitForFunction(()=>window.__maquette.etat().railsPrets);}
     const panneau=await ctx.newPage();panneau.on('pageerror',e=>erreurs.push('panneau: '+e.message));
@@ -87,6 +92,6 @@ async function banc(options={}){
     return resume;
   }finally{await ctx.close().catch(()=>{});await serveur.fermer();}
 }
-module.exports={banc,args};
+module.exports={banc,args,limiteRejeu};
 if(require.main===module){let o;try{o=args(process.argv.slice(2));}catch(e){console.error(e.message);process.exit(2);}
   banc(o).then(r=>{console.log(JSON.stringify(r,null,1));process.exitCode=r.erreurs.length?2:0;},e=>{console.error(e.stack||e.message);process.exitCode=1;});}

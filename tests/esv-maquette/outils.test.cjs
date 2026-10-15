@@ -21,3 +21,9 @@ test('esv-contrat-comparer : confirmée / infirmée / non relevée, et quoi chan
   assert.equal(v.H07,'infirmée');assert.equal(v.H08,'confirmée');assert.equal(v.H13,'infirmée','55 nœuds hors de la plage supposée');
   assert.ok(c.aChanger.some(x=>x.startsWith('H07')),'H07 à changer : '+JSON.stringify(c.aChanger));
 });
+test('banc-esv : borne du rejeu (toute la partie sauf --cuts écrit ou cuts programmé)',()=>{
+  const {limiteRejeu,args}=require('../../tools/banc-esv.cjs');
+  assert.equal(limiteRejeu(args(['--export','x'])),null,'ligne de commande sans --cuts : toute la partie');
+  assert.equal(limiteRejeu(args(['--export','x','--cuts','4'])),4);
+  assert.equal(limiteRejeu({export:'x'}),null);assert.equal(limiteRejeu({export:'x',cuts:2}),2);
+});
