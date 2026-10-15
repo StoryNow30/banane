@@ -200,9 +200,12 @@
      * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
      * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */
     viderApresExport: false,
-    /* V2 : volume maximal (compressé, pire cas) d'une archive « Tout télécharger ».
-     * Au-delà, une archive suivante est ouverte. Le zip simple s'arrête à 4 Gio. */
-    zipMaxBytes: 1024 * Mo,
+    /* V2 : volume maximal d'une archive « Tout télécharger » ; au-delà, une archive suivante est ouverte.
+     * 4.9.0.16 (test 15, Mic : limite d'envoi d'environ 18 Mo par fichier) : 17 Mo (17 × 1 048 576 octets,
+     * 17,8 millions d'octets), taille COMPRESSÉE réelle, CONTENU.txt compris : sous 18 Mo quelle que soit la
+     * façon de compter les mégaoctets. Un fichier JSON n'est jamais coupé (s'il dépasse seul, il fait un
+     * volume à lui). Le zip simple s'arrête à 4 Gio. */
+    zipMaxBytes: 17 * Mo,
     /* Cadence de contrôle du seuil par le panneau, pendant la collecte. */
     advicePollMs: 5000,
   });
@@ -284,6 +287,7 @@
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
       { groupe: 'Export', nom: 'Allègement des nuages', valeur: exportSettings.mode === 'allege' ? 'actif (sondes sans information retirées)' : 'aucun (tout est conservé)', pourquoi: 'D-091 : environ un tiers de moins sur les nuages LiDAR du zip. Les points restent exacts ; chaque nuage allégé le dit (exportLightening).' },
+      { groupe: 'Export', nom: 'Taille d’un volume zip', valeur: mo(exportSettings.zipMaxBytes) + ' au plus (compressé)', pourquoi: 'Au-delà, un volume suivant ; un fichier JSON n’est jamais coupé.' },
       { groupe: 'Export', nom: 'Taille de segment visée', valeur: mo(exportSettings.segmentBytes), pourquoi: 'Réserve de ' + mo(exportSettings.segmentReserveBytes) + ', plancher de ' + exportSettings.minObjectsPerSegment + ' objets.' },
       { groupe: 'Export', nom: 'Compactage', valeur: exportSettings.compact ? 'activé' : 'désactivé', pourquoi: 'Retire les champs dérivables, sans effet sur le moteur.' },
       { groupe: 'Lecteur', nom: 'Budget de lecture', valeur: exportSettings.compact === null ? '' : reader.maxMillis + ' ms', pourquoi: 'Par capture, points déjà chargés seulement.' },

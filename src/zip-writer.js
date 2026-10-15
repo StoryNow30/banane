@@ -83,6 +83,59 @@
     catch (_) { return false; }
   }
 
+  /* Lit un Blob en flux : CRC, taille et, si demandé, flux compressé. */
+  async function lire(blob, compresser) {
+    const lecteur = blob.stream().getReader();
+    let crc = 0, taille = 0;
+    let ecrivain = null, sortie = null, pompe = null;
+    const compresses = []; let tailleCompressee = 0;
+    if (compresser) {
+      const cs = new CompressionStream('deflate-raw');
+      ecrivain = cs.writable.getWriter(); sortie = cs.readable.getReader();
+      pompe = (async () => {
+        for (;;) {
+          const { done, value } = await sortie.read();
+          if (done) break;
+          compresses.push(value); tailleCompressee += value.length;
+        }
+      })();
+      // Une erreur de la pompe est relevée à l'attente de `pompe`, jamais perdue.
+      pompe.catch(() => {});
+    }
+    try {
+      for (;;) {
+        const { done, value } = await lecteur.read();
+        if (done) break;
+        crc = crc32(value, crc); taille += value.length;
+        if (ecrivain) await ecrivain.write(value);
+      }
+      if (ecrivain) { await ecrivain.close(); await pompe; }
+    } catch (e) {
+      try { await lecteur.cancel(); } catch (_) { /* déjà fermé */ }
+      if (ecrivain) { try { await ecrivain.abort(e); } catch (_) { /* déjà fermé */ } }
+      throw e;
+    }
+    return { crc, taille, compresses, tailleCompressee };
+  }
+
+  /* 4.9.0.16 — PRÉPARER une entrée sans l'écrire : le fichier est lu et compressé une fois,
+   * sa taille compressée est alors connue. L'appelant choisit l'archive (le volume) où
+   * l'écrire avec `ajouterPrepare`, sans recompresser. `methode` : 'deflate' ou 'stored'. */
+  async function preparer(nom, contenu, options = {}) {
+    if (!nomValide(nom)) throw Error('Nom d’entrée zip refusé : ' + nom);
+    const blob = contenu instanceof Blob ? contenu : new Blob([contenu]);
+    if (blob.size > LIMITE_32) throw Error('Fichier trop gros pour une archive zip simple : ' + nom);
+    const deflate = options.methode !== 'stored' && compressionDisponible();
+    let r = await lire(blob, deflate);
+    let m = deflate ? DEFLATE : STORED;
+    /* Les données qui ne se compressent pas (ou presque) restent « stored » : plus petit, plus sûr. */
+    if (m === DEFLATE && r.tailleCompressee >= r.taille) { m = STORED; r = { ...r, compresses: [], tailleCompressee: r.taille }; }
+    const nomOctets = encodeur().encode(nom);
+    return { nom, nomOctets, blob, methode: m, crc: r.crc, taille: r.taille, tailleCompressee: m === STORED ? r.taille : r.tailleCompressee, compresses: r.compresses };
+  }
+  /* Octets qu'une entrée préparée ajoute à l'archive terminée : en-tête local, données, entrée centrale. */
+  const coutEntree = p => 30 + p.nomOctets.length + p.tailleCompressee + 46 + p.nomOctets.length;
+
   /* `options.methode` : 'deflate' (défaut si disponible) ou 'stored'.
    * `options.date` : date écrite dans les entrées. */
   function createZip(options = {}) {
@@ -91,60 +144,18 @@
     const morceaux = [];        // en-têtes locaux et données, dans l'ordre
     const centrale = [];        // entrées du répertoire central
     const noms = new Set();
-    let octets = 0, fini = false;
+    let octets = 0, octetsCentrale = 0, fini = false;
     const entrees = [];
 
     function ecrire(parts) { for (const p of parts) { morceaux.push(p); octets += p.size !== undefined ? p.size : p.length; } }
 
-    /* Lit un Blob en flux : CRC, taille et, si demandé, flux compressé. */
-    async function lire(blob, compresser) {
-      const lecteur = blob.stream().getReader();
-      let crc = 0, taille = 0;
-      let ecrivain = null, sortie = null, pompe = null;
-      const compresses = []; let tailleCompressee = 0;
-      if (compresser) {
-        const cs = new CompressionStream('deflate-raw');
-        ecrivain = cs.writable.getWriter(); sortie = cs.readable.getReader();
-        pompe = (async () => {
-          for (;;) {
-            const { done, value } = await sortie.read();
-            if (done) break;
-            compresses.push(value); tailleCompressee += value.length;
-          }
-        })();
-        // Une erreur de la pompe est relevée à l'attente de `pompe`, jamais perdue.
-        pompe.catch(() => {});
-      }
-      try {
-        for (;;) {
-          const { done, value } = await lecteur.read();
-          if (done) break;
-          crc = crc32(value, crc); taille += value.length;
-          if (ecrivain) await ecrivain.write(value);
-        }
-        if (ecrivain) { await ecrivain.close(); await pompe; }
-      } catch (e) {
-        try { await lecteur.cancel(); } catch (_) { /* déjà fermé */ }
-        if (ecrivain) { try { await ecrivain.abort(e); } catch (_) { /* déjà fermé */ } }
-        throw e;
-      }
-      return { crc, taille, compresses, tailleCompressee };
-    }
-
-    /* Ajoute un fichier. `contenu` : Blob. Rend { nom, methode, crc32, taille, tailleCompressee }. */
-    async function ajouter(nom, contenu) {
+    /* Écrit une entrée préparée (`preparer`), sans la relire. Rend { nom, methode, crc32, taille, tailleCompressee }. */
+    function ajouterPrepare(p) {
       if (fini) throw Error('Archive déjà terminée.');
-      if (!nomValide(nom)) throw Error('Nom d’entrée zip refusé : ' + nom);
+      const nom = p.nom;
       if (noms.has(nom)) throw Error('Nom d’entrée zip en double : ' + nom);
       if (entrees.length + 1 > MAX_ENTREES) throw Error('Trop de fichiers pour une archive zip simple (' + MAX_ENTREES + ').');
-      const blob = contenu instanceof Blob ? contenu : new Blob([contenu]);
-      if (blob.size > LIMITE_32) throw Error('Fichier trop gros pour une archive zip simple : ' + nom);
-      let r = await lire(blob, methode === DEFLATE);
-      let m = methode;
-      /* Les données qui ne se compressent pas (ou presque) restent « stored » : plus petit, plus sûr. */
-      if (m === DEFLATE && r.tailleCompressee >= r.taille) { m = STORED; r = { ...r, compresses: [], tailleCompressee: r.taille }; }
-      const taille = r.taille, tailleCompressee = m === STORED ? taille : r.tailleCompressee;
-      const nomOctets = encodeur().encode(nom);
+      const m = p.methode, taille = p.taille, tailleCompressee = p.tailleCompressee, nomOctets = p.nomOctets;
       const decalage = octets;
       if (decalage + 30 + nomOctets.length + tailleCompressee + 46 + nomOctets.length > LIMITE_32 - 22) {
         throw Error('Archive zip pleine (4 Gio) : ' + nom + ' ne tient plus.');
@@ -152,16 +163,25 @@
       // Bit 11 : nom en UTF-8. Pas de bit 3 : les tailles et le CRC sont connus.
       const drapeaux = 0x0800;
       const locale = cat([u32(0x04034b50), u16(20), u16(drapeaux), u16(m), u16(date.heure), u16(date.jour),
-        u32(r.crc), u32(tailleCompressee), u32(taille), u16(nomOctets.length), u16(0), nomOctets]);
+        u32(p.crc), u32(tailleCompressee), u32(taille), u16(nomOctets.length), u16(0), nomOctets]);
       ecrire([locale]);
-      if (m === STORED) { if (taille) ecrire([blob]); } else ecrire(r.compresses);
-      centrale.push(cat([u32(0x02014b50), u16(20), u16(20), u16(drapeaux), u16(m), u16(date.heure), u16(date.jour),
-        u32(r.crc), u32(tailleCompressee), u32(taille), u16(nomOctets.length), u16(0), u16(0), u16(0), u16(0),
-        u32(0), u32(decalage), nomOctets]));
+      if (m === STORED) { if (taille) ecrire([p.blob]); } else ecrire(p.compresses);
+      const c = cat([u32(0x02014b50), u16(20), u16(20), u16(drapeaux), u16(m), u16(date.heure), u16(date.jour),
+        u32(p.crc), u32(tailleCompressee), u32(taille), u16(nomOctets.length), u16(0), u16(0), u16(0), u16(0),
+        u32(0), u32(decalage), nomOctets]);
+      centrale.push(c); octetsCentrale += c.length;
       noms.add(nom);
-      const info = { nom, methode: m, crc32: r.crc, taille, tailleCompressee };
+      const info = { nom, methode: m, crc32: p.crc, taille, tailleCompressee };
       entrees.push(info);
       return info;
+    }
+    /* Ajoute un fichier. `contenu` : Blob. Rend { nom, methode, crc32, taille, tailleCompressee }. */
+    async function ajouter(nom, contenu) {
+      if (fini) throw Error('Archive déjà terminée.');
+      if (!nomValide(nom)) throw Error('Nom d’entrée zip refusé : ' + nom);
+      if (noms.has(nom)) throw Error('Nom d’entrée zip en double : ' + nom);
+      if (entrees.length + 1 > MAX_ENTREES) throw Error('Trop de fichiers pour une archive zip simple (' + MAX_ENTREES + ').');
+      return ajouterPrepare(await preparer(nom, contenu, { methode: methode === DEFLATE ? 'deflate' : 'stored' }));
     }
 
     /* Ferme l'archive : répertoire central et fin de répertoire. Rend le Blob. */
@@ -176,11 +196,13 @@
     }
 
     return {
-      ajouter, terminer, methode: methode === DEFLATE ? 'deflate' : 'stored',
-      get octets() { return octets; }, get entrees() { return entrees.slice(); },
+      ajouter, ajouterPrepare, terminer, methode: methode === DEFLATE ? 'deflate' : 'stored',
+      get octets() { return octets; },
+      /* Taille exacte de l'archive si elle était terminée maintenant (répertoire central et fin compris). */
+      get octetsTermines() { return octets + octetsCentrale + 22; }, get entrees() { return entrees.slice(); },
       get vide() { return !entrees.length; },
     };
   }
 
-  return { createZip, crc32, nomValide, compressionDisponible, STORED, DEFLATE, LIMITE_32, MAX_ENTREES };
+  return { createZip, preparer, coutEntree, crc32, nomValide, compressionDisponible, STORED, DEFLATE, LIMITE_32, MAX_ENTREES };
 });

@@ -1,5 +1,36 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0.16 — test 16 (15/10)
+
+Manifeste `4.9.0.16`, « 4.9.0 test 16 », paquet `ariane-4.9.0-test.16.zip` ; base : test 15 (`b9652df`). Retours de Mic sur la
+test 15 (partie 24). `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+`consignes/seance-terrain-test-16-2026-10-15.md` ; retour arrière : test 15.
+
+- **Export découpé tout seul** (`panel.js`, `src/zip-writer.js`, réglage `export.zipMaxBytes`) : « Tout télécharger » écrit des
+  volumes zip autonomes de 17 Mo au plus (taille compressée réelle, CONTENU.txt compris ; sous 18 Mo quelle que soit l'unité),
+  nommés `…-volumeNN-surNN.zip` (un seul zip garde son nom d'avant). Chaque fichier JSON est compressé une fois
+  (`BananeZip.preparer`), puis rangé dans le volume où il tient. Un JSON n'est jamais coupé : plus gros que la limite, il fait
+  un volume à lui et le statut le dit. CONTENU.txt dit « Volume n sur N » et porte les départs. Pendant « Tout télécharger »,
+  un segment JSON vise au plus deux volumes (34 Mo) avant compression. Vidage automatique : seulement si TOUS les volumes
+  sont confirmés (inchangé). Essais : `tests/t16-export-volumes.test.cjs`.
+- **Départs des parties : historique** : la partie en cours en grand, puis « Parties précédentes » (plus récente d'abord :
+  heure du dernier départ, validés, invalides, total, nombre de départs), chacune dépliable sur ses départs ; la partie en
+  cours aussi (« Voir les N départs »). Mêmes fiches (`banane3FichesDepart`, 200 au plus, hors du cache des exports : le vidage
+  ne les touche pas) ; rien ne change dans ce qui est exporté.
+- **Sélecteur « Onglet ESV »** : options lisibles en sombre comme en clair (fond opaque du thème) ; deux onglets au même titre se
+  distinguent (rang, fenêtre, premier plan, pas prêt, utilisé par Ariane) ; l'invite ne se choisit pas ; l'onglet qu'Ariane
+  utilise, ou le seul onglet prêt, est choisi d'avance ; la connexion reste au clic sur « Reconnecter ESV » (onglet unique :
+  comme avant). `list-tabs` rend aussi fenêtre, rang, onglet actif, état prêt (aucune adresse).
+- **Tuile « Lot »** : le pourcentage défile avec le vert (requestAnimationFrame, s'arrête une fois arrivé) ; bord lumineux avec
+  une lueur lente pendant le lot ; onde au bord à chaque cut terminé ; pause calme (terne, immobile) ; fin du lot : un reflet
+  traverse une fois la tuile. Transformations et opacité seulement, figé avec « réduire les animations ». « 1 cut », jamais
+  « 1 cuts » (tuile, ligne d'état, couverture).
+- **B3** (`background.js`) : (a) après une fin de partie (dernier cut validé sur place ou différé sans envoi, fin retenue après
+  un différé), « Reprendre » répond « Lot déjà terminé » sans rien rejouer ; (b) « Reprendre » après un arrêt ou une pause
+  survenus entre la capture et la pose compare les rails d'ESV à ceux de la capture (comme « Réessayer ») et refuse s'ils ont
+  bougé : la proposition calculée avant l'arrêt n'est plus appliquée sur une autre pose ; (c) les 64 dernières transitions du lot
+  (nom, lot, état, heure) partent dans le journal exporté (`transitionsLot`). Essais : `tests/t16-b3-reprise.test.cjs`.
+
 ## 4.8.6 — stable (30/09, D-065)
 
 **Même code que le test 2** (`69b31c9`) ; seuls la version et le nom changent (manifeste `4.8.6`, nom « Ariane »,

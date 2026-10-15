@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.15',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 15';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0.16',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0 test 16';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -36,11 +36,14 @@ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
  *   cut-suivant  validation et passage au cut suivant (validateAndNext)
  *   differe      cut différé ; départ d'ESV après un différé
  *   fin-de-lot   lot clos : dernier cut, sortie d'ESV, fin naturelle de la boucle
- *   erreur       refus ou échec d'une action du panneau, dit dans l'avis */
+ *   erreur       refus ou échec d'une action du panneau, dit dans l'avis
+ * 4.9.0.16 (test 15) : chaque entrée porte aussi son heure (`at`) ; les 64 dernières
+ * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
+ * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
 const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
 const coordinateurLot={journal:[],
  transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
-  const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null});if(this.journal.length>64)this.journal.shift();
+  const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
   return f();}};
 function liveGCV1Contract(){
  const contract=globalThis.BananeGCV1Shadow?.state?.().contract;
@@ -659,6 +662,29 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
      +(meme?` Contrôle le cut ${N} dans ESV.`:'')+' Aucune commande n’a été renvoyée.';}
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:N,target,total:M,finMemorisee:memoriser});
  await engine.save();return true;}
+/* 4.9.0.16 (test 15, 5a) — LOT DÉJÀ TERMINÉ. Après une fin de partie certaine (dernier cut
+ * validé sur place ou différé sans envoi, KI-069 ; fin retenue après un différé, D-062 b),
+ * « Reprendre » relançait la boucle sur le dernier cut : la fin se rejouait à chaque clic
+ * (« dernier-cut-differe » puis « batch-stopped-at-end », terrain du 15/10 à 07:27:52 et
+ * 07:27:58). Il n'y a plus rien à faire dans ce lot : la reprise répond « Lot déjà
+ * terminé », sans commande ni événement. Les autres clôtures (dernier cut d'une plage,
+ * sortie d'ESV) restent reprenables comme avant. */
+const FINS_DE_PARTIE=new Set(['dernier-cut-valide','dernier-cut-differe']);
+function lotTermine(b){const e=b?.stoppedAtEnd;return b?.state==='STOPPED'&&!!e&&(FINS_DE_PARTIE.has(e.issue)||e.reason==='navigation-other-part-after-defer');}
+/* 4.9.0.16 (test 15, 5b) — REPRISE SUR UNE PROPOSITION DÉJÀ CALCULÉE. Le moteur épinglé ne
+ * contrôle les rails à la reprise que si le cut repart de sa capture. Arrêté (ou en pause)
+ * après l'analyse et avant la pose, le lot reprenait à l'étape « pose » et appliquait la
+ * proposition calculée AVANT l'arrêt, sans nouvelle capture (terrain du 15/10, cut 2236 :
+ * « Arrêter », puis « Reprendre » 6 s plus tard). Comme « Réessayer » : si les rails d'ESV
+ * ne sont plus ceux de la capture, la reprise est refusée, rien n'est posé. Rails
+ * inchangés : la proposition vaut toujours, le lot reprend comme avant. */
+async function gardeRailsCapture(affiche){const b=engine.s.batch,avant=engine.s.before;
+ if(!b||!avant?.rails||engine.s.applied||engine.s.intent||engine.s.reconcileRequired)return;
+ if(!(b.step==='analyze'||b.step==='apply'&&engine.s.proposal))return;
+ const now=affiche?.rails?affiche:await adapter.state().catch(()=>null);
+ if(!now?.rails)throw Error(`Cut ${avant.identity?.cut??'?'} : rails d’ESV illisibles ; la proposition calculée avant l’arrêt n’est pas appliquée. Recharge ESV (F5), puis clique sur Reprendre.`);
+ if(!globalThis.BananeCore3.equalPoses(avant.rails,now.rails))
+  throw Error(`Rails modifiés depuis la capture du cut ${avant.identity?.cut??'?'} : la proposition calculée avant l’arrêt n’est pas appliquée, la reprise est refusée. ${b.state==='STOPPED'?'C':'Arrête le lot, c'}ontrôle ce cut dans ESV, puis lance un nouveau lot.`);}
 async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const b0=engine.s.batch;
  if(departOuvert(b0))return coordinateurLot.transition('fin-de-lot',()=>finApresDiffere(b0));
@@ -681,6 +707,8 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
   * sur une proposition absente. Sans proposition, la reprise recommence le
   * cut par sa capture. */
  if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
+ if(!garde())return false;
+ await gardeRailsCapture(affiche);
  if(!garde())return false;
  /* « Adaptateur sans réponse » : ESV répond de nouveau (état relu ci-dessus), le
   * lot redevient une pause ordinaire ; refus du moteur : l'état est rendu. */
@@ -1254,7 +1282,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
  if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
   await chrome.storage.local.set({banane4Bandeau:bandeau.on});await syncLauncher();return {on:bandeau.on};}
- if(action==='list-tabs')return (await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'})).map(t=>({id:t.id,title:t.title}));
+ /* 4.9.0.16 (test 15) : de quoi distinguer deux onglets ESV au même titre (fenêtre, rang, onglet actif,
+  * prêt ou non, celui qu'Ariane utilise). Aucune adresse n'est rendue au panneau. */
+ if(action==='list-tabs')return (await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'})).map(t=>({id:t.id,title:t.title,
+  windowId:t.windowId??null,index:Number.isInteger(t.index)?t.index:null,active:t.active===true,pret:t.status!=='loading'&&t.discarded!==true,utilise:t.id===selectedTab}));
  if(action==='connect'){
   if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer d’onglet.');
   if(repriseEnCours)throw Error('Reprise du lot en cours : attends qu’elle se termine.');
@@ -1320,6 +1351,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='stop')return coordinateurLot.transition('arret',async()=>{const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
   if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();});
  if(action==='resume')return coordinateurLot.transition('reprise',async()=>{if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
+  if(lotTermine(engine.s.batch)){engine.s.notice=`Lot déjà terminé : ${engine.s.batch.stoppedAtEnd.reason==='navigation-other-part-after-defer'?'fin de la partie retenue':'dernier cut de la partie atteint'} (cut ${engine.s.batch.stoppedAtEnd.cut}). Rien n’est rejoué ; pour continuer, clique sur « Nouveau lot ».`;await engine.save();return engine.view();}
   repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();});
  /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
   * l'opérateur a déplacé les rails pendant la pause, cette capture serait SA
@@ -1345,9 +1377,11 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  const exporte=['journal-meta','dataset-meta','journal','dataset'].includes(action),periode=exporte?await periodeExport(await flushMesure()):null;
  const v1TimingExport=periode?.v1TimingExport??null;
  const timingMeta={...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{})};
- if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport()};
+ /* 4.9.0.16 (test 15, 5c) : les 64 dernières transitions du lot (B3), dans le journal exporté. */
+ const transitionsLot=coordinateurLot.journal.map(t=>({nom:t.nom,lot:t.lot,etat:t.etat,at:t.at??null}));
+ if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),transitionsLot};
  if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
- if(action==='journal')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport()};
+ if(action==='journal')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport(),transitionsLot};
  if(action==='dataset')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
  return engine.locked(async()=>{
   let result;

@@ -20,17 +20,17 @@
  --bg:#f4f6f4;--bg-2:#eaf0eb;--text:#0e1310;--text-2:#4c5650;--text-3:#56605a;--hair:rgba(14,40,24,.09);--hair-2:rgba(14,40,24,.18);--field:rgba(14,40,24,.05);
  --tile:rgba(14,40,24,.05);--tile-on:rgba(14,40,24,.08);--halo:rgba(24,140,82,.14);--vert-1:#38bf75;--vert-2:#23955a;--sur-vert:#0e1310;
  --voie:#3e6ae1;--ok:#0b6e3c;--amber:#8a5200;--red:#ad0c1a;--seg:#0e1310;--future:rgba(14,19,16,.08);--inv:#ffffff;
- --amber-t:rgba(164,98,0,.10);--red-t:rgba(200,16,30,.07);--flash:rgba(17,131,74,.10)}
+ --amber-t:rgba(164,98,0,.10);--red-t:rgba(200,16,30,.07);--flash:rgba(17,131,74,.10);--menu:#ffffff;--menu-on:#dcefe3}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;
  --bg:#0a100c;--bg-2:#0e1c13;--text:#f4f7f5;--text-2:#a9b3ad;--text-3:#97a29b;--hair:rgba(255,255,255,.07);--hair-2:rgba(255,255,255,.15);--field:rgba(255,255,255,.05);
  --tile:rgba(255,255,255,.055);--tile-on:rgba(255,255,255,.10);--halo:rgba(52,210,127,.16);--vert-1:#1f9a57;--vert-2:#11683b;--sur-vert:#ffffff;
  --voie:#4a74e6;--ok:#34d27f;--amber:#f2a93b;--red:#ff6e66;--seg:#f4f7f5;--future:rgba(255,255,255,.07);--inv:#000000;
- --amber-t:rgba(242,169,59,.10);--red-t:rgba(255,95,87,.08);--flash:rgba(52,210,127,.12)}}
+ --amber-t:rgba(242,169,59,.10);--red-t:rgba(255,95,87,.08);--flash:rgba(52,210,127,.12);--menu:#16201a;--menu-on:#1f4a31}}
 :root[data-theme=dark]{color-scheme:dark;
  --bg:#0a100c;--bg-2:#0e1c13;--text:#f4f7f5;--text-2:#a9b3ad;--text-3:#97a29b;--hair:rgba(255,255,255,.07);--hair-2:rgba(255,255,255,.15);--field:rgba(255,255,255,.05);
  --tile:rgba(255,255,255,.055);--tile-on:rgba(255,255,255,.10);--halo:rgba(52,210,127,.16);--vert-1:#1f9a57;--vert-2:#11683b;--sur-vert:#ffffff;
  --voie:#4a74e6;--ok:#34d27f;--amber:#f2a93b;--red:#ff6e66;--seg:#f4f7f5;--future:rgba(255,255,255,.07);--inv:#000000;
- --amber-t:rgba(242,169,59,.10);--red-t:rgba(255,95,87,.08);--flash:rgba(52,210,127,.12)}
+ --amber-t:rgba(242,169,59,.10);--red-t:rgba(255,95,87,.08);--flash:rgba(52,210,127,.12);--menu:#16201a;--menu-on:#1f4a31}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{background:linear-gradient(180deg,var(--bg) 0,var(--bg-2) 100%);min-height:100vh;overflow-x:hidden}
@@ -239,6 +239,15 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .range{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 4px}
 label{display:flex;flex-direction:column;gap:6px;margin:12px 0 0;font-size:12.5px;color:var(--text-2)}
 input,select{width:100%;height:40px;padding:0 10px;border:1px solid var(--hair-2);border-radius:6px;background:var(--field);color:var(--text)}
+/* 4.9.0.16 (test 15) : la liste déroulante native suit le thème. Avant, en sombre, ses options
+   héritaient du texte clair sur le fond blanc du menu : quasi illisibles. Fond opaque du thème,
+   texte du thème, option choisie en vert pâle ; l'invite désactivée en gris. */
+select{color-scheme:inherit}
+select option{background-color:var(--menu);color:var(--text)}
+select option:checked{background-color:var(--menu-on);color:var(--text)}
+select option:disabled{color:var(--text-3)}
+#tabs-note:empty{display:none}
+#tabs-note{margin:6px 0 0;font-size:12.5px}
 input[type=number]{font-family:var(--mono)}
 input[type=checkbox]{width:auto;height:auto;accent-color:var(--text)}
 .interrupteur{flex-direction:row;align-items:center;gap:8px;color:var(--text)}
@@ -427,7 +436,20 @@ body[data-window=automatic] .context{display:none}
 .tuile-lot #lot-progres{display:contents;margin:0}
 .tuile-lot .barre{position:absolute;inset:0;z-index:0;height:auto;background:none;overflow:hidden}
 .tuile-lot .barre i{background:linear-gradient(180deg,var(--vert-1) 0,var(--vert-2) 100%);transition:width 1.1s cubic-bezier(.2,0,0,1),filter .8s}
-.tuile-lot .barre i::after{content:"";position:absolute;top:0;bottom:0;right:-1px;width:2px;background:var(--ok);box-shadow:0 0 16px 1px var(--ok)}
+/* 4.9.0.16 : le bord d'avancée est un élément (#lot-bord) : un filet vert lumineux, une lueur qui
+   monte et descend lentement le long du bord quand le lot avance, et l'onde de chaque cut terminé. */
+.tuile-lot .barre i::after{content:none}
+.tuile-lot .bord{position:absolute;top:0;bottom:0;right:-1px;width:2px;background:var(--ok);box-shadow:0 0 16px 1px var(--ok);transition:opacity .6s,box-shadow .6s}
+.tuile-lot .bord::before{content:"";position:absolute;left:-7px;right:-7px;top:0;height:46%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--ok) 70%,#fff),transparent);opacity:0;transform:translateY(-30%)}
+.tuile-lot .bord .onde{position:absolute;top:50%;right:-23px;width:48px;height:48px;margin-top:-24px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--ok) 55%,transparent),transparent);opacity:0;pointer-events:none}
+/* Le reflet de la fin du lot : une bande claire traverse une fois la tuile. */
+.tuile-lot .fete{position:absolute;inset:0;z-index:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);opacity:0;transform:translateX(-110%);pointer-events:none}
+/* En pause : calme. Vert désaturé, bord éteint, rien ne bouge. */
+.tuile-lot[data-etat=pause] .barre i{filter:saturate(.25) brightness(.85)}
+.tuile-lot[data-etat=pause] .bord{opacity:.35;box-shadow:none}
+/* Fini : le vert se pose, le bord s'efface (il n'y a plus d'avancée). */
+.tuile-lot[data-etat=fini] .bord{opacity:0}
+.tuile-lot #lot-progres.indetermine .bord{display:none}
 .tuile-lot .barre i::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent) -100% 0/60% 100% no-repeat;opacity:0}
 .tuile-lot .progres-l{position:relative;z-index:1;display:flex;align-items:baseline;gap:5px;margin:0;color:var(--sur-vert)}
 .tuile-lot .progres-l .u{font-size:15px;color:var(--sur-vert);opacity:.85}
@@ -486,6 +508,36 @@ body[data-window=automatic] .context{display:none}
 .depart .d-n b{font:300 30px/1.05 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .depart .d-n small{font-size:13px;color:var(--text-2)}
 .depart .d-i{margin:8px 0 0;font-size:12.5px;color:var(--text-2)}
+/* 4.9.0.16 : historique des départs. La partie en cours reste en grand ; les parties précédentes
+   suivent en lignes compactes (du plus récent au plus ancien), chacune dépliable sur ses départs. */
+.departs details>summary{list-style:none;cursor:pointer;padding:0;font:inherit;letter-spacing:0;text-transform:none;color:inherit}
+.departs details>*:not(summary){margin-bottom:0}
+.departs details[open]>summary{color:inherit}
+.departs details>summary::-webkit-details-marker{display:none}
+.departs details>summary:focus-visible{outline:2px solid var(--ok);outline-offset:3px;border-radius:6px}
+.depart .d-detail{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair)}
+.depart .d-detail>summary,.depart .d-detail[open]>summary{font-size:13px;color:var(--text-2)}
+.depart .d-detail>summary::before,.d-partie>summary .h-l1::after{content:"";display:inline-block;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .2s cubic-bezier(.2,0,0,1)}
+.depart .d-detail>summary::before{margin-right:9px;vertical-align:1px}
+.depart .d-detail[open]>summary::before,.d-partie[open]>summary .h-l1::after{transform:rotate(45deg)}
+.d-hist-t{margin:8px 2px 0;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+.d-hist{border-radius:var(--r);background:var(--tile);overflow:hidden}
+.d-partie+.d-partie{border-top:1px solid var(--hair)}
+.departs .d-partie>summary{display:flex;flex-direction:column;gap:3px;padding:12px 18px}
+.d-partie>summary:hover{background:var(--tile)}
+.d-partie .h-l1{display:flex;align-items:baseline;gap:10px}
+.d-partie .h-l1 b{font-size:14.5px;font-weight:600}
+.d-partie .h-l1::after{margin-left:auto;color:var(--text-3);align-self:center}
+.d-partie .h-at{font:400 12px var(--mono);color:var(--text-2)}
+.d-partie .h-l2{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.d-partie .h-l2 .h-v{color:var(--text)}
+.d-partie .h-l2 .h-n{margin-left:auto;color:var(--text-3)}
+.d-partie>.d-table{margin:0 18px 12px;width:calc(100% - 36px)}
+.d-table{width:100%;margin-top:8px;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.d-table th{padding:4px 0;font-weight:500;text-align:left;color:var(--text-3)}
+.d-table td{padding:5px 0;border-top:1px solid var(--hair);color:var(--text-2)}
+.d-table td:first-child{font-family:var(--mono);font-size:12px}
+.d-table .n{text-align:right}
 /* Activité */
 .orbite .activite{margin:0}
 .orbite .activite .l{grid-template-columns:62px 52px minmax(0,1fr) auto;padding:12px 0;font-size:14px}
@@ -511,11 +563,14 @@ footer{border-top:0;margin-top:26px}
 .orbite:has(#lot-etat.amber) .tuile-lot .barre i{filter:saturate(.25) brightness(.85)}
 @media (prefers-reduced-motion:no-preference){
  .orbite:has(#lot-etat.live) .tuile-lot .barre i::before{opacity:1;animation:balaye 4.8s cubic-bezier(.45,0,.25,1) 1.2s infinite}
+ /* 4.9.0.16 : la lueur du bord ne vit que pendant que le lot avance (transform et opacité seulement). */
+ .tuile-lot[data-etat=live] .bord::before{animation:lueur 3.2s ease-in-out infinite alternate}
  body.entree .orbite .hero::before{animation:halo 1.6s cubic-bezier(.2,0,0,1) both}
  body.entree .tuile-lot .barre i{animation:fill 1.3s cubic-bezier(.2,0,0,1) .5s both}
  body.entree .orbite #lot-compteurs .tuile:nth-child(1){animation-delay:420ms}body.entree .orbite #lot-compteurs .tuile:nth-child(2){animation-delay:480ms}body.entree .orbite #lot-compteurs .tuile:nth-child(3){animation-delay:540ms}
  .orbite .eyebrow.live::before{animation:pouls 2.4s ease-out infinite}
 }
+@keyframes lueur{0%{opacity:.25;transform:translateY(-30%)}50%{opacity:.85}100%{opacity:.25;transform:translateY(150%)}}
 @keyframes balaye{0%{background-position:-100% 0}60%,100%{background-position:250% 0}}
 @keyframes halo{from{opacity:0;transform:scale(.7)}}
 @keyframes pouls{0%{box-shadow:0 0 0 0 var(--flash),0 0 0 0 var(--ok)}70%{box-shadow:0 0 0 8px transparent,0 0 0 0 transparent}100%{box-shadow:none}}

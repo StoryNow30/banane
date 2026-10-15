@@ -22,6 +22,25 @@
    el.textContent='';const n=texte.length;
    [...texte].forEach((ch,i)=>{const sp=document.createElement('span');sp.className='ch';sp.textContent=ch;el.append(sp);
      if(avant[avant.length-(n-i)]!==ch)animer(sp,[{transform:'translateY(.55em)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'none'}],{duration:520,delay:(n-1-i)*55,easing:REBOND});});}
+ /* 4.9.0.16 (test 15, Mic : la tuile du lot « plus vivante ») — LE POURCENTAGE DÉFILE : de l'ancienne
+  * valeur à la nouvelle, au rythme du vert qui avance (1,1 s, même courbe), image par image
+  * (requestAnimationFrame : rien ne tourne quand le panneau est caché, ni une fois arrivé). Figé
+  * (valeur posée d'un coup) si le système réduit les animations ou sans requestAnimationFrame. */
+ const DUREE_VERT=1100;
+ function compter(el,cible){if(!el)return;const texte=String(cible),d=el.dataset||{},de=Number(d.v);if(d.v===texte)return;d.v=texte;
+   const raf=globalThis.requestAnimationFrame,fin=Number(texte);
+   if(!Number.isFinite(de)||!Number.isFinite(fin)||typeof raf!=='function'||!bouger()||globalThis.document?.hidden){el._compte=null;el.textContent=texte;return;}
+   const jeton={};el._compte=jeton;let t0=null;
+   const pas=t=>{if(el._compte!==jeton)return;if(t0===null)t0=t;const k=Math.min(1,(t-t0)/DUREE_VERT),e=1-Math.pow(1-k,3);
+     el.textContent=String(Math.round(de+(fin-de)*e));if(k<1)raf(pas);else el._compte=null;};
+   raf(pas);}
+ /* Une impulsion au bord du vert à chaque cut terminé : une onde lumineuse part du bord, le vert s'éclaire un instant. */
+ function impulsion(){animer($('lot-bord')?.firstElementChild??null,[{transform:'scale(.4)',opacity:.95},{transform:'scale(2.4)',opacity:0}],{duration:900,easing:COURBE,fill:'none'});
+   animer($('lot-progres-fill'),[{filter:'brightness(1.22)'},{filter:'none'}],{duration:700,easing:'ease-out',fill:'none'});}
+ /* Fin du lot : une seule célébration, sobre : un reflet traverse la tuile, le chiffre se pose. */
+ function celebrer(){animer($('lot-fete'),[{transform:'translateX(-110%)',opacity:0},{opacity:1,offset:.25},{transform:'translateX(110%)',opacity:0}],{duration:1500,easing:'cubic-bezier(.4,0,.2,1)',fill:'none'});
+   animer($('lot-pct'),[{transform:'scale(1)'},{transform:'scale(1.07)',offset:.4},{transform:'scale(1)'}],{duration:900,delay:250,easing:REBOND,fill:'none'});}
+ const accorder=(n,mot,pluriel=mot+'s')=>n>1?pluriel:mot;
  /* Tuiles : un chiffre qui change monte et se pose. */
  let tuilesAvant={};
  function animerTuiles(el,cle){const b=tous(el,'.tuile b'),avant=tuilesAvant[cle]||[],now=b.map(x=>x.textContent);tuilesAvant[cle]=now;
@@ -79,7 +98,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 15',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 16',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -517,7 +536,7 @@
        :!e.issue&&e.reason==='adapter-lost-after-navigation'&&e.applied===false?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie'||e.reason&&!e.issue&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${raison}`
        :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
-     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} ${accorder(b.processed.length,'cut traité','cuts traités')} · ${b.skipped.length} ${accorder(b.skipped.length,'ignoré')}${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';
@@ -544,10 +563,22 @@
        const cle=b?.id??`${sc?.part}|${sc?.start}`;if(progresLot.cle!==cle)progresLot={cle,max:0};
        if(ok){const brut=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100),pct=Math.max(brut,progresLot.max);progresLot.max=pct;
          if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');rouler($('lot-pct'),String(pct));}
-       else if(inconnu){if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width='100%';$('lot-pct').textContent='';if($('lot-pct').dataset)delete $('lot-pct').dataset.v;$('lot-debut').textContent=entier(a);$('lot-fin').textContent='';}}
+         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');compter($('lot-pct'),String(pct));}
+       else if(inconnu){if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width='100%';$('lot-pct')._compte=null;$('lot-pct').textContent='';if($('lot-pct').dataset)delete $('lot-pct').dataset.v;$('lot-debut').textContent=entier(a);$('lot-fin').textContent='';}
+       /* 4.9.0.16 : l'état de la tuile pour le mouvement : en cours (le vert vit), en pause (calme,
+        * désaturé, immobile), fini (une célébration sobre, une seule fois, quand le lot se termine
+        * sous tes yeux) ; impulsion au bord du vert à chaque cut terminé. */
+       const fini=!!b&&(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state)||b.state==='STOPPED'&&!!b.stoppedAtEnd);
+       const etat=!b?'':fini?'fini':b.state==='RUNNING'&&!s.reconcileRequired?'live':OUVERT.includes(b.state)||b.state==='STOPPED'?'pause':'';
+       const tuile=$('lot-tuile');if(tuile?.dataset&&tuile.dataset.etat!==etat){if(etat)tuile.dataset.etat=etat;else delete tuile.dataset.etat;}
+       const n=b?.processed?.length??0;
+       if(progresLot.vu&&ok&&etat==='live'&&n>progresLot.traites)impulsion();
+       if(progresLot.vu&&etat==='fini'&&progresLot.etat&&progresLot.etat!=='fini')celebrer();
+       Object.assign(progresLot,{vu:true,traites:n,etat});}
      /* 4.9 (chantier UX) : la tuile du lot dit toujours combien de cuts sont traités, même quand la fin du lot n'est pas connue. */
      if($('lot-traites'))rouler($('lot-traites'),b?entier(b.processed?.length??0):'—');
+     /* 4.9.0.16 : « 1 cut », « 2 cuts » (et « 0 cut », en français). */
+     if($('lot-traites-u'))$('lot-traites-u').textContent=accorder(b?.processed?.length??0,'cut');
      const v=b?voieDuLot(s):null;
      /* Tuiles : posés, différés, couverture. 4.8.0 (audit qualité, D02) :
       * la couverture est C1 (D-038) : posés sur les cuts DISTINCTS du lot, le
@@ -561,7 +592,7 @@
          ['Différés',String(v.differe.size),v.differe.size?'amber':'',[v.saute.size?`${v.saute.size} SKIP`:'',v.main.size?`${v.main.size} repris à la main`:'',
            /* D-060 : les refus de la garde d'écartement bas, nommés pour la relecture. */
            v.bas.length?`refusés (écartement bas) : ${v.bas.slice(0,8).map(entier).join(', ')}${v.bas.length>8?', …':''}`:''].filter(Boolean).join(' · ')||'à reprendre'],
-         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis} cuts du lot`]]));
+         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis} ${accorder(finis,'cut')} du lot`]]));
        if(ecrit)animerTuiles($('lot-compteurs'),'lot');}
      if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;if(poser($('voie'),montrer?dessinerVoie(v):'')&&montrer)animerVoie($('voie'),v);
        if($('voie-legende'))$('voie-legende').hidden=!montrer;
@@ -660,9 +691,27 @@
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
+ /* 4.9.0.16 (test 15, capture de Mic) : deux onglets au même titre ne se distinguaient pas. Chaque
+  * libellé dit maintenant, si besoin, la fenêtre, le rang de l'onglet, s'il est au premier plan et
+  * s'il est prêt ; l'onglet qu'Ariane utilise déjà est marqué et choisi. Si un seul onglet ESV est
+  * prêt, il est choisi d'avance. Le choix reste celui d'avant : rien ne se connecte tant que tu ne
+  * cliques pas sur « Reconnecter ESV » (sauf un onglet ESV unique, comme avant). */
+ function libellesOnglets(tabs){const fen=[...new Set(tabs.map(t=>t.windowId).filter(w=>w!==null&&w!==undefined))],titre=t=>(t.title||'ESV').trim()||'ESV';
+   const n=new Map();for(const t of tabs)n.set(titre(t),(n.get(titre(t))||0)+1);
+   /* La précision vient en tête : la liste fermée montre le début du libellé, et le titre seul ne distingue rien. */
+   return tabs.map(t=>{const d=[];
+     if(n.get(titre(t))>1){if(Number.isInteger(t.index))d.push(`onglet ${t.index+1}`);if(fen.length>1&&fen.includes(t.windowId))d.push(`fenêtre ${fen.indexOf(t.windowId)+1}`);if(t.active)d.push('au premier plan');}
+     if(t.pret===false)d.push('pas prêt');if(t.utilise)d.push('utilisé par Ariane');
+     const tete=d.join(' · ');return d.length?tete[0].toUpperCase()+tete.slice(1)+' — '+titre(t):titre(t);});}
  async function discover(){if(which==='home')return;const tabs=await api('list-tabs');$('tabs').replaceChildren();
-   if(tabs.length!==1){const o=document.createElement('option');o.value='';o.textContent=tabs.length?'Choisir l’onglet à utiliser…':'Ouvre ESV dans Edge';$('tabs').append(o);}
-   for(const t of tabs){const o=document.createElement('option');o.value=t.id;o.textContent=t.title||'ESV';$('tabs').append(o);}
+   const prets=tabs.filter(t=>t.pret!==false),choisi=tabs.find(t=>t.utilise)??(prets.length===1?prets[0]:null);
+   if(tabs.length!==1){const o=document.createElement('option');o.value='';o.textContent=tabs.length?'Choisir l’onglet ESV à utiliser…':'Ouvre ESV dans Edge';
+     /* L'invite n'est pas un onglet : elle ne se choisit pas dans la liste. */
+     if(tabs.length){o.disabled=true;if(choisi)o.hidden=true;}$('tabs').append(o);}
+   const libelles=libellesOnglets(tabs);
+   tabs.forEach((t,i)=>{const o=document.createElement('option');o.value=t.id;o.textContent=libelles[i];$('tabs').append(o);});
+   $('tabs').value=choisi?String(choisi.id):tabs.length===1?String(tabs[0].id):'';
+   if($('tabs-note'))$('tabs-note').textContent=tabs.length>1?(choisi?.utilise?'Ariane utilise l’onglet marqué « utilisé par Ariane ».':choisi?'Un seul onglet ESV est prêt : il est choisi. Clique sur « Reconnecter ESV » pour l’utiliser.':`${tabs.length} onglets ESV ouverts : choisis le bon, puis « Reconnecter ESV ».`):'';
    const s=await api('view');if(tabs.length===1&&!active(s)&&!s.busy&&!['RUNNING','PAUSED'].includes(s.batch?.state))await connect();
    else if(!tabs.length||tabs.length>1&&!s.current)$('connection').open=true;
  }
@@ -747,7 +796,11 @@
   * premier segment d'un export porte events, records, state et diagnostic. */
  const MODE_EXPORT=()=>SET()?.export.mode??'complet';
  const modeDe=nom=>globalThis.BananeNativeExport?.exportMode?globalThis.BananeNativeExport.exportMode(nom??MODE_EXPORT()):{nom:nom??MODE_EXPORT(),nuage:c=>c};
+ /* 4.9.0.16 : pendant « Tout télécharger », un segment JSON vise au plus deux volumes zip (non
+  * compressé) : compressé, il tient alors dans un volume dès que le JSON se compresse de moitié. */
+ let segmentPlafond=null;
  async function writeSegments(data,prefix,{segmentBytes=EXPORT_SEGMENT_BYTES,compact=SET()?.export.compact!==false,label='',startIndex=0,save=saveBlob,mode}={}){
+   if(Number.isFinite(segmentPlafond))segmentBytes=Math.min(segmentBytes,segmentPlafond);
    const {cloudIds,...metadata}=data,X=compact?compactor():null,M=modeDe(mode),Nx=globalThis.BananeNativeExport||null;
    metadata.exportMode=M.nom;
    const stamp=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
@@ -1213,30 +1266,53 @@ on('native-discard',async()=>{
    if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${aVider.records.length} visites, ${aVider.events.length} événements, ${aVider.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).${alerteCapture}\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.${alerteLot}`))return;
    const out=await demandeVidage(snap,{exportAt:null,manuel:true});
    statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.${phraseGardes(out)}${phraseCapture(out)}${out.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`);});
- const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??1024*1024*1024;
+ /* 4.9.0.16 — EXPORT DÉCOUPÉ TOUT SEUL (test 15, Mic : « l'envoyer sans script », limite d'envoi
+  * d'environ 18 Mo par fichier). Chaque volume est un zip AUTONOME de 17 Mo au plus (réglage), taille
+  * COMPRESSÉE réelle : chaque fichier JSON est compressé une fois (BananeZip.preparer), puis rangé
+  * dans le volume courant s'il y tient, sinon dans un volume neuf. Un fichier JSON n'est jamais
+  * coupé : s'il dépasse seul la limite, il fait un volume à lui et le statut le dit. Les volumes
+  * sont gardés en mémoire (données déjà compressées) jusqu'à la fin, pour que le CONTENU.txt de
+  * chacun dise « volume n sur N » ; ils sont enregistrés ensuite, dans l'ordre. */
+ const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??17*1024*1024;
  const dateCompacte=d=>d.toISOString().replace(/[:.]/g,'-').slice(0,19);
+ const nomVolume=(base,n,N)=>N<=1?`${base}.zip`:`${base}-volume${String(n).padStart(2,'0')}-sur${String(N).padStart(2,'0')}.zip`;
  async function exportToutZip(Z){
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
    /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
    const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
    /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
    const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}) :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
-   let zip=Z.createZip({date:maintenant}),total=0;
-   const mo1=n=>(n/1048576).toFixed(1)+' Mo';
-   const fermer=async final=>{if(zip.vide)return;
-     const liste=zip.entrees,mode=modeDe().nom;
-     await zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${maintenant.toISOString()}\n`+
-       `Archive ${final&&!volumes.length?'unique':'n° '+(volumes.length+1)} : ${liste.length} fichier(s) JSON, méthode ${zip.methode}.\n`+
-       periode+departs+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
-       'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'],{type:'text/plain'}));
-     const blob=zip.terminer(),nom=final&&!volumes.length?`${base}.zip`:`${base}-partie${String(volumes.length+1).padStart(2,'0')}.zip`;
-     const f=await saveBlob(blob,nom);volumes.push({...f,entrees:liste.length,octets:blob.size});
-     zip=Z.createZip({date:maintenant});};
-   const save=async(blob,name)=>{
-     if(!zip.vide&&zip.octets+blob.size+4096>ZIP_MAX_BYTES())await fermer(false);
-     const e=await zip.ajouter(name,blob);total+=e.taille;
+   const max=ZIP_MAX_BYTES(),decoupe=typeof Z.preparer==='function'&&typeof Z.coutEntree==='function';
+   /* Place gardée dans chaque volume pour son CONTENU.txt (écrit à la fin) : la liste des fichiers et les départs. */
+   const reserve=Math.min(16384+2*departs.length,Math.floor(max/4));
+   let total=0;const trop=[];
+   const ouvrir=()=>{const v={zip:Z.createZip({date:maintenant}),seul:false};volumes.push(v);return v;};
+   let courant=ouvrir();
+   const save=async(blob,name)=>{let e;
+     if(decoupe){const p=await Z.preparer(name,blob,{methode:courant.zip.methode});const cout=Z.coutEntree(p);
+       if(!courant.zip.vide&&courant.zip.octetsTermines+cout+reserve>max)courant=ouvrir();
+       if(cout+reserve+22>max){courant.seul=true;trop.push({name,octets:p.tailleCompressee,volume:volumes.length});}
+       e=courant.zip.ajouterPrepare(p);
+       /* Un fichier plus gros que la limite reste seul dans son volume. */
+       if(courant.seul)courant=ouvrir();}
+     else{if(!courant.zip.vide&&courant.zip.octets+blob.size+4096>max)courant=ouvrir();e=await courant.zip.ajouter(name,blob);}
+     total+=e.taille;
      return {name,confirme:true,etat:'complete',dansZip:true,taille:e.taille,tailleCompressee:e.tailleCompressee};};
+   const mo1=n=>(n/1048576).toFixed(1).replace('.',',')+' Mo';
+   /* Ferme les volumes (CONTENU.txt « volume n sur N », départs compris) et les enregistre, dans l'ordre. */
+   const fermerTout=async()=>{const pleins=volumes.filter(v=>!v.zip.vide),N=pleins.length,mode=modeDe().nom,out=[];
+     for(const [i,v] of pleins.entries()){const liste=v.zip.entrees,n=i+1;
+       await v.zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${maintenant.toISOString()}\n`+
+         (N>1?`Volume ${n} sur ${N} : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}. Chaque volume est un zip complet ; il faut les ${N} pour l'export entier.\n`
+           :`Archive unique : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}.\n`)+
+         (v.seul?`Ce fichier dépasse seul la limite de ${mo1(max)} par volume : il n'est jamais coupé.\n`:'')+
+         periode+departs+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+
+         'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'],{type:'text/plain'}));
+       const blob=v.zip.terminer(),f=await saveBlob(blob,nomVolume(base,n,N));out.push({...f,entrees:liste.length,octets:blob.size,seul:v.seul});}
+     return out;};
    const essai=async(quoi,f)=>{try{const b=await f();bilans.push(b);return b;}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});return null;}};
+   segmentPlafond=Math.max(2*max,2*SEGMENT_RESERVE_BYTES);
+   try{
    await essai('journal',()=>exporterJournal({save}));
    /* Diagnostic calculé une fois : fichier, plan du corpus. */
    let diagnostic=null,plan=null;
@@ -1246,11 +1322,14 @@ on('native-discard',async()=>{
    const d=diagnostic?await essai('diagnostic',()=>exporterDiagnostic({save,diagnostic,nom:nomDiag})):null;
    const c=plan?await essai('corpus',()=>exporterCorpus({save,plan,...(d?{diagnosticRef:{file:nomDiag}}:{})})):null;
    await essai('bilan',()=>exporterBilan({save,horsCorpus:c&&c.ids.length?c.ids:null}));
-   try{await fermer(true);}catch(e){bilans.push({quoi:'zip',fichiers:[],alerte:null,erreur:e?.message||String(e)});}
+   }finally{segmentPlafond=null;}
+   try{volumes.splice(0,volumes.length,...await fermerTout());}catch(e){volumes.length=0;bilans.push({quoi:'zip',fichiers:[],alerte:null,erreur:e?.message||String(e)});}
    const manques=bilans.flatMap(b=>[...(b.erreur?[`${b.quoi} : ${b.erreur}`]:[]),...nonEnregistres(b.fichiers).map(f=>`${b.quoi} non enregistré (${f.etat})`),...(b.alerte?[`${b.quoi} : ${b.alerte}`]:[])]);
    const zipsKo=nonEnregistres(volumes),zipsOk=volumes.filter(f=>!nonEnregistres([f]).length);
    for(const f of zipsKo)manques.push(`${f.name} non enregistré (${f.etat})`);
    const nb=bilans.reduce((n,b)=>n+b.fichiers.length,0);
+   /* Un fichier JSON plus gros que la limite n'est pas coupé : on le dit, avec son volume. */
+   const grosVolumes=trop.length?` Attention : ${trop.map(t=>`${t.name} (${mo1(t.octets)} compressé) dépasse seul ${mo1(max)} ; il est seul dans le volume ${t.volume}`).join(' ; ')}, plus gros que la limite d’envoi.`:'';
    /* Vidage automatique : SEULEMENT si tout est confirmé complet par le navigateur. */
    let vidage='';
    if(SET()?.export.viderApresExport===true){
@@ -1261,7 +1340,7 @@ on('native-discard',async()=>{
        vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.${phraseGardes(r)}${phraseCapture(r)}${r.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`;}
      catch(e){vidage=` Cache d’export non vidé : ${e?.message||e}`;}}
    const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.${vidage}`
-     :`Journal, bilan, diagnostic et corpus : ${volumes.length} archive(s) zip (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?'les':'la'} pour l’analyse.${vidage}`;
+     :`Journal, bilan, diagnostic et corpus : ${volumes.length>1?`${volumes.length} archive(s) zip, ${volumes.length} volumes de ${mo1(max)} au plus`:'1 archive(s) zip'} (${nb} fichiers JSON, ${mo1(total)} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?`les ${volumes.length}, tels quels`:'la'} pour l’analyse.${grosVolumes}${vidage}`;
    statutExport(texte,manques.length>0);
  }
  on('export-tout',async()=>{const Z=globalThis.BananeZip;if(Z?.createZip&&typeof Blob==='function')return exportToutZip(Z);
@@ -1291,20 +1370,51 @@ on('native-discard',async()=>{
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
  /* 4.9.0.10 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
- /* D-092, 4.9 (chantier UX) : une carte par partie, la fiche la plus récente ; la
-  * partie en cours d'abord. Les chiffres sont ceux qu'ESV affichait au départ du
-  * lot, posés en texte (jamais en HTML). */
+ /* D-092, 4.9 (chantier UX) : la carte de la partie en cours, en grand. 4.9.0.16 (test 15, Mic :
+  * « voir aussi les parties précédentes ») : en dessous, l'historique, compact, de la plus récente à
+  * la plus ancienne (partie, heure du dernier départ, validés / invalides / total, nombre de
+  * départs) ; chaque partie se déplie sur le détail de ses départs. Données : les fiches de
+  * départ (`fiches-depart`, 200 au plus, hors du cache des exports : le vidage ne les touche pas),
+  * sans rien changer à ce qui est exporté. Les chiffres sont ceux qu'ESV affichait au départ du
+  * lot, posés en texte (jamais en HTML). La liste n'est reconstruite que si les fiches changent :
+  * une partie dépliée reste dépliée. */
  const milliersFr=n=>Number.isInteger(n)?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f'):'?';
- function carteDepart(x,n,enCours){const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
-   const c=el('div','depart'+(enCours?' en-cours':''));const t=el('p','d-t');
-   t.append(el('b','',`Partie ${Number.isInteger(x.partie)?x.partie:'?'}`),el('span','',(enCours?'en cours · ':'')+(typeof x.at==='string'?`${x.at.slice(8,10)}/${x.at.slice(5,7)} ${x.at.slice(11,16)} UTC`:'heure inconnue')+(n>1?` · ${n} départs`:'')));
-   const g=el('div','d-n');for(const [v,l] of [[x.valides,'validés'],[x.invalides,'invalides'],[x.total,'total']]){const k=el('span');k.append(el('b','',milliersFr(v)),el('small','',l));g.append(k);}
-   c.append(t,g);if(Number.isInteger(x.ignores)&&x.ignores>0)c.append(el('p','d-i',`dont ${milliersFr(x.ignores)} ignorés`));return c;}
+ const heureDepart=x=>typeof x?.at==='string'?`${x.at.slice(8,10)}/${x.at.slice(5,7)} ${x.at.slice(11,16)} UTC`:'heure inconnue';
+ const nomPartie=k=>`Partie ${Number.isInteger(k)?k:'?'}`;
+ const departsTexte=n=>`${n} départ${n>1?'s':''}`;
+ const elt=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
+ const departsOuverts=new Set();let departsSignature='';
+ /* Les départs d'une partie, du plus récent au plus ancien, en tableau. */
+ function tableDeparts(liste){const t=elt('table','d-table'),h=elt('tr');
+   for(const [l,c] of [['Départ',''],['validés','n'],['invalides','n'],['total','n']])h.append(elt('th',c,l));
+   const tete=elt('thead');tete.append(h);const corps=elt('tbody');
+   for(const x of liste.slice().reverse()){const r=elt('tr');r.append(elt('td','',heureDepart(x)),elt('td','n',milliersFr(x.valides)),elt('td','n',milliersFr(x.invalides)),elt('td','n',milliersFr(x.total)));corps.append(r);}
+   t.append(tete,corps);return t;}
+ function deplier(cle,resume,contenu,cls){const d=elt('details',cls);d.open=departsOuverts.has(cle);
+   d.addEventListener?.('toggle',()=>{if(d.open)departsOuverts.add(cle);else departsOuverts.delete(cle);});
+   const s=elt('summary');if(typeof resume==='string')s.textContent=resume;else s.append(...resume);d.append(s,contenu);return d;}
+ function carteDepart(k,liste,enCours){const x=liste.at(-1),n=liste.length,c=elt('div','depart'+(enCours?' en-cours':''));const t=elt('p','d-t');
+   t.append(elt('b','',nomPartie(k)),elt('span','',(enCours?'en cours · ':'dernière partie · ')+heureDepart(x)+(n>1?` · ${departsTexte(n)}`:'')));
+   const g=elt('div','d-n');for(const [v,l] of [[x.valides,'validés'],[x.invalides,'invalides'],[x.total,'total']]){const q=elt('span');q.append(elt('b','',milliersFr(v)),elt('small','',l));g.append(q);}
+   c.append(t,g);if(Number.isInteger(x.ignores)&&x.ignores>0)c.append(elt('p','d-i',`dont ${milliersFr(x.ignores)} ignorés`));
+   if(n>1)c.append(deplier('principale|'+k,`Voir les ${departsTexte(n)}`,tableDeparts(liste),'d-detail'));
+   return c;}
+ /* Une ligne d'historique : partie et heure du dernier départ ; validés · invalides · total ; départs. */
+ function ligneHistorique(k,liste){const x=liste.at(-1),n=liste.length,haut=elt('span','h-l1'),bas=elt('span','h-l2');
+   haut.append(elt('b','',nomPartie(k)),elt('span','h-at',heureDepart(x)));
+   bas.append(elt('span','h-v',`${milliersFr(x.valides)} validés`),elt('span','h-i',`${milliersFr(x.invalides)} invalides`),elt('span','h-t',`${milliersFr(x.total)} total`),elt('span','h-n',departsTexte(n)));
+   return deplier('historique|'+k,[haut,bas],tableDeparts(liste),'d-partie');}
  async function majDeparts(){const el=$('departs-liste');if(!el)return;try{const r=await api('fiches-depart'),f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;
-  if(!f.length||!EC)return;const par=new Map();for(const x of f){const k=Number.isInteger(x?.partie)?x.partie:'?',p=par.get(k);par.delete(k);par.set(k,{x,n:(p?.n||0)+1});}
-  const enCours=state?.batch?.scope?.part??state?.current?.identity?.part;departsPartie=enCours??null;const cartes=[...par.entries()].reverse().slice(0,6);
-  cartes.sort((a,b)=>(b[0]===enCours)-(a[0]===enCours));
-  el.replaceChildren(...cartes.map(([k,{x,n}])=>carteDepart(x,n,k===enCours)));}catch{/* affichage seulement */}}
+  if(!f.length||!EC)return;
+  /* Les fiches sont rangées dans l'ordre d'arrivée : une partie prend le rang de son départ le plus récent. */
+  const par=new Map();for(const x of f){if(!x||typeof x!=='object')continue;const k=Number.isInteger(x.partie)?x.partie:'?',l=par.get(k)||[];par.delete(k);l.push(x);par.set(k,l);}
+  const enCours=state?.batch?.scope?.part??state?.current?.identity?.part;departsPartie=enCours??null;
+  const parties=[...par.entries()].reverse();if(!parties.length)return;
+  const i=parties.findIndex(([k])=>k===enCours),[principale]=i>=0?parties.splice(i,1):parties.splice(0,1);
+  const signature=JSON.stringify([enCours??null,principale[0],parties.map(p=>p[0]),f]);if(signature===departsSignature&&el.children?.length)return;departsSignature=signature;
+  const blocs=[carteDepart(principale[0],principale[1],principale[0]===enCours)];
+  if(parties.length){const h=elt('div','d-hist');h.append(...parties.map(([k,l])=>ligneHistorique(k,l)));blocs.push(elt('p','d-hist-t',`Parties précédentes (${parties.length})`),h);}
+  el.replaceChildren(...blocs);}catch{/* affichage seulement */}}
  setInterval(()=>{if(!working)void refresh();},1000);
  // Contrôle du volume pendant la collecte : peu fréquent, jamais bloquant.
  // Le suivi continue quelle que soit la vue affichée : quitter l'onglet Natif

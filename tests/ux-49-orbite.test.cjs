@@ -50,8 +50,10 @@ test('panel.html : la politique effective est dans « Détails du lot », fermé
   assert.match(html,/id="lot-details-toggle" class="pill details-toggle" aria-expanded="false"[^>]*>Détails du lot</);
 });
 
-/* Départs des parties (D-092) : une carte par partie, la fiche la plus récente, la partie en cours d'abord. */
-test('départs : une carte par partie, la plus récente, partie en cours en tête ; texte seulement',async()=>{
+/* Départs des parties (D-092). 4.9.0.16 (test 15, Mic : voir aussi les parties précédentes) : la
+ * partie en cours en grand (sa fiche la plus récente), puis l'historique des autres parties, de la
+ * plus récente à la plus ancienne, chacune dépliable sur ses départs. Texte seulement. */
+test('départs : partie en cours en grand, puis historique des parties précédentes (plus récente d’abord) ; texte seulement',async()=>{
   const elements=new Map(),cree=tag=>({tag,className:'',textContent:'',children:[],append(...c){this.children.push(...c);},replaceChildren(...c){this.children=c;},
     hidden:false,disabled:false,innerHTML:'',value:'',checked:false,open:false,classList:{toggle(){}},dataset:{},setAttribute(){},removeAttribute(){},addEventListener(){},set onchange(_){},set oninput(_){},set onclick(_){}});
   const document={body:{dataset:{}},activeElement:null,querySelectorAll:()=>[],createElement:cree,getElementById(id){if(!elements.has(id))elements.set(id,cree('div'));return elements.get(id);}};
@@ -63,10 +65,18 @@ test('départs : une carte par partie, la plus récente, partie en cours en têt
   const context={document,chrome,location:{hash:'#automatic'},addEventListener:()=>{},setInterval:()=>{},setTimeout:()=>{},console,BananeExportCache:{}};
   vm.createContext(context);vm.runInContext(SOURCE,context);
   for(let i=0;i<12;i++)await new Promise(resolve=>setImmediate(resolve));
-  const cartes=document.getElementById('departs-liste').children,txt=e=>e.textContent+e.children.map(txt).join(' ');
-  assert.equal(cartes.length,3,'une carte par partie');
-  assert.equal(cartes[0].className,'depart en-cours');assert.match(txt(cartes[0]),/Partie 34/);assert.match(txt(cartes[0]),/en cours · 13\/10 12:58 UTC · 2 départs/);
-  assert.match(txt(cartes[0]),/1\u202f284.*validés.*37.*invalides.*2\u202f140.*total/s);assert.match(txt(cartes[0]),/dont 5 ignorés/);
-  assert.equal(cartes[1].className,'depart');assert.match(txt(cartes[1]),/Partie 35/);assert.match(txt(cartes[1]),/\?/,'une valeur illisible s’écrit « ? », jamais en HTML');
-  assert.match(txt(cartes[2]),/Partie 33/);
+  const blocs=document.getElementById('departs-liste').children,txt=e=>e.textContent+e.children.map(txt).join(' ');
+  assert.equal(blocs.length,3,'la carte en cours, le titre de l’historique, l’historique');
+  const [carte,titre,hist]=blocs;
+  assert.equal(carte.className,'depart en-cours');assert.match(txt(carte),/Partie 34/);assert.match(txt(carte),/en cours · 13\/10 12:58 UTC · 2 départs/);
+  assert.match(txt(carte),/1\u202f284.*validés.*37.*invalides.*2\u202f140.*total/s);assert.match(txt(carte),/dont 5 ignorés/);
+  /* Le détail des deux départs de la partie en cours, du plus récent au plus ancien. */
+  const detail=carte.children.find(c=>c.className==='d-detail');assert.ok(detail,'détail dépliable');assert.equal(detail.tag,'details');
+  assert.match(txt(detail),/Voir les 2 départs/);assert.match(txt(detail),/13\/10 12:58 UTC 1\u202f284 37 2\u202f140.*13\/10 09:00 UTC 1\u202f200 30 2\u202f140/s);
+  assert.equal(titre.textContent,'Parties précédentes (2)');
+  assert.equal(hist.className,'d-hist');assert.equal(hist.children.length,2,'une ligne par partie précédente');
+  assert.ok(hist.children.every(l=>l.tag==='details'&&l.className==='d-partie'),'chaque partie se déplie');
+  assert.match(txt(hist.children[0]),/Partie 35.*13\/10 14:00 UTC.*\? validés.*0 invalides.*900 total.*1 départ\b/s,'la plus récente d’abord ; une valeur illisible s’écrit « ? », jamais en HTML');
+  assert.match(txt(hist.children[1]),/Partie 33.*12\/10 16:04 UTC.*2\u202f015 validés.*12 invalides.*2\u202f310 total.*1 départ\b/s);
+  assert.ok(!JSON.stringify(blocs.map(txt)).includes('<img>'),'jamais de HTML');
 });
