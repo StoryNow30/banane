@@ -170,6 +170,12 @@ function obsContexte(){try{const v=timing?.context?.()||timing?.batchContext?.()
 function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
  const ctx=c.batchId===b.id?c:prev?.ctx||{sessionId:engine?.s?.sessionId??null,batchId:b.id,visitId:null,clockId:timing?.clockId??null};
  obsFins.delete(b.id);obsFins.set(b.id,{at,cause,ctx});while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);sauverObsFins();}
+/* D1 (relecture finale de la 4.9.0) : fin de lot HORS de la boucle du moteur (« Clôturer le résultat incertain », fin de
+ * partie après un différé, SKIP explicite du dernier cut) : aucun jalon `batch-state`, la mesure V1 du lot restait ouverte
+ * et le vidage du cache était refusé indéfiniment. Elle est close ici, comme pour « Arrêter » hors tâche (`operatorAfter`),
+ * avec l'état réel du lot ; jamais pendant une tâche (la boucle la clôt elle-même), jamais deux fois. */
+function cloreMesureHorsBoucle(){try{const b=engine?.s?.batch,t=timing?.batch;
+ if(b?.id&&!engine.task&&OBS_CLOS.includes(b.state)&&t?.id===b.id&&!t.closed)timing.closeBatch(b.state);}catch{/* mesure seule : jamais bloquant */}}
 function marquerFinLot(b,cause){if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
 /* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
 function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;
@@ -661,7 +667,7 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
    engine.s.notice=`Lot fermé sans fin de partie (${pourquoi}) : le cut ${N} pourrait être le dernier de la partie ; saisis-le comme dernier cut si tu veux le retenir.`
      +(meme?` Contrôle le cut ${N} dans ESV.`:'')+' Aucune commande n’a été renvoyée.';}
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:N,target,total:M,finMemorisee:memoriser});
- await engine.save();return true;}
+ cloreMesureHorsBoucle();await engine.save();return true;}
 /* 4.9.0.16 (test 15, 5a) — LOT DÉJÀ TERMINÉ. Après une fin de partie certaine (dernier cut
  * validé sur place ou différé sans envoi, KI-069 ; fin retenue après un différé, D-062 b),
  * « Reprendre » relançait la boucle sur le dernier cut : la fin se rejouait à chaque clic
@@ -1368,7 +1374,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* OBS-1 (relecture du test 3) : un SKIP explicite du dernier cut d'un lot borné clôt le lot HORS de la boucle du moteur
   * (pas de jalon `batch-state`) : la fin est relevée ici, comme pour « Arrêter », sinon l'écriture SKIP arrive sans grâce. */
  if(action==='explicit-skip'){await gardeRetourCut('« SKIP explicite »');const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
-  if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'))coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));return engine.view();}
+  if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')){coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));cloreMesureHorsBoucle();}return engine.view();}
  if(action==='start')return coordinateurLot.transition('demarrage',()=>demarrerLot(args));
  if(action==='cloud')return store.getCloud(args.id);
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
@@ -1407,7 +1413,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   else if(action==='reject'){engine.s.proposal=null;await engine.event('proposal-rejected');result=engine.view();}
   else if(action==='restore')result=await engine.restore();
   else if(action==='reconcile')result=await engine.reconcile();
-  else if(action==='close-uncertain')result=await engine.closeUncertain();
+  else if(action==='close-uncertain'){result=await engine.closeUncertain();cloreMesureHorsBoucle();}
   else if(action==='cancel-before'){await engine.archivePending('operator-cancelled');result=engine.view();}
   else if(action==='references')result=await engine.exportReferences();
   else throw Error('Commande inconnue.');return result;

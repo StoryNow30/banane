@@ -2,11 +2,17 @@
 
 ## 4.9.0 — version candidate stable (15/10)
 
-**Même code que la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27) ; seuls la version et les
-documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
+**Code de la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27), plus deux corrections de la
+relecture finale (D-110, ci-dessous) ; la version et les documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
 « Ariane 4.9.0 · ouvrir » sur le bouton blanc d'ESV, paquet `ariane-v4.9.0.zip`. `src/engine.js` identique à la test 17.
 Notes pour l'opérateur : `NOTES_4.9.0.md` ; porte de version : `fiches/PORTE_4.9.0.md`. Fusion, étiquette et publication :
 décision de Mic. Retour arrière : la 4.8.6 (`v4.8.6`).
+
+Corrections de la relecture finale (D-110) :
+
+- **D1** : le vidage du cache n'est plus refusé sans fin après « Clôturer le résultat incertain », une fin de partie après un différé ou un SKIP explicite du dernier cut (la mesure V1 du lot y est désormais close).
+- **D2** : la fiche de départ d'une partie ne peut plus être écrasée par la réponse d'ESV à « y a-t-il des invalides ? » (0 / 1 / 1) ; écritures des fiches mises en file.
+- Limite connue, renvoyée à la 4.9.5 : **D3**, une écriture refusée par ESV (HTTP 500) est quand même comptée comme acceptée (identique en 4.8.6, jamais vue sur 924 écritures).
 
 Ce que la 4.9 apporte depuis la 4.8.6, en bref :
 

@@ -1,8 +1,13 @@
 # Ariane 4.9.0 — notes de version pour Mic
 
 Version candidate stable, préparée le 15 octobre 2026. **C'est le code de la test 17, celle que tu as essayée sur la
-partie 27** : seuls le numéro de version et les documents changent. Rien ne change dans ce qu'Ariane décide, pose ou valide
-par rapport à la test 17. La fusion dans `main`, l'étiquette `v4.9.0` et la publication restent ta décision.
+partie 27**, plus deux corrections de la relecture finale (ci-dessous) ; le numéro de version et les documents changent.
+Rien ne change dans ce qu'Ariane décide, pose ou valide par rapport à la test 17.
+
+- **D1 corrigé** : « Vider le cache » n'est plus refusé sans fin après « Clôturer le résultat incertain », une fin de partie
+  après un différé ou un SKIP explicite du dernier cut.
+- **D2 corrigé** : la fiche de départ d'une partie ne peut plus être remplacée par une fausse fiche 0 / 1 / 1 (réponse d'ESV
+  à « y a-t-il des invalides ? »). La fusion dans `main`, l'étiquette `v4.9.0` et la publication restent ta décision.
 
 - Paquet : `ariane-v4.9.0.zip` (l'empreinte SHA-256 est dans mon message : ce fichier est dans le paquet et ne peut pas
   porter sa propre empreinte).
@@ -64,7 +69,10 @@ Chaque chiffre compare, **dans le même lot**, les cuts en rapide aux cuts en r�
   souvent ; Ariane attend alors 800 ms par rail, et le gain retombe vers −50 %. Un F5 sur ESV a rétabli le signal sur les
   pages observées (à confirmer, voir § 5).
 - **Pas de petit fichier séparé « Préparer pour analyse »** : il n'y a qu'un export, découpé en volumes. Le gain de poids
-  mesuré est d'environ un tiers sur les nuages LiDAR (le −40 % du cahier n'est pas démontré).
+  mesuré est d'environ un tiers sur les nuages LiDAR (le −40 % du cahier n'est pas démontré). Ta décision du 15 octobre :
+  ces deux critères d'export (zéro différence et −40 % de taille) sont renvoyés à la 4.9.5.
+- **D3, renvoyé à la 4.9.5** : si ESV refuse une validation (erreur serveur HTTP 500), Ariane la compte quand même comme
+  acceptée. Même chose en 4.8.6 ; jamais vu sur 924 écritures observées.
 - **Pause de sécurité « Lecture LiDAR instable, vue non recentrée »** : elle peut arriver (partie 25, partie 27). C'est voulu :
   Ariane s'arrête plutôt que de poser sur une lecture douteuse. « Reprendre » repart.
 - **Un cut peut être posé deux fois** si un F5 tombe en pleine validation (cut 5440, partie 27) : sans effet nuisible vu.
@@ -74,9 +82,9 @@ Chaque chiffre compare, **dans le même lot**, les cuts en rapide aux cuts en r�
 - Deux petits défauts connus de la sauvegarde V5, sans perte de données (validation d'un cut vidé après un redémarrage ;
   archive d'une migration jamais relue) : notés dans les problèmes connus.
 
-**Encore à essayer lors de la séance finale** : Arrêter puis Reprendre en ayant bougé un rail (refus attendu) ; Reprendre
-après la fin (« Lot déjà terminé ») ; un lot à plage fixe jusqu'à son dernier cut ; une erreur dans l'avis (démarrer sans
-onglet ESV prêt).
+**Essais B3 de la séance finale, confirmés par toi le 15 octobre avec la 4.9.0.17 (sans export)** : Arrêter puis Reprendre
+en ayant bougé un rail (refusé) ; Reprendre après la fin (« Lot déjà terminé ») ; un lot à plage fixe jusqu'à son dernier
+cut ; une erreur dans l'avis.
 
 ## 5. Ce qui est prévu pour la 4.9.5
 
