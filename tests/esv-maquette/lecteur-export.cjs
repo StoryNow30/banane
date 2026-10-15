@@ -44,7 +44,7 @@ function fusionner(docs){const out={formats:[],records:[],events:[],clouds:[],st
    * celle qui porte une identité. Idem pour les nuages (captureId) et les événements (eventId). */
   const dedup=(liste,cle,mieux)=>{const m=new Map();for(const x of liste){const k=cle(x);if(k===undefined||k===null){m.set(Symbol(),x);continue;}
     const prev=m.get(k);if(!prev||mieux&&mieux(x)&&!mieux(prev))m.set(k,x);else if(prev)out.doublons++;}return [...m.values()];};
-  out.records=dedup(out.records,r=>r.recordId||r.id,r=>!!identite(r)?.cut);out.clouds=dedup(out.clouds,c=>c.captureId||c.chunkId);out.events=dedup(out.events,e=>e.eventId);
+  out.records=dedup(out.records,r=>r.recordId||r.id,r=>!!identite(r)?.cut);out.clouds=dedup(out.clouds,c=>c.chunkId||c.captureId); /* un bloc Écho a son chunkId ; une capture Orbite son captureId */out.events=dedup(out.events,e=>e.eventId);
   return out;}
 const identite=r=>r.identity||r.before?.identity||(Number.isInteger(r.cut)?{part:r.part,cut:r.cut}:null);
 const EDGES=['XLeftEdge','YLeftEdge','ZLeftEdge','XRightEdge','YRightEdge','ZRightEdge'];
