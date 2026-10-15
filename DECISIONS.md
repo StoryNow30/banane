@@ -396,6 +396,7 @@ ou d'apprentissage, aucun changement de seuil, de porte ou de critère.
    V1 cohérent (0 perdue, 0 en attente) ; cycle médian 7,9 s (indicatif : lecture de l'extension à 09:35 pendant les premières minutes, sans effet visible).
    Le lot suivant (partie 10) est lancé sans l'extension. Un script chargé dynamiquement (chemin aléatoire) est vu sur la page ; nature non établie, contenu non lu.
    Aucun merge, tag, publication, activation de production ou d'apprentissage, aucun changement de seuil ou de porte.
+- Note du 15 octobre 2026 (D-115) : inexact sur un point, le mode allégé conserve l'intensité des points (D-091).
 
 ## D-078 - Décisions du 6 octobre validées : V1 adopté pour test, U1 et U2 acceptés, lecteur hors gel (test), séance terrain, V4
 
@@ -1807,6 +1808,7 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - **B3, quatre derniers essais validés sur le terrain par Mic le 15 octobre avec la 4.9.0.17, sans export** : Arrêter puis Reprendre refusé si les rails ont bougé ; Reprendre après la fin → « Lot déjà terminé » ; lot à plage fixe jusqu'à sa fin ; erreur dans l'avis. Mic confirme aussi la reprise automatique au bon endroit après une mise en veille du PC suivie d'un F5.
 - **Exports non tenus (porte, lignes 8b et 8c) : décision de Mic du 15 octobre** : il accepte la 4.9.0 sans « Préparer pour analyse » à zéro différence ni le −40 % de taille ; les deux critères sont renvoyés à la 4.9.5.
 - Fusion dans `main`, étiquette et publication : toujours à la décision de Mic.
+- Correction (D-113) : 2 écritures refusées (HTTP 502) sur ~3 530, relancées par ESV et acceptées en 204 ; voir D-113.
 
 ## D-111 — 4.9.0 fusionnée dans main ; 4.9.5 test 1 livrée (2026-10-15)
 
