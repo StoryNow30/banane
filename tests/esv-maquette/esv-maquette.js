@@ -109,10 +109,13 @@
      catch(e){log('noeuds-echec',{cut:c.cut,message:'réponse illisible'});}etat.cacheNoeuds.set(cleCache,n);servir(n);}).catch(e=>{log('noeuds-echec',{cut:c.cut,message:e.message});servir([]);});
   if(options.decoupeTardive&&!c.decoupe)etat.minuteries.push(setTimeout(()=>{if(cutCourant()===c){decoupe(etat.scenario.decoupe.dimensions[2]+.1);log('decoupe-deplacee',{cut:c.cut});}},options.latenceRails+150));
   majEtat();return true;}
- function noeud(n,c){const p=objet('Points',{position:c.origine});p.isPoints=true;p.parent=pc;p.matrixWorld.elements=mul(pc.matrixWorld.elements,compose(p));
-  const xs=n.positions;let min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<xs.length;i+=3)for(let k=0;k<3;k++){min[k]=Math.min(min[k],xs[i+k]);max[k]=Math.max(max[k],xs[i+k]);}
-  p.geometry={attributes:{position:tampon(xs),intensity:tampon(n.intensite.length?n.intensite:Array(xs.length/3).fill(0),Uint16Array,1),classification:tampon(n.classe.length?n.classe:Array(xs.length/3).fill(0),Uint8Array,1)},
-   drawRange:{start:0,count:Infinity},boundingBox:{min:{x:min[0],y:min[1],z:min[2]},max:{x:max[0],y:max[1],z:max[2]}}};
+ /* Comme Potree : les positions Float32 d'un nœud sont relatives au coin de sa boîte (petites valeurs, précision ~1e-7 m) et
+  * l'origine du nœud porte le décalage dans `matrixWorld` (double). Des valeurs scène de ~1 600 m en Float32 perdraient 0,1 mm. */
+ function noeud(n,c){const xs=n.positions;let min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<xs.length;i+=3)for(let k=0;k<3;k++){min[k]=Math.min(min[k],xs[i+k]);max[k]=Math.max(max[k],xs[i+k]);}
+  const coin=min.map(v=>Math.floor(v*1000)/1000),local=Float32Array.from(xs,(v,i)=>v-coin[i%3]);
+  const p=objet('Points',{position:c.origine.map((v,k)=>v+coin[k])});p.isPoints=true;p.parent=pc;p.matrixWorld.elements=mul(pc.matrixWorld.elements,compose(p));
+  p.geometry={attributes:{position:{array:local,itemSize:3,count:local.length/3,version:0,normalized:false},intensity:tampon(n.intensite.length?n.intensite:Array(xs.length/3).fill(0),Uint16Array,1),classification:tampon(n.classe.length?n.classe:Array(xs.length/3).fill(0),Uint8Array,1)},
+   drawRange:{start:0,count:Infinity},boundingBox:{min:{x:min[0]-coin[0],y:min[1]-coin[1],z:min[2]-coin[2]},max:{x:max[0]-coin[0],y:max[1]-coin[1],z:max[2]-coin[2]}}};
   return {sceneNode:p,geometryNode:{boundingBox:{min:{x:min[0]+c.origine[0],y:min[1]+c.origine[1],z:min[2]+c.origine[2]},max:{x:max[0]+c.origine[0],y:max[1]+c.origine[1],z:max[2]+c.origine[2]}}}};}
  /* ---------- compteur « N on M treated » et « M cuts » ---------- */
  /* Compteur tenu sur la LISTE de la partie (une ligne par indice, cut N = ligne N) ; hypothèse : traité = validé ou passé. */

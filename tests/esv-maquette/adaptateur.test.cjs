@@ -77,4 +77,20 @@ test('retour à une coupe : boutons « Previous cut » / « Next cut » d’ESV 
   await env.page.waitForFunction(()=>window.__maquette.etat().cut===100&&window.__maquette.etat().railsPrets);
   const s=(await env.appel('state')).result;assert.equal(s.identity.cut,100);assert.equal(env.serveur.journal.ecritures.length,3,'aucune écriture par la navigation');
 });
+test('précision des nœuds : positions Float32 locales au nœud, scène reconstituée au micron (comme Potree)',opts,async()=>{
+  /* Régression du 15 octobre : des coordonnées scène de ~1 600 m stockées en Float32 perdaient 0,1 mm et déplaçaient
+   * 34 rails de 2 à 30 mm au rejeu d'un export de terrain. */
+  const r=await env.page.evaluate(async()=>{const m=window.__maquette,e=m.etat(),c=m.scenario().parties.find(p=>p.part===e.part).cuts.find(x=>x.cut===e.cut);
+    const j=await (await fetch(c.noeudsUrl)).json(),pc=window.viewer.scene.pointclouds[0];let maxLocal=0,maxErr=0,n=0,coinMax=-Infinity,coinMin=Infinity;
+    for(const nd of pc.visibleNodes){const a=nd.sceneNode.geometry.attributes.position.array,M=nd.sceneNode.matrixWorld.elements;
+      for(let k=0;k<3;k++){let mn=Infinity;for(let i=k;i<a.length;i+=3)mn=Math.min(mn,a[i]);coinMin=Math.min(coinMin,mn);coinMax=Math.max(coinMax,mn);}
+      const src=j.noeuds.find(x=>x.positions.length===a.length&&Math.abs(x.positions[0]+c.origine[0]-(M[0]*a[0]+M[4]*a[1]+M[8]*a[2]+M[12]))<1e-3);if(!src)return {erreur:'nœud sans source'};
+      for(let i=0;i<a.length;i+=3){const s=[M[0]*a[i]+M[4]*a[i+1]+M[8]*a[i+2]+M[12],M[1]*a[i]+M[5]*a[i+1]+M[9]*a[i+2]+M[13],M[2]*a[i]+M[6]*a[i+1]+M[10]*a[i+2]+M[14]];
+        for(let k=0;k<3;k++){maxLocal=Math.max(maxLocal,Math.abs(a[i+k]));maxErr=Math.max(maxErr,Math.abs(s[k]-(src.positions[i+k]+c.origine[k])));}n++;}}
+    return {maxLocal,maxErr,n,noeuds:pc.visibleNodes.length,coinMin,coinMax};});
+  assert.equal(r.erreur,undefined,r.erreur);assert.ok(r.n>0&&r.noeuds>0,'des points');
+  assert.ok(r.maxLocal<64,`positions locales au nœud (max ${r.maxLocal} m)`);
+  assert.ok(r.coinMin>=0&&r.coinMax<1e-3,`chaque nœud a son coin de boîte pour origine (min des positions entre 0 et 1 mm : ${r.coinMin}…${r.coinMax})`);
+  assert.ok(r.maxErr<2e-6,`scène reconstituée au micron (erreur max ${r.maxErr} m)`);
+});
 test('aucune erreur de page pendant les essais',opts,()=>{assert.deepEqual(env.erreurs,[]);});
