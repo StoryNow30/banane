@@ -72,7 +72,8 @@ test('valider sur place (Ctrl+Entrée) : compteur +1, cut inchangé',opts,async(
 });
 test('retour à une coupe : boutons « Previous cut » / « Next cut » d’ESV (identifiants relevés) et événement interne (hypothèse)',opts,async()=>{
   await env.page.click('#O2N3DCutPrevious3DRail');await env.page.waitForFunction(()=>window.__maquette.etat().cut===102&&window.__maquette.etat().railsPrets);
-  await env.page.evaluate(()=>document.dispatchEvent(new CustomEvent('maquette:goto',{detail:{cut:100}})));
+  /* Événement interne d'ESV tel que la 4.9 le déclenche : $(#globalcontainer).trigger('railPairSelected',[partie en texte, index]). */
+  await env.page.evaluate(()=>window.$(document.getElementById('globalcontainer')).trigger('railPairSelected',['23',100]));
   await env.page.waitForFunction(()=>window.__maquette.etat().cut===100&&window.__maquette.etat().railsPrets);
   const s=(await env.appel('state')).result;assert.equal(s.identity.cut,100);assert.equal(env.serveur.journal.ecritures.length,3,'aucune écriture par la navigation');
 });

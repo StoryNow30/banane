@@ -148,7 +148,22 @@
  $('O2N3DCutValidate3DRail').addEventListener('click',validerEtSuivant);$('O2N3DCutNextInvalid3DRail').addEventListener('click',invalideSuivant);$('O2N3DCutPreviousInvalid3DRail').addEventListener('click',invalidePrecedent);
  $('O2N3DCutSkip3DRail').addEventListener('click',passer);
  $('O2N3DCutPrevious3DRail').addEventListener('click',()=>allerA(etat.index-1,'precedent'));$('O2N3DCutNext3DRail').addEventListener('click',()=>allerA(etat.index+1,'suivant'));
- document.addEventListener('maquette:goto',e=>{const i=etat.partie?.cuts.findIndex(c=>c.cut===Number(e.detail?.cut));if(i>=0)allerA(i,'evenement-goto');}); /* hypothèse d'événement interne */
+ document.addEventListener('maquette:goto',e=>{const i=etat.partie?.cuts.findIndex(c=>c.cut===Number(e.detail?.cut));if(i>=0)allerA(i,'evenement-goto');}); /* événement propre à la maquette */
+ /* ÉVÉNEMENTS INTERNES D'ESV (relevé B du 15 octobre, lecture seule) : ESV est une page jQuery ; `#globalcontainer`
+  * porte cinq événements jQuery (railPairSelected, railPairUpdated, railPairSeen, loading, newPart) ; le premier
+  * gestionnaire de `railPairSelected` est `function(e,n,i){t.loadCut(n,i)}`. Ariane 4.9 le détecte par `$._data(el,'events')`
+  * et le déclenche par `$(el).trigger('railPairSelected',[String(part),cut])`. La maquette fournit le strict nécessaire :
+  * un `$` minimal (pas jQuery), `_data`, `trigger`, et un `loadCut(partie en texte, index)` qui charge la ligne d'indice
+  * `index` (cut N = ligne N) de la partie affichée ; hors de la partie ou index inconnu : lève, comme ESV (hypothèse). */
+ const evenementsJq=new Map();
+ function loadCut(partieTexte,index){if(String(partieTexte)!==String(etat.partie?.part))throw Error('loadCut : partie différente de la partie affichée');
+   const i=etat.partie.cuts.findIndex(c=>c.cut===Number(index));if(i<0)throw Error('loadCut : index hors de la partie');chargerCut(i,'evenement-railPairSelected');}
+ const jq=sel=>{const el=typeof sel==='string'?document.querySelector(sel):sel;return {0:el,length:el?1:0,
+   trigger(nom,args=[]){const hs=evenementsJq.get(el)?.[nom]||[];log('evenement-jquery',{nom,args:[].concat(args).map(String)});for(const h of hs)h.handler({type:nom,target:el},...[].concat(args));return this;},
+   on(nom,handler){const m=evenementsJq.get(el)||{};(m[nom]=m[nom]||[]).push({handler});evenementsJq.set(el,m);return this;}};};
+ jq._data=(el,cle)=>cle==='events'?(evenementsJq.get(el)||{}):undefined;jq.fn={jquery:'maquette-0.1'};
+ window.$=window.jQuery=jq;
+ jq('#globalcontainer').on('railPairSelected',function(e,n,i){loadCut(n,i);}).on('railPairUpdated',()=>{}).on('railPairSeen',()=>{}).on('loading',()=>{}).on('newPart',()=>{});
  document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select'))return;const which=e.which||e.keyCode;
   log('touche',{key:e.key,which,shift:e.shiftKey,ctrl:e.ctrlKey,trusted:e.isTrusted});
   if(e.shiftKey&&!e.ctrlKey&&(which===90||e.key==='Z'||e.key==='z'))return invalideSuivant();
