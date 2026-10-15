@@ -1,0 +1,516 @@
+{
+ "format": "ariane-journal-v4-synthetique",
+ "version": "test",
+ "events": [
+  {
+   "eventId": "proposed-1001",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "proposed",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1001,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "proposal": {
+    "rails": {
+     "left": {
+      "status": "candidate",
+      "confidence": 0.9,
+      "gcv1": {
+       "motif": "candidate",
+       "convention": {
+        "applied": true
+       }
+      }
+     },
+     "right": {
+      "status": "candidate",
+      "confidence": 0.8,
+      "gcv1": {
+       "motif": "candidate",
+       "convention": {
+        "applied": false
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "eventId": "applied-verified-1001",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "applied-verified",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1001,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  },
+  {
+   "eventId": "validation-accepted-1001",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "validation-accepted",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1001,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  },
+  {
+   "eventId": "b1-ombre-1001",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "b1-ombre",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1001,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "etat": "calcule",
+   "regle": "dernier-recours",
+   "changement": "aucun",
+   "reel": {
+    "stage": "candidate",
+    "reason": null
+   },
+   "hypothese": {
+    "stage": "window",
+    "reason": null,
+    "anchorsUsed": [
+     1006
+    ],
+    "fromPredictionMm": 2.5
+   },
+   "ecartPoseMm": 1.2
+  },
+  {
+   "eventId": "defer-finalized-1002",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "defer-finalized",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1002,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "status": "DEFERRED_UNRESOLVED",
+   "transition": "NEXT_CUT_WITHOUT_DECISION_SAME_PAGE_AND_PART",
+   "unresolvedRails": [
+    "left",
+    "right"
+   ],
+   "rails": {
+    "left": {
+     "status": "unresolved",
+     "reasons": [
+      "Flanc interne insuffisamment observé."
+     ],
+     "gcv1": {
+      "motif": "minTop"
+     }
+    },
+    "right": {
+     "status": "unresolved",
+     "reasons": [
+      "Plan de roulement non estimable."
+     ],
+     "gcv1": {
+      "motif": "rsf"
+     }
+    }
+   }
+  },
+  {
+   "eventId": "b1-ombre-1002",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "b1-ombre",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1002,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "etat": "calcule",
+   "regle": "dernier-recours",
+   "changement": "pose-ajoutee",
+   "reel": {
+    "stage": "deferred",
+    "reason": "no-anchor"
+   },
+   "hypothese": {
+    "stage": "window",
+    "reason": null,
+    "anchorsUsed": [
+     1001,
+     1006
+    ],
+    "fromPredictionMm": 1.8
+   },
+   "ecartPoseMm": null
+  },
+  {
+   "eventId": "applied-verified-1004",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "applied-verified",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1004,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  },
+  {
+   "eventId": "validation-accepted-1004",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "validation-accepted",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1004,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  },
+  {
+   "eventId": "applied-verified-1006",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "applied-verified",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1006,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  },
+  {
+   "eventId": "validation-accepted-1006",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "validation-accepted",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1006,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  },
+  {
+   "eventId": "cut-target-changed-1003",
+   "timestamp": "2030-01-01T09:00:00.000Z",
+   "type": "cut-target-changed",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1003,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   }
+  }
+ ],
+ "records": [
+  {
+   "recordId": "jr-1001",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1001,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "capturedAt": "2030-01-01T09:01:00.000Z",
+   "rails": {
+    "left": {
+     "initial": {
+      "positionSceneRelative": [
+       10.002,
+       20.001,
+       1
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "corrected": {
+      "positionSceneRelative": [
+       10,
+       20,
+       1
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    },
+    "right": {
+     "initial": {
+      "positionSceneRelative": [
+       11.421,
+       20,
+       1.002
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "corrected": {
+      "positionSceneRelative": [
+       11.42,
+       20,
+       1
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "recordId": "jr-1004",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1004,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "capturedAt": "2030-01-01T09:04:00.000Z",
+   "rails": {
+    "left": {
+     "initial": {
+      "positionSceneRelative": [
+       30.002,
+       20.001,
+       1
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "corrected": {
+      "positionSceneRelative": [
+       30,
+       20,
+       1
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    },
+    "right": {
+     "initial": {
+      "positionSceneRelative": [
+       31.421,
+       20,
+       1.002
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "corrected": {
+      "positionSceneRelative": [
+       31.42,
+       20,
+       1
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "recordId": "jr-1006",
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1006,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "capturedAt": "2030-01-01T09:06:00.000Z",
+   "rails": {
+    "left": {
+     "initial": {
+      "positionSceneRelative": [
+       50.002,
+       20.001,
+       1
+      ]
+     },
+     "corrected": {
+      "positionSceneRelative": [
+       50,
+       20,
+       1
+      ]
+     }
+    },
+    "right": {
+     "initial": {
+      "positionSceneRelative": [
+       51.421,
+       20,
+       1.002
+      ]
+     },
+     "corrected": {
+      "positionSceneRelative": [
+       51.42,
+       20,
+       1
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
