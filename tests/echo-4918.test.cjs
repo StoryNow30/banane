@@ -88,8 +88,8 @@ test('AM-08 : une revisite du même cut depuis une AUTRE page (F5) est reconnue 
 test('AM-14 / AM-18 : une écriture de validation d’ESV jointe à la dernière visite close la confirme ; sans navigation, la référence reste comparable',async()=>{
  const f=await session();await f.sessions.start();const a=await f.open('v1');await f.gesture('v1',a,{intent:'VALIDATE',decisionKey:'Ctrl+Enter'});await f.close('v1',a,null,'finished');
  let r=f.record('v1');assert.ok(r.partialReasons.includes('decision-effect-not-observed'));
- const w=await f.sessions.noteServerWrite({eventId:'w1',timestamp:new Date().toISOString(),status:200,method:'PUT',outcome:'done',attempt:1,rowIndex:12,body:{XLeftEdge:1.5,ExtractionStatus:'valid'},durationMs:40});
- assert.equal(w.joinedTo,'last-closed-visit');r=f.record('v1');assert.equal(r.serverConfirmed,true);assert.equal(r.serverConfirmationStatus,'observed-write-200');
+ const w=await f.sessions.noteServerWrite({eventId:'w1',timestamp:new Date().toISOString(),status:200,method:'PUT',outcome:'done',attempt:1,rowIndex:100,body:{XLeftEdge:1.5,ExtractionStatus:'valid',TreatedByOperator:true,SeenByOperator:true},durationMs:40});
+ assert.equal(w.joinedTo,'closed-visit');assert.equal(w.joinMethod,'row-index');assert.equal(w.kind,'validation');r=f.record('v1');assert.equal(r.serverConfirmed,true);assert.equal(r.serverConfirmationStatus,'observed-validation-write-200');
  assert.equal(r.serverWrites.length,1);assert.ok(!r.partialReasons.includes('decision-effect-not-observed'));assert.ok(!r.geometryEligibility.left.reasons.includes('decision-effect-not-observed'));
 });
 test('AM-07 : après un redémarrage du service worker, la page qui observe toujours guérit la période et rouvre la visite',async()=>{
@@ -117,6 +117,21 @@ test('AM-19 : une session finie avec des visites, jamais téléchargée en entie
  await f.sessions.start();assert.equal(f.engine.s.native.visits.length,0);
 });
 
+test('4.9.0.19 (partie 24) : la validation écrite APRÈS le changement de cut va au cut de sa ligne ; « vu par l’opérateur » ne confirme rien',async()=>{
+ const f=await session();await f.sessions.start();const a=await f.open('v1',100);const t0=Date.now();
+ await f.sessions.noteServerWrite({eventId:'s1',timestamp:new Date(t0).toISOString(),status:204,rowIndex:100,body:{SeenByOperator:true}});
+ await f.gesture('v1',a,{intent:'VALIDATE',decisionKey:'Shift+Space'});await f.close('v1',a,101);
+ const b=await f.open('v2',101);                                   // ESV a déjà changé de cut quand la validation du cut 100 est écrite
+ const w=await f.sessions.noteServerWrite({eventId:'w1',timestamp:new Date(Date.now()+200).toISOString(),status:204,rowIndex:100,body:{ExtractionStatus:'valid',TreatedByOperator:true,SeenByOperator:true}});
+ assert.equal(w.joinMethod,'row-index');assert.equal(f.record('v1').serverConfirmed,true);assert.equal(f.record('v1').serverWrites.length,2);assert.equal(f.record('v1').serverWrites[0].kind,'seen');
+ assert.equal(f.record('v2').serverConfirmed,false,'la visite suivante n’est pas confirmée par la validation du cut précédent');assert.equal(f.record('v2').serverWrites.length,0);
+ await f.sessions.noteServerWrite({eventId:'s2',timestamp:new Date().toISOString(),status:204,rowIndex:101,body:{SeenByOperator:true}});
+ assert.equal(f.record('v2').serverWrites.length,1);assert.equal(f.record('v2').serverConfirmed,false,'une écriture « vu » seule ne confirme pas');
+ // numéro de ligne sans visite correspondante : repli sur l’heure, nommé
+ const x=await f.sessions.noteServerWrite({eventId:'w9',timestamp:new Date().toISOString(),status:204,rowIndex:9999,body:{ExtractionStatus:'valid',TreatedByOperator:true}});
+ assert.equal(x.joinMethod,'time-current-visit');
+});
+
 /* ---------- service worker : F5, alerte, reprise, observations ESV taguées ---------- */
 const esv={id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}};
 test('AM-05 (service worker) : F5 sur l’onglet observé → pause dite, bandeau rouge dans ESV, puis reprise automatique (nouvelle période, aucune commande ESV)',async()=>{
@@ -136,9 +151,9 @@ test('AM-14 (service worker) : pendant Écho, les observations ESV portent la se
  const state=await b.adapter.state();
  await b.message({kind:'native-event',type:'visit-started',payload:{sessionId:id,observationPeriodId:period,visitId:'v1',identity:state.identity,initialObserved:state}},esv);
  await b.message({kind:'native-event',type:'operator-event',payload:{sessionId:id,observationPeriodId:period,visitId:'v1',identity:state.identity,stateObservedBeforeInput:state,event:{type:'keydown',intent:'VALIDATE',decisionKey:'Ctrl+Enter',observedAt:new Date().toISOString()}}},esv);
- const t=Date.now();const r=await b.message({kind:'esv-observation',observer:'obs-1',entries:[{seq:1,kind:'write',urlClass:'rail-pair-write',method:'PUT',status:200,outcome:'done',attempt:1,railPairId:'table/row-1',bodyKeys:7,body:{XLeftEdge:1.25,ExtractionStatus:'valid'},rowIndex:4,startedEpochMs:t-30,endedEpochMs:t,durationMs:30}]},esv);
+ const t=Date.now();const r=await b.message({kind:'esv-observation',observer:'obs-1',entries:[{seq:1,kind:'write',urlClass:'rail-pair-write',method:'PUT',status:200,outcome:'done',attempt:1,railPairId:'table/row-1',bodyKeys:7,body:{XLeftEdge:1.25,ExtractionStatus:'valid',TreatedByOperator:true,SeenByOperator:true},rowIndex:100,startedEpochMs:t-30,endedEpochMs:t,durationMs:30}]},esv);
  assert.equal(r.accept,true);await flush(20);
- const rec=b.store.records.find(x=>x.visitId==='v1');assert.equal(rec.serverConfirmed,true);assert.equal(rec.serverWrites[0].status,200);assert.equal(rec.serverWrites[0].joinedTo,'current-visit');assert.equal(rec.serverWrites[0].body.ExtractionStatus,'valid');
+ const rec=b.store.records.find(x=>x.visitId==='v1');assert.equal(rec.serverConfirmed,true);assert.equal(rec.serverWrites[0].status,200);assert.equal(rec.serverWrites[0].joinedTo,'current-visit');assert.equal(rec.serverWrites[0].joinMethod,'row-index');assert.equal(rec.serverWrites[0].body.ExtractionStatus,'valid');
  const obs=b.store.events.find(e=>e.type==='esv-observation'&&e.kind==='write');assert.equal(obs.nativeSessionId,id);
  await b.message({kind:'native-event',type:'visit-ended',payload:{sessionId:id,observationPeriodId:period,visitId:'v1',identity:state.identity,finalObserved:state,reason:'finished',nextIdentity:null,endedAt:new Date().toISOString()}},esv);
  await b.api('native-end');const data=await b.api('native-download');assert.ok(data.events.some(e=>e.type==='esv-observation'&&e.kind==='write'),'l’écriture ESV est dans l’export Écho');

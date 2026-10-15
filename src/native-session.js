@@ -439,16 +439,29 @@
    * file des événements : une écriture de l'observation « continuité » ne doit jamais écraser la sienne, ni l'inverse. */
   noteServerWrite(write){const next=this.queue.then(()=>this.noteServerWriteNow(write));this.queue=next.catch(()=>{});return next;}
   async noteServerWriteNow(write){const n=this.e.s.native;if(!n||!this.active()||!write)return null;
-   const at=Date.parse(write.timestamp||'')||Date.now();let record=n.current;
-   if(!record){const last=n.visits.at(-1);if(last){const r=await this.recordById(last.visitId);
-     if(r&&r.nativeSessionId===n.id&&(!r.endedAt||at-Date.parse(r.endedAt)<=(S.echo?.ecritureJointeMs??5000)))record=r;}}
+   const at=Date.parse(write.timestamp||'')||Date.now(),grace=S.echo?.ecritureJointeMs??5000,body=write.body&&typeof write.body==='object'?write.body:null;
+   /* 4.9.0.19 (terrain, partie 24) : ESV écrit deux sortes de choses. « Vu par l'opérateur » (SeenByOperator seul) à
+    * l'arrivée sur un cut ; la VALIDATION (ExtractionStatus valid + TreatedByOperator, avec les bords en repère monde)
+    * 0,5 à 0,7 s après le geste, souvent APRÈS le changement de cut. Seule la validation confirme. */
+   const kind=body?.ExtractionStatus==='valid'&&body?.TreatedByOperator===true?'validation':body?.SeenByOperator===true?'seen':'other';
+   /* Rattachement : par numéro de ligne (`rowIndex` = numéro du cut sur la partie 24 : 36 lignes sur 36) à la dernière visite
+    * de ce cut dont la fenêtre contient l'écriture ; sinon par l'heure (visite en cours, ou dernière visite close). */
+   const dans=r=>{const s=Date.parse(r.startedAt||''),e=r.endedAt?Date.parse(r.endedAt):Infinity;return Number.isFinite(s)&&at>=s-1000&&at<=e+grace;};
+   let record=null,method=null;
+   if(Number.isInteger(write.rowIndex)){
+    for(const visit of n.visits.slice().reverse()){if(visit.identity?.cut!==write.rowIndex)continue;
+     const r=n.current?.visitId===visit.visitId?n.current:await this.recordById(visit.visitId);
+     if(r&&r.nativeSessionId===n.id&&dans(r)){record=r;method='row-index';break;}}}
+   if(!record){record=n.current;method=record?'time-current-visit':null;
+    if(!record){const last=n.visits.at(-1);if(last){const r=await this.recordById(last.visitId);
+      if(r&&r.nativeSessionId===n.id&&(!r.endedAt||at-Date.parse(r.endedAt)<=grace)){record=r;method='time-last-closed-visit';}}}}
    if(!record)return null;
-   const entry={eventId:write.eventId||null,at:write.timestamp||iso(),status:write.status??null,method:write.method||null,outcome:write.outcome||null,
-    attempt:write.attempt??null,rowIndex:Number.isInteger(write.rowIndex)?write.rowIndex:null,body:write.body&&typeof write.body==='object'?K.clone(write.body):null,
-    joinedTo:n.current===record?'current-visit':'last-closed-visit',durationMs:write.durationMs??null};
+   const entry={eventId:write.eventId||null,at:write.timestamp||iso(),kind,status:write.status??null,method:write.method||null,outcome:write.outcome||null,
+    attempt:write.attempt??null,rowIndex:Number.isInteger(write.rowIndex)?write.rowIndex:null,body:body?K.clone(body):null,
+    joinedTo:n.current?.visitId===record.visitId?'current-visit':'closed-visit',joinMethod:method,durationMs:write.durationMs??null};
    (record.serverWrites??=[]).push(entry);if(record.serverWrites.length>16)record.serverWrites.shift();
-   if(Number.isInteger(entry.status)&&entry.status>=200&&entry.status<300){record.serverConfirmed=true;record.serverConfirmationStatus='observed-write-'+entry.status;
-    record.serverConfirmedAt=entry.at;}
+   if(kind==='validation'&&Number.isInteger(entry.status)&&entry.status>=200&&entry.status<300){record.serverConfirmed=true;
+    record.serverConfirmationStatus='observed-validation-write-'+entry.status;record.serverConfirmedAt=entry.at;}
    if(record.endedAt!==null)this.classify(record);await this.saveRecord(record);return entry;}
   /* 4.9.0.18 (AM-05) : la page ESV observée a été rechargée, a quitté ESV ou l'onglet a été fermé. L'observateur de la
    * page a disparu avec elle : la visite en cours est close telle qu'elle est (rien d'inventé), la période interrompue,

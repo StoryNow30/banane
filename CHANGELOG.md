@@ -1,5 +1,20 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0.19 — test 19 (15/10)
+
+Manifeste `4.9.0.19`, « 4.9.0 test 19 », paquet `ariane-4.9.0-test.19.zip` ; base : test 18 (`7b17083`). Un correctif, trouvé en relisant l'export Écho de la
+partie 24 (test 18, 54 visites, 3 minutes). `src/engine.js` inchangé. Consigne : `consignes/seance-terrain-test-19-2026-10-15.md` ; retour arrière : test 18.
+
+- **Écritures d'ESV rattachées au bon cut** (`src/native-session.js`, `noteServerWrite`). ESV écrit deux choses : « vu par l'opérateur » (à l'arrivée sur un cut)
+  et la **validation** (`ExtractionStatus` valid + `TreatedByOperator`, avec les bords en repère monde) 0,5 à 0,7 s après le geste, souvent après le changement de cut.
+  La test 18 rattachait toute écriture 2xx par l'heure : 37 visites « confirmées » pour 32 validations, une validation comptée sur le cut suivant.
+  Maintenant : rattachement par numéro de ligne (`rowIndex` = numéro du cut : 36 lignes sur 36 sur la partie 24) à la dernière visite de ce cut dont la fenêtre
+  contient l'écriture, sinon par l'heure (`joinMethod`) ; chaque écriture porte son genre (`kind` : validation, seen, other) ; **seule une validation confirme**
+  (`serverConfirmationStatus:'observed-validation-write-204'`). Rejeu sur l'export réel : 32 visites validées, 32 confirmées, 0 confirmation sur un cut non validé,
+  0 écriture rattachée à un autre cut que sa ligne.
+- CONTENU.txt d'un export Écho : la phrase sur la fusion des segments n'apparaît que s'il y a plusieurs segments.
+- Essai ajouté (`tests/echo-4918.test.cjs`, 18 essais) ; `tests/version-test19.test.cjs`.
+
 ## 4.9.0.18 — test 18 (15/10)
 
 Manifeste `4.9.0.18`, « 4.9.0 test 18 », paquet `ariane-4.9.0-test.18.zip` ; base : test 17 (`9a329b6`). Corrections de l'audit du mode

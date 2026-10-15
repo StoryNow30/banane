@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 18',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 19',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -1362,7 +1362,7 @@ on('native-discard',async()=>{
          (N>1?`Volume ${n} sur ${N} : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}. Chaque volume est un zip complet ; il faut les ${N} pour l'export entier.\n`
            :`Archive unique : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}.\n`)+
          (v.seul?`Ce fichier dépasse seul la limite de ${V.mo1(max)} par volume : il n'est jamais coupé.\n`:'')+
-         corps+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+pied],{type:'text/plain'}));
+         corps+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+(typeof pied==='function'?pied():pied)],{type:'text/plain'}));
        const blob=v.zip.terminer(),f=await saveBlob(blob,nomVolume(base,n,N));out.push({...f,entrees:liste.length,octets:blob.size,seul:v.seul});}
      return out;};
    return V;
@@ -1381,9 +1381,10 @@ on('native-discard',async()=>{
    const debut=session.startedAt?dateHeureParis(session.startedAt):'?',fin=session.finishedAt?dateHeureParis(session.finishedAt):'en cours';
    const corps=`Session Écho ${session.id||'?'} · version ${data.version||K_VERSION()} · ${records.length} visite(s) · partie(s) ${parties.length?parties.join(', '):'?'} · du ${debut} au ${fin}.\n`+
      (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+departs;
+   let r;
    const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode Écho (relecture) — ${dateHeureParis(maintenant)}\n`,corps,
-     pied:'Plusieurs segments JSON : node tools/merge-segments.cjs --out SESSION.json --dir DOSSIER (les zip sont lus tels quels). Les visites et les événements sont dans le premier segment.\n'});
-   segmentPlafond=Math.max(2*V.max,2*SEGMENT_RESERVE_BYTES);let r;
+     pied:()=>r?.segments>1?'Plusieurs segments JSON : node tools/merge-segments.cjs --out SESSION.json --dir DOSSIER (les zip sont lus tels quels). Les visites et les événements sont dans le premier segment.\n':''});
+   segmentPlafond=Math.max(2*V.max,2*SEGMENT_RESERVE_BYTES);
    try{r=await writeSegments(data,'ariane-echo',{label,startIndex,save:V.save});}finally{segmentPlafond=null;}
    const volumes=await V.fermerTout(),ko=nonEnregistres(volumes),confirme=volumes.length>0&&!ko.length;
    /* Purge seulement si chaque volume est confirmé : sinon tout reste dans Ariane et partira avec l'export final. */
