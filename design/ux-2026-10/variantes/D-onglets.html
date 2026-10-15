@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbite · D · Onglets</title>
+<!-- Variante D « Onglets » : la navigation de l'application Porsche. Un écran
+     tient sans défiler ; une barre d'onglets en pied (Lot, Ligne, Exports,
+     Plus) mène aux autres écrans. Ici : l'écran Lot et l'écran Exports
+     (&onglet=exports). Données fictives (commun.js). ?theme=clair|sombre -->
+<script src="commun.js"></script>
+<link rel="stylesheet" href="porsche.css">
+<style>
+body{display:flex;flex-direction:column}
+main{flex:1}
+.tete{display:flex;align-items:center;justify-content:space-between}
+.tete h1{margin:0;font-size:30px;font-weight:600;display:flex;align-items:center;gap:8px}
+.tete .etat{font-size:13px;color:var(--text-2)}.tete .etat b{color:var(--vert)}
+.carte{margin-top:18px;padding:22px 20px;border-radius:20px;background:var(--tile)}
+.carte .h{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--text-2)}
+.carte .n{display:block;margin-top:8px;font-size:92px}
+.etapes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px}
+.etapes span{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text-3)}
+.etapes span::before{content:"";height:4px;border-radius:2px;background:var(--tile-2)}
+.etapes .f{color:var(--text-2)}.etapes .f::before{background:var(--text)}
+.etapes .a{color:var(--vert)}.etapes .a::before{background:linear-gradient(90deg,var(--vert) 55%,var(--tile-2) 55%)}
+.lot{margin-top:18px;padding-top:16px;border-top:1px solid var(--hair)}
+.lot .l{display:flex;justify-content:space-between;align-items:baseline}
+.lot .l b{font-size:28px;font-weight:300}.lot .l span{font-size:13px;color:var(--text-2)}
+.barre{height:10px;margin-top:10px;border-radius:5px;background:var(--tile-2);overflow:hidden}.barre i{display:block;height:100%;width:20%;border-radius:5px;background:var(--vert)}
+.cmds{display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-top:12px}.cmds .btn{height:58px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.trio .tile{margin:0;padding:14px}
+.trio .n{display:block;font-size:34px}.trio .s{display:block;margin-top:6px;font-size:12.5px;color:var(--text-2)}
+.dc{margin-top:10px}.dc .t{display:flex;justify-content:space-between;font-size:14.5px}.dc .t span{font:400 12px var(--mono);color:var(--text-3)}
+.pol{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.pol span{padding:6px 12px;border-radius:16px;background:var(--tile);font-size:12.5px;color:var(--text-2)}.pol b{font-weight:500;color:var(--text)}
+.ecr-t{display:grid;grid-template-columns:1fr auto;align-items:baseline}.ecr-t h1{margin:0;font-size:30px;font-weight:600}
+/* Barre d'onglets en pied. */
+.tabs{position:static;display:grid;grid-template-columns:repeat(4,1fr);margin-top:22px;padding:10px 12px 16px;background:rgba(0,0,0,.35);backdrop-filter:blur(12px);border-top:1px solid var(--hair)}
+:root:not([data-theme=sombre]) .tabs{background:rgba(255,255,255,.6)}
+.tabs span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--text-3)}
+.tabs .on{color:var(--text)}.tabs .on svg{color:var(--vert)}
+.tabs .badge{position:relative}.tabs .badge::after{content:"3";position:absolute;top:-4px;right:18px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--amber);color:#000;font:600 10px/16px var(--sans);text-align:center}
+</style></head>
+<body><main>
+
+<div data-pane="lot">
+ <div class="tete"><h1>Orbite <i data-ic="bas" data-s="22"></i></h1><span class="etat"><b>●</b> ESV · Edge</span></div>
+ <div class="carte">
+  <div class="h"><span><b class="vert">En cours</b> · partie 34</span><span>cut affiché</span></div>
+  <span class="n">8455</span>
+  <div class="etapes"><span class="f">Capture</span><span class="a">Pose</span><span>Validation</span></div>
+  <div class="lot"><div class="l"><b>20 %</b><span>8410 → 8640 · 45 cuts traités</span></div><div class="barre"><i></i></div></div>
+ </div>
+ <div class="cmds"><button class="btn plein"><i data-ic="pause" data-s="20"></i>Pause</button><button class="btn stop"><i data-ic="stop" data-s="16"></i>Arrêter le lot</button></div>
+ <div class="trio">
+  <div class="tile"><span class="n">42</span><span class="s">posés · 9 voie</span></div>
+  <div class="tile"><span class="n amb">3</span><span class="s">Différés : 3</span></div>
+  <div class="tile"><span class="n">93<span class="u">%</span></span><span class="s">couverture</span></div>
+ </div>
+ <div class="tile dc"><div class="t"><b style="font-weight:500">Valider et passer au suivant</b><span>cut 8454</span></div>
+  <div class="trois"><span>Émise</span><span class="vu">Navigation observée</span><span class="na">Serveur : non disponible</span></div></div>
+ <div class="pol"><span>Rail non résolu : <b>différer</b></span><span>Faible confiance : <b>pause</b></span><span>Décision : <b>appliquée</b></span></div>
+</div>
+
+<div data-pane="exports" hidden>
+ <div class="ecr-t"><h1>Exports</h1><span class="note" style="margin:0">sur ce poste</span></div>
+ <div class="liste sep" style="margin-top:18px"><div class="row fort"><i class="i" data-ic="dl" data-s="26"></i><span class="l">Tout télécharger pour l’analyse</span><i class="chev" data-ic="chev" data-s="22"></i></div></div>
+ <p class="sec">Un par un</p>
+ <div class="liste">
+  <div class="row"><i class="i" data-ic="doc" data-s="24"></i><span class="l">Journal</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="nuage" data-s="24"></i><span class="l">Bilan et LiDAR</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="courbe" data-s="24"></i><span class="l">Diagnostic GCV1</span><i class="chev" data-ic="chev"></i></div>
+  <div class="row"><i class="i" data-ic="couches" data-s="24"></i><span class="l">Corpus GCV1 + LiDAR</span><i class="chev" data-ic="chev"></i></div>
+ </div>
+ <p class="sec">Départs des parties</p>
+ <div class="tile">
+  <div class="kv"><span>Partie 34 · 13/10 12:58</span><b class="mono" style="font-size:13px">1 284 val · 37 inv</b></div>
+  <div class="kv"><span>Partie 33 · 12/10 16:04</span><b class="mono" style="font-size:13px">2 015 val · 12 inv</b></div>
+ </div>
+ <div class="liste" style="margin-top:12px"><div class="row dis"><i class="i" data-ic="poubelle" data-s="20"></i><span class="l">Vider le cache des exports</span></div></div>
+ <p class="note">ESV ne donne aucune confirmation serveur.</p>
+</div>
+</main>
+<nav class="tabs">
+ <span data-tab="lot"><i data-ic="eclair" data-s="22"></i>Lot</span>
+ <span data-tab="ligne" class="badge"><i data-ic="rail" data-s="22"></i>Ligne</span>
+ <span data-tab="exports"><i data-ic="dl" data-s="22"></i>Exports</span>
+ <span data-tab="plus"><i data-ic="liste" data-s="22"></i>Plus</span>
+</nav>
+</body></html>

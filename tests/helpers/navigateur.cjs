@@ -9,7 +9,10 @@ const all=[...fs.readFileSync(path.join(root,'background.js'),'utf8').match(/imp
 const listed=all.slice(0,all.indexOf('src/gcv1-shadow.js')+1);
 function load(files){const ctx={console,setTimeout,clearTimeout};ctx.self=ctx;ctx.globalThis=ctx;vm.createContext(ctx);
   for(const f of files)vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});return ctx;}
-/* Scénario du risque connu KI-047 (ancres fausses de 150 mm, choix sur la paire
+/* D-084 (12 octobre 2026) : décalage des ancres 140 mm au lieu de 150. À 150 mm la paire parallèle choisie est à 1415,9 mm,
+ * HORS du contrat d'écartement depuis la borne basse à 1420 mm : la décision est différée et il n'y a plus de choix à traduire ;
+ * à 140 mm le choix est à 1436,4 mm, dans le contrat (`lot-decision-voie.test.cjs` garde le cas à 150 mm).
+ * Scénario du risque connu KI-047 (ancres fausses de 140 mm, choix sur la paire
  * parallèle). Depuis la 4.7.16, la garde d'écartement voisin le diffère sur ce
  * fixture (écartement du choix à 20,6 mm de celui des ancres) ; les essais de
  * traduction et d'ordre de chargement la coupent pour garder un choix à
@@ -27,7 +30,7 @@ function build(L,Shadow,options={gaugeGuardMm:null}){
   const truth=Object.fromEntries(SIDES.map(side=>{const r=base.rails[side],P=r.profileLocalToSceneRelative,w=K.C.point(P,s0.rails[side].next.delta),o=K.C.point(P,[0,0,0]);
     return [side,O.translated(r,w.map((v,i)=>v-o[i]))];}));
   const shifted=Object.fromEntries(SIDES.map(side=>{const r=truth[side],P=r.profileLocalToSceneRelative,o=K.C.point(r.sceneRelativeToProfileLocal,r.positionSceneRelative);
-    const a=K.C.point(P,o),b=K.C.point(P,[o[0],o[1]+.15,o[2]]);return [side,O.translated(r,[b[0]-a[0],b[1]-a[1],b[2]-a[2]])];}));
+    const a=K.C.point(P,o),b=K.C.point(P,[o[0],o[1]+.14,o[2]]);return [side,O.translated(r,[b[0]-a[0],b[1]-a[1],b[2]-a[2]])];}));
   const anchor=cut=>({identity:{part:23,cut,frameId:'f'},positions:Object.fromEntries(SIDES.map(s=>[s,shifted[s].positionSceneRelative]))});
   const cap=capture(shifted);
   return {capture:cap,decision:L.decideCut({capture:cap,science:Shadow.scientificProposeBoth(cap),anchors:[anchor(104),anchor(103)],Shadow,options})};

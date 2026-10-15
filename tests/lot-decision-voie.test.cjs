@@ -28,14 +28,23 @@ test('pose ESV à 150 mm, voisins justes : la voie retrouve le rail à quelques 
  * elles, l'écartement restant dans le contrat. La protection est en amont :
  * ancres confirmées par la garde de continuité. */
 test('risque connu : des ancres fausses sur une paire parallèle entraînent le choix',()=>{
-  const rails=shifted(truth,150),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),wrong=shifted(truth,150),anchors=[anchorAt(104,wrong),anchorAt(103,wrong)];
+  /* D-084 (12 octobre 2026) : borne basse du contrat d'écartement à 1420 mm (1405 avant). Le fixture est repris à 140 mm : la
+   * paire parallèle choisie est à 1436,4 mm, DANS le contrat, donc ni le contrat ni la garde d'écartement voisin (même écartement
+   * que les ancres) ne l'arrêtent : le risque KI-047 reste ouvert et ce test le garde visible. */
+  const rails=shifted(truth,140),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),wrong=shifted(truth,140),anchors=[anchorAt(104,wrong),anchorAt(103,wrong)];
   const d=L.decideCut({capture:cap,science:sci,anchors,Shadow,options:{gaugeGuardMm:null}});
   assert.equal(d.stage,'choice');assert.ok(lateralMm(rails,d.positions,truth)>100);
-  /* 4.7.16 (D-050) : sur ce fixture, l'écartement de la paire parallèle est à
-   * 20,6 mm de celui des ancres — juste au-delà de la garde de 20 mm : le cut est
-   * différé. Protection de circonstance : une paire parallèle d'écartement
-   * voisin passerait. Le risque KI-047 reste ouvert. */
+  assert.ok(d.gaugeMm>1420&&d.gaugeMm<1470,String(d.gaugeMm));
+});
+
+/* À 150 mm la paire parallèle choisie est à 1415,9 mm : admissible avec la borne 1405 (4.7.16 : la garde d'écartement voisin la
+ * différait déjà, écartement à 20,6 mm de celui des ancres), HORS contrat depuis la borne 1420 (D-084). Même sans la garde
+ * d'écartement voisin le cut est différé : le contrat ferme ce cas. */
+test('D-084 : la paire parallèle à 1415,9 mm (ancres fausses de 150 mm) est hors contrat, le cut est différé',()=>{
+  const rails=shifted(truth,150),cap=capture(rails),sci=Shadow.scientificProposeBoth(cap),wrong=shifted(truth,150),anchors=[anchorAt(104,wrong),anchorAt(103,wrong)];
+  const d=L.decideCut({capture:cap,science:sci,anchors,Shadow,options:{gaugeGuardMm:null}});
+  assert.equal(d.stage,'deferred');assert.equal(d.reason,'gauge-LOW_INVALID');assert.ok(d.gaugeMm>1415&&d.gaugeMm<1417,String(d.gaugeMm));
   const g=L.decideCut({capture:cap,science:sci,anchors,Shadow});
-  assert.equal(g.stage,'deferred');assert.equal(g.reason,'gauge-guard');assert.ok(g.gaugeJumpMm>20&&g.gaugeJumpMm<25,String(g.gaugeJumpMm));
+  assert.equal(g.stage,'deferred');assert.ok(['gauge-guard','gauge-LOW_INVALID'].includes(g.reason),g.reason);
 });
 

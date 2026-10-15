@@ -8,7 +8,7 @@ test('intrusion : validateInPlace refusée, message « pose faite, non validée 
   const f=page(),before=await f.call('state');
   await assert.rejects(f.raw('next',[],{proprietaire:'autre'}).promise);
   let refus=null;await f.call('validateInPlace',before.identity,{},{commande:'ctrl-entree'}).catch(e=>{refus=e.message;});
-  assert.match(refus,/^Adaptateur ESV sans réponse : Ariane 4\.8\.6 en sécurité/);
+  assert.match(refus,new RegExp(`^Adaptateur ESV sans réponse : Ariane ${require('../src/core.js').VERSION_NAME.replaceAll('.', '\\.')} en sécurité`));
   assert.match(refus,/Validation refusée : la pose de ce cut est faite, non validée/);
   assert.equal(f.keyboard.length,0,'aucun raccourci émis');
   assert.equal(f.nodes.get('O2N3DCutDescription').textContent,'Cut 100 of part 23');

@@ -93,6 +93,24 @@
     recentrages: 3,
     attenteNavigationMs: 15000,
     attenteClicMs: 5000,
+    /* V3, expérience I1 (D-078, D-087), version de test seulement : lecture
+     * sans attendre une image d'ESV. « tirage » : chaque cut est tiré une fois
+     * pour toutes à partir de son numéro, une moitié lit comme avant
+     * (« référence »), l'autre rend la main à ESV par `scheduler.yield`
+     * (« rapide »). Mêmes points lus dans les deux modes ; seule la vitesse
+     * change. « reference » : aucun cut rapide. « toujours » : tous rapides. */
+    lectureI1: 'tirage',
+    /* D-088 (4.9.0.7, version de test) : mode « rapide », même tirage cut par cut que la 4.9.0.6.
+     * Un cut « rapide » lit sans attendre une image (I1), sélectionne sa vue au rythme des images
+     * (I2), lit dès que plus rien ne charge (I3, repli : la stabilité ci-dessus) et pose sans
+     * attendre le recentrage de la vue (P1). Un cut « référence » fait tout comme la 4.9.0.5.
+     * `rapide` : chaque pièce peut être coupée seule (false) pour isoler un effet.
+     * `modeRapide` remplace `lectureI1` (gardé pour lire les réglages de la 4.9.0.6).
+     * D-091 (4.9.0.9) : « echantillon », mode rapide sur neuf cuts sur dix ; un cut sur dix, tiré au
+     * sort d'après son numéro, reste en référence pour surveiller la qualité (validé le 13 octobre :
+     * −64 % par cut sur le lot de 112 cuts de la 4.9.0.8, qualité identique). « tirage » reste lisible. */
+    modeRapide: 'echantillon',
+    rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true }),
   });
 
   /* --- Export : vidage automatique et segmentation --- */
@@ -173,6 +191,21 @@
      * déclarée, donc un segment manquant à la fusion est signalé. */
     releaseAfterExport: true,
     compact: true,
+    /* V2 (D-079) : mode d'export. « complet » garde tout : intensité, classe,
+     * pointSources, probes. D-091 (4.9.0.9) : « allege » (allègement A) retire les
+     * sondes des nœuds vides qui ne touchent pas la zone ; points au bit près ;
+     * environ −33 % sur les nuages (src/native-export.js, MODES). */
+    mode: 'allege',
+    /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
+     * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
+     * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */
+    viderApresExport: false,
+    /* V2 : volume maximal d'une archive « Tout télécharger » ; au-delà, une archive suivante est ouverte.
+     * 4.9.0.16 (test 15, Mic : limite d'envoi d'environ 18 Mo par fichier) : 17 Mo (17 × 1 048 576 octets,
+     * 17,8 millions d'octets), taille COMPRESSÉE réelle, CONTENU.txt compris : sous 18 Mo quelle que soit la
+     * façon de compter les mégaoctets. Un fichier JSON n'est jamais coupé (s'il dépasse seul, il fait un
+     * volume à lui). Le zip simple s'arrête à 4 Gio. */
+    zipMaxBytes: 17 * Mo,
     /* Cadence de contrôle du seuil par le panneau, pendant la collecte. */
     advicePollMs: 5000,
   });
@@ -195,6 +228,40 @@
   });
 
   /* Valeurs dérivées, pour éviter de recalculer les mêmes ratios partout. */
+  /* V1 (test 2, D-077/D-078) — OBSERVATEUR PASSIF DE LA PAGE ESV. Il écoute, sans
+   * rien commander : écriture de validation (statut, corps réduit), pages de la liste
+   * des coupes (comptes), fichiers de points (nombre, octets). JOURNALISATION SEULE,
+   * pendant une séance (lot Orbite non clos, session Écho active), jamais hors séance.
+   * `actif:false` : le service worker ne range rien et le pont coupe l'observateur.
+   * Activé par défaut dans cette version de test. NE CONCERNE NI LE MOTEUR NI LA POSE ;
+   * aucun seuil. Les bornes du pont (50 entrées, 64 Ko par message, file de 100) et de la
+   * page (256 entrées, 1 Mo) vivent dans leurs fichiers, hors du service worker. */
+  const observateurPassif = Object.freeze({
+    actif: true,
+    /* Service worker : au plus ce nombre d'entrées rangées par séance (au-delà : un
+     * jalon « gap »), et cette taille maximale (caractères) d'un événement rangé. */
+    entreesParSeanceMax: 20000,
+    caracteresParEntree: 4096,
+  });
+  /* B1 (D-095) — APPUIS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
+   * 'ombre' : à chaque décision du lot, l'hypothèse « avec les voisins validés de la
+   * liste » est calculée À CÔTÉ et consignée (`b1-ombre`) ; la décision réelle, donc
+   * la pose, ne change pas. 'actif' : l'hypothèse devient la décision (dernier
+   * recours et garde de continuité du premier passage seulement). 'off' : rien,
+   * et la page oublie sa table. Livré à 'ombre' : passer à 'actif' attend le
+   * rejeu de l'ombre (justes perdus, faux ajoutés) et l'accord de la direction. */
+  const appuisListe = 'ombre';
+  /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
+   * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
+   * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.
+   * `chemin` : 'auto' (événement interne d'ESV s'il est visible dans la page, sinon pas
+   * à pas par les boutons précédent/suivant), 'evenement' ou 'pas' (ce chemin seul),
+   * 'off' (refus). `pasMax` : au-delà de ce nombre de pas, le pas à pas est refusé (un
+   * clic et une relecture par pas). Coupable sans reconstruire le moteur. */
+  const retourCut = Object.freeze({
+    chemin: 'auto',
+    pasMax: 40,
+  });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
@@ -213,10 +280,14 @@
       { groupe: 'Pilote', nom: 'Tentatives par vue', valeur: String(pilote.tentativesParVue), pourquoi: 'Relectures d’un rail avant abandon.' },
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
+      { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { echantillon: 'neuf cuts sur dix (un sur dix en référence, tiré au sort)', tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Les cuts de référence surveillent la qualité. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
+      { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
+      { groupe: 'Export', nom: 'Allègement des nuages', valeur: exportSettings.mode === 'allege' ? 'actif (sondes sans information retirées)' : 'aucun (tout est conservé)', pourquoi: 'D-091 : environ un tiers de moins sur les nuages LiDAR du zip. Les points restent exacts ; chaque nuage allégé le dit (exportLightening).' },
+      { groupe: 'Export', nom: 'Taille d’un volume zip', valeur: mo(exportSettings.zipMaxBytes) + ' au plus (compressé)', pourquoi: 'Au-delà, un volume suivant ; un fichier JSON n’est jamais coupé.' },
       { groupe: 'Export', nom: 'Taille de segment visée', valeur: mo(exportSettings.segmentBytes), pourquoi: 'Réserve de ' + mo(exportSettings.segmentReserveBytes) + ', plancher de ' + exportSettings.minObjectsPerSegment + ' objets.' },
       { groupe: 'Export', nom: 'Compactage', valeur: exportSettings.compact ? 'activé' : 'désactivé', pourquoi: 'Retire les champs dérivables, sans effet sur le moteur.' },
       { groupe: 'Lecteur', nom: 'Budget de lecture', valeur: exportSettings.compact === null ? '' : reader.maxMillis + ' ms', pourquoi: 'Par capture, points déjà chargés seulement.' },
@@ -225,5 +296,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, retourCut, derived, describe };
 });

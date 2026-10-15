@@ -1,5 +1,102 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0 — version candidate stable (15/10)
+
+**Code de la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27), plus deux corrections de la
+relecture finale (D-110, ci-dessous) ; la version et les documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
+« Ariane 4.9.0 · ouvrir » sur le bouton blanc d'ESV, paquet `ariane-v4.9.0.zip`. `src/engine.js` identique à la test 17.
+Notes pour l'opérateur : `NOTES_4.9.0.md` ; porte de version : `fiches/PORTE_4.9.0.md`. Fusion, étiquette et publication :
+décision de Mic. Retour arrière : la 4.8.6 (`v4.8.6`).
+
+Corrections de la relecture finale (D-110) :
+
+- **D1** : le vidage du cache n'est plus refusé sans fin après « Clôturer le résultat incertain », une fin de partie après un différé ou un SKIP explicite du dernier cut (la mesure V1 du lot y est désormais close).
+- **D2** : la fiche de départ d'une partie ne peut plus être écrasée par la réponse d'ESV à « y a-t-il des invalides ? » (0 / 1 / 1) ; écritures des fiches mises en file.
+- Limite connue, renvoyée à la 4.9.5 : **D3**, une écriture refusée par ESV (HTTP 500) est quand même comptée comme acceptée (identique en 4.8.6, jamais vue sur 924 écritures).
+
+Ce que la 4.9 apporte depuis la 4.8.6, en bref :
+
+- **Vitesse (V3, « mode rapide »)** : sélection du rail à l'image, lecture au signal de fin de chargement d'ESV (repli : la
+  règle des 800 ms), pose sans recentrage, lecture des points sans attendre une image (D-087, D-088). Neuf cuts sur dix en
+  rapide ; un sur dix, tiré d'après son numéro, reste en référence pour surveiller la qualité (D-091). Mesuré sur le terrain,
+  même lot, rapide contre référence : −54 % (test 15), −71 % (test 16, partie 26), −48 % (test 16, partie 25), −57 % sur la
+  séance de la test 17 et −71 % sur une page ESV fraîche ; part posée (C1) au niveau de la référence ; 0 capture perdue.
+- **Sauvegarde à taille constante (V5)** : Ariane ne ralentit plus au fil des lots quand le cache n'est pas vidé (D-089) ;
+  KI-070 corrigé (D-096).
+- **Mesure par phase (V1)** et **observateur passif** d'ESV (écritures de validation, liste des coupes, chargements), en
+  lecture seule, sans commande ajoutée (D-073, D-077, D-079). Chrome ou Edge 111 au moins.
+- **Écartement** : limites 1420 à 1470 mm (D-084, D-085).
+- **B3, transitions du lot** : neuf transitions nommées (démarrage, pause, reprise, arrêt, rechargement, cut suivant, différé,
+  fin de lot, erreur) ; « Reprendre » après la fin répond « Lot déjà terminé » ; « Reprendre » après un arrêt en plein cut refuse
+  si les rails ont bougé ; les transitions partent dans le journal exporté (D-102, D-104, D-106).
+- **Exports** : un clic sur « Tout télécharger pour l'analyse » ; une seule copie des nuages ; nuages allégés des sondes sans
+  information, points exacts (environ un tiers de moins sur les nuages, D-091) ; **export découpé tout seul** en volumes zip
+  autonomes de 17 Mo au plus (D-106) ; vidage du cache seulement si tous les volumes sont confirmés.
+- **Départs des parties** : validés, invalides et total relevés au départ de chaque partie, gardés hors du cache, historique
+  par partie, recopiés dans les exports (D-093, D-106).
+- **Panneau** (variante « Accueil » choisie par Mic) : grande tuile du lot (pourcentage des invalides traités sur un lot de toute
+  la partie, position sinon), cartes des départs, thèmes clair et sombre, contrastes, sélecteur d'onglet lisible, résumé de la
+  partie (U1), essais du vrai panneau (U2), raccourcis `D` et `Maj + Espace` d'ESV ni doublés ni détournés (U3) (D-078,
+  D-093, D-103, D-105, D-107).
+- **Heure de Paris** partout à l'écran et dans `CONTENU.txt` ; les JSON restent en UTC (test 17).
+- **B1 (voisins de la liste d'ESV) en ombre** : calculé et consigné, sans effet sur la pose (D-096, D-102). **Retour à une
+  coupe** : livré en lecture seule, sans bouton, jamais appelé (D-098).
+
+## 4.9.0.17 — test 17 (15/10)
+
+Manifeste `4.9.0.17`, « 4.9.0 test 17 », paquet `ariane-4.9.0-test.17.zip` ; base : test 16 (`6c61bdb`) + bornes alignées (`0147f29`).
+Retours de Mic sur la test 16. `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+`consignes/seance-terrain-test-17-2026-10-15.md` ; retour arrière : test 16.
+
+- **Tuile « Lot » : le travail, pas la position** (`panel.js`). Lot sur toute la partie (premier cut 0 ou 1, jusqu'à la fin de
+  partie) dont la fiche de départ est connue (D-092, même `batchId`, la première du lot = invalides au démarrage) : % = cuts
+  traités par le lot (posés + différés, `b.processed`) ÷ invalides de la fiche, et la tuile dit « N / M invalides » au lieu de
+  « N cuts ». Autres lots (plage fixe, départ au milieu) ou fiche absente : la position, comme avant. Dans les deux cas : jamais
+  de recul dans un lot (le plus haut atteint, par mesure), plafond 100 %, une décimale sous 10 % arrondie vers le bas (« 7,5 »),
+  100 % à la fin du lot. Le vert suit la valeur exacte (2 décimales) ; sous 1,5 % le bord lumineux est caché (il débordait du
+  coin arrondi gauche) ; le séparateur ne se tasse plus ; panneau étroit : les pastilles d'étape cèdent la place au compteur.
+- **Heure de Paris partout dans le panneau** (`panel.js`, `src/export-cache.js`) : Europe/Paris par `Intl.DateTimeFormat`
+  (heure d'été et d'hiver) pour l'activité, les lots de la partie, les départs (carte, historique, détail) ; plus de « UTC »
+  à l'écran. CONTENU.txt : heure de l'export, période et départs en heure de Paris, dit « heure de Paris ». Les JSON exportés
+  gardent leurs horodatages ISO en UTC ; le nom des fichiers d'export aussi.
+- Essais : `tests/t17-panneau.test.cjs` (travail 39 / 514 → « 7,5 », plage fixe et départ au milieu → position, pas de
+  fiche → position, fiche tardive, recul, plafond, fin ; heure de Paris en juillet, novembre et au passage du 25/10/2026),
+  `tests/t16-export-volumes.test.cjs` (CONTENU.txt en heure de Paris), `tests/consigne-test17.test.cjs`, `tests/version-test17.test.cjs`.
+- Attendus modifiés : `d092-fiche-depart` et `ux-49-orbite` (heures des départs : Paris au lieu d'UTC) ; `ux-49-tuile-lot`
+  (largeur exacte « 81.98% » / « 83.39% » et « 81 » arrondi vers le bas, au lieu de « 82% » / « 83% » arrondis) ;
+  `version-test16` → `version-test17`, `cohabitation-485`.
+
+## 4.9.0.16 — test 16 (15/10)
+
+Manifeste `4.9.0.16`, « 4.9.0 test 16 », paquet `ariane-4.9.0-test.16.zip` ; base : test 15 (`b9652df`). Retours de Mic sur la
+test 15 (partie 24). `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+`consignes/seance-terrain-test-16-2026-10-15.md` ; retour arrière : test 15.
+
+- **Export découpé tout seul** (`panel.js`, `src/zip-writer.js`, réglage `export.zipMaxBytes`) : « Tout télécharger » écrit des
+  volumes zip autonomes de 17 Mo au plus (taille compressée réelle, CONTENU.txt compris ; sous 18 Mo quelle que soit l'unité),
+  nommés `…-volumeNN-surNN.zip` (un seul zip garde son nom d'avant). Chaque fichier JSON est compressé une fois
+  (`BananeZip.preparer`), puis rangé dans le volume où il tient. Un JSON n'est jamais coupé : plus gros que la limite, il fait
+  un volume à lui et le statut le dit. CONTENU.txt dit « Volume n sur N » et porte les départs. Pendant « Tout télécharger »,
+  un segment JSON vise au plus deux volumes (34 Mo) avant compression. Vidage automatique : seulement si TOUS les volumes
+  sont confirmés (inchangé). Essais : `tests/t16-export-volumes.test.cjs`.
+- **Départs des parties : historique** : la partie en cours en grand, puis « Parties précédentes » (plus récente d'abord :
+  heure du dernier départ, validés, invalides, total, nombre de départs), chacune dépliable sur ses départs ; la partie en
+  cours aussi (« Voir les N départs »). Mêmes fiches (`banane3FichesDepart`, 200 au plus, hors du cache des exports : le vidage
+  ne les touche pas) ; rien ne change dans ce qui est exporté.
+- **Sélecteur « Onglet ESV »** : options lisibles en sombre comme en clair (fond opaque du thème) ; deux onglets au même titre se
+  distinguent (rang, fenêtre, premier plan, pas prêt, utilisé par Ariane) ; l'invite ne se choisit pas ; l'onglet qu'Ariane
+  utilise, ou le seul onglet prêt, est choisi d'avance ; la connexion reste au clic sur « Reconnecter ESV » (onglet unique :
+  comme avant). `list-tabs` rend aussi fenêtre, rang, onglet actif, état prêt (aucune adresse).
+- **Tuile « Lot »** : le pourcentage défile avec le vert (requestAnimationFrame, s'arrête une fois arrivé) ; bord lumineux avec
+  une lueur lente pendant le lot ; onde au bord à chaque cut terminé ; pause calme (terne, immobile) ; fin du lot : un reflet
+  traverse une fois la tuile. Transformations et opacité seulement, figé avec « réduire les animations ». « 1 cut », jamais
+  « 1 cuts » (tuile, ligne d'état, couverture).
+- **B3** (`background.js`) : (a) après une fin de partie (dernier cut validé sur place ou différé sans envoi, fin retenue après
+  un différé), « Reprendre » répond « Lot déjà terminé » sans rien rejouer ; (b) « Reprendre » après un arrêt ou une pause
+  survenus entre la capture et la pose compare les rails d'ESV à ceux de la capture (comme « Réessayer ») et refuse s'ils ont
+  bougé : la proposition calculée avant l'arrêt n'est plus appliquée sur une autre pose ; (c) les 64 dernières transitions du lot
+  (nom, lot, état, heure) partent dans le journal exporté (`transitionsLot`). Essais : `tests/t16-b3-reprise.test.cjs`.
+
 ## 4.8.6 — stable (30/09, D-065)
 
 **Même code que le test 2** (`69b31c9`) ; seuls la version et le nom changent (manifeste `4.8.6`, nom « Ariane »,

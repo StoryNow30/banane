@@ -5,12 +5,23 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(K,G,Gauge){
  'use strict';
  if(!Gauge||typeof Gauge.classifyMm!=='function')throw Error('Moteur : contrat d’écartement absent.');
+ const EVENEMENTS_SANS_SAUVEGARDE=new Set(['adapter-progress','adapter-result']);
+ /* V5 : comparaison sans l'ordre des clés. chrome.storage rend ses objets clés TRIÉES, IndexedDB dans
+  * l'ordre d'écriture : vérifié dans un vrai Chromium (13 octobre). */
+ const canonique=x=>JSON.stringify(x,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(c=>[c,v[c]])):v);
  class Engine{
   constructor(adapter,store){this.adapter=adapter;this.store=store;this.busy=false;this.task=null;
+   /* V5 : identifiants des visites dont l'écriture dans IndexedDB a réussi (toute écriture, d'où qu'elle vienne). */
+   this.enBase=new Set();const ecrire=typeof store?.putRecord==='function'?store.putRecord.bind(store):null;
+   if(ecrire)store.putRecord=async r=>{const id=r?.recordId||r?.id;
+     /* Une écriture échouée retire la confirmation : la version modifiée restera recopiée dans l'état. */
+     try{const resultat=await ecrire(r);if(typeof id==='string')this.enBase.add(id);return resultat;}catch(e){if(typeof id==='string')this.enBase.delete(id);throw e;}};
    this.s={schemaVersion:4,version:K.VERSION,sessionId:K.uid(),mode:'observation',collection:'IDLE',
      before:null,after:null,lidarId:null,records:[],incomplete:[],proposal:null,snapshot:null,applied:null,
      validationStarted:false,batch:null,notice:'Prêt. Sélectionne un onglet ESV.',events:[],settings:{...G.DEFAULTS}};}
   async init(){const old=await this.store.getState();if(old){this.s=old;this.s.version=K.VERSION;this.s.schemaVersion=4;
+    /* KI-070 : tant que la relecture des visites n'a pas réussi, `save()` réécrit l'état tel que chargé (identifiants gardés). */
+    this.visitesRelues=false;await this.relireVisites();this.visitesRelues=true;
     this.s.settings={...G.DEFAULTS,...this.s.settings,method:G.DEFAULTS.method};
     /* `deferred` rejoint les collections du lot. Un lot ancien se relit donc
      * avec une liste vide — et, faute de `scope.unresolvedPolicy`, conserve la
@@ -102,7 +113,47 @@
     }
     await this.save();}return this.s;}
   view(){return {...K.clone(this.s),busy:this.busy};}
-  async save(){await this.store.setState(K.clone(this.s));}
+  /* V5 (D-089) — SAUVEGARDE À TAILLE CONSTANTE. Mesuré dans un vrai Chromium : `chrome.storage.local.set`
+   * coûte environ 50 ms par Mo, et l'état était réécrit en entier à chaque événement (une vingtaine par
+   * cut), visites comprises, depuis le début de la session et même après un vidage du cache : plusieurs
+   * secondes par cut après quelques lots. Une visite (`records`) ou capture abandonnée (`incomplete`)
+   * dont la DERNIÈRE écriture dans IndexedDB a réussi (`enBase`, tenu par `putRecord`) n'est plus
+   * recopiée : `recordIds` garde son identifiant, à sa place ; toute autre entrée reste recopiée.
+   * `records` et `incomplete` restent écrits VIDES : une version antérieure (retour arrière) relit
+   * l'état sans planter. Listes encore non relues (IndexedDB illisible au démarrage) : réécrites telles quelles. */
+  async save(){if(this.visitesRelues===false){await this.store.setState(K.clone(this.s));return;}
+   const {records,incomplete,...reste}=this.s,ref=r=>{const id=r?.recordId||r?.id;return typeof id==='string'&&this.enBase.has(id)?id:r;};
+   const liste=(l,brute)=>Array.isArray(l)?l.map(ref):Array.isArray(brute)?brute:[];
+   await this.store.setState({...K.clone(reste),records:[],incomplete:[],recordIds:K.clone(liste(records,reste.recordIds)),incompleteIds:K.clone(liste(incomplete,reste.incompleteIds))});}
+  /* Au démarrage. Identifiant : la visite est relue dans IndexedDB ; absente, elle a été vidée après
+   * export : elle n'est plus gardée, et le nombre est consigné. Entrée recopiée : gardée telle quelle,
+   * et confirmée seulement si IndexedDB en a la même version. ANCIEN FORMAT (toutes les visites
+   * recopiées, y compris celles vidées depuis) : une visite encore dans IndexedDB est gardée ; les
+   * autres sont archivées UNE fois hors de l'état (`archiverVisites`, rien n'est perdu) ; sans archive
+   * possible, elles restent dans l'état comme avant. Après un retour arrière puis une remise à jour,
+   * les visites ajoutées par l'ancienne version (dans `records`) sont reprises à la suite. Rien n'est
+   * retiré de l'état avant que la lecture d'IndexedDB ait réussi. */
+  async relireVisites(){const nouveau=Array.isArray(this.s.recordIds)||Array.isArray(this.s.incompleteIds);
+   const cle=x=>typeof x==='string'?x:typeof(x?.recordId||x?.id)==='string'?(x.recordId||x.id):null;
+   const listes={};for(const [nom,ids] of [['records','recordIds'],['incomplete','incompleteIds']]){
+     const brute=Array.isArray(this.s[ids])?this.s[ids]:[],enLigne=Array.isArray(this.s[nom])?this.s[nom]:[];
+     if(!nouveau){listes[nom]=enLigne;continue;}
+     const vus=new Set(brute.map(cle).filter(x=>x!==null));listes[nom]=[...brute,...enLigne.filter(x=>cle(x)===null||!vus.has(cle(x)))];}
+   const presentes=new Map();
+   if([...listes.records,...listes.incomplete].some(x=>cle(x)!==null))for(const r of await this.store.all('records'))if(r&&cle(r)!==null)presentes.set(cle(r),r);
+   delete this.s.recordIds;delete this.s.incompleteIds;
+   let absentes=0;const aArchiver=[];
+   for(const nom of ['records','incomplete'])this.s[nom]=listes[nom].flatMap(x=>{const id=cle(x);
+     if(id===null)return x&&typeof x==='object'?[x]:[];
+     if(typeof x==='string'){if(presentes.has(id)){this.enBase.add(id);return [presentes.get(id)];}absentes++;return [];}
+     if(presentes.has(id)){if(canonique(presentes.get(id))===canonique(x))this.enBase.add(id);return [x];}
+     if(!nouveau){aArchiver.push({liste:nom,entree:x});return [];}
+     return [x];});
+   if(aArchiver.length){
+     try{if(typeof this.store.archiverVisites!=='function')throw Error('archive absente');
+       await this.store.archiverVisites(aArchiver.map(a=>a.entree));this.s.visitesArchivees=(this.s.visitesArchivees||0)+aArchiver.length;}
+     catch{for(const a of aArchiver)this.s[a.liste].push(a.entree);}}
+   this.s.recordsAbsentsAuRedemarrage=absentes;}
   async event(type,detail={}){const identity=detail.identity===null?null:K.completeIdentity(detail.identity||this.s.current?.identity||this.s.before?.identity||{});
    const e={eventId:K.uid(),timestamp:new Date().toISOString(),type,identity,...detail};
    /* D3. Un événement peut porter un identifiant DÉTERMINISTE, dérivé de son
@@ -112,7 +163,10 @@
    await this.store.putEvent(e);
    const existant=this.s.events.findIndex(x=>x.eventId===e.eventId);
    if(existant>=0)this.s.events[existant]=e;else this.s.events.push(e);
-   if(this.s.events.length>150)this.s.events.shift();await this.save();}
+   if(this.s.events.length>150)this.s.events.shift();
+   /* V5 : un événement d'information (étape de la page, diagnostic du pont) est déjà dans IndexedDB ;
+    * il n'impose pas de réécrire l'état, qui l'emportera à la prochaine sauvegarde. */
+   if(!EVENEMENTS_SANS_SAUVEGARDE.has(type))await this.save();}
   async locked(fn){if(this.busy)throw Error('Une opération est déjà en cours.');this.busy=true;
    try{return await fn();}catch(e){this.s.notice=e.message;await this.event('error',{message:e.message});throw e;}finally{this.busy=false;await this.save();}}
   async observe(){const previous=this.s.current?.identity,now=await this.adapter.state();now.identity=K.completeIdentity(now.identity);

@@ -27,7 +27,7 @@
  *         fenêtre.
  *
  * Aucune cible d'écartement : l'écartement n'intervient qu'en admissibilité
- * (contrat [1405, 1470] mm). Le critère de choix est la POSITION du champignon
+ * (contrat [1420, 1470] mm, 1405 avant D-084). Le critère de choix est la POSITION du champignon
  * prédite par la voie, jamais un écartement. Même entrée que la 4.7.7
  * (src/continuity-observer.js). Jugement aux règles du banc (referenceFor) ;
  * faux si l'erreur latérale OU verticale dépasse 10 mm (D-038).

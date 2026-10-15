@@ -10,11 +10,11 @@
  * (défaut de la 4.7.8, KI-048). Il est donc chargé juste après la géométrie
  * GCV1 et avant la composition. */
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
- 'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js',
+ 'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js');
-const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.8.6',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.8.6';
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
+const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.0',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.0';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -24,6 +24,27 @@ const VERSION=globalThis.BananeCore3?.VERSION||'4.8.6',VERSION_NAME=globalThis.B
 BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
+/* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
+ * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
+ * inchangé) et de ses enveloppes ci-dessous. `transition(nom, f)` appelle `f`
+ * tout de suite et rend son résultat tel quel (aucune attente ajoutée, aucun
+ * effet sur ESV ni sur les exports) ; le nom est noté dans `journal`, en
+ * mémoire seulement (64 entrées), pour que l'ordre soit lisible et testé.
+ *   demarrage    « Démarrer » (start)              pause        « Pause »
+ *   reprise      « Reprendre » (resume)            arret        « Arrêter »
+ *   rechargement F5 : lot rattaché à la page (dans la reprise)
+ *   cut-suivant  validation et passage au cut suivant (validateAndNext)
+ *   differe      cut différé ; départ d'ESV après un différé
+ *   fin-de-lot   lot clos : dernier cut, sortie d'ESV, fin naturelle de la boucle
+ *   erreur       refus ou échec d'une action du panneau, dit dans l'avis
+ * 4.9.0.16 (test 15) : chaque entrée porte aussi son heure (`at`) ; les 64 dernières
+ * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
+ * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
+const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
+const coordinateurLot={journal:[],
+ transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
+  const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
+  return f();}};
 function liveGCV1Contract(){
  const contract=globalThis.BananeGCV1Shadow?.state?.().contract;
  if(!contract?.id||!contract?.geometrySha256)throw Error('Moteur GCV1 d’Orbite indisponible.');
@@ -70,9 +91,15 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
  if(!esvURL(tab.url))throw Object.assign(Error('Adaptateur ESV sans réponse : l’onglet sélectionné n’affiche plus ESV. Rouvre ESV dans cet onglet (ou F5), puis : lot Orbite, clique sur Reprendre ; Écho, clique sur Connecter puis Reprendre.'),{code:'ESV_PAGE_ABSENTE'});
  /* 4.7.19 (KI-059) : si Chrome signale lui-même un message trop gros, l'erreur
   * est dite en clair ; pour une capture, c'est une lecture à reprendre. */
- const reply=await chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args}).catch(e=>{
+ const trace=timing?.startRequest(action,args);
+ const envoi=chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args,...(trace?{traceId:trace.id}:{})});
+ /* B1 (D-095) : la capture part, la page travaille ; l'hypothèse en ombre du cut précédent se conclut pendant ce temps. */
+ if(action==='capture'&&b1File.length)setTimeout(b1Vider,0);
+ const reply=await envoi.catch(e=>{
+   timing?.endRequest(trace,null,e);
    if(!/maximum allowed size/i.test(e?.message||''))throw pageEsvAbsente(e);
    throw Error((action==='capture'?'Lecture LiDAR instable : ':'')+`réponse de l’adaptateur trop grosse pour un message Chrome (${action} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':''));});
+ timing?.endRequest(trace,reply?.result,reply?.error||(!reply||!Object.hasOwn(reply,'result')?'missing-result':null),reply?.diagnostic);
  if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null});
  if(reply?.error)throw Error(reply.error);
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
@@ -94,6 +121,154 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
   * (jamais réemployé) ; le départ ne s'en sert que s'il est celui du cut N. */
  const b=engine.s.batch;if(b?.state==='RUNNING')b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),traites:(e.compteursVus??1)>1?null:(e.compteur?.traites??null),at:e.at||e.timestamp};
  void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
+/* V1 (test 2, D-077/D-078) — RANGEMENT DE L'OBSERVATEUR PASSIF DE LA PAGE ESV.
+ * Le pont relaie ce que l'observateur de la page a vu (écriture de validation, pages de
+ * la liste des coupes, fichiers de points). Ici : JOURNALISATION SEULE.
+ *  - rien n'est rangé hors séance (lot Orbite non clos, session Écho active) ni si le
+ *    réglage `observateurPassif.actif` est faux : réponse `accept:false` ;
+ *  - le message vient de la page (source non fiable) : chaque entrée est revalidée champ
+ *    par champ (liste blanche, nombres finis, chaînes bornées) ;
+ *  - rangé comme `esv-releve` (`store.putEvent`, sans attente), jamais par `engine.event` :
+ *    ni état, ni décision, ni commande ne dépendent de ces événements ; un échec
+ *    d'écriture est compté et dit par un jalon « gap » ;
+ *  - borne par séance : au-delà, un seul jalon « gap ». */
+const OBS_REASONS=new Set(['ring-overflow','bridge-queue','oversize','unserializable','store-rejected','rejected','session-cap']);
+const obsState={lost:0,perSeance:new Map()};
+/* Grâce de réception après l'arrêt au dernier cut du lot. La dernière validation du lot (Ctrl+Entrée en place) clôt le lot
+ * (`closeAtExit`, état STOPPED) avant que son écriture PUT ait été relayée : l'observateur la poste à la fin de l'écriture, le pont
+ * la tient 250 ms avant de l'envoyer (mesuré : 158 à 343 ms entre la fin de l'écriture et sa réception ; lots 7 à 10, 4 sur 4 perdues).
+ * Pendant cette courte fenêtre, et pour ce seul lot, le rangement accepte encore ce que l'observateur RELAIE : rien n'est
+ * demandé à ESV, la séance n'est pas rouverte (`launcher-status` ne l'annonce pas). Date absente, illisible ou future : jamais devinée.
+ * OBS-2 (relecture du test 3) : cela comprend une requête COMMENCÉE après la fin du lot (validation ou navigation dans ESV
+ * juste après « Arrêter ») ; un filtre sur la date de début perdrait de vraies écritures (vrai lot : PUT commencé après
+ * l'acceptation 63 fois sur 208, jusqu'à +1,5 s). Chaque entrée rangée pendant la grâce porte donc `recuEnGrace:true` et
+ * `debutMoinsFinLotMs` (début de la requête, horloge de la page − fin du lot, horloge du service worker ; écart d'horloge
+ * non corrigé ; null sans date de début) : l'analyse les sépare. */
+const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
+/* OBS-4 (relecture du test 3) : « Arrêter » pendant une action prolonge la grâce tant que la boucle finit l'action de ce
+ * lot, mais 120 s au plus après l'arrêt (sans plafond : mesuré accepté 10 min après) ; ensuite, seuls les 5 s après la
+ * sortie de la boucle (jalon `batch-state`) comptent. */
+const OBS_TACHE_MAX_MS=120000;
+/* Test 3 — MÊME GRÂCE après l'arrêt MANUEL (« Arrêter ») et après la fin naturelle du lot (COMPLETED, ou
+ * FINISHED_WITH_UNCONFIRMED_ACTIONS : même fin, nommée par `closingState` selon la confirmation serveur). `src/engine.js`
+ * (épinglé) ne date ni l'un ni l'autre : l'instant est relevé ICI, quand le service worker voit la fin (clic « Arrêter »
+ * sur un lot non clos ; sortie de la boucle du moteur, jalon `batch-state`). Clé : l'identifiant du lot, aucun autre lot
+ * n'en hérite. Le contexte de mesure du lot est gardé avec : si un NOUVEAU lot démarre pendant la grâce, ce que la page a
+ * vu AVANT son début reste à l'ancien ; ce qu'elle a vu après, ou sans date, va au nouveau (jamais l'inverse). Le vidage
+ * du cache des exports est refusé tant qu'une grâce court, ou si une grâce a couru depuis l'instantané de l'export
+ * (sinon une écriture arrivée après l'instantané resterait seule, sans son lot). Rien de demandé à ESV. */
+const obsFins=new Map();
+/* T3D-7 / OBS-3 (relecture du test 3) : les fins relevées (instant, cause, contexte de mesure) sont aussi gardées dans
+ * chrome.storage.session : un redémarrage du service worker pendant la grâce ne les perd plus (relues avant `ready`).
+ * Sans chrome.storage.session (navigateur ancien) : mémoire seule, comme avant. Jamais dans chrome.storage.local. */
+const OBS_FINS_CLE='banane49ObsFins';
+function sauverObsFins(){try{const s=chrome?.storage?.session;if(s?.set)Promise.resolve(s.set({[OBS_FINS_CLE]:[...obsFins]})).catch(()=>{});}catch{/* mémoire seule */}}
+async function restaurerObsFins(){try{const s=chrome?.storage?.session;if(!s?.get)return;const v=(await s.get(OBS_FINS_CLE))?.[OBS_FINS_CLE];if(!Array.isArray(v))return;
+ for(const x of v){const [id,f]=Array.isArray(x)?x:[];if(typeof id==='string'&&Number.isFinite(f?.at)&&!obsFins.has(id))obsFins.set(id,{at:f.at,cause:typeof f.cause==='string'?f.cause:null,ctx:f.ctx&&typeof f.ctx==='object'?f.ctx:{}});}
+ while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);}catch{/* rien de relu : comme avant */}}
+function obsContexte(){try{const v=timing?.context?.()||timing?.batchContext?.();return v?{sessionId:v.sessionId??null,batchId:v.batchId??null,visitId:v.visitId??null,clockId:timing?.clockId??null}:{};}catch{return {};}}
+function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
+ const ctx=c.batchId===b.id?c:prev?.ctx||{sessionId:engine?.s?.sessionId??null,batchId:b.id,visitId:null,clockId:timing?.clockId??null};
+ obsFins.delete(b.id);obsFins.set(b.id,{at,cause,ctx});while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);sauverObsFins();}
+/* D1 (relecture finale de la 4.9.0) : fin de lot HORS de la boucle du moteur (« Clôturer le résultat incertain », fin de
+ * partie après un différé, SKIP explicite du dernier cut) : aucun jalon `batch-state`, la mesure V1 du lot restait ouverte
+ * et le vidage du cache était refusé indéfiniment. Elle est close ici, comme pour « Arrêter » hors tâche (`operatorAfter`),
+ * avec l'état réel du lot ; jamais pendant une tâche (la boucle la clôt elle-même), jamais deux fois. */
+function cloreMesureHorsBoucle(){try{const b=engine?.s?.batch,t=timing?.batch;
+ if(b?.id&&!engine.task&&OBS_CLOS.includes(b.state)&&t?.id===b.id&&!t.closed)timing.closeBatch(b.state);}catch{/* mesure seule : jamais bloquant */}}
+function marquerFinLot(b,cause){if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
+/* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
+function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;
+ if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));
+ else if(state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel')marquerFinLot(b,'arret-manuel');}
+/* Avant un nouveau lot : l'ancien, clos, garde son instant de fin (arrêt au dernier cut compris) et son contexte. */
+function retenirLotClos(){const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
+ const at=finDuLot(b);if(Number.isFinite(at))poserFin(b,at,obsFins.get(b.id)?.cause||'dernier-cut');}
+/* Instant de fin du lot (ms) : arrêt au dernier cut = `stoppedAtEnd.at` (absente ou illisible : NaN, jamais devinée) ; sinon fin relevée ici. */
+function finDuLot(b){if(b.state==='STOPPED'&&b.stoppedAtEnd)return Date.parse(b.stoppedAtEnd.at);const f=obsFins.get(b.id);return f?f.at:NaN;}
+const dansFenetre=(at,now)=>{const age=now-at;return Number.isFinite(age)&&age>=-1000&&age<=OBS_GRACE_MS;};
+function dansGrace(b,now=Date.now()){if(dansFenetre(finDuLot(b),now))return true;
+ /* « Arrêter » pendant une action : la boucle du moteur finit l'action en cours de CE lot (comme la mesure V1, `runtimeContext`). */
+ const f=obsFins.get(b.id),age=now-(f?.at??NaN);
+ return b.state==='STOPPED'&&!b.stoppedAtEnd&&f?.cause==='arret-manuel'&&!!engine?.task&&Number.isFinite(age)&&age>=-1000&&age<=OBS_TACHE_MAX_MS;}
+function seanceObservateur({grace=false}={}){
+ const b=engine?.s?.batch;
+ if(engine?.s?.mode==='automatic-test'&&b&&!OBS_CLOS.includes(b.state))return 'lot:'+(b.id||'');
+ if(grace&&engine?.s?.mode==='automatic-test'&&b&&OBS_CLOS.includes(b.state)&&dansGrace(b))return 'lot:'+(b.id||'');
+ return manual?.active?.()?'ecoute-manuelle':native?.active?.()?'ecoute-native':null;}
+/* Lot précédent encore en grâce quand la séance est celle d'un lot plus récent : { seance, ctx, debut } ou null. */
+function ancienLotEnGrace(seance){const b=engine?.s?.batch;if(!b?.id||seance!=='lot:'+b.id)return null;
+ const debut=Date.parse(b.startedAt),now=Date.now();if(!Number.isFinite(debut))return null;let best=null;
+ for(const [id,f] of obsFins)if(id!==b.id&&f.at<=debut+1000&&dansFenetre(f.at,now)&&(!best||f.at>best.at))best={id,...f};
+ return best?{seance:'lot:'+best.id,ctx:best.ctx,debut,fin:best.at}:null;}
+/* Une grace a-t-elle couru entre `depuis` et maintenant ? 'en-cours', 'depuis-instantane' ou null (vidage du cache). */
+function graceObservations(depuis=Date.now()){const now=Date.now(),b=engine?.s?.batch,fins=[...obsFins.values()].map(f=>f.at);
+ if(engine?.s?.mode==='automatic-test'&&b&&OBS_CLOS.includes(b.state)){if(dansGrace(b,now))return 'en-cours';fins.push(finDuLot(b));}
+ if(fins.some(at=>dansFenetre(at,now)))return 'en-cours';
+ return fins.some(at=>Number.isFinite(at)&&at+OBS_GRACE_MS>=depuis&&at-1000<=now)?'depuis-instantane':null;}
+const obsInt=(v,max=1e12)=>Number.isInteger(v)&&v>=0&&v<=max?v:null;
+const obsNum=v=>Number.isFinite(v)&&Math.abs(v)<1e15?v:null;
+const obsStr=(v,n)=>typeof v==='string'&&v.length<=n?v:null;
+const obsKey=v=>typeof v==='string'&&v.length<=80&&/^[\w.+\-]+$/.test(v)?v:null;
+const obsOutcome=v=>['done','error','abort','timeout'].includes(v)?v:null;
+function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;const out={};let n=0;
+ for(const k of Object.keys(b)){const v=b[k];if(n>=24||k.length>40||!/^[\w.\-]+$/.test(k))continue;
+  if(typeof v==='number'&&Number.isFinite(v)||typeof v==='boolean'||typeof v==='string'&&v.length<=32){out[k]=v;n++;}}
+ return out;}
+function obsFields(x){
+ const time={startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),durationMs:obsNum(x.durationMs)};
+ switch(x.kind){
+  case 'write':return {kind:'write',via:'xhr',urlClass:'rail-pair-write',method:obsStr(x.method,8),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),attempt:obsInt(x.attempt,1000),
+   railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),rowIndex:obsInt(x.rowIndex,1e7),...time};
+  case 'list-page':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
+   return {kind:'list-page',via:'xhr',urlClass:'rail-list',listKey:obsKey(x.listKey),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
+    skipped:['oversize','unreadable'].includes(x.skipped)?x.skipped:null,basis:'row-string-values',...time};}
+  case 'list-summary':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
+   return {kind:'list-summary',listKey:obsKey(x.listKey),pages:obsInt(x.pages,1e6),okPages:obsInt(x.okPages,1e6),rows:obsInt(x.rows,1e8),chars:obsInt(x.chars,1e10),counts:c,
+    firstStartedEpochMs:obsNum(x.firstStartedEpochMs),lastEndedEpochMs:obsNum(x.lastEndedEpochMs),durationMs:obsNum(x.durationMs),beforeSession:typeof x.beforeSession==='boolean'?x.beforeSession:null};}
+  case 'fetch-rails':return {kind:'fetch-rails',n:obsInt(x.n,1e7),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
+  case 'observer':return {kind:'observer',version:obsInt(x.version,1000),world:x.world==='MAIN'?'MAIN':null,installedBeforePageScripts:typeof x.installedBeforePageScripts==='boolean'?x.installedBeforePageScripts:null,
+   readyState:['loading','interactive','complete'].includes(x.readyState)?x.readyState:null,scriptsAtInstall:obsInt(x.scriptsAtInstall,1e6),enabled:typeof x.enabled==='boolean'?x.enabled:null,
+   afterDenial:typeof x.afterDenial==='boolean'?x.afterDenial:null,dropped:obsInt(x.dropped,1e9),ignored:obsInt(x.ignored,1e12)};
+  case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5)};
+  case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
+ }return null;}
+function rangerObservations(m){try{
+ if(globalThis.BananeSettings?.observateurPassif?.actif===false)return {accept:false,enabled:false,reason:'setting-off'};
+ const seance=seanceObservateur({grace:true});if(!seance)return {accept:false,reason:'no-session'};
+ if(typeof m.observer!=='string'||m.observer.length>80||!Array.isArray(m.entries)||m.entries.length>100)return {accept:true,stored:0,reason:'malformed'};
+ const K=globalThis.BananeCore3,cfg=globalThis.BananeSettings?.observateurPassif||{},cap=cfg.entreesParSeanceMax||20000,maxChars=cfg.caracteresParEntree||4096;
+ const receivedMs=(()=>{try{return timing?.now?timing.now():performance.now();}catch{return null;}})(),timeOrigin=timing?.origin??performance.timeOrigin;
+ /* OBS-2 : séance tenue seulement par la grâce de fin du lot courant → entrées marquées (écart à la fin de CE lot). */
+ const lot=engine?.s?.batch,enGrace=seance!==seanceObservateur();
+ /* OBS-3 : en grâce, le contexte de mesure relevé à la fin du lot (gardé au redémarrage) ; sinon celui de la mesure en cours. */
+ const ctxFin=enGrace&&lot?.id?obsFins.get(lot.id)?.ctx:null,ctxCourant=ctxFin&&ctxFin.batchId===lot.id?ctxFin:obsContexte();
+ const vu=s=>obsState.perSeance.get(s)||{n:0,capped:false},courant={seance,ctx:ctxCourant,seen:vu(seance),fin:enGrace&&lot?finDuLot(lot):null},events=[];let rejected=0;
+ const marqueGrace=(f,fin)=>{const t=f.startedEpochMs;return {recuEnGrace:true,debutMoinsFinLotMs:Number.isFinite(t)&&Number.isFinite(fin)?Math.round((t-fin)*10)/10:null};};
+ /* Nouveau lot pendant la grâce de l'ancien : ce que la page a vu (début, sinon fin) AVANT le début du nouveau lot reste à l'ancien. */
+ const ancien=(a=>a&&{...a,seen:vu(a.seance)})(ancienLotEnGrace(seance));
+ const cible=f=>{if(!ancien)return courant;const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:f.endedEpochMs;return Number.isFinite(t)&&t<ancien.debut?ancien:courant;};
+ const add=(fields,seq,c=courant)=>{const e={eventId:K.uid(),timestamp:new Date().toISOString(),type:'esv-observation',schema:1,observer:{id:m.observer,seq:Number.isInteger(seq)?seq:null},...fields,receivedMs,timeOrigin,...c.ctx,
+  ...(c.fin!==null&&c.fin!==undefined?marqueGrace(fields,c.fin):{})};
+  if(JSON.stringify(e).length>maxChars){rejected++;return;}events.push(e);};
+ if(obsState.lost){add({kind:'gap',lost:obsState.lost,reason:'store-rejected',of:null},null);obsState.lost=0;}
+ for(const x of m.entries){
+  if(!x||typeof x!=='object'){rejected++;continue;}
+  const fields=obsFields(x);if(!fields){rejected++;continue;}
+  const c=cible(fields),seen=c.seen;
+  if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
+  add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;
+  if(fields.kind==='write')b1NoterEcriture(fields);}
+ if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
+ for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
+ /* 4.9.0.10 (D-092) : fiche de départ de la partie (validés, invalides, total), gardée hors du cache : le vidage ne la touche pas. */
+ for(const e of events){if(e.kind!=='list-summary'||e.beforeSession!==true)continue;try{const EC=cacheExport(),lotE=engine?.s?.batch,
+   fiche=EC?.ficheDepart?.(e,{batchId:e.batchId??lotE?.id??null,partie:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
+  if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});}catch{/* la fiche n'est pas critique */}}
+ for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
+ /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
+ return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{})};
+}catch{return {accept:true,stored:0,reason:'error'};}}
 /* D-062 (a) : M, le nombre de cuts de la partie (numérotés de 0 à M−1), est le
  * total du compteur « N on M treated » (le texte confirmé par la direction,
  * photo du 27/09), lu une seule fois. Le texte « M cuts » est journalisé pour
@@ -150,7 +325,8 @@ function lotExitOf(next,dernier=null){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.part)&&next.part!==sc.part)return 'part';
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
-async function closeAtExit(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false,dernier=null}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
+function closeAtExit(...args){return coordinateurLot.transition('fin-de-lot',()=>clore(...args));}
+async function clore(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false,dernier=null}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';
  if(dernier){/* KI-069 : ESV est resté sur le dernier cut ; rien d'autre n'est ni envoyé ni mémorisé (D-062 b reste celle de D-062). */
    b.stoppedAtEnd={cut:last,reason,issue:reason,motif:dernier.motif,target:null,total:dernier.total,at:new Date().toISOString(),applied:reason==='dernier-cut-valide'};
@@ -211,12 +387,12 @@ async function validerSurPlace(identity,d,scope){const S=globalThis.BananeSettin
  await engine.event('validation-en-place',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:e.command??'ctrl-entrée',compteurAvant:av,compteurApres:ap});
  await closeAtExit('dernier-cut-valide',d.cut,null,{dernier:d});
  return e;}
-adapter.validateAndNext=async(...args)=>{
+adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',async()=>{
  const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return validerSurPlace(args[0],dernier,args[1]);
  const evidence=await validateInESV(...args);
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
- return evidence;};
+ return evidence;});
 const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.test(e?.message||'');
 /* 4.8.0 (KI-063) — ESV LU DANS UNE AUTRE PARTIE. Après un silence, ESV peut
  * revenir sur une autre partie (terrain du 26/09 : partie 13 muette 30 s après
@@ -491,20 +667,45 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
    engine.s.notice=`Lot fermé sans fin de partie (${pourquoi}) : le cut ${N} pourrait être le dernier de la partie ; saisis-le comme dernier cut si tu veux le retenir.`
      +(meme?` Contrôle le cut ${N} dans ESV.`:'')+' Aucune commande n’a été renvoyée.';}
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:N,target,total:M,finMemorisee:memoriser});
- await engine.save();return true;}
+ cloreMesureHorsBoucle();await engine.save();return true;}
+/* 4.9.0.16 (test 15, 5a) — LOT DÉJÀ TERMINÉ. Après une fin de partie certaine (dernier cut
+ * validé sur place ou différé sans envoi, KI-069 ; fin retenue après un différé, D-062 b),
+ * « Reprendre » relançait la boucle sur le dernier cut : la fin se rejouait à chaque clic
+ * (« dernier-cut-differe » puis « batch-stopped-at-end », terrain du 15/10 à 07:27:52 et
+ * 07:27:58). Il n'y a plus rien à faire dans ce lot : la reprise répond « Lot déjà
+ * terminé », sans commande ni événement. Les autres clôtures (dernier cut d'une plage,
+ * sortie d'ESV) restent reprenables comme avant. */
+const FINS_DE_PARTIE=new Set(['dernier-cut-valide','dernier-cut-differe']);
+function lotTermine(b){const e=b?.stoppedAtEnd;return b?.state==='STOPPED'&&!!e&&(FINS_DE_PARTIE.has(e.issue)||e.reason==='navigation-other-part-after-defer');}
+/* 4.9.0.16 (test 15, 5b) — REPRISE SUR UNE PROPOSITION DÉJÀ CALCULÉE. Le moteur épinglé ne
+ * contrôle les rails à la reprise que si le cut repart de sa capture. Arrêté (ou en pause)
+ * après l'analyse et avant la pose, le lot reprenait à l'étape « pose » et appliquait la
+ * proposition calculée AVANT l'arrêt, sans nouvelle capture (terrain du 15/10, cut 2236 :
+ * « Arrêter », puis « Reprendre » 6 s plus tard). Comme « Réessayer » : si les rails d'ESV
+ * ne sont plus ceux de la capture, la reprise est refusée, rien n'est posé. Rails
+ * inchangés : la proposition vaut toujours, le lot reprend comme avant. */
+async function gardeRailsCapture(affiche){const b=engine.s.batch,avant=engine.s.before;
+ if(!b||!avant?.rails||engine.s.applied||engine.s.intent||engine.s.reconcileRequired)return;
+ if(!(b.step==='analyze'||b.step==='apply'&&engine.s.proposal))return;
+ const now=affiche?.rails?affiche:await adapter.state().catch(()=>null);
+ if(!now?.rails)throw Error(`Cut ${avant.identity?.cut??'?'} : rails d’ESV illisibles ; la proposition calculée avant l’arrêt n’est pas appliquée. Recharge ESV (F5), puis clique sur Reprendre.`);
+ if(!globalThis.BananeCore3.equalPoses(avant.rails,now.rails))
+  throw Error(`Rails modifiés depuis la capture du cut ${avant.identity?.cut??'?'} : la proposition calculée avant l’arrêt n’est pas appliquée, la reprise est refusée. ${b.state==='STOPPED'?'C':'Arrête le lot, c'}ontrôle ce cut dans ESV, puis lance un nouveau lot.`);}
 async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const b0=engine.s.batch;
- if(departOuvert(b0))return finApresDiffere(b0);
+ if(departOuvert(b0))return coordinateurLot.transition('fin-de-lot',()=>finApresDiffere(b0));
  const lot=engine.s.batch?.id,etatDepart=engine.s.batch?.state;
  const garde=()=>engine.s.batch?.id===lot&&engine.s.batch.state===etatDepart;
  /* 4.8.0 : page ESV rafraîchie (F5) depuis la pause : retour au cut, lot rattaché. */
- const {etat}=await retablirApresRechargement(garde);
+ const {etat,rattache}=await coordinateurLot.transition('rechargement',()=>retablirApresRechargement(garde));
  /* Relecture 4.7.12, constat I3 : « Reprendre » sur le cut encore affiché et
   * archivé recapturait ce cut, que le moteur refuse d'écrire ; le lot passait
   * en ERROR, non reprenable, et perdait ses appuis. La reprise est refusée
   * avant de toucher à l'étape du lot : il reste arrêté, reprenable dès le cut
   * suivant. */
  const affiche=etat??await adapter.state().catch(()=>null);
+ /* D-067 : après un retour à un cut pendant la pause, le lot ne repart que du cut où il était. */
+ await gardeRetourCut('« Reprendre »',affiche,{rattache});
  if(affiche?.identity)try{engine.writable(affiche.identity);}
   catch{throw Error(`Cut ${affiche.identity.cut} : résultat incertain archivé, Ariane n’y écrit plus. Passe au cut suivant dans ESV, puis clique sur Reprendre.`);}
  /* KI-052 : « Archiver le résultat interrompu » arrête le lot en laissant
@@ -512,6 +713,8 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
   * sur une proposition absente. Sans proposition, la reprise recommence le
   * cut par sa capture. */
  if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
+ if(!garde())return false;
+ await gardeRailsCapture(affiche);
  if(!garde())return false;
  /* « Adaptateur sans réponse » : ESV répond de nouveau (état relu ci-dessus), le
   * lot redevient une pause ordinaire ; refus du moteur : l'état est rendu. */
@@ -522,24 +725,27 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  return true;}
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{const result=await applyInESV(...args);
- if(stopAtLotEnd())await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true});return result;};
+ if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
-const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
+const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */
  /* 4.8.6 (KI-069) : différé sur le dernier cut de la partie : aucune commande « suivant »
   * (le moteur épinglé attendrait un changement de cut) ; le lot se ferme ici, rien n'est envoyé à ESV. */
  const differer=engine.deferUnresolved.bind(engine);
- engine.deferUnresolved=async(now,b,eligibility)=>{const d=dernierCutCertain(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
+ engine.deferUnresolved=(now,b,eligibility)=>coordinateurLot.transition('differe',async()=>{const d=dernierCutCertain(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
    await engine.event('dernier-cut-differe',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:null});
    b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
    b.interrupted.push({identity:globalThis.BananeCore3.completeIdentity(now.identity),status:'DEFER_DERNIER_CUT_SANS_ENVOI',commandInvoked:false,total:d.total});
    await closeAtExit('dernier-cut-differe',d.cut,null,{dernier:d});await engine.save();
-   return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};};
+   return {status:'DEFER_DERNIER_CUT_SANS_ENVOI'};});
  const evenement=engine.event.bind(engine);
- engine.event=async(type,...rest)=>{const r=await evenement(type,...rest);
-   if(type==='defer-navigation-uncertain')await departApresDiffere(rest[0]);
+ engine.event=async(type,...rest)=>{if(type==='batch-state')finVueParLaBoucle(rest[0]?.state);
+   /* OBS-3 : arrêt au dernier cut : l'instant reste `stoppedAtEnd.at` ; on garde aussi le contexte de mesure (redémarrage). */
+   if(type==='batch-stopped-at-end'){const b=engine.s.batch,at=Date.parse(b?.stoppedAtEnd?.at);if(b?.id&&b.state==='STOPPED'&&Number.isFinite(at)&&engine.s.mode==='automatic-test')poserFin(b,at,'dernier-cut');}
+   const r=await evenement(type,...rest);
+   if(type==='defer-navigation-uncertain')await coordinateurLot.transition('differe',()=>departApresDiffere(rest[0]));
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
    return r;};
@@ -554,6 +760,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
      ?engine.s.batch.scope:null;
    if(pilotScope)assertPilotContract(pilotScope);
    const selector=pilotScope?'active-pilot-test':activeAssisted?'active-assisted':null;
+   if(timing)timing.selector=selector||'runtime-default';
    let proposal,analysisError=null;
    try{if(selector)gcv1.armOnce(selector);proposal=await analyzeV46(...args);}
    catch(e){analysisError=e;}
@@ -593,7 +800,7 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
    if(analysisError)throw analysisError;
    /* 4.7.19 — dernier cut du lot non résolu : laissé sans commande ni navigation. */
-   if(pilotScope&&proposal&&stopAtLotEnd(proposal))await engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false});
+   if(pilotScope&&proposal&&stopAtLotEnd(proposal))await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false}));
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
      engine.s.proposal=null;
      const reason=shadow?.selection?.fallbackReason||shadow?.error||'sélection GCV1 absente';
@@ -602,6 +809,11 @@ const ready=(async()=>{selectedTab=(await chrome.storage.local.get('banane3Tab')
    }
    return proposal;
  };
+ timing=globalThis.BananePhaseTiming?.install(engine,store)||null;
+ if(timing){const observer=observeLot,commander=commandLot;
+  observeLot=function(...args){return timing.trackTask('observe-lot',()=>observer.apply(this,args));};
+  commandLot=function(...args){return timing.trackTask('command-lot',()=>commander.apply(this,args));};
+ }
  await engine.init();
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();})();
 /* 4.7.10 — la décision commande. La proposition du moteur n'est pas modifiée
@@ -644,6 +856,70 @@ function holdLotAnchor(lotObservation,command){
  lotObservation.anchorHeld=L.commandsPositions(lotObservation,command);
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
 }
+/* B1 (D-095) — VOISINS VALIDÉS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
+ * La liste vit en mémoire de la PAGE (src/esv-observer.js) ; le service worker n'en
+ * demande, par le pont, qu'une fenêtre de ±5 lignes autour du cut décidé et la ligne
+ * la plus proche de sa pose de départ (monde = scène + T). T, la translation monde −
+ * scène de la page, est mesurée ici sur les écritures de validation relevées par
+ * l'observateur (corps de l'écriture − pose corrigée d'Ariane du même cut) : elle
+ * reste en mémoire du service worker, n'est jamais consignée ni exportée, et se
+ * recalibre à la validation suivante après un redémarrage. Le journal (`b1-ombre`) ne
+ * garde que des écarts en mm, des numéros de cut et des comptes. Aucune requête vers
+ * ESV : le pont lit la mémoire de la page. */
+const b1={repere:null,sansPaire:0};
+function b1Reglage(){const v=globalThis.BananeSettings?.appuisListe;return v==='ombre'||v==='actif'?v:'off';}
+function b1NoterEcriture(f){try{const B=globalThis.BananeAppuisListe;
+ if(!B||b1Reglage()==='off'||!(f.status>=200&&f.status<300)||!Number.isInteger(f.rowIndex)||f.body?.ExtractionStatus!=='valid')return;
+ const bords=B.bordsCorps(f.body);if(!bords)return;
+ const corrige=r=>['left','right'].every(x=>Array.isArray(r?.rails?.[x]?.corrected?.positionSceneRelative));
+ const rec=(engine?.s?.records||[]).slice(-40).reverse().find(r=>r?.identity?.cut===f.rowIndex&&corrige(r));
+ if(!rec){b1.sansPaire++;return;}
+ b1.repere=B.noterRepere(b1.repere,rec.identity.frameId??null,B.mesurerT(bords,{left:rec.rails.left.corrected.positionSceneRelative,right:rec.rails.right.corrected.positionSceneRelative}));
+}catch{/* jamais bloquant */}}
+async function b1Voisins(cut,world){const B=globalThis.BananeAppuisListe;if(selectedTab===null)return {ok:false,reason:'sans-onglet'};let timer;
+ try{return await Promise.race([chrome.tabs.sendMessage(selectedTab,{kind:'b1-voisins',cut,fenetre:B.DEFAULTS.fenetre,world}),
+   new Promise(r=>{timer=setTimeout(()=>r({ok:false,reason:'delai'}),B.DEFAULTS.delaiPageMs);})]);}
+ catch{return {ok:false,reason:'page-sans-reponse'};}finally{clearTimeout(timer);}}
+/* Préparation, LÉGÈRE : repère, demande à la page (quelques millisecondes), appariement, voisins et garde de
+ * cohérence. Elle se fait au moment de la décision, avant toute écriture du cut décidé (la ligne N est encore
+ * la pose de départ d'ESV). Rend soit un événement final, soit de quoi conclure. */
+async function b1Preparer(args,d0,mode){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t0=Date.now(),id=args.capture.identity;
+ const base={mode,identity:{part:id.part??null,cut:id.cut??null},reel:B.resumeDecision(d0)};
+ try{const R=b1.repere;
+  if(!R||R.frameId!==(id.frameId??null)||!R.T)return {evenement:{...base,etat:'sans-repere',ecrituresSansPaire:b1.sansPaire}};
+  if(R.etat!=='calibre')return {evenement:{...base,etat:'repere-instable',repere:B.resumeRepere(R)}};
+  const world=Object.fromEntries(['left','right'].map(x=>[x,args.capture.rails[x].positionSceneRelative.map((v,i)=>v+R.T[i])]));
+  const rep=B.lireReponse(await b1Voisins(id.cut,world),{cut:id.cut,fenetre:B.DEFAULTS.fenetre});
+  if(!rep.ok)return {evenement:{...base,etat:'page',raison:rep.reason,repere:B.resumeRepere(R),ms:Date.now()-t0}};
+  const apparie=B.accord(rep,id.cut),validated=apparie.ok?B.appuis(rep.rows,R.T,id):[];
+  const gardes=validated.length?L.consistentValidated(id,args.capture.rails,validated).map(a=>a.identity.cut):[];
+  return {validated,regle:validated.length?B.regle(d0):'inchange',t0,evenement:{...base,etat:apparie.ok?'calcule':'desaccord',repere:B.resumeRepere(R),table:rep.table,appariement:apparie,
+   fenetre:B.compter(rep.rows,id.cut),candidats:validated.map(a=>a.identity.cut),gardes,msPage:Date.now()-t0}};
+ }catch(e){return {evenement:{...base,etat:'erreur',message:String(e?.message||e).slice(0,200)}};}}
+/* Conclusion : la décision avec les voisins, selon la règle d'emploi. Elle peut relancer le moteur depuis la voie
+ * (jusqu'à 2,5 s mesurées sur le terrain pour une reprise) : en ombre, elle attend que la page travaille. */
+function b1Conclure(prep,args,d0){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t=Date.now();
+ if(!prep.validated)return {evenement:prep.evenement};
+ try{const pol=B.politique(d0,prep.validated,v=>L.decideCut({...args,validated:v}));
+  return {decision:pol.decision,evenement:{...prep.evenement,regle:pol.regle,hypothese:pol.regle==='inchange'?null:B.resumeDecision(pol.decision),...B.comparer(d0,pol.decision),msCalcul:Date.now()-t}};}
+ catch(e){return {evenement:{...prep.evenement,etat:'erreur',message:String(e?.message||e).slice(0,200)}};}}
+/* Ombre : les conclusions lourdes attendent que la page travaille (envoi de la capture suivante), sinon 4 s. */
+const b1File=[];let b1Minuterie=null;
+function b1Planifier(f){b1File.push(f);while(b1File.length>8)try{b1File.shift()();}catch{}clearTimeout(b1Minuterie);b1Minuterie=setTimeout(b1Vider,4000);}
+function b1Vider(){clearTimeout(b1Minuterie);b1Minuterie=null;for(const f of b1File.splice(0))try{f();}catch{/* jamais bloquant */}}
+function b1Journal(ev,ctx){try{if(!ev)return;const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'b1-ombre',schema:1,...ctx,...ev})).catch(()=>{});}catch{/* le journal n'est pas critique */}}
+/* Décision réelle `d0` : rendue telle quelle en ombre (calcul différé, consigné seulement) ; en actif, remplacée par
+ * l'hypothèse quand la règle d'emploi s'applique. Une panne ici ne change jamais la décision réelle. */
+async function b1Decision(args,d0){
+ const mode=b1Reglage();if(mode==='off'||!globalThis.BananeAppuisListe)return d0;
+ const snap={...args,anchors:(args.anchors||[]).slice()},ctx={batchId:engine?.s?.batch?.id??null,sessionId:engine?.s?.sessionId??null};
+ if(mode==='ombre'){void b1Preparer(snap,d0,mode).then(prep=>{
+   if(!prep.validated||prep.regle==='inchange')b1Journal(b1Conclure(prep,snap,d0).evenement,ctx);
+   else b1Planifier(()=>b1Journal(b1Conclure(prep,snap,d0).evenement,ctx));},()=>{});
+  return d0;}
+ const r=b1Conclure(await b1Preparer(snap,d0,mode),snap,d0);b1Journal(r.evenement,ctx);
+ return r.decision&&r.decision!==d0?{...r.decision,appuisListe:{regle:r.evenement.regle,gardes:r.evenement.gardes}}:d0;}
 async function observeLot(shadow){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
  if(!L||!batch||S?.lot?.observe===false)return null;
@@ -660,8 +936,11 @@ async function observeLot(shadow){
   * cut posé est aussi gardé, en bref, pour une reprise ultérieure (`lotPosed`). */
  if(typeof L.promoteAnchors==='function')promouvoirAppuis(batch,state,batch.processed,max);
  const t0=Date.now();
- const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
-   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow});
+ const lotArgs={capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
+   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow};
+ /* B1 (D-095) : en ombre (réglage livré), la décision réelle est celle-ci, inchangée ; l'hypothèse « voisins de la
+  * liste d'ESV » est calculée à côté, après coup, et seulement consignée (`b1-ombre`). */
+ const decision=await b1Decision(lotArgs,L.decideCut(lotArgs));
  /* « La ligne » : l'écart de chaque cut à la voie de ses voisins (garde du
   * premier passage, ou distance à la prédiction pour une reprise ou un choix),
   * pour le profil du panneau. Borné aux cuts du lot. */
@@ -763,19 +1042,256 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
  if(poses)v.batch.lotPosedCount=poses.length;
  return {...panelView({...v,records:[],incomplete:[]}),recordsCount:Array.isArray(records)?records.length:0,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
 function pollCurrent(){
- /* Pendant une reprise (retour au cut après F5), la vue ne lit pas ESV. */
- if(pollPromise||engine.busy||engine.task||repriseEnCours||manual?.active()||native?.active()||selectedTab===null)return;
+ /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
+ if(pollPromise||engine.busy||engine.task||repriseEnCours||retourCutEnCours||manual?.active()||native?.active()||selectedTab===null)return;
  pollPromise=engine.observe().then(()=>{engine.s.connection={status:'ready',observedAt:new Date().toISOString()};})
   .catch(e=>{engine.s.connection={status:'unavailable',message:e.message};})
   .finally(()=>{pollPromise=null;});
 }
+/* V1 (test 2) — la mesure ne bloque ni ne fait échouer un export. `timing.flush()`
+ * attend déjà au plus 250 ms ses propres écritures ; ici on garde l'appel lui-même :
+ * une exception, ou une Promise qui ne se règle jamais, donne une métadonnée
+ * « incomplète » (status flush-error ou timeout, flushComplete:false, aucun lot
+ * certifié) et l'export continue. Borne dure : 1 s (une valeur inférieure peut être
+ * posée par un essai, jamais supérieure). Mesure absente : rien de plus qu'avant. */
+async function flushMesure(){if(!timing)return null;
+ const limite=Number.isFinite(timing.hardLimitMs)&&timing.hardLimitMs>0?Math.min(1000,timing.hardLimitMs):1000;let timer;
+ const incomplet=(status,error)=>({schema:1,status,maxWaitMs:limite,flushComplete:false,pendingWrites:null,lots:[],...(error?{error:String(error?.message||error).slice(0,200)}:{})});
+ try{return await Promise.race([Promise.resolve().then(()=>timing.flush()),new Promise(resolve=>{timer=setTimeout(()=>resolve(incomplet('timeout')),limite);})]);}
+ catch(e){return incomplet('flush-error',e);}
+ finally{clearTimeout(timer);}}
+/* V2 — VIDAGE DU CACHE DES EXPORTS (frontière écrite dans src/export-cache.js).
+ * Le marqueur (chrome.storage.local, clé à part : l'état du moteur n'est pas touché)
+ * dit quand le cache a été vidé ; les exports le recopient (`exportPeriod`). Les lots
+ * dont la mesure V1 a été vidée sortent de `v1TimingExport.lots` (leur santé n'est
+ * plus dans le journal, ce n'est pas une perte à signaler à chaque export). */
+const cacheExport=()=>globalThis.BananeExportCache;
+const contexteVidage=depuis=>({state:engine.s,busy:engine.busy,task:engine.task,nativeActive:native.active(),manualActive:manual.active(),timing,graceObservations:graceObservations(depuis)});
+/* Un lot vidé n'est masqué de la mesure V1 que s'il est CLOS et dans le même segment qu'au vidage :
+ * repris ou rouvert, sa santé redevient visible (aucune mesure V1 masquée). */
+const lotVideMasque=(e,t)=>{const id=typeof e==='string'?e:e.id,b=t?.batches?.get?.(id);
+ if(!b)return typeof e==='object'?true:true;return b.closed===true&&(typeof e==='string'||e.segment===undefined||b.segment===e.segment);};
+async function periodeExport(v1){
+ const EC=cacheExport();let mq=null;try{mq=EC?await EC.lire(chrome.storage.local):null;}catch{/* marqueur illisible : période inconnue */}
+ const masques=new Set((mq?.lotsVides||[]).filter(e=>lotVideMasque(e,timing)).map(e=>typeof e==='string'?e:e.id));let t=v1;
+ if(t&&masques.size&&Array.isArray(t.lots))t={...t,lots:t.lots.filter(l=>!masques.has(l.batchId)),lotsVidesDuCache:t.lots.filter(l=>masques.has(l.batchId)).map(l=>l.batchId)};
+ let fichesDepart=[];try{fichesDepart=EC?await EC.lireDeparts(chrome.storage.local):[];}catch{/* illisible : aucune fiche */}
+ return {v1TimingExport:t,fichesDepart,exportPeriod:{startedAt:mq?.at??null,previousDataCleared:mq?{at:mq.at,afterExportAt:mq.afterExportAt??null,manual:mq.manuel===true,text:EC.texte(mq),counts:mq.counts??null}:null}};
+}
+/* Après un vidage, `closureSummary` ne liste plus les coupes sans état final / sans confirmation
+ * des enregistrements vidés (l'état du moteur, lui, garde tout : engine.js n'est pas touché). */
+async function closureExport(){
+ const c=engine.closureSummary(),EC=cacheExport();let mq=null;try{mq=EC?await EC.lire(chrome.storage.local):null;}catch{/* inchangé */}
+ if(!mq)return c;
+ try{const K=globalThis.BananeCore3,presents=new Set(await store.keys('records')),rs=(engine.s.records||[]).filter(r=>presents.has(r.recordId||r.id));
+  return {...c,
+   withoutFinalState:rs.filter(r=>r.status==='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED'||r.status==='incomplete-no-after').map(r=>K.cutId(r.identity||r.before?.identity)),
+   withoutServerConfirmation:rs.filter(r=>r.commandSent&&!r.serverConfirmed).map(r=>K.cutId(r.identity)),
+   closureScope:'enregistrements depuis le dernier vidage du cache (withoutFinalState, withoutServerConfirmation)'};}
+ catch{return c;}
+}
+/* Test 4 — CAPTURE « AVANT » RESTÉE OUVERTE sur un lot fini (dernier cut différé, posé non validé, sortie d'ESV pendant un cut) :
+ * `closeAtExit` / `stopAtLotEnd` ne la referment pas ; le moteur (épinglé) l'archive au prochain `begin()`. Le vidage est permis
+ * (src/export-cache.js `refus`) À CONDITION de garder son nuage LiDAR, les événements et visites qui le nomment : ils restent
+ * dans le cache et partent au prochain export. Rien n'est lu si aucune capture n'est ouverte. */
+async function captureOuverteAGarder(){const EC=cacheExport(),s=engine?.s;
+ if(!EC?.capturesAGarder||!s?.lidarId||!(EC.CAPTURES_OUVERTES||[]).includes(s.collection))return null;
+ /* DON-1 : l'état de la capture est RELEVÉ ici, avant les deux lectures d'IndexedDB (qui rendent la main au moteur). Relu sur
+  * `engine.s` APRÈS les attentes, une capture refermée entre-temps ne donnait plus rien à garder (capt = null) et le « second
+  * contrôle » de viderCacheExport comparait null à null. Avec ce relevé, il voit la différence et refuse (« réessaie »). */
+ const releve={collection:s.collection,lidarId:s.lidarId,proposal:s.proposal};
+ const g=EC.capturesAGarder(releve,await store.all('events'),await store.all('records'));
+ return g.clouds.length?{collection:releve.collection,...g}:null;}
+async function viderCacheExport(args){
+ const EC=cacheExport();if(!EC)throw Error('Vidage indisponible (module absent).');
+ const auto=!!args?.auto&&args?.manuel!==true;
+ const t0=args?.instantaneAt,depuis=Number.isFinite(t0)&&t0<=Date.now()+1000?t0:Date.now();
+ const raison=EC.refus(contexteVidage(depuis),{auto});if(raison)throw Error('Vidage refusé : '+raison+'.');
+ const garder={events:[],records:[],clouds:[]};
+ const capt=await captureOuverteAGarder();
+ if(capt){garder.clouds.push(...capt.clouds);garder.events.push(...capt.events);garder.records.push(...capt.records);}
+ /* Une session Écho ou Correction conservée garde ses données (son propre abandon les efface). */
+ if(engine.s.native||engine.s.manual){
+  garder.clouds.push(...(engine.s.native?.cloudIds||[]),...(engine.s.manual?.cloudIds||[]));
+  for(const r of await store.all('records'))if(r.nativeSessionId||r.manualSessionId)garder.records.push(r.recordId||r.id);
+  for(const e of await store.all('events'))if(e.nativeSessionId||e.manualSessionId)garder.events.push(e.eventId);}
+ /* Les lectures ci-dessus ont rendu la main : si l'état du moteur a changé entre-temps (lot repris, capture refermée ou autre),
+  * le refus est réévalué et la capture à garder relue AVANT de supprimer quoi que ce soit. */
+ const raison2=EC.refus(contexteVidage(depuis),{auto});if(raison2)throw Error('Vidage refusé : '+raison2+'.');
+ const ouverte=engine.s.lidarId&&(EC.CAPTURES_OUVERTES||[]).includes(engine.s.collection)?engine.s.lidarId:null;
+ if((capt?.clouds[0]??null)!==ouverte)throw Error('Vidage refusé : la capture ouverte a changé pendant la préparation du vidage ; réessaie.');
+ const avant=await EC.lire(chrome.storage.local);
+ const lots=[...(timing?.batches?.entries?.()||[])].filter(([,b])=>b.closed===true).map(([id,b])=>({id,segment:b.segment}));
+ const counts=await EC.supprimer(store,args?.ids||{},garder,args?.signatures);
+ /* Gardé à cause de la capture ouverte (parmi ce qui était demandé) : dit au panneau, noté dans le marqueur. */
+ const demande=nom=>new Set(args?.ids?.[nom]||[]),compte=(nom,liste)=>{const d=demande(nom);return (liste||[]).filter(i=>d.has(i)).length;};
+ const captureGardee=capt?{collection:capt.collection,nuages:compte('clouds',capt.clouds),evenements:compte('events',capt.events),visites:compte('records',capt.records)}:null;
+ const marqueur={at:new Date().toISOString(),afterExportAt:auto||args?.manuel!==true?(args?.exportAt||null):null,manuel:args?.manuel===true||!args?.exportAt,
+  counts:{events:counts.events,records:counts.records,clouds:counts.clouds},
+  ...(captureGardee&&(captureGardee.nuages||captureGardee.evenements||captureGardee.visites)?{captureGardee}:{}),
+  lotsVides:[...(avant?.lotsVides||[]).filter(e=>typeof e==='object'&&!lots.some(l=>l.id===e.id)),...lots]};
+ /* Le marqueur n'est écrit qu'APRÈS une suppression réussie. */
+ let marqueurEcrit=true;try{await EC.ecrire(chrome.storage.local,marqueur);}catch{marqueurEcrit=false;}
+ return {cleared:true,...counts,at:marqueur.at,text:EC.texte(marqueur),marqueurEcrit,captureGardee};
+}
+/* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-067, D-077 point 3) — LECTURE SEULE.
+ * Action de panneau `goto-cut` {part, cut} : la page va au cut N de la partie CHARGÉE et
+ * en confirme l'identité (`goToCut`, src/adapter-page.js : événement interne d'ESV, sinon
+ * pas à pas, sinon refus). Rien n'est validé, skippé ni posé ; le moteur, la pose et la
+ * décision sur le lot n'en savent rien ; aucune reprise automatique des différés (hors
+ * périmètre, à soumettre séparément). Refusée, sans rien envoyer à ESV, quand :
+ *  - un lot Orbite tourne, ou sa pause n'est pas EFFECTIVE (action du moteur encore en
+ *    cours), ou la reprise du lot (retour au cut après F5 compris) est en cours ;
+ *  - un résultat est à clôturer (navigation différée incertaine, état final manquant,
+ *    intention ou réconciliation), une pose est appliquée sans validation, ou une
+ *    reprise manuelle tient le contexte du lot ;
+ *  - hors d'un lot en pause, une capture assistée ou une proposition est ouverte ;
+ *  - une autre demande de retour est en cours (double appel) ;
+ *  - Écho est actif (refus général de `dispatch`, plus haut que l'action).
+ * Journal `goto-cut`, rangé directement (comme `b1-ombre`, jamais par `engine.event`) :
+ * cible, identité avant et après (partie et cut SEULEMENT : ni position, ni repère, ni
+ * projet ESV), commande émise (evenement, pas-a-pas, aucune, refus), résultat, durée.
+ * CONTRÔLE D'IDENTITÉ AVANT REPRISE (D-067) : la première demande pendant la pause d'un
+ * lot retient le cut affiché au départ (`b.retourCut`) ; « Reprendre », « Réessayer »,
+ * « SKIP explicite » et « Reprise manuelle » sont refusés tant qu'ESV n'affiche pas de
+ * nouveau ce cut. Page rechargée (autre page ESV) : la reprise après F5 ramène elle-même
+ * le lot à son cut ; la garde s'efface. */
+const PAUSES_LOT=new Set(['PAUSED','STOPPED','PAUSED_ADAPTER_UNRESPONSIVE']);
+/* Pendant un retour en vol, ces actions attendent son résultat (elles agiraient sur un cut en mouvement). */
+const PENDANT_RETOUR=new Set(['connect','native-start','native-resume','start','resume','retry','manual-takeover','manual-completion','explicit-skip',
+ 'before','after','lidar','analyze','accept','restore','reconcile','close-uncertain','cancel-before']);
+let retourCutEnCours=null;
+const partCut=x=>Number.isInteger(x?.part)&&Number.isInteger(x?.cut)?{part:x.part,cut:x.cut}:null;
+function journalRetour(ev){try{const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'goto-cut',schema:1,...ev})).catch(()=>{});}catch{/* le journal n'est pas critique */}}
+function refusRetour(){const b=engine.s.batch,s=engine.s;
+ if(retourCutEnCours)return ['DEJA_EN_COURS','Un retour à un cut est déjà en cours : attends son résultat (une seule demande à la fois).'];
+ if(selectedTab===null)return ['SANS_ONGLET','Sélectionne un onglet ESV.'];
+ if(repriseEnCours)return ['REPRISE_EN_COURS','Reprise du lot en cours : aucune navigation de consultation.'];
+ if(b?.state==='RUNNING')return ['LOT_EN_COURS','Lot Orbite en cours : mets-le en pause avant d’aller à un autre cut.'];
+ if(engine.task||engine.busy)return ['PAUSE_NON_EFFECTIVE','Une action d’Ariane est encore en cours (lecture, pose, validation ou déplacement) : attends que la pause soit effective.'];
+ if(b?.state==='MANUAL_TAKEOVER')return ['REPRISE_MANUELLE',`Reprise manuelle en cours sur le cut ${b.manualTakeover?.identity?.cut??b.activeIdentity?.cut} : termine-la avant d’aller à un autre cut.`];
+ if(['PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING'].includes(b?.state)||engine.deferPending?.()||s.intent||s.reconcileRequired)
+  return ['INCERTITUDE_A_CLORE','Un résultat incertain reste à clôturer : contrôle ESV et clôture-le avant toute navigation.'];
+ if(s.applied)return ['POSE_NON_VALIDEE','Une pose d’Ariane est appliquée et pas encore validée : valide-la, restaure-la ou archive-la avant d’aller à un autre cut.'];
+ const enPause=!!b&&PAUSES_LOT.has(b.state);
+ if(!enPause&&s.before&&['BEFORE_CAPTURED','READY_FOR_AFTER'].includes(s.collection))return ['CAPTURE_OUVERTE','Une capture est ouverte : termine-la ou annule-la avant d’aller à un autre cut.'];
+ if(!enPause&&s.proposal)return ['PROPOSITION_OUVERTE','Une proposition est ouverte : applique-la, rejette-la ou annule la capture avant d’aller à un autre cut.'];
+ return null;}
+/* Plus grand cut connu de la partie (cut du lot, cuts traités, cut retenu) : borne de la cible quand le compteur d'ESV est illisible. */
+function borneConnue(part){const b=engine.s.batch,vus=[];
+ if(b?.scope?.part===part)for(const x of [b.activeIdentity,...(b.processed||[]),...(b.skipped||[]),...(b.deferred||[])]){const c=x?.cut??x?.identity?.cut;if(Number.isInteger(c))vus.push(c);}
+ const o=b?.retourCut?.origine;if(o?.part===part)vus.push(o.cut);return vus.length?Math.max(...vus):null;}
+async function allerAuCut(args){const t0=Date.now(),K=globalThis.BananeCore3,S=globalThis.BananeSettings?.retourCut||{};
+ const cible={part:Number.isInteger(args?.part)?args.part:null,cut:Number.isInteger(args?.cut)?args.cut:null},b=engine.s.batch;
+ const base={cible,lotId:b?.id??null,etatLot:b?.state??null};
+ const refus=(code,message,avant=null)=>{journalRetour({...base,operationId:null,identiteAvant:avant,identiteApres:null,commande:'refus',chemin:null,emissions:0,resultat:'refuse',code,message,dureeMs:Date.now()-t0});
+  return {ok:false,resultat:'refuse',code,message,cible,identiteAvant:avant,identiteApres:null,commande:'refus',emissions:0,dureeMs:Date.now()-t0};};
+ if(cible.part===null||cible.cut===null||cible.cut<0)return refus('CIBLE_INVALIDE','Cible invalide : une partie et un cut entiers, cut positif ou nul.');
+ const r=refusRetour();if(r)return refus(...r);
+ const operationId=K.uid();retourCutEnCours={operationId,depuis:t0,cible};
+ try{
+  /* Cut affiché AVANT toute émission (lecture seule) : la garde de reprise en a besoin même si la page ne répond pas ensuite. */
+  let lu=null;try{lu=(await call('ping'))?.label||null;}catch(e){return refus('ESV_ILLISIBLE',`ESV ne répond pas (${e.message}) : aucune navigation.`);}
+  if(!partCut(lu))return refus('ESV_ILLISIBLE','« Cut N of part P » illisible dans ESV : aucune navigation.');
+  const enPause=!!b&&PAUSES_LOT.has(b.state)&&engine.s.batch===b,garde=enPause&&!b.retourCut;
+  if(garde){b.retourCut={origine:{pageId:lu.pageId??null,part:lu.part,cut:lu.cut},depuis:new Date().toISOString()};await engine.save();}
+  let ev=null,erreur=null;
+  try{ev=await call('goToCut',cible,{chemin:S.chemin,borneConnue:borneConnue(cible.part)},operationId);}catch(e){erreur=e;}
+  /* Rien n'est parti : la garde posée par cette demande n'a pas lieu d'être. */
+  if(garde&&ev&&ev.emissions===0&&ev.commandInvoked===false&&b.retourCut){delete b.retourCut;await engine.save();}
+  const commande=erreur?'inconnue':ev.chemin==='evenement'?'evenement':ev.chemin==='pas-a-pas'?'pas-a-pas':ev.resultat==='refuse'?'refus':'aucune';
+  const resultat=erreur?'incertain':ev.resultat,code=erreur?'ADAPTATEUR':ev.refusal?.code??null,message=erreur?erreur.message:ev.refusal?.message??null;
+  const out={ok:resultat==='confirme',resultat,code,message,cible,operationId,identiteAvant:partCut(ev?.identiteAvant)||partCut(lu),identiteApres:partCut(ev?.identiteApres),
+   commande,chemin:ev?.chemin??null,emissions:ev?.emissions??null,pas:ev?.pas?{demandes:ev.pas.demandes,faits:ev.pas.faits}:null,pret:ev?.pret??null,
+   pauseExplicite:erreur?true:ev.pauseExplicite===true,gardeReprise:partCut(b?.retourCut?.origine),dureeMs:Date.now()-t0};
+  journalRetour({...base,operationId,identiteAvant:out.identiteAvant,identiteApres:out.identiteApres,commande,chemin:out.chemin,emissions:out.emissions,pas:out.pas,
+   cheminEvenement:ev?.cheminEvenement?.raison??(ev?.cheminEvenement?.disponible?'disponible':null),cheminPas:ev?.cheminPas?.raison??(ev?.cheminPas?.disponible?'disponible':null),
+   bornes:ev?.bornes?{source:ev.bornes.source,total:ev.bornes.total}:null,pret:out.pret,resultat,code,message,dureeMs:out.dureeMs,dureePageMs:ev?.durationMs??null,gardeReprise:out.gardeReprise});
+  return out;
+ }finally{retourCutEnCours=null;}}
+/* D-067 : contrôle d'identité avant toute action du lot qui part du cut affiché. `affiche` : l'état déjà relu
+ * (reprise) ; sinon le libellé est relu ici. Illisible : la reprise est refusée ; pour les autres actions, le
+ * moteur relit et contrôle lui-même le cut du lot. */
+async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const b=engine.s.batch,o=b?.retourCut?.origine;if(!o)return;
+ if(rattache){delete b.retourCut;await engine.save();return;}
+ let l=affiche===undefined?null:affiche?.identity??null;
+ if(affiche===undefined){try{l=(await call('ping'))?.label||null;}catch{return;}if(!partCut(l))return;}
+ if(l&&o.pageId!=null&&l.pageId!=null&&l.pageId!==o.pageId){delete b.retourCut;await engine.save();return;}
+ if(!partCut(l)||l.part!==o.part||l.cut!==o.cut)throw Error(`${quoi} refusé : le lot est en pause sur le cut ${o.cut} de la partie ${o.part}, ESV affiche ${partCut(l)?`le cut ${l.cut} de la partie ${l.part}`:'un cut illisible'} (consultation). Reviens au cut ${o.cut} dans ESV, puis recommence ; rien n’a été validé.`);
+ delete b.retourCut;await engine.save();}
+/* B3 — transition « demarrage » : le corps de « Démarrer », inchangé (déplacé de `dispatch`). */
+async function demarrerLot(args){
+  // Avant tout archivage : un lot en reprise manuelle garde son contexte.
+  engine.assertBatchContextFree('un nouveau lot');
+  /* 4.7.21 : « fin de partie » demandée, ou fin saisie retenue pour la partie. */
+  const finPartie=args?.endMode==='partie';
+  if(!finPartie&&Number.isInteger(args?.end))await retenirFinPartie(args.part,args.end,'saisie');
+  if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');
+  /* GARDE-FOU DÉCOUVERT SUR LE TERRAIN, cut 6/4245.
+   *
+   * Une sélection du cerveau porte `confidence: 0` pour que le pilote la mette
+   * en pause. Mais `src/engine.js` — gelé, ligne 233 — ne met en pause que
+   * si `scope.lowConfidence !== 'attempt'`. Avec la politique « Tenter la
+   * proposition expérimentale », le pilote a donc appliqué tout seul une
+   * sélection explicitement marquée « jamais à appliquer automatiquement ».
+   *
+   * La confiance nulle ne suffit pas : on coupe la sélection à la source quand
+   * la politique permet de tenter. Le cerveau continue de retirer le biais
+   * vertical — cette correction-là garde la confiance du moteur et n'a jamais
+   * été en cause. Un rail ambigu redevient alors `unresolved`, ce qui met le
+   * lot en pause par le chemin `missing`, avant même la question de confiance. */
+  const geometryEngine=args?.geometryEngine||V46_ENGINE;
+  if(![V46_ENGINE,GCV1_ENGINE].includes(geometryEngine))throw Error('Moteur géométrique de lot inconnu.');
+  const startArgs={...args,geometryEngine,...(finPartie?{end:FIN_PARTIE}:{})};
+  if(geometryEngine===GCV1_ENGINE){
+    startArgs.geometryContract=liveGCV1Contract();
+    startArgs.requestedLowConfidence=args?.lowConfidence||null;
+    // La publication GCV1 est la frontière d'admissibilité du lot TEST : une
+    // candidate finie, y compris S1 à confiance non calibrée, n'est pas
+    // repassée dans le seuil de confiance historique V4.6.
+    startArgs.lowConfidence='attempt';
+    /* 4.7.10 — décision sur le lot, figée dans le scope à la création : elle
+     * commande seulement si le lot est créé avec « appliquer » (D-041, D-042). */
+    if(args?.lotDecision!==undefined&&!['apply','observe'].includes(args.lotDecision))throw Error('Décision sur le lot inconnue.');
+    startArgs.lotDecision=args?.lotDecision==='apply'?'apply':'observe';
+  }else delete startArgs.lotDecision;
+  /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
+   * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
+  startArgs.extensionVersion=VERSION;
+  if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
+  /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
+  delete startArgs.lotReprise;
+  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée à Orbite GCV1.');
+    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);
+    /* 4.7.20 — les appuis d'une reprise sont liés au repère de la page ESV
+     * (`frameId`) : après un rechargement, aucun ne sert (terrain du 25/09,
+     * partie 9). Refusé en clair plutôt que lancé sans effet. */
+    const frame=await currentFrameId(),seeds=startArgs.lotReprise.anchors||[];
+    if(frame&&seeds.length&&!seeds.some(a=>(a.identity?.frameId??null)===frame))
+      throw Error('Reprise : la page ESV a été rechargée depuis le lot précédent (autre repère) ; ses cuts posés ne peuvent plus servir d’appuis. Décoche « Reprise » ou lance un lot ordinaire.');}
+  const tente=startArgs.lowConfidence==='attempt';
+  const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
+  BananeGeometryBrain.configure({selectionActive:!tente||autorise});
+  retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
 async function dispatch(m){await ready;const {action,args={}}=m;
+ if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
+  await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
+ if(retourCutEnCours&&PENDANT_RETOUR.has(action))throw Error('Retour à un cut en cours : attends son résultat, ou annule-le.');
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
+ if(action==='fiches-depart'){const EC=cacheExport();return {fiches:EC?await EC.lireDeparts(chrome.storage.local):[]};}
+ if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage(),refus=EC?EC.refus(c,{auto:args?.auto===true}):'module absent';
+  /* Test 4 : ce que la capture ouverte retient (identifiants), pour que la confirmation le dise et ne le compte pas parmi ce qui sera supprimé. */
+  return {refus,reprenable:EC?EC.reprenable(c):false,marqueur:EC?await EC.lire(chrome.storage.local):null,capture:refus===null?await captureOuverteAGarder():null};}
+ if(action==='export-cache-clear')return viderCacheExport(args);
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
  if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
   await chrome.storage.local.set({banane4Bandeau:bandeau.on});await syncLauncher();return {on:bandeau.on};}
- if(action==='list-tabs')return (await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'})).map(t=>({id:t.id,title:t.title}));
+ /* 4.9.0.16 (test 15) : de quoi distinguer deux onglets ESV au même titre (fenêtre, rang, onglet actif,
+  * prêt ou non, celui qu'Ariane utilise). Aucune adresse n'est rendue au panneau. */
+ if(action==='list-tabs')return (await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'})).map(t=>({id:t.id,title:t.title,
+  windowId:t.windowId??null,index:Number.isInteger(t.index)?t.index:null,active:t.active===true,pret:t.status!=='loading'&&t.discarded!==true,utilise:t.id===selectedTab}));
  if(action==='connect'){
   if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de changer d’onglet.');
   if(repriseEnCours)throw Error('Reprise du lot en cours : attends qu’elle se termine.');
@@ -836,83 +1352,43 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='manual-download')return manual.dataset();
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
- if(action==='pause'){await engine.pause();return engine.view();}if(action==='stop'){await engine.stop();return engine.view();}
- if(action==='resume'){if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
-  repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();}
+ if(action==='goto-cut')return allerAuCut(args);
+ if(action==='pause')return coordinateurLot.transition('pause',async()=>{await engine.pause();return engine.view();});
+ if(action==='stop')return coordinateurLot.transition('arret',async()=>{const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
+  if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();});
+ if(action==='resume')return coordinateurLot.transition('reprise',async()=>{if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
+  if(lotTermine(engine.s.batch)){engine.s.notice=`Lot déjà terminé : ${engine.s.batch.stoppedAtEnd.reason==='navigation-other-part-after-defer'?'fin de la partie retenue':'dernier cut de la partie atteint'} (cut ${engine.s.batch.stoppedAtEnd.cut}). Rien n’est rejoué ; pour continuer, clique sur « Nouveau lot ».`;await engine.save();return engine.view();}
+  repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();});
  /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
   * l'opérateur a déplacé les rails pendant la pause, cette capture serait SA
   * pose, qui entrerait dans le moteur et la décision sur le lot (cahier §10,
   * §14 I) : refusé, comme « Reprendre » (« Rails modifiés depuis la lecture
   * interrompue »). `src/engine.js` est épinglé : le contrôle vit ici. */
- if(action==='retry'){const ref=engine.s.before?.rails;
+ if(action==='retry'){await gardeRetourCut('« Réessayer »');const ref=engine.s.before?.rails;
    if(ref){const now=await engine.adapter.state();
      if(!globalThis.BananeCore3.equalPoses(ref,now.rails))throw Error('Rails modifiés pendant la pause : « Réessayer » analyserait ta pose, il est refusé. Choisis Reprise manuelle ou SKIP explicite.');}
    await engine.retryPaused();return engine.view();}
- if(action==='manual-takeover'){await engine.manualTakeover();return engine.view();}
+ if(action==='manual-takeover'){await gardeRetourCut('« Reprise manuelle »');await engine.manualTakeover();return engine.view();}
  // V4.6.0 : l'opérateur déclare avoir traité le cut lui-même ; le lot reprend au suivant.
  if(action==='manual-completion'){await engine.manualCompletion();return engine.view();}
- if(action==='explicit-skip'){await engine.skipPaused();return engine.view();}
- if(action==='start'){
-  // Avant tout archivage : un lot en reprise manuelle garde son contexte.
-  engine.assertBatchContextFree('un nouveau lot');
-  /* 4.7.21 : « fin de partie » demandée, ou fin saisie retenue pour la partie. */
-  const finPartie=args?.endMode==='partie';
-  if(!finPartie&&Number.isInteger(args?.end))await retenirFinPartie(args.part,args.end,'saisie');
-  if(engine.s.before&&!engine.s.applied&&!engine.s.intent)await engine.archivePending('new-automatic-batch');
-  /* GARDE-FOU DÉCOUVERT SUR LE TERRAIN, cut 6/4245.
-   *
-   * Une sélection du cerveau porte `confidence: 0` pour que le pilote la mette
-   * en pause. Mais `src/engine.js` — gelé, ligne 233 — ne met en pause que
-   * si `scope.lowConfidence !== 'attempt'`. Avec la politique « Tenter la
-   * proposition expérimentale », le pilote a donc appliqué tout seul une
-   * sélection explicitement marquée « jamais à appliquer automatiquement ».
-   *
-   * La confiance nulle ne suffit pas : on coupe la sélection à la source quand
-   * la politique permet de tenter. Le cerveau continue de retirer le biais
-   * vertical — cette correction-là garde la confiance du moteur et n'a jamais
-   * été en cause. Un rail ambigu redevient alors `unresolved`, ce qui met le
-   * lot en pause par le chemin `missing`, avant même la question de confiance. */
-  const geometryEngine=args?.geometryEngine||V46_ENGINE;
-  if(![V46_ENGINE,GCV1_ENGINE].includes(geometryEngine))throw Error('Moteur géométrique de lot inconnu.');
-  const startArgs={...args,geometryEngine,...(finPartie?{end:FIN_PARTIE}:{})};
-  if(geometryEngine===GCV1_ENGINE){
-    startArgs.geometryContract=liveGCV1Contract();
-    startArgs.requestedLowConfidence=args?.lowConfidence||null;
-    // La publication GCV1 est la frontière d'admissibilité du lot TEST : une
-    // candidate finie, y compris S1 à confiance non calibrée, n'est pas
-    // repassée dans le seuil de confiance historique V4.6.
-    startArgs.lowConfidence='attempt';
-    /* 4.7.10 — décision sur le lot, figée dans le scope à la création : elle
-     * commande seulement si le lot est créé avec « appliquer » (D-041, D-042). */
-    if(args?.lotDecision!==undefined&&!['apply','observe'].includes(args.lotDecision))throw Error('Décision sur le lot inconnue.');
-    startArgs.lotDecision=args?.lotDecision==='apply'?'apply':'observe';
-  }else delete startArgs.lotDecision;
-  /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
-   * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
-  startArgs.extensionVersion=VERSION;
-  if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
-  /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
-  delete startArgs.lotReprise;
-  if(args?.lotReprise===true){if(geometryEngine!==GCV1_ENGINE)throw Error('Reprise : réservée à Orbite GCV1.');
-    startArgs.lotReprise=repriseAnchors(engine.s.batch,args.part);
-    /* 4.7.20 — les appuis d'une reprise sont liés au repère de la page ESV
-     * (`frameId`) : après un rechargement, aucun ne sert (terrain du 25/09,
-     * partie 9). Refusé en clair plutôt que lancé sans effet. */
-    const frame=await currentFrameId(),seeds=startArgs.lotReprise.anchors||[];
-    if(frame&&seeds.length&&!seeds.some(a=>(a.identity?.frameId??null)===frame))
-      throw Error('Reprise : la page ESV a été rechargée depuis le lot précédent (autre repère) ; ses cuts posés ne peuvent plus servir d’appuis. Décoche « Reprise » ou lance un lot ordinaire.');}
-  const tente=startArgs.lowConfidence==='attempt';
-  const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
-  BananeGeometryBrain.configure({selectionActive:!tente||autorise});
-  await engine.startBatch(startArgs);return engine.view();}
+ /* OBS-1 (relecture du test 3) : un SKIP explicite du dernier cut d'un lot borné clôt le lot HORS de la boucle du moteur
+  * (pas de jalon `batch-state`) : la fin est relevée ici, comme pour « Arrêter », sinon l'écriture SKIP arrive sans grâce. */
+ if(action==='explicit-skip'){await gardeRetourCut('« SKIP explicite »');const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state);await engine.skipPaused();
+  if(ouvert&&engine.s.batch===b&&(b.state==='COMPLETED'||b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')){coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));cloreMesureHorsBoucle();}return engine.view();}
+ if(action==='start')return coordinateurLot.transition('demarrage',()=>demarrerLot(args));
  if(action==='cloud')return store.getCloud(args.id);
  /* Métadonnées d'export sans événements ni enregistrements : le panneau les lit
   * directement dans IndexedDB (4.7.19, KI-059). `stateOmits` dit ce qui manque
   * à l'état, rangé ailleurs dans le même fichier. */
- if(action==='journal-meta')return {format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary()};
- if(action==='dataset-meta')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
- if(action==='journal')return {format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary()};
- if(action==='dataset')return {format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:engine.closureSummary(),cloudIds:await store.keys('clouds')};
+ const exporte=['journal-meta','dataset-meta','journal','dataset'].includes(action),periode=exporte?await periodeExport(await flushMesure()):null;
+ const v1TimingExport=periode?.v1TimingExport??null;
+ const timingMeta={...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{})};
+ /* 4.9.0.16 (test 15, 5c) : les 64 dernières transitions du lot (B3), dans le journal exporté. */
+ const transitionsLot=coordinateurLot.journal.map(t=>({nom:t.nom,lot:t.lot,etat:t.etat,at:t.at??null}));
+ if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),transitionsLot};
+ if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
+ if(action==='journal')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport(),transitionsLot};
+ if(action==='dataset')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:await store.all('events'),records:await store.all('records'),closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
  return engine.locked(async()=>{
   let result;
   if(action==='settings'){
@@ -937,18 +1413,26 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   else if(action==='reject'){engine.s.proposal=null;await engine.event('proposal-rejected');result=engine.view();}
   else if(action==='restore')result=await engine.restore();
   else if(action==='reconcile')result=await engine.reconcile();
-  else if(action==='close-uncertain')result=await engine.closeUncertain();
+  else if(action==='close-uncertain'){result=await engine.closeUncertain();cloreMesureHorsBoucle();}
   else if(action==='cancel-before'){await engine.archivePending('operator-cancelled');result=engine.view();}
   else if(action==='references')result=await engine.exportReferences();
   else throw Error('Commande inconnue.');return result;
  });
 }
+let swPret=false;ready.then(()=>{swPret=true;},()=>{});
 chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(sender.id!==chrome.runtime.id)return;
  if(m.kind==='launcher-status'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
-  respond(launcherState());return;}
+  // Onglet choisi : en plus, l'état de séance de l'observateur passif (le pont en tire sa demande de marque).
+  respond(sender.tab.id===selectedTab?{...launcherState(),observation:{seance:globalThis.BananeSettings?.observateurPassif?.actif!==false&&!!seanceObservateur()}}:launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
+ /* OBS-3 (relecture du test 3) : le message qui réveille le service worker arrive avant `ready` (onglet choisi et fins
+  * pas encore relus) ; il était ignoré sans réponse et ses entrées, déjà retirées de la file du pont, perdues sans trace.
+  * Il est maintenant traité une fois `ready` résolu. */
+ if(m.kind==='esv-observation'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
+  if(swPret){if(sender.tab.id===selectedTab)respond(rangerObservations(m));return;}
+  ready.then(()=>respond(sender.tab.id===selectedTab?rangerObservations(m):{accept:false,reason:'other-tab'}),()=>respond({accept:false,reason:'not-ready'}));return true;}
  if(m.kind==='manual-event'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
   ready.then(()=>manual.receive(m.type,m.payload)).then(result=>respond({result}),e=>respond({error:e.message}));return true;
  }
@@ -956,6 +1440,7 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   ready.then(()=>native.receive(m.type,m.payload)).then(result=>respond({result}),e=>respond({error:e.message}));return true;
  }
  if(m.kind==='adapter-trace'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
+  timing?.progress(m);
   ready.then(()=>{if(m.action==='capture')engine.s.captureProgress={stage:m.lastStage,...m.lastDetail};
     return engine.event('adapter-progress',{requestId:m.requestId,action:m.action,elapsedMs:m.elapsedMs,acknowledged:m.acknowledged,lastStage:m.lastStage,lastDetail:m.lastDetail});}).then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;
  }
@@ -966,5 +1451,5 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
  dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
    catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
-  async e=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});return true;
+  e=>coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});}));return true;
 });

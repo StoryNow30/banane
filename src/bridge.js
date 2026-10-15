@@ -1,5 +1,5 @@
 (()=>{'use strict';if(window.__banane3Bridge)return;window.__banane3Bridge=true;
- const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
+ const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','goToCut','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
  let pill=null,strip=null,launcherGeneration=0;
  /* 4.7.20 (piste H) — bandeau d'état en bas de la page ESV, activé depuis le
   * panneau. Il ne capte aucun clic (pointer-events: none) : le Pilote clique
@@ -13,10 +13,10 @@
  function setLauncherVisible(visible){if(!pill)return;const shown=visible===true;pill.hidden=!shown;
   if(shown){if(!pill.isConnected)document.documentElement.append(pill);}else if(pill.isConnected)pill.remove();}
  async function refreshLauncher(){const generation=++launcherGeneration;
-  try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});if(generation===launcherGeneration){setLauncherVisible(state?.visible===true);setBandeau(state?.bandeau||null);}}
+  try{const state=await chrome.runtime.sendMessage({kind:'launcher-status'});obsSeance(state?.observation?.seance);if(generation===launcherGeneration){setLauncherVisible(state?.visible===true);setBandeau(state?.bandeau||null);}}
   catch{if(generation===launcherGeneration){setLauncherVisible(false);setBandeau(null);}}}
  const passive=new Set(['ping','state','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish']);
- function diagnostic(p){return {requestId:p.id,action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
+ function diagnostic(p){return {requestId:p.id,...(p.traceId?{traceId:p.traceId}:{}),action:p.action,elapsedMs:Date.now()-p.startedAt,acknowledged:p.acknowledged,lastStage:p.stage,lastDetail:p.detail};}
  /* 4.7.19 (KI-059) : un message chrome.runtime est limité à 64 Mio. Une réponse
   * plus grosse échouait ici, dans la page, sans que le service worker reçoive
   * rien : le lot restait suspendu. On mesure avant d'envoyer, et un envoi qui
@@ -30,7 +30,73 @@
    let size=0;try{size=JSON.stringify(payload).length;}catch{size=Infinity;}
    if(size>MESSAGE_BUDGET)payload={error:tooBig(p.action,Number.isFinite(size)?Math.round(size/1048576)+' Mo':'taille illisible'),diagnostic:payload.diagnostic};
    try{p.respond(payload);}catch(e){p.respond({error:tooBig(p.action,e.message),diagnostic:payload.diagnostic});}}
- window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin||e.data?.channel!==channel)return;
+ /* V1 (test 2, D-077/D-078) — RELAIS DE L'OBSERVATEUR PASSIF DE LA PAGE. L'observateur
+  * (src/esv-observer.js, monde principal) poste ce qu'il voit ; ce message vient de la
+  * PAGE, donc d'une source NON AUTHENTIFIÉE : copie profonde, schéma et tailles bornés,
+  * jamais utilisé pour une décision. Le service worker ne range que pendant une séance ;
+  * sinon (`accept:false`) la file est vidée ici, sans rien garder. Trous de numérotation
+  * et file pleine sont dits par un jalon « gap », jamais passés sous silence. */
+ const OBS={maxQueue:100,maxEntryChars:4096,maxPerMessage:50,maxMessageChars:65536,flushMs:250};
+ const obs={observer:null,last:0,queue:[],timer:null,lost:0,known:null,refused:false};
+ /* État de séance connu du service worker (réponse à un lot d'entrées, ou battement `launcher-status`) :
+  * au DÉBUT d'une séance, demander à l'observateur sa marque (« observateur présent ») et, s'il y a lieu, le résumé
+  * des listes d'avant. `afterDenial` dit que des observations d'avant la séance n'ont pas été rangées : on savait
+  * qu'il n'y avait pas de séance juste avant, OU un lot d'entrées est parti sans recevoir accept:true (refus ;
+  * aucune réponse, par exemple onglet pas encore choisi dans Ariane ; service worker absent). Ne pas exiger d'avoir
+  * VU « pas de séance » : démarrer tout de suite après le choix de l'onglet, avant le premier battement de 15 s,
+  * ne laisse aucune trace de refus à observer. Une page chargée pendant une séance déjà ouverte (changement de
+  * partie en plein lot) a tout rangé en direct : aucun refus, aucun résumé. Une seule demande par début de séance. */
+ function obsSeance(on){if(typeof on!=='boolean')return;
+  if(on&&obs.known!==true){const afterDenial=obs.known===false||obs.refused;obs.known=true;obs.refused=false;try{window.postMessage({kind:'banane5:snapshot',afterDenial},location.origin);}catch{}}
+  else if(!on)obs.known=false;}
+ function obsCopy(x){
+  if(!x||typeof x!=='object'||!Number.isInteger(x.seq)||x.seq<0||typeof x.kind!=='string'||x.kind.length>24)return null;
+  try{const json=JSON.stringify(x);return json.length>OBS.maxEntryChars?null:JSON.parse(json);}catch{return null;}}
+ function relayObservation(d){
+  if(d.v!==1||typeof d.observer!=='string'||d.observer.length>80)return;
+  if(obs.observer!==d.observer){obs.observer=d.observer;obs.last=0;}
+  const x=obsCopy(d.entry);if(!x||x.seq<1||x.seq<=obs.last)return;
+  if(x.seq>obs.last+1)obs.queue.push({seq:0,kind:'gap',lost:x.seq-obs.last-1,reason:'ring-overflow'});
+  obs.last=x.seq;obs.queue.push(x);
+  while(obs.queue.length>OBS.maxQueue){obs.queue.shift();obs.lost++;}
+  if(!obs.timer)obs.timer=setTimeout(obsFlush,OBS.flushMs);}
+ async function obsFlush(){
+  obs.timer=null;const entries=[];
+  if(obs.lost){entries.push({seq:0,kind:'gap',lost:obs.lost,reason:'bridge-queue'});obs.lost=0;}
+  let chars=0;
+  while(obs.queue.length&&entries.length<OBS.maxPerMessage){const n=JSON.stringify(obs.queue[0]).length;if(entries.length&&chars+n>OBS.maxMessageChars)break;chars+=n;entries.push(obs.queue.shift());}
+  if(!entries.length)return;
+  if(obs.queue.length)obs.timer=setTimeout(obsFlush,OBS.flushMs);
+  let r;
+  try{r=await chrome.runtime.sendMessage({kind:'esv-observation',observer:obs.observer,entries});
+   // Ces entrées sont parties sans être rangées (refus, aucune réponse) : le début de séance en tiendra compte.
+   if(!(r&&r.accept===true))obs.refused=true;
+   if(r&&r.accept===false)obs.queue.length=0;
+   /* OBS-5 (relecture du test 3) : une réponse pendant la grâce de fin de lot (`grace:true`) ne dit pas qu'une séance
+    * commence : sans cela, après le battement « pas de séance », elle redemandait marque et résumés d'avant séance. */
+   if(r&&typeof r.accept==='boolean'&&r.grace!==true)obsSeance(r.accept);
+   if(r&&r.enabled===false)window.postMessage({kind:'banane5:config',enabled:false},location.origin);
+   if(r&&r.tableListe===false)window.postMessage({kind:'banane5:config',table:false},location.origin);
+  }catch{if(!(r&&r.accept===true))obs.refused=true;}}
+ /* B1 (D-095) — VOISINS DE LA LISTE DES COUPES. Le service worker demande, pour le cut décidé, une fenêtre de
+  * ±10 lignes au plus et la ligne la plus proche d'une paire de points ; l'observateur (monde principal) répond
+  * depuis la mémoire de la page. Aucune requête vers ESV. La réponse vient de la PAGE (source non fiable) : copie
+  * bornée ici (taille), relue champ par champ par le service worker ; elle ne sert qu'à l'hypothèse consignée. */
+ const B1={delaiMs:500,maxChars:16384},b1Attente=new Map();
+ function b1Demande(m,respond){
+  const p=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite)?[...v]:null,world={left:p(m.world?.left),right:p(m.world?.right)};
+  if(!Number.isInteger(m.cut)||m.cut<0||!Number.isInteger(m.fenetre)||m.fenetre<1||m.fenetre>10||!world.left||!world.right){respond({ok:false,reason:'demande-invalide'});return;}
+  const id=crypto.randomUUID(),timer=setTimeout(()=>{b1Attente.delete(id);respond({ok:false,reason:'page-sans-reponse'});},B1.delaiMs);
+  b1Attente.set(id,{respond,timer});
+  try{window.postMessage({kind:'banane5:voisins',id,cut:m.cut,fenetre:m.fenetre,world},location.origin);}catch{clearTimeout(timer);b1Attente.delete(id);respond({ok:false,reason:'pont'});}}
+ function b1Reponse(d){const w=typeof d.id==='string'?b1Attente.get(d.id):null;if(!w)return;b1Attente.delete(d.id);clearTimeout(w.timer);
+  let copie=null;try{const json=JSON.stringify(d);copie=json.length<=B1.maxChars?JSON.parse(json):{ok:false,reason:'trop-gros'};}catch{copie={ok:false,reason:'illisible'};}
+  w.respond(copie);}
+ try{window.postMessage({kind:'banane5:hello',afterSeq:0},location.origin);}catch{}
+ window.addEventListener('message',e=>{if(e.source!==window||e.origin!==location.origin)return;
+   if(e.data?.kind==='banane5:esv-observation'){relayObservation(e.data);return;}
+   if(e.data?.kind==='banane5:voisins-reponse'){b1Reponse(e.data);return;}
+   if(e.data?.channel!==channel)return;
    if(e.data.kind==='banane4:manual-phase'){
      const gate=window.__banane4InputGate;if(gate){gate.phase=e.data.phase;if(e.data.phase==='FINISHED')gate.active=false;}return;
    }
@@ -62,6 +128,7 @@
      // A delayed push may describe an earlier window set. Keep the pill absent
      // until the current background state answers this fresh read.
      launcherGeneration++;setLauncherVisible(false);void refreshLauncher();respond({ok:true});return;}
+   if(m.kind==='b1-voisins'){b1Demande(m,respond);return true;}
    if(m.kind!=='page-command'||!allowed.has(m.action))return;
    if(m.action==='manualStart'){
      const gate=window.__banane4InputGate;if(!gate){respond({error:'Recharge ESV pour activer l’enregistrement de session V4.'});return;}
@@ -71,7 +138,7 @@
      const gate=window.__banane4NativeGate;if(!gate){respond({error:'Recharge ESV pour activer l’observation native V4.'});return;}
      Object.assign(gate,{active:true,channel});
    }
-   const id=crypto.randomUUID(),p={id,action:m.action,startedAt:Date.now(),respond,acknowledged:false,stage:'sent',detail:null};
+   const id=crypto.randomUUID(),p={id,traceId:typeof m.traceId==='string'&&m.traceId.length<=80?m.traceId:null,action:m.action,startedAt:Date.now(),respond,acknowledged:false,stage:'sent',detail:null};
    p.timer=setTimeout(()=>{pending.delete(id);
      if(['manualStart','manualFinish'].includes(m.action)&&window.__banane4InputGate)window.__banane4InputGate.active=false;
      if(['nativeStart','nativePause','nativeResume','nativeFinish'].includes(m.action)&&window.__banane4NativeGate)window.__banane4NativeGate.active=false;
@@ -85,7 +152,7 @@
      respond({error,diagnostic:diagnostic(p)});},['state','ping','nativeSnapshot'].includes(m.action)?4000:['capture','apply','manualFinish'].includes(m.action)?90000:45000);
    /* D1 (4.8.5) : l'adaptateur n'obéit qu'à l'extension qui l'a installé. */
    pending.set(id,p);window.postMessage({kind:'banane3:command',id,channel,proprietaire:chrome.runtime.id,action:m.action,args:m.args||[],sentAt:Date.now()},location.origin);return true;});
- pill=document.createElement('button');pill.textContent='Ariane 4.8.6 · ouvrir';pill.type='button';pill.hidden=true;
+ pill=document.createElement('button');pill.textContent='Ariane 4.9.0 · ouvrir';pill.type='button';pill.hidden=true;
  /* 4.8.0 (direction, 26/09) : bouton blanc et discret, plein seulement au survol. */
  const repos='0 1px 2px rgba(15,23,42,.10),0 2px 8px rgba(15,23,42,.08)',survol='0 2px 4px rgba(15,23,42,.12),0 6px 18px rgba(15,23,42,.14)';
  pill.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483646;background:#fff;color:#1f2328;border:1px solid rgba(15,23,42,.12);border-radius:999px;padding:6px 12px;font:500 12px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.01em;cursor:pointer;opacity:.92;box-shadow:'+repos+';transition:opacity .16s ease,box-shadow .16s ease,transform .16s ease';

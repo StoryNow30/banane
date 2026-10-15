@@ -80,7 +80,7 @@ test('mémoire des appuis : un cut analysé deux fois ne compte que pour un appu
 /* KI-051 — lot 4.7.10, partie 33, cut 8089 : cible à 21 cm de la pose ESV, hors
  * de la vue de ±20 cm ; l'adaptateur refusait le clic et le lot s'arrêtait. */
 test('vue d\'ESV : une cible hors de la vue du rail n\'est pas commandée ; caméra inconnue non plus',()=>{
-  const narrow=L.viewCameras(withCameras(capture,.01));   // vue de ±1 cm : la cible du rail gauche est à 12 mm
+  const narrow=L.viewCameras(withCameras(capture,.003));   // vue de ±3 mm : la cible du rail gauche est à 7 mm (fixture à 140 mm depuis D-084 ; 12 mm et ±1 cm à 150 mm)
   const out=command(decision,both(abstention),K.expectedPoses,narrow);
   assert.equal(out.action,'engine');assert.match(out.reason,/^hors-vue-(left|right)$/);assert.ok(Math.abs(out.ndc[0])>L.VIEW_MARGIN||Math.abs(out.ndc[1])>L.VIEW_MARGIN);
   assert.equal(command(decision,both(abstention),K.expectedPoses,null).reason,'vue-inconnue-left');
