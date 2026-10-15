@@ -41,13 +41,16 @@ function decomposer(m){
   else{const s=Math.sqrt(1+R(2,2)-R(0,0)-R(1,1))*2;q=[(R(0,2)+R(2,0))/s,(R(1,2)+R(2,1))/s,.25*s,(R(1,0)-R(0,1))/s];}
   return {position,quaternion:q,scale};
 }
+/* Contour de repli (forme en U, 3 lignes) quand une pose n'a pas de contour exporté : seul le signe du y moyen compte pour gauche/droite. */
+const CONTOUR_REPLI=side=>{const s=side==='left'?1:-1;return [[[0,s*.036,0],[0,s*.036,-.05],[0,s*.01,-.05]],[[0,s*.01,-.05],[0,s*.01,-.12],[0,s*.07,-.12]],[[0,s*.07,-.12],[0,s*.07,-.15],[0,s*.005,-.15]]];};
 function rail(capture,side,origine){
   const r=capture.rails[side],rm=r.railLocalToSceneRelative,pm=r.profileLocalToSceneRelative;
   const monde=C.multiply(C.translation(origine),rm),profilDansRail=C.multiply(C.inverse(rm),pm);
-  const contours=(r.profileContours||[]).map(c=>c.verticesSceneRelative.map(v=>C.point(r.sceneRelativeToProfileLocal,v).map(x=>arrondi(x,6))));
+  const inv=r.sceneRelativeToProfileLocal||C.inverse(pm);
+  const contours=(r.profileContours||[]).length?r.profileContours.map(c=>c.verticesSceneRelative.map(v=>C.point(inv,v).map(x=>arrondi(x,6)))):CONTOUR_REPLI(side);
   const centreY=contours.flat().reduce((a,p)=>a+p[1],0)/Math.max(1,contours.flat().length);
   if((side==='left')!==(centreY>0))throw Error(`Contour ${side} : côté inattendu (y moyen ${centreY}).`);
-  return {...decomposer(monde),rotation:r.rotation,profil:{...decomposer(profilDansRail),rotation:r.profileRotation},contours};
+  return {...decomposer(monde),rotation:r.rotation||[0,0,0,'XYZ'],profil:{...decomposer(profilDansRail),rotation:r.profileRotation||[0,0,0,'XYZ']},contours};
 }
 function noeuds(capture){
   const parNoeud=new Map();
@@ -59,6 +62,9 @@ function noeuds(capture){
     const positions=ks.length?ks.flatMap(k=>capture.pointsSceneRelative[k].map(x=>arrondi(x,6))):[12+n,20,-3, 12.5+n,20.5,-3.2, 13+n,21,-2.8];
     return {source:node.id,positions,intensite:ks.map(k=>inten[k]??0),classe:ks.map(k=>classe[k]??0)};});
 }
+/* Découpe réelle d'une capture : matrices scène → cube unité (données, pas du code). */
+function decoupe(capture){const c=capture.clouds?.[0]?.clipping;if(!c||!Array.isArray(c.boxesSceneRelativeToUnit)||!c.boxesSceneRelativeToUnit.length)return null;
+  return {task:c.task||'SHOW_INSIDE',method:c.method||'INSIDE_ANY',boites:c.boxesSceneRelativeToUnit.map(m=>m.slice())};}
 function construire(options={}){
   const nb=Number(options.cuts??12),debut=Number(options.debut??100),part=Number(options.part??23),partie2=Number(options.partie2??4);
   const base=corpus(),direction=base[0].capture.rails.left.railLocalToSceneRelative.slice(0,3);
@@ -68,7 +74,7 @@ function construire(options={}){
     for(let i=0;i<n;i++){const src=base[(decalageIndex+i)%base.length],k=decalageIndex+i;
       const origine=ORIGINE_MONDE.map((v,j)=>arrondi(v+direction[j]*PAS_M*k,6));
       cuts.push({cut:premier+i,index:i,status:statut(k),origine,source:src.nom,shape:src.capture.shape||'U50',
-        rails:{left:rail(src.capture,'left',origine),right:rail(src.capture,'right',origine)},noeuds:noeuds(src.capture)});}
+        rails:{left:rail(src.capture,'left',origine),right:rail(src.capture,'right',origine)},noeuds:noeuds(src.capture),decoupe:decoupe(src.capture)});}
     return {part:numero,table:`maquette-${numero}`,cuts};
   };
   return {format:'banane-esv-maquette-scenario-v1',monde:{origine:ORIGINE_MONDE,pas:PAS_M,direction},
@@ -83,7 +89,7 @@ function lignes(partie){
       XLeftEdge:L[0],YLeftEdge:L[1],ZLeftEdge:L[2],XRightEdge:R[0],YRightEdge:R[1],ZRightEdge:R[2],
       RailSpacing:arrondi(Math.hypot(...R.map((v,j)=>v-L[j])),4),TrajAzimuth:0,Index:i};});
 }
-module.exports={construire,lignes,corpus};
+module.exports={construire,lignes,corpus,rail,noeuds,decoupe,decomposer,arrondi,ORIGINE_MONDE,PAS_M};
 if(require.main===module){const s=construire({cuts:Number(process.argv[2]||12)});
   console.log(JSON.stringify({parties:s.parties.map(p=>({part:p.part,cuts:p.cuts.length,statuts:p.cuts.map(c=>c.status[0]).join('')})),
     premier:{cut:s.parties[0].cuts[0].cut,noeuds:s.parties[0].cuts[0].noeuds.length,points:s.parties[0].cuts[0].noeuds.reduce((a,n)=>a+n.positions.length/3,0)}},null,1));}

@@ -4,7 +4,7 @@
  * messages du panneau (tools/banc-esv.cjs). Prouve la chaîne service worker →
  * pont → adaptateur → page sur la maquette ; ne prouve rien sur le vrai ESV.
  *   node --test --test-timeout=120000 tests/esv-maquette/extension.test.cjs */
-const {test}=require('node:test'),assert=require('node:assert/strict');
+const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs'),os=require('node:os');
 const N=require('./navigateur.cjs'),{banc}=require('../../tools/banc-esv.cjs');
 const raison=N.indisponible(),opts=raison?{skip:raison}:{};
 test('lot Orbite de deux cuts, extension réelle, maquette ESV',opts,async()=>{
@@ -18,4 +18,12 @@ test('lot Orbite de deux cuts, extension réelle, maquette ESV',opts,async()=>{
   assert.ok(r.commandes.apply>=1&&r.commandes.validateAndNext>=1,'au moins une pose validée : '+JSON.stringify(r.commandes));
   assert.ok(r.ecrituresServeur.some(e=>e.status==='valid'),'une écriture « valid » reçue par le serveur');
   console.log(`# lot : ${r.etatFinal}, ${r.dureeLotMs} ms, commandes ${JSON.stringify(r.commandes)}, écritures ${r.ecrituresServeur.length}, cuts ${r.cuts.map(c=>c.cut+':'+c.dureeMs+'ms').join(' ')}`);
+});
+test('aller-retour : lot synthétique → bilan avec nuages → rejeu du bilan, mêmes poses à 1 mm',opts,async()=>{
+  const bilan=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'maquette-bilan-')),'bilan.json');
+  const a=await banc({cuts:2,decalage:5,latence:30,delai:60000,dataset:bilan});assert.deepEqual(a.erreurs,[]);assert.ok(a.ecrituresServeur.length>=1);
+  const b=await banc({export:bilan,latence:30,delai:90000});assert.deepEqual(b.erreurs,[]);
+  assert.equal(b.maquette.provenance.nature,'orbite');assert.ok(b.ecartsReferenceMm.length>=1,'au moins une pose comparée à la référence');
+  for(const e of b.ecartsReferenceMm)assert.ok(e.gaucheMm<=1&&e.droitMm<=1,'écart au rejeu : '+JSON.stringify(e));
+  console.log(`# rejeu : ${b.etatFinal}, écarts ${JSON.stringify(b.ecartsReferenceMm)}`);
 });

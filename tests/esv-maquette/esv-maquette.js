@@ -38,7 +38,7 @@
  /* ---------- options ---------- */
  const q=new URLSearchParams(location.search),num=(k,d)=>{const v=Number(q.get(k));return q.has(k)&&Number.isFinite(v)?v:d;};
  const options={cuts:num('cuts',12),debut:num('debut',100),part:num('part',23),cut:num('cut',NaN),latence:num('latence',40),lots:num('lots',4),
-   latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10};
+   latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10,source:q.get('source')||'synthetique'};
  const $=id=>document.getElementById(id);
  const journal=[],log=(type,detail={})=>{const e={at:new Date().toISOString(),type,...detail};journal.push(e);
    const el=$('journal');if(el){el.textContent=journal.slice(-40).map(x=>`${x.at.slice(11,23)} ${x.type} ${JSON.stringify({...x,at:undefined,type:undefined})}`).join('\n');el.scrollTop=el.scrollHeight;}};
@@ -62,7 +62,11 @@
   poser(camera,{position:cible.map((v,i)=>v+Z[i]*options.distanceCamera),quaternion:(({x,y,z,w})=>[x,y,z,w])(quatColonnes(X,Y,Z))});
   majMonde(camera);projection();dessiner();log('camera-recentree',{side});}
  /* ---------- découpe (boîte Potree : inverse = monde → cube unité) ---------- */
- function decoupe(profondeur){const c=cutCourant();if(!c)return;const L=c.rails.left.position,R=c.rails.right.position,[larg,haut]=etat.scenario.decoupe.dimensions;
+ function decoupe(profondeur){const c=cutCourant();if(!c)return;
+  /* Découpe RÉELLE de l'export (matrices scène → cube unité) quand le scénario la porte : monde → scène → unité. */
+  if(c.decoupe?.boites?.length){const T=tr(c.origine.map(v=>-v));pc.material.clipBoxes=c.decoupe.boites.map(m=>({inverse:{elements:mul(m,T)}}));
+   pc.material.clipTask=window.Potree.ClipTask[c.decoupe.task]??2;pc.material.clipMethod=window.Potree.ClipMethod[c.decoupe.method]??0;return;}
+  const L=c.rails.left.position,R=c.rails.right.position,[larg,haut]=etat.scenario.decoupe.dimensions;
   const X=unit([R[0]-L[0],R[1]-L[1],0]),Y=[0,0,1],Z=cross(X,Y),centre=L.map((v,i)=>(v+R[i])/2+Y[i]*.5);
   const boite=objet('Box',{position:centre,quaternion:(({x,y,z,w})=>[x,y,z,w])(quatColonnes(X,Y,Z)),scale:[larg,haut,profondeur]});majMonde(boite);
   pc.material.clipBoxes=[{inverse:{elements:inv(boite.matrixWorld.elements)}}];}
@@ -84,7 +88,7 @@
   const lots=Math.max(1,options.lots),parLot=Math.ceil(c.noeuds.length/lots);window.Potree.numNodesLoading=c.noeuds.length;
   for(let i=0;i<lots;i++){const tranche=c.noeuds.slice(i*parLot,(i+1)*parLot);if(!tranche.length)continue;
    etat.minuteries.push(setTimeout(()=>{for(const n of tranche)pc.visibleNodes.push(noeud(n,c));window.Potree.numNodesLoading-=tranche.length;dessiner();log('noeuds-charges',{cut:c.cut,lot:i+1,noeuds:pc.visibleNodes.length});},options.latence*(i+1)+options.latenceRails));}
-  if(options.decoupeTardive)etat.minuteries.push(setTimeout(()=>{if(cutCourant()===c){decoupe(etat.scenario.decoupe.dimensions[2]+.1);log('decoupe-deplacee',{cut:c.cut});}},options.latenceRails+150));
+  if(options.decoupeTardive&&!c.decoupe)etat.minuteries.push(setTimeout(()=>{if(cutCourant()===c){decoupe(etat.scenario.decoupe.dimensions[2]+.1);log('decoupe-deplacee',{cut:c.cut});}},options.latenceRails+150));
   majEtat();return true;}
  function noeud(n,c){const p=objet('Points',{position:c.origine});p.isPoints=true;p.parent=pc;p.matrixWorld.elements=mul(pc.matrixWorld.elements,compose(p));
   const xs=n.positions;let min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<xs.length;i+=3)for(let k=0;k<3;k++){min[k]=Math.min(min[k],xs[i+k]);max[k]=Math.max(max[k],xs[i+k]);}
@@ -143,10 +147,11 @@
   for(const s of ['left','right']){const r=rails[s];if(!r)continue;ctx.strokeStyle=s===etat.side?'#f4db72':'#e05a5a';ctx.lineWidth=1.5;
    for(const l of r.children[1].children){const a=l.geometry.attributes.position.array,m=l.matrixWorld.elements;ctx.beginPath();for(let i=0;i<a.length;i+=3){const [x,y]=pix(pt(m,[a[i],a[i+1],a[i+2]]));i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}}
   ctx.fillStyle='#9ab';ctx.font='12px monospace';ctx.fillText(`${$('O2N3DCutDescription').textContent} · rail courant : ${etat.side||'aucun'} · nœuds : ${pc.visibleNodes.length}`,10,h-10);}
- function majEtat(){const c=cutCourant();$('maquette-etat').textContent=c?`partie ${etat.partie.part}, cut ${c.cut} (${c.status}), ${etat.partie.cuts.length} coupes, latence ${options.latence} ms × ${options.lots} lots`:'—';}
+ function majEtat(){const c=cutCourant();$('maquette-etat').textContent=c?`${etat.scenario.provenance?`rejeu de ${etat.scenario.provenance.entree} (${etat.scenario.provenance.nature}) · `:''}partie ${etat.partie.part}, cut ${c.cut} (${c.status}), ${etat.partie.cuts.length} coupes, latence ${options.latence} ms × ${options.lots} lots`:'—';}
  /* ---------- démarrage : scénario puis liste des coupes (GET paginé) ---------- */
  async function demarrer(){
-  const s=await (await fetch(`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}`)).json();etat.scenario=s;
+  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}`);
+  if(!r0.ok)throw Error((await r0.json().catch(()=>({}))).error||('scénario : HTTP '+r0.status));const s=await r0.json();etat.scenario=s;
   for(const p of s.parties){const lignes=[];for(let page=1;;page++){const r=await (await fetch(`/rails/${p.table}?page=${page}`)).json();lignes.push(...r.value);if(r.value.length<r.pageSize)break;}
    etat.listes.set(p.part,lignes);for(const l of lignes){const c=p.cuts.find(x=>x.cut===l.CutNumber);if(c)c.status=l.ExtractionStatus;}}
   etat.partie=s.parties[0];
@@ -155,7 +160,8 @@
   projection();chargerCut(index,'demarrage');return true;}
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
    compteur:$('maquette-compteur').textContent,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
-   statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null)};},
+   statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),
+   reference:c?.reference?.monde||null,provenance:etat.scenario?.provenance||null,cuts:etat.partie?.cuts.map(x=>x.cut)||[]};},
   allerA:cut=>{const i=etat.partie.cuts.findIndex(c=>c.cut===cut);return i>=0?allerA(i,'maquette.allerA'):false;},scenario:()=>etat.scenario,pret:null};
  window.__maquette.pret=demarrer().then(()=>true,e=>{log('erreur-demarrage',{message:e.message});$('maquette-etat').textContent='Erreur : '+e.message;throw e;});
 })();

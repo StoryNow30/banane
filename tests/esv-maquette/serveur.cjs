@@ -4,10 +4,12 @@
  * + « serveur ESV » factice (liste des coupes paginée, écriture de validation).
  * Aucun code ni contenu d'ESV. Rien n'est écrit sur disque.
  *
- *   node tests/esv-maquette/serveur.cjs [port]      → http://localhost:PORT/tests/esv-maquette/esv.html
+ *   node tests/esv-maquette/serveur.cjs [port] [--export FICHIER_OU_DOSSIER]   → http://localhost:PORT/tests/esv-maquette/esv.html[?source=export]
+ *   (ou BANANE_MAQUETTE_EXPORT=/chemin) : un vrai export d'Ariane devient la partie rejouée (tests/esv-maquette/lecteur-export.cjs)
  *
  * API (chemins relatifs à l'origine, comme ceux qu'Ariane observe) :
- *   GET  /maquette/scenario.json?cuts=12&debut=100&part=23   scénario (tests/esv-maquette/scenario.cjs)
+ *   GET  /maquette/scenario.json?cuts=12&debut=100&part=23   scénario synthétique (tests/esv-maquette/scenario.cjs)
+ *   GET  /maquette/scenario.json?source=export[&part=N]      scénario rejoué depuis l'export chargé
  *   GET  /rails/<table>?page=N          page de 1 000 lignes de la liste des coupes (vide au-delà)
  *   PUT  /rails/<table>/<RowKey>        écriture de validation : corps JSON, réponse 204, journalisée
  *   GET  /maquette/journal              {ecritures:[…], requetes:[…]}
@@ -20,7 +22,10 @@ const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=u
 const PAGE=1000;
 function demarrer(options={}){
   const journal={ecritures:[],requetes:[]};const scenarios=new Map();const statuts=new Map();
-  const scenario=q=>{const cle=JSON.stringify([q.cuts,q.debut,q.part,q.partie2]);if(!scenarios.has(cle))scenarios.set(cle,S.construire(q));return scenarios.get(cle);};
+  const exportation=options.exportation||process.env.BANANE_MAQUETTE_EXPORT||null;
+  const scenario=q=>{if(q.source==='export'){if(!exportation)throw Error('aucun export chargé (option --export ou BANANE_MAQUETTE_EXPORT)');
+      const cle='export|'+(q.part??'');if(!scenarios.has(cle))scenarios.set(cle,require('./lecteur-export.cjs').construire(exportation,{part:q.part!==undefined?Number(q.part):undefined}));return scenarios.get(cle);}
+    const cle=JSON.stringify([q.cuts,q.debut,q.part,q.partie2]);if(!scenarios.has(cle))scenarios.set(cle,S.construire(q));return scenarios.get(cle);};
   const tables=()=>[...scenarios.values()].flatMap(s=>s.parties);
   const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(body));};
   const serveur=http.createServer((req,res)=>{
@@ -49,7 +54,7 @@ function demarrer(options={}){
     }catch(e){json(res,500,{error:e.message});}});
   });
   return new Promise((resolve,reject)=>{serveur.on('error',reject);serveur.listen(options.port??0,'127.0.0.1',()=>{const port=serveur.address().port;
-    resolve({port,url:`http://127.0.0.1:${port}`,journal,fermer:()=>new Promise(r=>serveur.close(r)),scenario});});});
+    resolve({port,url:`http://127.0.0.1:${port}`,journal,fermer:()=>new Promise(r=>serveur.close(r)),scenario,exportation});});});
 }
 module.exports={demarrer};
-if(require.main===module)demarrer({port:Number(process.argv[2]||8124)}).then(s=>console.log(`Maquette ESV : ${s.url}/tests/esv-maquette/esv.html`),e=>{console.error(e.message);process.exit(1);});
+if(require.main===module){const a=process.argv.slice(2),i=a.indexOf('--export');demarrer({port:Number(a.find(x=>/^\d+$/.test(x))||8124),exportation:i>=0?a[i+1]:null}).then(s=>console.log(`Maquette ESV : ${s.url}/tests/esv-maquette/esv.html${s.exportation?'?source=export':''}`),e=>{console.error(e.message);process.exit(1);});}

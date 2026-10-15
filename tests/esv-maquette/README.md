@@ -16,6 +16,25 @@ Réglages de la page (paramètres d'URL) : `cuts` (nombre de coupes de la partie
 
 Corpus privé : `BANANE_MAQUETTE_CORPUS=/chemin/vers/captures` fait lire d'autres captures `banane-lidar-…json` (jamais dans le dépôt).
 
+## Rejouer un VRAI lot (export d'Ariane)
+
+`tests/esv-maquette/lecteur-export.cjs` transforme un export d'Ariane en partie rejouable ; les données restent hors dépôt.
+
+| Export | Ce qui est lu | Pose de départ | Référence rendue dans le rapport |
+|---|---|---|---|
+| Orbite : bilan « Télécharger le bilan et les LiDAR » (`banane-test-dataset-v4` + `clouds`), corpus GCV1, ou journal + fichier de nuages | enregistrements (`rails.*.initial`, `before.rails`, identifiant de nuage) et captures `banane-lidar-capture-v1` (points des fenêtres, nœuds, **découpe réelle**) | celle d'ESV avant la pose d'Ariane | la pose corrigée par Ariane (`source: ariane`) |
+| Écho : session `banane-native-session-v2` complète, ou dossier de segments `banane-native-session-v3-compact` (relus par `tools/merge-segments.cjs`) | visites `banane-native-visit-v2` et blocs `banane-native-lidar-chunk-v1` (points des fenêtres par rail, visibles par la découpe) | celle lue au moment de la visite | la **pose finale humaine** (`humanFinalReference`, `source: humaine`) et l'intention VALIDATE / SKIP |
+
+Commandes :
+
+```
+node tests/esv-maquette/lecteur-export.cjs EXPORT [--part N]         # inventaire : cuts rejouables, exclus et pourquoi
+node tests/esv-maquette/serveur.cjs 8124 --export EXPORT              # à la main : http://localhost:8124/tests/esv-maquette/esv.html?source=export
+node tools/banc-esv.cjs --export EXPORT [--part N] [--cuts K] [--extension DOSSIER]   # lot Orbite sur toute la partie, écart de chaque pose à la référence (mm)
+```
+
+Fidélité mesurée : un lot joué sur la maquette, exporté en bilan avec ses nuages, puis rejoué depuis ce bilan, rend **les mêmes poses à 0,0 mm** (`extension.test.cjs`, aller-retour). Les cuts sans nuage ou sans pose de départ sont listés dans `provenance.exclus`, jamais inventés. Un export Écho de terrain n'a pas encore été rejoué (les formats sont ceux du code source ; l'essai `lecteur-export.test.cjs` les couvre sur une session synthétique) : le premier rejeu réel dira ce qui manque.
+
 ## Ce que la maquette reproduit, et avec quelle certitude
 
 | Élément | Reproduit | Statut |
@@ -42,4 +61,4 @@ La vitesse réelle (le vrai Potree, la carte graphique, le réseau, Edge), le vr
 
 ## Fichiers
 
-`scenario.cjs` (partie synthétique depuis le corpus), `serveur.cjs` (statique + API factice, journal des écritures), `esv.html` + `esv-maquette.js` (la page), `navigateur.cjs` (Playwright, injection, pont d'essai), `adaptateur.test.cjs`, `extension.test.cjs`, et `tools/banc-esv.cjs` (banc extension réelle, rapport JSON avec `--json`).
+`scenario.cjs` (partie synthétique depuis le corpus), `lecteur-export.cjs` (partie rejouée depuis un export), `serveur.cjs` (statique + API factice, journal des écritures), `esv.html` + `esv-maquette.js` (la page), `navigateur.cjs` (Playwright, injection, pont d'essai), `adaptateur.test.cjs`, `lecteur-export.test.cjs`, `extension.test.cjs`, et `tools/banc-esv.cjs` (banc extension réelle ; `--json` rapport, `--dataset` bilan avec nuages, `--export` rejeu).
