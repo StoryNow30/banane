@@ -31,11 +31,9 @@ Le minimum donne une amorce.
 
 **Temps 2 — deux droites robustes, et leur intersection.** Depuis cette amorce on
 ajuste une droite au plan de roulement (`topRows`) et une au flanc interne
-(`faceRows`), par médiane de pentes. **Le delta publié est l'intersection de ces
-deux droites**, pas l'amorce du gabarit.
+(`faceRows`), par médiane de pentes. **Le delta publié est l'amorce du gabarit** (`best.u`, `best.z`), pas l'intersection des deux droites (`metrics.surfaceIntersection`). Corrigé le 15 octobre 2026, D-115.
 
-L'amorce ne sert donc qu'à **désigner le bon voisinage de points**. La précision
-vient des deux ajustements. Cette séparation explique tout ce qui suit.
+Les deux droites ne servent qu'au contrôle de support (diagnostic).
 
 **Portes d'admission** : `top.count ≥ 15` (`minTop`), `faceCount ≥ 6`
 (`minFace`), pentes non saturées, et `lossRatio ≥ 1,5` (competitive set).
