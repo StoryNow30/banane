@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.2',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 2';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -272,7 +272,7 @@ function rangerObservations(m){try{
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
   add(fields,x.seq,c);if(fields.kind!=='gap')seen.n++;
-  if(fields.kind==='write')b1NoterEcriture(fields);
+  if(fields.kind==='write'){b1NoterEcriture(fields);listeNoterEcriture(fields,echoId);}
   if(fields.kind==='write'&&echoId&&events.at(-1)?.kind==='write')void Promise.resolve(native.noteServerWrite(events.at(-1))).catch(()=>{});}
  if(rejected&&!events.some(e=>e.kind==='gap'&&e.reason==='rejected'))add({kind:'gap',lost:rejected,reason:'rejected',of:null},null);
  for(const c of ancien?[ancien,courant]:[courant]){obsState.perSeance.set(c.seance,c.seen);if(obsState.perSeance.size>8)obsState.perSeance.delete(obsState.perSeance.keys().next().value);}
@@ -281,7 +281,8 @@ function rangerObservations(m){try{
    fiche=EC?.ficheDepart?.(e,{batchId:e.batchId??lotE?.id??(echoId?'echo:'+echoId:null),
     /* 4.9.0.18 : en Écho, la partie est celle du cut affiché (aucun lot). */
     partie:echoId?engine?.s?.current?.identity?.part??null:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
-  if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});}catch{/* la fiche n'est pas critique */}}
+  if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});
+  listeApresChargement(e,fiche,courant.ctx);}catch{/* la fiche n'est pas critique */}}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
  return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{})};
@@ -937,6 +938,16 @@ function holdLotAnchor(lotObservation,command){
  * ESV : le pont lit la mémoire de la page. */
 const b1={repere:null,sansPaire:0};
 function b1Reglage(){const v=globalThis.BananeSettings?.appuisListe;return v==='ombre'||v==='actif'?v:'off';}
+/* E1 (5.0) — mémoire de la liste d'ESV (src/liste-memoire.js) : bords écrits par Ariane pendant un lot, instantané et écarts au
+ * chargement d'une liste. Rien n'est envoyé à ESV ; toute panne est avalée. */
+function listeNoterEcriture(f,echoId){try{const LM=globalThis.BananeListeMemoire,b=engine?.s?.batch;
+ if(LM&&!echoId&&b?.state==='RUNNING')void LM.noterEcriture(chrome.storage.local,f,{partie:b.scope?.part,enLot:true,version:VERSION});}catch{/* jamais bloquant */}}
+function listeApresChargement(e,fiche,ctx){try{const LM=globalThis.BananeListeMemoire,K=globalThis.BananeCore3;if(!LM||!fiche)return;
+ void LM.apresChargement({storage:chrome.storage.local,chrome,tabId:selectedTab,obs:e,fiche,version:VERSION,
+  emettre:ev=>store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),schema:1,...ev,...ctx})});}catch{/* jamais bloquant */}}
+async function listeAction(action,args){const LM=globalThis.BananeListeMemoire;if(!LM)return {instantanes:[]};
+ if(action==='liste-resume')return LM.resume(chrome.storage.local,Number(args?.partie));
+ return {instantanes:await LM.instantanes(chrome.storage.local,args?.parties)};}
 function b1NoterEcriture(f){try{const B=globalThis.BananeAppuisListe;
  if(!B||b1Reglage()==='off'||!(f.status>=200&&f.status<300)||!Number.isInteger(f.rowIndex)||f.body?.ExtractionStatus!=='valid')return;
  const bords=B.bordsCorps(f.body);if(!bords)return;
@@ -1210,6 +1221,7 @@ async function viderCacheExport(args){
  const avant=await EC.lire(chrome.storage.local);
  const lots=[...(timing?.batches?.entries?.()||[])].filter(([,b])=>b.closed===true).map(([id,b])=>({id,segment:b.segment}));
  const counts=await EC.supprimer(store,args?.ids||{},garder,args?.signatures);
+ if(!auto)await globalThis.BananeListeMemoire?.effacer(chrome.storage.local).catch(()=>{});/* E1 : vidage manuel = mémoire de la liste aussi */
  /* Gardé à cause de la capture ouverte (parmi ce qui était demandé) : dit au panneau, noté dans le marqueur. */
  const demande=nom=>new Set(args?.ids?.[nom]||[]),compte=(nom,liste)=>{const d=demande(nom);return (liste||[]).filter(i=>d.has(i)).length;};
  const captureGardee=capt?{collection:capt.collection,nuages:compte('clouds',capt.clouds),evenements:compte('events',capt.events),visites:compte('records',capt.records)}:null;
@@ -1366,6 +1378,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
  if(retourCutEnCours&&PENDANT_RETOUR.has(action))throw Error('Retour à un cut en cours : attends son résultat, ou annule-le.');
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
+ if(action==='liste-instantanes'||action==='liste-resume')return listeAction(action,args);
  if(action==='fiches-depart'){const EC=cacheExport();return {fiches:EC?await EC.lireDeparts(chrome.storage.local):[]};}
  if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage(),refus=EC?EC.refus(c,{auto:args?.auto===true}):'module absent';
   /* Test 4 : ce que la capture ouverte retient (identifiants), pour que la confirmation le dise et ne le compte pas parmi ce qui sera supprimé. */
