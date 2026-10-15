@@ -38,7 +38,10 @@
  /* ---------- options ---------- */
  const q=new URLSearchParams(location.search),num=(k,d)=>{const v=Number(q.get(k));return q.has(k)&&Number.isFinite(v)?v:d;};
  const options={cuts:num('cuts',12),debut:num('debut',100),part:num('part',23),cut:num('cut',NaN),latence:num('latence',40),lots:num('lots',4),
-   latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10,source:q.get('source')||'synthetique'};
+   latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10,source:q.get('source')||'synthetique',valides:num('valides',0)};
+ /* ESV parle à son serveur en XMLHttpRequest (c'est ce que l'observateur d'Ariane enveloppe) : la maquette aussi. */
+ const xhr=(methode,url,corps)=>new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open(methode,url,true);if(corps!==undefined)x.setRequestHeader('content-type','application/json');
+   x.onload=()=>res({status:x.status,texte:x.responseText});x.onerror=()=>rej(Error('réseau'));x.send(corps===undefined?null:JSON.stringify(corps));});
  const $=id=>document.getElementById(id);
  const journal=[],log=(type,detail={})=>{const e={at:new Date().toISOString(),type,...detail};journal.push(e);
    const el=$('journal');if(el){el.textContent=journal.slice(-40).map(x=>`${x.at.slice(11,23)} ${x.type} ${JSON.stringify({...x,at:undefined,type:undefined})}`).join('\n');el.scrollTop=el.scrollHeight;}};
@@ -96,15 +99,17 @@
    drawRange:{start:0,count:Infinity},boundingBox:{min:{x:min[0],y:min[1],z:min[2]},max:{x:max[0],y:max[1],z:max[2]}}};
   return {sceneNode:p,geometryNode:{boundingBox:{min:{x:min[0]+c.origine[0],y:min[1]+c.origine[1],z:min[2]+c.origine[2]},max:{x:max[0]+c.origine[0],y:max[1]+c.origine[1],z:max[2]+c.origine[2]}}}};}
  /* ---------- compteur « N on M treated » et « M cuts » ---------- */
- const traites=()=>etat.partie.cuts.filter(c=>c.status!=='invalid').length; /* hypothèse : traité = validé ou passé */
- function majCompteur(){$('maquette-compteur').textContent=`${traites()} on ${etat.partie.cuts.length} treated`;$('maquette-total').textContent=`${etat.partie.cuts.length} cuts`;
+ /* Compteur tenu sur la LISTE de la partie (une ligne par indice, cut N = ligne N) ; hypothèse : traité = validé ou passé. */
+ const liste=()=>etat.listes.get(etat.partie.part)||[];
+ const traites=()=>liste().filter(l=>l.ExtractionStatus!=='invalid').length;
+ function majCompteur(){$('maquette-compteur').textContent=`${traites()} on ${liste().length} treated`;$('maquette-total').textContent=`${liste().length} cuts`;
   $('O2N3DCutNextInvalid3DRail').disabled=prochain('invalid')<0;}
  const prochain=(critere,depuis=etat.index)=>{for(let i=depuis+1;i<etat.partie.cuts.length;i++){const s=etat.partie.cuts[i].status;if(critere==='invalid'?s==='invalid':s!=='valid')return i;}return -1;};
  /* ---------- écritures vers le « serveur » ---------- */
- async function ecrire(status){const c=cutCourant();c.status=status;majCompteur();const L=pt(rails.left.matrixWorld.elements,[0,0,0]),R=pt(rails.right.matrixWorld.elements,[0,0,0]);
+ async function ecrire(status){const c=cutCourant();c.status=status;const ligne=liste()[c.cut];const L=pt(rails.left.matrixWorld.elements,[0,0,0]),R=pt(rails.right.matrixWorld.elements,[0,0,0]);
   const body={RowKey:`${etat.partie.part}-${c.cut}`,ExtractionStatus:status,TreatedByOperator:true,SeenByOperator:true,XLeftEdge:L[0],YLeftEdge:L[1],ZLeftEdge:L[2],XRightEdge:R[0],YRightEdge:R[1],ZRightEdge:R[2]};
-  etat.ecritures++;log('ecriture',{cut:c.cut,status});
-  try{const r=await fetch(`/rails/${etat.partie.table}/${body.RowKey}`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(body)});log('ecriture-reponse',{cut:c.cut,http:r.status});}
+  if(ligne)Object.assign(ligne,body);majCompteur();etat.ecritures++;log('ecriture',{cut:c.cut,status});
+  try{const r=await xhr('PUT',`/rails/${etat.partie.table}/${body.RowKey}`,body);log('ecriture-reponse',{cut:c.cut,http:r.status});}
   catch(e){log('ecriture-echec',{cut:c.cut,message:e.message});}}
  /* ---------- actions (équivalents de ce qu'Ariane observe dans ESV) ---------- */
  function choisirRail(side){etat.side=side;$('O2N3DCutLRClick').classList.toggle('active',side==='left');$('O2N3DCutRRClick').classList.toggle('active',side==='right');
@@ -152,14 +157,14 @@
  async function demarrer(){
   const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}`);
   if(!r0.ok)throw Error((await r0.json().catch(()=>({}))).error||('scénario : HTTP '+r0.status));const s=await r0.json();etat.scenario=s;
-  for(const p of s.parties){const lignes=[];for(let page=1;;page++){const r=await (await fetch(`/rails/${p.table}?page=${page}`)).json();lignes.push(...r.value);if(r.value.length<r.pageSize)break;}
-   etat.listes.set(p.part,lignes);for(const l of lignes){const c=p.cuts.find(x=>x.cut===l.CutNumber);if(c)c.status=l.ExtractionStatus;}}
+  for(const p of s.parties){const lignes=[];let url=`/rails/${p.table}`;for(;;){const r=JSON.parse((await xhr('GET',url)).texte);lignes.push(...r.value);if(!r.suite)break;url=`/rails/${p.table}?npk=${encodeURIComponent(r.suite.npk)}&nrk=${r.suite.nrk}`;}
+   etat.listes.set(p.part,lignes);for(const c of p.cuts){const l=lignes[c.cut];if(l&&l.ExtractionStatus)c.status=l.ExtractionStatus;}}
   etat.partie=s.parties[0];
   let index=Number.isFinite(options.cut)?etat.partie.cuts.findIndex(c=>c.cut===options.cut):-1;
   if(index<0){index=etat.partie.cuts.findIndex(c=>c.status==='invalid');if(index<0)index=0;}
   projection();chargerCut(index,'demarrage');return true;}
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
-   compteur:$('maquette-compteur').textContent,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
+   compteur:$('maquette-compteur').textContent,traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
    statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),
    reference:c?.reference?.monde||null,provenance:etat.scenario?.provenance||null,cuts:etat.partie?.cuts.map(x=>x.cut)||[]};},
   allerA:cut=>{const i=etat.partie.cuts.findIndex(c=>c.cut===cut);return i>=0?allerA(i,'maquette.allerA'):false;},scenario:()=>etat.scenario,pret:null};

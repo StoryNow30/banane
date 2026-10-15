@@ -120,6 +120,20 @@ Observation à vérifier par l'orchestrateur : sur le lot de 10 cuts, la vue du 
 
 **Rejeu d'un vrai lot (option B, faite le 15 octobre à la demande de Mic).** `tests/esv-maquette/lecteur-export.cjs` lit les exports d'Ariane tels que le code source les écrit : bilan Orbite avec nuages (`banane-test-dataset-v4` + captures `banane-lidar-capture-v1`), corpus GCV1, session Écho (`banane-native-session-v2`, ou segments compacts relus par `tools/merge-segments.cjs` : visites et blocs par rail). Il rend une partie rejouable avec la découpe réelle de chaque capture, la pose de départ d'ESV et une référence par cut (pose corrigée par Ariane en Orbite, **pose finale humaine** en Écho). `node tools/banc-esv.cjs --export EXPORT` joue le lot sur toute la partie et donne l'écart de chaque pose à la référence en mm. **Mesuré : un lot joué, exporté en bilan, rejoué depuis ce bilan rend les mêmes poses à 0,0 mm.** Un export Écho de terrain reste à rejouer une première fois (formats suivis depuis le code, essai sur session synthétique). Les données d'export ne vont jamais dans le dépôt.
 
+**Premiers tests (15 octobre, demande de Mic) : la 4.9.0.15 (test 15, branche `claude/ux-variantes`) sur le banc.**
+
+| Essai | 4.8.6 (dépôt) | 4.9.0.15 (test 15) |
+|---|---|---|
+| Lot synthétique de 10 cuts (mêmes cuts, latence factice 40 ms) | 5 posés et validés, 3 différés, 45 s ; 6,3 à 6,8 s par cut posé | **7 posés et validés, 1 différé**, 41 s ; 5,0 à 6,0 s par cut posé ; fin de lot : « navigation observée, état final non relu » sur le dernier cut |
+| Rejeu du bilan (3 cuts, référence = poses d'Ariane 4.8.6) | 0,0 mm d'écart sur les 2 cuts posés | 0,0 mm d'écart sur les 2 cuts posés |
+| Observateur passif 4.9 | sans objet | liste de la partie vue (112 lignes, une par indice), 7 écritures vues avec `rowIndex` = cut ; aucune perte |
+| B1 en ombre | sans objet | repère **calibré** sur la première écriture, appariement indice = géométrie à 0 mm, voisins trouvés sur chaque cut (candidats, gardes, règle consignés) |
+| Erreurs | 0 | 0 |
+
+Ce que cela dit : le même lot, les deux versions, les mêmes données, sans ESV ; la 4.9 résout deux cuts de plus que la 4.8.6 (cause non instruite ici : moteur V5 ou garde d'écartement 1420). Ce que cela ne dit pas : la vitesse réelle (latence factice).
+
+**Pour l'apprentissage (demande de Mic).** `tools/jeu-apprentissage.cjs` rend, hors ligne, un jeu `banane-apprentissage-v1` depuis n'importe quel export : pose de départ, référence (humaine en Écho), écart en repère profil, points par rail, voisins, interpolation D-098 et son écart, écart de la pose rejouée par Ariane. Les cuts d'un même repère de scène sont placés dans un repère commun ; avec un export 4.9 (écritures observées), le monde de la maquette devient le monde réel (T mesurée comme B1). `--valides K` sert des voisins déjà validés à leur pose de référence, pour éprouver B1 et l'interpolation sur le banc.
+
 Suites possibles, par ordre d'utilité : (1) rejouer le code 4.9 (branches `claude/49-test-*`, test 15) sur ce banc : `node tools/banc-esv.cjs --extension DOSSIER_DU_PAQUET` ; (2) premier rejeu d'un export de terrain de Mic (parties 17, 18 ou 23) : `--export`, puis comparer deux versions d'Ariane sur le même lot avec la référence humaine ; (3) erreurs d'ESV par réglage (écriture refusée, nuage jamais chargé) ; (4) exposer la référence humaine au futur apprentissage (GCV2) directement depuis le scénario rejoué.
 
 ## 9. Solution pour le banc B privé (code ESV + Potree) : procédure prête, une action de Mic

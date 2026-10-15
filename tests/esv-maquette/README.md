@@ -33,7 +33,13 @@ node tests/esv-maquette/serveur.cjs 8124 --export EXPORT              # à la ma
 node tools/banc-esv.cjs --export EXPORT [--part N] [--cuts K] [--extension DOSSIER]   # lot Orbite sur toute la partie, écart de chaque pose à la référence (mm)
 ```
 
-Fidélité mesurée : un lot joué sur la maquette, exporté en bilan avec ses nuages, puis rejoué depuis ce bilan, rend **les mêmes poses à 0,0 mm** (`extension.test.cjs`, aller-retour). Les cuts sans nuage ou sans pose de départ sont listés dans `provenance.exclus`, jamais inventés. Un export Écho de terrain n'a pas encore été rejoué (les formats sont ceux du code source ; l'essai `lecteur-export.test.cjs` les couvre sur une session synthétique) : le premier rejeu réel dira ce qui manque.
+Placement : tous les cuts d'un même repère de scène (`frameId`, une page d'ESV) partagent une origine, comme dans Ariane (mesuré : cut 105 à 2 m du cut 103 dans le même repère). Si l'export porte des écritures observées (4.9, `esv-observation` kind `write`), T = monde − scène est mesurée comme le fait B1 et le monde de la maquette est le **monde réel** (`monde: reel`) ; sinon une origine factice par repère (`monde: factice`). `--valides K` sert un cut rejouable sur K déjà validé à sa pose de référence : appui pour B1, sauté par le lot.
+
+Fidélité mesurée : un lot joué sur la maquette, exporté en bilan avec ses nuages, puis rejoué depuis ce bilan, rend **les mêmes poses à 0,0 mm** (`extension.test.cjs`, aller-retour), avec la 4.8.6 comme avec la 4.9.0.15.
+
+## Jeu d'apprentissage
+
+`node tools/jeu-apprentissage.cjs EXPORT [EXPORT…] [--rejeu RAPPORT.json] [--fenetre 3] [--points] [--sortie JEU.json]` (hors ligne, sans navigateur) rend `banane-apprentissage-v1` : par cut, repère, pose de départ d'ESV, référence (humaine en Écho, Ariane en Orbite), écart départ → référence en mm et en repère profil (le long de la voie, en travers, vertical), points par rail, voisins à référence dans la fenêtre, prédiction par interpolation entre les deux voisins les plus proches (D-098 à D-100) et son écart, et l'écart de la pose rejouée par Ariane si un rapport `--json` du banc est donné ; `--points` ajoute les points en scène. Résumé : médiane, P90, max par rail. Les cuts sans nuage ou sans pose de départ sont listés dans `provenance.exclus`, jamais inventés. Un export Écho de terrain n'a pas encore été rejoué (les formats sont ceux du code source ; l'essai `lecteur-export.test.cjs` les couvre sur une session synthétique) : le premier rejeu réel dira ce qui manque.
 
 ## Ce que la maquette reproduit, et avec quelle certitude
 
@@ -45,13 +51,13 @@ Fidélité mesurée : un lot joué sur la maquette, exporté en bilan avec ses n
 | `#O2N3DCutNextInvalid3DRail` et `Maj+Z` : cut invalide suivant, sans décision | oui | **connu** (KI-024) |
 | `Maj+Retour` : passer (SKIP) ; `Ctrl+Entrée` : valider sans suivant ; `Maj+Espace` : valider | oui | **supposé** (dits par Mic, non lus dans ESV) |
 | `D` : cut suivant (« cut de droite ») | oui | **supposé** (FICHE_U3) |
-| Compteur « N on M treated », texte « M cuts » | oui, un seul élément | format **connu** ; élément exact, moment de mise à jour, « traité = validé ou passé » : **hypothèses** |
+| Compteur « N on M treated », texte « M cuts » | oui, un seul élément, tenu sur la liste de la partie | format **connu** ; élément exact, moment de mise à jour, « traité = validé ou passé » : **hypothèses** |
 | Rails : `Object3D` + `Mesh` + profil `Object3D` + `Line` (contour du corpus, 3 lignes) ; gauche/droite par le signe du y moyen du contour | oui, poses du corpus | **connu** |
 | Rails absents pendant `latenceRails` après le libellé | oui | **supposé** (Ariane attend ce cas) |
 | Potree : `pointclouds[0].visibleNodes[].sceneNode` (Points, `matrixWorld`, `geometry.attributes.position/intensity/classification`, `drawRange`), `material.clipBoxes[].inverse`, `clipTask` SHOW_INSIDE, `Potree.ClipTask/ClipMethod`, `Potree.numNodesLoading` | oui ; les 16 nœuds de chaque capture du corpus, par lots avec latence | forme **connue** (lecteur gelé) ; latence, lots, LOD : **factices** |
 | Clic dans la vue : pose du rail courant au point rayon ∩ plan de coupe, pixel entier, sans contrôle « dans la vue » | oui | **connu** (D-088 P1, 4.8.0) ; plan de coupe = plan du rail perpendiculaire à la vue : **supposé** |
 | Caméra orthographique (échelle 5 = 0,4 unité de scène de large, comme au corpus) | oui | **connu** (corpus) ; position exacte et hauteur : **supposées** |
-| Liste des coupes `GET /rails/<table>?page=N` (1 000 lignes, champs de `fiches/FICHE_B1.md`), écriture `PUT /rails/<table>/<RowKey>` → 204 | oui, chemins **relatifs** et table factice | forme **connue** ; chemin exact, en-têtes, corps exact : **inconnus** (jamais recopiés) |
+| Liste des coupes `GET /rails/<table>` paginée par `?npk=…&nrk=…` (1 000 lignes, champs de `fiches/FICHE_B1.md`, **une ligne par indice, cut N = ligne N**), écriture `PUT /rails/<table>/<RowKey>` → 204, les deux en **XMLHttpRequest** | oui, chemins **relatifs** et table factice ; vus par l'observateur passif 4.9 (liste, écritures avec `rowIndex` = cut) ; B1 y calibre son repère et apparie ses lignes | forme **connue** (code de l'observateur) ; corps exact de la réponse, en-têtes : **inconnus** (jamais recopiés) |
 | Boutons précédent/suivant (`#maquette-cut-precedent`, `#maquette-cut-suivant`), événement `maquette:goto` | oui | **hypothèses** de la maquette (identifiants inventés, marqués) |
 | Erreurs d'ESV (écriture refusée, nuage jamais chargé, changement de partie imprévu) | non (à ajouter par réglage) | **inconnu** sur le terrain |
 

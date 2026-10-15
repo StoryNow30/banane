@@ -13,7 +13,7 @@
  *
  *   node tools/banc-esv.cjs [--cuts 3] [--debut 100] [--decalage 0] [--latence 40] [--extension DOSSIER] [--json SORTIE.json] [--dataset BILAN.json] [--entete]
  *   --dataset : écrit aussi le bilan du lot avec ses nuages (format `banane-test-dataset-v4` + `clouds`, comme « Télécharger le bilan et les LiDAR »)
- *   --export FICHIER_OU_DOSSIER [--part N] : REJEU d'un vrai export (Orbite ou Écho, tests/esv-maquette/lecteur-export.cjs) ;
+ *   --export FICHIER_OU_DOSSIER [--part N] [--valides K] : REJEU (--valides K : un cut sur K déjà validé à sa pose de référence, appui pour B1) d'un vrai export (Orbite ou Écho, tests/esv-maquette/lecteur-export.cjs) ;
  *     le lot couvre toute la partie (ou --cuts à partir de --decalage) ; le rapport donne l'écart de chaque pose d'Ariane à la référence de l'export (mm)
  *
  * Nécessite Playwright et Chromium (PLAYWRIGHT_BROWSERS_PATH ou CHROMIUM). Hors du banc `verify`.
@@ -21,9 +21,9 @@
 const path=require('node:path'),fs=require('node:fs');
 const N=require('../tests/esv-maquette/navigateur.cjs');
 const racine=N.racine;
-function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,entete:false,delai:120000};
+function args(argv){const o={cuts:3,debut:100,decalage:0,latence:40,extension:racine,json:null,dataset:null,export:null,part:null,valides:0,entete:false,delai:120000};
   for(let i=0;i<argv.length;i++){const a=argv[i];if(a==='--entete')o.entete=true;else if(a.startsWith('--')){o[a.slice(2)]=argv[++i];}}
-  for(const k of ['cuts','debut','decalage','latence','delai'])o[k]=Number(o[k]);if(o.part!==null)o.part=Number(o.part);o.extension=path.resolve(o.extension);if(o.export)o.export=path.resolve(o.export);return o;}
+  for(const k of ['cuts','debut','decalage','latence','delai','valides'])o[k]=Number(o[k]);if(o.part!==null)o.part=Number(o.part);o.extension=path.resolve(o.extension);if(o.export)o.export=path.resolve(o.export);return o;}
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
 async function banc(options={}){
   const o={...args([]),...options},pw=N.playwright();if(!pw)throw Error('Playwright introuvable.');
@@ -43,7 +43,7 @@ async function banc(options={}){
     const sw=ctx.serviceWorkers()[0];if(!sw)throw Error('Service worker de l’extension absent : extension non chargée.');
     const id=sw.url().split('/')[2];sw.on('console',m=>{if(m.type()==='error')erreurs.push('sw: '+m.text());});
     const esv=await ctx.newPage();esv.on('pageerror',e=>erreurs.push('esv: '+e.message));esv.on('console',m=>{if(m.type()==='error')erreurs.push('esv console: '+m.text());});
-    const requete=o.export?`source=export${o.part!==null?'&part='+o.part:''}&latence=${o.latence}`:`cuts=${o.cuts+o.decalage+2}&debut=${o.debut}&cut=${o.debut+o.decalage}&latence=${o.latence}`;
+    const requete=o.export?`source=export${o.part!==null?'&part='+o.part:''}${o.valides?'&valides='+o.valides:''}&latence=${o.latence}`:`cuts=${o.cuts+o.decalage+2}&debut=${o.debut}&cut=${o.debut+o.decalage}&latence=${o.latence}`;
     await esv.goto(`${origine}${prefixe}maquette?${requete}`);
     await esv.evaluate(()=>window.__maquette.pret);await esv.waitForFunction(()=>window.__maquette.etat().railsPrets);
     /* Rejeu : bornes du lot = les cuts de la partie rejouée (tous, ou --cuts à partir de --decalage), ouverts sur le premier. */

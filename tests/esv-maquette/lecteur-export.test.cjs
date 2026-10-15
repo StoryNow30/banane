@@ -57,3 +57,15 @@ test('rejeu Écho dans la maquette : la capture du vrai adaptateur rend les poin
     assert.deepEqual(erreurs,[]);
   }finally{await navigateur.close();await serveur.fermer();}
 });
+test('jeu d’apprentissage : écarts départ → référence, interpolation entre voisins, repère profil',()=>{
+  const J=require('../../tools/jeu-apprentissage.cjs');
+  const jeu=J.construire({exports:[fichierEcho],rejeu:null,fenetre:3,points:false,sortie:null});
+  assert.equal(jeu.format,'banane-apprentissage-v1');assert.equal(jeu.resume.cuts,4);assert.equal(jeu.resume.avecReference,3,'trois visites validées, une passée');
+  const cuts=jeu.parties[0].cuts;const c=cuts.find(x=>x.reference);
+  assert.ok(Math.abs(c.ecartDepartMm.left-7)<=.2&&Math.abs(c.ecartDepartMm.right-7)<=.2,'référence à 7 mm du départ : '+JSON.stringify(c.ecartDepartMm));
+  assert.ok(Math.abs(c.deltaLocalMm.left[1]-7)<=.2&&Math.abs(c.deltaLocalMm.left[0])<=.2&&Math.abs(c.deltaLocalMm.left[2])<=.2,'7 mm en travers, rien le long ni en vertical : '+JSON.stringify(c.deltaLocalMm));
+  assert.ok(c.points.left>100&&c.points.right>100,'points par rail : '+JSON.stringify(c.points));
+  /* Cuts du corpus : 2855…2860 ; le 2856 (intent SKIP) est entre 2855 et 2857, tous deux à référence : interpolation possible pour un voisin interne. */
+  const interpoles=cuts.filter(x=>x.interpolation);assert.ok(interpoles.length>=1,'au moins un cut interpolé entre deux voisins à référence');
+  for(const x of interpoles)assert.ok(x.voisins.avant!==null&&x.voisins.apres!==null);
+});

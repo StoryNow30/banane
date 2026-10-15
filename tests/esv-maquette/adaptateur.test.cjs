@@ -29,7 +29,7 @@ test('capture : mêmes points que la capture d’origine (fenêtres par rail), r
   assert.equal(d.readStrategy.attempts.filter(a=>a.status==='captured').length,2,'une lecture réussie par rail');
   assert.ok(Object.keys(d.attributes).includes('intensity'),'intensité lue');
   const releves=await env.messages('banane3:releve');assert.equal(releves.length,1,'un relevé passif après la capture');
-  const traites=(await env.etat()).statuts.replace(/i/g,'').length;assert.deepEqual(releves[0].releve.compteur,{traites,total:8});assert.equal(releves[0].releve.objetsRail,2);assert.equal(releves[0].releve.cutsAffiches,8);
+  const e=await env.etat();assert.deepEqual(releves[0].releve.compteur,{traites:e.traites,total:e.total});assert.equal(e.total,108,'une ligne par indice, cut N = ligne N');assert.equal(releves[0].releve.objetsRail,2);assert.equal(releves[0].releve.cutsAffiches,108);
   console.log(`# capture : ${Date.now()-debut} ms (${d.readStrategy.attempts.map(a=>a.durationMs+' ms').join(', ')})`);
 });
 test('pose (apply) par clics dans la vue, à 1 mm, puis restauration',opts,async()=>{
@@ -55,7 +55,7 @@ test('valider et suivant : écriture 204 « valid », compteur N → N+1, cut no
   const r=await env.appel('validateAndNext',[s.identity,{part:23,end:107}]);assert.equal(r.error,undefined,r.error);
   const e=r.result;assert.equal(e.commandSent,true);assert.equal(e.navigationObserved,true);assert.equal(e.nextIdentity.cut,102);assert.equal(e.navigationSemantics,'VALIDATE_NEXT_NON_VALIDATED_CUT');
   const ecritures=env.serveur.journal.ecritures;assert.equal(ecritures.length,1);assert.equal(ecritures[0].body.ExtractionStatus,'valid');assert.equal(ecritures[0].status,204);
-  const traites=(await env.etat()).statuts.replace(/i/g,'').length;assert.equal((await env.etat()).compteur,`${traites} on 8 treated`);assert.equal(traites,3);
+  const m=await env.etat();assert.equal(m.compteur,`${m.traites} on 108 treated`);assert.equal(m.traites,103,'100 lignes de remplissage + 2 cuts non invalides + 1 validé');
 });
 test('passer (SKIP, Maj+Retour) : écriture « skipped », puis invalide suivant',opts,async()=>{
   const s=(await env.appel('state')).result;assert.equal(s.identity.cut,102);

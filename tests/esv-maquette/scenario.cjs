@@ -81,13 +81,19 @@ function construire(options={}){
     camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,.6]},
     parties:[partie(part,debut,nb,0),partie(part+1,1,partie2,nb)]};
 }
-/* Lignes de la liste des coupes (forme de fiches/FICHE_B1.md, valeurs factices). */
+/* Lignes de la liste des coupes (forme de fiches/FICHE_B1.md, valeurs factices). La page d'ESV affiche
+ * « Cut N » pour la ligne d'indice N (lecture du code d'ESV, mission B ; B1 s'y fie) : la liste porte donc une
+ * ligne par indice de 0 au plus grand cut, et les indices sans cut rejouable sont des lignes « skipped » sans bords. */
 function lignes(partie){
-  return partie.cuts.map((c,i)=>{const L=c.rails.left.position,R=c.rails.right.position;
-    return {RowKey:`${partie.part}-${c.cut}`,PK:partie.table,CutNumber:c.cut,ExtractionStatus:c.status,
+  const parCut=new Map(partie.cuts.map(c=>[c.cut,c])),max=Math.max(-1,...partie.cuts.map(c=>c.cut)),out=[];
+  for(let i=0;i<=max;i++){const c=parCut.get(i);
+    if(!c){out.push({RowKey:`${partie.part}-${i}`,PK:partie.table,CutNumber:i,ExtractionStatus:'skipped',TreatedByOperator:true,SeenByOperator:true,Index:i});continue;}
+    const L=c.rails.left.position,R=c.rails.right.position;
+    out.push({RowKey:`${partie.part}-${i}`,PK:partie.table,CutNumber:i,ExtractionStatus:c.status,
       TreatedByOperator:c.status!=='invalid',SeenByOperator:c.status!=='invalid',SuccessLeft:c.status==='valid',SuccessRight:c.status==='valid',
       XLeftEdge:L[0],YLeftEdge:L[1],ZLeftEdge:L[2],XRightEdge:R[0],YRightEdge:R[1],ZRightEdge:R[2],
-      RailSpacing:arrondi(Math.hypot(...R.map((v,j)=>v-L[j])),4),TrajAzimuth:0,Index:i};});
+      RailSpacing:arrondi(Math.hypot(...R.map((v,j)=>v-L[j])),4),TrajAzimuth:0,Index:i});}
+  return out;
 }
 module.exports={construire,lignes,corpus,rail,noeuds,decoupe,decomposer,arrondi,ORIGINE_MONDE,PAS_M};
 if(require.main===module){const s=construire({cuts:Number(process.argv[2]||12)});

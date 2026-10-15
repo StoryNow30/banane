@@ -10,7 +10,7 @@
  * API (chemins relatifs à l'origine, comme ceux qu'Ariane observe) :
  *   GET  /maquette/scenario.json?cuts=12&debut=100&part=23   scénario synthétique (tests/esv-maquette/scenario.cjs)
  *   GET  /maquette/scenario.json?source=export[&part=N]      scénario rejoué depuis l'export chargé
- *   GET  /rails/<table>?page=N          page de 1 000 lignes de la liste des coupes (vide au-delà)
+ *   GET  /rails/<table>[?npk=<table>&nrk=<indice>]   liste des coupes par pages de 1 000 lignes chaînées (`suite:{npk,nrk}`, comme l'observe Ariane)
  *   PUT  /rails/<table>/<RowKey>        écriture de validation : corps JSON, réponse 204, journalisée
  *   GET  /maquette/journal              {ecritures:[…], requetes:[…]}
  *   POST /maquette/reset                vide le journal et les statuts modifiés
@@ -24,7 +24,7 @@ function demarrer(options={}){
   const journal={ecritures:[],requetes:[]};const scenarios=new Map();const statuts=new Map();
   const exportation=options.exportation||process.env.BANANE_MAQUETTE_EXPORT||null;
   const scenario=q=>{if(q.source==='export'){if(!exportation)throw Error('aucun export chargé (option --export ou BANANE_MAQUETTE_EXPORT)');
-      const cle='export|'+(q.part??'');if(!scenarios.has(cle))scenarios.set(cle,require('./lecteur-export.cjs').construire(exportation,{part:q.part!==undefined?Number(q.part):undefined}));return scenarios.get(cle);}
+      const cle='export|'+(q.part??'')+'|'+(q.valides??'');if(!scenarios.has(cle))scenarios.set(cle,require('./lecteur-export.cjs').construire(exportation,{part:q.part!==undefined?Number(q.part):undefined,valides:q.valides!==undefined?Number(q.valides):0}));return scenarios.get(cle);}
     const cle=JSON.stringify([q.cuts,q.debut,q.part,q.partie2]);if(!scenarios.has(cle))scenarios.set(cle,S.construire(q));return scenarios.get(cle);};
   const tables=()=>[...scenarios.values()].flatMap(s=>s.parties);
   const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(body));};
@@ -39,8 +39,9 @@ function demarrer(options={}){
       if(p==='/maquette/reset'){journal.ecritures.length=0;journal.requetes.length=0;statuts.clear();return json(res,200,{ok:true});}
       let m=/^\/rails\/([^/]+)$/.exec(p);
       if(m&&req.method==='GET'){const t=tables().find(x=>x.table===m[1]);if(!t)return json(res,404,{error:'table inconnue'});
-        const page=Math.max(1,Number(q.page||1)),lignes=S.lignes(t).map(l=>statuts.has(l.RowKey)?{...l,...statuts.get(l.RowKey)}:l);
-        return json(res,200,{value:lignes.slice((page-1)*PAGE,page*PAGE),page,pageSize:PAGE,total:lignes.length});}
+        const depuis=q.npk!==undefined?Math.max(0,Number(q.nrk)||0):0,lignes=S.lignes(t).map(l=>statuts.has(l.RowKey)?{...l,...statuts.get(l.RowKey)}:l);
+        const value=lignes.slice(depuis,depuis+PAGE),fin=depuis+PAGE;
+        return json(res,200,{value,suite:fin<lignes.length?{npk:t.table,nrk:fin}:null,total:lignes.length});}
       m=/^\/rails\/([^/]+)\/([^/]+)$/.exec(p);
       if(m&&req.method==='PUT'){let body=null;try{body=JSON.parse(Buffer.concat(corps).toString('utf8')||'null');}catch{body={illisible:true};}
         journal.ecritures.push({table:m[1],rowKey:m[2],body,status:204,at:new Date().toISOString()});

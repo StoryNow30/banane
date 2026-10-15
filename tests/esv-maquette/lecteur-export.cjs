@@ -13,7 +13,7 @@
  *     visibles par la découpe) ; pose de départ = pose au moment de la lecture ;
  *     référence = pose finale humaine (`humanFinalReference.state`), intention VALIDATE / SKIP.
  *
- *   node tests/esv-maquette/lecteur-export.cjs FICHIER_OU_DOSSIER [--part N]
+ *   node tests/esv-maquette/lecteur-export.cjs FICHIER_OU_DOSSIER [--part N] [--valides K]
  *
  * Sortie : le même format que scenario.cjs (`banane-esv-maquette-scenario-v1`),
  * plus `provenance` et, par cut, `reference` (pose humaine ou d'Ariane, en scène)
@@ -40,6 +40,18 @@ function fusionner(docs){const out={formats:[],records:[],events:[],clouds:[],st
     if(d.state)out.state=d.state;if(d.session)out.session=d.session;}
   return out;}
 const identite=r=>r.identity||r.before?.identity||(Number.isInteger(r.cut)?{part:r.part,cut:r.cut}:null);
+const EDGES=['XLeftEdge','YLeftEdge','ZLeftEdge','XRightEdge','YRightEdge','ZRightEdge'];
+/* T (monde − scène) par repère de scène, mesurée comme B1 (src/appuis-liste.js, 4.9) : corps d'une écriture
+ * observée (monde, `esv-observation` kind `write`, `rowIndex` = cut) moins la pose corrigée du même cut (scène). */
+function translationsParRepere(doc){const out=new Map();
+  const ecrits=doc.events.filter(e=>e.type==='esv-observation'&&e.kind==='write'&&e.body&&EDGES.every(k=>Number.isFinite(e.body[k]))&&Number.isInteger(e.rowIndex));
+  for(const e of ecrits){const r=doc.records.find(r=>identite(r)?.cut===e.rowIndex&&r.rails?.left?.corrected?.positionSceneRelative&&r.rails?.right?.corrected?.positionSceneRelative);
+    if(!r)continue;const frame=identite(r).frameId||r.coordinateBridge?.sceneFrameId||'?';
+    const dl=[0,1,2].map(i=>e.body[EDGES[i]]-r.rails.left.corrected.positionSceneRelative[i]),dr=[0,1,2].map(i=>e.body[EDGES[3+i]]-r.rails.right.corrected.positionSceneRelative[i]);
+    const rigideMm=Math.hypot(...dl.map((v,i)=>v-dr[i]))*1000;if(rigideMm>2)continue;
+    const T=[0,1,2].map(i=>(dl[i]+dr[i])/2),m=out.get(frame);if(!m)out.set(frame,{T,mesures:1,ecartMaxMm:0});
+    else{m.ecartMaxMm=Math.max(m.ecartMaxMm,Math.hypot(...T.map((v,i)=>v-m.T[i]))*1000);m.mesures++;}}
+  return out;}
 const poseRail=(r,side)=>r.rails?.[side]?.initial||r.before?.rails?.[side]||r.initialObserved?.rails?.[side]||null;
 const reference=(r,side)=>r.rails?.[side]?.corrected||null;
 /* ---------- Orbite ---------- */
@@ -54,11 +66,11 @@ function cutsOrbite(doc){
       rails[s]={...p,profileContours:p.profileContours?.length?p.profileContours:capture.rails?.[s]?.profileContours||[]};}
     if(!rails.left||!rails.right)continue;
     const ref={};for(const s of ['left','right']){const c=reference(r,s);if(c)ref[s]=c.positionSceneRelative;}
-    parCut.set(cle,{part:id.part,cut:id.cut,capture:{...capture,rails},status:'invalid',reference:Object.keys(ref).length===2?{source:'ariane',positions:ref}:null,
+    parCut.set(cle,{part:id.part,cut:id.cut,frame:id.frameId||r.coordinateBridge?.sceneFrameId||capture.identity?.frameId||capture.coordinateBridge?.sceneFrameId||'?',capture:{...capture,rails},status:'invalid',reference:Object.keys(ref).length===2?{source:'ariane',positions:ref}:null,
       intent:r.decision||r.operatorDecision||(r.rails?'POSE':null),format:r.format});}
   /* Nuages sans enregistrement (dernier cut d'un lot, par exemple) : rejouables avec la pose de la capture. */
   for(const c of captures.values()){const id=identite(c);if(!id||!Number.isInteger(id.cut))continue;const cle=`${id.part}|${id.cut}`;if(parCut.has(cle))continue;
-    parCut.set(cle,{part:id.part,cut:id.cut,capture:c,status:'invalid',reference:null,intent:null,format:c.format});}
+    parCut.set(cle,{part:id.part,cut:id.cut,frame:id.frameId||c.coordinateBridge?.sceneFrameId||'?',capture:c,status:'invalid',reference:null,intent:null,format:c.format});}
   return {cuts:[...parCut.values()],exclus};
 }
 /* ---------- Écho ---------- */
@@ -83,26 +95,40 @@ function cutsEcho(doc){
     /* Capture au format de scenario.cjs : un nœud par bloc, points des fenêtres visibles par la découpe. */
     const capture={captureId,part:id.part,cut:id.cut,shape:id.shape||'U50',rails,clouds:captures.get(captureId)?.clouds||[],
       nodes:noeuds.map(n=>({id:n.id})),pointsSceneRelative:noeuds.flatMap(n=>n.points),pointSources:noeuds.flatMap((n,ni)=>n.points.map((_,k)=>[ni,k])),attributes:{}};
-    parCut.set(cle,{part:id.part,cut:id.cut,capture,status:'invalid',reference:ref,intent:v.operatorIntent||null,format:v.format});}
+    parCut.set(cle,{part:id.part,cut:id.cut,frame:id.frameId||'?',capture,status:'invalid',reference:ref,intent:v.operatorIntent||null,format:v.format});}
   return {cuts:[...parCut.values()],exclus};
 }
 /* ---------- scénario ---------- */
+/* Placement : tous les cuts d'un même repère de scène (`frameId`, une page d'ESV) partagent une origine, car
+ * Ariane exprime leurs poses et leurs points dans ce repère commun (mesuré : cut 105 à 2 m du cut 103 dans le
+ * même repère). Origine = T réelle (monde = scène + T) si une écriture observée la donne (export 4.9),
+ * sinon une origine factice par repère, décalée pour que deux pages ne se superposent pas. */
 function construire(entree,options={}){
   const doc=charger(entree);const echo=doc.records.some(r=>r.format==='banane-native-visit-v2');
   const {cuts,exclus}=echo?cutsEcho(doc):cutsOrbite(doc);
   const parts=[...new Set(cuts.map(c=>c.part))].sort((a,b)=>a-b).filter(p=>!Number.isInteger(options.part)||p===options.part);
   if(!parts.length)throw Error('Aucun cut rejouable dans '+entree+(exclus.length?` (${exclus.length} exclus : ${exclus[0].raison})`:''));
-  const premier=cuts.find(c=>c.part===parts[0]).capture,direction=premier.rails.left.railLocalToSceneRelative.slice(0,3);
-  let k=0;const parties=parts.map(part=>{const liste=cuts.filter(c=>c.part===part).sort((a,b)=>a.cut-b.cut);
-    return {part,table:`maquette-${part}`,cuts:liste.map((c,i)=>{const origine=S.ORIGINE_MONDE.map((v,j)=>S.arrondi(v+direction[j]*S.PAS_M*(k++),6));
-      const gauche=c.capture.rails.left.positionSceneRelative||[0,0,0];
-      return {cut:c.cut,index:i,status:c.status,origine,source:`${c.format}:${c.capture.captureId}`,shape:c.capture.shape||'U50',
-        rails:{left:S.rail(c.capture,'left',origine),right:S.rail(c.capture,'right',origine)},noeuds:S.noeuds(c.capture),decoupe:S.decoupe(c.capture),
+  const Ts=translationsParRepere(doc),reperes=new Map();let nFactice=0;
+  const origineDe=frame=>{if(!reperes.has(frame)){const t=Ts.get(frame);
+    reperes.set(frame,t?{origine:t.T.map(v=>S.arrondi(v,6)),monde:'reel',mesures:t.mesures,ecartMaxMm:S.arrondi(t.ecartMaxMm,1)}:{origine:S.ORIGINE_MONDE.map((v,j)=>v+(j===0?100*nFactice++:0)),monde:'factice'});}
+    return reperes.get(frame);};
+  const valides=Number(options.valides)||0;let rang=0;
+  const parties=parts.map(part=>{const liste=cuts.filter(c=>c.part===part).sort((a,b)=>a.cut-b.cut);
+    return {part,table:`maquette-${part}`,cuts:liste.map((c,i)=>{const rep=origineDe(c.frame),origine=rep.origine;
+      /* --valides K : un cut rejouable sur K, s'il a une référence, est servi déjà validé À la pose de référence (appui pour B1, sauté par le lot). */
+      const preValide=valides>0&&c.reference&&(++rang)%valides===0;
+      const capture=preValide?{...c.capture,rails:Object.fromEntries(['left','right'].map(s=>{const r=c.capture.rails[s],d=c.reference.positions[s].map((v,j)=>v-r.positionSceneRelative[j]);
+        const tr=C.translation(d);return [s,{...r,railLocalToSceneRelative:C.multiply(tr,r.railLocalToSceneRelative),profileLocalToSceneRelative:C.multiply(tr,r.profileLocalToSceneRelative),
+          sceneRelativeToProfileLocal:C.inverse(C.multiply(tr,r.profileLocalToSceneRelative)),positionSceneRelative:c.reference.positions[s]}];}))}:c.capture;
+      return {cut:c.cut,index:i,status:preValide?'valid':c.status,preValide,origine,frame:c.frame,monde:rep.monde,source:`${c.format}:${c.capture.captureId}`,shape:c.capture.shape||'U50',
+        rails:{left:S.rail(capture,'left',origine),right:S.rail(capture,'right',origine)},noeuds:S.noeuds(c.capture),decoupe:S.decoupe(c.capture),
         reference:c.reference?{...c.reference,monde:{left:c.reference.positions.left.map((v,j)=>v+origine[j]),right:c.reference.positions.right.map((v,j)=>v+origine[j])}}:null,
-        intent:c.intent,origineSceneDansExport:gauche};})};});
-  return {format:'banane-esv-maquette-scenario-v1',monde:{origine:S.ORIGINE_MONDE,pas:S.PAS_M,direction},camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,1.2]},
-    provenance:{entree:path.basename(entree),formats:[...new Set(doc.formats)],nature:echo?'echo':'orbite',records:doc.records.length,nuages:doc.clouds.length,rejouables:cuts.length,exclus},parties};
+        intent:c.intent,origineSceneDansExport:c.capture.rails.left.positionSceneRelative||[0,0,0]};})};});
+  const direction=cuts.find(c=>c.part===parts[0]).capture.rails.left.railLocalToSceneRelative.slice(0,3);
+  return {format:'banane-esv-maquette-scenario-v1',monde:{origine:S.ORIGINE_MONDE,pas:S.PAS_M,direction,reperes:Object.fromEntries(reperes)},camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,1.2]},
+    provenance:{entree:path.basename(entree),formats:[...new Set(doc.formats)],nature:echo?'echo':'orbite',records:doc.records.length,nuages:doc.clouds.length,rejouables:cuts.length,
+      reperes:reperes.size,mondeReel:[...reperes.values()].filter(r=>r.monde==='reel').length,preValides:valides,exclus},parties};
 }
 module.exports={construire,charger,cutsOrbite,cutsEcho};
-if(require.main===module){const a=process.argv.slice(2),i=a.indexOf('--part');const s=construire(a[0],{part:i>=0?Number(a[i+1]):undefined});
-  console.log(JSON.stringify({provenance:s.provenance,parties:s.parties.map(p=>({part:p.part,cuts:p.cuts.map(c=>({cut:c.cut,noeuds:c.noeuds.length,points:c.noeuds.reduce((n,x)=>n+x.positions.length/3,0),decoupe:!!c.decoupe,reference:c.reference?.source||null,intent:c.intent}))}))},null,1));}
+if(require.main===module){const a=process.argv.slice(2),i=a.indexOf('--part'),v=a.indexOf('--valides');const s=construire(a[0],{part:i>=0?Number(a[i+1]):undefined,valides:v>=0?Number(a[v+1]):0});
+  console.log(JSON.stringify({provenance:s.provenance,parties:s.parties.map(p=>({part:p.part,cuts:p.cuts.map(c=>({cut:c.cut,status:c.status,monde:c.monde,noeuds:c.noeuds.length,points:c.noeuds.reduce((n,x)=>n+x.positions.length/3,0),decoupe:!!c.decoupe,reference:c.reference?.source||null,intent:c.intent}))}))},null,1));}
