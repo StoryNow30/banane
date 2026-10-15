@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Ariane · A ou B</title>
+<!-- A (la voie) et B (l'orbite), et un hybride, en situation : barre d'outils du
+     navigateur (16 px), page des extensions (48 px), tête du panneau, bouton
+     sur la page ESV, grande tuile. Données fictives, aucune marque reprise. -->
+<style>
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+body{margin:0;padding:40px 44px 48px;background:#0a100c;color:#f4f7f5;font:400 15px/1.4 "Hanken Grotesk",sans-serif}
+h1{margin:0;font-size:24px;font-weight:600}.s{margin:4px 0 28px;color:#a9b3ad}
+.g{display:grid;grid-template-columns:repeat(3,520px);gap:28px}
+.c{padding:24px;border-radius:22px;background:rgba(255,255,255,.04)}
+.c h2{margin:0 0 16px;font-size:18px;font-weight:600}.c h2 span{color:#34d27f;margin-right:8px}
+.lbl{margin:18px 0 8px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#86918a}
+.grand{display:flex;justify-content:center;padding:18px 0;border-radius:16px;background:radial-gradient(60% 70% at 50% 55%,rgba(52,210,127,.12),transparent 70%)}
+/* Barre d'outils du navigateur : icônes grises, la nôtre en 16 px. */
+.barre{display:flex;align-items:center;gap:6px;height:40px;padding:0 10px;border-radius:10px;background:#dfe3e8}
+.barre.sombre{background:#35363a}
+.barre .url{flex:1;height:26px;border-radius:13px;background:#fff;margin-right:8px;font:12px system-ui;color:#5f6368;display:flex;align-items:center;padding-left:12px}
+.barre.sombre .url{background:#202124;color:#9aa0a6}
+.barre i{display:inline-block;width:16px;height:16px;border-radius:4px;background:#9aa0a6;margin:0 4px}
+.barre .moi{display:flex;padding:4px;border-radius:6px}
+/* Carte de la page des extensions. */
+.carte{display:flex;gap:14px;padding:16px;border-radius:10px;background:#fff;color:#202124;font:13px system-ui}
+.carte b{display:block;font-size:14px;font-weight:600}.carte small{color:#5f6368}
+/* Tête du panneau. */
+.tete{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:14px;background:linear-gradient(180deg,#0a100c,#0f1f15)}
+.tete .t small{display:block;font-size:10px;font-weight:600;letter-spacing:.26em;color:#86918a}.tete .t b{font-size:26px;font-weight:600}
+/* Bouton blanc sur la page ESV. */
+.esv{display:flex;align-items:flex-end;justify-content:flex-end;height:70px;padding:12px;border-radius:10px;background:#4a5058}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 7px;border-radius:999px;background:#fff;color:#1f2328;font:500 12px system-ui;box-shadow:0 2px 8px rgba(15,23,42,.15)}
+</style></head><body>
+<h1>Ariane — A ou B, en situation</h1>
+<p class="s">Les mêmes emplacements pour chaque logo : barre du navigateur (16 px, taille réelle), page des extensions (48 px), tête du panneau, bouton sur la page ESV.</p>
+<div class="g" id="g"></div>
+<script>
+const tuile=(id,corps)=>`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="f${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b3a27"/><stop offset="1" stop-color="#0b1a11"/></linearGradient>
+<radialGradient id="h${id}" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="#34d27f" stop-opacity=".22"/><stop offset="1" stop-color="#34d27f" stop-opacity="0"/></radialGradient></defs>
+<rect width="64" height="64" rx="15" fill="url(#f${id})"/><rect width="64" height="64" rx="15" fill="url(#h${id})"/><rect x=".5" y=".5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity=".08"/>${corps}</svg>`;
+const P=[
+ {n:'A',titre:'La voie',corps:`<g fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"><path d="M14 52 L30 15 M50 52 L34 15"/></g>
+   <g stroke="#fff" stroke-linecap="round"><path d="M18.6 43.5 H45.4" stroke-width="3.2"/><path d="M23.3 33 H40.7" stroke-width="2.6" stroke-opacity=".75"/><path d="M26.8 25 H37.2" stroke-width="2" stroke-opacity=".5"/></g>
+   <circle cx="32" cy="12.5" r="4.4" fill="#34d27f"/>`},
+ {n:'B',titre:'L’orbite',corps:`<path d="M10.65 42.3 A22 7.5 -14 0 1 53.35 31.7" fill="none" stroke="#34d27f" stroke-width="3" stroke-opacity=".55"/>
+   <path d="M17 51 L32 13 L47 51" fill="none" stroke="#fff" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+   <path d="M53.35 31.7 A22 7.5 -14 0 1 10.65 42.3" fill="none" stroke="#34d27f" stroke-width="3.2"/>
+   <circle cx="52.3" cy="31.6" r="3.4" fill="#34d27f"/>`},
+ {n:'AB',titre:'Hybride : la voie en orbite',corps:`<path d="M9.5 41 A23 7.2 -12 0 1 54.5 31.4" fill="none" stroke="#34d27f" stroke-width="2.8" stroke-opacity=".5"/>
+   <g fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"><path d="M15 52 L30 16 M49 52 L34 16"/></g>
+   <path d="M54.5 31.4 A23 7.2 -12 0 1 9.5 41" fill="none" stroke="#34d27f" stroke-width="3"/>
+   <circle cx="32" cy="12.8" r="4.4" fill="#34d27f"/>`},
+];
+let k=0;const ic=(p,s)=>{k++;return tuile(p.n+k,p.corps).replace('<svg ',`<svg width="${s}" height="${s}" `);};
+document.getElementById('g').innerHTML=P.map(p=>`<div class="c"><h2><span>${p.n}</span>${p.titre}</h2>
+ <div class="grand">${ic(p,200)}</div>
+ <p class="lbl">Barre du navigateur · 16 px</p>
+ <div class="barre"><span class="url">esv · partie 34</span><i></i><i></i><span class="moi">${ic(p,16)}</span><i></i></div>
+ <div class="barre sombre" style="margin-top:8px"><span class="url">esv · partie 34</span><i></i><i></i><span class="moi">${ic(p,16)}</span><i></i></div>
+ <p class="lbl">Page des extensions · 48 px</p>
+ <div class="carte">${ic(p,48)}<div><b>Ariane</b><small>4.9.0 test 15 · Écho observe ton travail, Orbite place et valide les rails d’un lot.</small></div></div>
+ <p class="lbl">Tête du panneau</p>
+ <div class="tete">${ic(p,40)}<div class="t"><small>ARIANE</small><b>Orbite · Partie 34</b></div></div>
+ <p class="lbl">Bouton sur la page ESV</p>
+ <div class="esv"><span class="pill">${ic(p,18)}Ariane 4.9.0 test 15 · ouvrir</span></div>
+</div>`).join('');
+</script></body></html>
