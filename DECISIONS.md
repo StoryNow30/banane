@@ -1893,3 +1893,16 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - Partie 24 (Écho de 5 min) : 10 cuts joints, effectifs trop faibles.
 - Constat utile : l'Écho et le journal n'ont pas la même origine de scène, translation constante estimée par l'outil ; résidu 0,0 mm sur les deux parties.
 - Manques pour P0 (à prévoir dans S6 ou dans le rejeu) : pas de grandeur « intersection » dans le journal (seulement `uSeed`, `uMedian`, `zMedian`), convention réduite à un booléen dans la table (le journal a `convention.dzMm`), `slopeLimited` booléen sans pente brute. P0 (a) et (c) passeront par le rejeu de `Candidate.propose` sur le corpus GCV1, pas par le journal. Échos 18 et 20 à joindre à leur tour.
+
+## D-122 — Réponses de Mic aux neuf questions du cahier 5.0 (15 octobre 2026, nuit)
+
+1. **Oui** : Ariane garde localement, par partie, les bords qu'elle a écrits et exporte un instantané compact de la liste (dans les zips de Mic seulement). Lève la réserve de D-096 pour ce seul usage. Débloque E1 étape 2, M2, M4 (2).
+2. **Oui** (« top ») : D-044 et le ré-épinglage du moteur de géométrie peuvent être touchés si les mesures P0 le justifient, avec rejeu des quatre lots. Débloque P1, P2.
+3. **Oui** aux numéros de cuts d'un ADV et d'un PN connus : à recevoir de Mic (partie dont l'export est disponible).
+4. **Oui** : Ariane peut visiter des cuts verts en lecture seule, autour d'un rouge, jamais en Écho (M5).
+5. **Oui** à un Écho sur une partie 24 à 27 : Mic rappelle qu'il existe déjà (Écho de la partie 24 fait avec les tests 19/20, 124 visites, 103 validations, reçu par la session de l'audit Écho). À rapatrier dans cette session (Mic renvoie les volumes) pour juger les 241 décisions hypothétiques de B1 (S3 joint déjà la partie 24 : 10 cuts seulement avec l'Écho de 5 min).
+6. **Oui** à la reprise automatique bornée (F3) : liste blanche, trois par lot, visible dans le panneau. Modifie D-058.
+7. **Oui** : Mic relit tous les cuts posés par Ariane ; « inchangé » vaut donc « confirmé » dans E1.
+8. Orbite et Écho en même temps : Mic demande pourquoi « non en 5.0 ». Réponse de l'orchestrateur : dans un même profil Chrome, Ariane a un seul état et un seul observateur ; Orbite envoie des commandes qu'Écho prendrait pour des gestes humains, et D-112 point 7 impose un seul onglet pendant Écho ; les séparer exige des états par onglet, c'est le multi-onglets retiré. **Mais c'est possible dès aujourd'hui sans développement** avec deux profils Chrome (ou Chrome et Edge) : chaque profil a sa propre Ariane, son état, ses exports ; Orbite dans l'un, Écho dans l'autre, sur deux parties différentes. À vérifier une fois au banc (aucune interférence côté serveur attendue : parties distinctes). Reste hors 5.0 dans un même profil.
+9. **Marges ADV : 20 cuts** avant la pointe d'aiguille et après la fin de l'appareil (M3).
+- Conséquence sur le plan : les vagues V4 et V5 n'attendent plus que les mesures ; seuls les numéros de cuts ADV/PN (Q3) et les volumes de l'Écho partie 24 (Q5) restent à recevoir.

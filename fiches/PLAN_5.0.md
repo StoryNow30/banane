@@ -93,12 +93,12 @@ Somme des estimations : ≈ 17 M de jetons au niveau rapide (dont 2,3 M pour G1)
 
 | Q | Sujet | Réponse | Chantiers débloqués |
 |---|---|---|---|
-| 1 | bords monde en mémoire, instantané de liste | en attente | E1 étape 2, M2, M4 (2) |
-| 2 | toucher D-044, ré-épingler | en attente | P1, P2 |
-| 3 | cuts ADV et PN connus | en attente | M1, M3 |
-| 4 | visiter des verts en lecture | en attente | M5 |
-| 5 | Écho sur une partie 24 à 27 | en attente | juge B1 ombre |
-| 6 | reprise automatique bornée | en attente | F3 |
-| 7 | protocole de relecture | en attente | E1 (sens de « inchangé ») |
-| 8 | Orbite et Écho en même temps : non en 5.0 | en attente | périmètre |
-| 9 | marges ADV (cuts avant pointe, après fin) | en attente | M3 |
+| 1 | bords monde en mémoire, instantané de liste | **oui** (D-122) | E1 étape 2, M2, M4 (2) |
+| 2 | toucher D-044, ré-épingler | **oui** (D-122) | P1, P2 |
+| 3 | cuts ADV et PN connus | **oui**, numéros à recevoir (D-122) | M1, M3 |
+| 4 | visiter des verts en lecture | **oui** (D-122) | M5 |
+| 5 | Écho sur une partie 24 à 27 | **oui** : l'Écho de la partie 24 (tests 19/20) existe, à rapatrier (D-122) | juge B1 ombre |
+| 6 | reprise automatique bornée | **oui** (D-122) | F3 |
+| 7 | protocole de relecture | **tous les cuts posés** sont relus (D-122) | E1 (sens de « inchangé ») |
+| 8 | Orbite et Écho en même temps | Mic demande pourquoi ; réponse : possible dès aujourd'hui avec deux profils Chrome, pas dans un même onglet (D-122) | périmètre |
+| 9 | marges ADV (cuts avant pointe, après fin) | **20 cuts** (D-122) | M3 |
