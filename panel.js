@@ -28,11 +28,12 @@
   * (valeur posée d'un coup) si le système réduit les animations ou sans requestAnimationFrame. */
  const DUREE_VERT=1100;
  function compter(el,cible){if(!el)return;const texte=String(cible),d=el.dataset||{},de=Number(d.v);if(d.v===texte)return;d.v=texte;
-   const raf=globalThis.requestAnimationFrame,fin=Number(texte);
-   if(!Number.isFinite(de)||!Number.isFinite(fin)||typeof raf!=='function'||!bouger()||globalThis.document?.hidden){el._compte=null;el.textContent=texte;return;}
+   /* Test 16 : la cible peut porter une décimale (« 0.4 ») ; affichée à la française (« 0,4 »). */
+   const raf=globalThis.requestAnimationFrame,fin=Number(texte),dec=(texte.split('.')[1]||'').length,vu=v=>v.toFixed(dec).replace('.',',');
+   if(!Number.isFinite(de)||!Number.isFinite(fin)||typeof raf!=='function'||!bouger()||globalThis.document?.hidden){el._compte=null;el.textContent=Number.isFinite(fin)?vu(fin):texte;return;}
    const jeton={};el._compte=jeton;let t0=null;
    const pas=t=>{if(el._compte!==jeton)return;if(t0===null)t0=t;const k=Math.min(1,(t-t0)/DUREE_VERT),e=1-Math.pow(1-k,3);
-     el.textContent=String(Math.round(de+(fin-de)*e));if(k<1)raf(pas);else el._compte=null;};
+     el.textContent=vu(de+(fin-de)*e);if(k<1)raf(pas);else el._compte=null;};
    raf(pas);}
  /* Une impulsion au bord du vert à chaque cut terminé : une onde lumineuse part du bord, le vert s'éclaire un instant. */
  function impulsion(){animer($('lot-bord')?.firstElementChild??null,[{transform:'scale(.4)',opacity:.95},{transform:'scale(2.4)',opacity:0}],{duration:900,easing:COURBE,fill:'none'});
@@ -78,7 +79,17 @@
  const sg=v=>(v>=0?'+':'−')+fr1(Math.abs(v));
  /* Quantile d'une liste triée, interpolé (médiane : 0,5 ; p90 : 0,9). */
  const quantile=(t,f)=>{if(!t.length)return null;const p=f*(t.length-1),a=Math.floor(p),b=Math.ceil(p);return t[a]+(t[b]-t[a])*(p-a);};
- const heure=t=>{const d=new Date(t);return t&&Number.isFinite(d.getTime())?d.toTimeString().slice(0,8):'—';};
+ /* 4.9.0.17 (Mic : « l'heure de Paris partout ») — toute heure affichée est celle de Paris
+  * (Europe/Paris : heure d'été et d'hiver gérées par Intl), jamais l'UTC ni l'heure de la machine.
+  * Les JSON exportés gardent leurs horodatages ISO en UTC (outils d'analyse). `paris(t)` rend
+  * {jour, mois, an, h, min, s} (texte sur deux chiffres) ou null si l'heure est illisible. */
+ const FORMAT_PARIS=(()=>{try{return new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});}catch{return null;}})();
+ function paris(t){const d=t instanceof Date?t:new Date(t);if(t===null||t===undefined||t===''||!Number.isFinite(d.getTime())||!FORMAT_PARIS)return null;
+   const p={};for(const x of FORMAT_PARIS.formatToParts(d))p[x.type]=x.value;
+   return {jour:p.day,mois:p.month,an:p.year,h:p.hour==='24'?'00':p.hour,min:p.minute,s:p.second};}
+ const heure=t=>{const p=paris(t);return p?`${p.h}:${p.min}:${p.s}`:'—';};
+ /* CONTENU.txt : « 15/10/2026 10:12:03 heure de Paris » ; sans Intl, l'ISO tel quel (UTC, dit par son « Z »). */
+ const dateHeureParis=t=>{const p=paris(t);return p?`${p.jour}/${p.mois}/${p.an} ${p.h}:${p.min}:${p.s} heure de Paris`:String(t instanceof Date?t.toISOString():t);};
  const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
  /* Entrée d'une vue : les blocs montent en cascade, une seule fois (panel.css). */
  let entreeMinuteur=null;
@@ -98,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.0 test 16',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.0 test 17',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -425,7 +436,20 @@
  /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
   * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, « Détails du lot » est fermé
   * par défaut et garde son nom ; son état se lit dans aria-expanded. */
- let nouveauLot=false,departsPartie=null,progresLot={cle:null,max:0};const tiroirs={lot:false,native:true};
+ let nouveauLot=false,departsPartie=null,progresLot={cle:null,max:0};
+ /* 4.9.0.17 : fiches de départ (D-092) gardées pour la tuile du lot ; relues avec la liste des départs. */
+ let fichesDepart=[];
+ /* La fiche de départ qui donne le travail d'un lot : seulement pour un lot sur TOUTE la partie
+  * (premier cut 0 ou 1 : les lots de Mic partent du cut 1 ; jusqu'à la fin de partie), la
+  * première fiche de CE lot (même batchId : les invalides au démarrage), avec des invalides
+  * lisibles et non nuls. Sinon null : la tuile garde la position. */
+ const PREMIER_CUT_MAX=1;
+ function travailDuLot(b){const sc=b?.scope,a=Number(sc?.start);
+   if(!b?.id||!sc||!finDePartie(sc)||!Number.isInteger(a)||a<0||a>PREMIER_CUT_MAX)return null;
+   const f=fichesDepart.find(x=>x&&x.batchId===b.id);
+   return f&&Number.isInteger(f.invalides)&&f.invalides>0&&(!Number.isInteger(f.partie)||f.partie===sc.part)?f:null;}
+ /* Le pourcentage affiché : une décimale sous 10 %, arrondi vers le bas (jamais plus que le vrai). */
+ const pourcentAffiche=p=>p>=100?'100':p<10?String(Math.floor(p*10)/10):String(Math.floor(p));const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
    bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
@@ -554,31 +578,50 @@
       * indéterminée et « fin de partie inconnue », jamais un faux pourcentage. Le
       * vert ne recule pas sur un retour à un cut : il garde le plus loin atteint
       * dans ce lot. */
+     /* 4.9.0.17 (retour de Mic sur la test 16 : « le pourcentage des invalides traités, pas de la
+      * position ») — DEUX MESURES, jamais un faux chiffre :
+      * - lot sur TOUTE la partie (premier cut 0 ou 1, jusqu'à la fin de partie) et fiche de départ
+      *   de CE lot connue (D-092, même batchId ; la première du lot = invalides au démarrage) :
+      *   % = cuts traités par le lot (posés + différés, b.processed) ÷ invalides de la fiche, et la
+      *   tuile dit « N / M invalides » ;
+      * - sinon (plage fixe, départ au milieu de la partie, fiche absente) : la position, comme avant.
+      * Dans les deux cas : le % ne recule jamais dans un lot (le plus haut atteint est gardé, par
+      * mesure), plafonné à 100 %, une décimale sous 10 % (arrondie vers le bas : jamais plus que
+      * le vrai), 100 % à la fin du lot. Test 16 : le vert suit la valeur exacte (2 décimales) et le
+      * bord lumineux n'apparaît qu'à partir de 1,5 % (avant, collé au coin arrondi gauche, il
+      * débordait de la tuile). */
+     const lotFini=!!b&&(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state)||b.state==='STOPPED'&&!!b.stoppedAtEnd);
+     const fiche=travailDuLot(b);
      if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut),t=b?.totalReleve;
        const parCompteur=t&&t.part===sc?.part&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&(!Number.isInteger(t.cut)||t.cut<t.total)&&Number.isFinite(c)&&c<t.total?t.total-1:NaN;
        const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:parCompteur):Number(sc?.end);
-       const lotOk=!!sc&&Number.isFinite(a)&&Number.isFinite(c),ok=lotOk&&Number.isFinite(z)&&z>a,inconnu=lotOk&&!ok&&finDePartie(sc);
+       const lotOk=!!sc&&Number.isFinite(a)&&Number.isFinite(c),travail=!!fiche,ok=travail||lotOk&&Number.isFinite(z)&&z>a,inconnu=lotOk&&!ok&&finDePartie(sc);
        $('lot-progres').hidden=!ok&&!inconnu;$('lot-progres').className='progres'+(inconnu?' indetermine':'');
        if($('lot-progres-note'))$('lot-progres-note').textContent=inconnu?'fin de partie inconnue':'';
-       const cle=b?.id??`${sc?.part}|${sc?.start}`;if(progresLot.cle!==cle)progresLot={cle,max:0};
-       if(ok){const brut=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100),pct=Math.max(brut,progresLot.max);progresLot.max=pct;
-         if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');compter($('lot-pct'),String(pct));}
+       const cle=`${b?.id??`${sc?.part}|${sc?.start}`}|${travail?'travail':'position'}`;if(progresLot.cle!==cle)progresLot={cle,max:0};
+       if(ok){const brut=lotFini?100:travail?Math.min(1,(b.processed?.length??0)/fiche.invalides)*100:Math.min(1,Math.max(0,(c-a)/(z-a)))*100,pct=Math.max(brut,progresLot.max);progresLot.max=pct;
+         if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=String(+pct.toFixed(2))+'%';
+         if($('lot-progres')?.classList)$('lot-progres').classList.toggle('naissant',pct<1.5);
+         compter($('lot-pct'),pourcentAffiche(pct));
+         $('lot-debut').textContent=travail?'':entier(a);$('lot-fin').textContent=travail?'':entier(z)+(finDePartie(sc)?' ?':'');}
        else if(inconnu){if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width='100%';$('lot-pct')._compte=null;$('lot-pct').textContent='';if($('lot-pct').dataset)delete $('lot-pct').dataset.v;$('lot-debut').textContent=entier(a);$('lot-fin').textContent='';}
        /* 4.9.0.16 : l'état de la tuile pour le mouvement : en cours (le vert vit), en pause (calme,
         * désaturé, immobile), fini (une célébration sobre, une seule fois, quand le lot se termine
         * sous tes yeux) ; impulsion au bord du vert à chaque cut terminé. */
-       const fini=!!b&&(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state)||b.state==='STOPPED'&&!!b.stoppedAtEnd);
-       const etat=!b?'':fini?'fini':b.state==='RUNNING'&&!s.reconcileRequired?'live':OUVERT.includes(b.state)||b.state==='STOPPED'?'pause':'';
+       const etat=!b?'':lotFini?'fini':b.state==='RUNNING'&&!s.reconcileRequired?'live':OUVERT.includes(b.state)||b.state==='STOPPED'?'pause':'';
        const tuile=$('lot-tuile');if(tuile?.dataset&&tuile.dataset.etat!==etat){if(etat)tuile.dataset.etat=etat;else delete tuile.dataset.etat;}
+       /* 4.9.0.17 : la mesure de la tuile (travail : « N / M invalides » ; position : « N cuts »), pour la mise en page. */
+       if(tuile?.dataset){if(travail)tuile.dataset.mesure='travail';else delete tuile.dataset.mesure;}
        const n=b?.processed?.length??0;
        if(progresLot.vu&&ok&&etat==='live'&&n>progresLot.traites)impulsion();
        if(progresLot.vu&&etat==='fini'&&progresLot.etat&&progresLot.etat!=='fini')celebrer();
        Object.assign(progresLot,{vu:true,traites:n,etat});}
      /* 4.9 (chantier UX) : la tuile du lot dit toujours combien de cuts sont traités, même quand la fin du lot n'est pas connue. */
      if($('lot-traites'))rouler($('lot-traites'),b?entier(b.processed?.length??0):'—');
-     /* 4.9.0.16 : « 1 cut », « 2 cuts » (et « 0 cut », en français). */
-     if($('lot-traites-u'))$('lot-traites-u').textContent=accorder(b?.processed?.length??0,'cut');
+     /* 4.9.0.16 : « 1 cut », « 2 cuts » (et « 0 cut », en français). 4.9.0.17 : lot sur toute la
+      * partie avec sa fiche de départ : « 39 / 514 invalides » (traités sur invalides au départ). */
+     if($('lot-traites-u'))$('lot-traites-u').textContent=fiche?`/ ${entier(fiche.invalides)} ${accorder(fiche.invalides,'invalide')}`:accorder(b?.processed?.length??0,'cut');
+     const bulle=$('lot-traites')?.parentElement;if(bulle?.setAttribute)bulle.setAttribute('title',fiche?'cuts traités par ce lot (posés et différés) sur les invalides de la partie au départ du lot':'cuts traités dans ce lot');
      const v=b?voieDuLot(s):null;
      /* Tuiles : posés, différés, couverture. 4.8.0 (audit qualité, D02) :
       * la couverture est C1 (D-038) : posés sur les cuts DISTINCTS du lot, le
@@ -1279,9 +1322,9 @@ on('native-discard',async()=>{
  async function exportToutZip(Z){
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,volumes=[],bilans=[];
    /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
-   const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${i.marqueur.at} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+i.marqueur.afterExportAt:'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
+   const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${dateHeureParis(i.marqueur.at)} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+dateHeureParis(i.marqueur.afterExportAt):'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
    /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
-   const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}) :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
+   const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
    const max=ZIP_MAX_BYTES(),decoupe=typeof Z.preparer==='function'&&typeof Z.coutEntree==='function';
    /* Place gardée dans chaque volume pour son CONTENU.txt (écrit à la fin) : la liste des fichiers et les départs. */
    const reserve=Math.min(16384+2*departs.length,Math.floor(max/4));
@@ -1302,7 +1345,7 @@ on('native-discard',async()=>{
    /* Ferme les volumes (CONTENU.txt « volume n sur N », départs compris) et les enregistre, dans l'ordre. */
    const fermerTout=async()=>{const pleins=volumes.filter(v=>!v.zip.vide),N=pleins.length,mode=modeDe().nom,out=[];
      for(const [i,v] of pleins.entries()){const liste=v.zip.entrees,n=i+1;
-       await v.zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${maintenant.toISOString()}\n`+
+       await v.zip.ajouter('CONTENU.txt',new Blob([`Export Ariane — mode ${mode} — ${dateHeureParis(maintenant)}\n`+
          (N>1?`Volume ${n} sur ${N} : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}. Chaque volume est un zip complet ; il faut les ${N} pour l'export entier.\n`
            :`Archive unique : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}.\n`)+
          (v.seul?`Ce fichier dépasse seul la limite de ${mo1(max)} par volume : il n'est jamais coupé.\n`:'')+
@@ -1379,7 +1422,8 @@ on('native-discard',async()=>{
   * lot, posés en texte (jamais en HTML). La liste n'est reconstruite que si les fiches changent :
   * une partie dépliée reste dépliée. */
  const milliersFr=n=>Number.isInteger(n)?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f'):'?';
- const heureDepart=x=>typeof x?.at==='string'?`${x.at.slice(8,10)}/${x.at.slice(5,7)} ${x.at.slice(11,16)} UTC`:'heure inconnue';
+ /* 4.9.0.17 : l'heure de Paris (plus de « UTC » à l'écran). */
+ const heureDepart=x=>{const p=typeof x?.at==='string'?paris(x.at):null;return p?`${p.jour}/${p.mois} ${p.h}:${p.min}`:'heure inconnue';};
  const nomPartie=k=>`Partie ${Number.isInteger(k)?k:'?'}`;
  const departsTexte=n=>`${n} départ${n>1?'s':''}`;
  const elt=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
@@ -1405,6 +1449,8 @@ on('native-discard',async()=>{
    bas.append(elt('span','h-v',`${milliersFr(x.valides)} validés`),elt('span','h-i',`${milliersFr(x.invalides)} invalides`),elt('span','h-t',`${milliersFr(x.total)} total`),elt('span','h-n',departsTexte(n)));
    return deplier('historique|'+k,[haut,bas],tableDeparts(liste),'d-partie');}
  async function majDeparts(){const el=$('departs-liste');if(!el)return;try{const r=await api('fiches-depart'),f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;
+  /* 4.9.0.17 : la tuile du lot suit la fiche de départ de son lot ; un nouveau rendu seulement si elle change. */
+  const avant=JSON.stringify(travailDuLot(state?.batch));fichesDepart=f;if(state&&JSON.stringify(travailDuLot(state.batch))!==avant)render(state);
   if(!f.length||!EC)return;
   /* Les fiches sont rangées dans l'ordre d'arrivée : une partie prend le rang de son départ le plus récent. */
   const par=new Map();for(const x of f){if(!x||typeof x!=='object')continue;const k=Number.isInteger(x.partie)?x.partie:'?',l=par.get(k)||[];par.delete(k);l.push(x);par.set(k,l);}

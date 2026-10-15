@@ -210,8 +210,21 @@
     return [...l, fiche].slice(-MAX_DEPARTS);
   }
   const milliers = n => (Number.isInteger(n) ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : '?');
+  /* 4.9.0.17 (Mic : « l'heure de Paris partout ») : l'heure d'un départ, dans CONTENU.txt, est celle
+   * de Paris (Europe/Paris, heure d'été et d'hiver par Intl) : « 15/10/2026 10:12:03 ». Le titre de la
+   * liste dit « heure de Paris ». Sans Intl, l'ISO tel quel (UTC, dit par son « Z »). Le JSON exporté
+   * (`fichesDepart`) garde `at` en ISO UTC. */
+  let formatParis = null;
+  try { formatParis = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }); } catch (_) { formatParis = null; }
+  function heureParis(iso) {
+    const d = new Date(iso);
+    if (typeof iso !== 'string' || !Number.isFinite(d.getTime())) return null;
+    if (!formatParis) return iso;
+    const p = {}; for (const x of formatParis.formatToParts(d)) p[x.type] = x.value;
+    return `${p.day}/${p.month}/${p.year} ${p.hour === '24' ? '00' : p.hour}:${p.minute}:${p.second}`;
+  }
   function texteDepart(f) {
-    const h = typeof f.at === 'string' ? f.at.replace('T', ' ').slice(0, 19) + ' UTC' : 'heure inconnue';
+    const h = heureParis(f.at) || 'heure inconnue';
     return `${h} · partie ${Number.isInteger(f.partie) ? f.partie : '?'} · validés ${milliers(f.valides)} · invalides ${milliers(f.invalides)} · total ${milliers(f.total)}`;
   }
   async function lireDeparts(storage) {
@@ -224,5 +237,5 @@
     return fiche;
   }
 
-  return { CLE, CLE_DEPARTS, ficheDepart, ajouterDepart, texteDepart, lireDeparts, noterDepart, LOT_TERMINE, TERMINES, CAPTURES_OUVERTES, refus, reprenable, finiPourDeBon, capturesAGarder, signature, supprimer, texte, lire, ecrire };
+  return { CLE, CLE_DEPARTS, ficheDepart, ajouterDepart, texteDepart, heureParis, lireDeparts, noterDepart, LOT_TERMINE, TERMINES, CAPTURES_OUVERTES, refus, reprenable, finiPourDeBon, capturesAGarder, signature, supprimer, texte, lire, ecrire };
 });

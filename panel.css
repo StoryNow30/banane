@@ -450,12 +450,14 @@ body[data-window=automatic] .context{display:none}
 /* Fini : le vert se pose, le bord s'efface (il n'y a plus d'avancée). */
 .tuile-lot[data-etat=fini] .bord{opacity:0}
 .tuile-lot #lot-progres.indetermine .bord{display:none}
+/* Test 16 : sous 1,5 %, pas de bord lumineux (il sortait de la tuile par le coin arrondi gauche). */
+.tuile-lot #lot-progres.naissant .bord{opacity:0}
 .tuile-lot .barre i::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent) -100% 0/60% 100% no-repeat;opacity:0}
 .tuile-lot .progres-l{position:relative;z-index:1;display:flex;align-items:baseline;gap:5px;margin:0;color:var(--sur-vert)}
 .tuile-lot .progres-l .u{font-size:15px;color:var(--sur-vert);opacity:.85}
 .tuile-lot #lot-debut,.tuile-lot #lot-fin{display:none}
 .tuile-lot #lot-pct{font:300 46px/1 var(--sans);letter-spacing:-.02em;color:var(--sur-vert)}
-.tuile-lot .lot-sep{position:relative;z-index:1;align-self:stretch;width:1.5px;margin:4px 0 3px;border-radius:1px;background:var(--text-3);opacity:.6}
+.tuile-lot .lot-sep{position:relative;z-index:1;flex:none;align-self:stretch;width:1.5px;margin:4px 0 3px;border-radius:1px;background:var(--text-3);opacity:.6}
 .tuile-lot:has(#lot-progres[hidden]) .lot-sep{display:none}
 /* 4.9.0.14 : fin de partie inconnue. Une bande verte qui glisse, jamais un faux pourcentage ; le texte le dit. */
 .tuile-lot .lot-note{position:relative;z-index:1;align-self:flex-end;margin-bottom:6px;font-size:14.5px;color:var(--text-2)}
@@ -472,6 +474,11 @@ body[data-window=automatic] .context{display:none}
 .tuile-lot .lot-t b{font-size:19px;font-weight:600;color:var(--sur-vert)}
 .tuile-lot #lot-plage{margin:0;font-size:13px;letter-spacing:.02em;text-transform:none;color:var(--text-2)}
 .tuile-lot .etapes{position:absolute;z-index:1;right:18px;bottom:20px;display:flex;align-items:center;gap:7px;margin:0}
+/* 4.9.0.17 : « 39 / 514 invalides » (lot sur toute la partie) est plus long que « 39 cuts ». Tuile étroite
+   (panneau rétréci sous 470 px environ) : les pastilles d'étape cèdent la place au compteur, sans chevauchement ;
+   l'étape reste écrite dans la ligne d'état au-dessus (« En cours · capture du LiDAR »). */
+.tuile-lot{container-type:inline-size}
+@container (max-width:379px){.tuile-lot[data-mesure=travail] .lot-bas{padding-right:0}.tuile-lot[data-mesure=travail] .etapes{display:none}}
 .tuile-lot .etapes i{flex-direction:row;align-items:center;gap:8px;font:400 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--text-2)}
 .tuile-lot .etapes i::before,.tuile-lot .etapes i.actif::before{width:6px;height:6px;border-radius:50%;background:var(--future);animation:none}
 .tuile-lot .etapes i.fait::before{background:var(--text)}

@@ -32,7 +32,7 @@ test('ajout : pas de doublon pour un même lot et mêmes comptes ; borne aux 200
 });
 test('texte lisible, avec espaces fines pour les milliers ; partie inconnue écrite « ? »',()=>{
  assert.equal(EC.texteDepart({at:'2026-10-13T11:51:55.000Z',partie:13,valides:7602,invalides:137,total:7739}),
-  '2026-10-13 11:51:55 UTC · partie 13 · validés 7 602 · invalides 137 · total 7 739');
+  '13/10/2026 13:51:55 · partie 13 · validés 7 602 · invalides 137 · total 7 739','4.9.0.17 : heure de Paris (CEST, UTC+2), plus « UTC »');
  assert.match(EC.texteDepart({at:null,partie:null,valides:1,invalides:0,total:1}),/heure inconnue · partie \? · validés 1 · invalides 0 · total 1/);
 });
 test('stockage illisible ou en échec : liste vide, jamais d’exception',async()=>{

@@ -68,15 +68,17 @@ test('départs : partie en cours en grand, puis historique des parties précéde
   const blocs=document.getElementById('departs-liste').children,txt=e=>e.textContent+e.children.map(txt).join(' ');
   assert.equal(blocs.length,3,'la carte en cours, le titre de l’historique, l’historique');
   const [carte,titre,hist]=blocs;
-  assert.equal(carte.className,'depart en-cours');assert.match(txt(carte),/Partie 34/);assert.match(txt(carte),/en cours · 13\/10 12:58 UTC · 2 départs/);
+  assert.equal(carte.className,'depart en-cours');assert.match(txt(carte),/Partie 34/);assert.match(txt(carte),/en cours · 13\/10 14:58 · 2 départs/);
   assert.match(txt(carte),/1\u202f284.*validés.*37.*invalides.*2\u202f140.*total/s);assert.match(txt(carte),/dont 5 ignorés/);
   /* Le détail des deux départs de la partie en cours, du plus récent au plus ancien. */
   const detail=carte.children.find(c=>c.className==='d-detail');assert.ok(detail,'détail dépliable');assert.equal(detail.tag,'details');
-  assert.match(txt(detail),/Voir les 2 départs/);assert.match(txt(detail),/13\/10 12:58 UTC 1\u202f284 37 2\u202f140.*13\/10 09:00 UTC 1\u202f200 30 2\u202f140/s);
+  assert.match(txt(detail),/Voir les 2 départs/);assert.match(txt(detail),/13\/10 14:58 1\u202f284 37 2\u202f140.*13\/10 11:00 1\u202f200 30 2\u202f140/s);
   assert.equal(titre.textContent,'Parties précédentes (2)');
   assert.equal(hist.className,'d-hist');assert.equal(hist.children.length,2,'une ligne par partie précédente');
   assert.ok(hist.children.every(l=>l.tag==='details'&&l.className==='d-partie'),'chaque partie se déplie');
-  assert.match(txt(hist.children[0]),/Partie 35.*13\/10 14:00 UTC.*\? validés.*0 invalides.*900 total.*1 départ\b/s,'la plus récente d’abord ; une valeur illisible s’écrit « ? », jamais en HTML');
-  assert.match(txt(hist.children[1]),/Partie 33.*12\/10 16:04 UTC.*2\u202f015 validés.*12 invalides.*2\u202f310 total.*1 départ\b/s);
+  assert.match(txt(hist.children[0]),/Partie 35.*13\/10 16:00.*\? validés.*0 invalides.*900 total.*1 départ\b/s,'la plus récente d’abord ; une valeur illisible s’écrit « ? », jamais en HTML');
+  assert.match(txt(hist.children[1]),/Partie 33.*12\/10 18:04.*2\u202f015 validés.*12 invalides.*2\u202f310 total.*1 départ\b/s);
   assert.ok(!JSON.stringify(blocs.map(txt)).includes('<img>'),'jamais de HTML');
+  /* 4.9.0.17 : heure de Paris (CEST en octobre avant le 25 : UTC+2), sans « UTC » à l'écran. */
+  assert.ok(!JSON.stringify(blocs.map(txt)).includes('UTC'),'plus de « UTC »');
 });

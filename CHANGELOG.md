@@ -1,5 +1,29 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.0.17 — test 17 (15/10)
+
+Manifeste `4.9.0.17`, « 4.9.0 test 17 », paquet `ariane-4.9.0-test.17.zip` ; base : test 16 (`6c61bdb`) + bornes alignées (`0147f29`).
+Retours de Mic sur la test 16. `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+`consignes/seance-terrain-test-17-2026-10-15.md` ; retour arrière : test 16.
+
+- **Tuile « Lot » : le travail, pas la position** (`panel.js`). Lot sur toute la partie (premier cut 0 ou 1, jusqu'à la fin de
+  partie) dont la fiche de départ est connue (D-092, même `batchId`, la première du lot = invalides au démarrage) : % = cuts
+  traités par le lot (posés + différés, `b.processed`) ÷ invalides de la fiche, et la tuile dit « N / M invalides » au lieu de
+  « N cuts ». Autres lots (plage fixe, départ au milieu) ou fiche absente : la position, comme avant. Dans les deux cas : jamais
+  de recul dans un lot (le plus haut atteint, par mesure), plafond 100 %, une décimale sous 10 % arrondie vers le bas (« 7,5 »),
+  100 % à la fin du lot. Le vert suit la valeur exacte (2 décimales) ; sous 1,5 % le bord lumineux est caché (il débordait du
+  coin arrondi gauche) ; le séparateur ne se tasse plus ; panneau étroit : les pastilles d'étape cèdent la place au compteur.
+- **Heure de Paris partout dans le panneau** (`panel.js`, `src/export-cache.js`) : Europe/Paris par `Intl.DateTimeFormat`
+  (heure d'été et d'hiver) pour l'activité, les lots de la partie, les départs (carte, historique, détail) ; plus de « UTC »
+  à l'écran. CONTENU.txt : heure de l'export, période et départs en heure de Paris, dit « heure de Paris ». Les JSON exportés
+  gardent leurs horodatages ISO en UTC ; le nom des fichiers d'export aussi.
+- Essais : `tests/t17-panneau.test.cjs` (travail 39 / 514 → « 7,5 », plage fixe et départ au milieu → position, pas de
+  fiche → position, fiche tardive, recul, plafond, fin ; heure de Paris en juillet, novembre et au passage du 25/10/2026),
+  `tests/t16-export-volumes.test.cjs` (CONTENU.txt en heure de Paris), `tests/consigne-test17.test.cjs`, `tests/version-test17.test.cjs`.
+- Attendus modifiés : `d092-fiche-depart` et `ux-49-orbite` (heures des départs : Paris au lieu d'UTC) ; `ux-49-tuile-lot`
+  (largeur exacte « 81.98% » / « 83.39% » et « 81 » arrondi vers le bas, au lieu de « 82% » / « 83% » arrondis) ;
+  `version-test16` → `version-test17`, `cohabitation-485`.
+
 ## 4.9.0.16 — test 16 (15/10)
 
 Manifeste `4.9.0.16`, « 4.9.0 test 16 », paquet `ariane-4.9.0-test.16.zip` ; base : test 15 (`b9652df`). Retours de Mic sur la

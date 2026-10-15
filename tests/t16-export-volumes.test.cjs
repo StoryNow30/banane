@@ -109,3 +109,16 @@ test('vidage automatique : seulement si TOUS les volumes sont confirmés ; un se
   const ko=await exporter({zipMaxBytes:120000,vider:true,etats:nom=>/volume02/.test(nom)?'interrupted':'complete'});
   assert.ok(ko.blobs.length>=3);assert.equal(ko.vidages.length,0,'aucun vidage');assert.match(ko.statut,/volume02-sur\d+\.zip non enregistré/);assert.match(ko.statut,/NON vidé/);
 });
+
+/* 4.9.0.17 (Mic : « l'heure de Paris partout ») : CONTENU.txt, que Mic lit, écrit l'heure de l'export
+ * et les départs en heure de Paris, et le dit ; les JSON gardent leurs horodatages ISO en UTC. */
+test('CONTENU.txt en heure de Paris (« heure de Paris », plus « UTC ») ; les JSON gardent l’ISO UTC',{skip:!PYTHON&&'python3 absent'},async()=>{
+  const r=await exporter({});const [v]=await ouvrirVolumes(r);
+  assert.match(v.contenu,/^Export Ariane — mode .+ — \d\d\/\d\d\/\d{4} \d\d:\d\d:\d\d heure de Paris$/m);
+  assert.match(v.contenu,/Départs des parties \(2\), heure de Paris :/);
+  assert.match(v.contenu,/14\/10\/2026 14:01:00 · partie 23/,'12:01 UTC le 14/10 = 14:01 à Paris (CEST)');
+  assert.match(v.contenu,/15\/10\/2026 09:35:00 · partie 24/,'07:35 UTC le 15/10 = 09:35 à Paris');
+  assert.doesNotMatch(v.contenu,/UTC/);
+  const bilan=fs.readdirSync(v.dossier).filter(n=>n.endsWith('.json')).map(n=>fs.readFileSync(path.join(v.dossier,n),'utf8')).join('\n');
+  assert.ok(bilan.includes('"timestamp":"2026-10-15T07:00:00.000Z"'),'les événements gardent leur horodatage ISO UTC dans le JSON');
+});

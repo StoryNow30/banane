@@ -65,6 +65,7 @@ test('relevé du compteur tardif : bande « fin de partie inconnue » jusque-là
   assert.deepEqual(vert($),{cache:false,largeur:'100%',pct:'',note:'fin de partie inconnue',inconnu:true});
   await $.etat(reel(7400));assert.equal(vert($).inconnu,true,'toujours aucun relevé : toujours la bande');
   await $.etat(reel(7591,releve(7591,9260)));
-  assert.deepEqual(vert($),{cache:false,largeur:'82%',pct:'82',note:'',inconnu:false},'(7591 − 1) / (9259 − 1)');
-  await $.etat(reel(7721,releve(7591,9260)));assert.equal(vert($).largeur,'83%','le relevé reste valable pour les cuts suivants du lot');
+  /* 4.9.0.17 : le vert suit la valeur exacte (81,98 %) et le chiffre est arrondi vers le bas (81, jamais plus que le vrai). */
+  assert.deepEqual(vert($),{cache:false,largeur:'81.98%',pct:'81',note:'',inconnu:false},'(7591 − 1) / (9259 − 1)');
+  await $.etat(reel(7721,releve(7591,9260)));assert.equal(vert($).largeur,'83.39%','le relevé reste valable pour les cuts suivants du lot (7720 / 9258)');
 });
