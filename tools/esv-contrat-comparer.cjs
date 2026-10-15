@@ -13,6 +13,7 @@ function juger(h,releve){const v=lire(releve,h.attendu.cle),a=h.attendu.valeur;
   if(typeof a==='string'&&/^\d+ à \d+$/.test(a)){const [lo,hi]=a.split(' à ').map(Number);return {verdict:v>=lo&&v<=hi?'confirmée':'infirmée',observe:v};}
   if(a==='= liste.lignes'){const lignes=lire(releve,'liste.lignes');return lignes==null?{verdict:'non relevée',observe:v}:{verdict:v===lignes?'confirmée':'infirmée',observe:v};}
   if(typeof a==='string')return {verdict:String(v).toLowerCase()===a.toLowerCase()?'confirmée':'infirmée',observe:v};
+  if(typeof a==='number'&&typeof v==='number')return {verdict:Math.abs(v-a)<=1e-6*Math.max(1,Math.abs(a))?'confirmée':'infirmée',observe:v};
   return {verdict:v===a?'confirmée':'infirmée',observe:v};}
 function comparer(releve){const lignes=contrat.hypotheses.map(h=>({...h,...juger(h,releve)}));
   return {releve:releve.quand||null,confirmees:lignes.filter(l=>l.verdict==='confirmée').length,infirmees:lignes.filter(l=>l.verdict==='infirmée').length,nonRelevees:lignes.filter(l=>l.verdict==='non relevée').length,hypotheses:lignes,

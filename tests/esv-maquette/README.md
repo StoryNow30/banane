@@ -53,19 +53,19 @@ Fidélité mesurée : un lot joué sur la maquette, exporté en bilan avec ses n
 | Élément | Reproduit | Statut |
 |---|---|---|
 | `#O2N3DCutDescription` « Cut N of part P », `#O2N3DCutShapeInfo` « U50 » | oui | **connu** (code d'Ariane, terrain) |
-| `#O2N3DCutLRClick` / `#O2N3DCutRRClick` : rail courant tout de suite, caméra recentrée à l'image suivante | oui | **connu** (D-088) ; la classe `active` du bouton est une **hypothèse** |
+| `#O2N3DCutLRClick` / `#O2N3DCutRRClick` : rail courant tout de suite, caméra recentrée à l'image suivante ; classes `leftRailSClass` / `leftRailUSClass` (S = sélectionné), idem à droite | oui | **connu** (D-088 ; classes relevées sur ESV le 15 octobre, celles que lit la 4.9) |
 | `#O2N3DCutValidate3DRail` (titre « Load next non validated cut ») : valide, écrit, charge le cut non validé suivant ; au dernier, la partie suivante | oui | **connu** (terrain du 30/09) |
-| `#O2N3DCutNextInvalid3DRail` et `Maj+Z` : cut invalide suivant, sans décision | oui | **connu** (KI-024) |
+| `#O2N3DCutNextInvalid3DRail` (« Next non validated cut ») et `Maj+Z` : cut non validé suivant, sans décision ; `#O2N3DCutPreviousInvalid3DRail`, `#O2N3DCutPrevious3DRail` (« Previous cut »), `#O2N3DCutNext3DRail` (« Next cut »), `#O2N3DCutSkip3DRail` (« Ignore this cut and load the next one ») | oui, mêmes identifiants et titres | **connu** (KI-024 ; six boutons relevés sur ESV le 15 octobre) ; « non validé = statut différent de valid » est **déduit des titres** |
 | `Maj+Retour` : passer (SKIP) ; `Ctrl+Entrée` : valider sans suivant ; `Maj+Espace` : valider | oui | **supposé** (dits par Mic, non lus dans ESV) |
 | `D` : cut suivant (« cut de droite ») | oui | **supposé** (FICHE_U3) |
-| Compteur « N on M treated », texte « M cuts » | oui, un seul élément, tenu sur la liste de la partie | format **connu** ; élément exact, moment de mise à jour, « traité = validé ou passé » : **hypothèses** |
-| Rails : `Object3D` + `Mesh` + profil `Object3D` + `Line` (contour du corpus, 3 lignes) ; gauche/droite par le signe du y moyen du contour | oui, poses du corpus | **connu** |
+| Compteur « N on M treated » : un `li.list-group-item`, nombre dans un enfant, « treated » en texte ; aucun texte « M cuts » | oui, tenu sur la liste de la partie | **connu** (relevé du 15 octobre : 9114 on 9260, M = nombre de cuts de la partie) ; moment de mise à jour et « traité = validé ou passé » : **hypothèses** |
+| Racine de la scène : deux rails `Object3D` (+ `Mesh` + profil `Object3D` + `Line`, contour du corpus) puis trois `Mesh` ; le nuage Potree n'est pas enfant de la racine ; gauche/droite par le signe du y moyen du contour | oui | **connu** (relevé du 15 octobre) |
 | Rails absents pendant `latenceRails` après le libellé | oui | **supposé** (Ariane attend ce cas) |
 | Potree : `pointclouds[0].visibleNodes[].sceneNode` (Points, `matrixWorld`, `geometry.attributes.position/intensity/classification`, `drawRange`), `material.clipBoxes[].inverse`, `clipTask` SHOW_INSIDE, `Potree.ClipTask/ClipMethod`, `Potree.numNodesLoading` | oui ; les 16 nœuds de chaque capture du corpus, par lots avec latence | forme **connue** (lecteur gelé) ; latence, lots, LOD : **factices** |
 | Clic dans la vue : pose du rail courant au point rayon ∩ plan de coupe, pixel entier, sans contrôle « dans la vue » | oui | **connu** (D-088 P1, 4.8.0) ; plan de coupe = plan du rail perpendiculaire à la vue : **supposé** |
-| Caméra orthographique (échelle 5 = 0,4 unité de scène de large, comme au corpus) | oui | **connu** (corpus) ; position exacte et hauteur : **supposées** |
+| Caméra orthographique, échelle 5 (0,4 unité de scène de large), profondeur −1e-4, vue 763 × 943 px | oui | **connu** (relevé du 15 octobre) ; position exacte et hauteur : **supposées** |
 | Liste des coupes `GET /rails/<table>` paginée par `?npk=…&nrk=…` (1 000 lignes, champs de `fiches/FICHE_B1.md`, **une ligne par indice, cut N = ligne N**), écriture `PUT /rails/<table>/<RowKey>` → 204, les deux en **XMLHttpRequest** | oui, chemins **relatifs** et table factice ; vus par l'observateur passif 4.9 (liste, écritures avec `rowIndex` = cut) ; B1 y calibre son repère et apparie ses lignes | forme **connue** (code de l'observateur) ; corps exact de la réponse, en-têtes : **inconnus** (jamais recopiés) |
-| Boutons précédent/suivant (`#maquette-cut-precedent`, `#maquette-cut-suivant`), événement `maquette:goto` | oui | **hypothèses** de la maquette (identifiants inventés, marqués) |
+| Événement interne de saut (`railPairSelected` sur `#globalcontainer`, jQuery) | non : `#globalcontainer` existe, sans écouteur jQuery, la 4.9 prend le chemin pas à pas par les vrais boutons | **inconnu** sur le vrai ESV (jamais vu) ; `maquette:goto` reste un événement de la maquette |
 | Erreurs d'ESV (écriture refusée, nuage jamais chargé, changement de partie imprévu) | non (à ajouter par réglage) | **inconnu** sur le terrain |
 
 ## Ce que ça ne prouve jamais

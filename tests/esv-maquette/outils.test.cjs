@@ -15,9 +15,9 @@ test('banc-comparer : issues par cut, cuts différents, totaux, tableau',()=>{
 });
 test('esv-contrat-comparer : confirmée / infirmée / non relevée, et quoi changer',()=>{
   const r={quand:'t',libelle:{format:'Cut N of part P'},profil:{texte:'U50'},commandes:{manquantes:[],titreValider:'load next non validated cut'},compteur:{nombre:1,total:112},
-    totalCuts:{nombre:0},potree:{nuages:1,clipTask:'SHOW_INSIDE',noeudsVisibles:55},camera:{projection0:5},scene:{rails:2},clavier:{ecouteurs:2},railActif:{classe:'selected'},navigation:{candidats:[{},{}]}};
+    totalCuts:{nombre:1},potree:{nuages:1,clipTask:'SHOW_INSIDE',noeudsVisibles:55},camera:{projection0:5.000000006},scene:{rails:2},clavier:{ecouteurs:2},railActif:{classe:'selected'},navigation:{candidats:[{},{},{},{},{},{}]}};
   const c=Contrat.comparer(r);const v=Object.fromEntries(c.hypotheses.map(h=>[h.id,h.verdict]));
-  assert.equal(v.H01,'confirmée');assert.equal(v.H04,'confirmée');assert.equal(v.H05,'infirmée','« M cuts » absent');assert.equal(v.H06,'non relevée','la liste n’est pas relevable depuis la page');
+  assert.equal(v.H01,'confirmée');assert.equal(v.H04,'confirmée');assert.equal(v.H05,'infirmée','« M cuts » présent alors qu’ESV ne l’affiche pas');assert.equal(v.H12,'confirmée','tolérance numérique');assert.equal(v.H06,'non relevée','la liste n’est pas relevable depuis la page');
   assert.equal(v.H07,'infirmée');assert.equal(v.H08,'confirmée');assert.equal(v.H13,'infirmée','55 nœuds hors de la plage supposée');
   assert.ok(c.aChanger.some(x=>x.startsWith('H07')),'H07 à changer : '+JSON.stringify(c.aChanger));
 });

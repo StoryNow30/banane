@@ -19,7 +19,7 @@
   out.compteur = { nombre: compteurs.length, elements: compteurs.slice(0, 3), traites: m ? Number(m[1].replace(/\D/g, '')) : null, total: m ? Number(m[2].replace(/\D/g, '')) : null };
   out.totalCuts = { nombre: totaux.length, elements: totaux.slice(0, 3) };
   const actif = ['O2N3DCutLRClick', 'O2N3DCutRRClick'].map(id => ({ id, classes: String($(id)?.className || ''), aria: $(id)?.getAttribute('aria-pressed') })).filter(x => x.classes || x.aria);
-  out.railActif = { boutons: actif, classe: actif.map(x => x.classes).join(' ').split(/\s+/).find(c => /active|selected|pressed|on$/i.test(c)) || null };
+  out.railActif = { boutons: actif, classe: /\b(left|right)RailSClass\b/.test(actif.map(x => x.classes).join(' ')) ? 'SClass' : actif.map(x => x.classes).join(' ').split(/\s+/).find(c => /active|selected|pressed|on$/i.test(c)) || null };
   const nav = [...document.querySelectorAll('button,[role=button],a')].filter(el => /prev|previous|précéd|next|suivant|back|◀|▶|«|»/i.test((el.title || '') + ' ' + (el.textContent || '') + ' ' + (el.id || ''))).map(el => ({ id: el.id || null, titre: (el.title || '').slice(0, 40), texte: (el.textContent || '').trim().slice(0, 20) }));
   out.navigation = { candidats: nav.slice(0, 12) };
   try {

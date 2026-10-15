@@ -49,8 +49,8 @@
  const etat={scenario:null,partie:null,index:-1,side:null,chargements:0,minuteries:[],listes:new Map(),ecritures:0,pannes:{},cacheNoeuds:new Map(),generation:0};
  const concerne=(regle,cut)=>!!regle&&(regle.cuts==='toutes'||Array.isArray(regle.cuts)&&regle.cuts.includes(cut));
  const root=objet('Scene'),camera=objet('OrthographicCamera');camera.projectionMatrix={elements:I()};
- const pc=objet('PointCloudOctree');pc.visibleNodes=[];pc.material={clipBoxes:[],clipTask:2,clipMethod:0};ajouter(root,pc);
- for(const [i,p] of [[0,[0,0,0]],[1,[1.5,0,0]]].entries()){const m=objet('Mesh',{position:p});m.geometry={type:'SphereGeometry',parameters:{radius:.0015}};m.material={color:{getHex:()=>[16302520,10606282][i]}};ajouter(root,m);}
+ const pc=objet('PointCloudOctree');pc.visibleNodes=[];pc.material={clipBoxes:[],clipTask:2,clipMethod:0}; /* hors de la racine, comme sur ESV (relevé du 15 octobre) */
+ for(const [i,p] of [[0,[0,0,0]],[1,[1.5,0,0]],[2,[.75,0,.5]]].entries()){const m=objet('Mesh',{position:p});m.geometry={type:'SphereGeometry',parameters:{radius:.0015}};m.material={color:{getHex:()=>[16302520,10606282,8947848][i]}};ajouter(root,m);}
  majMonde(root);
  const canvas=$('maquette-vue');
  window.Potree={ClipTask:{NONE:0,HIGHLIGHT:1,SHOW_INSIDE:2,SHOW_OUTSIDE:3},ClipMethod:{INSIDE_ANY:0,INSIDE_ALL:1},numNodesLoading:0};
@@ -77,7 +77,9 @@
  /* ---------- chargement d'un cut ---------- */
  function viderCut(){for(const t of etat.minuteries)clearTimeout(t);etat.minuteries.length=0;
   for(const s of ['left','right'])if(rails[s]){root.children.splice(root.children.indexOf(rails[s]),1);rails[s]=null;}
-  pc.visibleNodes=[];window.Potree.numNodesLoading=0;etat.side=null;for(const id of ['O2N3DCutLRClick','O2N3DCutRRClick'])$(id).classList.remove('active');}
+  pc.visibleNodes=[];window.Potree.numNodesLoading=0;etat.side=null;classesCote(null);}
+ /* Classes des boutons de rail, relevées sur ESV : `leftRailSClass` (sélectionné) / `leftRailUSClass` (non), idem à droite. */
+ function classesCote(side){for(const [s,id,pre] of [['left','O2N3DCutLRClick','leftRail'],['right','O2N3DCutRRClick','rightRail']]){const el=$(id);el.classList.toggle(pre+'SClass',side===s);el.classList.toggle(pre+'USClass',side!==s);}}
  function construireRail(side,desc){const r=objet('Object3D',{position:desc.position,quaternion:desc.quaternion,scale:desc.scale,rotation:desc.rotation});
   ajouter(r,objet('Mesh'));const profil=ajouter(r,objet('Object3D',{position:desc.profil.position,quaternion:desc.profil.quaternion,scale:desc.profil.scale,rotation:desc.profil.rotation}));
   for(const contour of desc.contours){const l=ajouter(profil,objet('Line'));l.geometry={attributes:{position:tampon(contour.flat())}};}
@@ -116,9 +118,10 @@
  /* Compteur tenu sur la LISTE de la partie (une ligne par indice, cut N = ligne N) ; hypothèse : traité = validé ou passé. */
  const liste=()=>etat.listes.get(etat.partie.part)||[];
  const traites=()=>liste().filter(l=>l.ExtractionStatus!=='invalid').length;
- function majCompteur(){$('maquette-compteur').textContent=`${traites()} on ${liste().length} treated`;$('maquette-total').textContent=`${liste().length} cuts`;
-  $('O2N3DCutNextInvalid3DRail').disabled=prochain('invalid')<0;}
- const prochain=(critere,depuis=etat.index)=>{for(let i=depuis+1;i<etat.partie.cuts.length;i++){const s=etat.partie.cuts[i].status;if(critere==='invalid'?s==='invalid':s!=='valid')return i;}return -1;};
+ function majCompteur(){$('maquette-compteur').querySelector('.badge').textContent=`${traites()} on ${liste().length}`;
+  $('O2N3DCutNextInvalid3DRail').disabled=prochain('non-valide')<0;$('O2N3DCutPreviousInvalid3DRail').disabled=prochain('non-valide',etat.index,-1)<0;}
+ /* « non validé » (titres relevés : « Next non validated cut », « Load next non validated cut ») = statut différent de `valid` : un cut passé (skipped) est revisité. Hypothèse déduite des titres. */
+ const prochain=(critere,depuis=etat.index,sens=1)=>{for(let i=depuis+sens;i>=0&&i<etat.partie.cuts.length;i+=sens){const s=etat.partie.cuts[i].status;if(s!=='valid')return i;}return -1;};
  /* ---------- écritures vers le « serveur » ---------- */
  async function ecrire(status){const c=cutCourant(),ligne=liste()[c.cut],avant={status:c.status,ligne:ligne?{...ligne}:null};c.status=status;const L=pt(rails.left.matrixWorld.elements,[0,0,0]),R=pt(rails.right.matrixWorld.elements,[0,0,0]);
   const body={RowKey:`${etat.partie.part}-${c.cut}`,ExtractionStatus:status,TreatedByOperator:true,SeenByOperator:true,XLeftEdge:L[0],YLeftEdge:L[1],ZLeftEdge:L[2],XRightEdge:R[0],YRightEdge:R[1],ZRightEdge:R[2]};
@@ -128,9 +131,10 @@
    if(r.status<200||r.status>=300){c.status=avant.status;if(ligne&&avant.ligne){for(const k of Object.keys(ligne))delete ligne[k];Object.assign(ligne,avant.ligne);}majCompteur();log('ecriture-refusee',{cut:c.cut,http:r.status});}}
   catch(e){log('ecriture-echec',{cut:c.cut,message:e.message});}}
  /* ---------- actions (équivalents de ce qu'Ariane observe dans ESV) ---------- */
- function choisirRail(side){etat.side=side;$('O2N3DCutLRClick').classList.toggle('active',side==='left');$('O2N3DCutRRClick').classList.toggle('active',side==='right');
+ function choisirRail(side){etat.side=side;classesCote(side);
   log('rail-choisi',{side});requestAnimationFrame(()=>recentrer(side)); /* la caméra suit à l'image suivante (D-088) */}
- function invalideSuivant(){const i=prochain('invalid');if(i<0){log('invalide-suivant-aucun');return;}chargerCut(i,'invalide-suivant');}
+ function invalideSuivant(){const i=prochain('non-valide');if(i<0){log('invalide-suivant-aucun');return;}chargerCut(i,'invalide-suivant');}
+ function invalidePrecedent(){const i=prochain('non-valide',etat.index,-1);if(i<0){log('invalide-precedent-aucun');return;}chargerCut(i,'invalide-precedent');}
  function validerEtSuivant(){if(!rails.left)return;void ecrire('valid');const i=prochain('non-valide');
   const cp=etat.pannes.changementPartie;
   if(i>=0&&!(cp&&Number(cp.apresCut)===cutCourant().cut))return chargerCut(i,'valider-et-suivant');
@@ -141,8 +145,9 @@
  function passer(){if(!rails.left)return;void ecrire('skipped');invalideSuivant();}
  function allerA(index,raison){if(index<0||index>=etat.partie.cuts.length){log('navigation-refusee',{index});return;}chargerCut(index,raison);}
  $('O2N3DCutLRClick').addEventListener('click',()=>choisirRail('left'));$('O2N3DCutRRClick').addEventListener('click',()=>choisirRail('right'));
- $('O2N3DCutValidate3DRail').addEventListener('click',validerEtSuivant);$('O2N3DCutNextInvalid3DRail').addEventListener('click',invalideSuivant);
- $('maquette-cut-precedent').addEventListener('click',()=>allerA(etat.index-1,'precedent'));$('maquette-cut-suivant').addEventListener('click',()=>allerA(etat.index+1,'suivant'));
+ $('O2N3DCutValidate3DRail').addEventListener('click',validerEtSuivant);$('O2N3DCutNextInvalid3DRail').addEventListener('click',invalideSuivant);$('O2N3DCutPreviousInvalid3DRail').addEventListener('click',invalidePrecedent);
+ $('O2N3DCutSkip3DRail').addEventListener('click',passer);
+ $('O2N3DCutPrevious3DRail').addEventListener('click',()=>allerA(etat.index-1,'precedent'));$('O2N3DCutNext3DRail').addEventListener('click',()=>allerA(etat.index+1,'suivant'));
  document.addEventListener('maquette:goto',e=>{const i=etat.partie?.cuts.findIndex(c=>c.cut===Number(e.detail?.cut));if(i>=0)allerA(i,'evenement-goto');}); /* hypothèse d'événement interne */
  document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select'))return;const which=e.which||e.keyCode;
   log('touche',{key:e.key,which,shift:e.shiftKey,ctrl:e.ctrlKey,trusted:e.isTrusted});
@@ -182,7 +187,7 @@
   if(index<0){index=etat.partie.cuts.findIndex(c=>c.status==='invalid');if(index<0)index=0;}
   projection();chargerCut(index,'demarrage');return true;}
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
-   compteur:$('maquette-compteur').textContent,traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
+   compteur:$('maquette-compteur').textContent.replace(/\s+/g,' ').trim(),traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
    statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),
    reference:c?.reference?.monde||null,provenance:etat.scenario?.provenance||null,cuts:etat.partie?.cuts.map(x=>x.cut)||[],pannes:etat.pannes};},
   allerA:cut=>{const i=etat.partie.cuts.findIndex(c=>c.cut===cut);return i>=0?allerA(i,'maquette.allerA'):false;},scenario:()=>etat.scenario,pret:null};
