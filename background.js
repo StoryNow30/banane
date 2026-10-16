@@ -292,6 +292,13 @@ function aplatirContrat(v,prefixe='',out={}){
  * jamais relue. Ne sont plus comparés ni les libellés de boutons ni le nombre d'écouteurs (l'adaptateur les met à part, dans `etat`, que le journal
  * garde sans le comparer). Aucune requête ESV : tout vient du second `ping` de « Connecter ». */
 const CLE_CONTRATS='banane54Contrats',CONTRATS_MAX=8;
+/* 5.0 (audit 5.0, U1) — EN PLUS, LA DERNIÈRE EMPREINTE CONNUE, TOUS ONGLETS CONFONDUS, dans chrome.storage.local (elle survit au redémarrage du
+ * navigateur, que storage.session ne passe pas). Quand l'onglet n'a pas d'empreinte propre, l'événement `contrat-esv` consigne
+ * `dernierConnu` ({hash, different, changements}) : un changement d'ESV entre deux jours se voit au premier « Connecter ». JAMAIS D'AVIS
+ * sur ce seul motif (deux fenêtres dans deux états restent possibles) : l'avis reste la règle par onglet. */
+const CLE_CONTRAT_DERNIER='banane50ContratDernier';
+async function contratDernierLire(){try{const v=(await chrome.storage.local.get(CLE_CONTRAT_DERNIER))?.[CLE_CONTRAT_DERNIER];
+ return v&&typeof v==='object'&&!Array.isArray(v)&&typeof v.hash==='string'&&/^[0-9a-f]{8}$/.test(v.hash)?v:null;}catch{return null;}}
 const stockContrats=()=>chrome?.storage?.session?.get?chrome.storage.session:chrome?.storage?.local;
 async function contratsLire(S){try{const v=(await S.get(CLE_CONTRATS))?.[CLE_CONTRATS];return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}catch{return {};}}
 /* Un onglet fermé est oublié (son numéro ne reviendra pas dans cette session ; en repli sur storage.local, il pourrait être réattribué). */
@@ -302,8 +309,13 @@ async function contratNoter(c,tabId){try{
  const S=stockContrats(),detail=reduireContrat(c.detail),etat=reduireContrat(c.etat),cle=Number.isInteger(tabId)?String(tabId):'?';
  const tous=await contratsLire(S),prev=tous[cle]||null;
  const change=!!prev&&typeof prev.hash==='string'&&prev.hash!==c.hash;
- const a=aplatirContrat(prev?.detail||{}),b=aplatirContrat(detail||{}),bouge=change?[...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).slice(0,12):[];
- journalerSimple('contrat-esv',{hash:c.hash,precedent:prev?.hash??null,change,changements:bouge,detail,etat,onglet:Number.isInteger(tabId)?tabId:null});
+ const diff=(x,y)=>{const a=aplatirContrat(x||{}),b=aplatirContrat(y||{});return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).slice(0,12);};
+ const bouge=change?diff(prev?.detail,detail):[];
+ /* U1 : sans empreinte propre à l'onglet, comparaison (consignée seulement) à la dernière connue, tous onglets confondus. */
+ const dernier=await contratDernierLire();
+ const dernierConnu=prev?undefined:dernier?{hash:dernier.hash,different:dernier.hash!==c.hash,changements:dernier.hash!==c.hash?diff(dernier.detail,detail):[]}:null;
+ journalerSimple('contrat-esv',{hash:c.hash,precedent:prev?.hash??null,change,changements:bouge,...(dernierConnu!==undefined?{dernierConnu}:{}),detail,etat,onglet:Number.isInteger(tabId)?tabId:null});
+ try{await chrome.storage.local.set({[CLE_CONTRAT_DERNIER]:{hash:c.hash,at:new Date().toISOString(),version:VERSION,detail}});}catch{/* relevé seulement */}
  try{tous[cle]={hash:c.hash,at:new Date().toISOString(),version:VERSION,detail};
   const cles=Object.keys(tous).sort((x,y)=>String(tous[x]?.at||'').localeCompare(String(tous[y]?.at||'')));while(cles.length>CONTRATS_MAX)delete tous[cles.shift()];
   await S.set({[CLE_CONTRATS]:tous});}catch{}
