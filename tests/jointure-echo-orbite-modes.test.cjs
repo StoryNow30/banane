@@ -150,7 +150,7 @@ test('visité sans action : durée par défaut 0,8 s ; un cut visité sans rien 
   assert.equal(rg.dureeMinimaleS, 0.8);
   assert.equal(rg.cuts, 4);
   assert.deepEqual(rg.parClasse, { 'hors-journal': 3, posee: 1 });
-  assert.deepEqual(refus(resume), { 'deplace-sans-validation': 1, 'trop-court': 1, 'sans-mesure': 0, 'hors-cut': 1 });
+  assert.deepEqual(refus(resume), { 'deplace-sans-validation': 1, 'trop-court': 1, 'sans-mesure': 0, 'hors-cut': 1, 'apres-page-perdue': 0, 'captures-vides': 0 });
   for (const cut of [7102, 7103, 7106, 7107]) {
     const l = ligne(table, cut);
     assert.equal(l.referenceHumaine, 'observee', `cut ${cut}`);
@@ -195,7 +195,7 @@ test('visité sans action : durée minimale réglable (0 = toutes les visites, 1
   const cuts = d => joindreRegle({ visiteSansActionBonne: d }).resume.visiteSansActionBonne;
   assert.equal(cuts(0).cuts, 5);                                  // 7101 (0,4 s) s'ajoute
   assert.equal(cuts(1).cuts, 3);                                  // 7102 (0,8 s) tombe
-  assert.deepEqual(cuts(1).refus, { 'deplace-sans-validation': 1, 'trop-court': 2, 'sans-mesure': 0, 'hors-cut': 1 });
+  assert.deepEqual(cuts(1).refus, { 'deplace-sans-validation': 1, 'trop-court': 2, 'sans-mesure': 0, 'hors-cut': 1, 'apres-page-perdue': 0, 'captures-vides': 0 });
   assert.equal(cuts(3).cuts, 2);                                  // 7103 et 7107
   assert.throws(() => joindreRegle({ visiteSansActionBonne: -1 }), /durée en secondes/);
 });

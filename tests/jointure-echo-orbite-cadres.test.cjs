@@ -59,6 +59,7 @@ test('I2 : deux cadres de scène au journal, une translation par cadre, aucun cu
   }
   assert.equal(resume.repereScene.calibre, true);
   assert.equal(resume.repereScene.cadres, 2);
+  assert.equal(resume.repereScene.translationsDistinctes, 2);
   assert.equal(resume.repereScene.paires, 16);
   proche(resume.repereScene.residuP90Mm, 0, 0.001);
   assert.deepEqual(resume.repereScene.parCadre.map(c => [c.rang, c.paires, c.residuP90Mm]), [[1, 8, 0], [2, 8, 0]]);
@@ -88,6 +89,21 @@ test('I2 : un seul cadre, une seule translation ; la table ne change pas de form
   assert.match(J.texte(resume), /Repère de scène : translation constante Écho − journal estimée sur 6 rails ; résidu médian 0\.0 mm, P90 0\.0 mm\./);
 });
 
+test('I2 : plusieurs cadres de même translation (rechargement sans changement d\'origine) : la table garde la forme d\'avant', () => {
+  /* L'Écho a deux sessions (deux pages) mais l'origine de scène n'a pas bougé : une seule translation distincte. */
+  const poses = [], records = [];
+  [8001, 8002, 8003, 8004].forEach((cut, k) => {
+    const g = avancer(G0, k), d = avancer(D0, k);
+    poses.push({ cut, partie: 94, gauche: moinsT(g, T_A), droit: moinsT(d, T_A) });
+    records.push(S.visite({ session: k < 2 ? 'sess-1' : 'sess-2', index: k % 2, cut, partie: 94, debut: m(k * 30 + 1), fin: m(k * 30 + 1, 20), initiale: [g, d], validation: [g, d], cadre: k < 2 ? PAGE_A : PAGE_B }));
+  });
+  const { table, resume } = joindreExports([S.exportEcho({ session: 'sess-1', debutSession: m(0), stamp: '2031-05-01T10-00-00', records: records.slice(0, 2) }),
+    S.exportEcho({ session: 'sess-2', debutSession: m(50), stamp: '2031-05-01T11-00-00', records: records.slice(2) })], S.journal(poses), { partie: 94 });
+  assert.equal(resume.repereScene.cadres, 2);
+  assert.equal(resume.repereScene.translationsDistinctes, 1);
+  for (const l of table) { assert.equal(l.base, 'ariane'); assert.equal('cadreScene' in l, false); }
+});
+
 test('I2 : un cadre sans aucun rail pour estimer sa translation retombe sur la première visite, et le dit', () => {
   /* 8005 à 8008 (page B) : l'Écho n'a pas de pose initiale à rails, la translation de la page B est inconnue. */
   const { exports, jr } = lotDeuxPages({ sansRailsEcho: CUTS_B });
@@ -102,7 +118,7 @@ test('I2 : le résumé lisible donne la translation par cadre', () => {
   const { exports, jr } = lotDeuxPages();
   const { resume } = joindreExports(exports, jr, { partie: 94 });
   const t = J.texte(resume);
-  assert.match(t, /Repère de scène : translation Écho − journal estimée par cadre de scène \(2 cadres\) sur 16 rails ; résidu médian 0\.0 mm, P90 0\.0 mm\./);
+  assert.match(t, /Repère de scène : translation Écho − journal estimée par cadre de scène \(2 cadres, 2 translations distinctes\) sur 16 rails ; résidu médian 0\.0 mm, P90 0\.0 mm\./);
   assert.match(t, /cadre 1 : 8 rails, P90 0\.0 mm ; cadre 2 : 8 rails, P90 0\.0 mm/);
 });
 
