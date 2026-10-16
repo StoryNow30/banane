@@ -20,6 +20,11 @@
  *   node tools/apprentissage-g0.cjs --jeu a.jsonl --jeu b.jsonl [--jeu c.jsonl …]
  *        [--questions 1,2,3,4] [--seuil-visite 0.8] [--bootstrap 500] [--graine 20261016]
  *        [--json sortie.json] [--silencieux]
+ *        [--partie PROJET:PARTIE[,PROJET:PARTIE…] [--juger-partie-reservee]]
+ *
+ * `--partie` déclare les parties que contiennent les jeux ; une partie réservée par le manifeste des parties
+ * (datasets/manifeste-parties.json, B1 de l'audit 5.0) est refusée, sauf avec `--juger-partie-reservee` : l'étude est
+ * alors un JUGEMENT, aucun réglage ne doit être modifié d'après ses résultats.
  *
  * Les parties sont reconnues à leur champ `partie`. Une partie « Ariane » porte des traits d'Ariane (lot Orbite) ; une
  * partie « humaine » (poses de départ d'un opérateur, source `humain*`) n'en porte pas. Les traits absents sont
@@ -29,6 +34,7 @@
  * la pose de départ avant correction). Aucune coordonnée absolue n'est lue ni écrite.
  */
 const fs = require('node:fs');
+const Manifeste = require('./manifeste-parties.cjs');
 
 const FORMAT = 'ariane-apprentissage-g0-v1';
 const PARTS_SIGNALEES = [0.05, 0.10, 0.20];
@@ -986,6 +992,8 @@ function lireArguments(argv) {
     else if (a === '--seuil-ecartement') o.seuilEcartementMm = Number(argv[++i]);
     else if (a === '--json') o.json = argv[++i];
     else if (a === '--silencieux') o.silencieux = true;
+    else if (a === '--partie') o.partie = Manifeste.lireDesignations(argv[++i]);
+    else if (a === '--juger-partie-reservee') o.jugerReservee = true;
     else if (a === '--aide' || a === '-h') o.aide = true;
     else throw new Error(`option inconnue : ${a}`);
   }
@@ -994,7 +1002,11 @@ function lireArguments(argv) {
 }
 function executer(argv) {
   const o = lireArguments(argv);
-  if (o.aide) return { texte: 'usage : node tools/apprentissage-g0.cjs --jeu a.jsonl --jeu b.jsonl [--questions 1,2,3,4] [--seuil-visite 0.8] [--bootstrap 500] [--graine N] [--seuil-ecartement 10] [--json sortie.json] [--silencieux]\n', code: 0 };
+  if (o.partie && !o.aide) {
+    const { avis } = Manifeste.controler(Manifeste.lire(), o.partie, { outil: 'apprentissage-g0', jugerReservee: !!o.jugerReservee });
+    if (avis) process.stderr.write(avis + '\n');
+  }
+  if (o.aide) return { texte: 'usage : node tools/apprentissage-g0.cjs --jeu a.jsonl --jeu b.jsonl [--questions 1,2,3,4] [--seuil-visite 0.8] [--bootstrap 500] [--graine N] [--seuil-ecartement 10] [--json sortie.json] [--silencieux] [--partie projet:partie[,projet:partie…]] [--juger-partie-reservee]\n', code: 0 };
   const resultat = analyser(lireFichiers(o.jeux), o);
   if (o.json) fs.writeFileSync(o.json, JSON.stringify(resultat, null, 1) + '\n');
   return { texte: o.silencieux ? '' : texte(resultat), code: 0, resultat };

@@ -270,3 +270,40 @@ test('ligne de commande : construire puis juger, sans coordonnée absolue dans l
     assert.equal(mauvais.status, 2); assert.match(mauvais.stderr, /au moins deux parties/);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
+
+/* ---------------------------------------------------------------- B1 : parties réservées (manifeste des parties) */
+const partieDe = (p, i) => partieFabriquee(p, 1000 + 17 * i, { decalage: 30 + 10 * i });
+
+test('B1 juger : une partie réservée est jugée mais n\'entre dans aucun apprentissage', () => {
+  const brouille = cas => cas.map(c => ({ ...c, reponse: { ...c.reponse, mic: { gauche: [0, 123, 45], droite: [0, -123, 45] } } }));
+  const construire = changer => new Map([91, 92, 93, 94, 95].map((p, i) => [p, changer && p === 95 ? brouille(partieDe(p, i)) : partieDe(p, i)]));
+  const base = G.juger(construire(false), { reservees: [95] }), autre = G.juger(construire(true), { reservees: [95] });
+  for (const p of [91, 92, 93, 94]) {
+    for (const id of ['a-pool', 'b-serie', 'c-voisin']) assert.deepEqual(autre.methodes[id].modeles[p], base.methodes[id].modeles[p], `${id} appris hors partie ${p}, sans la partie réservée`);
+    assert.deepEqual(autre.bParSerie.parPartie[p], base.bParSerie.parPartie[p], `(b) série par série, partie ${p}`);
+  }
+  assert.ok(base.methodes['a-pool'].parPartie[95], 'la partie réservée est bien jugée');
+  assert.deepEqual(base.reservees, [95]);
+  assert.ok(G.texte(base).includes('réservée'));
+  assert.deepEqual(G.juger(construire(false)).reservees, [], 'sans partie réservée, rien ne change');
+});
+
+test('B1 juger : un en-tête qui porte projet et partie est contrôlé contre le manifeste', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'g1-manif-'));
+  try {
+    /* Le fichier du 91 déclare une partie réservée ; les deux autres déclarent des parties d'apprentissage du manifeste. */
+    const declare = { 91: 91, 92: 17, 93: 24 };
+    const fichiers = [91, 92, 93].map((pn, i) => {
+      const f = path.join(tmp, `cas-${pn}.jsonl`);
+      fs.writeFileSync(f, [{ type: 'entete', format: G.FORMAT_CAS, partie: declare[pn], projet: 1 }, ...partieDe(pn, i)].map(l => JSON.stringify(l)).join('\n') + '\n');
+      return f;
+    });
+    const cas = fichiers.flatMap(f => ['--cas', f]);
+    const refus = cp.spawnSync(process.execPath, [OUTIL, 'juger', ...cas, '--silencieux'], { encoding: 'utf8' });
+    assert.equal(refus.status, 2); assert.match(refus.stderr, /la partie 91 du projet 1 est réservée/);
+    const permis = cp.spawnSync(process.execPath, [OUTIL, 'juger', ...cas, '--juger-partie-reservee'], { encoding: 'utf8' });
+    assert.equal(permis.status, 0, permis.stderr);
+    assert.match(permis.stderr, /partie 91 du projet 1 réservée, jugée sans réglage/);
+    assert.match(permis.stdout, /Parties réservées, jugées sans réglage \(elles n'apprennent rien\) : 91/);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
