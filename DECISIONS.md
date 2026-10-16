@@ -2023,3 +2023,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Le grain fin de Mic (2 à 4 mm, surtout vertical) est le même pour les deux ; il remonte le débutant de +2,2 mm, mais descend Ariane de −2 mm sur la partie 29.
   - Parcours : ordre croissant, sans trou, environ 1,6 s par cut.
 - **Règle « visité sans action = bon »** : sans effet sur les faux verts d'Orbite. Les survols sont très courts (0,65 s en médiane) : proposer à Mic une durée minimale d'environ 1 s, nuage chargé.
+
+## D-135 — Partie 13 (partie humaine corrigée par Mic) : la signature des 30–40 mm confirmée, l'écartement la détecte parfaitement (16 octobre 2026)
+
+- 223 cuts : 66,8 % non touchés ; 11,7 % à 25 mm ou plus (26 cuts, dont 25 sur le rail droit, +30,9 mm latéral, −13,3 mm vertical, 3D de 25,8 à 39,3 mm). C'est la même signature qu'en partie 12, absente des poses d'Ariane (parties 17, 24, 29). Même opérateur ou même méthode de pose : compatible, mais non prouvé.
+- **Écartement de la pose de départ à plus de 10 mm de sa médiane : 54 « mauvais objets » humains repérés sur 54** (parties 12 et 13), et aucune fausse alerte sur 199 cuts non touchés. C'est un contrôle simple pour la relecture de poses humaines, et un trait pour M6 et GCV2.
+- Les PN concentrent 81 % des mauvais objets de la partie 13, au centre du PN (36 %) plutôt qu'aux bords (8 %). ADV1 : Mic corrige surtout l'entrée de la zone ; l'aiguille (cut 4682) ne se voit qu'à son arrêt de 69 s, pas dans la géométrie. ADV2 : la sortie réelle serait vers le cut 4963, et non 4936, et l'« aiguille au cut 4682 » de cette ligne paraît copiée de la ligne d'ADV1 (à confirmer par Mic). PN 6100 : fin probable 6115.
+- Parcours de Mic : validation cut par cut en PN et en entrée d'ADV (1,7 s par cut), survol ailleurs (0,8 s par cut).
+- Tableau de synthèse « par cut, > 10 mm » : débutant p12 29 %, p13 13 % ; Ariane p17 24,5 %, p24 32 %, p29 3,5 %. Les humains font peu d'erreurs moyennes, mais de grosses erreurs d'objet ; Ariane ne fait aucune erreur d'objet, mais beaucoup d'erreurs moyennes de 5 à 25 mm.
