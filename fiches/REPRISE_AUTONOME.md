@@ -59,3 +59,14 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - **4.9.5 test 5** : base 5.0, ombres, relevé des glissers, règles métier **en ombre**, avec paquet et consigne ;
 - **relecture au niveau maximal** du diff de la test 5 avant de l'envoyer à Mic ;
 - **cahier v1.1** : proposition de porte pour Mic (« jamais la mauvaise voie et pas plus de faux qu'Orbite aujourd'hui, en ombre sur parties neuves ») et autres amendements de l'audit (I7).
+
+**État au 17 octobre, 0 h** : la vague 1 est rentrée et fusionnée (D-156 à D-160), verify complet vert (2 006). Également faits : la mesure du clic hors vue (D-157, décision à Mic) et le bruit de la référence (D-158).
+
+**Vague 2 lancée** :
+- `claude/50-hauteur-apprise` (fort) : correction de hauteur en ombre ; 70 des 85 faux verts viennent de la hauteur ;
+- `claude/50-verts-a-controler` (fort) : liste des verts à contrôler, dans le panneau et l'export, sans aucune action dans ESV ;
+- cahier v1.1 (fort) : brouillon hors dépôt, `cahier11/CAHIER_5.0_v1.1.md`, à soumettre à Mic.
+
+**Vague 3** (quand la vague 2 est rentrée) :
+- **test 5** depuis `claude/50-base` : version 4.9.5.5, consigne, paquet ;
+- relecture au niveau maximal avant de l'envoyer à Mic.
