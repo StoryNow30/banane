@@ -2131,3 +2131,17 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - les classes des boutons de rail restent comparées : une fausse alerte reste possible ;
   - le F5 en Écho n'a été joué que sur le banc.
 - **Pour l'audit (axe 3)** : des noms de modèle figurent dans `DECISIONS.md` (ligne 14), `fiches/FICHE_B1.md` et `PILOTAGE_SESSIONS.md`. Ils sont déjà sur `main` et dans les paquets précédents. À retirer, avec Mic pour `main`.
+
+## D-147 — Voie prédite et « déplacer la vue » : rejeu hors ligne, règle prudente, rien d'activé (16 octobre 2026)
+
+- Livré sur `claude/50-voie-predite` (199bee8). Intégré à `claude/50-base` par avance rapide. Trois fichiers seulement : outil, essai, fiche `fiches/VOIE_PREDITE.md`. Rien sous `src/`, verify vert.
+- **Fidélité** : le rejeu appelle les vrais modules. Il refait le lot réel à 0,5 mm près (351/351 en partie 1 du second projet, 244/244 en partie 29). Il retrouve les 10 faux verts de D-141.
+- **Partie 1 du second projet, 127 différés** :
+  - sans déplacer la vue, aucune pose possible ;
+  - vue déplacée, série complète : 42 poses, 2 fausses, 0 sur la mauvaise voie ;
+  - **règle prudente** : seulement pour les différés, l'étage moteur, une confiance ≥ 55, une chaîne ≤ 10 et un écartement à 10 mm des appuis. Elle pose 27 cuts (21 %), 0 faux, 0 mauvaise voie. 15 de ces poses demandent un geste sur la vue. Aucun des 224 cuts déjà posés ne change.
+- Partie 29 : la règle ne change rien.
+- Les seuils sont lus sur ces deux parties : la règle passera un lot neuf **en ombre** avant toute activation, qui se fera avec Mic.
+- **Pièce à construire** : `amenerDansLaVue`, avec dézoom ou glisser, au plus 3 gestes par rail. La vue est remise en place avant le cut suivant. Il faut d'abord relever sur la maquette si ESV accepte ces gestes.
+- **Écho** : y consigner longueur, durée et caméra des glissers.
+- **À confirmer par Mic** : D-043 dit qu'il déplace la vue « au clic droit », le message du 16 octobre dit « au clic gauche ».
