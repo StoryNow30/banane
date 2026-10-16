@@ -154,3 +154,108 @@ test('la garde de paire ne change pas : un rail plafonné compte toujours comme 
   /* Pas de rail repêché : la garde ne se déclenche pas, plafond ou non. */
   assert.notEqual(pose(science(false)).reason,'pair-guard');
 });
+
+/* ------------------------------------------------------------------ P1 bis : plafond sur l'axe vertical seulement */
+const brutDe=c=>raw(!!(c.cap&&c.cap.mirror));
+const lancerAvec=(valeur)=>avecReglage(valeur,()=>lancer(Convention));
+
+test('trois valeurs : faux, "vertical", vrai ; le reste vaut faux', () => {
+  assert.equal(JSON.stringify(Convention.calibrate(capture({topSpreadMm:11}),'left',raw(false),{plafond:'oui'})),reference[CAS.findIndex(c=>c.cap&&c.cap.topSpreadMm===11&&c.cap.topShiftMm===0&&c.cap.facePoints===11)],'valeur inconnue : comme faux');
+  for(const valeur of ['oui',1,null,undefined,'both','']) {
+    const out=avecReglage(valeur,()=>lancer(Convention));
+    for(let i=0;i<CAS.length;i++)assert.equal(out[i],reference[i],`${String(valeur)} : ${CAS[i].nom}`);
+  }
+});
+
+test('"vertical" : les rails dans le domaine ou non calables sont rendus à l’identique', () => {
+  const v=lancerAvec('vertical');
+  for(let i=0;i<CAS.length;i++){const ref=JSON.parse(reference[i]);if(ref.reason==='shift-out-of-domain')continue;assert.equal(v[i],reference[i],CAS[i].nom);}
+});
+
+test('"vertical" : un décalage latéral hors domaine garde le rail refusé, posé brut, même si dz est hors domaine', () => {
+  const v=lancerAvec('vertical');let lateraux=0,deux=0;
+  for(let i=0;i<CAS.length;i++){
+    const ref=JSON.parse(reference[i]),max=(CAS[i].options&&CAS[i].options.maxShiftMm)||8;
+    if(ref.reason!=='shift-out-of-domain'||!(Math.abs(ref.duMm)>max))continue;
+    lateraux++;if(Math.abs(ref.dzMm)>max)deux++;
+    assert.equal(v[i],reference[i],`refus conservé, octet pour octet : ${CAS[i].nom}`);
+    const r=JSON.parse(v[i]);assert.equal(r.applied,false);assert.deepEqual(r.delta,brutDe(CAS[i]));assert.equal('capped' in r,false);
+  }
+  assert.ok(lateraux>=4,'cas latéraux couverts');assert.ok(deux>=2,'cas avec les deux axes hors domaine couverts');
+});
+
+test('"vertical" : dz seul hors domaine est plafonné à 8 mm dans son signe, du appliqué en entier, le reste consigné', () => {
+  const v=lancerAvec('vertical');let n=0,positifs=0,negatifs=0;
+  for(let i=0;i<CAS.length;i++){
+    const ref=JSON.parse(reference[i]),c=CAS[i],max=(c.options&&c.options.maxShiftMm)||8;
+    if(ref.reason!=='shift-out-of-domain'||Math.abs(ref.duMm)>max)continue;
+    n++;const r=JSON.parse(v[i]),mirror=!!(c.cap&&c.cap.mirror),brut=brutDe(c),sign=mirror?-1:1;
+    assert.equal(r.applied,true,c.nom);assert.equal(r.capped,true);assert.equal(r.capAxes,'vertical');assert.equal(r.capMm,max);assert.equal(r.reason,'shift-out-of-domain');
+    assert.equal(r.duMm,ref.duMm);assert.equal(r.dzMm,ref.dzMm);
+    assert.equal(r.appliedDzMm,Math.sign(ref.dzMm)*max,'dz plafonné');assert.ok(Math.abs(r.restDzMm-(ref.dzMm-r.appliedDzMm))<1e-12);assert.ok(r.restDzMm*ref.dzMm>0);
+    assert.equal(r.appliedDuMm,ref.duMm,'du appliqué en entier');assert.equal(r.restDuMm,0);
+    assert.ok(Math.abs(r.delta[1]-(brut[1]+sign*ref.duMm/1000))<1e-12);assert.ok(Math.abs(r.delta[2]-(brut[2]+r.appliedDzMm/1000))<1e-12);assert.equal(r.delta[0],brut[0]);
+    ref.dzMm>0?positifs++:negatifs++;
+  }
+  assert.ok(n>=50);assert.ok(positifs>0&&negatifs>0,'les deux signes de dz');
+});
+
+test('vrai : comportement des deux axes inchangé par P1 bis (aucun champ capAxes)', () => {
+  const t=lancerAvec(true);
+  for(let i=0;i<CAS.length;i++){const ref=JSON.parse(reference[i]),r=JSON.parse(t[i]);
+    if(ref.reason==='shift-out-of-domain'){assert.equal(r.capped,true);assert.equal('capAxes' in r,false);const max=(CAS[i].options&&CAS[i].options.maxShiftMm)||8;assert.equal(r.appliedDuMm,Math.sign(ref.duMm)*Math.min(Math.abs(ref.duMm),max));}
+    else assert.equal(t[i],reference[i]);}
+  /* "vertical" et vrai ne diffèrent que sur les rails dont du est hors domaine : ailleurs, même pose (du est appliqué en entier dans les deux cas). */
+  const v=lancerAvec('vertical');let memes=0,differents=0;
+  for(let i=0;i<CAS.length;i++){const ref=JSON.parse(reference[i]),max=(CAS[i].options&&CAS[i].options.maxShiftMm)||8;
+    if(ref.reason!=='shift-out-of-domain')continue;
+    const a=JSON.parse(v[i]),b=JSON.parse(t[i]);
+    if(Math.abs(ref.duMm)>max){differents++;assert.equal(a.applied,false);assert.equal(b.applied,true);}
+    else{memes++;assert.deepEqual(a.delta,b.delta,CAS[i].nom);assert.equal(a.appliedDzMm,b.appliedDzMm);}}
+  assert.ok(memes>0&&differents>0);
+});
+
+test('l’option explicite prime sur le réglage, avec les trois valeurs', () => {
+  const cap=capture({topSpreadMm:11}),brut=raw(false);
+  assert.equal(Convention.calibrate(cap,'left',brut,{plafond:'vertical'}).capAxes,'vertical');
+  assert.equal(avecReglage(true,()=>Convention.calibrate(cap,'left',brut,{plafond:'vertical'})).capAxes,'vertical');
+  assert.equal(avecReglage('vertical',()=>Convention.calibrate(cap,'left',brut,{plafond:true})).capAxes,undefined);
+  assert.equal(avecReglage('vertical',()=>Convention.calibrate(cap,'left',brut,{plafond:false})).applied,false);
+  assert.equal(avecReglage('vertical',()=>Convention.calibrate(cap,'left',brut)).capAxes,'vertical');
+});
+
+test('le réglage livré est faux et le panneau le dit coupé', () => {
+  assert.equal(Settings.conventionPlafond,false);
+  const texte=Settings.describe().find(l=>/Plafond du calage de convention/.test(l.nom)).valeur;
+  assert.match(texte,/coupé/);
+});
+
+test('dans le moteur : "vertical" plafonne dz seul, le journal compact reprend capped, capMm, capAxes et rest*, et coupé il est inchangé', () => {
+  const off=Shadow.scientificProposeBoth(pilot),runtimeOff=Shadow.toRuntimeRails(off);
+  for(const s of ['left','right'])assert.deepEqual(Object.keys(runtimeOff[s].gcv1.convention),['applied','reason','duMm','dzMm','faceMode','rawDelta'],'coupé : mêmes champs qu’avant');
+  const refus=off.rails.right.conventionCalibration;
+  const lateral=Math.abs(refus.duMm)>8;
+  const vert=avecReglage('vertical',()=>Shadow.scientificProposeBoth(pilot)),deux=avecReglage(true,()=>Shadow.scientificProposeBoth(pilot));
+  const cv=vert.rails.right.conventionCalibration;
+  assert.equal(lateral,false,'la capture versionnée a un rail droit hors domaine sur dz seul');
+  if(lateral){assert.equal(cv.applied,false);assert.deepEqual(vert.rails.right.next.delta,off.rails.right.next.delta);}
+  else{assert.equal(cv.capped,true);assert.equal(cv.capAxes,'vertical');assert.equal(cv.appliedDuMm,cv.duMm);assert.equal(cv.restDuMm,0);
+    const journal=Shadow.toRuntimeRails(vert).right.gcv1.convention;
+    assert.deepEqual(['capped','capMm','capAxes','appliedDuMm','appliedDzMm','restDuMm','restDzMm'].map(k=>journal[k]),[true,8,'vertical',cv.appliedDuMm,cv.appliedDzMm,cv.restDuMm,cv.restDzMm]);}
+  const jd=Shadow.toRuntimeRails(deux).right.gcv1.convention;
+  assert.equal(jd.capped,true);assert.equal(jd.capMm,8);assert.equal(jd.capAxes,'both');assert.equal(jd.restDzMm,deux.rails.right.conventionCalibration.restDzMm);
+  assert.equal(Shadow.toRuntimeRails(deux).left.gcv1.convention.capped,undefined,'rail dans le domaine : rien de plus');
+});
+
+test('la garde de paire ne change pas non plus en mode "vertical"', () => {
+  const cap=capture({topSpreadMm:11}),brut=raw(false);   // dz hors domaine seul
+  const cal=Convention.calibrate(cap,'left',brut,{plafond:'vertical'});assert.equal(cal.capped,true);assert.equal(cal.capAxes,'vertical');
+  const latRefuse=Convention.calibrate(capture({faceShiftMm:12}),'left',brut,{plafond:'vertical'});assert.equal(latRefuse.applied,false);
+  for(const [nom,rail] of [['plafonné',cal],['refusé',latRefuse]]){
+    const science={summary:{pairGaugeRejected:false},rails:{
+      left:{ok:true,next:{status:'candidate',delta:[0,.001,0],changed:true},conventionCalibration:{applied:true,reason:null}},
+      right:{ok:true,next:{status:'candidate',delta:[0,.001,0],changed:false},conventionCalibration:rail}}};
+    const d=L.decideCut({capture:{identity:{part:23,cut:105,frameId:'f'},rails:pilot.rails,pointsSceneRelative:pilot.pointsSceneRelative,visibleByClipBoxes:pilot.pointsSceneRelative.map(()=>true)},science,anchors:[],Shadow});
+    assert.equal(d.stage,'deferred',nom);assert.equal(d.reason,'pair-guard',nom);
+  }
+});

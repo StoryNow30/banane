@@ -18,22 +18,33 @@ function lotSynthetique() {
   return { science, lot: { label: 'synthetique', diagnostic: { version: '4.9.5.4', observations: [observation] }, journal: null, corpus: { clouds: [{ captureId: 'capture-1', ...capture }] } } };
 }
 
-test('rejeu d’un lot : le rail refusé est plafonné, la décision et les compteurs sont consignés', () => {
+test('rejeu d’un lot : trois colonnes, le rail refusé est plafonné, la décision et les compteurs sont consignés', () => {
   const { lot } = lotSynthetique();
   const r = T.rejouerLot(lot);
-  assert.equal(r.comptes.cuts, 1);
+  assert.deepEqual(Object.keys(r.bras), ['vertical', 'deux']);
+  assert.equal(r.cuts, 1);
   assert.deepEqual(r.controle, { observations: 1, identiques: 1, sansNuage: 0 }, 'le relancement sans plafond redonne la science consignée');
   assert.equal(r.cutsAvecRailRefuse, 1);
-  assert.equal(r.rails.refuses, 1);assert.equal(r.rails.plafonnes, 1);
-  assert.ok(r.rails.deplacementMedianMm > 1 && r.rails.deplacementMaxMm <= 8 * Math.SQRT2 + 1e-9, 'le décalage ne dépasse pas 8 mm par axe');
-  /* Un cut posé avant et après ; sa pose a bougé, par un rail refusé. */
-  assert.equal(r.comptes.off.pose, 1);assert.equal(r.comptes.on.pose, 1);
-  assert.equal(r.resume.posesDeplaces.n, 1);assert.equal(r.resume.posesDeplaces.avecRailRefuse, 1);assert.equal(r.resume.posesDeplaces.sansRailRefuse, 0);
-  assert.equal(r.resume.nouveauxPoses.n, 0);assert.equal(r.resume.posesPerdus.n, 0);
-  assert.equal(r.comptes.gardePaire.off, r.comptes.gardePaire.on);
+  assert.equal(r.off.comptes.pose, 1);
+  for (const nom of ['vertical', 'deux']) {
+    const b = r.bras[nom];
+    assert.equal(b.rails.refuses, 1);assert.equal(b.rails.plafonnes, 1);
+    assert.ok(b.rails.deplacementMedianMm > 1 && b.rails.deplacementMaxMm <= 8 * Math.SQRT2 + 1e-9, 'le décalage ne dépasse pas 8 mm par axe');
+    assert.equal(b.comptes.on.pose, 1);
+    assert.equal(b.resume.posesDeplaces.n, 1);assert.equal(b.resume.posesDeplaces.avecRailRefuse, 1);assert.equal(b.resume.posesDeplaces.sansRailRefuse, 0);
+    assert.equal(b.resume.nouveauxPoses.n, 0);assert.equal(b.resume.posesPerdus.n, 0);
+    assert.equal(b.comptes.gardePaire.off, b.comptes.gardePaire.on);
+  }
+  /* Ici le rail refusé l'est sur dz seul : "vertical" et "deux" posent la même chose. */
+  assert.equal(r.bras.vertical.rails.deplacementMedianMm, r.bras.deux.rails.deplacementMedianMm);
 });
 
-test('jugement à la pose de Mic : l’erreur du pire rail avant et après', () => {
+test('un seul bras peut être demandé', () => {
+  const { lot } = lotSynthetique();
+  assert.deepEqual(Object.keys(T.rejouerLot(lot, { bras: ['vertical'] }).bras), ['vertical']);
+});
+
+test('jugement à la pose de Mic : l’erreur du pire rail avant et après, pour chaque bras', () => {
   const { lot, science } = lotSynthetique();
   const avec = T.avecReglage(true, () => Shadow.scientificProposeBoth(lot.corpus.clouds[0]));
   /* Mic a posé exactement la pose plafonnée : l’erreur après est nulle, celle d’avant est la distance au brut. */
@@ -41,18 +52,23 @@ test('jugement à la pose de Mic : l’erreur du pire rail avant et après', () 
   const zero = { repere: 'profil', longitudinalMm: 0, lateralMm: 0, verticalMm: 0 };
   const table = [{ partie: 99, cut: 105, classe: 'posee', base: 'ariane', referenceHumaine: 'observee', ecartHumain: ecart, arianeDeplacement: { gauche: zero, droite: zero } }];
   const r = T.rejouerLot(lot, { jointure: table });
-  assert.equal(r.mic.cuts, 1);
   const attendu = Math.max(...SIDES.map(s => Math.hypot(...mm3(science.rails[s].next.delta).map((v, i) => v - mm3(avec.rails[s].next.delta)[i]))));
-  assert.ok(Math.abs(r.mic.lignes[0].offMm - Math.round(attendu * 100) / 100) <= 0.01);
-  assert.equal(r.mic.lignes[0].onMm, 0);
-  assert.equal(r.mic.tousEtages.cuts, 1);assert.equal(r.mic.tousEtages.avant.plus5, 1);assert.equal(r.mic.tousEtages.apres.plus5, 0);
-  assert.equal(r.mic.nouveauxPoses.n, 0);assert.equal(r.mic.posesPerdus.n, 0);
-  assert.equal(r.mic.avant.plus5, 1);assert.equal(r.mic.apres.plus5, 0);assert.equal(r.mic.gagnes5, 1);assert.equal(r.mic.perdus5, 0);
+  for (const nom of ['vertical', 'deux']) {
+    const m = r.bras[nom].mic;
+    assert.equal(m.cuts, 1);
+    assert.ok(Math.abs(m.lignes[0].offMm - Math.round(attendu * 100) / 100) <= 0.01);
+    assert.equal(m.lignes[0].onMm, 0);
+    assert.equal(m.tousEtages.cuts, 1);assert.equal(m.tousEtages.avant.plus5, 1);assert.equal(m.tousEtages.apres.plus5, 0);
+    assert.equal(m.nouveauxPoses.n, 0);assert.equal(m.posesPerdus.n, 0);
+    assert.equal(m.avant.plus5, 1);assert.equal(m.apres.plus5, 0);assert.equal(m.gagnes5, 1);assert.equal(m.perdus5, 0);
+  }
 });
 
 test('le réglage est remis à zéro après le rejeu', () => {
   const { lot } = lotSynthetique();
   T.rejouerLot(lot);
+  assert.equal(globalThis.BananeSettings, undefined);
+  T.avecReglage('vertical', () => assert.equal(globalThis.BananeSettings.conventionPlafond, 'vertical'));
   assert.equal(globalThis.BananeSettings, undefined);
 });
 
@@ -62,10 +78,12 @@ test('classes de décision, égalité de décisions, somme des lots et texte', (
   assert.ok(T.memeDecision({ stage: 'first-pass', positions: p }, { stage: 'first-pass', positions: JSON.parse(JSON.stringify(p)) }));
   assert.ok(!T.memeDecision({ stage: 'first-pass', positions: p }, { stage: 'choice', positions: p }));
   assert.ok(!T.memePositions(p, { left: [1, 2, 3.001], right: [4, 5, 6] }));
-  const un = { etiquette: 'A', comptes: { cuts: 3, off: { pose: 2, differe: 1 }, on: { pose: 3 }, gardePaire: { off: 1, on: 1 }, ecartementRejete: { off: 0, on: 0 } }, transitions: { 'pose > pose': 2, 'differe > pose': 1 },
-    parite: { comparees: 3, identiques: 3 }, controle: { observations: 2, identiques: 2, sansNuage: 0 }, cutsAvecRailRefuse: 2,
-    resume: { nouveauxPoses: { n: 1, avecRailRefuse: 1, sansRailRefuse: 0 }, posesPerdus: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, posesDeplaces: { n: 1, avecRailRefuse: 1, sansRailRefuse: 0 }, differesMotifChange: 0, autresChangementsDeStade: 0 }, rails: { refuses: 2, plafonnes: 2 } };
+  const bras = { comptes: { cuts: 3, off: { pose: 2, differe: 1 }, on: { pose: 3 }, gardePaire: { off: 1, on: 1 }, ecartementRejete: { off: 0, on: 0 } }, transitions: { 'pose > pose': 2, 'differe > pose': 1 },
+    resume: { nouveauxPoses: { n: 1, avecRailRefuse: 1, sansRailRefuse: 0 }, posesPerdus: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, posesDeplaces: { n: 1, avecRailRefuse: 1, sansRailRefuse: 0 }, differesMotifChange: 0, autresChangementsDeStade: 0 },
+    rails: { refuses: 2, plafonnes: 2 }, changements: { gardeQuittee: [{ partie: 1, cut: 2, a: 'pose:crossing' }] } };
+  const un = { etiquette: 'A', cuts: 3, cutsAvecRailRefuse: 2, off: { comptes: { pose: 2, differe: 1 }, gardePaire: 1, ecartementRejete: 0 }, parite: { comparees: 3, identiques: 3 }, controle: { observations: 2, identiques: 2, sansNuage: 0 }, bras: { vertical: bras, deux: bras } };
   const t = T.fusion([un, un]);
-  assert.equal(t.cuts, 6);assert.equal(t.off.pose, 4);assert.equal(t.on.pose, 6);assert.equal(t.transitions['differe > pose'], 2);assert.equal(t.resume.nouveauxPoses.n, 2);assert.equal(t.rails.plafonnes, 4);
-  assert.match(T.texte(t), /nouveaux posés 2/);
+  assert.equal(t.cuts, 6);assert.equal(t.off.comptes.pose, 4);assert.equal(t.bras.vertical.on.pose, 6);assert.equal(t.bras.deux.transitions['differe > pose'], 2);
+  assert.equal(t.bras.vertical.resume.nouveauxPoses.n, 2);assert.equal(t.bras.deux.rails.plafonnes, 4);assert.equal(t.bras.deux.gardeQuittee, 2);assert.equal(t.bras.vertical.gardePaire, 2);
+  assert.match(T.texte(t), /bras « vertical »[\s\S]*nouveaux posés 2/);
 });

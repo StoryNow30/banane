@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * p1-plafond.cjs — rejeu hors ligne d'un lot du Pilote, réglage `conventionPlafond` ACTIVÉ contre DÉSACTIVÉ
- * (plan 5.0, P1 ; D-129). Lecture seule : rien n'est écrit ailleurs que la sortie demandée.
+ * p1-plafond.cjs — rejeu hors ligne d'un lot du Pilote, réglage `conventionPlafond` DÉSACTIVÉ contre 'vertical' (P1 bis)
+ * contre vrai (deux axes) (plan 5.0, P1 ; D-129). Lecture seule : rien n'est écrit ailleurs que la sortie demandée.
  *
  *   node --max-old-space-size=6000 tools/p1-plafond.cjs --lot DOSSIER[=libellé] [--jointure table.json] [--json sortie.json]
  *   node tools/p1-plafond.cjs --fusion sortie-A.json sortie-B.json … [--json total.json]
  *
  * Méthode. `tools/acceptance-report.cjs` sait rejouer la décision sur le lot d'un lot de Pilote (journal, diagnostic GCV1
- * et corpus de nuages) : même ordre, mêmes appuis, mêmes règles que le Pilote qui l'a produit. Le rejeu est fait deux
- * fois, sur les mêmes observations :
+ * et corpus de nuages) : même ordre, mêmes appuis, mêmes règles que le Pilote qui l'a produit. Le rejeu est fait trois
+ * fois, sur les mêmes observations (désactivé, puis les deux bras activés) :
  *   - DÉSACTIVÉ : la science GCV1 consignée dans le diagnostic, telle quelle. Contrôle : la décision rejouée retombe sur
  *     la décision consignée par le Pilote (parité) ;
- *   - ACTIVÉ : pour chaque observation où un rail avait un calage de convention refusé, le moteur d'ombre est relancé sur
+ *   - ACTIVÉ, bras « vertical » (seul dz plafonné ; du hors domaine garde le rail refusé) et bras « deux » (les deux axes) :
+ *     pour chaque observation où un rail avait un calage de convention refusé, le moteur d'ombre est relancé sur
  *     le nuage du corpus avec le plafond (rail, puis écartement de la paire, tels que le Pilote les aurait publiés), et
  *     la décision sur le lot est rejouée avec ces rails, plafond actif aussi dans la reprise depuis la voie. Contrôle :
  *     le même relancement SANS plafond redonne la science consignée.
@@ -42,7 +43,7 @@ const TOL = 1e-9;
 
 /* ------------------------------------------------------------------ le réglage, comme le service worker le voit */
 function poserReglage(actif) {
-  if (actif) globalThis.BananeSettings = { ...Settings, conventionPlafond: true };
+  if (actif) globalThis.BananeSettings = { ...Settings, conventionPlafond: actif };
   else delete globalThis.BananeSettings;
 }
 function avecReglage(actif, fn) {
@@ -78,7 +79,9 @@ function captureDe(o, corpus) {
 const empreinteRail = r => r && r.ok ? JSON.stringify([r.next && r.next.delta, r.next && r.next.rawDelta, r.conventionCalibration && [r.conventionCalibration.applied, r.conventionCalibration.reason, r.conventionCalibration.duMm, r.conventionCalibration.dzMm],
   r.pairGauge && [r.pairGauge.predictedMm, r.pairGauge.rejected]]) : JSON.stringify(r && r.ok);
 
-function rejouerLot(lot, { jointure = null, journal = () => {} } = {}) {
+const BRAS = { vertical: 'vertical', deux: true };   // nom du bras -> valeur de `conventionPlafond`
+
+function rejouerLot(lot, { jointure = null, journal = () => {}, bras = Object.keys(BRAS) } = {}) {
   const ctx = AR.lotCuts(lot.diagnostic, lot.journal, lot.batchFilter || null);
   const toutes = ctx.cuts.flatMap(c => c.observations);
   const regles = AR.lotRules(toutes, ctx.batch && ctx.batch.scope && ctx.batch.scope.extensionVersion || lot.diagnostic && lot.diagnostic.version || lot.journal && lot.journal.version, false);
@@ -87,9 +90,9 @@ function rejouerLot(lot, { jointure = null, journal = () => {} } = {}) {
     minTop: regles.minTop, anchorRule: regles.anchorRule, crossing: regles.crossing, framed: regles.framed } });
   const corpus = new Map(((lot.corpus && lot.corpus.clouds) || []).map(c => [c.captureId, c]));
 
-  /* 1. Science avec plafond pour chaque observation qui a un rail refusé ; contrôle sans plafond. */
+  /* 1. Science de chaque bras pour chaque observation qui a un rail refusé ; contrôle sans plafond. */
   const controle = { observations: 0, identiques: 0, sansNuage: 0 };
-  const sciencePlafond = new Map(), scienceBrute = new Map(), rails = [];
+  const science = Object.fromEntries(bras.map(b => [b, new Map()])), railsBras = Object.fromEntries(bras.map(b => [b, []]));
   let n = 0;
   for (const o of toutes) {
     if (o.error || !o.rails || !railRefuse(o)) continue;
@@ -97,64 +100,84 @@ function rejouerLot(lot, { jointure = null, journal = () => {} } = {}) {
     if (!capture) { controle.sansNuage++; continue; }
     controle.observations++;
     const sans = avecReglage(false, () => Shadow.scientificProposeBoth(capture));
-    const avec = avecReglage(true, () => Shadow.scientificProposeBoth(capture));
     if (SIDES.every(s => empreinteRail(sans.rails[s]) === empreinteRail(o.rails[s].scientificRail))) controle.identiques++;
-    sciencePlafond.set(o.observationEventId, avec);
-    scienceBrute.set(o.observationEventId, sans);
-    for (const s of SIDES) {
-      const a = o.rails[s].scientificRail, b = avec.rails[s];
-      const cc = b && b.conventionCalibration;
-      if (a && a.conventionCalibration && a.conventionCalibration.reason === REFUSE && b && b.ok && b.next && b.next.delta && a.next && a.next.delta)
-        rails.push({ plafonne: !!(cc && cc.capped), dzMm: a.conventionCalibration.dzMm, duMm: a.conventionCalibration.duMm, restDzMm: cc && cc.restDzMm, restDuMm: cc && cc.restDuMm,
-          deplacementMm: distance3(mm3(a.next.delta), mm3(b.next.delta)) });
+    for (const b of bras) {
+      const avec = avecReglage(BRAS[b], () => Shadow.scientificProposeBoth(capture));
+      science[b].set(o.observationEventId, avec);
+      for (const s of SIDES) {
+        const a = o.rails[s].scientificRail, r = avec.rails[s], cc = r && r.conventionCalibration;
+        if (a && a.conventionCalibration && a.conventionCalibration.reason === REFUSE && r && r.ok && r.next && r.next.delta && a.next && a.next.delta)
+          railsBras[b].push({ plafonne: !!(cc && cc.capped), restDzMm: cc && cc.restDzMm, deplacementMm: distance3(mm3(a.next.delta), mm3(r.next.delta)) });
+      }
     }
     if (++n % 100 === 0) journal(`${lot.label} : ${n} observations relancées`);
   }
-  const substituer = o => {
-    const sci = sciencePlafond.get(o.observationEventId);
+  const substituer = b => o => {
+    const sci = science[b].get(o.observationEventId);
     if (!sci) return o;
     return { ...o, rails: Object.fromEntries(SIDES.map(s => [s, { ...o.rails[s], scientificRail: sci.rails[s] }])), summary: sci.summary };
   };
-  const observationsPlafond = toutes.map(substituer);
 
-  /* 2. Les deux rejeux. */
-  const decisions = { off: new Map(), on: new Map() };
+  /* 2. Les rejeux : désactivé, puis un par bras. */
+  const decisions = { off: new Map() };
   for (const x of AR.replayLot(toutes, lot.corpus, deps())) decisions.off.set(x.observationEventId, x.decision);
-  avecReglage(true, () => { for (const x of AR.replayLot(observationsPlafond, lot.corpus, deps())) decisions.on.set(x.observationEventId, x.decision); });
+  for (const b of bras) {
+    decisions[b] = new Map();
+    avecReglage(BRAS[b], () => { for (const x of AR.replayLot(toutes.map(substituer(b)), lot.corpus, deps())) decisions[b].set(x.observationEventId, x.decision); });
+  }
 
   /* 3. Parité du rejeu sans plafond avec la décision consignée par le Pilote. */
   const parite = { comparees: 0, identiques: 0 };
   for (const o of toutes) if (o.lotObservation) { parite.comparees++; if (memeDecision(o.lotObservation, decisions.off.get(o.observationEventId))) parite.identiques++; }
 
   /* 4. Cut par cut, dernière observation. */
-  const cuts = [], refusParCut = new Set(), obsLast = new Map();
+  const refusParCut = new Set(), obsLast = new Map(), cutsBase = [];
   for (const c of ctx.cuts) {
     const o = c.observations.at(-1);
     if (!o) continue;
     obsLast.set(c.key, o);
     if (c.observations.some(railRefuse)) refusParCut.add(c.key);
-    const off = decisions.off.get(o.observationEventId) || null, on = decisions.on.get(o.observationEventId) || null;
-    cuts.push({ cle: c.key, partie: c.part, cut: c.cut, refuse: refusParCut.has(c.key), refuseDernier: railRefuse(o), off, on });
+    cutsBase.push({ cle: c.key, partie: c.part, cut: c.cut, refuse: refusParCut.has(c.key), refuseDernier: railRefuse(o), o });
   }
+  const comptesOff = {};
+  let gardeOff = 0, ecartOff = 0;
+  for (const c of cutsBase) {
+    const d = decisions.off.get(c.o.observationEventId) || null;
+    const k = classe(d); comptesOff[k] = (comptesOff[k] || 0) + 1;
+    if (d && d.reason === 'pair-guard') gardeOff++;
+    if (c.o.summary && c.o.summary.pairGaugeRejected) ecartOff++;
+  }
+  const table = jointure ? new Map(jointure.map(t => [cle(t.partie, t.cut), t])) : null;
+  const sorties = {};
+  for (const b of bras) sorties[b] = comparerBras(b, { cutsBase, decisions, science: science[b], railsBras: railsBras[b], corpus, table, comptesOff, gardeOff, ecartOff });
+  return {
+    format: 'ariane-p1-plafond-v2', etiquette: lot.label, regles: { pairGuard: regles.pairGuard, chainMm: regles.chainMm, gaugeGuardMm: regles.gaugeGuardMm, source: regles.source }, mode,
+    observations: toutes.length, controle, parite, cuts: cutsBase.length, cutsAvecRailRefuse: refusParCut.size, off: { comptes: comptesOff, gardePaire: gardeOff, ecartementRejete: ecartOff }, bras: sorties,
+  };
+}
+
+/* Un bras contre le désactivé : transitions, changements, jugement à la pose de Mic. */
+function comparerBras(b, { cutsBase, decisions, science, railsBras, corpus, table, comptesOff, gardeOff, ecartOff }) {
+  const cuts = cutsBase.map(c => ({ ...c, off: decisions.off.get(c.o.observationEventId) || null, on: decisions[b].get(c.o.observationEventId) || null }));
   const transitions = {}, chg = { poses: [], perdus: [], deplaces: [], stades: [], motifs: [] };
-  const comptes = { cuts: cuts.length, off: {}, on: {}, gardePaire: { off: 0, on: 0 }, ecartementRejete: { off: 0, on: 0 } };
+  const on = {};
+  let gardeOn = 0, ecartOn = 0;
   for (const c of cuts) {
-    const a = classe(c.off), b = classe(c.on);
-    comptes.off[a] = (comptes.off[a] || 0) + 1; comptes.on[b] = (comptes.on[b] || 0) + 1;
-    const k = `${a} > ${b}`; transitions[k] = (transitions[k] || 0) + 1;
-    if (c.off && c.off.reason === 'pair-guard') comptes.gardePaire.off++;
-    if (c.on && c.on.reason === 'pair-guard') comptes.gardePaire.on++;
-    const oo = obsLast.get(c.cle);
-    if (oo && oo.summary && oo.summary.pairGaugeRejected) comptes.ecartementRejete.off++;
-    const sci = sciencePlafond.get(oo && oo.observationEventId);
-    if (sci ? sci.summary && sci.summary.pairGaugeRejected : oo && oo.summary && oo.summary.pairGaugeRejected) comptes.ecartementRejete.on++;
-    const fiche = { partie: c.partie, cut: c.cut, de: a + (c.off && c.off.stage && a !== 'differe' ? `:${c.off.stage}` : ''), a: b + (c.on && c.on.stage && b !== 'differe' ? `:${c.on.stage}` : ''),
+    const a = classe(c.off), z = classe(c.on);
+    on[z] = (on[z] || 0) + 1;
+    const k = `${a} > ${z}`; transitions[k] = (transitions[k] || 0) + 1;
+    if (c.on && c.on.reason === 'pair-guard') gardeOn++;
+    const sci = science.get(c.o.observationEventId);
+    if (sci ? sci.summary && sci.summary.pairGaugeRejected : c.o.summary && c.o.summary.pairGaugeRejected) ecartOn++;
+    const fiche = { partie: c.partie, cut: c.cut, de: a + (c.off && c.off.stage && a !== 'differe' ? `:${c.off.stage}` : ''), a: z + (c.on && c.on.stage && z !== 'differe' ? `:${c.on.stage}` : ''),
       motifOff: c.off && c.off.reason || null, motifOn: c.on && c.on.reason || null, railRefuse: c.refuse, railRefuseDernier: c.refuseDernier };
-    if (a === 'differe' && b === 'pose') chg.poses.push(fiche);
-    else if (a === 'pose' && b === 'differe') chg.perdus.push(fiche);
-    else if (a === 'pose' && b === 'pose' && !memePositions(c.off.positions, c.on.positions)) chg.deplaces.push({ ...fiche, deplacementMm: arrondi(deplacementMm(c.off, c.on)), memeStade: c.off.stage === c.on.stage });
-    else if (a === 'differe' && b === 'differe' && c.off.reason !== c.on.reason) chg.motifs.push(fiche);
-    else if (a !== b) chg.stades.push(fiche);
+    if (a === 'differe' && z === 'pose') chg.poses.push(fiche);
+    else if (a === 'pose' && z === 'differe') chg.perdus.push(fiche);
+    else if (a === 'pose' && z === 'pose' && !memePositions(c.off.positions, c.on.positions)) chg.deplaces.push({ ...fiche, deplacementMm: arrondi(deplacementMm(c.off, c.on)), memeStade: c.off.stage === c.on.stage });
+    else if (a === 'differe' && z === 'differe' && c.off.reason !== c.on.reason) chg.motifs.push(fiche);
+    else if (a !== z) chg.stades.push(fiche);
+    /* Les cuts dont la garde de paire change d'issue, quel que soit le cas. */
+    if (c.off && c.off.reason === 'pair-guard' && !(c.on && c.on.reason === 'pair-guard')) (chg.gardeQuittee = chg.gardeQuittee || []).push(fiche);
   }
   const part = (liste, f) => liste.filter(f).length;
   const resume = {
@@ -165,21 +188,19 @@ function rejouerLot(lot, { jointure = null, journal = () => {} } = {}) {
     differesMotifChange: chg.motifs.length, autresChangementsDeStade: chg.stades.length,
   };
   const out = {
-    format: 'ariane-p1-plafond-v1', etiquette: lot.label, regles: { pairGuard: regles.pairGuard, chainMm: regles.chainMm, gaugeGuardMm: regles.gaugeGuardMm, source: regles.source }, mode,
-    observations: toutes.length, controle, parite, comptes, transitions, resume, changements: chg,
-    cutsAvecRailRefuse: refusParCut.size,
-    rails: { refuses: rails.length, plafonnes: rails.filter(r => r.plafonne).length,
-      restDzMm: quantile(rails.filter(r => r.plafonne).map(r => Math.abs(r.restDzMm)), .5) === null ? null : arrondi(quantile(rails.filter(r => r.plafonne).map(r => Math.abs(r.restDzMm)), .5)),
-      deplacementMedianMm: arrondi(quantile(rails.map(r => r.deplacementMm), .5)), deplacementMaxMm: rails.length ? arrondi(Math.max(...rails.map(r => r.deplacementMm))) : null },
+    comptes: { cuts: cuts.length, off: comptesOff, on, gardePaire: { off: gardeOff, on: gardeOn }, ecartementRejete: { off: ecartOff, on: ecartOn } },
+    transitions, resume, changements: chg,
+    rails: { refuses: railsBras.length, plafonnes: railsBras.filter(r => r.plafonne).length,
+      restDzMm: railsBras.some(r => r.plafonne) ? arrondi(quantile(railsBras.filter(r => r.plafonne).map(r => Math.abs(r.restDzMm)), .5)) : null,
+      deplacementMedianMm: arrondi(quantile(railsBras.map(r => r.deplacementMm), .5)), deplacementMaxMm: railsBras.length ? arrondi(Math.max(...railsBras.map(r => r.deplacementMm))) : null },
   };
 
-  /* 5. Jugement à la pose de Mic. Pose d'un cut = positions de sa décision, ramenées au repère profil de la pose de départ
+  /* Jugement à la pose de Mic. Pose d'un cut = positions de sa décision, ramenées au repère profil de la pose de départ
    * (celui de la table de jointure) ; erreur du cut = erreur 3D du pire rail. */
-  if (jointure) {
-    const table = new Map(jointure.map(t => [cle(t.partie, t.cut), t]));
+  if (table) {
     const reference = c => { const t = table.get(c.cle); const r = t && SIDES.map(s => P.referenceDepuisTable(t, s)); return r && r.every(Boolean) ? r : null; };
     const erreurCut = (c, d, ref) => {
-      const o = obsLast.get(c.cle), cap = o && corpus.get(o.lidar && o.lidar.captureId);
+      const cap = corpus.get(c.o.lidar && c.o.lidar.captureId);
       if (!cap || !d || !d.positions) return null;
       const e = SIDES.map((s, i) => {
         const M = cap.rails[s].sceneRelativeToProfileLocal, q = Capture.point(M, d.positions[s]), o0 = Capture.point(M, cap.rails[s].positionSceneRelative);
@@ -196,18 +217,16 @@ function rejouerLot(lot, { jointure = null, journal = () => {} } = {}) {
     for (const c of cuts) {
       const ref = reference(c);
       if (!ref || classe(c.off) !== 'pose' || classe(c.on) !== 'pose') continue;
-      const off = erreurCut(c, c.off, ref), on = erreurCut(c, c.on, ref);
-      if (off === null || on === null) continue;
-      const l = { partie: c.partie, cut: c.cut, off, on, railRefuse: c.refuseDernier, stade: c.off.stage };
+      const off = erreurCut(c, c.off, ref), onE = erreurCut(c, c.on, ref);
+      if (off === null || onE === null) continue;
+      const l = { partie: c.partie, cut: c.cut, off, on: onE, railRefuse: c.refuseDernier };
       tous.push(l);
       if (c.off.stage === 'first-pass' && c.on.stage === 'first-pass') lignes.push(l);
     }
-    /* Les cuts posés au premier passage, avant et après : le chiffre de la mesure P0 (partie 17 : 188 cuts, 47 -> 25 au-delà de 10 mm). */
+    /* Les cuts posés au premier passage, avant et après : le chiffre de la mesure P0 (partie 17 : 188 cuts, 47 -> 25 au-delà de 10 mm, deux axes). */
     out.mic = { ...compare(lignes), cutsAvecRailRefuse: lignes.filter(l => l.railRefuse).length,
       lignes: lignes.map(l => ({ partie: l.partie, cut: l.cut, offMm: arrondi(l.off), onMm: arrondi(l.on), railRefuse: l.railRefuse })) };
-    /* Tous les cuts posés des deux côtés (tous étages), quand Mic les a vus aux deux rails. */
     out.mic.tousEtages = compare(tous);
-    /* Cuts posés en plus ou en moins, jugés quand la pose de Mic existe. */
     const jug = (liste, cote) => {
       const r = liste.map(f => { const c = cuts.find(x => x.cle === cle(f.partie, f.cut)); const ref = reference(c); return { partie: f.partie, cut: f.cut, stade: f.a, erreurMm: ref ? arrondi(erreurCut(c, cote === 'on' ? c.on : c.off, ref)) : null }; });
       const j = r.filter(x => x.erreurMm !== null);
@@ -221,43 +240,52 @@ function rejouerLot(lot, { jointure = null, journal = () => {} } = {}) {
 
 /* ------------------------------------------------------------------ somme de plusieurs lots */
 function ajouter(a, b) { for (const [k, v] of Object.entries(b)) a[k] = (a[k] || 0) + v; return a; }
+const resumeVide = () => ({ nouveauxPoses: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, posesPerdus: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, posesDeplaces: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, differesMotifChange: 0, autresChangementsDeStade: 0 });
 function fusion(sorties) {
-  const t = { format: 'ariane-p1-plafond-total-v1', lots: sorties.map(s => s.etiquette), cuts: 0, off: {}, on: {}, transitions: {}, gardePaire: { off: 0, on: 0 }, ecartementRejete: { off: 0, on: 0 },
-    parite: { comparees: 0, identiques: 0 }, controle: { observations: 0, identiques: 0, sansNuage: 0 }, cutsAvecRailRefuse: 0,
-    resume: { nouveauxPoses: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, posesPerdus: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, posesDeplaces: { n: 0, avecRailRefuse: 0, sansRailRefuse: 0 }, differesMotifChange: 0, autresChangementsDeStade: 0 },
-    rails: { refuses: 0, plafonnes: 0 } };
+  const t = { format: 'ariane-p1-plafond-total-v2', lots: sorties.map(s => s.etiquette), cuts: 0, cutsAvecRailRefuse: 0, off: { comptes: {}, gardePaire: 0, ecartementRejete: 0 },
+    parite: { comparees: 0, identiques: 0 }, controle: { observations: 0, identiques: 0, sansNuage: 0 }, bras: {} };
   for (const s of sorties) {
-    t.cuts += s.comptes.cuts; ajouter(t.off, s.comptes.off); ajouter(t.on, s.comptes.on); ajouter(t.transitions, s.transitions);
-    ajouter(t.gardePaire, s.comptes.gardePaire); ajouter(t.ecartementRejete, s.comptes.ecartementRejete); ajouter(t.parite, s.parite); ajouter(t.controle, s.controle);
-    t.cutsAvecRailRefuse += s.cutsAvecRailRefuse;
-    for (const k of ['nouveauxPoses', 'posesPerdus', 'posesDeplaces']) for (const f of ['n', 'avecRailRefuse', 'sansRailRefuse']) t.resume[k][f] += s.resume[k][f];
-    t.resume.differesMotifChange += s.resume.differesMotifChange; t.resume.autresChangementsDeStade += s.resume.autresChangementsDeStade;
-    t.rails.refuses += s.rails.refuses; t.rails.plafonnes += s.rails.plafonnes;
+    t.cuts += s.cuts; t.cutsAvecRailRefuse += s.cutsAvecRailRefuse; ajouter(t.off.comptes, s.off.comptes); t.off.gardePaire += s.off.gardePaire; t.off.ecartementRejete += s.off.ecartementRejete;
+    ajouter(t.parite, s.parite); ajouter(t.controle, s.controle);
+    for (const [nom, b] of Object.entries(s.bras)) {
+      const x = t.bras[nom] = t.bras[nom] || { on: {}, transitions: {}, gardePaire: 0, ecartementRejete: 0, resume: resumeVide(), rails: { refuses: 0, plafonnes: 0 }, gardeQuittee: 0 };
+      ajouter(x.on, b.comptes.on); ajouter(x.transitions, b.transitions); x.gardePaire += b.comptes.gardePaire.on; x.ecartementRejete += b.comptes.ecartementRejete.on;
+      for (const k of ['nouveauxPoses', 'posesPerdus', 'posesDeplaces']) for (const f of ['n', 'avecRailRefuse', 'sansRailRefuse']) x.resume[k][f] += b.resume[k][f];
+      x.resume.differesMotifChange += b.resume.differesMotifChange; x.resume.autresChangementsDeStade += b.resume.autresChangementsDeStade;
+      x.rails.refuses += b.rails.refuses; x.rails.plafonnes += b.rails.plafonnes; x.gardeQuittee += (b.changements.gardeQuittee || []).length;
+    }
   }
   return t;
 }
 
 /* ------------------------------------------------------------------ texte */
 function ligneComptes(c) { return Object.entries(c).sort().map(([k, v]) => `${k} ${v}`).join(', '); }
-function texte(s) {
+function texteBras(nom, b, off, extra = {}) {
   const L = [];
-  const titre = s.etiquette || `total (${(s.lots || []).join(', ')})`;
-  L.push(`== ${titre}`);
-  const c = s.comptes || { cuts: s.cuts, off: s.off, on: s.on, gardePaire: s.gardePaire, ecartementRejete: s.ecartementRejete };
-  L.push(`cuts ${c.cuts} (dont ${s.cutsAvecRailRefuse} avec un rail refusé) ; parité du rejeu sans plafond avec le Pilote : ${s.parite.identiques}/${s.parite.comparees} ; relancement sans plafond = science consignée : ${s.controle.identiques}/${s.controle.observations}`);
-  L.push(`désactivé : ${ligneComptes(c.off)}`);
-  L.push(`activé    : ${ligneComptes(c.on)}`);
-  L.push(`garde de paire (différés pair-guard) : ${c.gardePaire.off} -> ${c.gardePaire.on} ; écartement refusé (dernière observation) : ${c.ecartementRejete.off} -> ${c.ecartementRejete.on}`);
-  L.push(`transitions : ${ligneComptes(s.transitions)}`);
-  const r = s.resume;
-  L.push(`nouveaux posés ${r.nouveauxPoses.n} (rail refusé ${r.nouveauxPoses.avecRailRefuse}, sans ${r.nouveauxPoses.sansRailRefuse}) ; posés perdus ${r.posesPerdus.n} (rail refusé ${r.posesPerdus.avecRailRefuse}, sans ${r.posesPerdus.sansRailRefuse}) ; posés déplacés ${r.posesDeplaces.n} (rail refusé ${r.posesDeplaces.avecRailRefuse}, sans ${r.posesDeplaces.sansRailRefuse}) ; différés au motif changé ${r.differesMotifChange} ; autres ${r.autresChangementsDeStade}`);
-  if (s.rails) L.push(`rails refusés ${s.rails.refuses}, plafonnés ${s.rails.plafonnes}` + (s.rails.deplacementMedianMm != null ? ` ; déplacement médian ${s.rails.deplacementMedianMm} mm, maximum ${s.rails.deplacementMaxMm} mm` : ''));
-  if (s.mic) {
-    const m = s.mic;
-    L.push(`pose de Mic, cuts posés au premier passage vus aux deux rails : ${m.cuts} ; > 5 mm ${m.avant.plus5} -> ${m.apres.plus5} ; > 10 mm ${m.avant.plus10} -> ${m.apres.plus10} (gagnés ${m.gagnes10}, perdus ${m.perdus10}) ; médiane ${m.avant.medianeMm} -> ${m.apres.medianeMm} mm ; P90 ${m.avant.p90Mm} -> ${m.apres.p90Mm} mm`);
-    if (m.tousEtages) L.push(`tous étages (posés des deux côtés) : ${m.tousEtages.cuts} ; > 5 mm ${m.tousEtages.avant.plus5} -> ${m.tousEtages.apres.plus5} ; > 10 mm ${m.tousEtages.avant.plus10} -> ${m.tousEtages.apres.plus10} (gagnés ${m.tousEtages.gagnes10}, perdus ${m.tousEtages.perdus10})`);
-    if (m.nouveauxPoses) L.push(`posés en plus jugeables : ${m.nouveauxPoses.jugeables}/${m.nouveauxPoses.n}, à plus de 10 mm : ${m.nouveauxPoses.plus10} ; posés en moins jugeables : ${m.posesPerdus.jugeables}/${m.posesPerdus.n}`);
+  const c = b.comptes || { on: b.on, gardePaire: { on: b.gardePaire }, ecartementRejete: { on: b.ecartementRejete } };
+  const r = b.resume;
+  L.push(`-- bras « ${nom} »`);
+  L.push(`   désactivé : ${ligneComptes(off.comptes)} ; activé : ${ligneComptes(c.on)}`);
+  L.push(`   garde de paire (différés pair-guard) : ${off.gardePaire} -> ${c.gardePaire.on} ; écartement refusé (dernière observation) : ${off.ecartementRejete} -> ${c.ecartementRejete.on}`);
+  L.push(`   transitions : ${ligneComptes(b.transitions)}`);
+  L.push(`   nouveaux posés ${r.nouveauxPoses.n} (rail refusé ${r.nouveauxPoses.avecRailRefuse}, sans = ricochet ${r.nouveauxPoses.sansRailRefuse}) ; posés perdus ${r.posesPerdus.n} (rail refusé ${r.posesPerdus.avecRailRefuse}, sans ${r.posesPerdus.sansRailRefuse}) ; posés déplacés ${r.posesDeplaces.n} (rail refusé ${r.posesDeplaces.avecRailRefuse}, sans ${r.posesDeplaces.sansRailRefuse}) ; différés au motif changé ${r.differesMotifChange}`);
+  L.push(`   rails refusés ${b.rails.refuses}, plafonnés ${b.rails.plafonnes}` + (b.rails.deplacementMedianMm != null ? ` ; déplacement médian ${b.rails.deplacementMedianMm} mm, maximum ${b.rails.deplacementMaxMm} mm` : ''));
+  const gq = b.changements ? b.changements.gardeQuittee : null;
+  if (gq && gq.length) L.push(`   cuts pair-guard qui cessent de l'être : ${gq.map(f => `${f.partie}/${f.cut} -> ${f.a}`).join(', ')}`);
+  else if (b.gardeQuittee) L.push(`   cuts pair-guard qui cessent de l'être : ${b.gardeQuittee}`);
+  if (b.mic) {
+    const m = b.mic;
+    L.push(`   pose de Mic, posés au premier passage vus aux deux rails : ${m.cuts} ; > 5 mm ${m.avant.plus5} -> ${m.apres.plus5} ; > 10 mm ${m.avant.plus10} -> ${m.apres.plus10} (gagnés ${m.gagnes10}, perdus ${m.perdus10}) ; médiane ${m.avant.medianeMm} -> ${m.apres.medianeMm} mm ; P90 ${m.avant.p90Mm} -> ${m.apres.p90Mm} mm`);
+    L.push(`   tous étages (posés des deux côtés) : ${m.tousEtages.cuts} ; > 5 mm ${m.tousEtages.avant.plus5} -> ${m.tousEtages.apres.plus5} ; > 10 mm ${m.tousEtages.avant.plus10} -> ${m.tousEtages.apres.plus10} (gagnés ${m.tousEtages.gagnes10}, perdus ${m.tousEtages.perdus10})`);
+    L.push(`   posés en plus jugeables : ${m.nouveauxPoses.jugeables}/${m.nouveauxPoses.n}, à plus de 10 mm : ${m.nouveauxPoses.plus10} ; posés en moins jugeables : ${m.posesPerdus.jugeables}/${m.posesPerdus.n}`);
   }
+  return L.join('\n');
+}
+function texte(s) {
+  const titre = s.etiquette || `total (${(s.lots || []).join(', ')})`;
+  const L = [`== ${titre}`,
+    `cuts ${s.cuts} (dont ${s.cutsAvecRailRefuse} avec un rail refusé) ; parité du rejeu sans plafond avec le Pilote : ${s.parite.identiques}/${s.parite.comparees} ; relancement sans plafond = science consignée : ${s.controle.identiques}/${s.controle.observations}`];
+  for (const [nom, b] of Object.entries(s.bras)) L.push(texteBras(nom, b, s.off));
   return L.join('\n');
 }
 
@@ -299,4 +327,4 @@ function main() {
 }
 if (require.main === module) try { main(); } catch (e) { console.error(e.stack || e.message); process.exit(1); }
 
-module.exports = { rejouerLot, fusion, texte, classe, memePositions, memeDecision, railRefuse, avecReglage, lireArgs };
+module.exports = { BRAS, rejouerLot, fusion, texte, classe, memePositions, memeDecision, railRefuse, avecReglage, lireArgs };

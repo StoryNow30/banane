@@ -22,7 +22,7 @@ P1 se réduisait, après P0 (D-129), à un seul changement : un rail dont le dé
   - `restDuMm`, `restDzMm` : le reste **non appliqué**, en mm, de même signe que le décalage mesuré (nul sur un axe qui n'a pas dépassé).
   Un rail dans le domaine, ou non calable (dessus sous-observé), donne exactement le même résultat qu'avant ; il n'y a pas de champ `capped` à `false`, il est simplement absent.
 - Le motif `reason: 'shift-out-of-domain'` **reste** sur un rail plafonné bien qu'il soit appliqué. C'est voulu : la garde de paire (D-044, `src/lot-decision.js`, `pairFlagged`) lit ce motif pour savoir qu'un rail est hors du domaine mesuré. Ainsi la garde n'a pas été touchée et voit les mêmes rails qu'avant.
-- `src/settings.js` : `conventionPlafond = false` (commentaire : ne pas activer sans l'accord de Mic), et une ligne dans `describe()` pour le panneau.
+- `src/settings.js` : `conventionPlafond = false` (trois valeurs depuis P1 bis : `false`, `'vertical'`, `true`, § 9) (commentaire : ne pas activer sans l'accord de Mic), et une ligne dans `describe()` pour le panneau.
 - Le réglage est lu au moment de l'appel (global `BananeSettings`, chargé avant le module dans le service worker). L'option `calibrate(..., { plafond: true|false })` prime sur le réglage (outils et essais).
 - Rien d'autre : ni `src/engine.js`, ni la garde de paire, ni le domaine de 8 mm, ni la bande de 12 mm, ni la borne de pente, ni `lot-decision.js`, ni `gcv1-shadow.js`.
 
@@ -108,7 +108,7 @@ La lecture à proposer à Mic : le plafond réduit nettement les poses fausses d
 - **Rails refusés relancés sur le nuage du corpus** : le contrôle sans plafond retrouve la science consignée sur 710 observations sur 710, ce qui valide la méthode ; les rails non refusés gardent leur science consignée.
 - **Un cut parmi les jugeables** pour la qualité des poses en plus : trop peu pour conclure dans un sens ou dans l'autre.
 - La référence de Mic est la pose de sa dernière validation, sans vérité indépendante (limites de P0 inchangées). Les chiffres de la partie 17 sont sur les 188 cuts qu'il a relus.
-- Le journal compact du Pilote (`gcv1.convention`, `src/gcv1-shadow.js`) ne reprend pas les champs ajoutés (`capped`, `rest*`, `applied*`) : il montre `applied: true`, `reason: 'shift-out-of-domain'` et les décalages mesurés en entier. Le diagnostic GCV1 (`scientificRail.conventionCalibration`) les garde tous. Les outils P0 restent valables sur de tels journaux (`rawDelta` et le motif suffisent à retrouver la population des rails refusés).
+- Le journal compact du Pilote (`gcv1.convention`) reprend, depuis P1 bis, `capped`, `capMm`, `capAxes`, `appliedDuMm`, `appliedDzMm`, `restDuMm` et `restDzMm` quand le plafond a joué (rien de plus sinon, § 9). Les journaux produits avant P1 bis, ou avec le plafond coupé, montrent seulement `applied`, `reason` et les décalages mesurés en entier ; le diagnostic GCV1 (`scientificRail.conventionCalibration`) a toujours tout gardé.
 - Le réglage ne se bascule pas depuis le panneau : c'est une constante de `src/settings.js`. L'activer, c'est la changer et publier une version (hors du périmètre de ce chantier : le manifeste n'a pas bougé).
 
 ## 7. À vérifier sur le terrain avant d'activer
@@ -119,7 +119,7 @@ La lecture à proposer à Mic : le plafond réduit nettement les poses fausses d
 4. Décider si les cuts posés en plus par ricochet sont acceptables, ou s'il faut les écarter (par exemple ne pas laisser le choix par la voie s'appuyer sur un appui dont le calage a été plafonné). Ce serait un autre chantier : il touche `src/lot-decision.js`, hors du périmètre de P1.
 5. Avant l'activation : l'accord de Mic, un numéro de version, et la mention dans `DECISIONS.md` (non faite ici).
 
-## 8. Reproduire
+## 8. Reproduire (P1 : deux colonnes ; l'outil en donne trois depuis P1 bis, voir § 9)
 
 ```
 # un lot : dossier avec le journal, le diagnostic GCV1 et les segments du corpus (JSON ou volumes zip)
@@ -129,3 +129,71 @@ node tools/p1-plafond.cjs --fusion sortie-A.json sortie-B.json …
 ```
 
 La table de jointure de la partie 17 vient de `tools/jointure-echo-orbite.cjs` (voir `fiches/JOINTURE_ECHO_ORBITE.md`). Chaque lot demande de 1 à 5 minutes et moins de 6 Go. Les essais (`tests/placement-convention-plafond.test.cjs`, `tests/p1-plafond.test.cjs`) n'emploient que des fixtures synthétiques et une capture déjà versionnée.
+
+## 9. P1 bis — plafond sur l'axe vertical seulement
+
+Variante demandée après P1 : le réglage `conventionPlafond` prend trois valeurs, `false` (défaut, inchangé), `'vertical'` et `true` (le P1 d'origine).
+
+**Ce qui est codé** (`src/placement-convention.js`, `src/settings.js`, `src/gcv1-shadow.js`)
+
+- `'vertical'` : le décalage vertical (dz) hors domaine est appliqué à 8 mm au plus, dans son signe ; le reste est consigné. Si le décalage latéral (du) est hors domaine, le rail **reste refusé** (posé brut, exactement le résultat d'avant), même quand dz serait plafonné. Si seul dz sort du domaine, du est appliqué **en entier** et dz est plafonné. Le résultat porte alors `capAxes: 'vertical'` ; avec `true`, le résultat est celui de P1 (pas de `capAxes`).
+- Valeur inconnue (autre que `false`, `'vertical'`, `true`) : comme `false`. L'option `calibrate(..., { plafond })` accepte les mêmes trois valeurs et prime sur le réglage.
+- `false` : les 151 cas figés passent toujours, octet pour octet.
+- Le motif `shift-out-of-domain` reste partout ; la garde de paire (D-044) est inchangée dans les trois modes (essai dédié).
+- Journal compact (`gcv1.convention`) : `capped`, `capMm`, `capAxes` (`'vertical'` ou `'both'`), `appliedDuMm`, `appliedDzMm`, `restDuMm`, `restDzMm`, ajoutés **seulement quand le plafond a joué**. Plafond coupé : les six mêmes champs qu'avant, le journal est identique. Les essais de non-régression du journal et l'épinglage (« Geometry unchanged », « Engine matches baseline ») n'ont pas bougé. `src/engine.js` n'est pas touché.
+
+**Essais** : 9 cas de plus dans `tests/placement-convention-plafond.test.cjs` (trois valeurs, valeurs inconnues, du hors domaine garde le refus, dz seul plafonné avec du entier, l'option prime, le journal compact, la garde de paire en `'vertical'`).
+
+**Rejeu** : même méthode que § 3, les mêmes six lots, `tools/p1-plafond.cjs` en trois colonnes (désactivé / vertical / deux axes). Contrôles inchangés : parité du rejeu désactivé 2 262/2 263, relancement sans plafond identique à la science consignée 710/710.
+
+### 9.1 Les trois colonnes
+
+Six lots, 2 263 cuts (4 lots 4.9 : 1 574).
+
+| | désactivé | vertical | deux axes |
+|---|---:|---:|---:|
+| Rails refusés qui reçoivent un calage plafonné | 0 | 779 sur 787 | 787 sur 787 |
+| Posés (6 lots) | 1 846 | 1 854 | 1 854 |
+| Différés (6 lots) | 417 | 409 | 409 |
+| Différé → posé / posé → différé | | 11 / 3 | 11 / 3 |
+| **Posés en plus par ricochet** (sans rail refusé dans le cut) | | **8** | **8** |
+| Posés en plus avec un rail refusé | | 3 | 3 |
+| Posés en moins (tous par ricochet) | | 3 | 3 |
+| Cuts posés dont la pose bouge | | 593 | 598 |
+| Cuts 'pair-guard' (6 lots) | 104 | **103** | **103** |
+| Cuts 'pair-guard' (4 lots 4.9) | 76 | 75 | 75 |
+| Écartement refusé (dernière observation) | 59 | 60 | 60 |
+
+Les mêmes 11 cuts sont posés en plus, les mêmes 3 posés en moins, dans les deux modes. Le mode vertical ne se distingue que sur les 8 rails (1 %) dont le décalage latéral est hors domaine : ils restent refusés, ce qui fait 5 cuts posés de moins qui bougent. Aucun de ces rails n'est dans la partie 17.
+
+Par lot, en vertical (les valeurs « deux axes » sont les mêmes, sauf mention) : partie 17, 232 → 233 posés, 12 → 12 pair-guard ; partie 18, 385 → 386, 16 → 16 ; partie 24, 408 → 410, 35 → 35 ; parties 25–26, 381 → 385, 21 → 21 ; partie 26 (lot b), 311 → 311, 6 → 6 ; partie 27, 129 → 129, 14 → 13. Rails refusés plafonnés : 118/118, 179/180, 201/202, 170/172, 78/78, 33/37.
+
+### 9.2 Partie 17, pose de Mic
+
+Cuts posés au premier passage, Mic vu aux deux rails (188) : **les deux modes donnent exactement les mêmes chiffres**, parce qu'aucun rail refusé de la partie 17 n'a un décalage latéral hors domaine.
+
+| | > 5 mm | **> 10 mm** | médiane | P90 |
+|---|---:|---:|---:|---:|
+| désactivé | 128 | **47** | 7,05 mm | 12,69 mm |
+| vertical | 110 | **25** | 5,76 mm | 10,87 mm |
+| deux axes | 110 | **25** | 5,76 mm | 10,87 mm |
+
+Gagnés / perdus (vertical comme deux axes) : 28 / 10 au-delà de 5 mm, 25 / 3 au-delà de 10 mm. Tous étages (192 cuts) : 48 → 27. Partie 24 (4 cuts avec Mic) : identique dans les deux modes.
+
+### 9.3 Poses par ricochet
+
+8 cuts posés en plus sans rail refusé, dans les deux modes (partie 24 : 3 ; parties 25–26 : 3 ; partie 17 : 1 ; partie 18 : 1). Un seul a une pose de Mic aux deux rails (cut 4557, partie 17, choix par la voie) : **29 mm d'erreur**, dans les deux modes. Le plafond vertical **ne réduit pas** le ricochet : il vient des appuis voisins dont dz a bougé de 8 mm, et dz est plafonné dans les deux modes. Les 3 cuts posés en moins sont les mêmes.
+
+### 9.4 Le cut 'pair-guard' de passage à niveau (partie 27, cut 4293)
+
+**La garde ne le retient pas en vertical.** Il échappe à la garde comme avec les deux axes, et il est posé par le repli du passage à niveau (1 438 mm). La raison n'est pas le dz plafonné : son rail gauche est refusé sur dz (10,4 mm) avec un du de −1,9 mm, dans le domaine. En vertical, ce du est appliqué en entier alors qu'il ne l'était pas avant (le rail était refusé en bloc), et le calage ainsi posé (du −1,9 mm, dz +8 mm) fait passer l'écartement prédit de 1 421,8 mm à 1 419,1 mm, sous le plancher de 1 420 mm (le décalage latéral y contribue, le dz seul n'aurait presque rien changé). La paire est alors refusée par l'écartement, les deux rails deviennent « non résolus », il n'y a plus de rail repêché, et la garde de paire n'a rien à retenir. Le code de la garde est intact (essai) ; c'est la décision en amont qui change.
+
+Une variante où un rail refusé sur dz ne reçoit que dz plafonné, sans son du, garderait l'écartement de la base pour ces rails. Elle n'est pas codée ni mesurée ici : à ne proposer que si Mic veut ce cut retenu.
+
+### 9.5 Recommandation
+
+Les deux modes donnent les mêmes résultats mesurables : même gain sur la pose de Mic (47 → 25), même ricochet (8 poses en plus, 3 en moins, un cas jugé faux de 29 mm), même cut de passage à niveau qui échappe à la garde. La seule différence est qu'en vertical, 8 rails sur 787 (1 %) restent posés bruts ; leur erreur à la pose de Mic n'est pas mesurable, la partie 17 n'en a aucun.
+
+- **Si Mic active : `'vertical'`.** C'est le moindre changement pour le même gain mesuré : les rails hors domaine sur le latéral, où rien n'a été mesuré, gardent le comportement actuel. P0 n'a d'ailleurs mesuré l'erreur du calage que sur le vertical (le biais de −6,5 mm), pas sur le latéral.
+- **Ne pas activer avant un lot de terrain relu** : ni l'un ni l'autre ne règle le ricochet (poses en plus dont le seul cas jugeable est faux de 29 mm), ni le cut de passage à niveau. C'est le point du § 7 qui manque. Si le ricochet est jugé inacceptable, la bonne réponse n'est pas dans ce réglage mais dans l'appui qu'utilise le choix par la voie (autre chantier, `lot-decision.js`).
+- **Rien** reste la valeur livrée : `conventionPlafond = false`.

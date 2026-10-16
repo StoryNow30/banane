@@ -264,11 +264,14 @@
    * et la page oublie sa table. Livré à 'ombre' : passer à 'actif' attend le
    * rejeu de l'ombre (justes perdus, faux ajoutés) et l'accord de la direction. */
   const appuisListe = 'ombre';
-  /* P1 (5.0, D-129) — PLAFOND DU CALAGE DE CONVENTION (src/placement-convention.js). `false` (défaut) : un rail dont le décalage
-   * de convention sort du domaine mesuré (plus de 8 mm sur un axe) est refusé et posé brut, comme avant (biais vertical réel
-   * mesuré : −6,5 mm, partie 17). `true` : le décalage est appliqué à 8 mm au plus par axe, dans son signe ; le reste est consigné
-   * (`conventionCalibration.restDuMm` / `restDzMm`, `capped`). La garde de paire (D-044), le domaine et la borne de pente ne
-   * changent pas. Mesuré hors ligne : cuts posés corrigés de plus de 10 mm par Mic, 47 → 25 sur 188 (fiches/P1_CONVENTION.md).
+  /* P1 (5.0, D-129) — PLAFOND DU CALAGE DE CONVENTION (src/placement-convention.js). Trois valeurs.
+   *   false (défaut) : un rail dont le décalage de convention sort du domaine mesuré (plus de 8 mm sur un axe) est refusé et posé
+   *     brut, comme avant (biais vertical réel mesuré : −6,5 mm, partie 17).
+   *   'vertical' (P1 bis) : seul le décalage VERTICAL hors domaine est appliqué à 8 mm au plus, dans son signe ; le reste est
+   *     consigné. Si le décalage LATÉRAL sort du domaine, le rail reste refusé (posé brut), même si le vertical serait plafonné.
+   *   true : les deux axes sont plafonnés à 8 mm.
+   * Le reste est consigné (`conventionCalibration.restDuMm` / `restDzMm`, `capped`). La garde de paire (D-044), le domaine et la
+   * borne de pente ne changent pas. Mesures hors ligne : fiches/P1_CONVENTION.md.
    * NE PAS ACTIVER sans l'accord de Mic : il change la pose de terrain. */
   const conventionPlafond = false;
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
@@ -354,7 +357,7 @@
       { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { echantillon: 'neuf cuts sur dix (un sur dix en référence, tiré au sort)', tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Les cuts de référence surveillent la qualité. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
-      { groupe: 'Continuité', nom: 'Plafond du calage de convention (P1)', valeur: conventionPlafond ? 'actif (8 mm au plus par axe)' : 'coupé (rail hors domaine posé brut)', pourquoi: 'Un rail dont le décalage de convention dépasse 8 mm est posé avec 8 mm au plus au lieu d’être refusé ; le reste est consigné (D-129). Garde de paire inchangée.' },
+      { groupe: 'Continuité', nom: 'Plafond du calage de convention (P1)', valeur: conventionPlafond === 'vertical' ? 'actif sur le vertical seulement (8 mm au plus)' : conventionPlafond ? 'actif (8 mm au plus par axe)' : 'coupé (rail hors domaine posé brut)', pourquoi: 'Un rail dont le décalage de convention dépasse 8 mm est posé avec 8 mm au plus au lieu d’être refusé ; le reste est consigné (D-129). Garde de paire inchangée.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },

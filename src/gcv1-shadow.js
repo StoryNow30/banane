@@ -551,7 +551,11 @@
           convention:rail.conventionCalibration?{applied:!!rail.conventionCalibration.applied,
             reason:rail.conventionCalibration.reason??null,duMm:rail.conventionCalibration.duMm??null,
             dzMm:rail.conventionCalibration.dzMm??null,faceMode:rail.conventionCalibration.faceMode??null,
-            rawDelta:rail.conventionCalibration.rawDelta}:null}};
+            rawDelta:rail.conventionCalibration.rawDelta,
+            /* Plafond (P1) : consigné seulement quand il a joué ; sans plafond, la ligne est inchangée. */
+            ...(rail.conventionCalibration.capped?{capped:true,capMm:rail.conventionCalibration.capMm,capAxes:rail.conventionCalibration.capAxes??'both',
+              appliedDuMm:rail.conventionCalibration.appliedDuMm,appliedDzMm:rail.conventionCalibration.appliedDzMm,
+              restDuMm:rail.conventionCalibration.restDuMm,restDzMm:rail.conventionCalibration.restDzMm}:{})}:null}};
     }
     return rails;
   }
