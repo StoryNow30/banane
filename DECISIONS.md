@@ -2271,3 +2271,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **La maquette ne réagit à aucun geste**. La réaction du vrai ESV n'est donc pas mesurée : gain en mm par pixel, persistance du zoom, lectures de nuage par geste. Les vérifications à faire sur le vrai ESV avant activation sont au § 6 de `fiches/DEPLACER_VUE.md`. Le relevé Écho des gestes de Mic y répondra en partie.
 - **Écho** : le relevé des glissers et des crans de molette de Mic est **actif par défaut** (`echo.gestesVue`), en observation pure avec des écouteurs passifs. Il ajoute environ 1 Ko par geste.
 - **Remarque à garder pour la trace (D-151)** : la pose directe du mode rapide peut déjà cliquer à des coordonnées hors de la partie visible de la vue, ce qu'un humain ne peut pas faire. À examiner.
+
+## D-157 — Mode rapide : le clic du rail gauche tombe hors de la fenêtre, une marque côté page (17 octobre 2026)
+
+- Enquête en lecture, rapport hors dépôt (`clic-hors-vue/RAPPORT.md` dans le carnet de la session).
+- **Constat vérifié** : en mode rapide (`poseDirecte`, 9 cuts sur 10), Ariane presse le bouton du rail gauche puis clique tout de suite, avant que la caméra d'ESV ait suivi. Le clic est donc calculé dans la vue du rail droit, où la cible gauche tombe vers NDC −7 : environ 2 000 px à gauche du canevas, hors de la fenêtre. C'est voulu depuis D-088, et le seul garde-fou est |NDC| < 50.
+- Reconstitution sur les lots réels : 185 clics sur 185 en partie 29 et 205 sur 205 en partie 1 du second projet. Les poses sont justes (relues à 1 mm), et le serveur ne voit rien de différent : les écritures sont identiques (D-151).
+- **Pourquoi c'est une marque** : un vrai clic humain à ces coordonnées n'atteindrait jamais le canevas. Elle n'est visible que si la page d'ESV relève les coordonnées des clics, ce qui n'est pas vérifié.
+- **Correction proposée, non appliquée** : poser avec recentrage, le chemin des cuts de référence, qui refuse une cible hors de la vue. Sans code : `rapide.pose=false`. Coût : 0 cut différé en plus, mais environ +0,67 s par cut rapide, soit +13 à +19 % de durée de lot. Variante : rail droit en direct et rail gauche recentré, pour environ moitié moins de temps.
+- **Décision à Mic** : c'est un arbitrage entre le débit et la trace humaine (sa règle « aucune marque distincte »).
+- À noter aussi : Chromium arrondit les coordonnées à l'entier, donc les décalages d'un demi-pixel de `DECALAGES_CLIC` donnent 0 ou −1 px.
