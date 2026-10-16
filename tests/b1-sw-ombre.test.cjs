@@ -15,7 +15,7 @@ test('ombre : mêmes commandes, mêmes poses, mêmes enregistrements qu’avec l
   const a=await un('off',100),c=await un('ombre',100,false);
   deq(normalize(c.b.commands),normalize(a.b.commands),'mêmes commandes ESV, même ordre');deq(normalize(c.adapter.rails),normalize(a.adapter.rails));deq(c.adapter.calls,a.adapter.calls);
   const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);deq(rec(c.b),rec(a.b));
-  const metier=b=>b.store.events.filter(e=>!['b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);deq(metier(c.b),metier(a.b),'mêmes événements métier');
+  const metier=b=>b.store.events.filter(e=>!['b1-ombre','regles-metier-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);deq(metier(c.b),metier(a.b),'mêmes événements métier');
   assert.equal(evts(a.b).length,0,'réglage coupé : aucun calcul, aucune demande');assert.equal(a.demandes.length,0);
   deq([decision(c,110).stage,decision(c,110).anchorsUsed,decision(c,110).appuisListe],['first-pass',[],undefined],'décision réelle : premier passage sans appui, inchangée');
   /* L'hypothèse lourde (reprise depuis la voie) attend que la page travaille : capture suivante, ou 4 s. */

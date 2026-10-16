@@ -10,8 +10,10 @@ before(async()=>{livre=await lot(undefined);actif=await lot({...S.reglesMetier,a
 
 test('règle activée : 114 différé au lieu d\'être validé ; aucune autre différence ; aucune pose nouvelle',()=>{
  const d0=decisions(livre.b),d1=decisions(actif.b);
- deq(d0.map(([c,x])=>[c,x.command?.action==='defer'?'defer':'pose']),[[112,'defer'],[113,'defer'],[114,'pose'],[115,'pose']],'réglage livré');
- deq(d1.map(([c,x])=>[c,x.command?.action]),[[112,'defer'],[113,'defer'],[114,'defer'],[115,'defer']]);
+ deq(d0.map(([c,x])=>[c,x.stage,x.command?.action]),[[112,'deferred','engine'],[113,'deferred','engine'],[114,'first-pass','engine'],[115,'first-pass','engine']],'réglage livré');
+ deq(d1.map(([c,x])=>[c,x.stage,x.command?.action]),[[112,'deferred','engine'],[113,'deferred','engine'],[114,'first-pass','defer'],[115,'first-pass','defer']]);
+ assert.deepEqual(livre.adapter.calls,['capture','nextWithoutDecision','capture','nextWithoutDecision','capture','apply','validate','next','capture','apply']);
+ assert.deepEqual(actif.adapter.calls,['capture','nextWithoutDecision','capture','nextWithoutDecision','capture','nextWithoutDecision','capture']);
  for(const k of [2,3])assert.equal(d1[k][1].command.reason,'regles-metier');
  /* Les deux premiers cuts : décisions identiques octet pour octet. */
  assert.equal(JSON.stringify(neutre(d1.slice(0,2))),JSON.stringify(neutre(d0.slice(0,2))));

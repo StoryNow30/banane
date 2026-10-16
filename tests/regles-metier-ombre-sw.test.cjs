@@ -3,7 +3,7 @@
  * tests/helpers/regles-metier-lot.cjs ; moteur et GCV1 réels, ESV simulé, données synthétiques). Réglage livré (ombre active,
  * activation coupée) contre ombre coupée, lot de 112 à 114 : mêmes commandes ESV, mêmes rails, mêmes enregistrements, mêmes
  * événements métier, décisions du lot identiques octet pour octet. Un événement `regles-metier-ombre` par cut, sans position ; au
- * cut 114, posé juste après les différés 112 et 113, l'ombre dit qu'Ariane l'aurait différé (`grappe-differes`) : le lot l'a quand
+ * cut 114, posé juste après les différés 112 et 113 (captures sans point), l'ombre dit qu'Ariane l'aurait différé (`grappe-differes`) : le lot l'a quand
  * même posé. */
 const {test,before}=require('node:test'),assert=require('node:assert/strict');
 const {lot,neutre,decisions,metier,ombres,deq,rec,S}=require('./helpers/regles-metier-lot.cjs');
@@ -16,7 +16,8 @@ test('LA POSE NE CHANGE PAS : mêmes commandes ESV, mêmes rails, mêmes enregis
  deq(rec(ombre.b),rec(coupe.b));deq(metier(ombre.b),metier(coupe.b),'mêmes événements métier');
  assert.equal(JSON.stringify(neutre(decisions(ombre.b))),JSON.stringify(neutre(decisions(coupe.b))),'décisions du lot identiques, octet pour octet');
  /* Le lot a bien différé 112 et 113 et posé 114 (sinon l'essai ne prouverait rien). */
- deq(decisions(coupe.b).map(([c,x])=>[c,x.command?.action==='defer'?'defer':'pose']),[[112,'defer'],[113,'defer'],[114,'pose']]);
+ deq(decisions(coupe.b).map(([c,x])=>[c,x.stage]),[[112,'deferred'],[113,'deferred'],[114,'first-pass']]);
+ assert.deepEqual(coupe.adapter.calls,['capture','nextWithoutDecision','capture','nextWithoutDecision','capture','apply']);
  assert.equal(coupe.adapter.calls.filter(c=>c==='apply').length,1);
 });
 
