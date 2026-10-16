@@ -75,6 +75,24 @@
       "parties": [
         { "projet": 1, "parties": [17, 24, 29] }
       ]
+    },
+    "fauxVertOmbre": {
+      "libelle": "Faux vert en ombre : règle « hauteur ambiguë » (différer au lieu de valider)",
+      "decision": "aucune encore (chantier « faux verts », 5.0) ; activation à décider avec l’opérateur",
+      "fiche": "fiches/FAUX_VERTS.md",
+      "etat": "consignée seulement (src/faux-vert-ombre.js, clé fauxVertOmbre de la décision sur le lot) ; chemin d'activation coupé (differer:false)",
+      "fige": "2026-10-16",
+      "valeurs": {
+        "dzMinMm": 11,
+        "epaisseurMinMm": 14,
+        "memeRail": true,
+        "differer": false
+      },
+      "ombre": { "reglage": "src/settings.js fauxVertOmbre", "module": "src/faux-vert-ombre.js", "version": "faux-vert-ombre-v1" },
+      "parties": [
+        { "projet": 1, "parties": [17, 24, 29] },
+        { "projet": 2, "parties": [1] }
+      ]
     }
   }
 }

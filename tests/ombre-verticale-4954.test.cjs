@@ -16,7 +16,8 @@ const SIDES=['left','right'];
 /* Réglage posé comme le service worker le voit (global `BananeSettings`), puis retiré. */
 function avecReglage(valeur,fn){
  const avant=Object.getOwnPropertyDescriptor(globalThis,'BananeSettings');
- globalThis.BananeSettings=valeur===undefined?{...Settings,ombreVerticaleRefusee:undefined}:{...Settings,ombreVerticaleRefusee:valeur};
+ /* Les autres ombres de la décision (faux vert en ombre) sont tenues à l'écart : cet essai ne juge que P8. */
+ globalThis.BananeSettings=valeur===undefined?{...Settings,ombreVerticaleRefusee:undefined,fauxVertOmbre:undefined}:{...Settings,ombreVerticaleRefusee:valeur,fauxVertOmbre:undefined};
  try{return fn();}finally{if(avant)Object.defineProperty(globalThis,'BananeSettings',avant);else delete globalThis.BananeSettings;}
 }
 const sans=d=>{const {ombreVerticale,...reste}=d;return reste;};

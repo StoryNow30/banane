@@ -295,6 +295,14 @@
    * l'observation « continuité » : pose de départ et points capturés avant le premier geste, jamais la référence humaine du cut. Écho passif :
    * rien n'est posé ni commandé. `actif:false` : rien. */
   const memoireDifferesOmbre = Object.freeze({ actif: true, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
+  /* 5.0 (chantier « faux verts », fiches/FAUX_VERTS.md) — FAUX VERT EN OMBRE (src/faux-vert-ombre.js, consigné par src/lot-decision.js). Pour chaque
+   * cut que la décision sur le lot pose, la décision consigne (`fauxVertOmbre`) les signaux de la science du cut et le verdict de la règle
+   * « hauteur ambiguë » : un même rail avec un décalage vertical de calage d'au moins `dzMinMm` (appliqué ou refusé) ET une bande de points du
+   * dessus épaisse d'au moins `epaisseurMinMm` → « différer ». ACTIF POUR CONSIGNER SEULEMENT : la décision, la pose et la commande sont
+   * identiques, octet pour octet, avec et sans. `differer` : chemin d'activation, COUPÉ ; ouvert, il ne pourrait que différer le cut au lieu de
+   * le valider, jamais poser. NE PAS L'OUVRIR sans l'accord de l'opérateur, et pas avant une mesure en ombre sur des parties neuves. Seuils figés :
+   * datasets/reglages-figes.json (`fauxVertOmbre`). `actif:false` : rien n'est calculé ni consigné. */
+  const fauxVertOmbre = Object.freeze({ actif: true, differer: false, dzMinMm: 11, epaisseurMinMm: 14 });
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
@@ -391,6 +399,7 @@
       { groupe: 'Continuité', nom: 'Correction verticale en ombre (P8)', valeur: ombreVerticaleRefusee.actif ? 'consignée seulement (' + String(ombreVerticaleRefusee.mm).replace('.', ',') + ' mm sur les rails à convention refusée)' : 'coupée', pourquoi: 'Note dans la décision la pose qu’aurait donnée une correction verticale apprise (Mic remonte ces rails, D-140), à côté de la pose réelle. Jamais appliquée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Voie prédite en ombre (Orbite)', valeur: voiePrediteOmbre.actif ? 'consignée seulement (règle prudente D-147, à chaque cut différé)' : 'coupée', pourquoi: 'Note ce qu’aurait posé le moteur recentré sur la voie du lot, et le geste de vue qu’il aurait fallu. Jamais posé, aucune vue déplacée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire des différés en ombre (Écho)', valeur: memoireDifferesOmbre.actif ? 'consignée seulement (série de différés, ' + memoireDifferesOmbre.K + ' dernières corrections)' : 'coupée', pourquoi: 'Note, avant de lire ta référence sur le cut, la pose qu’aurait donnée la voie de tes corrections précédentes de la série. Rien n’est posé ni commandé.' },
+      { groupe: 'Continuité', nom: 'Faux vert en ombre (Orbite)', valeur: fauxVertOmbre.actif ? (fauxVertOmbre.differer ? 'actif : diffère les cuts à hauteur ambiguë' : 'consigné seulement (hauteur ambiguë : calage ≥ ' + fauxVertOmbre.dzMinMm + ' mm et dessus épais ≥ ' + fauxVertOmbre.epaisseurMinMm + ' mm)') : 'coupé', pourquoi: 'Note, pour chaque cut posé par le lot, s’il ressemble à un faux vert (hauteur du rail ambiguë). Jamais appliqué : la pose et la validation sont les mêmes avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -408,5 +417,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, fauxVertOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });

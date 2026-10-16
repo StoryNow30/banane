@@ -1,8 +1,8 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'),require('./gauge.js'),
-    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'));
-  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing);
-})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing){
+    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'),require('./faux-vert-ombre.js'));
+  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing,root.BananeFauxVertOmbre);
+})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing,FauxVert){
  'use strict';
  /* DÉCIDER SUR LE LOT — cahier 4.8, amendement n°9 (D-039).
   *
@@ -389,9 +389,23 @@
    }
    return Object.keys(rails).length?{version:'e2-vertical-refuse-v1',mm:reglage.mm,repere:'profil du rail, + = vers le haut',rails}:null;
  }
+ /* 5.0 (chantier « faux verts ») — FAUX VERT EN OMBRE (`src/faux-vert-ombre.js`, réglage `fauxVertOmbre`). Pour une décision qui pose, la
+  * décision consigne `fauxVertOmbre` : signaux de la science du cut (décalage vertical du calage de convention, épaisseur du dessus à la pose
+  * décidée) et verdict de la règle « hauteur ambiguë » (`valider` ou `differer`). CONSIGNÉE SEULEMENT : comme pour P8, la décision de base est
+  * calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée ; réglage coupé ou absent (outils hors ligne), module absent, cut sans
+  * pose : aucune clé. Une panne ici ne change jamais la décision. Le chemin qui la lirait pour DIFFÉRER est `fauxVertActivation`, coupé. */
+ const fauxVertReglage=options=>{const o=options&&options.fauxVertOmbre!==undefined?options.fauxVertOmbre:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.fauxVertOmbre:undefined);
+   return o&&o.actif===true?o:null;};
+ function fauxVertOmbre(decision,{capture,science,options}){
+   const reglage=fauxVertReglage(options);if(!reglage||!FauxVert||!decision?.positions)return null;
+   return FauxVert.evaluer({capture,science,decision,reglage});
+ }
  function decideCut(args){
    const decision=decideCutBase(args);
-   try{const o=ombreVerticale(decision,args);return o?{...decision,ombreVerticale:o}:decision;}catch{return decision;}
+   let out=decision;
+   try{const o=ombreVerticale(decision,args);if(o)out={...decision,ombreVerticale:o};}catch{out=decision;}
+   try{const f=fauxVertOmbre(decision,args);if(f)out={...out,fauxVertOmbre:f};}catch{/* consigne seulement */}
+   return out;
  }
  /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
   * décision en rails pour `Engine.apply()`, sans rien décider de plus :
@@ -471,7 +485,22 @@
    return {action:'defer',reason,rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
      reasons:[text],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason,...(decision?.guardMm!=null?{guardMm:decision.guardMm}:{})}}]))};
  }
- function commandRails({decision,runtimeRails,before,expectedPoses,cameras}){
+ /* CHEMIN D'ACTIVATION DU FAUX VERT EN OMBRE — COUPÉ. Il ne s'ouvre que si le réglage dit `differer:true` (livré à `false`, épinglé par
+  * les essais). Ouvert, il ne fait qu'une chose : un cut dont l'ombre consignée dit « différer » et que la commande allait poser est DIFFÉRÉ
+  * (deux abstentions, comme toute garde du lot). Il ne crée jamais de pose, ne déplace jamais une position, ne touche pas un cut déjà différé ;
+  * fermé, il rend la commande telle quelle (le même objet). */
+ function fauxVertActivation(out,{decision,runtimeRails}){
+   const reglage=typeof globalThis!=='undefined'?globalThis.BananeSettings?.fauxVertOmbre:undefined;
+   if(!reglage||reglage.differer!==true)return out;
+   const o=decision?.fauxVertOmbre;
+   if(!o||o.verdict!=='differer'||!out||!runtimeRails||!SIDES.every(side=>runtimeRails[side]))return out;
+   /* Seulement une commande qui POSE : les positions du lot, ou la paire du moteur avec ses deux rails résolus. */
+   const pose=out.action==='lot'||(out.action==='engine'&&SIDES.every(side=>out.rails?.[side]?.status==='candidate'));
+   if(!pose)return out;
+   return deferRails(runtimeRails,decision,'faux-vert-ombre','décision sur le lot : faux vert probable (hauteur ambiguë sur '+(o.railsSuspects||[]).join(', ')+')');
+ }
+ function commandRails(args){return fauxVertActivation(commandRailsBase(args),args);}
+ function commandRailsBase({decision,runtimeRails,before,expectedPoses,cameras}){
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
    /* D-060 : un refus de la garde d'écartement bas est TOUJOURS un différé, même
     * sans capture de départ ; sans ce renvoi, il suivrait la paire du moteur. */

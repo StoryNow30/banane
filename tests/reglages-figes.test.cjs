@@ -21,7 +21,7 @@ const Settings = require('../src/settings.js');
 test('le fichier porte une date, des valeurs et les parties qui ont servi, pour chaque réglage', () => {
   assert.equal(F.format, 'ariane-reglages-figes-v1');
   assert.match(F.date, /^\d{4}-\d{2}-\d{2}$/);
-  assert.deepEqual(Object.keys(F.reglages).sort(), ['memoireSerieB', 'ombreVerticale', 'voiePredite']);
+  assert.deepEqual(Object.keys(F.reglages).sort(), ['fauxVertOmbre', 'memoireSerieB', 'ombreVerticale', 'voiePredite']);
   for (const [nom, r] of Object.entries(F.reglages)) {
     assert.ok(r.libelle && r.valeurs && typeof r.valeurs === 'object', nom);
     assert.match(r.fige, /^\d{4}-\d{2}-\d{2}$/, `${nom} : date de gel`);
@@ -70,4 +70,14 @@ test('ombre verticale : même valeur que le réglage de src/settings.js quand ce
   assert.equal(v.mm, 3.6);
   if (!Settings.ombreVerticaleRefusee) return t.skip('cette branche ne porte pas encore l\'ombre verticale (livrée par la ligne de test 4.9.5.4) : à vérifier après la fusion');
   assert.equal(Settings.ombreVerticaleRefusee.mm, v.mm);
+});
+
+test('faux vert en ombre : mêmes seuils que le module et le réglage livré, chemin d\'activation coupé', () => {
+  const FV = require('../src/faux-vert-ombre.js');
+  const v = F.reglages.fauxVertOmbre.valeurs;
+  assert.equal(v.dzMinMm, FV.REGLE.dzMinMm); assert.equal(v.epaisseurMinMm, FV.REGLE.epaisseurMinMm);
+  assert.equal(v.dzMinMm, Settings.fauxVertOmbre.dzMinMm); assert.equal(v.epaisseurMinMm, Settings.fauxVertOmbre.epaisseurMinMm);
+  assert.equal(v.differer, false); assert.equal(Settings.fauxVertOmbre.differer, false);
+  assert.equal(v.memeRail, true);
+  assert.equal(F.reglages.fauxVertOmbre.ombre.version, FV.VERSION);
 });
