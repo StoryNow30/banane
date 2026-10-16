@@ -22,7 +22,7 @@ const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.4',VERSION_NAME=globalThis
  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
 BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
-const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
+const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 /* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
  * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
@@ -925,7 +925,15 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  try{await engine.resume();}catch(e){if(engine.s.batch===b){if(bloque&&b.state==='PAUSED')b.state='PAUSED_ADAPTER_UNRESPONSIVE';b.stoppedAtEnd=fin;}throw e;}
  return true;}
 const applyInESV=adapter.apply;
-adapter.apply=async(...args)=>{const result=await applyInESV(...args);
+adapter.apply=async(...args)=>{
+ /* 5.0 (D-147) : le plan de geste de la commande du lot, seulement si le réglage `deplacerVue` est actif ; sinon l'appel d'avant. */
+ const plan=deplacerVueReglage()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
+ if(plan){const identity=engine.s.before?.identity??null,ev={phase:'pose',identity:identity?{part:identity.part??null,cut:identity.cut??null}:null,batchId:engine.s.batch?.id??null};
+  try{result=await applyInESV(...args,{deplacerVue:plan});}
+  catch(e){await engine.event('deplacer-vue',{...ev,erreur:String(e?.message||e).slice(0,300)}).catch(()=>{});throw e;}
+  const rapport=result&&typeof result==='object'?result.deplacerVue??null:null;if(rapport){result={...result};delete result.deplacerVue;}
+  await engine.event('deplacer-vue',{...ev,cotes:(rapport?.cotes||[]).map(dvAmener),remise:rapport?.remise??null}).catch(()=>{});}
+ else result=await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
@@ -1038,8 +1046,11 @@ async function commandLot(proposal,lotObservation){
  const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,before=engine.s.before?.rails;
  /* 4.7.11 — caméras de la capture : la cible doit tomber dans la vue du rail (KI-051). */
  const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
- const command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
- lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{})};
+ let command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
+ /* 5.0 (D-147) : cible hors de la vue SEULEMENT, réglage `deplacerVue` actif (coupé par défaut) : le geste qui l'amènerait. */
+ if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
+  const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
+ lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
@@ -1050,6 +1061,51 @@ async function commandLot(proposal,lotObservation){
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
  return engine.s.proposal;
 }
+/* 5.0 (D-147, fiches/DEPLACER_VUE.md) — DÉPLACER LA VUE. Réglage `deplacerVue`, COUPÉ PAR DÉFAUT : coupé, rien de ce qui suit ne
+ * s'exécute et les commandes sont celles d'avant, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif, pour un cut que le
+ * lot ne pose pas PARCE QUE sa cible tombe hors de la vue d'un rail (KI-051) :
+ *   1. l'étage de la décision doit être permis (`etages`, « window » par défaut : le moteur a retrouvé lui-même les deux rails) ;
+ *   2. avec des vues élargies, la commande du lot doit passer (toutes les autres gardes inchangées) ;
+ *   3. pour chaque rail hors de sa vue, le geste nécessaire, d'après la caméra de la capture (`vueNecessaire`) : dézoom
+ *      (≤ `dezoomMax`, pixel ≤ `pixelMaxMm`) ou glisser (≤ `glissementPxMax` px) ; sinon refus ;
+ *   4. pré-vol (`preVol`) : la page essaie le geste sur chaque rail concerné, sans rien poser, et remet la vue ; un échec laisse
+ *      le cut différé, comme aujourd'hui ;
+ *   5. la commande devient celle du lot, avec le plan (`deplacerVue`), que `apply` transmet à la page.
+ * Un événement `deplacer-vue` par décision (plan ou refus, pré-vol) et par pose ; un `deplacer-vue-geste` par geste (progression
+ * de la page). Aucune position n'y est écrite : des NDC, des facteurs, des pixels, des comptes. */
+function deplacerVueReglage(){const v=globalThis.BananeSettings?.deplacerVue;return v&&v.actif===true?v:null;}
+const DV_TRANSMIS=['gestesMax','dezoomMax','glissementPxMax','pixelMaxMm','marge','remiseTolerance','molette','glisser'];
+const dvR=(v,k=1000)=>Number.isFinite(v)?Math.round(v*k)/k:null;
+const dvAmener=r=>r?{cote:r.cote??null,ok:!!r.ok,raison:r.raison??null,gestes:(r.gestes||[]).map(g=>({type:g.type,crans:g.crans??null,px:g.px??null,py:g.py??null,facteurCran:g.facteurCran??null,gain:g.gain??null,camera:g.camera??null,ndcApres:g.ndcApres??null,dureeMs:g.dureeMs??null})),
+ ndcAvant:r.ndcAvant??null,ndcApres:r.ndcApres??null,pixelMm:r.pixelMm??null,dureeMs:r.dureeMs??null,remise:r.remise??null}:null;
+const dvPlan=p=>p?{cotes:p.cotes,gestesMax:p.gestesMax,dezoomMax:p.dezoomMax,glissementPxMax:p.glissementPxMax}:null;
+async function deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage}){
+ const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,identity=engine.s.before?.identity??null;
+ const ev={phase:'decision',identity:identity?{part:identity.part??null,cut:identity.cut??null}:null,batchId:engine.s.batch?.id??null,stage:lotObservation.stage??null,raisonLot:command.reason,ndc:command.ndc??null};
+ const fin=async(refus,extra={})=>{await engine.event('deplacer-vue',{...ev,...extra,refus}).catch(()=>{});return {command:null};};
+ try{
+  if(!(reglage.etages||['window']).includes(lotObservation.stage))return fin('etage');
+  if(!VR||!capture||!lotObservation.positions)return fin('capture-absente');
+  const large=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:VR.camerasLarges(capture)});
+  if(large.action!=='lot')return fin('commande:'+large.reason);
+  const vue=VR.vueNecessaire(capture,lotObservation.positions,reglage.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
+  if(vue.inconnu)return fin('vue-inconnue');
+  for(const s of ['left','right']){const p=vue.par[s];if(!p||p.ok)continue;const c=cams[s];
+   const pixel=c?.viewport?.width&&c.projection?.[0]?2/Math.abs(c.projection[0])/c.viewport.width*1000:NaN;
+   const dezoom=p.dezoom<=reglage.dezoomMax&&Number.isFinite(pixel)&&pixel*p.dezoom<=reglage.pixelMaxMm,glisser=p.panPx<=reglage.glissementPxMax;
+   const besoin={dezoom:dvR(p.dezoom),panPx:dvR(p.panPx,10),pixelMm:dvR(pixel),ndc:p.ndc.map(x=>dvR(x))};
+   if(!dezoom&&!glisser)return fin('hors-limites',{besoin:{[s]:besoin}});
+   cotes[s]={geste:dezoom?'dezoom':'glissement',...besoin};}
+  if(!Object.keys(cotes).length)return fin('dans-la-vue');
+  const plan={version:'deplacer-vue-v1',cotes,...Object.fromEntries(DV_TRANSMIS.filter(k=>reglage[k]!==undefined).map(k=>[k,reglage[k]]))};
+  const preVol=[];
+  if(reglage.preVol!==false)for(const s of Object.keys(cotes)){let r;
+   try{r=await call('amenerDansLaVue',s,lotObservation.positions[s],identity,{...plan,cotes:undefined,essai:true});}
+   catch(e){r={cote:s,ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
+   preVol.push(dvAmener(r));if(!r?.ok)return fin('pre-vol:'+(r?.raison||'?'),{plan:dvPlan(plan),preVol});}
+  await engine.event('deplacer-vue',{...ev,plan:dvPlan(plan),preVol,refus:null});
+  return {command:{...large,deplacerVue:plan}};
+ }catch(e){return fin('erreur:'+String(e?.message||e).slice(0,100));}}
 /* Décision sur le lot : l'état du lot (ancres) vit dans le lot lui-même,
  * persisté avec lui, et disparaît avec lui. */
 let lotAnchorCandidate=null;
@@ -1803,7 +1859,11 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(m.kind==='adapter-trace'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
   timing?.progress(m);
   ready.then(()=>{if(m.action==='capture')engine.s.captureProgress={stage:m.lastStage,...m.lastDetail};
-    return engine.event('adapter-progress',{requestId:m.requestId,action:m.action,elapsedMs:m.elapsedMs,acknowledged:m.acknowledged,lastStage:m.lastStage,lastDetail:m.lastDetail});}).then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;
+    const progression=()=>engine.event('adapter-progress',{requestId:m.requestId,action:m.action,elapsedMs:m.elapsedMs,acknowledged:m.acknowledged,lastStage:m.lastStage,lastDetail:m.lastDetail});
+    /* 5.0 (D-147) : chaque geste de vue d'Ariane, et la remise de la vue, consignés à part (les autres étapes : comme avant). */
+    if(m.lastStage==='vue-geste'||m.lastStage==='vue-remise')return engine.event('deplacer-vue-geste',{action:m.action,etape:m.lastStage,...(m.lastDetail&&typeof m.lastDetail==='object'?m.lastDetail:{}),
+      identity:engine.s.before?.identity?{part:engine.s.before.identity.part??null,cut:engine.s.before.identity.cut??null}:null}).catch(()=>{}).then(progression);
+    return progression();}).then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;
  }
  if(m.kind==='open-panel'){openPanel().then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;}
  // Le fragment d'URL porte la vue affichée ; seule l'origine de la page compte.

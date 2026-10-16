@@ -13,7 +13,7 @@ before(async()=>{
  refuse=await lot({reglage:{...S.deplacerVue,actif:true},amener:{ok:false,raison:'camera-immobile'}});
 });
 
-test('réglage actif : plan de geste (dézoom), pré-vol par la page, pose avec la vue déplacée ; le cut 112 est posé et validé',()=>{
+test('réglage actif : plan de geste (dézoom), pré-vol par la page, pose avec la vue déplacée ; le cut 112 est posé (dernier cut du lot : posé sans validation, comme tout dernier cut)',()=>{
  const {b,adapter}=actif;
  const d=decisions(b).find(([c])=>c===112)[1];
  assert.equal(d.command.action,'lot');assert.equal(d.command.reason,'window');
@@ -21,7 +21,7 @@ test('réglage actif : plan de geste (dézoom), pré-vol par la page, pose avec 
  /* Pré-vol : la page a essayé le côté hors de la vue (et lui seul), avec la cible de la décision et l'identité du cut. */
  assert.deepEqual(adapter.amenerArgs.map(a=>a.cote),Object.keys(d.command.deplacerVue.cotes));
  assert.equal(adapter.amenerArgs[0].attendu.cut,112);assert.ok(adapter.amenerArgs[0].options.essai);
- assert.deepEqual(adapter.amenerArgs[0].cible,d.positions.left);
+ assert.equal(JSON.stringify(adapter.amenerArgs[0].cible),JSON.stringify(d.positions.left));
  /* Pose : apply reçoit le plan ; le cut est validé. */
  assert.deepEqual(adapter.calls,['capture','apply','validate','next','capture','amenerDansLaVue',...adapter.amenerArgs.slice(1).map(()=>'amenerDansLaVue'),'apply']);
  assert.deepEqual(adapter.applyArgs,[0,1]);assert.ok(adapter.options.deplacerVue.cotes.left);
@@ -38,8 +38,8 @@ test('réglage actif, la page n\'amène pas la cible : le cut reste différé ex
  const e=ev(b,'deplacer-vue');assert.equal(e.length,1);assert.equal(e[0].phase,'decision');assert.equal(e[0].refus,'pre-vol:camera-immobile');
 });
 
-test('la décision du lot ne dépend pas du geste (seule la commande change), et le moteur ne connaît pas le réglage',()=>{
- const sansCommande=b=>decisions(b).map(([c,x])=>{const {command,applied,...reste}=x;return [c,reste];});
+test('la décision du lot ne dépend pas du geste (seules la commande et son appui changent), et le moteur ne connaît pas le réglage',()=>{
+ const sansCommande=b=>decisions(b).map(([c,x])=>{const {command,applied,anchorHeld,...reste}=x;return [c,reste];});
  assert.equal(JSON.stringify(neutre(sansCommande(actif.b))),JSON.stringify(neutre(sansCommande(refuse.b))));
  assert.deepEqual(decisions(refuse.b).map(([c,x])=>[c,x.stage]),GOLDEN.decisions.map(d=>d.slice(0,2)));
  const fs=require('node:fs'),path=require('node:path');
