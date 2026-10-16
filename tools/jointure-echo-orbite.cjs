@@ -6,17 +6,21 @@
  * lot automatique) de la même partie. Chantier S3 du plan 5.0 (audit Écho, ligne C-03) : juger Ariane sur la
  * vérité terrain sans jointure manuelle. Outil hors ligne, lecture seule, aucune dépendance.
  *
- *   node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> --journal <fichier>
+ *   node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> (--journal <fichier> | --sans-journal)
  *        [--partie N] [--base auto|premiere|derniere] [--sortie table.json] [--csv table.csv] [--sans-poses]
+ *        [--visite-sans-action-bonne [durée minimale en s, 1 par défaut]]
  *
  * Clé de jointure : (partie, cut) — et le projet si les deux identités en portent un (`projectId` ; absent des
- * exports actuels). Par cut, la table donne :
+ * exports actuels). Clé de visite : (session Écho, `visitIndex`) : `visitIndex` repart de 0 à chaque session, il ne
+ * suffit donc jamais seul. Les visites d'un cut, toutes sessions confondues, sont rangées dans l'ordre du temps
+ * (`startedAt`, puis rang de la session, puis `visitIndex`). Par cut, la table donne :
  *  - la classe Ariane : « posee » (validation ou pose vérifiée au journal), « differee » (cut différé et jamais
  *    posé), « autre » (vu au journal sans issue : capture abandonnée…), « hors-journal » ;
  *  - le motif de différé (par rail : motif du moteur et raison) ;
  *  - la pose d'Ariane (bords gauche/droit, scène du journal) et son déplacement dans le repère profil ;
  *  - la pose humaine finale (bords, scène de l'Écho) : celle de la DERNIÈRE validation observée, toutes visites
- *    confondues (comme la 4.9.0.20) ; un cut sans validation observée est « sans-reference » ;
+ *    confondues, dans l'ordre du temps (comme la 4.9.0.20) ; un cut sans validation observée est « sans-reference »
+ *    (sauf avec `--visite-sans-action-bonne`, voir plus bas) ;
  *  - l'écart humain par rail : latéral, vertical, longitudinal (mm, repère profil du rail) et distance 3D ;
  *    sans matrice de repère profil, la distance 3D seule (« repere: "3D" ») ;
  *  - l'étiquette Écho (VALIDATE_NO_MOVEMENT, VALIDATE_CORRECTED_*…) ;
@@ -33,6 +37,16 @@
  * Ariane (journal) et la pose initiale vue par l'Écho est une translation constante. L'outil l'estime (médiane
  * par axe sur les cuts posés des deux côtés), la consigne dans le résumé avec sa dispersion, et marque
  * « repere-incoherent » (retour à la première visite) tout cut qui s'en écarte de plus de 20 mm.
+ *
+ * ÉCHO SEUL (`--sans-journal`). Pas de journal : tous les cuts de l'Écho (de la partie `--partie`, sinon de toutes
+ * les parties) sont de classe « sans-journal », sans repère de scène, et l'écart se mesure à la pose initiale de la
+ * PREMIÈRE visite. Sert à juger des corrections humaines hors d'un lot Ariane (poses d'un opérateur, par exemple).
+ *
+ * RÈGLE « VISITÉ SANS ACTION = BON » (`--visite-sans-action-bonne [s]`, coupée par défaut). Un cut visité sans
+ * validation observée, dont aucun rail n'a bougé de 0,5 mm ou plus entre la pose initiale et la dernière pose
+ * observée d'une visite, et dont la plus longue visite dure au moins `s` secondes (1 par défaut ; 0 = toutes), compte
+ * pour une correction nulle (référence « observee », `regleVisiteBon: true`). Ces cuts sont comptés à part dans le
+ * résumé. Un cut déplacé sans validation, trop court ou sans mesure reste « sans-reference ».
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -73,14 +87,15 @@ function versProfil(m, d) {
 const cleCut = (partie, cut) => `${partie}|${cut}`;
 const identiteDe = o => o && o.identity ? o.identity : (o && Number.isInteger(o.cut) ? o : null);
 
-/* Fichiers Écho : un dossier (JSON et volumes zip, seuls les exports natifs sont retenus par leur nom),
- * ou des fichiers donnés tels quels. */
+/* Fichiers Écho : un dossier (JSON et volumes zip, seuls les exports Écho sont retenus par leur nom :
+ * `ariane-echo-*` depuis la 4.9.5, `ariane-native-v4-*` et `banane-native-v4-*` avant), ou des fichiers donnés tels quels. */
+const NOM_EXPORT_ECHO = /^(ariane|banane)-(native-v\d+|echo)-/;
 function entreesEcho(entrees) {
   const out = [];
   for (const e of entrees) {
     const dossier = fs.existsSync(e) && fs.statSync(e).isDirectory();
     for (const x of V.entrees(e)) {
-      if (dossier && !/^(ariane|banane)-native-v\d+-/.test(x.nom)) continue;
+      if (dossier && !NOM_EXPORT_ECHO.test(x.nom)) continue;
       out.push(x);
     }
   }
@@ -89,23 +104,33 @@ function entreesEcho(entrees) {
 
 /* Les records d'un Écho, tous segments : union par recordId, le segment le plus récent l'emporte (chaque segment
  * porte un instantané complet des records au moment du vidage, comme dans tools/merge-segments.cjs). Le segment
- * est relu, ses records dépliés, puis libéré : on ne garde jamais les nuages. */
+ * est relu, ses records dépliés, puis libéré : on ne garde jamais les nuages.
+ * Chaque record garde sa session (`nativeSessionId`, à défaut l'identifiant de la session du segment) : plusieurs
+ * sessions Écho peuvent couvrir une même partie, et `visitIndex` repart de 0 dans chacune. Sans recordId, la clé de
+ * visite (session, visitIndex) sert de repli pour l'union. */
 function lireEcho(entrees, { journal = () => {} } = {}) {
   const liste = entreesEcho(entrees);
-  if (!liste.length) throw Error('Aucun export Écho (ariane-native-v4-*.json, banane-native-v4-*.json) trouvé.');
+  if (!liste.length) throw Error('Aucun export Écho (ariane-echo-*.json, ariane-native-v4-*.json, banane-native-v4-*.json) trouvé.');
   const segments = [];
   for (const e of liste) {
     const doc = JSON.parse(e.lire().toString('utf8'));
     if (!/^banane-native-session-/.test(doc.format || '')) { journal(`ignoré (pas un export Écho) : ${e.nom}`); continue; }
     const records = (doc.format === X.FORMAT ? X.unfoldRefs({ records: doc.records || [] }, doc.dictionaries || {}) : doc).records || [];
-    const seg = doc.segment || {};
-    segments.push({ nom: e.nom, stamp: String(seg.stamp || ''), index: seg.index || 0, records });
+    const seg = doc.segment || {}, session = doc.session && doc.session.id || null;
+    for (const r of records) if (r && !r.nativeSessionId && session) r.nativeSessionId = session;
+    segments.push({ nom: e.nom, stamp: String(seg.stamp || ''), index: seg.index || 0, records, session, debutSession: doc.session && doc.session.startedAt || null });
   }
   if (!segments.length) throw Error('Aucun des fichiers donnés n\'est un export Écho (banane-native-session-*).');
   segments.sort((a, b) => a.stamp.localeCompare(b.stamp) || a.index - b.index || a.nom.localeCompare(b.nom));
   const records = new Map();
-  for (const s of segments) for (const r of s.records) records.set(r.recordId || r.id || `${s.nom}#${records.size}`, r);
-  return { records: [...records.values()], segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, records: s.records.length })) };
+  for (const s of segments) for (const r of s.records) records.set(r.recordId || r.id || (Number.isInteger(r.visitIndex) ? cleVisite(r) : `${s.nom}#${records.size}`), r);
+  /* Sessions, dans l'ordre du temps : début déclaré par le segment, à défaut la plus ancienne visite. */
+  const debuts = new Map();
+  const noter = (id, t) => { if (!debuts.has(id) || (t && (!debuts.get(id) || t < debuts.get(id)))) debuts.set(id, t ? String(t) : ''); };
+  for (const s of segments) if (s.session) noter(s.session, s.debutSession);
+  for (const r of records.values()) noter(sessionDe(r), r.startedAt);
+  const sessions = [...debuts].sort((a, b) => String(a[1]).localeCompare(String(b[1])) || a[0].localeCompare(b[0])).map(([id, debut], rang) => ({ id, debut, rang }));
+  return { records: [...records.values()], sessions, segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, session: s.session, records: s.records.length })) };
 }
 
 /* Le journal Orbite : événements et records (un journal compact est déplié). */
@@ -123,10 +148,19 @@ const positionsDe = etat => {
   return p;
 };
 const aDesRails = etat => !!etat && COTES.some(([, en]) => etat.rails && etat.rails[en] && vec3(etat.rails[en].positionSceneRelative));
-const visiteOrdre = (a, b) => (a.visitIndex ?? 0) - (b.visitIndex ?? 0) || String(a.startedAt || '').localeCompare(String(b.startedAt || ''));
+/* Clé de visite : (session, visitIndex). `visitIndex` repart de 0 à chaque session Écho. */
+const sessionDe = r => r && r.nativeSessionId || '';
+const cleVisite = r => `${sessionDe(r)}#${r.visitIndex ?? ''}`;
 
-/* Regroupe les records de l'Écho par (partie, cut). */
-function echoParCut(records) {
+/* Regroupe les records de l'Écho par (partie, cut). Les visites d'un cut, toutes sessions confondues, sont rangées dans
+ * l'ordre du temps : début de la visite, puis rang de la session, puis `visitIndex`. Trier par `visitIndex` seul
+ * placerait une visite de la seconde session avant celles de la première. `sessions` : les sessions de `lireEcho`
+ * ({ id, rang }) ; sans elles, toutes les sessions ont le même rang et l'identifiant départage. */
+function echoParCut(records, sessions = []) {
+  const rang = new Map(sessions.map(s => [s.id, s.rang]));
+  const rangDe = r => rang.has(sessionDe(r)) ? rang.get(sessionDe(r)) : 0;
+  const visiteOrdre = (a, b) => String(a.startedAt || '').localeCompare(String(b.startedAt || '')) || rangDe(a) - rangDe(b)
+    || sessionDe(a).localeCompare(sessionDe(b)) || (a.visitIndex ?? 0) - (b.visitIndex ?? 0);
   const par = new Map();
   for (const r of records) {
     const id = identiteDe(r);
@@ -276,7 +310,7 @@ function joindre(records, journal, options = {}) {
   const base = options.base || 'auto';
   if (!BASES.includes(base)) throw Error(`--base inconnue : ${base} (auto, premiere, derniere).`);
   const poses = options.poses !== false;
-  let echo = echoParCut(records);
+  let echo = echoParCut(records, options.sessions);
   let jr = journalParCut(journal);
   const partiesJournal = new Set([...jr.values()].map(c => c.partie));
   const retenue = options.partie !== undefined && options.partie !== null ? new Set([options.partie]) : partiesJournal;
@@ -348,7 +382,8 @@ function joindre(records, journal, options = {}) {
     lignes.push(ligne);
   }
 
-  return { table: lignes, resume: resumer(lignes, { base, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents }) };
+  const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
+  return { table: lignes, resume: resumer(lignes, { base, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions }) };
 }
 
 /* ------------------------------------------------------------------ résumé */
@@ -358,6 +393,7 @@ function resumer(lignes, meta = {}) {
     base: meta.base || null,
     repereScene: meta.repere ? { calibre: meta.repere.calibre, paires: meta.repere.paires, residuMedianMm: meta.repere.residuMedianMm, residuP90Mm: meta.repere.residuP90Mm } : null,
     partiesEchoIgnorees: meta.partiesEchoIgnorees || [], projetsDifferents: meta.projetsDifferents || 0,
+    cutsVusDansPlusieursSessions: meta.cutsMultiSessions || 0,
     cutsEcho: lignes.filter(l => l.dansEcho).length, cutsJournal: lignes.filter(l => l.dansJournal).length,
     cutsJoints: lignes.filter(l => l.dansEcho && l.dansJournal).length,
     cutsJournalAbsentsDeLEcho: lignes.filter(l => !l.dansEcho).length,
@@ -414,6 +450,7 @@ function texte(resume, entete = []) {
     + (resume.cutsJournalAbsentsDeLEcho ? `, ${resume.cutsJournalAbsentsDeLEcho} du journal absents de l'Écho` : '') + '.');
   if (resume.partiesEchoIgnorees.length) L.push(`Parties de l'Écho absentes du journal, ignorées : ${resume.partiesEchoIgnorees.join(', ')}.`);
   if (resume.projetsDifferents) L.push(`Cuts écartés (projets différents) : ${resume.projetsDifferents}.`);
+  if (resume.cutsVusDansPlusieursSessions) L.push(`Cuts vus dans plusieurs sessions Écho : ${resume.cutsVusDansPlusieursSessions} (visites rangées dans l'ordre du temps).`);
   L.push(`Classes Ariane au journal : ${Object.entries(resume.cutsParClasse).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'} (tous les cuts du journal, joints ou non).`);
   const r = resume.repereScene;
   L.push(r && r.calibre ? `Repère de scène : translation constante Écho − journal estimée sur ${r.paires} rails ; résidu médian ${f1(r.residuMedianMm)} mm, P90 ${f1(r.residuP90Mm)} mm.`
@@ -452,15 +489,15 @@ function executer(argv, sortie = console.log) {
   const a = lireArguments(argv), avis = [];
   const echo = lireEcho(a.echo, { journal: m => avis.push(m) });
   const journal = lireJournal(a.journal);
-  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses });
-  resume.sources = { segmentsEcho: echo.segments.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length };
+  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions });
+  resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length };
   const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses }, resume, table };
   if (a.sortie) { fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true }); fs.writeFileSync(a.sortie, JSON.stringify(sortieJson, null, 1)); }
   if (a.csv) { fs.mkdirSync(path.dirname(path.resolve(a.csv)), { recursive: true }); fs.writeFileSync(a.csv, enCsv(table)); }
-  sortie(texte(resume, [`Sources : ${echo.segments.length} segment(s) Écho (${echo.records.length} records), journal de ${journal.events.length} événements.`, ...avis]));
+  sortie(texte(resume, [`Sources : ${echo.segments.length} segment(s) Écho (${echo.records.length} records, ${echo.sessions.length} session(s)), journal de ${journal.events.length} événements.`, ...avis]));
   return sortieJson;
 }
 if (require.main === module) {
   try { executer(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
+module.exports = { echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
