@@ -261,9 +261,10 @@ async function lotSeul(){const events=await store.all('events'),records=await st
  * événement du journal (`avis-contrat-esv`). Une ligne par motif et par vie du service worker.
  *  - `fetch-rails` : l'observateur compte les requêtes `fetch` de chemin « rails » (non enveloppé, jamais lu). Aujourd'hui toujours 0 :
  *    s'il devient non nul, les écritures d'ESV ont changé de voie et D3, B1 (fraîcheur) et la preuve d'écriture seraient muets ;
- *  - empreinte du contrat (`ping` de « Connecter », adaptateur) : boutons de navigation et titres, classes de rail, nombre d'écouteurs
- *    jQuery par événement, versions de jQuery et de Potree. Hachée (8 caractères), gardée avec la précédente dans chrome.storage.local ;
- *    un changement dit lesquels des éléments ont bougé ;
+ *  - empreinte du contrat (`ping` de « Connecter », adaptateur) : boutons de navigation (identifiants), classes de rail, présence des
+ *    écouteurs jQuery par événement, versions de jQuery et de Potree. Hachée (8 caractères), gardée avec la précédente DE CE MÊME ONGLET
+ *    (4.9.5.4, D-139 : ni libellés de boutons ni nombre d'écouteurs, qui dépendent de l'état de la page) ; un changement dit lesquels des
+ *    éléments ont bougé ;
  *  - audit serveur : chaque lecture complète de la liste d'une partie (au F5, ou au début de la séance) donne les validés côté serveur ;
  *    leur écart avec la lecture précédente est comparé aux validations qu'Ariane a faites entre les deux (événements
  *    `validation-accepted` de la partie) : `audit-serveur` (attendus, constatés, écart). Les validations d'un humain, ou un refus
@@ -282,15 +283,28 @@ function reduireContrat(v,profondeur=0){
  const out={};let n=0;for(const k of Object.keys(v)){if(n>=24)break;if(k.length>48)continue;out[k]=reduireContrat(v[k],profondeur+1);n++;}return out;}
 function aplatirContrat(v,prefixe='',out={}){
  if(v&&typeof v==='object')for(const k of Object.keys(v))aplatirContrat(v[k],prefixe?prefixe+'.'+k:k,out);else out[prefixe]=v;return out;}
-const CLE_CONTRAT='banane53Contrat';
-async function contratNoter(c){try{
+/* 4.9.5.4 (D-139) — L'EMPREINTE PRÉCÉDENTE EST RANGÉE PAR ONGLET. Jusqu'à la 4.9.5.3, une seule empreinte était gardée pour tout le
+ * navigateur : deux fenêtres ESV dans des états différents se la disputaient et produisaient de fausses alertes en alternance. Chaque onglet
+ * n'est comparé qu'à lui-même (numéro d'onglet), dans chrome.storage.session — un numéro d'onglet n'a de sens que dans la session du navigateur
+ * (à défaut de storage.session : storage.local, borné à 8 onglets). Une empreinte de la 4.9.5.3 (clé `banane53Contrat`, autre forme) n'est
+ * jamais relue. Ne sont plus comparés ni les libellés de boutons ni le nombre d'écouteurs (l'adaptateur les met à part, dans `etat`, que le journal
+ * garde sans le comparer). Aucune requête ESV : tout vient du second `ping` de « Connecter ». */
+const CLE_CONTRATS='banane54Contrats',CONTRATS_MAX=8;
+const stockContrats=()=>chrome?.storage?.session?.get?chrome.storage.session:chrome?.storage?.local;
+async function contratsLire(S){try{const v=(await S.get(CLE_CONTRATS))?.[CLE_CONTRATS];return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}catch{return {};}}
+/* Un onglet fermé est oublié (son numéro ne reviendra pas dans cette session ; en repli sur storage.local, il pourrait être réattribué). */
+async function contratOublier(tabId){try{const S=stockContrats();if(!S?.get||!Number.isInteger(tabId))return;
+ const tous=await contratsLire(S);if(!(String(tabId) in tous))return;delete tous[String(tabId)];await S.set({[CLE_CONTRATS]:tous});}catch{/* relevé seulement */}}
+async function contratNoter(c,tabId){try{
  if(!releveOn('empreinte')||!c||typeof c.hash!=='string'||!/^[0-9a-f]{8}$/.test(c.hash))return;
- const S=chrome?.storage?.local,detail=reduireContrat(c.detail);
- let prev=null;try{prev=(await S.get(CLE_CONTRAT))?.[CLE_CONTRAT]||null;}catch{prev=null;}
+ const S=stockContrats(),detail=reduireContrat(c.detail),etat=reduireContrat(c.etat),cle=Number.isInteger(tabId)?String(tabId):'?';
+ const tous=await contratsLire(S),prev=tous[cle]||null;
  const change=!!prev&&typeof prev.hash==='string'&&prev.hash!==c.hash;
  const a=aplatirContrat(prev?.detail||{}),b=aplatirContrat(detail||{}),bouge=change?[...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).slice(0,12):[];
- journalerSimple('contrat-esv',{hash:c.hash,precedent:prev?.hash??null,change,changements:bouge,detail});
- try{await S.set({[CLE_CONTRAT]:{hash:c.hash,at:new Date().toISOString(),version:VERSION,detail}});}catch{}
+ journalerSimple('contrat-esv',{hash:c.hash,precedent:prev?.hash??null,change,changements:bouge,detail,etat,onglet:Number.isInteger(tabId)?tabId:null});
+ try{tous[cle]={hash:c.hash,at:new Date().toISOString(),version:VERSION,detail};
+  const cles=Object.keys(tous).sort((x,y)=>String(tous[x]?.at||'').localeCompare(String(tous[y]?.at||'')));while(cles.length>CONTRATS_MAX)delete tous[cles.shift()];
+  await S.set({[CLE_CONTRATS]:tous});}catch{}
  for(const m of [...avisContrat.vus])if(m.startsWith('empreinte:')){avisContrat.vus.delete(m);}   // un nouveau « Connecter » réévalue l'avis d'empreinte
  avisContrat.lignes=avisContrat.lignes.filter(l=>!l.startsWith('ESV n’a plus le même contrat'));
  if(change)avisContratEsv('empreinte:'+c.hash,`ESV n’a plus le même contrat qu’à la dernière connexion (empreinte ${prev.hash}, puis ${c.hash}${bouge.length?' ; ce qui a bougé : '+bouge.slice(0,4).join(', '):''}). Rien ne s’arrête ; préviens-moi avant de lancer un lot.`,{hash:c.hash,precedent:prev.hash,changements:bouge});
@@ -660,7 +674,7 @@ async function equiperOnglet(tabId){
  if(ping?.version!==VERSION)throw aRecharger();
  if(ping?.intrusion)throw definitif(`Ariane ${VERSION_NAME} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${ping.intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`);
  /* 4.9.5.3 (S6) : empreinte du contrat ESV, demandée par un second ping (lecture seule) ; une panne n'empêche jamais la connexion. */
- if(releveOn('empreinte'))void callSur(tabId,'ping',{contrat:true}).then(r=>contratNoter(r?.contrat),()=>{});}
+ if(releveOn('empreinte'))void callSur(tabId,'ping',{contrat:true}).then(r=>contratNoter(r?.contrat,tabId),()=>{});}
 async function reconnecterESV(delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
  while(Date.now()<fin){garde();try{const tab=await chrome.tabs.get(selectedTab);
    if(tab?.status&&tab.status!=='complete'){await attendre(500);continue;}
@@ -1221,7 +1235,7 @@ chrome.runtime.onConnect.addListener(port=>{
  void syncLauncher().catch(()=>{});
 });
 chrome.windows.onRemoved?.addListener(id=>{panelWindows.delete(id);for(const [port,info] of panelPorts)if(info.windowId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
-chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(info.tabId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});
+chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(info.tabId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});void contratOublier(id);
  if(id===selectedTab)void ready.then(()=>echoPagePerdue('tab-closed')).catch(()=>{});});
 /* 4.9.0.18 (AM-05, audit Écho) — PAGE ESV RECHARGÉE PENDANT ÉCHO. La barrière d'entrée et l'observateur vivent dans le document :
  * après un F5 ils n'existent plus et rien ne le disait (Écho n'envoie aucune commande qui aurait échoué). La session est

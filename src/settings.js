@@ -298,7 +298,8 @@
    *   champsListe   : RailSpacing, TrajAzimuth, RailType, Success*, PK gardés de la liste, et inventaire des noms de champs.
    *   compteurBloque: `numNodesLoading` identique et > 0 au début de `cuts` cuts de suite : `diag-compteur-bloque`.
    *   avisFetch     : écriture passée par `fetch` (compteur `fetch-rails` non nul) : `avis-contrat-esv` et avis du panneau.
-   *   empreinte     : empreinte du contrat ESV à « Connecter », comparée à la précédente ; avis si elle change.
+   *   empreinte     : empreinte du contrat ESV à « Connecter », comparée à la précédente DU MÊME ONGLET (4.9.5.4, D-139) ; avis si elle change.
+   *                   Ni libellés de boutons ni nombre d'écouteurs (état de la page) : boutons par identifiant, écouteurs par présence.
    *   translationDepart : T monde/scène sur la pose de départ du cut, consignée à côté de l'actuelle (B1 reste sur l'actuelle).
    *   revisiteSansSource: revisite d'un différé sans source nouvelle, consignée seulement (rien n'est sauté).
    *   auditServeur  : au rechargement de la liste, validés côté serveur contre validations d'Ariane (`audit-serveur`).
