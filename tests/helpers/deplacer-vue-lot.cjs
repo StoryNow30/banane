@@ -27,11 +27,11 @@ class EsvVue extends SimulatedESV{
  async nextWithoutDecision(...a){const r=await super.nextWithoutDecision(...a);this.ajuster();return r;}
 }
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-async function lot({reglage,amener,ombre=false}={}){
+async function lot({reglage,amener,ombre=false,seuilsVoie=null}={}){
  const adapter=new EsvVue([112],amener),b=production({adapter});
  const S={...b.ctx.BananeSettings};if(reglage!==undefined)S.deplacerVue=reglage;
  /* L'ombre de la voie prédite est coupée ici : elle ne commande rien et alourdit l'essai (essayée à part). */
- if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};b.ctx.BananeSettings=S;
+ if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};if(seuilsVoie)S.voiePrediteOmbre={...S.voiePrediteOmbre,...seuilsVoie};b.ctx.BananeSettings=S;
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);
  await b.api('start',{part:23,start:111,end:112,...SCOPE});await b.settle();await attendre(20);

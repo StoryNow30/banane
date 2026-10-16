@@ -296,9 +296,11 @@
    * rien n'est posé ni commandé. `actif:false` : rien. */
   const memoireDifferesOmbre = Object.freeze({ actif: true, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
   /* 5.0 (D-147) — DÉPLACER LA VUE D'ESV POUR POSER UN RAIL HORS DE SA VUE (src/adapter-page.js `amenerDansLaVue`, src/gestes-vue.js,
-   * fiches/DEPLACER_VUE.md). COUPÉ PAR DÉFAUT : seul Mic l'active, après les vérifications de la fiche sur le vrai ESV. Coupé, rien ne
+   * fiches/DEPLACER_VUE.md). COUPÉ PAR DÉFAUT : seule la direction l'active, après les vérifications de la fiche sur le vrai ESV. Coupé, rien ne
    * change : mêmes commandes à ESV, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif : un cut que le lot différerait PARCE QUE
-   * la cible tombe hors de la vue du rail (KI-051, `hors-vue-*`), à un étage permis (`etages`), est posé si un geste humain l'y amène :
+   * la cible tombe hors de la vue du rail (KI-051, `hors-vue-*`), à un étage permis (`etages`), qui tient la règle prudente D-147 (`regle`,
+   * seuils de `voiePrediteOmbre` : confiance ≥ 55, chaîne ≤ 10, écartement à 10 mm des appuis, écart à la voie ≤ 30 mm ; 'aucune' : l'étage et
+   * la vue seulement), est posé si un geste humain l'y amène :
    * un dézoom à la molette (au plus `dezoomMax`, pixel au plus `pixelMaxMm`) ou un glisser au bouton gauche (au plus
    * `glissementPxMax` pixels), au plus `gestesMax` gestes par rail, la caméra relue et la cible reprojetée après chaque geste, la vue
    * remise ensuite (écart d'échelle au plus `remiseTolerance`). `preVol` : la page essaie d'abord le geste (sans rien poser, vue
@@ -308,7 +310,7 @@
    * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
   const deplacerVue = Object.freeze({
     actif: false,
-    etages: Object.freeze(['window']),
+    etages: Object.freeze(['window']), regle: 'prudente',
     gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: true,
     molette: Object.freeze({ deltaY: 100, deltaMode: 0, wheelDelta: 120, intervalleMs: Object.freeze([60, 140]), cransMax: 8, sensDezoom: 1, facteurSuppose: 1.1 }),
     glisser: Object.freeze({ dureeMs: Object.freeze([220, 420]), pasMs: 16, bouton: 0, clicFinal: false, viseNdc: 0.8 }),

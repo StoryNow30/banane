@@ -1048,6 +1048,9 @@ async function commandLot(proposal,lotObservation){
  const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
  let command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
  /* 5.0 (D-147) : cible hors de la vue SEULEMENT, réglage `deplacerVue` actif (coupé par défaut) : le geste qui l'amènerait. */
+ /* Profondeur de chaîne de chaque décision du lot (règle prudente), seulement si le réglage est actif. */
+ if(deplacerVueReglage())try{const VR=globalThis.BananeVoieRecentree,b=engine.s.batch,id=engine.s.before?.identity;
+  if(VR&&b?.id){if(dvMemoire?.batchId!==b.id)dvMemoire=VR.creerMemoire(b.id);VR.noterDecisionReelle(dvMemoire,id,lotObservation);}}catch{/* jamais bloquant */}
  if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{})};
@@ -1074,6 +1077,7 @@ async function commandLot(proposal,lotObservation){
  * Un événement `deplacer-vue` par décision (plan ou refus, pré-vol) et par pose ; un `deplacer-vue-geste` par geste (progression
  * de la page). Aucune position n'y est écrite : des NDC, des facteurs, des pixels, des comptes. */
 function deplacerVueReglage(){const v=globalThis.BananeSettings?.deplacerVue;return v&&v.actif===true?v:null;}
+let dvContexte=null,dvMemoire=null;
 const DV_TRANSMIS=['gestesMax','dezoomMax','glissementPxMax','pixelMaxMm','marge','remiseTolerance','molette','glisser'];
 const dvR=(v,k=1000)=>Number.isFinite(v)?Math.round(v*k)/k:null;
 const dvAmener=r=>r?{cote:r.cote??null,ok:!!r.ok,raison:r.raison??null,gestes:(r.gestes||[]).map(g=>({type:g.type,crans:g.crans??null,px:g.px??null,py:g.py??null,facteurCran:g.facteurCran??null,gain:g.gain??null,camera:g.camera??null,ndcApres:g.ndcApres??null,dureeMs:g.dureeMs??null})),
@@ -1088,6 +1092,19 @@ async function deplacerVuePlanifier({lotObservation,proposal,before,capture,comm
   if(!VR||!capture||!lotObservation.positions)return fin('capture-absente');
   const large=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:VR.camerasLarges(capture)});
   if(large.action!=='lot')return fin('commande:'+large.reason);
+  /* Règle prudente D-147 (`regle:'prudente'`, défaut) : le moteur recentré sur la voie du lot (même décision, sa confiance), la
+   * profondeur de chaîne et l'écartement des appuis, aux seuils de la voie prédite (`voiePrediteOmbre`) ; la vue aux limites de
+   * ce réglage. Une règle non tenue laisse le cut différé. `regle:'aucune'` : seulement l'étage et les limites de la vue. */
+  if(reglage.regle!=='aucune'){const ctx=dvContexte;dvContexte=null;
+   if(!ctx||ctx.identity.cut!==identity?.cut)return fin('regle:contexte-absent');
+   const seuils={...VR.REGLE_PRUDENTE,...(globalThis.BananeSettings?.voiePrediteOmbre||{}),dezoomMax:reglage.dezoomMax,glissementPxMax:reglage.glissementPxMax};
+   const r=VR.recentrer({capture:{...ctx.lotArgs.capture,camera:capture.camera??null,viewCaptures:capture.viewCaptures||[]},science:ctx.lotArgs.science,anchors:ctx.anchors,
+     Shadow:globalThis.BananeGCV1Shadow,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,vue:'deplacee',profondeurAppui:c=>dvMemoire?.profondeurs.get(c)??0});
+   const verdict=VR.verdictPrudent(r,seuils);
+   ev.regle={posable:verdict.posable,raison:verdict.raison,etage:r.stage,confiance:VR.confiances(r.moteur),profondeur:r.profondeur,ecartVoieMm:dvR(r.fromPredictionMm,10),ecartementVoisinMm:dvR(r.ecartVoisinMm,10)};
+   if(!verdict.posable)return fin('regle:'+verdict.raison);
+   const meme=r.positions&&['left','right'].every(s=>Math.hypot(...r.positions[s].map((v,i)=>v-lotObservation.positions[s][i]))<=1e-6);
+   if(!meme)return fin('regle:decision-differente');}
   const vue=VR.vueNecessaire(capture,lotObservation.positions,reglage.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
   if(vue.inconnu)return fin('vue-inconnue');
   for(const s of ['left','right']){const p=vue.par[s];if(!p||p.ok)continue;const c=cams[s];
@@ -1267,6 +1284,8 @@ async function observeLot(shadow){
  if(decision.anchor)lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage};
  /* 5.0 (I8) : ce que l'ombre de la voie prédite lira, en copie (capture, science, appuis réels AU MOMENT de la décision). */
  voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
+ /* 5.0 (D-147) : ce que la règle prudente de « déplacer la vue » relira, seulement si le réglage est actif (références, sans copie). */
+ dvContexte=deplacerVueReglage()?{identity,lotArgs,anchors:state.anchors.slice(),decision}:null;
  /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
  const reprise=seeds.length&&!state.repriseLogged?{fromBatchId:batch.scope.lotReprise.fromBatchId??null,anchors:seeds}:null;
  if(reprise)state.repriseLogged=true;

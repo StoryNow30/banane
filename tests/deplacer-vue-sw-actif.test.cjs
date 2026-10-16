@@ -27,6 +27,7 @@ test('réglage actif : plan de geste (dézoom), pré-vol par la page, pose avec 
  assert.deepEqual(adapter.applyArgs,[0,1]);assert.ok(adapter.options.deplacerVue.cotes.left);
  const e=ev(b,'deplacer-vue');assert.deepEqual(e.map(x=>x.phase),['decision','pose']);
  assert.equal(e[0].plan.cotes.left.geste,'dezoom');assert.equal(e[0].preVol.every(p=>p.ok),true);
+ assert.equal(e[0].regle.posable,true,'règle prudente D-147 tenue');assert.equal(e[0].regle.etage,'window');
  assert.ok(!/positionSceneRelative|"cible"/.test(JSON.stringify(e)),'aucune position consignée');
 });
 
