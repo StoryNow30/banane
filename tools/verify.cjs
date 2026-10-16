@@ -1,5 +1,11 @@
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process'),crypto=require('node:crypto');
-const root=path.resolve(__dirname,'..'),audit=path.join(root,'audit');fs.mkdirSync(audit,{recursive:true});
+const root=path.resolve(__dirname,'..'),audit=path.join(root,'audit');
+/* U8 (audit 5.0), machine partagée : on refuse de partir si un verrou « rejeu lourd » est posé (BANANE_VERROU_LOURD, voir tools/verify-garde.cjs),
+ * avant d'écrire quoi que ce soit dans audit/ ; puis on baisse la priorité du processus, que les essais lancés plus bas héritent (Linux seulement). */
+const Garde=require('./verify-garde.cjs');
+try{Garde.refuserSiVerrou(process.env,root);}catch(e){if(e instanceof Garde.VerrouPose){console.error(e.message);process.exit(3);}throw e;}
+const prioriteBasse=Garde.baisserPriorite();
+fs.mkdirSync(audit,{recursive:true});
 /* V4.6.0, revue Astra — deux modes, et la différence est écrite dans l'audit.
  *
  * PARTIEL (par défaut) : depuis un clone GitHub propre, `datasets/native/` est
@@ -17,6 +23,7 @@ const full=process.argv.includes('--full')||process.env.BANANE_BANC==='full';
 const corpus=C.status(root);
 if(full&&!corpus.present)throw Error(`Mode complet demandé, corpus Natif absent : ${corpus.missing.join(', ')}. Replace-les (datasets/native/README.md) ou lance le banc sans --full.`);
 const startedAt=new Date().toISOString(),log=[`Started: ${startedAt}\nNode: ${process.version}\nPlatform: ${process.platform}\n`,
+ `Priority: ${prioriteBasse===null?'unchanged (low priority unavailable on this platform)':'nice '+prioriteBasse}\n`,
  `Bench mode: ${full?'full (corpus required, no skip tolerated)':corpus.present?'default (native corpus present)':'partial (native corpus absent: 2 tests skipped, not passed)'}\n`,
  corpus.present?'Native corpus: present.\n':`Native corpus: ABSENT — missing ${corpus.missing.join(', ')}. See datasets/native/README.md.\n`];
 function run(args){log.push(`\n$ node ${args.join(' ')}\n`);const p=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8',maxBuffer:20*1024*1024});log.push(p.stdout||'',p.stderr||'',`Exit code: ${p.status}\n`);if(p.status!==0){fs.writeFileSync(path.join(audit,'verification.txt'),log.join(''));throw Error('Failed: '+args.join(' '));}return p.stdout;}

@@ -36,16 +36,23 @@
  *      poses sur la MAUVAISE VOIE (plus de 50 mm), abstentions restantes. Porte : 0 pose sur la mauvaise voie et
  *      moins de 5 % de poses fausses parmi celles proposées.
  *
- *   node tools/memoire-differes.cjs construire --partie N --jeu jeu.jsonl --jointure table.json
+ *   node tools/memoire-differes.cjs construire --partie PROJET:PARTIE --jeu jeu.jsonl --jointure table.json
  *        --corpus seg1.json [--corpus seg2.json …] [--diagnostic diag.json] [--reprendre-pools ancien.jsonl] --sortie cas-N.jsonl
+ *        [--juger-partie-reservee]
  *   node tools/memoire-differes.cjs juger --cas cas-a.jsonl --cas cas-b.jsonl [--cas …] [--json sortie.json]
- *        [--propagation] [--silencieux]
+ *        [--propagation] [--silencieux] [--juger-partie-reservee]
+ *
+ * Parties réservées (manifeste des parties, B1 de l'audit 5.0 : datasets/manifeste-parties.json) : `construire` refuse
+ * une partie qui n'est pas d'apprentissage, et `juger` refuse un fichier dont l'en-tête (projet, partie) est réservé.
+ * Avec `--juger-partie-reservee`, la partie réservée est JUGÉE avec des réglages appris sur les autres parties, et
+ * n'entre dans aucun apprentissage. Un fichier de cas sans `projet` dans son en-tête n'est pas contrôlé.
  *
  * Les fichiers de cas, de corpus et de jointure restent HORS dépôt (scratchpad). Le dépôt ne porte que l'outil, son
  * essai sur fixture synthétique et la fiche (fiches/G1_MEMOIRE_DIFFERES.md).
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const Manifeste = require('./manifeste-parties.cjs');
 
 const FORMAT_CAS = 'ariane-memoire-differes-cas-v1';
 const FORMAT_RAPPORT = 'ariane-memoire-differes-v1';
@@ -333,7 +340,7 @@ function contexteDuJeu(ligne) {
 
 /* Construit les cas d'une partie. Entrées déjà lues : `jeu` (lignes), `jointure` (objet), `lireCorpus(rappel)`,
  * `diagnostic` (optionnel). Retourne { entete, cas }. */
-function construireCas({ partie, jeu, jointure, corpus, diagnostic = null, sansPool = false, poolsRepris = null, journal = () => {} }) {
+function construireCas({ partie, projet = null, jeu, jointure, corpus, diagnostic = null, sansPool = false, poolsRepris = null, journal = () => {} }) {
   const M = modules(), { C } = M;
   const lignes = new Map(); for (const l of jeu) if (l.type === 'cut' && l.partie === partie) lignes.set(l.cut, l);
   const table = new Map(); for (const r of jointure.table) if (r.partie === partie) table.set(r.cut, r);
@@ -412,7 +419,7 @@ function construireCas({ partie, jeu, jointure, corpus, diagnostic = null, sansP
       reponse: { mic: Object.fromEntries(COTES.map(c => [c, mic.get(r.cut)[c]])), decalageVoie, ecartementMicMm: gaugeMic, ecartDepartMm: arrondi(Math.max(...COTES.map(c => norme(mic.get(r.cut)[c]))), 1), pool: reponsePool },
     });
   }
-  const entete = { type: 'entete', format: FORMAT_CAS, partie, cas: cas.length, differesTotal: differes.length, differesAvecMic: avecMic.length, series: [...new Set(cas.map(c => c.serie.id))].length,
+  const entete = { type: 'entete', format: FORMAT_CAS, partie, ...(projet ? { projet } : {}), cas: cas.length, differesTotal: differes.length, differesAvecMic: avecMic.length, series: [...new Set(cas.map(c => c.serie.id))].length,
     decalagesLat: DECALAGES_LAT, decalagesVert: DECALAGES_VERT, note: 'Positions en mm dans le repère profil du cut, par rapport à la pose de départ d\'ESV. Aucune coordonnée absolue. Les poses voisines sont des décalages relatifs à ce cut.' };
   return { entete, cas };
 }
@@ -423,10 +430,11 @@ function lireCas(texte) {
   const entete = lignes.find(l => l.type === 'entete') || null;
   return { entete, cas: lignes.filter(l => l.type === 'cas') };
 }
-function lireFichiers(fichiers) {
+function lireFichiers(fichiers, entetes = null) {
   const parties = new Map();
   for (const f of fichiers) {
-    const { cas } = lireCas(fs.readFileSync(f, 'utf8'));
+    const { entete, cas } = lireCas(fs.readFileSync(f, 'utf8'));
+    if (entetes) entetes.push(entete);
     for (const c of cas) { if (!parties.has(c.partie)) parties.set(c.partie, []); parties.get(c.partie).push(c); }
   }
   for (const v of parties.values()) v.sort((a, b) => a.cut - b.cut);
@@ -802,8 +810,10 @@ function apprendreC(partiesApp) {
 /* ================================================================== 7. JUGEMENT */
 function juger(parties, opts = {}) {
   const propagation = !!opts.propagation;
+  /* Parties réservées (manifeste des parties) : jugées, mais jamais utilisées pour apprendre. */
+  const reservees = new Set((opts.reservees || []).map(Number));
   const noms = [...parties.keys()].sort((a, b) => a - b);
-  if (noms.length < 2) throw Error('Il faut au moins deux parties pour apprendre sur certaines et juger sur une autre.');
+  if (noms.filter(p => !reservees.has(p)).length < 2) throw Error('Il faut au moins deux parties pour apprendre sur certaines et juger sur une autre' + (reservees.size ? ' (les parties réservées n\'apprennent rien)' : '') + '.');
   const methodes = {};
   const defs = [
     { id: 'naif-moteur', titre: 'témoin : pool du moteur, paire la moins chère sous contrat (D-141)' },
@@ -820,7 +830,7 @@ function juger(parties, opts = {}) {
   const serieFigee = { 1: {}, 2: {}, 3: {} };
   const optPool = { elargi: false }, optElargi = { elargi: true };
   for (const p of noms) {
-    const test = parties.get(p), app = new Map(noms.filter(q => q !== p).map(q => [q, parties.get(q)]));
+    const test = parties.get(p), app = new Map(noms.filter(q => q !== p && !reservees.has(q)).map(q => [q, parties.get(q)]));
     methodes['naif-moteur'].parPartie[p] = mesurer(test.map(c => ({ cas: c, pose: poserNaif(c, false).pose })));
     methodes['naif-elargi'].parPartie[p] = mesurer(test.map(c => ({ cas: c, pose: poserNaif(c, true).pose })));
     const a1 = apprendreA(app, optPool, 'a-pool'); methodes['a-pool'].parPartie[p] = mesurer(juger_A(a1, optPool, test)); methodes['a-pool'].modeles[p] = resumeA(a1);
@@ -842,31 +852,31 @@ function juger(parties, opts = {}) {
   // « b puis a » : la mémoire de la série d'abord, sinon le choix dans le pool du moteur (réglages appris hors partie)
   methodes['b-puis-a'] = { id: 'b-puis-a', titre: '(b) puis (a) : mémoire de la série si elle sait poser, sinon choix dans le pool du moteur', parPartie: {}, modeles: {} };
   for (const p of noms) {
-    const test = parties.get(p), app = new Map(noms.filter(q => q !== p).map(q => [q, parties.get(q)])), a1 = apprendreA(app, optPool, 'a-pool'), pb = methodes['b-serie'].modeles[p].params;
+    const test = parties.get(p), app = new Map(noms.filter(q => q !== p && !reservees.has(q)).map(q => [q, parties.get(q)])), a1 = apprendreA(app, optPool, 'a-pool'), pb = methodes['b-serie'].modeles[p].params;
     const rb = pb ? new Map(simulerB(pb, test, null, propagation).map(r => [r.cas, r])) : new Map();
     methodes['b-puis-a'].parPartie[p] = mesurer(test.map(c => { const b = rb.get(c); if (b && b.pose) return { cas: c, pose: b.pose }; return juger_A(a1, optPool, [c])[0]; }));
   }
   for (const m of Object.values(methodes)) m.total = sommer(Object.values(m.parPartie));
-  const parSerie = jugerBParSerie(parties, 8, 'sur', propagation), parSerieGain = jugerBParSerie(parties, 8, 'gain', propagation);
+  const parSerie = jugerBParSerie(parties, 8, 'sur', propagation, reservees), parSerieGain = jugerBParSerie(parties, 8, 'gain', propagation, reservees);
   const figee = {}; for (const k of [1, 2, 3]) figee[k] = { parPartie: serieFigee[k], total: sommer(Object.values(serieFigee[k])) };
   // Potentiel : où Mic se trouve-t-il par rapport au pool ?
   const potentiel = {};
   for (const p of noms) potentiel[p] = potentielPool(parties.get(p));
-  return { format: FORMAT_RAPPORT, propagation, bParSerie: parSerie, bParSerieGain: parSerieGain, parties: Object.fromEntries(noms.map(p => [p, { cas: parties.get(p).length, series: groupesParSerie(parties.get(p)).length }])), methodes, serieFigee: figee, potentiel,
+  return { format: FORMAT_RAPPORT, propagation, reservees: [...reservees].sort((a, b) => a - b), bParSerie: parSerie, bParSerieGain: parSerieGain, parties: Object.fromEntries(noms.map(p => [p, { cas: parties.get(p).length, series: groupesParSerie(parties.get(p)).length }])), methodes, serieFigee: figee, potentiel,
     seuils: { justeMm: SEUIL_JUSTE_MM, fauxMm: SEUIL_FAUX_MM, mauvaiseVoieMm: SEUIL_MAUVAISE_VOIE_MM, porteFaux: PORTE_FAUX } };
 }
 /* (b), second protocole : « série par série ». Chaque série est jugée à son tour avec le réglage choisi sur TOUTES LES AUTRES
  * séries (de toutes les parties, la sienne comprise pour les autres séries) ; la série jugée est jouée en ligne. Plus riche
  * que le protocole « partie par partie » (qui prive la partie 1 de ses longues séries), mais moins sévère : les autres
  * séries d'une même partie ressemblent à la série jugée. Les deux protocoles sont donnés. */
-function jugerBParSerie(parties, minPoses = 8, politique = 'sur', propagation = false) {
+function jugerBParSerie(parties, minPoses = 8, politique = 'sur', propagation = false, reservees = new Set()) {
   const series = [];
   for (const [p, cas] of parties) for (const g of groupesParSerie(cas)) series.push({ partie: p, id: g[0].serie ? g[0].serie.id : g[0].cut, cas: g });
   const table = series.map(se => GRILLE_B.map(prm => mesurer(simulerB(prm, se.cas, null, propagation))));
   const choisir = exclu => {
     let best = null;
     GRILLE_B.forEach((prm, gi) => {
-      const ms = sommer(table.filter((_, si) => si !== exclu).map(t => t[gi]));
+      const ms = sommer(table.filter((_, si) => si !== exclu && !reservees.has(series[si].partie)).map(t => t[gi]));
       if (ms.poses < minPoses) return;
       if (politique === 'sur' && (ms.mauvaiseVoie > 0 || ms.faux / ms.poses >= 0.02)) return;
       const mieux = politique === 'sur' ? (!best || ms.juste10 > best.m.juste10 || (ms.juste10 === best.m.juste10 && ms.faux < best.m.faux)) : (!best || gainNet(ms) > gainNet(best.m));
@@ -914,6 +924,7 @@ function texte(r) {
   const o = [];
   o.push(`MÉMOIRE DES DIFFÉRÉS — jugement hors ligne (${r.format})`);
   o.push(`Parties : ${Object.entries(r.parties).map(([p, v]) => `${p} (${v.cas} cas, ${v.series} séries)`).join(' · ')}`);
+  if (r.reservees && r.reservees.length) o.push(`Parties réservées, jugées sans réglage (elles n'apprennent rien) : ${r.reservees.join(', ')}`);
   o.push(`Mémoire de la série : ${r.propagation ? 'AVEC propagation (Ariane s\'appuie sur ses propres poses ; Mic ne corrige que les cuts différés)' : 'idéale (Mic a corrigé tous les cuts précédents de la série)'}.`);
   o.push(`Seuils : juste ≤ ${r.seuils.justeMm} mm, faux > ${r.seuils.fauxMm} mm, mauvaise voie > ${r.seuils.mauvaiseVoieMm} mm. Porte : 0 mauvaise voie et moins de ${pct(r.seuils.porteFaux, 0)} de fausses parmi les posées.`);
   o.push('');
@@ -959,7 +970,8 @@ function arguments_(argv) {
     const k = argv[i], v = () => { if (i + 1 >= argv.length) throw Error(`${k} attend une valeur`); return argv[++i]; };
     if (k === '--cas') a.cas.push(v());
     else if (k === '--corpus') a.corpus.push(v());
-    else if (k === '--partie') a.partie = Number(v());
+    else if (k === '--partie') a.partie = Manifeste.lireDesignations(v());
+    else if (k === '--juger-partie-reservee') a.jugerReservee = true;
     else if (k === '--jeu') a.jeu = v();
     else if (k === '--jointure') a.jointure = v();
     else if (k === '--diagnostic') a.diagnostic = v();
@@ -977,19 +989,28 @@ function executer(argv) {
   const a = arguments_(argv);
   if (a.cmd === 'construire') {
     for (const k of ['partie', 'jeu', 'jointure', 'sortie']) if (a[k] === undefined) throw Error(`--${k} requis`);
+    if (a.partie.length !== 1) throw Error('--partie attend une seule partie (projet:partie)');
+    const { avis } = Manifeste.controler(Manifeste.lire(), a.partie, { outil: 'memoire-differes', jugerReservee: !!a.jugerReservee });
+    if (avis) process.stderr.write(avis + '\n');
+    const { projet, partie } = a.partie[0];
     if (!a.corpus.length) throw Error('--corpus requis (au moins un segment)');
     const jeu = fs.readFileSync(a.jeu, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
     const jointure = JSON.parse(fs.readFileSync(a.jointure, 'utf8'));
     const diagnostic = a.diagnostic ? JSON.parse(fs.readFileSync(a.diagnostic, 'utf8')) : null;
     const corpus = rappel => { for (const f of a.corpus) { const seg = JSON.parse(fs.readFileSync(f, 'utf8')); for (const cap of seg.clouds || []) rappel(cap); } };
     const poolsRepris = a.reprendrePools ? new Map(lireCas(fs.readFileSync(a.reprendrePools, 'utf8')).cas.map(c => [c.cut, c])) : null;
-    const { entete, cas } = construireCas({ partie: a.partie, jeu, jointure, corpus, diagnostic, sansPool: a.sansPool, poolsRepris, journal: a.silencieux ? () => {} : m => process.stderr.write(m + '\n') });
+    const { entete, cas } = construireCas({ partie, projet, jeu, jointure, corpus, diagnostic, sansPool: a.sansPool, poolsRepris, journal: a.silencieux ? () => {} : m => process.stderr.write(m + '\n') });
     fs.writeFileSync(a.sortie, [entete, ...cas].map(l => JSON.stringify(l)).join('\n') + '\n');
-    return { texte: `partie ${a.partie} : ${cas.length} cas écrits (${entete.series} séries)\n`, code: 0 };
+    return { texte: `partie ${partie} du projet ${projet} : ${cas.length} cas écrits (${entete.series} séries)\n`, code: 0 };
   }
   if (a.cmd === 'juger') {
     if (!a.cas.length) throw Error('--cas requis (un fichier par partie, au moins deux)');
-    const rapport = juger(lireFichiers(a.cas), { propagation: !!a.propagation });
+    const entetes = [], parties = lireFichiers(a.cas, entetes);
+    /* Manifeste des parties : seuls les en-têtes qui portent un projet sont contrôlés. */
+    const declarees = entetes.filter(e => e && e.projet && e.partie).map(e => ({ projet: Number(e.projet), partie: Number(e.partie) }));
+    const { reservees, avis } = Manifeste.controler(Manifeste.lire(), declarees, { outil: 'memoire-differes', jugerReservee: !!a.jugerReservee });
+    if (avis) process.stderr.write(avis + '\n');
+    const rapport = juger(parties, { propagation: !!a.propagation, reservees: reservees.map(d => d.partie) });
     if (a.json) fs.writeFileSync(a.json, JSON.stringify(rapport, null, 1));
     return { texte: a.silencieux ? '' : texte(rapport), code: 0, rapport };
   }
@@ -998,7 +1019,7 @@ function executer(argv) {
 
 module.exports = { FORMAT_CAS, FORMAT_RAPPORT, construireCas, contexteDuJeu, numeroterSeries, lireCas, lireFichiers, erreurPose, mesurer, sommer, wilsonHaut,
   traitsCandidat, ajusterLogistique, scoreLogistique, ecartementPaire, poserNaif, apprendreA, poserA, memoireSerie, poserB, simulerB, apprendreB, descripteur, poserC, apprendreC,
-  juger, potentielPool, texte, executer, baseC, rangDeMic, GRILLE_C, GRILLE_B, poolsDuRail, poolFenetre, preparerCadre, SEUIL_JUSTE_MM, SEUIL_FAUX_MM, SEUIL_MAUVAISE_VOIE_MM };
+  juger, potentielPool, texte, executer, baseC, rangDeMic, GRILLE_C, GRILLE_B, poolsDuRail, poolFenetre, preparerCadre, SEUIL_JUSTE_MM, SEUIL_FAUX_MM, SEUIL_MAUVAISE_VOIE_MM, PORTE_FAUX };
 
 if (require.main === module) {
   try { const s = executer(process.argv.slice(2)); process.stdout.write(s.texte); process.exit(s.code); }

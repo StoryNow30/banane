@@ -283,7 +283,7 @@ Le gain est **concentré sur la partie 17** (99 rails refusés, 26 % des rails) 
 |---|---|---|
 | **PN** : un rouge dont `flushPct` ≥ 50 ouvre une zone de prudence (garde, repli) ; plage de contrôle = cœur étendu de 4 cuts avant et 6 après ; chaque cut de la plage est visité. | Partie 29 : précision 100 %, rappel 92 %, 4 PN couverts sur 4 | **Atteinte sur une partie** (porte proposée : précision ≥ 95 % et rappel ≥ 90 % sur au moins deux parties). |
 | **Extraction suspecte** : un vert dont l'écartement de départ sort de la médiane de la partie de plus de 10 à 18 mm devient un cut à visiter (en priorité dans un PN). | Parties 12/13 : 54/54, tenue en validation croisée ; partie 29 : 18 justes sur 19 | Atteinte sur les parties humaines ; **non atteinte** en général : seuil non transportable (partie 17), rappel de 22 % sur les verts d'extraction de la partie 29. |
-| **Vertical** : un rail à convention refusée est remonté de ~3 mm. | Gain concentré sur la partie 17 (47 → 32) | **Non atteinte** (« 0 mauvaise pose ajoutée » du cahier : 4 cuts passent au-dessus de 10 mm en validation croisée, 1 avec +3 mm choisi après coup). À poser en **ombre E2**, pas en activation. |
+| **Vertical** : un rail à convention refusée est remonté de ~3 mm. | Gain concentré sur la partie 17 (47 → 32) | **Non atteinte** (« 0 mauvaise pose ajoutée » du cahier : 4 cuts passent au-dessus de 10 mm en validation croisée, 1 avec +3 mm choisi après coup). À poser en **ombre P8**, pas en activation. |
 | **Visite** : ne pas laisser vert un cut dont le dénivelé local sort de la médiane de plus de 15 mm. | AUC 0,80 à 0,90 sur trois parties | Non évaluée au sens d'une porte ; **à valider** (une mesure par partie). |
 
 ### (c) Traits pour GCV2
