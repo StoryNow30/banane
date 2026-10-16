@@ -5,7 +5,9 @@
  *  fichier (donc sans repartir de zéro sur des parties neuves) fait échouer l'essai.
  *  - règle prudente de voie prédite (D-147) : tools/rejeu-voie-predite.cjs, variante « regle-wc-e10-p10 » ;
  *  - mémoire de série G1 (b) : tools/memoire-differes.cjs (grille, seuils, porte) et src/lot-decision.js (recentrage) ;
- *  - ombre verticale : src/settings.js (présente seulement dans les versions qui la portent). */
+ *  - ombre verticale (nom : P8) : src/settings.js (présente seulement dans les versions qui la portent). Le nom « E2 » est réservé à l'ombre GCV1
+ *    de l'Écho ; les clés de données (`ombreVerticaleRefusee`, `ombreVerticale`) et la chaîne de version `e2-vertical-refuse-v1` gardent « e2 » par
+ *    compatibilité avec les exports déjà produits. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
 const racine = path.join(__dirname, '..');
