@@ -45,13 +45,15 @@ async function session(){
 test('session : le geste est consigné au journal et rangé dans la visite (au plus 32, avec un compte) ; la visite est classée comme avant',async()=>{
  const temoin=await session(),f=await session();
  for(const x of [temoin,f])await x.sessions.receive('visit-started',{...x.ctx(),visitId:'v1',identity:x.st.identity,initialObserved:x.st});
- for(let i=0;i<40;i++)await f.sessions.receive('operator-gesture',{...f.ctx(),visitId:'v1',identity:f.st.identity,geste:{...GESTE,type:i%2?'molette':'glisser',crans:i%2?2:undefined}});
+ for(let i=0;i<40;i++)await f.sessions.receive('operator-gesture',{...f.ctx(),visitId:'v1',identity:f.st.identity,collectorMetrics:{enqueued:i,sent:i},geste:{...GESTE,type:i%2?'molette':'glisser',crans:i%2?2:undefined}});
  for(const x of [temoin,f])await x.sessions.receive('visit-ended',{...x.ctx(),visitId:'v1',identity:x.st.identity,finalObserved:x.st,reason:'target-changed',nextIdentity:{...x.st.identity,cut:101},endedAt:new Date().toISOString()});
  const r=f.store.records.find(x=>x.visitId==='v1'),t=temoin.store.records.find(x=>x.visitId==='v1');
  assert.equal(r.gestesVue.length,32);deq(r.gestesVueResume,{glissers:20,molettes:20,crans:40,gardes:32});
  const sans=x=>{const {gestesVue,gestesVueResume,...reste}=x;return reste;};
  for(const k of ['status','observedLabelCandidate','partialReasons','startPose','operatorEvents','operatorIntents','geometryEligibility'])deq(sans(r)[k],sans(t)[k],k+' inchangé');
  assert.equal(f.store.events.filter(e=>e.type==='native-operator-gesture').length,40,'consigné au journal');
+ const j=f.store.events.find(e=>e.type==='native-operator-gesture');assert.ok(!('collectorMetrics' in j),'poids sobre : pas de compteurs recopiés');
+ assert.ok(JSON.stringify(j).length<1200,'moins de 1,2 Ko au journal : '+JSON.stringify(j).length);
  /* Sans visite : consigné, rien rangé. */
  await f.sessions.receive('operator-gesture',{...f.ctx(),visitId:null,identity:null,geste:GESTE});
  assert.equal(f.store.events.filter(e=>e.type==='native-operator-gesture').length,41);

@@ -275,6 +275,8 @@
      side:chunk.side,identity:chunk.identity,capturedAt:chunk.capturedAt,acquisition:chunk.acquisition,
      qualification:chunk.qualification?{status:chunk.qualification.status,criteriaVersion:chunk.qualification.criteriaVersion,
       acquiredThroughAt:chunk.qualification.acquiredThroughAt,coverage:chunk.qualification.coverage}:null,points:chunk.pointsSceneRelative?.length||0}};}
+   /* 5.0 : un geste de l'opérateur reste petit au journal (les compteurs du collecteur sont fondus dans la session, pas recopiés). */
+   if(type==='operator-gesture'){const {collectorMetrics,...reste}=data;return reste;}
    return data;}
   async handle(type,data){const n=this.e.s.native;if(!n||n.id!==data.sessionId||!this.active())throw Error('La session Natif n’est plus active.');
    if(n.status==='PAUSED'&&data.observationPeriodId&&n.currentPeriodId===null)await this.heal(data);
