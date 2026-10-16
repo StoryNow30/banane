@@ -36,3 +36,8 @@ Notes de Mic pendant sa relecture Écho de la partie 29, après un lot Orbite en
 ## Partie 12 (opérateur débutant, Écho de Mic du 16/10, 10 h 02 – 10 h 17)
 
 Mic corrige la partie d'un opérateur débutant. Les poses de départ sont humaines. PN, avec les marges de contrôle avant et après comprises : 3944–3965, 6232–6246, 7885–7899, 8380–8394, 9070–9086, soit 15 à 22 cuts par PN marges comprises. Cela confirme la règle 3 (PN avec marge) sur une deuxième partie.
+
+## Partie 13 (partie humaine, Écho de Mic du 16/10, à partir de 10 h 20)
+
+- PN : 124–139, 1284–1300, 6100–(fin non précisée), 6927–6941, 8055–8071, 9456–9469.
+- Zones d'ADV, marges comprises : 4644–4713, avec l'aiguille au cut 4682 (environ 38 cuts avant l'aiguille et 31 après) ; 4911–4936 (Mic a noté aussi « aiguille au cut 4682 » pour cette zone : à confirmer).
