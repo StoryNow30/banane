@@ -29,3 +29,8 @@ Demande de Mic (D-124) : avancer sur tous les chantiers possibles pendant son ab
 ## À intégrer au prochain numéro de test
 
 - Logo retenu par Mic (piste A « La voie ») : commit a426771 sur `claude/ux-variantes`. Prendre `icons/` (`git checkout a426771 -- icons/`), puis déclarer dans `manifest.json` `"icons": {"16":"icons/ariane-16.png","32":"icons/ariane-32.png","48":"icons/ariane-48.png","128":"icons/ariane-128.png"}` et la même liste sous `action.default_icon`. Fait : intégré à la 4.9.5 test 3 (D-127).
+
+## Prochain réveil (après D-129)
+
+- Lourd : **P1 plafond de convention à 8 mm** (`claude/50-p1-convention` depuis `claude/50-base`) : `src/placement-convention.js` seulement (jamais `src/engine.js`), décalage plafonné, reste consigné ; essais ; rejeu des quatre lots au banc (`fiches/P0_MESURES.md`) sans régression ; relecteur indépendant. Rien n'est activé au terrain sans Mic.
+- Léger : corriger AUDIT_SUPER_CERVEAU § 1 avec les chiffres de P0 (a).
