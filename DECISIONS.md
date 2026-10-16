@@ -2190,3 +2190,17 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - le mode de travail qui rendrait la mémoire de série active (I8 4) ;
   - une seconde relecture d'une trentaine de cuts pour mesurer le bruit de la référence (U6) ;
   - le retrait des noms de modèles sur `main`.
+
+## D-150 — Base 5.0 : test 4 et hygiène de l'audit intégrées (16 octobre 2026)
+
+- Dans `claude/50-base`, dans l'ordre :
+  - la 4.9.5 test 4 (7c0a694) ;
+  - l'hygiène de l'audit, `claude/50-audit-hygiene` (5e8e9a0) ;
+  - le renommage de l'ombre verticale en P8 (21910eb).
+- Le renommage touche les commentaires et le libellé seulement. Les clés `ombreVerticale`, `ombreVerticaleRefusee` et `e2-vertical-refuse-v1` ne changent pas.
+- **B1** : `datasets/manifeste-parties.json`. Les parties 17, 24, 29 du projet 1 et la partie 1 du projet 2 sont en apprentissage. Toute autre partie est réservée. Les outils de réglage refusent une partie réservée, sauf avec `--juger-partie-reservee`.
+- **I4** : `datasets/reglages-figes.json` (règle prudente D-147, G1 b, ombre verticale à 3,6 mm). Un essai vérifie qu'ils concordent avec le code.
+- **I1** : plus aucun nom de modèle d'IA dans la base. Un essai l'interdit, et l'essai de consigne de la test 4 n'écrit plus ces noms en clair.
+- **U8** : `verify` tourne en priorité basse. Il refuse de partir si `wt/lourd.lock` existe ; `BANANE_VERROU_LOURD=""` coupe ce contrôle.
+- verify : 1 861 réussis, 0 échec, 2 ignorés (corpus natif absent). Le moteur est conforme à la baseline.
+- Toute partie de la test 3 ou de la test 4 reçue désormais est **réservée** : elle servira à juger, jamais à régler.
