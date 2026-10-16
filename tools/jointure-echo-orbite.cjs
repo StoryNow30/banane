@@ -21,6 +21,13 @@
  *  - la pose humaine finale (bords, scène de l'Écho) : celle de la DERNIÈRE validation observée, toutes visites
  *    confondues, dans l'ordre du temps (comme la 4.9.0.20) ; un cut sans validation observée est « sans-reference »
  *    (sauf avec `--visite-sans-action-bonne`, voir plus bas) ;
+ *    RÉFÉRENCE CORRIGÉE PAR L'ÉCRITURE SERVEUR (D-143). La référence que l'Écho fige à la touche de validation est périmée
+ *    quand ESV applique le déplacement d'un rail APRÈS la touche (clic sur un rail quelques ms avant). L'écriture de
+ *    validation de la ligne (PUT 2xx, rattachée à la visite par numéro de ligne, dernière de la visite) porte la bonne pose :
+ *    si ses rails diffèrent de plus de 1 mm de la référence, celle-ci est remplacée (dernier état observé s'il concorde avec
+ *    l'écriture à 1 mm près, sinon positions de l'écriture), comme le fait l'Écho depuis ce correctif
+ *    (`src/native-session.js`, `referenceParEcriture`). Les cuts concernés sont comptés et listés dans le résumé
+ *    (`referencesCorrigees`), avec les écartements de la référence hors 1 420–1 470 mm (`ecartementsReferenceHorsPlage`) ;
  *  - l'écart humain par rail : latéral, vertical, longitudinal (mm, repère profil du rail) et distance 3D ;
  *    sans matrice de repère profil, la distance 3D seule (« repere: "3D" ») ;
  *  - l'étiquette Écho (VALIDATE_NO_MOVEMENT, VALIDATE_CORRECTED_*…) ;
@@ -52,6 +59,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const X = require('../src/native-export.js');
 const V = require('./lire-volumes.cjs');
+const { referenceParEcriture } = require('../src/native-session.js');
 
 const COTES = [['gauche', 'left'], ['droite', 'right']];
 const SEUIL_REPERE_MM = 20;
@@ -61,6 +69,9 @@ const BASES = ['auto', 'premiere', 'derniere'];
  * d'un rail (mm) à partir duquel le cut est considéré comme modifié. */
 const DUREE_VISITE_DEFAUT_S = 0.8;
 const DEPLACEMENT_MODIFIE_MM = 0.5;
+/* Écartement attendu entre les deux rails de la pose de référence (mm) : en dehors, la référence est suspecte (D-143). */
+const ECARTEMENT_MIN_MM = 1420, ECARTEMENT_MAX_MM = 1470;
+const SEUIL_DEPLACEMENT_ETIQUETTE_MM = 1;
 
 /* ------------------------------------------------------------------ outils numériques */
 const fini = v => Number.isFinite(v);
@@ -202,13 +213,56 @@ function visiteSansAction(c, seuilS) {
   return r;
 }
 
-/* Dernière validation observée : la visite la plus tardive qui porte une référence humaine à rails. */
+/* D-143 : la référence d'une visite corrigée par l'écriture serveur de validation. Seule compte une validation réussie
+ * (statut 2xx), rattachée à la visite par NUMÉRO DE LIGNE (`joinMethod: 'row-index'`) et au cut de la visite, postérieure à
+ * l'intention de validation ; la dernière de la visite fait foi. `kind` manque dans les exports anciens : la validation se
+ * reconnaît alors à son corps. Rend null (rien à corriger) ou { par, ecartMaxMm, poseDe, etat?, sides?, diffMm? } :
+ * `par: 'outil'` (corrigée ici, `etat` est la nouvelle référence) ou `par: 'echo'` (déjà corrigée par l'Écho). */
+const estValidationReussie = (w, cut) => {
+  const b = w && w.body, ok = Number.isInteger(w && w.status) && w.status >= 200 && w.status < 300;
+  const validation = w && (w.kind ? w.kind === 'validation' : !!b && b.ExtractionStatus === 'valid' && b.TreatedByOperator === true);
+  return !!validation && ok && w.joinMethod === 'row-index' && w.rowIndex === cut;
+};
+function corrigerParEcriture(visite, h) {
+  const cut = visite.identity && visite.identity.cut;
+  const t0 = Date.parse(h.observedAt || '');
+  const ecritures = (visite.serverWrites || []).filter(w => estValidationReussie(w, cut) && !(fini(t0) && Date.parse(w.at || '') < t0));
+  if (h.source === 'validation-write' && h.replacedByWrite) {
+    const r = h.replacedByWrite;
+    return { par: 'echo', ecartMaxMm: fini(r.maxDiffMm) ? r.maxDiffMm : null, poseDe: r.poseFrom || null };
+  }
+  if (!ecritures.length) return null;
+  const fix = referenceParEcriture(h.state, visite.lastObserved || visite.finalObserved || null, ecritures[ecritures.length - 1].body);
+  return fix ? { par: 'outil', etat: fix.state, ecartMaxMm: fix.maxDiffMm, poseDe: fix.poseFrom, sides: fix.sides, diffMm: fix.diffMm } : null;
+}
+
+/* Dernière validation observée : la visite la plus tardive qui porte une référence humaine à rails ; `correction` : la
+ * correction par l'écriture serveur (D-143), `etat` est alors l'état corrigé. */
 function referenceHumaine(visites) {
   for (let i = visites.length - 1; i >= 0; i--) {
     const h = visites[i].humanFinalReference;
-    if (h && aDesRails(h.state)) return { visite: visites[i], etat: h.state, rang: i };
+    if (h && aDesRails(h.state)) {
+      const correction = corrigerParEcriture(visites[i], h);
+      return { visite: visites[i], etat: correction && correction.etat ? correction.etat : h.state, rang: i, correction };
+    }
   }
   return null;
+}
+/* Écartement entre les deux rails d'une pose (mm, distance 3D), ou null. */
+function ecartementDe(etat) {
+  const p = positionsDe(etat), g = p.left && vec3(p.left.positionSceneRelative), d = p.right && vec3(p.right.positionSceneRelative);
+  return g && d ? arrondi(1000 * norme(moins(g, d)), 1) : null;
+}
+/* Étiquette qu'aurait donnée l'Écho avec la référence corrigée : départ (pose de départ, à défaut la pose initiale de la
+ * visite) contre référence, seuil de 1 mm par rail. */
+function etiquetteCorrigee(visite, etat) {
+  const depart = visite.startPose && visite.startPose.rails ? visite.startPose : (visite.initialObserved || visite.firstObserved);
+  const bouge = en => {
+    const a = depart && depart.rails && vec3(depart.rails[en] && depart.rails[en].positionSceneRelative), b = etat && etat.rails && vec3(etat.rails[en] && etat.rails[en].positionSceneRelative);
+    return !!a && !!b && 1000 * norme(moins(b, a)) > SEUIL_DEPLACEMENT_ETIQUETTE_MM;
+  };
+  const g = bouge('left'), d = bouge('right');
+  return g && d ? 'VALIDATE_CORRECTED_BOTH' : g ? 'VALIDATE_CORRECTED_LEFT_ONLY' : d ? 'VALIDATE_CORRECTED_RIGHT_ONLY' : 'VALIDATE_NO_MOVEMENT';
 }
 
 /* ------------------------------------------------------------------ côté journal */
@@ -360,7 +414,7 @@ function joindre(records, journal, options = {}) {
   const regle = seuilVisite === null ? null : { seuilS: seuilVisite, cuts: 0, parClasse: {}, refus: { 'deplace-sans-validation': 0, 'trop-court': 0, 'sans-mesure': 0, 'hors-cut': 0 } };
   const repere = calibrerRepere(echo, jr);
   const decalage = repere.calibre ? repere.decalage : null;
-  const lignes = [];
+  const lignes = [], ecartements = [];
   const cles = new Set([...echo.keys(), ...jr.keys()]);
   for (const k of [...cles].sort((a, b) => { const [pa, ca] = a.split('|').map(Number), [pb, cb] = b.split('|').map(Number); return pa - pb || ca - cb; })) {
     const c = echo.get(k) || null, j = jr.get(k) || null, classe = sansJournal ? 'sans-journal' : classeDe(j);
@@ -401,7 +455,12 @@ function joindre(records, journal, options = {}) {
     }
     ligne.referenceHumaine = 'observee';
     ligne.visiteReference = ref.rang + 1;
-    ligne.validationsDeLaVisite = (ref.visite.humanFinalReferences || []).length || 1;
+    ligne.validationsDeLaVisite = (ref.visite.humanFinalReferences || []).filter(h => !h.supersededBy).length || 1;
+    if (ref.correction) {
+      ligne.referenceCorrigeeParEcriture = { par: ref.correction.par, poseDe: ref.correction.poseDe, ecartMaxMm: ref.correction.ecartMaxMm };
+      if (ref.correction.par === 'outil') ligne.etiquetteEchoApresCorrection = etiquetteCorrigee(ref.visite, ref.etat);
+    }
+    ecartements.push({ partie: ligne.partie, cut: ligne.cut, ecartementMm: ecartementDe(ref.etat) });
 
     /* Pose de base. */
     const premiere = c.visites[0].initialObserved || c.visites[0].firstObserved;
@@ -437,7 +496,7 @@ function joindre(records, journal, options = {}) {
   }
 
   const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
-  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle }) };
+  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements }) };
 }
 
 /* ------------------------------------------------------------------ résumé */
@@ -454,7 +513,23 @@ function resumer(lignes, meta = {}) {
     cutsJoints: lignes.filter(l => l.dansEcho && l.dansJournal).length,
     cutsJournalAbsentsDeLEcho: lignes.filter(l => !l.dansEcho).length,
     reperes: { profil: 0, '3D': 0 }, bases: {}, cutsParClasse: {}, parClasse: {},
+    /* D-143 : références humaines corrigées par l'écriture serveur de validation (par cet outil, ou déjà par l'Écho), et
+     * cuts dont la pose de référence a un écartement hors de la plage attendue (la référence corrigée est celle mesurée). */
+    referencesCorrigees: { cuts: 0, parLOutil: 0, parLEcho: 0, liste: [] },
+    ecartementsReferenceHorsPlage: { minMm: ECARTEMENT_MIN_MM, maxMm: ECARTEMENT_MAX_MM, cuts: 0, liste: [] },
   };
+  for (const l of lignes) {
+    const c = l.referenceCorrigeeParEcriture;
+    if (!c) continue;
+    resume.referencesCorrigees.cuts++;
+    resume.referencesCorrigees[c.par === 'echo' ? 'parLEcho' : 'parLOutil']++;
+    resume.referencesCorrigees.liste.push({ partie: l.partie, cut: l.cut, par: c.par, poseDe: c.poseDe, ecartMaxMm: c.ecartMaxMm, ...(l.etiquetteEchoApresCorrection ? { etiquetteApres: l.etiquetteEchoApresCorrection, etiquetteAvant: l.etiquetteEcho } : {}) });
+  }
+  for (const e of meta.ecartements || []) {
+    if (e.ecartementMm !== null && e.ecartementMm >= ECARTEMENT_MIN_MM && e.ecartementMm <= ECARTEMENT_MAX_MM) continue;
+    resume.ecartementsReferenceHorsPlage.liste.push(e);
+  }
+  resume.ecartementsReferenceHorsPlage.cuts = resume.ecartementsReferenceHorsPlage.liste.length;
   for (const l of lignes) {
     if (l.dansJournal) resume.cutsParClasse[l.classe] = (resume.cutsParClasse[l.classe] || 0) + 1;
     if (l.base) resume.bases[l.base] = (resume.bases[l.base] || 0) + 1;
@@ -521,6 +596,14 @@ function texte(resume, entete = []) {
     L.push(`Règle « visité sans action = bon » (visite d'au moins ${rg.dureeMinimaleS} s, aucun rail déplacé de ${rg.deplacementModifieMm} mm ou plus) : ${rg.cuts} cuts comptés à correction nulle`
       + `${Object.keys(rg.parClasse).length ? ` (${Object.entries(rg.parClasse).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''} ; restent sans référence : ${rg.refus['deplace-sans-validation']} déplacés sans validation, ${rg.refus['trop-court']} trop courts, ${rg.refus['sans-mesure']} sans mesure, ${rg.refus['hors-cut']} hors cut.`);
   }
+  const rc = resume.referencesCorrigees;
+  if (rc) {
+    L.push(`Références humaines corrigées par l'écriture serveur : ${rc.cuts} cut${rc.cuts > 1 ? 's' : ''}`
+      + (rc.cuts ? ` (par cet outil ${rc.parLOutil}, déjà par l'Écho ${rc.parLEcho}) : ${rc.liste.map(x => `${x.partie}/${x.cut} (${f1(x.ecartMaxMm)} mm)`).join(', ')}` : '') + '.');
+    const eh = resume.ecartementsReferenceHorsPlage;
+    L.push(`Écartements de la référence hors ${eh.minMm}–${eh.maxMm} mm : ${eh.cuts} cut${eh.cuts > 1 ? 's' : ''}`
+      + (eh.cuts ? ` : ${eh.liste.map(x => `${x.partie}/${x.cut} (${f1(x.ecartementMm)} mm)`).join(', ')}` : '') + '.');
+  }
   for (const [classe, c] of Object.entries(resume.parClasse)) {
     L.push('', `Classe « ${classe} » : ${c.cuts} cuts en Écho (${c.avecReference} avec référence humaine, ${c.sansReference} sans référence).`
       + (rg ? ` Parmi les références : ${c.avecValidationObservee} validations observées, ${c.dontVisiteSansAction} visités sans action.` : ''));
@@ -576,4 +659,4 @@ function executer(argv, sortie = console.log) {
 if (require.main === module) {
   try { executer(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { DUREE_VISITE_DEFAUT_S, visiteSansAction, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
+module.exports = { DUREE_VISITE_DEFAUT_S, ECARTEMENT_MIN_MM, ECARTEMENT_MAX_MM, corrigerParEcriture, visiteSansAction, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
