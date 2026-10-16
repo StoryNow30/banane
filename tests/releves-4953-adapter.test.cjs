@@ -103,7 +103,7 @@ test('goToCut : notre écouteur en ombre n\'est pas pris pour un écouteur d\'ES
  assert.equal((await chemin(true)).disponible,true);
 });
 
-test('empreinte du contrat : demandée au « Connecter » seulement ; stable ; change avec un bouton, une classe, un écouteur d\'ESV, jQuery ou Potree ; nos écouteurs exclus', async () => {
+test('empreinte du contrat : demandée au « Connecter » seulement ; stable ; change avec un bouton absent, une classe, un écouteur d\'ESV absent, jQuery ou Potree ; nos écouteurs exclus (4.9.5.4 : ni libellés ni nombres, voir contrat-par-onglet-4954)', async () => {
  const monter=(opt={})=>{const f=page({globals:opt.globals}),el={},{$,events}=faussejQuery(el);f.ctx.$=$;if(opt.jq)$.fn.jquery=opt.jq;
   const boutons=[['O2N3DCutPreviousInvalid3DRail','Previous invalid'],['O2N3DCutPrevious3DRail','Previous'],['O2N3DCutValidate3DRail','Validate'],['O2N3DCutSkip3DRail','Skip'],['O2N3DCutNext3DRail','Next'],['O2N3DCutNextInvalid3DRail','Next invalid']]
    .map(([id,title])=>({id,title:opt.titre&&id==='O2N3DCutSkip3DRail'?opt.titre:title}));
@@ -115,11 +115,13 @@ test('empreinte du contrat : demandée au « Connecter » seulement ; stable ; c
  const lire=async(o)=>plat((await o.f.call('ping',{contrat:true})).contrat);
  const a=await lire(monter()),b=await lire(monter());
  assert.match(a.hash,/^[0-9a-f]{8}$/);assert.equal(a.hash,b.hash,'même contrat, même empreinte');
- assert.deepEqual(a.detail.boutons.map(x=>x[0]),['O2N3DCutPreviousInvalid3DRail','O2N3DCutPrevious3DRail','O2N3DCutValidate3DRail','O2N3DCutSkip3DRail','O2N3DCutNext3DRail','O2N3DCutNextInvalid3DRail'],'six boutons, par leur id');
- assert.deepEqual(a.detail.ecouteurs,{railPairSelected:1,railPairUpdated:1,railPairSeen:1,loading:1,newPart:1});assert.equal(a.detail.jquery,'3.6.0');assert.equal(a.detail.potree,'1.8');
+ assert.deepEqual(a.detail.boutons,['O2N3DCutPreviousInvalid3DRail','O2N3DCutPrevious3DRail','O2N3DCutValidate3DRail','O2N3DCutSkip3DRail','O2N3DCutNext3DRail','O2N3DCutNextInvalid3DRail'],'six boutons, par leur id');
+ assert.deepEqual(a.detail.ecouteurs,{railPairSelected:true,railPairUpdated:true,railPairSeen:true,loading:true,newPart:true});assert.equal(a.detail.jquery,'3.6.0');assert.equal(a.detail.potree,'1.8');
  assert.deepEqual(a.detail.rails,['btn leftRailSClass','btn rightRailSClass']);
- for(const [nom,o] of [['titre',{titre:'Passer'}],['classe',{classe:'leftRailXClass'}],['écouteur',{n:{loading:2}}],['jquery',{jq:'3.7.1'}],['potree',{potree:{major:1,minor:9,suffix:''}}]])
+ for(const [nom,o] of [['classe',{classe:'leftRailXClass'}],['écouteur absent',{n:{loading:0}}],['jquery',{jq:'3.7.1'}],['potree',{potree:{major:1,minor:9,suffix:''}}]])
   assert.notEqual((await lire(monter(o))).hash,a.hash,nom);
+ /* 4.9.5.4 (D-139) : un libellé de bouton qui change, ou un écouteur de plus, dépendent de l'état de la page : même empreinte. */
+ for(const [nom,o] of [['titre',{titre:'Passer'}],['écouteur de plus',{n:{loading:2}}]])assert.equal((await lire(monter(o))).hash,a.hash,nom);
  /* Nos écouteurs en ombre ne comptent pas : l'empreinte est la même avant et après leur pose. */
  const m=monter(),avant=await lire(m);await m.f.call('ping');assert.ok(m.events.loading.some(h=>h.namespace==='banane53'));assert.equal((await lire(m)).hash,avant.hash);
  /* Ping ordinaire : pas d'empreinte ; relevé coupé : pas d'empreinte. */

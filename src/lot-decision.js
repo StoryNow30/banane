@@ -260,7 +260,7 @@
    }
    return best.length>=cfg.validatedMinInliers?best.map(k=>cands[k]):[];
  }
- function decideCut({capture,science,anchors,validated,Shadow,options={}}){
+ function decideCutBase({capture,science,anchors,validated,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
    const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,lowGaugeGuardMm:cfg.lowGaugeGuardMm??null,minTop:cfg.minTop,anchorRule:cfg.anchorRule,
@@ -364,6 +364,32 @@
    const positions=Object.fromEntries(SIDES.map(side=>[side,positionOf(seeded.rails[side],deltas[side])]));
    if(gaugeSuspect(positions))return deferred({...base,stage:'deferred',reason:'gauge-guard',gaugeJumpMm:r1(gaugeJump(gaugeRef,positions)),gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates});
    return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,positions,anchor:false};
+ }
+ /* 4.9.5.4 (E2, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE. Pour un rail dont le calage de convention est REFUSÉ (`applied:false`, motif
+  * `shift-out-of-domain`, lu dans la science du cut), la décision consigne `ombreVerticale` : à côté de la pose réelle (`reelle`, celle de
+  * `positions`), la pose qu'aurait donnée une correction verticale de `mm` (3,6 par défaut, réglage `ombreVerticaleRefusee`), remontée dans le
+  * repère PROFIL du rail (G0 : correction = pose de Mic − pose d'Ariane, « + » = Mic remonte). Positions en repère scène, arrondies au micromètre.
+  * CONSIGNÉE SEULEMENT : `positions`, `stage`, la garde, l'appui, la commande n'en dépendent jamais (`commandRails` ne lit que des champs nommés), la
+  * décision de base est calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée. Réglage coupé, absent (outils hors ligne),
+  * valeur nulle ou non finie, aucun rail refusé, cut sans pose : aucune clé ajoutée, la décision est celle de la base 5.0 à l'octet près.
+  * Une panne ici ne change jamais la décision. */
+ const ombreReglage=options=>{const o=options&&options.ombreVerticale!==undefined?options.ombreVerticale:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.ombreVerticaleRefusee:undefined);
+   return o&&o.actif===true&&Number.isFinite(o.mm)&&o.mm!==0?o:null;};
+ const um=v=>Math.round(v*1e6)/1e6;
+ function ombreVerticale(decision,{capture,science,options}){
+   const reglage=ombreReglage(options);if(!reglage||!decision?.positions)return null;
+   const rails={};
+   for(const side of SIDES){
+     const cal=science?.rails?.[side]?.conventionCalibration,rail=capture?.rails?.[side],pose=decision.positions[side];
+     if(!cal||cal.applied!==false||cal.reason!=='shift-out-of-domain'||!rail?.profileLocalToSceneRelative||!Array.isArray(pose))continue;
+     const P=rail.profileLocalToSceneRelative,a=C.point(P,[0,0,0]),b=C.point(P,[0,0,reglage.mm/1000]),haut=b.map((v,i)=>v-a[i]);
+     rails[side]={reelle:pose.map(um),ombre:pose.map((v,i)=>um(v+haut[i])),refus:{reason:cal.reason,dzMm:r1(cal.dzMm),duMm:r1(cal.duMm)}};
+   }
+   return Object.keys(rails).length?{version:'e2-vertical-refuse-v1',mm:reglage.mm,repere:'profil du rail, + = vers le haut',rails}:null;
+ }
+ function decideCut(args){
+   const decision=decideCutBase(args);
+   try{const o=ombreVerticale(decision,args);return o?{...decision,ombreVerticale:o}:decision;}catch{return decision;}
  }
  /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
   * décision en rails pour `Engine.apply()`, sans rien décider de plus :

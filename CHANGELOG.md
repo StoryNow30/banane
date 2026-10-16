@@ -1,5 +1,22 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.4 — 4.9.5 test 4 (16/10)
+
+Manifeste `4.9.5.4`, « 4.9.5 test 4 », paquet `ariane-4.9.5-test.4.zip` ; base : `claude/50-base` (8825ec9 : 4.9.5 test 3 + E1, M6, E5, reprise de l'Écho après un F5, référence humaine de l'Écho par l'écriture serveur).
+**Aucun changement de pose, de validation ni de navigation** ; `src/engine.js` inchangé (identique à `origin/main`). Aucune requête ESV nouvelle, aucune marque d'Ariane : la trace dans ESV est celle d'un humain.
+Consigne : `consignes/seance-terrain-4.9.5-test-4-2026-10-16.md` ; retour arrière : la 4.9.5 test 3.
+
+- **Déjà dans la base, entre dans cette version**
+  - **E1, mémoire de la liste d'ESV** (`src/liste-memoire.js`, `tools/diff-liste.cjs`, `listeMemoire.actif`, vrai) : bords écrits par Ariane gardés en local par partie, instantané compact de la liste à chaque chargement complet, compte des cuts corrigés depuis le dernier passage ; aucune requête ESV (D-125).
+  - **Reprise de l'Écho après un F5** (D-137, `fiches/ECHO_F5.md`) : la reprise attend le cut lisible et la liste lue puis silencieuse (2,5 s) ; même session, une nouvelle période ; plus de période fantôme. **Le F5 en Écho est de nouveau permis**, à essayer une fois en fin de partie.
+  - **Référence humaine de l'Écho corrigée par l'écriture serveur** (D-143, `fiches/ECHO_REFERENCE_ECRITURE.md`) : quand l'écriture de validation diffère de plus de 1 mm de la référence lue à la touche, elle la remplace (l'ancienne est gardée). Un cut sur 1 260 sur les Échos relus.
+  - **Plafond de convention (P1) : livré COUPÉ** (`conventionPlafond = false`, D-129 à D-131). Les rails refusés sont posés comme avant.
+  - **Logo** « La voie » (`icons/`, déclaré dans le manifeste).
+- **Nouveau — empreinte du contrat ESV rangée par onglet** (D-139) : l'empreinte précédente est gardée par onglet (`chrome.storage.session`, clé `banane54Contrats`, repli sur `local`, huit onglets au plus, onglet fermé oublié) ; un onglet n'est comparé qu'à lui-même, donc deux fenêtres ESV ne se disputent plus la même empreinte. L'empreinte ne contient plus les libellés des boutons (identifiants seuls) ni le nombre d'écouteurs jQuery (présence seule) ; libellés et nombres restent consignés à part (`etat` dans `contrat-esv`), sans être hachés ni comparés. Les empreintes de la 4.9.5.3 (clé `banane53Contrat`) ne sont jamais relues. Essais : `tests/contrat-par-onglet-4954.test.cjs` (rouges d'abord : 7 sur 8).
+- **Nouveau — `audit-serveur` : champ partie corrigé** (D-141) : la partie et la séance sont relevées quand la liste est lue : lot ouvert, sinon séance Écho (dernière visite), sinon lot tout juste clos (grâce), sinon capture en cours ; jamais un lot clos depuis longtemps. Sans source sûre : `partie:null` et pas de validations attendues. Champ `partieSource` ajouté. Pendant Écho, l'événement porte `nativeSessionId` : il sort dans l'export d'Écho (D-134). Essais : `tests/audit-serveur-4954.test.cjs` (rouges d'abord : 5 sur 7).
+- **Nouveau — correction verticale en ombre (E2, D-140)** (`src/lot-decision.js`, réglage `ombreVerticaleRefusee` de `src/settings.js`, actif, 3,6 mm) : pour un rail dont le calage de convention est refusé, la décision consigne `ombreVerticale` (pose réelle et pose remontée de 3,6 mm dans le repère profil du rail, décalages mesurés). **Jamais appliquée** : la pose, la commande, les gardes et les appuis ne la lisent pas ; décisions identiques octet pour octet avec et sans le réglage. Page Réglages : une ligne de plus. Essais : `tests/ombre-verticale-4954.test.cjs`.
+- Essais de version : `tests/version-4954.test.cjs` (remplace `version-4953`), `tests/consigne-4954.test.cjs` (remplace `consigne-4953`). Les essais `releves-4953-*` sont adaptés à la nouvelle forme de l'empreinte.
+
 ## 4.9.5.3 — 4.9.5 test 3 (16/10)
 
 Manifeste `4.9.5.3`, « 4.9.5 test 3 », paquet `ariane-4.9.5-test.3.zip` ; base : `claude/50-base` (4.9.5 test 2 + S3 et S8). **Aucun changement de pose, de validation ni de navigation** ;
