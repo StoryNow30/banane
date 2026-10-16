@@ -2281,3 +2281,17 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Correction proposée, non appliquée** : poser avec recentrage, le chemin des cuts de référence, qui refuse une cible hors de la vue. Sans code : `rapide.pose=false`. Coût : 0 cut différé en plus, mais environ +0,67 s par cut rapide, soit +13 à +19 % de durée de lot. Variante : rail droit en direct et rail gauche recentré, pour environ moitié moins de temps.
 - **Décision à Mic** : c'est un arbitrage entre le débit et la trace humaine (sa règle « aucune marque distincte »).
 - À noter aussi : Chromium arrondit les coordonnées à l'entier, donc les décalages d'un demi-pixel de `DECALAGES_CLIC` donnent 0 ou −1 px.
+
+## D-158 — Bruit de la référence de Mic : environ 1 mm par axe ; le seuil de 10 mm tient, celui de 5 mm comme taux seulement (17 octobre 2026)
+
+- Livré sur `claude/50-bruit-reference` (5d246a6, 2b73df1), intégré à `claude/50-base` (bf47d1c). Seuls l'outil, l'essai et la fiche `fiches/BRUIT_REFERENCE.md` changent, rien sous `src/`.
+- Mesuré sur 8 sessions Écho, soit 3 013 cuts dont 2 209 validés :
+  - les relectures espacées de Mic retrouvent la même pose à 0,5 mm près dans 79 % des cas, avec un écart maximal de 4,6 mm ;
+  - le grain du clic est de 0,386 mm par pixel ;
+  - entre voisins, l'écart est de 1,5 mm en latéral et 2,3 mm en vertical (borne haute) ;
+  - le dernier pas d'un réglage est de 0,75 mm.
+  Fourchette retenue : 0,75 à 1,5 mm par axe en latéral, jusqu'à 2,3 mm en vertical.
+- **Le seuil de 10 mm a un sens.** **Celui de 5 mm** a un sens comme taux sur une partie, pas comme verdict sur un cut : la zone grise va de 3,6 à 6,4 mm. Un écart de moins de 3 points entre deux taux ne se lit pas.
+- Débutant contre Mic (228 cuts communs) : 41,7 % des références sont la pose de départ elle-même, et 23,7 % sont déplacées de 25 mm ou plus.
+- Le biais propre à Mic ne se mesure pas avec un seul opérateur. Les relectures ne sont pas à l'aveugle.
+- verify de l'agent : 0 échec, mais 8 fichiers annulés par délai sous charge (load 11). Ils passent seuls. Un verify complet sera relancé sur une machine calme avant la test 5.
