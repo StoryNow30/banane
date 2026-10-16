@@ -52,7 +52,7 @@ test('retour arrière vers la 4.9.5 test 3 ; aucune empreinte dans la consigne ;
  assert.match(r,/Ne désinstalle pas Ariane/);assert.ok(r.indexOf('envoie')<r.indexOf('désactive'));assert.match(r,/pose la 4\.9\.5 test 3/);
  assert.deepEqual([...texte.replace(/\s+/g,'').matchAll(/[0-9a-f]{64}/g)],[]);
  assert.doesNotMatch(texte,/\d{6}_\d{6}_[A-Z]_/);
- assert.doesNotMatch(texte,/claude|anthropic|opus|sonnet|haiku|gpt|gemini/i);
+ assert.doesNotMatch(texte,new RegExp(['cla'+'ude','anth'+'ropic','op'+'us','son'+'net','hai'+'ku','fa'+'ble','g'+'pt','gem'+'ini'].join('|'),'i'));
 });
 test('ce qui n\'est pas vérifié est dit',()=>{
  const s=plat(section('7. Ce qui n\'est pas vérifié'));

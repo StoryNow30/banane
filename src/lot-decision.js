@@ -365,14 +365,16 @@
    if(gaugeSuspect(positions))return deferred({...base,stage:'deferred',reason:'gauge-guard',gaugeJumpMm:r1(gaugeJump(gaugeRef,positions)),gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates});
    return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,positions,anchor:false};
  }
- /* 4.9.5.4 (E2, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE. Pour un rail dont le calage de convention est REFUSÉ (`applied:false`, motif
+ /* 4.9.5.4 (P8, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE. Pour un rail dont le calage de convention est REFUSÉ (`applied:false`, motif
   * `shift-out-of-domain`, lu dans la science du cut), la décision consigne `ombreVerticale` : à côté de la pose réelle (`reelle`, celle de
   * `positions`), la pose qu'aurait donnée une correction verticale de `mm` (3,6 par défaut, réglage `ombreVerticaleRefusee`), remontée dans le
   * repère PROFIL du rail (G0 : correction = pose de Mic − pose d'Ariane, « + » = Mic remonte). Positions en repère scène, arrondies au micromètre.
   * CONSIGNÉE SEULEMENT : `positions`, `stage`, la garde, l'appui, la commande n'en dépendent jamais (`commandRails` ne lit que des champs nommés), la
   * décision de base est calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée. Réglage coupé, absent (outils hors ligne),
   * valeur nulle ou non finie, aucun rail refusé, cut sans pose : aucune clé ajoutée, la décision est celle de la base 5.0 à l'octet près.
-  * Une panne ici ne change jamais la décision. */
+  * Une panne ici ne change jamais la décision.
+  * Nom : P8. « E2 » désigne l'ombre GCV1 de l'Écho (cahier 5.0 § 5), pas cette correction. Les clés de données (`ombreVerticale`, `ombreVerticaleRefusee`)
+  * et la chaîne de version `e2-vertical-refuse-v1` gardent « e2 » par compatibilité avec les exports déjà produits. */
  const ombreReglage=options=>{const o=options&&options.ombreVerticale!==undefined?options.ombreVerticale:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.ombreVerticaleRefusee:undefined);
    return o&&o.actif===true&&Number.isFinite(o.mm)&&o.mm!==0?o:null;};
  const um=v=>Math.round(v*1e6)/1e6;
