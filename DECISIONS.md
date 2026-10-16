@@ -2039,3 +2039,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Seuil de la règle « visité sans action = bon » : **0,8 s**.
 - Mic a cité le code du projet ESV dans la conversation. Il n'est reporté nulle part dans les dépôts, conformément à la règle « aucun identifiant de projet ».
 - À vérifier dans les exports : `SeenByOperator` faux au départ sur les cuts à 30–40 mm.
+
+## D-137 — Reprise de l'Écho après un F5 corrigée (16 octobre 2026)
+
+- `claude/50-echo-f5` (32bbdce : essais rouges ; d043f7d : correctif), intégré à `claude/50-base` par avance rapide.
+- Après un rechargement, la reprise Écho attend le libellé du cut lisible (partie ≥ 1) et la liste ESV lue puis silencieuse depuis 2,5 s. Sans liste, elle exige un cut réel après 10 s, et n'accepte jamais le cut 0. Délai maximal : 60 s, relancé à chaque nouveau rechargement ; au bout, aucune période n'est créée.
+- La **même session** continue, avec une nouvelle période. Un démarrage raté marque sa période, et l'essai suivant la remplace : au plus une période marquée.
+- Aucune requête ESV nouvelle, aucune marque d'Ariane.
+- 7 essais rouges devenus verts ; le F5 pendant un lot Orbite reste vert. verify : 1 731 réussis, 0 échec, moteur identique.
+- Joué seulement sur le banc simulé. Délais tirés d'un seul relevé terrain : à vérifier au terrain avant de redemander un F5 à Mic. Fiche : `fiches/ECHO_F5.md`.
