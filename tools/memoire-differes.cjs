@@ -40,6 +40,10 @@
  *        --corpus seg1.json [--corpus seg2.json …] [--diagnostic diag.json] [--reprendre-pools ancien.jsonl] --sortie cas-N.jsonl
  *   node tools/memoire-differes.cjs juger --cas cas-a.jsonl --cas cas-b.jsonl [--cas …] [--json sortie.json]
  *        [--propagation] [--silencieux]
+ *   node tools/memoire-differes.cjs concordance --cas cas-N.jsonl --corpus seg1.json [--corpus …] [--json sortie.json]
+ *        [--evenements ombre.jsonl]
+ *      l'ombre de l'Écho de l'extension (module commun src/voie-recentree.js, moteur recentré sur le vrai nuage) contre (b) hors
+ *      ligne (recalage dans le pool), cas par cas, avec la mémoire de l'Écho ; et le poids des événements qu'elle consignerait.
  *
  * Les fichiers de cas, de corpus et de jointure restent HORS dépôt (scratchpad). Le dépôt ne porte que l'outil, son
  * essai sur fixture synthétique et la fiche (fiches/G1_MEMOIRE_DIFFERES.md).
@@ -86,6 +90,10 @@ const racine = () => path.resolve(__dirname, '..');
 let _gauge = null;
 const gauge = () => _gauge || (_gauge = require(path.join(racine(), 'src', 'gauge.js')));
 const ecartementAdmissible = mm => fini(mm) && gauge().admissible(gauge().classifyMm(mm));
+/* Module commun « recentrer sur la voie » (src/voie-recentree.js, audit 5.0 I8) : le recalage de (b) dans le pool est le sien, et
+ * l'ombre de l'Écho de l'extension (`memoire-differes-ombre`) en emploie la forme « moteur recentré sur le vrai nuage ». */
+let _voie = null;
+const voie = () => _voie || (_voie = require(path.join(racine(), 'src', 'voie-recentree.js')));
 
 /* ================================================================== 1. CONSTRUCTION D'UN CAS */
 
@@ -661,17 +669,11 @@ function poserB(params, cas, avant) {
     if (!ecartementAdmissible(ecartementPaire(cas, m.pred.gauche, m.pred.droite))) return { pose: null, raison: 'écartement hors contrat', disp: m.disp };
     return { pose: { gauche: m.pred.gauche, droite: m.pred.droite }, disp: m.disp };
   }
-  const pose = {};
-  for (const c of COTES) {
-    const pres = cas.rails[c].pool.filter(cd => cd.haut >= 5 && cd.flanc >= 3 && !cd.pente && Math.hypot(cd.fla - m.pred[c][0], cd.fve - m.pred[c][1]) <= params.tol);
-    // un seul minimum qualifié près de la voie (minima distincts à plus de 20 mm l'un de l'autre, comme le lot)
-    const grappes = [];
-    for (const cd of pres.slice().sort((a, b) => a.perte - b.perte)) if (!grappes.some(g => Math.hypot(g.fla - cd.fla, g.fve - cd.fve) < 20)) grappes.push(cd);
-    if (grappes.length !== 1) return { pose: null, raison: grappes.length ? 'plusieurs minima près de la voie' : 'aucun minimum près de la voie', disp: m.disp };
-    pose[c] = [grappes[0].fla, grappes[0].fve];
-  }
-  if (!ecartementAdmissible(ecartementPaire(cas, pose.gauche, pose.droite))) return { pose: null, raison: 'écartement hors contrat', disp: m.disp };
-  return { pose, disp: m.disp };
+  /* Recalage : `choisirDansLePool` du module commun (candidats à `tol` mm de la voie, au moins 5 points de dessus et 3 de flanc,
+   * pente non limitée, un seul minimum — minima distincts à plus de 20 mm —, écartement de la paire dans le contrat). */
+  const r = voie().choisirDansLePool({ gauche: cas.rails.gauche.pool, droite: cas.rails.droite.pool }, { gauche: m.pred.gauche, droite: m.pred.droite },
+    pose => ecartementAdmissible(ecartementPaire(cas, pose.gauche, pose.droite)), { tolMm: params.tol });
+  return r.pose ? { pose: r.pose, disp: m.disp } : { pose: null, raison: r.raison, disp: m.disp };
 }
 /* Simulation en ligne d'une partie : pour chaque série, les cas dans l'ordre ; la mémoire d'un cas = les cas plus anciens
  * de la série (Mic les a corrigés). `figeK` : la mémoire est figée aux K premiers cas de la série, qui ne sont pas jugés. */
@@ -906,6 +908,72 @@ function potentielPool(cas) {
   return r;
 }
 
+/* ================================================================== 7 bis. CONCORDANCE AVEC L'OMBRE DE L'ÉCHO */
+/* Réglage de l'ombre de l'Écho (`memoire-differes-ombre`) : celui que G1 a retenu hors partie (D-148), fixé dans le module commun :
+ * voie prolongée depuis les poses de l'opérateur, 3 derniers cuts corrigés, dispersion ≤ 10 mm, moteur recentré à 15 mm. */
+const REGLAGE_OMBRE = (() => { const M = require(path.join(racine(), 'src', 'voie-recentree.js'));
+  return { base: 'M', K: M.MEMOIRE_SERIE.K, porteDisp: M.MEMOIRE_SERIE.porteDispersionMm, nBack: 0, minMemoire: 1, mode: 'moteur', tol: M.POOL.tolMm }; })();
+/* Les deux formes du recentrage, cas par cas, avec la mémoire de l'Écho (idéale : l'opérateur a corrigé tous les cuts précédents de
+ * la série avant le cut) :
+ *   - « pool » : (b) hors ligne, recalage dans le pool élargi du cas (`poserB`, réglage de l'ombre) ;
+ *   - « moteur » : l'ombre de l'extension (`evaluerEcho` du module commun) sur le VRAI nuage du cut, appuis = poses de l'opérateur
+ *     des cuts de la mémoire, ramenées en positions de scène par la pose de départ du cut.
+ * `captureDe(cut)` rend la capture (rails, points, visibilité) ou rien. Rend { lignes, resume } ; chaque ligne garde l'événement
+ * que l'Écho aurait consigné (poids). Aucune pose de l'opérateur n'entre dans la décision du cut jugé. */
+function concorder(casListe, captureDe, { Shadow, reglage = REGLAGE_OMBRE, seuilConcordanceMm = 3, journal = () => {} } = {}) {
+  const V = voie(), L = require(path.join(racine(), 'src', 'lot-decision.js'));
+  const lignes = [];
+  for (const serie of groupesParSerie(casListe)) {
+    serie.forEach((c, i) => {
+      const avant = serie.slice(0, i).reverse(), pool = poserB(reglage, c, avant);
+      const ligne = { partie: c.partie, cut: c.cut, serie: c.serie || null, memoire: null, pool: { pose: pool.pose || null, raison: pool.raison || null }, moteur: { etage: null, pose: null, raison: null } };
+      const cap = captureDe(c.cut);
+      if (!cap) ligne.memoire = 'sans-nuage';
+      else {
+        const identity = { ...(cap.identity || {}), part: c.partie, cut: c.cut };
+        const validees = avant.map((m, k) => {
+          const v = c.voisinsMic.find(x => x.cut === m.cut); if (!v) return null;
+          return { identity: { part: c.partie, cut: m.cut, frameId: identity.frameId ?? null }, visitIndex: avant.length - k,
+            positions: { left: L.positionOf(cap.rails.left, v.mic.gauche.map(x => x / 1000)), right: L.positionOf(cap.rails.right, v.mic.droite.map(x => x / 1000)) } };
+        }).filter(Boolean);
+        const t0 = Date.now();
+        const { evenement } = V.evaluerEcho({ entree: { identity, rails: cap.rails, points: cap.pointsSceneRelative, visible: cap.visibleByClipBoxes }, differes: serie.map(x => x.cut), validees, Shadow });
+        ligne.memoire = evenement.etat; ligne.evenement = { ...evenement, ms: Date.now() - t0 };
+        ligne.moteur = { etage: evenement.etage || null, pose: evenement.verdict.posable ? { gauche: evenement.poseMm.left.slice(1), droite: evenement.poseMm.right.slice(1) } : null, raison: evenement.verdict.raison };
+        journal(`concordance cut ${c.cut} : mémoire ${evenement.etat}, moteur ${evenement.etage || '—'}`);
+      }
+      const mic = { left: c.reponse.mic.gauche, right: c.reponse.mic.droite };
+      const enPose = p => p ? { left: p.gauche, right: p.droite } : null;
+      ligne.ecartPoolMm = ligne.pool.pose ? arrondi(V.ecartPose(enPose(ligne.pool.pose), mic), 1) : null;
+      ligne.ecartMoteurMm = ligne.moteur.pose ? arrondi(V.ecartPose(enPose(ligne.moteur.pose), mic), 1) : null;
+      ligne.jugementPool = ligne.pool.pose ? V.juger(ligne.ecartPoolMm) : 'abstenue';
+      ligne.jugementMoteur = ligne.moteur.pose ? V.juger(ligne.ecartMoteurMm) : 'abstenue';
+      ligne.ecartEntreMm = ligne.pool.pose && ligne.moteur.pose ? arrondi(Math.max(...COTES.map(co => Math.hypot(ligne.pool.pose[co][0] - ligne.moteur.pose[co][0], ligne.pool.pose[co][1] - ligne.moteur.pose[co][1]))), 1) : null;
+      lignes.push(ligne);
+    });
+  }
+  const compte = (cle) => { const o = { posees: 0, juste5: 0, juste10: 0, fausse: 0, mauvaiseVoie: 0 }; for (const l of lignes) { const j = l[cle]; if (j === 'abstenue') continue; o.posees++; if (j === 'juste5') { o.juste5++; o.juste10++; } else if (j === 'juste10') o.juste10++; else if (j === 'fausse') o.fausse++; else if (j === 'mauvaise-voie') o.mauvaiseVoie++; } return o; };
+  const deux = lignes.filter(l => l.ecartEntreMm !== null), evts = lignes.filter(l => l.evenement).map(l => JSON.stringify({ eventId: '00000000-0000-4000-8000-000000000000', timestamp: '2026-01-01T00:00:00.000Z', type: 'memoire-differes-ombre', schema: 1,
+    nativeSessionId: '00000000-0000-4000-8000-000000000000', observationPeriodId: '00000000-0000-4000-8000-000000000000', visitId: '00000000-0000-4000-8000-000000000000', visitIndex: 0, ...l.evenement }));
+  const octets = evts.reduce((n, x) => n + Buffer.byteLength(x) + 1, 0), etats = {};
+  for (const l of lignes) etats[l.memoire] = (etats[l.memoire] || 0) + 1;
+  const resume = { cas: lignes.length, etats, lesDeuxPosent: deux.length, concordantes: deux.filter(l => l.ecartEntreMm <= seuilConcordanceMm).length, seuilConcordanceMm,
+    ecartEntre: { mediane: arrondi(mediane(deux.map(l => l.ecartEntreMm)), 1), p90: arrondi(quantile(deux.map(l => l.ecartEntreMm), 0.9), 1), max: deux.length ? Math.max(...deux.map(l => l.ecartEntreMm)) : null },
+    poolSeul: lignes.filter(l => l.pool.pose && !l.moteur.pose).length, moteurSeul: lignes.filter(l => !l.pool.pose && l.moteur.pose).length,
+    pool: compte('jugementPool'), moteur: compte('jugementMoteur'),
+    evenements: { n: evts.length, octetsJson: octets, octetsParEvenement: evts.length ? Math.round(octets / evts.length) : 0, octetsGzip: evts.length ? require('node:zlib').gzipSync(evts.join('\n') + '\n').length : 0 } };
+  return { lignes, resume, evenements: evts };
+}
+function texteConcordance(r) {
+  const o = [], s = r.resume, m = x => `${x.posees} posées · ≤5 mm ${x.juste5} · ≤10 mm ${x.juste10} · fausses ${x.fausse} · mauvaise voie ${x.mauvaiseVoie}`;
+  o.push(`CONCORDANCE — ombre de l'Écho (moteur recentré, vrai nuage) contre (b) hors ligne (pool), mémoire idéale, réglage de l'ombre`);
+  o.push(`Cas : ${s.cas} · mémoire : ${Object.entries(s.etats).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+  o.push(`Les deux posent : ${s.lesDeuxPosent}, dont ${s.concordantes} à ≤ ${s.seuilConcordanceMm} mm l'une de l'autre (écart médian ${fr(s.ecartEntre.mediane)} mm, P90 ${fr(s.ecartEntre.p90)}, max ${fr(s.ecartEntre.max)}) · pool seul ${s.poolSeul} · moteur seul ${s.moteurSeul}`);
+  o.push(`  pool   : ${m(s.pool)}`); o.push(`  moteur : ${m(s.moteur)}`);
+  o.push(`Événements memoire-differes-ombre : ${s.evenements.n}, ${s.evenements.octetsJson} octets (${s.evenements.octetsParEvenement} par événement, ${s.evenements.octetsGzip} compressés)`);
+  return o.join('\n') + '\n';
+}
+
 /* ================================================================== 8. RAPPORT */
 function ligneMesure(m) {
   return `${String(m.poses).padStart(3)} posées · ≤5 mm : ${String(m.juste5).padStart(3)} · ≤10 mm : ${String(m.juste10).padStart(3)} · fausses (>10) : ${String(m.faux).padStart(2)} (${pct(m.tauxFaux)}, borne haute ${pct(m.fauxHaut95)}) · mauvaise voie (>50) : ${m.mauvaiseVoie} · abstentions : ${m.abstentions}/${m.cas} · porte ${m.porte ? 'tenue' : 'NON tenue'}`;
@@ -969,6 +1037,7 @@ function arguments_(argv) {
     else if (k === '--sans-pool') a.sansPool = true;
     else if (k === '--propagation') a.propagation = true;
     else if (k === '--reprendre-pools') a.reprendrePools = v();
+    else if (k === '--evenements') a.evenements = v();
     else throw Error(`argument inconnu : ${k}`);
   }
   return { cmd, ...a };
@@ -993,12 +1062,22 @@ function executer(argv) {
     if (a.json) fs.writeFileSync(a.json, JSON.stringify(rapport, null, 1));
     return { texte: a.silencieux ? '' : texte(rapport), code: 0, rapport };
   }
-  throw Error('commande attendue : construire | juger');
+  if (a.cmd === 'concordance') {
+    if (!a.cas.length || !a.corpus.length) throw Error('--cas et --corpus requis');
+    const cas = [...lireFichiers(a.cas).values()].flat(), cuts = new Set(cas.map(c => c.cut)), captures = new Map();
+    for (const f of a.corpus) { const seg = JSON.parse(fs.readFileSync(f, 'utf8')); for (const cap of seg.clouds || []) if (cuts.has(cap.cut) && !captures.has(cap.cut) && cap.rails && cap.rails.left && cap.rails.right)
+      captures.set(cap.cut, { identity: cap.identity, rails: cap.rails, pointsSceneRelative: cap.pointsSceneRelative, visibleByClipBoxes: cap.visibleByClipBoxes }); }
+    const r = concorder(cas, cut => captures.get(cut), { Shadow: require(path.join(racine(), 'src', 'gcv1-shadow.js')), journal: a.silencieux ? () => {} : m => process.stderr.write(m + '\n') });
+    if (a.json) fs.writeFileSync(a.json, JSON.stringify({ format: 'ariane-memoire-differes-concordance-v1', resume: r.resume, lignes: r.lignes.map(({ evenement, ...l }) => l) }, null, 1));
+    if (a.evenements) fs.writeFileSync(a.evenements, r.evenements.join('\n') + (r.evenements.length ? '\n' : ''));
+    return { texte: texteConcordance(r), code: 0, rapport: r };
+  }
+  throw Error('commande attendue : construire | juger | concordance');
 }
 
 module.exports = { FORMAT_CAS, FORMAT_RAPPORT, construireCas, contexteDuJeu, numeroterSeries, lireCas, lireFichiers, erreurPose, mesurer, sommer, wilsonHaut,
   traitsCandidat, ajusterLogistique, scoreLogistique, ecartementPaire, poserNaif, apprendreA, poserA, memoireSerie, poserB, simulerB, apprendreB, descripteur, poserC, apprendreC,
-  juger, potentielPool, texte, executer, baseC, rangDeMic, GRILLE_C, GRILLE_B, poolsDuRail, poolFenetre, preparerCadre, SEUIL_JUSTE_MM, SEUIL_FAUX_MM, SEUIL_MAUVAISE_VOIE_MM };
+  juger, potentielPool, texte, executer, baseC, concorder, texteConcordance, REGLAGE_OMBRE, rangDeMic, GRILLE_C, GRILLE_B, poolsDuRail, poolFenetre, preparerCadre, SEUIL_JUSTE_MM, SEUIL_FAUX_MM, SEUIL_MAUVAISE_VOIE_MM };
 
 if (require.main === module) {
   try { const s = executer(process.argv.slice(2)); process.stdout.write(s.texte); process.exit(s.code); }

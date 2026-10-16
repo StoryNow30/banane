@@ -43,7 +43,7 @@
  *   node tools/rejeu-voie-predite.cjs --corpus SEG.json [--corpus SEG2.json ...]
  *        --journal JOURNAL.json --jointure JOINTURE.json [--lignes LISTE.jsonl]
  *        [--zones JEU.jsonl] [--cache MEMOIRE.json] [--variantes id,id,...]
- *        [--sortie SORTIE.json] [--detail DETAIL.json] [--csv MODELE-{id}.csv]
+ *        [--sortie SORTIE.json] [--detail DETAIL.json] [--csv MODELE-{id}.csv] [--ombre OMBRE.jsonl]
  *   node tools/rejeu-voie-predite.cjs --rapport SORTIE1.json [SORTIE2.json ...]
  *   node tools/rejeu-voie-predite.cjs --liste      (variantes connues)
  *   node tools/rejeu-voie-predite.cjs --essai      (fixture synthétique, sans donnée)
@@ -51,6 +51,9 @@
  * Entrées : le corpus GCV1 du lot (nuages et poses de départ), le journal Orbite (ordre du lot, ombre B1),
  * la jointure Écho-Orbite (pose finale de Mic, classe de chaque cut), la liste d'ESV (B1 seulement : pose de
  * départ de chaque cut en coordonnées monde, une ligne JSON par cut), le jeu d'apprentissage (zones d'ADV).
+ *
+ * `--ombre` : l'ombre d'Orbite (`voie-predite-ombre`, module src/voie-recentree.js) rejouée sur le lot, un événement par cut
+ * différé du témoin, tel que l'extension le consignerait ; son résumé (posables, jugement, poids en octets) entre dans la sortie.
  *
  * Sorties : agrégats seulement (comptes, millimètres d'écart, facteurs de
  * dézoom), jamais de coordonnée absolue ni d'identifiant de projet. Les fichiers
@@ -63,6 +66,10 @@ const L=require('../src/lot-decision.js');
 const O=require('../src/continuity-observer.js');
 const Shadow=require('../src/gcv1-shadow.js');
 const B=require('../src/appuis-liste.js');
+/* Module commun « recentrer sur la voie » (audit 5.0, I8) : vue, trace du moteur, règle, mesures et ombre d'Orbite sont celles
+ * de l'extension, pour que le rejeu et l'ombre de terrain ne puissent pas diverger. */
+const V=require('../src/voie-recentree.js');
+const zlib=require('node:zlib');
 
 const SIDES=['left','right'];
 const FR={left:'gauche',right:'droite'};
@@ -128,11 +135,8 @@ function lireZones(chemin){
 /* ------------------------------------------------------------------ géométrie */
 /* Position scène d'un rail déplacé de `delta` (mm) dans le repère profil de sa pose de départ. */
 const positionMic=(rail,deltaMm)=>L.positionOf(rail,deltaMm.map(v=>v/1000));
-/* Écart (mm) d'une position scène à la pose de départ, dans le repère profil du rail : [long, lat, vert]. */
-function localMm(rail,p){
-  const M=rail.sceneRelativeToProfileLocal,a=C.point(M,p),o=C.point(M,rail.positionSceneRelative);
-  return [0,1,2].map(i=>(a[i]-o[i])*1000);
-}
+/* Écart (mm) d'une position scène à la pose de départ, dans le repère profil du rail : [long, lat, vert] (module commun). */
+const localMm=V.localMm;
 /* Écart au repère de Mic, par rail et le pire des deux. */
 function ecartAMic(cap,positions,mic){
   const out={};
@@ -143,35 +147,8 @@ function ecartAMic(cap,positions,mic){
   out.pire=Math.max(out.left,out.right);
   return out;
 }
-/* Vue : ce qu'il faut pour que le clic tombe dans l'écran du rail. `dezoom` : facteur sur la demi-largeur de la vue
- * (1 = la cible est déjà dans la vue, marge de 1 % comprise) ; `panPx` : glissement du fond d'écran, en pixels, si on
- * garde l'échelle. Un rail dont la caméra est inconnue est « inconnu ». */
-function vueNecessaire(cap,positions){
-  const cams=L.viewCameras(cap),par={};let dans=true,inconnu=false,dezoom=1,panPx=0,panMm=0;
-  for(const s of SIDES){
-    const cam=cams[s];
-    if(!cam||!cam.viewport){inconnu=true;par[s]=null;continue;}
-    const ndc=C.point(C.multiply(cam.projection,cam.sceneRelativeToCamera),positions[s]);
-    const ax=Math.abs(ndc[0]),ay=Math.abs(ndc[1]),k=Math.max(ax,ay)/MARGE_VUE;
-    const exX=Math.max(0,ax-MARGE_VUE),exY=Math.max(0,ay-MARGE_VUE);
-    const pxX=exX*cam.viewport.width/2,pxY=exY*cam.viewport.height/2;
-    const mmX=exX*1000/Math.abs(cam.projection[0]),mmY=exY*1000/Math.abs(cam.projection[5]);
-    const ok=k<=1&&Math.abs(ndc[2])<=1;
-    par[s]={ok,dezoom:Math.max(1,k),panPx:Math.max(pxX,pxY),panMm:Math.max(mmX,mmY),ndc:[ndc[0],ndc[1]]};
-    if(!ok)dans=false;
-    dezoom=Math.max(dezoom,par[s].dezoom);panPx=Math.max(panPx,par[s].panPx);panMm=Math.max(panMm,par[s].panMm);
-  }
-  return {dans:dans&&!inconnu,inconnu,dezoom,panPx,panMm,par};
-}
-/* Caméras élargies : « la vue est déplacée » — la cible tombe dans l'écran, on mesure ensuite ce que cela a coûté. */
-function camerasLarges(cap){
-  const cams=L.viewCameras(cap),out={};
-  for(const s of SIDES){
-    const c=cams[s];
-    out[s]=c?{...c,projection:c.projection.map((v,i)=>(i===0||i===5)?v/1000:v)}:null;
-  }
-  return out;
-}
+/* Vue nécessaire (dézoom, glissement) et caméras élargies (« la vue est déplacée ») : celles du module commun. */
+const vueNecessaire=V.vueNecessaire,camerasLarges=V.camerasLarges;
 
 /* ------------------------------------------------------------------ repère de la liste d'ESV (B1) */
 /* T : monde − scène, estimée par cadre de scène (un rechargement d'ESV en change) sur les cuts du lot qui figurent dans la liste (pose de
@@ -289,39 +266,17 @@ function lireCache(chemin,cache){
   const o=lireJson(chemin);for(const k of Object.keys(o))cache.set(k,o[k]);
 }
 function ecrireCache(chemin,cache){if(chemin)fs.writeFileSync(chemin,JSON.stringify(Object.fromEntries(cache)));}
-/* Ce que le moteur relancé depuis la voie a vu, par rail (pour juger une règle sans le rejouer). */
-function traceMoteur(sci){
-  if(!sci)return null;
-  const out={};
-  for(const s of SIDES){
-    const r=sci.rails?.[s];
-    out[s]=r&&r.ok?{statut:r.next.status,motif:r.next.motif,confiance:r.astar?.confidence??null,topRows:r.next.topRows??null,faceCount:r.next.faceCount??null,
-      rapportPerte:r.astar?.lossRatio??null,s1:!!r.s1Changed,flancPartiel:!!r.partialFlankUsed,fortsConcurrents:r.competitive?.nStrongCompetitive??null}:{statut:'absent'};
-  }
-  out.ecartementMm=sci.pairGauge?.predictedMm??null;
-  return out;
-}
+/* Ce que le moteur relancé depuis la voie a vu, par rail (module commun). */
+const traceMoteur=V.traceMoteur;
 
 /* ------------------------------------------------------------------ rejeu d'un lot */
 function optionsDe(v){return {gap:v.gap,anchors:v.appuis,guardMm:v.fenetre,chooseMm:v.choix};}
-/* Prédiction de voie utilisée par la décision (écart à Mic, diagnostic seulement). */
-function predictionDe(cap,decision,anchorsTous){
-  const cuts=new Set(decision.anchorsUsed||[]);
-  const liste=anchorsTous.filter(a=>cuts.has(a.identity.cut));
-  if(!liste.length||liste.length!==cuts.size)return null;
-  const out={};
-  for(const s of SIDES){
-    const p=(decision.framedAnchors?.length?L.predictFramed:O.predict)(cap.rails[s],liste.map(a=>({positions:a.positions})),s);
-    out[s]=[p.lateral*1000,p.vertical*1000];
-  }
-  return out;
-}
 function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
   const {captures,ordre,ref,cache,lignesParCut,repere,zones}=ctx;
   temoinAnchors=temoinAnchors||temoin?.ancresParCut||null;
   const moteur=moteurMemoise(cache);
   const memoire={anchors:[],pending:[]};
-  const resultats=new Map(),ancresParCut=new Map();
+  const resultats=new Map(),ancresParCut=new Map(),decisions=new Map(),commandes=new Map();
   const opts=optionsDe(v);
   let n=0;
   for(const cut of ordre){
@@ -377,88 +332,41 @@ function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
     let bloqueHorsVue=false;
     if(positions&&v.vue==='seule'){const vv=vueNecessaire(cap,positions);if(!vv.dans){bloqueHorsVue=true;positions=null;}}
     /* Profondeur de chaîne : 0 pour une pose du moteur seul (premier passage), sinon 1 + la plus grande profondeur des appuis de la prédiction. */
-    const profAppui=c=>ancres.find(a=>a.identity.cut===c)?.profondeur??0;
-    const profondeur=decision.stage==='first-pass'?0:1+Math.max(0,...(decision.anchorsUsed||[]).map(profAppui));
+    const profondeur=V.profondeur(decision,c=>ancres.find(a=>a.identity.cut===c)?.profondeur??0);
     const r={cut,stage:decision.stage,reason:decision.reason??null,action:command.action,commandReason:command.reason??null,source,profondeur,
       posee:!!positions,bloqueHorsVue,refuseVue:/^hors-vue/.test(command.reason||''),anchorsUsed:(decision.anchorsUsed||[]).slice(),fromPredictionMm:decision.fromPredictionMm??null,
       guardMm:decision.guardMm??null,validatedAnchors:decision.validatedAnchors||null,framed:!!decision.framedAnchors,
       moteur:decision.stage==='window'||decision.stage==='choice'?traceMoteur(relance):null,
       choisi:decision.chosen?Object.fromEntries(Object.entries(decision.chosen).map(([k,c])=>[k,{deMm:c.fromPredictionMm??null,haut:c.top??null,flanc:c.face??null,rapport:c.lossRatio??null}])):null};
     if(positions){
-      r.deplacementMm=Object.fromEntries(SIDES.map(s=>{const l=localMm(cap.rails[s],positions[s]);return [s,[l[1],l[2]]];}));
+      /* Déplacement depuis le départ et, pour une reprise ou un choix, écarts à la prédiction, dévers et écartement comparés à ceux
+       * des appuis employés (module commun). */
+      const m=V.mesures(cap,decision,positions,[...ancres,...valides]);
+      r.deplacementMm=m.deplacementMm;
       r.vue=vueNecessaire(cap,positions);
-      const m=ref.get(cut)?.mic;
-      if(m)r.ecart=ecartAMic(cap,positions,m);
-    }
-    if(positions&&(decision.stage==='window'||decision.stage==='choice')){
-      /* Écarts de la pose à la prédiction de voie (latéral et vertical, pire des deux rails) et dévers comparé à celui des appuis. */
-      const utilises=[...ancres,...valides].filter(a=>(decision.anchorsUsed||[]).includes(a.identity.cut));
-      const pr=predictionDe(cap,decision,[...ancres,...valides]);
-      if(pr){
-        r.devLatMm=Math.max(...SIDES.map(s=>Math.abs(r.deplacementMm[s][0]-pr[s][0])));
-        r.devVertMm=Math.max(...SIDES.map(s=>Math.abs(r.deplacementMm[s][1]-pr[s][1])));
-        const m=ref.get(cut)?.mic;
-        if(m)r.predictionEcartMm=Math.max(...SIDES.map(s=>Math.hypot(pr[s][0]-m[s][1],pr[s][1]-m[s][2])));
-      }
-      const dev=a=>a.positions.left[2]-a.positions.right[2];
-      if(utilises.length&&positions){
-        const ref_=med(utilises.map(dev)),d=(positions.left[2]-positions.right[2]);
-        r.deversEcartMm=Math.abs(d-ref_)*1000;
-        const g=a=>C.distance(a.positions.left,a.positions.right)*1000;
-        r.ecartementMm=C.distance(positions.left,positions.right)*1000;
-        r.ecartVoisinMm=Math.abs(r.ecartementMm-med(utilises.map(g)));
-      }
+      const mic=ref.get(cut)?.mic;
+      if(mic)r.ecart=ecartAMic(cap,positions,mic);
+      for(const k of ['devLatMm','devVertMm','deversEcartMm','ecartementMm','ecartVoisinMm'])if(m[k]!==undefined)r[k]=m[k];
+      if(m.prediction&&mic)r.predictionEcartMm=Math.max(...SIDES.map(s=>Math.hypot(m.prediction[s][0]-mic[s][1],m.prediction[s][1]-mic[s][2])));
     }
     /* Règle prudente : elle ne juge que les poses NOUVELLES (un cut que le lot réel avait différé) ; les autres restent ce qu'elles sont. */
     if(positions&&v.regle&&temoin?.resultats.get(cut)?.posee===false){
       const motif=regleAccepte(v.regle,r,zones?.get(cut)||null,temoin.resultats.get(cut));
       if(motif){positions=null;r.posee=false;r.refuseRegle=motif;}
     }
-    resultats.set(cut,r);
+    resultats.set(cut,r);decisions.set(cut,decision);commandes.set(cut,{action:command.action,reason:command.reason??null});
     /* L'appui proposé attend la validation du cut ; le lot valide ce qu'il pose. */
     if(positions&&decision.anchor&&L.commandsPositions(decision,command)&&decision.positions)
       memoire.pending.push({identity:{part:identity.part,cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage,profondeur});
   }
-  return {resultats,ancresParCut};
+  return {resultats,ancresParCut,decisions,commandes};
 }
 
 
 /* ------------------------------------------------------------------ règle prudente */
-/* Règle de recentrage prudente, évaluée seulement sur les poses nouvelles. Chaque seuil nul est inactif.
- *   etages      étages de décision admis pour une pose nouvelle ('window' : le moteur retrouve lui-même les deux rails autour de la voie ;
- *               'choice' : un minimum local choisi près de la voie, avec un critère plus lâche — 5 points de dessus, 3 de flanc) ;
- *   fenetreMm   écart maximal de la pose à la voie prédite (plus étroit que la garde de continuité de 30 mm) ;
- *   confMin     confiance minimale du moteur sur les DEUX rails (étage window) ;
- *   vertMm      écart vertical maximal de la pose à la voie prédite (la garde de continuité ne regarde que le latéral) ;
- *   ecartVoisinMm écart maximal de l'écartement de la pose à celui des appuis (la garde du lot est à 20 mm) ;
- *   deversMm    écart maximal du dévers (hauteur gauche − droite) à celui des appuis de la prédiction ;
- *   cohMm       écart maximal entre les déplacements latéraux des deux rails, depuis la pose de départ ;
- *   cohVMm      idem en vertical (dévers) ;
- *   appuisMin   nombre minimal d'appuis de la prédiction ;
- *   profMax     profondeur de chaîne maximale (poses nouvelles consécutives sans pose du moteur seul) ;
- *   sansAncre   seulement les cuts que le lot différait faute d'appui (`no-anchor`) ;
- *   adv         en zone d'ADV : { etages, cohMm, appuisMin, profMax } plus stricts, ou `false` pour interdire toute pose nouvelle en ADV. */
-function regleAccepte(g,r,zone,temoinRow=null){
-  const adv=!!zone?.adv;
-  const k=adv&&g.adv&&typeof g.adv==='object'?{...g,...g.adv}:g;
-  if(adv&&g.adv===false)return 'adv-interdit';
-  if(g.sansAncre&&temoinRow&&temoinRow.reason!=='no-anchor')return 'avec-ancre';
-  if(k.etages&&!k.etages.includes(r.stage))return 'etage';
-  if(k.fenetreMm!=null&&r.fromPredictionMm!=null&&r.fromPredictionMm>k.fenetreMm)return 'fenetre';
-  if(k.appuisMin!=null&&(r.anchorsUsed||[]).length+(r.validatedAnchors||[]).length<k.appuisMin)return 'appuis';
-  if(k.profMax!=null&&r.profondeur>k.profMax)return 'profondeur';
-  if(k.confMin!=null&&r.stage==='window'){
-    /* Un rail retenu par S1 n'a pas de confiance calibrée (zéro par construction) : il n'est pas jugé sur ce seuil. */
-    const c=SIDES.map(s=>r.moteur?.[s]?.s1?Infinity:r.moteur?.[s]?.confiance);
-    if(!c.every(x=>Number.isFinite(x)||x===Infinity)||!c.every(x=>x>=k.confMin))return 'confiance';
-  }
-  if(k.vertMm!=null&&r.devVertMm!=null&&r.devVertMm>k.vertMm)return 'vertical';
-  if(k.deversMm!=null&&r.deversEcartMm!=null&&r.deversEcartMm>k.deversMm)return 'devers';
-  if(k.ecartVoisinMm!=null&&r.ecartVoisinMm!=null&&r.ecartVoisinMm>k.ecartVoisinMm)return 'ecartement-voisin';
-  if(k.cohMm!=null&&r.deplacementMm&&Math.abs(r.deplacementMm.left[0]-r.deplacementMm.right[0])>k.cohMm)return 'coherence';
-  if(k.cohVMm!=null&&r.deplacementMm&&Math.abs(r.deplacementMm.left[1]-r.deplacementMm.right[1])>k.cohVMm)return 'coherence-vertical';
-  return null;
-}
+/* Règle de recentrage prudente, évaluée seulement sur les poses nouvelles : celle du module commun (`V.regle`, clés et motifs
+ * décrits là-bas). Chaque seuil nul est inactif. */
+const regleAccepte=V.regle;
 
 /* ------------------------------------------------------------------ jugement et agrégats */
 function jugement(r){
@@ -596,6 +504,41 @@ function executer(ctx,ids,log=()=>{}){
 }
 
 
+/* ------------------------------------------------------------------ ombre d'Orbite rejouée */
+/* L'ombre `voie-predite-ombre` de l'extension (`V.evaluerDiffere`, le code même du service worker), rejouée le long d'un lot :
+ * pour chaque cut que le lot réel (le témoin) a différé, ce qu'aurait donné la règle prudente, vue déplacée, avec les appuis
+ * réels du lot et les poses de l'ombre comme appuis de l'ombre. Sert à deux choses : (1) vérifier que l'extension pose ce que
+ * pose la règle du rejeu (concordance), (2) mesurer le poids des événements ajoutés aux exports (l'enveloppe est celle du
+ * journal : identifiants, horodatage, type, lot, séance). Rend { evenements, resume }. */
+function ombreLot(ctx,temoin,{seuils=V.REGLE_PRUDENTE,jugement=V.JUGEMENT}={}){
+  const {captures,ordre,cache,ref}=ctx;
+  const moteur=moteurMemoise(cache),mem=V.creerMemoire('rejeu'),evenements=[];
+  for(const cut of ordre){
+    const cap=captures.get(cut),t=temoin.resultats.get(cut),decision=temoin.decisions?.get(cut);if(!cap||!t||!decision)continue;
+    const identity=K.completeIdentity(cap.identity);
+    V.noterDecisionReelle(mem,identity,decision);
+    if(t.posee)continue;
+    const science=moteur.scientificProposeBoth(cap);
+    let runtime=null;try{runtime=Shadow.toRuntimeRails(science);}catch{runtime=null;}
+    const capture={identity,rails:cap.rails,pointsSceneRelative:cap.pointsSceneRelative,visibleByClipBoxes:cap.visibleByClipBoxes,camera:cap.camera,viewCaptures:cap.viewCaptures};
+    const {evenement}=V.evaluerDiffere({mem,capture,science:{rails:science.rails,summary:science.summary},ancresReelles:temoin.ancresParCut.get(cut)||[],decisionReelle:decision,
+      commandeReelle:temoin.commandes?.get(cut)||null,Shadow:moteur,runtimeRails:runtime,before:cap.rails,expectedPoses:K.expectedPoses,seuils});
+    evenements.push(evenement);
+  }
+  /* Enveloppe d'un événement du journal (identifiants de même longueur que ceux de l'extension) ; seuils sur le premier seulement. */
+  const enveloppe=(e,i)=>({eventId:'00000000-0000-4000-8000-000000000000',timestamp:'2026-01-01T00:00:00.000Z',type:'voie-predite-ombre',schema:1,
+    batchId:'00000000-0000-4000-8000-000000000000',sessionId:'00000000-0000-4000-8000-000000000000',...e,...(i===0?{seuils:{...seuils,etages:[...seuils.etages]}}:{})});
+  const lignes=evenements.map((e,i)=>JSON.stringify(enveloppe(e,i)));
+  const octets=lignes.reduce((n,l)=>n+Buffer.byteLength(l)+1,0),gz=lignes.length?zlib.gzipSync(lignes.join('\n')+'\n').length:0;
+  const juges={juste5:0,juste10:0,fausse:0,'mauvaise-voie':0,'non-jugee':0};
+  for(const e of evenements.filter(x=>x.verdict.posable)){const m=ref?.get(e.identity.cut)?.mic;juges[V.juger(m?V.ecartPose(e.poseMm,m):null,jugement)]++;}
+  const raisons={};for(const e of evenements.filter(x=>!x.verdict.posable)){const k=String(e.verdict.raison).split(':')[0];raisons[k]=(raisons[k]||0)+1;}
+  const gestes={};for(const e of evenements.filter(x=>x.verdict.posable)){const k=e.vue?.geste||'aucun';gestes[k]=(gestes[k]||0)+1;}
+  return {evenements,lignes,resume:{differes:evenements.length,posables:evenements.filter(e=>e.verdict.posable).length,recalcules:evenements.filter(e=>e.recalcule).length,
+    jugement:{juste5:juges.juste5,juste10:juges.juste5+juges.juste10,fausse:juges.fausse,mauvaiseVoie:juges['mauvaise-voie'],nonJugees:juges['non-jugee'],seuils:{...jugement}},
+    gestes,refus:raisons,octetsJson:octets,octetsParEvenement:evenements.length?Math.round(octets/evenements.length):0,octetsGzip:gz}};
+}
+
 /* ------------------------------------------------------------------ fixture synthétique */
 /* Une voie droite le long de x, deux rails à 1 430 mm, un champignon de 64 mm (dessus à plat, flanc intérieur vertical), des points
  * de dessus et de flanc, des points de ballast, une caméra orthographique de ±200 mm par rail (comme ESV). Les `premiers` cuts ont
@@ -668,6 +611,7 @@ function lireArgs(argv){
     const a=argv[i],val=()=>argv[++i];
     if(a==='--corpus')o.corpus.push(val());else if(a==='--journal')o.journal=val();else if(a==='--jointure')o.jointure=val();
     else if(a==='--lignes')o.lignes=val();else if(a==='--cache')o.cache=val();else if(a==='--detail')o.detail=val();else if(a==='--csv')o.csv=val();else if(a==='--zones')o.zones=val();else if(a==='--sortie')o.sortie=val();
+    else if(a==='--ombre')o.ombre=val();
     else if(a==='--variantes')o.variantes=val().split(',');else if(a==='--essai')o.essai=true;else if(a==='--liste')o.liste=true;
     else if(a==='--rapport'){o.rapport=[];while(i+1<argv.length&&!argv[i+1].startsWith('--'))o.rapport.push(argv[++i]);}
     else throw Error('Option inconnue : '+a);
@@ -680,7 +624,7 @@ function main(argv=process.argv.slice(2)){
   if(o.rapport){console.log(rapportTexte(o.rapport.map(lireJson)));return;}
   if(o.essai){const ctx=fixtureSynthetique(),res=executer(ctx,['temoin','vue-reelle','vue-serie'],m=>console.error(m));
     console.log(rapportTexte(res.sorties.map(x=>({variantes:[x.synthese]}))));return;}
-  if(!o.corpus.length||!o.journal||!o.jointure)throw Error('Usage : --corpus SEG [--corpus SEG...] --journal J --jointure JT [--lignes L] [--zones Z] [--variantes ids] [--sortie S]');
+  if(!o.corpus.length||!o.journal||!o.jointure)throw Error('Usage : --corpus SEG [--corpus SEG...] --journal J --jointure JT [--lignes L] [--zones Z] [--variantes ids] [--sortie S] [--ombre O.jsonl]');
   const ctx=preparer(o);
   console.error(`captures ${ctx.captures.size}, cuts rejoués ${ctx.ordre.length}${ctx.repere?`, T sur ${ctx.repere.paires} paires, ${ctx.repere.cadres} cadre(s) de scène (écart max ${r2(ctx.repere.ecartMaxMm)} mm)`:''}`);
   const res=executer(ctx,o.variantes,m=>console.error(m));
@@ -690,8 +634,11 @@ function main(argv=process.argv.slice(2)){
   if(o.detail)fs.writeFileSync(o.detail,JSON.stringify(Object.fromEntries(res.sorties.map(x=>[x.synthese.id,x.detail]))));
   /* Un CSV par variante (hors dépôt) : pour chaque cut, la pose du rejeu, son jugement et ce que la vue exige. */
   if(o.csv)for(const x of res.sorties)fs.writeFileSync(o.csv.replace('{id}',x.synthese.id),csvVariante(x.detail));
+  /* `--ombre FICHIER.jsonl` : l'ombre d'Orbite rejouée sur le lot (événements tels que l'extension les consignerait). */
+  if(o.ombre){const om=ombreLot(ctx,res.temoin);fs.writeFileSync(o.ombre,om.lignes.join('\n')+(om.lignes.length?'\n':''));sortie.ombre=om.resume;
+    console.error(`ombre voie-predite : ${om.resume.differes} différés, ${om.resume.posables} posables (${om.resume.jugement.juste10} justes à 10 mm, ${om.resume.jugement.fausse} fausses, ${om.resume.jugement.mauvaiseVoie} mauvaise voie), ${om.resume.octetsJson} octets (${om.resume.octetsGzip} compressés)`);}
   if(o.sortie)fs.writeFileSync(o.sortie,JSON.stringify(sortie,null,1)+'\n');else console.log(JSON.stringify(sortie,null,1));
 }
 if(require.main===module){try{main();}catch(e){console.error(e.stack||e);process.exitCode=1;}}
 module.exports={VARIANTES,variante,chargerCaptures,lireJournal,lireReference,lireZones,estimerT,fenetreListe,vueNecessaire,camerasLarges,localMm,ecartAMic,
-  fixtureSynthetique,regleAccepte,csvVariante,rapportTexte,rejouerLot,executer,synthese,validerTemoin,validerB1,detail,lireCache,ecrireCache,jugement,compter,statsVue,preparer,positionMic,main,FAUX_MM,MAUVAISE_VOIE_MM};
+  fixtureSynthetique,regleAccepte,ombreLot,csvVariante,rapportTexte,rejouerLot,executer,synthese,validerTemoin,validerB1,detail,lireCache,ecrireCache,jugement,compter,statsVue,preparer,positionMic,main,FAUX_MM,MAUVAISE_VOIE_MM};
