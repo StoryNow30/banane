@@ -2251,3 +2251,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Décision** : l'ombre reste active pendant le lot, dans la test 5. La différer en fin de lot coûterait environ 190 Mo de mémoire et serait perdue au redémarrage du service worker. Un garde-fou est à prévoir si un poste plus lent montre un retard : plafonner la relance.
 - La test 5 relèvera `ms` sur chaque événement d'ombre : il est déjà dans l'événement.
 - Limites : une seule partie, banc sous Node et non Chromium, rapport de vitesse estimé sur le moteur seul.
+
+## D-155 — Réponses de Mic à l'audit, cap sur l'autonomie, nuit à gros moyens (16 octobre 2026)
+
+- **Porte d'activation** : Mic trouve les 5 % trop sévères. Proposition, à confirmer dans le cahier v1.1 : jamais de pose sur la mauvaise voie, et pas plus de faux qu'Orbite aujourd'hui (4 à 9 % de faux verts selon les parties), mesurés en ombre sur des parties neuves. Il faut environ 30 à 40 poses, soit une ou deux parties à voie décalée.
+- **Mémoire de série (G1 b)** : Mic ne veut pas d'un mode où Ariane dépend de ses corrections pendant le lot. Le but est l'autonomie, avec les règles métier. G1 (b) reste un outil de mesure dans l'Écho, pas un mode de travail. Priorité à la voie prédite, au déplacement de la vue et aux règles métier.
+- **Bruit de la référence (U6)** : une seconde relecture à l'aveugle est impossible dans ESV, car Mic y verrait sa propre correction. Le bruit sera mesuré sur les données existantes, sans travail pour Mic.
+- **Noms de modèles d'IA sur `main`** : Mic donne son accord. Retirés de `main` (4c9fee0), documents seulement, rien sous `src/`.
+- **Nuit du 16 au 17** : Mic demande de grands chantiers aux niveaux forts, avec relance après chaque réinitialisation. Le plan et les règles assouplies sont dans `fiches/REPRISE_AUTONOME.md`.
+- Rien n'est activé au terrain sans Mic.

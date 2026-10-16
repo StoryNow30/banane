@@ -39,3 +39,23 @@ Demande de Mic (D-124) : avancer sur tous les chantiers possibles pendant son ab
 
 - Lourd : **P1 bis, plafond vertical seulement** (`claude/50-p1-vertical` depuis `claude/50-base`) : même réglage coupé par défaut, plafond appliqué à l'axe vertical seulement, latéral refusé comme avant ; rejeu `tools/p1-plafond.cjs` identique ; vérifier le cut de passage à niveau de la partie 27 et le ricochet ; reprendre `capped`/`rest*` dans le journal compact si c'est hors `src/engine.js`.
 - Léger : S4 maquette ESV dans verify, étape 1 (inventaire de `claude/esv-locale-audit`, plan d'intégration court).
+
+## Nuit du 16 au 17 octobre 2026 (D-155) : gros moyens
+
+Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts quand c'est utile, relance après chaque réinitialisation comme la nuit d'avant. Beaucoup de crédits restent avant la réinitialisation hebdomadaire du dimanche. Les règles 5 et 6 ci-dessus sont donc assouplies cette nuit :
+- jusqu'à **4 chantiers lourds** en même temps, au niveau fort par défaut pour la conception et le code, et au niveau maximal pour les relectures avant livraison ;
+- pas de plafond de 60 % de la fenêtre ;
+- garder le verrou `wt/lourd.lock` et `nice` : la machine sature au-delà de 4 rejeux.
+
+**Cap fixé par Mic** : l'autonomie d'Ariane en appliquant les règles métier. On ne dépend pas des corrections de Mic pendant le lot (D-155).
+
+**Vague 1** (lancée le 16 au soir) :
+1. `claude/50-deplacer-vue` (fort) : relevés sur la maquette ESV (`claude/esv-locale-audit`), pièce `amenerDansLaVue` coupée par défaut, et dans l'Écho le relevé des glissers de Mic (longueur, durée, caméra).
+2. `claude/50-regles-metier` (fort) : règles métier de Mic en ombre puis prêtes à activer (PN : contrôler chaque cut ; écartement proche de 1 435 ; marges PN et ADV), rejouées sur toutes les parties, avec chiffres.
+3. `claude/50-faux-verts` (fort) : détecteur des faux verts près des rouges, des PN et des aiguilles (M1 et M5), avec chiffres par partie, et ce qu'Ariane ferait de différent.
+4. `claude/50-bruit-reference` (rapide) : bruit de la référence de Mic, mesuré sur les données existantes (validations doubles, recoupements avec le débutant).
+
+**Vague 2** (au réveil suivant, quand la vague 1 est rentrée) :
+- **4.9.5 test 5** : base 5.0, ombres, relevé des glissers, règles métier **en ombre**, avec paquet et consigne ;
+- **relecture au niveau maximal** du diff de la test 5 avant de l'envoyer à Mic ;
+- **cahier v1.1** : proposition de porte pour Mic (« jamais la mauvaise voie et pas plus de faux qu'Orbite aujourd'hui, en ombre sur parties neuves ») et autres amendements de l'audit (I7).
