@@ -78,10 +78,10 @@ test('écartement de la partie : référence = médiane des lignes valides vues 
  const mem=R.creerMemoire('lot-h');const L=(i,g,s='valid',o={})=>({i,statut:s,operateur:false,vu:false,fraiche:false,ecartementMm:g,...o});
  /* Pas assez de lignes : aucune référence, aucun verdict. */
  assert.equal(R.lignes(mem,[L(1,1470)],{cut:1}).reference.mm,null);
- const rows=[];for(let i=10;i<40;i++)rows.push(L(i,1437+(i%3)));rows.push(L(40,1471),L(41,1452.4),L(42,1420,'invalid'),L(43,1469,'valid',{operateur:true}));
+ const rows=[];for(let i=10;i<40;i++)rows.push(L(i,1437+(i%3)));rows.push(L(40,1471),L(45,1452.4),L(42,1420,'invalid'),L(43,1469,'valid',{operateur:true}));
  const r=R.lignes(mem,rows,{cut:42});
  assert.equal(r.reference.mm,1438);assert.ok(r.reference.lignes>=30);
- assert.deepEqual(r.verts.map(v=>[v.i,v.raisons]),[[40,['ecartement']]],'41 est à 14,4 mm : sous le seuil ; 42 est rouge ; 43 a été traité par l\'opérateur');
+ assert.deepEqual(r.verts.map(v=>[v.i,v.raisons]),[[40,['ecartement']]],'45 est à 14,4 mm : sous le seuil ; 42 est rouge ; 43 a été traité par l\'opérateur');
  assert.equal(r.verts[0].ecartMm,33);
  assert.deepEqual(R.lignes(mem,rows,{cut:43}).verts,[],'déjà signalé : pas deux fois');
 });

@@ -295,6 +295,16 @@
    * l'observation « continuité » : pose de départ et points capturés avant le premier geste, jamais la référence humaine du cut. Écho passif :
    * rien n'est posé ni commandé. `actif:false` : rien. */
   const memoireDifferesOmbre = Object.freeze({ actif: true, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
+  /* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, fiches/REGLES_METIER.md). PN avec ses marges (« contrôler chaque cut »),
+   * grappe de différés (noyau d'aiguille, grappe d'invalides), validation en place dans une zone, verts à contrôler (écartement à
+   * plus de 15 mm de la médiane de la partie, intérieur et marges d'une grappe, voisins d'un isolé, plage d'un PN).
+   * `ombre` (livré : true) : à chaque cut du lot, l'événement `regles-metier-ombre` consigne la zone détectée, les règles
+   * déclenchées et ce qu'Ariane AURAIT fait ; la décision, la commande, la pose et les appuis sont identiques avec et sans.
+   * `actif` (livré : false) et `regles` (toutes à false) : chemin d'activation, COUPÉ. Seul Mic l'ouvre. Une règle activée ne
+   * peut que transformer en différé un cut que le lot allait valider ; elle ne pose jamais à un nouvel endroit. Seuils figés :
+   * datasets/reglages-figes.json, `reglesMetier`. */
+  const reglesMetier = Object.freeze({ ombre: true, actif: false,
+    regles: Object.freeze({ 'zone-validation-en-place': false, 'pn-chaque-cut': false, 'grappe-differes': false }) });
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
@@ -391,6 +401,7 @@
       { groupe: 'Continuité', nom: 'Correction verticale en ombre (P8)', valeur: ombreVerticaleRefusee.actif ? 'consignée seulement (' + String(ombreVerticaleRefusee.mm).replace('.', ',') + ' mm sur les rails à convention refusée)' : 'coupée', pourquoi: 'Note dans la décision la pose qu’aurait donnée une correction verticale apprise (Mic remonte ces rails, D-140), à côté de la pose réelle. Jamais appliquée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Voie prédite en ombre (Orbite)', valeur: voiePrediteOmbre.actif ? 'consignée seulement (règle prudente D-147, à chaque cut différé)' : 'coupée', pourquoi: 'Note ce qu’aurait posé le moteur recentré sur la voie du lot, et le geste de vue qu’il aurait fallu. Jamais posé, aucune vue déplacée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire des différés en ombre (Écho)', valeur: memoireDifferesOmbre.actif ? 'consignée seulement (série de différés, ' + memoireDifferesOmbre.K + ' dernières corrections)' : 'coupée', pourquoi: 'Note, avant de lire ta référence sur le cut, la pose qu’aurait donnée la voie de tes corrections précédentes de la série. Rien n’est posé ni commandé.' },
+      { groupe: 'Continuité', nom: 'Règles métier de Mic en ombre (Orbite)', valeur: reglesMetier.ombre ? (reglesMetier.actif ? 'ACTIVES pour : ' + (Object.keys(reglesMetier.regles).filter(k => reglesMetier.regles[k]).join(', ') || 'aucune règle') : 'consignées seulement (PN et marges, grappes de différés, verts à contrôler) ; activation coupée') : 'coupées', pourquoi: 'Note à chaque cut la zone reconnue (passage à niveau, grappe de différés), la règle de Mic qui se déclenche et ce qu’Ariane aurait fait : différer au lieu de valider, ou te signaler un vert à contrôler. Rien n’est posé ni différé tant que Mic n’active pas.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -408,5 +419,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, reglesMetier, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });
