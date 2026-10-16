@@ -335,6 +335,14 @@
      * quelques millisecondes APRÈS la touche (−6 ms sur 2 validations de la partie 24), avant que la validation ait pu
      * changer quoi que ce soit. Au-delà, la référence reste « horaire incertaine » (saut d'horloge, état en retard). */
     freshnessSkewMs: 50,
+    /* D-143 : l'écriture serveur de validation (PUT 2xx, les deux rails, rattachée à la visite par numéro de ligne) fait foi
+     * sur la référence humaine. Si ses rails diffèrent de la référence de plus de ce seuil (mètres, 1 mm), la référence est
+     * remplacée (l'ancienne est gardée). Observation seulement : aucune requête ESV, aucune écriture. */
+    ecritureReferenceSeuilM: 0.001,
+    /* D-143 : un changement de rails observé dans cette fenêtre (ms) après la touche de validation est nommé
+     * (`rail-change-after-validate-intent`) : ESV applique parfois le déplacement APRÈS la touche, la référence lue à la
+     * touche peut alors être périmée. */
+    changementApresIntentionMs: 150,
   });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),

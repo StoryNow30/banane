@@ -22,6 +22,29 @@
   let local=null;if(Array.isArray(inv)&&inv.length===16){const f=K.C.point(inv,a),t=K.C.point(inv,b);local=t.map((v,i)=>mm(v-f[i]));}
   return {status:'measured',changed:distance>thresholdM,identical:poseEqual(from,to),distanceMm:mm(distance),localMm:local,thresholdMm:thresholdM*1000};};
  const sameCutKey=(a,b)=>K.cutKey(a)===K.cutKey(b);
+ /* D-143 : la référence humaine corrigée par l'écriture serveur de validation. ESV écrit la pose finale des deux rails (corps
+  * `XLeftEdge`…`ZRightEdge`, même repère que `positionSceneRelative`). Si cette écriture diffère de plus de
+  * `settings.echo.ecritureReferenceSeuilM` (1 mm) de l'état de référence, la référence lue à la touche était périmée (un clic
+  * sur un rail quelques ms avant la touche : ESV applique le déplacement après). Rend null s'il n'y a rien à corriger, sinon
+  * { state, poseFrom, sides, maxDiffMm, diffMm } : `state` est le dernier état observé s'il concorde avec l'écriture à 1 mm près
+  * (`poseFrom: 'last-observed-state'`), sinon la référence dont les positions des rails écrits sont celles de l'écriture
+  * (`poseFrom: 'write'`, l'orientation du repère profil est gardée). Fonction pure, partagée avec tools/jointure-echo-orbite.cjs. */
+ const WRITE_EDGES={left:['XLeftEdge','YLeftEdge','ZLeftEdge'],right:['XRightEdge','YRightEdge','ZRightEdge']};
+ const writeRails=body=>{const out={};if(body&&typeof body==='object')for(const side of SIDES){const v=WRITE_EDGES[side].map(key=>body[key]);if(v.every(x=>typeof x==='number'&&Number.isFinite(x)))out[side]=v;}return out;};
+ const railPosition=(state,side)=>{const p=state?.rails?.[side]?.positionSceneRelative;return Array.isArray(p)&&p.length>=3&&p.slice(0,3).every(Number.isFinite)?p.slice(0,3):null;};
+ const pointDistance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+ function referenceParEcriture(referenceState,lastObserved,body,toleranceM=S.echo?.ecritureReferenceSeuilM??0.001){
+  const written=writeRails(body),sides=SIDES.filter(side=>written[side]);if(!sides.length||!referenceState?.rails)return null;
+  const diffMm={};let max=0;
+  for(const side of sides){const p=railPosition(referenceState,side),d=p?pointDistance(p,written[side]):null;
+   diffMm[side]=d===null?null:Math.round(d*1e4)/10;if(d===null||d>toleranceM)max=Math.max(max,d===null?Infinity:d);}
+  if(!(max>0))return null;
+  const concordant=!!lastObserved&&sides.every(side=>{const p=railPosition(lastObserved,side);return p&&pointDistance(p,written[side])<=toleranceM;});
+  const state=K.clone(concordant?lastObserved:referenceState);
+  if(concordant){for(const side of SIDES)if(!state.rails?.[side]&&referenceState.rails[side]){(state.rails??={})[side]=K.clone(referenceState.rails[side]);}}
+  else for(const side of sides){const old=referenceState.rails[side];
+   state.rails[side]={positionSceneRelative:written[side].slice(),...(Array.isArray(old?.sceneRelativeToProfileLocal)?{sceneRelativeToProfileLocal:K.clone(old.sceneRelativeToProfileLocal)}:{}),positionSource:'validation-write'};}
+  return {state,poseFrom:concordant?'last-observed-state':'write',sides,diffMm,maxDiffMm:Number.isFinite(max)?Math.round(max*1e4)/10:null};}
  class Sessions{
   /* Réglages centralisés dans src/settings.js ; ces alias restent exposés pour
    * les tests et les outils qui les lisaient déjà. */
@@ -272,7 +295,11 @@
     if(/rail/.test(data.effect?.kind||'')){(record.railPoseHistory??=[]).push({observedAt:data.state.capturedAt,eventSeq:logged.eventSeq,afterGesture:record.operatorEvents.length>0,
       rails:Object.fromEntries(SIDES.map(side=>[side,data.state.rails?.[side]?{positionSceneRelative:K.clone(data.state.rails[side].positionSceneRelative),
        railLocalToSceneRelative:K.clone(data.state.rails[side].railLocalToSceneRelative),profileLocalToSceneRelative:K.clone(data.state.rails[side].profileLocalToSceneRelative)}:null]))});
-     if(record.railPoseHistory.length>64){record.railPoseHistory.shift();this.partialReason(record,'rail-pose-history-truncated');}}
+     if(record.railPoseHistory.length>64){record.railPoseHistory.shift();this.partialReason(record,'rail-pose-history-truncated');}
+     /* D-143 : un rail qui bouge juste après la touche de validation (≤ `changementApresIntentionMs`) : la référence lue à la
+      * touche peut être périmée ; l'écriture serveur de validation la corrige (noteServerWriteNow). */
+     const validate=(record.operatorIntents||[]).filter(item=>item.intent==='VALIDATE').pop(),after=validate?Date.parse(data.state.capturedAt||'')-eventTime(validate):NaN;
+     if(validate&&after>=0&&after<=(S.echo?.changementApresIntentionMs??150))this.partialReason(record,'rail-change-after-validate-intent');}
     for(const reason of data.state.partialReasons||[])this.partialReason(record,reason);this.e.s.current=K.clone(data.state);await this.saveRecord(record);return {saved:true,eventSeq:logged.eventSeq};
    }
    if(type==='capture-checkpoint'){
@@ -419,7 +446,7 @@
    const reference=record.humanFinalReference,referenceReasons=[];
    if(!sole||sole.intent!=='VALIDATE')referenceReasons.push(record.multiIntent?'multiple-operator-intents-observed':sole?.intent==='SKIP'?'operator-skip-observed':'validated-reference-not-observed');
    if(!reference?.state)referenceReasons.push('human-final-reference-missing');if(reference?.association?.identityMatched===false)referenceReasons.push('human-final-reference-identity-mismatch');
-   if(reference?.association?.freshnessMs===null||reference?.association?.freshnessMs<-(S.echo?.freshnessSkewMs??50)||reference?.association?.freshnessMs>1500)referenceReasons.push('human-final-reference-not-freshly-observed');
+   if(reference?.source!=='validation-write'&&(reference?.association?.freshnessMs===null||reference?.association?.freshnessMs<-(S.echo?.freshnessSkewMs??50)||reference?.association?.freshnessMs>1500))referenceReasons.push('human-final-reference-not-freshly-observed');
    if(!record.navigationObserved&&!record.serverConfirmed)referenceReasons.push('decision-effect-not-observed');
    for(const side of SIDES){const eligibility=record.geometryEligibility[side],reasons=[...eligibility.reasons,...referenceReasons];
     if(!reference?.state?.rails?.[side])reasons.push('human-final-rail-state-missing');eligibility.referenceStatus=reference?.status||'not-observed';eligibility.reasons=unique(reasons);
@@ -467,8 +494,27 @@
     joinedTo:n.current?.visitId===record.visitId?'current-visit':'closed-visit',joinMethod:method,durationMs:write.durationMs??null};
    (record.serverWrites??=[]).push(entry);if(record.serverWrites.length>16)record.serverWrites.shift();
    if(kind==='validation'&&Number.isInteger(entry.status)&&entry.status>=200&&entry.status<300){record.serverConfirmed=true;
-    record.serverConfirmationStatus='observed-validation-write-'+entry.status;record.serverConfirmedAt=entry.at;}
+    record.serverConfirmationStatus='observed-validation-write-'+entry.status;record.serverConfirmedAt=entry.at;
+    /* D-143 : l'écriture de validation fait foi sur la référence humaine (rattachement par numéro de ligne seulement). */
+    if(method==='row-index')this.referenceFromWrite(record,entry,at);}
    if(record.endedAt!==null)this.classify(record);await this.saveRecord(record);return entry;}
+  /* D-143 : la référence lue à la touche est périmée si ESV a appliqué le déplacement après la touche (clic sur un rail
+   * quelques ms avant). Si les rails de l'écriture de validation diffèrent de plus de 1 mm de `humanFinalReference`, celle-ci
+   * est remplacée (dernier état observé s'il concorde avec l'écriture, sinon positions de l'écriture) ; l'ancienne reste dans
+   * `humanFinalReferences`, marquée remplacée. La classification est refaite par l'appelant. Aucune requête ESV. */
+  referenceFromWrite(record,entry,writeAt){const current=record.humanFinalReference;
+   if(!current?.state||!(writeAt>=eventTime(current)))return false;
+   const fix=referenceParEcriture(current.state,record.lastObserved,entry.body);if(!fix)return false;
+   const stateAt=Date.parse(fix.state.capturedAt||''),freshness=fix.poseFrom==='last-observed-state'&&Number.isFinite(stateAt)?eventTime(current)-stateAt:0;
+   /* `candidate-observed` : les outils en aval ne retiennent que ce statut ; la pose vient d'une écriture observée, pas d'un doute d'horloge. */
+   const next={status:'candidate-observed',state:fix.state,observedAt:current.observedAt,eventSeq:current.eventSeq,decisionKey:current.decisionKey??null,source:'validation-write',
+    association:{identityMatched:current.association?.identityMatched!==false,freshnessMs:freshness,source:'validation-write',eventTimeStamp:current.association?.eventTimeStamp??null,
+     stateCapturedAt:fix.state.capturedAt||null,reviewed:false},
+    replacedByWrite:{eventId:entry.eventId,at:entry.at,status:entry.status,rowIndex:entry.rowIndex,poseFrom:fix.poseFrom,sides:fix.sides,diffMm:fix.diffMm,maxDiffMm:fix.maxDiffMm,thresholdMm:(S.echo?.ecritureReferenceSeuilM??0.001)*1000},
+    replaces:{status:current.status,stateCapturedAt:current.state?.capturedAt||null,eventSeq:current.eventSeq,source:current.source||current.association?.source||null}};
+   const list=record.humanFinalReferences??=[],index=list.findIndex(item=>item.eventSeq===current.eventSeq&&item.observedAt===current.observedAt&&!item.supersededBy);
+   if(index>=0)list[index].supersededBy='validation-write';else list.push({...K.clone(current),supersededBy:'validation-write'});
+   list.push(next);record.humanFinalReference=next;record.humanFinalReferenceSource='validation-write';return true;}
   /* 4.9.0.18 (AM-05) : la page ESV observée a été rechargée, a quitté ESV ou l'onglet a été fermé. L'observateur de la
    * page a disparu avec elle : la visite en cours est close telle qu'elle est (rien d'inventé), la période interrompue,
    * la session mise en pause « adaptateur sans réponse ». La reprise (automatique ou « Reprendre ») ouvre une période neuve. */
@@ -801,5 +847,5 @@
    return {format:'banane-native-session-v2',version:K.VERSION,exportedAt:iso(),session:K.clone(n),records,events,closureSummary,cloudIds:n.cloudIds.slice()};
   }
  }
- return {Sessions,poseEqual};
+ return {Sessions,poseEqual,referenceParEcriture};
 });

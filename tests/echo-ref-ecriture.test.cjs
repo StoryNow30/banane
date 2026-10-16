@@ -62,12 +62,13 @@ test('D-143 : l’écriture de validation de la ligne remplace la référence ; 
  const r=f.record('v1');
  assert.equal(r.humanFinalReferenceSource,'validation-write');
  assert.equal(r.humanFinalReference.source,'validation-write');
+ assert.equal(r.humanFinalReference.status,'candidate-observed','les outils en aval ne retiennent que ce statut');
  assert.ok(mm(pos(r.humanFinalReference.state,'right'),pos(b,'right'))<0.001,'la référence porte la pose de l’écriture');
  assert.ok(mm(pos(r.humanFinalReference.state,'left'),pos(b,'left'))<0.001);
  assert.equal(r.humanFinalReferences.length,2);
  assert.ok(mm(pos(r.humanFinalReferences[0].state,'right'),pos(a,'right'))<0.001,'l’ancienne référence reste dans humanFinalReferences');
  assert.equal(r.humanFinalReferences[0].supersededBy,'validation-write');
- assert.equal(r.humanFinalReferences[1],r.humanFinalReference);
+ assert.deepEqual(r.humanFinalReferences[1],r.humanFinalReference);
  assert.equal(r.humanFinalReference.replaces?.eventSeq,r.humanFinalReferences[0].eventSeq);
  assert.ok(Math.abs(r.humanFinalReference.replacedByWrite.maxDiffMm-190)<0.5,String(r.humanFinalReference.replacedByWrite.maxDiffMm));
  assert.equal(r.observedLabelCandidate,'VALIDATE_CORRECTED_RIGHT_ONLY');
@@ -178,4 +179,10 @@ test('D-143 : une écriture qui arrive après la fermeture de la visite corrige 
  await f.sessions.noteServerWrite(f.ecriture(5000,100,b.rails));                 // 4,7 s après la sortie du cut, dans le délai de jointure
  assert.equal(f.record('v1').humanFinalReference.source,'validation-write');
  assert.equal(f.record('v1').observedLabelCandidate,'VALIDATE_CORRECTED_RIGHT_ONLY');
+});
+
+test('D-143 : une écriture antérieure à l’intention de validation n’est pas la sienne',async()=>{
+ const f=await session();const {b}=await cas428(f);
+ await f.sessions.noteServerWrite(f.ecriture(60,100,b.rails,{},204,'trop-tot'));            // 40 ms avant la touche
+ assert.equal(f.record('v1').humanFinalReferences.length,1);assert.equal(f.record('v1').humanFinalReference.source,undefined);
 });
