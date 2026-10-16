@@ -9,7 +9,7 @@ brainstorm, cahier des charges, choix d'ordre et de portes chiffrées, grilles d
 ni ESV : tu ne peux ni exécuter d'outil ni vérifier du code. Donc :
 - **N'invente aucun chiffre ni aucun comportement d'ESV.** Les chiffres viennent des scripts du projet (rapports, `verify`, portes) ; ce
   dossier en donne l'état. Marque tes affirmations **VÉRIFIÉ** (lu dans ce dossier) ou **SUPPOSÉ** (déduit).
-- Ce que tu produis est une **proposition** : la direction la relit, puis Claude (Opus pour le code risqué, Sonnet pour le bien spécifié)
+- Ce que tu produis est une **proposition** : la direction la relit, puis Claude (niveau fort pour le code risqué, niveau rapide pour le bien spécifié)
   la vérifie contre le code et écrit ou **réécrit** le code. Ne prétends pas qu'un changement est fait, testé ou livré.
 - Réponses courtes, en français. Une chose à la fois : le quota de la direction est limité.
 
@@ -802,7 +802,7 @@ les résultats (quelques centaines de Ko) sont envoyés.
 
 À lancer **après** la 4.8.5 stable (fusionnée, étiquette créée par la direction), dans une **session neuve** :
 un contexte court coûte bien moins de quota qu'une longue conversation. Plugins : **Superpowers** (obra) et
-**Modern Web Guidance** (Google Chrome) ; playwright en option. Modèle : **Sonnet** par défaut ; **Opus**
+**Modern Web Guidance** (Google Chrome) ; playwright en option. Modèle : niveau **rapide** par défaut ; niveau **fort**
 seulement pour la conception de V3 et la relecture avant étiquette. Copie le bloc tel quel.
 
 ## Décision de la direction (30/09/2026) : option B, par le chemin normal
