@@ -171,7 +171,18 @@ function bilan({evals,verts,mem,jeu,pnMic,mode}){
     variantes[id]={zones:zs.length,micRetrouves:pnMic.filter(p=>zs.some(z=>croise(p,z))).length,zonesSansPN:zs.filter(z=>!pnMic.some(p=>croise(p,z))).length,
       cutsEnZone:zs.reduce((n,[a,b])=>n+b-a+1,0)};}
   pn.variantes=variantes;
-  return {mode,lot:{decisions:evals.length,poses,posesAvecRef:avecRef,fauxVerts},regles:parRegle,combine:tous,zonesPN:pn,verts:v};
+  /* Règle d'écartement sur tous les verts étiquetés de la partie (pose de départ) : seuil fixe autour de 1 435 mm, seuil autour
+   * de la médiane de la partie, seuil autour de la médiane des voisins visités (±5 cuts). Mesure, pas une règle de plus. */
+  const gv=[...jeu.cuts.values()].filter(x=>x.classe==='hors-journal'&&x.mm!=null&&x.ecartementInitialMm!=null);
+  const mediane=t=>{const s=t.slice().sort((a,b)=>a-b),k=s.length>>1;return s.length?(s.length%2?s[k]:(s[k-1]+s[k])/2):null;};
+  const medPartie=mediane(gv.map(x=>x.ecartementInitialMm)),parCutG=new Map(gv.map(x=>[x.cut,x.ecartementInitialMm]));
+  const voisins=c=>{const t=[];for(let d=-5;d<=5;d++){if(d&&parCutG.has(c+d))t.push(parCutG.get(c+d));}return t.length>=2?mediane(t):null;};
+  const ecartement={verts:gv.length,medianePartieMm:r1(medPartie),plus10:gv.filter(x=>x.mm>FAUX_MM).length,objet25:gv.filter(x=>x.mm>=MAUVAIS_OBJET_MM).length,variantes:{}};
+  for(const [id,f] of [['fixe-1435-10',x=>Math.abs(x.ecartementInitialMm-1435)>10],['fixe-1435-15',x=>Math.abs(x.ecartementInitialMm-1435)>15],
+    ['partie-10',x=>Math.abs(x.ecartementInitialMm-medPartie)>10],['partie-15',x=>Math.abs(x.ecartementInitialMm-medPartie)>15],
+    ['voisins-10',x=>{const m=voisins(x.cut);return m!=null&&Math.abs(x.ecartementInitialMm-m)>10;}]]){
+    const sg=gv.filter(f);ecartement.variantes[id]={signales:sg.length,plus10:sg.filter(x=>x.mm>FAUX_MM).length,objet25:sg.filter(x=>x.mm>=MAUVAIS_OBJET_MM).length,fin5:sg.filter(x=>x.mm<=BON_FIN_MM).length};}
+  return {mode,lot:{decisions:evals.length,poses,posesAvecRef:avecRef,fauxVerts},regles:parRegle,combine:tous,zonesPN:pn,verts:v,ecartement};
 }
 
 function lireArguments(argv){
@@ -198,16 +209,20 @@ function executer(o){
 }
 function rapport(sorties){
   const L=[],pct=(a,b)=>b?Math.round(100*a/b)+' %':'—';
-  L.push('| Partie | Manifeste | Mode | Posés (faux verts) | Règle | Différés en plus | dont faux verts évités | bons différés (≤ 5 mm) | sans réf. | Minutes de Mic (méd. – haute) |','|---|---|---|---|---|--:|--:|--:|--:|---|');
+  L.push('| Partie | Manifeste | Mode | Posés / avec réf. (faux verts) | Règle | Différés en plus | dont faux verts évités | bons différés (≤ 5 mm) | sans réf. | Minutes de Mic (méd. – haute) |','|---|---|---|---|---|--:|--:|--:|--:|---|');
   for(const s of sorties){if(s.mode!=='lot')continue;
     for(const [id,o] of [...Object.entries(s.regles),['toutes',s.combine]])
-      L.push(`| ${s.projet}:${s.partie} | ${s.manifeste} | ${s.mode} | ${s.lot.poses} (${s.lot.fauxVerts}) | ${id} | ${o.signales} | ${o.faux} | ${o.bon} (${o.bonFin}) | ${o.sansRef} | ${o.tempsMic.medianeMin} – ${o.tempsMic.hauteMin} |`);}
+      L.push(`| ${s.projet}:${s.partie} | ${s.manifeste} | ${s.mode} | ${s.lot.poses} / ${s.lot.posesAvecRef} (${s.lot.fauxVerts}) | ${id} | ${o.signales} | ${o.faux} | ${o.bon} (${o.bonFin}) | ${o.sansRef} | ${o.tempsMic.medianeMin} – ${o.tempsMic.hauteMin} |`);}
   L.push('','| Partie | Mode | PN de Mic retrouvés | Zones reconnues sans PN | Cœurs non confirmés | Cuts de PN couverts |','|---|---|--:|--:|--:|--:|');
   for(const s of sorties){const z=s.zonesPN;L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${z.mic.length?z.micRetrouves+'/'+z.mic.length:'liste absente'} | ${z.zonesSansPN.length} | ${z.coeursNonConfirmes.length} | ${z.cutsMic?z.cutsMicCouverts+'/'+z.cutsMic:'—'} |`);}
   L.push('','| Partie | Mode | Détecteur | Zones | PN de Mic retrouvés | Zones sans PN | Cuts en zone |','|---|---|---|--:|--:|--:|--:|');
   for(const s of sorties)for(const [id,v] of Object.entries(s.zonesPN.variantes||{}))L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${id} | ${v.zones} | ${s.zonesPN.mic.length?v.micRetrouves+'/'+s.zonesPN.mic.length:'liste absente'} | ${v.zonesSansPN} | ${v.cutsEnZone} |`);
   L.push('','| Partie | Mode | Verts signalés | étiquetés | > 10 mm retrouvés | ≥ 25 mm retrouvés | ≤ 5 mm (fausses alertes) | Minutes de Mic |','|---|---|--:|--:|--:|--:|--:|--:|');
   for(const s of sorties){const v=s.verts;L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${v.signales} | ${v.etiquetes} | ${v.plus10}/${v.total.plus10} (${pct(v.plus10,v.total.plus10)}) | ${v.objet25}/${v.total.objet25} | ${v.fin5} | ${v.tempsMicMin} |`);}
+  L.push('','| Partie | Verts étiquetés (> 10 mm ; ≥ 25 mm) | Médiane de la partie | Variante | Signalés | > 10 mm | ≥ 25 mm | ≤ 5 mm |','|---|---|--:|---|--:|--:|--:|--:|');
+  const vues=new Set();
+  for(const s of sorties){const e=s.ecartement,cle=s.projet+':'+s.partie;if(!e||vues.has(cle))continue;vues.add(cle);
+    for(const [id,v] of Object.entries(e.variantes))L.push(`| ${cle} | ${e.verts} (${e.plus10} ; ${e.objet25}) | ${e.medianePartieMm} | ${id} | ${v.signales} | ${v.plus10} | ${v.objet25} | ${v.fin5} |`);}
   return L.join('\n');
 }
 
