@@ -81,6 +81,15 @@
    }
    return {ok:true,sign:t.sign,top,face};
  }
+ /* Plafond du décalage (P1) : `options.plafond` (booléen) l'impose ; à défaut, le
+  * réglage `conventionPlafond` de `settings.js` (global `BananeSettings`, chargé
+  * avant ce module dans le service worker). Coupé par défaut : sans réglage, le
+  * comportement est celui de la 5.0 de base, octet pour octet. */
+ function plafondActif(cfg){
+   if(typeof cfg.plafond==='boolean')return cfg.plafond;
+   const settings=typeof globalThis!=='undefined'?globalThis.BananeSettings:null;
+   return settings?.conventionPlafond===true;
+ }
  /* Le calage d'un rail publié. Rend le delta calé et tout ce qui l'explique ;
   * ne publie rien de plus que ce que GCV1 a publié, et s'efface (applied:false)
   * quand il ne peut pas se justifier. */
@@ -96,7 +105,24 @@
    if(!Number.isFinite(dzMm)||!Number.isFinite(duMm))return {...base,reason:'offset-not-finite',topN,faceN};
    /* Garde-fou de domaine : l'ajustement a été mesuré entre −8,6 et +6,6 mm.
     * Au-delà, le rail n'est pas dans le domaine où le calage a été établi. */
-   if(Math.abs(dzMm)>cfg.maxShiftMm||Math.abs(duMm)>cfg.maxShiftMm)return {...base,reason:'shift-out-of-domain',topN,faceN,duMm,dzMm};
+   if(Math.abs(dzMm)>cfg.maxShiftMm||Math.abs(duMm)>cfg.maxShiftMm){
+     if(!plafondActif(cfg))return {...base,reason:'shift-out-of-domain',topN,faceN,duMm,dzMm};
+     /* PLAFOND (plan 5.0, P1, D-129) — réglage `conventionPlafond`, coupé par défaut.
+      * Au lieu de refuser le rail, on applique le décalage mesuré limité à
+      * `maxShiftMm` par axe, dans son signe ; le reste est consigné. Mesuré hors
+      * ligne (partie 17) : le rail refusé est posé brut avec un biais vertical
+      * de −6,5 mm, parce que la convention exagère d'un tiers au-delà de 6 mm ;
+      * le plafond le ramène à +1,5 mm.
+      * `reason` reste 'shift-out-of-domain' même appliqué : la garde de paire
+      * (D-044, `lot-decision.js`) lit ce motif pour savoir que le rail est hors
+      * du domaine mesuré, et elle ne change pas. `duMm` et `dzMm` restent les
+      * décalages mesurés en entier (comme pour un rail refusé) ; `applied*` est
+      * ce qui a été posé, `rest*` ce qui ne l'a pas été. */
+     const cap=m=>Math.sign(m)*Math.min(Math.abs(m),cfg.maxShiftMm),appliedDuMm=cap(duMm),appliedDzMm=cap(dzMm);
+     return {...base,applied:true,delta:[delta[0],delta[1]+offsets.sign*appliedDuMm/1000,delta[2]+appliedDzMm/1000],
+       reason:'shift-out-of-domain',capped:true,capMm:cfg.maxShiftMm,duMm,dzMm,appliedDuMm,appliedDzMm,restDuMm:duMm-appliedDuMm,restDzMm:dzMm-appliedDzMm,
+       topN,faceN,faceMode,topQuantileMm:topQ,faceQuantileMm:faceQ};
+   }
    const corrected=[delta[0],delta[1]+offsets.sign*duMm/1000,delta[2]+dzMm/1000];
    return {...base,applied:true,delta:corrected,duMm,dzMm,topN,faceN,faceMode,topQuantileMm:topQ,faceQuantileMm:faceQ};
  }
