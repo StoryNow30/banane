@@ -2000,3 +2000,26 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Non archivés, par prudence : le paquet de passation du 04/10 (documents de travail, pas un export), la capture réseau ESV du 05/10 (HAR, même nettoyée), et les captures d'écran. À déposer si Mic le demande.
 - Disque : environ 3,4 Go de fichiers temporaires d'essais supprimés dans `/tmp` pour faire la place.
 - **Réflexe désormais** : tout export reçu de Mic est archivé dans `banane-data` dès réception, avec la même procédure. En mode Auto, le contrôle automatique refuse cette publication : il faudra repasser en « Accept edits » le temps du dépôt. La branche `claude/execute-prompt-00-18ra5a` de banane-data n'est pas fusionnée dans `main` : à faire avec l'accord de Mic.
+
+## D-134 — Partie 29 (4.9.5 test 3, Écho soigné de Mic) et partie 12 (opérateur débutant) analysées (16 octobre 2026)
+
+- Exports archivés dans banane-data (bf6a3cc, 95cd4a5, 9f44b87). Analyses hors ligne dans le scratchpad (`p29/RAPPORT.md`, `p12/RAPPORT.md`, `jeu-p29.jsonl`, `jeu-p12.jsonl`), sans commit.
+- **Partie 29** :
+  - **Faux verts** : 7/192 posés corrigés de plus de 10 mm (3,6 %), contre 24,5 % sur la partie 17. Écart 3D par rail : 3,4 / 7,3 / 19,8 mm. Différés : 34/245. Débit : 1 361 cuts/h. La baisse n'est **pas attribuable** à la version : les verts d'extraction baissent aussi de moitié, et partie, version et soin de la relecture varient ensemble.
+  - **Convention refusée** : 22/418 rails (5 %), contre 23 % sur la partie 17.
+  - **Plafond P1** : gain nul ou négatif (tous étages 6 → 7). Un ricochet jugé faux : cut 305, de 5,5 à 16,2 mm. Un autre dans un PN : cut 1660, de 7,8 à 10,5 mm. → **P1 ne sera pas activé ; une suite éventuelle passe par une garde contre le ricochet dans `lot-decision.js`, pas par une variante d'axe.**
+  - **Méthode métier** : les poses fausses d'Orbite ne se concentrent pas dans les PN et ADV (1/37 en zone, 6/164 hors zone). Les verts d'extraction faux se concentrent près des rouges : 18 à 27 % à 1–3 cuts d'un rouge, 51 % entre les rouges d'une grappe, 1,4 % à plus de 10 cuts. Autour d'une aiguille, les gros écarts tiennent dans environ −5 à +8 cuts. Après la sortie d'un PN, 5/17 cuts dépassent 10 mm, contre 2/13 avant l'entrée.
+- **Relevés S6 sur le vrai ESV** :
+  - Ressources Potree : 2 450, toutes en statut 200, 0 échec, aucun statut 0. Le doute de D-127 est levé.
+  - `flushPct` ≥ 50 sur exactement 22 cuts, tous dans les PN, sans faux positif : **indice de PN pour M1**.
+  - `tDepart` à 0,0 mm de la T actuelle (243 cuts).
+  - `esv-event` concorde à 100 % avec les validations de Mic (725/725).
+  - Journal replié −35 %.
+  - `list-fields` et `audit-serveur` sont vides parce que la liste est lue avant la séance. De plus, l'export Écho ne garde pas `audit-serveur` (pas de `nativeSessionId`).
+- **F5 en Écho** : aucune donnée perdue, mais trois défauts cumulés. La reprise part à 0,35 s, avant le chargement de la liste ESV. La reprise automatique n'existe qu'en séance. Chaque démarrage raté crée une période fantôme (six en 8 s). À corriger avant de redemander un F5 ; protocole de reproduction proposé pour la maquette.
+- **Défauts d'outil** : `jointure-echo-orbite.cjs` mélange deux sessions Écho (`visitIndex` repart de 0) et ignore les fichiers `ariane-echo-*` en mode dossier ; `perf-phases.cjs` ignore les relevés S6. Les jointures d'Échos multi-sessions sont à revérifier.
+- **Partie 12** (Mic corrige un opérateur débutant, 107 cuts) :
+  - 47 % de cuts non touchés, contre 8 à 19 % chez Ariane, et seulement 4 % de retouches entre 5 et 10 mm. Mais **28 erreurs de 25 à 45 mm**, presque toutes sur le rail droit (environ +34 mm latéral, −14 mm vertical) ; Ariane n'en a aucune de cette taille sur les parties 17, 24 et 29.
+  - Le grain fin de Mic (2 à 4 mm, surtout vertical) est le même pour les deux ; il remonte le débutant de +2,2 mm, mais descend Ariane de −2 mm sur la partie 29.
+  - Parcours : ordre croissant, sans trou, environ 1,6 s par cut.
+- **Règle « visité sans action = bon »** : sans effet sur les faux verts d'Orbite. Les survols sont très courts (0,65 s en médiane) : proposer à Mic une durée minimale d'environ 1 s, nuage chargé.
