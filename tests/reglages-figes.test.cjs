@@ -23,7 +23,7 @@ const ReglesMetier = require('../src/regles-metier.js');
 test('le fichier porte une date, des valeurs et les parties qui ont servi, pour chaque réglage', () => {
   assert.equal(F.format, 'ariane-reglages-figes-v1');
   assert.match(F.date, /^\d{4}-\d{2}-\d{2}$/);
-  assert.deepEqual(Object.keys(F.reglages).sort(), ['memoireSerieB', 'ombreVerticale', 'reglesMetier', 'voiePredite']);
+  assert.deepEqual(Object.keys(F.reglages).sort(), ['fauxVertOmbre', 'memoireSerieB', 'ombreVerticale', 'reglesMetier', 'voiePredite']);
   for (const [nom, r] of Object.entries(F.reglages)) {
     assert.ok(r.libelle && r.valeurs && typeof r.valeurs === 'object', nom);
     assert.match(r.fige, /^\d{4}-\d{2}-\d{2}$/, `${nom} : date de gel`);
@@ -82,4 +82,14 @@ test('règles métier : mêmes seuils que le module, ombre active et activation 
   for (const id of ReglesMetier.REGLES) assert.equal(Settings.reglesMetier.regles[id], false, id);
   // les nombres que la fiche annonce : marges de 4 et 6 cuts, deux cœurs à 3 cuts, quarts à 50 %, grappe 2 différés dans 6 cuts dont un à 2, écartement à 15 mm
   assert.deepEqual([v.pn.margeAvant, v.pn.margeApres, v.pn.confirmation, v.pn.confirmationEcartCuts, v.surface.quadMinPct, v.grappe.differesMin, v.grappe.fenetreCuts, v.grappe.procheCuts, v.ecartement.seuilMm], [4, 6, 2, 3, 50, 2, 6, 2, 15]);
+});
+
+test('faux vert en ombre : mêmes seuils que le module et le réglage livré, chemin d\'activation coupé', () => {
+  const FV = require('../src/faux-vert-ombre.js');
+  const v = F.reglages.fauxVertOmbre.valeurs;
+  assert.equal(v.dzMinMm, FV.REGLE.dzMinMm); assert.equal(v.epaisseurMinMm, FV.REGLE.epaisseurMinMm);
+  assert.equal(v.dzMinMm, Settings.fauxVertOmbre.dzMinMm); assert.equal(v.epaisseurMinMm, Settings.fauxVertOmbre.epaisseurMinMm);
+  assert.equal(v.differer, false); assert.equal(Settings.fauxVertOmbre.differer, false);
+  assert.equal(v.memeRail, true);
+  assert.equal(F.reglages.fauxVertOmbre.ombre.version, FV.VERSION);
 });
