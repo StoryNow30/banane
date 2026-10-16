@@ -2231,3 +2231,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Effet** : G0 inchangé (21 faux verts sur 70 en partie 24). G1 (b) inchangé (56 poses, 53 justes, 3 fausses, 0 mauvaise voie). D-147 inchangé. Pour D-141, il faut citer les deux comptes : 10 faux verts sur 165 avec la règle, 10 sur 111 sans.
 - Sur la partie 1 du second projet, les 54 cuts « visités = bons » restent 54. 6 d'entre eux n'ont aucune capture ; 44 tiennent sur une visite de moins de 2 s.
 - Les 60 s sont un choix, pas une mesure.
+
+## D-153 — Ombres de la voie prédite (Orbite) et de la mémoire de série (Écho) : intégrées, pas encore livrées (16 octobre 2026)
+
+- Livré sur `claude/50-ombres-voie`, jusqu'à 4cadc00. Intégré à `claude/50-base` par avance rapide. verify : 1 917 réussis, 0 échec, 2 ignorés. Moteur intact.
+- **Module commun** `src/voie-recentree.js`, « recentrer sur la voie », utilisé par les deux rejeux et par l'extension. Il concorde avec les rejeux : sur la partie 1 du second projet, la règle prudente déclare posables exactement les mêmes 27 cuts. G1 (b) reste à 56 poses, avec un rapport identique.
+- **Orbite** : un événement `voie-predite-ombre` par cut différé. Le calcul part après la décision et la commande, sur des copies, et ne rend rien. Relu : `voieOmbrePlanifier` n'écrit ni dans `batch` ni dans les appuis, et n'envoie aucune commande.
+- **Écho** : un événement `memoire-differes-ombre`, calculé avant la lecture de la référence humaine, dans la file de la continuité. Il a besoin de la liste des différés du lot, présente dans l'état d'Ariane. S'il ne la trouve pas, il le dit (`differes-inconnus`).
+- **U1** : la dernière empreinte de contrat connue est gardée dans `storage.local`. Elle est consignée, sans jamais donner d'avis.
+- **Poids** : environ 90 Ko par lot de 350 cuts, soit 0,4 % du journal.
+- **Risque à mesurer avant livraison** : l'ombre d'Orbite relance le moteur, jusqu'à 2,5 s, pendant la capture du cut suivant, dans le même service worker. Sur la partie 1, elle l'aurait fait 60 fois. Le cycle du lot pourrait ralentir, et son rythme change la trace (D-151). La test 5 ne partira qu'avec une mesure du cycle sur le banc, ombre coupée puis active. Si le cycle s'allonge, il faudra soit couper l'ombre d'Orbite, soit la différer en fin de lot.
+- **Ordre** : la test 5 attend le retour terrain de la test 4.
