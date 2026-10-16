@@ -41,3 +41,19 @@ Mic corrige la partie d'un opérateur débutant. Les poses de départ sont humai
 
 - PN : 124–139, 1284–1300, 6100–(fin non précisée), 6927–6941, 8055–8071, 9456–9469.
 - Zones d'ADV, marges comprises : 4644–4713, avec l'aiguille au cut 4682 (environ 38 cuts avant l'aiguille et 31 après) ; 4911–4936 (Mic a noté aussi « aiguille au cut 4682 » pour cette zone : à confirmer).
+
+## Réponses de Mic (16/10, après les analyses des parties 12 et 13)
+
+- Partie 12 : les cuts 7276–7289 forment bien un **PN**.
+- **Les grosses erreurs (30–40 mm) ne sont pas des poses du débutant** : le débutant n'a pas corrigé tout le PN, faute d'appliquer la méthode métier. Ces rails étaient **verts sur la carte, donc non visités** (un rail visité devient violet) : ce sont les poses d'extraction laissées telles quelles. Mic, lui, contrôle tout le PN, et **c'est ce qu'Orbite doit apprendre**.
+- Partie 13 :
+  - le PN qui commence au cut 6100 se termine au **6115** ;
+  - la deuxième zone d'ADV va jusqu'au **4963** (confirmé), et non 4936 ;
+  - son aiguille se situe **entre les cuts 4935 et 4936**.
+- Les parties 12 et 13 ont été traitées par la **même personne**.
+- Règle « visité sans action = bon » : **seuil de 0,8 s** de visite.
+
+## Conséquences
+
+- La signature des 30–40 mm caractérise **l'extraction dans les PN non contrôlés**, et non un humain. À vérifier dans les exports : les cuts concernés devraient avoir `SeenByOperator` faux au départ (vert sur la carte). Le contrôle « écartement à plus de 10 mm de la médiane » (54/54, D-135) est donc un détecteur d'extraction fausse en PN.
+- Règle métier n° 3 renforcée : **dans un PN, contrôler chaque cut, marges comprises, sans en sauter un** ; un PN partiellement contrôlé laisse des erreurs de 30–40 mm.

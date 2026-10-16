@@ -2031,3 +2031,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Les PN concentrent 81 % des mauvais objets de la partie 13, au centre du PN (36 %) plutôt qu'aux bords (8 %). ADV1 : Mic corrige surtout l'entrée de la zone ; l'aiguille (cut 4682) ne se voit qu'à son arrêt de 69 s, pas dans la géométrie. ADV2 : la sortie réelle serait vers le cut 4963, et non 4936, et l'« aiguille au cut 4682 » de cette ligne paraît copiée de la ligne d'ADV1 (à confirmer par Mic). PN 6100 : fin probable 6115.
 - Parcours de Mic : validation cut par cut en PN et en entrée d'ADV (1,7 s par cut), survol ailleurs (0,8 s par cut).
 - Tableau de synthèse « par cut, > 10 mm » : débutant p12 29 %, p13 13 % ; Ariane p17 24,5 %, p24 32 %, p29 3,5 %. Les humains font peu d'erreurs moyennes, mais de grosses erreurs d'objet ; Ariane ne fait aucune erreur d'objet, mais beaucoup d'erreurs moyennes de 5 à 25 mm.
+
+## D-136 — Réponses de Mic sur les parties 12 et 13 ; les 30–40 mm viennent de PN non contrôlés (16 octobre 2026)
+
+- Les grosses erreurs des parties 12 et 13 sont des **poses d'extraction dans des PN que le débutant n'a pas contrôlés en entier** : rails verts sur la carte, donc non visités. Elles ne sont pas des poses humaines. Mic contrôle tout le PN ; c'est ce qu'Orbite doit apprendre (règle 3 renforcée, `fiches/METHODE_MIC_P29.md`).
+- Zones confirmées : p12, cuts 7276–7289 = PN ; p13, PN 6100–6115 ; ADV2 4911–4963, aiguille entre 4935 et 4936. Les parties 12 et 13 ont été traitées par la même personne.
+- Seuil de la règle « visité sans action = bon » : **0,8 s**.
+- Mic a cité le code du projet ESV dans la conversation. Il n'est reporté nulle part dans les dépôts, conformément à la règle « aucun identifiant de projet ».
+- À vérifier dans les exports : `SeenByOperator` faux au départ sur les cuts à 30–40 mm.
