@@ -5,12 +5,27 @@
   "apprentissage": [
     {
       "projet": 1,
-      "parties": [17, 24, 29],
+      "parties": [
+        17,
+        24,
+        29
+      ],
       "motif": "Ont servi à régler la convention, la correction verticale en ombre, la règle prudente de voie prédite et la mémoire de série (G1), et à étudier les faux verts (G0)."
     },
     {
+      "projet": 1,
+      "parties": [
+        12,
+        13
+      ],
+      "motif": "Parties d'un opérateur humain relues en Écho par l'opérateur expert (poses d'extraction, PN et zones d'ADV notés). Elles ont déjà servi à régler la règle d'écartement de G0 (D-135, D-140 : 54 mauvais objets sur 54, seuil appris de la partie 12 à la 13), puis les règles métier (zones de PN, écartement par partie). Passées en apprentissage le 2026-10-17 sur ce constat : aucune partie disponible n'est restée à l'écart.",
+      "decision": "D-140"
+    },
+    {
       "projet": 2,
-      "parties": [1],
+      "parties": [
+        1
+      ],
       "motif": "A servi à régler la règle prudente de voie prédite et la mémoire de série (G1), et à étudier les faux verts (G0)."
     }
   ],

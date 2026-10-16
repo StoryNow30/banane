@@ -7,7 +7,8 @@
  *  - mémoire de série G1 (b) : tools/memoire-differes.cjs (grille, seuils, porte) et src/lot-decision.js (recentrage) ;
  *  - ombre verticale (nom : P8) : src/settings.js (présente seulement dans les versions qui la portent). Le nom « E2 » est réservé à l'ombre GCV1
  *    de l'Écho ; les clés de données (`ombreVerticaleRefusee`, `ombreVerticale`) et la chaîne de version `e2-vertical-refuse-v1` gardent « e2 » par
- *    compatibilité avec les exports déjà produits. */
+ *    compatibilité avec les exports déjà produits.
+ *  - règles métier de l'opérateur expert : src/regles-metier.js (seuils) et src/settings.js (ombre active, activation coupée). */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
 const racine = path.join(__dirname, '..');
@@ -17,11 +18,12 @@ const Rejeu = require('../tools/rejeu-voie-predite.cjs');
 const G1 = require('../tools/memoire-differes.cjs');
 const Lot = require('../src/lot-decision.js');
 const Settings = require('../src/settings.js');
+const ReglesMetier = require('../src/regles-metier.js');
 
 test('le fichier porte une date, des valeurs et les parties qui ont servi, pour chaque réglage', () => {
   assert.equal(F.format, 'ariane-reglages-figes-v1');
   assert.match(F.date, /^\d{4}-\d{2}-\d{2}$/);
-  assert.deepEqual(Object.keys(F.reglages).sort(), ['memoireSerieB', 'ombreVerticale', 'voiePredite']);
+  assert.deepEqual(Object.keys(F.reglages).sort(), ['memoireSerieB', 'ombreVerticale', 'reglesMetier', 'voiePredite']);
   for (const [nom, r] of Object.entries(F.reglages)) {
     assert.ok(r.libelle && r.valeurs && typeof r.valeurs === 'object', nom);
     assert.match(r.fige, /^\d{4}-\d{2}-\d{2}$/, `${nom} : date de gel`);
@@ -70,4 +72,14 @@ test('ombre verticale : même valeur que le réglage de src/settings.js quand ce
   assert.equal(v.mm, 3.6);
   if (!Settings.ombreVerticaleRefusee) return t.skip('cette branche ne porte pas encore l\'ombre verticale (livrée par la ligne de test 4.9.5.4) : à vérifier après la fusion');
   assert.equal(Settings.ombreVerticaleRefusee.mm, v.mm);
+});
+
+test('règles métier : mêmes seuils que le module, ombre active et activation coupée dans le réglage livré', () => {
+  const r = F.reglages.reglesMetier, v = r.valeurs, D = JSON.parse(JSON.stringify(ReglesMetier.DEFAULTS));
+  for (const k of ['surface', 'pn', 'grappe', 'enPlace', 'ecartement', 'verts']) assert.deepEqual(v[k], D[k], k);
+  assert.equal(Settings.reglesMetier.ombre, true); assert.equal(Settings.reglesMetier.actif, false);
+  assert.deepEqual(Object.keys(Settings.reglesMetier.regles).sort(), [...ReglesMetier.REGLES].sort());
+  for (const id of ReglesMetier.REGLES) assert.equal(Settings.reglesMetier.regles[id], false, id);
+  // les nombres que la fiche annonce : marges de 4 et 6 cuts, deux cœurs à 3 cuts, quarts à 50 %, grappe 2 différés dans 6 cuts dont un à 2, écartement à 15 mm
+  assert.deepEqual([v.pn.margeAvant, v.pn.margeApres, v.pn.confirmation, v.pn.confirmationEcartCuts, v.surface.quadMinPct, v.grappe.differesMin, v.grappe.fenetreCuts, v.grappe.procheCuts, v.ecartement.seuilMm], [4, 6, 2, 3, 50, 2, 6, 2, 15]);
 });

@@ -11,7 +11,9 @@
       "fige": "2026-10-16",
       "variante": "regle-wc-e10-p10",
       "valeurs": {
-        "etages": ["window"],
+        "etages": [
+          "window"
+        ],
         "confMin": 55,
         "chaineMax": 10,
         "ecartVoisinMm": 10,
@@ -21,11 +23,24 @@
       "ombre": {
         "reglage": "src/settings.js voiePrediteOmbre",
         "etat": "en ombre dans Orbite (voie-predite-ombre), consignée seulement",
-        "vue": { "dezoomMax": 1.5, "glissementPxMax": 250 }
+        "vue": {
+          "dezoomMax": 1.5,
+          "glissementPxMax": 250
+        }
       },
       "parties": [
-        { "projet": 1, "parties": [29] },
-        { "projet": 2, "parties": [1] }
+        {
+          "projet": 1,
+          "parties": [
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
       ]
     },
     "memoireSerieB": {
@@ -37,7 +52,10 @@
       "valeurs": {
         "base": "M",
         "derniersCuts": 3,
-        "porteDispersionMm": [6, 10],
+        "porteDispersionMm": [
+          6,
+          10
+        ],
         "coupPrecedentCompris": 0,
         "memoireMin": 1,
         "mode": "moteur",
@@ -56,11 +74,27 @@
         "porteDispersionMm": 10,
         "mmParCut": 3,
         "ecartSerieMax": 10,
-        "etages": ["first-pass", "window", "choice"]
+        "etages": [
+          "first-pass",
+          "window",
+          "choice"
+        ]
       },
       "parties": [
-        { "projet": 1, "parties": [17, 24, 29] },
-        { "projet": 2, "parties": [1] }
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
       ]
     },
     "ombreVerticale": {
@@ -73,8 +107,77 @@
         "mm": 3.6
       },
       "parties": [
-        { "projet": 1, "parties": [17, 24, 29] }
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        }
       ]
+    },
+    "reglesMetier": {
+      "libelle": "Règles métier de l'opérateur expert : PN et marges, grappe de différés, validation en place dans une zone, verts à contrôler",
+      "decision": "à écrire (chantier claude/50-regles-metier)",
+      "fiche": "fiches/REGLES_METIER.md",
+      "etat": "en ombre dans Orbite (regles-metier-ombre), consignée seulement ; activation coupée, règle par règle",
+      "fige": "2026-10-17",
+      "valeurs": {
+        "surface": {
+          "sidePointsMin": 200,
+          "quadPointsMin": 30,
+          "quadNombreMin": 3,
+          "quadMinPct": 50,
+          "flushMinPct": 50
+        },
+        "pn": {
+          "confirmation": 2,
+          "confirmationEcartCuts": 3,
+          "margeAvant": 4,
+          "margeApres": 6
+        },
+        "grappe": {
+          "fenetreCuts": 6,
+          "differesMin": 2,
+          "procheCuts": 2
+        },
+        "enPlace": {
+          "mm": 1
+        },
+        "ecartement": {
+          "seuilMm": 15,
+          "lignesMin": 20
+        },
+        "verts": {
+          "trouCuts": 5,
+          "grappeMin": 3,
+          "margeGrappe": 3
+        }
+      },
+      "ombre": {
+        "reglage": "src/settings.js reglesMetier",
+        "etat": "ombre: true, actif: false, toutes les règles à false"
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            12,
+            13,
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ],
+      "note": "Toutes les parties disponibles ont servi : aucune partie réservée n'a jugé ces seuils. Le jugement se fera en ombre sur les parties suivantes."
     }
   }
 }

@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.4',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 4';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -1006,6 +1006,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if(lotObservation&&pilotScope)holdLotAnchor(lotObservation,pilotScope.lotDecision==='apply'?lotObservation.command??null:null);
    /* 5.0 (I8) : ombre de la voie prédite, APRÈS la décision et la commande, sur des copies ; elle ne rend rien. */
    if(lotObservation&&pilotScope)voieOmbrePlanifier(lotObservation,propositionMoteur,proposal);
+   /* 5.0 : règles métier de Mic, consignées APRÈS la décision et la commande (src/regles-metier.js) ; rien n'est rendu au lot. */
+   if(lotObservation&&pilotScope)reglesMetierNoter(lotObservation,proposal);
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
@@ -1053,6 +1055,8 @@ async function commandLot(proposal,lotObservation){
   if(VR&&b?.id){if(dvMemoire?.batchId!==b.id)dvMemoire=VR.creerMemoire(b.id);VR.noterDecisionReelle(dvMemoire,id,lotObservation);}}catch{/* jamais bloquant */}
  if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
+ /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
+ command=reglesMetierCommande(command,lotObservation,proposal,before);
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
@@ -1179,7 +1183,7 @@ const b1Depart={repere:null};
 async function b1TDepart(args,trace){const B=globalThis.BananeAppuisListe,id=args.capture.identity;
  try{const scene={left:args.capture.rails.left.positionSceneRelative,right:args.capture.rails.right.positionSceneRelative};
   let rep=trace.rep;
-  if(!rep)rep=B.lireReponse(await b1Voisins(id.cut,scene),{cut:id.cut,fenetre:B.DEFAULTS.fenetre});
+  if(!rep)trace.rep=rep=B.lireReponse(await b1Voisins(id.cut,scene),{cut:id.cut,fenetre:B.DEFAULTS.fenetre});
   if(!rep.ok)return {etat:'page',raison:rep.reason};
   const ligne=rep.rows.find(x=>x.i===id.cut);
   if(!ligne)return {etat:'sans-ligne'};if(!ligne.bords)return {etat:'sans-bords'};
@@ -1192,8 +1196,9 @@ async function b1TDepart(args,trace){const B=globalThis.BananeAppuisListe,id=arg
  }catch(e){return {etat:'erreur',message:String(e?.message||e).slice(0,120)};}}
 async function b1Preparer(args,d0,mode){
  const trace={},prep=await b1PreparerBase(args,d0,mode,trace);
- if(!releveOn('translationDepart')||!prep?.evenement)return prep;
+ if(!releveOn('translationDepart')||!prep?.evenement){reglesMetierLignes(args.capture.identity,trace.rep);return prep;}
  try{prep.evenement={...prep.evenement,tDepart:await b1TDepart(args,trace)};}catch{/* relevé seulement */}
+ reglesMetierLignes(args.capture.identity,trace.rep);
  return prep;}
 async function b1PreparerBase(args,d0,mode,trace={}){const B=globalThis.BananeAppuisListe,L=globalThis.BananeLotDecision,t0=Date.now(),id=args.capture.identity;
  const base={mode,identity:{part:id.part??null,cut:id.cut??null},reel:B.resumeDecision(d0)};
@@ -1286,11 +1291,69 @@ async function observeLot(shadow){
  voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
  /* 5.0 (D-147) : ce que la règle prudente de « déplacer la vue » relira, seulement si le réglage est actif (références, sans copie). */
  dvContexte=deplacerVueReglage()?{identity,lotArgs,anchors:state.anchors.slice(),decision}:null;
+ /* 5.0 : surface « au ras » du cut pour les règles métier (lecture de la capture seulement). */
+ reglesMetierCapture(identity,capture);
  /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
  const reprise=seeds.length&&!state.repriseLogged?{fromBatchId:batch.scope.lotReprise.fromBatchId??null,anchors:seeds}:null;
  if(reprise)state.repriseLogged=true;
  return {...decision,...(reprise?{reprise}:{}),applied:false,displayed:false,engineMs:Date.now()-t0};
 }
+/* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, réglage `reglesMetier`, fiches/REGLES_METIER.md). À chaque cut du lot,
+ * l'événement `regles-metier-ombre` consigne la zone reconnue (PN confirmé et ses marges, grappe de différés), les règles de Mic
+ * déclenchées et ce qu'Ariane AURAIT fait ; à chaque fenêtre de la liste d'ESV lue par B1, les verts à contrôler (`portee:'verts'`).
+ * OMBRE (réglage livré) : la surface est lue sur la capture (copie du stockage), l'évaluation part après la décision et la commande ;
+ * rien n'est rendu au lot, ni à `batch`, ni aux appuis ; aucune commande n'est envoyée. Une panne ne laisse qu'un événement « erreur ».
+ * ACTIVATION (coupée : `actif:false`, toutes les règles à false ; seul Mic l'ouvre) : `reglesMetierCommande` remplace la commande
+ * d'un cut que le lot allait VALIDER par deux abstentions GCV1 (`deferRails`, motif `regles-metier`) : le cut est différé. Jamais une
+ * position nouvelle, jamais un différé changé en pose. Mémoire volatile, par lot : un redémarrage du service worker la vide. */
+const reglesOmbre={mem:null,premier:true,capture:null,eval:null};
+const reglesReglage=()=>{const r=globalThis.BananeSettings?.reglesMetier;return r&&(r.ombre===true||r.actif===true)&&globalThis.BananeReglesMetier?r:null;};
+function reglesMemoire(){const b=engine?.s?.batch,M=globalThis.BananeReglesMetier;if(!b?.id||!M)return null;
+ if(reglesOmbre.mem?.lotId!==b.id){reglesOmbre.mem=M.creerMemoire(b.id);reglesOmbre.premier=true;}return reglesOmbre.mem;}
+function reglesMetierCapture(identity,capture){try{reglesOmbre.capture=null;reglesOmbre.eval=null;if(!reglesReglage())return;
+ reglesOmbre.capture={cut:identity?.cut??null,part:identity?.part??null,surface:globalThis.BananeReglesMetier.surface(capture)};
+}catch(e){reglesOmbre.capture={cut:identity?.cut??null,part:identity?.part??null,erreur:String(e?.message||e).slice(0,160)};}}
+/* Ce que le lot va faire du cut : valider (les deux rails résolus) ou non, et la pose qu'il validerait (positions scène, gardées ici). */
+function reglesResume(lotObservation,rails,before,action){const M=globalThis.BananeReglesMetier,K=globalThis.BananeCore3,c=reglesOmbre.capture,SIDES=['left','right'];
+ if(!c||c.erreur)throw Error(c?.erreur||'capture du cut absente');
+ const valide=action!=='defer'&&!!rails&&SIDES.every(x=>rails[x]?.status==='candidate'&&Array.isArray(rails[x].delta));
+ let initiale=null,finale=null;
+ if(valide&&before&&SIDES.every(x=>before[x]))try{const e=K.expectedPoses({rails:before},rails);
+  initiale=Object.fromEntries(SIDES.map(x=>[x,before[x].positionSceneRelative]));finale=Object.fromEntries(SIDES.map(x=>[x,e[x].positionSceneRelative]));}catch{}
+ return M.resumer({identity:{part:c.part,cut:c.cut},decision:lotObservation,action:action??null,valide,surface:c.surface,initiale,finale});}
+function reglesEvaluer(lotObservation,rails,before,action){const M=globalThis.BananeReglesMetier,mem=reglesMemoire();if(!mem)throw Error('lot absent');
+ const resume=reglesResume(lotObservation,rails,before,action);return {resume,e:M.evaluer(mem,resume),applique:false};}
+function reglesMetierCommande(command,lotObservation,proposal,before){try{
+ const r=reglesReglage();if(!r||!command)return command;
+ const ev=reglesEvaluer(lotObservation,command.action==='lot'?command.rails:proposal.rails,before,command.action);reglesOmbre.eval=ev;
+ if(!globalThis.BananeReglesMetier.doitDifferer(ev.e,r)||command.action==='defer')return command;
+ const L=globalThis.BananeLotDecision,regles=ev.e.regles.filter(id=>r.regles?.[id]===true);
+ const d=L.deferRails(proposal.rails,lotObservation,'regles-metier','décision sur le lot : règle métier de Mic ('+regles.join(', ')+') : cut laissé à l\'opérateur');
+ ev.applique=true;ev.reglesAppliquees=regles;return d;
+}catch(e){reglesOmbre.eval={erreur:String(e?.message||e).slice(0,160)};return command;}}
+function reglesJournal(ev){try{const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'regles-metier-ombre',schema:1,
+  batchId:engine?.s?.batch?.id??null,sessionId:engine?.s?.sessionId??null,...ev})).catch(()=>{});}catch{/* le journal n'est pas critique */}}
+function reglesMetierNoter(lotObservation,proposal){const c=reglesOmbre.capture;try{
+ const r=reglesReglage(),M=globalThis.BananeReglesMetier;if(!r)return;
+ const SIDES=['left','right'],rails=proposal?.rails;
+ let ev=reglesOmbre.eval;
+ if(!ev)ev=reglesEvaluer(lotObservation,rails,engine?.s?.before?.rails,lotObservation?.command?.action??null);
+ if(ev.erreur)throw Error(ev.erreur);
+ const differe=!(rails&&SIDES.every(x=>rails[x]?.status==='candidate'&&Array.isArray(rails[x].delta)));
+ M.noter(reglesOmbre.mem,ev.resume,{differe,parRegle:ev.applique===true});
+ if(r.ombre!==false){reglesJournal(M.evenement(ev.e,{premier:reglesOmbre.premier,actif:ev.applique?{applique:true,regles:ev.reglesAppliquees}:null}));reglesOmbre.premier=false;}
+}catch(e){if(reglesReglage()?.ombre!==false)reglesJournal({version:'regles-metier-v1',portee:'cut',identity:{part:c?.part??null,cut:c?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)});}
+ finally{reglesOmbre.eval=null;reglesOmbre.capture=null;}}
+/* Fenêtre de la liste d'ESV lue par B1 (statut, traité ou vu par un opérateur, bords) : verts à contrôler, signalés une fois par lot. */
+function reglesMetierLignes(identity,rep){try{
+ const r=reglesReglage(),M=globalThis.BananeReglesMetier,K=globalThis.BananeCore3,mem=reglesOmbre.mem,b=engine?.s?.batch;
+ if(!r||!rep?.ok||!Array.isArray(rep.rows)||!mem||mem.lotId!==b?.id)return;
+ const rows=rep.rows.map(x=>({i:x.i,statut:x.statut,operateur:x.operateur===true,vu:x.vu===true,fraiche:x.fraiche===true,
+  ecartementMm:x.bords?Math.round(K.C.distance(x.bords.left,x.bords.right)*10000)/10:null}));
+ const v=M.lignes(mem,rows,{cut:identity?.cut});
+ if(v.verts.length&&r.ombre!==false)reglesJournal({version:'regles-metier-v1',portee:'verts',identity:{part:identity?.part??null,cut:identity?.cut??null},reference:v.reference,verts:v.verts});
+}catch{/* relevé seulement */}}
 /* 5.0 (audit 5.0, I8 (1)) — VOIE PRÉDITE EN OMBRE (src/voie-recentree.js, réglage `voiePrediteOmbre`). Pour chaque cut que le lot DIFFÈRE
  * (proposition finale sans les deux rails résolus), l'événement `voie-predite-ombre` consigne ce qu'aurait donné la règle prudente D-147 :
  * moteur recentré sur la voie du lot, vue déplacée (mesurée, jamais faite), étage, confiance, écart à la voie, profondeur de chaîne, geste
