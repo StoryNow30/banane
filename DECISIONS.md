@@ -1983,3 +1983,20 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Archivage des exports** : Mic demande de les archiver dans banane-data dès réception. La tentative est **refusée par le contrôle de sécurité de la session** : publier des exports bruts dans un dépôt public est traité comme une fuite de données. banane-data est public par choix du propriétaire (README, 23/09), mais rien n'a été archivé depuis le 29/09. **À trancher par Mic** : rendre banane-data privé, ou créer un dépôt privé d'archives. Je n'archive rien et je ne contourne pas ce refus en attendant.
 - ESV local (maquette, `claude/esv-locale-audit`) : la maquette est bouclée (rejeux 4.9.0.15 et 4.8.6 identiques au terrain cut par cut, campagne de pannes faite). Il reste à l'intégrer à verify : **S4 lancé** (`claude/50-s4-banc`).
 - Suite le 16/10 : Mic maintient banane-data public, et sa direction ordonne d'y publier les exports. Une nouvelle tentative, avec cette autorisation écrite, est encore refusée par le contrôle automatique de la session (mode Auto). Je ne contourne pas le refus. Deux voies : Mic passe la session en mode « Accept edits » le temps de l'archivage et approuve chaque commande ; ou il dépose les archives lui-même avec GitHub Desktop (voie du 23/09), et j'écris les manifests et l'index.
+
+## D-133 — Exports reçus archivés dans banane-data ; réflexe d'archivage à chaque réception (16 octobre 2026)
+
+- Mic a passé la session en « Accept edits » et approuvé chaque commande. 11 collectes sont créées dans `banane-data` (branche `claude/execute-prompt-00-18ra5a`, commits 5c2b50c, 73d4dfd et 9223d33), avec 87 volumes, environ 1,6 Go, du 7 au 15 octobre :
+  - Ariane 4.9.0.2 : lots p7 et p10 ;
+  - 4.9.0.3 et 4.9.0.4 : lots p3 et p5 ;
+  - 4.9.0.8 : lots p7 à p10 ;
+  - 4.9.0.9 : lots p1, p13 et p15 ;
+  - 4.9.0.12 : lots p17 et p18, et **Écho p17** ;
+  - 4.9.0.13 : lot p23 ;
+  - 4.9.0.15 : lot p24 ;
+  - 4.9.0.16 et 4.9.0.17 : lots p25 à p27 ;
+  - 4.9.5.1 : segment 1 d'un Écho.
+- Chaque volume est déposé tel qu'envoyé (zip ou 7z d'origine, intégrité contrôlée par réassemblage), avec un `SHA256SUMS`, un `NOTES.md` par collecte et une ligne dans `INDEX.md`.
+- Non archivés, par prudence : le paquet de passation du 04/10 (documents de travail, pas un export), la capture réseau ESV du 05/10 (HAR, même nettoyée), et les captures d'écran. À déposer si Mic le demande.
+- Disque : environ 3,4 Go de fichiers temporaires d'essais supprimés dans `/tmp` pour faire la place.
+- **Réflexe désormais** : tout export reçu de Mic est archivé dans `banane-data` dès réception, avec la même procédure. En mode Auto, le contrôle automatique refuse cette publication : il faudra repasser en « Accept edits » le temps du dépôt. La branche `claude/execute-prompt-00-18ra5a` de banane-data n'est pas fusionnée dans `main` : à faire avec l'accord de Mic.
