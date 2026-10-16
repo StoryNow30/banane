@@ -2145,3 +2145,19 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Pièce à construire** : `amenerDansLaVue`, avec dézoom ou glisser, au plus 3 gestes par rail. La vue est remise en place avant le cut suivant. Il faut d'abord relever sur la maquette si ESV accepte ces gestes.
 - **Écho** : y consigner longueur, durée et caméra des glissers.
 - **Confirmé par Mic le 16 octobre** : il déplace la vue en glissant au **clic gauche**, ou en dézoomant. La mention « clic droit » de D-043 est fausse.
+
+## D-148 — G1, mémoire des différés : une seule façon tient, et rien n'est activé (16 octobre 2026)
+
+- Livré sur `claude/50-g1-memoire-differes` (15de62c) et intégré à `claude/50-base` (8f3b369). Seuls l'outil, l'essai et la fiche `fiches/G1_MEMOIRE_DIFFERES.md` changent. Rien sous `src/`, verify vert.
+- 236 cas, un par différé posé par Mic : partie 1 du second projet 127, partie 17 35, partie 24 40, partie 29 34. Chaque partie est jugée par un modèle appris sur les trois autres.
+- **(a) Choix dans le pool** : 11 posés, 6 sur la mauvaise voie. Le classement ne se transfère pas d'une partie à l'autre. Abandon.
+- **(c) Voisin le plus proche** : 6 posés, 5 faux. Abandon.
+- **(b) Mémoire de voie de la série** : 56 posés, 53 justes à 10 mm près, 3 faux (5,4 %), 0 sur la mauvaise voie. La porte des 5 % n'est pas démontrée : la borne haute est à 14,6 %. Il faudrait environ 73 poses sans faute sur des parties neuves.
+- Le décalage constant par rapport à la pose de départ ESV est faux sur le second projet.
+- **Limites** :
+  - le gain vient des longues séries ;
+  - la tête de série reste à Mic ;
+  - le jugement suppose qu'Ariane voit les corrections de Mic pendant le lot, ce qu'elle ne fait pas aujourd'hui ;
+  - le réglage de (b) est sensible au protocole de simulation.
+- **Suite** : (b) en ombre, dans le lot et l'Écho, avec un événement par différé. Il faut définir avec Mic comment Ariane voit ses corrections. (b) recoupe la règle prudente de D-147 et sera rapprochée d'elle dans l'audit.
+- Les trois chantiers du déclencheur de D-145 sont rentrés. L'audit est lancé.
