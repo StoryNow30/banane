@@ -32,3 +32,7 @@ Notes de Mic pendant sa relecture Écho de la partie 29, après un lot Orbite en
 - La jointure (S3), E5 et M6 doivent compter les cuts « visités sans action » comme bons (règle 5).
 - M1 dispose désormais de quatre PN et deux zones d'ADV étiquetés sur une même partie : c'est le premier jeu d'apprentissage de la carte de la partie.
 - **F5 en Écho : défaut à reproduire** sur la maquette ESV (S4) et à corriger avant toute nouvelle consigne qui demande un F5. C'est moi qui avais demandé ce F5.
+
+## Partie 12 (opérateur débutant, Écho de Mic du 16/10, 10 h 02 – 10 h 17)
+
+Mic corrige la partie d'un opérateur débutant. Les poses de départ sont humaines. PN, avec les marges de contrôle avant et après comprises : 3944–3965, 6232–6246, 7885–7899, 8380–8394, 9070–9086, soit 15 à 22 cuts par PN marges comprises. Cela confirme la règle 3 (PN avec marge) sur une deuxième partie.
