@@ -2093,3 +2093,16 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Correctif à faire** : dans l'Écho (`noteServerWriteNow`), quand l'écriture de validation de la ligne diffère de plus de 1 mm de la référence, on remplace celle-ci, en gardant l'ancienne et en notant `source: validation-write`. Même règle dans `tools/jointure-echo-orbite.cjs`, pour réparer les exports déjà collectés. L'écriture serveur est l'arbitre.
 - **Effet sur D-141** : négligeable. L'écart médian par rail passe de 149 à 150 mm. La voie est décalée dans le même sens sur 109/112 cuts. L'exception à 1 631 mm disparaît. Les nuages ont des points de flanc sur 254/254 rails. Les faux verts, le débit et les différés ne changent pas. D-134 ne change pas.
 - Correctif livré (`claude/50-echo-ref-ecriture`, de 3cb4c95 à 8825ec9) et intégré à `claude/50-base` par avance rapide. Une seule fonction pure, `referenceParEcriture`, est partagée par l'Écho et l'outil de jointure. Une écriture antérieure à l'intention est ignorée. Le statut `candidate-observed` est conservé. Le cut 428 passe de 1 631,1 à 1 441,6 mm ; c'est le seul cut corrigé sur 765. Les tables des parties 17 et 29 sont identiques ligne pour ligne. verify : 1 788 réussis, 0 échec. La règle reste à confirmer au terrain avec une Écho équipée du correctif.
+
+## D-144 — Cap de l'apprentissage fixé par Mic : « un cut différé = un cut appris » ; lancement massif (16 octobre 2026)
+
+- Mic : « Tu peux tout massivement lancer, que ce soit la prochaine version, les analyses, l'apprentissage. » Et il fixe un cap, pas un but : **quand on possède un lot Orbite et son Écho, chaque cut différé devient un cas appris qu'Ariane saura poser dans un contexte semblable.**
+- Lancé en parallèle :
+  - **G1, mémoire des différés** (`claude/50-g1-memoire-differes`), avec trois façons d'apprendre, toutes lisibles :
+    - choix dans le pool de candidats ;
+    - décalage de voie d'une série, appris sur les premiers cuts corrigés par Mic et réutilisé sur les suivants ;
+    - voisin le plus proche entre parties.
+    - Jugée hors ligne. Porte : 0 pose sur la mauvaise voie, moins de 5 % de poses fausses.
+  - **Voie prédite et « déplacer la vue »** (`claude/50-voie-predite`) : rejeu du moteur sur le vrai nuage, centré sur la voie prédite, avec le décalage d'écran ou le dézoom nécessaire.
+  - **4.9.5 test 4** (`claude/495-test-4`) : la base 5.0, plus l'empreinte de contrat par onglet (D-139), le champ partie d'`audit-serveur` corrigé, la correction verticale en **ombre** (E2, jamais appliquée) et le F5 en Écho à nouveau permis. Rien ne change dans la pose.
+- Toujours en cours : l'enquête sur le cut 428 (déjà poussée sur la base, à relire : D-143), l'analyse de la partie 24, P1 ter et S4.
