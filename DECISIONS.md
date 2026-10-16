@@ -1972,3 +1972,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Rejeu (six lots) : le mode vertical donne exactement le même résultat que les deux axes (partie 17 : 47 → 25 au-delà de 10 mm ; 11 posés en plus, dont 8 par ricochet, et 3 en moins).
 - **Ma prévision était fausse** : le cut 'pair-guard' de passage à niveau de la partie 27 échappe toujours à la garde. En mode vertical, le du du rail (−1,9 mm, dans le domaine) est appliqué en entier alors qu'il ne l'était pas avant, et l'écartement prédit tombe sous le plancher de 1 420 mm. Le ricochet vient des appuis dont dz a bougé de 8 mm, pas du latéral.
 - Lancé : **P1 ter `'hauteur'`** (dz plafonné seul, du = 0, latéral strictement comme aujourd'hui), rejeu en quatre colonnes, et analyse chiffrée d'une garde contre le ricochet dans `lot-decision.js` (proposition seulement, non codée).
+
+## D-132 — Réponses de Mic du 16 octobre au matin ; archivage des exports bloqué tant que banane-data est public (16 octobre 2026)
+
+- Séance 4.9.5 test 3 : Mic commence par là. Exports de la test 2 : à venir si encore disponibles. Écho partie 24 long (Q5) : probablement perdu.
+- Q3 : Mic signalera l'entrée en aiguillage et la marge avant et après.
+- D-123 : changement de projet ESV aujourd'hui, donc un second projet arrive.
+- **Q8 précisée** : Mic n'utilise que Google Chrome, dans un seul profil, en plusieurs fenêtres. Exemple : un lot Orbite dans une fenêtre, une correction manuelle d'une autre partie dans une autre fenêtre au premier plan. Changer d'onglet dans la même fenêtre arrête Ariane. L'Écho ne peut donc pas observer cette correction pendant le lot ; ce serait possible avec un second profil Chrome, à proposer sans imposer.
+- Version de test avec le plafond de convention activé : **accord de Mic**, après le choix de variante (P1 ter), pour un lot qu'il relira entièrement.
+- **Archivage des exports** : Mic demande de les archiver dans banane-data dès réception. La tentative est **refusée par le contrôle de sécurité de la session** : publier des exports bruts dans un dépôt public est traité comme une fuite de données. banane-data est public par choix du propriétaire (README, 23/09), mais rien n'a été archivé depuis le 29/09. **À trancher par Mic** : rendre banane-data privé, ou créer un dépôt privé d'archives. Je n'archive rien et je ne contourne pas ce refus en attendant.
+- ESV local (maquette, `claude/esv-locale-audit`) : la maquette est bouclée (rejeux 4.9.0.15 et 4.8.6 identiques au terrain cut par cut, campagne de pannes faite). Il reste à l'intégrer à verify : **S4 lancé** (`claude/50-s4-banc`).
