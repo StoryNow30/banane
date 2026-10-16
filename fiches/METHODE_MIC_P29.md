@@ -80,3 +80,4 @@ Notes de Mic :
 - **Nouvelle capacité candidate, « déplacer la vue »** : quand aucun rail sûr n'est dans la fenêtre, se décaler latéralement, comme Mic au clic gauche, ou dézoomer, puis chercher de nouveau. La trace doit rester celle d'un humain : un glisser de souris est un geste humain ordinaire. À mesurer d'abord : quelle part des différés de ce lot ont leur bon rail hors fenêtre (pose de Mic hors du cadre de capture) ?
 - Règle SKIP (points manquants, ou un seul scanner sur une coupe) : à consigner comme règle métier, priorité basse.
 - ADV : les marges de Mic vont d'environ 20 cuts (zone 1, aiguille au 136 : de 116 à 165) à des zones entières contrôlées sans fin déclarée.
+- Réponses de Mic (16/10) : **PN aux cuts 405–409** ; les cuts 388–396 et 447–449 ne sont pas des PN. Le cut 428 a un écartement final de **1 441 mm**. Les cuts validés puis SKIP restent en SKIP ; sans importance.
