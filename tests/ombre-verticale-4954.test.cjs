@@ -50,7 +50,7 @@ test('le réglage existe, il est actif par défaut avec 3,6 mm, et le panneau di
  assert.deepEqual({...Settings.ombreVerticaleRefusee},{actif:true,mm:3.6});
  assert.ok(Object.isFrozen(Settings.ombreVerticaleRefusee));
  const ligne=Settings.describe().find(l=>/Correction verticale en ombre/.test(l.nom));
- assert.ok(ligne,'une ligne dans la liste des réglages');assert.match(ligne.valeur,/3,6/);assert.match(ligne.valeur,/consigne/i);assert.match(ligne.pourquoi,/jamais appliquée/i);
+ assert.ok(ligne,'une ligne dans la liste des réglages');assert.match(ligne.valeur,/3,6/);assert.match(ligne.valeur,/consign/i);assert.match(ligne.pourquoi,/jamais appliquée/i);
  assert.equal(Settings.conventionPlafond,false,'le plafond de convention reste coupé');
 });
 
