@@ -48,7 +48,7 @@ async function visit(f,visitId,cut,{pose=truth}={}){
   return f.store.records.find(r=>r.visitId===visitId);
 }
 const ombres=f=>f.store.events.filter(e=>e.type==='memoire-differes-ombre');
-const sansHorloge=e=>{const {eventId,timestamp,ms,...x}=e;return x;};
+const sansHorloge=e=>{const {eventId,timestamp,ms,eventSeq,event_seq,...x}=e;return x;};
 
 test('le réglage existe, actif par défaut en OMBRE, réglage G1 (b) de D-148 ; le panneau dit qu\'il ne fait que consigner',()=>{
   const m=S.memoireDifferesOmbre;assert.ok(Object.isFrozen(m));

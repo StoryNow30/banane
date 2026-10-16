@@ -45,6 +45,17 @@
   else for(const side of sides){const old=referenceState.rails[side];
    state.rails[side]={positionSceneRelative:written[side].slice(),...(Array.isArray(old?.sceneRelativeToProfileLocal)?{sceneRelativeToProfileLocal:K.clone(old.sceneRelativeToProfileLocal)}:{}),positionSource:'validation-write'};}
   return {state,poseFrom:concordant?'last-observed-state':'write',sides,diffMm,maxDiffMm:Number.isFinite(max)?Math.round(max*1e4)/10:null};}
+ /* 5.0 (audit 5.0, I8 (2)) — ENTRÉE SANS FUITE de l'ombre « mémoire des différés » : la frontière de l'observation « continuité » (amendement
+  * n°7). Seuls sont copiés l'identité, la visite, la pose de départ (`beforeEstablished`) et les instants des transitions (pour couper au
+  * premier changement de rail) ; les points sont ceux des captures prises AUTOUR DE LA POSE DE DÉPART, achevées avant ce changement
+  * (`gatherInput`). La référence humaine, la pose finale, les intentions et les écritures de la visite ne sont jamais lues. */
+ function entreeSansFuite(record,chunks,O=typeof module==='object'?require('./continuity-observer.js'):globalThis.BananeContinuityObserver){
+  const vue={visitId:record.visitId,visitIndex:record.visitIndex,identity:K.clone(record.identity),beforeEstablished:K.clone(record.beforeEstablished),
+   stateTransitions:(record.stateTransitions||[]).map(t=>({observedAt:t.observedAt,effect:{kind:t.effect?.kind??null}}))};
+  const input=O.gatherInput(vue,chunks),before=vue.beforeEstablished?.rails||{};
+  const rails=Object.fromEntries(SIDES.map(side=>[side,before[side]?{...before[side],profileContours:input.contours[side]??before[side].profileContours}:null]));
+  return {identity:vue.identity,visitId:vue.visitId,visitIndex:vue.visitIndex,rails,points:input.points,visible:input.visible};
+ }
  class Sessions{
   /* Réglages centralisés dans src/settings.js ; ces alias restent exposés pour
    * les tests et les outils qui les lisaient déjà. */
@@ -148,16 +159,69 @@
    const observer=typeof module==='object'?require('./continuity-observer.js'):globalThis.BananeContinuityObserver;
    const shadow=typeof module==='object'?require('./gcv1-shadow.js'):globalThis.BananeGCV1Shadow;
    return observer&&typeof shadow?.scientificProposeBoth==='function'?{observer,shadow}:null;}
+  continuityOn(){return S.continuity?.observe!==false&&!!this.continuityTools();}
+  /* 5.0 (I8 (2)) : la même file sert l'ombre « mémoire des différés », calculée après la continuité de la visite. */
   scheduleContinuity(visitId){
-   if(S.continuity?.observe===false||!this.continuityTools())return;
+   const continuite=this.continuityOn(),memoire=!!this.memoireReglage();
+   if(!continuite&&!memoire)return;
    (this.continuityPending??=[]).push(visitId);
-   while(this.continuityPending.length>(S.continuity?.maxPending??4))
-    void this.writeContinuity(this.continuityPending.shift(),{format:'banane-continuity-observation-v1',status:'skipped-backlog',applied:false,displayed:false});
+   while(this.continuityPending.length>(S.continuity?.maxPending??4)){const v=this.continuityPending.shift();
+    if(continuite)void this.writeContinuity(v,{format:'banane-continuity-observation-v1',status:'skipped-backlog',applied:false,displayed:false});}
    if(!this.continuityRunning){this.continuityRunning=this.drainContinuity().finally(()=>{this.continuityRunning=null;});}}
   async drainContinuity(){await Promise.resolve();
    while(this.continuityPending?.length){const visitId=this.continuityPending.shift();
-    try{await this.observeContinuity(visitId);}
-    catch(e){await this.writeContinuity(visitId,{format:'banane-continuity-observation-v1',status:'error',reason:String(e?.message||e),applied:false,displayed:false});}}}
+    if(this.continuityOn())try{await this.observeContinuity(visitId);}
+    catch(e){await this.writeContinuity(visitId,{format:'banane-continuity-observation-v1',status:'error',reason:String(e?.message||e),applied:false,displayed:false});}
+    try{await this.observeMemoire(visitId);}catch{/* ombre : jamais bloquant */}}}
+  /* 5.0 (audit 5.0, I8 (2)) — MÉMOIRE DES DIFFÉRÉS EN OMBRE (`memoire-differes-ombre`, réglage `memoireDifferesOmbre`, module
+   * src/voie-recentree.js). À la fin de la PREMIÈRE visite d'un cut que le lot Orbite de la partie a différé : la mémoire de la série (les
+   * corrections déjà validées par l'opérateur sur les autres cuts différés de la série, visites antérieures de cette session), puis le
+   * moteur recentré sur leur voie, sur l'entrée sans fuite (`entreeSansFuite`). Consigné seulement, dans l'export de l'Écho
+   * (`nativeSessionId`) ; l'Écho reste passif. Si le lot de la partie n'est pas connu d'Ariane (aucun enregistrement de lot de cette
+   * partie dans l'état du moteur), un seul événement « differes-inconnus » le dit, et rien n'est calculé. */
+  memoireReglage(){const r=(globalThis.BananeSettings||S)?.memoireDifferesOmbre;return r&&r.actif===true?r:null;}
+  memoireOutils(){
+   const V=typeof module==='object'?require('./voie-recentree.js'):globalThis.BananeVoieRecentree;
+   const O=typeof module==='object'?require('./continuity-observer.js'):globalThis.BananeContinuityObserver;
+   const Shadow=typeof module==='object'?require('./gcv1-shadow.js'):globalThis.BananeGCV1Shadow;
+   return V&&O&&typeof Shadow?.scientificProposeBoth==='function'?{V,O,Shadow}:null;}
+  /* Cuts que le lot de la partie a laissés différés : dernier enregistrement de lot (hors Écho et Correction) de chaque cut. Null : aucun lot connu. */
+  differesDuLot(part){
+   const dernier=new Map();
+   for(const r of this.e.s.records||[]){if(!r||r.nativeSessionId||r.manualSessionId||r.identity?.part!==part||!Number.isInteger(r.identity?.cut))continue;dernier.set(r.identity.cut,r);}
+   if(!dernier.size)return null;
+   return [...dernier.values()].filter(r=>r.status==='deferred-unresolved').map(r=>r.identity.cut).sort((a,b)=>a-b);}
+  /* Validation utilisable comme mémoire : celle de la continuité (une intention, état frais et associé), ou une référence corrigée par
+   * l'écriture serveur de validation (D-143), plus sûre encore. */
+  valideePourMemoire(O,r){const f=r?.humanFinalReference;
+   if(O.validated(r))return true;
+   return f?.source==='validation-write'&&r.operatorIntent==='VALIDATE'&&(r.operatorIntents||[]).length===1&&SIDES.every(side=>(f.state?.rails?.[side]?.positionSceneRelative||[]).length===3);}
+  async observeMemoire(visitId){
+   const n=this.e.s.native,reglage=this.memoireReglage();if(!n||!reglage)return;
+   const record=await this.recordById(visitId);
+   if(!record||record.nativeSessionId!==n.id||record.visitRelation?.type!=='first-observation'||!record.beforeEstablished?.rails)return;
+   /* Numéro d'ordre de la session (l'export de l'Écho range ses événements par `eventSeq`), pris au moment où l'événement est rangé. */
+   const id=record.identity,base=()=>{const eventSeq=n.nextEventSeq=(n.nextEventSeq||0)+1;return {eventId:K.uid(),timestamp:iso(),type:'memoire-differes-ombre',schema:1,nativeSessionId:n.id,
+    observationPeriodId:record.observationPeriodId||null,visitId:record.visitId,visitIndex:record.visitIndex,eventSeq,event_seq:eventSeq};};
+   const differes=this.differesDuLot(id.part);
+   if(!differes){const vus=(this.memoireSansLot??=new Set());if(vus.has(n.id+'|'+id.part))return;vus.add(n.id+'|'+id.part);
+    await this.store.putEvent({...base(),version:'memoire-differes-ombre-v1',identity:{part:id.part??null,cut:id.cut??null},frontiere:'avant-reference',etat:'differes-inconnus',
+     manque:'la liste des cuts différés par le lot de cette partie (aucun enregistrement de lot de la partie dans l\'état d\'Ariane)',verdict:{posable:false,raison:'differes-inconnus'}});return;}
+   if(!differes.includes(id.cut))return;
+   const t0=Date.now();let ev;
+   try{const outils=this.memoireOutils();if(!outils)throw Error('modules absents');const {V,O,Shadow}=outils;
+    const portee=reglage.ecartSerieMax*Math.max(1,differes.length),validees=[];
+    for(const visit of n.visits||[]){if(!(visit.visitIndex<record.visitIndex)||visit.identity?.part!==id.part||Math.abs((visit.identity?.cut??Infinity)-id.cut)>portee)continue;
+     const other=await this.recordById(visit.visitId);if(!other||other.nativeSessionId!==n.id||!this.valideePourMemoire(O,other))continue;
+     validees.push({identity:K.clone(other.identity),visitIndex:other.visitIndex,positions:Object.fromEntries(SIDES.map(side=>[side,other.humanFinalReference.state.rails[side].positionSceneRelative.slice()]))});}
+    const chunks=[];for(const cid of record.lidarChunkIds||[]){const c=await this.store.getCloud(cid);if(c)chunks.push(c);}
+    const entree=entreeSansFuite(record,chunks,O);
+    if(!entree.points.length||!SIDES.every(side=>entree.rails[side]?.profileContours?.length))ev={...V.memoireSerie({identity:id,differes,validees,seuils:reglage}),etat:'sans-nuage'};
+    ev=ev?{version:'memoire-differes-ombre-v1',identity:{part:id.part??null,cut:id.cut??null},frontiere:'avant-reference',etat:'sans-nuage',serie:ev.serie,memoire:ev.memoire,verdict:{posable:false,raison:'sans-nuage'}}
+     :V.evaluerEcho({entree,differes,validees,Shadow,seuils:reglage}).evenement;
+    ev={...ev,points:entree.points.length};}
+   catch(e){ev={version:'memoire-differes-ombre-v1',identity:{part:id.part??null,cut:id.cut??null},frontiere:'avant-reference',etat:'erreur',message:String(e?.message||e).slice(0,160),verdict:{posable:false,raison:'erreur'}};}
+   await this.store.putEvent({...base(),...ev,ms:Date.now()-t0});}
   async observeContinuity(visitId){const n=this.e.s.native,tools=this.continuityTools();if(!n||!tools)return;
    const record=await this.recordById(visitId);
    if(!record||record.nativeSessionId!==n.id||record.visitRelation?.type!=='first-observation'||!record.beforeEstablished?.rails)return;
@@ -847,5 +911,5 @@
    return {format:'banane-native-session-v2',version:K.VERSION,exportedAt:iso(),session:K.clone(n),records,events,closureSummary,cloudIds:n.cloudIds.slice()};
   }
  }
- return {Sessions,poseEqual,referenceParEcriture};
+ return {Sessions,poseEqual,referenceParEcriture,entreeSansFuite};
 });
