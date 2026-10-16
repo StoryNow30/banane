@@ -2144,4 +2144,4 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Les seuils sont lus sur ces deux parties : la règle passera un lot neuf **en ombre** avant toute activation, qui se fera avec Mic.
 - **Pièce à construire** : `amenerDansLaVue`, avec dézoom ou glisser, au plus 3 gestes par rail. La vue est remise en place avant le cut suivant. Il faut d'abord relever sur la maquette si ESV accepte ces gestes.
 - **Écho** : y consigner longueur, durée et caméra des glissers.
-- **À confirmer par Mic** : D-043 dit qu'il déplace la vue « au clic droit », le message du 16 octobre dit « au clic gauche ».
+- **Confirmé par Mic le 16 octobre** : il déplace la vue en glissant au **clic gauche**, ou en dézoomant. La mention « clic droit » de D-043 est fausse.
