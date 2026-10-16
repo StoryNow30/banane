@@ -2221,3 +2221,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Ce que les exports ne montrent pas** : la télémétrie cliente d'ESV, les événements d'interface synthétiques. Il faut le vérifier sur la maquette : capture réseau d'un passage manuel contre un passage en lot, sur les mêmes cuts.
 - **Aucune action nouvelle proposée.** Réduire un écart (pauses, lectures) changerait le comportement dans ESV : c'est à Mic de décider.
 - **Remarque** : l'essai `memoire-differes` frôle sa limite de 20 s sous charge (15 s seul). À alléger.
+
+## D-152 — Jointure par cadre de scène : la partie 24 était juste, seule une étiquette était fausse (16 octobre 2026)
+
+- Livré sur `claude/50-jointure-cadres` (11b0bfc à 2eef69c), intégré à `claude/50-base` (55a14b9). Seuls l'outil, les essais et les fiches changent, rien sous `src/`.
+- **I2** : la translation est estimée pour chaque cadre de scène. Sur la partie 24, le lot a été lancé sur deux pages, d'où deux translations écartées de 65 m. Le P90 passe de 65 m à 0 et les cuts en repli de 17 à 0. Les tables des parties 17, 29 et de la partie 1 du second projet sont identiques ligne pour ligne.
+- **I3 (a)** : la règle « visité = bon » est refusée moins de 60 s après une perte de page et pour une visite aux captures vides. Les deux comptes, avec et sans la règle, sont publiés (I3 b).
+- **U5** : le résumé signale les sessions Écho qui se chevauchent. Aucune des quatre parties n'en a.
+- **Effet** : G0 inchangé (21 faux verts sur 70 en partie 24). G1 (b) inchangé (56 poses, 53 justes, 3 fausses, 0 mauvaise voie). D-147 inchangé. Pour D-141, il faut citer les deux comptes : 10 faux verts sur 165 avec la règle, 10 sur 111 sans.
+- Sur la partie 1 du second projet, les 54 cuts « visités = bons » restent 54. 6 d'entre eux n'ont aucune capture ; 44 tiennent sur une visite de moins de 2 s.
+- Les 60 s sont un choix, pas une mesure.
