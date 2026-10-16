@@ -1,4 +1,4 @@
-# Audit à mi-parcours — audit indépendant (GPT-6 Astra)
+# Audit à mi-parcours — audit indépendant (niveau maximal)
 
 *Transmis par la direction le 23 septembre 2026, versé tel quel. Instantané
 audité : commit `8ad1bec`. Archives `.7z` de banane-data non ouvertes par

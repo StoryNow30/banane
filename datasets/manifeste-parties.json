@@ -1,0 +1,22 @@
+{
+  "format": "ariane-manifeste-parties-v1",
+  "date": "2026-10-16",
+  "regle": "Une partie d'apprentissage a servi à régler ou à choisir : elle ne peut plus servir à juger un réglage. Toute partie qui n'est pas listée ici est réservée : aucun outil de réglage ne la lit. Toute partie reçue après la date de ce fichier est réservée jusqu'à une décision écrite qui la fait passer en apprentissage (on ajoute alors la partie à la liste, avec la date et la décision). Les projets sont désignés par leur rang : projet 1 et projet 2.",
+  "apprentissage": [
+    {
+      "projet": 1,
+      "parties": [17, 24, 29],
+      "motif": "Ont servi à régler la convention, la correction verticale en ombre, la règle prudente de voie prédite et la mémoire de série (G1), et à étudier les faux verts (G0)."
+    },
+    {
+      "projet": 2,
+      "parties": [1],
+      "motif": "A servi à régler la règle prudente de voie prédite et la mémoire de série (G1), et à étudier les faux verts (G0)."
+    }
+  ],
+  "reservees": {
+    "depuis": "2026-10-16",
+    "parties": [],
+    "note": "Aucune partie reçue après la date du fichier n'est encore nommée ici. Une partie absente de la liste d'apprentissage est réservée, nommée ou non."
+  }
+}

@@ -1,7 +1,7 @@
 'use strict';
 /* Version de test 4.9.5.4, nom « 4.9.5 test 4 » : base 5.0 avec E1 (mémoire de la liste), la reprise de l'Écho après un F5 (D-137), la référence humaine de l'Écho
  * corrigée par l'écriture serveur (D-143), l'empreinte du contrat ESV rangée par onglet (D-139), `audit-serveur` corrigé (D-141) et la correction verticale en ombre
- * (E2, D-140) ; le plafond de convention est livré coupé. Écrite comme les versions de test précédentes : manifeste avec `version_name` et
+ * (P8, D-140) ; le plafond de convention est livré coupé. Écrite comme les versions de test précédentes : manifeste avec `version_name` et
  * titre « Ouvrir Ariane … — V1 », même nom dans core, le repli du service worker, la pastille du pont et la
  * chaîne de version du panneau. Jamais deux paquets de même numéro et de comportement différent. La LECTURE des
  * anciens exports (4.9.0.2 et plus pour l'observateur, tools/perf-phases.cjs) n'est pas une version posée :

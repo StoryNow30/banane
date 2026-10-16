@@ -7,7 +7,7 @@ Deux audits menés en parallèle, sur le même instantané (`8ad1bec`) :
   recommandations ont été reprises dans D-037 après décision de la direction
   (retrait de la recommandation sur la conduite du projet, objectif
   intermédiaire porté à 80 %).
-- `AUDIT_ASTRA.md` — audit indépendant (modèle GPT-6 Astra), lecture seule du
+- `AUDIT_ASTRA.md` — audit indépendant (niveau maximal), lecture seule du
   code et des relevés, sans les archives de données. Texte transmis par la
   direction, versé tel quel.
 

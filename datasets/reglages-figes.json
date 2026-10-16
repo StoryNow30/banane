@@ -1,0 +1,67 @@
+{
+  "format": "ariane-reglages-figes-v1",
+  "date": "2026-10-16",
+  "regle": "Ces réglages sont figés avant de recevoir la partie suivante. Toute mesure faite sur une partie suivante cite ce fichier et sa date. Un réglage changé après coup n'est plus celui-ci : il repart de zéro, avec une nouvelle date et des parties neuves (voir datasets/manifeste-parties.json). Les projets sont désignés par leur rang : projet 1 et projet 2.",
+  "reglages": {
+    "voiePredite": {
+      "libelle": "Règle prudente de voie prédite (recentrage sur la voie)",
+      "decision": "D-147",
+      "fiche": "fiches/VOIE_PREDITE.md",
+      "etat": "hors ligne ; à passer d'abord en ombre dans Orbite, sur une partie neuve",
+      "fige": "2026-10-16",
+      "variante": "regle-wc-e10-p10",
+      "valeurs": {
+        "etages": ["window"],
+        "confMin": 55,
+        "chaineMax": 10,
+        "ecartVoisinMm": 10,
+        "fenetreMm": 30,
+        "memoire": "propre"
+      },
+      "parties": [
+        { "projet": 1, "parties": [29] },
+        { "projet": 2, "parties": [1] }
+      ]
+    },
+    "memoireSerieB": {
+      "libelle": "Mémoire de série G1 (b) : voie prolongée depuis les poses de l'opérateur, moteur recentré",
+      "decision": "D-148",
+      "fiche": "fiches/G1_MEMOIRE_DIFFERES.md",
+      "etat": "hors ligne ; porte non démontrée (3 fausses sur 56 poses, borne haute 14,6 %)",
+      "fige": "2026-10-16",
+      "valeurs": {
+        "base": "M",
+        "derniersCuts": 3,
+        "porteDispersionMm": [6, 10],
+        "coupPrecedentCompris": 0,
+        "memoireMin": 1,
+        "mode": "moteur",
+        "recentrageMm": 15,
+        "minDessus": 5,
+        "minFlanc": 3,
+        "propagation": true,
+        "seuilJusteMm": 5,
+        "seuilFauxMm": 10,
+        "seuilMauvaiseVoieMm": 50,
+        "porteFaux": 0.05
+      },
+      "parties": [
+        { "projet": 1, "parties": [17, 24, 29] },
+        { "projet": 2, "parties": [1] }
+      ]
+    },
+    "ombreVerticale": {
+      "libelle": "Correction verticale en ombre sur les rails à convention refusée (P8)",
+      "decision": "D-140",
+      "fiche": "fiches/G0_APPRENTISSAGE_V1.md",
+      "etat": "consignée seulement, jamais appliquée",
+      "fige": "2026-10-16",
+      "valeurs": {
+        "mm": 3.6
+      },
+      "parties": [
+        { "projet": 1, "parties": [17, 24, 29] }
+      ]
+    }
+  }
+}

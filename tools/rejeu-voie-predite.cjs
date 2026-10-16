@@ -44,6 +44,7 @@
  *        --journal JOURNAL.json --jointure JOINTURE.json [--lignes LISTE.jsonl]
  *        [--zones JEU.jsonl] [--cache MEMOIRE.json] [--variantes id,id,...]
  *        [--sortie SORTIE.json] [--detail DETAIL.json] [--csv MODELE-{id}.csv] [--ombre OMBRE.jsonl]
+ *        [--partie PROJET:PARTIE [--juger-partie-reservee]]
  *   node tools/rejeu-voie-predite.cjs --rapport SORTIE1.json [SORTIE2.json ...]
  *   node tools/rejeu-voie-predite.cjs --liste      (variantes connues)
  *   node tools/rejeu-voie-predite.cjs --essai      (fixture synthétique, sans donnée)
@@ -70,6 +71,7 @@ const B=require('../src/appuis-liste.js');
  * de l'extension, pour que le rejeu et l'ombre de terrain ne puissent pas diverger. */
 const V=require('../src/voie-recentree.js');
 const zlib=require('node:zlib');
+const Manifeste=require('./manifeste-parties.cjs');
 
 const SIDES=['left','right'];
 const FR={left:'gauche',right:'droite'};
@@ -612,6 +614,7 @@ function lireArgs(argv){
     if(a==='--corpus')o.corpus.push(val());else if(a==='--journal')o.journal=val();else if(a==='--jointure')o.jointure=val();
     else if(a==='--lignes')o.lignes=val();else if(a==='--cache')o.cache=val();else if(a==='--detail')o.detail=val();else if(a==='--csv')o.csv=val();else if(a==='--zones')o.zones=val();else if(a==='--sortie')o.sortie=val();
     else if(a==='--ombre')o.ombre=val();
+    else if(a==='--partie')o.partie=Manifeste.lireDesignations(val());else if(a==='--juger-partie-reservee')o.jugerReservee=true;
     else if(a==='--variantes')o.variantes=val().split(',');else if(a==='--essai')o.essai=true;else if(a==='--liste')o.liste=true;
     else if(a==='--rapport'){o.rapport=[];while(i+1<argv.length&&!argv[i+1].startsWith('--'))o.rapport.push(argv[++i]);}
     else throw Error('Option inconnue : '+a);
@@ -620,6 +623,8 @@ function lireArgs(argv){
 }
 function main(argv=process.argv.slice(2)){
   const o=lireArgs(argv);
+  /* Manifeste des parties (B1) : une partie réservée n'est pas rejouée par un outil de réglage, sauf pour la juger sans rien régler. */
+  if(o.partie){const {avis}=Manifeste.controler(Manifeste.lire(),o.partie,{outil:'rejeu-voie-predite',jugerReservee:!!o.jugerReservee});if(avis)console.error(avis);}
   if(o.liste){for(const v of VARIANTES)console.log(v.id);return;}
   if(o.rapport){console.log(rapportTexte(o.rapport.map(lireJson)));return;}
   if(o.essai){const ctx=fixtureSynthetique(),res=executer(ctx,['temoin','vue-reelle','vue-serie'],m=>console.error(m));

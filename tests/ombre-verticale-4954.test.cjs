@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.5.4 (E2, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE SUR LES RAILS À CONVENTION REFUSÉE. SEULEMENT CONSIGNÉE, JAMAIS APPLIQUÉE.
+/* 4.9.5.4 (P8, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE SUR LES RAILS À CONVENTION REFUSÉE. SEULEMENT CONSIGNÉE, JAMAIS APPLIQUÉE.
  *
  * D-140 : sur les rails dont le calage de convention est refusé (décalage hors des 8 mm), Mic remonte la pose dans les trois parties relues
  * (+6,1 ; +1,8 ; +3,6 mm). La correction apprise ailleurs n'atteint pas la porte (« 0 mauvaise pose ajoutée ») : elle va en OMBRE.
