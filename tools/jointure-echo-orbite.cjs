@@ -8,7 +8,7 @@
  *
  *   node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> (--journal <fichier> | --sans-journal)
  *        [--partie N] [--base auto|premiere|derniere] [--sortie table.json] [--csv table.csv] [--sans-poses]
- *        [--visite-sans-action-bonne [durée minimale en s, 1 par défaut]]
+ *        [--visite-sans-action-bonne [durée minimale en s, 0,8 par défaut]]
  *
  * Clé de jointure : (partie, cut) — et le projet si les deux identités en portent un (`projectId` ; absent des
  * exports actuels). Clé de visite : (session Écho, `visitIndex`) : `visitIndex` repart de 0 à chaque session, il ne
@@ -44,7 +44,7 @@
  *
  * RÈGLE « VISITÉ SANS ACTION = BON » (`--visite-sans-action-bonne [s]`, coupée par défaut). Un cut visité sans
  * validation observée, dont aucun rail n'a bougé de 0,5 mm ou plus entre la pose initiale et la dernière pose
- * observée d'une visite, et dont la plus longue visite dure au moins `s` secondes (1 par défaut ; 0 = toutes), compte
+ * observée d'une visite, et dont la plus longue visite dure au moins `s` secondes (0,8 par défaut ; 0 = toutes), compte
  * pour une correction nulle (référence « observee », `regleVisiteBon: true`). Ces cuts sont comptés à part dans le
  * résumé. Un cut déplacé sans validation, trop court ou sans mesure reste « sans-reference ».
  */
@@ -57,6 +57,10 @@ const COTES = [['gauche', 'left'], ['droite', 'right']];
 const SEUIL_REPERE_MM = 20;
 const SEUILS_MM = [5, 10];
 const BASES = ['auto', 'premiere', 'derniere'];
+/* Règle « visité sans action = bon » : durée minimale par défaut de la plus longue visite (s) et déplacement
+ * d'un rail (mm) à partir duquel le cut est considéré comme modifié. */
+const DUREE_VISITE_DEFAUT_S = 0.8;
+const DEPLACEMENT_MODIFIE_MM = 0.5;
 
 /* ------------------------------------------------------------------ outils numériques */
 const fini = v => Number.isFinite(v);
@@ -172,6 +176,32 @@ function echoParCut(records, sessions = []) {
   for (const c of par.values()) c.visites.sort(visiteOrdre);
   return par;
 }
+/* Règle « visité sans action = bon » pour un cut sans validation observée. Rend { appliquee, raison, visites,
+ * dwellMaxS, deplacementMaxMm } : appliquee quand aucun rail n'a bougé de DEPLACEMENT_MODIFIE_MM ou plus (pose
+ * initiale → dernière pose observée, dans chaque visite) et que la plus longue visite dure au moins `seuilS`.
+ * Raisons de refus : « hors-cut » (cut 0 : artefact d'un rechargement de page), « sans-mesure » (aucun rail
+ * mesurable des deux côtés), « deplace-sans-validation », « trop-court ». */
+function visiteSansAction(c, seuilS) {
+  const mesures = [];
+  let dwellMaxS = 0;
+  for (const v of c.visites) {
+    const ini = v.initialObserved || v.firstObserved, fin = v.lastObserved;
+    for (const [, en] of COTES) {
+      const a = ini && ini.rails && vec3(ini.rails[en] && ini.rails[en].positionSceneRelative), b = fin && fin.rails && vec3(fin.rails[en] && fin.rails[en].positionSceneRelative);
+      if (a && b) mesures.push(1000 * norme(moins(b, a)));
+    }
+    const dt = (Date.parse(v.endedAt) - Date.parse(v.startedAt)) / 1000;
+    if (fini(dt) && dt > dwellMaxS) dwellMaxS = dt;
+  }
+  const r = { appliquee: false, raison: null, visites: c.visites.length, dwellMaxS: arrondi(dwellMaxS, 1), deplacementMaxMm: mesures.length ? arrondi(Math.max(...mesures), 1) : null };
+  if (!(c.cut > 0)) r.raison = 'hors-cut';
+  else if (!mesures.length) r.raison = 'sans-mesure';
+  else if (Math.max(...mesures) >= DEPLACEMENT_MODIFIE_MM) r.raison = 'deplace-sans-validation';
+  else if (dwellMaxS < seuilS) r.raison = 'trop-court';
+  else r.appliquee = true;
+  return r;
+}
+
 /* Dernière validation observée : la visite la plus tardive qui porte une référence humaine à rails. */
 function referenceHumaine(visites) {
   for (let i = visites.length - 1; i >= 0; i--) {
@@ -324,6 +354,10 @@ function joindre(records, journal, options = {}) {
   let projetsDifferents = 0;
   for (const [k, c] of echo) { const j = jr.get(k); if (j && c.projet && j.projet && c.projet !== j.projet) { jr.delete(k); projetsDifferents++; } }
 
+  const seuilVisite = options.visiteSansActionBonne === undefined || options.visiteSansActionBonne === null || options.visiteSansActionBonne === false ? null
+    : options.visiteSansActionBonne === true ? DUREE_VISITE_DEFAUT_S : options.visiteSansActionBonne;
+  if (seuilVisite !== null && !(fini(seuilVisite) && seuilVisite >= 0)) throw Error('--visite-sans-action-bonne attend une durée en secondes, positive ou nulle.');
+  const regle = seuilVisite === null ? null : { seuilS: seuilVisite, cuts: 0, parClasse: {}, refus: { 'deplace-sans-validation': 0, 'trop-court': 0, 'sans-mesure': 0, 'hors-cut': 0 } };
   const repere = calibrerRepere(echo, jr);
   const decalage = repere.calibre ? repere.decalage : null;
   const lignes = [];
@@ -347,7 +381,24 @@ function joindre(records, journal, options = {}) {
     const etiquette = (ref ? ref.visite : derniere).observedLabelCandidate ?? null;
     ligne.etiquetteEcho = etiquette;
     ligne.statutEcho = (ref ? ref.visite : derniere).status ?? null;
-    if (!ref) { ligne.referenceHumaine = 'sans-reference'; ligne.base = null; lignes.push(ligne); continue; }
+    let sansAction = null;
+    if (!ref && regle) {
+      sansAction = visiteSansAction(c, regle.seuilS);
+      ligne.visiteSansAction = sansAction;
+      if (sansAction.appliquee) { regle.cuts++; regle.parClasse[classe] = (regle.parClasse[classe] || 0) + 1; }
+      else regle.refus[sansAction.raison]++;
+    }
+    if (!ref && !(sansAction && sansAction.appliquee)) { ligne.referenceHumaine = 'sans-reference'; ligne.base = null; lignes.push(ligne); continue; }
+    if (!ref) {
+      /* Visité sans action : correction nulle, sans pose humaine finale. */
+      ligne.referenceHumaine = 'observee';
+      ligne.regleVisiteBon = true;
+      ligne.base = base === 'derniere' ? 'derniere-visite' : base === 'auto' && a && decalage ? 'ariane' : 'premiere-visite';
+      const zero = () => ({ repere: 'profil', longitudinalMm: 0, lateralMm: 0, verticalMm: 0, dist3dMm: 0 });
+      ligne.ecartHumain = { gauche: zero(), droite: zero(), maxDist3dMm: 0 };
+      lignes.push(ligne);
+      continue;
+    }
     ligne.referenceHumaine = 'observee';
     ligne.visiteReference = ref.rang + 1;
     ligne.validationsDeLaVisite = (ref.visite.humanFinalReferences || []).length || 1;
@@ -386,7 +437,7 @@ function joindre(records, journal, options = {}) {
   }
 
   const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
-  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions }) };
+  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle }) };
 }
 
 /* ------------------------------------------------------------------ résumé */
@@ -397,6 +448,8 @@ function resumer(lignes, meta = {}) {
     repereScene: meta.repere ? { calibre: meta.repere.calibre, paires: meta.repere.paires, residuMedianMm: meta.repere.residuMedianMm, residuP90Mm: meta.repere.residuP90Mm } : null,
     partiesEchoIgnorees: meta.partiesEchoIgnorees || [], projetsDifferents: meta.projetsDifferents || 0,
     cutsVusDansPlusieursSessions: meta.cutsMultiSessions || 0,
+    visiteSansActionBonne: meta.regle ? { dureeMinimaleS: meta.regle.seuilS, deplacementModifieMm: DEPLACEMENT_MODIFIE_MM, cuts: meta.regle.cuts, parClasse: meta.regle.parClasse,
+      refus: meta.regle.refus } : null,
     cutsEcho: lignes.filter(l => l.dansEcho).length, cutsJournal: lignes.filter(l => l.dansJournal).length,
     cutsJoints: lignes.filter(l => l.dansEcho && l.dansJournal).length,
     cutsJournalAbsentsDeLEcho: lignes.filter(l => !l.dansEcho).length,
@@ -418,6 +471,7 @@ function resumer(lignes, meta = {}) {
     const cuts = avec.map(l => l.ecartHumain.maxDist3dMm).filter(fini);
     resume.parClasse[classe] = {
       cuts: cl.length, avecReference: avec.length, sansReference: cl.length - avec.length, etiquettesEcho: etiq,
+      ...(meta.regle ? { dontVisiteSansAction: avec.filter(l => l.regleVisiteBon).length, avecValidationObservee: avec.filter(l => !l.regleVisiteBon).length } : {}),
       ecart3dMm: { gauche: stat(dist(rail('gauche'))), droite: stat(dist(rail('droite'))), rails: stat(dist(tous)), parCut: stat(cuts) },
       ecartLateralAbsMm: stat(tous.map(r => r.lateralMm === null ? NaN : Math.abs(r.lateralMm))),
       ecartVerticalAbsMm: stat(tous.map(r => r.verticalMm === null ? NaN : Math.abs(r.verticalMm))),
@@ -462,8 +516,14 @@ function texte(resume, entete = []) {
     : 'Repère de scène : non calibré (aucun cut posé des deux côtés) ; la base est la première visite de l\'Écho.');
   L.push(`Base de l'écart humain (--base ${resume.base}) : ${Object.entries(resume.bases).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'}.`);
   L.push(`Repère de l'écart : profil pour ${resume.reperes.profil} rails, distance 3D seule pour ${resume.reperes['3D']} rails.`);
+  const rg = resume.visiteSansActionBonne;
+  if (rg) {
+    L.push(`Règle « visité sans action = bon » (visite d'au moins ${rg.dureeMinimaleS} s, aucun rail déplacé de ${rg.deplacementModifieMm} mm ou plus) : ${rg.cuts} cuts comptés à correction nulle`
+      + `${Object.keys(rg.parClasse).length ? ` (${Object.entries(rg.parClasse).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''} ; restent sans référence : ${rg.refus['deplace-sans-validation']} déplacés sans validation, ${rg.refus['trop-court']} trop courts, ${rg.refus['sans-mesure']} sans mesure, ${rg.refus['hors-cut']} hors cut.`);
+  }
   for (const [classe, c] of Object.entries(resume.parClasse)) {
-    L.push('', `Classe « ${classe} » : ${c.cuts} cuts en Écho (${c.avecReference} avec référence humaine, ${c.sansReference} sans référence).`);
+    L.push('', `Classe « ${classe} » : ${c.cuts} cuts en Écho (${c.avecReference} avec référence humaine, ${c.sansReference} sans référence).`
+      + (rg ? ` Parmi les références : ${c.avecValidationObservee} validations observées, ${c.dontVisiteSansAction} visités sans action.` : ''));
     L.push(`  étiquettes Écho : ${Object.entries(c.etiquettesEcho).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ') || '—'}`);
     L.push(`  écart 3D gauche : ${st(c.ecart3dMm.gauche)}`, `  écart 3D droit  : ${st(c.ecart3dMm.droite)}`, `  écart 3D rails  : ${st(c.ecart3dMm.rails)}`, `  écart 3D par cut (plus grand des deux rails) : ${st(c.ecart3dMm.parCut)}`);
     L.push(`  latéral |.| : ${st(c.ecartLateralAbsMm)}`, `  vertical |.| : ${st(c.ecartVerticalAbsMm)}`);
@@ -474,14 +534,22 @@ function texte(resume, entete = []) {
 }
 
 /* ------------------------------------------------------------------ ligne de commande */
-const USAGE = 'Usage : node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> (--journal <fichier> | --sans-journal) [--partie N] [--base auto|premiere|derniere] [--sortie table.json] [--csv table.csv] [--sans-poses] [--visite-sans-action-bonne [durée minimale en s, 1 par défaut]]';
+const USAGE = 'Usage : node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> (--journal <fichier> | --sans-journal) [--partie N] [--base auto|premiere|derniere] [--sortie table.json] [--csv table.csv] [--sans-poses] [--visite-sans-action-bonne [durée minimale en s, 0,8 par défaut]]';
 function lireArguments(argv) {
-  const a = { echo: [], journal: null, sansJournal: false, partie: null, sortie: null, csv: null, base: 'auto', poses: true };
+  const a = { echo: [], journal: null, sansJournal: false, visiteSansActionBonne: null, partie: null, sortie: null, csv: null, base: 'auto', poses: true };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--echo') { while (i + 1 < argv.length && !argv[i + 1].startsWith('--')) a.echo.push(argv[++i]); }
     else if (k === '--journal') a.journal = argv[++i];
     else if (k === '--sans-journal') a.sansJournal = true;
+    else if (k === '--visite-sans-action-bonne') {
+      /* Valeur facultative : une durée en secondes ; sans elle, DUREE_VISITE_DEFAUT_S. */
+      if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
+        const v = Number(argv[++i]);
+        if (!fini(v) || v < 0) throw Error('--visite-sans-action-bonne attend une durée en secondes, positive ou nulle.');
+        a.visiteSansActionBonne = v;
+      } else a.visiteSansActionBonne = DUREE_VISITE_DEFAUT_S;
+    }
     else if (k === '--partie') { a.partie = Number(argv[++i]); if (!Number.isInteger(a.partie)) throw Error('--partie attend un entier.'); }
     else if (k === '--sortie') a.sortie = argv[++i];
     else if (k === '--csv') a.csv = argv[++i];
@@ -497,9 +565,9 @@ function executer(argv, sortie = console.log) {
   const a = lireArguments(argv), avis = [];
   const echo = lireEcho(a.echo, { journal: m => avis.push(m) });
   const journal = a.sansJournal ? { events: [], records: [], format: null, version: null } : lireJournal(a.journal);
-  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal });
+  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne });
   resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length };
-  const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses, sansJournal: a.sansJournal }, resume, table };
+  const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne }, resume, table };
   if (a.sortie) { fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true }); fs.writeFileSync(a.sortie, JSON.stringify(sortieJson, null, 1)); }
   if (a.csv) { fs.mkdirSync(path.dirname(path.resolve(a.csv)), { recursive: true }); fs.writeFileSync(a.csv, enCsv(table)); }
   sortie(texte(resume, [`Sources : ${echo.segments.length} segment(s) Écho (${echo.records.length} records, ${echo.sessions.length} session(s)), ${a.sansJournal ? 'sans journal' : `journal de ${journal.events.length} événements`}.`, ...avis]));
@@ -508,4 +576,4 @@ function executer(argv, sortie = console.log) {
 if (require.main === module) {
   try { executer(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
+module.exports = { DUREE_VISITE_DEFAUT_S, visiteSansAction, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
