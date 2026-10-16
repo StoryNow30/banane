@@ -45,6 +45,8 @@ test('PN : un cœur seul n\'est qu\'un candidat ; deux cœurs à 3 cuts au plus 
  assert.deepEqual(e[2].zone.pnControle,[96,108],'plage à contrôler : 4 cuts avant le premier cœur, 6 après le dernier');
  assert.deepEqual(e.map(x=>x.regles.includes('pn-chaque-cut')),[false,false,true,true,true,false]);
  assert.deepEqual(e.map(x=>x.aurait),['valider','valider','differer','differer','differer','valider']);
+ /* Variante de mesure (un cœur suffit) : la zone commence au cœur lui-même. */
+ const m1=R.creerMemoire('lot-a1');R.noter(m1,res(100,{coeurPN:true}),{},{pn:{confirmation:1}});assert.deepEqual(m1.zones,[{debut:100,fin:100}]);
  /* Un cœur isolé loin de tout autre : jamais confirmé. */
  const m2=R.creerMemoire('lot-b');assert.deepEqual(jouer(m2,[res(10,{coeurPN:true}),res(14,{coeurPN:true})]).map(x=>x.zone.pn),['coeur-non-confirme','coeur-non-confirme']);
 });

@@ -74,14 +74,14 @@
    valide:valide===true?true:valide===false?false:null,deplacementMm,ecartementMm,
    flushPct:s?.flushPct??null,quadMin:s?.quadMin??null,coeurPN:s?.coeurPN===true};}
 
- function creerMemoire(lotId){return {lotId:lotId??null,cuts:[],coeurs:[],zones:[],lignes:new Map(),signales:new Set()};}
+ function creerMemoire(lotId){return {lotId:lotId??null,cuts:[],coeurs:[],zones:[],lignes:new Map(),signales:new Map()};}
  /* Zone PN du cut : cœur (confirmé ou non) et marge d'après d'un PN confirmé. */
  function zonePN(mem,r,cfg){const c=r.cut,P=cfg.pn;
   const derniere=mem.zones.at(-1),dansMarge=derniere&&c>derniere.fin&&c-derniere.fin<=P.margeApres;
   if(r.coeurPN){
    if(derniere&&c>=derniere.debut&&(c<=derniere.fin||dansMarge))return {etat:'coeur',zone:{...derniere,fin:Math.max(derniere.fin,c)}};
    const avant=mem.coeurs.filter(x=>x<c&&c-x<=P.confirmationEcartCuts);
-   if(avant.length+1>=P.confirmation)return {etat:'coeur',zone:{debut:Math.min(...avant),fin:c,nouvelle:true}};
+   if(avant.length+1>=P.confirmation)return {etat:'coeur',zone:{debut:Math.min(c,...avant),fin:c,nouvelle:true}};
    return {etat:'coeur-non-confirme',zone:null};}
   if(dansMarge)return {etat:'marge-apres',zone:derniere};
   return {etat:null,zone:null};}
@@ -113,7 +113,7 @@
 
  /* VERTS À CONTRÔLER, sur les lignes de la liste d'ESV autour du cut (fenêtre de B1 : statut, traité ou vu par un opérateur,
   * écartement des bords). Rouges connus : cuts passés par le lot et lignes « invalid » de la fenêtre. Un vert n'est signalé
-  * qu'une fois par lot. */
+  * qu'une fois par raison et par lot. */
  function lignes(mem,rows,{cut}={},options){const cfg=cfgDe(options),E=cfg.ecartement,V=cfg.verts;
   for(const x of rows||[])if(Number.isInteger(x?.i)&&Number.isFinite(x.ecartementMm))mem.lignes.set(x.i,{statut:x.statut,g:x.ecartementMm});
   const valides=[...mem.lignes.values()].filter(x=>x.statut==='valid').map(x=>x.g);
@@ -124,7 +124,7 @@
   const zones=mem.zones.map(z=>[z.debut-cfg.pn.margeAvant,z.fin+cfg.pn.margeApres]);
   const verts=[];
   for(const x of rows||[]){
-   if(!Number.isInteger(x?.i)||x.statut!=='valid'||x.operateur===true||x.fraiche===true||lot.has(x.i)||mem.signales.has(x.i))continue;
+   if(!Number.isInteger(x?.i)||x.statut!=='valid'||x.operateur===true||x.fraiche===true||lot.has(x.i))continue;
    const raisons=[],ecart=reference.mm!=null&&Number.isFinite(x.ecartementMm)?Math.abs(x.ecartementMm-reference.mm):null;
    if(ecart!=null&&ecart>E.seuilMm)raisons.push('ecartement');
    if(zones.some(([a,b])=>x.i>=a&&x.i<=b))raisons.push('pn');
@@ -132,8 +132,8 @@
     if(g.n>=V.grappeMin&&x.i>g.debut&&x.i<g.fin){raisons.push('grappe');break;}
     if(g.n>=V.grappeMin&&(x.i<g.debut&&g.debut-x.i<=V.margeGrappe||x.i>g.fin&&x.i-g.fin<=V.margeGrappe)){raisons.push('grappe-marge');break;}
     if(g.n===1&&Math.abs(x.i-g.debut)===1){raisons.push('isole');break;}}
-   if(!raisons.length)continue;
-   mem.signales.add(x.i);verts.push({i:x.i,raisons,ecartMm:ecart==null?null:r1(ecart),vu:x.vu===true});}
+   const deja=mem.signales.get(x.i)||new Set(),neuves=raisons.filter(k=>!deja.has(k));if(!neuves.length)continue;
+   for(const k of neuves)deja.add(k);mem.signales.set(x.i,deja);verts.push({i:x.i,raisons:neuves,ecartMm:ecart==null?null:r1(ecart),vu:x.vu===true});}
   return {cut:cut??null,reference,verts};}
 
  /* Activation : seule une règle déclenchée ET activée par Mic transforme une validation en différé. */
