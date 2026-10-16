@@ -31,7 +31,12 @@
  *  - l'écart humain par rail : latéral, vertical, longitudinal (mm, repère profil du rail) et distance 3D ;
  *    sans matrice de repère profil, la distance 3D seule (« repere: "3D" ») ;
  *  - l'étiquette Écho (VALIDATE_NO_MOVEMENT, VALIDATE_CORRECTED_*…) ;
- *  - la décision B1 en ombre (dernier événement `b1-ombre` du cut) et la proposition du moteur par rail.
+ *  - la décision B1 en ombre (dernier événement `b1-ombre` du cut) et la proposition du moteur par rail ;
+ *  - LES OMBRES DE LA 5.0 (audit 5.0, I8), jugées d'un même format (module commun src/voie-recentree.js) : `voie-predite-ombre` (journal
+ *    Orbite, un par cut différé) et `memoire-differes-ombre` (export Écho, première visite d'un différé). Chacune porte une pose en
+ *    décalages (mm, repère profil de la pose de départ d'ESV) et un verdict ; contre la pose finale de l'opérateur (pire des deux rails,
+ *    en 3D) : juste à 5 mm, juste à 10 mm, fausse (> 10 mm), mauvaise voie (> 50 mm). Une ombre non posable est « abstenue » ; si elle
+ *    avait une pose, `jugementSiPosee` dit ce que la règle a évité ou perdu. Le résumé (`ombres`) a la même forme pour les deux.
  *
  * ÉCART HUMAIN = pose finale humaine − pose de base, dans le repère profil de la base.
  * Base (`--base`) :
@@ -60,6 +65,8 @@ const path = require('node:path');
 const X = require('../src/native-export.js');
 const V = require('./lire-volumes.cjs');
 const { referenceParEcriture } = require('../src/native-session.js');
+const Voie = require('../src/voie-recentree.js');
+const TYPES_OMBRES_ECHO = new Set(['memoire-differes-ombre']);
 
 const COTES = [['gauche', 'left'], ['droite', 'right']];
 const SEUIL_REPERE_MM = 20;
@@ -126,11 +133,14 @@ function entreesEcho(entrees) {
 function lireEcho(entrees, { journal = () => {} } = {}) {
   const liste = entreesEcho(entrees);
   if (!liste.length) throw Error('Aucun export Écho (ariane-echo-*.json, ariane-native-v4-*.json, banane-native-v4-*.json) trouvé.');
-  const segments = [];
+  const segments = [], evenements = [];
   for (const e of liste) {
     const doc = JSON.parse(e.lire().toString('utf8'));
     if (!/^banane-native-session-/.test(doc.format || '')) { journal(`ignoré (pas un export Écho) : ${e.nom}`); continue; }
     const records = (doc.format === X.FORMAT ? X.unfoldRefs({ records: doc.records || [] }, doc.dictionaries || {}) : doc).records || [];
+    /* Ombres de l'Écho (5.0) : seuls ces événements sont gardés ; les autres restent dans le fichier. */
+    const ombres = (doc.events || []).filter(ev => ev && TYPES_OMBRES_ECHO.has(ev.type));
+    for (const ev of doc.format === X.FORMAT ? X.unfoldRefs(ombres, doc.dictionaries || {}) : ombres) evenements.push(ev);
     const seg = doc.segment || {}, session = doc.session && doc.session.id || null;
     for (const r of records) if (r && !r.nativeSessionId && session) r.nativeSessionId = session;
     segments.push({ nom: e.nom, stamp: String(seg.stamp || ''), index: seg.index || 0, records, session, debutSession: doc.session && doc.session.startedAt || null });
@@ -145,7 +155,10 @@ function lireEcho(entrees, { journal = () => {} } = {}) {
   for (const s of segments) if (s.session) noter(s.session, s.debutSession);
   for (const r of records.values()) noter(sessionDe(r), r.startedAt);
   const sessions = [...debuts].sort((a, b) => String(a[1]).localeCompare(String(b[1])) || a[0].localeCompare(b[0])).map(([id, debut], rang) => ({ id, debut, rang }));
-  return { records: [...records.values()], sessions, segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, session: s.session, records: s.records.length })) };
+  /* Une ombre par (session, visite, type) : le segment le plus récent l'emporte, comme pour les records. */
+  const ombres = new Map();
+  for (const ev of evenements) ombres.set(ev.eventId || `${ev.nativeSessionId}|${ev.visitId}|${ev.type}`, ev);
+  return { records: [...records.values()], evenements: [...ombres.values()], sessions, segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, session: s.session, records: s.records.length })) };
 }
 
 /* Le journal Orbite : événements et records (un journal compact est déplié). */
@@ -270,6 +283,7 @@ const TYPES_VUS = new Set(['proposed', 'before-captured', 'applied-verified', 'a
   'validation-accepted', 'defer-intent', 'defer-finalized', 'capture-abandoned', 'capture-stale', 'b1-ombre']);
 
 function journalParCut(journal) {
+  const ombresSansCut = [];
   const par = new Map(), get = (id) => {
     const k = cleCut(id.part, id.cut);
     if (!par.has(k)) par.set(k, { partie: id.part, cut: id.cut, projet: id.projectId ?? null, vu: false, posee: false, differee: false, appliedVerified: null, deferFinalise: null, b1: null, propose: null });
@@ -278,6 +292,8 @@ function journalParCut(journal) {
   for (const e of journal.events) {
     const id = identiteDe(e);
     if (!id || !Number.isInteger(id.part) || !Number.isInteger(id.cut)) continue;
+    /* Ombre d'Orbite (5.0) : la dernière du cut ; elle ne change ni la classe ni le « vu » du cut. */
+    if (e.type === 'voie-predite-ombre') { const c = par.get(cleCut(id.part, id.cut)); if (c) c.voieOmbre = e; else ombresSansCut.push(e); continue; }
     if (!TYPES_VUS.has(e.type)) continue;
     const c = get(id);
     c.vu = true;
@@ -296,6 +312,7 @@ function journalParCut(journal) {
     if (!ancien || String(r.capturedAt || '') >= String(ancien.capturedAt || '')) recs.set(k, r);
   }
   for (const [k, r] of recs) if (par.has(k)) par.get(k).record = r;
+  for (const e of ombresSansCut) { const id = identiteDe(e), c = par.get(cleCut(id.part, id.cut)); if (c) c.voieOmbre = e; }
   return par;
 }
 const classeDe = c => !c || !c.vu ? 'hors-journal' : c.posee ? 'posee' : c.differee ? 'differee' : 'autre';
@@ -388,6 +405,49 @@ function ecartRail(base, fin) {
 }
 const sansPose = (r) => r && r.positionSceneRelative ? { x: arrondi(r.positionSceneRelative[0], 3), y: arrondi(r.positionSceneRelative[1], 3), z: arrondi(r.positionSceneRelative[2], 3) } : null;
 
+/* ------------------------------------------------------------------ ombres (5.0) */
+/* Pose finale de l'opérateur en décalages depuis la pose de DÉPART d'ESV (repère profil, mm, [long, lat, vert] par rail) : l'écart
+ * humain si la base est une visite de l'Écho ; s'il est mesuré depuis la pose d'Ariane, on y ajoute le déplacement d'Ariane. */
+function micDepuisDepart(ligne) {
+  const e = ligne.ecartHumain;
+  if (!e || !ligne.base) return null;
+  const out = {};
+  for (const [fr, en] of COTES) {
+    const r = e[fr];
+    if (!r || r.repere !== 'profil') return null;
+    let v = [r.longitudinalMm, r.lateralMm, r.verticalMm];
+    if (ligne.base === 'ariane') { const a = ligne.arianeDeplacement && ligne.arianeDeplacement[fr]; if (!a || a.repere !== 'profil') return null; v = [v[0] + a.longitudinalMm, v[1] + a.lateralMm, v[2] + a.verticalMm]; }
+    out[en] = v;
+  }
+  return out;
+}
+/* Une ombre jugée : { posable, raison, ecartMm, jugement[, jugementSiPosee] } (format commun aux deux ombres). */
+function jugerOmbre(ev, mic) {
+  if (!ev) return null;
+  const v = ev.verdict || {}, posable = v.posable === true;
+  const ecart = ev.poseMm && mic ? Voie.ecartPose(ev.poseMm, mic) : null, ecartMm = ecart === null ? null : arrondi(ecart, 1);
+  const out = { posable, raison: posable ? null : (v.raison ?? ev.etat ?? null), ecartMm };
+  if (posable) out.jugement = Voie.juger(ecartMm);
+  else { out.jugement = 'abstenue'; if (ecartMm !== null) out.jugementSiPosee = Voie.juger(ecartMm); }
+  return out;
+}
+/* Résumé d'une ombre (même forme pour Orbite et l'Écho). `juste10` compte aussi les `juste5`. */
+function resumerOmbre(jugees) {
+  const r = { evenements: jugees.length, posables: 0, juste5: 0, juste10: 0, fausse: 0, mauvaiseVoie: 0, nonJugees: 0, abstenues: 0,
+    refuseesAvecPose: { n: 0, juste10: 0, fausse: 0, mauvaiseVoie: 0 }, parRaison: {}, seuils: { ...Voie.JUGEMENT } };
+  for (const j of jugees) {
+    if (!j.posable) {
+      r.abstenues++; const k = String(j.raison || '?').split(':')[0]; r.parRaison[k] = (r.parRaison[k] || 0) + 1;
+      if (j.jugementSiPosee) { const s = r.refuseesAvecPose; s.n++; if (j.jugementSiPosee === 'juste5' || j.jugementSiPosee === 'juste10') s.juste10++; else if (j.jugementSiPosee === 'fausse') s.fausse++; else if (j.jugementSiPosee === 'mauvaise-voie') s.mauvaiseVoie++; }
+      continue;
+    }
+    r.posables++;
+    if (j.jugement === 'juste5') { r.juste5++; r.juste10++; } else if (j.jugement === 'juste10') r.juste10++; else if (j.jugement === 'fausse') r.fausse++;
+    else if (j.jugement === 'mauvaise-voie') r.mauvaiseVoie++; else r.nonJugees++;
+  }
+  return r;
+}
+
 /* ------------------------------------------------------------------ jointure */
 /* `records` : records de l'Écho ; `journal` : { events, records } ; options : { partie, base, poses, sessions,
  * sansJournal, visiteSansActionBonne }. `sansJournal` : Écho seul, le journal est ignoré (voir l'en-tête). */
@@ -415,6 +475,11 @@ function joindre(records, journal, options = {}) {
   const repere = calibrerRepere(echo, jr);
   const decalage = repere.calibre ? repere.decalage : null;
   const lignes = [], ecartements = [];
+  /* Ombres de l'Écho (5.0) : la dernière par cut. */
+  const ombresEcho = new Map();
+  for (const ev of (options.evenementsEcho || []).slice().sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')))) {
+    const id = identiteDe(ev); if (id && Number.isInteger(id.part) && Number.isInteger(id.cut) && retenue.has(id.part) && ev.etat !== 'differes-inconnus') ombresEcho.set(cleCut(id.part, id.cut), ev);
+  }
   const cles = new Set([...echo.keys(), ...jr.keys()]);
   for (const k of [...cles].sort((a, b) => { const [pa, ca] = a.split('|').map(Number), [pb, cb] = b.split('|').map(Number); return pa - pb || ca - cb; })) {
     const c = echo.get(k) || null, j = jr.get(k) || null, classe = sansJournal ? 'sans-journal' : classeDe(j);
@@ -495,8 +560,21 @@ function joindre(records, journal, options = {}) {
     lignes.push(ligne);
   }
 
+  /* Ombres : jugées contre la pose finale de l'opérateur, dans la même grille. */
+  const jugeesVoie = [], jugeesMemoire = [];
+  for (const l of lignes) {
+    const k = cleCut(l.partie, l.cut), ev = jr.get(k) && jr.get(k).voieOmbre, em = ombresEcho.get(k);
+    if (!ev && !em) continue;
+    const mic = micDepuisDepart(l);
+    l.ombres = {};
+    if (ev) { l.ombres.voie = jugerOmbre(ev, mic); jugeesVoie.push(l.ombres.voie); }
+    if (em) { l.ombres.memoire = jugerOmbre(em, mic); jugeesMemoire.push(l.ombres.memoire); }
+  }
+  const ombres = jugeesVoie.length || jugeesMemoire.length ? { voie: resumerOmbre(jugeesVoie), memoire: resumerOmbre(jugeesMemoire) } : null;
   const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
-  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements }) };
+  const resume = resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements });
+  if (ombres) resume.ombres = ombres;
+  return { table: lignes, resume };
 }
 
 /* ------------------------------------------------------------------ résumé */
@@ -612,6 +690,12 @@ function texte(resume, entete = []) {
     L.push(`  latéral |.| : ${st(c.ecartLateralAbsMm)}`, `  vertical |.| : ${st(c.ecartVerticalAbsMm)}`);
     L.push(`  corrections > 5 mm : ${c.corrections.sup5mm.cuts} cuts (${c.corrections.sup5mm.rails} rails) ; > 10 mm : ${c.corrections.sup10mm.cuts} cuts (${c.corrections.sup10mm.rails} rails)`);
   }
+  if (resume.ombres) for (const [k, titre] of [['voie', 'Ombre voie prédite (Orbite)'], ['memoire', 'Ombre mémoire des différés (Écho)']]) {
+    const o = resume.ombres[k];
+    L.push('', `${titre} : ${o.evenements} événement(s), ${o.posables} posable(s) — juste à 5 mm ${o.juste5}, à 10 mm ${o.juste10}, fausses ${o.fausse}, mauvaise voie (> ${o.seuils.mauvaiseVoieMm} mm) ${o.mauvaiseVoie}, non jugées ${o.nonJugees} ; abstenues ${o.abstenues}`
+      + (o.refuseesAvecPose.n ? ` (dont ${o.refuseesAvecPose.n} avec une pose : ${o.refuseesAvecPose.juste10} juste(s), ${o.refuseesAvecPose.fausse} fausse(s), ${o.refuseesAvecPose.mauvaiseVoie} mauvaise voie)` : '')
+      + (Object.keys(o.parRaison).length ? ` ; raisons : ${Object.entries(o.parRaison).sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ')}` : '') + '.');
+  }
   if (Object.keys(resume.motifsDeDiffere).length) L.push('', `Motifs de différé (par rail, tous les cuts différés du journal) : ${Object.entries(resume.motifsDeDiffere).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')}`);
   return L.join('\n');
 }
@@ -648,7 +732,7 @@ function executer(argv, sortie = console.log) {
   const a = lireArguments(argv), avis = [];
   const echo = lireEcho(a.echo, { journal: m => avis.push(m) });
   const journal = a.sansJournal ? { events: [], records: [], format: null, version: null } : lireJournal(a.journal);
-  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne });
+  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne, evenementsEcho: echo.evenements });
   resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length };
   const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne }, resume, table };
   if (a.sortie) { fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true }); fs.writeFileSync(a.sortie, JSON.stringify(sortieJson, null, 1)); }
@@ -659,4 +743,4 @@ function executer(argv, sortie = console.log) {
 if (require.main === module) {
   try { executer(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { DUREE_VISITE_DEFAUT_S, ECARTEMENT_MIN_MM, ECARTEMENT_MAX_MM, corrigerParEcriture, visiteSansAction, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
+module.exports = { jugerOmbre, resumerOmbre, micDepuisDepart, DUREE_VISITE_DEFAUT_S, ECARTEMENT_MIN_MM, ECARTEMENT_MAX_MM, corrigerParEcriture, visiteSansAction, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };

@@ -37,7 +37,7 @@ test('jugement commun : chaque ombre, contre la pose finale de l\'opérateur, da
   const {table,resume}=J.joindre(echo.records,J.lireJournal(fj),{sessions:echo.sessions,evenementsEcho:echo.evenements});
   const o=cut=>table.find(l=>l.cut===cut).ombres;
   assert.deepEqual(o(11).voie,{posable:true,raison:null,ecartMm:2,jugement:'juste5'});
-  assert.equal(o(12).voie.jugement,'juste10');assert.ok(Math.abs(o(12).voie.ecartMm-Math.hypot(8,1))<0.01);
+  assert.equal(o(12).voie.jugement,'juste10');assert.ok(Math.abs(o(12).voie.ecartMm-Math.hypot(8,1))<0.06,'écart arrondi au dixième de mm');
   assert.deepEqual(o(13).voie,{posable:false,raison:'confiance',ecartMm:30,jugement:'abstenue',jugementSiPosee:'fausse'});
   assert.deepEqual(o(14).voie,{posable:false,raison:'differe:no-anchor',ecartMm:null,jugement:'abstenue'});
   assert.equal(o(12).memoire.jugement,'mauvaise-voie');assert.equal(o(13).memoire.jugement,'fausse');assert.equal(o(11).memoire.jugement,'juste5');
@@ -57,6 +57,6 @@ test('jugement commun : chaque ombre, contre la pose finale de l\'opérateur, da
 test('sans événement d\'ombre : rien n\'est ajouté au résumé, la jointure d\'avant est inchangée',()=>{
   const dossier=fs.mkdtempSync(path.join(os.tmpdir(),'jointure-ombres-'));
   H.ecrire(dossier,'ariane-echo-synth-seg01.json',H.exportEcho({session:'S1',debutSession:{minutes:0},stamp:'a',records:[H.visite({session:'S1',index:0,cut:11,debut:{minutes:0},fin:{minutes:1},initiale:depart(11),validation:mic(11)})]}));
-  const echo=J.lireEcho([dossier]),{table,resume}=J.joindre(echo.records,{events:[],records:[]},{sessions:echo.sessions,evenementsEcho:echo.evenements});
-  assert.equal(resume.ombres,undefined);assert.equal(table[0].ombres,undefined);
+  const echo=J.lireEcho([dossier]),{table,resume}=J.joindre(echo.records,{events:[],records:[]},{sessions:echo.sessions,evenementsEcho:echo.evenements,sansJournal:true});
+  assert.equal(table.length,1);assert.equal(resume.ombres,undefined);assert.equal(table[0].ombres,undefined);
 });
