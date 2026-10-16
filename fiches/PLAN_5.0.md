@@ -50,7 +50,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | Code | Branche | Niveau / effort | Entrées | Livrables | Porte | Jetons | Attend |
 |---|---|---|---|---|---|---|---|
 | P0 mesures (a)(b)(c) | `claude/50-p0-mesures` | rapide / moyen, note relue par fort | S3, Échos 17/18/20, `convention-fit.cjs`, rejeu `Candidate.propose` | trois notes chiffrées ; décision écrite par mesure | décisions prises | 450 k | livré (D-129) : (b) plafond 8 mm recommandé ; garde, (a), (c) inchangés |
-| P1 convention / garde de paire | `claude/50-p1-convention` | rapide / haut ; relecteur fort | P0(b), Q2 | plafond ou domaine 12 mm ; garde portée par le rail repêché | rejeu 4 lots sans régression ; 0 mauvaise pose ; ≥ 50/89 récupérés | 200 k + 150 k | V5 |
+| P1 convention / garde de paire | `claude/50-p1-convention` | rapide / haut ; relecteur fort | P0(b), Q2 | plafond ou domaine 12 mm ; garde portée par le rail repêché | rejeu 4 lots sans régression ; 0 mauvaise pose ; ≥ 50/89 récupérés | 200 k + 150 k | codé, coupé par défaut (D-130) ; activation : décision de Mic |
 | P2 porte de pente | `claude/50-p2-pente` | rapide / haut ; relecteur fort ; ré-épinglage avec Q2 | P0(c) | borne relâchée pour le flanc ou pente sur bande 14-30 mm | idem ; ≥ 40/68 | 350 k + 150 k | V5 |
 | P3 dessus seul | `claude/50-p3-dessus-seul` | rapide / haut ; relecteur fort | P4, 66 rails Écho 17, 4 lots | module après `gcv1-shadow`, statut distinct, 3 preuves | ≤ 10 mm ; ombre un lot ; 0 mauvaise pose | 700 k + 200 k | V5 |
 | P4 famine de flanc | `claude/50-p4-lod` | rapide / moyen ; banc B chez Mic | S6 (profondeur, budget), banc B | essai budget ×2/×4 pendant la capture ; note | réponse chiffrée | 300 k | V5, banc B |

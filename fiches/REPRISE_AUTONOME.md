@@ -34,3 +34,8 @@ Demande de Mic (D-124) : avancer sur tous les chantiers possibles pendant son ab
 
 - Lourd : **P1 plafond de convention à 8 mm** (`claude/50-p1-convention` depuis `claude/50-base`) : `src/placement-convention.js` seulement (jamais `src/engine.js`), décalage plafonné, reste consigné ; essais ; rejeu des quatre lots au banc (`fiches/P0_MESURES.md`) sans régression ; relecteur indépendant. Rien n'est activé au terrain sans Mic.
 - Léger : corriger AUDIT_SUPER_CERVEAU § 1 avec les chiffres de P0 (a).
+
+## Prochain réveil (après D-130)
+
+- Lourd : **P1 bis, plafond vertical seulement** (`claude/50-p1-vertical` depuis `claude/50-base`) : même réglage coupé par défaut, plafond appliqué à l'axe vertical seulement, latéral refusé comme avant ; rejeu `tools/p1-plafond.cjs` identique ; vérifier le cut de passage à niveau de la partie 27 et le ricochet ; reprendre `capped`/`rest*` dans le journal compact si c'est hors `src/engine.js`.
+- Léger : S4 maquette ESV dans verify, étape 1 (inventaire de `claude/esv-locale-audit`, plan d'intégration court).
