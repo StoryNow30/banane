@@ -2116,3 +2116,18 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   2. la fiabilité des mesures (capture de l'Écho, cut 428, jointure, biais d'échantillon, petits effectifs) ;
   3. la base de code 5.0 (sécurité de la pose, trace identique à celle d'un humain, moteur intact, commits poussés sans relecture).
 - Livrable : un rapport de recommandations classées. J'applique ce qui est simple et sûr ; le reste est soumis à Mic.
+
+## D-146 — 4.9.5 test 4 livrée ; D-143 relu (16 octobre 2026)
+
+- **D-143 relu** (de 3cb4c95 à 8825ec9). C'est de l'observation pure : `native-session.js` et l'outil de jointure. Ni requête ESV, ni écriture, ni pose. La référence remplacée est gardée et marquée `supersededBy`. Accepté.
+- **Test 4** : `claude/495-test-4`, version 4.9.5.4, partie de 8825ec9.
+  - Contenu : empreinte du contrat par onglet (D-139), partie d'`audit-serveur` lue dans la séance en cours, correction verticale E2 en **ombre** et F5 en Écho permis (D-137).
+  - Relecture de `lot-decision.js` : `decideCut` appelle la décision de base telle qu'elle était, puis ajoute seulement la clé `ombreVerticale`. Une erreur rend la décision intacte. `commandRails` ne lit pas cette clé.
+  - `src/engine.js` est identique à `main`. verify : 1 814 réussis, 0 échec, 2 ignorés (corpus natif absent). Les trois premiers passages ont dépassé le délai, parce que la machine était saturée par G1 et la voie prédite.
+  - Paquet `ariane-4.9.5-test.4.zip`, 1 754 648 octets, SHA-256 `52e09e429937f2c451e3578a411bf53c1a5cd6393305edd8584935a1c9f285d7`.
+  - La consigne demande un seul F5 en Écho, en fin de partie, heure notée, et un essai à deux fenêtres ESV.
+- **Doutes déclarés par l'agent** :
+  - l'empreinte précédente ne survit pas à un redémarrage du navigateur ;
+  - les classes des boutons de rail restent comparées : une fausse alerte reste possible ;
+  - le F5 en Écho n'a été joué que sur le banc.
+- **Pour l'audit (axe 3)** : des noms de modèle figurent dans `DECISIONS.md` (ligne 14), `fiches/FICHE_B1.md` et `PILOTAGE_SESSIONS.md`. Ils sont déjà sur `main` et dans les paquets précédents. À retirer, avec Mic pour `main`.
