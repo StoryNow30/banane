@@ -2242,3 +2242,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Poids** : environ 90 Ko par lot de 350 cuts, soit 0,4 % du journal.
 - **Risque à mesurer avant livraison** : l'ombre d'Orbite relance le moteur, jusqu'à 2,5 s, pendant la capture du cut suivant, dans le même service worker. Sur la partie 1, elle l'aurait fait 60 fois. Le cycle du lot pourrait ralentir, et son rythme change la trace (D-151). La test 5 ne partira qu'avec une mesure du cycle sur le banc, ombre coupée puis active. Si le cycle s'allonge, il faudra soit couper l'ombre d'Orbite, soit la différer en fin de lot.
 - **Ordre** : la test 5 attend le retour terrain de la test 4.
+
+## D-154 — Cycle du lot avec l'ombre de la voie prédite : coût négligeable sur le poste du terrain (16 octobre 2026)
+
+- Livré sur `claude/50-mesure-cycle-ombre` (2c878f1), intégré à `claude/50-base` par avance rapide. Contenu : l'outil `tools/cycle-ombre.cjs`, son essai et la fiche `fiches/CYCLE_OMBRE.md`. Rien sous `src/`.
+- **Banc** : le vrai `background.js` joue un lot contre un ESV simulé qui rend les vrais nuages et les vrais temps de capture de la partie 1 du second projet. Ombre coupée puis active, 3 lots par réglage, en alternance. Le cycle médian est le même (2,83 s), le P90 aussi (5,9 s), et les durées restent dans le bruit. Décisions et commandes sont identiques.
+- **Calcul sur tout le lot**, au poste du lot : 18 différés sur 127 sont retardés, 4,1 s en tout (0,4 %), 0,78 s au pire. Sur un poste 2,5 fois plus lent : 35 s (3,3 %), 2,7 s au pire.
+- **Décision** : l'ombre reste active pendant le lot, dans la test 5. La différer en fin de lot coûterait environ 190 Mo de mémoire et serait perdue au redémarrage du service worker. Un garde-fou est à prévoir si un poste plus lent montre un retard : plafonner la relance.
+- La test 5 relèvera `ms` sur chaque événement d'ombre : il est déjà dans l'événement.
+- Limites : une seule partie, banc sous Node et non Chromium, rapport de vitesse estimé sur le moteur seul.
