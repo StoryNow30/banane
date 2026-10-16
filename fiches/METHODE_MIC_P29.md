@@ -57,3 +57,26 @@ Mic corrige la partie d'un opérateur débutant. Les poses de départ sont humai
 
 - La signature des 30–40 mm caractérise **l'extraction dans les PN non contrôlés**, et non un humain. À vérifier dans les exports : les cuts concernés devraient avoir `SeenByOperator` faux au départ (vert sur la carte). Le contrôle « écartement à plus de 10 mm de la médiane » (54/54, D-135) est donc un détecteur d'extraction fausse en PN.
 - Règle métier n° 3 renforcée : **dans un PN, contrôler chaque cut, marges comprises, sans en sauter un** ; un PN partiellement contrôlé laisse des erreurs de 30–40 mm.
+
+## Second projet, partie 1 (Écho de Mic du 16/10, après le lot Orbite 4.9.5.3)
+
+Notes de Mic :
+- **SKIP obligatoire** sur les cuts 0, 1, 2 et 3 : il manque des points, ou un seul scanner est visible sur l'une des deux coupes. Mic l'indique pour mémoire : ce n'est pas une priorité pour Ariane si cela complique.
+- Ce projet a bien **3 scanners** (correction de Mic ; il avait d'abord parlé de 2).
+- Zones d'ADV :
+
+  | Zone | Début | Aiguilles | Fin |
+  |---|---|---|---|
+  | 1 | 116 (marge comprise) | 136, à gauche | 165 (marge comprise) |
+  | 2 | 271 (marge comprise) | 287, à droite ; fin d'aiguille 320, à gauche ; 552 ; 616, à droite ; fin d'aiguille 626 | non déclarée : succession d'ADV plus ou moins espacés, zone « bordélique », Mic contrôle tout |
+  | 3 | 2911 | 2932, à gauche ; 3012 | 3036 |
+  | 4 | 5496 | 5520, à droite ; 5591 ; 6159 ; fin d'aiguille 6160 | non précisée |
+
+- Dans la zone 2, certains cuts sont en SKIP au titre d'une règle métier que Mic ne prévoit pas pour le cahier 5.0.
+- **Cause probable de nombreux invalides de la zone 2 : le bon rail est hors de la fenêtre ESV visible par Ariane.** Sans pouvoir se déplacer, il est impossible de poser. Mic se déplace soit en dézoomant, soit, le plus souvent, en se décalant d'un côté ou de l'autre par un glisser au clic gauche de la souris.
+
+## Conséquences pour la 5.0
+
+- **Nouvelle capacité candidate, « déplacer la vue »** : quand aucun rail sûr n'est dans la fenêtre, se décaler latéralement, comme Mic au clic gauche, ou dézoomer, puis chercher de nouveau. La trace doit rester celle d'un humain : un glisser de souris est un geste humain ordinaire. À mesurer d'abord : quelle part des différés de ce lot ont leur bon rail hors fenêtre (pose de Mic hors du cadre de capture) ?
+- Règle SKIP (points manquants, ou un seul scanner sur une coupe) : à consigner comme règle métier, priorité basse.
+- ADV : les marges de Mic vont d'environ 20 cuts (zone 1, aiguille au 136 : de 116 à 165) à des zones entières contrôlées sans fin déclarée.
