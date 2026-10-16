@@ -2106,3 +2106,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - **Voie prédite et « déplacer la vue »** (`claude/50-voie-predite`) : rejeu du moteur sur le vrai nuage, centré sur la voie prédite, avec le décalage d'écran ou le dézoom nécessaire.
   - **4.9.5 test 4** (`claude/495-test-4`) : la base 5.0, plus l'empreinte de contrat par onglet (D-139), le champ partie d'`audit-serveur` corrigé, la correction verticale en **ombre** (E2, jamais appliquée) et le F5 en Écho à nouveau permis. Rien ne change dans la pose.
 - Toujours en cours : l'enquête sur le cut 428 (déjà poussée sur la base, à relire : D-143), l'analyse de la partie 24, P1 ter et S4.
+
+## D-145 — Audit indépendant au tournant de la 5.0 : accord de Mic, déclenchement automatique (16 octobre 2026)
+
+- Mic valide un audit en lecture seule, mené avec le modèle le plus fort et ciblé, et me laisse le programmer.
+- **Déclencheur** : quand trois chantiers ont rendu leur rapport : G1 (mémoire des différés), la voie prédite et la 4.9.5 test 4. Pas avant, pour ne pas auditer un état périmé.
+- **Trois axes** :
+  1. le cahier 5.0 face aux données (priorités, abandons, plan d'apprentissage, cap « un différé = un cut appris ») ;
+  2. la fiabilité des mesures (capture de l'Écho, cut 428, jointure, biais d'échantillon, petits effectifs) ;
+  3. la base de code 5.0 (sécurité de la pose, trace identique à celle d'un humain, moteur intact, commits poussés sans relecture).
+- Livrable : un rapport de recommandations classées. J'applique ce qui est simple et sûr ; le reste est soumis à Mic.
