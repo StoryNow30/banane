@@ -1964,3 +1964,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   2. Un cut de passage à niveau 'pair-guard' (partie 27) échappe à la garde : le décalage latéral plafonné sort l'écartement du contrat, puis le repli du passage à niveau le pose. 1 cut sur 104, mais c'est exactement le genre de pose que la garde doit empêcher.
   3. Le journal compact (`gcv1-shadow.js`) ne reprend pas `capped`/`rest*`.
 - Suite proposée (avant toute activation) : variante qui n'applique le plafond qu'à l'axe vertical (le biais mesuré est vertical) et laisse le latéral refusé, ce qui devrait supprimer le cas du passage à niveau et réduire le ricochet ; puis rejeu identique. Activation : seulement avec Mic, après lecture d'un lot réel.
+
+## D-131 — P1 bis (plafond vertical) : même gain, mais ne règle ni le passage à niveau ni le ricochet ; P1 ter lancé (16 octobre 2026, matin)
+
+- Mic : « pas besoin d'attendre le prochain réveil, go ». Le réveil automatique de 11 h 26 est annulé : Mic a repris la main, le protocole autonome s'arrête.
+- `claude/50-p1-vertical` (e1e851f), intégré à `claude/50-base` (avance rapide) : `conventionPlafond = false | 'vertical' | true` ; `gcv1-shadow.js` reprend `capped`, `capMm`, `capAxes`, `applied*`, `rest*` dans le journal compact, seulement quand le plafond a joué. Défaut `false`, identique octet pour octet. verify 1 723 réussis, 0 échec ; épinglages intacts.
+- Rejeu (six lots) : le mode vertical donne exactement le même résultat que les deux axes (partie 17 : 47 → 25 au-delà de 10 mm ; 11 posés en plus, dont 8 par ricochet, et 3 en moins).
+- **Ma prévision était fausse** : le cut 'pair-guard' de passage à niveau de la partie 27 échappe toujours à la garde. En mode vertical, le du du rail (−1,9 mm, dans le domaine) est appliqué en entier alors qu'il ne l'était pas avant, et l'écartement prédit tombe sous le plancher de 1 420 mm. Le ricochet vient des appuis dont dz a bougé de 8 mm, pas du latéral.
+- Lancé : **P1 ter `'hauteur'`** (dz plafonné seul, du = 0, latéral strictement comme aujourd'hui), rejeu en quatre colonnes, et analyse chiffrée d'une garde contre le ricochet dans `lot-decision.js` (proposition seulement, non codée).
