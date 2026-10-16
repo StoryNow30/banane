@@ -323,22 +323,36 @@ async function auditLecture(p){
  const cles=Object.keys(m);while(cles.length>8)delete m[cles.shift()];
  try{await chrome.storage.local.set({[CLE_LECTURES]:m});}catch{}
  if(!prev||!Number.isFinite(prev.atMs)||p.atMs<=prev.atMs)return;
- const partie=Number.isInteger(engine?.s?.batch?.scope?.part)?engine.s.batch.scope.part:Number.isInteger(engine?.s?.before?.identity?.part)?engine.s.before.identity.part:null;
- let attendus=null;try{attendus=await validationsAriane(partie,prev.atMs,p.atMs);}catch{attendus=null;}
+ const cx=p.ctx||contexteAudit(),partie=cx.partie;
+ let attendus=null;if(partie!==null)try{attendus=await validationsAriane(partie,prev.atMs,p.atMs);}catch{attendus=null;}
  const constates=p.valid-prev.valid;
- journalerSimple('audit-serveur',{listKey:p.listKey,partie,depuis:new Date(prev.atMs).toISOString(),jusqua:new Date(p.atMs).toISOString(),
+ journalerSimple('audit-serveur',{listKey:p.listKey,partie,partieSource:cx.source,depuis:new Date(prev.atMs).toISOString(),jusqua:new Date(p.atMs).toISOString(),
   validesAvant:prev.valid,validesApres:p.valid,invalidesAvant:prev.invalid,invalidesApres:p.invalid,attendus,constates,ecart:attendus===null?null:constates-attendus,
-  avantSeance:p.avantSeance===true,pages:p.pages??null});}
+  avantSeance:p.avantSeance===true,pages:p.pages??null,...(cx.nativeSessionId?{nativeSessionId:cx.nativeSessionId}:{})});}
+/* 4.9.5.4 (D-141, D-134) — LA PARTIE ET LA SÉANCE DE LA LISTE LUE, relevées au moment où la liste est vue (pas 4 s plus tard, au silence).
+ * Avant : la partie venait de `batch.scope.part` même pour un lot clos depuis longtemps — un événement portait « partie 29 » avec les totaux de la
+ * liste de la partie 12 affichée dans ESV. Maintenant, par ordre : un lot ouvert (en cours ou en pause) ; la séance Écho (sa dernière visite :
+ * jamais le lot clos, ni une partie devinée avant la première visite) ; un lot tout juste clos, encore en grâce de l'observateur ; l'identité de la
+ * capture en cours. Sinon `partie:null` et aucune validation attendue (elles ne se comparent qu'à la liste de la même partie). Pendant Écho,
+ * l'événement porte `nativeSessionId` : il sort dans l'export d'Écho (filtré sur ce champ) et plus dans le journal d'Orbite, comme les observations. */
+function contexteAudit(){
+ const b=engine?.s?.batch,n=engine?.s?.native,echo=!!native?.active?.(),entier=v=>Number.isInteger(v)?v:null;
+ if(b&&!OBS_CLOS.includes(b.state)&&entier(b.scope?.part)!==null)return {partie:b.scope.part,source:'lot',nativeSessionId:echo?n?.id??null:null};
+ if(echo){const part=entier(n?.current?.identity?.part)??entier((n?.visits||[]).at(-1)?.identity?.part);
+  return {partie:part,source:part!==null?'echo':null,nativeSessionId:n?.id??null};}
+ if(b&&entier(b.scope?.part)!==null&&dansGrace(b))return {partie:b.scope.part,source:'lot',nativeSessionId:null};
+ const cap=entier(engine?.s?.before?.identity?.part);
+ return {partie:cap,source:cap!==null?'capture':null,nativeSessionId:null};}
 /* Une observation rangée : avis `fetch-rails`, pages de liste (lecture complète = silence de 4 s après la dernière page). */
 function relevesObservation(f,observer){
  if(f.kind==='fetch-rails'&&releveOn('avisFetch')&&Number.isInteger(f.n)&&f.n>0)
   avisContratEsv('fetch-rails',`ESV a changé : des requêtes de rails passent par « fetch » (${f.n} vue${f.n>1?'s':''}), qu’Ariane ne voit pas. Les validations ne sont plus contrôlées : préviens-moi avant de lancer un lot.`,{n:f.n});
  else if(f.kind==='list-page'&&releveOn('auditServeur')&&f.listKey&&f.status>=200&&f.status<300&&f.counts&&Number.isInteger(f.rows)){
   const k=String(observer)+'|'+f.listKey,p=lectures.pend.get(k)||{listKey:f.listKey,pages:0,rows:0,valid:0,invalid:0,atMs:null,timer:null};
-  p.pages++;p.rows+=f.rows;p.valid+=f.counts.valid||0;p.invalid+=f.counts.invalid||0;if(Number.isFinite(f.endedEpochMs))p.atMs=Math.max(p.atMs??0,f.endedEpochMs);
+  p.ctx=contexteAudit();p.pages++;p.rows+=f.rows;p.valid+=f.counts.valid||0;p.invalid+=f.counts.invalid||0;if(Number.isFinite(f.endedEpochMs))p.atMs=Math.max(p.atMs??0,f.endedEpochMs);
   clearTimeout(p.timer);p.timer=setTimeout(()=>{lectures.pend.delete(k);void auditLecture(p).catch(()=>{});},Number.isFinite(globalThis.BananeSettings?.releves?.auditSilenceMs)?globalThis.BananeSettings.releves.auditSilenceMs:4000);lectures.pend.set(k,p);}
  else if(f.kind==='list-summary'&&f.beforeSession===true&&f.counts&&Number.isInteger(f.rows)&&Number.isFinite(f.lastEndedEpochMs))
-  void auditLecture({listKey:f.listKey,pages:f.pages,rows:f.rows,valid:f.counts.valid||0,invalid:f.counts.invalid||0,atMs:f.lastEndedEpochMs,avantSeance:true}).catch(()=>{});}
+  void auditLecture({listKey:f.listKey,pages:f.pages,rows:f.rows,valid:f.counts.valid||0,invalid:f.counts.invalid||0,atMs:f.lastEndedEpochMs,avantSeance:true,ctx:contexteAudit()}).catch(()=>{});}
 /* 4.9.5.3 (S6) : relevés de l'observateur de la page coupés par les réglages (`releves`, `esvEvents`) : noms rendus au pont. */
 function relevesOff(){const R=globalThis.BananeSettings?.releves||{},E=globalThis.BananeSettings?.esvEvents||{},o=[];
  if(R.ressources===false)o.push('ressources');if(R.champsListe===false)o.push('champsListe');if(R.compteurBloque?.actif===false)o.push('compteurBloque');if(E.ombre===false)o.push('esvEvents');return o;}
