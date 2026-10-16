@@ -2204,3 +2204,20 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **U8** : `verify` tourne en priorité basse. Il refuse de partir si `wt/lourd.lock` existe ; `BANANE_VERROU_LOURD=""` coupe ce contrôle.
 - verify : 1 861 réussis, 0 échec, 2 ignorés (corpus natif absent). Le moteur est conforme à la baseline.
 - Toute partie de la test 3 ou de la test 4 reçue désormais est **réservée** : elle servira à juger, jamais à régler.
+
+## D-151 — Trace dans ESV : les écritures d'Ariane sont celles d'un humain ; restent les lectures et le rythme (16 octobre 2026)
+
+- Livré sur `claude/50-mesure-trace` (9f2d6c9, fa874c0), intégré à `claude/50-base` par avance rapide. Contenu : l'outil `tools/trace-ecritures.cjs`, son essai et la fiche `fiches/TRACE_ESV.md`. Rien sous `src/`.
+- Mesure faite sur les parties 29 et 1 du second projet, lot Orbite contre Écho.
+- **Identique à l'opérateur** :
+  - les écritures (PUT en XHR, code 204) ;
+  - les champs, l'ordre des clés, les valeurs et la précision ;
+  - l'ordre « vu » puis « validation » ;
+  - aucune écriture qu'un humain ne ferait jamais.
+- **Différences, classées par risque** :
+  1. **Moyen** : plus de lectures de nuage par cut (4,2 contre 1,7 en partie 29, 2,5 contre 1,8 en partie 1). Elles ont la même forme et restent dans la plage humaine. Cause supposée : les commandes de vue.
+  2. **Faible à moyen** : presque aucune pause, 1 % des intervalles au-delà de 5 s contre 7 à 9 % chez l'opérateur. Le cycle est concentré entre 2 et 3 s. Le débit de pointe est le même que celui de l'opérateur.
+  3. **Faible** : en partie 29, le lot avance par sauts vers l'avant.
+- **Ce que les exports ne montrent pas** : la télémétrie cliente d'ESV, les événements d'interface synthétiques. Il faut le vérifier sur la maquette : capture réseau d'un passage manuel contre un passage en lot, sur les mêmes cuts.
+- **Aucune action nouvelle proposée.** Réduire un écart (pauses, lectures) changerait le comportement dans ESV : c'est à Mic de décider.
+- **Remarque** : l'essai `memoire-differes` frôle sa limite de 20 s sous charge (15 s seul). À alléger.
