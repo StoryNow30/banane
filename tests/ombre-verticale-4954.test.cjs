@@ -36,7 +36,10 @@ const shifted=(rails,mm)=>Object.fromEntries(SIDES.map(side=>{const r=rails[side
  const a=K.C.point(P,o),b=K.C.point(P,[o[0],o[1]+mm/1000,o[2]]);return [side,O.translated(r,[b[0]-a[0],b[1]-a[1],b[2]-a[2]])];}));
 const anchorAt=(cut,rails)=>({identity:{part:23,cut,frameId:'f'},positions:Object.fromEntries(SIDES.map(s=>[s,rails[s].positionSceneRelative]))});
 const railsReprise=shifted(truth,150),capReprise=capture(railsReprise),sciReprise=Shadow.scientificProposeBoth(capReprise),ancres=[anchorAt(104,shifted(truth,12)),anchorAt(103,shifted(truth,12))];
-const reprise=()=>L.decideCut({capture:capReprise,science:sciReprise,anchors:ancres,Shadow});
+/* La reprise relance le moteur (environ 1 s) : une décision par réglage, gardée (jamais modifiée par les essais). */
+const memoReprise=new Map();
+const reprise=()=>{const cle=JSON.stringify(globalThis.BananeSettings?.ombreVerticaleRefusee??null);
+ if(!memoReprise.has(cle))memoReprise.set(cle,L.decideCut({capture:capReprise,science:sciReprise,anchors:ancres,Shadow}));return memoReprise.get(cle);};
 
 /* Cas 3 : tous les rails calés (aucun refus) : premier passage de la capture de base. */
 const capBase=capture(truth),sciBase=Shadow.scientificProposeBoth(capBase);
@@ -94,16 +97,20 @@ test('la valeur vient du réglage (3,6 par défaut), et le réglage coupé ou ab
 });
 
 test('LA POSE NE CHANGE PAS : décisions identiques, octet pour octet, avec et sans le réglage, à toute valeur ; les commandes aussi',()=>{
+ /* La reprise relance le moteur (environ 1 s) : un seul réglage actif pour la reprise ; le premier passage en essaie quatre. */
+ const REGLAGES={'premier passage':[{actif:true,mm:3.6},{actif:true,mm:25},{actif:false,mm:3.6},undefined],'reprise':[{actif:true,mm:3.6}],'sans refus':[{actif:true,mm:3.6},undefined]};
+ const decisions={};
  for(const [nom,cas] of [['premier passage',premierPassage],['reprise',reprise],['sans refus',sansRefus]]){
   const sansReglage=JSON.stringify(cas());
-  for(const reglage of [{actif:true,mm:3.6},{actif:true,mm:25},{actif:false,mm:3.6},undefined]){
+  for(const reglage of REGLAGES[nom]){
    const d=avecReglage(reglage,cas);
    assert.equal(JSON.stringify(sans(d)),sansReglage,`${nom} : tout sauf la consigne est identique (${JSON.stringify(reglage)})`);
    assert.equal(JSON.stringify(d.positions),JSON.stringify(JSON.parse(sansReglage).positions),`${nom} : positions identiques`);
+   if(nom==='reprise'&&reglage.mm===3.6)decisions.reprise=d;
   }
  }
  /* Ce qui est commandé à ESV ne lit jamais la consigne, même fausse ou démesurée. */
- const d=avecReglage({actif:true,mm:3.6},reprise),dFaux={...d,ombreVerticale:{mm:999,rails:{left:{ombre:[1,2,3],reelle:[1,2,3]},right:{ombre:[9,9,9],reelle:[9,9,9]}}}};
+ const d=decisions.reprise,dFaux={...d,ombreVerticale:{mm:999,rails:{left:{ombre:[1,2,3],reelle:[1,2,3]},right:{ombre:[9,9,9],reelle:[9,9,9]}}}};
  const before=Object.fromEntries(SIDES.map(s=>[s,capReprise.rails[s]])),runtimeRails=before;
  const expectedPoses=(_a,rails)=>Object.fromEntries(SIDES.map(s=>[s,{positionSceneRelative:C.point(capReprise.rails[s].profileLocalToSceneRelative,rails[s].delta)}]));
  const commande=x=>JSON.stringify(L.commandRails({decision:x,runtimeRails,before,expectedPoses,cameras:{left:null,right:null}}));
