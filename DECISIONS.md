@@ -2056,3 +2056,8 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - 28 essais sur fixtures synthétiques ; verify : 1 744, 0 échec.
 - Partie 17 identique ligne pour ligne (192 / 132 / 47 ; 5,0 / 11,1 / 20,0 mm). Partie 29 : 7/192 à plus de 10 mm, 96 à plus de 5 mm ; avec la règle à 0,8 s, 7/198.
 - Reste à faire : `tools/p0-commun.cjs` ignore aussi les `ariane-echo-*` ; `perf-phases.cjs` ne lit pas les relevés S6. Les deux corrections sont décrites dans la fiche.
+
+## D-139 — Second projet : lot Orbite de la partie 1 reçu ; fausses alertes « contrat ESV » avec deux fenêtres (16 octobre 2026)
+
+- Lot Orbite 4.9.5.3 de la partie 1 du second projet (D-123), archivé dans banane-data (5fabea9). Projet difficile, avec seulement 2 scanners visibles d'après Mic : **224 posés, 127 différés** (tous `deferred-unresolved`). L'Écho de Mic suit ; ce sera le premier jeu où les abstentions d'Ariane reçoivent une pose humaine.
+- **Fausses alertes de contrat** : 5 avis « ESV n'a plus le même contrat » en alternance entre deux empreintes (8ff6ba83 et a1c1d168), entre 10 h 01 et 10 h 52, heure de Paris, pendant que Mic faisait l'Écho des parties 12 et 13 dans une autre fenêtre. L'empreinte est gardée **une seule fois pour tout le navigateur**. Deux onglets ESV dans des états différents (boutons, écouteurs) se la disputent. C'est le doute signalé en D-127. Correctif à faire : empreinte rangée par onglet, et retirer des champs comparés ce qui dépend de l'état de la page, comme les libellés de boutons et le nombre d'écouteurs. Jusque-là, Mic peut ignorer cet avis quand deux fenêtres ESV sont ouvertes.
