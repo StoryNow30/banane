@@ -2260,3 +2260,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Noms de modèles d'IA sur `main`** : Mic donne son accord. Retirés de `main` (4c9fee0), documents seulement, rien sous `src/`.
 - **Nuit du 16 au 17** : Mic demande de grands chantiers aux niveaux forts, avec relance après chaque réinitialisation. Le plan et les règles assouplies sont dans `fiches/REPRISE_AUTONOME.md`.
 - Rien n'est activé au terrain sans Mic.
+
+## D-156 — Déplacer la vue : la pièce est écrite et coupée ; la maquette ne réagit pas aux gestes (16-17 octobre 2026)
+
+- Livré sur `claude/50-deplacer-vue` (2209034 à 4e64445), intégré à `claude/50-base` par avance rapide. Essais ciblés verts, et verify de l'agent : 1 955 réussis, 0 échec. Moteur intact.
+- **Pièce `amenerDansLaVue`** : dézoom à la molette, sinon glisser au clic gauche, au plus 3 gestes par rail. Elle relit la caméra, reprojette, pose, puis remet la vue. Un pré-vol essaie le geste sans rien poser.
+  - Conditions : seulement pour un cut différé parce que la cible est hors de la vue, à l'étage « window », et qui passe la règle prudente D-147.
+  - Réglage `deplacerVue.actif=false`. Coupé, les commandes à ESV sont identiques octet pour octet.
+- **Gestes vérifiés dans Chromium** : la suite d'événements est la même que celle d'une vraie souris. Le `click` final d'un glisser est volontairement omis, car il poserait le rail. La molette envoie `wheel` avec `wheelDeltaY` (sinon le zoom part dans le mauvais sens). Un faux cran n'atteint jamais un écouteur `mousewheel` : si ESV n'écoute que lui, le dézoom d'Ariane sera sans effet.
+- **La maquette ne réagit à aucun geste**. La réaction du vrai ESV n'est donc pas mesurée : gain en mm par pixel, persistance du zoom, lectures de nuage par geste. Les vérifications à faire sur le vrai ESV avant activation sont au § 6 de `fiches/DEPLACER_VUE.md`. Le relevé Écho des gestes de Mic y répondra en partie.
+- **Écho** : le relevé des glissers et des crans de molette de Mic est **actif par défaut** (`echo.gestesVue`), en observation pure avec des écouteurs passifs. Il ajoute environ 1 Ko par geste.
+- **Remarque à garder pour la trace (D-151)** : la pose directe du mode rapide peut déjà cliquer à des coordonnées hors de la partie visible de la vue, ce qu'un humain ne peut pas faire. À examiner.
