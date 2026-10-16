@@ -629,7 +629,7 @@ le mode « aveugle » de `p2-plancher.cjs` ; le fait que V4.6 ne soit pas une v�
    comme hors périmètre.
 10. **Provenance (D04)** : reprise comme règle transversale (§ 6), pas comme chantier.
 11. **Porte de V3** : capture −30 % (plan) contre cycle −25 % (direction) : cohérentes seulement avec V4 (§ 3).
-12. **Modèle** : le cahier 0.2 initial proposait des modèles par chantier (Opus, Sonnet). Le développeur étant une session
+12. **Modèle** : le cahier 0.2 initial proposait des modèles par chantier (niveau fort, niveau rapide). Le développeur étant une session
     Sol (décision de la direction, 30/09), ils sont remplacés par un **profil d'exécutant** (§ 2.3) : *bornée* ou *conception*.
 
 **Révision de l'orchestrateur (30/09, après le rapport de rédaction).** Contrôle par sondage dans le dépôt, tous exacts : les

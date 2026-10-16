@@ -32,5 +32,5 @@ conception de V5 maintenant (pendant la séance test 6), pour une version 4.9.0.
 
 **À ne pas relire.** Les rapports de missions A à G, `verification.txt`, les exports déjà analysés (chiffres ci-dessus).
 
-**Modèle et effort.** Conception et code : Opus, élevé ; essais rouges d'abord (dérive reproduite sur un lot simulé de 400 cuts : temps de `save()` par rang de cut) ; une relecture
-Opus ou Fable du diff (le code touche l'enregistrement) ; aucun autre agent.
+**Modèle et effort.** Conception et code : niveau fort, élevé ; essais rouges d'abord (dérive reproduite sur un lot simulé de 400 cuts : temps de `save()` par rang de cut) ; une relecture
+de niveau fort ou maximal du diff (le code touche l'enregistrement) ; aucun autre agent.

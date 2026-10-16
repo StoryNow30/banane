@@ -40,5 +40,5 @@ Aujourd'hui `background.js` (~ligne 816) appelle `L.decideCut({capture:…})` SA
 ## Règles à respecter
 - `src/engine.js`, `src/geometry.js`, `vendor/capture-core.js`, `vendor/lidar.js` : **gelés** (baseline `audit/v4.6.0-engine-baseline.json`). Ne pas les modifier.
 - Aucun identifiant de projet ESV (motif six chiffres, souligné, six chiffres, souligné, une lettre, souligné) dans le dépôt, les consignes ou les sorties. Données d'export privées, dans le scratchpad.
-- Aucun nom de modèle dans les commits. Pied de commit : `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` et `Claude-Session: https://claude.ai/code/session_01RpfEZY6gJiLAEGcHEiExbv`.
+- Aucun nom de modèle dans les fichiers du dépôt. Pied de commit : celui que fixe la session, avec `Claude-Session: https://claude.ai/code/session_01RpfEZY6gJiLAEGcHEiExbv`.
 - Pas de PR, pas de fusion, pas d'étiquette.

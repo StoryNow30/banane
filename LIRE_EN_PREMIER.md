@@ -1,5 +1,7 @@
 # Ariane — lire en premier
 
+> **Branche pilote `claude/execute-prompt-00-18ra5a` : documents seulement.** Son code (`src/`, `manifest.json` 4.8.6) est en retard sur `main` et ne doit **jamais** servir à construire un paquet. Le code de la 5.0 est sur `claude/50-base`, les versions de terrain sur `claude/495-test-*` (audit D-149, I5).
+
 **Seul document d'état** (D6, 29/09/2026) : ce qui est installé, ce qui est en
 cours, où en sont les mesures. Le plan est dans `PLAN_SUITE.md`, les règles
 dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le

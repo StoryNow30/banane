@@ -16,16 +16,16 @@ conviennent à chaque tâche, compacter quand c'est nécessaire ou opportun. Com
 
 ## 2. Routage modèle et effort (recommandations, à corriger avec les coûts mesurés)
 
-| Tâche | Modèle | Effort | Comment |
+| Tâche | Niveau de modèle | Effort | Comment |
 |---|---|---|---|
-| Dialogue avec Mic, arbitrage simple, point d'étape | Sonnet 5.5 | moyen | conversation |
-| Décision d'architecture, conception V3 (ordre des lectures d'ESV), cas ambigu | Opus 5.5 | élevé | conversation, courte |
-| Analyse d'un export de séance (`analyse-locale`, `perf-lot`) | Sonnet 5.5 | bas à moyen | direct, scripts du dépôt |
-| Code borné (constante, fixture, test, version) | Sonnet 5.5 | moyen | direct |
-| Code qui efface ou enregistre (vidage, export), conception de capture (V3) | Opus 5.5 | élevé | direct, tests rouges d'abord |
-| Relecture indépendante de ce code | Opus 5.5 ou Fable 5.1 | élevé | **un** agent, angle précis |
-| Texte, consigne, rapport, relevé `verify`, paquet, push | Haiku 5.5 ou Sonnet 5.5 | bas | direct |
-| Recherche dans le code (où est X ?) | Haiku 5.5 | bas | `grep`, ou agent Explore |
+| Dialogue avec Mic, arbitrage simple, point d'étape | niveau rapide | moyen | conversation |
+| Décision d'architecture, conception V3 (ordre des lectures d'ESV), cas ambigu | niveau fort | élevé | conversation, courte |
+| Analyse d'un export de séance (`analyse-locale`, `perf-lot`) | niveau rapide | bas à moyen | direct, scripts du dépôt |
+| Code borné (constante, fixture, test, version) | niveau rapide | moyen | direct |
+| Code qui efface ou enregistre (vidage, export), conception de capture (V3) | niveau fort | élevé | direct, tests rouges d'abord |
+| Relecture indépendante de ce code | niveau fort ou niveau maximal | élevé | **un** agent, angle précis |
+| Texte, consigne, rapport, relevé `verify`, paquet, push | niveau éclair ou niveau rapide | bas | direct |
+| Recherche dans le code (où est X ?) | niveau éclair | bas | `grep`, ou agent Explore |
 
 Limites de cette table : prix et qualités des modèles non vérifiés ici ; l'ordre « plus fort = plus cher » est une hypothèse. Les coûts mesurés par chantier
 (voir § 4) servent à la corriger.

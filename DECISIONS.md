@@ -11,7 +11,7 @@
 ## D-097 - Test 11 (4.9.0.11) livrée ; chantier UX lancé en session séparée (13 octobre 2026, nuit)
 
 **Décision de l'orchestrateur (pleins pouvoirs D-096).** La test 11 = test 10 + B1 en mode ombre (calculé à côté, consigné `b1-ombre`, jamais appliqué) + correctif de sauvegarde KI-070. Branche `claude/49-test-11` (286d924 + version), verify 1465 réussis / 0 échec / 2 sautés. Le travail de l'agent B1 (coupé par un redémarrage du conteneur) était déjà commité : relu par l'orchestrateur, poussé, vérifié. Paquet `ariane-4.9.0-test.11.zip`, SHA-256 `a9675f286a14fcdba2e1acf8521241ccc5dc8a734d29a1d88bd2f7f1b36c1a1c`. Activation de B1 : seulement après lecture des notes `b1-ombre` d'un lot de terrain (justes perdus, faux ajoutés).
-**Chantier UX (demande de Mic)** : la moitié basse de la vue Orbite est jugée illisible. Session dédiée (Opus 5.5), branche `claude/ux-variantes`, brief `design/ux-2026-10/BRIEF.md`, références Porsche et capture actuelle dans `design/references/ux-2026-10/` : quatre variantes, Mic choisit, puis intégration sans toucher aux identifiants du panneau. L'intégration au panneau sera rapatriée dans la ligne de test après le choix (merge des fichiers `panel.*` seulement).
+**Chantier UX (demande de Mic)** : la moitié basse de la vue Orbite est jugée illisible. Session dédiée (niveau fort), branche `claude/ux-variantes`, brief `design/ux-2026-10/BRIEF.md`, références Porsche et capture actuelle dans `design/references/ux-2026-10/` : quatre variantes, Mic choisit, puis intégration sans toucher aux identifiants du panneau. L'intégration au panneau sera rapatriée dans la ligne de test après le choix (merge des fichiers `panel.*` seulement).
 
 ## D-096 - Pleins pouvoirs de décision à l'orchestrateur jusqu'à la livraison de la 4.9 ; B1 accepté en lecture de la liste des coupes ; B1 lancé en mode ombre (13 octobre 2026)
 
@@ -2161,3 +2161,32 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - le réglage de (b) est sensible au protocole de simulation.
 - **Suite** : (b) en ombre, dans le lot et l'Écho, avec un événement par différé. Il faut définir avec Mic comment Ariane voit ses corrections. (b) recoupe la règle prudente de D-147 et sera rapprochée d'elle dans l'audit.
 - Les trois chantiers du déclencheur de D-145 sont rentrés. L'audit est lancé.
+
+## D-149 — Audit indépendant de la 5.0 : résultats et suites (16 octobre 2026)
+
+- L'audit (D-145) est rendu. Il était en lecture seule et a rejoué 115 essais ciblés. Le rapport complet est hors dépôt, dans le carnet de la session (`audit50/AUDIT_5.0.md`).
+- **Ce qui est sûr** :
+  - la 4.9.5.4 et la base 5.0 ne changent pas la pose ;
+  - `src/engine.js` est identique à `main` ;
+  - aucune ombre ne touche `positions` ni les commandes ;
+  - D-143 est accepté.
+  - Trace dans ESV : Ariane n'émet aucune requête propre, aucun en-tête, aucun champ écrit. Les commandes passent par ESV lui-même.
+- **Reste à mesurer sur la trace** : la nature des écritures par cut, Orbite contre Écho, et l'éventuelle télémétrie cliente d'ESV, à vérifier sur la maquette.
+- **Bloquant avant toute activation d'une pose nouvelle** :
+  - B1 : un manifeste des parties. Les parties 17, 24, 29 et la partie 1 du second projet ont servi à régler. Toute partie neuve est réservée.
+  - B2 : la porte doit avoir un effectif, avec une borne de Wilson < 5 % : 73 poses sans faute, ou 110 avec une seule. Seuil de métier, à soumettre à Mic.
+- **Appliqué tout de suite** :
+  - I1 : noms de modèles d'IA retirés de la branche pilote, remplacés par des niveaux ;
+  - I5 : la branche pilote est déclarée « documents seulement » dans `LIRE_EN_PREMIER.md`.
+- **Lancé** :
+  - hygiène sur la base 5.0 : manifeste des parties, réglages figés, noms de modèles, renommage de l'ombre verticale en P8, verify sous `nice` et verrou, textes à recouper ;
+  - jointure par cadre de scène et rejeu de la partie 24 (I2). Le même chantier refuse la règle « visité = bon » après une perte de page ou sur une capture vide (I3 a), et avertit quand deux sessions se chevauchent (U5) ;
+  - les ombres : la règle prudente de voie prédite dans Orbite d'abord, puis la mémoire de série dans l'Écho, avec un module commun (I8). Le même chantier ajoute la dernière empreinte connue dans `storage.local` (U1) ;
+  - la mesure de la trace (I6).
+- **À soumettre à Mic** :
+  - B2 ;
+  - le seuil de 0,8 s (I3 c) ;
+  - les amendements du cahier (I7) ;
+  - le mode de travail qui rendrait la mémoire de série active (I8 4) ;
+  - une seconde relecture d'une trentaine de cuts pour mesurer le bruit de la référence (U6) ;
+  - le retrait des noms de modèles sur `main`.

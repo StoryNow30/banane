@@ -18,7 +18,7 @@ brainstorm, cahier des charges, choix d'ordre et de portes chiffrées, grilles d
 ni ESV : tu ne peux ni exécuter d'outil ni vérifier du code. Donc :
 - **N'invente aucun chiffre ni aucun comportement d'ESV.** Les chiffres viennent des scripts du projet (rapports, `verify`, portes) ; ce
   dossier en donne l'état. Marque tes affirmations **VÉRIFIÉ** (lu dans ce dossier) ou **SUPPOSÉ** (déduit).
-- Ce que tu produis est une **proposition** : la direction la relit, puis Claude (Opus pour le code risqué, Sonnet pour le bien spécifié)
+- Ce que tu produis est une **proposition** : la direction la relit, puis Claude (niveau fort pour le code risqué, niveau rapide pour le bien spécifié)
   la vérifie contre le code et écrit ou **réécrit** le code. Ne prétends pas qu'un changement est fait, testé ou livré.
 - Réponses courtes, en français. Une chose à la fois : le quota de la direction est limité.
 
