@@ -60,7 +60,12 @@
    const event={...copy,eventId:K.uid(),timestamp:iso(),type:'native-'+type,nativeSessionId:n?.id||detail.sessionId,
     observationPeriodId:detail.observationPeriodId||null,identity,eventSeq,event_seq:eventSeq};
    await this.store.putEvent(event);return event;}
-  newPeriod(n){const period={observationPeriodId:K.uid(),startedAt:iso(),endedAt:null,endTimeStatus:'open',status:'STARTING'};
+  /* F5 en Écho (fiches/ECHO_F5.md) : un démarrage ou une reprise qui échoue marque sa période (`reason:'start-failed'`, `error`) ; l'essai
+   * suivant la remplace au lieu de s'empiler (terrain : six périodes de 0 à 60 ms en 8 s). Au pire, une seule période marquée en fin de liste. */
+  failPeriod(period,error){period.status='INTERRUPTED';period.endedAt=iso();period.endTimeStatus='observed';period.reason='start-failed';
+   period.error=String(error?.message||error||'?').slice(0,240);}
+  newPeriod(n){const list=n.observationPeriods;while(list.length&&list.at(-1).reason==='start-failed')list.pop();
+   const period={observationPeriodId:K.uid(),startedAt:iso(),endedAt:null,endTimeStatus:'open',status:'STARTING'};
    n.observationPeriods.push(period);n.currentPeriodId=period.observationPeriodId;return period;}
   async start(){if(this.starting||this.ending)throw Error('Le mode Natif est déjà en cours de démarrage ou de fermeture.');this.starting=true;
    try{const old=this.e.s.native;if(['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(old?.status))return this.resume();
@@ -80,7 +85,7 @@
     await this.nativeEvent('session-started',{sessionId:n.id,observationPeriodId:period.observationPeriodId,identity:null});
     try{await this.adapter.nativeStart({sessionId:n.id,observationPeriodId:period.observationPeriodId});n.status='RUNNING';period.status='RUNNING';
       n.message='Observation native active. Travaille normalement dans ESV : Banane n’envoie aucune commande.';await this.e.save();return this.e.view();}
-    catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';period.status='INTERRUPTED';period.endedAt=iso();period.endTimeStatus='observed';n.message=error.message;await this.e.save();throw error;}
+    catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';this.failPeriod(period,error);n.message=error.message;await this.e.save();throw error;}
    }finally{this.starting=false;}}
   receive(type,data){const next=this.queue.then(()=>this.handle(type,data));this.queue=next.catch(()=>{});return next;}
   /* 4.7.2 — lecture d'UN enregistrement par sa clé. Avant, chaque événement
@@ -496,8 +501,8 @@
    catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';n.message=error.message;await this.e.save();throw error;}}
   async resume(){const n=this.e.s.native;if(!n||!['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status))throw Error('Aucune observation Natif en pause.');
    const period=this.newPeriod(n);try{await this.adapter.nativeResume({sessionId:n.id,observationPeriodId:period.observationPeriodId});n.status='RUNNING';period.status='RUNNING';
-    n.message='Nouvelle période d’observation native active.';await this.e.save();return this.e.view();}catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';period.status='INTERRUPTED';
-    period.endedAt=iso();period.endTimeStatus='observed';n.message=error.message;await this.e.save();throw error;}}
+    n.message='Nouvelle période d’observation native active.';await this.e.save();return this.e.view();}catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';
+    this.failPeriod(period,error);n.message=error.message;await this.e.save();throw error;}}
   /* `end({dataset:false})` rend un résumé léger au lieu de la session entière.
    * 4.7.2 terrain : la fin de session renvoyait tout le jeu (88 Mo de visites et
    * d'événements pour 105 visites) dans un seul message vers le panneau —

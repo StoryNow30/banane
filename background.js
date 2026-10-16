@@ -1228,16 +1228,43 @@ chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(i
  * mise en pause « page perdue », l'alerte s'affiche dans ESV, puis l'observation REPREND TOUTE SEULE quand la page est
  * chargée (réglage `echo.repriseAutomatique`) : réinstallation de l'adaptateur, nouvelle période, aucune commande à ESV. */
 async function echoPagePerdue(reason){if(!native?.running())return null;const r=await native.pageLost(reason);await syncLauncher().catch(()=>{});return r;}
+/* F5 en Écho (fiches/ECHO_F5.md) — LA REPRISE ATTEND QU'ESV AIT FINI DE CHARGER. Avant, elle partait au premier « complete » de l'onglet,
+ * 0,35 s après le F5, alors qu'ESV n'avait ni liste (7 s) ni cut : visite sans identité, puis visites au cut 0 du chargement. Le service
+ * worker note ce que l'observateur de la page lui rapporte déjà (pages de liste lues, aucune requête de plus) ; la reprise exige le libellé
+ * du cut lisible (`ping.label`, lecture du DOM) ET la liste lue puis silencieuse. Si la liste n'est jamais vue, le libellé doit afficher un
+ * cut réel (≥ 1) après `attenteSansListeMs`. Au-delà de `delaiMaxMs` : aucune période, « Connecter puis Reprendre » comme avant. */
+const chargementEsv={gen:0,debutMs:Date.now(),listePages:0,derniereListeMs:null};
+function chargementEsvReset(){chargementEsv.gen++;chargementEsv.debutMs=Date.now();chargementEsv.listePages=0;chargementEsv.derniereListeMs=null;}
+function chargementEsvNoter(entries){if(!Array.isArray(entries))return;
+ for(const e of entries)if(e?.kind==='list-page'&&e.status>=200&&e.status<300){const t=Number.isFinite(e.endedEpochMs)?Math.min(e.endedEpochMs,Date.now()):Date.now();
+  chargementEsv.listePages++;chargementEsv.derniereListeMs=Math.max(chargementEsv.derniereListeMs??0,t);}}
+const repriseEchoDelais=()=>({pollMs:250,silenceListeMs:2500,attenteSansListeMs:10000,delaiMaxMs:60000,...(globalThis.BananeSettings?.echo?.reprise||{})});
+function chargementEsvPret(label,R,now=Date.now()){
+ if(!Number.isInteger(label?.part)||!Number.isInteger(label?.cut)||label.part<1)return false;/* « partie 0 » : libellé de chargement d'ESV */
+ if(chargementEsv.listePages>0)return now-chargementEsv.derniereListeMs>=R.silenceListeMs;
+ return label.cut>=1&&label.part>=1&&now-chargementEsv.debutMs>=R.attenteSansListeMs;}
 async function echoReprise(tabId){const n=engine?.s?.native;if(!n||n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||!n.pageLost||n.pageLost.reason==='tab-closed')return;
  if(globalThis.BananeSettings?.echo?.repriseAutomatique===false||n.pageLost.repriseEnCours)return;
- n.pageLost.repriseEnCours=true;await syncLauncher().catch(()=>{});let derniere=null;
- for(let essai=1;essai<=5;essai++){try{const tab=await chrome.tabs.get(tabId);if(!esvURL(tab.url))throw Error('l’onglet n’affiche plus ESV');
-   await equiperOnglet(tabId);await native.resume();n.pageLost=null;n.message='Observation native reprise après le rechargement de la page ESV (nouvelle période, rien d’inventé pendant l’interruption).';
-   await engine.save();await syncLauncher().catch(()=>{});return;}
-  catch(e){derniere=e;await new Promise(r=>setTimeout(r,1500*essai));}}
- n.pageLost.repriseEnCours=false;n.message='Écho : reprise automatique impossible après le rechargement ('+(derniere?.message||'?')+'). Clique sur Connecter puis Reprendre.';
- await engine.save();await syncLauncher().catch(()=>{});}
+ const perdue=n.pageLost,R=repriseEchoDelais();perdue.repriseEnCours=true;await syncLauncher().catch(()=>{});
+ let derniere=null,fin=Date.now()+R.delaiMaxMs,genFin=chargementEsv.gen,genEquipe=-1,echecs=0,attente=null;
+ try{while(Date.now()<fin){
+   if(n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||n.pageLost!==perdue)return;/* reprise manuelle, session finie : rien à faire */
+   if(chargementEsv.gen!==genFin){genFin=chargementEsv.gen;fin=Date.now()+R.delaiMaxMs;}/* nouveau chargement : l'attente repart */
+   try{const tab=await chrome.tabs.get(tabId);if(!esvURL(tab.url))throw Error('l’onglet n’affiche plus ESV');
+    if(genEquipe!==chargementEsv.gen){await equiperOnglet(tabId);genEquipe=chargementEsv.gen;}
+    const ping=await callSur(tabId,'ping');
+    if(chargementEsvPret(ping?.label,R)){await native.resume();perdue.repriseEnCours=false;n.pageLost=null;
+     n.message='Observation native reprise après le rechargement de la page ESV (nouvelle période, rien d’inventé pendant l’interruption).';
+     await engine.save();await syncLauncher().catch(()=>{});return;}
+    attente=ping?.label?'liste de coupes pas encore lue':'cut pas encore identifié';}
+   catch(e){derniere=e;genEquipe=-1;if(e?.definitif||++echecs>=5)break;await new Promise(r=>setTimeout(r,1500*echecs));continue;}
+   await new Promise(r=>setTimeout(r,R.pollMs));}}
+ catch(e){derniere=e;}
+ if(n.pageLost===perdue){perdue.repriseEnCours=false;
+  n.message='Écho : reprise automatique impossible après le rechargement ('+(derniere?.message||'ESV n’a pas fini de charger : '+(attente||'page sans réponse'))+'). Clique sur Connecter puis Reprendre.';
+  await engine.save();await syncLauncher().catch(()=>{});}}
 chrome.tabs.onUpdated?.addListener((tabId,info,tab)=>{if(tabId!==selectedTab)return;
+ if(info.status==='loading')chargementEsvReset();
  void ready.then(async()=>{if(info.status==='loading'&&native?.running())await echoPagePerdue('page-reloaded');
   else if(info.status==='complete'&&esvURL(tab?.url))await echoReprise(tabId);}).catch(()=>{});});
 /* 4.7.19 (KI-059) — LA VUE ET LES EXPORTS TIENNENT DANS UN MESSAGE.
@@ -1539,7 +1566,11 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');
   /* 4.9.0.18 (AM-23, AM-06) : libellé du cut illisible = aucune identité pour toute la séance : refus ; plusieurs onglets ESV : dit. */
-  const vu=await call('nativeSnapshot').catch(()=>null);
+  let vu=await call('nativeSnapshot').catch(e=>e);
+  /* F5 hors séance : la page rechargée n'a plus d'adaptateur. « Connecter » ferait la même chose (injection locale, aucune requête à ESV) ;
+   * sinon le démarrage échouait en laissant une session et une période fantôme à chaque clic (fiches/ECHO_F5.md). */
+  if(vu instanceof Error){try{await equiperOnglet(selectedTab);vu=await call('nativeSnapshot');}
+   catch(e){if(e?.definitif)throw e;throw Error('Écho non démarré : la page ESV ne répond pas ('+(e?.message||vu.message)+'). Clique sur Connecter, puis réessaie.');}}
   if(vu&&(!Number.isInteger(vu.identity?.part)||!Number.isInteger(vu.identity?.cut)))throw Error('Écho refusé : le libellé du cut n’est pas lisible dans ESV (« Cut N of part M » attendu). Ouvre un cut, puis réessaie.');
   const onglets=(await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'}).catch(()=>[])).length;
   const v=await native.start();const n=engine.s.native;
@@ -1676,6 +1707,7 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   * pas encore relus) ; il était ignoré sans réponse et ses entrées, déjà retirées de la file du pont, perdues sans trace.
   * Il est maintenant traité une fois `ready` résolu. */
  if(m.kind==='esv-observation'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
+  if(sender.tab.id===selectedTab)chargementEsvNoter(m.entries);
   if(swPret){if(sender.tab.id===selectedTab)respond(rangerObservations(m));return;}
   ready.then(()=>respond(sender.tab.id===selectedTab?rangerObservations(m):{accept:false,reason:'other-tab'}),()=>respond({accept:false,reason:'not-ready'}));return true;}
  if(m.kind==='manual-event'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){

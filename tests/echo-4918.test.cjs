@@ -135,12 +135,15 @@ test('4.9.0.19 (partie 24) : la validation écrite APRÈS le changement de cut v
 /* ---------- service worker : F5, alerte, reprise, observations ESV taguées ---------- */
 const esv={id:'test',url:'https://esv.lidar.altametris.xyz/rails_validation/test',tab:{id:1}};
 test('AM-05 (service worker) : F5 sur l’onglet observé → pause dite, bandeau rouge dans ESV, puis reprise automatique (nouvelle période, aucune commande ESV)',async()=>{
- const b=background({globals:{BananeCore3:K,BananeSettings:Settings,BananeExportCache:EC}});await b.api('connect',{tabId:1});await b.api('native-start');
+ /* Reprise : attend que le libellé du cut soit lisible (4.9.5 F5, tests/echo-f5-reprise.test.cjs) ; délais réduits. */
+ const b=background({globals:{BananeCore3:K,BananeSettings:{...Settings,echo:{...Settings.echo,reprise:{pollMs:5,silenceListeMs:20,attenteSansListeMs:20,delaiMaxMs:2000}}},BananeExportCache:EC,setTimeout,clearTimeout}});
+ b.adapter.ping=async()=>({version:K.VERSION,pageId:b.adapter.identity.pageId,proprietaire:'test',label:{part:b.adapter.identity.part,cut:b.adapter.identity.cut}});
+ await b.api('connect',{tabId:1});await b.api('native-start');
  const id=b.fonction('engine.s.native.id');await b.message({kind:'native-event',type:'visit-started',payload:{sessionId:id,observationPeriodId:b.fonction('engine.s.native.currentPeriodId'),visitId:'v1',identity:b.adapter.identity,initialObserved:await b.adapter.state()}},esv);
  await b.tabUpdated(1,{status:'loading'});
  let n=b.fonction('engine.s.native');assert.equal(n.status,'PAUSED_ADAPTER_UNRESPONSIVE');assert.equal(n.pageLost.reason,'page-reloaded');
  const statut=await b.message({kind:'launcher-status'},esv);assert.equal(statut.bandeau.ton,'rouge');assert.match(statut.bandeau.text,/CAPTURE ARRÊTÉE/);
- await b.tabUpdated(1,{status:'complete'});await flush(30);
+ await b.tabUpdated(1,{status:'complete'});await new Promise(r=>setTimeout(r,150));
  n=b.fonction('engine.s.native');assert.equal(n.status,'RUNNING',n.message);assert.equal(n.pageLost,null);assert.equal(n.observationPeriods.length,2);
  assert.ok(b.adapter.calls.includes('nativeResume'));assert.ok(!b.adapter.calls.some(c=>['apply','validateAndNext','next','skipAndNext'].includes(c)));
  assert.equal((await b.message({kind:'launcher-status'},esv)).bandeau,null);
