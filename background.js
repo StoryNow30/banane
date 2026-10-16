@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.4',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 4';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -99,6 +99,8 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
  const envoi=chrome.tabs.sendMessage(tabId,{kind:'page-command',action,args,...(trace?{traceId:trace.id}:{})});
  /* B1 (D-095) : la capture part, la page travaille ; l'hypothèse en ombre du cut précédent se conclut pendant ce temps. */
  if(action==='capture'&&b1File.length)setTimeout(b1Vider,0);
+ /* 5.0 (I8) : idem pour l'ombre de la voie prédite du cut précédent (calcul lourd, consigné seulement). */
+ if(action==='capture'&&voieOmbreFile.length)setTimeout(voieOmbreVider,0);
  const reply=await envoi.catch(e=>{
    timing?.endRequest(trace,null,e);
    if(!/maximum allowed size/i.test(e?.message||''))throw pageEsvAbsente(e);
@@ -969,7 +971,7 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
     * — la proposition remise au lot porte ses positions (`commandLot`). Un lot
     * « observer seulement », ou créé avant la 4.7.10, reste en observation.
     * Une erreur ici n'arrête rien : la proposition du moteur reste la seule. */
-   let lotObservation=null;
+   let lotObservation=null;const propositionMoteur=proposal;
    if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
     catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
    if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=await commandLot(proposal,lotObservation);}
@@ -982,6 +984,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    /* 4.7.18 (KI-057) : l'appui proposé attend que le cut soit validé avec ces
     * positions ; il ne compte qu'une fois posé (`promoteAnchors`). */
    if(lotObservation&&pilotScope)holdLotAnchor(lotObservation,pilotScope.lotDecision==='apply'?lotObservation.command??null:null);
+   /* 5.0 (I8) : ombre de la voie prédite, APRÈS la décision et la commande, sur des copies ; elle ne rend rien. */
+   if(lotObservation&&pilotScope)voieOmbrePlanifier(lotObservation,propositionMoteur,proposal);
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
@@ -1193,11 +1197,51 @@ async function observeLot(shadow){
  if(Number.isInteger(identity.cut)){batch.lotCommands=batch.lotCommands||{};
    batch.lotCommands[identity.cut]={...(batch.lotCommands[identity.cut]||{}),cut:identity.cut,stage:decision.stage,reason:decision.reason??null,ecartMm:Number.isFinite(ecartMm)?ecartMm:null};}
  if(decision.anchor)lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage};
+ /* 5.0 (I8) : ce que l'ombre de la voie prédite lira, en copie (capture, science, appuis réels AU MOMENT de la décision). */
+ voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
  /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
  const reprise=seeds.length&&!state.repriseLogged?{fromBatchId:batch.scope.lotReprise.fromBatchId??null,anchors:seeds}:null;
  if(reprise)state.repriseLogged=true;
  return {...decision,...(reprise?{reprise}:{}),applied:false,displayed:false,engineMs:Date.now()-t0};
 }
+/* 5.0 (audit 5.0, I8 (1)) — VOIE PRÉDITE EN OMBRE (src/voie-recentree.js, réglage `voiePrediteOmbre`). Pour chaque cut que le lot DIFFÈRE
+ * (proposition finale sans les deux rails résolus), l'événement `voie-predite-ombre` consigne ce qu'aurait donné la règle prudente D-147 :
+ * moteur recentré sur la voie du lot, vue déplacée (mesurée, jamais faite), étage, confiance, écart à la voie, profondeur de chaîne, geste
+ * de vue nécessaire, verdict. CONSIGNÉ SEULEMENT : le calcul part après la décision et la commande du cut, sur des copies ; il ne rend
+ * rien au lot, n'écrit ni dans `batch` ni dans ses appuis, n'envoie aucune commande à ESV. Ses propres « poses » ne servent d'appuis
+ * qu'à lui-même (mémoire de l'ombre, volatile : un redémarrage du service worker la vide, la chaîne de l'ombre repart alors des seuls
+ * appuis réels). Le calcul lourd (relance du moteur) attend que la page travaille (capture suivante), sinon 4 s, comme B1. Une panne
+ * ne laisse qu'un événement « erreur ». */
+const voieOmbre={mem:null,premier:true,contexte:null};
+const voieOmbreFile=[];let voieOmbreMinuterie=null;
+const voieOmbreReglage=()=>{const r=globalThis.BananeSettings?.voiePrediteOmbre;return r&&r.actif===true&&globalThis.BananeVoieRecentree?r:null;};
+function voieOmbreNoter(identity,capture,shadow,anchors,decision){try{
+ voieOmbre.contexte=null;if(!voieOmbreReglage())return;
+ const copie=x=>x==null?x:JSON.parse(JSON.stringify(x));
+ voieOmbre.contexte={identity:copie(identity),decision:copie(decision),anchors:copie(anchors||[]),science:copie({rails:shadow.rails,summary:shadow.summary}),
+  capture:{identity:copie(identity),rails:copie(capture.rails),pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes,
+   camera:copie(capture.camera??null),viewCaptures:(capture.viewCaptures||[]).map(v=>({camera:copie(v?.camera??null)}))}};
+}catch{voieOmbre.contexte=null;}}
+function voieOmbrePlanifier(lotObservation,propositionMoteur,propositionFinale){try{
+ const ctx=voieOmbre.contexte;voieOmbre.contexte=null;
+ const reglage=voieOmbreReglage(),V=globalThis.BananeVoieRecentree,b=engine.s.batch;
+ if(!ctx||!reglage||!b?.id)return;
+ if(voieOmbre.mem?.batchId!==b.id){voieOmbre.mem=V.creerMemoire(b.id);voieOmbre.premier=true;}
+ const mem=voieOmbre.mem;V.noterDecisionReelle(mem,ctx.identity,ctx.decision);
+ const differe=!['left','right'].every(s=>propositionFinale?.rails?.[s]?.status==='candidate');
+ if(!differe)return;
+ const copie=x=>x==null?x:JSON.parse(JSON.stringify(x)),K=globalThis.BananeCore3;
+ const commande=lotObservation.command?{action:lotObservation.command.action,reason:lotObservation.command.reason??null}:null;
+ const runtime=copie(propositionMoteur?.rails||null),before=copie(engine.s.before?.rails||ctx.capture.rails),ctxEv={batchId:b.id,sessionId:engine.s.sessionId??null};
+ voieOmbrePousser(()=>{const t0=Date.now();let ev;
+  try{ev={...V.evaluerDiffere({mem,capture:ctx.capture,science:ctx.science,ancresReelles:ctx.anchors,decisionReelle:ctx.decision,commandeReelle:commande,
+    Shadow:globalThis.BananeGCV1Shadow,runtimeRails:runtime,before,expectedPoses:K.expectedPoses,seuils:reglage}).evenement,ms:Date.now()-t0};}
+  catch(e){ev={version:'voie-predite-ombre-v1',identity:{part:ctx.identity.part??null,cut:ctx.identity.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)};}
+  if(voieOmbre.premier){ev.seuils={...reglage,etages:[...reglage.etages]};voieOmbre.premier=false;}
+  void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'voie-predite-ombre',schema:1,...ctxEv,...ev})).catch(()=>{});});
+}catch{/* ombre : jamais bloquant */}}
+function voieOmbrePousser(f){voieOmbreFile.push(f);while(voieOmbreFile.length>8)try{voieOmbreFile.shift()();}catch{}clearTimeout(voieOmbreMinuterie);voieOmbreMinuterie=setTimeout(voieOmbreVider,4000);}
+function voieOmbreVider(){clearTimeout(voieOmbreMinuterie);voieOmbreMinuterie=null;for(const f of voieOmbreFile.splice(0))try{f();}catch{/* jamais bloquant */}}
 /* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
  * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
 function promouvoirAppuis(batch,state,processed,max){const L=globalThis.BananeLotDecision,waiting=(state.pending||[]).map(p=>p.identity.cut);

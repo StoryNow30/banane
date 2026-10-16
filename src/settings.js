@@ -281,6 +281,20 @@
    * appui ; la pose réelle est identique, octet pour octet, avec et sans ce réglage. `actif:false` : rien n'est consigné. Étude : fiches/G0_APPRENTISSAGE_V1.md § 6.
    * Nom : P8 (« E2 » désigne l'ombre GCV1 de l'Écho). Les clés de données gardent leur nom, et la chaîne de version `e2-vertical-refuse-v1` garde « e2 » par compatibilité. */
   const ombreVerticaleRefusee = Object.freeze({ actif: true, mm: 3.6 });
+  /* 5.0 (audit 5.0, I8 (1)) — VOIE PRÉDITE EN OMBRE DANS ORBITE (src/voie-recentree.js). Pour chaque cut que le lot DIFFÈRE, le service worker
+   * consigne (`voie-predite-ombre`) ce qu'aurait donné la règle prudente D-147 : moteur recentré sur la voie du lot (les poses de l'ombre servent
+   * d'appuis à l'ombre seulement), étage, confiance, écart à la voie, profondeur de chaîne, geste de vue qu'il AURAIT fallu (dans la vue, dézoom,
+   * glissement en pixels), verdict « posable ou non, et pourquoi ». ACTIF PAR DÉFAUT, POUR CONSIGNER SEULEMENT : rien n'est posé, aucune vue
+   * n'est déplacée, aucune commande n'est envoyée à ESV ; la décision, la pose et les appuis du lot sont identiques avec et sans. Seuils figés
+   * (datasets/reglages-figes.json, `voiePredite`). `actif:false` : rien n'est calculé ni consigné. */
+  const voiePrediteOmbre = Object.freeze({ actif: true, etages: Object.freeze(['window']), confianceMin: 55, ecartementVoisinMm: 10, profondeurMax: 10, fenetreMm: 30, dezoomMax: 1.5, glissementPxMax: 250 });
+  /* 5.0 (audit 5.0, I8 (2)) — MÉMOIRE DES DIFFÉRÉS EN OMBRE DANS L'ÉCHO (src/voie-recentree.js, G1 (b), D-148). À la fin de la PREMIÈRE visite d'un cut
+   * que le lot de la partie a différé, l'Écho consigne (`memoire-differes-ombre`) la pose qu'aurait donnée le moteur recentré sur la voie des
+   * corrections DÉJÀ VALIDÉES par l'opérateur dans la même série de différés (trou de `ecartSerieMax` cuts au plus ; les `K` plus proches ;
+   * dispersion = éloignement × `mmParCut`, au plus `porteDispersionMm` ; voie = droite des `appuis` plus proches). Frontière anti-fuite de
+   * l'observation « continuité » : pose de départ et points capturés avant le premier geste, jamais la référence humaine du cut. Écho passif :
+   * rien n'est posé ni commandé. `actif:false` : rien. */
+  const memoireDifferesOmbre = Object.freeze({ actif: true, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
@@ -375,6 +389,8 @@
       { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Plafond du calage de convention (P1)', valeur: conventionPlafond === 'vertical' ? 'actif sur le vertical seulement (8 mm au plus)' : conventionPlafond ? 'actif (8 mm au plus par axe)' : 'coupé (rail hors domaine posé brut)', pourquoi: 'Un rail dont le décalage de convention dépasse 8 mm est posé avec 8 mm au plus au lieu d’être refusé ; le reste est consigné (D-129). Garde de paire inchangée.' },
       { groupe: 'Continuité', nom: 'Correction verticale en ombre (P8)', valeur: ombreVerticaleRefusee.actif ? 'consignée seulement (' + String(ombreVerticaleRefusee.mm).replace('.', ',') + ' mm sur les rails à convention refusée)' : 'coupée', pourquoi: 'Note dans la décision la pose qu’aurait donnée une correction verticale apprise (Mic remonte ces rails, D-140), à côté de la pose réelle. Jamais appliquée : la pose est la même avec ou sans.' },
+      { groupe: 'Continuité', nom: 'Voie prédite en ombre (Orbite)', valeur: voiePrediteOmbre.actif ? 'consignée seulement (règle prudente D-147, à chaque cut différé)' : 'coupée', pourquoi: 'Note ce qu’aurait posé le moteur recentré sur la voie du lot, et le geste de vue qu’il aurait fallu. Jamais posé, aucune vue déplacée : la pose est la même avec ou sans.' },
+      { groupe: 'Continuité', nom: 'Mémoire des différés en ombre (Écho)', valeur: memoireDifferesOmbre.actif ? 'consignée seulement (série de différés, ' + memoireDifferesOmbre.K + ' dernières corrections)' : 'coupée', pourquoi: 'Note, avant de lire ta référence sur le cut, la pose qu’aurait donnée la voie de tes corrections précédentes de la série. Rien n’est posé ni commandé.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -392,5 +408,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });

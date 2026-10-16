@@ -10,6 +10,8 @@ const O=require('../src/continuity-observer.js'),S=require('../src/settings.js')
 const SCOPE={testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1',lotDecision:'apply'};
 const plat=x=>JSON.parse(JSON.stringify(x===undefined?null:x)),deq=(a,b,m)=>assert.deepEqual(plat(a),plat(b),m);
 const SIDES=['left','right'];
+/* Identifiants (opérations, captures) et horloges diffèrent d'une exécution à l'autre : ils sont neutralisés, rien d'autre. */
+const neutre=x=>JSON.parse(JSON.stringify(normalize(x)).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>'));
 const decale=mm=>Object.fromEntries(SIDES.map(side=>{const r=base.rails[side],P=r.profileLocalToSceneRelative,o=K.C.point(r.sceneRelativeToProfileLocal,r.positionSceneRelative);
   const a=K.C.point(P,o),b=K.C.point(P,[o[0],o[1]+mm/1000,o[2]]);return [side,O.translated(r,[b[0]-a[0],b[1]-a[1],b[2]-a[2]])];}));
 /* ESV simulé dont les cuts de `loin` ont leur pose de départ à 230 mm de la voie (hors de la fenêtre du moteur). */
@@ -44,14 +46,14 @@ test('le réglage existe, actif par défaut en OMBRE, seuils de D-147 ; le panne
 
 test('LA POSE NE CHANGE PAS : mêmes commandes ESV, mêmes rails, mêmes enregistrements, mêmes événements métier, décisions identiques octet pour octet',()=>{
  for(const [nom,x] of [['ombre active',active],['ombre en panne',panne]]){
-  deq(normalize(x.b.commands),normalize(coupe.b.commands),nom+' : mêmes commandes ESV, même ordre');
-  deq(normalize(x.adapter.rails),normalize(coupe.adapter.rails),nom);deq(x.adapter.calls,coupe.adapter.calls,nom);
+  deq(neutre(x.b.commands),neutre(coupe.b.commands),nom+' : mêmes commandes ESV, même ordre');
+  deq(neutre(x.adapter.rails),neutre(coupe.adapter.rails),nom);deq(x.adapter.calls,coupe.adapter.calls,nom);
   const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);deq(rec(x.b),rec(coupe.b),nom);
   deq(metier(x.b),metier(coupe.b),nom+' : mêmes événements métier');
-  assert.equal(JSON.stringify(decisions(x.b)),JSON.stringify(decisions(coupe.b)),nom+' : décisions du lot identiques, octet pour octet');
+  assert.equal(JSON.stringify(neutre(decisions(x.b))),JSON.stringify(neutre(decisions(coupe.b))),nom+' : décisions du lot identiques, octet pour octet');
  }
  /* Le lot a bien posé 110 et 111 et différé 112 et 113 (sinon l'essai ne prouverait rien). */
- const d=decisions(coupe.b);deq(d.map(([c,x])=>[c,x.command?.action]),[[110,'engine'],[111,'engine'],[112,'engine'],[113,'engine']]);
+ const d=decisions(coupe.b);deq(d.map(([c,x])=>[c,x.command?.action]),[[110,'engine'],[111,'engine'],[112,'defer'],[113,'defer']]);
  assert.equal(coupe.adapter.calls.filter(c=>c==='validate').length,2);
 });
 
