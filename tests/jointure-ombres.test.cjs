@@ -9,7 +9,7 @@ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const J=require('../tools/jointure-echo-orbite.cjs'),H=require('./helpers/jointure-synthetique.cjs'),V=require('../src/voie-recentree.js');
 
 const G0=[10,0,0],D0=[10,1.435,0];
-/* Mic pose les différés 11 à 14 à 150 mm de la pose de départ (latéral −150 mm). */
+/* L'opérateur pose les différés 11 à 14 à 150 mm de la pose de départ (latéral −150 mm). */
 const depart=cut=>[H.decaler(G0,cut),H.decaler(D0,cut)],mic=cut=>[H.decaler(G0,cut,-0.150),H.decaler(D0,cut,-0.150)];
 const pose=(dLat,dVert=0)=>({left:[0,-150+dLat,dVert],right:[0,-150+dLat,dVert]});
 const voie=(cut,posable,p,raison=null)=>({eventId:'vo'+cut,timestamp:'2031-05-01T07:30:00.000Z',type:'voie-predite-ombre',schema:1,batchId:'lot-1',identity:{part:90,cut},
