@@ -18,6 +18,11 @@
         "fenetreMm": 30,
         "memoire": "propre"
       },
+      "ombre": {
+        "reglage": "src/settings.js voiePrediteOmbre",
+        "etat": "en ombre dans Orbite (voie-predite-ombre), consignée seulement",
+        "vue": { "dezoomMax": 1.5, "glissementPxMax": 250 }
+      },
       "parties": [
         { "projet": 1, "parties": [29] },
         { "projet": 2, "parties": [1] }
@@ -44,6 +49,14 @@
         "seuilFauxMm": 10,
         "seuilMauvaiseVoieMm": 50,
         "porteFaux": 0.05
+      },
+      "ombre": {
+        "reglage": "src/settings.js memoireDifferesOmbre",
+        "etat": "en ombre dans l'Écho (memoire-differes-ombre), consignée seulement ; mémoire = corrections déjà validées de l'opérateur",
+        "porteDispersionMm": 10,
+        "mmParCut": 3,
+        "ecartSerieMax": 10,
+        "etages": ["first-pass", "window", "choice"]
       },
       "parties": [
         { "projet": 1, "parties": [17, 24, 29] },

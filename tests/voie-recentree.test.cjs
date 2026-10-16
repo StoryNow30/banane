@@ -176,3 +176,15 @@ test('ombre de l\'Écho : moteur recentré sur la voie des corrections de l\'op�
  const vide=V.evaluerEcho({entree:ent,differes:[4,5,6,7],validees:[],Shadow:espion}).evenement;
  assert.equal(appels,0);assert.equal(vide.etat,'sans-memoire');assert.deepEqual(vide.verdict,{posable:false,raison:'sans-memoire'});
 });
+
+test('réglages de l\'extension = réglages figés (datasets/reglages-figes.json) = constantes du module',()=>{
+ const S=require('../src/settings.js'),F=require('../datasets/reglages-figes.json').reglages;
+ const v=F.voiePredite.valeurs,o=S.voiePrediteOmbre;
+ assert.deepEqual([[...o.etages],o.confianceMin,o.profondeurMax,o.ecartementVoisinMm,o.fenetreMm],[v.etages,v.confMin,v.chaineMax,v.ecartVoisinMm,v.fenetreMm]);
+ assert.deepEqual([o.dezoomMax,o.glissementPxMax],[F.voiePredite.ombre.vue.dezoomMax,F.voiePredite.ombre.vue.glissementPxMax]);
+ for(const k of ['confianceMin','profondeurMax','ecartementVoisinMm','fenetreMm','dezoomMax','glissementPxMax'])assert.equal(o[k],V.REGLE_PRUDENTE[k],k);
+ const m=S.memoireDifferesOmbre,g=F.memoireSerieB;
+ assert.ok(g.valeurs.porteDispersionMm.includes(m.porteDispersionMm));assert.equal(m.K,g.valeurs.derniersCuts);
+ assert.deepEqual([m.porteDispersionMm,m.mmParCut,m.ecartSerieMax,[...m.etages]],[g.ombre.porteDispersionMm,g.ombre.mmParCut,g.ombre.ecartSerieMax,g.ombre.etages]);
+ for(const k of ['K','appuis','mmParCut','porteDispersionMm','ecartSerieMax'])assert.equal(m[k],V.MEMOIRE_SERIE[k],k);
+});
