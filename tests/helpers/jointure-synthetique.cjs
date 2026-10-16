@@ -20,7 +20,7 @@ const horodatage = (minutes, secondes = 0) => new Date(Date.UTC(2031, 4, 1, 8, 0
  *  - initiale : [gauche, droit] à l'ouverture ; derniere : à la sortie (par défaut l'initiale) ;
  *  - validation : [gauche, droit] de la validation observée, ou rien ;
  *  - sansId : retire recordId (l'union retombe alors sur la clé de visite). */
-function visite({ session, index, cut, partie = 90, debut, fin, initiale, derniere, validation, etiquette, sansId = false }) {
+function visite({ session, index, cut, partie = 90, debut, fin, initiale, derniere, validation, etiquette, sansId = false, ecritures, referenceSource }) {
   const t = v => typeof v === 'string' ? v : horodatage(v.minutes, v.secondes || 0);
   const r = {
     recordId: `${session}-v${index}-c${cut}`, visitId: `vid-${session}-${index}-${cut}`, nativeSessionId: session, visitIndex: index,
@@ -30,7 +30,19 @@ function visite({ session, index, cut, partie = 90, debut, fin, initiale, dernie
     observedLabelCandidate: etiquette || (validation ? 'VALIDATE_CORRECTED_BOTH' : 'PASS_NO_DECISION'), status: validation ? 'complete' : 'partial',
   };
   if (sansId) delete r.recordId;
+  if (ecritures) r.serverWrites = ecritures.map((e, i) => ecritureEcho({ cut, i, ...e }));
+  if (referenceSource && r.humanFinalReference) r.humanFinalReference.source = referenceSource;
   return r;
+}
+
+/* Une écriture serveur vue par l'Écho (`serverWrites` d'un record) : par défaut une validation réussie (204), rattachée par
+ * numéro de ligne, au cut de la visite ; `rails` : [gauche, droit], ses bords sont mis dans le corps (`XLeftEdge`…).
+ * `corps` remplace le corps ; `a` : horodatage ISO de l'écriture. */
+function ecritureEcho({ cut, i = 0, rails, kind = 'validation', status = 204, rowIndex = cut, joinMethod = 'row-index', a, corps }) {
+  const bords = rails ? { XLeftEdge: rails[0][0], YLeftEdge: rails[0][1], ZLeftEdge: rails[0][2], XRightEdge: rails[1][0], YRightEdge: rails[1][1], ZRightEdge: rails[1][2] } : {};
+  const drapeaux = kind === 'validation' ? { ExtractionStatus: 'valid', TreatedByOperator: true, SeenByOperator: true } : { SeenByOperator: true };
+  return { eventId: `w-${cut}-${i}`, at: a || horodatage(0, 0), kind, status, method: 'PUT', outcome: 'done', attempt: 1, rowIndex, joinedTo: 'closed-visit', joinMethod,
+    body: corps || { ...bords, ...drapeaux } };
 }
 
 /* Un export Écho (format v2 clair). `nom` : nom du fichier (ariane-echo-… ou ariane-native-v4-…). */
@@ -55,4 +67,4 @@ function journal(poses) {
   return { format: 'ariane-journal-v4', version: 'test', events, records };
 }
 
-module.exports = { identite, rail, etat, decaler, horodatage, visite, exportEcho, ecrire, journal };
+module.exports = { identite, rail, etat, decaler, horodatage, visite, ecritureEcho, exportEcho, ecrire, journal };
