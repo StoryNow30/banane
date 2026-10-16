@@ -274,6 +274,12 @@
    * borne de pente ne changent pas. Mesures hors ligne : fiches/P1_CONVENTION.md.
    * NE PAS ACTIVER sans l'accord de Mic : il change la pose de terrain. */
   const conventionPlafond = false;
+  /* E2 (5.0, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE (src/lot-decision.js). Sur un rail dont le calage de convention est REFUSÉ (décalage hors
+   * des 8 mm), Mic remonte la pose dans les trois parties relues (+6,1 ; +1,8 ; +3,6 mm). La décision consigne, À CÔTÉ de la pose réelle, celle qu'aurait
+   * donnée une correction verticale de `mm` (3,6 par défaut : médiane de la partie 29, entre les deux autres), dans le repère profil du rail.
+   * ACTIF PAR DÉFAUT, MAIS POUR CONSIGNER SEULEMENT : cette pose-là n'est JAMAIS posée, ni commandée, ni validée, ni lue par une garde, une reprise ou un
+   * appui ; la pose réelle est identique, octet pour octet, avec et sans ce réglage. `actif:false` : rien n'est consigné. Étude : fiches/G0_APPRENTISSAGE_V1.md § 6. */
+  const ombreVerticaleRefusee = Object.freeze({ actif: true, mm: 3.6 });
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
@@ -298,7 +304,8 @@
    *   champsListe   : RailSpacing, TrajAzimuth, RailType, Success*, PK gardés de la liste, et inventaire des noms de champs.
    *   compteurBloque: `numNodesLoading` identique et > 0 au début de `cuts` cuts de suite : `diag-compteur-bloque`.
    *   avisFetch     : écriture passée par `fetch` (compteur `fetch-rails` non nul) : `avis-contrat-esv` et avis du panneau.
-   *   empreinte     : empreinte du contrat ESV à « Connecter », comparée à la précédente ; avis si elle change.
+   *   empreinte     : empreinte du contrat ESV à « Connecter », comparée à la précédente DU MÊME ONGLET (4.9.5.4, D-139) ; avis si elle change.
+   *                   Ni libellés de boutons ni nombre d'écouteurs (état de la page) : boutons par identifiant, écouteurs par présence.
    *   translationDepart : T monde/scène sur la pose de départ du cut, consignée à côté de l'actuelle (B1 reste sur l'actuelle).
    *   revisiteSansSource: revisite d'un différé sans source nouvelle, consignée seulement (rien n'est sauté).
    *   auditServeur  : au rechargement de la liste, validés côté serveur contre validations d'Ariane (`audit-serveur`).
@@ -366,6 +373,7 @@
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Plafond du calage de convention (P1)', valeur: conventionPlafond === 'vertical' ? 'actif sur le vertical seulement (8 mm au plus)' : conventionPlafond ? 'actif (8 mm au plus par axe)' : 'coupé (rail hors domaine posé brut)', pourquoi: 'Un rail dont le décalage de convention dépasse 8 mm est posé avec 8 mm au plus au lieu d’être refusé ; le reste est consigné (D-129). Garde de paire inchangée.' },
+      { groupe: 'Continuité', nom: 'Correction verticale en ombre (E2)', valeur: ombreVerticaleRefusee.actif ? 'consignée seulement (' + String(ombreVerticaleRefusee.mm).replace('.', ',') + ' mm sur les rails à convention refusée)' : 'coupée', pourquoi: 'Note dans la décision la pose qu’aurait donnée une correction verticale apprise (Mic remonte ces rails, D-140), à côté de la pose réelle. Jamais appliquée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -383,5 +391,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });

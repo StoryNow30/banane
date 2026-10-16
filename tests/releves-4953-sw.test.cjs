@@ -50,13 +50,13 @@ test('avis fetch-rails : une ligne au panneau et un événement avis-contrat-esv
 });
 
 test('empreinte du contrat à « Connecter » : consignée, comparée à la précédente, avis si elle change ; aucune action sur ESV', async () => {
- const local=memoire(),adapter=new SimulatedESV();let hash='aaaaaaaa',detail={jquery:'3.6.0',ecouteurs:{loading:1,newPart:2},boutons:[['a','A']]};
+ const local=memoire(),adapter=new SimulatedESV();let hash='aaaaaaaa',detail={jquery:'3.6.0',ecouteurs:{loading:true,newPart:true},boutons:['a']};
  const ping=adapter.ping.bind(adapter);adapter.ping=async(o)=>({...await ping(),...(o&&o.contrat===true?{contrat:{hash,detail}}:{})});
  const b=production({adapter,local});await b.api('connect',{tabId:1});await attendre(20);
  let c=stored(b,'contrat-esv');assert.equal(c.length,1);deq([c[0].hash,c[0].precedent,c[0].change],['aaaaaaaa',null,false]);assert.equal(stored(b,'avis-contrat-esv').length,0,'première connexion : rien à comparer');
- assert.equal(local.m.banane53Contrat.hash,'aaaaaaaa');
+ assert.equal(local.m.banane54Contrats['1'].hash,'aaaaaaaa','4.9.5.4 : rangée par onglet (storage.session s\'il existe, sinon local)');
  await b.api('connect',{tabId:1});await attendre(20);assert.equal(stored(b,'contrat-esv').at(-1).change,false,'même empreinte : pas de changement');assert.equal(stored(b,'avis-contrat-esv').length,0);
- hash='bbbbbbbb';detail={jquery:'3.7.1',ecouteurs:{loading:1,newPart:3},boutons:[['a','A']]};
+ hash='bbbbbbbb';detail={jquery:'3.7.1',ecouteurs:{loading:true,newPart:false},boutons:['a']};
  await b.api('connect',{tabId:1});await attendre(20);
  c=stored(b,'contrat-esv').at(-1);deq([c.hash,c.precedent,c.change],['bbbbbbbb','aaaaaaaa',true]);deq(c.changements.sort(),['ecouteurs.newPart','jquery']);
  const a=stored(b,'avis-contrat-esv');assert.equal(a.length,1);assert.equal(a[0].motif,'empreinte:bbbbbbbb');assert.match(a[0].texte,/aaaaaaaa.*bbbbbbbb/);

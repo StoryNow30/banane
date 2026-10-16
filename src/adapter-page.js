@@ -1053,18 +1053,22 @@
      });
      ombreEsv.installe=true;}catch{}}
  /* 4.9.5.3 (S6) — EMPREINTE DU CONTRAT ESV, à « Connecter » (lecture seule, aucune commande, aucune valeur de projet) : boutons de navigation d'ESV
-  * (`O2N3Dcut…3DRail`) et leurs titres, classes des deux boutons de rail, nombre d'écouteurs jQuery de chacun des cinq événements sur
-  * `#globalcontainer` (les nôtres exclus), versions de jQuery et de Potree. Haché (FNV-1a, 8 caractères) ; le détail part avec lui pour dire ce
-  * qui a changé. Comparée par le service worker à la précédente. */
- function empreinteContrat(){const d={};
-   try{d.boutons=[...document.querySelectorAll('[id^="O2N3DCut"]')].filter(el=>/3DRail$/.test(el.id)).slice(0,16).map(el=>[el.id,(el.title||'').slice(0,60)]);}catch{d.boutons=null;}
+  * (`O2N3Dcut…3DRail`), classes des deux boutons de rail, écouteurs jQuery de chacun des cinq événements sur `#globalcontainer` (les nôtres
+  * exclus), versions de jQuery et de Potree. Haché (FNV-1a, 8 caractères) ; le détail part avec lui pour dire ce qui a changé. Comparée par le
+  * service worker à la précédente DU MÊME ONGLET.
+  * 4.9.5.4 (D-139) : l'empreinte ne contient plus ce qui dépend de l'ÉTAT de la page — les libellés (`title`) des boutons, qui changent selon
+  * l'état, et le NOMBRE d'écouteurs par événement. Les boutons sont pris par leur identifiant seul, et un écouteur compte par sa PRÉSENCE
+  * (vrai/faux). Les libellés et les nombres restent relevés dans `etat`, consigné sans être haché ni comparé (pour voir, au terrain, ce qui varie). */
+ function empreinteContrat(){const d={},etat={};
+   try{const bs=[...document.querySelectorAll('[id^="O2N3DCut"]')].filter(el=>/3DRail$/.test(el.id)).slice(0,16);d.boutons=bs.map(el=>el.id);etat.titres=bs.map(el=>[el.id,(el.title||'').slice(0,60)]);}catch{d.boutons=null;etat.titres=null;}
    try{d.rails=['O2N3DCutLRClick','O2N3DCutRRClick'].map(id=>{const el=document.getElementById(id);return el?[...el.classList].sort().join(' ').slice(0,80):null;});}catch{d.rails=null;}
    try{const $=window.$;d.jquery=typeof $?.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null;
      const el=document.getElementById('globalcontainer'),ev=typeof $==='function'&&typeof $._data==='function'&&el?$._data(el,'events'):null;
-     d.ecouteurs=Object.fromEntries(ESVEV.noms.map(n=>[n,ev?(ev[n]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE)).length:null]));}catch{d.jquery=null;d.ecouteurs=null;}
+     const nombres=Object.fromEntries(ESVEV.noms.map(n=>[n,ev?(ev[n]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE)).length:null]));
+     d.ecouteurs=Object.fromEntries(Object.entries(nombres).map(([n,v])=>[n,v===null?null:v>0]));etat.ecouteurs=nombres;}catch{d.jquery=null;d.ecouteurs=null;etat.ecouteurs=null;}
    try{const v=window.Potree?.version;d.potree=v&&typeof v==='object'?[v.major,v.minor].filter(x=>Number.isFinite(x)).join('.')+(typeof v.suffix==='string'?String(v.suffix).slice(0,12):''):typeof v==='string'?v.slice(0,16):null;}catch{d.potree=null;}
    const texte=JSON.stringify(d);let h=2166136261>>>0;for(let i=0;i<texte.length;i++){h^=texte.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
-   return {hash:h.toString(16).padStart(8,'0'),detail:d};}
+   return {hash:h.toString(16).padStart(8,'0'),detail:d,etat};}
  let intrusion=null;
  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
