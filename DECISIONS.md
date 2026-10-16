@@ -2048,3 +2048,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Aucune requête ESV nouvelle, aucune marque d'Ariane.
 - 7 essais rouges devenus verts ; le F5 pendant un lot Orbite reste vert. verify : 1 731 réussis, 0 échec, moteur identique.
 - Joué seulement sur le banc simulé. Délais tirés d'un seul relevé terrain : à vérifier au terrain avant de redemander un F5 à Mic. Fiche : `fiches/ECHO_F5.md`.
+
+## D-138 — Jointure v2 : Écho multi-sessions, Écho seul, « visité sans action = bon » (16 octobre 2026)
+
+- `claude/50-jointure-v2` (255ef64, 07f4b7e, 243ae89, 506af7e), intégré à `claude/50-base`.
+- Clé de visite (session, `visitIndex`), dans l'ordre du temps. Les exports `ariane-echo-*` sont lus en mode dossier. Mode `--sans-journal` pour un Écho seul (poses humaines). Option `--visite-sans-action-bonne [s]`, 0,8 s par défaut (choix de Mic), coupée par défaut, cut 0 exclu.
+- 28 essais sur fixtures synthétiques ; verify : 1 744, 0 échec.
+- Partie 17 identique ligne pour ligne (192 / 132 / 47 ; 5,0 / 11,1 / 20,0 mm). Partie 29 : 7/192 à plus de 10 mm, 96 à plus de 5 mm ; avec la règle à 0,8 s, 7/198.
+- Reste à faire : `tools/p0-commun.cjs` ignore aussi les `ariane-echo-*` ; `perf-phases.cjs` ne lit pas les relevés S6. Les deux corrections sont décrites dans la fiche.
