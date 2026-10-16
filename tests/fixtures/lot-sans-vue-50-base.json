@@ -1,0 +1,104 @@
+{
+ "format": "ariane-golden-lot-v1",
+ "source": "background.js et src/ de origin/claude/50-base (2c878f1), tests/helpers/deplacer-vue-lot.cjs, réglages par défaut ; empreintes SHA-256 du JSON neutralisé (identifiants et horloges)",
+ "actions": [
+  "ping",
+  "ping",
+  "state",
+  "state",
+  "state",
+  "state",
+  "state",
+  "capture",
+  "state",
+  null,
+  "state",
+  "apply",
+  "state",
+  "state",
+  "validateAndNext",
+  "state",
+  "state",
+  "state",
+  "capture",
+  "state",
+  null,
+  "state"
+ ],
+ "nombreArguments": [
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  2,
+  0,
+  0,
+  2,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0
+ ],
+ "empreinteCommandes": "e294ceef9c3996a75a7575ba1f0be95bbcec1db6a530271a3a65bb2d2be57ee2",
+ "appels": [
+  "capture",
+  "apply",
+  "validate",
+  "next",
+  "capture"
+ ],
+ "applyArgs": [
+  0
+ ],
+ "metier": [
+  "cut-target-changed",
+  "batch-started",
+  "before-captured",
+  "proposed",
+  "gcv1-shadow-observed",
+  "applied-verified",
+  "after-captured",
+  "validation-intent",
+  "validation-observation",
+  "validation-accepted",
+  "cut-target-changed",
+  "before-captured",
+  "proposed",
+  "gcv1-shadow-observed",
+  "batch-stopped-at-end",
+  "batch-state"
+ ],
+ "decisions": [
+  [
+   111,
+   "first-pass",
+   {
+    "action": "engine",
+    "reason": "first-pass"
+   }
+  ],
+  [
+   112,
+   "window",
+   {
+    "action": "defer",
+    "reason": "guard-hors-vue-left",
+    "ndc": [
+     1.339,
+     -0.047
+    ]
+   }
+  ]
+ ],
+ "empreinteDecisions": "695892b42b24a2eed8b98e11cf3a5a8441d4c60b4c2558afaed987ff63ba3e29"
+}
