@@ -41,9 +41,13 @@
  *  - « derniere » : la pose initiale de la visite qui porte la référence (lecture du prototype cmp.cjs).
  *
  * REPÈRE DE SCÈNE. L'Écho et le journal n'ont pas la même origine de scène : l'écart entre la pose posée par
- * Ariane (journal) et la pose initiale vue par l'Écho est une translation constante. L'outil l'estime (médiane
- * par axe sur les cuts posés des deux côtés), la consigne dans le résumé avec sa dispersion, et marque
- * « repere-incoherent » (retour à la première visite) tout cut qui s'en écarte de plus de 20 mm.
+ * Ariane (journal) et la pose initiale vue par l'Écho est une translation, constante PAR CADRE DE SCÈNE. Un cadre est
+ * le couple (page, repère) de chaque côté : `pageId` et `frameId` (= `sceneFrameId`) de la pose du journal, ceux de la
+ * première visite de l'Écho ; un rechargement de la page ESV, dans le lot ou dans l'Écho, ouvre un autre cadre (même
+ * règle que B1 : page OU repère différent). L'outil estime une translation par cadre (médiane par axe sur les rails
+ * posés des deux côtés), la consigne dans le résumé avec sa dispersion, et marque « repere-incoherent » (retour à la
+ * première visite) tout cut qui s'en écarte de plus de 20 mm ; un cut d'un cadre sans aucun rail pour l'estimer
+ * retombe sur la première visite (« cadre-non-calibre »). Avec un seul cadre, c'est la translation unique d'avant.
  *
  * ÉCHO SEUL (`--sans-journal`). Pas de journal : tous les cuts de l'Écho (de la partie `--partie`, sinon de toutes
  * les parties) sont de classe « sans-journal », sans repère de scène, et l'écart se mesure à la pose initiale de la
@@ -53,7 +57,13 @@
  * validation observée, dont aucun rail n'a bougé de 0,5 mm ou plus entre la pose initiale et la dernière pose
  * observée d'une visite, et dont la plus longue visite dure au moins `s` secondes (0,8 par défaut ; 0 = toutes), compte
  * pour une correction nulle (référence « observee », `regleVisiteBon: true`). Ces cuts sont comptés à part dans le
- * résumé. Un cut déplacé sans validation, trop court ou sans mesure reste « sans-reference ».
+ * résumé. Un cut déplacé sans validation, trop court ou sans mesure reste « sans-reference ». Une visite ouverte
+ * moins de 60 s après un rechargement de la page (`native-page-lost` de la même session) ou dont les captures sont
+ * vides (`read-complete-empty`, aucune capture avec des points) ne compte pas pour la durée (audit 5.0, I3 a). Le
+ * résumé publie toujours, par classe, les comptes sans la règle à côté de ceux avec.
+ *
+ * SESSIONS QUI SE CHEVAUCHENT. Deux sessions Écho dont les intervalles de temps se recouvrent (deux fenêtres) sont
+ * signalées dans le résumé : leurs visites sont rangées ensemble dans l'ordre du temps, sans être séparées.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -63,6 +73,9 @@ const { referenceParEcriture } = require('../src/native-session.js');
 
 const COTES = [['gauche', 'left'], ['droite', 'right']];
 const SEUIL_REPERE_MM = 20;
+/* Deux cadres de scène dont les translations diffèrent de moins de 1 mm partagent la même origine : ils ne comptent qu'une
+ * fois dans `translationsDistinctes`, et la ligne ne porte le rang du cadre que s'il y a au moins deux translations distinctes. */
+const SEUIL_TRANSLATION_DISTINCTE_MM = 1;
 const SEUILS_MM = [5, 10];
 const BASES = ['auto', 'premiere', 'derniere'];
 /* Règle « visité sans action = bon » : durée minimale par défaut de la plus longue visite (s) et déplacement
@@ -72,6 +85,11 @@ const DEPLACEMENT_MODIFIE_MM = 0.5;
 /* Écartement attendu entre les deux rails de la pose de référence (mm) : en dehors, la référence est suspecte (D-143). */
 const ECARTEMENT_MIN_MM = 1420, ECARTEMENT_MAX_MM = 1470;
 const SEUIL_DEPLACEMENT_ETIQUETTE_MM = 1;
+/* Règle « visité sans action = bon » (audit 5.0, I3 a) : une visite ouverte moins de DELAI_APRES_PAGE_PERDUE_S secondes
+ * après un rechargement de la page ESV (nuage peut-être pas encore chargé) ne compte pas, ni une visite aux captures vides. */
+const DELAI_APRES_PAGE_PERDUE_S = 60;
+const CAPTURE_VIDE = 'read-complete-empty';
+const captureSansPoint = st => /-empty$/.test(String(st || '')) || st === 'unavailable';
 
 /* ------------------------------------------------------------------ outils numériques */
 const fini = v => Number.isFinite(v);
@@ -123,16 +141,36 @@ function entreesEcho(entrees) {
  * Chaque record garde sa session (`nativeSessionId`, à défaut l'identifiant de la session du segment) : plusieurs
  * sessions Écho peuvent couvrir une même partie, et `visitIndex` repart de 0 dans chacune. Sans recordId, la clé de
  * visite (session, visitIndex) sert de repli pour l'union. */
+/* Événements de l'Écho utiles à la règle de la visite : rechargements de page (`native-page-lost` : session, instant) et
+ * statuts de capture par visite (`native-capture-ready` : statut de lecture du nuage). Seuls ces deux types sont gardés. */
+const TYPES_EVENEMENTS_ECHO = new Set(['native-page-lost', 'native-capture-ready']);
+function evenementsUtiles(doc) {
+  const bruts = Array.isArray(doc.events) ? doc.events : [];
+  if (!bruts.length) return [];
+  const evs = doc.format === X.FORMAT ? (X.unfoldRefs({ events: bruts }, doc.dictionaries || {}).events || []) : bruts;
+  return evs.filter(e => e && TYPES_EVENEMENTS_ECHO.has(e.type));
+}
 function lireEcho(entrees, { journal = () => {} } = {}) {
   const liste = entreesEcho(entrees);
   if (!liste.length) throw Error('Aucun export Écho (ariane-echo-*.json, ariane-native-v4-*.json, banane-native-v4-*.json) trouvé.');
-  const segments = [];
+  const segments = [], pagesPerdues = new Map(), captures = new Map();
   for (const e of liste) {
     const doc = JSON.parse(e.lire().toString('utf8'));
     if (!/^banane-native-session-/.test(doc.format || '')) { journal(`ignoré (pas un export Écho) : ${e.nom}`); continue; }
     const records = (doc.format === X.FORMAT ? X.unfoldRefs({ records: doc.records || [] }, doc.dictionaries || {}) : doc).records || [];
     const seg = doc.segment || {}, session = doc.session && doc.session.id || null;
     for (const r of records) if (r && !r.nativeSessionId && session) r.nativeSessionId = session;
+    /* Les segments sont des instantanés : un même événement peut y figurer plusieurs fois (union par identifiant). */
+    for (const ev of evenementsUtiles(doc)) {
+      const sess = ev.nativeSessionId || ev.sessionId || session || '';
+      if (ev.type === 'native-page-lost') {
+        const at = ev.timestamp || ev.at || null;
+        if (at) pagesPerdues.set(ev.eventId || `${sess}|${at}`, { session: sess, at: String(at) });
+      } else if (ev.visitId) {
+        const statut = ev.cloud && ev.cloud.status || ev.status || null;
+        if (statut) captures.set(ev.eventId || `${ev.visitId}|${ev.cloud && ev.cloud.captureId || captures.size}`, { visitId: ev.visitId, statut, seq: ev.eventSeq ?? ev.collectorSeq ?? captures.size });
+      }
+    }
     segments.push({ nom: e.nom, stamp: String(seg.stamp || ''), index: seg.index || 0, records, session, debutSession: doc.session && doc.session.startedAt || null });
   }
   if (!segments.length) throw Error('Aucun des fichiers donnés n\'est un export Écho (banane-native-session-*).');
@@ -145,7 +183,10 @@ function lireEcho(entrees, { journal = () => {} } = {}) {
   for (const s of segments) if (s.session) noter(s.session, s.debutSession);
   for (const r of records.values()) noter(sessionDe(r), r.startedAt);
   const sessions = [...debuts].sort((a, b) => String(a[1]).localeCompare(String(b[1])) || a[0].localeCompare(b[0])).map(([id, debut], rang) => ({ id, debut, rang }));
-  return { records: [...records.values()], sessions, segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, session: s.session, records: s.records.length })) };
+  const capturesParVisite = {};
+  for (const c of [...captures.values()].sort((a, b) => a.seq - b.seq)) (capturesParVisite[c.visitId] = capturesParVisite[c.visitId] || []).push(c.statut);
+  return { records: [...records.values()], sessions, segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, session: s.session, records: s.records.length })),
+    pagesPerdues: [...pagesPerdues.values()].sort((a, b) => a.at.localeCompare(b.at) || a.session.localeCompare(b.session)), capturesParVisite };
 }
 
 /* Le journal Orbite : événements et records (un journal compact est déplié). */
@@ -187,14 +228,33 @@ function echoParCut(records, sessions = []) {
   for (const c of par.values()) c.visites.sort(visiteOrdre);
   return par;
 }
+/* Pourquoi une visite ne compte pas pour la règle (audit 5.0, I3 a) : « apres-page-perdue » (ouverte moins de
+ * DELAI_APRES_PAGE_PERDUE_S s après un `native-page-lost` de sa session ; un événement sans session vaut pour toutes),
+ * « captures-vides » (au moins une capture `read-complete-empty` et aucune capture avec des points), sinon null.
+ * `contexte` : { pagesPerdues: [{ session, at }], capturesParVisite: { visitId: [statuts] } } (de `lireEcho`). */
+function visiteEcartee(v, contexte = {}) {
+  const t = Date.parse(v.startedAt || ''), sess = sessionDe(v);
+  if (fini(t)) for (const p of contexte.pagesPerdues || []) {
+    if (p.session && sess && p.session !== sess) continue;
+    const dt = (t - Date.parse(p.at)) / 1000;
+    if (fini(dt) && dt >= 0 && dt < DELAI_APRES_PAGE_PERDUE_S) return 'apres-page-perdue';
+  }
+  const st = contexte.capturesParVisite && v.visitId ? contexte.capturesParVisite[v.visitId] : null;
+  if (st && st.length && st.includes(CAPTURE_VIDE) && st.every(captureSansPoint)) return 'captures-vides';
+  return null;
+}
 /* Règle « visité sans action = bon » pour un cut sans validation observée. Rend { appliquee, raison, visites,
  * dwellMaxS, deplacementMaxMm } : appliquee quand aucun rail n'a bougé de DEPLACEMENT_MODIFIE_MM ou plus (pose
- * initiale → dernière pose observée, dans chaque visite) et que la plus longue visite dure au moins `seuilS`.
+ * initiale → dernière pose observée, dans chaque visite) et que la plus longue visite retenue dure au moins `seuilS`.
  * Raisons de refus : « hors-cut » (cut 0 : artefact d'un rechargement de page), « sans-mesure » (aucun rail
- * mesurable des deux côtés), « deplace-sans-validation », « trop-court ». */
-function visiteSansAction(c, seuilS) {
-  const mesures = [];
-  let dwellMaxS = 0;
+ * mesurable des deux côtés), « deplace-sans-validation », « trop-court » (aucune visite assez longue, écartées
+ * comprises), puis, quand seules des visites écartées sont assez longues, la raison de la plus longue d'entre elles :
+ * « apres-page-perdue » ou « captures-vides » (voir `visiteEcartee`). Si une visite est écartée, la ligne porte
+ * `visitesEcartees` (par raison), `dwellMaxS` (visites retenues) et `dwellMaxToutesS` (toutes) ; sinon sa forme
+ * est celle d'avant. */
+function visiteSansAction(c, seuilS, contexte = {}) {
+  const mesures = [], ecartees = { apresPagePerdue: 0, capturesVides: 0 };
+  let dwellMaxS = 0, dwellRetenueS = 0, longueEcartee = null;
   for (const v of c.visites) {
     const ini = v.initialObserved || v.firstObserved, fin = v.lastObserved;
     for (const [, en] of COTES) {
@@ -202,13 +262,20 @@ function visiteSansAction(c, seuilS) {
       if (a && b) mesures.push(1000 * norme(moins(b, a)));
     }
     const dt = (Date.parse(v.endedAt) - Date.parse(v.startedAt)) / 1000;
+    const ecart = visiteEcartee(v, contexte);
+    if (ecart) ecartees[ecart === 'apres-page-perdue' ? 'apresPagePerdue' : 'capturesVides']++;
     if (fini(dt) && dt > dwellMaxS) dwellMaxS = dt;
+    if (fini(dt) && !ecart && dt > dwellRetenueS) dwellRetenueS = dt;
+    if (fini(dt) && ecart && (!longueEcartee || dt > longueEcartee.dt)) longueEcartee = { dt, raison: ecart };
   }
-  const r = { appliquee: false, raison: null, visites: c.visites.length, dwellMaxS: arrondi(dwellMaxS, 1), deplacementMaxMm: mesures.length ? arrondi(Math.max(...mesures), 1) : null };
+  const nEcartees = ecartees.apresPagePerdue + ecartees.capturesVides;
+  const r = { appliquee: false, raison: null, visites: c.visites.length, dwellMaxS: arrondi(nEcartees ? dwellRetenueS : dwellMaxS, 1), deplacementMaxMm: mesures.length ? arrondi(Math.max(...mesures), 1) : null };
+  if (nEcartees) { r.dwellMaxToutesS = arrondi(dwellMaxS, 1); r.visitesEcartees = ecartees; }
   if (!(c.cut > 0)) r.raison = 'hors-cut';
   else if (!mesures.length) r.raison = 'sans-mesure';
   else if (Math.max(...mesures) >= DEPLACEMENT_MODIFIE_MM) r.raison = 'deplace-sans-validation';
   else if (dwellMaxS < seuilS) r.raison = 'trop-court';
+  else if (dwellRetenueS < seuilS) r.raison = longueEcartee.raison;
   else r.appliquee = true;
   return r;
 }
@@ -355,23 +422,55 @@ function decisionB1(c) {
 }
 
 /* ------------------------------------------------------------------ repère de scène (Écho ↔ journal) */
-/* Translation constante entre la scène du journal et celle de l'Écho : médiane par axe de
- * (pose initiale vue par l'Écho, première visite) − (pose posée par Ariane), sur les rails des cuts posés des deux côtés. */
+/* Cadre de scène d'une identité : (page, repère). Un rechargement de la page ESV change l'un ou l'autre, et l'origine de
+ * la scène avec (B1 rattache le lot à la nouvelle page de la même façon : page OU repère différent). */
+const cadreDe = id => `${id && id.pageId || ''}|${id && (id.frameId || id.sceneFrameId) || ''}`;
+/* Cadre de la pose d'Ariane (journal) : l'identité de la source de `poseAriane` (record, sinon `applied-verified`). */
+function cadreJournal(j, a) {
+  if (!a) return null;
+  const src = a.source === 'record' ? j.record : j.appliedVerified;
+  const id = src && (src.identity || src), pont = src && src.coordinateBridge;
+  return cadreDe({ pageId: id && id.pageId, frameId: id && id.frameId || pont && pont.sceneFrameId });
+}
+/* Cadre de la pose de base de l'Écho : la première visite (sa pose initiale, à défaut la visite). */
+const cadreEcho = c => { const v = c.visites[0]; return v ? cadreDe(v.initialObserved && v.initialObserved.identity || v.identity) : null; };
+const cleCadre = (j, a, c) => `${cadreJournal(j, a)}→${cadreEcho(c)}`;
+
+/* Translation entre la scène du journal et celle de l'Écho, PAR CADRE DE SCÈNE (couple cadre du journal → cadre de l'Écho) :
+ * médiane par axe de (pose initiale vue par l'Écho, première visite) − (pose posée par Ariane), sur les rails des cuts posés
+ * des deux côtés. Rend le résumé global (paires, résidus à la translation de chaque cadre ; avec un seul cadre, ce sont
+ * exactement ceux de la translation unique d'avant), `parCadre` (Map clé → { rang, decalage, paires, résidus }, rangs dans
+ * l'ordre du premier cut) et `cadresNonCalibres` (cadres de cuts posés sans aucun rail pour estimer leur translation).
+ * `decalage` : la translation quand il n'y a qu'un cadre, sinon null. */
 function calibrerRepere(echo, jr) {
-  const dx = [[], [], []], paires = [];
+  const groupes = new Map(), sansMesure = new Set();
   for (const [k, c] of echo) {
     const j = jr.get(k), a = poseAriane(j);
     if (!a) continue;
-    const ini = c.visites[0] && c.visites[0].initialObserved;
+    const cle = cleCadre(j, a, c), ini = c.visites[0] && c.visites[0].initialObserved;
+    let n = 0;
     for (const [, en] of COTES) {
       const pe = ini && ini.rails && vec3(ini.rails[en] && ini.rails[en].positionSceneRelative), pa = a.posee[en] && vec3(a.posee[en].positionSceneRelative);
-      if (pe && pa) { const d = moins(pe, pa); paires.push(d); for (let i = 0; i < 3; i++) dx[i].push(d[i]); }
+      if (!(pe && pa)) continue;
+      if (!groupes.has(cle)) groupes.set(cle, { premierCut: c.cut, paires: [] });
+      const g = groupes.get(cle);
+      g.paires.push(moins(pe, pa)); g.premierCut = Math.min(g.premierCut, c.cut); n++;
     }
+    if (!n) sansMesure.add(cle);
   }
-  if (!paires.length) return { calibre: false, paires: 0, decalage: null, residuMedianMm: null, residuP90Mm: null };
-  const decalage = dx.map(mediane);
-  const residus = paires.map(d => 1000 * norme(moins(d, decalage)));
-  return { calibre: true, paires: paires.length, decalage, residuMedianMm: arrondi(quantile(residus, .5), 3), residuP90Mm: arrondi(quantile(residus, .9), 3) };
+  const parCadre = new Map(), residus = [];
+  [...groupes].sort((x, y) => x[1].premierCut - y[1].premierCut || x[0].localeCompare(y[0])).forEach(([cle, g], i) => {
+    const decalage = [0, 1, 2].map(ax => mediane(g.paires.map(d => d[ax])));
+    const r = g.paires.map(d => 1000 * norme(moins(d, decalage)));
+    residus.push(...r);
+    parCadre.set(cle, { rang: i + 1, decalage, paires: g.paires.length, residuMedianMm: arrondi(quantile(r, .5), 3), residuP90Mm: arrondi(quantile(r, .9), 3) });
+  });
+  const cadresNonCalibres = [...sansMesure].filter(cle => !parCadre.has(cle)).length;
+  const distinctes = [];
+  for (const c of parCadre.values()) if (!distinctes.some(d => 1000 * norme(moins(d, c.decalage)) < SEUIL_TRANSLATION_DISTINCTE_MM)) distinctes.push(c.decalage);
+  if (!residus.length) return { calibre: false, paires: 0, decalage: null, residuMedianMm: null, residuP90Mm: null, cadres: 0, translationsDistinctes: 0, cadresNonCalibres, parCadre };
+  return { calibre: true, paires: residus.length, decalage: parCadre.size === 1 ? [...parCadre.values()][0].decalage : null,
+    residuMedianMm: arrondi(quantile(residus, .5), 3), residuP90Mm: arrondi(quantile(residus, .9), 3), cadres: parCadre.size, translationsDistinctes: distinctes.length, cadresNonCalibres, parCadre };
 }
 
 /* ------------------------------------------------------------------ écart d'un rail */
@@ -411,9 +510,12 @@ function joindre(records, journal, options = {}) {
   const seuilVisite = options.visiteSansActionBonne === undefined || options.visiteSansActionBonne === null || options.visiteSansActionBonne === false ? null
     : options.visiteSansActionBonne === true ? DUREE_VISITE_DEFAUT_S : options.visiteSansActionBonne;
   if (seuilVisite !== null && !(fini(seuilVisite) && seuilVisite >= 0)) throw Error('--visite-sans-action-bonne attend une durée en secondes, positive ou nulle.');
-  const regle = seuilVisite === null ? null : { seuilS: seuilVisite, cuts: 0, parClasse: {}, refus: { 'deplace-sans-validation': 0, 'trop-court': 0, 'sans-mesure': 0, 'hors-cut': 0 } };
+  const regle = seuilVisite === null ? null : { seuilS: seuilVisite, cuts: 0, parClasse: {},
+    refus: { 'deplace-sans-validation': 0, 'trop-court': 0, 'sans-mesure': 0, 'hors-cut': 0, 'apres-page-perdue': 0, 'captures-vides': 0 } };
+  const contexteVisites = { pagesPerdues: options.pagesPerdues || [], capturesParVisite: options.capturesParVisite || {} };
   const repere = calibrerRepere(echo, jr);
-  const decalage = repere.calibre ? repere.decalage : null;
+  /* Translation du cadre d'un cut posé (null : cadre non calibré) ; le rang n'est écrit que s'il y a plusieurs cadres. */
+  const cadreDuCut = (j, a, c) => repere.calibre ? repere.parCadre.get(cleCadre(j, a, c)) || null : null;
   const lignes = [], ecartements = [];
   const cles = new Set([...echo.keys(), ...jr.keys()]);
   for (const k of [...cles].sort((a, b) => { const [pa, ca] = a.split('|').map(Number), [pb, cb] = b.split('|').map(Number); return pa - pb || ca - cb; })) {
@@ -437,7 +539,7 @@ function joindre(records, journal, options = {}) {
     ligne.statutEcho = (ref ? ref.visite : derniere).status ?? null;
     let sansAction = null;
     if (!ref && regle) {
-      sansAction = visiteSansAction(c, regle.seuilS);
+      sansAction = visiteSansAction(c, regle.seuilS, contexteVisites);
       ligne.visiteSansAction = sansAction;
       if (sansAction.appliquee) { regle.cuts++; regle.parClasse[classe] = (regle.parClasse[classe] || 0) + 1; }
       else regle.refus[sansAction.raison]++;
@@ -447,7 +549,7 @@ function joindre(records, journal, options = {}) {
       /* Visité sans action : correction nulle, sans pose humaine finale. */
       ligne.referenceHumaine = 'observee';
       ligne.regleVisiteBon = true;
-      ligne.base = base === 'derniere' ? 'derniere-visite' : base === 'auto' && a && decalage ? 'ariane' : 'premiere-visite';
+      ligne.base = base === 'derniere' ? 'derniere-visite' : base === 'auto' && a && cadreDuCut(j, a, c) ? 'ariane' : 'premiere-visite';
       const zero = () => ({ repere: 'profil', longitudinalMm: 0, lateralMm: 0, verticalMm: 0, dist3dMm: 0 });
       ligne.ecartHumain = { gauche: zero(), droite: zero(), maxDist3dMm: 0 };
       lignes.push(ligne);
@@ -468,7 +570,11 @@ function joindre(records, journal, options = {}) {
     let choix = base === 'derniere' ? 'derniere-visite' : 'premiere-visite', rails = base === 'derniere' ? propre : premiere, baseRails = {};
     if (rails && rails.rails) for (const [, en] of COTES) baseRails[en] = rails.rails[en] || null;
     let coherence = null;
-    if (base === 'auto' && a && decalage) {
+    const cadre = base === 'auto' && a ? cadreDuCut(j, a, c) : null;
+    if (base === 'auto' && a && repere.calibre && !cadre) choix = 'premiere-visite (cadre-non-calibre)';
+    if (cadre) {
+      const decalage = cadre.decalage;
+      if (repere.translationsDistinctes > 1) ligne.cadreScene = cadre.rang;
       const ariane = {};
       let ecartMax = 0;
       for (const [, en] of COTES) {
@@ -496,7 +602,32 @@ function joindre(records, journal, options = {}) {
   }
 
   const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
-  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements }) };
+  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements,
+    sessionsChevauchantes: sessionsChevauchantes(records, options.sessions) }) };
+}
+
+/* U5 (audit 5.0) : sessions Écho dont les intervalles de temps se recouvrent. Intervalle d'une session : du premier début de
+ * visite à la dernière fin (à défaut, au dernier début), sur tous les records donnés. Rend [{ sessions: [rang, rang],
+ * debut, fin, chevauchementS }] ; les rangs (à partir de 1) sont ceux de `lireEcho` (ordre du temps), jamais d'identifiant. */
+function sessionsChevauchantes(records, sessions = []) {
+  const bornes = new Map();
+  for (const r of records) {
+    const id = sessionDe(r), d = Date.parse(r.startedAt || ''), f = Date.parse(r.endedAt || '');
+    if (!fini(d)) continue;
+    const b = bornes.get(id) || { debut: d, fin: d };
+    b.debut = Math.min(b.debut, d); b.fin = Math.max(b.fin, fini(f) ? f : d);
+    bornes.set(id, b);
+  }
+  const rang = new Map(sessions.map(s => [s.id, s.rang + 1]));
+  const liste = [...bornes].sort((x, y) => x[1].debut - y[1].debut || x[0].localeCompare(y[0]));
+  liste.forEach(([id], i) => { if (!rang.has(id)) rang.set(id, sessions.length + i + 1); });
+  const out = [];
+  for (let i = 0; i < liste.length; i++) for (let k = i + 1; k < liste.length; k++) {
+    const [ia, a] = liste[i], [ib, b] = liste[k];
+    const debut = Math.max(a.debut, b.debut), fin = Math.min(a.fin, b.fin);
+    if (fin > debut) out.push({ sessions: [rang.get(ia), rang.get(ib)].sort((x, y) => x - y), debut: new Date(debut).toISOString(), fin: new Date(fin).toISOString(), chevauchementS: arrondi((fin - debut) / 1000, 1) });
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------ résumé */
@@ -504,9 +635,12 @@ const CLASSES = ['posee', 'differee', 'autre', 'hors-journal', 'sans-journal'];
 function resumer(lignes, meta = {}) {
   const resume = {
     base: meta.base || null, sansJournal: !!meta.sansJournal,
-    repereScene: meta.repere ? { calibre: meta.repere.calibre, paires: meta.repere.paires, residuMedianMm: meta.repere.residuMedianMm, residuP90Mm: meta.repere.residuP90Mm } : null,
+    repereScene: meta.repere ? { calibre: meta.repere.calibre, paires: meta.repere.paires, residuMedianMm: meta.repere.residuMedianMm, residuP90Mm: meta.repere.residuP90Mm,
+      cadres: meta.repere.cadres || 0, translationsDistinctes: meta.repere.translationsDistinctes || 0, cadresNonCalibres: meta.repere.cadresNonCalibres || 0,
+      parCadre: meta.repere.parCadre ? [...meta.repere.parCadre.values()].map(c => ({ rang: c.rang, paires: c.paires, residuMedianMm: c.residuMedianMm, residuP90Mm: c.residuP90Mm })) : [] } : null,
     partiesEchoIgnorees: meta.partiesEchoIgnorees || [], projetsDifferents: meta.projetsDifferents || 0,
     cutsVusDansPlusieursSessions: meta.cutsMultiSessions || 0,
+    sessionsChevauchantes: meta.sessionsChevauchantes || [],
     visiteSansActionBonne: meta.regle ? { dureeMinimaleS: meta.regle.seuilS, deplacementModifieMm: DEPLACEMENT_MODIFIE_MM, cuts: meta.regle.cuts, parClasse: meta.regle.parClasse,
       refus: meta.regle.refus } : null,
     cutsEcho: lignes.filter(l => l.dansEcho).length, cutsJournal: lignes.filter(l => l.dansJournal).length,
@@ -544,6 +678,8 @@ function resumer(lignes, meta = {}) {
     const dist = rows => rows.map(r => r.dist3dMm);
     const tous = [...rail('gauche'), ...rail('droite')];
     const cuts = avec.map(l => l.ecartHumain.maxDist3dMm).filter(fini);
+    /* I3 (b) : avec la règle, les comptes sans elle (validations observées seules) sont publiés à côté. */
+    const valides = avec.filter(l => !l.regleVisiteBon).map(l => l.ecartHumain.maxDist3dMm).filter(fini);
     resume.parClasse[classe] = {
       cuts: cl.length, avecReference: avec.length, sansReference: cl.length - avec.length, etiquettesEcho: etiq,
       ...(meta.regle ? { dontVisiteSansAction: avec.filter(l => l.regleVisiteBon).length, avecValidationObservee: avec.filter(l => !l.regleVisiteBon).length } : {}),
@@ -551,6 +687,7 @@ function resumer(lignes, meta = {}) {
       ecartLateralAbsMm: stat(tous.map(r => r.lateralMm === null ? NaN : Math.abs(r.lateralMm))),
       ecartVerticalAbsMm: stat(tous.map(r => r.verticalMm === null ? NaN : Math.abs(r.verticalMm))),
       corrections: Object.fromEntries(SEUILS_MM.map(s => [`sup${s}mm`, { cuts: cuts.filter(v => v > s).length, rails: dist(tous).filter(v => v > s).length }])),
+      ...(meta.regle ? { sansLaRegle: { avecReference: avec.filter(l => !l.regleVisiteBon).length, ...Object.fromEntries(SEUILS_MM.map(s => [`sup${s}mm`, valides.filter(v => v > s).length])) } } : {}),
     };
   }
   const motifs = {};
@@ -584,17 +721,22 @@ function texte(resume, entete = []) {
   if (resume.partiesEchoIgnorees.length) L.push(`Parties de l'Écho absentes du journal, ignorées : ${resume.partiesEchoIgnorees.join(', ')}.`);
   if (resume.projetsDifferents) L.push(`Cuts écartés (projets différents) : ${resume.projetsDifferents}.`);
   if (resume.cutsVusDansPlusieursSessions) L.push(`Cuts vus dans plusieurs sessions Écho : ${resume.cutsVusDansPlusieursSessions} (visites rangées dans l'ordre du temps).`);
+  for (const c of resume.sessionsChevauchantes || []) L.push(`Attention : sessions Écho qui se chevauchent dans le temps : ${c.sessions.join(' et ')} (${Math.round(c.chevauchementS)} s en commun) ; leurs visites sont rangées ensemble dans l'ordre du temps, sans être séparées.`);
   if (!resume.sansJournal) L.push(`Classes Ariane au journal : ${Object.entries(resume.cutsParClasse).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'} (tous les cuts du journal, joints ou non).`);
   const r = resume.repereScene;
   if (resume.sansJournal) L.push('Repère de scène : sans objet (pas de journal) ; l\'écart se mesure à la pose initiale de la première visite de chaque cut.');
+  else if (r && r.calibre && r.cadres > 1) L.push(`Repère de scène : translation Écho − journal estimée par cadre de scène (${r.cadres} cadres, ${r.translationsDistinctes} translation${r.translationsDistinctes > 1 ? 's' : ''} distincte${r.translationsDistinctes > 1 ? 's' : ''}) sur ${r.paires} rails ; résidu médian ${f1(r.residuMedianMm)} mm, P90 ${f1(r.residuP90Mm)} mm.`
+    + ` Par cadre : ${r.parCadre.map(c => `cadre ${c.rang} : ${c.paires} rails, P90 ${f1(c.residuP90Mm)} mm`).join(' ; ')}.`);
   else L.push(r && r.calibre ? `Repère de scène : translation constante Écho − journal estimée sur ${r.paires} rails ; résidu médian ${f1(r.residuMedianMm)} mm, P90 ${f1(r.residuP90Mm)} mm.`
     : 'Repère de scène : non calibré (aucun cut posé des deux côtés) ; la base est la première visite de l\'Écho.');
+  if (r && r.cadresNonCalibres) L.push(`Cadres de scène sans rail pour estimer leur translation : ${r.cadresNonCalibres} (leurs cuts posés retombent sur la première visite).`);
   L.push(`Base de l'écart humain (--base ${resume.base}) : ${Object.entries(resume.bases).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'}.`);
   L.push(`Repère de l'écart : profil pour ${resume.reperes.profil} rails, distance 3D seule pour ${resume.reperes['3D']} rails.`);
   const rg = resume.visiteSansActionBonne;
   if (rg) {
     L.push(`Règle « visité sans action = bon » (visite d'au moins ${rg.dureeMinimaleS} s, aucun rail déplacé de ${rg.deplacementModifieMm} mm ou plus) : ${rg.cuts} cuts comptés à correction nulle`
-      + `${Object.keys(rg.parClasse).length ? ` (${Object.entries(rg.parClasse).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''} ; restent sans référence : ${rg.refus['deplace-sans-validation']} déplacés sans validation, ${rg.refus['trop-court']} trop courts, ${rg.refus['sans-mesure']} sans mesure, ${rg.refus['hors-cut']} hors cut.`);
+      + `${Object.keys(rg.parClasse).length ? ` (${Object.entries(rg.parClasse).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''} ; restent sans référence : ${rg.refus['deplace-sans-validation']} déplacés sans validation, ${rg.refus['trop-court']} trop courts, ${rg.refus['sans-mesure']} sans mesure, ${rg.refus['hors-cut']} hors cut`
+      + `, ${rg.refus['apres-page-perdue'] || 0} ouverts moins de ${DELAI_APRES_PAGE_PERDUE_S} s après un rechargement de page, ${rg.refus['captures-vides'] || 0} aux captures vides.`);
   }
   const rc = resume.referencesCorrigees;
   if (rc) {
@@ -611,6 +753,9 @@ function texte(resume, entete = []) {
     L.push(`  écart 3D gauche : ${st(c.ecart3dMm.gauche)}`, `  écart 3D droit  : ${st(c.ecart3dMm.droite)}`, `  écart 3D rails  : ${st(c.ecart3dMm.rails)}`, `  écart 3D par cut (plus grand des deux rails) : ${st(c.ecart3dMm.parCut)}`);
     L.push(`  latéral |.| : ${st(c.ecartLateralAbsMm)}`, `  vertical |.| : ${st(c.ecartVerticalAbsMm)}`);
     L.push(`  corrections > 5 mm : ${c.corrections.sup5mm.cuts} cuts (${c.corrections.sup5mm.rails} rails) ; > 10 mm : ${c.corrections.sup10mm.cuts} cuts (${c.corrections.sup10mm.rails} rails)`);
+    const sr = c.sansLaRegle, nc = n => `${n} cut${n > 1 ? 's' : ''}`;
+    if (sr) L.push(`  > 10 mm : avec la règle ${nc(c.corrections.sup10mm.cuts)} sur ${c.avecReference} avec référence, sans la règle ${sr.sup10mm} sur ${sr.avecReference}`
+      + ` ; > 5 mm : avec la règle ${c.corrections.sup5mm.cuts}, sans la règle ${sr.sup5mm}`);
   }
   if (Object.keys(resume.motifsDeDiffere).length) L.push('', `Motifs de différé (par rail, tous les cuts différés du journal) : ${Object.entries(resume.motifsDeDiffere).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')}`);
   return L.join('\n');
@@ -648,8 +793,10 @@ function executer(argv, sortie = console.log) {
   const a = lireArguments(argv), avis = [];
   const echo = lireEcho(a.echo, { journal: m => avis.push(m) });
   const journal = a.sansJournal ? { events: [], records: [], format: null, version: null } : lireJournal(a.journal);
-  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne });
-  resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length };
+  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne,
+    pagesPerdues: echo.pagesPerdues, capturesParVisite: echo.capturesParVisite });
+  resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length,
+    pagesPerduesEcho: echo.pagesPerdues.length, visitesAvecCaptures: Object.keys(echo.capturesParVisite).length };
   const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne }, resume, table };
   if (a.sortie) { fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true }); fs.writeFileSync(a.sortie, JSON.stringify(sortieJson, null, 1)); }
   if (a.csv) { fs.mkdirSync(path.dirname(path.resolve(a.csv)), { recursive: true }); fs.writeFileSync(a.csv, enCsv(table)); }
@@ -659,4 +806,4 @@ function executer(argv, sortie = console.log) {
 if (require.main === module) {
   try { executer(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { DUREE_VISITE_DEFAUT_S, ECARTEMENT_MIN_MM, ECARTEMENT_MAX_MM, corrigerParEcriture, visiteSansAction, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
+module.exports = { DUREE_VISITE_DEFAUT_S, DELAI_APRES_PAGE_PERDUE_S, ECARTEMENT_MIN_MM, ECARTEMENT_MAX_MM, corrigerParEcriture, visiteSansAction, visiteEcartee, sessionsChevauchantes, echoParCut, journalParCut, poseAriane, joindre, resumer, lireEcho, lireJournal, lireArguments, executer, enCsv, texte, ecartRail, calibrerRepere, quantile, stat };
