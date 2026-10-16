@@ -305,14 +305,17 @@ function ecartRail(base, fin) {
 const sansPose = (r) => r && r.positionSceneRelative ? { x: arrondi(r.positionSceneRelative[0], 3), y: arrondi(r.positionSceneRelative[1], 3), z: arrondi(r.positionSceneRelative[2], 3) } : null;
 
 /* ------------------------------------------------------------------ jointure */
-/* `records` : records de l'Écho ; `journal` : { events, records } ; options : { partie, base, poses }. */
+/* `records` : records de l'Écho ; `journal` : { events, records } ; options : { partie, base, poses, sessions,
+ * sansJournal, visiteSansActionBonne }. `sansJournal` : Écho seul, le journal est ignoré (voir l'en-tête). */
 function joindre(records, journal, options = {}) {
   const base = options.base || 'auto';
   if (!BASES.includes(base)) throw Error(`--base inconnue : ${base} (auto, premiere, derniere).`);
   const poses = options.poses !== false;
   let echo = echoParCut(records, options.sessions);
   let jr = journalParCut(journal);
-  const partiesJournal = new Set([...jr.values()].map(c => c.partie));
+  const sansJournal = options.sansJournal === true;
+  if (sansJournal) jr = new Map();
+  const partiesJournal = sansJournal ? new Set([...echo.values()].map(c => c.partie)) : new Set([...jr.values()].map(c => c.partie));
   const retenue = options.partie !== undefined && options.partie !== null ? new Set([options.partie]) : partiesJournal;
   const partiesEchoIgnorees = new Set();
   for (const [k, c] of [...echo]) if (!retenue.has(c.partie)) { partiesEchoIgnorees.add(c.partie); echo.delete(k); }
@@ -326,7 +329,7 @@ function joindre(records, journal, options = {}) {
   const lignes = [];
   const cles = new Set([...echo.keys(), ...jr.keys()]);
   for (const k of [...cles].sort((a, b) => { const [pa, ca] = a.split('|').map(Number), [pb, cb] = b.split('|').map(Number); return pa - pb || ca - cb; })) {
-    const c = echo.get(k) || null, j = jr.get(k) || null, classe = classeDe(j);
+    const c = echo.get(k) || null, j = jr.get(k) || null, classe = sansJournal ? 'sans-journal' : classeDe(j);
     const ligne = {
       partie: (c || j).partie, cut: (c || j).cut, classe,
       dansEcho: !!c, dansJournal: !!(j && j.vu), visitesEcho: c ? c.visites.length : 0,
@@ -383,14 +386,14 @@ function joindre(records, journal, options = {}) {
   }
 
   const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
-  return { table: lignes, resume: resumer(lignes, { base, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions }) };
+  return { table: lignes, resume: resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions }) };
 }
 
 /* ------------------------------------------------------------------ résumé */
-const CLASSES = ['posee', 'differee', 'autre', 'hors-journal'];
+const CLASSES = ['posee', 'differee', 'autre', 'hors-journal', 'sans-journal'];
 function resumer(lignes, meta = {}) {
   const resume = {
-    base: meta.base || null,
+    base: meta.base || null, sansJournal: !!meta.sansJournal,
     repereScene: meta.repere ? { calibre: meta.repere.calibre, paires: meta.repere.paires, residuMedianMm: meta.repere.residuMedianMm, residuP90Mm: meta.repere.residuP90Mm } : null,
     partiesEchoIgnorees: meta.partiesEchoIgnorees || [], projetsDifferents: meta.projetsDifferents || 0,
     cutsVusDansPlusieursSessions: meta.cutsMultiSessions || 0,
@@ -446,14 +449,16 @@ const f1 = v => v === null || v === undefined ? '—' : (Math.round(v * 10) / 10
 const st = s => s.n ? `n=${s.n} méd ${f1(s.medianeMm)} P90 ${f1(s.p90Mm)} max ${f1(s.maxMm)} mm` : 'n=0';
 function texte(resume, entete = []) {
   const L = [...entete];
-  L.push(`Jointure Écho ↔ Orbite : ${resume.cutsEcho} cuts en Écho, ${resume.cutsJournal} au journal, ${resume.cutsJoints} joints`
+  if (resume.sansJournal) L.push(`Écho seul (sans journal) : ${resume.cutsEcho} cuts en Écho.`);
+  else L.push(`Jointure Écho ↔ Orbite : ${resume.cutsEcho} cuts en Écho, ${resume.cutsJournal} au journal, ${resume.cutsJoints} joints`
     + (resume.cutsJournalAbsentsDeLEcho ? `, ${resume.cutsJournalAbsentsDeLEcho} du journal absents de l'Écho` : '') + '.');
   if (resume.partiesEchoIgnorees.length) L.push(`Parties de l'Écho absentes du journal, ignorées : ${resume.partiesEchoIgnorees.join(', ')}.`);
   if (resume.projetsDifferents) L.push(`Cuts écartés (projets différents) : ${resume.projetsDifferents}.`);
   if (resume.cutsVusDansPlusieursSessions) L.push(`Cuts vus dans plusieurs sessions Écho : ${resume.cutsVusDansPlusieursSessions} (visites rangées dans l'ordre du temps).`);
-  L.push(`Classes Ariane au journal : ${Object.entries(resume.cutsParClasse).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'} (tous les cuts du journal, joints ou non).`);
+  if (!resume.sansJournal) L.push(`Classes Ariane au journal : ${Object.entries(resume.cutsParClasse).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'} (tous les cuts du journal, joints ou non).`);
   const r = resume.repereScene;
-  L.push(r && r.calibre ? `Repère de scène : translation constante Écho − journal estimée sur ${r.paires} rails ; résidu médian ${f1(r.residuMedianMm)} mm, P90 ${f1(r.residuP90Mm)} mm.`
+  if (resume.sansJournal) L.push('Repère de scène : sans objet (pas de journal) ; l\'écart se mesure à la pose initiale de la première visite de chaque cut.');
+  else L.push(r && r.calibre ? `Repère de scène : translation constante Écho − journal estimée sur ${r.paires} rails ; résidu médian ${f1(r.residuMedianMm)} mm, P90 ${f1(r.residuP90Mm)} mm.`
     : 'Repère de scène : non calibré (aucun cut posé des deux côtés) ; la base est la première visite de l\'Écho.');
   L.push(`Base de l'écart humain (--base ${resume.base}) : ${Object.entries(resume.bases).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'}.`);
   L.push(`Repère de l'écart : profil pour ${resume.reperes.profil} rails, distance 3D seule pour ${resume.reperes['3D']} rails.`);
@@ -469,12 +474,14 @@ function texte(resume, entete = []) {
 }
 
 /* ------------------------------------------------------------------ ligne de commande */
+const USAGE = 'Usage : node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> (--journal <fichier> | --sans-journal) [--partie N] [--base auto|premiere|derniere] [--sortie table.json] [--csv table.csv] [--sans-poses] [--visite-sans-action-bonne [durée minimale en s, 1 par défaut]]';
 function lireArguments(argv) {
-  const a = { echo: [], journal: null, partie: null, sortie: null, csv: null, base: 'auto', poses: true };
+  const a = { echo: [], journal: null, sansJournal: false, partie: null, sortie: null, csv: null, base: 'auto', poses: true };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--echo') { while (i + 1 < argv.length && !argv[i + 1].startsWith('--')) a.echo.push(argv[++i]); }
     else if (k === '--journal') a.journal = argv[++i];
+    else if (k === '--sans-journal') a.sansJournal = true;
     else if (k === '--partie') { a.partie = Number(argv[++i]); if (!Number.isInteger(a.partie)) throw Error('--partie attend un entier.'); }
     else if (k === '--sortie') a.sortie = argv[++i];
     else if (k === '--csv') a.csv = argv[++i];
@@ -482,19 +489,20 @@ function lireArguments(argv) {
     else if (k === '--sans-poses') a.poses = false;
     else throw Error(`Argument inconnu : ${k}`);
   }
-  if (!a.echo.length || !a.journal) throw Error('Usage : node tools/jointure-echo-orbite.cjs --echo <dossier ou fichiers…> --journal <fichier> [--partie N] [--base auto|premiere|derniere] [--sortie table.json] [--csv table.csv] [--sans-poses]');
+  if (a.sansJournal && a.journal) throw Error('--journal et --sans-journal s\'excluent : un Écho seul n\'a pas de journal.');
+  if (!a.echo.length || (!a.journal && !a.sansJournal)) throw Error(USAGE);
   return a;
 }
 function executer(argv, sortie = console.log) {
   const a = lireArguments(argv), avis = [];
   const echo = lireEcho(a.echo, { journal: m => avis.push(m) });
-  const journal = lireJournal(a.journal);
-  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions });
+  const journal = a.sansJournal ? { events: [], records: [], format: null, version: null } : lireJournal(a.journal);
+  const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal });
   resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length };
-  const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses }, resume, table };
+  const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses, sansJournal: a.sansJournal }, resume, table };
   if (a.sortie) { fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true }); fs.writeFileSync(a.sortie, JSON.stringify(sortieJson, null, 1)); }
   if (a.csv) { fs.mkdirSync(path.dirname(path.resolve(a.csv)), { recursive: true }); fs.writeFileSync(a.csv, enCsv(table)); }
-  sortie(texte(resume, [`Sources : ${echo.segments.length} segment(s) Écho (${echo.records.length} records, ${echo.sessions.length} session(s)), journal de ${journal.events.length} événements.`, ...avis]));
+  sortie(texte(resume, [`Sources : ${echo.segments.length} segment(s) Écho (${echo.records.length} records, ${echo.sessions.length} session(s)), ${a.sansJournal ? 'sans journal' : `journal de ${journal.events.length} événements`}.`, ...avis]));
   return sortieJson;
 }
 if (require.main === module) {

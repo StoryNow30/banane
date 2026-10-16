@@ -12,7 +12,7 @@ const rail = pos => ({ positionSceneRelative: pos, sceneRelativeToProfileLocal: 
 const etat = (cut, [g, d], partie = 90) => ({ identity: identite(cut, partie), capturedAt: '2031-05-01T08:00:00.000Z', status: 'observed', rails: { left: rail(g), right: rail(d) } });
 const decaler = (pos, dx = 0, dy = 0, dz = 0) => [pos[0] + dx, pos[1] + dy, pos[2] + dz];
 
-const horodatage = (minutes, secondes = 0) => new Date(Date.UTC(2031, 4, 1, 8, minutes, secondes)).toISOString();
+const horodatage = (minutes, secondes = 0) => new Date(Date.UTC(2031, 4, 1, 8, 0, 0) + Math.round((minutes * 60 + secondes) * 1000)).toISOString();
 
 /* Une visite d'Écho.
  *  - session, index : (session, visitIndex) ; l'index repart de 0 à chaque session ;
