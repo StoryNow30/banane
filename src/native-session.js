@@ -315,6 +315,16 @@
    if(type==='observation-failed'){if(n.current){this.partialReason(n.current,data.reason||'observation-failed');await this.saveRecord(n.current);}
     n.incomplete=unique([...n.incomplete,n.current?.recordId]);await this.e.save();return {saved:true,eventSeq:logged.eventSeq};}
    if(type==='operator-event'&&!data.visitId)return {saved:true,eventSeq:logged.eventSeq};
+   /* 5.0 (« déplacer la vue ») : glisser ou série de crans de l'opérateur, observation seule. Consigné au journal ; rangé dans la
+    * visite (32 au plus, et un compte jamais tronqué). Rien d'autre de la visite n'en dépend. */
+   if(type==='operator-gesture'){if(!data.visitId)return {saved:true,eventSeq:logged.eventSeq};
+    let visite=null;try{visite=await this.record(data);}catch{visite=null;}   // visite inconnue : consigné au journal seulement
+    const g=data.geste&&typeof data.geste==='object'?data.geste:null;
+    if(visite&&g){const resume=visite.gestesVueResume??={glissers:0,molettes:0,crans:0,gardes:0};
+     if(g.type==='glisser')resume.glissers++;else if(g.type==='molette'){resume.molettes++;resume.crans+=Number.isFinite(g.crans)?g.crans:0;}
+     const liste=visite.gestesVue??=[];if(liste.length<32){liste.push({...K.clone(g),eventSeq:logged.eventSeq});resume.gardes=liste.length;}
+     await this.saveRecord(visite);}
+    return {saved:true,eventSeq:logged.eventSeq};}
    const record=data.visitId?await this.record(data):null;
    if(type==='operator-event'){
     const observed={...K.clone(data.event),eventSeq:logged.eventSeq,event_seq:logged.eventSeq,collectorSeq:data.collectorSeq??null};record.operatorEvents.push(observed);

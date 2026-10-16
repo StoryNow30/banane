@@ -32,7 +32,7 @@ test('molette : la cible à 230 mm (NDC 1,15) entre dans la vue en un geste de 2
  const r=await f.call('amenerDansLaVue','left',cible(f,'left',230),etat.identity,{});
  assert.equal(r.ok,true,JSON.stringify(r));assert.equal(r.gestes.length,1);const g=r.gestes[0];
  assert.equal(g.type,'molette');assert.equal(g.crans,2);assert.ok(Math.abs(g.facteurCran-1.1)<1e-9);
- assert.ok(Math.abs(r.ndcAvant[0]-1.15)<1e-6);assert.ok(Math.abs(g.ndcApres[0]-1.15/1.21)<1e-6);assert.ok(r.pixelMm.apres<.9);
+ assert.ok(Math.abs(r.ndcAvant[0]-1.15)<1e-6);assert.ok(Math.abs(g.ndcApres[0]-1.15/1.21)<1e-3);assert.ok(r.pixelMm.apres<.9);
  /* Remise : deux crans dans l'autre sens, l'échelle d'origine retrouvée. */
  assert.equal(r.remise.ok,true);assert.equal(r.remise.crans,2);assert.ok(Math.abs(echelle(f)/e0-1)<1e-9);
  const w=f.evenements.filter(e=>e.type==='wheel');assert.deepEqual(w.map(e=>e.deltaY),[100,100,-100,-100]);

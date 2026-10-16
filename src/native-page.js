@@ -146,7 +146,13 @@
    this.api.install(e=>this.input(e));this.api.watch?.(()=>{void this.observe('label-changed');});this.timer=this.api.interval(()=>{void this.observe('poll');void this.flush();},this.pollMs);
    this.enqueue('period-started',{startedAt:new Date().toISOString()},true);await this.observe('period-start');
    return {active:true,observationPeriodId:this.periodId,metrics:this.metricSnapshot()};}
-  input(event){if(!this.active||event.isTrusted===false)return;const began=this.api.performanceNow?this.api.performanceNow():this.now();
+  input(event){if(!this.active||event.isTrusted===false)return;
+   /* 5.0 (« déplacer la vue ») : résumé d'un glisser ou d'une série de crans de molette de l'opérateur (src/gestes-vue.js,
+    * relevé par l'adaptateur). OBSERVATION SEULE : ni geste de correction compté (la pose de départ et les lectures de la visite
+    * n'en dépendent pas), ni observation relancée, ni état cloné ; un seul petit événement, non essentiel (cède sous charge). */
+   if(event.type==='geste-vue'){if(event.geste&&typeof event.geste==='object')this.enqueue('operator-gesture',{visitId:this.current?.visitId||null,
+     identity:this.current?.state?.identity||null,geste:event.geste,observedAt:event.observedAt||new Date().toISOString()});return;}
+   const began=this.api.performanceNow?this.api.performanceNow():this.now();
    const editable=this.api.editable?.(event.target)===true,targetKind=this.api.targetKind?.(event.target)||'other';
    if(this.current&&!editable)this.current.operatorInputs=(this.current.operatorInputs||0)+1;
    const shiftOnly=!!event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey;

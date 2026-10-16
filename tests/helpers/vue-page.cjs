@@ -16,7 +16,13 @@ function page({navigation=null,adaptateur=path.join(racine,'src/adapter-page.js'
  const root=F.object([0,0,0],'Scene');F.add(root,left);F.add(root,right);
  const projection=()=>[ECHELLE,0,0,0, 0,ECHELLE*LARGEUR/HAUTEUR,0,0, 0,0,-1e-4,0, 0,0,0,1];
  const camera={type:'OrthographicCamera',matrixWorldAutoUpdate:false,matrixWorld:{elements:matriceCamera([0,0,0])},position:{x:10,y:0,z:0},projectionMatrix:{elements:projection()}};
- let selected='left',clock=0;const nodes=new Map(),responses=new Map(),progress=[],evenements=[],ecouteurs=new Map(),fenetre=new Map(),releves=[],natifs=[];
+ let selected='left',clock=0;
+ /* Horloge simulée : chaque minuterie part à son heure, dans l'ordre ; l'horloge saute à la suivante dès que la page n'a plus rien
+  * à faire (les promesses passent avant). Une attente de 10 s ne dure rien, mais ne double jamais une réponse arrivée avant. */
+ const minuteries=[];let seq=0,pompeArmee=false;
+ function pompe(){if(pompeArmee)return;pompeArmee=true;setImmediate(()=>{pompeArmee=false;if(!minuteries.length)return;
+   minuteries.sort((a,b)=>a.due-b.due||a.seq-b.seq);const t=minuteries.shift();clock=Math.max(clock,t.due);try{t.fn();}finally{pompe();}});}
+ function planifier(fn,ms){const id=++seq;minuteries.push({id,seq:id,due:clock+Math.max(0,Number(ms)||0),fn});pompe();return id;}const nodes=new Map(),responses=new Map(),progress=[],evenements=[],ecouteurs=new Map(),fenetre=new Map(),releves=[],natifs=[];
  const pos=r=>[r.position.x,r.position.y,r.position.z];
  function recentrer(side){const p=pos(side==='left'?left:right),m=matriceCamera(p);camera.matrixWorld.elements=m;Object.assign(camera.position,{x:m[12],y:m[13],z:m[14]});
    camera.projectionMatrix.elements=projection();}
@@ -45,12 +51,12 @@ function page({navigation=null,adaptateur=path.join(racine,'src/adapter-page.js'
   BananeCaptureCore:C,BananeCore3:K,BananeSettings:S,BananeLodSignature:require('../../src/lod-signature.js'),BananeLidar:{...require('../../vendor/lidar.js')},
   BananeNativeLidar4:require('../../src/native-lidar.js'),BananeMerge3:require('../../src/merge-clouds.js'),BananeNativePage4:require('../../src/native-page.js'),
   viewer:{scene:{scene:root,pointclouds:[],getActiveCamera:()=>camera},renderer:{domElement:canvas}},
-  Date:class extends Date{static now(){return clock;}},performance:{now:()=>clock},setTimeout:(fn,ms=0)=>{clock+=ms;queueMicrotask(()=>fn());return 0;},clearTimeout:()=>{},
+  Date:class extends Date{static now(){return clock;}},performance:{now:()=>clock},setTimeout:(fn,ms=0)=>planifier(fn,ms),clearTimeout:id=>{const i=minuteries.findIndex(t=>t.id===id);if(i>=0)minuteries.splice(i,1);},
   setInterval:()=>0,clearInterval:()=>{},queueMicrotask,
   MouseEvent,PointerEvent,WheelEvent,KeyboardEvent,Math,
   __ARIANE_PROPRIETAIRE:proprietaire!==null?{id:proprietaire,version:K.VERSION}:undefined,
   addEventListener:(t,f)=>{(fenetre.get(t)||fenetre.set(t,[]).get(t)).push(f);},removeEventListener:(t,f)=>{const l=fenetre.get(t);if(l)l.splice(l.indexOf(f)>>>0,1);},
-  postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else if(m.kind==='banane3:releve')releves.push(m);else if(m.kind==='banane4:native-event'){natifs.push(m);}
+  postMessage:m=>{if(m.kind==='banane3:progress')progress.push(m);else if(m.kind==='banane3:releve')releves.push(m);else if(m.kind==='banane4:native-event'){natifs.push(m);/* accusé de sauvegarde, comme le service worker */queueMicrotask(()=>message({kind:'banane4:native-ack',channel:m.channel,requestId:m.requestId,result:{saved:true,storageConfirmedAt:new Date(0).toISOString()}}));}
    else if(m.kind==='banane3:result')responses.get(m.id)?.(m);},crypto:{randomUUID:K.uid}};
  ctx.window=ctx;vm.createContext(ctx);
  if(gestes)vm.runInContext(fs.readFileSync(path.join(racine,'src/gestes-vue.js'),'utf8'),ctx,{filename:'src/gestes-vue.js'});

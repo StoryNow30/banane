@@ -295,6 +295,24 @@
    * l'observation « continuité » : pose de départ et points capturés avant le premier geste, jamais la référence humaine du cut. Écho passif :
    * rien n'est posé ni commandé. `actif:false` : rien. */
   const memoireDifferesOmbre = Object.freeze({ actif: true, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
+  /* 5.0 (D-147) — DÉPLACER LA VUE D'ESV POUR POSER UN RAIL HORS DE SA VUE (src/adapter-page.js `amenerDansLaVue`, src/gestes-vue.js,
+   * fiches/DEPLACER_VUE.md). COUPÉ PAR DÉFAUT : seul Mic l'active, après les vérifications de la fiche sur le vrai ESV. Coupé, rien ne
+   * change : mêmes commandes à ESV, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif : un cut que le lot différerait PARCE QUE
+   * la cible tombe hors de la vue du rail (KI-051, `hors-vue-*`), à un étage permis (`etages`), est posé si un geste humain l'y amène :
+   * un dézoom à la molette (au plus `dezoomMax`, pixel au plus `pixelMaxMm`) ou un glisser au bouton gauche (au plus
+   * `glissementPxMax` pixels), au plus `gestesMax` gestes par rail, la caméra relue et la cible reprojetée après chaque geste, la vue
+   * remise ensuite (écart d'échelle au plus `remiseTolerance`). `preVol` : la page essaie d'abord le geste (sans rien poser, vue
+   * remise) ; s'il échoue, le cut reste différé comme aujourd'hui. Un événement `deplacer-vue` par décision et par pose, un
+   * `deplacer-vue-geste` par geste. `molette` et `glisser` : forme des gestes (src/gestes-vue.js) ; leurs durées sont PROVISOIRES,
+   * à fixer sur les gestes de l'opérateur relevés par l'Écho (`echo.gestesVue`). `clicFinal` reste faux : Chromium termine un vrai
+   * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
+  const deplacerVue = Object.freeze({
+    actif: false,
+    etages: Object.freeze(['window']),
+    gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: true,
+    molette: Object.freeze({ deltaY: 100, deltaMode: 0, wheelDelta: 120, intervalleMs: Object.freeze([60, 140]), cransMax: 8, sensDezoom: 1, facteurSuppose: 1.1 }),
+    glisser: Object.freeze({ dureeMs: Object.freeze([220, 420]), pasMs: 16, bouton: 0, clicFinal: false, viseNdc: 0.8 }),
+  });
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
@@ -365,6 +383,11 @@
      * (`rail-change-after-validate-intent`) : ESV applique parfois le déplacement APRÈS la touche, la référence lue à la
      * touche peut alors être périmée. */
     changementApresIntentionMs: 150,
+    /* 5.0 (chantier « déplacer la vue ») : relevé des glissers et des crans de molette de l'opérateur sur la vue d'ESV, en
+     * observation pure (écouteurs passifs, rien n'est empêché ni commandé) : un événement `operator-gesture` par glisser (longueur,
+     * direction, durée, bouton, clic final, caméra avant et après) et par série de crans (nombre, sens, deltaY, durée, caméra). Sert
+     * à copier le geste de l'opérateur avant d'activer `deplacerVue`. `false` : aucun écouteur posé. */
+    gestesVue: true,
   });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
@@ -391,6 +414,8 @@
       { groupe: 'Continuité', nom: 'Correction verticale en ombre (P8)', valeur: ombreVerticaleRefusee.actif ? 'consignée seulement (' + String(ombreVerticaleRefusee.mm).replace('.', ',') + ' mm sur les rails à convention refusée)' : 'coupée', pourquoi: 'Note dans la décision la pose qu’aurait donnée une correction verticale apprise (Mic remonte ces rails, D-140), à côté de la pose réelle. Jamais appliquée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Voie prédite en ombre (Orbite)', valeur: voiePrediteOmbre.actif ? 'consignée seulement (règle prudente D-147, à chaque cut différé)' : 'coupée', pourquoi: 'Note ce qu’aurait posé le moteur recentré sur la voie du lot, et le geste de vue qu’il aurait fallu. Jamais posé, aucune vue déplacée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire des différés en ombre (Écho)', valeur: memoireDifferesOmbre.actif ? 'consignée seulement (série de différés, ' + memoireDifferesOmbre.K + ' dernières corrections)' : 'coupée', pourquoi: 'Note, avant de lire ta référence sur le cut, la pose qu’aurait donnée la voie de tes corrections précédentes de la série. Rien n’est posé ni commandé.' },
+      { groupe: 'Continuité', nom: 'Déplacer la vue (Orbite)', valeur: deplacerVue.actif ? 'actif (dézoom ≤ ×' + String(deplacerVue.dezoomMax).replace('.', ',') + ' ou glisser ≤ ' + deplacerVue.glissementPxMax + ' px, ' + deplacerVue.gestesMax + ' gestes par rail au plus)' : 'coupé', pourquoi: 'Quand la cible d’un rail tombe hors de la vue d’ESV, Ariane dézoome à la molette ou glisse la vue comme toi, pose, puis remet la vue. Coupé : ces cuts restent différés.' },
+      { groupe: 'Écho', nom: 'Relevé des glissers et de la molette', valeur: echo.gestesVue ? 'actif (observation seule)' : 'coupé', pourquoi: 'Note la longueur, la durée, le bouton et les crans de tes gestes sur la vue, avec la caméra avant et après, pour copier ton geste. Rien n’est empêché ni commandé.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -408,5 +433,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });

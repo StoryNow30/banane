@@ -12,7 +12,7 @@
   * sur la même page. Les modules sont donc lus UNE fois, ici ; le tampon posé
   * par le service worker juste avant l'injection désigne le propriétaire. */
  const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
- const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4;
+ const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4,GV=window.BananeGestesVue||null;
  const PROPRIO=typeof window.__ARIANE_PROPRIETAIRE?.id==='string'?window.__ARIANE_PROPRIETAIRE.id:null;
  const PROPRIO_NOM=typeof window.__ARIANE_PROPRIETAIRE?.versionName==='string'?window.__ARIANE_PROPRIETAIRE.versionName:null;
  try{delete window.__ARIANE_PROPRIETAIRE;}catch{}
@@ -509,8 +509,14 @@
   * par le moteur. */
  const DECALAGES_CLIC=[[0,0],[.5,.5],[-.5,-.5]];
  const pixelMm=cam=>cam?.viewport?.width&&Array.isArray(cam.projection)&&cam.projection[0]?2/cam.projection[0]/cam.viewport.width*1000:NaN;
- async function clickPosition(side,target,expected){
+ async function clickPosition(side,target,expected,vue=null){
    await select(side,expected);let dernier=null,pixel=NaN;
+   /* 5.0 (« déplacer la vue ») : seulement si le service worker l'a demandé pour ce cut (réglage `deplacerVue`, coupé par défaut). */
+   if(vue){const r=await amenerVue(side,target,expected,vue.etat,vue.reglages,vue.progress);vue.rapports.push(r);
+     if(!r.ok){const remise=await remettreVue(vue.etat,side,expected,vue.reglages,vue.progress).catch(e=>({ok:false,erreur:e.message}));
+       const nom=side==='left'?'gauche':'droit',poses=vue.poses.map(s=>s==='left'?'gauche':'droit');
+       throw Error(`Vue ESV non amenée sur la cible du rail ${nom} (${r.raison}) : `+(poses.length?`le rail ${poses.join(' et ')} est déjà posé, rien n’est validé. État à réconcilier.`:'rien n’a été posé.')
+         +(remise.ok===false?' Vue ESV non restituée : contrôle-la avant de reprendre.':''));}}
    for(const [dx,dy] of DECALAGES_CLIC){
      const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
      const view=projectToView(cam,target);
@@ -555,14 +561,134 @@
      if(C.distance(s.rails[side].positionSceneRelative,target)<=.001)return s;
      if(C.distance(s.rails[side].positionSceneRelative,avant.rails[side].positionSceneRelative)<=1e-9)return null;}
    return null;}
- async function apply(before,proposals,progress=()=>{}){cancelled=false;const now=assertExpected(before);
+ /* 5.0 (D-147) — DÉPLACER LA VUE : AMENER LA CIBLE D'UN RAIL DANS LA VUE D'ESV PAR UN GESTE HUMAIN (fiches/DEPLACER_VUE.md).
+  *
+  * Chaque rail a sa vue (±0,2 unité de scène, centrée sur lui après le bouton du rail) : une cible plus loin est « hors de la
+  * vue » (KI-051) et le lot diffère le cut. L'opérateur, lui, dézoome à la molette ou glisse la vue au bouton gauche (D-147).
+  * `amenerVue` fait de même, après `select` et avant la lecture de caméra qui sert au clic :
+  *   1. caméra lue, cible projetée ; dans la vue (marge de 1 %) : rien ;
+  *   2. sinon le plus petit geste dans les limites : dézoom si la vue entière tient (≤ `dezoomMax`, pixel ≤ `pixelMaxMm`),
+  *      sinon glisser (≤ `glissementPxMax` px), sinon refus « hors-limites » ;
+  *   3. le geste est émis comme un humain le fait (src/gestes-vue.js : mêmes événements, même ordre que Chromium ; jamais de
+  *      `click` dans la vue), puis la caméra est attendue immobile, RELUE, et la cible REPROJETÉE ; le facteur d'un cran et le gain
+  *      du glisser sont mesurés sur ce geste et servent au suivant ;
+  *   4. au plus `gestesMax` gestes ; caméra immobile après un geste, rail déplacé, mauvais sens : arrêt (le rail déplacé est une
+  *      erreur, « État à réconcilier ») ;
+  *   5. la vue est remise ensuite (`remettreVue`) : crans dans l'autre sens, bouton du rail après un glisser, échelle relue.
+  * Ni écriture dans la caméra, ni appel d'une fonction d'ESV, ni requête : des événements de souris et de molette, non fiables
+  * (`isTrusted` faux), comme le `click` de pose d'aujourd'hui. Rien de ceci ne s'exécute sans demande du service worker. */
+ const VUE_VERSION='deplacer-vue-v1';
+ const VUE_DEFAUTS={gestesMax:3,dezoomMax:1.5,glissementPxMax:250,pixelMaxMm:.9,marge:.99,remiseTolerance:.02};
+ function reglagesVue(options){const S=window.BananeSettings?.deplacerVue||{},o=options&&typeof options==='object'?options:{};
+   const E=GV?.EMISSION||{molette:{},glisser:{}};
+   return {...VUE_DEFAUTS,...S,...o,molette:{facteurSuppose:1.1,...E.molette,...(S.molette||{}),...(o.molette||{})},glisser:{viseNdc:.8,...E.glisser,...(S.glisser||{}),...(o.glisser||{})}};}
+ /* État partagé par les deux rails d'une pose : échelle de la vue habituelle, crans nets de dézoom, glisser fait, facteur d'un
+  * cran et gain du glisser mesurés. */
+ const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,facteurCran:o.molette.facteurSuppose,gain:1});
+ const echelleVue=cam=>Math.abs(cam?.projection?.[0]??NaN);
+ const r3v=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
+ const ndcVue=v=>v?[r3v(v.ndc[0]),r3v(v.ndc[1])]:null;
+ const dansVue=(v,marge)=>!!v&&Math.abs(v.ndc[0])<=marge&&Math.abs(v.ndc[1])<=marge&&Math.abs(v.ndc[2])<=1;
+ const procheCam=(a,b)=>!!a&&!!b&&a.cameraToSceneRelative.every((x,i)=>Math.abs(x-b.cameraToSceneRelative[i])<=1e-6)&&Math.abs(echelleVue(a)/echelleVue(b)-1)<=1e-6;
+ /* Caméra immobile : `lecturesStables` comparaisons égales de suite, à `sondageMs` (comme `select`), à 1 µm et 1e-6 d'échelle près
+  * (une visionneuse amortie approche sa cible sans l'atteindre au bit près). Plafond `attenteMs`. */
+ async function cameraImmobile(guard){let prec=null,stables=0;const debut=Date.now();
+   for(;;){await sleep(P.sondageMs);if(cancelled)throw Error('Action interrompue.');guard();const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+     stables=cam&&procheCam(cam,prec)?stables+1:0;prec=cam;if(stables>=P.lecturesStables||Date.now()-debut>=P.attenteMs)return cam;}}
+ function centreVue(c){const r=c.viewer.renderer.domElement.getBoundingClientRect();return {r,x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};}
+ const gesteGarde=expected=>()=>{if(cancelled)throw Error('Action interrompue.');assertExpected(expected);};
+ async function emettreGeste(c,seq,guard){return GV.emettre(c.viewer.renderer.domElement,seq,{fenetre:window,attendre:ms=>sleep(ms),garde:guard});}
+ async function amenerVue(side,target,expected,etat,o,progress=()=>{}){const debut=Date.now(),rapport={cote:side,ok:false,raison:null,gestes:[],ndcAvant:null,ndcApres:null,pixelMm:{avant:null,apres:null}};
+   if(!GV){rapport.raison='module-absent';return rapport;}
+   const guard=gesteGarde(expected);let c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   if(!cam?.viewport||!Number.isFinite(echelleVue(cam))){rapport.raison='camera-illisible';return rapport;}
+   if(etat.echelle0===null){etat.echelle0=echelleVue(cam);etat.pixel0=pixelMm(cam);}
+   else if(Math.abs(echelleVue(cam)/etat.echelle0-1)<=1e-9)etat.crans=0;   // la vue a été remise par ESV (recentrage)
+   const poses0=assertExpected(expected).rails;
+   let v=projectToView(cam,target);rapport.ndcAvant=ndcVue(v);rapport.pixelMm.avant=r3v(pixelMm(cam));
+   if(dansVue(v,o.marge)){rapport.ok=true;rapport.raison='dans-la-vue';rapport.ndcApres=rapport.ndcAvant;rapport.pixelMm.apres=rapport.pixelMm.avant;rapport.dureeMs=Date.now()-debut;return rapport;}
+   for(let n=0;n<o.gestesMax;n++){
+     const b=GV.besoin(v.ndc,cam.viewport,o.marge),zoomActuel=etat.echelle0/echelleVue(cam),{r,x,y}=centreVue(c),geste={};
+     const dezoomPossible=zoomActuel*b.dezoom<=o.dezoomMax*(1+1e-9)&&etat.pixel0*zoomActuel*b.dezoom<=o.pixelMaxMm;
+     let seq=null;
+     if(dezoomPossible){const f=Math.max(1.0001,etat.facteurCran);
+       let crans=Math.min(o.molette.cransMax,Math.max(1,Math.ceil(Math.log(b.dezoom)/Math.log(f)-1e-9)));
+       while(crans>1&&(zoomActuel*Math.pow(f,crans)>o.dezoomMax*(1+1e-9)||etat.pixel0*zoomActuel*Math.pow(f,crans)>o.pixelMaxMm))crans--;
+       Object.assign(geste,{type:'molette',crans,sens:o.molette.sensDezoom});
+       seq=GV.sequenceMolette({x,y,crans,sens:o.molette.sensDezoom,reglages:o.molette});}
+     else if(b.panPx<=o.glissementPxMax){
+       const vise=Math.min(o.marge,o.glisser.viseNdc),cl=u=>Math.max(-vise,Math.min(vise,u));
+       let dx=(cl(v.ndc[0])-v.ndc[0])*r.width/2/etat.gain,dy=-(cl(v.ndc[1])-v.ndc[1])*r.height/2/etat.gain;
+       const L2=Math.hypot(dx,dy);if(L2>o.glissementPxMax){dx*=o.glissementPxMax/L2;dy*=o.glissementPxMax/L2;}
+       dx=Math.round(dx);dy=Math.round(dy);
+       /* Départ loin du rail sélectionné (au centre de la vue), du côté opposé au mouvement ; les deux bouts dans la vue. */
+       const borne=(u,a,l,d)=>Math.round(Math.max(a+20+Math.max(0,-d),Math.min(a+l-20-Math.max(0,d),u)));
+       const x0=borne(x-Math.sign(dx||1)*.3*r.width,r.left,r.width,dx),y0=borne(y+(dy>0?-1:1)*.3*r.height,r.top,r.height,dy);
+       Object.assign(geste,{type:'glisser',px:dx,py:dy});
+       seq=GV.sequenceGlisser({x0,y0,x1:x0+dx,y1:y0+dy,reglages:o.glisser});}
+     else{rapport.raison=n?'gestes-epuises':'hors-limites';break;}
+     const t0=Date.now();await emettreGeste(c,seq,guard);const cam2=await cameraImmobile(guard);
+     geste.dureeMs=Date.now()-t0;geste.ndcAvant=ndcVue(v);
+     /* Le geste ne doit jamais avoir bougé un rail. */
+     const apres=assertExpected(expected).rails;
+     for(const s of ['left','right'])if(C.distance(apres[s].positionSceneRelative,poses0[s].positionSceneRelative)>1e-9){
+       rapport.gestes.push(geste);progress('vue-geste',{side,...geste,rail:s});
+       throw Error('Le geste de vue a déplacé le rail '+(s==='left'?'gauche':'droit')+' ('+geste.type+'). État à réconcilier.');}
+     if(!cam2||procheCam(cam2,cam)){geste.camera='immobile';rapport.gestes.push(geste);progress('vue-geste',{side,...geste});rapport.raison='camera-immobile';break;}
+     if(geste.type==='molette'){const f=Math.pow(echelleVue(cam)/echelleVue(cam2),1/geste.crans);geste.facteurCran=r3v(f);
+       if(f<1){etat.crans-=geste.crans;geste.sensInverse=true;}else{etat.crans+=geste.crans;etat.facteurCran=f;}}
+     else{etat.glisse=true;const v2=projectToView(cam2,target),d=Math.hypot((v2.ndc[0]-v.ndc[0])*r.width/2,(v2.ndc[1]-v.ndc[1])*r.height/2),m=Math.hypot(geste.px,geste.py);
+       if(m>0&&d>0){etat.gain=d/m;geste.gain=r3v(etat.gain);}}
+     cam=cam2;c=context();v=projectToView(cam,target);geste.ndcApres=ndcVue(v);geste.zoom=r3v(etat.echelle0/echelleVue(cam));
+     rapport.gestes.push(geste);progress('vue-geste',{side,...geste});
+     if(geste.sensInverse){rapport.raison='sens-molette';break;}
+     if(pixelMm(cam)>o.pixelMaxMm){rapport.raison='pixel';break;}
+     if(dansVue(v,o.marge)){rapport.ok=true;break;}
+   }
+   if(!rapport.ok&&!rapport.raison)rapport.raison='gestes-epuises';
+   rapport.ndcApres=ndcVue(v);rapport.pixelMm.apres=r3v(pixelMm(cam));rapport.dureeMs=Date.now()-debut;return rapport;}
+ /* Remettre la vue habituelle : après un glisser, le bouton du rail la recentre ; des crans nets de dézoom sont rendus dans
+  * l'autre sens (par séries de `cransMax`) si l'échelle n'est pas déjà revenue. L'échelle est relue : écart au plus
+  * `remiseTolerance`, sinon `ok:false`. */
+ async function remettreVue(etat,side,expected,o,progress=()=>{}){const rap={ok:true,crans:0,recentre:false,ecartEchelle:0};
+   if(!etat||etat.echelle0===null||(!etat.glisse&&!etat.crans))return rap;
+   const guard=gesteGarde(expected);
+   if(etat.glisse){await select(side,expected);rap.recentre=true;etat.glisse=false;}
+   let c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   if(etat.crans&&Math.abs(echelleVue(cam)/etat.echelle0-1)>1e-9){const {x,y}=centreVue(c),sens=etat.crans>0?-o.molette.sensDezoom:o.molette.sensDezoom;
+     let reste=Math.abs(etat.crans);
+     while(reste>0){const n=Math.min(reste,o.molette.cransMax);await emettreGeste(c,GV.sequenceMolette({x,y,crans:n,sens,reglages:o.molette}),guard);reste-=n;rap.crans+=n;
+       if(reste>0)await sleep(Math.round((o.molette.intervalleMs?.[1]??140)*2));}
+     cam=await cameraImmobile(guard);}
+   etat.crans=0;const ecart=Math.abs(echelleVue(cam)/etat.echelle0-1);rap.ecartEchelle=Math.round(ecart*1e6)/1e6;rap.ok=ecart<=o.remiseTolerance;
+   progress('vue-remise',{side,...rap});return rap;}
+ /* Action de page, sans pose : sélectionne le rail, amène la cible dans sa vue, puis REMET la vue (pré-vol du service worker,
+  * relevés sur la maquette). Ne clique jamais dans la vue. */
+ async function amenerDansLaVue(cote,cible,attendu,a4,a5){const [options,progress]=typeof a4==='function'?[{},a4]:[a4&&typeof a4==='object'?a4:{},typeof a5==='function'?a5:()=>{}];
+   cancelled=false;if(cote!=='left'&&cote!=='right')throw Error('Côté de rail inconnu : '+cote);
+   if(!Array.isArray(cible)||cible.length!==3||!cible.every(Number.isFinite))throw Error('Cible invalide.');
+   assertExpected(attendu);const o=reglagesVue(options),etat=etatVue(o);
+   await select(cote,attendu);
+   const r={version:VUE_VERSION,...await amenerVue(cote,cible,attendu,etat,o,progress)};
+   r.remise=await remettreVue(etat,cote,attendu,o,progress);if(r.ok&&!r.remise.ok){r.ok=false;r.raison='vue-non-restituee';}
+   return r;}
+ /* `options` (troisième argument, facultatif) : `{deplacerVue}` envoyé par le service worker pour un cut que la vue seule
+  * empêchait de poser (réglage `deplacerVue`, coupé par défaut). Sans lui, l'appel est celui d'avant, à l'identique. Avec lui :
+  * pas de pose directe (P1), chaque rail est amené dans sa vue par un geste humain avant le clic, et la vue est remise à la fin. */
+ async function apply(before,proposals,a3,a4){const [options,progress]=typeof a3==='function'?[{},a3]:[a3&&typeof a3==='object'?a3:{},typeof a4==='function'?a4:()=>{}];
+   cancelled=false;const now=assertExpected(before);
    if(!K.equalPoses(now.rails,before.rails))throw Error('Rails modifiés avant l’application.');
-   const expected=K.expectedPoses(before,proposals),directe=piece(lectureDuCut(before.identity),'pose');
+   const plan=options.deplacerVue&&typeof options.deplacerVue==='object'?options.deplacerVue:null;
+   const reglages=plan?reglagesVue(plan):null,vue=plan?{etat:etatVue(reglages),reglages,progress,rapports:[],poses:[]}:null;
+   const expected=K.expectedPoses(before,proposals),directe=!vue&&piece(lectureDuCut(before.identity),'pose');
    for(const s of ['left','right']){if(cancelled)throw Error('Action interrompue.');
      if(directe&&poseDirecte(s,expected[s].positionSceneRelative,before.identity))continue;
      if(directe)progress('apply-repli',{side:s});
-     await clickPosition(s,expected[s].positionSceneRelative,before.identity);}
-   return snapshot();}
+     await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue);if(vue)vue.poses.push(s);}
+   if(!vue)return snapshot();
+   const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
+   if(!remise.ok)throw Error(`Vue ESV non restituée après le déplacement de vue (échelle à ${(remise.ecartEchelle*100).toFixed(1).replace('.',',')} % de la vue habituelle) : les deux rails sont posés, rien n’est validé. Remets la vue d’ESV, puis contrôle le cut. État à réconcilier.`);
+   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise};return fin;}
  async function restore(before){cancelled=false;assertExpected(before);
    for(const s of ['left','right'])await clickPosition(s,before.rails[s].positionSceneRelative,before.identity);return snapshot();}
  async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
@@ -1024,12 +1150,27 @@
      observer.observe(node,{characterData:true,childList:true,subtree:true});
      nativeListeners.push(['mutation',observer,null]);return true;},
    install:handler=>{const relay=e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:native-input'||e.data.channel!==nativeChannel)return;
-     const input=e.data.input;handler({...input,target:{kind:input.targetKind}});};window.addEventListener('message',relay);nativeListeners.push(['message',relay,false]);},
+     const input=e.data.input;if(input?.type==='geste-vue')return;   // un résumé de geste ne vient que du relevé de cette page
+     handler({...input,target:{kind:input.targetKind}});};window.addEventListener('message',relay);nativeListeners.push(['message',relay,false]);
+     releverGestesVue(handler);},
    uninstall:()=>{for(const [type,handler,options] of nativeListeners.splice(0)){if(type==='mutation')handler.disconnect();else window.removeEventListener(type,handler,options);}},
    editable:el=>el?.kind==='input'||!!el?.closest?.('input,textarea,select,[contenteditable="true"]'),
    targetKind:el=>el?.kind|| (el?.closest?.('#O2N3DCutValidate3DRail')?'validation':el?.closest?.('canvas')?'canvas':el?.closest?.('button,a')?'control':'other'),
    signalFailure:message=>{if(nativeFailureBanner)return;nativeFailureBanner=document.createElement('div');nativeFailureBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#381f23;color:#ffd7dc;border:1px solid #8b5058;border-radius:8px;font:14px Arial;pointer-events:none';
      nativeFailureBanner.setAttribute('role','alert');nativeFailureBanner.textContent=message;document.documentElement.append(nativeFailureBanner);}};}
+ /* 5.0 (« déplacer la vue ») — RELEVÉ DES GLISSERS ET DE LA MOLETTE DE L'OPÉRATEUR pendant une session Écho (réglage
+  * `echo.gestesVue`). Écouteurs de la fenêtre, phase de capture, PASSIFS : ils lisent, n'empêchent rien, n'arrêtent rien, et ne
+  * retiennent que les événements de confiance qui visent la vue d'ESV. La caméra est lue au premier événement du geste (avant
+  * qu'ESV ne le traite) et quand elle est de nouveau immobile. Un résumé par geste (src/gestes-vue.js `Releveur`) part dans la
+  * file de l'Écho ; les écouteurs sont retirés avec ceux de la session. */
+ function releverGestesVue(handler){if(window.BananeSettings?.echo?.gestesVue===false||typeof GV?.Releveur!=='function')return;
+   const vueEsv=()=>{try{return window.viewer?.renderer?.domElement||null;}catch{return null;}};
+   const R=new GV.Releveur({lireCamera:()=>{const v=window.viewer;return v?L.cameraSnapshot(v,[0,0,0]):null;},
+     emettre:geste=>{try{handler({type:'geste-vue',isTrusted:true,target:{kind:'canvas'},geste,observedAt:new Date().toISOString()});}catch{}},
+     planifier:(fn,ms)=>setTimeout(fn,ms),maintenant:()=>heurePage()??Date.now(),
+     estVue:t=>{const c=vueEsv();return !!c&&!!t&&(t===c||(typeof t.closest==='function'&&t.closest('canvas')===c));}});
+   const ecoute=e=>R.evenement(e),opts={capture:true,passive:true};
+   for(const t of GV.TYPES_RELEVE){window.addEventListener(t,ecoute,opts);nativeListeners.push([t,ecoute,opts]);}}
  async function nativeStart(options){if(native?.active)throw Error('Écho est déjà actif dans ESV.');nativeChannel=options.channel;
    native=native||new NP4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
@@ -1073,7 +1214,7 @@
  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
    return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,
-   manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
+   amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
    /* Un `cancel` PORTANT un identifiant d'opération est retenu pour elle seule

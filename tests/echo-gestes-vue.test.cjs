@@ -64,9 +64,11 @@ test('page : pendant une session Écho, un vrai glisser sur la vue devient un r�
  await f.call('nativeStart',{sessionId:'s',observationPeriodId:'p'});await flush();
  const ecoutes=['pointerdown','pointermove','pointerup','wheel'].map(t=>(f.fenetre.get(t)||[]).length);assert.ok(ecoutes.every(n=>n>=1),'écouteurs posés : '+ecoutes);
  let empeche=0;const vrai=(type,o)=>({type,isTrusted:true,pointerId:1,pointerType:'mouse',preventDefault(){empeche++;},stopPropagation(){empeche++;},stopImmediatePropagation(){empeche++;},...o});
- f.canvas.dispatchEvent(vrai('pointerdown',{button:0,buttons:1,clientX:600,clientY:500}));
- for(let i=1;i<=6;i++)f.canvas.dispatchEvent(vrai('pointermove',{buttons:1,clientX:600-20*i,clientY:500}));
- f.canvas.dispatchEvent(vrai('pointerup',{button:0,buttons:0,clientX:480,clientY:500}));f.canvas.dispatchEvent(vrai('click',{button:0}));
+ /* La suite d'un vrai glisser (relevée sur Chromium) : pointeur puis souris à chaque étape, click final. */
+ const deux=(p,m,o)=>{f.canvas.dispatchEvent(vrai(p,o));f.canvas.dispatchEvent(vrai(m,{...o,button:p==='pointermove'?0:o.button}));};
+ deux('pointerdown','mousedown',{button:0,buttons:1,clientX:600,clientY:500});
+ for(let i=1;i<=6;i++)deux('pointermove','mousemove',{button:-1,buttons:1,clientX:600-20*i,clientY:500});
+ deux('pointerup','mouseup',{button:0,buttons:0,clientX:480,clientY:500});f.canvas.dispatchEvent(vrai('click',{button:0,clientX:480,clientY:500}));
  for(let i=0;i<30;i++)await flush(2);
  const g=f.natifs.filter(m=>m.type==='operator-gesture').map(m=>m.payload.geste);
  assert.equal(g.length,1,JSON.stringify(f.natifs.map(m=>m.type)));assert.equal(g[0].type,'glisser');deq([g[0].dxPx,g[0].pas,g[0].clic],[-120,6,true]);
