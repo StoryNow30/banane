@@ -1,5 +1,7 @@
 # Fiche B1 + 398/402 — voisins validés lus dans la liste des coupes d'ESV (D-095, 13 octobre 2026)
 
+> **Note du 16 octobre 2026 (audit de la 5.0, U7).** Les constats 1 à 3 de cette fiche (source de la liste, repère, appariement cut ↔ ligne) sont **datés du 13 octobre et dépassés** (D-115) : l'appariement est établi, la ligne N de la liste porte la pose de départ du cut N. Ils restent écrits ici pour l'historique ; ne pas s'y fier pour l'état actuel.
+
 Statut : **accord de Mic reçu le 13 octobre 2026** pour lire, en lecture seule, les bords et le statut des cuts voisins dans la liste des coupes qu'ESV charge au démarrage
 (« complètement ok »), avec les pleins pouvoirs de décision de l'orchestrateur jusqu'à la livraison de la 4.9. Branche de travail : `claude/49-test-11` (depuis `claude/49-test-10`).
 
