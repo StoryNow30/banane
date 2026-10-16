@@ -2295,3 +2295,25 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Débutant contre Mic (228 cuts communs) : 41,7 % des références sont la pose de départ elle-même, et 23,7 % sont déplacées de 25 mm ou plus.
 - Le biais propre à Mic ne se mesure pas avec un seul opérateur. Les relectures ne sont pas à l'aveugle.
 - verify de l'agent : 0 échec, mais 8 fichiers annulés par délai sous charge (load 11). Ils passent seuls. Un verify complet sera relancé sur une machine calme avant la test 5.
+
+## D-159 — Règles métier de Mic, en ombre : PN retrouvés 17 sur 17 ; gain net modeste en différés, fort en relecture (17 octobre 2026)
+
+- Livré sur `claude/50-regles-metier` (d987016 à 6bc01a9), intégré à `claude/50-base`. Les conflits avec « déplacer la vue » ont été résolus en gardant les deux. Les règles métier s'appliquent **après** « déplacer la vue », et ne peuvent que différer.
+- **Module** `src/regles-metier.js` et événement `regles-metier-ombre` (ombre active). L'activation est coupée, règle par règle (`zone-validation-en-place`, `pn-chaque-cut`, `grappe-differes`). Une règle activée ne peut que transformer une validation en différé.
+- **Détection des PN sans la liste de Mic** : chaussée au ras des rails sur les quatre côtés, sur deux cuts proches. **17 PN de Mic sur 17, et 0 fausse zone**, sur les parties 29, 12, 13 et la partie 1 du second projet. Les plages tombent à 0 à 3 cuts près. Les ADV n'ont pas de signal géométrique fiable : on passe par la grappe de différés.
+- **Écartement** : écart à la médiane de la partie supérieur à 15 mm. 54 cas sur 54 chez le débutant, 14 sur 15 en partie 29, 19 sur 19 au second projet, 5 sur 9 en partie 17.
+- **Si tout était activé** : 18 faux verts évités sur 85, au prix de 96 cuts différés en plus, soit environ 2 à 5 minutes de Mic sur 4 lots. Les gains viennent de `grappe-differes`, dont les 3 poses sur la mauvaise voie du second projet. `pn-chaque-cut` n'évite aucune faute de plus de 10 mm.
+- **Le fort potentiel est la liste des verts à contrôler.** En partie 29, 256 verts signalés contiennent 67 des 83 erreurs de plus de 10 mm. Cela représente environ 8,5 minutes de relecture, alors que Mic a relu 585 verts en 36 minutes. À présenter à Mic.
+- Toutes les parties ont servi à régler, réglages figés. Les parties 12 et 13 sont passées en apprentissage dans le manifeste (elles servent depuis D-140).
+- Zones à faire confirmer par Mic : partie 24, cuts 6569–6585 et 8518–8535, et un PN possible en partie 12, cuts 4495–4499.
+
+## D-160 — Faux verts : presque tous viennent de la hauteur ; aucune règle de différé fiable (17 octobre 2026)
+
+- Livré sur `claude/50-faux-verts` (ef34ef7 à fbb81e0), intégré à `claude/50-base`. verify complet sur machine calme, toutes branches de la nuit fusionnées : **2 006 réussis, 0 échec**, 2 ignorés, moteur conforme.
+- **Typologie des 85 faux verts** :
+  - 70 viennent de la **convention verticale**, c'est-à-dire la hauteur ;
+  - 4 de la voie décalée, 2 du flanc partiel, 1 du nuage pauvre ;
+  - 0 d'un mauvais minimum, 0 d'une validation en place.
+  - Dans 81 cas sur 85, Mic garde le même minimum de la grille qu'Ariane et ne fait que corriger la hauteur.
+- **Aucun signal ne trie les faux verts** d'une partie à l'autre (AUC de 0,52 à 0,78), comme dans G0. La règle « hauteur ambiguë » (`faux-vert-ombre`, calage ≥ 11 mm et dessus ≥ 14 mm) est consignée seulement. En validation croisée, son bilan net est nul.
+- **Le vrai levier est la pose verticale**. Une correction apprise, de la forme a + b × épaisseur du dessus, ferait passer les faux verts de 85 à 66, mais elle en crée 7 nouveaux. Ce serait une pose différente : non livrée. Elle passera d'abord en ombre, et la décision reviendra à Mic. À rapprocher de l'ombre verticale à 3,6 mm (P8) et de l'abandon du plafond P1.
