@@ -2551,3 +2551,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - pas de pauses artificielles, car le lot Orbite n'en fait pas non plus et Mic n'en voit pas l'utilité ;
   - **départ automatique juste après le lot, sans compte à rebours.** Mic : « pas besoin de toute cette fantaisie ; quand Ariane travaille, je ne corrige pas un cut ». Le bouton d'arrêt de la passe reste ;
   - cela remplace le point 10 de D-175, qui demandait des pauses et un départ au clic.
+
+## D-177 — Mic livrera 1 000 à 1 500 corrections, avec une documentation, pour le méga cerveau (17 octobre 2026)
+
+- **Mic** : il livrera « le double ou le triple » des 500 corrections prévues pour la GCV2 (lot G du plan), de quoi mesurer un vrai écart avec l'ancienne version. Il fera aussi joindre une documentation.
+- **Protocole retenu** :
+  - lot Orbite avec la version courante, puis Écho sur la même partie, exports d'origine gardés ;
+  - de préférence des parties neuves, et pas seulement du projet 2 ;
+  - les PN et les ADV notés (début, fin, aiguilles).
+- **Partage des parties** : dans le manifeste, apprentissage ou réservée, **avant** toute lecture des résultats. Une partie sur trois environ est gardée pour le jugement.
+- **Écart avec l'ancienne version** : mesuré hors ligne, en rejouant les mêmes captures avec l'ancien moteur et avec le nouveau. Mic n'a pas à faire tourner deux versions.
+- **Documentation** : avant de la verser dans un dépôt, vérifier qu'elle n'est ni propriétaire ni sensible. Les deux dépôts sont publics. Sinon, la garder hors dépôt et n'en reporter que les règles, reformulées.
