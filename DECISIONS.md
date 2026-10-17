@@ -2496,3 +2496,10 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Règle** : un cut se met en SKIP seulement si **aucun point** ne s'affiche, ou si **un seul scanner** s'affiche. Dans tous les autres cas, cuts 0 à 3 compris, Ariane le visite et le corrige si besoin, comme les autres.
 - Le cut 1 de chaque partie posé par Ariane au lot des parties 2 à 7 (D-169) n'est donc pas une faute en soi : il faut vérifier s'il avait des points des deux scanners.
 - Aujourd'hui Ariane refuse tout SKIP. Pour suivre la règle : d'abord une **détection en ombre** (« ce cut serait à SKIP : aucun point / un seul scanner »), notée au journal et comparée aux SKIP de Mic dans les Échos ; l'envoi réel du SKIP, par le même geste qu'un humain, reste coupé et ne s'active qu'avec Mic.
+
+## D-173 — Condition de Mic pour la test 7 : règles métier fonctionnelles et UX réorganisée (17 octobre 2026)
+
+- Mic : la test 7 ne se fabrique **que lorsque l'avancée sur les points du matin est réelle** (D-170 à D-172 : relecture autonome, pose seule en zones PN et ADV, règle SKIP). Elle doit être **fonctionnelle sur les règles métier** : elles agissent, pas seulement en ombre.
+- Ce que j'en tire : chaque règle qui agit dans la test 7 doit avoir ses chiffres au banc, mesurés en validation croisée sur parties d'apprentissage puis jugés sur parties réservées, avec 0 mauvaise voie. Ce qui ne tient pas reste en ombre et c'est dit à Mic.
+- Mic veut aussi une **réorganisation propre du panneau**, désorganisé par les derniers ajouts. Le chantier `claude/50-panneau-t7` est élargi : inventaire, nouvelle structure (lot, règles du prochain lot, résultats, relecture, détails repliés), sans perte d'information ni changement vers ESV.
+- Temps et calcul : gros calculs et essais autorisés jusqu'au retour de Mic.

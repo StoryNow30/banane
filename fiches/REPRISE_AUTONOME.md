@@ -108,3 +108,5 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - relecture au niveau maximal, puis envoi.
 
 **Réponse de Mic (D-172)** : SKIP seulement si aucun point ne s'affiche ou si un seul scanner s'affiche ; sinon visiter et corriger, cuts 0 à 3 compris. À faire : détection SKIP en ombre, mesurée contre les SKIP de Mic.
+
+**17 octobre, 10 h 40 (D-173)** : la test 7 attend une avancée réelle : règles métier qui agissent, chiffrées et jugées sur parties réservées, plus un panneau réorganisé (`claude/50-panneau-t7`, élargi). Ne pas fabriquer la test 7 avant.
