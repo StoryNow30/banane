@@ -130,7 +130,7 @@ Chaque correction de la revue a son essai, écrit d'abord : rouge sur le code d'
 | Rôle « vert » jamais présumé (correction 1) | `-role-lot` : SKIP, reprise à la main, cible bloquée traversés ; cible bloquée en cours de passe refusée par la garde ; `-role-borne` : dernier cut d'un lot borné (corrigé et validé par Mic, en PN) jamais réécrit ; rouge au-delà de la borne relu sans pose |
 | Une seule passe (correction 2) | `-une-passe` : clic pendant le délai et pendant la préparation, « Démarrer » pendant la préparation refusés ; deux « Lancer » simultanés : un seul part |
 | Maj+Espace (correction 4) | `-maj-espace` : ESV ailleurs qu'au + 1 → arrêt après la validation ; dernier cut de la partie jamais validé ; cut déjà corrigé jamais réécrit ; `relecture-maj-espace-page` : touches exactes, une seule frappe, refus avant envoi sans émission (correction 6) |
-| Réglages sûrs (correction 5) | `-reglages-surs` : absent, format -2, coquille → ombre, dit ; contrôle : le fichier valide corrige ; `relecture-critere` (D-174, champs invalides, valeurs brutes) |
+| Réglages sûrs (correction 5) | `-reglages-surs` (absent, format -2) et `-reglages-coquille` : → ombre, dit ; contrôle : le fichier valide corrige ; `relecture-critere` (D-174, champs invalides, valeurs brutes) |
 | Arrêt, panne, intention | `-arret` (« Arrêter » du lot ; annulation neutre, T-6), `-panne`, `-corriger-validation` (intention par cut, « J'ai contrôlé le cut N »), `-redemarrage` |
 | La passe ne part que si ESV est propre | `-hors-partie`, `-pose-en-attente` |
 | Observateur coupé | `-sans-observateur` |
