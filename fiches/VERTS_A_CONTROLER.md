@@ -187,7 +187,7 @@ Partie 12 :
   
   Elle n'envoie rien à la page, n'écrit rien et ne touche ni au lot ni à ses appuis. Elle est permise à tout moment, même pendant une session Écho.
 - **Panneau** (vue Orbite) : une carte « À contrôler », sous « Ce lot ».
-  - Elle apparaît quand le lot est fini. La liste est demandée une fois par lot.
+  - Elle apparaît quand le lot est fini. Le panneau demande la liste une fois par lot. L'export la redemande : « Tout télécharger » refait un calcul (au moins deux par lot avec celui du panneau), sans rien écrire dans le lot.
   - Elle montre le nombre de cuts, le temps estimé et au plus 12 plages ; le reste est dans l'export.
   - « Recalculer » redemande la liste.
   - Pendant un lot, la carte est cachée.

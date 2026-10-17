@@ -122,7 +122,7 @@ Lecture d'une case : nombre de verts signalés, puis parmi eux les corrections d
 
   Les seuils figurent au premier événement du lot.
 - **Verts** : un événement `portee:'verts'` à chaque fenêtre de la liste d'ESV que B1 lit déjà (±5 lignes). Il donne le numéro, les raisons (`ecartement`, `pn`, `grappe`, `grappe-marge`, `isole`), l'écart en mm et la référence. **Aucune demande nouvelle à la page.** Un vert est signalé une fois par raison et par lot.
-- **Poids** : environ 560 octets par cut, 970 pour le premier ; environ 200 Ko pour un lot de 350 cuts (1 % d'un journal de 20 Mo).
+- **Poids** : environ 560 octets par cut, 970 pour le premier, enveloppe du journal comprise (identifiants, horloge, lot, session : 150 à 250 octets) ; le contenu seul mesure 318 octets par cut, 730 pour le premier (seuils compris). Environ 200 Ko pour un lot de 350 cuts (1 % d'un journal de 20 Mo).
 - **Preuve « ombre sans effet »** (service worker réel en VM, moteur et GCV1 réels, ESV simulé, données synthétiques) :
   - `tests/regles-metier-ombre-sw.test.cjs` compare le réglage livré à l'ombre coupée. Commandes ESV, rails, enregistrements et événements métier sont identiques ; les décisions du lot le sont **octet pour octet**. Au cut 114, l'ombre dit « différer » (`grappe-differes`) : le lot l'a quand même posé ;
   - `tests/regles-metier-panne-sw.test.cjs` : un module en panne, même avec toutes les règles activées, ne change rien. Il ne laisse qu'un événement « erreur » ;
