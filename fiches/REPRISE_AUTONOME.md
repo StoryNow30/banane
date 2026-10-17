@@ -140,9 +140,11 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
    - plafond par zone, PN d'abord ;
    - chaîne vide, comme l'étude ;
    - « vu » dit clairement, avec un compteur ;
-   - rythme avec des pauses, départ au clic ou après 30 s ;
+   - pas de pauses ; départ automatique avec un compte à rebours visible et un bouton pour annuler (D-176) ;
    - lectures de nuage mesurées.
 
    Ensuite, une contre-revue courte, puis la fusion.
 2. **Atelier P-7** : reprendre avec `Workflow({scriptPath: ".../p7-pose-adv-grappes-wf_56d882aa-e4e.js", resumeFromRunId: "wf_7d519878-737"})`. Le diagnostic est fait (`scratchpad/p7/CATALOGUE.md`). Si la reprise depuis le cache échoue, relancer le script : le diagnostic relira `p7/`.
 3. **Verify complet au calme** sur 50-base, puis **test 7** si la relecture est fusionnée.
+
+**Après la test 7 (D-176)** : chantier « relecture au fil du lot ». La même logique s'applique pendant le lot, en visitant les cuts voisins d'un PN, d'une ADV ou d'un rouge isolé. On la compare à la passe de fin de lot.

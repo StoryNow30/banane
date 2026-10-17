@@ -2540,3 +2540,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - la branche n'est pas fusionnée ;
   - un chantier de correction appliquera les 11 points ;
   - le mode « corriger » passera par le geste de Mic (Maj+Espace), ou restera verrouillé tant que ce geste n'est pas prouvé.
+
+## D-176 — Avis de Mic sur la relecture de fin de lot ; rythme et départ (17 octobre 2026)
+
+- **Mic** : « d'accord, on teste, je veux voir ce que ça donne. Je suis un peu dubitatif : je pensais qu'elle le ferait au fur et à mesure, comme un véritable opérateur. »
+- **Ce que j'en retiens** : la façon naturelle, c'est d'appliquer la règle **au fil du lot**. Quand le lot passe dans un PN ou une ADV, ou sur un rouge isolé, il visite et corrige aussi les cuts voisins (verts compris), puis il reprend vers le rouge suivant.
+  - La logique est la même que celle de la passe de fin de lot : sélection, calcul, règle prudente. Seul change le moment où elle s'applique.
+  - La test 7 garde la passe de fin de lot, parce qu'elle est prête et revue. Le mode « au fil du lot » devient le chantier suivant ; il sera comparé à la passe sur les mêmes parties.
+- **Rythme** :
+  - pas de pauses artificielles, car le lot Orbite n'en fait pas non plus et Mic n'en voit pas l'utilité ;
+  - départ automatique, avec un compte à rebours de quelques secondes visible dans le panneau et un bouton pour annuler. Ariane ne prend donc pas la main pendant que Mic touche encore ESV.
+  - Cela remplace le point 10 de D-175 (« pauses, départ au clic »).
