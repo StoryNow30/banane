@@ -2439,3 +2439,16 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Second lot sur la partie 8 (10 h 01)** : la partie était déjà finie, donc le lot a seulement revalidé le cut 5948 puis il est sorti. Mic a cru à un défaut ; il faut un message clair quand il ne reste rien à faire.
 - **Malentendu** : Mic s'attendait à ce que la case « règle métier » applique ses règles aux aiguilles et aux PN. Le libellé « grappe (aiguille, série de rouges) » est trompeur. Sur la partie 8, Ariane a posé 6 cuts dans l'ADV 846–911, 15 dans l'ADV 5467–5555 et 8 dans le PN 5936–5954. Seule l'ombre PN aurait gardé 7 de ces cuts.
 - **Proposé à Mic** : trois cases claires (PN, ADV, série de différés), et le choix entre « Ariane me laisse ces zones » et « elle pose et me les signale ».
+
+## D-168 — Mic : « Ariane doit savoir poser par elle-même, c'est le but » ; les zones PN et ADV ne lui sont pas laissées (17 octobre 2026)
+
+- Réponse à D-167 : Mic écarte « Ariane me laisse les zones ». Les cases « me laisser chaque cut d'un PN / d'un ADV » ne seront **pas** construites. Pour l'instant, Ariane pose dans les zones et les signale dans « À contrôler » (choix B).
+- **Cap** : qu'Ariane applique elle-même la méthode de Mic dans les zones, y compris le contrôle des **verts**, dont elle ne visite aucun aujourd'hui. Les grosses erreurs d'extraction se trouvent dans ces verts.
+- **Chantier lancé** : `claude/50-zones-autonomes`, au niveau fort.
+  - Qualité des poses d'Ariane dans les zones.
+  - Correction prudente des verts de zone, mesurée sur les Échos.
+  - Coût en temps.
+  - Trace laissée en visitant un vert.
+  - Ombre `zones-ombre` si une règle tient.
+- La visite des verts est une action nouvelle dans ESV : elle sera décidée avec Mic, chiffres en main.
+- La case grappe reste, avec un libellé à corriger : « série de différés », et non « aiguille ».
