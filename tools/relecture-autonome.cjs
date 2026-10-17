@@ -11,7 +11,15 @@
  *   node tools/relecture-autonome.cjs etudier  --partie P:N --cas CAS.jsonl --table TABLE.json [--skip SKIP.jsonl] [--partie …] [--json S.json]
  *                                              [--reglages datasets/relecture-reglages-proposes.json --date AAAA-MM-JJ]
  *   node tools/relecture-autonome.cjs juger    --reglages R.json --partie P:N --cas … --table … [--skip …] --juger-partie-reservee [--json S.json]
+ *   node tools/relecture-autonome.cjs comparer --ref ETUDE.json --essai ETUDE.json
+ *   node tools/relecture-autonome.cjs greffer  --ref ETUDE.json --partie P:N --cas CAS.jsonl --table TABLE.json [--partie …] [--appuis-min 1] [--json G.json]
  *   node tools/relecture-autonome.cjs essai
+ *
+ * `etudier --differes-en-chaine` (option COUPÉE par défaut ; src/differes-en-chaine.js, fiches/P7_DIFFERES_EN_CHAINE.md) : la grille de la
+ * règle prudente peut admettre un cut DIFFÉRÉ par le lot quand sa pose vient de la chaîne avec au moins un appui (1 ou 2), jugé sans les
+ * limites D et G des verts ; la validation croisée choisit. `comparer` : deux études des mêmes parties, par partie et par groupe.
+ * `greffer` : l'hypothèse à la lettre, sans rien apprendre : la règle de service de chaque partie (apprise sans elle, lue dans une étude
+ * SANS l'option) plus la seule condition des différés en chaîne, mesurée sur la partie laissée de côté.
  *
  * EXTRAIRE. Pour chaque cut que Mic a visité dans l'Écho (partie P:N) :
  *  - l'ENTRÉE SANS FUITE de sa première visite (`entreeSansFuite` de src/native-session.js, la frontière de l'ombre « mémoire des
@@ -45,6 +53,7 @@ const L = require('../src/lot-decision.js');
 const H = require('../src/hauteur-apprise.js');
 const M = require('../src/regles-metier.js');
 const { entreeSansFuite } = require('../src/native-session.js');
+const DC = require('../src/differes-en-chaine.js');
 
 const SIDES = ['left', 'right'];
 const FORMAT = 'ariane-relecture-autonome-cas-v1';
@@ -351,8 +360,10 @@ function selection(t, { liste = null, cfg = SELECTION } = {}) {
   for (const z of t.zonesADV || []) { const c = Array.isArray(z) ? z : z.controle || [z.debut, z.fin]; mettre(c[0], c[1], 'adv'); }
   const runs = [];
   for (const c of [...lot.keys()].sort((a, b) => a - b)) { const r = runs.at(-1); if (r && c - r.at(-1) <= cfg.trouCuts) r.push(c); else runs.push([c]); }
+  /* `enGrappe` : cuts d'une grappe avec sa marge (pour le bilan « grappes » ; ne change pas la sélection). */
+  const enGrappe = new Set();
   for (const r of runs) {
-    if (r.length >= cfg.grappeMin) mettre(r[0] - cfg.margeGrappe, r.at(-1) + cfg.margeGrappe, 'abords');
+    if (r.length >= cfg.grappeMin) { mettre(r[0] - cfg.margeGrappe, r.at(-1) + cfg.margeGrappe, 'abords'); for (let i = r[0] - cfg.margeGrappe; i <= r.at(-1) + cfg.margeGrappe; i++) enGrappe.add(i); }
     else for (const c of r) mettre(c - cfg.margeIsole, c + cfg.margeIsole, 'abords');
   }
   for (const [c, k] of lot) if (k === 'differe') mettre(c - cfg.margeDiffere, c + cfg.margeDiffere, 'abords');
@@ -360,7 +371,7 @@ function selection(t, { liste = null, cfg = SELECTION } = {}) {
   const compte = Object.fromEntries(TYPES.map(k => [k, 0])), verts = Object.fromEntries(TYPES.map(k => [k, 0]));
   let revisites = 0;
   for (const [c, k] of type) { compte[k]++; if (!lot.has(c)) verts[k]++; else if (lot.get(c) === 'pose') revisites++; }
-  return { type, lot, fin, compte, verts, revisites, grappes: runs.filter(r => r.length >= cfg.grappeMin).length, isoles: runs.filter(r => r.length === 1).length };
+  return { type, lot, fin, compte, verts, revisites, enGrappe, grappes: runs.filter(r => r.length >= cfg.grappeMin).length, isoles: runs.filter(r => r.length === 1).length };
 }
 /* La liste « À contrôler » (src/verts-a-controler.js, réglages livrés) sur la table de la partie. */
 function listeAControler(t) {
@@ -382,7 +393,7 @@ function proposition(cas, variante) {
   const src = variante.startsWith('chaine') ? a.chaine : a, h = variante.endsWith('+h'); if (!src) return null;
   const out = {};
   for (const s of SIDES) { const r = src.rails[s], p = r && r.pose; if (!p) return null; out[s] = h && fini(r.hauteurMm) ? [p[0], p[1], p[2] + r.hauteurMm] : p.slice(); }
-  return { rails: out, stage: src.stage, ecartementPoseMm: src.ecartementPoseMm ?? a.ecartementPoseMm ?? null };
+  return { rails: out, stage: src.stage, ecartementPoseMm: src.ecartementPoseMm ?? a.ecartementPoseMm ?? null, appuis: variante.startsWith('chaine') ? (Number.isInteger(src.appuis) ? src.appuis : null) : 0 };
 }
 /* Lignes de jugement d'une partie : un cut visité par Mic, sa zone, son genre (pose, différé, vert), sa référence et les propositions. */
 function lignes({ cas, table, designation }) {
@@ -393,7 +404,7 @@ function lignes({ cas, table, designation }) {
   for (const c of cas) {
     const ref = c.mic && c.mic.ref ? c.mic.rails : null;
     const l = { partie: designation, cut: c.cut, zone: S.type.get(c.cut) || 'hors', genre: S.lot.get(c.cut) || 'vert', ref: !!ref, mic: ref ? max3d(ref) : null,
-      etat: c.ariane ? c.ariane.etat : null };
+      etat: c.ariane ? c.ariane.etat : null, grappe: S.enGrappe.has(c.cut) };
     if (ref) { const s = SIDES.reduce((a, b) => norme(ref[a]) >= norme(ref[b]) ? a : b); l.micAxe = Math.abs(ref[s][1]) >= Math.abs(ref[s][2]) ? 'lateral' : 'vertical'; }
     if (l.etat === 'calcule') {
       const a = c.ariane;
@@ -405,7 +416,7 @@ function lignes({ cas, table, designation }) {
         /* Mesures de la règle, celles du lecteur de la passe de relecture (src/relecture-critere.js) : écart = le plus grand |latéral| ou
          * |vertical| des deux rails ; voie = le plus grand |latéral| ; cohérence = différence des deux rails en latéral et en vertical. */
         const P = p.rails;
-        l.var[k] = { stage: p.stage, d: max3d(P), e: ref ? Math.max(...SIDES.map(s => norme(moins(P[s], ref[s])))) : null,
+        l.var[k] = { stage: p.stage, appuis: p.appuis, d: max3d(P), e: ref ? Math.max(...SIDES.map(s => norme(moins(P[s], ref[s])))) : null,
           pire: Math.max(...SIDES.flatMap(s => [Math.abs(P[s][1]), Math.abs(P[s][2])])), latMax: Math.max(...SIDES.map(s => Math.abs(P[s][1]))),
           coh: Math.max(Math.abs(P.left[1] - P.right[1]), Math.abs(P.left[2] - P.right[2])),
           dg: fini(p.ecartementPoseMm) && fini(gMed) ? Math.abs(p.ecartementPoseMm - gMed) : null };
@@ -430,19 +441,28 @@ function issue(l, v, agitIci) {
  * voie), avec une confiance d'au moins Y sur les deux rails (absente : refus), des rails cohérents (différence des deux rails ≤ C mm en latéral
  * et en vertical), un écartement à G mm au plus de la médiane de la partie, une étape de décision permise, jamais sur un cut différé par le
  * lot, et sur un cut posé par le lot seulement si `poses`. Sinon elle laisse le cut tel quel. Mêmes conditions que src/relecture-critere.js. */
-function agit(l, R) {
+/* `differes` : false (jamais un différé), ou les réglages de src/differes-en-chaine.js (option COUPÉE par défaut, `--differes-en-chaine`) :
+ * un différé posé en chaîne avec au moins un appui est admis, et jugé sans les limites D et G des verts ; posé seul, il reste exclu. */
+/* `refus` : la première condition qui retient Ariane (null : elle agit). `agit` en est la forme booléenne. */
+function refus(l, R) {
   const v = l.var && l.var[R.variante];
-  if (!v || v.d == null) return false;
-  if (R.stages && !R.stages.includes(v.stage)) return false;
-  if (R.differes === false && l.genre === 'differe') return false;
-  if (R.poses === false && l.genre === 'pose') return false;
-  if (!(v.pire >= R.X)) return false;
-  if (R.D != null && !(v.latMax <= R.D)) return false;
-  if (!(l.conf >= R.Y)) return false;
-  if (R.C != null && !(v.coh <= R.C)) return false;
-  if (R.G != null && !(v.dg != null && v.dg <= R.G)) return false;
-  return true;
+  if (!v || v.d == null) return 'abstention';
+  if (R.stages && !R.stages.includes(v.stage)) return 'etape';
+  let leve = null;
+  if (l.genre === 'differe' && R.differes === false) return 'differe';
+  if (l.genre === 'differe' && R.differes && typeof R.differes === 'object') {
+    leve = DC.admet({ genre: l.genre, variante: R.variante, etage: v.stage, appuis: v.appuis }, R.differes);
+    if (!leve.admis) return 'differe-' + leve.regle;
+  }
+  if (R.poses === false && l.genre === 'pose') return 'pose';
+  if (!(v.pire >= R.X)) return 'X';
+  if (R.D != null && !(leve && leve.sansVoie) && !(v.latMax <= R.D)) return 'D';
+  if (!(l.conf >= R.Y)) return 'Y';
+  if (R.C != null && !(v.coh <= R.C)) return 'C';
+  if (R.G != null && !(leve && leve.sansEcartement) && !(v.dg != null && v.dg <= R.G)) return 'G';
+  return null;
 }
+const agit = (l, R) => refus(l, R) === null;
 /* Bilan sur les cuts jugeables (référence de Mic et nuage) : R une règle, une fonction ligne → règle (variante par type), ou { tout, variante }. */
 function bilan(ls, R) {
   const b = { visites: 0, micSup5: 0, micSup10: 0, agit: 0, reproduit5: 0, reproduit10: 0, corrigesJustes: 0, confirme: 0, gris: 0, abime: 0, aggrave: 0,
@@ -473,6 +493,10 @@ const additionner = bs => { const o = bilan([], {}); delete o.partDegats; for (c
 const GRILLE = Object.freeze({ variante: VARIANTES, X: [3, 4, 5, 6, 8, 10, 12, 15, 20], Y: [0, 30, 50, 60, 65, 70, 75, 80], D: [60, 45, 30], C: [100, 10, 6], G: [100, 15, 10, 6],
   stages: [null, ['first-pass'], ['first-pass', 'crossing']], differes: [false], poses: [true, false] });
 const CONTRAINTE = Object.freeze({ mauvaiseVoieMax: 0, degatsPartMax: 0.01 });
+/* Option « différés en chaîne » (hypothèse H1, src/differes-en-chaine.js) : la grille ajoute aux différés exclus deux façons de les admettre
+ * en chaîne (1 ou 2 appuis au moins). La validation croisée choisit ; à gain égal, la règle qui n'en touche aucun. */
+const grilleDifferesEnChaine = (g = GRILLE) => ({ ...g, differes: [false, DC.reglages({ actif: true, appuisMin: 1 }), DC.reglages({ actif: true, appuisMin: 2 })] });
+const prudenceDifferes = R => !R.differes ? 99 : R.differes.actif === true ? R.differes.appuisMin : 0;
 function regles(g = GRILLE) {
   const out = [];
   for (const variante of g.variante) for (const X of g.X) for (const Y of g.Y) for (const G of g.G || [null]) for (const D of g.D) for (const C of g.C || [null]) for (const stages of g.stages) for (const differes of g.differes) for (const poses of g.poses || [true])
@@ -490,7 +514,7 @@ function choisir(ls, { grille = GRILLE, contrainte = CONTRAINTE, parPartie = nul
     if (b.mauvaiseVoie > contrainte.mauvaiseVoieMax || b.partDegats > contrainte.degatsPartMax + 1e-12) continue;
     if (parPartie && parPartie.some(lp => { const bp = bilan(lp, R); return bp.mauvaiseVoie > contrainte.mauvaiseVoieMax || (degatsParPartie && bp.partDegats > contrainte.degatsPartMax + 1e-12); })) continue;
     /* Objectif « net » (retenu) : une correction juste moins un dégât ; « justes » : les corrections justes seules (à la lettre). */
-    const cle = [objectif === 'net' ? b.corrigesJustes - b.degats : b.corrigesJustes, -b.degats, R.poses === false ? 1 : 0, R.X, R.Y, -(R.D ?? 999), -(R.C ?? 999), -(R.G ?? 999)];
+    const cle = [objectif === 'net' ? b.corrigesJustes - b.degats : b.corrigesJustes, -b.degats, prudenceDifferes(R), R.poses === false ? 1 : 0, R.X, R.Y, -(R.D ?? 999), -(R.C ?? 999), -(R.G ?? 999)];
     if (!best || plusGrand(cle, best.cle)) best = { R, b, cle };
   }
   return best;
@@ -546,6 +570,31 @@ function cout(r) {
     minutesMic: r1(verts * TEMPS.micParVertS / 60), minutesAriane: TEMPS.arianeCycleS.map(s => r1(verts * s / 60)), minutesArianeAvecRevisites: TEMPS.arianeCycleS.map(s => r1(visites * s / 60)),
     minutesArianeParType: Object.fromEntries(TYPES.map(k => [k, TEMPS.arianeCycleS.map(s => r1(S.verts[k] * s / 60))])) };
 }
+/* Bilans de la règle de service `Rs` sur les lignes d'une partie : toutes zones, verts par type de zone, tous genres par type de zone, par
+ * genre, dans les grappes (cuts d'une grappe avec sa marge), et le détail des cuts différés posés par la chaîne. */
+function bilansService(ls, Rs) {
+  const b = f => Rs ? bilan(ls.filter(f), Rs) : null;
+  return { bilanSobre: Rs ? bilan(ls, Rs) : null,
+    parTypeVertSobre: Object.fromEntries(TYPES.map(k => [k, b(l => l.zone === k && l.genre === 'vert')])),
+    parTypeSobre: Object.fromEntries([...TYPES, 'hors'].map(k => [k, b(l => l.zone === k)])),
+    genreSobre: Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, b(l => l.genre === k)])),
+    grappeSobre: b(l => l.grappe), differesSobre: Rs ? detailDifferes(ls, Rs) : [] };
+}
+/* Les cuts DIFFÉRÉS par le lot que la variante de la règle pose (jugeables : référence de Mic et nuage) : étape, appuis, correction de Mic,
+ * déplacement d'Ariane depuis la pose d'ESV (plus grand rail, 3D, et plus grand |latéral|), écart à Mic, action ou raison du refus, issue.
+ * Numéros de cut et millimètres seulement. */
+function detailDifferes(ls, R) {
+  const out = [];
+  for (const l of ls) {
+    if (l.genre !== 'differe' || !l.ref || l.etat !== 'calcule') continue;
+    const v = l.var[R.variante];
+    if (!v || v.d == null) continue;
+    const pourquoi = refus(l, R);
+    out.push({ cut: l.cut, zone: l.zone, grappe: !!l.grappe, etape: v.stage, appuis: v.appuis ?? null, mic: r1(l.mic), deplacement: r1(v.d), lateral: r1(v.latMax),
+      ecart: r1(v.e), agit: pourquoi === null, refus: pourquoi, issue: issue(l, v, pourquoi === null) });
+  }
+  return out;
+}
 /* `parties` : [{ designation, cas, table, skip? }] (parties d'apprentissage). */
 function etudier(parties, { grille = GRILLE } = {}) {
   const res = parties.map(p => ({ ...p, ...lignes(p) }));
@@ -558,8 +607,8 @@ function etudier(parties, { grille = GRILLE } = {}) {
     const genre = Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, best ? bilan(sel[i].filter(l => l.genre === k), best.R) : null]));
     const parTypeVert = Object.fromEntries(TYPES.map(k => [k, best ? bilan(sel[i].filter(l => l.zone === k && l.genre === 'vert'), best.R) : null]));
     const Rs = best ? sobre(best.R, train.flat(), { grille, parPartie: train }) : null;
-    const parTypeVertSobre = Object.fromEntries(TYPES.map(k => [k, Rs ? bilan(sel[i].filter(l => l.zone === k && l.genre === 'vert'), Rs) : null]));
-    return { partie: r.designation, regle: best ? best.R : null, bilan: best ? bilan(sel[i], best.R) : null, parType, parTypeVert, genre, regleSobre: Rs, bilanSobre: Rs ? bilan(sel[i], Rs) : null, parTypeVertSobre };
+    const grappe = best ? bilan(sel[i].filter(l => l.grappe), best.R) : null;
+    return { partie: r.designation, regle: best ? best.R : null, bilan: best ? bilan(sel[i], best.R) : null, parType, parTypeVert, genre, regleSobre: Rs, grappe, ...bilansService(sel[i], Rs) };
   });
   const fige = choisir(sel.flat(), { grille, parPartie: sel });
   const croiseeLettre = res.map((r, i) => { const train = sel.filter((_, j) => j !== i), best = choisir(train.flat(), { grille, parPartie: train, objectif: 'justes' });
@@ -574,6 +623,9 @@ function etudier(parties, { grille = GRILLE } = {}) {
     parTypeVertCroisee: Object.fromEntries([...TYPES].map(k => [k, additionner(croisee.filter(c => c.parTypeVert[k]).map(c => c.parTypeVert[k]))])),
     parTypeVertCroiseeSobre: Object.fromEntries([...TYPES].map(k => [k, additionner(croisee.filter(c => c.parTypeVertSobre[k]).map(c => c.parTypeVertSobre[k]))])),
     parGenreCroisee: Object.fromEntries(['vert', 'pose'].map(k => [k, additionner(croisee.filter(c => c.genre[k]).map(c => c.genre[k]))])),
+    parTypeCroiseeSobre: Object.fromEntries([...TYPES, 'hors'].map(k => [k, additionner(croisee.filter(c => c.parTypeSobre[k]).map(c => c.parTypeSobre[k]))])),
+    parGenreCroiseeSobre: Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, additionner(croisee.filter(c => c.genreSobre[k]).map(c => c.genreSobre[k]))])),
+    grappeCroisee: additionner(croisee.filter(c => c.grappe).map(c => c.grappe)), grappeCroiseeSobre: additionner(croisee.filter(c => c.grappeSobre).map(c => c.grappeSobre)),
     fige: fige ? { regle: fige.R, bilan: fige.b, parPartie: res.map((r, i) => ({ partie: r.designation, ...bilan(sel[i], fige.R) })) } : null,
     croiseeLettre, totalCroiseeLettre: additionner(croiseeLettre.filter(c => c.bilan).map(c => c.bilan)),
     totalCroiseeSobre: additionner(croisee.filter(c => c.bilanSobre).map(c => c.bilanSobre)),
@@ -640,7 +692,10 @@ function reglagesProposes(etude, { date }) {
     coherence: { diffLateraleMaxMm: R.C ?? 100, diffVerticaleMaxMm: R.C ?? 100, ecartementMaxMm: R.G ?? 100 },
     zones: Object.fromEntries(TYPES.map(k => [ZONE_LECTEUR[k], { corriger: decisions[k].action === 'agir', seuilMm: R.X, confianceMin: R.Y }])),
     variante: { proposition: R.variante, sens: 'chaine : la décision du lot avec pour appuis les poses qu\'Ariane vient de donner aux cuts précédents de la relecture ; seul : le cut seul ; +h : hauteur apprise ajoutée à la pose' },
+    /* `jamais` reste entier : un lecteur qui ignore le bloc `differesEnChaine` (src/relecture-critere.js de la relecture en ombre) garde
+     * les différés exclus. Le bloc porte l'exception, pour un lecteur qui le connaît. */
     jamais: ['cut différé par le lot', 'cut posé par le lot'],
+    ...(R.differes && R.differes.actif ? { differesEnChaine: { ...R.differes, sens: 'exception à « jamais un cut différé » : un cut différé par le lot est admis si sa pose vient de la chaîne avec au moins appuisMin appuis (src/differes-en-chaine.js) ; jugé sans les limites de voie et d\'écartement des verts' } } : {}),
     origine: { outil: 'tools/relecture-autonome.cjs etudier', fiche: 'fiches/RELECTURE_AUTONOME.md', parties: etude.parties,
       procedure: 'validation croisée par partie (une partie laissée de côté, réglage sur les autres, mesure sur elle), puis règle figée sur les six parties d\'apprentissage ; aucune partie réservée lue pour régler',
       objectif: 'le plus de corrections justes (correction de Mic > 10 mm, pose d\'Ariane à 10 mm près de celle de Mic), nettes des cuts abîmés',
@@ -659,7 +714,9 @@ function reglagesProposes(etude, { date }) {
 function regleDuReglage(g) {
   const z = g.zones || {}, une = z.pn || Object.values(z)[0] || {}, et = Array.isArray(g.etagesPermis) && !ETAPES_TOUTES.every(e => g.etagesPermis.includes(e)) ? g.etagesPermis : null;
   const base = { variante: g.variante && g.variante.proposition || 'chaine+h', X: une.seuilMm, Y: une.confianceMin ?? 0, D: g.voie && g.voie.lateralMaxMm,
-    C: g.coherence ? g.coherence.diffLateraleMaxMm : null, G: g.coherence ? g.coherence.ecartementMaxMm : null, stages: et, differes: false, poses: !(g.jamais || []).includes('cut posé par le lot') };
+    C: g.coherence ? g.coherence.diffLateraleMaxMm : null, G: g.coherence ? g.coherence.ecartementMaxMm : null, stages: et,
+    /* Bloc `differesEnChaine` (src/differes-en-chaine.js) : absent ou coupé, jamais un différé. */
+    differes: g.differesEnChaine && g.differesEnChaine.actif === true ? DC.reglages(g.differesEnChaine) : false, poses: !(g.jamais || []).includes('cut posé par le lot') };
   return { regle: base, parType: g.varianteParZone && g.varianteParZone.regles || null,
     actifs: TYPES.filter(k => z[ZONE_LECTEUR[k]] && z[ZONE_LECTEUR[k]].corriger === true),
     procedure: g.regleProcedure ? { ...base, X: g.regleProcedure.seuilMm } : null };
@@ -667,7 +724,7 @@ function regleDuReglage(g) {
 
 /* ------------------------------------------------------------------ texte */
 const pc = (a, b) => b ? `${Math.round(1000 * a / b) / 10} %` : '—';
-const decrire = R => !R ? 'aucune' : `${R.variante}, écart ≥ ${R.X} mm${R.D != null ? `, rail déplacé de ${R.D} mm au plus en travers` : ''}${R.Y > 0 ? `, confiance ≥ ${R.Y}` : ', confiance présente'}${R.C != null && R.C < 100 ? `, rails cohérents à ${R.C} mm` : ''}${R.G != null && R.G < 100 ? `, écartement à ${R.G} mm de la médiane` : ''}${R.stages ? `, étapes ${R.stages.join('/')}` : ''}${R.differes === false ? ', jamais sur un différé' : ''}${R.poses === false ? ', jamais sur un cut posé par le lot' : ''}`;
+const decrire = R => !R ? 'aucune' : `${R.variante}, écart ≥ ${R.X} mm${R.D != null ? `, rail déplacé de ${R.D} mm au plus en travers` : ''}${R.Y > 0 ? `, confiance ≥ ${R.Y}` : ', confiance présente'}${R.C != null && R.C < 100 ? `, rails cohérents à ${R.C} mm` : ''}${R.G != null && R.G < 100 ? `, écartement à ${R.G} mm de la médiane` : ''}${R.stages ? `, étapes ${R.stages.join('/')}` : ''}${R.differes === false ? ', jamais sur un différé' : R.differes && R.differes.actif ? `, différés en chaîne (${R.differes.appuisMin} appui${R.differes.appuisMin > 1 ? 's' : ''} au moins, sans limites D et G)` : ''}${R.poses === false ? ', jamais sur un cut posé par le lot' : ''}`;
 const ligneBilan = b => `${b.visites} | ${b.micSup10} | ${b.agit} | ${b.reproduit5} | ${b.reproduit10} | ${b.corrigesJustes} | ${b.abime + b.aggrave} | ${b.mauvaiseVoie} | ${b.abstention} | ${b.laisseFaux}`;
 const ENTETE_BILAN = 'visités mesurables | Mic > 10 mm | agit | reproduit ≤ 5 | reproduit ≤ 10 | corrections justes | abîmés | mauvaise voie | abstentions | laissés faux';
 function texte(o) {
@@ -684,6 +741,12 @@ function texte(o) {
     L.push('', `Règle figée : ${decrire(o.fige && o.fige.regle)}`, o.fige ? `- en échantillon : ${ligneBilan(o.fige.bilan)}` : '');
     L.push('', `Objectif à la lettre (corrections justes seules), validation croisée : ${ligneBilan(o.totalCroiseeLettre)}`);
     if (o.figeSobre) { L.push('', `Règle de service (variante sobre) : ${decrire(o.figeSobre.regle)}`, `- validation croisée : ${ligneBilan(o.totalCroiseeSobre)}`); for (const c of o.croisee) if (c.bilanSobre) L.push(`  - ${c.partie} (X ${c.regleSobre.X}) : ${ligneBilan(c.bilanSobre)}`); }
+    if (o.parTypeCroiseeSobre) {
+      L.push('', '## Règle de service, tous genres (validation croisée)', '', `Groupe | ${ENTETE_BILAN} | erreurs > 10 mm`, '---' + '|--:'.repeat(11));
+      for (const k of [...TYPES, 'hors']) L.push(`${k} | ${ligneBilan(o.parTypeCroiseeSobre[k])} | ${o.parTypeCroiseeSobre[k].erreurs10}`);
+      for (const k of ['vert', 'pose', 'differe']) L.push(`${k} | ${ligneBilan(o.parGenreCroiseeSobre[k])} | ${o.parGenreCroiseeSobre[k].erreurs10}`);
+      L.push(`grappes | ${ligneBilan(o.grappeCroiseeSobre)} | ${o.grappeCroiseeSobre.erreurs10}`);
+    }
     L.push('', '## Variante par type (validation croisée)'); for (const c of o.croiseeType) L.push(`- ${c.partie} : ${ligneBilan(c.bilan)}`); L.push(`- total : ${ligneBilan(o.totalCroiseeType)}`);
     L.push('', '## Courbe (règle figée, X variable, en échantillon)', '', 'X | agit | corrections justes | reproduit ≤ 10 | dégâts | mauvaise voie | erreurs > 10 mm', '--:|--:|--:|--:|--:|--:|--:');
     for (const c of o.courbe) L.push(`${c.X} | ${c.agit} | ${c.corrigesJustes} | ${c.reproduit10} | ${c.degats} | ${c.mauvaiseVoie} | ${c.erreurs10}`);
@@ -700,6 +763,77 @@ function texte(o) {
       L.push(`- total : ${ligneBilan(o.totalProcedure)} ; erreur ${pc(o.totalProcedure.erreurs10, o.totalProcedure.agit)} (≤ ${o.wilsonErreurProcedure.haut == null ? '—' : Math.round(1000 * o.wilsonErreurProcedure.haut) / 10 + ' %'})`); }
   }
   return L.join('\n');
+}
+
+/* ------------------------------------------------------------------ comparaison de deux études */
+/* Deux sorties `etudier --json` des mêmes parties (ex. référence et `--differes-en-chaine`) : par partie (validation croisée, règle de
+ * service apprise sans elle) et par groupe (type de zone, genre, grappes, toutes zones), actions / justes / abîmés / erreurs > 10 mm /
+ * mauvaise voie / abstentions, et l'écart des justes, des abîmés et du gain net. Rien n'est recalculé : les bilans sont lus tels quels. */
+const GROUPES_COMPARES = Object.freeze([...TYPES.map(k => ['zone ' + (ZONE_LECTEUR[k] || k), c => c.parTypeSobre && c.parTypeSobre[k]]),
+  ['verts de PN', c => c.parTypeVertSobre && c.parTypeVertSobre.pn],
+  ...['vert', 'pose', 'differe'].map(k => ['genre ' + k, c => c.genreSobre && c.genreSobre[k]]), ['grappes', c => c.grappeSobre], ['toutes zones', c => c.bilanSobre]]);
+function comparer(ref, essai) {
+  if (!ref || !essai || ref.format !== FORMAT_ETUDE || ![FORMAT_ETUDE, FORMAT_GREFFE].includes(essai.format)) throw Error('deux sorties d\'etudier (ou une étude et une greffe) attendues');
+  if (JSON.stringify(ref.parties) !== JSON.stringify(essai.parties)) throw Error('études de parties différentes');
+  const lignesC = [], totaux = {};
+  ref.parties.forEach((p, i) => {
+    for (const [g, lire] of GROUPES_COMPARES) {
+      const a = lire(ref.croisee[i]), b = lire(essai.croisee[i]);
+      if (!a || !b) throw Error(`partie ${p} : bilan « ${g} » absent (étude d'une version sans ce bilan)`);
+      lignesC.push({ partie: p, groupe: g, ref: a, essai: b });
+      (totaux[g] = totaux[g] || { ref: [], essai: [] }).ref.push(a); totaux[g].essai.push(b);
+    }
+  });
+  const ecart = (a, b) => ({ justes: b.corrigesJustes - a.corrigesJustes, abimes: (b.abime + b.aggrave) - (a.abime + a.aggrave), erreurs: b.erreurs10 - a.erreurs10,
+    mauvaiseVoie: b.mauvaiseVoie - a.mauvaiseVoie, net: (b.corrigesJustes - b.degats) - (a.corrigesJustes - a.degats) });
+  const total = Object.entries(totaux).map(([g, t]) => { const a = additionner(t.ref), b = additionner(t.essai); return { groupe: g, ref: a, essai: b, ecart: ecart(a, b) }; });
+  return { parties: ref.parties, regles: ref.parties.map((p, i) => ({ partie: p, ref: ref.croisee[i].regleSobre, essai: essai.croisee[i].regleSobre })),
+    lignes: lignesC.map(l => ({ ...l, ecart: ecart(l.ref, l.essai) })), total };
+}
+function texteComparaison(c) {
+  const cel = b => `${b.visites} : ${b.agit} / ${b.corrigesJustes} / ${b.abime + b.aggrave} / ${b.erreurs10} / ${b.mauvaiseVoie} / ${b.abstention} / ${b.laisseFaux}`;
+  const L = ['Cellule : visités : actions / justes / abîmés / erreurs > 10 mm / mauvaise voie / abstentions / laissés faux (validation croisée, règle de service apprise sans la partie)', ''];
+  for (const r of c.regles) L.push(`- ${r.partie} : référence ${decrire(r.ref)} ; essai ${decrire(r.essai)}`);
+  L.push('', 'Partie | groupe | référence | essai | Δ justes | Δ abîmés | Δ erreurs | Δ mauvaise voie | Δ net', '---|---|---|---|--:|--:|--:|--:|--:');
+  for (const l of [...c.lignes, ...c.total.map(t => ({ ...t, partie: 'total' }))]) if (l.ref.visites || l.essai.visites)
+    L.push(`${l.partie} | ${l.groupe} | ${cel(l.ref)} | ${cel(l.essai)} | ${l.ecart.justes} | ${l.ecart.abimes} | ${l.ecart.erreurs} | ${l.ecart.mauvaiseVoie} | ${l.ecart.net}`);
+  return L.join('\n');
+}
+/* Détail des différés posés par la chaîne, partie par partie (règle de service de chaque partie). `vueMm` : déplacement au-delà duquel la
+ * cible risque de sortir de la vue d'ESV (~200 mm ; le vrai critère est la caméra, non rejouée ici). */
+function texteDifferes(o, { vueMm = 200 } = {}) {
+  const L = ['Partie | cut | zone | grappe | étape | appuis | Mic (mm) | déplacement d\'Ariane (mm, 3D ; latéral) | écart à Mic (mm) | action | issue', '---|--:|---|---|---|--:|--:|---|--:|---|---'];
+  let n = 0, loin = 0;
+  for (const c of o.croisee) for (const d of c.differesSobre || []) {
+    L.push(`${c.partie} | ${d.cut} | ${ZONE_LECTEUR[d.zone] || d.zone} | ${d.grappe ? 'oui' : 'non'} | ${d.etape} | ${d.appuis ?? '?'} | ${d.mic} | ${d.deplacement} ; ${d.lateral} | ${d.ecart} | ${d.agit ? 'agit' : 'refus ' + d.refus} | ${d.issue}`);
+    if (d.agit) { n++; if (d.deplacement > vueMm) loin++; }
+  }
+  L.push('', `Différés sur lesquels Ariane agit : ${n}, dont ${loin} à plus de ${vueMm} mm de la pose d'ESV (cible peut-être hors de la vue, D-156 : non rejoué).`);
+  return L.join('\n');
+}
+
+/* ------------------------------------------------------------------ greffe : l'hypothèse à la lettre */
+/* GREFFE. Pour chaque partie, la règle de service apprise SANS elle dans une étude de référence (sortie `etudier --json` SANS l'option),
+ * à laquelle on ajoute la seule condition des différés en chaîne (src/differes-en-chaine.js, appuis au moins `appuisMin`, fixé par
+ * l'hypothèse : rien n'est appris ici), mesurée sur la partie laissée de côté. Les verts et les cuts posés sont jugés comme dans la
+ * référence. Mêmes bilans que la validation croisée d'`etudier` : `comparer` les lit. */
+const FORMAT_GREFFE = 'ariane-relecture-autonome-greffe-v1';
+function greffer(parties, ref, cfg = { appuisMin: 1 }) {
+  if (!ref || ref.format !== FORMAT_ETUDE || !Array.isArray(ref.croisee)) throw Error('greffe : une sortie d\'etudier attendue en référence');
+  if (JSON.stringify(ref.parties) !== JSON.stringify(parties.map(p => p.designation))) throw Error('études de parties différentes');
+  const D = DC.reglages({ ...cfg, actif: true });
+  const res = parties.map(p => ({ ...p, ...lignes(p) })), sel = res.map(dansSelection);
+  const croisee = res.map((r, i) => {
+    const R0 = ref.croisee[i].regleSobre;
+    if (R0 && R0.differes !== false) throw Error(`greffe : la règle de référence de ${r.designation} admet déjà des différés`);
+    const Rs = R0 ? { ...R0, differes: D } : null;
+    return { partie: r.designation, regleSobre: Rs, ...bilansService(sel[i], Rs) };
+  });
+  const somme = f => additionner(croisee.map(f).filter(Boolean));
+  return { format: FORMAT_GREFFE, parties: res.map(r => r.designation), differesEnChaine: D, croisee, totalCroiseeSobre: somme(c => c.bilanSobre),
+    parTypeCroiseeSobre: Object.fromEntries([...TYPES, 'hors'].map(k => [k, somme(c => c.parTypeSobre[k])])),
+    parTypeVertCroiseeSobre: Object.fromEntries(TYPES.map(k => [k, somme(c => c.parTypeVertSobre[k])])),
+    parGenreCroiseeSobre: Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, somme(c => c.genreSobre[k])])), grappeCroiseeSobre: somme(c => c.grappeSobre) };
 }
 
 /* ------------------------------------------------------------------ essai synthétique */
@@ -724,7 +858,8 @@ function essai() {
 module.exports = { FORMAT, FORMAT_ETUDE, FORMAT_JUGEMENT, FORMAT_REGLAGES, decalage, referenceHumaine, vuEcrit, poseAriane, extraire, chunksDesVisites, chunkComplet,
   releverSkip, verdictSkip, bilanSkip, fusionner, zonesDepuisCas, construireTable, SELECTION, TYPES, selection, listeAControler, VARIANTES, proposition, lignes,
   SEUILS, issue, agit, bilan, additionner, GRILLE, CONTRAINTE, regles, choisir, choisirParType, regleParType, PART_SOBRE, sobre, wilson, TEMPS, couverture, cout, etudier, PORTE, juger,
-  CRITERES_TYPE, decisionType, reglagesProposes, regleDuReglage, texte, essai, max3d };
+  CRITERES_TYPE, decisionType, reglagesProposes, regleDuReglage, texte, essai, max3d, grilleDifferesEnChaine, comparer, texteComparaison,
+  refus, bilansService, detailDifferes, texteDifferes, FORMAT_GREFFE, greffer };
 
 /* ------------------------------------------------------------------ ligne de commande */
 const lireJsonl = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
@@ -740,6 +875,9 @@ function args(argv) {
     else if (k === '--table') courante().table = val(); else if (k === '--skip') courante().skip = val();
     else if (k === '--json') o.json = val(); else if (k === '--reglages') o.reglages = val(); else if (k === '--date') o.date = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
+    else if (k === '--differes-en-chaine') o.differesEnChaine = true;
+    else if (k === '--ref') o.ref = val(); else if (k === '--essai') o.essai = val();
+    else if (k === '--appuis-min') { o.appuisMin = Number(val()); if (!Number.isInteger(o.appuisMin) || o.appuisMin < 1) throw Error('--appuis-min : entier ≥ 1'); }
     else throw Error('argument inconnu : ' + k);
   }
   return o;
@@ -777,18 +915,27 @@ if (require.main === module) {
       fs.writeFileSync(a.sortie, JSON.stringify(t));
       console.log(`partie ${a.projet}:${a.partie} : lot ${t.lot.length} (${t.lot.filter(x => x.differe).length} différés), PN ${t.zonesPN.length}, ADV ${t.zonesADV.length}, ${t.cuts.length} cuts à l'Écho`);
     } else if (a.mode === 'etudier') {
-      const o = etudier(chargerParties(a, 'relecture-autonome'));
+      const o = etudier(chargerParties(a, 'relecture-autonome'), a.differesEnChaine ? { grille: grilleDifferesEnChaine() } : {});
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(o, null, 1));
       if (a.reglages) fs.writeFileSync(a.reglages, JSON.stringify(reglagesProposes(o, { date: a.date || new Date().toISOString().slice(0, 10) }), null, 2) + '\n');
       console.log(texte(o));
+      if (a.differesEnChaine) console.log('\n## Différés posés par la chaîne (règle de service de chaque partie)\n\n' + texteDifferes(o));
     } else if (a.mode === 'juger') {
       if (!a.reglages) throw Error('juger --reglages datasets/relecture-reglages-proposes.json --partie P:N --cas … --table … [--juger-partie-reservee]');
       const o = juger(chargerParties(a, 'relecture-autonome (jugement)'), regleDuReglage(JSON.parse(fs.readFileSync(a.reglages, 'utf8'))));
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(o, null, 1));
       console.log(texte(o));
+    } else if (a.mode === 'comparer') {
+      if (!a.ref || !a.essai) throw Error('comparer --ref ETUDE.json --essai ETUDE.json');
+      console.log(texteComparaison(comparer(JSON.parse(fs.readFileSync(a.ref, 'utf8')), JSON.parse(fs.readFileSync(a.essai, 'utf8')))));
+    } else if (a.mode === 'greffer') {
+      if (!a.ref) throw Error('greffer --ref ETUDE.json (etudier sans l\'option) --partie P:N --cas … --table … [--partie …] [--appuis-min 1] [--json G.json]');
+      const ref = JSON.parse(fs.readFileSync(a.ref, 'utf8')), g = greffer(chargerParties(a, 'relecture-autonome'), ref, { appuisMin: a.appuisMin ?? 1 });
+      if (a.json) fs.writeFileSync(a.json, JSON.stringify(g, null, 1));
+      console.log(texteComparaison(comparer(ref, g)) + '\n\n## Différés posés par la chaîne (règle de service de chaque partie, greffée)\n\n' + texteDifferes(g));
     } else if (a.mode === 'essai') {
       const { cas, table } = essai(), o = etudier([{ designation: '9:1', cas, table }, { designation: '9:2', cas, table }]);
       console.log(texte(o));
-    } else throw Error('mode : extraire | skip | table | etudier | juger | essai');
+    } else throw Error('mode : extraire | skip | table | etudier | juger | comparer | greffer | essai');
   } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
