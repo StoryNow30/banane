@@ -2334,3 +2334,24 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - le gain vient surtout de la partie 17, en 4.9.0.
   - Avant toute activation, il faut régler : l'appui mémorisé non corrigé, le calcul de `faux-vert-ombre` sur la pose non corrigée, et la marge de vue de 2 mm.
 - Porte B du cahier v1.1, à juger sur des parties neuves.
+
+## D-162 — Liste des verts à contrôler : 3 erreurs sur 4 en 5 fois moins de relecture ; test 5 lancée (17 octobre 2026)
+
+- Livré sur `claude/50-verts-a-controler` (2de2d30 à 2878e86), intégré à `claude/50-base` (0f96f17). verify complet sur une machine calme : **2 047 réussis, 0 échec**, moteur conforme.
+- **Le calcul se fait en fin de lot.** La liste s'affiche dans le panneau, groupée par plages (« grappe 268–278 », « PN 1656–1663 »), avec le temps estimé, et elle est jointe à l'export (`ariane-verts-a-controler-partieN-….json`). **Aucune action dans ESV.** Elle est active par défaut ; le réglage `vertsAControler` la coupe.
+- **Le classement** combine l'écart d'écartement à la médiane de la partie, le saut de hauteur par rapport aux voisins, les rouges proches et les différés voisins.
+- **Rejeu** :
+
+  | Partie | À contrôler | Verts relus par Mic | Erreurs de plus de 10 mm trouvées | Temps |
+  |---|---|---|---|---|
+  | 29 | 121 | 584 | 63 sur 83 (76 %), dont 38 des 39 gros écarts | 7,5 min au lieu de 36 |
+  | Partie 1 du second projet | 77 | 275 | 27 sur 35 | 4,8 min au lieu de 23 |
+  | 17 (4.9.0) | — | — | 53 % seulement | — |
+
+  En validation croisée du seuil, 77 % des erreurs sont trouvées en relisant 25 à 32 % des verts.
+- **Limites** :
+  - toutes les parties ont servi à apprendre les poids ;
+  - la liste réelle sera plus longue (estimation pessimiste en partie 29 : 154 verts, soit 9,5 minutes) ;
+  - il faut que la liste ESV ait été chargée en entier ;
+  - les ADV restent invisibles.
+- **Test 5 lancée** depuis `claude/50-base` (0f96f17), sur `claude/495-test-5`. Elle sera relue au niveau maximal avant d'être envoyée à Mic. Le mode rapide reste tel quel tant que Mic n'a pas tranché D-157.
