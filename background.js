@@ -951,7 +951,7 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const fin=b?.stoppedAtEnd;if(b)b.stoppedAtEnd=null;
  try{await engine.resume();}catch(e){if(engine.s.batch===b){if(bloque&&b.state==='PAUSED')b.state='PAUSED_ADAPTER_UNRESPONSIVE';b.stoppedAtEnd=fin;}throw e;}
  return true;}
-/* 4.9.5 test 5 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX DU PANNEAU POUR LE LOT. Deux choix, gardés dans
+/* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX DU PANNEAU POUR LE LOT. Deux choix, gardés dans
  * storage.local par le panneau (actions `choix-lot-etat`, `choix-lot`), lus au démarrage de chaque lot et figés dans son scope :
  *  - `clicHumain` : le clic de pose du mode rapide ('tel-quel' par défaut, 'gauche-recentre', 'tout-recentre'), envoyé à la page
  *    avec chaque `apply` du lot en cours quand il est corrigé (src/adapter-page.js, `options.clicHumain`) ;
@@ -970,7 +970,7 @@ const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{
  /* 5.0 (D-147) : le plan de geste de la commande du lot, seulement si le réglage `deplacerVue` est actif ; sinon l'appel d'avant. */
  const plan=deplacerVueReglage()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
- /* 4.9.5 test 5 (D-164) : le clic du mode rapide figé dans le lot en cours, transmis à la page seulement s'il est corrigé ; « Comme
+ /* 4.9.5 test 6 (D-164) : le clic du mode rapide figé dans le lot en cours, transmis à la page seulement s'il est corrigé ; « Comme
   * avant » (tel-quel) : l'appel d'avant, à l'octet près. */
  const clic=clicHumainDuLot(),optClic=clic?{clicHumain:clic}:null;
  if(plan){const identity=engine.s.before?.identity??null,ev={phase:'pose',identity:identity?{part:identity.part??null,cut:identity.cut??null}:null,batchId:engine.s.batch?.id??null};
@@ -1353,7 +1353,7 @@ async function observeLot(shadow){
  * position nouvelle, jamais un différé changé en pose. Mémoire volatile, par lot : un redémarrage du service worker la vide. */
 const reglesOmbre={mem:null,premier:true,capture:null,eval:null};
 const reglesReglage=()=>{const r=reglesDuLot(globalThis.BananeSettings?.reglesMetier);return r&&(r.ombre===true||r.actif===true)&&globalThis.BananeReglesMetier?r:null;};
-/* 4.9.5 test 5 (D-164) : lot créé avec l'interrupteur « grappe de différés » (scope.regleGrappeDifferes, figé au démarrage) : le
+/* 4.9.5 test 6 (D-164) : lot créé avec l'interrupteur « grappe de différés » (scope.regleGrappeDifferes, figé au démarrage) : le
  * chemin d'activation s'ouvre pour `grappe-differes` SEULEMENT ; les autres règles gardent leur réglage (coupées à la livraison). */
 function reglesDuLot(r){if(!r||engine?.s?.batch?.scope?.regleGrappeDifferes!==true)return r;
  return {...r,actif:true,regles:{...(r.regles||{}),'grappe-differes':true}};}
@@ -1837,7 +1837,7 @@ async function demarrerLot(args){
   /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
    * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
   startArgs.extensionVersion=VERSION;
-  /* 4.9.5 test 5 (D-164) : les choix du panneau pour le lot (clic du mode rapide, règle « grappe de différés »), lus ICI, au
+  /* 4.9.5 test 6 (D-164) : les choix du panneau pour le lot (clic du mode rapide, règle « grappe de différés »), lus ICI, au
    * démarrage, dans storage.local, et figés dans le scope : un changement pendant le lot n'attend que le lot suivant. Ce que le
    * panneau envoie dans `start` ne compte pas : seule la valeur gardée fait foi. Consignés par `batch-started` et l'export.
    * Au défaut (« Comme avant », règle coupée), le scope n'en porte rien : il est celui d'avant, à l'octet près (il voyage jusqu'à
@@ -1873,7 +1873,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   return {refus,reprenable:EC?EC.reprenable(c):false,marqueur:EC?await EC.lire(chrome.storage.local):null,capture:refus===null?await captureOuverteAGarder():null};}
  if(action==='export-cache-clear')return viderCacheExport(args);
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
- /* 4.9.5 test 5 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
+ /* 4.9.5 test 6 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
  if(action==='choix-lot-etat')return choixDuLot();
  if(action==='choix-lot')return choixLot(args);
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
