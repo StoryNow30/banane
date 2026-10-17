@@ -250,6 +250,12 @@ select option:disabled{color:var(--text-3)}
 #tabs-note{margin:6px 0 0;font-size:12.5px}
 input[type=number]{font-family:var(--mono)}
 input[type=checkbox]{width:auto;height:auto;accent-color:var(--text)}
+/* 4.9.5 test 6 : choix pour le lot (clic du mode rapide, règle « grappe de différés »). */
+input[type=radio]{width:auto;height:auto;accent-color:var(--text)}
+fieldset.choix-lot{border:0;min-width:0;margin-inline:0}
+fieldset.choix-lot>legend{float:left;width:100%;padding:0;margin:0 0 2px}
+.choix-lot .interrupteur{margin-top:10px}
+.choix-lot .muted{margin:8px 0 0}
 .interrupteur{flex-direction:row;align-items:center;gap:8px;color:var(--text)}
 .interrupteur input{margin:0}
 details{margin:6px 0 0;border-top:1px solid var(--hair)}

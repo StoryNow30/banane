@@ -951,16 +951,34 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const fin=b?.stoppedAtEnd;if(b)b.stoppedAtEnd=null;
  try{await engine.resume();}catch(e){if(engine.s.batch===b){if(bloque&&b.state==='PAUSED')b.state='PAUSED_ADAPTER_UNRESPONSIVE';b.stoppedAtEnd=fin;}throw e;}
  return true;}
+/* 4.9.5 test 5 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX DU PANNEAU POUR LE LOT. Deux choix, gardés dans
+ * storage.local par le panneau (actions `choix-lot-etat`, `choix-lot`), lus au démarrage de chaque lot et figés dans son scope :
+ *  - `clicHumain` : le clic de pose du mode rapide ('tel-quel' par défaut, 'gauche-recentre', 'tout-recentre'), envoyé à la page
+ *    avec chaque `apply` du lot en cours quand il est corrigé (src/adapter-page.js, `options.clicHumain`) ;
+ *  - `regleGrappeDifferes` : la règle métier « grappe de différés » (COUPÉE par défaut) ; activée, elle ouvre le chemin d'activation
+ *    existant des règles métier pour CETTE règle seulement (voir `reglesDuLot`) : elle ne peut que différer un cut que le lot validait.
+ * Absent, illisible ou inconnu : le défaut. Hors d'un lot en cours (assisté, restauration), rien ne change. */
+const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
+async function choixDuLot(){let r={};try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES])||{};}catch{r={};}
+ return {clicHumain:MODES_CLIC_HUMAIN.includes(r[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r[CLE_GRAPPE_DIFFERES]===true};}
+async function choixLot(args){
+ if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
+ if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}
+ return choixDuLot();}
+function clicHumainDuLot(){const b=engine?.s?.batch,v=b?.state==='RUNNING'?b.scope?.clicHumain:null;return v==='gauche-recentre'||v==='tout-recentre'?v:null;}
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{
  /* 5.0 (D-147) : le plan de geste de la commande du lot, seulement si le réglage `deplacerVue` est actif ; sinon l'appel d'avant. */
  const plan=deplacerVueReglage()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
+ /* 4.9.5 test 5 (D-164) : le clic du mode rapide figé dans le lot en cours, transmis à la page seulement s'il est corrigé ; « Comme
+  * avant » (tel-quel) : l'appel d'avant, à l'octet près. */
+ const clic=clicHumainDuLot(),optClic=clic?{clicHumain:clic}:null;
  if(plan){const identity=engine.s.before?.identity??null,ev={phase:'pose',identity:identity?{part:identity.part??null,cut:identity.cut??null}:null,batchId:engine.s.batch?.id??null};
-  try{result=await applyInESV(...args,{deplacerVue:plan});}
+  try{result=await applyInESV(...args,{deplacerVue:plan,...optClic});}
   catch(e){await engine.event('deplacer-vue',{...ev,erreur:String(e?.message||e).slice(0,300)}).catch(()=>{});throw e;}
   const rapport=result&&typeof result==='object'?result.deplacerVue??null:null;if(rapport){result={...result};delete result.deplacerVue;}
   await engine.event('deplacer-vue',{...ev,cotes:(rapport?.cotes||[]).map(dvAmener),remise:rapport?.remise??null}).catch(()=>{});}
- else result=await applyInESV(...args);
+ else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
@@ -1334,7 +1352,11 @@ async function observeLot(shadow){
  * d'un cut que le lot allait VALIDER par deux abstentions GCV1 (`deferRails`, motif `regles-metier`) : le cut est différé. Jamais une
  * position nouvelle, jamais un différé changé en pose. Mémoire volatile, par lot : un redémarrage du service worker la vide. */
 const reglesOmbre={mem:null,premier:true,capture:null,eval:null};
-const reglesReglage=()=>{const r=globalThis.BananeSettings?.reglesMetier;return r&&(r.ombre===true||r.actif===true)&&globalThis.BananeReglesMetier?r:null;};
+const reglesReglage=()=>{const r=reglesDuLot(globalThis.BananeSettings?.reglesMetier);return r&&(r.ombre===true||r.actif===true)&&globalThis.BananeReglesMetier?r:null;};
+/* 4.9.5 test 5 (D-164) : lot créé avec l'interrupteur « grappe de différés » (scope.regleGrappeDifferes, figé au démarrage) : le
+ * chemin d'activation s'ouvre pour `grappe-differes` SEULEMENT ; les autres règles gardent leur réglage (coupées à la livraison). */
+function reglesDuLot(r){if(!r||engine?.s?.batch?.scope?.regleGrappeDifferes!==true)return r;
+ return {...r,actif:true,regles:{...(r.regles||{}),'grappe-differes':true}};}
 function reglesMemoire(){const b=engine?.s?.batch,M=globalThis.BananeReglesMetier;if(!b?.id||!M)return null;
  if(reglesOmbre.mem?.lotId!==b.id){reglesOmbre.mem=M.creerMemoire(b.id);reglesOmbre.premier=true;}return reglesOmbre.mem;}
 function reglesMetierCapture(identity,capture){try{reglesOmbre.capture=null;reglesOmbre.eval=null;if(!reglesReglage())return;
@@ -1815,6 +1837,13 @@ async function demarrerLot(args){
   /* 4.7.18 (relecture 4.7.16, I1) : la version qui CRÉE le lot, figée dans son
    * scope ; le rejeu la préfère à la version de l'export, qui peut être plus récente. */
   startArgs.extensionVersion=VERSION;
+  /* 4.9.5 test 5 (D-164) : les choix du panneau pour le lot (clic du mode rapide, règle « grappe de différés »), lus ICI, au
+   * démarrage, dans storage.local, et figés dans le scope : un changement pendant le lot n'attend que le lot suivant. Ce que le
+   * panneau envoie dans `start` ne compte pas : seule la valeur gardée fait foi. Consignés par `batch-started` et l'export.
+   * Au défaut (« Comme avant », règle coupée), le scope n'en porte rien : il est celui d'avant, à l'octet près (il voyage jusqu'à
+   * la page) ; un champ absent se lit comme le défaut. */
+  delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
+  {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
   /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
   delete startArgs.lotReprise;
@@ -1844,6 +1873,9 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   return {refus,reprenable:EC?EC.reprenable(c):false,marqueur:EC?await EC.lire(chrome.storage.local):null,capture:refus===null?await captureOuverteAGarder():null};}
  if(action==='export-cache-clear')return viderCacheExport(args);
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
+ /* 4.9.5 test 5 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
+ if(action==='choix-lot-etat')return choixDuLot();
+ if(action==='choix-lot')return choixLot(args);
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
  if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
   await chrome.storage.local.set({banane4Bandeau:bandeau.on});await syncLauncher();return {on:bandeau.on};}

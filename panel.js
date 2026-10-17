@@ -478,6 +478,32 @@
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
    bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
+ /* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX POUR LE LOT. Le clic du mode rapide et la règle métier
+  * « grappe de différés » sont gardés par le service worker (storage.local : `choix-lot-etat`, `choix-lot`), lus au démarrage de
+  * chaque lot et figés dans son scope. Un lot ouvert garde les siens : le panneau le dit quand ils diffèrent du choix, qui servira
+  * au lot suivant. Un champ absent du scope vaut le défaut (« Comme avant », règle coupée). */
+ const NOMS_CLIC={'tel-quel':'Comme avant','gauche-recentre':'Variante : rail gauche recentré','tout-recentre':'Tout recentré, comme un humain'};
+ const IDS_CLIC={'tel-quel':'clic-tel-quel','gauche-recentre':'clic-gauche-recentre','tout-recentre':'clic-tout-recentre'};
+ let choixLot=null;
+ const clicDuScope=sc=>NOMS_CLIC[sc?.clicHumain]?sc.clicHumain:'tel-quel',grappeDuScope=sc=>sc?.regleGrappeDifferes===true;
+ const nomGrappe=on=>on?'activée':'coupée';
+ function majChoixLot(s){if(!choixLot)return;
+   for(const [v,id] of Object.entries(IDS_CLIC))if($(id)&&document.activeElement!==$(id))$(id).checked=choixLot.clicHumain===v;
+   if($('grappe-differes')&&document.activeElement!==$('grappe-differes'))$('grappe-differes').checked=choixLot.regleGrappeDifferes===true;
+   const b=s?.batch,ouvert=OUVERT.includes(b?.state),lc=clicDuScope(b?.scope),lg=grappeDuScope(b?.scope);
+   if($('clic-humain-note'))$('clic-humain-note').textContent=!ouvert?'Lu au démarrage de chaque lot, gardé jusqu’à sa fin.'
+     :lc===choixLot.clicHumain?`Ce lot utilise « ${NOMS_CLIC[lc]} ».`
+     :`Ce lot garde « ${NOMS_CLIC[lc]} » jusqu’à sa fin. « ${NOMS_CLIC[choixLot.clicHumain]} » servira au prochain lot.`;
+   if($('grappe-note'))$('grappe-note').textContent=!ouvert?(choixLot.regleGrappeDifferes?'Activée pour le prochain lot. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.')
+     :lg===(choixLot.regleGrappeDifferes===true)?`Règle ${nomGrappe(lg)} dans ce lot.`
+     :`Règle ${nomGrappe(lg)} dans ce lot jusqu’à sa fin. Elle sera ${nomGrappe(choixLot.regleGrappeDifferes===true)} au prochain lot.`;}
+ async function changerChoixLot(args){try{choixLot=await api('choix-lot',args);
+     const ouvert=OUVERT.includes(state?.batch?.state);
+     note(ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
+   catch(e){note(e.message,true);}
+   majChoixLot(state);}
+ /* Une ligne de CONTENU.txt : les choix du dernier lot (ceux de son scope). */
+ const texteChoixLot=b=>b?.scope?`Choix du lot ${b.id||'?'} : clic du mode rapide « ${NOMS_CLIC[clicDuScope(b.scope)]} » (${clicDuScope(b.scope)}) ; règle métier « grappe de différés » ${nomGrappe(grappeDuScope(b.scope))}${grappeDuScope(b.scope)?' (chaque cut mis en attente : événement regles-metier-ombre, actif.applique, dans le journal)':''}.\n`:'';
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
    /* 4.9.5.3 (S6) : avis de contrat ESV (empreinte changée, écritures par fetch), une ligne par motif ; absent tant que rien n'a changé. */
    {const el=$('avis-contrat'),l=Array.isArray(s.avisContrat)?s.avisContrat.filter(x=>typeof x==='string'):[];
@@ -565,6 +591,7 @@
          sc?.lotDecision!=='apply'?'décision sur le lot : observée':'',
          (sc?.lowConfidence||'pause')!=='attempt'?'faible confiance : pause':''].filter(Boolean);
        $('lot-politique-pastille').hidden=!ecarts.length;$('lot-politique-pastille').textContent=ecarts.length?'Politique : '+ecarts.join(' · '):'';}
+     majChoixLot(s);
      if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
        $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${b.scope?.lotDecision==='apply'?'appliquée':'observée seulement'}.`:'';}
      const names=NOMS_ETAT;
@@ -1471,7 +1498,7 @@ on('native-discard',async()=>{
    /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
    const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
    const L=await exportListe(null),VC=await exportVerts();
-   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte+VC.texte,
+   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte+VC.texte+texteChoixLot(state?.batch),
      pied:'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'});
    const {save,fermerTout,trop,max,mo1}=V,total=()=>V.total;
    await L.sauver(save).catch(()=>{});await VC.sauver(save).catch(()=>{});
@@ -1531,6 +1558,11 @@ on('native-discard',async()=>{
  try{appliquerTheme(globalThis.localStorage?.getItem(CLE_THEME));}catch{appliquerTheme(null);}
  if($('theme-toggle'))$('theme-toggle').onclick=()=>{const actuel=document.documentElement?.dataset?.theme||(sysSombre()?'dark':'light'),suivant=actuel==='dark'?'light':'dark';
    try{globalThis.localStorage?.setItem(CLE_THEME,suivant);}catch{/* fenêtre sans stockage : bascule le temps de la fenêtre */}appliquerTheme(suivant);};
+ /* 4.9.5 test 6 : choix pour le lot, relus au service worker à l'ouverture. */
+ /* `click` : il part aussi au clavier (Espace, flèches), une fois la case cochée. */
+ for(const [v,id] of Object.entries(IDS_CLIC))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixLot({clicHumain:v});};
+ if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
+ api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});
  /* Bandeau dans ESV : préférence gardée par le service worker. */
  const marquerBandeau=()=>$('bandeau-toggle')?.setAttribute('aria-pressed',String(bandeau));
  api('bandeau-etat').then(r=>{bandeau=r?.on===true;marquerBandeau();if(state)envoyerBandeau(state);}).catch(()=>{});

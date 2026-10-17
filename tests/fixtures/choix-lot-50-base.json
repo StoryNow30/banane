@@ -1,0 +1,49 @@
+{
+ "source": "claude/50-base (a362a29), code de base, sans aucun choix gardé",
+ "version": "4.9.5.5",
+ "clic": {
+  "actions": [
+   "state",
+   "state",
+   "state",
+   "state",
+   "capture",
+   "state",
+   null,
+   "state",
+   "apply",
+   "state",
+   "state",
+   "validateAndNext",
+   "state",
+   "state",
+   "state",
+   "capture",
+   "state",
+   null,
+   "state",
+   "apply",
+   "state"
+  ],
+  "empreinteCommandes": "e3bf7043788ba882515f76220255eb9fe70befe65a938e18d5063aedb1556e0c",
+  "applyOptions": [
+   null,
+   null
+  ]
+ },
+ "grappe": {
+  "appels": [
+   "capture",
+   "nextWithoutDecision",
+   "capture",
+   "nextWithoutDecision",
+   "capture",
+   "apply",
+   "validate",
+   "next",
+   "capture",
+   "apply"
+  ],
+  "empreinteCommandes": "06a2b64f154c5681c6e84145f7447eac2c2d9aa6c99be039ac40041dee4fd8b9"
+ }
+}

@@ -141,13 +141,14 @@ const SCENARIOS={
   'rapide-puis-restauration':{mode:'rapide',restaurer:true},
 };
 const r9=v=>Math.round(v*1e9)/1e9;
-/* Joue un scénario : la trace envoyée à ESV, les étapes, les poses finales, la durée (horloge virtuelle) et l'erreur. */
-async function jouer(nom,{adapter,pilote={}}={}){
+/* Joue un scénario : la trace envoyée à ESV, les étapes, les poses finales, la durée (horloge virtuelle) et l'erreur.
+ * `options` (test 6) : troisième argument de `apply`, comme le service worker l'envoie pour un lot (`{clicHumain}`). */
+async function jouer(nom,{adapter,pilote={},options}={}){
   const sc=SCENARIOS[nom],G=geometrie(),f=esvClic({adapter,pilote,fenetre:sc.fenetre||FENETRE}),cut=cutDuMode(sc.mode);
   f.poser({cut,rails:G.rails,vues:G.vues,active:sc.active||'right',decalageEsv:sc.decalageEsv||{},figee:sc.figee||{}});
   const before=await f.call('state'),propositions=sc.propositions||PROPOSITIONS,cible=K.expectedPoses(before,propositions);
   const t0=f.clock();let erreur=null;
-  try{await f.call('apply',before,propositions);}catch(e){erreur=e.message;}
+  try{await f.call('apply',before,propositions,...(options===undefined?[]:[options]));}catch(e){erreur=e.message;}
   const dureeMs=f.clock()-t0;
   if(sc.restaurer&&!erreur)try{await f.call('restore',before);}catch(e){erreur='restauration : '+e.message;}
   await new Promise(r=>setImmediate(r));

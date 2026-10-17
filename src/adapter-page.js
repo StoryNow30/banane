@@ -526,6 +526,11 @@
   * Garde-fou, quel que soit le mode : chaque clic de pose calculé hors de la partie visible est relevé (`clicsHorsVue`), sans
   * rien changer au clic, et part au service worker APRÈS la réponse (message `banane3:clic-hors-vue`, comme le relevé D4). */
  const CLIC_HUMAIN=['gauche-recentre','tout-recentre'].includes(REGLE_CLIC_HUMAIN)?REGLE_CLIC_HUMAIN:'tel-quel',CLIC_CORRIGE=CLIC_HUMAIN!=='tel-quel';
+ /* 4.9.5 test 6 (D-164, Mic : « essayer les 2 méthodes ») : le mode peut venir du LOT. Le service worker lit le choix du panneau
+  * au démarrage du lot, le fige dans le lot et l'envoie avec chaque `apply` (`options.clicHumain`), seulement s'il est corrigé.
+  * Sans lui (ou valeur inconnue), le réglage de la page, comme avant : 'tel-quel' par défaut, la même trace à l'octet près. */
+ const MODES_CLIC=['tel-quel','gauche-recentre','tout-recentre'];
+ const modeClic=o=>o&&typeof o==='object'&&MODES_CLIC.includes(o.clicHumain)?o.clicHumain:CLIC_HUMAIN;
  const CLIC_MARGE=.99,MOTIF_CLIC={'hors-canevas':'hors du canevas','marge':'hors de la marge de 0,99','hors-fenetre':'hors de la fenêtre','vue-illisible':'vue illisible'};
  /* Point du clic sur l'écran : la formule de la pose, à l'identique (même ordre d'opérations). */
  const pointClic=(r,ndc,dx=0,dy=0)=>[r.left+(ndc[0]+1)*r.width/2+dx,r.top+(1-ndc[1])*r.height/2+dy];
@@ -547,7 +552,7 @@
  function directeVisible(target){try{const c=context(),v=projectToView(L.cameraSnapshot(c.viewer,c.frame.origin),target);
    return !!v?.inView&&v.ndc.every(Number.isFinite)&&!horsVueClic(v.viewport,...pointClic(v.viewport,v.ndc));}catch{return false;}}
  const pixelMm=cam=>cam?.viewport?.width&&Array.isArray(cam.projection)&&cam.projection[0]?2/cam.projection[0]/cam.viewport.width*1000:NaN;
- async function clickPosition(side,target,expected,vue=null){
+ async function clickPosition(side,target,expected,vue=null,mode=CLIC_HUMAIN){
    await select(side,expected);let dernier=null,pixel=NaN;
    /* 5.0 (« déplacer la vue ») : seulement si le service worker l'a demandé pour ce cut (réglage `deplacerVue`, coupé par défaut). */
    if(vue){const r=await amenerVue(side,target,expected,vue.etat,vue.reglages,vue.progress);vue.rapports.push(r);
@@ -562,7 +567,7 @@
      const r=view.viewport,ndc=view.ndc,avant=now.rails[side].positionSceneRelative;pixel=pixelMm(cam);
      /* D-157 : mode corrigé, aucun clic hors de la partie visible ; tel-quel, le clic part comme avant, relevé. */
      const [x,y]=pointClic(r,ndc,dx,dy),horsVue=horsVueClic(r,x,y);
-     if(horsVue&&CLIC_CORRIGE)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view,horsVue));
+     if(horsVue&&mode!=='tel-quel')throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view,horsVue));
      if(horsVue)noterClicHorsVue(side,'recentre',essai+1,horsVue,r,x,y,expected);
      c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
        clientX:x,clientY:y,button:0,buttons:1}));
@@ -586,19 +591,19 @@
   * celle qu'ESV utilise pour son rayon. Garde : côté d'ESV relu sur son bouton avant le clic ;
   * l'autre rail ne doit pas bouger. Ne conclut pas (`null`) : pose avec recentrage, comme avant. */
  const CLASSE_COTE={left:['O2N3DCutLRClick','leftRailSClass'],right:['O2N3DCutRRClick','rightRailSClass']};
- function poseDirecte(side,target,expected){
+ function poseDirecte(side,target,expected,mode=CLIC_HUMAIN){
    const autre=side==='left'?'right':'left',avant=assertExpected(expected),[id,classe]=CLASSE_COTE[side];
    /* Sans témoin du côté d'ESV (classe du bouton), rien n'est tenté : pose avec recentrage. */
    if(typeof document.getElementById(id)?.classList?.contains!=='function')return null;
    /* D-157, mode corrigé : cible hors de la partie visible de la vue active, rien n'est pressé ni cliqué. */
-   if(CLIC_CORRIGE&&!directeVisible(target))return null;
+   if(mode!=='tel-quel'&&!directeVisible(target))return null;
    nativeClick(selectors[side]);if(!document.getElementById(id).classList.contains(classe))return null;
    const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin),view=projectToView(cam,target);
    if(!view||!view.ndc.every(v=>Number.isFinite(v)&&Math.abs(v)<50))return null;
    const r=view.viewport,ndc=view.ndc;
    for(const [essai,[dx,dy]] of DECALAGES_CLIC.entries()){
      const [x,y]=pointClic(r,ndc,dx,dy),horsVue=horsVueClic(r,x,y);
-     if(CLIC_CORRIGE&&(horsVue||!view.inView))return null;
+     if(mode!=='tel-quel'&&(horsVue||!view.inView))return null;
      if(horsVue)noterClicHorsVue(side,'directe',essai+1,horsVue,r,x,y,expected);
      c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
        clientX:x,clientY:y,button:0,buttons:1}));
@@ -729,13 +734,14 @@
    const reglages=plan?reglagesVue(plan):null,vue=plan?{etat:etatVue(reglages),reglages,progress,rapports:[],poses:[]}:null;
    const expected=K.expectedPoses(before,proposals),directe=!vue&&piece(lectureDuCut(before.identity),'pose');
    /* D-157 : 'gauche-recentre' pose d'abord le rail droit, celui de la vue active après la capture ; 'tout-recentre' ne pose
-    * jamais en direct. 'tel-quel' : gauche puis droit, en direct, comme avant. */
-   const ordre=directe&&CLIC_HUMAIN==='gauche-recentre'?['right','left']:['left','right'];
-   const enDirect=s=>directe&&(CLIC_HUMAIN==='tel-quel'||CLIC_HUMAIN==='gauche-recentre'&&s==='right');
+    * jamais en direct. 'tel-quel' : gauche puis droit, en direct, comme avant. Test 6 : le mode du lot, s'il est transmis. */
+   const mode=modeClic(options);
+   const ordre=directe&&mode==='gauche-recentre'?['right','left']:['left','right'];
+   const enDirect=s=>directe&&(mode==='tel-quel'||mode==='gauche-recentre'&&s==='right');
    for(const s of ordre){if(cancelled)throw Error('Action interrompue.');
-     if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity))continue;
+     if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity,mode))continue;
      if(enDirect(s))progress('apply-repli',{side:s});
-     await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue);if(vue)vue.poses.push(s);}
+     await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue,mode);if(vue)vue.poses.push(s);}
    if(!vue)return snapshot();
    const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
    if(!remise.ok)throw Error(`Vue ESV non restituée après le déplacement de vue (échelle à ${(remise.ecartEchelle*100).toFixed(1).replace('.',',')} % de la vue habituelle) : les deux rails sont posés, rien n’est validé. Remets la vue d’ESV, puis contrôle le cut. État à réconcilier.`);
@@ -1374,7 +1380,7 @@
    finally{running.delete(id);actionsEnCours.delete(id);
      /* D-157 : le relevé des clics hors vue, après la réponse ; rien de ce qui suit ne peut la toucher. */
      if((action==='apply'||action==='restore')&&clicsHorsVue.length)try{const clics=clicsHorsVue.splice(0),cible=args[0]?.identity;
-       window.postMessage({kind:'banane3:clic-hors-vue',channel,requestId:id,releve:{requestId:id,action,mode:CLIC_HUMAIN,
+       window.postMessage({kind:'banane3:clic-hors-vue',channel,requestId:id,releve:{requestId:id,action,mode:action==='apply'?modeClic(args[2]):CLIC_HUMAIN,
          identity:Number.isInteger(cible?.cut)?{part:Number.isInteger(cible.part)?cible.part:null,cut:cible.cut}:null,clics}},location.origin);}catch{}
      /* D4 : le relevé passif, après la réponse ; rien de ce qui suit ne peut la toucher. */
      if(action==='capture')try{window.postMessage({kind:'banane3:releve',channel,requestId:id,releve:releverEsv(id,args[0]?.identity)},location.origin);}catch{}}});

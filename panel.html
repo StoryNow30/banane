@@ -157,6 +157,20 @@
   <p class="muted" id="bornes-note">Rempli par Ariane : le cut affiché dans ESV, et la fin de la partie. Modifiable.</p></div>
  <!-- 4.7.19 : reprise des différés du lot précédent, encadrés par ses cuts posés. -->
  <div id="lot-reprise-row" class="carte" hidden><label class="interrupteur"><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
+ <!-- 4.9.5 test 5 (D-157, D-164) : deux choix pour le lot, gardés par Ariane, lus au démarrage de chaque lot et figés jusqu'à sa fin. -->
+ <fieldset id="clic-humain" class="carte choix-lot rise d4">
+  <legend class="lbl">Clic du mode rapide</legend>
+  <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-tel-quel" value="tel-quel"> Comme avant</label>
+  <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-gauche-recentre" value="gauche-recentre"> Variante : rail gauche recentré</label>
+  <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-tout-recentre" value="tout-recentre"> Tout recentré, comme un humain</label>
+  <p class="muted" id="clic-humain-cout">Durée d’un lot : +6 à 9 % pour la variante, +12 à 18 % pour « tout recentré ».</p>
+  <p class="muted" id="clic-humain-note">Lu au démarrage de chaque lot, gardé jusqu’à sa fin.</p>
+ </fieldset>
+ <div id="grappe-row" class="carte choix-lot rise d4">
+  <label class="interrupteur"><input id="grappe-differes" type="checkbox"> Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges)</label>
+  <p class="muted">Ne pose jamais ailleurs : met en attente un cut qu’Ariane aurait validé.</p>
+  <p class="muted" id="grappe-note">Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.</p>
+ </div>
 
  <p class="sec rise d5">Ce lot</p>
  <div id="lot-compteurs" class="tuiles rise d5" hidden></div>
