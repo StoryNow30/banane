@@ -62,10 +62,10 @@ test('fin de lot : télécharger d\'abord ; « Nouveau lot » rouvre les bornes 
   assert.equal($('new-batch').hidden,true);assert.equal($('export-tout').className,'link');
 });
 
-test('« Détails du lot » : fermé par défaut (chantier UX 4.9, Mic), s\'ouvre et se referme sans toucher au lot ; Écho garde ses détails ouverts',async()=>{
+test('« Export, archive et réglages avancés » (ex « Détails du lot ») : fermé par défaut (chantier UX 4.9, Mic), s\'ouvre et se referme sans toucher au lot ; Écho garde ses détails ouverts',async()=>{
   const $=await panneau(lot());
-  assert.equal($('lot-details').hidden,true);assert.equal($('lot-details-toggle').textContent,'Détails du lot');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'false');
-  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,false);assert.equal($('lot-details-toggle').textContent,'Détails du lot');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'true');
+  assert.equal($('lot-details').hidden,true);assert.equal($('lot-details-toggle').textContent,'Export, archive et réglages avancés');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'false');
+  $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,false);assert.equal($('lot-details-toggle').textContent,'Export, archive et réglages avancés');assert.equal($('lot-details-toggle').attrs['aria-expanded'],'true');
   $('lot-details-toggle').onclick();assert.equal($('lot-details').hidden,true);
   assert.equal($('native-details').hidden,false);
 });

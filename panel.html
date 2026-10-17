@@ -91,30 +91,23 @@
 
 <!-- ---------------------------------------------------------------- pilote -->
 <section class="vue orbite" data-vue="automatic" hidden>
- <!-- 4.9 (chantier UX, variante A « Accueil » retenue par Mic le 13/10) : le
-      cut en héros sur son halo avec la ligne, deux tuiles de commande, la tuile
-      du lot qui se remplit, puis des tuiles ; une idée par tuile. Le détail
-      (exports, départs, réglages et politique effective) est dans « Détails
-      du lot », fermé par défaut. Tous les identifiants sont conservés. -->
- <div class="barre-lot rise d0"><button id="lot-details-toggle" class="pill details-toggle" aria-expanded="false" aria-controls="lot-details">Détails du lot</button></div>
- <!-- Détails du lot : exports, départs des parties, réglages et politique EFFECTIVE du lot (D-045). -->
- <div id="lot-details" class="tiroir" hidden>
-  <p class="lbl">Exports du lot</p>
-  <div class="row"><button id="journal" class="secondary">Télécharger le journal</button><button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button><button id="gcv1-diagnostic-export" class="secondary">Télécharger le diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Télécharger le corpus GCV1 + LiDAR</button><button id="export-cache-clear" class="secondary">Vider le cache des exports</button></div>
-  <p class="muted">Construits sur ce poste. ESV ne donne aucune confirmation serveur.</p>
-  <p class="lbl reglages-titre">Réglages du lot</p>
-  <p class="muted" id="lot-reglages">Rail non résolu : différé · décision sur le lot : appliquée · proposition expérimentale : tentée · cerveau de placement : actif. Réglages fixes depuis la 4.7.21.</p>
-  <!-- Pendant un lot : ses politiques EFFECTIVES, figées à sa création (cahier 4.7 §10, KI-033). -->
-  <p class="muted" id="lot-decision-effective" hidden></p>
-  <p class="muted" id="unresolved-policy-effective" hidden></p>
-  <p class="muted" id="policy-effective" hidden></p>
-  <input type="hidden" id="policy" value="attempt">
- </div>
+ <!-- Test 7 (Mic : « remettre de l'ordre ») — cinq groupes, dans l'ordre où on s'en sert :
+      (a) Lot : le cut en héros, les commandes, l'avancement, les bornes ;
+      (b) Règles et choix du prochain lot : une carte ; chaque choix dit ce que le DERNIER lot a utilisé (figé dans son
+          scope au démarrage, événement batch-started) et ce que le PROCHAIN lot utilisera (le choix gardé) ;
+      (c) Résultats du dernier lot : fin de partie, posés, différés, à contrôler, activité, départs, résumé ;
+      (d) Relecture : emplacement réservé (voir le commentaire plus bas) ;
+      (e) Export, archive et réglages avancés, repliés, avec « Détails » (lignes techniques) replié dedans.
+      Rien n'est retiré : seulement déplacé, regroupé ou replié. Les identifiants d'avant sont gardés (4.9 chantier UX
+      compris : le cut en héros, les tuiles de commande, la tuile du lot). -->
 
+ <!-- (a) LOT -->
+ <section id="groupe-lot" class="groupe" aria-labelledby="groupe-lot-titre">
+ <h2 id="groupe-lot-titre" class="groupe-titre rise d0">Lot</h2>
  <!-- Le héros : l'état, le cut, la ligne et l'écart à la voie, alignés. -->
  <div class="bloc hero">
   <p id="lot-etat" class="eyebrow ink rise d0">Aucun lot</p>
-  <!-- Politique du lot différente de celle par défaut : une pastille ; le détail est dans « Détails du lot ». -->
+  <!-- Politique du lot différente de celle par défaut : une pastille ; le détail est dans « Export, archive et réglages avancés », sous « Détails ». -->
   <p id="lot-politique-pastille" class="pastille" hidden></p>
   <p class="big rise d1"><span id="lot-cut">—</span><small>cut</small></p>
   <div class="rise d2" id="ligne-bloc">
@@ -157,25 +150,40 @@
   <p class="muted" id="bornes-note">Rempli par Ariane : le cut affiché dans ESV, et la fin de la partie. Modifiable.</p></div>
  <!-- 4.7.19 : reprise des différés du lot précédent, encadrés par ses cuts posés. -->
  <div id="lot-reprise-row" class="carte" hidden><label class="interrupteur"><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
- <!-- 4.9.5 test 6 (D-157, D-164) : deux choix pour le lot, gardés par Ariane, lus au démarrage de chaque lot et figés jusqu'à sa fin. -->
- <fieldset id="clic-humain" class="carte choix-lot rise d4">
+ </section>
+
+ <!-- (b) RÈGLES ET CHOIX DU PROCHAIN LOT. 4.9.5 test 6 (D-157, D-164) : gardés par Ariane, lus au démarrage de chaque lot et
+      figés jusqu'à sa fin. « Dernier lot » (« Lot en cours » pendant un lot) : ce que le scope du lot a figé ; « Prochain lot » :
+      le choix gardé, qui servira au prochain « Démarrer ». -->
+ <section id="groupe-choix" class="groupe" aria-labelledby="groupe-choix-titre">
+ <h2 id="groupe-choix-titre" class="groupe-titre rise d4">Règles et choix du prochain lot</h2>
+ <div id="carte-choix" class="carte rise d4">
+ <fieldset id="clic-humain" class="choix-lot">
   <legend class="lbl">Clic du mode rapide</legend>
   <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-tel-quel" value="tel-quel"> Comme avant</label>
   <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-gauche-recentre" value="gauche-recentre"> Variante : rail gauche recentré</label>
   <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-tout-recentre" value="tout-recentre"> Tout recentré, comme un humain</label>
+  <dl class="choix-etat"><dt id="clic-dernier-l">Dernier lot</dt><dd id="clic-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="clic-prochain">—</dd></dl>
   <p class="muted" id="clic-humain-cout">Durée d’un lot : +6 à 9 % pour la variante, +12 à 18 % pour « tout recentré ».</p>
   <p class="muted" id="clic-humain-note">Lu au démarrage de chaque lot, gardé jusqu’à sa fin.</p>
  </fieldset>
- <div id="grappe-row" class="carte choix-lot rise d4">
-  <label class="interrupteur"><input id="grappe-differes" type="checkbox"> Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges)</label>
-  <p class="muted">Ne pose jamais ailleurs : met en attente un cut qu’Ariane aurait validé.</p>
+ <div id="grappe-row" class="choix-lot">
+  <p class="lbl">Règle métier</p>
+  <label class="interrupteur"><input id="grappe-differes" type="checkbox"> Mettre en attente les cuts voisins d’une série de différés</label>
+  <p class="muted" id="grappe-explication">Ne pose rien, ne détecte pas les aiguilles. Un cut qu’Ariane allait valider est mis en attente si le lot vient de différer au moins 2 cuts parmi les 6 d’avant, dont un à 2 cuts au plus.</p>
+  <dl class="choix-etat"><dt id="grappe-dernier-l">Dernier lot</dt><dd id="grappe-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="grappe-prochain">—</dd></dl>
   <p class="muted" id="grappe-note">Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.</p>
  </div>
+ </div>
+ </section>
 
- <p class="sec rise d5">Ce lot</p>
+ <!-- (c) RÉSULTATS DU DERNIER LOT (« du lot en cours » pendant un lot). -->
+ <section id="groupe-resultats" class="groupe" aria-labelledby="resultats-titre">
+ <h2 id="resultats-titre" class="groupe-titre rise d5">Résultats du dernier lot</h2>
+ <!-- Test 7 : plus aucun cut rouge dans la partie du lot (compteur d'ESV « N on M treated » complet, ou départ du lot à
+      0 invalide). Le lot clos le dit ici, en clair, au lieu de passer à la suite sans rien dire. -->
+ <p id="lot-fin-partie" class="fin-partie rise d5" role="status" hidden></p>
  <div id="lot-compteurs" class="tuiles rise d5" hidden></div>
- <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
- <div id="lot-commande" class="commande carte rise d5" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
 
  <!-- 5.0 : verts à contrôler, en fin de lot. Une liste à consulter, dans l'ordre des cuts : Ariane n'agit pas dans ESV. -->
  <section id="verts-controle" class="carte verts rise d5" aria-labelledby="verts-titre" hidden>
@@ -185,16 +193,16 @@
   <p id="verts-note" class="muted">Verts qu’Ariane n’a pas visités, à relire d’abord. Liste à consulter : aucune action dans ESV.</p>
  </section>
 
- <!-- D-092 : les fiches de départ, une carte par partie (la plus récente), la partie en cours d'abord.
-      Les chiffres sont ceux qu'ESV affichait au démarrage du lot : à comparer avec sa liste. -->
- <p class="sec rise d6">Départs des parties</p>
- <div id="departs-liste" class="departs rise d6"><p class="muted">Aucune partie enregistrée pour l’instant. Les validés et invalides de chaque partie sont notés ici au démarrage, et restent même si tu vides le cache.</p></div>
-
  <p class="sec rise d6">Activité</p>
  <div class="carte rise d6">
   <div id="lot-activite-bloc" hidden><div id="lot-activite" class="activite"></div></div>
   <div id="batch" class="batch">Aucun lot en cours.</div>
  </div>
+
+ <!-- D-092 : les fiches de départ, une carte par partie (la plus récente), la partie en cours d'abord.
+      Les chiffres sont ceux qu'ESV affichait au démarrage du lot : à comparer avec sa liste. -->
+ <p class="sec rise d6">Départs des parties</p>
+ <div id="departs-liste" class="departs rise d6"><p class="muted">Aucune partie enregistrée pour l’instant. Les validés et invalides de chaque partie sont notés ici au démarrage, et restent même si tu vides le cache.</p></div>
 
  <!-- 4.9 U1 : résumé de la partie, tous lots confondus. Lecture seule : aucun bouton, aucune commande. -->
  <section id="part-summary" class="bloc resume-partie carte" aria-labelledby="part-summary-title" hidden>
@@ -208,6 +216,33 @@
    <p id="part-summary-liste" class="muted"></p>
    <details><summary id="part-summary-lots-title">Lots de la partie</summary><ul id="part-summary-lots"></ul></details>
   </details>
+ </section>
+ </section>
+
+ <!-- (d) RELECTURE — EMPLACEMENT RÉSERVÉ. Le chantier `claude/50-relecture-ombre` pose ICI sa carte
+      <section id="carte-relecture" class="carte">…</section> : choix « coupée », « ombre » ou « corriger », avancement de la
+      relecture et bouton d'arrêt. Rien n'est codé ici. Garder cette place entre les résultats (c) et l'export (e). -->
+
+ <!-- (e) EXPORT, ARCHIVE ET RÉGLAGES AVANCÉS : fermé par défaut (son état se lit dans aria-expanded). -->
+ <section id="groupe-avance" class="groupe" aria-label="Export, archive et réglages avancés">
+ <div class="barre-lot"><button id="lot-details-toggle" class="pill details-toggle" aria-expanded="false" aria-controls="lot-details">Export, archive et réglages avancés</button></div>
+ <!-- Exports, réglages fixes et, dans « Détails », les lignes techniques : la dernière commande et la politique EFFECTIVE du lot (D-045). -->
+ <div id="lot-details" class="tiroir" hidden>
+  <p class="lbl">Exports du lot</p>
+  <div class="row"><button id="journal" class="secondary">Télécharger le journal</button><button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button><button id="gcv1-diagnostic-export" class="secondary">Télécharger le diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Télécharger le corpus GCV1 + LiDAR</button><button id="export-cache-clear" class="secondary">Vider le cache des exports</button></div>
+  <p class="muted">Construits sur ce poste. ESV ne donne aucune confirmation serveur.</p>
+  <p class="lbl reglages-titre">Réglages avancés</p>
+  <p class="muted" id="lot-reglages">Rail non résolu : différé · décision sur le lot : appliquée · proposition expérimentale : tentée · cerveau de placement : actif. Réglages fixes depuis la 4.7.21.</p>
+  <details id="lot-details-techniques" class="techniques"><summary>Détails</summary>
+   <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
+   <div id="lot-commande" class="commande" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
+   <!-- Pendant un lot : ses politiques EFFECTIVES, figées à sa création (cahier 4.7 §10, KI-033). -->
+   <p class="muted" id="lot-decision-effective" hidden></p>
+   <p class="muted" id="unresolved-policy-effective" hidden></p>
+   <p class="muted" id="policy-effective" hidden></p>
+  </details>
+  <input type="hidden" id="policy" value="attempt">
+ </div>
  </section>
 </section>
 
