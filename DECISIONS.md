@@ -2355,3 +2355,24 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - il faut que la liste ESV ait été chargée en entier ;
   - les ADV restent invisibles.
 - **Test 5 lancée** depuis `claude/50-base` (0f96f17), sur `claude/495-test-5`. Elle sera relue au niveau maximal avant d'être envoyée à Mic. Le mode rapide reste tel quel tant que Mic n'a pas tranché D-157.
+
+## D-163 — 4.9.5 test 5 : relue au niveau maximal, envoyée à Mic (17 octobre 2026)
+
+- Construite sur `claude/495-test-5` (fb7dad9, d7b89ba, f89e00b, c2dc0e0), à partir de la base 5.0 (0f96f17), puis réintégrée dans `claude/50-base` par avance rapide. Version 4.9.5.5.
+- **Relecture indépendante au niveau maximal, en lecture seule. Verdict : envoyer.**
+  - Aucune ombre ne peut toucher la pose, la commande, les appuis ni les cuts envoyés.
+  - Tous les chemins d'activation sont coupés.
+  - Les écouteurs de l'Écho sont passifs.
+  - La liste des verts n'envoie rien à ESV.
+  - Déplacer la vue, coupé, est inerte.
+- **Deux points importants de la relecture, corrigés avant l'envoi** :
+  - I-1 : l'ombre « mémoire des différés » de l'Écho relance deux fois le moteur par différé, et ce coût n'a pas été mesuré au banc. Elle est **coupée au terrain** (`memoireDifferesOmbre.actif=false`), car les données de l'Écho passent avant et Mic ne veut pas de ce mode (D-155). Les essais la jouent toujours active.
+  - I-2 : la consigne est complétée (faux vert douteux, message « Liste d'ESV non lue »).
+- verify : 2 046 réussis, 0 échec, 2 ignorés. Moteur identique à `main`.
+- **Paquet** `ariane-4.9.5-test.5.zip` : 2 075 808 octets, SHA-256 `594a026b13d1fe7e1d159ea246b60f43627dccb977652b7d60f94b72ff7a6fea`. Le premier paquet, construit avant la relecture, n'est pas envoyé.
+- **Contenu** : tout ce que contenait la test 4, plus :
+  - en ombre : voie prédite, règles métier, faux vert « hauteur ambiguë », hauteur apprise, P8 ;
+  - en observation : le relevé des gestes en Écho, la liste des verts à contrôler et la dernière empreinte de contrat ;
+  - coupé : déplacer la vue.
+  La pose est inchangée. Le mode rapide est inchangé, D-157 attend Mic.
+- Points utiles de la relecture, gardés pour la test 6 : le retour arrière sans « Recharger », l'ordre de lecture du journal dans `vertsAControler`, `BananeSettings` non gelé, la liste absente d'un export sans zip.
