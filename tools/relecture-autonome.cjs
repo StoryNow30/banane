@@ -25,6 +25,10 @@
  *  - `--voisins-surs-differes` (H3, src/voisins-surs-differes.js, fiches/P7_VOISINS_SURS_DIFFERES.md) ;
  *  - `--graine-ecartement-fictive` (H2, src/graine-ecartement-fictive.js, fiches/P7_GRAINE_ECARTEMENT_FICTIVE.md) ;
  *  - `--garde-paire-confirmee` (H5, src/garde-paire-confirmee.js, fiches/P7_GARDE_PAIRE_CONFIRMEE.md).
+ * COMBINAISON (fiches/P7_COMBINAISON.md) : deux ou trois des options H1, H3, H2 ensemble donnent un seul choix combiné dans la grille
+ * (`combiDifferes` : chaîne avec 1 ou 2 appuis, reprise des voisins, graine), réglé en validation croisée comme le reste ; H5 garde sa grille.
+ * `--leger` : validation croisée et règle figée seulement (grilles lourdes). `greffer` : la combinaison à la lettre avec
+ * `--voisins-surs-differes`, `--graine-ecartement-fictive`, `--sans-chaine` et `--garde-paire-seuil N:l|N:lv`.
  *
  * `etudier --differes-en-chaine` (option COUPÉE par défaut ; src/differes-en-chaine.js, fiches/P7_DIFFERES_EN_CHAINE.md) : la grille de la
  * règle prudente peut admettre un cut DIFFÉRÉ par le lot quand sa pose vient de la chaîne avec au moins un appui (1 ou 2), jugé sans les
@@ -597,13 +601,30 @@ const cleGP = g => g ? `${g.axes}:${g.nMm}` : null;
 /* Options P7 : ce qu'admet le choix `differes` d'une règle. `postsPermis` : les post-traitements dont la pose agit sans les seuils des verts
  * ('voisins' : reprise des voisins sûrs ; 'graine' : graine d'écartement) ; `chaineDe` : les réglages des différés en chaîne (src/differes-en-chaine.js). */
 const POSTS_AUCUN = Object.freeze(new Set()), POSTS_VOISINS = Object.freeze(new Set(['voisins-surs'])), POSTS_GRAINE = Object.freeze(new Set(['graine']));
-const postsPermis = d => d === 'voisins' ? POSTS_VOISINS : d === 'graine' ? POSTS_GRAINE : POSTS_AUCUN;
-const chaineDe = d => d && typeof d === 'object' && d.actif === true ? d : null;
-/* La proposition qu'une règle lit : pour un différé du lot que la règle admet, la proposition de base (chaîne, ou post-traitement) ; sinon,
- * si la règle porte la garde de paire confirmée et que la voie confirme, la paire levée ; sinon la proposition de base. */
+const POSTS_DEUX = Object.freeze(new Set(['voisins-surs', 'graine']));
+/* COMBINAISON P7 (fiches/P7_COMBINAISON.md) : un seul choix `differes` qui réunit les façons d'admettre un différé du lot :
+ * { combi: true, chaine: réglages de src/differes-en-chaine.js ou null, voisins: bool, graine: bool }. */
+/* `chaine` : true (réglages par défaut, `appuisMin`) ou des réglages de src/differes-en-chaine.js (relus d'un fichier de réglages). */
+function combiDifferes({ chaine = false, appuisMin = 1, voisins = false, graine = false } = {}) {
+  const dc = !chaine ? null : DC.reglages(typeof chaine === 'object' ? { ...chaine, actif: true } : { actif: true, appuisMin });
+  return { combi: true, chaine: dc, voisins: !!voisins, graine: !!graine };
+}
+const postsPermis = d => d === 'voisins' ? POSTS_VOISINS : d === 'graine' ? POSTS_GRAINE
+  : d && d.combi ? (d.voisins && d.graine ? POSTS_DEUX : d.voisins ? POSTS_VOISINS : d.graine ? POSTS_GRAINE : POSTS_AUCUN) : POSTS_AUCUN;
+const chaineDe = d => d && typeof d === 'object' ? (d.combi ? (d.chaine && d.chaine.actif === true ? d.chaine : null) : d.actif === true ? d : null) : null;
+/* La proposition qu'une règle lit : pour un différé du lot que la règle admet, la proposition de base (chaîne, ou post-traitement) — ou,
+ * si la règle n'admet pas le post-traitement de base mais admet l'autre et qu'il a posé, la pose de l'autre (`varAlt`) ; sinon, si la règle
+ * porte la garde de paire confirmée et que la voie confirme, la paire levée ; sinon la proposition de base. */
 function varDe(l, R, variante = R && R.variante) {
   const base = l.var && l.var[variante];
-  if (!R || (l.genre === 'differe' && R.differes)) return base;
+  if (R && l.genre === 'differe' && R.differes) {
+    if (base && base.post && l.varAlt && l.varAlt[variante]) {
+      const permis = postsPermis(R.differes);
+      if (!permis.has(base.post)) for (const p of permis) if (l.varAlt[variante][p]) return l.varAlt[variante][p];
+    }
+    return base;
+  }
+  if (!R) return base;
   if (!l.varGP || !R.gardePaire) return base;  // presque toutes les lignes : aucune levée (et pas de clé à bâtir)
   const g = l.varGP[cleGP(R.gardePaire)];
   return (g && g[variante]) || base;
@@ -635,6 +656,11 @@ function lignes({ cas, table, designation, voisinsSurs = false, graine = false }
         const p = proposition(c, k, { voisinsSurs, graine, differe: l.genre === 'differe' });
         if (!p) { l.var[k] = { stage: (k.startsWith('chaine') ? a.chaine && a.chaine.stage : a.stage) || null, d: null, e: null }; continue; }
         l.var[k] = mesurer(p);
+        /* Combinaison : quand la reprise des voisins a pris la place, la pose de la graine reste lisible par une règle qui n'admet qu'elle. */
+        if (voisinsSurs && graine && p.post === 'voisins-surs') {
+          const pg = proposition(c, k, { graine: true, differe: true });
+          if (pg && pg.post === 'graine') ((l.varAlt = l.varAlt || {})[k] = l.varAlt[k] || {}).graine = mesurer(pg);
+        }
       }
       if (gardes && a.chaine && a.chaine.reason === 'pair-guard' && a.chaineGardePaire) {
         const gp = a.chaineGardePaire, pl = pose2(gp) ? poseDe(gp, a, true, 'garde-paire-confirmee') : null;
@@ -733,7 +759,8 @@ const CONTRAINTE = Object.freeze({ mauvaiseVoieMax: 0, degatsPartMax: 0.01 });
 const grilleDifferesEnChaine = (g = GRILLE) => ({ ...g, differes: [false, DC.reglages({ actif: true, appuisMin: 1 }), DC.reglages({ actif: true, appuisMin: 2 })] });
 /* À gain égal : la règle qui ne touche aucun différé, puis la plus exigeante en appuis. Les choix 'voisins' et 'graine' comptent comme
  * « aucun différé » pour ce départage (leurs études le départageaient par l'ordre de la grille, où `false` vient d'abord : même effet). */
-const prudenceDifferes = R => !R.differes || typeof R.differes === 'string' ? 99 : R.differes.actif === true ? R.differes.appuisMin : 0;
+const prudenceDifferes = R => !R.differes || typeof R.differes === 'string' ? 99
+  : R.differes.combi ? (R.differes.chaine ? R.differes.chaine.appuisMin : 50) : R.differes.actif === true ? R.differes.appuisMin : 0;
 /* Options P7 : la grille gagne un seul choix, « agir sur un différé du lot seulement s'il vient de la reprise des voisins sûrs » (ou « de la
  * graine d'écartement »). Sans option, la grille livrée, inchangée (même objet). */
 const GRILLE_VOISINS = Object.freeze({ ...GRILLE, differes: [false, 'voisins'] });
@@ -743,9 +770,12 @@ const GRILLE_GRAINE = Object.freeze({ ...GRILLE, differes: [false, 'graine'] });
  * la plus stricte. */
 const grilleGardePaire = (g = GRILLE) => ({ ...g, gardePaire: [null, ...GP.GRILLE] });
 const prudenceGP = R => !R.gardePaire ? 1000 : 100 - R.gardePaire.nMm + (R.gardePaire.axes === 'lv' ? 0.5 : 0);
-/* La grille d'une étude selon les options P7 demandées (une seule à la fois ; la combinaison est ajoutée à part). */
+/* La grille d'une étude selon les options P7 demandées. Une seule façon d'admettre les différés : la grille de son option. Deux ou trois
+ * (combinaison) : un seul choix combiné en plus de « jamais un différé », avec 1 ou 2 appuis si la chaîne en est (comme H1 seule). */
 function grilleDe({ voisinsSurs = false, graine = false, chaine = false, gardePaire = false } = {}) {
-  let g = chaine ? grilleDifferesEnChaine(GRILLE) : voisinsSurs ? GRILLE_VOISINS : graine ? GRILLE_GRAINE : GRILLE;
+  const n = [voisinsSurs, graine, chaine].filter(Boolean).length;
+  let g = n >= 2 ? { ...GRILLE, differes: [false, ...(chaine ? [1, 2] : [1]).map(appuisMin => combiDifferes({ chaine, appuisMin, voisins: voisinsSurs, graine }))] }
+    : chaine ? grilleDifferesEnChaine(GRILLE) : voisinsSurs ? GRILLE_VOISINS : graine ? GRILLE_GRAINE : GRILLE;
   if (gardePaire) g = grilleGardePaire(g);
   return g;
 }
@@ -788,7 +818,9 @@ const regleParType = rt => Object.assign(l => rt[l.zone] || null, { variante: (O
 const PART_SOBRE = 0.9;
 /* Options P7 'voisins' et 'graine' : un différé posé par le post-traitement agit sans le seuil X ; ses corrections ne comptent donc pas dans la
  * part gardée (sinon elles laisseraient monter le seuil des verts sans rien gagner). Sans ces options : toutes les lignes, inchangé. */
-const sobreSansDifferes = R => typeof R.differes === 'string';
+/* Combinaison : même règle (les différés admis bougent de 100 à 270 mm, le seuil X ne les touche pas ; s'ils comptaient, le seuil des verts
+ * monterait sans rien gagner, comme mesuré pour H1 seule : X de 8 à 10–12 mm, un vert juste perdu). H1 seule garde la méthode de sa branche. */
+const sobreSansDifferes = R => typeof R.differes === 'string' || !!(R.differes && R.differes.combi);
 function sobre(R, ls, { grille = GRILLE, contrainte = CONTRAINTE, parPartie = null } = {}) {
   const sousX = sobreSansDifferes(R) ? ls.filter(l => l.genre !== 'differe') : ls;
   const ref = bilan(sousX, R).corrigesJustes;
@@ -869,8 +901,11 @@ function detailDifferes(ls, R) {
 }
 /* `parties` : [{ designation, cas, table, skip? }] (parties d'apprentissage). Options P7 : `voisinsSurs`, `graine` (propositions des différés
  * du lot, grille étendue d'un choix), `gardePaire` (grille étendue des seuils de la garde de paire, propositions levées). */
-const ajouterChoix = (g, choix) => (g.differes || []).includes(choix) ? g : g === GRILLE ? (choix === 'voisins' ? GRILLE_VOISINS : GRILLE_GRAINE) : { ...g, differes: [...(g.differes || [false]), choix] };
-function etudier(parties, { grille = GRILLE, voisinsSurs = false, graine = false, gardePaire = false } = {}) {
+/* Un choix déjà couvert (seul, ou dans une valeur combinée de la grille) n'est pas ajouté. `leger` (combinaison, grilles lourdes) : la
+ * validation croisée de la règle commune et la règle figée seulement, sans les variantes « à la lettre » et « par type » (null). */
+const couvre = (g, post) => (g.differes || []).some(d => postsPermis(d).has(post));
+const ajouterChoix = (g, choix) => couvre(g, choix === 'voisins' ? 'voisins-surs' : 'graine') ? g : g === GRILLE ? (choix === 'voisins' ? GRILLE_VOISINS : GRILLE_GRAINE) : { ...g, differes: [...(g.differes || [false]), choix] };
+function etudier(parties, { grille = GRILLE, voisinsSurs = false, graine = false, gardePaire = false, leger = false } = {}) {
   if (voisinsSurs) grille = ajouterChoix(grille, 'voisins');
   if (graine) grille = ajouterChoix(grille, 'graine');
   if (gardePaire && !grille.gardePaire) grille = grilleGardePaire(grille);
@@ -898,10 +933,10 @@ function etudier(parties, { grille = GRILLE, voisinsSurs = false, graine = false
     return { gardePaire: g, total: additionner(bs.map(b => b.tout)), parType: Object.fromEntries(TYPES.map(k => [k, additionner(bs.map(b => b[k]))])), grappes: additionner(bs.map(b => b.grappes)) };
   });
   const fige = choisir(sel.flat(), { grille, parPartie: sel });
-  const croiseeLettre = res.map((r, i) => { const train = sel.filter((_, j) => j !== i), best = choisir(train.flat(), { grille, parPartie: train, objectif: 'justes' });
+  const croiseeLettre = leger ? null : res.map((r, i) => { const train = sel.filter((_, j) => j !== i), best = choisir(train.flat(), { grille, parPartie: train, objectif: 'justes' });
     return { partie: r.designation, regle: best ? best.R : null, bilan: best ? bilan(sel[i], best.R) : null }; });
-  const croiseeType = res.map((r, i) => { const rt = choisirParType(sel.filter((_, j) => j !== i), { grille }); return { partie: r.designation, regles: rt, bilan: bilan(sel[i], regleParType(rt)) }; });
-  const figeType = choisirParType(sel, { grille });
+  const croiseeType = leger ? null : res.map((r, i) => { const rt = choisirParType(sel.filter((_, j) => j !== i), { grille }); return { partie: r.designation, regles: rt, bilan: bilan(sel[i], regleParType(rt)) }; });
+  const figeType = leger ? null : choisirParType(sel, { grille });
   const courbe = fige ? [3, 4, 5, 6, 8, 10, 12, 15, 20, 30].map(X => ({ X, ...bilan(sel.flat(), { ...fige.R, X }) })) : [];
   return {
     format: FORMAT_ETUDE, voisinsSurs: !!voisinsSurs, graine: !!graine, gardePaire: !!gardePaire, sensibiliteGP,
@@ -915,10 +950,10 @@ function etudier(parties, { grille = GRILLE, voisinsSurs = false, graine = false
     parGenreCroiseeSobre: Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, additionner(croisee.filter(c => c.genreSobre[k]).map(c => c.genreSobre[k]))])),
     grappeCroisee: additionner(croisee.filter(c => c.grappe).map(c => c.grappe)), grappeCroiseeSobre: additionner(croisee.filter(c => c.grappeSobre).map(c => c.grappeSobre)),
     fige: fige ? { regle: fige.R, bilan: fige.b, parPartie: res.map((r, i) => ({ partie: r.designation, ...bilan(sel[i], fige.R) })) } : null,
-    croiseeLettre, totalCroiseeLettre: additionner(croiseeLettre.filter(c => c.bilan).map(c => c.bilan)),
+    croiseeLettre, totalCroiseeLettre: croiseeLettre ? additionner(croiseeLettre.filter(c => c.bilan).map(c => c.bilan)) : null,
     totalCroiseeSobre: additionner(croisee.filter(c => c.bilanSobre).map(c => c.bilanSobre)),
     figeSobre: fige ? (R => ({ regle: R, bilan: bilan(sel.flat(), R), parPartie: res.map((r, i) => ({ partie: r.designation, ...bilan(sel[i], R) })) }))(sobre(fige.R, sel.flat(), { grille, parPartie: sel })) : null,
-    croiseeType, totalCroiseeType: additionner(croiseeType.map(c => c.bilan)), figeType,
+    croiseeType, totalCroiseeType: croiseeType ? additionner(croiseeType.map(c => c.bilan)) : null, figeType, ...(leger ? { leger: true } : {}),
     courbe, cout: res.map(cout),
     skip: res.filter(r => r.skip).map(r => ({ partie: r.designation, ...bilanSkip(r.skip) })),
   };
@@ -964,6 +999,7 @@ function decisionType(etude, k) {
 /* Le fichier de réglages est au format que lit la passe de relecture (`ariane-relecture-reglages-1`, src/relecture-critere.js du chantier
  * de la relecture en ombre) : étapes permises, rôles, voie, cohérence, et par zone (pn, adv, abords, vert-hors-zone) corriger / seuil /
  * confiance. Le reste (origine, chiffres, variantes) est en plus : ce lecteur l'ignore. */
+const SENS_COMBINES = 'exception à « jamais un cut différé » (combinaison P7) : un cut différé par le lot est admis si sa pose vient de la chaîne avec au moins chaine.appuisMin appuis (src/differes-en-chaine.js ; sans les limites de voie et d\'écartement des verts), ou de la reprise des voisins sûrs (voisins ; src/voisins-surs-differes.js), ou de la graine d\'écartement sur pose fictive (graine ; src/graine-ecartement-fictive.js) ; ces deux dernières agissent sans les seuils des verts ; jamais un appui';
 const EXCEPTION_VOISINS = 'voisins-surs : un différé du lot est posé seulement par la reprise des voisins sûrs (src/voisins-surs-differes.js)';
 const EXCEPTION_GRAINE = 'graine-ecartement-fictive : un différé du lot est posé seulement par la graine d\'écartement sur pose fictive (src/graine-ecartement-fictive.js)';
 const ZONE_LECTEUR = Object.freeze({ pn: 'pn', adv: 'adv', abords: 'abords', liste: 'vert-hors-zone' });
@@ -990,6 +1026,7 @@ function reglagesProposes(etude, { date }) {
     ...(R.differes && R.differes.actif ? { differesEnChaine: { ...R.differes, sens: 'exception à « jamais un cut différé » : un cut différé par le lot est admis si sa pose vient de la chaîne avec au moins appuisMin appuis (src/differes-en-chaine.js) ; jugé sans les limites de voie et d\'écartement des verts' } } : {}),
     /* Options P7 : exceptions lues par `regleDuReglage` ; un lecteur qui les ignore garde la règle prudente (jamais un différé ; garde de paire). */
     ...(R.differes === 'voisins' ? { exceptionDifferes: EXCEPTION_VOISINS } : R.differes === 'graine' ? { exceptionDifferes: EXCEPTION_GRAINE } : {}),
+    ...(R.differes && R.differes.combi ? { differesCombines: { actif: true, chaine: R.differes.chaine, voisins: R.differes.voisins, graine: R.differes.graine, sens: SENS_COMBINES } } : {}),
     ...(R.gardePaire ? { gardePaireConfirmee: { actif: true, nMm: R.gardePaire.nMm, axes: R.gardePaire.axes, sens: 'un cut que la garde de paire retire est posé à la pose du moteur si, sans la garde, la décision livrée pose au premier passage et si cette paire tombe à nMm de la voie de la chaîne ou des voisins sûrs (axes l : latéral seul ; lv : latéral et vertical) ; jamais un appui' } } : {}),
     origine: { outil: 'tools/relecture-autonome.cjs etudier', fiche: 'fiches/RELECTURE_AUTONOME.md', parties: etude.parties,
       procedure: 'validation croisée par partie (une partie laissée de côté, réglage sur les autres, mesure sur elle), puis règle figée sur les six parties d\'apprentissage ; aucune partie réservée lue pour régler',
@@ -1012,7 +1049,9 @@ function regleDuReglage(g) {
     C: g.coherence ? g.coherence.diffLateraleMaxMm : null, G: g.coherence ? g.coherence.ecartementMaxMm : null, stages: et,
     /* Bloc `differesEnChaine` (src/differes-en-chaine.js) ou exception P7 (`exceptionDifferes` : voisins sûrs, graine) : absents ou coupés,
      * jamais un différé. Bloc `gardePaireConfirmee` (option P7) : absent ou coupé, la garde de paire reste. */
-    differes: g.differesEnChaine && g.differesEnChaine.actif === true ? DC.reglages(g.differesEnChaine)
+    differes: g.differesCombines && g.differesCombines.actif === true ? combiDifferes({ chaine: g.differesCombines.chaine && g.differesCombines.chaine.actif === true ? g.differesCombines.chaine : false,
+        voisins: g.differesCombines.voisins === true, graine: g.differesCombines.graine === true })
+      : g.differesEnChaine && g.differesEnChaine.actif === true ? DC.reglages(g.differesEnChaine)
       : typeof g.exceptionDifferes === 'string' && g.exceptionDifferes.startsWith('voisins-surs') ? 'voisins'
       : typeof g.exceptionDifferes === 'string' && g.exceptionDifferes.startsWith('graine-ecartement-fictive') ? 'graine' : false,
     poses: !(g.jamais || []).includes('cut posé par le lot'),
@@ -1030,6 +1069,7 @@ function decrireDifferes(d) {
   if (d === 'voisins') return ', différés : reprise des voisins sûrs seulement';
   if (d === 'graine') return ', différés : graine d\'écartement seulement';
   if (d && d.actif) return `, différés en chaîne (${d.appuisMin} appui${d.appuisMin > 1 ? 's' : ''} au moins, sans limites D et G)`;
+  if (d && d.combi) return `, différés : ${[d.chaine && `chaîne (${d.chaine.appuisMin} appui${d.chaine.appuisMin > 1 ? 's' : ''} au moins, sans limites D et G)`, d.voisins && 'voisins sûrs', d.graine && 'graine'].filter(Boolean).join(', ') || 'aucun'}`;
   return '';
 }
 const ligneBilan = b => `${b.visites} | ${b.micSup10} | ${b.agit} | ${b.reproduit5} | ${b.reproduit10} | ${b.corrigesJustes} | ${b.abime + b.aggrave} | ${b.mauvaiseVoie} | ${b.abstention} | ${b.laisseFaux}`;
@@ -1046,7 +1086,7 @@ function texte(o) {
     L.push(`total | | ${ligneBilan(o.totalCroisee)}`);
     L.push('', `Par type de zone (validation croisée, règle commune) :`); for (const k of TYPES) L.push(`- ${k} : ${ligneBilan(o.parTypeCroisee[k])}`);
     L.push('', `Règle figée : ${decrire(o.fige && o.fige.regle)}`, o.fige ? `- en échantillon : ${ligneBilan(o.fige.bilan)}` : '');
-    L.push('', `Objectif à la lettre (corrections justes seules), validation croisée : ${ligneBilan(o.totalCroiseeLettre)}`);
+    if (o.totalCroiseeLettre) L.push('', `Objectif à la lettre (corrections justes seules), validation croisée : ${ligneBilan(o.totalCroiseeLettre)}`);
     if (o.figeSobre) { L.push('', `Règle de service (variante sobre) : ${decrire(o.figeSobre.regle)}`, `- validation croisée : ${ligneBilan(o.totalCroiseeSobre)}`); for (const c of o.croisee) if (c.bilanSobre) L.push(`  - ${c.partie} (X ${c.regleSobre.X}) : ${ligneBilan(c.bilanSobre)}`); }
     if (o.parTypeCroiseeSobre) {
       L.push('', '## Règle de service, tous genres (validation croisée)', '', `Groupe | ${ENTETE_BILAN} | erreurs > 10 mm`, '---' + '|--:'.repeat(11));
@@ -1063,7 +1103,8 @@ function texte(o) {
     L.push('', '## Chiffre central par type de zone (chaîne+h, agir partout)', '', `Partie | zone | ${EN}`, '---|---' + '|--:'.repeat(8));
     for (const c of o.central) { if (!c.chaineParType) continue; for (const k of TYPES) L.push(`${c.partie} | ${k} | ${lb(c.chaineParType[k])}`); L.push(`${c.partie} | en grappe | ${lb(c.chaineGrappe)}`); L.push(`${c.partie} | différés du lot | ${lb(c.chaineDiffere)}`); }
     if (o.gardePaire) L.push('', texteGardePaire(o));
-    L.push('', '## Variante par type (validation croisée)'); for (const c of o.croiseeType) L.push(`- ${c.partie} : ${ligneBilan(c.bilan)}`); L.push(`- total : ${ligneBilan(o.totalCroiseeType)}`);
+    if (o.croiseeType) { L.push('', '## Variante par type (validation croisée)'); for (const c of o.croiseeType) L.push(`- ${c.partie} : ${ligneBilan(c.bilan)}`); L.push(`- total : ${ligneBilan(o.totalCroiseeType)}`); }
+    if (o.leger) L.push('', 'Mode léger : variantes « à la lettre » et « par type » non calculées.');
     L.push('', '## Courbe (règle figée, X variable, en échantillon)', '', 'X | agit | corrections justes | reproduit ≤ 10 | dégâts | mauvaise voie | erreurs > 10 mm', '--:|--:|--:|--:|--:|--:|--:');
     for (const c of o.courbe) L.push(`${c.X} | ${c.agit} | ${c.corrigesJustes} | ${c.reproduit10} | ${c.degats} | ${c.mauvaiseVoie} | ${c.erreurs10}`);
     L.push('', '## Coût', '', 'Partie | verts en plus | revisites de poses | min Mic (3,6 s) | min Ariane (1,8–2,4 s)', '---|--:|--:|--:|---');
@@ -1150,20 +1191,27 @@ function texteDifferes(o, { vueMm = 200 } = {}) {
  * à laquelle on ajoute la seule condition des différés en chaîne (src/differes-en-chaine.js, appuis au moins `appuisMin`, fixé par
  * l'hypothèse : rien n'est appris ici), mesurée sur la partie laissée de côté. Les verts et les cuts posés sont jugés comme dans la
  * référence. Mêmes bilans que la validation croisée d'`etudier` : `comparer` les lit. */
+/* COMBINAISON (options P7) : `differes` donne une autre valeur à greffer (ex. `combiDifferes(…)`, 'voisins', 'graine') ; `gardePaire`
+ * ({ nMm, axes }) ajoute la garde de paire confirmée à ce seuil fixé. Les propositions des différés et de la garde de paire sont alors
+ * lues dans les cas (extraction ou greffe avec les options). Sans eux : l'hypothèse H1 seule, comme dans sa branche. */
 const FORMAT_GREFFE = 'ariane-relecture-autonome-greffe-v1';
 function greffer(parties, ref, cfg = { appuisMin: 1 }) {
   if (!ref || ref.format !== FORMAT_ETUDE || !Array.isArray(ref.croisee)) throw Error('greffe : une sortie d\'etudier attendue en référence');
   if (JSON.stringify(ref.parties) !== JSON.stringify(parties.map(p => p.designation))) throw Error('études de parties différentes');
-  const D = DC.reglages({ ...cfg, actif: true });
-  const res = parties.map(p => ({ ...p, ...lignes(p) })), sel = res.map(dansSelection);
+  const { differes = null, gardePaire = null, ...dc } = cfg || {};
+  const D = differes != null ? differes : DC.reglages({ ...dc, actif: true });
+  const posts = postsPermis(D);
+  const res = parties.map(p => ({ ...p, ...lignes({ ...p, voisinsSurs: posts.has('voisins-surs'), graine: posts.has('graine') }, { gardes: gardePaire ? [gardePaire] : null }) })), sel = res.map(dansSelection);
   const croisee = res.map((r, i) => {
     const R0 = ref.croisee[i].regleSobre;
     if (R0 && R0.differes !== false) throw Error(`greffe : la règle de référence de ${r.designation} admet déjà des différés`);
-    const Rs = R0 ? { ...R0, differes: D } : null;
+    if (R0 && R0.gardePaire) throw Error(`greffe : la règle de référence de ${r.designation} lève déjà la garde de paire`);
+    const Rs = R0 ? { ...R0, differes: D, ...(gardePaire ? { gardePaire } : {}) } : null;
     return { partie: r.designation, regleSobre: Rs, ...bilansService(sel[i], Rs) };
   });
   const somme = f => additionner(croisee.map(f).filter(Boolean));
-  return { format: FORMAT_GREFFE, parties: res.map(r => r.designation), differesEnChaine: D, croisee, totalCroiseeSobre: somme(c => c.bilanSobre),
+  return { format: FORMAT_GREFFE, parties: res.map(r => r.designation), differesEnChaine: chaineDe(D), ...(differes != null ? { differes: D } : {}), ...(gardePaire ? { gardePaire } : {}),
+    croisee, totalCroiseeSobre: somme(c => c.bilanSobre),
     parTypeCroiseeSobre: Object.fromEntries([...TYPES, 'hors'].map(k => [k, somme(c => c.parTypeSobre[k])])),
     parTypeVertCroiseeSobre: Object.fromEntries(TYPES.map(k => [k, somme(c => c.parTypeVertSobre[k])])),
     parGenreCroiseeSobre: Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, somme(c => c.genreSobre[k])])), grappeCroiseeSobre: somme(c => c.grappeSobre) };
@@ -1222,7 +1270,8 @@ module.exports = { FORMAT, FORMAT_ETUDE, FORMAT_JUGEMENT, FORMAT_REGLAGES, decal
   CRITERES_TYPE, decisionType, reglagesProposes, regleDuReglage, texte, essai, max3d, grilleDifferesEnChaine, comparer, texteComparaison,
   refus, bilansService, detailDifferes, texteDifferes, FORMAT_GREFFE, greffer,
   grilleDe, GRILLE_VOISINS, GRILLE_GRAINE, EXCEPTION_VOISINS, EXCEPTION_GRAINE, greffeCas, memeChaine,
-  voisinageActuel, lireEchoLeger, greffeGardePaire, grilleGardePaire, varDe, cleGP, detailGardePaire, texteGardePaire };
+  voisinageActuel, lireEchoLeger, greffeGardePaire, grilleGardePaire, varDe, cleGP, detailGardePaire, texteGardePaire,
+  combiDifferes, postsPermis, chaineDe };
 
 /* ------------------------------------------------------------------ ligne de commande */
 const lireJsonl = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
@@ -1241,6 +1290,8 @@ function args(argv) {
     else if (k === '--differes-en-chaine') o.differesEnChaine = true;
     else if (k === '--voisins-surs-differes') o.voisinsSurs = true; else if (k === '--graine-ecartement-fictive') o.graine = true;
     else if (k === '--garde-paire-confirmee') o.gardePaire = true; else if (k === '--greffer') o.greffer = val();
+    else if (k === '--leger') o.leger = true; else if (k === '--sans-chaine') o.sansChaine = true;
+    else if (k === '--garde-paire-seuil') { const [n, ax] = val().split(':'); o.gardePaireSeuil = { nMm: Number(n), axes: ax }; if (!(o.gardePaireSeuil.nMm > 0) || !['l', 'lv'].includes(ax)) throw Error('--garde-paire-seuil N:l ou N:lv'); }
     else if (k === '--ref') o.ref = val(); else if (k === '--essai') o.essai = val();
     else if (k === '--appuis-min') { o.appuisMin = Number(val()); if (!Number.isInteger(o.appuisMin) || o.appuisMin < 1) throw Error('--appuis-min : entier ≥ 1'); }
     else throw Error('argument inconnu : ' + k);
@@ -1294,7 +1345,9 @@ if (require.main === module) {
       fs.writeFileSync(a.sortie, JSON.stringify(t));
       console.log(`partie ${a.projet}:${a.partie} : lot ${t.lot.length} (${t.lot.filter(x => x.differe).length} différés), PN ${t.zonesPN.length}, ADV ${t.zonesADV.length}, ${t.cuts.length} cuts à l'Écho`);
     } else if (a.mode === 'etudier') {
-      const o = etudier(chargerParties(a, 'relecture-autonome'), { ...(a.differesEnChaine ? { grille: grilleDifferesEnChaine() } : {}), voisinsSurs: !!a.voisinsSurs, graine: !!a.graine, gardePaire: !!a.gardePaire });
+      /* Une option : la grille de son option ; deux façons d'admettre les différés ou plus : le choix combiné (grilleDe). */
+      const o = etudier(chargerParties(a, 'relecture-autonome'), { grille: grilleDe({ chaine: !!a.differesEnChaine, voisinsSurs: !!a.voisinsSurs, graine: !!a.graine, gardePaire: !!a.gardePaire }),
+        voisinsSurs: !!a.voisinsSurs, graine: !!a.graine, gardePaire: !!a.gardePaire, leger: !!a.leger });
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(o, null, 1));
       if (a.reglages) fs.writeFileSync(a.reglages, JSON.stringify(reglagesProposes(o, { date: a.date || new Date().toISOString().slice(0, 10) }), null, 2) + '\n');
       console.log(texte(o));
@@ -1319,8 +1372,13 @@ if (require.main === module) {
       if (!a.ref || !a.essai) throw Error('comparer --ref ETUDE.json --essai ETUDE.json');
       console.log(texteComparaison(comparer(JSON.parse(fs.readFileSync(a.ref, 'utf8')), JSON.parse(fs.readFileSync(a.essai, 'utf8')))));
     } else if (a.mode === 'greffer') {
-      if (!a.ref) throw Error('greffer --ref ETUDE.json (etudier sans l\'option) --partie P:N --cas … --table … [--partie …] [--appuis-min 1] [--json G.json]');
-      const ref = JSON.parse(fs.readFileSync(a.ref, 'utf8')), g = greffer(chargerParties(a, 'relecture-autonome'), ref, { appuisMin: a.appuisMin ?? 1 });
+      if (!a.ref) throw Error('greffer --ref ETUDE.json (etudier sans l\'option) --partie P:N --cas … --table … [--partie …] [--appuis-min 1] [--voisins-surs-differes] [--graine-ecartement-fictive] [--sans-chaine] [--garde-paire-seuil N:l|N:lv] [--json G.json]');
+      /* Sans option de combinaison : H1 seule (sa branche). Avec : la chaîne (sauf --sans-chaine) et les post-traitements demandés ; une seule
+       * façon restante prend la valeur de son option ('voisins', 'graine'), deux ou trois la valeur combinée. */
+      const ch = !a.sansChaine, nb = [ch, !!a.voisinsSurs, !!a.graine].filter(Boolean).length;
+      const differes = !a.voisinsSurs && !a.graine && !a.sansChaine ? null : nb === 0 ? false : nb >= 2 ? combiDifferes({ chaine: ch, appuisMin: a.appuisMin ?? 1, voisins: !!a.voisinsSurs, graine: !!a.graine })
+        : ch ? DC.reglages({ actif: true, appuisMin: a.appuisMin ?? 1 }) : a.voisinsSurs ? 'voisins' : 'graine';
+      const ref = JSON.parse(fs.readFileSync(a.ref, 'utf8')), g = greffer(chargerParties(a, 'relecture-autonome'), ref, { appuisMin: a.appuisMin ?? 1, ...(differes !== null ? { differes } : {}), ...(a.gardePaireSeuil ? { gardePaire: a.gardePaireSeuil } : {}) });
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(g, null, 1));
       console.log(texteComparaison(comparer(ref, g)) + '\n\n## Différés posés par la chaîne (règle de service de chaque partie, greffée)\n\n' + texteDifferes(g));
     } else if (a.mode === 'essai') {
