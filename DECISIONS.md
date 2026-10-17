@@ -2503,3 +2503,16 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Ce que j'en tire : chaque règle qui agit dans la test 7 doit avoir ses chiffres au banc, mesurés en validation croisée sur parties d'apprentissage puis jugés sur parties réservées, avec 0 mauvaise voie. Ce qui ne tient pas reste en ombre et c'est dit à Mic.
 - Mic veut aussi une **réorganisation propre du panneau**, désorganisé par les derniers ajouts. Le chantier `claude/50-panneau-t7` est élargi : inventaire, nouvelle structure (lot, règles du prochain lot, résultats, relecture, détails repliés), sans perte d'information ni changement vers ESV.
 - Temps et calcul : gros calculs et essais autorisés jusqu'au retour de Mic.
+
+## D-174 — Relecture autonome : la correction des verts de PN peut agir, le reste reste en ombre (17 octobre 2026)
+
+- **Fait (étude `claude/50-zones-autonomes`, fusionnée dans 50-base)** : la sélection « méthode de Mic » contient 94 % de ses corrections de plus de 10 mm.
+- **Règle figée** (`datasets/relecture-reglages-proposes.json`) : 8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus de la médiane, sur les verts seulement, jamais un cut posé ou différé par le lot.
+  - En validation croisée : 79 justes, 0 mauvaise voie, 6 abîmés sur 1 445. **PN 36/36.** ADV 18 % d'erreurs, abords 14 %.
+  - Sur les parties réservées 1:25 et 1:11 : 0 mauvaise voie, PN 3/3.
+- **Décision** :
+  - dans la test 7, seule la correction des verts de PN est proposée en mode « corriger » ;
+  - ADV, abords, verts hors zone, cuts du lot et SKIP restent en ombre ;
+  - le réglage reste coupé par défaut ; Mic choisit le mode dans le panneau.
+- **Non démontré** : la porte des 9 % demande 39 actions sans erreur, et il n'y en a que 9 de jugées. Les Échos des parties 2 à 9 du projet 2 suffiraient.
+- **Suite** : atelier P-7 pour la pose en ADV, aux abords et dans les grappes. La SKIP « un seul scanner » ne se mesure pas : ESV fond les scanners en un seul nuage.
