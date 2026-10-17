@@ -20,7 +20,8 @@ const SIDES=['left','right'];
 
 function avecReglage(valeur,fn){
  const avant=Object.getOwnPropertyDescriptor(globalThis,'BananeSettings');
- globalThis.BananeSettings=valeur===undefined?{...Settings,fauxVertOmbre:undefined}:{...Settings,fauxVertOmbre:valeur};
+ /* La hauteur apprise (autre ombre de la décision) est tenue à l'écart : cet essai ne juge que le faux vert en ombre. */
+ globalThis.BananeSettings=valeur===undefined?{...Settings,fauxVertOmbre:undefined,hauteurApprise:undefined}:{...Settings,fauxVertOmbre:valeur,hauteurApprise:undefined};
  try{return fn();}finally{if(avant)Object.defineProperty(globalThis,'BananeSettings',avant);else delete globalThis.BananeSettings;}
 }
 const sans=d=>{const {fauxVertOmbre,...reste}=d;return reste;};

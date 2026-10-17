@@ -23,7 +23,7 @@ const ReglesMetier = require('../src/regles-metier.js');
 test('le fichier porte une date, des valeurs et les parties qui ont servi, pour chaque réglage', () => {
   assert.equal(F.format, 'ariane-reglages-figes-v1');
   assert.match(F.date, /^\d{4}-\d{2}-\d{2}$/);
-  assert.deepEqual(Object.keys(F.reglages).sort(), ['fauxVertOmbre', 'memoireSerieB', 'ombreVerticale', 'reglesMetier', 'voiePredite']);
+  assert.deepEqual(Object.keys(F.reglages).sort(), ['fauxVertOmbre', 'hauteurApprise', 'memoireSerieB', 'ombreVerticale', 'reglesMetier', 'voiePredite']);
   for (const [nom, r] of Object.entries(F.reglages)) {
     assert.ok(r.libelle && r.valeurs && typeof r.valeurs === 'object', nom);
     assert.match(r.fige, /^\d{4}-\d{2}-\d{2}$/, `${nom} : date de gel`);
@@ -92,4 +92,14 @@ test('faux vert en ombre : mêmes seuils que le module et le réglage livré, ch
   assert.equal(v.differer, false); assert.equal(Settings.fauxVertOmbre.differer, false);
   assert.equal(v.memeRail, true);
   assert.equal(F.reglages.fauxVertOmbre.ombre.version, FV.VERSION);
+});
+
+test('hauteur apprise en ombre : même modèle que le module et le réglage livré, chemin d\'activation coupé', () => {
+  const HA = require('../src/hauteur-apprise.js');
+  const r = F.reglages.hauteurApprise, v = r.valeurs, s = Settings.hauteurApprise;
+  assert.equal(r.ombre.version, HA.VERSION);
+  assert.equal(v.appliquer, false); assert.equal(s.appliquer, false); assert.equal(s.actif, true);
+  for (const k of ['plafondMm', 'pointsDessusMin']) { assert.equal(v[k], HA.MODELE[k], k); assert.equal(s[k], HA.MODELE[k], k); }
+  assert.deepEqual(v.etages, [...HA.MODELE.etages]); assert.deepEqual([...s.etages], [...HA.MODELE.etages]);
+  for (const g of ['applique', 'refuse']) { assert.deepEqual(v[g], { ...HA.MODELE[g] }, g); assert.deepEqual({ ...s[g] }, { ...HA.MODELE[g] }, g); }
 });
