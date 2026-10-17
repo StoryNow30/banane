@@ -515,7 +515,8 @@ function poseDe(src, a, h, post = null) {
  * et que la voie confirme, sinon la proposition de base). */
 const cleGP = g => g ? `${g.axes}:${g.nMm}` : null;
 function varDe(l, R, variante = R && R.variante) {
-  const k = R && R.gardePaire ? cleGP(R.gardePaire) : null, g = k && l.varGP && l.varGP[k];
+  if (!l.varGP || !R || !R.gardePaire) return l.var && l.var[variante];  // presque toutes les lignes : aucune levée (et pas de clé à bâtir)
+  const g = l.varGP[cleGP(R.gardePaire)];
   return (g && g[variante]) || (l.var && l.var[variante]);
 }
 /* Lignes de jugement d'une partie : un cut visité par Mic, sa zone, son genre (pose, différé, vert), sa référence et les propositions.
