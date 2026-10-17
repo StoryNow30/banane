@@ -2489,3 +2489,10 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Mic : « je suis d'accord ». La relecture autonome (D-170) commence par une **ombre de terrain**. Après le lot, Ariane visite les cuts que Mic aurait relus, verts compris : zones PN et ADV avec leurs marges, abords des rouges et des différés, cuts isolés, liste « À contrôler ». Pour chacun, elle capture, calcule la pose qu'elle donnerait (moteur et hauteur apprise) et note l'écart avec la pose actuelle. **Elle ne modifie rien et ne valide rien.**
 - La correction réelle viendra plus tard, avec Mic, une fois les chiffres validés sur des parties réservées avec Écho.
 - Chantier lancé : `claude/50-relecture-ombre`, au niveau fort. Réglage coupé par défaut, case dans le panneau. La trace est celle d'une visite humaine.
+
+## D-172 — Règle SKIP de Mic pour les premiers cuts (et tous les autres) (17 octobre 2026)
+
+- Mic : « si aucun point ne s'affiche oui, si un seul scanner s'affiche oui c'est à skip aussi, sinon il ne faut jamais les ignorer, il faut les visiter et corriger si besoin ».
+- **Règle** : un cut se met en SKIP seulement si **aucun point** ne s'affiche, ou si **un seul scanner** s'affiche. Dans tous les autres cas, cuts 0 à 3 compris, Ariane le visite et le corrige si besoin, comme les autres.
+- Le cut 1 de chaque partie posé par Ariane au lot des parties 2 à 7 (D-169) n'est donc pas une faute en soi : il faut vérifier s'il avait des points des deux scanners.
+- Aujourd'hui Ariane refuse tout SKIP. Pour suivre la règle : d'abord une **détection en ombre** (« ce cut serait à SKIP : aucun point / un seul scanner »), notée au journal et comparée aux SKIP de Mic dans les Échos ; l'envoi réel du SKIP, par le même geste qu'un humain, reste coupé et ne s'active qu'avec Mic.

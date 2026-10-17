@@ -107,4 +107,4 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - **test 7**, avec : la relecture en ombre ; le libellé de la case grappe corrigé (« série de différés », pas « aiguille ») ; l'état du dernier lot affiché clairement ; un message quand il ne reste rien à faire dans la partie ;
 - relecture au niveau maximal, puis envoi.
 
-**Question en attente** : les cuts 0 à 3 de chaque partie doivent-ils être ignorés (SKIP) ?
+**Réponse de Mic (D-172)** : SKIP seulement si aucun point ne s'affiche ou si un seul scanner s'affiche ; sinon visiter et corriger, cuts 0 à 3 compris. À faire : détection SKIP en ombre, mesurée contre les SKIP de Mic.
