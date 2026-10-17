@@ -138,8 +138,9 @@ partie.
   `tests/consigne-4956.test.cjs` (la consigne de la test 6 garde son libellé ; le panneau a le nouveau).
 - Nouveaux : `tests/partie-sans-rouge-t7.test.cjs` (avis du service worker, commandes identiques, message du panneau et
   cas où il ne doit rien dire) ; `tests/partie-complete-sans-envoi-t7.test.cjs` (partie complète et cut vert : 0 commande ;
-  13 autres cas, dont cut rouge, page muette, relevé d'un autre cut : commandes et arguments identiques à un lot sans
-  relevé ; une seule lecture de la liste, au premier cut, et seulement si le compteur est complet).
+  une seule lecture de la liste, au premier cut, et seulement si le compteur est complet) ;
+  `tests/partie-complete-inchange-a-t7.test.cjs` et `-b-` (13 autres cas, dont cut rouge, page muette, relevé d'un autre
+  cut : commandes et arguments identiques à un lot sans relevé) ; montage commun `tests/helpers/partie-complete.cjs`.
 
 ## 5. Limites
 

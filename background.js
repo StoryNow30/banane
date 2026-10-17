@@ -909,8 +909,9 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
  * 07:27:58). Il n'y a plus rien à faire dans ce lot : la reprise répond « Lot déjà
  * terminé », sans commande ni événement. Les autres clôtures (dernier cut d'une plage,
  * sortie d'ESV) restent reprenables comme avant. */
-const FINS_DE_PARTIE=new Set(['dernier-cut-valide','dernier-cut-differe','partie-sans-rouge']);
-function lotTermine(b){const e=b?.stoppedAtEnd;return b?.state==='STOPPED'&&!!e&&(FINS_DE_PARTIE.has(e.issue)||e.reason==='navigation-other-part-after-defer');}
+const FINS_DE_PARTIE=new Set(['dernier-cut-valide','dernier-cut-differe']);
+/* Test 7, suite : un lot clos au premier cut d'une partie complète (`partie-sans-rouge`, rien envoyé) est terminé lui aussi. */
+function lotTermine(b){const e=b?.stoppedAtEnd;return b?.state==='STOPPED'&&!!e&&(FINS_DE_PARTIE.has(e.issue)||e.reason==='navigation-other-part-after-defer'||e.issue==='partie-sans-rouge');}
 /* Test 7, suite (coordination) — PARTIE COMPLÈTE : RIEN N'EST ENVOYÉ À ESV SUR UN CUT DÉJÀ TRAITÉ. Constaté au banc : sur une
  * partie dont le compteur « N on M treated » est complet, le lot posait et validait le cut affiché, déjà traité, puis ESV
  * chargeait la partie suivante ; un opérateur ne fait pas cette écriture. Au PREMIER cut du lot (rien de traité, un seul cut
