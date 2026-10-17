@@ -28,7 +28,7 @@ class EsvRelecture extends SimulatedESV{
   this.ecriture='valid';this.surValidation=null;this.refusApply=null;this.offsetApply=false;this.apresLot=false;this.sansPoints=new Set();this.panneCapture=new Set();
   /* Liste d'ESV : nombre de cuts de la partie (compteur), cuts rouges, lignes forcées {cut: {s, t, v}}, cuts déjà vus ; Maj+Espace. */
   this.total=200;this.rouges=new Set(loin);this.lignes={};this.vus=new Set([111,112,113]);this.vusListe=new Set(this.vus);this.listeIllisible=false;this.lecturesListe=[];
-  this.majEspace=[];this.majEspaceVers=null;this.surVu=null;this.imiterVu=true;this.bordsListe=false;}
+  this.majEspace=[];this.majEspaceVers=null;this.surVu=null;this.imiterVu=true;this.bordsListe=false;this.refusAller=null;}
  /* Pose d'ESV d'un cut : celle qu'Ariane ou la passe y a validée ; sinon, après le lot, un vert juste (la pose que le lot a validée au
   * cut 111, celle du moteur sur ce nuage), décalé de `decalages[cut]` mm en travers (nombre) ou [travers, hauteur] ; avant le lot, la
   * pose de la fixture. */
@@ -66,6 +66,10 @@ class EsvRelecture extends SimulatedESV{
  /* Retour à un cut : la page confirme le cut atteint (chemin « pas à pas » ou « événement »), et les bornes lues au compteur. */
  async goToCut(target,options={},operationId=null){this.calls.push('goToCut');this.allees.push({cut:target.cut,chemin:options.chemin??null,operationId,t:Date.now()});
   if(this.surAller)await this.surAller(target);
+  /* Refus de la page (`refusAller(cut)` → code), rendu comme la vraie page : rien n'est émis. */
+  const code=this.refusAller?this.refusAller(target.cut):null;
+  if(code)return {format:'ariane-goto-cut-v1',operationId,action:'GO_TO_CUT',lectureSeule:true,cible:{part:target.part,cut:target.cut},identiteAvant:{part:this.identity.part,cut:this.identity.cut},
+   identiteApres:null,chemin:null,commande:'aucune',emissions:0,commandInvoked:false,resultat:'refuse',confirme:false,refusal:{code,message:`refus simulé (${code}) ; rien n’a été envoyé à ESV.`}};
   const avant={part:this.identity.part,cut:this.identity.cut},pas=options.chemin==='pas';
   if(pas){const s=target.cut>avant.cut?1:-1;for(let c=avant.cut+s;c!==target.cut+s;c+=s)this.afficher(c);}else this.afficher(target.cut);
   this.identity.cut=target.cut;this.ajuster();
