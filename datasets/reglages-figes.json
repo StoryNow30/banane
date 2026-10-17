@@ -263,6 +263,57 @@
         }
       ],
       "note": "Coefficients appris sur les quatre parties, enveloppe (part 0,5 sur les rails calés, 1 sur les rails refusés, plafond 5 mm) choisie à l'identique dans les quatre plis de la validation croisée. Aucune partie réservée ne l'a jugée."
+    },
+    "vertsAControler": {
+      "libelle": "Verts à contrôler : liste de fin de lot des verts à relire en priorité (lecture seule)",
+      "decision": "à écrire (chantier des verts à contrôler)",
+      "fiche": "fiches/VERTS_A_CONTROLER.md",
+      "etat": "actif : liste consultée par l'opérateur, aucune action dans ESV ; la décision et la pose ne la lisent pas",
+      "fige": "2026-10-17",
+      "valeurs": {
+        "poids": {
+          "ecartement": 0.5,
+          "denivele": 0.5,
+          "hauteur": 1,
+          "poses": 0.5,
+          "voie": 0,
+          "rouges": 1,
+          "differe": 0.5,
+          "pn": 0
+        },
+        "zonesMortes": {
+          "ecartementMm": 2,
+          "deniveleMm": 2,
+          "hauteurMm": 2,
+          "posesMm": 2,
+          "voieMm": 2
+        },
+        "fenetreCuts": 5,
+        "fenetreIsoleCuts": 5,
+        "voisinsVoie": 5,
+        "voisinsDenivele": 10,
+        "seuil": 1,
+        "tempsParVertS": 3.7
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            12,
+            13,
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ],
+      "note": "Poids et zone morte appris sur les quatre lots (1:17, 1:24, 1:29, 2:1), seuil choisi après validation croisée du seuil seul (0,86 à 1,06 selon la partie laissée de côté). Parties 12 et 13 : contrôle sans lot. Aucune partie réservée n'a jugé ces valeurs."
     }
   }
 }

@@ -163,6 +163,14 @@
  <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
  <div id="lot-commande" class="commande carte rise d5" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
 
+ <!-- 5.0 : verts à contrôler, en fin de lot. Une liste à consulter, dans l'ordre des cuts : Ariane n'agit pas dans ESV. -->
+ <section id="verts-controle" class="carte verts rise d5" aria-labelledby="verts-titre" hidden>
+  <p class="tete-bloc"><span id="verts-titre" class="lbl">À contrôler</span><button id="verts-maj" class="link" type="button">Recalculer</button></p>
+  <p id="verts-ligne" class="resume-ligne"></p>
+  <ul id="verts-plages" class="verts-plages"></ul>
+  <p id="verts-note" class="muted">Verts qu’Ariane n’a pas visités, à relire d’abord. Liste à consulter : aucune action dans ESV.</p>
+ </section>
+
  <!-- D-092 : les fiches de départ, une carte par partie (la plus récente), la partie en cours d'abord.
       Les chiffres sont ceux qu'ESV affichait au démarrage du lot : à comparer avec sa liste. -->
  <p class="sec rise d6">Départs des parties</p>
