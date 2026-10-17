@@ -123,7 +123,7 @@
   const h=decision.hauteurApprise?.rails,out={},corr={};
   for(const s of SIDES){const c=h?.[s],ok=c&&Number.isFinite(c.correctionMm)&&c.correctionMm!==0&&Array.isArray(c.corrigee)&&c.corrigee.every(Number.isFinite);
    out[s]=ok?c.corrigee.slice():p[s].slice();corr[s]=ok?c.correctionMm:0;}
-  return {positions:out,hauteurApprise:h?corr:null};}
+  return {positions:out,hauteurMm:h?corr:null};}
  /* Confiance du moteur par rail (« s1 » : rail retenu par S1, sans confiance calibrée). */
  function confiance(science){if(!science?.rails)return null;
   return Object.fromEntries(SIDES.map(s=>{const r=science.rails[s];return [s,r?.s1Changed?'s1':Number.isFinite(r?.astar?.confidence)?r1(r.astar.confidence):null];}));}
@@ -132,15 +132,15 @@
   const base={etage:decision?.stage??null,motifDecision:decision?.reason!=null?String(decision.reason).slice(0,80):null,
    appuis:Array.isArray(decision?.anchorsUsed)?decision.anchorsUsed.slice(0,12):[],confiance:confiance(science),poseActuelle:actuelle};
   const calc=actuelle?poseCalculee(decision):null;
-  if(!calc)return {...base,poseCalculee:null,ecartMm:null,pireMm:null,hauteurApprise:null,zoneGrise:false,verdict:'je laisserais',
+  if(!calc)return {...base,poseCalculee:null,ecartMm:null,pireMm:null,hauteurMm:null,zoneGrise:false,verdict:'je laisserais',
    raison:`aucune pose sûre calculée (${base.etage||'?'}${base.motifDecision?' : '+base.motifDecision:''}) : rien à proposer`};
   const ecartMm=Object.fromEntries(SIDES.map(s=>[s,ecartRail(rails[s],calc.positions[s])]));
   let pire=0,ou=null;for(const s of SIDES)for(const axe of ['lat','vert']){const v=Math.abs(ecartMm[s][axe]);if(v>pire){pire=v;ou={s,axe,v:ecartMm[s][axe]};}}
   const corrige=pire>=cfg.seuilCorrigerMm,gris=pire>=cfg.zoneGrise[0]&&pire<=cfg.zoneGrise[1];
   const nombre=v=>String(r1(v)).replace('.',',');
   const lieu=ou?`rail ${NOM[ou.s]}, ${ou.axe==='lat'?'latéral':'vertical'} ${nombre(Math.abs(ou.v))} mm`:'aucun écart';
-  const h=calc.hauteurApprise&&SIDES.some(s=>calc.hauteurApprise[s])?` ; hauteur apprise ${SIDES.filter(s=>calc.hauteurApprise[s]).map(s=>`${NOM[s]} ${calc.hauteurApprise[s]>0?'+':''}${nombre(calc.hauteurApprise[s])} mm`).join(', ')}`:'';
-  return {...base,poseCalculee:Object.fromEntries(SIDES.map(s=>[s,calc.positions[s].map(um)])),ecartMm,pireMm:r1(pire),hauteurApprise:calc.hauteurApprise,zoneGrise:gris,
+  const h=calc.hauteurMm&&SIDES.some(s=>calc.hauteurMm[s])?` ; hauteur apprise ${SIDES.filter(s=>calc.hauteurMm[s]).map(s=>`${NOM[s]} ${calc.hauteurMm[s]>0?'+':''}${nombre(calc.hauteurMm[s])} mm`).join(', ')}`:'';
+  return {...base,poseCalculee:Object.fromEntries(SIDES.map(s=>[s,calc.positions[s].map(um)])),ecartMm,pireMm:r1(pire),hauteurMm:calc.hauteurMm,zoneGrise:gris,
    verdict:corrige?'je corrigerais':'je laisserais',
    raison:corrige?`${lieu} (seuil ${nombre(cfg.seuilCorrigerMm)} mm, étage ${base.etage})${h}`:`écart le plus grand : ${lieu}, sous le seuil de ${nombre(cfg.seuilCorrigerMm)} mm${h}`};}
 
@@ -160,17 +160,7 @@
   const raison=total===0?'aucun-point':scanners===1?'un-seul-scanner':null;
   return {raison,points,scanners,scannersLisibles:scanners!==null};}
 
- /* Ce qu'Ariane donnerait sur une capture : moteur (science GCV1), décision sur le lot avec les appuis du lot, hauteur apprise
-  * (consignée par la décision, réglage forcé actif ici : c'est une ombre), puis le jugement. Dépendances passées : `Shadow`
-  * (BananeGCV1Shadow), `L` (BananeLotDecision). Aucun effet. */
- function evaluer({capture,anchors=[],Shadow,L,hauteur=null},options){
-  const science=Shadow.scientificProposeBoth(capture);
-  const opts=hauteur?{hauteurApprise:{...hauteur,actif:true,appliquer:false}}:{};
-  const decision=L.decideCut({capture:{identity:capture.identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes},
-   science:{rails:science.rails,summary:science.summary},anchors,Shadow,options:opts});
-  return juger({capture,decision,science},options);}
-
  /* Durée lisible : « 2 min 20 s », « 45 s ». */
  function duree(s){if(!Number.isFinite(s)||s<0)return '';const m=Math.floor(s/60),r=Math.round(s-60*m);return m?`${m} min${r?` ${r} s`:''}`:`${r} s`;}
- return {VERSION,DEFAULTS,LIBELLE,ZONE,plage,selection,ecartRail,poseCalculee,confiance,juger,skipOmbre,evaluer,duree};
+ return {VERSION,DEFAULTS,LIBELLE,ZONE,plage,selection,ecartRail,poseCalculee,confiance,juger,skipOmbre,duree};
 });

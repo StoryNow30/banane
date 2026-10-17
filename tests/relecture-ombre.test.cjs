@@ -105,7 +105,7 @@ test('juger : la hauteur apprise corrige la pose calculée (pose « corrigee » 
   left:{correctionMm:4,corrigee:decale(c.rails.left,[0,0,4])},right:{correctionMm:0,abstention:null}}}};
  const j=R.juger({capture:c,decision});
  assert.equal(j.ecartMm.left.vert,4);assert.equal(j.ecartMm.right.vert,0);
- assert.deepEqual(j.hauteurApprise,{left:4,right:0});
+ assert.deepEqual(j.hauteurMm,{left:4,right:0});
  assert.equal(j.verdict,'je laisserais','4 mm reste sous le seuil');
 });
 

@@ -595,3 +595,28 @@ footer{border-top:0;margin-top:26px}
 .verts-plages{list-style:none;margin:.4rem 0;padding:0;display:grid;gap:.15rem}
 .verts-plages li{display:flex;justify-content:space-between;gap:.75rem;font-size:.9rem}
 .verts-plages li span{font-variant-numeric:tabular-nums;color:var(--text-2);white-space:nowrap}
+
+/* Test 7 — le panneau en cinq groupes (Mic : « remettre de l'ordre ») : (a) Lot, (b) Règles et choix du prochain lot,
+   (c) Résultats du dernier lot, (d) Relecture (place réservée), (e) Export, archive et réglages avancés, repliés.
+   Un titre sobre par groupe ; les choix dans UNE carte ; chaque choix dit « Dernier lot » et « Prochain lot ». */
+.orbite .groupe{display:block;margin:0}
+.orbite .groupe+.groupe{margin-top:34px}
+.orbite .groupe-titre{margin:0 4px 10px;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-2)}
+.orbite #groupe-lot>.groupe-titre{margin-bottom:0}
+.orbite #carte-choix{padding:16px 18px}
+.orbite #carte-choix fieldset.choix-lot{margin:0;padding:0}
+.orbite #grappe-row{margin-top:16px;padding-top:14px;border-top:1px solid var(--hair)}
+.orbite #grappe-row>.lbl{margin:0}
+.choix-etat{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--tile);font-size:13px}
+.choix-etat dt{color:var(--text-3)}
+.choix-etat dd{margin:0;color:var(--text);overflow-wrap:anywhere}
+/* Partie sans rouge : une ligne pleine, au-dessus des compteurs. */
+.fin-partie{margin:0 0 10px;padding:14px 16px;border-radius:var(--r);background:var(--tile-on);box-shadow:inset 0 0 0 1.5px var(--ok);color:var(--text);font-size:14.5px;font-weight:500;line-height:1.45}
+.orbite #groupe-resultats>.sec:first-of-type{margin-top:22px}
+/* (e) : le tiroir en bas de la vue ; « Détails » (lignes techniques) replié dedans. */
+.orbite #groupe-avance .barre-lot{margin:0}
+.orbite #lot-details .techniques{margin:16px 0 0}
+.orbite #lot-details .techniques>summary{padding:12px 0 8px}
+.orbite #lot-details .techniques .commande{margin:4px 0 8px}
+@media (max-width:400px){.orbite .groupe+.groupe{margin-top:28px}}
+@media (max-width:340px){.choix-etat{grid-template-columns:minmax(0,1fr);gap:0}.choix-etat dd+dt{margin-top:6px}}

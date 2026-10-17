@@ -980,6 +980,12 @@
   * « N on M treated » passé de N à N+1 (un seul compteur, même total). Sans
   * compteur lisible AVANT, rien n'est émis. Sans effet, ou cut changé : erreur,
   * le moteur s'arrête, l'opérateur valide lui-même. */
+ /* Ctrl+Entrée relayé comme le raccourci de SKIP : keydown puis keyup sur `document` (un seul gabarit, pour les deux validations sur place). */
+ function ctrlEntree(){const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
+   for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
+     /* Le gestionnaire d'ESV lit e.which : réglé explicitement si le constructeur ne le renseigne pas. */
+     for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
+     document.dispatchEvent(e);}}
  const lireCompteur=()=>{const r=releverEsv(null);
    return r.compteur&&!(r.compteursVus>1)&&!r.compteurIllisible?{traites:r.compteur.traites,total:r.compteur.total}:null;};
  /* 5.0 (D-171, relecture après le lot) : `options.preuve === 'ecriture'`. Un cut VERT est déjà compté « treated » par ESV : sa
@@ -998,12 +1004,7 @@
      command={id,exists:!!document.getElementById(id),disabled:!!document.getElementById(id)?.disabled};
    }else command={id:'Ctrl+Enter',exists:true,disabled:false};
    progress('validate-in-place-before-command',{identity:before.identity,command,compteur:avant});
-   if(bouton)nativeClick(options.boutonId);
-   else{const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
-     for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
-       /* Le gestionnaire d'ESV lit e.which : réglé explicitement si le constructeur ne le renseigne pas. */
-       for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
-       document.dispatchEvent(e);}}
+   if(bouton)nativeClick(options.boutonId);else ctrlEntree();
    let apres=null,compteur=null;
    try{compteur=await waitFor(()=>{const c=lireCompteur();return c&&c.traites!==avant.traites?c:false;},'',P.attenteNavigationMs);}catch{compteur=lireCompteur();}
    const nom=bouton?'Le bouton « valider sans suivant »':'Ctrl+Entrée',label=cutLabel();
@@ -1029,11 +1030,7 @@
      command={id,exists:true,disabled:false};
    }else command={id:'Ctrl+Enter',exists:true,disabled:false};
    progress('validate-in-place-before-command',{identity:before.identity,command,compteur:avant,preuve:'ecriture'});
-   if(bouton)nativeClick(options.boutonId);
-   else{const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
-     for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
-       for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
-       document.dispatchEvent(e);}}
+   if(bouton)nativeClick(options.boutonId);else ctrlEntree();
    /* Le temps qu'ESV traite la touche (même délai que la relecture d'un état), puis le cut affiché doit être le même. */
    await sleep(Math.min(P.stabiliteMs??800,800));
    const nom=bouton?'Le bouton « valider sans suivant »':'Ctrl+Entrée',label=cutLabel();

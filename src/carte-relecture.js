@@ -2,10 +2,12 @@
  * que ses propres éléments et ne parle au service worker que par ses actions (`relecture-choix-etat`, `relecture-choix`,
  * `relecture-etat`, `relecture-lancer`, `relecture-arreter`). Le choix est gardé par le service worker, lu au DÉMARRAGE du lot et figé
  * pour lui ; un changement pendant un lot sert au lot suivant. Pendant la passe : « relecture 12 sur 85, 3 corrigés » et un bouton
- * d'arrêt. `texteContenu(batch)` donne la ligne de CONTENU.txt (rien quand le lot a la relecture coupée). */
+ * d'arrêt. Comme les autres choix : « Dernier lot » (« Lot en cours ») et « Prochain lot ». `texteContenu(batch)` donne la ligne de
+ * CONTENU.txt (rien quand le lot a la relecture coupée). */
 (function(root){'use strict';
  const NOMS={coupee:'coupée',ombre:'ombre (visite, ne modifie rien)',corriger:'corriger (corrige seulement les cuts sûrs)'};
  const IDS={coupee:'relecture-coupee',ombre:'relecture-ombre',corriger:'relecture-corriger'};
+ const COURTS={coupee:'Coupée',ombre:'Ombre',corriger:'Corriger'},OUVERTS=['RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING'];
  const $=id=>typeof document!=='undefined'?document.getElementById(id):null;
  const api=async(action,args={})=>{const r=await chrome.runtime.sendMessage({kind:'panel',action,args});if(!r)throw Error('Ariane ne répond pas. Rouvre la fenêtre.');if(r.error)throw Error(r.error);return r.result;};
  let choix=null,etat=null,minuterie=null;
@@ -18,10 +20,15 @@
  function afficher(){const carte=$('carte-relecture');if(!carte)return;
   if(choix)for(const [m,id] of Object.entries(IDS)){const el=$(id);if(el&&document.activeElement!==el)el.checked=choix===m;}
   const p=etat?.passe,lot=etat?.lot,enCours=p?.etat==='en-cours';
-  const note=$('relecture-note');
-  if(note){const ouvert=lot&&['RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER'].includes(lot.etat);
-   note.textContent=ouvert&&lot.mode!==choix?`Ce lot garde la relecture ${NOMS[lot.mode]||lot.mode} jusqu’à sa fin ; « ${NOMS[choix]} » servira au prochain lot.`
-    :ouvert?`Ce lot utilise la relecture ${NOMS[lot.mode]||lot.mode}.`:'Lue au démarrage de chaque lot, gardée jusqu’à sa fin. Coupée par défaut.';}
+  /* Comme les autres choix du lot (test 7) : ce que le dernier lot a utilisé (« Lot en cours » pendant un lot), lu dans son scope,
+   * et ce que le prochain lot utilisera (le choix gardé). Sans lot : « aucun lot » ; sans réponse : « — ». */
+  const ecrire=(id,t)=>{const el=$(id);if(el)el.textContent=t;};
+  const ouvert=!!lot&&OUVERTS.includes(lot.etat);
+  ecrire('relecture-dernier-l',ouvert?'Lot en cours':'Dernier lot');
+  ecrire('relecture-dernier',lot?`« ${COURTS[lot.mode]||COURTS.coupee} »`:'aucun lot');
+  ecrire('relecture-prochain',choix?`« ${COURTS[choix]} »`:'—');
+  ecrire('relecture-note',ouvert&&choix&&lot.mode!==choix?'Le lot en cours garde la sienne jusqu’à sa fin ; le choix coché servira au prochain lot.'
+   :'Lue au démarrage de chaque lot, gardée jusqu’à sa fin. Coupée par défaut.');
   const l=$('relecture-ligne');if(l){l.textContent=ligne(p);l.hidden=!p;}
   const ci=$('relecture-interrompue');if(ci){const c=etat?.correctionInterrompue;ci.hidden=!c;ci.textContent=c?`Une correction de la relecture a été interrompue au cut ${c.cut} (partie ${c.part}) : contrôle ce cut dans ESV.`:'';}
   const stop=$('relecture-arreter');if(stop){stop.hidden=!enCours;stop.disabled=p?.arretDemande===true;}
@@ -40,7 +47,7 @@
  function texteContenu(b,passe=etat?.passe){const m=b?.scope?.relecture;if(m!=='ombre'&&m!=='corriger')return '';
   const p=passe&&passe.lotId===b.id?` ; passe : ${passe.etat}, ${passe.faits} sur ${passe.total} relus${(passe.modeEffectif||passe.mode)==='corriger'?`, ${passe.corriges} corrigés`:''} (événements relecture-ombre dans le journal)`:'';
   return `Relecture après le lot ${b.id||'?'} : ${NOMS[m]} (${m})${p}.\n`;}
- root.ArianeCarteRelecture={brancher,rafraichir,texteContenu,ligne,NOMS};
+ root.ArianeCarteRelecture={brancher,rafraichir,texteContenu,ligne,NOMS,COURTS,afficher,arreter:()=>clearTimeout(minuterie),etat:x=>{if(x!==undefined){etat=x;choix=x?.choix??null;}return etat;}};
  if(typeof document!=='undefined'&&typeof chrome!=='undefined'&&chrome.runtime?.sendMessage){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',brancher);else brancher();}
 })(typeof globalThis!=='undefined'?globalThis:this);

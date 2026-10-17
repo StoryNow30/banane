@@ -47,7 +47,11 @@ test('panel.html : la politique effective est dans « Détails du lot », fermé
   for(const id of ['lot-decision-effective','unresolved-policy-effective','policy-effective','lot-reglages','journal','dataset'])assert.match(tiroir,new RegExp(`id="${id}"`),id);
   assert.doesNotMatch(tiroir,/id="departs-liste"/,'les départs sont sur la vue, plus dans les détails');assert.match(html,/<div id="departs-liste" class="departs/);
   assert.match(html,/<p id="lot-politique-pastille" class="pastille" hidden><\/p>/);
-  assert.match(html,/id="lot-details-toggle" class="pill details-toggle" aria-expanded="false"[^>]*>Détails du lot</);
+  /* Test 7 : le tiroir s'appelle « Export, archive et réglages avancés » ; les lignes techniques y sont sous « Détails », replié. */
+  assert.match(html,/id="lot-details-toggle" class="pill details-toggle" aria-expanded="false"[^>]*>Export, archive et réglages avancés</);
+  const details=tiroir.match(/<details id="lot-details-techniques" class="techniques"><summary>Détails<\/summary>[\s\S]*?<\/details>/)?.[0];
+  assert.ok(details,'« Détails » replié dans le tiroir');
+  for(const id of ['lot-commande','lot-decision-effective','unresolved-policy-effective','policy-effective'])assert.match(details,new RegExp(`id="${id}"`),id);
 });
 
 /* Départs des parties (D-092). 4.9.0.16 (test 15, Mic : voir aussi les parties précédentes) : la

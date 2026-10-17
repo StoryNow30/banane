@@ -7,14 +7,42 @@ const racine=path.join(__dirname,'..'),lire=f=>fs.readFileSync(path.join(racine,
 const ctx={};vm.createContext(ctx);vm.runInContext(lire('src/carte-relecture.js'),ctx);
 const C=ctx.ArianeCarteRelecture;
 
-test('panel.html : bloc #carte-relecture autonome, trois choix, ligne d’avancement, arrêt ; script chargé avant panel.js',()=>{
- const h=lire('panel.html'),bloc=h.slice(h.indexOf('<fieldset id="carte-relecture"'),h.indexOf('</fieldset>',h.indexOf('<fieldset id="carte-relecture"')));
- assert.ok(bloc.length>100);
+test('panel.html : carte #carte-relecture dans l’emplacement (d) « Relecture », entre les résultats et l’export ; trois choix, Dernier lot / Prochain lot, avancement, arrêt ; script chargé avant panel.js',()=>{
+ const h=lire('panel.html'),debut=h.indexOf('<section id="carte-relecture"'),bloc=h.slice(debut,h.indexOf('</section>',debut));
+ assert.ok(debut>0&&bloc.length>100);assert.match(h.slice(debut,debut+60),/class="carte/);
+ assert.ok(h.indexOf('id="groupe-resultats"')<debut&&debut<h.indexOf('id="groupe-avance"'),'entre (c) et (e)');
+ assert.ok(h.indexOf('id="groupe-relecture"')<debut&&h.indexOf('id="groupe-relecture"')>h.indexOf('id="groupe-resultats"'));
+ assert.equal((h.match(/id="carte-relecture"/g)||[]).length,1,'une seule carte');
  for(const [id,txt] of [['relecture-coupee','Coupée'],['relecture-ombre','Ombre (visite, ne modifie rien)'],['relecture-corriger','Corriger (corrige seulement les cuts sûrs)']])
   assert.match(bloc,new RegExp(`id="${id}"[^>]*> ${txt.replace(/[()]/g,'\\$&')}`));
- for(const id of ['relecture-ligne','relecture-arreter','relecture-lancer','relecture-note'])assert.ok(bloc.includes(`id="${id}"`),id);
+ for(const id of ['relecture-dernier-l','relecture-dernier','relecture-prochain','relecture-ligne','relecture-arreter','relecture-lancer','relecture-note'])assert.ok(bloc.includes(`id="${id}"`),id);
+ assert.match(bloc,/<dl class="choix-etat"><dt id="relecture-dernier-l">Dernier lot<\/dt><dd id="relecture-dernier">aucun lot<\/dd><dt>Prochain lot<\/dt><dd id="relecture-prochain">—<\/dd><\/dl>/);
  assert.ok(h.indexOf('src/carte-relecture.js')<h.indexOf('src="panel.js"'));
  assert.match(lire('panel.js'),/ArianeCarteRelecture\?\.texteContenu\(state\?\.batch\)/);
+});
+
+/* Une page minimale : les éléments de la carte, rien d'autre. */
+function page(){const el={};const ids=['carte-relecture','relecture-coupee','relecture-ombre','relecture-corriger','relecture-dernier-l','relecture-dernier','relecture-prochain','relecture-note','relecture-ligne','relecture-interrompue','relecture-arreter','relecture-lancer'];
+ for(const id of ids)el[id]={id,textContent:'',hidden:false,checked:false,disabled:false};
+ const c={setTimeout:()=>0,clearTimeout:()=>{},document:{readyState:'complete',activeElement:null,getElementById:id=>el[id]||null}};vm.createContext(c);vm.runInContext(lire('src/carte-relecture.js'),c);
+ return {el,C:c.ArianeCarteRelecture};}
+
+test('Dernier lot / Prochain lot, comme les autres choix : mode figé du dernier lot, choix gardé ; « Lot en cours » pendant un lot',()=>{
+ const {el,C:K}=page();
+ K.etat({choix:'ombre',lot:null,passe:null});K.afficher();
+ assert.equal(el['relecture-dernier-l'].textContent,'Dernier lot');assert.equal(el['relecture-dernier'].textContent,'aucun lot');
+ assert.equal(el['relecture-prochain'].textContent,'« Ombre »');assert.equal(el['relecture-ombre'].checked,true);assert.equal(el['relecture-coupee'].checked,false);
+ K.etat({choix:'corriger',lot:{id:'L1',mode:'ombre',etat:'RUNNING'},passe:null});K.afficher();
+ assert.equal(el['relecture-dernier-l'].textContent,'Lot en cours');assert.equal(el['relecture-dernier'].textContent,'« Ombre »');
+ assert.equal(el['relecture-prochain'].textContent,'« Corriger »');assert.match(el['relecture-note'].textContent,/garde la sienne jusqu’à sa fin/);
+ K.etat({choix:'coupee',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:{lotId:'L1',etat:'en-cours',mode:'corriger',modeEffectif:'corriger',faits:12,total:85,corriges:3,cut:456,plage:'grappe 453–471'}});K.afficher();
+ assert.equal(el['relecture-dernier-l'].textContent,'Dernier lot');assert.equal(el['relecture-dernier'].textContent,'« Corriger »');assert.equal(el['relecture-prochain'].textContent,'« Coupée »');
+ assert.equal(el['relecture-ligne'].textContent,'Relecture 12 sur 85, 3 corrigés · cut 456 · grappe 453–471');assert.equal(el['relecture-ligne'].hidden,false);
+ assert.equal(el['relecture-arreter'].hidden,false,'bouton d’arrêt pendant la passe');assert.equal(el['relecture-lancer'].hidden,true);
+ for(const id of ['relecture-coupee','relecture-ombre','relecture-corriger'])assert.equal(el[id].disabled,true,'choix figés pendant la passe');
+ K.etat({choix:'ombre',lot:{id:'L2',mode:'coupee',etat:'COMPLETED'},passe:null});K.afficher();
+ assert.equal(el['relecture-dernier'].textContent,'« Coupée »');assert.equal(el['relecture-arreter'].hidden,true);assert.equal(el['relecture-lancer'].hidden,true,'rien à lancer : lot sans relecture');
+ K.arreter();
 });
 
 test('avancement : « Relecture 12 sur 85, 3 corrigés », arrêt demandé, bilan de fin',()=>{

@@ -30,9 +30,9 @@ Branche `claude/50-relecture-ombre`, partie de `claude/50-base` (2d60d04). Deman
 3. **Sélection** (§ 3), puis, pour chaque cut, dans l'ordre :
    - **aller au cut** : `goToCut`, avec les boutons « cut suivant » d'ESV dans une plage. Entre deux plages, le chemin habituel du retour à un cut : l'événement de la carte, sinon pas à pas. Les cuts posés par le lot sont traversés, comme Mic le fait ;
    - **capture** : la même commande que le lot (`capture`, boutons de rail, lecture des points) ;
-   - **calcul** : moteur (science GCV1), décision sur le lot avec, pour appuis, tous les cuts posés et validés par le lot (`lotPosed`), hauteur apprise consignée. On obtient la pose calculée, l'écart par rail dans le repère profil (latéral et vertical), le pire écart, la confiance, le verdict (« je corrigerais » au-delà de 5 mm, sinon « je laisserais ») et sa raison. S'y ajoutent la commande que le lot écrirait et son écart, l'écartement écrit et sa référence, puis la règle prudente ;
+   - **calcul** : moteur (science GCV1), décision sur le lot avec, pour appuis, tous les cuts posés et validés par le lot (`lotPosed`), et la hauteur apprise que la décision consigne selon son réglage (aucune option passée à la décision, comme le lot). On obtient la pose calculée, l'écart par rail dans le repère profil (latéral et vertical), le pire écart, la confiance, le verdict (« je corrigerais » au-delà de 5 mm, sinon « je laisserais ») et sa raison. S'y ajoutent la commande que le lot écrirait et son écart, l'écartement écrit et sa référence, puis la règle prudente ;
    - **mode « corriger »**, quand la règle passe : relecture de l'état, rails inchangés depuis la capture, écartement dans le contrat. Puis `apply` (la commande du lot, avec son clic), relecture à 1 mm, relecture de l'état comme le moteur avant de valider, Ctrl+Entrée, et l'attente de l'écriture « valid » de la ligne du cut (6 s au plus) ;
-   - **événement `relecture-ombre`** : identité, plage, zone, rôle, pose d'ESV, pose calculée, écart par rail, pire écart, confiance, étage, appuis, hauteur apprise, verdict, raison, `skipOmbre`, écart écrit, écartement, règle (oui ou non, et pourquoi), action (`visite`, `corrige`, `correction-refusee`, `correction-incertaine`, `navigation-refusee`), durées (navigation, capture, calcul, total) et chemin ;
+   - **événement `relecture-ombre`** : identité, plage, zone, rôle, pose d'ESV, pose calculée, écart par rail, pire écart, confiance, étage, appuis, correction de hauteur apprise (`hauteurMm`), verdict, raison, `skipOmbre`, écart écrit, écartement, règle (oui ou non, et pourquoi), action (`visite`, `corrige`, `correction-refusee`, `correction-incertaine`, `navigation-refusee`), durées (navigation, capture, calcul, total) et chemin ;
    - **rythme** : chaque cut relu reste affiché au moins 2 à 4,5 s, tirées au hasard (Mic : médiane 2,4 s, moyenne 3,7 s).
 4. **Fin** : événement `relecture-fin` (issue, comptes, durée) ; le panneau dit « Relecture finie : 18 cuts relus, 5 corrigés ».
 
@@ -109,7 +109,7 @@ Essais rouges d'abord : les douze fichiers `tests/relecture-sw-*.test.cjs`, jou�
 | Le lot avant la passe est inchangé | `-ombre` et `-corriger` : le lot, sans le champ `relecture` du scope, a l'empreinte de la base |
 | La passe ne part que si ESV est propre | `-hors-partie` (autre partie : non lancée ; « Lancer la relecture » au retour), `-pose-en-attente` (pose d'Ariane non validée sur le cut affiché) |
 | Observateur coupé | `-sans-observateur` : « corriger » ramené à « ombre » ; rythme d'au moins `visiteMs` entre deux cuts |
-| Modules purs | `relecture-ombre.test.cjs` (sélection, jugement, SKIP), `relecture-critere.test.cjs` (chaque condition, voie, cohérence, réglages), `relecture-panneau.test.cjs` (carte, CONTENU.txt) |
+| Modules purs | `relecture-ombre.test.cjs` (sélection, jugement, SKIP), `relecture-critere.test.cjs` (chaque condition, voie, cohérence, réglages), `relecture-panneau.test.cjs` (place de la carte, « Dernier lot » / « Prochain lot », avancement, CONTENU.txt) |
 
 Ce que les essais remplacent : hors du lot, la science et la décision des verts sont remplacées pour l'essai. Le moteur de la fixture ne retrouve plus son rail quand la pose d'ESV a bougé (sa boîte de découpe est celle de la fixture). Le cut 113, lui, est calculé pour de vrai (étage `window`, appuis 111 et 112). Le banc (§ 7) joue tout pour de vrai.
 
@@ -163,11 +163,15 @@ Même ainsi, la règle a refusé un rail S1 (cut 7) et les cuts sans appui. Au p
 
 ## 9. Panneau
 
-La carte vit dans un bloc autonome, `<fieldset id="carte-relecture">` dans `panel.html`. Son script est séparé (`src/carte-relecture.js`), chargé avant `panel.js`. Dans `panel.js`, une seule ligne change : celle de `CONTENU.txt`. Le chantier `claude/50-panneau-t7` peut déplacer le bloc tel quel.
+La carte occupe l'emplacement réservé par la réorganisation du panneau (test 7, `fiches/UX_PANNEAU_T7.md`) : le groupe **(d) « Relecture »** (`#groupe-relecture`), entre les résultats du dernier lot (c) et l'export replié (e). C'est un bloc `<section id="carte-relecture" class="carte">` dans le style des autres cartes. Son script est séparé (`src/carte-relecture.js`), chargé avant `panel.js`. Dans `panel.js`, une seule ligne change : celle de `CONTENU.txt`.
 
 - Elle propose trois choix : « Coupée », « Ombre (visite, ne modifie rien) », « Corriger (corrige seulement les cuts sûrs) ».
-- Elle dit ce qu'utilise le lot ouvert, et ce qui servira au prochain lot.
-- Pendant la passe, elle affiche l'avancement et le bouton d'arrêt. Après, elle affiche le bilan, et « Lancer la relecture » quand la passe n'est pas partie seule.
+- Comme les autres choix du lot, elle a deux lignes :
+  - **« Dernier lot »** (« Lot en cours » pendant un lot) : le mode figé dans le scope du lot ;
+  - **« Prochain lot »** : le choix gardé, qui servira au prochain « Démarrer ».
+  
+  Sans lot, la première ligne dit « aucun lot ».
+- Pendant la passe, elle affiche « Relecture 12 sur 85, 3 corrigés · cut 456 · grappe 453–471 » et le bouton « Arrêter la relecture » ; les choix sont figés. Après, elle affiche le bilan, et « Lancer la relecture » quand la passe n'est pas partie seule.
 - Elle signale une correction interrompue.
 - **CONTENU.txt** reçoit une ligne quand la relecture du lot n'est pas coupée : « Relecture après le lot … : corriger (…) ; passe : finie, 85 sur 85 relus, 3 corrigés ». Coupée, aucune ligne.
 

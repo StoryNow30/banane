@@ -459,8 +459,9 @@
  function bornesDe(part){if(!Number.isInteger(part)||bornesDemandees===part)return;bornesDemandees=part;
    void api('bornes-partie',{part}).then(r=>{bornesPartie={part,last:Number.isInteger(r?.last)?r.last:null,source:r?.source??null};if(state)render(state);}).catch(()=>{bornesDemandees=null;});}
  /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
-  * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, « Détails du lot » est fermé
-  * par défaut et garde son nom ; son état se lit dans aria-expanded. */
+  * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, le tiroir du lot est fermé par
+  * défaut ; son état se lit dans aria-expanded. Test 7 : il s'appelle « Export,
+  * archive et réglages avancés » et porte « Détails » (lignes techniques). */
  let nouveauLot=false,departsPartie=null,progresLot={cle:null,max:0};
  /* 4.9.0.17 : fiches de départ (D-092) gardées pour la tuile du lot ; relues avec la liste des départs. */
  let fichesDepart=[];
@@ -473,11 +474,21 @@
    if(!b?.id||!sc||!finDePartie(sc)||!Number.isInteger(a)||a<0||a>PREMIER_CUT_MAX)return null;
    const f=fichesDepart.find(x=>x&&x.batchId===b.id);
    return f&&Number.isInteger(f.invalides)&&f.invalides>0&&(!Number.isInteger(f.partie)||f.partie===sc.part)?f:null;}
+ /* Test 7 (Mic : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE TERMINÉE. Constaté au banc
+  * (service worker réel, ESV simulé) : un lot lancé sur une partie dont le compteur d'ESV dit « N on M treated » avec N = M
+  * pose et valide le cut affiché, puis ESV charge la partie suivante et le lot se clôt sur « ESV est passé dans la partie
+  * P+1 » ; rien ne disait que la partie était finie. Ici, lecture seule, pour un lot CLOS : la partie de son scope n'a plus
+  * aucun cut rouge si (1) le dernier relevé du compteur pendant le lot (`totalReleve`, même partie, source « compteur ») a
+  * N ≥ M, ou (2) la fiche de départ de CE lot (D-092, même batchId) compte 0 invalide. Aucune commande, rien d'écrit. */
+ function partieSansRouge(b){const p=b?.scope?.part;if(!b||!Number.isInteger(p)||OUVERT.includes(b.state))return null;
+   const t=b.totalReleve,compteur=!!t&&t.part===p&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&Number.isInteger(t.traites)&&t.traites>=t.total;
+   const f=fichesDepart.find(x=>x&&x.batchId===b.id),depart=!!f&&f.invalides===0&&(!Number.isInteger(f.partie)||f.partie===p);
+   return compteur||depart?p:null;}
  /* Le pourcentage affiché : une décimale sous 10 %, arrondi vers le bas (jamais plus que le vrai). */
  const pourcentAffiche=p=>p>=100?'100':p<10?String(Math.floor(p*10)/10):String(Math.floor(p));const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
-   bouton.textContent=nom==='lot'?'Détails du lot':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
+   bouton.textContent=nom==='lot'?'Export, archive et réglages avancés':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
  /* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX POUR LE LOT. Le clic du mode rapide et la règle métier
   * « grappe de différés » sont gardés par le service worker (storage.local : `choix-lot-etat`, `choix-lot`), lus au démarrage de
   * chaque lot et figés dans son scope. Un lot ouvert garde les siens : le panneau le dit quand ils diffèrent du choix, qui servira
@@ -487,16 +498,23 @@
  let choixLot=null;
  const clicDuScope=sc=>NOMS_CLIC[sc?.clicHumain]?sc.clicHumain:'tel-quel',grappeDuScope=sc=>sc?.regleGrappeDifferes===true;
  const nomGrappe=on=>on?'activée':'coupée';
- function majChoixLot(s){if(!choixLot)return;
+ /* Test 7 (Mic : « après un lot, le panneau disait “Activée pour le prochain lot” alors que le lot venait de l'utiliser ») — chaque
+  * choix dit DEUX choses, séparées : ce que le dernier lot a utilisé (« Lot en cours » pendant un lot), lu dans son scope (figé au
+  * démarrage, consigné par `batch-started`), et ce que le prochain lot utilisera (le choix gardé). Sans lot : « aucun lot ».
+  * Sans réponse du service worker aux choix (ancienne version) : « Prochain lot » reste « — » et rien n'est coché. */
+ function majChoixLot(s){const b=s?.batch,sc=b?.scope,ouvert=OUVERT.includes(b?.state),qui=ouvert?'Lot en cours':'Dernier lot';
+   const ecrire=(id,t)=>{if($(id))$(id).textContent=t;};
+   ecrire('clic-dernier-l',qui);ecrire('grappe-dernier-l',qui);
+   ecrire('clic-dernier',sc?`« ${NOMS_CLIC[clicDuScope(sc)]} »`:'aucun lot');
+   ecrire('grappe-dernier',sc?`règle ${nomGrappe(grappeDuScope(sc))}`:'aucun lot');
+   if(!choixLot)return;
    for(const [v,id] of Object.entries(IDS_CLIC))if($(id)&&document.activeElement!==$(id))$(id).checked=choixLot.clicHumain===v;
    if($('grappe-differes')&&document.activeElement!==$('grappe-differes'))$('grappe-differes').checked=choixLot.regleGrappeDifferes===true;
-   const b=s?.batch,ouvert=OUVERT.includes(b?.state),lc=clicDuScope(b?.scope),lg=grappeDuScope(b?.scope);
-   if($('clic-humain-note'))$('clic-humain-note').textContent=!ouvert?'Lu au démarrage de chaque lot, gardé jusqu’à sa fin.'
-     :lc===choixLot.clicHumain?`Ce lot utilise « ${NOMS_CLIC[lc]} ».`
-     :`Ce lot garde « ${NOMS_CLIC[lc]} » jusqu’à sa fin. « ${NOMS_CLIC[choixLot.clicHumain]} » servira au prochain lot.`;
-   if($('grappe-note'))$('grappe-note').textContent=!ouvert?(choixLot.regleGrappeDifferes?'Activée pour le prochain lot. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.')
-     :lg===(choixLot.regleGrappeDifferes===true)?`Règle ${nomGrappe(lg)} dans ce lot.`
-     :`Règle ${nomGrappe(lg)} dans ce lot jusqu’à sa fin. Elle sera ${nomGrappe(choixLot.regleGrappeDifferes===true)} au prochain lot.`;}
+   ecrire('clic-prochain',`« ${NOMS_CLIC[choixLot.clicHumain]} »`);
+   ecrire('grappe-prochain',`règle ${nomGrappe(choixLot.regleGrappeDifferes===true)}`);
+   /* Pendant un lot, un choix différent du sien attend le lot suivant : la note le dit. */
+   ecrire('clic-humain-note',ouvert&&clicDuScope(sc)!==choixLot.clicHumain?'Le lot en cours garde le sien jusqu’à sa fin ; le choix coché servira au prochain lot.':'Lu au démarrage de chaque lot, gardé jusqu’à sa fin.');
+   ecrire('grappe-note',ouvert&&grappeDuScope(sc)!==(choixLot.regleGrappeDifferes===true)?'Le lot en cours garde la sienne jusqu’à sa fin ; la case servira au prochain lot.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.');}
  async function changerChoixLot(args){try{choixLot=await api('choix-lot',args);
      const ouvert=OUVERT.includes(state?.batch?.state);
      note(ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
@@ -584,7 +602,7 @@
          ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Orbite GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
          :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
      if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
-     /* 4.9 (chantier UX) : la politique effective est dans « Détails du lot » ;
+     /* 4.9 (chantier UX ; test 7 : sous « Détails », dans « Export, archive et réglages avancés ») : la politique effective y est ;
       * si elle n'est pas celle par défaut, une pastille courte le dit sur la vue. */
      if($('lot-politique-pastille')){const sc=b?.scope,ecarts=!running?[]:[
          (sc?.unresolvedPolicy||'pause')!=='defer'?'rail non résolu : pause':'',
@@ -616,6 +634,9 @@
        :e.issue==='sortie'||e.reason&&!e.issue&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${raison}`
        :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} ${accorder(b.processed.length,'cut traité','cuts traités')} · ${b.skipped.length} ${accorder(b.skipped.length,'ignoré')}${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     /* Test 7 : le titre des résultats suit le lot ; la fin de partie est dite en clair. */
+     if($('resultats-titre'))$('resultats-titre').textContent=!b?'Résultats du dernier lot':OUVERT.includes(b.state)?'Résultats du lot en cours':'Résultats du dernier lot';
+     {const P=partieSansRouge(b),el=$('lot-fin-partie');if(el){el.hidden=P===null;el.textContent=P===null?'':`Partie ${entier(P)} : plus aucun cut rouge à traiter. Le lot s’arrête ici.`;}}
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';

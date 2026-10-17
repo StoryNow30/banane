@@ -502,24 +502,30 @@ function lotExitOf(next,dernier=null){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
 function closeAtExit(...args){return coordinateurLot.transition('fin-de-lot',()=>clore(...args));}
+/* Test 7 (Mic : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE SANS ROUGE : le dernier relevé
+ * du compteur d'ESV pendant le lot (« N on M treated », même partie, source « compteur ») a N ≥ M. Lecture seule : l'avis de
+ * fin de lot le dit d'abord ; ni la clôture, ni la navigation d'ESV, ni ce qui est envoyé à ESV ne changent. */
+function partieSansRouge(b){const t=b?.totalReleve,p=b?.scope?.part;
+ return Number.isInteger(p)&&!!t&&t.part===p&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&Number.isInteger(t.traites)&&t.traites>=t.total;}
+const avisPartieSansRouge=b=>partieSansRouge(b)?`Partie ${b.scope.part} : plus aucun cut rouge à traiter. Le lot s’arrête ici. `:'';
 async function clore(reason,last,next,{annonce=null,surNavigation=true,finSansPose=false,dernier=null}={}){const b=engine.s.batch;last=last??b.activeIdentity?.cut;
  b.state='STOPPED';
  if(dernier){/* KI-069 : ESV est resté sur le dernier cut ; rien d'autre n'est ni envoyé ni mémorisé (D-062 b reste celle de D-062). */
    b.stoppedAtEnd={cut:last,reason,issue:reason,motif:dernier.motif,target:null,total:dernier.total,at:new Date().toISOString(),applied:reason==='dernier-cut-valide'};
    const quel=dernier.motif==='dernier-invalide'?'dernier cut à valider de la partie':'dernier cut de la partie';
-   engine.s.notice=reason==='dernier-cut-valide'?`Fin du lot : ${quel} (${last}) validé ; ESV est resté sur ce cut.`
-     :`Fin du lot : ${quel} (${last}), différé ; rien n’a été envoyé à ESV.`;
+   engine.s.notice=avisPartieSansRouge(b)+(reason==='dernier-cut-valide'?`Fin du lot : ${quel} (${last}) validé ; ESV est resté sur ce cut.`
+     :`Fin du lot : ${quel} (${last}), différé ; rien n’a été envoyé à ESV.`);
    await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:null,total:dernier.total});return;}
  /* `issue` : sortie d'ESV après une validation, pendant un cut, ou fin muette sans pose (4.8.0). */
  const issue=finSansPose?'fin-sans-pose':surNavigation?'sortie':'sortie-pendant-cut';
  b.stoppedAtEnd={cut:finSansPose?next?.cut??null:last??null,reason,issue,target:next?{part:next.part??null,cut:next.cut??null}:null,at:new Date().toISOString(),applied:issue==='sortie'||issue==='sortie-pendant-cut'&&!!engine.s.applied};
  const where=()=>next?.part!==b.scope.part?`dans la partie ${next?.part}`:`au cut ${next?.cut}`;
- engine.s.notice=finSansPose
+ engine.s.notice=avisPartieSansRouge(b)+(finSansPose
    ?`Fin du lot : ESV ne répond plus sur le dernier cut du lot (${next?.cut}), où rien n’a été posé. Contrôle-le dans ESV ; le lot est clos.`
    :reason==='adapter-lost-after-navigation'
    ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
    :surNavigation?`Fin du lot : après la validation du cut ${last}, ESV est passé ${where()}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`
-   :`Fin du lot : ESV affiche la partie ${next?.part} pendant le cut ${last}, qu’Ariane n’a pas validé. Le lot est clos ; contrôle ce cut dans ESV.`;
+   :`Fin du lot : ESV affiche la partie ${next?.part} pendant le cut ${last}, qu’Ariane n’a pas validé. Le lot est clos ; contrôle ce cut dans ESV.`);
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});
  /* ESV a quitté la partie après ce cut : c'est la fin de la partie pour le
   * Pilote. 4.8.0 (KI-063) : seulement quand ESV montre ou annonce une AUTRE
@@ -1923,9 +1929,10 @@ const tirage=v=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)?v[0]+Ma
  * serait écrite (commande du lot sur la pose ESV de la capture) et son écart ; la règle prudente. */
 function relectureCalculer(capture,c,appuis,reglages,skip){
  const R=globalThis.BananeRelectureOmbre,Q=globalThis.BananeRelectureCritere,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,Shadow=globalThis.BananeGCV1Shadow;
- const identity=K.completeIdentity(capture.identity||{}),science=Shadow.scientificProposeBoth(capture),h=globalThis.BananeSettings?.hauteurApprise;
+ /* Comme le lot : aucune option passée à la décision ; la correction de hauteur est consignée par la décision selon son réglage. */
+ const identity=K.completeIdentity(capture.identity||{}),science=Shadow.scientificProposeBoth(capture);
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes},
-  science:{rails:science.rails,summary:science.summary},anchors:appuis,Shadow,options:h?{hauteurApprise:{...h,actif:true,appliquer:false}}:{}});
+  science:{rails:science.rails,summary:science.summary},anchors:appuis,Shadow});
  const jugement=R.juger({capture,decision,science});
  let commande=null,ecrit=null,ecartementMm,ecartementRefMm;
  /* La commande du lot pour les positions de la décision. Au premier passage (pose du moteur confirmée par la voie des appuis), le lot
@@ -2015,7 +2022,7 @@ async function relecturePasse(p,b,sel,reglages){const K=globalThis.BananeCore3,c
   const j=calc?.jugement;capture=null;
   relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,
    poseEsv:j?.poseActuelle??null,poseCalculee:j?.poseCalculee??null,ecartMm:j?.ecartMm??null,pireMm:j?.pireMm??null,confiance:j?.confiance??null,
-   etage:j?.etage??null,appuis:j?.appuis??[],hauteurApprise:j?.hauteurApprise??null,zoneGrise:j?.zoneGrise??false,verdict:j?.verdict??null,raison:j?.raison??erreurCapture??erreurCalcul,
+   etage:j?.etage??null,appuis:j?.appuis??[],hauteurMm:j?.hauteurMm??null,zoneGrise:j?.zoneGrise??false,verdict:j?.verdict??null,raison:j?.raison??erreurCapture??erreurCalcul,
    skipOmbre:skip?{raison:skip.raison,scanners:skip.scanners,scannersLisibles:skip.scannersLisibles,points:skip.points}:null,
    ecritMm:calc?.ecrit??null,ecartementMm:calc?.ecartementMm??null,ecartementRefMm:calc?.ecartementRefMm??null,
    critere:calc?{corriger:calc.critere.corriger,regle:calc.critere.regle,raison:calc.critere.raison}:null,
