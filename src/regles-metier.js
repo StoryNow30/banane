@@ -22,6 +22,10 @@
   *     d'avant, dont un à 2 cuts au plus (`grappe-differes`). C'est la forme que prend, dans un lot qui avance, la grappe
   *     d'invalides et le noyau d'une aiguille (différés « flanc », « pente », « ambiguïté »). Les cuts différés par la règle
   *     elle-même ne comptent pas : pas d'avalanche.
+  *   - ADV avec ses marges (zone `adv`, EN OMBRE, aucune règle : fiches/DETECTION_ADV.md) : un cut du lot dont la capture montre
+  *     un rail de plus autour des deux rails posés (aiguille, contre-rail, cœur, voie qui diverge ; `railsDePlus`) est une alerte ;
+  *     deux alertes à 3 cuts au plus ouvrent la zone ; plage à contrôler de 30 cuts avant la première alerte à 30 après la dernière.
+  *     Elle ne change aucun verdict ; ses verts sont signalés (`adv`) et la liste des verts à contrôler la reprend.
   *   - « Ne pas valider en place une pose d'extraction » : dans une zone (PN ou grappe), une validation dont aucun rail ne
   *     bouge de plus de 1 mm depuis la pose de départ d'ESV (`zone-validation-en-place`).
   *   - Verts à contrôler (lignes de la liste d'ESV autour du cut, statut valide, jamais traitées par un opérateur ni passées
@@ -39,6 +43,12 @@
   grappe:Object.freeze({fenetreCuts:6,differesMin:2,procheCuts:2}),
   enPlace:Object.freeze({mm:1}),
   ecartement:Object.freeze({seuilMm:15,lignesMin:20}),
+  /* ADV (fiches/DETECTION_ADV.md) : profil en travers de chaque rail, pas de 1 cm, ±40 cm, ±50 cm le long de la voie ; un pas est
+   * « haut » si 90 % de ses points sont sous le dessus du rail moins 3 cm et qu'il l'est sur au moins la moitié des tranches de 10 cm. */
+  adv:Object.freeze({version:'adv-rail-de-plus-v1',pasM:0.01,lateralM:0.4,longM:0.5,trancheM:0.1,zMinM:-0.4,zMaxM:0.2,pointsPas:3,
+   hautM:-0.03,continuite:0.5,basM:-0.08,creuxM:-0.15,tete:Object.freeze([-0.09,0.03]),largeurMinPas:3,largeurMaxPas:16,
+   contreRail:Object.freeze({debutMaxM:0.065,finMaxM:0.125}),platMax:0.5,sautPas:3,chutePas:5,
+   confirmation:2,confirmationEcartCuts:3,trouCuts:10,margeAvant:30,margeApres:30}),
   verts:Object.freeze({trouCuts:5,grappeMin:3,margeGrappe:3}),
   memoireCuts:80});
  const REGLES=Object.freeze(['zone-validation-en-place','pn-chaque-cut','grappe-differes']);
@@ -61,8 +71,55 @@
     const k=q[side+(lat>0?'In':'Out')];k.n++;n++;if(z>-0.05){k.f++;f++;}}}
   const flushPct=n?Math.round(100*f/n):null,peuples=QUARTS.filter(k=>q[k].n>=cfg.quadPointsMin);
   const quadMin=peuples.length>=cfg.quadNombreMin?Math.min(...peuples.map(k=>Math.round(100*q[k].f/q[k].n))):null;
+  const adv=railsDePlus(capture,options);
   return {flushPct,sidePoints:n,quadMin,quarts:Object.fromEntries(QUARTS.map(k=>[k,q[k].n?Math.round(100*q[k].f/q[k].n):null])),
-   coeurPN:n>=cfg.sidePointsMin&&flushPct!=null&&flushPct>=cfg.flushMinPct&&quadMin!=null&&quadMin>=cfg.quadMinPct};}
+   coeurPN:n>=cfg.sidePointsMin&&flushPct!=null&&flushPct>=cfg.flushMinPct&&quadMin!=null&&quadMin>=cfg.quadMinPct,
+   advRails:adv.rails,advCotes:adv.cotes};}
+
+ /* RAIL DE PLUS (ADV) : un troisième ou quatrième rail dans le nuage autour des deux rails posés — aiguille, contre-rail ou cœur
+  * d'un appareil de voie, rail de la voie qui diverge. TOUS les points de la capture (pas seulement les visibles : la fenêtre d'ESV
+  * coupe souvent les rails voisins). Pour chaque rail, profil en travers : pas de 1 cm de −40 à +40 cm (latéral positif vers l'autre
+  * rail), points à ±50 cm le long de la voie, hauteur relative à la pose de départ. Classe d'un pas : « haut » (90e centile au-dessus
+  * de −3 cm, et sur au moins la moitié des tranches de 10 cm : continu le long de la voie), « mi-haut » (haut mais discontinu), bas,
+  * creux, vide. Un rail de plus est une suite de pas hauts, hors de la tête du rail posé (−9 à +3 cm) :
+  *   - large de 3 à 16 cm, sans toucher le bord de la fenêtre ni la tête (on ne saurait pas l'en séparer) ;
+  *   - pas le contre-rail d'une courbe (début à 6,5 cm au plus, fin à 12,5 cm au plus, côté voie : il court sur des centaines de cuts) ;
+  *   - bordée des deux côtés par un pas bas, creux ou vide, après au plus 3 pas mi-hauts ; un creux (sous −8 cm) à 5 pas au plus :
+  *     c'est ce qui sépare un champignon d'une rampe, d'un quai ou d'un remblai ;
+  *   - côté « plat » exclu : plus de la moitié des pas hors de la tête sont hauts (chaussée d'un PN, quai au ras).
+  * Rend le nombre de rails de plus et, par côté, leurs bornes en centimètres (jamais une position). */
+ function railsDePlus(capture,options){const A=cfgDe(options).adv,out={rails:0,cotes:{}};
+  const tous=Array.isArray(capture?.pointsSceneRelative)?capture.pointsSceneRelative:[];
+  if(!capture?.rails?.left||!capture?.rails?.right||!tous.length)return {rails:null,cotes:null};
+  const N=Math.round(A.lateralM/A.pasM),T=Math.round(2*A.longM/A.trancheM),EPS=1e-9;
+  for(const side of SIDES){const fr=Crossing.frameOf({rails:capture.rails},side),bins=new Map();
+   for(const p of tous){if(!Array.isArray(p))continue;const {along,lat,z}=fr.local(p);
+    if(!(Math.abs(along)<=A.longM)||!(Math.abs(lat)<A.lateralM)||z<A.zMinM||z>A.zMaxM)continue;
+    const b=Math.floor(lat/A.pasM);let e=bins.get(b);if(!e){e={z:[],t:new Map()};bins.set(b,e);}
+    e.z.push(z);const t=Math.floor((along+A.longM)/A.trancheM);e.t.set(t,Math.max(e.t.get(t)??-Infinity,z));}
+   /* Classe par pas : '#' haut et continu, '^' haut discontinu, '+' bas, '-' et '.' creux, ' ' vide. */
+   const cl=[];for(let b=-N;b<N;b++){const e=bins.get(b);if(!e||e.z.length<A.pointsPas){cl.push(' ');continue;}
+    const z=e.z.slice().sort((x,y)=>x-y),p90=z[Math.min(z.length-1,Math.floor(0.9*z.length))];
+    const cont=[...e.t.values()].filter(v=>v>A.hautM).length/T;
+    cl.push(p90>A.hautM?(cont>=A.continuite?'#':'^'):p90>A.basM?'+':p90>A.creuxM?'-':'.');}
+   const lat=i=>(i-N+0.5)*A.pasM,tete=i=>lat(i)>=A.tete[0]-EPS&&lat(i)<=A.tete[1]+EPS;
+   let hauts=0,dehors=0;for(let i=0;i<cl.length;i++)if(!tete(i)&&cl[i]!==' '){dehors++;if(cl[i]==='#'||cl[i]==='^')hauts++;}
+   const rails=[];
+   if(!(dehors>0&&hauts/dehors>A.platMax)){
+    const bas=c=>c==='+'||c==='-'||c==='.'||c===' ',creux=c=>c==='-'||c==='.';
+    const voisin=(i,d)=>{let k=0;while(i>=0&&i<cl.length&&cl[i]==='^'&&k<A.sautPas){i+=d;k++;}return i>=0&&i<cl.length?cl[i]:' ';};
+    let a=-1;
+    for(let i=0;i<=cl.length;i++){const h=i<cl.length&&cl[i]==='#'&&!tete(i);if(h&&a<0)a=i;if(h||a<0)continue;
+     const x=a,y=i-1,w=y-x+1;a=-1;
+     if(w<A.largeurMinPas||w>A.largeurMaxPas||x===0||y===cl.length-1)continue;
+     if(tete(x-1)||tete(y+1))continue;
+     if(lat(x)>A.tete[1]+EPS&&lat(x)<=A.contreRail.debutMaxM+EPS&&lat(y)<=A.contreRail.finMaxM+EPS)continue;
+     if(!bas(voisin(x-1,-1))||!bas(voisin(y+1,1)))continue;
+     let ch=false;for(let k=1;k<=A.chutePas&&!ch;k++)ch=creux(cl[x-k]??'')||creux(cl[y+k]??'');
+     if(!ch)continue;
+     rails.push([Math.round(lat(x)*100-0.5),Math.round(lat(y)*100+0.5)]);}}
+   out.cotes[side]=rails;out.rails+=rails.length;}
+  return out;}
 
  /* Résumé d'un cut, le même pour l'extension et pour le rejeu. `initiale`/`finale` : positions {left,right} (scène) de la pose
   * de départ d'ESV et de la pose que le lot validerait ; elles ne sortent jamais du résumé (seuls des millimètres en sortent). */
@@ -72,9 +129,9 @@
   const ecartementMm=ok(finale)?r1(C.distance(finale.left,finale.right)*1000):null;
   return {cut:identity?.cut??null,part:identity?.part??null,stage:decision?.stage??null,reason:decision?.reason??null,action:action??null,
    valide:valide===true?true:valide===false?false:null,deplacementMm,ecartementMm,
-   flushPct:s?.flushPct??null,quadMin:s?.quadMin??null,coeurPN:s?.coeurPN===true};}
+   flushPct:s?.flushPct??null,quadMin:s?.quadMin??null,coeurPN:s?.coeurPN===true,advRails:Number.isInteger(s?.advRails)?s.advRails:null};}
 
- function creerMemoire(lotId){return {lotId:lotId??null,cuts:[],coeurs:[],zones:[],lignes:new Map(),signales:new Map()};}
+ function creerMemoire(lotId){return {lotId:lotId??null,cuts:[],coeurs:[],zones:[],advAlertes:[],zonesADV:[],lignes:new Map(),signales:new Map()};}
  /* Zone PN du cut : cœur (confirmé ou non) et marge d'après d'un PN confirmé. */
  function zonePN(mem,r,cfg){const c=r.cut,P=cfg.pn;
   const derniere=mem.zones.at(-1),dansMarge=derniere&&c>derniere.fin&&c-derniere.fin<=P.margeApres;
@@ -85,6 +142,19 @@
    return {etat:'coeur-non-confirme',zone:null};}
   if(dansMarge)return {etat:'marge-apres',zone:derniere};
   return {etat:null,zone:null};}
+ /* Zone d'ADV du cut : un cut du lot où la capture montre un rail de plus est une ALERTE ; deux alertes à 3 cuts au plus ouvrent la
+  * zone, qui s'étend tant que les alertes se suivent à 10 cuts au plus. Plage à contrôler : 30 cuts avant la première alerte, 30
+  * après la dernière (marges de Mic : « environ 20 à 40 cuts autour » de l'aiguille). En ombre : une zone, aucune règle. */
+ function zoneADV(mem,r,cfg){const c=r.cut,A=cfg.adv,derniere=(mem.zonesADV||[]).at(-1);
+  const alerte=Number.isInteger(r.advRails)&&r.advRails>0,dansMarge=derniere&&c>derniere.fin&&c-derniere.fin<=A.margeApres;
+  if(alerte){
+   if(derniere&&c>=derniere.debut&&c-derniere.fin<=A.trouCuts)return {etat:'alerte',zone:{...derniere,fin:Math.max(derniere.fin,c)}};
+   const avant=(mem.advAlertes||[]).filter(x=>x<c&&c-x<=A.confirmationEcartCuts&&!(derniere&&x<=derniere.fin));
+   if(avant.length+1>=A.confirmation)return {etat:'alerte',zone:{debut:Math.min(c,...avant),fin:c,nouvelle:true}};
+   return {etat:'alerte-non-confirmee',zone:dansMarge?derniere:null};}
+  if(dansMarge)return {etat:'marge-apres',zone:derniere};
+  if(derniere&&c>=derniere.debut&&c<=derniere.fin)return {etat:'dans-la-zone',zone:derniere};
+  return {etat:null,zone:null};}
  function grappeDe(mem,c,cfg){const G=cfg.grappe;
   const d=mem.cuts.filter(x=>x.differe&&!x.parRegle&&x.cut<c&&c-x.cut<=G.fenetreCuts).map(x=>c-x.cut);
   return {differes:d.length,plusProche:d.length?Math.min(...d):null,active:d.length>=G.differesMin&&Math.min(...d)<=G.procheCuts};}
@@ -92,6 +162,8 @@
  function evaluer(mem,r,options){const cfg=cfgDe(options);
   const pn=zonePN(mem,r,cfg),g=grappeDe(mem,r.cut,cfg),zone={pn:pn.etat,grappe:{differes:g.differes,plusProche:g.plusProche,active:g.active}};
   if(pn.zone)zone.pnControle=[pn.zone.debut-cfg.pn.margeAvant,pn.zone.fin+cfg.pn.margeApres];
+  const adv=zoneADV(mem,r,cfg);zone.adv=adv.etat;
+  if(adv.zone)zone.advControle=[Math.max(0,adv.zone.debut-cfg.adv.margeAvant),adv.zone.fin+cfg.adv.margeApres];
   const enPN=pn.etat==='coeur'||pn.etat==='marge-apres',regles=[];
   let aurait=r.valide===true?'valider':r.valide===false?'deja-differe':'sans-pose';
   if(r.valide===true){
@@ -99,7 +171,7 @@
    if(enPN)regles.push('pn-chaque-cut');
    if(g.active)regles.push('grappe-differes');
    if(regles.length)aurait='differer';}
-  return {version:cfg.version,cut:r.cut,part:r.part,zone,surface:{flushPct:r.flushPct,quadMin:r.quadMin,coeurPN:r.coeurPN},
+  return {version:cfg.version,cut:r.cut,part:r.part,zone,surface:{flushPct:r.flushPct,quadMin:r.quadMin,coeurPN:r.coeurPN,advRails:r.advRails??null},
    reel:{stage:r.stage,action:r.action,deplacementMm:r.deplacementMm,ecartementMm:r.ecartementMm},regles,aurait};}
  /* Le cut est passé : on garde son issue RÉELLE (différé ou non ; `parRegle` : différé par une règle activée). */
  function noter(mem,r,{differe=false,parRegle=false}={},options){const cfg=cfgDe(options);
@@ -107,6 +179,11 @@
   if(r.coeurPN){mem.coeurs.push(r.cut);while(mem.coeurs.length>cfg.memoireCuts)mem.coeurs.shift();}
   if(pn.etat==='coeur'){if(pn.zone.nouvelle)mem.zones.push({debut:pn.zone.debut,fin:pn.zone.fin});else mem.zones[mem.zones.length-1].fin=pn.zone.fin;
    while(mem.zones.length>8)mem.zones.shift();}
+  if(!mem.zonesADV)mem.zonesADV=[];if(!mem.advAlertes)mem.advAlertes=[];
+  const adv=zoneADV(mem,r,cfg);
+  if(adv.etat==='alerte'||adv.etat==='alerte-non-confirmee'){mem.advAlertes.push(r.cut);while(mem.advAlertes.length>cfg.memoireCuts)mem.advAlertes.shift();}
+  if(adv.etat==='alerte'){if(adv.zone.nouvelle)mem.zonesADV.push({debut:adv.zone.debut,fin:adv.zone.fin});else mem.zonesADV[mem.zonesADV.length-1].fin=adv.zone.fin;
+   while(mem.zonesADV.length>8)mem.zonesADV.shift();}
   const i=mem.cuts.findIndex(x=>x.cut===r.cut);if(i>=0)mem.cuts.splice(i,1);
   mem.cuts.push({cut:r.cut,differe:!!differe,parRegle:!!parRegle});while(mem.cuts.length>cfg.memoireCuts)mem.cuts.shift();
   return mem;}
@@ -122,12 +199,14 @@
   const rouges=[...new Set([...lot,...(rows||[]).filter(x=>x?.statut==='invalid'&&Number.isInteger(x.i)).map(x=>x.i)])].sort((a,b)=>a-b);
   const groupes=[];for(const c of rouges){const g=groupes.at(-1);if(g&&c-g.fin<=V.trouCuts){g.fin=c;g.n++;}else groupes.push({debut:c,fin:c,n:1});}
   const zones=mem.zones.map(z=>[z.debut-cfg.pn.margeAvant,z.fin+cfg.pn.margeApres]);
+  const zonesADV=(mem.zonesADV||[]).map(z=>[Math.max(0,z.debut-cfg.adv.margeAvant),z.fin+cfg.adv.margeApres]);
   const verts=[];
   for(const x of rows||[]){
    if(!Number.isInteger(x?.i)||x.statut!=='valid'||x.operateur===true||x.fraiche===true||lot.has(x.i))continue;
    const raisons=[],ecart=reference.mm!=null&&Number.isFinite(x.ecartementMm)?Math.abs(x.ecartementMm-reference.mm):null;
    if(ecart!=null&&ecart>E.seuilMm)raisons.push('ecartement');
    if(zones.some(([a,b])=>x.i>=a&&x.i<=b))raisons.push('pn');
+   if(zonesADV.some(([a,b])=>x.i>=a&&x.i<=b))raisons.push('adv');
    for(const g of groupes){
     if(g.n>=V.grappeMin&&x.i>g.debut&&x.i<g.fin){raisons.push('grappe');break;}
     if(g.n>=V.grappeMin&&(x.i<g.debut&&g.debut-x.i<=V.margeGrappe||x.i>g.fin&&x.i-g.fin<=V.margeGrappe)){raisons.push('grappe-marge');break;}
@@ -146,5 +225,5 @@
    regles:e?.regles||[],aurait:e?.aurait??null,...(actif?{actif}:{})};
   if(premier)o.seuils=JSON.parse(JSON.stringify(cfg));
   return o;}
- return {DEFAULTS,REGLES,surface,resumer,creerMemoire,evaluer,noter,lignes,doitDifferer,evenement};
+ return {DEFAULTS,REGLES,surface,railsDePlus,resumer,creerMemoire,evaluer,noter,lignes,doitDifferer,evenement};
 });

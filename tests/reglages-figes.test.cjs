@@ -78,12 +78,14 @@ test('ombre verticale : même valeur que le réglage de src/settings.js quand ce
 
 test('règles métier : mêmes seuils que le module, ombre active et activation coupée dans le réglage livré', () => {
   const r = F.reglages.reglesMetier, v = r.valeurs, D = JSON.parse(JSON.stringify(ReglesMetier.DEFAULTS));
-  for (const k of ['surface', 'pn', 'grappe', 'enPlace', 'ecartement', 'verts']) assert.deepEqual(v[k], D[k], k);
+  for (const k of ['surface', 'pn', 'grappe', 'enPlace', 'ecartement', 'verts', 'adv']) assert.deepEqual(v[k], D[k], k);
   assert.equal(Settings.reglesMetier.ombre, true); assert.equal(Settings.reglesMetier.actif, false);
   assert.deepEqual(Object.keys(Settings.reglesMetier.regles).sort(), [...ReglesMetier.REGLES].sort());
   for (const id of ReglesMetier.REGLES) assert.equal(Settings.reglesMetier.regles[id], false, id);
   // les nombres que la fiche annonce : marges de 4 et 6 cuts, deux cœurs à 3 cuts, quarts à 50 %, grappe 2 différés dans 6 cuts dont un à 2, écartement à 15 mm
   assert.deepEqual([v.pn.margeAvant, v.pn.margeApres, v.pn.confirmation, v.pn.confirmationEcartCuts, v.surface.quadMinPct, v.grappe.differesMin, v.grappe.fenetreCuts, v.grappe.procheCuts, v.ecartement.seuilMm], [4, 6, 2, 3, 50, 2, 6, 2, 15]);
+  // zone d'ADV (fiches/DETECTION_ADV.md) : rail de plus de 3 à 16 cm, deux alertes à 3 cuts, marges de 30 cuts ; poids nul dans la liste des verts
+  assert.deepEqual([v.adv.largeurMinPas, v.adv.largeurMaxPas, v.adv.confirmation, v.adv.confirmationEcartCuts, v.adv.trouCuts, v.adv.margeAvant, v.adv.margeApres, v.adv.sautPas, v.adv.chutePas], [3, 16, 2, 3, 10, 30, 30, 3, 5]);
 });
 
 test('faux vert en ombre : mêmes seuils que le module et le réglage livré, chemin d\'activation coupé', () => {

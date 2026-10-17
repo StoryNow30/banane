@@ -18,13 +18,15 @@
  *   - cut que le lot a validé et qu'une règle aurait différé : faux vert évité (correction > 10 mm), bon cut différé en plus
  *     (≤ 10 mm), ou sans référence ;
  *   - zones de PN reconnues contre la liste de Mic (`--pn`) : PN retrouvés, zones reconnues sans PN, cuts de PN couverts ;
+ *   - zones d'ADV reconnues (rail de plus, en ombre) contre les zones de Mic (`--adv`, avec leurs aiguilles) : zones retrouvées,
+ *     aiguilles couvertes, plages sans ADV, alertes par rôle du cut (noyau d'aiguille à ±10 cuts, marge, PN, hors zone) ;
  *   - verts signalés : corrections > 10 mm et ≥ 25 mm (mauvais objet) retrouvées, signalements sur des cuts corrigés de 5 mm au plus.
  * Temps de Mic : un cut posé juste qui devient différé lui coûte la différence entre poser et relire (médianes de l'Écho, parties
  * 29 et 1 du second projet : +0,9 et +1,7 s ; moyennes : +4,1 et +1,1 s) ; un vert signalé, une visite (≈ 2 s).
  *
  * Usage :
- *   node tools/regles-metier.cjs lot --partie P:N --journal J.json --corpus SEG.json [...] --jeu JEU.jsonl [--pn a-b,...] [--sortie S.json]
- *   node tools/regles-metier.cjs echo --partie P:N --echo DOSSIER|FICHIER [...] --jeu JEU.jsonl [--pn a-b,...] [--sortie S.json]
+ *   node tools/regles-metier.cjs lot --partie P:N --journal J.json --corpus SEG.json [...] --jeu JEU.jsonl [--pn a-b,...] [--adv a-b:aig[+aig],...] [--sortie S.json]
+ *   node tools/regles-metier.cjs echo --partie P:N --echo DOSSIER|FICHIER [...] --jeu JEU.jsonl [--pn a-b,...] [--adv a-b:aig[+aig],...] [--sortie S.json]
  *   node tools/regles-metier.cjs rapport S1.json S2.json ...       (tables en Markdown)
  *   node tools/regles-metier.cjs essai                             (fixture synthétique, sans donnée)
  *   --juger-partie-reservee : une partie réservée du manifeste est jugée sans réglage.
@@ -55,6 +57,10 @@ function lireJeu(chemin){
   return {entete:lignes[0]?.type==='entete'?lignes[0]:null,cuts};
 }
 const juger=x=>x?.mm==null?'sans-ref':x.mm>FAUX_MM?'faux':x.mm<=BON_FIN_MM?'bon-fin':'bon';
+/* Zones d'ADV de Mic : « début-fin:aiguille+aiguille », séparées par des virgules (ex. 6558-6678:6638,7954-8066:8003). */
+const plagesADV=t=>t?String(t).split(',').filter(Boolean).map(s=>{const m=/^(\d+)-(\d+):(\d+(?:\+\d+)*)$/.exec(s.trim());if(!m)throw Error('zone d\'ADV attendue a-b:aiguille[+aiguille] : '+s);
+  return {debut:Number(m[1]),fin:Number(m[2]),aiguilles:m[3].split('+').map(Number)};}):[];
+const NOYAU_CUTS=10;
 const plages=t=>t?String(t).split(',').filter(Boolean).map(s=>{const m=/^(\d+)-(\d+)$/.exec(s.trim());if(!m)throw Error('plage attendue a-b : '+s);return [Number(m[1]),Number(m[2])];}):[];
 
 /* --- Mode LOT : décisions du journal, issue réelle, poses (départ, validée), captures du corpus. --- */
@@ -132,7 +138,7 @@ function rejouerEcho({surfaces,jeu,options}){
 }
 
 /* --- Bilan commun --- */
-function bilan({evals,verts,mem,jeu,pnMic,mode}){
+function bilan({evals,verts,mem,jeu,pnMic,advMic=[],mode}){
   const parRegle={},tous={signales:0,faux:0,bon:0,bonFin:0,sansRef:0,cuts:[]};
   const compter=(o,x,c)=>{o.signales++;const j=juger(x);if(j==='faux')o.faux++;else if(j==='sans-ref')o.sansRef++;else{o.bon++;if(j==='bon-fin')o.bonFin++;}o.cuts.push({cut:c,jugement:j,mm:r1(x?.mm)});};
   for(const id of M.REGLES)parRegle[id]={signales:0,faux:0,bon:0,bonFin:0,sansRef:0,cuts:[]};
@@ -182,7 +188,30 @@ function bilan({evals,verts,mem,jeu,pnMic,mode}){
     ['partie-10',x=>Math.abs(x.ecartementInitialMm-medPartie)>10],['partie-15',x=>Math.abs(x.ecartementInitialMm-medPartie)>15],
     ['voisins-10',x=>{const m=voisins(x.cut);return m!=null&&Math.abs(x.ecartementInitialMm-m)>10;}]]){
     const sg=gv.filter(f);ecartement.variantes[id]={signales:sg.length,plus10:sg.filter(x=>x.mm>FAUX_MM).length,objet25:sg.filter(x=>x.mm>=MAUVAIS_OBJET_MM).length,fin5:sg.filter(x=>x.mm<=BON_FIN_MM).length};}
-  return {mode,lot:{decisions:evals.length,poses,posesAvecRef:avecRef,fauxVerts},regles:parRegle,combine:tous,zonesPN:pn,verts:v,ecartement};
+  /* Zones d'ADV : zones reconnues (plages à contrôler) contre les zones de Mic ; aiguilles couvertes ; alertes par rôle du cut
+   * (noyau : à 10 cuts au plus d'une aiguille ; marge : reste de la zone de Mic ; PN ; hors zone). */
+  /* Plages lues sur les évaluations (comme la liste des verts les lit sur les événements) : la mémoire du lot ne garde que les 8 dernières. */
+  const zA=[];for(const {e} of evals){const c=e.zone?.advControle;if(Array.isArray(c)&&!zA.some(z=>z[0]===c[0]&&z[1]===c[1]))zA.push(c.slice());}
+  const fondues=[];for(const z of zA.map(z=>z.slice()).sort((a,b)=>a[0]-b[0])){const d=fondues.at(-1);if(d&&z[0]<=d[1]+1)d[1]=Math.max(d[1],z[1]);else fondues.push(z);}
+  const dansMic=c=>advMic.find(a=>c>=a.debut&&c<=a.fin),aig=advMic.flatMap(a=>a.aiguilles);
+  const role=c=>{const d=aig.length?Math.min(...aig.map(x=>Math.abs(c-x))):Infinity;if(d<=NOYAU_CUTS)return 'noyau';if(dansMic(c))return 'marge';
+    if(pnMic.some(([a,b])=>c>=a&&c<=b))return 'pn';return 'hors';};
+  const parRole={noyau:{cuts:0,alertes:0},marge:{cuts:0,alertes:0},pn:{cuts:0,alertes:0},hors:{cuts:0,alertes:0,cutsAlerte:[]}};
+  for(const {r} of evals){if(!Number.isInteger(r.advRails))continue;const k=role(r.cut),o=parRole[k];o.cuts++;if(r.advRails>0){o.alertes++;if(k==='hors')o.cutsAlerte.push(r.cut);}}
+  const cutsDe=zs=>zs.reduce((n,[a,b])=>n+b-a+1,0);
+  const adv={mic:advMic.map(a=>({debut:a.debut,fin:a.fin,aiguilles:a.aiguilles,vus:evals.filter(({r})=>r.cut>=a.debut&&r.cut<=a.fin&&Number.isInteger(r.advRails)).length})),
+    plages:fondues,
+    micRetrouvees:advMic.filter(a=>fondues.some(([x,y])=>croise([a.debut,a.fin],[x,y]))).length,
+    aiguilles:aig.length,aiguillesCouvertes:aig.filter(c=>fondues.some(([x,y])=>c>=x&&c<=y)).length,
+    aiguillesManquees:aig.filter(c=>!fondues.some(([x,y])=>c>=x&&c<=y)),
+    plagesSansADV:fondues.filter(([x,y])=>!advMic.some(a=>croise([a.debut,a.fin],[x,y]))),
+    cutsMic:advMic.reduce((n,a)=>n+a.fin-a.debut+1,0),
+    cutsMicCouverts:advMic.reduce((n,a)=>{let k=0;for(let c=a.debut;c<=a.fin;c++)if(fondues.some(([x,y])=>c>=x&&c<=y))k++;return n+k;},0),
+    cutsPlages:cutsDe(fondues),
+    cutsPlagesHorsMic:fondues.reduce((n,[x,y])=>{let k=0;for(let c=x;c<=y;c++)if(!dansMic(c))k++;return n+k;},0),
+    alertesNonConfirmees:evals.filter(({e})=>e.zone.adv==='alerte-non-confirmee').map(({r})=>r.cut),
+    parRole};
+  return {mode,lot:{decisions:evals.length,poses,posesAvecRef:avecRef,fauxVerts},regles:parRegle,combine:tous,zonesPN:pn,zonesADV:adv,verts:v,ecartement};
 }
 
 function lireArguments(argv){
@@ -190,7 +219,7 @@ function lireArguments(argv){
   for(let i=1;i<argv.length;i++){const a=argv[i],val=()=>argv[++i];
     if(a==='--partie')o.partie=Manifeste.lireDesignations(val());else if(a==='--juger-partie-reservee')o.jugerReservee=true;
     else if(a==='--journal')o.journal=val();else if(a==='--corpus')o.corpus.push(val());else if(a==='--echo')o.echo.push(val());
-    else if(a==='--jeu')o.jeu=val();else if(a==='--pn')o.pn=plages(val());else if(a==='--sortie')o.sortie=val();
+    else if(a==='--jeu')o.jeu=val();else if(a==='--pn')o.pn=plages(val());else if(a==='--adv')o.adv=plagesADV(val());else if(a==='--sortie')o.sortie=val();
     else if(!a.startsWith('--'))o.fichiers.push(a);else throw Error('option inconnue : '+a);}
   return o;
 }
@@ -203,7 +232,7 @@ function executer(o){
     source={version:journal.version,decisions:journal.decisions.length,surfaces:surfaces.size,validesAuJournal:journal.valide.size};}
   else if(o.mode==='echo'){const e=lireEcho(o.echo,d.partie);r=rejouerEcho({surfaces:e.surfaces,jeu});source={visites:e.visites,surfaces:e.surfaces.size};}
   else throw Error('mode lot ou echo attendu');
-  const b=bilan({...r,jeu,pnMic:pn,mode:o.mode});
+  const b=bilan({...r,jeu,pnMic:pn,advMic:o.adv||[],mode:o.mode});
   return {format:FORMAT,module:M.DEFAULTS.version,projet:d.projet,partie:d.partie,manifeste:Manifeste.statut(m,d.projet,d.partie),source,seuils:JSON.parse(JSON.stringify(M.DEFAULTS)),temps:TEMPS,...b,
     limites:o.mode==='lot'?['verts : seuls ceux que Mic a visités ont un écartement connu','activation : effet du premier ordre (les décisions suivantes ne sont pas recalculées)']:['aucun lot : les règles du lot (différer) ne s\'appliquent pas ; zones et verts seulement']};
 }
@@ -217,6 +246,9 @@ function rapport(sorties){
   for(const s of sorties){const z=s.zonesPN;L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${z.mic.length?z.micRetrouves+'/'+z.mic.length:'liste absente'} | ${z.zonesSansPN.length} | ${z.coeursNonConfirmes.length} | ${z.cutsMic?z.cutsMicCouverts+'/'+z.cutsMic:'—'} |`);}
   L.push('','| Partie | Mode | Détecteur | Zones | PN de Mic retrouvés | Zones sans PN | Cuts en zone |','|---|---|---|--:|--:|--:|--:|');
   for(const s of sorties)for(const [id,v] of Object.entries(s.zonesPN.variantes||{}))L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${id} | ${v.zones} | ${s.zonesPN.mic.length?v.micRetrouves+'/'+s.zonesPN.mic.length:'liste absente'} | ${v.zonesSansPN} | ${v.cutsEnZone} |`);
+  L.push('','| Partie | Mode | Zones d\'ADV de Mic retrouvées | Aiguilles couvertes | Plages sans ADV | Cuts des zones de Mic couverts | Cuts des plages hors zones de Mic | Alertes : noyau / marge / PN / hors zone |','|---|---|--:|--:|--:|--:|--:|---|');
+  for(const s of sorties){const z=s.zonesADV;if(!z)continue;const R=z.parRole,t=k=>`${R[k].alertes}/${R[k].cuts}`;
+    L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${z.mic.length?z.micRetrouvees+'/'+z.mic.length:'liste absente'} | ${z.aiguilles?z.aiguillesCouvertes+'/'+z.aiguilles:'—'} | ${z.plagesSansADV.length} | ${z.cutsMic?z.cutsMicCouverts+'/'+z.cutsMic:'—'} | ${z.cutsPlagesHorsMic} | ${t('noyau')} / ${t('marge')} / ${t('pn')} / ${t('hors')} |`);}
   L.push('','| Partie | Mode | Verts signalés | étiquetés | > 10 mm retrouvés | ≥ 25 mm retrouvés | ≤ 5 mm (fausses alertes) | Minutes de Mic |','|---|---|--:|--:|--:|--:|--:|--:|');
   for(const s of sorties){const v=s.verts;L.push(`| ${s.projet}:${s.partie} | ${s.mode} | ${v.signales} | ${v.etiquetes} | ${v.plus10}/${v.total.plus10} (${pct(v.plus10,v.total.plus10)}) | ${v.objet25}/${v.total.objet25} | ${v.fin5} | ${v.tempsMicMin} |`);}
   L.push('','| Partie | Verts étiquetés (> 10 mm ; ≥ 25 mm) | Médiane de la partie | Variante | Signalés | > 10 mm | ≥ 25 mm | ≤ 5 mm |','|---|---|--:|---|--:|--:|--:|--:|');

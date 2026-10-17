@@ -133,3 +133,57 @@ test('réglage d\'activation : coupé par défaut, et seule une règle nommée E
  assert.equal(R.doitDifferer({aurait:'valider',regles:[]},{...r,actif:true,regles:{'pn-chaque-cut':true}}),false);
  assert.equal(R.doitDifferer({aurait:'deja-differe',regles:[]},{actif:true,regles:{'pn-chaque-cut':true}}),false);
 });
+
+/* ADV (fiches/DETECTION_ADV.md) : voie fabriquée avec ses deux champignons (dessus à 0, 7 cm vers l'extérieur de chaque pose), le
+ * ballast à −16 cm, et ce qu'on veut y ajouter : un rail de plus, le contre-rail d'une courbe, une chaussée de PN, une rampe. */
+const tete=y=>(y<=-0.7175+0.0005&&y>=-0.7875)||(y>=0.7175-0.0005&&y<=0.7875);
+const voieAvec=extra=>y=>{const e=extra?extra(y):null;return e!=null?e:tete(y)?0:-0.16;};
+const surDe=c=>R.surface(c);
+
+test('rail de plus : une aiguille ou la voie qui diverge dans le nuage ; ni le contre-rail d\'une courbe, ni la chaussée d\'un PN, ni une rampe',()=>{
+ const voie=surDe(capture(voieAvec()));assert.equal(voie.advRails,0,'voie courante : aucun rail de plus');
+ /* Un champignon de 6 cm, côté voie, à 17–23 cm du rail gauche (vu du rail droit : à 1,2 m, hors de la fenêtre). */
+ const aiguille=surDe(capture(voieAvec(y=>y>=-0.5475&&y<=-0.4875?0:null)));
+ assert.equal(aiguille.advRails,1);assert.deepEqual(aiguille.advCotes.right,[]);assert.equal(aiguille.advCotes.left.length,1);
+ const [a,b]=aiguille.advCotes.left[0];assert.ok(a>=16&&a<=18&&b>=23&&b<=24,`bornes ${a}–${b} cm`);
+ /* Côté extérieur : le rail de la voie qui diverge, à 25 cm dehors du rail droit. */
+ assert.equal(surDe(capture(voieAvec(y=>y>=0.7175+0.25&&y<=0.7175+0.31?0:null))).advRails,1);
+ /* Contre-rail de courbe : ornière de 4,5 cm, champignon jusqu'à 10 cm côté voie. Il court sur des centaines de cuts : écarté. */
+ assert.equal(surDe(capture(voieAvec(y=>y>=-0.7175+0.045&&y<=-0.7175+0.10?0:null))).advRails,0);
+ /* Chaussée d'un PN : tout est au ras, le côté est « plat ». */
+ assert.equal(surDe(capture(voieAvec(y=>tete(y)?0:-0.01))).advRails,0);
+ /* Rampe (remblai, quai qui monte) côté voie : pas de creux de part et d'autre d'un champignon. */
+ assert.equal(surDe(capture(voieAvec(y=>y>0.2&&y<0.7175-0.1?Math.min(0,-0.16+(y-0.2)*0.8):null))).advRails,0);
+ /* Rien à lire : pas de verdict. */
+ assert.equal(R.railsDePlus({rails:RAILS,pointsSceneRelative:[]}).rails,null);
+ /* Tous les points comptent, visibles ou non (la fenêtre d'ESV coupe souvent les rails voisins). */
+ const c=capture(voieAvec(y=>y>=-0.5475&&y<=-0.4875?0:null));c.visibleByClipBoxes=c.pointsSceneRelative.map(()=>false);assert.equal(R.surface(c).advRails,1);
+ /* Le PN, lui, ne lit que les points visibles : rien ne change pour lui. */
+ assert.equal(R.surface(c).sidePoints,0);
+});
+
+test('zone d\'ADV : une alerte seule ne suffit pas ; deux à 3 cuts au plus ouvrent la zone ; 30 cuts de marge ; aucun verdict changé',()=>{
+ const mem=R.creerMemoire('lot-adv');
+ const e=jouer(mem,[res(90),res(100,{advRails:1}),res(102,{advRails:2}),res(108,{advRails:1}),res(115),res(138),res(139),res(160,{advRails:1})]);
+ assert.deepEqual(e.map(x=>x.zone.adv),[null,'alerte-non-confirmee','alerte','alerte','marge-apres','marge-apres',null,'alerte-non-confirmee']);
+ assert.deepEqual(e[2].zone.advControle,[70,132],'30 cuts avant la première alerte, 30 après la dernière');
+ assert.deepEqual(e[3].zone.advControle,[70,138],'la zone grandit tant que les alertes se suivent à 10 cuts au plus');
+ assert.equal(e[1].zone.advControle,undefined);
+ assert.deepEqual(e.map(x=>x.aurait),Array(8).fill('valider'),'en ombre : la zone d\'ADV ne change aucun verdict');
+ for(const x of e)assert.ok(!x.regles.length);
+ assert.deepEqual(mem.zonesADV,[{debut:100,fin:108}]);
+ /* Deux alertes trop loin l'une de l'autre : jamais de zone. */
+ const m2=R.creerMemoire('lot-adv2');assert.deepEqual(jouer(m2,[res(10,{advRails:1}),res(14,{advRails:1})]).map(x=>x.zone.adv),['alerte-non-confirmee','alerte-non-confirmee']);
+ /* Capture absente (advRails nul) : pas d'alerte. */
+ assert.equal(R.evaluer(R.creerMemoire('x'),res(5,{advRails:null})).zone.adv,null);
+ /* Le résumé porte le compte, l'événement aussi ; jamais une position. */
+ const s=R.resumer({identity:{part:9,cut:7},valide:true,surface:{advRails:2}});assert.equal(s.advRails,2);
+ const ev=R.evenement(R.evaluer(R.creerMemoire('y'),s));assert.equal(ev.surface.advRails,2);assert.ok(!/positionSceneRelative|"positions"|bords/.test(JSON.stringify(ev)));
+});
+
+test('verts dans une zone d\'ADV : signalés (`adv`), comme ceux d\'un PN',()=>{
+ const mem=R.creerMemoire('lot-adv3');jouer(mem,[res(300,{advRails:1}),res(302,{advRails:1})]);
+ const L=i=>({i,statut:'valid',operateur:false,vu:false,fraiche:false,ecartementMm:1437});
+ const r=R.lignes(mem,[260,270,290,320,332,340].map(L),{cut:302});
+ assert.deepEqual(r.verts.map(v=>[v.i,v.raisons]),[[270,['adv']],[290,['adv']],[320,['adv']],[332,['adv']]]);
+});
