@@ -602,7 +602,7 @@
          ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Orbite GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
          :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
      if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
-     /* 4.9 (chantier UX) : la politique effective est dans « Détails du lot » ;
+     /* 4.9 (chantier UX ; test 7 : sous « Détails », dans « Export, archive et réglages avancés ») : la politique effective y est ;
       * si elle n'est pas celle par défaut, une pastille courte le dit sur la vue. */
      if($('lot-politique-pastille')){const sc=b?.scope,ecarts=!running?[]:[
          (sc?.unresolvedPolicy||'pause')!=='defer'?'rail non résolu : pause':'',
