@@ -9,7 +9,7 @@ Branche `claude/50-regles-metier`, partie de `claude/50-base`. Méthode de dépa
 | | Résultat |
 |---|---|
 | **Détection des PN sans liste** | Le PN est reconnu quand la chaussée affleure sur les **quatre quarts** autour des rails, sur **deux cuts à 3 cuts au plus**. Plage à contrôler : 4 cuts avant, 6 après. **17 PN de Mic sur 17 retrouvés** (parties 12, 13, 29 et partie 1 du second projet), **0 zone reconnue sans PN**. Les plages tombent à 0 à 3 cuts près de celles de Mic. Sur le second projet, `flushPct` à 30 % donnait 7 zones sans PN ; le détecteur retenu n'en donne aucune. |
-| **ADV** | Aucun signal géométrique fiable. La forme qu'un ADV prend dans un lot, c'est une **grappe de différés** autour de l'aiguille. La règle `grappe-differes` s'appuie là-dessus. |
+| **ADV** | Aucun signal géométrique fiable. La forme qu'un ADV prend dans un lot, c'est une **grappe de différés** autour de l'aiguille. La règle `grappe-differes` s'appuie là-dessus. **Mise à jour du 17/10** : le nuage, lui, montre l'ADV (un rail de plus autour des rails posés) ; zone `adv` en ombre, 8 zones de Mic sur 8, voir `fiches/DETECTION_ADV.md`. |
 | **Faux verts évités** (lots 17, 24, 29 et partie 1 du second projet) | **18 sur 85** (21 %), dont les **3 poses sur la mauvaise voie** du second projet (163 à 280 mm). Ils viennent tous de `grappe-differes`. |
 | **Cuts différés en plus** | **96** : 56 bons, 22 sans référence, 18 faux verts. |
 | **Coût en temps de Mic** | **1,7 à 5,4 minutes** pour les quatre lots, soit 6 à 18 s par faux vert évité. |
@@ -84,6 +84,8 @@ Aucun trait géométrique ne sépare une zone d'ADV :
 - le cap ne rompt pas.
 
 Ce qui se voit dans un lot, c'est la **grappe de différés** autour de l'aiguille, aux motifs flanc, pente et ambiguïté (partie 29 : 6633–6638 et 8002–8005), et les grosses corrections latérales de Mic de −5 à +8 cuts autour de l'aiguille (D-134). La règle `grappe-differes` est la traduction retenue. Elle ne reconnaît pas l'ADV en tant que tel : elle reconnaît son noyau, et toute grappe d'invalides.
+
+**Mise à jour du 17/10 (`fiches/DETECTION_ADV.md`).** Les traits ci-dessus sont ceux des poses. Le **nuage de points** de la capture, lui, montre l'ADV : l'aiguille, le contre-rail, le cœur ou la voie qui diverge forment un **rail de plus** autour des deux rails posés. Ce signal (`railsDePlus`) donne la zone `adv`, en ombre et sans règle : 8 zones de Mic sur 8 (parties 13 et 29, partie 1 du second projet), aucune plage sans ADV, aucun PN confondu. La liste des verts à contrôler en fait entrer les verts.
 
 ## 4. Règle d'écartement
 

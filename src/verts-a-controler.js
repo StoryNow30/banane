@@ -14,7 +14,8 @@
   * défaut écartement et dénivelé de la fenêtre de B1), `lot` (cuts du lot, différés ou non), `zonesPN` (PN reconnus par les
   * règles métier), `posees` (bords qu'Ariane a écrits sur les cuts qu'elle a validés, mémoire E1). Un vert : ligne `valid`, jamais
   * traitée par un opérateur, hors des cuts du lot.
-  * Candidats : les verts à `fenetreCuts` cuts au plus d'un cut du lot (la fenêtre que B1 lit déjà), et ceux de la plage d'un PN.
+  * Candidats : les verts à `fenetreCuts` cuts au plus d'un cut du lot (la fenêtre que B1 lit déjà), et ceux de la plage d'un PN ou
+  * d'une zone d'ADV (`zonesADV` : plages à contrôler reconnues par les règles métier, rail de plus ; fiches/DETECTION_ADV.md).
   * Signaux (REGLES_METIER, FAUX_VERTS, G0) :
   *   - écartement : écart à la médiane des verts de la partie (le mauvais objet d'extraction, 54 sur 54 en parties 12 et 13) ;
   *   - dénivelé : hauteur gauche − droite contre la médiane des verts voisins (±10) : le saut vertical d'un seul rail ;
@@ -30,7 +31,7 @@
  const DEFAULTS=Object.freeze({version:'verts-a-controler-v1',
   fenetreCuts:5,fenetreIsoleCuts:5,touteLaPartie:false,referenceLignesMin:20,voisinsDenivele:10,voisinsMin:3,voisinsVoie:5,
   pn:Object.freeze({margeAvant:4,margeApres:6}),
-  poids:Object.freeze({ecartement:0.5,denivele:0.5,hauteur:1,poses:0.5,voie:0,rouges:1,differe:0.5,pn:0}),
+  poids:Object.freeze({ecartement:0.5,denivele:0.5,hauteur:1,poses:0.5,voie:0,rouges:1,differe:0.5,pn:0,adv:0}),
   bornes:Object.freeze({ecartementMm:40,deniveleMm:40,hauteurMm:40,posesMm:40,voieMm:40,rouges:6}),
   echelles:Object.freeze({ecartementMm:10,deniveleMm:10,hauteurMm:10,posesMm:10,voieMm:10,rouges:5}),
   zonesMortes:Object.freeze({ecartementMm:2,deniveleMm:2,hauteurMm:2,posesMm:2,voieMm:2}),
@@ -69,7 +70,7 @@
  function signaux(entree,options){const cfg=cfgDe(options);
   const lot=(entree?.lot||[]).filter(x=>entier(x?.cut)),cutsLot=[...new Set(lot.map(x=>x.cut))].sort((a,b)=>a-b),setLot=new Set(cutsLot);
   const differes=[...new Set(lot.filter(x=>x.differe===true).map(x=>x.cut))].sort((a,b)=>a-b);
-  const zones=plagesPN(entree?.zonesPN,cfg);
+  const zones=plagesPN(entree?.zonesPN,cfg),zonesADV=plagesPN(entree?.zonesADV,{pn:{margeAvant:0,margeApres:0}});
   const parI=new Map();
   for(const x of entree?.lignes||[])if(entier(x?.i))parI.set(x.i,x);
   const verts=[...parI.values()].filter(x=>x.statut==='valid'&&x.operateur!==true&&!setLot.has(x.i)).sort((a,b)=>a.i-b.i).map(x=>({i:x.i,...mesures(x)}));
@@ -93,10 +94,11 @@
   const out=[];
   for(const v of verts){
    const distLot=cutsLot.length?proche(cutsLot,v.i):Infinity,pn=zones.find(z=>v.i>=z.controle[0]&&v.i<=z.controle[1])||null;
+   const adv=zonesADV.find(z=>v.i>=z.controle[0]&&v.i<=z.controle[1])||null;
    /* Hors d'une grappe (un seul cut du lot à 5 cuts), la fenêtre se réduit à `fenetreIsoleCuts` : la règle de l'opérateur pour un cut isolé
     * (« le cut d'avant et le cut d'après »). */
    const n5=compte(cutsLot,v.i,5);
-   if(cfg.touteLaPartie!==true&&!pn&&!(distLot<=(n5>=2?cfg.fenetreCuts:Math.min(cfg.fenetreCuts,cfg.fenetreIsoleCuts))))continue;
+   if(cfg.touteLaPartie!==true&&!pn&&!adv&&!(distLot<=(n5>=2?cfg.fenetreCuts:Math.min(cfg.fenetreCuts,cfg.fenetreIsoleCuts))))continue;
    const vois=[];for(let d=-cfg.voisinsDenivele;d<=cfg.voisinsDenivele;d++){if(d&&dz.has(v.i+d))vois.push(dz.get(v.i+d));}
    const mdz=vois.length>=cfg.voisinsMin&&Number.isFinite(v.dz)?med(vois):null;
    const distDiff=differes.length?proche(differes,v.i):Infinity,vo=voie(v.i),vp=poses.size?voie(v.i,poses):null;
@@ -105,8 +107,8 @@
     deniveleMm:mdz!=null?r1(Math.abs(v.dz-mdz)):null,
     voieVerticaleMm:vo?r1(vo.v):null,voieLateraleMm:vo?r1(vo.h):null,hauteurPosesMm:vp?r1(vp.v):null,
     rouges:compte(cutsLot,v.i,5),distLot:Number.isFinite(distLot)?distLot:null,distDiffere:Number.isFinite(distDiff)?distDiff:null,
-    pn:pn?{debut:pn.debut,fin:pn.fin}:null});}
-  return {reference,signaux:out,cutsLot,differes,zones};}
+    pn:pn?{debut:pn.debut,fin:pn.fin}:null,adv:adv?{debut:adv.debut,fin:adv.fin}:null});}
+  return {reference,signaux:out,cutsLot,differes,zones,zonesADV};}
 
  /* Score : points bornés, un terme par signal ; `raisons` dans l'ordre de leur poids dans le score. */
  function noter(s,options){const cfg=cfgDe(options),P=cfg.poids,B=cfg.bornes,E=cfg.echelles,Z=cfg.zonesMortes,t={};
@@ -119,6 +121,7 @@
   if(s.rouges>0)t.grappe=P.rouges*Math.min(s.rouges,B.rouges)/E.rouges;
   if(Number.isFinite(s.distDiffere)&&s.distDiffere<=cfg.plage.differeCuts)t.differe=P.differe;
   if(s.pn)t.pn=P.pn;
+  if(s.adv)t.adv=P.adv||0;
   const score=Object.values(t).reduce((a,b)=>a+b,0);
   const raisons=Object.entries(t).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k])=>k);
   return {score:r2(score),raisons};}
@@ -129,17 +132,18 @@
   return {...S,verts};}
 
  /* Plages groupées comme l'opérateur les parcourt (ordre des cuts) : des verts retenus à `trouCuts` cuts au plus les uns des
-  * autres font une plage. Libellé : le PN qu'elle touche, sinon le différé du lot le plus proche, sinon la grappe de cuts du lot,
+  * autres font une plage. Libellé : le PN qu'elle touche, sinon le différé du lot le plus proche, sinon la zone d'ADV, sinon la grappe de cuts du lot,
   * sinon le signal du cut. */
  function plages(retenus,S,options){const cfg=cfgDe(options),tri=retenus.slice().sort((a,b)=>a.i-b.i),out=[];
   for(const v of tri){const p=out.at(-1);if(p&&v.i-p.fin<=cfg.plage.trouCuts){p.fin=v.i;p.cuts.push(v.i);p.verts.push(v);}else out.push({debut:v.i,fin:v.i,cuts:[v.i],verts:[v]});}
-  return out.map(p=>{const pn=p.verts.find(v=>v.pn)?.pn||null,d=cfg.plage.differeCuts;
+  return out.map(p=>{const pn=p.verts.find(v=>v.pn)?.pn||null,adv=p.verts.find(v=>v.adv)?.adv||null,d=cfg.plage.differeCuts;
    const diff=S.differes.filter(c=>c>=p.debut-d&&c<=p.fin+d);
    const lot=S.cutsLot.filter(c=>c>=p.debut-cfg.fenetreCuts&&c<=p.fin+cfg.fenetreCuts);
    const raisons=[...new Set(p.verts.flatMap(v=>v.raisons))];
    let motif,libelle;
    if(pn){motif='pn';libelle=`PN ${pn.debut}–${pn.fin}`;}
    else if(diff.length){motif='differe';libelle=diff.length===1?`autour du différé ${diff[0]}`:`autour des différés ${diff[0]}–${diff.at(-1)}`;}
+   else if(adv){motif='adv';libelle=`ADV ${adv.debut}–${adv.fin}`;}
    else if(lot.length>=3){motif='grappe';libelle=`grappe ${lot[0]}–${lot.at(-1)}`;}
    else if(raisons[0]==='ecartement'){motif='ecartement';libelle=p.cuts.length===1?`écartement, cut ${p.debut}`:`écartement, cuts ${p.debut}–${p.fin}`;}
    else if(raisons[0]==='denivele'||raisons[0]==='hauteur'){motif='hauteur';libelle=p.cuts.length===1?`hauteur, cut ${p.debut}`:`hauteur, cuts ${p.debut}–${p.fin}`;}
@@ -147,7 +151,7 @@
    return {debut:p.debut,fin:p.fin,cuts:p.cuts,nombre:p.cuts.length,motif,libelle,scoreMax:Math.max(...p.verts.map(v=>v.score)),raisons};})
    /* Deux plages voisines du même PN, du même différé ou de la même grappe n'en font qu'une : on les parcourt ensemble. */
    .reduce((acc,p)=>{const d=acc.at(-1);
-    if(d&&d.libelle===p.libelle&&['pn','differe','grappe','voisin'].includes(p.motif)){d.fin=p.fin;d.cuts.push(...p.cuts);d.nombre=d.cuts.length;d.scoreMax=Math.max(d.scoreMax,p.scoreMax);d.raisons=[...new Set([...d.raisons,...p.raisons])];}
+    if(d&&d.libelle===p.libelle&&['pn','adv','differe','grappe','voisin'].includes(p.motif)){d.fin=p.fin;d.cuts.push(...p.cuts);d.nombre=d.cuts.length;d.scoreMax=Math.max(d.scoreMax,p.scoreMax);d.raisons=[...new Set([...d.raisons,...p.raisons])];}
     else acc.push(p);return acc;},[]).map(p=>({...p,cutsTexte:compacter(p.cuts)}));}
  /* « 1655, 1664–1666 » : les cuts d'une plage, suites consécutives réunies. */
  function compacter(cuts){const t=[...new Set(cuts)].sort((a,b)=>a-b),out=[];
@@ -160,6 +164,7 @@
   return {format:'ariane-verts-a-controler-1',version:cfg.version,partie:Number.isInteger(entree?.partie)?entree.partie:null,
    candidats:C.verts.length,aControler:retenus.length,tempsEstimeS:Math.round(retenus.length*cfg.tempsParVertS),tempsParVertS:cfg.tempsParVertS,
    seuil:cfg.seuil,reference:C.reference,cutsDuLot:C.cutsLot.length,differes:C.differes.length,zonesPN:C.zones.map(z=>({debut:z.debut,fin:z.fin,controle:z.controle})),
+   zonesADV:C.zonesADV.map(z=>({debut:z.debut,fin:z.fin,controle:z.controle})),
    plages:P.slice(0,cfg.plagesMax),plagesTronquees:P.length>cfg.plagesMax,
    verts:retenus.map(v=>({i:v.i,score:v.score,raisons:v.raisons,ecartementMm:v.ecartementMm,deniveleMm:v.deniveleMm,hauteurMm:v.voieVerticaleMm,rouges:v.rouges,distDiffere:v.distDiffere}))};}
  /* Durée lisible : « 2 min 20 s », « 45 s ». */

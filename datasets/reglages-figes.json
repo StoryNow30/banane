@@ -118,7 +118,7 @@
       ]
     },
     "reglesMetier": {
-      "libelle": "Règles métier de l'opérateur expert : PN et marges, grappe de différés, validation en place dans une zone, verts à contrôler",
+      "libelle": "Règles métier de l'opérateur expert : PN et marges, grappe de différés, validation en place dans une zone, verts à contrôler, zone d'ADV par rail de plus (figée le 2026-10-17, fiches/DETECTION_ADV.md)",
       "decision": "à écrire (chantier claude/50-regles-metier)",
       "fiche": "fiches/REGLES_METIER.md",
       "etat": "en ombre dans Orbite (regles-metier-ombre), consignée seulement ; activation coupée, règle par règle",
@@ -153,6 +153,38 @@
           "trouCuts": 5,
           "grappeMin": 3,
           "margeGrappe": 3
+        },
+        "adv": {
+          "version": "adv-rail-de-plus-v1",
+          "pasM": 0.01,
+          "lateralM": 0.4,
+          "longM": 0.5,
+          "trancheM": 0.1,
+          "zMinM": -0.4,
+          "zMaxM": 0.2,
+          "pointsPas": 3,
+          "hautM": -0.03,
+          "continuite": 0.5,
+          "basM": -0.08,
+          "creuxM": -0.15,
+          "tete": [
+            -0.09,
+            0.03
+          ],
+          "largeurMinPas": 3,
+          "largeurMaxPas": 16,
+          "contreRail": {
+            "debutMaxM": 0.065,
+            "finMaxM": 0.125
+          },
+          "platMax": 0.5,
+          "sautPas": 3,
+          "chutePas": 5,
+          "confirmation": 2,
+          "confirmationEcartCuts": 3,
+          "trouCuts": 10,
+          "margeAvant": 30,
+          "margeApres": 30
         }
       },
       "ombre": {
@@ -279,7 +311,8 @@
           "voie": 0,
           "rouges": 1,
           "differe": 0.5,
-          "pn": 0
+          "pn": 0,
+          "adv": 0
         },
         "zonesMortes": {
           "ecartementMm": 2,

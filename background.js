@@ -1383,7 +1383,7 @@ function reglesMetierLignes(identity,rep){try{
 }catch{/* relevé seulement */}}
 /* 5.0 — VERTS À CONTRÔLER (src/verts-a-controler.js, réglage `vertsAControler`, fiches/VERTS_A_CONTROLER.md). Action de panneau, à la
  * demande (fin de lot, bouton « Recalculer », export) : la liste des verts à relire en priorité. LECTURE SEULE de ce qu'Ariane a déjà :
- *  - cuts du lot et PN reconnus : événements `regles-metier-ombre` du journal local (repli : listes du lot courant) ;
+ *  - cuts du lot, PN et zones d'ADV reconnus : événements `regles-metier-ombre` du journal local (repli : listes du lot courant) ;
  *  - lignes de la liste d'ESV : instantané E1 de la partie (chrome.storage.local), gardé seulement s'il concorde avec le lot (les cuts
  *    du lot y sont rouges ou traités) ; repli : lignes que B1 a lues pendant le lot (écartement seul) ;
  *  - poses d'Ariane : bords qu'elle a écrits pendant le lot (mémoire E1, même liste).
@@ -1395,15 +1395,18 @@ async function vertsAControler(args){
  const V=globalThis.BananeVertsAControler,LM=globalThis.BananeListeMemoire,b=engine?.s?.batch;
  const partie=Number.isInteger(args?.partie)?args.partie:b?.scope?.part??null;
  if(!Number.isInteger(partie))return {actif:true,partie:null,raison:'partie-inconnue'};
- const lot=new Map(),zones=[],cutDe=x=>x?.cut??x?.identity?.cut;
+ const lot=new Map(),zones=[],zonesA=[],cutDe=x=>x?.cut??x?.identity?.cut;
  let events=[];try{events=await store.all('events')||[];}catch{/* journal illisible : repli sur le lot courant */}
  for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.identity?.part!==partie||!Number.isInteger(e.identity?.cut))continue;
   lot.set(e.identity.cut,{cut:e.identity.cut,differe:e.aurait==='deja-differe'||e.aurait==='sans-pose'});
-  const c=e.zone?.pnControle;if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zones.push(c);}
+  const c=e.zone?.pnControle;if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zones.push(c);
+  const a=e.zone?.advControle;if(Array.isArray(a)&&a.length===2&&a.every(Number.isInteger))zonesA.push(a);}
  if(!lot.size&&b?.scope?.part===partie){for(const x of b.processed||[]){const c=cutDe(x);if(Number.isInteger(c))lot.set(c,{cut:c,differe:false});}
   for(const x of b.deferred||[]){const c=cutDe(x);if(Number.isInteger(c))lot.set(c,{cut:c,differe:true});}}
  /* Plages de PN : celles d'un même PN grandissent au fil du lot ; on les fond. */
  const pn=[];for(const [a,z] of zones.sort((x,y)=>x[0]-y[0]||x[1]-y[1])){const d=pn.at(-1);if(d&&a<=d[1])d[1]=Math.max(d[1],z);else pn.push([a,z]);}
+ /* Zones d'ADV (rail de plus, en ombre ; fiches/DETECTION_ADV.md) : mêmes plages grandissantes, fondues de même. */
+ const adv=[];for(const [a,z] of zonesA.sort((x,y)=>x[0]-y[0]||x[1]-y[1])){const d=adv.at(-1);if(d&&a<=d[1]+1)d[1]=Math.max(d[1],z);else adv.push([a,z]);}
  let lignes=[],source='aucune',posees=[],cle=null;
  try{if(LM&&globalThis.BananeSettings?.listeMemoire?.actif!==false){
   const inst=(await LM.instantanes(chrome.storage.local,[partie]))?.[0]?.snap,dec=inst?LM.decompacter(inst):null;
@@ -1416,7 +1419,7 @@ async function vertsAControler(args){
  catch{/* stockage illisible : repli */}
  const mem=reglesOmbre.mem;
  if(source==='aucune'&&mem?.lignes?.size&&b?.id===mem.lotId&&b?.scope?.part===partie){lignes=[...mem.lignes].map(([i,x])=>({i,statut:x.statut,g:x.g}));source='fenetres-b1';}
- const l=V.liste({partie,lignes,lot:[...lot.values()],zonesPN:pn,posees});
+ const l=V.liste({partie,lignes,lot:[...lot.values()],zonesPN:pn,zonesADV:adv,posees});
  return {actif:true,...l,source,lotId:b?.scope?.part===partie?b?.id??null:null,calculeA:new Date().toISOString()};}
 /* 5.0 (audit 5.0, I8 (1)) — VOIE PRÉDITE EN OMBRE (src/voie-recentree.js, réglage `voiePrediteOmbre`). Pour chaque cut que le lot DIFFÈRE
  * (proposition finale sans les deux rails résolus), l'événement `voie-predite-ombre` consigne ce qu'aurait donné la règle prudente D-147 :

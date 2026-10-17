@@ -83,3 +83,18 @@ test('module pur : aucun accès à chrome, au réseau, au stockage ni à une com
  const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/verts-a-controler.js'),'utf8');
  for(const m of [/chrome\./,/fetch\(/,/XMLHttpRequest/,/sendMessage/,/indexedDB/,/localStorage/,/require\(/])assert.ok(!m.test(src),String(m));
 });
+
+test('zone d\'ADV (règles métier, rail de plus) : ses verts deviennent candidats, même loin de tout rouge ; la géométrie décide ; libellé « ADV »',()=>{
+ /* Zone d'ADV reconnue 85–110 (plage déjà marginée) ; le vert 100 est mal extrait (écartement +30 mm), 95 est juste. */
+ const e={...partie({mal:{100:{dg:30}}}),zonesADV:[[85,110]]};
+ const sans=V.signaux({...e,zonesADV:[]}).signaux.map(s=>s.i);assert.ok(!sans.includes(100)&&!sans.includes(95),'sans zone : hors de la fenêtre du lot');
+ const S=V.signaux(e),s=i=>S.signaux.find(x=>x.i===i);
+ assert.ok(s(100)&&s(95),'avec la zone : candidats');assert.deepEqual(s(100).adv,{debut:85,fin:110});assert.deepEqual(S.zonesADV,[{debut:85,fin:110,controle:[85,110]}]);
+ assert.equal(V.DEFAULTS.poids.adv,0,'poids livré nul : la zone ne fait entrer que des verts suspects par leur géométrie');
+ const L=V.liste(e),ids=L.verts.map(v=>v.i);assert.ok(ids.includes(100)&&!ids.includes(95));
+ const p=L.plages.find(x=>x.cuts.includes(100));assert.equal(p.motif,'adv');assert.equal(p.libelle,'ADV 85–110');
+ assert.deepEqual(L.zonesADV,[{debut:85,fin:110,controle:[85,110]}]);
+ /* Un poids non nul (mesuré, non livré) ferait entrer toute la zone. */
+ assert.ok(V.liste(e,{poids:{...V.DEFAULTS.poids,adv:1}}).verts.map(v=>v.i).includes(95));
+ assert.ok(!/positionSceneRelative|bords|"left"|"right"/.test(JSON.stringify(L)),'aucune position');
+});
