@@ -980,20 +980,9 @@
   * « N on M treated » passé de N à N+1 (un seul compteur, même total). Sans
   * compteur lisible AVANT, rien n'est émis. Sans effet, ou cut changé : erreur,
   * le moteur s'arrête, l'opérateur valide lui-même. */
- /* Ctrl+Entrée relayé comme le raccourci de SKIP : keydown puis keyup sur `document` (un seul gabarit, pour les deux validations sur place). */
- function ctrlEntree(){const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
-   for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
-     /* Le gestionnaire d'ESV lit e.which : réglé explicitement si le constructeur ne le renseigne pas. */
-     for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
-     document.dispatchEvent(e);}}
  const lireCompteur=()=>{const r=releverEsv(null);
    return r.compteur&&!(r.compteursVus>1)&&!r.compteurIllisible?{traites:r.compteur.traites,total:r.compteur.total}:null;};
- /* 5.0 (D-171, relecture après le lot) : `options.preuve === 'ecriture'`. Un cut VERT est déjà compté « treated » par ESV : sa
-  * validation ne fait pas bouger le compteur. La même commande (Ctrl+Entrée, ou le bouton réglé) est alors envoyée sans exiger le
-  * compteur ; la page prouve seulement que le cut affiché n'a pas changé, et le service worker attend l'écriture de validation vue
-  * par l'observateur passif (ligne du cut, statut 2xx). Sans cette option : comportement de KI-069, inchangé. */
  async function validateInPlace(identity,scope={},options={},progress=()=>{}){
-   if(options?.preuve==='ecriture')return validateInPlaceEcriture(identity,options,progress);
    cancelled=false;const bouton=options?.commande==='bouton';
    const before=assertExpected(identity),startedAt=new Date().toISOString();
    const avant=lireCompteur();
@@ -1004,7 +993,12 @@
      command={id,exists:!!document.getElementById(id),disabled:!!document.getElementById(id)?.disabled};
    }else command={id:'Ctrl+Enter',exists:true,disabled:false};
    progress('validate-in-place-before-command',{identity:before.identity,command,compteur:avant});
-   if(bouton)nativeClick(options.boutonId);else ctrlEntree();
+   if(bouton)nativeClick(options.boutonId);
+   else{const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
+     for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
+       /* Le gestionnaire d'ESV lit e.which : réglé explicitement si le constructeur ne le renseigne pas. */
+       for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
+       document.dispatchEvent(e);}}
    let apres=null,compteur=null;
    try{compteur=await waitFor(()=>{const c=lireCompteur();return c&&c.traites!==avant.traites?c:false;},'',P.attenteNavigationMs);}catch{compteur=lireCompteur();}
    const nom=bouton?'Le bouton « valider sans suivant »':'Ctrl+Entrée',label=cutLabel();
@@ -1019,30 +1013,47 @@
      nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
      meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
  }
- /* Le même geste que `validateInPlace` (Ctrl+Entrée relayé, ou le bouton réglé), preuve laissée à l'écriture observée. */
- async function validateInPlaceEcriture(identity,options={},progress=()=>{}){
-   cancelled=false;const bouton=options?.commande==='bouton';
-   const before=assertExpected(identity),startedAt=new Date().toISOString(),avant=lireCompteur();
-   let command;
-   if(bouton){const id=options.boutonId;
-     if(typeof id!=='string'||!id)throw Error('Repli buttonValidateRail() : l’identifiant du bouton « valider sans suivant » d’ESV n’est pas réglé (réglage boutonValiderSansSuivant) ; rien n’a été envoyé à ESV.');
-     const el=document.getElementById(id);if(!el||el.disabled)throw Error('Bouton « valider sans suivant » indisponible : '+id+' ; rien n’a été envoyé à ESV.');
-     command={id,exists:true,disabled:false};
-   }else command={id:'Ctrl+Enter',exists:true,disabled:false};
-   progress('validate-in-place-before-command',{identity:before.identity,command,compteur:avant,preuve:'ecriture'});
-   if(bouton)nativeClick(options.boutonId);else ctrlEntree();
-   /* Le temps qu'ESV traite la touche (même délai que la relecture d'un état), puis le cut affiché doit être le même. */
-   await sleep(Math.min(P.stabiliteMs??800,800));
-   const nom=bouton?'Le bouton « valider sans suivant »':'Ctrl+Entrée',label=cutLabel();
-   if(label&&K.key(label)!==K.key(identity))throw Error(`${nom} a fait changer le cut affiché (partie ${label.part}, cut ${label.cut}) : rien n’est affirmé validé. Contrôle le cut ${identity.cut} dans ESV.`);
-   const apres=snapshot();K.assertTarget(identity,apres.identity);
-   return {format:'banane-validate-in-place-v1',trigger:bouton?'configured-validate-rail-button':'relayed-native-validate-shortcut',startedAt,
-     operatorDecision:'VALIDATE',decisionCommand:command,command:bouton?'bouton':'ctrl-entrée',commandSent:true,preuve:'ecriture',
-     navigationSemantics:'VALIDATE_IN_PLACE',afterObserved:true,afterState:apres,afterStateStatus:'OBSERVED_SAME_TARGET',
-     beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,serverConfirmed:false,
-     nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:lireCompteur(),
-     meaning:'Validation sans navigation : identité inchangée ; la preuve est l’écriture de validation observée par le service worker.'};
- }
+ /* 5.0, RELECTURE APRÈS LE LOT (D-175, revue de la relecture, corrections 4 et 6) — VALIDER PAR MAJ+ESPACE, le geste de Mic.
+  * Faits (Échos du projet 2, revue « trace ») : Mic valide TOUJOURS par Maj+Espace (1 377 validations sur 1 377, aucune par
+  * Ctrl+Entrée) ; il frappe Maj (ShiftLeft) puis Espace, le canevas d'ESV ayant le focus ; ESV écrit la validation et passe au cut
+  * + 1 en 180 ms environ (93 à 96 % des cas), même quand ce cut est déjà validé. Ce geste n'est employé que par la passe de
+  * relecture en mode « corriger », jamais par le lot (qui garde le bouton « valider et suivant », D-092).
+  * La frappe est relayée UNE fois, comme Mic la fait : keydown Maj, keydown Espace (Maj tenue), keyup Espace, keyup Maj, sur le
+  * canevas d'ESV (elle remonte au document, où ESV lit `e.which`), `which`/`keyCode` réglés comme pour Maj+Retour arrière.
+  * PREUVE : la page ne prouve PAS la validation ; elle rend le cut atteint après la touche (ou aucun changement observé). La preuve
+  * est l'écriture « valid » de la ligne vue par l'observateur passif, dans le service worker, qui contrôle aussi que le cut atteint
+  * est le + 1. Refus AVANT l'envoi (cut, partie ou page différents, libellé illisible, option inconnue, action interrompue) : erreur
+  * qui dit « rien n'a été envoyé à ESV » ; après l'envoi, plus jamais : le résultat est rendu, sans renvoi de la touche. */
+ const TOUCHES_MAJ_ESPACE=[['keydown','Shift','ShiftLeft',16,true],['keydown',' ','Space',32,true],['keyup',' ','Space',32,true],['keyup','Shift','ShiftLeft',16,false]];
+ async function validerMajEspace(identity,scope={},options={},progress=()=>{}){
+   cancelled=false;const startedAt=new Date().toISOString(),sc=scope&&typeof scope==='object'?scope:{};
+   const avantEnvoi=m=>Error(`${m} ; rien n’a été envoyé à ESV.`);
+   if(options&&typeof options==='object'&&Object.keys(options).length)throw avantEnvoi(`Maj+Espace : option inconnue (${Object.keys(options).slice(0,3).join(', ')})`);
+   let before;try{before=assertExpected(identity);}catch(e){throw avantEnvoi(`Maj+Espace refusé : ${e.message}`);}
+   if(sc.pageId!=null&&before.identity.pageId!==sc.pageId)throw avantEnvoi('Maj+Espace refusé : page ESV différente de celle du lot (rechargée ?)');
+   if(sc.part!=null&&before.identity.part!==sc.part)throw avantEnvoi(`Maj+Espace refusé : partie ${before.identity.part} affichée, partie ${sc.part} attendue`);
+   const depart=cutLabel();if(!depart||K.key(depart)!==K.key(identity))throw avantEnvoi('Maj+Espace refusé : « Cut N of part P » illisible ou différent du cut attendu');
+   progress('maj-espace-before-command',{identity:K.completeIdentity(before.identity)});
+   if(cancelled)throw avantEnvoi('Maj+Espace : action interrompue avant l’envoi');
+   let cible=null;try{cible=window.viewer?.renderer?.domElement||null;}catch{cible=null;}
+   const ou=cible&&typeof cible.dispatchEvent==='function'?cible:document;
+   for(const [type,key,code,num,maj] of TOUCHES_MAJ_ESPACE){
+     const e=new KeyboardEvent(type,{key,code,keyCode:num,which:num,shiftKey:maj,ctrlKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true});
+     for(const [k,v] of [['which',num],['keyCode',num]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
+     ou.dispatchEvent(e);}
+   const evidence={format:'banane-maj-espace-v1',trigger:'relayed-operator-validate-shortcut',startedAt,operatorDecision:'VALIDATE',command:'maj-espace',
+     decisionCommand:{id:'Shift+Space',exists:true,disabled:false,cible:ou===document?'document':'canevas'},commandSent:true,serverConfirmed:false,
+     beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,nextIdentity:null,nextReady:null,observedAt:null,meaning:null};
+   progress('maj-espace-command-returned',{label:cutLabel()});
+   const apres=await attendreAutreCut(identity,P.attenteNavigationMs);
+   if(!apres){evidence.meaning='Maj+Espace transmis une fois, cut inchangé après le délai : validation non affirmée (la preuve est l’écriture vue par le service worker). Aucune touche renvoyée.';return evidence;}
+   evidence.navigationObserved=true;evidence.observedAt=new Date().toISOString();evidence.nextIdentity=K.completeIdentity(apres);
+   progress('maj-espace-navigation-observed',{nextIdentity:apres});
+   try{const pret=await waitFor(()=>{const n=snapshot();return K.key(n.identity)===K.key(apres)?n:false;},'Le cut atteint après Maj+Espace est affiché, mais ses rails ne sont pas prêts.',12000);
+     evidence.nextReady=true;evidence.nextIdentity=K.completeIdentity(pret.identity);}
+   catch(e){evidence.nextReady=false;progress('maj-espace-next-geometry-unavailable',{message:e.message,nextIdentity:apres});}
+   evidence.meaning='Maj+Espace transmis une fois ; ESV a changé de cut. La validation est prouvée par l’écriture « valid » de la ligne, vue par le service worker.';
+   return evidence;}
  /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-066, D-067, D-077 point 3) —
   * LECTURE SEULE. « Aller au cut N de la partie chargée, et confirmer son identité. »
   * Aucune décision : ni VALIDATE, ni SKIP, ni pose, ni bouton de rail, ni touche. Aller
@@ -1306,7 +1317,7 @@
  let intrusion=null;
  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
-   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,
+   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
    amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
@@ -1382,6 +1393,7 @@
    skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',
    goToCut:'Retour à un cut refusé : rien n’a été envoyé à ESV. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV.',
+   validerMajEspace:'Validation refusée : la pose de ce cut est faite, non validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l’effacer ; valide-la toi-même si elle est juste). Puis désactive l’autre Ariane dans edge://extensions, F5 sur ESV.',
    restore:'Restauration refusée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.'};
  const refusSecurite=action=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). `
    +(SUITE[action]||'Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.');

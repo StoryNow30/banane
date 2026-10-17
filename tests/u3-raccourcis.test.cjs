@@ -46,8 +46,16 @@ test('observation d’Écho (garde native) : `D` et `Maj + Espace` restent passi
 test('Orbite n’émet jamais `D` ni `Maj + Espace` : elle ne rejoue que Maj + Retour arrière (passer) et Ctrl + Entrée (valider sans suivant) ; aucun raccourci d’extension déclaré',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/adapter-page.js'),'utf8');
  const inits=[...src.matchAll(/const init=\{key:'([^']+)',(?:code:'([^']+)')?/g)].map(m=>m[2]||m[1]);
- assert.deepEqual([...new Set(inits)].sort(),['Backspace','Enter'],'seuls ces deux raccourcis d’ESV sont rejoués');
- assert.equal((src.match(/const init=\{key:/g)||[]).length,2,'deux seuls gabarits de touches émises');
- assert.ok(!/key:'d'|code:'KeyD'|code:'Space'|key:' '/i.test(src),'ni D ni Espace n’apparaissent comme touches émises');
+ assert.deepEqual([...new Set(inits)].sort(),['Backspace','Enter'],'seuls ces deux raccourcis d’ESV sont rejoués par le lot');
+ assert.equal((src.match(/const init=\{key:/g)||[]).length,2,'deux seuls gabarits de touches émises par le lot');
+ assert.ok(!/key:'d'|code:'KeyD'|'KeyD'/i.test(src),'D n’est jamais émis');
+ /* 5.0 (D-175, revue de la relecture, correction 4) : Maj + Espace, le geste de validation de Mic, n'est émis QUE par l'action
+  * `validerMajEspace` (passe de relecture en mode « corriger ») : un seul gabarit, dans cette seule fonction ; le lot ne l'appelle pas. */
+ const espaces=[...src.matchAll(/'Space'/g)].map(m=>m.index),gabarit=src.indexOf('const TOUCHES_MAJ_ESPACE='),fin=src.indexOf('\n',gabarit);
+ assert.ok(gabarit>0&&espaces.length>0&&espaces.every(i=>i>gabarit&&i<fin),'Espace n’apparaît que dans le gabarit de validerMajEspace');
+ assert.equal((src.match(/TOUCHES_MAJ_ESPACE/g)||[]).length,2,'gabarit défini une fois, employé une fois');
+ const corps=src.slice(src.indexOf('async function validerMajEspace('),src.indexOf(' /* RETOUR À UN CUT'));
+ assert.ok(corps.includes('TOUCHES_MAJ_ESPACE')&&!/validerMajEspace\(/.test(src.replace(corps,'').replace(/validerMajEspace,/g,'')),'aucune autre fonction de la page n’émet Maj + Espace');
+ const engine=fs.readFileSync(path.join(__dirname,'../src/engine.js'),'utf8');assert.ok(!engine.includes('validerMajEspace'),'le moteur (lot) ne l’emploie pas');
  const manifest=require('../manifest.json');assert.ok(!('commands' in manifest),'aucun raccourci d’extension déclaré : rien ne double une touche d’ESV');
 });
