@@ -82,7 +82,7 @@ test('étude : le modèle linéaire par groupe est retrouvé, appris sans la par
   const env={partApplique:1,partRefuse:1,plafondMm:5};
   const b=T.bilan(listes[0],T.correcteur(m,env),{bruitMm:2});
   assert.equal(b.fauxVertsAvant,6);assert.equal(b.fauxVertsApres,0);assert.equal(b.corriges,6);assert.equal(b.nouveaux,0);
-  assert.ok(b.medianeVerticaleApresMm<b.medianeVerticaleAvantMm);
+  assert.equal(b.medianeVerticaleApresMm,0,'modèle exact : plus aucun écart vertical');assert.ok(b.medianeCutApresMm<b.medianeCutAvantMm);
   /* Une correction de signe faux crée des faux verts : ils sont comptés comme nouveaux. */
   const faux=T.bilan(listes[0],T.correcteur({...m,applique:{a:12,b:0}},env),{bruitMm:2});
   assert.ok(faux.nouveaux>0);
