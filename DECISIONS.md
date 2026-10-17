@@ -2399,3 +2399,23 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - fiches corrigées ;
   - `memoire-differes` coupé en deux fichiers ;
   - la phrase de retour arrière pour la test 6 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+## D-165 — 4.9.5 test 6 : choix du clic et règle « grappe » dans le panneau ; relue au niveau maximal, envoyée (17 octobre 2026)
+
+- Demandes de Mic : « essayer les 2 méthodes » pour le clic du mode rapide, puis « go » pour un interrupteur de la règle grappe.
+- Construite sur `claude/495-test-6` (b56172f à 2d60d04), depuis la base a362a29, puis réintégrée dans `claude/50-base` par avance rapide. Version 4.9.5.6.
+- **Panneau** :
+  - choix du clic : « Comme avant » (défaut), « Variante : rail gauche recentré », « Tout recentré, comme un humain » ;
+  - case « Règle métier : grappe », décochée par défaut. Allumée, elle ouvre le chemin d'activation de `grappe-differes` seulement, et ne peut que différer.
+  - Les deux choix sont gardés dans `storage.local`, figés par lot, consignés dans `batch-started`, dans l'export et dans `CONTENU.txt`. Les règles restent en ombre dans tous les cas.
+- **Relecture indépendante au niveau maximal, en lecture seule. Verdict : envoyer.**
+  - Par défaut, l'empreinte des commandes est identique à celle du code de la test 5.
+  - Les modes corrigés ne font aucun clic hors de la partie visible.
+  - La règle ne fait que différer, et aucun appui n'est pris sur un cut différé.
+  - Le coût de l'ADV est de 7 ms par cut.
+  - verify : 2 093 réussis, 0 échec.
+- **Points de la relecture** :
+  - I-1 : en mode corrigé, un clic hors de la fenêtre arrête le lot en erreur, là où « Comme avant » cliquait quand même. Cela n'arrive que si le canevas d'ESV dépasse la fenêtre. Consigne passée à Mic par message : fenêtre grande ; en cas de « Position proposée hors de la vue », exporter et repasser en « Comme avant ».
+  - I-2 : mesurer dans l'export l'effet indirect de la règle sur les appuis.
+  - Utiles : `CONTENU.txt` ne décrit que le dernier lot, et le `DECISIONS.md` du paquet est en retard.
+- **Paquet** `ariane-4.9.5-test.6.zip` : 2 120 050 octets, SHA-256 `63cb96d3dfe30ef23a487f160d9ba45b0f3fa2ba3c777a140bdc4d09ef2d0b6e`.
