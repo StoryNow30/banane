@@ -294,7 +294,9 @@
    * dispersion = éloignement × `mmParCut`, au plus `porteDispersionMm` ; voie = droite des `appuis` plus proches). Frontière anti-fuite de
    * l'observation « continuité » : pose de départ et points capturés avant le premier geste, jamais la référence humaine du cut. Écho passif :
    * rien n'est posé ni commandé. `actif:false` : rien. */
-  const memoireDifferesOmbre = Object.freeze({ actif: true, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
+  /* 4.9.5 test 5 (relecture, I-1 ; D-155) : COUPÉE au terrain. Deux relances du moteur par différé pendant l'Écho, non mesurées au banc,
+   * pour une mesure que Mic ne veut pas comme mode de travail ; les données de l'Écho passent avant. Le calcul reste jouable hors ligne. */
+  const memoireDifferesOmbre = Object.freeze({ actif: false, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
   /* 5.0 (D-147) — DÉPLACER LA VUE D'ESV POUR POSER UN RAIL HORS DE SA VUE (src/adapter-page.js `amenerDansLaVue`, src/gestes-vue.js,
    * fiches/DEPLACER_VUE.md). COUPÉ PAR DÉFAUT : seule la direction l'active, après les vérifications de la fiche sur le vrai ESV. Coupé, rien ne
    * change : mêmes commandes à ESV, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif : un cut que le lot différerait PARCE QUE

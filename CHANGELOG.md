@@ -9,7 +9,7 @@ Consigne : `consignes/seance-terrain-4.9.5-test-5-2026-10-17.md` ; retour arriè
 - **Tout ce qu'avait la test 4** (empreinte du contrat par onglet, `audit-serveur` corrigé, P8 en ombre, F5 en Écho permis, mémoire de la liste, plafond de convention coupé, logo).
 - **En ombre, consigné seulement (aucune pose changée ; décisions et commandes identiques avec et sans)**
   - **Voie prédite** (`voiePrediteOmbre`, `src/voie-recentree.js`) : événement `voie-predite-ombre` par cut différé, règle prudente D-147 ; calcul sur copies, après la décision et la commande (D-153, coût mesuré négligeable sur le banc : D-154).
-  - **Mémoire de série en Écho** (`memoireDifferesOmbre`) : événement `memoire-differes-ombre`, calculé avant la lecture de la référence humaine (G1 b, D-148, D-153) ; outil de mesure, pas un mode de travail (D-155).
+  - **Mémoire de série en Écho** (`memoireDifferesOmbre`) : événement `memoire-differes-ombre`, calculé avant la lecture de la référence humaine (G1 b, D-148, D-153) ; outil de mesure, pas un mode de travail (D-155). **Coupée au terrain** dans ce paquet (relecture avant envoi, I-1) : deux relances du moteur par différé pendant l’Écho, non mesurées au banc.
   - **Règles métier de Mic** (`reglesMetier.ombre`, `src/regles-metier.js`) : événement `regles-metier-ombre` (PN et marges, grappes de différés) ; activation coupée, règle par règle (D-159).
   - **Faux vert « hauteur ambiguë »** (`fauxVertOmbre`, `differer:false`) : consigné dans la décision du lot (D-160).
   - **Hauteur apprise** (`hauteurApprise`, `appliquer:false`) : correction verticale consignée dans la décision du lot (D-161).

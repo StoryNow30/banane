@@ -10,10 +10,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {identity,truth,shifted,esv,nativeFixture,visit,ombres,sansHorloge,SIDES,O,Shadow,S,K,base,entreeSansFuite}=require('./helpers/memoire-ombre-session.cjs');
 
-test('le réglage existe, actif par défaut en OMBRE, réglage G1 (b) de D-148 ; le panneau dit qu\'il ne fait que consigner',()=>{
+test('le réglage existe, COUPÉ au terrain depuis la test 5 (relecture I-1), en OMBRE quand il est actif, réglage G1 (b) de D-148 ; le panneau dit qu\'il ne fait que consigner',()=>{
   const m=S.memoireDifferesOmbre;assert.ok(Object.isFrozen(m));
-  assert.deepEqual({...m,etages:[...m.etages]},{actif:true,ecartSerieMax:10,K:3,appuis:2,mmParCut:3,porteDispersionMm:10,etages:['first-pass','window','choice']});
-  const ligne=S.describe().find(l=>/Mémoire des différés en ombre/.test(l.nom));assert.ok(ligne);assert.match(ligne.valeur,/consign/i);assert.match(ligne.pourquoi,/référence/i);
+  assert.deepEqual({...m,etages:[...m.etages]},{actif:false,ecartSerieMax:10,K:3,appuis:2,mmParCut:3,porteDispersionMm:10,etages:['first-pass','window','choice']});
+  const ligne=S.describe().find(l=>/Mémoire des différés en ombre/.test(l.nom));assert.ok(ligne);assert.equal(ligne.valeur,'coupée');assert.match(ligne.pourquoi,/référence/i);
 });
 
 test('session Écho : un événement par première visite d\'un différé ; la série apprend des corrections déjà validées ; rien n\'est commandé',{timeout:60000},async()=>{

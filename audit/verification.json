@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-10-17T01:11:38.256Z",
-  "finishedAt": "2026-10-17T01:15:18.723Z",
+  "startedAt": "2026-10-17T01:38:45.213Z",
+  "finishedAt": "2026-10-17T01:42:22.578Z",
   "node": "v22.22.0",
   "platform": "linux",
   "counts": {
@@ -402,7 +402,7 @@
     "src/phase-pli.js": "d190f7e0843c6d5da76cbe652c9b05635ea585136c3a2e051ea1816fb36ca11c",
     "src/placement-convention.js": "c478ef17e35c36500995c95e42fe788710c460ddff88a2dc0f832e28a84fba65",
     "src/regles-metier.js": "6e031c1d0f1b3c738b4e65aab682e6421878bcc9d30111bf5e0a3c71917bf44a",
-    "src/settings.js": "b0db2c309e47ea1a041b73b2c00cb419aca02b8365f1c00850894c672b1a677c",
+    "src/settings.js": "fde7278661e0d5233c07352c5b87f089b963bbebcf22e194d469ca96636d73c0",
     "src/storage.js": "4543383dce6b9de6f8bf47afd842a27bae4f5283440cfc267a10e42d214a9ae0",
     "src/verts-a-controler.js": "d0ea733503eca1dc98a15ea232044dafc48672e6e450c1ab1abf21418baf677e",
     "src/voie-recentree.js": "45c29f551855f9701f561e3015b85273799083d27ee47f96041413078dc60cd0",

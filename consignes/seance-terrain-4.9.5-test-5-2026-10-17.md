@@ -7,7 +7,7 @@ Ariane n'envoie aucune commande de plus à ESV. Tout le reste de la test 4 est l
 
 - **La carte « À contrôler », en fin de lot.** Quand un lot Orbite est fini, une carte apparaît dans le panneau, sous « Ce lot » : le nombre de verts à relire, le temps estimé, et les plages où aller (« grappe 268–278 », « autour du différé 283 », « PN 1656–1663 »…). Ce sont des cuts verts qu'Orbite n'a pas visités et qui ressemblent à des erreurs. La liste complète part dans l'export. Ariane ne fait rien dans ESV pour la dresser. Pendant un lot, la carte est cachée.
 - **Écho note tes gestes sur la vue.** Quand tu glisses la vue au clic gauche ou que tu dézoomes à la molette, Écho note la longueur, la durée et le nombre de crans. Rien n'est empêché ni commandé : c'est pour apprendre ton geste.
-- **Des idées sont notées, jamais appliquées.** Ariane note aussi, à côté de la vraie pose : la voie prédite d'un cut différé, tes règles de métier (PN, grappes de différés), une hauteur corrigée, et la correction verticale P8 de la test 4. La page Réglages les montre, « consignées seulement ». **Déplacer la vue** est dans la version, mais **coupé**.
+- **Des idées sont notées, jamais appliquées.** Ariane note aussi, à côté de la vraie pose : la voie prédite d'un cut différé, tes règles de métier (PN, grappes de différés), un cut vert douteux (« hauteur ambiguë »), une hauteur corrigée, et la correction verticale P8 de la test 4. La page Réglages les montre, « consignées seulement ». **Déplacer la vue** est dans la version, mais **coupé**.
 
 ## Le paquet
 
@@ -46,7 +46,7 @@ Retour arrière : exporte, vérifie et envoie les zips, puis **désactive** la 4
 
 ## 5. Ce qui n'est pas vérifié
 
-- La carte « À contrôler » a été vue dans Chromium sur un lot simulé, jamais sur un vrai lot. Elle a besoin de la liste d'ESV chargée en entier : si elle dit « Instantané de la liste absent », note-le.
+- La carte « À contrôler » a été vue dans Chromium sur un lot simulé, jamais sur un vrai lot. Elle a besoin de la liste d'ESV chargée en entier : si elle dit « Instantané de la liste absent » ou « Liste d’ESV non lue », note-le.
 - Le temps affiché compte 3,7 secondes par vert : la vraie liste peut être un peu plus longue.
 - Le relevé de tes gestes n'a jamais été vu sur le vrai ESV.
 - Edge n'a pas été vu.

@@ -19,6 +19,8 @@ async function nativeFixture({differes=[100,101,102,103],continuite=false}={}){
   /* Le lot Orbite de la partie, vu par le moteur : ces cuts sont restés différés. */
   for(const c of differes)engine.s.records.push({id:'d'+c,recordId:'d'+c,format:'banane-deferred-unresolved-v1',status:'deferred-unresolved',identity:identity(c)});
   const sessions=new Sessions(engine,adapter,store);await sessions.init();await sessions.start();
+  /* 4.9.5 test 5 : l'ombre est coupée au terrain (relecture I-1) ; ces essais la jouent active, sauf réglage posé par l'essai. */
+  sessions.memoireReglage=function(){const src=globalThis.BananeSettings||{memoireDifferesOmbre:{...S.memoireDifferesOmbre,actif:true}};const r=src.memoireDifferesOmbre;return r&&r.actif===true?r:null;};
   /* Délai de verify (20 s par fichier) : l'observation « continuité » (une relance du moteur par visite) n'est gardée que là où l'essai la lit. */
   if(!continuite)sessions.continuityOn=()=>false;
   const n=engine.s.native,p=n.observationPeriods.at(-1);
