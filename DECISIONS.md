@@ -2571,3 +2571,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - les chantiers et les revues tournent avec le modèle de session par défaut ;
   - la relecture de la test 7 se fait **sans Fable dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ;
   - aucun agent ni workflow ne porte `model: 'fable'` avant elle.
+
+## D-179 — Maj+Espace sur un vert valide sur place, sans changer de cut (17 octobre 2026)
+
+- **Mic** : « Maj+Espace sur un vert ne fait pas avancer au prochain cut non validé, juste ça valide. » ESV **reste sur le même cut**.
+- **Conséquence pour la relecture corrigée (5c67a64)** : la passe attendait l'arrivée au cut + 1 comme preuve de sa validation. La maquette avait été réglée ainsi, hors dépôt. Sur le vrai ESV, elle se serait arrêtée après la première correction : rien de faux, mais une passe inutile.
+- **Correction décidée** :
+  - preuve de la validation : la ligne écrite « valid » **et** le même cut toujours affiché ;
+  - la passe avance ensuite d'un pas, avec le geste de Mic ;
+  - la maquette des essais valide sur place, comme le vrai ESV.
+- La correction est faite avec les défauts que la contre-revue retiendra, avant la fusion.
