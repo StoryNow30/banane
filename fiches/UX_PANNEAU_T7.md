@@ -131,6 +131,12 @@ la partie 9 partent du cut 0 ou 1, eux aussi `valid` dans la liste, puis ESV pas
 par exemple, retenir aussi le cas où les cuts restants (M − N) sont tous des différés connus des lots précédents de la
 partie.
 
+### Suite 2 : départ sur un cut vert
+
+Voir `fiches/DEPART_SUR_VERT.md`. Un lot qui part d'un cut déjà vert n'y écrit plus rien. Il passe au premier rouge devant
+par « cut non validé suivant » (Maj+Z), ou s'arrête en nommant les rouges restants derrière. C'est le cas de la relance de
+la partie 8 : cuts 1 et 899. Le panneau le dit dans la ligne de fin et dans la ligne d'état du lot.
+
 ## 4. Essais
 
 - Adaptés : `tests/choix-lot-panel.test.cjs` (libellé, carte unique, dernier et prochain lot, cas d'après un lot),
