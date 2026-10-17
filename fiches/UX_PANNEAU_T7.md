@@ -105,19 +105,48 @@ Correction, en lecture seule :
 - `panel.js` : pour un lot clos, la même phrase s'affiche en tête des résultats (`#lot-fin-partie`) si ce relevé est
   complet, ou si la fiche de départ de **ce** lot (D-092, même `batchId`) compte 0 invalide.
 
+### Suite : partie complète, rien n'est envoyé à ESV
+
+Constaté au banc (avant correction) : dans ce cas, le lot envoie au cut affiché, déjà traité, une pose (`apply`) et une
+validation (`validateAndNext`), puis ESV charge la partie suivante. Un opérateur ne fait pas cette écriture.
+
+Règle (`background.js`, `partieCompleteAuDepart`, appelée à la fin de l'analyse du cut, avant toute commande) : au
+**premier** cut du lot, rien n'est envoyé à ESV et le lot se clôt (`STOPPED`, `partie-sans-rouge`) avec l'avis « Partie N :
+plus aucun cut rouge à traiter. Le lot s'arrête ici. Rien n'a été envoyé à ESV. » seulement si :
+
+1. le relevé du compteur est celui de ce cut (même partie, même cut, après le début du cut), d'un seul compteur lisible,
+   avec N ≥ M ;
+2. la liste d'ESV en mémoire de la page (lecture B1, aucune requête réseau) donne à ce cut un statut lu `valid` ou
+   `skipped`, dans une table unique ou dont la ligne la plus proche est ce cut.
+
+Toute information absente, illisible ou ambiguë : commandes d'avant. Un cut `invalid` n'est jamais retenu. « Reprendre »
+répond « Lot déjà terminé : partie sans cut rouge » sans rien rejouer. La capture du cut (une lecture) reste faite.
+
+**Terrain de la test 6** (partie 8, second lot de 10 h 02, journal de l'export de 10 h 02) : ce n'était **pas** une partie
+complète. Le compteur disait 9 909 sur 9 911 : il restait les 2 cuts différés du premier lot. Le premier lot s'était clos
+sur le dernier cut à valider (5948, validé sur place). Le second lot est parti de 5948, `valid` dans la liste (relevé B1),
+l'a reposé et revalidé, puis ESV est allée au cut 9910 et la page n'a plus répondu. La règle ci-dessus ne couvre pas ce
+cas. Une règle plus large (« premier cut vert : ne rien envoyer ») bloquerait les lots habituels de Mic : les deux lots de
+la partie 9 partent du cut 0 ou 1, eux aussi `valid` dans la liste, puis ESV passe au premier rouge. Décision à prendre :
+par exemple, retenir aussi le cas où les cuts restants (M − N) sont tous des différés connus des lots précédents de la
+partie.
+
 ## 4. Essais
 
 - Adaptés : `tests/choix-lot-panel.test.cjs` (libellé, carte unique, dernier et prochain lot, cas d'après un lot),
   `tests/ux-49-orbite.test.cjs` et `tests/panel-ligne-suite.test.cjs` (nom du tiroir, « Détails » replié),
   `tests/consigne-4956.test.cjs` (la consigne de la test 6 garde son libellé ; le panneau a le nouveau).
-- Nouveau : `tests/partie-sans-rouge-t7.test.cjs` (avis du service worker, commandes identiques, message du panneau et
-  cas où il ne doit rien dire).
+- Nouveaux : `tests/partie-sans-rouge-t7.test.cjs` (avis du service worker, commandes identiques, message du panneau et
+  cas où il ne doit rien dire) ; `tests/partie-complete-sans-envoi-t7.test.cjs` (partie complète et cut vert : 0 commande ;
+  une seule lecture de la liste, au premier cut, et seulement si le compteur est complet) ;
+  `tests/partie-complete-inchange-a-t7.test.cjs` et `-b-` (13 autres cas, dont cut rouge, page muette, relevé d'un autre
+  cut : commandes et arguments identiques à un lot sans relevé) ; montage commun `tests/helpers/partie-complete.cjs`.
 
 ## 5. Limites
 
 - La fin de partie n'est dite que si ESV a donné un compteur lisible pendant le lot, ou si la fiche de départ du lot est
   connue. Sans l'un ni l'autre, le lot se clôt comme avant, avec l'avis d'avant.
-- Le lot valide toujours le cut affiché avant qu'ESV ne quitte la partie : c'est la navigation d'ESV, volontairement
-  inchangée.
+- Hors partie complète au premier cut, le lot valide toujours le cut affiché avant qu'ESV ne quitte la partie : c'est la
+  navigation d'ESV, volontairement inchangée. Le cas de terrain de la test 6 (2 différés restants) n'est pas couvert.
 - Les captures sont faites avec les API Chrome simulées et des données synthétiques ; ce n'est pas l'extension installée.
 - La carte de relecture n'est pas codée : seule sa place est réservée.
