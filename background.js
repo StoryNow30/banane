@@ -1397,7 +1397,12 @@ async function vertsAControler(args){
  if(!Number.isInteger(partie))return {actif:true,partie:null,raison:'partie-inconnue'};
  const lot=new Map(),zones=[],zonesA=[],cutDe=x=>x?.cut??x?.identity?.cut;
  let events=[];try{events=await store.all('events')||[];}catch{/* journal illisible : repli sur le lot courant */}
- for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.identity?.part!==partie||!Number.isInteger(e.identity?.cut))continue;
+ /* Un cut peut figurer dans plusieurs lots de la partie (lot interrompu puis repris) et IndexedDB rend les événements par clé
+  * aléatoire : on les ordonne (instant, puis identifiant) pour que le DERNIER lot fasse foi du drapeau `differe`, toujours le même. */
+ const rang=e=>[String(e.timestamp??''),String(e.eventId??'')];
+ const ombres=events.filter(e=>e?.type==='regles-metier-ombre'&&e.portee==='cut'&&e.identity?.part===partie&&Number.isInteger(e.identity?.cut))
+  .sort((x,y)=>{const a=rang(x),b=rang(y);return a[0]<b[0]?-1:a[0]>b[0]?1:a[1]<b[1]?-1:a[1]>b[1]?1:0;});
+ for(const e of ombres){
   lot.set(e.identity.cut,{cut:e.identity.cut,differe:e.aurait==='deja-differe'||e.aurait==='sans-pose'});
   const c=e.zone?.pnControle;if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zones.push(c);
   const a=e.zone?.advControle;if(Array.isArray(a)&&a.length===2&&a.every(Number.isInteger))zonesA.push(a);}

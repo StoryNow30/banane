@@ -42,6 +42,17 @@ Lot réel rejoué (partie 1 du second projet, 352 cuts, 128 différés) : 128 é
 
 Écho (même partie, rejeu `concordance`) : 127 événements `memoire-differes-ombre`, **89 Ko en JSON** (700 octets par événement), **5 à 18 Ko compressés** selon le nombre d'identifiants propres à chaque événement. Un seul événement par première visite d'un différé ; calcul hors de la file des événements, deux relances du moteur par cut calculé (médiane 2,2 s, maximum 4,9 s sur ce rejeu).
 
+**Les 87 Ko ci-dessus sont ceux de la seule voie prédite.** Toutes les ombres livrées à la 4.9.5 test 5 pèsent ensemble environ **0,5 Mo par lot de 350 cuts** (mesure de la relecture de la test 5, sur une capture du corpus de tests ; environ 130 différés), soit **+2,5 %** d'un journal Orbite de 20 Mo, très compressible :
+
+| Ajout | Octets | Par lot de 350 cuts |
+|---|---:|---:|
+| faux vert + hauteur apprise, dans chaque décision qui pose (événement `gcv1-shadow-observed`) | 346 + 651 | ≈ 220 Ko |
+| règles métier, un événement par cut (730 pour le premier, seuils compris) | 318 | ≈ 110 Ko |
+| voie prédite, un événement par différé | ≈ 680 | ≈ 87 Ko |
+| mémoire des différés (Écho), un événement par première visite d'un différé | ≈ 700 | ≈ 90 Ko, dans l'export Écho |
+
+La décision passe de 710 à 1 760 octets environ (×2,5) : visible dans les tables, sans effet sur la pose. Les gestes de l'Écho (`operator-gesture`) et la liste des verts à contrôler (quelques kilo-octets) s'ajoutent, selon les gestes.
+
 ## 5. Écho : ce qui est fait, ce qui manque
 
 Fait (partie sûre) : la mémoire de la série (`memoireSerie` : corrections déjà validées de la même série, les 3 plus proches, dispersion = éloignement × 3 mm ≤ 10 mm ; voie = droite des 2 plus proches), puis le moteur recentré sur cette voie, sur le nuage capturé autour de la pose de départ avant le premier geste. Le réglage est celui que G1 a retenu hors partie (D-148).

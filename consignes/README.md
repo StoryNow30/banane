@@ -1,5 +1,11 @@
 # Consignes des chantiers parallèles 4.8
 
+> **Consignes de séance terrain 4.9.5 : phrase de retour arrière à employer dès la test 6.** Les versions se déplient dans le **même dossier** (§ 1 de la consigne) : « poser la test précédente », c'est redécompresser son zip par-dessus, puis remettre la carte en marche. Les consignes jusqu'à la test 5 disent seulement « désactive … pose la test N-1, puis F5 sur ESV » et oublient ces deux gestes. À écrire ainsi au § 4 :
+>
+> « Retour arrière : exporte, vérifie et envoie les zips, puis **désactive** la 4.9.5 test N (interrupteur dans `chrome://extensions`, sans la supprimer). Décompresse le zip de la 4.9.5 test N-1 dans le même dossier, en remplaçant les fichiers, puis **réactive** la carte Ariane et clique sur **Recharger**, puis F5 sur ESV. »
+>
+> L'essai de la consigne de la test 6 devra chercher « Recharger » et « réactive » dans cette section (l'essai de la test 5 ne les cherche pas).
+
 ## Quatrième vague — 28 septembre 2026, 4.8.0 fusionnée, 4.8.5 en préparation
 
 | Chantier | Qui | Fichier | Ce qu'il rend |

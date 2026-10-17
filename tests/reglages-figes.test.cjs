@@ -116,3 +116,22 @@ test('verts à contrôler : mêmes poids, zones mortes, fenêtres, seuil et temp
   assert.deepEqual([v.fenetreCuts, v.fenetreIsoleCuts, v.voisinsVoie, v.voisinsDenivele, v.seuil, v.tempsParVertS], [D.fenetreCuts, D.fenetreIsoleCuts, D.voisinsVoie, D.voisinsDenivele, D.seuil, D.tempsParVertS]);
   assert.equal(Settings.vertsAControler.actif, true);
 });
+
+test('l\'objet des réglages est gelé : aucune affectation ne peut ouvrir un chemin d\'activation ; chaque réglage l\'est déjà en profondeur', () => {
+  assert.equal(Object.isFrozen(Settings), true, 'objet rendu par settings.js');
+  assert.throws(() => { 'use strict'; Settings.hauteurApprise = { actif: true, appliquer: true }; }, TypeError);
+  assert.throws(() => { 'use strict'; Settings.nouveau = 1; }, TypeError);
+  assert.equal(Settings.hauteurApprise.appliquer, false);
+  /* Gel de premier niveau suffisant : tout ce que porte l'objet est déjà gelé en profondeur (fonctions exceptées). */
+  const nonGeles = [];
+  (function parcours(o, chemin) {
+    if (!o || typeof o !== 'object') return;
+    if (!Object.isFrozen(o)) nonGeles.push(chemin);
+    for (const k of Object.keys(o)) parcours(o[k], chemin + '.' + k);
+  })(Object.fromEntries(Object.entries(Settings).filter(([, v]) => typeof v !== 'function')), 'Settings');
+  assert.deepEqual(nonGeles, ['Settings'], 'seule l\'enveloppe locale de l\'essai n\'est pas gelée');
+  /* Les essais remplacent l'objet entier ou en font une copie : cela reste possible. */
+  const copie = { ...Settings, hauteurApprise: { ...Settings.hauteurApprise, appliquer: true } };
+  assert.equal(copie.hauteurApprise.appliquer, true); assert.equal(Settings.hauteurApprise.appliquer, false);
+  assert.equal(typeof Settings.describe(), 'object');
+});

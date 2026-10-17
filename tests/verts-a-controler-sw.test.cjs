@@ -69,3 +69,28 @@ test('le moteur et la décision ne lisent pas le module ; le service worker le c
   assert.ok(!/BananeVertsAControler|verts-a-controler|vertsAControler/.test(t),f+' ne lit pas le module');}
  assert.equal(S.vertsAControler.actif,true,'livré actif : il n\'agit pas sur ESV');
 });
+
+/* Un cut présent dans deux lots d'une même partie (lot interrompu puis repris) : le DERNIER lot fait foi pour `differe`, quel que soit
+ * l'ordre dans lequel IndexedDB rend les événements (clé aléatoire). */
+test('un cut dans plusieurs lots : le dernier lot fait foi, quel que soit l\'ordre de lecture du journal',async()=>{
+ const ev=(eventId,timestamp,batchId,cut,aurait)=>({eventId,timestamp,type:'regles-metier-ombre',schema:1,batchId,portee:'cut',identity:{part:23,cut},aurait});
+ const ancien=ev('zz-ancien','2026-10-17T08:00:00.000Z','lot-1',120,'deja-differe'),recent=ev('aa-recent','2026-10-17T09:00:00.000Z','lot-2',120,'valider');
+ const dernierDiffere=[ev('aa-ancien','2026-10-17T08:00:00.000Z','lot-1',121,'valider'),ev('zz-recent','2026-10-17T09:00:00.000Z','lot-2',121,'sans-pose')];
+ const base=livre.b.store.events.slice(),resultats=[];
+ try{
+  for(const ordre of [[ancien,recent,...dernierDiffere],[recent,ancien,...dernierDiffere.slice().reverse()],[...dernierDiffere,recent,ancien]]){
+   livre.b.store.events=[...base,...ordre];
+   const r=await livre.b.api('verts-a-controler',{partie:23});
+   /* 112 et 113 (lot réel) + 121 (différé au dernier lot) ; 120 est posé au dernier lot, l'ancien lot ne compte plus. */
+   assert.equal(r.differes,3,'compte des différés');resultats.push({...r,calculeA:null});}
+ }finally{livre.b.store.events=base;}
+ deq(resultats[1],resultats[0],'même liste, ordre de lecture inversé');deq(resultats[2],resultats[0],'même liste, autre ordre');
+});
+
+test('même instant, deux événements : l\'identifiant tranche, sans dépendre de l\'ordre de lecture',async()=>{
+ const ev=(eventId,aurait)=>({eventId,timestamp:'2026-10-17T09:00:00.000Z',type:'regles-metier-ombre',schema:1,batchId:'lot-2',portee:'cut',identity:{part:23,cut:120},aurait});
+ const a=ev('a','valider'),z=ev('z','deja-differe'),base=livre.b.store.events.slice(),n=[];
+ try{for(const ordre of [[a,z],[z,a]]){livre.b.store.events=[...base,...ordre];n.push((await livre.b.api('verts-a-controler',{partie:23})).differes);}}
+ finally{livre.b.store.events=base;}
+ assert.equal(n[0],n[1]);
+});
