@@ -311,7 +311,8 @@
           "voie": 0,
           "rouges": 1,
           "differe": 0.5,
-          "pn": 0
+          "pn": 0,
+          "adv": 0
         },
         "zonesMortes": {
           "ecartementMm": 2,

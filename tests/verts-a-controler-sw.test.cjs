@@ -10,10 +10,12 @@ const {lot,neutre,decisions,metier,deq,rec,S}=require('./helpers/regles-metier-l
 const {memoire}=require('./helpers/perf-production.cjs');
 const LM=require('../src/liste-memoire.js');
 
-/* Instantané de la partie 23 : 140 lignes sur une voie droite inventée (dixièmes de mm) ; le lot 112–115 y est « invalid » ; le vert
- * 111 a un écartement de 30 mm de trop, le vert 116 un rail gauche 35 mm trop haut, le vert 130 (loin du lot) 40 mm de trop. */
-function instantane({lotValide=false}={}){const n=140,st=[],fl=[],ed=[];
- for(let i=0;i<n;i++){const auLot=i>=112&&i<=115,dg=i===111?300:i===130?400:0,dz=i===116?350:0;
+/* Instantané de la partie 23 : 180 lignes sur une voie droite inventée (dixièmes de mm) ; le lot 112–115 y est « invalid » ; le vert
+ * 111 a un écartement de 30 mm de trop, le vert 116 un rail gauche 35 mm trop haut, les verts 130 et 170 (loin du lot) 40 mm de trop.
+ * La capture du montage (partie 23, cut 2855) montre un rail de plus : les cuts 114 et 115 ouvrent une zone d'ADV (84–145, marges de
+ * 30 cuts ; fiches/DETECTION_ADV.md). Le vert 130 y est : il entre dans la liste ; 170 reste dehors. */
+function instantane({lotValide=false}={}){const n=180,st=[],fl=[],ed=[];
+ for(let i=0;i<n;i++){const auLot=i>=112&&i<=115,dg=i===111?300:i===130||i===170?400:0,dz=i===116?350:0;
   st.push(auLot&&!lotValide?1:0);fl.push(0);ed.push(10000*i,-7175-dg/2,dz,10000*i,7175+dg/2,0);}
  return LM.compacter({st,fl,ed},{partie:23,at:'2026-10-17T00:00:00.000Z',version:'essai',cle:'cle-essai'});}
 async function ranger(b,snap){const m=memoire();await m.set({[LM.CLE_INDEX]:[{partie:23,at:snap.at}],[LM.PRE_INST+23]:snap});b.ctx.chrome.storage.local=m;return m;}
@@ -29,7 +31,9 @@ test('liste calculée sur l\'instantané E1 et l\'ombre des règles métier ; au
  assert.equal(livre.b.commands.length,avant,'aucune commande à ESV');deq(livre.adapter.calls,appels,'adaptateur non appelé');assert.equal(onglet.n,0,'aucun message à l\'onglet');
  assert.equal(r.actif,true);assert.equal(r.format,'ariane-verts-a-controler-1');assert.equal(r.partie,23);assert.equal(r.source,'instantane');
  assert.equal(r.cutsDuLot,4);assert.equal(r.differes,2);
- const ids=r.verts.map(v=>v.i);assert.ok(ids.includes(111)&&ids.includes(116),JSON.stringify(ids));assert.ok(!ids.includes(130),'loin du lot');
+ const ids=r.verts.map(v=>v.i);assert.ok(ids.includes(111)&&ids.includes(116),JSON.stringify(ids));assert.ok(!ids.includes(170),'loin du lot et de toute zone');
+ assert.ok(ids.includes(130),'dans la zone d\'ADV');deq(r.zonesADV.map(z=>z.controle),[[84,145]]);
+ assert.ok(r.plages.some(p=>p.libelle==='ADV 84–145'&&p.cuts.includes(130)),JSON.stringify(r.plages));
  assert.ok(r.plages.some(p=>/^autour des? différés? 11[23]/.test(p.libelle)),r.plages.map(p=>p.libelle).join(' | '));
  assert.equal(r.tempsEstimeS,Math.round(r.aControler*3.7));
  assert.ok(!/bords|left|right|7175/.test(JSON.stringify(r)),'aucune position');

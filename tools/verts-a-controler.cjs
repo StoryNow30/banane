@@ -33,7 +33,7 @@ const Manifeste=require('./manifeste-parties.cjs');
 
 const FORMAT_TABLE='ariane-verts-table-v1',FORMAT='ariane-verts-a-controler-etude-v1';
 const FAUX_MM=10,OBJET_MM=25,PRIX_VERT=0.3;
-const CLES=['ecartement','denivele','hauteur','poses','voie','rouges','differe','pn'];
+const CLES=['ecartement','denivele','hauteur','poses','voie','rouges','differe','pn','adv'];
 const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null;
 const pct=v=>Number.isFinite(v)?Math.round(100*v)+' %':'—';
 const med=a=>{const s=a.filter(Number.isFinite).sort((x,y)=>x-y);if(!s.length)return null;const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;};
@@ -49,13 +49,14 @@ function extraire(o){
     cuts.push({i:c.cut,classe:x?.classe??null,mm:x?.mm??null,dureeS:Math.round(duree*100)/100,visites:c.visites.length,bords:ok?{left:A,right:B}:null});}
   cuts.sort((a,b)=>a.i-b.i);
   let lot=null;if(o.journal){const j=RM.lireJournal(o.journal,d.partie);lot=j.decisions.map(x=>({cut:x.cut,differe:!j.valide.has(x.cut)}));}
-  let zonesPN=[];if(o.regles){const z=JSON.parse(fs.readFileSync(o.regles,'utf8'));zonesPN=(z.zonesPN?.detectees||[]).map(x=>({debut:x.debut,fin:x.fin,controle:x.controle}));}
-  return {format:FORMAT_TABLE,projet:d.projet,partie:d.partie,lot,zonesPN,cuts,note:'table de travail HORS DÉPÔT : elle porte les bords des rails'};
+  let zonesPN=[],zonesADV=[];if(o.regles){const z=JSON.parse(fs.readFileSync(o.regles,'utf8'));zonesPN=(z.zonesPN?.detectees||[]).map(x=>({debut:x.debut,fin:x.fin,controle:x.controle}));
+    zonesADV=(z.zonesADV?.plages||[]).map(x=>x.slice());}
+  return {format:FORMAT_TABLE,projet:d.projet,partie:d.partie,lot,zonesPN,zonesADV,cuts,note:'table de travail HORS DÉPÔT : elle porte les bords des rails'};
 }
 
 /* ------------------------------------------------------------------ préparation d'une table */
 const ZONES=[0,2,4],FENETRES=[5];
-const GEO=['ecartement','denivele','hauteur','poses','voie'],CTX=['rouges','differe','pn'];
+const GEO=['ecartement','denivele','hauteur','poses','voie'],CTX=['rouges','differe','pn','adv'];
 /* Termes du score, poids 1, pour chaque zone morte essayée (même zone pour les signaux de pose). */
 function termes(s){const o={};for(const z of ZONES){const t={};
     for(const k of CLES){const p=Object.fromEntries(CLES.map(j=>[j,j===k?1:0]));
@@ -63,7 +64,7 @@ function termes(s){const o={};for(const z of ZONES){const t={};
 function preparer(t,{fenetreIsoleCuts=V.DEFAULTS.fenetreIsoleCuts}={}){const fenetreCuts=V.DEFAULTS.fenetreCuts;
   const verts=t.cuts.filter(c=>c.classe==='hors-journal');
   const entree={partie:t.partie,lignes:verts.map(c=>({i:c.i,statut:'valid',operateur:false,bords:c.bords||null,...(c.bords?{}:{g:c.g??null,dz:c.dz??null})})),
-    lot:(t.lot||[]).map(x=>({cut:x.cut,differe:x.differe===true||x.valide===false})),zonesPN:t.zonesPN||[]};
+    lot:(t.lot||[]).map(x=>({cut:x.cut,differe:x.differe===true||x.valide===false})),zonesPN:t.zonesPN||[],zonesADV:t.zonesADV||[]};
   /* Poses validées d'Ariane : pose de départ de l'Écho des cuts posés (l'Écho suit le lot : c'est la pose d'Ariane, avant l'opérateur). */
   const valides=new Set((t.lot||[]).filter(x=>!(x.differe===true||x.valide===false)).map(x=>x.cut));
   entree.posees=t.cuts.filter(c=>c.classe==='posee'&&valides.has(c.i)&&c.bords).map(c=>({i:c.i,bords:c.bords}));
@@ -77,9 +78,9 @@ function preparer(t,{fenetreIsoleCuts=V.DEFAULTS.fenetreIsoleCuts}={}){const fen
     const pres=(arr,c,r)=>arr.some(x=>Math.abs(x-c)<=r);
     for(let i=Math.max(0,S.cutsLot[0]-fenetreCuts);i<=S.cutsLot.at(-1)+fenetreCuts;i++){
       if(setVus.has(i)||setLot.has(i)||!pres(vus,i,10))continue;
-      const pn=S.zones.find(z=>i>=z.controle[0]&&i<=z.controle[1])||null,n5=S.cutsLot.filter(c=>Math.abs(c-i)<=5).length;if(!pn&&!pres(S.cutsLot,i,n5>=2?fenetreCuts:Math.min(fenetreCuts,fenetreIsoleCuts)))continue;
+      const pn=S.zones.find(z=>i>=z.controle[0]&&i<=z.controle[1])||null,adv=(S.zonesADV||[]).find(z=>i>=z.controle[0]&&i<=z.controle[1])||null,n5=S.cutsLot.filter(c=>Math.abs(c-i)<=5).length;if(!pn&&!adv&&!pres(S.cutsLot,i,n5>=2?fenetreCuts:Math.min(fenetreCuts,fenetreIsoleCuts)))continue;
       const s={i,ecartementMm:null,deniveleMm:null,voieVerticaleMm:null,voieLateraleMm:null,rouges:S.cutsLot.filter(c=>Math.abs(c-i)<=5).length,
-        distDiffere:S.differes.length?Math.min(...S.differes.map(c=>Math.abs(c-i))):null,pn:pn?{debut:pn.debut,fin:pn.fin}:null};
+        distDiffere:S.differes.length?Math.min(...S.differes.map(c=>Math.abs(c-i))):null,pn:pn?{debut:pn.debut,fin:pn.fin}:null,adv:adv?{debut:adv.debut,fin:adv.fin}:null};
       inconnus.push({...s,T:termes(s)});}}
   return {t,entree,opt,fenetreIsoleCuts,S,sansLot,U,cand,visNonLab,inconnus,nErr:U.filter(c=>c.mm>FAUX_MM).length,n25:U.filter(c=>c.mm>=OBJET_MM).length,
     designation:`${t.projet??'?'}:${t.partie}`};
@@ -112,7 +113,7 @@ function auc(xs,ys){const p=[],n=[];xs.forEach((v,i)=>{if(!Number.isFinite(v))re
 /* ------------------------------------------------------------------ étudier */
 const GRILLE=(()=>{const g=[];
   for(const fenetre of FENETRES)for(const zone of ZONES)for(const ecartement of [0.5,1])for(const denivele of [0,0.5,1])for(const hauteur of [0.5,1])
-    for(const poses of [0,0.5,1,2])for(const rouges of [0.5,1,2,3])for(const differe of [0.5])g.push({fenetre,zone,poids:{ecartement,denivele,hauteur,poses,voie:0,rouges,differe,pn:0}});
+    for(const poses of [0,0.5,1,2])for(const rouges of [0.5,1,2,3])for(const differe of [0.5])g.push({fenetre,zone,poids:{ecartement,denivele,hauteur,poses,voie:0,rouges,differe,pn:0,adv:0}});
   return g;})();
 /* Apprendre sur des lots : le réglage qui maximise le rappel moyen pour une liste de terrain de 20, 30 et 40 % des verts relus par
  * l'opérateur (chaque partie pèse autant), puis le seuil de `seuilAppris` sur ces mêmes lots. */
@@ -135,7 +136,7 @@ function etudier(tables){
   const Q=tables.map(t=>Object.fromEntries(FENETRES.map(f=>[f,preparer(t,{fenetreIsoleCuts:f})]))),D=V.DEFAULTS.fenetreIsoleCuts;
   const P=Q.map(q=>q[FENETRES.includes(D)?D:FENETRES.at(-1)]),lotsQ=Q.filter(q=>!q[FENETRES[0]].sansLot),lots=lotsQ;
   const signauxAUC=P.map(p=>{const y=p.cand.map(c=>c.mm>FAUX_MM);const o={partie:p.designation,verts:p.U.length,erreurs:p.nErr,candidats:p.cand.length,nonRelus:p.inconnus.length};
-    for(const [k,f] of [['ecartement',c=>c.ecartementMm],['denivele',c=>c.deniveleMm],['hauteur',c=>c.voieVerticaleMm],['poses',c=>c.hauteurPosesMm],['voie',c=>c.voieLateraleMm],['rouges',c=>c.rouges],['differe',c=>c.distDiffere==null?null:-c.distDiffere],['pn',c=>c.pn?1:0]])
+    for(const [k,f] of [['ecartement',c=>c.ecartementMm],['denivele',c=>c.deniveleMm],['hauteur',c=>c.voieVerticaleMm],['poses',c=>c.hauteurPosesMm],['voie',c=>c.voieLateraleMm],['rouges',c=>c.rouges],['differe',c=>c.distDiffere==null?null:-c.distDiffere],['pn',c=>c.pn?1:0],['adv',c=>c.adv?1:0]])
       o[k]=auc(p.cand.map(f),y);return o;});
   const tous=lots.length?apprendre(lots):null;
   const croisee=Q.map(q=>{const p0=q[FENETRES[0]];const A=p0.sansLot?tous:lots.length>1?apprendre(lots.filter(x=>x!==q)):null;if(!A)return {partie:p0.designation,erreur:'pas assez de lots'};
@@ -178,8 +179,8 @@ function rejeu(tables){
 /* ------------------------------------------------------------------ texte */
 function texte(r){const L=[];
   if(r.mode==='etudier'){
-    L.push('Signaux (AUC, erreurs > 10 mm parmi les candidats) :','| Partie | Verts relus | > 10 mm | Candidats | écartement | dénivelé | hauteur | poses | voie | rouges | différé | PN |','|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|');
-    for(const s of r.signaux)L.push(`| ${s.partie} | ${s.verts} | ${s.erreurs} | ${s.candidats} | ${['ecartement','denivele','hauteur','poses','voie','rouges','differe','pn'].map(k=>s[k]??'—').join(' | ')} |`);
+    L.push('Signaux (AUC, erreurs > 10 mm parmi les candidats) :','| Partie | Verts relus | > 10 mm | Candidats | écartement | dénivelé | hauteur | poses | voie | rouges | différé | PN | ADV |','|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|');
+    for(const s of r.signaux)L.push(`| ${s.partie} | ${s.verts} | ${s.erreurs} | ${s.candidats} | ${['ecartement','denivele','hauteur','poses','voie','rouges','differe','pn','adv'].map(k=>s[k]??'—').join(' | ')} |`);
     L.push('','Validation croisée par partie (réglage et seuil appris sans la partie jugée) ; liste « terrain » : relus de la liste + estimation des non relus de la fenêtre :','| Partie | Appris sur | Fenêtre, zone morte, seuil | Rappel pour une liste de 10 / 20 / 30 / 40 / 50 / 60 % des verts | Liste relue (part) | Liste terrain (part) | Attrapées | ≥ 25 mm | ≤ 5 mm | Minutes terrain (3,7 s) | Minutes réelles (relus) | Hors candidats (erreurs) |','|---|---|---|---|--:|--:|--:|--:|--:|--:|--:|--:|');
     for(const c of r.croisee){if(c.erreur){L.push(`| ${c.partie} | ${c.erreur} |`);continue;}const q=c.point;
       L.push(`| ${c.partie} | ${c.appris} | isolé ±${c.fenetre}, ${c.zone} mm, ${c.seuil} | ${c.courbe.map(x=>pct(x.rappel)).join(' / ')} | ${q.verts} (${pct(q.part)}) | ${q.terrain} (${pct(q.partTerrain)}) | ${q.erreurs}/${c.erreurs} (${pct(q.rappel)}) | ${q.objets}/${c.objets} | ${q.fin5} | ${q.minutesTerrain} | ${q.minutesEcho} | ${c.horsCandidats.verts} (${c.horsCandidats.erreurs}) |`);}

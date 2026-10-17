@@ -86,6 +86,7 @@ test('règles métier : mêmes seuils que le module, ombre active et activation 
   assert.deepEqual([v.pn.margeAvant, v.pn.margeApres, v.pn.confirmation, v.pn.confirmationEcartCuts, v.surface.quadMinPct, v.grappe.differesMin, v.grappe.fenetreCuts, v.grappe.procheCuts, v.ecartement.seuilMm], [4, 6, 2, 3, 50, 2, 6, 2, 15]);
   // zone d'ADV (fiches/DETECTION_ADV.md) : rail de plus de 3 à 16 cm, deux alertes à 3 cuts, marges de 30 cuts ; poids nul dans la liste des verts
   assert.deepEqual([v.adv.largeurMinPas, v.adv.largeurMaxPas, v.adv.confirmation, v.adv.confirmationEcartCuts, v.adv.trouCuts, v.adv.margeAvant, v.adv.margeApres, v.adv.sautPas, v.adv.chutePas], [3, 16, 2, 3, 10, 30, 30, 3, 5]);
+  assert.equal(F.reglages.vertsAControler.valeurs.poids.adv, 0);
 });
 
 test('faux vert en ombre : mêmes seuils que le module et le réglage livré, chemin d\'activation coupé', () => {
