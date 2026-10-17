@@ -2277,7 +2277,7 @@ function relectureCalculer(capture,c,ctx,reglages,skip){
    ecartementBrutMm=L.gaugeOf(decision.positions);ecartementMm=Math.round(ecartementBrutMm*10)/10;}}catch{commande=null;}
  const critere=commande?.action==='lot'?Q.juger({jugement,zone:c.zone,role:c.role,skipOmbre:skip,ecrit,ecritBrut,ecartementMm,ecartementBrutMm,ecartementRefMm},reglages)
   :{corriger:false,regle:'commande',raison:`la commande du lot ne pose pas ce cut (${commande?.reason??'aucune'})`};
- return {jugement,commande,ecrit,ecartementMm,ecartementRefMm,critere,variante,enChaine:!!enChaineAjout};}
+ return {jugement,commande,ecrit,ecritBrut,ecartementMm,ecartementBrutMm,ecartementRefMm,critere,variante,enChaine:!!enChaineAjout};}
 /* Attente de l'écriture de validation du cut, vue par l'observateur passif (rangerObservations → relectureEcriture) ; et compte des
  * « vu » qu'ESV écrit lui-même pendant la passe (PUT {SeenByOperator:true}, sans statut : un cut affiché pour la première fois). */
 function relectureEcriture(f){const p=relecture.passe;if(!p||p.etat!=='en-cours'||f?.kind!=='write')return;

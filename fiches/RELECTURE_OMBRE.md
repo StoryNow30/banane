@@ -1,8 +1,8 @@
-# Relecture après le lot : ombre et correction prudente (5.0, D-170 à D-173)
+# Relecture après le lot : ombre et correction prudente (5.0, D-170 à D-176)
 
-Branche `claude/50-relecture-ombre`, partie de `claude/50-base` (2d60d04). Demande de Mic : qu'Ariane fasse **elle-même** la relecture qu'il fait en Écho après un lot Orbite (D-170). Accord de Mic pour visiter les verts, d'abord sans rien modifier (D-171). Règle SKIP de Mic (D-172). Condition de la test 7 : des règles métier qui **agissent** (D-173).
+Branche `claude/50-relecture-ombre`, à jour de `claude/50-base` (d8a7bcd). Demande de Mic : qu'Ariane fasse **elle-même** la relecture qu'il fait en Écho après un lot Orbite (D-170). Accord de Mic pour visiter les verts (D-171). Règle SKIP de Mic (D-172). Condition de la test 7 : des règles métier qui **agissent** (D-173). Seule la correction des verts de PN est proposée (D-174). Revue adverse et ses 11 corrections (D-175). Avis de Mic sur le rythme et le départ (D-176).
 
-**Réglage coupé par défaut.** Mic choisit dans le panneau : « coupée », « ombre » (visite, ne modifie rien) ou « corriger » (corrige seulement les cuts sûrs). Le choix est lu au démarrage du lot et figé pour ce lot.
+**Réglage coupé par défaut.** Mic choisit dans le panneau : « coupée », « ombre » ou « corriger ». Le choix est lu au démarrage du lot et figé pour ce lot.
 
 `src/engine.js` n'est pas touché. `DECISIONS.md` non plus.
 
@@ -10,213 +10,228 @@ Branche `claude/50-relecture-ombre`, partie de `claude/50-base` (2d60d04). Deman
 
 | | Résultat |
 |---|---|
-| **Coupée** (défaut) | Rien ne change : le scope du lot ne porte aucun champ nouveau, les commandes envoyées à la page sont celles de la base **octet pour octet** (empreinte prise sur 2d60d04 et empreinte du test 6). Aucune passe. |
-| **Ombre** | Après le lot, Ariane visite les cuts que Mic relirait, verts compris, capture, calcule et note. **Aucune pose, aucune validation, aucun SKIP, aucune écriture** : prouvé en essai (service worker réel) et au banc (extension réelle dans Chromium : 0 écriture reçue par le serveur, 0 clic de pose, 0 touche pendant la passe). |
-| **Corriger** | Seuls les cuts qui passent la **règle prudente** sont corrigés, par la **même commande de pose que le lot** (`apply`, avec le clic du mode rapide figé dans le lot), relue à 1 mm, puis validés par **Ctrl+Entrée**, la touche de validation sur place qu'Orbite emploie déjà au dernier cut d'une partie. La validation est prouvée par l'écriture vue par l'observateur passif. Banc : 5 corrections, 5 écritures « valid » exactement sur ces 5 cuts, rien ailleurs. |
-| **Seuils** | Ceux du fichier chiffré par l'étude `claude/50-zones-autonomes` (`datasets/relecture-reglages-proposes.json`, `fiches/RELECTURE_AUTONOME.md`), appliqués tels quels : **seule la zone PN corrige** (écart de 8 mm et plus) ; ADV, abords et verts hors zone restent en ombre, même en « corriger » ; verts seulement, jamais un cut posé ou différé par le lot ; 45 mm au plus en travers ; écartement à 15 mm de la médiane de la partie ; les quatre étapes qui posent ; variante « chaine+h » (décision en chaîne, plus la hauteur apprise). Sans ce fichier : des valeurs provisoires très prudentes (`datasets/relecture-reglages-defaut.json`). |
-| **SKIP (D-172)** | Consigné seulement (`skipOmbre`). « Aucun point » quand **deux captures complètes de suite** sont vides. Jamais « un seul scanner » : l'étude montre que tous les scanners arrivent dans un seul nuage d'ESV, ce n'est pas mesurable. Aucun SKIP n'est envoyé. |
-| **Temps** (banc, cette machine) | **3,5 s par cut relu** (capture 2,5 s, calcul 0,37 à 0,41 s, navigation 0,09 s). Un cut corrigé : 4,2 s (médiane). Mic : 3,6 à 3,7 s par vert. Passe de 18 cuts : 63 s (ombre ; corriger avec le fichier réel : 63,5 s, 0 corrigé, la maquette n'a pas de PN) ; 72 s avec des seuils permissifs de banc (5 corrections). Une passe au plafond (120 cuts) : environ 7 minutes. |
-| **Trace dans ESV** | Les gestes d'un humain qui relit : boutons « cut suivant » dans une plage, saut par la carte entre deux plages, boutons de rail de la capture ; en correction, clics de pose et Ctrl+Entrée. Les écritures sont celles d'ESV lui-même (voir § 8). |
+| **Coupée** (défaut) | Rien ne change : le scope du lot ne porte aucun champ nouveau, les commandes envoyées à la page sont celles de la base **octet pour octet** (empreinte de la base, version neutralisée, et empreinte du test 6). Aucune passe. |
+| **Ombre** | Après le lot, Ariane visite les cuts que Mic relirait, verts compris, capture, calcule et note. **Ariane n'envoie ni pose, ni validation, ni SKIP, ni écriture.** Mais **ESV écrit lui-même « vu »** (`SeenByOperator`) sur chaque cut affiché pour la première fois, comme quand Mic le visite : la passe annonce au départ le nombre de cuts neufs, puis compte ces « vu » (journal et panneau). Banc : 37 cuts relus, 0 écriture d'Ariane ; 36 cuts neufs annoncés, 36 « vu » reçus par le serveur, 36 comptés par Ariane. |
+| **Corriger** | Seuls les **verts prouvés** (statut `valid` sans drapeau opérateur, lu dans la liste d'ESV ; cible permise par le moteur) qui passent la **règle prudente** sont corrigés. Pose : la commande `apply` du lot, clic « tout-recentre », relue à 1 mm. Validation : **Maj+Espace**, le geste de Mic, prouvé par l'écriture « valid » de la ligne **et** par l'arrivée au cut + 1, où la passe reprend. Banc (maquette réglée sur le comportement relevé au terrain) : 20 corrections, 20 écritures « valid » exactement sur ces cuts, 20 Maj+Espace. Maquette d'origine (Maj+Espace y charge le cut non validé suivant) : la passe s'arrête net après la première correction. |
+| **Seuils** | Ceux du fichier chiffré par l'étude (`datasets/relecture-reglages-proposes.json`, `fiches/RELECTURE_AUTONOME.md`), appliqués tels quels : **seule la zone PN corrige** (8 mm et plus) ; ADV, abords et verts hors zone restent en ombre ; 45 mm au plus en travers ; écartement à 15 mm de la médiane ; variante « chaine+h ». **Fichier absent, d'un autre format, ou avec un champ de sécurité invalide : « corriger » reste en ombre**, et la carte le dit. |
+| **Une seule passe** | Elle existe dès sa planification, avant toute attente ; « Lancer », « Démarrer » et le retour à un cut sont refusés pendant sa préparation et pendant la passe. |
+| **Départ et rythme** (D-176) | Départ automatique juste après le lot, sans compte à rebours. Aucune pause ajoutée. Seul le bouton « Arrêter la relecture » reste. |
+| **SKIP (D-172)** | Consigné seulement (`skipOmbre`). « Aucun point » quand **deux captures complètes de suite** sont vides. Jamais « un seul scanner ». Aucun SKIP n'est envoyé. |
+| **Temps** (banc, machine chargée) | **3,1 s par cut relu** en ombre (capture 2,6 s, calcul 0,4 s, navigation 0,09 s), sans plancher d'affichage ; 4,1 s par cut en corriger (20 corrections sur 37). Mic, lui, passe un vert en **0,63 s** (médiane) : la capture fait que la passe est environ 5 fois plus lente que lui sur un vert. |
+| **Lectures de nuage** | Maquette : 1,0 par vert relu (elle charge les nœuds d'un cut une fois, à son premier affichage, et ne recharge rien quand la vue bouge). Terrain, d'après les Échos et le lot de la partie 29 : Mic 0,67 à 1,11 par vert passé ; un cut capturé sans pose par le lot, 6,1 (médiane 5). L'écart attendu par vert relu est donc de ×2 à ×9 : à faire trancher par Mic (D-151, § 8). |
+| **Fidélité à l'étude** (§ 11) | Après la correction 8 (chaîne vide), rejeu des cas de l'étude : décision de l'étude rendue sur 1 323 cuts sur 1 323 ; **PN 36 justes sur 36 actions, 0 erreur, 0 abîmé, 0 mauvaise voie**, plafond compris (le PN n'est plus coupé) ; avec les seules zones du lot, PN 7 sur 7. Mauvaise voie : 0 partout. |
 
 ## 2. La passe, pas à pas
 
-1. **Démarrage du lot.** Le service worker lit le choix gardé (`storage.local`, clé du panneau) et le fige dans le scope du lot (`scope.relecture`, consigné par `batch-started` et l'export). Coupée : le champ n'existe pas. Les arguments envoyés par le panneau ne comptent pas.
-2. **Fin du lot.** À la fin naturelle du lot (boucle finie, ou arrêt au dernier cut), la passe est planifiée une fois (1,5 s). Elle ne part que si ESV est propre :
+1. **Démarrage du lot.** Le service worker lit le choix gardé (`storage.local`) et le fige dans le scope du lot (`scope.relecture`, consigné par `batch-started` et l'export). Coupée : le champ n'existe pas. Ce champ ne part jamais vers la page (revue, R7).
+2. **Fin du lot.** À la fin naturelle du lot (boucle finie, ou arrêt au dernier cut), la passe est créée tout de suite, à l'état « préparation », puis part (D-176 : pas de compte à rebours). Pendant sa préparation, elle lit le fichier de réglages, le journal du lot et la liste d'ESV ; ESV et le lot sont contrôlés **avant et après** ces attentes. Elle ne part que si ESV est propre :
    - aucune intention, réconciliation ni navigation incertaine à clore, aucune action en cours, ni Écho, ni reprise, ni retour à un cut ;
+   - aucune correction de relecture interrompue que Mic n'a pas encore contrôlée ;
    - ESV affiche la partie du lot ;
-   - aucune pose d'Ariane non validée sur le cut affiché. C'est le cas d'un lot borné, qui pose le dernier cut sans le valider : Mic le valide lui-même, ESV passe à un autre cut, puis Mic clique sur « Lancer la relecture ».
-   
-   Sinon, la passe est « non lancée », avec la raison (panneau et événement `relecture-fin`).
-3. **Sélection** (§ 3), puis, pour chaque cut, dans l'ordre :
-   - **aller au cut** : `goToCut`, avec les boutons « cut suivant » d'ESV dans une plage. Entre deux plages, le chemin habituel du retour à un cut : l'événement de la carte, sinon pas à pas. Les cuts posés par le lot sont traversés, comme Mic le fait ;
-   - **capture** : la même commande que le lot (`capture`, boutons de rail, lecture des points) ;
-   - **calcul**, variante du fichier (« chaine+h » par défaut, celle de l'étude) : moteur (science GCV1), puis décision sur le lot avec pour appuis la **chaîne** de la passe, puis la **hauteur apprise** que la décision consigne selon son réglage (aucune option passée à la décision, comme le lot). La chaîne part des cuts posés et validés par le lot (`lotPosed`) ; chaque cut relu y ajoute la pose de sa décision (étapes `first-pass`, `window`, `crossing`, pas un appui refusé), écrite ou non, comme dans l'étude. La pose calculée est celle de la décision, plus la correction de hauteur de chaque rail sur l'axe vertical de la pose d'ESV. On obtient la pose calculée, l'écart par rail dans le repère profil (latéral et vertical), le pire écart, la confiance, le verdict (« je corrigerais » au-delà de 5 mm, sinon « je laisserais ») et sa raison. S'y ajoutent la commande que le lot écrirait (avec la hauteur pour « +h ») et son écart, l'écartement de la pose et la médiane de la partie, puis la règle prudente ;
-   - **SKIP en ombre** : une capture vide est relue une fois ; deux captures vides de suite font `aucun-point` ;
-   - **mode « corriger »**, quand la règle passe : relecture de l'état, rails inchangés depuis la capture, écartement dans le contrat. Puis `apply` (la commande du lot, avec son clic), relecture à 1 mm, relecture de l'état comme le moteur avant de valider, Ctrl+Entrée, et l'attente de l'écriture « valid » de la ligne du cut (6 s au plus) ;
-   - **événement `relecture-ombre`** : identité, plage, zone, rôle, pose d'ESV, pose calculée, écart par rail, pire écart, confiance, étage, appuis, rail repêché par S1, correction de hauteur apprise (`hauteurMm`), verdict, raison, `skipOmbre`, écart écrit, écartement et médiane, variante, règle (oui ou non, et pourquoi), action (`visite`, `corrige`, `correction-refusee`, `correction-incertaine`, `navigation-refusee`), durées (navigation, capture, calcul, total) et chemin ;
-   - **rythme** : chaque cut relu reste affiché au moins 2 à 4,5 s, tirées au hasard (Mic : médiane 2,4 s, moyenne 3,7 s).
-4. **Fin** : événement `relecture-fin` (issue, comptes, durée) ; le panneau dit « Relecture finie : 18 cuts relus, 5 corrigés ».
+   - aucune pose d'Ariane non validée sur le cut affiché (lot borné : Mic valide le dernier cut, ESV passe à un autre cut, puis « Lancer la relecture ») ;
+   - pas une partie sans rouge, ni un lot clos au départ sur un cut vert (revue, R3).
 
-**Pendant la passe**, le panneau refuse tout ce qui agirait dans ESV ou sur le lot : nouveau lot, reprise, retour à un cut, Écho, réglages, vidage. Il affiche « Relecture 12 sur 85, 3 corrigés · cut 456 · grappe 453–471 », avec un bouton « Arrêter la relecture ».
+   Sinon, la passe est « non lancée », avec la raison (panneau et `relecture-fin`). Le mode effectif est le plus prudent du mode figé et du choix courant (W10) ; « corriger » est ramené à « ombre » si les réglages ne sont pas sûrs, si l'observateur passif est coupé, ou si le geste de validation est verrouillé (réglage `relecture.validation`).
+3. **Sélection** (§ 3), puis, pour chaque cut, dans l'ordre :
+   - **aller au cut** : dans une plage, les boutons « cut suivant » d'ESV (`goToCut`, chemin pas à pas) ; entre deux plages, la carte (événement interne), sinon pas à pas. Les cuts du lot sont traversés. **En « corriger », un vert corrigeable n'est jamais atteint par un saut** : la passe saute au cut d'avant (au cut d'après pour le cut 0), puis fait un pas vers lui (revue, correction 3) ;
+   - **statut du cut dans la liste d'ESV** (mémoire de la page, aucune requête) : statut, drapeau opérateur, « vu » ;
+   - **capture** : la même commande que le lot (`capture`, boutons de rail, lecture des points) ;
+   - **calcul**, variante « chaine+h » : moteur (science GCV1), décision du lot avec pour appuis la **chaîne de la passe**, puis la hauteur apprise que la décision consigne. **La chaîne part vide, comme l'étude** ; seules les poses calculées pour des **verts** y entrent, jamais celle d'un cut différé par le lot (revue, correction 8). On obtient la pose calculée, l'écart par rail (latéral et vertical), le pire écart, la confiance, le verdict, la commande que le lot écrirait et son écart, l'écartement de la pose et la médiane de la partie, puis la règle prudente ;
+   - **SKIP en ombre** : une capture vide est relue une fois ; deux captures vides de suite font `aucun-point` ;
+   - **mode « corriger »**, si la règle passe ET la garde (§ 4) : relecture de l'état, rails inchangés depuis la capture, écartement dans le contrat ; `apply` (la commande du lot, clic « tout-recentre ») relu à 1 mm ; relecture de l'état comme le moteur avant de valider ; **Maj+Espace** ; attente de l'écriture « valid » de la ligne (6 s au plus) ; contrôle que ESV est au cut + 1. La passe reprend sur ce cut, que Maj+Espace vient d'afficher, comme Mic ;
+   - **événement `relecture-ombre`** : identité, plage, zone et son origine, rôle, statut lu dans ESV, arrivée (`pas`, `maj-espace`, `evenement`) et chemins, pose d'ESV, pose calculée, écarts, confiance, étage, appuis, entrée dans la chaîne, hauteur apprise, verdict, raison, `skipOmbre`, écart écrit, écartement et médiane, règle, garde, action (`visite`, `corrige`, `correction-refusee`, `correction-incertaine`, `navigation-refusee`), durées.
+4. **Fin** : la passe attend 2,5 s les « vu » des derniers cuts affichés (ESV les écrit 0,9 à 1,7 s après l'arrivée), puis `relecture-fin` (issue, comptes, « vu », cuts neufs, durée). Le panneau dit par exemple « Relecture finie : 18 cuts relus, rien de modifié ; ESV a marqué 17 cuts « vu » ».
+
+**Pendant la préparation et pendant la passe**, le panneau refuse tout ce qui agirait dans ESV ou sur le lot : seconde passe, nouveau lot, reprise, retour à un cut, Écho, réglages, vidage. « Arrêter » (celui du lot) arrête la relecture (W11). La carte affiche « Relecture 12 sur 85, 3 corrigés · « vu » : 9 sur 60 cuts neufs · cut 456 · grappe 453–471 » et le bouton « Arrêter la relecture ».
 
 ## 3. Sélection : la méthode de Mic (`src/relecture-ombre.js`, `selection`)
 
-La sélection est **alignée sur celle de l'étude** (`tools/relecture-autonome.cjs`, fonction `selection` ; bloc `selection` du fichier proposé, dont la passe lit les marges) : même ensemble de cuts, même type de zone pour chaque cut.
+La sélection est **alignée sur celle de l'étude** (`tools/relecture-autonome.cjs`, `selection` ; bloc `selection` du fichier proposé) : même ensemble de cuts, même type de zone pour chaque cut.
 
 | Motif | Cuts relus | Zone de la règle |
 |---|---|---|
 | PN reconnu (règles métier en ombre) | sa plage à contrôler : 4 cuts avant, 6 après, chaque cut | `pn` |
-| ADV reconnue (rail de plus, `fiches/DETECTION_ADV.md`) | sa plage : 30 cuts de chaque côté | `adv` |
+| ADV reconnue (`fiches/DETECTION_ADV.md`) | sa plage : 30 cuts de chaque côté | `adv` |
 | grappe (3 cuts du lot ou plus, trous de 5 au plus) | toute la plage, 3 cuts de marge | `abords` |
 | cut du lot hors grappe (isolé, paire) | chaque cut, avec 1 cut de part et d'autre | `abords` |
-| différé (ou dernier cut laissé sans commande) | 2 cuts de chaque côté, et le différé lui-même | `abords` |
+| différé (ou dernier cut resté rouge) | 2 cuts de chaque côté, et le différé lui-même | `abords` |
 | liste « À contrôler » (`src/verts-a-controler.js`) | ses verts | `vert-hors-zone` |
-| en plus de l'étude (H5 de l'audit P-5) : vert de la liste d'ESV à plus de 15 mm de la médiane d'écartement de la partie, hors de toute plage | le vert | `ecartement`, **ombre seulement** |
+| en plus de l'étude (H5 de l'audit P-5) : vert de la liste d'ESV à plus de 15 mm de la médiane d'écartement, hors de toute plage | le vert | `ecartement`, **ombre seulement** |
 
-- **Zones figées, tirées du lot.** Les zones PN et ADV viennent des seules captures du lot : les événements `regles-metier-ombre` de ce lot, lus **avant** la passe et figés pour toute la passe. La passe n'évalue aucune règle métier sur ses propres captures : une capture de vert ne crée ni n'étend jamais une zone. C'est le point de sécurité de l'audit P-5 : une fausse zone PN apparaît dès que des verts sont capturés (443–456 en partie 1 du second projet), en attendant le détecteur plus robuste de `claude/50-pn-robuste`. Chaque visite dit l'origine de sa zone (`zoneSource` : `lot` pour PN, ADV et abords, `liste` pour « À contrôler », `liste-esv` pour l'écartement) ; `relecture-debut` consigne les zones figées.
-- **Verts hors plage par l'écartement (H5)** : exemple de l'audit, 7047–7054 en partie 9, absents de « À contrôler ». La médiane est prise sur les lignes valides de la liste d'ESV (20 au moins) ; la zone `ecartement` passe en dernier au plafond, et la règle ne la corrige jamais, quels que soient les réglages.
-- **Type de zone de chaque cut**, comme l'étude : le premier qui le couvre, dans l'ordre PN, ADV, abords, liste (puis écartement). Un vert d'abords qui touche un PN reste « abords » : seul un cut de PN peut être corrigé.
-- Les cuts couverts sont groupés en plages de cuts **consécutifs**. Aucun cut n'est ajouté pour boucher un trou (une première version fondait les plages à 3 cuts près : retiré pour coller à l'étude).
-- Les bornes de la partie vont de 0 à M − 1 (compteur d'ESV). **Cuts 0 à 3 inclus** (D-172).
-- Ordre : par plages, dans l'ordre des cuts. Rôle de chaque cut : `vert`, `differe` (encore invalide) ou `lot` (posé par le lot, traversé et non relu).
-- **Différence avec l'étude : le plafond.** L'étude relit toute la sélection (117 à 781 verts par partie, 3,5 à 31 minutes). La passe a un plafond réglable (`BananeSettings.relecture.plafondCuts`, 120 par défaut, environ 7 minutes) : les plages sont gardées **entières**, par priorité (PN d'abord, puis ADV, grappe, différé, isolé, liste). Les PN, seule zone qui corrige, passent donc toujours en premier. Ce qui ne tient pas est rendu dans `horsPlafond` et consigné dans `relecture-debut`, avec le compte par zone (`parZone`).
+- **Cuts du lot (revue, correction 1).** Sont des cuts du lot, traversés et jamais corrigés : les cuts posés et validés, les SKIP, les cuts repris à la main, toutes les identités interrompues, le dernier cut d'un lot clos (pose appliquée ou non ; s'il reste rouge, il est relu comme un différé), la pose en attente et les cibles bloquées. `relecture-debut` dit d'où vient chaque cut du lot (`sourcesLot`).
+- **Zones figées, tirées du lot.** Les zones PN et ADV viennent des seules captures du lot (événements `regles-metier-ombre` de ce lot), lues avant la passe et figées. La passe n'évalue aucune règle métier sur ses propres captures (audit P-5). Chaque visite dit l'origine de sa zone (`zoneSource`).
+- **Type de zone de chaque cut**, comme l'étude : le premier qui le couvre, dans l'ordre PN, ADV, abords, liste, écartement.
+- **Plages par type de zone.** Les cuts couverts sont groupés en plages de cuts consécutifs **du même type de zone** : un PN dans une ADV est sa propre plage. Aucun cut n'est ajouté pour boucher un trou.
+- Bornes : de 0 à M − 1. **Cuts 0 à 3 inclus** (D-172). Ordre : par plages, dans l'ordre des cuts.
+- **Plafond (revue, correction 7).** L'étude relit toute la sélection. La passe a un plafond réglable (120 cuts par défaut), mais **les PN sont hors du budget et toujours gardés entiers** : un PN à moitié contrôlé laisse des erreurs de 30 à 40 mm. Le budget sert ensuite les autres zones, plages entières, par priorité (ADV, grappe, différé, isolé, liste, écartement). Ce qui ne tient pas est rendu dans `horsPlafond`.
 
-## 4. Règle prudente de correction (`src/relecture-critere.js`)
+## 4. Règle prudente et garde de la correction
 
-C'est une fonction pure. Elle ne dit « oui » que si **toutes** les conditions tiennent, et dit sinon la première qui manque. Ce sont les conditions de l'étude (`agit` dans `tools/relecture-autonome.cjs`), mesurées de la même façon.
+### 4.1 Règle prudente (`src/relecture-critere.js`)
+
+Fonction pure, conditions de l'étude (`agit` dans `tools/relecture-autonome.cjs`). « Oui » seulement si **toutes** tiennent ; sinon la première qui manque.
 
 1. Le cut a une pose calculée.
 2. Il n'est pas à SKIP en ombre.
-3. Son rôle est permis (`roles` : les **verts**) et n'est pas dans `jamais` (cut différé par le lot, cut posé par le lot).
-4. L'étage est permis (`etagesPermis`) : le fichier donne les quatre étapes qui posent, `first-pass`, `window`, `choice` et `crossing`, toutes acceptées. La décision s'appuie sur `appuisMin` appuis au moins : le fichier n'en fixe pas, donc aucun minimum (la chaîne tient lieu de voie, comme dans l'étude).
-5. La zone permet la correction (`corriger`).
+3. Son rôle est permis (les **verts**) et n'est pas dans `jamais` (cut différé, cut posé par le lot).
+4. L'étage est permis (les quatre étapes qui posent) ; aucun minimum d'appuis (la chaîne tient lieu de voie, comme dans l'étude).
+5. La zone permet la correction.
 6. Le pire écart (latéral ou vertical, des deux rails) atteint le seuil de la zone.
-7. La confiance du moteur (A*) est présente sur **les deux rails** et atteint le minimum de la zone (0 : « présente »). Un rail repêché par S1 garde sa confiance A*, comme dans l'étude ; il est signalé dans l'événement (`s1`).
-8. **Jamais de changement de voie** : chaque rail reste à `voie.lateralMaxMm` au plus en travers.
-9. **Les deux rails sont cohérents** : différence des écarts latéraux, et des écarts verticaux, à `diffLateraleMaxMm` et `diffVerticaleMaxMm` au plus ; **écartement de la pose à `ecartementMaxMm` au plus de la médiane de la partie** (sans médiane : refus).
+7. La confiance du moteur (A*) est présente sur les deux rails.
+8. **Jamais de changement de voie** : 45 mm au plus en travers pour chaque rail.
+9. **Rails cohérents**, et écartement de la pose à 15 mm au plus de la médiane de la partie (sans médiane : refus).
 
-Les conditions 6, 8 et 9 sont jugées sur la pose **qui serait écrite** : la commande du lot, avec ses contrôles de position, d'écartement et de vue, plus la hauteur apprise.
+Les conditions 6, 8 et 9 sont jugées sur la pose **qui serait écrite**, en **valeurs brutes** (revue, F4 : 7,95 mm ne passe pas 8 mm ; l'arrondi au dixième ne sert qu'à l'affichage).
 
-**Médiane de la partie** (condition 9). L'étude prend la médiane des écartements des verts de la partie, tels qu'ESV les montre. La passe prend la référence de la liste « À contrôler » : la médiane de l'écartement des lignes valides de la liste d'ESV (20 au moins), tirée de leurs bords. Sans liste lisible, elle prend la médiane des poses d'ESV des verts déjà relus, une fois qu'il y en a 5. Avant, la règle refuse.
+**Médiane de la partie** : la référence de la liste « À contrôler » ; sinon la médiane des lignes valides de la table de la liste tenue par la page (20 au moins, aucune requête) ; sinon celle des poses d'ESV des verts déjà relus (5 au moins). Avant, la règle refuse.
 
-**Seuils du fichier proposé** (`datasets/relecture-reglages-proposes.json`, lu au début de chaque passe par un `fetch` du fichier de l'extension, validé valeur par valeur ; une valeur absente ou invalide prend le défaut) :
+**Réglages sûrs (revue, correction 5).** Le fichier proposé est lu au début de chaque passe. Chaque champ de sécurité invalide ou absent (zone, `corriger`, `seuilMm`, `voie.lateralMaxMm` au-delà de 45 mm, `roles` autres que les verts, `jamais` sans les cuts du lot) est listé ; une correction mal écrite (« "corriger":"false" ») reste fermée. « Corriger » n'est permis qu'avec le fichier proposé, lu sans refus ni champ invalide ; sinon la passe reste en ombre et le dit. Le défaut provisoire (`datasets/relecture-reglages-defaut.json`, recopié dans le module) suit D-174 : seule la zone PN corrige, 45 mm au plus ; il ne sert qu'au calcul consigné. La carte affiche la source des réglages. Les deux fichiers sont dans la liste des fichiers requis du paquet (`tools/package.py`).
 
-| Zone | Corriger | Seuil | Confiance | Étude, validation croisée (6 parties) |
-|---|---|--:|--:|---|
-| PN | **oui** | 8 mm | présente | 36 corrections justes sur 36 actions, 0 erreur, 0 abîmé |
-| ADV | non (ombre) | 8 mm | présente | 11 justes sur 17, 18 % d'erreurs |
-| abords | non (ombre) | 8 mm | présente | 30 justes sur 37, 14 % d'erreurs |
-| vert hors zone | non (ombre) | 8 mm | présente | 2 actions |
+| Zone | Corriger | Seuil | Étude, validation croisée (6 parties) |
+|---|---|--:|---|
+| PN | **oui** | 8 mm | 36 corrections justes sur 36 actions, 0 erreur, 0 abîmé |
+| ADV | non (ombre) | 8 mm | 11 justes sur 17, 18 % d'erreurs |
+| abords | non (ombre) | 8 mm | 30 justes sur 37, 14 % d'erreurs |
+| vert hors zone | non (ombre) | 8 mm | 2 actions |
 
-Avec : verts seulement, jamais un cut posé ou différé par le lot ; 45 mm au plus en travers ; cohérence des rails sans limite (100 mm) ; écartement à 15 mm de la médiane ; les quatre étapes ; variante « chaine+h ».
+### 4.2 Garde (background.js, `relectureGarde`)
 
-Sans le fichier proposé, la passe prend les valeurs **provisoires** de `datasets/relecture-reglages-defaut.json`, recopiées dans le module (un essai vérifie qu'ils sont égaux) : PN 15 mm et confiance 85, abords 12 mm et 80, hors zone 15 mm et 90, ADV coupée ; 60 mm en travers ; rails cohérents à 6 mm ; écartement à 8 mm ; étapes `first-pass` et `window` ; 2 appuis. La source (`propose` ou `defaut`) et le statut du fichier sont consignés dans `relecture-debut` et affichés dans l'état de la passe.
+Même quand la règle dit « oui », la passe ne pose que si :
 
-**Une correction refusée par la page** (pose qui lève, ou pose relue à plus de 1 mm de la commande) est remise : `restore`, la commande « Restaurer » du lot, relue à 1 mm. Le cut est ensuite quitté (« correction-refusee ») et la passe continue. Si la remise échoue, la passe s'arrête et dit le cut à contrôler.
+- le rôle est « vert » **et prouvé** : statut `valid` **sans drapeau opérateur** lu dans la liste d'ESV pour ce cut (revue, correction 1). Un SKIP, un cut que Mic vient de corriger, un rouge au-delà de la borne du lot, un cut que la passe a déjà corrigé : refusés. Sans statut lisible, rien ;
+- le moteur permet d'écrire sur la cible (`engine.writable`) ;
+- le cut a été atteint par les boutons d'ESV, ou par le Maj+Espace précédent ; jamais juste après un saut par la carte (correction 3) ;
+- le nombre de cuts de la partie est connu, et le cut n'est pas le dernier (Maj+Espace chargerait la partie suivante, KI-069).
 
-**Une validation non prouvée** arrête la passe et dit le cut à contrôler : erreur de la page après l'envoi, cut changé, aucune écriture vue en 6 s, ou écriture refusée par le serveur. Une intention de correction est gardée dans `storage.local` de la pose jusqu'à la preuve. Après un redémarrage du service worker, le panneau la signale.
+### 4.3 Ce qui est repris de la pose du lot (revue, W7)
+
+La commande `apply` et sa relecture à 1 mm sont celles du lot ; le clic est « tout-recentre », jamais un clic direct (T-5). Les rails sont ceux de la règle prudente : la décision (une première passe est convertie comme une reprise depuis la voie) plus la hauteur apprise, que le lot, lui, n'applique pas. La validation n'est pas celle du lot (bouton « valider et suivant ») mais celle de Mic (Maj+Espace).
+
+**Une correction refusée par la page** est remise (`restore`, relue à 1 mm), le cut est quitté (« correction-refusee ») et la passe continue. Si la remise échoue, la passe s'arrête et dit le cut.
+
+**Une validation non prouvée** (erreur après l'envoi, aucune écriture vue en 6 s, écriture refusée) arrête la passe et dit le cut. Une arrivée ailleurs qu'au cut + 1 arrête aussi la passe, après la validation prouvée. L'intention de correction est gardée **par cut** dans `storage.local`, de la pose jusqu'à la preuve ; seule celle du cut prouvé est effacée (W5). Tant qu'il en reste une, la carte demande « J'ai contrôlé le cut N », et la relecture, « Démarrer » et le retour à un cut sont refusés. Un redémarrage du service worker pendant une passe la clôt au réveil (`relecture-fin` « interrompue », R4).
 
 ## 5. SKIP, règle de Mic (D-172)
 
 - `skipOmbre:{raison, points, captures, capturesVides}` dans chaque événement, **jamais envoyé** (aucune commande SKIP n'existe dans la passe).
-- `aucun-point` : seulement quand la capture est **vraiment vide après chargement complet**. Une capture complète sans aucun point près des deux rails est relue une fois ; si la seconde est vide aussi, `raison:'aucun-point'`. L'étude a retrouvé ainsi 1 SKIP de Mic sur 4 aux cuts 0 à 3, avec 3 fausses alertes sur des visites brèves d'une ou deux captures vides ou incomplètes : une seule capture vide ne suffit donc pas.
-- Une capture qui échoue (ESV ne charge rien dans le délai) est notée en erreur de capture, sans raison de SKIP : on ne sait pas.
-- **Jamais `un-seul-scanner`** : tous les scanners arrivent dans un seul nuage d'ESV. Les captures de terrain n'ont que `intensity` et `classification`, rien ne dit de quel scanner vient un point.
+- `aucun-point` : seulement quand deux captures complètes de suite n'ont aucun point près des deux rails. L'étude a retrouvé ainsi 1 SKIP de Mic sur 4 aux cuts 0 à 3, avec 3 fausses alertes sur des visites brèves : une seule capture vide ne suffit pas.
+- Une capture qui échoue est notée en erreur, sans raison de SKIP.
+- **Jamais `un-seul-scanner`** : tous les scanners arrivent dans un seul nuage d'ESV.
 
 ## 6. Sécurité : les essais
 
-Essais rouges d'abord : les fichiers `tests/relecture-sw-*.test.cjs`, joués sur le code de la base, échouent tous (0 sur 9 avant le découpage). Ils passent tous sur la branche. Un fichier par essai : `tools/verify.cjs` donne 20 s à chaque fichier, et un lot réel en prend 3 à 6.
+Chaque correction de la revue a son essai, écrit d'abord : rouge sur le code d'avant (a50e214), vert après. Un fichier par essai (`tools/verify.cjs` donne 20 s à chaque fichier ; un lot réel en prend 3 à 6).
 
 | Exigence | Essai |
 |---|---|
-| Coupée : commandes identiques à la base, octet pour octet | `relecture-sw-coupee-rien`, `-coupee-gardee` (empreinte `tests/fixtures/relecture-lot-50-base.json`, prise en jouant le même lot sur `background.js` et `src/adapter-page.js` de 2d60d04), `-coupee-trafique` (empreinte du test 6 inchangée, arguments de « Démarrer » ignorés) |
-| Ombre : jamais de pose, de validation ni d'écriture | `relecture-sw-ombre` : après le lot, seulement `ping`, `state`, `goToCut`, `capture`, même quand la règle dirait « corriger » ; SKIP en ombre consigné, aucun SKIP envoyé |
-| Corriger : seulement les cuts qui passent la règle, chemin de la pose Orbite, aucune marque | `relecture-sw-corriger` : 2 corrigés sur 7, `state` puis `apply` (même forme que les poses du lot), puis `state` et `validateInPlace` ; rails incohérents et voie refusés ; aucune trace du mot « relecture » dans ce qui part vers la page. `-corriger-clic-refus` : le clic figé dans le lot sert aussi à la passe ; une pose refusée est remise, sans validation |
-| Arrêt ou panne : ESV propre | `relecture-sw-arret` (l'étape en cours finit, puis plus rien ; chaque `apply` a sa validation prouvée ; pendant la passe, ni lot, ni retour à un cut), `-panne` (ESV sans réponse : arrêt net), `-corriger-validation` (aucune écriture vue : arrêt, cut dit, intention gardée) |
-| Le lot avant la passe est inchangé | `-ombre` et `-corriger` : le lot, sans le champ `relecture` du scope, a l'empreinte de la base |
-| La passe ne part que si ESV est propre | `-hors-partie` (autre partie : non lancée ; « Lancer la relecture » au retour), `-pose-en-attente` (pose d'Ariane non validée sur le cut affiché) |
-| Observateur coupé | `-sans-observateur` : « corriger » ramené à « ombre » ; rythme d'au moins `visiteMs` entre deux cuts |
-| Zones figées (audit P-5) | `-zones-figees` : une « zone PN » apparue pendant la passe (comme celle qu'ouvrirait une capture de vert) n'est pas lue ; la passe ne lit aucune surface de règle métier sur ses captures ; le cut reste aux abords, en ombre, `zoneSource:'lot'` |
-| Fichier proposé réel | `-fichier-reel` : le vrai fichier servi à la passe ; un vert de PN corrigé, un vert de PN sous 8 mm laissé, un vert d'abords laissé en ombre (zone coupée), le différé du lot jamais touché. `relecture-critere.test.cjs` lit aussi le vrai fichier : quatre étapes, zones, 45 mm, 15 mm, chaine+h |
-| Modules purs | `relecture-ombre.test.cjs` (sélection, jugement, SKIP), `relecture-critere.test.cjs` (chaque condition, voie, cohérence, réglages), `relecture-panneau.test.cjs` (place de la carte, « Dernier lot » / « Prochain lot », avancement, CONTENU.txt) |
+| Coupée : commandes identiques à la base | `relecture-sw-coupee-rien`, `-coupee-gardee` (empreinte `tests/fixtures/relecture-lot-50-base.json`, version neutralisée, R9), `-coupee-trafique` |
+| Ombre : rien d'Ariane, « vu » d'ESV compté, chaîne vide, départ immédiat | `relecture-sw-ombre` : après le lot, seulement lectures et navigations ; 6 cuts neufs annoncés, 6 « vu » comptés ; aucun appui tiré des poses du lot ; le différé (étage `first-pass`) n'entre pas dans la chaîne ; départ dans les 3 s ; lot sans marque de la relecture (R7) |
+| Corriger : verts prouvés, pose du lot, Maj+Espace prouvé | `relecture-sw-corriger` : 3 corrigés sur 7, `state`, `apply` (« tout-recentre »), `state`, `validerMajEspace` ; arrivée au + 1 ; premier cut de plage atteint par un pas ; aucune pose après un saut ; aucune marque |
+| Rôle « vert » jamais présumé (correction 1) | `-role-lot` : SKIP, reprise à la main, cible bloquée traversés ; cible bloquée en cours de passe refusée par la garde ; `-role-borne` : dernier cut d'un lot borné (corrigé et validé par Mic, en PN) jamais réécrit ; rouge au-delà de la borne relu sans pose |
+| Une seule passe (correction 2) | `-une-passe` : clic pendant le délai et pendant la préparation, « Démarrer » pendant la préparation refusés ; deux « Lancer » simultanés : un seul part |
+| Maj+Espace (correction 4) | `-maj-espace` : ESV ailleurs qu'au + 1 → arrêt après la validation ; dernier cut de la partie jamais validé ; cut déjà corrigé jamais réécrit ; `relecture-maj-espace-page` : touches exactes, une seule frappe, refus avant envoi sans émission (correction 6) |
+| Réglages sûrs (correction 5) | `-reglages-surs` : absent, format -2, coquille → ombre, dit ; contrôle : le fichier valide corrige ; `relecture-critere` (D-174, champs invalides, valeurs brutes) |
+| Arrêt, panne, intention | `-arret` (« Arrêter » du lot ; annulation neutre, T-6), `-panne`, `-corriger-validation` (intention par cut, « J'ai contrôlé le cut N »), `-redemarrage` |
+| La passe ne part que si ESV est propre | `-hors-partie`, `-pose-en-attente` |
+| Observateur coupé | `-sans-observateur` |
+| Zones figées (audit P-5) | `-zones-figees` |
+| Fichier proposé réel | `-fichier-reel` : deux verts de PN corrigés (le premier du PN atteint par un pas), un sous 8 mm laissé, les abords en ombre, le différé jamais touché |
+| Modules purs | `relecture-ombre` (sélection, plafond par zone, jugement, SKIP), `relecture-critere`, `relecture-panneau` (préparation, réglages, « vu », « J'ai contrôlé ») |
 
-Ce que les essais remplacent : hors du lot, la science et la décision des verts sont remplacées pour l'essai. Le moteur de la fixture ne retrouve plus son rail quand la pose d'ESV a bougé (sa boîte de découpe est celle de la fixture). Le cut 113, lui, est calculé pour de vrai (étage `window`, appuis 111 et 112). Le banc (§ 7) joue tout pour de vrai.
+L'ESV simulé des essais tient la liste de la partie (statut, opérateur, « vu »), imite le « vu » d'ESV au premier affichage et valide par Maj+Espace (écriture, puis cut + 1). Hors du lot, la science et la décision des verts sont remplacées pour l'essai ; le cut 113 est calculé pour de vrai. Le simulateur échoue sur toute option inattendue de la validation.
 
-**Modification de `src/adapter-page.js`** : `validateInPlace` accepte `preuve:'ecriture'`. Un vert est déjà compté « treated » par ESV, donc sa validation ne fait pas bouger le compteur « N on M treated » ; c'est l'écriture observée qui fait la preuve. Le geste est le même : Ctrl+Entrée, ou le bouton réglé. Sans l'option, le chemin du dernier cut (KI-069) est inchangé.
+**`src/adapter-page.js`** : nouvelle action `validerMajEspace` (Maj enfoncée, Espace enfoncée puis relâchée, Maj relâchée, sur le canevas d'ESV ; une seule frappe ; rend le cut atteint). `validateInPlace` est revenu au texte de la base. Le lot n'émet toujours ni D ni Maj+Espace (`tests/u3-raccourcis.test.cjs`).
 
 ## 7. Banc : extension réelle, maquette ESV
 
-`tools/relecture-banc.cjs` charge l'extension du dépôt dans Chromium et route l'hôte d'ESV vers la maquette de `claude/esv-locale-audit` (`fiches/AUDIT_ESV_LOCALE.md`), qu'on extrait hors du dépôt. Le banc garde le choix, lance un lot et attend la passe. Il joue Mic si le dernier cut attend sa validation. Tout passe par le vrai chemin : service worker, pont, observateur passif, adaptateur, page, serveur.
+`tools/relecture-banc.cjs` charge l'extension du dépôt dans Chromium et route l'hôte d'ESV vers la maquette de `claude/esv-locale-audit`, extraite hors du dépôt. Tout passe par le vrai chemin : service worker, pont, observateur passif, adaptateur, page, serveur.
 
-Partie de 20 cuts (0 à 19), lot de 8 à 11 : 8 et 10 posés et validés, 11 laissé non résolu (9 est vert dans la maquette, le lot ne le visite pas) ; latence de la maquette 40 ms par lot de nœuds, machine partagée (charge 4 à 6 sur 4 cœurs). Les règles métier en ombre voient une ADV sur toute la maquette (ses cuts reprennent les captures du corpus). La sélection est donc « ADV 0–19 » : 18 cuts relus, **cuts 0 à 3 compris**.
+**Maquette réglée sur le terrain.** La copie de maquette du banc a reçu trois options, hors dépôt : `majEspace=plus1` (Maj+Espace valide puis charge le cut + 1, comme dans 93 à 96 % des Maj+Espace des Échos), `vu=1` (« vu » écrit 1 s après le premier affichage d'un cut jamais vu), `rouges=A-B` (seuls les cuts A à B sont rouges, les autres sont des verts d'ESV jamais traités, comme autour d'un lot). La maquette d'origine prend Maj+Espace pour « valider et suivant non validé » (supposé), n'écrit pas de « vu », et ses cuts autour du lot sont surtout rouges.
 
-| | Ombre (seuils provisoires) | Corriger (seuils permissifs de banc) |
-|---|---|---|
-| Passe | 18 relus, 0 corrigé, **62,9 s** | 18 relus, **5 corrigés**, 72,3 s |
-| Entre deux cuts, médiane (P90, max) | 3,2 s (4,1 ; 5,1) | 3,8 s (5,1 ; 6,7) |
-| Moyenne par cut | **3,5 s** | 4,0 s |
-| Capture, médiane | 2,47 s | 2,59 s |
-| Calcul (moteur, décision, règle), médiane (P90) | 0,38 s (0,44) | 0,37 s (0,45) |
-| Navigation, médiane | 0,09 s | 0,09 s |
-| Cut corrigé, temps propre médian | — | 4,2 s (de 3,9 à 6,2 ; un cut visité : 3,0 s) |
-| Écritures reçues par le serveur pendant la passe | **0** | **5**, « valid », exactement les lignes des 5 cuts corrigés |
-| Page : poses de rail, touches pendant la passe | **0**, **0** | 10 poses (5 × 2 rails), 5 Ctrl+Entrée |
-| Navigation vue par la page | 1 saut par la carte, puis boutons « cut suivant » | idem |
+| Partie de 40 cuts, lot de 8 à 11, latence 40 ms, machine chargée | Ombre (fichier réel), `rouges=8-11` | Corriger (seuils permissifs), `rouges=8-11` | Corriger, maquette d'origine |
+|---|---|---|---|
+| Passe | 37 relus, 0 corrigé, **113 s** | 37 relus, **20 corrigés**, 152 s | 1 relu, 1 corrigé, puis **arrêt** |
+| Par cut, moyenne | **3,1 s** (capture 2,6 s, calcul 0,4 s, navigation 0,09 s) | 4,1 s | — |
+| Écritures d'Ariane reçues par le serveur | **0** | **20** « valid », exactement les lignes des cuts corrigés | 1 « valid », celle du cut corrigé |
+| Cuts neufs annoncés ; « vu » reçus par le serveur ; comptés par Ariane | 36 ; 36 ; 36 | 36 ; 35 ; 35 | — (pas de « vu » dans la maquette d'origine) |
+| Maj+Espace vus par la page | 0 | 20 | 1 |
+| Lectures de nuage par vert relu | 1,0 | 1,0 | 2 (le cut 1, approché, et le cut 0) |
+| Fin | « finie » | « finie » | « après Maj+Espace, ESV affiche le cut 11 de la partie 23, pas le cut 1 » |
 
-**Avec le fichier proposé réel** (mode « corriger », même lot, même maquette) : **18 cuts sélectionnés, 0 corrigé, 18 laissés**, passe de **63,5 s** (3,5 s par cut en moyenne, médiane 3,8 s entre deux cuts ; calcul médian 0,37 s), 0 écriture, 0 pose, 0 touche. Toute la maquette est en zone ADV, que le fichier laisse en ombre ; elle n'a pas de PN (ses cuts reprennent des captures du corpus sans passage à niveau). Le chemin de correction d'un vert de PN avec ce fichier est prouvé par l'essai `relecture-sw-fichier-reel`, et la mécanique de correction de bout en bout par le banc « permissif » ci-dessus.
+Les seuils permissifs du banc ouvrent toutes les zones à 12 mm (fichier complet et valide, sinon la passe resterait en ombre). La maquette n'a pas de PN ; avec le fichier réel, ses verts (zone ADV) restent en ombre. Les corrections du banc prouvent le chemin (pose, Maj+Espace, écriture, arrivée au + 1), pas la justesse : les écarts de 40 mm viennent de la fixture.
 
-Le banc « permissif » a pris un fichier de seuils ouvert (ADV ouverte, confiance 0, cohérence à 100 mm, 1 appui), servi le temps du banc à la place du fichier proposé, puis remis. Même ainsi, la règle a refusé les cuts sans appui. Au premier essai, la maquette commençait au cut 100 : la marge de l'ADV demandait le cut 74, et la carte de la maquette a levé. **La passe s'est arrêtée net** (« passage au cut 74 non confirmé, rien n'a été posé »). Sur le vrai ESV, les parties commencent au cut 0.
-
-**Temps pour le terrain.** Le calcul y est 2,5 fois plus rapide (`fiches/CYCLE_OMBRE.md`), donc environ 0,15 s. La capture est celle du lot (mode rapide), et le temps d'affichage minimal (2 à 4,5 s, moyenne 3,25 s) domine. On attend **3,3 à 3,7 s par cut relu**, comme Mic (3,7 s), et environ 1 à 2 s de plus par cut corrigé.
-
-**Partie type, avec le fichier réel.** L'étude compte, pour la sélection « méthode de Mic », de 117 à 781 verts par partie (`fiches/RELECTURE_AUTONOME.md` § 7 ; partie 29 : 545 verts, dont 38 de PN, 182 d'ADV, 316 d'abords, 9 de la liste). À 3,5 s par cut :
-- toute la sélection de la partie 29 durerait environ 32 minutes ; au plafond de 120 cuts, la passe dure **environ 7 minutes** et relit d'abord les 38 verts de PN (2 à 3 minutes), puis les plages d'ADV et d'abords entières qui tiennent ;
-- seuls les verts de PN peuvent être corrigés : en validation croisée, l'étude en corrige 36 sur 167 verts de PN relus dans les six parties d'apprentissage (environ 6 par partie en moyenne, aucun dans les parties sans PN), 0 erreur ; tous les autres cuts relus sont laissés et notés.
+**Le geste est-il prouvé ?** Sur la maquette réglée sur le terrain, oui : la page reçoit Maj+Espace, le serveur reçoit l'écriture « valid » de la ligne, ESV arrive au cut + 1, la passe continue. Ce qui reste supposé : que le vrai ESV réagisse à Maj+Espace relayé comme à celui de Mic (c'est le cas de Maj+Retour arrière, relayé de la même façon par Orbite). S'il ne le fait pas, aucune écriture n'est vue et la passe s'arrête en nommant le cut. Le réglage `relecture.validation` permet de verrouiller « corriger » en ombre.
 
 ## 8. Trace dans ESV
 
-- **Commandes** : la passe n'emploie que des commandes qu'Ariane emploie déjà pour un humain, et n'en invente aucune :
-  - `goToCut` du retour à un cut : boutons « cut précédent / suivant » et événement de la carte, relevés au banc ESV local ;
+- **Commandes** : la passe n'emploie que des commandes qu'Ariane emploie déjà, plus le geste de validation de Mic :
+  - `goToCut` du retour à un cut : boutons « cut précédent / suivant » et événement de la carte ;
   - `capture` du lot : boutons de rail ;
-  - en correction, `apply` du lot (clics de pose, même mode de clic que le lot), `restore` du lot si besoin, et Ctrl+Entrée relayé comme au dernier cut (KI-069).
-  
-  Aucun champ, aucun en-tête, aucune requête propre à Ariane : le mot « relecture » n'apparaît dans rien de ce qui part vers la page (essai).
+  - en correction, `apply` du lot (clic « tout-recentre »), `restore` si besoin, et Maj+Espace (une frappe, comme Mic).
+
+  Aucun champ, aucun en-tête, aucune requête propre à Ariane : le mot « relecture » n'apparaît dans rien de ce qui part vers la page, lot compris ; l'annulation d'un passage porte la raison neutre d'un retour à un cut.
 - **Écritures** : elles sont faites par ESV lui-même.
-  - En **ombre**, aucune écriture n'est provoquée par Ariane. ESV écrit seulement « SeenByOperator » la première fois qu'un cut est affiché (`fiches/TRACE_ESV.md`). Un vert visité devient donc violet sur la carte, comme quand Mic le visite. La maquette n'imite pas cette écriture : le banc ne la montre pas.
-  - En **corriger**, chaque cut corrigé reçoit l'écriture de validation d'ESV (12 champs, mêmes clés), comme une validation de Mic. C'est une « seconde validation » quand le cut était déjà vert et traité : Mic en fait aussi en Écho, sur 1,5 % des cuts validés en partie 29.
-- **Rythme** : au moins 2 à 4,5 s par cut relu, tirées au hasard. La passe ne fait pas de longue pause. En Écho, Mic tient 3,6 à 4,0 minutes sans pause de 10 s (`fiches/TRACE_ESV.md`) ; le lot Orbite, 4,1 à 5,9 minutes. Une passe de 7 minutes d'affilée dépasse ces deux durées : c'est la seule différence de cadence connue, à régler avec Mic (plafond plus bas, ou pause entre deux plages).
-- **Parcours** : par plages, cut par cut (90 % de pas d'un cut chez Mic en Écho). Le lot, lui, avance par sauts.
-- **À vérifier sur le vrai ESV** :
-  - que Ctrl+Entrée valide bien un vert sur place (hypothèse D-065, jamais observée sur le terrain) ;
-  - que le saut par la carte et les boutons « cut suivant » sont ceux du vrai ESV (hypothèses du banc ESV local, D-098).
-  
-  Sans preuve d'écriture, la passe s'arrête et le dit : elle ne peut pas croire à tort qu'un cut est validé.
+  - En **ombre**, aucune écriture n'est provoquée par Ariane, mais ESV écrit « vu » (`{SeenByOperator:true}`, 204) la première fois qu'un cut est affiché, 0,9 à 1,7 s après l'arrivée. Un vert visité devient violet sur la carte, comme quand Mic le visite. À la prochaine Écho, Mic ne distinguera plus les verts qu'il a vus lui-même de ceux qu'Ariane a affichés. La passe annonce les cuts neufs au départ et compte les « vu » (D-175 : à dire à Mic).
+  - En **corriger**, chaque cut corrigé reçoit l'écriture de validation d'ESV, comme une validation de Mic par Maj+Espace.
+- **Rythme** (D-176) : aucune pause ajoutée, départ juste après le lot. Mic passe un vert en 0,63 s (médiane ; p90 1,57 s) et fait une pause de plus de 10 s toutes les 21,5 visites ; ses intervalles entre deux arrivées sur un cut ont une médiane de 1,86 s et une moyenne de 3,6 s, toutes visites confondues, surtout des validations. La passe reste 3,1 s par cut relu (capture), sans pause : pour le serveur, des « vu » espacés de 3 s environ, réguliers.
+- **Lectures de nuage** : chaque vert relu est une capture du lot (boutons des deux rails, vue recentrée). Sur le terrain, un cut capturé sans pose par le lot coûte 6,1 lectures (médiane 5), un vert passé par Mic 0,67 à 1,11. La maquette ne le montre pas (1,0, voir § 7). Si Mic juge l'écart hors de la plage humaine, une lecture passive de la vue chargée suffirait pour les verts que la règle ne peut pas corriger (à revoir avec l'étude).
+- **Parcours** (revue, T-7) : par plages, cut par cut. Pour passer un vert, Mic quitte le cut surtout par la touche D ou par un clic dans le canevas, presque jamais par le bouton « cut suivant » ; il revient en arrière dans 8 à 22 % des verts. La passe, elle, clique « cut suivant » (le bouton se vérifie avant d'agir) et ne recule que pour approcher un vert corrigeable. Invisible du serveur.
+- **À vérifier sur le vrai ESV** : Maj+Espace relayé (effet et corps de l'écriture), le saut par la carte et les boutons « cut suivant » (hypothèses du banc ESV local).
 
 ## 9. Panneau
 
-La carte occupe l'emplacement réservé par la réorganisation du panneau (test 7, `fiches/UX_PANNEAU_T7.md`) : le groupe **(d) « Relecture »** (`#groupe-relecture`), entre les résultats du dernier lot (c) et l'export replié (e). C'est un bloc `<section id="carte-relecture" class="carte">` dans le style des autres cartes. Son script est séparé (`src/carte-relecture.js`), chargé avant `panel.js`. Dans `panel.js`, une seule ligne change : celle de `CONTENU.txt`.
+La carte occupe l'emplacement réservé (d) « Relecture » (`#groupe-relecture`), entre les résultats du dernier lot et l'export replié. Script séparé (`src/carte-relecture.js`), chargé avant `panel.js`.
 
-- Elle propose trois choix : « Coupée », « Ombre (visite, ne modifie rien) », « Corriger (corrige seulement les cuts sûrs) ».
-- Comme les autres choix du lot, elle a deux lignes :
-  - **« Dernier lot »** (« Lot en cours » pendant un lot) : le mode figé dans le scope du lot ;
-  - **« Prochain lot »** : le choix gardé, qui servira au prochain « Démarrer ».
-  
-  Sans lot, la première ligne dit « aucun lot ».
-- Pendant la passe, elle affiche « Relecture 12 sur 85, 3 corrigés · cut 456 · grappe 453–471 » et le bouton « Arrêter la relecture » ; les choix sont figés. Après, elle affiche le bilan, et « Lancer la relecture » quand la passe n'est pas partie seule.
-- Elle signale une correction interrompue.
-- **CONTENU.txt** reçoit une ligne quand la relecture du lot n'est pas coupée : « Relecture après le lot … : corriger (…) ; passe : finie, 85 sur 85 relus, 3 corrigés ». Coupée, aucune ligne.
+- Trois choix : « Coupée », « Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché) », « Corriger (seulement les verts sûrs, validés par Maj+Espace) ». Une note dit que la passe part seule juste après le lot.
+- « Dernier lot » / « Prochain lot », comme les autres choix du lot.
+- Réglages de la correction : leur source, et si « corriger » restera en ombre, avec la raison.
+- Pendant la préparation : « Relecture en préparation » ; « Lancer la relecture » est caché, « Arrêter la relecture » visible. Pendant la passe : avancement, corrections, « vu » sur les cuts neufs annoncés, cut et plage.
+- Correction interrompue : le cut à contrôler, et le bouton « J'ai contrôlé le cut N ».
+- **CONTENU.txt** : une ligne quand la relecture du lot n'est pas coupée (mode, bilan, « vu »).
 
 ## 10. Réglages
 
 | Où | Quoi | Défaut |
 |---|---|---|
 | Panneau (`storage.local`, `banane50Relecture`) | coupée / ombre / corriger | coupée |
-| `BananeSettings.relecture` (facultatif, absent de `src/settings.js`) | `departMs` (délai après le lot), `visiteMs` (temps d'affichage minimal, tiré entre deux bornes), `attenteEcritureMs` (preuve), `pasMax`, `plafondCuts` | 1 500 ms, [2 000, 4 500] ms, 6 000 ms, 40, 120 (module) |
-| `datasets/relecture-reglages-proposes.json` | seuils chiffrés par l'étude (chantier `claude/50-zones-autonomes`, fusionné) : zones, étapes, rôles, `jamais`, voie, cohérence, variante, marges de sélection | présent ; absent : défaut provisoire `datasets/relecture-reglages-defaut.json` |
+| `BananeSettings.relecture` (facultatif) | `departMs` (0, D-176), `attenteEcritureMs` (preuve, 6 000 ms), `attenteVuMs` (« vu » des derniers cuts, 2 500 ms), `pasMax` (40), `plafondCuts` (120, PN hors budget), `validation` ('maj-espace' ; toute autre valeur verrouille « corriger » en ombre) | |
+| `datasets/relecture-reglages-proposes.json` | seuils chiffrés par l'étude | présent ; absent ou non sûr : ombre |
 
-## 11. Doutes et limites
+## 11. Fidélité à l'étude, après la correction 8
 
-- **Ce qui diffère encore de l'étude**, dit précisément :
-  - *la chaîne d'appuis* : celle de l'étude part vide et passe par tous les cuts que Mic a visités, cuts du lot compris, recalculés ; la passe traverse les cuts posés par le lot sans les recalculer, et leurs poses validées servent d'appuis à leur place, avant les poses de la passe. L'étude prévient qu'une pose avec les seuls appuis du lot n'a pas été mesurée ; ce mélange non plus ;
-  - *la médiane de la partie* : l'étude prend les écartements des verts vus par Mic à l'Écho ; la passe prend la liste d'ESV (bords des lignes valides), sinon les verts déjà relus (5 au moins), et refuse avant ;
-  - *l'écartement de la pose* : celui des positions de la décision, comme l'étude (sans la hauteur) ;
-  - *le plafond* de 120 cuts (absent de l'étude) ; les PN passent en premier ;
-  - *H5* : les verts hors plage par l'écartement sont en plus, en ombre seulement.
-- **La porte des 9 % n'est pas démontrée** : l'étude n'a jugé que 3 actions de PN sur parties réservées (3 justes) ; il en faut au moins 39 sans erreur. Chaque correction est notée (pose avant, pose après, écart) pour que la prochaine Écho de Mic la juge.
-- **Zones PN** : tirées des seules captures du lot, donc les PN que le lot n'a pas traversés (tout en verts) ne sont pas relus en PN ; c'est le prix de la sécurité de l'audit P-5, en attendant `claude/50-pn-robuste`.
-- **Ctrl+Entrée sur un vert** : il valide sur place selon Mic (geste de l'Écho) et la maquette, mais ce n'est pas observé sur le vrai ESV. La preuve par l'écriture protège : sans écriture vue, la passe s'arrête.
-- **SKIP** : « aucun point » ne retrouve qu'un SKIP de Mic sur 4 dans l'étude ; « un seul scanner » ne se mesure pas (§ 5).
-- **Banc** : la maquette n'a ni Potree réel ni vrai serveur, et pas d'écriture « seen ». Ses cuts reprennent quelques captures du corpus : l'ADV couvre toute la partie, et les écarts de 40 mm viennent de la fixture, pas d'un vrai vert. Les temps de capture sont ceux de la maquette, les temps de calcul ceux de cette machine chargée.
-- **Essais** : hors du lot, la science et la décision des verts sont remplacées (§ 6). Le chemin de la passe est réel, mais son calcul complet n'est joué au banc que sur la maquette.
-- **Mémoire volatile** : un redémarrage du service worker arrête la passe sans la relancer. Une correction coupée entre la pose et la preuve est signalée au panneau, pas réparée.
-- **Pas de longue pause** dans une passe (§ 8).
-- **Lot borné** : la passe attend que Mic valide le dernier cut posé. Si Mic quitte ce cut sans le valider, la pose d'Ariane est perdue (elle ne l'était pas avant, puisque rien ne quittait ce cut).
+Rejeu hors ligne de la logique codée (`relectureCalculer` extraite de `background.js`, règle et sélection de la branche) sur les cas de l'étude, parties d'apprentissage 1:12, 1:13, 1:24, 1:29 et 2:1 (1:17 n'existe plus qu'en archive). Outils de la revue (`revrelo/fidelite`), adaptés : chaîne vide, seules les poses des verts y entrent ; sélection avec le plafond par zone.
 
-## 12. Rejouer
+| | Décision de l'étude rendue | PN, règle réelle : actions, justes, erreurs, abîmés, mauvaise voie | Toutes zones ouvertes, mêmes seuils (ADV ; abords) |
+|---|---|---|---|
+| Étude (référence, cas) | — | 36, 36, 0, 0, 0 | ADV 16, 10 justes, 3 erreurs, 1 abîmé ; abords 37, 30, 3, 0 |
+| Branche, sans plafond | 1 323 cuts sur 1 323 | **36, 36, 0, 0, 0** | ADV 16, 10, 3, 1 ; abords 36, 29, 3, 0 |
+| Branche, plafond de 120 (PN hors budget) | idem | **36, 36, 0, 0, 0** (1:12 : 20 sur 20, 1:13 : 9 sur 9, 1:29 : 7 sur 7, 2:1 : aucune) | ADV 5, 2, 2, 1 ; abords 8, 8, 0, 0 |
+| Branche, zones du lot seulement (parties avec lot) | idem | **7, 7, 0, 0, 0** (1:29) | ADV 0 ; abords 8, 8, 0, 0 |
+
+- **Mauvaise voie : 0** dans toutes les variantes et toutes les zones.
+- **F4 corrigé** : la 37e action de la revue (1:12 #8383, 7,95 mm arrondi à 8) a disparu.
+- **Plafond** : les PN ne sont plus coupés (167 verts de PN jugeables relus, avec ou sans plafond ; en 2:1, les dix cuts du PN 401–414 que l'Écho permet de rejouer sont tous relus, contre 5 à 6 sur 14 avant la correction 7).
+- **Chaîne** : vide au départ ; le différé 2:1 #303 (Mic l'a déplacé de 210 mm), qui partait en first-pass avec les poses du lot pour appuis, est maintenant jugé sans elles, n'est jamais corrigé (rôle) et n'entre pas dans la chaîne.
+- **Ce qui s'applique à la passe livrée** : 29 des 36 corrections justes de PN viennent de 1:12 et 1:13, deux parties sans lot, donc sans passe. Sur les parties traitées par lot, il reste PN 7 sur 7, loin de la porte des 39 actions sans erreur.
+- **Non rejoué** : la garde (statut lu dans ESV, arrivée par un pas, dernier cut), que les Échos ne permettent pas de reconstituer ; elle ne peut que retirer des actions.
+
+## 12. Doutes et limites
+
+- **Ce qui diffère encore de l'étude** : la chaîne n'accueille pas les cuts différés (l'étude, si) ; la médiane de la partie vient de la liste d'ESV ; le plafond (PN hors budget) ; H5 en plus, en ombre ; la garde (statut lu dans ESV, arrivée, dernier cut), que l'étude n'avait pas.
+- **Zones PN** : tirées des seules captures du lot. Sur les parties traitées par lot, l'étude n'a que 7 PN sur 7 (partie 29) ; 29 des 36 corrections justes viennent de parties sans lot, donc sans passe (revue, F1).
+- **La porte des 9 % n'est pas démontrée** : il faut au moins 39 actions sans erreur ; chaque correction est notée pour que la prochaine Écho de Mic la juge.
+- **Maj+Espace relayé** : prouvé sur la maquette réglée sur le terrain, pas sur le vrai ESV (§ 7).
+- **« vu »** : inévitable dès qu'un cut est affiché ; une ombre stricte limitée aux cuts déjà vus ôterait presque tout l'intérêt sur les verts.
+- **Lectures de nuage** : excédent probable sur le terrain (§ 8), non mesurable sur la maquette.
+- **Rythme** : sans pause, comme le lot (D-176).
+- **Banc** : maquette sans Potree réel ni vrai serveur ; temps de capture de la maquette, calcul de cette machine chargée.
+- **Lot borné** : la passe attend que Mic valide le dernier cut posé.
+
+## 13. Rejouer
 
 ```
-node --test tests/relecture-ombre.test.cjs tests/relecture-critere.test.cjs tests/relecture-panneau.test.cjs tests/relecture-sw-*.test.cjs
+node --test tests/relecture-ombre.test.cjs tests/relecture-critere.test.cjs tests/relecture-panneau.test.cjs tests/relecture-maj-espace-page.test.cjs tests/relecture-sw-*.test.cjs
 git archive origin/claude/esv-locale-audit tests/esv-maquette | tar -x -C <DOSSIER>
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs --maquette <DOSSIER>/tests/esv-maquette --mode ombre --debut 0 --cuts 20 --lot 8:11
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs --maquette <DOSSIER>/tests/esv-maquette --mode corriger --debut 0 --cuts 20 --lot 8:11 --reglages SEUILS.json
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs --maquette <DOSSIER>/tests/esv-maquette --mode ombre --debut 0 --cuts 20 --lot 8:11 --terrain 1
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs --maquette <DOSSIER>/tests/esv-maquette --mode corriger --debut 0 --cuts 40 --lot 8:11 --rouges 8-11 --terrain 1 --reglages SEUILS.json
 ```
