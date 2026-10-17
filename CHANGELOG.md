@@ -1,5 +1,27 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.5 — 4.9.5 test 5 (17/10)
+
+Manifeste `4.9.5.5`, « 4.9.5 test 5 », paquet `ariane-4.9.5-test.5.zip` ; base : `claude/50-base` (0f96f17 : 4.9.5 test 4 + hygiène de l'audit, ombres de la voie, règles métier, faux verts, hauteur apprise, déplacer la vue coupé, verts à contrôler).
+**Aucun changement de pose, de validation ni de navigation** par rapport à la base ; `src/engine.js` inchangé (identique à `origin/main`). Le mode rapide n'est pas modifié (D-157 attend la décision de Mic). Aucune commande ESV nouvelle.
+Consigne : `consignes/seance-terrain-4.9.5-test-5-2026-10-17.md` ; retour arrière : la 4.9.5 test 4.
+
+- **Tout ce qu'avait la test 4** (empreinte du contrat par onglet, `audit-serveur` corrigé, P8 en ombre, F5 en Écho permis, mémoire de la liste, plafond de convention coupé, logo).
+- **En ombre, consigné seulement (aucune pose changée ; décisions et commandes identiques avec et sans)**
+  - **Voie prédite** (`voiePrediteOmbre`, `src/voie-recentree.js`) : événement `voie-predite-ombre` par cut différé, règle prudente D-147 ; calcul sur copies, après la décision et la commande (D-153, coût mesuré négligeable sur le banc : D-154).
+  - **Mémoire de série en Écho** (`memoireDifferesOmbre`) : événement `memoire-differes-ombre`, calculé avant la lecture de la référence humaine (G1 b, D-148, D-153) ; outil de mesure, pas un mode de travail (D-155).
+  - **Règles métier de Mic** (`reglesMetier.ombre`, `src/regles-metier.js`) : événement `regles-metier-ombre` (PN et marges, grappes de différés) ; activation coupée, règle par règle (D-159).
+  - **Faux vert « hauteur ambiguë »** (`fauxVertOmbre`, `differer:false`) : consigné dans la décision du lot (D-160).
+  - **Hauteur apprise** (`hauteurApprise`, `appliquer:false`) : correction verticale consignée dans la décision du lot (D-161).
+  - **Ombre verticale P8** (`ombreVerticaleRefusee`, 3,6 mm), déjà dans la test 4 (D-140, renommée P8 : D-150).
+- **Actifs, en observation seule (aucune action dans ESV)**
+  - **Relevé Écho des glissers et des crans de molette** (`echo.gestesVue`, `src/gestes-vue.js`) : événement `operator-gesture`, écouteurs passifs (D-156).
+  - **Liste des verts à contrôler** (`vertsAControler`, `src/verts-a-controler.js`) : carte « À contrôler » du panneau Orbite en fin de lot, fichier `ariane-verts-a-controler-partieN-….json` et ligne de `CONTENU.txt` dans l'export (D-162).
+  - **Dernière empreinte de contrat connue** dans `chrome.storage.local` (`banane50ContratDernier`), consignée sans jamais donner d'avis (U1, D-153).
+- **Coupé** : déplacer la vue (`deplacerVue.actif=false`, pièce `amenerDansLaVue`, D-156) et tous les chemins d'activation (`reglesMetier.actif`, `hauteurApprise.appliquer`, `fauxVertOmbre.differer`, `conventionPlafond`).
+- Essais de version : `tests/version-4955.test.cjs` (remplace `version-4954`), `tests/consigne-4955.test.cjs` (remplace `consigne-4954`).
+- Essai de fumée dans Chromium (hors du banc) : l'extension se charge, le panneau s'ouvre, la carte « À contrôler » s'affiche sur un lot simulé dans le vrai service worker.
+
 ## 4.9.5.4 — 4.9.5 test 4 (16/10)
 
 Manifeste `4.9.5.4`, « 4.9.5 test 4 », paquet `ariane-4.9.5-test.4.zip` ; base : `claude/50-base` (8825ec9 : 4.9.5 test 3 + E1, M6, E5, reprise de l'Écho après un F5, référence humaine de l'Écho par l'écriture serveur).
