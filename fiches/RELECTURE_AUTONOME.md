@@ -32,7 +32,7 @@ Conventions :
 ### 2.1 Parties
 
 - **Apprentissage** (manifeste des parties) : 1:12, 1:13, 1:17, 1:24, 1:29 et 2:1. Elles seules servent à régler.
-- **Réservées avec une Écho** : 1:25 (lot Orbite 4.8.5.1 du 29/09, Écho de Mic le même jour) et 1:11 (deux lots Orbite 4.7.20 et 4.8.0, Écho du 28/09). Ce sont les seules réservées qui ont une Écho : les parties 2 à 9 du second projet n'en ont pas encore. Elles ne servent qu'au jugement, après le gel des réglages (commit `fde3d43`, avant tout calcul sur elles).
+- **Réservées avec une Écho** : 1:25 (lot Orbite 4.8.5.1 du 29/09, Écho de Mic le même jour) et 1:11 (deux lots Orbite 4.7.20 et 4.8.0, Écho du 28/09). Ce sont les seules réservées qui ont une Écho : les parties 2 à 9 du second projet n'en ont pas encore. Elles ne servent qu'au jugement, après le gel des réglages (commit `fde3d43`). Leurs cas ont été extraits avant le gel, mais aucun résultat n'en a été lu avant.
 
 ### 2.2 Ce qu'on rejoue, cut par cut
 

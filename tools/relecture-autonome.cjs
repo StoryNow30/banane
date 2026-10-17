@@ -451,7 +451,7 @@ function bilan(ls, R) {
     if (!l.ref || l.etat !== 'calcule') continue;
     b.visites++; if (l.mic > 5) b.micSup5++; if (l.mic > 10) b.micSup10++;
     const Rl = typeof R === 'function' ? R(l) : R;
-    const v = l.var[Rl ? Rl.variante : 'seul+h'];
+    const v = l.var[Rl ? Rl.variante : (R && R.variante) || 'seul+h'];
     if (!v || v.d == null) { b.abstention++; if (l.mic > 10) b.laisseFaux++; continue; }
     const a = !Rl ? false : Rl.tout ? true : agit(l, Rl), i = issue(l, v, a);
     if (a) { b.agit++; if (v.e > 10) b.erreurs10++; if (l.mic > 10 && v.e <= 10) b.corrigesJustes++; }
@@ -505,7 +505,8 @@ function choisirParType(parties, opts = {}) {
   }
   return out;
 }
-const regleParType = rt => l => rt[l.zone] || null;
+/* Fonction ligne → règle ; `variante` : celle qui compte les abstentions des types laissés. */
+const regleParType = rt => Object.assign(l => rt[l.zone] || null, { variante: (Object.values(rt).find(Boolean) || {}).variante || 'chaine+h' });
 /* Variante SOBRE d'une règle : le plus grand écart minimal X (même règle par ailleurs) qui garde au moins 90 % de ses corrections justes sur
  * les mêmes lignes d'apprentissage, sous la même contrainte. Moins d'écritures dans ESV pour presque le même gain. */
 const PART_SOBRE = 0.9;
@@ -576,7 +577,7 @@ function etudier(parties, { grille = GRILLE } = {}) {
     fige: fige ? { regle: fige.R, bilan: fige.b, parPartie: res.map((r, i) => ({ partie: r.designation, ...bilan(sel[i], fige.R) })) } : null,
     croiseeLettre, totalCroiseeLettre: additionner(croiseeLettre.filter(c => c.bilan).map(c => c.bilan)),
     totalCroiseeSobre: additionner(croisee.filter(c => c.bilanSobre).map(c => c.bilanSobre)),
-    figeSobre: fige ? (R => ({ regle: R, bilan: bilan(sel.flat(), R) }))(sobre(fige.R, sel.flat(), { grille, parPartie: sel })) : null,
+    figeSobre: fige ? (R => ({ regle: R, bilan: bilan(sel.flat(), R), parPartie: res.map((r, i) => ({ partie: r.designation, ...bilan(sel[i], R) })) }))(sobre(fige.R, sel.flat(), { grille, parPartie: sel })) : null,
     croiseeType, totalCroiseeType: additionner(croiseeType.map(c => c.bilan)), figeType,
     courbe, cout: res.map(cout),
     skip: res.filter(r => r.skip).map(r => ({ partie: r.designation, ...bilanSkip(r.skip) })),
@@ -591,7 +592,7 @@ function juger(parties, reglage) {
     const w = wilson(b.erreurs10, b.agit), wd = wilson(b.degats, b.visites);
     return { partie: r.designation, couverture: couverture(r), cout: cout(r), toutAgir: bilan(ls, { tout: true, variante: reglage.regle.variante }), bilan: b,
       erreur: b.agit ? b.erreurs10 / b.agit : null, wilsonErreur: w, wilsonDegats: wd, parType: Object.fromEntries(TYPES.map(k => [k, bilan(ls.filter(l => l.zone === k), reglage.regle)])),
-      bilanActifs: reglage.actifs ? bilan(ls, l => reglage.actifs.includes(l.zone) ? reglage.regle : null) : null,
+      bilanActifs: reglage.actifs ? bilan(ls, Object.assign(l => reglage.actifs.includes(l.zone) ? reglage.regle : null, { variante: reglage.regle.variante })) : null,
       bilanParType: bt, bilanProcedure: reglage.procedure ? bilan(ls, reglage.procedure) : null, skip: r.skip ? bilanSkip(r.skip) : null,
       porte: { mauvaiseVoie: b.mauvaiseVoie <= PORTE.mauvaiseVoieMax, erreur: b.agit ? b.erreurs10 / b.agit <= PORTE.erreurMax : null, borneHaute: w.haut != null ? w.haut <= PORTE.erreurMax : null } };
   });
