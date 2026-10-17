@@ -46,6 +46,7 @@ Branche `claude/50-regles-metier`, partie de `claude/50-base`. Méthode de dépa
 
   Un quai, un trottoir ou une autre voie au ras **d'un seul côté** font monter `flushPct` sans remplir les quatre quarts.
 - **Confirmation** : deux cœurs à 3 cuts au plus. Un cœur seul reste « non confirmé » et n'ouvre pas de zone.
+  - **Depuis le 17/10 (`fiches/PN_ROBUSTE.md`)** : les deux cœurs doivent aussi être **consécutifs parmi les cuts vus**, sans cut vu sans chaussée entre eux (réglage `pn.consecutifs`, livré actif). Sur les captures du lot, rien ne change : mêmes zones, et pas une évaluation différente sur les quatre lots d'apprentissage. Sur l'union du lot et de l'Écho, le faux PN 443–456 du second projet disparaît.
 - **Plage à contrôler** : 4 cuts avant le premier cœur, 6 après le dernier (marges de Mic sur la partie 29 ; G0 § 4.3). Dans un lot qui avance, les 4 cuts d'avant sont déjà passés quand le PN est reconnu : ils sont seulement signalés dans la plage. Les 6 d'après sont tenus.
 - Dans le lot, la surface est lue sur la capture du cut, que le lot a déjà ; elle ne coûte qu'un passage sur les points. Pour les verts, `tools/regles-metier.cjs` mode « écho » la lit sur la capture de la première visite de Mic.
 

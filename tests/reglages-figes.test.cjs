@@ -84,6 +84,8 @@ test('règles métier : mêmes seuils que le module, ombre active et activation 
   for (const id of ReglesMetier.REGLES) assert.equal(Settings.reglesMetier.regles[id], false, id);
   // les nombres que la fiche annonce : marges de 4 et 6 cuts, deux cœurs à 3 cuts, quarts à 50 %, grappe 2 différés dans 6 cuts dont un à 2, écartement à 15 mm
   assert.deepEqual([v.pn.margeAvant, v.pn.margeApres, v.pn.confirmation, v.pn.confirmationEcartCuts, v.surface.quadMinPct, v.grappe.differesMin, v.grappe.fenetreCuts, v.grappe.procheCuts, v.ecartement.seuilMm], [4, 6, 2, 3, 50, 2, 6, 2, 15]);
+  // PN robuste (fiches/PN_ROBUSTE.md, H6) : deux cœurs CONSÉCUTIFS parmi les cuts vus, livré actif
+  assert.equal(v.pn.consecutifs, true); assert.equal(ReglesMetier.DEFAULTS.pn.consecutifs, true);
   // zone d'ADV (fiches/DETECTION_ADV.md) : rail de plus de 3 à 16 cm, deux alertes à 3 cuts, marges de 30 cuts ; poids nul dans la liste des verts
   assert.deepEqual([v.adv.largeurMinPas, v.adv.largeurMaxPas, v.adv.confirmation, v.adv.confirmationEcartCuts, v.adv.trouCuts, v.adv.margeAvant, v.adv.margeApres, v.adv.sautPas, v.adv.chutePas], [3, 16, 2, 3, 10, 30, 30, 3, 5]);
   assert.equal(F.reglages.vertsAControler.valeurs.poids.adv, 0);

@@ -17,11 +17,13 @@ test('fixture : PN retrouvé et confirmé, marges de 4 et 6 cuts ; règles et ju
  /* Le vert mal extrait (cut 24, écartement 1 470 mm) est signalé ; la référence de la partie s'est faite sur les verts vus. */
  assert.ok(o.verts.parRaison.ecartement.objet25>=1);assert.equal(o.verts.total.objet25,1);
  for(const id of R.REGLES)assert.ok(o.regles[id],id);
+ /* Détecteur retenu (cœurs consécutifs, fiches/PN_ROBUSTE.md) et règle d'avant, côte à côte : ici, quatre cœurs qui se suivent, mêmes zones. */
+ assert.deepEqual(o.zonesPN.variantes['sans-consecutifs'],o.zonesPN.variantes.retenu);assert.equal(o.zonesPN.variantes.retenu.zones,1);
  assert.ok(!/positionSceneRelative|"positions"|initiale|finale/.test(JSON.stringify(o)),'aucune coordonnée dans la sortie');
 });
 
 test('rapport : tables Markdown des règles, des zones et des verts',()=>{
- const t=T.rapport([T.essai()]);for(const m of [/grappe-differes/,/pn-chaque-cut/,/PN de Mic retrouvés/,/Verts signalés/,/flushPct-30/])assert.match(t,m);
+ const t=T.rapport([T.essai()]);for(const m of [/grappe-differes/,/pn-chaque-cut/,/PN de Mic retrouvés/,/Verts signalés/,/flushPct-30/,/sans-consecutifs/])assert.match(t,m);
 });
 
 test('manifeste : une partie réservée est refusée, sauf pour la juger sans régler',()=>{

@@ -134,6 +134,7 @@
         "pn": {
           "confirmation": 2,
           "confirmationEcartCuts": 3,
+          "consecutifs": true,
           "margeAvant": 4,
           "margeApres": 6
         },
@@ -209,7 +210,7 @@
           ]
         }
       ],
-      "note": "Toutes les parties disponibles ont servi : aucune partie réservée n'a jugé ces seuils. Le jugement se fera en ombre sur les parties suivantes."
+      "note": "Toutes les parties disponibles ont servi : aucune partie réservée n'a jugé ces seuils. Le jugement se fera en ombre sur les parties suivantes. Ajout du 2026-10-17 (fiches/PN_ROBUSTE.md, H6) : pn.consecutifs, deux cœurs consécutifs parmi les cuts vus ; mesuré sur les mêmes parties d'apprentissage (captures du lot seul, puis union lot + Écho), sans partie réservée."
     },
     "fauxVertOmbre": {
       "libelle": "Faux vert en ombre : règle « hauteur ambiguë » (différer au lieu de valider)",
