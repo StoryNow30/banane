@@ -91,3 +91,20 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - Mic veut essayer les deux méthodes du clic : la **test 6** est lancée (`claude/495-test-6`), avec le choix du clic dans le panneau.
 
 **Ensuite** : relecture de la test 6 au niveau maximal, puis envoi à Mic avec son empreinte.
+
+**État au 17 octobre, vers 10 h 30** (avant compactage) :
+- test 6 au terrain : parties 8 et 9 archivées (D-166, D-167) ;
+- lot des parties 2 à 7 analysé, prédictions scellées (D-169) ;
+- recadrage de Mic (D-170) : la 5.0 doit faire elle-même la relecture qu'il fait en Écho ;
+- accord pour visiter les verts sans modifier (D-171).
+
+**En cours** :
+- `claude/50-zones-autonomes` : étude élargie à toute la relecture, fiche `RELECTURE_AUTONOME.md`. Chiffre central : la part des corrections de Mic reproduite seule, face aux cuts abîmés ;
+- `claude/50-relecture-ombre` : passe de relecture en ombre de fin de lot (visite, calcul, note, aucune modification), case coupée par défaut.
+
+**Ensuite** :
+- relire et fusionner les deux chantiers ;
+- **test 7**, avec : la relecture en ombre ; le libellé de la case grappe corrigé (« série de différés », pas « aiguille ») ; l'état du dernier lot affiché clairement ; un message quand il ne reste rien à faire dans la partie ;
+- relecture au niveau maximal, puis envoi.
+
+**Question en attente** : les cuts 0 à 3 de chaque partie doivent-ils être ignorés (SKIP) ?
