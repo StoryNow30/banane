@@ -2569,7 +2569,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **Fable est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
 - **Conséquences** :
   - les chantiers et les revues tournent avec le modèle de session par défaut ;
-  - la relecture de la test 7 se fait **sans Fable dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ;
+  - la relecture de la test 7 se fait **sans Fable dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **Sonnet 5.5** comme modèle de session pour cette relecture (D-181) ;
   - aucun agent ni workflow ne porte `model: 'fable'` avant elle.
 
 ## D-179 — Maj+Espace sur un vert valide sur place, sans changer de cut (17 octobre 2026)
@@ -2596,3 +2596,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - les réglages gardent un interrupteur par zone, pour repasser une zone en ombre sans toucher au code.
 - **Mesure sur le terrain** : l'ombre continue de calculer et de noter toutes les zones ; les Échos de Mic qui suivent un lot en mode corriger montrent s'il a dû reprendre des cuts corrigés par Ariane. C'est la mesure qui dira si la zone peut rester ouverte.
 - **Suite** : le changement part sur la branche de la relecture, avec les corrections de la contre-revue en cours et celle de D-179, avant la fusion dans 50-base.
+
+## D-181 — Quota presque épuisé : Sonnet 5.5 pour la relecture de la test 7, travail resserré (17 octobre 2026)
+
+- **Mic** : il reste très peu de quota ; il refuse de repasser sur Opus. La relecture de la test 7 se fait avec **Sonnet 5.5**, au plus haut effort, sans Fable.
+- **Conséquences** :
+  - la contre-revue lancée à cinq angles et au plus haut effort est **arrêtée** : elle relisait du code que D-179 et D-180 font changer ;
+  - un seul agent applique D-179 (Maj+Espace sur place) et D-180 (ADV et abords), avec un seul verify complet à la fin ;
+  - la contre-revue est refaite **une fois**, resserrée (écritures et trace d'abord), sur la tête corrigée ;
+  - l'atelier P-7 finit ses derniers sceptiques puis s'arrête ; pas de nouveau gros calcul avant la test 7 ;
+  - pas de nouvel atelier sans nécessité : les essais ciblés d'abord, le verify complet une seule fois.
