@@ -9,6 +9,10 @@ const {test,before}=require('node:test'),assert=require('node:assert/strict'),cr
 const {lot,neutre,decisions,metier}=require('./helpers/deplacer-vue-lot.cjs'),S=require('../src/settings.js');
 const GOLDEN=require('./fixtures/lot-sans-vue-50-base.json');
 const h=x=>crypto.createHash('sha256').update(JSON.stringify(x)).digest('hex');
+/* L'empreinte de 50-base (2c878f1) a été prise sous la version 4.9.5.4 : chaque `apply` porte `extensionVersion`. Une nouvelle version de test ne
+ * change que ce champ ; on le ramène à la version de l'empreinte avant de hacher (rien d'autre n'est neutralisé). */
+const VERSION_GOLDEN='4.9.5.4',VERSION=require('../manifest.json').version;
+const versionGolden=x=>JSON.parse(JSON.stringify(x).split(`"extensionVersion":"${VERSION}"`).join(`"extensionVersion":"${VERSION_GOLDEN}"`));
 const ev=(b,type)=>b.store.events.filter(e=>e.type===type);
 let defaut;
 before(async()=>{defaut=await lot({});});
@@ -18,7 +22,7 @@ test('réglage coupé (défaut) : mêmes commandes, mêmes appels, mêmes décis
  for(const [nom,x] of [['défaut',defaut]]){
   assert.deepEqual(x.b.commands.map(c=>c.action??null),GOLDEN.actions,nom+' : mêmes actions');
   assert.deepEqual(x.b.commands.map(c=>(c.args||[]).length),GOLDEN.nombreArguments,nom+' : mêmes arguments (apply : 2)');
-  assert.equal(h(neutre(x.b.commands)),GOLDEN.empreinteCommandes,nom+' : commandes identiques octet pour octet');
+  assert.equal(h(versionGolden(neutre(x.b.commands))),GOLDEN.empreinteCommandes,nom+' : commandes identiques octet pour octet');
   assert.deepEqual(x.adapter.calls,GOLDEN.appels,nom);assert.deepEqual(x.adapter.applyArgs,GOLDEN.applyArgs,nom+' : apply sans option');
   assert.deepEqual(metier(x.b),GOLDEN.metier,nom+' : mêmes événements');
   assert.equal(h(neutre(decisions(x.b))),GOLDEN.empreinteDecisions,nom+' : décisions identiques');

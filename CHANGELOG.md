@@ -20,6 +20,7 @@ Consigne : `consignes/seance-terrain-4.9.5-test-5-2026-10-17.md` ; retour arriè
   - **Dernière empreinte de contrat connue** dans `chrome.storage.local` (`banane50ContratDernier`), consignée sans jamais donner d'avis (U1, D-153).
 - **Coupé** : déplacer la vue (`deplacerVue.actif=false`, pièce `amenerDansLaVue`, D-156) et tous les chemins d'activation (`reglesMetier.actif`, `hauteurApprise.appliquer`, `fauxVertOmbre.differer`, `conventionPlafond`).
 - Essais de version : `tests/version-4955.test.cjs` (remplace `version-4954`), `tests/consigne-4955.test.cjs` (remplace `consigne-4954`).
+- `tests/deplacer-vue-sw.test.cjs` : l'empreinte des commandes de 50-base (prise sous la 4.9.5.4) est comparée à version égale ; seul `extensionVersion` de chaque `apply` est ramené à 4.9.5.4 avant de hacher.
 - Essai de fumée dans Chromium (hors du banc) : l'extension se charge, le panneau s'ouvre, la carte « À contrôler » s'affiche sur un lot simulé dans le vrai service worker.
 
 ## 4.9.5.4 — 4.9.5 test 4 (16/10)
