@@ -110,3 +110,12 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 **Réponse de Mic (D-172)** : SKIP seulement si aucun point ne s'affiche ou si un seul scanner s'affiche ; sinon visiter et corriger, cuts 0 à 3 compris. À faire : détection SKIP en ombre, mesurée contre les SKIP de Mic.
 
 **17 octobre, 10 h 40 (D-173)** : la test 7 attend une avancée réelle : règles métier qui agissent, chiffrées et jugées sur parties réservées, plus un panneau réorganisé (`claude/50-panneau-t7`, élargi). Ne pas fabriquer la test 7 avant.
+
+**17 octobre, 13 h 05 UTC** : 83 % de la fenêtre est consommée ; elle se réinitialise vers 16 h 40 UTC.
+- **Atelier P-7 arrêté exprès** pour économiser. Son diagnostic est fini : `scratchpad/p7/CATALOGUE.md`.
+- **À la reprise**, relancer :
+  ```
+  Workflow({scriptPath: "/root/.claude/projects/-home-user/cc0e4631-960e-5f55-b126-e7123e84b5ca/workflows/scripts/p7-pose-adv-grappes-wf_56d882aa-e4e.js", resumeFromRunId: "wf_7d519878-737"})
+  ```
+  Le diagnostic reviendra du cache, si c'est la même session.
+- **Tournent encore** : la revue de la relecture, le départ sur un vert et le PN robuste.
