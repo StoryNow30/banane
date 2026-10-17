@@ -110,7 +110,14 @@
      * sort d'après son numéro, reste en référence pour surveiller la qualité (validé le 13 octobre :
      * −64 % par cut sur le lot de 112 cuts de la 4.9.0.8, qualité identique). « tirage » reste lisible. */
     modeRapide: 'echantillon',
-    rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true }),
+    /* D-157 (5.0) : `clicHumain`, le clic de pose du mode rapide (src/adapter-page.js, fiches/RAPIDE_HUMAIN.md).
+     * La pose directe clique le rail gauche depuis la vue du rail droit : vers NDC −7, hors de la fenêtre, un clic
+     * qu'aucun humain ne peut faire. 'tel-quel' (défaut) : comme avant, à l'octet près. 'gauche-recentre' : rail
+     * droit en direct, rail gauche avec recentrage (environ +0,32 s par cut rapide). 'tout-recentre' : les deux rails
+     * avec recentrage, le chemin des cuts de référence (environ +0,65 s). Les deux modes corrigés ne cliquent jamais
+     * hors de la partie visible du canevas (marge de 0,99). Ce n'est pas une pièce : il ne figure pas dans `pieces`.
+     * Décision à Mic. */
+    rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true, clicHumain: 'tel-quel' }),
   });
 
   /* --- Export : vidage automatique et segmentation --- */

@@ -125,6 +125,8 @@
    }
    /* D4 (4.8.5) : relevé passif d'ESV, après la réponse d'une capture ; transmis tel quel au journal. */
    if(e.data.kind==='banane3:releve'){if(e.data.releve&&typeof e.data.releve==='object')chrome.runtime.sendMessage({kind:'esv-releve',releve:e.data.releve}).catch(()=>{});return;}
+   /* D-157 (5.0) : clics de pose calculés hors de la partie visible du canevas, relevés après la réponse ; transmis tels quels. */
+   if(e.data.kind==='banane3:clic-hors-vue'){if(e.data.releve&&typeof e.data.releve==='object')chrome.runtime.sendMessage({kind:'clic-hors-vue',releve:e.data.releve}).catch(()=>{});return;}
    const p=pending.get(e.data.id);if(!p)return;
    if(e.data.kind==='banane3:progress'){
      p.acknowledged=true;p.stage=e.data.stage;p.detail=e.data.detail;

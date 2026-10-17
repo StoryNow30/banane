@@ -200,8 +200,10 @@
   *   pose      (P1) : ESV pose le rail du côté courant au point du plan de coupe visé par le clic, même
   *                    hors de la vue : le bouton de rail fixe le côté, le clic part dans la même tâche,
   *                    calculé avec la caméra active ; sans attendre le recentrage (< 0,6 mm, 1 à 4 ms).
-  * Chaque pièce se coupe seule dans les réglages ; une pièce qui ne conclut pas retombe sur la 4.9.0.5. */
- const RAPIDE={lecture:true,selection:true,signal:true,pose:true,...(P.rapide||{})};
+  * Chaque pièce se coupe seule dans les réglages ; une pièce qui ne conclut pas retombe sur la 4.9.0.5.
+  * D-157 : `rapide.clicHumain` n'est pas une pièce (voir CLIC_HUMAIN, plus bas) ; il est lu à part. */
+ const {clicHumain:REGLE_CLIC_HUMAIN,...PIECES_REGLEES}=P.rapide||{};
+ const RAPIDE={lecture:true,selection:true,signal:true,pose:true,...PIECES_REGLEES};
  const piece=(mode,nom)=>mode==='rapide'&&RAPIDE[nom]!==false;
  /* Prochaine image d'ESV ; repli à 100 ms si la page ne dessine plus (onglet caché). */
  function prochaineImage(){return new Promise(resolve=>{let fini=false,minuterie=null;
@@ -435,7 +437,7 @@
    }
    guard();const data=M3.merge(...captures);guard();
    data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts,lecture,regleLecture:P.modeRapide??P.lectureI1??null,
-     pieces:lecture==='rapide'?Object.keys(RAPIDE).filter(n=>RAPIDE[n]!==false):[]};
+     pieces:lecture==='rapide'?Object.keys(RAPIDE).filter(n=>RAPIDE[n]!==false):[],...(CLIC_CORRIGE?{clicHumain:CLIC_HUMAIN}:{})};
    /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
     * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
@@ -453,14 +455,14 @@
  }
  /* Un refus d'émission doit être explicable sans rejeu : repère, source, cible,
   * centre de vue, NDC par composante et bornes retenues. */
- function refusalDetail(side,now,target,cam,view){
+ function refusalDetail(side,now,target,cam,view,motif=null){
    const fmt=p=>Array.isArray(p)?p.map(v=>Number(v).toFixed(6)).join(', '):'non-observé';
-   const reason=!cam?'caméra non lisible':!cam.viewport?'viewport absent'
+   const reason=motif?MOTIF_CLIC[motif]||motif:!cam?'caméra non lisible':!cam.viewport?'viewport absent'
      :'hors bornes : '+['x','y','z'].filter((_,i)=>Math.abs(view.ndc[i])>1).join('+');
    return `[repère=scene-relative frameId=${now.identity.frameId??'non-observé'}`
      +` ; source=(${fmt(now.rails[side]?.positionSceneRelative)}) ; cible=(${fmt(target)})`
      +` ; centre de vue=(${fmt(cam?.cameraToSceneRelative?.slice(12,15))})`
-     +` ; ndc=(${fmt(view?.ndc)}) ; bornes=[-1,1] par composante`
+     +` ; ndc=(${fmt(view?.ndc)}) ; bornes=${motif?`[-${CLIC_MARGE},${CLIC_MARGE}] en x et y, dans la fenêtre`:'[-1,1] par composante'}`
      +` ; viewport=${cam?.viewport?`${cam.viewport.width.toFixed(1)}x${cam.viewport.height.toFixed(1)}px`:'absent'}`
      +` ; raison=${reason}]`;
  }
@@ -508,6 +510,42 @@
   * est lu, sans attendre les 5 s. Même tolérance qu'avant (1 mm), relue ensuite
   * par le moteur. */
  const DECALAGES_CLIC=[[0,0],[.5,.5],[-.5,-.5]];
+ /* 5.0 (D-157) — CLIC HUMAIN DU MODE RAPIDE (fiches/RAPIDE_HUMAIN.md).
+  * La pose directe (P1) presse le bouton du rail et clique dans la même tâche, avec la caméra encore active. Depuis la capture,
+  * cette caméra est celle du rail DROIT (la capture lit le gauche puis le droit) : la cible gauche y projette à NDC x ≈ −7,
+  * soit environ 2 000 px à gauche du canevas, hors de la fenêtre. Un humain ne peut pas produire ce clic (D-157 : 185 cuts sur
+  * 185 en partie 29, 205 sur 205 en partie 1 du second projet). Réglage `pilote.rapide.clicHumain` :
+  *   'tel-quel'        (défaut) : le comportement de la base, à l'octet près ;
+  *   'gauche-recentre' : le rail droit d'abord, posé en direct depuis la vue active ; le rail gauche ensuite, avec recentrage ;
+  *   'tout-recentre'   : les deux rails avec recentrage, le chemin des cuts de référence (comme la pièce « pose » coupée).
+  * Valeur absente ou inconnue : 'tel-quel'. Dans les deux modes corrigés, AUCUN clic de pose ne part hors de la partie visible
+  * du canevas : NDC du point cliqué dans ±0,99 (la marge du lot, KI-051, et de « déplacer la vue »), et point dans la fenêtre
+  * quand la page en donne la taille. La pose directe est refusée AVANT de presser le bouton (la caméra ne change pas quand on le
+  * presse) : pose avec recentrage, le repli existant. Le clic après recentrage est refusé comme une cible hors de la vue
+  * (« Position proposée hors de la vue »), sans clic.
+  * Garde-fou, quel que soit le mode : chaque clic de pose calculé hors de la partie visible est relevé (`clicsHorsVue`), sans
+  * rien changer au clic, et part au service worker APRÈS la réponse (message `banane3:clic-hors-vue`, comme le relevé D4). */
+ const CLIC_HUMAIN=['gauche-recentre','tout-recentre'].includes(REGLE_CLIC_HUMAIN)?REGLE_CLIC_HUMAIN:'tel-quel',CLIC_CORRIGE=CLIC_HUMAIN!=='tel-quel';
+ const CLIC_MARGE=.99,MOTIF_CLIC={'hors-canevas':'hors du canevas','marge':'hors de la marge de 0,99','hors-fenetre':'hors de la fenêtre','vue-illisible':'vue illisible'};
+ /* Point du clic sur l'écran : la formule de la pose, à l'identique (même ordre d'opérations). */
+ const pointClic=(r,ndc,dx=0,dy=0)=>[r.left+(ndc[0]+1)*r.width/2+dx,r.top+(1-ndc[1])*r.height/2+dy];
+ /* Ce point est-il dans la partie visible du canevas ? `null` si oui, sinon la raison. */
+ function horsVueClic(r,x,y){
+   if(!r||![x,y,r.left,r.top,r.width,r.height].every(Number.isFinite)||!(r.width>0)||!(r.height>0))return 'vue-illisible';
+   const nx=(x-r.left)/r.width*2-1,ny=1-(y-r.top)/r.height*2;
+   if(Math.abs(nx)>1||Math.abs(ny)>1)return 'hors-canevas';
+   if(Math.abs(nx)>CLIC_MARGE||Math.abs(ny)>CLIC_MARGE)return 'marge';
+   const largeur=window.innerWidth,hauteur=window.innerHeight;
+   if(Number.isFinite(largeur)&&Number.isFinite(hauteur)&&largeur>0&&hauteur>0&&(x<0||y<0||x>=largeur||y>=hauteur))return 'hors-fenetre';
+   return null;}
+ /* Relevé du garde-fou : compact, borné (12 clics au plus par commande), jamais bloquant. */
+ const clicsHorsVue=[];
+ function noterClicHorsVue(cote,chemin,essai,raison,r,x,y,expected){try{if(clicsHorsVue.length>=12)return;
+   const a=v=>Math.round(v*1000)/1000,b=v=>Math.round(v*10)/10;
+   clicsHorsVue.push({cote,chemin,essai,raison,lecture:lectureDuCut(expected),ndc:[a((x-r.left)/r.width*2-1),a(1-(y-r.top)/r.height*2)],client:[b(x),b(y)]});}catch{}}
+ /* Pose directe d'un mode corrigé : la cible doit être dans la partie visible de la vue ACTIVE. */
+ function directeVisible(target){try{const c=context(),v=projectToView(L.cameraSnapshot(c.viewer,c.frame.origin),target);
+   return !!v?.inView&&v.ndc.every(Number.isFinite)&&!horsVueClic(v.viewport,...pointClic(v.viewport,v.ndc));}catch{return false;}}
  const pixelMm=cam=>cam?.viewport?.width&&Array.isArray(cam.projection)&&cam.projection[0]?2/cam.projection[0]/cam.viewport.width*1000:NaN;
  async function clickPosition(side,target,expected,vue=null){
    await select(side,expected);let dernier=null,pixel=NaN;
@@ -517,13 +555,17 @@
        const nom=side==='left'?'gauche':'droit',poses=vue.poses.map(s=>s==='left'?'gauche':'droit');
        throw Error(`Vue ESV non amenée sur la cible du rail ${nom} (${r.raison}) : `+(poses.length?`le rail ${poses.join(' et ')} est déjà posé, rien n’est validé. État à réconcilier.`:'rien n’a été posé.')
          +(remise.ok===false?' Vue ESV non restituée : contrôle-la avant de reprendre.':''));}}
-   for(const [dx,dy] of DECALAGES_CLIC){
+   for(const [essai,[dx,dy]] of DECALAGES_CLIC.entries()){
      const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
      const view=projectToView(cam,target);
      if(!view?.inView)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view));
      const r=view.viewport,ndc=view.ndc,avant=now.rails[side].positionSceneRelative;pixel=pixelMm(cam);
+     /* D-157 : mode corrigé, aucun clic hors de la partie visible ; tel-quel, le clic part comme avant, relevé. */
+     const [x,y]=pointClic(r,ndc,dx,dy),horsVue=horsVueClic(r,x,y);
+     if(horsVue&&CLIC_CORRIGE)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view,horsVue));
+     if(horsVue)noterClicHorsVue(side,'recentre',essai+1,horsVue,r,x,y,expected);
      c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
-       clientX:r.left+(ndc[0]+1)*r.width/2+dx,clientY:r.top+(1-ndc[1])*r.height/2+dy,button:0,buttons:1}));
+       clientX:x,clientY:y,button:0,buttons:1}));
      /* Posé : à 1 mm de la cible ; ou déplacé, puis immobile sur trois lectures. */
      let precedent=null,stable=0;
      const pose=await waitFor(()=>{const s=assertExpected(expected),p=s.rails[side].positionSceneRelative;
@@ -548,13 +590,18 @@
    const autre=side==='left'?'right':'left',avant=assertExpected(expected),[id,classe]=CLASSE_COTE[side];
    /* Sans témoin du côté d'ESV (classe du bouton), rien n'est tenté : pose avec recentrage. */
    if(typeof document.getElementById(id)?.classList?.contains!=='function')return null;
+   /* D-157, mode corrigé : cible hors de la partie visible de la vue active, rien n'est pressé ni cliqué. */
+   if(CLIC_CORRIGE&&!directeVisible(target))return null;
    nativeClick(selectors[side]);if(!document.getElementById(id).classList.contains(classe))return null;
    const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin),view=projectToView(cam,target);
    if(!view||!view.ndc.every(v=>Number.isFinite(v)&&Math.abs(v)<50))return null;
    const r=view.viewport,ndc=view.ndc;
-   for(const [dx,dy] of DECALAGES_CLIC){
+   for(const [essai,[dx,dy]] of DECALAGES_CLIC.entries()){
+     const [x,y]=pointClic(r,ndc,dx,dy),horsVue=horsVueClic(r,x,y);
+     if(CLIC_CORRIGE&&(horsVue||!view.inView))return null;
+     if(horsVue)noterClicHorsVue(side,'directe',essai+1,horsVue,r,x,y,expected);
      c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
-       clientX:r.left+(ndc[0]+1)*r.width/2+dx,clientY:r.top+(1-ndc[1])*r.height/2+dy,button:0,buttons:1}));
+       clientX:x,clientY:y,button:0,buttons:1}));
      const s=assertExpected(expected);
      if(C.distance(s.rails[autre].positionSceneRelative,avant.rails[autre].positionSceneRelative)>1e-9)
        throw Error('Le clic a déplacé le rail '+(autre==='left'?'gauche':'droit')+' au lieu du rail '+(side==='left'?'gauche':'droit')+'. État à réconcilier.');
@@ -681,9 +728,13 @@
    const plan=options.deplacerVue&&typeof options.deplacerVue==='object'?options.deplacerVue:null;
    const reglages=plan?reglagesVue(plan):null,vue=plan?{etat:etatVue(reglages),reglages,progress,rapports:[],poses:[]}:null;
    const expected=K.expectedPoses(before,proposals),directe=!vue&&piece(lectureDuCut(before.identity),'pose');
-   for(const s of ['left','right']){if(cancelled)throw Error('Action interrompue.');
-     if(directe&&poseDirecte(s,expected[s].positionSceneRelative,before.identity))continue;
-     if(directe)progress('apply-repli',{side:s});
+   /* D-157 : 'gauche-recentre' pose d'abord le rail droit, celui de la vue active après la capture ; 'tout-recentre' ne pose
+    * jamais en direct. 'tel-quel' : gauche puis droit, en direct, comme avant. */
+   const ordre=directe&&CLIC_HUMAIN==='gauche-recentre'?['right','left']:['left','right'];
+   const enDirect=s=>directe&&(CLIC_HUMAIN==='tel-quel'||CLIC_HUMAIN==='gauche-recentre'&&s==='right');
+   for(const s of ordre){if(cancelled)throw Error('Action interrompue.');
+     if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity))continue;
+     if(enDirect(s))progress('apply-repli',{side:s});
      await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue);if(vue)vue.poses.push(s);}
    if(!vue)return snapshot();
    const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
@@ -1321,6 +1372,10 @@
    try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
    catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}
    finally{running.delete(id);actionsEnCours.delete(id);
+     /* D-157 : le relevé des clics hors vue, après la réponse ; rien de ce qui suit ne peut la toucher. */
+     if((action==='apply'||action==='restore')&&clicsHorsVue.length)try{const clics=clicsHorsVue.splice(0),cible=args[0]?.identity;
+       window.postMessage({kind:'banane3:clic-hors-vue',channel,requestId:id,releve:{requestId:id,action,mode:CLIC_HUMAIN,
+         identity:Number.isInteger(cible?.cut)?{part:Number.isInteger(cible.part)?cible.part:null,cut:cible.cut}:null,clics}},location.origin);}catch{}
      /* D4 : le relevé passif, après la réponse ; rien de ce qui suit ne peut la toucher. */
      if(action==='capture')try{window.postMessage({kind:'banane3:releve',channel,requestId:id,releve:releverEsv(id,args[0]?.identity)},location.origin);}catch{}}});
 })();

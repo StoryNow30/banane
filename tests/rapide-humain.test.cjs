@@ -44,7 +44,7 @@ test('modes corrigés : aucun clic hors de la partie visible du canevas, dans le
  for(const mode of MODES_CORRIGES)for(const nom of Object.keys(H.SCENARIOS)){
   const r=await jouer(nom,mode);
   for(const c of clics(r))assert.ok(H.clicVisible(c,r.vue,r.fenetre),`${mode} / ${nom} : clic (${c.clientX}, ${c.clientY}) hors de la partie visible`);
-  if(!r.erreur)for(const s of ['left','right'])assert.ok(r.ecartCibleMm[s]<=1,`${mode} / ${nom} : ${s} à ${r.ecartCibleMm[s]} mm`);
+  if(!r.erreur&&!H.SCENARIOS[nom].restaurer)for(const s of ['left','right'])assert.ok(r.ecartCibleMm[s]<=1,`${mode} / ${nom} : ${s} à ${r.ecartCibleMm[s]} mm`);
   assert.equal(r.horsVue.length,0,`${mode} / ${nom} : aucun relevé hors vue`);
  }
 });
@@ -65,10 +65,13 @@ test('gauche-recentre : vue active sur le rail gauche au départ : le droit n\'e
  assert.equal(r.dureeMs,GOLDEN.scenarios.reference.dureeMs);
 });
 
-test('tout-recentre : exactement le chemin des cuts de référence (même trace que la pièce « pose » coupée)',async()=>{
+test('tout-recentre : exactement le chemin des cuts de référence (même trace que la pièce « pose » coupée), marge de 0,99 en plus',async()=>{
  for(const nom of Object.keys(H.SCENARIOS)){
   if(H.SCENARIOS[nom].mode!=='rapide')continue;
   const a=await jouer(nom,'tout-recentre'),b=await jouer(nom,undefined,{rapide:{pose:false}});
+  /* La pièce coupée clique encore entre 0,99 et 1 ou hors de la fenêtre ; « tout-recentre » refuse ces clics, et seulement eux. */
+  if(!clics(b).every(c=>H.clicVisible(c,b.vue,b.fenetre))){assert.match(a.erreur,/^Position proposée hors de la vue : /,nom);
+   assert.ok(clics(a).every(c=>H.clicVisible(c,a.vue,a.fenetre)),nom);assert.equal(JSON.stringify(b.journal).startsWith(JSON.stringify(a.journal).slice(0,-1)),true,nom+' : même trace jusqu\'au refus');continue;}
   assert.equal(JSON.stringify(a.journal),JSON.stringify(b.journal),nom+' : trace');
   assert.deepEqual(a.etapes,b.etapes,nom+' : étapes');assert.equal(a.erreur,b.erreur,nom);assert.equal(a.dureeMs,b.dureeMs,nom);
  }

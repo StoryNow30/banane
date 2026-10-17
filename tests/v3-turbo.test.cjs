@@ -43,7 +43,7 @@ function nuage(f){const F=require('./v242/fixtures.cjs'),L=require('../vendor/li
  f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree.ClipTask=F.enums.ClipTask;f.ctx.Potree.ClipMethod=F.enums.ClipMethod;f.ctx.BananeLidar.capture=opts=>L.capture(opts);return pc;}
 
 test('réglage : mode rapide tiré cut par cut (neuf sur dix depuis la 4.9.0.9), quatre pièces actives, ligne du panneau',()=>{
- assert.equal(S.pilote.modeRapide,'echantillon');assert.deepEqual({...S.pilote.rapide},{lecture:true,selection:true,signal:true,pose:true});
+ assert.equal(S.pilote.modeRapide,'echantillon');const {clicHumain,...pieces}=S.pilote.rapide;assert.deepEqual(pieces,{lecture:true,selection:true,signal:true,pose:true});assert.equal(clicHumain,'tel-quel');
  const l=S.describe().find(x=>x.nom==='Mode rapide (V3)');assert.equal(l.valeur,'neuf cuts sur dix (un sur dix en référence, tiré au sort)');
  assert.match(l.pourquoi,/mêmes contrôles, mêmes points/);
 });

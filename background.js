@@ -127,6 +127,33 @@ function rangerReleve(r){try{if(!r||typeof r!=='object')return;const K=globalThi
   * (jamais réemployé) ; le départ ne s'en sert que s'il est celui du cut N. */
  const b=engine.s.batch;if(b?.state==='RUNNING')b.totalReleve={part:e.identity?.part??null,cut:e.identity?.cut??null,...totalPartie(e),traites:(e.compteursVus??1)>1?null:(e.compteur?.traites??null),at:e.at||e.timestamp};
  void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
+/* 5.0 (D-157) — GARDE-FOU « CLIC HORS VUE ». La page relève chaque clic de pose calculé hors de la partie visible du canevas
+ * (NDC au-delà de ±0,99, ou hors de la fenêtre), sans rien changer au clic, et l'envoie après la réponse (fiches/RAPIDE_HUMAIN.md).
+ * Ici : JOURNALISATION SEULE, comme le relevé D4 : `store.putEvent` sans attente, jamais `engine.event` ; ni état du moteur (hors le
+ * compteur), ni décision, ni commande n'en dépendent. Poids sobre : un compteur par lot (`batch.clicsHorsVue`), les cinq premiers
+ * clics du lot en exemples (`clic-hors-vue`, total courant), puis un bilan à la fin du lot s'il y en a eu (`clic-hors-vue-bilan`).
+ * Hors lot (Écho, pose assistée) : compteur de la vie du service worker. Le message vient de la page : chaque champ est revérifié. */
+const CLICS_HORS_VUE={exemples:5,parReleve:12},clicsHorsVueHorsLot={total:0,exemples:0};
+const texteCourt=(v,n)=>typeof v==='string'?v.slice(0,n):null;
+const paireFinie=(v,d)=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)?v.map(x=>Math.round(x*10**d)/10**d):null;
+function rangerClicHorsVue(r){try{if(!r||typeof r!=='object'||!Array.isArray(r.clics))return;
+ const clics=r.clics.slice(0,CLICS_HORS_VUE.parReleve).filter(c=>c&&typeof c==='object').map(c=>({cote:c.cote==='left'||c.cote==='right'?c.cote:null,
+   chemin:texteCourt(c.chemin,20),raison:texteCourt(c.raison,40),essai:Number.isInteger(c.essai)?c.essai:null,lecture:texteCourt(c.lecture,20),
+   ndc:paireFinie(c.ndc,3),client:paireFinie(c.client,1)}));
+ if(!clics.length)return;
+ const b=engine?.s?.batch,enLot=!!b?.id&&b.state==='RUNNING';
+ if(enLot&&!(b.clicsHorsVue&&typeof b.clicsHorsVue==='object'))b.clicsHorsVue={total:0,exemples:0};
+ const n=enLot?b.clicsHorsVue:clicsHorsVueHorsLot;n.total+=clics.length;
+ const place=Math.max(0,CLICS_HORS_VUE.exemples-n.exemples);if(!place)return;
+ const exemples=clics.slice(0,place);n.exemples+=exemples.length;
+ const e={eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'clic-hors-vue',batchId:enLot?b.id:null,
+   identity:Number.isInteger(r.identity?.cut)?{part:entierOuNul(r.identity.part),cut:r.identity.cut}:null,
+   action:r.action==='apply'||r.action==='restore'?r.action:null,mode:texteCourt(r.mode,20),requestId:texteCourt(r.requestId,64),total:n.total,exemples};
+ void Promise.resolve(store.putEvent(e)).catch(()=>{});}catch{}}
+/* Bilan du lot clos : une fois, et seulement s'il y a eu des clics hors vue (aucun événement = aucun clic hors vue). */
+function bilanClicsHorsVue(b){try{const n=b?.clicsHorsVue;if(!b?.id||!n||n.bilan||!(n.total>0)||!OBS_CLOS.includes(b.state))return;n.bilan=true;
+ void Promise.resolve(store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'clic-hors-vue-bilan',
+   batchId:b.id,etat:b.state,total:n.total,exemples:n.exemples})).catch(()=>{});}catch{}}
 /* V1 (test 2, D-077/D-078) — RANGEMENT DE L'OBSERVATEUR PASSIF DE LA PAGE ESV.
  * Le pont relaie ce que l'observateur de la page a vu (écriture de validation, pages de
  * la liste des coupes, fichiers de points). Ici : JOURNALISATION SEULE.
@@ -180,15 +207,15 @@ function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
  * partie après un différé, SKIP explicite du dernier cut) : aucun jalon `batch-state`, la mesure V1 du lot restait ouverte
  * et le vidage du cache était refusé indéfiniment. Elle est close ici, comme pour « Arrêter » hors tâche (`operatorAfter`),
  * avec l'état réel du lot ; jamais pendant une tâche (la boucle la clôt elle-même), jamais deux fois. */
-function cloreMesureHorsBoucle(){try{const b=engine?.s?.batch,t=timing?.batch;
+function cloreMesureHorsBoucle(){bilanClicsHorsVue(engine?.s?.batch);try{const b=engine?.s?.batch,t=timing?.batch;
  if(b?.id&&!engine.task&&OBS_CLOS.includes(b.state)&&t?.id===b.id&&!t.closed)timing.closeBatch(b.state);}catch{/* mesure seule : jamais bloquant */}}
-function marquerFinLot(b,cause){if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
+function marquerFinLot(b,cause){bilanClicsHorsVue(b);if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
 /* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
-function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;
+function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;bilanClicsHorsVue(b);
  if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));
  else if(state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel')marquerFinLot(b,'arret-manuel');}
 /* Avant un nouveau lot : l'ancien, clos, garde son instant de fin (arrêt au dernier cut compris) et son contexte. */
-function retenirLotClos(){const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
+function retenirLotClos(){bilanClicsHorsVue(engine?.s?.batch);const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
  const at=finDuLot(b);if(Number.isFinite(at))poserFin(b,at,obsFins.get(b.id)?.cause||'dernier-cut');}
 /* Instant de fin du lot (ms) : arrêt au dernier cut = `stoppedAtEnd.at` (absente ou illisible : NaN, jamais devinée) ; sinon fin relevée ici. */
 function finDuLot(b){if(b.state==='STOPPED'&&b.stoppedAtEnd)return Date.parse(b.stoppedAtEnd.at);const f=obsFins.get(b.id);return f?f.at:NaN;}
@@ -1964,6 +1991,7 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   respond(sender.tab.id===selectedTab?{...launcherState(),observation:{seance:globalThis.BananeSettings?.observateurPassif?.actif!==false&&!!seanceObservateur()}}:launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
+ if(m.kind==='clic-hors-vue'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerClicHorsVue(m.releve);return;}
  /* OBS-3 (relecture du test 3) : le message qui réveille le service worker arrive avant `ready` (onglet choisi et fins
   * pas encore relus) ; il était ignoré sans réponse et ses entrées, déjà retirées de la file du pont, perdues sans trace.
   * Il est maintenant traité une fois `ready` résolu. */
