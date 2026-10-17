@@ -2,7 +2,7 @@
 /* 5.0, revue de la relecture (D-175, correction 1) — LOT BORNÉ : le dernier cut (113), posé par le lot puis corrigé et validé par Mic,
  * est un cut du lot : traversé, jamais réécrit, même s'il est dans un PN et que la règle y verrait plus de 8 mm. Au-delà de la borne,
  * un cut ROUGE (115, invalide dans la liste d'ESV) est relu en ombre mais jamais posé : la garde exige le statut `valid` lu dans ESV.
- * Un vert d'ESV au-delà de la borne (116) est corrigé (contrôle). Fichier de réglages proposé RÉEL (PN seule). Données synthétiques. */
+ * Un vert d'ESV au-delà de la borne (116) est corrigé (contrôle). Fichier de réglages proposé RÉEL. Données synthétiques. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {H,j,apresLot}=require('./helpers/relecture-essais.cjs');
 const FICHIER=JSON.parse(fs.readFileSync(path.join(__dirname,'../datasets/relecture-reglages-proposes.json'),'utf8'));

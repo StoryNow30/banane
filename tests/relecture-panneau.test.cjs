@@ -14,7 +14,7 @@ test('panel.html : carte #carte-relecture dans l’emplacement (d) « Relecture 
  assert.ok(h.indexOf('id="groupe-relecture"')<debut&&h.indexOf('id="groupe-relecture"')>h.indexOf('id="groupe-resultats"'));
  assert.equal((h.match(/id="carte-relecture"/g)||[]).length,1,'une seule carte');
  /* Revue (correction 9) : l'ombre dit qu'ESV marque « vu » les cuts neufs ; « corriger » dit son geste (Maj+Espace, correction 4). */
- for(const [id,txt] of [['relecture-coupee','Coupée'],['relecture-ombre','Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)'],['relecture-corriger','Corriger (seulement les verts sûrs, validés par Maj+Espace)']])
+ for(const [id,txt] of [['relecture-coupee','Coupée'],['relecture-ombre','Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)'],['relecture-corriger','Corriger (verts sûrs du PN, de l’ADV et des abords, validés par Maj+Espace)']])
   assert.match(bloc,new RegExp(`id="${id}"[^>]*> ${txt.replace(/[()+]/g,'\\$&')}`));
  assert.doesNotMatch(bloc,/ne modifie rien\)/,'plus de « ne modifie rien » sans le « vu »');
  for(const id of ['relecture-dernier-l','relecture-dernier','relecture-prochain','relecture-ligne','relecture-arreter','relecture-lancer','relecture-note','relecture-reglages','relecture-acquitter'])assert.ok(bloc.includes(`id="${id}"`),id);
@@ -68,6 +68,14 @@ test('préparation : « Lancer » caché, « Arrêter » visible ; réglages : s
  assert.equal(el['relecture-ligne'].textContent,'Relecture en préparation : elle part dans un instant.');
  assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : fichier proposé (« propose »).');
  for(const id of ['relecture-coupee','relecture-ombre','relecture-corriger'])assert.equal(el[id].disabled,true);
+ /* D-180 : la carte dit quelles zones corrigent (un interrupteur par zone). */
+ K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null,zones:{pn:true,adv:true,abords:true,'vert-hors-zone':false}}});K.afficher();
+ assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : fichier proposé (« propose »). Zones qui corrigent : PN, ADV, abords ; les autres restent en ombre.');
+ K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null,zones:{pn:true,adv:false,abords:false,'vert-hors-zone':false}}});K.afficher();
+ assert.match(el['relecture-reglages'].textContent,/Zones qui corrigent : PN ; les autres restent en ombre\./);
+ K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null,zones:{pn:false,adv:false,abords:false,'vert-hors-zone':false}}});K.afficher();
+ assert.match(el['relecture-reglages'].textContent,/Aucune zone ne corrige : tout reste en ombre\./);
+ K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:{lotId:'L1',etat:'preparation',mode:'corriger',faits:0,total:0,message:'Relecture en préparation : elle part dans un instant.'},reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null}});K.afficher();
  K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'defaut',statut:'provisoire',correctionPermise:false,raison:'fichier proposé absent ou illisible (défaut provisoire)'},
   correctionInterrompue:{lotId:'L1',part:23,cut:109}});K.afficher();
  assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : défaut provisoire. « Corriger » restera en ombre : fichier proposé absent ou illisible (défaut provisoire).');
@@ -83,6 +91,6 @@ test('CONTENU.txt : le choix figé dans le lot et le bilan de sa passe ; rien qu
  assert.equal(C.texteContenu({id:'L1',scope:{part:8}}),'');assert.equal(C.texteContenu(null),'');
  assert.equal(C.texteContenu({id:'L1',scope:{relecture:'ombre'}},null),'Relecture après le lot L1 : ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché) (ombre).\n');
  assert.equal(C.texteContenu({id:'L1',scope:{relecture:'corriger'}},{lotId:'L1',etat:'finie',faits:85,total:85,corriges:3,vus:40,mode:'corriger',modeEffectif:'corriger'}),
-  'Relecture après le lot L1 : corriger (seulement les verts sûrs, validés par Maj+Espace) (corriger) ; passe : finie, 85 sur 85 relus, 3 corrigés, 40 cuts marqués « vu » par ESV (événements relecture-ombre dans le journal).\n');
+  'Relecture après le lot L1 : corriger (verts sûrs du PN, de l’ADV et des abords, validés par Maj+Espace) (corriger) ; passe : finie, 85 sur 85 relus, 3 corrigés, 40 cuts marqués « vu » par ESV (événements relecture-ombre dans le journal).\n');
  assert.equal(C.texteContenu({id:'L2',scope:{relecture:'ombre'}},{lotId:'L1',etat:'finie',faits:1,total:1}),'Relecture après le lot L2 : ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché) (ombre).\n','passe d’un autre lot : pas de bilan');
 });

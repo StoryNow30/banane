@@ -2053,7 +2053,7 @@ async function relectureAcquitter(args){const cut=args?.cut;if(!Number.isInteger
 /* Ce que le panneau affiche : avancement, comptes, message ; corrections interrompues s'il y en a. */
 /* Résumé des réglages que la prochaine passe lirait (carte : source, et si « corriger » pourra corriger). */
 async function relectureReglagesResume(){try{const r=await relectureReglages(),q=globalThis.BananeRelectureCritere.correctionPermise(r);
- return {source:r.source,statut:r.statut,correctionPermise:q.ok,raison:q.raison};}catch{return null;}}
+ return {source:r.source,statut:r.statut,correctionPermise:q.ok,raison:q.raison,zones:Object.fromEntries(Object.entries(r.zones||{}).map(([z,x])=>[z,x?.corriger===true]))};}catch{return null;}}
 async function relectureEtat(){const p=relecture.passe,intentions=await relectureIntentions(),b=engine?.s?.batch;
  return {choix:await relectureChoix(),lot:b?.id?{id:b.id,mode:relectureDuLot(b)||'coupee',etat:b.state}:null,reglages:await relectureReglagesResume(),
   passe:p?{lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,etat:p.etat,auto:p.auto===true,total:p.total,faits:p.faits,corriges:p.corriges,refusees:p.refusees,
@@ -2213,7 +2213,8 @@ async function relectureLancer({auto=false,passe=null}={}){
   const b=engine.s.batch,affiches=[...new Set([...sel.cuts.map(c=>c.cut),...sel.plages.flatMap(x=>x.traverses||[])])];
   const neufs=entree.vu&&affiches.every(c=>entree.vu.has(c))?affiches.filter(c=>entree.vu.get(c)===false).length:null;
   Object.assign(p,{etat:'en-cours',modeEffectif,total:sel.total,cutsNeufsAnnonces:neufs,
-   reglages:{source:reglages.source,statut:reglages.statut,refus:reglages.refus??null,invalides:reglages.invalides??[],correctionPermise:permis.ok,raison:permis.raison},
+   reglages:{source:reglages.source,statut:reglages.statut,refus:reglages.refus??null,invalides:reglages.invalides??[],correctionPermise:permis.ok,raison:permis.raison,
+    zones:Object.fromEntries(Object.entries(reglages.zones||{}).map(([z,x])=>[z,x?.corriger===true]))},
    noteMode:motif?`Mode « ${modeEffectif} »${modeEffectif!==p.mode?` (au lieu de « ${p.mode} »)`:''} : ${motif}.`:null});
   p.message=p.noteMode;
   try{await chrome.storage.local.set({[CLE_RELECTURE_PASSE]:{lotId:p.lotId,gen:p.gen,debut:p.debut,mode:p.mode,modeEffectif}});}catch{/* mémoire seule */}

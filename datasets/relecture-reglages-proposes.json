@@ -2,7 +2,7 @@
   "format": "ariane-relecture-reglages-1",
   "statut": "propose",
   "date": "2026-10-17",
-  "note": "Seuils de la règle de correction prudente de la relecture autonome, mesurés sur les six parties d'apprentissage (fiches/RELECTURE_AUTONOME.md). Proposés : rien n'agit sans décision de Mic. Une zone à corriger:false reste en ombre (visite, calcul, note).",
+  "note": "Seuils de la règle de correction prudente de la relecture autonome, mesurés sur les six parties d'apprentissage (fiches/RELECTURE_AUTONOME.md). Proposés : rien n'agit tant que Mic n'a pas choisi « corriger » dans le panneau. Décision de Mic (D-180) : PN, ADV et abords corrigent, avec la même règle ; les verts hors zone restent en ombre. Un interrupteur par zone : corriger:false repasse la zone en ombre (visite, calcul, note) sans toucher au code.",
   "etagesPermis": [
     "first-pass",
     "window",
@@ -27,12 +27,12 @@
       "confianceMin": 0
     },
     "adv": {
-      "corriger": false,
+      "corriger": true,
       "seuilMm": 8,
       "confianceMin": 0
     },
     "abords": {
-      "corriger": false,
+      "corriger": true,
       "seuilMm": 8,
       "confianceMin": 0
     },
@@ -93,6 +93,11 @@
     "justesMin": 10,
     "justesParMinuteMin": 0.5,
     "sens": "une zone corrige si, en validation croisée sur ses verts : 0 mauvaise voie, dégâts ≤ 1 % des visités, erreur ≤ 9 % des actions, au moins 10 corrections justes, au moins une correction juste pour 2 minutes de visites"
+  },
+  "decisionMic": {
+    "decision": "D-180",
+    "date": "2026-10-17",
+    "sens": "Mic accepte les chiffres de l'étude pour l'ADV (11 justes sur 17, 18 % d'erreurs, 1 cut abîmé) et les abords (30 justes sur 37, 14 %), 0 mauvaise voie : ces deux zones corrigent comme le PN, avec la même règle prudente. Le seuil de 9 % n'est pas démontré pour elles (il faut 39 actions sans erreur) : c'est un choix de Mic. Les verts hors zone, les cuts posés ou différés par le lot et le SKIP restent en ombre. Interrupteur par zone : corriger:false."
   },
   "decisionsZone": {
     "pn": {

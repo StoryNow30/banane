@@ -1,7 +1,7 @@
 {
   "format": "ariane-relecture-reglages-1",
   "statut": "provisoire",
-  "note": "Valeurs PROVISOIRES et très prudentes de la règle de correction de la relecture (src/relecture-critere.js), alignées sur D-174 : seule la zone PN corrige, 45 mm de latéral au plus. Ce fichier n'est lu que si le fichier proposé (datasets/relecture-reglages-proposes.json) est absent ou illisible ; la passe reste alors en ombre (D-175, correction 5) : ces valeurs ne servent qu'au calcul consigné, jamais à une écriture. Aucune partie n'a servi à les régler : ce sont des bornes de prudence, pas des mesures.",
+  "note": "Valeurs PROVISOIRES et prudentes de la règle de correction de la relecture (src/relecture-critere.js), alignées sur D-180 : PN, ADV et abords corrigent (verts hors zone en ombre), 45 mm de latéral au plus. Ce fichier n'est lu que si le fichier proposé (datasets/relecture-reglages-proposes.json) est absent ou illisible ; la passe reste alors en ombre (D-175, correction 5) : ces valeurs ne servent qu'au calcul consigné, jamais à une écriture. Aucune partie n'a servi à les régler : ce sont des bornes de prudence, pas des mesures.",
   "etagesPermis": [
     "first-pass",
     "window"
@@ -32,13 +32,13 @@
       "confianceMin": 85
     },
     "adv": {
-      "corriger": false,
-      "seuilMm": 25,
+      "corriger": true,
+      "seuilMm": 8,
       "confianceMin": 95
     },
     "abords": {
-      "corriger": false,
-      "seuilMm": 12,
+      "corriger": true,
+      "seuilMm": 8,
       "confianceMin": 80
     },
     "vert-hors-zone": {

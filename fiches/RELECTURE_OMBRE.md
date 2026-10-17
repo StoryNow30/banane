@@ -1,6 +1,6 @@
-# Relecture après le lot : ombre et correction prudente (5.0, D-170 à D-176)
+# Relecture après le lot : ombre et correction prudente (5.0, D-170 à D-180)
 
-Branche `claude/50-relecture-ombre`, à jour de `claude/50-base` (d8a7bcd). Demande de Mic : qu'Ariane fasse **elle-même** la relecture qu'il fait en Écho après un lot Orbite (D-170). Accord de Mic pour visiter les verts (D-171). Règle SKIP de Mic (D-172). Condition de la test 7 : des règles métier qui **agissent** (D-173). Seule la correction des verts de PN est proposée (D-174). Revue adverse et ses 11 corrections (D-175). Avis de Mic sur le rythme et le départ (D-176).
+Branche `claude/50-relecture-ombre`, à jour de `claude/50-base` (d8a7bcd). Demande de Mic : qu'Ariane fasse **elle-même** la relecture qu'il fait en Écho après un lot Orbite (D-170). Accord de Mic pour visiter les verts (D-171). Règle SKIP de Mic (D-172). Condition de la test 7 : des règles métier qui **agissent** (D-173). Seule la correction des verts de PN était proposée (D-174). Revue adverse et ses 11 corrections (D-175). Avis de Mic sur le rythme et le départ (D-176). Maj+Espace valide sur place (D-179). **Mic accepte les chiffres de l'ADV et des abords : ils corrigent comme le PN (D-180).**
 
 **Réglage coupé par défaut.** Mic choisit dans le panneau : « coupée », « ombre » ou « corriger ». Le choix est lu au démarrage du lot et figé pour ce lot.
 
@@ -12,14 +12,14 @@ Branche `claude/50-relecture-ombre`, à jour de `claude/50-base` (d8a7bcd). Dema
 |---|---|
 | **Coupée** (défaut) | Rien ne change : le scope du lot ne porte aucun champ nouveau, les commandes envoyées à la page sont celles de la base **octet pour octet** (empreinte de la base, version neutralisée, et empreinte du test 6). Aucune passe. |
 | **Ombre** | Après le lot, Ariane visite les cuts que Mic relirait, verts compris, capture, calcule et note. **Ariane n'envoie ni pose, ni validation, ni SKIP, ni écriture.** Mais **ESV écrit lui-même « vu »** (`SeenByOperator`) sur chaque cut affiché pour la première fois, comme quand Mic le visite : la passe annonce au départ le nombre de cuts neufs, puis compte ces « vu » (journal et panneau). Banc : 37 cuts relus, 0 écriture d'Ariane ; 36 cuts neufs annoncés, 36 « vu » reçus par le serveur, 36 comptés par Ariane. |
-| **Corriger** | Seuls les **verts prouvés** (statut `valid` sans drapeau opérateur, lu dans la liste d'ESV ; cible permise par le moteur) qui passent la **règle prudente** sont corrigés. Pose : la commande `apply` du lot, clic « tout-recentre », relue à 1 mm. Validation : **Maj+Espace**, le geste de Mic, qui valide **sur place** : ESV reste sur le même cut (Mic, deux fois ; D-179). Preuve : l'écriture « valid » de la ligne **et** le même cut toujours affiché ; puis la passe avance **d'un pas** vers le cut suivant. Banc (maquette qui valide sur place) : 20 corrections, 20 écritures « valid » exactement sur ces cuts, 20 Maj+Espace, chaque cut suivant atteint par un pas. Maquette d'origine (Maj+Espace y charge le cut non validé suivant) : la passe s'arrête net après la première correction, ESV n'étant plus sur le cut corrigé. |
-| **Seuils** | Ceux du fichier chiffré par l'étude (`datasets/relecture-reglages-proposes.json`, `fiches/RELECTURE_AUTONOME.md`), appliqués tels quels : **seule la zone PN corrige** (8 mm et plus) ; ADV, abords et verts hors zone restent en ombre ; 45 mm au plus en travers ; écartement à 15 mm de la médiane ; variante « chaine+h ». **Fichier absent, d'un autre format, ou avec un champ de sécurité invalide : « corriger » reste en ombre**, et la carte le dit. |
+| **Corriger** | Seuls les **verts prouvés** du PN, de l'ADV et des abords (D-180) (statut `valid` sans drapeau opérateur, lu dans la liste d'ESV ; cible permise par le moteur) qui passent la **règle prudente** sont corrigés. Pose : la commande `apply` du lot, clic « tout-recentre », relue à 1 mm. Validation : **Maj+Espace**, le geste de Mic, qui valide **sur place** : ESV reste sur le même cut (Mic, deux fois ; D-179). Preuve : l'écriture « valid » de la ligne **et** le même cut toujours affiché ; puis la passe avance **d'un pas** vers le cut suivant. Banc (maquette qui valide sur place) : 20 corrections, 20 écritures « valid » exactement sur ces cuts, 20 Maj+Espace, chaque cut suivant atteint par un pas. Maquette d'origine (Maj+Espace y charge le cut non validé suivant) : la passe s'arrête net après la première correction, ESV n'étant plus sur le cut corrigé. |
+| **Seuils** | Ceux du fichier chiffré par l'étude (`datasets/relecture-reglages-proposes.json`, `fiches/RELECTURE_AUTONOME.md`), appliqués tels quels : **PN, ADV et abords corrigent** (8 mm et plus ; D-180) ; les **verts hors zone** restent en ombre, de même que tout cut posé ou différé par le lot et le SKIP ; 45 mm au plus en travers ; écartement à 15 mm de la médiane ; variante « chaine+h ». **Un interrupteur par zone** (`zones.<zone>.corriger`) : `false` repasse la zone en ombre sans toucher au code. **Fichier absent, d'un autre format, ou avec un champ de sécurité invalide : « corriger » reste en ombre**, pour toutes les zones, et la carte le dit. |
 | **Une seule passe** | Elle existe dès sa planification, avant toute attente ; « Lancer », « Démarrer » et le retour à un cut sont refusés pendant sa préparation et pendant la passe. |
 | **Départ et rythme** (D-176) | Départ automatique juste après le lot, sans compte à rebours. Aucune pause ajoutée. Seul le bouton « Arrêter la relecture » reste. |
 | **SKIP (D-172)** | Consigné seulement (`skipOmbre`). « Aucun point » quand **deux captures complètes de suite** sont vides. Jamais « un seul scanner ». Aucun SKIP n'est envoyé. |
 | **Temps** (banc, machine chargée) | **3,1 s par cut relu** en ombre (capture 2,6 s, calcul 0,4 s, navigation 0,09 s), sans plancher d'affichage ; 4,1 s par cut en corriger (20 corrections sur 37). Mic, lui, passe un vert en **0,63 s** (médiane) : la capture fait que la passe est environ 5 fois plus lente que lui sur un vert. |
 | **Lectures de nuage** | Maquette : 1,0 par vert relu (elle charge les nœuds d'un cut une fois, à son premier affichage, et ne recharge rien quand la vue bouge). Terrain, d'après les Échos et le lot de la partie 29 : Mic 0,67 à 1,11 par vert passé ; un cut capturé sans pose par le lot, 6,1 (médiane 5). L'écart attendu par vert relu est donc de ×2 à ×9 : à faire trancher par Mic (D-151, § 8). |
-| **Fidélité à l'étude** (§ 11) | Après la correction 8 (chaîne vide), rejeu des cas de l'étude : décision de l'étude rendue sur 1 323 cuts sur 1 323 ; **PN 36 justes sur 36 actions, 0 erreur, 0 abîmé, 0 mauvaise voie**, plafond compris (le PN n'est plus coupé) ; avec les seules zones du lot, PN 7 sur 7. Mauvaise voie : 0 partout. |
+| **Fidélité à l'étude** (§ 11) | Rejeu des cas de l'étude (chaîne vide) : décision de l'étude rendue sur 1 323 cuts sur 1 323 ; **PN 36 justes sur 36 actions, 0 erreur, 0 abîmé**, plafond compris ; sans plafond, **ADV 16 actions, 10 justes, 3 erreurs, 1 abîmé ; abords 36, 29, 3, 0**, comme l'étude. Avec les plafonds par zone livrés (ADV 40, abords 70) : ADV 4, 2, 1, 0 ; abords 12, 12, 0, 0. Mauvaise voie : 0 partout. **Mic accepte les chiffres ; 9 % non démontré en ADV et abords** (D-180). |
 
 ## 2. La passe, pas à pas
 
@@ -63,7 +63,7 @@ La sélection est **alignée sur celle de l'étude** (`tools/relecture-autonome.
 - **Type de zone de chaque cut**, comme l'étude : le premier qui le couvre, dans l'ordre PN, ADV, abords, liste, écartement.
 - **Plages par type de zone.** Les cuts couverts sont groupés en plages de cuts consécutifs **du même type de zone** : un PN dans une ADV est sa propre plage. Aucun cut n'est ajouté pour boucher un trou.
 - Bornes : de 0 à M − 1. **Cuts 0 à 3 inclus** (D-172). Ordre : par plages, dans l'ordre des cuts.
-- **Plafond (revue, correction 7).** L'étude relit toute la sélection. La passe a un plafond réglable (120 cuts par défaut), mais **les PN sont hors du budget et toujours gardés entiers** : un PN à moitié contrôlé laisse des erreurs de 30 à 40 mm. Le budget sert ensuite les autres zones, plages entières, par priorité (ADV, grappe, différé, isolé, liste, écartement). Ce qui ne tient pas est rendu dans `horsPlafond`.
+- **Plafond (revue, correction 7 ; D-180).** L'étude relit toute la sélection. La passe a un budget de temps, mais **les PN sont hors du budget et toujours gardés entiers** : un PN à moitié contrôlé laisse des erreurs de 30 à 40 mm. Depuis D-180 le budget est **par zone** (`plafondParZone`) : un budget unique de 120 cuts laissait l'ADV manger presque tout et les abords presque rien (sur les parties d'apprentissage : ADV 329 verts jugeables ramenés à 103, abords 223 ramenés à 35), alors que les deux agissent maintenant. Par défaut : **ADV 40, abords 70, verts hors zone 20, écartement 20** (cuts relus), choisis au § 11. Dans chaque zone : plages entières par priorité (grappe, différé, isolé pour les abords), puis ordre des cuts ; la première plage trop grande est coupée à son début ; ce qui ne tient pas est rendu dans `horsPlafond`, d'un seul tenant par plage. `BananeSettings.relecture.plafondParZone` les change (`null` : sans plafond) ; `plafondCuts` reste un budget global facultatif, hors PN, sans valeur par défaut.
 
 ## 4. Règle prudente et garde de la correction
 
@@ -85,14 +85,16 @@ Les conditions 6, 8 et 9 sont jugées sur la pose **qui serait écrite**, en **v
 
 **Médiane de la partie** : la référence de la liste « À contrôler » ; sinon la médiane des lignes valides de la table de la liste tenue par la page (20 au moins, aucune requête) ; sinon celle des poses d'ESV des verts déjà relus (5 au moins). Avant, la règle refuse.
 
-**Réglages sûrs (revue, correction 5).** Le fichier proposé est lu au début de chaque passe. Chaque champ de sécurité invalide ou absent (zone, `corriger`, `seuilMm`, `voie.lateralMaxMm` au-delà de 45 mm, `roles` autres que les verts, `jamais` sans les cuts du lot) est listé ; une correction mal écrite (« "corriger":"false" ») reste fermée. « Corriger » n'est permis qu'avec le fichier proposé, lu sans refus ni champ invalide ; sinon la passe reste en ombre et le dit. Le défaut provisoire (`datasets/relecture-reglages-defaut.json`, recopié dans le module) suit D-174 : seule la zone PN corrige, 45 mm au plus ; il ne sert qu'au calcul consigné. La carte affiche la source des réglages. Les deux fichiers sont dans la liste des fichiers requis du paquet (`tools/package.py`).
+**Réglages sûrs (revue, correction 5).** Le fichier proposé est lu au début de chaque passe. Chaque champ de sécurité invalide ou absent (zone, `corriger`, `seuilMm`, `voie.lateralMaxMm` au-delà de 45 mm, `roles` autres que les verts, `jamais` sans les cuts du lot) est listé ; une correction mal écrite (« "corriger":"false" ») reste fermée. « Corriger » n'est permis qu'avec le fichier proposé, lu sans refus ni champ invalide ; sinon la passe reste en ombre et le dit. Le défaut provisoire (`datasets/relecture-reglages-defaut.json`, recopié dans le module) suit D-180 : PN, ADV et abords corrigent, 45 mm au plus ; il ne sert qu'au calcul consigné, jamais à une écriture (la source doit être le fichier proposé). Une zone absente ou mal écrite du fichier est fermée, jamais ouverte par le défaut ; un interrupteur fermé (`corriger:false`) est un choix valide, qui n'invalide pas le fichier. La carte affiche la source des réglages et les zones qui corrigent. Les deux fichiers sont dans la liste des fichiers requis du paquet (`tools/package.py`).
 
 | Zone | Corriger | Seuil | Étude, validation croisée (6 parties) |
 |---|---|--:|---|
 | PN | **oui** | 8 mm | 36 corrections justes sur 36 actions, 0 erreur, 0 abîmé |
-| ADV | non (ombre) | 8 mm | 11 justes sur 17, 18 % d'erreurs |
-| abords | non (ombre) | 8 mm | 30 justes sur 37, 14 % d'erreurs |
+| ADV | **oui** (D-180) | 8 mm | 11 justes sur 17, 18 % d'erreurs, 1 cut abîmé |
+| abords | **oui** (D-180) | 8 mm | 30 justes sur 37, 14 % d'erreurs, 0 abîmé |
 | vert hors zone | non (ombre) | 8 mm | 2 actions |
+
+**Mic accepte les chiffres, 9 % non démontré en ADV et abords (D-180).** Le seuil de 9 % d'erreurs demande 39 actions sans erreur ; l'ADV et les abords n'en ont que quelques dizaines de jugées, avec 14 à 18 % d'erreurs. Ce n'est pas une porte franchie : c'est un choix de Mic, pour avancer et mesurer sur le terrain. Le défaut du réglage reste « coupée » : l'activation est le geste de Mic dans le panneau. La mesure : l'ombre continue de calculer et de noter toutes les zones ; les Échos qui suivent un lot en « corriger » montrent si Mic a dû reprendre des cuts corrigés par Ariane, zone par zone.
 
 ### 4.2 Garde (background.js, `relectureGarde`)
 
@@ -130,12 +132,15 @@ Chaque correction de la revue a son essai, écrit d'abord : rouge sur le code d'
 | Rôle « vert » jamais présumé (correction 1) | `-role-lot` : SKIP, reprise à la main, cible bloquée traversés ; cible bloquée en cours de passe refusée par la garde ; `-role-borne` : dernier cut d'un lot borné (corrigé et validé par Mic, en PN) jamais réécrit ; rouge au-delà de la borne relu sans pose |
 | Une seule passe (correction 2) | `-une-passe` : clic pendant le délai et pendant la préparation, « Démarrer » pendant la préparation refusés ; deux « Lancer » simultanés : un seul part |
 | Maj+Espace (correction 4) | `-maj-espace` : ESV sur un autre cut après la validation → arrêt après la validation ; dernier cut de la partie jamais validé ; cut déjà corrigé jamais réécrit ; `-maj-espace-ligne` : ligne écrite avec un autre statut que « valid » → arrêt, ni pas ni pose ensuite ; `relecture-maj-espace-page` : touches exactes, une seule frappe, validation sur place rendue sans attendre 15 s, refus avant envoi sans émission (correction 6) |
-| Réglages sûrs (correction 5) | `-reglages-surs` (absent, format -2) et `-reglages-coquille` : → ombre, dit ; contrôle : le fichier valide corrige ; `relecture-critere` (D-174, champs invalides, valeurs brutes) |
+| Réglages sûrs (correction 5) | `-reglages-surs` (absent, format -2) et `-reglages-coquille` : → ombre, dit ; contrôle : le fichier valide corrige ; `relecture-critere` (défaut D-180, champs invalides, valeurs brutes, interrupteur par zone) ; `-reglages-adv-abords` (D-180) : fichier absent (le défaut ouvre pourtant ADV et abords), autre format, correction en texte ou en nombre, zone absente, seuil en texte, latéral au-delà de 45 mm, rôles autres que les verts, cuts du lot non protégés → ni le vert d'abords ni le vert d'ADV ne sont touchés ; le fichier valide corrige les deux |
 | Arrêt, panne, intention | `-arret` (« Arrêter » du lot ; annulation neutre, T-6), `-panne`, `-corriger-validation` (intention par cut, « J'ai contrôlé le cut N »), `-redemarrage` |
 | La passe ne part que si ESV est propre | `-hors-partie`, `-pose-en-attente` |
 | Observateur coupé | `-sans-observateur` |
 | Zones figées (audit P-5) | `-zones-figees` |
-| Fichier proposé réel | `-fichier-reel` : deux verts de PN corrigés (le premier du PN atteint par un pas), un sous 8 mm laissé, les abords en ombre, le différé jamais touché |
+| Fichier proposé réel | `-fichier-reel` : deux verts de PN et un vert d'abords corrigés (le premier du PN atteint par un pas), un sous 8 mm laissé, le différé jamais touché |
+| ADV et abords agissent (D-180) | `-adv-abords` : un vert d'abords et un vert d'ADV (premier cut de sa plage : saut au cut d'avant, puis un pas) corrigés ; un vert traité par un opérateur, un cut rouge dans ESV, le différé et les cuts posés par le lot jamais touchés ; en ombre, même fichier : rien d'écrit par Ariane |
+| Un interrupteur par zone (D-180) | `-interrupteur` : ADV fermée puis abords fermés dans le fichier, le fichier reste valide, l'autre zone corrige |
+| Plafond par zone (D-180) | `relecture-ombre` : l'ADV ne mange plus le budget des abords, PN jamais coupé, plages entières par priorité dans la zone, restes d'une même plage d'un seul tenant |
 | Modules purs | `relecture-ombre` (sélection, plafond par zone, jugement, SKIP), `relecture-critere`, `relecture-panneau` (préparation, réglages, « vu », « J'ai contrôlé ») |
 
 L'ESV simulé des essais tient la liste de la partie (statut, opérateur, « vu »), imite le « vu » d'ESV au premier affichage et valide par Maj+Espace comme le vrai ESV sur un vert (écriture, ESV reste sur le même cut ; l'ancienne supposition « cut + 1 », ou un autre cut, n'existe que là où un essai la demande). Hors du lot, la science et la décision des verts sont remplacées pour l'essai ; le cut 113 est calculé pour de vrai. Le simulateur échoue sur toute option inattendue de la validation.
@@ -182,9 +187,9 @@ Les seuils permissifs du banc ouvrent toutes les zones à 12 mm (fichier complet
 
 La carte occupe l'emplacement réservé (d) « Relecture » (`#groupe-relecture`), entre les résultats du dernier lot et l'export replié. Script séparé (`src/carte-relecture.js`), chargé avant `panel.js`.
 
-- Trois choix : « Coupée », « Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché) », « Corriger (seulement les verts sûrs, validés par Maj+Espace) ». Une note dit que la passe part seule juste après le lot.
+- Trois choix : « Coupée », « Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché) », « Corriger (verts sûrs du PN, de l’ADV et des abords, validés par Maj+Espace) ». Une note dit que la passe part seule juste après le lot, qu'en « corriger » elle ne pose et ne valide que ces verts sûrs, et que Mic a accepté les chiffres de l'ADV et des abords.
 - « Dernier lot » / « Prochain lot », comme les autres choix du lot.
-- Réglages de la correction : leur source, et si « corriger » restera en ombre, avec la raison.
+- Réglages de la correction : leur source, les zones qui corrigent (PN, ADV, abords ; les autres restent en ombre), et si « corriger » restera en ombre, avec la raison.
 - Pendant la préparation : « Relecture en préparation » ; « Lancer la relecture » est caché, « Arrêter la relecture » visible. Pendant la passe : avancement, corrections, « vu » sur les cuts neufs annoncés, cut et plage.
 - Correction interrompue : le cut à contrôler, et le bouton « J'ai contrôlé le cut N ».
 - **CONTENU.txt** : une ligne quand la relecture du lot n'est pas coupée (mode, bilan, « vu »).
@@ -194,32 +199,63 @@ La carte occupe l'emplacement réservé (d) « Relecture » (`#groupe-relecture`
 | Où | Quoi | Défaut |
 |---|---|---|
 | Panneau (`storage.local`, `banane50Relecture`) | coupée / ombre / corriger | coupée |
-| `BananeSettings.relecture` (facultatif) | `departMs` (0, D-176), `attenteEcritureMs` (preuve, 6 000 ms), `attenteVuMs` (« vu » des derniers cuts, 2 500 ms), `pasMax` (40), `plafondCuts` (120, PN hors budget), `validation` ('maj-espace' ; toute autre valeur verrouille « corriger » en ombre) | |
+| `BananeSettings.relecture` (facultatif) | `departMs` (0, D-176), `attenteEcritureMs` (preuve, 6 000 ms), `attenteVuMs` (« vu » des derniers cuts, 2 500 ms), `pasMax` (40), `plafondParZone` (adv 40, abords 70, vert-hors-zone 20, ecartement 20 ; PN hors budget, D-180), `plafondCuts` (budget global facultatif hors PN, aucun par défaut), `validation` ('maj-espace' ; toute autre valeur verrouille « corriger » en ombre) | |
 | `datasets/relecture-reglages-proposes.json` | seuils chiffrés par l'étude | présent ; absent ou non sûr : ombre |
 
-## 11. Fidélité à l'étude, après la correction 8
+## 11. Fidélité à l'étude, après la correction 8 et D-180 (plafonds par zone)
 
-Rejeu hors ligne de la logique codée (`relectureCalculer` extraite de `background.js`, règle et sélection de la branche) sur les cas de l'étude, parties d'apprentissage 1:12, 1:13, 1:24, 1:29 et 2:1 (1:17 n'existe plus qu'en archive). Outils de la revue (`revrelo/fidelite`), adaptés : chaîne vide, seules les poses des verts y entrent ; sélection avec le plafond par zone.
+Rejeu hors ligne de la logique codée (`relectureCalculer` extraite de `background.js`, règle et sélection de la branche, fichier de réglages proposé réel : PN, ADV et abords corrigent) sur les cas de l'étude, parties d'apprentissage 1:12, 1:13, 1:24, 1:29 et 2:1 (1:17 n'existe plus qu'en archive). Outils de la revue (hors dépôt : `revrelo/fidelite`, `fid2`), adaptés : chaîne vide, seules les poses des verts y entrent ; sélection avec un plafond par zone, plusieurs plafonds rejoués (chacun avec sa propre chaîne). Décision de l'étude rendue sur **1 323 cuts sur 1 323**.
 
-| | Décision de l'étude rendue | PN, règle réelle : actions, justes, erreurs, abîmés, mauvaise voie | Toutes zones ouvertes, mêmes seuils (ADV ; abords) |
-|---|---|---|---|
-| Étude (référence, cas) | — | 36, 36, 0, 0, 0 | ADV 16, 10 justes, 3 erreurs, 1 abîmé ; abords 37, 30, 3, 0 |
-| Branche, sans plafond | 1 323 cuts sur 1 323 | **36, 36, 0, 0, 0** | ADV 16, 10, 3, 1 ; abords 36, 29, 3, 0 |
-| Branche, plafond de 120 (PN hors budget) | idem | **36, 36, 0, 0, 0** (1:12 : 20 sur 20, 1:13 : 9 sur 9, 1:29 : 7 sur 7, 2:1 : aucune) | ADV 5, 2, 2, 1 ; abords 8, 8, 0, 0 |
-| Branche, zones du lot seulement (parties avec lot) | idem | **7, 7, 0, 0, 0** (1:29) | ADV 0 ; abords 8, 8, 0, 0 |
+Colonnes : cuts relus avec une référence de Mic, actions, justes, erreurs de plus de 10 mm, cuts abîmés, mauvaise voie.
+
+**Sans plafond** (la règle seule, comme l'étude) :
+
+| Zone | Étude (référence, cas) | Branche, sans plafond |
+|---|---|---|
+| PN | 36 actions, 36 justes, 0 erreur, 0 abîmé, 0 mauvaise voie | **167 relus : 36, 36, 0, 0, 0** |
+| ADV | 16, 10, 3, 1, 0 | **329 relus : 16, 10, 3, 1, 0** |
+| abords | 37, 30, 3, 0, 0 | **223 relus : 36, 29, 3, 0, 0** |
+| verts hors zone | 2 actions | 7 relus : 0 (ombre) |
+
+**Plafonds par zone** (cuts relus au plus ; PN hors budget). La colonne « 3 parties avec lot » ne compte que 1:24, 1:29 et 2:1, les seules où la passe tournerait : les zones PN et ADV y viennent d'un lot.
+
+| Plafond ADV / abords | ADV : relus, actions, justes, erreurs, abîmés | abords : relus, actions, justes, erreurs, abîmés | dont 3 parties avec lot : ADV ; abords | Cuts relus par partie 1:24 / 1:29 / 2:1 (3,5 s le cut) |
+|---|---|---|---|---|
+| 30 / 20 | 19, 0, 0, 0, 0 | 14, 8, 8, 0, 0 | 0 ; 8 sur 8 | 76 / 99 / 47 (4 / 6 / 3 min) |
+| 50 / 30 | 52, 4, 2, 1, 0 | 22, 8, 8, 0, 0 | 0 ; 8 sur 8 | 106 / 129 / 67 (6 / 8 / 4 min) |
+| 50 / 50 | 52, 4, 2, 1, 0 | 33, 7, 7, 0, 0 | 0 ; 7 sur 7 | 125 / 148 / 67 (7 / 9 / 4 min) |
+| 80 / 50 | 93, 5, 2, 2, 1 | 33, 7, 7, 0, 0 | 0 ; 7 sur 7 | 155 / 163 / 79 (9 / 10 / 5 min) |
+| 120 / 80 | 103, 5, 2, 2, 1 | 48, 12, 12, 0, 0 | 0 ; 12 sur 12 | 192 / 194 / 79 (11 / 11 / 5 min) |
+| 200 / 120 | 194, 10, 5, 3, 1 | 77, 24, 23, 0, 0 | 2 sur 2 ; 23 sur 24 | 232 / 361 / 194 (14 / 21 / 11 min) |
+| sans plafond | 329, 16, 10, 3, 1 | 223, 36, 29, 3, 0 | 7 sur 8 ; 29 sur 36 (3 erreurs) | 887 / 580 / 637 (52 / 34 / 37 min) |
+| **40 / 70 (livré)** | **33, 4, 2, 1, 0** | **44, 12, 12, 0, 0** | **0 ; 12 sur 12** | **136 / 159 / 57 (8 / 9 / 3 min)** |
+| 40 / 120 | 33, 4, 2, 1, 0 | 77, 24, 23, 0, 0 | 0 ; 23 sur 24 | 186 / 208 / 57 (11 / 12 / 3 min) |
+| 80 / 70 | 93, 5, 2, 2, 1 | 44, 12, 12, 0, 0 | 0 ; 12 sur 12 | 176 / 184 / 79 (10 / 11 / 5 min) |
+
+(Dans ce tableau, les trois dernières lignes sont une seconde série, avec les plafonds de zone, de vert hors zone à 20 et d'écartement à 20 du module ; les autres sont la première série. Le PN est identique dans toutes : 167 relus, 36, 36, 0, 0. Mauvaise voie : 0 partout.)
+
+**Plafonds choisis : ADV 40, abords 70, verts hors zone 20, écartement 20, PN hors budget.** Raisons :
+
+- **Le temps.** À 3,5 s le cut relu, PN compris, la passe d'une partie avec lot tient en 3 à 9 minutes (1:24 : 24 PN + 40 + 70 + 2 = 136 cuts ; 1:29 : 40 PN + 40 + 70 + 9 = 159 cuts ; 2:1 : 13 PN + 40 + 4 = 57 cuts), plus 2 s environ par correction. Sans plafond, la même passe prendrait 34 à 52 minutes.
+- **Les abords rendent le plus.** Jusqu'à 120 cuts, les corrections des abords n'ont aucune erreur ni cut abîmé (24 actions, 23 justes). 70 cuts donnent 12 corrections justes sur 12 ; 120 cuts en donnent 24 (+3 minutes). Les erreurs de l'étude (3) viennent de cuts plus loin dans la zone (1:24, 1:29). Si Mic juge la durée acceptable, `plafondParZone.abords` à 120 double les corrections.
+- **L'ADV rend le moins.** Les corrections d'ADV des parties avec lot sont loin dans la zone (2 justes sur 2 en 1:29 à partir de 200 cuts, 5 justes sur 6 en 2:1 sur 620) : aucun plafond compatible avec quelques minutes n'en récolte. Les quatre actions du plafond de 40 viennent de 1:13, partie sans lot : 2 justes, 1 erreur de 15,8 mm (1:13 #4651). Au-delà de 50 cuts, le cut abîmé de 1:13 (#4681) entre dans la sélection (plafond 80). **En pratique, l'ADV agira peu avec ce plafond ; l'ombre la visite et la note, et Mic peut relever son plafond.**
+- **Pas de priorité dans la zone par proximité du lot** (hors étude) : l'ADV garde ses premiers cuts dans l'ordre des cuts. Une priorité par distance au lot, ou à l'écart, pourrait récolter plus de corrections pour le même temps ; non mesurée.
 
 - **Mauvaise voie : 0** dans toutes les variantes et toutes les zones.
+- **Critère de sortie** : PN inchangé (**36 justes sur 36 actions, 0 erreur, 0 abîmé, 0 mauvaise voie**) avec ou sans plafond ; ADV et abords sans plafond à l'étude (ADV 16 / 10 / 3 / 1 ; abords 36 / 29 / 3 / 0). **Avec les plafonds livrés : PN 36, 36, 0, 0, 0 ; ADV 4, 2, 1, 0, 0 ; abords 12, 12, 0, 0, 0 ; mauvaise voie 0.**
+- **Mic accepte les chiffres, 9 % non démontré en ADV et abords** (D-180) : ADV 10 justes sur 16 actions (3 erreurs, 1 abîmé), abords 29 sur 36 (3 erreurs), contre 36 sur 36 en PN ; la porte des 39 actions sans erreur n'est franchie ni par l'un ni par l'autre.
 - **F4 corrigé** : la 37e action de la revue (1:12 #8383, 7,95 mm arrondi à 8) a disparu.
 - **Plafond** : les PN ne sont plus coupés (167 verts de PN jugeables relus, avec ou sans plafond ; en 2:1, les dix cuts du PN 401–414 que l'Écho permet de rejouer sont tous relus, contre 5 à 6 sur 14 avant la correction 7).
 - **Chaîne** : vide au départ ; le différé 2:1 #303 (Mic l'a déplacé de 210 mm), qui partait en first-pass avec les poses du lot pour appuis, est maintenant jugé sans elles, n'est jamais corrigé (rôle) et n'entre pas dans la chaîne.
-- **Ce qui s'applique à la passe livrée** : 29 des 36 corrections justes de PN viennent de 1:12 et 1:13, deux parties sans lot, donc sans passe. Sur les parties traitées par lot, il reste PN 7 sur 7, loin de la porte des 39 actions sans erreur.
+- **Ce qui s'applique à la passe livrée** : 29 des 36 corrections justes de PN viennent de 1:12 et 1:13, deux parties sans lot, donc sans passe. Sur les parties traitées par lot, il reste PN 7 sur 7 (1:29), abords 12 sur 12, ADV aucune, loin de la porte des 39 actions sans erreur.
 - **Non rejoué** : la garde (statut lu dans ESV, arrivée par un pas, dernier cut), que les Échos ne permettent pas de reconstituer ; elle ne peut que retirer des actions.
 
 ## 12. Doutes et limites
 
-- **Ce qui diffère encore de l'étude** : la chaîne n'accueille pas les cuts différés (l'étude, si) ; la médiane de la partie vient de la liste d'ESV ; le plafond (PN hors budget) ; H5 en plus, en ombre ; la garde (statut lu dans ESV, arrivée, dernier cut), que l'étude n'avait pas.
+- **Ce qui diffère encore de l'étude** : la chaîne n'accueille pas les cuts différés (l'étude, si) ; la médiane de la partie vient de la liste d'ESV ; le plafond par zone (PN hors budget) ; H5 en plus, en ombre ; la garde (statut lu dans ESV, arrivée, dernier cut), que l'étude n'avait pas.
 - **Zones PN** : tirées des seules captures du lot. Sur les parties traitées par lot, l'étude n'a que 7 PN sur 7 (partie 29) ; 29 des 36 corrections justes viennent de parties sans lot, donc sans passe (revue, F1).
-- **La porte des 9 % n'est pas démontrée** : il faut au moins 39 actions sans erreur ; chaque correction est notée pour que la prochaine Écho de Mic la juge.
+- **La porte des 9 % n'est pas démontrée** : il faut au moins 39 actions sans erreur ; chaque correction est notée pour que la prochaine Écho de Mic la juge. **En ADV et aux abords, Mic accepte les chiffres tels quels (D-180)** : 18 % et 14 % d'erreurs dans l'étude (ADV 10 justes sur 16 actions, 1 cut abîmé ; abords 29 sur 36), pas de démonstration. Si les Échos qui suivent un lot en « corriger » montrent des cuts corrigés par Ariane que Mic a dû reprendre, la zone se referme par son interrupteur (`corriger:false`), sans toucher au code.
+- **ADV : peu d'actions avec le plafond livré** (§ 11) : les corrections d'ADV des parties avec lot sont loin dans la zone ; en 3 à 9 minutes, la passe n'en récolte aucune sur 1:24, 1:29 et 2:1. Le plafond est un réglage de temps, pas de sécurité : l'ADV est visitée et notée dans tous les cas.
 - **Maj+Espace relayé** : prouvé sur la maquette qui valide sur place ; sur le vrai ESV, « valide sur place » vient de Mic (deux fois), non d'un export ; l'effet du geste relayé reste à vérifier (§ 7).
 - **« vu »** : inévitable dès qu'un cut est affiché ; une ombre stricte limitée aux cuts déjà vus ôterait presque tout l'intérêt sur les verts.
 - **Lectures de nuage** : excédent probable sur le terrain (§ 8), non mesurable sur la maquette.

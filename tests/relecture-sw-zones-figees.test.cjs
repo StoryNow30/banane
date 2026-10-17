@@ -1,11 +1,13 @@
 'use strict';
 /* 5.0 (D-170 à D-173, audit P-5) — RELECTURE APRÈS LE LOT, service worker réel (tests/helpers/relecture-lot.cjs) : les zones PN et ADV
  * qui servent à la sélection et au mode « corriger » sont tirées des SEULES captures du lot, AVANT la passe, et figées. Une capture de
- * vert faite par la passe qui ressemble à un cœur de PN ne crée ni n'étend aucune zone : le cut reste aux abords, en ombre (fichier
- * proposé réel : seule la zone PN corrige). Chaque visite dit l'origine de sa zone (`zoneSource:'lot'`). Données synthétiques. */
+ * vert faite par la passe qui ressemble à un cœur de PN ne crée ni n'étend aucune zone : le cut reste aux abords. Fichier proposé réel
+ * avec l'ADV et les abords fermés par leur interrupteur (D-180) : seule la zone PN corrige, de sorte qu'une fausse zone PN lue par la
+ * passe ferait corriger le cut ; ici, rien n'est corrigé. Chaque visite dit l'origine de sa zone (`zoneSource:'lot'`). Données synthétiques. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {H,j,apresLot}=require('./helpers/relecture-essais.cjs');
 const FICHIER=JSON.parse(fs.readFileSync(path.join(__dirname,'../datasets/relecture-reglages-proposes.json'),'utf8'));
+for(const z of ['adv','abords'])FICHIER.zones[z].corriger=false;
 
 test('captures de verts qui ressemblent à un cœur de PN pendant la passe : aucune zone créée, aucune correction',async()=>{
  let appelsPendantPasse=0,adapterRef=null;

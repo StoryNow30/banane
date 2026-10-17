@@ -8,7 +8,7 @@
  * « J'ai contrôlé le cut N » (W5). Comme les autres choix : « Dernier lot » (« Lot en cours ») et « Prochain lot ».
  * `texteContenu(batch)` donne la ligne de CONTENU.txt (rien quand le lot a la relecture coupée). */
 (function(root){'use strict';
- const NOMS={coupee:'coupée',ombre:'ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)',corriger:'corriger (seulement les verts sûrs, validés par Maj+Espace)'};
+ const NOMS={coupee:'coupée',ombre:'ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)',corriger:'corriger (verts sûrs du PN, de l’ADV et des abords, validés par Maj+Espace)'};
  const IDS={coupee:'relecture-coupee',ombre:'relecture-ombre',corriger:'relecture-corriger'};
  const COURTS={coupee:'Coupée',ombre:'Ombre',corriger:'Corriger'},OUVERTS=['RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING'];
  const $=id=>typeof document!=='undefined'?document.getElementById(id):null;
@@ -23,10 +23,13 @@
   const vus=Number.isInteger(p.cutsNeufsAnnonces)?` · « vu » : ${p.vus||0} sur ${pluriel(p.cutsNeufsAnnonces,'cut')} neuf${p.cutsNeufsAnnonces>1?'s':''}`:p.vus?` · ${p.vus} « vu »`:'';
   if(p.etat==='en-cours')return `Relecture ${p.faits} sur ${p.total}${corr}${vus}${p.cut!=null?` · cut ${p.cut}`:''}${p.plage?` · ${p.plage}`:''}${p.arretDemande?' · arrêt demandé':''}`;
   return p.message||'';}
- const SOURCES={propose:'fichier proposé',defaut:'défaut provisoire'};
+ const SOURCES={propose:'fichier proposé',defaut:'défaut provisoire'},ZONES={pn:'PN',adv:'ADV',abords:'abords','vert-hors-zone':'verts hors zone'};
  function texteReglages(r){if(!r)return '';
   const t=`Réglages de la correction : ${SOURCES[r.source]||r.source}${r.source==='propose'&&r.statut?` (« ${r.statut} »)`:''}.`;
-  return r.correctionPermise?t:`${t} « Corriger » restera en ombre : ${r.raison||'réglages non sûrs'}.`;}
+  if(!r.correctionPermise)return `${t} « Corriger » restera en ombre : ${r.raison||'réglages non sûrs'}.`;
+  /* Un interrupteur par zone (D-180) : la carte dit lesquelles corrigent. */
+  const ouvertes=r.zones&&typeof r.zones==='object'?Object.entries(r.zones).filter(([,v])=>v===true).map(([z])=>ZONES[z]||z):null;
+  return ouvertes?`${t} ${ouvertes.length?`Zones qui corrigent : ${ouvertes.join(', ')} ; les autres restent en ombre.`:'Aucune zone ne corrige : tout reste en ombre.'}`:t;}
  function afficher(){const carte=$('carte-relecture');if(!carte)return;
   if(choix)for(const [m,id] of Object.entries(IDS)){const el=$(id);if(el&&document.activeElement!==el)el.checked=choix===m;}
   const p=etat?.passe,lot=etat?.lot,enCours=active(p);

@@ -13,7 +13,8 @@
   *   4. l'étage de la décision est permis (`etagesPermis` : par défaut « first-pass », la pose du moteur confirmée par la voie des
   *      appuis, et « window », la reprise depuis la voie ; le fichier proposé ajoute « choice » et « crossing ») et la décision
   *      s'appuie sur `appuisMin` appuis au moins (défaut provisoire : 2 ; fichier sans ce champ : aucun minimum, comme l'étude) ;
-  *   5. la zone (pn, adv, abords, vert-hors-zone) permet la correction (`zones[z].corriger`) ;
+  *   5. la zone (pn, adv, abords, vert-hors-zone) permet la correction (`zones[z].corriger`, un interrupteur par zone : D-180, Mic
+  *      accepte les chiffres de l'étude pour l'ADV et les abords, qui corrigent comme le PN ; les verts hors zone restent en ombre) ;
   *   6. l'écart le plus grand (latéral ou vertical, des deux rails) atteint le seuil de la zone (`seuilMm`) ;
   *   7. la confiance du moteur (A*), sur les deux rails, atteint le minimum de la zone (`confianceMin`) ; absente : refus (comme
   *      l'étude : « confiance présente » quand le minimum est 0) ;
@@ -27,9 +28,9 @@
   * `ecartementBrutMm`) quand elles sont données ; l'arrondi au dixième ne sert qu'à l'affichage (7,95 mm ne passe pas 8 mm).
   *
   * SEUILS : `datasets/relecture-reglages-proposes.json` (chantier claude/50-zones-autonomes) s'il existe et se lit, sinon
-  * `datasets/relecture-reglages-defaut.json` (PROVISOIRE, aligné sur D-174 : seule la zone PN corrige, 45 mm de latéral au plus),
+  * `datasets/relecture-reglages-defaut.json` (PROVISOIRE, aligné sur D-180 : PN, ADV et abords corrigent, 45 mm de latéral au plus),
   * recopié ici dans DEFAUT (un essai vérifie qu'ils sont égaux). `reglages(fichier)` valide un fichier et complète ce qui manque par
-  * le défaut. Revue (D-175, correction 5) : les réglages ne s'ouvrent JAMAIS en cas d'échec. Un champ de sécurité invalide ou absent
+  * le défaut (une zone absente ou mal écrite y est FERMÉE, jamais ouverte par le défaut). Revue (D-175, correction 5) : les réglages ne s'ouvrent JAMAIS en cas d'échec. Un champ de sécurité invalide ou absent
   * (zone, `corriger`, `seuilMm`, `voie.lateralMaxMm` au-delà de 45 mm, `roles` autres que les verts, `jamais` sans les cuts du lot) est
   * listé dans `invalides` ; une correction mal écrite reste fermée. `correctionPermise(r)` ne dit oui que pour le fichier proposé, lu
   * sans refus et sans champ invalide : sinon le service worker ramène « corriger » à « ombre » et le dit au panneau. */
@@ -42,8 +43,8 @@
   coherence:Object.freeze({diffLateraleMaxMm:6,diffVerticaleMaxMm:6,ecartementMaxMm:8}),
   zones:Object.freeze({
    pn:Object.freeze({corriger:true,seuilMm:15,confianceMin:85}),
-   adv:Object.freeze({corriger:false,seuilMm:25,confianceMin:95}),
-   abords:Object.freeze({corriger:false,seuilMm:12,confianceMin:80}),
+   adv:Object.freeze({corriger:true,seuilMm:8,confianceMin:95}),
+   abords:Object.freeze({corriger:true,seuilMm:8,confianceMin:80}),
    'vert-hors-zone':Object.freeze({corriger:false,seuilMm:15,confianceMin:90})})});
  const nombre=(v,min=0,max=1e6)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
  const virgule=v=>String(Math.round(v*10)/10).replace('.',',');
