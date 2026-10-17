@@ -2475,3 +2475,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - hauteur apprise : 41 cuts changés, dont 5 au plafond de +5 mm ;
   - verts à contrôler : entre 103 et 214 verts, soit 6 à 13 minutes.
 - Demande à Mic, quand il fera les Échos : noter les PN et les ADV, faire toute la partie 2, les zones d'ADV des parties 6 et 7, les 5 cuts à +5 mm, et relire tous les verts d'une partie courte en chronométrant.
+
+## D-170 — Recadrage de Mic : la 5.0 doit faire elle-même la relecture qu'il fait en Écho (17 octobre 2026)
+
+- **Mic** : « le but n'est pas de me laisser plus de travail avec des contrôles à effectuer ; l'application des règles métier vise à réduire ce travail de contrôle ; Ariane doit savoir le faire ; j'ai distribué de nombreux lots Orbite → Écho montrant la méthode, et c'est ce que j'attends d'Ariane sur la 5.0 ».
+- **Ce que je corrige** : la liste « À contrôler » et les mises en attente (règle grappe) ne sont que des étapes. Elles laissent encore le travail à Mic. Le cap de la 5.0 est une **relecture autonome** : après les rouges, Ariane visite ce que Mic aurait visité (autour des rouges, PN, ADV avec leurs marges, cuts isolés, verts compris), corrige comme lui (moteur et hauteur apprise), puis valide.
+- **Mesure de réussite** : la part des corrections de Mic, dans ses couples Orbite et Écho, qu'Ariane reproduit seule à 5 et à 10 mm près, face aux cuts justes qu'elle abîme. On la mesure en validation croisée par partie, puis sur des parties réservées.
+- Le chantier `claude/50-zones-autonomes` est élargi à toute la relecture : fiche `RELECTURE_AUTONOME.md`.
+- **Question posée à Mic** : Ariane peut-elle visiter des cuts verts dans ESV, d'abord sans rien modifier (visite, calcul, note), puis en corrigeant une fois les chiffres validés ?
