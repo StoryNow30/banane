@@ -117,7 +117,8 @@ test('empreinte du contrat : demandée au « Connecter » seulement ; stable ; c
  assert.match(a.hash,/^[0-9a-f]{8}$/);assert.equal(a.hash,b.hash,'même contrat, même empreinte');
  assert.deepEqual(a.detail.boutons,['O2N3DCutPreviousInvalid3DRail','O2N3DCutPrevious3DRail','O2N3DCutValidate3DRail','O2N3DCutSkip3DRail','O2N3DCutNext3DRail','O2N3DCutNextInvalid3DRail'],'six boutons, par leur id');
  assert.deepEqual(a.detail.ecouteurs,{railPairSelected:true,railPairUpdated:true,railPairSeen:true,loading:true,newPart:true});assert.equal(a.detail.jquery,'3.6.0');assert.equal(a.detail.potree,'1.8');
- assert.deepEqual(a.detail.rails,['btn leftRailSClass','btn rightRailSClass']);
+ /* Audit P-5 (H14) : la classe de sélection du rail est comparée par sa présence seulement ; les classes brutes (le rail sélectionné) sont consignées dans `etat`. */
+ assert.deepEqual(a.detail.rails,['btn leftRail(S|US)Class','btn rightRail(S|US)Class']);assert.deepEqual(a.etat.rails,['btn leftRailSClass','btn rightRailSClass']);
  for(const [nom,o] of [['classe',{classe:'leftRailXClass'}],['écouteur absent',{n:{loading:0}}],['jquery',{jq:'3.7.1'}],['potree',{potree:{major:1,minor:9,suffix:''}}]])
   assert.notEqual((await lire(monter(o))).hash,a.hash,nom);
  /* 4.9.5.4 (D-139) : un libellé de bouton qui change, ou un écouteur de plus, dépendent de l'état de la page : même empreinte. */

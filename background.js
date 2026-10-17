@@ -334,16 +334,19 @@ async function contratOublier(tabId){try{const S=stockContrats();if(!S?.get||!Nu
 async function contratNoter(c,tabId){try{
  if(!releveOn('empreinte')||!c||typeof c.hash!=='string'||!/^[0-9a-f]{8}$/.test(c.hash))return;
  const S=stockContrats(),detail=reduireContrat(c.detail),etat=reduireContrat(c.etat),cle=Number.isInteger(tabId)?String(tabId):'?';
- const tous=await contratsLire(S),prev=tous[cle]||null;
+ /* Audit P-5 (H14) : la forme 2 ne hache plus la sélection du rail ; une empreinte d'une autre forme n'est jamais comparée (ni avis, ni
+  * « différente de la dernière connue » au premier « Connecter » après l'installation). Sans forme dite : forme 1. */
+ const forme=Number.isInteger(c.forme)?c.forme:1,memeForme=x=>(Number.isInteger(x?.forme)?x.forme:1)===forme;
+ const tous=await contratsLire(S),prev=tous[cle]&&memeForme(tous[cle])?tous[cle]:null;
  const change=!!prev&&typeof prev.hash==='string'&&prev.hash!==c.hash;
  const diff=(x,y)=>{const a=aplatirContrat(x||{}),b=aplatirContrat(y||{});return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).slice(0,12);};
  const bouge=change?diff(prev?.detail,detail):[];
  /* U1 : sans empreinte propre à l'onglet, comparaison (consignée seulement) à la dernière connue, tous onglets confondus. */
- const dernier=await contratDernierLire();
+ const dernier=(x=>memeForme(x)?x:null)(await contratDernierLire());
  const dernierConnu=prev?undefined:dernier?{hash:dernier.hash,different:dernier.hash!==c.hash,changements:dernier.hash!==c.hash?diff(dernier.detail,detail):[]}:null;
- journalerSimple('contrat-esv',{hash:c.hash,precedent:prev?.hash??null,change,changements:bouge,...(dernierConnu!==undefined?{dernierConnu}:{}),detail,etat,onglet:Number.isInteger(tabId)?tabId:null});
- try{await chrome.storage.local.set({[CLE_CONTRAT_DERNIER]:{hash:c.hash,at:new Date().toISOString(),version:VERSION,detail}});}catch{/* relevé seulement */}
- try{tous[cle]={hash:c.hash,at:new Date().toISOString(),version:VERSION,detail};
+ journalerSimple('contrat-esv',{hash:c.hash,forme,precedent:prev?.hash??null,change,changements:bouge,...(dernierConnu!==undefined?{dernierConnu}:{}),detail,etat,onglet:Number.isInteger(tabId)?tabId:null});
+ try{await chrome.storage.local.set({[CLE_CONTRAT_DERNIER]:{hash:c.hash,at:new Date().toISOString(),version:VERSION,forme,detail}});}catch{/* relevé seulement */}
+ try{tous[cle]={hash:c.hash,at:new Date().toISOString(),version:VERSION,forme,detail};
   const cles=Object.keys(tous).sort((x,y)=>String(tous[x]?.at||'').localeCompare(String(tous[y]?.at||'')));while(cles.length>CONTRATS_MAX)delete tous[cles.shift()];
   await S.set({[CLE_CONTRATS]:tous});}catch{}
  for(const m of [...avisContrat.vus])if(m.startsWith('empreinte:')){avisContrat.vus.delete(m);}   // un nouveau « Connecter » réévalue l'avis d'empreinte
