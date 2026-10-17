@@ -30,9 +30,12 @@
   *   Le rôle `vert` n'est qu'une présomption : avant toute correction, le service worker exige le statut lu dans ESV (src : background.js).
   *   ORDRE : par plages, dans l'ordre des cuts, comme Mic parcourt. PLAFOND (propre à la passe, absent de l'étude : budget de temps),
   *   revue de la relecture (correction 7) : les PN sont HORS DU BUDGET et toujours gardés entiers (un PN à moitié contrôlé laisse des
-  *   erreurs de 30 à 40 mm) ; `plafondCuts` cuts relus au plus pour les autres zones, plages entières par priorité de motif
-  *   (`priorites`), puis remises dans l'ordre des cuts ; une plage qui ne tient pas est rendue dans `horsPlafond`, sauf si aucune autre
-  *   plage n'est encore gardée dans le budget : elle est alors coupée au plafond (son début).
+  *   erreurs de 30 à 40 mm). D-180 : le plafond est PAR ZONE (`plafondParZone` : adv, abords, vert-hors-zone, ecartement ; null = sans
+  *   plafond) : un budget unique laissait l'ADV manger presque tout et les abords presque rien, alors que les deux agissent maintenant.
+  *   Dans chaque zone : plages entières par priorité de motif (`priorites`), puis ordre des cuts ; une plage qui ne tient pas est rendue
+  *   dans `horsPlafond`, sauf si aucune autre plage n'est encore gardée dans le budget de la zone : elle est alors coupée au plafond (son
+  *   début). `plafondCuts` (facultatif, null par défaut) est un second budget, sur l'ensemble des zones hors PN ; tout est remis dans
+  *   l'ordre des cuts.
   *
   * JUGEMENT (`juger`) d'un cut visité : la pose actuelle d'ESV (celle de la capture), la pose qu'Ariane donnerait (décision sur le
   * lot en chaîne, plus la hauteur apprise : variante « chaine+h » de l'étude), l'écart par rail dans le repère profil
@@ -47,7 +50,11 @@
   isole:Object.freeze({marge:1}),differe:Object.freeze({marge:2}),grappe:Object.freeze({trouCuts:5,min:3,marge:3}),
   fusionTrouCuts:0,relireCutsDuLot:false,
   priorites:Object.freeze(['pn','adv','grappe','differe','isole','a-controler','ecartement']),
-  plafondCuts:120,
+  /* Plafond par zone (D-180), en cuts relus ; mesuré sur les parties d'apprentissage (fiches/RELECTURE_OMBRE.md § 11). PN : aucun. À 3,5 s
+   * par cut relu, la passe d'une partie avec lot reste autour de 10 minutes au plus (PN compris). Les abords ont le meilleur rendement
+   * (aucune erreur sur les corrections de l'étude), l'ADV le plus faible (peu de corrections à faire, 18 % d'erreurs). */
+  plafondParZone:Object.freeze({adv:40,abords:70,'vert-hors-zone':20,ecartement:20}),
+  plafondCuts:null,
   /* Temps par cut relu (s) pour l'estimation : navigation d'un pas, capture et calcul, sans pause ajoutée (D-176). Mesuré au banc
    * (fiches/RELECTURE_OMBRE.md § 6 : 2,9 s par cut relu, capture comprise). Un cut traversé : un pas (0,1 s au banc), arrondi à 1 s. */
   tempsParCutS:3,tempsTraverseS:1,
@@ -104,19 +111,28 @@
    for(const c of liste){if(poses.has(c)&&!cfg.relireCutsDuLot)traverses.push(c);else cuts.push({cut:c,role:differes.has(c)?'differe':poses.has(c)?'lot':'vert',zone:zoneDe.get(c)});}
    return {debut:a,fin:z,motifs:ms,zone,priorite:rang(tete),libelle:`${LIBELLE[tete]||tete} ${tiret(a,z)}`,cuts,traverses,liste};};
   const candidates=fondues.map(p=>decrire(p.a,p.z,p.cuts));
-  /* Plafond : les PN hors budget, entiers ; les autres plages entières, par priorité puis ordre des cuts. */
-  const gardees=candidates.filter(p=>p.zone==='pn'),horsPlafond=[];let reste=entier(cfg.plafondCuts)?cfg.plafondCuts:Infinity,dansBudget=0;
-  for(const p of candidates.filter(x=>x.zone!=='pn').sort((x,y)=>x.priorite-y.priorite||x.debut-y.debut)){
-   if(p.cuts.length<=reste){gardees.push(p);reste-=p.cuts.length;dansBudget++;continue;}
-   if(!dansBudget&&reste>0){const coupe=p.cuts[reste-1].cut;gardees.push(decrire(p.debut,coupe,p.liste.filter(c=>c<=coupe)));dansBudget++;
-    horsPlafond.push({debut:coupe+1,fin:p.fin,motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});reste=0;continue;}
-   horsPlafond.push({debut:p.debut,fin:p.fin,motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});}
+  /* Plafond : les PN hors budget, entiers ; chaque autre zone a son budget (`plafondParZone`), puis un budget global facultatif
+   * (`plafondCuts`) ; dans un budget, les plages entières par priorité puis ordre des cuts. */
+  const gardees=candidates.filter(p=>p.zone==='pn'),horsPlafond=[];
+  const hors=(p,debut=p.debut)=>horsPlafond.push({debut,fin:p.fin,motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});
+  const budgeter=(liste,plafond)=>{let reste=entier(plafond)?plafond:Infinity,dansBudget=0;const out=[];
+   for(const p of liste.slice().sort((x,y)=>x.priorite-y.priorite||x.debut-y.debut)){
+    if(p.cuts.length<=reste){out.push(p);reste-=p.cuts.length;dansBudget++;continue;}
+    if(!dansBudget&&reste>0){const coupe=p.cuts[reste-1].cut;out.push(decrire(p.debut,coupe,p.liste.filter(c=>c<=coupe)));dansBudget++;hors(p,coupe+1);reste=0;continue;}
+    hors(p);}
+   return out;};
+  const parZoneBudget=cfg.plafondParZone&&typeof cfg.plafondParZone==='object'?cfg.plafondParZone:{};
+  const apresZones=ORDRE_ZONES.filter(z=>z!=='pn').flatMap(z=>budgeter(candidates.filter(x=>x.zone===z),parZoneBudget[z]));
+  gardees.push(...budgeter(apresZones,cfg.plafondCuts));
   gardees.sort((x,y)=>x.debut-y.debut);horsPlafond.sort((x,y)=>x.debut-y.debut);
+  /* Une plage coupée par le budget de sa zone puis par le budget global : un seul reste, d'un seul tenant. */
+  for(let i=horsPlafond.length-1;i>0;i--){const a=horsPlafond[i-1],b=horsPlafond[i];if(a.fin+1===b.debut&&a.motifs.join()===b.motifs.join()){a.fin=b.fin;a.libelle=b.libelle;horsPlafond.splice(i,1);}}
   const cuts=gardees.flatMap((p,i)=>p.cuts.map(c=>({...c,plage:i})));
   const traverses=gardees.reduce((n,p)=>n+p.traverses.length,0);
   const parZone=Object.fromEntries(ORDRE_ZONES.map(z=>[z,cuts.filter(c=>c.zone===z).length]));
   return {format:'ariane-relecture-selection-1',version:cfg.version,partie:entier(e.partie)?e.partie:null,total:cuts.length,traverses,parZone,
-   tempsEstimeS:Math.round(cuts.length*cfg.tempsParCutS+traverses*cfg.tempsTraverseS),plafondCuts:Number.isFinite(reste)?cfg.plafondCuts:null,
+   tempsEstimeS:Math.round(cuts.length*cfg.tempsParCutS+traverses*cfg.tempsTraverseS),plafondCuts:entier(cfg.plafondCuts)?cfg.plafondCuts:null,
+   plafondParZone:Object.fromEntries(['adv','abords','vert-hors-zone','ecartement'].map(z=>[z,entier(parZoneBudget[z])?parZoneBudget[z]:null])),
    plages:gardees.map(p=>({debut:p.debut,fin:p.fin,motifs:p.motifs,zone:p.zone,libelle:p.libelle,relus:p.cuts.length,traverses:p.traverses})),
    cuts,horsPlafond};}
  /* Options de sélection depuis le bloc `selection` du fichier de réglages (marges de grappe, d'isolé, de différé) ; le reste : défaut.

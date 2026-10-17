@@ -2028,8 +2028,9 @@ const ECARTEMENT_ORIGINE_ESV_MM=1500;
 const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
 /* `departMs` (0, D-176) et `attenteEcritureMs` : rythme ; `attenteVuMs` : après le dernier cut affiché, le temps de recevoir le « vu »
  * qu'ESV écrit 0,9 à 1,7 s après l'arrivée (rien n'est commandé pendant ce temps) ; `validation` : le geste de validation de « corriger » ('maj-espace', le seul
- * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : celui de la sélection si entier. */
-const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,validation:'maj-espace',...(globalThis.BananeSettings?.relecture||{})});
+ * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : budget global de la sélection si entier (hors PN) ;
+ * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
+const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',...(globalThis.BananeSettings?.relecture||{})});
 const passeActive=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
 const RANG_MODE={coupee:0,ombre:1,corriger:2};
 async function relectureChoix(){let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
@@ -2202,7 +2203,8 @@ async function relectureLancer({auto=false,passe=null}={}){
   else if(modeEffectif==='corriger'&&!observe){modeEffectif='ombre';motif='l’observateur passif est coupé, aucune écriture ne pourrait être prouvée';}
   else if(modeEffectif==='corriger'&&!permis.ok){modeEffectif='ombre';motif=`réglages non sûrs (${permis.raison})`;}
   const entree=await relectureEntree(engine.s.batch);
-  const sel=R.selection(entree,{...R.optionsSelection(reglages.selection),...(Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:{})});
+  const sel=R.selection(entree,{...R.optionsSelection(reglages.selection),...(Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:{}),
+   ...(cfg.plafondParZone&&typeof cfg.plafondParZone==='object'?{plafondParZone:cfg.plafondParZone}:{})});
   s=suite();if(s==='remplacee')return relectureEtat();if(s)return nonLancee('arrêtée à ta demande avant le départ','arret');
   /* Revue (correction 2) : ESV et le lot sont recontrôlés APRÈS les attentes, juste avant le départ. */
   refus=await relectureRefus(engine.s.batch,auto);if(refus)return nonLancee(refus);
@@ -2217,7 +2219,7 @@ async function relectureLancer({auto=false,passe=null}={}){
   try{await chrome.storage.local.set({[CLE_RELECTURE_PASSE]:{lotId:p.lotId,gen:p.gen,debut:p.debut,mode:p.mode,modeEffectif}});}catch{/* mémoire seule */}
   relectureJournal('relecture-debut',{mode:p.mode,modeEffectif,choixCourant,motif,auto,total:sel.total,traverses:sel.traverses,parZone:sel.parZone,variante:reglages.variante,
    ecartementPartieMm:entree.ecartementPartieMm??null,cutsNeufsAnnonces:neufs,sourcesLot:entree.sources,chaine:'vide',validation:cfg.validation,
-   zonesSource:entree.zonesSource,zones:{pn:entree.zonesPN.slice(0,64),adv:entree.zonesADV.slice(0,64)},tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,
+   zonesSource:entree.zonesSource,zones:{pn:entree.zonesPN.slice(0,64),adv:entree.zonesADV.slice(0,64)},tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,plafondParZone:sel.plafondParZone,
    plages:sel.plages.map(x=>({debut:x.debut,fin:x.fin,zone:x.zone,libelle:x.libelle,relus:x.relus})),horsPlafond:sel.horsPlafond.map(x=>({debut:x.debut,fin:x.fin,libelle:x.libelle})),
    reglages:p.reglages},p);
   relecture.tache=relecturePasse(p,b,sel,reglages,entree).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();

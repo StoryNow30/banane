@@ -187,3 +187,43 @@ test('plafond par zone : PN 401–414 dans une ADV 256–689, plafond 120 : les 
  assert.equal(t.cuts.filter(c=>c.zone!=='pn').length,20);
  assert.equal(t.plafondCuts,20);
 });
+
+/* D-180 : le plafond est PAR ZONE. Avant, un budget unique servi par priorité laissait l'ADV (329 verts jugeables sur les parties
+ * d'apprentissage) manger presque tout et les abords (223) presque rien. Maintenant chaque zone (ADV, abords, vert hors zone,
+ * écartement) a son budget ; le PN reste hors budget, jamais coupé. */
+test('plafond par zone : l’ADV ne mange plus le budget des abords ; PN jamais coupé ; plages entières par priorité dans la zone ; la première trop grande est coupée à son début',()=>{
+ const entree={partie:1,lot:[{cut:900},{cut:902},{cut:904},{cut:1100,differe:true}],zonesADV:[[256,689]],zonesPN:[[401,414]],aControler:[[1500,1509]]};
+ const s=R.selection(entree,{plafondParZone:{adv:60,abords:30,'vert-hors-zone':4,ecartement:0}});
+ const nb=z=>s.cuts.filter(c=>c.zone===z).length;
+ assert.equal(nb('pn'),14,'PN entier, hors budget');
+ assert.equal(nb('adv'),60,'ADV coupée à son budget (le début de la plage)');
+ assert.deepEqual(s.cuts.filter(c=>c.zone==='adv').map(c=>c.cut).slice(0,2),[256,257]);
+ assert.ok(nb('abords')>0&&nb('abords')<=30,'les abords ont leur budget, même avec une ADV de 434 cuts');
+ assert.deepEqual(s.cuts.filter(c=>c.zone==='abords').map(c=>c.cut).filter(c=>c>=897&&c<=907).length>0,true,'grappe 897–907 gardée (priorité grappe)');
+ assert.equal(nb('vert-hors-zone'),4,'liste « À contrôler » coupée à 4');
+ assert.ok(s.horsPlafond.some(p=>p.debut===316&&p.fin===400)&&s.horsPlafond.some(p=>p.debut===415&&p.fin===689),'reste de l’ADV (de part et d’autre du PN) rendu hors plafond');
+ assert.ok(s.horsPlafond.some(p=>p.debut===1504&&p.fin===1509),'reste de la liste rendu hors plafond');
+ assert.deepEqual(s.plafondParZone,{adv:60,abords:30,'vert-hors-zone':4,ecartement:0});
+ /* Sans plafond de zone (null) : tout est relu, comme l'étude. */
+ const t=R.selection(entree,{plafondParZone:{adv:null,abords:null,'vert-hors-zone':null,ecartement:null}});
+ assert.equal(t.cuts.filter(c=>c.zone==='adv').length,420,'434 cuts d’ADV moins les 14 du PN');assert.equal(t.horsPlafond.length,0);
+ /* Le budget d'une zone ne sert jamais une autre : abords seuls à 6, ADV à 0 (aucune ligne ADV), PN intact. */
+ const u=R.selection(entree,{plafondParZone:{adv:0,abords:6,'vert-hors-zone':null,ecartement:null}});
+ assert.equal(u.cuts.filter(c=>c.zone==='adv').length,0);assert.equal(u.cuts.filter(c=>c.zone==='pn').length,14);
+ assert.ok(u.cuts.filter(c=>c.zone==='abords').length<=6);
+ /* Le plafond global (réglage de rythme) reste possible : il joue après ceux des zones, PN toujours hors budget. */
+ const v=R.selection(entree,{plafondParZone:{adv:60,abords:30,'vert-hors-zone':4,ecartement:0},plafondCuts:20});
+ assert.equal(v.cuts.filter(c=>c.zone!=='pn').length<=20,true);assert.equal(v.cuts.filter(c=>c.zone==='pn').length,14);
+});
+
+test('plafond par zone : valeurs par défaut (mesurées, fiche § 11) — chaque zone a un budget fini, le PN aucun',()=>{
+ const d=R.DEFAULTS.plafondParZone;
+ assert.ok(d&&!('pn' in d),'le PN n’a pas de budget');
+ assert.deepEqual(JSON.parse(JSON.stringify(d)),{adv:40,abords:70,'vert-hors-zone':20,ecartement:20});
+ assert.equal(R.DEFAULTS.plafondCuts,null,'plus de budget unique par défaut');
+ /* La passe d'une partie reste de l'ordre de la dizaine de minutes : PN (hors budget) + 150 cuts hors PN au plus, à 3,5 s le cut. */
+ assert.ok(Object.values(d).reduce((a,b)=>a+b,0)*3.5/60<=12,'au plus 12 minutes de cuts hors PN');
+ /* Appliqués sans option : une ADV de 434 cuts (PN 401–414 dedans) et une grappe d'abords de 11 cuts. */
+ const s=R.selection({partie:1,lot:[{cut:900},{cut:902},{cut:904}],zonesADV:[[256,689]],zonesPN:[[401,414]]});
+ assert.equal(s.cuts.filter(c=>c.zone==='pn').length,14);assert.equal(s.cuts.filter(c=>c.zone==='adv').length,40);assert.equal(s.cuts.filter(c=>c.zone==='abords').length,8);
+});
