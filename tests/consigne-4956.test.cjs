@@ -34,7 +34,10 @@ test('ce qui change : les trois choix du clic avec les libellés du panneau et l
  assert.ok(s.includes('« Clic du mode rapide »'));assert.match(html,/<legend class="lbl">Clic du mode rapide<\/legend>/);
  for(const m of ['6 à 9 %','12 à 18 %','lu au démarrage de chaque lot','un changement pendant un lot sert au lot suivant','le panneau le dit'])assert.ok(s.includes(m),m);
  const regle='Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges)';
- assert.ok(s.includes(`« ${regle} »`));assert.ok(html.includes(`> ${regle}</label>`),'libellé du panneau : la règle');
+ assert.ok(s.includes(`« ${regle} »`));
+ /* Test 7 (Mic) : le libellé du panneau a été corrigé (la règle part d'une série de DIFFÉRÉS, pas d'aiguilles ni de rouges) ;
+  * la consigne de la test 6 garde le libellé de sa version. */
+ assert.ok(html.includes('> Mettre en attente les cuts voisins d’une série de différés</label>'),'libellé du panneau : la règle');
  for(const m of ['**Une règle métier, coupée par défaut.**','elle ne pose jamais ailleurs','Lue au démarrage du lot',
   '**La carte « À contrôler » montre aussi les aiguillages**','« ADV ','**Ariane note chaque clic parti hors de la vue**','sans rien changer',
   'le dernier lot fait foi','l\'export sans zip'])assert.ok(s.includes(m),m);
