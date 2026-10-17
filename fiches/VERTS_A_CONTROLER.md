@@ -213,7 +213,7 @@ Partie 12 :
 - **L'univers du rejeu.** Seuls les verts que l'opérateur a relus ont une étiquette et une pose connue hors ligne. La liste du terrain contiendra aussi des verts qu'il ne relit pas aujourd'hui. Estimation pessimiste : 154 au lieu de 121 en partie 29 (9,5 min).
 - **Les voisins sont plus denses au terrain.** L'instantané donne tous les verts, alors que le rejeu n'a que les verts relus. Les signaux de hauteur et de dénivelé y seront plus précis, mais leur loi sur les verts justes peut changer.
 - **L'instantané E1 est indispensable** pour la hauteur et le dénivelé. Sans lui (liste vue partiellement, ou mémoire de la liste coupée), il ne reste que l'écartement des fenêtres de B1. C'est dit dans la carte.
-- **ADV.** Un ADV sans différé n'est pas vu, et ses marges de 20 à 40 cuts dépassent la fenêtre. Au second projet, 7 erreurs manquées sont dans les zones d'ADV 1 et 4.
+- **ADV.** Un ADV sans différé n'est pas vu, et ses marges de 20 à 40 cuts dépassent la fenêtre. Au second projet, 7 erreurs manquées sont dans les zones d'ADV 1 et 4. **Mise à jour du 17/10** : les zones d'ADV reconnues par le rail de plus (`fiches/DETECTION_ADV.md`) font entrer leurs verts comme candidats (poids nul). Au second projet, la liste passe à 33 erreurs sur 35 et 20 gros écarts sur 20, pour 7 verts de plus ; les autres parties ne changent pas.
 - **Les PN** viennent des règles métier en ombre. Un PN que le lot n'a pas vu (peu de rouges) n'a pas de plage.
 - **Le seuil de 10 mm et le bruit de la référence** (2 à 4 mm, D-134, D-158) : beaucoup des erreurs manquées sont des corrections de 10 à 15 mm.
 - **Temps** : 3,7 s est une moyenne de la partie 29. On mesure des durées de visite, pas des durées de regard.
