@@ -70,3 +70,16 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 **Vague 3** (quand la vague 2 est rentrée) :
 - **test 5** depuis `claude/50-base` : version 4.9.5.5, consigne, paquet ;
 - relecture au niveau maximal avant de l'envoyer à Mic.
+
+**État au 17 octobre, vers 2 h** :
+- vagues 2 et 3 rentrées : D-161 (hauteur apprise), D-162 (liste des verts), D-163 (test 5 relue et envoyée à Mic) ;
+- le cahier v1.1 est envoyé à Mic, hors dépôt, dans `cahier11/` ; à verser au dépôt après son accord.
+
+**Vague 4 lancée** :
+- `claude/50-rapide-humain` (fort) : réglage `rapide.clicHumain`, `'tel-quel'` par défaut, plus le relevé `clic-hors-vue`, mesuré au banc ;
+- `claude/50-detection-adv` (fort) : étude de détection des ADV, puis ombre et branchement sur la liste des verts si elle tient ;
+- `claude/50-utiles-t6` (rapide) : les points utiles de la relecture de la test 5.
+
+**Au prochain réveil** :
+- recueillir la vague 4 et la fusionner dans `claude/50-base` ;
+- rien ne part au terrain avant le retour de Mic sur la test 5 et ses décisions : D-157 et cahier v1.1.
