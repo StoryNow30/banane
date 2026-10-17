@@ -119,6 +119,19 @@ test('skipOmbre (D-172) : « aucun-point » si la capture n’a aucun point ; sc
  assert.equal(R.skipOmbre({...c,quality:{...c.quality,perRail:{left:0,right:12}}}).raison,null);
 });
 
+test('skipOmbre (D-172) : « un-seul-scanner » seulement si les points portent leur source (pointSourceID), jamais deviné',()=>{
+ const c=capture(),n=c.pointsSceneRelative.length;
+ const un={...c,attributes:{...c.attributes,pointSourceID:new Array(n).fill(7)}};
+ assert.deepEqual(R.skipOmbre(un),{raison:'un-seul-scanner',points:{left:2322,right:2442},scanners:1,scannersLisibles:true});
+ const deux={...c,attributes:{...c.attributes,pointSourceID:Array.from({length:n},(_,i)=>i%3?7:9)}};
+ assert.equal(R.skipOmbre(deux).raison,null);assert.equal(R.skipOmbre(deux).scanners,2);
+ /* Les points cachés par la boîte de découpe ne comptent pas : le seul point du second scanner est caché. */
+ const cache={...c,visibleByClipBoxes:Array.from({length:n},(_,i)=>i!==0),attributes:{...c.attributes,pointSourceID:Array.from({length:n},(_,i)=>i===0?9:7)}};
+ assert.equal(R.skipOmbre(cache).raison,'un-seul-scanner');
+ /* Attribut de longueur différente des points : illisible. */
+ assert.equal(R.skipOmbre({...c,attributes:{pointSourceID:[1]}}).scannersLisibles,false);
+});
+
 test('le module ne commande rien : aucune référence à une commande d’ESV ni à chrome',()=>{
  const src=require('node:fs').readFileSync(require.resolve('../src/relecture-ombre.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
  for(const mot of ['apply','validateAndNext','skipAndNext','validateInPlace','chrome.','XMLHttpRequest','fetch('])assert.ok(!src.includes(mot),mot);

@@ -21,7 +21,8 @@
   *   Les plages à `fusionTrouCuts` cuts ou moins l'une de l'autre sont fondues (Mic ne laisse pas de trou). Bornes : 0 et `total − 1`.
   *   D-172 : aucun cut n'est exclu, les premiers cuts d'une partie compris.
   *   Rôle de chaque cut d'une plage : `vert` (hors du lot, laissé valide par ESV), `differe` (cut du lot différé : encore invalide),
-  *   `lot` (cut posé et validé par le lot : traversé, pas relu, sauf `relireCutsDuLot`).
+  *   `lot` (cut posé et validé par le lot : traversé, pas relu, sauf `relireCutsDuLot`). Zone de chaque cut (`zone`) : celle du motif
+  *   le plus prioritaire de sa plage (`ZONE` : pn, adv, abords, vert-hors-zone), lue par la règle prudente de correction.
   *   ORDRE : par plages, dans l'ordre des cuts, comme Mic parcourt. PLAFOND : `plafondCuts` cuts relus au plus ; les plages sont
   *   gardées ENTIÈRES (un PN à moitié contrôlé laisse des erreurs de 30 à 40 mm), par priorité de motif (`priorites`), puis remises
   *   dans l'ordre des cuts ; une plage qui ne tient pas est rendue dans `horsPlafond`, sauf si rien n'est encore gardé : elle est
@@ -37,9 +38,9 @@
   *
   * SKIP EN OMBRE (`skipOmbre`, règle métier de Mic, D-172) : un cut ne se SKIP que si AUCUN point n'est affiché, ou si UN SEUL scanner
   * l'est. Le nombre de points par rail est dans la capture (`quality.perRail`) : « aucun-point » quand les deux sont nuls. Le scanner
-  * d'un point n'y est PAS : un seul nuage Potree par capture, attributs `intensity` et `classification` seulement (aucun
-  * `pointSourceID` relevé sur le terrain). `scanners` reste donc `null`, `scannersLisibles` faux : rien n'est deviné. Consigné
-  * seulement : aucun SKIP n'est envoyé. */
+  * d'un point n'y est que si Potree fournit `pointSourceID` (le lecteur le garde alors) : aucune capture de terrain relevée ne le porte
+  * (un seul nuage, attributs `intensity` et `classification`). Sans lui, `scanners` reste `null`, `scannersLisibles` faux : rien
+  * n'est deviné. Consigné seulement : aucun SKIP n'est envoyé. */
  const VERSION='relecture-ombre-v1';
  const DEFAULTS=Object.freeze({version:VERSION,
   isole:Object.freeze({marge:1}),differe:Object.freeze({marge:2}),grappe:Object.freeze({trouCuts:5,min:3,marge:3}),
@@ -52,6 +53,9 @@
   seuilCorrigerMm:5,zoneGrise:Object.freeze([3.6,6.4])});
  const SIDES=['left','right'],NOM={left:'gauche',right:'droit'};
  const LIBELLE={pn:'PN',adv:'ADV',grappe:'grappe',differe:'autour du différé',isole:'cut isolé','a-controler':'à contrôler'};
+ /* Type de zone d'une plage, pour la règle prudente de correction (src/relecture-critere.js) : celui de son motif le plus prioritaire.
+  * Abords : autour des cuts du lot (grappe, différé, cut isolé) ; vert hors zone : la liste « À contrôler » seule. */
+ const ZONE={pn:'pn',adv:'adv',grappe:'abords',differe:'abords',isole:'abords','a-controler':'vert-hors-zone'};
  const entier=v=>Number.isInteger(v)&&v>=0;
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10+0:null;
  const um=v=>Math.round(v*1e6)/1e6;
@@ -91,8 +95,9 @@
    else fondues.push({a:p.a,z:p.z,motifs:new Set([p.motif])});}
   const rang=m=>{const i=cfg.priorites.indexOf(m);return i<0?cfg.priorites.length:i;};
   const decrire=(a,z,motifs)=>{const ms=[...motifs].sort((x,y)=>rang(x)-rang(y)),cuts=[],traverses=[];
-   for(let c=a;c<=z;c++){if(poses.has(c)&&!cfg.relireCutsDuLot)traverses.push(c);else cuts.push({cut:c,role:differes.has(c)?'differe':poses.has(c)?'lot':'vert'});}
-   return {debut:a,fin:z,motifs:ms,priorite:rang(ms[0]),libelle:`${LIBELLE[ms[0]]||ms[0]} ${tiret(a,z)}`,cuts,traverses};};
+   const zone=ZONE[ms[0]]||'vert-hors-zone';
+   for(let c=a;c<=z;c++){if(poses.has(c)&&!cfg.relireCutsDuLot)traverses.push(c);else cuts.push({cut:c,role:differes.has(c)?'differe':poses.has(c)?'lot':'vert',zone});}
+   return {debut:a,fin:z,motifs:ms,zone,priorite:rang(ms[0]),libelle:`${LIBELLE[ms[0]]||ms[0]} ${tiret(a,z)}`,cuts,traverses};};
   const candidates=fondues.map(p=>decrire(p.a,p.z,p.motifs));
   /* Plafond : plages entières, par priorité puis ordre des cuts. */
   const gardees=[],horsPlafond=[];let reste=entier(cfg.plafondCuts)?cfg.plafondCuts:Infinity;
@@ -106,7 +111,7 @@
   const traverses=gardees.reduce((n,p)=>n+p.traverses.length,0);
   return {format:'ariane-relecture-selection-1',version:cfg.version,partie:entier(e.partie)?e.partie:null,total:cuts.length,traverses,
    tempsEstimeS:Math.round(cuts.length*cfg.tempsParCutS+traverses*cfg.tempsTraverseS),plafondCuts:Number.isFinite(reste)?cfg.plafondCuts:null,
-   plages:gardees.map(p=>({debut:p.debut,fin:p.fin,motifs:p.motifs,libelle:p.libelle,relus:p.cuts.length,traverses:p.traverses})),
+   plages:gardees.map(p=>({debut:p.debut,fin:p.fin,motifs:p.motifs,zone:p.zone,libelle:p.libelle,relus:p.cuts.length,traverses:p.traverses})),
    cuts,horsPlafond};}
 
  /* ----------------------------------------------------------------- jugement */
@@ -139,11 +144,21 @@
    verdict:corrige?'je corrigerais':'je laisserais',
    raison:corrige?`${lieu} (seuil ${nombre(cfg.seuilCorrigerMm)} mm, étage ${base.etage})${h}`:`écart le plus grand : ${lieu}, sous le seuil de ${nombre(cfg.seuilCorrigerMm)} mm${h}`};}
 
- /* SKIP en ombre (D-172) : « aucun-point » si aucun point n'est affiché ; un seul scanner : illisible dans la capture. */
+ /* SKIP en ombre (D-172) : « aucun-point » si aucun point n'est affiché ; « un-seul-scanner » si les points visibles portent un
+  * identifiant de source (`attributes.pointSourceID`, gardé par le lecteur quand Potree le fournit) et qu'il n'y en a qu'un. Sans cet
+  * attribut (cas de toutes les captures de terrain relevées : intensité et classe seulement), `scanners` reste null : rien n'est deviné.
+  * Le compte des scanners porte sur toute la capture (les deux vues fondues) : la capture ne dit plus de quelle vue vient un point. */
  function skipOmbre(capture){const q=capture?.quality?.perRail;
   const points=q&&SIDES.every(s=>Number.isInteger(q[s]))?{left:q.left,right:q.right}:null;
-  const total=points?points.left+points.right:Array.isArray(capture?.pointsSceneRelative)?capture.pointsSceneRelative.length:null;
-  return {raison:total===0?'aucun-point':null,points,scanners:null,scannersLisibles:false};}
+  const pts=Array.isArray(capture?.pointsSceneRelative)?capture.pointsSceneRelative:null;
+  const total=points?points.left+points.right:pts?pts.length:null;
+  const a=capture?.attributes,ids=Array.isArray(a?.pointSourceID)?a.pointSourceID:Array.isArray(a?.pointSourceId)?a.pointSourceId:null;
+  let scanners=null;
+  if(ids&&pts&&ids.length===pts.length){const vis=Array.isArray(capture.visibleByClipBoxes)?capture.visibleByClipBoxes:null,vus=new Set();
+   for(let i=0;i<ids.length;i++)if(Number.isFinite(ids[i])&&vis?.[i]!==false)vus.add(ids[i]);
+   scanners=vus.size;}
+  const raison=total===0?'aucun-point':scanners===1?'un-seul-scanner':null;
+  return {raison,points,scanners,scannersLisibles:scanners!==null};}
 
  /* Ce qu'Ariane donnerait sur une capture : moteur (science GCV1), décision sur le lot avec les appuis du lot, hauteur apprise
   * (consignée par la décision, réglage forcé actif ici : c'est une ombre), puis le jugement. Dépendances passées : `Shadow`
@@ -157,5 +172,5 @@
 
  /* Durée lisible : « 2 min 20 s », « 45 s ». */
  function duree(s){if(!Number.isFinite(s)||s<0)return '';const m=Math.floor(s/60),r=Math.round(s-60*m);return m?`${m} min${r?` ${r} s`:''}`:`${r} s`;}
- return {VERSION,DEFAULTS,LIBELLE,plage,selection,ecartRail,poseCalculee,confiance,juger,skipOmbre,evaluer,duree};
+ return {VERSION,DEFAULTS,LIBELLE,ZONE,plage,selection,ecartRail,poseCalculee,confiance,juger,skipOmbre,evaluer,duree};
 });
