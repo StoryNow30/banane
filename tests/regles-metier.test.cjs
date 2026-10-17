@@ -16,7 +16,7 @@ const quai=y=>y>0.7175?-0.01:-0.16;   // à droite du rail droit seulement : un 
 
 test('réglages : version, seuils figés, objet gelé',()=>{
  assert.ok(Object.isFrozen(R.DEFAULTS));assert.equal(R.DEFAULTS.version,'regles-metier-v1');
- assert.deepEqual(JSON.parse(JSON.stringify(R.DEFAULTS.pn)),{confirmation:2,confirmationEcartCuts:3,margeAvant:4,margeApres:6});
+ assert.deepEqual(JSON.parse(JSON.stringify(R.DEFAULTS.pn)),{confirmation:2,confirmationEcartCuts:3,consecutifs:true,margeAvant:4,margeApres:6});
  assert.deepEqual(JSON.parse(JSON.stringify(R.DEFAULTS.grappe)),{fenetreCuts:6,differesMin:2,procheCuts:2});
  assert.equal(R.DEFAULTS.surface.quadMinPct,50);assert.equal(R.DEFAULTS.ecartement.seuilMm,15);assert.equal(R.DEFAULTS.enPlace.mm,1);
 });
@@ -49,6 +49,52 @@ test('PN : un cœur seul n\'est qu\'un candidat ; deux cœurs à 3 cuts au plus 
  const m1=R.creerMemoire('lot-a1');R.noter(m1,res(100,{coeurPN:true}),{},{pn:{confirmation:1}});assert.deepEqual(m1.zones,[{debut:100,fin:100}]);
  /* Un cœur isolé loin de tout autre : jamais confirmé. */
  const m2=R.creerMemoire('lot-b');assert.deepEqual(jouer(m2,[res(10,{coeurPN:true}),res(14,{coeurPN:true})]).map(x=>x.zone.pn),['coeur-non-confirme','coeur-non-confirme']);
+});
+
+/* PN robuste (fiches/PN_ROBUSTE.md, H6) : deux cœurs ne confirment le PN que s'ils sont CONSÉCUTIFS parmi les cuts vus (aucun cut vu
+ * non-cœur entre eux, écart de 3 au plus). Un cut « vu » a une surface lue (`flushPct` présent) ; un cut sans capture ne compte pas.
+ * Cas de la partie 1 du second projet : cœur 447 (lot), 448 et 449 vus sans chaussée, cœur 450 (relecture d'un vert) : faux PN. */
+const vu=(cut,o={})=>res(cut,{flushPct:20,quadMin:0,...o}),sansCapture=cut=>res(cut,{flushPct:null,quadMin:null});
+const COEUR={coeurPN:true,flushPct:93,quadMin:82};
+test('PN (H6, livré) : deux cœurs séparés par des cuts vus sans chaussée ne confirment pas ; la règle d\'avant les confirmait',()=>{
+ const suite=[res(447,COEUR),vu(448,{flushPct:82,quadMin:44}),vu(449,{flushPct:78,quadMin:46}),res(450,COEUR),vu(452)];
+ const e=jouer(R.creerMemoire('h6-a'),suite);
+ assert.deepEqual(e.map(x=>x.zone.pn),['coeur-non-confirme',null,null,'coeur-non-confirme',null]);
+ assert.equal(e[3].zone.pnControle,undefined);assert.deepEqual(e.map(x=>x.regles.includes('pn-chaque-cut')),[false,false,false,false,false]);
+ /* Réglage `consecutifs:false` : la règle d'avant (deux cœurs à 3 cuts au plus) ouvre la zone 443–456. */
+ const ref=R.creerMemoire('h6-ref'),opt={pn:{consecutifs:false}};
+ const r=suite.map(x=>{const v=R.evaluer(ref,x,opt);R.noter(ref,x,{differe:!x.valide},opt);return v;});
+ assert.equal(r[3].zone.pn,'coeur');assert.deepEqual(r[3].zone.pnControle,[443,456]);assert.deepEqual(ref.zones,[{debut:447,fin:450}]);
+});
+
+test('PN (H6) : cœurs consécutifs, cuts sans capture entre eux, cut illisible après la confirmation (cas 407) ; la zone grandit comme avant',()=>{
+ /* Deux cœurs voisins : confirmés. Un cut sans capture entre deux cœurs ne casse rien (il n'est pas vu). */
+ assert.deepEqual(jouer(R.creerMemoire('h6-b'),[res(100,COEUR),res(101,COEUR)]).map(x=>x.zone.pn),['coeur-non-confirme','coeur']);
+ const e=jouer(R.creerMemoire('h6-c'),[res(200,COEUR),sansCapture(201),sansCapture(202),res(203,COEUR)]);
+ assert.equal(e[3].zone.pn,'coeur');assert.deepEqual(e[3].zone.pnControle,[196,209]);
+ /* Écho de la partie 1 du second projet : 405 et 406 cœurs, 407 vu mais illisible (quarts trop peu peuplés), 408 cœur (capture du lot). */
+ const p=jouer(R.creerMemoire('h6-d'),[res(404,{flushPct:12,quadMin:0}),res(405,COEUR),res(406,COEUR),vu(407,{flushPct:86,quadMin:null}),res(408,COEUR),vu(409,{flushPct:41,quadMin:10})]);
+ assert.deepEqual(p.map(x=>x.zone.pn),[null,'coeur-non-confirme','coeur','marge-apres','coeur','marge-apres']);
+ assert.deepEqual(p[4].zone.pnControle,[401,414]);
+ /* Une zone confirmée s'étend à un cœur de sa marge d'après même si des cuts vus sans chaussée les séparent (extension inchangée). */
+ const z=jouer(R.creerMemoire('h6-e'),[res(300,COEUR),res(301,COEUR),vu(302),vu(303),res(305,COEUR)]);
+ assert.deepEqual(z.map(x=>x.zone.pn),['coeur-non-confirme','coeur','marge-apres','marge-apres','coeur']);assert.deepEqual(z[4].zone.pnControle,[296,311]);
+});
+
+test('PN (H6) : un cut vu plus tard (relecture après le lot) compte ; le dernier regard sur un cut fait foi',()=>{
+ /* Le lot voit 447 (cœur) et 448, 449 (sans chaussée) ; la relecture capture ensuite le vert 450 (cœur) : pas de zone. */
+ const m=R.creerMemoire('h6-f');jouer(m,[res(447,COEUR),vu(448),vu(449)]);
+ assert.equal(R.evaluer(m,res(450,COEUR)).zone.pn,'coeur-non-confirme');
+ /* Un cut d'abord vu sans chaussée puis revu comme cœur : il ne sépare plus rien. */
+ const m2=R.creerMemoire('h6-g');jouer(m2,[res(500,COEUR),vu(501),res(501,COEUR)]);
+ assert.equal(m2.zones.length,1);assert.deepEqual(m2.zones[0],{debut:500,fin:501});
+ /* Lot long, puis relecture : 448 et 449 ont été vus des centaines de cuts plus tôt ; ils séparent toujours 447 de 450. (Une mémoire
+  * bornée à 80 cuts les avait oubliés : le faux PN revenait, constaté au rejeu de la partie 1 du second projet, fiches/PN_ROBUSTE.md.) */
+ const m3=R.creerMemoire('h6-h');jouer(m3,[res(447,COEUR),vu(448),vu(449)]);for(let c=460;c<860;c++)R.noter(m3,vu(c));
+ assert.equal(R.evaluer(m3,res(450,COEUR)).zone.pn,'coeur-non-confirme');
+ /* … et la relecture qui capture 447 après coup, comme 450 : 448 et 449, vus par le lot, séparent encore. */
+ const m4=R.creerMemoire('h6-i');jouer(m4,[vu(448),vu(449)]);for(let c=460;c<860;c++)R.noter(m4,vu(c));
+ jouer(m4,[res(447,COEUR)]);assert.equal(R.evaluer(m4,res(450,COEUR)).zone.pn,'coeur-non-confirme');
 });
 
 test('grappe de différés : un cut posé au milieu de différés du lot ; les différés DE LA RÈGLE ne comptent pas (pas d\'avalanche)',()=>{

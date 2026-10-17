@@ -167,11 +167,12 @@ function bilan({evals,verts,mem,jeu,pnMic,advMic=[],mode}){
       if(lab){o.etiquetes++;if(x.mm>FAUX_MM)o.plus10++;if(x.mm>=MAUVAIS_OBJET_MM)o.objet25++;if(x.mm<=BON_FIN_MM)o.fin5++;}}
     if(lab){v.etiquetes++;if(x.mm>FAUX_MM)v.plus10++;if(x.mm>=MAUVAIS_OBJET_MM)v.objet25++;if(x.mm<=BON_FIN_MM)v.fin5++;}}
   v.tempsMicMin=r1(union.size*TEMPS.vertSignaleS/60);
-  /* Détecteurs comparés sur les mêmes cuts : `flushPct` seul (30 ou 50 %, un cœur suffit), quarts sans confirmation, détecteur retenu. */
+  /* Détecteurs comparés sur les mêmes cuts : `flushPct` seul (30 ou 50 %, un cœur suffit), quarts sans confirmation, détecteur retenu
+   * (deux cœurs consécutifs parmi les cuts vus) et règle d'avant (deux cœurs à 3 cuts au plus, `sans-consecutifs` ; fiches/PN_ROBUSTE.md). */
   const variantes={};
-  for(const [id,coeur,confirmation] of [['flushPct-30',r=>r.flushPct!=null&&r.flushPct>=30,1],['flushPct-50',r=>r.flushPct!=null&&r.flushPct>=50,1],
-    ['quarts-sans-confirmation',r=>r.coeurPN,1],['retenu',r=>r.coeurPN,M.DEFAULTS.pn.confirmation]]){
-    const m=M.creerMemoire('variante'),opt={pn:{confirmation}};
+  for(const [id,coeur,confirmation,consecutifs] of [['flushPct-30',r=>r.flushPct!=null&&r.flushPct>=30,1],['flushPct-50',r=>r.flushPct!=null&&r.flushPct>=50,1],
+    ['quarts-sans-confirmation',r=>r.coeurPN,1],['retenu',r=>r.coeurPN,M.DEFAULTS.pn.confirmation],['sans-consecutifs',r=>r.coeurPN,M.DEFAULTS.pn.confirmation,false]]){
+    const m=M.creerMemoire('variante'),opt={pn:{confirmation,...(consecutifs===false?{consecutifs:false}:{})}};
     for(const {r} of evals){const x={...r,coeurPN:coeur(r)};M.noter(m,x,{differe:r.valide===false},opt);}
     const zs=m.zones.map(z=>[z.debut-M.DEFAULTS.pn.margeAvant,z.fin+M.DEFAULTS.pn.margeApres]);
     variantes[id]={zones:zs.length,micRetrouves:pnMic.filter(p=>zs.some(z=>croise(p,z))).length,zonesSansPN:zs.filter(z=>!pnMic.some(p=>croise(p,z))).length,

@@ -11,8 +11,11 @@
   *
   * Ce qu'il traduit de la méthode de Mic :
   *   - PN avec ses marges, « contrôler chaque cut » : un cut du lot dont la chaussée affleure sur les QUATRE quarts autour des
-  *     rails (intérieur et extérieur de chaque rail) est un cœur de PN. Deux cœurs à 3 cuts au plus confirment le PN ; la plage
-  *     à contrôler va de 4 cuts avant le premier cœur à 6 après le dernier (marges de Mic, 4 PN de la partie 29). Règle
+  *     rails (intérieur et extérieur de chaque rail) est un cœur de PN. Deux cœurs CONSÉCUTIFS parmi les cuts vus (aucun cut vu
+  *     non-cœur entre eux) et à 3 cuts au plus confirment le PN ; la plage à contrôler va de 4 cuts avant le premier cœur à 6 après
+  *     le dernier (marges de Mic, 4 PN de la partie 29). « Consécutifs » (`pn.consecutifs`, fiches/PN_ROBUSTE.md, H6) : dès qu'on
+  *     capture des verts, deux faux cœurs isolés finissent à 3 cuts l'un de l'autre (partie 1 du second projet : 447 au lot, 450 à
+  *     l'Écho, 448 et 449 vus sans chaussée entre eux) ; une vraie chaussée, elle, ne s'interrompt pas. Règle
   *     `pn-chaque-cut` : un cut que le lot validerait dans un PN confirmé ou sa marge d'après est un cut que Mic contrôle de
   *     toute façon ; Ariane le lui laisse. Les 4 cuts d'avant sont déjà passés quand le PN est reconnu : ils ne sont que
   *     signalés (plage à contrôler).
@@ -39,7 +42,7 @@
   * appui (l'appui d'un cut différé n'existe pas). Seul Mic active. */
  const DEFAULTS=Object.freeze({version:'regles-metier-v1',
   surface:Object.freeze({sidePointsMin:200,quadPointsMin:30,quadNombreMin:3,quadMinPct:50,flushMinPct:50}),
-  pn:Object.freeze({confirmation:2,confirmationEcartCuts:3,margeAvant:4,margeApres:6}),
+  pn:Object.freeze({confirmation:2,confirmationEcartCuts:3,consecutifs:true,margeAvant:4,margeApres:6}),
   grappe:Object.freeze({fenetreCuts:6,differesMin:2,procheCuts:2}),
   enPlace:Object.freeze({mm:1}),
   ecartement:Object.freeze({seuilMm:15,lignesMin:20}),
@@ -131,13 +134,19 @@
    valide:valide===true?true:valide===false?false:null,deplacementMm,ecartementMm,
    flushPct:s?.flushPct??null,quadMin:s?.quadMin??null,coeurPN:s?.coeurPN===true,advRails:Number.isInteger(s?.advRails)?s.advRails:null};}
 
- function creerMemoire(lotId){return {lotId:lotId??null,cuts:[],coeurs:[],zones:[],advAlertes:[],zonesADV:[],lignes:new Map(),signales:new Map()};}
- /* Zone PN du cut : cœur (confirmé ou non) et marge d'après d'un PN confirmé. */
+ function creerMemoire(lotId){return {lotId:lotId??null,cuts:[],coeurs:[],nonCoeurs:new Set(),zones:[],advAlertes:[],zonesADV:[],lignes:new Map(),signales:new Map()};}
+ /* Zone PN du cut : cœur (confirmé ou non) et marge d'après d'un PN confirmé. `pn.consecutifs` : un cœur antérieur ne confirme que si
+  * aucun cut VU sans chaussée (surface lue, pas un cœur : `mem.nonCoeurs`) ne tombe entre les deux ; un cut sans capture n'est pas vu.
+  * L'extension d'une zone déjà confirmée (cœur dans la zone ou sa marge d'après) est inchangée. `nonCoeurs` garde TOUS les cuts vus du
+  * lot (des numéros seulement, comme `lignes`) : une relecture qui capture un vert des centaines de cuts plus tard doit encore savoir
+  * que ses voisins ont été vus sans chaussée. */
+ const vusSansChaussee=mem=>mem.nonCoeurs instanceof Set?mem.nonCoeurs:(mem.nonCoeurs=new Set(Array.isArray(mem.nonCoeurs)?mem.nonCoeurs:[]));
  function zonePN(mem,r,cfg){const c=r.cut,P=cfg.pn;
   const derniere=mem.zones.at(-1),dansMarge=derniere&&c>derniere.fin&&c-derniere.fin<=P.margeApres;
   if(r.coeurPN){
    if(derniere&&c>=derniere.debut&&(c<=derniere.fin||dansMarge))return {etat:'coeur',zone:{...derniere,fin:Math.max(derniere.fin,c)}};
-   const avant=mem.coeurs.filter(x=>x<c&&c-x<=P.confirmationEcartCuts);
+   const sep=P.consecutifs===true?vusSansChaussee(mem):null,separes=x=>{if(!sep)return false;for(let y=x+1;y<c;y++)if(sep.has(y))return true;return false;};
+   const avant=mem.coeurs.filter(x=>x<c&&c-x<=P.confirmationEcartCuts&&!separes(x));
    if(avant.length+1>=P.confirmation)return {etat:'coeur',zone:{debut:Math.min(c,...avant),fin:c,nouvelle:true}};
    return {etat:'coeur-non-confirme',zone:null};}
   if(dansMarge)return {etat:'marge-apres',zone:derniere};
@@ -177,6 +186,8 @@
  function noter(mem,r,{differe=false,parRegle=false}={},options){const cfg=cfgDe(options);
   const pn=zonePN(mem,r,cfg);
   if(r.coeurPN){mem.coeurs.push(r.cut);while(mem.coeurs.length>cfg.memoireCuts)mem.coeurs.shift();}
+  /* Cuts vus sans chaussée (le dernier regard sur un cut fait foi) : ce qui sépare deux cœurs (`pn.consecutifs`). */
+  if(Number.isInteger(r.cut)){const v=vusSansChaussee(mem);if(!r.coeurPN&&r.flushPct!=null)v.add(r.cut);else if(r.coeurPN)v.delete(r.cut);}
   if(pn.etat==='coeur'){if(pn.zone.nouvelle)mem.zones.push({debut:pn.zone.debut,fin:pn.zone.fin});else mem.zones[mem.zones.length-1].fin=pn.zone.fin;
    while(mem.zones.length>8)mem.zones.shift();}
   if(!mem.zonesADV)mem.zonesADV=[];if(!mem.advAlertes)mem.advAlertes=[];
