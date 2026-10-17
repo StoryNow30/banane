@@ -108,7 +108,8 @@ Correction, en lecture seule :
 ## 4. Essais
 
 - Adaptés : `tests/choix-lot-panel.test.cjs` (libellé, carte unique, dernier et prochain lot, cas d'après un lot),
-  `tests/ux-49-orbite.test.cjs` et `tests/panel-ligne-suite.test.cjs` (nom du tiroir, « Détails » replié).
+  `tests/ux-49-orbite.test.cjs` et `tests/panel-ligne-suite.test.cjs` (nom du tiroir, « Détails » replié),
+  `tests/consigne-4956.test.cjs` (la consigne de la test 6 garde son libellé ; le panneau a le nouveau).
 - Nouveau : `tests/partie-sans-rouge-t7.test.cjs` (avis du service worker, commandes identiques, message du panneau et
   cas où il ne doit rien dire).
 
