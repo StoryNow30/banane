@@ -2,14 +2,42 @@
   "format": "ariane-relecture-reglages-1",
   "statut": "provisoire",
   "note": "Valeurs PROVISOIRES et très prudentes de la règle de correction de la relecture (src/relecture-critere.js), en attendant les seuils chiffrés par le chantier claude/50-zones-autonomes (datasets/relecture-reglages-proposes.json). Ce fichier n'est lu que si le fichier proposé est absent ou illisible. Aucune partie n'a servi à les régler : ce sont des bornes de prudence, pas des mesures.",
-  "etagesPermis": ["window"],
-  "roles": ["vert"],
-  "voie": { "lateralMaxMm": 60 },
-  "coherence": { "diffLateraleMaxMm": 6, "diffVerticaleMaxMm": 6, "ecartementMaxMm": 8 },
+  "etagesPermis": [
+    "first-pass",
+    "window"
+  ],
+  "appuisMin": 2,
+  "roles": [
+    "vert"
+  ],
+  "voie": {
+    "lateralMaxMm": 60
+  },
+  "coherence": {
+    "diffLateraleMaxMm": 6,
+    "diffVerticaleMaxMm": 6,
+    "ecartementMaxMm": 8
+  },
   "zones": {
-    "pn": { "corriger": true, "seuilMm": 15, "confianceMin": 85 },
-    "adv": { "corriger": false, "seuilMm": 25, "confianceMin": 95 },
-    "abords": { "corriger": true, "seuilMm": 12, "confianceMin": 80 },
-    "vert-hors-zone": { "corriger": true, "seuilMm": 15, "confianceMin": 90 }
+    "pn": {
+      "corriger": true,
+      "seuilMm": 15,
+      "confianceMin": 85
+    },
+    "adv": {
+      "corriger": false,
+      "seuilMm": 25,
+      "confianceMin": 95
+    },
+    "abords": {
+      "corriger": true,
+      "seuilMm": 12,
+      "confianceMin": 80
+    },
+    "vert-hors-zone": {
+      "corriger": true,
+      "seuilMm": 15,
+      "confianceMin": 90
+    }
   }
 }

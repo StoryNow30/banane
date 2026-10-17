@@ -166,6 +166,18 @@
   <p class="muted" id="clic-humain-cout">Durée d’un lot : +6 à 9 % pour la variante, +12 à 18 % pour « tout recentré ».</p>
   <p class="muted" id="clic-humain-note">Lu au démarrage de chaque lot, gardé jusqu’à sa fin.</p>
  </fieldset>
+ <!-- 5.0 (D-171, D-173) : relecture après le lot. Bloc autonome (src/carte-relecture.js) : lu au démarrage du lot, figé pour lui. -->
+ <fieldset id="carte-relecture" class="carte choix-lot rise d4">
+  <legend class="lbl">Relecture après le lot</legend>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-coupee" value="coupee"> Coupée</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-ombre" value="ombre"> Ombre (visite, ne modifie rien)</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-corriger" value="corriger"> Corriger (corrige seulement les cuts sûrs)</label>
+  <p class="muted">Après les rouges, Ariane visite les cuts que tu relirais (PN, ADV, abords des rouges et des différés, cuts isolés, « À contrôler »), verts compris.</p>
+  <p class="muted" id="relecture-note">Lue au démarrage de chaque lot, gardée jusqu’à sa fin. Coupée par défaut.</p>
+  <p class="resume-ligne" id="relecture-ligne" hidden></p>
+  <p class="muted error" id="relecture-interrompue" hidden></p>
+  <p><button id="relecture-arreter" class="danger" type="button" hidden>Arrêter la relecture</button> <button id="relecture-lancer" class="link" type="button" hidden>Lancer la relecture</button></p>
+ </fieldset>
  <div id="grappe-row" class="carte choix-lot rise d4">
   <label class="interrupteur"><input id="grappe-differes" type="checkbox"> Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges)</label>
   <p class="muted">Ne pose jamais ailleurs : met en attente un cut qu’Ariane aurait validé.</p>
@@ -216,4 +228,4 @@
 <details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><p id="tabs-note" class="muted"></p><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
 <footer>Ariane 4.9.5 test 6 · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
 </div>
-</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="panel.js"></script></body></html>
+</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="src/carte-relecture.js"></script><script src="panel.js"></script></body></html>

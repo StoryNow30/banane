@@ -10,7 +10,8 @@
   *   1. le cut a une pose calculée et un écart par rail (jugement de src/relecture-ombre.js) ;
   *   2. aucun SKIP en ombre (D-172 : un cut sans point n'est pas corrigé) ;
   *   3. son rôle est permis (`roles` : par défaut les verts seulement ; jamais un cut posé par le lot) ;
-  *   4. l'étage de la décision est permis (`etagesPermis` : par défaut « window », la voie retrouvée par les appuis du lot) ;
+  *   4. l'étage de la décision est permis (`etagesPermis` : par défaut « first-pass », la pose du moteur confirmée par la voie des
+  *      appuis, et « window », la reprise depuis la voie) et la décision s'appuie sur `appuisMin` cuts posés par le lot au moins ;
   *   5. la zone (pn, adv, abords, vert-hors-zone) permet la correction (`zones[z].corriger`) ;
   *   6. l'écart le plus grand (latéral ou vertical, des deux rails) atteint le seuil de la zone (`seuilMm`) ;
   *   7. la confiance du moteur, sur les deux rails, atteint le minimum de la zone (`confianceMin`) ; « s1 » (rail repêché, sans
@@ -19,7 +20,7 @@
   *      plus ; les poses sur la mauvaise voie mesurées allaient de 163 à 280 mm, D-159) ;
   *   9. LES DEUX RAILS COHÉRENTS : leurs écarts latéraux ne diffèrent pas de plus de `coherence.diffLateraleMaxMm`, leurs écarts
   *      verticaux de plus de `coherence.diffVerticaleMaxMm` (la correction déplace la voie, elle ne la tord pas), et l'écartement de la
-  *      pose écrite reste à `coherence.ecartementMaxMm` de la référence (écartement des appuis du lot, sinon 1 435 mm).
+  *      pose écrite reste à `coherence.ecartementMaxMm` de la référence (écartement des appuis voisins du lot ; sans référence, refus).
   * `ecrit` (facultatif) : l'écart de la pose qui serait ÉCRITE (commande du lot), à la place de celui du jugement ; les conditions 6,
   * 8 et 9 sont jugées sur lui.
   *
@@ -28,7 +29,7 @@
   * `reglages(fichier)` valide un fichier et complète ce qui manque par le défaut ; un fichier illisible rend le défaut. */
  const SIDES=['left','right'],ZONES=['pn','adv','abords','vert-hors-zone'];
  const DEFAUT=Object.freeze({format:'ariane-relecture-reglages-1',statut:'provisoire',
-  etagesPermis:Object.freeze(['window']),roles:Object.freeze(['vert']),
+  etagesPermis:Object.freeze(['first-pass','window']),appuisMin:2,roles:Object.freeze(['vert']),
   voie:Object.freeze({lateralMaxMm:60}),
   coherence:Object.freeze({diffLateraleMaxMm:6,diffVerticaleMaxMm:6,ecartementMaxMm:8}),
   zones:Object.freeze({
@@ -50,7 +51,8 @@
     confianceMin:nombre(x.confianceMin,0,100)?x.confianceMin:d.confianceMin};}
   const c=f.coherence||{},v=f.voie||{};
   return {format:DEFAUT.format,statut:typeof f.statut==='string'?f.statut.slice(0,40):'inconnu',source,
-   etagesPermis:liste(f.etagesPermis,DEFAUT.etagesPermis,e=>['window','choice','crossing'].includes(e)),
+   etagesPermis:liste(f.etagesPermis,DEFAUT.etagesPermis,e=>['first-pass','window','choice','crossing'].includes(e)),
+   appuisMin:Number.isInteger(f.appuisMin)&&f.appuisMin>=1&&f.appuisMin<=40?f.appuisMin:DEFAUT.appuisMin,
    roles:liste(f.roles,DEFAUT.roles,r=>['vert','differe'].includes(r)),
    voie:{lateralMaxMm:nombre(v.lateralMaxMm,1,500)?Math.min(v.lateralMaxMm,500):DEFAUT.voie.lateralMaxMm},
    coherence:{diffLateraleMaxMm:nombre(c.diffLateraleMaxMm,0,100)?c.diffLateraleMaxMm:DEFAUT.coherence.diffLateraleMaxMm,
@@ -67,6 +69,8 @@
   if(!roles.includes(e.role))return non('role',`rôle « ${e.role??'?'} » non permis (${roles.join(', ')})`);
   const etages=Array.isArray(R.etagesPermis)?R.etagesPermis:DEFAUT.etagesPermis;
   if(!etages.includes(j.etage))return non('etage',`étage « ${j.etage??'?'} » non permis (${etages.join(', ')})`);
+  const appuisMin=Number.isInteger(R.appuisMin)?R.appuisMin:DEFAUT.appuisMin,nAppuis=Array.isArray(j.appuis)?j.appuis.length:0;
+  if(nAppuis<appuisMin)return non('appuis',`${nAppuis} appui${nAppuis>1?'s':''} du lot, ${appuisMin} au moins`);
   const Z=R.zones?.[e.zone];
   if(!Z)return non('zone',`zone « ${e.zone??'?'} » inconnue`);
   if(Z.corriger!==true)return non('zone',`zone ${e.zone} : correction coupée`);
@@ -86,7 +90,8 @@
   if(!(dv<=C.diffVerticaleMaxMm))return non('coherence',`rails incohérents en hauteur (${virgule(dv)} mm d’écart entre les deux rails)`);
   if(e.ecartementMm!==undefined||e.ecartementRefMm!==undefined){
    if(!Number.isFinite(e.ecartementMm))return non('coherence','écartement de la pose écrite illisible');
-   const ref=Number.isFinite(e.ecartementRefMm)?e.ecartementRefMm:1435,d=Math.abs(e.ecartementMm-ref);
+   if(!Number.isFinite(e.ecartementRefMm))return non('coherence','aucun écartement de référence (appuis du lot)');
+   const ref=e.ecartementRefMm,d=Math.abs(e.ecartementMm-ref);
    if(!(d<=C.ecartementMaxMm))return non('coherence',`écartement ${virgule(e.ecartementMm)} mm, à ${virgule(d)} mm de la référence ${virgule(ref)} mm`);}
   return {corriger:true,regle:'ok',raison:`zone ${e.zone}, écart ${virgule(pire)} mm (seuil ${virgule(Z.seuilMm)}), confiance ${SIDES.map(s=>virgule(conf[s])).join(' / ')}, rails cohérents`};}
  return {DEFAUT,ZONES,reglages,juger};

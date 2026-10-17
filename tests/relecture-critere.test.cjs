@@ -8,7 +8,7 @@ const Q=require('../src/relecture-critere.js');
 const ec=(l,r)=>({left:{long:0,lat:l[0],vert:l[1]},right:{long:0,lat:r[0],vert:r[1]}});
 /* Un cut que la règle accepte : vert d'abords, étage « window », 14 mm en travers sur les deux rails, confiance 90. */
 const bon=(x={})=>({zone:'abords',role:'vert',skipOmbre:{raison:null},ecartementMm:1436,ecartementRefMm:1435,
- jugement:{etage:'window',poseCalculee:{left:[0,0,0],right:[0,0,0]},ecartMm:ec([14,1],[13,0]),confiance:{left:90,right:92}},...x});
+ jugement:{etage:'window',appuis:[110,112],poseCalculee:{left:[0,0,0],right:[0,0,0]},ecartMm:ec([14,1],[13,0]),confiance:{left:90,right:92}},...x});
 const avec=(f)=>{const e=bon();f(e);return Q.juger(e);};
 
 test('un cut qui passe toutes les conditions : corriger, avec la raison',()=>{
@@ -20,11 +20,11 @@ test('chaque condition manquante refuse, avec sa raison (première manquante)',(
   [e=>{e.jugement.poseCalculee=null;},'pose'],
   [e=>{e.skipOmbre={raison:'aucun-point'};},'skip'],
   [e=>{e.role='lot';},'role'],[e=>{e.role='differe';},'role'],
-  [e=>{e.jugement.etage='first-pass';},'etage'],[e=>{e.jugement.etage='choice';},'etage'],
+  [e=>{e.jugement.etage='deferred';},'etage'],[e=>{e.jugement.etage='choice';},'etage'],[e=>{e.jugement.appuis=[110];},'appuis'],
   [e=>{e.zone='adv';},'zone'],[e=>{e.zone='inconnue';},'zone'],
   [e=>{e.jugement.ecartMm=ec([10,1],[9,0]);},'seuil'],
   [e=>{e.jugement.confiance={left:'s1',right:95};},'confiance'],[e=>{e.jugement.confiance={left:95,right:70};},'confiance'],[e=>{e.jugement.confiance=null;},'confiance'],
-  [e=>{e.ecartementMm=1450;},'coherence'],[e=>{e.ecartementMm=NaN;},'coherence']];
+  [e=>{e.ecartementMm=1450;},'coherence'],[e=>{e.ecartementMm=NaN;},'coherence'],[e=>{e.ecartementRefMm=null;},'coherence']];
  for(const [f,regle] of cas){const r=avec(f);assert.equal(r.corriger,false,regle);assert.equal(r.regle,regle,r.raison);assert.ok(r.raison.length>5);}
 });
 

@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.6',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 6';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -228,6 +228,8 @@ function seanceObservateur({grace=false}={}){
  const b=engine?.s?.batch;
  if(engine?.s?.mode==='automatic-test'&&b&&!OBS_CLOS.includes(b.state))return 'lot:'+(b.id||'');
  if(grace&&engine?.s?.mode==='automatic-test'&&b&&OBS_CLOS.includes(b.state)&&dansGrace(b))return 'lot:'+(b.id||'');
+ /* 5.0 (D-171) : pendant la relecture après le lot, l'observateur passif relève (écritures « seen » d'ESV, preuve des validations). */
+ if(relecture.passe?.etat==='en-cours')return 'relecture:'+(relecture.passe.lotId||'');
  return manual?.active?.()?'ecoute-manuelle':native?.active?.()?'ecoute-native':null;}
 /* Lot précédent encore en grâce quand la séance est celle d'un lot plus récent : { seance, ctx, debut } ou null. */
 function ancienLotEnGrace(seance){const b=engine?.s?.batch;if(!b?.id||seance!=='lot:'+b.id)return null;
@@ -423,7 +425,7 @@ function rangerObservations(m){try{
   if(!x||typeof x!=='object'){rejected++;continue;}
   const fields=obsFields(x);if(!fields){rejected++;continue;}
   /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
-  if(fields.kind==='write')try{ecritureObservee(fields);}catch{}
+  if(fields.kind==='write')try{ecritureObservee(fields);relectureEcriture(fields);}catch{}
   try{relevesObservation(fields,m.observer);}catch{}
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
@@ -999,6 +1001,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    /* OBS-3 : arrêt au dernier cut : l'instant reste `stoppedAtEnd.at` ; on garde aussi le contexte de mesure (redémarrage). */
    if(type==='batch-stopped-at-end'){const b=engine.s.batch,at=Date.parse(b?.stoppedAtEnd?.at);if(b?.id&&b.state==='STOPPED'&&Number.isFinite(at)&&engine.s.mode==='automatic-test')poserFin(b,at,'dernier-cut');}
    const r=await evenement(type,...rest);
+   /* 5.0 (D-171) : fin naturelle d'un lot créé avec la relecture : la passe est planifiée (rien si elle est coupée). */
+   if(type==='batch-state'||type==='batch-stopped-at-end')relecturePlanifier();
    if(type==='defer-navigation-uncertain')await coordinateurLot.transition('differe',()=>departApresDiffere(rest[0]));
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
@@ -1617,7 +1621,9 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
  /* La copie est celle du moteur : engine.view() appliqué à l'état allégé. */
  const leger=poses?{...s,batch:(({lotPosed,...x})=>x)(b)}:s,v=engine.view.call({s:leger,busy:engine.busy});
  if(poses)v.batch.lotPosedCount=poses.length;
- return {...panelView({...v,records:[],incomplete:[]}),recordsCount:Array.isArray(records)?records.length:0,incompleteCount:Array.isArray(incomplete)?incomplete.length:0};}
+ return {...panelView({...v,records:[],incomplete:[]}),recordsCount:Array.isArray(records)?records.length:0,incompleteCount:Array.isArray(incomplete)?incomplete.length:0,
+  /* 5.0 : relecture après le lot, seulement si une passe a eu lieu. */
+  ...(relecture.passe?{relecture:relectureVue()}:{})};}
 function pollCurrent(){
  /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
  if(pollPromise||engine.busy||engine.task||repriseEnCours||retourCutEnCours||manual?.active()||native?.active()||selectedTab===null)return;
@@ -1798,6 +1804,229 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  if(l&&o.pageId!=null&&l.pageId!=null&&l.pageId!==o.pageId){delete b.retourCut;await engine.save();return;}
  if(!partCut(l)||l.part!==o.part||l.cut!==o.cut)throw Error(`${quoi} refusé : le lot est en pause sur le cut ${o.cut} de la partie ${o.part}, ESV affiche ${partCut(l)?`le cut ${l.cut} de la partie ${l.part}`:'un cut illisible'} (consultation). Reviens au cut ${o.cut} dans ESV, puis recommence ; rien n’a été validé.`);
  delete b.retourCut;await engine.save();}
+/* 5.0 (D-170 à D-173) — RELECTURE APRÈS LE LOT (src/relecture-ombre.js, src/relecture-critere.js, fiches/RELECTURE_OMBRE.md).
+ * Choix du panneau gardé dans storage.local (`relecture-choix-etat`, `relecture-choix`) : « coupée » (défaut), « ombre » (visite,
+ * calcule, note ; ne modifie rien), « corriger » (corrige seulement les cuts qui passent la règle prudente). Lu au DÉMARRAGE du lot et
+ * figé dans son scope (`scope.relecture`, consigné par `batch-started`) ; coupée : le scope n'en porte rien, à l'octet près.
+ * La passe part SEULE à la fin naturelle du lot (boucle finie, ou arrêt au dernier cut sans pose en attente), ou à la demande
+ * (`relecture-lancer`) sur un lot clos. Elle ne part pas si ESV n'est pas propre : pose appliquée non validée, intention ou
+ * réconciliation en cours, autre activité, ESV dans une autre partie. Pour chaque cut choisi par la sélection (méthode de Mic) :
+ *   1. aller au cut : `goToCut`, les boutons « cut suivant » d'ESV dans une plage, le chemin habituel (carte, sinon pas à pas) entre
+ *      deux plages ; un cut du lot dans une plage est traversé, comme Mic ;
+ *   2. capture (`capture`, la même que le lot), puis calcul : moteur, décision sur le lot avec les cuts posés par le lot pour appuis,
+ *      hauteur apprise ; écart par rail, verdict, raison ; SKIP en ombre (D-172, consigné, JAMAIS envoyé) ; règle prudente ;
+ *   3. mode « corriger » et règle passée : la commande du lot (`commandRails`), puis la pose par la MÊME commande `apply` que le lot
+ *      (avec le clic du mode rapide figé dans le lot), relue à 1 mm, puis la validation sur place (Ctrl+Entrée, comme le lot au
+ *      dernier cut d'une partie : « valider et suivant » ferait sauter ESV au cut non validé suivant), prouvée par l'écriture vue par
+ *      l'observateur passif (ligne du cut, statut 2xx, « valid »). Une pose refusée ou non conforme est remise (`restore`) et le cut
+ *      quitté sans action ; une validation non prouvée arrête la passe, avec le cut à contrôler ;
+ *   4. événement `relecture-ombre` (pose d'ESV, pose calculée, écart par rail, confiance, verdict, raison, skipOmbre, règle, action,
+ *      durées) ; rythme humain : chaque cut relu reste affiché `visiteMs` au moins.
+ * En mode « ombre », aucune commande de pose, de validation, de SKIP ni d'écriture n'est émise : navigation, boutons de rail de la
+ * capture, lecture. Pendant la passe, le panneau ne peut lancer ni lot, ni Écho, ni retour à un cut ; « Arrêter la relecture » arrête
+ * à la fin de l'étape en cours (jamais entre la pose et la validation d'un cut). Mémoire volatile : un redémarrage du service worker
+ * arrête la passe ; une correction interrompue entre la pose et la validation est notée (storage.local) et dite au panneau. */
+const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',MODES_RELECTURE=['coupee','ombre','corriger'];
+const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer']);
+const relecture={passe:null,tache:null,planifie:new Set(),attente:null};
+const reglageRelecture=()=>({departMs:1500,visiteMs:[2000,4500],attenteEcritureMs:6000,pasMax:40,plafondCuts:null,...(globalThis.BananeSettings?.relecture||{})});
+async function relectureChoix(){let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
+async function relectureChoisir(args){if(!MODES_RELECTURE.includes(args?.mode))throw Error('Relecture après le lot : choix inconnu.');
+ await chrome.storage.local.set({[CLE_RELECTURE]:args.mode});return {mode:await relectureChoix()};}
+const relectureDuLot=b=>{const m=b?.scope?.relecture;return m==='ombre'||m==='corriger'?m:null;};
+function relectureJournal(type,champs){journalerSimple(type,{lotId:relecture.passe?.lotId??null,...champs});}
+/* Ce que le panneau affiche : avancement, compte des corrections, message ; correction interrompue (redémarrage) s'il y en a une. */
+async function relectureEtat(){const p=relecture.passe;let interrompue=null;
+ try{interrompue=(await chrome.storage.local.get(CLE_RELECTURE_INTENTION))?.[CLE_RELECTURE_INTENTION]||null;}catch{/* illisible */}
+ const b=engine?.s?.batch;
+ return {choix:await relectureChoix(),lot:b?.id?{id:b.id,mode:relectureDuLot(b)||'coupee',etat:b.state}:null,
+  passe:p?{lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,etat:p.etat,total:p.total,faits:p.faits,corriges:p.corriges,refusees:p.refusees,
+   cut:p.cut,plage:p.plage,message:p.message,debut:p.debut,fin:p.fin,arretDemande:p.arret===true,reglages:p.reglages??null}:null,
+  correctionInterrompue:interrompue&&p?.etat!=='en-cours'?interrompue:null};}
+function relectureVue(){const p=relecture.passe;return p?{etat:p.etat,mode:p.modeEffectif||p.mode,faits:p.faits,total:p.total,corriges:p.corriges,cut:p.cut,message:p.message}:null;}
+/* Fin naturelle d'un lot créé avec la relecture : la passe est planifiée une fois par lot. */
+function relecturePlanifier(){const b=engine?.s?.batch;if(!b?.id||relecture.planifie.has(b.id)||!relectureDuLot(b))return;
+ if(!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd))return;
+ relecture.planifie.add(b.id);setTimeout(()=>{void relectureLancer({auto:true,lotId:b.id}).catch(()=>{});},reglageRelecture().departMs);}
+/* Seuils de la règle prudente : le fichier proposé (chantier claude/50-zones-autonomes) s'il existe et se lit, sinon le défaut provisoire. */
+async function relectureReglages(){const Q=globalThis.BananeRelectureCritere;
+ try{if(typeof fetch==='function'&&chrome?.runtime?.getURL){const r=await fetch(chrome.runtime.getURL('datasets/relecture-reglages-proposes.json'));
+  if(r?.ok)return Q.reglages(await r.json(),'propose');}}catch{/* absent ou illisible : défaut */}
+ return Q.reglages(Q.DEFAUT,'defaut');}
+/* Appuis de la décision : tous les cuts posés et validés par le lot (`lotPosed`), et ceux qui attendaient leur validation. */
+function relectureAppuis(b){const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,st=b?.lotObservation?K.clone(b.lotObservation):null;
+ if(st&&typeof L?.promoteAnchors==='function')try{L.promoteAnchors(st,(b.processed||[]).map(p=>p.identity).filter(Boolean),1e6);}catch{/* appuis tels quels */}
+ const parCut=new Map();for(const a of [...(b?.lotPosed||[]),...(st?.anchors||[])])if(Number.isInteger(a?.identity?.cut)&&a.positions)parCut.set(a.identity.cut,a);
+ return [...parCut.values()];}
+/* Entrée de la sélection : cuts du lot, PN et ADV du journal (règles métier en ombre), liste « À contrôler » si elle est active. */
+async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.identity?.cut,lot=new Map();
+ for(const x of b.processed||[]){const c=cutDe(x);if(Number.isInteger(c))lot.set(c,{cut:c,differe:false});}
+ for(const x of b.deferred||[]){const c=cutDe(x);if(Number.isInteger(c)&&!lot.has(c))lot.set(c,{cut:c,differe:true});}
+ /* Dernier cut laissé sans commande (non résolu à la fin du lot, ou différé sur le dernier cut de la partie) : il reste invalide. */
+ for(const c of [b.stoppedAtEnd?.applied===false?b.stoppedAtEnd.cut:null,...(b.interrupted||[]).filter(x=>x?.status==='DEFER_DERNIER_CUT_SANS_ENVOI').map(cutDe)])
+  if(Number.isInteger(c)&&!lot.has(c))lot.set(c,{cut:c,differe:true});
+ const zonesPN=[],zonesADV=[];let events=[];try{events=await store.all('events')||[];}catch{/* journal illisible */}
+ for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.batchId!==b.id||e.identity?.part!==partie)continue;
+  const c=e.zone?.pnControle,a=e.zone?.advControle;
+  if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zonesPN.push(c);if(Array.isArray(a)&&a.length===2&&a.every(Number.isInteger))zonesADV.push(a);}
+ let aControler=[];try{const v=await vertsAControler({partie});if(v?.actif&&Array.isArray(v.verts))aControler=v.verts.map(x=>x.i).filter(Number.isInteger);}catch{/* liste absente */}
+ const t=b.totalReleve,total=t?.part===partie&&Number.isInteger(t.total)?t.total:null;
+ return {partie,total,lot:[...lot.values()],zonesPN,zonesADV,aControler};}
+/* Pourquoi la passe ne peut pas partir maintenant (ESV doit être propre), ou null. */
+async function relectureRefus(b,auto){
+ if(!b?.id)return 'aucun lot';
+ if(!relectureDuLot(b))return 'ce lot a été créé avec la relecture coupée';
+ if(b.scope?.geometryEngine!==GCV1_ENGINE)return 'lot hors Orbite GCV1';
+ const naturel=b.state==='COMPLETED'||b.state==='STOPPED'&&!!b.stoppedAtEnd;
+ if(auto?!naturel:!['COMPLETED','STOPPED'].includes(b.state))return b.state==='FINISHED_WITH_UNCONFIRMED_ACTIONS'?'le lot a fini avec des actions non confirmées : contrôle ESV d’abord'
+  :auto?'le lot ne s’est pas fini de lui-même':'le lot n’est pas clos';
+ if(engine.s.intent||engine.s.reconcileRequired||engine.deferPending?.())return 'un résultat incertain reste à clôturer';
+ if(engine.task||engine.busy)return 'une action d’Ariane est en cours';
+ if(manual?.active?.()||native?.active?.())return 'Écho est actif';
+ if(retourCutEnCours||repriseEnCours)return 'un retour à un cut ou une reprise est en cours';
+ if(selectedTab===null)return 'aucun onglet ESV';
+ let lu=null;try{lu=(await call('ping'))?.label||null;}catch(e){return `ESV ne répond pas (${String(e?.message||e).slice(0,120)})`;}
+ if(!partCut(lu))return '« Cut N of part P » illisible dans ESV';
+ if(lu.part!==b.scope.part)return `ESV affiche la partie ${lu.part}, pas celle du lot (${b.scope.part}) : reviens dans la partie ${b.scope.part}, puis « Lancer la relecture »`;
+ /* Pose d'Ariane appliquée et non validée (dernier cut d'un lot borné) : tant qu'ESV l'affiche, la passe ne part pas (elle quitterait
+  * ce cut). Mic la valide (ESV passe alors à un autre cut) ou la quitte lui-même ; ensuite « Lancer la relecture ». */
+ const a=engine.s.applied?.identity;
+ if(a&&a.part===lu.part&&a.cut===lu.cut)return `une pose d’Ariane attend ta validation au cut ${a.cut} : valide-la (ou corrige-la) dans ESV, puis « Lancer la relecture »`;
+ return null;}
+async function relectureLancer({auto=false,lotId=null}={}){
+ if(relecture.passe?.etat==='en-cours')throw Error('Relecture déjà en cours.');
+ const b=engine.s.batch;if(lotId&&b?.id!==lotId)return relectureEtat();
+ for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
+ const mode=relectureDuLot(b),debut=new Date().toISOString(),refus=await relectureRefus(b,auto);
+ if(refus){relecture.passe={lotId:b?.id??null,mode,modeEffectif:null,etat:'non-lancee',total:0,faits:0,corriges:0,refusees:0,cut:null,plage:null,
+   message:`Relecture non lancée : ${refus}.`,debut,fin:debut,arret:false};
+  if(b?.id&&mode)relectureJournal('relecture-fin',{mode,issue:'non-lancee',raison:refus,auto});
+  if(!auto)throw Error(relecture.passe.message);return relectureEtat();}
+ const R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),reglages=await relectureReglages();
+ const observe=globalThis.BananeSettings?.observateurPassif?.actif!==false;
+ const modeEffectif=mode==='corriger'&&!observe?'ombre':mode;
+ const sel=R.selection(await relectureEntree(b),Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:undefined);
+ relecture.passe={lotId:b.id,mode,modeEffectif,etat:'en-cours',total:sel.total,faits:0,corriges:0,refusees:0,cut:null,plage:null,debut,fin:null,arret:false,
+  message:modeEffectif!==mode?'Mode « corriger » ramené à « ombre » : l’observateur passif est coupé, aucune écriture ne pourrait être prouvée.':null,
+  reglages:{source:reglages.source,statut:reglages.statut},operationId:null};
+ relectureJournal('relecture-debut',{mode,modeEffectif,auto,total:sel.total,traverses:sel.traverses,tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,
+  plages:sel.plages.map(p=>({debut:p.debut,fin:p.fin,zone:p.zone,libelle:p.libelle,relus:p.relus})),horsPlafond:sel.horsPlafond.map(p=>({debut:p.debut,fin:p.fin,libelle:p.libelle})),
+  reglages:{source:reglages.source,statut:reglages.statut}});
+ relecture.tache=relecturePasse(relecture.passe,b,sel,reglages).catch(e=>{const p=relecture.passe;if(p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
+  relectureJournal('relecture-fin',{mode:p.mode,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges});}});
+ return relectureEtat();}
+function relectureArreter(){const p=relecture.passe;if(!p||p.etat!=='en-cours')return {arretDemande:false};p.arret=true;
+ if(p.operationId)void adapter.cancel({operationId:p.operationId,reason:'relecture-arret'}).catch(()=>{});return {arretDemande:true};}
+const attendreMs=ms=>new Promise(r=>setTimeout(r,Math.max(0,ms)));
+const tirage=v=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)?v[0]+Math.random()*(v[1]-v[0]):Number.isFinite(v)?v:0;
+/* Ce qu'Ariane donnerait sur une capture (aucun effet) : moteur, décision avec les appuis du lot, hauteur apprise ; la commande qui
+ * serait écrite (commande du lot sur la pose ESV de la capture) et son écart ; la règle prudente. */
+function relectureCalculer(capture,c,appuis,reglages,skip){
+ const R=globalThis.BananeRelectureOmbre,Q=globalThis.BananeRelectureCritere,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,Shadow=globalThis.BananeGCV1Shadow;
+ const identity=K.completeIdentity(capture.identity||{}),science=Shadow.scientificProposeBoth(capture),h=globalThis.BananeSettings?.hauteurApprise;
+ const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes},
+  science:{rails:science.rails,summary:science.summary},anchors:appuis,Shadow,options:h?{hauteurApprise:{...h,actif:true,appliquer:false}}:{}});
+ const jugement=R.juger({capture,decision,science});
+ let commande=null,ecrit=null,ecartementMm,ecartementRefMm;
+ /* La commande du lot pour les positions de la décision. Au premier passage (pose du moteur confirmée par la voie des appuis), le lot
+  * pose la paire du moteur, dont les positions sont celles de la décision : la même conversion que la reprise depuis la voie
+  * (décalages du repère profil de la pose d'ESV, relus à 0,01 mm, écartement dans le contrat, cible dans la vue) en donne les rails. */
+ try{const pourCommande=decision?.stage==='first-pass'&&decision.positions?{...decision,stage:'window'}:decision;
+  commande=L.commandRails({decision:pourCommande,runtimeRails:{left:{},right:{}},before:capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
+  if(commande?.action==='lot'){const exp=K.expectedPoses({rails:capture.rails},commande.rails);
+   ecrit=Object.fromEntries(['left','right'].map(s=>[s,R.ecartRail(capture.rails[s],exp[s].positionSceneRelative)]));
+   ecartementMm=Math.round(L.gaugeOf({left:exp.left.positionSceneRelative,right:exp.right.positionSceneRelative})*10)/10;
+   const ref=L.gaugeReference(identity,appuis);ecartementRefMm=ref?Math.round(ref.mm*10)/10:null;}}catch{commande=null;}
+ const critere=commande?.action==='lot'?Q.juger({jugement,zone:c.zone,role:c.role,skipOmbre:skip,ecrit,ecartementMm,ecartementRefMm},reglages)
+  :{corriger:false,regle:'commande',raison:`la commande du lot ne pose pas ce cut (${commande?.reason??'aucune'})`};
+ return {jugement,commande,ecrit,ecartementMm:ecartementMm??null,ecartementRefMm:ecartementRefMm??null,critere};}
+/* Attente de l'écriture de validation du cut, vue par l'observateur passif (rangerObservations → relectureEcriture). */
+function relectureEcriture(f){const a=relecture.attente;if(!a||f?.kind!=='write'||f.rowIndex!==a.cut)return;
+ const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:Date.now();if(t<a.depuisMs-500)return;
+ if(f.body&&typeof f.body==='object'&&f.body.ExtractionStatus!=='valid')return;
+ if(Number.isInteger(f.status)&&f.status>=200&&f.status<300)a.ok=true;else if(f.status!=null)a.refus=f.status;}
+/* Correction d'un cut : le chemin de la pose d'un rouge par le lot (commande du lot, `apply`, relecture à 1 mm), puis la validation
+ * sur place prouvée par l'écriture. Rend {action, raison} ; lève seulement si ESV n'est plus dans un état sûr (la passe s'arrête). */
+async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G=globalThis.BananeGauge4,S=globalThis.BananeSettings?.lot||{},cut=etat.identity.cut;
+ const refusee=raison=>({action:'correction-refusee',raison});
+ const now=await readState();if(K.key(now.identity)!==K.key(etat.identity))return refusee('le cut affiché a changé');
+ if(!K.equalPoses(etat.rails,now.rails))return refusee('rails modifiés depuis la capture');
+ const rails=calc.commande.rails,expected=K.expectedPoses(now,rails),g=G.gaugeMmOf(expected,K.C);
+ if(!G.admissible(G.classifyMm(g)))return refusee(`écartement hors contrat (${Math.round(g*10)/10} mm)`);
+ const clic=b.scope?.clicHumain==='gauche-recentre'||b.scope?.clicHumain==='tout-recentre'?b.scope.clicHumain:null;
+ const intention={lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString()};
+ try{await chrome.storage.local.set({[CLE_RELECTURE_INTENTION]:intention});}catch{/* mémoire seule */}
+ const effacer=async()=>{try{await chrome.storage.local.remove?.(CLE_RELECTURE_INTENTION);}catch{/* rien */}};
+ const remettre=async raison=>{let ok=false;try{const r=await call('restore',now);ok=K.equalPoses(now.rails,r?.rails,.001);}catch{ok=false;}
+  if(!ok)throw Error(`cut ${cut} : pose d’Ariane non conforme (${raison}) et remise impossible ; rien n’est validé. Contrôle ce cut dans ESV (une pose non validée n’est pas enregistrée).`);
+  await effacer();return refusee(`${raison} ; pose remise`);};
+ let result;try{result=clic?await applyInESV(now,rails,{clicHumain:clic}):await applyInESV(now,rails);}
+ catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||''))throw Error(`cut ${cut} : ESV ne répond plus pendant la pose (${e.message}) ; rien n’est validé. Contrôle ce cut dans ESV.`);
+  return remettre(`pose refusée par la page : ${String(e?.message||e).slice(0,160)}`);}
+ if(K.key(result?.identity||{})!==K.key(now.identity)||!K.equalPoses(expected,result?.rails,.001))return remettre('pose non conforme à la commande (relecture à 1 mm)');
+ /* Comme le moteur avant de valider : les rails n'ont pas bougé depuis la relecture de la pose. */
+ const avantValider=await readState();
+ if(K.key(avantValider.identity)!==K.key(now.identity)||!K.equalPoses(result.rails,avantValider.rails,.001))return remettre('rails modifiés entre la pose et la validation');
+ relecture.attente={cut,depuisMs:Date.now(),ok:false,refus:null};
+ let ev;try{ev=await validateInPlaceInESV(now.identity,{part:b.scope.part,pageId:b.scope.pageId??null},{commande:S.validationDernierCut==='bouton'?'bouton':'ctrl-entree',boutonId:S.boutonValiderSansSuivant??null,preuve:'ecriture'});}
+ catch(e){relecture.attente=null;
+  if(/rien n.a été envoyé/.test(e?.message||''))return remettre(`validation refusée avant envoi : ${String(e.message).slice(0,160)}`);
+  throw Error(`cut ${cut} : validation incertaine (${String(e?.message||e).slice(0,200)}). Contrôle ce cut dans ESV.`);}
+ if(ev?.commandSent!==true||ev.navigationObserved===true||K.key(ev.afterState?.identity||{})!==K.key(now.identity)){relecture.attente=null;
+  throw Error(`cut ${cut} : validation incertaine (commande non transmise ou cut changé). Contrôle ce cut dans ESV.`);}
+ const fin=Date.now()+reglageRelecture().attenteEcritureMs;while(!relecture.attente.ok&&relecture.attente.refus==null&&Date.now()<fin)await attendreMs(100);
+ const a=relecture.attente;relecture.attente=null;
+ if(!a.ok)throw Error(a.refus!=null?`cut ${cut} : ESV a refusé d’enregistrer la validation (statut ${a.refus}). Contrôle ce cut dans ESV.`
+  :`cut ${cut} : validation envoyée, aucune écriture vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s. Contrôle ce cut dans ESV.`);
+ await effacer();return {action:'corrige',raison:calc.critere.raison};}
+async function relecturePasse(p,b,sel,reglages){const K=globalThis.BananeCore3,cfg=reglageRelecture(),appuis=relectureAppuis(b),partie=b.scope.part;
+ const borne=Math.max(...[b.totalReleve?.part===partie?b.totalReleve.total-1:null,...sel.cuts.map(c=>c.cut)].filter(Number.isInteger));
+ const plagesSautees=new Set();let precedent=null,issue='fin';
+ const stop=(m,i='erreur')=>{p.message=m;issue=i;};
+ for(const c of sel.cuts){
+  if(p.arret){issue='arret';p.message=`Relecture arrêtée à ta demande : ${p.faits} cut${p.faits>1?'s':''} relu${p.faits>1?'s':''} sur ${p.total}.`;break;}
+  if(plagesSautees.has(c.plage))continue;
+  const plage=sel.plages[c.plage];p.cut=c.cut;p.plage=plage?.libelle??null;
+  const t0=Date.now(),opId=K.uid();
+  const chemin=precedent&&precedent.plage===c.plage&&c.cut>precedent.cut&&c.cut-precedent.cut<=cfg.pasMax?'pas':'auto';
+  p.operationId=opId;let nav;
+  try{nav=await call('goToCut',{part:partie,cut:c.cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
+  catch(e){p.operationId=null;stop(`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${c.cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`);break;}
+  p.operationId=null;
+  if(nav?.resultat==='refuse'){
+   if(p.arret)continue;
+   relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,action:'navigation-refusee',raison:nav.refusal?.message??null});
+   plagesSautees.add(c.plage);precedent=null;continue;}
+  if(nav?.resultat!=='confirme'){stop(`Relecture arrêtée : le passage au cut ${c.cut} n’est pas confirmé (${nav?.refusal?.message||nav?.resultat||'résultat inconnu'}). Contrôle le cut affiché ; rien n’a été posé.`);break;}
+  precedent=c;const tNav=Date.now();
+  let etat,capture,erreurCapture=null;
+  try{etat=await readState();if(etat?.identity?.part!==partie||etat.identity.cut!==c.cut)throw Error(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${c.cut}`);
+   capture=await call('capture',etat);K.assertTarget(etat.identity,capture.identity);}
+  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane|ESV affiche/.test(e?.message||'')){stop(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}
+   erreurCapture=String(e?.message||e).slice(0,200);}
+  const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?globalThis.BananeRelectureOmbre.skipOmbre(capture):null;
+  if(capture)try{calc=relectureCalculer(capture,c,appuis,reglages,skip);}catch(e){erreurCalcul=String(e?.message||e).slice(0,200);}
+  const tCalc=Date.now();let action={action:'visite',raison:null};
+  if(calc&&p.modeEffectif==='corriger'&&calc.critere.corriger&&!p.arret){
+   try{action=await relectureCorriger(p,b,etat,calc);}
+   catch(e){stop(`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`);
+    relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,action:'correction-incertaine',raison:p.message});break;}
+   if(action.action==='corrige')p.corriges++;else p.refusees++;}
+  const j=calc?.jugement;capture=null;
+  relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,
+   poseEsv:j?.poseActuelle??null,poseCalculee:j?.poseCalculee??null,ecartMm:j?.ecartMm??null,pireMm:j?.pireMm??null,confiance:j?.confiance??null,
+   etage:j?.etage??null,appuis:j?.appuis??[],hauteurApprise:j?.hauteurApprise??null,zoneGrise:j?.zoneGrise??false,verdict:j?.verdict??null,raison:j?.raison??erreurCapture??erreurCalcul,
+   skipOmbre:skip?{raison:skip.raison,scanners:skip.scanners,scannersLisibles:skip.scannersLisibles,points:skip.points}:null,
+   ecritMm:calc?.ecrit??null,ecartementMm:calc?.ecartementMm??null,ecartementRefMm:calc?.ecartementRefMm??null,
+   critere:calc?{corriger:calc.critere.corriger,regle:calc.critere.regle,raison:calc.critere.raison}:null,
+   action:action.action,raisonAction:action.raison,erreurCapture,erreurCalcul,
+   durees:{navigationMs:tNav-t0,captureMs:tCap-tNav,calculMs:tCalc-tCap,totalMs:Date.now()-t0},chemin});
+  p.faits++;
+  const reste=tirage(cfg.visiteMs)-(Date.now()-tNav);if(reste>0&&!p.arret)await attendreMs(reste);}
+ if(issue==='fin'&&p.etat==='en-cours')p.message=`Relecture finie : ${p.faits} cut${p.faits>1?'s':''} relu${p.faits>1?'s':''}${p.modeEffectif==='corriger'?`, ${p.corriges} corrigé${p.corriges>1?'s':''}${p.refusees?`, ${p.refusees} correction${p.refusees>1?'s':''} refusée${p.refusees>1?'s':''} par la page`:''}`:', rien de modifié'}.`;
+ p.etat=issue==='fin'?'finie':issue==='arret'?'arretee':'erreur';p.fin=new Date().toISOString();p.cut=null;
+ relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue,raison:p.message,faits:p.faits,total:p.total,corriges:p.corriges,refusees:p.refusees,
+  dureeMs:Date.parse(p.fin)-Date.parse(p.debut)});}
 /* B3 — transition « demarrage » : le corps de « Démarrer », inchangé (déplacé de `dispatch`). */
 async function demarrerLot(args){
   // Avant tout archivage : un lot en reprise manuelle garde son contexte.
@@ -1844,6 +2073,8 @@ async function demarrerLot(args){
    * la page) ; un champ absent se lit comme le défaut. */
   delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
+  /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */
+  delete startArgs.relecture;{const m=await relectureChoix();if(m!=='coupee')startArgs.relecture=m;}
   if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
   /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
   delete startArgs.lotReprise;
@@ -1860,6 +2091,13 @@ async function demarrerLot(args){
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
   retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
 async function dispatch(m){await ready;const {action,args={}}=m;
+ /* 5.0 (D-171) : relecture après le lot. Pendant la passe, rien qui agisse dans ESV ou sur le lot ne part du panneau. */
+ if(relecture.passe?.etat==='en-cours'&&RELECTURE_BLOQUE.has(action))
+  throw Error(`Relecture après le lot en cours (${relecture.passe.faits} sur ${relecture.passe.total}) : clique sur « Arrêter la relecture » et attends qu’elle s’arrête.`);
+ if(action==='relecture-choix-etat')return {mode:await relectureChoix()};
+ if(action==='relecture-choix')return relectureChoisir(args);
+ if(action==='relecture-etat')return relectureEtat();
+ if(action==='relecture-arreter')return relectureArreter();
  if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
   await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
  if(retourCutEnCours&&PENDANT_RETOUR.has(action))throw Error('Retour à un cut en cours : attends son résultat, ou annule-le.');
@@ -1955,6 +2193,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
+ if(action==='relecture-lancer')return relectureLancer({auto:false});
  if(action==='pause')return coordinateurLot.transition('pause',async()=>{await engine.pause();return engine.view();});
  if(action==='stop')return coordinateurLot.transition('arret',async()=>{const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
   if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();});

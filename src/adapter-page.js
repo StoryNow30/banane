@@ -982,7 +982,12 @@
   * le moteur s'arrête, l'opérateur valide lui-même. */
  const lireCompteur=()=>{const r=releverEsv(null);
    return r.compteur&&!(r.compteursVus>1)&&!r.compteurIllisible?{traites:r.compteur.traites,total:r.compteur.total}:null;};
+ /* 5.0 (D-171, relecture après le lot) : `options.preuve === 'ecriture'`. Un cut VERT est déjà compté « treated » par ESV : sa
+  * validation ne fait pas bouger le compteur. La même commande (Ctrl+Entrée, ou le bouton réglé) est alors envoyée sans exiger le
+  * compteur ; la page prouve seulement que le cut affiché n'a pas changé, et le service worker attend l'écriture de validation vue
+  * par l'observateur passif (ligne du cut, statut 2xx). Sans cette option : comportement de KI-069, inchangé. */
  async function validateInPlace(identity,scope={},options={},progress=()=>{}){
+   if(options?.preuve==='ecriture')return validateInPlaceEcriture(identity,options,progress);
    cancelled=false;const bouton=options?.commande==='bouton';
    const before=assertExpected(identity),startedAt=new Date().toISOString();
    const avant=lireCompteur();
@@ -1012,6 +1017,34 @@
      beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,serverConfirmed:true,
      nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
      meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
+ }
+ /* Le même geste que `validateInPlace` (Ctrl+Entrée relayé, ou le bouton réglé), preuve laissée à l'écriture observée. */
+ async function validateInPlaceEcriture(identity,options={},progress=()=>{}){
+   cancelled=false;const bouton=options?.commande==='bouton';
+   const before=assertExpected(identity),startedAt=new Date().toISOString(),avant=lireCompteur();
+   let command;
+   if(bouton){const id=options.boutonId;
+     if(typeof id!=='string'||!id)throw Error('Repli buttonValidateRail() : l’identifiant du bouton « valider sans suivant » d’ESV n’est pas réglé (réglage boutonValiderSansSuivant) ; rien n’a été envoyé à ESV.');
+     const el=document.getElementById(id);if(!el||el.disabled)throw Error('Bouton « valider sans suivant » indisponible : '+id+' ; rien n’a été envoyé à ESV.');
+     command={id,exists:true,disabled:false};
+   }else command={id:'Ctrl+Enter',exists:true,disabled:false};
+   progress('validate-in-place-before-command',{identity:before.identity,command,compteur:avant,preuve:'ecriture'});
+   if(bouton)nativeClick(options.boutonId);
+   else{const init={key:'Enter',code:'Enter',keyCode:13,which:13,ctrlKey:true,shiftKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true};
+     for(const type of ['keydown','keyup']){const e=new KeyboardEvent(type,init);
+       for(const [k,v] of [['which',13],['keyCode',13]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
+       document.dispatchEvent(e);}}
+   /* Le temps qu'ESV traite la touche (même délai que la relecture d'un état), puis le cut affiché doit être le même. */
+   await sleep(Math.min(P.stabiliteMs??800,800));
+   const nom=bouton?'Le bouton « valider sans suivant »':'Ctrl+Entrée',label=cutLabel();
+   if(label&&K.key(label)!==K.key(identity))throw Error(`${nom} a fait changer le cut affiché (partie ${label.part}, cut ${label.cut}) : rien n’est affirmé validé. Contrôle le cut ${identity.cut} dans ESV.`);
+   const apres=snapshot();K.assertTarget(identity,apres.identity);
+   return {format:'banane-validate-in-place-v1',trigger:bouton?'configured-validate-rail-button':'relayed-native-validate-shortcut',startedAt,
+     operatorDecision:'VALIDATE',decisionCommand:command,command:bouton?'bouton':'ctrl-entrée',commandSent:true,preuve:'ecriture',
+     navigationSemantics:'VALIDATE_IN_PLACE',afterObserved:true,afterState:apres,afterStateStatus:'OBSERVED_SAME_TARGET',
+     beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,serverConfirmed:false,
+     nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:lireCompteur(),
+     meaning:'Validation sans navigation : identité inchangée ; la preuve est l’écriture de validation observée par le service worker.'};
  }
  /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-066, D-067, D-077 point 3) —
   * LECTURE SEULE. « Aller au cut N de la partie chargée, et confirmer son identité. »
