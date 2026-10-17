@@ -49,12 +49,17 @@ const cibleOf=e=>Number.isInteger(e?.nextIdentity?.cut)?e.nextIdentity.cut:null;
 function stats(values){const v=values.filter(Number.isFinite).sort((a,b)=>a-b);if(!v.length)return {n:0};
   const q=p=>v[Math.min(v.length-1,Math.floor(p*(v.length-1)+0.5))];
   return {n:v.length,median:q(0.5),p90:q(0.9),max:v.at(-1),min:v[0],total:v.reduce((s,x)=>s+x,0)};}
+/* Audit P-5 (H16) : une réponse de commande (`adapter-result`) ou une erreur de lot (`batch-error`) qui porte son lot (`batchId`, depuis la
+ * correction) est rangée à ce lot, quelle que soit l'heure de la réponse (une attente expirée peut répondre en plein lot suivant) ; sans lot
+ * (journaux d'avant), la fenêtre de temps du lot. */
+const PORTE_SON_LOT=new Set(['adapter-result','batch-error']);
+const dansLot=(e,id,de,a)=>typeof id==='string'&&PORTE_SON_LOT.has(e.type)&&typeof e.batchId==='string'?e.batchId===id:ms(e)>=de&&ms(e)<a;
 /* Un export garde les événements de plusieurs lots : on ne mesure que le lot
  * exporté (`state.batch`), de son `batch-started` au lot suivant. */
 function fenetreDuLot(events,batch){
   const debuts=events.filter(e=>e.type==='batch-started');const i=debuts.findIndex(e=>e.batch?.id&&e.batch.id===batch?.id);
   if(i<0)return {events,filtre:false};const de=ms(debuts[i]),a=debuts[i+1]?ms(debuts[i+1]):Infinity;
-  return {events:events.filter(e=>ms(e)>=de&&ms(e)<a),filtre:true};}
+  return {events:events.filter(e=>dansLot(e,debuts[i].batch.id,de,a)),filtre:true};}
 function measure(data,{tous=false}={}){
   const tries=(data.events||[]).filter(e=>Number.isFinite(ms(e))).sort((a,b)=>ms(a)-ms(b));
   const batch=data.state?.batch||null,{events,filtre}=tous?{events:tries,filtre:false}:fenetreDuLot(tries,batch);
@@ -62,17 +67,18 @@ function measure(data,{tous=false}={}){
   const m={...mesurer(events),phases:decomposer(events)};
   /* Lot par lot : chaque `batch-started` ouvre une fenêtre jusqu'au suivant. */
   const debuts=events.filter(e=>e.type==='batch-started'),lots=debuts.map((d,i)=>{const de=ms(d),a=debuts[i+1]?ms(debuts[i+1]):Infinity;
-    const w=events.filter(e=>ms(e)>=de&&ms(e)<a),x=mesurer(w),etats=w.filter(e=>e.type==='batch-state');
+    const w=events.filter(e=>dansLot(e,d.batch?.id,de,a)),x=mesurer(w),etats=w.filter(e=>e.type==='batch-state');
     return {lot:d.batch?.id??null,partie:d.batch?.scope?.part??null,depart:d.batch?.scope?.start??null,debut:d.timestamp,
       fin:etats.at(-1)?.state??null,cuts:x.cuts.distincts,dureeMin:x.dureeMin.totale,silencesMin:x.dureeMin.silences,
-      cycleMs:x.cycleMs,captureMs:x.commandesMs.capture||{n:0},erreurs:Object.values(x.erreurs).reduce((s,l)=>s+l.length,0)};});
+      cycleMs:x.cycleMs,captureMs:x.commandesMs.capture||{n:0},erreurs:Object.values(x.erreurs).reduce((s,l)=>s+l.length,0),erreursDeLot:w.filter(e=>e.type==='batch-error').length};});
   return {v1:V1.measure(data,{tous}),source:{format:data.format??null,version:data.version??null,exportedAt:data.exportedAt??null,partie:batch?.scope?.part??null,
       lot:batch?.id??null,etat:batch?.state??null,lotSeul:filtre,evenements:events.length,debut:events[0].timestamp,fin:events.at(-1).timestamp},...m,lots};
 }
 function mesurer(events){
   const actions={},errors={},capture={points:[],bytes:[],attempts:[]};
   for(const e of events.filter(x=>x.type==='adapter-result')){const a=e.action||'?';(actions[a]=actions[a]||[]).push(e.elapsedMs);
-    if(e.error)(errors[a]=errors[a]||[]).push({cut:cutOf(e),at:e.timestamp,message:String(e.error).slice(0,160)});
+    if(e.error)(errors[a]=errors[a]||[]).push({cut:cutOf(e),at:e.timestamp,message:String(e.error).slice(0,160),
+      ...(typeof e.demandeA==='string'?{demandeA:e.demandeA}:{}),...(typeof e.batchId==='string'?{lot:e.batchId}:{})});
     if(a==='capture'&&!e.error&&e.lastDetail){capture.points.push(e.lastDetail.points);capture.bytes.push(e.lastDetail.bytes);capture.attempts.push(e.lastDetail.attempts);}}
   /* GCV1 : du dernier `before-captured` d'un cut à son `proposed` ; décision
    * sur le lot : de `proposed` à `gcv1-shadow-observed` (même cut). */
@@ -154,7 +160,7 @@ function toMarkdown(m,titre,opts={}){
     for(const e of p.etapes)L.push(`| ${e.libelle} | ${e.ms.n} | ${sec(e.ms.median)} | ${sec(e.ms.p90)} | ${Math.round(e.part*100)} % |`);}
   if(m.lots.length>1){L.push('','Lot par lot :','','| Début | Partie | Départ | Fin | Cuts | Durée | Cycle médian / p90 | Capture médiane / p90 / max | Erreurs |','|---|---|---|---|---|---|---|---|---|');
     for(const l of m.lots)L.push(`| ${l.debut} | ${l.partie??'?'} | ${l.depart??'?'} | ${l.fin??'—'} | ${l.cuts} | ${n(l.dureeMin)} min${l.silencesMin>=1?` (${n(l.silencesMin)} de silences)`:''} | ${sec(l.cycleMs.median)} / ${sec(l.cycleMs.p90)} | ${sec(l.captureMs.median)} / ${sec(l.captureMs.p90)} / ${sec(l.captureMs.max)} | ${l.erreurs} |`);}
-  const err=Object.entries(m.erreurs);if(err.length){L.push('','Erreurs de commande :','');for(const [a,l] of err)L.push(`- ${a} : ${l.length} (${l.slice(0,3).map(x=>`cut ${x.cut} : ${x.message}`).join(' ; ')}${l.length>3?' ; …':''})`);}
+  const err=Object.entries(m.erreurs);if(err.length){L.push('','Erreurs de commande :','');for(const [a,l] of err)L.push(`- ${a} : ${l.length} (${l.slice(0,3).map(x=>`cut ${x.cut}${x.demandeA?` (demandée à ${x.demandeA.slice(11,19)} UTC)`:''} : ${x.message}`).join(' ; ')}${l.length>3?' ; …':''})`);}
   if(m.silences.length){L.push('',`Silences (> 60 s) : ${m.silences.length}`,'');for(const s of m.silences.slice(0,12))L.push(`- ${s.de}, après « ${s.apres} » (cut ${s.cut??'?'}) : ${s.s} s`);if(m.silences.length>12)L.push('- …');}
   return L.join('\n')+'\n'+V1.toMarkdown(m.v1||{available:false,reason:'Mesures V1 non mesurées.'},opts);
 }

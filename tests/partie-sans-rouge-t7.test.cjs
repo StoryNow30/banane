@@ -37,6 +37,20 @@ test('panneau : lot clos sur une partie sans rouge (compteur ou départ à 0 inv
  assert.equal(p.$('lot-fin-partie').hidden,false);assert.equal(p.$('lot-fin-partie').textContent,AVIS);
 });
 
+test('panneau : lot clos sans commande par le service worker (partie complète au premier cut) : la ligne le dit, « Rien n’a été envoyé à ESV »',async()=>{
+ const p=await ouvrir(lot('STOPPED',{...releve(101),stoppedAtEnd:{cut:50,reason:'partie-sans-rouge',issue:'partie-sans-rouge',target:null,total:101,applied:false,at:'2026-10-17T08:00:01Z'}}));
+ assert.equal(p.$('lot-fin-partie').hidden,false);assert.equal(p.$('lot-fin-partie').textContent,AVIS+' Rien n’a été envoyé à ESV.');
+ assert.match(p.$('batch').textContent,/— partie 23 sans cut rouge : le cut 50, déjà traité, n’a reçu aucune commande$/);
+ assert.doesNotMatch(p.$('batch').textContent,/non résolu|posé, non validé/);
+});
+
+test('panneau : départ sur un cut vert, rouges restants derrière : la ligne les nomme ; la ligne d’état du lot aussi',async()=>{
+ const p=await ouvrir(lot('STOPPED',{...releve(99),stoppedAtEnd:{cut:50,reason:'depart-sur-vert',issue:'depart-sur-vert',motif:'rouges-derriere',derriere:[1,7],target:null,total:101,applied:false,at:'2026-10-17T08:00:01Z'}}));
+ assert.equal(p.$('lot-fin-partie').hidden,false);
+ assert.equal(p.$('lot-fin-partie').textContent,'Partie 23 : plus aucun cut rouge après le cut 50. Il reste 2 cuts rouges derrière : 1, 7. Rien n’a été envoyé à ESV.');
+ assert.match(p.$('batch').textContent,/— départ sur le cut 50, déjà validé : rien n’y a été écrit ; cuts rouges restants derrière : 1, 7$/);
+});
+
 test('panneau : rien n’est dit s’il reste des rouges, si le relevé est d’une autre partie, si la fiche est d’un autre lot, ou pendant un lot',async()=>{
  for(const [nom,s,fiches] of [['rouges restants',lot('STOPPED',releve(90)),[]],['autre partie',lot('STOPPED',releve(101,24)),[]],
    ['fiche d’un autre lot',lot('STOPPED'),[{partie:23,batchId:'lot-8',invalides:0}]],['lot en cours',lot('RUNNING',releve(101)),[]]]){

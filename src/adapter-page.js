@@ -1286,17 +1286,23 @@
   * service worker à la précédente DU MÊME ONGLET.
   * 4.9.5.4 (D-139) : l'empreinte ne contient plus ce qui dépend de l'ÉTAT de la page — les libellés (`title`) des boutons, qui changent selon
   * l'état, et le NOMBRE d'écouteurs par événement. Les boutons sont pris par leur identifiant seul, et un écouteur compte par sa PRÉSENCE
-  * (vrai/faux). Les libellés et les nombres restent relevés dans `etat`, consigné sans être haché ni comparé (pour voir, au terrain, ce qui varie). */
+  * (vrai/faux). Les libellés et les nombres restent relevés dans `etat`, consigné sans être haché ni comparé (pour voir, au terrain, ce qui varie).
+  * Audit P-5 (H14) : la classe de SÉLECTION d'un bouton de rail (`leftRailSClass` sélectionné, `leftRailUSClass` non, idem à droite) dépend elle
+  * aussi de l'état de la page : sélectionner l'autre rail changeait l'empreinte (faux avis « contrat changé »). Elle est ramenée à
+  * `leftRail(S|US)Class` : sa présence reste comparée (CLASSE_COTE la lit), son état non ; les classes brutes vont dans `etat`. Forme 2. */
+ const FORME_CONTRAT=2,SELECTION_RAIL=/^(left|right)Rail(?:S|US)Class$/;
  function empreinteContrat(){const d={},etat={};
    try{const bs=[...document.querySelectorAll('[id^="O2N3DCut"]')].filter(el=>/3DRail$/.test(el.id)).slice(0,16);d.boutons=bs.map(el=>el.id);etat.titres=bs.map(el=>[el.id,(el.title||'').slice(0,60)]);}catch{d.boutons=null;etat.titres=null;}
-   try{d.rails=['O2N3DCutLRClick','O2N3DCutRRClick'].map(id=>{const el=document.getElementById(id);return el?[...el.classList].sort().join(' ').slice(0,80):null;});}catch{d.rails=null;}
+   try{const classes=['O2N3DCutLRClick','O2N3DCutRRClick'].map(id=>{const el=document.getElementById(id);return el?[...el.classList].sort():null;});
+     etat.rails=classes.map(c=>c?c.join(' ').slice(0,80):null);
+     d.rails=classes.map(c=>c?[...new Set(c.map(x=>x.replace(SELECTION_RAIL,'$1Rail(S|US)Class')))].sort().join(' ').slice(0,80):null);}catch{d.rails=null;etat.rails=null;}
    try{const $=window.$;d.jquery=typeof $?.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null;
      const el=document.getElementById('globalcontainer'),ev=typeof $==='function'&&typeof $._data==='function'&&el?$._data(el,'events'):null;
      const nombres=Object.fromEntries(ESVEV.noms.map(n=>[n,ev?(ev[n]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE)).length:null]));
      d.ecouteurs=Object.fromEntries(Object.entries(nombres).map(([n,v])=>[n,v===null?null:v>0]));etat.ecouteurs=nombres;}catch{d.jquery=null;d.ecouteurs=null;etat.ecouteurs=null;}
    try{const v=window.Potree?.version;d.potree=v&&typeof v==='object'?[v.major,v.minor].filter(x=>Number.isFinite(x)).join('.')+(typeof v.suffix==='string'?String(v.suffix).slice(0,12):''):typeof v==='string'?v.slice(0,16):null;}catch{d.potree=null;}
    const texte=JSON.stringify(d);let h=2166136261>>>0;for(let i=0;i<texte.length;i++){h^=texte.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
-   return {hash:h.toString(16).padStart(8,'0'),detail:d,etat};}
+   return {hash:h.toString(16).padStart(8,'0'),detail:d,etat,forme:FORME_CONTRAT};}
  let intrusion=null;
  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
