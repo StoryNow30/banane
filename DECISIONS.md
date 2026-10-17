@@ -2483,3 +2483,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mesure de réussite** : la part des corrections de Mic, dans ses couples Orbite et Écho, qu'Ariane reproduit seule à 5 et à 10 mm près, face aux cuts justes qu'elle abîme. On la mesure en validation croisée par partie, puis sur des parties réservées.
 - Le chantier `claude/50-zones-autonomes` est élargi à toute la relecture : fiche `RELECTURE_AUTONOME.md`.
 - **Question posée à Mic** : Ariane peut-elle visiter des cuts verts dans ESV, d'abord sans rien modifier (visite, calcul, note), puis en corrigeant une fois les chiffres validés ?
+
+## D-171 — Accord de Mic : Ariane peut visiter des cuts verts dans ESV, d'abord sans rien modifier (17 octobre 2026)
+
+- Mic : « je suis d'accord ». La relecture autonome (D-170) commence par une **ombre de terrain**. Après le lot, Ariane visite les cuts que Mic aurait relus, verts compris : zones PN et ADV avec leurs marges, abords des rouges et des différés, cuts isolés, liste « À contrôler ». Pour chacun, elle capture, calcule la pose qu'elle donnerait (moteur et hauteur apprise) et note l'écart avec la pose actuelle. **Elle ne modifie rien et ne valide rien.**
+- La correction réelle viendra plus tard, avec Mic, une fois les chiffres validés sur des parties réservées avec Écho.
+- Chantier lancé : `claude/50-relecture-ombre`, au niveau fort. Réglage coupé par défaut, case dans le panneau. La trace est celle d'une visite humaine.
