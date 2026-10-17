@@ -8,9 +8,11 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,PERMISSIF,apresLot}=require('./helpers/relecture-essais.cjs');
 
 test('Maj+Espace : ESV va ailleurs qu’au cut + 1 → arrêt après la validation prouvée ; dernier cut de la partie jamais validé ; cut déjà corrigé jamais réécrit',async()=>{
- const {b,adapter,lot,local}=await H.lotRelecture({mode:'corriger',decisions:{109:14,115:20},reglagesProposes:PERMISSIF,
-  esv:a=>{a.total=116;a.majEspaceVers=cut=>cut===109?100:cut+1;}});
+ /* Sans référence de la liste « À contrôler » : la médiane de l'écartement vient de la table de la liste tenue par la page. */
+ const {b,adapter,lot,local}=await H.lotRelecture({mode:'corriger',decisions:{109:14,115:20},reglagesProposes:PERMISSIF,ecartementPartie:null,
+  esv:a=>{a.total=116;a.majEspaceVers=cut=>cut===109?100:cut+1;a.bordsListe=true;}});
  const p=await H.finPasse(b);
+ const g=H.evenements(b,'relecture-debut')[0].ecartementPartieMm;assert.ok(Number.isFinite(g)&&Math.abs(g-1435)<20,`médiane de la table de la page : ${g}`);
  assert.equal(p.etat,'erreur');assert.equal(p.corriges,1);
  assert.match(p.message,/arrêtée après la correction du cut 109 \(validation vue\) : après Maj\+Espace, ESV affiche le cut 100 de la partie 23, pas le cut 110/);
  assert.equal('banane50RelectureIntention' in local.m,false,'validation prouvée par l’écriture : aucune intention');

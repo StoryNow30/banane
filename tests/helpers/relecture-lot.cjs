@@ -28,7 +28,7 @@ class EsvRelecture extends SimulatedESV{
   this.ecriture='valid';this.surValidation=null;this.refusApply=null;this.offsetApply=false;this.apresLot=false;this.sansPoints=new Set();this.panneCapture=new Set();
   /* Liste d'ESV : nombre de cuts de la partie (compteur), cuts rouges, lignes forcées {cut: {s, t, v}}, cuts déjà vus ; Maj+Espace. */
   this.total=200;this.rouges=new Set(loin);this.lignes={};this.vus=new Set([111,112,113]);this.vusListe=new Set(this.vus);this.listeIllisible=false;this.lecturesListe=[];
-  this.majEspace=[];this.majEspaceVers=null;this.surVu=null;this.imiterVu=true;}
+  this.majEspace=[];this.majEspaceVers=null;this.surVu=null;this.imiterVu=true;this.bordsListe=false;}
  /* Pose d'ESV d'un cut : celle qu'Ariane ou la passe y a validée ; sinon, après le lot, un vert juste (la pose que le lot a validée au
   * cut 111, celle du moteur sur ce nuage), décalé de `decalages[cut]` mm en travers (nombre) ou [travers, hauteur] ; avant le lot, la
   * pose de la fixture. */
@@ -48,9 +48,11 @@ class EsvRelecture extends SimulatedESV{
   for(let i=Math.max(0,m.cut-m.fenetre);i<=Math.min(this.total-1,m.cut+m.fenetre);i++)rows.push(this.ligne(i));
   return {ok:true,table:{lignes:this.total,pages:1,fraiches:0,debut:true,rompue:false,tronquee:false,tables:1},geo:null,rows};}
  /* La table entière de la liste (`liste-instantane` : statut et drapeaux de chaque ligne, comme l'observateur de la page). */
- tableListe(){if(this.listeIllisible)return {ok:false,reason:'coupe'};const st=[],fl=[];
-  for(let i=0;i<this.total;i++){const l=this.ligne(i);st.push({valid:0,invalid:1,skipped:2}[l.s]??3);fl.push((l.t?1:0)|(l.v?2:0));}
-  return {ok:true,tables:[{key:'table-essai',debut:true,rompue:false,tronquee:false,st,fl,ed:[]}]};}
+ tableListe(){if(this.listeIllisible)return {ok:false,reason:'coupe'};const st=[],fl=[],ed=[];
+  for(let i=0;i<this.total;i++){const l=this.ligne(i);st.push({valid:0,invalid:1,skipped:2}[l.s]??3);fl.push((l.t?1:0)|(l.v?2:0));
+   /* Bords (1e-4 m) : la pose d'ESV du cut, pour les lignes valides seulement si `bordsListe`. */
+   const r=this.bordsListe&&l.s==='valid'?this.railsDe(i):null;ed.push(...(r?[...r.left.positionSceneRelative,...r.right.positionSceneRelative].map(v=>Math.round(v*1e4)):[null,null,null,null,null,null]));}
+  return {ok:true,tables:[{key:'table-essai',debut:true,rompue:false,tronquee:false,st,fl,ed}]};}
  async ping(){return {...await super.ping(),label:{pageId:this.identity.pageId,part:this.identity.part,cut:this.identity.cut}};}
  async capture(expected){const d=await super.capture(expected);d.viewCaptures=camerasParRail(d.rails);
   if(this.sansPoints?.has(this.identity.cut)){d.pointsSceneRelative=[];d.visibleByClipBoxes=[];d.quality={...d.quality,retained:0,perRail:{left:0,right:0}};}

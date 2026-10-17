@@ -2106,8 +2106,11 @@ async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.
   if(verts.length>=20){const v=verts.map(x=>x.g).sort((x,y)=>x-y),m=v.length>>1,med=v.length%2?v[m]:(v[m-1]+v[m])/2;
    if(!Number.isFinite(ecartementPartieMm))ecartementPartieMm=Math.round(med*10)/10;
    ecartement=verts.filter(x=>Math.abs(x.g-med)>15).map(x=>x.i);}}catch{/* liste illisible : rien en plus */}
- /* Cuts déjà vus (drapeau « SeenByOperator » de la liste d'ESV, table de la page, sinon instantané), pour annoncer les cuts neufs. */
- const vu=await relectureTableVus(total)||(lignes.length&&lignes.every(x=>typeof x.vu==='boolean')?new Map(lignes.map(x=>[x.i,x.vu])):null);
+ /* Cuts déjà vus (drapeau « SeenByOperator » de la liste d'ESV, table de la page, sinon instantané), pour annoncer les cuts neufs ; et,
+  * sans autre référence, la médiane de l'écartement des lignes valides de la table de la page. */
+ const page=await relectureTablePage(total);
+ const vu=page?.vu||(lignes.length&&lignes.every(x=>typeof x.vu==='boolean')?new Map(lignes.map(x=>[x.i,x.vu])):null);
+ if(!Number.isFinite(ecartementPartieMm)&&Number.isFinite(page?.ecartementMm))ecartementPartieMm=page.ecartementMm;
  /* Zones figées AVANT la passe, tirées des seules captures du lot (événements `regles-metier-ombre` de ce lot) : les captures de la
   * passe ne créent ni n'étendent jamais une zone (audit P-5 : une fausse zone PN apparaît dès qu'on capture des verts). */
  return {partie,total,lot,sources,zonesPN,zonesADV,aControler,ecartement,ecartementPartieMm,zonesSource:'lot',vu};}
@@ -2122,13 +2125,18 @@ async function relectureLignesListe(partie,b){const V=globalThis.BananeVertsACon
  const mem=reglesOmbre.mem;
  if(mem?.lignes?.size&&b?.id===mem.lotId&&b?.scope?.part===partie)return [...mem.lignes].map(([i,x])=>({i,statut:x.statut,operateur:false,g:x.g}));
  return [];}
-/* « Vu » de chaque ligne de la liste d'ESV tenue par la page (`liste-instantane`, la table de l'observateur : aucune requête, aucune
- * commande) : une seule table complète (de `total` lignes si on le connaît), sinon null. */
-async function relectureTableVus(total){if(selectedTab===null)return null;let timer;
+/* La liste d'ESV tenue par la page (`liste-instantane`, la table de l'observateur : aucune requête, aucune commande), une seule table
+ * complète (de `total` lignes si on le connaît), sinon null : « vu » de chaque ligne, et médiane de l'écartement des lignes valides
+ * à bords (20 au moins ; bords au dixième de mm, en 1e-4 m), comme la référence de la liste « À contrôler ». */
+async function relectureTablePage(total){if(selectedTab===null)return null;let timer;
  try{const rep=await Promise.race([chrome.tabs.sendMessage(selectedTab,{kind:'liste-instantane'}),new Promise(r=>{timer=setTimeout(()=>r(null),LISTE_PAGE_MS);})]);
   if(rep?.ok!==true||!Array.isArray(rep.tables))return null;
   const l=rep.tables.filter(t=>t&&Array.isArray(t.fl)&&t.debut===true&&t.rompue!==true&&t.tronquee!==true&&(!Number.isInteger(total)||t.fl.length===total));
-  return l.length===1?new Map(l[0].fl.map((f,i)=>[i,Number.isInteger(f)&&(f&2)===2])):null;}
+  if(l.length!==1)return null;const t=l[0],g=[];
+  if(Array.isArray(t.st)&&Array.isArray(t.ed))for(let i=0;i<t.st.length;i++){if(t.st[i]!==0)continue;const e=t.ed.slice(6*i,6*i+6);
+   if(e.length===6&&e.every(Number.isFinite))g.push(Math.hypot(e[0]-e[3],e[1]-e[4],e[2]-e[5])/10);}
+  g.sort((a,b)=>a-b);const m=g.length>>1;
+  return {vu:new Map(t.fl.map((f,i)=>[i,Number.isInteger(f)&&(f&2)===2])),ecartementMm:g.length>=20?Math.round((g.length%2?g[m]:(g[m-1]+g[m])/2)*10)/10:null};}
  catch{return null;}finally{clearTimeout(timer);}}
 /* Statut d'UN cut dans la liste d'ESV (mémoire de la page, lecture B1 `b1-voisins` : aucune requête, aucune commande), comme
  * `statutListeDuCut` de la base, avec ses drapeaux : {statut, operateur (TreatedByOperator), vu (SeenByOperator)} ; null si illisible,
