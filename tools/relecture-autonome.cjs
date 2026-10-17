@@ -6,10 +6,11 @@
  * Étude HORS LIGNE (5.0, fiches/RELECTURE_AUTONOME.md). Rien n'est changé à l'extension ; aucune action dans ESV.
  *
  *   node tools/relecture-autonome.cjs extraire --partie P:N --echo DOSSIER [--echo DOSSIER…] [--jeu JEU.jsonl] --sortie CAS.jsonl
+ *                                              [--graine-ecartement-fictive --table TABLE.json [--greffer ANCIEN-CAS.jsonl]]
  *   node tools/relecture-autonome.cjs skip     --partie P:N --echo DOSSIER [...] --sortie SKIP.jsonl
  *   node tools/relecture-autonome.cjs table    --partie P:N --echo DOSSIER --journal J.json [--journal …] --cas CAS.jsonl --sortie TABLE.json
  *   node tools/relecture-autonome.cjs etudier  --partie P:N --cas CAS.jsonl --table TABLE.json [--skip SKIP.jsonl] [--partie …] [--json S.json]
- *                                              [--reglages datasets/relecture-reglages-proposes.json --date AAAA-MM-JJ]
+ *                                              [--reglages datasets/relecture-reglages-proposes.json --date AAAA-MM-JJ] [--graine-ecartement-fictive]
  *   node tools/relecture-autonome.cjs juger    --reglages R.json --partie P:N --cas … --table … [--skip …] --juger-partie-reservee [--json S.json]
  *   node tools/relecture-autonome.cjs essai
  *
@@ -33,6 +34,19 @@
  * par cut (à 5 et 10 mm, cuts abîmés, mauvaise voie, abstentions) ; règle de CORRECTION PRUDENTE (agir seulement si…, sinon laisser)
  * choisie en validation croisée par partie, puis figée sur toutes les parties ; variante par type de zone ; courbe ; coût en temps.
  * JUGER : applique un réglage figé, sans rien régler, et donne les chiffres bruts avec une borne de Wilson à 95 %.
+ *
+ * OPTION `--graine-ecartement-fictive` (chantier P7, hypothèse H2 du catalogue, COUPÉE par défaut ; fiches/P7_GRAINE_ECARTEMENT_FICTIVE.md,
+ * src/graine-ecartement-fictive.js) :
+ *  - EXTRAIRE : un cut que la chaîne diffère et dont la pose de départ est FICTIVE (1 500 mm) : si le moteur a trouvé un rail, l'autre est
+ *    replacé à l'écartement de référence (médiane des poses actuelles des voisins à ±5 cuts, non différés par le lot, pose non fictive,
+ *    jamais Mic ; sinon médiane de la partie) et le moteur livré est relancé ; paire gardée sous les gardes du module. Résultat dans
+ *    `chaineGraine`, jamais un appui de la chaîne. `--greffer ANCIEN.jsonl` garde les cas d'une extraction antérieure (source d'Écho
+ *    devenue incomplète) et n'y reporte la graine que si la chaîne rend la même décision ;
+ *  - ETUDIER : la variante en chaîne d'un différé du lot prend cette pose ; la grille gagne le choix « agir sur un différé seulement s'il
+ *    vient de la graine » (`differes: 'graine'`), réglé en validation croisée comme le reste ; un différé posé par la graine agit sans les
+ *    seuils des verts, et ses corrections ne comptent pas dans les 90 % de la règle de service (`sobre`), qui reste celle des verts.
+ *    Tables par partie et type de zone, tous genres (règle de service et chiffre central), plus « en grappe » et « différés du lot ».
+ *    Sans l'option : chiffres inchangés (mêmes règles, mêmes bilans ; seules les tables ajoutées en plus).
  */
 const fs = require('node:fs'), path = require('node:path');
 const C = require('../vendor/capture-core.js');
@@ -45,6 +59,7 @@ const L = require('../src/lot-decision.js');
 const H = require('../src/hauteur-apprise.js');
 const M = require('../src/regles-metier.js');
 const { entreeSansFuite } = require('../src/native-session.js');
+const GE = require('../src/graine-ecartement-fictive.js');
 
 const SIDES = ['left', 'right'];
 const FORMAT = 'ariane-relecture-autonome-cas-v1';
@@ -123,8 +138,7 @@ function vuEcrit(v) {
 /* `entree` : entrée sans fuite ; rend ce qu'Ariane aurait donné, en décalages depuis la pose de départ. */
 const ecartementDe = pos => pos && vec3(pos.left) && vec3(pos.right) ? r1(1000 * Math.hypot(...[0, 1, 2].map(i => pos.left[i] - pos.right[i]))) : null;
 /* Une décision du lot et sa hauteur apprise, en décalages depuis la pose de départ. */
-function variante(capture, science, anchors) {
-  const decision = L.decideCut({ capture, science, anchors, Shadow });
+function variante(capture, science, anchors, decision = L.decideCut({ capture, science, anchors, Shadow })) {
   let haut = null;
   if (decision.positions) { try { haut = H.evaluer({ capture, science, decision }); } catch { haut = null; } }
   const rails = {};
@@ -140,7 +154,10 @@ function variante(capture, science, anchors) {
  *  - sans appui (`seul`, champs à la racine) : le cut visité seul, premier passage du lot ;
  *  - `chaine` : avec pour appuis les poses qu'elle vient de donner aux cuts précédents de la même relecture (ordre des cuts),
  *    comme le lot le fait de ses propres poses. Jamais une pose de Mic. */
-function poseAriane(entree, { tous = null, appuis = null } = {}) {
+/* `graine` (option P7, coupée) : { actif, poses: [{ cut, positions, differe }], gPartie } — poses ACTUELLES des voisins (jamais une pose de
+ * Mic) et médiane de la partie. Un cut que la chaîne diffère, pose de départ fictive, reçoit la graine (src/graine-ecartement-fictive.js) :
+ * `chaineGraine`, même forme que `chaine`, plus la tentative ; la graine n'entre jamais dans la liste des appuis de la chaîne. */
+function poseAriane(entree, { tous = null, appuis = null, graine = null } = {}) {
   const capture = { identity: entree.identity, rails: entree.rails, pointsSceneRelative: entree.points, visibleByClipBoxes: entree.visible };
   const science = Shadow.scientificProposeBoth(capture);
   const seul = variante(capture, science, []), decision = seul.decision, haut = seul.haut;
@@ -151,6 +168,15 @@ function poseAriane(entree, { tous = null, appuis = null } = {}) {
   if (appuis) {
     const ch = variante(capture, science, appuis.liste);
     out.chaine = ch.v;
+    if (graine && graine.actif === true) {
+      const poses = (graine.poses || []).map(p => ({ identity: { part: capture.identity.part, cut: p.cut, frameId: capture.identity.frameId ?? null }, positions: p.positions, differe: p.differe === true }));
+      const r = GE.reprendre({ decision: ch.decision, capture, science, poses, gPartie: graine.gPartie, Shadow, options: { actif: true, ...(graine.options || {}) } });
+      if (r.tentative) {
+        const t = { post: 'graine', pose: r.tentative.pose, reference: r.tentative.reference, trouves: r.tentative.trouves, essais: r.tentative.essais, accordMm: r.tentative.accordMm };
+        out.chaineGraine = r.tentative.pose ? { ...variante(capture, science, null, r.decision).v, ...t, reason: null }
+          : { stage: ch.decision.stage, reason: r.tentative.reason, appuis: 0, rails: { left: { pose: null }, right: { pose: null } }, ...t };
+      }
+    }
     if (ch.decision.positions && ch.decision.anchor !== false && ['first-pass', 'window', 'crossing'].includes(ch.decision.stage))
       L.rememberAnchor(appuis.liste, { identity: { part: capture.identity.part, cut: capture.identity.cut, frameId: null }, positions: ch.decision.positions, stage: ch.decision.stage }, 40);
   }
@@ -179,7 +205,7 @@ function poseAriane(entree, { tous = null, appuis = null } = {}) {
   return out;
 }
 
-function extraire({ partie, projet, echo, jeu }) {
+function extraire({ partie, projet, echo, jeu, graine = false, table = null }) {
   const e = J.lireEcho(echo);
   const parCut = [...J.echoParCut(e.records, e.sessions).values()].filter(c => c.partie === partie && c.cut >= 0);  // D-172 : les premiers cuts d'une partie sont dans le périmètre
   const labels = new Map();
@@ -193,6 +219,26 @@ function extraire({ partie, projet, echo, jeu }) {
   const chunks = chunksDesVisites(echo, visites);
   const ctx = { pagesPerdues: e.pagesPerdues, capturesParVisite: e.capturesParVisite };
   const appuis = { liste: [] };
+  /* Option P7 : poses actuelles des cuts visités (pose de départ de leur première visite, avant tout geste de Mic), cuts différés par le lot
+   * (table de la partie, comme l'étude ; sans table, le jeu) et médiane de la partie (poses actuelles hors lot, non fictives). */
+  let posesActuelles = null, differeLot = null, gPartie = null;
+  if (graine) {
+    differeLot = new Map();
+    if (table) for (const x of table.lot || []) differeLot.set(x.cut, x.differe === true || x.valide === false);
+    else for (const [cut, lab] of labels) differeLot.set(cut, lab.classe === 'differee');
+    posesActuelles = new Map();
+    for (const c of parCut) {
+      const b = c.visites[0] && c.visites[0].beforeEstablished && c.visites[0].beforeEstablished.rails;
+      if (b && SIDES.every(s => b[s] && vec3(b[s].positionSceneRelative))) posesActuelles.set(c.cut, { left: vec3(b.left.positionSceneRelative), right: vec3(b.right.positionSceneRelative) });
+    }
+    gPartie = med([...posesActuelles].filter(([cut, p]) => !differeLot.has(cut) && !GE.estFictive(p)).map(([, p]) => ecartementDe(p)));
+  }
+  const graineDe = cut => {
+    if (!graine) return null;
+    const poses = [];
+    for (let j = cut - GE.DEFAUTS.rayon; j <= cut + GE.DEFAUTS.rayon; j++) if (j !== cut && posesActuelles.has(j)) poses.push({ cut: j, positions: posesActuelles.get(j), differe: differeLot.get(j) === true });
+    return { actif: true, poses, gPartie };
+  };
   const cas = [];
   for (const c of parCut.sort((a, b) => a.cut - b.cut)) {
     const v0 = c.visites[0], lab = labels.get(c.cut) || null;
@@ -233,7 +279,7 @@ function extraire({ partie, projet, echo, jeu }) {
         for (const k of ks) if (k.side && (before[k.side] && k.rail)) for (let i = 0; i < k.pointsSceneRelative.length; i++) { pts.push(k.pointsSceneRelative[i]); vis.push(k.visibleByClipBoxes[i]); }
         const tous = { rails: entree.rails, pointsSceneRelative: pts, visibleByClipBoxes: vis };
         try { entree.identity = { ...entree.identity, frameId: null };
-        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis }) }; }
+        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis, graine: graineDe(c.cut) }) }; }
         catch (err) { o.ariane = { etat: 'erreur', message: String(err && err.message || err).slice(0, 120) }; }
       }
     }
@@ -360,7 +406,10 @@ function selection(t, { liste = null, cfg = SELECTION } = {}) {
   const compte = Object.fromEntries(TYPES.map(k => [k, 0])), verts = Object.fromEntries(TYPES.map(k => [k, 0]));
   let revisites = 0;
   for (const [c, k] of type) { compte[k]++; if (!lot.has(c)) verts[k]++; else if (lot.get(c) === 'pose') revisites++; }
-  return { type, lot, fin, compte, verts, revisites, grappes: runs.filter(r => r.length >= cfg.grappeMin).length, isoles: runs.filter(r => r.length === 1).length };
+  /* Cuts « en grappe » (catalogue P7) : toute la plage d'une grappe du lot et ses marges, quelle que soit la zone qui les a pris. */
+  const enGrappe = new Set();
+  for (const r of runs) if (r.length >= cfg.grappeMin) for (let i = Math.max(0, r[0] - cfg.margeGrappe); i <= r.at(-1) + cfg.margeGrappe; i++) enGrappe.add(i);
+  return { type, lot, fin, compte, verts, revisites, grappes: runs.filter(r => r.length >= cfg.grappeMin).length, isoles: runs.filter(r => r.length === 1).length, enGrappe };
 }
 /* La liste « À contrôler » (src/verts-a-controler.js, réglages livrés) sur la table de la partie. */
 function listeAControler(t) {
@@ -377,15 +426,19 @@ const med = a => { const s = a.filter(fini).sort((x, y) => x - y); if (!s.length
 const VARIANTES = Object.freeze(['seul+h', 'seul', 'chaine+h', 'chaine']);
 /* Proposition d'Ariane (décalage depuis la pose actuelle) : `seul` (cut visité seul, premier passage du lot) ou `chaine` (appuis : ses propres
  * poses des cuts précédents de la relecture) ; `+h` : hauteur apprise ajoutée. null si la décision diffère. */
-function proposition(cas, variante) {
+/* Option P7 (`graine`) : pour un cut DIFFÉRÉ PAR LE LOT (`differe`) que la chaîne diffère, la variante en chaîne prend la pose de la graine
+ * d'écartement (`chaineGraine`) si elle pose ; la proposition porte alors `post: 'graine'`. */
+const pose2 = src => !!(src && src.rails && SIDES.every(s => src.rails[s] && src.rails[s].pose));
+function proposition(cas, variante, { graine = false, differe = false } = {}) {
   const a = cas.ariane; if (!a || a.etat !== 'calcule') return null;
-  const src = variante.startsWith('chaine') ? a.chaine : a, h = variante.endsWith('+h'); if (!src) return null;
+  let src = variante.startsWith('chaine') ? a.chaine : a, post = null; const h = variante.endsWith('+h'); if (!src) return null;
+  if (graine && differe && variante.startsWith('chaine') && !pose2(src) && a.chaineGraine && a.chaineGraine.post === 'graine' && pose2(a.chaineGraine)) { src = a.chaineGraine; post = 'graine'; }
   const out = {};
   for (const s of SIDES) { const r = src.rails[s], p = r && r.pose; if (!p) return null; out[s] = h && fini(r.hauteurMm) ? [p[0], p[1], p[2] + r.hauteurMm] : p.slice(); }
-  return { rails: out, stage: src.stage, ecartementPoseMm: src.ecartementPoseMm ?? a.ecartementPoseMm ?? null };
+  return { rails: out, stage: src.stage, ecartementPoseMm: src.ecartementPoseMm ?? a.ecartementPoseMm ?? null, post };
 }
 /* Lignes de jugement d'une partie : un cut visité par Mic, sa zone, son genre (pose, différé, vert), sa référence et les propositions. */
-function lignes({ cas, table, designation }) {
+function lignes({ cas, table, designation, graine = false }) {
   const L = table ? listeAControler(table) : { cuts: [] };
   const S = table ? selection(table, { liste: L.cuts }) : selection({ cuts: [], lot: [] });
   const gMed = med(cas.filter(c => c.ariane && fini(c.ariane.ecartementDepartMm) && Math.abs(c.ariane.ecartementDepartMm - 1500) > 0.05 && !S.lot.has(c.cut)).map(c => c.ariane.ecartementDepartMm));
@@ -393,19 +446,19 @@ function lignes({ cas, table, designation }) {
   for (const c of cas) {
     const ref = c.mic && c.mic.ref ? c.mic.rails : null;
     const l = { partie: designation, cut: c.cut, zone: S.type.get(c.cut) || 'hors', genre: S.lot.get(c.cut) || 'vert', ref: !!ref, mic: ref ? max3d(ref) : null,
-      etat: c.ariane ? c.ariane.etat : null };
+      etat: c.ariane ? c.ariane.etat : null, grappe: !!(S.enGrappe && S.enGrappe.has(c.cut)) };
     if (ref) { const s = SIDES.reduce((a, b) => norme(ref[a]) >= norme(ref[b]) ? a : b); l.micAxe = Math.abs(ref[s][1]) >= Math.abs(ref[s][2]) ? 'lateral' : 'vertical'; }
     if (l.etat === 'calcule') {
       const a = c.ariane;
       l.conf = Math.min(...SIDES.map(s => fini(a.rails[s].confiance) ? a.rails[s].confiance : -1));
       l.var = {};
       for (const k of VARIANTES) {
-        const p = proposition(c, k);
+        const p = proposition(c, k, { graine, differe: l.genre === 'differe' });
         if (!p) { l.var[k] = { stage: (k.startsWith('chaine') ? a.chaine && a.chaine.stage : a.stage) || null, d: null, e: null }; continue; }
         /* Mesures de la règle, celles du lecteur de la passe de relecture (src/relecture-critere.js) : écart = le plus grand |latéral| ou
          * |vertical| des deux rails ; voie = le plus grand |latéral| ; cohérence = différence des deux rails en latéral et en vertical. */
         const P = p.rails;
-        l.var[k] = { stage: p.stage, d: max3d(P), e: ref ? Math.max(...SIDES.map(s => norme(moins(P[s], ref[s])))) : null,
+        l.var[k] = { stage: p.stage, post: p.post, d: max3d(P), e: ref ? Math.max(...SIDES.map(s => norme(moins(P[s], ref[s])))) : null,
           pire: Math.max(...SIDES.flatMap(s => [Math.abs(P[s][1]), Math.abs(P[s][2])])), latMax: Math.max(...SIDES.map(s => Math.abs(P[s][1]))),
           coh: Math.max(Math.abs(P.left[1] - P.right[1]), Math.abs(P.left[2] - P.right[2])),
           dg: fini(p.ecartementPoseMm) && fini(gMed) ? Math.abs(p.ecartementPoseMm - gMed) : null };
@@ -433,6 +486,9 @@ function issue(l, v, agitIci) {
 function agit(l, R) {
   const v = l.var && l.var[R.variante];
   if (!v || v.d == null) return false;
+  /* Option P7 : un cut différé par le lot n'est touché que par la graine d'écartement, et alors sans les seuils des verts : le moteur relancé
+   * et les gardes du module ont décidé, et un différé doit être posé quelle que soit sa distance à la pose actuelle (fictive). */
+  if (l.genre === 'differe' && R.differes === 'graine') return v.post === 'graine';
   if (R.stages && !R.stages.includes(v.stage)) return false;
   if (R.differes === false && l.genre === 'differe') return false;
   if (R.poses === false && l.genre === 'pose') return false;
@@ -473,6 +529,10 @@ const additionner = bs => { const o = bilan([], {}); delete o.partDegats; for (c
 const GRILLE = Object.freeze({ variante: VARIANTES, X: [3, 4, 5, 6, 8, 10, 12, 15, 20], Y: [0, 30, 50, 60, 65, 70, 75, 80], D: [60, 45, 30], C: [100, 10, 6], G: [100, 15, 10, 6],
   stages: [null, ['first-pass'], ['first-pass', 'crossing']], differes: [false], poses: [true, false] });
 const CONTRAINTE = Object.freeze({ mauvaiseVoieMax: 0, degatsPartMax: 0.01 });
+/* Option P7 : la grille gagne un seul choix, « agir sur un différé du lot seulement s'il vient de la graine d'écartement ». Sans l'option,
+ * la grille livrée, inchangée (même objet). */
+const GRILLE_GRAINE = Object.freeze({ ...GRILLE, differes: [false, 'graine'] });
+const grilleDe = ({ graine = false } = {}) => graine ? GRILLE_GRAINE : GRILLE;
 function regles(g = GRILLE) {
   const out = [];
   for (const variante of g.variante) for (const X of g.X) for (const Y of g.Y) for (const G of g.G || [null]) for (const D of g.D) for (const C of g.C || [null]) for (const stages of g.stages) for (const differes of g.differes) for (const poses of g.poses || [true])
@@ -511,11 +571,14 @@ const regleParType = rt => Object.assign(l => rt[l.zone] || null, { variante: (O
  * les mêmes lignes d'apprentissage, sous la même contrainte. Moins d'écritures dans ESV pour presque le même gain. */
 const PART_SOBRE = 0.9;
 function sobre(R, ls, { grille = GRILLE, contrainte = CONTRAINTE, parPartie = null } = {}) {
-  const ref = bilan(ls, R).corrigesJustes;
+  /* Option P7 (`differes: 'graine'`) : un différé posé par la graine agit sans le seuil X ; ses corrections ne comptent donc pas dans la
+   * part gardée (sinon elles laisseraient monter le seuil des verts sans rien gagner). Sans l'option : toutes les lignes, inchangé. */
+  const sousX = R.differes === 'graine' ? ls.filter(l => l.genre !== 'differe') : ls;
+  const ref = bilan(sousX, R).corrigesJustes;
   let out = R;
   for (const X of grille.X.filter(x => x > R.X)) {
-    const Rx = { ...R, X }, b = bilan(ls, Rx);
-    if (b.corrigesJustes < PART_SOBRE * ref || b.mauvaiseVoie > contrainte.mauvaiseVoieMax || b.partDegats > contrainte.degatsPartMax + 1e-12) continue;
+    const Rx = { ...R, X }, b = bilan(ls, Rx), justes = sousX === ls ? b.corrigesJustes : bilan(sousX, Rx).corrigesJustes;
+    if (justes < PART_SOBRE * ref || b.mauvaiseVoie > contrainte.mauvaiseVoieMax || b.partDegats > contrainte.degatsPartMax + 1e-12) continue;
     if (parPartie && parPartie.some(lp => bilan(lp, Rx).mauvaiseVoie > contrainte.mauvaiseVoieMax)) continue;
     out = Rx;
   }
@@ -547,10 +610,14 @@ function cout(r) {
     minutesArianeParType: Object.fromEntries(TYPES.map(k => [k, TEMPS.arianeCycleS.map(s => r1(S.verts[k] * s / 60))])) };
 }
 /* `parties` : [{ designation, cas, table, skip? }] (parties d'apprentissage). */
-function etudier(parties, { grille = GRILLE } = {}) {
-  const res = parties.map(p => ({ ...p, ...lignes(p) }));
+function etudier(parties, { grille = GRILLE, graine = false } = {}) {
+  if (graine && !(grille.differes || []).includes('graine')) grille = grille === GRILLE ? GRILLE_GRAINE : { ...grille, differes: [...(grille.differes || [false]), 'graine'] };
+  const res = parties.map(p => ({ ...p, ...lignes({ ...p, graine }) }));
   const sel = res.map(dansSelection);
-  const central = res.map((r, i) => ({ partie: r.designation, seul: bilan(sel[i], { tout: true, variante: 'seul+h' }), chaine: bilan(sel[i], { tout: true, variante: 'chaine+h' }),
+  const tout = { tout: true, variante: 'chaine+h' };
+  const central = res.map((r, i) => ({ partie: r.designation, seul: bilan(sel[i], { tout: true, variante: 'seul+h' }), chaine: bilan(sel[i], tout),
+    chaineParType: Object.fromEntries(TYPES.map(k => [k, bilan(sel[i].filter(l => l.zone === k), tout)])), chaineGrappe: bilan(sel[i].filter(l => l.grappe), tout),
+    chaineDiffere: bilan(sel[i].filter(l => l.genre === 'differe'), tout),
     nonMesurables: sel[i].filter(l => l.ref && l.etat !== 'calcule').length, sansReference: sel[i].filter(l => !l.ref).length }));
   const croisee = res.map((r, i) => {
     const train = sel.filter((_, j) => j !== i), best = choisir(train.flat(), { grille, parPartie: train });
@@ -559,7 +626,11 @@ function etudier(parties, { grille = GRILLE } = {}) {
     const parTypeVert = Object.fromEntries(TYPES.map(k => [k, best ? bilan(sel[i].filter(l => l.zone === k && l.genre === 'vert'), best.R) : null]));
     const Rs = best ? sobre(best.R, train.flat(), { grille, parPartie: train }) : null;
     const parTypeVertSobre = Object.fromEntries(TYPES.map(k => [k, Rs ? bilan(sel[i].filter(l => l.zone === k && l.genre === 'vert'), Rs) : null]));
-    return { partie: r.designation, regle: best ? best.R : null, bilan: best ? bilan(sel[i], best.R) : null, parType, parTypeVert, genre, regleSobre: Rs, bilanSobre: Rs ? bilan(sel[i], Rs) : null, parTypeVertSobre };
+    /* Règle de service, tous genres (P7 : les différés posés par la graine entrent dans les zones ADV et abords, et dans les grappes). */
+    const parTypeSobre = Object.fromEntries([...TYPES, 'hors'].map(k => [k, Rs ? bilan(sel[i].filter(l => l.zone === k), Rs) : null]));
+    const genreSobre = Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, Rs ? bilan(sel[i].filter(l => l.genre === k), Rs) : null]));
+    return { partie: r.designation, regle: best ? best.R : null, bilan: best ? bilan(sel[i], best.R) : null, parType, parTypeVert, genre, regleSobre: Rs, bilanSobre: Rs ? bilan(sel[i], Rs) : null, parTypeVertSobre,
+      parTypeSobre, genreSobre, grappeSobre: Rs ? bilan(sel[i].filter(l => l.grappe), Rs) : null };
   });
   const fige = choisir(sel.flat(), { grille, parPartie: sel });
   const croiseeLettre = res.map((r, i) => { const train = sel.filter((_, j) => j !== i), best = choisir(train.flat(), { grille, parPartie: train, objectif: 'justes' });
@@ -567,13 +638,17 @@ function etudier(parties, { grille = GRILLE } = {}) {
   const croiseeType = res.map((r, i) => { const rt = choisirParType(sel.filter((_, j) => j !== i), { grille }); return { partie: r.designation, regles: rt, bilan: bilan(sel[i], regleParType(rt)) }; });
   const figeType = choisirParType(sel, { grille });
   const courbe = fige ? [3, 4, 5, 6, 8, 10, 12, 15, 20, 30].map(X => ({ X, ...bilan(sel.flat(), { ...fige.R, X }) })) : [];
+  const somme = f => additionner(croisee.map(f).filter(Boolean));
   return {
-    format: FORMAT_ETUDE, parties: res.map(r => r.designation), selection: SELECTION, seuils: SEUILS, contrainte: CONTRAINTE, temps: TEMPS,
+    format: FORMAT_ETUDE, graine: !!graine, parties: res.map(r => r.designation), selection: SELECTION, seuils: SEUILS, contrainte: CONTRAINTE, temps: TEMPS,
     couverture: res.map(couverture), central, croisee, totalCroisee: additionner(croisee.filter(c => c.bilan).map(c => c.bilan)),
     parTypeCroisee: Object.fromEntries([...TYPES].map(k => [k, additionner(croisee.filter(c => c.parType[k]).map(c => c.parType[k]))])),
     parTypeVertCroisee: Object.fromEntries([...TYPES].map(k => [k, additionner(croisee.filter(c => c.parTypeVert[k]).map(c => c.parTypeVert[k]))])),
     parTypeVertCroiseeSobre: Object.fromEntries([...TYPES].map(k => [k, additionner(croisee.filter(c => c.parTypeVertSobre[k]).map(c => c.parTypeVertSobre[k]))])),
     parGenreCroisee: Object.fromEntries(['vert', 'pose'].map(k => [k, additionner(croisee.filter(c => c.genre[k]).map(c => c.genre[k]))])),
+    parTypeCroiseeSobre: Object.fromEntries([...TYPES, 'hors'].map(k => [k, somme(c => c.parTypeSobre[k])])),
+    parGenreCroiseeSobre: Object.fromEntries(['vert', 'pose', 'differe'].map(k => [k, somme(c => c.genreSobre[k])])),
+    grappeCroiseeSobre: somme(c => c.grappeSobre),
     fige: fige ? { regle: fige.R, bilan: fige.b, parPartie: res.map((r, i) => ({ partie: r.designation, ...bilan(sel[i], fige.R) })) } : null,
     croiseeLettre, totalCroiseeLettre: additionner(croiseeLettre.filter(c => c.bilan).map(c => c.bilan)),
     totalCroiseeSobre: additionner(croisee.filter(c => c.bilanSobre).map(c => c.bilanSobre)),
@@ -585,9 +660,9 @@ function etudier(parties, { grille = GRILLE } = {}) {
 }
 /* Jugement d'un réglage figé (aucun réglage ici) : chiffres bruts et borne de Wilson du taux d'erreur parmi les actions. */
 const PORTE = Object.freeze({ mauvaiseVoieMax: 0, erreurMax: 0.09 });
-function juger(parties, reglage) {
+function juger(parties, reglage, { graine = false } = {}) {
   const out = parties.map(p => {
-    const r = { ...p, ...lignes(p) }, ls = dansSelection(r), b = bilan(ls, reglage.regle);
+    const r = { ...p, ...lignes({ ...p, graine }) }, ls = dansSelection(r), b = bilan(ls, reglage.regle);
     const bt = reglage.parType ? bilan(ls, regleParType(reglage.parType)) : null;
     const w = wilson(b.erreurs10, b.agit), wd = wilson(b.degats, b.visites);
     return { partie: r.designation, couverture: couverture(r), cout: cout(r), toutAgir: bilan(ls, { tout: true, variante: reglage.regle.variante }), bilan: b,
@@ -622,6 +697,7 @@ function decisionType(etude, k) {
 /* Le fichier de réglages est au format que lit la passe de relecture (`ariane-relecture-reglages-1`, src/relecture-critere.js du chantier
  * de la relecture en ombre) : étapes permises, rôles, voie, cohérence, et par zone (pn, adv, abords, vert-hors-zone) corriger / seuil /
  * confiance. Le reste (origine, chiffres, variantes) est en plus : ce lecteur l'ignore. */
+const EXCEPTION_GRAINE = 'graine-ecartement-fictive : un différé du lot est posé seulement par la graine d\'écartement sur pose fictive (src/graine-ecartement-fictive.js)';
 const ZONE_LECTEUR = Object.freeze({ pn: 'pn', adv: 'adv', abords: 'abords', liste: 'vert-hors-zone' });
 const ETAPES_TOUTES = Object.freeze(['first-pass', 'window', 'choice', 'crossing']);
 const resume = b => (({ visites, micSup10, agit, corrigesJustes, reproduit5, reproduit10, degats, mauvaiseVoie, erreurs10 }) => ({ visites, micSup10, agit, corrigesJustes, reproduit5, reproduit10, degats, mauvaiseVoie, erreurs10 }))(b);
@@ -641,6 +717,8 @@ function reglagesProposes(etude, { date }) {
     zones: Object.fromEntries(TYPES.map(k => [ZONE_LECTEUR[k], { corriger: decisions[k].action === 'agir', seuilMm: R.X, confianceMin: R.Y }])),
     variante: { proposition: R.variante, sens: 'chaine : la décision du lot avec pour appuis les poses qu\'Ariane vient de donner aux cuts précédents de la relecture ; seul : le cut seul ; +h : hauteur apprise ajoutée à la pose' },
     jamais: ['cut différé par le lot', 'cut posé par le lot'],
+    /* Option P7 : exception lue par `regleDuReglage` ; un lecteur qui l'ignore garde la règle prudente (jamais un différé). */
+    ...(R.differes === 'graine' ? { exceptionDifferes: EXCEPTION_GRAINE } : {}),
     origine: { outil: 'tools/relecture-autonome.cjs etudier', fiche: 'fiches/RELECTURE_AUTONOME.md', parties: etude.parties,
       procedure: 'validation croisée par partie (une partie laissée de côté, réglage sur les autres, mesure sur elle), puis règle figée sur les six parties d\'apprentissage ; aucune partie réservée lue pour régler',
       objectif: 'le plus de corrections justes (correction de Mic > 10 mm, pose d\'Ariane à 10 mm près de celle de Mic), nettes des cuts abîmés',
@@ -659,7 +737,8 @@ function reglagesProposes(etude, { date }) {
 function regleDuReglage(g) {
   const z = g.zones || {}, une = z.pn || Object.values(z)[0] || {}, et = Array.isArray(g.etagesPermis) && !ETAPES_TOUTES.every(e => g.etagesPermis.includes(e)) ? g.etagesPermis : null;
   const base = { variante: g.variante && g.variante.proposition || 'chaine+h', X: une.seuilMm, Y: une.confianceMin ?? 0, D: g.voie && g.voie.lateralMaxMm,
-    C: g.coherence ? g.coherence.diffLateraleMaxMm : null, G: g.coherence ? g.coherence.ecartementMaxMm : null, stages: et, differes: false, poses: !(g.jamais || []).includes('cut posé par le lot') };
+    C: g.coherence ? g.coherence.diffLateraleMaxMm : null, G: g.coherence ? g.coherence.ecartementMaxMm : null, stages: et,
+    differes: typeof g.exceptionDifferes === 'string' && g.exceptionDifferes.startsWith('graine-ecartement-fictive') ? 'graine' : false, poses: !(g.jamais || []).includes('cut posé par le lot') };
   return { regle: base, parType: g.varianteParZone && g.varianteParZone.regles || null,
     actifs: TYPES.filter(k => z[ZONE_LECTEUR[k]] && z[ZONE_LECTEUR[k]].corriger === true),
     procedure: g.regleProcedure ? { ...base, X: g.regleProcedure.seuilMm } : null };
@@ -667,7 +746,7 @@ function regleDuReglage(g) {
 
 /* ------------------------------------------------------------------ texte */
 const pc = (a, b) => b ? `${Math.round(1000 * a / b) / 10} %` : '—';
-const decrire = R => !R ? 'aucune' : `${R.variante}, écart ≥ ${R.X} mm${R.D != null ? `, rail déplacé de ${R.D} mm au plus en travers` : ''}${R.Y > 0 ? `, confiance ≥ ${R.Y}` : ', confiance présente'}${R.C != null && R.C < 100 ? `, rails cohérents à ${R.C} mm` : ''}${R.G != null && R.G < 100 ? `, écartement à ${R.G} mm de la médiane` : ''}${R.stages ? `, étapes ${R.stages.join('/')}` : ''}${R.differes === false ? ', jamais sur un différé' : ''}${R.poses === false ? ', jamais sur un cut posé par le lot' : ''}`;
+const decrire = R => !R ? 'aucune' : `${R.variante}, écart ≥ ${R.X} mm${R.D != null ? `, rail déplacé de ${R.D} mm au plus en travers` : ''}${R.Y > 0 ? `, confiance ≥ ${R.Y}` : ', confiance présente'}${R.C != null && R.C < 100 ? `, rails cohérents à ${R.C} mm` : ''}${R.G != null && R.G < 100 ? `, écartement à ${R.G} mm de la médiane` : ''}${R.stages ? `, étapes ${R.stages.join('/')}` : ''}${R.differes === false ? ', jamais sur un différé' : R.differes === 'graine' ? ', différés : graine d\'écartement seulement' : ''}${R.poses === false ? ', jamais sur un cut posé par le lot' : ''}`;
 const ligneBilan = b => `${b.visites} | ${b.micSup10} | ${b.agit} | ${b.reproduit5} | ${b.reproduit10} | ${b.corrigesJustes} | ${b.abime + b.aggrave} | ${b.mauvaiseVoie} | ${b.abstention} | ${b.laisseFaux}`;
 const ENTETE_BILAN = 'visités mesurables | Mic > 10 mm | agit | reproduit ≤ 5 | reproduit ≤ 10 | corrections justes | abîmés | mauvaise voie | abstentions | laissés faux';
 function texte(o) {
@@ -684,6 +763,13 @@ function texte(o) {
     L.push('', `Règle figée : ${decrire(o.fige && o.fige.regle)}`, o.fige ? `- en échantillon : ${ligneBilan(o.fige.bilan)}` : '');
     L.push('', `Objectif à la lettre (corrections justes seules), validation croisée : ${ligneBilan(o.totalCroiseeLettre)}`);
     if (o.figeSobre) { L.push('', `Règle de service (variante sobre) : ${decrire(o.figeSobre.regle)}`, `- validation croisée : ${ligneBilan(o.totalCroiseeSobre)}`); for (const c of o.croisee) if (c.bilanSobre) L.push(`  - ${c.partie} (X ${c.regleSobre.X}) : ${ligneBilan(c.bilanSobre)}`); }
+    const lb = b => b ? `${b.visites} | ${b.micSup10} | ${b.agit} | ${b.corrigesJustes} | ${b.erreurs10} | ${b.abime + b.aggrave} | ${b.mauvaiseVoie} | ${b.abstention}` : '—';
+    const EN = 'visités | Mic > 10 mm | agit | justes | erreurs > 10 mm | abîmés | mauvaise voie | abstentions';
+    L.push('', `## Par partie et type de zone (règle de service, validation croisée, tous genres${o.graine ? ' ; option graine d\'écartement sur pose fictive' : ''})`, '', `Partie | zone | ${EN}`, '---|---' + '|--:'.repeat(8));
+    for (const c of o.croisee) { if (!c.parTypeSobre) continue; for (const k of TYPES) L.push(`${c.partie} | ${k} | ${lb(c.parTypeSobre[k])}`); L.push(`${c.partie} | en grappe | ${lb(c.grappeSobre)}`); L.push(`${c.partie} | différés du lot | ${lb(c.genreSobre.differe)}`); }
+    if (o.parTypeCroiseeSobre) { for (const k of TYPES) L.push(`total | ${k} | ${lb(o.parTypeCroiseeSobre[k])}`); L.push(`total | en grappe | ${lb(o.grappeCroiseeSobre)}`); L.push(`total | différés du lot | ${lb(o.parGenreCroiseeSobre.differe)}`); }
+    L.push('', '## Chiffre central par type de zone (chaîne+h, agir partout)', '', `Partie | zone | ${EN}`, '---|---' + '|--:'.repeat(8));
+    for (const c of o.central) { if (!c.chaineParType) continue; for (const k of TYPES) L.push(`${c.partie} | ${k} | ${lb(c.chaineParType[k])}`); L.push(`${c.partie} | en grappe | ${lb(c.chaineGrappe)}`); L.push(`${c.partie} | différés du lot | ${lb(c.chaineDiffere)}`); }
     L.push('', '## Variante par type (validation croisée)'); for (const c of o.croiseeType) L.push(`- ${c.partie} : ${ligneBilan(c.bilan)}`); L.push(`- total : ${ligneBilan(o.totalCroiseeType)}`);
     L.push('', '## Courbe (règle figée, X variable, en échantillon)', '', 'X | agit | corrections justes | reproduit ≤ 10 | dégâts | mauvaise voie | erreurs > 10 mm', '--:|--:|--:|--:|--:|--:|--:');
     for (const c of o.courbe) L.push(`${c.X} | ${c.agit} | ${c.corrigesJustes} | ${c.reproduit10} | ${c.degats} | ${c.mauvaiseVoie} | ${c.erreurs10}`);
@@ -721,10 +807,34 @@ function essai() {
   return { cas, table };
 }
 
+/* ------------------------------------------------------------------ greffe (option P7) */
+/* Cas d'une extraction ANTÉRIEURE (`anciens`, source d'Écho devenue incomplète sur le disque) et cas d'une extraction nouvelle avec l'option
+ * (`nouveaux`) : la graine (`chaineGraine`) n'est reportée sur un cas ancien que si la chaîne nouvelle y rend la même décision (étape et
+ * poses à 0,5 mm près). Rien d'autre ne change dans les cas anciens. `differe` : cuts différés par le lot (pour compter les cuts visés). */
+function memeChaine(a, b) {
+  if (!a || !b || a.stage !== b.stage) return false;
+  return SIDES.every(s => { const p = a.rails && a.rails[s] && a.rails[s].pose, q = b.rails && b.rails[s] && b.rails[s].pose; return (!p && !q) || (!!p && !!q && [0, 1, 2].every(i => Math.abs(p[i] - q[i]) < 0.5)); });
+}
+function greffer(anciens, nouveaux, { differe = new Set() } = {}) {
+  const par = new Map(nouveaux.map(c => [c.cut, c])), bilan = { cuts: anciens.length, visees: 0, greffes: 0, chaineDifferente: 0, absents: 0, chainesComparees: 0, chainesIdentiques: 0 };
+  const cas = anciens.map(o => {
+    const a = o.ariane, vise = differe.has(o.cut) && a && a.etat === 'calcule' && a.chaine && !pose2(a.chaine) && GE.DEFAUTS.ecartementFictifMm - GE.DEFAUTS.toleranceFictiveMm < (a.ecartementDepartMm ?? 0) && (a.ecartementDepartMm ?? 0) < GE.DEFAUTS.ecartementFictifMm + GE.DEFAUTS.toleranceFictiveMm;
+    if (vise) bilan.visees++;
+    const n = par.get(o.cut), nv = n && n.ariane && n.ariane.etat === 'calcule' ? n.ariane : null;
+    /* Contrôle de reproduction : sur tous les cuts calculés des deux côtés, la chaîne nouvelle rend-elle l'ancienne ? */
+    if (nv && a && a.etat === 'calcule' && a.chaine && nv.chaine) { bilan.chainesComparees++; if (memeChaine(a.chaine, nv.chaine)) bilan.chainesIdentiques++; }
+    if (!nv || !nv.chaineGraine) { if (vise) bilan.absents++; return o; }
+    if (!a || a.etat !== 'calcule' || !memeChaine(a.chaine, nv.chaine)) { if (vise) bilan.chaineDifferente++; return o; }
+    if (vise) bilan.greffes++;
+    return { ...o, ariane: { ...a, chaineGraine: nv.chaineGraine } };
+  });
+  return { cas, bilan };
+}
+
 module.exports = { FORMAT, FORMAT_ETUDE, FORMAT_JUGEMENT, FORMAT_REGLAGES, decalage, referenceHumaine, vuEcrit, poseAriane, extraire, chunksDesVisites, chunkComplet,
   releverSkip, verdictSkip, bilanSkip, fusionner, zonesDepuisCas, construireTable, SELECTION, TYPES, selection, listeAControler, VARIANTES, proposition, lignes,
   SEUILS, issue, agit, bilan, additionner, GRILLE, CONTRAINTE, regles, choisir, choisirParType, regleParType, PART_SOBRE, sobre, wilson, TEMPS, couverture, cout, etudier, PORTE, juger,
-  CRITERES_TYPE, decisionType, reglagesProposes, regleDuReglage, texte, essai, max3d };
+  CRITERES_TYPE, decisionType, reglagesProposes, regleDuReglage, texte, essai, max3d, grilleDe, GRILLE_GRAINE, EXCEPTION_GRAINE, greffer, memeChaine };
 
 /* ------------------------------------------------------------------ ligne de commande */
 const lireJsonl = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
@@ -740,6 +850,7 @@ function args(argv) {
     else if (k === '--table') courante().table = val(); else if (k === '--skip') courante().skip = val();
     else if (k === '--json') o.json = val(); else if (k === '--reglages') o.reglages = val(); else if (k === '--date') o.date = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
+    else if (k === '--graine-ecartement-fictive') o.graine = true; else if (k === '--greffer') o.greffer = val();
     else throw Error('argument inconnu : ' + k);
   }
   return o;
@@ -762,11 +873,19 @@ if (require.main === module) {
     const a = args(process.argv.slice(2));
     if (a.mode === 'extraire') {
       if (!a.partie || !a.echo.length || !a.sortie) throw Error('extraire --partie P:N --echo DOSSIER [--jeu JEU.jsonl] --sortie CAS.jsonl');
-      const cas = extraire(a);
+      const tableP7 = a.graine && a.parties[0] && a.parties[0].table ? JSON.parse(fs.readFileSync(a.parties[0].table, 'utf8')) : null;
+      if (tableP7 && tableP7.partie !== a.partie) throw Error(`${a.parties[0].table} : table d'une autre partie`);
+      let cas = extraire({ ...a, table: tableP7 });
+      if (a.greffer) {
+        if (!a.graine) throw Error('--greffer ne sert qu\'avec --graine-ecartement-fictive');
+        const g = greffer(lireJsonl(a.greffer), cas, { differe: new Set([...(tableP7 ? selection(tableP7).lot : new Map())].filter(([, k]) => k === 'differe').map(([c]) => c)) });
+        cas = g.cas; console.log(`greffe sur ${a.greffer} : ${JSON.stringify(g.bilan)}`);
+      }
       fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true });
       fs.writeFileSync(a.sortie, cas.map(c => JSON.stringify(c)).join('\n') + '\n');
       const n = k => cas.filter(c => c.ariane && c.ariane.etat === k).length;
-      console.log(`partie ${a.projet}:${a.partie} : ${cas.length} cuts, calculés ${n('calcule')}, sans nuage ${n('sans-nuage')}, erreurs ${n('erreur')}, avec référence ${cas.filter(c => c.mic && c.mic.ref).length}`);
+      console.log(`partie ${a.projet}:${a.partie} : ${cas.length} cuts, calculés ${n('calcule')}, sans nuage ${n('sans-nuage')}, erreurs ${n('erreur')}, avec référence ${cas.filter(c => c.mic && c.mic.ref).length}`
+        + (a.graine ? `, graines tentées ${cas.filter(c => c.ariane && c.ariane.chaineGraine).length}, posées ${cas.filter(c => c.ariane && c.ariane.chaineGraine && c.ariane.chaineGraine.pose).length}` : ''));
     } else if (a.mode === 'skip') {
       if (!a.partie || !a.echo.length || !a.sortie) throw Error('skip --partie P:N --echo DOSSIER --sortie SKIP.jsonl');
       const r = releverSkip(a.echo, a.partie); fs.writeFileSync(a.sortie, r.map(x => JSON.stringify(x)).join('\n') + '\n');
@@ -777,13 +896,13 @@ if (require.main === module) {
       fs.writeFileSync(a.sortie, JSON.stringify(t));
       console.log(`partie ${a.projet}:${a.partie} : lot ${t.lot.length} (${t.lot.filter(x => x.differe).length} différés), PN ${t.zonesPN.length}, ADV ${t.zonesADV.length}, ${t.cuts.length} cuts à l'Écho`);
     } else if (a.mode === 'etudier') {
-      const o = etudier(chargerParties(a, 'relecture-autonome'));
+      const o = etudier(chargerParties(a, 'relecture-autonome'), { graine: !!a.graine });
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(o, null, 1));
       if (a.reglages) fs.writeFileSync(a.reglages, JSON.stringify(reglagesProposes(o, { date: a.date || new Date().toISOString().slice(0, 10) }), null, 2) + '\n');
       console.log(texte(o));
     } else if (a.mode === 'juger') {
       if (!a.reglages) throw Error('juger --reglages datasets/relecture-reglages-proposes.json --partie P:N --cas … --table … [--juger-partie-reservee]');
-      const o = juger(chargerParties(a, 'relecture-autonome (jugement)'), regleDuReglage(JSON.parse(fs.readFileSync(a.reglages, 'utf8'))));
+      const o = juger(chargerParties(a, 'relecture-autonome (jugement)'), regleDuReglage(JSON.parse(fs.readFileSync(a.reglages, 'utf8'))), { graine: !!a.graine });
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(o, null, 1));
       console.log(texte(o));
     } else if (a.mode === 'essai') {
