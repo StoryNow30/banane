@@ -909,8 +909,36 @@ async function finApresDiffere(b){const d=b.departApresDiffere,S=globalThis.Bana
  * 07:27:58). Il n'y a plus rien à faire dans ce lot : la reprise répond « Lot déjà
  * terminé », sans commande ni événement. Les autres clôtures (dernier cut d'une plage,
  * sortie d'ESV) restent reprenables comme avant. */
-const FINS_DE_PARTIE=new Set(['dernier-cut-valide','dernier-cut-differe']);
+const FINS_DE_PARTIE=new Set(['dernier-cut-valide','dernier-cut-differe','partie-sans-rouge']);
 function lotTermine(b){const e=b?.stoppedAtEnd;return b?.state==='STOPPED'&&!!e&&(FINS_DE_PARTIE.has(e.issue)||e.reason==='navigation-other-part-after-defer');}
+/* Test 7, suite (coordination) — PARTIE COMPLÈTE : RIEN N'EST ENVOYÉ À ESV SUR UN CUT DÉJÀ TRAITÉ. Constaté au banc : sur une
+ * partie dont le compteur « N on M treated » est complet, le lot posait et validait le cut affiché, déjà traité, puis ESV
+ * chargeait la partie suivante ; un opérateur ne fait pas cette écriture. Au PREMIER cut du lot (rien de traité, un seul cut
+ * dans la séquence), après l'analyse et AVANT toute commande, le lot se clôt sans rien envoyer à ESV si :
+ *  1. le relevé du compteur pendant le lot est celui de CE cut (même partie, même cut, après le début du cut), d'un seul
+ *     compteur lisible, avec N ≥ M (`partieSansRouge`) ;
+ *  2. la liste d'ESV en mémoire de la page (lecture B1 `b1-voisins` : aucune requête réseau, aucune commande) donne à ce cut
+ *     un statut LU et non rouge (`valid` ou `skipped`), dans une table unique ou dont la ligne la plus proche est ce cut.
+ * Toute information absente, illisible, d'un autre cut ou ambiguë : rien ne change. Un cut `invalid` n'est jamais retenu. */
+async function statutListeDuCut(cut,avant){const B=globalThis.BananeAppuisListe;if(!B?.lireReponse||!B.DEFAULTS||selectedTab===null)return null;
+ const R=b1.repere,T=R?.T&&R.frameId===(avant?.identity?.frameId??null)?R.T:[0,0,0];
+ const world=Object.fromEntries(['left','right'].map(x=>{const p=avant?.rails?.[x]?.positionSceneRelative;return [x,Array.isArray(p)?p.map((v,i)=>v+T[i]):null];}));
+ if(!['left','right'].every(x=>Array.isArray(world[x])&&world[x].length===3&&world[x].every(Number.isFinite)))return null;
+ const rep=B.lireReponse(await b1Voisins(cut,world),{cut,fenetre:B.DEFAULTS.fenetre});
+ if(!rep?.ok||!(rep.table?.tables===1||rep.geo?.index===cut))return null;
+ const l=rep.rows.find(x=>x.i===cut);return l?l.statut:null;}
+async function partieCompleteAuDepart(){try{const b=engine?.s?.batch,sc=b?.scope,avant=engine?.s?.before,cut=avant?.identity?.cut,t=b?.totalReleve;
+  if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(cut)||avant.identity.part!==sc.part)return null;
+  if(cutsTraites(b).size>0||(b.sequence?.length??0)!==1||!partieSansRouge(b)||t.cut!==cut)return null;
+  const depuis=Date.parse(b.cutStartedAt),vu=Date.parse(t.at);if(!Number.isFinite(depuis)||!Number.isFinite(vu)||vu<depuis)return null;
+  const statut=await statutListeDuCut(cut,avant);
+  return statut==='valid'||statut==='skipped'?{part:sc.part,cut,total:t.total,traites:t.traites,statut}:null;}catch{return null;}}
+/* Clôture sans commande : l'état du lot, l'avis, le journal. La capture ouverte reste (comme l'arrêt au dernier cut non résolu). */
+async function cloreSansRouge(p){const b=engine.s.batch;if(b?.state!=='RUNNING')return false;
+ b.state='STOPPED';b.stoppedAtEnd={cut:p.cut,reason:'partie-sans-rouge',issue:'partie-sans-rouge',target:null,total:p.total,at:new Date().toISOString(),applied:false};
+ engine.s.notice=`Partie ${p.part} : plus aucun cut rouge à traiter. Le lot s’arrête ici. Rien n’a été envoyé à ESV.`;
+ await engine.event('batch-stopped-at-end',{identity:null,reason:'partie-sans-rouge',lastCut:p.cut,target:null,total:p.total,traites:p.traites,statut:p.statut});
+ return true;}
 /* 4.9.0.16 (test 15, 5b) — REPRISE SUR UNE PROPOSITION DÉJÀ CALCULÉE. Le moteur épinglé ne
  * contrôle les rails à la reprise que si le cut repart de sa capture. Arrêté (ou en pause)
  * après l'analyse et avant la pose, le lot reprenait à l'étape « pose » et appliquait la
@@ -1063,6 +1091,9 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
      proposalId:proposal?.id||null,shadow,...(lotObservation?{lotObservation}:{})});
    if(analysisError)throw analysisError;
+   /* Test 7, suite : partie complète et premier cut pas rouge : le lot se clôt ici, avant toute commande (`partieCompleteAuDepart`). */
+   if(pilotScope&&proposal&&shadow?.selection?.selectedEngine===GCV1_ENGINE){const p=await partieCompleteAuDepart();
+     if(p&&await coordinateurLot.transition('fin-de-lot',()=>cloreSansRouge(p)))return proposal;}
    /* 4.7.19 — dernier cut du lot non résolu : laissé sans commande ni navigation. */
    if(pilotScope&&proposal&&stopAtLotEnd(proposal))await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false}));
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
@@ -1965,7 +1996,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='stop')return coordinateurLot.transition('arret',async()=>{const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
   if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();});
  if(action==='resume')return coordinateurLot.transition('reprise',async()=>{if(repriseEnCours)throw Error('Reprise déjà en cours : patiente.');
-  if(lotTermine(engine.s.batch)){engine.s.notice=`Lot déjà terminé : ${engine.s.batch.stoppedAtEnd.reason==='navigation-other-part-after-defer'?'fin de la partie retenue':'dernier cut de la partie atteint'} (cut ${engine.s.batch.stoppedAtEnd.cut}). Rien n’est rejoué ; pour continuer, clique sur « Nouveau lot ».`;await engine.save();return engine.view();}
+  if(lotTermine(engine.s.batch)){engine.s.notice=`Lot déjà terminé : ${engine.s.batch.stoppedAtEnd.reason==='navigation-other-part-after-defer'?'fin de la partie retenue':engine.s.batch.stoppedAtEnd.reason==='partie-sans-rouge'?'partie sans cut rouge':'dernier cut de la partie atteint'} (cut ${engine.s.batch.stoppedAtEnd.cut}). Rien n’est rejoué ; pour continuer, clique sur « Nouveau lot ».`;await engine.save();return engine.view();}
   repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}return engine.view();});
  /* 4.7.18 (KI-055, chantier 5) : « Réessayer ce cut » relit une capture. Si
   * l'opérateur a déplacé les rails pendant la pause, cette capture serait SA

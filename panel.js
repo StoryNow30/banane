@@ -483,7 +483,9 @@
  function partieSansRouge(b){const p=b?.scope?.part;if(!b||!Number.isInteger(p)||OUVERT.includes(b.state))return null;
    const t=b.totalReleve,compteur=!!t&&t.part===p&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&Number.isInteger(t.traites)&&t.traites>=t.total;
    const f=fichesDepart.find(x=>x&&x.batchId===b.id),depart=!!f&&f.invalides===0&&(!Number.isInteger(f.partie)||f.partie===p);
-   return compteur||depart?p:null;}
+   /* Test 7, suite : lot clos par le service worker sans rien envoyer (partie complète au premier cut). */
+   const garde=b.state==='STOPPED'&&b.stoppedAtEnd?.issue==='partie-sans-rouge';
+   return compteur||depart||garde?p:null;}
  /* Le pourcentage affiché : une décimale sous 10 %, arrondi vers le bas (jamais plus que le vrai). */
  const pourcentAffiche=p=>p>=100?'100':p<10?String(Math.floor(p*10)/10):String(Math.floor(p));const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
@@ -628,6 +630,7 @@
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
      const fin=!e?'':e.issue==='dernier-cut-valide'?` — dernier cut de la partie (${e.cut}) validé ; ESV est resté sur ce cut`
        :e.issue==='dernier-cut-differe'?` — dernier cut de la partie (${e.cut}), différé ; rien n’a été envoyé à ESV`
+       :e.issue==='partie-sans-rouge'?` — partie ${entier(b.scope?.part)} sans cut rouge : le cut ${entier(e.cut)}, déjà traité, n’a reçu aucune commande`
        :e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
        :!e.issue&&e.reason==='adapter-lost-after-navigation'&&e.applied===false?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
@@ -636,7 +639,7 @@
      $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} ${accorder(b.processed.length,'cut traité','cuts traités')} · ${b.skipped.length} ${accorder(b.skipped.length,'ignoré')}${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
      /* Test 7 : le titre des résultats suit le lot ; la fin de partie est dite en clair. */
      if($('resultats-titre'))$('resultats-titre').textContent=!b?'Résultats du dernier lot':OUVERT.includes(b.state)?'Résultats du lot en cours':'Résultats du dernier lot';
-     {const P=partieSansRouge(b),el=$('lot-fin-partie');if(el){el.hidden=P===null;el.textContent=P===null?'':`Partie ${entier(P)} : plus aucun cut rouge à traiter. Le lot s’arrête ici.`;}}
+     {const P=partieSansRouge(b),el=$('lot-fin-partie');if(el){el.hidden=P===null;el.textContent=P===null?'':`Partie ${entier(P)} : plus aucun cut rouge à traiter. Le lot s’arrête ici.${b.stoppedAtEnd?.issue==='partie-sans-rouge'?' Rien n’a été envoyé à ESV.':''}`;}}
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';
