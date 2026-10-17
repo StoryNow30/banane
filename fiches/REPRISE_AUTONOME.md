@@ -148,3 +148,5 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 3. **Verify complet au calme** sur 50-base, puis **test 7** si la relecture est fusionnée.
 
 **Après la test 7 (D-176)** : chantier « relecture au fil du lot ». La même logique s'applique pendant le lot, en visitant les cuts voisins d'un PN, d'une ADV ou d'un rouge isolé. On la compare à la passe de fin de lot.
+
+**D-178** : Fable est interdit jusqu'à la dernière session de 5 h qui précède la réinitialisation hebdomadaire, le dimanche 18 octobre à 22 h. Ne jamais passer `model: 'fable'` avant cette session.

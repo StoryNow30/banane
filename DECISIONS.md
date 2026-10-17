@@ -2563,3 +2563,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Écart avec l'ancienne version** : mesuré hors ligne, en rejouant les mêmes captures avec l'ancien moteur et avec le nouveau. Mic n'a pas à faire tourner deux versions.
 - **Documentation** : avant de la verser dans un dépôt, vérifier qu'elle n'est ni propriétaire ni sensible. Les deux dépôts sont publics. Sinon, la garder hors dépôt et n'en reporter que les règles, reformulées.
 - **Précision de Mic, sur les corrections des débutants** : « elles sont utiles, car j'y applique le bon comportement de la règle métier. La lacune des débutants est bien plus dans la règle métier que dans leur placement sur le nuage. » Conséquence : les Échos sur des parties de débutants servent à apprendre **la sélection** (quoi relire, où, avec quelles marges, quand corriger). Les couples Orbite → Écho servent à apprendre **la précision de pose d'Ariane**. Les deux jeux restent séparés dans le manifeste.
+
+## D-178 — Pas de Fable avant la dernière session qui précède la réinitialisation hebdomadaire (17 octobre 2026)
+
+- **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **Fable est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
+- **Conséquences** :
+  - les chantiers et les revues tournent avec le modèle de session par défaut ;
+  - la relecture de la test 7 « au niveau maximal » se fait au niveau d'effort le plus haut, sans Fable, sauf si la test 7 tombe dans cette dernière session ;
+  - aucun agent ni workflow ne porte `model: 'fable'` avant elle.
