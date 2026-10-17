@@ -2452,3 +2452,26 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Ombre `zones-ombre` si une règle tient.
 - La visite des verts est une action nouvelle dans ESV : elle sera décidée avec Mic, chiffres en main.
 - La case grappe reste, avec un libellé à corriger : « série de différés », et non « aiguille ».
+
+## D-169 — Lot des parties 2, 3, 4, 6, 7 du second projet (test 3) : bilan et premières prédictions scellées avant Écho (17 octobre 2026)
+
+- **Bilan** (sans Écho) :
+
+  | Partie | Décidés | Posés | Différés |
+  |---|---|---|---|
+  | 2 | 89 | 61 | 28 (31 %) |
+  | 3 | 38 | 37 | 1 (3 %) |
+  | 4 | 55 | 48 | 7 (13 %) |
+  | 6 | 83 | 72 | 11 (13 %) |
+  | 7 | 151 | 130 | 21 (14 %) |
+
+  - Débit de 1 000 à 1 225 cuts par heure, cycle médian de 2,4 à 2,6 s. Aucun incident.
+  - Pas de voie décalée d'ensemble comme en partie 1 : 53 des 68 différés sont en zone d'ADV.
+  - Un avis de contrat probablement faux (classes des boutons de rail).
+  - Ariane pose le cut 1 de chaque partie et le cut 0 de la partie 2, alors que Mic les ignore en partie 1 (SKIP).
+- **Prédictions figées** avec les réglages de `datasets/reglages-figes.json` (empreinte bff4c5ba…) et la base 2d60d04. Fichier `PREDICTIONS.json`, SHA-256 `9deaa9a17cc273e20a5a42d72a17cb629d49cb66c57df9f702a90878387d7196`, déposé dans banane-data (`travail/2026-10-17_predictions-projet2-p2-p7`) **avant toute Écho**. Il prédit :
+  - voie prédite : 0 différé posable ;
+  - règles métier : 18 PN et 15 ADV, avec 123 cuts qui seraient mis en attente si toutes les règles étaient actives ;
+  - hauteur apprise : 41 cuts changés, dont 5 au plafond de +5 mm ;
+  - verts à contrôler : entre 103 et 214 verts, soit 6 à 13 minutes.
+- Demande à Mic, quand il fera les Échos : noter les PN et les ADV, faire toute la partie 2, les zones d'ADV des parties 6 et 7, les 5 cuts à +5 mm, et relire tous les verts d'une partie courte en chronométrant.
