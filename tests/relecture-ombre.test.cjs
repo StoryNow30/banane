@@ -56,13 +56,14 @@ test('D-172 : les cuts 0 à 3 d’une partie ne sont jamais exclus ; bornes 0 et
  assert.deepEqual(cutsDe(t),[0,1,2,3,4]);
 });
 
-test('plafond de cuts : plages entières, par priorité (PN, ADV, grappe, différé, isolé, à contrôler), puis ordre des cuts',()=>{
+test('plafond de cuts : PN hors budget ; les autres plages entières, par priorité (ADV, grappe, différé, isolé, à contrôler), puis ordre des cuts',()=>{
  const entree={partie:29,lot:[{cut:323,differe:false}],zonesPN:[[1652,1667]],aControler:[[100,104]]};
- const s=R.selection(entree,{plafondCuts:18});
- assert.deepEqual(plagesDe(s),[[322,324],[1652,1667]],'PN (16) puis isolé (2) ; « À contrôler » (5) ne tient plus');
+ const s=R.selection(entree,{plafondCuts:5});
+ assert.deepEqual(plagesDe(s),[[322,324],[1652,1667]],'PN (16, hors budget) et isolé (2) ; « À contrôler » (5) ne tient plus dans les 3 restants');
  assert.deepEqual(s.horsPlafond.map(p=>[p.debut,p.fin,p.raison]),[[100,104,'plafond-cuts']]);
  assert.equal(s.total,18);
  assert.equal(s.tempsEstimeS,Math.round(18*R.DEFAULTS.tempsParCutS+1*R.DEFAULTS.tempsTraverseS));
+ assert.deepEqual(plagesDe(R.selection(entree,{plafondCuts:18})),[[100,104],[322,324],[1652,1667]],'avec 18 : tout tient (le PN ne compte pas)');
  /* Une seule plage plus grande que le plafond : elle est coupée (on garde son début) plutôt que rien. */
  const u=R.selection({partie:29,zonesADV:[[1000,1099]]},{plafondCuts:30});
  assert.deepEqual(plagesDe(u),[[1000,1029]]);assert.equal(u.horsPlafond[0].raison,'plafond-cuts');assert.deepEqual([u.horsPlafond[0].debut,u.horsPlafond[0].fin],[1030,1099]);
@@ -159,4 +160,30 @@ test('H5 (audit P-5) : verts à plus de 15 mm de la médiane hors plage, en zone
  assert.equal(s.plages.at(-1).libelle,'écartement 7047–7049');assert.equal(s.parZone.ecartement,3);
  /* Plafond : passent après tout le reste. */
  const t=R.selection({partie:9,lot:[{cut:100}],ecartement:[7047]},{plafondCuts:2});assert.deepEqual(t.horsPlafond.map(p=>p.debut),[7047]);
+});
+
+/* Revue (F4) : l'écart brut est rendu à côté de l'écart arrondi pour l'affichage. */
+test('juger : écart brut (`ecartBrutMm`) à côté de l’écart arrondi ; ecartRail brut sur demande',()=>{
+ const c=capture(),decision={stage:'window',positions:{left:decale(c.rails.left,[0,7.95,0]),right:decale(c.rails.right,[0,7.95,0])}};
+ const j=R.juger({capture:c,decision});
+ assert.equal(j.ecartMm.left.lat,8);assert.ok(Math.abs(j.ecartBrutMm.left.lat-7.95)<1e-6,String(j.ecartBrutMm.left.lat));
+ const b=R.ecartRail(c.rails.left,decision.positions.left,{brut:true});assert.ok(Math.abs(b.lat-7.95)<1e-6);
+});
+
+/* Revue (correction 7) : un PN n'est jamais coupé par le plafond. Les plages sont découpées par type de zone avant le plafond ; les PN
+ * sont hors du budget, gardés entiers ; le budget sert ensuite les autres zones par priorité. */
+test('plafond par zone : PN 401–414 dans une ADV 256–689, plafond 120 : les 14 cuts du PN relus ; deux PN gardés entiers avant toute grappe d’abords',()=>{
+ const s=R.selection({partie:1,zonesADV:[[256,689]],zonesPN:[[401,414]]},{plafondCuts:120});
+ const pn=[];for(let c=401;c<=414;c++)pn.push(c);
+ assert.deepEqual(s.cuts.filter(c=>c.zone==='pn').map(c=>c.cut),pn,'le PN entier');
+ assert.ok(s.plages.some(p=>p.zone==='pn'&&p.debut===401&&p.fin===414),'le PN est sa propre plage');
+ assert.ok(s.cuts.filter(c=>c.zone!=='pn').length<=120,'le budget ne compte que les autres zones');
+ assert.ok(s.plages.every(p=>s.cuts.filter(c=>c.cut>=p.debut&&c.cut<=p.fin).every(c=>c.zone===p.zone)),'une plage, un type de zone');
+ const t=R.selection({partie:1,lot:[{cut:900},{cut:902},{cut:904}],zonesADV:[[256,689]],zonesPN:[[50,60],[401,414]]},{plafondCuts:20});
+ const pnT=t.cuts.filter(c=>c.zone==='pn').map(c=>c.cut);
+ assert.deepEqual(pnT,[50,51,52,53,54,55,56,57,58,59,60,...pn],'les deux PN entiers, au-delà du plafond');
+ assert.equal(t.cuts.filter(c=>c.zone==='abords').length,0,'la grappe d’abords ne passe qu’après');
+ assert.ok(t.horsPlafond.some(p=>p.debut===897&&p.fin===907),'grappe 897–907 hors plafond');
+ assert.equal(t.cuts.filter(c=>c.zone!=='pn').length,20);
+ assert.equal(t.plafondCuts,20);
 });

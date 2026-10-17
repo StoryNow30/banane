@@ -21,15 +21,18 @@
   *   - en plus de l'étude (H5 de l'audit P-5), en OMBRE SEULEMENT : les verts de la liste d'ESV à plus de 15 mm de la médiane
   *     d'écartement de la partie, hors de toute autre plage (`ecartement`, zone `ecartement`, que la règle ne corrige jamais).
   *   TYPE DE ZONE de chaque cut (`zone`), comme l'étude : le premier qui le couvre dans l'ordre pn, adv, abords (grappe, cut isolé,
-  *   différé), vert-hors-zone (liste), puis ecartement ; lu par la règle prudente (src/relecture-critere.js). Les cuts couverts sont groupés en plages
-  *   de cuts CONSÉCUTIFS (`fusionTrouCuts`, 0 par défaut : aucun cut ajouté pour boucher un trou). Bornes : 0 et `total − 1`.
-  *   D-172 : aucun cut n'est exclu, les premiers cuts d'une partie compris.
+  *   différé), vert-hors-zone (liste), puis ecartement ; lu par la règle prudente (src/relecture-critere.js). Les cuts couverts sont
+  *   groupés en plages de cuts CONSÉCUTIFS DU MÊME TYPE DE ZONE (`fusionTrouCuts`, 0 par défaut : aucun cut ajouté pour boucher un
+  *   trou) : un PN dans une ADV est sa propre plage. Bornes : 0 et `total − 1`. D-172 : aucun cut n'est exclu, les premiers cuts d'une
+  *   partie compris.
   *   Rôle de chaque cut : `vert` (hors du lot, laissé valide par ESV), `differe` (cut du lot différé : encore invalide), `lot` (cut
-  *   posé et validé par le lot : traversé, pas relu, sauf `relireCutsDuLot`).
-  *   ORDRE : par plages, dans l'ordre des cuts, comme Mic parcourt. PLAFOND (propre à la passe, absent de l'étude : budget de temps) :
-  *   `plafondCuts` cuts relus au plus ; les plages sont gardées ENTIÈRES (un PN à moitié contrôlé laisse des erreurs de 30 à 40 mm),
-  *   par priorité de motif (`priorites`), puis remises dans l'ordre des cuts ; une plage qui ne tient pas est rendue dans
-  *   `horsPlafond`, sauf si rien n'est encore gardé : elle est alors coupée au plafond (son début).
+  *   posé et validé par le lot, ou SKIP, reprise à la main, cible bloquée, dernier cut posé : traversé, pas relu, sauf `relireCutsDuLot`).
+  *   Le rôle `vert` n'est qu'une présomption : avant toute correction, le service worker exige le statut lu dans ESV (src : background.js).
+  *   ORDRE : par plages, dans l'ordre des cuts, comme Mic parcourt. PLAFOND (propre à la passe, absent de l'étude : budget de temps),
+  *   revue de la relecture (correction 7) : les PN sont HORS DU BUDGET et toujours gardés entiers (un PN à moitié contrôlé laisse des
+  *   erreurs de 30 à 40 mm) ; `plafondCuts` cuts relus au plus pour les autres zones, plages entières par priorité de motif
+  *   (`priorites`), puis remises dans l'ordre des cuts ; une plage qui ne tient pas est rendue dans `horsPlafond`, sauf si aucune autre
+  *   plage n'est encore gardée dans le budget : elle est alors coupée au plafond (son début).
   *
   * JUGEMENT (`juger`) d'un cut visité : la pose actuelle d'ESV (celle de la capture), la pose qu'Ariane donnerait (décision sur le
   * lot en chaîne, plus la hauteur apprise : variante « chaine+h » de l'étude), l'écart par rail dans le repère profil
@@ -45,9 +48,9 @@
   fusionTrouCuts:0,relireCutsDuLot:false,
   priorites:Object.freeze(['pn','adv','grappe','differe','isole','a-controler','ecartement']),
   plafondCuts:120,
-  /* Temps par cut relu (s) pour l'estimation : navigation d'un pas, capture, calcul, visite au moins `visiteMinMs`. Mesuré au banc
-   * (fiches/RELECTURE_OMBRE.md § 6) ; Mic : 3,7 s par vert relu en partie 29. Un cut traversé : un pas et sa pause. */
-  tempsParCutS:4,tempsTraverseS:1,
+  /* Temps par cut relu (s) pour l'estimation : navigation d'un pas, capture et calcul, sans pause ajoutée (D-176). Mesuré au banc
+   * (fiches/RELECTURE_OMBRE.md § 6 : 2,9 s par cut relu, capture comprise). Un cut traversé : un pas (0,1 s au banc), arrondi à 1 s. */
+  tempsParCutS:3,tempsTraverseS:1,
   seuilCorrigerMm:5,zoneGrise:Object.freeze([3.6,6.4])});
  const SIDES=['left','right'],NOM={left:'gauche',right:'droit'};
  const LIBELLE={pn:'PN',adv:'ADV',grappe:'grappe',differe:'autour du différé',isole:'cut isolé','a-controler':'à contrôler',ecartement:'écartement'};
@@ -92,20 +95,20 @@
   const zoneDe=new Map(),motifsDe=new Map();
   for(const z of ORDRE_ZONES)for(const p of bornees)if((ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))zoneDe.set(c,z);
   for(const p of bornees)for(let c=p.a;c<=p.z;c++){if(!motifsDe.has(c))motifsDe.set(c,new Set());motifsDe.get(c).add(p.motif);}
-  /* Plages : cuts couverts consécutifs (trou de `fusionTrouCuts` au plus : les cuts du trou ne sont pas relus). */
+  /* Plages : cuts couverts consécutifs DU MÊME TYPE DE ZONE (trou de `fusionTrouCuts` au plus : les cuts du trou ne sont pas relus). */
   const couverts=[...zoneDe.keys()].sort((a,b)=>a-b),fondues=[];
-  for(const c of couverts){const d=fondues.at(-1);if(d&&c-d.z-1<=cfg.fusionTrouCuts){d.z=c;d.cuts.push(c);}else fondues.push({a:c,z:c,cuts:[c]});}
+  for(const c of couverts){const d=fondues.at(-1);if(d&&d.zone===zoneDe.get(c)&&c-d.z-1<=cfg.fusionTrouCuts){d.z=c;d.cuts.push(c);}else fondues.push({a:c,z:c,cuts:[c],zone:zoneDe.get(c)});}
   const rang=m=>{const i=cfg.priorites.indexOf(m);return i<0?cfg.priorites.length:i;};
   const decrire=(a,z,liste)=>{const motifs=new Set();for(const c of liste)for(const m of motifsDe.get(c)||[])motifs.add(m);
-   const ms=[...motifs].sort((x,y)=>rang(x)-rang(y)),cuts=[],traverses=[];
+   const zone=zoneDe.get(liste[0]),ms=[...motifs].sort((x,y)=>rang(x)-rang(y)),propre=ms.filter(m=>(ZONE[m]||'vert-hors-zone')===zone),tete=propre[0]??ms[0],cuts=[],traverses=[];
    for(const c of liste){if(poses.has(c)&&!cfg.relireCutsDuLot)traverses.push(c);else cuts.push({cut:c,role:differes.has(c)?'differe':poses.has(c)?'lot':'vert',zone:zoneDe.get(c)});}
-   return {debut:a,fin:z,motifs:ms,zone:ZONE[ms[0]]||'vert-hors-zone',priorite:rang(ms[0]),libelle:`${LIBELLE[ms[0]]||ms[0]} ${tiret(a,z)}`,cuts,traverses,liste};};
+   return {debut:a,fin:z,motifs:ms,zone,priorite:rang(tete),libelle:`${LIBELLE[tete]||tete} ${tiret(a,z)}`,cuts,traverses,liste};};
   const candidates=fondues.map(p=>decrire(p.a,p.z,p.cuts));
-  /* Plafond : plages entières, par priorité puis ordre des cuts. */
-  const gardees=[],horsPlafond=[];let reste=entier(cfg.plafondCuts)?cfg.plafondCuts:Infinity;
-  for(const p of [...candidates].sort((x,y)=>x.priorite-y.priorite||x.debut-y.debut)){
-   if(p.cuts.length<=reste){gardees.push(p);reste-=p.cuts.length;continue;}
-   if(!gardees.length&&reste>0){const coupe=p.cuts[reste-1].cut;gardees.push(decrire(p.debut,coupe,p.liste.filter(c=>c<=coupe)));
+  /* Plafond : les PN hors budget, entiers ; les autres plages entières, par priorité puis ordre des cuts. */
+  const gardees=candidates.filter(p=>p.zone==='pn'),horsPlafond=[];let reste=entier(cfg.plafondCuts)?cfg.plafondCuts:Infinity,dansBudget=0;
+  for(const p of candidates.filter(x=>x.zone!=='pn').sort((x,y)=>x.priorite-y.priorite||x.debut-y.debut)){
+   if(p.cuts.length<=reste){gardees.push(p);reste-=p.cuts.length;dansBudget++;continue;}
+   if(!dansBudget&&reste>0){const coupe=p.cuts[reste-1].cut;gardees.push(decrire(p.debut,coupe,p.liste.filter(c=>c<=coupe)));dansBudget++;
     horsPlafond.push({debut:coupe+1,fin:p.fin,motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});reste=0;continue;}
    horsPlafond.push({debut:p.debut,fin:p.fin,motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});}
   gardees.sort((x,y)=>x.debut-y.debut);horsPlafond.sort((x,y)=>x.debut-y.debut);
@@ -125,9 +128,10 @@
   return o;}
 
  /* ----------------------------------------------------------------- jugement */
- /* Écart (mm) d'une position scène à la pose actuelle d'ESV, dans le repère profil du rail : longitudinal, latéral, vertical. */
- function ecartRail(rail,p){const M=rail.sceneRelativeToProfileLocal,a=C.point(M,p),o=C.point(M,rail.positionSceneRelative);
-  const d=[0,1,2].map(i=>(a[i]-o[i])*1000);return {long:r1(d[0]),lat:r1(d[1]),vert:r1(d[2])};}
+ /* Écart (mm) d'une position scène à la pose actuelle d'ESV, dans le repère profil du rail : longitudinal, latéral, vertical ; arrondi
+  * au dixième (affichage), ou brut (`brut:true`, comparé aux seuils de la règle prudente : revue, F4). */
+ function ecartRail(rail,p,{brut=false}={}){const M=rail.sceneRelativeToProfileLocal,a=C.point(M,p),o=C.point(M,rail.positionSceneRelative);
+  const d=[0,1,2].map(i=>(a[i]-o[i])*1000),f=brut?v=>v+0:r1;return {long:f(d[0]),lat:f(d[1]),vert:f(d[2])};}
  /* La pose qu'Ariane donnerait, comme l'étude (variante « +h », tools/relecture-autonome.cjs `proposition`) : les positions de la
   * décision, plus la correction de hauteur apprise que la décision consigne (`correctionMm` par rail), portée sur l'axe vertical du
   * repère profil de la pose ACTUELLE d'ESV du rail. `hauteur:false` : la décision seule (variante sans « +h »). */
@@ -147,15 +151,15 @@
   const base={etage:decision?.stage??null,motifDecision:decision?.reason!=null?String(decision.reason).slice(0,80):null,
    appuis:Array.isArray(decision?.anchorsUsed)?decision.anchorsUsed.slice(0,12):[],confiance:confiance(science),s1:s1De(science),poseActuelle:actuelle};
   const calc=actuelle?poseCalculee(decision,rails,{hauteur}):null;
-  if(!calc)return {...base,poseCalculee:null,ecartMm:null,pireMm:null,hauteurMm:null,zoneGrise:false,verdict:'je laisserais',
+  if(!calc)return {...base,poseCalculee:null,ecartMm:null,ecartBrutMm:null,pireMm:null,hauteurMm:null,zoneGrise:false,verdict:'je laisserais',
    raison:`aucune pose sûre calculée (${base.etage||'?'}${base.motifDecision?' : '+base.motifDecision:''}) : rien à proposer`};
-  const ecartMm=Object.fromEntries(SIDES.map(s=>[s,ecartRail(rails[s],calc.positions[s])]));
-  let pire=0,ou=null;for(const s of SIDES)for(const axe of ['lat','vert']){const v=Math.abs(ecartMm[s][axe]);if(v>pire){pire=v;ou={s,axe,v:ecartMm[s][axe]};}}
+  const ecartMm=Object.fromEntries(SIDES.map(s=>[s,ecartRail(rails[s],calc.positions[s])])),ecartBrutMm=Object.fromEntries(SIDES.map(s=>[s,ecartRail(rails[s],calc.positions[s],{brut:true})]));
+  let pire=0,ou=null;for(const s of SIDES)for(const axe of ['lat','vert']){const v=Math.abs(ecartBrutMm[s][axe]);if(v>pire){pire=v;ou={s,axe,v:ecartBrutMm[s][axe]};}}
   const corrige=pire>=cfg.seuilCorrigerMm,gris=pire>=cfg.zoneGrise[0]&&pire<=cfg.zoneGrise[1];
   const nombre=v=>String(r1(v)).replace('.',',');
   const lieu=ou?`rail ${NOM[ou.s]}, ${ou.axe==='lat'?'latéral':'vertical'} ${nombre(Math.abs(ou.v))} mm`:'aucun écart';
   const h=calc.hauteurMm&&SIDES.some(s=>calc.hauteurMm[s])?` ; hauteur apprise ${SIDES.filter(s=>calc.hauteurMm[s]).map(s=>`${NOM[s]} ${calc.hauteurMm[s]>0?'+':''}${nombre(calc.hauteurMm[s])} mm`).join(', ')}`:'';
-  return {...base,poseCalculee:Object.fromEntries(SIDES.map(s=>[s,calc.positions[s].map(um)])),ecartMm,pireMm:r1(pire),hauteurMm:calc.hauteurMm,zoneGrise:gris,
+  return {...base,poseCalculee:Object.fromEntries(SIDES.map(s=>[s,calc.positions[s].map(um)])),ecartMm,ecartBrutMm,pireMm:r1(pire),hauteurMm:calc.hauteurMm,zoneGrise:gris,
    verdict:corrige?'je corrigerais':'je laisserais',
    raison:corrige?`${lieu} (seuil ${nombre(cfg.seuilCorrigerMm)} mm, étage ${base.etage})${h}`:`écart le plus grand : ${lieu}, sous le seuil de ${nombre(cfg.seuilCorrigerMm)} mm${h}`};}
 

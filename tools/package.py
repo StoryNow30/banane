@@ -16,6 +16,8 @@ def build(destination, include_tests=False):
                 'audit/native-geometry-loss-v4.4.0.md', 'audit/native-offline-evaluation-v4.4.0.json', 'audit/native-offline-evaluation-v4.4.0.md',
                 'audit/native-v4.4.1-real-audit.json', 'audit/native-offline-v4.4.1-baseline.json',
                 'tools/audit-native-v441.cjs',
+                # 5.0 (D-174, D-175) : seuils de la relecture après le lot ; sans eux, « corriger » reste en ombre.
+                'datasets/relecture-reglages-proposes.json', 'datasets/relecture-reglages-defaut.json',
                 'panel.html', 'panel.js', 'panel.css',
                 manifest['background']['service_worker']]
     required += [p for content in manifest['content_scripts'] for p in content['js']]

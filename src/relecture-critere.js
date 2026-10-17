@@ -23,50 +23,72 @@
   *      verticaux de plus de `coherence.diffVerticaleMaxMm` (la correction déplace la voie, elle ne la tord pas), et l'écartement de la
   *      pose reste à `coherence.ecartementMaxMm` de la médiane de la partie (référence passée par l'appelant ; sans référence, refus).
   * `ecrit` (facultatif) : l'écart de la pose qui serait ÉCRITE (commande du lot), à la place de celui du jugement ; les conditions 6,
-  * 8 et 9 sont jugées sur lui.
+  * 8 et 9 sont jugées sur lui. Revue (F4) : les seuils sont comparés aux valeurs BRUTES (`ecritBrut`, `jugement.ecartBrutMm`,
+  * `ecartementBrutMm`) quand elles sont données ; l'arrondi au dixième ne sert qu'à l'affichage (7,95 mm ne passe pas 8 mm).
   *
   * SEUILS : `datasets/relecture-reglages-proposes.json` (chantier claude/50-zones-autonomes) s'il existe et se lit, sinon
-  * `datasets/relecture-reglages-defaut.json` (PROVISOIRE, très prudent), recopié ici dans DEFAUT (un essai vérifie qu'ils sont égaux).
-  * `reglages(fichier)` valide un fichier et complète ce qui manque par le défaut ; un fichier illisible rend le défaut. */
+  * `datasets/relecture-reglages-defaut.json` (PROVISOIRE, aligné sur D-174 : seule la zone PN corrige, 45 mm de latéral au plus),
+  * recopié ici dans DEFAUT (un essai vérifie qu'ils sont égaux). `reglages(fichier)` valide un fichier et complète ce qui manque par
+  * le défaut. Revue (D-175, correction 5) : les réglages ne s'ouvrent JAMAIS en cas d'échec. Un champ de sécurité invalide ou absent
+  * (zone, `corriger`, `seuilMm`, `voie.lateralMaxMm` au-delà de 45 mm, `roles` autres que les verts, `jamais` sans les cuts du lot) est
+  * listé dans `invalides` ; une correction mal écrite reste fermée. `correctionPermise(r)` ne dit oui que pour le fichier proposé, lu
+  * sans refus et sans champ invalide : sinon le service worker ramène « corriger » à « ombre » et le dit au panneau. */
  const SIDES=['left','right'],ZONES=['pn','adv','abords','vert-hors-zone'],ETAGES=['first-pass','window','choice','crossing'],VARIANTES=['chaine+h','chaine','seul+h','seul'];
+ const LATERAL_MAX_MM=45,JAMAIS=Object.freeze(['cut différé par le lot','cut posé par le lot']);
  const DEFAUT=Object.freeze({format:'ariane-relecture-reglages-1',statut:'provisoire',
   etagesPermis:Object.freeze(['first-pass','window']),appuisMin:2,roles:Object.freeze(['vert']),
-  jamais:Object.freeze(['cut différé par le lot','cut posé par le lot']),variante:Object.freeze({proposition:'chaine+h'}),
-  voie:Object.freeze({lateralMaxMm:60}),
+  jamais:JAMAIS,variante:Object.freeze({proposition:'chaine+h'}),
+  voie:Object.freeze({lateralMaxMm:LATERAL_MAX_MM}),
   coherence:Object.freeze({diffLateraleMaxMm:6,diffVerticaleMaxMm:6,ecartementMaxMm:8}),
   zones:Object.freeze({
    pn:Object.freeze({corriger:true,seuilMm:15,confianceMin:85}),
    adv:Object.freeze({corriger:false,seuilMm:25,confianceMin:95}),
-   abords:Object.freeze({corriger:true,seuilMm:12,confianceMin:80}),
-   'vert-hors-zone':Object.freeze({corriger:true,seuilMm:15,confianceMin:90})})});
+   abords:Object.freeze({corriger:false,seuilMm:12,confianceMin:80}),
+   'vert-hors-zone':Object.freeze({corriger:false,seuilMm:15,confianceMin:90})})});
  const nombre=(v,min=0,max=1e6)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
  const virgule=v=>String(Math.round(v*10)/10).replace('.',',');
 
- /* Réglages lus d'un fichier : chaque valeur invalide ou absente prend celle du défaut. `source` : d'où ils viennent. */
+ /* Réglages lus d'un fichier : chaque valeur invalide ou absente prend celle du défaut (une correction invalide : fermée), et chaque
+  * champ de sécurité invalide est nommé dans `invalides`. `source` : d'où ils viennent. */
  function reglages(fichier,source='defaut'){
   const f=fichier&&typeof fichier==='object'&&!Array.isArray(fichier)?fichier:null;
   if(!f||f.format!==DEFAUT.format)return {...reglages(DEFAUT,'defaut'),refus:f?'format':null};
   const liste=(v,d,ok)=>Array.isArray(v)&&v.length&&v.every(ok)?v.slice():d.slice();
-  const zones={};
-  for(const z of ZONES){const d=DEFAUT.zones[z],x=f.zones?.[z]||{};
-   zones[z]={corriger:typeof x.corriger==='boolean'?x.corriger:d.corriger,seuilMm:nombre(x.seuilMm,1,500)?x.seuilMm:d.seuilMm,
-    confianceMin:nombre(x.confianceMin,0,100)?x.confianceMin:d.confianceMin};}
+  const zones={},invalides=[];
+  for(const z of ZONES){const d=DEFAUT.zones[z],x=f.zones?.[z];
+   if(!x||typeof x!=='object'||Array.isArray(x))invalides.push(`zones.${z}`);
+   const y=x&&typeof x==='object'?x:{};
+   if(x&&typeof y.corriger!=='boolean')invalides.push(`zones.${z}.corriger`);
+   if(x&&!nombre(y.seuilMm,1,500))invalides.push(`zones.${z}.seuilMm`);
+   zones[z]={corriger:typeof y.corriger==='boolean'?y.corriger:false,seuilMm:nombre(y.seuilMm,1,500)?y.seuilMm:d.seuilMm,
+    confianceMin:nombre(y.confianceMin,0,100)?y.confianceMin:d.confianceMin};}
   const c=f.coherence||{},v=f.voie||{};
+  const lateralOk=nombre(v.lateralMaxMm,1,LATERAL_MAX_MM);if(!lateralOk)invalides.push('voie.lateralMaxMm');
+  const rolesOk=Array.isArray(f.roles)&&f.roles.length>0&&f.roles.every(r=>r==='vert');if(!rolesOk)invalides.push('roles');
+  const jamaisOk=Array.isArray(f.jamais)&&JAMAIS.every(x=>f.jamais.includes(x));if(!jamaisOk)invalides.push('jamais');
   const variante=typeof f.variante==='string'?f.variante:f.variante?.proposition;
-  return {format:DEFAUT.format,statut:typeof f.statut==='string'?f.statut.slice(0,40):'inconnu',source,
+  return {format:DEFAUT.format,statut:typeof f.statut==='string'?f.statut.slice(0,40):'inconnu',source,invalides,
    /* Les quatre étapes qui posent sont acceptées (le fichier proposé les donne toutes) ; une étape inconnue rend le défaut. */
    etagesPermis:liste(f.etagesPermis,DEFAUT.etagesPermis,e=>ETAGES.includes(e)),
    /* Minimum d'appuis : celui du fichier ; absent, aucun (l'étude n'en a pas : la chaîne d'appuis tient lieu de voie). */
    appuisMin:Number.isInteger(f.appuisMin)&&f.appuisMin>=0&&f.appuisMin<=40?f.appuisMin:0,
    variante:VARIANTES.includes(variante)?variante:DEFAUT.variante.proposition,
-   jamais:Array.isArray(f.jamais)?f.jamais.filter(x=>typeof x==='string').slice(0,8):DEFAUT.jamais.slice(),
+   jamais:jamaisOk?f.jamais.filter(x=>typeof x==='string').slice(0,8):DEFAUT.jamais.slice(),
    selection:f.selection&&typeof f.selection==='object'&&!Array.isArray(f.selection)?f.selection:null,
-   roles:liste(f.roles,DEFAUT.roles,r=>['vert','differe'].includes(r)),
-   voie:{lateralMaxMm:nombre(v.lateralMaxMm,1,500)?Math.min(v.lateralMaxMm,500):DEFAUT.voie.lateralMaxMm},
+   roles:rolesOk?f.roles.slice():DEFAUT.roles.slice(),
+   voie:{lateralMaxMm:lateralOk?v.lateralMaxMm:DEFAUT.voie.lateralMaxMm},
    coherence:{diffLateraleMaxMm:nombre(c.diffLateraleMaxMm,0,100)?c.diffLateraleMaxMm:DEFAUT.coherence.diffLateraleMaxMm,
     diffVerticaleMaxMm:nombre(c.diffVerticaleMaxMm,0,100)?c.diffVerticaleMaxMm:DEFAUT.coherence.diffVerticaleMaxMm,
     ecartementMaxMm:nombre(c.ecartementMaxMm,0,100)?c.ecartementMaxMm:DEFAUT.coherence.ecartementMaxMm},
    zones};}
+ /* La passe peut-elle corriger avec ces réglages ? Oui seulement pour le fichier proposé, lu sans refus et sans champ invalide. */
+ function correctionPermise(r){
+  if(!r||typeof r!=='object')return {ok:false,raison:'réglages illisibles'};
+  if(r.refus==='format')return {ok:false,raison:'fichier de réglages d’un autre format'};
+  if(r.source!=='propose')return {ok:false,raison:'fichier proposé absent ou illisible (défaut provisoire)'};
+  if(!Array.isArray(r.invalides))return {ok:false,raison:'réglages non vérifiés'};
+  if(r.invalides.length)return {ok:false,raison:`réglages invalides : ${r.invalides.slice(0,6).join(', ')}`};
+  return {ok:true,raison:null};}
 
  /* Le jugement de la règle. Entrée : {jugement, zone, role, skipOmbre, ecrit, ecartementMm, ecartementRefMm}. */
  function juger(entree,R=DEFAUT){
@@ -86,7 +108,8 @@
   const Z=R.zones?.[e.zone];
   if(!Z)return non('zone',`zone « ${e.zone??'?'} » inconnue`);
   if(Z.corriger!==true)return non('zone',`zone ${e.zone} : correction coupée`);
-  const ec=e.ecrit&&SIDES.every(s=>e.ecrit[s])?e.ecrit:j.ecartMm;
+  const tous=x=>x&&SIDES.every(s=>x[s]);
+  const ec=tous(e.ecritBrut)?e.ecritBrut:tous(e.ecrit)?e.ecrit:tous(j.ecartBrutMm)?j.ecartBrutMm:j.ecartMm;
   if(!SIDES.every(s=>['lat','vert'].every(a=>Number.isFinite(ec[s]?.[a]))))return non('pose','écart par rail illisible');
   const pire=Math.max(...SIDES.flatMap(s=>[Math.abs(ec[s].lat),Math.abs(ec[s].vert)]));
   if(!(pire>=Z.seuilMm))return non('seuil',`écart ${virgule(pire)} mm sous le seuil de la zone ${e.zone} (${virgule(Z.seuilMm)} mm)`);
@@ -103,8 +126,8 @@
   if(e.ecartementMm!==undefined||e.ecartementRefMm!==undefined){
    if(!Number.isFinite(e.ecartementMm))return non('coherence','écartement de la pose écrite illisible');
    if(!Number.isFinite(e.ecartementRefMm))return non('coherence','aucun écartement de référence (appuis du lot)');
-   const ref=e.ecartementRefMm,d=Math.abs(e.ecartementMm-ref);
+   const ref=e.ecartementRefMm,g=Number.isFinite(e.ecartementBrutMm)?e.ecartementBrutMm:e.ecartementMm,d=Math.abs(g-ref);
    if(!(d<=C.ecartementMaxMm))return non('coherence',`écartement ${virgule(e.ecartementMm)} mm, à ${virgule(d)} mm de la référence ${virgule(ref)} mm`);}
   return {corriger:true,regle:'ok',raison:`zone ${e.zone}, écart ${virgule(pire)} mm (seuil ${virgule(Z.seuilMm)}), confiance ${SIDES.map(s=>virgule(conf[s])).join(' / ')}, rails cohérents`};}
- return {DEFAUT,ZONES,ETAGES,VARIANTES,reglages,juger};
+ return {DEFAUT,ZONES,ETAGES,VARIANTES,LATERAL_MAX_MM,reglages,correctionPermise,juger};
 });
