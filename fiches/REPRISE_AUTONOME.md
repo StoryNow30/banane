@@ -140,7 +140,7 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
    - plafond par zone, PN d'abord ;
    - chaîne vide, comme l'étude ;
    - « vu » dit clairement, avec un compteur ;
-   - pas de pauses ; départ automatique avec un compte à rebours visible et un bouton pour annuler (D-176) ;
+   - pas de pauses, départ automatique juste après le lot sans compte à rebours, seul le bouton d'arrêt reste (D-176) ;
    - lectures de nuage mesurées.
 
    Ensuite, une contre-revue courte, puis la fusion.

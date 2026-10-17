@@ -2549,5 +2549,5 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - La test 7 garde la passe de fin de lot, parce qu'elle est prête et revue. Le mode « au fil du lot » devient le chantier suivant ; il sera comparé à la passe sur les mêmes parties.
 - **Rythme** :
   - pas de pauses artificielles, car le lot Orbite n'en fait pas non plus et Mic n'en voit pas l'utilité ;
-  - départ automatique, avec un compte à rebours de quelques secondes visible dans le panneau et un bouton pour annuler. Ariane ne prend donc pas la main pendant que Mic touche encore ESV.
-  - Cela remplace le point 10 de D-175 (« pauses, départ au clic »).
+  - **départ automatique juste après le lot, sans compte à rebours.** Mic : « pas besoin de toute cette fantaisie ; quand Ariane travaille, je ne corrige pas un cut ». Le bouton d'arrêt de la passe reste ;
+  - cela remplace le point 10 de D-175, qui demandait des pauses et un départ au clic.
