@@ -40,12 +40,12 @@ test('différé : ses abords (2 cuts) et le différé lui-même, relu avec le r�
 
 test('PN, ADV et « À contrôler » : la plage entière, chaque cut ; ordre des cuts ; fusion des plages proches',()=>{
  const s=R.selection({partie:29,zonesPN:[[1652,1667]],zonesADV:[[6608,6620]],aControler:[[5936,5940],6000,6003]});
- assert.deepEqual(plagesDe(s),[[1652,1667],[5936,5940],[6000,6003],[6608,6620]]);
- assert.deepEqual(s.plages.map(p=>p.motifs),[['pn'],['a-controler'],['a-controler'],['adv']]);
- assert.equal(s.cuts.length,16+5+4+13);
+ assert.deepEqual(plagesDe(s),[[1652,1667],[5936,5940],[6000,6000],[6003,6003],[6608,6620]]);
+ assert.deepEqual(s.plages.map(p=>p.motifs),[['pn'],['a-controler'],['a-controler'],['a-controler'],['adv']]);
+ assert.equal(s.cuts.length,16+5+2+13);assert.deepEqual(s.parZone,{pn:16,adv:13,abords:0,'vert-hors-zone':7,ecartement:0});
  const c=cutsDe(s);assert.deepEqual(c,[...c].sort((a,b)=>a-b),'dans l’ordre des cuts');
- /* 6000 et 6003 : deux cuts d'écart, fusionnés (on ne laisse pas de trou de moins de 3 cuts). */
- assert.equal(s.plages[2].libelle,'à contrôler 6000–6003');
+ /* 6000 et 6003 : comme l'étude, aucun cut ajouté pour boucher le trou (6001 et 6002 ne sont pas relus). */
+ assert.equal(s.plages[2].libelle,'à contrôler 6000');
 });
 
 test('D-172 : les cuts 0 à 3 d’une partie ne sont jamais exclus ; bornes 0 et total − 1',()=>{
@@ -109,30 +109,54 @@ test('juger : la hauteur apprise corrige la pose calculée (pose « corrigee » 
  assert.equal(j.verdict,'je laisserais','4 mm reste sous le seuil');
 });
 
-test('skipOmbre (D-172) : « aucun-point » si la capture n’a aucun point ; scanners illisibles, jamais inventés',()=>{
- const c=capture();
- assert.deepEqual(R.skipOmbre(c),{raison:null,points:{left:2322,right:2442},scanners:null,scannersLisibles:false});
- const vide={...c,pointsSceneRelative:[],quality:{...c.quality,retained:0,perRail:{left:0,right:0}}};
- assert.equal(R.skipOmbre(vide).raison,'aucun-point');
- assert.equal(R.skipOmbre(null).raison,null);
+test('skipOmbre (D-172) : « aucun-point » seulement après deux captures complètes vides ; jamais « un seul scanner »',()=>{
+ const c=capture(),vide={...c,pointsSceneRelative:[],quality:{...c.quality,retained:0,perRail:{left:0,right:0}}};
+ assert.deepEqual(R.skipOmbre([c]),{raison:null,points:{left:2322,right:2442},captures:1,capturesVides:0});
+ assert.equal(R.skipOmbre([vide]).raison,null,'une seule capture vide ne suffit pas (visites brèves de l’étude)');
+ assert.deepEqual(R.skipOmbre([vide,vide]),{raison:'aucun-point',points:{left:0,right:0},captures:2,capturesVides:2});
+ assert.equal(R.skipOmbre([vide,c]).raison,null,'la seconde capture a des points');
+ assert.equal(R.captureVide(vide),true);assert.equal(R.captureVide(c),false);
  /* Un seul rail sans point n'est pas « aucun point affiché ». */
- assert.equal(R.skipOmbre({...c,quality:{...c.quality,perRail:{left:0,right:12}}}).raison,null);
+ const unRail={...c,quality:{...c.quality,perRail:{left:0,right:12}}};assert.equal(R.skipOmbre([unRail,unRail]).raison,null);
+ /* Les points d'un seul scanner (attribut de source) ne font jamais un SKIP : ce n'est pas mesurable dans ESV. */
+ const unScanner={...c,attributes:{...c.attributes,pointSourceID:new Array(c.pointsSceneRelative.length).fill(7)}};
+ assert.equal(R.skipOmbre([unScanner,unScanner]).raison,null);
+ assert.equal(R.skipOmbre(null).raison,null);
+ assert.ok(!/un-seul-scanner/.test(require('node:fs').readFileSync(require.resolve('../src/relecture-ombre.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')));
 });
 
-test('skipOmbre (D-172) : « un-seul-scanner » seulement si les points portent leur source (pointSourceID), jamais deviné',()=>{
- const c=capture(),n=c.pointsSceneRelative.length;
- const un={...c,attributes:{...c.attributes,pointSourceID:new Array(n).fill(7)}};
- assert.deepEqual(R.skipOmbre(un),{raison:'un-seul-scanner',points:{left:2322,right:2442},scanners:1,scannersLisibles:true});
- const deux={...c,attributes:{...c.attributes,pointSourceID:Array.from({length:n},(_,i)=>i%3?7:9)}};
- assert.equal(R.skipOmbre(deux).raison,null);assert.equal(R.skipOmbre(deux).scanners,2);
- /* Les points cachés par la boîte de découpe ne comptent pas : le seul point du second scanner est caché. */
- const cache={...c,visibleByClipBoxes:Array.from({length:n},(_,i)=>i!==0),attributes:{...c.attributes,pointSourceID:Array.from({length:n},(_,i)=>i===0?9:7)}};
- assert.equal(R.skipOmbre(cache).raison,'un-seul-scanner');
- /* Attribut de longueur différente des points : illisible. */
- assert.equal(R.skipOmbre({...c,attributes:{pointSourceID:[1]}}).scannersLisibles,false);
+test('sélection alignée sur l’étude : hors grappe, chaque cut du lot avec ses voisins (sans boucher le trou) ; zone de chaque cut par ordre pn, adv, abords, liste',()=>{
+ /* Deux cuts du lot à 4 cuts l'un de l'autre (paire, pas une grappe) : 9, 11 et 13, 15 ; 12 n'est pas relu. */
+ const s=R.selection({partie:1,lot:[{cut:10},{cut:14}]});
+ assert.deepEqual(cutsDe(s),[9,11,13,15]);
+ /* Une plage qui touche un PN : chaque cut garde son type (abords hors du PN, pn dedans) ; c'est le type qui dit si l'on corrige. */
+ const t=R.selection({partie:1,lot:[{cut:10},{cut:14}],zonesPN:[[16,20]],aControler:[21]});
+ assert.deepEqual(s.cuts.map(c=>c.zone),['abords','abords','abords','abords']);
+ assert.deepEqual(t.cuts.filter(c=>c.cut>=13).map(c=>[c.cut,c.zone]),[[13,'abords'],[15,'abords'],[16,'pn'],[17,'pn'],[18,'pn'],[19,'pn'],[20,'pn'],[21,'vert-hors-zone']]);
+ /* Marges du fichier proposé (bloc `selection`) : options de la sélection. */
+ assert.deepEqual(R.optionsSelection({grappeMin:3,trouCuts:5,margeGrappe:3,margeIsole:1,margeDiffere:2}),{grappe:{min:3,trouCuts:5,marge:3},isole:{marge:1},differe:{marge:2}});
+ const u=R.selection({partie:1,lot:[{cut:50,differe:true}]},R.optionsSelection({margeDiffere:4,margeIsole:0}));assert.deepEqual(cutsDe(u),[46,47,48,49,50,51,52,53,54]);
+});
+
+test('juger : variante « +h » (défaut) ajoute la hauteur sur l’axe vertical de la pose d’ESV ; sans « +h », la décision seule ; confiance A* même pour un rail S1',()=>{
+ const c=capture(),decision={stage:'window',positions:{left:decale(c.rails.left,[0,0,0]),right:decale(c.rails.right,[0,0,0])},hauteurApprise:{rails:{left:{correctionMm:-3},right:{correctionMm:0}}}};
+ const science={rails:{left:{s1Changed:true,astar:{confidence:66}},right:{astar:{confidence:71}}}};
+ const h=R.juger({capture:c,decision,science});assert.equal(h.ecartMm.left.vert,-3);assert.deepEqual(h.hauteurMm,{left:-3,right:0});
+ assert.deepEqual(h.confiance,{left:66,right:71});assert.deepEqual(h.s1,{left:true,right:false});
+ const sans=R.juger({capture:c,decision,science,hauteur:false});assert.equal(sans.ecartMm.left.vert,0);assert.equal(sans.hauteurMm,null);
 });
 
 test('le module ne commande rien : aucune référence à une commande d’ESV ni à chrome',()=>{
  const src=require('node:fs').readFileSync(require.resolve('../src/relecture-ombre.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
  for(const mot of ['apply','validateAndNext','skipAndNext','validateInPlace','chrome.','XMLHttpRequest','fetch('])assert.ok(!src.includes(mot),mot);
+});
+
+test('H5 (audit P-5) : verts à plus de 15 mm de la médiane hors plage, en zone « ecartement » (ombre) ; un cut déjà dans une plage garde sa zone',()=>{
+ const s=R.selection({partie:9,lot:[{cut:100}],zonesPN:[[200,210]],ecartement:[101,205,7047,7048,7049]});
+ const z=Object.fromEntries(s.cuts.map(c=>[c.cut,c.zone]));
+ assert.equal(z[101],'abords','101 est déjà aux abords du cut 100');assert.equal(z[205],'pn');
+ for(const c of [7047,7048,7049])assert.equal(z[c],'ecartement');
+ assert.equal(s.plages.at(-1).libelle,'écartement 7047–7049');assert.equal(s.parZone.ecartement,3);
+ /* Plafond : passent après tout le reste. */
+ const t=R.selection({partie:9,lot:[{cut:100}],ecartement:[7047]},{plafondCuts:2});assert.deepEqual(t.horsPlafond.map(p=>p.debut),[7047]);
 });

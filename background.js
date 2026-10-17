@@ -1875,9 +1875,29 @@ async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.
  for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.batchId!==b.id||e.identity?.part!==partie)continue;
   const c=e.zone?.pnControle,a=e.zone?.advControle;
   if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zonesPN.push(c);if(Array.isArray(a)&&a.length===2&&a.every(Number.isInteger))zonesADV.push(a);}
- let aControler=[];try{const v=await vertsAControler({partie});if(v?.actif&&Array.isArray(v.verts))aControler=v.verts.map(x=>x.i).filter(Number.isInteger);}catch{/* liste absente */}
+ let aControler=[],ecartementPartieMm=null;try{const v=await vertsAControler({partie});if(v?.actif&&Array.isArray(v.verts))aControler=v.verts.map(x=>x.i).filter(Number.isInteger);
+  /* Médiane de l'écartement des lignes valides de la liste d'ESV (20 au moins) : la médiane de la partie de l'étude. */
+  if(Number.isFinite(v?.reference?.ecartementMm))ecartementPartieMm=v.reference.ecartementMm;}catch{/* liste absente */}
  const t=b.totalReleve,total=t?.part===partie&&Number.isInteger(t.total)?t.total:null;
- return {partie,total,lot:[...lot.values()],zonesPN,zonesADV,aControler};}
+ /* H5 (audit P-5), en ombre : les verts de la liste d'ESV à plus de 15 mm de la médiane d'écartement de la partie (20 lignes au moins). */
+ let ecartement=[];try{const L=await relectureLignesListe(partie,b),verts=L.filter(x=>x.statut==='valid'&&x.operateur!==true&&!lot.has(x.i)&&Number.isFinite(x.g));
+  if(verts.length>=20){const v=verts.map(x=>x.g).sort((a,c)=>a-c),m=v.length>>1,med=v.length%2?v[m]:(v[m-1]+v[m])/2;
+   if(!Number.isFinite(ecartementPartieMm))ecartementPartieMm=Math.round(med*10)/10;
+   ecartement=verts.filter(x=>Math.abs(x.g-med)>15).map(x=>x.i);}}catch{/* liste illisible : rien en plus */}
+ /* Zones figées AVANT la passe, tirées des seules captures du lot (événements `regles-metier-ombre` de ce lot) : les captures de la
+  * passe ne créent ni n'étendent jamais une zone (audit P-5 : une fausse zone PN apparaît dès qu'on capture des verts). */
+ return {partie,total,lot:[...lot.values()],zonesPN,zonesADV,aControler,ecartement,ecartementPartieMm,zonesSource:'lot'};}
+/* Lignes de la liste d'ESV de la partie (instantané E1 qui concorde avec le lot, sinon fenêtres lues par B1), écartement de chacune. */
+async function relectureLignesListe(partie,b){const V=globalThis.BananeVertsAControler,LM=globalThis.BananeListeMemoire;if(!V)return [];
+ const lot=new Set([...(b.processed||[]),...(b.deferred||[])].map(x=>x?.cut??x?.identity?.cut).filter(Number.isInteger));
+ const g=x=>{const d=x.bords;return Number.isFinite(x.g)?x.g:d?.left&&d?.right?Math.hypot(d.left[0]-d.right[0],d.left[1]-d.right[1],d.left[2]-d.right[2])*1000:null;};
+ try{if(LM&&globalThis.BananeSettings?.listeMemoire?.actif!==false){const inst=(await LM.instantanes(chrome.storage.local,[partie]))?.[0]?.snap,dec=inst?LM.decompacter(inst):null;
+  if(dec){const L=V.lignesDeInstantane(dec),parI=new Map(L.map(x=>[x.i,x])),cuts=[...lot];
+   const rouges=cuts.filter(c=>{const x=parI.get(c);return x&&(x.statut!=='valid'||x.operateur);}).length;
+   if(cuts.length&&rouges>=0.8*cuts.length)return L.map(x=>({...x,g:g(x)}));}}}catch{/* stockage illisible */}
+ const mem=reglesOmbre.mem;
+ if(mem?.lignes?.size&&b?.id===mem.lotId&&b?.scope?.part===partie)return [...mem.lignes].map(([i,x])=>({i,statut:x.statut,operateur:false,g:x.g}));
+ return [];}
 /* Pourquoi la passe ne peut pas partir maintenant (ESV doit être propre), ou null. */
 async function relectureRefus(b,auto){
  if(!b?.id)return 'aucun lot';
@@ -1911,42 +1931,62 @@ async function relectureLancer({auto=false,lotId=null}={}){
  const R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),reglages=await relectureReglages();
  const observe=globalThis.BananeSettings?.observateurPassif?.actif!==false;
  const modeEffectif=mode==='corriger'&&!observe?'ombre':mode;
- const sel=R.selection(await relectureEntree(b),Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:undefined);
+ const entree=await relectureEntree(b);
+ const sel=R.selection(entree,{...R.optionsSelection(reglages.selection),...(Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:{})});
  relecture.passe={lotId:b.id,mode,modeEffectif,etat:'en-cours',total:sel.total,faits:0,corriges:0,refusees:0,cut:null,plage:null,debut,fin:null,arret:false,
   message:modeEffectif!==mode?'Mode « corriger » ramené à « ombre » : l’observateur passif est coupé, aucune écriture ne pourrait être prouvée.':null,
   reglages:{source:reglages.source,statut:reglages.statut},operationId:null};
- relectureJournal('relecture-debut',{mode,modeEffectif,auto,total:sel.total,traverses:sel.traverses,tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,
+ relectureJournal('relecture-debut',{mode,modeEffectif,auto,total:sel.total,traverses:sel.traverses,parZone:sel.parZone,variante:reglages.variante,ecartementPartieMm:entree.ecartementPartieMm??null,
+  zonesSource:entree.zonesSource,zones:{pn:entree.zonesPN.slice(0,64),adv:entree.zonesADV.slice(0,64)},tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,
   plages:sel.plages.map(p=>({debut:p.debut,fin:p.fin,zone:p.zone,libelle:p.libelle,relus:p.relus})),horsPlafond:sel.horsPlafond.map(p=>({debut:p.debut,fin:p.fin,libelle:p.libelle})),
   reglages:{source:reglages.source,statut:reglages.statut}});
- relecture.tache=relecturePasse(relecture.passe,b,sel,reglages).catch(e=>{const p=relecture.passe;if(p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
+ relecture.tache=relecturePasse(relecture.passe,b,sel,reglages,entree.ecartementPartieMm).catch(e=>{const p=relecture.passe;if(p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
   relectureJournal('relecture-fin',{mode:p.mode,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges});}});
  return relectureEtat();}
 function relectureArreter(){const p=relecture.passe;if(!p||p.etat!=='en-cours')return {arretDemande:false};p.arret=true;
  if(p.operationId)void adapter.cancel({operationId:p.operationId,reason:'relecture-arret'}).catch(()=>{});return {arretDemande:true};}
 const attendreMs=ms=>new Promise(r=>setTimeout(r,Math.max(0,ms)));
+/* Origine de la zone d'un cut relu : PN, ADV et abords viennent du lot (captures et cuts du lot, figés avant la passe) ; la liste
+ * « À contrôler » et les verts hors plage (écartement) viennent de la liste d'ESV. */
+const sourceZone=c=>['pn','adv','abords'].includes(c.zone)?'lot':c.zone==='ecartement'?'liste-esv':'liste';
 const tirage=v=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)?v[0]+Math.random()*(v[1]-v[0]):Number.isFinite(v)?v:0;
 /* Ce qu'Ariane donnerait sur une capture (aucun effet) : moteur, décision avec les appuis du lot, hauteur apprise ; la commande qui
  * serait écrite (commande du lot sur la pose ESV de la capture) et son écart ; la règle prudente. */
-function relectureCalculer(capture,c,appuis,reglages,skip){
+/* Ce qu'Ariane donnerait sur une capture (aucun effet), selon la variante du fichier de réglages (« chaine+h » : décision du lot avec
+ * pour appuis la chaîne de la passe, plus la hauteur apprise ; « seul » : sans appui) : moteur, décision, jugement ; la commande qui
+ * serait écrite (commande du lot sur la pose ESV de la capture, plus la hauteur pour « +h ») et son écart ; la règle prudente.
+ * `ctx` : {chaine (appuis, mis à jour ici), ecartementRef () → médiane de la partie, ou null}. */
+function relectureCalculer(capture,c,ctx,reglages,skip){
  const R=globalThis.BananeRelectureOmbre,Q=globalThis.BananeRelectureCritere,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,Shadow=globalThis.BananeGCV1Shadow;
+ const variante=reglages.variante||'chaine+h',enChaine=variante.startsWith('chaine'),avecH=variante.endsWith('+h');
  /* Comme le lot : aucune option passée à la décision ; la correction de hauteur est consignée par la décision selon son réglage. */
  const identity=K.completeIdentity(capture.identity||{}),science=Shadow.scientificProposeBoth(capture);
  const decision=L.decideCut({capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes},
-  science:{rails:science.rails,summary:science.summary},anchors:appuis,Shadow});
- const jugement=R.juger({capture,decision,science});
- let commande=null,ecrit=null,ecartementMm,ecartementRefMm;
+  science:{rails:science.rails,summary:science.summary},anchors:enChaine?ctx.chaine:[],Shadow});
+ /* Chaîne de l'étude : la pose donnée à ce cut devient un appui des cuts suivants (même règle que l'étude : positions de la décision,
+  * étapes qui posent sur la voie, pas un appui refusé par la décision), qu'elle soit écrite ou non. */
+ if(enChaine&&decision?.positions&&decision.anchor!==false&&['first-pass','window','crossing'].includes(decision.stage))
+  L.rememberAnchor(ctx.chaine,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage},1e6);
+ const jugement=R.juger({capture,decision,science,hauteur:avecH});
+ let commande=null,ecrit=null,ecartementMm=null;const ecartementRefMm=ctx.ecartementRef();
  /* La commande du lot pour les positions de la décision. Au premier passage (pose du moteur confirmée par la voie des appuis), le lot
   * pose la paire du moteur, dont les positions sont celles de la décision : la même conversion que la reprise depuis la voie
-  * (décalages du repère profil de la pose d'ESV, relus à 0,01 mm, écartement dans le contrat, cible dans la vue) en donne les rails. */
- try{const pourCommande=decision?.stage==='first-pass'&&decision.positions?{...decision,stage:'window'}:decision;
-  commande=L.commandRails({decision:pourCommande,runtimeRails:{left:{},right:{}},before:capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
+  * (décalages du repère profil de la pose d'ESV, relus à 0,01 mm, écartement dans le contrat, cible dans la vue) en donne les rails.
+  * « +h » : la correction de hauteur de chaque rail est ajoutée au décalage vertical, et la cible est relue dans la vue. */
+ try{const pourCommande=decision?.stage==='first-pass'&&decision.positions?{...decision,stage:'window'}:decision,cameras=L.viewCameras(capture);
+  commande=L.commandRails({decision:pourCommande,runtimeRails:{left:{},right:{}},before:capture.rails,expectedPoses:K.expectedPoses,cameras});
+  const mm=jugement.hauteurMm;
+  if(commande?.action==='lot'&&avecH&&mm&&['left','right'].some(s=>mm[s])){
+   const rails=Object.fromEntries(['left','right'].map(s=>{const r=commande.rails[s];return [s,mm[s]?{...r,delta:[r.delta[0],r.delta[1],r.delta[2]+mm[s]/1000]}:r];}));
+   const exp=K.expectedPoses({rails:capture.rails},rails);
+   commande=['left','right'].every(s=>cameras?.[s]&&L.inView(cameras[s],exp[s].positionSceneRelative).inView)?{...commande,rails}:{action:'engine',reason:'hauteur-hors-vue'};}
   if(commande?.action==='lot'){const exp=K.expectedPoses({rails:capture.rails},commande.rails);
    ecrit=Object.fromEntries(['left','right'].map(s=>[s,R.ecartRail(capture.rails[s],exp[s].positionSceneRelative)]));
-   ecartementMm=Math.round(L.gaugeOf({left:exp.left.positionSceneRelative,right:exp.right.positionSceneRelative})*10)/10;
-   const ref=L.gaugeReference(identity,appuis);ecartementRefMm=ref?Math.round(ref.mm*10)/10:null;}}catch{commande=null;}
+   /* Écartement de la pose, comme l'étude : celui des positions de la décision. */
+   ecartementMm=Math.round(L.gaugeOf(decision.positions)*10)/10;}}catch{commande=null;}
  const critere=commande?.action==='lot'?Q.juger({jugement,zone:c.zone,role:c.role,skipOmbre:skip,ecrit,ecartementMm,ecartementRefMm},reglages)
   :{corriger:false,regle:'commande',raison:`la commande du lot ne pose pas ce cut (${commande?.reason??'aucune'})`};
- return {jugement,commande,ecrit,ecartementMm:ecartementMm??null,ecartementRefMm:ecartementRefMm??null,critere};}
+ return {jugement,commande,ecrit,ecartementMm,ecartementRefMm,critere,variante};}
 /* Attente de l'écriture de validation du cut, vue par l'observateur passif (rangerObservations → relectureEcriture). */
 function relectureEcriture(f){const a=relecture.attente;if(!a||f?.kind!=='write'||f.rowIndex!==a.cut)return;
  const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:Date.now();if(t<a.depuisMs-500)return;
@@ -1986,7 +2026,12 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  if(!a.ok)throw Error(a.refus!=null?`cut ${cut} : ESV a refusé d’enregistrer la validation (statut ${a.refus}). Contrôle ce cut dans ESV.`
   :`cut ${cut} : validation envoyée, aucune écriture vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s. Contrôle ce cut dans ESV.`);
  await effacer();return {action:'corrige',raison:calc.critere.raison};}
-async function relecturePasse(p,b,sel,reglages){const K=globalThis.BananeCore3,cfg=reglageRelecture(),appuis=relectureAppuis(b),partie=b.scope.part;
+async function relecturePasse(p,b,sel,reglages,ecartementPartieMm=null){const K=globalThis.BananeCore3,R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),partie=b.scope.part;
+ /* Chaîne d'appuis : les cuts posés par le lot (traversés sans être recalculés), puis les poses que la passe donne aux cuts relus. */
+ const chaine=relectureAppuis(b),ecartementsVerts=[];
+ /* Médiane de la partie : celle de la liste d'ESV ; sans elle, celle des poses d'ESV des verts déjà relus (5 au moins). */
+ const mediane=t=>{const v=t.slice().sort((x,y)=>x-y),m=v.length>>1;return v.length%2?v[m]:(v[m-1]+v[m])/2;};
+ const ctx={chaine,ecartementRef:()=>Number.isFinite(ecartementPartieMm)?ecartementPartieMm:ecartementsVerts.length>=5?Math.round(mediane(ecartementsVerts)*10)/10:null};
  const borne=Math.max(...[b.totalReleve?.part===partie?b.totalReleve.total-1:null,...sel.cuts.map(c=>c.cut)].filter(Number.isInteger));
  const plagesSautees=new Set();let precedent=null,issue='fin';
  const stop=(m,i='erreur')=>{p.message=m;issue=i;};
@@ -2002,7 +2047,7 @@ async function relecturePasse(p,b,sel,reglages){const K=globalThis.BananeCore3,c
   p.operationId=null;
   if(nav?.resultat==='refuse'){
    if(p.arret)continue;
-   relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,action:'navigation-refusee',raison:nav.refusal?.message??null});
+   relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,action:'navigation-refusee',raison:nav.refusal?.message??null});
    plagesSautees.add(c.plage);precedent=null;continue;}
   if(nav?.resultat!=='confirme'){stop(`Relecture arrêtée : le passage au cut ${c.cut} n’est pas confirmé (${nav?.refusal?.message||nav?.resultat||'résultat inconnu'}). Contrôle le cut affiché ; rien n’a été posé.`);break;}
   precedent=c;const tNav=Date.now();
@@ -2011,20 +2056,26 @@ async function relecturePasse(p,b,sel,reglages){const K=globalThis.BananeCore3,c
    capture=await call('capture',etat);K.assertTarget(etat.identity,capture.identity);}
   catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane|ESV affiche/.test(e?.message||'')){stop(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}
    erreurCapture=String(e?.message||e).slice(0,200);}
-  const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?globalThis.BananeRelectureOmbre.skipOmbre(capture):null;
-  if(capture)try{calc=relectureCalculer(capture,c,appuis,reglages,skip);}catch(e){erreurCalcul=String(e?.message||e).slice(0,200);}
+  /* D-172 : une capture vide est relue une fois ; deux captures complètes vides de suite : « aucun-point » (consigné, jamais envoyé). */
+  let seconde=null;
+  if(capture&&R.captureVide(capture))try{seconde=await call('capture',etat);}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stop(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
+  const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?R.skipOmbre(seconde?[capture,seconde]:[capture]):null;
+  if(c.role==='vert'&&capture?.rails&&!R.captureVide(capture))try{const g=globalThis.BananeLotDecision.gaugeOf({left:capture.rails.left.positionSceneRelative,right:capture.rails.right.positionSceneRelative});
+   if(Number.isFinite(g)&&Math.abs(g-1500)>.05)ecartementsVerts.push(g);}catch{/* écartement illisible */}
+  if(capture)try{calc=relectureCalculer(capture,c,ctx,reglages,skip);}catch(e){erreurCalcul=String(e?.message||e).slice(0,200);}
   const tCalc=Date.now();let action={action:'visite',raison:null};
   if(calc&&p.modeEffectif==='corriger'&&calc.critere.corriger&&!p.arret){
    try{action=await relectureCorriger(p,b,etat,calc);}
    catch(e){stop(`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`);
-    relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,action:'correction-incertaine',raison:p.message});break;}
+    relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,action:'correction-incertaine',raison:p.message});break;}
    if(action.action==='corrige')p.corriges++;else p.refusees++;}
   const j=calc?.jugement;capture=null;
   relectureJournal('relecture-ombre',{identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,role:c.role,
+   zoneSource:sourceZone(c),
    poseEsv:j?.poseActuelle??null,poseCalculee:j?.poseCalculee??null,ecartMm:j?.ecartMm??null,pireMm:j?.pireMm??null,confiance:j?.confiance??null,
    etage:j?.etage??null,appuis:j?.appuis??[],hauteurMm:j?.hauteurMm??null,zoneGrise:j?.zoneGrise??false,verdict:j?.verdict??null,raison:j?.raison??erreurCapture??erreurCalcul,
-   skipOmbre:skip?{raison:skip.raison,scanners:skip.scanners,scannersLisibles:skip.scannersLisibles,points:skip.points}:null,
-   ecritMm:calc?.ecrit??null,ecartementMm:calc?.ecartementMm??null,ecartementRefMm:calc?.ecartementRefMm??null,
+   skipOmbre:skip?{raison:skip.raison,points:skip.points,captures:skip.captures,capturesVides:skip.capturesVides}:null,
+   ecritMm:calc?.ecrit??null,ecartementMm:calc?.ecartementMm??null,ecartementRefMm:calc?.ecartementRefMm??null,variante:calc?.variante??null,s1:j?.s1??null,
    critere:calc?{corriger:calc.critere.corriger,regle:calc.critere.regle,raison:calc.critere.raison}:null,
    action:action.action,raisonAction:action.raison,erreurCapture,erreurCalcul,
    durees:{navigationMs:tNav-t0,captureMs:tCap-tNav,calculMs:tCalc-tCap,totalMs:Date.now()-t0},chemin});

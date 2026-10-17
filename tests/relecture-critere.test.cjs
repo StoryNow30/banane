@@ -62,3 +62,33 @@ test('réglages : défaut provisoire égal au fichier par défaut ; fichier prop
  /* Les réglages proposés changent le jugement : ADV ouverte. */
  assert.equal(Q.juger(bon({zone:'adv',jugement:{...bon().jugement,ecartMm:ec([22,0],[21,0]),confiance:{left:96,right:97}}}),p).corriger,true);
 });
+
+test('fichier proposé réel (datasets/relecture-reglages-proposes.json) : lu tel quel, les quatre étapes, PN seule corrige, 45 mm, écartement à 15 mm, chaine+h',()=>{
+ const f=JSON.parse(fs.readFileSync(path.join(__dirname,'../datasets/relecture-reglages-proposes.json'),'utf8'));
+ const r=Q.reglages(f,'propose');
+ assert.equal(r.source,'propose');assert.equal(r.statut,'propose');
+ assert.deepEqual(r.etagesPermis,['first-pass','window','choice','crossing'],'les quatre étapes qui posent, sans repli sur le défaut');
+ assert.deepEqual(JSON.parse(JSON.stringify(r.zones)),{pn:{corriger:true,seuilMm:8,confianceMin:0},adv:{corriger:false,seuilMm:8,confianceMin:0},
+  abords:{corriger:false,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:false,seuilMm:8,confianceMin:0}});
+ assert.deepEqual(r.roles,['vert']);assert.deepEqual(r.jamais,['cut différé par le lot','cut posé par le lot']);
+ assert.equal(r.voie.lateralMaxMm,45);assert.deepEqual(r.coherence,{diffLateraleMaxMm:100,diffVerticaleMaxMm:100,ecartementMaxMm:15});
+ assert.equal(r.variante,'chaine+h');assert.equal(r.appuisMin,0,'aucun minimum d’appuis : l’étude n’en a pas');
+ assert.deepEqual({...r.selection,liste:undefined},{grappeMin:3,trouCuts:5,margeGrappe:3,margeIsole:1,margeDiffere:2,pn:{margeAvant:4,margeApres:6},adv:{margeAvant:30,margeApres:30},liste:undefined});
+ /* Un vert de PN, premier passage, 9 mm, confiance présente, écartement à 10 mm de la médiane : corrigé. */
+ const pn=bon({zone:'pn',ecartementMm:1445,ecartementRefMm:1435,jugement:{...bon().jugement,etage:'first-pass',appuis:[],ecartMm:ec([9,0],[2,0]),confiance:{left:3,right:50}}});
+ assert.equal(Q.juger(pn,r).corriger,true,Q.juger(pn,r).raison);
+ for(const etage of ['window','choice','crossing'])assert.equal(Q.juger({...pn,jugement:{...pn.jugement,etage}},r).corriger,true,etage);
+ /* Le même cut en ADV, aux abords ou hors zone : reste en ombre. */
+ for(const zone of ['adv','abords','vert-hors-zone']){const x=Q.juger({...pn,zone},r);assert.equal(x.corriger,false);assert.equal(x.regle,'zone',zone);}
+ /* Sous 8 mm, plus de 45 mm en travers, écartement à plus de 15 mm de la médiane, confiance absente, cut du lot : laissé. */
+ assert.equal(Q.juger({...pn,jugement:{...pn.jugement,ecartMm:ec([7.9,0],[0,0])}},r).regle,'seuil');
+ assert.equal(Q.juger({...pn,jugement:{...pn.jugement,ecartMm:ec([46,0],[40,0])}},r).regle,'voie');
+ assert.equal(Q.juger({...pn,ecartementMm:1451},r).regle,'coherence');
+ assert.equal(Q.juger({...pn,jugement:{...pn.jugement,confiance:{left:null,right:50}}},r).regle,'confiance');
+ assert.match(Q.juger({...pn,role:'differe'},r).raison,/jamais un cut différé par le lot/);assert.match(Q.juger({...pn,role:'lot'},r).raison,/jamais un cut posé par le lot/);
+});
+
+test('zone « ecartement » (H5) : jamais corrigée, même avec des réglages qui ouvriraient tout',()=>{
+ const tout=Q.reglages({format:'ariane-relecture-reglages-1',zones:{pn:{corriger:true},adv:{corriger:true},abords:{corriger:true},'vert-hors-zone':{corriger:true},ecartement:{corriger:true,seuilMm:1}}});
+ const r=Q.juger(bon({zone:'ecartement'}),tout);assert.equal(r.corriger,false);assert.equal(r.regle,'zone');assert.match(r.raison,/ombre seulement/);
+});

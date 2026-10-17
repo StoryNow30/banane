@@ -65,7 +65,7 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
  * décision des cuts sans remplacement est un différé immédiat (« essai-sans-calcul ») : la passe dure alors quelques dizaines de ms par
  * cut au lieu de 1 à 4 s (le délai d'un essai est de 20 s). Vrai : moteur et décision réels sur chaque cut relu. */
 let scienceFixture=null;
-async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},calculReel=false,reglagesProposes=null,relecture={},esv=null,observateur=true,clic=null,regles=false}={}){
+async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},calculReel=false,ecartementPartie=undefined,reglagesProposes=null,relecture={},esv=null,observateur=true,clic=null,regles=false}={}){
  const adapter=new EsvRelecture({decalages,loin}),local=memoire();if(mode)local.m[CLE]=mode;if(clic)local.m.banane50ClicHumain=clic;
  const b=production({adapter,local});b.local=local;
  b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},
@@ -84,6 +84,12 @@ async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},c
   if(d===undefined||dansLot(cut))return calculReel||dansLot(cut)?L.decideCut(args):{version:L.DEFAULTS.version,stage:'deferred',reason:'essai-sans-calcul',anchorsUsed:[],anchor:false};
   const [g,dr]=Array.isArray(d)?d:[d,d],r=args.capture.rails,pos={left:decaleDe(r,g).left.positionSceneRelative,right:decaleDe(r,dr).right.positionSceneRelative};
   return {version:L.DEFAULTS.version,stage:'window',fromPredictionMm:Math.max(Math.abs(g),Math.abs(dr)),anchorsUsed:[111,112],positions:pos,anchor:false};}};
+ /* Médiane de l'écartement de la partie (liste d'ESV) : la fixture n'a pas de liste ; celle des verts justes de l'essai (la pose validée
+  * au cut 111), donnée comme la référence de la liste « À contrôler ». `ecartementPartie:null` : aucune référence. */
+ const vraisVerts=b.ctx.vertsAControler;
+ b.ctx.vertsAControler=async a=>{const v=await vraisVerts(a),j=adapter.poses.get(111);
+  const g=ecartementPartie!==undefined?ecartementPartie:j?L.gaugeOf({left:j.left.positionSceneRelative,right:j.right.positionSceneRelative}):null;
+  return {...v,actif:true,verts:Array.isArray(v?.verts)?v.verts:[],reference:{ecartementMm:g,lignes:g===null?0:100}};};
  if(esv)esv(adapter,b);
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.ajuster();

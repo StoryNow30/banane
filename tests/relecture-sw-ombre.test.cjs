@@ -22,16 +22,17 @@ test('ombre : chaque cut choisi est visité, capturé, calculé et noté ; aucun
  assert.equal(e109.action,'visite');assert.equal(e109.verdict,'je corrigerais');assert.equal(e109.critere.corriger,true,'la règle dirait « corriger »');
  assert.deepEqual(j(e109.ecartMm.left),{long:0,lat:14,vert:0});assert.equal(e109.zone,'abords');assert.equal(e109.role,'vert');
  assert.ok(Array.isArray(e109.poseEsv.left)&&Array.isArray(e109.poseCalculee.right));assert.ok(e109.confiance&&'left' in e109.confiance);
- assert.match(e109.raison,/rail gauche, latéral 14 mm/);assert.deepEqual(j(e109.skipOmbre),{raison:null,scanners:null,scannersLisibles:false,points:{left:2322,right:2442}});
+ assert.match(e109.raison,/rail gauche, latéral 14 mm/);assert.deepEqual(j(e109.skipOmbre),{raison:null,points:{left:2322,right:2442},captures:1,capturesVides:0});
  const e113=ev.find(e=>e.identity.cut===113);assert.equal(e113.role,'differe','le dernier cut laissé sans commande est relu comme un différé');
  /* Le cut 113 est calculé pour de vrai (moteur, décision avec les appuis 111 et 112 du lot, hauteur apprise) : reprise depuis la voie,
   * à 268 mm de la pose d'ESV, dont la commande tombe hors de la vue : rien à corriger. */
  assert.equal(e113.etage,'window');assert.ok(e113.pireMm>200);assert.deepEqual(j(e113.appuis).sort(),[111,112]);assert.equal(e113.critere.regle,'commande');
- /* D-172 : aucun point affiché au cut 114 : SKIP en ombre, consigné ; aucun SKIP envoyé. */
- assert.equal(ev.find(e=>e.identity.cut===114).skipOmbre.raison,'aucun-point');assert.equal(apres.some(c=>c.action==='skipAndNext'),false);
+ /* D-172 : aucun point affiché au cut 114, relu une seconde fois, toujours vide : SKIP en ombre, consigné ; aucun SKIP envoyé. */
+ assert.deepEqual(j(ev.find(e=>e.identity.cut===114).skipOmbre),{raison:'aucun-point',points:{left:0,right:0},captures:2,capturesVides:2});
+ assert.equal(apres.some(c=>c.action==='skipAndNext'),false);
  for(const e of ev)for(const k of ['navigationMs','captureMs','calculMs','totalMs'])assert.ok(Number.isFinite(e.durees[k]),k);
  const debut=H.evenements(b,'relecture-debut')[0],fin=H.evenements(b,'relecture-fin')[0];
- assert.equal(debut.mode,'ombre');assert.equal(debut.total,7);assert.deepEqual(j(debut.reglages),{source:'propose',statut:'essai'});
+ assert.equal(debut.mode,'ombre');assert.equal(debut.total,7);assert.equal(debut.variante,'chaine+h');assert.deepEqual(j(debut.parZone),{pn:0,adv:0,abords:7,'vert-hors-zone':0,ecartement:0});assert.deepEqual(j(debut.reglages),{source:'propose',statut:'essai'});
  assert.equal(fin.issue,'fin');assert.equal(fin.corriges,0);
  const etat=await b.api('relecture-etat');assert.equal(etat.passe.etat,'finie');assert.equal(etat.lot.mode,'ombre');
  assert.deepEqual(j((await b.api('view')).relecture),{etat:'finie',mode:'ombre',faits:7,total:7,corriges:0,cut:null,message:p.message});

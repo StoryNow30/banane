@@ -10,6 +10,13 @@
   "roles": [
     "vert"
   ],
+  "jamais": [
+    "cut différé par le lot",
+    "cut posé par le lot"
+  ],
+  "variante": {
+    "proposition": "chaine+h"
+  },
   "voie": {
     "lateralMaxMm": 60
   },
