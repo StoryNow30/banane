@@ -219,24 +219,26 @@
  </section>
  </section>
 
- <!-- (d) RELECTURE APRÈS LE LOT (5.0, D-170 à D-173 ; fiches/RELECTURE_OMBRE.md). Bloc autonome, tenu par src/carte-relecture.js :
+ <!-- (d) RELECTURE APRÈS LE LOT (5.0, D-170 à D-176 ; fiches/RELECTURE_OMBRE.md). Bloc autonome, tenu par src/carte-relecture.js :
       choix « coupée », « ombre » ou « corriger » (gardé par Ariane, lu au démarrage de chaque lot et figé jusqu'à sa fin),
-      « Dernier lot » / « Prochain lot » comme les autres choix, avancement de la passe et bouton d'arrêt. Entre (c) et (e). -->
+      « Dernier lot » / « Prochain lot » comme les autres choix, réglages de la correction, avancement de la passe (« vu » compris),
+      bouton d'arrêt, correction interrompue à contrôler. Entre (c) et (e). -->
  <section id="groupe-relecture" class="groupe" aria-labelledby="relecture-titre">
  <h2 id="relecture-titre" class="groupe-titre rise d5">Relecture</h2>
  <section id="carte-relecture" class="carte rise d5">
  <fieldset class="choix-lot">
   <legend class="lbl">Relecture après le lot</legend>
   <label class="interrupteur"><input type="radio" name="relecture" id="relecture-coupee" value="coupee"> Coupée</label>
-  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-ombre" value="ombre"> Ombre (visite, ne modifie rien)</label>
-  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-corriger" value="corriger"> Corriger (corrige seulement les cuts sûrs)</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-ombre" value="ombre"> Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-corriger" value="corriger"> Corriger (seulement les verts sûrs, validés par Maj+Espace)</label>
   <dl class="choix-etat"><dt id="relecture-dernier-l">Dernier lot</dt><dd id="relecture-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="relecture-prochain">—</dd></dl>
-  <p class="muted">Après les rouges, Ariane visite les cuts que tu relirais (PN, ADV, abords des rouges et des différés, cuts isolés, « À contrôler »), verts compris.</p>
+  <p class="muted">Après les rouges, Ariane visite les cuts que tu relirais (PN, ADV, abords des rouges et des différés, cuts isolés, « À contrôler »), verts compris. Elle part seule juste après le lot ; « Arrêter la relecture » l’arrête. Comme pour toi, ESV marque « vu » chaque cut qu’elle affiche pour la première fois.</p>
   <p class="muted" id="relecture-note">Lue au démarrage de chaque lot, gardée jusqu’à sa fin. Coupée par défaut.</p>
+  <p class="muted" id="relecture-reglages"></p>
  </fieldset>
  <p class="resume-ligne" id="relecture-ligne" hidden></p>
  <p class="muted error" id="relecture-interrompue" hidden></p>
- <p class="row"><button id="relecture-arreter" class="danger" type="button" hidden>Arrêter la relecture</button><button id="relecture-lancer" class="link" type="button" hidden>Lancer la relecture</button></p>
+ <p class="row"><button id="relecture-arreter" class="danger" type="button" hidden>Arrêter la relecture</button><button id="relecture-acquitter" type="button" hidden>J’ai contrôlé le cut</button><button id="relecture-lancer" class="link" type="button" hidden>Lancer la relecture</button></p>
  </section>
  </section>
 
