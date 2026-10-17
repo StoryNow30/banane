@@ -254,7 +254,7 @@ input[type=checkbox]{width:auto;height:auto;accent-color:var(--text)}
 input[type=radio]{width:auto;height:auto;accent-color:var(--text)}
 fieldset.choix-lot{border:0;min-width:0;margin-inline:0}
 fieldset.choix-lot>legend{float:left;width:100%;padding:0;margin:0 0 2px}
-.choix-lot .interrupteur{margin-top:10px}
+.choix-lot .interrupteur{margin-top:10px;clear:both}
 .choix-lot .muted{margin:8px 0 0}
 .interrupteur{flex-direction:row;align-items:center;gap:8px;color:var(--text)}
 .interrupteur input{margin:0}
