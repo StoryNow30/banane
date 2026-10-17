@@ -2428,3 +2428,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Règle grappe** : active, mais aucune grappe dans ce lot (0 différé autour). Aucun cut n'a été mis en attente par la règle.
 - **Ombres** : `regles-metier-ombre` voit un PN (« cœur ») sur 7 cuts et des zones d'ADV. La carte « À contrôler » a été vue chez Mic : 17 cuts, ADV 846–911, autour du différé 899, ADV 5467–5555 et PN 5936–5954, environ 1 minute.
 - **Défaut d'affichage** : après la fin du lot, la case cochée affiche « Activée pour le prochain lot », alors qu'elle était déjà active pour ce lot. Mic a cru qu'elle n'avait pas servi. Le libellé est à corriger à la prochaine version : dire ce qu'a utilisé le dernier lot et ce qu'utilisera le prochain.
+
+## D-167 — Test 6, partie 9 en « Tout recentré » : la règle grappe agit ; Mic attend que les règles métier s'appliquent aux PN et aux ADV (17 octobre 2026)
+
+- **Partie 9**, second projet. Lot parti à 10 h 04, exporté à 10 h 06, archivé (`2026-10-17_v4.9.5.6_projet2-parties-8-9`), choix `tout-recentre` et règle grappe activée.
+  - 29 posés et 13 différés. **La règle grappe a mis 4 cuts en attente** (7002, 7353, 8623, 8624).
+  - 0 clic hors vue.
+  - Cycle médian 2,41 s, contre 1,78 s en Variante sur la partie 8. Ce sont deux parties différentes, on ne peut pas encore conclure.
+  - Ombre : PN reconnu sur 4049–4056.
+- **Second lot sur la partie 8 (10 h 01)** : la partie était déjà finie, donc le lot a seulement revalidé le cut 5948 puis il est sorti. Mic a cru à un défaut ; il faut un message clair quand il ne reste rien à faire.
+- **Malentendu** : Mic s'attendait à ce que la case « règle métier » applique ses règles aux aiguilles et aux PN. Le libellé « grappe (aiguille, série de rouges) » est trompeur. Sur la partie 8, Ariane a posé 6 cuts dans l'ADV 846–911, 15 dans l'ADV 5467–5555 et 8 dans le PN 5936–5954. Seule l'ombre PN aurait gardé 7 de ces cuts.
+- **Proposé à Mic** : trois cases claires (PN, ADV, série de différés), et le choix entre « Ariane me laisse ces zones » et « elle pose et me les signale ».
