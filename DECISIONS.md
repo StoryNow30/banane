@@ -2317,3 +2317,20 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Dans 81 cas sur 85, Mic garde le même minimum de la grille qu'Ariane et ne fait que corriger la hauteur.
 - **Aucun signal ne trie les faux verts** d'une partie à l'autre (AUC de 0,52 à 0,78), comme dans G0. La règle « hauteur ambiguë » (`faux-vert-ombre`, calage ≥ 11 mm et dessus ≥ 14 mm) est consignée seulement. En validation croisée, son bilan net est nul.
 - **Le vrai levier est la pose verticale**. Une correction apprise, de la forme a + b × épaisseur du dessus, ferait passer les faux verts de 85 à 66, mais elle en crée 7 nouveaux. Ce serait une pose différente : non livrée. Elle passera d'abord en ombre, et la décision reviendra à Mic. À rapprocher de l'ombre verticale à 3,6 mm (P8) et de l'abandon du plafond P1.
+
+## D-161 — Hauteur apprise, en ombre : 85 → 61 faux verts sans en créer, en validation croisée (17 octobre 2026)
+
+- Livré sur `claude/50-hauteur-apprise` (9503d42 à 6162729), intégré à `claude/50-base` par avance rapide. verify de l'agent : 2 023 réussis, 0 échec. Moteur intact.
+- **Modèle** : part × (a + b × épaisseur du dessus), borné à ±5 mm.
+  - Rail calé : demi-correction, un dessus épais descend de 1 à 3 mm.
+  - Rail refusé : remonté de 5 mm au plus, descendu si le dessus dépasse 16 mm.
+  - Abstention dans l'ornière d'un PN, sans calage lisible, ou sous 15 points.
+- **Validation croisée par partie** : 85 → 61 faux verts, 24 corrigés, 0 créé. Partie 17 : 47 → 28. Partie 24 : 21 → 19. Partie 29 : 7 → 4. Second projet : 10 → 10.
+- À comparer avec P8 (3,6 mm constant) : 85 → 68, avec 1 créé. **Les deux restent en ombre.** Seule la hauteur apprise a un chemin d'activation (`appliquer:false`). Les deux ne doivent jamais s'appliquer ensemble.
+- **Preuve « ombre sans effet »** : décisions et commandes identiques sur les 1 380 cuts des 4 lots réels.
+- **Limites** :
+  - le gain tient dans le bruit de la référence : les cuts passent de 10 à 14 mm à 6 à 10 mm ;
+  - le « 0 créé » dépend du seuil de 10 mm (6 créés à 9 mm) ;
+  - le gain vient surtout de la partie 17, en 4.9.0.
+  - Avant toute activation, il faut régler : l'appui mémorisé non corrigé, le calcul de `faux-vert-ombre` sur la pose non corrigée, et la marge de vue de 2 mm.
+- Porte B du cahier v1.1, à juger sur des parties neuves.
