@@ -212,6 +212,57 @@
           ]
         }
       ]
+    },
+    "hauteurApprise": {
+      "libelle": "Hauteur apprise en ombre : correction verticale part × (a + b × épaisseur du dessus), par groupe de calage, bornée",
+      "decision": "aucune encore (chantier « hauteur apprise », 5.0) ; activation à décider avec l’opérateur, après une mesure en ombre sur des parties neuves",
+      "fiche": "fiches/HAUTEUR_APPRISE.md",
+      "etat": "consignée seulement (src/hauteur-apprise.js, clé hauteurApprise de la décision sur le lot : pose réelle et pose corrigée) ; chemin d'activation coupé (appliquer:false)",
+      "fige": "2026-10-17",
+      "valeurs": {
+        "forme": "lineaire-epaisseur",
+        "plafondMm": 5,
+        "pointsDessusMin": 15,
+        "etages": [
+          "first-pass",
+          "window",
+          "choice"
+        ],
+        "applique": {
+          "a": 3.28,
+          "b": -0.5,
+          "part": 0.5
+        },
+        "refuse": {
+          "a": 17.89,
+          "b": -1.14,
+          "part": 1
+        },
+        "appliquer": false
+      },
+      "ombre": {
+        "reglage": "src/settings.js hauteurApprise",
+        "module": "src/hauteur-apprise.js",
+        "version": "hauteur-apprise-v1",
+        "outil": "tools/hauteur-apprise.cjs etudier (pénalité 10 par nouveau faux vert)"
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ],
+      "note": "Coefficients appris sur les quatre parties, enveloppe (part 0,5 sur les rails calés, 1 sur les rails refusés, plafond 5 mm) choisie à l'identique dans les quatre plis de la validation croisée. Aucune partie réservée ne l'a jugée."
     }
   }
 }

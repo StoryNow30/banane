@@ -39,6 +39,6 @@ async function lot({reglage,amener,ombre=false,seuilsVoie=null}={}){
 }
 /* Identifiants (opérations, captures) et horloges neutralisés, rien d'autre. */
 const neutre=x=>JSON.parse(JSON.stringify(normalize(x)).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>'));
-const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,fauxVertOmbre,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
+const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,fauxVertOmbre,hauteurApprise,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
 const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing','adapter-progress'].includes(e.type)).map(e=>e.type);
 module.exports={lot,neutre,decisions,metier,SCOPE};

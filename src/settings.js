@@ -333,6 +333,17 @@
    * le valider, jamais poser. NE PAS L'OUVRIR sans l'accord de l'opérateur, et pas avant une mesure en ombre sur des parties neuves. Seuils figés :
    * datasets/reglages-figes.json (`fauxVertOmbre`). `actif:false` : rien n'est calculé ni consigné. */
   const fauxVertOmbre = Object.freeze({ actif: true, differer: false, dzMinMm: 11, epaisseurMinMm: 14 });
+  /* 5.0 (chantier « hauteur apprise », fiches/HAUTEUR_APPRISE.md) — HAUTEUR APPRISE EN OMBRE (src/hauteur-apprise.js, consignée par
+   * src/lot-decision.js). Pour chaque cut que la décision sur le lot pose, la décision consigne (`hauteurApprise`), rail par rail, la correction
+   * verticale apprise sur les corrections de l'opérateur : part × (a + b × épaisseur de la bande du dessus), selon que le calage de convention
+   * a été appliqué ou refusé, bornée à ± `plafondMm` ; abstention hors des `etages`, sans calage lisible, ou sous `pointsDessusMin` points du
+   * dessus. Elle consigne la pose réelle ET la pose corrigée. ACTIVE POUR CONSIGNER SEULEMENT : la décision, la pose et la commande sont
+   * identiques, octet pour octet, avec et sans. `appliquer` : chemin d'activation, COUPÉ ; ouvert, il poserait la pose corrigée (hauteur
+   * seulement) : NE PAS L'OUVRIR sans l'accord de l'opérateur, et pas avant une mesure en ombre sur des parties neuves. Valeurs figées :
+   * datasets/reglages-figes.json (`hauteurApprise`). `actif:false` : rien n'est calculé ni consigné. */
+  const hauteurApprise = Object.freeze({ actif: true, appliquer: false, plafondMm: 5, pointsDessusMin: 15,
+    etages: Object.freeze(['first-pass', 'window', 'choice']),
+    applique: Object.freeze({ a: 3.28, b: -0.5, part: 0.5 }), refuse: Object.freeze({ a: 17.89, b: -1.14, part: 1 }) });
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
@@ -437,6 +448,7 @@
       { groupe: 'Continuité', nom: 'Déplacer la vue (Orbite)', valeur: deplacerVue.actif ? 'actif (dézoom ≤ ×' + String(deplacerVue.dezoomMax).replace('.', ',') + ' ou glisser ≤ ' + deplacerVue.glissementPxMax + ' px, ' + deplacerVue.gestesMax + ' gestes par rail au plus)' : 'coupé', pourquoi: 'Quand la cible d’un rail tombe hors de la vue d’ESV, Ariane dézoome à la molette ou glisse la vue comme toi, pose, puis remet la vue. Coupé : ces cuts restent différés.' },
       { groupe: 'Écho', nom: 'Relevé des glissers et de la molette', valeur: echo.gestesVue ? 'actif (observation seule)' : 'coupé', pourquoi: 'Note la longueur, la durée, le bouton et les crans de tes gestes sur la vue, avec la caméra avant et après, pour copier ton geste. Rien n’est empêché ni commandé.' },
       { groupe: 'Continuité', nom: 'Règles métier de Mic en ombre (Orbite)', valeur: reglesMetier.ombre ? (reglesMetier.actif ? 'ACTIVES pour : ' + (Object.keys(reglesMetier.regles).filter(k => reglesMetier.regles[k]).join(', ') || 'aucune règle') : 'consignées seulement (PN et marges, grappes de différés, verts à contrôler) ; activation coupée') : 'coupées', pourquoi: 'Note à chaque cut la zone reconnue (passage à niveau, grappe de différés), la règle de Mic qui se déclenche et ce qu’Ariane aurait fait : différer au lieu de valider, ou te signaler un vert à contrôler. Rien n’est posé ni différé tant que Mic n’active pas.' },
+      { groupe: 'Continuité', nom: 'Hauteur apprise en ombre (Orbite)', valeur: hauteurApprise.actif ? (hauteurApprise.appliquer ? 'ACTIVE : pose la hauteur corrigée' : 'consignée seulement (hauteur corrigée selon l’épaisseur du dessus, ' + String(hauteurApprise.plafondMm).replace('.', ',') + ' mm au plus)') : 'coupée', pourquoi: 'Note, pour chaque cut posé par le lot, la hauteur que l’opérateur aurait probablement donnée au rail (apprise sur ses corrections), à côté de la pose réelle. Jamais appliquée tant que l’opérateur ne l’active pas : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Faux vert en ombre (Orbite)', valeur: fauxVertOmbre.actif ? (fauxVertOmbre.differer ? 'actif : diffère les cuts à hauteur ambiguë' : 'consigné seulement (hauteur ambiguë : calage ≥ ' + fauxVertOmbre.dzMinMm + ' mm et dessus épais ≥ ' + fauxVertOmbre.epaisseurMinMm + ' mm)') : 'coupé', pourquoi: 'Note, pour chaque cut posé par le lot, s’il ressemble à un faux vert (hauteur du rail ambiguë). Jamais appliqué : la pose et la validation sont les mêmes avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
@@ -455,5 +467,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
 });

@@ -1,8 +1,8 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'),require('./gauge.js'),
-    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'),require('./faux-vert-ombre.js'));
-  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing,root.BananeFauxVertOmbre);
-})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing,FauxVert){
+    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'),require('./faux-vert-ombre.js'),require('./hauteur-apprise.js'));
+  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing,root.BananeFauxVertOmbre,root.BananeHauteurApprise);
+})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing,FauxVert,Hauteur){
  'use strict';
  /* DÉCIDER SUR LE LOT — cahier 4.8, amendement n°9 (D-039).
   *
@@ -400,11 +400,24 @@
    const reglage=fauxVertReglage(options);if(!reglage||!FauxVert||!decision?.positions)return null;
    return FauxVert.evaluer({capture,science,decision,reglage});
  }
+ /* 5.0 (chantier « hauteur apprise ») — HAUTEUR APPRISE, EN OMBRE (`src/hauteur-apprise.js`, réglage `hauteurApprise`). Pour une décision qui
+  * pose, la décision consigne `hauteurApprise` : par rail, le groupe du calage de convention (appliqué, refusé), l'épaisseur du dessus à la pose
+  * décidée, la correction verticale apprise (part × (a + b × épaisseur), bornée, ou l'abstention et son motif), la pose réelle (`reelle`, celle
+  * de `positions`) et la pose corrigée (`corrigee`, repère profil du rail, « + » = vers le haut). CONSIGNÉE SEULEMENT, comme P8 : la décision de
+  * base est calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée ; réglage coupé ou absent (outils hors ligne), module
+  * absent, cut sans pose : aucune clé. Une panne ici ne change jamais la décision. Le chemin qui la POSERAIT est `hauteurActivation`, coupé. */
+ const hauteurReglage=options=>{const o=options&&options.hauteurApprise!==undefined?options.hauteurApprise:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.hauteurApprise:undefined);
+   return o&&o.actif===true?o:null;};
+ function hauteurApprise(decision,{capture,science,options}){
+   const reglage=hauteurReglage(options);if(!reglage||!Hauteur||!decision?.positions)return null;
+   return Hauteur.evaluer({capture,science,decision,reglage});
+ }
  function decideCut(args){
    const decision=decideCutBase(args);
    let out=decision;
    try{const o=ombreVerticale(decision,args);if(o)out={...decision,ombreVerticale:o};}catch{out=decision;}
    try{const f=fauxVertOmbre(decision,args);if(f)out={...out,fauxVertOmbre:f};}catch{/* consigne seulement */}
+   try{const h=hauteurApprise(decision,args);if(h)out={...out,hauteurApprise:h};}catch{/* consigne seulement */}
    return out;
  }
  /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
@@ -499,7 +512,30 @@
    if(!pose)return out;
    return deferRails(runtimeRails,decision,'faux-vert-ombre','décision sur le lot : faux vert probable (hauteur ambiguë sur '+(o.railsSuspects||[]).join(', ')+')');
  }
- function commandRails(args){return fauxVertActivation(commandRailsBase(args),args);}
+ /* CHEMIN D'ACTIVATION DE LA HAUTEUR APPRISE — COUPÉ. Il ne s'ouvre que si le réglage dit `appliquer:true` (livré à `false`, épinglé par les
+  * essais) ; seul l'opérateur l'ouvrira, après une mesure en ombre sur des parties neuves : IL CHANGE LA POSE. Ouvert, il ne fait qu'une chose :
+  * une commande qui POSE (positions du lot, ou paire du moteur aux deux rails résolus) garde son action, ses rails et leur latéral ; seule la
+  * hauteur de chaque rail (décalage vertical du repère profil de la pose ESV) bouge de la correction consignée (`hauteurApprise`, au plus le
+  * plafond du modèle). La cible corrigée doit être relue dans la vue du rail ; sans caméra, ou hors de la vue, la commande reste telle quelle.
+  * Il ne crée jamais de pose, ne touche pas un cut différé ; fermé, il rend la commande telle quelle (le même objet).
+  * À régler avant de l'ouvrir : l'appui mémorisé du cut garde la pose de la décision (non corrigée), à quelques millimètres en hauteur. */
+ function hauteurActivation(out,{decision,before,expectedPoses,cameras}){
+   const reglage=typeof globalThis!=='undefined'?globalThis.BananeSettings?.hauteurApprise:undefined;
+   if(!reglage||reglage.appliquer!==true)return out;
+   const h=decision?.hauteurApprise;
+   if(!h?.rails||!out||!before||typeof expectedPoses!=='function'||!cameras)return out;
+   const pose=out.action==='lot'||(out.action==='engine'&&SIDES.every(side=>out.rails?.[side]?.status==='candidate'));
+   if(!pose)return out;
+   const mm=Object.fromEntries(SIDES.map(side=>{const v=h.rails[side]?.correctionMm;return [side,typeof v==='number'&&Number.isFinite(v)?v:0];}));
+   if(SIDES.every(side=>mm[side]===0))return out;
+   const rails={};
+   for(const side of SIDES){const r=out.rails[side];if(!Array.isArray(r?.delta)||r.delta.length!==3||!r.delta.every(Number.isFinite))return out;
+     rails[side]=mm[side]===0?r:{...r,delta:[r.delta[0],r.delta[1],r.delta[2]+mm[side]/1000],hauteurApprise:{correctionMm:mm[side],version:h.version??null}};}
+   let expected;try{expected=expectedPoses({rails:before},rails);}catch{return out;}
+   for(const side of SIDES){const cam=cameras[side];if(!cam||!inView(cam,expected[side].positionSceneRelative).inView)return out;}
+   return {...out,rails,hauteurApprise:{appliquee:true,correctionMm:mm,version:h.version??null}};
+ }
+ function commandRails(args){return fauxVertActivation(hauteurActivation(commandRailsBase(args),args),args);}
  function commandRailsBase({decision,runtimeRails,before,expectedPoses,cameras}){
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
    /* D-060 : un refus de la garde d'écartement bas est TOUJOURS un différé, même
