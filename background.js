@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.4',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 4';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -1354,6 +1354,43 @@ function reglesMetierLignes(identity,rep){try{
  const v=M.lignes(mem,rows,{cut:identity?.cut});
  if(v.verts.length&&r.ombre!==false)reglesJournal({version:'regles-metier-v1',portee:'verts',identity:{part:identity?.part??null,cut:identity?.cut??null},reference:v.reference,verts:v.verts});
 }catch{/* relevé seulement */}}
+/* 5.0 — VERTS À CONTRÔLER (src/verts-a-controler.js, réglage `vertsAControler`, fiches/VERTS_A_CONTROLER.md). Action de panneau, à la
+ * demande (fin de lot, bouton « Recalculer », export) : la liste des verts à relire en priorité. LECTURE SEULE de ce qu'Ariane a déjà :
+ *  - cuts du lot et PN reconnus : événements `regles-metier-ombre` du journal local (repli : listes du lot courant) ;
+ *  - lignes de la liste d'ESV : instantané E1 de la partie (chrome.storage.local), gardé seulement s'il concorde avec le lot (les cuts
+ *    du lot y sont rouges ou traités) ; repli : lignes que B1 a lues pendant le lot (écartement seul) ;
+ *  - poses d'Ariane : bords qu'elle a écrits pendant le lot (mémoire E1, même liste).
+ * AUCUNE action dans ESV : ni commande à l'adaptateur, ni message à l'onglet, ni requête. Rien n'est écrit, ni dans le lot ni ailleurs ;
+ * la décision et la pose ne lisent jamais cette liste. */
+const vertsReglage=()=>globalThis.BananeSettings?.vertsAControler?.actif!==false&&globalThis.BananeVertsAControler?true:false;
+async function vertsAControler(args){
+ if(!vertsReglage())return {actif:false};
+ const V=globalThis.BananeVertsAControler,LM=globalThis.BananeListeMemoire,b=engine?.s?.batch;
+ const partie=Number.isInteger(args?.partie)?args.partie:b?.scope?.part??null;
+ if(!Number.isInteger(partie))return {actif:true,partie:null,raison:'partie-inconnue'};
+ const lot=new Map(),zones=[],cutDe=x=>x?.cut??x?.identity?.cut;
+ let events=[];try{events=await store.all('events')||[];}catch{/* journal illisible : repli sur le lot courant */}
+ for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.identity?.part!==partie||!Number.isInteger(e.identity?.cut))continue;
+  lot.set(e.identity.cut,{cut:e.identity.cut,differe:e.aurait==='deja-differe'||e.aurait==='sans-pose'});
+  const c=e.zone?.pnControle;if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zones.push(c);}
+ if(!lot.size&&b?.scope?.part===partie){for(const x of b.processed||[]){const c=cutDe(x);if(Number.isInteger(c))lot.set(c,{cut:c,differe:false});}
+  for(const x of b.deferred||[]){const c=cutDe(x);if(Number.isInteger(c))lot.set(c,{cut:c,differe:true});}}
+ /* Plages de PN : celles d'un même PN grandissent au fil du lot ; on les fond. */
+ const pn=[];for(const [a,z] of zones.sort((x,y)=>x[0]-y[0]||x[1]-y[1])){const d=pn.at(-1);if(d&&a<=d[1])d[1]=Math.max(d[1],z);else pn.push([a,z]);}
+ let lignes=[],source='aucune',posees=[],cle=null;
+ try{if(LM&&globalThis.BananeSettings?.listeMemoire?.actif!==false){
+  const inst=(await LM.instantanes(chrome.storage.local,[partie]))?.[0]?.snap,dec=inst?LM.decompacter(inst):null;
+  if(dec){const L=V.lignesDeInstantane(dec),parI=new Map(L.map(x=>[x.i,x])),cuts=[...lot.keys()];
+   const rouges=cuts.filter(c=>{const x=parI.get(c);return x&&(x.statut!=='valid'||x.operateur);}).length;
+   if(cuts.length&&rouges>=0.8*cuts.length){lignes=L;source='instantane';cle=dec.cle;}}
+  if(cle){const m=(await chrome.storage.local.get(LM.CLE_MEM))?.[LM.CLE_MEM]?.[partie];
+   if(m&&m.cle===cle)for(const [k,e] of Object.entries(m.cuts||{})){const i=Number(k);
+    if(Number.isInteger(i)&&lot.has(i)&&!lot.get(i).differe&&Array.isArray(e)&&e.slice(0,6).every(Number.isFinite))posees.push({i,bords:{left:e.slice(0,3).map(v=>v/1e4),right:e.slice(3,6).map(v=>v/1e4)}});}}}}
+ catch{/* stockage illisible : repli */}
+ const mem=reglesOmbre.mem;
+ if(source==='aucune'&&mem?.lignes?.size&&b?.id===mem.lotId&&b?.scope?.part===partie){lignes=[...mem.lignes].map(([i,x])=>({i,statut:x.statut,g:x.g}));source='fenetres-b1';}
+ const l=V.liste({partie,lignes,lot:[...lot.values()],zonesPN:pn,posees});
+ return {actif:true,...l,source,lotId:b?.scope?.part===partie?b?.id??null:null,calculeA:new Date().toISOString()};}
 /* 5.0 (audit 5.0, I8 (1)) — VOIE PRÉDITE EN OMBRE (src/voie-recentree.js, réglage `voiePrediteOmbre`). Pour chaque cut que le lot DIFFÈRE
  * (proposition finale sans les deux rails résolus), l'événement `voie-predite-ombre` consigne ce qu'aurait donné la règle prudente D-147 :
  * moteur recentré sur la voie du lot, vue déplacée (mesurée, jamais faite), étage, confiance, écart à la voie, profondeur de chaîne, geste
@@ -1764,6 +1801,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(retourCutEnCours&&PENDANT_RETOUR.has(action))throw Error('Retour à un cut en cours : attends son résultat, ou annule-le.');
  if(action==='open-window'){await openPanel(args.window);return {opened:true};}
  if(action==='liste-instantanes'||action==='liste-resume')return listeAction(action,args);
+ /* 5.0 : verts à contrôler, lecture seule (aucune action dans ESV), permise à tout moment. */
+ if(action==='verts-a-controler')return vertsAControler(args);
  if(action==='fiches-depart'){const EC=cacheExport();return {fiches:EC?await EC.lireDeparts(chrome.storage.local):[]};}
  if(action==='export-cache-info'){const EC=cacheExport(),c=contexteVidage(),refus=EC?EC.refus(c,{auto:args?.auto===true}):'module absent';
   /* Test 4 : ce que la capture ouverte retient (identifiants), pour que la confirmation le dise et ne le compte pas parmi ce qui sera supprimé. */

@@ -583,3 +583,9 @@ footer{border-top:0;margin-top:26px}
 @keyframes halo{from{opacity:0;transform:scale(.7)}}
 @keyframes pouls{0%{box-shadow:0 0 0 0 var(--flash),0 0 0 0 var(--ok)}70%{box-shadow:0 0 0 8px transparent,0 0 0 0 transparent}100%{box-shadow:none}}
 @media (max-width:400px){.orbite .big>span{font-size:84px}.orbite .hero{margin:4px -16px 0;padding:26px 16px 0}.orbite .actions>button{min-height:80px}}
+
+/* 5.0 — verts à contrôler : une carte sobre, une ligne par plage. */
+.verts .tete-bloc{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.verts-plages{list-style:none;margin:.4rem 0;padding:0;display:grid;gap:.15rem}
+.verts-plages li{display:flex;justify-content:space-between;gap:.75rem;font-size:.9rem}
+.verts-plages li span{font-variant-numeric:tabular-nums;color:var(--text-2);white-space:nowrap}

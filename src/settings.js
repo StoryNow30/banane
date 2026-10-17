@@ -336,6 +336,12 @@
   /* E1 (5.0, accord D-122 Q1) : mémoire locale des bords écrits par Ariane, par partie, et instantané de la liste d'ESV à chaque
    * chargement complet (src/liste-memoire.js). Aucune requête vers ESV. `actif:false` : rien n'est gardé, comparé ni exporté. */
   const listeMemoire = Object.freeze({ actif: true });
+  /* 5.0 — VERTS À CONTRÔLER (src/verts-a-controler.js, fiches/VERTS_A_CONTROLER.md). En fin de lot ou à la demande, une LISTE des
+   * verts (cuts laissés valides par ESV, jamais visités par Orbite) à relire en priorité, classés par risque et groupés en plages,
+   * avec le temps estimé ; jointe à l'export en petit fichier JSON. LECTURE SEULE : calculée dans le service worker sur ce qu'Ariane a
+   * déjà (instantané E1 de la liste, ombre des règles métier, bords qu'elle a écrits) ; aucune action dans ESV, la décision et la pose
+   * ne la lisent pas. Livrée active pour cela. `actif:false` : rien n'est calculé, affiché ni exporté. */
+  const vertsAControler = Object.freeze({ actif: true });
   /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
    * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
    * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.
@@ -438,6 +444,7 @@
       { groupe: 'Écho', nom: 'Relevé des glissers et de la molette', valeur: echo.gestesVue ? 'actif (observation seule)' : 'coupé', pourquoi: 'Note la longueur, la durée, le bouton et les crans de tes gestes sur la vue, avec la caméra avant et après, pour copier ton geste. Rien n’est empêché ni commandé.' },
       { groupe: 'Continuité', nom: 'Règles métier de Mic en ombre (Orbite)', valeur: reglesMetier.ombre ? (reglesMetier.actif ? 'ACTIVES pour : ' + (Object.keys(reglesMetier.regles).filter(k => reglesMetier.regles[k]).join(', ') || 'aucune règle') : 'consignées seulement (PN et marges, grappes de différés, verts à contrôler) ; activation coupée') : 'coupées', pourquoi: 'Note à chaque cut la zone reconnue (passage à niveau, grappe de différés), la règle de Mic qui se déclenche et ce qu’Ariane aurait fait : différer au lieu de valider, ou te signaler un vert à contrôler. Rien n’est posé ni différé tant que Mic n’active pas.' },
       { groupe: 'Continuité', nom: 'Faux vert en ombre (Orbite)', valeur: fauxVertOmbre.actif ? (fauxVertOmbre.differer ? 'actif : diffère les cuts à hauteur ambiguë' : 'consigné seulement (hauteur ambiguë : calage ≥ ' + fauxVertOmbre.dzMinMm + ' mm et dessus épais ≥ ' + fauxVertOmbre.epaisseurMinMm + ' mm)') : 'coupé', pourquoi: 'Note, pour chaque cut posé par le lot, s’il ressemble à un faux vert (hauteur du rail ambiguë). Jamais appliqué : la pose et la validation sont les mêmes avec ou sans.' },
+      { groupe: 'Continuité', nom: 'Verts à contrôler (fin de lot)', valeur: vertsAControler.actif ? 'actif (liste à consulter, aucune action dans ESV)' : 'coupé', pourquoi: 'Après un lot, liste les verts qu’Ariane n’a pas visités et qui méritent ta relecture (écartement, hauteur d’un rail, grappe de rouges, voisin d’un différé), par plages, avec le temps estimé. Rien n’est cliqué ni changé dans ESV.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -455,5 +462,5 @@
     ];
   }
 
-  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe };
+  return { Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, listeMemoire, vertsAControler, retourCut, echo, releves, esvEvents, derived, describe };
 });

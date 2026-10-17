@@ -297,6 +297,26 @@
  function listeLigne(s){const p=s.batch?.scope?.part??s.current?.identity?.part,el=$('part-summary-liste');if(!el||!Number.isInteger(p)||globalThis.BananeSettings?.listeMemoire?.actif===false)return;
   if(listeLu.partie===p&&Date.now()-listeLu.t<5000)return;listeLu={partie:p,t:Date.now()};
   api('liste-resume',{partie:p}).then(r=>{const q=r?.passage;el.textContent=q?`Liste d’ESV relue : ${q.constatees} correction(s) constatée(s) sur ${q.comparees} cut(s) d’Ariane comparés, dont ${q.nouvelles} depuis le dernier passage.`:r?.memorises?`Liste d’ESV : ${r.memorises} cut(s) d’Ariane mémorisés, pas encore comparés (recharge la liste après ta relecture).`:'';},()=>{});}
+ /* 5.0 — VERTS À CONTRÔLER (fiches/VERTS_A_CONTROLER.md). En fin de lot, la liste est demandée UNE fois au service worker (calcul
+  * en lecture seule, aucune action dans ESV), puis affichée : nombre de cuts, temps estimé, plages dans l'ordre des cuts. « Recalculer »
+  * la redemande. Pendant un lot, la carte est cachée. Réglage `vertsAControler.actif:false` : rien n'est demandé ni affiché. */
+ const VERTS_PLAGES_MAX=12,verts={lot:null,en:false,liste:null};
+ const vertsActif=()=>globalThis.BananeSettings?.vertsAControler?.actif!==false;
+ const dureeTexte=x=>{if(!Number.isFinite(x)||x<0)return '';const m=Math.floor(x/60),r=Math.round(x-60*m);return m?`${m} min${r?` ${r} s`:''}`:`${r} s`;};
+ function afficherVerts(s){const el=$('verts-controle'),L=verts.liste,b=s?.batch;if(!el)return;
+  if(!vertsActif()||!L||L.actif===false||!Number.isInteger(L.partie)||(b&&OUVERT.includes(b.state))){el.hidden=true;return;}
+  el.hidden=false;
+  $('verts-ligne').textContent=L.aControler>0?`${L.aControler} ${accorder(L.aControler,'cut')} à contrôler · environ ${dureeTexte(L.tempsEstimeS)}`:'Aucun vert à contrôler autour de ce lot.';
+  if($('verts-note'))$('verts-note').textContent='Verts qu’Ariane n’a pas visités, à relire d’abord. Liste à consulter : aucune action dans ESV.'
+   +(L.source==='fenetres-b1'?' Instantané de la liste absent : écartement seul.':L.source==='aucune'?' Liste d’ESV non lue : la liste est vide.':'');
+  const P=Array.isArray(L.plages)?L.plages:[];
+  poser($('verts-plages'),P.slice(0,VERTS_PLAGES_MAX).map(p=>`<li><b>${esc(p.libelle)}</b> <span>${esc(typeof p.cutsTexte==='string'&&p.cutsTexte?p.cutsTexte:p.debut===p.fin?p.debut:p.debut+'–'+p.fin)} · ${esc(p.nombre)} ${accorder(p.nombre,'cut')}</span></li>`).join('')
+   +(P.length>VERTS_PLAGES_MAX?`<li class="muted">… et ${P.length-VERTS_PLAGES_MAX} autres plages, dans l’export</li>`:''));}
+ async function majVerts(s,force=false){const b=s?.batch,p=b?.scope?.part??s?.current?.identity?.part,cle=b?.id??'sans-id';
+  if(!vertsActif()||!Number.isInteger(p)||verts.en){afficherVerts(s);return;}
+  if(!force&&(!b||OUVERT.includes(b.state)||verts.lot===cle)){afficherVerts(s);return;}
+  verts.en=true;verts.lot=cle;
+  try{verts.liste=await api('verts-a-controler',{partie:p});}catch{verts.liste=null;}finally{verts.en=false;afficherVerts(state);}}
  function afficherResume(s){const el=$('part-summary'),R=moduleResume();if(!el)return;el.hidden=!R;if(!R)return;listeLigne(s);
    const cle=cleHistoire(s),b=s.batch,memeSession=histoire.session===s.sessionId,recents=Array.isArray(s.events)?s.events:[];
    const statut=histoire.cle===cle?histoire.statut:memeSession&&histoire.statut==='unavailable'?'unavailable':'loading';
@@ -651,7 +671,7 @@
        if($('legende-skip'))$('legende-skip').hidden=!(v?.saute?.size>0);}
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
      const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
-     afficherResume(s);
+     afficherResume(s);void majVerts(s);
      /* La carte de départ de la partie en cours passe en tête dès que la partie est connue. */
      if((b?.scope?.part??id?.part??null)!==departsPartie)void majDeparts();
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
@@ -1435,6 +1455,14 @@ on('native-discard',async()=>{
  /* E1 : instantanés de la liste d'ESV (src/liste-memoire.js) rangés dans les volumes, et leur résumé dans CONTENU.txt. */
  const exportListe=async parties=>{const LM=globalThis.BananeListeMemoire;if(!LM||globalThis.BananeSettings?.listeMemoire?.actif===false)return {texte:'',sauver:async()=>{}};
    try{return await LM.exportPanneau(api,parties,iso=>globalThis.BananeExportCache?.heureParis?.(iso));}catch{return {texte:'',sauver:async()=>{}};}};
+ /* 5.0 : la liste des verts à contrôler de la partie du lot, en petit fichier JSON, et sa ligne dans CONTENU.txt. */
+ const exportVerts=async()=>{const vide={texte:'',sauver:async()=>{}};if(!vertsActif())return vide;
+   const p=state?.batch?.scope?.part??state?.current?.identity?.part;if(!Number.isInteger(p))return vide;
+   try{const L=await api('verts-a-controler',{partie:p});if(!L||L.actif===false||!Number.isInteger(L.partie))return vide;
+     const nom=`ariane-verts-a-controler-partie${L.partie}-${dateCompacte(new Date())}.json`,n=Array.isArray(L.plages)?L.plages.length:0;
+     return {texte:`Verts à contrôler, partie ${L.partie} : ${L.aControler} ${accorder(L.aControler,'cut')} en ${n} ${accorder(n,'plage')}, environ ${dureeTexte(L.tempsEstimeS)||'0 s'} (${nom}). Liste à consulter : aucune action dans ESV.\n`,
+       sauver:async save=>{await save(new Blob([JSON.stringify(L,null,1)],{type:'application/json'}),nom);}};}
+   catch{return vide;}};
  const K_VERSION=()=>globalThis.BananeCore3?.VERSION||'';
  async function exportToutZip(Z){
    const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,bilans=[];let volumes=[];
@@ -1442,11 +1470,11 @@ on('native-discard',async()=>{
    const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${dateHeureParis(i.marqueur.at)} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+dateHeureParis(i.marqueur.afterExportAt):'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
    /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
    const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
-   const L=await exportListe(null);
-   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte,
+   const L=await exportListe(null),VC=await exportVerts();
+   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte+VC.texte,
      pied:'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'});
    const {save,fermerTout,trop,max,mo1}=V,total=()=>V.total;
-   await L.sauver(save).catch(()=>{});
+   await L.sauver(save).catch(()=>{});await VC.sauver(save).catch(()=>{});
    const essai=async(quoi,f)=>{try{const b=await f();bilans.push(b);return b;}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});return null;}};
    segmentPlafond=Math.max(2*max,2*SEGMENT_RESERVE_BYTES);
    try{
@@ -1480,6 +1508,8 @@ on('native-discard',async()=>{
      :`Journal, bilan, diagnostic et corpus : ${volumes.length>1?`${volumes.length} archive(s) zip, ${volumes.length} volumes de ${mo1(max)} au plus`:'1 archive(s) zip'} (${nb} fichiers JSON, ${mo1(total())} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?`les ${volumes.length}, tels quels`:'la'} pour l’analyse.${grosVolumes}${vidage}`;
    statutExport(texte,manques.length>0);
  }
+ /* Verts à contrôler : recalcul à la demande (lecture seule). */
+ if($('verts-maj'))$('verts-maj').onclick=()=>majVerts(state,true);
  on('export-tout',async()=>{const Z=globalThis.BananeZip;if(Z?.createZip&&typeof Blob==='function')return exportToutZip(Z);
    const bilans=[];
    for(const [quoi,f] of [['journal',()=>exporterJournal()],['bilan',()=>exporterBilan()],['diagnostic',()=>exporterDiagnostic()],['corpus',()=>exporterCorpus()]]){
