@@ -8,6 +8,8 @@ const T = require('../tools/relecture-autonome.cjs');
 
 const v = (lat, z) => ({ left: [0, lat, z], right: [0, lat, z] });
 const ligne = (o) => ({ partie: '9:1', cut: 1, zone: 'pn', genre: 'vert', ref: true, etat: 'calcule', conf: 80, ...o });
+/* Une proposition : écart `d` (plus grand |latéral| ou |vertical|), erreur `e` contre Mic, écart d'écartement `dg`. */
+const prop = (o) => ({ stage: 'first-pass', pire: o.d, latMax: o.d, coh: 0, dg: 1, ...o });
 
 test('sélection : PN puis ADV puis abords (grappe, isolé, différé) puis liste, verts et revisites comptés', () => {
   const t = { cuts: [{ i: 0 }, { i: 300 }], lot: [{ cut: 100, differe: false }, { cut: 103, differe: false }, { cut: 106, differe: true }, { cut: 200, differe: false }],
@@ -39,28 +41,32 @@ test('issue d\'une action : reproduit, confirmé, gris, abîmé, aggravé, mauva
   assert.equal(T.issue({ mic: 3 }, { e: 3 }, false), 'laisse-juste');
 });
 
-test('règle prudente : seuils X, D, confiance, écartement, étapes ; jamais sur un cut différé par le lot', () => {
-  const R = { variante: 'seul+h', X: 10, D: 45, Y: 50, G: 10, stages: ['first-pass'], differes: false };
-  const l = ligne({ mic: 30, var: { 'seul+h': { stage: 'first-pass', d: 30, e: 2, dg: 3 } } });
+test('règle prudente : seuil, voie, confiance, cohérence, écartement, étapes ; jamais sur un cut différé ni (si demandé) posé par le lot', () => {
+  const R = { variante: 'seul+h', X: 10, D: 45, Y: 50, C: 6, G: 10, stages: ['first-pass'], differes: false, poses: false };
+  const l = ligne({ mic: 30, var: { 'seul+h': prop({ d: 30, e: 2, dg: 3 }) } });
   assert.equal(T.agit(l, R), true);
   assert.equal(T.agit({ ...l, genre: 'differe' }, R), false, 'différé : jamais');
-  assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], d: 8 } } }, R), false, 'écart trop petit : on laisse');
-  assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], d: 60 } } }, R), false, 'écart trop grand : on laisse');
+  assert.equal(T.agit({ ...l, genre: 'pose' }, R), false, 'posé par le lot : pas avec poses:false');
+  assert.equal(T.agit({ ...l, genre: 'pose' }, { ...R, poses: true }), true);
+  assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], pire: 8 } } }, R), false, 'écart trop petit : on laisse');
+  assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], latMax: 60 } } }, R), false, 'rail déplacé trop loin en travers : on laisse');
+  assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], coh: 9 } } }, R), false, 'rails incohérents : on laisse');
+  assert.equal(T.agit({ ...l, conf: -1 }, { ...R, Y: 0 }), false, 'confiance absente : refus');
   assert.equal(T.agit({ ...l, conf: 40 }, R), false);
   assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], dg: 12 } } }, R), false);
   assert.equal(T.agit({ ...l, var: { 'seul+h': { ...l.var['seul+h'], stage: 'crossing' } } }, R), false);
   assert.equal(T.agit({ ...l, var: { 'seul+h': { stage: 'deferred', d: null, e: null } } }, R), false, 'décision différée : abstention');
-  const b = T.bilan([l, ligne({ mic: 2, var: { 'seul+h': { stage: 'first-pass', d: 20, e: 19, dg: 1 } } }), ligne({ mic: 30, var: { 'seul+h': { stage: 'deferred', d: null } } }), ligne({ ref: false })], R);
+  const b = T.bilan([l, ligne({ mic: 2, var: { 'seul+h': prop({ d: 20, e: 19 }) } }), ligne({ mic: 30, var: { 'seul+h': { stage: 'deferred', d: null } } }), ligne({ ref: false })], R);
   assert.equal(b.visites, 3); assert.equal(b.agit, 2); assert.equal(b.corrigesJustes, 1); assert.equal(b.abime, 1); assert.equal(b.degats, 1); assert.equal(b.abstention, 1); assert.equal(b.laisseFaux, 1);
 });
 
 test('choix de la règle : le plus de corrections justes sous 0 mauvaise voie et ≤ 1 % de dégâts ; la plus prudente à égalité', () => {
   const ls = [];
-  for (let i = 0; i < 100; i++) ls.push(ligne({ cut: i, mic: 1, var: { 'seul+h': { stage: 'first-pass', d: 3, e: 2, dg: 1 } } }));
-  for (let i = 0; i < 10; i++) ls.push(ligne({ cut: 200 + i, mic: 35, var: { 'seul+h': { stage: 'first-pass', d: 34, e: 2, dg: 1 } } }));
-  ls.push(ligne({ cut: 300, mic: 1, var: { 'seul+h': { stage: 'first-pass', d: 14, e: 14, dg: 1 } } }));
-  ls.push(ligne({ cut: 301, mic: 1, var: { 'seul+h': { stage: 'first-pass', d: 16, e: 16, dg: 1 } } }));
-  const grille = { variante: ['seul+h'], X: [5, 15, 20], Y: [-1], G: [null], D: [null], stages: [null], differes: [false] };
+  for (let i = 0; i < 100; i++) ls.push(ligne({ cut: i, mic: 1, var: { 'seul+h': prop({ d: 3, e: 2 }) } }));
+  for (let i = 0; i < 10; i++) ls.push(ligne({ cut: 200 + i, mic: 35, var: { 'seul+h': prop({ d: 34, e: 2 }) } }));
+  ls.push(ligne({ cut: 300, mic: 1, var: { 'seul+h': prop({ d: 14, e: 14 }) } }));
+  ls.push(ligne({ cut: 301, mic: 1, var: { 'seul+h': prop({ d: 16, e: 16 }) } }));
+  const grille = { variante: ['seul+h'], X: [5, 15, 20], Y: [0], G: [100], D: [60], C: [100], stages: [null], differes: [false], poses: [true] };
   const best = T.choisir(ls, { grille });
   assert.equal(best.b.corrigesJustes, 10); assert.ok(best.b.degats <= 1);
   assert.equal(best.R.X, 20, 'à gains égaux, la règle la plus prudente');
@@ -101,13 +107,19 @@ test('étude de la fixture, réglages proposés puis jugement : la règle corrig
   assert.equal(o.couverture[0].micSup10DansSelection, 7);
   assert.ok(o.cout[0].minutesAriane[0] < o.cout[0].minutesAriane[1]);
   const g = T.reglagesProposes(o, { date: '2026-10-17' });
-  assert.equal(g.format, T.FORMAT_REGLAGES); assert.equal(g.regle.differes, false); assert.equal(g.parType.pn.action, 'agir'); assert.equal(g.parType.adv.action, 'ombre');
+  /* Format lu par la passe de relecture (src/relecture-critere.js) : zones pn, adv, abords, vert-hors-zone ; corriger, seuilMm, confianceMin. */
+  assert.equal(g.format, 'ariane-relecture-reglages-1'); assert.deepEqual(g.roles, ['vert']); assert.ok(g.jamais.includes('cut différé par le lot'));
+  assert.deepEqual(Object.keys(g.zones), ['pn', 'adv', 'abords', 'vert-hors-zone']);
+  assert.equal(g.zones.pn.corriger, true); assert.equal(g.zones.adv.corriger, false);
+  for (const z of Object.values(g.zones)) { assert.ok(z.seuilMm >= 1 && z.seuilMm <= 500); assert.ok(z.confianceMin >= 0 && z.confianceMin <= 100); }
+  assert.ok(g.voie.lateralMaxMm >= 1 && g.voie.lateralMaxMm <= 500);
+  const relu = T.regleDuReglage(g); assert.equal(relu.regle.X, o.figeSobre.regle.X); assert.equal(relu.regle.D, o.fige.regle.D); assert.equal(relu.procedure.X, o.fige.regle.X); assert.deepEqual(relu.actifs, ['pn']);
   const j = T.juger([{ designation: '9:3', cas, table }], T.regleDuReglage(g));
   assert.equal(j.parties[0].bilan.corrigesJustes, 7); assert.equal(j.parties[0].porte.mauvaiseVoie, true);
   assert.ok(j.parties[0].wilsonErreur.haut > 0, 'borne haute non nulle même sans erreur');
   const s = JSON.stringify(o) + JSON.stringify(g) + JSON.stringify(j);
   assert.ok(!/"bords"|positionSceneRelative/.test(s), 'aucune coordonnée');
-  assert.match(T.texte(o), /Validation croisée/); assert.match(T.texte(j), /Règle figée/);
+  assert.match(T.texte(o), /Validation croisée/); assert.match(T.texte(j), /Règle de service figée/);
 });
 
 test('manifeste : etudier refuse une partie réservée', () => {
