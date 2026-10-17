@@ -88,7 +88,21 @@ async function call(action,...args){return callSur(selectedTab,action,...args);}
 const PAGE_ABSENTE=/Could not establish connection|Receiving end does not exist|message (port|channel) (is )?closed|No tab with id|The frame was removed|Extension context invalidated|back\/forward cache/i;
 function pageEsvAbsente(e){if(!PAGE_ABSENTE.test(e?.message||''))return e;
  return Object.assign(Error(`Adaptateur ESV sans réponse : page ESV rechargée ou fermée (${e.message}). Après un F5 : lot Orbite, clique sur Reprendre ; Écho, clique sur Connecter puis Reprendre. Onglet fermé : rouvre ESV puis clique sur Connecter.`),{code:'ESV_PAGE_ABSENTE'});}
-async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélectionne un onglet ESV.');
+/* Audit P-5 (H16) — CHAQUE ERREUR PORTE LE LOT ET L'HEURE DE SA DEMANDE. Une réponse peut arriver longtemps après la demande (test 6 : un
+ * `cancel` demandé pendant la pause de L2, attente de 45 s expirée en plein L3, rangé sur un cut de L3) : `adapter-result` porte le lot ouvert,
+ * l'heure (`demandeA`) et l'identité du moment de la DEMANDE ; `batch-error` (émis par le moteur, épinglé) porte le lot qui passe en erreur et,
+ * si l'erreur vient d'une commande à ESV, l'heure de sa demande et son nom (`commande`). Journal seulement : le message à la page ne change pas. */
+const echecsCommande=new Map();
+function demandeCommande(action){const s=engine?.s,id=s?.current?.identity||s?.before?.identity;
+ return {commande:action,batchId:s?.batch?.id??null,demandeA:new Date().toISOString(),...(id&&typeof id==='object'?{identity:{...id}}:{})};}
+function rangerErreursDeLot(m){const ev=m.event.bind(m);
+ m.event=(type,detail={})=>{if(type!=='batch-error'||!detail||typeof detail!=='object')return ev(type,detail);
+  const d=echecsCommande.get(String(detail.message));
+  return ev(type,{...detail,batchId:detail.batchId??m.s?.batch?.id??null,demandeA:d?.demandeA??null,commande:d?.commande??null});};}
+async function callSur(tabId,action,...args){const demande=demandeCommande(action);
+ try{return await envoyerCommande(tabId,demande,action,...args);}
+ catch(e){echecsCommande.set(String(e?.message),demande);while(echecsCommande.size>8)echecsCommande.delete(echecsCommande.keys().next().value);throw e;}}
+async function envoyerCommande(tabId,demande,action,...args){if(tabId===null)throw Error('Sélectionne un onglet ESV.');
  const tab=await chrome.tabs.get(tabId).catch(e=>{throw pageEsvAbsente(e);});
  /* D3 (4.8.5) : onglet sorti d'ESV pendant une lecture (ESV a quitté la page, ou
   * l'onglet a été emmené ailleurs) : erreur reprenable, comme une page absente. */
@@ -106,7 +120,7 @@ async function callSur(tabId,action,...args){if(tabId===null)throw Error('Sélec
    if(!/maximum allowed size/i.test(e?.message||''))throw pageEsvAbsente(e);
    throw Error((action==='capture'?'Lecture LiDAR instable : ':'')+`réponse de l’adaptateur trop grosse pour un message Chrome (${action} ; limite 64 Mo).`+(action==='capture'?' Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.':''));});
  timing?.endRequest(trace,reply?.result,reply?.error||(!reply||!Object.hasOwn(reply,'result')?'missing-result':null),reply?.diagnostic);
- if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null});
+ if(reply?.diagnostic&&!['state','ping','nativeSnapshot','nativeStart','nativePause','nativeResume','nativeFinish'].includes(action))await engine.event('adapter-result',{...reply.diagnostic,error:reply.error||null,batchId:demande.batchId,demandeA:demande.demandeA,...(demande.identity?{identity:demande.identity}:{})});
  if(reply?.error)throw Error(reply.error);
  if(!reply||!Object.hasOwn(reply,'result'))throw Error('Aucune réponse de l’adaptateur ESV.');return reply.result;}
 /* D4 (4.8.5, D-061) : le relevé passif d'ESV, rangé au journal (`esv-releve`)
@@ -1037,7 +1051,7 @@ adapter.apply=async(...args)=>{
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
-const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);
+const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);rangerErreursDeLot(engine);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */
