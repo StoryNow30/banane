@@ -83,3 +83,11 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 **Au prochain réveil** :
 - recueillir la vague 4 et la fusionner dans `claude/50-base` ;
 - rien ne part au terrain avant le retour de Mic sur la test 5 et ses décisions : D-157 et cahier v1.1.
+
+**État au 17 octobre, vers 9 h** :
+- le conteneur a redémarré dans la nuit ;
+- la vague 4 est récupérée et intégrée (D-164) ;
+- 65 anciens worktrees sont supprimés : le disque était presque plein ;
+- Mic veut essayer les deux méthodes du clic : la **test 6** est lancée (`claude/495-test-6`), avec le choix du clic dans le panneau.
+
+**Ensuite** : relecture de la test 6 au niveau maximal, puis envoi à Mic avec son empreinte.
