@@ -5,10 +5,12 @@
  * non résolu) : le lot s'arrête au dernier cut sans commande ni navigation (fin naturelle, sans pose en attente). La relecture choisit alors la grappe 108–116 (marge 3) : 108, 109, 110,
  * 113 (différé), 114, 115, 116 relus ; 111 et 112 traversés. `decalages` : {cut: mm} pose d'ESV de ce cut décalée en travers (les
  * deux rails), pour que la pose calculée s'en écarte. L'ESV simulé tient la pose de chaque cut : ce qu'Ariane valide y reste.
- * `ecriture` : ce que l'observateur passif voit après une validation (Maj+Espace : 'valid' 204 par défaut, un statut, ou null : rien).
+ * `ecriture` : ce que l'observateur passif voit après une validation (Maj+Espace : 'valid' 204 par défaut, un statut, 'autre' : la ligne
+ * écrite avec un autre statut que « valid », ou null : rien).
  * Revue de la relecture (D-175) : l'ESV simulé tient aussi la LISTE de la partie (statut, drapeau opérateur, « vu ») que la page lit en
  * mémoire (`b1-voisins`), imite le « vu » qu'ESV écrit au premier affichage d'un cut (PUT {SeenByOperator:true}), et valide par
- * Maj+Espace (`validerMajEspace`) : écriture « valid » de la ligne, puis le cut + 1 (`majEspaceVers` pour un autre effet). */
+ * Maj+Espace (`validerMajEspace`) : comme le vrai ESV (D-179, Mic), sur un vert valide SUR PLACE : écriture « valid » de la ligne, ESV reste
+ * sur le même cut (`majEspaceVers(cut)` : l'ancienne supposition « cut + 1 », ou un autre cut, là où un essai en a besoin). */
 const {production,memoire}=require('./perf-production.cjs'),{SimulatedESV,base,K}=require('../fixtures.cjs');
 const S=require('../../src/settings.js'),O=require('../../src/continuity-observer.js');
 const SCOPE={testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1',lotDecision:'apply'};
@@ -80,18 +82,19 @@ class EsvRelecture extends SimulatedESV{
  /* Validation sur place (Ctrl+Entrée) : jamais employée par la passe ; consignée si elle l'était. */
  async validateInPlace(identity,scope,options){this.calls.push('validateInPlace');this.enPlace.push({cut:identity.cut,options:K.clone(options)});
   throw Error('validateInPlace n’est pas le geste de la relecture (simulé).');}
- /* Maj+Espace : ESV écrit « valid » sur la ligne (vue par l'observateur si `ecriture`) et passe au cut + 1 (`majEspaceVers(cut)` : un
-  * autre cut, ou null : rien ne bouge). Le simulateur échoue sur toute option inattendue. */
+ /* Maj+Espace : ESV écrit « valid » sur la ligne (vue par l'observateur si `ecriture`) et RESTE SUR LE MÊME CUT (D-179 : Mic, deux fois).
+  * `majEspaceVers(cut)` rend le cut que l'ESV simulé affiche ensuite (cut + 1 : l'ancienne supposition ; un autre cut : ESV ailleurs).
+  * Le simulateur échoue sur toute option inattendue. */
  async validerMajEspace(identity,scope,options){this.calls.push('validerMajEspace');
   if(options!==undefined&&!(options&&typeof options==='object'&&!Object.keys(options).length))throw Error('validerMajEspace : option inattendue (simulé) : '+JSON.stringify(options));
   if(!scope||scope.part!==this.identity.part)throw Error('validerMajEspace : partie du lot absente ou différente (simulé).');
   const cut=identity.cut;if(cut!==this.identity.cut)throw Error('Maj+Espace refusé : cut différent ; rien n’a été envoyé à ESV.');
   this.majEspace.push({cut,scope:K.clone(scope)});this.poses.set(cut,K.clone(this.rails));
-  const vers=this.majEspaceVers?this.majEspaceVers(cut):cut+1;
-  if(Number.isInteger(vers)){this.afficher(vers);this.identity.cut=vers;this.ajuster();}
+  const vers=this.majEspaceVers?this.majEspaceVers(cut):cut,bouge=Number.isInteger(vers)&&vers!==cut;
+  if(bouge){this.afficher(vers);this.identity.cut=vers;this.ajuster();}
   if(this.surValidation)await this.surValidation(cut,this.ecriture);
   return {format:'banane-maj-espace-v1',operatorDecision:'VALIDATE',command:'maj-espace',commandSent:true,serverConfirmed:false,
-   beforeNavigationIdentity:{...identity},navigationObserved:Number.isInteger(vers),nextIdentity:Number.isInteger(vers)?{pageId:this.identity.pageId,part:this.identity.part,cut:vers}:null,nextReady:Number.isInteger(vers)};}
+   beforeNavigationIdentity:{...identity},navigationObserved:bouge,nextIdentity:bouge?{pageId:this.identity.pageId,part:this.identity.part,cut:vers}:null,nextReady:bouge?true:null};}
 }
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /* `mode` : choix gardé ('coupee', 'ombre', 'corriger' ; null : rien de gardé) ; `reglagesProposes` : contenu du fichier proposé servi
@@ -114,8 +117,8 @@ async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},c
  if(reglagesProposes)b.ctx.fetch=async url=>/relecture-reglages-proposes\.json$/.test(url)?{ok:true,json:async()=>structuredClone(reglagesProposes)}:{ok:false};
  /* L'écriture que l'observateur passif de la page relaierait après une validation. */
  let seq=0;adapter.surValidation=async(cut,e)=>{if(e===null)return;const t=Date.now();
-  b.raw({kind:'esv-observation',observer:'obs-relecture',entries:[{kind:'write',seq:++seq,method:'PUT',status:e==='valid'?204:e,outcome:e==='valid'?'ok':'error',attempt:1,
-   rowIndex:e==='valid'?cut:null,railPairId:'ligne-'+cut,bodyKeys:12,body:{ExtractionStatus:'valid',TreatedByOperator:true},startedEpochMs:t,endedEpochMs:t+50,durationMs:50}]});};
+  b.raw({kind:'esv-observation',observer:'obs-relecture',entries:[{kind:'write',seq:++seq,method:'PUT',status:e==='valid'||e==='autre'?204:e,outcome:e==='valid'||e==='autre'?'ok':'error',attempt:1,
+   rowIndex:e==='valid'||e==='autre'?cut:null,railPairId:'ligne-'+cut,bodyKeys:12,body:{ExtractionStatus:e==='autre'?'invalid':'valid',TreatedByOperator:true},startedEpochMs:t,endedEpochMs:t+50,durationMs:50}]});};
  /* Le « vu » qu'ESV écrit lui-même au premier affichage d'un cut (corps d'un seul champ, 204). */
  adapter.surVu=cut=>{const t=Date.now();b.raw({kind:'esv-observation',observer:'obs-relecture',entries:[{kind:'write',seq:++seq,method:'PUT',status:204,outcome:'ok',attempt:1,
    rowIndex:cut,railPairId:'ligne-'+cut,bodyKeys:1,body:{SeenByOperator:true},startedEpochMs:t,endedEpochMs:t+30,durationMs:30}]});};

@@ -15,7 +15,7 @@ test('corriger : clic « tout-recentre » pour la passe, quel que soit celui du 
  assert.deepEqual(j(passeOpt),[{clicHumain:'tout-recentre'},{clicHumain:'tout-recentre'}],'la passe ne clique jamais en direct');
  assert.deepEqual(adapter.majEspace.map(x=>x.cut),[109],'aucune validation après le refus');
  const e110=H.evenements(b,'relecture-ombre').find(e=>e.identity.cut===110);
- assert.equal(e110.action,'correction-refusee');assert.match(e110.raisonAction,/pose refusée par la page.*pose remise/);assert.equal(e110.arrivee,'maj-espace');
+ assert.equal(e110.action,'correction-refusee');assert.match(e110.raisonAction,/pose refusée par la page.*pose remise/);assert.equal(e110.arrivee,'pas','110 atteint par un pas après la validation sur place de 109');
  assert.ok(apresLot(b,lot).some(c=>c.action==='restore'),'remise à la pose d’avant');
- assert.deepEqual(adapter.allees.map(a=>[a.cut,a.chemin]),[[107,'auto'],[108,'pas'],[109,'pas'],[113,'pas']],'premier vert corrigeable atteint par un pas ; après le refus, un pas vers le cut suivant');
+ assert.deepEqual(adapter.allees.map(a=>[a.cut,a.chemin]),[[107,'auto'],[108,'pas'],[109,'pas'],[110,'pas'],[113,'pas']],'premier vert corrigeable atteint par un pas ; après la validation sur place, un pas vers le cut suivant ; après le refus, encore un pas');
 });

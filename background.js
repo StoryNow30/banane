@@ -2003,12 +2003,13 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  *      règle prudente (seuils sur les valeurs brutes) ;
  *   3. mode « corriger », règle passée ET garde (revue, corrections 1, 3, 4) : rôle « vert » PROUVÉ (statut `valid` lu dans la liste
  *      d'ESV, sans drapeau opérateur ; cible permise par le moteur, `engine.writable`), cut atteint par les boutons d'ESV ou par le
- *      Maj+Espace précédent (jamais juste après un saut par la carte : la passe saute au cut d'avant puis fait un pas), cut qui n'est pas
- *      le dernier de la partie. Alors : la commande du lot (`commandRails`), la pose par la MÊME commande `apply` que le lot (clic
- *      'tout-recentre', jamais en direct : T-5), relue à 1 mm, puis Maj+Espace (le geste de Mic, `validerMajEspace`), prouvé par
- *      l'écriture « valid » de la ligne vue par l'observateur passif ET par l'arrivée au cut + 1 (où ESV conduit, comme pour Mic).
- *      Une pose refusée ou non conforme est remise (`restore`) et le cut quitté sans action ; une validation non prouvée, ou une
- *      arrivée ailleurs qu'au cut + 1, arrête la passe en nommant le cut à contrôler ;
+ *      pas (jamais juste après un saut par la carte : la passe saute au cut d'avant puis fait un pas), cut qui n'est pas le dernier de
+ *      la partie. Alors : la commande du lot (`commandRails`), la pose par la MÊME commande `apply` que le lot (clic 'tout-recentre',
+ *      jamais en direct : T-5), relue à 1 mm, puis Maj+Espace (le geste de Mic, `validerMajEspace`), qui VALIDE SUR PLACE (D-179 : sur
+ *      un vert valide, ESV reste sur le même cut), prouvé par l'écriture « valid » de la ligne vue par l'observateur passif ET par ce
+ *      même cut toujours affiché. La passe avance ensuite d'UN PAS vers le cut suivant (le geste de navigation qu'elle emploie déjà).
+ *      Une pose refusée ou non conforme est remise (`restore`) et le cut quitté sans action ; une validation non prouvée, ou ESV
+ *      affichant un autre cut, arrête la passe en nommant le cut à contrôler ;
  *   4. événement `relecture-ombre` (statut lu dans ESV, arrivée, pose d'ESV, pose calculée, écart, confiance, verdict, raison,
  *      skipOmbre, règle, garde, action, durées). Aucune pause ajoutée (D-176) : la capture et le calcul font le rythme.
  * « vu » (revue, correction 9) : chaque écriture « SeenByOperator » d'ESV pendant la passe est comptée (`vus`) ; les cuts neufs à
@@ -2293,12 +2294,13 @@ function relectureGarde({c,etat,ligne,par,total}){
  if(!ligne)return {ok:false,raison:'statut du cut illisible dans la liste d’ESV : pas de correction sans preuve du vert'};
  if(ligne.statut!=='valid'||ligne.operateur)return {ok:false,raison:`statut lu dans ESV : ${ligne.statut}${ligne.operateur?', traité par un opérateur':''} ; ce n’est pas un vert d’ESV`};
  try{engine.writable(etat.identity);}catch{return {ok:false,raison:'cible bloquée par un résultat incertain archivé'};}
- if(par!=='pas'&&par!=='maj-espace')return {ok:false,raison:`cut atteint par ${par==='evenement'?'la carte (saut)':par||'un chemin inconnu'} : pas de pose juste après un saut`};
+ if(par!=='pas')return {ok:false,raison:`cut atteint par ${par==='evenement'?'la carte (saut)':par||'un chemin inconnu'} : pas de pose juste après un saut`};
  if(!Number.isInteger(total))return {ok:false,raison:'nombre de cuts de la partie inconnu : Maj+Espace pourrait quitter la partie'};
  if(c.cut>=total-1)return {ok:false,raison:'dernier cut de la partie : Maj+Espace chargerait la partie suivante'};
  return {ok:true,raison:null};}
-/* Correction d'un cut : le chemin de la pose d'un rouge par le lot (commande du lot, `apply`, relecture à 1 mm), puis Maj+Espace prouvé
- * par l'écriture et par l'arrivée au cut + 1. Rend {action, raison, arrivee, stopApres} ; lève si la validation n'est pas prouvée. */
+/* Correction d'un cut : le chemin de la pose d'un rouge par le lot (commande du lot, `apply`, relecture à 1 mm), puis Maj+Espace sur
+ * place, prouvé par l'écriture « valid » de la ligne et par le MÊME cut toujours affiché (D-179). Rend {action, raison, arrivee,
+ * stopApres} ; lève si la validation n'est pas prouvée. */
 async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G=globalThis.BananeGauge4,cut=etat.identity.cut;
  const refusee=raison=>({action:'correction-refusee',raison});
  const now=await readState();if(K.key(now.identity)!==K.key(etat.identity))return refusee('le cut affiché a changé');
@@ -2318,7 +2320,7 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  /* Comme le moteur avant de valider : les rails n'ont pas bougé depuis la relecture de la pose. */
  const avantValider=await readState();
  if(K.key(avantValider.identity)!==K.key(now.identity)||!K.equalPoses(result.rails,avantValider.rails,.001))return remettre('rails modifiés entre la pose et la validation');
- /* Maj+Espace (D-175) : ESV écrit « valid » et passe au cut + 1. L'attente est portée par la passe (jeton). */
+ /* Maj+Espace (D-175, D-179) : sur un vert, ESV écrit « valid » et reste sur le même cut. L'attente est portée par la passe (jeton). */
  const a={cut,depuisMs:Date.now(),ok:false,refus:null};relecture.attente=a;p.attente=a;
  const lacher=()=>{if(relecture.attente===a)relecture.attente=null;if(p.attente===a)p.attente=null;};
  let ev;try{ev=await call('validerMajEspace',now.identity,{part:b.scope.part,pageId:b.scope.pageId??null});}
@@ -2331,9 +2333,12 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  if(!a.ok)throw Error(a.refus!=null?`cut ${cut} : ESV a refusé d’enregistrer la validation (statut ${a.refus}). Contrôle ce cut dans ESV.`
   :`cut ${cut} : Maj+Espace envoyé, aucune écriture de validation vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s. Contrôle ce cut dans ESV.`);
  await effacer();
- const vers=ev.navigationObserved===true&&partCut(ev.nextIdentity)?partCut(ev.nextIdentity):null;
- if(!vers||vers.part!==now.identity.part||vers.cut!==cut+1)return {action:'corrige',raison:calc.critere.raison,arrivee:vers,
-  stopApres:`Relecture arrêtée après la correction du cut ${cut} (validation vue) : ${vers?`après Maj+Espace, ESV affiche le cut ${vers.cut} de la partie ${vers.part}, pas le cut ${cut+1}`:'ESV n’a pas changé de cut après Maj+Espace'}. Contrôle ESV.`};
+ /* D-179 : la preuve est l'écriture ET le même cut toujours affiché. La page dit si elle a vu un autre cut ; sinon, une lecture du libellé
+  * « Cut N of part P » (aucune commande) le confirme. Un autre cut, ou un libellé illisible : la passe s'arrête, rien n'est réécrit. */
+ let vers=ev.navigationObserved===true&&partCut(ev.nextIdentity)?partCut(ev.nextIdentity):null;
+ if(!vers){try{vers=partCut((await call('ping'))?.label);}catch{vers=null;}}
+ if(!vers||vers.part!==now.identity.part||vers.cut!==cut)return {action:'corrige',raison:calc.critere.raison,arrivee:vers,
+  stopApres:`Relecture arrêtée après la correction du cut ${cut} (validation vue) : ${vers?`après Maj+Espace, ESV affiche le cut ${vers.cut} de la partie ${vers.part}, pas le cut ${cut}`:'le cut affiché par ESV est illisible après Maj+Espace'}. Contrôle ESV.`};
  return {action:'corrige',raison:calc.critere.raison,arrivee:vers};}
 async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.BananeCore3,R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),partie=b.scope.part;
  /* Chaîne d'appuis (revue, correction 8) : VIDE au départ, comme l'étude ; seules les poses calculées pour les verts relus y entrent. */
@@ -2344,7 +2349,7 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
  let total=Number.isInteger(entree.total)?entree.total:null;
  const borne=Math.max(...[total!==null?total-1:null,...sel.cuts.map(c=>c.cut)].filter(Number.isInteger));
  const vivante=()=>relecture.passe===p&&p.gen===relecture.gen&&p.etat==='en-cours';
- const plagesSautees=new Set();let precedent=null,ici=null,arriveePar=null,issue='fin',derniereArrivee=null;
+ const plagesSautees=new Set();let precedent=null,ici=null,issue='fin',derniereArrivee=null;
  const stop=(m,i='erreur')=>{p.message=m;issue=i;};
  /* Champs communs des événements d'un cut relu (revue, R10). */
  const evenementCut=(c,plage,champs)=>({identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,...champs});
@@ -2366,8 +2371,6 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
   if(plagesSautees.has(c.plage))continue;
   const plage=sel.plages[c.plage];p.cut=c.cut;p.plage=plage?.libelle??null;
   const t0=Date.now(),chemins=[];let par=null,r=null;
-  if(ici===c.cut&&arriveePar==='maj-espace')par='maj-espace';
-  else{
    const memePlage=precedent&&precedent.plage===c.plage,enPas=ici!==null&&c.cut>ici&&(memePlage?c.cut-ici<=cfg.pasMax:c.cut-ici===1);
    if(enPas){chemins.push('pas');r=await aller(c.cut,'pas');}
    /* Revue (correction 3) : en « corriger », un vert corrigeable n'est posé qu'atteint par les boutons d'ESV. Après un saut par la
@@ -2380,8 +2383,8 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
    if(r.stop){stop(r.stop);break;}
    if(r.saut){if(p.arret)continue;relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'navigation-refusee',raison:r.raison??null,chemins}),p);
     plagesSautees.add(c.plage);precedent=null;ici=null;continue;}
-   par=r.par;}
-  arriveePar=par;precedent=c;const tNav=Date.now();derniereArrivee=tNav;
+   par=r.par;
+  precedent=c;const tNav=Date.now();derniereArrivee=tNav;
   let etat,capture,erreurCapture=null,ligne=null;
   try{etat=await readState();if(etat?.identity?.part!==partie||etat.identity.cut!==c.cut)throw Error(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${c.cut}`);
    /* Statut du cut dans la liste d'ESV (mémoire de la page, dès l'arrivée) : la preuve du vert, et « vu » ou non à l'arrivée. */
@@ -2404,7 +2407,7 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
    else{try{action=await relectureCorriger(p,b,etat,calc);}
     catch(e){stop(`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`);
      relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'correction-incertaine',raison:p.message,statutEsv:ligne,arrivee:par,chemins}),p);p.faits++;break;}
-    if(action.action==='corrige'){p.corriges++;if(action.arrivee){ici=action.arrivee.cut;arriveePar='maj-espace';}else ici=null;}else p.refusees++;}}
+    if(action.action==='corrige'){p.corriges++;ici=action.arrivee?action.arrivee.cut:null;}else p.refusees++;}}
   const j=calc?.jugement;capture=null;
   relectureJournal('relecture-ombre',evenementCut(c,plage,{statutEsv:ligne,arrivee:par,chemins,
    poseEsv:j?.poseActuelle??null,poseCalculee:j?.poseCalculee??null,ecartMm:j?.ecartMm??null,pireMm:j?.pireMm??null,confiance:j?.confiance??null,

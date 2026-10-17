@@ -20,12 +20,12 @@ test('fichier réel : verts de PN corrigés (8 mm et plus, premier cut du PN att
  assert.deepEqual(j(debut.plages.map(x=>[x.debut,x.fin,x.zone])),[[107,110,'pn'],[111,116,'abords']],'une plage par type de zone');
  assert.equal(p.etat,'finie',p.message);assert.equal(p.corriges,2);
  assert.deepEqual(adapter.majEspace.map(x=>x.cut),[107,109]);
- assert.deepEqual(adapter.allees.slice(0,3).map(a=>[a.cut,a.chemin]),[[106,'auto'],[107,'pas'],[109,'pas']],'saut au cut 106, pas vers 107 ; 108 atteint par Maj+Espace');
+ assert.deepEqual(adapter.allees.slice(0,4).map(a=>[a.cut,a.chemin]),[[106,'auto'],[107,'pas'],[108,'pas'],[109,'pas']],'saut au cut 106, pas vers 107 ; Maj+Espace valide sur place, puis un pas vers 108');
  assert.deepEqual(posesApresSaut(apresLot(b,lot)),[],'aucune pose juste après un saut');
  const ev=H.evenements(b,'relecture-ombre'),de=c=>ev.find(e=>e.identity.cut===c);
  assert.equal(de(107).zone,'pn');assert.equal(de(107).action,'corrige');assert.equal(de(107).arrivee,'pas');
  assert.equal(de(109).zone,'pn');assert.equal(de(109).action,'corrige');assert.equal(de(109).critere.regle,'ok');
- assert.equal(de(108).critere.regle,'seuil','6 mm : sous les 8 mm du fichier');assert.equal(de(108).arrivee,'maj-espace');
+ assert.equal(de(108).critere.regle,'seuil','6 mm : sous les 8 mm du fichier');assert.equal(de(108).arrivee,'pas');
  assert.equal(de(115).zone,'abords');assert.equal(de(115).action,'visite');assert.equal(de(115).critere.regle,'zone','abords : corriger=false, reste en ombre');
  assert.equal(de(113).role,'differe');assert.notEqual(de(113).action,'corrige');
  assert.equal(apresLot(b,lot).filter(c=>c.action==='apply').length,2);

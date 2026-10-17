@@ -12,17 +12,19 @@
  * « vu ») ; lectures de nuages de points (requêtes `ept-data` reçues par le serveur) par cut relu et par vert relu (revue, correction
  * 11) ; touches Maj+Espace vues par la page.
  *
- *   git archive origin/claude/esv-locale-audit tests/esv-maquette | tar -x -C <DOSSIER>     (une fois : la maquette, hors du dépôt)
+ *   git archive origin/claude/esv-locale-audit tests/esv-maquette | tar -x -C <DOSSIER>     (une fois : la maquette, hors du dépôt ;
+ *                                                                                          le banc la règle lui-même)
  *   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs --maquette <DOSSIER>/tests/esv-maquette \
  *        [--mode ombre|corriger] [--cuts 16] [--debut 100] [--lot 104:107] [--latence 40] [--reglages FICHIER.json] [--json SORTIE.json]
  *        [--terrain 1] [--rouges A-B] [--plafond-lectures N]
  *
  * `--reglages` : fichier de seuils servi à l'extension comme datasets/relecture-reglages-proposes.json LE TEMPS DU BANC ; le fichier
  * d'origine est gardé à côté (`.banc-sauve`) et remis à la fin, même sur Ctrl+C (revue, R11). `--terrain 1` : demande à la maquette le
- * comportement relevé sur le terrain, si elle le connaît (paramètres `majEspace=plus1` : Maj+Espace valide puis charge le cut + 1 ;
- * `vu=1` : « vu » écrit 1 s après le premier affichage d'un cut ; `--rouges A-B` : seuls les cuts A à B sont rouges, les autres sont des
- * verts d'ESV jamais traités, comme autour d'un lot sur le terrain) ; une maquette qui ne les connaît pas les ignore (Maj+Espace y charge
- * alors le cut non validé suivant : la passe doit s'arrêter après la première correction). `--plafond-lectures N` : échec (code 2) si
+ * comportement relevé sur le terrain (paramètres `majEspace=surplace` : Maj+Espace sur un vert valide SUR PLACE, ESV reste sur le même
+ * cut, D-179 ; `vu=1` : « vu » écrit 1 s après le premier affichage d'un cut ; `--rouges A-B` : seuls les cuts A à B sont rouges, les
+ * autres sont des verts d'ESV jamais traités, comme autour d'un lot sur le terrain). Ces réglages sont posés par tools/relecture-maquette.cjs
+ * sur la copie extraite de la maquette (hors du dépôt), au démarrage du banc. Sans `--terrain 1`, la maquette d'origine : Maj+Espace y
+ * charge le cut non validé suivant, et la passe s'arrête après la première correction (ESV n'est plus sur le cut corrigé). `--plafond-lectures N` : échec (code 2) si
  * un vert relu coûte en moyenne plus de N lectures de nuage. Ce que le banc prouve : la passe tourne de bout en bout sur une page qui
  * imite ESV, avec ses temps de page à elle. Ce qu'il ne prouve pas : le vrai ESV, le vrai Potree (la maquette charge les nœuds d'un cut
  * une fois, à son premier affichage, et ne recharge rien quand la vue bouge : les lectures dues aux boutons de rail de la capture n'y
@@ -41,6 +43,7 @@ function args(argv){const o={maquette:null,mode:'ombre',cuts:16,debut:100,lot:nu
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
 /* La maquette lit ses voisins à deux niveaux au-dessus d'elle (corpus, capture-core) : liens vers ceux du dépôt s'ils manquent. */
 function preparerMaquette(dossier){const base=path.resolve(dossier,'../..');
+ require('./relecture-maquette.cjs').regler(dossier);
  for(const [lien,cible] of [['tests/corpus','tests/corpus'],['vendor','vendor']]){const l=path.join(base,lien);
   if(!fs.existsSync(l)){fs.mkdirSync(path.dirname(l),{recursive:true});fs.symlinkSync(path.join(racine,cible),l);}}
  for(const f of ['navigateur.cjs','serveur.cjs','esv.html','esv-maquette.js'])if(!fs.existsSync(path.join(dossier,f)))throw Error('Maquette incomplète : '+f+' absent de '+dossier);}
@@ -70,7 +73,7 @@ async function banc(o){preparerMaquette(o.maquette);
   const sw=ctx.serviceWorkers()[0];if(!sw)throw Error('Service worker de l’extension absent.');
   const id=sw.url().split('/')[2];sw.on('console',m=>{if(m.type()==='error')erreurs.push('sw: '+m.text());});
   const esv=await ctx.newPage();esv.on('pageerror',e=>erreurs.push('esv: '+e.message));
-  await esv.goto(`${origine}${prefixe}maquette?cuts=${o.cuts}&debut=${o.debut}&cut=${o.lot.start}&latence=${o.latence}${o.terrain?'&majEspace=plus1&vu=1':''}${o.rouges?`&rouges=${encodeURIComponent(o.rouges)}`:''}`);
+  await esv.goto(`${origine}${prefixe}maquette?cuts=${o.cuts}&debut=${o.debut}&cut=${o.lot.start}&latence=${o.latence}${o.terrain?'&majEspace=surplace&vu=1':''}${o.rouges?`&rouges=${encodeURIComponent(o.rouges)}`:''}`);
   await esv.evaluate(()=>window.__maquette.pret);await esv.waitForFunction(()=>window.__maquette.etat().railsPrets);
   const panneau=await ctx.newPage();panneau.on('pageerror',e=>erreurs.push('panneau: '+e.message));
   await panneau.goto(`chrome-extension://${id}/panel.html#automatic`);await dormir(600);

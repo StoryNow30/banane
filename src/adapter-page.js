@@ -1013,17 +1013,21 @@
      nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
      meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
  }
- /* 5.0, RELECTURE APRÈS LE LOT (D-175, revue de la relecture, corrections 4 et 6) — VALIDER PAR MAJ+ESPACE, le geste de Mic.
+ /* 5.0, RELECTURE APRÈS LE LOT (D-175, revue de la relecture, corrections 4 et 6 ; D-179) — VALIDER PAR MAJ+ESPACE, le geste de Mic.
   * Faits (Échos du projet 2, revue « trace ») : Mic valide TOUJOURS par Maj+Espace (1 377 validations sur 1 377, aucune par
-  * Ctrl+Entrée) ; il frappe Maj (ShiftLeft) puis Espace, le canevas d'ESV ayant le focus ; ESV écrit la validation et passe au cut
-  * + 1 en 180 ms environ (93 à 96 % des cas), même quand ce cut est déjà validé. Ce geste n'est employé que par la passe de
-  * relecture en mode « corriger », jamais par le lot (qui garde le bouton « valider et suivant », D-092).
+  * Ctrl+Entrée) ; il frappe Maj (ShiftLeft) puis Espace, le canevas d'ESV ayant le focus. SUR UN VERT VALIDE, ESV valide SUR PLACE et
+  * RESTE SUR LE MÊME CUT (Mic, deux fois, D-179) ; sur un cut rouge, il passe à un autre cut (cut + 1 dans 93 à 96 % des cas relevés).
+  * Ce geste n'est employé que par la passe de relecture en mode « corriger », jamais par le lot (qui garde le bouton « valider et
+  * suivant », D-092).
   * La frappe est relayée UNE fois, comme Mic la fait : keydown Maj, keydown Espace (Maj tenue), keyup Espace, keyup Maj, sur le
   * canevas d'ESV (elle remonte au document, où ESV lit `e.which`), `which`/`keyCode` réglés comme pour Maj+Retour arrière.
-  * PREUVE : la page ne prouve PAS la validation ; elle rend le cut atteint après la touche (ou aucun changement observé). La preuve
-  * est l'écriture « valid » de la ligne vue par l'observateur passif, dans le service worker, qui contrôle aussi que le cut atteint
-  * est le + 1. Refus AVANT l'envoi (cut, partie ou page différents, libellé illisible, option inconnue, action interrompue) : erreur
-  * qui dit « rien n'a été envoyé à ESV » ; après l'envoi, plus jamais : le résultat est rendu, sans renvoi de la touche. */
+  * PREUVE : la page ne prouve PAS la validation ; elle rend le cut atteint après la touche, ou aucun changement observé (le cas normal
+  * d'un vert : on n'attend qu'un court instant un autre cut, jamais les 15 s d'une navigation). La preuve est l'écriture « valid » de la
+  * ligne vue par l'observateur passif, dans le service worker, qui contrôle aussi que le MÊME cut est toujours affiché. Refus AVANT
+  * l'envoi (cut, partie ou page différents, libellé illisible, option inconnue, action interrompue) : erreur qui dit « rien n'a été
+  * envoyé à ESV » ; après l'envoi, plus jamais : le résultat est rendu, sans renvoi de la touche. */
+ /* Temps laissé à ESV pour changer de cut après Maj+Espace (il le fait en 180 ms environ sur un cut rouge) : au-delà, il valide sur place. */
+ const FENETRE_SUR_PLACE_MS=1500;
  const TOUCHES_MAJ_ESPACE=[['keydown','Shift','ShiftLeft',16,true],['keydown',' ','Space',32,true],['keyup',' ','Space',32,true],['keyup','Shift','ShiftLeft',16,false]];
  async function validerMajEspace(identity,scope={},options={},progress=()=>{}){
    cancelled=false;const startedAt=new Date().toISOString(),sc=scope&&typeof scope==='object'?scope:{};
@@ -1045,14 +1049,14 @@
      decisionCommand:{id:'Shift+Space',exists:true,disabled:false,cible:ou===document?'document':'canevas'},commandSent:true,serverConfirmed:false,
      beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,nextIdentity:null,nextReady:null,observedAt:null,meaning:null};
    progress('maj-espace-command-returned',{label:cutLabel()});
-   const apres=await attendreAutreCut(identity,P.attenteNavigationMs);
-   if(!apres){evidence.meaning='Maj+Espace transmis une fois, cut inchangé après le délai : validation non affirmée (la preuve est l’écriture vue par le service worker). Aucune touche renvoyée.';return evidence;}
+   const apres=await attendreAutreCut(identity,Math.min(P.attenteNavigationMs,FENETRE_SUR_PLACE_MS));
+   if(!apres){evidence.meaning='Maj+Espace transmis une fois, cut inchangé après le délai : ESV valide sur place, sans changer de cut. Validation non affirmée ici (la preuve est l’écriture vue par le service worker). Aucune touche renvoyée.';return evidence;}
    evidence.navigationObserved=true;evidence.observedAt=new Date().toISOString();evidence.nextIdentity=K.completeIdentity(apres);
    progress('maj-espace-navigation-observed',{nextIdentity:apres});
    try{const pret=await waitFor(()=>{const n=snapshot();return K.key(n.identity)===K.key(apres)?n:false;},'Le cut atteint après Maj+Espace est affiché, mais ses rails ne sont pas prêts.',12000);
      evidence.nextReady=true;evidence.nextIdentity=K.completeIdentity(pret.identity);}
    catch(e){evidence.nextReady=false;progress('maj-espace-next-geometry-unavailable',{message:e.message,nextIdentity:apres});}
-   evidence.meaning='Maj+Espace transmis une fois ; ESV a changé de cut. La validation est prouvée par l’écriture « valid » de la ligne, vue par le service worker.';
+   evidence.meaning='Maj+Espace transmis une fois ; ESV a changé de cut. La validation est prouvée par l’écriture « valid » de la ligne, vue par le service worker, qui contrôle le cut affiché.';
    return evidence;}
  /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-066, D-067, D-077 point 3) —
   * LECTURE SEULE. « Aller au cut N de la partie chargée, et confirmer son identité. »
