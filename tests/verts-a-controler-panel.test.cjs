@@ -74,3 +74,25 @@ test('export : un petit fichier JSON de la liste dans les volumes, et sa ligne d
  assert.ok(JSON.stringify(trouves[0]).length<20000,'petit fichier');
  assert.match(contenu,/Verts à contrôler, partie 23 : 38 cuts en 4 plages, environ 2 min 21 s/);
 });
+
+test('export sans zip (repli de « Tout télécharger ») : la liste des verts est jointe aussi, en fichier JSON',async()=>{
+ const store={all:async()=>[],keys:async()=>[],getCloud:async()=>null};
+ const diagnostic={format:'banane-gcv1-diagnostic-v1',version:'5.0',sessionId:'s1',observationCount:0,observations:[]};
+ const meta={format:'banane-test-dataset-v4',version:'5.0',exportedAt:'2026-10-17T07:58:00.000Z',state:{batch:{id:'lot-1',state:'COMPLETED'},sessionId:'s1'},stateOmits:['records','incomplete'],closureSummary:{visits:0},cloudIds:[]};
+ const base={BananeStorage3:class{constructor(){return store;}},BananeExportCache:EC,BananeNativeExport:X,BananeZip:undefined,
+  BananeSettings:{...Settings,export:{...Settings.export,mode:'complet',viderApresExport:false}},BananeGCV1Export:{buildDiagnostic:()=>structuredClone(diagnostic),buildCorpusPlan:GCV1.buildCorpusPlan}};
+ const reponses={'verts-a-controler':LISTE,'dataset-meta':meta,'journal-meta':{...meta,format:'banane-test-journal-v4'},'gcv1-export-meta':{version:'5.0',sessionId:'s1'},
+  'fiches-depart':{fiches:[]},'export-cache-info':()=>({refus:null,marqueur:null})};
+ const lance=async globals=>{let id=0;const noms=[];
+  const chromeExtra={downloads:{download:async o=>{id++;noms.push(o.filename);return id;},search:async()=>[{state:'complete'}],onChanged:{addListener(){},removeListener(){}}}};
+  const p=await panneau(lot(),{globals,chromeExtra,reponses});await p.$('export-tout').onclick();await p.attendre();return {p,noms};};
+ const vs=n=>n.filter(x=>/^ariane-verts-a-controler-partie23-.*\.json$/.test(x));
+ /* Sans BananeZip ni Blob-zip : le repli joint le fichier des verts. */
+ const r=await lance({...base});
+ assert.equal(vs(r.noms).length,1,'un fichier de la liste : '+r.noms.join(' | '));
+ assert.ok(r.noms.some(x=>/^ariane-journal-v4-/.test(x))&&!r.noms.some(x=>/\.zip$/.test(x)),'le repli sans zip a bien servi : '+r.noms.join(' | '));
+ assert.equal(r.p.appels.filter(a=>a.action==='verts-a-controler').length>=1,true);
+ /* Réglage coupé : pas de fichier, pas de demande. */
+ const c=await lance({...base,BananeSettings:{...base.BananeSettings,vertsAControler:{actif:false}}});
+ assert.equal(vs(c.noms).length,0);assert.equal(c.p.appels.filter(a=>a.action==='verts-a-controler').length,0);
+});

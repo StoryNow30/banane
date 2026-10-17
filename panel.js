@@ -1461,7 +1461,7 @@ on('native-discard',async()=>{
    try{const L=await api('verts-a-controler',{partie:p});if(!L||L.actif===false||!Number.isInteger(L.partie))return vide;
      const nom=`ariane-verts-a-controler-partie${L.partie}-${dateCompacte(new Date())}.json`,n=Array.isArray(L.plages)?L.plages.length:0;
      return {texte:`Verts à contrôler, partie ${L.partie} : ${L.aControler} ${accorder(L.aControler,'cut')} en ${n} ${accorder(n,'plage')}, environ ${dureeTexte(L.tempsEstimeS)||'0 s'} (${nom}). Liste à consulter : aucune action dans ESV.\n`,
-       sauver:async save=>{await save(new Blob([JSON.stringify(L,null,1)],{type:'application/json'}),nom);}};}
+       sauver:async save=>save(new Blob([JSON.stringify(L,null,1)],{type:'application/json'}),nom)};}
    catch{return vide;}};
  const K_VERSION=()=>globalThis.BananeCore3?.VERSION||'';
  async function exportToutZip(Z){
@@ -1512,8 +1512,11 @@ on('native-discard',async()=>{
  if($('verts-maj'))$('verts-maj').onclick=()=>majVerts(state,true);
  on('export-tout',async()=>{const Z=globalThis.BananeZip;if(Z?.createZip&&typeof Blob==='function')return exportToutZip(Z);
    const bilans=[];
+   /* 5.0 : sans zip aussi, la liste des verts à contrôler est jointe (petit fichier JSON, facultatif : un refus ne rend pas l'export incomplet). */
+   const verts=await exportVerts();
    for(const [quoi,f] of [['journal',()=>exporterJournal()],['bilan',()=>exporterBilan()],['diagnostic',()=>exporterDiagnostic()],['corpus',()=>exporterCorpus()]]){
      try{bilans.push(await f());}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});}}
+   try{const fv=await verts.sauver(saveBlob);if(fv&&!nonEnregistres([fv]).length)bilans.push({quoi:'verts à contrôler',fichiers:[fv],alerte:null});}catch{/* facultatif */}
    const fichiers=bilans.flatMap(b=>b.fichiers),manques=bilans.flatMap(b=>[
      ...(b.erreur?[`${b.quoi} : ${b.erreur}`]:[]),...nonEnregistres(b.fichiers).map(f=>`${b.quoi} non enregistré (${f.etat})`),...(b.alerte?[`${b.quoi} : ${b.alerte}`]:[])]);
    const autres=fichiers.filter(f=>!nonEnregistres([f]).length);
