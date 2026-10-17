@@ -2376,3 +2376,26 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - coupé : déplacer la vue.
   La pose est inchangée. Le mode rapide est inchangé, D-157 attend Mic.
 - Points utiles de la relecture, gardés pour la test 6 : le retour arrière sans « Recharger », l'ordre de lecture du journal dans `vertsAControler`, `BananeSettings` non gelé, la liste absente d'un export sans zip.
+
+## D-164 — Vague 4 intégrée : clic humain du mode rapide (3 réglages), détection des ADV, points utiles (17 octobre 2026)
+
+- Le conteneur a redémarré pendant la nuit, mais les trois chantiers avaient fini leurs commits. Je les ai vérifiés et poussés. Ils sont intégrés à `claude/50-base` : verify **2 075 réussis, 0 échec**, moteur conforme.
+- **Clic humain du mode rapide** (`claude/50-rapide-humain`, `fiches/RAPIDE_HUMAIN.md`) : réglage `pilote.rapide.clicHumain`.
+  - `'tel-quel'` (défaut) : comportement actuel.
+  - `'gauche-recentre'` : plus aucun clic hors fenêtre, pour +6 à +9 % de durée de lot. Le rail droit reste posé « à la machine » (clic dans la même milliseconde que le bouton), et l'ordre des rails change.
+  - `'tout-recentre'` : +12 à +18 % de durée de lot.
+  - Avec les deux modes corrigés : 0 clic hors vue, mêmes poses, 0 différé de plus, mesuré au banc sur deux lots réels.
+  - Garde-fou consigné `clic-hors-vue` dans tous les modes.
+  - Arrondi des demi-pixels : biais d'environ 0,19 mm par axe, et la reprise à −0,5 px ne sert jamais. Rien n'est changé.
+  - **Mic (17 octobre) : « essayer les 2 méthodes »** → test 6 avec un choix dans le panneau.
+- **Détection des ADV** (`claude/50-detection-adv`, `fiches/DETECTION_ADV.md`) : signal du « rail de plus » dans le profil en travers (aiguille, contre-rail, cœur).
+  - **8 zones de Mic sur 8**, 12 aiguilles sur 12, aucune plage sans ADV, aucun PN pris pour un ADV.
+  - Zone `adv` en ombre dans les règles métier. Branchée sur la liste des verts : au second projet, 33 erreurs sur 35 au lieu de 27, et 20 gros écarts sur 20, pour 7 verts de plus.
+  - Toutes les parties étiquetées ont servi à régler.
+- **Points utiles de la relecture de la test 5** (`claude/50-utiles-t6`) :
+  - verts à contrôler : le dernier lot fait foi ;
+  - la liste est jointe aussi à l'export sans zip ;
+  - `BananeSettings` gelé ;
+  - fiches corrigées ;
+  - `memoire-differes` coupé en deux fichiers ;
+  - la phrase de retour arrière pour la test 6 (désactiver, redécompresser, réactiver, Recharger, F5).
