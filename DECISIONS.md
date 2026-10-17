@@ -2419,3 +2419,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - I-2 : mesurer dans l'export l'effet indirect de la règle sur les appuis.
   - Utiles : `CONTENU.txt` ne décrit que le dernier lot, et le `DECISIONS.md` du paquet est en retard.
 - **Paquet** `ariane-4.9.5-test.6.zip` : 2 120 050 octets, SHA-256 `63cb96d3dfe30ef23a487f160d9ba45b0f3fa2ba3c777a140bdc4d09ef2d0b6e`.
+
+## D-166 — Premier lot de la test 6 au terrain (partie 8, second projet) : Variante sans clic hors vue, règle grappe active mais jamais déclenchée (17 octobre 2026)
+
+- Lot du 17/10, de 9 h 57 à 10 h 00, archivé dans banane-data (`2026-10-17_v4.9.5.6_projet2-partie-8`). Choix du lot, consignés dans `batch-started` et dans `CONTENU.txt` : `clicHumain: gauche-recentre`, `regleGrappeDifferes: true`.
+- 31 invalides : 29 posés (dont 14 par la voie) et 2 différés. Cycle médian 1,78 s, P90 5,9 s : la médiane est la même qu'en partie 29 avec la test 3 (1,76 s).
+- **Clic hors vue : aucun événement `clic-hors-vue`.** La Variante a supprimé les clics hors fenêtre (à confirmer sur un lot plus long).
+- **Règle grappe** : active, mais aucune grappe dans ce lot (0 différé autour). Aucun cut n'a été mis en attente par la règle.
+- **Ombres** : `regles-metier-ombre` voit un PN (« cœur ») sur 7 cuts et des zones d'ADV. La carte « À contrôler » a été vue chez Mic : 17 cuts, ADV 846–911, autour du différé 899, ADV 5467–5555 et PN 5936–5954, environ 1 minute.
+- **Défaut d'affichage** : après la fin du lot, la case cochée affiche « Activée pour le prochain lot », alors qu'elle était déjà active pour ce lot. Mic a cru qu'elle n'avait pas servi. Le libellé est à corriger à la prochaine version : dire ce qu'a utilisé le dernier lot et ce qu'utilisera le prochain.
