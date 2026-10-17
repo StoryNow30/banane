@@ -8,7 +8,8 @@
  *  - ombre verticale (nom : P8) : src/settings.js (présente seulement dans les versions qui la portent). Le nom « E2 » est réservé à l'ombre GCV1
  *    de l'Écho ; les clés de données (`ombreVerticaleRefusee`, `ombreVerticale`) et la chaîne de version `e2-vertical-refuse-v1` gardent « e2 » par
  *    compatibilité avec les exports déjà produits.
- *  - règles métier de l'opérateur expert : src/regles-metier.js (seuils) et src/settings.js (ombre active, activation coupée). */
+ *  - règles métier de l'opérateur expert : src/regles-metier.js (seuils) et src/settings.js (ombre active, activation coupée) ;
+ *  - verts à contrôler : src/verts-a-controler.js (poids, zones mortes, fenêtre, seuil, temps par vert) et src/settings.js (liste active). */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
 const racine = path.join(__dirname, '..');
@@ -19,11 +20,12 @@ const G1 = require('../tools/memoire-differes.cjs');
 const Lot = require('../src/lot-decision.js');
 const Settings = require('../src/settings.js');
 const ReglesMetier = require('../src/regles-metier.js');
+const VertsAControler = require('../src/verts-a-controler.js');
 
 test('le fichier porte une date, des valeurs et les parties qui ont servi, pour chaque réglage', () => {
   assert.equal(F.format, 'ariane-reglages-figes-v1');
   assert.match(F.date, /^\d{4}-\d{2}-\d{2}$/);
-  assert.deepEqual(Object.keys(F.reglages).sort(), ['fauxVertOmbre', 'memoireSerieB', 'ombreVerticale', 'reglesMetier', 'voiePredite']);
+  assert.deepEqual(Object.keys(F.reglages).sort(), ['fauxVertOmbre', 'memoireSerieB', 'ombreVerticale', 'reglesMetier', 'vertsAControler', 'voiePredite']);
   for (const [nom, r] of Object.entries(F.reglages)) {
     assert.ok(r.libelle && r.valeurs && typeof r.valeurs === 'object', nom);
     assert.match(r.fige, /^\d{4}-\d{2}-\d{2}$/, `${nom} : date de gel`);
@@ -92,4 +94,12 @@ test('faux vert en ombre : mêmes seuils que le module et le réglage livré, ch
   assert.equal(v.differer, false); assert.equal(Settings.fauxVertOmbre.differer, false);
   assert.equal(v.memeRail, true);
   assert.equal(F.reglages.fauxVertOmbre.ombre.version, FV.VERSION);
+});
+
+test('verts à contrôler : mêmes poids, zones mortes, fenêtres, seuil et temps que le module ; liste active (lecture seule)', () => {
+  const r = F.reglages.vertsAControler, v = r.valeurs, D = VertsAControler.DEFAULTS;
+  assert.deepEqual(v.poids, { ...D.poids });
+  assert.deepEqual(v.zonesMortes, { ...D.zonesMortes });
+  assert.deepEqual([v.fenetreCuts, v.fenetreIsoleCuts, v.voisinsVoie, v.voisinsDenivele, v.seuil, v.tempsParVertS], [D.fenetreCuts, D.fenetreIsoleCuts, D.voisinsVoie, D.voisinsDenivele, D.seuil, D.tempsParVertS]);
+  assert.equal(Settings.vertsAControler.actif, true);
 });
