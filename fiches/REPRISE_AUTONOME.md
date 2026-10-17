@@ -119,3 +119,30 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
   ```
   Le diagnostic reviendra du cache, si c'est la même session.
 - **Tournent encore** : la revue de la relecture, le départ sur un vert et le PN robuste.
+
+**17 octobre, 13 h 30 UTC (D-175)** : la fenêtre est presque épuisée. On attend la réinitialisation, vers 16 h 40 UTC, avant de lancer le reste.
+
+**Fusionnés dans 50-base (d8a7bcd)** :
+- panneau réorganisé ;
+- partie complète ;
+- départ sur un cut vert ;
+- fiabilité du lot ;
+- PN robuste (H6).
+
+**Au réveil suivant, dans l'ordre** :
+1. **Chantier de correction de la relecture** sur `claude/50-relecture-ombre`. Fusionner d'abord `origin/claude/50-base`, puis appliquer les 11 corrections exigées de `scratchpad/revrelo/SYNTHESE_REVUE.md` § 2 :
+   - rôle vert prouvé par le statut `valid` ;
+   - une seule passe à la fois ;
+   - pose seulement après un pas par les boutons ;
+   - validation par Maj+Espace (geste de Mic), sinon « corriger » reste verrouillé ;
+   - réglages sûrs en cas d'échec ;
+   - essai de `validateInPlaceEcriture` ;
+   - plafond par zone, PN d'abord ;
+   - chaîne vide, comme l'étude ;
+   - « vu » dit clairement, avec un compteur ;
+   - rythme avec des pauses, départ au clic ou après 30 s ;
+   - lectures de nuage mesurées.
+
+   Ensuite, une contre-revue courte, puis la fusion.
+2. **Atelier P-7** : reprendre avec `Workflow({scriptPath: ".../p7-pose-adv-grappes-wf_56d882aa-e4e.js", resumeFromRunId: "wf_7d519878-737"})`. Le diagnostic est fait (`scratchpad/p7/CATALOGUE.md`). Si la reprise depuis le cache échoue, relancer le script : le diagnostic relira `p7/`.
+3. **Verify complet au calme** sur 50-base, puis **test 7** si la relecture est fusionnée.

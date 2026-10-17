@@ -2516,3 +2516,27 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - le réglage reste coupé par défaut ; Mic choisit le mode dans le panneau.
 - **Non démontré** : la porte des 9 % demande 39 actions sans erreur, et il n'y en a que 9 de jugées. Les Échos des parties 2 à 9 du projet 2 suffiraient.
 - **Suite** : atelier P-7 pour la pose en ADV, aux abords et dans les grappes. La SKIP « un seul scanner » ne se mesure pas : ESV fond les scanners en un seul nuage.
+
+## D-175 — Revue de la relecture de fin de lot : pas de fusion avant 11 corrections (17 octobre 2026)
+
+- **Revue adverse** : quatre angles (écritures, trace, fidélité à l'étude, régressions), chacun repris par un sceptique. Synthèse dans `scratchpad/revrelo/SYNTHESE_REVUE.md`, hors dépôt.
+- **Ce qui tient (F)** :
+  - mode coupé : commandes identiques octet pour octet (5 scénarios et un lot réel rejoué, 335 commandes) ;
+  - mode ombre : aucune commande d'écriture ;
+  - le code rend la décision de l'étude sur 1 323 cuts sur 1 323 ;
+  - PN : 36 justes, 0 erreur, 0 mauvaise voie.
+- **Ce qui bloque (F)** :
+  - le rôle « vert » est présumé : un SKIP de Mic, un cut repris à la main ou le dernier cut d'un lot borné peuvent être corrigés, jusqu'à écraser une correction de Mic ;
+  - deux passes peuvent tourner en même temps.
+- **Constats importants (F)** :
+  - **le geste de validation** : Mic valide toujours par **Maj+Espace** (1 377 fois sur 1 377 dans les Échos), jamais par Ctrl+Entrée ;
+  - **les réglages** : s'ils sont absents ou faux, la règle retombe sur un défaut plus permissif ;
+  - **le plafond de 120 cuts** coupe les PN ;
+  - **la chaîne d'appuis** part des poses du lot, contrairement à l'étude ;
+  - **le rythme** : il n'y a pas de pause, et la passe démarre 1,5 s après le lot.
+- **Constat (F)** : en ombre, ESV écrit lui-même « vu » sur chaque cut neuf affiché. Une visite de Mic fait la même chose. Mais le panneau et la fiche disaient « ne modifie rien » : il faut les corriger et le dire à Mic.
+- **Nuance de chiffre (F)** : 29 des 36 corrections PN justes viennent des parties 12 et 13, qui n'ont pas de lot. Sur des parties traitées par lot, on n'a que 7 PN sur 7.
+- **Décision** :
+  - la branche n'est pas fusionnée ;
+  - un chantier de correction appliquera les 11 points ;
+  - le mode « corriger » passera par le geste de Mic (Maj+Espace), ou restera verrouillé tant que ce geste n'est pas prouvé.
