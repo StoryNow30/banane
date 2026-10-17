@@ -2606,3 +2606,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - la contre-revue est refaite **une fois**, resserrée (écritures et trace d'abord), sur la tête corrigée ;
   - l'atelier P-7 finit ses derniers sceptiques puis s'arrête ; pas de nouveau gros calcul avant la test 7 ;
   - pas de nouvel atelier sans nécessité : les essais ciblés d'abord, le verify complet une seule fois.
+
+## D-182 — P-7 : la combinaison des quatre correctifs reste en ombre, hors test 7 (17 octobre 2026)
+
+- **Fait (validation croisée sur les parties d'apprentissage, branche `claude/50-p7-combi`)** : les quatre correctifs (différés en chaîne, voisins sûrs, graine d'écartement fictive, garde de paire) tiennent à la réfutation. La combinaison des trois utiles passe de 79 à 124 justes, avec +3 erreurs, 0 cut abîmé en plus, 0 mauvaise voie ; PN 36/36 inchangé.
+- **Pourquoi elle n'agit pas** : le gain vient de 51 actions sur des cuts que le lot a différés. 37 déplacent un rail de plus de 45 mm en travers, ce que D-159 interdit ; 7 visent un point à plus de 200 mm de la pose d'ESV, où la vue d'ESV n'est pas rejouée (D-156).
+- **Décision** : la test 7 garde la règle de D-180 (PN, ADV, abords ; verts seulement ; jamais un cut du lot). La combinaison reste en ombre sur sa branche, qui n'est pas fusionnée.
+- **Non fait, pour économiser le quota (D-181)** : le jugement unique sur les parties réservées. Il se fera plus tard, avec les réglages figés `datasets/relecture-reglages-p7-combinaison.json` et les critères de la synthèse P-7 (§ 3.3).
+- **Pistes suivantes** : recentrer puis recapturer (74 cuts hors de portée), garde verticale (16 cuts laissés, 9 actions fausses de hauteur), robustesse de la chaîne.
