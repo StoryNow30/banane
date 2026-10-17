@@ -2581,3 +2581,18 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - la passe avance ensuite d'un pas, avec le geste de Mic ;
   - la maquette des essais valide sur place, comme le vrai ESV.
 - La correction est faite avec les défauts que la contre-revue retiendra, avant la fusion.
+
+## D-180 — Mic accepte les chiffres de l'ADV et des abords : ils pourront agir en mode corriger (17 octobre 2026)
+
+- **Mic** : « Je trouve les chiffres acceptables, on les améliorera en cours de développement. » Les chiffres en question sont ceux de l'étude (parties d'apprentissage) :
+  - PN : 36 justes sur 36 actions, 0 erreur ;
+  - ADV : 11 justes sur 17, 18 % d'erreurs, 1 cut abîmé ;
+  - abords (voisins verts d'un rouge isolé, d'une grappe ou d'un différé) : 30 justes sur 37, 14 % d'erreurs, surtout des écarts de hauteur ; 0 mauvaise voie dans toutes les zones.
+- **Ce que j'en retiens** : c'est un choix de Mic, pas une porte franchie. Le seuil de 9 % n'est **pas démontré** pour l'ADV et les abords (il faut 39 actions sans erreur, et il n'y en a que quelques dizaines de jugées). Mic accepte ce risque pour avancer et mesurer sur le terrain.
+- **Décision** (modifie D-174, qui reste valable pour le reste) :
+  - dans la test 7, le mode « corriger » peut agir sur les verts de **PN, d'ADV et d'abords**, avec la même règle prudente (8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus, verts seulement) ;
+  - restent en ombre : les verts hors zone (2 actions seulement), tout cut posé ou différé par le lot, le SKIP ;
+  - le défaut reste **coupé** : c'est Mic qui choisit « corriger » dans le panneau, donc l'activation sur le terrain reste son geste ;
+  - les réglages gardent un interrupteur par zone, pour repasser une zone en ombre sans toucher au code.
+- **Mesure sur le terrain** : l'ombre continue de calculer et de noter toutes les zones ; les Échos de Mic qui suivent un lot en mode corriger montrent s'il a dû reprendre des cuts corrigés par Ariane. C'est la mesure qui dira si la zone peut rester ouverte.
+- **Suite** : le changement part sur la branche de la relecture, avec les corrections de la contre-revue en cours et celle de D-179, avant la fusion dans 50-base.
