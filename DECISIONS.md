@@ -2569,5 +2569,5 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **Fable est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
 - **Conséquences** :
   - les chantiers et les revues tournent avec le modèle de session par défaut ;
-  - la relecture de la test 7 « au niveau maximal » se fait au niveau d'effort le plus haut, sans Fable, sauf si la test 7 tombe dans cette dernière session ;
+  - la relecture de la test 7 se fait **sans Fable dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ;
   - aucun agent ni workflow ne porte `model: 'fable'` avant elle.
