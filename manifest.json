@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Ariane",
-  "version": "4.9.5.5",
+  "version": "4.9.5.6",
   "minimum_chrome_version": "111",
   "description": "Ariane pour ESV LiDAR : Écho observe ton travail, Orbite place et valide les rails d’un lot. Collecte segmentée et export compact.",
   "permissions": [
@@ -23,7 +23,7 @@
     "128": "icons/ariane-128.png"
   },
   "action": {
-    "default_title": "Ouvrir Ariane 4.9.5 test 5 — V1",
+    "default_title": "Ouvrir Ariane 4.9.5 test 6 — V1",
     "default_icon": {
       "16": "icons/ariane-16.png",
       "32": "icons/ariane-32.png",
@@ -61,5 +61,5 @@
       "run_at": "document_idle"
     }
   ],
-  "version_name": "4.9.5 test 5"
+  "version_name": "4.9.5 test 6"
 }
