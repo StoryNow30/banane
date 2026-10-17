@@ -194,6 +194,7 @@ Correction verticale = a + b × épaisseur du dessus, par groupe de rails (calag
 
 - Les modèles appris se ressemblent d'une partie à l'autre pour les rails calés (a ≈ 3 à 4 mm, b ≈ −0,5) : un rail au dessus fin (6 mm) ne bouge presque pas (+0,4 mm), un rail au dessus épais (16 mm) descend de 4,6 mm.
 - Ce n'est **pas** livré : c'est une pose différente, et la porte « aucune mauvaise pose ajoutée » n'est pas tenue (7 nouveaux faux verts). Suite proposée : une ombre « P8 bis » qui **consigne** la pose qu'aurait donnée cette correction (comme P8 pour les rails refusés), puis une mesure sur des parties neuves, et la décision de l'opérateur.
+- **Fait** (17 octobre 2026) : `HAUTEUR_APPRISE.md`. Avec une enveloppe prudente (moitié de la droite sur les rails calés, plafond de 5 mm), le modèle donne 85 → 61 en validation croisée, sans nouveau faux vert, et il est consigné en ombre (`hauteurApprise`).
 
 ## 8. Doutes et limites
 
