@@ -1,0 +1,16 @@
+{
+  "format": "ariane-compteur-gcv2-sources-v1",
+  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que Mic n'a pas confirmé l'entraînement (D-188). `projetCertain: false` : projet déduit, à confirmer par Mic.",
+  "sources": [
+    { "id": "p1-24", "projet": "1", "partie": 24, "dossiers": ["2026-10-15_v4.9.0.20_parties-24-28/echo p24 17h26"] },
+    { "id": "p1-12", "projet": "1", "partie": 12, "dossiers": ["2026-10-16_v4.9.5.3_partie-12-operateur/echo p12 10h02"], "note": "partie d'un opérateur débutant relue par Mic" },
+    { "id": "p1-13", "projet": "1", "partie": 13, "dossiers": ["2026-10-16_v4.9.5.3_partie-13-operateur/echo p13 10h20"], "note": "partie d'un opérateur débutant relue par Mic" },
+    { "id": "p1-29", "projet": "1", "partie": 29, "dossiers": ["2026-10-16_v4.9.5.3_partie-29/echo p29 session 1 08h40", "2026-10-16_v4.9.5.3_partie-29/echo p29 session 2 09h22"] },
+    { "id": "p2-1", "projet": "2", "partie": 1, "dossiers": ["2026-10-16_v4.9.5.3_projet2-partie-1/echo p1 11h"] },
+    { "id": "p2-10", "projet": "2", "partie": 10, "dossiers": ["2026-10-18_v4.9.5.7_echo-partie-10/echo p10 19h26"] },
+    { "id": "p2-11", "projet": "2", "partie": 11, "dossiers": ["2026-10-18_v4.9.5.7_echo-partie-11/echo p11 12h32"] },
+    { "id": "p1-14", "projet": "1", "projetCertain": false, "partie": 14, "dossiers": ["2026-10-18_v4.9.5.7_echo-partie-14/echo p14 18h27"], "note": "opérateur débutant selon Mic" },
+    { "id": "p1-15", "projet": "1", "projetCertain": false, "partie": 15, "dossiers": ["2026-10-18_v4.9.5.7_echo-partie-15/echo p15 18h35"], "note": "export final non envoyé : segments 11 à 18 et 32 absents, compte partiel" },
+    { "id": "p1-16", "projet": "1", "projetCertain": false, "partie": 16, "dossiers": ["2026-10-18_v4.9.5.7_echo-partie-16/echo p16 19h04"], "note": "opérateur débutant selon Mic" }
+  ]
+}
