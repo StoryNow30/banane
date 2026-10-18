@@ -172,7 +172,7 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 ## Après la relecture finale de la test 7 (18 octobre 2026, D-183)
 
 - La relecture finale du paquet a rendu son rapport : code bon, deux défauts de texte bloquants (consigne fausse après mise à jour, code de projet dans `DECISIONS.md`), corrigés dans 50-base (5ca5e49).
-- **À la reprise** : (1) lire `scratchpad/verify-50-base-2.log` (fin : « FIN verify code=0 » attendu) ; (2) si vert, commiter les rapports d'audit sur 50-base, pousser, reconstruire le zip (`python3 tools/package.py --output <zip>`), recalculer le SHA-256 (il change) ; (3) envoyer le zip à Mic avec SendUserFile, empreinte et taille dans le message ; (4) si rouge, corriger la cause, un seul verify de plus.
+- **Fait** : verify vert sur 5ca5e49 (2 221 essais, 2 219 réussis, 0 échec, 2 ignorés), rapports commités (da9debf) et poussés sur `claude/50-base`. Sur demande expresse de Mic (zip d'abord, le reste après), le zip lui a été remis AVANT ce verify : `ariane-4.9.5-test.7.zip`, construit sur 5ca5e49, SHA-256 `30ecab7220b711d913f0471a92c939eacdca4062ed996df3153617221797c67a`, 2 267 022 octets. Les rapports d'audit à l'intérieur du zip sont ceux de l'exécution précédente (mêmes chiffres, trois empreintes de fichiers d'avant les corrections) ; sans effet à l'exécution, l'extension ne les lit pas. Ancien zip (avant la relecture finale, à ne plus utiliser) : `livraison-ancien/`.
 - Rien n'est envoyé à Mic avant ce verify vert. Jamais sans Mic : fusion dans main, étiquette, publication, activation d'une pose sur le terrain.
 - À décider avec Mic : ordre du panneau (choix de la relecture sous les résultats), hygiène héritée de banane (liste dans D-183), effacement du code de projet dans l'historique git.
 
