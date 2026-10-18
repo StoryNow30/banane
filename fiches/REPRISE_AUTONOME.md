@@ -150,3 +150,21 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 **Après la test 7 (D-176)** : chantier « relecture au fil du lot ». La même logique s'applique pendant le lot, en visitant les cuts voisins d'un PN, d'une ADV ou d'un rouge isolé. On la compare à la passe de fin de lot.
 
 **D-178** : Fable est interdit jusqu'à la dernière session de 5 h qui précède la réinitialisation hebdomadaire, le dimanche 18 octobre à 22 h. Ne jamais passer `model: 'fable'` avant cette session.
+
+## Matin du 18 octobre 2026 (D-179 à D-183) : test 7 construite, relecture finale en cours
+
+**Fait** :
+- Maj+Espace valide un vert sur place (Mic, D-179) ; la passe est corrigée.
+- L'ADV et les abords agissent en mode « corriger », défaut coupé (D-180).
+- Quota presque épuisé, Sonnet 5.5, travail resserré (D-181).
+- P-7 terminée, la combinaison reste en ombre (D-182).
+- Contre-revue de la relecture : 3 défauts démontrés et corrigés (statut du cut relu avant la pose, table de la liste incomplète refusée, vert hors zone jamais corrigé), `claude/50-relecture-ombre` à da1d9bd.
+- Fusion dans `claude/50-base` (803fb76) ; version 4.9.5.7 ; verify complet : 2 221 essais, 2 219 réussis, 0 échec, 2 ignorés.
+- Paquet `ariane-4.9.5-test.7.zip` (2 266 750 octets) dans `scratchpad/livraison/`.
+
+**Au réveil suivant, dans l'ordre** :
+1. Lire le rapport de la relecture finale de la test 7 (agent lancé au plus haut effort, sans Fable). Corriger ce qui est démontré, refaire le verify une seule fois, reconstruire le paquet, recalculer le SHA-256.
+2. Envoyer le zip à Mic avec son SHA-256 et sa taille (jamais avant la fin de la relecture finale).
+3. Archiver tout export reçu de Mic dans banane-data (zips bruts, SHA256SUMS, NOTES.md, INDEX.md avant « ## Benchmarks »), après vérification qu'aucune identité d'opérateur n'y figure.
+4. Chantier suivant : « relecture au fil du lot » (D-176). Le jugement unique de P-7 sur les parties réservées reste en attente (réglages figés `datasets/relecture-reglages-p7-combinaison.json`).
+5. Aucune fusion dans main, aucune étiquette, aucune publication sans Mic.
