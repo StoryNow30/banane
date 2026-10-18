@@ -2243,8 +2243,8 @@ const attendreMs=ms=>new Promise(r=>setTimeout(r,Math.max(0,ms)));
 /* Origine de la zone d'un cut relu : PN, ADV et abords viennent du lot (captures et cuts du lot, figés avant la passe) ; la liste
  * « À contrôler » et les verts hors plage (écartement) viennent de la liste d'ESV. */
 const sourceZone=c=>['pn','adv','abords'].includes(c.zone)?'lot':c.zone==='ecartement'?'liste-esv':'liste';
-/* Un cut que les réglages pourraient corriger (vert d'une zone ouverte) : en « corriger », il n'est posé qu'atteint par les boutons. */
-const relectureCorrigeable=(c,reglages)=>c.role==='vert'&&c.zone!=='ecartement'&&reglages?.zones?.[c.zone]?.corriger===true;
+/* Un cut que les réglages pourraient corriger (vert d'une zone ouverte ; la zone « écartement » est fermée tant que les réglages ne l'ouvrent pas, D-185) : en « corriger », il n'est posé qu'atteint par les boutons. */
+const relectureCorrigeable=(c,reglages)=>c.role==='vert'&&reglages?.zones?.[c.zone]?.corriger===true;
 /* Ce qu'Ariane donnerait sur une capture (aucun effet), selon la variante du fichier de réglages (« chaine+h » : décision du lot avec
  * pour appuis la chaîne de la passe, plus la hauteur apprise ; « seul » : sans appui) : moteur, décision, jugement ; la commande qui
  * serait écrite (commande du lot sur la pose ESV de la capture, plus la hauteur pour « +h ») et son écart ; la règle prudente.

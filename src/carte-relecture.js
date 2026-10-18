@@ -23,7 +23,7 @@
   const vus=Number.isInteger(p.cutsNeufsAnnonces)?` · « vu » : ${p.vus||0} sur ${pluriel(p.cutsNeufsAnnonces,'cut')} neuf${p.cutsNeufsAnnonces>1?'s':''}`:p.vus?` · ${p.vus} « vu »`:'';
   if(p.etat==='en-cours')return `Relecture ${p.faits} sur ${p.total}${corr}${vus}${p.cut!=null?` · cut ${p.cut}`:''}${p.plage?` · ${p.plage}`:''}${p.arretDemande?' · arrêt demandé':''}`;
   return p.message||'';}
- const SOURCES={propose:'fichier proposé',defaut:'défaut provisoire'},ZONES={pn:'PN',adv:'ADV',abords:'abords','vert-hors-zone':'verts hors zone'};
+ const SOURCES={propose:'fichier proposé',defaut:'défaut provisoire'},ZONES={pn:'PN',adv:'ADV',abords:'abords',ecartement:'écartement','vert-hors-zone':'verts hors zone'};
  function texteReglages(r){if(!r)return '';
   const t=`Réglages de la correction : ${SOURCES[r.source]||r.source}${r.source==='propose'&&r.statut&&r.statut!=='propose'?` (« ${r.statut} »)`:''}.`;
   if(!r.correctionPermise)return `${t} « Corriger » restera en ombre : ${r.raison||'réglages non sûrs'}.`;
