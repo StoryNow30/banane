@@ -1,5 +1,18 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.8 — 4.9.5 test 8 (18/10)
+
+Manifeste `4.9.5.8`, « 4.9.5 test 8 », paquet `ariane-4.9.5-test.8.zip` ; base : `claude/50-base` (da9debf, 4.9.5 test 7) + la couverture de la relecture (eed6390, 2bf876d ; D-185, D-186).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). La relecture reste coupée par défaut ; seul change ce qu'elle relit et ce qu'elle peut corriger.
+Consigne : `consignes/seance-terrain-4.9.5-test-8-2026-10-18.md` ; retour arrière : la 4.9.5 test 7 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Couverture de la relecture** (D-185, d'après l'Écho de la partie 11 : 17 corrections qui tiennent, 15 verts faux laissés) : plus de plafond en ADV, ADV séparées de 40 cuts au plus enchaînées en une seule plage, plafonds de 70 (abords), 20 (vert hors zone) et 20 (écartement) ; les cuts « À contrôler » et « écartement » ne sont jamais écartés par un budget de zone ; un cut à l'écartement hors norme est relu avec son cut d'avant et son cut d'après (marge de 1). Rejeu de la sélection sur la partie 11 : 391 cuts relus au lieu de 144, 13 des 15 oublis couverts (restent 6418 et 6419, première zone d'ADV non détectée).
+- **Zone « écartement » corrigeable** (accord de Mic) : fermée dans `datasets/relecture-reglages-defaut.json`, ouverte dans `datasets/relecture-reglages-proposes.json` (8 mm au moins, même règle prudente que le PN, l'ADV et les abords). Fermée, un vert hors plage reste en ombre.
+- **Panneau** : « Corriger (verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, validés par Maj+Espace) ».
+- **Apprentissage** (D-187) : la partie 11 du second projet passe dans l'ensemble d'apprentissage (`datasets/manifeste-parties.json`).
+- Essais : `tests/relecture-ombre.test.cjs` (5 essais ajoutés, 4 adaptés), `tests/relecture-critere.test.cjs`, essais de version `tests/version-4958.test.cjs` (remplace `version-4957`) et `tests/consigne-4958.test.cjs` (remplace `consigne-4957`). verify : 2 226 essais, 2 224 réussis, 0 échec, 2 ignorés (corpus natif absent) ; géométrie inchangée, moteur identique à la base V4.6.0.
+- Non vérifié : la durée de la relecture (environ 12 minutes estimées pour une partie comme la 11, contre 4 minutes mesurées) ; la détection de la première zone d'ADV de la partie 11 (cuts 6362 à 6424) ; Maj+Espace servi sur 18 corrections à la test 7 (aucune écriture refusée), pas sur les corrections nouvelles ; Edge. Pas dans cette version : la relecture « au fil du lot » (D-176), la combinaison P-7.
+
 ## 4.9.5.7 — 4.9.5 test 7 (18/10)
 
 Manifeste `4.9.5.7`, « 4.9.5 test 7 », paquet `ariane-4.9.5-test.7.zip` ; base : `claude/50-base` (803fb76 : 4.9.5 test 6 + panneau réorganisé, départ de lot sur un cut vert, partie complète, fiabilité du lot, PN confirmé par deux cœurs consécutifs, relecture après le lot ; D-170 à D-182).

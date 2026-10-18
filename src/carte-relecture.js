@@ -8,7 +8,7 @@
  * « J'ai contrôlé le cut N » (W5). Comme les autres choix : « Dernier lot » (« Lot en cours ») et « Prochain lot ».
  * `texteContenu(batch)` donne la ligne de CONTENU.txt (rien quand le lot a la relecture coupée). */
 (function(root){'use strict';
- const NOMS={coupee:'coupée',ombre:'ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)',corriger:'corriger (verts sûrs du PN, de l’ADV et des abords, validés par Maj+Espace)'};
+ const NOMS={coupee:'coupée',ombre:'ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)',corriger:'corriger (verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, validés par Maj+Espace)'};
  const IDS={coupee:'relecture-coupee',ombre:'relecture-ombre',corriger:'relecture-corriger'};
  const COURTS={coupee:'Coupée',ombre:'Ombre',corriger:'Corriger'},OUVERTS=['RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING'];
  const $=id=>typeof document!=='undefined'?document.getElementById(id):null;
