@@ -2623,3 +2623,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Laissé tel quel, à décider avec Mic** : (a) le choix de la relecture est à environ 1 750 px sur 2 636, sous « Résultats du dernier lot », alors qu'il se règle avant le lot (la consigne dit où il est) ; (b) pendant la passe, le haut du panneau dit « Arrêté » ; (c) hygiène héritée, déjà dans la test 6 : noms d'autres IA dans des fiches, `claude/…` dans 55 fichiers, un lien d'artefact, des chemins locaux, le pseudo « Mic » dans 76 fichiers, des exports bruts dans l'historique de banane (tests/corpus, fixtures, incidents, 14 Mo). Rien de neuf apporté par la test 7.
 - **Chiffres à ne pas sur-lire** : PN 36/36, dont 29 viennent de parties sans lot ; borne haute 9,6 % : la porte des 9 % (39 actions) n'est pas franchie non plus pour le PN.
 
+
+## D-184 — Test 7 au terrain : premiers lots en mode corriger, parties 10 et 11 (18 octobre 2026)
+
+- **Reçu et archivé** dans banane-data (fe7299d, baad843) : deux exports du 18/10, 9 h 37 à 9 h 50, avec « Tout recentré », règle « grappe » coupée et relecture « corriger ». Pas d'Écho : rien n'est encore jugé contre la pose de Mic.
+- **Partie 10** : lot de 9 cuts, 9 posés. Relecture seule, 22 s : 12 relus, 1 corrigé (cut 4130, 31 mm, écartement 1 474,8 → 1 439,2 mm pour une médiane de 1 433,5), 12 « vu ».
+- **Partie 11** : 131 cuts, 119 posés, 12 différés, 6,4 min. Relecture seule, 4 min 20 s (affiché : 8 min 42 s) : 144 relus (PN 67, ADV 40, abords 32, écartement 4, hors zone 1), **17 corrigés** (11 PN, 6 ADV ; 9 à 44 mm, aucun de 50 mm ou plus), 139 « vu ». 14 des 17 cuts corrigés étaient dans la liste « À contrôler » (63 cuts sur 409 candidats).
+- **Sain** : 437 écritures PUT, toutes en 204 ; aucune pause ; contrat ESV inchangé ; relecture démarrée seule après un lot jusqu'à la fin de la partie, comme prévu.
+- **Non jugé** : si les 18 corrections sont justes. Il faut l'œil de Mic ou un Écho sur ces cuts. Rien ne dit non plus que le seuil de 9 % tient pour l'ADV et les abords.
+- **Proposition retirée** : remplacer Ctrl+Entrée par Maj+Espace pour le dernier cut du lot. Ctrl+Entrée vient de la décision de Mic (D-065, KI-069) ; Maj+Espace sur un cut rouge passe à un autre cut et risque de faire quitter la partie. Mic avait accordé le changement ; il n'est pas fait. Un essai sur le vrai ESV (Maj+Espace sur le dernier cut rouge d'une partie) trancherait.
+- **Défaut d'export à instruire** : le volume 1 de l'export de 9 h 50 contient une copie du volume 2 (27,8 Mo au lieu d'environ 17). Les données sont complètes ; seul le poids est faux. Cause non cherchée.
+- **Suite** : lot en « Ombre » sur une partie neuve ; Écho de Mic sur les cuts corrigés (4130 de la partie 10, les 17 de la partie 11) pour les juger.
