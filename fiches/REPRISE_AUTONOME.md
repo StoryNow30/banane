@@ -185,3 +185,11 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - **À instruire plus tard** : volume 1 d'export qui contient une copie du volume 2 ; ordre du panneau ; « Arrêté » en haut pendant une passe ; hygiène héritée (D-183).
 - **Chantier suivant** : « relecture au fil du lot » (D-176), puis l'idée P-12 si Mic la retient.
 - Jamais sans Mic : fusion dans main, étiquette, publication, activation d'une pose sur le terrain. Pas de PR sans demande.
+
+## Test 8 construite et remise à Mic (18 octobre 2026, nuit, D-187)
+
+- **Fait** : branche `claude/50-relecture-couverture` (d58a6f1, poussée), version 4.9.5.8. verify complet : 2 226 essais, 2 224 réussis, 0 échec, 2 ignorés. Paquet `ariane-4.9.5-test.8.zip`, 2 271 656 octets, SHA-256 `20bb3847ad6071bb7aba76d509ae6bb32821f2bc99e3955076c9627d843d1e06`, remis à Mic avec sa consigne. La partie 11 passe en apprentissage (accord de Mic, D-187).
+- **Rien fusionné** dans `claude/50-base` ni `main` (jamais sans Mic). La relecture reste coupée par défaut.
+- **Attendre Mic** : exports de la test 8 (lot « Corriger » et « Ombre » sur parties neuves, puis Écho) et les corrections qu'il doit fournir dans l'après-midi. Les archiver dans banane-data (zips d'origine, SHA256SUMS, NOTES.md, ligne INDEX.md avant « ## Benchmarks »), après avoir vérifié qu'aucune identité d'opérateur n'y figure, puis les lire (D-184, D-185 donnent le modèle).
+- **À étudier ensuite** : première zone d'ADV de la partie 11 non détectée (cuts 6362 à 6424) ; marge de fin d'ADV ; « relecture au fil du lot » (D-176) ; défaut d'export (volume 1 contenant le volume 2) ; ordre du panneau.
+- Le déclencheur `trig_013CLrwFHFamJTuTq5pkhqcG` (Opus, 22 h 05) a tourné ; son prompt est dépassé par cette section. Rien de lourd (quota, D-181).
