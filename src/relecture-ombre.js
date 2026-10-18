@@ -53,8 +53,12 @@
   /* Plafond par zone (D-180), en cuts relus ; mesuré sur les parties d'apprentissage (fiches/RELECTURE_OMBRE.md § 11). PN : aucun. À 3,5 s
    * par cut relu, la passe d'une partie avec lot reste autour de 10 minutes au plus (PN compris). Les abords ont le meilleur rendement
    * (aucune erreur sur les corrections de l'étude), l'ADV le plus faible (peu de corrections à faire, 18 % d'erreurs). */
-  plafondParZone:Object.freeze({adv:40,abords:70,'vert-hors-zone':20,ecartement:20}),
+  plafondParZone:Object.freeze({adv:null,abords:70,'vert-hors-zone':20,ecartement:20}),
   plafondCuts:null,
+  /* D-185 (Écho de Mic sur la partie 11) : deux zones d'ADV séparées de `fusionTrouCuts` cuts au plus sont enchaînées (Mic les contrôle
+   * d'un trait : trou de 37 cuts entre 7350 et 7388) ; un cut « écartement » est relu avec `marge` cut(s) de part et d'autre (le cut
+   * isolé 7177 : son cut d'avant et son cut d'après). */
+  adv:Object.freeze({fusionTrouCuts:40}),ecartement:Object.freeze({marge:1}),
   /* Temps par cut relu (s) pour l'estimation : navigation d'un pas, capture et calcul, sans pause ajoutée (D-176). Mesuré au banc
    * (fiches/RELECTURE_OMBRE.md § 6 : 2,9 s par cut relu, capture comprise). Un cut traversé : un pas (0,1 s au banc), arrondi à 1 s. */
   tempsParCutS:3,tempsTraverseS:1,
@@ -87,6 +91,10 @@
    else for(const c of g)out.push({a:c-cfg.isole.marge,z:c+cfg.isole.marge,motif:'isole'});}
   for(const x of lot)if(x.differe)out.push({a:x.cut-cfg.differe.marge,z:x.cut+cfg.differe.marge,motif:'differe'});
   return out;}
+ /* Plages enchaînées quand le trou entre deux plages ne dépasse pas `trou` cuts (les cuts du trou entrent dans la plage). */
+ function enchainer(ps,trou){const t=entier(trou)?trou:0,out=[];
+  for(const p of ps.slice().sort((x,y)=>x[0]-y[0])){const d=out.at(-1);if(d&&p[0]-d[1]-1<=t)d[1]=Math.max(d[1],p[1]);else out.push([p[0],p[1]]);}
+  return out;}
  /* Ordre de couverture des types de zone (le premier qui couvre un cut le garde), comme l'étude. */
  const ORDRE_ZONES=['pn','adv','abords','vert-hors-zone','ecartement'];
 
@@ -95,8 +103,11 @@
   const lot=(Array.isArray(e.lot)?e.lot:[]).filter(x=>entier(x?.cut)&&x.cut<=max).map(x=>({cut:x.cut,differe:x.differe===true}));
   const differes=new Set(lot.filter(x=>x.differe).map(x=>x.cut)),poses=new Set(lot.filter(x=>!x.differe&&!differes.has(x.cut)).map(x=>x.cut));
   const brutes=plagesDuLot(lot,cfg);
-  for(const [cle,motif] of [['zonesPN','pn'],['zonesADV','adv'],['aControler','a-controler'],['ecartement','ecartement']])
-   for(const x of Array.isArray(e[cle])?e[cle]:[]){const p=plage(x);if(p)brutes.push({a:p[0],z:p[1],motif});}
+  for(const [cle,motif] of [['zonesPN','pn'],['zonesADV','adv'],['aControler','a-controler'],['ecartement','ecartement']]){
+   let ps=(Array.isArray(e[cle])?e[cle]:[]).map(plage).filter(Boolean);
+   if(motif==='adv')ps=enchainer(ps,cfg.adv.fusionTrouCuts);
+   if(motif==='ecartement')ps=ps.map(([a,z])=>[a-cfg.ecartement.marge,z+cfg.ecartement.marge]);
+   for(const p of ps)brutes.push({a:p[0],z:p[1],motif});}
   const bornees=brutes.map(p=>({...p,a:Math.max(0,p.a),z:Math.min(max,p.z)})).filter(p=>p.a<=p.z);
   /* Type de zone de chaque cut : le premier type qui le couvre (pn, adv, abords, vert-hors-zone) ; motifs : tous ceux qui le couvrent. */
   const zoneDe=new Map(),motifsDe=new Map();
@@ -114,15 +125,24 @@
   /* Plafond : les PN hors budget, entiers ; chaque autre zone a son budget (`plafondParZone`), puis un budget global facultatif
    * (`plafondCuts`) ; dans un budget, les plages entières par priorité puis ordre des cuts. */
   const gardees=candidates.filter(p=>p.zone==='pn'),horsPlafond=[];
-  const hors=(p,debut=p.debut)=>horsPlafond.push({debut,fin:p.fin,motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});
-  const budgeter=(liste,plafond)=>{let reste=entier(plafond)?plafond:Infinity,dansBudget=0;const out=[];
+  /* D-185 : un cut de la liste « À contrôler » ou « écartement » n'est jamais écarté par un budget de ZONE (6 des 15 oublis de la partie
+   * 11 étaient dans la liste, coupés par le plafond de l'ADV) : il est gardé, le reste de sa plage reste soumis au budget. Le plafond
+   * global facultatif (`plafondCuts`, réglage de rythme, null par défaut) reste un choix explicite : il ne protège rien. */
+  const obligatoire=c=>{const m=motifsDe.get(c);return !!m&&(m.has('a-controler')||m.has('ecartement'));};
+  const budgeter=(liste,plafond,{exempter=false}={})=>{let reste=entier(plafond)?plafond:Infinity,dansBudget=0;const out=[];
+   const hors=(p,debut=p.debut)=>{let suite=[],ob=null;
+    const rendre=()=>{if(!suite.length)return;
+     if(ob)out.push(decrire(suite[0],suite.at(-1),suite));
+     else horsPlafond.push({debut:suite[0],fin:suite.at(-1),motifs:p.motifs,libelle:p.libelle,raison:'plafond-cuts'});suite=[];};
+    for(const c of p.liste.filter(x=>x>=debut)){const o=exempter&&obligatoire(c);if(ob!==null&&o!==ob)rendre();ob=o;suite.push(c);}
+    rendre();};
    for(const p of liste.slice().sort((x,y)=>x.priorite-y.priorite||x.debut-y.debut)){
     if(p.cuts.length<=reste){out.push(p);reste-=p.cuts.length;dansBudget++;continue;}
     if(!dansBudget&&reste>0){const coupe=p.cuts[reste-1].cut;out.push(decrire(p.debut,coupe,p.liste.filter(c=>c<=coupe)));dansBudget++;hors(p,coupe+1);reste=0;continue;}
     hors(p);}
    return out;};
   const parZoneBudget=cfg.plafondParZone&&typeof cfg.plafondParZone==='object'?cfg.plafondParZone:{};
-  const apresZones=ORDRE_ZONES.filter(z=>z!=='pn').flatMap(z=>budgeter(candidates.filter(x=>x.zone===z),parZoneBudget[z]));
+  const apresZones=ORDRE_ZONES.filter(z=>z!=='pn').flatMap(z=>budgeter(candidates.filter(x=>x.zone===z),parZoneBudget[z],{exempter:true}));
   gardees.push(...budgeter(apresZones,cfg.plafondCuts));
   gardees.sort((x,y)=>x.debut-y.debut);horsPlafond.sort((x,y)=>x.debut-y.debut);
   /* Une plage coupée par le budget de sa zone puis par le budget global : un seul reste, d'un seul tenant. */
