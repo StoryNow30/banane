@@ -106,6 +106,7 @@
   if(nAppuis<appuisMin)return non('appuis',`${nAppuis} appui${nAppuis>1?'s':''} du lot, ${appuisMin} au moins`);
   /* H5 (audit P-5) : un vert entré pour son seul écartement, hors de toute plage, reste en ombre, quels que soient les réglages. */
   if(e.zone==='ecartement')return non('zone','vert hors plage entré pour son écartement : ombre seulement');
+  if(!['pn','adv','abords'].includes(e.zone))return non('zone',`zone « ${e.zone??'?'} » : jamais corrigée (D-180)`);
   const Z=R.zones?.[e.zone];
   if(!Z)return non('zone',`zone « ${e.zone??'?'} » inconnue`);
   if(Z.corriger!==true)return non('zone',`zone ${e.zone} : correction coupée`);

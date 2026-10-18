@@ -2149,6 +2149,7 @@ async function relectureLigneListe(cut,etat){const B=globalThis.BananeAppuisList
  if(!['left','right'].every(x=>Array.isArray(world[x])&&world[x].length===3&&world[x].every(Number.isFinite)))return null;
  const rep=B.lireReponse(await b1Voisins(cut,world),{cut,fenetre:B.DEFAULTS.fenetre});
  if(!rep?.ok||!(rep.table?.tables===1||rep.geo?.index===cut))return null;
+ if(rep.table.debut!==true||rep.table.rompue===true||rep.table.tronquee===true)return null;
  const l=rep.rows.find(x=>x.i===cut);return l?{statut:l.statut,operateur:l.operateur===true,vu:l.vu===true}:null;}
 /* Pourquoi la passe ne peut pas partir maintenant (ESV doit être propre), ou null. */
 async function relectureRefus(b,auto){
@@ -2308,6 +2309,7 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  const refusee=raison=>({action:'correction-refusee',raison});
  const now=await readState();if(K.key(now.identity)!==K.key(etat.identity))return refusee('le cut affiché a changé');
  if(!K.equalPoses(etat.rails,now.rails))return refusee('rails modifiés depuis la capture');
+ {let l2=null;try{l2=await relectureLigneListe(cut,now);}catch{l2=null;}if(!l2||l2.statut!=='valid'||l2.operateur)return refusee('statut du cut changé ou illisible depuis la lecture');}
  const rails=calc.commande.rails,expected=K.expectedPoses(now,rails),g=G.gaugeMmOf(expected,K.C);
  if(!G.admissible(G.classifyMm(g)))return refusee(`écartement hors contrat (${Math.round(g*10)/10} mm)`);
  await relectureNoterIntention({lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString()});

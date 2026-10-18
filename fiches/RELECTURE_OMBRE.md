@@ -100,7 +100,7 @@ Les conditions 6, 8 et 9 sont jugées sur la pose **qui serait écrite**, en **v
 
 Même quand la règle dit « oui », la passe ne pose que si :
 
-- le rôle est « vert » **et prouvé** : statut `valid` **sans drapeau opérateur** lu dans la liste d'ESV pour ce cut (revue, correction 1). Un SKIP, un cut que Mic vient de corriger, un rouge au-delà de la borne du lot, un cut que la passe a déjà corrigé : refusés. Sans statut lisible, rien ;
+- le rôle est « vert » **et prouvé** : statut `valid` **sans drapeau opérateur** lu dans la liste d'ESV pour ce cut (revue, correction 1). Un SKIP, un cut que Mic vient de corriger, un rouge au-delà de la borne du lot, un cut que la passe a déjà corrigé : refusés. Sans statut lisible, rien. Le statut est lu à l'arrivée **et relu juste avant la pose** : si Mic valide ou SKIP le cut pendant la capture, la passe ne pose ni ne valide rien (contre-revue). La table de la liste n'est crue que si sa première page a été vue et qu'elle n'est ni rompue ni tronquée (sinon les lignes seraient décalées). Un vert hors zone n'est jamais corrigé, quel que soit le fichier de réglages (D-180) ;
 - le moteur permet d'écrire sur la cible (`engine.writable`) ;
 - le cut a été atteint par les boutons d'ESV (un pas) ; jamais juste après un saut par la carte (correction 3). Le cut qui suit une correction est atteint par un pas, comme les autres ;
 - le nombre de cuts de la partie est connu, et le cut n'est pas le dernier (Maj+Espace chargerait la partie suivante, KI-069).
