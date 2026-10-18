@@ -1,5 +1,19 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.7 — 4.9.5 test 7 (18/10)
+
+Manifeste `4.9.5.7`, « 4.9.5 test 7 », paquet `ariane-4.9.5-test.7.zip` ; base : `claude/50-base` (803fb76 : 4.9.5 test 6 + panneau réorganisé, départ de lot sur un cut vert, partie complète, fiabilité du lot, PN confirmé par deux cœurs consécutifs, relecture après le lot ; D-170 à D-182).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). Seule écriture nouvelle : la relecture en mode « Corriger », que Mic choisit dans le panneau (coupée par défaut). Mode coupé : commandes vers ESV identiques à la test 6 sur les scénarios rejoués (5 cas synthétiques, un lot réel de 335 commandes).
+Consigne : `consignes/seance-terrain-4.9.5-test-7-2026-10-18.md` ; retour arrière : la 4.9.5 test 6 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Relecture après le lot** (D-170 à D-176, D-179, D-180 ; `fiches/RELECTURE_OMBRE.md`) : trois modes, « Coupée » (défaut), « Ombre » (visite, capture, calcule, journalise, n'écrit rien ; ESV marque « vu » chaque cut neuf affiché) et « Corriger » (verts prouvés du PN, de l'ADV et des abords qui passent la règle prudente : 8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus de la médiane ; pose par la commande `apply` du lot, validation par **Maj+Espace**, qui valide sur place). Jamais un cut posé ou différé par le lot, jamais un SKIP, jamais un vert hors zone. Départ juste après le lot, sans pause ; « Arrêter la relecture ». Gardes : une seule passe, statut du cut relu avant la pose, table de la liste refusée si incomplète, pas de pose juste après un saut, dernier cut de la partie jamais validé, réglages invalides = « Corriger » retombe en ombre. Plafonds par zone (ADV 40, abords 70, PN hors budget). Étude : PN 36 justes sur 36 actions, ADV 11 sur 17 (18 % d'erreurs), abords 30 sur 37 (14 %), 0 mauvaise voie ; 9 % non démontré en ADV et abords (accepté par Mic, D-180).
+- **Panneau réorganisé** (D-173) : groupes « Lot », « Règles et choix du prochain lot », « Résultats du dernier lot », « Relecture », « Export, archive et réglages avancés » ; « Dernier lot » et « Prochain lot » sous chaque choix ; règle grappe renommée « Mettre en attente les cuts voisins d’une série de différés » ; fin de partie et partie sans rouge annoncées.
+- **Départ de lot sur un cut vert** (D-169) : ni pose ni validation sur le vert, passage au prochain cut non validé (Maj+Z, `nextWithoutDecision`) ; rouges seulement derrière : aucune commande, avis qui les nomme. **Partie complète et cut vert** : 0 commande.
+- **Fiabilité du lot** (H14, H15, H16) : empreinte du contrat indépendante du rail sélectionné (plus de faux avis), audit serveur seulement sur une lecture complète de la partie du lot, chaque erreur rangée au lot de sa demande.
+- **PN confirmé par deux cœurs consécutifs** (H6) : 17 PN sur 17 gardés, plus de fausse zone en capturant des verts.
+- Essais : `tests/relecture-*.test.cjs` (dont `-sw-statut-relu`, `-sw-table-zone`, `-sw-table-tronquee`, `-sw-zone-hors`), `depart-sur-vert-*-t7`, `fiabilite-*`, essais de version `tests/version-4957.test.cjs` (remplace `version-4956`) et `tests/consigne-4957.test.cjs` (remplace `consigne-4956`). verify : 2 222 essais, 0 échec, 2 ignorés (corpus natif absent).
+- Non vérifié : Maj+Espace relayé par Ariane dans le vrai ESV ; la durée et le nombre de lectures de nuage de la passe sur un vrai lot ; Edge. Pas dans cette version : la relecture « au fil du lot » (D-176), la combinaison P-7 (en ombre, D-182).
+
 ## 4.9.5.6 — 4.9.5 test 6 (17/10)
 
 Manifeste `4.9.5.6`, « 4.9.5 test 6 », paquet `ariane-4.9.5-test.6.zip` ; base : `claude/50-base` (a362a29 : 4.9.5 test 5 + points utiles de la relecture, clic humain du mode rapide en réglage, détection des ADV ; D-163, D-164).
