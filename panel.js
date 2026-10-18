@@ -1527,7 +1527,7 @@ on('native-discard',async()=>{
    /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
    const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
    const L=await exportListe(null),VC=await exportVerts();
-   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte+VC.texte+texteChoixLot(state?.batch),
+   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte+VC.texte+texteChoixLot(state?.batch)+(globalThis.ArianeCarteRelecture?.texteContenu(state?.batch)||''),
      pied:'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'});
    const {save,fermerTout,trop,max,mo1}=V,total=()=>V.total;
    await L.sauver(save).catch(()=>{});await VC.sauver(save).catch(()=>{});
