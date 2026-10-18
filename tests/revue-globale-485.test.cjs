@@ -71,7 +71,7 @@ test('« écartement bas » seulement si le cut a vraiment été différé par l
 test('nom de version : une seule valeur, celle du manifeste, partout où il est écrit (stable : aucun nom de test)',()=>{
   const nom=manifest.version_name||manifest.version;assert.equal(K.VERSION_NAME,nom);
   for(const f of ['panel.html','panel.js','src/bridge.js','background.js']){
-    const s=fs.readFileSync(path.join(root,f),'utf8'),tests=[...s.matchAll(/\d+\.\d+\.\d+ test \d+/g)].map(m=>m[0]);
+    const s=fs.readFileSync(path.join(root,f),'utf8'),code=s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/<!--[\s\S]*?-->/g,''),tests=[...code.matchAll(/\d+\.\d+\.\d+ test \d+/g)].map(m=>m[0]);/* les commentaires datés gardent l'historique des versions */
     if(manifest.version_name)for(const v of tests)assert.equal(v,nom,`${f} : « ${v} »`);
     else assert.deepEqual(tests,[],`${f} : nom de test dans une stable`);
     assert.ok(s.includes(nom),`${f} : ${nom}`);}

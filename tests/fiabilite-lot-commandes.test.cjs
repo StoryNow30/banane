@@ -4,25 +4,26 @@
  *   A. lot 100–103 sans incident, précédé de « Connecter » (empreinte du contrat) ;
  *   B. lot 100–103 où la page disparaît pendant une capture (erreur de lot), puis « Reprendre » après F5 ;
  *   C. observations de liste pendant un lot (audit serveur : lectures complète et partielle).
- * Chaque message envoyé à la page (`page-command` : action, arguments) est relevé dans l'ordre. Les identifiants aléatoires et les heures sont
+ * Chaque message envoyé à la page (`page-command` : action, arguments) est relevé dans l'ordre. Les identifiants aléatoires, les heures et la version de l'extension sont
  * neutralisés (ils changent à chaque exécution) ; tout le reste est comparé à l'empreinte relevée sur la base (`claude/50-base`, 97dfca7),
  * avant les corrections. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const COUPE='Could not establish connection. Receiving end does not exist.';
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-const neutre=x=>JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>'));
+const neutre=x=>JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>').replace(/4\.9\.5\.\d+|4\.9\.5 test \d+/g,'<version>'));
 const empreinte=messages=>crypto.createHash('sha256').update(JSON.stringify(neutre(messages))).digest('hex');
 /* Relevé de chaque message à la page, posé avant « Connecter ». */
 const releve=messages=>(esv,b)=>{const envoi=b.ctx.chrome.tabs.sendMessage;
  b.ctx.chrome.tabs.sendMessage=async(id,m)=>{if(m?.kind==='page-command')messages.push({tab:id,...JSON.parse(JSON.stringify(m))});return envoi(id,m);};};
 const fin=async b=>{let v;for(let i=0;i<600&&((v=await b.api('view')).busy||v.batch?.state==='RUNNING');i++)await attendre(5);return v;};
 
-/* Empreintes relevées sur la base, avant les corrections (même scénario, même neutralisation). */
-const BASE={A:{n:42,sha:'5758eac88a1d35ac7405f5bff705a152982cf1323f4b853a44c9535b8c98fe98'},
- B:{n:52,sha:'081e3019aa2896068c5da6d3c444c232cafcfc97a74875b0bc834175719c3d70'},
+/* Empreintes relevées sur la base, avant les corrections (même scénario, même neutralisation). Refaites avec la version neutralisée à la test 7 :
+ * mêmes messages à 803fb76 (4.9.5.6) et à 4.9.5.7, le numéro de version était le seul écart. */
+const BASE={A:{n:42,sha:'722bbee48b43e7b37512a63dfddc7aa8bd98ce61674091d567a58581675cec19'},
+ B:{n:52,sha:'f25ce0a84742f4669f75e44b14d8bd3ef156d3aaf41555f4fed53f2ff05389c0'},
  /* C : les observations de liste ne changent aucune commande (même suite que A). */
- C:{n:42,sha:'5758eac88a1d35ac7405f5bff705a152982cf1323f4b853a44c9535b8c98fe98'}};
+ C:{n:42,sha:'722bbee48b43e7b37512a63dfddc7aa8bd98ce61674091d567a58581675cec19'}};
 
 async function scenarioA(){const messages=[];const r=await pilote(L,{start:100,end:103,esv:releve(messages)});await fin(r.b);return messages;}
 async function scenarioB(){const messages=[];
