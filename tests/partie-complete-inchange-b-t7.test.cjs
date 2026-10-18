@@ -23,6 +23,6 @@ test('partie incomplète, compteur absent, illisible ou d’un autre cut : comma
    ['relevé antérieur au début du cut',{mesure:i=>({requestId:'r',at:'2020-01-01T00:00:00.000Z',identity:{pageId:i.pageId,part:i.part,cut:i.cut},compteur:{traites:101,total:101}}),liste:fenetre(50,'valid')}]]){
   const s=await scenario(o);
   assert.deepEqual(s.calls,ref.calls,nom);assert.deepEqual(s.trace,ref.trace,nom+' : arguments identiques');
-  assert.doesNotMatch(String(s.view.notice),/Rien n’a été envoyé à ESV/,nom);}
+  assert.doesNotMatch(String(s.view.notice),/Aucune pose ni validation n’a été envoyée à ESV/,nom);}
 });
 

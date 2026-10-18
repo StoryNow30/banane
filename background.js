@@ -977,7 +977,7 @@ async function partieCompleteAuDepart(){try{const b=engine?.s?.batch,sc=b?.scope
 /* Clôture sans commande : l'état du lot, l'avis, le journal. La capture ouverte reste (comme l'arrêt au dernier cut non résolu). */
 async function cloreSansRouge(p){const b=engine.s.batch;if(b?.state!=='RUNNING')return false;
  b.state='STOPPED';b.stoppedAtEnd={cut:p.cut,reason:'partie-sans-rouge',issue:'partie-sans-rouge',target:null,total:p.total,at:new Date().toISOString(),applied:false};
- engine.s.notice=`Partie ${p.part} : plus aucun cut rouge à traiter. Le lot s’arrête ici. Rien n’a été envoyé à ESV.`;
+ engine.s.notice=`Partie ${p.part} : plus aucun cut rouge à traiter. Le lot s’arrête ici. Aucune pose ni validation n’a été envoyée à ESV.`;
  await engine.event('batch-stopped-at-end',{identity:null,reason:'partie-sans-rouge',lastCut:p.cut,target:null,total:p.total,traites:p.traites,statut:p.statut});
  return true;}
 /* Test 7, suite 2 (coordination, D-169, audit P-5 C1 et C2) — DÉPART SUR UN CUT VERT : AUCUNE ÉCRITURE SUR LUI.
@@ -1025,7 +1025,7 @@ async function departSurVert(){try{const b=engine?.s?.batch,sc=b?.scope,avant=en
 const K3=()=>globalThis.BananeCore3;
 const listeCuts=l=>l.length<=12?l.join(', '):`${l.slice(0,12).join(', ')} et ${l.length-12} autres`;
 function avisDepartSurVert(d){const n=d.derriere?.length??0,rouges=k=>`${k} ${k>1?'cuts rouges':'cut rouge'}`;
- const debut=`Partie ${d.part} : le cut ${d.cut} est déjà ${d.statut==='skipped'?'passé (SKIP)':'validé'}.`,rien='Rien n’a été envoyé à ESV.';
+ const debut=`Partie ${d.part} : le cut ${d.cut} est déjà ${d.statut==='skipped'?'passé (SKIP)':'validé'}.`,rien='Aucune pose ni validation n’a été envoyée à ESV.';
  if(d.motif==='rouges-derriere')return `${debut} Plus aucun cut rouge après lui. Il reste ${rouges(n)} derrière : ${listeCuts(d.derriere)}. ${rien} Pour ${n>1?'les':'le'} traiter : ouvre le cut ${d.derriere[0]} dans ESV, puis lance un lot depuis ce cut.`;
  if(d.motif==='suivant-non-rouge')return `${debut} Le cut non validé suivant (${d.devant}) n’est pas rouge (SKIP ou statut inconnu). ${rien} Ouvre le cut à traiter dans ESV, puis lance un lot depuis ce cut.`;
  if(d.motif==='hors-du-lot')return `${debut} Le premier cut rouge après lui (${d.devant}) est au-delà du dernier cut du lot (${d.end}). ${rien}`;

@@ -14,7 +14,7 @@ test('cut vert et information douteuse : arrêt sans rien envoyer, avec la raiso
    ['premier rouge au-delà du lot',{liste:partie(12,{rouges:[9]}),depart:0,fin:5},'hors-du-lot',/Le premier cut rouge après lui \(9\) est au-delà du dernier cut du lot \(5\)/]]){
   const s=await lotListe(o);
   assert.deepEqual(s.trace,[],nom+' : aucune commande');assert.equal(s.view.batch.state,'STOPPED',nom);
-  assert.equal(s.view.batch.stoppedAtEnd.motif,motif,nom);assert.match(s.view.notice,avis,nom);assert.match(s.view.notice,/Rien n’a été envoyé à ESV\./,nom);}
+  assert.equal(s.view.batch.stoppedAtEnd.motif,motif,nom);assert.match(s.view.notice,avis,nom);assert.match(s.view.notice,/Aucune pose ni validation n’a été envoyée à ESV\./,nom);}
 });
 
 test('navigation refusée par ESV (aucun cut non validé devant pour ESV) : arrêt dit, rien d’écrit, aucune erreur',async()=>{
@@ -30,5 +30,5 @@ test('navigation refusée par ESV (aucun cut non validé devant pour ESV) : arr�
 test('partie complète, cut vert : la règle d’avant (rien n’est envoyé, « plus aucun cut rouge »)',async()=>{
  const s=await lotListe({liste:partie(12,{}),depart:5});
  assert.deepEqual(s.trace,[]);assert.equal(s.view.batch.stoppedAtEnd.issue,'partie-sans-rouge');
- assert.equal(s.view.notice,'Partie 23 : plus aucun cut rouge à traiter. Le lot s’arrête ici. Rien n’a été envoyé à ESV.');
+ assert.equal(s.view.notice,'Partie 23 : plus aucun cut rouge à traiter. Le lot s’arrête ici. Aucune pose ni validation n’a été envoyée à ESV.');
 });

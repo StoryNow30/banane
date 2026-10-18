@@ -206,7 +206,7 @@ La carte occupe l'emplacement réservé (d) « Relecture » (`#groupe-relecture`
 
 Rejeu hors ligne de la logique codée (`relectureCalculer` extraite de `background.js`, règle et sélection de la branche, fichier de réglages proposé réel : PN, ADV et abords corrigent) sur les cas de l'étude, parties d'apprentissage 1:12, 1:13, 1:24, 1:29 et 2:1 (1:17 n'existe plus qu'en archive). Outils de la revue (hors dépôt : `revrelo/fidelite`, `fid2`), adaptés : chaîne vide, seules les poses des verts y entrent ; sélection avec un plafond par zone, plusieurs plafonds rejoués (chacun avec sa propre chaîne). Décision de l'étude rendue sur **1 323 cuts sur 1 323**.
 
-Colonnes : cuts relus avec une référence de Mic, actions, justes, erreurs de plus de 10 mm, cuts abîmés, mauvaise voie.
+Colonnes : cuts relus avec une référence de Mic, actions, justes, erreurs de plus de 10 mm, cuts abîmés, mauvaise voie. La colonne « Étude » compte les 5 parties rejouables ; `RELECTURE_AUTONOME.md` § 5.4 compte 6 parties (1:17 comprise) : ADV 17 actions, 11 justes, 3 erreurs, 1 abîmé ; abords 37, 30, 5, 1.
 
 **Sans plafond** (la règle seule, comme l'étude) :
 
@@ -251,6 +251,8 @@ Colonnes : cuts relus avec une référence de Mic, actions, justes, erreurs de p
 - **Non rejoué** : la garde (statut lu dans ESV, arrivée par un pas, dernier cut), que les Échos ne permettent pas de reconstituer ; elle ne peut que retirer des actions.
 
 ## 12. Doutes et limites
+
+- **Poids du journal.** L'événement `relecture-ombre` seul pèse environ 1,4 Ko par cut relu ; avec les événements de l'adaptateur (captures, navigation), la revue finale a mesuré environ 12 Ko par cut (452 815 octets pour 37 cuts), soit 2 à 3 Mo par lot de 200 cuts. La préparation de la passe relit tout le journal du cache (non vidé) : coût non mesuré.
 
 - **Ce qui diffère encore de l'étude** : la chaîne n'accueille pas les cuts différés (l'étude, si) ; la médiane de la partie vient de la liste d'ESV ; le plafond par zone (PN hors budget) ; H5 en plus, en ombre ; la garde (statut lu dans ESV, arrivée, dernier cut), que l'étude n'avait pas.
 - **Zones PN** : tirées des seules captures du lot. Sur les parties traitées par lot, l'étude n'a que 7 PN sur 7 (partie 29) ; 29 des 36 corrections justes viennent de parties sans lot, donc sans passe (revue, F1).

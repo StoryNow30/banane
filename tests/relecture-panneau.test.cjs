@@ -18,7 +18,7 @@ test('panel.html : carte #carte-relecture dans l’emplacement (d) « Relecture 
   assert.match(bloc,new RegExp(`id="${id}"[^>]*> ${txt.replace(/[()+]/g,'\\$&')}`));
  assert.doesNotMatch(bloc,/ne modifie rien\)/,'plus de « ne modifie rien » sans le « vu »');
  for(const id of ['relecture-dernier-l','relecture-dernier','relecture-prochain','relecture-ligne','relecture-arreter','relecture-lancer','relecture-note','relecture-reglages','relecture-acquitter'])assert.ok(bloc.includes(`id="${id}"`),id);
- assert.match(bloc,/part seule juste après le lot/,'D-176 : départ automatique, sans compte à rebours');assert.doesNotMatch(bloc,/compte à rebours|au clic/);
+ assert.match(bloc,/part seule juste après un lot jusqu’à la fin de la partie/,'D-176 : départ automatique, sans compte à rebours');assert.doesNotMatch(bloc,/compte à rebours|au clic/);
  assert.match(bloc,/<dl class="choix-etat"><dt id="relecture-dernier-l">Dernier lot<\/dt><dd id="relecture-dernier">aucun lot<\/dd><dt>Prochain lot<\/dt><dd id="relecture-prochain">—<\/dd><\/dl>/);
  assert.ok(h.indexOf('src/carte-relecture.js')<h.indexOf('src="panel.js"'));
  assert.match(lire('panel.js'),/ArianeCarteRelecture\?\.texteContenu\(state\?\.batch\)/);
@@ -66,11 +66,11 @@ test('préparation : « Lancer » caché, « Arrêter » visible ; réglages : s
   reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null}});K.afficher();
  assert.equal(el['relecture-lancer'].hidden,true,'pas de second lancement pendant la préparation');assert.equal(el['relecture-arreter'].hidden,false);
  assert.equal(el['relecture-ligne'].textContent,'Relecture en préparation : elle part dans un instant.');
- assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : fichier proposé (« propose »).');
+ assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : fichier proposé.');
  for(const id of ['relecture-coupee','relecture-ombre','relecture-corriger'])assert.equal(el[id].disabled,true);
  /* D-180 : la carte dit quelles zones corrigent (un interrupteur par zone). */
  K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null,zones:{pn:true,adv:true,abords:true,'vert-hors-zone':false}}});K.afficher();
- assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : fichier proposé (« propose »). Zones qui corrigent : PN, ADV, abords ; les autres restent en ombre.');
+ assert.equal(el['relecture-reglages'].textContent,'Réglages de la correction : fichier proposé. Zones qui corrigent : PN, ADV, abords ; les autres restent en ombre.');
  K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null,zones:{pn:true,adv:false,abords:false,'vert-hors-zone':false}}});K.afficher();
  assert.match(el['relecture-reglages'].textContent,/Zones qui corrigent : PN ; les autres restent en ombre\./);
  K.etat({choix:'corriger',lot:{id:'L1',mode:'corriger',etat:'STOPPED'},passe:null,reglages:{source:'propose',statut:'propose',correctionPermise:true,raison:null,zones:{pn:false,adv:false,abords:false,'vert-hors-zone':false}}});K.afficher();

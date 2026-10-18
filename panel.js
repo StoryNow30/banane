@@ -643,8 +643,8 @@
      {const P=partieSansRouge(b),el=$('lot-fin-partie'),e=b?.state==='STOPPED'?b.stoppedAtEnd:null;
       /* Test 7, suite 2 : départ sur un cut vert sans rouge devant ; les rouges restants derrière sont nommés. */
       const derriere=e?.issue==='depart-sur-vert'&&e.motif==='rouges-derriere'&&Array.isArray(e.derriere)&&e.derriere.length?e.derriere:null;
-      if(el){el.hidden=P===null&&!derriere;el.textContent=derriere?`Partie ${entier(b.scope?.part)} : plus aucun cut rouge après le cut ${entier(e.cut)}. Il reste ${derriere.length} ${derriere.length>1?'cuts rouges':'cut rouge'} derrière : ${derriere.slice(0,12).map(entier).join(', ')}${derriere.length>12?', …':''}. Rien n’a été envoyé à ESV.`
-        :P===null?'':`Partie ${entier(P)} : plus aucun cut rouge à traiter. Le lot s’arrête ici.${b.stoppedAtEnd?.issue==='partie-sans-rouge'?' Rien n’a été envoyé à ESV.':''}`;}}
+      if(el){el.hidden=P===null&&!derriere;el.textContent=derriere?`Partie ${entier(b.scope?.part)} : plus aucun cut rouge après le cut ${entier(e.cut)}. Il reste ${derriere.length} ${derriere.length>1?'cuts rouges':'cut rouge'} derrière : ${derriere.slice(0,12).map(entier).join(', ')}${derriere.length>12?', …':''}. Aucune pose ni validation n’a été envoyée à ESV.`
+        :P===null?'':`Partie ${entier(P)} : plus aucun cut rouge à traiter. Le lot s’arrête ici.${b.stoppedAtEnd?.issue==='partie-sans-rouge'?' Aucune pose ni validation n’a été envoyée à ESV.':''}`;}}
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';

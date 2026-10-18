@@ -44,7 +44,7 @@ Si le cut est vert, Ariane **n'y écrit rien**, puis :
 |---|---|
 | Le premier cut non validé **devant** est rouge et dans les bornes | « Cut non validé suivant » (Maj+Z), puis le même lot repart sur ce cut |
 | Aucun cut non validé devant, rouges **derrière** | Arrêt. Avis : « Partie P : le cut C est déjà validé. Plus aucun cut rouge après lui. Il reste N cuts rouges derrière : 1, 899. Rien n'a été envoyé à ESV. Pour les traiter : ouvre le cut 1 dans ESV, puis lance un lot depuis ce cut. » |
-| Plus aucun rouge | Arrêt de la règle « partie complète » : « Partie P : plus aucun cut rouge à traiter. Le lot s'arrête ici. Rien n'a été envoyé à ESV. » |
+| Plus aucun rouge | Arrêt de la règle « partie complète » : « Partie P : plus aucun cut rouge à traiter. Le lot s'arrête ici. Aucune pose ni validation n'a été envoyée à ESV. » |
 | Le cut non validé devant est passé (SKIP) ou de statut inconnu | Arrêt, rien envoyé |
 | Le premier rouge devant est au-delà du dernier cut du lot | Arrêt, rien envoyé |
 | La liste ne concorde pas avec le compteur (nombre de rouges ≠ M − N) | Arrêt, rien envoyé |

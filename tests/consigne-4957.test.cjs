@@ -16,7 +16,10 @@ test('installation : empreinte avant la pose, par-dessus la test 6 sans désinst
  const s=plat(section('1. Installer et vérifier'));
  assert.ok(s.indexOf('Contrôle l\'empreinte')<s.indexOf('Pose la 4.9.5 test 7'));
  for(const m of ['Get-FileHash','ariane-4.9.5-test.7.zip','-Algorithm SHA256','par-dessus la test 6','Ne désinstalle rien','Recharger','« 4.9.5 test 7 »','ARIANE 4.9.5 test 7',
-  'Ariane 4.9.5 test 7 · ouvrir','« Comme avant » est coché','la case de la règle est vide','« Coupée » est cochée'])assert.ok(s.includes(m),m);
+  'Ariane 4.9.5 test 7 · ouvrir','« Relecture après le lot »','« Coupée » est cochée','Tes choix d\'Orbite de la test 6 sont gardés'])assert.ok(s.includes(m),m);
+ /* Revue finale : après une mise à jour par-dessus la test 6, « Tout recentré » et la case de la règle sont GARDÉS (D-166, D-167). La consigne ne doit
+  * pas annoncer un état « Comme avant » / règle vide, que Mic ne verrait pas, ni lui faire croire qu'il faut s'arrêter. */
+ assert.doesNotMatch(s,/Comme avant|règle est vide/);
 });
 
 test('ce qui ne change pas : la pose, le moteur ; la mémoire des différés de l\'Écho et déplacer la vue restent coupés',()=>{
@@ -44,7 +47,9 @@ test('ce qui change : les groupes du panneau, le départ sur un cut vert, la rè
 
 test('lot en « Ombre » : une partie neuve, avant de démarrer, ne rien toucher dans ESV pendant la relecture, les heures, puis une Écho complète',()=>{
  const s=plat(section('2. Un lot en « Ombre »'));
- for(const m of ['**Une partie neuve**','**« Ombre »** **avant** de démarrer le lot','**Ne touche à rien dans ESV pendant qu\'elle travaille.**','l\'heure de début et l\'heure de fin de la relecture','**une Écho complète**'])assert.ok(s.includes(m),m);
+ for(const m of ['**Une partie neuve**','**« Ombre »** **avant** de démarrer le lot','**Ne touche à rien dans ESV pendant qu\'elle travaille.**','l\'heure de début et l\'heure de fin de la relecture','**une Écho complète**','jusqu\'à la fin de la partie','Sinon la carte dit pourquoi','« Lancer la relecture »','« Relecture finie »'])assert.ok(s.includes(m),m);
+ /* Revue finale : la passe ne part seule que pour un lot jusqu'à la fin de la partie ; ces libellés existent dans le panneau et le service worker. */
+ assert.ok(html.includes('>Lancer la relecture</button>'));assert.ok(fs.readFileSync(path.resolve(__dirname,'..','background.js'),'utf8').includes('Relecture finie :'));
  const M=require('../datasets/manifeste-parties.json'),p1=M.apprentissage.filter(a=>a.projet===1).flatMap(a=>a.parties).sort((a,b)=>a-b);
  assert.ok(s.includes(`pas les parties ${p1.slice(0,-1).join(', ')} et ${p1.at(-1)} du premier projet, ni la partie 1 du second`),'parties d\'apprentissage exclues');
  assert.deepEqual(M.apprentissage.filter(a=>a.projet===2).flatMap(a=>a.parties),[1]);
@@ -53,14 +58,14 @@ test('lot en « Ombre » : une partie neuve, avant de démarrer, ne rien toucher
 test('lot en « Corriger » : une autre partie neuve, PN et ADV notés, Écho complète, les cuts repris notés, un arrêt ou « J’ai contrôlé le cut » expliqué',()=>{
  const s=plat(section('3. Un lot en « Corriger »'));
  for(const m of ['**Une autre partie neuve**','PN et des ADV','**« Corriger »** **avant** de démarrer le lot','ne touche à rien pendant la relecture','**une Écho complète**',
-  '**note les cuts qu\'Ariane a corrigés et que tu as dû reprendre**','« J’ai contrôlé le cut »','contrôle ce cut dans ESV'])assert.ok(s.includes(m),m);
+  '**note combien de cuts tu as dû reprendre parmi ceux qu\'Ariane a corrigés**','« J’ai contrôlé le cut »','contrôle ce cut dans ESV'])assert.ok(s.includes(m),m);
  assert.ok(html.includes('J’ai contrôlé le cut</button>'));
 });
 
 test('exports : tous les volumes, SHA-256, les heures ; le choix de la relecture noté ; cache vidé après confirmation',()=>{
  const f=plat(section('4. À la fin : les exports'));
- for(const m of ['Tout télécharger pour l\'analyse','après chaque lot','Le choix de la relecture y est noté','**tous les volumes**','SHA-256','tes heures','Terminer et télécharger',
-  'Vide le cache seulement après ma confirmation de réception'])assert.ok(f.includes(m),m);
+ for(const m of ['Tout télécharger pour l\'analyse','après chaque lot','Le choix de la relecture y est noté (Ombre ou Corriger)','Exporte après « Relecture finie »','**tous les volumes**','SHA-256','tes heures','Terminer et télécharger',
+  'Vide le cache seulement après ma confirmation de réception','remets « Coupée »'])assert.ok(f.includes(m),m);
 });
 
 test('retour arrière : la phrase de consignes/README.md (désactive, décompresse la test 6, réactive, Recharger, F5)',()=>{
@@ -83,6 +88,6 @@ test('aucune empreinte ; aucun identifiant de projet ESV ; aucune adresse ; aucu
 test('ce qui n\'est pas vérifié est dit ; la consigne tient sur une page',()=>{
  const s=plat(section('6. Ce qui n\'est pas vérifié'));
  for(const m of ['**Maj+Espace envoyé par Ariane n\'a jamais été essayé dans le vrai ESV.**','valide sur place','nomme le cut','pas démontré pour l\'ADV et les abords','14 à 18 %',
-  '3 à 9 minutes','de ×2 à ×9','pas au fil du lot','Edge n\'a pas été vu'])assert.ok(s.includes(m),m);
+  '3 à 9 minutes par partie en Ombre','12 au plus en Corriger','×4,5 à ×9','pas au fil du lot','Edge n\'a pas été vu'])assert.ok(s.includes(m),m);
  assert.ok(texte.split(/\s+/).length<1000,'une page : moins de 1 000 mots');
 });

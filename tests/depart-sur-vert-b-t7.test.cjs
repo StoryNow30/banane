@@ -22,7 +22,7 @@ test('relance d’une partie dont les rouges restants sont DERRIÈRE le cut vert
  assert.equal(s.view.batch.state,'STOPPED');assert.equal(s.view.batch.error??null,null,'aucune erreur');
  assert.equal(s.view.batch.stoppedAtEnd.issue,'depart-sur-vert');assert.equal(s.view.batch.stoppedAtEnd.motif,'rouges-derriere');
  assert.deepEqual(s.view.batch.stoppedAtEnd.derriere,[1,3]);
- assert.equal(s.view.notice,'Partie 23 : le cut 8 est déjà validé. Plus aucun cut rouge après lui. Il reste 2 cuts rouges derrière : 1, 3. Rien n’a été envoyé à ESV. Pour les traiter : ouvre le cut 1 dans ESV, puis lance un lot depuis ce cut.');
+ assert.equal(s.view.notice,'Partie 23 : le cut 8 est déjà validé. Plus aucun cut rouge après lui. Il reste 2 cuts rouges derrière : 1, 3. Aucune pose ni validation n’a été envoyée à ESV. Pour les traiter : ouvre le cut 1 dans ESV, puis lance un lot depuis ce cut.');
  const v=await s.b.api('resume');assert.match(v.notice,/^Lot déjà terminé : départ sur un cut vert, rien à traiter devant \(cut 8\)/);assert.deepEqual(s.ecritures,[]);
 });
 

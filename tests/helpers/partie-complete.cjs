@@ -3,7 +3,7 @@
  * service worker réel en VM, moteur et GCV1 réels, ESV simulé ; données synthétiques. Réparti en trois fichiers, chacun bien
  * sous les 20 s de verify. */
 const {pilote,avecReleve}=require('./dernier-cut.cjs'),L=require('../../src/lot-decision.js'),B=require('../../src/appuis-liste.js');
-const AVIS='Partie 23 : plus aucun cut rouge à traiter. Le lot s’arrête ici. Rien n’a été envoyé à ESV.';
+const AVIS='Partie 23 : plus aucun cut rouge à traiter. Le lot s’arrête ici. Aucune pose ni validation n’a été envoyée à ESV.';
 const ECRITURES=['apply','restore','validateAndNext','validateInPlace','next','nextWithoutDecision','skipAndNext'];
 /* Commandes reçues par l'ESV simulé, arguments compris ; identifiants et heures neutralisés, rien d'autre. */
 const neutre=x=>JSON.parse(JSON.stringify(x??null).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>')

@@ -563,7 +563,7 @@ Le pilote 3717 a été contrôlé séparément avant la séance complète.
   Écho doit conserver l'origine du premier passage avant tout déplacement.
   Le calcul compare cette origine à la pose finale de Mic, et non à la
   position déplacée qui a été validée entre les deux.
-- Projet confirmé par Mic : `RAIL-260826_060933_E_701`, partie 24. L'export
+- Projet confirmé par Mic : `RAIL-<code du projet>`, partie 24. L'export
   déclare 4.8.6 ; son `projectId` est absent. Cette absence ne constitue pas
   une preuve de changement de projet.
 - Mic confirme les poses d'origine manuelles, l'absence de vue des anciennes

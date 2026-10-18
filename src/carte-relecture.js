@@ -25,7 +25,7 @@
   return p.message||'';}
  const SOURCES={propose:'fichier proposé',defaut:'défaut provisoire'},ZONES={pn:'PN',adv:'ADV',abords:'abords','vert-hors-zone':'verts hors zone'};
  function texteReglages(r){if(!r)return '';
-  const t=`Réglages de la correction : ${SOURCES[r.source]||r.source}${r.source==='propose'&&r.statut?` (« ${r.statut} »)`:''}.`;
+  const t=`Réglages de la correction : ${SOURCES[r.source]||r.source}${r.source==='propose'&&r.statut&&r.statut!=='propose'?` (« ${r.statut} »)`:''}.`;
   if(!r.correctionPermise)return `${t} « Corriger » restera en ombre : ${r.raison||'réglages non sûrs'}.`;
   /* Un interrupteur par zone (D-180) : la carte dit lesquelles corrigent. */
   const ouvertes=r.zones&&typeof r.zones==='object'?Object.entries(r.zones).filter(([,v])=>v===true).map(([z])=>ZONES[z]||z):null;

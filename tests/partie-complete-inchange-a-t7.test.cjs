@@ -22,6 +22,6 @@ test('partie complète mais information incertaine ou cut rouge : commandes envo
    ['partie complète, ligne du cut absente',{mesure:{total:101,traites:101},liste:{...fenetre(50,'valid'),rows:[]}}]]){
   const s=await scenario(o);
   assert.deepEqual(s.calls,ref.calls,nom);assert.deepEqual(s.trace,ref.trace,nom+' : arguments identiques');
-  assert.doesNotMatch(String(s.view.notice),/Rien n’a été envoyé à ESV/,nom);}
+  assert.doesNotMatch(String(s.view.notice),/Aucune pose ni validation n’a été envoyée à ESV/,nom);}
 });
 

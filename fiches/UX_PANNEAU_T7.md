@@ -112,7 +112,7 @@ validation (`validateAndNext`), puis ESV charge la partie suivante. Un opérateu
 
 Règle (`background.js`, `partieCompleteAuDepart`, appelée à la fin de l'analyse du cut, avant toute commande) : au
 **premier** cut du lot, rien n'est envoyé à ESV et le lot se clôt (`STOPPED`, `partie-sans-rouge`) avec l'avis « Partie N :
-plus aucun cut rouge à traiter. Le lot s'arrête ici. Rien n'a été envoyé à ESV. » seulement si :
+plus aucun cut rouge à traiter. Le lot s'arrête ici. Aucune pose ni validation n'a été envoyée à ESV. » seulement si :
 
 1. le relevé du compteur est celui de ce cut (même partie, même cut, après le début du cut), d'un seul compteur lisible,
    avec N ≥ M ;
