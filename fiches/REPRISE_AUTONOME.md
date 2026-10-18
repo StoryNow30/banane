@@ -176,3 +176,12 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - Rien n'est envoyé à Mic avant ce verify vert. Jamais sans Mic : fusion dans main, étiquette, publication, activation d'une pose sur le terrain.
 - À décider avec Mic : ordre du panneau (choix de la relecture sous les résultats), hygiène héritée de banane (liste dans D-183), effacement du code de projet dans l'historique git.
 
+
+## Après les premiers lots de la test 7 (18 octobre 2026, vers 10 h, D-184)
+
+- **Fait** : deux exports de Mic (parties 10 et 11, mode « corriger », règle grappe coupée) lus et archivés dans banane-data (fe7299d, baad843). Relecture automatique saine : 18 corrections sur 156 cuts relus, 0 mauvaise voie, 437 écritures en 204, aucune pause. Statistiques par partie remises à Mic (fichier hors dépôt).
+- **Retiré** : le remplacement de Ctrl+Entrée par Maj+Espace au dernier cut du lot (D-065 : demande de Mic, risque de quitter la partie). Rien n'est modifié dans 50-base (da9debf).
+- **Réveil suivant (13 h 41 UTC)** : rien à fusionner (relecture déjà dans 50-base, P-7 en ombre). Attendre les retours de Mic : Écho sur les cuts corrigés (4130 partie 10 ; 17 cuts de la partie 11), lot en « Ombre » sur une partie neuve. Ne rien lancer de lourd (quota, D-181).
+- **À instruire plus tard** : volume 1 d'export qui contient une copie du volume 2 ; ordre du panneau ; « Arrêté » en haut pendant une passe ; hygiène héritée (D-183).
+- **Chantier suivant** : « relecture au fil du lot » (D-176), puis l'idée P-12 si Mic la retient.
+- Jamais sans Mic : fusion dans main, étiquette, publication, activation d'une pose sur le terrain. Pas de PR sans demande.
