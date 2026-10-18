@@ -564,7 +564,7 @@ Le pilote 3717 a été contrôlé séparément avant la séance complète.
   Écho doit conserver l'origine du premier passage avant tout déplacement.
   Le calcul compare cette origine à la pose finale de Mic, et non à la
   position déplacée qui a été validée entre les deux.
-- Projet confirmé par Mic : `RAIL-260826_060933_E_701`, partie 24. L'export
+- Projet confirmé par Mic : `RAIL-<code du projet>`, partie 24. L'export
   déclare 4.8.6 ; son `projectId` est absent. Cette absence ne constitue pas
   une preuve de changement de projet.
 - Mic confirme les poses d'origine manuelles, l'absence de vue des anciennes
@@ -2614,3 +2614,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Décision** : la test 7 garde la règle de D-180 (PN, ADV, abords ; verts seulement ; jamais un cut du lot). La combinaison reste en ombre sur sa branche, qui n'est pas fusionnée.
 - **Non fait, pour économiser le quota (D-181)** : le jugement unique sur les parties réservées. Il se fera plus tard, avec les réglages figés `datasets/relecture-reglages-p7-combinaison.json` et les critères de la synthèse P-7 (§ 3.3).
 - **Pistes suivantes** : recentrer puis recapturer (74 cuts hors de portée), garde verticale (16 cuts laissés, 9 actions fausses de hauteur), robustesse de la chaîne.
+
+## D-183 — Relecture finale de la test 7 : le code est bon, deux défauts de texte corrigés avant l'envoi (18 octobre 2026)
+
+- **Fait (relecture finale, plus haut effort, 248 appels d'outils, sur le paquet tel que Mic l'installe)** : aucune écriture sans le choix de Mic, aucune marque d'Ariane ; mise à jour par-dessus la test 6 : relecture coupée, aucune clé de stockage ne peut l'activer ; mode coupé : commandes identiques à la test 6 ; ombre : 0 écriture d'Ariane ; corriger : 20 corrections = 20 poses = 20 Maj+Espace = 20 écritures « valid » sur la maquette ; arrêt et déblocage tiennent ; retour arrière vers la test 6 sans erreur ; version « 4.9.5 test 7 » partout, 0 erreur de console. Ce qui n'a pas pu être vu : le vrai ESV, Edge, un gros cache.
+- **Défauts bloquants, corrigés (5ca5e49)** : (1) la consigne annonçait « Comme avant » coché et la case de la règle vide, faux après une mise à jour (« Tout recentré » et la règle sont gardés) ; (2) un code de projet ESV restait dans `DECISIONS.md` (forme courte que l'essai ne reconnaissait pas) : retiré de banane et du pilote, l'essai reconnaît la forme courte (rouge sur l'ancien fichier, vert après). L'historique git garde la trace du code ; l'effacer demande de réécrire l'historique, donc l'accord de Mic.
+- **Défauts importants et mineurs, corrigés** : la passe ne part seule que pour un lot jusqu'à la fin de la partie (sinon la carte dit pourquoi) ; avis « partie complète » : « Aucune pose ni validation n'a été envoyée à ESV » (une capture de lecture part) ; durées « 3 à 9 minutes en Ombre, 12 au plus en Corriger » et « ×4,5 à ×9 » ; texte du panneau sans « Mic » ni « propose » brut ; poids du journal mesuré à 12 Ko par cut ; export après « Relecture finie » ; remettre « Coupée » après la séance.
+- **Laissé tel quel, à décider avec Mic** : (a) le choix de la relecture est à environ 1 750 px sur 2 636, sous « Résultats du dernier lot », alors qu'il se règle avant le lot (la consigne dit où il est) ; (b) pendant la passe, le haut du panneau dit « Arrêté » ; (c) hygiène héritée, déjà dans la test 6 : noms d'autres IA dans des fiches, `claude/…` dans 55 fichiers, un lien d'artefact, des chemins locaux, le pseudo « Mic » dans 76 fichiers, des exports bruts dans l'historique de banane (tests/corpus, fixtures, incidents, 14 Mo). Rien de neuf apporté par la test 7.
+- **Chiffres à ne pas sur-lire** : PN 36/36, dont 29 viennent de parties sans lot ; borne haute 9,6 % : la porte des 9 % (39 actions) n'est pas franchie non plus pour le PN.
+

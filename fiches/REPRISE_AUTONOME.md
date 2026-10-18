@@ -168,3 +168,11 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 3. Archiver tout export reçu de Mic dans banane-data (zips bruts, SHA256SUMS, NOTES.md, INDEX.md avant « ## Benchmarks »), après vérification qu'aucune identité d'opérateur n'y figure.
 4. Chantier suivant : « relecture au fil du lot » (D-176). Le jugement unique de P-7 sur les parties réservées reste en attente (réglages figés `datasets/relecture-reglages-p7-combinaison.json`).
 5. Aucune fusion dans main, aucune étiquette, aucune publication sans Mic.
+
+## Après la relecture finale de la test 7 (18 octobre 2026, D-183)
+
+- La relecture finale du paquet a rendu son rapport : code bon, deux défauts de texte bloquants (consigne fausse après mise à jour, code de projet dans `DECISIONS.md`), corrigés dans 50-base (5ca5e49).
+- **À la reprise** : (1) lire `scratchpad/verify-50-base-2.log` (fin : « FIN verify code=0 » attendu) ; (2) si vert, commiter les rapports d'audit sur 50-base, pousser, reconstruire le zip (`python3 tools/package.py --output <zip>`), recalculer le SHA-256 (il change) ; (3) envoyer le zip à Mic avec SendUserFile, empreinte et taille dans le message ; (4) si rouge, corriger la cause, un seul verify de plus.
+- Rien n'est envoyé à Mic avant ce verify vert. Jamais sans Mic : fusion dans main, étiquette, publication, activation d'une pose sur le terrain.
+- À décider avec Mic : ordre du panneau (choix de la relecture sous les résultats), hygiène héritée de banane (liste dans D-183), effacement du code de projet dans l'historique git.
+
