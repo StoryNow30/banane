@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-10-18T03:23:29.889Z",
-  "finishedAt": "2026-10-18T03:28:59.771Z",
+  "startedAt": "2026-10-18T04:25:42.816Z",
+  "finishedAt": "2026-10-18T04:31:16.247Z",
   "node": "v22.22.0",
   "platform": "linux",
   "counts": {
@@ -418,10 +418,10 @@
   "runtimeFilesSyntaxChecked": 54,
   "hashes": {
     "manifest.json": "b438fa35084d060df5b4ac9566b59843dcd02de56afd108abadf024e02fca3ec",
-    "panel.html": "7dd33daffee8937c2ab7b1f8eecc2850e38740a0e2e8618685c642acf3e9d36b",
+    "panel.html": "a579264ddecfc04e8abefa53884b57e089096ed0dbba7b486f0a7ea82740e0b7",
     "panel.css": "f3b6d30f5d2f57cfdb2b2eadec67a953bf9873ced05a3a1ae048e951654aea2d",
-    "background.js": "469d7ad04fcdb412b0dfdedb87cf40cc80e7d39ffaefb18ddd33a47253801d6c",
-    "panel.js": "694c15b113fb8ba976f6ecbcc40033a8396a50d8a532c8c1d019f4bb3b4924b6",
+    "background.js": "bdceedab050ab0e3204500ce3f4a78ed5827011e0615a571fb442f2ac7f664bb",
+    "panel.js": "08866e0e5cd1b9486c556b2bb17c40a6912ea911fe3aaf5983346e54f37a770b",
     "tools/offline-evaluate.cjs": "d8ea7e742dc32bfa0ea31cb0b85e24d5b55248ee37d02b60a8eb4bbfded2d538",
     "tools/native-offline-evaluate.cjs": "f90a34ce32157171e029e5171316a467d9f3de42334ab7cb680fda1c16c095fa",
     "tools/audit-native-geometry.cjs": "6d7a00a4ad2a6bb881f76334e040811cd94616758decbcd010712c625839b3d8",
@@ -432,7 +432,7 @@
     "src/appuis-liste.js": "966d52431947b3c8710ede1c866f141a32620c3e969308a480a878f072d60d02",
     "src/brain.js": "bced4a7a8560afa7608f758d1735c5e12590c1c15de9c75a29d0c279a1102c4e",
     "src/bridge.js": "79cf58d5c917265b01be6a18e0195a5817f73c98ece2fc5b351641f570ed4389",
-    "src/carte-relecture.js": "f21b2924138b18306833a9e6d149c2572fa784e697a779cdfbb59b9fcfc7ddc5",
+    "src/carte-relecture.js": "9cfd0995c90b79bafa864349c82c0ccb1b96dac2af8beab459f187aa489c04bc",
     "src/continuity-observer.js": "3a4fe4f1b151f7ff876520650de15741ff980bbe58743a3a47a516f7dc7af7ee",
     "src/core.js": "6e758e6e78216acae94197894ff7de38bd9170913e29117545345bcec3213314",
     "src/early-input.js": "a3d90c794f9a82977218844f84baaf3c90b134e2f58067758d90d1a80a7344e8",
