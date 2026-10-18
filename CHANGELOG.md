@@ -11,7 +11,7 @@ Consigne : `consignes/seance-terrain-4.9.5-test-7-2026-10-18.md` ; retour arriè
 - **Départ de lot sur un cut vert** (D-169) : ni pose ni validation sur le vert, passage au prochain cut non validé (Maj+Z, `nextWithoutDecision`) ; rouges seulement derrière : aucune commande, avis qui les nomme. **Partie complète et cut vert** : 0 commande.
 - **Fiabilité du lot** (H14, H15, H16) : empreinte du contrat indépendante du rail sélectionné (plus de faux avis), audit serveur seulement sur une lecture complète de la partie du lot, chaque erreur rangée au lot de sa demande.
 - **PN confirmé par deux cœurs consécutifs** (H6) : 17 PN sur 17 gardés, plus de fausse zone en capturant des verts.
-- Essais : `tests/relecture-*.test.cjs` (dont `-sw-statut-relu`, `-sw-table-zone`, `-sw-table-tronquee`, `-sw-zone-hors`), `depart-sur-vert-*-t7`, `fiabilite-*`, essais de version `tests/version-4957.test.cjs` (remplace `version-4956`) et `tests/consigne-4957.test.cjs` (remplace `consigne-4956`). verify : 2 222 essais, 0 échec, 2 ignorés (corpus natif absent).
+- Essais : `tests/relecture-*.test.cjs` (dont `-sw-statut-relu`, `-sw-table-zone`, `-sw-table-tronquee`, `-sw-zone-hors`), `depart-sur-vert-*-t7`, `fiabilite-*`, essais de version `tests/version-4957.test.cjs` (remplace `version-4956`) et `tests/consigne-4957.test.cjs` (remplace `consigne-4956`). verify : 2 221 essais, 2 219 réussis, 0 échec, 2 ignorés (corpus natif absent).
 - Non vérifié : Maj+Espace relayé par Ariane dans le vrai ESV ; la durée et le nombre de lectures de nuage de la passe sur un vrai lot ; Edge. Pas dans cette version : la relecture « au fil du lot » (D-176), la combinaison P-7 (en ombre, D-182).
 
 ## 4.9.5.6 — 4.9.5 test 6 (17/10)
