@@ -130,6 +130,11 @@ test('zones de l\'instant : une zone s\'ouvre au cut qui la confirme, jamais ava
   assert.equal(a.get(21).zone, 'pn'); assert.equal(a.get(27).zone, 'pn', 'marge d\'après : 6 cuts'); assert.equal(a.get(28).zone, 'hors');
   for (let c = 10; c <= 29; c++) assert.equal(b.get(c).zone, a.get(c).zone, `cut ${c} : un cœur à venir (30, 31) ne change rien`);
   assert.equal(b.get(31).zone, 'pn');
+  /* Partie traitée par le lot : la mémoire ne lit que les cuts du lot (ses invalides), comme la table d'avant ; un cœur sur un vert visité par l'opérateur
+   * n'ouvre rien. */
+  const l = G.zonesCausales({ cas: cas([20, 21]), table, lecture: new Set([20]) });
+  assert.equal(l.get(21).zone, 'hors', 'le cut 21 (vert) n\'est pas lu par le lot : pas de confirmation');
+  assert.equal(G.zonesCausales({ cas: cas([20, 21]), table, lecture: new Set([20, 21]) }).get(21).zone, 'pn');
   /* La sélection d'avant (non causale) mettait la marge d'avant : c'est ce que l'instant de la décision ne peut pas savoir. */
   const ancien = RA.zonesDepuisCas(cas([20, 21]));
   assert.deepEqual(ancien.zonesPN.map(z => z.controle), [[16, 27]]);
@@ -180,4 +185,16 @@ test('chaîne : sa pose est une hypothèse même sans appui (étage crossing ou 
     const q = ch.rails[s].pose, h = ch.rails[s].hauteurMm || 0;
     assert.ok(c1.some(l => l.rail === s && Math.hypot(l.decal[0] - q[0], l.decal[1] - q[1], l.decal[2] - (q[2] + h)) < 0.76), `rail ${s} : la pose « chaîne + hauteur » de la règle prudente est parmi les hypothèses`);
   }
+});
+
+test('rezoner : recalculer les zones d\'un jeu déjà construit redonne exactement la construction (zones, rôles, traits, rupture de série)', () => {
+  const d = tmp(), vs = [];
+  for (let c = 1; c <= 8; c++) vs.push({ cut: c, index: c, debut: 60 * c, ref: c % 2 ? { lat: 12 } : null, depart: c === 6 ? { dl: 0.02, dr: 0.02 } : {} });
+  H.ecrireEcho(d, vs); const j = H.ecrireJournal(path.join(d, 'journal.json'), { poses: { 6: { lat: 20 } }, differes: [7] });
+  const r = G.construire({ projet: 9, partie: 91, echo: [d], journaux: [j] });
+  /* on abîme les zones et les ruptures, puis on rezone : on retrouve la construction, octet pour octet */
+  const abime = ls => ls.map(l => l.type === 'cut' ? { ...l, zone: 'pn', role: 'vert', contexte: l.contexte && l.contexte.voieH6 ? { ...l.contexte, voieH6: { ...l.contexte.voieH6, tous: l.contexte.voieH6.tous && { ...l.contexte.voieH6.tous, motifs: [...l.contexte.voieH6.tous.motifs, 'rupture-de-serie'], sure: false } } } : l.contexte } : l.type === 'hyp' ? { ...l, traits: { ...l.traits, zone: 'pn' } } : l);
+  const z = G.rezoner({ projet: 9, partie: 91, echo: [d], journaux: [j], cas: r.cas.map(c => ({ ...c, zoneCausale: 'pn' })), lignes: abime(r.lignes), lignesLot: abime(r.lignesLot) });
+  fs.rmSync(d, { recursive: true, force: true });
+  assert.equal(json(z.lignes), json(r.lignes)); assert.equal(json(z.lignesLot), json(r.lignesLot)); assert.equal(json(z.cas), json(r.cas));
 });

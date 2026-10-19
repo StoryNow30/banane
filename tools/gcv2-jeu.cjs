@@ -604,14 +604,15 @@ function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relec
 /* ------------------------------------------------------------------ jeu causal : zones à l'instant du cut, références incertaines */
 /*
  * Zone et rôle de chaque cut À L'INSTANT DE SA DÉCISION (audit F4, F1) : une passe dans l'ordre des cuts visités. À l'instant du cut c, on connaît :
- *  - les surfaces (règles métier, lues sur l'entrée sans fuite : `extraire` en mode causal) des cuts visités jusqu'à c, dans l'ordre : la mémoire des zones
+ *  - les surfaces (règles métier, lues sur l'entrée sans fuite : `extraire` en mode causal) des cuts LUS jusqu'à c, dans l'ordre (`lecture` : les cuts que
+ *    le lot lit, c'est-à-dire ses invalides, pour une partie traitée par le lot, comme la table d'avant ; tous les cuts visités pour une partie sans lot) : la mémoire des zones
  *    PN et ADV est celle de l'extension (`src/regles-metier.js`), arrêtée à c — une zone qui s'ouvre après c n'existe pas encore, sa marge d'avant non plus ;
  *  - la liste des invalides d'ESV (les cuts que le lot décidera : connue avant le lot), avec la décision du lot (posé ou différé) des seuls cuts jusqu'à c ;
  *  - les poses de départ des verts jusqu'à c (liste « À contrôler », module livré).
  * Puis la sélection de la relecture (`selection` de tools/relecture-autonome.cjs, inchangée) donne la zone de c. Les cuts à référence incertaine (D-211)
  * n'entrent pas dans la mémoire des zones (leur pose de départ est celle d'une main humaine). Rend Map cut → { zone, genre, advVu, connus }.
  */
-function zonesCausales({ cas, table, incertaines = null, fenetre = H6.fenetreCuts }) {
+function zonesCausales({ cas, table, incertaines = null, fenetre = H6.fenetreCuts, lecture = null }) {
   const mem = M.creerMemoire('jeu-causal'), out = new Map();
   const cs = cas.filter(c => c.cut >= 0).slice().sort((a, b) => a.cut - b.cut);
   const lotTout = (table.lot || []).slice(), cutsTable = (table.cuts || []).slice().sort((a, b) => a.i - b.i);
@@ -619,7 +620,7 @@ function zonesCausales({ cas, table, incertaines = null, fenetre = H6.fenetreCut
   for (const c of cs) {
     visites.push(c.cut);
     const sf = c.ariane && c.ariane.surface;
-    if (sf && !(incertaines && incertaines.has(c.cut))) {
+    if (sf && !(incertaines && incertaines.has(c.cut)) && (!lecture || lecture.has(c.cut))) {
       const r = M.resumer({ identity: { part: c.partie, cut: c.cut }, decision: null, action: null, valide: null, surface: { flushPct: sf.flushPct, quadMin: sf.quadMin, coeurPN: sf.coeurPN, advRails: sf.advRails } });
       M.evaluer(mem, r); M.noter(mem, r, { differe: false });
     }
@@ -695,10 +696,37 @@ function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu 
   const gm = new Map(observateur.etat.cuts.map(r => [r.cut, r.gMed ?? null]));
   for (const c of cas) c.gMedCausalMm = gm.has(c.cut) ? gm.get(c.cut) : null;
   const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
-  const zones = zonesCausales({ cas, table, incertaines: observateur.etat.incertaines });
+  const zones = zonesCausales({ cas, table, incertaines: observateur.etat.incertaines, lecture: sansLot ? null : lotCuts });
   for (const c of cas) { const z = zones.get(c.cut); if (z) { c.zoneCausale = z.zone; c.genreLot = z.genre; } }
   const lignes = lignesDuJeu({ designation, jeu, observateur, cas, zones }), lignesLot = lignesDuJeu({ designation, jeu, observateur, cas, zones, usage: 'lot' });
   return { lignes, lignesLot, etat: observateur.etat, cas, table, zones, incertaines: observateur.etat.incertaines };
+}
+
+/* ------------------------------------------------------------------ rezoner un jeu causal (zones seulement) */
+/*
+ * Recalcule les zones de l'instant d'un jeu causal DÉJÀ construit (mêmes cas, même Écho, même journal), sans refaire l'extraction : la zone et le rôle de
+ * chaque cut, ceux des traits des hypothèses, et la rupture de série de la voie de référence (H6). Sert quand seule la règle de lecture des zones change :
+ * le résultat est celui que `construire` donnerait (l'essai le vérifie sur une construction complète). Rien d'autre ne bouge.
+ */
+const sansRupture = v => { if (!v || !(v.motifs || []).includes('rupture-de-serie')) return v; const motifs = v.motifs.filter(m => m !== 'rupture-de-serie'); return { ...v, motifs, sure: !motifs.length }; };
+function rezoner({ projet, partie, echo, journaux = [], sansLot = false, cas, lignes, lignesLot }) {
+  const RM = require('./regles-metier.cjs'), lotCuts = new Set();
+  for (const f of sansLot ? [] : journaux) for (const d of RM.lireJournal(f, partie).decisions) lotCuts.add(d.cut);
+  const incertaines = new Map(cas.filter(c => c.mic && c.mic.raison === 'reference-incertaine').map(c => [c.cut, { ecartMm: c.mic.ecartDepartListeMm }]));
+  const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
+  const zones = zonesCausales({ cas, table, incertaines: incertaines.size ? incertaines : null, lecture: sansLot ? null : lotCuts });
+  const roleDe = g => g === 'pose' ? 'rouge' : g === 'differe' ? 'differe' : 'vert';
+  const cas2 = cas.map(c => { const z = zones.get(c.cut); return z ? { ...c, zoneCausale: z.zone, genreLot: z.genre } : c; });
+  const patch = ls => ls.map(l => {
+    if (l.type !== 'cut' && l.type !== 'hyp') return l;
+    const z = zones.get(l.cut) || { zone: 'hors', genre: 'vert' };
+    if (l.type === 'hyp') return { ...l, traits: { ...l.traits, zone: z.zone, role: roleDe(z.genre) } };
+    const v = l.contexte && l.contexte.voieH6;
+    const contexte = v ? { ...l.contexte, voieH6: { ...v, tous: avecRupture(sansRupture(v.tous), l.cut, zones), lot: avecRupture(sansRupture(v.lot), l.cut, zones) } } : l.contexte;
+    /* l'ordre des clés de la ligne de cut est gardé */
+    return Object.fromEntries(Object.entries(l).map(([k, x]) => [k, k === 'zone' ? z.zone : k === 'role' ? roleDe(z.genre) : k === 'contexte' ? contexte : x]));
+  });
+  return { cas: cas2, lignes: patch(lignes), lignesLot: patch(lignesLot), zones };
 }
 
 /* ------------------------------------------------------------------ rappel atteignable */
@@ -946,7 +974,7 @@ function args(argv) {
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
     else if (k === '--sortie') o.sortie = val(); else if (k === '--sortie-lot') o.sortieLot = val(); else if (k === '--sortie-cas') o.sortieCas = val();
-    else if (k === '--liste') o.liste = val(); else if (k === '--non-causal') o.nonCausal = true; else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
+    else if (k === '--liste') o.liste = val(); else if (k === '--non-causal') o.nonCausal = true; else if (k === '--cas') o.cas = val(); else if (k === '--jeu-lot') o.jeuLot = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
     else if (k === '--selection') { const v = val(), i = v.indexOf('='); if (i < 1) throw Error('--selection NOM=P:N:a-b,…'); o.selections[v.slice(0, i)] = lireSelection(v.slice(i + 1)); }
     else throw Error('argument inconnu : ' + k);
@@ -962,7 +990,7 @@ function controlerManifeste({ projet, partie, jugerReservee }) {
   return { avis, jeu: jugerReservee ? 'jugement' : 'apprentissage', temoin: Manifeste.estTemoin(m, projet, partie) };
 }
 
-module.exports = { VERSION_CAUSAL, SEUIL_VISITE_CAUSAL_S, SEUIL_INCERTAINE_MM, zonesCausales, referencesIncertaines, gaugeDepart, FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
+module.exports = { VERSION_CAUSAL, SEUIL_VISITE_CAUSAL_S, SEUIL_INCERTAINE_MM, zonesCausales, rezoner, sansRupture, referencesIncertaines, gaugeDepart, FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
   decalageDepuisEsv, esvDepuisDeplacement, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
 
 if (require.main === module) {
@@ -983,6 +1011,12 @@ if (require.main === module) {
       if (r.incertaines) console.log(`références incertaines (D-211) : ${r.incertaines.size}`);
       const n = t => r.lignes.filter(l => l.type === t).length;
       console.log(`partie ${a.projet}:${a.partie} (${c.jeu}${a.nonCausal ? '' : ', causal'}) : ${n('cut')} cuts, ${r.etat.calcules} calculés, ${n('hyp')} hypothèses, erreurs ${r.etat.erreurs}, écarts de la copie du moteur ${r.etat.ecartsMoteur}, ${Math.round((Date.now() - t0) / 1000)} s`);
+    } else if (a.mode === 'rezoner') {
+      if (!a.partie || !a.echo.length || !a.cas || !a.jeux.length || !a.jeuLot || !a.sortie) throw Error('rezoner --partie P:N --echo D (--journal J | --sans-lot) --cas C --jeu J --jeu-lot JL --sortie J2 --sortie-lot JL2 --sortie-cas C2');
+      const lire = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)), ecrire = (f, ls) => fs.writeFileSync(f, ls.map(l => JSON.stringify(l)).join('\n') + '\n');
+      const r = rezoner({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, sansLot: a.sansLot, cas: lire(a.cas), lignes: lire(a.jeux[0]), lignesLot: lire(a.jeuLot) });
+      ecrire(a.sortie, r.lignes); if (a.sortieLot) ecrire(a.sortieLot, r.lignesLot); if (a.sortieCas) ecrire(a.sortieCas, r.cas);
+      console.log(`partie ${a.projet}:${a.partie} : zones de l'instant recalculées (${r.zones.size} cuts)`);
     } else if (a.mode === 'rappel') {
       if (!a.jeux.length) throw Error('rappel --jeu JEU.jsonl [--jeu …] [--json R.json]');
       const R = rappel(lireJeux(a.jeux), { selections: a.selections });
