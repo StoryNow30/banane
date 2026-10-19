@@ -202,10 +202,12 @@ test('registre : visités → référence → nuage → exemples → actions ; v
   /* « validation puis SKIP » : le SKIP n'est pas propagé, le cut garde sa référence explicite et reste un exemple (le registre le montre) */
   assert.deepEqual(l.skip, { total: 2, referenceExplicite: 1, referenceImplicite: 1, sansReference: 0, retenusCommeExemples: 2 });
   assert.deepEqual(l.grossesCorrections, { total: 3, avecNuage: 2, sansNuage: 1, retenuesCommeExemples: 2 }, '10,0036 mm dépasse 10 mm dans l\'extraction');
-  assert.equal(l.seuilVisite.trop_courtsDansLaBande, 1, 'une visite de 0,7 s sans validation (cut 4) : acceptée à 0,6 s, refusée à 0,8 s ; le cut 7 est refusé pour une autre raison');
-  assert.equal(l.seuilVisite.utilise, 0.8); assert.equal(l.seuilVisite.g0, 0.6);
+  /* Jeu causal : la jointure du jeu prend 0,6 s, comme G0 ; la bande 0,6–0,8 s est vide par construction (une visite de 0,7 s y est une référence implicite).
+   * Avec l'ancien seuil (0,8 s), le cut 4 (0,7 s, « trop court ») y tombait. */
+  assert.equal(l.seuilVisite.trop_courtsDansLaBande, 0);
+  assert.equal(l.seuilVisite.utilise, 0.6); assert.equal(l.seuilVisite.g0, 0.6);
   const t = V.sommeRegistre([l, l]);
-  assert.equal(t.visites, 18); assert.equal(t.reference.explicite, 8); assert.equal(t.skip.retenusCommeExemples, 4); assert.equal(t.partie, 'total'); assert.equal(t.seuilVisite.trop_courtsDansLaBande, 2);
+  assert.equal(t.visites, 18); assert.equal(t.reference.explicite, 8); assert.equal(t.skip.retenusCommeExemples, 4); assert.equal(t.partie, 'total'); assert.equal(t.seuilVisite.trop_courtsDansLaBande, 0);
   assert.ok(/total/.test(V.rapportRegistre([l, t])));
 });
 

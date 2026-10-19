@@ -98,9 +98,11 @@ test('les jeux de jugement, les témoins et les parties réservées sont refusé
     assert.throws(() => A.lireJeuFichier(ecrire('temoin.jsonl', { partie: '1:11', cuts: 3 }), { manifeste }), /témoin fixe/);
     assert.throws(() => A.lireJeuFichier(ecrire('reservee.jsonl', { partie: '2:6', cuts: 3 }), { manifeste }), /réservée/);
     assert.throws(() => A.lireJeuFichier(ecrire('jugement.jsonl', { partie: '1:12', cuts: 3, jeu: 'jugement' }), { manifeste }), /jeu « jugement »/);
-    /* Les parties d'apprentissage du manifeste du dépôt ne contiennent ni 1:11, ni 1:25, ni 2:6. */
-    const M = require('../tools/manifeste-parties.cjs').lire();
-    for (const [p, n] of [[1, 11], [1, 25], [2, 6]]) assert.notEqual(require('../tools/manifeste-parties.cjs').statut(M, p, n), 'apprentissage');
+    /* Les parties d'apprentissage du manifeste du dépôt ne contiennent ni les témoins 1:11 et 1:25, ni les parties réservées 2:17 et 2:18 ;
+     * 2:6, 2:7 et 2:13 y sont depuis D-213. */
+    const MP = require('../tools/manifeste-parties.cjs'), M = MP.lire();
+    for (const [p, n] of [[1, 11], [1, 25], [2, 17], [2, 18]]) assert.notEqual(MP.statut(M, p, n), 'apprentissage');
+    for (const n of [6, 7, 13]) assert.equal(MP.statut(M, 2, n), 'apprentissage');
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

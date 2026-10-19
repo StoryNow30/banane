@@ -56,6 +56,17 @@
       "date": "2026-10-19",
       "motif": "Écho de l'opérateur expert du 18/10 (23 visites) après le lot et la relecture de la test 7 : lu pour juger la relecture (D-188), aucun réglage. Passée en apprentissage par la rotation examen → apprentissage (D-192, D-193).",
       "decision": "D-193"
+    },
+    {
+      "projet": 2,
+      "parties": [
+        6,
+        7,
+        13
+      ],
+      "date": "2026-10-19",
+      "motif": "Examens de terrain (D-198, D-209, D-211) : règle prudente et zones lues, GCV2 jamais lue ; classées « exposées » par le protocole G1-c (§ 2), donc non confirmatoires. Passées en apprentissage sur accord de l'opérateur expert (« je valide tout »). 2:13 : cuts revisités dont la pose de départ avait déjà été corrigée = référence incertaine, exclus des exemples (D-211).",
+      "decision": "D-213"
     }
   ],
   "temoins": [

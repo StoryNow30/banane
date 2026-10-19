@@ -33,7 +33,7 @@ const FICHIER_REGLAGES = path.join(__dirname, '..', 'datasets', 'relecture-regla
 /* La porte unique : mêmes nombres que fiches/PROTOCOLE_G1C.md § 3. */
 const PORTE = Object.freeze({ mauvaiseVoieMax: 0, erreurMax: 0.09, juste10: A.SEUILS.juste10, mauvaiseVoieMm: A.SEUILS.mauvaiseVoie, lateralMm: A.GARDES.lateralMaxMm, z: 1.959964 });
 /* Seuils de durée d'une visite sans action (F6) : G0 dit 0,6 s (et le compteur l'applique) ; la jointure Écho-Orbite, qui a fabriqué les références implicites du jeu, 0,8 s. */
-const SEUIL_VISITE_G0_S = 0.6, SEUIL_VISITE_JEU_S = 0.8;
+const SEUIL_VISITE_G0_S = 0.6, SEUIL_VISITE_JEU_S = 0.6;   // jeu causal : la jointure du jeu prend 0,6 s (avant : 0,8 s)
 /* Contrôle D-190 : 3 parties (1:14, 1:15, 1:16), règle prudente figée. */
 /* Chiffres publiés en G1-b (fiches/G1B_APPRENTISSAGE.md, validation croisée à λ = 30, règle prudente SUBSTITUÉE, V1 sur 2 411 cuts) : le point de départ de l'écart du λ imbriqué. */
 const PUBLIE_G1B = Object.freeze({ relecture: Object.freeze({ agit: 257, justes: 128, abimes: 2, mauvaiseVoie: 0, erreurs: 9, taux: 9 / 257 }), lot: Object.freeze({ agit: 258, justes: 123, abimes: 2, mauvaiseVoie: 0, erreurs: 11, taux: 11 / 258 }) });
@@ -390,17 +390,19 @@ function reconcilierGrosses(parties) {
 const lireCas = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
 /* Évalue : références exactes, validation croisée (λ imbriqué si demandé), porte unique, lectures par unité, recouvrements, registre.
  *   parties  jeux de `lireJeuFichier` ; casParPartie : { '1:14': [cas…] } ; tables : { '1:14': table } facultatives. */
-function evaluer({ parties, casParPartie, tables = {}, usage = 'relecture', lambdas = null, lambdaTemoin = null, lambda = A.LAMBDA, variante = 'V1', reglages = reglagesDuDepot(), journal = () => {}, accord = true }) {
+function evaluer({ parties, casParPartie, tables = {}, usage = 'relecture', lambdas = null, lambdaTemoin = null, lambda = A.LAMBDA, variante = 'V1', reglages = reglagesDuDepot(), journal = () => {}, accord = true,
+  defsVariantes = null, gardeVoie = false, sansH6 = false }) {
   const refs = {};
   for (const j of parties) {
     if (!casParPartie[j.partie]) throw Error(`partie ${j.partie} : les cas de l'extraction manquent (--cas)`);
     refs[j.partie] = referenceExacte({ jeu: j, cas: casParPartie[j.partie], reglages, table: tables[j.partie] || null });
   }
-  const V = A.validationCroisee(parties, { usage, lambda, lambdas, lambdaTemoin, variantes: [variante], reference: fournisseurReference(refs), garderCuts: true, journal, accord });
+  const defs = defsVariantes || A.lireVariantes();
+  const V = A.validationCroisee(parties, { usage, lambda, lambdas, lambdaTemoin, variantes: [variante], defsVariantes: defs, gardeVoie, sansH6, reference: fournisseurReference(refs), garderCuts: true, journal, accord });
   const parCut = Object.fromEntries(Object.entries(casParPartie).map(([p, cs]) => [p, new Map(cs.map(c => [c.cut, c]))]));
   const cand = annoter(V.cuts.variantes[variante], parCut), reference = annoter(V.cuts.prudente, parCut), gcv2Seule = annoter(V.cuts.gcv2, parCut);
   const porte = porteUnique({ candidat: cand, reference });
-  const E = { format: FORMAT_EVAL, usage, variante, lambda, lambdas: V.lambdas || null, parties: V.parties, nCas: V.nCas,
+  const E = { format: FORMAT_EVAL, usage, variante, variantesDef: defs[variante], gardeVoie, sansH6, lambda, lambdas: V.lambdas || null, parties: V.parties, nCas: V.nCas,
     reference: { source: 'tools/relecture-autonome.cjs (lignes, agit, regleDuReglage) sur les cas de l\'extraction', regle: refs[parties[0].partie].regle, actifs: refs[parties[0].partie].actifs,
       parPartie: Object.fromEntries(parties.map(j => [j.partie, { lignesMesurables: refs[j.partie].resultats.size, gMedReference: arrondi(refs[j.partie].gMed, 2), gMedJeu: refs[j.partie].gMedJeu }])) },
     porte, sensibilites: sensibilites(cand, reference), unites: { candidat: lecturesParUnite(cand), reference: lecturesParUnite(reference), gcv2Seule: lecturesParUnite(gcv2Seule) },
@@ -415,9 +417,106 @@ function evaluer({ parties, casParPartie, tables = {}, usage = 'relecture', lamb
     const tc = annoter(V.cuts.temoin.variantes[variante], parCut);
     E.temoin = { lambda: lambdaTemoin, bilan: lectureDe(tc), porte: porteUnique({ candidat: tc, reference }), gcv2Seule: lectureDe(annoter(V.cuts.temoin.gcv2, parCut)) };
   }
+  /* Cascade des pertes des grosses corrections (lecture seule) et banc des différés (D-214) : mêmes plis, mêmes décisions. */
+  E.cascade = cascade({ candidat: cand, diagnostics: V.cuts.diagnostics, casParPartie, defs: defs[variante] });
+  E.differes = bancDifferes({ resultats: gcv2Seule, diagnostics: V.cuts.diagnostics, casParPartie });
+  E.cuts.diagnostics = V.cuts.diagnostics;
   const { cuts: _cuts, ...Vsans } = V; void _cuts;
   E.validation = Vsans;
   return E;
+}
+
+/* ================================================================== 5 bis. CASCADE DES PERTES ET BANC DES DIFFÉRÉS (lecture seule) */
+/* Qui traite un cut sous une variante : 'gcv2', 'prudente' ou 'rien' (même logique que `appliquerVariante`). */
+function traitePar(def, zone, role) {
+  const dans = l => Array.isArray(l) ? l.some(dans) : !!l && l.zones.includes(zone) && l.roles.includes(role);
+  return dans(def.gcv2) ? 'gcv2' : dans(def.prudente) ? 'prudente' : 'rien';
+}
+const ETAPES_CASCADE = ['grosses', 'sansNuage', 'horsJeu', 'sansHypothese', 'rouge', 'differeJamais', 'zoneHorsListe', 'prudenteNAgitPas', 'preuveDeVoie', 'gardeEcartement', 'gardeLateral45', 'gardeDevers',
+  'zoneInactive', 'meilleureH0', 'sousDelta', 'sousTau', 'autre', 'traitees', 'justes', 'fausses'];
+const LIBELLES_CASCADE = { grosses: 'grosses corrections (Mic > 10 mm)', sansNuage: 'sans nuage (perdues d\'avance)', horsJeu: 'avec nuage, hors de la population du jeu (rail sans hypothèse de départ)',
+  sansHypothese: 'avec nuage, aucune hypothèse à 10 mm (rappel manquant)', rouge: 'atteignable, rouge (jamais touché)', differeJamais: 'atteignable, différé (la variante ne le confie à personne)',
+  zoneHorsListe: 'atteignable, zone « hors » ou « liste » (rien n\'agit)', prudenteNAgitPas: 'atteignable, abords : la règle prudente n\'agit pas', preuveDeVoie: 'GCV2 s\'abstient : preuve de voie manquante (différé)',
+  gardeEcartement: 'GCV2 s\'abstient : garde-fou d\'écartement', gardeLateral45: 'GCV2 s\'abstient : garde-fou 45 mm latéral', gardeDevers: 'GCV2 s\'abstient : garde-fou de dévers',
+  zoneInactive: 'GCV2 s\'abstient : zone inactive dans le pli (aucun τ admissible)', meilleureH0: 'GCV2 s\'abstient : sa meilleure paire est « ne rien faire »', sousDelta: 'GCV2 s\'abstient : écart sous δ',
+  sousTau: 'GCV2 s\'abstient : probabilité sous τ', autre: 'autre (non classé)', traitees: 'traitées (action de la variante)', justes: 'dont justes (≤ 10 mm de Mic)', fausses: 'dont fausses (> 10 mm)' };
+/*
+ * Cascade des pertes (demande de Mic par l'orchestrateur, lecture seule ; aucun réglage) : chaque grosse correction de Mic (Mic exact > 10 mm, référence non incertaine)
+ * tombe dans UNE case, dans cet ordre : sans nuage ; hors de la population du jeu ; aucune hypothèse à 10 mm sur les deux rails ; puis, atteignable : la variante ne la
+ * confie à personne (rouge, différé, zone hors/liste) ; la règle prudente (abords) n'agit pas ; la GCV2 s'abstient (preuve de voie, garde-fou, zone inactive, meilleure paire
+ * H0, sous δ, sous τ) ; traitée (justes, fausses). Une action de la variante sur une correction NON atteignable est comptée « traitée » (elle a agi) : la case « aucune
+ * hypothèse » ne compte que celles qu'on laisse. Par zone (zone de l'instant), par projet.
+ */
+function cascade({ candidat, diagnostics, casParPartie, defs }) {
+  const vide = () => Object.fromEntries(ETAPES_CASCADE.map(k => [k, 0]));
+  const tables = { total: vide(), parZone: Object.fromEntries(A.ZONES.map(z => [z, vide()])), parProjet: {}, parPartie: {} };
+  const ajouter = (partie, zone, k) => { const pj = `projet ${projetDe(partie)}`; for (const t of [tables.total, tables.parZone[zone] || (tables.parZone[zone] = vide()), tables.parProjet[pj] || (tables.parProjet[pj] = vide()), tables.parPartie[partie] || (tables.parPartie[partie] = vide())]) t[k]++; };
+  const cand = new Map(candidat.map(r => [cle(r), r])), diag = new Map(diagnostics.map(d => [cle(d), d]));
+  for (const [partie, cas] of Object.entries(casParPartie)) for (const c of cas) {
+    const m = micDuCas(c); if (!(fini(m) && m > PORTE.juste10) || (c.mic && c.mic.raison === 'reference-incertaine')) continue;
+    const r = cand.get(`${partie}|${c.cut}`), d = diag.get(`${partie}|${c.cut}`), zone = (r && r.zone) || c.zoneCausale || 'hors';
+    ajouter(partie, zone, 'grosses');
+    if (!c.ariane || c.ariane.etat !== 'calcule') { ajouter(partie, zone, 'sansNuage'); continue; }
+    if (!r || !d) { ajouter(partie, zone, 'horsJeu'); continue; }
+    if (agit(r)) { ajouter(partie, zone, 'traitees'); ajouter(partie, zone, r.e <= PORTE.juste10 ? 'justes' : 'fausses'); continue; }
+    if (!d.atteignable) { ajouter(partie, zone, 'sansHypothese'); continue; }
+    const qui = traitePar(defs, r.zone, r.role);
+    let k;
+    if (qui === 'rien') k = r.role === 'rouge' ? 'rouge' : r.role === 'differe' ? 'differeJamais' : (r.zone === 'hors' || r.zone === 'liste') ? 'zoneHorsListe' : 'autre';
+    else if (qui === 'prudente') k = 'prudenteNAgitPas';
+    else if (d.garde === 'voie' && !d.voieSure) k = 'preuveDeVoie';
+    else if (!d.bonnePermise) { const g = d.gardes || []; k = g.includes('preuve-de-voie') ? 'preuveDeVoie' : g.includes('lateral-45') ? 'gardeLateral45' : g.includes('devers') ? 'gardeDevers' : g.includes('ecartement') ? 'gardeEcartement' : 'autre'; }
+    else if (!d.zoneActive) k = 'zoneInactive';
+    else if (d.meilleureH0) k = 'meilleureH0';
+    else if (d.sousDelta) k = 'sousDelta';
+    else if (d.sousTau) k = 'sousTau';
+    else k = 'autre';
+    ajouter(partie, zone, k);
+  }
+  return { etapes: ETAPES_CASCADE, libelles: LIBELLES_CASCADE, ...tables };
+}
+/*
+ * Banc des différés (D-214, lecture seule) : sur les cuts DIFFÉRÉS par le lot dont Mic a une référence (jugés : nuage et hypothèses), les poses d'une méthode
+ * (la GCV2 du pli, sans variante) : effectif, rappel atteignable (paire à 10 mm parmi les hypothèses), actions, justes (pose à 10 mm de Mic), abîmés (Mic ≤ 5 mm,
+ * pose à plus de 10 mm), mauvaises voies (définition du protocole § 3 : erreur > 50 mm ou rail déplacé de plus de 45 mm depuis la pose de départ), erreur médiane
+ * des actions et erreur finale médiane (action ou non). Les différés sans nuage sont comptés à part. Par partie, par projet, total.
+ */
+function bancDifferes({ resultats, diagnostics, casParPartie }) {
+  const diag = new Map(diagnostics.map(d => [cle(d), d])), parCut = Object.fromEntries(Object.entries(casParPartie).map(([p, cs]) => [p, new Map(cs.map(c => [c.cut, c]))]));
+  const rs = resultats.filter(r => r.role === 'differe').map(r => { const c = parCut[r.partie] && parCut[r.partie].get(r.cut), m = c ? micDuCas(c) : null; return { ...r, mic: fini(m) ? m : r.mic }; });
+  const resume = (liste, sansNuage) => {
+    const acts = liste.filter(agit);
+    return { differes: liste.length, sansNuage, atteignables: liste.filter(r => (diag.get(cle(r)) || {}).atteignable).length, grosses: liste.filter(r => r.mic > PORTE.juste10).length,
+      actions: acts.length, justes: acts.filter(r => r.e <= PORTE.juste10).length, abimes: acts.filter(estAbime).length, mauvaiseVoie: acts.filter(estMauvaiseVoie).length,
+      erreurs: acts.filter(estErreur).length, erreurMedianeActions: arrondi(mediane(acts.map(r => r.e)), 2), erreurFinaleMediane: arrondi(mediane(liste.map(erreurFinale)), 2),
+      wilsonHautErreur: acts.length ? arrondi(wilsonHaut(acts.filter(estErreur).length, acts.length), 4) : null };
+  };
+  const sansNuageDe = p => [...(parCut[p] || new Map()).values()].filter(c => c.genreLot === 'differe' && c.mic && c.mic.ref && (!c.ariane || c.ariane.etat !== 'calcule')).length;
+  const parties = [...new Set([...Object.keys(casParPartie), ...rs.map(r => r.partie)])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const parPartie = Object.fromEntries(parties.map(p => [p, resume(rs.filter(r => r.partie === p), sansNuageDe(p))]));
+  const projets = [...new Set(parties.map(projetDe))].sort();
+  const parProjet = Object.fromEntries(projets.map(pj => [`projet ${pj}`, resume(rs.filter(r => projetDe(r.partie) === pj), parties.filter(p => projetDe(p) === pj).reduce((a, p) => a + sansNuageDe(p), 0))]));
+  return { parPartie, parProjet, total: resume(rs, parties.reduce((a, p) => a + sansNuageDe(p), 0)),
+    cuts: rs.filter(agit).map(r => ({ partie: r.partie, cut: r.cut, zone: r.zone, mic: arrondi(r.mic, 1), e: arrondi(r.e, 1), lat: arrondi(r.lat, 1) })) };
+}
+/*
+ * Test CROISÉ entre projets (D-214) : apprendre sur toutes les parties d'un projet (λ choisi par validation interne de ces seules parties, calibrage et seuils
+ * appris sans l'autre projet), juger les cuts de l'autre projet ; le banc des différés est lu sur ces décisions. Lecture seule.
+ */
+function croise({ parties, casParPartie, usage = 'lot', lambdas = [3, 30, 300], gardeVoie = false, sansH6 = false, journal = () => {}, cible = A.CIBLE }) {
+  const projets = [...new Set(parties.map(j => projetDe(j.partie)))].sort(), out = {};
+  for (const apprendre of projets) for (const juger of projets) {
+    if (apprendre === juger) continue;
+    const app = parties.filter(j => projetDe(j.partie) === apprendre).flatMap(j => A.construireCas(j, usage, { gardeVoie, sansH6 }));
+    const test = parties.filter(j => projetDe(j.partie) === juger).flatMap(j => A.construireCas(j, usage, { gardeVoie, sansH6 }));
+    const t0 = Date.now(), imb = A.apprendrePliImbrique(app, { lambda: A.LAMBDA, accord: true, espion: (nom, ps) => { if (ps.some(p => projetDe(p) === juger)) throw Error(`fuite : le projet jugé ${juger} est lu par « ${nom} »`); }, cible }, lambdas);
+    const J = A.jugerPli(imb.pli, test), dec = test.map((k, i) => A.decider(k, J.p10[i], imb.pli.seuils));
+    const rs = test.map((k, i) => A.resultatDeDecision(k, dec[i])), dg = test.map((k, i) => ({ partie: k.partie, cut: k.cut, zone: k.zone, role: k.role, garde: k.garde || null, voieSure: k.garde === 'voie' ? !!(k.voieRef && k.voieRef.sure) : null, ...A.diagnostic(k, dec[i], imb.pli.seuils) }));
+    const parCut = Object.fromEntries(Object.entries(casParPartie).filter(([p]) => projetDe(p) === juger));
+    out[`appris sur le projet ${apprendre}, jugé sur le projet ${juger}`] = { lambda: imb.lambda, seuils: imb.pli.seuils, banc: bancDifferes({ resultats: annoter(rs, Object.fromEntries(Object.entries(parCut).map(([p, cs]) => [p, new Map(cs.map(c => [c.cut, c]))]))), diagnostics: dg, casParPartie: parCut }) };
+    journal(`croisé ${apprendre} → ${juger} : ${test.length} cuts, ${Math.round((Date.now() - t0) / 1000)} s`);
+  }
+  return { format: 'ariane-gcv2-croise-v1', usage, gardeVoie, sansH6, lambdas, directions: out };
 }
 
 /* ================================================================== 6. RAPPORT */
@@ -473,7 +572,23 @@ function rapportEvaluation(E) {
     L.push(l(`λ fixe ${E.temoin.lambda}, règle prudente exacte, Mic exact (nouvel évaluateur)`, E.temoin.bilan, E.temoin.porte), l(`λ imbriqué (${E.lambdas.join(', ')}), même évaluateur`, E.bilans.candidat, E.porte), '');
   }
   if (E.registre) L.push(rapportRegistre([...E.registre.parPartie, E.registre.total]), '', `Grosses corrections (Mic > 10 mm) : ${E.registre.grosses.cas} dans les cas de l'extraction (Mic exact), ${E.registre.grosses.jeu} dans le jeu (Mic arrondi à 0,01 mm)${E.registre.grosses.ecarts.length ? ` ; cuts qui franchissent 10 mm d'un côté seulement : ${E.registre.grosses.ecarts.map(x => `${x.partie} cut ${x.cut} (${x.micExact} mm exact, ${x.micJeu} dans le jeu)`).join(', ')}` : ''}.`, '');
+  if (E.cascade) L.push(rapportCascade(E.cascade), '');
+  if (E.differes) L.push(rapportDifferes(E.differes, `GCV2 du pli sur les différés${E.gardeVoie ? ', avec H6 et le garde de série' : E.sansH6 ? ', sans H6 ni garde de série (« GCV2 seule »)' : ', avec H6, sans garde de série'}`), '');
   if (E.lambdaParPli) { L.push('### λ choisi par pli extérieur', '', 'partie jugée | λ choisi | perte interne par λ', '---|--:|---'); for (const p of E.parties) L.push(`${p} | ${E.lambdaParPli[p].choisi} | ${Object.entries(E.lambdaParPli[p].criteres || {}).map(([l, v]) => `${l} : ${v}`).join(' ; ')}`); }
+  return L.join('\n');
+}
+function rapportCascade(K) {
+  const cols = [['total', K.total], ...A.ZONES.map(z => [z, K.parZone[z]]), ...Object.entries(K.parProjet)];
+  const L = ['### Cascade des pertes des grosses corrections de Mic (lecture seule, aucun réglage)', '', `étape | ${cols.map(c => c[0]).join(' | ')}`, '---|' + cols.map(() => '--:').join('|')];
+  for (const k of K.etapes) L.push(`${K.libelles[k]} | ${cols.map(([, t]) => t ? t[k] : 0).join(' | ')}`);
+  return L.join('\n');
+}
+function rapportDifferes(B, titre) {
+  const L = [`### Banc des différés (${titre})`, '', 'partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane', '---|' + '--:|'.repeat(10) + '--:'];
+  const l = (nom, o) => `${nom} | ${o.differes} | ${o.sansNuage} | ${o.grosses} | ${o.atteignables} | ${o.actions} | ${o.justes} | ${o.abimes} | ${o.mauvaiseVoie} | ${o.erreurs} | ${o.erreurMedianeActions ?? '—'} | ${o.erreurFinaleMediane ?? '—'}`;
+  for (const [p, o] of Object.entries(B.parPartie)) L.push(l(p, o));
+  for (const [p, o] of Object.entries(B.parProjet)) L.push(l(`**${p}**`, o));
+  L.push(l('**total**', B.total));
   return L.join('\n');
 }
 function rapportControle(C) {
@@ -499,10 +614,11 @@ function rapportRegistre(lignes) {
 
 /* ================================================================== ligne de commande */
 function argsCli(argv) {
-  const o = { mode: argv[0], jeux: [], cas: [], tables: [], json: null, usage: null, lambdas: null, lambdaTemoin: null, variante: 'V1', sortie: null };
+  const o = { mode: argv[0], jeux: [], cas: [], tables: [], json: null, usage: null, lambdas: null, lambdaTemoin: null, variante: 'V1', sortie: null, variantes: null, gardeVoie: false, sansH6: false };
   for (let i = 1; i < argv.length; i++) {
     const k = argv[i], v = () => { const x = argv[++i]; if (x === undefined) throw Error(`valeur manquante après ${k}`); return x; };
     if (k === '--jeu') o.jeux.push(v()); else if (k === '--cas') o.cas.push(v()); else if (k === '--table') o.tables.push(v()); else if (k === '--json') o.json = v(); else if (k === '--usage') o.usage = v();
+    else if (k === '--variantes') o.variantes = v(); else if (k === '--garde-voie') o.gardeVoie = true; else if (k === '--sans-h6') o.sansH6 = true;
     else if (k === '--lambdas') o.lambdas = v().split(',').map(Number); else if (k === '--lambda-temoin') o.lambdaTemoin = Number(v()); else if (k === '--variante') o.variante = v(); else if (k === '--sortie') o.sortie = v();
     else throw Error(`argument inconnu : ${k}`);
   }
@@ -526,8 +642,14 @@ function main(argv) {
     const C = controleD190({ parties }); if (a.json) fs.writeFileSync(a.json, JSON.stringify(C, null, 1)); process.stdout.write(rapportControle(C) + '\n');
   } else if (a.mode === 'valider') {
     if (!a.jeux.length || !a.usage) throw Error('valider --jeu … --cas … --usage relecture|lot');
-    const parties = a.jeux.map(f => A.lireJeuFichier(f)), E = evaluer({ parties, casParPartie: chargerCas(a.cas), tables: chargerTables(a.tables), usage: a.usage, lambdas: a.lambdas, lambdaTemoin: a.lambdaTemoin, variante: a.variante, journal });
+    const parties = a.jeux.map(f => A.lireJeuFichier(f)), E = evaluer({ parties, casParPartie: chargerCas(a.cas), tables: chargerTables(a.tables), usage: a.usage, lambdas: a.lambdas, lambdaTemoin: a.lambdaTemoin, variante: a.variante, journal,
+      defsVariantes: a.variantes ? A.lireVariantes(a.variantes) : null, gardeVoie: a.gardeVoie, sansH6: a.sansH6 });
     if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(E)); process.stdout.write(rapportEvaluation(E) + '\n');
+  } else if (a.mode === 'croise') {
+    if (!a.jeux.length || !a.usage) throw Error('croise --jeu … --cas … --usage relecture|lot [--garde-voie] [--sans-h6]');
+    const parties = a.jeux.map(f => A.lireJeuFichier(f)), X = croise({ parties, casParPartie: chargerCas(a.cas), usage: a.usage, lambdas: a.lambdas || [3, 30, 300], gardeVoie: a.gardeVoie, sansH6: a.sansH6, journal });
+    if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(X));
+    for (const [nom, d] of Object.entries(X.directions)) process.stdout.write(rapportDifferes(d.banc, `${nom}, λ ${d.lambda}`) + '\n\n');
   } else if (a.mode === 'rapport') {
     if (!a.json) throw Error('rapport --json E.json'); process.stdout.write(rapportEvaluation(JSON.parse(fs.readFileSync(a.json, 'utf8'))) + '\n');
   } else if (a.mode === 'registre') {
@@ -535,9 +657,9 @@ function main(argv) {
     const lignes = jeux.map(j => registrePartie({ partie: j.partie, cas: cas[j.partie], exemples: A.construireCas(j, 'relecture').map(k => k.cut) }));
     process.stdout.write(rapportRegistre([...lignes, sommeRegistre(lignes)]) + '\n');
   } else if (a.mode === 'essai') process.stdout.write('node --test tests/gcv2-evaluer.test.cjs\n');
-  else throw Error('mode : controle | valider | rapport | registre | essai');
+  else throw Error('mode : controle | valider | croise | rapport | registre | essai');
 }
 module.exports = { FORMAT_EVAL, PUBLIE_G1B, SEUIL_REFERENCE_INCERTAINE_MM, detecterReferenceIncertaine, PORTE, SEUIL_VISITE_G0_S, SEUIL_VISITE_JEU_S, ATTENDU_D190, agit, estMauvaiseVoie, estJuste, estAbime, estErreur, erreurFinale, finaleSup10, wilsonHaut, effectifMinimum, mediane,
   reglagesDuDepot, tablePseudo, micDuCas, referenceExacte, fournisseurReference, annoter, comparerCutParCut, controleD190, porteUnique, sensibilites, recouvrements, lectureDe, lecturesParUnite,
-  registrePartie, sommeRegistre, reconcilierGrosses, lireCas, evaluer, rapportPorte, rapportEvaluation, rapportControle, rapportRegistre, argsCli, chargerCas, chargerTables };
+  registrePartie, sommeRegistre, reconcilierGrosses, lireCas, evaluer, traitePar, cascade, bancDifferes, croise, rapportCascade, rapportDifferes, ETAPES_CASCADE, rapportPorte, rapportEvaluation, rapportControle, rapportRegistre, argsCli, chargerCas, chargerTables };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`gcv2-evaluer : ${e.message}\n`); process.exit(1); } }

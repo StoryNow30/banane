@@ -140,7 +140,7 @@ function variante(capture, science, anchors) {
  *  - sans appui (`seul`, champs à la racine) : le cut visité seul, premier passage du lot ;
  *  - `chaine` : avec pour appuis les poses qu'elle vient de donner aux cuts précédents de la même relecture (ordre des cuts),
  *    comme le lot le fait de ses propres poses. Jamais une pose de Mic. */
-function poseAriane(entree, { tous = null, appuis = null, rappel = null } = {}) {
+function poseAriane(entree, { tous = null, appuis = null, rappel = null, repliSurface = null } = {}) {
   const capture = { identity: entree.identity, rails: entree.rails, pointsSceneRelative: entree.points, visibleByClipBoxes: entree.visible };
   const science = Shadow.scientificProposeBoth(capture);
   const seul = variante(capture, science, []), decision = seul.decision, haut = seul.haut;
@@ -174,16 +174,25 @@ function poseAriane(entree, { tous = null, appuis = null, rappel = null } = {}) 
     };
   }
   /* Surface des règles métier (PN, ADV) : tous les points de la capture, comme le lecteur de l'Écho de tools/regles-metier.cjs. */
+  /* Mode CAUSAL (jeu causal, audit F4) : `repliSurface` (fonction) remplace `tous`. La surface se lit sur l'ENTRÉE SANS FUITE du moteur (mêmes chunks,
+   * même filtre de pose et de temps) ; le repli, quand les points visibles ne suffisent pas, garde ces mêmes chunks sans le filtre de visibilité.
+   * Jamais un chunk pris après un déplacement du rail, jamais un chunk d'une visite dont la pose n'est plus celle du départ. */
   try {
-    const cap2 = tous || capture;
+    const cap2 = repliSurface ? capture : (tous || capture);
     let sf = M.surface(cap2);
-    if (!(sf.sidePoints >= M.DEFAULTS.surface.sidePointsMin) && tous) sf = M.surface({ rails: tous.rails, pointsSceneRelative: tous.pointsSceneRelative });
+    if (!(sf.sidePoints >= M.DEFAULTS.surface.sidePointsMin) && repliSurface) { const r = repliSurface(); if (r) sf = M.surface(r); }
+    else if (!(sf.sidePoints >= M.DEFAULTS.surface.sidePointsMin) && tous) sf = M.surface({ rails: tous.rails, pointsSceneRelative: tous.pointsSceneRelative });
     out.surface = { flushPct: sf.flushPct ?? null, quadMin: sf.quadMin ?? null, sidePoints: sf.sidePoints ?? null, coeurPN: !!sf.coeurPN, advRails: sf.advRails ?? null };
   } catch { out.surface = null; }
   return out;
 }
 
-function extraire({ partie, projet, echo, jeu, observateur = null }) {
+/* Options du JEU CAUSAL (tools/gcv2-jeu.cjs, fiches/JEU_CAUSAL.md) ; sans elles, la sortie est celle d'avant, octet pour octet :
+ *   seuilVisiteS   durée minimale d'une visite sans action valant « bon » (G0 et compteur : 0,6 s ; défaut historique de la jointure : 0,8 s) ;
+ *   causal         surface des règles métier lue sur l'entrée sans fuite du moteur (audit F4), jamais sur tous les chunks des visites ;
+ *   incertaines    (parCut) → Map cut → { ecartMm } : cuts dont la pose de départ était déjà déplacée par rapport à la liste d'ESV du départ de partie
+ *                  (D-211) ; leur référence est « incertaine » : ni correction nulle ni correction mesurée (`mic.ref` null, raison `reference-incertaine`). */
+function extraire({ partie, projet, echo, jeu, observateur = null, seuilVisiteS = J.DUREE_VISITE_DEFAUT_S, causal = false, incertaines = null }) {
   const e = J.lireEcho(echo);
   const parCut = [...J.echoParCut(e.records, e.sessions).values()].filter(c => c.partie === partie && c.cut >= 0);  // D-172 : les premiers cuts d'une partie sont dans le périmètre
   const labels = new Map();
@@ -201,7 +210,8 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
   parCut.sort((a, b) => a.cut - b.cut);
   /* Observateur facultatif (G1-a, tools/gcv2-jeu.cjs) : `debut` reçoit les cuts de l'Écho, `cut` reçoit, pour chaque cut, ce qu'`extraire` vient
    * de calculer (la ligne `o`, l'entrée sans fuite et les objets bruts de la pose). Il ne change ni les cas ni leur ordre. */
-  if (observateur && observateur.debut) observateur.debut({ parCut, ctx, referenceHumaine });
+  const incert = incertaines ? incertaines(parCut) : null;
+  if (observateur && observateur.debut) observateur.debut({ parCut, ctx, referenceHumaine, incertaines: incert });
   for (const c of parCut) {
     const v0 = c.visites[0], lab = labels.get(c.cut) || null;
     let brutDuCut = null, entreeDuCut = null;
@@ -213,12 +223,13 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
       mic: null, ariane: null };
     /* Correction de Mic depuis la pose de départ de la première visite. */
     const ref = referenceHumaine(c.visites);
-    if (before && SIDES.every(s => before[s])) {
+    if (incert && incert.has(c.cut)) o.mic = { ref: null, raison: 'reference-incertaine', ecartDepartListeMm: r2(incert.get(c.cut).ecartMm) };
+    else if (before && SIDES.every(s => before[s])) {
       if (ref) {
         const rails = {}; for (const s of SIDES) rails[s] = decalage(before[s], ref.etat.rails && ref.etat.rails[s] && ref.etat.rails[s].positionSceneRelative);
         o.mic = { ref: 'validation', rails };
       } else {
-        const sa = J.visiteSansAction(c, J.DUREE_VISITE_DEFAUT_S, ctx);
+        const sa = J.visiteSansAction(c, seuilVisiteS, ctx);
         o.mic = sa.appliquee ? { ref: 'visite-bon', rails: { left: [0, 0, 0], right: [0, 0, 0] } } : { ref: null, raison: sa.raison };
       }
     } else o.mic = { ref: null, raison: 'sans-pose-de-depart' };
@@ -230,7 +241,10 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
     o.skipMic = c.visites.some(v => (v.serverWrites || []).some(w => w && w.body && w.body.ExtractionStatus === 'skipped'));
     o.lecture = [...new Set(e.capturesParVisite[v0.visitId] || [])];
     o.pointsParRail = Object.fromEntries(SIDES.map(s => [s, ks.filter(k => k.side === s).reduce((n, k) => n + k.pointsSceneRelative.length, 0)]));
-    if (!before || !SIDES.every(s => before[s] && before[s].sceneRelativeToProfileLocal)) o.ariane = { etat: 'sans-pose-de-depart' };
+    /* Référence incertaine (D-211) : l'entrée elle-même (pose de départ, fenêtre de capture) est déjà celle d'une main humaine. Le cut est retiré de la
+     * passe : aucun calcul, aucun appui de chaîne, aucune surface pour les zones (comme un cut non visité). */
+    if (incert && incert.has(c.cut)) o.ariane = { etat: 'reference-incertaine' };
+    else if (!before || !SIDES.every(s => before[s] && before[s].sceneRelativeToProfileLocal)) o.ariane = { etat: 'sans-pose-de-depart' };
     else {
       /* Visibilité non relevée (exports anciens) : `gatherInput` ne garde que `=== true` ; on la tient pour vraie, comme le lecteur de surface. */
       let entree = entreeSansFuite(v0, ks);
@@ -242,8 +256,10 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
         const pts = [], vis = [];
         for (const k of ks) if (k.side && (before[k.side] && k.rail)) for (let i = 0; i < k.pointsSceneRelative.length; i++) { pts.push(k.pointsSceneRelative[i]); vis.push(k.visibleByClipBoxes[i]); }
         const tous = { rails: entree.rails, pointsSceneRelative: pts, visibleByClipBoxes: vis };
+        /* Repli causal : les mêmes chunks que l'entrée sans fuite, visibilité ignorée (calculé seulement s'il sert). */
+        const repliSurface = causal ? () => { const f = entreeSansFuite(v0, ks.map(k => ({ ...k, visibleByClipBoxes: k.visibleByClipBoxes.map(() => true) }))); return f.points.length ? { rails: entree.rails, pointsSceneRelative: f.points } : null; } : null;
         try { entree.identity = { ...entree.identity, frameId: null };
-        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis, rappel: observateur ? b => { brutDuCut = b; } : null }) }; }
+        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous: causal ? null : tous, appuis, repliSurface, rappel: observateur ? b => { brutDuCut = b; } : null }) }; }
         catch (err) { o.ariane = { etat: 'erreur', message: String(err && err.message || err).slice(0, 120) }; }
       }
     }
@@ -408,6 +424,10 @@ function lignes({ cas, table, designation }) {
     const l = { partie: designation, cut: c.cut, zone: S.type.get(c.cut) || 'hors', genre: S.lot.get(c.cut) || 'vert', ref: !!ref, mic: ref ? max3d(ref) : null,
       etat: c.ariane ? c.ariane.etat : null };
     if (ref) { const s = SIDES.reduce((a, b) => norme(ref[a]) >= norme(ref[b]) ? a : b); l.micAxe = Math.abs(ref[s][1]) >= Math.abs(ref[s][2]) ? 'lateral' : 'vertical'; }
+    /* Médiane d'écartement : CAUSALE quand le cas la porte (jeu causal, audit F5 : celle de l'instant de la décision, la même pour la GCV2 et la règle,
+     * `null` tant qu'aucun cut n'est connu) ; sinon la médiane de la partie (historique). */
+    const gm = 'gMedCausalMm' in c ? c.gMedCausalMm : gMed;
+    if ('gMedCausalMm' in c) l.gMed = gm;
     if (l.etat === 'calcule') {
       const a = c.ariane;
       l.conf = Math.min(...SIDES.map(s => fini(a.rails[s].confiance) ? a.rails[s].confiance : -1));
@@ -421,7 +441,7 @@ function lignes({ cas, table, designation }) {
         l.var[k] = { stage: p.stage, d: max3d(P), e: ref ? Math.max(...SIDES.map(s => norme(moins(P[s], ref[s])))) : null,
           pire: Math.max(...SIDES.flatMap(s => [Math.abs(P[s][1]), Math.abs(P[s][2])])), latMax: Math.max(...SIDES.map(s => Math.abs(P[s][1]))),
           coh: Math.max(Math.abs(P.left[1] - P.right[1]), Math.abs(P.left[2] - P.right[2])),
-          dg: fini(p.ecartementPoseMm) && fini(gMed) ? Math.abs(p.ecartementPoseMm - gMed) : null };
+          dg: fini(p.ecartementPoseMm) && fini(gm) ? Math.abs(p.ecartementPoseMm - gm) : null };
       }
     }
     out.push(l);

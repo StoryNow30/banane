@@ -224,7 +224,11 @@ function appliquerUsage(c, usage) {
   return { hyp, ctx: humains ? { ...c.cut.contexte, voisins: { n: 0, humains: 0, lot: 0, encadre: null, coupMin: null, ecartementMm: null } } : c.cut.contexte, retire };
 }
 /* Les cas d'une partie : cuts calculés avec un nuage et une référence pour les deux rails. */
-function construireCas(jeu, usage = 'relecture', { gardeVoie = false } = {}) {
+/* `sansH6` (banc des différés, D-214 : « GCV2 seule ») : les hypothèses qui ne viennent QUE de H6 sont retirées, et l'origine H6 et ses traits quittent les
+ * hypothèses mixtes, avant tout calcul (paires, garde-fous, traits). */
+const retirerH6 = hs => hs.flatMap(h => { if (!h.origines.includes('H6')) return [h]; const o = h.origines.filter(x => x !== 'H6'); if (!o.length) return [];
+  return [{ ...h, origines: o, sousOrigines: h.sousOrigines.filter(x => !x.startsWith(PREFIXE_H6)), traits: sansTraitsH6(h.traits) }]; });
+function construireCas(jeu, usage = 'relecture', { gardeVoie = false, sansH6 = false } = {}) {
   if (!['relecture', 'lot'].includes(usage)) throw Error(`usage « ${usage} » : relecture | lot`);
   const cas = [], gMed = fini(jeu.entete.gMedMm) ? jeu.entete.gMedMm : null;
   /* Audit F3 : un jeu H6 dit son usage. Le jeu « lot » est GÉNÉRÉ sans aucun appui humain (gcv2-jeu `--sortie-lot`) : il est lu tel quel, et seul
@@ -237,12 +241,16 @@ function construireCas(jeu, usage = 'relecture', { gardeVoie = false } = {}) {
     /* Référence incertaine (D-211) : la pose de départ de la visite était déjà déplacée par rapport à la liste d'ESV du début de la partie ; ce n'est pas une « correction nulle ». Jamais un exemple. */
     if (c.reference === 'incertaine') continue;
     if (c.etat !== 'calcule' || !c.nHyp || !c.etiquette || !c.etiquette.mic || !c.etiquette.mic.left || !c.etiquette.mic.right) continue;
-    const { hyp, ctx: contexte } = usageJeu ? { hyp: c0.hyp, ctx: c.contexte } : appliquerUsage({ cut: c, hyp: c0.hyp, gMed }, usage);
+    const { hyp: hyp0, ctx: contexte } = usageJeu ? { hyp: c0.hyp, ctx: c.contexte } : appliquerUsage({ cut: c, hyp: c0.hyp, gMed }, usage);
+    const hyp = sansH6 ? { left: retirerH6(hyp0.left), right: retirerH6(hyp0.right) } : hyp0;
+    /* Jeu causal : la médiane d'écartement est celle de l'INSTANT du cut (`contexte.gMedMm`, null tant qu'aucun cut n'est connu), la même que la règle
+     * prudente lit dans le cas ; sinon la médiane de la partie (entête). */
+    const gMedCut = jeu.entete.causal && contexte && 'gMedMm' in contexte ? (fini(contexte.gMedMm) ? contexte.gMedMm : null) : gMed;
     const G0 = fini(contexte && contexte.ecartDepartMm) ? contexte.ecartDepartMm : null, v = (contexte && contexte.voisins) || {};
     const ctx = { zone: c.zone, role: c.role, etageChaine: contexte ? contexte.etageChaine : null, appuisChaine: contexte ? contexte.appuisChaine : null,
       voisinsN: v.n ?? null, voisinsHumains: v.humains ?? null, voisinsLot: v.lot ?? null, voisinsEncadre: v.encadre ?? null, voisinsCoupMin: v.coupMin ?? null,
-      ecartDepartMedMm: fini(G0) && fini(gMed) ? G0 - gMed : null };
-    const k = { partie: jeu.partie, cut: c.cut, zone: c.zone, role: c.role, gMed, G0, chaineDifferee: ctx.etageChaine === 'deferred', rails: {}, etiq: { micMaxMm: c.etiquette.micMaxMm, mic: c.etiquette.mic } };
+      ecartDepartMedMm: fini(G0) && fini(gMedCut) ? G0 - gMedCut : null };
+    const k = { partie: jeu.partie, cut: c.cut, zone: c.zone, role: c.role, gMed: gMedCut, G0, chaineDifferee: ctx.etageChaine === 'deferred', rails: {}, etiq: { micMaxMm: c.etiquette.micMaxMm, mic: c.etiquette.mic } };
     /* Garde-fou de voie (option) : un cut différé est gardé par la voie de référence de sa série (H6), celle de l'usage (lot : voisins du lot seuls). */
     if (gardeVoie && c.role === 'differe') { const v = c.contexte && c.contexte.voieH6; k.garde = 'voie'; k.voieRef = v ? (v[usage === 'lot' ? 'lot' : 'tous'] || null) : null; }
     for (const s of SIDES) {
@@ -536,6 +544,42 @@ function issueDePaire(k, i, j) {
   const latGarde = k.garde === 'voie' && k.voieRef ? Math.max(Math.abs(latRef(k, 'left', hl)), Math.abs(latRef(k, 'right', hr))) : lat;
   return { e, lat, latGarde };
 }
+/* Garde-fous qu'une paire viole, dans l'ordre : voie de référence absente ou non sûre (différé sous le garde de série), rail à plus de 45 mm en travers,
+ * dévers, écartement. Lecture seule (cascade des pertes) : la décision n'utilise que `paireValide`. */
+function gardesVioles(k, hl, hr, gardes = GARDES) {
+  const out = [];
+  if (k.garde === 'voie') {
+    const r = k.voieRef;
+    if (!r || !r.sure) return ['preuve-de-voie'];
+    if (Math.abs(latRef(k, 'left', hl)) > gardes.lateralMaxMm || Math.abs(latRef(k, 'right', hr)) > gardes.lateralMaxMm) out.push('lateral-45');
+    if (Math.abs((hl.decal[2] - hr.decal[2]) - (r.left[1] - r.right[1])) > gardes.deversMaxMm) out.push('devers');
+  } else {
+    if (Math.abs(hl.decal[1]) > gardes.lateralMaxMm || Math.abs(hr.decal[1]) > gardes.lateralMaxMm) out.push('lateral-45');
+    if (Math.abs(hl.decal[2] - hr.decal[2]) > gardes.deversMaxMm) out.push('devers');
+  }
+  const g = ecartementPaire(k, hl, hr);
+  if (!(fini(g) && ((fini(k.gMed) && Math.abs(g - k.gMed) <= gardes.ecartementMedianeMm) || (g >= gardes.contratMm[0] && g <= gardes.contratMm[1])))) out.push('ecartement');
+  return out;
+}
+/* Diagnostic d'une décision de la GCV2 sur un cut (cascade des pertes, lecture seule ; rien n'est réglé dessus) : la paire juste existe-t-elle parmi les
+ * hypothèses (les deux rails à 10 mm de Mic : rappel atteignable) ? est-elle permise par les garde-fous (sinon lequel la bloque) ? la zone est-elle active
+ * dans ce pli ? la meilleure paire est-elle « ne rien faire » ? sous δ ? sous τ ? */
+function diagnostic(k, d, seuils) {
+  const bons = s => k.rails[s].hyps.map((h, i) => h.y && h.y.ecartMm <= 10 ? i : -1).filter(i => i >= 0);
+  const L = bons('left'), R = bons('right'), s = seuils[k.zone] || seuils.hors || { actif: false };
+  const out = { atteignable: L.length > 0 && R.length > 0, etat: d.etat, zoneActive: !!s.actif, meilleureH0: d.i === k.i0.left && d.j === k.i0.right,
+    sousDelta: !!(s.actif && !(d.i === k.i0.left && d.j === k.i0.right) && d.ecart < s.delta), sousTau: d.etat === 'abstient', bonnePermise: false, gardes: null };
+  if (!out.atteignable) return out;
+  const perm = new Set(k.paires.map(q => q.i + ',' + q.j)); let mini = null;
+  for (const i of L) for (const j of R) {
+    if (i === k.i0.left && j === k.i0.right) { out.bonnePermise = true; continue; }
+    if (perm.has(i + ',' + j)) { out.bonnePermise = true; continue; }
+    const v = gardesVioles(k, k.rails.left.hyps[i], k.rails.right.hyps[j]);
+    if (!mini || v.length < mini.length) mini = v;
+  }
+  if (!out.bonnePermise) out.gardes = mini;
+  return out;
+}
 /* Un résultat par cut : { partie, cut, zone, role, mic (pire des deux rails), etat, e, lat }. */
 function resultatDeDecision(k, d) {
   const r = { partie: k.partie, cut: k.cut, zone: k.zone, role: k.role, mic: k.etiq.micMaxMm, etat: d.etat, e: null, lat: null };
@@ -785,16 +829,16 @@ function apprendrePliImbrique(app, opt, lambdas) {
 /* Options de G1-c-prep : `lambdas` (λ imbriqué, V3), `reference` (k → résultat de la règle prudente EXACTE, M1 ; sans elle, le substitut de G1-b),
  * `garderCuts` (un résultat par cut et par méthode, pour la porte unique), `lambdaTemoin` (évalue aussi, dans les mêmes plis, le λ fixe de G1-b). */
 function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {}, variantes = [], defsVariantes,
-  lambdas = null, reference = null, garderCuts = false, lambdaTemoin = null, gardeVoie = false } = {}) {
+  lambdas = null, reference = null, garderCuts = false, lambdaTemoin = null, gardeVoie = false, sansH6 = false } = {}) {
   const defs = variantes.length ? (defsVariantes || lireVariantes()) : null, methodesV = Object.fromEntries(variantes.map(v => [v, []]));
   for (const v of variantes) if (!defs[v]) throw Error(`variante « ${v} » inconnue (${Object.keys(defs).join(' | ')})`);
   for (const v of variantes) if (defs[v].gardeVoie && !gardeVoie) throw Error(`variante « ${v} » : elle agit sur des différés, il faut --garde-voie`);
-  const noms = parties.map(j => j.partie), casParPartie = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, usage, { gardeVoie })]));
+  const noms = parties.map(j => j.partie), casParPartie = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, usage, { gardeVoie, sansH6 })]));
   const detailsDifferes = [];
   const methodes = { gcv2: [], prudente: [], h0: [] }, plis = [], hasard = { total: bilanVide(), perimetrePrudent: bilanVide(), parZone: Object.fromEntries(ZONES.map(z => [z, bilanVide()])), parRole: Object.fromEntries(ROLES.map(r => [r, bilanVide()])) };
   const parPartie = {}, fiab10 = [], fiab5 = [], fiabGagnants = [], coefs = [], hasardParPartie = {}, lambdaParPli = {};
   const temoin = lambdaTemoin && lambdas ? { gcv2: [], variantes: Object.fromEntries(variantes.map(v => [v, []])) } : null;
-  const cuts = garderCuts ? { gcv2: [], prudente: [], h0: [], variantes: Object.fromEntries(variantes.map(v => [v, []])), temoin } : null;
+  const cuts = garderCuts ? { gcv2: [], prudente: [], h0: [], variantes: Object.fromEntries(variantes.map(v => [v, []])), temoin, diagnostics: [] } : null;
   const refDe = reference || (k => reglePrudente(k));
   for (const jugee of noms) {
     const app = noms.filter(n => n !== jugee).flatMap(n => casParPartie[n]), test = casParPartie[jugee];
@@ -810,7 +854,8 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     /* Garde-fou de voie : le détail des différés jugés (référence, décision, issue), pour la fiche. Rien d'autre ne change. */
     if (gardeVoie) test.forEach((k, i) => { if (k.garde === 'voie') detailsDifferes.push({ partie: k.partie, cut: k.cut, zone: k.zone, mic: k.etiq.micMaxMm, reference: !!k.voieRef, sure: !!(k.voieRef && k.voieRef.sure),
       paires: k.paires.length, motifs: k.voieRef ? k.voieRef.motifs || [] : ['aucune-reference'], etat: rs[i].etat, p: arrondi(dec[i].p, 4), e: rs[i].e, lat: rs[i].lat, latGarde: rs[i].latGarde ?? rs[i].lat }); });
-    if (cuts) { cuts.gcv2.push(...rs); cuts.prudente.push(...rsP); cuts.h0.push(...rsH); for (const v of variantes) cuts.variantes[v].push(...rsV[v]); }
+    if (cuts) { cuts.gcv2.push(...rs); cuts.prudente.push(...rsP); cuts.h0.push(...rsH); for (const v of variantes) cuts.variantes[v].push(...rsV[v]);
+      cuts.diagnostics.push(...test.map((k, i) => ({ partie: k.partie, cut: k.cut, zone: k.zone, role: k.role, garde: k.garde || null, voieSure: k.garde === 'voie' ? !!(k.voieRef && k.voieRef.sure) : null, ...diagnostic(k, dec[i], pli.seuils) }))); }
     /* λ fixe de G1-b évalué dans les mêmes plis (témoin) : même chose avec le pli appris à λ = lambdaTemoin, déjà calculé dans la liste des essais. */
     if (temoin) {
       const e = imb.plis.find(x => x.lambda === lambdaTemoin);
@@ -876,7 +921,9 @@ function identifiantsExemples(parties, { usages = ['relecture', 'lot'] } = {}) {
 }
 
 /* ------------------------------------------------------------------ export des paramètres */
-function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {}, gardeVoie = false, partiesLot = null } = {}) {
+/* `lambdas` (jeu causal) : λ choisi par la MÊME procédure que la validation croisée imbriquée (V3), cette fois sur toutes les parties d'apprentissage :
+ * la perte interne hors-échantillon de chaque λ, le plus petit à égalité. Sans l'option, λ fixe (G1-b). */
+function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {}, gardeVoie = false, partiesLot = null, lambdas = null } = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) throw Error('exporter : --date AAAA-MM-JJ attendue');
   const h6 = parties.some(j => j.entete && j.entete.h6);
   const noms = parties.map(j => j.partie), out = { format: FORMAT_PARAMS, version: VERSION, date, graine: GRAINE, lambda, accord,
@@ -884,14 +931,17 @@ function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, acc
     parties: noms.map(n => ({ partie: n, sha256: parties.find(j => j.partie === n).sha256 })), garde: { ...GARDES, contratMm: [...GARDES.contratMm] },
     cible: { ...CIBLE }, listeBlanche: listeBlancheExportable(accord, h6), interdits: [...INTERDITS], usages: {} };
   if (h6) out.h6 = { ...parties.find(j => j.entete && j.entete.h6).entete.h6 };
+  if (lambdas) { out.lambda = null; out.lambdas = [...lambdas].sort((x, y) => x - y); out.lambdaProcedure = 'choisi par usage, par la perte interne hors-échantillon de chaque λ sur toutes les parties (même procédure que la validation imbriquée)'; }
+  const causal = parties.find(j => j.entete && j.entete.causal); if (causal) out.causal = { ...causal.entete.causal };
   /* Jeux « lot » générés sans appui humain (audit F3) : l'usage lot apprend sur eux. */
   if (partiesLot) out.partiesLot = partiesLot.map(j => ({ partie: j.partie, sha256: j.sha256 }));
   if (gardeVoie) out.garde.voie = { roles: ['differe'], reference: 'médiane rail par rail des décalages des voisins sûrs (H6) ; sûre seulement avec 2 appuis vérifiés au moins, une étendue latérale de 50 mm au plus, l\'appui le plus proche à 5 cuts au plus, le support local des deux rails à la référence, aucune voie concurrente au départ et aucune rupture de série (ADV) ; seuils dans h6', lateralMaxMm: GARDES.lateralMaxMm, deversMaxMm: GARDES.deversMaxMm, sansReference: 'aucune paire permise' };
   for (const usage of usages) {
     const cas = (usage === 'lot' && partiesLot ? partiesLot : parties).flatMap(j => construireCas(j, usage, { gardeVoie })), t0 = Date.now();
     /* Calibrage et seuils : sur les scores hors-échantillon de toutes les parties (une partie jugée par un modèle qui ne l'a pas vue). */
-    const pli = apprendrePli(cas, { lambda, accord, cible });
+    const imb = apprendrePliImbrique(cas, { lambda, accord, cible }, lambdas), pli = imb.pli;
     out.usages[usage] = {
+      ...(lambdas ? { lambda: imb.lambda, criteresLambda: imb.criteres } : {}),
       nCas: cas.length, nExemples: pli.modele.n, colonnes: pli.modele.fit.noms,
       normalisation: pli.modele.fit.num.map((f, i) => f && !f.constant ? { nom: NUM[i].nom, moyenne: arrondi(f.moy, 6), ecartType: arrondi(f.sd, 6), manque: f.manque } : null).filter(Boolean),
       categories: Object.fromEntries([...CAT.map((t, i) => [t.nom, pli.modele.fit.cat[i]]), ...MULTI.map((t, i) => [t.nom, pli.modele.fit.multi[i]])]),
@@ -1042,7 +1092,7 @@ function main(argv) {
     } else {
       if (!a.sortie) throw Error('--sortie datasets/gcv2-parametres.json attendu');
       const date = a.date || new Date().toISOString().slice(0, 10);
-      fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal, ...(a.gardeVoie ? { gardeVoie: true } : {}),
+      fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal, ...(a.gardeVoie ? { gardeVoie: true } : {}), ...(a.lambdas ? { lambdas: a.lambdas } : {}),
         ...(a.jeuxLot ? { partiesLot: a.jeuxLot.map(f => lireJeuFichier(f)) } : {}) })));
       process.stdout.write(`écrit ${a.sortie}\n`);
       if (a.exemples) { fs.writeFileSync(a.exemples, serialiser(identifiantsExemples(parties))); process.stdout.write(`écrit ${a.exemples}\n`); }
@@ -1059,7 +1109,7 @@ module.exports = {
   verifierListeBlanche, estInterdit, wilson, mulberry32, sigmoide, lignesDeTexte, jeuDeLignes, lireJeuFichier, construireCas, appliquerUsage, accords, brut,
   pairesPermises, paireValide, ecartementPaire, ajusterCodage, coder, matrice, ajusterLogistique, ajusterArbres, scoresArbres, platt, appliquerPlatt, exemples, poidsParPartie, entrainer, scorer, parCas,
   meilleurePaire, decider, choisirSeuils, apprendrePli, jugerPli, reglePrudente, reglesPrudentesDuDepot, poseChaineH, resultatH0, resultatDeDecision, bilanDe, synthese, hasardEnEsperance,
-  fiabilite, porte, validationCroisee, critereLambda, apprendrePliImbrique, FORMAT_EXEMPLES, identifiantsExemples, exporter, serialiser, listeBlancheExportable, rapport,
+  fiabilite, porte, validationCroisee, gardesVioles, diagnostic, retirerH6, critereLambda, apprendrePliImbrique, FORMAT_EXEMPLES, identifiantsExemples, exporter, serialiser, listeBlancheExportable, rapport,
   FORMAT_VARIANTES, FICHIER_VARIANTES, FICHIER_VARIANTES_H6, lireVariantes, appliquerVariante, rapportVariantes, args, issueDePaire, TRAIT_H6,
 };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`gcv2-apprendre : ${e.message}\n`); process.exit(1); } }

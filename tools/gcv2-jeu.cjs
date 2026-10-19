@@ -58,6 +58,7 @@ const Conv = require('../src/placement-convention.js');
 const V = require('../src/voie-recentree.js');
 const ShadowLivre = require('../src/gcv1-shadow.js');
 const RA = require('./relecture-autonome.cjs');
+const M = require('../src/regles-metier.js');
 const J = require('./jointure-echo-orbite.cjs');
 const Manifeste = require('./manifeste-parties.cjs');
 
@@ -68,13 +69,24 @@ const DOUBLON_MM = 0.75;        // deux hypothèses plus proches que cela n'en f
 const SEUILS_MM = Object.freeze({ juste: 5, faux: 10, mauvaiseVoie: 50 });
 const ORIGINES = Object.freeze(['H0', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
 const ORIGINES_G1A = Object.freeze(['H0', 'H1', 'H2', 'H3', 'H4', 'H5']);
-const VERSION_H6 = 'h6-1';
+const VERSION_H6 = 'h6-1', VERSION_CAUSAL = 'causal-1';
+/* Jeu causal : visite sans action valant « bon » à 0,6 s (G0, compteur de Mic ; la jointure garde 0,8 s par défaut pour ses autres usages). */
+const SEUIL_VISITE_CAUSAL_S = 0.6;
+/* D-211 : écart (mm, pire rail) au-delà duquel la pose de départ d'un cut n'est plus celle de la liste d'ESV du départ de partie (même seuil que G1-c-prep). */
+const SEUIL_INCERTAINE_MM = 0.5;
 const fini = v => typeof v === 'number' && Number.isFinite(v);
 const arrondi = (v, d = 1) => fini(v) ? Math.round(v * 10 ** d) / 10 ** d : null;
 const sig4 = v => fini(v) ? Number(v.toPrecision(4)) : null;
 const norme = v => Math.hypot(...v);
 const moins = (a, b) => a.map((x, i) => x - b[i]);
 const med = a => { const s = a.filter(fini).sort((x, y) => x - y); if (!s.length) return null; const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+/* Écartement (mm) de la pose de départ de la première visite d'un cut de l'Écho, ou null. */
+function gaugeDepart(c) {
+  const a = c && c.visites && c.visites[0] && c.visites[0].beforeEstablished && c.visites[0].beforeEstablished.rails;
+  if (!a || !a.left || !a.right || !Array.isArray(a.left.positionSceneRelative) || !Array.isArray(a.right.positionSceneRelative)) return null;
+  return 1000 * C.distance(a.left.positionSceneRelative, a.right.positionSceneRelative);
+}
 
 /* ------------------------------------------------------------------ moteur avec réservoir */
 /* Copie en mémoire de src/gcv1-shadow.js où `scientificRail` rend aussi son réservoir (`_reservoir` : cellules du pool, perte minimale, signe du
@@ -98,7 +110,11 @@ function moteurAvecReservoir() {
  * positions: { left, right } (scène, en mémoire seulement) }. Une pose HUMAINE est la dernière validation de l'opérateur sur le cut, ou sa
  * pose de départ quand il l'a visité sans rien toucher (règle des 0,8 s) ; elle compte à la FIN de la visite qui l'a validée. Une pose du LOT est
  * la pose de départ d'un cut que le lot a posé et validé : elle précède tout l'Écho. */
-function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), deplacementsLot = new Map() }) {
+/* JEU CAUSAL (option `versions`, audit F2) : chaque validation de l'opérateur est une VERSION datée par la fin de SA visite, bornée par la dernière
+ * écriture serveur de cette visite (une écriture tardive ne s'antidate pas) ; `voisinsSursA` prend, à l'instant t, la dernière version disponible avant
+ * t. `seuilVisiteS` : durée de la visite sans action (0,6 s pour le jeu causal). `incertaines` : cuts dont la pose de départ a déjà été déplacée par une
+ * main humaine (D-211) : leur pose de départ n'est jamais une pose du lot. */
+function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), deplacementsLot = new Map(), seuilVisiteS = J.DUREE_VISITE_DEFAUT_S, versions = false, incertaines = null }) {
   const out = [];
   for (const c of parCut) {
     const v0 = c.visites[0], avant = v0 && v0.beforeEstablished && v0.beforeEstablished.rails;
@@ -111,13 +127,32 @@ function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), 
     const fin = x => Date.parse(x && (x.endedAt || x.startedAt));
     /* H6 : décalage de la pose sûre depuis la pose d'ESV d'origine (avant le lot), dans le repère profil du rail de départ de CE voisin. */
     const decal = positions => decalageDepuisEsv(avant, positions, lotValide.has(c.cut) ? esvDepuisDeplacement(avant, deplacementsLot.get(c.cut)) : 'depart');
-    if (finale && fini(fin(ref.visite))) out.push({ cut: c.cut, source: 'humain', t: fin(ref.visite), positions: finale, decalage: decal(finale) });
-    else if (!ref && depart) {
-      const sa = J.visiteSansAction(c, J.DUREE_VISITE_DEFAUT_S, ctx);
+    const finDeVisite = v => { const ts = [fin(v), ...((v && v.serverWrites) || []).map(w => Date.parse(w && w.at || ''))].filter(fini); return ts.length ? Math.max(...ts) : NaN; };
+    if (versions) {
+      /* Versions dans l'ordre des visites : une validation (sa pose corrigée, à la fin de SA visite) ; tant qu'aucune validation n'a eu lieu, la première
+       * visite qui satisfait la règle « visité sans action » sur les visites déjà faites (pose de départ, à la fin de cette visite). */
+      let valide = false, implicite = false;
+      for (let i = 0; i < c.visites.length; i++) {
+        const r = c.visites[i].humanFinalReference && referenceHumaine(c.visites.slice(0, i + 1));
+        if (!r || r.visite !== c.visites[i]) {
+          if (!valide && !implicite && depart && J.visiteSansAction({ ...c, visites: c.visites.slice(0, i + 1) }, seuilVisiteS, ctx).appliquee) {
+            const t = fin(c.visites[i]); if (fini(t)) { out.push({ cut: c.cut, source: 'humain', t, positions: depart, decalage: decal(depart) }); implicite = true; }
+          }
+          continue;
+        }
+        valide = true;
+        const rr = r.etat && r.etat.rails, pos = rr && SIDES.every(s => rr[s] && Array.isArray(rr[s].positionSceneRelative) && rr[s].positionSceneRelative.length === 3)
+          ? { left: rr.left.positionSceneRelative.slice(), right: rr.right.positionSceneRelative.slice() } : null;
+        const t = finDeVisite(c.visites[i]);
+        if (pos && fini(t)) out.push({ cut: c.cut, source: 'humain', t, positions: pos, decalage: decal(pos) });
+      }
+    } else if (finale && fini(fin(ref.visite))) out.push({ cut: c.cut, source: 'humain', t: fin(ref.visite), positions: finale, decalage: decal(finale) });
+    if (!versions && !ref && depart) {
+      const sa = J.visiteSansAction(c, seuilVisiteS, ctx);
       const t = fin(c.visites[c.visites.length - 1]);
       if (sa.appliquee && fini(t)) out.push({ cut: c.cut, source: 'humain', t, positions: depart, decalage: decal(depart) });
     }
-    if (depart && lotValide.has(c.cut)) out.push({ cut: c.cut, source: 'lot', t: -Infinity, positions: depart, decalage: decal(depart) });
+    if (depart && lotValide.has(c.cut) && !(incertaines && incertaines.has(c.cut))) out.push({ cut: c.cut, source: 'lot', t: -Infinity, positions: depart, decalage: decal(depart) });
   }
   return out;
 }
@@ -143,10 +178,12 @@ function decalageDepuisEsv(rails, positions, esv) {
 }
 /* Appuis vérifiés AVANT l'instant `t0` (début de la première visite du cut), autres que le cut lui-même. Un cut à la fois humain (avant t0) et
  * lot garde la pose humaine ; humain après t0 : le lot, s'il y en a un, sinon rien. */
-function voisinsSursA(verifiees, partie, cut, t0) {
+/* `lotAvant` (jeu causal, usage lot) : seules les poses du lot des cuts qui PRÉCÈDENT le cut sont connues à l'instant de sa décision (premier passage). */
+function voisinsSursA(verifiees, partie, cut, t0, { lotAvant = false } = {}) {
   const par = new Map();
   for (const p of verifiees) {
     if (p.cut === cut) continue;
+    if (lotAvant && p.source === 'lot' && !(p.cut < cut)) continue;
     if (p.source === 'humain' && !(p.t < t0)) continue;
     const a = par.get(p.cut);
     if (!a || (p.source === 'humain' && a.source !== 'humain') || (p.source === a.source && p.t > a.t)) par.set(p.cut, p);
@@ -226,7 +263,9 @@ function mesuresTranslatees(capture, side, mm, calage, etage = 'first-pass') {
  * `voisins` : appuis vérifiés avant la première visite ; `gMed` : médiane d'écartement de la partie (mm) ou null.
  * Rend { rails: { left: [hyp…], right: [hyp…] }, rail: { left: {...}, right: {...} }, cut: {...}, tronques: { left: [[l,a,v]…], right: … } }.
  */
-function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = [], voisins = [], gMed = null, voisinsLot = null, departEsv = null }) {
+/* `chaineToujours` (jeu causal) : la pose de la chaîne entre parmi les hypothèses dès qu'elle existe, même sans appui (étage `crossing` du premier cut
+ * d'une série : 27 cuts de G1-c-prep), et sa hauteur apprise est celle de la chaîne même quand la pose rejoint une autre hypothèse (dédoublonnage). */
+function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = [], voisins = [], gMed = null, voisinsLot = null, departEsv = null, chaineToujours = false }) {
   const T = (ShadowLivre._test), identity = capture.identity;
   const res = {};
   /* H6 : décalages des voisins sûrs (deux familles). `departEsv` : null quand la pose de départ du cut est celle d'ESV ; { left, right } (mm,
@@ -272,7 +311,7 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
     const astarCell = cellules.find(k => k.astar);
     if (astarCell) items.push(miseEnCellule(astarCell, 'H1', 'astar'));
     /* H3 : pose de la chaîne et voie prédite. */
-    if (chaine && chaine.decision && chaine.decision.positions && (chaine.decision.anchorsUsed || []).length)
+    if (chaine && chaine.decision && chaine.decision.positions && (chaineToujours || (chaine.decision.anchorsUsed || []).length))
       items.push({ origine: 'H3', sous: 'chaine', mm: RA.decalage(rail, chaine.decision.positions[s]), calage: null, cellule: null, chaineRail: chaine.v.rails[s] });
     if (voie) items.push({ origine: 'H3', sous: 'voie', mm: [0, voie[s][0], voie[s][1]], calage: null, cellule: null });
     /* H4 : interpolation des voisins sûrs. */
@@ -311,6 +350,7 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
         if (it.cellule) { d.cellules.push(it.cellule); if (!d.cellule || it.cellule.c.loss < d.cellule.c.loss) { d.cellule = it.cellule; d.calage = it.calage; } }
         /* Les traits H6 suivent la première H6 qui tombe ici (celle du lot passe avant celle des voisins humains). */
         if (it.h6 && (!d.h6 || (d.h6.source !== 'lot' && it.h6.source === 'lot'))) d.h6 = it.h6;
+        if (chaineToujours && it.chaineRail && !d.chaineRail) d.chaineRail = it.chaineRail;
         return true;
       }
       if (gardees.length >= MAX_HYP) return false;
@@ -448,12 +488,20 @@ function etiqueter(hypotheses, mic) {
 }
 
 /* ------------------------------------------------------------------ observateur d'`extraire` */
-function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new Map(), moteur = moteurAvecReservoir(), journal = () => {} }) {
-  const etat = { verifiees: [], gMed: null, cuts: [], erreurs: 0, ecartsMoteur: 0, calcules: 0 };
+/* JEU CAUSAL (`causal: true`, fiches/JEU_CAUSAL.md) : tout ce qui entre dans une hypothèse ou un trait est pris à l'INSTANT DE LA DÉCISION du cut, dans
+ * une passe unique dans l'ordre des cuts visités : la médiane d'écartement est celle des cuts déjà connus (`medianeCausale`, la même que la règle
+ * prudente lit dans le cas), les validations humaines sont des versions datées (audit F2), le jeu « lot » ne connaît que les poses du lot des cuts
+ * précédents, la pose de la chaîne est toujours une hypothèse. `lotCuts` : tous les cuts que le lot a décidés (liste des invalides d'ESV, connue
+ * avant le lot) ; `seuilVisiteS` : 0,6 s. */
+function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new Map(), moteur = moteurAvecReservoir(), journal = () => {}, causal = false, lotCuts = null, seuilVisiteS = J.DUREE_VISITE_DEFAUT_S }) {
+  const etat = { verifiees: [], gMed: null, cuts: [], erreurs: 0, ecartsMoteur: 0, calcules: 0, causal, gauges: [], incertaines: null, seuilVisiteS: causal ? seuilVisiteS : null };
+  const exclusLot = lotCuts || lotValide;
   return {
     etat,
-    debut({ parCut, ctx, referenceHumaine }) {
-      etat.verifiees = posesVerifiees(parCut, { ctx, referenceHumaine, lotValide, deplacementsLot });
+    debut({ parCut, ctx, referenceHumaine, incertaines = null }) {
+      etat.incertaines = incertaines || null;
+      etat.verifiees = posesVerifiees(parCut, { ctx, referenceHumaine, lotValide, deplacementsLot, seuilVisiteS, versions: causal, incertaines });
+      if (causal) { etat.gMed = null; return; }
       /* Médiane d'écartement de la partie : poses de départ des cuts visités, hors cuts du lot et hors valeur par défaut 1500 mm (statistique
        * de la partie, comme `lignes` de relecture-autonome.cjs ; aucune référence de l'opérateur). */
       const g = [];
@@ -468,6 +516,14 @@ function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new
     cut({ c, v0, o, entree, brut }) {
       const t0 = Date.parse(v0.startedAt), rec = { cut: c.cut, o, hyp: null, hypLot: null, etiquette: null, erreur: null };
       etat.cuts.push(rec);
+      /* Médiane causale : le cut lui-même compte (sa pose de départ est connue à l'instant de sa décision) ; jamais un cut du lot, une référence incertaine
+       * ou la valeur par défaut 1 500 mm. Arrondie au millième de mm : la même valeur pour les hypothèses, le jeu et la règle prudente (cas). */
+      if (causal) {
+        const g = gaugeDepart(c);
+        if (fini(g) && !exclusLot.has(c.cut) && !(etat.incertaines && etat.incertaines.has(c.cut)) && Math.abs(g - 1500) > 0.05) etat.gauges.push(g);
+        etat.gMed = etat.gauges.length ? arrondi(med(etat.gauges), 3) : null;
+        rec.gMed = etat.gMed;
+      }
       if (!o.ariane || o.ariane.etat !== 'calcule' || !brut) return;
       try {
         const science = moteur.scientificProposeBoth(brut.capture);
@@ -479,16 +535,18 @@ function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new
         const voisins = voisinsSursA(etat.verifiees, partie, c.cut, t0);
         /* H6, famille du lot : les voisins validés par le lot SEULEMENT (un cut à la fois humain et lot garde ici sa pose du lot). */
         const voisinsLot = voisinsSursA(etat.verifiees.filter(p => p.source === 'lot'), partie, c.cut, t0);
+        /* Jeu causal, usage lot : les poses du lot des seuls cuts qui précèdent (premier passage du lot, aucun appui humain). */
+        const voisinsLotAvant = causal ? voisinsSursA(etat.verifiees.filter(p => p.source === 'lot'), partie, c.cut, t0, { lotAvant: true }) : voisinsLot;
         /* Pose d'ESV d'origine du cut : sa pose de départ, sauf si le lot l'a posé (journal du lot ; inconnue : pas de H6). */
         let departEsv = null;
         if (lotValide.has(c.cut)) {
           const ini = esvDepuisDeplacement(brut.capture.rails, deplacementsLot.get(c.cut)), d = ini ? Object.fromEntries(SIDES.map(s => [s, RA.decalage(brut.capture.rails[s], ini[s])])) : null;
           departEsv = d && SIDES.every(s => d[s]) ? d : false;
         }
-        rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv });
+        rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv, chaineToujours: causal });
         /* Jeu « lot » (audit F3) : GÉNÉRÉ depuis des entrées sans aucun appui humain (H4 et H6 n'ont que les voisins du lot), avant déduplication,
          * plafond et traits ; il n'est pas obtenu en filtrant le jeu de relecture. */
-        rec.hypLot = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins: voisinsLot, gMed: etat.gMed, voisinsLot, departEsv });
+        rec.hypLot = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins: voisinsLotAvant, gMed: etat.gMed, voisinsLot: voisinsLotAvant, departEsv, chaineToujours: causal });
         etat.calcules++;
       } catch (e) { rec.erreur = String(e && e.message || e).slice(0, 160); etat.erreurs++; journal(`cut ${c.cut} : ${rec.erreur}`); }
     },
@@ -498,10 +556,13 @@ function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new
 /* Lignes du jeu d'une partie, une fois le cas et la table connus (zone, rôle). */
 /* Rupture de série (audit H1, point 2) : un appui est séparé du cut par une bifurcation quand un cut de l'intervalle (bornes comprises) n'a pas le même
  * statut ADV que le cut. La voie de référence n'est alors pas sûre. */
+/* Jeu causal : la zone ADV de chaque cut de l'intervalle est celle qu'on CONNAÎT à l'instant du cut (`zones.get(cut).advVu` : cuts visités, jusqu'au cut,
+ * classés ADV par la sélection de cet instant) ; un cut postérieur n'est pas connu et ne compte pas. */
 function avecRupture(voie, cut, zones) {
   if (!voie) return voie;
-  const adv = c => (zones.get(c) || {}).zone === 'adv', t = adv(cut);
-  const rompu = (voie.ancres || []).some(a => { for (let c = Math.min(a.cut, cut); c <= Math.max(a.cut, cut); c++) if (zones.has(c) && adv(c) !== t) return true; return false; });
+  const z0 = zones.get(cut) || {}, causal = !!z0.connus;
+  const adv = causal ? (c => z0.advVu.has(c)) : (c => (zones.get(c) || {}).zone === 'adv'), connu = causal ? (c => z0.connus.has(c)) : (c => zones.has(c)), t = adv(cut);
+  const rompu = (voie.ancres || []).some(a => { for (let c = Math.min(a.cut, cut); c <= Math.max(a.cut, cut); c++) if (connu(c) && adv(c) !== t) return true; return false; });
   if (!rompu) return voie;
   const motifs = [...voie.motifs, 'rupture-de-serie'];
   return { ...voie, motifs, sure: false };
@@ -509,8 +570,10 @@ function avecRupture(voie, cut, zones) {
 /* `usage` : « relecture » (voisins humains validés avant la première visite, et voisins du lot) ou « lot » (jeu généré sans aucun appui humain). */
 function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relecture' }) {
   if (!['relecture', 'lot'].includes(usage)) throw Error(`usage « ${usage} » : relecture | lot`);
+  const causal = !!observateur.etat.causal;
   const out = [{ type: 'entete', format: FORMAT, partie: designation, jeu, usage, note: 'jeu HORS DÉPÔT : décalages en mm dans le repère profil de la pose de départ, aucune coordonnée absolue',
-    maxHypParRail: MAX_HYP, doublonMm: DOUBLON_MM, seuilsMm: SEUILS_MM, gMedMm: arrondi(observateur.etat.gMed, 1), h6: { version: VERSION_H6, ...H6 } }];
+    maxHypParRail: MAX_HYP, doublonMm: DOUBLON_MM, seuilsMm: SEUILS_MM, gMedMm: causal ? null : arrondi(observateur.etat.gMed, 1), h6: { version: VERSION_H6, ...H6 },
+    ...(causal ? { causal: { version: VERSION_CAUSAL, seuilVisiteS: observateur.etat.seuilVisiteS ?? null, note: 'zones, rôle, médiane d\'écartement (par cut : contexte.gMedMm), voisins et chaîne pris à l\'instant de la décision du cut' } } : {}) }];
   const roleDe = g => g === 'pose' ? 'rouge' : g === 'differe' ? 'differe' : 'vert';
   for (const rec0 of observateur.etat.cuts) {
     const hyp = usage === 'lot' ? rec0.hypLot : rec0.hyp;
@@ -518,10 +581,12 @@ function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relec
     const o = rec.o, z = zones.get(rec.cut) || { zone: 'hors', genre: 'vert' };
     const mic = o.mic && o.mic.ref ? { left: o.mic.rails.left, right: o.mic.rails.right } : null;
     const micMax = mic && mic.left && mic.right ? arrondi(Math.max(norme(mic.left), norme(mic.right)), 2) : null;
+    const incertaine = !!(o.mic && o.mic.raison === 'reference-incertaine');
     const ligneCut = { type: 'cut', partie: designation, cut: rec.cut, zone: z.zone, role: roleDe(z.genre), etat: o.ariane ? o.ariane.etat : null,
-      reference: o.mic ? (o.mic.ref || null) : null, visites: o.visites, etiquette: { mic, micMaxMm: micMax, grosse: fini(micMax) ? micMax > SEUILS_MM.faux : null },
+      reference: incertaine ? 'incertaine' : o.mic ? (o.mic.ref || null) : null, visites: o.visites, etiquette: { mic, micMaxMm: micMax, grosse: fini(micMax) ? micMax > SEUILS_MM.faux : null },
       moteur: rec.hyp ? { abstenu: rec.hyp.cut.abstenu, differe: rec.hyp.cut.differe, etage: rec.hyp.cut.etage, raison: rec.hyp.cut.raison, ecartementMm: rec.hyp.cut.ecartementMm, ecartementRejete: rec.hyp.cut.ecartementRejete } : null,
-      contexte: rec.hyp ? { etageChaine: rec.hyp.cut.etageChaine, appuisChaine: rec.hyp.cut.appuisChaine, voisins: rec.hyp.cut.voisins, ecartDepartMm: rec.hyp.cut.ecartDepartMm, voieH6: rec.hyp.voieH6 } : null,
+      contexte: rec.hyp ? { etageChaine: rec.hyp.cut.etageChaine, appuisChaine: rec.hyp.cut.appuisChaine, voisins: rec.hyp.cut.voisins, ecartDepartMm: rec.hyp.cut.ecartDepartMm, voieH6: rec.hyp.voieH6,
+        ...(causal ? { gMedMm: rec.gMed ?? null } : {}) } : null,
       nHyp: rec.hyp ? rec.hyp.cut.nHyp : null, tronques: rec.hyp ? { left: rec.hyp.tronques.left.length, right: rec.hyp.tronques.right.length } : null,
       tronquesPoses: rec.hyp && (rec.hyp.tronques.left.length || rec.hyp.tronques.right.length) ? rec.hyp.tronques : null, tronquesH6: rec.hyp ? rec.hyp.tronquesH6 : null, erreur: rec.erreur };
     out.push(ligneCut);
@@ -536,28 +601,104 @@ function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relec
   return out;
 }
 
+/* ------------------------------------------------------------------ jeu causal : zones à l'instant du cut, références incertaines */
+/*
+ * Zone et rôle de chaque cut À L'INSTANT DE SA DÉCISION (audit F4, F1) : une passe dans l'ordre des cuts visités. À l'instant du cut c, on connaît :
+ *  - les surfaces (règles métier, lues sur l'entrée sans fuite : `extraire` en mode causal) des cuts visités jusqu'à c, dans l'ordre : la mémoire des zones
+ *    PN et ADV est celle de l'extension (`src/regles-metier.js`), arrêtée à c — une zone qui s'ouvre après c n'existe pas encore, sa marge d'avant non plus ;
+ *  - la liste des invalides d'ESV (les cuts que le lot décidera : connue avant le lot), avec la décision du lot (posé ou différé) des seuls cuts jusqu'à c ;
+ *  - les poses de départ des verts jusqu'à c (liste « À contrôler », module livré).
+ * Puis la sélection de la relecture (`selection` de tools/relecture-autonome.cjs, inchangée) donne la zone de c. Les cuts à référence incertaine (D-211)
+ * n'entrent pas dans la mémoire des zones (leur pose de départ est celle d'une main humaine). Rend Map cut → { zone, genre, advVu, connus }.
+ */
+function zonesCausales({ cas, table, incertaines = null, fenetre = H6.fenetreCuts }) {
+  const mem = M.creerMemoire('jeu-causal'), out = new Map();
+  const cs = cas.filter(c => c.cut >= 0).slice().sort((a, b) => a.cut - b.cut);
+  const lotTout = (table.lot || []).slice(), cutsTable = (table.cuts || []).slice().sort((a, b) => a.i - b.i);
+  const P = M.DEFAULTS.pn, A = M.DEFAULTS.adv, visites = [];
+  for (const c of cs) {
+    visites.push(c.cut);
+    const sf = c.ariane && c.ariane.surface;
+    if (sf && !(incertaines && incertaines.has(c.cut))) {
+      const r = M.resumer({ identity: { part: c.partie, cut: c.cut }, decision: null, action: null, valide: null, surface: { flushPct: sf.flushPct, quadMin: sf.quadMin, coeurPN: sf.coeurPN, advRails: sf.advRails } });
+      M.evaluer(mem, r); M.noter(mem, r, { differe: false });
+    }
+    const t = { ...table, lot: lotTout.map(x => x.cut <= c.cut ? x : { cut: x.cut, differe: false }),
+      zonesPN: mem.zones.map(z => ({ debut: z.debut, fin: z.fin, controle: [Math.max(0, z.debut - P.margeAvant), z.fin + P.margeApres] })),
+      zonesADV: RA.fusionner(mem.zonesADV.map(z => [Math.max(0, z.debut - A.margeAvant), z.fin + A.margeApres])),
+      cuts: cutsTable.filter(x => x.i <= c.cut) };
+    let liste = [];
+    try { liste = RA.listeAControler(t).cuts; } catch { liste = []; }
+    const S = RA.selection(t, { liste });
+    const advVu = new Set(); for (let k = c.cut - fenetre; k <= c.cut; k++) if (S.type.get(k) === 'adv') advVu.add(k);
+    out.set(c.cut, { zone: S.type.get(c.cut) || 'hors', genre: S.lot.get(c.cut) || 'vert', advVu, connus: new Set(visites.filter(k => k >= c.cut - fenetre)) });
+  }
+  return out;
+}
+/*
+ * Références incertaines (D-211) : la pose de départ de la première visite de l'Écho comparée à la ligne de la LISTE D'ESV du départ de partie
+ * (`ariane-liste-partieN-….json` du lot, décompactée par src/liste-memoire.js), plus le déplacement du lot pour un cut que le lot a posé. Les deux repères
+ * diffèrent d'une translation (bords monde contre scène) : médiane composante par composante sur les cuts que le lot n'a pas posés. Un cut est incertain
+ * si l'écart (pire rail) dépasse `seuilMm` : une main humaine l'avait déjà déplacé avant la visite. Rend Map cut → { ecartMm }.
+ */
+function referencesIncertaines({ parCut, liste, lotValide = new Set(), deplacementsLot = new Map(), seuilMm = SEUIL_INCERTAINE_MM }) {
+  if (!liste || !Array.isArray(liste.ed)) return new Map();
+  const ligne = c => { if (!(c >= 0 && c < liste.n)) return null; const e = liste.ed.slice(6 * c, 6 * c + 6); return e.every(fini) ? e.map(v => v / 1e4) : null; };
+  const depart = c => { const a = c.visites[0] && c.visites[0].beforeEstablished && c.visites[0].beforeEstablished.rails; return a && SIDES.every(s => a[s] && Array.isArray(a[s].positionSceneRelative)) ? [...a.left.positionSceneRelative, ...a.right.positionSceneRelative] : null; };
+  const paires = [];
+  for (const c of parCut) { const l = ligne(c.cut), d = depart(c); if (l && d) paires.push({ c, l, d }); }
+  const base = paires.filter(p => !lotValide.has(p.c.cut));
+  if (!base.length) return new Map();
+  const T = [0, 1, 2, 3, 4, 5].map(k => med(base.map(p => p.d[k] - p.l[k])));
+  const out = new Map();
+  for (const { c, l, d } of paires) {
+    const dl = lotValide.has(c.cut) ? deplacementsLot.get(c.cut) : null;
+    if (lotValide.has(c.cut) && !dl) continue;
+    const att = k => l[k] + T[k] + (dl ? dl[k < 3 ? 'left' : 'right'][k % 3] : 0);
+    const e = Math.max(...[0, 3].map(o => 1000 * Math.hypot(d[o] - att(o), d[o + 1] - att(o + 1), d[o + 2] - att(o + 2))));
+    if (e > seuilMm) out.set(c.cut, { ecartMm: e });
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ construction d'une partie */
-function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu = 'apprentissage', journal = () => {} }) {
+/* `causal` (défaut) : jeu causal (fiches/JEU_CAUSAL.md) ; `causal: false` reproduit le jeu de H6. `liste` : liste d'ESV du départ de partie (décompactée),
+ * pour les références incertaines (D-211) ; sans elle, aucune n'est cherchée. */
+function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu = 'apprentissage', journal = () => {}, causal = true, liste = null }) {
   const designation = `${projet}:${partie}`;
   if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
   if (!sansLot && !journaux.length) throw Error('--journal J.json (lot Orbite de la partie) ou --sans-lot (partie sans lot) attendu');
   const RM = require('./regles-metier.cjs');
-  const lotValide = new Set(), deplacementsLot = new Map();
+  const lotValide = new Set(), deplacementsLot = new Map(), lotCuts = new Set();
   for (const f of sansLot ? [] : journaux) {
     const j = RM.lireJournal(f, partie);
+    for (const d of j.decisions) lotCuts.add(d.cut);
     for (const c of j.valide) {
       lotValide.add(c);
       const p = j.poses.get(c);
       if (p && p.initiale && p.finale && SIDES.every(s => Array.isArray(p.initiale[s]) && Array.isArray(p.finale[s]))) deplacementsLot.set(c, Object.fromEntries(SIDES.map(s => [s, p.finale[s].map((v, i) => v - p.initiale[s][i])])));
     }
   }
-  const observateur = creerObservateur({ partie, lotValide, deplacementsLot, journal });
-  const cas = RA.extraire({ partie, projet, echo, observateur });
+  if (!causal) {
+    const observateur = creerObservateur({ partie, lotValide, deplacementsLot, journal });
+    const cas = RA.extraire({ partie, projet, echo, observateur });
+    const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
+    const L2 = RA.lignes({ cas, table, designation });
+    const zones = new Map(L2.lignes.map(l => [l.cut, { zone: l.zone, genre: l.genre }]));
+    const lignes = lignesDuJeu({ designation, jeu, observateur, cas, zones }), lignesLot = lignesDuJeu({ designation, jeu, observateur, cas, zones, usage: 'lot' });
+    return { lignes, lignesLot, etat: observateur.etat, cas, table };
+  }
+  const observateur = creerObservateur({ partie, lotValide, deplacementsLot, journal, causal: true, lotCuts, seuilVisiteS: SEUIL_VISITE_CAUSAL_S });
+  const incertaines = liste ? parCut => referencesIncertaines({ parCut, liste, lotValide, deplacementsLot }) : null;
+  const cas = RA.extraire({ partie, projet, echo, observateur, seuilVisiteS: SEUIL_VISITE_CAUSAL_S, causal: true, incertaines });
+  /* La médiane causale et la zone de l'instant entrent dans le cas : la règle prudente exacte (tools/gcv2-evaluer.cjs) lit les mêmes. */
+  const gm = new Map(observateur.etat.cuts.map(r => [r.cut, r.gMed ?? null]));
+  for (const c of cas) c.gMedCausalMm = gm.has(c.cut) ? gm.get(c.cut) : null;
   const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
-  const L2 = RA.lignes({ cas, table, designation });
-  const zones = new Map(L2.lignes.map(l => [l.cut, { zone: l.zone, genre: l.genre }]));
+  const zones = zonesCausales({ cas, table, incertaines: observateur.etat.incertaines });
+  for (const c of cas) { const z = zones.get(c.cut); if (z) { c.zoneCausale = z.zone; c.genreLot = z.genre; } }
   const lignes = lignesDuJeu({ designation, jeu, observateur, cas, zones }), lignesLot = lignesDuJeu({ designation, jeu, observateur, cas, zones, usage: 'lot' });
-  return { lignes, lignesLot, etat: observateur.etat, cas, table };
+  return { lignes, lignesLot, etat: observateur.etat, cas, table, zones, incertaines: observateur.etat.incertaines };
 }
 
 /* ------------------------------------------------------------------ rappel atteignable */
@@ -804,7 +945,8 @@ function args(argv) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
-    else if (k === '--sortie') o.sortie = val(); else if (k === '--sortie-lot') o.sortieLot = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
+    else if (k === '--sortie') o.sortie = val(); else if (k === '--sortie-lot') o.sortieLot = val(); else if (k === '--sortie-cas') o.sortieCas = val();
+    else if (k === '--liste') o.liste = val(); else if (k === '--non-causal') o.nonCausal = true; else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
     else if (k === '--selection') { const v = val(), i = v.indexOf('='); if (i < 1) throw Error('--selection NOM=P:N:a-b,…'); o.selections[v.slice(0, i)] = lireSelection(v.slice(i + 1)); }
     else throw Error('argument inconnu : ' + k);
@@ -820,7 +962,7 @@ function controlerManifeste({ projet, partie, jugerReservee }) {
   return { avis, jeu: jugerReservee ? 'jugement' : 'apprentissage', temoin: Manifeste.estTemoin(m, projet, partie) };
 }
 
-module.exports = { FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
+module.exports = { VERSION_CAUSAL, SEUIL_VISITE_CAUSAL_S, SEUIL_INCERTAINE_MM, zonesCausales, referencesIncertaines, gaugeDepart, FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
   decalageDepuisEsv, esvDepuisDeplacement, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
 
 if (require.main === module) {
@@ -830,12 +972,17 @@ if (require.main === module) {
       if (!a.partie || !a.echo.length || !a.sortie) throw Error('construire --partie P:N --echo DOSSIER [--echo …] (--journal J.json | --sans-lot) --sortie JEU.jsonl [--juger-partie-reservee]');
       const c = controlerManifeste(a);
       if (c.avis) console.error(c.avis);
-      const t0 = Date.now(), r = construire({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, sansLot: a.sansLot, jeu: c.jeu, journal: m => console.error(m) });
+      const liste = a.liste ? require('../src/liste-memoire.js').decompacter(JSON.parse(fs.readFileSync(a.liste, 'utf8'))) : null;
+      if (a.liste && !liste) throw Error(`--liste ${a.liste} : instantané de liste illisible`);
+      const t0 = Date.now(), r = construire({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, sansLot: a.sansLot, jeu: c.jeu, journal: m => console.error(m), causal: !a.nonCausal, liste });
       fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true });
       fs.writeFileSync(a.sortie, r.lignes.map(l => JSON.stringify(l)).join('\n') + '\n');
       if (a.sortieLot) fs.writeFileSync(a.sortieLot, r.lignesLot.map(l => JSON.stringify(l)).join('\n') + '\n');
+      /* Les cas de l'extraction (médiane causale et zone de l'instant compris) : la règle prudente exacte de tools/gcv2-evaluer.cjs les lit. */
+      if (a.sortieCas) fs.writeFileSync(a.sortieCas, r.cas.map(l => JSON.stringify(l)).join('\n') + '\n');
+      if (r.incertaines) console.log(`références incertaines (D-211) : ${r.incertaines.size}`);
       const n = t => r.lignes.filter(l => l.type === t).length;
-      console.log(`partie ${a.projet}:${a.partie} (${c.jeu}) : ${n('cut')} cuts, ${r.etat.calcules} calculés, ${n('hyp')} hypothèses, erreurs ${r.etat.erreurs}, écarts de la copie du moteur ${r.etat.ecartsMoteur}, ${Math.round((Date.now() - t0) / 1000)} s`);
+      console.log(`partie ${a.projet}:${a.partie} (${c.jeu}${a.nonCausal ? '' : ', causal'}) : ${n('cut')} cuts, ${r.etat.calcules} calculés, ${n('hyp')} hypothèses, erreurs ${r.etat.erreurs}, écarts de la copie du moteur ${r.etat.ecartsMoteur}, ${Math.round((Date.now() - t0) / 1000)} s`);
     } else if (a.mode === 'rappel') {
       if (!a.jeux.length) throw Error('rappel --jeu JEU.jsonl [--jeu …] [--json R.json]');
       const R = rappel(lireJeux(a.jeux), { selections: a.selections });
