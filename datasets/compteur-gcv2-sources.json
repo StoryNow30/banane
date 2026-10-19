@@ -87,6 +87,16 @@
         "2026-10-18_v4.9.5.7_echo-partie-16/echo p16 19h04"
       ],
       "note": "opérateur débutant selon Mic"
+    },
+    {
+      "id": "p2-6",
+      "projet": "2",
+      "partie": 6,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-19_v4.9.5.8_echo-partie-6/echo p6 08h48"
+      ],
+      "note": "Écho du 19/10 (4.9.5.8, 458 visites) : partie neuve, réservée, examinée (rotation D-192) ; même total de cuts que le lot Orbite du 16/10 (jointure à 0,0 mm de résidu)"
     }
   ]
 }

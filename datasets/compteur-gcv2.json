@@ -1,6 +1,6 @@
 {
  "format": "ariane-compteur-gcv2-v1",
- "creeLe": "2026-10-18T22:33:41.361Z",
+ "creeLe": "2026-10-19T07:48:14.418Z",
  "regle": {
   "seuilVisiteS": 0.6,
   "comptes": [
@@ -137,7 +137,7 @@
   {
    "id": "p1-14",
    "projet": "1",
-   "projetCertain": false,
+   "projetCertain": true,
    "partie": 14,
    "etat": "en-file",
    "note": "opérateur débutant selon Mic",
@@ -154,7 +154,7 @@
   {
    "id": "p1-15",
    "projet": "1",
-   "projetCertain": false,
+   "projetCertain": true,
    "partie": 15,
    "etat": "en-file",
    "note": "export final non envoyé : segments 11 à 18 et 32 absents, compte partiel",
@@ -171,7 +171,7 @@
   {
    "id": "p1-16",
    "projet": "1",
-   "projetCertain": false,
+   "projetCertain": true,
    "partie": 16,
    "etat": "en-file",
    "note": "opérateur débutant selon Mic",
@@ -184,30 +184,47 @@
    "skips": 1,
    "sansReference": 19,
    "appris": 368
+  },
+  {
+   "id": "p2-6",
+   "projet": "2",
+   "projetCertain": true,
+   "partie": 6,
+   "etat": "en-file",
+   "note": "Écho du 19/10 (4.9.5.8, 458 visites) : partie neuve, réservée, examinée (rotation D-192) ; même total de cuts que le lot Orbite du 16/10 (jointure à 0,0 mm de résidu)",
+   "cutsEcho": 431,
+   "corriges": 152,
+   "dont5mm": 68,
+   "dont10mm": 32,
+   "valideSansMouvement": 30,
+   "visiteSansAction": 196,
+   "skips": 5,
+   "sansReference": 48,
+   "appris": 378
   }
  ],
  "totaux": {
   "tous": {
-   "cutsEcho": 3772,
-   "corriges": 1631,
-   "dont5mm": 1023,
-   "dont10mm": 527,
-   "valideSansMouvement": 442,
-   "visiteSansAction": 1177,
-   "skips": 13,
-   "sansReference": 509,
-   "appris": 3250
+   "cutsEcho": 4203,
+   "corriges": 1783,
+   "dont5mm": 1091,
+   "dont10mm": 559,
+   "valideSansMouvement": 472,
+   "visiteSansAction": 1373,
+   "skips": 18,
+   "sansReference": 557,
+   "appris": 3628
   },
   "en-file": {
-   "cutsEcho": 3772,
-   "corriges": 1631,
-   "dont5mm": 1023,
-   "dont10mm": 527,
-   "valideSansMouvement": 442,
-   "visiteSansAction": 1177,
-   "skips": 13,
-   "sansReference": 509,
-   "appris": 3250
+   "cutsEcho": 4203,
+   "corriges": 1783,
+   "dont5mm": 1091,
+   "dont10mm": 559,
+   "valideSansMouvement": 472,
+   "visiteSansAction": 1373,
+   "skips": 18,
+   "sansReference": 557,
+   "appris": 3628
   },
   "appris": {
    "cutsEcho": 0,
@@ -234,15 +251,15 @@
    "appris": 2283
   },
   "2": {
-   "cutsEcho": 1332,
-   "corriges": 429,
-   "dont5mm": 275,
-   "dont10mm": 192,
-   "valideSansMouvement": 119,
-   "visiteSansAction": 419,
-   "skips": 9,
-   "sansReference": 356,
-   "appris": 967
+   "cutsEcho": 1763,
+   "corriges": 581,
+   "dont5mm": 343,
+   "dont10mm": 224,
+   "valideSansMouvement": 149,
+   "visiteSansAction": 615,
+   "skips": 14,
+   "sansReference": 404,
+   "appris": 1345
   }
  }
 }
