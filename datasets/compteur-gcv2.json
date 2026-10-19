@@ -1,6 +1,6 @@
 {
  "format": "ariane-compteur-gcv2-v1",
- "creeLe": "2026-10-19T09:28:18.227Z",
+ "creeLe": "2026-10-19T10:57:09.553Z",
  "regle": {
   "seuilVisiteS": 0.6,
   "comptes": [
@@ -218,30 +218,47 @@
    "skips": 5,
    "sansReference": 48,
    "appris": 378
+  },
+  {
+   "id": "p2-7",
+   "projet": "2",
+   "projetCertain": true,
+   "partie": 7,
+   "etat": "en-file",
+   "note": "Écho du 19/10 (4.9.5.8, 1 106 visites, 33 zips : sauvegardes cumulatives puis export final) : partie neuve, réservée, examinée (rotation D-192) ; même total de cuts (9 791) que le lot Orbite du 16/10",
+   "cutsEcho": 960,
+   "corriges": 394,
+   "dont5mm": 186,
+   "dont10mm": 78,
+   "valideSansMouvement": 141,
+   "visiteSansAction": 321,
+   "skips": 1,
+   "sansReference": 103,
+   "appris": 856
   }
  ],
  "totaux": {
   "tous": {
-   "cutsEcho": 4998,
-   "corriges": 2290,
-   "dont5mm": 1519,
-   "dont10mm": 757,
-   "valideSansMouvement": 553,
-   "visiteSansAction": 1559,
-   "skips": 18,
-   "sansReference": 578,
-   "appris": 4402
+   "cutsEcho": 5958,
+   "corriges": 2684,
+   "dont5mm": 1705,
+   "dont10mm": 835,
+   "valideSansMouvement": 694,
+   "visiteSansAction": 1880,
+   "skips": 19,
+   "sansReference": 681,
+   "appris": 5258
   },
   "en-file": {
-   "cutsEcho": 431,
-   "corriges": 152,
-   "dont5mm": 68,
-   "dont10mm": 32,
-   "valideSansMouvement": 30,
-   "visiteSansAction": 196,
-   "skips": 5,
-   "sansReference": 48,
-   "appris": 378
+   "cutsEcho": 1391,
+   "corriges": 546,
+   "dont5mm": 254,
+   "dont10mm": 110,
+   "valideSansMouvement": 171,
+   "visiteSansAction": 517,
+   "skips": 6,
+   "sansReference": 151,
+   "appris": 1234
   },
   "appris": {
    "cutsEcho": 4567,
@@ -268,15 +285,15 @@
    "appris": 3057
   },
   "2": {
-   "cutsEcho": 1763,
-   "corriges": 581,
-   "dont5mm": 343,
-   "dont10mm": 224,
-   "valideSansMouvement": 149,
-   "visiteSansAction": 615,
-   "skips": 14,
-   "sansReference": 404,
-   "appris": 1345
+   "cutsEcho": 2723,
+   "corriges": 975,
+   "dont5mm": 529,
+   "dont10mm": 302,
+   "valideSansMouvement": 290,
+   "visiteSansAction": 936,
+   "skips": 15,
+   "sansReference": 507,
+   "appris": 2201
   }
  }
 }
