@@ -1163,7 +1163,7 @@ adapter.capabilities={serverConfirmation:false};
 /* 4.9.5.10 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
 const nextSansDecisionESV=adapter.nextWithoutDecision;
 adapter.nextWithoutDecision=async(identity,...rest)=>{const p=l1PoseEnAttente;l1PoseEnAttente=null;
- if(p&&identity&&p.cutId===globalThis.BananeCore3.cutId(identity))await l1PoserSansValider(p);
+ if(p&&identity&&p.batchId===(engine?.s?.batch?.id??null)&&p.cutId===globalThis.BananeCore3.cutId(identity))await l1PoserSansValider(p);
  return nextSansDecisionESV(identity,...rest);};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);rangerErreursDeLot(engine);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
@@ -1440,7 +1440,7 @@ async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLo
   if(!x?.ok)return {ok:false,raison:'pre-vol:'+(x?.raison||'?')};}
  return {ok:true,plan};}
 async function l1Commande({command,lotObservation,proposal,before,capture}){
- const SIDES=['left','right'],ctx=l1Contexte;l1Contexte=null;
+ const SIDES=['left','right'],ctx=l1Contexte;l1Contexte=null;l1PoseEnAttente=null;
  if(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'))return command;
  const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow;
  const b=engine.s.batch,identity=engine.s.before?.identity??null;
@@ -1452,6 +1452,10 @@ async function l1Commande({command,lotObservation,proposal,before,capture}){
   const d=g.decision,l1={...G.resumer(g),zoneSource:z.source,ms:Date.now()-t0};
   lotObservation.l1=l1;
   if(d.etat==='rien')return command;
+  /* D-220 : chaque changement de pose est définitif dans ESV ; le journal garde, pour chaque cut que L1 touche, la pose d'ESV AVANT la commande
+   * et la pose envoyée (repère scène de la capture, comme les visites `records`) : la jointure juge le gain (pose d'avant → Mic contre pose L1 → Mic). */
+  const p3=v=>Array.isArray(v)?v.slice(0,3):null;
+  l1.poseAvant=Object.fromEntries(SIDES.map(s=>[s,p3(before?.[s]?.positionSceneRelative)]));l1.poseEnvoyee=Object.fromEntries(SIDES.map(s=>[s,p3(g.positions?.[s])]));
   const valider=d.etat==='valider';
   const cg=G.commander({positions:g.positions,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),camerasLarges:VR.camerasLarges(capture),valider});
   l1.commande={action:cg.action,reason:cg.reason,vue:cg.vue??null};
@@ -1464,8 +1468,8 @@ async function l1Commande({command,lotObservation,proposal,before,capture}){
    else l1.commande.refus='regles-metier';
    return c;}
   /* Sous τ : la commande reste un différé ; la pose est faite juste avant la navigation sans décision (`adapter.nextWithoutDecision`). */
-  l1PoseEnAttente={cutId:K.cutId(identity),identity:K.clone(identity),before:K.clone(engine.s.before),rails:cg.rails,plan,
-   resume:{p:l1.p,hypothese:l1.hypothese,ecartDepartMm:l1.ecartDepartMm,zone:l1.zone}};
+  l1PoseEnAttente={batchId:b?.id??null,cutId:K.cutId(identity),identity:K.clone(identity),before:K.clone(engine.s.before),rails:cg.rails,plan,
+   resume:{etat:d.etat,motif:d.motif??null,p:l1.p,hypothese:l1.hypothese,ecartDepartMm:l1.ecartDepartMm,zone:l1.zone,poseAvant:l1.poseAvant,poseEnvoyee:l1.poseEnvoyee}};
   l1.commande.sansValider='en-attente-de-la-navigation';
   return command;
  }catch(e){lotObservation.l1={version:G?.VERSION??null,etat:'erreur',message:String(e?.message||e).slice(0,160)};return command;}}

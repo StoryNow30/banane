@@ -4,7 +4,7 @@
  * `choix` : ce qui est déjà gardé avant le lot (clés de storage.local) ; `pendant(b)` : appelé à la première commande du lot
  * (`capture` ou `apply`, selon `quand`), pour changer un choix en cours de lot ; `extra` : arguments ajoutés à « Démarrer ». Les
  * deux cuts du lot sont posés ; le premier est validé, le dernier est posé sans être validé (arrêt en fin de lot). Données
- * synthétiques. */
+ * synthétiques. `profil` : profil du lot (4.9.5.10), « actuel » par défaut ici. */
 const {production,memoire}=require('./perf-production.cjs'),{SimulatedESV,base,K}=require('../fixtures.cjs');
 const S=require('../../src/settings.js');
 const SCOPE={testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1',lotDecision:'apply'};
@@ -17,11 +17,14 @@ class EsvOptions extends SimulatedESV{
 }
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /* Un lot de `debut` à `fin`, sur un service worker donné ou neuf. */
-async function lotClic({choix={},pendant=null,quand='apply',b=null,local=null,debut=111,fin=112,extra={}}={}){
+async function lotClic({choix={},pendant=null,quand='apply',b=null,local=null,debut=111,fin=112,extra={},profil='actuel'}={}){
  const adapter=b?b.adapter:new EsvOptions();
  if(!b){local=memoire();Object.assign(local.m,structuredClone(choix));b=production({adapter,local});b.local=local;
   /* L'ombre de la voie prédite relance le moteur sur chaque différé ; elle n'est pas l'objet de ces essais. */
   b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false}};
+  /* 4.9.5.10 : ces essais gardent les empreintes de la base ; ils jouent le profil du lot « actuel » (le défaut livré est « L1 »,
+   * essayé dans tests/lot-profil-sw.test.cjs). `profil:null` : le défaut livré. */
+  if(profil)b.ctx.BananeSettings={...b.ctx.BananeSettings,lot:{...S.lot,profil}};
   await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});}
  let fait=false;adapter.avantCommande=pendant?async q=>{if(fait||q!==quand)return;fait=true;await pendant(b);}:null;
  adapter.identity.cut=debut;adapter.rails=K.clone(base.rails);
