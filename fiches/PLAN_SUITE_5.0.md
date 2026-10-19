@@ -81,6 +81,8 @@ Total GCV2 : ≈ 2,1 M au niveau rapide et ≈ 0,7 M au niveau fort, hors orches
 | **fort** (haut) | l'orchestrateur du cycle quotidien et de la GCV2 (briefs, lecture des tables, décisions, synthèses pour Mic) ; relecteur de tout diff qui touche la sélection, la décision de pose ou le code gelé (RM-1, RM-7, G1-a anti-fuite, G1-b méthode, G1-d, G2) ; conception de RM-8 |
 | **le plus fort** (haut) | seulement sur décision de Mic : arbitrage si la validation croisée de G1-b contredit la conception G0, ou refonte de la conception |
 
+**Règle de Mic (D-194)** : une petite tâche qui touche le code ou un essai part au niveau rapide, jamais chez l'orchestrateur. **Astra** (relecteur externe, via Mic) audite les premiers résultats d'apprentissage : entre G1-b et G1-c.
+
 Règles de passage : une mission monte d'un niveau quand elle touche la pose, la décision ou le code gelé, ou quand le développeur est bloqué deux fois ; elle ne descend jamais sous le niveau de sa relecture. Le brief est complet d'emblée (but, fichiers, règles absolues, porte, format du rapport) ; les rapports sont des tables ; aucun gros fichier lu en entier ; verify une fois par commit.
 
 ## 6. Le modèle de la session GCV2
