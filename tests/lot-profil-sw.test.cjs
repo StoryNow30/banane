@@ -21,11 +21,11 @@ const ev=(b,type)=>b.store.events.filter(e=>e.type===type);
 const scopeDe=b=>b.get('engine').s.batch.scope;
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 
-test('réglage livré : profil du lot « L1 » ; le choix du panneau est gardé et lu', async()=>{
- assert.equal(S.lot.profil,'L1');
+test('réglage livré : profil du lot « L1-s » (D-221) ; le choix du panneau est gardé et lu', async()=>{
+ assert.equal(S.lot.profil,'L1-s');
  const local=memoire(),b=production({local});
  const j=x=>JSON.parse(JSON.stringify(x));
- assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'L1'});
+ assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'L1-s'});
  await b.api('lot-profil',{profil:'actuel'});assert.equal(local.m.banane50LotProfil,'actuel');
  assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'actuel'});
  await assert.rejects(b.api('lot-profil',{profil:'L9'}),/Profil du lot inconnu/);
@@ -42,9 +42,9 @@ test('profil « actuel » gardé au panneau : exactement les commandes de la 4.9
  assert.ok(!decisions(x.b).some(([,d])=>'l1' in d),'aucune décision L1 consignée');
 });
 
-test('profil « L1 » (défaut) : cible de la chaîne hors de la vue → la vue est amenée (pré-vol), puis la pose est faite avec le plan', async()=>{
- const x=await lot({profil:null});
- assert.equal(scopeDe(x.b).lotProfil,'L1','profil figé dans le scope');
+for(const profil of ['L1','L1-s'])test(`profil « ${profil} » : cible de la chaîne hors de la vue → la vue est amenée (pré-vol), puis la pose est faite avec le plan`, async()=>{
+ const x=await lot({profil:profil==='L1-s'?null:profil});
+ assert.equal(scopeDe(x.b).lotProfil,profil,'profil figé dans le scope (L1-s : le défaut)');
  /* 111 : posé et validé comme avant ; 112 (cible de la voie hors de la vue gauche) : pré-vol des deux rails, puis pose avec le plan. */
  assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','amenerDansLaVue','amenerDansLaVue','apply']);
  assert.deepEqual(x.adapter.applyArgs,[0,1],'111 : apply sans option ; 112 : apply avec le plan de vue');
@@ -53,6 +53,9 @@ test('profil « L1 » (défaut) : cible de la chaîne hors de la vue → la vue 
  assert.equal(d112.command.action,'lot');assert.equal(d112.command.reason,'window');assert.ok(d112.command.deplacerVue);
  assert.deepEqual(x.adapter.amenerArgs.map(a=>[a.cote,a.options.essai]),[['left',true],['right',true]],'pré-vol : essai, sans pose');
  assert.equal(ev(x.b,'deplacer-vue').filter(e=>e.phase==='decision'&&e.refus===null).length,1);
+ /* D-221 : sous L1-s, cette pose (un différé de la chaîne de la 4.9.5.9) n'est pas un appui. */
+ if(profil==='L1-s'){assert.equal(d112.command.l1s,'vue');assert.equal(d112.anchorHeld,false);assert.equal(x.b.get('engine').s.batch.lotCommands[112].l1,true);}
+ else assert.equal(d112.command.l1s,undefined);
 });
 
 /* Montage du différé : cuts 111 à 113, le 112 capturé sans point (le moteur s'abstient, la chaîne le diffère). La GCV2 est forcée sur le 112 :
@@ -76,7 +79,7 @@ async function lotDiffere({etat=null,panne=false,profil=null}={}){
 }
 const d112=x=>decisions(x.b).find(([c])=>c===112)[1];
 
-test('profil « L1 », sous τ : pose SANS validation juste avant la navigation sans décision ; pose d\'avant et pose envoyée au journal', async()=>{
+test('profil « L1-s » (défaut), sous τ : pose SANS validation juste avant la navigation sans décision ; pose d\'avant et pose envoyée au journal', async()=>{
  const x=await lotDiffere({etat:'poser-sans-valider'});
  assert.equal(x.forcees.length,1);
  /* 112 : capture, pose (apply, aucune validation), puis navigation sans décision ; 113 : comme avant. */
@@ -94,7 +97,7 @@ test('profil « L1 », sous τ : pose SANS validation juste avant la navigation 
 });
 
 test('profil « L1 », au-dessus de τ : la commande devient celle de la GCV2 ; apply puis validate ; le cut devient appui', async()=>{
- const x=await lotDiffere({etat:'valider'});
+ const x=await lotDiffere({etat:'valider',profil:'L1'});
  assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','apply','validate','next','capture','apply']);
  const d=d112(x);assert.equal(d.command.action,'lot');assert.equal(d.command.reason,'gcv2-l1');assert.equal(d.applied,true);
  assert.equal(d.anchorHeld,true,'pose validée de la GCV2 : appui de la chaîne');
@@ -121,4 +124,21 @@ test('paramètres du service worker : copie conforme de datasets/gcv2-parametres
  assert.equal(crypto.createHash('sha256').update(brut).digest('hex'),'679015ef515547287fdb0fbdde4cdf5a015c8644ef6a170005d67a2ab6eee5f8','fichier figé de la fiche (§ 2.1)');
  assert.deepEqual(require('../src/gcv2-parametres-l1.js'),JSON.parse(brut.toString('utf8')));
  const G=require('../src/gcv2-l1.js');assert.deepEqual(G.REGLE.lotOptions,{pairGuard:false,gap:10});assert.equal(G.REGLE.sansValiderMaxMm,150);
+});
+
+test('profil « L1-s », au-dessus de τ : pose validée de la GCV2, jamais appui ni voisin (D-221)', async()=>{
+ const x=await lotDiffere({etat:'valider'});
+ assert.equal(scopeDe(x.b).lotProfil,'L1-s');
+ assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','apply','validate','next','capture','apply']);
+ const d=d112(x);assert.equal(d.command.reason,'gcv2-l1');assert.equal(d.command.l1s,'gcv2');assert.notEqual(d.anchorHeld,true,'pas un appui');
+ assert.equal(x.b.get('engine').s.batch.lotCommands[112].l1,true);
+ const d113=decisions(x.b).find(([c])=>c===113)[1];assert.ok(!(d113.anchorsUsed||[]).includes(112),'113 ne s\'appuie pas sur 112');
+});
+
+test('profil « L1-s » (défaut) : sur un lot que la chaîne pose en entier, mêmes commandes que la 4.9.5.9 (hors le profil dans le scope)', async()=>{
+ const {lotClic,neutre:neutreClic}=require('./helpers/choix-lot.cjs'),E=require('./helpers/choix-lot-essais.cjs');
+ const x=await lotClic({profil:null});
+ assert.equal(scopeDe(x.b).lotProfil,'L1-s');
+ const sansProfil=v=>JSON.parse(JSON.stringify(v,(k,y)=>y&&typeof y==='object'&&!Array.isArray(y)&&'lotProfil' in y?Object.fromEntries(Object.entries(y).filter(([c])=>c!=='lotProfil')):y));
+ assert.equal(E.h(E.versionGolden(neutreClic(sansProfil(x.commandes)))),E.GOLDEN.clic.empreinteCommandes,'commandes de la base, octet pour octet, hors lotProfil');
 });

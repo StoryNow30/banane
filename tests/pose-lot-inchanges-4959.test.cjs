@@ -54,7 +54,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
  const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
- assert.equal(profil,'L1','test 13 : profil du lot « L1 » par défaut');
+ assert.equal(profil,'L1-s','test 13 : profil du lot « L1-s » par défaut (D-221)');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
