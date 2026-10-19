@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction B · Le fil de la séance</title><link rel="stylesheet" href="commun.css"></head>
+<body><div class="maquette">
+<p class="lien-retour"><a href="index.html" style="color:inherit">← les trois directions</a></p>
+<h1>Direction B · « Le fil de la séance »</h1>
+<p class="legende">La séance de Mic est une suite d'étapes : <b>ESV prêt → lot → relecture → envoi</b>. Le panneau montre ce fil. L'étape en cours est ouverte avec son unique geste ; les étapes faites tiennent en une ligne ; les suivantes sont grisées. Mic voit où il en est <b>et</b> ce qui reste. Chiffres inventés.</p>
+<div class="barre-scenes" id="scenes"></div>
+
+<div class="fenetre" id="fenetre">
+ <div class="tete"><div><span class="nom">ARIANE</span><span class="ou" id="ou">Orbite · Partie 13</span></div><button class="roue" title="Réglages" onclick="location.href='A-le-grand-bouton.html#reglages'">⚙</button></div>
+
+ <section class="scene" data-scene="repos" data-titre="1 · Début de séance"><div class="corps">
+  <ol class="fil">
+   <li class="etape courant"><span class="rond">1</span><div><h3>Choisir le travail</h3><div class="corps-etape">
+     <div class="segment"><button aria-pressed="true">Ariane pose (Orbite)</button><button aria-pressed="false" data-va="echo">J'ai la main (Écho)</button></div>
+     <p class="note">ESV est sur le <b>cut 4790</b>, partie 13.</p>
+     <button class="bouton">Démarrer le lot</button></div></div></li>
+   <li class="etape futur"><span class="rond">2</span><div><h3>Le lot pose les rails</h3></div></li>
+   <li class="etape futur"><span class="rond">3</span><div><h3>La relecture des verts</h3></div></li>
+   <li class="etape futur"><span class="rond">4</span><div><h3>Envoyer</h3></div></li>
+  </ol></div></section>
+
+ <section class="scene" data-scene="lot" data-titre="2 · Le lot tourne"><div class="corps">
+  <ol class="fil">
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Départ : cut 4790</h3><p class="res">jusqu'à la fin de la partie 13</p></div></li>
+   <li class="etape courant"><span class="rond">2</span><div><h3>Le lot pose les rails</h3><div class="corps-etape">
+     <div class="cut" style="font-size:56px">4812<small>cut</small></div>
+     <div><div class="barre"><i style="width:26%"></i></div><div class="barre-ligne"><span>31 / 120 invalides</span><span>27 posés · 4 différés</span></div></div>
+     <button class="bouton calme">Pause</button></div></div></li>
+   <li class="etape futur"><span class="rond">3</span><div><h3>La relecture des verts</h3></div></li>
+   <li class="etape futur"><span class="rond">4</span><div><h3>Envoyer</h3></div></li>
+  </ol></div></section>
+
+ <section class="scene" data-scene="incident" data-titre="3 · Un incident"><div class="corps">
+  <ol class="fil">
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Départ : cut 4790</h3></div></li>
+   <li class="etape alerte"><span class="rond">!</span><div><h3>ESV ne répond plus (cut 4812)</h3><div class="corps-etape">
+     <p class="note">Rien n'a été posé sur ce cut. Recharge la page ESV (F5), puis reprends.</p>
+     <button class="bouton alerte">Reprendre</button>
+     <details class="autres"><summary>Autres options</summary><div class="rang"><button>Je le fais moi-même</button><button>SKIP…</button><button class="danger">Arrêter le lot</button></div></details></div></div></li>
+   <li class="etape futur"><span class="rond">3</span><div><h3>La relecture des verts</h3></div></li>
+   <li class="etape futur"><span class="rond">4</span><div><h3>Envoyer</h3></div></li>
+  </ol></div></section>
+
+ <section class="scene" data-scene="relecture" data-titre="4 · La relecture"><div class="corps">
+  <ol class="fil">
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Départ : cut 4790</h3></div></li>
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Lot fini</h3><p class="res">27 posés · 4 différés · 120 / 120 invalides</p></div></li>
+   <li class="etape courant"><span class="rond">3</span><div><h3>La relecture des verts</h3><div class="corps-etape">
+     <p class="note"><b>12 sur 85</b> relus, 3 corrigés. Ne touche à rien dans ESV.</p>
+     <div class="barre"><i style="width:14%"></i></div>
+     <button class="bouton calme">Arrêter la relecture</button></div></div></li>
+   <li class="etape futur"><span class="rond">4</span><div><h3>Envoyer</h3></div></li>
+  </ol></div></section>
+
+ <section class="scene" data-scene="fin" data-titre="5 · Envoyer"><div class="corps">
+  <ol class="fil">
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Départ : cut 4790</h3></div></li>
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Lot fini</h3><p class="res">27 posés · 4 différés · 120 / 120 invalides</p></div></li>
+   <li class="etape fait"><span class="rond">✓</span><div><h3>Relecture finie</h3><p class="res">85 relus · 41 corrigés · 9 à contrôler</p></div></li>
+   <li class="etape courant"><span class="rond">4</span><div><h3>Envoyer</h3><div class="corps-etape">
+     <p class="note">Prépare les fichiers du lot et le message à coller (heures, noms et empreintes).</p>
+     <button class="bouton">Envoyer</button></div></div></li>
+  </ol></div></section>
+
+ <section class="scene" data-scene="echo" data-titre="6 · Écho"><div class="corps">
+  <ol class="fil">
+   <li class="etape courant"><span class="rond">1</span><div><h3>Écho observe</h3><div class="corps-etape">
+     <div class="cut" style="font-size:56px">148<small>cuts vus</small></div>
+     <p class="note">61 corrigés. Travaille normalement dans ESV.</p>
+     <button class="bouton">Terminer et envoyer</button></div></div></li>
+  </ol></div></section>
+
+ <div class="pied">
+  <div><p class="lbl">Partie 13</p><p class="val">31 / 120</p><p class="sous">invalides traités</p></div>
+  <div><p class="lbl">GCV2 · cuts appris</p><p class="val">2 684 <span style="color:var(--vert)">+ 61</span></p><p class="sous">dernier archivage + cette séance</p></div>
+ </div>
+</div>
+<p class="explique"><b>À lire.</b> Le fil répond à « où j'en suis dans ma séance » sans rien demander. Le prix : plus de texte à l'écran que A, et l'Écho, qui n'a qu'une étape, y paraît presque vide. Les réglages sont les mêmes que dans A (profils) : <a href="A-le-grand-bouton.html#reglages" style="color:var(--text)">les voir</a>.</p>
+</div>
+<script src="scenes.js"></script>
+</body></html>

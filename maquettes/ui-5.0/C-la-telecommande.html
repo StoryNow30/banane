@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction C · La télécommande</title><link rel="stylesheet" href="commun.css"></head>
+<body><div class="maquette">
+<p class="lien-retour"><a href="index.html" style="color:inherit">← les trois directions</a></p>
+<h1>Direction C · « La télécommande »</h1>
+<p class="legende">Le panneau devient une <b>petite fenêtre</b> (environ 380 × 190) qu'on laisse à côté d'ESV : une phrase, un bouton, une barre. Tout le reste (graphique de la voie, listes, réglages) est une seconde page, « Détails », ouverte à la demande et <b>en lecture seule</b>. Chiffres inventés.</p>
+
+<div class="grille-c">
+ <div><p class="lbl" style="margin:0 0 6px">1 · Repos</p>
+  <div class="tele"><div class="ligne1"><span class="nom" style="font:700 13px var(--sans);letter-spacing:.2em">ARIANE</span><span class="ou">Orbite · P13 · ⚙</span></div>
+   <p class="phrase-c">ESV est sur le <b>cut 4790</b>. Lot jusqu'à la fin de la partie.</p>
+   <button class="bouton">Démarrer le lot</button>
+   <div class="mini"><span>Orbite ⇄ Écho</span><span>GCV2 2 684 cuts appris</span></div></div></div>
+
+ <div><p class="lbl" style="margin:0 0 6px">2 · Lot en cours</p>
+  <div class="tele"><div class="ligne1"><span class="etat vert">Pose · cut 4812</span><span class="ou">⚙</span></div>
+   <p class="phrase-c">31 / 120 invalides. <b>27</b> posés, <b>4</b> différés.</p>
+   <div class="barre"><i style="width:26%"></i></div>
+   <button class="bouton calme">Pause</button>
+   <div class="mini"><span>Détails ▸</span><span>GCV2 2 684 cuts appris</span></div></div></div>
+
+ <div><p class="lbl" style="margin:0 0 6px">3 · Incident</p>
+  <div class="tele" style="border-color:var(--ambre)"><div class="ligne1"><span class="etat rouge">À toi · cut 4812</span><span class="ou">⚙</span></div>
+   <p class="phrase-c">ESV ne répond plus. Recharge la page (F5), puis reprends.</p>
+   <button class="bouton alerte">Reprendre</button>
+   <div class="mini"><span>Autres options ▸</span><span>GCV2 2 684</span></div></div></div>
+
+ <div><p class="lbl" style="margin:0 0 6px">4 · Relecture</p>
+  <div class="tele"><div class="ligne1"><span class="etat vert">Relecture</span><span class="ou">⚙</span></div>
+   <p class="phrase-c"><b>12 sur 85</b>, 3 corrigés. Ne touche à rien dans ESV.</p>
+   <div class="barre"><i style="width:14%"></i></div>
+   <button class="bouton calme">Arrêter la relecture</button>
+   <div class="mini"><span>Détails ▸</span><span>GCV2 2 684</span></div></div></div>
+
+ <div><p class="lbl" style="margin:0 0 6px">5 · Fin</p>
+  <div class="tele"><div class="ligne1"><span class="etat">Fini</span><span class="ou">⚙</span></div>
+   <p class="phrase-c"><b>27</b> posés, 4 différés, 9 à contrôler. Relecture finie.</p>
+   <button class="bouton">Envoyer</button>
+   <div class="mini"><span>Détails ▸</span><span>GCV2 2 684</span></div></div></div>
+
+ <div><p class="lbl" style="margin:0 0 6px">6 · Écho</p>
+  <div class="tele"><div class="ligne1"><span class="etat vert">Écho</span><span class="ou">⚙</span></div>
+   <p class="phrase-c"><b>148</b> cuts vus, <b>61</b> corrigés. Travaille dans ESV.</p>
+   <button class="bouton">Terminer et envoyer</button>
+   <div class="mini"><span>Pause</span><span>GCV2 2 684 + 61</span></div></div></div>
+</div>
+
+<h2 style="font-size:15px;margin:30px 0 8px">Page « Détails » (lecture seule, ouverte à la demande)</h2>
+<div class="detail-c">
+ <p class="lbl">La voie du lot</p>
+ <div class="voie" aria-hidden="true"><i style="height:50%"></i><i style="height:55%"></i><i style="height:48%"></i><i class="d" style="height:90%"></i><i style="height:52%"></i><i style="height:57%"></i><i style="height:61%"></i><i class="d" style="height:85%"></i><i style="height:58%"></i><i style="height:54%"></i><i style="height:50%"></i><i style="height:49%"></i><i style="height:53%"></i><i class="d" style="height:88%"></i><i style="height:56%"></i><i style="height:60%"></i></div>
+ <ul class="liste-c"><li><span>Posés / différés / couverture</span><span>27 · 4 · 87 %</span></li><li><span>Verts à contrôler</span><span>9 (liste)</span></li><li><span>Départ de la partie</span><span>120 invalides, 1 344 validés</span></li><li><span>Santé de la collecte, qualité de capture</span><span>OK</span></li><li><span>Journal, politique effective, dernière commande</span><span>→ pour l'analyse</span></li></ul>
+</div>
+<p class="explique"><b>À lire.</b> La plus économe en pixels : elle tient à côté d'ESV sans le masquer. Le prix : on ne voit plus la « voie » ni les verts à contrôler sans un clic de plus, et la fenêtre d'Ariane est aujourd'hui créée en 560 × 820 (<code>background.js</code>) : la changer est un petit chantier propre à cette direction.</p>
+</div>
+</body></html>

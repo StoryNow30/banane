@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ariane 5.0 · trois directions pour le panneau</title><link rel="stylesheet" href="commun.css">
+<style>.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0}
+.carte-d{border:1px solid var(--hair2);border-radius:10px;padding:18px;background:var(--bg)}
+.carte-d h2{margin:0 0 6px;font-size:17px}.carte-d a.go{display:inline-block;margin-top:10px;color:var(--vert);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid var(--hair2);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--tile)}</style></head>
+<body><div class="maquette">
+<h1>Ariane 5.0 · trois directions pour le panneau</h1>
+<p class="legende">Maquettes statiques (pages ouvertes dans un navigateur, aucun appel réseau, aucune donnée réelle, chiffres inventés). La conception, les comptes de gestes et la recommandation sont dans <code>fiches/UI_5.0_CONCEPTION.md</code> ; l'état des lieux de l'interface actuelle dans <code>fiches/UI_INVENTAIRE.md</code>.</p>
+<div class="cartes">
+ <div class="carte-d"><h2>A · Le grand bouton</h2><p class="note">Une phrase, un grand bouton, deux chiffres. Tout le reste est replié ou dans les réglages.</p><a class="go" href="A-le-grand-bouton.html">Voir les 9 écrans →</a></div>
+ <div class="carte-d"><h2>B · Le fil de la séance</h2><p class="note">Les étapes de la séance en colonne : faites (une ligne), en cours (le geste), à venir (grisées).</p><a class="go" href="B-le-fil-de-la-seance.html">Voir les écrans →</a></div>
+ <div class="carte-d"><h2>C · La télécommande</h2><p class="note">Une petite fenêtre d'une phrase et d'un bouton, et une page « Détails » en lecture seule.</p><a class="go" href="C-la-telecommande.html">Voir les écrans →</a></div>
+</div>
+<table><tr><th></th><th>Panneau actuel</th><th>A</th><th>B</th><th>C</th></tr>
+<tr><th>Clics Ariane dans une séance type (un lot + une Écho)</th><td>9</td><td>6</td><td>6</td><td>6 (+ « Détails » pour voir la voie)</td></tr>
+<tr><th>Choix à faire ou à vérifier</th><td>4 choix, 10 cases ou boutons radio, 5 vérifications de défauts</td><td>0 (profil fixé une fois)</td><td>0</td><td>0</td></tr>
+<tr><th>Gestes hors panneau (empreintes, heures)</th><td>3 par envoi</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><th>Risques d'erreur d'opérateur</th><td>6 identifiés</td><td>1 (profil mal choisi, dit sous le bouton)</td><td>1</td><td>2 (cibles petites, infos cachées)</td></tr>
+<tr><th>Voir où on en est, sans clic</th><td>oui, noyé</td><td>oui (phrase + barre + 2 chiffres)</td><td>oui (le fil entier)</td><td>oui (une phrase), la voie demande un clic</td></tr></table>
+</div></body></html>
