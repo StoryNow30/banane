@@ -9,6 +9,7 @@
  *   node tools/banc-differes.cjs predire  (mêmes arguments que rejouer ; imprime le SHA-256 du fichier, exige --juger-partie-reservee pour une
  *                                         partie réservée ; aucune entrée humaine, aucun Écho)
  *   node tools/banc-differes.cjs agreger  --rejeu R.jsonl [--rejeu …] [--juges CUTS.jsonl …] [--inventaire INV.json] [--json S.json] [--md S.md]
+ *   node tools/banc-differes.cjs resumer  --prediction R.jsonl [--json S.json]   (comparatif sans vérité : différés par zone, poses du lot, vues déplacées)
  *   node tools/banc-differes.cjs comparer --prediction R.jsonl --echo DOSSIER [--echo …] [--json C.json]   (à l'arrivée de l'Écho seulement)
  *
  * REJEU CONJOINT (et non union de contrefactuels). Pour un lot, les cuts sont repris dans l'ordre du lot. Pour chaque cut et chaque PROFIL :
@@ -338,6 +339,33 @@ function resumePrediction(lignes, profils) {
   return { traites: lignes.length, differesReels: differes.length, parProfil: Object.fromEntries(profils.map(p => [p, { ...compter(lignes, p), surDifferesReels: par(differes, p),
     parZone: Object.fromEntries(zones.map(z => [z, { differesReels: differes.filter(l => (l.zone || 'sans-nuage') === z).length, ...par(differes.filter(l => (l.zone || 'sans-nuage') === z), p) }])) }])) };
 }
+/* Comparatif SANS VÉRITÉ d'un lot scellé (demande du 19/10, partie 19) : (a) les différés réels : posés validés, posés sans validation, laissés, par
+ * profil et par zone ; (b) les cuts posés par le lot réel : même pose à 2, 5, 10 mm (pire rail, 3D), poses différentes (distribution, 10 plus grands
+ * écarts avec cut et zone), cuts laissés ; (c) les cuts où le profil déplace la vue. Aucune entrée humaine. */
+function comparatifSansVerite(lignes, profils) {
+  const P = profils.filter(p => p !== 'base'), differes = lignes.filter(l => !l.reel.pose), poses = lignes.filter(l => l.reel.pose);
+  const zoneDe = l => l.zone || 'sans-nuage', zones = [...new Set(lignes.map(zoneDe))].sort();
+  const sort = (liste, p) => ({ n: liste.length, valides: liste.filter(l => l.profils[p].etat === 'pose').length, nonValides: liste.filter(l => l.profils[p].etat === 'pose-non-validee').length,
+    laisses: liste.filter(l => l.profils[p].etat === 'differe').length });
+  const ecartReel = (l, p) => { const o = l.profils[p]; if (!o || !o.decal || !l.reel.decal) return null; return Math.max(...SIDES.map(s => norme(moins(o.decal[s], l.reel.decal[s])))); };
+  const out = { traites: lignes.length, differesReels: differes.length, posesReelles: poses.length, posesReellesSansDecal: poses.filter(l => !l.reel.decal).length, profils: {} };
+  for (const p of P) {
+    const a = { total: sort(differes, p), parZone: Object.fromEntries(zones.map(z => [z, sort(differes.filter(l => zoneDe(l) === z), p)])),
+      hypotheses: (() => { const m = new Map(); for (const l of differes) { const o = l.profils[p]; if (o.etat === 'differe' || !o.l1) continue; m.set(o.l1.hypothese || '?', (m.get(o.l1.hypothese || '?') || 0) + 1); } return Object.fromEntries([...m].sort((x, y) => y[1] - x[1])); })(),
+      motifsLaisses: (() => { const m = new Map(); for (const l of differes) { const o = l.profils[p]; if (o.etat !== 'differe') continue; const k = o.source === 'reel-sans-nuage' ? 'sans-nuage' : o.l1 ? (o.l1.refusCommande ? 'commande-refusee:' + o.l1.refusCommande : 'L1-rien:' + o.l1.motif) : (o.source || '?'); m.set(k, (m.get(k) || 0) + 1); } return Object.fromEntries([...m].sort((x, y) => y[1] - x[1])); })() };
+    const avec = poses.map(l => ({ l, e: l.profils[p].etat === 'pose' ? ecartReel(l, p) : null })), comp = avec.filter(x => fini(x.e)), es = comp.map(x => x.e);
+    const b = { comparables: comp.length, a2: es.filter(e => e <= 2).length, a5: es.filter(e => e <= 5).length, a10: es.filter(e => e <= 10).length, plus10: es.filter(e => e > 10).length,
+      laisses: poses.filter(l => l.profils[p].etat !== 'pose').length, nonValides: poses.filter(l => l.profils[p].etat === 'pose-non-validee').length,
+      ecartMedianMm: arrondi(med(es), 2), ecartQ3Mm: arrondi(quantile(es, 0.75), 2), ecartQ90Mm: arrondi(quantile(es, 0.9), 2), ecartMaxMm: arrondi(Math.max(...es, 0), 1),
+      tranches: { '0–2': es.filter(e => e <= 2).length, '2–5': es.filter(e => e > 2 && e <= 5).length, '5–10': es.filter(e => e > 5 && e <= 10).length, '10–20': es.filter(e => e > 10 && e <= 20).length, '20–50': es.filter(e => e > 20 && e <= 50).length, '> 50': es.filter(e => e > 50).length },
+      plusGrands: comp.slice().sort((x, y) => y.e - x.e).slice(0, 10).map(x => ({ cut: x.l.cut, zone: zoneDe(x.l), ecartMm: arrondi(x.e, 1), etage: x.l.profils[p].etage || null, etageReel: x.l.reel.etage || null })) };
+    const vues = lignes.filter(l => l.profils[p] && l.profils[p].vue === 'deplacee');
+    const c = { n: vues.length, surDifferesReels: vues.filter(l => !l.reel.pose).length, surPosesReelles: vues.filter(l => l.reel.pose).length, valides: vues.filter(l => l.profils[p].etat === 'pose').length,
+      nonValides: vues.filter(l => l.profils[p].etat === 'pose-non-validee').length, cuts: vues.map(l => ({ cut: l.cut, zone: zoneDe(l), etat: l.profils[p].etat, source: l.profils[p].source })) };
+    out.profils[p] = { differes: a, posesReelles: b, vueDeplacee: c };
+  }
+  return out;
+}
 /* Comparaison pure : lignes scellées contre poses de Mic (Map cut → { rails: {left,right} décalages mm depuis la pose de départ de l'Écho, ecartDepartMm }).
  * Jugé : différé réel, pose de Mic connue, pose de départ de l'Écho à 2 mm de celle du lot (écartement). */
 function comparer(entete, lignes, micParCut) {
@@ -401,6 +429,12 @@ function main(argv) {
     if (a.json) ecrire(a.json, JSON.stringify(S, null, 1) + '\n');
     if (a.md) ecrire(a.md, md + '\n');
     process.stdout.write(md + '\n');
+  } else if (a.mode === 'resumer') {
+    if (!a.prediction) throw Error('resumer --prediction R.jsonl [--json S.json]   (comparatif sans vérité d\'un lot scellé)');
+    const buf = fs.readFileSync(a.prediction), R = lireRejeux([buf.toString('utf8')]), e = R.entetes[0];
+    const out = { format: 'ariane-banc-differes-sans-verite-v1', partie: e.partie, lot: e.lot, sha256: sha256(buf), ...comparatifSansVerite(R.lignes, e.profils) };
+    if (a.json) ecrire(a.json, JSON.stringify(out, null, 1) + '\n');
+    process.stdout.write(JSON.stringify(out, null, 1) + '\n');
   } else if (a.mode === 'comparer') {
     if (!a.prediction || !a.echo.length) throw Error('comparer --prediction R.jsonl --echo DOSSIER [--echo …] [--json C.json]');
     const buf = fs.readFileSync(a.prediction), R = lireRejeux([buf.toString('utf8')]), e = R.entetes[0], P = require('./gcv2-predire-differes.cjs');
@@ -409,10 +443,10 @@ function main(argv) {
     if (a.json) ecrire(a.json, JSON.stringify(out, null, 1) + '\n');
     process.stdout.write(`Comparaison — partie ${out.partie}, lot ${out.lot}, fichier scellé SHA-256 ${sha256(buf)} : ${out.juges} jugés ; non jugés ${JSON.stringify(out.nonJuges)}\n`
       + Object.entries(out.parProfil).map(([p, x]) => `  ${p} : ${x.poses} posés (${x.posesValidees} validés), erreur médiane ${fmt(x.erreurMedianeMm)} mm contre ${fmt(x.departMedianMm)} au départ, gain médian ${fmt(x.gainMedianMm)} mm, ≤ 10 mm ${x.a10}, > 50 mm ${x.plus50}, rappel ${x.rappel.k}/${x.rappel.n}`).join('\n') + '\n');
-  } else throw Error('mode : rejouer | predire | agreger | comparer');
+  } else throw Error('mode : rejouer | predire | agreger | resumer | comparer');
 }
 
 module.exports = { SANS_VERITE, FORMAT, FORMAT_SYNTHESE, FORMAT_COMPARAISON, VERSION, PROFILS, chargerCaptures, avecNuage, lotReel, rejouerLot, lireRejeux, lireJuges, compter, stats, erreurProfil, agreger, syntheseMd,
-  resumePrediction, comparer, args, main };
+  resumePrediction, comparatifSansVerite, comparer, args, main };
 
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`banc-differes : ${e.message}\n`); process.exitCode = 1; } }
