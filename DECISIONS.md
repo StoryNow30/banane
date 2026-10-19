@@ -2832,3 +2832,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Le 0 mauvaise voie vient de l'exclusion structurelle des cuts différés, pas de l'apprentissage. Le choix de V1 est fait **après coup** : V1 est la **seule** candidate envoyée au jugement à l'aveugle (G1-c : 2:6, 1:11, 1:25), sans autre réglage. Si V1 échoue en G1-c, aucune autre variante n'est essayée sur ces parties : on attend de nouvelles parties réservées.
 - **Compteur** : la partie 1:17 est ajoutée (option `--racine-supplementaire`, 7z extrait puis effacé, banane-data intact) : **2 290 cuts corrigés depuis le début de la 5.0, dont 2 138 appris (11 parties) et 152 en file (2:6)** ; 4 402 apprenables (4 024 appris, 378 en file). Fiche `fiches/COMPTEUR_GCV2.md` mise à jour.
 - Le prompt d'Astra est complété avec V1. G1-c attend toujours sa réponse.
+
+## D-206 — Réponses de Mic (19 octobre 2026, midi) et suites
+
+- **2:6, cuts 3931–3935** : c'est bien un **PN**, et ESV ne l'avait même pas marqué d'un rouge invalide : « tu n'y pouvais rien, RAS ». Vérité ajoutée aux notes de 2:6.
+- **1:16, cuts 4006–4071** : c'est bien une **ADV**, que Mic n'a pas corrigée. La plage du détecteur n'est donc **pas une fausse zone** (RM-1, D-200 : 0 fausse plage à l'Écho) ; vérité ajoutée aux notes de 1:16.
+- **2:1, ce que la GCV2 rate** (57 cuts sans hypothèse juste, G1-a) : vérifié sur le jeu. 53 sont dans la **zone 2 (cuts 293 à 459)**, presque tous **différés** par le lot, avec **toute la voie décalée de 130 à 250 mm** en latéral (les deux rails ensemble) ; 4 autres en ADV (625, 3011, 5521, 5550). C'est la zone de D-141 et D-147 : « déplacer la vue » a été développé pour elle, mais la vue n'explique que 32 % des différés ; **61 % sont hors de la fenêtre de recherche du moteur** (±180 mm en travers). Piste GCV2 : une hypothèse **H6 « voie décalée »**, qui applique à la paire le décalage du dernier voisin sûr (série), à mesurer après l'audit d'Astra.
+- **Temps de lot (RM-12)** : « peu importe pour le moment, sauf si c'est complètement aberrant pour un gain minime ; on s'occupera du gain de temps plus tard ». La lecture d'un vert sur cinq partout (+66 min pour 6 grosses corrections sur 633) **reste jugée aberrante**. Une variante **ciblée** est mesurée : lire les verts **seulement dans les longs trous du lot** (les deux zones manquées sont dans des trous de 720 et 890 cuts sans lecture).
+- **Test 8** : Mic l'utilise cet après-midi. Les parties 0 à 5 du projet 2 ne seront pas fournies.
+- **Format des notes** de zones : validé par Mic.
+- **RM-11, raison de la correction** : « si c'est bien fait, pourquoi pas ». D'abord une conception (maquette du panneau, gestes, temps ajouté), soumise à Mic avant tout code ; rien ne change dans la test 8.
