@@ -2759,3 +2759,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Les notes de Mic « parties 10 et 11 » portent sur le **projet 2** (Écho du 18/10, 731 visites) : l'ADV 6362–6424 est dans **2:11**, partie d'apprentissage (D-187). Le témoin fixe est **1:11** (Écho du 28/09). D-195 avait confondu les deux.
 - RM-1 peut donc étudier 2:11 comme prévu au plan. La règle de D-195 reste juste pour les vrais témoins : **1:11 et 1:25** ne règlent rien et ne sont lus qu'à la fin, réglages figés.
 - Les missions G1-a, RM-1 et RM-2 ont été interrompues par une interruption de session (19/10, 6 h 38 UTC), pas par décision ; elles reprennent sur accord de Mic, avec ce brief corrigé.
+
+## D-198 — Examen de la partie 6 du projet 2 (Écho du 19/10, test 8) ; compteur à 1 783 cuts corrigés (19 octobre 2026)
+
+- **Archivage** : `banane-data` `collections/2026-10-19_v4.9.5.8_echo-partie-6` (10 zips, 112 Mo, notes de Mic), commit `faea9c8`, distant vérifié, contrôle d'identité vide. Projet 2 : même total (9 884) que la partie 6 du lot du 16/10.
+- **Orbite contre Mic** (lot du 16/10, 83 invalides) : 72 posés, 11 différés. Mic retouche 10 posés sur 69 vus, aucun de plus de 10 mm ; les 11 différés sont tous des grosses corrections (médiane 48 mm). Verts non touchés : 133 corrigés par Mic, dont 24 de plus de 10 mm (14 en ADV).
+- **Règle prudente figée** (274 cuts mesurables, 27 grosses corrections) : 14 actions, toutes à 10 mm ou moins de Mic (13 à 5 mm), **0 mauvaise voie, 0 abîmé** ; 38 abstentions, 17 grosses corrections laissées. Porte tenue en valeur, pas démontrée (Wilson 21,5 % sur 14 actions).
+- **Zones** : détecteur d'ADV figé 5/5 zones et 3/3 aiguilles de Mic, aucune fausse plage ; l'aiguille isolée du cut 4650 vue ; le PN 7935–7957 vu comme un PN (pas comme une ADV). La sélection bâtie sur le lot seul manque 3478–3535 (deux cuts du lot). Un amas 3931–3935 (34 à 41 mm) ressemble à un PN non noté : **question à Mic**.
+- **Décision** : 2:6 reste **réservée** encore quelques heures : c'est la seule partie neuve que RM-1 (variante ADV) et RM-2 (marges) n'ont jamais vue ; elles y seront jugées à l'aveugle, réglages figés. Elle passe ensuite en apprentissage (rotation D-192), par une ligne du manifeste.
+- **Compteur** (`claude/50-compteur-gcv2`, `36458ba`) : **1 783 corrigés** (1 091 de plus de 5 mm, 559 de plus de 10 mm), 472 validés tels quels, 1 373 visités sans action : **3 628 apprenables**, tous en file, 0 appris. Fiche d'examen : `fiches/EXAMEN_2-6.md`.
