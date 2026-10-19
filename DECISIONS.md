@@ -2859,3 +2859,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mic** : « feu vert » sur la conception (`fiches/RM11_RAISON_CORRECTION.md`, maquette montrée) : touches 1 à 6 et 0, rien par défaut, jamais bloquant, double appui collant, champ `raisonCorrection` côté étiquette, jamais dans les traits.
 - **Développement** (niveau rapide) sur `claude/50-rm11-test9`, depuis le code de la test 8 (`claude/50-relecture-couverture`, d58a6f1), pour une **test 9 (4.9.5.9)** = test 8 + raison de la correction. Pose et lot inchangés (preuve par essai), Écho identique sans touche tapée. Étape 0 de la consigne : vérifier dans ESV que les chiffres n'y font rien, sinon régler la rangée de repli.
 - **Relecture forte** du diff de `src/native-session.js` avant remise du paquet. La test 8 reste en service cet après-midi ; la test 9 sera remise après.
+
+## D-209 — Examen de la partie 7 du projet 2 ; lot test 8 de 2:13 archivé ; compteur à 2 684 cuts corrigés (19 octobre 2026)
+
+- **Archives** (banane-data) : Écho de 2:7 (33 zips, 372 Mo, deux volumes recollés et vérifiés, `a1c587a`), compléments de Mic aux notes (PN 1957–1972, ADV 3131–3228, début de la zone de l'aiguille 5897 inconnu, `5b0b67e`) ; premier lot Orbite de la test 8 sur **2:13** (partie neuve du projet 2, 9 772 cuts, relecture « corriger » encore en cours à l'export, `a199f92`). Contrôles d'identité vides, distants vérifiés.
+- **Examen de 2:7** (`fiches/EXAMEN_2-7.md`) : lot du 16/10, 151 invalides : 130 posés, 21 différés (tous corrigés de plus de 10 mm, médiane 60 mm) ; Mic corrige 7 posés de plus de 10 mm, dont 4 sur des aiguilles. Verts non touchés : 57 grosses corrections (21 en ADV).
+- **Règle prudente figée** (444 cuts mesurables, 46 grosses corrections) : 16 actions, 15 à 10 mm de Mic, **0 mauvaise voie, 0 abîmé** ; 34 grosses corrections laissées. Porte tenue en valeur, pas démontrée (Wilson ≤ 19,4 %).
+- **Zones** : détecteur figé sur l'Écho : **8/8 zones d'ADV, 15/15 aiguilles, 2/2 PN, 0 fausse plage**, aucun PN pris pour une ADV. Avec la sélection bâtie sur le lot seul : 5/8 zones (le lot n'a rien lu en 3131–3228, 3514–3579, 5867–5928) ; même cause que D-200 et D-202.
+- **Questions à Mic** : la grappe 3260–3304 (7 alertes d'ADV : une ADV non notée ?), un cœur de PN isolé en 5361 (cut 5364 corrigé de 14 mm), les cuts 4927–4929.
+- **Compteur** (`claude/50-g1b-apprendre`, `6f950a9`) : **2 684 cuts corrigés** depuis le début de la 5.0 (1 705 de plus de 5 mm, 835 de plus de 10 mm) : **2 138 appris**, **546 en file** (2:6 et 2:7) ; 5 258 apprenables.
