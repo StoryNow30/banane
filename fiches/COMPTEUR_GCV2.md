@@ -2,12 +2,12 @@
 
 Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (Mic). Les SKIP ne sont pas comptés. Aucune limite : on ne s'arrête pas à 1 000 ou 1 500 cuts (Mic).
 
-**Cuts corrigés : 1 783** (dont 1 091 de plus de 5 mm, 559 de plus de 10 mm). Avec les cuts validés tels quels (472) et les cuts visités sans action d'au moins 0,6 s (1 373) : **3 628 cuts apprenables**.
+**Cuts corrigés : 2 290** (dont 1 519 de plus de 5 mm, 757 de plus de 10 mm). Avec les cuts validés tels quels (553) et les cuts visités sans action d'au moins 0,6 s (1 559) : **4 402 cuts apprenables**.
 
 | File | Corrigés | Validés tels quels | Visités sans action | Apprenables |
 |---|---:|---:|---:|---:|
 | En apprentissage (en file) | 152 | 30 | 196 | 378 |
-| Appris (GCV2 entraînée) | 1 631 | 442 | 1 177 | 3 250 |
+| Appris (GCV2 entraînée) | 2 138 | 523 | 1 363 | 4 024 |
 
 | Projet | Partie | État | Cuts à l'Écho | Corrigés | dont > 5 mm | dont > 10 mm | Validés tels quels | Visités sans action | SKIP (non comptés) | Sans référence |
 |---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -21,6 +21,7 @@ Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut
 | 1 | 14 | appris | 112 | 48 | 23 | 17 | 25 | 35 | 0 | 4 |
 | 1 | 15 | appris | 524 | 107 | 35 | 9 | 27 | 356 | 2 | 32 |
 | 1 | 16 | appris | 388 | 133 | 59 | 21 | 49 | 186 | 1 | 19 |
+| 1 | 17 | appris | 795 | 507 | 428 | 198 | 81 | 186 | 0 | 21 |
 | 2 | 6 | en-file | 431 | 152 | 68 | 32 | 30 | 196 | 5 | 48 |
 
 Une partie lue en plusieurs Échos (sessions, reprises) compte chaque cut une fois, d'après son dernier état observé.

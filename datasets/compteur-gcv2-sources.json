@@ -1,6 +1,6 @@
 {
   "format": "ariane-compteur-gcv2-sources-v1",
-  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que Mic n'a pas confirmé l'entraînement (D-188). Les parties apprises par la GCV2 (G1-b, datasets/gcv2-parametres.json) sont à l'état « appris » ; p1-17 a servi à l'apprentissage mais n'est pas une source du compteur.",
+  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que Mic n'a pas confirmé l'entraînement (D-188). Les parties apprises par la GCV2 (G1-b, datasets/gcv2-parametres.json) sont à l'état « appris » ; p1-17 (Écho en 7z) est lue par `--racine-supplementaire` (voir `archive7z`).",
   "sources": [
     {
       "id": "p1-24",
@@ -96,6 +96,17 @@
         "2026-10-18_v4.9.5.7_echo-partie-16/echo p16 19h04"
       ],
       "note": "opérateur débutant selon Mic",
+      "etat": "appris"
+    },
+    {
+      "id": "p1-17",
+      "projet": "1",
+      "partie": 17,
+      "dossiers": [
+        "2026-10-14_v4.9.0.12_partie-17/echo p17 (z)"
+      ],
+      "archive7z": true,
+      "note": "Écho en 7z (7 volumes, 14 segments) : extraction temporaire, voir l'en-tête de tools/compteur-gcv2.cjs",
       "etat": "appris"
     },
     {

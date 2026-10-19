@@ -16,6 +16,7 @@ Chantier G1-b (`G0_GCV2_CONCEPTION.md` § 2 « Étage 2 » et « Étage 3 », §
 | **Calibrage** | Brier de p(10 mm) : 0,043 (relecture) et 0,0446 (lot), hors-échantillon. La courbe de fiabilité tient entre 60 et 100 % ; elle est trop confiante entre 10 et 50 % (p 0,35, observé 0,27). |
 | **Petits arbres** | **Non retenus** : Brier −3,6 %, perte logistique −4,6 % (en validation croisée par partie, sur les hypothèses), moins de 5 % : pas « nettement ». |
 | **Export** | `datasets/gcv2-parametres.json` (44 ko), appris sur les 11 parties, reproductible octet pour octet. |
+| **Variantes par zone** (§ 11, choisies après coup en D-204) | **V1** (GCV2 sur les verts de PN et d'ADV, règle prudente sur les verts des abords) tient la porte en relecture et au lot : 128 justes contre 107, 2 abîmés contre 4, 0 mauvaise voie, erreur 3,5 %. V2 et V3 ne la tiennent pas (5 abîmés contre 4). Le juge sera G1-c. |
 
 **Lecture honnête.** La GCV2 corrige nettement plus que la règle prudente (+35 %), avec une erreur globale du même ordre (6,4 à 6,6 % contre 7,4 %), mais elle ne tient pas la règle « 0 mauvaise voie » à cause d'une seule partie (2:1, 5 cuts) et de la zone des abords. Elle n'est **pas prête à agir sans garde supplémentaire**. Aucune activation n'est proposée ici : elle reste à Mic. Les sensibilités du § 7 (hors porte, après coup) montrent que le résultat ne change pas de nature quand on durcit l'erreur visée ou qu'on retire les traits d'accord.
 
@@ -440,7 +441,7 @@ Coefficients de la régression à 10 mm, moyenne sur les 11 plis (traits numéri
 8. **L'usage « lot » est approché** (§ 2.5) : le vrai lot n'a ni les mêmes voisins ni les mêmes rôles que l'Écho de Mic.
 9. **La règle prudente relue sur le jeu** n'est pas la règle exacte de D-190 (38 actions contre 40, 27 justes contre 29) ; la différence est la chaîne sans appui, lue comme l'A* du moteur.
 10. **Ablation et variantes** (§ 7) : après coup, non réglées.
-11. **p1-17** n'est pas dans les sources du compteur (`datasets/compteur-gcv2-sources.json`) : son jeu a servi à l'apprentissage, mais le compteur ne peut pas la passer en « appris ».
+11. **p1-17** n'était pas dans le compteur (`datasets/compteur-gcv2-sources.json`) : son Écho est en 7z. Elle y est maintenant, à l'état « appris » : l'Écho est extrait le temps du comptage (dossier temporaire, effacé ensuite) et lu par `node tools/compteur-gcv2.cjs … --racine-supplementaire <dossier>`. Elle compte 507 cuts corrigés, et le compteur passe de 1 631 à 2 138 cuts corrigés appris.
 
 ## 10. Reproduire
 
@@ -453,3 +454,157 @@ node --test tests/gcv2-apprendre.test.cjs
 ```
 
 Chaque `valider` prend 12 minutes sur une machine peu chargée (121 modèles par usage) ; l'export 4 minutes. Les jeux sont hors dépôt ; leurs empreintes SHA-256 sont dans le fichier de paramètres.
+
+## 11. Variantes par zone (déclarées en D-204, après lecture de la validation croisée)
+
+**Un choix fait après coup.** Les trois variantes ci-dessous ont été écrites en D-204 **après** la lecture de la validation croisée des § 3 à 6. On y avait vu que la GCV2 gagne en PN, en ADV et hors zone, qu'elle perd aux abords, et que les 5 mauvaises voies sont toutes des cuts différés. Les variantes en tirent les conséquences. Elles ont été déclarées **avant** tout calcul de ce paragraphe et rien n'a été changé ensuite, mais elles n'ont pas été choisies à l'aveugle : les chiffres ci-dessous sont **optimistes** pour elles. **Le vrai juge sera G1-c**, à l'aveugle, sur la partie réservée 2:6 et sur les témoins 1:11 et 1:25. Aucune de ces trois parties n'a été lue pour ce paragraphe.
+
+### 11.1 Les trois variantes
+
+| Variante | La GCV2 agit sur | La règle prudente figée agit sur | Partout ailleurs |
+|---|---|---|---|
+| **V1** | les **verts** de PN et d'ADV | les **verts des abords** | rien : hors zone, liste, rouges, différés |
+| **V2** | les verts de PN, d'ADV et **hors zone** | les verts des abords | rien : liste, rouges, différés |
+| **V3** | tous les verts **sauf les abords** (PN, ADV, liste si active, hors zone) | rien | rien : abords, rouges, différés |
+
+- La liste exacte des zones et des rôles est dans `datasets/gcv2-variantes.json`. Elle ne contient **aucun coefficient**. L'outil la lit et refuse une variante qui agirait sur un rouge ou sur un différé.
+- Le modèle, le calibrage, **τ et δ par zone** sont ceux de chaque pli de la validation croisée des § 3 et 4 : une variante ne réapprend rien. Les mêmes 11 plis, les mêmes 2 411 cuts. La règle prudente garde ses paramètres figés. La zone « liste » n'est jamais active (§ 9) : V3 y est donc égale à V2.
+- Les références sont celles des § 3 et 4, sur les mêmes cuts : la règle prudente seule, le hasard, H0.
+- Sortie : `node tools/gcv2-apprendre.cjs valider … --usage relecture|lot --variante V1 --variante V2 --variante V3`. Sans l'option, la sortie est celle de G1-b, octet pour octet (l'essai le vérifie). Le contenu de base des deux validations refaites est identique à celui de G1-b ; les variantes s'y ajoutent.
+
+### 11.2 Résultats, relecture et lot
+
+Lecture des colonnes : « agit » = cuts où l'on écrit une pose ; « corrections justes » = Mic corrigeait de plus de 10 mm et la pose est à 10 mm ou moins de la sienne ; « abîmés » = on agit sur un cut que Mic laisse à 5 mm ou moins et la pose est à plus de 10 mm ; « mauvaise voie » = pose à plus de 50 mm de celle de Mic ou rail déplacé de plus de 45 mm en latéral.
+
+##### Usage « relecture » — total (2411 cuts jugés, mêmes cuts pour toutes les lignes)
+
+méthode | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions), Wilson | abstentions | grosses laissées fausses
+---|--:|--:|--:|--:|--:|--:|--:|--:
+règle prudente seule | 136 | **107** | 84 | 4 | 0 | 10 (7,4 %) ≤ 13 % | 755 | 293
+V1 | 257 | **128** | 97 | 2 | 0 | 9 (3,5 %) ≤ 6,5 % | 135 | 272
+V2 | 357 | **151** | 110 | 5 | 0 | 13 (3,6 %) ≤ 6,1 % | 139 | 249
+V3 | 315 | **118** | 88 | 5 | 0 | 9 (2,9 %) ≤ 5,3 % | 10 | 286
+GCV2 seule (G1-b) | 392 | **144** | 100 | 6 | 5 | 26 (6,6 %) ≤ 9,5 % | 38 | 246
+hasard | 375 | **20,4** | 10 | 124,7 | 5,7 | 189,5 (50,5 %) ≤ 55,6 % | 0 | 343,7
+H0 | 0 | **0** | 0 | 0 | 0 | 0 (—) — | 0 | 406
+
+##### Usage « lot » — total (2411 cuts jugés, mêmes cuts pour toutes les lignes)
+
+méthode | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions), Wilson | abstentions | grosses laissées fausses
+---|--:|--:|--:|--:|--:|--:|--:|--:
+règle prudente seule | 136 | **107** | 84 | 4 | 0 | 10 (7,4 %) ≤ 13 % | 755 | 293
+V1 | 258 | **123** | 94 | 2 | 0 | 11 (4,3 %) ≤ 7,5 % | 136 | 274
+V2 | 447 | **143** | 106 | 6 | 0 | 18 (4 %) ≤ 6,3 % | 140 | 251
+V3 | 405 | **110** | 84 | 6 | 0 | 14 (3,5 %) ≤ 5,7 % | 11 | 288
+GCV2 seule (G1-b) | 466 | **125** | 92 | 9 | 5 | 30 (6,4 %) ≤ 9 % | 38 | 261
+hasard | 450,7 | **18,6** | 9,8 | 161,9 | 5,1 | 231,8 (51,4 %) ≤ 56 % | 0 | 345,4
+H0 | 0 | **0** | 0 | 0 | 0 | 0 (—) — | 0 | 406
+
+##### Porte du plan
+
+usage | variante | 0 mauvaise voie | erreur ≤ 9 % | borne de Wilson ≤ 9 % | justes ≥ prudente | abîmés ≤ prudente | **porte**
+---|---|---|---|---|---|---|---
+relecture | V1, tous les cuts | oui (0) | oui (3,5 %) | oui (≤ 6,5 %) | oui (128 contre 107) | oui (2 contre 4) | **oui**
+relecture | V1, périmètre prudent | oui (0) | oui (3,5 %) | oui (≤ 6,5 %) | oui (128 contre 107) | oui (2 contre 4) | **oui**
+relecture | V2, tous les cuts | oui (0) | oui (3,6 %) | oui (≤ 6,1 %) | oui (151 contre 107) | NON (5 contre 4) | **NON**
+relecture | V2, périmètre prudent | oui (0) | oui (3,5 %) | oui (≤ 6,5 %) | oui (128 contre 107) | oui (2 contre 4) | **oui**
+relecture | V3, tous les cuts | oui (0) | oui (2,9 %) | oui (≤ 5,3 %) | oui (118 contre 107) | NON (5 contre 4) | **NON**
+relecture | V3, périmètre prudent | oui (0) | oui (2,3 %) | oui (≤ 5,3 %) | NON (95 contre 107) | oui (2 contre 4) | **NON**
+lot | V1, tous les cuts | oui (0) | oui (4,3 %) | oui (≤ 7,5 %) | oui (123 contre 107) | oui (2 contre 4) | **oui**
+lot | V1, périmètre prudent | oui (0) | oui (4,3 %) | oui (≤ 7,5 %) | oui (123 contre 107) | oui (2 contre 4) | **oui**
+lot | V2, tous les cuts | oui (0) | oui (4 %) | oui (≤ 6,3 %) | oui (143 contre 107) | NON (6 contre 4) | **NON**
+lot | V2, périmètre prudent | oui (0) | oui (4,3 %) | oui (≤ 7,5 %) | oui (123 contre 107) | oui (2 contre 4) | **oui**
+lot | V3, tous les cuts | oui (0) | oui (3,5 %) | oui (≤ 5,7 %) | oui (110 contre 107) | NON (6 contre 4) | **NON**
+lot | V3, périmètre prudent | oui (0) | oui (3,2 %) | oui (≤ 6,5 %) | NON (90 contre 107) | oui (2 contre 4) | **NON**
+
+##### Par zone — usage « relecture » (agit / justes / abîmés / mauvaise voie / erreurs)
+
+zone | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+---|--:|---|---|---|---|---
+pn | 86 | 60 / 56 / 2 / 0 / 2 | 163 / 68 / 2 / 0 / 3 | 163 / 68 / 2 / 0 / 3 | 163 / 68 / 2 / 0 / 3 | 168 / 69 / 2 / 0 / 3
+adv | 65 | 34 / 18 / 2 / 0 / 4 | 52 / 27 / 0 / 0 / 2 | 52 / 27 / 0 / 0 / 2 | 52 / 27 / 0 / 0 / 2 | 66 / 38 / 0 / 0 / 3
+abords | 214 | 42 / 33 / 0 / 0 / 4 | 42 / 33 / 0 / 0 / 4 | 42 / 33 / 0 / 0 / 4 | 0 / 0 / 0 / 0 / 0 | 58 / 14 / 1 / 5 / 16
+liste | 7 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0
+hors | 34 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 100 / 23 / 3 / 0 / 4 | 100 / 23 / 3 / 0 / 4 | 100 / 23 / 3 / 0 / 4
+
+##### Par zone — usage « lot » (agit / justes / abîmés / mauvaise voie / erreurs)
+
+zone | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+---|--:|---|---|---|---|---
+pn | 86 | 60 / 56 / 2 / 0 / 2 | 159 / 65 / 1 / 0 / 3 | 159 / 65 / 1 / 0 / 3 | 159 / 65 / 1 / 0 / 3 | 162 / 66 / 1 / 0 / 3
+adv | 65 | 34 / 18 / 2 / 0 / 4 | 57 / 25 / 1 / 0 / 4 | 57 / 25 / 1 / 0 / 4 | 57 / 25 / 1 / 0 / 4 | 68 / 32 / 1 / 0 / 7
+abords | 214 | 42 / 33 / 0 / 0 / 4 | 42 / 33 / 0 / 0 / 4 | 42 / 33 / 0 / 0 / 4 | 0 / 0 / 0 / 0 / 0 | 47 / 7 / 3 / 5 / 13
+liste | 7 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0
+hors | 34 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 189 / 20 / 4 / 0 / 7 | 189 / 20 / 4 / 0 / 7 | 189 / 20 / 4 / 0 / 7
+
+##### Par partie — usage « relecture » (agit / justes / abîmés / mauvaise voie)
+
+partie | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+---|--:|---|---|---|---|---
+1:12 | 24 | 19 / 19 / 0 / 0 | 36 / 22 / 0 / 0 | 37 / 23 / 0 / 0 | 37 / 23 / 0 / 0 | 37 / 23 / 0 / 0
+1:13 | 21 | 15 / 10 / 1 / 0 | 35 / 18 / 0 / 0 | 35 / 18 / 0 / 0 | 35 / 18 / 0 / 0 | 35 / 18 / 0 / 0
+1:14 | 15 | 16 / 14 / 0 / 0 | 32 / 15 / 0 / 0 | 32 / 15 / 0 / 0 | 32 / 15 / 0 / 0 | 32 / 15 / 0 / 0
+1:15 | 7 | 12 / 6 / 1 / 0 | 19 / 6 / 0 / 0 | 27 / 7 / 0 / 0 | 27 / 7 / 0 / 0 | 27 / 7 / 0 / 0
+1:16 | 20 | 10 / 7 / 1 / 0 | 45 / 11 / 2 / 0 | 56 / 15 / 3 / 0 | 56 / 15 / 3 / 0 | 56 / 15 / 3 / 0
+1:17 | 44 | 5 / 3 / 0 / 0 | 5 / 3 / 0 / 0 | 32 / 8 / 0 / 0 | 27 / 5 / 0 / 0 | 36 / 9 / 1 / 0
+1:24 | 24 | 4 / 1 / 0 / 0 | 4 / 1 / 0 / 0 | 5 / 1 / 0 / 0 | 1 / 0 / 0 / 0 | 13 / 5 / 0 / 0
+1:29 | 93 | 42 / 38 / 0 / 0 | 48 / 38 / 0 / 0 | 75 / 42 / 2 / 0 | 42 / 13 / 2 / 0 | 50 / 19 / 2 / 0
+2:1 | 134 | 6 / 5 / 0 / 0 | 11 / 7 / 0 / 0 | 29 / 9 / 0 / 0 | 29 / 9 / 0 / 0 | 69 / 17 / 0 / 5
+2:10 | 1 | 0 / 0 / 0 / 0 | 4 / 0 / 0 / 0 | 4 / 0 / 0 / 0 | 4 / 0 / 0 / 0 | 4 / 0 / 0 / 0
+2:11 | 23 | 7 / 4 / 1 / 0 | 18 / 7 / 0 / 0 | 25 / 13 / 0 / 0 | 25 / 13 / 0 / 0 | 33 / 16 / 0 / 0
+
+##### Par partie — usage « lot » (agit / justes / abîmés / mauvaise voie)
+
+partie | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+---|--:|---|---|---|---|---
+1:12 | 24 | 19 / 19 / 0 / 0 | 37 / 22 / 0 / 0 | 43 / 23 / 0 / 0 | 43 / 23 / 0 / 0 | 43 / 23 / 0 / 0
+1:13 | 21 | 15 / 10 / 1 / 0 | 33 / 14 / 0 / 0 | 34 / 14 / 0 / 0 | 34 / 14 / 0 / 0 | 34 / 14 / 0 / 0
+1:14 | 15 | 16 / 14 / 0 / 0 | 34 / 15 / 0 / 0 | 34 / 15 / 0 / 0 | 34 / 15 / 0 / 0 | 34 / 15 / 0 / 0
+1:15 | 7 | 12 / 6 / 1 / 0 | 18 / 6 / 1 / 0 | 50 / 7 / 1 / 0 | 50 / 7 / 1 / 0 | 50 / 7 / 1 / 0
+1:16 | 20 | 10 / 7 / 1 / 0 | 53 / 11 / 1 / 0 | 85 / 15 / 4 / 0 | 85 / 15 / 4 / 0 | 85 / 15 / 4 / 0
+1:17 | 44 | 5 / 3 / 0 / 0 | 5 / 3 / 0 / 0 | 31 / 7 / 0 / 0 | 26 / 4 / 0 / 0 | 36 / 6 / 2 / 0
+1:24 | 24 | 4 / 1 / 0 / 0 | 4 / 1 / 0 / 0 | 5 / 1 / 0 / 0 | 1 / 0 / 0 / 0 | 4 / 1 / 0 / 0
+1:29 | 93 | 42 / 38 / 0 / 0 | 42 / 38 / 0 / 0 | 92 / 41 / 1 / 0 | 59 / 12 / 1 / 0 | 64 / 16 / 1 / 0
+2:1 | 134 | 6 / 5 / 0 / 0 | 11 / 7 / 0 / 0 | 27 / 8 / 0 / 0 | 27 / 8 / 0 / 0 | 65 / 14 / 1 / 5
+2:10 | 1 | 0 / 0 / 0 / 0 | 4 / 0 / 0 / 0 | 4 / 0 / 0 / 0 | 4 / 0 / 0 / 0 | 4 / 0 / 0 / 0
+2:11 | 23 | 7 / 4 / 1 / 0 | 17 / 6 / 0 / 0 | 42 / 12 / 0 / 0 | 42 / 12 / 0 / 0 | 47 / 14 / 0 / 0
+
+### 11.3 La porte du plan
+
+La porte : 0 mauvaise voie, erreur parmi les actions ≤ 9 %, corrections justes ≥ règle prudente, abîmés ≤ règle prudente. La lecture qui compte est « tous les cuts » ; la lecture « périmètre prudent » (verts de PN, ADV et abords) est donnée en plus, comme au § 6.
+
+| Variante | Relecture | Lot |
+|---|---|---|
+| **V1** | **porte tenue** : 0 mauvaise voie, erreur 3,5 % (Wilson ≤ 6,5 %), 128 justes contre 107, 2 abîmés contre 4 | **porte tenue** : 0 mauvaise voie, erreur 4,3 % (Wilson ≤ 7,5 %), 123 justes contre 107, 2 abîmés contre 4 |
+| **V2** | **non tenue** : 5 abîmés contre 4 (tout le reste est tenu : 0 mauvaise voie, erreur 3,6 %, 151 justes) | **non tenue** : 6 abîmés contre 4 (0 mauvaise voie, erreur 4 %, 143 justes) |
+| **V3** | **non tenue** : 5 abîmés contre 4 ; dans le périmètre prudent, 95 justes contre 107 | **non tenue** : 6 abîmés contre 4 ; dans le périmètre prudent, 90 justes contre 107 |
+
+Pour V2, la lecture « périmètre prudent » est tenue (elle est égale à V1, puisque le hors zone en est exclu) ; la porte ne l'est pas sur tous les cuts. Ce n'est pas une lecture plus douce qui la fait passer : c'est le hors zone (3 abîmés en relecture, 4 au lot) qui la fait échouer.
+
+### 11.4 Lecture
+
+- **V1 tient la porte dans les deux usages.** Elle corrige 21 cuts justes de plus que la règle prudente en relecture (128 contre 107) et 16 de plus au lot (123), avec la moitié des abîmés (2 contre 4) et 0 mauvaise voie. Le gain vient de **PN** (68 justes contre 56) et d'**ADV** (27 contre 18) ; aux abords la variante **est** la règle prudente (42 actions, 33 justes, identiques). Aucune partie n'a moins de justes que la règle prudente.
+- **V2 ajoute le hors zone** : 23 justes de plus en relecture (151), mais 3 abîmés de plus. Elle dépasse la limite de 4 abîmés d'un cut en relecture et de deux au lot.
+- **V3 retire les abords** et perd les 33 corrections justes que la règle prudente y fait : dans le périmètre prudent, 95 justes contre 107. Elle laisse 286 grosses corrections fausses, contre 249 pour V2.
+- **Les mauvaises voies tombent à 0 dans les trois variantes.** C'est **par construction** : les 5 mauvaises voies de la relecture (4 au lot) étaient des cuts différés, et le seul vert à mauvaise voie du lot était aux abords ; D-204 les a écartés en lisant ces résultats. La borne haute de 0 sur 257 actions est d'environ 1,2 % (règle des trois), sur des cuts que l'on a déjà regardés : ce n'est pas une preuve.
+- **Taille des écarts.** 2 abîmés contre 4, ou 5 contre 4, sont des écarts de quelques cuts sur 2 411, sur 11 parties et un seul opérateur. Les bornes de Wilson de l'erreur sont toutes en dessous de 9 % (V1 ≤ 6,5 % et ≤ 7,5 %), plus basses que celles de la GCV2 seule (≤ 9,5 % et ≤ 9 %).
+- **Le lot** perd 5 justes pour V1 (123 contre 128) : même ordre qu'au § 5.1. Sa limite (§ 2.5) reste : les voisins mixtes du lot ne sont pas recalculés.
+
+### 11.5 Ce que ces chiffres ne disent pas
+
+1. **Les variantes ont été choisies sur les cuts qui les jugent.** Un partage en zones et en rôles choisi en regardant les erreurs de chaque zone fera toujours mieux sur ces cuts que sur d'autres. La validation croisée par partie protège τ, δ et le modèle ; elle ne protège pas le choix des zones.
+2. **Les abords restent le point faible.** Ils portent 214 des 406 grosses corrections, et la règle prudente n'en corrige justes que 33 (15 %). V1 et V2 ne changent pas ce point ; V3 l'aggrave.
+3. **Une zone de plus à surveiller : le hors zone.** Il apporte des corrections justes (23) mais aussi les abîmés qui font échouer V2 et V3. Les seuils de la zone sont bas (τ de 0,3 à 0,6, § 3).
+4. **Les abîmés de V2 et de V3 viennent surtout de deux parties** : 1:16 (3 en relecture, 4 au lot) et 1:29 (2 en relecture, 1 au lot). Ils sont peu nombreux, donc fragiles à lire.
+5. **Rien n'est activé.** La décision d'activer une variante reste à Mic, après G1-c.
+
+### 11.6 Reproduire
+
+```
+nice -n 10 node tools/gcv2-apprendre.cjs valider --jeu jeu-1-12.jsonl … --usage relecture --variante V1 --variante V2 --variante V3 --sortie Vvar.json
+nice -n 10 node tools/gcv2-apprendre.cjs valider --jeu … --usage lot --variante V1 --variante V2 --variante V3 --sortie Vvar-lot.json
+node tools/gcv2-apprendre.cjs rapport --json Vvar.json
+node --test tests/gcv2-apprendre.test.cjs
+```
+
+Chaque validation prend de 13 à 17 minutes sur une machine peu chargée (un seul calcul sert aux trois variantes).

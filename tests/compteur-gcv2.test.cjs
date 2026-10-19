@@ -62,3 +62,25 @@ test('arguments : la racine de banane-data est obligatoire, le seuil de visite d
   assert.throws(() => C.lireArguments(['--donnees', '/r', '--seuil-visite', '-1']), /positive/);
   assert.equal(C.lireArguments(['--donnees', '/r']).seuil, C.SEUIL_VISITE_S);
 });
+
+test('Écho en 7z : lu dans la racine supplémentaire si elle a son dossier, refusé avec un rappel sinon ; banane-data reste la racine des autres', () => {
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cpt-'));
+  try {
+    const s7 = { id: 'z', projet: '1', partie: 9, dossiers: ['2026-01-01_x/echo (z)'], archive7z: true }, sz = { id: 'y', projet: '1', partie: 8, dossiers: ['2026-01-01_y/echo'] };
+    assert.doesNotThrow(() => C.verifierSources([s7, sz]));
+    assert.throws(() => C.verifierSources([{ ...s7, archive7z: 'oui' }]), /archive7z/);
+    assert.throws(() => C.dossiersEcho(s7, '/r', null), /7z.*--racine-supplementaire/s, 'sans extraction : refus explicite');
+    assert.throws(() => C.dossiersEcho(s7, '/r', dir), /7z/, 'racine supplémentaire sans le dossier : refus');
+    fs.mkdirSync(path.join(dir, s7.dossiers[0]), { recursive: true });
+    assert.deepEqual(C.dossiersEcho(s7, '/r', dir), [path.join(dir, s7.dossiers[0])]);
+    assert.deepEqual(C.dossiersEcho(sz, '/r', dir), [path.join('/r', 'collections', sz.dossiers[0])], 'une source ordinaire reste lue dans banane-data');
+    /* La jointure reçoit bien le dossier extrait. */
+    const vus = [];
+    const r = C.compter([s7, sz], { racine: '/r', racineSupplementaire: dir, executer: argv => { vus.push(argv[argv.indexOf('--echo') + 1]); return { table: [ligne('VALIDATE_NO_MOVEMENT')] }; } });
+    assert.deepEqual(vus, [path.join(dir, s7.dossiers[0]), path.join('/r', 'collections', sz.dossiers[0])]);
+    assert.equal(r.totaux.tous.valideSansMouvement, 2);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  assert.equal(C.lireArguments(['--donnees', '/r', '--racine-supplementaire', '/t']).supplementaire, '/t');
+  assert.equal(C.lireArguments(['--donnees', '/r']).supplementaire, null);
+});

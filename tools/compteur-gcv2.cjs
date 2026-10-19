@@ -17,7 +17,11 @@
  * pas dit le contraire, en changeant `etat` dans le fichier des sources.
  *
  *   node tools/compteur-gcv2.cjs --donnees <dossier banane-data> [--sources datasets/compteur-gcv2-sources.json]
- *        [--sortie datasets/compteur-gcv2.json] [--md fiches/COMPTEUR_GCV2.md] [--seuil-visite 0.6]
+ *        [--sortie datasets/compteur-gcv2.json] [--md fiches/COMPTEUR_GCV2.md] [--seuil-visite 0.6] [--racine-supplementaire <dossier>]
+ *
+ * Une source dont l'Écho est archivé en 7z (champ `archive7z`) n'est pas lue sur banane-data, qui n'est jamais modifié : on extrait ses segments
+ * `ariane-native-v4-*.json` dans un dossier temporaire, rangé comme les `dossiers` de la source (<temporaire>/<dossier de la source>/), et on le donne avec
+ * `--racine-supplementaire`. Ce dossier passe avant banane-data pour toute source qui y a le sien. Sans lui, une source en 7z est refusée avec ce rappel.
  *
  * Un cut compte une fois par partie (le dernier état observé, toutes visites et sessions confondues). Un même cut
  * ne peut pas être compté deux fois : les sources sont des parties distinctes.
@@ -66,14 +70,25 @@ function verifierSources(sources) {
     if (ids.has(s.id)) throw Error(`Source en double : ${s.id}`);
     ids.add(s.id);
     if (s.etat !== undefined && !ETATS.includes(s.etat)) throw Error(`État inconnu pour ${s.id} : ${s.etat}`);
+    if (s.archive7z !== undefined && typeof s.archive7z !== 'boolean') throw Error(`archive7z de ${s.id} : vrai ou faux attendu`);
   }
 }
 
-function compter(sources, { racine, seuilVisiteS = SEUIL_VISITE_S, executer = J.executer } = {}) {
+/* Dossiers Écho d'une source : d'abord ceux de la racine supplémentaire (extraction temporaire), sinon banane-data. Une source en 7z sans extraction est refusée. */
+function dossiersEcho(s, racine, racineSupp) {
+  return s.dossiers.map(d => {
+    const extrait = racineSupp ? path.join(racineSupp, d) : null;
+    if (extrait && fs.existsSync(extrait)) return extrait;
+    if (s.archive7z) throw Error(`${s.id} : l'Écho est archivé en 7z, que le compteur ne lit pas. Extraire les segments « ariane-native-v4-*.json » de « ${d} » dans <dossier>/${d}/ puis relancer avec --racine-supplementaire <dossier>.`);
+    return path.join(racine, 'collections', d);
+  });
+}
+
+function compter(sources, { racine, racineSupplementaire = null, seuilVisiteS = SEUIL_VISITE_S, executer = J.executer } = {}) {
   verifierSources(sources);
   const lignes = [];
   for (const s of sources) {
-    const echo = s.dossiers.map(d => path.join(racine, 'collections', d));
+    const echo = dossiersEcho(s, racine, racineSupplementaire);
     const sortie = executer(['--echo', ...echo, '--sans-journal', '--partie', String(s.partie), '--visite-sans-action-bonne', String(seuilVisiteS)], () => {});
     lignes.push({ id: s.id, projet: s.projet, projetCertain: s.projetCertain !== false, partie: s.partie, etat: s.etat || 'en-file', note: s.note || null, ...compterTable(sortie.table) });
   }
@@ -111,12 +126,12 @@ function enMarkdown(r) {
 }
 
 function lireArguments(argv) {
-  const a = { donnees: null, sources: null, sortie: null, md: null, seuil: SEUIL_VISITE_S };
+  const a = { donnees: null, sources: null, sortie: null, md: null, seuil: SEUIL_VISITE_S, supplementaire: null };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i], v = argv[i + 1];
-    if (k === '--donnees') { a.donnees = v; i++; } else if (k === '--sources') { a.sources = v; i++; } else if (k === '--sortie') { a.sortie = v; i++; } else if (k === '--md') { a.md = v; i++; } else if (k === '--seuil-visite') { a.seuil = Number(v); i++; } else throw Error(`Argument inconnu : ${k}`);
+    if (k === '--donnees') { a.donnees = v; i++; } else if (k === '--sources') { a.sources = v; i++; } else if (k === '--sortie') { a.sortie = v; i++; } else if (k === '--md') { a.md = v; i++; } else if (k === '--seuil-visite') { a.seuil = Number(v); i++; } else if (k === '--racine-supplementaire') { a.supplementaire = v; i++; } else throw Error(`Argument inconnu : ${k}`);
   }
-  if (!a.donnees) throw Error('Usage : node tools/compteur-gcv2.cjs --donnees <dossier banane-data> [--sources fichier.json] [--sortie fichier.json] [--md fichier.md] [--seuil-visite 0.6]');
+  if (!a.donnees) throw Error('Usage : node tools/compteur-gcv2.cjs --donnees <dossier banane-data> [--sources fichier.json] [--sortie fichier.json] [--md fichier.md] [--seuil-visite 0.6] [--racine-supplementaire dossier]');
   if (!Number.isFinite(a.seuil) || a.seuil < 0) throw Error('--seuil-visite : durée en secondes, positive');
   return a;
 }
@@ -124,7 +139,7 @@ function lireArguments(argv) {
 function main(argv) {
   const a = lireArguments(argv);
   const fichier = a.sources || path.join(__dirname, '..', 'datasets', 'compteur-gcv2-sources.json');
-  const r = compter(JSON.parse(fs.readFileSync(fichier, 'utf8')).sources, { racine: a.donnees, seuilVisiteS: a.seuil });
+  const r = compter(JSON.parse(fs.readFileSync(fichier, 'utf8')).sources, { racine: a.donnees, racineSupplementaire: a.supplementaire, seuilVisiteS: a.seuil });
   if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(r, null, 1) + '\n');
   if (a.md) fs.writeFileSync(a.md, enMarkdown(r));
   console.log(enMarkdown(r));
@@ -135,4 +150,4 @@ if (require.main === module) {
   try { main(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
 
-module.exports = { categorie, compterTable, compter, verifierSources, enMarkdown, lireArguments, appris, SEUIL_VISITE_S };
+module.exports = { dossiersEcho, categorie, compterTable, compter, verifierSources, enMarkdown, lireArguments, appris, SEUIL_VISITE_S };

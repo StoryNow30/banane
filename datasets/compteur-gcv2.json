@@ -1,6 +1,6 @@
 {
  "format": "ariane-compteur-gcv2-v1",
- "creeLe": "2026-10-19T09:02:32.598Z",
+ "creeLe": "2026-10-19T09:28:18.227Z",
  "regle": {
   "seuilVisiteS": 0.6,
   "comptes": [
@@ -186,6 +186,23 @@
    "appris": 368
   },
   {
+   "id": "p1-17",
+   "projet": "1",
+   "projetCertain": true,
+   "partie": 17,
+   "etat": "appris",
+   "note": "Écho en 7z (7 volumes, 14 segments) : extraction temporaire, voir l'en-tête de tools/compteur-gcv2.cjs",
+   "cutsEcho": 795,
+   "corriges": 507,
+   "dont5mm": 428,
+   "dont10mm": 198,
+   "valideSansMouvement": 81,
+   "visiteSansAction": 186,
+   "skips": 0,
+   "sansReference": 21,
+   "appris": 774
+  },
+  {
    "id": "p2-6",
    "projet": "2",
    "projetCertain": true,
@@ -205,15 +222,15 @@
  ],
  "totaux": {
   "tous": {
-   "cutsEcho": 4203,
-   "corriges": 1783,
-   "dont5mm": 1091,
-   "dont10mm": 559,
-   "valideSansMouvement": 472,
-   "visiteSansAction": 1373,
+   "cutsEcho": 4998,
+   "corriges": 2290,
+   "dont5mm": 1519,
+   "dont10mm": 757,
+   "valideSansMouvement": 553,
+   "visiteSansAction": 1559,
    "skips": 18,
-   "sansReference": 557,
-   "appris": 3628
+   "sansReference": 578,
+   "appris": 4402
   },
   "en-file": {
    "cutsEcho": 431,
@@ -227,28 +244,28 @@
    "appris": 378
   },
   "appris": {
-   "cutsEcho": 3772,
-   "corriges": 1631,
-   "dont5mm": 1023,
-   "dont10mm": 527,
-   "valideSansMouvement": 442,
-   "visiteSansAction": 1177,
+   "cutsEcho": 4567,
+   "corriges": 2138,
+   "dont5mm": 1451,
+   "dont10mm": 725,
+   "valideSansMouvement": 523,
+   "visiteSansAction": 1363,
    "skips": 13,
-   "sansReference": 509,
-   "appris": 3250
+   "sansReference": 530,
+   "appris": 4024
   }
  },
  "parProjet": {
   "1": {
-   "cutsEcho": 2440,
-   "corriges": 1202,
-   "dont5mm": 748,
-   "dont10mm": 335,
-   "valideSansMouvement": 323,
-   "visiteSansAction": 758,
+   "cutsEcho": 3235,
+   "corriges": 1709,
+   "dont5mm": 1176,
+   "dont10mm": 533,
+   "valideSansMouvement": 404,
+   "visiteSansAction": 944,
    "skips": 4,
-   "sansReference": 153,
-   "appris": 2283
+   "sansReference": 174,
+   "appris": 3057
   },
   "2": {
    "cutsEcho": 1763,

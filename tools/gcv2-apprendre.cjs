@@ -5,7 +5,7 @@
  * (fiches/G0_GCV2_CONCEPTION.md § 2 à 4, fiches/G1B_APPRENTISSAGE.md, D-201). Étude HORS LIGNE : rien n'est changé à l'extension, aucune action
  * dans ESV. Node pur, sans aucune dépendance.
  *
- *   node tools/gcv2-apprendre.cjs valider  --jeu JEU.jsonl [--jeu …] --usage relecture|lot [--lambda 30] [--json V.json] [--md]
+ *   node tools/gcv2-apprendre.cjs valider  --jeu JEU.jsonl [--jeu …] --usage relecture|lot [--lambda 30] [--variante V1|V2|V3 …] [--sortie V.json]
  *   node tools/gcv2-apprendre.cjs exporter --jeu JEU.jsonl [--jeu …] --sortie datasets/gcv2-parametres.json [--date AAAA-MM-JJ]
  *   node tools/gcv2-apprendre.cjs rapport  --json V1.json [--json V2.json]
  *   node tools/gcv2-apprendre.cjs essai
@@ -35,6 +35,10 @@
  * hypothèses H4 de source humaine sont retirées, et les traits d'écart aux voisins sont annulés pour les cuts dont les voisins sont humains).
  * RÉFÉRENCES, sur les mêmes cuts : (a) H0, ne rien faire ; (b) la règle prudente figée de D-180 et D-190 relue sur le jeu ; (c) le hasard (une
  * paire tirée uniformément parmi les paires permises par les garde-fous, avec le taux d'action de la GCV2 par zone).
+ *
+ * VARIANTES PAR ZONE (D-204, option `--variante`, datasets/gcv2-variantes.json). Une variante ne change ni le modèle, ni le calibrage, ni τ et δ : elle
+ * décide, pour chaque cut, qui agit, la GCV2 apprise du pli, la règle prudente figée, ou personne (H0). Jamais sur un cut rouge ni différé. Sans
+ * l'option, la sortie est celle de G1-b, octet pour octet.
  */
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const Manifeste = require('./manifeste-parties.cjs');
@@ -589,6 +593,39 @@ function reglePrudente(k, R = REGLES_PRUDENTES) {
 /* (a) H0 : ne rien faire. */
 const resultatH0 = k => ({ partie: k.partie, cut: k.cut, zone: k.zone, role: k.role, mic: k.etiq.micMaxMm, etat: 'laisse', e: null, lat: null });
 
+/* ------------------------------------------------------------------ variantes par zone (D-204) */
+const FORMAT_VARIANTES = 'ariane-gcv2-variantes-v1';
+const FICHIER_VARIANTES = path.join(__dirname, '..', 'datasets', 'gcv2-variantes.json');
+/* Lit et vérifie les variantes. Une variante n'agit que sur des verts, et la règle prudente n'y agit que dans son propre périmètre. */
+function lireVariantes(fichier = FICHIER_VARIANTES) {
+  const g = JSON.parse(fs.readFileSync(fichier, 'utf8'));
+  if (g.format !== FORMAT_VARIANTES) throw Error(`variantes : format ${FORMAT_VARIANTES} attendu`);
+  const defs = g.variantes || {}, liste = (d, quoi) => {
+    if (!d || !Array.isArray(d.zones) || !Array.isArray(d.roles)) throw Error(`variantes : « ${quoi} » doit nommer des zones et des rôles`);
+    return { zones: [...d.zones], roles: [...d.roles] };
+  };
+  const out = {};
+  for (const nom of Object.keys(defs)) {
+    const gcv2 = liste(defs[nom].gcv2, `${nom}.gcv2`), prudente = liste(defs[nom].prudente, `${nom}.prudente`);
+    for (const l of [gcv2, prudente]) {
+      if (l.zones.some(z => !ZONES.includes(z))) throw Error(`variantes : ${nom} nomme une zone inconnue`);
+      if (l.roles.some(r => r !== 'vert')) throw Error(`variantes : ${nom} ne peut agir que sur des verts (ni rouge ni différé)`);
+    }
+    if (prudente.zones.some(z => !REGLES_PRUDENTES.zones.includes(z))) throw Error(`variantes : ${nom} donne à la règle prudente une zone hors de son périmètre`);
+    out[nom] = { resume: defs[nom].resume || null, gcv2, prudente };
+  }
+  return out;
+}
+/* Résultat d'une variante pour un cut : celui de la GCV2 (`rG`), celui de la règle prudente (`rP`), ou « laisser » (H0). */
+function appliquerVariante(k, nom, rG, rP, defs = lireVariantes()) {
+  const d = defs[nom];
+  if (!d) throw Error(`variante « ${nom} » inconnue (${Object.keys(defs).join(' | ')})`);
+  const dans = l => l.zones.includes(k.zone) && l.roles.includes(k.role);
+  if (dans(d.gcv2)) return rG;
+  if (dans(d.prudente)) return rP;
+  return resultatH0(k);
+}
+
 /* ------------------------------------------------------------------ mesures */
 const COMPTEURS = ['visites', 'micSup5', 'micSup10', 'agit', 'justes', 'justes5', 'reproduit10', 'abimes', 'aggraves', 'mauvaiseVoie', 'erreurs', 'abstentions', 'laisseFaux'];
 function bilanVide() { return Object.fromEntries(COMPTEURS.map(c => [c, 0])); }
@@ -656,7 +693,9 @@ function fiabilite(paires, classes = 10) {
 }
 
 /* ------------------------------------------------------------------ validation croisée par partie */
-function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {} } = {}) {
+function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {}, variantes = [], defsVariantes } = {}) {
+  const defs = variantes.length ? (defsVariantes || lireVariantes()) : null, methodesV = Object.fromEntries(variantes.map(v => [v, []]));
+  for (const v of variantes) if (!defs[v]) throw Error(`variante « ${v} » inconnue (${Object.keys(defs).join(' | ')})`);
   const noms = parties.map(j => j.partie), casParPartie = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, usage)]));
   const methodes = { gcv2: [], prudente: [], h0: [] }, plis = [], hasard = { total: bilanVide(), perimetrePrudent: bilanVide(), parZone: Object.fromEntries(ZONES.map(z => [z, bilanVide()])), parRole: Object.fromEntries(ROLES.map(r => [r, bilanVide()])) };
   const parPartie = {}, fiab10 = [], fiab5 = [], fiabGagnants = [], coefs = [], hasardParPartie = {};
@@ -668,6 +707,7 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     const dec = test.map((k, i) => decider(k, J.p10[i], pli.seuils)), rs = test.map((k, i) => resultatDeDecision(k, dec[i]));
     const rsP = test.map(k => reglePrudente(k)), rsH = test.map(resultatH0);
     methodes.gcv2.push(...rs); methodes.prudente.push(...rsP); methodes.h0.push(...rsH);
+    const rsV = {}; for (const v of variantes) { rsV[v] = test.map((k, i) => appliquerVariante(k, v, rs[i], rsP[i], defs)); methodesV[v].push(...rsV[v]); }
     /* hasard : taux d'action de la GCV2 par zone, sur cette partie */
     const taux = {}; for (const z of ZONES) { const n = rs.filter(r => r.zone === z).length; taux[z] = n ? rs.filter(r => r.zone === z && r.etat === 'agit').length / n : 0; }
     const h = hasardEnEsperance(test, taux); hasardParPartie[jugee] = h;
@@ -681,6 +721,7 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     });
     coefs.push({ partie: jugee, noms: pli.modele.fit.noms, coef10: pli.modele.m10.coef, intercept10: pli.modele.m10.intercept });
     parPartie[jugee] = { empreinteModele: empreinteModele(pli.modele), gcv2: synthese(rs), prudente: synthese(rsP), h0: synthese(rsH), hasard: arrondiSynth(h), seuils: pli.seuils, calibrage10: pli.cal10, calibrage5: pli.cal5, nCas: test.length, nExemplesApp: pli.modele.n };
+    if (variantes.length) parPartie[jugee].variantes = Object.fromEntries(variantes.map(v => [v, synthese(rsV[v])]));
     plis.push(jugee);
     journal(`pli ${jugee} : ${test.length} cuts, ${((Date.now() - t0) / 1000).toFixed(0)} s, agit ${rs.filter(r => r.etat === 'agit').length}`);
   }
@@ -689,7 +730,8 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     nCas: noms.reduce((a, n) => a + casParPartie[n].length, 0),
     total: { gcv2: synthese(methodes.gcv2), prudente: synthese(methodes.prudente), h0: synthese(methodes.h0), hasard: arrondiHasard },
     parPartie, calibrage: { p10: fiabilite(fiab10), p5: fiab5.length ? fiabilite(fiab5) : null, gagnants: fiabilite(fiabGagnants.map(([p, y]) => [p, y])), gagnantsHorsH0: fiabilite(fiabGagnants.filter(g => !g[2]).map(([p, y]) => [p, y])) },
-    coefficients: resumeCoefficients(coefs) };
+    coefficients: resumeCoefficients(coefs),
+    ...(variantes.length ? { variantes: Object.fromEntries(variantes.map(v => [v, synthese(methodesV[v])])), variantesDef: Object.fromEntries(variantes.map(v => [v, defs[v]])) } : {}) };
 }
 /* Empreinte de tout ce qu'un modèle a appris : colonnes, normalisation, vocabulaires, coefficients. */
 function empreinteModele(m) {
@@ -780,16 +822,42 @@ function rapport(V) {
   for (const p of V.parties) L.push(`${p} | ${ZONES.map(z => { const s = V.parPartie[p].seuils[z]; return s.actif ? `${s.tau} ; ${s.delta}` : 'inactive'; }).join(' | ')}`);
   L.push('', '### Traits dominants (coefficient moyen sur les plis, traits normalisés)', '', 'trait | coefficient moyen | plis de même signe', '---|--:|--:');
   for (const c of V.coefficients.slice(0, 20)) L.push(`${c.nom} | ${c.moyenne} | ${Math.round(100 * c.memeSigne)} %`);
+  if (V.variantes) L.push('', rapportVariantes(V));
+  return L.join('\n');
+}
+/* Les variantes par zone (D-204), mêmes cuts et mêmes plis que le rapport de base : variante, règle prudente seule, GCV2 seule, hasard et H0. */
+function rapportVariantes(V) {
+  const L = [], oui = x => x ? 'oui' : 'NON', p1 = x => x == null ? '—' : (Math.round(1000 * x) / 10).toString().replace('.', ',') + ' %';
+  const liste = l => l.zones.length && l.roles.length ? `${l.zones.join(', ')} (${l.roles.join(', ')})` : 'rien';
+  for (const nom of Object.keys(V.variantes)) {
+    const S = V.variantes[nom], d = V.variantesDef[nom], tete = `méthode | ${ENTETE} | Wilson haut`, ligne = '---|' + '--:|'.repeat(10) + '---';
+    L.push(`## Variante ${nom} — usage « ${V.usage} » (${V.nCas} cuts jugés, ${V.parties.length} plis)`, '', `GCV2 : ${liste(d.gcv2)} ; règle prudente : ${liste(d.prudente)} ; partout ailleurs : rien. τ et δ : ceux appris dans chaque pli.`, '');
+    L.push(`### Total, ${nom} contre les références (mêmes cuts)`, '', tete, ligne);
+    for (const [nomM, b] of [[nom, S.total], ['règle prudente seule', V.total.prudente.total], ['GCV2 seule', V.total.gcv2.total], ['hasard', V.total.hasard.total], ['H0 (ne rien faire)', V.total.h0.total]]) L.push(`${nomM} | ${LIGNE(b)} | ${wilsonTexte(b)}`);
+    L.push('', `### Dans le périmètre de la règle prudente (verts de PN, ADV et abords), ${nom}`, '', tete, ligne);
+    for (const [nomM, b] of [[nom, S.perimetrePrudent], ['règle prudente seule', V.total.prudente.perimetrePrudent], ['GCV2 seule', V.total.gcv2.perimetrePrudent]]) L.push(`${nomM} | ${LIGNE(b)} | ${wilsonTexte(b)}`);
+    L.push('', `### Par zone (${nom} | règle prudente seule | GCV2 seule)`, '', `zone | méthode | ${ENTETE}`, '---|---|' + '--:|'.repeat(10));
+    for (const z of ZONES) for (const [nomM, b] of [[nom, S.parZone[z]], ['règle prudente', V.total.prudente.parZone[z]], ['GCV2 seule', V.total.gcv2.parZone[z]]]) L.push(`${z} | ${nomM} | ${LIGNE(b)}`);
+    L.push('', `### Par rôle du cut (${nom} | règle prudente seule | GCV2 seule)`, '', `rôle | méthode | ${ENTETE}`, '---|---|' + '--:|'.repeat(10));
+    for (const o of ROLES) for (const [nomM, b] of [[nom, S.parRole[o]], ['règle prudente', V.total.prudente.parRole[o]], ['GCV2 seule', V.total.gcv2.parRole[o]]]) L.push(`${o} | ${nomM} | ${LIGNE(b)}`);
+    L.push('', `### Par partie jugée (${nom} | règle prudente)`, '', `partie | ${ENTETE} | règle prudente : agit | justes | abîmés | mauvaise voie`, '---|' + '--:|'.repeat(10) + '--:|--:|--:|--:');
+    for (const q of V.parties) { const g = V.parPartie[q].variantes[nom].total, r = V.parPartie[q].prudente.total; L.push(`${q} | ${LIGNE(g)} | ${nb(r.agit)} | ${nb(r.justes)} | ${nb(r.abimes)} | ${nb(r.mauvaiseVoie)}`); }
+    const P = porte({ total: { gcv2: S, prudente: V.total.prudente } });
+    L.push('', `### Porte du plan, ${nom} (0 mauvaise voie, erreur ≤ 9 %, corrections justes ≥ règle prudente, abîmés ≤ règle prudente)`, '', 'lecture | 0 mauvaise voie | erreur ≤ 9 % | borne de Wilson ≤ 9 % | justes ≥ prudente | abîmés ≤ prudente | porte tenue', '---|---|---|---|---|---|---');
+    for (const [nomL, o, t] of [['tous les cuts', P.tout, P.tenue], ['périmètre de la règle prudente', P.perimetre, P.tenuePerimetre]]) L.push(`${nomL} | ${oui(o.mauvaiseVoie)} (${nb(o.valeurs.gcv2.mauvaiseVoie)}) | ${oui(o.erreur)} (${p1(o.erreurTaux)}) | ${oui(o.borneHaute)} (≤ ${p1(o.wilsonHaut)}) | ${oui(o.justes)} (${nb(o.valeurs.gcv2.justes)} contre ${nb(o.valeurs.prudente.justes)}) | ${oui(o.abimes)} (${nb(o.valeurs.gcv2.abimes)} contre ${nb(o.valeurs.prudente.abimes)}) | ${oui(t)}`);
+    L.push('');
+  }
   return L.join('\n');
 }
 
 /* ------------------------------------------------------------------ ligne de commande */
 function args(argv) {
-  const o = { jeux: [], jsons: [] };
+  const o = { jeux: [], jsons: [], variantes: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--jeu') o.jeux.push(argv[++i]); else if (a === '--json') o.jsons.push(argv[++i]); else if (a === '--usage') o.usage = argv[++i];
     else if (a === '--lambda') o.lambda = Number(argv[++i]); else if (a === '--sortie') o.sortie = argv[++i]; else if (a === '--date') o.date = argv[++i];
+    else if (a === '--variante') o.variantes.push(...String(argv[++i]).split(',').map(x => x.trim()).filter(Boolean));
     else if (a === '--sans-accord') o.accord = false; else if (a === '--erreur-max') o.erreurMax = Number(argv[++i]); else if (!o.mode) o.mode = a; else throw Error(`argument inconnu : ${a}`);
   }
   return o;
@@ -802,7 +870,7 @@ function main(argv) {
     const cible = { ...CIBLE, ...(a.erreurMax ? { erreurMax: a.erreurMax } : {}) };
     if (a.mode === 'valider') {
       if (!a.usage) throw Error('--usage relecture|lot attendu');
-      const V = validationCroisee(parties, { usage: a.usage, lambda: a.lambda || LAMBDA, accord: a.accord !== false, cible, journal });
+      const V = validationCroisee(parties, { usage: a.usage, lambda: a.lambda || LAMBDA, accord: a.accord !== false, cible, journal, variantes: [...new Set(a.variantes)] });
       if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(V)); process.stdout.write(rapport(V) + '\n');
     } else {
       if (!a.sortie) throw Error('--sortie datasets/gcv2-parametres.json attendu');
@@ -823,5 +891,6 @@ module.exports = {
   pairesPermises, paireValide, ecartementPaire, ajusterCodage, coder, matrice, ajusterLogistique, ajusterArbres, scoresArbres, platt, appliquerPlatt, exemples, poidsParPartie, entrainer, scorer, parCas,
   meilleurePaire, decider, choisirSeuils, apprendrePli, jugerPli, reglePrudente, reglesPrudentesDuDepot, poseChaineH, resultatH0, resultatDeDecision, bilanDe, synthese, hasardEnEsperance,
   fiabilite, porte, validationCroisee, exporter, serialiser, listeBlancheExportable, rapport,
+  FORMAT_VARIANTES, FICHIER_VARIANTES, lireVariantes, appliquerVariante, rapportVariantes, args,
 };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`gcv2-apprendre : ${e.message}\n`); process.exit(1); } }

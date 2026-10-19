@@ -8,8 +8,11 @@
  *  - GARDE-FOUS : une paire de mauvaise voie est écartée même avec un score de 1 ;
  *  - USAGES : le « lot » retire les hypothèses H4 de source humaine ;
  *  - RÉFÉRENCES : la règle prudente est celle des réglages figés, le hasard a le taux d'action de la GCV2 ;
- *  - EXPORT : reproductible octet pour octet, sans coordonnée ni ligne d'exemple. */
+ *  - EXPORT : reproductible octet pour octet, sans coordonnée ni ligne d'exemple ;
+ *  - VARIANTES PAR ZONE (D-204) : une variante n'agit jamais sur un rouge ni un différé, ni hors de ses zones ; sans l'option `--variante`, la sortie est
+ *    celle de G1-b, octet pour octet. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
 const F = require('./helpers/gcv2-apprendre-fixture.cjs');
 const A = require('../tools/gcv2-apprendre.cjs');
@@ -287,4 +290,101 @@ test('rapport : tableaux de validation croisée lisibles', () => {
   for (const mot of ['Usage « lot »', 'règle prudente', 'hasard', 'H0 (ne rien faire)', 'Par zone', 'Calibrage', 'Traits dominants', 'Seuils par pli']) assert.ok(t.includes(mot), mot);
   assert.equal(V.calibrage.p10.classes.length, 10);
   assert.ok(V.total.gcv2.total.visites === V.nCas && V.total.prudente.total.visites === V.nCas && V.total.h0.total.visites === V.nCas && Math.abs(V.total.hasard.total.visites - V.nCas) < 1e-9, 'mêmes cuts pour toutes les méthodes');
+});
+
+/* ------------------------------------------------------------------ variantes par zone (D-204) */
+const ZV = v => ({ gcv2: v.gcv2.zones, prudente: v.prudente.zones });
+test('variantes : le fichier dit V1, V2 et V3 comme D-204, sans coefficient, et refuse un rôle rouge ou différé', () => {
+  const D = A.lireVariantes();
+  assert.deepEqual(Object.keys(D), ['V1', 'V2', 'V3']);
+  assert.deepEqual(ZV(D.V1), { gcv2: ['pn', 'adv'], prudente: ['abords'] });
+  assert.deepEqual(ZV(D.V2), { gcv2: ['pn', 'adv', 'hors'], prudente: ['abords'] });
+  assert.deepEqual(ZV(D.V3), { gcv2: ['pn', 'adv', 'liste', 'hors'], prudente: [] });
+  for (const v of Object.values(D)) assert.deepEqual(v.gcv2.roles, ['vert']);
+  const brut = JSON.parse(fs.readFileSync(A.FICHIER_VARIANTES, 'utf8'));
+  assert.equal(brut.format, A.FORMAT_VARIANTES);
+  const nombres = []; (function parcours(o) { if (typeof o === 'number') nombres.push(o); else if (o && typeof o === 'object') Object.values(o).forEach(parcours); })(brut);
+  assert.deepEqual(nombres, [], 'aucun coefficient dans le fichier des variantes');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'var-'));
+  try {
+    const ecrire = (nom, v) => { const f = path.join(dir, nom); fs.writeFileSync(f, JSON.stringify({ format: A.FORMAT_VARIANTES, variantes: { X: v } })); return f; };
+    assert.throws(() => A.lireVariantes(ecrire('a.json', { gcv2: { zones: ['pn'], roles: ['vert', 'differe'] }, prudente: { zones: [], roles: [] } })), /ni rouge ni différé/);
+    assert.throws(() => A.lireVariantes(ecrire('b.json', { gcv2: { zones: ['pn'], roles: ['rouge'] }, prudente: { zones: [], roles: [] } })), /ni rouge ni différé/);
+    assert.throws(() => A.lireVariantes(ecrire('c.json', { gcv2: { zones: ['ailleurs'], roles: ['vert'] }, prudente: { zones: [], roles: [] } })), /zone inconnue/);
+    assert.throws(() => A.lireVariantes(ecrire('d.json', { gcv2: { zones: ['pn'], roles: ['vert'] }, prudente: { zones: ['hors'], roles: ['vert'] } })), /hors de son périmètre/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('variantes : jamais sur un différé ni sur un rouge, ni hors de leurs zones, même si la GCV2 et la règle prudente agissent partout', () => {
+  const D = A.lireVariantes(), cas = A.construireCas(jeu({ partie: '9:1', graine: 11, cuts: 120 }), 'relecture');
+  /* La GCV2 « agit » sur tous les cuts (pose parfaite) ; la règle prudente est la vraie. */
+  const rG = cas.map(k => ({ ...A.resultatH0(k), etat: 'agit', e: 0, lat: 0 })), rP = cas.map(k => A.reglePrudente(k));
+  assert.ok(cas.some(k => k.role === 'differe') && cas.some(k => k.role === 'rouge') && cas.some(k => k.zone === 'abords') && cas.some(k => k.zone === 'hors'), 'la fixture a de quoi tester');
+  assert.ok(rP.some(r => r.etat === 'agit' && r.zone === 'abords'), 'la règle prudente agit quelque part aux abords');
+  for (const nom of Object.keys(D)) {
+    cas.forEach((k, i) => {
+      const r = A.appliquerVariante(k, nom, rG[i], rP[i], D);
+      const attendu = k.role === 'vert' && D[nom].gcv2.zones.includes(k.zone) ? rG[i] : k.role === 'vert' && D[nom].prudente.zones.includes(k.zone) ? rP[i] : null;
+      if (attendu) assert.equal(r, attendu, `${nom} ${k.zone} ${k.role}`);
+      else { assert.equal(r.etat, 'laisse', `${nom} ne fait rien sur ${k.zone}/${k.role}`); assert.equal(r.e, null); }
+      if (r.etat === 'agit') assert.equal(k.role, 'vert', `${nom} n'agit que sur un vert`);
+    });
+  }
+  /* Cas précis. */
+  const un = (zone, role) => { const c = cas.find(x => x.zone === zone && x.role === role); assert.ok(c, `${zone}/${role}`); return c; };
+  const rg = c => ({ ...A.resultatH0(c), etat: 'agit', e: 0, lat: 0 }), rp = c => ({ ...A.resultatH0(c), etat: 'agit', e: 1, lat: 0 });
+  assert.equal(A.appliquerVariante(un('pn', 'vert'), 'V1', rg(un('pn', 'vert')), rp(un('pn', 'vert')), D).e, 0, 'V1 : GCV2 en PN');
+  assert.equal(A.appliquerVariante(un('abords', 'vert'), 'V1', rg(un('abords', 'vert')), rp(un('abords', 'vert')), D).e, 1, 'V1 : règle prudente aux abords');
+  assert.equal(A.appliquerVariante(un('hors', 'vert'), 'V1', rg(un('hors', 'vert')), rp(un('hors', 'vert')), D).etat, 'laisse', 'V1 : rien hors zone');
+  assert.equal(A.appliquerVariante(un('hors', 'vert'), 'V2', rg(un('hors', 'vert')), rp(un('hors', 'vert')), D).e, 0, 'V2 : GCV2 hors zone');
+  assert.equal(A.appliquerVariante(un('abords', 'vert'), 'V3', rg(un('abords', 'vert')), rp(un('abords', 'vert')), D).etat, 'laisse', 'V3 : rien aux abords');
+  assert.equal(A.appliquerVariante(un('pn', 'differe'), 'V3', rg(un('pn', 'differe')), rp(un('pn', 'differe')), D).etat, 'laisse', 'V3 : rien sur un différé');
+  assert.throws(() => A.appliquerVariante(cas[0], 'V9', rG[0], rP[0], D), /inconnue/);
+});
+
+test('variantes : validation croisée, bilans par zone et par rôle conformes à D-204', () => {
+  for (const usage of ['relecture', 'lot']) {
+    const V = A.validationCroisee(trois(), { usage, lambda: 10, variantes: ['V1', 'V2', 'V3'] }), S = V.variantes;
+    assert.deepEqual(Object.keys(S), ['V1', 'V2', 'V3']);
+    for (const nom of Object.keys(S)) {
+      const s = S[nom];
+      assert.equal(s.total.visites, V.nCas, 'mêmes cuts'); assert.equal(s.parRole.differe.agit + s.parRole.differe.abstentions, 0, `${nom} : rien sur les différés`);
+      assert.equal(s.parRole.rouge.agit + s.parRole.rouge.abstentions, 0, `${nom} : rien sur les rouges`);
+      assert.equal(s.parZone.liste.agit, 0);
+      for (const p of V.parties) assert.equal(V.parPartie[p].variantes[nom].parRole.differe.agit, 0);
+    }
+    /* Zone par zone : PN et ADV identiques dans les trois variantes (GCV2) ; les abords sont la règle prudente en V1 et V2 (elle n'agit que sur des verts),
+     * rien en V3 ; hors zone, rien en V1, la GCV2 en V2 et V3. */
+    assert.deepEqual(S.V1.parZone.pn, S.V2.parZone.pn); assert.deepEqual(S.V2.parZone.pn, S.V3.parZone.pn);
+    assert.deepEqual(S.V1.parZone.adv, S.V2.parZone.adv); assert.deepEqual(S.V2.parZone.adv, S.V3.parZone.adv);
+    assert.equal(S.V1.parZone.hors.agit + S.V1.parZone.hors.abstentions, 0, 'V1 : rien hors zone'); assert.deepEqual(S.V2.parZone.hors, S.V3.parZone.hors);
+    assert.deepEqual(S.V1.parZone.abords, S.V2.parZone.abords);
+    assert.equal(S.V1.parZone.abords.agit, V.total.prudente.parZone.abords.agit, 'V1 : aux abords, les actions de la règle prudente');
+    assert.ok(S.V1.parZone.abords.agit > 0, 'V1 : la règle prudente agit aux abords');
+    assert.equal(S.V3.parZone.abords.agit + S.V3.parZone.abords.abstentions, 0, 'V3 : rien aux abords');
+    assert.equal(S.V2.total.agit, S.V1.total.agit + S.V2.parZone.hors.agit, 'V2 = V1 plus le hors zone');
+    assert.equal(S.V3.total.agit, S.V2.total.agit - S.V2.parZone.abords.agit, 'V3 = V2 moins les abords');
+    for (const nom of Object.keys(S)) assert.equal(S[nom].parRole.vert.agit, S[nom].total.agit, `${nom} : tout agit sur des verts`);
+    assert.ok(A.rapport(V).includes('Variante V1') && A.rapport(V).includes('Porte du plan, V3'));
+  }
+});
+
+test('variantes : sans l\'option, la sortie est celle de G1-b, octet pour octet', () => {
+  /* Empreintes du rapport par défaut sur le jeu synthétique, relevées avant l'ajout de l'option (G1-b, d1ea7c5). */
+  const OR = { relecture: 'af79acff69a3e55ccf4e2bfd5bb95af0f755759912dd55161f444aeeb2bef5ea', lot: 'd7c25c90238961eba249d0acdc5d7ad3e946ad9f19c0582f217a50e7114d9a81' };
+  const sha = t => crypto.createHash('sha256').update(t).digest('hex');
+  for (const usage of ['relecture', 'lot']) {
+    const V0 = A.validationCroisee(trois(), { usage, lambda: 10 }), V1 = A.validationCroisee(trois(), { usage, lambda: 10, variantes: [] });
+    assert.equal(sha(A.rapport(V0)), OR[usage], `rapport par défaut (${usage})`);
+    assert.equal(JSON.stringify(V1), JSON.stringify(V0), 'une liste vide de variantes ne change rien');
+    assert.equal('variantes' in V0, false); for (const p of V0.parties) assert.equal('variantes' in V0.parPartie[p], false);
+    /* Avec une variante : tout ce qui existait est identique, la variante s'ajoute. */
+    const Vv = A.validationCroisee(trois(), { usage, lambda: 10, variantes: ['V1', 'V3'] }), R0 = A.rapport(V0);
+    const nu = JSON.parse(JSON.stringify(Vv)); delete nu.variantes; delete nu.variantesDef; for (const p of nu.parties) delete nu.parPartie[p].variantes;
+    assert.equal(JSON.stringify(nu), JSON.stringify(V0), 'le contenu de base ne bouge pas');
+    assert.ok(A.rapport(Vv).startsWith(R0 + '\n\n## Variante V1'), 'le rapport de base reste en tête, octet pour octet');
+  }
+  /* Ligne de commande : --variante est répétable ou en liste. */
+  assert.deepEqual(A.args(['valider', '--usage', 'lot']).variantes, []);
+  assert.deepEqual(A.args(['valider', '--variante', 'V1', '--variante', 'V2,V3']).variantes, ['V1', 'V2', 'V3']);
 });
