@@ -2842,3 +2842,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Test 8** : Mic l'utilise cet après-midi. Les parties 0 à 5 du projet 2 ne seront pas fournies.
 - **Format des notes** de zones : validé par Mic.
 - **RM-11, raison de la correction** : « si c'est bien fait, pourquoi pas ». D'abord une conception (maquette du panneau, gestes, temps ajouté), soumise à Mic avant tout code ; rien ne change dans la test 8.
+
+## D-207 — Mic : « la GCV2 doit se nourrir de toutes les situations, notamment les plus complexes » ; chantier H6 « voie décalée » lancé au niveau fort (19 octobre 2026)
+
+- **Mic**, sur la zone 2 de 2:1 (voie entière décalée de 13 à 25 cm) : « D'accord, mets-les en apprentissage ; n'hésite pas à utiliser le modèle le plus fort, voire le plus fort de tous si ça bloque vraiment. La GCV2 doit se nourrir de toutes les situations et notamment les plus complexes. »
+- **Lecture** : 2:1 est déjà une partie d'apprentissage, mais la GCV2 ne peut rien apprendre de ces 53 cuts, parce qu'aucune de ses hypothèses ne les atteint (G1-a) et que V1 exclut les cuts différés (D-205). Il faut donc **une hypothèse qui les atteigne** et **une décision qui puisse agir sur les différés sans mauvaise voie**.
+- **Chantier H6** (`claude/50-g1-h6`, depuis `claude/50-g1b-apprendre`), **niveau fort** (D-207, accord de Mic ; il touche l'anti-fuite et le garde-fou de mauvaise voie) :
+  1. hypothèse **H6 « voie décalée »** : la paire de départ translatée du décalage latéral et vertical d'un voisin sûr récent (même règle de temps que H4 : validé avant la première visite du cut, ou validé par le lot), et la translation lissée sur la série ;
+  2. **garde-fou de voie** relatif à la voie de référence de la série (et non plus à la seule pose de départ) pour les différés ; 0 mauvaise voie reste la porte ;
+  3. jeux reconstruits, rappel atteignable (zone 2 de 2:1 en particulier), essai anti-fuite étendu ;
+  4. validation croisée G1-b relancée avec H6 et une variante **V1+** (V1 plus les différés sous le nouveau garde-fou).
+- 2:6 et 2:7 restent réservées pour le jugement à l'aveugle (G1-c) ; elles passeront en apprentissage juste après.
