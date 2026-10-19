@@ -95,11 +95,14 @@ Fichiers JSON lignes hors dépôt (une ligne par cut traité : sort réel du lot
 | 2:18 eb1d9bc2 | base, L1, L1-v | `10e8f38a0d2d0c90d3f656d19649b5a3e2c8f44b95e7097b3cb9c676f31d9367` |
 | 2:19 7f46bbc5 (partie 19 du 19/10, projet non confirmé) | base, L1, L1-v | `2c66542ba9cda418dd5c7f1ffbf3a983fca3c0ea70425db27aa6f6fc04918d8f` |
 | 2:19 7f46bbc5 | base, L1-s | `26ed3e70deedb141e3e236dc1ee22adb43c739d889b9c806a28456fa1324f3ac` |
+| 2:17 bfb15534 | base, L1-s | `e63c9c9d3f1d1132c32d1755aff00b538cee74b5ec41bba5808cb51aebdcc71e` |
+| 2:18 eb1d9bc2 | base, L1-s | `9661afc63e35260a53026aec08db8787c56fcb35718caf80c5a8fefcd877e14c` |
 
 ### 4.1 Chiffres sans vérité
 
 **2:17** (139 cuts, 41 différés réels, 32 en ADV) : L1 pose et valide 11, pose sans valider 13, laisse 17 (11 à plus de 150 mm) ; L1-v valide 31, laisse 10. Cuts posés par le lot : 94 sur 95 comparables à 2 mm près sous L1, 3 laissés.
 **2:18** (214 cuts, 37 différés réels, 30 en ADV) : L1 valide 17, sans valider 4, laisse 16 ; L1-v valide 26, laisse 11. Cuts posés par le lot : 153 à 2 mm, 6 à plus de 10 mm (jusqu'à 42,2 mm), 12 laissés ; vue déplacée 9 fois.
+**Sous L1-s** : 2:17 : valide 11, sans valider 14, laisse 16 (8 à plus de 150 mm, 8 départ le plus probable) ; les 98 cuts posés par le lot le sont à l'identique ; vue déplacée 4 fois. 2:18 : valide 12, sans valider 7, laisse 18 ; les 177 cuts posés par le lot à l'identique ; vue déplacée 6 fois.
 
 **2:19** (348 cuts traités, 103 posés, 245 différés dont 243 en ADV, 1 aux abords, 1 sans nuage) :
 
