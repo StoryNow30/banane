@@ -1,6 +1,6 @@
 {
   "format": "ariane-compteur-gcv2-sources-v1",
-  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que Mic n'a pas confirmé l'entraînement (D-188).",
+  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que Mic n'a pas confirmé l'entraînement (D-188). Les parties apprises par la GCV2 (G1-b, datasets/gcv2-parametres.json) sont à l'état « appris » ; p1-17 a servi à l'apprentissage mais n'est pas une source du compteur.",
   "sources": [
     {
       "id": "p1-24",
@@ -8,7 +8,8 @@
       "partie": 24,
       "dossiers": [
         "2026-10-15_v4.9.0.20_parties-24-28/echo p24 17h26"
-      ]
+      ],
+      "etat": "appris"
     },
     {
       "id": "p1-12",
@@ -17,7 +18,8 @@
       "dossiers": [
         "2026-10-16_v4.9.5.3_partie-12-operateur/echo p12 10h02"
       ],
-      "note": "partie d'un opérateur débutant relue par Mic"
+      "note": "partie d'un opérateur débutant relue par Mic",
+      "etat": "appris"
     },
     {
       "id": "p1-13",
@@ -26,7 +28,8 @@
       "dossiers": [
         "2026-10-16_v4.9.5.3_partie-13-operateur/echo p13 10h20"
       ],
-      "note": "partie d'un opérateur débutant relue par Mic"
+      "note": "partie d'un opérateur débutant relue par Mic",
+      "etat": "appris"
     },
     {
       "id": "p1-29",
@@ -35,7 +38,8 @@
       "dossiers": [
         "2026-10-16_v4.9.5.3_partie-29/echo p29 session 1 08h40",
         "2026-10-16_v4.9.5.3_partie-29/echo p29 session 2 09h22"
-      ]
+      ],
+      "etat": "appris"
     },
     {
       "id": "p2-1",
@@ -43,7 +47,8 @@
       "partie": 1,
       "dossiers": [
         "2026-10-16_v4.9.5.3_projet2-partie-1/echo p1 11h"
-      ]
+      ],
+      "etat": "appris"
     },
     {
       "id": "p2-10",
@@ -51,7 +56,8 @@
       "partie": 10,
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-10/echo p10 19h26"
-      ]
+      ],
+      "etat": "appris"
     },
     {
       "id": "p2-11",
@@ -59,7 +65,8 @@
       "partie": 11,
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-11/echo p11 12h32"
-      ]
+      ],
+      "etat": "appris"
     },
     {
       "id": "p1-14",
@@ -68,7 +75,8 @@
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-14/echo p14 18h27"
       ],
-      "note": "opérateur débutant selon Mic"
+      "note": "opérateur débutant selon Mic",
+      "etat": "appris"
     },
     {
       "id": "p1-15",
@@ -77,7 +85,8 @@
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-15/echo p15 18h35"
       ],
-      "note": "export final non envoyé : segments 11 à 18 et 32 absents, compte partiel"
+      "note": "export final non envoyé : segments 11 à 18 et 32 absents, compte partiel",
+      "etat": "appris"
     },
     {
       "id": "p1-16",
@@ -86,7 +95,8 @@
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-16/echo p16 19h04"
       ],
-      "note": "opérateur débutant selon Mic"
+      "note": "opérateur débutant selon Mic",
+      "etat": "appris"
     },
     {
       "id": "p2-6",
