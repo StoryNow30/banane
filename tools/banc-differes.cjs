@@ -217,10 +217,12 @@ function lireRejeux(textes) {
  * `D.juge` : pose de départ vérifiée à 2 mm, nuage, cut que nul autre lot n'a posé ensuite. `memeSeance` : Écho de la même séance (règle de la
  * fiche, § 2.16). D-220 (Mic : chaque changement de pose est définitif dans ESV) : un différé est jugeable quel que soit le délai tant qu'aucune
  * autre écriture n'a touché le cut ; les jugés d'une autre séance sont donc gardés, marqués, et comptés à part. */
+/* Parties à prédiction scellée (2:17, 2:18) : aucune vérité n'y est jointe, même si un fichier de jugés est donné (aucun Écho de ces parties n'est lu). */
+const SANS_VERITE = Object.freeze(['2:17', '2:18']);
 function lireJuges(textes) {
   const out = new Map();
   for (const x of textes) for (const o of lireJsonl(x)) {
-    if (o.type !== 'differe' || !D.juge(o) || o.temoin) continue;
+    if (o.type !== 'differe' || SANS_VERITE.includes(o.partie) || !D.juge(o) || o.temoin) continue;
     out.set(`${o.partie}|${o.lot}|${o.cut}`, { depart: Math.max(...SIDES.map(s => norme(o.mic.rails[s]))), mic: o.mic.rails, motif: o.motif ? o.motif.code : null, zone: o.zone, memeSeance: o.echoMemeSeance !== false });
   }
   return out;
@@ -410,7 +412,7 @@ function main(argv) {
   } else throw Error('mode : rejouer | predire | agreger | comparer');
 }
 
-module.exports = { FORMAT, FORMAT_SYNTHESE, FORMAT_COMPARAISON, VERSION, PROFILS, chargerCaptures, avecNuage, lotReel, rejouerLot, lireRejeux, lireJuges, compter, stats, erreurProfil, agreger, syntheseMd,
+module.exports = { SANS_VERITE, FORMAT, FORMAT_SYNTHESE, FORMAT_COMPARAISON, VERSION, PROFILS, chargerCaptures, avecNuage, lotReel, rejouerLot, lireRejeux, lireJuges, compter, stats, erreurProfil, agreger, syntheseMd,
   resumePrediction, comparer, args, main };
 
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`banc-differes : ${e.message}\n`); process.exitCode = 1; } }
