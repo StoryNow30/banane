@@ -6,7 +6,7 @@
  * dans ESV. Node pur, sans aucune dépendance.
  *
  *   node tools/gcv2-apprendre.cjs valider  --jeu JEU.jsonl [--jeu …] --usage relecture|lot [--lambda 30] [--variante V1|V2|V3 …] [--sortie V.json]
- *   node tools/gcv2-apprendre.cjs exporter --jeu JEU.jsonl [--jeu …] --sortie datasets/gcv2-parametres.json [--date AAAA-MM-JJ]
+ *   node tools/gcv2-apprendre.cjs exporter --jeu JEU.jsonl [--jeu …] [--jeu-lot JEU-LOT.jsonl …] [--garde-voie] --sortie datasets/gcv2-parametres.json [--date AAAA-MM-JJ]
  *   node tools/gcv2-apprendre.cjs rapport  --json V1.json [--json V2.json]
  *   node tools/gcv2-apprendre.cjs essai
  *
@@ -814,7 +814,7 @@ function resumeCoefficients(plis) {
 }
 
 /* ------------------------------------------------------------------ export des paramètres */
-function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {}, gardeVoie = false } = {}) {
+function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {}, gardeVoie = false, partiesLot = null } = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) throw Error('exporter : --date AAAA-MM-JJ attendue');
   const h6 = parties.some(j => j.entete && j.entete.h6);
   const noms = parties.map(j => j.partie), out = { format: FORMAT_PARAMS, version: VERSION, date, graine: GRAINE, lambda, accord,
@@ -822,9 +822,11 @@ function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, acc
     parties: noms.map(n => ({ partie: n, sha256: parties.find(j => j.partie === n).sha256 })), garde: { ...GARDES, contratMm: [...GARDES.contratMm] },
     cible: { ...CIBLE }, listeBlanche: listeBlancheExportable(accord, h6), interdits: [...INTERDITS], usages: {} };
   if (h6) out.h6 = { ...parties.find(j => j.entete && j.entete.h6).entete.h6 };
+  /* Jeux « lot » générés sans appui humain (audit F3) : l'usage lot apprend sur eux. */
+  if (partiesLot) out.partiesLot = partiesLot.map(j => ({ partie: j.partie, sha256: j.sha256 }));
   if (gardeVoie) out.garde.voie = { roles: ['differe'], reference: 'médiane rail par rail des décalages des voisins sûrs (H6), sûre si 2 voisins au moins et une étendue latérale de 50 mm au plus', lateralMaxMm: GARDES.lateralMaxMm, deversMaxMm: GARDES.deversMaxMm, sansReference: 'aucune paire permise' };
   for (const usage of usages) {
-    const cas = parties.flatMap(j => construireCas(j, usage, { gardeVoie })), t0 = Date.now();
+    const cas = (usage === 'lot' && partiesLot ? partiesLot : parties).flatMap(j => construireCas(j, usage, { gardeVoie })), t0 = Date.now();
     /* Calibrage et seuils : sur les scores hors-échantillon de toutes les parties (une partie jugée par un modèle qui ne l'a pas vue). */
     const pli = apprendrePli(cas, { lambda, accord, cible });
     out.usages[usage] = {
@@ -947,7 +949,7 @@ function args(argv) {
   const o = { jeux: [], jsons: [], variantes: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === '--jeu') o.jeux.push(argv[++i]); else if (a === '--json') o.jsons.push(argv[++i]); else if (a === '--usage') o.usage = argv[++i];
+    if (a === '--jeu') o.jeux.push(argv[++i]); else if (a === '--jeu-lot') (o.jeuxLot = o.jeuxLot || []).push(argv[++i]); else if (a === '--json') o.jsons.push(argv[++i]); else if (a === '--usage') o.usage = argv[++i];
     else if (a === '--lambda') o.lambda = Number(argv[++i]); else if (a === '--sortie') o.sortie = argv[++i]; else if (a === '--date') o.date = argv[++i];
     else if (a === '--variante') o.variantes.push(...String(argv[++i]).split(',').map(x => x.trim()).filter(Boolean));
     else if (a === '--variantes') o.fichierVariantes = argv[++i]; else if (a === '--garde-voie') o.gardeVoie = true;
@@ -969,7 +971,8 @@ function main(argv) {
     } else {
       if (!a.sortie) throw Error('--sortie datasets/gcv2-parametres.json attendu');
       const date = a.date || new Date().toISOString().slice(0, 10);
-      fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal, ...(a.gardeVoie ? { gardeVoie: true } : {}) })));
+      fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal, ...(a.gardeVoie ? { gardeVoie: true } : {}),
+        ...(a.jeuxLot ? { partiesLot: a.jeuxLot.map(f => lireJeuFichier(f)) } : {}) })));
       process.stdout.write(`écrit ${a.sortie}\n`);
     }
   } else if (a.mode === 'rapport') {

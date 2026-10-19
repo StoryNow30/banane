@@ -545,3 +545,13 @@ test('mesures de voie séparées (audit H2) : erreur finale > 50 mm, amplitude d
   assert.ok(A.rapport(V).includes('Mesures de voie, séparées'));
   assert.equal(A.rapport(A.validationCroisee(parties, { usage: 'relecture', lambda: 10 })).includes('Mesures de voie'), false);
 });
+
+test('export H6 : l\'usage lot apprend sur les jeux « lot » générés sans appui humain', () => {
+  const rel = [1, 2, 3].map(n => { const j = jeuH6({ partie: `9:${n}`, graine: n, cuts: 40 }); j.entete.usage = 'relecture'; return j; });
+  const lot = [1, 2, 3].map(n => { const j = jeuH6({ partie: `9:${n}`, graine: n + 10, cuts: 40 }); j.entete.usage = 'lot'; return j; });
+  assert.throws(() => A.exporter(rel, { usages: ['lot'], lambda: 10, date: '2026-10-19' }), /généré sans appui humain/);
+  const o = A.exporter(rel, { usages: ['relecture', 'lot'], lambda: 10, date: '2026-10-19', partiesLot: lot, gardeVoie: true });
+  assert.deepEqual(o.partiesLot.map(p => p.partie), ['9:1', '9:2', '9:3']);
+  assert.ok(o.usages.lot.nCas > 0 && o.usages.relecture.nCas > 0);
+  assert.deepEqual(A.args(['exporter', '--jeu', 'a', '--jeu-lot', 'b', '--jeu-lot', 'c']).jeuxLot, ['b', 'c']);
+});
