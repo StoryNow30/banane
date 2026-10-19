@@ -1,5 +1,21 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.10 — 4.9.5 test 10 (19/10)
+
+Manifeste `4.9.5.10`, « 4.9.5 test 10 », paquet `ariane-4.9.5-test.10.zip` ; base : la 4.9.5 test 9 (`claude/50-rm11-test9`) + la candidate L1 (D-217, D-219, D-220 ; `fiches/L1_DIFFERES.md`).
+**Le lot change, sur ses différés seulement** : derrière le **profil du lot** (`lot.profil`, `'L1'` par défaut, figé dans le scope du lot à son départ). Profil `'actuel'` : le lot de la 4.9.5.9, commandes identiques octet pour octet (essai tests/lot-profil-sw.test.cjs). `src/engine.js` et la géométrie inchangés ; Écho et la relecture après le lot inchangés.
+Consigne : `consignes/seance-terrain-4.9.5-test-10-2026-10-19.md` ; retour arrière : la 4.9.5 test 9 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **GCV2 sur les différés du lot (L1)** : un cut que la chaîne du lot ne pose pas passe à la GCV2 (`src/gcv2-l1.js`, hypothèses H0 à H6, paramètres figés `src/gcv2-parametres-l1.js` = `datasets/gcv2-parametres-h6.json`, usage « lot »), sans le couloir de 45 mm ; τ, δ et l'écartement de la paire gardés. Au-dessus de τ : la commande devient celle de la GCV2 (`gcv2-l1`), le moteur pose et valide, le cut devient appui. Sous τ : **pose sans validation** (commande `apply` de la page, puis la navigation sans décision d'avant) ; rien à plus de 150 mm de la pose de départ. Variante L1-v (valider sous τ) : chiffrée au banc, pas livrée.
+- **Ce que la GCV2 lit** : seulement ce que le service worker a à l'instant de la décision (capture, science recalculée avec le réservoir du moteur, appuis de la chaîne, cuts validés par ce lot, zone des règles métier évaluée avant le cut).
+- **Options du lot sous L1** : garde de paire éteinte, appuis de reprise à 10 cuts. **Cible hors de la vue** (chaîne de tout étage, ou GCV2) : la vue est amenée (pré-vol `amenerDansLaVue`), puis la pose est faite avec le plan ; hors des limites, rien n'est posé.
+- **Journal (D-220)** : chaque décision L1 dans l'observation du lot (`l1` : état, motif, hypothèse, probabilité, écart au départ, zone, commande, **pose d'ESV avant la commande, pose envoyée**) ; chaque pose sans validation : événement `l1-pose-sans-valider`. Une panne de la GCV2 ne pose rien (`l1.etat:'erreur'`).
+- **Correctif de la relecture après le lot (terrain 2:19 du 19/10)** : la passe « corriger » s'arrêtait en erreur (156 cuts sur 574) sur « passage au cut 5042 refusé par la page (Action d'Ariane en cours dans ESV (capture)…) ». Ce refus (`ADAPTER_BUSY`) est passager et rien n'est parti vers ESV : la passe attend la fin de l'action et redemande le passage (6 essais au plus, 0,25 à 4 s, 11,75 s en tout ; réglage `relecture.occupeAttentesMs`), chaque attente consignée (`relecture-navigation-attente`). La page garde son verrou : jamais de navigation pendant une capture. Un refus qui dure au-delà, ou tout autre refus, arrête la passe comme avant. Essai `tests/relecture-sw-page-occupee.test.cjs` (rouge avant le correctif).
+- **Moteur** : `src/gcv1-shadow.js` rend son réservoir **sur demande** (`scientificProposeBothAvecReservoir`) ; la sortie par défaut est inchangée.
+- **Banc conjoint** `tools/banc-differes.cjs` (rejeu causal des 40 lots de la base du diagnostic, profils base, L1, L1-v ; jugés contre Mic de la même séance et de toute séance sans autre écriture, D-220) ; résultats dans `fiches/L1_DIFFERES.md`.
+- Essais : `tests/lot-profil-sw.test.cjs` (profil « actuel » = 4.9.5.9 ; profil « L1 » : vue amenée, pose sans validation, validation, panne ; paramètres figés) ; montages d'empreinte joués sous le profil « actuel » ; `tests/pose-lot-inchanges-4959.test.cjs` mis à jour (fichiers changés déclarés).
+- Non vérifié : la GCV2 n'a jamais posé dans ESV ; le déplacement de vue n'a jamais servi en séance ; le dernier cut d'un lot n'est pas approché ; pas de choix du profil au panneau (retour arrière = test 9) ; Edge.
+
 ## 4.9.5.9 — 4.9.5 test 9 (19/10)
 
 Manifeste `4.9.5.9`, « 4.9.5 test 9 », paquet `ariane-4.9.5-test.9.zip` ; base : `claude/50-relecture-couverture` (d58a6f1, 4.9.5 test 8) + la fiche de conception RM-11 (70b3d18) ; accord de Mic à la conception (D-208).

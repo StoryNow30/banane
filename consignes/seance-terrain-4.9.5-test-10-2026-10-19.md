@@ -8,6 +8,8 @@
 
 Aussi : quand la cible d'un cut sort de la vue d'ESV, Orbite **déplace la vue**, puis pose. Le reste (Écho, la relecture après le lot, Maj+Espace) ne change pas.
 
+**Correctif (partie 19 du 19/10)** : la relecture « Corriger » après le lot ne s'arrête plus quand ESV est encore occupé par une capture. Elle attend quelques secondes et repart. Si ESV reste occupé plus de 12 secondes, elle s'arrête comme avant, avec le message.
+
 ## 1. Installer et vérifier
 
 1. Exporte d'abord ce que la test 9 garde.

@@ -2152,7 +2152,10 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * qu'ESV écrit 0,9 à 1,7 s après l'arrivée (rien n'est commandé pendant ce temps) ; `validation` : le geste de validation de « corriger » ('maj-espace', le seul
  * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : budget global de la sélection si entier (hors PN) ;
  * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
-const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',...(globalThis.BananeSettings?.relecture||{})});
+/* 4.9.5.10 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
+ * finie (`ADAPTER_BUSY`, terrain 2:19) : 6 essais au plus, 11,75 s en tout. */
+const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
+ occupeAttentesMs:[250,500,1000,2000,4000,4000],...(globalThis.BananeSettings?.relecture||{})});
 const passeActive=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
 const RANG_MODE={coupee:0,ombre:1,corriger:2};
 async function relectureChoix(){let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
@@ -2481,16 +2484,24 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
  /* Champs communs des événements d'un cut relu (revue, R10). */
  const evenementCut=(c,plage,champs)=>({identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,...champs});
  /* Aller à un cut ('pas' : boutons d'ESV ; 'auto' : carte, sinon pas à pas). W8 : seul un cut hors des bornes, ou une annulation, fait
-  * sauter la plage ; tout autre refus arrête la passe. */
- const aller=async(cut,chemin)=>{const opId=K.uid();p.operationId=opId;let nav;
-  try{nav=await call('goToCut',{part:partie,cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
-  catch(e){p.operationId=null;ici=null;return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
-  p.operationId=null;
+  * sauter la plage ; tout autre refus arrête la passe. 4.9.5.10 (terrain 2:19) : un refus « action d'Ariane en cours » (`ADAPTER_BUSY` : une
+  * capture, une pose ou une lecture de la page n'est pas finie ; rien n'est parti vers ESV) est passager : la passe attend (`occupeAttentesMs`)
+  * et redemande, avec une opération neuve ; la page garde son verrou et ne navigue jamais pendant une action. Au-delà des essais : arrêt. */
+ const aller=async(cut,chemin)=>{const attentes=(Array.isArray(cfg.occupeAttentesMs)?cfg.occupeAttentesMs:[]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);let nav,demandes=0;
+  for(;;){const opId=K.uid();p.operationId=opId;demandes++;
+   try{nav=await call('goToCut',{part:partie,cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
+   catch(e){p.operationId=null;ici=null;return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
+   p.operationId=null;
+   if(!(nav?.resultat==='refuse'&&String(nav.refusal?.code||'')==='ADAPTER_BUSY')||p.arret||!vivante()||demandes>attentes.length)break;
+   const attenteMs=attentes[demandes-1];
+   await engine.event('relecture-navigation-attente',{identity:{part:partie,cut},code:'ADAPTER_BUSY',essai:demandes,attenteMs,essaisMax:attentes.length,
+    raison:String(nav.refusal?.message||'').slice(0,200)}).catch(()=>{});
+   await attendreMs(attenteMs);}
   if(nav?.bornes?.source==='compteur'&&Number.isInteger(nav.bornes.total)&&nav.bornes.total>0)total=nav.bornes.total;
   if(nav?.resultat==='confirme'){ici=cut;return {ok:true,par:nav.chemin==='pas-a-pas'?'pas':nav.chemin==='aucun'?'aucun':'evenement'};}
   if(nav?.resultat==='refuse'){const code=String(nav.refusal?.code||'');
    if(p.arret||/^(OUT_OF_BOUNDS|CANCELLED_)/.test(code))return {saut:true,raison:nav.refusal?.message??code};
-   return {stop:`Relecture arrêtée : passage au cut ${cut} refusé par la page (${String(nav.refusal?.message||code||'refus').slice(0,200)}). Rien n’a été posé.`};}
+   return {stop:`Relecture arrêtée : passage au cut ${cut} refusé par la page (${String(nav.refusal?.message||code||'refus').slice(0,200)})${demandes>1?` après ${demandes} demandes`:''}. Rien n’a été posé.`};}
   ici=null;return {stop:`Relecture arrêtée : le passage au cut ${cut} n’est pas confirmé (${nav?.refusal?.message||nav?.resultat||'résultat inconnu'}). Contrôle le cut affiché ; rien n’a été posé.`};};
  for(const c of sel.cuts){
   if(!vivante()){issue='erreur';p.message='Relecture arrêtée : passe remplacée.';break;}
