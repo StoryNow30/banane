@@ -276,6 +276,8 @@ test('ligne de commande : les témoins 1:11 et 1:25 et une partie inconnue sont 
 });
 
 /* ------------------------------------------------------------------ H6 « voie décalée » (D-207) */
+/* Déplacement du lot (pose du lot − pose d'ESV d'origine) tel que le journal le donne, à partir d'une pose d'ESV d'origine dans le repère de l'essai. */
+const deplacement = (cap, ini) => Object.fromEntries(SIDES.map(s => [s, cap.rails[s].positionSceneRelative.map((v, i) => v - ini[s][i])]));
 const h6De = (h, s, sous) => h.rails[s].find(x => !x.hauteur && x.sousOrigines.includes(sous));
 
 test('H6 : la pose d\'ESV translatée du décalage du voisin sûr le plus proche, et de la médiane des voisins ; rail par rail et paire ; source marquée', () => {
@@ -342,18 +344,18 @@ test('H6 : le décalage d\'un voisin se lit depuis la pose d\'ESV d\'origine (jo
   assert.deepEqual(sans.find(p => p.cut === 4).decalage, { left: [140, 10], right: [140, 10] }, 'cut 4 (vert) : pose finale − pose de départ');
   /* Le lot a posé le cut 4 ; la pose d'ESV d'origine était 25 mm plus à gauche et 3 mm plus bas que sa pose de départ (celle du lot). */
   const ini = Object.fromEntries(SIDES.map(s => [s, E.cap.rails[s].positionSceneRelative.map((v, i) => i === 1 ? v - 0.025 : i === 2 ? v - 0.003 : v)]));
-  const lot = G.posesVerifiees(E.cuts, { ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine, lotValide: new Set([4]), initialesLot: new Map([[4, ini]]) });
+  const lot = G.posesVerifiees(E.cuts, { ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine, lotValide: new Set([4]), deplacementsLot: new Map([[4, deplacement(E.cap, ini)]]) });
   assert.deepEqual(lot.filter(p => p.cut === 4).map(p => [p.source, p.decalage.left]), [['humain', [165, 13]], ['lot', [25, 3]]], 'humain : finale − ESV ; lot : pose du lot − ESV');
   const inconnu = G.posesVerifiees(E.cuts, { ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine, lotValide: new Set([4]) });
   assert.ok(inconnu.filter(p => p.cut === 4).every(p => p.decalage === null), 'cut posé par le lot sans pose d\'ESV connue : aucun décalage');
 });
 
 /* Lignes du jeu pour le cut 5 de l'Écho synthétique (observateur de bout en bout). */
-function lignesH6(opts, { lotValide = new Set(), initialesLot = new Map(), usage = 'relecture', retirerHumains = false } = {}) {
+function lignesH6(opts, { lotValide = new Set(), deplacementsLot = new Map(), usage = 'relecture', retirerHumains = false } = {}) {
   const E = echoSynthetique(opts);
   /* Supprimer tous les appuis humains : les autres cuts n'ont plus aucune validation de l'opérateur. */
   if (retirerHumains) for (const c of E.cuts) if (c.cut !== 5) for (const v of c.visites) { v.humanFinalReference = null; v.lastObserved = v.beforeEstablished; }
-  const obs = G.creerObservateur({ partie: 91, moteur, lotValide, initialesLot });
+  const obs = G.creerObservateur({ partie: 91, moteur, lotValide, deplacementsLot });
   obs.debut({ parCut: E.cuts, ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine });
   const { entree, brut } = brutDuCut({ cut: 5, appuis: appuisChaine(E.cap, 5) });
   const ref = opts.refCut || [5, 5];
@@ -395,7 +397,7 @@ test('ANTI-FUITE H6 (3) : un voisin validé AVANT la première visite change H6 
   /* Le cut 6 validé par le lot (pose d'ESV d'origine 120 mm à droite de sa pose de départ) : la famille du lot existe, quel que soit l'instant. */
   const E = echoSynthetique({});
   const ini = Object.fromEntries(SIDES.map(s => [s, E.cap.rails[s].positionSceneRelative.map((v, i) => i === 1 ? v - 0.120 : v)]));
-  const l = lignesH6({ refAvant: [140, 10] }, { lotValide: new Set([6]), initialesLot: new Map([[6, ini]]) });
+  const l = lignesH6({ refAvant: [140, 10] }, { lotValide: new Set([6]), deplacementsLot: new Map([[6, deplacement(E.cap, ini)]]) });
   const lot = lignesH6Seules(l).filter(x => !x.hauteur && x.rail === 'left' && x.sousOrigines.includes('h6-lot-proche-rail'));
   assert.deepEqual(lot.map(x => x.decal), [[0, 120, 0]], 'famille du lot : pose du lot − pose d\'ESV du cut 6');
   assert.ok(lignesH6Seules(l).some(x => x.sousOrigines.includes('h6-humain-mediane-rail')), 'famille « tous » : médiane des cuts 4 (humain) et 6 (lot)');
@@ -429,7 +431,7 @@ test('rappel : H6 avant et après, usage lot sans voisins humains, sélections n
 test('ANTI-FUITE lot (audit F3) : modifier ou supprimer tous les appuis humains ne change aucune ligne du jeu « lot »', () => {
   const E0 = echoSynthetique({});
   const ini = Object.fromEntries(SIDES.map(s => [s, E0.cap.rails[s].positionSceneRelative.map((v, i) => i === 1 ? v - 0.120 : v)]));
-  const opt = extra => ({ lotValide: new Set([6]), initialesLot: new Map([[6, ini]]), ...extra });
+  const opt = extra => ({ lotValide: new Set([6]), deplacementsLot: new Map([[6, deplacement(E0.cap, ini)]]), ...extra });
   const base = lignesH6({ refAvant: [140, 10] }, opt({ usage: 'lot' }));
   const variantes = [lignesH6({ refAvant: [-30, 25] }, opt({ usage: 'lot' })), lignesH6({ refAvant: [140, 10], refApres: [5, -60], tApres: '2026-01-01T10:00:40Z' }, opt({ usage: 'lot' })),
     lignesH6({ refAvant: [140, 10] }, opt({ usage: 'lot', retirerHumains: true }))];
@@ -495,4 +497,12 @@ test('garde de série : jamais une pose d\'Ariane comme appui (pas d\'auto-valid
   /* posesVerifiees ne connaît que les validations de l'opérateur et les poses validées par le lot. */
   const E = echoSynthetique({}), p = G.posesVerifiees(E.cuts, { ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine, lotValide: new Set([6]) });
   assert.ok(p.every(x => x.source === 'humain' || x.source === 'lot'));
+});
+
+test('H6 : le journal du lot et l\'Écho n\'ont pas la même origine de scène ; seul le déplacement du lot se transporte', () => {
+  const cap = F.capture({ cut: 5, origine: ORIGINE_ABS });
+  /* Déplacement de 120 mm en latéral lu dans un journal d'une autre origine : la pose d'ESV d'origine est 120 mm en deçà de la pose de départ. */
+  const ini = G.esvDepuisDeplacement(cap.rails, { left: [0, 0.12, 0], right: [0, 0.12, 0] });
+  assert.deepEqual(G.decalageDepuisEsv(cap.rails, { left: cap.rails.left.positionSceneRelative, right: cap.rails.right.positionSceneRelative }, ini), { left: [120, 0], right: [120, 0] });
+  assert.equal(G.esvDepuisDeplacement(cap.rails, null), null); assert.equal(G.esvDepuisDeplacement(cap.rails, { left: [0, NaN, 0], right: [0, 0, 0] }), null);
 });

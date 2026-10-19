@@ -98,7 +98,7 @@ function moteurAvecReservoir() {
  * positions: { left, right } (scène, en mémoire seulement) }. Une pose HUMAINE est la dernière validation de l'opérateur sur le cut, ou sa
  * pose de départ quand il l'a visité sans rien toucher (règle des 0,8 s) ; elle compte à la FIN de la visite qui l'a validée. Une pose du LOT est
  * la pose de départ d'un cut que le lot a posé et validé : elle précède tout l'Écho. */
-function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), initialesLot = new Map() }) {
+function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), deplacementsLot = new Map() }) {
   const out = [];
   for (const c of parCut) {
     const v0 = c.visites[0], avant = v0 && v0.beforeEstablished && v0.beforeEstablished.rails;
@@ -110,7 +110,7 @@ function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), 
       ? { left: rails.left.positionSceneRelative.slice(), right: rails.right.positionSceneRelative.slice() } : null;
     const fin = x => Date.parse(x && (x.endedAt || x.startedAt));
     /* H6 : décalage de la pose sûre depuis la pose d'ESV d'origine (avant le lot), dans le repère profil du rail de départ de CE voisin. */
-    const decal = positions => decalageDepuisEsv(avant, positions, lotValide.has(c.cut) ? (initialesLot.get(c.cut) || null) : 'depart');
+    const decal = positions => decalageDepuisEsv(avant, positions, lotValide.has(c.cut) ? esvDepuisDeplacement(avant, deplacementsLot.get(c.cut)) : 'depart');
     if (finale && fini(fin(ref.visite))) out.push({ cut: c.cut, source: 'humain', t: fin(ref.visite), positions: finale, decalage: decal(finale) });
     else if (!ref && depart) {
       const sa = J.visiteSansAction(c, J.DUREE_VISITE_DEFAUT_S, ctx);
@@ -121,9 +121,15 @@ function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), 
   }
   return out;
 }
+/* Pose d'ESV d'origine d'un cut posé par le lot, dans le repère de l'Écho : la pose de départ (celle du lot) moins le DÉPLACEMENT du lot (pose
+ * corrigée − pose initiale, lu dans le journal du lot). Le journal et l'Écho n'ont pas la même origine de scène : seule la différence se transporte. */
+function esvDepuisDeplacement(rails, dl) {
+  if (!rails || !dl || !SIDES.every(s => rails[s] && Array.isArray(rails[s].positionSceneRelative) && Array.isArray(dl[s]) && dl[s].length === 3 && dl[s].every(fini))) return null;
+  return Object.fromEntries(SIDES.map(s => [s, rails[s].positionSceneRelative.map((v, i) => v - dl[s][i])]));
+}
 /* H6 — décalage [latéral, vertical] (mm) d'une pose sûre `positions` par rapport à la pose d'ESV d'ORIGINE du même cut, dans le repère profil
  * du rail de départ (`rails`, pose montrée par l'Écho). `esv` : 'depart' quand la pose de départ EST celle d'ESV (cut que le lot n'a pas posé),
- * les positions initiales du journal du lot quand le lot a posé le cut (la pose de départ de l'Écho est alors celle du lot), null si on ne la
+ * la pose d'ESV d'origine dans le repère de l'Écho quand le lot a posé le cut (`esvDepuisDeplacement`), null si on ne la
  * connaît pas (aucun décalage). Rien de la référence du cut JUGÉ n'entre ici : `positions` est la pose sûre d'un AUTRE cut. */
 function decalageDepuisEsv(rails, positions, esv) {
   if (!rails || !positions || !esv) return null;
@@ -442,12 +448,12 @@ function etiqueter(hypotheses, mic) {
 }
 
 /* ------------------------------------------------------------------ observateur d'`extraire` */
-function creerObservateur({ partie, lotValide = new Set(), initialesLot = new Map(), moteur = moteurAvecReservoir(), journal = () => {} }) {
+function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new Map(), moteur = moteurAvecReservoir(), journal = () => {} }) {
   const etat = { verifiees: [], gMed: null, cuts: [], erreurs: 0, ecartsMoteur: 0, calcules: 0 };
   return {
     etat,
     debut({ parCut, ctx, referenceHumaine }) {
-      etat.verifiees = posesVerifiees(parCut, { ctx, referenceHumaine, lotValide, initialesLot });
+      etat.verifiees = posesVerifiees(parCut, { ctx, referenceHumaine, lotValide, deplacementsLot });
       /* Médiane d'écartement de la partie : poses de départ des cuts visités, hors cuts du lot et hors valeur par défaut 1500 mm (statistique
        * de la partie, comme `lignes` de relecture-autonome.cjs ; aucune référence de l'opérateur). */
       const g = [];
@@ -476,7 +482,7 @@ function creerObservateur({ partie, lotValide = new Set(), initialesLot = new Ma
         /* Pose d'ESV d'origine du cut : sa pose de départ, sauf si le lot l'a posé (journal du lot ; inconnue : pas de H6). */
         let departEsv = null;
         if (lotValide.has(c.cut)) {
-          const ini = initialesLot.get(c.cut), d = ini ? Object.fromEntries(SIDES.map(s => [s, RA.decalage(brut.capture.rails[s], ini[s])])) : null;
+          const ini = esvDepuisDeplacement(brut.capture.rails, deplacementsLot.get(c.cut)), d = ini ? Object.fromEntries(SIDES.map(s => [s, RA.decalage(brut.capture.rails[s], ini[s])])) : null;
           departEsv = d && SIDES.every(s => d[s]) ? d : false;
         }
         rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv });
@@ -536,12 +542,16 @@ function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu 
   if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
   if (!sansLot && !journaux.length) throw Error('--journal J.json (lot Orbite de la partie) ou --sans-lot (partie sans lot) attendu');
   const RM = require('./regles-metier.cjs');
-  const lotValide = new Set(), initialesLot = new Map();
+  const lotValide = new Set(), deplacementsLot = new Map();
   for (const f of sansLot ? [] : journaux) {
     const j = RM.lireJournal(f, partie);
-    for (const c of j.valide) { lotValide.add(c); const p = j.poses.get(c); if (p && p.initiale && p.initiale.left && p.initiale.right) initialesLot.set(c, p.initiale); }
+    for (const c of j.valide) {
+      lotValide.add(c);
+      const p = j.poses.get(c);
+      if (p && p.initiale && p.finale && SIDES.every(s => Array.isArray(p.initiale[s]) && Array.isArray(p.finale[s]))) deplacementsLot.set(c, Object.fromEntries(SIDES.map(s => [s, p.finale[s].map((v, i) => v - p.initiale[s][i])])));
+    }
   }
-  const observateur = creerObservateur({ partie, lotValide, initialesLot, journal });
+  const observateur = creerObservateur({ partie, lotValide, deplacementsLot, journal });
   const cas = RA.extraire({ partie, projet, echo, observateur });
   const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
   const L2 = RA.lignes({ cas, table, designation });
@@ -811,7 +821,7 @@ function controlerManifeste({ projet, partie, jugerReservee }) {
 }
 
 module.exports = { FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
-  decalageDepuisEsv, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
+  decalageDepuisEsv, esvDepuisDeplacement, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
 
 if (require.main === module) {
   try {
