@@ -1,0 +1,86 @@
+{
+  "format": "ariane-marges-zones-proposees-v1",
+  "date": "2026-10-19",
+  "etat": "proposées, non figées",
+  "regle": "Choisies sur les parties d'apprentissage seulement (D-195, datasets/manifeste-parties.json). Les témoins ne règlent rien : ils se lisent une fois, marges figées.",
+  "fiche": "fiches/RM2_MARGES.md",
+  "outil": "tools/marges-zones.cjs",
+  "procedure": {
+    "prix": 200,
+    "plafond": 1.75,
+    "alertesIgnoreesAutourDuPNChoisies": false,
+    "margesImposees": {
+      "adv.trou": 30,
+      "adv.gap": 40
+    },
+    "parties": [
+      "1:12",
+      "1:13",
+      "1:14",
+      "1:15",
+      "1:16",
+      "1:17",
+      "1:24",
+      "1:29",
+      "2:1",
+      "2:10",
+      "2:11"
+    ],
+    "note": "prix : cuts de plus acceptés par grosse correction rattrapée ; plafond : rapport maximal des cuts à relire après/avant sur une partie"
+  },
+  "livre": {
+    "pn": {
+      "margeAvant": 4,
+      "margeApres": 6
+    },
+    "adv": {
+      "margeAvant": 30,
+      "margeApres": 30,
+      "trouCuts": 10,
+      "ignorerAlertesAutourDuPN": -1
+    },
+    "liste": {
+      "margeCuts": 0
+    },
+    "abords": {
+      "grappeMin": 3,
+      "trouCuts": 5,
+      "margeGrappe": 3,
+      "margeIsole": 1,
+      "margeDiffere": 2
+    }
+  },
+  "marges": {
+    "pn": {
+      "margeAvant": 4,
+      "margeApres": 6,
+      "noyauSeul": true
+    },
+    "adv": {
+      "margeAvant": 40,
+      "margeApres": 30,
+      "alerteSeule": false,
+      "trouCuts": 30,
+      "relierSiEcartDeCuts": 40,
+      "ignorerAlertesAutourDuPN": -1
+    },
+    "liste": {
+      "margeCuts": 7
+    },
+    "abords": {
+      "grappeMin": 3,
+      "trouCuts": 5,
+      "margeGrappe": 3,
+      "margeIsole": 1,
+      "margeDiffere": 2
+    }
+  },
+  "mesure": {
+    "grossesCorrectionsHorsSelectionAvant": 54,
+    "grossesCorrectionsHorsSelectionApres": 11,
+    "cutsARelireAvant": 4969,
+    "cutsARelireApres": 5930,
+    "horsSelectionValidationCroisee": 20
+  },
+  "ombre": "Rien n'est branché : ni src/regles-metier.js, ni datasets/reglages-figes.json, ni tools/relecture-autonome.cjs ne lisent ce fichier."
+}

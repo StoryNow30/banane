@@ -1,0 +1,95 @@
+{
+ "format": "ariane-notes-zones-de-mic-v1",
+ "date": "2026-10-19",
+ "source": "notes de Mic des parties 14, 15 et 16 (projet 1) et 10 et 11 (projet 2) : collections 2026-10-18_v4.9.5.7_echo-partie-14 et _echo-partie-10",
+ "note": "Zones notées avec les marges de Mic comprises. Seules les zones dont le début et la fin sont notés figurent ici ; la partie 14 n'a que des PN corrigés, la partie 10 est « RAS ». Les cuts sont des numéros de cut, sans coordonnée.",
+ "zones": [
+  {
+   "partie": "1:15",
+   "genre": "PN",
+   "debut": 144,
+   "fin": 160
+  },
+  {
+   "partie": "1:15",
+   "genre": "ADV",
+   "debut": 5889,
+   "fin": 6081,
+   "aiguilles": [
+    5944
+   ],
+   "note": "cœur d'ADV au cut 6017"
+  },
+  {
+   "partie": "1:15",
+   "genre": "PN",
+   "debut": 6169,
+   "fin": 6173,
+   "note": "petit PN"
+  },
+  {
+   "partie": "1:15",
+   "genre": "ADV",
+   "debut": 7036,
+   "fin": 7232,
+   "aiguilles": [
+    7079
+   ],
+   "note": "ADV avec un PN à proximité ; fin d'aiguille au cut 7111"
+  },
+  {
+   "partie": "1:15",
+   "genre": "PN",
+   "debut": 7598,
+   "fin": 7614
+  },
+  {
+   "partie": "1:15",
+   "genre": "PN",
+   "debut": 8137,
+   "fin": 8151
+  },
+  {
+   "partie": "1:16",
+   "genre": "PN",
+   "debut": 1678,
+   "fin": 1702
+  },
+  {
+   "partie": "1:16",
+   "genre": "ADV",
+   "debut": 8735,
+   "fin": 8785,
+   "aiguilles": [
+    8751
+   ]
+  },
+  {
+   "partie": "2:11",
+   "genre": "ADV",
+   "debut": 6362,
+   "fin": 6480,
+   "aiguilles": [
+    6456
+   ],
+   "note": "Mic commence au cut 6362 (cœur d'ADV au cut 6391), vérifie jusqu'au cut 6424 car la seconde zone est proche, puis la seconde zone jusqu'au cut 6480"
+  },
+  {
+   "partie": "2:11",
+   "genre": "ADV",
+   "debut": 7299,
+   "fin": 7456,
+   "aiguilles": [
+    7390
+   ],
+   "note": "deux zones d'ADV successives : contrôle continu jusqu'au cut 7385, aiguille au cut 7390, fin de marge au cut 7456"
+  },
+  {
+   "partie": "2:11",
+   "genre": "ADV",
+   "debut": 8229,
+   "fin": 8309,
+   "note": "fin d'aiguille au cut 8257 ; fin de marge au cut 8309"
+  }
+ ]
+}
