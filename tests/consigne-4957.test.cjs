@@ -50,9 +50,12 @@ test('lot en « Ombre » : une partie neuve, avant de démarrer, ne rien toucher
  for(const m of ['**Une partie neuve**','**« Ombre »** **avant** de démarrer le lot','**Ne touche à rien dans ESV pendant qu\'elle travaille.**','l\'heure de début et l\'heure de fin de la relecture','**une Écho complète**','jusqu\'à la fin de la partie','Sinon la carte dit pourquoi','« Lancer la relecture »','« Relecture finie »'])assert.ok(s.includes(m),m);
  /* Revue finale : la passe ne part seule que pour un lot jusqu'à la fin de la partie ; ces libellés existent dans le panneau et le service worker. */
  assert.ok(html.includes('>Lancer la relecture</button>'));assert.ok(fs.readFileSync(path.resolve(__dirname,'..','background.js'),'utf8').includes('Relecture finie :'));
- const M=require('../datasets/manifeste-parties.json'),p1=M.apprentissage.filter(a=>a.projet===1).flatMap(a=>a.parties).sort((a,b)=>a-b);
+ /* La consigne de la test 7 est un document livré le 17/10 : elle nomme les parties d'apprentissage du manifeste de ce jour-là
+  * (1:12, 1:13, 1:17, 1:24, 1:29 et 2:1), toutes encore en apprentissage. Le manifeste a grandi depuis (rotation, D-192, D-193). */
+ const M=require('../tools/manifeste-parties.cjs'),m=M.lire(),p1=[12,13,17,24,29];
  assert.ok(s.includes(`pas les parties ${p1.slice(0,-1).join(', ')} et ${p1.at(-1)} du premier projet, ni la partie 1 du second`),'parties d\'apprentissage exclues');
- assert.deepEqual(M.apprentissage.filter(a=>a.projet===2).flatMap(a=>a.parties),[1]);
+ for(const n of p1)assert.equal(M.statut(m,1,n),'apprentissage',`1:${n} toujours en apprentissage`);
+ assert.equal(M.statut(m,2,1),'apprentissage');
 });
 
 test('lot en « Corriger » : une autre partie neuve, PN et ADV notés, Écho complète, les cuts repris notés, un arrêt ou « J’ai contrôlé le cut » expliqué',()=>{
