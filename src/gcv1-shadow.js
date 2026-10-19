@@ -402,6 +402,15 @@
    return Math.hypot((a[0]||0)-(b[0]||0),(a[1]||0)-(b[1]||0),(a[2]||0)-(b[2]||0));
  }
 
+ /* 4.9.5.10 (L1, D-219) — RÉSERVOIR DU MOTEUR POUR LA GCV2. `scientificProposeBothAvecReservoir` rend exactement ce que rend
+  * `scientificProposeBoth`, plus, sur chaque rail résolu en repère (`ok:true`), le champ `_reservoir` (cellules du pool, perte minimale,
+  * signe du profil) que lisent les hypothèses H1 et H2 de la GCV2 (`src/gcv2-l1.js`). Le drapeau ne vit que le temps de l'appel ; sans lui,
+  * la sortie est celle d'avant, octet pour octet (tests/gcv1-reservoir.test.cjs). Le calcul du moteur n'est pas touché. */
+ let avecReservoir=false;
+ function scientificProposeBothAvecReservoir(capture){
+   avecReservoir=true;
+   try{return scientificProposeBoth(capture);}finally{avecReservoir=false;}
+ }
  function scientificRail(capture,side){
    const v46p=V46.propose(capture,side),v46=compactProposal(v46p);v46.motif=motifOf(v46);
    const frame=prepareFrame(capture,side);
@@ -436,7 +445,7 @@
      conventionCalibration=CONVENTION.calibrate(capture,side,next.delta);
      if(conventionCalibration.applied){next.rawDelta=next.delta;next.delta=conventionCalibration.delta.slice();}
    }
-   return {ok:true,side,
+   return {ok:true,side,...(avecReservoir?{_reservoir:{pool:reduced.pool,lmin,sign:frame.sign}}:{}),
      frame:{sign:frame.sign,width:round6(frame.width),pointsLocal:frame.pointsLocal,uMedian:round6(frame.uMedian),
        uSeed:aStarLab(frame).uSeeds[0],zMedian:frame.zMedian},
      v46,astar,next,
@@ -603,7 +612,8 @@
   }
 
  const geometry={...Runtime,proposeBoth};
-  const api={CONTRACT,geometry,configure,state,journal,consumeLast,armOnce,disarm,scientificProposeBoth,toRuntimeRails};
+  const api={CONTRACT,geometry,configure,state,journal,consumeLast,armOnce,disarm,scientificProposeBoth,toRuntimeRails,
+   scientificProposeBothAvecReservoir,reservoirOutils:Object.freeze({lossRatio,inCompetitive,qualifyStrong})};
  if(typeof module==='object'&&module.exports)Object.defineProperty(api,'_test',{value:{
    round6,lossRatio,inCompetitive,spatialClusters,qualifyStrong,alreadyQualified,policyS1,preserveAmbiguity,hypotDelta,
    assessPublishedPair,GAUGE,
