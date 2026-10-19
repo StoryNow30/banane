@@ -471,6 +471,12 @@ function rappel(jeux) {
     out.global[nom] = { n: liste.length };
     for (const mode of ['paire', 'un-rail']) out.global[nom][mode] = { a10: ligne(liste, tout, 10, mode), a5: ligne(liste, tout, 5, mode) };
   }
+  /* Chiffre BRUT : les corrections sans nuage (perdues pour de bon) restent au dénominateur, comme des échecs. La porte se lit sur les cuts avec nuage (`global`). */
+  out.brut = {};
+  for (const [nom, liste] of Object.entries(familles)) {
+    const perdues = comptes(sansNuage, nom === 'plus-de-10-mm' ? 10 : 5).length, r = ligne(liste, tout, 10), r5 = ligne(liste, tout, 5), n = r.n + perdues;
+    out.brut[nom] = { avecNuage: r.n, sansNuage: perdues, a10: { n, k: r.k, part: n ? r.k / n : null }, a5: { n, k: r5.k, part: n ? r5.k / n : null } };
+  }
   out.parZone = {};
   for (const z of ZONES) {
     out.parZone[z] = {};
@@ -573,6 +579,7 @@ function texte(R) {
     const g = R.global[f];
     L1.push(`${f} (n = ${g.n}) : paire à 10 mm ${pc(g.paire.a10)}, à 5 mm ${pc(g.paire.a5)} ; au moins un rail à 10 mm ${pc(g['un-rail'].a10)}`);
   }
+  for (const f of ['plus-de-10-mm', 'plus-de-5-mm']) { const x = R.brut[f]; L1.push(`${f} BRUT, cuts sans nuage comptés comme échecs (${x.sansNuage} perdues pour de bon) : à 10 mm ${pc(x.a10)}, à 5 mm ${pc(x.a5)}`); }
   for (const z of ZONES) { const x = R.parZone[z]['plus-de-10-mm']; L1.push(`  zone ${z} : n = ${x.n}, paire à 10 mm ${pc(x.paire.a10)}, à 5 mm ${pc(x.paire.a5)}`); }
   for (const [nom, v] of Object.entries(R.parOrigine)) L1.push(`  ${nom} : > 10 mm à 10 mm ${pc(v['plus-de-10-mm'].global.a10)}`);
   return L1.join('\n');

@@ -223,12 +223,14 @@ test('rappel atteignable : paire à 10 et à 5 mm, par zone et par origine, abst
     cut(3, 'adv', 30, false), hyp(3, 'left', 'H3', 12), hyp(3, 'left', 'H2', 11, true, 'comp'), hyp(3, 'right', 'H0', 0),                     // hors de 10 mm (la hauteur n'y change rien)
     cut(4, 'adv', 30, false), hyp(4, 'left', 'H2', 20, false, 'comp'), hyp(4, 'left', 'H2', 8, true, 'comp'), hyp(4, 'right', 'H0', 0),      // atteint seulement avec la hauteur
     cut(5, 'abords', 3, false), hyp(5, 'left', 'H0', 3), hyp(5, 'right', 'H0', 0),                                                          // correction de 3 mm : ne compte pas
+    { ...cut(6, 'abords', 40, false, false), etat: 'sans-nuage' },                                                                          // grosse correction sans nuage : perdue, comptée dans le brut
   ];
   const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
   const f = path.join(os.tmpdir(), `gcv2-jeu-rappel-${process.pid}.jsonl`);
   fs.writeFileSync(f, lignes.map(l => JSON.stringify(l)).join('\n') + '\n');
   const R = G.rappel(G.lireJeux([f])); fs.unlinkSync(f);
   assert.equal(R.comptes.grosses, 4);
+  assert.equal(R.sansNuage.grosses, 1); assert.deepEqual([R.brut['plus-de-10-mm'].a10.k, R.brut['plus-de-10-mm'].a10.n], [3, 5], 'brut : le cut sans nuage reste au dénominateur');
   assert.deepEqual([R.global['plus-de-10-mm'].paire.a10.k, R.global['plus-de-10-mm'].paire.a10.n], [3, 4], 'cuts 1, 2 et 4 atteints');
   assert.deepEqual([R.global['plus-de-10-mm'].paire.a5.k, R.global['plus-de-10-mm'].paire.a5.n], [2, 4], 'à 5 mm : cuts 1 et 2');
   assert.deepEqual([R.parZone.pn['plus-de-10-mm'].paire.a10.k, R.parZone.pn['plus-de-10-mm'].paire.a10.n], [2, 2]);
