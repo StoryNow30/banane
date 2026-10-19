@@ -7,7 +7,7 @@
  *
  *   node tools/relecture-autonome.cjs extraire --partie P:N --echo DOSSIER [--echo DOSSIER…] [--jeu JEU.jsonl] --sortie CAS.jsonl
  *   node tools/relecture-autonome.cjs skip     --partie P:N --echo DOSSIER [...] --sortie SKIP.jsonl
- *   node tools/relecture-autonome.cjs table    --partie P:N --echo DOSSIER --journal J.json [--journal …] --cas CAS.jsonl --sortie TABLE.json
+ *   node tools/relecture-autonome.cjs table    --partie P:N --echo DOSSIER (--journal J.json [--journal …] | --sans-lot) --cas CAS.jsonl --sortie TABLE.json
  *   node tools/relecture-autonome.cjs etudier  --partie P:N --cas CAS.jsonl --table TABLE.json [--skip SKIP.jsonl] [--partie …] [--json S.json]
  *                                              [--reglages datasets/relecture-reglages-proposes.json --date AAAA-MM-JJ]
  *   node tools/relecture-autonome.cjs juger    --reglages R.json --partie P:N --cas … --table … [--skip …] --juger-partie-reservee [--json S.json]
@@ -315,9 +315,10 @@ function zonesDepuisCas(cas, { cuts = null } = {}) {
 /* Table de partie (même format que les tables de tools/verts-a-controler.cjs ; HORS DÉPÔT : elle porte les bords des rails) pour une partie
  * qui n'en a pas : lot lu dans les journaux Orbite, verts lus dans l'Écho (pose de départ de la première visite), zones reconnues sur les
  * cuts du lot, correction de Mic tirée des cas (pour les seuls jugements). */
-function construireTable({ projet, partie, echo, journaux, cas }) {
+function construireTable({ projet, partie, echo, journaux, cas, sansLot = false }) {
   const RM = require('./regles-metier.cjs'), lot = new Map();
-  for (const f of journaux) {
+  if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
+  for (const f of sansLot ? [] : journaux) {
     const j = RM.lireJournal(f, partie);
     for (const d of j.decisions) { const differe = !j.valide.has(d.cut); lot.set(d.cut, lot.has(d.cut) ? lot.get(d.cut) && differe : differe); }
   }
@@ -331,7 +332,8 @@ function construireTable({ projet, partie, echo, journaux, cas }) {
       dureeS: r2(duree), visites: c.visites.length, bords: A && B ? { left: A, right: B } : null });
   }
   cuts.sort((a, b) => a.i - b.i);
-  const z = zonesDepuisCas(cas, { cuts: new Set(lot.keys()) });
+  /* Sans lot (partie d'un opérateur humain relue en Écho), les zones se reconnaissent sur tous les cuts que Mic a visités. */
+  const z = zonesDepuisCas(cas, { cuts: sansLot ? null : new Set(lot.keys()) });
   return { format: 'ariane-verts-table-v1', projet, partie, lot: [...lot].sort((a, b) => a[0] - b[0]).map(([cut, differe]) => ({ cut, differe })),
     zonesPN: z.zonesPN, zonesADV: z.zonesADV, cuts, note: 'table de travail HORS DÉPÔT : elle porte les bords des rails' };
 }
@@ -729,13 +731,13 @@ module.exports = { FORMAT, FORMAT_ETUDE, FORMAT_JUGEMENT, FORMAT_REGLAGES, decal
 /* ------------------------------------------------------------------ ligne de commande */
 const lireJsonl = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
 function args(argv) {
-  const o = { mode: argv[0], echo: [], journal: [], parties: [] };
+  const o = { mode: argv[0], echo: [], journal: [], parties: [], sansLot: false };
   const courante = () => { if (!o.parties.length) throw Error('--partie d\'abord'); return o.parties.at(-1); };
   for (let i = 1; i < argv.length; i++) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; o.parties.push({ projet: p, partie: n, designation: `${p}:${n}` }); }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--jeu') o.jeu = val(); else if (k === '--sortie') o.sortie = val();
-    else if (k === '--journal') o.journal.push(val());
+    else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
     else if (k === '--cas') { const v = val(); if (o.mode === 'table') o.casFichier = v; else courante().cas = v; }
     else if (k === '--table') courante().table = val(); else if (k === '--skip') courante().skip = val();
     else if (k === '--json') o.json = val(); else if (k === '--reglages') o.reglages = val(); else if (k === '--date') o.date = val();
@@ -772,8 +774,8 @@ if (require.main === module) {
       const r = releverSkip(a.echo, a.partie); fs.writeFileSync(a.sortie, r.map(x => JSON.stringify(x)).join('\n') + '\n');
       console.log(JSON.stringify(bilanSkip(r)));
     } else if (a.mode === 'table') {
-      if (!a.partie || !a.echo.length || !a.journal.length || !a.casFichier || !a.sortie) throw Error('table --partie P:N --echo DOSSIER --journal J.json [...] --cas CAS.jsonl --sortie TABLE.json (hors dépôt : bords des rails)');
-      const t = construireTable({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, cas: lireJsonl(a.casFichier) });
+      if (!a.partie || !a.echo.length || !(a.journal.length || a.sansLot) || !a.casFichier || !a.sortie) throw Error('table --partie P:N --echo DOSSIER (--journal J.json [...] | --sans-lot) --cas CAS.jsonl --sortie TABLE.json (hors dépôt : bords des rails)');
+      const t = construireTable({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, cas: lireJsonl(a.casFichier), sansLot: a.sansLot });
       fs.writeFileSync(a.sortie, JSON.stringify(t));
       console.log(`partie ${a.projet}:${a.partie} : lot ${t.lot.length} (${t.lot.filter(x => x.differe).length} différés), PN ${t.zonesPN.length}, ADV ${t.zonesADV.length}, ${t.cuts.length} cuts à l'Écho`);
     } else if (a.mode === 'etudier') {
