@@ -85,6 +85,38 @@ Sous L1, la chaîne change (garde de paire éteinte, appuis à 10 cuts, poses va
 - Hors 2:1, les poses de L1 sont bonnes : erreur médiane 6,7 mm, 86,5 % à 20 mm, 5 poses à plus de 50 mm. **2:1 est le point faible** : 33 des 35 poses à plus de 50 mm, gain médian 1 mm.
 - Ces chiffres ne changent pas la candidate (D-219).
 
+## 4. Prédictions scellées (aucun Écho lu)
+
+Fichiers JSON lignes hors dépôt (une ligne par cut traité : sort réel du lot et sa pose, décision de chaque profil, pose, hypothèse, probabilité, écart au départ, vue déplacée), deux copies, rejoués avec `--juger-partie-reservee`. Jugement plus tard, à l'arrivée de l'Écho : `node tools/banc-differes.cjs comparer --prediction <fichier> --echo <dossier de l'Écho>` ; résumé sans vérité : `resumer`.
+
+| Partie, lot | Profils | SHA-256 |
+|---|---|---|
+| 2:17 bfb15534 | base, L1, L1-v | `755654149041e90724d9f694937feaa7aafaeddf837c9e9ee2793d1ad5c11f0d` |
+| 2:18 eb1d9bc2 | base, L1, L1-v | `10e8f38a0d2d0c90d3f656d19649b5a3e2c8f44b95e7097b3cb9c676f31d9367` |
+| 2:19 7f46bbc5 (partie 19 du 19/10, projet non confirmé) | base, L1, L1-v | `2c66542ba9cda418dd5c7f1ffbf3a983fca3c0ea70425db27aa6f6fc04918d8f` |
+| 2:19 7f46bbc5 | base, L1-s | `26ed3e70deedb141e3e236dc1ee22adb43c739d889b9c806a28456fa1324f3ac` |
+
+### 4.1 Chiffres sans vérité
+
+**2:17** (139 cuts, 41 différés réels, 32 en ADV) : L1 pose et valide 11, pose sans valider 13, laisse 17 (11 à plus de 150 mm) ; L1-v valide 31, laisse 10. Cuts posés par le lot : 94 sur 95 comparables à 2 mm près sous L1, 3 laissés.
+**2:18** (214 cuts, 37 différés réels, 30 en ADV) : L1 valide 17, sans valider 4, laisse 16 ; L1-v valide 26, laisse 11. Cuts posés par le lot : 153 à 2 mm, 6 à plus de 10 mm (jusqu'à 42,2 mm), 12 laissés ; vue déplacée 9 fois.
+
+**2:19** (348 cuts traités, 103 posés, 245 différés dont 243 en ADV, 1 aux abords, 1 sans nuage) :
+
+| | L1 | L1-v | L1-s |
+|---|--:|--:|--:|
+| (a) différés posés et validés | 242 | 243 | 50 |
+| (a) posés sans valider | 1 | 0 | 3 |
+| (a) laissés | 2 | 2 | 192 (180 : paire à plus de 150 mm ; 10 : départ le plus probable) |
+| (b) cuts posés par le lot, même pose à 2 mm / 5 / 10 mm | 71 / 72 / 73 | 71 / 72 / 73 | 103 / 103 / 103 |
+| (b) posés autrement (> 10 mm) | 30 (20 à 34,3 mm, tous en ADV, étage « window ») | 30 | 0 (écart max 0,6 mm) |
+| (b) laissés | 0 | 0 | 0 |
+| (c) vue déplacée | 196 (174 différés, 22 posés) | 196 | 3 (cuts 5030 à 5032) |
+
+Les 10 plus grands écarts sous L1 sur les cuts posés par le lot (tous en ADV) : 5049 (34,3 mm), 5209 (34,0), 5110 (33,6), 5244 (32,1), 5231 (31,5), 5095 (30,7), 5271 (30,3), 5062 (30,3), 5088 (29,4), 5101 (29,1).
+Lecture : sous L1, presque tout vient de la chaîne changée (garde de paire éteinte, poses devenues appuis, vue déplacée), très peu de la GCV2 ; sous L1-s, sans ces appuis, la GCV2 trouve la plupart des paires à plus de 150 mm de la pose de départ et ne pose rien. L'Écho de Mic dira lequel a raison.
+
+
 ## 5. Candidate de terrain « L1-s » (D-221) : détails tranchés avant la mesure
 
 D-221 (après le § 3.4 : sous L1, 59 poses réelles ne sont plus validées et 430 cuts verts sont posés autrement) : la chaîne du lot ne doit pas changer.
