@@ -1,5 +1,7 @@
 'use strict';
-/* RM-11 (test 9) — LA POSE NE CHANGE PAS ET LE LOT NE CHANGE PAS. La raison de la correction est une étiquette posée par Mic dans Écho : elle ne touche ni
+/* 4.9.5 test 10-ui (les trois présentations du panneau) — même contrat que la test 9 : seuls changent des fichiers qui ne posent ni ne valident (l'habillage
+ * `src/ui5*.js`, le panneau, ses feuilles de style) et les chaînes de version ; la pose et le lot sont identiques octet pour octet à la test 8.
+ * RM-11 (test 9) — LA POSE NE CHANGE PAS ET LE LOT NE CHANGE PAS. La raison de la correction est une étiquette posée par Mic dans Écho : elle ne touche ni
  * à l'endroit où Orbite pose les rails, ni à la façon dont un lot se déroule.
  *  1. Tout ce que la pose et le lot lisent (`src/*.js`, réglages de la relecture, empreintes gelées de la géométrie) est identique octet pour octet à la
  *     test 8 (tests/pose-inchangee-4958.json, empreintes prises sur d58a6f1 avant la fonction). Seuls changent les fichiers de la liste ci-dessous, qui
@@ -16,17 +18,20 @@ const sha=t=>crypto.createHash('sha256').update(t).digest('hex');
 const ECHO={'src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
 const VERSION_SEULE=['src/core.js','src/bridge.js'];   // le numéro de version, rien d'autre
+const manifeste=require('../manifest.json'),VERSION_COURANTE=manifeste.version,NOM_COURANT=manifeste.version_name;
+/* Fichiers de l'habillage du panneau (test 10-ui) : aucun ne lit ni ne commande la pose. */
+const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.9').join('4.9.5.8').split('4.9.5 test 9').join('4.9.5 test 8'):lire(f);
+  const texte=VERSION_SEULE.includes(f)?lire(f).split(VERSION_COURANTE).join('4.9.5.8').split(NOM_COURANT).join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]);assert.deepEqual(nouveaux,['raison-correction.js']);
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]);assert.deepEqual(nouveaux.sort(),['raison-correction.js',...HABILLAGE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

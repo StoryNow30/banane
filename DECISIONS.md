@@ -2564,13 +2564,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Documentation** : avant de la verser dans un dépôt, vérifier qu'elle n'est ni propriétaire ni sensible. Les deux dépôts sont publics. Sinon, la garder hors dépôt et n'en reporter que les règles, reformulées.
 - **Précision de Mic, sur les corrections des débutants** : « elles sont utiles, car j'y applique le bon comportement de la règle métier. La lacune des débutants est bien plus dans la règle métier que dans leur placement sur le nuage. » Conséquence : les Échos sur des parties de débutants servent à apprendre **la sélection** (quoi relire, où, avec quelles marges, quand corriger). Les couples Orbite → Écho servent à apprendre **la précision de pose d'Ariane**. Les deux jeux restent séparés dans le manifeste.
 
-## D-178 — Pas de Fable avant la dernière session qui précède la réinitialisation hebdomadaire (17 octobre 2026)
+## D-178 — Pas de le niveau le plus fort avant la dernière session qui précède la réinitialisation hebdomadaire (17 octobre 2026)
 
-- **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **Fable est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
+- **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **le niveau le plus fort est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
 - **Conséquences** :
   - les chantiers et les revues tournent avec le modèle de session par défaut ;
-  - la relecture de la test 7 se fait **sans Fable dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **Sonnet 5.5** comme modèle de session pour cette relecture (D-181) ;
-  - aucun agent ni workflow ne porte `model: 'fable'` avant elle.
+  - la relecture de la test 7 se fait **sans le niveau le plus fort dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **le niveau rapide** comme modèle de session pour cette relecture (D-181) ;
+  - aucun agent ni workflow ne porte un agent du niveau le plus fort avant elle.
 
 ## D-179 — Maj+Espace sur un vert valide sur place, sans changer de cut (17 octobre 2026)
 
@@ -2597,9 +2597,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mesure sur le terrain** : l'ombre continue de calculer et de noter toutes les zones ; les Échos de Mic qui suivent un lot en mode corriger montrent s'il a dû reprendre des cuts corrigés par Ariane. C'est la mesure qui dira si la zone peut rester ouverte.
 - **Suite** : le changement part sur la branche de la relecture, avec les corrections de la contre-revue en cours et celle de D-179, avant la fusion dans 50-base.
 
-## D-181 — Quota presque épuisé : Sonnet 5.5 pour la relecture de la test 7, travail resserré (17 octobre 2026)
+## D-181 — Quota presque épuisé : le niveau rapide pour la relecture de la test 7, travail resserré (17 octobre 2026)
 
-- **Mic** : il reste très peu de quota ; il refuse de repasser sur Opus. La relecture de la test 7 se fait avec **Sonnet 5.5**, au plus haut effort, sans Fable.
+- **Mic** : il reste très peu de quota ; il refuse de repasser sur niveau fort. La relecture de la test 7 se fait avec **le niveau rapide**, au plus haut effort, sans le niveau le plus fort.
 - **Conséquences** :
   - la contre-revue lancée à cinq angles et au plus haut effort est **arrêtée** : elle relisait du code que D-179 et D-180 font changer ;
   - un seul agent applique D-179 (Maj+Espace sur place) et D-180 (ADV et abords), avec un seul verify complet à la fin ;
@@ -2948,3 +2948,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Application** : une session de recherche et développement distincte est ouverte (branche `claude/50-ui-5.0`) avec, dans l'ordre : inventaire honnête de chaque bouton/case/réglage (qui s'en sert, quelle décision l'a introduit, ce que les consignes de séance font cocher à chaque fois), conception nouvelle pensée depuis la séance de Mic (zéro réglage en séance, une action principale à la fois, état en une phrase, un seul geste « envoyer », profils nommés à la place des grilles de cases, rien de retiré des journaux ni des exports), deux ou trois directions contrastées en maquettes HTML, recommandation, puis développement derrière une bascule (ancien panneau conservé tant que Mic n'a pas validé), exports identiques octet pour octet, essais, paquet.
 - **Appui** : le skill de patrons de conception tiré de refactoring.guru (branche `claude/design-patterns-ariane-69osmz`, `claude/skills/design-patterns/`) sert là où un symptôme réel du code du panneau le justifie, jamais par principe.
 - **Hors périmètre de cette session** : moteur, lot, relecture, Écho et GCV2 (le cap D-217 continue en parallèle). Le moteur et la géométrie restent intacts.
+
+## D-219 — Interface 5.0 : les directions A à E sont rejetées ; trois présentations (Linear, Raycast, Figma et Arc) à essayer sur Chrome (19 octobre 2026)
+
+- **Mic** : il rejette les trois premières directions, puis la piste « Apple TV » et la piste « produits Apple » (trop proches de l'actuel, trop pauvres, mauvais point de départ, ni profils ni « Envoyer »). Il cite Linear en tête, puis Raycast, Arc et Figma. Les maquettes F (Linear), G (Raycast, refaite plus fidèle) et H (Figma et Arc) lui plaisent toutes (« très réussies, je ne sais pas quoi choisir ») : il veut **les essayer sur Chrome**.
+- **Décision** : trois versions installables, une par présentation (4.9.5.10 Linear, 4.9.5.11 Raycast, 4.9.5.12 Figma et Arc), construites sur la test 9 par un **habillage** de `panel.js` (qui reste le moteur de la page) qui clique les boutons d'origine : pose, lot, relecture, Écho et exports inchangés, aucun message de plus au service worker. Ancien panneau conservé. Pas de « Envoyer », pas de profils, pas d'envoi automatique.
+- **Numéros** : `4.9.5.10` à `4.9.5.12`, nom « 4.9.5 test N » exigé par les essais de version. Si la « test 10 » du cap différés (D-217) est construite à part, elle prend le numéro suivant.
+- **À décider avec Mic après l'essai** : la présentation retenue (ou une combinaison), et ce qui manque (verts à contrôler, départs des parties, résumé de la partie restent dans l'ancien panneau).
+

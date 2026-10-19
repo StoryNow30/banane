@@ -4,7 +4,7 @@ Demande de Mic : « une toute nouvelle conception pour la 5.0, radicalement oppo
 
 Cette fiche suit `fiches/UI_INVENTAIRE.md` (l'état des lieux, élément par élément). Les maquettes sont dans `maquettes/ui-5.0/` : ouvrir `index.html` dans un navigateur.
 
-**Statut : conception et recommandation, pas de code de panneau.** Le développement ne commence qu'après la réponse de Mic (§ 9).
+**Statut (19 octobre, soir) : brouillon rejeté par Mic.** Les directions A à E de cette fiche (et la recommandation A, les profils, « Envoyer ») sont rejetées (D-219). Les maquettes retenues pour l'essai sont F, G et H (`maquettes/ui-5.0/`), construites dans les versions 4.9.5 test 10, 11 et 12 (`CHANGELOG.md`). Le modèle commun du § 3 n'est pas repris ; l'inventaire (`fiches/UI_INVENTAIRE.md`) reste valable.
 
 ## 1. Ce que la séance de Mic nous apprend
 

@@ -149,21 +149,21 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 
 **Après la test 7 (D-176)** : chantier « relecture au fil du lot ». La même logique s'applique pendant le lot, en visitant les cuts voisins d'un PN, d'une ADV ou d'un rouge isolé. On la compare à la passe de fin de lot.
 
-**D-178** : Fable est interdit jusqu'à la dernière session de 5 h qui précède la réinitialisation hebdomadaire, le dimanche 18 octobre à 22 h. Ne jamais passer `model: 'fable'` avant cette session.
+**D-178** : le niveau le plus fort est interdit jusqu'à la dernière session de 5 h qui précède la réinitialisation hebdomadaire, le dimanche 18 octobre à 22 h. Ne jamais passer un agent du niveau le plus fort avant cette session.
 
 ## Matin du 18 octobre 2026 (D-179 à D-183) : test 7 construite, relecture finale en cours
 
 **Fait** :
 - Maj+Espace valide un vert sur place (Mic, D-179) ; la passe est corrigée.
 - L'ADV et les abords agissent en mode « corriger », défaut coupé (D-180).
-- Quota presque épuisé, Sonnet 5.5, travail resserré (D-181).
+- Quota presque épuisé, le niveau rapide, travail resserré (D-181).
 - P-7 terminée, la combinaison reste en ombre (D-182).
 - Contre-revue de la relecture : 3 défauts démontrés et corrigés (statut du cut relu avant la pose, table de la liste incomplète refusée, vert hors zone jamais corrigé), `claude/50-relecture-ombre` à da1d9bd.
 - Fusion dans `claude/50-base` (803fb76) ; version 4.9.5.7 ; verify complet : 2 221 essais, 2 219 réussis, 0 échec, 2 ignorés.
 - Paquet `ariane-4.9.5-test.7.zip` (2 266 750 octets) dans `scratchpad/livraison/`.
 
 **Au réveil suivant, dans l'ordre** :
-1. Lire le rapport de la relecture finale de la test 7 (agent lancé au plus haut effort, sans Fable). Corriger ce qui est démontré, refaire le verify une seule fois, reconstruire le paquet, recalculer le SHA-256.
+1. Lire le rapport de la relecture finale de la test 7 (agent lancé au plus haut effort, sans le niveau le plus fort). Corriger ce qui est démontré, refaire le verify une seule fois, reconstruire le paquet, recalculer le SHA-256.
 2. Envoyer le zip à Mic avec son SHA-256 et sa taille (jamais avant la fin de la relecture finale).
 3. Archiver tout export reçu de Mic dans banane-data (zips bruts, SHA256SUMS, NOTES.md, INDEX.md avant « ## Benchmarks »), après vérification qu'aucune identité d'opérateur n'y figure.
 4. Chantier suivant : « relecture au fil du lot » (D-176). Le jugement unique de P-7 sur les parties réservées reste en attente (réglages figés `datasets/relecture-reglages-p7-combinaison.json`).
@@ -192,13 +192,13 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - **Rien fusionné** dans `claude/50-base` ni `main` (jamais sans Mic). La relecture reste coupée par défaut.
 - **Attendre Mic** : exports de la test 8 (lot « Corriger » et « Ombre » sur parties neuves, puis Écho) et les corrections qu'il doit fournir dans l'après-midi. Les archiver dans banane-data (zips d'origine, SHA256SUMS, NOTES.md, ligne INDEX.md avant « ## Benchmarks »), après avoir vérifié qu'aucune identité d'opérateur n'y figure, puis les lire (D-184, D-185 donnent le modèle).
 - **À étudier ensuite** : première zone d'ADV de la partie 11 non détectée (cuts 6362 à 6424) ; marge de fin d'ADV ; « relecture au fil du lot » (D-176) ; défaut d'export (volume 1 contenant le volume 2) ; ordre du panneau.
-- Le déclencheur `trig_013CLrwFHFamJTuTq5pkhqcG` (Opus, 22 h 05) a tourné ; son prompt est dépassé par cette section. Rien de lourd (quota, D-181).
+- Le déclencheur `trig_013CLrwFHFamJTuTq5pkhqcG` (niveau fort, 22 h 05) a tourné ; son prompt est dépassé par cette section. Rien de lourd (quota, D-181).
 
 ## Nuit du 18 au 19 octobre 2026 (D-188, D-189) : Mic dort, autorisations de travail accordées
 
 - **Autorisation de Mic** : tout le travail, les outils, les branches, les archives. Reste réservé : fusion dans `main`, étiquette, publication, activation d'une pose sur le terrain, PR sans demande.
 - **Fait cette nuit** : Échos des parties 10, 14, 15, 16 archivés dans banane-data (2df4abb à c2fbc97) ; compteur des cuts appris par la GCV2 (`tools/compteur-gcv2.cjs`, branche `claude/50-compteur-gcv2`, commit poussé, verify : 2 227 essais, 2 225 réussis, 0 échec, 2 ignorés ; `fiches/COMPTEUR_GCV2.md`) : 1 631 cuts corrigés ; mesure du moteur contre Mic sur les parties 14 à 16 (D-189). La test 8 est remise à Mic (D-187).
-- **Session Opus de 22 h 05** : elle n'a pas pu pousser (le dépôt banane n'est pas dans ses sources) ; tout le travail est fait ici. Ses commits locaux ne sont nulle part ailleurs : ne rien en attendre. Le déclencheur `trig_013CLrwFHFamJTuTq5pkhqcG` a tourné et ne doit plus servir.
+- **Session niveau fort de 22 h 05** : elle n'a pas pu pousser (le dépôt banane n'est pas dans ses sources) ; tout le travail est fait ici. Ses commits locaux ne sont nulle part ailleurs : ne rien en attendre. Le déclencheur `trig_013CLrwFHFamJTuTq5pkhqcG` a tourné et ne doit plus servir.
 - **Réveil suivant** : `send_later` à 03 h 26 UTC (`trig_01Y5LVv1ixMsJKDeA5tjHkWs`) ; à chaque réveil, reprogrammer +305 min d'abord.
 - **À faire ensuite (dans l'ordre)** : (1) juger la règle prudente figée de D-180 sur les parties 14 à 16, avec une table de zones faite des notes de Mic (`relecture-autonome.cjs juger … --juger-partie-reservee`, après lecture du manifeste) ; (2) détection de la première zone d'ADV de la partie 11 (6362–6424) et marges de fin ; (3) fusionner `claude/50-compteur-gcv2` dans `claude/50-base` seulement si Mic le dit (l'outil ne touche pas l'extension) ; (4) archiver tout nouvel export de Mic (jamais le code de projet ESV).
 - **Questions à poser à Mic, une à la fois** (voir D-188) : quand un cut est « appris » ; compter les retouches de 5 mm ou moins ; réserver des parties pour juger la GCV2 ; projet des parties 14 à 16 ; final de la partie 15.
