@@ -92,10 +92,15 @@ test('le fichier d\'empreintes du dépôt : bien formé, toutes les pièces du p
   assert.deepEqual(chemins, E.PIECES.map(p => p[0]), 'les pièces consignées sont celles de la liste de l\'outil');
   for (const f of doc.fichiers) { assert.match(f.sha256, /^[0-9a-f]{64}$/); assert.ok(!path.isAbsolute(f.chemin) && !f.chemin.includes('..'), f.chemin); assert.ok(fs.existsSync(path.join(__dirname, '..', f.chemin)), `${f.chemin} existe`); }
   for (const famille of ['jeux', 'cas']) for (const x of doc[famille] || []) { assert.match(x.sha256, /^[0-9a-f]{64}$/); assert.ok(!path.isAbsolute(x.chemin) && !x.chemin.includes('..'), x.chemin); }
-  /* les 11 jeux d'apprentissage de G1-b sont consignés, et leurs empreintes sont celles que les paramètres exportés nomment déjà */
-  const params = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'datasets', 'gcv2-parametres.json'), 'utf8'));
-  assert.ok(Array.isArray(doc.jeux) && doc.jeux.length === params.parties.length, 'un jeu par partie d\'apprentissage');
-  for (const p of params.parties) { const [pr, n] = p.partie.split(':'); const j = doc.jeux.find(x => x.chemin === `jeu-${pr}-${n}.jsonl`); assert.ok(j, p.partie); assert.equal(j.sha256, p.sha256, `jeu ${p.partie} : même empreinte que les paramètres exportés`); }
+  /* jeu causal (14 parties, D-213) : un jeu de relecture et un jeu « lot » par partie, un cas par partie ; leurs empreintes sont celles que les paramètres
+   * appris sur le jeu causal nomment (datasets/gcv2-parametres-causal.json : `parties` pour la relecture, `partiesLot` pour le lot). */
+  const params = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'datasets', 'gcv2-parametres-causal.json'), 'utf8'));
+  assert.ok(Array.isArray(doc.jeux) && doc.jeux.length === params.parties.length + params.partiesLot.length, 'un jeu de relecture et un jeu lot par partie d\'apprentissage');
+  assert.ok(Array.isArray(doc.cas) && doc.cas.length === params.parties.length, 'un cas par partie');
+  for (const [liste, prefixe] of [[params.parties, 'jeu'], [params.partiesLot, 'jeu-lot']]) for (const p of liste) {
+    const [pr, n] = p.partie.split(':'); const j = doc.jeux.find(x => x.chemin === `${prefixe}-${pr}-${n}.jsonl`);
+    assert.ok(j, `${prefixe} ${p.partie}`); assert.equal(j.sha256, p.sha256, `${prefixe} ${p.partie} : même empreinte que les paramètres exportés`);
+  }
   const brut = fs.readFileSync(E.FICHIER, 'utf8');
   assert.ok(!/\/tmp\/|\/home\/|scratchpad/.test(brut), 'aucun chemin de machine');
 });

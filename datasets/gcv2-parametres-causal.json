@@ -1,0 +1,2786 @@
+{
+ "format": "ariane-gcv2-parametres-v1",
+ "version": "gcv2-g1b-1",
+ "date": "2026-10-19",
+ "graine": 20261019,
+ "lambda": null,
+ "accord": true,
+ "note": "Paramètres de la GCV2 appris sur les parties nommées. Aucune coordonnée, aucune ligne d'exemple : des coefficients, des moyennes, des seuils et des empreintes.",
+ "parties": [
+  {
+   "partie": "1:12",
+   "sha256": "d1b3043246292e67f590c70f233370da078fcb671bae678cadf568a49a986714"
+  },
+  {
+   "partie": "1:13",
+   "sha256": "fb0c0d3e678e0ea2873d4ded8eccd393271a97f473ba4acb26e985a978a1a575"
+  },
+  {
+   "partie": "1:14",
+   "sha256": "1be9680b490db9852f556be07d848eaecd956b390723c014052e38b3d61520fb"
+  },
+  {
+   "partie": "1:15",
+   "sha256": "cbf34230b5bf1fa9058a443698b686dca2847566e3bef0f9d0935a4b93ac810e"
+  },
+  {
+   "partie": "1:16",
+   "sha256": "3057acd9022aa426d45078ed31a00b54dd714ededae618cbf3c38044e2c60e24"
+  },
+  {
+   "partie": "1:17",
+   "sha256": "ee626ab4de9045e51c0eb50bef4002f50719c22ae5351921e7f820bacd5ccc47"
+  },
+  {
+   "partie": "1:24",
+   "sha256": "c5efa9e9800e3ffd0ae1be1783b083d310f77e7e9143aec32d86cd1b00531d5e"
+  },
+  {
+   "partie": "1:29",
+   "sha256": "07455cb76b734e659dfd79251ab008d3d2d269340d342093f9b1213cea3aa877"
+  },
+  {
+   "partie": "2:1",
+   "sha256": "3fe17735eaf6e86d74d2837af5196386487a5ff695d9e8f279cb87e8d9d5379d"
+  },
+  {
+   "partie": "2:6",
+   "sha256": "e419c3e2d951c9ce589684f50e7582035188f96f955efbf96671b7c25e41eeb8"
+  },
+  {
+   "partie": "2:7",
+   "sha256": "36bb75d4034d2e89b24afc3b1c1b3fef98ac8fc15b25d0fb2856935b94ef9951"
+  },
+  {
+   "partie": "2:10",
+   "sha256": "ed662cd870bc54c26ed4263e5e92bb0b30b80a1c029d246e633cbd873433373c"
+  },
+  {
+   "partie": "2:11",
+   "sha256": "3474fcef5bd12f63680d492604d8a65717467fa39191f0863b551b84ca1a65b3"
+  },
+  {
+   "partie": "2:13",
+   "sha256": "b22522f656a89c1b1565c3cb3de442721d605961c752f72520e0cf32754e4a3e"
+  }
+ ],
+ "garde": {
+  "ecartementMedianeMm": 15,
+  "contratMm": [
+   1420,
+   1470
+  ],
+  "lateralMaxMm": 45,
+  "deversMaxMm": 15
+ },
+ "cible": {
+  "erreurMax": 0.09,
+  "mauvaiseVoieMax": 0,
+  "justesMinZone": 10
+ },
+ "listeBlanche": [
+  {
+   "nom": "perte",
+   "source": "hyp",
+   "chemin": "perte",
+   "transformation": "log10",
+   "type": "numerique"
+  },
+  {
+   "nom": "ratioPerte",
+   "source": "hyp",
+   "chemin": "ratioPerte",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "lignesSommet",
+   "source": "hyp",
+   "chemin": "lignesSommet",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "faces",
+   "source": "hyp",
+   "chemin": "faces",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "pointsDessus",
+   "source": "hyp",
+   "chemin": "pointsDessus",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "pointsFlanc",
+   "source": "hyp",
+   "chemin": "pointsFlanc",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "epaisseurDessusMm",
+   "source": "hyp",
+   "chemin": "epaisseurDessusMm",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "distCelluleMm",
+   "source": "hyp",
+   "chemin": "distCelluleMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "ratioCelluleProche",
+   "source": "hyp",
+   "chemin": "ratioCelluleProche",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "dzConventionMm",
+   "source": "hyp",
+   "chemin": "dzConventionMm",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "duConventionMm",
+   "source": "hyp",
+   "chemin": "duConventionMm",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "deplMm",
+   "source": "hyp",
+   "chemin": "deplMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "ecartVoieMm",
+   "source": "hyp",
+   "chemin": "ecartVoieMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "ecartVoisinsMm",
+   "source": "hyp",
+   "chemin": "ecartVoisinsMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "ecartMedAutreH0Mm",
+   "source": "hyp",
+   "chemin": "ecartMedAutreH0Mm",
+   "transformation": "abs",
+   "type": "numerique"
+  },
+  {
+   "nom": "ecartPaireMedMm",
+   "source": "hyp",
+   "chemin": "ecartPaireMedMm",
+   "transformation": "abs",
+   "type": "numerique"
+  },
+  {
+   "nom": "hauteurMm",
+   "source": "hyp",
+   "chemin": "hauteurMm",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "strong",
+   "source": "hyp",
+   "chemin": "strong",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "pente",
+   "source": "hyp",
+   "chemin": "pente",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "fenetre",
+   "source": "hyp",
+   "chemin": "fenetre",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "competitive",
+   "source": "hyp",
+   "chemin": "competitive",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "astar",
+   "source": "hyp",
+   "chemin": "astar",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "publiee",
+   "source": "hyp",
+   "chemin": "publiee",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "s1",
+   "source": "hyp",
+   "chemin": "s1",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "strongCelluleProche",
+   "source": "hyp",
+   "chemin": "strongCelluleProche",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "hauteur",
+   "source": "lig",
+   "chemin": "hauteur",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "confianceAstar",
+   "source": "rail",
+   "chemin": "confianceAstar",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "rapportPerteAstar",
+   "source": "rail",
+   "chemin": "rapportPerteAstar",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "s1Rail",
+   "source": "rail",
+   "chemin": "s1",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "fortsConcurrents",
+   "source": "rail",
+   "chemin": "fortsConcurrents",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "competitives",
+   "source": "rail",
+   "chemin": "competitives",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "grappes",
+   "source": "rail",
+   "chemin": "grappes",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "fortsReservoir",
+   "source": "rail",
+   "chemin": "fortsReservoir",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "reservoir",
+   "source": "rail",
+   "chemin": "reservoir",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "pointsRail",
+   "source": "rail",
+   "chemin": "pointsRail",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "perteMin",
+   "source": "rail",
+   "chemin": "perteMin",
+   "transformation": "log10",
+   "type": "numerique"
+  },
+  {
+   "nom": "appuisChaine",
+   "source": "ctx",
+   "chemin": "appuisChaine",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "voisinsN",
+   "source": "ctx",
+   "chemin": "voisinsN",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "voisinsHumains",
+   "source": "ctx",
+   "chemin": "voisinsHumains",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "voisinsLot",
+   "source": "ctx",
+   "chemin": "voisinsLot",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "voisinsEncadre",
+   "source": "ctx",
+   "chemin": "voisinsEncadre",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "voisinsCoupMin",
+   "source": "ctx",
+   "chemin": "voisinsCoupMin",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "ecartDepartMedMm",
+   "source": "ctx",
+   "chemin": "ecartDepartMedMm",
+   "transformation": "abs",
+   "type": "numerique"
+  },
+  {
+   "nom": "accNProches5",
+   "source": "acc",
+   "chemin": "nProches5",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "accNProches10",
+   "source": "acc",
+   "chemin": "nProches10",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "accPlusProcheMm",
+   "source": "acc",
+   "chemin": "plusProcheMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "accDistH1Mm",
+   "source": "acc",
+   "chemin": "distH1Mm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "accDistChaineMm",
+   "source": "acc",
+   "chemin": "distChaineMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "accDistVoisinsMm",
+   "source": "acc",
+   "chemin": "distVoisinsMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "accNOrigines",
+   "source": "acc",
+   "chemin": "nOrigines",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6AmpleurMm",
+   "source": "hyp",
+   "chemin": "h6AmpleurMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6DistCuts",
+   "source": "hyp",
+   "chemin": "h6DistCuts",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6NVoisins",
+   "source": "hyp",
+   "chemin": "h6NVoisins",
+   "transformation": "id",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6DispersionMm",
+   "source": "hyp",
+   "chemin": "h6DispersionMm",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6Perte",
+   "source": "hyp",
+   "chemin": "h6Perte",
+   "transformation": "log10",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6LignesSommet",
+   "source": "hyp",
+   "chemin": "h6LignesSommet",
+   "transformation": "log",
+   "type": "numerique"
+  },
+  {
+   "nom": "h6DansReservoir",
+   "source": "hyp",
+   "chemin": "h6DansReservoir",
+   "transformation": "bool",
+   "type": "booleen"
+  },
+  {
+   "nom": "palier",
+   "source": "hyp",
+   "chemin": "palier",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "convention",
+   "source": "hyp",
+   "chemin": "convention",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "groupeHauteur",
+   "source": "hyp",
+   "chemin": "groupeHauteur",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "chaineEtage",
+   "source": "hyp",
+   "chemin": "chaineEtage",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "hauteurAbstention",
+   "source": "hyp",
+   "chemin": "hauteurAbstention",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "statut",
+   "source": "rail",
+   "chemin": "statut",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "motif",
+   "source": "rail",
+   "chemin": "motif",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "etageChaine",
+   "source": "ctx",
+   "chemin": "etageChaine",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "zone",
+   "source": "ctx",
+   "chemin": "zone",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "role",
+   "source": "ctx",
+   "chemin": "role",
+   "transformation": "id",
+   "type": "categorie"
+  },
+  {
+   "nom": "balises",
+   "source": "hyp",
+   "chemin": "balises",
+   "transformation": "id",
+   "type": "multiple"
+  },
+  {
+   "nom": "origines",
+   "source": "lig",
+   "chemin": "origines",
+   "transformation": "id",
+   "type": "multiple"
+  },
+  {
+   "nom": "sousOrigines",
+   "source": "lig",
+   "chemin": "sousOrigines",
+   "transformation": "id",
+   "type": "multiple"
+  }
+ ],
+ "interdits": [
+  "visites",
+  "reference",
+  "etat",
+  "etiquette",
+  "micRailMm",
+  "micMaxMm",
+  "mic",
+  "grosse",
+  "ecartMm",
+  "classe"
+ ],
+ "usages": {
+  "relecture": {
+   "lambda": 30,
+   "criteresLambda": {
+    "3": 0.130246,
+    "30": 0.128802,
+    "300": 0.130353
+   },
+   "nCas": 3700,
+   "nExemples": 94806,
+   "colonnes": [
+    "perte",
+    "perte:manque",
+    "ratioPerte",
+    "ratioPerte:manque",
+    "lignesSommet",
+    "lignesSommet:manque",
+    "faces",
+    "faces:manque",
+    "pointsDessus",
+    "pointsFlanc",
+    "epaisseurDessusMm",
+    "epaisseurDessusMm:manque",
+    "distCelluleMm",
+    "distCelluleMm:manque",
+    "ratioCelluleProche",
+    "ratioCelluleProche:manque",
+    "dzConventionMm",
+    "dzConventionMm:manque",
+    "duConventionMm",
+    "duConventionMm:manque",
+    "deplMm",
+    "ecartVoieMm",
+    "ecartVoieMm:manque",
+    "ecartVoisinsMm",
+    "ecartVoisinsMm:manque",
+    "ecartMedAutreH0Mm",
+    "ecartMedAutreH0Mm:manque",
+    "ecartPaireMedMm",
+    "ecartPaireMedMm:manque",
+    "hauteurMm",
+    "hauteurMm:manque",
+    "strong",
+    "strong:manque",
+    "pente",
+    "pente:manque",
+    "fenetre",
+    "fenetre:manque",
+    "competitive",
+    "competitive:manque",
+    "astar",
+    "publiee",
+    "s1",
+    "strongCelluleProche",
+    "strongCelluleProche:manque",
+    "hauteur",
+    "confianceAstar",
+    "confianceAstar:manque",
+    "rapportPerteAstar",
+    "rapportPerteAstar:manque",
+    "s1Rail",
+    "fortsConcurrents",
+    "fortsConcurrents:manque",
+    "competitives",
+    "competitives:manque",
+    "grappes",
+    "grappes:manque",
+    "fortsReservoir",
+    "fortsReservoir:manque",
+    "reservoir",
+    "pointsRail",
+    "pointsRail:manque",
+    "perteMin",
+    "perteMin:manque",
+    "appuisChaine",
+    "voisinsN",
+    "voisinsHumains",
+    "voisinsLot",
+    "voisinsEncadre",
+    "voisinsCoupMin",
+    "voisinsCoupMin:manque",
+    "ecartDepartMedMm",
+    "ecartDepartMedMm:manque",
+    "accNProches5",
+    "accNProches10",
+    "accPlusProcheMm",
+    "accPlusProcheMm:manque",
+    "accDistH1Mm",
+    "accDistH1Mm:manque",
+    "accDistChaineMm",
+    "accDistChaineMm:manque",
+    "accDistVoisinsMm",
+    "accDistVoisinsMm:manque",
+    "accNOrigines",
+    "h6AmpleurMm",
+    "h6AmpleurMm:manque",
+    "h6DistCuts",
+    "h6DistCuts:manque",
+    "h6NVoisins",
+    "h6NVoisins:manque",
+    "h6DispersionMm",
+    "h6DispersionMm:manque",
+    "h6Perte",
+    "h6Perte:manque",
+    "h6LignesSommet",
+    "h6LignesSommet:manque",
+    "h6DansReservoir",
+    "h6DansReservoir:manque",
+    "palier=PARTIAL_FACE",
+    "palier=STRONG_FACE",
+    "palier=WEAK_FACE",
+    "palier=∅",
+    "convention=appliquee",
+    "convention=shift-out-of-domain",
+    "convention=top-under-observed",
+    "convention=∅",
+    "groupeHauteur=applique",
+    "groupeHauteur=refuse",
+    "groupeHauteur=∅",
+    "chaineEtage=choice",
+    "chaineEtage=crossing",
+    "chaineEtage=first-pass",
+    "chaineEtage=window",
+    "chaineEtage=∅",
+    "hauteurAbstention=calage",
+    "hauteurAbstention=dessus-peu-observe",
+    "hauteurAbstention=etage",
+    "hauteurAbstention=∅",
+    "statut=absent",
+    "statut=candidate",
+    "statut=unresolved",
+    "motif=absent",
+    "motif=ambiguity",
+    "motif=candidate",
+    "motif=flank",
+    "motif=gauge-out-of-contract",
+    "motif=minTop",
+    "motif=rsf",
+    "motif=slope",
+    "motif=window",
+    "etageChaine=choice",
+    "etageChaine=crossing",
+    "etageChaine=deferred",
+    "etageChaine=first-pass",
+    "etageChaine=window",
+    "zone=abords",
+    "zone=adv",
+    "zone=hors",
+    "zone=liste",
+    "zone=pn",
+    "role=differe",
+    "role=rouge",
+    "role=vert",
+    "balises∋astar-published",
+    "balises∋coarse-best",
+    "balises∋engine-published",
+    "balises∋local-min",
+    "balises∋min-loss",
+    "balises∋min-loss-partial",
+    "balises∋min-loss-strong",
+    "balises∋min-loss-supported",
+    "balises∋partial-local-min",
+    "balises∋strong-local-min",
+    "balises∋top>=15",
+    "origines∋H0",
+    "origines∋H1",
+    "origines∋H2",
+    "origines∋H3",
+    "origines∋H4",
+    "origines∋H5",
+    "origines∋H6",
+    "sousOrigines∋astar",
+    "sousOrigines∋chaine",
+    "sousOrigines∋comp",
+    "sousOrigines∋comp-strong",
+    "sousOrigines∋depart",
+    "sousOrigines∋ecartement-median",
+    "sousOrigines∋h6-humain-mediane-paire",
+    "sousOrigines∋h6-humain-mediane-rail",
+    "sousOrigines∋h6-humain-proche-paire",
+    "sousOrigines∋h6-humain-proche-rail",
+    "sousOrigines∋h6-lot-mediane-paire",
+    "sousOrigines∋h6-lot-mediane-rail",
+    "sousOrigines∋h6-lot-proche-paire",
+    "sousOrigines∋h6-lot-proche-rail",
+    "sousOrigines∋strong-ecartee",
+    "sousOrigines∋voie",
+    "sousOrigines∋voisins-humains",
+    "sousOrigines∋voisins-lot"
+   ],
+   "normalisation": [
+    {
+     "nom": "perte",
+     "moyenne": -4.651032,
+     "ecartType": 0.848516,
+     "manque": true
+    },
+    {
+     "nom": "ratioPerte",
+     "moyenne": 2.585477,
+     "ecartType": 1.837111,
+     "manque": true
+    },
+    {
+     "nom": "lignesSommet",
+     "moyenne": 3.801312,
+     "ecartType": 0.639984,
+     "manque": true
+    },
+    {
+     "nom": "faces",
+     "moyenne": 11.040071,
+     "ecartType": 8.897886,
+     "manque": true
+    },
+    {
+     "nom": "pointsDessus",
+     "moyenne": 3.50083,
+     "ecartType": 1.256056,
+     "manque": false
+    },
+    {
+     "nom": "pointsFlanc",
+     "moyenne": 2.01268,
+     "ecartType": 1.167943,
+     "manque": false
+    },
+    {
+     "nom": "epaisseurDessusMm",
+     "moyenne": 7.88414,
+     "ecartType": 3.384259,
+     "manque": true
+    },
+    {
+     "nom": "distCelluleMm",
+     "moyenne": 1.842265,
+     "ecartType": 0.841821,
+     "manque": true
+    },
+    {
+     "nom": "ratioCelluleProche",
+     "moyenne": 2.231475,
+     "ecartType": 1.761914,
+     "manque": true
+    },
+    {
+     "nom": "dzConventionMm",
+     "moyenne": 4.010044,
+     "ecartType": 5.375855,
+     "manque": true
+    },
+    {
+     "nom": "duConventionMm",
+     "moyenne": -1.190848,
+     "ecartType": 2.413401,
+     "manque": true
+    },
+    {
+     "nom": "deplMm",
+     "moyenne": 2.437676,
+     "ecartType": 1.343424,
+     "manque": false
+    },
+    {
+     "nom": "ecartVoieMm",
+     "moyenne": 2.550686,
+     "ecartType": 1.261223,
+     "manque": true
+    },
+    {
+     "nom": "ecartVoisinsMm",
+     "moyenne": 2.571276,
+     "ecartType": 1.241111,
+     "manque": true
+    },
+    {
+     "nom": "ecartMedAutreH0Mm",
+     "moyenne": 23.12584,
+     "ecartType": 31.775478,
+     "manque": true
+    },
+    {
+     "nom": "ecartPaireMedMm",
+     "moyenne": 10.738812,
+     "ecartType": 18.68438,
+     "manque": true
+    },
+    {
+     "nom": "hauteurMm",
+     "moyenne": 0.81709,
+     "ecartType": 2.342365,
+     "manque": true
+    },
+    {
+     "nom": "strong",
+     "moyenne": 0.888779,
+     "ecartType": 0.314406,
+     "manque": true
+    },
+    {
+     "nom": "pente",
+     "moyenne": 0.00828,
+     "ecartType": 0.090617,
+     "manque": true
+    },
+    {
+     "nom": "fenetre",
+     "moyenne": 0.997571,
+     "ecartType": 0.049222,
+     "manque": true
+    },
+    {
+     "nom": "competitive",
+     "moyenne": 0.331196,
+     "ecartType": 0.470643,
+     "manque": true
+    },
+    {
+     "nom": "astar",
+     "moyenne": 0.128677,
+     "ecartType": 0.334842,
+     "manque": false
+    },
+    {
+     "nom": "publiee",
+     "moyenne": 0.114961,
+     "ecartType": 0.318975,
+     "manque": false
+    },
+    {
+     "nom": "s1",
+     "moyenne": 0.007108,
+     "ecartType": 0.084009,
+     "manque": false
+    },
+    {
+     "nom": "strongCelluleProche",
+     "moyenne": 0.421965,
+     "ecartType": 0.493873,
+     "manque": true
+    },
+    {
+     "nom": "hauteur",
+     "moyenne": 0.262654,
+     "ecartType": 0.440076,
+     "manque": false
+    },
+    {
+     "nom": "confianceAstar",
+     "moyenne": 51.339776,
+     "ecartType": 30.835251,
+     "manque": true
+    },
+    {
+     "nom": "rapportPerteAstar",
+     "moyenne": 2.423575,
+     "ecartType": 1.172193,
+     "manque": true
+    },
+    {
+     "nom": "s1Rail",
+     "moyenne": 0.063167,
+     "ecartType": 0.243263,
+     "manque": false
+    },
+    {
+     "nom": "fortsConcurrents",
+     "moyenne": 0.791932,
+     "ecartType": 0.550057,
+     "manque": true
+    },
+    {
+     "nom": "competitives",
+     "moyenne": 1.164916,
+     "ecartType": 0.358319,
+     "manque": true
+    },
+    {
+     "nom": "grappes",
+     "moyenne": 0.525693,
+     "ecartType": 0.328722,
+     "manque": true
+    },
+    {
+     "nom": "fortsReservoir",
+     "moyenne": 2.08162,
+     "ecartType": 0.839404,
+     "manque": true
+    },
+    {
+     "nom": "reservoir",
+     "moyenne": 3.916251,
+     "ecartType": 0.727164,
+     "manque": false
+    },
+    {
+     "nom": "pointsRail",
+     "moyenne": 5.217669,
+     "ecartType": 0.859523,
+     "manque": true
+    },
+    {
+     "nom": "perteMin",
+     "moyenne": -5.588911,
+     "ecartType": 0.459011,
+     "manque": true
+    },
+    {
+     "nom": "appuisChaine",
+     "moyenne": 1.10656,
+     "ecartType": 0.800032,
+     "manque": false
+    },
+    {
+     "nom": "voisinsN",
+     "moyenne": 2.657536,
+     "ecartType": 1.720112,
+     "manque": false
+    },
+    {
+     "nom": "voisinsHumains",
+     "moyenne": 1.820617,
+     "ecartType": 0.85673,
+     "manque": false
+    },
+    {
+     "nom": "voisinsLot",
+     "moyenne": 0.836919,
+     "ecartType": 1.292429,
+     "manque": false
+    },
+    {
+     "nom": "voisinsEncadre",
+     "moyenne": 0.27719,
+     "ecartType": 0.447611,
+     "manque": false
+    },
+    {
+     "nom": "voisinsCoupMin",
+     "moyenne": 0.995688,
+     "ecartType": 0.190781,
+     "manque": true
+    },
+    {
+     "nom": "ecartDepartMedMm",
+     "moyenne": 7.596662,
+     "ecartType": 14.13805,
+     "manque": true
+    },
+    {
+     "nom": "accNProches5",
+     "moyenne": 1.16201,
+     "ecartType": 0.647385,
+     "manque": false
+    },
+    {
+     "nom": "accNProches10",
+     "moyenne": 1.543153,
+     "ecartType": 0.650878,
+     "manque": false
+    },
+    {
+     "nom": "accPlusProcheMm",
+     "moyenne": 1.010612,
+     "ecartType": 0.790129,
+     "manque": true
+    },
+    {
+     "nom": "accDistH1Mm",
+     "moyenne": 2.407369,
+     "ecartType": 1.4383,
+     "manque": true
+    },
+    {
+     "nom": "accDistChaineMm",
+     "moyenne": 2.315324,
+     "ecartType": 1.358393,
+     "manque": true
+    },
+    {
+     "nom": "accDistVoisinsMm",
+     "moyenne": 2.569599,
+     "ecartType": 1.244414,
+     "manque": true
+    },
+    {
+     "nom": "accNOrigines",
+     "moyenne": 1.280136,
+     "ecartType": 0.677965,
+     "manque": false
+    },
+    {
+     "nom": "h6AmpleurMm",
+     "moyenne": 2.507949,
+     "ecartType": 1.573479,
+     "manque": true
+    },
+    {
+     "nom": "h6DistCuts",
+     "moyenne": 1.439098,
+     "ecartType": 0.511968,
+     "manque": true
+    },
+    {
+     "nom": "h6NVoisins",
+     "moyenne": 2.427326,
+     "ecartType": 1.804243,
+     "manque": true
+    },
+    {
+     "nom": "h6DispersionMm",
+     "moyenne": 2.329657,
+     "ecartType": 1.316539,
+     "manque": true
+    },
+    {
+     "nom": "h6Perte",
+     "moyenne": -4.940077,
+     "ecartType": 0.815092,
+     "manque": true
+    },
+    {
+     "nom": "h6LignesSommet",
+     "moyenne": 3.813768,
+     "ecartType": 0.967924,
+     "manque": true
+    },
+    {
+     "nom": "h6DansReservoir",
+     "moyenne": 0.449895,
+     "ecartType": 0.497483,
+     "manque": true
+    }
+   ],
+   "categories": {
+    "palier": [
+     "PARTIAL_FACE",
+     "STRONG_FACE",
+     "WEAK_FACE",
+     "∅"
+    ],
+    "convention": [
+     "appliquee",
+     "shift-out-of-domain",
+     "top-under-observed",
+     "∅"
+    ],
+    "groupeHauteur": [
+     "applique",
+     "refuse",
+     "∅"
+    ],
+    "chaineEtage": [
+     "choice",
+     "crossing",
+     "first-pass",
+     "window",
+     "∅"
+    ],
+    "hauteurAbstention": [
+     "calage",
+     "dessus-peu-observe",
+     "etage",
+     "∅"
+    ],
+    "statut": [
+     "absent",
+     "candidate",
+     "unresolved"
+    ],
+    "motif": [
+     "absent",
+     "ambiguity",
+     "candidate",
+     "flank",
+     "gauge-out-of-contract",
+     "minTop",
+     "rsf",
+     "slope",
+     "window"
+    ],
+    "etageChaine": [
+     "choice",
+     "crossing",
+     "deferred",
+     "first-pass",
+     "window"
+    ],
+    "zone": [
+     "abords",
+     "adv",
+     "hors",
+     "liste",
+     "pn"
+    ],
+    "role": [
+     "differe",
+     "rouge",
+     "vert"
+    ],
+    "balises": [
+     "astar-published",
+     "coarse-best",
+     "engine-published",
+     "local-min",
+     "min-loss",
+     "min-loss-partial",
+     "min-loss-strong",
+     "min-loss-supported",
+     "partial-local-min",
+     "strong-local-min",
+     "top>=15"
+    ],
+    "origines": [
+     "H0",
+     "H1",
+     "H2",
+     "H3",
+     "H4",
+     "H5",
+     "H6"
+    ],
+    "sousOrigines": [
+     "astar",
+     "chaine",
+     "comp",
+     "comp-strong",
+     "depart",
+     "ecartement-median",
+     "h6-humain-mediane-paire",
+     "h6-humain-mediane-rail",
+     "h6-humain-proche-paire",
+     "h6-humain-proche-rail",
+     "h6-lot-mediane-paire",
+     "h6-lot-mediane-rail",
+     "h6-lot-proche-paire",
+     "h6-lot-proche-rail",
+     "strong-ecartee",
+     "voie",
+     "voisins-humains",
+     "voisins-lot"
+    ]
+   },
+   "modele10": {
+    "intercept": -2.129008,
+    "coefficients": [
+     -0.995747,
+     0.091232,
+     -0.46864,
+     0.091232,
+     -0.189555,
+     0.091232,
+     -0.449264,
+     0.091232,
+     1.049762,
+     0.221698,
+     -0.203527,
+     0.832878,
+     -0.115754,
+     0.115979,
+     -0.342121,
+     0.115979,
+     -0.089855,
+     0.042552,
+     0.011289,
+     0.042552,
+     -1.439389,
+     -0.632864,
+     -0.25626,
+     -0.499626,
+     0.093782,
+     0.187322,
+     0.013703,
+     -1.806251,
+     0.013703,
+     -0.37547,
+     0.352837,
+     0.118692,
+     0.091232,
+     -0.170905,
+     0.091232,
+     -0.238068,
+     0.091232,
+     0.066782,
+     0.091232,
+     -0.12496,
+     0.117703,
+     -0.035218,
+     -0.021273,
+     0.115979,
+     0.255781,
+     0.036543,
+     0.207211,
+     -0.283545,
+     0.200514,
+     0.09239,
+     0.067609,
+     0.207211,
+     -0.152844,
+     0.207211,
+     -0.136015,
+     0.207211,
+     -0.246972,
+     0.207211,
+     -0.055693,
+     -0.327425,
+     0.207211,
+     -0.052423,
+     0.207211,
+     -0.122201,
+     -0.039821,
+     -0.018298,
+     -0.040869,
+     -0.018943,
+     -0.037923,
+     0.093782,
+     0.25205,
+     0.013703,
+     -0.04247,
+     0.955092,
+     0.025195,
+     0.021625,
+     -0.252129,
+     0.200514,
+     -1.786664,
+     0.155028,
+     -0.535541,
+     0.093782,
+     0.05593,
+     0.156783,
+     -0.147737,
+     -0.164678,
+     -0.147737,
+     0.033732,
+     -0.147737,
+     -0.003034,
+     0.217004,
+     -0.309695,
+     -0.096794,
+     0.136006,
+     -0.096794,
+     0.060964,
+     -0.147737,
+     0.331943,
+     -0.294053,
+     -0.129122,
+     0.091232,
+     0.011661,
+     -0.054213,
+     -0.04868,
+     0.091232,
+     -0.096624,
+     0.342856,
+     -0.246232,
+     -0.403578,
+     0.129784,
+     -0.585415,
+     0.268979,
+     0.59023,
+     -0.295545,
+     -0.177192,
+     0.129784,
+     0.342953,
+     0.207211,
+     -0.122688,
+     -0.084524,
+     0.207211,
+     0.343847,
+     -0.122688,
+     -0.501858,
+     0.072329,
+     0.624824,
+     -0.025526,
+     -0.616969,
+     0.018829,
+     -0.115076,
+     0.255516,
+     0.155028,
+     -0.301161,
+     0.005694,
+     0.112219,
+     0.157746,
+     0.177093,
+     -0.67175,
+     0.224692,
+     0.179934,
+     -0.128808,
+     -0.051126,
+     0.31047,
+     -0.087638,
+     -0.127207,
+     -0.203048,
+     -0.087638,
+     -0.364846,
+     0.176623,
+     0.142776,
+     -0.045888,
+     0.098256,
+     0.196488,
+     -0.456309,
+     -0.041842,
+     0.220677,
+     -0.179666,
+     -0.263746,
+     0.611144,
+     0.147737,
+     -0.041842,
+     -0.59023,
+     -0.215082,
+     0.362755,
+     -0.456309,
+     0.611144,
+     0.045118,
+     0.440037,
+     -0.049973,
+     0.503397,
+     -0.330005,
+     0.212371,
+     -0.160836,
+     0.005901,
+     -0.27701,
+     0.436846,
+     -0.088312,
+     -0.175434
+    ]
+   },
+   "modele5": {
+    "intercept": -4.366095,
+    "coefficients": [
+     -1.25867,
+     0.105358,
+     -0.268328,
+     0.105358,
+     -0.148418,
+     0.105358,
+     -0.44999,
+     0.105358,
+     0.629771,
+     0.132308,
+     -0.14794,
+     0.383836,
+     -0.14939,
+     0.049914,
+     -0.62025,
+     0.049914,
+     -0.275066,
+     -0.052119,
+     -0.001863,
+     -0.052119,
+     -1.45384,
+     -0.556037,
+     -0.333425,
+     -0.28013,
+     0.197035,
+     -0.110392,
+     0.003511,
+     -1.61129,
+     0.003511,
+     -0.224236,
+     0.661448,
+     -0.105938,
+     0.105358,
+     -0.069994,
+     0.105358,
+     -0.128435,
+     0.105358,
+     0.088927,
+     0.105358,
+     0.096585,
+     -0.050635,
+     0.022587,
+     -0.084515,
+     0.049914,
+     0.116707,
+     -0.074676,
+     0.155271,
+     -0.186136,
+     0.159507,
+     -0.077686,
+     0.074834,
+     0.155271,
+     -0.144215,
+     0.155271,
+     -0.056429,
+     0.155271,
+     -0.008229,
+     0.155271,
+     -0.055437,
+     -0.134114,
+     0.155271,
+     0.049321,
+     0.155271,
+     -0.211149,
+     0.034658,
+     0.073897,
+     -0.002858,
+     -0.160325,
+     0.033253,
+     0.197035,
+     0.398548,
+     0.003511,
+     0.992244,
+     -0.512644,
+     -0.2397,
+     -0.009667,
+     0.029346,
+     0.159507,
+     -1.39426,
+     0.391223,
+     -0.250173,
+     0.197035,
+     0.010259,
+     0.001743,
+     0.02954,
+     -0.004554,
+     0.02954,
+     -0.148231,
+     0.02954,
+     -0.090982,
+     -0.430194,
+     -0.138853,
+     -0.027584,
+     0.01018,
+     -0.027584,
+     0.082162,
+     0.02954,
+     0.055678,
+     -0.0156,
+     -0.145436,
+     0.105358,
+     -0.089652,
+     0.141771,
+     -0.157477,
+     0.105358,
+     0.115917,
+     0.121174,
+     -0.23709,
+     -0.27313,
+     0.039057,
+     -0.109976,
+     -0.009124,
+     0.353173,
+     -0.160148,
+     0.02395,
+     0.039057,
+     0.097141,
+     0.155271,
+     -0.110581,
+     -0.044691,
+     0.155271,
+     0.020202,
+     -0.110581,
+     -0.376878,
+     0.031723,
+     0.382228,
+     0.031782,
+     -0.1062,
+     -0.027546,
+     -0.094754,
+     0.258741,
+     0.391223,
+     -0.0767,
+     -0.478511,
+     -0.081511,
+     0.116909,
+     0.092244,
+     -0.441134,
+     0.313491,
+     0.324301,
+     -0.248663,
+     -0.075638,
+     0.090046,
+     -0.039614,
+     -0.101684,
+     -0.102518,
+     -0.039614,
+     -0.263525,
+     -0.217792,
+     0.102314,
+     -0.016921,
+     0.128506,
+     0.314896,
+     -0.380874,
+     0.032341,
+     0.172857,
+     -0.167692,
+     -0.141618,
+     0.513489,
+     -0.02954,
+     0.032341,
+     -0.353173,
+     0.000696,
+     0.050501,
+     -0.380874,
+     0.513489,
+     0.102057,
+     0.353171,
+     0.222353,
+     0.357356,
+     -0.228194,
+     0.238695,
+     -0.39226,
+     0.067147,
+     0.044873,
+     0.347269,
+     0.123266,
+     -0.264884
+    ]
+   },
+   "calibrage10": {
+    "methode": "platt",
+    "a": 0.923961,
+    "b": 0.110416
+   },
+   "calibrage5": {
+    "methode": "platt",
+    "a": 0.940695,
+    "b": 0.026643
+   },
+   "seuils": {
+    "pn": {
+     "actif": true,
+     "tau": 0.43,
+     "delta": 12
+    },
+    "adv": {
+     "actif": true,
+     "tau": 0.9,
+     "delta": 8
+    },
+    "abords": {
+     "actif": true,
+     "tau": 0.8,
+     "delta": 10
+    },
+    "liste": {
+     "actif": true,
+     "tau": 0.75,
+     "delta": 5
+    },
+    "hors": {
+     "actif": true,
+     "tau": 0.64,
+     "delta": 5
+    }
+   },
+   "seuilsApprentissage": {
+    "pn": {
+     "agit": 64,
+     "justes": 63,
+     "erreurs": 1,
+     "abimes": 0
+    },
+    "adv": {
+     "agit": 34,
+     "justes": 25,
+     "erreurs": 0,
+     "abimes": 0
+    },
+    "abords": {
+     "agit": 62,
+     "justes": 53,
+     "erreurs": 4,
+     "abimes": 1
+    },
+    "liste": {
+     "agit": 10,
+     "justes": 10,
+     "erreurs": 0,
+     "abimes": 0
+    },
+    "hors": {
+     "agit": 138,
+     "justes": 62,
+     "erreurs": 5,
+     "abimes": 2
+    }
+   }
+  },
+  "lot": {
+   "lambda": 30,
+   "criteresLambda": {
+    "3": 0.142103,
+    "30": 0.1396,
+    "300": 0.140486
+   },
+   "nCas": 3700,
+   "nExemples": 86121,
+   "colonnes": [
+    "perte",
+    "perte:manque",
+    "ratioPerte",
+    "ratioPerte:manque",
+    "lignesSommet",
+    "lignesSommet:manque",
+    "faces",
+    "faces:manque",
+    "pointsDessus",
+    "pointsFlanc",
+    "epaisseurDessusMm",
+    "epaisseurDessusMm:manque",
+    "distCelluleMm",
+    "distCelluleMm:manque",
+    "ratioCelluleProche",
+    "ratioCelluleProche:manque",
+    "dzConventionMm",
+    "dzConventionMm:manque",
+    "duConventionMm",
+    "duConventionMm:manque",
+    "deplMm",
+    "ecartVoieMm",
+    "ecartVoieMm:manque",
+    "ecartVoisinsMm",
+    "ecartVoisinsMm:manque",
+    "ecartMedAutreH0Mm",
+    "ecartMedAutreH0Mm:manque",
+    "ecartPaireMedMm",
+    "ecartPaireMedMm:manque",
+    "hauteurMm",
+    "hauteurMm:manque",
+    "strong",
+    "strong:manque",
+    "pente",
+    "pente:manque",
+    "fenetre",
+    "fenetre:manque",
+    "competitive",
+    "competitive:manque",
+    "astar",
+    "publiee",
+    "s1",
+    "strongCelluleProche",
+    "strongCelluleProche:manque",
+    "hauteur",
+    "confianceAstar",
+    "confianceAstar:manque",
+    "rapportPerteAstar",
+    "rapportPerteAstar:manque",
+    "s1Rail",
+    "fortsConcurrents",
+    "fortsConcurrents:manque",
+    "competitives",
+    "competitives:manque",
+    "grappes",
+    "grappes:manque",
+    "fortsReservoir",
+    "fortsReservoir:manque",
+    "reservoir",
+    "pointsRail",
+    "pointsRail:manque",
+    "perteMin",
+    "perteMin:manque",
+    "appuisChaine",
+    "voisinsN",
+    "voisinsLot",
+    "voisinsCoupMin",
+    "voisinsCoupMin:manque",
+    "ecartDepartMedMm",
+    "ecartDepartMedMm:manque",
+    "accNProches5",
+    "accNProches10",
+    "accPlusProcheMm",
+    "accPlusProcheMm:manque",
+    "accDistH1Mm",
+    "accDistH1Mm:manque",
+    "accDistChaineMm",
+    "accDistChaineMm:manque",
+    "accDistVoisinsMm",
+    "accDistVoisinsMm:manque",
+    "accNOrigines",
+    "h6AmpleurMm",
+    "h6AmpleurMm:manque",
+    "h6DistCuts",
+    "h6DistCuts:manque",
+    "h6NVoisins",
+    "h6NVoisins:manque",
+    "h6DispersionMm",
+    "h6DispersionMm:manque",
+    "h6Perte",
+    "h6Perte:manque",
+    "h6LignesSommet",
+    "h6LignesSommet:manque",
+    "h6DansReservoir",
+    "h6DansReservoir:manque",
+    "palier=PARTIAL_FACE",
+    "palier=STRONG_FACE",
+    "palier=WEAK_FACE",
+    "palier=∅",
+    "convention=appliquee",
+    "convention=shift-out-of-domain",
+    "convention=top-under-observed",
+    "convention=∅",
+    "groupeHauteur=applique",
+    "groupeHauteur=refuse",
+    "groupeHauteur=∅",
+    "chaineEtage=choice",
+    "chaineEtage=crossing",
+    "chaineEtage=first-pass",
+    "chaineEtage=window",
+    "chaineEtage=∅",
+    "hauteurAbstention=calage",
+    "hauteurAbstention=dessus-peu-observe",
+    "hauteurAbstention=etage",
+    "hauteurAbstention=∅",
+    "statut=absent",
+    "statut=candidate",
+    "statut=unresolved",
+    "motif=absent",
+    "motif=ambiguity",
+    "motif=candidate",
+    "motif=flank",
+    "motif=gauge-out-of-contract",
+    "motif=minTop",
+    "motif=rsf",
+    "motif=slope",
+    "motif=window",
+    "etageChaine=choice",
+    "etageChaine=crossing",
+    "etageChaine=deferred",
+    "etageChaine=first-pass",
+    "etageChaine=window",
+    "zone=abords",
+    "zone=adv",
+    "zone=hors",
+    "zone=liste",
+    "zone=pn",
+    "role=differe",
+    "role=rouge",
+    "role=vert",
+    "balises∋astar-published",
+    "balises∋coarse-best",
+    "balises∋engine-published",
+    "balises∋local-min",
+    "balises∋min-loss",
+    "balises∋min-loss-partial",
+    "balises∋min-loss-strong",
+    "balises∋min-loss-supported",
+    "balises∋partial-local-min",
+    "balises∋strong-local-min",
+    "balises∋top>=15",
+    "origines∋H0",
+    "origines∋H1",
+    "origines∋H2",
+    "origines∋H3",
+    "origines∋H4",
+    "origines∋H5",
+    "origines∋H6",
+    "sousOrigines∋astar",
+    "sousOrigines∋chaine",
+    "sousOrigines∋comp",
+    "sousOrigines∋comp-strong",
+    "sousOrigines∋depart",
+    "sousOrigines∋ecartement-median",
+    "sousOrigines∋h6-lot-mediane-paire",
+    "sousOrigines∋h6-lot-mediane-rail",
+    "sousOrigines∋h6-lot-proche-paire",
+    "sousOrigines∋h6-lot-proche-rail",
+    "sousOrigines∋strong-ecartee",
+    "sousOrigines∋voie",
+    "sousOrigines∋voisins-lot"
+   ],
+   "normalisation": [
+    {
+     "nom": "perte",
+     "moyenne": -4.581011,
+     "ecartType": 0.836722,
+     "manque": true
+    },
+    {
+     "nom": "ratioPerte",
+     "moyenne": 2.702946,
+     "ecartType": 1.840501,
+     "manque": true
+    },
+    {
+     "nom": "lignesSommet",
+     "moyenne": 3.741563,
+     "ecartType": 0.641213,
+     "manque": true
+    },
+    {
+     "nom": "faces",
+     "moyenne": 11.371095,
+     "ecartType": 9.14443,
+     "manque": true
+    },
+    {
+     "nom": "pointsDessus",
+     "moyenne": 3.60204,
+     "ecartType": 1.066601,
+     "manque": false
+    },
+    {
+     "nom": "pointsFlanc",
+     "moyenne": 2.079693,
+     "ecartType": 1.151219,
+     "manque": false
+    },
+    {
+     "nom": "epaisseurDessusMm",
+     "moyenne": 8.348794,
+     "ecartType": 3.699203,
+     "manque": true
+    },
+    {
+     "nom": "distCelluleMm",
+     "moyenne": 1.756964,
+     "ecartType": 0.8171,
+     "manque": true
+    },
+    {
+     "nom": "ratioCelluleProche",
+     "moyenne": 2.042515,
+     "ecartType": 1.688413,
+     "manque": true
+    },
+    {
+     "nom": "dzConventionMm",
+     "moyenne": 4.372318,
+     "ecartType": 5.507398,
+     "manque": true
+    },
+    {
+     "nom": "duConventionMm",
+     "moyenne": -1.151801,
+     "ecartType": 2.46866,
+     "manque": true
+    },
+    {
+     "nom": "deplMm",
+     "moyenne": 2.491802,
+     "ecartType": 1.351914,
+     "manque": false
+    },
+    {
+     "nom": "ecartVoieMm",
+     "moyenne": 2.624319,
+     "ecartType": 1.284312,
+     "manque": true
+    },
+    {
+     "nom": "ecartVoisinsMm",
+     "moyenne": 2.736497,
+     "ecartType": 1.277761,
+     "manque": true
+    },
+    {
+     "nom": "ecartMedAutreH0Mm",
+     "moyenne": 23.372221,
+     "ecartType": 30.521998,
+     "manque": true
+    },
+    {
+     "nom": "ecartPaireMedMm",
+     "moyenne": 12.762622,
+     "ecartType": 20.96194,
+     "manque": true
+    },
+    {
+     "nom": "hauteurMm",
+     "moyenne": 0.778987,
+     "ecartType": 2.4764,
+     "manque": true
+    },
+    {
+     "nom": "strong",
+     "moyenne": 0.897413,
+     "ecartType": 0.303418,
+     "manque": true
+    },
+    {
+     "nom": "pente",
+     "moyenne": 0.008235,
+     "ecartType": 0.090372,
+     "manque": true
+    },
+    {
+     "nom": "fenetre",
+     "moyenne": 0.997432,
+     "ecartType": 0.05061,
+     "manque": true
+    },
+    {
+     "nom": "competitive",
+     "moyenne": 0.293502,
+     "ecartType": 0.455366,
+     "manque": true
+    },
+    {
+     "nom": "astar",
+     "moyenne": 0.139118,
+     "ecartType": 0.34607,
+     "manque": false
+    },
+    {
+     "nom": "publiee",
+     "moyenne": 0.124537,
+     "ecartType": 0.330193,
+     "manque": false
+    },
+    {
+     "nom": "s1",
+     "moyenne": 0.007479,
+     "ecartType": 0.086159,
+     "manque": false
+    },
+    {
+     "nom": "strongCelluleProche",
+     "moyenne": 0.456311,
+     "ecartType": 0.498088,
+     "manque": true
+    },
+    {
+     "nom": "hauteur",
+     "moyenne": 0.33295,
+     "ecartType": 0.471269,
+     "manque": false
+    },
+    {
+     "nom": "confianceAstar",
+     "moyenne": 51.157559,
+     "ecartType": 30.869882,
+     "manque": true
+    },
+    {
+     "nom": "rapportPerteAstar",
+     "moyenne": 2.377471,
+     "ecartType": 1.176514,
+     "manque": true
+    },
+    {
+     "nom": "s1Rail",
+     "moyenne": 0.068858,
+     "ecartType": 0.253213,
+     "manque": false
+    },
+    {
+     "nom": "fortsConcurrents",
+     "moyenne": 0.806094,
+     "ecartType": 0.545694,
+     "manque": true
+    },
+    {
+     "nom": "competitives",
+     "moyenne": 1.163619,
+     "ecartType": 0.360136,
+     "manque": true
+    },
+    {
+     "nom": "grappes",
+     "moyenne": 0.537009,
+     "ecartType": 0.326386,
+     "manque": true
+    },
+    {
+     "nom": "fortsReservoir",
+     "moyenne": 2.160661,
+     "ecartType": 0.810297,
+     "manque": true
+    },
+    {
+     "nom": "reservoir",
+     "moyenne": 3.978907,
+     "ecartType": 0.609065,
+     "manque": false
+    },
+    {
+     "nom": "pointsRail",
+     "moyenne": 5.272536,
+     "ecartType": 0.86401,
+     "manque": true
+    },
+    {
+     "nom": "perteMin",
+     "moyenne": -5.606215,
+     "ecartType": 0.447339,
+     "manque": true
+    },
+    {
+     "nom": "appuisChaine",
+     "moyenne": 1.111527,
+     "ecartType": 0.793546,
+     "manque": false
+    },
+    {
+     "nom": "voisinsN",
+     "moyenne": 0.400467,
+     "ecartType": 0.734987,
+     "manque": false
+    },
+    {
+     "nom": "voisinsLot",
+     "moyenne": 0.400467,
+     "ecartType": 0.734987,
+     "manque": false
+    },
+    {
+     "nom": "voisinsCoupMin",
+     "moyenne": 0.855366,
+     "ecartType": 0.25689,
+     "manque": true
+    },
+    {
+     "nom": "ecartDepartMedMm",
+     "moyenne": 7.547336,
+     "ecartType": 13.871512,
+     "manque": true
+    },
+    {
+     "nom": "accNProches5",
+     "moyenne": 1.156751,
+     "ecartType": 0.586105,
+     "manque": false
+    },
+    {
+     "nom": "accNProches10",
+     "moyenne": 1.515177,
+     "ecartType": 0.609627,
+     "manque": false
+    },
+    {
+     "nom": "accPlusProcheMm",
+     "moyenne": 0.935325,
+     "ecartType": 0.784314,
+     "manque": true
+    },
+    {
+     "nom": "accDistH1Mm",
+     "moyenne": 2.435262,
+     "ecartType": 1.453232,
+     "manque": true
+    },
+    {
+     "nom": "accDistChaineMm",
+     "moyenne": 2.385639,
+     "ecartType": 1.390928,
+     "manque": true
+    },
+    {
+     "nom": "accDistVoisinsMm",
+     "moyenne": 2.732506,
+     "ecartType": 1.284765,
+     "manque": true
+    },
+    {
+     "nom": "accNOrigines",
+     "moyenne": 1.246084,
+     "ecartType": 0.640333,
+     "manque": false
+    },
+    {
+     "nom": "h6AmpleurMm",
+     "moyenne": 3.280548,
+     "ecartType": 1.076453,
+     "manque": true
+    },
+    {
+     "nom": "h6DistCuts",
+     "moyenne": 1.511698,
+     "ecartType": 0.613942,
+     "manque": true
+    },
+    {
+     "nom": "h6NVoisins",
+     "moyenne": 2.068519,
+     "ecartType": 1.553744,
+     "manque": true
+    },
+    {
+     "nom": "h6DispersionMm",
+     "moyenne": 2.161854,
+     "ecartType": 1.109429,
+     "manque": true
+    },
+    {
+     "nom": "h6Perte",
+     "moyenne": -4.547663,
+     "ecartType": 0.831839,
+     "manque": true
+    },
+    {
+     "nom": "h6LignesSommet",
+     "moyenne": 3.616953,
+     "ecartType": 1.051332,
+     "manque": true
+    },
+    {
+     "nom": "h6DansReservoir",
+     "moyenne": 0.333061,
+     "ecartType": 0.471308,
+     "manque": true
+    }
+   ],
+   "categories": {
+    "palier": [
+     "PARTIAL_FACE",
+     "STRONG_FACE",
+     "WEAK_FACE",
+     "∅"
+    ],
+    "convention": [
+     "appliquee",
+     "shift-out-of-domain",
+     "top-under-observed",
+     "∅"
+    ],
+    "groupeHauteur": [
+     "applique",
+     "refuse",
+     "∅"
+    ],
+    "chaineEtage": [
+     "choice",
+     "crossing",
+     "first-pass",
+     "window",
+     "∅"
+    ],
+    "hauteurAbstention": [
+     "calage",
+     "dessus-peu-observe",
+     "etage",
+     "∅"
+    ],
+    "statut": [
+     "absent",
+     "candidate",
+     "unresolved"
+    ],
+    "motif": [
+     "absent",
+     "ambiguity",
+     "candidate",
+     "flank",
+     "gauge-out-of-contract",
+     "minTop",
+     "rsf",
+     "slope",
+     "window"
+    ],
+    "etageChaine": [
+     "choice",
+     "crossing",
+     "deferred",
+     "first-pass",
+     "window"
+    ],
+    "zone": [
+     "abords",
+     "adv",
+     "hors",
+     "liste",
+     "pn"
+    ],
+    "role": [
+     "differe",
+     "rouge",
+     "vert"
+    ],
+    "balises": [
+     "astar-published",
+     "coarse-best",
+     "engine-published",
+     "local-min",
+     "min-loss",
+     "min-loss-partial",
+     "min-loss-strong",
+     "min-loss-supported",
+     "partial-local-min",
+     "strong-local-min",
+     "top>=15"
+    ],
+    "origines": [
+     "H0",
+     "H1",
+     "H2",
+     "H3",
+     "H4",
+     "H5",
+     "H6"
+    ],
+    "sousOrigines": [
+     "astar",
+     "chaine",
+     "comp",
+     "comp-strong",
+     "depart",
+     "ecartement-median",
+     "h6-lot-mediane-paire",
+     "h6-lot-mediane-rail",
+     "h6-lot-proche-paire",
+     "h6-lot-proche-rail",
+     "strong-ecartee",
+     "voie",
+     "voisins-lot"
+    ]
+   },
+   "modele10": {
+    "intercept": -2.54093,
+    "coefficients": [
+     -1.161349,
+     0.130797,
+     -0.700353,
+     0.130797,
+     -0.286796,
+     0.130797,
+     -0.556671,
+     0.130797,
+     0.973751,
+     0.107615,
+     -0.408301,
+     0.975444,
+     -0.09888,
+     0.038713,
+     -0.35457,
+     0.038713,
+     -0.031094,
+     -0.041591,
+     -0.038762,
+     -0.041591,
+     -1.588455,
+     -0.732799,
+     -0.197603,
+     -0.28736,
+     0.043781,
+     0.21032,
+     0.008143,
+     -1.160925,
+     0.008143,
+     -0.364422,
+     0.528377,
+     0.176507,
+     0.130797,
+     -0.097626,
+     0.130797,
+     -0.205198,
+     0.130797,
+     -0.015433,
+     0.130797,
+     -0.116989,
+     0.164154,
+     -0.030941,
+     -0.020038,
+     0.038713,
+     0.242366,
+     -0.010987,
+     0.16951,
+     -0.238083,
+     0.137563,
+     0.032173,
+     0.198491,
+     0.16951,
+     -0.225695,
+     0.16951,
+     -0.168159,
+     0.16951,
+     -0.40043,
+     0.16951,
+     -0.202639,
+     -0.419849,
+     0.16951,
+     -0.17262,
+     0.16951,
+     -0.083155,
+     -0.026295,
+     -0.026295,
+     0.038807,
+     0.043781,
+     0.296438,
+     0.008143,
+     0.000099,
+     0.829717,
+     -0.197114,
+     -0.044101,
+     -0.18047,
+     0.137563,
+     -1.924485,
+     0.208172,
+     -0.227402,
+     0.043781,
+     -0.009518,
+     0.083102,
+     -0.06041,
+     -0.338757,
+     -0.06041,
+     -0.014429,
+     -0.06041,
+     0.08137,
+     0.363506,
+     -0.343856,
+     -0.066287,
+     -0.209737,
+     -0.066287,
+     0.097954,
+     -0.06041,
+     0.427731,
+     -0.423267,
+     -0.135261,
+     0.130797,
+     -0.03823,
+     0.079822,
+     -0.172388,
+     0.130797,
+     -0.197885,
+     0.370726,
+     -0.172842,
+     -0.353109,
+     0.161655,
+     -0.627918,
+     0.287369,
+     0.532002,
+     -0.224348,
+     -0.375754,
+     0.161655,
+     0.438448,
+     0.16951,
+     -0.072873,
+     -0.096637,
+     0.16951,
+     0.446203,
+     -0.072873,
+     -0.487444,
+     0.275046,
+     0.35086,
+     -0.041767,
+     -0.649356,
+     0.00982,
+     -0.187712,
+     0.264076,
+     0.208172,
+     -0.193618,
+     -0.090918,
+     0.070505,
+     0.091473,
+     0.173418,
+     -0.56164,
+     0.226245,
+     0.170333,
+     -0.111563,
+     -0.05877,
+     0.18232,
+     -0.173641,
+     -0.125328,
+     -0.191907,
+     -0.173641,
+     0.029113,
+     0.083104,
+     0.024549,
+     0.050387,
+     0.171856,
+     0.189669,
+     -0.466651,
+     -0.040486,
+     0.314109,
+     -0.327533,
+     -0.06616,
+     0.520216,
+     0.06041,
+     -0.040486,
+     -0.532002,
+     -0.074065,
+     0.279445,
+     -0.466651,
+     0.520216,
+     -0.164747,
+     0.391488,
+     -0.199191,
+     0.310228,
+     -0.382123,
+     0.25712,
+     -0.06616
+    ]
+   },
+   "modele5": {
+    "intercept": -5.042116,
+    "coefficients": [
+     -1.353355,
+     0.165874,
+     -0.393524,
+     0.165874,
+     -0.240008,
+     0.165874,
+     -0.516497,
+     0.165874,
+     0.66024,
+     0.093797,
+     -0.313154,
+     0.650442,
+     -0.179751,
+     0.014248,
+     -0.627818,
+     0.014248,
+     -0.251893,
+     -0.147698,
+     0.034246,
+     -0.147698,
+     -1.506544,
+     -0.611618,
+     -0.389478,
+     -0.182939,
+     0.123679,
+     -0.041792,
+     -0.042834,
+     -1.022108,
+     -0.042834,
+     -0.374479,
+     0.813509,
+     -0.070025,
+     0.165874,
+     -0.055807,
+     0.165874,
+     -0.130134,
+     0.165874,
+     0.181062,
+     0.165874,
+     0.028375,
+     -0.015316,
+     -0.02,
+     -0.089987,
+     0.014248,
+     0.145036,
+     -0.06552,
+     0.180122,
+     -0.19313,
+     0.197711,
+     -0.031402,
+     0.043425,
+     0.180122,
+     -0.138421,
+     0.180122,
+     -0.055534,
+     0.180122,
+     -0.048476,
+     0.180122,
+     -0.029113,
+     -0.2092,
+     0.180122,
+     -0.029612,
+     0.180122,
+     -0.200562,
+     0.011405,
+     0.011405,
+     -0.037392,
+     0.123679,
+     0.367953,
+     -0.042834,
+     0.797518,
+     -0.438841,
+     -0.404791,
+     -0.214543,
+     0.033538,
+     0.197711,
+     -1.297343,
+     0.426448,
+     0.033284,
+     0.123679,
+     0.049012,
+     -0.135009,
+     0.027665,
+     -0.360659,
+     0.027665,
+     -0.058049,
+     0.027665,
+     0.090575,
+     0.197027,
+     -0.188725,
+     -0.014663,
+     -0.026851,
+     -0.014663,
+     0.050662,
+     0.027665,
+     0.057774,
+     0.022829,
+     -0.246477,
+     0.165874,
+     -0.153742,
+     0.30144,
+     -0.313572,
+     0.165874,
+     -0.041919,
+     0.291108,
+     -0.249189,
+     -0.199528,
+     0.053411,
+     -0.141464,
+     0.011491,
+     0.27609,
+     -0.087372,
+     -0.125638,
+     0.053411,
+     0.1596,
+     0.180122,
+     -0.113257,
+     -0.066865,
+     0.180122,
+     -0.049525,
+     -0.113257,
+     -0.344079,
+     0.175761,
+     0.40534,
+     0.045241,
+     -0.271951,
+     -0.027652,
+     -0.1735,
+     0.164208,
+     0.426448,
+     0.004543,
+     -0.421699,
+     -0.164702,
+     0.082393,
+     0.105553,
+     -0.493458,
+     0.470215,
+     0.192304,
+     -0.227711,
+     0.035407,
+     0.066633,
+     -0.026686,
+     -0.059522,
+     -0.125443,
+     -0.026686,
+     -0.107052,
+     -0.207235,
+     -0.089004,
+     0.070849,
+     0.257844,
+     0.293343,
+     -0.266168,
+     0.00982,
+     0.132614,
+     -0.340274,
+     0.15732,
+     0.365737,
+     -0.027665,
+     0.00982,
+     -0.27609,
+     0.093938,
+     0.036686,
+     -0.266168,
+     0.365737,
+     -0.105666,
+     0.68669,
+     -0.215219,
+     0.074605,
+     -0.014843,
+     0.157202,
+     0.15732
+    ]
+   },
+   "calibrage10": {
+    "methode": "platt",
+    "a": 0.911841,
+    "b": 0.090158
+   },
+   "calibrage5": {
+    "methode": "platt",
+    "a": 0.928186,
+    "b": 0.042015
+   },
+   "seuils": {
+    "pn": {
+     "actif": true,
+     "tau": 0.4,
+     "delta": 12
+    },
+    "adv": {
+     "actif": true,
+     "tau": 0.47,
+     "delta": 8
+    },
+    "abords": {
+     "actif": true,
+     "tau": 0.77,
+     "delta": 10
+    },
+    "liste": {
+     "actif": true,
+     "tau": 0.81,
+     "delta": 5
+    },
+    "hors": {
+     "actif": true,
+     "tau": 0.6,
+     "delta": 2
+    }
+   },
+   "seuilsApprentissage": {
+    "pn": {
+     "agit": 61,
+     "justes": 59,
+     "erreurs": 2,
+     "abimes": 2
+    },
+    "adv": {
+     "agit": 45,
+     "justes": 30,
+     "erreurs": 3,
+     "abimes": 0
+    },
+    "abords": {
+     "agit": 57,
+     "justes": 47,
+     "erreurs": 5,
+     "abimes": 2
+    },
+    "liste": {
+     "agit": 10,
+     "justes": 10,
+     "erreurs": 0,
+     "abimes": 0
+    },
+    "hors": {
+     "agit": 871,
+     "justes": 59,
+     "erreurs": 12,
+     "abimes": 6
+    }
+   }
+  }
+ },
+ "h6": {
+  "version": "h6-1",
+  "fenetreCuts": 10,
+  "k": 5,
+  "dispersionSureMm": 50,
+  "nSur": 2,
+  "reservoirMm": 5,
+  "procheMaxCuts": 5,
+  "supportDessus": 5,
+  "supportFlanc": 3,
+  "concurrentMm": 45
+ },
+ "lambdas": [
+  3,
+  30,
+  300
+ ],
+ "lambdaProcedure": "choisi par usage, par la perte interne hors-échantillon de chaque λ sur toutes les parties (même procédure que la validation imbriquée)",
+ "causal": {
+  "version": "causal-1",
+  "seuilVisiteS": 0.6,
+  "note": "zones, rôle, médiane d'écartement (par cut : contexte.gMedMm), voisins et chaîne pris à l'instant de la décision du cut"
+ },
+ "partiesLot": [
+  {
+   "partie": "1:12",
+   "sha256": "36466fbfd5cc9c2259940b9b6e2af8ecb66e4df5eb21089455b6a55092f708cf"
+  },
+  {
+   "partie": "1:13",
+   "sha256": "2f0ebbd8abd00449c3660e22ee1377c19fb365264be6bba4e836e72bff8d112d"
+  },
+  {
+   "partie": "1:14",
+   "sha256": "eaf0a23be0e0a196750ad0e35fd9c1ee379fdfb879ade535944bbd443c0881e5"
+  },
+  {
+   "partie": "1:15",
+   "sha256": "9546fafb0f24d09e25227a28559c0c6b0bda73200eb681bc9258aa805c7a5362"
+  },
+  {
+   "partie": "1:16",
+   "sha256": "17bc8f1e92d696075c35758612d6e9e9d1a3a6638dcc6487e30120ba23c156db"
+  },
+  {
+   "partie": "1:17",
+   "sha256": "f5340a922ed22a189d3b4e6b9dae2d239dc7703965948ac88558e7320165a3fe"
+  },
+  {
+   "partie": "1:24",
+   "sha256": "0d695fe1f9a835e539a9224ce59e65b325f739335a332ea8d4004b489660aeb1"
+  },
+  {
+   "partie": "1:29",
+   "sha256": "89504f1a26b0d83110e3226895044d9c61b02a96dad90ffe85a693638664b3ae"
+  },
+  {
+   "partie": "2:1",
+   "sha256": "2f4efd09abab49f618775b9464afd747dfdafef5fe0f86be73eb3e1fc9fe330e"
+  },
+  {
+   "partie": "2:6",
+   "sha256": "a77101eb25824f48dd2ec83212331727956d9c9c8ea1ce7ea4c866d3b2195177"
+  },
+  {
+   "partie": "2:7",
+   "sha256": "1649c3cb0b416cb95adeac0434397773a386714f44e95fef938480a9aa2be459"
+  },
+  {
+   "partie": "2:10",
+   "sha256": "076fec52af23295011427e0cb34517f5ce7aa12ad51373a1bd4acb78a8f4bdc4"
+  },
+  {
+   "partie": "2:11",
+   "sha256": "92aca4f768d3324683e93918479841a4d711888d465657294893f62eae8b1f36"
+  },
+  {
+   "partie": "2:13",
+   "sha256": "254ae51a549e07ea7023235541c818f511e464ce34b9766bc82ac8462bffd135"
+  }
+ ]
+}
