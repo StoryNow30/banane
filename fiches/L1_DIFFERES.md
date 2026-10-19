@@ -58,7 +58,7 @@ Sans compter les approchés comme différés, L1 laisse 164 cuts sans pose (−8
 | total | L1-v | 282 | 240 (240) | 85,8 | 10,2 | 36,9 (1,3 – 70,8) | 49,6 % | 60,6 % | 20 | 131/272 |
 | hors 2:1 | L1-v | 155 | 152 (152) | 51,4 | 6,7 | 42,5 (27,2 – 70,4) | 67,7 % | 86,5 % | 5 | 96/145 |
 
-Millimètres, pire des deux rails en 3D. Rappel : parmi les jugés à plus de 10 mm de Mic au départ, ceux que le profil pose à 10 mm au plus. Les 45 jugés d'une autre séance du diagnostic sont tous dans 2:17 : la règle de D-220 n'ajoute donc aucun cut ici.
+Millimètres, pire des deux rails en 3D. Rappel : parmi les jugés à plus de 10 mm de Mic au départ, ceux que le profil pose à 10 mm au plus. La règle de D-220 n'ajoute aucun cut ici : hors 2:17 (sans vérité), les fichiers du diagnostic n'ont qu'un différé d'une autre séance avec une pose de Mic (1:15), et il est écarté par la règle de la pose de départ (vérifiée à 2 mm). Élargir les jugés demande de rejoindre les Échos plus tardifs, ce que ce banc ne fait pas.
 
 **Poses à plus de 50 mm de Mic** (publiées dans la synthèse complète) : L1 **35** (30 posées sans valider, 5 validées), dont 33 en 2:1, plus 1:17 cut 2874 (sans valider, 122,6 → 56,5 mm) et 1:29 cut 8556 (validée, 0 → 58,3 mm). L1-v **48** (toutes validées), dont 45 en 2:1.
 
