@@ -154,7 +154,7 @@ function voisinsSursA(verifiees, partie, cut, t0) {
  * Deux familles : « tous » (voisins humains validés avant la première visite, et voisins du lot) pour l'usage relecture ; « lot » (voisins validés
  * par le lot seulement) pour l'usage lot. Dans chaque famille, deux variantes : le voisin le plus proche, et la médiane des K plus proches, à
  * FENETRE cuts au plus ; chacune rail par rail et « paire » (le même décalage, moyenne des deux rails du voisin, appliqué aux deux rails). */
-const H6 = Object.freeze({ fenetreCuts: 10, k: 5, dispersionSureMm: 50, nSur: 2, reservoirMm: 5 });
+const H6 = Object.freeze({ fenetreCuts: 10, k: 5, dispersionSureMm: 50, nSur: 2, reservoirMm: 5, procheMaxCuts: 5, supportDessus: 5, supportFlanc: 3, concurrentMm: 45 });
 /* Voisins utilisables : même voie, autre cut, à `fenetreCuts` au plus, avec un décalage connu ; du plus proche au plus loin (à égalité, l'amont). */
 function voisinsH6(identity, voisins) {
   return (voisins || []).filter(a => a && a.decalage && a.identity && a.identity.part === identity.part && (a.identity.frameId ?? null) === (identity.frameId ?? null)
@@ -177,12 +177,19 @@ function decalagesH6(identity, voisins) {
     mediane = { left: L, right: R, paire: P, n: k.length, distMax: Math.max(...k.map(dist)), source: k.some(a => a.source === 'humain') ? 'humain' : 'lot',
       dispersion: { left: etendue(a => a.decalage.left), right: etendue(a => a.decalage.right), paire: etendue(a => moyPaire(a.decalage)) } };
   }
-  /* Voie de référence de la série (garde-fou des différés, gcv2-apprendre `--garde-voie`) : la médiane rail par rail des K plus proches ; sûre si au
-   * moins `nSur` voisins et une étendue latérale d'au plus `dispersionSureMm` sur chaque rail. */
-  const reference = mediane ? { left: mediane.left, right: mediane.right, n: mediane.n, distMax: mediane.distMax,
-    dispersion: { left: mediane.dispersion.left, right: mediane.dispersion.right },
-    sure: mediane.n >= H6.nSur && mediane.dispersion.left <= H6.dispersionSureMm && mediane.dispersion.right <= H6.dispersionSureMm } : null;
-  return { proche, mediane, reference };
+  /* Voie de référence de la série (garde-fou des différés, gcv2-apprendre `--garde-voie`, audit H1) : la médiane rail par rail des K plus proches.
+   * Premières preuves (ici) : au moins `nSur` appuis, une étendue latérale d'au plus `dispersionSureMm` sur chaque rail (appuis contradictoires :
+   * non), l'appui le plus proche à `procheMaxCuts` au plus (propagation limitée). Les autres preuves (support local des deux rails à la pose de
+   * référence, pas de voie concurrente à la pose de départ, pas de rupture de série) sont ajoutées par `hypothesesDuCut` et `lignesDuJeu`. */
+  const motifs = [];
+  if (!mediane) motifs.push(v.length ? 'un-seul-appui' : 'aucun-appui');
+  else {
+    if (mediane.dispersion.left > H6.dispersionSureMm || mediane.dispersion.right > H6.dispersionSureMm) motifs.push('appuis-contradictoires');
+    if (proche.dist > H6.procheMaxCuts) motifs.push('appui-trop-loin');
+  }
+  const reference = mediane ? { left: mediane.left, right: mediane.right, n: mediane.n, distMax: mediane.distMax, distMin: proche.dist,
+    dispersion: { left: mediane.dispersion.left, right: mediane.dispersion.right }, ancres: k.map(a => ({ cut: a.identity.cut, source: a.source === 'humain' ? 'humain' : 'lot' })), motifs } : null;
+  return { proche, mediane, reference, motifs };
 }
 
 /* ------------------------------------------------------------------ géométrie d'une hypothèse */
@@ -395,11 +402,22 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
   const ecartDepart = gaugeMm(capture.rails.left.positionSceneRelative, capture.rails.right.positionSceneRelative);
   const abstenu = !SIDES.every(s => science.rails[s] && science.rails[s].ok && science.rails[s].next.status === 'candidate') || !!(science.summary && science.summary.pairGaugeRejected);
   /* Voie de référence de la série, par famille, en mm dans le repère profil de la pose de départ (comme `decal`) : le garde-fou des différés. */
+  /* Preuves indépendantes de la simple translation (audit H1, point 3) : SUPPORT LOCAL des deux rails à la pose de référence (points du dessus et du
+   * flanc sous le gabarit, sur la capture translatée), et PAS DE VOIE CONCURRENTE plausible : si la pose de départ a elle aussi un support sur les
+   * deux rails alors que la référence en est à plus de `concurrentMm`, deux voies sont possibles, on s'abstient. Sans preuve suffisante : non sûre. */
+  const support = mm => SIDES.map(s => { const m = mesuresTranslatees(capture, s, mm[s], null).sig; return { dessus: m.pointsDessus ?? 0, flanc: m.pointsFlanc ?? 0 }; });
+  const soutenu = x => x.dessus >= H6.supportDessus && x.flanc >= H6.supportFlanc;
   const refH6 = f => {
     const r = famH6[f] && famH6[f].reference;
     if (!r) return null;
     const pose = s => [arrondi(baseH6[s][1] + r[s][0], 2), arrondi(baseH6[s][2] + r[s][1], 2)];
-    return { left: pose('left'), right: pose('right'), n: r.n, distMax: r.distMax, dispersionMm: { left: arrondi(r.dispersion.left, 2), right: arrondi(r.dispersion.right, 2) }, sure: r.sure };
+    const sRef = support({ left: [baseH6.left[0], baseH6.left[1] + r.left[0], baseH6.left[2] + r.left[1]], right: [baseH6.right[0], baseH6.right[1] + r.right[0], baseH6.right[2] + r.right[1]] });
+    const sDep = support({ left: [0, 0, 0], right: [0, 0, 0] }), loin = Math.max(...SIDES.map(s => Math.abs(baseH6[s][1] + r[s][0]))) > H6.concurrentMm;
+    const motifs = [...r.motifs];
+    if (!sRef.every(soutenu)) motifs.push('sans-support-local');
+    if (loin && sDep.every(soutenu)) motifs.push('voie-concurrente-au-depart');
+    return { left: pose('left'), right: pose('right'), n: r.n, distMin: r.distMin, distMax: r.distMax, dispersionMm: { left: arrondi(r.dispersion.left, 2), right: arrondi(r.dispersion.right, 2) },
+      ancres: r.ancres, support: { reference: sRef, depart: sDep }, motifs, sure: !motifs.length };
   };
   const voieH6 = baseH6 ? { tous: refH6('tous'), lot: refH6('lot'), departLot: !!departEsv } : null;
   return { rails: hyps, rail: railInfo, tronques, voieH6, tronquesH6,
@@ -442,7 +460,7 @@ function creerObservateur({ partie, lotValide = new Set(), initialesLot = new Ma
       etat.gMed = med(g);
     },
     cut({ c, v0, o, entree, brut }) {
-      const t0 = Date.parse(v0.startedAt), rec = { cut: c.cut, o, hyp: null, etiquette: null, erreur: null };
+      const t0 = Date.parse(v0.startedAt), rec = { cut: c.cut, o, hyp: null, hypLot: null, etiquette: null, erreur: null };
       etat.cuts.push(rec);
       if (!o.ariane || o.ariane.etat !== 'calcule' || !brut) return;
       try {
@@ -462,6 +480,9 @@ function creerObservateur({ partie, lotValide = new Set(), initialesLot = new Ma
           departEsv = d && SIDES.every(s => d[s]) ? d : false;
         }
         rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv });
+        /* Jeu « lot » (audit F3) : GÉNÉRÉ depuis des entrées sans aucun appui humain (H4 et H6 n'ont que les voisins du lot), avant déduplication,
+         * plafond et traits ; il n'est pas obtenu en filtrant le jeu de relecture. */
+        rec.hypLot = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins: voisinsLot, gMed: etat.gMed, voisinsLot, departEsv });
         etat.calcules++;
       } catch (e) { rec.erreur = String(e && e.message || e).slice(0, 160); etat.erreurs++; journal(`cut ${c.cut} : ${rec.erreur}`); }
     },
@@ -469,11 +490,25 @@ function creerObservateur({ partie, lotValide = new Set(), initialesLot = new Ma
 }
 
 /* Lignes du jeu d'une partie, une fois le cas et la table connus (zone, rôle). */
-function lignesDuJeu({ designation, jeu, observateur, cas, zones }) {
-  const out = [{ type: 'entete', format: FORMAT, partie: designation, jeu, note: 'jeu HORS DÉPÔT : décalages en mm dans le repère profil de la pose de départ, aucune coordonnée absolue',
+/* Rupture de série (audit H1, point 2) : un appui est séparé du cut par une bifurcation quand un cut de l'intervalle (bornes comprises) n'a pas le même
+ * statut ADV que le cut. La voie de référence n'est alors pas sûre. */
+function avecRupture(voie, cut, zones) {
+  if (!voie) return voie;
+  const adv = c => (zones.get(c) || {}).zone === 'adv', t = adv(cut);
+  const rompu = (voie.ancres || []).some(a => { for (let c = Math.min(a.cut, cut); c <= Math.max(a.cut, cut); c++) if (zones.has(c) && adv(c) !== t) return true; return false; });
+  if (!rompu) return voie;
+  const motifs = [...voie.motifs, 'rupture-de-serie'];
+  return { ...voie, motifs, sure: false };
+}
+/* `usage` : « relecture » (voisins humains validés avant la première visite, et voisins du lot) ou « lot » (jeu généré sans aucun appui humain). */
+function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relecture' }) {
+  if (!['relecture', 'lot'].includes(usage)) throw Error(`usage « ${usage} » : relecture | lot`);
+  const out = [{ type: 'entete', format: FORMAT, partie: designation, jeu, usage, note: 'jeu HORS DÉPÔT : décalages en mm dans le repère profil de la pose de départ, aucune coordonnée absolue',
     maxHypParRail: MAX_HYP, doublonMm: DOUBLON_MM, seuilsMm: SEUILS_MM, gMedMm: arrondi(observateur.etat.gMed, 1), h6: { version: VERSION_H6, ...H6 } }];
   const roleDe = g => g === 'pose' ? 'rouge' : g === 'differe' ? 'differe' : 'vert';
-  for (const rec of observateur.etat.cuts) {
+  for (const rec0 of observateur.etat.cuts) {
+    const hyp = usage === 'lot' ? rec0.hypLot : rec0.hyp;
+    const rec = { ...rec0, hyp: hyp ? { ...hyp, voieH6: hyp.voieH6 ? { ...hyp.voieH6, tous: avecRupture(hyp.voieH6.tous, rec0.cut, zones), lot: avecRupture(hyp.voieH6.lot, rec0.cut, zones) } : hyp.voieH6 } : null };
     const o = rec.o, z = zones.get(rec.cut) || { zone: 'hors', genre: 'vert' };
     const mic = o.mic && o.mic.ref ? { left: o.mic.rails.left, right: o.mic.rails.right } : null;
     const micMax = mic && mic.left && mic.right ? arrondi(Math.max(norme(mic.left), norme(mic.right)), 2) : null;
@@ -511,8 +546,8 @@ function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu 
   const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
   const L2 = RA.lignes({ cas, table, designation });
   const zones = new Map(L2.lignes.map(l => [l.cut, { zone: l.zone, genre: l.genre }]));
-  const lignes = lignesDuJeu({ designation, jeu, observateur, cas, zones });
-  return { lignes, etat: observateur.etat, cas, table };
+  const lignes = lignesDuJeu({ designation, jeu, observateur, cas, zones }), lignesLot = lignesDuJeu({ designation, jeu, observateur, cas, zones, usage: 'lot' });
+  return { lignes, lignesLot, etat: observateur.etat, cas, table };
 }
 
 /* ------------------------------------------------------------------ rappel atteignable */
@@ -759,7 +794,7 @@ function args(argv) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
-    else if (k === '--sortie') o.sortie = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
+    else if (k === '--sortie') o.sortie = val(); else if (k === '--sortie-lot') o.sortieLot = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
     else if (k === '--selection') { const v = val(), i = v.indexOf('='); if (i < 1) throw Error('--selection NOM=P:N:a-b,…'); o.selections[v.slice(0, i)] = lireSelection(v.slice(i + 1)); }
     else throw Error('argument inconnu : ' + k);
@@ -776,7 +811,7 @@ function controlerManifeste({ projet, partie, jugerReservee }) {
 }
 
 module.exports = { FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
-  decalageDepuisEsv, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
+  decalageDepuisEsv, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
 
 if (require.main === module) {
   try {
@@ -788,6 +823,7 @@ if (require.main === module) {
       const t0 = Date.now(), r = construire({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, sansLot: a.sansLot, jeu: c.jeu, journal: m => console.error(m) });
       fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true });
       fs.writeFileSync(a.sortie, r.lignes.map(l => JSON.stringify(l)).join('\n') + '\n');
+      if (a.sortieLot) fs.writeFileSync(a.sortieLot, r.lignesLot.map(l => JSON.stringify(l)).join('\n') + '\n');
       const n = t => r.lignes.filter(l => l.type === t).length;
       console.log(`partie ${a.projet}:${a.partie} (${c.jeu}) : ${n('cut')} cuts, ${r.etat.calcules} calculés, ${n('hyp')} hypothèses, erreurs ${r.etat.erreurs}, écarts de la copie du moteur ${r.etat.ecartsMoteur}, ${Math.round((Date.now() - t0) / 1000)} s`);
     } else if (a.mode === 'rappel') {

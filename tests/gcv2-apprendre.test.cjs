@@ -454,7 +454,9 @@ test('garde-fou de voie : un différé est gardé par la voie de référence ; s
     assert.ok(k0.paires.every(q => Math.abs(k.rails.left.hyps[q.i].decal[1]) <= 45), 'sans l\'option : gardé par la pose de départ (H6 à 150 mm écartées)');
     for (const q of k.paires) for (const [s, i] of [['left', q.i], ['right', q.j]]) {
       assert.ok(Math.abs(k.rails[s].hyps[i].decal[1] - k.voieRef[s][0]) <= 45, 'chaque rail à 45 mm au plus de la référence');
-      assert.ok(A.issueDePaire(k, q.i, q.j).lat <= 45, 'mauvaise voie impossible par la référence : latéral mesuré depuis elle');
+      const o = A.issueDePaire(k, q.i, q.j);
+      assert.ok(o.latGarde <= 45, 'dans le corridor de série : latéral mesuré depuis la référence');
+      assert.ok(o.lat >= 100, 'l\'amplitude depuis H0 reste publiée telle quelle (audit H2)');
     }
     assert.ok(!k.paires.some(q => k.rails.left.hyps[q.i].decal[1] === 30), 'la H6 « paire » à 30 mm (120 mm de la référence) est écartée');
     /* Même avec un score de 1 sur une paire interdite, la décision reste dans la voie. */
@@ -509,4 +511,37 @@ test('export H6 : les traits H6 n\'entrent dans la liste blanche que pour un jeu
   const neuf = A.exporter([1, 2, 3].map(n => jeuH6({ partie: `9:${n}`, graine: n, cuts: 40 })), { usages: ['relecture'], lambda: 10, date: '2026-10-19', gardeVoie: true });
   assert.ok(neuf.listeBlanche.filter(t => A.TRAIT_H6(t.nom)).length === 7 && neuf.h6.version === 'h6-1' && neuf.garde.voie.lateralMaxMm === 45);
   assert.ok(neuf.listeBlanche.every(t => !A.estInterdit(t.nom)));
+});
+
+test('jeu « lot » généré sans appui humain (audit F3) : lu tel quel, et seulement pour l\'usage lot ; un jeu de relecture est refusé au lot', () => {
+  const rel = jeuH6({ cuts: 30 }); rel.entete.usage = 'relecture';
+  const lot = jeuH6({ cuts: 30 }); lot.entete.usage = 'lot';
+  assert.throws(() => A.construireCas(rel, 'lot'), /généré sans appui humain/);
+  assert.throws(() => A.construireCas(lot, 'relecture'), /jeu « lot »/);
+  /* Le jeu lot n'est pas filtré : ses hypothèses sont celles du fichier (ici, la fixture en contient d'humaines exprès : elles restent). */
+  const k = A.construireCas(lot, 'lot');
+  assert.ok(k.some(c => SIDES.some(s => c.rails[s].hyps.some(h => h.sousOrigines.includes('h6-humain-proche-rail')))), 'aucun retrait après coup');
+  assert.equal(A.construireCas(rel, 'relecture').length, k.length);
+});
+
+test('mesures de voie séparées (audit H2) : erreur finale > 50 mm, amplitude depuis H0, corridor ; la porte garde l\'erreur finale', () => {
+  const b = A.bilanDe([
+    { mic: 150, etat: 'agit', e: 4, lat: 150, latGarde: 6 },      // correction H6 juste : amplitude 150 mm depuis H0, dans le corridor de série
+    { mic: 150, etat: 'agit', e: 80, lat: 150, latGarde: 20 },    // dans le corridor, mais à 80 mm de Mic : erreur finale
+    { mic: 3, etat: 'agit', e: 4, lat: 30 },                      // vert ordinaire
+  ]);
+  assert.deepEqual([b.agit, b.erreur50, b.amplitude45, b.horsCorridor, b.mauvaiseVoie], [3, 1, 2, 0, 2], 'mauvaise voie garde sa définition de G1-b');
+  const P = A.porte({ total: { gcv2: { total: b, perimetrePrudent: b }, prudente: { total: A.bilanDe([]), perimetrePrudent: A.bilanDe([]) } } });
+  assert.equal(P.tout.mauvaiseVoie, false, 'une erreur finale > 50 mm ferme la porte');
+  const ok = A.bilanDe([{ mic: 150, etat: 'agit', e: 4, lat: 150, latGarde: 6 }]);
+  assert.equal(A.porte({ total: { gcv2: { total: ok, perimetrePrudent: ok }, prudente: { total: A.bilanDe([]), perimetrePrudent: A.bilanDe([]) } } }).tout.mauvaiseVoie, true,
+    'une amplitude de 150 mm dans le corridor ne ferme pas la porte ; elle est publiée à part (amplitude45 = 1, mauvaise voie G1-b = 1)');
+  assert.equal(ok.mauvaiseVoie, 1);
+  const hors = A.bilanDe([{ mic: 150, etat: 'agit', e: 4, lat: 150, latGarde: 60 }]);
+  assert.equal(A.porte({ total: { gcv2: { total: hors, perimetrePrudent: hors }, prudente: { total: A.bilanDe([]), perimetrePrudent: A.bilanDe([]) } } }).tout.mauvaiseVoie, false, 'hors du corridor : porte fermée');
+  /* Le rapport sous le garde-fou de voie publie la table. */
+  const parties = [1, 2, 3].map(n => jeuH6({ partie: `9:${n}`, graine: n, cuts: 40 }));
+  const V = A.validationCroisee(parties, { usage: 'relecture', lambda: 10, gardeVoie: true });
+  assert.ok(A.rapport(V).includes('Mesures de voie, séparées'));
+  assert.equal(A.rapport(A.validationCroisee(parties, { usage: 'relecture', lambda: 10 })).includes('Mesures de voie'), false);
 });

@@ -220,10 +220,15 @@ function appliquerUsage(c, usage) {
 function construireCas(jeu, usage = 'relecture', { gardeVoie = false } = {}) {
   if (!['relecture', 'lot'].includes(usage)) throw Error(`usage « ${usage} » : relecture | lot`);
   const cas = [], gMed = fini(jeu.entete.gMedMm) ? jeu.entete.gMedMm : null;
+  /* Audit F3 : un jeu H6 dit son usage. Le jeu « lot » est GÉNÉRÉ sans aucun appui humain (gcv2-jeu `--sortie-lot`) : il est lu tel quel, et seul
+   * l'usage lot le lit ; l'usage lot refuse un jeu de relecture (le filtrer après coup laisserait une trace humaine). Les jeux de G1-a, sans usage
+   * déclaré, gardent l'ancien retrait (reproduction de G1-b). */
+  const usageJeu = jeu.entete.usage || null;
+  if (usageJeu && usageJeu !== usage) throw Error(`jeu ${jeu.partie} : jeu « ${usageJeu} », usage « ${usage} » demandé${usage === 'lot' ? ' (le jeu lot est généré sans appui humain : gcv2-jeu --sortie-lot)' : ''}`);
   for (const c0 of jeu.cuts) {
     const c = c0.cut;
     if (c.etat !== 'calcule' || !c.nHyp || !c.etiquette || !c.etiquette.mic || !c.etiquette.mic.left || !c.etiquette.mic.right) continue;
-    const { hyp, ctx: contexte } = appliquerUsage({ cut: c, hyp: c0.hyp, gMed }, usage);
+    const { hyp, ctx: contexte } = usageJeu ? { hyp: c0.hyp, ctx: c.contexte } : appliquerUsage({ cut: c, hyp: c0.hyp, gMed }, usage);
     const G0 = fini(contexte && contexte.ecartDepartMm) ? contexte.ecartDepartMm : null, v = (contexte && contexte.voisins) || {};
     const ctx = { zone: c.zone, role: c.role, etageChaine: contexte ? contexte.etageChaine : null, appuisChaine: contexte ? contexte.appuisChaine : null,
       voisinsN: v.n ?? null, voisinsHumains: v.humains ?? null, voisinsLot: v.lot ?? null, voisinsEncadre: v.encadre ?? null, voisinsCoupMin: v.coupMin ?? null,
@@ -515,13 +520,16 @@ function decider(k, p, seuils) {
 function issueDePaire(k, i, j) {
   const hl = k.rails.left.hyps[i], hr = k.rails.right.hyps[j];
   /* `lat` : déplacement latéral depuis la pose de départ ; sous le garde-fou de voie (et seulement quand on agit), depuis la voie de référence. */
-  if (k.garde === 'voie' && k.voieRef && !(i === k.i0.left && j === k.i0.right)) return { e: Math.max(hl.y.ecartMm, hr.y.ecartMm), lat: Math.max(Math.abs(latRef(k, 'left', hl)), Math.abs(latRef(k, 'right', hr))) };
-  return { e: Math.max(hl.y.ecartMm, hr.y.ecartMm), lat: Math.max(Math.abs(hl.decal[1]), Math.abs(hr.decal[1])) };
+  /* Audit H2 : `lat` reste le déplacement latéral DEPUIS H0 (amplitude) ; `latGarde` est mesuré depuis l'origine du corridor du garde-fou (H0, ou la
+   * voie de référence de la série sous le garde-fou de voie). Les deux sont publiés séparément. */
+  const e = Math.max(hl.y.ecartMm, hr.y.ecartMm), lat = Math.max(Math.abs(hl.decal[1]), Math.abs(hr.decal[1]));
+  const latGarde = k.garde === 'voie' && k.voieRef ? Math.max(Math.abs(latRef(k, 'left', hl)), Math.abs(latRef(k, 'right', hr))) : lat;
+  return { e, lat, latGarde };
 }
 /* Un résultat par cut : { partie, cut, zone, role, mic (pire des deux rails), etat, e, lat }. */
 function resultatDeDecision(k, d) {
   const r = { partie: k.partie, cut: k.cut, zone: k.zone, role: k.role, mic: k.etiq.micMaxMm, etat: d.etat, e: null, lat: null };
-  if (d.etat === 'agit') { const o = issueDePaire(k, d.i, d.j); r.e = o.e; r.lat = o.lat; }
+  if (d.etat === 'agit') { const o = issueDePaire(k, d.i, d.j); r.e = o.e; r.lat = o.lat; if (o.latGarde !== o.lat) r.latGarde = o.latGarde; }
   return r;
 }
 
@@ -538,7 +546,7 @@ function choisirSeuils(cas, probas, cible = CIBLE) {
       const { best } = meilleurePaire(k, probas[ci]);
       if (best.h0) return;
       const o = issueDePaire(k, best.i, best.j);
-      gagnants.push({ p: best.p, ecart: best.ecart, e: o.e, lat: o.lat, mic: k.etiq.micMaxMm });
+      gagnants.push({ p: best.p, ecart: best.ecart, e: o.e, lat: o.latGarde, mic: k.etiq.micMaxMm });
     });
     let meilleur = null;
     for (const delta of GRILLE_DELTA) for (const tau of GRILLE_TAU) {
@@ -627,7 +635,7 @@ function reglePrudente(k, R = REGLES_PRUDENTES) {
     && conf >= R.confianceMin && fini(g) && fini(k.gMed) && Math.abs(g - k.gMed) <= R.ecartementMedianeMm;
   if (!agit) { r.etat = 'laisse'; return r; }
   const o = issueDePaire(k, pose.i, pose.j);
-  return { ...r, etat: 'agit', e: o.e, lat: o.lat };
+  return { ...r, etat: 'agit', e: o.e, lat: o.lat, ...(o.latGarde !== o.lat ? { latGarde: o.latGarde } : {}) };
 }
 /* (a) H0 : ne rien faire. */
 const resultatH0 = k => ({ partie: k.partie, cut: k.cut, zone: k.zone, role: k.role, mic: k.etiq.micMaxMm, etat: 'laisse', e: null, lat: null });
@@ -673,7 +681,8 @@ function appliquerVariante(k, nom, rG, rP, defs = lireVariantes()) {
 }
 
 /* ------------------------------------------------------------------ mesures */
-const COMPTEURS = ['visites', 'micSup5', 'micSup10', 'agit', 'justes', 'justes5', 'reproduit10', 'abimes', 'aggraves', 'mauvaiseVoie', 'erreurs', 'abstentions', 'laisseFaux'];
+const COMPTEURS = ['visites', 'micSup5', 'micSup10', 'agit', 'justes', 'justes5', 'reproduit10', 'abimes', 'aggraves', 'mauvaiseVoie', 'erreurs', 'abstentions', 'laisseFaux',
+  'erreur50', 'amplitude45', 'horsCorridor'];
 function bilanVide() { return Object.fromEntries(COMPTEURS.map(c => [c, 0])); }
 /* Ajoute un résultat (poids p, 1 par défaut) à un bilan. Définitions (fiche § 3) :
  *  justes      Mic > 10 mm et la pose est à 10 mm ou moins de lui ; justes5 : à 5 mm ou moins ;
@@ -692,6 +701,11 @@ function compterAction(b, r, p = 1) {
   if (r.mic <= 5 && r.e > 10) b.abimes += p;
   if (r.mic > 5 && r.e > r.mic + 5) b.aggraves += p;
   if (r.e > SEUILS.mauvaiseVoie || r.lat > GARDES.lateralMaxMm) b.mauvaiseVoie += p;
+  /* Audit H2, publiés séparément : erreur finale > 50 mm ; amplitude > 45 mm en latéral depuis H0 ; sortie du corridor du garde-fou (45 mm depuis
+   * H0, ou depuis la voie de référence de la série sous le garde-fou de voie). « Mauvaise voie » garde sa définition de G1-b (les deux premiers). */
+  if (r.e > SEUILS.mauvaiseVoie) b.erreur50 += p;
+  if (r.lat > GARDES.lateralMaxMm) b.amplitude45 += p;
+  if ((r.latGarde ?? r.lat) > GARDES.lateralMaxMm) b.horsCorridor += p;
   return b;
 }
 function ajouterBilan(b, r) {
@@ -723,7 +737,7 @@ function hasardEnEsperance(cas, taux) {
     if (!t) continue;
     for (const q of k.paires) {
       const o = issueDePaire(k, q.i, q.j);
-      for (const b of cibles) compterAction(b, { mic, e: o.e, lat: o.lat }, t / N);
+      for (const b of cibles) compterAction(b, { mic, e: o.e, lat: o.lat, latGarde: o.latGarde }, t / N);
     }
   }
   return par;
@@ -758,7 +772,7 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     const rsV = {}; for (const v of variantes) { rsV[v] = test.map((k, i) => appliquerVariante(k, v, rs[i], rsP[i], defs)); methodesV[v].push(...rsV[v]); }
     /* Garde-fou de voie : le détail des différés jugés (référence, décision, issue), pour la fiche. Rien d'autre ne change. */
     if (gardeVoie) test.forEach((k, i) => { if (k.garde === 'voie') detailsDifferes.push({ partie: k.partie, cut: k.cut, zone: k.zone, mic: k.etiq.micMaxMm, reference: !!k.voieRef, sure: !!(k.voieRef && k.voieRef.sure),
-      paires: k.paires.length, etat: rs[i].etat, p: arrondi(dec[i].p, 4), e: rs[i].e, lat: rs[i].lat }); });
+      paires: k.paires.length, motifs: k.voieRef ? k.voieRef.motifs || [] : ['aucune-reference'], etat: rs[i].etat, p: arrondi(dec[i].p, 4), e: rs[i].e, lat: rs[i].lat, latGarde: rs[i].latGarde ?? rs[i].lat }); });
     /* hasard : taux d'action de la GCV2 par zone, sur cette partie */
     const taux = {}; for (const z of ZONES) { const n = rs.filter(r => r.zone === z).length; taux[z] = n ? rs.filter(r => r.zone === z && r.etat === 'agit').length / n : 0; }
     const h = hasardEnEsperance(test, taux); hasardParPartie[jugee] = h;
@@ -839,14 +853,21 @@ const pc = (a, b) => b ? `${(Math.round(1000 * a / b) / 10).toString().replace('
 const nb = v => Number.isInteger(v) ? String(v) : (Math.round(v * 10) / 10).toString().replace('.', ',');
 const LIGNE = b => `${nb(b.visites)} | ${nb(b.micSup10)} | ${nb(b.agit)} | ${nb(b.justes)} | ${nb(b.justes5)} | ${nb(b.abimes)} | ${nb(b.mauvaiseVoie)} | ${nb(b.erreurs)} (${pc(b.erreurs, b.agit)}) | ${nb(b.abstentions)} | ${nb(b.laisseFaux)}`;
 const ENTETE = 'visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses';
+/* Audit H2 : les mesures de voie, séparées. */
+const MESURES_VOIE_TITRE = '### Mesures de voie, séparées (audit H2)';
+const MESURES_VOIE_ENTETE = 'méthode | agit | erreur finale > 50 mm | amplitude > 45 mm depuis H0 | hors du corridor du garde-fou | mauvaise voie (définition G1-b : > 50 mm ou > 45 mm depuis H0)';
+const MESURES_VOIE = b => `${nb(b.agit)} | ${nb(b.erreur50 ?? 0)} | ${nb(b.amplitude45 ?? 0)} | ${nb(b.horsCorridor ?? 0)} | ${nb(b.mauvaiseVoie)}`;
 function wilsonTexte(b) { const w = wilson(b.erreurs, b.agit); return w.haut == null ? '—' : `≤ ${(Math.round(1000 * w.haut) / 10).toString().replace('.', ',')} %`; }
 /* La porte du plan (D-201, G0 § 4) : 0 mauvaise voie, erreur parmi les actions ≤ 9 %, corrections justes ≥ celles de la règle prudente, abîmés ≤ ceux de la
  * règle prudente. Lue sur tous les cuts jugés (G) et sur le périmètre de la règle prudente (P : verts de PN, ADV et abords). */
 function porte(V) {
   const lire = (g, r) => {
     const w = wilson(g.erreurs, g.agit), erreur = g.agit ? g.erreurs / g.agit : null;
-    return { mauvaiseVoie: g.mauvaiseVoie === 0, erreur: g.agit ? erreur <= 0.09 : false, erreurTaux: erreur, wilsonHaut: w.haut, justes: g.justes >= r.justes, abimes: g.abimes <= r.abimes,
-      borneHaute: w.haut != null && w.haut <= 0.09, valeurs: { gcv2: { agit: g.agit, justes: g.justes, abimes: g.abimes, mauvaiseVoie: g.mauvaiseVoie, erreurs: g.erreurs }, prudente: { agit: r.agit, justes: r.justes, abimes: r.abimes, mauvaiseVoie: r.mauvaiseVoie } } };
+    /* Audit H2 : la porte garde l'ERREUR FINALE (0 pose à plus de 50 mm de Mic) et le corridor du garde-fou ; l'amplitude depuis H0 est publiée à
+     * part. Sans le garde-fou de voie (lat ≤ 45 mm imposé depuis H0), c'est exactement la porte « 0 mauvaise voie » de G1-b. */
+    return { mauvaiseVoie: (g.erreur50 ?? g.mauvaiseVoie) === 0 && (g.horsCorridor ?? 0) === 0, erreur: g.agit ? erreur <= 0.09 : false, erreurTaux: erreur, wilsonHaut: w.haut, justes: g.justes >= r.justes, abimes: g.abimes <= r.abimes,
+      borneHaute: w.haut != null && w.haut <= 0.09, valeurs: { gcv2: { agit: g.agit, justes: g.justes, abimes: g.abimes, mauvaiseVoie: g.mauvaiseVoie, erreurs: g.erreurs, erreur50: g.erreur50, amplitude45: g.amplitude45, horsCorridor: g.horsCorridor },
+        prudente: { agit: r.agit, justes: r.justes, abimes: r.abimes, mauvaiseVoie: r.mauvaiseVoie } } };
   };
   const tout = lire(V.total.gcv2.total, V.total.prudente.total), perimetre = lire(V.total.gcv2.perimetrePrudent, V.total.prudente.perimetrePrudent);
   const ok = o => o.mauvaiseVoie && o.erreur && o.justes && o.abimes;
@@ -858,6 +879,9 @@ function rapport(V) {
   if (V.gardeVoie) L.push(rapportGardeVoie(V), '');
   L.push('### Total, par méthode (mêmes cuts)', '', `méthode | ${ENTETE} | Wilson haut`, '---|' + '--:|'.repeat(10) + '---');
   for (const [k, nom] of M) L.push(`${nom} | ${LIGNE(V.total[k].total)} | ${wilsonTexte(V.total[k].total)}`);
+  /* Les mesures de voie séparées ne s'impriment que sous le garde-fou de voie : sans lui, l'amplitude et la sortie de corridor sont nulles par
+   * construction et l'erreur finale > 50 mm est la « mauvaise voie » de G1-b (le rapport par défaut reste celui de G1-b, octet pour octet). */
+  if (V.gardeVoie) { L.push('', MESURES_VOIE_TITRE, '', MESURES_VOIE_ENTETE, '---|--:|--:|--:|--:|--:'); for (const [k, nom] of M) L.push(`${nom} | ${MESURES_VOIE(V.total[k].total)}`); }
   L.push('', '### Dans le périmètre de la règle prudente (verts de PN, ADV et abords)', '', `méthode | ${ENTETE} | Wilson haut`, '---|' + '--:|'.repeat(10) + '---');
   for (const [k, nom] of M) L.push(`${nom} | ${LIGNE(V.total[k].perimetrePrudent)} | ${wilsonTexte(V.total[k].perimetrePrudent)}`);
   L.push('', '### Par partie jugée (GCV2 | règle prudente)', '', `partie | ${ENTETE} | règle prudente : agit | justes | abîmés | mauvaise voie`, '---|' + '--:|'.repeat(10) + '--:|--:|--:|--:');
@@ -886,7 +910,8 @@ function rapportGardeVoie(V) {
   const d = V.detailsDifferes || [], n = f => d.filter(f).length;
   const agit = d.filter(x => x.etat === 'agit');
   return [`Garde-fou de voie sur les différés (option) : ${d.length} différés jugés ; voie de référence : ${n(x => x.reference)} (sûre : ${n(x => x.sure)}) ; sans référence sûre, aucune paire permise (${n(x => !x.sure)} cuts).`,
-    `GCV2 seule sur ces différés : agit ${agit.length}, justes ${agit.filter(x => x.mic > 10 && x.e <= 10).length}, à plus de 10 mm ${agit.filter(x => x.e > 10).length}, mauvaise voie ${agit.filter(x => x.e > 50 || x.lat > 45).length}.`].join('\n');
+    `GCV2 seule sur ces différés : agit ${agit.length}, justes ${agit.filter(x => x.mic > 10 && x.e <= 10).length}, à plus de 10 mm ${agit.filter(x => x.e > 10).length} ; erreur finale > 50 mm ${agit.filter(x => x.e > 50).length}, amplitude > 45 mm depuis H0 ${agit.filter(x => x.lat > 45).length}, hors du corridor de série ${agit.filter(x => x.latGarde > 45).length}.`,
+    `Motifs sans référence sûre : ${Object.entries(d.filter(x => !x.sure).flatMap(x => x.motifs).reduce((o, m) => { o[m] = (o[m] || 0) + 1; return o; }, {})).map(([m, k]) => `${m} ${k}`).join(', ') || 'aucun'}.`].join('\n');
 }
 /* Les variantes par zone (D-204), mêmes cuts et mêmes plis que le rapport de base : variante, règle prudente seule, GCV2 seule, hasard et H0. */
 function rapportVariantes(V) {
@@ -897,6 +922,10 @@ function rapportVariantes(V) {
     L.push(`## Variante ${nom} — usage « ${V.usage} » (${V.nCas} cuts jugés, ${V.parties.length} plis)`, '', `GCV2 : ${liste(d.gcv2)} ; règle prudente : ${liste(d.prudente)} ; partout ailleurs : rien. τ et δ : ceux appris dans chaque pli.`, '');
     L.push(`### Total, ${nom} contre les références (mêmes cuts)`, '', tete, ligne);
     for (const [nomM, b] of [[nom, S.total], ['règle prudente seule', V.total.prudente.total], ['GCV2 seule', V.total.gcv2.total], ['hasard', V.total.hasard.total], ['H0 (ne rien faire)', V.total.h0.total]]) L.push(`${nomM} | ${LIGNE(b)} | ${wilsonTexte(b)}`);
+    if (V.gardeVoie) {
+      L.push('', `${MESURES_VOIE_TITRE}, ${nom}`, '', MESURES_VOIE_ENTETE, '---|--:|--:|--:|--:|--:');
+      for (const [nomM, b] of [[nom, S.total], ['règle prudente seule', V.total.prudente.total], ['GCV2 seule', V.total.gcv2.total], ['hasard', V.total.hasard.total]]) L.push(`${nomM} | ${MESURES_VOIE(b)}`);
+    }
     L.push('', `### Dans le périmètre de la règle prudente (verts de PN, ADV et abords), ${nom}`, '', tete, ligne);
     for (const [nomM, b] of [[nom, S.perimetrePrudent], ['règle prudente seule', V.total.prudente.perimetrePrudent], ['GCV2 seule', V.total.gcv2.perimetrePrudent]]) L.push(`${nomM} | ${LIGNE(b)} | ${wilsonTexte(b)}`);
     L.push('', `### Par zone (${nom} | règle prudente seule | GCV2 seule)`, '', `zone | méthode | ${ENTETE}`, '---|---|' + '--:|'.repeat(10));

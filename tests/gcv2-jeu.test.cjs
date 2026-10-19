@@ -312,7 +312,9 @@ test('H6 : sûreté de la référence, pose de départ posée par le lot, pose d
   const v = [voisinA(cap, 4, 0, 0, 'lot', { left: [140, 10], right: [120, 12] }), voisinA(cap, 6, 0, 0, 'lot', { left: [160, 8], right: [140, 6] })];
   const appel = departEsv => G.hypothesesDuCut({ capture: base.capture, science, seul: base.seul, chaine: null, appuisAvant: [], voisins: v, gMed: 1450, departEsv });
   const a = appel(null);
-  assert.equal(a.voieH6.lot.sure, true, 'deux voisins à 20 mm l\'un de l\'autre : référence sûre'); assert.deepEqual(a.voieH6.lot.left, [150, 9]);
+  assert.deepEqual(a.voieH6.lot.left, [150, 9], 'médiane des deux appuis');
+  assert.equal(a.voieH6.lot.sure, false, 'la capture n\'a aucun rail à 150 mm : pas de support local, référence non sûre');
+  assert.ok(a.voieH6.lot.motifs.includes('sans-support-local') && a.voieH6.lot.motifs.includes('voie-concurrente-au-depart'), a.voieH6.lot.motifs.join());
   assert.deepEqual(a.voieH6.tous, a.voieH6.lot, 'sans voisin humain, les deux familles sont les mêmes');
   assert.equal(a.rails.left.some(y => y.sousOrigines.some(o => o.startsWith('h6-humain'))), false, 'aucune H6 humaine sans voisin humain');
   /* Le lot a posé ce cut : la pose d'ESV d'origine est à (−30, 2) mm de sa pose de départ ; H6 part de là. */
@@ -347,8 +349,10 @@ test('H6 : le décalage d\'un voisin se lit depuis la pose d\'ESV d\'origine (jo
 });
 
 /* Lignes du jeu pour le cut 5 de l'Écho synthétique (observateur de bout en bout). */
-function lignesH6(opts, { lotValide = new Set(), initialesLot = new Map() } = {}) {
+function lignesH6(opts, { lotValide = new Set(), initialesLot = new Map(), usage = 'relecture', retirerHumains = false } = {}) {
   const E = echoSynthetique(opts);
+  /* Supprimer tous les appuis humains : les autres cuts n'ont plus aucune validation de l'opérateur. */
+  if (retirerHumains) for (const c of E.cuts) if (c.cut !== 5) for (const v of c.visites) { v.humanFinalReference = null; v.lastObserved = v.beforeEstablished; }
   const obs = G.creerObservateur({ partie: 91, moteur, lotValide, initialesLot });
   obs.debut({ parCut: E.cuts, ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine });
   const { entree, brut } = brutDuCut({ cut: 5, appuis: appuisChaine(E.cap, 5) });
@@ -356,7 +360,7 @@ function lignesH6(opts, { lotValide = new Set(), initialesLot = new Map() } = {}
   const o = { partie: 91, cut: 5, visites: 1, ariane: { etat: 'calcule' }, mic: { ref: 'validation', rails: { left: [0, ref[0], ref[1]], right: [0, ref[0], ref[1]] } } };
   obs.cut({ c: E.cuts[1], v0: E.cuts[1].visites[0], o, entree, brut });
   assert.equal(obs.etat.erreurs, 0);
-  return G.lignesDuJeu({ designation: '9:91', jeu: 'apprentissage', observateur: obs, cas: [o], zones: new Map([[5, { zone: 'abords', genre: 'differe' }]]) });
+  return G.lignesDuJeu({ designation: '9:91', jeu: 'apprentissage', observateur: obs, cas: [o], zones: new Map([[5, { zone: 'abords', genre: 'differe' }]]), usage });
 }
 const sansEtiq = ls => ls.map(l => { const { etiquette, micRailMm, ...reste } = l; return reste; });
 const lignesH6Seules = ls => ls.filter(l => l.type === 'hyp' && l.origines.includes('H6'));
@@ -396,7 +400,8 @@ test('ANTI-FUITE H6 (3) : un voisin validé AVANT la première visite change H6 
   assert.deepEqual(lot.map(x => x.decal), [[0, 120, 0]], 'famille du lot : pose du lot − pose d\'ESV du cut 6');
   assert.ok(lignesH6Seules(l).some(x => x.sousOrigines.includes('h6-humain-mediane-rail')), 'famille « tous » : médiane des cuts 4 (humain) et 6 (lot)');
   const ref = l.find(x => x.type === 'cut').contexte.voieH6;
-  assert.equal(ref.lot, null, 'un seul voisin du lot : pas de référence du lot'); assert.deepEqual(ref.tous.left, [130, 5]); assert.equal(ref.tous.sure, true);
+  assert.equal(ref.lot, null, 'un seul voisin du lot : pas de référence du lot'); assert.deepEqual(ref.tous.left, [130, 5]);
+  assert.deepEqual(ref.tous.ancres, [{ cut: 4, source: 'humain' }, { cut: 6, source: 'lot' }], 'appuis datés et identifiés');
 });
 
 test('rappel : H6 avant et après, usage lot sans voisins humains, sélections nommées', () => {
@@ -418,4 +423,76 @@ test('rappel : H6 avant et après, usage lot sans voisins humains, sélections n
   assert.equal(R.parOrigine['H0 + H6 voisins du lot seuls']['plus-de-10-mm'].global.a10.k, 1);
   assert.equal(R.apportMarginal['plus-de-10-mm']['sans H6'].apport, 2);
   assert.throws(() => G.lireSelection('2:1:a-b'), /illisible/);
+});
+
+/* ------------------------------------------------------------------ audit F3 et H1 : jeu « lot » sans appui humain ; garde de série, essais adverses */
+test('ANTI-FUITE lot (audit F3) : modifier ou supprimer tous les appuis humains ne change aucune ligne du jeu « lot »', () => {
+  const E0 = echoSynthetique({});
+  const ini = Object.fromEntries(SIDES.map(s => [s, E0.cap.rails[s].positionSceneRelative.map((v, i) => i === 1 ? v - 0.120 : v)]));
+  const opt = extra => ({ lotValide: new Set([6]), initialesLot: new Map([[6, ini]]), ...extra });
+  const base = lignesH6({ refAvant: [140, 10] }, opt({ usage: 'lot' }));
+  const variantes = [lignesH6({ refAvant: [-30, 25] }, opt({ usage: 'lot' })), lignesH6({ refAvant: [140, 10], refApres: [5, -60], tApres: '2026-01-01T10:00:40Z' }, opt({ usage: 'lot' })),
+    lignesH6({ refAvant: [140, 10] }, opt({ usage: 'lot', retirerHumains: true }))];
+  for (const v of variantes) assert.equal(json(sansEtiq(v)), json(sansEtiq(base)), 'jeu lot : mêmes lignes, octet pour octet, étiquettes retirées');
+  assert.equal(base[0].usage, 'lot');
+  const hyp = base.filter(l => l.type === 'hyp');
+  assert.ok(hyp.some(l => l.sousOrigines.includes('h6-lot-proche-rail')), 'la H6 du lot est là');
+  assert.equal(hyp.some(l => l.sousOrigines.some(x => x === 'voisins-humains' || x.startsWith('h6-humain-'))), false, 'aucune origine humaine');
+  /* L'essai n'est pas vide : le jeu de relecture, lui, change avec l'appui humain d'avant. */
+  assert.notEqual(json(sansEtiq(lignesH6({ refAvant: [140, 10] }, opt({})))), json(sansEtiq(lignesH6({ refAvant: [-30, 25] }, opt({})))));
+});
+
+/* Capture dont les deux rails réels sont à `mm` (latéral) de la pose de départ ; `double` : rails réels au départ ET à `mm` (deux voies). */
+function captureDecalee(mm, { double = false } = {}) {
+  const cap = F.capture({ cut: 5, origine: ORIGINE_ABS }), dep = cap.pointsSceneRelative.map(p => [p[0], p[1] + mm / 1000, p[2]]);
+  const pts = double ? [...cap.pointsSceneRelative, ...dep] : dep;
+  return { ...cap, pointsSceneRelative: pts, visibleByClipBoxes: pts.map(() => true) };
+}
+function voieDe(cap, voisins, { appuis = [] } = {}) {
+  const entree = { identity: cap.identity, rails: cap.rails, points: cap.pointsSceneRelative, visible: cap.visibleByClipBoxes };
+  let brut = null; RA.poseAriane(entree, { appuis: { liste: appuis.slice() }, rappel: b => { brut = b; } });
+  return G.hypothesesDuCut({ capture: brut.capture, science: moteur.scientificProposeBoth(brut.capture), seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: 1450 });
+}
+const ancre = (cut, lat, source = 'lot') => voisinA(F.capture({ cut: 5, origine: ORIGINE_ABS }), cut, 0, 0, source, { left: [lat, 0], right: [lat, 0] });
+
+test('garde de série (audit H1) : une référence sûre exige deux appuis concordants, proches, et le support local des deux rails', () => {
+  const v = voieDe(captureDecalee(150), [ancre(4, 148), ancre(6, 152)]).voieH6.lot;
+  assert.deepEqual(v.motifs, [], 'voie réellement décalée de 150 mm, deux appuis à 148 et 152 mm : sûre'); assert.equal(v.sure, true);
+  assert.ok(v.support.reference.every(x => x.dessus >= G.H6.supportDessus && x.flanc >= G.H6.supportFlanc));
+  assert.ok(v.support.depart.every(x => x.dessus < G.H6.supportDessus), 'rien au départ : pas de voie concurrente');
+});
+
+test('garde de série, essais adverses : mauvaise branche, voie concurrente, appuis contradictoires, premier cut sans ancre, fin du décalage, propagation longue, rupture', () => {
+  const motifs = (cap, v) => { const r = voieDe(cap, v).voieH6.lot; return r ? (r.sure ? [] : r.motifs) : null; };
+  /* Appui sur la mauvaise branche : deux appuis concordants à 150 mm, mais la voie réelle de ce cut n'a pas bougé. */
+  assert.ok(motifs(captureDecalee(0), [ancre(4, 150), ancre(6, 150)]).includes('sans-support-local'), 'mauvaise branche : pas de rail à la référence');
+  /* Voie concurrente : une voie au départ ET une à 150 mm. */
+  assert.deepEqual(motifs(captureDecalee(150, { double: true }), [ancre(4, 150), ancre(6, 150)]), ['voie-concurrente-au-depart']);
+  /* Appuis contradictoires : 150 mm et 20 mm. */
+  assert.ok(motifs(captureDecalee(150), [ancre(4, 150), ancre(6, 20)]).includes('appuis-contradictoires'));
+  /* Premier cut sans ancre, ou un seul appui : pas de référence sûre. */
+  assert.equal(voieDe(captureDecalee(150), []).voieH6.lot, null, 'aucun appui : pas de référence');
+  assert.equal(voieDe(captureDecalee(150), [ancre(4, 150)]).voieH6.lot, null, 'un seul appui : pas de médiane, pas de référence');
+  /* Fin du décalage : les appuis d'amont sont à 150 mm, la voie de ce cut est revenue au départ. */
+  assert.ok(motifs(captureDecalee(0), [ancre(3, 150), ancre(4, 150)]).includes('sans-support-local'), 'fin du décalage : abstention');
+  /* Propagation longue : le plus proche appui est à 6 cuts. */
+  assert.ok(motifs(captureDecalee(150), [ancre(11, 150), ancre(12, 150)]).includes('appui-trop-loin'));
+  /* Rupture de série : une ADV entre l'appui et le cut. */
+  const v = voieDe(captureDecalee(150), [ancre(3, 150), ancre(4, 150)]).voieH6.lot;
+  assert.equal(v.sure, true);
+  const z = new Map([[3, { zone: 'abords' }], [4, { zone: 'adv' }], [5, { zone: 'abords' }]]);
+  assert.deepEqual([G.avecRupture(v, 5, z).sure, G.avecRupture(v, 5, z).motifs], [false, ['rupture-de-serie']]);
+  assert.equal(G.avecRupture(v, 5, new Map([[3, { zone: 'abords' }], [4, { zone: 'abords' }], [5, { zone: 'abords' }]])).sure, true, 'sans ADV entre eux : pas de rupture');
+});
+
+test('garde de série : jamais une pose d\'Ariane comme appui (pas d\'auto-validation) ; les appuis sont ceux des poses vérifiées', () => {
+  const cap = captureDecalee(150), voisins = [ancre(4, 148), ancre(6, 152)];
+  /* Les poses que la chaîne d'Ariane vient de donner aux cuts d'avant (non vérifiées) ne changent pas la voie de référence. */
+  const chaine = appuisChaine(cap, 5), autre = appuisChaine(cap, 5).map(a => ({ ...a, positions: Object.fromEntries(SIDES.map(s => [s, a.positions[s].map((x, i) => i === 1 ? x + 0.3 : x)])) }));
+  const a = voieDe(cap, voisins, { appuis: chaine }).voieH6, b = voieDe(cap, voisins, { appuis: autre }).voieH6;
+  assert.equal(json(a), json(b), 'la chaîne d\'Ariane n\'entre pas dans la voie de référence');
+  assert.deepEqual(a.lot.ancres.map(x => x.cut), [4, 6], 'les appuis sont les poses vérifiées données');
+  /* posesVerifiees ne connaît que les validations de l'opérateur et les poses validées par le lot. */
+  const E = echoSynthetique({}), p = G.posesVerifiees(E.cuts, { ctx: { pagesPerdues: [], capturesParVisite: {} }, referenceHumaine: RA.referenceHumaine, lotValide: new Set([6]) });
+  assert.ok(p.every(x => x.source === 'humain' || x.source === 'lot'));
 });
