@@ -2853,3 +2853,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   3. jeux reconstruits, rappel atteignable (zone 2 de 2:1 en particulier), essai anti-fuite étendu ;
   4. validation croisée G1-b relancée avec H6 et une variante **V1+** (V1 plus les différés sous le nouveau garde-fou).
 - 2:6 et 2:7 restent réservées pour le jugement à l'aveugle (G1-c) ; elles passeront en apprentissage juste après.
+
+## D-208 — Mic : feu vert pour la raison de la correction (RM-11) ; développement de la test 9 (19 octobre 2026)
+
+- **Mic** : « feu vert » sur la conception (`fiches/RM11_RAISON_CORRECTION.md`, maquette montrée) : touches 1 à 6 et 0, rien par défaut, jamais bloquant, double appui collant, champ `raisonCorrection` côté étiquette, jamais dans les traits.
+- **Développement** (niveau rapide) sur `claude/50-rm11-test9`, depuis le code de la test 8 (`claude/50-relecture-couverture`, d58a6f1), pour une **test 9 (4.9.5.9)** = test 8 + raison de la correction. Pose et lot inchangés (preuve par essai), Écho identique sans touche tapée. Étape 0 de la consigne : vérifier dans ESV que les chiffres n'y font rien, sinon régler la rangée de repli.
+- **Relecture forte** du diff de `src/native-session.js` avant remise du paquet. La test 8 reste en service cet après-midi ; la test 9 sera remise après.
