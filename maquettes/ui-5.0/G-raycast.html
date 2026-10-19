@@ -2,54 +2,83 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Direction G · Style Raycast</title><link rel="stylesheet" href="lin.css">
 <style>
-.fond{height:600px;border-radius:10px;border:1px solid var(--line2);background:radial-gradient(90% 80% at 50% 0,#1c2a24,#0a0c0b 70%);display:flex;justify-content:center;align-items:flex-start;padding-top:46px;position:relative;overflow:hidden}
-.ray{width:680px;background:rgba(24,25,27,.96);border:1px solid #34373b;border-radius:14px;box-shadow:0 30px 90px #000;overflow:hidden}
-.ray .q{display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line)}
-.ray .q input{flex:1;background:transparent;border:0;outline:none;color:var(--tx);font:16px var(--sans);padding:16px 0}
-.ray .q .tag{font:600 11px var(--sans);color:var(--tx2);background:#26282b;border-radius:6px;padding:3px 8px}
-.ray .etat{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:#141517}
-.ray .etat .gros{font:300 34px/1 var(--sans);letter-spacing:-.02em;min-width:90px}.ray .etat .tx{flex:1}.ray .etat .tx small{display:block;color:var(--tx2)}
-.bar-m{height:4px;border-radius:2px;background:#26282b;overflow:hidden;margin-top:6px}.bar-m i{display:block;height:100%;background:var(--vert)}
-.ray .l{padding:6px;max-height:300px;overflow:auto}.ray .g{padding:8px 10px 3px;font:600 11px var(--sans);color:var(--tx3)}
-.ray .o{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px}.ray .o.s{background:#2a2d31}.ray .o .i{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#26282b;font-size:13px}
-.ray .o .i.v{background:#143524;color:var(--vert)}.ray .o .i.a{background:#3a2c0c;color:var(--ambre)}.ray .o .i.r{background:#3d1a18;color:var(--rouge)}
-.ray .o .d{color:var(--tx3);font-size:12px}.ray .o .r{margin-left:auto;display:flex;gap:4px;align-items:center;color:var(--tx3);font-size:12px}
-.ray .pied{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--line);color:var(--tx2);font-size:12px;background:#141517}.ray .pied span{display:flex;gap:6px;align-items:center;margin-left:14px}
-.act{position:absolute;right:calc(50% - 340px + 10px);bottom:70px;width:290px;background:#1c1d20;border:1px solid #34373b;border-radius:12px;box-shadow:0 20px 60px #000;padding:6px;display:none}.act.on{display:block}
-.act .o{display:flex;justify-content:space-between;padding:8px 10px;border-radius:7px}.act .o.s{background:#2a2d31}.act .g{padding:6px 10px 2px;font:600 11px var(--sans);color:var(--tx3)}
-.hud{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:rgba(20,21,23,.96);border:1px solid #34373b;border-radius:14px;padding:14px 22px;display:none;gap:12px;align-items:center;box-shadow:0 20px 60px #000;font-size:15px}.hud.on{display:flex}.hud .ok{width:26px;height:26px;border-radius:50%;background:var(--vert);color:#04140c;display:grid;place-items:center;font-weight:700}
+/* Esprit Raycast : panneau translucide flou, flottant au-dessus de l'application, tuiles d'icônes colorées à reflet,
+   liste + métadonnées, étiquettes de type, barre d'action en pied, touches en relief, message flottant. */
+.bureau{position:relative;height:640px;border-radius:12px;overflow:hidden;border:1px solid var(--line2);
+ background:radial-gradient(60% 70% at 15% 10%,#3a1d4d 0,transparent 60%),radial-gradient(50% 60% at 90% 20%,#0f3a52 0,transparent 60%),radial-gradient(60% 60% at 60% 100%,#4a1620 0,transparent 60%),#0a0a0f}
+.esv-fond{position:absolute;inset:34px 70px 40px;border-radius:10px;background:#1a1e22;opacity:.85;overflow:hidden}
+.esv-fond .b{height:26px;background:#12151a;color:#6d757c;font-size:11px;padding:6px 12px}.esv-fond .r{position:absolute;left:6%;right:6%;top:34%;height:3px;background:#7e878e}.esv-fond .r.r2{top:48%}
+.esv-fond .g{position:absolute;inset:26px 0 0;background:repeating-linear-gradient(90deg,transparent 0 59px,#ffffff08 59px 60px)}
+.ray{position:absolute;left:50%;top:60px;transform:translateX(-50%);width:760px;height:480px;display:flex;flex-direction:column;border-radius:16px;
+ background:rgba(28,28,32,.72);backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);
+ border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 .5px #000,0 30px 80px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden}
+.q{display:flex;align-items:center;gap:12px;padding:0 18px;height:58px;border-bottom:1px solid rgba(255,255,255,.08)}
+.q .rt{display:flex;align-items:center;gap:8px;font:500 12px var(--sans);color:#d7d9dc;background:rgba(255,255,255,.1);border-radius:7px;padding:4px 9px}
+.q .rt i{width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#5be29c,#1f9a57);display:inline-block}
+.q input{flex:1;background:transparent;border:0;outline:none;color:#f2f3f4;font:17px var(--sans)}.q input::placeholder{color:#7a7f87}
+.q .ld{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin 1s linear infinite;display:none}.q .ld.on{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.q .ld{animation:none}}
+.corps{flex:1;display:grid;grid-template-columns:1fr 252px;min-height:0}.corps.seul{grid-template-columns:1fr}
+.l{overflow:hidden;padding:8px}.corps.seul .l{padding:8px 10px}
+.g{padding:9px 10px 5px;font:500 12px var(--sans);color:#868b93}
+.o{display:flex;align-items:center;gap:12px;height:44px;padding:0 10px;border-radius:9px;color:#eceef0}
+.o.s{background:rgba(255,255,255,.1)}
+.t{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;color:#fff;flex:none;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.25),0 1px 3px rgba(0,0,0,.4)}
+.t.v{background:linear-gradient(160deg,#5be29c,#1b8a52)}.t.a{background:linear-gradient(160deg,#ffcb6b,#e08a12)}.t.r{background:linear-gradient(160deg,#ff8a80,#d9352c)}.t.b{background:linear-gradient(160deg,#7fa2ff,#3a55d6)}.t.p{background:linear-gradient(160deg,#c59bff,#7a43d6)}.t.n{background:linear-gradient(160deg,#6b6f78,#3c3f46)}
+.o .nm{font-weight:500}.o .sb{color:#868b93;margin-left:2px}
+.o .ty{margin-left:auto;font:400 12px var(--sans);color:#7a7f87}
+.meta{border-left:1px solid rgba(255,255,255,.08);padding:16px;overflow:hidden}
+.meta .ti{font:600 13px var(--sans);margin:0 0 12px}.meta .big{font:300 46px/1 var(--sans);letter-spacing:-.03em;margin-bottom:4px}
+.meta .kv{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);font-size:12.5px}.meta .kv span:first-child{color:#868b93}
+.meta .bm{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;margin:8px 0 10px}.meta .bm i{display:block;height:100%;background:linear-gradient(90deg,#1b8a52,#5be29c)}
+.pied{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px 0 14px;border-top:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);font-size:12.5px;color:#a2a7ae}
+.pied .lg{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#5be29c,#1f9a57)}.pied .sp{flex:1}
+.pied .ac{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;color:#eceef0}.pied .ac:hover{background:rgba(255,255,255,.08)}.pied .sep{width:1px;height:18px;background:rgba(255,255,255,.12)}
+kbd{font:500 11px var(--sans);min-width:20px;text-align:center;display:inline-block;background:linear-gradient(#34363b,#2a2c30);border:1px solid #3d4046;border-bottom-color:#17181b;border-radius:5px;padding:1px 5px;color:#cfd2d6;box-shadow:0 1px 0 #0008}
+.act{position:absolute;right:calc(50% - 380px + 12px);bottom:64px;width:300px;border-radius:12px;padding:6px;background:rgba(32,32,37,.86);backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.6);z-index:3}
+.act .tt{padding:8px 10px 4px;font:500 12px var(--sans);color:#868b93}.act .o{height:36px;font-size:13px}.act .o span:last-child{margin-left:auto}.act .fl{margin:6px 4px 2px;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.07);color:#7a7f87;font-size:12.5px}
+.hud{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:12px 20px;border-radius:14px;background:rgba(30,30,34,.8);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:14.5px;z-index:4}
+.hud .ok{width:24px;height:24px;border-radius:50%;background:linear-gradient(160deg,#5be29c,#1b8a52);display:grid;place-items:center;font-weight:700;color:#04140c;font-size:13px}
 </style></head><body><div class="page">
 <p><a href="index.html">← les directions</a></p>
-<h1>Direction G · Style Raycast</h1>
-<p class="leg">Ce qu'on prend de Raycast : <b>une seule barre</b>. On ouvre, on tape quelques lettres ou on appuie sur Entrée sur la <b>première suggestion</b>, qui est toujours ce qui a du sens maintenant (« Démarrer le lot », puis « Pause », puis « Envoyer »). L'état vit dans la barre (un grand chiffre et une ligne), les autres actions sont des commandes qu'on cherche, <kbd>Ctrl K</kbd> ouvre les actions de l'élément choisi, et un petit message flottant confirme (le « HUD »). Aucune case, aucune carte. Utilise ↑ ↓ ou les boutons ; chiffres inventés.</p>
+<h1>Direction G · Style Raycast (version 2, plus fidèle)</h1>
+<p class="leg">Ce qu'on prend de Raycast, cette fois dans le rendu : un <b>panneau translucide et flou</b> qui flotte au-dessus d'ESV (la page reste visible derrière), une <b>grande ligne de saisie</b> avec sa pastille de contexte, des <b>tuiles d'icônes colorées</b> à reflet, des lignes « nom · précision » avec leur <b>type</b> à droite (Commande, Vue, Réglage), un <b>volet de métadonnées</b> à droite de la liste, une <b>barre d'action</b> en pied (« Pause ↵ · Actions Ctrl K »), des <b>touches en relief</b>, et un <b>message flottant</b> de confirmation. Tout se fait à <kbd>↵</kbd> et aux flèches (↑ ↓ fonctionnent ici). Chiffres inventés. Raycast n'existe que sur Mac : les touches sont dessinées en Ctrl pour Windows.</p>
 <div class="sc" id="sc"></div>
-<div class="fond" id="f"></div>
-<p class="note-b"><b>Pourquoi Raycast va bien à Ariane.</b> Mic fait presque toujours la même chose à chaque instant ; la barre la met en tête, il n'a qu'à confirmer (<kbd>Entrée</kbd>). Tout le reste (rare) se cherche en tapant, donc ne prend aucune place à l'écran. Les réglages sont des commandes (« Après le lot… »). <b>Limites honnêtes :</b> on ne voit que l'état courant (pas de liste de cuts), et il faut apprendre un mot ou deux. Côté code : la barre est un nouveau module, la liste de commandes se déduit de l'état du lot (la même idée que la table état → action vue plus haut).</p>
+<div class="bureau" id="b"></div>
+<p class="note-b"><b>Limites honnêtes :</b> le flou et la transparence ne sont possibles que dans un panneau posé <i>sur</i> ESV ; dans une fenêtre d'extension normale, le fond serait opaque. Il faudrait choisir entre « panneau flottant dans la page ESV » (fidèle à Raycast, un peu de code de plus, aucun changement du service worker) et « fenêtre à part » (même mise en page, sans transparence). On ne voit que l'état du moment, pas la liste des cuts.</p>
 </div>
 <script>
 const $=id=>document.getElementById(id);
-const o=(i,t,d,r,c='',s='')=>`<div class="o ${s}"><span class="i ${c}">${i}</span><span>${t} ${d?`<span class="d"> · ${d}</span>`:''}</span><span class="r">${r}</span></div>`;
-const g=t=>`<div class="g">${t}</div>`;
 const K=(...k)=>k.map(x=>`<kbd>${x}</kbd>`).join(' ');
-function ray({q='',tag='Orbite · partie 13',etat='',list,pied,extra=''}){return `<div class="ray"><div class="q"><span style="color:var(--tx3)">⌕</span><input placeholder="Que veux-tu faire ?" value="${q}"><span class="tag">${tag}</span></div>${etat}<div class="l">${list}</div><div class="pied"><span>${pied}</span><span>${K('Ctrl','K')} Actions</span></div></div>${extra}`;}
+const o=(c,i,n,sb,ty,s)=>`<div class="o${s?' s':''}"><span class="t ${c}">${i}</span><span class="nm">${n}</span>${sb?`<span class="sb">${sb}</span>`:''}<span class="ty">${ty||''}</span></div>`;
+const g=t=>`<div class="g">${t}</div>`;
+function ray({tag='Orbite · partie 13',q='',loading=false,list,meta='',pied,extra=''}){
+ return `<div class="esv-fond"><div class="b">ESV · partie 13</div><div class="g"></div><div class="r"></div><div class="r r2"></div></div>
+ <div class="ray"><div class="q"><span class="rt"><i></i>${tag}</span><input placeholder="Que veux-tu faire ?" value="${q}"><span class="ld ${loading?'on':''}"></span></div>
+ <div class="corps${meta?'':' seul'}"><div class="l">${list}</div>${meta?`<div class="meta">${meta}</div>`:''}</div>
+ <div class="pied"><span class="lg"></span><span class="sp"></span><span class="ac">${pied}</span><span class="sep"></span><span class="ac">Actions ${K('Ctrl','K')}</span></div></div>${extra}`;}
+const MV=(cut,l1,pct,rows)=>`<div class="ti">${l1}</div><div class="big">${cut}</div><div class="bm"><i style="width:${pct}%"></i></div>${rows.map(r=>`<div class="kv"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')}`;
 const S={
- repos:()=>ray({etat:`<div class="etat"><div class="gros">4790</div><div class="tx">ESV est sur ce cut rouge<small>Partie 13 · 120 cuts à poser</small></div></div>`,
-  list:g('Suggéré')+o('▶','Démarrer le lot','jusqu\'à la fin de la partie',K('↵'),'v','s')+o('◌','Passer en Écho','tu corriges toi-même',K('E'))+g('Réglages et suites')+o('⚙','Après le lot','relire et corriger','')+o('⌖','Aller au cut…','',''),pied:K('↵')+' Exécuter'}),
- lot:()=>ray({etat:`<div class="etat"><div class="gros">4812</div><div class="tx">Lot en cours · pose des rails<small>31 / 120 · 27 posés · 4 différés · 9 à contrôler</small><div class="bar-m"><i style="width:26%"></i></div></div></div>`,
-  list:g('Suggéré')+o('❚❚','Pause','',K('↵'),'a','s')+o('■','Arrêter le lot','ne se défait pas','')+g('Voir')+o('◔','Les 9 cuts à contrôler','',K('G','C'))+o('☰','Les 4 différés','',K('G','D')),pied:K('↵')+' Pause'}),
- incident:()=>ray({tag:'Orbite · à toi',etat:`<div class="etat" style="background:#241514"><div class="gros" style="color:var(--rouge)">4812</div><div class="tx">ESV ne répond plus<small>Rien n'a été posé sur ce cut. Recharge la page (F5), puis reprends.</small></div></div>`,
-  list:g('Suggéré')+o('↻','Reprendre','après le F5',K('↵'),'v','s')+g('Autres options')+o('✋','Je le fais moi-même','reprise manuelle','')+o('⤼','Passer ce cut en SKIP','avec confirmation','')+o('■','Arrêter le lot','','','r'),pied:K('↵')+' Reprendre'}),
- relecture:()=>ray({etat:`<div class="etat"><div class="gros">12<span style="font-size:16px;color:var(--tx3)"> / 85</span></div><div class="tx">Relecture des verts · 3 corrigés<small>Ne touche à rien dans ESV.</small><div class="bar-m"><i style="width:14%"></i></div></div></div>`,
-  list:g('Suggéré')+o('■','Arrêter la relecture','',K('↵'),'a','s'),pied:K('↵')+' Arrêter'}),
- fin:()=>ray({tag:'Orbite · terminé',etat:`<div class="etat"><div class="gros" style="color:var(--vert)">✓</div><div class="tx">Partie 13 terminée<small>27 posés · 4 différés · 9 à contrôler · 3 fichiers prêts</small></div></div>`,
-  list:g('Suggéré')+o('⧉','Copier le message','heures, noms et empreintes',K('↵'),'v','s')+o('📁','Ouvrir le dossier des fichiers','','')+o('▶','Nouveau lot','',K('N'))+g('Voir')+o('◔','Les 9 cuts à contrôler','',K('G','C')),pied:K('↵')+' Copier'}),
- actions:()=>ray({etat:`<div class="etat"><div class="gros">4812</div><div class="tx">Lot en cours · pose des rails<small>31 / 120</small></div></div>`,list:g('Suggéré')+o('❚❚','Pause','',K('↵'),'a','s')+o('■','Arrêter le lot','',''),pied:K('↵')+' Pause',
-  extra:`<div class="act on">${g('Actions')}<div class="o s"><span>Mettre en pause</span>${K('↵')}</div><div class="o"><span>Copier le numéro du cut</span>${K('⌘','C')}</div><div class="o"><span>Voir dans le journal</span>${K('⌘','J')}</div><div class="o"><span style="color:var(--rouge)">Arrêter le lot…</span>${K('⇧','⌘','X')}</div></div>`}),
- hud:()=>`<div class="hud on"><span class="ok">✓</span><span>Message copié : colle-le avec les 3 fichiers</span></div>`+ray({tag:'Orbite · terminé',etat:'',list:g('Suggéré')+o('▶','Nouveau lot','',K('↵'),'v','s'),pied:K('↵')+' Exécuter'})
+ repos:()=>ray({list:g('Suggestions')+o('v','▶','Démarrer le lot','jusqu’à la fin de la partie','Commande',1)+o('b','◌','Passer en Écho','tu corriges toi-même','Commande')+g('Vues')+o('p','◔','Cuts à contrôler','9','Vue')+o('n','⇪','Envois','3','Vue')+g('Réglages')+o('n','⚙','Après le lot','relire et corriger','Réglage'),
+  meta:MV('4790','Cut affiché dans ESV',0,[['Partie','13'],['Cuts rouges','120'],['Départ','cut 4790'],['Fin','fin de la partie']]),pied:`Démarrer le lot ${K('↵')}`}),
+ lot:()=>ray({loading:true,list:g('Suggestions')+o('a','❚❚','Pause','le lot s’arrête au prochain cut sûr','Commande',1)+o('r','■','Arrêter le lot','ne se défait pas','Commande')+g('Voir')+o('p','◔','Cuts à contrôler','9','Vue')+o('a','☰','Différés','4','Vue')+o('n','⚙','Après le lot','relire et corriger','Réglage'),
+  meta:MV('4812','Lot en cours · pose des rails',26,[['Avancement','31 / 120'],['Posés','27'],['Différés','4'],['À contrôler','9'],['Étape','pose']]),pied:`Pause ${K('↵')}`}),
+ palette:()=>ray({q:'rel',list:g('Résultats')+o('v','↻','Relire et corriger','après le lot','Réglage',1)+o('b','◎','Relire sans rien modifier','ombre','Réglage')+o('n','⏻','Pas de relecture','coupée','Réglage')+g('Autres')+o('p','◔','Relecture : dernier bilan','85 relus, 41 corrigés','Vue'),
+  meta:`<div class="ti">Après le lot</div><div class="kv"><span>Actuel</span><span>Relire et corriger</span></div><div class="kv"><span>Pris au prochain lot</span><span>oui</span></div><div class="kv"><span>Dernier lot</span><span>Relire et corriger</span></div>`,pied:`Choisir ${K('↵')}`}),
+ incident:()=>ray({tag:'Orbite · à toi',list:g('Suggestions')+o('v','↻','Reprendre','après le F5','Commande',1)+g('Autres options')+o('b','✋','Je le fais moi-même','reprise manuelle','Commande')+o('a','⤼','Passer ce cut en SKIP','avec confirmation','Commande')+o('r','■','Arrêter le lot','','Commande'),
+  meta:`<div class="ti" style="color:#ff8a80">ESV ne répond plus</div><div class="big">4812</div><div class="kv"><span>Cut</span><span>4812</span></div><div class="kv"><span>Posé</span><span>non</span></div><div class="kv"><span>Que faire</span><span>F5, puis reprendre</span></div>`,pied:`Reprendre ${K('↵')}`}),
+ relecture:()=>ray({loading:true,tag:'Orbite · relecture',list:g('Suggestions')+o('a','■','Arrêter la relecture','','Commande',1)+g('Voir')+o('p','◔','Cuts à contrôler','9','Vue'),
+  meta:MV('12 / 85','Relecture des verts',14,[['Corrigés','3'],['Cut en cours','4903'],['Consigne','ne touche à rien dans ESV']]),pied:`Arrêter la relecture ${K('↵')}`}),
+ fin:()=>ray({tag:'Orbite · terminé',list:g('Suggestions')+o('v','⧉','Copier le message','heures, noms et empreintes','Commande',1)+o('b','📁','Ouvrir le dossier des fichiers','3 volumes','Commande')+o('v','▶','Nouveau lot','','Commande')+g('Voir')+o('p','◔','Cuts à contrôler','9','Vue'),
+  meta:`<div class="ti">Partie 13 terminée</div><div class="big" style="color:#5be29c">✓</div><div class="kv"><span>Posés</span><span>27</span></div><div class="kv"><span>Différés</span><span>4</span></div><div class="kv"><span>Relus</span><span>85 · 41 corrigés</span></div><div class="kv"><span>Fichiers</span><span>3 · confirmés</span></div>`,pied:`Copier le message ${K('↵')}`}),
+ actions:()=>ray({loading:true,list:g('Suggestions')+o('a','❚❚','Pause','','Commande',1)+o('r','■','Arrêter le lot','','Commande'),meta:MV('4812','Lot en cours',26,[['Avancement','31 / 120']]),pied:`Pause ${K('↵')}`,
+  extra:`<div class="act"><div class="tt">Actions · Pause</div><div class="o s"><span class="t a" style="width:22px;height:22px;font-size:11px">❚❚</span>Mettre en pause<span>${K('↵')}</span></div><div class="o"><span class="t n" style="width:22px;height:22px;font-size:11px">⧉</span>Copier le numéro du cut<span>${K('Ctrl','C')}</span></div><div class="o"><span class="t p" style="width:22px;height:22px;font-size:11px">☰</span>Ouvrir le journal<span>${K('Ctrl','J')}</span></div><div class="o"><span class="t r" style="width:22px;height:22px;font-size:11px">■</span><span style="margin:0;color:#ff8a80">Arrêter le lot…</span><span>${K('⇧','Ctrl','X')}</span></div><div class="fl">Rechercher une action…</div></div>`}),
+ hud:()=>ray({tag:'Orbite · terminé',list:g('Suggestions')+o('v','▶','Nouveau lot','','Commande',1)+o('p','◔','Cuts à contrôler','9','Vue'),pied:`Nouveau lot ${K('↵')}`,
+  extra:`<div class="hud"><span class="ok">✓</span>Message copié : colle-le avec les 3 fichiers</div>`})
 };
-const N={repos:'1 · Au repos',lot:'2 · Le lot tourne',incident:'3 · Incident',relecture:'4 · Relecture',fin:'5 · Fin',actions:'6 · Ctrl K : actions',hud:'7 · Confirmation (HUD)'};
-function show(k){$('f').innerHTML=S[k]();[...$('sc').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));history.replaceState(null,'','#'+k);}
+const N={repos:'1 · Au repos',lot:'2 · Le lot tourne',palette:'3 · Je tape « rel »',incident:'4 · Incident',relecture:'5 · Relecture',fin:'6 · Fin',actions:'7 · Actions (Ctrl K)',hud:'8 · Confirmation'};
+function show(k){$('b').innerHTML=S[k]();[...$('sc').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));history.replaceState(null,'','#'+k);}
 Object.keys(N).forEach(k=>{const b=document.createElement('button');b.textContent=N[k];b.dataset.k=k;b.onclick=()=>show(k);$('sc').append(b);});
-document.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){const l=[...document.querySelectorAll('.ray .o')];if(!l.length)return;let i=l.findIndex(x=>x.classList.contains('s'));l.forEach(x=>x.classList.remove('s'));i=Math.max(0,Math.min(l.length-1,i+(e.key==='ArrowDown'?1:-1)));l[i].classList.add('s');e.preventDefault();}});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){const l=[...document.querySelectorAll('.ray .l .o')];if(!l.length)return;let i=l.findIndex(x=>x.classList.contains('s'));l.forEach(x=>x.classList.remove('s'));i=Math.max(0,Math.min(l.length-1,i+(e.key==='ArrowDown'?1:-1)));l[i].classList.add('s');e.preventDefault();}});
 show(N[location.hash.slice(1)]?location.hash.slice(1):'repos');
 </script></body></html>
