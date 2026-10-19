@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction E · Ariane ne se montre que quand il faut</title><link rel="stylesheet" href="commun.css">
+<style>
+.esv{position:relative;height:560px;border-radius:14px;overflow:hidden;background:#1b1f23;border:1px solid var(--hair2)}
+.esv .barre-esv{height:34px;background:#14171a;display:flex;align-items:center;padding:0 14px;color:#7d858c;font-size:12px;gap:14px}
+.esv .vue{position:absolute;inset:34px 0 0 0;background:repeating-linear-gradient(90deg,transparent 0 59px,rgba(255,255,255,.03) 59px 60px),linear-gradient(#20262b,#171b1f)}
+.esv .rail{position:absolute;top:30%;height:3px;left:8%;right:8%;background:#8c959c;border-radius:2px}.esv .rail.r2{top:44%}
+.esv .etiq{position:absolute;left:14px;bottom:12px;color:#5d656b;font-size:12px}
+/* La pastille Ariane : en bas à droite, là où est déjà le bouton « ouvrir » */
+.ilot{position:absolute;right:18px;bottom:18px;min-width:270px;max-width:420px;background:#000;color:#fff;border-radius:26px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.55);transition:all .25s;font-size:14px}
+.ilot .pt{width:10px;height:10px;border-radius:50%;background:#34d27f;flex:none}
+.ilot.ambre .pt{background:#f2a93b}.ilot.gris .pt{background:#8a8a90}
+.ilot .tx{flex:1;line-height:1.25}.ilot .tx small{display:block;color:#9a9aa0;font-size:12px}
+.ilot button{font:600 14px var(--sans);border:0;border-radius:18px;padding:9px 16px;background:#fff;color:#000;cursor:pointer}
+.ilot.etendu{border-radius:24px;flex-wrap:wrap;padding:16px 18px}
+.ilot .chiffres{display:flex;gap:22px;flex-basis:100%;margin:2px 0 4px;font:300 26px var(--sans)}.ilot .chiffres small{display:block;font:600 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#8a8a90}
+.anneau{width:22px;height:22px;border-radius:50%;background:conic-gradient(#34d27f var(--p),rgba(255,255,255,.2) 0);flex:none;display:grid;place-items:center}.anneau::after{content:"";width:14px;height:14px;border-radius:50%;background:#000}
+.petit{padding:7px 14px;min-width:0}
+.journal{width:min(560px,100%);min-height:560px;border:1px solid var(--hair2);border-radius:12px;background:var(--bg);padding:24px;display:flex;flex-direction:column;gap:18px}
+.jour{display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--hair)}
+.jour .an{width:46px;height:46px;border-radius:50%;background:conic-gradient(var(--vert-fond) var(--p),var(--tile) 0);display:grid;place-items:center;flex:none}.jour .an::after{content:"";width:34px;height:34px;border-radius:50%;background:var(--bg)}
+.jour b{font-size:15px}.jour span{display:block;font-size:12.5px;color:var(--text2)}
+.scene.visible{display:block}
+</style></head><body><div class="maquette">
+<p class="lien-retour"><a href="index.html" style="color:inherit">← les directions</a></p>
+<h1>Direction E · « Ariane ne se montre que quand il faut »</h1>
+<p class="legende">Le produit n'est plus une fenêtre qu'on ouvre : c'est une <b>pastille dans la page ESV</b>, qui propose elle-même la seule chose utile, se tait pendant que ça marche, et s'élargit quand il y a quelque chose à décider. La fenêtre actuelle devient un <b>journal</b> qu'on ouvre rarement. Cliquer la pastille l'élargit. Chiffres inventés ; la « page ESV » est une image neutre, pas la vraie.</p>
+<div class="barre-scenes" id="scenes"></div>
+
+<section class="scene" data-scene="ouvre" data-titre="1 · Tu ouvres ESV"><div class="esv"><div class="barre-esv"><span>ESV</span><span>partie 13 · cut 4790</span></div><div class="vue"><div class="rail"></div><div class="rail r2"></div><span class="etiq">page ESV (simulée)</span></div>
+ <div class="ilot"><span class="pt"></span><div class="tx">Partie 13 · 120 cuts rouges<small>Je peux poser le lot depuis le cut 4790.</small></div><button>Poser</button></div></div>
+ <p class="explique"><b>Anticipation.</b> Ariane voit que tu es sur un cut rouge d'une partie qu'elle connaît : elle propose, sans que tu choisisses un mode ni une plage. Aucun réglage : la relecture après le lot est déjà ce que tu fais d'habitude.</p></section>
+
+<section class="scene" data-scene="lot" data-titre="2 · Le lot tourne"><div class="esv"><div class="barre-esv"><span>ESV</span><span>partie 13 · cut 4812</span></div><div class="vue"><div class="rail"></div><div class="rail r2"></div></div>
+ <div class="ilot petit"><span class="anneau" style="--p:26%"></span><div class="tx">cut 4812 · 31 / 120</div></div></div>
+ <p class="explique"><b>Présence minimale.</b> Pendant que ça marche : un anneau et un chiffre, rien à faire, rien qui clignote. Un clic élargit :</p>
+ <div class="esv" style="height:200px;margin-top:10px"><div class="ilot etendu"><span class="anneau" style="--p:26%"></span><div class="tx">Lot en cours · pose des rails</div><div class="chiffres"><span>27<small>posés</small></span><span>4<small>différés</small></span><span>9<small>à contrôler</small></span></div><button style="background:#2a2a2d;color:#fff">Pause</button></div></div></section>
+
+<section class="scene" data-scene="incident" data-titre="3 · Il faut décider"><div class="esv"><div class="barre-esv"><span>ESV</span><span>partie 13 · cut 4812</span></div><div class="vue"><div class="rail"></div><div class="rail r2"></div></div>
+ <div class="ilot ambre etendu"><span class="pt"></span><div class="tx">ESV ne répond plus<small>Rien n'a été posé sur le cut 4812. Recharge la page (F5).</small></div><button>Reprendre</button></div></div>
+ <p class="explique"><b>On ne gère pas l'erreur, on la dit en une ligne avec la seule suite sûre.</b> Arrêter, SKIP et reprise manuelle existent, mais seulement dans un menu « … » de la pastille.</p></section>
+
+<section class="scene" data-scene="relecture" data-titre="4 · La relecture"><div class="esv"><div class="barre-esv"><span>ESV</span><span>relecture · cut 4903</span></div><div class="vue"><div class="rail"></div><div class="rail r2"></div></div>
+ <div class="ilot"><span class="anneau" style="--p:14%"></span><div class="tx">Je relis les verts · 12 / 85<small>Ne touche à rien dans ESV.</small></div></div></div>
+ <p class="explique"><b>Prévenir plutôt que corriger.</b> Il n'y a pas de bouton « Envoyer » à surveiller : tant que la relecture tourne, rien d'autre n'est proposé.</p></section>
+
+<section class="scene" data-scene="fin" data-titre="5 · C'est fini"><div class="esv"><div class="barre-esv"><span>ESV</span><span>partie 13 terminée</span></div><div class="vue"><div class="rail"></div><div class="rail r2"></div></div>
+ <div class="ilot etendu"><span class="pt"></span><div class="tx">Partie 13 terminée<small>27 posés · 4 différés · 9 à contrôler. 3 fichiers prêts, empreintes calculées.</small></div><button>Copier le message</button></div></div>
+ <p class="explique"><b>Il fait le travail d'avant-après tout seul</b> : les fichiers sont écrits, les empreintes calculées, le message prêt. Il te reste ce que lui seul ne peut pas faire : joindre les fichiers.</p></section>
+
+<section class="scene" data-scene="echo" data-titre="6 · Tu corriges toi-même"><div class="esv"><div class="barre-esv"><span>ESV</span><span>partie 14 · cut 5120</span></div><div class="vue"><div class="rail"></div><div class="rail r2"></div></div>
+ <div class="ilot petit gris"><span class="pt" style="background:#34d27f"></span><div class="tx">Écho · 148 cuts · 61 corrigés</div></div></div>
+ <p class="explique"><b>Il s'efface.</b> Quand tu travailles à la main, la pastille est un point et un compteur. Terminer se fait en la touchant.</p></section>
+
+<section class="scene" data-scene="journal" data-titre="7 · Le journal (la fenêtre d'avant)"><div class="journal">
+ <p class="lbl" style="margin:0">Journal d'Ariane</p>
+ <div class="jour" style="--p:100%"><div class="an" style="--p:100%"></div><div><b>Partie 13</b><span>Aujourd'hui · lot posé, relu, envoyé</span></div></div>
+ <div class="jour"><div class="an" style="--p:100%"></div><div><b>Partie 12</b><span>Hier · lot posé, relu, envoyé</span></div></div>
+ <div class="jour"><div class="an" style="--p:70%"></div><div><b>Partie 14 · Écho</b><span>148 cuts, 61 corrigés · 61 cuts appris de plus</span></div></div>
+ <div class="jour"><div class="an" style="--p:100%;--vert-fond:#3e6ae1"></div><div><b>GCV2 · 2 684 cuts appris</b><span>depuis le début de la 5.0</span></div></div>
+ <p class="lbl" style="margin:8px 0 0">Réglages</p>
+ <div class="ligne-reglage"><span>Apparence</span><span>Système</span></div><div class="ligne-reglage"><span>Après le lot</span><span>Relire et corriger</span></div><div class="ligne-reglage"><span>Vider le cache après confirmation de réception</span><span>›</span></div>
+</div><p class="explique"><b>Ce que l'analyse hors ligne lit reste intact.</b> Le journal est un historique, pas un tableau de bord. Les réglages tiennent en trois lignes ; le reste est dans « Détails techniques », jamais en séance.</p></section>
+
+<p class="explique"><b>Ce que cela change dans le code, honnêtement :</b> la pastille existe déjà dans la page ESV (<code>src/bridge.js</code>, un vrai bouton en bas à droite) ; je m'étais trompé en écrivant plus haut qu'on ne pouvait pas y mettre de bouton. Ce qu'il faudrait de nouveau : la « proposition » (lire que le cut affiché est rouge dans une partie connue), l'envoi préparé tout seul, et la pastille élargie. <b>À trancher avec l'orchestrateur :</b> fusionner Écho et Orbite en un seul produit (Écho observerait toujours) toucherait la séparation des provenances des données, que je ne propose pas ici.</p>
+</div><script src="scenes.js"></script></body></html>
