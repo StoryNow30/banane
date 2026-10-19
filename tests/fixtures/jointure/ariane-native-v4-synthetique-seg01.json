@@ -1,0 +1,658 @@
+{
+ "format": "banane-native-session-v2",
+ "version": "test",
+ "segment": {
+  "index": 1,
+  "stamp": "2030-01-01T10-00-00"
+ },
+ "records": [
+  {
+   "recordId": "r1001a",
+   "visitId": "v-r1001a",
+   "visitIndex": 0,
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1001,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "startedAt": "2030-01-01T10:00:00.000Z",
+   "initialObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 99,
+     "cut": 1001,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1010,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1011.42,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "firstObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 99,
+     "cut": 1001,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1010,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1011.42,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "humanFinalReference": null,
+   "observedLabelCandidate": "PASS_NO_DECISION",
+   "status": "partial"
+  },
+  {
+   "recordId": "r1002a",
+   "visitId": "v-r1002a",
+   "visitIndex": 0,
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1002,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "startedAt": "2030-01-01T10:00:00.000Z",
+   "initialObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 99,
+     "cut": 1002,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1070,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       0,
+       -1,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1071.42,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       0,
+       -1,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "firstObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 99,
+     "cut": 1002,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1070,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       0,
+       -1,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1071.42,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       0,
+       -1,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "humanFinalReference": {
+    "status": "candidate-observed",
+    "state": {
+     "identity": {
+      "pageId": "page-synth",
+      "part": 99,
+      "cut": 1002,
+      "shape": "U50",
+      "frameId": "frame-synth",
+      "projectId": null
+     },
+     "capturedAt": "2030-01-01T10:00:00.000Z",
+     "status": "observed",
+     "rails": {
+      "left": {
+       "positionSceneRelative": [
+        1069.99,
+        2020.02,
+        31.005
+       ],
+       "sceneRelativeToProfileLocal": [
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+       ]
+      },
+      "right": {
+       "positionSceneRelative": [
+        1071.42,
+        2020,
+        31
+       ],
+       "sceneRelativeToProfileLocal": [
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+       ]
+      }
+     }
+    },
+    "observedAt": "2030-01-01T10:00:30.000Z",
+    "eventSeq": 0
+   },
+   "observedLabelCandidate": "VALIDATE_CORRECTED_LEFT_ONLY",
+   "status": "complete"
+  },
+  {
+   "recordId": "r1005a",
+   "visitId": "v-r1005a",
+   "visitIndex": 0,
+   "identity": {
+    "pageId": "page-synth",
+    "part": 99,
+    "cut": 1005,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "startedAt": "2030-01-01T10:00:00.000Z",
+   "initialObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 99,
+     "cut": 1005,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1110,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1111.42,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "firstObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 99,
+     "cut": 1005,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1110,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1111.42,
+       2020,
+       31
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "humanFinalReference": null,
+   "observedLabelCandidate": "PASS_NO_DECISION",
+   "status": "partial"
+  },
+  {
+   "recordId": "r98a",
+   "visitId": "v-r98a",
+   "visitIndex": 0,
+   "identity": {
+    "pageId": "page-synth",
+    "part": 98,
+    "cut": 1,
+    "shape": "U50",
+    "frameId": "frame-synth",
+    "projectId": null
+   },
+   "startedAt": "2030-01-01T10:00:00.000Z",
+   "initialObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 98,
+     "cut": 1,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1005,
+       2005,
+       35
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1006,
+       2006,
+       36
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "firstObserved": {
+    "identity": {
+     "pageId": "page-synth",
+     "part": 98,
+     "cut": 1,
+     "shape": "U50",
+     "frameId": "frame-synth",
+     "projectId": null
+    },
+    "capturedAt": "2030-01-01T10:00:00.000Z",
+    "status": "observed",
+    "rails": {
+     "left": {
+      "positionSceneRelative": [
+       1005,
+       2005,
+       35
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     "right": {
+      "positionSceneRelative": [
+       1006,
+       2006,
+       36
+      ],
+      "sceneRelativeToProfileLocal": [
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   },
+   "humanFinalReference": null,
+   "observedLabelCandidate": "PASS_NO_DECISION",
+   "status": "partial"
+  }
+ ]
+}

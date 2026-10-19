@@ -1,6 +1,6 @@
 /* CONTRAT D'ÉCARTEMENT — frontières, invariance, et identité du calcul.
  *
- * Le contrat métier est : hors contrat sous 1405 mm, tolérance jusqu'à 1430,
+ * Le contrat métier est : hors contrat sous 1420 mm (1405 jusqu'au 12 octobre 2026, D-084), tolérance jusqu'à 1430,
  * nominal jusqu'à 1470 inclus, hors contrat au-delà. La comparaison porte sur
  * la valeur numérique, jamais sur un affichage arrondi.
  */
@@ -21,7 +21,7 @@ const railAt=p=>({positionSceneRelative:p,profileOriginSceneRelative:p,
 const pairAt=mm=>({left:railAt([0,0,0]),right:railAt([0,mm/1000,0])});
 
 test('les six frontières exactes du contrat',()=>{
- const cases=[[1404.999,'LOW_INVALID',false],[1405,'TOLERANCE',true],[1429.999,'TOLERANCE',true],
+ const cases=[[1405,'LOW_INVALID',false],[1419.999,'LOW_INVALID',false],[1420,'TOLERANCE',true],[1429.999,'TOLERANCE',true],
    [1430,'NOMINAL',true],[1470,'NOMINAL',true],[1470.001,'HIGH_INVALID',false]];
  for(const [mm,expected,admissible] of cases){
   assert.equal(Gauge.classifyMm(mm),expected,mm+' mm');
@@ -33,8 +33,8 @@ test('aucun arrondi d’affichage ne décide de la classe',()=>{
  /* 1470,0004 s’afficherait « 1470,0 mm » et serait pourtant hors contrat. */
  assert.equal(Gauge.classifyMm(1470.0004),'HIGH_INVALID');
  assert.equal(Number(1470.0004.toFixed(1)),1470,'l’affichage arrondi, lui, vaut 1470');
- assert.equal(Gauge.classifyMm(1404.9996),'LOW_INVALID');
- assert.equal(Gauge.classifyMm(1405-Number.EPSILON*1405),'LOW_INVALID');
+ assert.equal(Gauge.classifyMm(1419.9996),'LOW_INVALID');
+ assert.equal(Gauge.classifyMm(1420-Number.EPSILON*1420),'LOW_INVALID');
  // une mesure non finie n’est pas une classe du contrat, et n’est pas admissible
  for(const v of [NaN,Infinity,null,undefined,'1440'])assert.equal(Gauge.classifyMm(v),'INDETERMINATE');
  assert.equal(Gauge.admissible('INDETERMINATE'),false);

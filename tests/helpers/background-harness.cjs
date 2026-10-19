@@ -4,7 +4,7 @@
  * `background-lot.test.cjs` (découpés pour tenir sous 10 s par fichier). */
 const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('../fixtures.cjs');
-function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={},executeScript=null,runtimeId='test'}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
+function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={},executeScript=null,runtimeId='test'}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved,onTabUpdated;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
  const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../../src/engine.js'),BananeManualSession4:require('../../src/manual-session.js'),BananeNativeSession4:require('../../src/native-session.js'),BananeGCV1Export:require('../../src/gcv1-export.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../../src/geometry-brain.js'),
   BananeGCV1Shadow:shadow,...globals,
   chrome:{runtime:{id:runtimeId,getURL:p=>`chrome-extension://${runtimeId}/`+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:f=>onConnect=f}},
@@ -12,7 +12,7 @@ function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),g
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),query:async({url}={})=>!url?[{id:1,url:'https://esv.lidar.altametris.xyz/rails_validation/test',title:'ESV TEST'},...panelTabs]:
      Array.isArray(url)?[]:url.startsWith('chrome-extension:')?[]:[{id:1,title:'ESV TEST'}],
     sendMessage:async(id,m)=>m.kind==='launcher-visibility'?launcherMessages.push(m):({result:await adapter[m.action](...m.args)}),
-    onRemoved:{addListener:fn=>onTabRemoved=fn}},
+    onRemoved:{addListener:fn=>onTabRemoved=fn},onUpdated:{addListener:fn=>onTabUpdated=fn}},
    /* Comme Chrome : un tableau de résultats, un par cadre (D1 : la sonde lit le marqueur). */
    scripting:{executeScript:executeScript||(async options=>{injected.push(options);return [{frameId:0,result:options.func?null:undefined}];})},windows:{create:async o=>{opened.push(o);panelTabs.push({id:opened.length+20,url:o.url,windowId:opened.length});return {id:opened.length};},
     update:async()=>{},onRemoved:{addListener:fn=>onWindowRemoved=fn}}}};
@@ -21,6 +21,9 @@ function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),g
  const message=(m,from=sender)=>new Promise(resolve=>{const ret=onMessage(m,from,resolve);if(ret!==true)resolve(undefined);});
  const api=async(action,args={})=>{const r=await message({kind:'panel',action,args});if(r.error)throw Error(r.error);return r.result;};
  return {adapter,store,api,message,click,opened,injected,launcherMessages,shadow,
+  /* 4.9.0.18 : événements d'onglet (F5, fermeture) tels que Chrome les émet. */
+  tabUpdated:async(tabId,info,tab={id:tabId,url:'https://esv.lidar.altametris.xyz/rails_validation/test'})=>{onTabUpdated?.(tabId,info,tab);for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));},
+  tabRemoved:async tabId=>{onTabRemoved?.(tabId);for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));},
   /* Une fonction du service worker, par son nom (essais ciblés). */
   fonction:nom=>vm.runInContext(nom,ctx),
   connectPanel:(url='chrome-extension://test/panel.html',windowId=99,tabId=199)=>{let disconnected;

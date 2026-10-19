@@ -1,0 +1,77 @@
+{
+ "format": "ariane-golden-apply-v1",
+ "source": "src/adapter-page.js de origin/claude/50-base (2c878f1), tests/helpers/vue-page.cjs, modèle de navigation greffé",
+ "proposals": {
+  "left": {
+   "delta": [
+    0,
+    0.05,
+    0
+   ]
+  },
+  "right": {
+   "delta": [
+    0,
+    -0.03,
+    0.01
+   ]
+  }
+ },
+ "evenements": [
+  {
+   "type": "bouton",
+   "id": "O2N3DCutLRClick"
+  },
+  {
+   "type": "click",
+   "genre": "MouseEvent",
+   "clientX": 500,
+   "clientY": 300,
+   "button": 0,
+   "buttons": 1
+  },
+  {
+   "type": "bouton",
+   "id": "O2N3DCutRRClick"
+  },
+  {
+   "type": "click",
+   "genre": "MouseEvent",
+   "clientX": 339.9999999999999,
+   "clientY": 280,
+   "button": 0,
+   "buttons": 1
+  },
+  {
+   "type": "bouton",
+   "id": "O2N3DCutLRClick"
+  },
+  {
+   "type": "click",
+   "genre": "MouseEvent",
+   "clientX": 300,
+   "clientY": 300,
+   "button": 0,
+   "buttons": 1
+  },
+  {
+   "type": "bouton",
+   "id": "O2N3DCutRRClick"
+  },
+  {
+   "type": "click",
+   "genre": "MouseEvent",
+   "clientX": 460.99999999999994,
+   "clientY": 320,
+   "button": 0,
+   "buttons": 1
+  }
+ ],
+ "etapes": [
+  "received",
+  "received",
+  "apply-repli",
+  "apply-repli",
+  "received"
+ ]
+}

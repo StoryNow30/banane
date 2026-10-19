@@ -1,0 +1,430 @@
+{
+  "format": "ariane-relecture-reglages-1",
+  "statut": "propose",
+  "date": "2026-10-17",
+  "note": "Seuils de la règle de correction prudente de la relecture autonome, mesurés sur les six parties d'apprentissage (fiches/RELECTURE_AUTONOME.md). Proposés : rien n'agit tant que Mic n'a pas choisi « corriger » dans le panneau. Décision de Mic (D-180) : PN, ADV et abords corrigent, avec la même règle ; les verts hors zone restent en ombre. Un interrupteur par zone : corriger:false repasse la zone en ombre (visite, calcul, note) sans toucher au code.",
+  "etagesPermis": [
+    "first-pass",
+    "window",
+    "choice",
+    "crossing"
+  ],
+  "roles": [
+    "vert"
+  ],
+  "voie": {
+    "lateralMaxMm": 45
+  },
+  "coherence": {
+    "diffLateraleMaxMm": 100,
+    "diffVerticaleMaxMm": 100,
+    "ecartementMaxMm": 15
+  },
+  "zones": {
+    "pn": {
+      "corriger": true,
+      "seuilMm": 8,
+      "confianceMin": 0
+    },
+    "adv": {
+      "corriger": true,
+      "seuilMm": 8,
+      "confianceMin": 0
+    },
+    "abords": {
+      "corriger": true,
+      "seuilMm": 8,
+      "confianceMin": 0
+    },
+    "vert-hors-zone": {
+      "corriger": false,
+      "seuilMm": 8,
+      "confianceMin": 0
+    },
+    "ecartement": {
+      "corriger": true,
+      "seuilMm": 8,
+      "confianceMin": 0
+    }
+  },
+  "variante": {
+    "proposition": "chaine+h",
+    "sens": "chaine : la décision du lot avec pour appuis les poses qu'Ariane vient de donner aux cuts précédents de la relecture ; seul : le cut seul ; +h : hauteur apprise ajoutée à la pose"
+  },
+  "jamais": [
+    "cut différé par le lot",
+    "cut posé par le lot"
+  ],
+  "origine": {
+    "outil": "tools/relecture-autonome.cjs etudier",
+    "fiche": "fiches/RELECTURE_AUTONOME.md",
+    "parties": [
+      "1:12",
+      "1:13",
+      "1:17",
+      "1:24",
+      "1:29",
+      "2:1"
+    ],
+    "procedure": "validation croisée par partie (une partie laissée de côté, réglage sur les autres, mesure sur elle), puis règle figée sur les six parties d'apprentissage ; aucune partie réservée lue pour régler",
+    "objectif": "le plus de corrections justes (correction de Mic > 10 mm, pose d'Ariane à 10 mm près de celle de Mic), nettes des cuts abîmés",
+    "contrainte": {
+      "mauvaiseVoie": 0,
+      "degatsPartMax": 0.01,
+      "mauvaiseVoieMm": 50
+    },
+    "mesure": "écart = le plus grand |latéral| ou |vertical| des deux rails, comme src/relecture-critere.js"
+  },
+  "selection": {
+    "grappeMin": 3,
+    "trouCuts": 5,
+    "margeGrappe": 3,
+    "margeIsole": 1,
+    "margeDiffere": 2,
+    "pn": {
+      "margeAvant": 4,
+      "margeApres": 6
+    },
+    "adv": {
+      "margeAvant": 30,
+      "margeApres": 30
+    },
+    "liste": "src/verts-a-controler.js, réglages livrés"
+  },
+  "criteresZone": {
+    "mauvaiseVoieMax": 0,
+    "degatsPartMax": 0.01,
+    "erreurMax": 0.09,
+    "justesMin": 10,
+    "justesParMinuteMin": 0.5,
+    "sens": "une zone corrige si, en validation croisée sur ses verts : 0 mauvaise voie, dégâts ≤ 1 % des visités, erreur ≤ 9 % des actions, au moins 10 corrections justes, au moins une correction juste pour 2 minutes de visites"
+  },
+  "decisionMic": {
+    "decision": "D-180",
+    "date": "2026-10-17",
+    "sens": "Mic accepte les chiffres de l'étude pour l'ADV (11 justes sur 17, 18 % d'erreurs, 1 cut abîmé) et les abords (30 justes sur 37, 14 %), 0 mauvaise voie : ces deux zones corrigent comme le PN, avec la même règle prudente. Le seuil de 9 % n'est pas démontré pour elles (il faut 39 actions sans erreur) : c'est un choix de Mic. Les verts hors zone, les cuts posés ou différés par le lot et le SKIP restent en ombre. Interrupteur par zone : corriger:false."
+  },
+  "decisionsZone": {
+    "pn": {
+      "action": "agir",
+      "raisons": [],
+      "minutesArianeApprentissage": 11.6,
+      "croisee": {
+        "visites": 167,
+        "micSup10": 49,
+        "agit": 36,
+        "corrigesJustes": 36,
+        "reproduit5": 33,
+        "reproduit10": 36,
+        "degats": 0,
+        "mauvaiseVoie": 0,
+        "erreurs10": 0
+      }
+    },
+    "adv": {
+      "action": "ombre",
+      "raisons": [
+        "erreur > 9 %",
+        "moins d'une correction juste pour 2 minutes de visites"
+      ],
+      "minutesArianeApprentissage": 43,
+      "croisee": {
+        "visites": 359,
+        "micSup10": 37,
+        "agit": 17,
+        "corrigesJustes": 11,
+        "reproduit5": 10,
+        "reproduit10": 13,
+        "degats": 1,
+        "mauvaiseVoie": 0,
+        "erreurs10": 3
+      }
+    },
+    "abords": {
+      "action": "ombre",
+      "raisons": [
+        "erreur > 9 %"
+      ],
+      "minutesArianeApprentissage": 51.8,
+      "croisee": {
+        "visites": 362,
+        "micSup10": 76,
+        "agit": 37,
+        "corrigesJustes": 30,
+        "reproduit5": 20,
+        "reproduit10": 32,
+        "degats": 1,
+        "mauvaiseVoie": 0,
+        "erreurs10": 5
+      }
+    },
+    "vert-hors-zone": {
+      "action": "ombre",
+      "raisons": [
+        "moins de 10 corrections justes"
+      ],
+      "minutesArianeApprentissage": 1.8,
+      "croisee": {
+        "visites": 22,
+        "micSup10": 9,
+        "agit": 2,
+        "corrigesJustes": 2,
+        "reproduit5": 2,
+        "reproduit10": 2,
+        "degats": 0,
+        "mauvaiseVoie": 0,
+        "erreurs10": 0
+      }
+    }
+  },
+  "seuilService": {
+    "seuilMm": 8,
+    "note": "seuil de la procédure relevé tant que la règle garde au moins 90 % de ses corrections justes en apprentissage : moins d'écritures dans ESV, petits déplacements dans le bruit de la référence évités",
+    "croisee": {
+      "visites": 1445,
+      "micSup10": 351,
+      "agit": 97,
+      "corrigesJustes": 79,
+      "reproduit5": 65,
+      "reproduit10": 83,
+      "degats": 6,
+      "mauvaiseVoie": 0,
+      "erreurs10": 12
+    }
+  },
+  "regleProcedure": {
+    "seuilMm": 3,
+    "regle": {
+      "variante": "chaine+h",
+      "X": 3,
+      "Y": 0,
+      "G": 15,
+      "D": 45,
+      "C": 100,
+      "stages": null,
+      "differes": false,
+      "poses": false
+    },
+    "note": "règle de plus grand gain net de la grille, pour mémoire",
+    "croisee": {
+      "visites": 1445,
+      "micSup10": 351,
+      "agit": 312,
+      "corrigesJustes": 84,
+      "reproduit5": 106,
+      "reproduit10": 150,
+      "degats": 8,
+      "mauvaiseVoie": 0,
+      "erreurs10": 23
+    }
+  },
+  "varianteParZone": {
+    "note": "une règle par zone, choisie sur cette seule zone : moins bonne que la règle commune en validation croisée ; pour mémoire",
+    "regles": {
+      "pn": {
+        "variante": "chaine",
+        "X": 4,
+        "Y": 0,
+        "G": 10,
+        "D": 45,
+        "C": 100,
+        "stages": null,
+        "differes": false,
+        "poses": false
+      },
+      "adv": {
+        "variante": "chaine+h",
+        "X": 12,
+        "Y": 0,
+        "G": 10,
+        "D": 45,
+        "C": 100,
+        "stages": null,
+        "differes": false,
+        "poses": false
+      },
+      "abords": {
+        "variante": "chaine+h",
+        "X": 4,
+        "Y": 0,
+        "G": 15,
+        "D": 30,
+        "C": 100,
+        "stages": null,
+        "differes": false,
+        "poses": false
+      },
+      "liste": {
+        "variante": "chaine+h",
+        "X": 6,
+        "Y": 0,
+        "G": 10,
+        "D": 30,
+        "C": 100,
+        "stages": null,
+        "differes": false,
+        "poses": false
+      }
+    }
+  },
+  "croisee": {
+    "total": {
+      "visites": 1445,
+      "micSup10": 351,
+      "agit": 97,
+      "corrigesJustes": 79,
+      "reproduit5": 65,
+      "reproduit10": 83,
+      "degats": 6,
+      "mauvaiseVoie": 0,
+      "erreurs10": 12
+    },
+    "parPartie": [
+      {
+        "partie": "1:12",
+        "regle": {
+          "variante": "chaine+h",
+          "X": 8,
+          "Y": 0,
+          "G": 15,
+          "D": 45,
+          "C": 100,
+          "stages": null,
+          "differes": false,
+          "poses": false
+        },
+        "visites": 73,
+        "micSup10": 24,
+        "agit": 21,
+        "corrigesJustes": 21,
+        "reproduit5": 20,
+        "reproduit10": 21,
+        "degats": 0,
+        "mauvaiseVoie": 0,
+        "erreurs10": 0
+      },
+      {
+        "partie": "1:13",
+        "regle": {
+          "variante": "chaine+h",
+          "X": 8,
+          "Y": 0,
+          "G": 15,
+          "D": 45,
+          "C": 100,
+          "stages": null,
+          "differes": false,
+          "poses": false
+        },
+        "visites": 139,
+        "micSup10": 21,
+        "agit": 17,
+        "corrigesJustes": 12,
+        "reproduit5": 12,
+        "reproduit10": 13,
+        "degats": 1,
+        "mauvaiseVoie": 0,
+        "erreurs10": 3
+      },
+      {
+        "partie": "1:17",
+        "regle": {
+          "variante": "chaine+h",
+          "X": 10,
+          "Y": 0,
+          "G": 10,
+          "D": 45,
+          "C": 100,
+          "stages": null,
+          "differes": false,
+          "poses": true
+        },
+        "visites": 290,
+        "micSup10": 59,
+        "agit": 8,
+        "corrigesJustes": 3,
+        "reproduit5": 2,
+        "reproduit10": 4,
+        "degats": 2,
+        "mauvaiseVoie": 0,
+        "erreurs10": 3
+      },
+      {
+        "partie": "1:24",
+        "regle": {
+          "variante": "chaine+h",
+          "X": 8,
+          "Y": 0,
+          "G": 15,
+          "D": 45,
+          "C": 100,
+          "stages": null,
+          "differes": false,
+          "poses": false
+        },
+        "visites": 30,
+        "micSup10": 24,
+        "agit": 4,
+        "corrigesJustes": 1,
+        "reproduit5": 1,
+        "reproduit10": 2,
+        "degats": 0,
+        "mauvaiseVoie": 0,
+        "erreurs10": 2
+      },
+      {
+        "partie": "1:29",
+        "regle": {
+          "variante": "chaine+h",
+          "X": 10,
+          "Y": 0,
+          "G": 100,
+          "D": 45,
+          "C": 100,
+          "stages": null,
+          "differes": false,
+          "poses": true
+        },
+        "visites": 485,
+        "micSup10": 88,
+        "agit": 41,
+        "corrigesJustes": 37,
+        "reproduit5": 27,
+        "reproduit10": 37,
+        "degats": 3,
+        "mauvaiseVoie": 0,
+        "erreurs10": 4
+      },
+      {
+        "partie": "2:1",
+        "regle": {
+          "variante": "chaine+h",
+          "X": 8,
+          "Y": 0,
+          "G": 15,
+          "D": 45,
+          "C": 100,
+          "stages": null,
+          "differes": false,
+          "poses": false
+        },
+        "visites": 428,
+        "micSup10": 135,
+        "agit": 6,
+        "corrigesJustes": 5,
+        "reproduit5": 3,
+        "reproduit10": 6,
+        "degats": 0,
+        "mauvaiseVoie": 0,
+        "erreurs10": 0
+      }
+    ]
+  },
+  "temps": {
+    "micParVertS": 3.6,
+    "arianeCycleS": [
+      1.8,
+      2.4
+    ]
+  }
+}

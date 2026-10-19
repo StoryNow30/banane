@@ -139,26 +139,41 @@
     finally{this.flushing=false;this.flushPromise=null;}})();return this.flushPromise;}
   stateKey(state){const id=state?.identity||{};return K.identityFields.map(k=>id[k]??'not-observed').join('|');}
   railKey(state){return JSON.stringify(['left','right'].map(side=>{const r=state?.rails?.[side];return r?[r.railLocalToSceneRelative,r.profileLocalToSceneRelative]:null;}));}
-  async start({sessionId,observationPeriodId}){if(this.active)throw Error('Écho est déjà actif dans ESV.');
+  async start({sessionId,observationPeriodId,raison}){if(this.active)throw Error('Écho est déjà actif dans ESV.');
    if(this.sessionId&&this.sessionId!==sessionId){this.queue=[];this.checkpointReceipts.clear();this.retryAt=0;this.failureShown=false;this.metrics={enqueued:0,sent:0,dropped:0,sendFailures:0,
      queueDepthMax:0,handlerDurationsMs:[],captureCompleted:0,captureFailed:0,captureBudgeted:0,captureRefused:0,captureCheckpoints:0,degradationLevel:'FULL'};this.collectorSeq=0;}
-   this.sessionId=sessionId;this.periodId=observationPeriodId;this.active=true;this.paused=false;this.generation++;this.current=null;
+   this.sessionId=sessionId;this.periodId=observationPeriodId;this.raisonEssentielle=raison===true;this.active=true;this.paused=false;this.generation++;this.current=null;
    this.api.install(e=>this.input(e));this.api.watch?.(()=>{void this.observe('label-changed');});this.timer=this.api.interval(()=>{void this.observe('poll');void this.flush();},this.pollMs);
    this.enqueue('period-started',{startedAt:new Date().toISOString()},true);await this.observe('period-start');
    return {active:true,observationPeriodId:this.periodId,metrics:this.metricSnapshot()};}
-  input(event){if(!this.active||event.isTrusted===false)return;const began=this.api.performanceNow?this.api.performanceNow():this.now();
+  input(event){if(!this.active||event.isTrusted===false)return;
+   /* 5.0 (« déplacer la vue ») : résumé d'un glisser ou d'une série de crans de molette de l'opérateur (src/gestes-vue.js,
+    * relevé par l'adaptateur). OBSERVATION SEULE : ni geste de correction compté (la pose de départ et les lectures de la visite
+    * n'en dépendent pas), ni observation relancée, ni état cloné ; un seul petit événement, non essentiel (cède sous charge). */
+   if(event.type==='geste-vue'){if(event.geste&&typeof event.geste==='object')this.enqueue('operator-gesture',{visitId:this.current?.visitId||null,
+     identity:this.current?.state?.identity||null,geste:event.geste,observedAt:event.observedAt||new Date().toISOString()});return;}
+   const began=this.api.performanceNow?this.api.performanceNow():this.now();
    const editable=this.api.editable?.(event.target)===true,targetKind=this.api.targetKind?.(event.target)||'other';
    if(this.current&&!editable)this.current.operatorInputs=(this.current.operatorInputs||0)+1;
    const shiftOnly=!!event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey;
-   const validate=event.type==='keydown'&&shiftOnly&&(event.code==='Space'||event.key===' ')||event.type==='click'&&targetKind==='validation';
+   /* 4.9.0.18 (AM-01, audit Écho) : ESV valide aussi par Ctrl+Entrée (sans passer au suivant,
+    * le raccourci qu'Orbite relaie lui-même) et par Entrée (annoncé par le titre de son bouton).
+    * Avant, seuls Maj+Espace et le clic sur le bouton comptaient : le dernier cut d'une partie,
+    * validé en place, finissait PASS_NO_DECISION. La touche est consignée (`decisionKey`). */
+   const ctrlOnly=!!event.ctrlKey&&!event.shiftKey&&!event.metaKey&&!event.altKey,noModifier=!event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey;
+   const isSpace=event.code==='Space'||event.key===' ',isEnter=event.code==='Enter'||event.code==='NumpadEnter'||event.key==='Enter';
+   const validateKey=event.type==='keydown'?(shiftOnly&&isSpace?'Shift+Space':ctrlOnly&&isEnter?'Ctrl+Enter':noModifier&&isEnter?'Enter':null):event.type==='click'&&targetKind==='validation'?'click':null;
    const skip=event.type==='keydown'&&shiftOnly&&(event.code==='Backspace'||event.key==='Backspace');
-   const intent=editable?null:skip?'SKIP':validate?'VALIDATE':null;
+   /* AM-02 : une touche maintenue (`repeat`) n'est pas une seconde intention. */
+   const repeated=!!event.repeat&&event.type==='keydown';
+   const intent=editable||repeated?null:skip?'SKIP':validateKey?'VALIDATE':null;
    const key=editable?null:(event.key?.length===1?'character':event.key||null);
    this.enqueue('operator-event',{visitId:this.current?.visitId||null,identity:this.current?.state?.identity||null,stateObservedBeforeInput:this.current?.state?K.clone(this.current.state):null,event:{type:event.type,
      code:editable?null:event.code||null,key,shiftKey:!!event.shiftKey,ctrlKey:!!event.ctrlKey,metaKey:!!event.metaKey,altKey:!!event.altKey,
-     repeat:!!event.repeat,targetKind,editable,intent,observedAt:event.observedAt||new Date().toISOString(),
+     repeat:!!event.repeat,targetKind,editable,intent,decisionKey:editable?null:validateKey||(skip?'Shift+Backspace':null),repeatOfIntent:repeated&&!editable&&!!(validateKey||skip),
+     observedAt:event.observedAt||new Date().toISOString(),
      eventTimeStamp:Number.isFinite(event.eventTimeStamp)?event.eventTimeStamp:null,
-     stateCapturedAt:this.current?.state?.capturedAt||null}},!!intent);
+     stateCapturedAt:this.current?.state?.capturedAt||null}},!!intent||(this.raisonEssentielle===true&&event.type==='keydown'&&!editable&&!repeated&&/^(?:Digit|Numpad)[0-6]$/.test(event.code||'')));   // RM-11 : la frappe d'un chiffre de raison (si la lecture est allumée) est un événement essentiel, il ne cède pas sous charge
    const elapsed=Math.max(0,(this.api.performanceNow?this.api.performanceNow():this.now())-began);this.metrics.handlerDurationsMs.push(elapsed);
    if(this.metrics.handlerDurationsMs.length>512)this.metrics.handlerDurationsMs.shift();
    this.api.defer?.(()=>{void this.observe(intent?'after-decision-input':'after-input');});

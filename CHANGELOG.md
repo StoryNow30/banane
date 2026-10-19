@@ -1,5 +1,344 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.9 — 4.9.5 test 9 (19/10)
+
+Manifeste `4.9.5.9`, « 4.9.5 test 9 », paquet `ariane-4.9.5-test.9.zip` ; base : `claude/50-relecture-couverture` (d58a6f1, 4.9.5 test 8) + la fiche de conception RM-11 (70b3d18) ; accord de Mic à la conception (D-208).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé ; le lot envoie à ESV les mêmes commandes, octet pour octet (essai tests/pose-lot-inchanges-4959.test.cjs). La relecture après le lot est celle de la test 8.
+Consigne : `consignes/seance-terrain-4.9.5-test-9-2026-10-19.md` ; retour arrière : la 4.9.5 test 8 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Raison de la correction dans Écho** (RM-11, `fiches/RM11_RAISON_CORRECTION.md`) : l'opérateur tape un chiffre de la rangée du haut (lu par son code physique, pavé numérique aussi) pour dire pourquoi il corrige un cut : `1` rail voisin, `2` ADV, `3` PN, `4` nuage diffus ou pauvre, `5` hauteur seulement, `6` autre, `0` efface. **Facultative, coupée par défaut, jamais bloquante** : pas de raison par défaut (absent = inconnu), aucune fenêtre, aucune attente. Rien n'est retenu ni envoyé à ESV (aucun `preventDefault`) ; `src/early-input.js` et `src/adapter-page.js` sont inchangés.
+- **Comportement** : un appui = la raison de ce cut seul ; deux appuis sur la même touche en 600 ms sur le même cut = raison **collante** pour les cuts suivants, jusqu'à un `0`, une autre collante, un changement de partie, un saut de plus de 30 cuts, une pause ou la fin de séance (elle survit à un F5) ; une raison tapée seule passe avant la collante pour ce cut ; une touche tapée jusqu'à 500 ms après une validation, avant tout autre geste sur le cut suivant, va au cut validé (marque `apresValidationMs`). Rappel doux du panneau après 40 cuts collants.
+- **Consignation** : champ facultatif `raisonCorrection` (`ariane-raison-v1` : `code`, `source` touche ou collante, `serie`, `poseeA`, `eventSeq`, `apresValidationMs`, `historique` de 6 changements au plus) dans la visite Écho ; état de séance `native.raison` (gardé avec l'état, lu au démarrage d'Écho, figé jusqu'à sa fin) ; résumé `raisonSeries` écrit **une fois** dans l'en-tête de l'export (`UNE_FOIS`), seulement s'il y en a. Format de la visite et de l'export inchangés : les lecteurs d'avant ignorent le champ.
+- **Anti-fuite** : la raison est une étiquette, jamais un trait. Elle n'entre ni dans l'entrée sans fuite, ni dans les ombres, ni dans la pose de départ, ni dans les captures ; `tools/jointure-echo-orbite.cjs` et `tools/jeu-apprentissage.cjs` la lisent côté étiquette seulement (essais tests/raison-fuite.test.cjs).
+- **Repli si ESV réagit aux chiffres** : réglage du panneau « Touches lues » : `Alt + chiffre` puis `Pavé numérique seul` (étape 0 de la consigne : Mic vérifie dans ESV).
+- **Panneau** : carte « Raison de la correction » (case, rangée de touches, pastilles 1 à 6 et 0 avec étiquettes parlées, ligne de la collante, bande des 24 derniers cuts, couverture, aide) ; les touches sont lues aussi quand le panneau a le focus ; le bandeau d'ESV dit « raison : ADV (collante) » ; ligne dans les réglages affichés (`echo.raison`). Le choix est gardé par le service worker (`raison-choix-etat`, `raison-choix`), à part du choix du lot.
+- **Correctif D-211 (mémoire de la liste d'ESV)** : `listeNoterEcriture` (`background.js`) ne notait une écriture que si le lot était `RUNNING` ; le dernier cut validé 0,4 s après le passage à `STOPPED` et les corrections de la relecture « corriger » n'étaient pas mémorisés (18 au lieu de 29, partie 13 du projet 2, `fiches/EXAMEN_2-13.md`). Elle accepte aussi la fenêtre de grâce qui suit la fin du lot (`dansGrace`) et la relecture en cours, avec la partie du lot. Relevé local seulement : aucune requête vers ESV, aucun effet sur la pose (essai `tests/liste-memoire-fin-lot.test.cjs`, et `tests/pose-lot-inchanges-4959.test.cjs`).
+- **Outils** : la jointure Écho ↔ Orbite gagne `raisonHumaine`, la durée de visite et le temps geste-validation (mesure de base), la couverture des corrections de plus de 10 et de plus de 5 mm, les séries, deux colonnes CSV à la fin ; le jeu d'apprentissage recopie la raison dans l'étiquette.
+- **Un seul fichier de `src/` touché côté séance** : `src/native-session.js` (51 lignes ajoutées, 5 changées ou retirées ; héritage de la collante à l'ouverture d'une visite, `raisonFrappe`, `raisonPoser`, `raisonPanneau`, fin de série à la pause et à la fin, résumé d'export), tout dans un `try`, jamais bloquant. Autres : `src/native-page.js` (le chiffre de raison est un événement essentiel quand la lecture est allumée, 2 lignes), `src/settings.js` (`echo.raison`), `src/native-export.js` (`raisonSeries` dans `UNE_FOIS`), nouveau `src/raison-correction.js` (module pur).
+- Essais : `tests/raison-correction.test.cjs` (module pur), `tests/echo-raison.test.cjs` (session, dont **l'Écho identique octet pour octet à la test 8** : référence figée avant la fonction, `tests/echo-raison-reference.json`, scénario `tests/helpers/echo-scenario.cjs`), `tests/echo-raison-grace.test.cjs` (délai de grâce, replis, secours du panneau, jamais bloquant), `tests/echo-raison-charge.test.cjs` (10 000 frappes) et `tests/echo-raison-marge.test.cjs` (coût d'une frappe), `tests/raison-touches.test.cjs` (rien retenu ni envoyé à ESV), `tests/raison-fuite.test.cjs`, `tests/raison-export.test.cjs`, `tests/jointure-echo-orbite-raison.test.cjs`, `tests/panel-raison.test.cjs`, `tests/raison-reglage.test.cjs`, **`tests/pose-lot-inchanges-4959.test.cjs`** (la pose et le lot ne changent pas : empreintes `tests/pose-inchangee-4958.json` des fichiers de `src/`, réglages, commandes du lot), essais de version `tests/version-4959.test.cjs` (remplace `version-4958`) et de consigne `tests/consigne-4959.test.cjs` (remplace `consigne-4958`).
+- verify (machine très chargée, lancé sur 2 cœurs pour que les essais lents tiennent leur délai) : 2 321 essais, 2 319 réussis, 0 échec, 2 ignorés (corpus natif absent) ; géométrie inchangée, moteur identique à la base V4.6.0.
+- Non vérifié : qu'ESV ne réagit pas aux chiffres (étape 0, par Mic) ; le vrai délai des frappes après une validation (500 ms choisis sans mesure) ; le coût d'une raison (0,6 s estimé) ; la porte de 80 % des corrections de plus de 10 mm étiquetées (il faut une séance de 150 cuts avec une zone d'ADV) ; Edge. Pas dans cette version : `tools/gcv2-jeu.cjs` (absent de cette branche).
+
+## 4.9.5.8 — 4.9.5 test 8 (18/10)
+
+Manifeste `4.9.5.8`, « 4.9.5 test 8 », paquet `ariane-4.9.5-test.8.zip` ; base : `claude/50-base` (da9debf, 4.9.5 test 7) + la couverture de la relecture (eed6390, 2bf876d ; D-185, D-186).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). La relecture reste coupée par défaut ; seul change ce qu'elle relit et ce qu'elle peut corriger.
+Consigne : `consignes/seance-terrain-4.9.5-test-8-2026-10-18.md` ; retour arrière : la 4.9.5 test 7 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Couverture de la relecture** (D-185, d'après l'Écho de la partie 11 : 17 corrections qui tiennent, 15 verts faux laissés) : plus de plafond en ADV, ADV séparées de 40 cuts au plus enchaînées en une seule plage, plafonds de 70 (abords), 20 (vert hors zone) et 20 (écartement) ; les cuts « À contrôler » et « écartement » ne sont jamais écartés par un budget de zone ; un cut à l'écartement hors norme est relu avec son cut d'avant et son cut d'après (marge de 1). Rejeu de la sélection sur la partie 11 : 391 cuts relus au lieu de 144, 13 des 15 oublis couverts (restent 6418 et 6419, première zone d'ADV non détectée).
+- **Zone « écartement » corrigeable** (accord de Mic) : fermée dans `datasets/relecture-reglages-defaut.json`, ouverte dans `datasets/relecture-reglages-proposes.json` (8 mm au moins, même règle prudente que le PN, l'ADV et les abords). Fermée, un vert hors plage reste en ombre.
+- **Panneau** : « Corriger (verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, validés par Maj+Espace) ».
+- **Apprentissage** (D-187) : la partie 11 du second projet passe dans l'ensemble d'apprentissage (`datasets/manifeste-parties.json`).
+- Essais : `tests/relecture-ombre.test.cjs` (5 essais ajoutés, 4 adaptés), `tests/relecture-critere.test.cjs`, essais de version `tests/version-4958.test.cjs` (remplace `version-4957`) et `tests/consigne-4958.test.cjs` (remplace `consigne-4957`). verify : 2 226 essais, 2 224 réussis, 0 échec, 2 ignorés (corpus natif absent) ; géométrie inchangée, moteur identique à la base V4.6.0.
+- Non vérifié : la durée de la relecture (environ 12 minutes estimées pour une partie comme la 11, contre 4 minutes mesurées) ; la détection de la première zone d'ADV de la partie 11 (cuts 6362 à 6424) ; Maj+Espace servi sur 18 corrections à la test 7 (aucune écriture refusée), pas sur les corrections nouvelles ; Edge. Pas dans cette version : la relecture « au fil du lot » (D-176), la combinaison P-7.
+
+## 4.9.5.7 — 4.9.5 test 7 (18/10)
+
+Manifeste `4.9.5.7`, « 4.9.5 test 7 », paquet `ariane-4.9.5-test.7.zip` ; base : `claude/50-base` (803fb76 : 4.9.5 test 6 + panneau réorganisé, départ de lot sur un cut vert, partie complète, fiabilité du lot, PN confirmé par deux cœurs consécutifs, relecture après le lot ; D-170 à D-182).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). Seule écriture nouvelle : la relecture en mode « Corriger », que Mic choisit dans le panneau (coupée par défaut). Mode coupé : commandes vers ESV identiques à la test 6 sur les scénarios rejoués (5 cas synthétiques, un lot réel de 335 commandes).
+Consigne : `consignes/seance-terrain-4.9.5-test-7-2026-10-18.md` ; retour arrière : la 4.9.5 test 6 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Relecture après le lot** (D-170 à D-176, D-179, D-180 ; `fiches/RELECTURE_OMBRE.md`) : trois modes, « Coupée » (défaut), « Ombre » (visite, capture, calcule, journalise, n'écrit rien ; ESV marque « vu » chaque cut neuf affiché) et « Corriger » (verts prouvés du PN, de l'ADV et des abords qui passent la règle prudente : 8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus de la médiane ; pose par la commande `apply` du lot, validation par **Maj+Espace**, qui valide sur place). Jamais un cut posé ou différé par le lot, jamais un SKIP, jamais un vert hors zone. Départ juste après le lot, sans pause ; « Arrêter la relecture ». Gardes : une seule passe, statut du cut relu avant la pose, table de la liste refusée si incomplète, pas de pose juste après un saut, dernier cut de la partie jamais validé, réglages invalides = « Corriger » retombe en ombre. Plafonds par zone (ADV 40, abords 70, PN hors budget). Étude : PN 36 justes sur 36 actions, ADV 11 sur 17 (18 % d'erreurs), abords 30 sur 37 (14 %), 0 mauvaise voie ; 9 % non démontré en ADV et abords (accepté par Mic, D-180).
+- **Panneau réorganisé** (D-173) : groupes « Lot », « Règles et choix du prochain lot », « Résultats du dernier lot », « Relecture », « Export, archive et réglages avancés » ; « Dernier lot » et « Prochain lot » sous chaque choix ; règle grappe renommée « Mettre en attente les cuts voisins d’une série de différés » ; fin de partie et partie sans rouge annoncées.
+- **Départ de lot sur un cut vert** (D-169) : ni pose ni validation sur le vert, passage au prochain cut non validé (Maj+Z, `nextWithoutDecision`) ; rouges seulement derrière : aucune commande, avis qui les nomme. **Partie complète et cut vert** : aucune pose ni validation (au plus une capture de lecture) ; les avis disent « Aucune pose ni validation n’a été envoyée à ESV ».
+- **Fiabilité du lot** (H14, H15, H16) : empreinte du contrat indépendante du rail sélectionné (plus de faux avis), audit serveur seulement sur une lecture complète de la partie du lot, chaque erreur rangée au lot de sa demande.
+- **PN confirmé par deux cœurs consécutifs** (H6) : 17 PN sur 17 gardés, plus de fausse zone en capturant des verts.
+- Essais : `tests/relecture-*.test.cjs` (dont `-sw-statut-relu`, `-sw-table-zone`, `-sw-table-tronquee`, `-sw-zone-hors`), `depart-sur-vert-*-t7`, `fiabilite-*`, essais de version `tests/version-4957.test.cjs` (remplace `version-4956`) et `tests/consigne-4957.test.cjs` (remplace `consigne-4956`). verify : 2 221 essais, 2 219 réussis, 0 échec, 2 ignorés (corpus natif absent).
+- Non vérifié : Maj+Espace relayé par Ariane dans le vrai ESV ; la durée et le nombre de lectures de nuage de la passe sur un vrai lot ; Edge. Pas dans cette version : la relecture « au fil du lot » (D-176), la combinaison P-7 (en ombre, D-182).
+
+## 4.9.5.6 — 4.9.5 test 6 (17/10)
+
+Manifeste `4.9.5.6`, « 4.9.5 test 6 », paquet `ariane-4.9.5-test.6.zip` ; base : `claude/50-base` (a362a29 : 4.9.5 test 5 + points utiles de la relecture, clic humain du mode rapide en réglage, détection des ADV ; D-163, D-164).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). Aucune commande ESV nouvelle. Le seul ajout de comportement : deux **choix du panneau pour le lot**, lus au démarrage de chaque lot, figés jusqu'à sa fin, et au défaut identiques à la base octet pour octet.
+Consigne : `consignes/seance-terrain-4.9.5-test-6-2026-10-17.md` ; retour arrière : la 4.9.5 test 5 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Tout ce qu'avait la test 5** : ombres (voie prédite, règles métier, faux vert « hauteur ambiguë », hauteur apprise, P8), relevé des gestes en Écho, liste des verts à contrôler, dernière empreinte de contrat ; **mémoire des différés de l'Écho coupée au terrain** ; **déplacer la vue coupé**.
+- **Nouveau — choix du clic du mode rapide dans le panneau** (D-157, D-164 ; Mic : « essayer les 2 méthodes »). Carte « Clic du mode rapide » de la vue Orbite : « Comme avant » (`tel-quel`, défaut), « Variante : rail gauche recentré » (`gauche-recentre`, +6 à 9 % de durée de lot), « Tout recentré, comme un humain » (`tout-recentre`, +12 à 18 %).
+  - Gardé dans `chrome.storage.local` (`banane50ClicHumain`, actions `choix-lot-etat` et `choix-lot` du service worker), lu au démarrage de chaque lot et figé dans son scope (`clicHumain`) : un changement pendant un lot n'agit qu'au lot suivant, et le panneau le dit (« Ce lot garde … ; … servira au prochain lot »). Les arguments de « Démarrer » ne comptent pas.
+  - Transmis à la page avec chaque `apply` du lot en cours (`options.clicHumain`), seulement s'il est corrigé ; la page (`src/adapter-page.js`) le prend à la place de `pilote.rapide.clicHumain` pour cette commande. Hors d'un lot en cours (pose assistée, restauration) : le réglage de la page, `tel-quel`.
+  - Consigné : scope du lot (événement `batch-started`, état exporté), ligne « Choix du lot … » de `CONTENU.txt`, mode du relevé `clic-hors-vue`. Au défaut, le scope ne porte rien (un champ absent vaut `tel-quel`) : commandes identiques à la base octet pour octet (empreinte `tests/fixtures/choix-lot-50-base.json`, prise sur 50-base a362a29).
+- **Nouveau — interrupteur de la règle métier « grappe de différés »** (demande de Mic) : case « Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges) », **coupée par défaut**, gardée (`banane50GrappeDifferes`), lue au démarrage du lot et figée (`regleGrappeDifferes`). Activée, elle ouvre le chemin d'activation existant (`reglesMetier.actif`, `regles['grappe-differes']`) **pour cette règle seulement** : elle ne peut que changer une validation en différé (motif `regles-metier`), sans aucune pose nouvelle ni type d'appel nouveau ; `pn-chaque-cut` et `zone-validation-en-place` restent coupées. Chaque cut mis en attente garde son événement `regles-metier-ombre` (`actif:{applique:true,regles:['grappe-differes']}`).
+- **Déjà dans la base, entre dans cette version**
+  - **Relevé `clic-hors-vue`** (D-157, `fiches/RAPIDE_HUMAIN.md`) : chaque clic de pose calculé hors de la partie visible du canevas est relevé par la page après la réponse, sans rien changer ; compteur par lot, cinq exemples, bilan de fin de lot (`clic-hors-vue`, `clic-hors-vue-bilan`).
+  - **Détection des ADV** (`fiches/DETECTION_ADV.md`) : signal du « rail de plus » ; zone `adv` en ombre dans les règles métier ; **la liste « À contrôler » s'enrichit des zones d'ADV** (plages « ADV a–b »). 8 zones de Mic sur 8, sur des parties qui ont toutes servi à régler.
+  - **Points utiles de la relecture de la test 5** : verts à contrôler, **le dernier lot fait foi** quand un cut figure dans plusieurs lots ; **la liste est jointe aussi à l'export sans zip** ; `BananeSettings` gelé au premier niveau ; fiches corrigées ; essai `memoire-differes` coupé en deux ; phrase de retour arrière des consignes (`consignes/README.md`).
+- Essais : `tests/choix-lot-clic-sw`, `-clic-transmis-sw`, `-clic-pendant-sw`, `-clic-page`, `-grappe-sw`, `-grappe-actif-sw`, `-panel` ; essais de version `tests/version-4956.test.cjs` (remplace `version-4955`) et `tests/consigne-4956.test.cjs` (remplace `consigne-4955`). `tests/deplacer-vue-sw.test.cjs` passe sans changement (seul `extensionVersion` est ramené à la version de l'empreinte).
+- Essai de fumée dans Chromium (hors du banc) : l'extension se charge, le panneau s'ouvre, le choix du clic et l'interrupteur s'affichent, se gardent et se relisent après réouverture.
+
+## 4.9.5.5 — 4.9.5 test 5 (17/10)
+
+Manifeste `4.9.5.5`, « 4.9.5 test 5 », paquet `ariane-4.9.5-test.5.zip` ; base : `claude/50-base` (0f96f17 : 4.9.5 test 4 + hygiène de l'audit, ombres de la voie, règles métier, faux verts, hauteur apprise, déplacer la vue coupé, verts à contrôler).
+**Aucun changement de pose, de validation ni de navigation** par rapport à la base ; `src/engine.js` inchangé (identique à `origin/main`). Le mode rapide n'est pas modifié (D-157 attend la décision de Mic). Aucune commande ESV nouvelle.
+Consigne : `consignes/seance-terrain-4.9.5-test-5-2026-10-17.md` ; retour arrière : la 4.9.5 test 4.
+
+- **Tout ce qu'avait la test 4** (empreinte du contrat par onglet, `audit-serveur` corrigé, P8 en ombre, F5 en Écho permis, mémoire de la liste, plafond de convention coupé, logo).
+- **En ombre, consigné seulement (aucune pose changée ; décisions et commandes identiques avec et sans)**
+  - **Voie prédite** (`voiePrediteOmbre`, `src/voie-recentree.js`) : événement `voie-predite-ombre` par cut différé, règle prudente D-147 ; calcul sur copies, après la décision et la commande (D-153, coût mesuré négligeable sur le banc : D-154).
+  - **Mémoire de série en Écho** (`memoireDifferesOmbre`) : événement `memoire-differes-ombre`, calculé avant la lecture de la référence humaine (G1 b, D-148, D-153) ; outil de mesure, pas un mode de travail (D-155). **Coupée au terrain** dans ce paquet (relecture avant envoi, I-1) : deux relances du moteur par différé pendant l’Écho, non mesurées au banc.
+  - **Règles métier de Mic** (`reglesMetier.ombre`, `src/regles-metier.js`) : événement `regles-metier-ombre` (PN et marges, grappes de différés) ; activation coupée, règle par règle (D-159).
+  - **Faux vert « hauteur ambiguë »** (`fauxVertOmbre`, `differer:false`) : consigné dans la décision du lot (D-160).
+  - **Hauteur apprise** (`hauteurApprise`, `appliquer:false`) : correction verticale consignée dans la décision du lot (D-161).
+  - **Ombre verticale P8** (`ombreVerticaleRefusee`, 3,6 mm), déjà dans la test 4 (D-140, renommée P8 : D-150).
+- **Actifs, en observation seule (aucune action dans ESV)**
+  - **Relevé Écho des glissers et des crans de molette** (`echo.gestesVue`, `src/gestes-vue.js`) : événement `operator-gesture`, écouteurs passifs (D-156).
+  - **Liste des verts à contrôler** (`vertsAControler`, `src/verts-a-controler.js`) : carte « À contrôler » du panneau Orbite en fin de lot, fichier `ariane-verts-a-controler-partieN-….json` et ligne de `CONTENU.txt` dans l'export (D-162).
+  - **Dernière empreinte de contrat connue** dans `chrome.storage.local` (`banane50ContratDernier`), consignée sans jamais donner d'avis (U1, D-153).
+- **Coupé** : déplacer la vue (`deplacerVue.actif=false`, pièce `amenerDansLaVue`, D-156) et tous les chemins d'activation (`reglesMetier.actif`, `hauteurApprise.appliquer`, `fauxVertOmbre.differer`, `conventionPlafond`).
+- Essais de version : `tests/version-4955.test.cjs` (remplace `version-4954`), `tests/consigne-4955.test.cjs` (remplace `consigne-4954`).
+- `tests/deplacer-vue-sw.test.cjs` : l'empreinte des commandes de 50-base (prise sous la 4.9.5.4) est comparée à version égale ; seul `extensionVersion` de chaque `apply` est ramené à 4.9.5.4 avant de hacher.
+- Essai de fumée dans Chromium (hors du banc) : l'extension se charge, le panneau s'ouvre, la carte « À contrôler » s'affiche sur un lot simulé dans le vrai service worker.
+
+## 4.9.5.4 — 4.9.5 test 4 (16/10)
+
+Manifeste `4.9.5.4`, « 4.9.5 test 4 », paquet `ariane-4.9.5-test.4.zip` ; base : `claude/50-base` (8825ec9 : 4.9.5 test 3 + E1, M6, E5, reprise de l'Écho après un F5, référence humaine de l'Écho par l'écriture serveur).
+**Aucun changement de pose, de validation ni de navigation** ; `src/engine.js` inchangé (identique à `origin/main`). Aucune requête ESV nouvelle, aucune marque d'Ariane : la trace dans ESV est celle d'un humain.
+Consigne : `consignes/seance-terrain-4.9.5-test-4-2026-10-16.md` ; retour arrière : la 4.9.5 test 3.
+
+- **Déjà dans la base, entre dans cette version**
+  - **E1, mémoire de la liste d'ESV** (`src/liste-memoire.js`, `tools/diff-liste.cjs`, `listeMemoire.actif`, vrai) : bords écrits par Ariane gardés en local par partie, instantané compact de la liste à chaque chargement complet, compte des cuts corrigés depuis le dernier passage ; aucune requête ESV (D-125).
+  - **Reprise de l'Écho après un F5** (D-137, `fiches/ECHO_F5.md`) : la reprise attend le cut lisible et la liste lue puis silencieuse (2,5 s) ; même session, une nouvelle période ; plus de période fantôme. **Le F5 en Écho est de nouveau permis**, à essayer une fois en fin de partie.
+  - **Référence humaine de l'Écho corrigée par l'écriture serveur** (D-143, `fiches/ECHO_REFERENCE_ECRITURE.md`) : quand l'écriture de validation diffère de plus de 1 mm de la référence lue à la touche, elle la remplace (l'ancienne est gardée). Un cut sur 1 260 sur les Échos relus.
+  - **Plafond de convention (P1) : livré COUPÉ** (`conventionPlafond = false`, D-129 à D-131). Les rails refusés sont posés comme avant.
+  - **Logo** « La voie » (`icons/`, déclaré dans le manifeste).
+- **Nouveau — empreinte du contrat ESV rangée par onglet** (D-139) : l'empreinte précédente est gardée par onglet (`chrome.storage.session`, clé `banane54Contrats`, repli sur `local`, huit onglets au plus, onglet fermé oublié) ; un onglet n'est comparé qu'à lui-même, donc deux fenêtres ESV ne se disputent plus la même empreinte. L'empreinte ne contient plus les libellés des boutons (identifiants seuls) ni le nombre d'écouteurs jQuery (présence seule) ; libellés et nombres restent consignés à part (`etat` dans `contrat-esv`), sans être hachés ni comparés. Les empreintes de la 4.9.5.3 (clé `banane53Contrat`) ne sont jamais relues. Essais : `tests/contrat-par-onglet-4954.test.cjs` (rouges d'abord : 7 sur 8).
+- **Nouveau — `audit-serveur` : champ partie corrigé** (D-141) : la partie et la séance sont relevées quand la liste est lue : lot ouvert, sinon séance Écho (dernière visite), sinon lot tout juste clos (grâce), sinon capture en cours ; jamais un lot clos depuis longtemps. Sans source sûre : `partie:null` et pas de validations attendues. Champ `partieSource` ajouté. Pendant Écho, l'événement porte `nativeSessionId` : il sort dans l'export d'Écho (D-134). Essais : `tests/audit-serveur-4954.test.cjs` (rouges d'abord : 5 sur 7).
+- **Nouveau — correction verticale en ombre (P8, D-140)** (`src/lot-decision.js`, réglage `ombreVerticaleRefusee` de `src/settings.js`, actif, 3,6 mm) : pour un rail dont le calage de convention est refusé, la décision consigne `ombreVerticale` (pose réelle et pose remontée de 3,6 mm dans le repère profil du rail, décalages mesurés). **Jamais appliquée** : la pose, la commande, les gardes et les appuis ne la lisent pas ; décisions identiques octet pour octet avec et sans le réglage. Page Réglages : une ligne de plus. Essais : `tests/ombre-verticale-4954.test.cjs`.
+- Essais de version : `tests/version-4954.test.cjs` (remplace `version-4953`), `tests/consigne-4954.test.cjs` (remplace `consigne-4953`). Les essais `releves-4953-*` sont adaptés à la nouvelle forme de l'empreinte.
+
+## 4.9.5.3 — 4.9.5 test 3 (16/10)
+
+Manifeste `4.9.5.3`, « 4.9.5 test 3 », paquet `ariane-4.9.5-test.3.zip` ; base : `claude/50-base` (4.9.5 test 2 + S3 et S8). **Aucun changement de pose, de validation ni de navigation** ;
+`src/engine.js` inchangé (identique à `origin/main`). Consigne : `consignes/seance-terrain-4.9.5-test-3-2026-10-16.md` ; retour arrière : la 4.9.5 test 2.
+Tout ce qui est nouveau est LECTURE SEULE ou consigné en ombre, chacun derrière un réglage (`src/settings.js` : `releves`, `esvEvents`, `export.phaseTimingReplie`), actif par défaut.
+Aucune commande ESV nouvelle. Seul ce qu'on voit à l'écran : l'avis de contrat ESV, s'il se produit, et le nouveau logo.
+
+- **Logo** : piste A « La voie », retenue par Mic (`icons/ariane.svg`, icônes 16, 32, 48 et 128 px), déclarée dans `icons` et `action.default_icon` du manifeste.
+
+- **S6, relevés (plan 5.0, § 4)**
+  1. *Ressources Potree* (`src/esv-observer.js`) : pour les nœuds `ept-data`, le statut HTTP (`responseStatus`, si le navigateur le donne), la durée (total, maximum), les échecs (statut 0 ou ≥ 400) et leur cumul, dans l'événement `resource`.
+  2. *`flushPct`* du lecteur du passage à niveau (`src/lot-decision.js`) consigné à chaque cut dans la décision du lot (avant : seulement au-dessus de 50 %).
+  3. *Diag de capture* (`src/adapter-page.js`, `capture-read.diag`) : `niv` = niveau d'octree des nœuds lus [min, médiane, max, connus, total] et `bud` = budget de points du lecteur (`null` si absent).
+  4. *Liste d'ESV* : `RailSpacing`, `TrajAzimuth`, `RailType`, `Success*`, `PK` gardés en mémoire de la page (B1 et les comptes inchangés) ; une fois par chargement de liste, événement `list-fields` : noms des champs d'une ligne (jamais les valeurs) et résumé des champs gardés.
+  5. *Compteur Potree bloqué* : `numNodesLoading` identique et > 0 au début de 3 cuts de suite = `diag-compteur-bloque`, une fois par épisode.
+  6. *Avis `fetch-rails`* : si le compteur d'écritures passées par `fetch` devient non nul, événement `avis-contrat-esv` et ligne dans l'avis du panneau.
+  7. *Empreinte du contrat ESV* à « Connecter » : boutons de navigation et titres, classes de rail, écouteurs jQuery par événement, versions de jQuery et de Potree, hachés (8 caractères) ; événement `contrat-esv` ; avis si elle change depuis la connexion précédente.
+  8. *Écouteurs jQuery en ombre* sur `railPairSelected`, `railPairUpdated`, `railPairSeen`, `loading`, `newPart` (`#globalcontainer`) : événement `esv-event` (nom, arguments réduits, heure de la page). Espace de noms `banane53`, aucune valeur retournée, jamais d'exception ; au plus 30 événements par seconde ; exclus des comptes de l'empreinte et du chemin `goToCut`.
+  9. *T monde/scène sur la pose de départ* du cut (ligne N de la liste) dès le premier cut : `tDepart` dans `b1-ombre`, à côté de la T actuelle (écriture) ; B1 continue d'employer l'actuelle.
+  10. *Revisite d'un différé sans source nouvelle*, en ombre : événement `revisite-differe` (`revisite-sans-source-nouvelle:true|false`) ; rien n'est sauté.
+  11. *Audit serveur* : à chaque lecture complète de la liste (F5), validés côté serveur contre validations d'Ariane depuis la lecture précédente : événement `audit-serveur` (attendus, constatés, écart).
+  12. *En-tête de l'export* (journal et bilan Orbite, export Écho) : navigateur, plateforme, cœurs, mémoire (appareil et JS), GPU.
+- **S7, export allégé** (`src/phase-pli.js`) : les jalons `phase-timing` sont repliés par visite dans le journal exporté (un événement `phase-timing-pli` par visite : contexte écrit une fois, jalons en lignes de nombres, résumé de visite ; formes rangées dans `phase-timing-pli-formes`). Dépliage sans perte pour l'analyse. `tools/perf-phases.cjs` et `tools/perf-v3.cjs` lisent les deux formats et donnent les mêmes chiffres (essai `tests/phase-pli.test.cjs`, fixture fabriquée). Mesuré sur un export réel rejoué (partie 27, 606 visites) : jalons −84 %, journal −36 %.
+- Essais : `tests/releves-4953-*.test.cjs` (observateur, adaptateur, service worker, B1, export, `flushPct`), `tests/phase-pli.test.cjs`, `tests/version-4953.test.cjs` (remplace `version-4952`), `tests/consigne-4953.test.cjs`.
+
+## 4.9.5.2 — 4.9.5 test 2 (15/10)
+
+Manifeste `4.9.5.2`, « 4.9.5 test 2 », paquet `ariane-4.9.5-test.2.zip`. 4.9.5 test 2 = corrections Écho de la 4.9.0.20 + D3 et diagnostic du signal de la 4.9.5.1 ;
+aucun changement de pose ; `src/engine.js` inchangé. Fusion de `claude/49-echo-corrections` (4.9.0.20) et de `claude/495-test-1` (4.9.5.1) : seuls les libellés de version, ce
+journal, les rapports de vérification et l'essai de version ont été touchés (`tests/version-4952.test.cjs` remplace `version-test20` et `version-4951`). Consigne :
+`consignes/seance-terrain-4.9.5-test-2-2026-10-15.md` ; retour arrière : la 4.9.5 test 1 ou la 4.9.0 stable.
+
+## 4.9.5.1 — 4.9.5 test 1 (15/10)
+
+Manifeste `4.9.5.1`, « 4.9.5 test 1 », paquet `ariane-4.9.5-test.1.zip` ; base : la 4.9.0 stable (`main`, 5444245).
+`src/engine.js` inchangé (baseline épinglée), décision de lecture et de pose inchangées. Consigne :
+`consignes/seance-terrain-4.9.5-test-1-2026-10-15.md` ; retour arrière : la 4.9.0 stable.
+
+- **A. Diagnostic du signal de fin de chargement (D-109), sans rien changer à la lecture** (`src/adapter-page.js`).
+  Chaque lecture d'une vue porte un petit relevé `diag` dans le détail de l'étape `capture-read` (donc dans
+  `lastDetail` du journal exporté) : âge de l'adaptateur dans la page (`ageS`) et de la page ESV depuis sa navigation
+  (`navS`, remis à zéro par un F5) ; images vues (`img`) ; `numNodesLoading` à la fin et maximum (`nl`) ; paires
+  d'images comparées et, parmi elles, celles avec chargement en cours, nœuds changés, vue changée (`paires`, `pc`,
+  `nc`, `vc`) ; au repli 800 ms, la condition qui manquait (`m` : `images`, `chargements`, `noeuds`, `vue`, `aucune` ;
+  `hors-signal` pour une lecture qui n'attend pas le signal) ; nœuds visibles, points visibles et en cache de Potree,
+  mémoire JS (Chrome). Coût : quelques comparaisons de nombres par image et un relevé de compteurs par lecture, aucune
+  attente ni boucle ajoutée ; environ 150 à 200 octets par lecture, 300 à 400 par cut. Même règle, même temps simulé,
+  mêmes vues que la 4.9.0 sur le banc (signal, chargement pendu, compteur alterné, vue mobile, référence).
+- **Nouvel outil `tools/signal-age.cjs`** : part des vues lues au signal par page ESV et par tranche de 5 min d'âge de
+  page, condition manquante dominante au repli, repli avec chargement encore en cours. Âge lu dans `diag.navS` (4.9.5.1)
+  ou, pour les anciens exports, depuis la première action d'Ariane sur la page (borne basse). Sur la test 17 (partie
+  27) : page 1 à 84 % au signal de 0 à 5 min puis 0 % ; page 2 (après F5) à 100 % jusqu'à 10 min.
+- **B. D3 : écriture de validation refusée par ESV** (`background.js`, réglages `lot.ecritureRefusee` et
+  `lot.ecritureRefuseeRelanceMs`). Les validations envoyées par le lot sont notées ; chaque écriture observée par
+  l'observateur passif est rapprochée d'une ligne (`rowIndex` = cut, hypothèse de banc ; sinon `railPairId` déjà vu ;
+  sinon la dernière validation dont la fenêtre contient l'écriture). Écriture non 2xx (ou statut 0) d'un cut validé,
+  sans écriture 2xx de la même ligne dans les 2 s : événement `ecriture-refusee` (cut, statut, heure) et pause du lot
+  comme le bouton Pause (prochain point sûr du moteur), avis « ESV a refusé d’enregistrer la validation du cut N
+  (erreur serveur). Vérifie ce cut dans ESV, puis Reprendre. ». Aucune attente ajoutée, rien renvoyé à ESV ; sans
+  observation : comportement de la 4.9.0. Une écriture dont le corps ne porte pas `ExtractionStatus` (« vu » du cut
+  suivant) n'est jamais prise pour un refus.
+- Version 4.9.5.1 (manifeste avec `version_name`, core, repli du service worker, pont, panneau) ; essai de version
+  `version-4951` (remplace `version-490`) ; essais `t951-diag-signal`, `t951-signal-age`, `t951-d3-ecriture-refusee`,
+  `t951-d3-sans-pause`, `consigne-4951` ; captures du panneau `design/ux-2026-10/retenue/captures-t951.cjs`.
+
+## 4.9.0.20 — test 20 (15/10)
+
+Manifeste `4.9.0.20`, « 4.9.0 test 20 », paquet `ariane-4.9.0-test.20.zip` ; base : test 19 (`06cd533`). Trois correctifs trouvés dans l'export Écho de la
+partie 24 sous la test 19 (124 visites, 103 validations, un F5 réel, une validation à la touche Entrée). `src/engine.js` inchangé. Retour arrière : test 19.
+
+- **Fraîcheur de la référence humaine** (`src/native-session.js`, `settings.echo.freshnessSkewMs` = 50 ms) : un état lu jusqu'à 50 ms APRÈS la touche de validation
+  reste une référence fraîche (source `state-read-within-skew-after-input`). Mesure : 2 validations sur 103 (cuts 1925 et 1960) étaient à −6 ms et écartées
+  du rejeu à tort ; la validation ne peut pas avoir bougé un rail en 6 ms. Au-delà de 50 ms, la référence reste « horaire incertaine ».
+- **CONTENU.txt d'un vidage en cours** (`panel.js`) : « depuis le … (session en cours) » au lieu de « au en cours » ; les parties relues sont celles des visites
+  où l'opérateur a décidé quelque chose (à défaut, au-dessus de 0) : le chargement d'ESV après un F5 passe par un « cut 0 / partie 0 » et un libellé illisible,
+  qui ajoutaient « partie 0 » à la liste.
+- Constats de l'export, sans changement de code : le F5 est repris tout seul (visite close `page-reloaded`, nouvelle période 275 ms plus tard) ; **Entrée valide
+  dans ESV** (écriture « valid » 0,58 s après) ; 103 validations = 103 visites confirmées ; 0 nuage manquant sur les 3 zips fusionnés.
+- Essais : `tests/echo-4918.test.cjs` (20 essais), `tests/version-test20.test.cjs`.
+
+## 4.9.0.19 — test 19 (15/10)
+
+Manifeste `4.9.0.19`, « 4.9.0 test 19 », paquet `ariane-4.9.0-test.19.zip` ; base : test 18 (`7b17083`). Un correctif, trouvé en relisant l'export Écho de la
+partie 24 (test 18, 54 visites, 3 minutes). `src/engine.js` inchangé. Consigne : `consignes/seance-terrain-test-19-2026-10-15.md` ; retour arrière : test 18.
+
+- **Écritures d'ESV rattachées au bon cut** (`src/native-session.js`, `noteServerWrite`). ESV écrit deux choses : « vu par l'opérateur » (à l'arrivée sur un cut)
+  et la **validation** (`ExtractionStatus` valid + `TreatedByOperator`, avec les bords en repère monde) 0,5 à 0,7 s après le geste, souvent après le changement de cut.
+  La test 18 rattachait toute écriture 2xx par l'heure : 37 visites « confirmées » pour 32 validations, une validation comptée sur le cut suivant.
+  Maintenant : rattachement par numéro de ligne (`rowIndex` = numéro du cut : 36 lignes sur 36 sur la partie 24) à la dernière visite de ce cut dont la fenêtre
+  contient l'écriture, sinon par l'heure (`joinMethod`) ; chaque écriture porte son genre (`kind` : validation, seen, other) ; **seule une validation confirme**
+  (`serverConfirmationStatus:'observed-validation-write-204'`). Rejeu sur l'export réel : 32 visites validées, 32 confirmées, 0 confirmation sur un cut non validé,
+  0 écriture rattachée à un autre cut que sa ligne.
+- CONTENU.txt d'un export Écho : la phrase sur la fusion des segments n'apparaît que s'il y a plusieurs segments.
+- Essai ajouté (`tests/echo-4918.test.cjs`, 18 essais) ; `tests/version-test19.test.cjs`.
+
+## 4.9.0.18 — test 18 (15/10)
+
+Manifeste `4.9.0.18`, « 4.9.0 test 18 », paquet `ariane-4.9.0-test.18.zip` ; base : test 17 (`9a329b6`). Corrections de l'audit du mode
+Écho (`fiches/AUDIT_ECHO_5.0.md`, étapes 1 à 4 de la 4.9.5). **Rien ne change pour Orbite** : `src/engine.js`, `src/geometry.js` et la décision
+de pose sont inchangés ; seul l'export du journal et du bilan d'Orbite perd les données d'Écho (KI-068). Consigne :
+`consignes/seance-terrain-test-18-2026-10-15.md` ; retour arrière : test 17.
+
+- **Écho reconnaît toutes les validations** (AM-01, `src/native-page.js`) : Maj+Espace, **Ctrl+Entrée** (valider sans passer au suivant) et
+  **Entrée**, en plus du clic sur le bouton d'ESV ; la touche est consignée (`decisionKey`). Une touche maintenue (`repeat`) n'est plus une
+  seconde intention (AM-02). Réglage `settings.echo.validateKeys`.
+- **Plusieurs validations sans autre intention = une seule décision, la dernière** (AM-02, `src/native-session.js`) : `humanFinalReference`
+  est la dernière validation, toutes sont gardées dans `humanFinalReferences[]`, l'étiquette n'est plus `AMBIGUOUS_MULTIPLE_INTENTS`
+  (`intentCollapse`). VALIDATE puis SKIP reste ambigu.
+- **Pose de départ = dernier état observé avant le premier geste** (AM-03) : `startPose` ; un recalage des rails par ESV au chargement, sans
+  geste, n'est plus compté comme une correction. `beforeEstablished` (premier état vu) reste consigné, et `labelBasis.legacyLabel` dit
+  l'étiquette de l'ancienne règle. Les poses de chaque transition de rails sont gardées (`railPoseHistory`), les gestes résumés par touche
+  (`gestureSummary`, jamais tronqué).
+- **Seuil de déplacement : 1 mm** (AM-13) : `humanDelta` par rail (mm, distance et repère profil) ; au-dessous, « non déplacé » ; la
+  comparaison exacte reste (`identical`). Réglage `settings.echo.movementThresholdM`.
+- **Page ESV rechargée (F5) ou onglet fermé pendant Écho** (AM-05, `background.js`) : la session passe en pause « page perdue », la visite en
+  cours est close telle quelle, un **bandeau rouge** s'affiche dans ESV (panneau ouvert ou non), puis **Écho reprend tout seul** quand la page
+  est chargée (nouvelle période, aucune commande à ESV ; réglage `settings.echo.repriseAutomatique`). Onglet fermé : Connecter puis Reprendre.
+- **Redémarrage du service worker guéri** (AM-07) : si la page observe toujours, la période « interrompue » redevient active et la visite
+  close par le redémarrage est rouverte ; plus de fausse interruption pendant une pause de l'opérateur.
+- **Relation des visites par (partie, cut)** (AM-08, `K.cutKey`) : une revisite après F5 ou depuis une autre session est reconnue.
+- **Écriture de validation d'ESV jointe à la visite** (AM-14, AM-18) : pendant Écho, les observations ESV (`esv-observation`) portent
+  `nativeSessionId`, sortent dans l'export d'Écho, et une écriture 2xx confirme la visite (`serverWrites`, `serverConfirmed`,
+  `serverConfirmationStatus:'observed-write-200'`) ; une validation sans navigation (dernier cut, validation en place) reste comparable.
+- **Écho refusé si le libellé du cut n'est pas lisible** (AM-23) ; plusieurs onglets ESV : dit dans le message (AM-06).
+- **Une session finie, jamais téléchargée en entier, n'est pas remplacée** (AM-19) : « Démarrer une nouvelle session » le dit ; l'export
+  final confirmé est acquitté (`exportState.finalExportAt`).
+- **Export Écho en volumes zip, comme Orbite** (parité, `panel.js`) : « Terminer et télécharger », « Télécharger à nouveau la session » et le
+  vidage automatique écrivent des volumes autonomes de 17 Mo au plus (`ariane-echo-partieN-<date>-volumeNN-surNN.zip`), chacun avec un
+  `CONTENU.txt` en heure de Paris (session, visites, parties, période, départs des parties relues, liste des fichiers, crc32). Les nuages ne
+  sont purgés que si tous les volumes sont confirmés. La fiche de départ notée pendant Écho porte la partie.
+- **KI-068 corrigé** : le journal et le bilan d'Orbite (panneau et service worker) ne portent plus les visites ni les événements d'Écho et de
+  Correction ; `exportScope` le dit avec le compte écarté.
+- **Outils** : `tools/lire-volumes.cjs` (lecture des volumes zip sans dépendance) ; `tools/merge-segments.cjs` et
+  `tools/acceptance-report.cjs` (donc `analyse-locale.cjs`) lisent un dossier de volumes zip comme des JSON posés.
+- Essais : `tests/echo-4918.test.cjs` (17 essais : page, session, service worker, panneau, zip) ; harnais `tests/helpers/background-harness.cjs`
+  (événements d'onglet) ; `tests/d092-fiche-depart.test.cjs` ajusté au CONTENU commun.
+
+## 4.9.0 — version candidate stable (15/10)
+
+**Code de la test 17** (`9a329b6`, 4.9.0.17, essayée sur le terrain le 15/10, partie 27), plus deux corrections de la
+relecture finale (D-110, ci-dessous) ; la version et les documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
+« Ariane 4.9.0 · ouvrir » sur le bouton blanc d'ESV, paquet `ariane-v4.9.0.zip`. `src/engine.js` identique à la test 17.
+Notes pour l'opérateur : `NOTES_4.9.0.md` ; porte de version : `fiches/PORTE_4.9.0.md`. Fusion, étiquette et publication :
+décision de Mic. Retour arrière : la 4.8.6 (`v4.8.6`).
+
+Corrections de la relecture finale (D-110) :
+
+- **D1** : le vidage du cache n'est plus refusé sans fin après « Clôturer le résultat incertain », une fin de partie après un différé ou un SKIP explicite du dernier cut (la mesure V1 du lot y est désormais close).
+- **D2** : la fiche de départ d'une partie ne peut plus être écrasée par la réponse d'ESV à « y a-t-il des invalides ? » (0 / 1 / 1) ; écritures des fiches mises en file.
+- Limite connue, renvoyée à la 4.9.5 : **D3**, une écriture refusée par ESV (HTTP 500) est quand même comptée comme acceptée (identique en 4.8.6, jamais vue sur 924 écritures).
+
+Ce que la 4.9 apporte depuis la 4.8.6, en bref :
+
+- **Vitesse (V3, « mode rapide »)** : sélection du rail à l'image, lecture au signal de fin de chargement d'ESV (repli : la
+  règle des 800 ms), pose sans recentrage, lecture des points sans attendre une image (D-087, D-088). Neuf cuts sur dix en
+  rapide ; un sur dix, tiré d'après son numéro, reste en référence pour surveiller la qualité (D-091). Mesuré sur le terrain,
+  même lot, rapide contre référence : −54 % (test 15), −71 % (test 16, partie 26), −48 % (test 16, partie 25), −57 % sur la
+  séance de la test 17 et −71 % sur une page ESV fraîche ; part posée (C1) au niveau de la référence ; 0 capture perdue.
+- **Sauvegarde à taille constante (V5)** : Ariane ne ralentit plus au fil des lots quand le cache n'est pas vidé (D-089) ;
+  KI-070 corrigé (D-096).
+- **Mesure par phase (V1)** et **observateur passif** d'ESV (écritures de validation, liste des coupes, chargements), en
+  lecture seule, sans commande ajoutée (D-073, D-077, D-079). Chrome ou Edge 111 au moins.
+- **Écartement** : limites 1420 à 1470 mm (D-084, D-085).
+- **B3, transitions du lot** : neuf transitions nommées (démarrage, pause, reprise, arrêt, rechargement, cut suivant, différé,
+  fin de lot, erreur) ; « Reprendre » après la fin répond « Lot déjà terminé » ; « Reprendre » après un arrêt en plein cut refuse
+  si les rails ont bougé ; les transitions partent dans le journal exporté (D-102, D-104, D-106).
+- **Exports** : un clic sur « Tout télécharger pour l'analyse » ; une seule copie des nuages ; nuages allégés des sondes sans
+  information, points exacts (environ un tiers de moins sur les nuages, D-091) ; **export découpé tout seul** en volumes zip
+  autonomes de 17 Mo au plus (D-106) ; vidage du cache seulement si tous les volumes sont confirmés.
+- **Départs des parties** : validés, invalides et total relevés au départ de chaque partie, gardés hors du cache, historique
+  par partie, recopiés dans les exports (D-093, D-106).
+- **Panneau** (variante « Accueil » choisie par Mic) : grande tuile du lot (pourcentage des invalides traités sur un lot de toute
+  la partie, position sinon), cartes des départs, thèmes clair et sombre, contrastes, sélecteur d'onglet lisible, résumé de la
+  partie (U1), essais du vrai panneau (U2), raccourcis `D` et `Maj + Espace` d'ESV ni doublés ni détournés (U3) (D-078,
+  D-093, D-103, D-105, D-107).
+- **Heure de Paris** partout à l'écran et dans `CONTENU.txt` ; les JSON restent en UTC (test 17).
+- **B1 (voisins de la liste d'ESV) en ombre** : calculé et consigné, sans effet sur la pose (D-096, D-102). **Retour à une
+  coupe** : livré en lecture seule, sans bouton, jamais appelé (D-098).
+
+## 4.9.0.17 — test 17 (15/10)
+
+Manifeste `4.9.0.17`, « 4.9.0 test 17 », paquet `ariane-4.9.0-test.17.zip` ; base : test 16 (`6c61bdb`) + bornes alignées (`0147f29`).
+Retours de Mic sur la test 16. `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+`consignes/seance-terrain-test-17-2026-10-15.md` ; retour arrière : test 16.
+
+- **Tuile « Lot » : le travail, pas la position** (`panel.js`). Lot sur toute la partie (premier cut 0 ou 1, jusqu'à la fin de
+  partie) dont la fiche de départ est connue (D-092, même `batchId`, la première du lot = invalides au démarrage) : % = cuts
+  traités par le lot (posés + différés, `b.processed`) ÷ invalides de la fiche, et la tuile dit « N / M invalides » au lieu de
+  « N cuts ». Autres lots (plage fixe, départ au milieu) ou fiche absente : la position, comme avant. Dans les deux cas : jamais
+  de recul dans un lot (le plus haut atteint, par mesure), plafond 100 %, une décimale sous 10 % arrondie vers le bas (« 7,5 »),
+  100 % à la fin du lot. Le vert suit la valeur exacte (2 décimales) ; sous 1,5 % le bord lumineux est caché (il débordait du
+  coin arrondi gauche) ; le séparateur ne se tasse plus ; panneau étroit : les pastilles d'étape cèdent la place au compteur.
+- **Heure de Paris partout dans le panneau** (`panel.js`, `src/export-cache.js`) : Europe/Paris par `Intl.DateTimeFormat`
+  (heure d'été et d'hiver) pour l'activité, les lots de la partie, les départs (carte, historique, détail) ; plus de « UTC »
+  à l'écran. CONTENU.txt : heure de l'export, période et départs en heure de Paris, dit « heure de Paris ». Les JSON exportés
+  gardent leurs horodatages ISO en UTC ; le nom des fichiers d'export aussi.
+- Essais : `tests/t17-panneau.test.cjs` (travail 39 / 514 → « 7,5 », plage fixe et départ au milieu → position, pas de
+  fiche → position, fiche tardive, recul, plafond, fin ; heure de Paris en juillet, novembre et au passage du 25/10/2026),
+  `tests/t16-export-volumes.test.cjs` (CONTENU.txt en heure de Paris), `tests/consigne-test17.test.cjs`, `tests/version-test17.test.cjs`.
+- Attendus modifiés : `d092-fiche-depart` et `ux-49-orbite` (heures des départs : Paris au lieu d'UTC) ; `ux-49-tuile-lot`
+  (largeur exacte « 81.98% » / « 83.39% » et « 81 » arrondi vers le bas, au lieu de « 82% » / « 83% » arrondis) ;
+  `version-test16` → `version-test17`, `cohabitation-485`.
+
+## 4.9.0.16 — test 16 (15/10)
+
+Manifeste `4.9.0.16`, « 4.9.0 test 16 », paquet `ariane-4.9.0-test.16.zip` ; base : test 15 (`b9652df`). Retours de Mic sur la
+test 15 (partie 24). `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+`consignes/seance-terrain-test-16-2026-10-15.md` ; retour arrière : test 15.
+
+- **Export découpé tout seul** (`panel.js`, `src/zip-writer.js`, réglage `export.zipMaxBytes`) : « Tout télécharger » écrit des
+  volumes zip autonomes de 17 Mo au plus (taille compressée réelle, CONTENU.txt compris ; sous 18 Mo quelle que soit l'unité),
+  nommés `…-volumeNN-surNN.zip` (un seul zip garde son nom d'avant). Chaque fichier JSON est compressé une fois
+  (`BananeZip.preparer`), puis rangé dans le volume où il tient. Un JSON n'est jamais coupé : plus gros que la limite, il fait
+  un volume à lui et le statut le dit. CONTENU.txt dit « Volume n sur N » et porte les départs. Pendant « Tout télécharger »,
+  un segment JSON vise au plus deux volumes (34 Mo) avant compression. Vidage automatique : seulement si TOUS les volumes
+  sont confirmés (inchangé). Essais : `tests/t16-export-volumes.test.cjs`.
+- **Départs des parties : historique** : la partie en cours en grand, puis « Parties précédentes » (plus récente d'abord :
+  heure du dernier départ, validés, invalides, total, nombre de départs), chacune dépliable sur ses départs ; la partie en
+  cours aussi (« Voir les N départs »). Mêmes fiches (`banane3FichesDepart`, 200 au plus, hors du cache des exports : le vidage
+  ne les touche pas) ; rien ne change dans ce qui est exporté.
+- **Sélecteur « Onglet ESV »** : options lisibles en sombre comme en clair (fond opaque du thème) ; deux onglets au même titre se
+  distinguent (rang, fenêtre, premier plan, pas prêt, utilisé par Ariane) ; l'invite ne se choisit pas ; l'onglet qu'Ariane
+  utilise, ou le seul onglet prêt, est choisi d'avance ; la connexion reste au clic sur « Reconnecter ESV » (onglet unique :
+  comme avant). `list-tabs` rend aussi fenêtre, rang, onglet actif, état prêt (aucune adresse).
+- **Tuile « Lot »** : le pourcentage défile avec le vert (requestAnimationFrame, s'arrête une fois arrivé) ; bord lumineux avec
+  une lueur lente pendant le lot ; onde au bord à chaque cut terminé ; pause calme (terne, immobile) ; fin du lot : un reflet
+  traverse une fois la tuile. Transformations et opacité seulement, figé avec « réduire les animations ». « 1 cut », jamais
+  « 1 cuts » (tuile, ligne d'état, couverture).
+- **B3** (`background.js`) : (a) après une fin de partie (dernier cut validé sur place ou différé sans envoi, fin retenue après
+  un différé), « Reprendre » répond « Lot déjà terminé » sans rien rejouer ; (b) « Reprendre » après un arrêt ou une pause
+  survenus entre la capture et la pose compare les rails d'ESV à ceux de la capture (comme « Réessayer ») et refuse s'ils ont
+  bougé : la proposition calculée avant l'arrêt n'est plus appliquée sur une autre pose ; (c) les 64 dernières transitions du lot
+  (nom, lot, état, heure) partent dans le journal exporté (`transitionsLot`). Essais : `tests/t16-b3-reprise.test.cjs`.
+
 ## 4.8.6 — stable (30/09, D-065)
 
 **Même code que le test 2** (`69b31c9`) ; seuls la version et le nom changent (manifeste `4.8.6`, nom « Ariane »,

@@ -1,0 +1,353 @@
+{
+  "format": "ariane-reglages-figes-v1",
+  "date": "2026-10-16",
+  "regle": "Ces réglages sont figés avant de recevoir la partie suivante. Toute mesure faite sur une partie suivante cite ce fichier et sa date. Un réglage changé après coup n'est plus celui-ci : il repart de zéro, avec une nouvelle date et des parties neuves (voir datasets/manifeste-parties.json). Les projets sont désignés par leur rang : projet 1 et projet 2.",
+  "reglages": {
+    "voiePredite": {
+      "libelle": "Règle prudente de voie prédite (recentrage sur la voie)",
+      "decision": "D-147",
+      "fiche": "fiches/VOIE_PREDITE.md",
+      "etat": "hors ligne ; à passer d'abord en ombre dans Orbite, sur une partie neuve",
+      "fige": "2026-10-16",
+      "variante": "regle-wc-e10-p10",
+      "valeurs": {
+        "etages": [
+          "window"
+        ],
+        "confMin": 55,
+        "chaineMax": 10,
+        "ecartVoisinMm": 10,
+        "fenetreMm": 30,
+        "memoire": "propre"
+      },
+      "ombre": {
+        "reglage": "src/settings.js voiePrediteOmbre",
+        "etat": "en ombre dans Orbite (voie-predite-ombre), consignée seulement",
+        "vue": {
+          "dezoomMax": 1.5,
+          "glissementPxMax": 250
+        }
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ]
+    },
+    "memoireSerieB": {
+      "libelle": "Mémoire de série G1 (b) : voie prolongée depuis les poses de l'opérateur, moteur recentré",
+      "decision": "D-148",
+      "fiche": "fiches/G1_MEMOIRE_DIFFERES.md",
+      "etat": "hors ligne ; porte non démontrée (3 fausses sur 56 poses, borne haute 14,6 %)",
+      "fige": "2026-10-16",
+      "valeurs": {
+        "base": "M",
+        "derniersCuts": 3,
+        "porteDispersionMm": [
+          6,
+          10
+        ],
+        "coupPrecedentCompris": 0,
+        "memoireMin": 1,
+        "mode": "moteur",
+        "recentrageMm": 15,
+        "minDessus": 5,
+        "minFlanc": 3,
+        "propagation": true,
+        "seuilJusteMm": 5,
+        "seuilFauxMm": 10,
+        "seuilMauvaiseVoieMm": 50,
+        "porteFaux": 0.05
+      },
+      "ombre": {
+        "reglage": "src/settings.js memoireDifferesOmbre",
+        "etat": "en ombre dans l'Écho (memoire-differes-ombre), consignée seulement ; mémoire = corrections déjà validées de l'opérateur",
+        "porteDispersionMm": 10,
+        "mmParCut": 3,
+        "ecartSerieMax": 10,
+        "etages": [
+          "first-pass",
+          "window",
+          "choice"
+        ]
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ]
+    },
+    "ombreVerticale": {
+      "libelle": "Correction verticale en ombre sur les rails à convention refusée (P8)",
+      "decision": "D-140",
+      "fiche": "fiches/G0_APPRENTISSAGE_V1.md",
+      "etat": "consignée seulement, jamais appliquée",
+      "fige": "2026-10-16",
+      "valeurs": {
+        "mm": 3.6
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        }
+      ]
+    },
+    "reglesMetier": {
+      "libelle": "Règles métier de l'opérateur expert : PN et marges, grappe de différés, validation en place dans une zone, verts à contrôler, zone d'ADV par rail de plus (figée le 2026-10-17, fiches/DETECTION_ADV.md)",
+      "decision": "à écrire (chantier claude/50-regles-metier)",
+      "fiche": "fiches/REGLES_METIER.md",
+      "etat": "en ombre dans Orbite (regles-metier-ombre), consignée seulement ; activation coupée, règle par règle",
+      "fige": "2026-10-17",
+      "valeurs": {
+        "surface": {
+          "sidePointsMin": 200,
+          "quadPointsMin": 30,
+          "quadNombreMin": 3,
+          "quadMinPct": 50,
+          "flushMinPct": 50
+        },
+        "pn": {
+          "confirmation": 2,
+          "confirmationEcartCuts": 3,
+          "consecutifs": true,
+          "margeAvant": 4,
+          "margeApres": 6
+        },
+        "grappe": {
+          "fenetreCuts": 6,
+          "differesMin": 2,
+          "procheCuts": 2
+        },
+        "enPlace": {
+          "mm": 1
+        },
+        "ecartement": {
+          "seuilMm": 15,
+          "lignesMin": 20
+        },
+        "verts": {
+          "trouCuts": 5,
+          "grappeMin": 3,
+          "margeGrappe": 3
+        },
+        "adv": {
+          "version": "adv-rail-de-plus-v1",
+          "pasM": 0.01,
+          "lateralM": 0.4,
+          "longM": 0.5,
+          "trancheM": 0.1,
+          "zMinM": -0.4,
+          "zMaxM": 0.2,
+          "pointsPas": 3,
+          "hautM": -0.03,
+          "continuite": 0.5,
+          "basM": -0.08,
+          "creuxM": -0.15,
+          "tete": [
+            -0.09,
+            0.03
+          ],
+          "largeurMinPas": 3,
+          "largeurMaxPas": 16,
+          "contreRail": {
+            "debutMaxM": 0.065,
+            "finMaxM": 0.125
+          },
+          "platMax": 0.5,
+          "sautPas": 3,
+          "chutePas": 5,
+          "confirmation": 2,
+          "confirmationEcartCuts": 3,
+          "trouCuts": 10,
+          "margeAvant": 30,
+          "margeApres": 30
+        }
+      },
+      "ombre": {
+        "reglage": "src/settings.js reglesMetier",
+        "etat": "ombre: true, actif: false, toutes les règles à false"
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            12,
+            13,
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ],
+      "note": "Toutes les parties disponibles ont servi : aucune partie réservée n'a jugé ces seuils. Le jugement se fera en ombre sur les parties suivantes. Ajout du 2026-10-17 (fiches/PN_ROBUSTE.md, H6) : pn.consecutifs, deux cœurs consécutifs parmi les cuts vus ; mesuré sur les mêmes parties d'apprentissage (captures du lot seul, puis union lot + Écho), sans partie réservée."
+    },
+    "fauxVertOmbre": {
+      "libelle": "Faux vert en ombre : règle « hauteur ambiguë » (différer au lieu de valider)",
+      "decision": "aucune encore (chantier « faux verts », 5.0) ; activation à décider avec l’opérateur",
+      "fiche": "fiches/FAUX_VERTS.md",
+      "etat": "consignée seulement (src/faux-vert-ombre.js, clé fauxVertOmbre de la décision sur le lot) ; chemin d'activation coupé (differer:false)",
+      "fige": "2026-10-16",
+      "valeurs": {
+        "dzMinMm": 11,
+        "epaisseurMinMm": 14,
+        "memeRail": true,
+        "differer": false
+      },
+      "ombre": {
+        "reglage": "src/settings.js fauxVertOmbre",
+        "module": "src/faux-vert-ombre.js",
+        "version": "faux-vert-ombre-v1"
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ]
+    },
+    "hauteurApprise": {
+      "libelle": "Hauteur apprise en ombre : correction verticale part × (a + b × épaisseur du dessus), par groupe de calage, bornée",
+      "decision": "aucune encore (chantier « hauteur apprise », 5.0) ; activation à décider avec l’opérateur, après une mesure en ombre sur des parties neuves",
+      "fiche": "fiches/HAUTEUR_APPRISE.md",
+      "etat": "consignée seulement (src/hauteur-apprise.js, clé hauteurApprise de la décision sur le lot : pose réelle et pose corrigée) ; chemin d'activation coupé (appliquer:false)",
+      "fige": "2026-10-17",
+      "valeurs": {
+        "forme": "lineaire-epaisseur",
+        "plafondMm": 5,
+        "pointsDessusMin": 15,
+        "etages": [
+          "first-pass",
+          "window",
+          "choice"
+        ],
+        "applique": {
+          "a": 3.28,
+          "b": -0.5,
+          "part": 0.5
+        },
+        "refuse": {
+          "a": 17.89,
+          "b": -1.14,
+          "part": 1
+        },
+        "appliquer": false
+      },
+      "ombre": {
+        "reglage": "src/settings.js hauteurApprise",
+        "module": "src/hauteur-apprise.js",
+        "version": "hauteur-apprise-v1",
+        "outil": "tools/hauteur-apprise.cjs etudier (pénalité 10 par nouveau faux vert)"
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ],
+      "note": "Coefficients appris sur les quatre parties, enveloppe (part 0,5 sur les rails calés, 1 sur les rails refusés, plafond 5 mm) choisie à l'identique dans les quatre plis de la validation croisée. Aucune partie réservée ne l'a jugée."
+    },
+    "vertsAControler": {
+      "libelle": "Verts à contrôler : liste de fin de lot des verts à relire en priorité (lecture seule)",
+      "decision": "à écrire (chantier des verts à contrôler)",
+      "fiche": "fiches/VERTS_A_CONTROLER.md",
+      "etat": "actif : liste consultée par l'opérateur, aucune action dans ESV ; la décision et la pose ne la lisent pas",
+      "fige": "2026-10-17",
+      "valeurs": {
+        "poids": {
+          "ecartement": 0.5,
+          "denivele": 0.5,
+          "hauteur": 1,
+          "poses": 0.5,
+          "voie": 0,
+          "rouges": 1,
+          "differe": 0.5,
+          "pn": 0,
+          "adv": 0
+        },
+        "zonesMortes": {
+          "ecartementMm": 2,
+          "deniveleMm": 2,
+          "hauteurMm": 2,
+          "posesMm": 2,
+          "voieMm": 2
+        },
+        "fenetreCuts": 5,
+        "fenetreIsoleCuts": 5,
+        "voisinsVoie": 5,
+        "voisinsDenivele": 10,
+        "seuil": 1,
+        "tempsParVertS": 3.7
+      },
+      "parties": [
+        {
+          "projet": 1,
+          "parties": [
+            12,
+            13,
+            17,
+            24,
+            29
+          ]
+        },
+        {
+          "projet": 2,
+          "parties": [
+            1
+          ]
+        }
+      ],
+      "note": "Poids et zone morte appris sur les quatre lots (1:17, 1:24, 1:29, 2:1), seuil choisi après validation croisée du seuil seul (0,86 à 1,06 selon la partie laissée de côté). Parties 12 et 13 : contrôle sans lot. Aucune partie réservée n'a jugé ces valeurs."
+    }
+  }
+}

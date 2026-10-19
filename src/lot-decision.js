@@ -1,8 +1,8 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'),require('./gauge.js'),
-    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'));
-  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing);
-})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing){
+    require('./geometry-candidate-v1.js'),require('./placement-convention.js'),require('./continuity-observer.js'),require('./level-crossing.js'),require('./faux-vert-ombre.js'),require('./hauteur-apprise.js'));
+  else root.BananeLotDecision=factory(root.BananeCaptureCore,root.BananeGauge4,root.BananeGeometry3,root.BananePlacementConvention,root.BananeContinuityObserver,root.BananeLevelCrossing,root.BananeFauxVertOmbre,root.BananeHauteurApprise);
+})(typeof globalThis!=='undefined'?globalThis:this,function(C,Gauge,Candidate,Convention,O,Crossing,FauxVert,Hauteur){
  'use strict';
  /* DÉCIDER SUR LE LOT — cahier 4.8, amendement n°9 (D-039).
   *
@@ -155,11 +155,16 @@
    return Math.max(...SIDES.map(side=>{const M=rails[side].sceneRelativeToProfileLocal,p=C.point(M,a[side]),q=C.point(M,b[side]);return Math.abs((p[1]-q[1])*1000);}));
  }
  /* Lecture du passage à niveau sur les points visibles de la capture. */
- function crossingOf(capture,cfg){
+ /* 4.9.5.3 (S6) : la lecture complète (`flushPct` compris) est gardée pour que la décision consigne la part « au ras » À CHAQUE CUT, pas
+  * seulement au-dessus de 50 % ; `crossingOf` rend exactement ce qu'il rendait (la lecture seulement si elle est un passage à niveau). */
+ function crossingRead(capture,cfg){
    if(!cfg.crossing||!Crossing)return null;
    const vis=capture.visibleByClipBoxes,points=Array.isArray(vis)?capture.pointsSceneRelative.filter((_,i)=>vis[i]===true):capture.pointsSceneRelative;
-   const read=Crossing.read({rails:capture.rails,pointsSceneRelative:points});
-   return read.crossing?read:null;
+   return Crossing.read({rails:capture.rails,pointsSceneRelative:points});
+ }
+ function crossingOf(capture,cfg){
+   const read=crossingRead(capture,cfg);
+   return read&&read.crossing?read:null;
  }
  /* Minima d'un rail, qualifiés par les points sous le gabarit posé à chacun. */
  function candidatesOf(capture,side,science,cfg=DEFAULTS){
@@ -255,7 +260,7 @@
    }
    return best.length>=cfg.validatedMinInliers?best.map(k=>cands[k]):[];
  }
- function decideCut({capture,science,anchors,validated,Shadow,options={}}){
+ function decideCutBase({capture,science,anchors,validated,Shadow,options={}}){
    /* La décision consigne ses propres règles (relecture 4.7.12, constat M) : le
     * rejeu les lit dans le lot au lieu de les déduire de la version de l'export. */
    const cfg={...DEFAULTS,...options},identity=capture.identity,rails=capture.rails,base={version:cfg.version,pairGuard:!!cfg.pairGuard,chainMm:cfg.chainMm,gaugeGuardMm:cfg.gaugeGuardMm,lowGaugeGuardMm:cfg.lowGaugeGuardMm??null,minTop:cfg.minTop,anchorRule:cfg.anchorRule,
@@ -263,14 +268,19 @@
    /* §14 I amendé (D-054) : voisins validés cohérents, en tête des appuis. */
    if(validated?.length){const kept=consistentValidated(identity,rails,validated,cfg);
      base.validatedAnchors=kept.map(a=>a.identity.cut);
-     if(kept.length)anchors=[...kept.map(a=>({identity:a.identity,positions:a.positions,stage:'validated'})),...(anchors||[])];}
+     /* B1 (D-095) : un cut à la fois validé (ligne de la liste d'ESV, tenue à jour par l'écriture) et appui posé
+      * du lot ne compte qu'une fois — sa ligne, gardée par la cohérence. */
+     const vus=new Set(kept.map(a=>a.identity.cut));
+     if(kept.length)anchors=[...kept.map(a=>({identity:a.identity,positions:a.positions,stage:'validated'})),...(anchors||[]).filter(a=>!(sameTrack(a.identity,identity)&&vus.has(a.identity.cut)))];}
    const applicable=SIDES.every(side=>science?.rails?.[side]?.ok&&science.rails[side].next.status==='candidate')&&!science?.summary?.pairGaugeRejected;
    const nb=neighbours(identity,anchors,cfg),gaugeRef=cfg.gaugeGuardMm!=null?gaugeReference(identity,anchors,cfg):null;
    const gaugeSuspect=positions=>gaugeRef!==null&&gaugeJump(gaugeRef,positions)>cfg.gaugeGuardMm;
    if(gaugeRef)base.gaugeReference={mm:r1(gaugeRef.mm),cuts:gaugeRef.cuts};
    /* 4.7.19 : voie encadrée si des appuis posés sont des deux côtés, sinon les
     * plus proches (inchangé) ; passage à niveau lu par son ornière. */
-   const pred=predictionAnchors(identity,anchors,nb,cfg),pn=crossingOf(capture,cfg);
+   const rd=crossingRead(capture,cfg),pred=predictionAnchors(identity,anchors,nb,cfg),pn=rd&&rd.crossing?rd:null;
+   /* 4.9.5.3 (S6) : `flushPct` à chaque cut (null si illisible ou lecteur coupé), consigné seulement ; la décision ne le lit pas. */
+   if(cfg.flushPctChaqueCut!==false&&globalThis.BananeSettings?.releves?.flushPct!==false&&rd)base.flushPct=Number.isFinite(rd.flushPct)?rd.flushPct:null;
    if(pred.framed)base.framedAnchors=pred.cuts;
    if(pn)base.levelCrossing={flushPct:pn.flushPct,read:pn.ok,...(pn.ok?{}:{reason:pn.reason})};
    if(applicable){
@@ -355,6 +365,61 @@
    if(gaugeSuspect(positions))return deferred({...base,stage:'deferred',reason:'gauge-guard',gaugeJumpMm:r1(gaugeJump(gaugeRef,positions)),gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates});
    return {...base,stage:'choice',chosen,gaugeMm:r1(pair.predictedMm),anchorsUsed,candidates,positions,anchor:false};
  }
+ /* 4.9.5.4 (P8, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE. Pour un rail dont le calage de convention est REFUSÉ (`applied:false`, motif
+  * `shift-out-of-domain`, lu dans la science du cut), la décision consigne `ombreVerticale` : à côté de la pose réelle (`reelle`, celle de
+  * `positions`), la pose qu'aurait donnée une correction verticale de `mm` (3,6 par défaut, réglage `ombreVerticaleRefusee`), remontée dans le
+  * repère PROFIL du rail (G0 : correction = pose de Mic − pose d'Ariane, « + » = Mic remonte). Positions en repère scène, arrondies au micromètre.
+  * CONSIGNÉE SEULEMENT : `positions`, `stage`, la garde, l'appui, la commande n'en dépendent jamais (`commandRails` ne lit que des champs nommés), la
+  * décision de base est calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée. Réglage coupé, absent (outils hors ligne),
+  * valeur nulle ou non finie, aucun rail refusé, cut sans pose : aucune clé ajoutée, la décision est celle de la base 5.0 à l'octet près.
+  * Une panne ici ne change jamais la décision.
+  * Nom : P8. « E2 » désigne l'ombre GCV1 de l'Écho (cahier 5.0 § 5), pas cette correction. Les clés de données (`ombreVerticale`, `ombreVerticaleRefusee`)
+  * et la chaîne de version `e2-vertical-refuse-v1` gardent « e2 » par compatibilité avec les exports déjà produits. */
+ const ombreReglage=options=>{const o=options&&options.ombreVerticale!==undefined?options.ombreVerticale:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.ombreVerticaleRefusee:undefined);
+   return o&&o.actif===true&&Number.isFinite(o.mm)&&o.mm!==0?o:null;};
+ const um=v=>Math.round(v*1e6)/1e6;
+ function ombreVerticale(decision,{capture,science,options}){
+   const reglage=ombreReglage(options);if(!reglage||!decision?.positions)return null;
+   const rails={};
+   for(const side of SIDES){
+     const cal=science?.rails?.[side]?.conventionCalibration,rail=capture?.rails?.[side],pose=decision.positions[side];
+     if(!cal||cal.applied!==false||cal.reason!=='shift-out-of-domain'||!rail?.profileLocalToSceneRelative||!Array.isArray(pose))continue;
+     const P=rail.profileLocalToSceneRelative,a=C.point(P,[0,0,0]),b=C.point(P,[0,0,reglage.mm/1000]),haut=b.map((v,i)=>v-a[i]);
+     rails[side]={reelle:pose.map(um),ombre:pose.map((v,i)=>um(v+haut[i])),refus:{reason:cal.reason,dzMm:r1(cal.dzMm),duMm:r1(cal.duMm)}};
+   }
+   return Object.keys(rails).length?{version:'e2-vertical-refuse-v1',mm:reglage.mm,repere:'profil du rail, + = vers le haut',rails}:null;
+ }
+ /* 5.0 (chantier « faux verts ») — FAUX VERT EN OMBRE (`src/faux-vert-ombre.js`, réglage `fauxVertOmbre`). Pour une décision qui pose, la
+  * décision consigne `fauxVertOmbre` : signaux de la science du cut (décalage vertical du calage de convention, épaisseur du dessus à la pose
+  * décidée) et verdict de la règle « hauteur ambiguë » (`valider` ou `differer`). CONSIGNÉE SEULEMENT : comme pour P8, la décision de base est
+  * calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée ; réglage coupé ou absent (outils hors ligne), module absent, cut sans
+  * pose : aucune clé. Une panne ici ne change jamais la décision. Le chemin qui la lirait pour DIFFÉRER est `fauxVertActivation`, coupé. */
+ const fauxVertReglage=options=>{const o=options&&options.fauxVertOmbre!==undefined?options.fauxVertOmbre:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.fauxVertOmbre:undefined);
+   return o&&o.actif===true?o:null;};
+ function fauxVertOmbre(decision,{capture,science,options}){
+   const reglage=fauxVertReglage(options);if(!reglage||!FauxVert||!decision?.positions)return null;
+   return FauxVert.evaluer({capture,science,decision,reglage});
+ }
+ /* 5.0 (chantier « hauteur apprise ») — HAUTEUR APPRISE, EN OMBRE (`src/hauteur-apprise.js`, réglage `hauteurApprise`). Pour une décision qui
+  * pose, la décision consigne `hauteurApprise` : par rail, le groupe du calage de convention (appliqué, refusé), l'épaisseur du dessus à la pose
+  * décidée, la correction verticale apprise (part × (a + b × épaisseur), bornée, ou l'abstention et son motif), la pose réelle (`reelle`, celle
+  * de `positions`) et la pose corrigée (`corrigee`, repère profil du rail, « + » = vers le haut). CONSIGNÉE SEULEMENT, comme P8 : la décision de
+  * base est calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée ; réglage coupé ou absent (outils hors ligne), module
+  * absent, cut sans pose : aucune clé. Une panne ici ne change jamais la décision. Le chemin qui la POSERAIT est `hauteurActivation`, coupé. */
+ const hauteurReglage=options=>{const o=options&&options.hauteurApprise!==undefined?options.hauteurApprise:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.hauteurApprise:undefined);
+   return o&&o.actif===true?o:null;};
+ function hauteurApprise(decision,{capture,science,options}){
+   const reglage=hauteurReglage(options);if(!reglage||!Hauteur||!decision?.positions)return null;
+   return Hauteur.evaluer({capture,science,decision,reglage});
+ }
+ function decideCut(args){
+   const decision=decideCutBase(args);
+   let out=decision;
+   try{const o=ombreVerticale(decision,args);if(o)out={...decision,ombreVerticale:o};}catch{out=decision;}
+   try{const f=fauxVertOmbre(decision,args);if(f)out={...out,fauxVertOmbre:f};}catch{/* consigne seulement */}
+   try{const h=hauteurApprise(decision,args);if(h)out={...out,hauteurApprise:h};}catch{/* consigne seulement */}
+   return out;
+ }
  /* 4.7.10 — LA DÉCISION SUR LE LOT COMMANDE (D-041, D-042). Traduit une
   * décision en rails pour `Engine.apply()`, sans rien décider de plus :
   *   - premier passage : la proposition du moteur, inchangée ;
@@ -433,7 +498,45 @@
    return {action:'defer',reason,rails:Object.fromEntries(SIDES.map(side=>[side,{...runtimeRails[side],status:'unresolved',delta:null,confidence:0,
      reasons:[text],source:'geometry-candidate-v1-abstention',lotDecision:{...note,reason,...(decision?.guardMm!=null?{guardMm:decision.guardMm}:{})}}]))};
  }
- function commandRails({decision,runtimeRails,before,expectedPoses,cameras}){
+ /* CHEMIN D'ACTIVATION DU FAUX VERT EN OMBRE — COUPÉ. Il ne s'ouvre que si le réglage dit `differer:true` (livré à `false`, épinglé par
+  * les essais). Ouvert, il ne fait qu'une chose : un cut dont l'ombre consignée dit « différer » et que la commande allait poser est DIFFÉRÉ
+  * (deux abstentions, comme toute garde du lot). Il ne crée jamais de pose, ne déplace jamais une position, ne touche pas un cut déjà différé ;
+  * fermé, il rend la commande telle quelle (le même objet). */
+ function fauxVertActivation(out,{decision,runtimeRails}){
+   const reglage=typeof globalThis!=='undefined'?globalThis.BananeSettings?.fauxVertOmbre:undefined;
+   if(!reglage||reglage.differer!==true)return out;
+   const o=decision?.fauxVertOmbre;
+   if(!o||o.verdict!=='differer'||!out||!runtimeRails||!SIDES.every(side=>runtimeRails[side]))return out;
+   /* Seulement une commande qui POSE : les positions du lot, ou la paire du moteur avec ses deux rails résolus. */
+   const pose=out.action==='lot'||(out.action==='engine'&&SIDES.every(side=>out.rails?.[side]?.status==='candidate'));
+   if(!pose)return out;
+   return deferRails(runtimeRails,decision,'faux-vert-ombre','décision sur le lot : faux vert probable (hauteur ambiguë sur '+(o.railsSuspects||[]).join(', ')+')');
+ }
+ /* CHEMIN D'ACTIVATION DE LA HAUTEUR APPRISE — COUPÉ. Il ne s'ouvre que si le réglage dit `appliquer:true` (livré à `false`, épinglé par les
+  * essais) ; seul l'opérateur l'ouvrira, après une mesure en ombre sur des parties neuves : IL CHANGE LA POSE. Ouvert, il ne fait qu'une chose :
+  * une commande qui POSE (positions du lot, ou paire du moteur aux deux rails résolus) garde son action, ses rails et leur latéral ; seule la
+  * hauteur de chaque rail (décalage vertical du repère profil de la pose ESV) bouge de la correction consignée (`hauteurApprise`, au plus le
+  * plafond du modèle). La cible corrigée doit être relue dans la vue du rail ; sans caméra, ou hors de la vue, la commande reste telle quelle.
+  * Il ne crée jamais de pose, ne touche pas un cut différé ; fermé, il rend la commande telle quelle (le même objet).
+  * À régler avant de l'ouvrir : l'appui mémorisé du cut garde la pose de la décision (non corrigée), à quelques millimètres en hauteur. */
+ function hauteurActivation(out,{decision,before,expectedPoses,cameras}){
+   const reglage=typeof globalThis!=='undefined'?globalThis.BananeSettings?.hauteurApprise:undefined;
+   if(!reglage||reglage.appliquer!==true)return out;
+   const h=decision?.hauteurApprise;
+   if(!h?.rails||!out||!before||typeof expectedPoses!=='function'||!cameras)return out;
+   const pose=out.action==='lot'||(out.action==='engine'&&SIDES.every(side=>out.rails?.[side]?.status==='candidate'));
+   if(!pose)return out;
+   const mm=Object.fromEntries(SIDES.map(side=>{const v=h.rails[side]?.correctionMm;return [side,typeof v==='number'&&Number.isFinite(v)?v:0];}));
+   if(SIDES.every(side=>mm[side]===0))return out;
+   const rails={};
+   for(const side of SIDES){const r=out.rails[side];if(!Array.isArray(r?.delta)||r.delta.length!==3||!r.delta.every(Number.isFinite))return out;
+     rails[side]=mm[side]===0?r:{...r,delta:[r.delta[0],r.delta[1],r.delta[2]+mm[side]/1000],hauteurApprise:{correctionMm:mm[side],version:h.version??null}};}
+   let expected;try{expected=expectedPoses({rails:before},rails);}catch{return out;}
+   for(const side of SIDES){const cam=cameras[side];if(!cam||!inView(cam,expected[side].positionSceneRelative).inView)return out;}
+   return {...out,rails,hauteurApprise:{appliquee:true,correctionMm:mm,version:h.version??null}};
+ }
+ function commandRails(args){return fauxVertActivation(hauteurActivation(commandRailsBase(args),args),args);}
+ function commandRailsBase({decision,runtimeRails,before,expectedPoses,cameras}){
    const keep=reason=>({action:'engine',reason,rails:runtimeRails});
    /* D-060 : un refus de la garde d'écartement bas est TOUJOURS un différé, même
     * sans capture de départ ; sans ce renvoi, il suivrait la paire du moteur. */

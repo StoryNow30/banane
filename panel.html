@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ariane 4.8.6</title><link rel="stylesheet" href="panel.css"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ariane 4.9.5 test 9</title><link rel="stylesheet" href="panel.css"></head>
 <body data-window="home"><main>
 
 <!-- 4.7.20 — piste H « Sans le skill » (design/pistes-retenues, direction du 24/09) :
@@ -20,7 +20,7 @@
    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15h18"/></svg>
   </button>
  </div>
- <p class="brand">ARIANE <span>4.8.6</span></p>
+ <p class="brand">ARIANE <span>4.9.5 test 9</span></p>
  <h1 id="vue-titre">Écho observe. Orbite pose.</h1>
  <p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p>
 </header>
@@ -36,6 +36,7 @@
 <div class="corps">
 <p id="context" class="context"></p>
 <div id="notice" class="status" role="status" aria-live="polite">Prêt.</div>
+<div id="avis-contrat" class="status" role="status" aria-live="polite" hidden></div>
 
 <!-- ------------------------------------------------------------- accueil -->
 <section class="vue" data-vue="home">
@@ -69,6 +70,37 @@
   <button id="native-details-toggle" class="link details-toggle" aria-expanded="true" aria-controls="native-details">Masquer les détails</button>
  </div>
 
+ <!-- RM-11 (4.9.5 test 9) : la raison de la correction. Coupée par défaut ; le choix est lu au démarrage d'Écho et gardé jusqu'à la fin de la séance. -->
+ <section id="carte-raison" class="bloc raison rise d5" aria-labelledby="raison-titre">
+  <p id="raison-titre" class="lbl">Raison de la correction</p>
+  <label class="interrupteur"><input type="checkbox" id="raison-actif"> Noter ma raison (touches 1 à 6, 0 efface)</label>
+  <fieldset class="choix-lot" id="raison-touches-choix">
+   <legend class="lbl">Touches lues</legend>
+   <label class="interrupteur"><input type="radio" name="raison-touches" id="raison-touches-chiffres" value="chiffres"> Chiffres de la rangée du haut ou du pavé</label>
+   <label class="interrupteur"><input type="radio" name="raison-touches" id="raison-touches-alt-chiffres" value="alt-chiffres"> Alt + chiffre (si ESV réagit au chiffre seul)</label>
+   <label class="interrupteur"><input type="radio" name="raison-touches" id="raison-touches-pave" value="pave"> Pavé numérique seul (dernier recours)</label>
+  </fieldset>
+  <p class="muted" id="raison-note">Coupée par défaut. Lue au démarrage d’Écho, gardée jusqu’à la fin de la séance. Rien n’est retenu ni envoyé à ESV.</p>
+  <div id="raison-suivi" hidden>
+   <div id="raison-pastilles" class="pastilles" role="group" aria-label="Raison de ce cut">
+    <button type="button" id="raison-1" class="pastille" data-code="rail-voisin" aria-pressed="false" aria-label="1, rail voisin"><b>1</b> Rail voisin</button>
+    <button type="button" id="raison-2" class="pastille" data-code="adv" aria-pressed="false" aria-label="2, ADV"><b>2</b> ADV</button>
+    <button type="button" id="raison-3" class="pastille" data-code="pn" aria-pressed="false" aria-label="3, PN"><b>3</b> PN</button>
+    <button type="button" id="raison-4" class="pastille" data-code="nuage-pauvre" aria-pressed="false" aria-label="4, nuage diffus ou pauvre"><b>4</b> Nuage diffus ou pauvre</button>
+    <button type="button" id="raison-5" class="pastille" data-code="hauteur" aria-pressed="false" aria-label="5, hauteur seulement"><b>5</b> Hauteur seulement</button>
+    <button type="button" id="raison-6" class="pastille" data-code="autre" aria-pressed="false" aria-label="6, autre"><b>6</b> Autre</button>
+    <button type="button" id="raison-0" class="pastille efface" aria-label="0, effacer la raison et finir la collante"><b>0</b> Effacer</button>
+   </div>
+   <p id="raison-ligne" class="muted" role="status" aria-live="polite"></p>
+   <p id="raison-rappel" class="warning" role="status" hidden>La raison collante dure depuis 40 cuts : tape 0 si elle ne s’applique plus. Rien ne s’arrête.</p>
+   <div id="raison-bande" class="bande-raison" role="img" aria-label="Raisons posées sur les 24 derniers cuts"></div>
+   <p id="raison-couverture" class="muted"></p>
+  </div>
+  <details id="raison-aide"><summary>Comment taper une raison</summary>
+   <p>Un appui sur la touche, c’est la raison de ce cut seul. <b>Deux appuis</b> sur la même touche (moins de 0,6 seconde) la rendent <b>collante</b> : elle s’applique aux cuts suivants, jusqu’à un 0, une autre raison collante, un changement de partie ou un saut de plus de 30 cuts. Une touche tapée jusqu’à une demi-seconde après la validation va au cut que tu viens de valider. Rien n’est obligatoire : sans touche, la raison reste inconnue.</p>
+  </details>
+ </section>
+
  <div class="guide"><p>Travaille ensuite normalement dans ESV. Aucun clic Ariane n’est nécessaire entre les cuts.</p><p>Ce mode n’envoie aucun déplacement, changement de caméra, choix de rail, VALIDATE, SKIP ou navigation.</p></div>
 
  <section id="native-health" class="health" hidden><h2>Santé de la collecte</h2><div class="health-grid"><div><span class="health-label">Volume conservé</span><strong id="h-bytes">—</strong><span id="h-pending" class="muted"></span></div><div><span class="health-label">Segments écrits</span><strong id="h-seg">0</strong><span id="h-clouds" class="muted"></span></div><div><span class="health-label">Captures</span><strong id="h-cap">—</strong><span id="h-caprate" class="muted"></span></div><div><span class="health-label">File d’envoi</span><strong id="h-queue">—</strong><span id="h-dropped" class="muted"></span></div><div><span class="health-label">Niveau du collecteur</span><strong id="h-level">—</strong><span id="h-peak" class="muted"></span></div><div id="h-aside-box" hidden><span class="health-label">Mis à l’écart</span><strong id="h-aside">0</strong><span class="muted">avec cause</span></div></div><p id="h-note" class="muted"></p></section>
@@ -89,31 +121,33 @@
 </section>
 
 <!-- ---------------------------------------------------------------- pilote -->
-<section class="vue" data-vue="automatic" hidden>
- <!-- L'état, le cut en grand, la plage, la dernière commande ; les tuiles ;
-      la ligne et l'écart à la voie ; l'activité ; puis UNE action en pied. -->
+<section class="vue orbite" data-vue="automatic" hidden>
+ <!-- Test 7 (Mic : « remettre de l'ordre ») — cinq groupes, dans l'ordre où on s'en sert :
+      (a) Lot : le cut en héros, les commandes, l'avancement, les bornes ;
+      (b) Règles et choix du prochain lot : une carte ; chaque choix dit ce que le DERNIER lot a utilisé (figé dans son
+          scope au démarrage, événement batch-started) et ce que le PROCHAIN lot utilisera (le choix gardé) ;
+      (c) Résultats du dernier lot : fin de partie, posés, différés, à contrôler, activité, départs, résumé ;
+      (d) Relecture : emplacement réservé (voir le commentaire plus bas) ;
+      (e) Export, archive et réglages avancés, repliés, avec « Détails » (lignes techniques) replié dedans.
+      Rien n'est retiré : seulement déplacé, regroupé ou replié. Les identifiants d'avant sont gardés (4.9 chantier UX
+      compris : le cut en héros, les tuiles de commande, la tuile du lot). -->
+
+ <!-- (a) LOT -->
+ <section id="groupe-lot" class="groupe" aria-labelledby="groupe-lot-titre">
+ <h2 id="groupe-lot-titre" class="groupe-titre rise d0">Lot</h2>
+ <!-- Le héros : l'état, le cut, la ligne et l'écart à la voie, alignés. -->
  <div class="bloc hero">
   <p id="lot-etat" class="eyebrow ink rise d0">Aucun lot</p>
+  <!-- Politique du lot différente de celle par défaut : une pastille ; le détail est dans « Export, archive et réglages avancés », sous « Détails ». -->
+  <p id="lot-politique-pastille" class="pastille" hidden></p>
   <p class="big rise d1"><span id="lot-cut">—</span><small>cut</small></p>
-  <!-- 4.7.21 : les trois étapes du cut courant ; l'étape en cours est parcourue d'un reflet continu (jamais un clignotement). -->
-  <div id="lot-etapes" class="etapes rise d1" hidden><i data-e="capture"><span>capture</span></i><i data-e="apply"><span>pose</span></i><i data-e="validate"><span>validation</span></i></div>
-  <div id="lot-progres" class="progres rise d2" hidden><div class="barre"><i id="lot-progres-fill" class="fill"></i></div><p class="progres-l"><span id="lot-debut"></span><span id="lot-pct"></span><span id="lot-fin"></span></p></div>
-  <p id="lot-plage" class="mono sous rise d2"></p>
-  <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
-  <div id="lot-commande" class="commande rise d3" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
+  <div class="rise d2" id="ligne-bloc">
+   <p class="tete-bloc"><span id="voie-legende" class="legend" hidden><span><i class="moteur"></i>moteur</span><span><i class="voie-l"></i>voie</span><span><i class="differe"></i>différé</span><span id="legende-skip" hidden><i class="refuse"></i>SKIP</span></span></p>
+   <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut, et l’écart de chaque cut à la voie" hidden></div>
+  </div>
  </div>
- <div id="lot-compteurs" class="tuiles rise d4" hidden></div>
- <div class="bloc rise d5" id="ligne-bloc">
-  <p class="tete-bloc"><span class="lbl">La ligne</span><span id="voie-legende" class="legend" hidden><span><i class="moteur"></i>moteur</span><span><i class="voie-l"></i>voie</span><span><i class="differe"></i>différé</span><span id="legende-skip" hidden><i class="refuse"></i>SKIP</span></span></p>
-  <div id="voie" class="voie" role="img" aria-label="Le lot, cut par cut, et l’écart de chaque cut à la voie" hidden></div>
- </div>
- <div id="lot-activite-bloc" class="bloc rise d6" hidden><p class="lbl">Activité</p><div id="lot-activite" class="activite"></div></div>
- <div id="batch" class="batch">Aucun lot en cours.</div>
- <div id="lot-bornes"><div class="range"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0" placeholder="fin de partie"></label></div>
-  <p class="muted" id="bornes-note">Rempli par Ariane : le cut affiché dans ESV, et la fin de la partie. Modifiable.</p></div>
- <!-- 4.7.19 : reprise des différés du lot précédent, encadrés par ses cuts posés. -->
- <div id="lot-reprise-row" hidden><label class="interrupteur"><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
- <div class="actions" id="lot-actions">
+
+ <div class="actions rise d3" id="lot-actions">
   <button id="start-batch" class="primary">Démarrer le lot</button>
   <button id="pause" class="secondary" hidden>Pause</button>
   <button id="resume" class="secondary" hidden>Reprendre</button>
@@ -126,27 +160,145 @@
   <!-- 4.8.0 (audit qualité, U03) : en fin de lot, l'action principale est le dossier complet. -->
   <button id="export-tout" class="secondary">Tout télécharger pour l’analyse</button>
   <button id="new-batch" class="link" hidden>Nouveau lot</button>
-  <button id="lot-details-toggle" class="link details-toggle" aria-expanded="true" aria-controls="lot-details">Masquer les détails</button>
  </div>
- <p class="muted">Orbite pose et valide les rails du lot ; relis-le ensuite dans ESV ou avec Écho. Changer de vue dans ce panneau ne met pas le lot en pause.</p>
- <!-- 4.7.21 : les détails sont ouverts par défaut, exports à portée de clic. -->
- <div id="lot-details" class="tiroir">
+
+ <!-- La tuile du lot : elle se remplit de vert jusqu'où en est le lot. -->
+ <div id="lot-tuile" class="tuile-lot rise d4">
+  <p class="lot-t"><b>Lot</b><span id="lot-plage" class="mono"></span></p>
+  <!-- En bas : la part de la plage parcourue (si la fin du lot est connue) et les cuts traités. -->
+  <div class="lot-bas">
+   <div id="lot-progres" class="progres" hidden><div class="barre"><i id="lot-progres-fill" class="fill"><span id="lot-bord" class="bord" aria-hidden="true"><span class="onde"></span></span></i></div><p class="progres-l"><span id="lot-debut"></span><span id="lot-pct"></span><small class="u">%</small><span id="lot-fin"></span></p></div>
+   <span id="lot-progres-note" class="lot-note"></span>
+   <span class="lot-sep" aria-hidden="true"></span>
+   <p class="lot-traites" title="cuts traités dans ce lot"><b id="lot-traites">—</b><small id="lot-traites-u">cuts</small></p>
+  </div>
+  <!-- 4.7.21 : les trois étapes du cut courant ; l'étape en cours est parcourue d'un reflet continu (jamais un clignotement). -->
+  <span id="lot-fete" class="fete" aria-hidden="true"></span>
+  <div id="lot-etapes" class="etapes" hidden><i data-e="capture"><span>capture</span></i><i data-e="apply"><span>pose</span></i><i data-e="validate"><span>validation</span></i></div>
+ </div>
+
+ <div id="lot-bornes" class="carte rise d4"><div class="range"><label>Premier cut<input id="start" type="number" min="0"></label><label>Dernier cut<input id="end" type="number" min="0" placeholder="fin de partie"></label></div>
+  <p class="muted" id="bornes-note">Rempli par Ariane : le cut affiché dans ESV, et la fin de la partie. Modifiable.</p></div>
+ <!-- 4.7.19 : reprise des différés du lot précédent, encadrés par ses cuts posés. -->
+ <div id="lot-reprise-row" class="carte" hidden><label class="interrupteur"><input id="lot-reprise" type="checkbox"> Reprise des différés : repartir des cuts posés par le lot précédent</label><p class="muted" id="lot-reprise-note"></p></div>
+ </section>
+
+ <!-- (b) RÈGLES ET CHOIX DU PROCHAIN LOT. 4.9.5 test 6 (D-157, D-164) : gardés par Ariane, lus au démarrage de chaque lot et
+      figés jusqu'à sa fin. « Dernier lot » (« Lot en cours » pendant un lot) : ce que le scope du lot a figé ; « Prochain lot » :
+      le choix gardé, qui servira au prochain « Démarrer ». -->
+ <section id="groupe-choix" class="groupe" aria-labelledby="groupe-choix-titre">
+ <h2 id="groupe-choix-titre" class="groupe-titre rise d4">Règles et choix du prochain lot</h2>
+ <div id="carte-choix" class="carte rise d4">
+ <fieldset id="clic-humain" class="choix-lot">
+  <legend class="lbl">Clic du mode rapide</legend>
+  <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-tel-quel" value="tel-quel"> Comme avant</label>
+  <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-gauche-recentre" value="gauche-recentre"> Variante : rail gauche recentré</label>
+  <label class="interrupteur"><input type="radio" name="clic-humain" id="clic-tout-recentre" value="tout-recentre"> Tout recentré, comme un humain</label>
+  <dl class="choix-etat"><dt id="clic-dernier-l">Dernier lot</dt><dd id="clic-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="clic-prochain">—</dd></dl>
+  <p class="muted" id="clic-humain-cout">Durée d’un lot : +6 à 9 % pour la variante, +12 à 18 % pour « tout recentré ».</p>
+  <p class="muted" id="clic-humain-note">Lu au démarrage de chaque lot, gardé jusqu’à sa fin.</p>
+ </fieldset>
+ <div id="grappe-row" class="choix-lot">
+  <p class="lbl">Règle métier</p>
+  <label class="interrupteur"><input id="grappe-differes" type="checkbox"> Mettre en attente les cuts voisins d’une série de différés</label>
+  <p class="muted" id="grappe-explication">Ne pose rien, ne détecte pas les aiguilles. Un cut qu’Ariane allait valider est mis en attente si le lot vient de différer au moins 2 cuts parmi les 6 d’avant, dont un à 2 cuts au plus.</p>
+  <dl class="choix-etat"><dt id="grappe-dernier-l">Dernier lot</dt><dd id="grappe-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="grappe-prochain">—</dd></dl>
+  <p class="muted" id="grappe-note">Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.</p>
+ </div>
+ </div>
+ </section>
+
+ <!-- (c) RÉSULTATS DU DERNIER LOT (« du lot en cours » pendant un lot). -->
+ <section id="groupe-resultats" class="groupe" aria-labelledby="resultats-titre">
+ <h2 id="resultats-titre" class="groupe-titre rise d5">Résultats du dernier lot</h2>
+ <!-- Test 7 : plus aucun cut rouge dans la partie du lot (compteur d'ESV « N on M treated » complet, ou départ du lot à
+      0 invalide). Le lot clos le dit ici, en clair, au lieu de passer à la suite sans rien dire. -->
+ <p id="lot-fin-partie" class="fin-partie rise d5" role="status" hidden></p>
+ <div id="lot-compteurs" class="tuiles rise d5" hidden></div>
+
+ <!-- 5.0 : verts à contrôler, en fin de lot. Une liste à consulter, dans l'ordre des cuts : Ariane n'agit pas dans ESV. -->
+ <section id="verts-controle" class="carte verts rise d5" aria-labelledby="verts-titre" hidden>
+  <p class="tete-bloc"><span id="verts-titre" class="lbl">À contrôler</span><button id="verts-maj" class="link" type="button">Recalculer</button></p>
+  <p id="verts-ligne" class="resume-ligne"></p>
+  <ul id="verts-plages" class="verts-plages"></ul>
+  <p id="verts-note" class="muted">Verts qu’Ariane n’a pas visités, à relire d’abord. Liste à consulter : aucune action dans ESV.</p>
+ </section>
+
+ <p class="sec rise d6">Activité</p>
+ <div class="carte rise d6">
+  <div id="lot-activite-bloc" hidden><div id="lot-activite" class="activite"></div></div>
+  <div id="batch" class="batch">Aucun lot en cours.</div>
+ </div>
+
+ <!-- D-092 : les fiches de départ, une carte par partie (la plus récente), la partie en cours d'abord.
+      Les chiffres sont ceux qu'ESV affichait au démarrage du lot : à comparer avec sa liste. -->
+ <p class="sec rise d6">Départs des parties</p>
+ <div id="departs-liste" class="departs rise d6"><p class="muted">Aucune partie enregistrée pour l’instant. Les validés et invalides de chaque partie sont notés ici au démarrage, et restent même si tu vides le cache.</p></div>
+
+ <!-- 4.9 U1 : résumé de la partie, tous lots confondus. Lecture seule : aucun bouton, aucune commande. -->
+ <section id="part-summary" class="bloc resume-partie carte" aria-labelledby="part-summary-title" hidden>
+  <h2 id="part-summary-title" class="lbl">Résumé de la partie</h2>
+  <p id="part-summary-line" class="resume-ligne"></p>
+  <details id="part-summary-details"><summary id="part-summary-details-toggle">Détail du résumé</summary>
+   <div id="part-summary-counts" class="tuiles"></div>
+   <p id="part-summary-deferred" class="resume-liste"></p>
+   <p id="part-summary-unknown" class="muted"></p>
+   <p id="part-summary-note" class="muted"></p>
+   <p id="part-summary-liste" class="muted"></p>
+   <details><summary id="part-summary-lots-title">Lots de la partie</summary><ul id="part-summary-lots"></ul></details>
+  </details>
+ </section>
+ </section>
+
+ <!-- (d) RELECTURE APRÈS LE LOT (5.0, D-170 à D-176 ; fiches/RELECTURE_OMBRE.md). Bloc autonome, tenu par src/carte-relecture.js :
+      choix « coupée », « ombre » ou « corriger » (gardé par Ariane, lu au démarrage de chaque lot et figé jusqu'à sa fin),
+      « Dernier lot » / « Prochain lot » comme les autres choix, réglages de la correction, avancement de la passe (« vu » compris),
+      bouton d'arrêt, correction interrompue à contrôler. Entre (c) et (e). -->
+ <section id="groupe-relecture" class="groupe" aria-labelledby="relecture-titre">
+ <h2 id="relecture-titre" class="groupe-titre rise d5">Relecture</h2>
+ <section id="carte-relecture" class="carte rise d5">
+ <fieldset class="choix-lot">
+  <legend class="lbl">Relecture après le lot</legend>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-coupee" value="coupee"> Coupée</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-ombre" value="ombre"> Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-corriger" value="corriger"> Corriger (verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, validés par Maj+Espace)</label>
+  <dl class="choix-etat"><dt id="relecture-dernier-l">Dernier lot</dt><dd id="relecture-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="relecture-prochain">—</dd></dl>
+  <p class="muted">Après les rouges, Ariane visite les cuts que tu relirais (PN, ADV, abords des rouges et des différés, cuts isolés, « À contrôler »), verts compris. Elle part seule juste après un lot jusqu’à la fin de la partie ; « Arrêter la relecture » l’arrête. Comme pour toi, ESV marque « vu » chaque cut qu’elle affiche pour la première fois. En « corriger », elle ne pose et ne valide que les verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, qui passent la règle prudente (jamais un cut posé ou différé par le lot) ; les autres cuts, les verts hors zone compris, sont seulement notés. Tu as accepté les chiffres de l’ADV et des abords (14 à 18 % d’erreurs dans l’étude) : le seuil de 9 % n’est pas démontré pour ces deux zones.</p>
+  <p class="muted" id="relecture-note">Lue au démarrage de chaque lot, gardée jusqu’à sa fin. Coupée par défaut.</p>
+  <p class="muted" id="relecture-reglages"></p>
+ </fieldset>
+ <p class="resume-ligne" id="relecture-ligne" hidden></p>
+ <p class="muted error" id="relecture-interrompue" hidden></p>
+ <p class="row"><button id="relecture-arreter" class="danger" type="button" hidden>Arrêter la relecture</button><button id="relecture-acquitter" type="button" hidden>J’ai contrôlé le cut</button><button id="relecture-lancer" class="link" type="button" hidden>Lancer la relecture</button></p>
+ </section>
+ </section>
+
+ <!-- (e) EXPORT, ARCHIVE ET RÉGLAGES AVANCÉS : fermé par défaut (son état se lit dans aria-expanded). -->
+ <section id="groupe-avance" class="groupe" aria-label="Export, archive et réglages avancés">
+ <div class="barre-lot"><button id="lot-details-toggle" class="pill details-toggle" aria-expanded="false" aria-controls="lot-details">Export, archive et réglages avancés</button></div>
+ <!-- Exports, réglages fixes et, dans « Détails », les lignes techniques : la dernière commande et la politique EFFECTIVE du lot (D-045). -->
+ <div id="lot-details" class="tiroir" hidden>
   <p class="lbl">Exports du lot</p>
-  <div class="row"><button id="journal" class="secondary">Télécharger le journal</button><button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button><button id="gcv1-diagnostic-export" class="secondary">Télécharger le diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Télécharger le corpus GCV1 + LiDAR</button></div>
-  <p class="muted">Construits depuis ce qu’Ariane a enregistré sur ce poste. ESV ne donne aucune confirmation serveur.</p>
-  <p class="lbl reglages-titre">Réglages du lot</p>
+  <div class="row"><button id="journal" class="secondary">Télécharger le journal</button><button id="dataset" class="secondary">Télécharger le bilan et les LiDAR</button><button id="gcv1-diagnostic-export" class="secondary">Télécharger le diagnostic GCV1</button><button id="gcv1-corpus-export" class="secondary">Télécharger le corpus GCV1 + LiDAR</button><button id="export-cache-clear" class="secondary">Vider le cache des exports</button></div>
+  <p class="muted">Construits sur ce poste. ESV ne donne aucune confirmation serveur.</p>
+  <p class="lbl reglages-titre">Réglages avancés</p>
   <p class="muted" id="lot-reglages">Rail non résolu : différé · décision sur le lot : appliquée · proposition expérimentale : tentée · cerveau de placement : actif. Réglages fixes depuis la 4.7.21.</p>
-  <!-- Pendant un lot : ses politiques EFFECTIVES, figées à sa création (cahier 4.7 §10, KI-033). -->
-  <p class="muted" id="lot-decision-effective" hidden></p>
-  <p class="muted" id="unresolved-policy-effective" hidden></p>
-  <p class="muted" id="policy-effective" hidden></p>
+  <details id="lot-details-techniques" class="techniques"><summary>Détails</summary>
+   <!-- La dernière commande en trois étapes : émise, effet, serveur. Seul un effet observé passe au vert. -->
+   <div id="lot-commande" class="commande" hidden><p class="cmd"><b id="lot-cmd-nom"></b><span id="lot-cmd-cut"></span></p><p id="lot-cmd-etapes" class="steps"></p></div>
+   <!-- Pendant un lot : ses politiques EFFECTIVES, figées à sa création (cahier 4.7 §10, KI-033). -->
+   <p class="muted" id="lot-decision-effective" hidden></p>
+   <p class="muted" id="unresolved-policy-effective" hidden></p>
+   <p class="muted" id="policy-effective" hidden></p>
+  </details>
   <input type="hidden" id="policy" value="attempt">
  </div>
+ </section>
 </section>
 
 <!-- --------------------------------------------------- commun à toutes les vues -->
 <p id="export-status" class="muted" role="status"></p>
-<details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
-<footer>Ariane 4.8.6 · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
+<details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><p id="tabs-note" class="muted"></p><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
+<footer>Ariane 4.9.5 test 9 · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
 </div>
-</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/gcv1-export.js"></script><script src="panel.js"></script></body></html>
+</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="src/carte-relecture.js"></script><script src="src/raison-correction.js"></script><script src="panel.js"></script></body></html>

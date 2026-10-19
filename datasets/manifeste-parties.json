@@ -1,0 +1,46 @@
+{
+  "format": "ariane-manifeste-parties-v1",
+  "date": "2026-10-16",
+  "regle": "Une partie d'apprentissage a servi à régler ou à choisir : elle ne peut plus servir à juger un réglage. Toute partie qui n'est pas listée ici est réservée : aucun outil de réglage ne la lit. Toute partie reçue après la date de ce fichier est réservée jusqu'à une décision écrite qui la fait passer en apprentissage (on ajoute alors la partie à la liste, avec la date et la décision). Les projets sont désignés par leur rang : projet 1 et projet 2.",
+  "apprentissage": [
+    {
+      "projet": 1,
+      "parties": [
+        17,
+        24,
+        29
+      ],
+      "motif": "Ont servi à régler la convention, la correction verticale en ombre, la règle prudente de voie prédite et la mémoire de série (G1), et à étudier les faux verts (G0)."
+    },
+    {
+      "projet": 1,
+      "parties": [
+        12,
+        13
+      ],
+      "motif": "Parties d'un opérateur humain relues en Écho par l'opérateur expert (poses d'extraction, PN et zones d'ADV notés). Elles ont déjà servi à régler la règle d'écartement de G0 (D-135, D-140 : 54 mauvais objets sur 54, seuil appris de la partie 12 à la 13), puis les règles métier (zones de PN, écartement par partie). Passées en apprentissage le 2026-10-17 sur ce constat : aucune partie disponible n'est restée à l'écart.",
+      "decision": "D-140"
+    },
+    {
+      "projet": 2,
+      "parties": [
+        1
+      ],
+      "motif": "A servi à régler la règle prudente de voie prédite et la mémoire de série (G1), et à étudier les faux verts (G0)."
+    },
+    {
+      "projet": 2,
+      "parties": [
+        11
+      ],
+      "date": "2026-10-18",
+      "motif": "Écho de l'opérateur expert du 18/10 (731 visites) : a servi à juger la relecture de la test 7 (D-185), puis à régler sa couverture (plafond d'ADV, cuts à l'écartement, liste « À contrôler »). Passée en apprentissage sur décision de l'opérateur expert (D-187).",
+      "decision": "D-187"
+    }
+  ],
+  "reservees": {
+    "depuis": "2026-10-16",
+    "parties": [],
+    "note": "Aucune partie reçue après la date du fichier n'est encore nommée ici. Une partie absente de la liste d'apprentissage est réservée, nommée ou non."
+  }
+}

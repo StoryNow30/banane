@@ -22,6 +22,26 @@
    el.textContent='';const n=texte.length;
    [...texte].forEach((ch,i)=>{const sp=document.createElement('span');sp.className='ch';sp.textContent=ch;el.append(sp);
      if(avant[avant.length-(n-i)]!==ch)animer(sp,[{transform:'translateY(.55em)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'none'}],{duration:520,delay:(n-1-i)*55,easing:REBOND});});}
+ /* 4.9.0.16 (test 15, Mic : la tuile du lot « plus vivante ») — LE POURCENTAGE DÉFILE : de l'ancienne
+  * valeur à la nouvelle, au rythme du vert qui avance (1,1 s, même courbe), image par image
+  * (requestAnimationFrame : rien ne tourne quand le panneau est caché, ni une fois arrivé). Figé
+  * (valeur posée d'un coup) si le système réduit les animations ou sans requestAnimationFrame. */
+ const DUREE_VERT=1100;
+ function compter(el,cible){if(!el)return;const texte=String(cible),d=el.dataset||{},de=Number(d.v);if(d.v===texte)return;d.v=texte;
+   /* Test 16 : la cible peut porter une décimale (« 0.4 ») ; affichée à la française (« 0,4 »). */
+   const raf=globalThis.requestAnimationFrame,fin=Number(texte),dec=(texte.split('.')[1]||'').length,vu=v=>v.toFixed(dec).replace('.',',');
+   if(!Number.isFinite(de)||!Number.isFinite(fin)||typeof raf!=='function'||!bouger()||globalThis.document?.hidden){el._compte=null;el.textContent=Number.isFinite(fin)?vu(fin):texte;return;}
+   const jeton={};el._compte=jeton;let t0=null;
+   const pas=t=>{if(el._compte!==jeton)return;if(t0===null)t0=t;const k=Math.min(1,(t-t0)/DUREE_VERT),e=1-Math.pow(1-k,3);
+     el.textContent=vu(de+(fin-de)*e);if(k<1)raf(pas);else el._compte=null;};
+   raf(pas);}
+ /* Une impulsion au bord du vert à chaque cut terminé : une onde lumineuse part du bord, le vert s'éclaire un instant. */
+ function impulsion(){animer($('lot-bord')?.firstElementChild??null,[{transform:'scale(.4)',opacity:.95},{transform:'scale(2.4)',opacity:0}],{duration:900,easing:COURBE,fill:'none'});
+   animer($('lot-progres-fill'),[{filter:'brightness(1.22)'},{filter:'none'}],{duration:700,easing:'ease-out',fill:'none'});}
+ /* Fin du lot : une seule célébration, sobre : un reflet traverse la tuile, le chiffre se pose. */
+ function celebrer(){animer($('lot-fete'),[{transform:'translateX(-110%)',opacity:0},{opacity:1,offset:.25},{transform:'translateX(110%)',opacity:0}],{duration:1500,easing:'cubic-bezier(.4,0,.2,1)',fill:'none'});
+   animer($('lot-pct'),[{transform:'scale(1)'},{transform:'scale(1.07)',offset:.4},{transform:'scale(1)'}],{duration:900,delay:250,easing:REBOND,fill:'none'});}
+ const accorder=(n,mot,pluriel=mot+'s')=>n>1?pluriel:mot;
  /* Tuiles : un chiffre qui change monte et se pose. */
  let tuilesAvant={};
  function animerTuiles(el,cle){const b=tous(el,'.tuile b'),avant=tuilesAvant[cle]||[],now=b.map(x=>x.textContent);tuilesAvant[cle]=now;
@@ -59,7 +79,17 @@
  const sg=v=>(v>=0?'+':'−')+fr1(Math.abs(v));
  /* Quantile d'une liste triée, interpolé (médiane : 0,5 ; p90 : 0,9). */
  const quantile=(t,f)=>{if(!t.length)return null;const p=f*(t.length-1),a=Math.floor(p),b=Math.ceil(p);return t[a]+(t[b]-t[a])*(p-a);};
- const heure=t=>{const d=new Date(t);return t&&Number.isFinite(d.getTime())?d.toTimeString().slice(0,8):'—';};
+ /* 4.9.0.17 (Mic : « l'heure de Paris partout ») — toute heure affichée est celle de Paris
+  * (Europe/Paris : heure d'été et d'hiver gérées par Intl), jamais l'UTC ni l'heure de la machine.
+  * Les JSON exportés gardent leurs horodatages ISO en UTC (outils d'analyse). `paris(t)` rend
+  * {jour, mois, an, h, min, s} (texte sur deux chiffres) ou null si l'heure est illisible. */
+ const FORMAT_PARIS=(()=>{try{return new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});}catch{return null;}})();
+ function paris(t){const d=t instanceof Date?t:new Date(t);if(t===null||t===undefined||t===''||!Number.isFinite(d.getTime())||!FORMAT_PARIS)return null;
+   const p={};for(const x of FORMAT_PARIS.formatToParts(d))p[x.type]=x.value;
+   return {jour:p.day,mois:p.month,an:p.year,h:p.hour==='24'?'00':p.hour,min:p.minute,s:p.second};}
+ const heure=t=>{const p=paris(t);return p?`${p.h}:${p.min}:${p.s}`:'—';};
+ /* CONTENU.txt : « 15/10/2026 10:12:03 heure de Paris » ; sans Intl, l'ISO tel quel (UTC, dit par son « Z »). */
+ const dateHeureParis=t=>{const p=paris(t);return p?`${p.jour}/${p.mois}/${p.an} ${p.h}:${p.min}:${p.s} heure de Paris`:String(t instanceof Date?t.toISOString():t);};
  const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
  /* Entrée d'une vue : les blocs montent en cascade, une seule fois (panel.css). */
  let entreeMinuteur=null;
@@ -79,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.8.6',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 9',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -126,6 +156,9 @@
    let texte=String(message??'');
    for(const [motif,remplacement] of NOTICES)texte=texte.replace(motif,remplacement);
    $('notice').textContent=texte;$('notice').classList.toggle('error',error);}
+ /* V2 : un lot RUNNING, en pause, repris à la main ou en erreur interdit le vidage du cache. A2 (relecture du test 3) :
+  * une fin naturelle (COMPLETED, FINISHED_WITH_UNCONFIRMED_ACTIONS) est une fin, comme STOPPED (même liste que src/export-cache.js). */
+ const lotNonTermine=s=>{const e=s?.batch?.state;return !!e&&!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(e);};
  function button(id,{hidden=false,disabled=false}={}){if($(id)){$(id).hidden=hidden;$(id).disabled=disabled;}}
  const openStatus=status=>['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(status);
  const manualActive=s=>openStatus(s.manual?.status),nativeActive=s=>openStatus(s.native?.status),active=s=>manualActive(s)||nativeActive(s);
@@ -224,6 +257,107 @@
  }
  /* Tuiles : un libellé, un grand chiffre léger, une précision. */
  const tuiles=l=>l.map(([lbl,val,ton,sous])=>`<div class="tuile"><span class="lbl">${esc(lbl)}</span><b${ton?` class="${ton}"`:''}>${esc(val)}</b><small>${esc(sous)}</small></div>`).join('');
+ /* 4.9 U1 (réécrit, mission G) — RÉSUMÉ DE LA PARTIE, en lecture seule.
+  * Le calcul est dans src/part-summary-49.js (module pur, règles R1 à R9). Ici :
+  * lire l'historique conservé et afficher. Aucune commande à ESV, aucun message
+  * au service worker en plus de la vue ; sans module ou sans stockage, le reste
+  * du panneau est inchangé. Un compte non prouvé complet n'est jamais affiché
+  * comme exact : « au moins N », ou « inconnu » à la place d'un zéro. */
+ const moduleResume=()=>globalThis.ArianePartSummary49||null;
+ const TRANCHE_HISTOIRE=128,RELIRE_HISTOIRE_MS=5000;
+ let histoire={cle:null,session:null,statut:'loading',events:[],lu:0,version:0},lectureHistoire=false,resumeMemo=null;
+ const cleHistoire=s=>`${s?.sessionId??''}|${s?.batch?.id??''}`;
+ /* Une tranche de l'historique : une transaction en lecture seule, 128 objets
+  * au plus, pour laisser Orbite écrire entre deux tranches. La clé de stockage
+  * sert à reprendre la lecture, jamais à ordonner les événements. */
+ function trancheHistoire(db,apres,R){return new Promise((resolve,reject)=>{
+   const lus=[],tx=db.transaction('events','readonly'),req=tx.objectStore('events').openCursor(apres===null?null:IDBKeyRange.lowerBound(apres,true));
+   let n=0,derniere=apres,suite=false;
+   req.onsuccess=()=>{const c=req.result;if(!c)return;derniere=c.key;const p=R.projectEvent(c.value);if(p)lus.push(p);
+     if(++n<TRANCHE_HISTOIRE)c.continue();else suite=true;};
+   req.onerror=()=>reject(req.error||Error('Lecture impossible.'));tx.onerror=()=>reject(tx.error||Error('Lecture impossible.'));
+   tx.onabort=()=>reject(tx.error||Error('Lecture annulée.'));tx.oncomplete=()=>resolve({lus,derniere,suite});});}
+ /* Lecture entière à l'ouverture de la vue Orbite et à chaque nouveau lot ;
+  * entre-temps, la fenêtre récente de l'état et les listes du lot courant
+  * suffisent. Un échec est retenté au plus toutes les 5 s. */
+ async function lireHistoire(s){const R=moduleResume();if(!R||!s?.sessionId||lectureHistoire)return;
+   const cle=cleHistoire(s);
+   if(histoire.cle===cle&&(histoire.statut==='available'||histoire.statut==='unavailable'&&Date.now()-histoire.lu<RELIRE_HISTOIRE_MS))return;
+   lectureHistoire=true;const garder=histoire.session===s.sessionId?histoire.events:[];
+   try{const S=store();if(!S)throw Error('Stockage indisponible.');const db=await S.open(),lus=[];let apres=null,suite=true;
+     while(suite){const t=await trancheHistoire(db,apres,R);lus.push(...t.lus);apres=t.derniere;suite=t.suite;}
+     histoire={cle,session:s.sessionId,statut:'available',events:lus,lu:Date.now(),version:histoire.version+1};
+   }catch{histoire={cle,session:s.sessionId,statut:'unavailable',events:garder,lu:Date.now(),version:histoire.version+1};}
+   finally{lectureHistoire=false;if(state&&which==='automatic')afficherResume(state);}}
+ /* Complet : le nombre exact. Sinon : « au moins N », et « inconnu » pour zéro. */
+ const compte=(v,complet)=>complet?String(v):v>0?'au moins '+v:'inconnu';
+ const pluriel=(n,mot)=>`${mot}${n>1?'s':''}`;
+ /* E1 : corrections constatées dans la liste d'ESV depuis le dernier passage (comptes seulement), lues au plus toutes les 5 s. */
+ let listeLu={partie:null,t:0};
+ function listeLigne(s){const p=s.batch?.scope?.part??s.current?.identity?.part,el=$('part-summary-liste');if(!el||!Number.isInteger(p)||globalThis.BananeSettings?.listeMemoire?.actif===false)return;
+  if(listeLu.partie===p&&Date.now()-listeLu.t<5000)return;listeLu={partie:p,t:Date.now()};
+  api('liste-resume',{partie:p}).then(r=>{const q=r?.passage;el.textContent=q?`Liste d’ESV relue : ${q.constatees} correction(s) constatée(s) sur ${q.comparees} cut(s) d’Ariane comparés, dont ${q.nouvelles} depuis le dernier passage.`:r?.memorises?`Liste d’ESV : ${r.memorises} cut(s) d’Ariane mémorisés, pas encore comparés (recharge la liste après ta relecture).`:'';},()=>{});}
+ /* 5.0 — VERTS À CONTRÔLER (fiches/VERTS_A_CONTROLER.md). En fin de lot, la liste est demandée UNE fois au service worker (calcul
+  * en lecture seule, aucune action dans ESV), puis affichée : nombre de cuts, temps estimé, plages dans l'ordre des cuts. « Recalculer »
+  * la redemande. Pendant un lot, la carte est cachée. Réglage `vertsAControler.actif:false` : rien n'est demandé ni affiché. */
+ const VERTS_PLAGES_MAX=12,verts={lot:null,en:false,liste:null};
+ const vertsActif=()=>globalThis.BananeSettings?.vertsAControler?.actif!==false;
+ const dureeTexte=x=>{if(!Number.isFinite(x)||x<0)return '';const m=Math.floor(x/60),r=Math.round(x-60*m);return m?`${m} min${r?` ${r} s`:''}`:`${r} s`;};
+ function afficherVerts(s){const el=$('verts-controle'),L=verts.liste,b=s?.batch;if(!el)return;
+  if(!vertsActif()||!L||L.actif===false||!Number.isInteger(L.partie)||(b&&OUVERT.includes(b.state))){el.hidden=true;return;}
+  el.hidden=false;
+  $('verts-ligne').textContent=L.aControler>0?`${L.aControler} ${accorder(L.aControler,'cut')} à contrôler · environ ${dureeTexte(L.tempsEstimeS)}`:'Aucun vert à contrôler autour de ce lot.';
+  if($('verts-note'))$('verts-note').textContent='Verts qu’Ariane n’a pas visités, à relire d’abord. Liste à consulter : aucune action dans ESV.'
+   +(L.source==='fenetres-b1'?' Instantané de la liste absent : écartement seul.':L.source==='aucune'?' Liste d’ESV non lue : la liste est vide.':'');
+  const P=Array.isArray(L.plages)?L.plages:[];
+  poser($('verts-plages'),P.slice(0,VERTS_PLAGES_MAX).map(p=>`<li><b>${esc(p.libelle)}</b> <span>${esc(typeof p.cutsTexte==='string'&&p.cutsTexte?p.cutsTexte:p.debut===p.fin?p.debut:p.debut+'–'+p.fin)} · ${esc(p.nombre)} ${accorder(p.nombre,'cut')}</span></li>`).join('')
+   +(P.length>VERTS_PLAGES_MAX?`<li class="muted">… et ${P.length-VERTS_PLAGES_MAX} autres plages, dans l’export</li>`:''));}
+ async function majVerts(s,force=false){const b=s?.batch,p=b?.scope?.part??s?.current?.identity?.part,cle=b?.id??'sans-id';
+  if(!vertsActif()||!Number.isInteger(p)||verts.en){afficherVerts(s);return;}
+  if(!force&&(!b||OUVERT.includes(b.state)||verts.lot===cle)){afficherVerts(s);return;}
+  verts.en=true;verts.lot=cle;
+  try{verts.liste=await api('verts-a-controler',{partie:p});}catch{verts.liste=null;}finally{verts.en=false;afficherVerts(state);}}
+ function afficherResume(s){const el=$('part-summary'),R=moduleResume();if(!el)return;el.hidden=!R;if(!R)return;listeLigne(s);
+   const cle=cleHistoire(s),b=s.batch,memeSession=histoire.session===s.sessionId,recents=Array.isArray(s.events)?s.events:[];
+   const statut=histoire.cle===cle?histoire.statut:memeSession&&histoire.statut==='unavailable'?'unavailable':'loading';
+   /* Le résumé n'est recalculé que si ses entrées ont changé. */
+   const memo=JSON.stringify([cle,statut,histoire.version,recents.length,recents.at(-1)?.eventId??null,b?.state??null,
+     ...['processed','deferred','skipped','manuallyCompleted','interrupted','paused'].map(k=>b?.[k]?.length??0),b?.activeIdentity??null,s.current?.identity??null]);
+   if(memo===resumeMemo)return;resumeMemo=memo;
+   const r=R.summarize({sessionId:s.sessionId??null,batch:b??null,identity:s.current?.identity??null,
+     events:[...(memeSession?histoire.events:[]),...recents],historyStatus:statut});
+   const titre=$('part-summary-title');
+   if(!r.counts){titre.textContent='Résumé de la partie';$('part-summary-line').textContent='Partie non identifiée : résumé inconnu.';poser($('part-summary-counts'),'');poser($('part-summary-lots'),'');
+     $('part-summary-deferred').textContent='Partie non identifiée : résumé inconnu.';$('part-summary-unknown').textContent='';
+     $('part-summary-lots-title').textContent='Lots de la partie (inconnu)';
+     $('part-summary-note').textContent='Ariane ne connaît pas encore la page, le repère ou la session : rien n’est compté.';return;}
+   const c=r.counts,ok=r.historyComplete,n=v=>compte(v,ok),p=r.scope.part;
+   titre.textContent=`Résumé de la partie ${entier(p)}`;
+   /* Le bloc est replié : cette ligne reste visible, avec les mêmes règles que les tuiles. */
+   $('part-summary-line').textContent=`Coupes traitées ${n(c.distinct)} · Posées ${n(c.posed)} · Différés restants ${n(c.deferred)}`;
+   if(poser($('part-summary-counts'),tuiles([['Lots',n(r.lots.length),'','de cette partie'],
+     ['Coupes traitées',n(c.distinct),'','chacune comptée une fois'],
+     ['Posées par Ariane',n(c.posed),'','validation acceptée'],
+     ['Différés restants',n(c.deferred),c.deferred?'amber':'',`${n(c.engineDeferred)} moteur · ${n(c.gaugeRejected)} écartement · ${n(c.noInput)} sans points · ${n(c.unclassifiedDeferred)} motif inconnu`],
+     ['Reprises à la main',n(c.manual),'','déclarées'],
+     ['SKIP envoyés',n(c.skipped),'','commande explicite']])))animerTuiles($('part-summary-counts'),'resume');
+   const liste=r.deferredCuts.map(entier).join(', ');
+   $('part-summary-deferred').textContent=r.deferredCuts.length?(ok?`Différés restants : ${liste}.`:`Différés restants connus : ${liste} (liste peut-être incomplète).`)
+     :ok?'Aucun différé restant.':'Différés restants : inconnu (aucun dans ce qui a été lu).';
+   const inconnues=r.unknownCuts.length&&r.unknownCuts.length<=12?` (${r.unknownCuts.map(entier).join(', ')})`:'';
+   $('part-summary-unknown').textContent=`Issue inconnue : ${n(c.unknown)}${inconnues} · En cours maintenant : ${r.activeCut!==null?'cut '+entier(r.activeCut):'aucun cut'} · Événements sans identité complète : ${n(r.identityUnknown)}.`;
+   const manques=[r.missingStarts?'début de lot absent':'',r.identityUnknown?'identités incomplètes':'',r.otherPageLots?'autre page non rapprochée':''].filter(Boolean);
+   $('part-summary-note').textContent=[
+     statut==='loading'?'Lecture de l’historique en cours : comptes partiels.':statut==='unavailable'?'Historique indisponible : seuls le lot courant et les derniers événements sont comptés.'
+       :ok?'Historique lu en entier.':`Historique incomplet (${manques.join(', ')}) : comptes partiels.`,
+     r.scope.projectId?'Compté pour ce projet, dans cette session d’Ariane.':'Projet non identifié : compté pour cette page d’ESV (et ses rechargements repris par Ariane), dans cette session.',
+     r.otherPageLots?`${r.otherPageLots} ${pluriel(r.otherPageLots,'autre lot')} de la partie ${entier(p)} sur une autre page d’ESV : non ${pluriel(r.otherPageLots,'compté')} ici.`:'',
+     'Nombre total de coupes de la partie : inconnu.'].filter(Boolean).join(' ');
+   $('part-summary-lots-title').textContent=`Lots de la partie (${n(r.lots.length)})`;
+   poser($('part-summary-lots'),r.lots.slice().reverse().map(l=>{const m=v=>compte(v,l.complete),k=l.counts;
+     return `<li><span class="mono">${esc(heure(l.startedAt))} · ${esc(String(l.id).slice(0,8))}${l.current?' · lot courant':''}</span>`
+       +`<span>${esc(NOMS_ETAT[l.state]||'état inconnu')} · coupes ${m(k.distinct)} · posées ${m(k.posed)} · différées ${m(k.deferred)} · issue inconnue ${m(k.unknown)}</span></li>`;}).join(''));
+ }
  /* Activité : heure, cut, ce qui s'est passé, valeur. */
  const lignes=l=>l.map(x=>`<div class="l" data-k="${entier(x.c)}-${x.k||'x'}-${entier(Date.parse(x.t))}"><span class="h">${heure(x.t)}</span><span class="c">${entier(x.c)}</span><span class="quoi${x.k?' '+x.k:''}">${esc(x.quoi)}</span><span class="v">${esc(x.val)}</span></div>`).join('');
  const QUOI={'first-pass':['posé · moteur',''],window:['posé · par la voie','voie-l'],choice:['posé · choix par la voie','voie-l'],crossing:['posé · ornière','voie-l']};
@@ -249,7 +383,9 @@
    const encours=i=>({nom:NOMS_COMMANDE[i.kind]||'Commande',cut:i.identity?.cut,
      etapes:s.reconcileRequired?[['unk','Émise ?'],['unk','Effet non observé'],na]:[['','Émission en cours'],['','Effet attendu'],na]});
    const vu=e=>({effet:e.afterObserved===true?['seen','Effet observé']:e.navigationObserved===true?['done','Navigation observée','État final non relu : ESV a changé de cut avant la relecture.']:['unk','Effet non observé'],
-     serveur:e.serverConfirmed===true?['seen','Serveur : confirmé']:na});
+     /* Relecture E : `serverConfirmed` vient du compteur d'ESV (preuve du moteur « server-confirmed ») : c'est une
+      * acceptation LOCALE. Le texte le dit ; la valeur de la preuve ne change pas. */
+     serveur:e.serverConfirmed===true?['seen','Acceptée par ESV (compteur local)','Acceptation constatée par le compteur d’ESV dans cette fenêtre ; ce n’est pas une confirmation du serveur.']:na});
    const d=s.deferIntent&&s.deferIntent.phase!=='FINALIZED'?s.deferIntent:null;
    if(d)return {nom:'Suivant sans décision',cut:d.identity?.cut,etapes:[emise(d.commandInvoked),['unk','Effet non observé'],na]};
    if(s.intent)return encours(s.intent);
@@ -282,11 +418,14 @@
  /* Bandeau dans ESV (piste H) : une ligne d'état en bas de la page ESV, qui ne
   * capte aucun clic. Il suit cette fenêtre : fermée, il disparaît. */
  let bandeau=false,bandeauEnvoye='';
+ /* RM-11 : la raison de la séance, dite en bout de ligne seulement quand la lecture est allumée et qu'il y en a une (le texte vient du catalogue). */
+ function raisonBandeau(n){const M=globalThis.BananeRaisonCorrection;if(!M||n?.raison?.actif!==true)return '';
+   const c=n.raison.collante,code=c?c.code:(n.visits||[]).at(-1)?.raison;return M.LIBELLES[code]?` · raison : ${M.LIBELLES[code]}${c?' (collante)':''}`:'';}
  function texteBandeau(s){const b=s.batch,n=s.native;
    if(b&&OUVERT.includes(b.state)){const v=voieDuLot(s);
      return {texte:`ARIANE · ORBITE · ${NOMS_ETAT[b.state]||'lot'} · cut ${entier(b.activeIdentity?.cut)} · ${v.fait.size} posés · ${v.differe.size} différés`,
        ton:INCERTAIN.includes(b.state)||s.reconcileRequired?'rouge':b.state==='RUNNING'?'vert':'ambre'};}
-   if(n&&nativeActive(s))return {texte:`ARIANE · ÉCHO · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites`,ton:n.status==='RUNNING'?'vert':'ambre'};
+   if(n&&nativeActive(s))return {texte:`ARIANE · ÉCHO · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites${raisonBandeau(n)}`,ton:n.status==='RUNNING'?'vert':'ambre'};
    if(b)return {texte:`ARIANE · ORBITE · ${NOMS_ETAT[b.state]||'lot'} · ${b.processed?.length||0} traités · ${b.deferred?.length||0} différés`,ton:''};
    return {texte:'ARIANE · prêt',ton:''};}
  let bandeauA=0;
@@ -322,11 +461,107 @@
  let bornesPartie={part:null,last:null,source:null},bornesDemandees=null;
  function bornesDe(part){if(!Number.isInteger(part)||bornesDemandees===part)return;bornesDemandees=part;
    void api('bornes-partie',{part}).then(r=>{bornesPartie={part,last:Number.isInteger(r?.last)?r.last:null,source:r?.source??null};if(state)render(state);}).catch(()=>{bornesDemandees=null;});}
- /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages). */
- let nouveauLot=false;const tiroirs={lot:true,native:true};
+ /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
+  * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, le tiroir du lot est fermé par
+  * défaut ; son état se lit dans aria-expanded. Test 7 : il s'appelle « Export,
+  * archive et réglages avancés » et porte « Détails » (lignes techniques). */
+ let nouveauLot=false,departsPartie=null,progresLot={cle:null,max:0};
+ /* 4.9.0.17 : fiches de départ (D-092) gardées pour la tuile du lot ; relues avec la liste des départs. */
+ let fichesDepart=[];
+ /* La fiche de départ qui donne le travail d'un lot : seulement pour un lot sur TOUTE la partie
+  * (premier cut 0 ou 1 : les lots de Mic partent du cut 1 ; jusqu'à la fin de partie), la
+  * première fiche de CE lot (même batchId : les invalides au démarrage), avec des invalides
+  * lisibles et non nuls. Sinon null : la tuile garde la position. */
+ const PREMIER_CUT_MAX=1;
+ function travailDuLot(b){const sc=b?.scope,a=Number(sc?.start);
+   if(!b?.id||!sc||!finDePartie(sc)||!Number.isInteger(a)||a<0||a>PREMIER_CUT_MAX)return null;
+   const f=fichesDepart.find(x=>x&&x.batchId===b.id);
+   return f&&Number.isInteger(f.invalides)&&f.invalides>0&&(!Number.isInteger(f.partie)||f.partie===sc.part)?f:null;}
+ /* Test 7 (Mic : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE TERMINÉE. Constaté au banc
+  * (service worker réel, ESV simulé) : un lot lancé sur une partie dont le compteur d'ESV dit « N on M treated » avec N = M
+  * pose et valide le cut affiché, puis ESV charge la partie suivante et le lot se clôt sur « ESV est passé dans la partie
+  * P+1 » ; rien ne disait que la partie était finie. Ici, lecture seule, pour un lot CLOS : la partie de son scope n'a plus
+  * aucun cut rouge si (1) le dernier relevé du compteur pendant le lot (`totalReleve`, même partie, source « compteur ») a
+  * N ≥ M, ou (2) la fiche de départ de CE lot (D-092, même batchId) compte 0 invalide. Aucune commande, rien d'écrit. */
+ function partieSansRouge(b){const p=b?.scope?.part;if(!b||!Number.isInteger(p)||OUVERT.includes(b.state))return null;
+   const t=b.totalReleve,compteur=!!t&&t.part===p&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&Number.isInteger(t.traites)&&t.traites>=t.total;
+   const f=fichesDepart.find(x=>x&&x.batchId===b.id),depart=!!f&&f.invalides===0&&(!Number.isInteger(f.partie)||f.partie===p);
+   /* Test 7, suite : lot clos par le service worker sans rien envoyer (partie complète au premier cut). */
+   const garde=b.state==='STOPPED'&&b.stoppedAtEnd?.issue==='partie-sans-rouge';
+   return compteur||depart||garde?p:null;}
+ /* Le pourcentage affiché : une décimale sous 10 %, arrondi vers le bas (jamais plus que le vrai). */
+ const pourcentAffiche=p=>p>=100?'100':p<10?String(Math.floor(p*10)/10):String(Math.floor(p));const tiroirs={lot:false,native:true};
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
-   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));bouton.textContent=tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
+   t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
+   bouton.textContent=nom==='lot'?'Export, archive et réglages avancés':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
+ /* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX POUR LE LOT. Le clic du mode rapide et la règle métier
+  * « grappe de différés » sont gardés par le service worker (storage.local : `choix-lot-etat`, `choix-lot`), lus au démarrage de
+  * chaque lot et figés dans son scope. Un lot ouvert garde les siens : le panneau le dit quand ils diffèrent du choix, qui servira
+  * au lot suivant. Un champ absent du scope vaut le défaut (« Comme avant », règle coupée). */
+ const NOMS_CLIC={'tel-quel':'Comme avant','gauche-recentre':'Variante : rail gauche recentré','tout-recentre':'Tout recentré, comme un humain'};
+ const IDS_CLIC={'tel-quel':'clic-tel-quel','gauche-recentre':'clic-gauche-recentre','tout-recentre':'clic-tout-recentre'};
+ let choixLot=null;
+ const clicDuScope=sc=>NOMS_CLIC[sc?.clicHumain]?sc.clicHumain:'tel-quel',grappeDuScope=sc=>sc?.regleGrappeDifferes===true;
+ const nomGrappe=on=>on?'activée':'coupée';
+ /* Test 7 (Mic : « après un lot, le panneau disait “Activée pour le prochain lot” alors que le lot venait de l'utiliser ») — chaque
+  * choix dit DEUX choses, séparées : ce que le dernier lot a utilisé (« Lot en cours » pendant un lot), lu dans son scope (figé au
+  * démarrage, consigné par `batch-started`), et ce que le prochain lot utilisera (le choix gardé). Sans lot : « aucun lot ».
+  * Sans réponse du service worker aux choix (ancienne version) : « Prochain lot » reste « — » et rien n'est coché. */
+ function majChoixLot(s){const b=s?.batch,sc=b?.scope,ouvert=OUVERT.includes(b?.state),qui=ouvert?'Lot en cours':'Dernier lot';
+   const ecrire=(id,t)=>{if($(id))$(id).textContent=t;};
+   ecrire('clic-dernier-l',qui);ecrire('grappe-dernier-l',qui);
+   ecrire('clic-dernier',sc?`« ${NOMS_CLIC[clicDuScope(sc)]} »`:'aucun lot');
+   ecrire('grappe-dernier',sc?`règle ${nomGrappe(grappeDuScope(sc))}`:'aucun lot');
+   if(!choixLot)return;
+   for(const [v,id] of Object.entries(IDS_CLIC))if($(id)&&document.activeElement!==$(id))$(id).checked=choixLot.clicHumain===v;
+   if($('grappe-differes')&&document.activeElement!==$('grappe-differes'))$('grappe-differes').checked=choixLot.regleGrappeDifferes===true;
+   ecrire('clic-prochain',`« ${NOMS_CLIC[choixLot.clicHumain]} »`);
+   ecrire('grappe-prochain',`règle ${nomGrappe(choixLot.regleGrappeDifferes===true)}`);
+   /* Pendant un lot, un choix différent du sien attend le lot suivant : la note le dit. */
+   ecrire('clic-humain-note',ouvert&&clicDuScope(sc)!==choixLot.clicHumain?'Le lot en cours garde le sien jusqu’à sa fin ; le choix coché servira au prochain lot.':'Lu au démarrage de chaque lot, gardé jusqu’à sa fin.');
+   ecrire('grappe-note',ouvert&&grappeDuScope(sc)!==(choixLot.regleGrappeDifferes===true)?'Le lot en cours garde la sienne jusqu’à sa fin ; la case servira au prochain lot.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.');}
+ async function changerChoixLot(args){try{choixLot=await api('choix-lot',args);
+     const ouvert=OUVERT.includes(state?.batch?.state);
+     note(ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
+   catch(e){note(e.message,true);}
+   majChoixLot(state);}
+ /* RM-11 (4.9.5 test 9) — RAISON DE LA CORRECTION (fiches/RM11_RAISON_CORRECTION.md). Coupée par défaut. Le choix (allumée ou non, rangée de touches)
+  * est gardé par le service worker (`raison-choix-etat`, `raison-choix`), lu au démarrage d'Écho et gardé jusqu'à la fin de la séance : la séance en cours
+  * garde le sien. Le suivi vient de `native.raison` (état de la séance) et de `native.visits[].raison` (la bande des 24 derniers cuts). Les pastilles
+  * et les touches (quand ce panneau a le focus) envoient la raison au service worker, qui la consigne : jamais bloquant, rien n'est envoyé à ESV.
+  * Les textes viennent du catalogue du module, jamais de l'état. */
+ const IDS_TOUCHES_RAISON={'chiffres':'raison-touches-chiffres','alt-chiffres':'raison-touches-alt-chiffres','pave':'raison-touches-pave'};
+ let choixRaison=null;
+ const RC=()=>globalThis.BananeRaisonCorrection||null;
+ function majRaison(s){const M=RC(),bloc=$('carte-raison');if(!bloc||!M)return;
+   const ecrire=(id,t)=>{if($(id))$(id).textContent=t;};
+   if(choixRaison){if($('raison-actif')&&document.activeElement!==$('raison-actif'))$('raison-actif').checked=choixRaison.actif===true;
+     for(const [v,id] of Object.entries(IDS_TOUCHES_RAISON))if($(id)&&document.activeElement!==$(id))$(id).checked=choixRaison.touches===v;}
+   const n=s?.native,r=n?.raison&&n.raison.actif===true?n.raison:null,ouverte=['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status);
+   if($('raison-suivi'))$('raison-suivi').hidden=!r;
+   /* La séance ouverte garde son choix ; le choix coché servira à la prochaine. */
+   ecrire('raison-note',ouverte&&choixRaison&&(!!r!==(choixRaison.actif===true)||r&&r.touches!==choixRaison.touches)?'La séance en cours garde son choix jusqu’à sa fin ; le choix coché servira à la prochaine séance.'
+     :ouverte&&r?'Lecture allumée pour cette séance. Rien n’est retenu ni envoyé à ESV.':'Coupée par défaut. Lue au démarrage d’Écho, gardée jusqu’à la fin de la séance. Rien n’est retenu ni envoyé à ESV.');
+   if(!r)return;
+   const v=M.vue(r,n.visits),vis=n.visits||[],dernier=vis.at(-1),courant=n.status==='RUNNING'&&dernier&&!dernier.endedAt?dernier:null;
+   M.CATALOGUE.forEach((c,i)=>{const b=$('raison-'+(i+1));if(!b)return;b.disabled=!courant;b.setAttribute('aria-pressed',String(!!courant&&courant.raison===c.code));});
+   if($('raison-0'))$('raison-0').disabled=!courant;
+   const lib=code=>M.LIBELLES[code]||'?';
+   ecrire('raison-ligne',(courant?(courant.raison?`Ce cut : ${lib(courant.raison)}.`:'Ce cut : aucune raison.'):'Pas de cut en cours.')+' '+
+     (v.collante?`Collante : ${lib(v.collante.code)}, depuis le cut ${entier(v.collante.depuis)} (${entier(v.collante.nCuts)} cut${v.collante.nCuts>1?'s':''}). Tape 0 pour la finir.`:'Aucune raison collante : deux appuis sur la même touche la rendent collante.'));
+   if($('raison-rappel'))$('raison-rappel').hidden=!v.rappel;
+   poser($('raison-bande'),v.bande.map(b=>{const c=M.CODES.includes(b.code)?b.code:null;return `<i class="${c?'r r-'+c:''}" title="cut ${entier(b.cut)} · ${c?lib(c):'aucune raison'}"></i>`;}).join(''));
+   ecrire('raison-couverture',v.couverture.visites?`Raison posée sur ${entier(v.couverture.avecRaison)} des ${entier(v.couverture.visites)} derniers cuts. Les autres restent inconnues.`:'Aucun cut visité pour l’instant.');}
+ async function changerChoixRaison(args){try{choixRaison=await api('raison-choix',args);note('Choix gardé pour la prochaine séance d’Écho.');}catch(e){note(e.message,true);}
+   majRaison(state);}
+ /* Une raison tapée (touche ou pastille) : envoyée au service worker, qui la consigne sur le cut en cours. Pas d'`action()` : rien n'est bloqué ni rechargé. */
+ function envoyerRaison(f){void api('native-raison',f.efface?{efface:true}:{code:f.code}).catch(e=>note(e.message,true));}
+ /* Une ligne de CONTENU.txt : les choix du dernier lot (ceux de son scope). */
+ const texteChoixLot=b=>b?.scope?`Choix du lot ${b.id||'?'} : clic du mode rapide « ${NOMS_CLIC[clicDuScope(b.scope)]} » (${clicDuScope(b.scope)}) ; règle métier « grappe de différés » ${nomGrappe(grappeDuScope(b.scope))}${grappeDuScope(b.scope)?' (chaque cut mis en attente : événement regles-metier-ombre, actif.applique, dans le journal)':''}.\n`:'';
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
+   /* 4.9.5.3 (S6) : avis de contrat ESV (empreinte changée, écritures par fetch), une ligne par motif ; absent tant que rien n'a changé. */
+   {const el=$('avis-contrat'),l=Array.isArray(s.avisContrat)?s.avisContrat.filter(x=>typeof x==='string'):[];
+    if(el){el.hidden=!l.length;el.textContent=l.join(' ');el.classList.toggle('error',l.length>0);}}
    const onglets=etatOnglets(s);
    for(const [vue,e] of Object.entries(onglets)){const t=$('tab-'+vue);if(!t)continue;
      if(e){t.dataset.etat=e[0];t.setAttribute('title',e[1]);}else{delete t.dataset.etat;t.removeAttribute('title');}}
@@ -364,6 +599,7 @@
      button('native-discard',{hidden:!n,disabled:working});
      if($('native-discard-note'))$('native-discard-note').hidden=!n;
      hierarchie(['native-resume','native-end','native-download','native-start','native-pause']);
+     majRaison(s);
    }else if(which==='automatic'){
      /* 4.7.21 : pendant un lot, l'invite « Choisis les bornes » n'a pas de sens. */
      note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||(b?.state==='RUNNING'?'Orbite enchaîne les cuts : tu peux suivre ici ou dans ESV.'
@@ -403,6 +639,14 @@
          ?`Politique effective de ce lot : ${nomPolitique(applique)}. Le lot Orbite GCV1 ne repasse pas ses candidates dans le seuil de confiance V4.6 : le choix « ${nomPolitique(demande)} » ne s’y applique pas.`
          :`Politique effective de ce lot : ${nomPolitique(applique)}.`;}
      if($('policy')&&running&&b.scope?.lowConfidence)$('policy').value=b.scope.lowConfidence;
+     /* 4.9 (chantier UX ; test 7 : sous « Détails », dans « Export, archive et réglages avancés ») : la politique effective y est ;
+      * si elle n'est pas celle par défaut, une pastille courte le dit sur la vue. */
+     if($('lot-politique-pastille')){const sc=b?.scope,ecarts=!running?[]:[
+         (sc?.unresolvedPolicy||'pause')!=='defer'?'rail non résolu : pause':'',
+         sc?.lotDecision!=='apply'?'décision sur le lot : observée':'',
+         (sc?.lowConfidence||'pause')!=='attempt'?'faible confiance : pause':''].filter(Boolean);
+       $('lot-politique-pastille').hidden=!ecarts.length;$('lot-politique-pastille').textContent=ecarts.length?'Politique : '+ecarts.join(' · '):'';}
+     majChoixLot(s);
      if($('lot-decision-effective')){$('lot-decision-effective').hidden=!running;
        $('lot-decision-effective').textContent=running?`Décision sur le lot dans ce lot : ${b.scope?.lotDecision==='apply'?'appliquée':'observée seulement'}.`:'';}
      const names=NOMS_ETAT;
@@ -421,26 +665,82 @@
      const e=b?.stoppedAtEnd,raison=SORTIES[e?.reason]||'sortie du lot';
      const fin=!e?'':e.issue==='dernier-cut-valide'?` — dernier cut de la partie (${e.cut}) validé ; ESV est resté sur ce cut`
        :e.issue==='dernier-cut-differe'?` — dernier cut de la partie (${e.cut}), différé ; rien n’a été envoyé à ESV`
+       :e.issue==='depart-sur-vert'?` — départ sur le cut ${entier(e.cut)}, déjà validé : rien n’y a été écrit${Array.isArray(e.derriere)&&e.derriere.length?` ; cuts rouges restants derrière : ${e.derriere.slice(0,12).map(entier).join(', ')}${e.derriere.length>12?', …':''}`:''}`
+       :e.issue==='partie-sans-rouge'?` — partie ${entier(b.scope?.part)} sans cut rouge : le cut ${entier(e.cut)}, déjà traité, n’a reçu aucune commande`
        :e.issue==='fin-sans-pose'?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie-pendant-cut'?` — lot clos pendant le cut ${e.cut} (${raison}) : ${e.applied?'pose appliquée, non validée ; contrôle-la dans ESV':'rien n’y a été validé'}`
        :!e.issue&&e.reason==='adapter-lost-after-navigation'&&e.applied===false?` — dernier cut ${e.cut} : ESV ne répond plus, rien n’y a été posé ; contrôle-le dans ESV`
        :e.issue==='sortie'||e.reason&&!e.issue&&e.applied!==false?` — lot clos après le cut ${e.cut} : ${raison}`
        :` — dernier cut ${e.cut} ${e.applied?'posé, non validé : valide-le dans ESV':'non résolu, laissé sans commande'}`;
-     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} cuts traités · ${b.skipped.length} ignorés${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     $('batch').textContent=b?`${names[b.state]||b.state} · ${b.processed.length} ${accorder(b.processed.length,'cut traité','cuts traités')} · ${b.skipped.length} ${accorder(b.skipped.length,'ignoré')}${differes}${repris}${fin}${b.error?' — '+b.error.message:''}`:'Aucun lot en cours.';
+     /* Test 7 : le titre des résultats suit le lot ; la fin de partie est dite en clair. */
+     if($('resultats-titre'))$('resultats-titre').textContent=!b?'Résultats du dernier lot':OUVERT.includes(b.state)?'Résultats du lot en cours':'Résultats du dernier lot';
+     {const P=partieSansRouge(b),el=$('lot-fin-partie'),e=b?.state==='STOPPED'?b.stoppedAtEnd:null;
+      /* Test 7, suite 2 : départ sur un cut vert sans rouge devant ; les rouges restants derrière sont nommés. */
+      const derriere=e?.issue==='depart-sur-vert'&&e.motif==='rouges-derriere'&&Array.isArray(e.derriere)&&e.derriere.length?e.derriere:null;
+      if(el){el.hidden=P===null&&!derriere;el.textContent=derriere?`Partie ${entier(b.scope?.part)} : plus aucun cut rouge après le cut ${entier(e.cut)}. Il reste ${derriere.length} ${derriere.length>1?'cuts rouges':'cut rouge'} derrière : ${derriere.slice(0,12).map(entier).join(', ')}${derriere.length>12?', …':''}. Aucune pose ni validation n’a été envoyée à ESV.`
+        :P===null?'':`Partie ${entier(P)} : plus aucun cut rouge à traiter. Le lot s’arrête ici.${b.stoppedAtEnd?.issue==='partie-sans-rouge'?' Aucune pose ni validation n’a été envoyée à ESV.':''}`;}}
      /* « La ligne » : l'état en capitales, le cut en grand, les compteurs, la voie. */
      const ton=!b?'ink':INCERTAIN.includes(b.state)||s.reconcileRequired?'red':b.state==='RUNNING'?'':OUVERT.includes(b.state)?'amber':'ink';
      if($('lot-etat')){$('lot-etat').textContent=b?(names[b.state]||b.state)+(b.state==='RUNNING'&&ETAPES[b.step]?' · '+ETAPES[b.step]:''):'Aucun lot';
        $('lot-etat').className='eyebrow'+(ton?' '+ton:'')+(b?.state==='RUNNING'&&!s.reconcileRequired?' live':'');}
      if($('lot-cut'))rouler($('lot-cut'),entier(b?.activeIdentity?.cut??id?.cut));
      etapes(b,s);
-     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`partie ${entier(b.scope.part)} · ${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
+     /* 4.9 (chantier UX) : la partie est dans le titre de la vue ; la tuile du lot ne porte que la plage. */
+     if($('lot-plage'))$('lot-plage').textContent=b?.scope?`${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
      /* Progression dans la plage du lot : du premier au dernier cut. */
-     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut);
-       /* « Fin de partie » : la progression se mesure sur la fin retenue pour la partie, si elle est connue. */
-       const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:NaN):Number(sc?.end);
-       const ok=Number.isFinite(a)&&Number.isFinite(z)&&z>a&&Number.isFinite(c);$('lot-progres').hidden=!ok;
-       if(ok){const pct=Math.round(Math.min(1,Math.max(0,(c-a)/(z-a)))*100);if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=pct+'%';
-         $('lot-debut').textContent=entier(a);$('lot-fin').textContent=entier(z)+(finDePartie(sc)?' ?':'');$('lot-pct').textContent=`${pct} % de la plage`;}}
+     /* 4.9.0.14 (retour de Mic sur la test 13 : « le vert ne se remplit pas ») — la
+      * part de la plage parcourue. Plage fixe : son dernier cut. « Fin de partie » :
+      * la fin retenue pour la partie si elle est connue, sinon M−1, M lu au compteur
+      * d'ESV « cut N sur M » pendant ce lot (b.totalReleve, même partie, source
+      * « compteur », cut courant < M) : la règle de D-062. Fin inconnue : bande
+      * indéterminée et « fin de partie inconnue », jamais un faux pourcentage. Le
+      * vert ne recule pas sur un retour à un cut : il garde le plus loin atteint
+      * dans ce lot. */
+     /* 4.9.0.17 (retour de Mic sur la test 16 : « le pourcentage des invalides traités, pas de la
+      * position ») — DEUX MESURES, jamais un faux chiffre :
+      * - lot sur TOUTE la partie (premier cut 0 ou 1, jusqu'à la fin de partie) et fiche de départ
+      *   de CE lot connue (D-092, même batchId ; la première du lot = invalides au démarrage) :
+      *   % = cuts traités par le lot (posés + différés, b.processed) ÷ invalides de la fiche, et la
+      *   tuile dit « N / M invalides » ;
+      * - sinon (plage fixe, départ au milieu de la partie, fiche absente) : la position, comme avant.
+      * Dans les deux cas : le % ne recule jamais dans un lot (le plus haut atteint est gardé, par
+      * mesure), plafonné à 100 %, une décimale sous 10 % (arrondie vers le bas : jamais plus que
+      * le vrai), 100 % à la fin du lot. Test 16 : le vert suit la valeur exacte (2 décimales) et le
+      * bord lumineux n'apparaît qu'à partir de 1,5 % (avant, collé au coin arrondi gauche, il
+      * débordait de la tuile). */
+     const lotFini=!!b&&(['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state)||b.state==='STOPPED'&&!!b.stoppedAtEnd);
+     const fiche=travailDuLot(b);
+     if($('lot-progres')){const sc=b?.scope,a=Number(sc?.start),c=Number(b?.activeIdentity?.cut??b?.lastCompletedIdentity?.cut),t=b?.totalReleve;
+       const parCompteur=t&&t.part===sc?.part&&t.totalSource==='compteur'&&Number.isInteger(t.total)&&t.total>0&&(!Number.isInteger(t.cut)||t.cut<t.total)&&Number.isFinite(c)&&c<t.total?t.total-1:NaN;
+       const z=finDePartie(sc)?(bornesPartie.part===sc?.part&&bornesPartie.last>a?bornesPartie.last:parCompteur):Number(sc?.end);
+       const lotOk=!!sc&&Number.isFinite(a)&&Number.isFinite(c),travail=!!fiche,ok=travail||lotOk&&Number.isFinite(z)&&z>a,inconnu=lotOk&&!ok&&finDePartie(sc);
+       $('lot-progres').hidden=!ok&&!inconnu;$('lot-progres').className='progres'+(inconnu?' indetermine':'');
+       if($('lot-progres-note'))$('lot-progres-note').textContent=inconnu?'fin de partie inconnue':'';
+       const cle=`${b?.id??`${sc?.part}|${sc?.start}`}|${travail?'travail':'position'}`;if(progresLot.cle!==cle)progresLot={cle,max:0};
+       if(ok){const brut=lotFini?100:travail?Math.min(1,(b.processed?.length??0)/fiche.invalides)*100:Math.min(1,Math.max(0,(c-a)/(z-a)))*100,pct=Math.max(brut,progresLot.max);progresLot.max=pct;
+         if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width=String(+pct.toFixed(2))+'%';
+         if($('lot-progres')?.classList)$('lot-progres').classList.toggle('naissant',pct<1.5);
+         compter($('lot-pct'),pourcentAffiche(pct));
+         $('lot-debut').textContent=travail?'':entier(a);$('lot-fin').textContent=travail?'':entier(z)+(finDePartie(sc)?' ?':'');}
+       else if(inconnu){if($('lot-progres-fill')?.style)$('lot-progres-fill').style.width='100%';$('lot-pct')._compte=null;$('lot-pct').textContent='';if($('lot-pct').dataset)delete $('lot-pct').dataset.v;$('lot-debut').textContent=entier(a);$('lot-fin').textContent='';}
+       /* 4.9.0.16 : l'état de la tuile pour le mouvement : en cours (le vert vit), en pause (calme,
+        * désaturé, immobile), fini (une célébration sobre, une seule fois, quand le lot se termine
+        * sous tes yeux) ; impulsion au bord du vert à chaque cut terminé. */
+       const etat=!b?'':lotFini?'fini':b.state==='RUNNING'&&!s.reconcileRequired?'live':OUVERT.includes(b.state)||b.state==='STOPPED'?'pause':'';
+       const tuile=$('lot-tuile');if(tuile?.dataset&&tuile.dataset.etat!==etat){if(etat)tuile.dataset.etat=etat;else delete tuile.dataset.etat;}
+       /* 4.9.0.17 : la mesure de la tuile (travail : « N / M invalides » ; position : « N cuts »), pour la mise en page. */
+       if(tuile?.dataset){if(travail)tuile.dataset.mesure='travail';else delete tuile.dataset.mesure;}
+       const n=b?.processed?.length??0;
+       if(progresLot.vu&&ok&&etat==='live'&&n>progresLot.traites)impulsion();
+       if(progresLot.vu&&etat==='fini'&&progresLot.etat&&progresLot.etat!=='fini')celebrer();
+       Object.assign(progresLot,{vu:true,traites:n,etat});}
+     /* 4.9 (chantier UX) : la tuile du lot dit toujours combien de cuts sont traités, même quand la fin du lot n'est pas connue. */
+     if($('lot-traites'))rouler($('lot-traites'),b?entier(b.processed?.length??0):'—');
+     /* 4.9.0.16 : « 1 cut », « 2 cuts » (et « 0 cut », en français). 4.9.0.17 : lot sur toute la
+      * partie avec sa fiche de départ : « 39 / 514 invalides » (traités sur invalides au départ). */
+     if($('lot-traites-u'))$('lot-traites-u').textContent=fiche?`/ ${entier(fiche.invalides)} ${accorder(fiche.invalides,'invalide')}`:accorder(b?.processed?.length??0,'cut');
+     const bulle=$('lot-traites')?.parentElement;if(bulle?.setAttribute)bulle.setAttribute('title',fiche?'cuts traités par ce lot (posés et différés) sur les invalides de la partie au départ du lot':'cuts traités dans ce lot');
      const v=b?voieDuLot(s):null;
      /* Tuiles : posés, différés, couverture. 4.8.0 (audit qualité, D02) :
       * la couverture est C1 (D-038) : posés sur les cuts DISTINCTS du lot, le
@@ -454,7 +754,7 @@
          ['Différés',String(v.differe.size),v.differe.size?'amber':'',[v.saute.size?`${v.saute.size} SKIP`:'',v.main.size?`${v.main.size} repris à la main`:'',
            /* D-060 : les refus de la garde d'écartement bas, nommés pour la relecture. */
            v.bas.length?`refusés (écartement bas) : ${v.bas.slice(0,8).map(entier).join(', ')}${v.bas.length>8?', …':''}`:''].filter(Boolean).join(' · ')||'à reprendre'],
-         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis} cuts du lot`]]));
+         ['Couverture',finis?`${Math.round(v.fait.size/finis*100)} %`:'—','',`${v.fait.size} sur ${finis} ${accorder(finis,'cut')} du lot`]]));
        if(ecrit)animerTuiles($('lot-compteurs'),'lot');}
      if($('voie')){const montrer=!!v&&v.cuts.length>0;$('voie').hidden=!montrer;if(poser($('voie'),montrer?dessinerVoie(v):'')&&montrer)animerVoie($('voie'),v);
        if($('voie-legende'))$('voie-legende').hidden=!montrer;
@@ -462,6 +762,9 @@
        if($('legende-skip'))$('legende-skip').hidden=!(v?.saute?.size>0);}
      afficherCommande('lot',b?commandeDerniere(s,'automatic'):null);
      const actLot=b?activiteLot(b):[];if($('lot-activite-bloc'))$('lot-activite-bloc').hidden=!actLot.length;if(poser($('lot-activite'),lignes(actLot)))animerActivite($('lot-activite'),'lot');
+     afficherResume(s);void majVerts(s);
+     /* La carte de départ de la partie en cours passe en tête dès que la partie est connue. */
+     if((b?.scope?.part??id?.part??null)!==departsPartie)void majDeparts();
      /* PAUSED_AFTER_STATE_MISSING n'offre aucun bouton d'action : ni Réessayer,
       * ni SKIP, ni Reprise manuelle. L'opérateur voyait un message sans savoir
       * quoi faire. Ce n'est pourtant pas une panne : la commande est partie, ESV
@@ -545,13 +848,32 @@
    }
    /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
-   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   rendreFocus();
  }
- async function refresh(){if(refreshing)return;refreshing=true;try{render(await api('view'));}catch(e){note(e.message,true);}finally{refreshing=false;}}
+ async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
+ /* 4.9.0.16 (test 15, capture de Mic) : deux onglets au même titre ne se distinguaient pas. Chaque
+  * libellé dit maintenant, si besoin, la fenêtre, le rang de l'onglet, s'il est au premier plan et
+  * s'il est prêt ; l'onglet qu'Ariane utilise déjà est marqué et choisi. Si un seul onglet ESV est
+  * prêt, il est choisi d'avance. Le choix reste celui d'avant : rien ne se connecte tant que tu ne
+  * cliques pas sur « Reconnecter ESV » (sauf un onglet ESV unique, comme avant). */
+ function libellesOnglets(tabs){const fen=[...new Set(tabs.map(t=>t.windowId).filter(w=>w!==null&&w!==undefined))],titre=t=>(t.title||'ESV').trim()||'ESV';
+   const n=new Map();for(const t of tabs)n.set(titre(t),(n.get(titre(t))||0)+1);
+   /* La précision vient en tête : la liste fermée montre le début du libellé, et le titre seul ne distingue rien. */
+   return tabs.map(t=>{const d=[];
+     if(n.get(titre(t))>1){if(Number.isInteger(t.index))d.push(`onglet ${t.index+1}`);if(fen.length>1&&fen.includes(t.windowId))d.push(`fenêtre ${fen.indexOf(t.windowId)+1}`);if(t.active)d.push('au premier plan');}
+     if(t.pret===false)d.push('pas prêt');if(t.utilise)d.push('utilisé par Ariane');
+     const tete=d.join(' · ');return d.length?tete[0].toUpperCase()+tete.slice(1)+' — '+titre(t):titre(t);});}
  async function discover(){if(which==='home')return;const tabs=await api('list-tabs');$('tabs').replaceChildren();
-   if(tabs.length!==1){const o=document.createElement('option');o.value='';o.textContent=tabs.length?'Choisir l’onglet à utiliser…':'Ouvre ESV dans Edge';$('tabs').append(o);}
-   for(const t of tabs){const o=document.createElement('option');o.value=t.id;o.textContent=t.title||'ESV';$('tabs').append(o);}
+   const prets=tabs.filter(t=>t.pret!==false),choisi=tabs.find(t=>t.utilise)??(prets.length===1?prets[0]:null);
+   if(tabs.length!==1){const o=document.createElement('option');o.value='';o.textContent=tabs.length?'Choisir l’onglet ESV à utiliser…':'Ouvre ESV dans Edge';
+     /* L'invite n'est pas un onglet : elle ne se choisit pas dans la liste. */
+     if(tabs.length){o.disabled=true;if(choisi)o.hidden=true;}$('tabs').append(o);}
+   const libelles=libellesOnglets(tabs);
+   tabs.forEach((t,i)=>{const o=document.createElement('option');o.value=t.id;o.textContent=libelles[i];$('tabs').append(o);});
+   $('tabs').value=choisi?String(choisi.id):tabs.length===1?String(tabs[0].id):'';
+   if($('tabs-note'))$('tabs-note').textContent=tabs.length>1?(choisi?.utilise?'Ariane utilise l’onglet marqué « utilisé par Ariane ».':choisi?'Un seul onglet ESV est prêt : il est choisi. Clique sur « Reconnecter ESV » pour l’utiliser.':`${tabs.length} onglets ESV ouverts : choisis le bon, puis « Reconnecter ESV ».`):'';
    const s=await api('view');if(tabs.length===1&&!active(s)&&!s.busy&&!['RUNNING','PAUSED'].includes(s.batch?.state))await connect();
    else if(!tabs.length||tabs.length>1&&!s.current)$('connection').open=true;
  }
@@ -630,8 +952,19 @@
  // 50,3 Mo pour un budget de 48. On vise donc un fichier réellement sous budget.
  const SEGMENT_RESERVE_BYTES=SET()?.export.segmentReserveBytes??4*1024*1024;
  const compactor=()=>globalThis.BananeNativeExport||null;
- async function writeSegments(data,prefix,{segmentBytes=EXPORT_SEGMENT_BYTES,compact=SET()?.export.compact!==false,label='',startIndex=0}={}){
-   const {cloudIds,...metadata}=data,X=compact?compactor():null;
+ /* Ariane 4.9 (V2, D-079) : `mode` (défaut : réglage, « complet ») est rendu par
+  * BananeNativeExport.exportMode, qui refuse un nom inconnu. `save` remplace
+  * saveBlob (« Tout télécharger » y met les fichiers dans UN zip). Seul le
+  * premier segment d'un export porte events, records, state et diagnostic. */
+ const MODE_EXPORT=()=>SET()?.export.mode??'complet';
+ const modeDe=nom=>globalThis.BananeNativeExport?.exportMode?globalThis.BananeNativeExport.exportMode(nom??MODE_EXPORT()):{nom:nom??MODE_EXPORT(),nuage:c=>c};
+ /* 4.9.0.16 : pendant « Tout télécharger », un segment JSON vise au plus deux volumes zip (non
+  * compressé) : compressé, il tient alors dans un volume dès que le JSON se compresse de moitié. */
+ let segmentPlafond=null;
+ async function writeSegments(data,prefix,{segmentBytes=EXPORT_SEGMENT_BYTES,compact=SET()?.export.compact!==false,label='',startIndex=0,save=saveBlob,mode}={}){
+   if(Number.isFinite(segmentPlafond))segmentBytes=Math.min(segmentBytes,segmentPlafond);
+   const {cloudIds,...metadata}=data,X=compact?compactor():null,M=modeDe(mode),Nx=globalThis.BananeNativeExport||null;
+   metadata.exportMode=M.nom;
    const stamp=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
    const exportTrace={cloudObjects:0,chunks:0,captureSummaries:0,pointsExported:0};
    /* `acked` : nuages des segments dont le fichier est confirmé (purgeables) ;
@@ -641,14 +974,16 @@
    // Taille réelle du fichier en cours : en-tête REPLIÉ + nuages + dictionnaires.
    // Mesurer les métadonnées non repliées serait très pessimiste (50 Mo contre
    // 6 Mo repliés sur une session de 58 visites) et découperait à l'infini.
-   const foldMeta=()=>JSON.stringify(X?X.foldRefs(metadata,interner):metadata).slice(0,-1);
+   /* Premier segment : tout l'en-tête. Suivants : en-tête mince (V2). */
+   let mince=false;
+   const foldMeta=()=>{const m=mince&&Nx?.enteteMince?Nx.enteteMince(metadata):metadata;return JSON.stringify(X?X.foldRefs(m,interner):m).slice(0,-1);};
    const fileBytes=()=>bytes+(interner?interner.bytes:0);
    // L'en-tête est sérialisé à la FERMETURE du segment : sinon `exportTrace`,
      // calculé au fil de la boucle, n'atterrissait jamais dans le fichier.
-     const openSegment=()=>{interner=X?X.createInterner():null;head=foldMeta();parts=[];bytes=head.length;inSegment=0;idsSegment=[];};
+     const openSegment=()=>{mince=segment>0;interner=X?X.createInterner():null;head=foldMeta();parts=[];bytes=head.length;inSegment=0;idsSegment=[];};
    /* 4.8.0 : un export sans aucun nuage (lot sans LiDAR) s'écrivait nulle part,
     * sans le dire ; hors vidage automatique, il donne un fichier de métadonnées. */
-   const closeSegment=async(forcer=false)=>{if(!inSegment&&!(forcer&&!segment))return;segment++;
+   const closeSegment=async(forcer=false)=>{if(!inSegment&&!(forcer&&!segment))return;mince=segment>0;segment++;
      // Terrain 15/09 : la trace n'était posée qu'après la boucle, donc seul le
      // DERNIER segment la portait. On la fige à chaque fermeture, avec l'état
      // cumulé à cet instant et ce que ce segment contient en propre.
@@ -657,12 +992,12 @@
        segmentIndex:startIndex+segment,segmentObjects:inSegment,
        cumulative:true,allRequestedObjectsPresent:exportTrace.cloudObjects===cloudIds.length};
      head=foldMeta();
-     const info=`,"segment":${JSON.stringify({index:startIndex+segment,stamp,objects:inSegment,format:'banane-native-export-segment-v1',...(X?{selfContained:true}:{})})}`;
+     const info=`,"segment":${JSON.stringify({index:startIndex+segment,stamp,objects:inSegment,format:'banane-native-export-segment-v1',...(X?{selfContained:true}:{}),...(mince?{headerIn:startIndex+1}:{})})}`;
      const dict=X?`,"dictionaries":${JSON.stringify(interner.dictionaries)}`:'';
      const fmt=X?`,"format":"${X.FORMAT}","compactedFrom":"${metadata.format||'banane-native-session-v2'}"`:'';
      const blob=new Blob([head,info,fmt,',"clouds":[',...parts,']',dict,'}'],{type:'application/json'});
      const name=`${prefix}-${stamp}${label}-seg${String(startIndex+segment).padStart(2,'0')}.json`;
-     parts=[];const f=await saveBlob(blob,name);written.push({name,objects:inSegment,approxBytes:bytes,confirme:f.confirme,etat:f.etat});
+     parts=[];const f=await save(blob,name);written.push({name,objects:inSegment,approxBytes:bytes,confirme:f.confirme,etat:f.etat});
      (f.confirme?acked:nonConfirmes).push(...idsSegment);};
    openSegment();
    for(let i=0;i<cloudIds.length;i++){
@@ -670,6 +1005,7 @@
        note(`Préparation du fichier : ${i+1} / ${cloudIds.length} objets LiDAR${segment?` · ${segment} segment(s) écrit(s)`:''}…`);
      let cloud=await lireNuage(cloudIds[i]);
      if(!cloud)throw Error('Un LiDAR manque dans le stockage. Les autres données restent conservées.');
+     cloud=M.nuage(cloud);
      if(cloud.format==='banane-native-lidar-chunk-v1'){const points=cloud.pointsSceneRelative?.length||0;
        cloud.storageTrace={...(cloud.storageTrace||{}),pointsSaved:points,pointsExported:points};exportTrace.chunks++;exportTrace.pointsExported+=points;}
      if(cloud.format==='banane-native-lidar-capture-v2'){cloud.trace={...(cloud.trace||{}),pointsExported:cloud.trace?.pointsSaved||0};
@@ -859,8 +1195,9 @@
      note(`Vidage automatique : ${(advice.bytesPending/1048576).toFixed(0)} Mo en attente, écriture d’un segment…`);
      const manifeste=await api('native-export-manifest');
      if(!manifeste?.cloudIds?.length)return;
-     const plan=await assembler(manifeste);
-     const {acked,nonConfirmes,written}=await writeSegments(plan,'ariane-native-v4',{label:'-auto',startIndex:advice.segments||0});
+     const plan=await assembler(manifeste),Z=globalThis.BananeZip;
+     const {acked,nonConfirmes,written}=Z?.createZip&&typeof Blob==='function'?await exportEchoZip(Z,plan,{label:'-auto',startIndex:advice.segments||0})
+       :await writeSegments(plan,'ariane-native-v4',{label:'-auto',startIndex:advice.segments||0});
      /* Tout ce qui est écrit sort de la file d'attente (sinon le vidage
       * reprendrait toutes les 5 s) ; seul le confirmé est purgé. */
      await api('native-export-ack',{ids:[...acked,...nonConfirmes],confirmed:acked,fichiers:written.length});
@@ -870,7 +1207,23 @@
    }catch(e){note('Vidage automatique impossible : '+e.message,true);}
    finally{autoExporting=false;vidage=null;finir();}
  }
- async function action(id,fn){if(working)return;uiError=null;working=true;if(state)render(state);try{await fn();}catch(e){uiError=e.message;working=false;if(state)render(state);note(e.message,true);return;}working=false;await refresh();}
+ /* U2 (proposition F, focus-pause / focus-error) : la commande activée est
+  * désactivée pendant l'action, puis peut disparaître (Pause → Reprendre).
+  * Chromium rend alors le focus à body : l'utilisateur du clavier perd sa place.
+  * On le rend à la commande, ou à celle qui la remplace, au premier rendu où
+  * elle est disponible ; jamais à une autre commande (Arrêter, SKIP), jamais si
+  * le focus a été placé ailleurs entre-temps, et au plus 3 s après l'action. */
+ const RELAIS={pause:'resume',resume:'pause','native-pause':'native-resume','native-resume':'native-pause','native-start':'native-pause'};
+ let focusARendre=null;
+ const disponible=el=>!!el&&el.isConnected&&!el.hidden&&!el.disabled&&el.getClientRects().length>0;
+ function rendreFocus(){const f=focusARendre;if(!f||working)return;
+   const actif=document.activeElement;
+   if(Date.now()>f.jusqua||actif&&actif!==document.body&&actif!==f.el){focusARendre=null;return;}
+   const cible=[f.el,$(RELAIS[f.el.id])].find(disponible);
+   if(cible&&cible!==actif)cible.focus();}
+ async function action(id,fn){if(working)return;const origine=document.activeElement;
+   focusARendre=origine?.tagName==='BUTTON'?{el:origine,jusqua:Date.now()+3000}:null;
+   uiError=null;working=true;if(state)render(state);try{await fn();}catch(e){uiError=e.message;working=false;if(state)render(state);note(e.message,true);return;}working=false;await refresh();}
  function on(id,fn){if($(id))$(id).onclick=()=>action(id,fn);}
  /* Navigation interne : plus aucune fenetre n'est ouverte depuis l'interface. */
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>naviguer(b.dataset.view));
@@ -880,8 +1233,16 @@
   * au-delà de 64 MiB. */
  async function exportComplet(prefix){
    if(vidage){note('Vidage automatique en cours : l’export final attend sa fin…');await vidage;}
-   const manifeste=await api('native-export-manifest',{all:true});
-   return dataset(await assembler(manifeste),prefix);
+   const manifeste=await api('native-export-manifest',{all:true}),data=await assembler(manifeste),Z=globalThis.BananeZip;
+   try{const mach=enteteMachine();if(mach&&data&&typeof data==='object'&&!data.machine)data.machine=mach;}catch{/* en-tête seulement */}
+   if(!(Z?.createZip&&typeof Blob==='function'))return dataset(data,prefix);
+   /* 4.9.0.18 : volumes zip ≤ 17 Mo avec CONTENU.txt, comme Orbite ; l'export final confirmé est noté (AM-19). */
+   const r=await exportEchoZip(Z,data);
+   const grosVolumes=r.trop.length?` Attention : ${r.trop.map(t=>`${t.name} (${r.mo1(t.octets)} compressé) dépasse seul ${r.mo1(r.max)} ; il est seul dans le volume ${t.volume}`).join(' ; ')}.`:'';
+   if(r.confirme)await api('native-export-ack',{ids:[],confirmed:[],fichiers:r.volumes.length,final:true}).catch(()=>{});
+   const texte=!r.confirme?`Export Écho incomplet : ${direFichiers(r.volumes)}. Relance « Télécharger à nouveau la session » avant d’envoyer.`
+     :`Session Écho : ${r.volumes.length>1?`${r.volumes.length} volumes zip de ${r.mo1(r.max)} au plus`:'1 archive zip'} (${r.written.length} segment(s) JSON, ${data.records?.length??0} visites, ${r.exportTrace.cloudObjects} LiDAR, ${r.mo1(r.total)} avant compression, ${r.mo1(r.volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(r.volumes)}. Envoie-${r.volumes.length>1?`les ${r.volumes.length}, tels quels`:'la'} pour l’analyse.${grosVolumes}`;
+   statutExport(texte,!r.confirme);return r;
  }
  on('native-end',async()=>{await api('native-end');return exportComplet('ariane-native-v4');});
  on('native-download',()=>exportComplet('ariane-native-v4'));
@@ -928,8 +1289,21 @@ on('native-discard',async()=>{
  on('manual-completion',()=>api('manual-completion'));
  /* 4.8.0 (audit qualité, D03) : chaque export d'Orbite rend
   * { quoi, fichiers, alerte } ; « Tout télécharger » en fait le bilan. */
- const exporterBilan=async()=>({quoi:'bilan',fichiers:(await dataset(await bilanPilote(),'ariane-bilan-v4')).written,alerte:null});
- on('dataset',exporterBilan);
+ /* V2 (D-079) : dans « Tout télécharger » (zip), les nuages sont écrits UNE fois,
+  * dans le corpus ; le bilan n'en recopie aucun mais garde `cloudsInCorpus` (les
+  * captureId, à retrouver dans le corpus du même zip). Bilan seul (bouton
+  * « Télécharger le bilan et les LiDAR ») : il garde ses nuages, rien ne manque. */
+ function sansNuagesDuCorpus(data,idsCorpus){
+   const dans=new Set(idsCorpus),tous=data.cloudIds||[];
+   return {...data,cloudIds:tous.filter(id=>!dans.has(id)),
+     cloudsInCorpus:{file:'ariane-gcv1-corpus-*.json',captureIds:tous.filter(id=>dans.has(id)),
+       note:'Ces nuages LiDAR sont dans le corpus GCV1 du même export (même captureId) ; ils ne sont pas recopiés ici.'}};
+ }
+ const exporterBilan=async({save=saveBlob,mode,horsCorpus=null}={})=>{
+   let data=await bilanPilote();if(horsCorpus)data=sansNuagesDuCorpus(data,horsCorpus);
+   const incoherent=data?.v1TimingExport?.snapshot?.coherent===false;
+   return {quoi:'bilan',fichiers:(await dataset(data,'ariane-bilan-v4',{save,mode})).written,alerte:incoherent?'mesure V1 incomplète (bilan de santé absent de l’instantané)':null};};
+ on('dataset',()=>exporterBilan());
  /* 4.7.19 (KI-059) — EXPORTS DU PILOTE SANS MESSAGE GÉANT.
   * Journal, bilan, diagnostic et corpus passaient en UN message du service
   * worker, limité à 64 Mio : un long lot (65 Ko de journal par cut) l'aurait
@@ -938,50 +1312,302 @@ on('native-discard',async()=>{
   * message ne porte plus que l'état. Le fichier est assemblé par morceaux,
   * sans chaîne géante. Stockage illisible d'ici : ancien chemin par message. */
  async function lireStore(nom){const s=store();if(!s)return null;try{return await s.all(nom);}catch{return null;}}
+ /* 4.9.0.18 (KI-068) : les exports d'Orbite ne portent plus les visites ni les événements d'Écho et de Correction (marques :
+  * `nativeSessionId`, `manualSessionId`, `observationPeriodId`, `railSnapshots`), même règle que tools/filtrer-journal.cjs.
+  * Les observations ESV rangées pendant Écho portent `nativeSessionId` et sortent avec l'export d'Écho. */
+ const horsEcho=x=>!x||!(x.nativeSessionId||x.manualSessionId||x.observationPeriodId||x.railSnapshots);
+ async function lireStoreOrbite(nom){const tout=await lireStore(nom);if(!tout)return null;const gardes=tout.filter(horsEcho);
+   if(gardes.length!==tout.length)gardes.exclusEcho=tout.length-gardes.length;return gardes;}
+ /* V1 (correction 1) — INSTANTANÉ D'EXPORT COHÉRENT. Pendant `…-meta`, le service
+  * worker attend ses écritures de mesure (250 ms au plus) et ajoute une santé V1
+  * par lot suivi. Lire `events` en même temps pouvait figer l'instantané AVANT
+  * cette écriture : la métadonnée annonçait une santé absente de son propre
+  * fichier (partie 23). Ordre voulu : métadonnée (donc flush), PUIS lecture ;
+  * puis contrôle que chaque santé annoncée comme stockée est bien dans ce qui a
+  * été lu. Sinon l'export est déclaré incomplet, dit à l'opérateur, jamais
+  * corrigé en silence : rien n'est supprimé, rien n'est inventé, aucune
+  * commande ESV, budget de 250 ms et compteur de pertes inchangés. */
+ function verifierSanteExportee(meta,events){
+   const t=meta?.v1TimingExport;if(!t||!Array.isArray(t.lots)||!Array.isArray(events))return meta;
+   const presente=l=>events.some(e=>e?.type==='phase-timing'&&e.kind==='health'&&e.sessionId===l.sessionId&&e.batchId===l.batchId&&e.clockId===l.clockId&&e.batchSeq===l.healthSeq);
+   const absentes=t.lots.filter(l=>l.healthStored===true&&!presente(l));
+   if(!absentes.length)return {...meta,v1TimingExport:{...t,snapshot:{coherent:true,missing:[]}}};
+   const perdu=new Set(absentes.map(l=>l.batchId+'|'+l.clockId));
+   return {...meta,v1TimingExport:{...t,status:'snapshot-incomplete',flushComplete:false,
+     lots:t.lots.map(l=>perdu.has(l.batchId+'|'+l.clockId)?{...l,complete:false}:l),
+     snapshot:{coherent:false,missing:absentes.map(l=>({sessionId:l.sessionId,batchId:l.batchId,clockId:l.clockId,healthSeq:l.healthSeq}))}}};
+ }
+ /* Métadonnée d'abord, lecture ensuite : jamais en parallèle. `null` si le
+  * stockage direct est illisible (l'appelant repasse alors par l'API, qui
+  * attend aussi son flush avant de lire). */
+ async function lirePilote(actionMeta){
+   const meta=await api(actionMeta),events=await lireStoreOrbite('events'),records=await lireStoreOrbite('records');
+   const exclus=(events?.exclusEcho||0)+(records?.exclusEcho||0);
+   return events&&records?{meta:verifierSanteExportee(exclus?{...meta,exportScope:{lotOnly:true,excludedEchoItems:exclus,rule:'KI-068'}}:meta,events),events,records}:null;
+ }
  function blobJson(meta,arrays){const head=JSON.stringify(meta),parts=[head.slice(0,-1)];let first=head==='{}';
    for(const [name,items] of Object.entries(arrays)){parts.push(`${first?'':','}${JSON.stringify(name)}:[`);first=false;
      items.forEach((x,i)=>parts.push((i?',':'')+JSON.stringify(x)));parts.push(']');}
    parts.push('}');return new Blob(parts,{type:'application/json'});}
- async function bilanPilote(){const [meta,events,records]=await Promise.all([api('dataset-meta'),lireStore('events'),lireStore('records')]);
-   return events&&records?{...meta,events,records}:api('dataset');}
- async function diagnosticPilote(){const X=globalThis.BananeGCV1Export,events=X?await lireStore('events'):null;
+ /* 4.9.5.3 (S7) : les jalons `phase-timing` sont repliés par visite à l'export (src/phase-pli.js) : même information, contexte écrit une
+  * fois par visite (mesuré : −84 % sur ces jalons, −36 % sur le journal d'une partie). Réglage `export.phaseTimingReplie`. Un groupe qui ne
+  * se redéplie pas à l'identique reste tel quel. Le bilan de l'opération est joint à l'en-tête (`phaseTimingPli`). */
+ /* 4.9.5.3 (S6, relevé 12) — EN-TÊTE « MACHINE » de l'export : navigateur, plateforme, mémoire, GPU. Lecture seule, au moment de l'export, dans la
+  * page du panneau (jamais dans ESV) ; chaque champ absent reste absent (jamais deviné). Ni nom d'utilisateur, ni adresse, ni identifiant. */
+ function enteteMachine(){
+   if(globalThis.BananeSettings?.releves?.enteteMachine===false)return null;
+   const m={};
+   try{const n=navigator;
+     if(Array.isArray(n.userAgentData?.brands))m.navigateur=n.userAgentData.brands.slice(0,5).map(b=>`${String(b.brand).slice(0,40)} ${String(b.version).slice(0,16)}`);
+     if(typeof n.userAgent==='string')m.userAgent=n.userAgent.slice(0,200);
+     const pf=n.userAgentData?.platform||n.platform;if(typeof pf==='string')m.plateforme=pf.slice(0,40);
+     if(Number.isFinite(n.hardwareConcurrency))m.coeurs=n.hardwareConcurrency;
+     if(Number.isFinite(n.deviceMemory))m.memoireGo=n.deviceMemory;}catch{/* absent */}
+   try{const pm=performance.memory;if(pm&&Number.isFinite(pm.usedJSHeapSize))m.memoireJsMo={utilisee:Math.round(pm.usedJSHeapSize/1048576),totale:Math.round(pm.totalJSHeapSize/1048576),limite:Math.round(pm.jsHeapSizeLimit/1048576),source:'panneau'};}catch{/* absent */}
+   try{const c=document.createElement('canvas'),gl=c.getContext('webgl')||c.getContext('experimental-webgl'),ext=gl&&gl.getExtension('WEBGL_debug_renderer_info');
+     m.gpu=ext?{fabricant:String(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)).slice(0,80),rendu:String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)).slice(0,120)}:null;
+     try{gl&&gl.getExtension('WEBGL_lose_context')?.loseContext();}catch{}}catch{m.gpu=null;}
+   return m;}
+ function eventsExport(meta,events){
+   const P=globalThis.BananePhasePli,S=globalThis.BananeSettings?.export,machine=enteteMachine();
+   const m={...meta,...(machine?{machine}:{})};
+   if(!P||S?.phaseTimingReplie===false||!Array.isArray(events))return {meta:m,events};
+   try{const r=P.plier(events);return {meta:{...m,phaseTimingPli:r.bilan},events:r.events};}catch{return {meta:m,events};}
+ }
+ async function bilanPilote(){const lu=await lirePilote('dataset-meta');
+   if(!lu)return api('dataset');const e=eventsExport(lu.meta,lu.events);
+   return {...e.meta,events:e.events,records:lu.records};}
+ async function diagnosticPilote(){const X=globalThis.BananeGCV1Export,events=X?await lireStoreOrbite('events'):null;
    if(!events)return api('gcv1-diagnostic-export');
    return X.buildDiagnostic({...await api('gcv1-export-meta'),events});}
- async function planCorpusPilote(){const X=globalThis.BananeGCV1Export,s=store();
+ async function planCorpusPilote(diagnostic=null){const X=globalThis.BananeGCV1Export,s=store();
    if(!X||!s)return api('gcv1-corpus-export-plan');
    let presents;try{presents=new Set(await s.keys('clouds'));}catch{return api('gcv1-corpus-export-plan');}
-   return X.buildCorpusPlan({diagnostic:await diagnosticPilote(),getCloud:async id=>presents.has(id)?{}:null});}
- async function exporterDiagnostic(){
-   const diagnostic=await diagnosticPilote();
-   const f=await saveBlob(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),`ariane-gcv1-diagnostic-${Date.now()}.json`);
+   return X.buildCorpusPlan({diagnostic:diagnostic||await diagnosticPilote(),getCloud:async id=>presents.has(id)?{}:null});}
+ async function exporterDiagnostic({save=saveBlob,diagnostic=null,nom=`ariane-gcv1-diagnostic-${Date.now()}.json`}={}){
+   diagnostic=diagnostic||await diagnosticPilote();
+   const f=await save(new Blob([JSON.stringify(diagnostic)],{type:'application/json'}),nom);
    statutExport(nonEnregistres([f]).length?`Diagnostic GCV1 ${direFichiers([f])}.`:`Diagnostic GCV1 téléchargé : ${diagnostic.observationCount} observation(s).`,nonEnregistres([f]).length>0);
-   return {quoi:'diagnostic',fichiers:[f],alerte:null};
+   return {quoi:'diagnostic',fichiers:[f],alerte:null,nom};
  }
- async function exporterCorpus(){
-   const plan=await planCorpusPilote();
-   const fichiers=plan.cloudIds.length?(await dataset(plan,'ariane-gcv1-corpus',{compact:false})).written
-     :[await saveBlob(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`ariane-gcv1-corpus-${Date.now()}.json`)];
+ /* V2 : `diagnosticRef` remplace le diagnostic recopié dans le corpus quand le
+  * diagnostic est déjà dans le même zip (une seule copie). `ids` rend les nuages
+  * réellement écrits, pour que le bilan n'omette que ceux-là. */
+ async function exporterCorpus({save=saveBlob,plan=null,mode,diagnosticRef=null}={}){
+   plan=plan||await planCorpusPilote();
+   if(diagnosticRef){const {diagnostic,...reste}=plan;plan={...reste,diagnosticRef:{...diagnosticRef,observationCount:diagnostic?.observationCount??null}};}
+   let ids=[];
+   const fichiers=plan.cloudIds.length?await(async()=>{const r=await dataset(plan,'ariane-gcv1-corpus',{compact:false,save,mode});
+       if(r.exportTrace.cloudObjects===plan.cloudIds.length&&!nonEnregistres(r.written).length)ids=plan.cloudIds.slice();return r.written;})()
+     :[await save(new Blob([JSON.stringify({...plan,clouds:[]})],{type:'application/json'}),`ariane-gcv1-corpus-${Date.now()}.json`)];
    const alerte=plan.missingCaptureIds.length?`${plan.missingCaptureIds.length} capture(s) LiDAR référencée(s) absente(s) du store`:null;
    if(nonEnregistres(fichiers).length)statutExport(`Corpus GCV1 ${direFichiers(fichiers)}.`,true);
    else if(alerte)statutExport(`Corpus GCV1 téléchargé ; ${alerte}.`,true);
    else statutExport(`Corpus GCV1 téléchargé : ${plan.cloudIds.length} capture(s) LiDAR.`);
-   return {quoi:'corpus',fichiers,alerte};
+   return {quoi:'corpus',fichiers,alerte,ids};
  }
- async function exporterJournal(){const name=`ariane-journal-v4-${Date.now()}.json`;
-   const [meta,events,records]=await Promise.all([api('journal-meta'),lireStore('events'),lireStore('records')]);
-   const f=events&&records?await saveBlob(blobJson(meta,{events,records}),name):await saveBlob(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
-   statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:events&&records?`Journal téléchargé : ${events.length} événements, ${records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0);
-   return {quoi:'journal',fichiers:[f],alerte:null};}
- on('gcv1-diagnostic-export',exporterDiagnostic);on('gcv1-corpus-export',exporterCorpus);on('journal',exporterJournal);
+ async function exporterJournal({save=saveBlob}={}){const name=`ariane-journal-v4-${Date.now()}.json`;
+   const lu=await lirePilote('journal-meta');
+   const e=lu?eventsExport(lu.meta,lu.events):null;
+   const f=lu?await save(blobJson(e.meta,{events:e.events,records:lu.records}),name):await save(new Blob([JSON.stringify(await api('journal'))],{type:'application/json'}),name);
+   const incoherent=lu?.meta?.v1TimingExport?.snapshot?.coherent===false;
+   statutExport(nonEnregistres([f]).length?`Journal ${direFichiers([f])}.`:incoherent?'Journal téléchargé, mais la mesure V1 est incomplète (bilan de santé absent de l’instantané) : relance l’export.'
+     :lu?`Journal téléchargé : ${lu.events.length} événements, ${lu.records.length} enregistrements.`:'Journal téléchargé.',nonEnregistres([f]).length>0||incoherent);
+   /* Une mesure V1 incohérente est un MANQUE : « Tout télécharger » ne vide pas le cache. */
+   return {quoi:'journal',fichiers:[f],alerte:incoherent?'mesure V1 incomplète (bilan de santé absent de l’instantané)':null};}
+ on('gcv1-diagnostic-export',()=>exporterDiagnostic());on('gcv1-corpus-export',()=>exporterCorpus());on('journal',()=>exporterJournal());
  /* 4.8.0 — TOUT POUR L'ANALYSE EN UN CLIC. Terrain du 26/09 (parties 13 et 14) :
   * bilans sans journal, les causes d'arrêt se lisaient moins bien. Les quatre
   * exports du lot, dans l'ordre, chacun avec son propre message. */
  /* 4.8.0 (audit qualité, D03) : un export qui échoue n'arrête pas les
   * autres, et le message final dit ce qui manque (fichier non enregistré,
   * capture absente) au lieu d'un succès global. Il reste affiché. */
- on('export-tout',async()=>{const bilans=[];
-   for(const [quoi,f] of [['journal',exporterJournal],['bilan',exporterBilan],['diagnostic',exporterDiagnostic],['corpus',exporterCorpus]]){
+ /* V2 (D-079) — UN CLIC, UN ZIP. Les quatre exports restent des fichiers JSON
+  * distincts, mais ils sont rangés dans une seule archive (src/zip-writer.js,
+  * écrite à la main, en flux : aucune dépendance, aucune permission de plus).
+  * Les nuages LiDAR n'y sont qu'une fois (le corpus) ; le diagnostic non plus
+  * n'est pas recopié dans le corpus. Si le diagnostic ou le corpus échoue, le
+  * bilan garde ses nuages et le corpus garde son diagnostic : rien ne manque
+  * parce qu'un autre fichier a échoué. Au-delà de `zipMaxBytes`, l'archive est
+  * fermée et une suivante est ouverte (« -partie02 »). Sans l'écrivain zip
+  * (essais, ancien navigateur), repli sur l'ancien chemin fichier par fichier. */
+ /* V2 — cache des exports : instantané des clés, et vidage manuel avec confirmation chiffrée. */
+ async function instantaneCache(){const s=store();if(!s)return null;
+   const EC=globalThis.BananeExportCache;if(!EC?.signature)return null;
+   const at=Date.now();   // instant de l'instantané : le service worker refuse le vidage si une grâce d'observation a couru depuis
+   try{const [events,records,clouds]=[await s.keys('events'),await s.keys('records'),await s.keys('clouds')];
+     if(!(Array.isArray(events)&&Array.isArray(records)&&Array.isArray(clouds)))return null;
+     /* Signature de chaque événement/visite : un enregistrement modifié après cet instantané n'est jamais supprimé. */
+     const sig=(liste,id)=>Object.fromEntries(liste.map(o=>[id(o),EC.signature(o)]));
+     const signatures={events:sig(await s.all('events'),o=>o.eventId),records:sig(await s.all('records'),o=>o.recordId||o.id)};
+     return {events:events.filter(id=>id in signatures.events),records:records.filter(id=>id in signatures.records),clouds,signatures,at};}catch{return null;}}
+ const demandeVidage=(snap,extra)=>api('export-cache-clear',{ids:{events:snap.events,records:snap.records,clouds:snap.clouds},signatures:snap.signatures,instantaneAt:snap.at,...extra});
+ const phraseGardes=r=>{const n=(r?.modifies?.events?.length||0)+(r?.modifies?.records?.length||0);return n?` ${n} enregistrement(s) modifié(s) depuis l’export ont été GARDÉS (pas dans l’export).`:'';};
+ /* Test 4 : la capture « avant » restée ouverte sur un lot fini (dernier cut différé, posé non validé…) est GARDÉE par le
+  * vidage : son nuage LiDAR et ce qui le nomme restent dans le cache et partent avec le prochain export. */
+ const phraseCapture=r=>{const c=r?.captureGardee,n=c?.nuages||0,ev=c?.evenements||0,vi=c?.visites||0;if(!(n||ev||vi))return '';
+   const liens=[ev?`${ev} événement${ev>1?'s':''}`:'',vi?`${vi} visite${vi>1?'s':''}`:''].filter(Boolean).join(' et ');
+   return ` ${n===1?'1 nuage gardé':n>1?`${n} nuages gardés`:'Données gardées'} : capture du dernier cut${liens?` (${liens} liés gardé${ev+vi>1?'s':''} aussi)`:''}. Elle partira avec le prochain export.`;};
+ async function resumeCache(snap){const s=store(),out={lots:0,coupes:0,octets:null};
+   try{const lots=new Set(),coupes=new Set(),ev=new Set(snap.events),rc=new Set(snap.records);
+     for(const e of await s.all('events'))if(ev.has(e.eventId)&&e.batchId)lots.add(e.batchId);
+     for(const r of await s.all('records'))if(rc.has(r.recordId||r.id)&&r.identity)coupes.add(r.identity.part+'|'+r.identity.cut);
+     out.lots=lots.size;out.coupes=coupes.size;}catch{out.lots=out.coupes=null;}
+   try{let points=0;for(const id of snap.clouds){const c=await s.getCloud(id);points+=c?.pointsSceneRelative?.length||0;}out.octets=points*(SET()?.export.bytesPerPointEstimate??113);}catch{out.octets=null;}
+   return out;}
+ on('export-cache-clear',async()=>{
+   const info=await api('export-cache-info');if(info?.refus)throw Error('Vidage impossible : '+info.refus+'.');
+   const snap=await instantaneCache();if(!snap)throw Error('Stockage illisible depuis le panneau : rien n’est vidé.');
+   /* Test 4 : ce que le service worker gardera (capture ouverte du dernier cut) n'est pas compté parmi ce qui sera supprimé. */
+   const gardes=info?.capture||null,sauf=(liste,nom)=>{const g=new Set(gardes?.[nom]||[]);return liste.filter(i=>!g.has(i));};
+   const aVider={...snap,events:sauf(snap.events,'events'),records:sauf(snap.records,'records'),clouds:sauf(snap.clouds,'clouds')};
+   const nGardes={nuages:snap.clouds.length-aVider.clouds.length,evenements:snap.events.length-aVider.events.length,visites:snap.records.length-aVider.records.length};
+   const gardeQuelqueChose=nGardes.nuages+nGardes.evenements+nGardes.visites>0;
+   if(!snap.events.length&&!snap.records.length&&!snap.clouds.length){statutExport('Le cache des exports est déjà vide.');return;}
+   if(!aVider.events.length&&!aVider.records.length&&!aVider.clouds.length){statutExport(`Rien d’autre à vider.${phraseCapture({captureGardee:nGardes})}`);return;}
+   const r=await resumeCache(aVider),nb=x=>x===null?'nombre inconnu':x;
+   const alerteLot=info?.reprenable?'\n\nATTENTION : ce lot est arrêté mais pas terminé : il peut être repris. Vider maintenant retire ses données de l’export suivant.':'';
+   const alerteCapture=gardeQuelqueChose?`\n\nSera GARDÉ : la capture ouverte du dernier cut (${nGardes.nuages} nuage${nGardes.nuages>1?'s':''} LiDAR, ${nGardes.evenements} événement${nGardes.evenements>1?'s':''} liés). Ce n’est pas une perte : elle reste dans le cache et partira avec le prochain export.`:'';
+   if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${aVider.records.length} visites, ${aVider.events.length} événements, ${aVider.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).${alerteCapture}\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.${alerteLot}`))return;
+   const out=await demandeVidage(snap,{exportAt:null,manuel:true});
+   statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.${phraseGardes(out)}${phraseCapture(out)}${out.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`);});
+ /* 4.9.0.16 — EXPORT DÉCOUPÉ TOUT SEUL (test 15, Mic : « l'envoyer sans script », limite d'envoi
+  * d'environ 18 Mo par fichier). Chaque volume est un zip AUTONOME de 17 Mo au plus (réglage), taille
+  * COMPRESSÉE réelle : chaque fichier JSON est compressé une fois (BananeZip.preparer), puis rangé
+  * dans le volume courant s'il y tient, sinon dans un volume neuf. Un fichier JSON n'est jamais
+  * coupé : s'il dépasse seul la limite, il fait un volume à lui et le statut le dit. Les volumes
+  * sont gardés en mémoire (données déjà compressées) jusqu'à la fin, pour que le CONTENU.txt de
+  * chacun dise « volume n sur N » ; ils sont enregistrés ensuite, dans l'ordre. */
+ const ZIP_MAX_BYTES=()=>SET()?.export.zipMaxBytes??17*1024*1024;
+ const dateCompacte=d=>d.toISOString().replace(/[:.]/g,'-').slice(0,19);
+ const nomVolume=(base,n,N)=>N<=1?`${base}.zip`:`${base}-volume${String(n).padStart(2,'0')}-sur${String(N).padStart(2,'0')}.zip`;
+ /* 4.9.0.18 (audit Écho, parité d'export) — VOLUMES ZIP, machinerie commune à Orbite (« Tout télécharger ») et à Écho
+  * (« Terminer et télécharger », « Télécharger à nouveau », vidage automatique). `save(blob,name)` range un fichier JSON dans le
+  * volume courant s'il y tient, sinon dans un volume neuf ; `fermerTout()` écrit dans chaque volume son CONTENU.txt
+  * (`tete` + « Volume n sur N » + `corps` + liste des fichiers + `pied`) puis enregistre les volumes dans l'ordre. */
+ function volumesZip(Z,{base,maintenant,tete,corps='',pied=''}){
+   const max=ZIP_MAX_BYTES(),decoupe=typeof Z.preparer==='function'&&typeof Z.coutEntree==='function',volumes=[],trop=[];
+   /* Place gardée dans chaque volume pour son CONTENU.txt (écrit à la fin) : la liste des fichiers et le corps. */
+   const reserve=Math.min(16384+2*(tete.length+corps.length+pied.length),Math.floor(max/4));
+   const V={volumes,trop,max,total:0,mo1:n=>(n/1048576).toFixed(1).replace('.',',')+' Mo'};
+   const ouvrir=()=>{const v={zip:Z.createZip({date:maintenant}),seul:false};volumes.push(v);return v;};
+   let courant=ouvrir();
+   V.save=async(blob,name)=>{let e;
+     if(decoupe){const p=await Z.preparer(name,blob,{methode:courant.zip.methode});const cout=Z.coutEntree(p);
+       if(!courant.zip.vide&&courant.zip.octetsTermines+cout+reserve>max)courant=ouvrir();
+       if(cout+reserve+22>max){courant.seul=true;trop.push({name,octets:p.tailleCompressee,volume:volumes.length});}
+       e=courant.zip.ajouterPrepare(p);
+       /* Un fichier plus gros que la limite reste seul dans son volume. */
+       if(courant.seul)courant=ouvrir();}
+     else{if(!courant.zip.vide&&courant.zip.octets+blob.size+4096>max)courant=ouvrir();e=await courant.zip.ajouter(name,blob);}
+     V.total+=e.taille;
+     return {name,confirme:true,etat:'complete',dansZip:true,taille:e.taille,tailleCompressee:e.tailleCompressee};};
+   /* Ferme les volumes (CONTENU.txt « volume n sur N », corps compris) et les enregistre, dans l'ordre. */
+   V.fermerTout=async()=>{const pleins=volumes.filter(v=>!v.zip.vide),N=pleins.length,out=[];
+     for(const [i,v] of pleins.entries()){const liste=v.zip.entrees,n=i+1;
+       await v.zip.ajouter('CONTENU.txt',new Blob([tete+
+         (N>1?`Volume ${n} sur ${N} : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}. Chaque volume est un zip complet ; il faut les ${N} pour l'export entier.\n`
+           :`Archive unique : ${liste.length} fichier(s) JSON, méthode ${v.zip.methode}.\n`)+
+         (v.seul?`Ce fichier dépasse seul la limite de ${V.mo1(max)} par volume : il n'est jamais coupé.\n`:'')+
+         corps+liste.map(e=>`${e.nom}  ${e.taille} octets  (zip ${e.tailleCompressee})  crc32 ${e.crc32.toString(16).padStart(8,'0')}`).join('\n')+'\n'+(typeof pied==='function'?pied():pied)],{type:'text/plain'}));
+       const blob=v.zip.terminer(),f=await saveBlob(blob,nomVolume(base,n,N));out.push({...f,entrees:liste.length,octets:blob.size,seul:v.seul});}
+     return out;};
+   return V;
+ }
+ /* 4.9.0.18 — EXPORT ÉCHO EN VOLUMES ZIP (parité avec Orbite, audit Écho § 3). Les segments JSON d'Écho (compactés, allégés,
+  * en-tête mince après le premier) sont rangés dans des volumes zip autonomes de `zipMaxBytes` au plus, avec un CONTENU.txt
+  * en heure de Paris qui nomme la session, les parties relues, la période observée et les départs de ces parties.
+  * `label` '-auto' : vidage automatique en cours de séance (mêmes volumes, nom distinct). Les nuages ne sont acquittés
+  * (purgeables) que si TOUS les volumes sont confirmés écrits par le navigateur. */
+ async function exportEchoZip(Z,data,{label='',startIndex=0}={}){
+   const maintenant=new Date(),session=data.session||{},records=Array.isArray(data.records)?data.records:[];
+   /* Parties relues : celles des visites où l'opérateur a décidé quelque chose ; à défaut, toute partie numérotée au-dessus de 0
+    * (le chargement d'ESV passe par un « cut 0 / partie 0 » ou un libellé illisible, sans rapport avec le travail). */
+   const decidees=records.filter(r=>(r.operatorIntents||[]).length),sources=decidees.length?decidees:records.filter(r=>r.identity?.part>0);
+   const parties=[...new Set(sources.map(r=>r.identity?.part).filter(Number.isInteger))].sort((a,b)=>a-b);
+   const partieNom=parties.length?`-partie${parties.join('-')}`:'',base=`ariane-echo${partieNom}-${dateCompacte(maintenant)}${label}`;
+   const departs=await api('fiches-depart').then(r=>{const f=(Array.isArray(r?.fiches)?r.fiches:[]).filter(x=>!parties.length||parties.includes(x.partie)),EC=globalThis.BananeExportCache;
+     return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
+   const L=await exportListe(parties);
+   const debut=session.startedAt?dateHeureParis(session.startedAt):'?',periode=session.finishedAt?`du ${debut} au ${dateHeureParis(session.finishedAt)}`:`depuis le ${debut} (session en cours)`;
+   const corps=`Session Écho ${session.id||'?'} · version ${data.version||K_VERSION()} · ${records.length} visite(s) · partie(s) ${parties.length?parties.join(', '):'?'} · ${periode}.\n`+
+     (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+departs+L.texte;
+   let r;
+   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode Écho (relecture) — ${dateHeureParis(maintenant)}\n`,corps,
+     pied:()=>r?.segments>1?'Plusieurs segments JSON : node tools/merge-segments.cjs --out SESSION.json --dir DOSSIER (les zip sont lus tels quels). Les visites et les événements sont dans le premier segment.\n':''});
+   await L.sauver(V.save).catch(()=>{});
+   segmentPlafond=Math.max(2*V.max,2*SEGMENT_RESERVE_BYTES);
+   try{r=await writeSegments(data,'ariane-echo',{label,startIndex,save:V.save});}finally{segmentPlafond=null;}
+   const volumes=await V.fermerTout(),ko=nonEnregistres(volumes),confirme=volumes.length>0&&!ko.length;
+   /* Purge seulement si chaque volume est confirmé : sinon tout reste dans Ariane et partira avec l'export final. */
+   const acked=confirme?r.acked:[],nonConfirmes=confirme?r.nonConfirmes:[...r.acked,...r.nonConfirmes];
+   return {...r,acked,nonConfirmes,volumes,confirme,trop:V.trop,max:V.max,mo1:V.mo1,total:V.total,base};
+ }
+ /* E1 : instantanés de la liste d'ESV (src/liste-memoire.js) rangés dans les volumes, et leur résumé dans CONTENU.txt. */
+ const exportListe=async parties=>{const LM=globalThis.BananeListeMemoire;if(!LM||globalThis.BananeSettings?.listeMemoire?.actif===false)return {texte:'',sauver:async()=>{}};
+   try{return await LM.exportPanneau(api,parties,iso=>globalThis.BananeExportCache?.heureParis?.(iso));}catch{return {texte:'',sauver:async()=>{}};}};
+ /* 5.0 : la liste des verts à contrôler de la partie du lot, en petit fichier JSON, et sa ligne dans CONTENU.txt. */
+ const exportVerts=async()=>{const vide={texte:'',sauver:async()=>{}};if(!vertsActif())return vide;
+   const p=state?.batch?.scope?.part??state?.current?.identity?.part;if(!Number.isInteger(p))return vide;
+   try{const L=await api('verts-a-controler',{partie:p});if(!L||L.actif===false||!Number.isInteger(L.partie))return vide;
+     const nom=`ariane-verts-a-controler-partie${L.partie}-${dateCompacte(new Date())}.json`,n=Array.isArray(L.plages)?L.plages.length:0;
+     return {texte:`Verts à contrôler, partie ${L.partie} : ${L.aControler} ${accorder(L.aControler,'cut')} en ${n} ${accorder(n,'plage')}, environ ${dureeTexte(L.tempsEstimeS)||'0 s'} (${nom}). Liste à consulter : aucune action dans ESV.\n`,
+       sauver:async save=>save(new Blob([JSON.stringify(L,null,1)],{type:'application/json'}),nom)};}
+   catch{return vide;}};
+ const K_VERSION=()=>globalThis.BananeCore3?.VERSION||'';
+ async function exportToutZip(Z){
+   const maintenant=new Date(),base=`ariane-lot-${dateCompacte(maintenant)}`,bilans=[];let volumes=[];
+   /* Ce qui est dans le cache AVANT l'export : seul ce qui sera exporté peut être vidé ensuite. */
+   const instantane=SET()?.export.viderApresExport===true?await instantaneCache():null,periode=await api('export-cache-info').then(i=>i?.marqueur?.at?`Période : depuis le ${dateHeureParis(i.marqueur.at)} — ${i.marqueur.afterExportAt||i.marqueur.manuel?`données précédentes vidées ${i.marqueur.afterExportAt?'après export du '+dateHeureParis(i.marqueur.afterExportAt):'à la main'}`:'cache vidé'}.\n`:'Période : depuis le début de la session (cache jamais vidé).\n',()=>'');
+   /* 4.9.0.10 : départs des parties (validés, invalides, total), recopiés dans CONTENU.txt et dans le bilan (`fichesDepart`). */
+   const departs=await api('fiches-depart').then(r=>{const f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;return f.length&&EC?`Départs des parties (${f.length}), heure de Paris :\n`+f.map(x=>'  '+EC.texteDepart(x)).join('\n')+'\n':'';},()=>'');
+   const L=await exportListe(null),VC=await exportVerts();
+   const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode ${modeDe().nom} — ${dateHeureParis(maintenant)}\n`,corps:periode+departs+L.texte+VC.texte+texteChoixLot(state?.batch)+(globalThis.ArianeCarteRelecture?.texteContenu(state?.batch)||''),
+     pied:'Les nuages LiDAR sont dans les fichiers « corpus » (une seule copie) ; le bilan les retrouve par captureId (cloudsInCorpus).\n'});
+   const {save,fermerTout,trop,max,mo1}=V,total=()=>V.total;
+   await L.sauver(save).catch(()=>{});await VC.sauver(save).catch(()=>{});
+   const essai=async(quoi,f)=>{try{const b=await f();bilans.push(b);return b;}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});return null;}};
+   segmentPlafond=Math.max(2*max,2*SEGMENT_RESERVE_BYTES);
+   try{
+   await essai('journal',()=>exporterJournal({save}));
+   /* Diagnostic calculé une fois : fichier, plan du corpus. */
+   let diagnostic=null,plan=null;
+   try{diagnostic=await diagnosticPilote();plan=await planCorpusPilote(diagnostic);}
+   catch(e){bilans.push({quoi:'corpus',fichiers:[],alerte:null,erreur:e?.message||String(e)});}
+   const nomDiag=`ariane-gcv1-diagnostic-${Date.now()}.json`;
+   const d=diagnostic?await essai('diagnostic',()=>exporterDiagnostic({save,diagnostic,nom:nomDiag})):null;
+   const c=plan?await essai('corpus',()=>exporterCorpus({save,plan,...(d?{diagnosticRef:{file:nomDiag}}:{})})):null;
+   await essai('bilan',()=>exporterBilan({save,horsCorpus:c&&c.ids.length?c.ids:null}));
+   }finally{segmentPlafond=null;}
+   try{volumes=await fermerTout();}catch(e){volumes=[];bilans.push({quoi:'zip',fichiers:[],alerte:null,erreur:e?.message||String(e)});}
+   const manques=bilans.flatMap(b=>[...(b.erreur?[`${b.quoi} : ${b.erreur}`]:[]),...nonEnregistres(b.fichiers).map(f=>`${b.quoi} non enregistré (${f.etat})`),...(b.alerte?[`${b.quoi} : ${b.alerte}`]:[])]);
+   const zipsKo=nonEnregistres(volumes),zipsOk=volumes.filter(f=>!nonEnregistres([f]).length);
+   for(const f of zipsKo)manques.push(`${f.name} non enregistré (${f.etat})`);
+   const nb=bilans.reduce((n,b)=>n+b.fichiers.length,0);
+   /* Un fichier JSON plus gros que la limite n'est pas coupé : on le dit, avec son volume. */
+   const grosVolumes=trop.length?` Attention : ${trop.map(t=>`${t.name} (${mo1(t.octets)} compressé) dépasse seul ${mo1(max)} ; il est seul dans le volume ${t.volume}`).join(' ; ')}, plus gros que la limite d’envoi.`:'';
+   /* Vidage automatique : SEULEMENT si tout est confirmé complet par le navigateur. */
+   let vidage='';
+   if(SET()?.export.viderApresExport===true){
+     const confirme=!manques.length&&volumes.length>0&&volumes.every(v=>v.confirme===true);
+     if(!confirme)vidage=' Cache d’export NON vidé : l’export n’est pas confirmé complet par le navigateur.';
+     else if(!instantane)vidage=' Cache d’export non vidé : stockage illisible depuis le panneau.';
+     else try{const r=await demandeVidage(instantane,{exportAt:maintenant.toISOString(),auto:true});
+       vidage=` Cache d’export vidé (${r.events} événements, ${r.records} visites, ${r.nuages??r.clouds} nuages) : le prochain export ne contiendra que la suite.${phraseGardes(r)}${phraseCapture(r)}${r.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`;}
+     catch(e){vidage=` Cache d’export non vidé : ${e?.message||e}`;}}
+   const texte=manques.length?`Export incomplet — ${manques.join(' ; ')}.${zipsOk.length?` Archive(s) : ${direFichiers(zipsOk)}.`:''} Relance l’export concerné (boutons « Télécharger… ») avant d’envoyer.${vidage}`
+     :`Journal, bilan, diagnostic et corpus : ${volumes.length>1?`${volumes.length} archive(s) zip, ${volumes.length} volumes de ${mo1(max)} au plus`:'1 archive(s) zip'} (${nb} fichiers JSON, ${mo1(total())} avant compression, ${mo1(volumes.reduce((n,v)=>n+v.octets,0))} en zip) ${direFichiers(volumes)}. Envoie-${volumes.length>1?`les ${volumes.length}, tels quels`:'la'} pour l’analyse.${grosVolumes}${vidage}`;
+   statutExport(texte,manques.length>0);
+ }
+ /* Verts à contrôler : recalcul à la demande (lecture seule). */
+ if($('verts-maj'))$('verts-maj').onclick=()=>majVerts(state,true);
+ on('export-tout',async()=>{const Z=globalThis.BananeZip;if(Z?.createZip&&typeof Blob==='function')return exportToutZip(Z);
+   const bilans=[];
+   /* 5.0 : sans zip aussi, la liste des verts à contrôler est jointe (petit fichier JSON, facultatif : un refus ne rend pas l'export incomplet). */
+   const verts=await exportVerts();
+   for(const [quoi,f] of [['journal',()=>exporterJournal()],['bilan',()=>exporterBilan()],['diagnostic',()=>exporterDiagnostic()],['corpus',()=>exporterCorpus()]]){
      try{bilans.push(await f());}catch(e){bilans.push({quoi,fichiers:[],alerte:null,erreur:e?.message||String(e)});}}
+   try{const fv=await verts.sauver(saveBlob);if(fv&&!nonEnregistres([fv]).length)bilans.push({quoi:'verts à contrôler',fichiers:[fv],alerte:null});}catch{/* facultatif */}
    const fichiers=bilans.flatMap(b=>b.fichiers),manques=bilans.flatMap(b=>[
      ...(b.erreur?[`${b.quoi} : ${b.erreur}`]:[]),...nonEnregistres(b.fichiers).map(f=>`${b.quoi} non enregistré (${f.etat})`),...(b.alerte?[`${b.quoi} : ${b.alerte}`]:[])]);
    const autres=fichiers.filter(f=>!nonEnregistres([f]).length);
@@ -996,6 +1622,22 @@ on('native-discard',async()=>{
  try{appliquerTheme(globalThis.localStorage?.getItem(CLE_THEME));}catch{appliquerTheme(null);}
  if($('theme-toggle'))$('theme-toggle').onclick=()=>{const actuel=document.documentElement?.dataset?.theme||(sysSombre()?'dark':'light'),suivant=actuel==='dark'?'light':'dark';
    try{globalThis.localStorage?.setItem(CLE_THEME,suivant);}catch{/* fenêtre sans stockage : bascule le temps de la fenêtre */}appliquerTheme(suivant);};
+ /* 4.9.5 test 6 : choix pour le lot, relus au service worker à l'ouverture. */
+ /* `click` : il part aussi au clavier (Espace, flèches), une fois la case cochée. */
+ for(const [v,id] of Object.entries(IDS_CLIC))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixLot({clicHumain:v});};
+ if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
+ api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});
+ /* RM-11 : choix de la raison de la correction, relu au service worker à l'ouverture ; pastilles et touches du panneau. */
+ api('raison-choix-etat').then(r=>{if(r&&typeof r.actif==='boolean'){choixRaison=r;majRaison(state);}}).catch(()=>{});
+ if($('raison-actif'))$('raison-actif').onclick=()=>changerChoixRaison({actif:$('raison-actif').checked===true});
+ for(const [v,id] of Object.entries(IDS_TOUCHES_RAISON))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixRaison({touches:v});};
+ if(RC()){RC().CATALOGUE.forEach((c,i)=>{if($('raison-'+(i+1)))$('raison-'+(i+1)).onclick=()=>envoyerRaison({code:c.code});});
+   if($('raison-0'))$('raison-0').onclick=()=>envoyerRaison({efface:true});
+   /* Quand le panneau a le focus : mêmes touches, même lecture (module), hors champ de saisie. Rien n'est retenu (pas de preventDefault). */
+   document.addEventListener?.('keydown',e=>{const r=state?.native?.raison;if(!r||r.actif!==true||state.native.status!=='RUNNING')return;
+     const t=e.target,editable=!!t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName||'')||t.isContentEditable===true);
+     const f=RC().lireFrappe({type:'keydown',code:e.code,shiftKey:!!e.shiftKey,ctrlKey:!!e.ctrlKey,altKey:!!e.altKey,metaKey:!!e.metaKey,repeat:!!e.repeat,editable},r.touches);
+     if(f)envoyerRaison(f);});}
  /* Bandeau dans ESV : préférence gardée par le service worker. */
  const marquerBandeau=()=>$('bandeau-toggle')?.setAttribute('aria-pressed',String(bandeau));
  api('bandeau-etat').then(r=>{bandeau=r?.on===true;marquerBandeau();if(state)envoyerBandeau(state);}).catch(()=>{});
@@ -1004,10 +1646,61 @@ on('native-discard',async()=>{
    note(bandeau?'Bandeau affiché en bas de la page ESV : il suit cette fenêtre et ne capte aucun clic.':'Bandeau retiré de la page ESV.');});
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
+ /* 4.9.0.10 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
+ /* D-092, 4.9 (chantier UX) : la carte de la partie en cours, en grand. 4.9.0.16 (test 15, Mic :
+  * « voir aussi les parties précédentes ») : en dessous, l'historique, compact, de la plus récente à
+  * la plus ancienne (partie, heure du dernier départ, validés / invalides / total, nombre de
+  * départs) ; chaque partie se déplie sur le détail de ses départs. Données : les fiches de
+  * départ (`fiches-depart`, 200 au plus, hors du cache des exports : le vidage ne les touche pas),
+  * sans rien changer à ce qui est exporté. Les chiffres sont ceux qu'ESV affichait au départ du
+  * lot, posés en texte (jamais en HTML). La liste n'est reconstruite que si les fiches changent :
+  * une partie dépliée reste dépliée. */
+ const milliersFr=n=>Number.isInteger(n)?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f'):'?';
+ /* 4.9.0.17 : l'heure de Paris (plus de « UTC » à l'écran). */
+ const heureDepart=x=>{const p=typeof x?.at==='string'?paris(x.at):null;return p?`${p.jour}/${p.mois} ${p.h}:${p.min}`:'heure inconnue';};
+ const nomPartie=k=>`Partie ${Number.isInteger(k)?k:'?'}`;
+ const departsTexte=n=>`${n} départ${n>1?'s':''}`;
+ const elt=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
+ const departsOuverts=new Set();let departsSignature='';
+ /* Les départs d'une partie, du plus récent au plus ancien, en tableau. */
+ function tableDeparts(liste){const t=elt('table','d-table'),h=elt('tr');
+   for(const [l,c] of [['Départ',''],['validés','n'],['invalides','n'],['total','n']])h.append(elt('th',c,l));
+   const tete=elt('thead');tete.append(h);const corps=elt('tbody');
+   for(const x of liste.slice().reverse()){const r=elt('tr');r.append(elt('td','',heureDepart(x)),elt('td','n',milliersFr(x.valides)),elt('td','n',milliersFr(x.invalides)),elt('td','n',milliersFr(x.total)));corps.append(r);}
+   t.append(tete,corps);return t;}
+ function deplier(cle,resume,contenu,cls){const d=elt('details',cls);d.open=departsOuverts.has(cle);
+   d.addEventListener?.('toggle',()=>{if(d.open)departsOuverts.add(cle);else departsOuverts.delete(cle);});
+   const s=elt('summary');if(typeof resume==='string')s.textContent=resume;else s.append(...resume);d.append(s,contenu);return d;}
+ function carteDepart(k,liste,enCours){const x=liste.at(-1),n=liste.length,c=elt('div','depart'+(enCours?' en-cours':''));const t=elt('p','d-t');
+   t.append(elt('b','',nomPartie(k)),elt('span','',(enCours?'en cours · ':'dernière partie · ')+heureDepart(x)+(n>1?` · ${departsTexte(n)}`:'')));
+   const g=elt('div','d-n');for(const [v,l] of [[x.valides,'validés'],[x.invalides,'invalides'],[x.total,'total']]){const q=elt('span');q.append(elt('b','',milliersFr(v)),elt('small','',l));g.append(q);}
+   c.append(t,g);if(Number.isInteger(x.ignores)&&x.ignores>0)c.append(elt('p','d-i',`dont ${milliersFr(x.ignores)} ignorés`));
+   if(n>1)c.append(deplier('principale|'+k,`Voir les ${departsTexte(n)}`,tableDeparts(liste),'d-detail'));
+   return c;}
+ /* Une ligne d'historique : partie et heure du dernier départ ; validés · invalides · total ; départs. */
+ function ligneHistorique(k,liste){const x=liste.at(-1),n=liste.length,haut=elt('span','h-l1'),bas=elt('span','h-l2');
+   haut.append(elt('b','',nomPartie(k)),elt('span','h-at',heureDepart(x)));
+   bas.append(elt('span','h-v',`${milliersFr(x.valides)} validés`),elt('span','h-i',`${milliersFr(x.invalides)} invalides`),elt('span','h-t',`${milliersFr(x.total)} total`),elt('span','h-n',departsTexte(n)));
+   return deplier('historique|'+k,[haut,bas],tableDeparts(liste),'d-partie');}
+ async function majDeparts(){const el=$('departs-liste');if(!el)return;try{const r=await api('fiches-depart'),f=Array.isArray(r?.fiches)?r.fiches:[],EC=globalThis.BananeExportCache;
+  /* 4.9.0.17 : la tuile du lot suit la fiche de départ de son lot ; un nouveau rendu seulement si elle change. */
+  const avant=JSON.stringify(travailDuLot(state?.batch));fichesDepart=f;if(state&&JSON.stringify(travailDuLot(state.batch))!==avant)render(state);
+  if(!f.length||!EC)return;
+  /* Les fiches sont rangées dans l'ordre d'arrivée : une partie prend le rang de son départ le plus récent. */
+  const par=new Map();for(const x of f){if(!x||typeof x!=='object')continue;const k=Number.isInteger(x.partie)?x.partie:'?',l=par.get(k)||[];par.delete(k);l.push(x);par.set(k,l);}
+  const enCours=state?.batch?.scope?.part??state?.current?.identity?.part;departsPartie=enCours??null;
+  const parties=[...par.entries()].reverse();if(!parties.length)return;
+  const i=parties.findIndex(([k])=>k===enCours),[principale]=i>=0?parties.splice(i,1):parties.splice(0,1);
+  const signature=JSON.stringify([enCours??null,principale[0],parties.map(p=>p[0]),f]);if(signature===departsSignature&&el.children?.length)return;departsSignature=signature;
+  const blocs=[carteDepart(principale[0],principale[1],principale[0]===enCours)];
+  if(parties.length){const h=elt('div','d-hist');h.append(...parties.map(([k,l])=>ligneHistorique(k,l)));blocs.push(elt('p','d-hist-t',`Parties précédentes (${parties.length})`),h);}
+  el.replaceChildren(...blocs);}catch{/* affichage seulement */}}
  setInterval(()=>{if(!working)void refresh();},1000);
  // Contrôle du volume pendant la collecte : peu fréquent, jamais bloquant.
  // Le suivi continue quelle que soit la vue affichée : quitter l'onglet Natif
  // ne doit pas interrompre le vidage automatique d'une session en cours.
  setInterval(()=>{if(state&&nativeActive(state)){void autoExportIfAdvised();if(which==='native')void renderHealth();}},SET()?.export.advicePollMs??5000);
+ /* Après les autres minuteries (les essais du panneau les désignent par leur rang). */
+ void majDeparts();setInterval(()=>{if(!working)void majDeparts();},5000);
  if(which==='native'){renderReglages();void renderHealth();}
 })();

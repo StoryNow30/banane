@@ -224,5 +224,70 @@
       clouds: [...head, ...list.map(c => expandCloud(c, dictionaries))] };
   }
 
-  return { FORMAT, REF, SHAPES, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
+  /* --- Ariane 4.9 (V2, D-079) : modes d'export et en-tête écrit une seule fois ---
+   *
+   * MODE. `mode: 'complet'` : intensité, classe, pointSources, probes, tout est
+   * conservé. Un mode est un objet { nom, nuage(cloud) }, où `nuage` rend le
+   * nuage à écrire, SANS toucher au flux d'écriture. Depuis la 4.9.0.9 (D-091),
+   * le réglage choisit « allege » (ci-dessous) ; « complet » reste le repli
+   * du code. Un nom inconnu est REFUSÉ (jamais remplacé en silence).
+   */
+  /* D-091 (4.9.0.9) : mode « allege » (allègement A, validé par la direction le 13 octobre).
+   * Sur le lot de 112 cuts de la 4.9.0.8, les nuages font 88 % du zip ; ce mode les allège
+   * d'environ un tiers sans toucher à une seule valeur que la pose, le moteur ou l'analyse
+   * utilisent : il retire les SONDES de diagnostic (`probes`) des seuls nœuds qui n'ont retenu
+   * aucun point (`retained === 0`) ET dont aucune sonde ne touche la zone d'intérêt (`roiHit`,
+   * `hierarchyRoiHit`) : 2 711 nœuds sur 3 692 dans ce lot, sans information. Un nœud vide
+   * dont une sonde touche la zone (anomalie à comprendre : 121 dans ce lot) garde ses sondes ;
+   * un nœud sans `retained` aussi ; `nearestToRailOrigin` est toujours gardé. Les points, eux,
+   * restent au bit près : l'arrondi au micromètre d'abord prévu (−11 points de plus) faisait
+   * échouer, à 0,3 µm, le contrôle de rejeu exact d'acceptance-report (relecture du 13 octobre).
+   * Le nuage porte `exportLightening`, qui dit ce qui a été retiré ; le nuage stocké n'est pas
+   * modifié (copie). Un nuage sans rien à alléger est rendu tel quel. */
+  const vrai = v => v === true || (!!v && typeof v === 'object' && Object.values(v).some(x => x === true));
+  const toucheLaZone = node => Array.isArray(node.probes) &&
+    node.probes.some(p => !!p && typeof p === 'object' && (vrai(p.roiHit) || vrai(p.hierarchyRoiHit)));
+  function alleger(cloud) {
+    if (!cloud || typeof cloud !== 'object' || !Array.isArray(cloud.nodes)) return cloud;
+    let noeuds = 0;
+    const nodes = cloud.nodes.map(node => {
+      if (!node || typeof node !== 'object' || !('probes' in node) || node.retained !== 0 || toucheLaZone(node)) return node;
+      const { probes, ...reste } = node; noeuds++; return reste;
+    });
+    if (!noeuds) return cloud;
+    return { ...cloud, nodes, exportLightening: { mode: 'allege', decision: 'D-091', probesRemovedFromNodes: noeuds,
+      probesRule: 'retained === 0 et aucune sonde roiHit ni hierarchyRoiHit', pointsUnchanged: true } };
+  }
+  const MODES = Object.freeze({
+    complet: Object.freeze({ nom: 'complet', nuage: cloud => cloud }),
+    allege: Object.freeze({ nom: 'allege', nuage: alleger }),
+  });
+  const MODE_DEFAUT = 'complet';
+  function exportMode(nom) {
+    const mode = MODES[nom === undefined || nom === null ? MODE_DEFAUT : nom];
+    if (!mode) throw Error('Mode d’export inconnu : ' + nom + ' (disponible : ' + Object.keys(MODES).join(', ') + ').');
+    return mode;
+  }
+
+  /* EN-TÊTE UNIQUE. Un export en plusieurs segments recopiait dans CHAQUE
+   * segment les mêmes `events`, `records`, `state`, diagnostic… (mesuré sur le
+   * lot 7 : 3 x 8,9 Mo d'événements, 3 x 2,6 Mo de diagnostic). Désormais seul
+   * le premier segment d'un export porte ces parties ; les suivants gardent un
+   * en-tête mince (même format, mêmes clés d'identification) et la marque
+   * `segment.headerIn` = index du segment qui les porte. Les listes sont
+   * laissées vides (`[]`) pour que la forme du document reste reconnue par les
+   * lecteurs (ex. `Array.isArray(doc.records)`), les objets sont retirés.
+   * Aucune information n'est perdue : le premier segment est un instantané
+   * complet, les suivants n'ont jamais eu que la même copie. */
+  const UNE_FOIS = ['events', 'records', 'state', 'stateOmits', 'closureSummary', 'v1TimingExport', 'diagnostic', 'raisonSeries'];   // RM-11 (test 9) : les séries de raisons collantes, une fois
+  function enteteMince(metadata) {
+    const out = {};
+    for (const k of Object.keys(metadata)) {
+      if (!UNE_FOIS.includes(k)) out[k] = metadata[k];
+      else if (Array.isArray(metadata[k])) out[k] = [];
+    }
+    return out;
+  }
+
+  return { FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, alleger, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
 });

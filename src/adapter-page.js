@@ -12,7 +12,7 @@
   * sur la même page. Les modules sont donc lus UNE fois, ici ; le tampon posé
   * par le service worker juste avant l'injection désigne le propriétaire. */
  const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
- const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4;
+ const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4,GV=window.BananeGestesVue||null;
  const PROPRIO=typeof window.__ARIANE_PROPRIETAIRE?.id==='string'?window.__ARIANE_PROPRIETAIRE.id:null;
  const PROPRIO_NOM=typeof window.__ARIANE_PROPRIETAIRE?.versionName==='string'?window.__ARIANE_PROPRIETAIRE.versionName:null;
  try{delete window.__ARIANE_PROPRIETAIRE;}catch{}
@@ -171,6 +171,46 @@
    if(typeof scheduler!=='undefined'&&typeof scheduler.yield==='function')return scheduler.yield();
    if(typeof MessageChannel==='function')return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();resolve();};channel.port2.postMessage(0);});
    return new Promise(resolve=>setTimeout(resolve,0));}
+ /* V3, expériences I1 puis « turbo » (D-078, D-087, D-088 ; versions de test) : mode d'un cut.
+  * Tirage fixe sur le numéro du cut (bit haut du hachage multiplicatif de Knuth) :
+  * une relecture, une reprise ou un F5 gardent le mode, l'analyse le recalcule, et
+  * les deux modes se mélangent tout au long du lot (pas de blocs : la vitesse dérive
+  * de 19 à 22 % entre la première et la seconde moitié d'un lot). « rapide » passe
+  * à `vendor/lidar.js`, inchangé, son option de pause existante ; « reference » ne
+  * lui passe rien, comme la 4.9.0.5. Réglage absent ou inconnu : référence.
+  * D-091 (4.9.0.9) : « echantillon » généralise le mode rapide et garde UN cut sur dix en
+  * référence, pour surveiller la qualité : le cut est « référence » si son hachage tombe dans
+  * le premier dixième (même hachage, lu comme une fraction). Le hachage de Fibonacci répartit
+  * ces cuts régulièrement (un tous les 8 à 13 cuts consécutifs), sans paquets. */
+ const DIXIEME=429496730; // ⌈2^32 / 10⌉
+ function lectureDuCut(identity){const regle=P.modeRapide??P.lectureI1;
+   if(regle==='toujours')return 'rapide';if(regle!=='tirage'&&regle!=='echantillon')return 'reference';
+   const cut=identity?.cut;if(!Number.isInteger(cut))return 'reference';
+   const h=Math.imul(cut>>>0,2654435761)>>>0;
+   if(regle==='echantillon')return h<DIXIEME?'reference':'rapide';
+   return h>>>31?'rapide':'reference';}
+ /* D-088 (4.9.0.7, version de test) : ce que le mode « rapide » change, pièce par pièce, d'après les
+  * mesures du banc ESV local (13 octobre, code d'origine d'ESV) :
+  *   lecture   (I1) : lire sans attendre une image d'ESV (4.9.0.6) ;
+  *   selection (I2) : le rail demandé est dans la vue dès l'image qui suit le clic (6 sur 6) ; on
+  *                    attend cette image, et non plus trois sondages immobiles à 80 ms ;
+  *   signal    (I3) : lire dès que plus rien ne charge (aucun chargement en cours et mêmes nœuds sur
+  *                    deux images de suite) ; mêmes nœuds qu'après 800 ms dans 32 vues sur 32 ; la
+  *                    règle des 800 ms reste le repli (chargement d'ESV pendu : le signal ne vient jamais) ;
+  *   pose      (P1) : ESV pose le rail du côté courant au point du plan de coupe visé par le clic, même
+  *                    hors de la vue : le bouton de rail fixe le côté, le clic part dans la même tâche,
+  *                    calculé avec la caméra active ; sans attendre le recentrage (< 0,6 mm, 1 à 4 ms).
+  * Chaque pièce se coupe seule dans les réglages ; une pièce qui ne conclut pas retombe sur la 4.9.0.5.
+  * D-157 : `rapide.clicHumain` n'est pas une pièce (voir CLIC_HUMAIN, plus bas) ; il est lu à part. */
+ const {clicHumain:REGLE_CLIC_HUMAIN,...PIECES_REGLEES}=P.rapide||{};
+ const RAPIDE={lecture:true,selection:true,signal:true,pose:true,...PIECES_REGLEES};
+ const piece=(mode,nom)=>mode==='rapide'&&RAPIDE[nom]!==false;
+ /* Prochaine image d'ESV ; repli à 100 ms si la page ne dessine plus (onglet caché). */
+ function prochaineImage(){return new Promise(resolve=>{let fini=false,minuterie=null;
+   const fin=()=>{if(fini)return;fini=true;if(minuterie!==null)try{clearTimeout(minuterie);}catch{}resolve();};
+   try{if(typeof requestAnimationFrame==='function')requestAnimationFrame(fin);}catch{}minuterie=setTimeout(fin,100);});}
+ const imageEsv=()=>{const f=window.Potree?.framenumber;return Number.isFinite(f)?f:null;};
+ const chargementsEsv=()=>{const n=window.Potree?.numNodesLoading;return Number.isFinite(n)?n:null;};
  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
    const c=nativeContext(),railInputs={},associationByRail={};
    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
@@ -218,8 +258,8 @@
    document.dispatchEvent(new KeyboardEvent('keyup',init));
    return {commandSent:true,command:'SKIP'};
  }
- async function captureOnce(expected,guard){guard();const c=context();
-   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,
+ async function captureOnce(expected,guard,lecture='reference'){guard();const c=context();
+   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,...(lecture==='rapide'?{pause:yieldToPage}:{}),
      meta:{version:K.VERSION,captureId:K.uid(),sessionId:pageId,visitId:`${c.frame.id}:${c.identity.part}:${c.identity.cut}`,
        identity:c.identity,part:c.identity.part,cut:c.identity.cut,shape:c.identity.shape,railStateProvenance:'observed-before',
        coordinateBridge:{sceneFrameId:c.frame.id,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
@@ -243,30 +283,147 @@
   * Voir ce fichier pour le raisonnement et tests/lod-signature.test.cjs pour les
   * sept propriétés de discrimination vérifiées. */
  const SIG=window.BananeLodSignature;
+ let inventaireRecent=null;
  function loadedSignature(){
    const id=o=>o&&typeof o==='object'?objectId(o):'';
-   return SIG.signature(L.inventory(context().viewer),id);
+   const inv=L.inventory(context().viewer);inventaireRecent=inv;   // 4.9.5.3 : gardé pour le relevé de profondeur (diag), sans second parcours
+   return SIG.signature(inv,id);
  }
- async function capture(expected,progress=()=>{}){cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
-   const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs;
+ /* I3 : lire dès que plus rien ne charge. Prédicat (code de Potree 1.8 d'ESV) : au moins trois
+  * images après le début de l'attente, puis deux images DISTINCTES de suite avec aucun chargement
+  * en cours et la même signature. Un nœud visible non chargé aurait lancé un chargement à l'image
+  * (compteur > 0) ; un nœud chargé non encore transféré l'aurait été (signature changée, deux par
+  * image au plus). Repli inchangé : signature immobile pendant `stableForMs` (règle de la 4.9.0.5),
+  * seule issue quand un chargement d'ESV reste pendu (un bloc en échec ne libère jamais sa place). */
+ /* Relecture indépendante : Potree choisit les nœuds avec la caméra et la découpe de l'image
+  * précédente. Les deux images du signal doivent donc aussi avoir la même caméra et la même
+  * découpe, sinon un recadrage d'ESV à cette image-là passerait inaperçu. */
+ function sceneEsv(){const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   const boites=(c.viewer.scene?.pointclouds||[]).map(pc=>(pc.material?.clipBoxes||[]).map(b=>Array.from(b?.inverse?.elements||[]).join(',')).join(';')).join('|');
+   return JSON.stringify(cam?.cameraToSceneRelative??null)+'#'+boites;}
+ /* 4.9.5.1 (D-109) — DIAGNOSTIC DU SIGNAL, SANS RIEN CHANGER À LA DÉCISION. Sur le terrain, le signal
+  * de fin de chargement s'éteint ~10 min après le chargement de la page ESV (tout passe au repli 800 ms),
+  * et un F5 le rétablit. Pour savoir pourquoi, chaque lecture porte un petit relevé (`diag`), publié avec
+  * l'étape `capture-read` (donc dans `lastDetail` du journal exporté) :
+  *   ageS / navS : âge en secondes de l'adaptateur dans la page (chargement de ce script) / de la page
+  *                 ESV (`performance.now()`, depuis la navigation : remis à zéro par un F5) ;
+  *   img         : images d'ESV vues pendant l'attente ; nl : [chargements en cours à la fin, maximum vu] ;
+  *   paires      : comparaisons d'une image à la précédente ; puis, parmi elles, celles où des chargements
+  *                 étaient en cours (pc), où les nœuds avaient changé (nc), où la vue avait changé (vc) ;
+  *   m           : au repli, la condition qui manquait à la dernière image comparée (« images » : moins
+  *                 de 3 images ou compteur d'images absent ; « chargements » : `numNodesLoading` ≠ 0 ;
+  *                 « noeuds » ; « vue » ; « aucune » : tout réuni sauf la seconde image) ; « hors-signal »
+  *                 pour une lecture qui n'attend pas le signal (référence, relecture) ;
+  *   noeuds, pts, lruPts, lruNoeuds, memMo : nœuds visibles lus, points visibles de Potree, points et nœuds
+  *                 gardés par son cache (LRU), mémoire JS utilisée en Mo (Chrome seulement).
+  * Coût : quelques comparaisons de nombres par image, un relevé de compteurs par lecture ; aucune attente,
+  * aucune boucle ajoutée ; ~200 octets par lecture. Lu par `tools/signal-age.cjs`. */
+ const ADAPTATEUR_CHARGE_A=Date.now();
+ const nombreFini=v=>Number.isFinite(v)?v:undefined;
+ /* 4.9.5.3 (S6) — relevés en lecture seule de la page ESV. Réglages : `BananeSettings.releves` / `.esvEvents`. */
+ const REL=window.BananeSettings?.releves||{},ESVEV={ombre:true,noms:['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],parSecondeMax:30,...(window.BananeSettings?.esvEvents||{})};
+ const relOn=nom=>REL[nom]!==false,NS_OMBRE='banane53';
+ /* Posté à l'observateur (même monde) qui le réduit et le range ; jamais une commande, jamais une écriture. */
+ const heurePage=()=>{try{const t=performance.now();return Number.isFinite(t)?t:null;}catch{return null;}};
+ function posterObservateur(event){try{window.postMessage({kind:'banane5:evt',event},location.origin);}catch{}}
+ /* Niveau d'un nœud Potree : `geometryNode.level` (ou `getLevel()`, ou `key.d` pour EPT), sinon la longueur du nom « r0123 » moins un. */
+ function niveauNoeud(n){const g=n?.geometryNode||null;
+   const essais=[()=>g?.level,()=>typeof g?.getLevel==='function'?g.getLevel():undefined,()=>g?.key?.d,()=>n?.level];
+   for(const f of essais){try{const v=f();if(Number.isInteger(v)&&v>=0&&v<=64)return v;}catch{}}
+   try{const nom=typeof g?.name==='string'?g.name:null;if(nom&&/^r[0-7]*$/.test(nom))return nom.length-1;}catch{}
+   return null;}
+ function niveauxNoeuds(inv){const nodes=inv?.nodes;if(!Array.isArray(nodes))return null;
+   const v=nodes.map(niveauNoeud).filter(x=>x!==null).sort((a,b)=>a-b);
+   return [v.length?v[0]:null,v.length?v[Math.floor((v.length-1)/2)]:null,v.length?v[v.length-1]:null,v.length,nodes.length];}
+ function budgetPoints(){const vw=window.viewer;if(!vw)return null;
+   let b;try{b=typeof vw.getPointBudget==='function'?vw.getPointBudget():vw.pointBudget;}catch{b=undefined;}
+   return Number.isFinite(b)&&b>0?b:null;}
+ function compteursEsv(sig){const d={ageS:Math.round((Date.now()-ADAPTATEUR_CHARGE_A)/1000)};
+   try{const t=performance?.now?.();if(Number.isFinite(t))d.navS=Math.round(t/1000);}catch{}
+   if(sig&&Number.isFinite(sig.count))d.noeuds=sig.count;
+   try{let pts=0,vu=false;for(const pc of window.viewer?.scene?.pointclouds||context().viewer?.scene?.pointclouds||[]){const n=pc?.numVisiblePoints;if(Number.isFinite(n)){pts+=n;vu=true;}}if(vu)d.pts=pts;}catch{}
+   try{const l=window.Potree?.lru;if(l){const a=nombreFini(l.numPoints),b=nombreFini(typeof l.size==='function'?l.size():l.elements);if(a!==undefined)d.lruPts=a;if(b!==undefined)d.lruNoeuds=b;}}catch{}
+   try{const m=performance?.memory?.usedJSHeapSize;if(Number.isFinite(m))d.memMo=Math.round(m/1048576);}catch{}
+   /* 4.9.5.3 (S6) : niveau d'octree des nœuds lus [min, médiane, max, nœuds au niveau connu, nœuds] (null si illisible) et budget de points du
+    * lecteur (`getPointBudget()` ; null si absent). Lecture seule, sur l'inventaire déjà pris pour la signature. */
+   if(relOn('diagCapture')){try{d.niv=niveauxNoeuds(inventaireRecent);}catch{d.niv=null;}try{d.bud=budgetPoints();}catch{d.bud=null;}}
+   return d;}
+ async function attendreChargement(guard,stableForMs){const debut=Date.now(),f0=imageEsv();
+   let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0,derniere=null;
+   /* Diagnostic seulement (voir plus haut) : jamais lu par la décision. */
+   let nlMax=null,paires=0,pc=0,nc=0,vc=0,manque='images';
+   while(Date.now()-debut<12000){
+     if(cancelled)throw Error('Action interrompue.');guard();
+     /* Une lecture qui échoue est réessayée à l'image suivante, comme `waitFor` le faisait. */
+     let sig,vue;try{sig=loadedSignature();vue=sceneEsv();}catch(e){derniere=e;precedente=null;await prochaineImage();continue;}
+     const f=imageEsv(),nl=chargementsEsv(),libre=nl===0;
+     if(nl!==null&&(nlMax===null||nl>nlMax))nlMax=nl;
+     if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}
+     if(f!==null&&f!==imagePrecedente){images++;
+       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
+         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc}};
+       if(precedente){paires++;const charge=!libre||!precedente.libre,noeuds=precedente.valeur!==sig.value,change=precedente.vue!==vue;
+         if(charge)pc++;if(noeuds)nc++;if(change)vc++;
+         manque=f0===null||f-f0<3?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
+       precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
+     if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEsv();
+       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque}};}
+     await prochaineImage();}
+   throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
+ /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
+  * que `select` (incident du cut 3560 : une caméra immobile n'est pas un rail sélectionné), au
+  * rythme des images au lieu de trois sondages à 80 ms ; clic répété comme en 4.8.0 (KI-063). */
+ async function selectImage(side,expected,guard=()=>assertExpected(expected)){
+   const essais=Math.max(1,P.recentrages??3);
+   for(let essai=1;essai<=essais;essai++){guard();nativeClick(selectors[side]);
+     let precedente=null;const debut=Date.now();
+     while(Date.now()-debut<P.attenteMs){await prochaineImage();if(cancelled)throw Error('Action interrompue.');guard();
+       const now=assertExpected(expected),c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);if(!cam){precedente=null;continue;}
+       const valeur=JSON.stringify(cam.cameraToSceneRelative);
+       if(valeur===precedente&&projectToView(cam,now.rails[side]?.positionSceneRelative)?.inView)return now;precedente=valeur;}}
+   throw Error('Vue ESV non recentrée sur le rail '+side+'.');}
+ /* 4.9.5.3 (S6) — COMPTEUR POTREE BLOQUÉ. `numNodesLoading` lu AU DÉBUT de chaque nouveau cut ; la même valeur > 0 au début de `cuts` cuts
+  * de suite (défaut 3) : un chargement qui ne redescend plus (hypothèse D-109). Un événement `diag-compteur-bloque` par épisode (l'épisode
+  * finit quand la valeur change ou retombe à 0). Aucune action : seul un événement posté à l'observateur. */
+ const compteurCuts={cle:null,hist:[],episode:false};
+ function noterCompteurDebutCut(){try{const C=REL.compteurBloque;if(C?.actif===false)return;
+   const l=cutLabel();if(!l)return;const cle=l.part+':'+l.cut;if(cle===compteurCuts.cle)return;compteurCuts.cle=cle;
+   const n=chargementsEsv(),N=Number.isInteger(C?.cuts)&&C.cuts>=2?C.cuts:3;compteurCuts.hist.push(n);while(compteurCuts.hist.length>N)compteurCuts.hist.shift();
+   const h=compteurCuts.hist,bloque=h.length>=N&&n!==null&&n>0&&h.every(v=>v===n);
+   if(!bloque){compteurCuts.episode=false;return;}
+   if(compteurCuts.episode)return;compteurCuts.episode=true;
+   posterObservateur({kind:'diag-compteur-bloque',valeur:n,cuts:N,cut:l.cut,pageMs:heurePage()});}catch{}}
+ async function capture(expected,progress=()=>{}){noterCompteurDebutCut();try{installerOmbreEsv();}catch{}cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
+   const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs,lecture=lectureDuCut(expected?.identity);
    const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
      if(!K.equalPoses(now.rails,expected.rails))throw Error('Rails modifiés pendant la lecture.');
      if(Date.now()-startedAt>=budgetMs)throw Error('Lecture LiDAR instable : délai total de 60 secondes atteint.');};
    for(const side of ['left','right']){
      /* Lecture seule : une vue qui ne se recentre pas met le lot en pause
       * reprenable (« Lecture LiDAR instable »), au lieu de l'arrêter en erreur. */
-     guard();await select(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut : rafraîchis la page ESV (F5), puis clique sur Reprendre.');throw e;});
+     const debutVue=Date.now();
+     guard();await (piece(lecture,'selection')?selectImage:select)(side,expected,guard).catch(e=>{if(String(e?.message).startsWith('Vue ESV non recentrée'))throw Error('Lecture LiDAR instable : '+e.message+' ESV est lent sur ce cut : rafraîchis la page ESV (F5), puis clique sur Reprendre.');throw e;});
      for(let attempt=1;attempt<=maxAttemptsPerView;attempt++){
        const began=Date.now();guard();progress('capture-wait',{side,attempt,maxAttemptsPerView});
        try{
-         let previous=null,unchangedSince=Date.now();
-         await waitFor(()=>{const signature=loadedSignature();
-           if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
-           return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
-         },'Niveau de détail non stabilisé.',12000,guard);
-         guard();progress('capture-read',{side,attempt});
-         const data=await captureOnce(expected,guard);guard();
-         attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began});captures.push(data);
+         let attente;
+         /* Signal à la première tentative seulement : une relecture attend comme la 4.9.0.5. */
+         if(piece(lecture,'signal')&&attempt===1)attente=await attendreChargement(guard,stableForMs);
+         else{let previous=null,unchangedSince=Date.now(),derniere=null;
+           await waitFor(()=>{const signature=loadedSignature();derniere=signature;
+             if(signature.value!==previous){previous=signature.value;unchangedSince=Date.now();}
+             return signature.count>0&&Date.now()-unchangedSince>=stableForMs;
+           },'Niveau de détail non stabilisé.',12000,guard);
+           let diag;try{diag={...compteursEsv(derniere),nl:[chargementsEsv(),null],m:'hors-signal'};}catch{diag={m:'hors-signal'};}
+           attente={regle:'stabilite',diag};}
+         guard();progress('capture-read',{side,attempt,lecture,regle:attente.regle,...(attente.diag?{diag:attente.diag}:{})});
+         const avantLecture=attente.regle==='signal'?loadedSignature().value:null;
+         const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference');guard();
+         /* Lu au signal : rien ne doit avoir changé pendant la lecture (elle rend la main à ESV à
+          * chaque tranche). Sinon la vue était incomplète : relecture, comme toute lecture instable. */
+         if(avantLecture!==null&&(loadedSignature().value!==avantLecture||chargementsEsv()!==0))
+           throw Error('Lecture LiDAR instable : niveau de détail changé pendant la lecture.');
+         attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began,vueMs:Date.now()-debutVue,regle:attente.regle,...(attente.images!=null?{images:attente.images}:{})});captures.push(data);
          progress('capture-view-ready',{side,attempt,points:data.pointsSceneRelative.length});break;
        }catch(e){
          // Never retain points from a failed attempt or retry after a moved rail,
@@ -279,13 +436,14 @@
      }
    }
    guard();const data=M3.merge(...captures);guard();
-   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts};
+   data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts,lecture,regleLecture:P.modeRapide??P.lectureI1??null,
+     pieces:lecture==='rapide'?Object.keys(RAPIDE).filter(n=>RAPIDE[n]!==false):[],...(CLIC_CORRIGE?{clicHumain:CLIC_HUMAIN}:{})};
    /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
     * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
    const nodes=data.nodes.length,compacted=M3.compactNodes(data),bytes=M3.messageBytes(data);
    if(bytes>M3.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
-   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes});return data;
+   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture,regleLecture:data.readStrategy.regleLecture});return data;
  }
  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
   * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de
@@ -297,14 +455,14 @@
  }
  /* Un refus d'émission doit être explicable sans rejeu : repère, source, cible,
   * centre de vue, NDC par composante et bornes retenues. */
- function refusalDetail(side,now,target,cam,view){
+ function refusalDetail(side,now,target,cam,view,motif=null){
    const fmt=p=>Array.isArray(p)?p.map(v=>Number(v).toFixed(6)).join(', '):'non-observé';
-   const reason=!cam?'caméra non lisible':!cam.viewport?'viewport absent'
+   const reason=motif?MOTIF_CLIC[motif]||motif:!cam?'caméra non lisible':!cam.viewport?'viewport absent'
      :'hors bornes : '+['x','y','z'].filter((_,i)=>Math.abs(view.ndc[i])>1).join('+');
    return `[repère=scene-relative frameId=${now.identity.frameId??'non-observé'}`
      +` ; source=(${fmt(now.rails[side]?.positionSceneRelative)}) ; cible=(${fmt(target)})`
      +` ; centre de vue=(${fmt(cam?.cameraToSceneRelative?.slice(12,15))})`
-     +` ; ndc=(${fmt(view?.ndc)}) ; bornes=[-1,1] par composante`
+     +` ; ndc=(${fmt(view?.ndc)}) ; bornes=${motif?`[-${CLIC_MARGE},${CLIC_MARGE}] en x et y, dans la fenêtre`:'[-1,1] par composante'}`
      +` ; viewport=${cam?.viewport?`${cam.viewport.width.toFixed(1)}x${cam.viewport.height.toFixed(1)}px`:'absent'}`
      +` ; raison=${reason}]`;
  }
@@ -352,16 +510,67 @@
   * est lu, sans attendre les 5 s. Même tolérance qu'avant (1 mm), relue ensuite
   * par le moteur. */
  const DECALAGES_CLIC=[[0,0],[.5,.5],[-.5,-.5]];
+ /* 5.0 (D-157) — CLIC HUMAIN DU MODE RAPIDE (fiches/RAPIDE_HUMAIN.md).
+  * La pose directe (P1) presse le bouton du rail et clique dans la même tâche, avec la caméra encore active. Depuis la capture,
+  * cette caméra est celle du rail DROIT (la capture lit le gauche puis le droit) : la cible gauche y projette à NDC x ≈ −7,
+  * soit environ 2 000 px à gauche du canevas, hors de la fenêtre. Un humain ne peut pas produire ce clic (D-157 : 185 cuts sur
+  * 185 en partie 29, 205 sur 205 en partie 1 du second projet). Réglage `pilote.rapide.clicHumain` :
+  *   'tel-quel'        (défaut) : le comportement de la base, à l'octet près ;
+  *   'gauche-recentre' : le rail droit d'abord, posé en direct depuis la vue active ; le rail gauche ensuite, avec recentrage ;
+  *   'tout-recentre'   : les deux rails avec recentrage, le chemin des cuts de référence (comme la pièce « pose » coupée).
+  * Valeur absente ou inconnue : 'tel-quel'. Dans les deux modes corrigés, AUCUN clic de pose ne part hors de la partie visible
+  * du canevas : NDC du point cliqué dans ±0,99 (la marge du lot, KI-051, et de « déplacer la vue »), et point dans la fenêtre
+  * quand la page en donne la taille. La pose directe est refusée AVANT de presser le bouton (la caméra ne change pas quand on le
+  * presse) : pose avec recentrage, le repli existant. Le clic après recentrage est refusé comme une cible hors de la vue
+  * (« Position proposée hors de la vue »), sans clic.
+  * Garde-fou, quel que soit le mode : chaque clic de pose calculé hors de la partie visible est relevé (`clicsHorsVue`), sans
+  * rien changer au clic, et part au service worker APRÈS la réponse (message `banane3:clic-hors-vue`, comme le relevé D4). */
+ const CLIC_HUMAIN=['gauche-recentre','tout-recentre'].includes(REGLE_CLIC_HUMAIN)?REGLE_CLIC_HUMAIN:'tel-quel',CLIC_CORRIGE=CLIC_HUMAIN!=='tel-quel';
+ /* 4.9.5 test 6 (D-164, Mic : « essayer les 2 méthodes ») : le mode peut venir du LOT. Le service worker lit le choix du panneau
+  * au démarrage du lot, le fige dans le lot et l'envoie avec chaque `apply` (`options.clicHumain`), seulement s'il est corrigé.
+  * Sans lui (ou valeur inconnue), le réglage de la page, comme avant : 'tel-quel' par défaut, la même trace à l'octet près. */
+ const MODES_CLIC=['tel-quel','gauche-recentre','tout-recentre'];
+ const modeClic=o=>o&&typeof o==='object'&&MODES_CLIC.includes(o.clicHumain)?o.clicHumain:CLIC_HUMAIN;
+ const CLIC_MARGE=.99,MOTIF_CLIC={'hors-canevas':'hors du canevas','marge':'hors de la marge de 0,99','hors-fenetre':'hors de la fenêtre','vue-illisible':'vue illisible'};
+ /* Point du clic sur l'écran : la formule de la pose, à l'identique (même ordre d'opérations). */
+ const pointClic=(r,ndc,dx=0,dy=0)=>[r.left+(ndc[0]+1)*r.width/2+dx,r.top+(1-ndc[1])*r.height/2+dy];
+ /* Ce point est-il dans la partie visible du canevas ? `null` si oui, sinon la raison. */
+ function horsVueClic(r,x,y){
+   if(!r||![x,y,r.left,r.top,r.width,r.height].every(Number.isFinite)||!(r.width>0)||!(r.height>0))return 'vue-illisible';
+   const nx=(x-r.left)/r.width*2-1,ny=1-(y-r.top)/r.height*2;
+   if(Math.abs(nx)>1||Math.abs(ny)>1)return 'hors-canevas';
+   if(Math.abs(nx)>CLIC_MARGE||Math.abs(ny)>CLIC_MARGE)return 'marge';
+   const largeur=window.innerWidth,hauteur=window.innerHeight;
+   if(Number.isFinite(largeur)&&Number.isFinite(hauteur)&&largeur>0&&hauteur>0&&(x<0||y<0||x>=largeur||y>=hauteur))return 'hors-fenetre';
+   return null;}
+ /* Relevé du garde-fou : compact, borné (12 clics au plus par commande), jamais bloquant. */
+ const clicsHorsVue=[];
+ function noterClicHorsVue(cote,chemin,essai,raison,r,x,y,expected){try{if(clicsHorsVue.length>=12)return;
+   const a=v=>Math.round(v*1000)/1000,b=v=>Math.round(v*10)/10;
+   clicsHorsVue.push({cote,chemin,essai,raison,lecture:lectureDuCut(expected),ndc:[a((x-r.left)/r.width*2-1),a(1-(y-r.top)/r.height*2)],client:[b(x),b(y)]});}catch{}}
+ /* Pose directe d'un mode corrigé : la cible doit être dans la partie visible de la vue ACTIVE. */
+ function directeVisible(target){try{const c=context(),v=projectToView(L.cameraSnapshot(c.viewer,c.frame.origin),target);
+   return !!v?.inView&&v.ndc.every(Number.isFinite)&&!horsVueClic(v.viewport,...pointClic(v.viewport,v.ndc));}catch{return false;}}
  const pixelMm=cam=>cam?.viewport?.width&&Array.isArray(cam.projection)&&cam.projection[0]?2/cam.projection[0]/cam.viewport.width*1000:NaN;
- async function clickPosition(side,target,expected){
+ async function clickPosition(side,target,expected,vue=null,mode=CLIC_HUMAIN){
    await select(side,expected);let dernier=null,pixel=NaN;
-   for(const [dx,dy] of DECALAGES_CLIC){
+   /* 5.0 (« déplacer la vue ») : seulement si le service worker l'a demandé pour ce cut (réglage `deplacerVue`, coupé par défaut). */
+   if(vue){const r=await amenerVue(side,target,expected,vue.etat,vue.reglages,vue.progress);vue.rapports.push(r);
+     if(!r.ok){const remise=await remettreVue(vue.etat,side,expected,vue.reglages,vue.progress).catch(e=>({ok:false,erreur:e.message}));
+       const nom=side==='left'?'gauche':'droit',poses=vue.poses.map(s=>s==='left'?'gauche':'droit');
+       throw Error(`Vue ESV non amenée sur la cible du rail ${nom} (${r.raison}) : `+(poses.length?`le rail ${poses.join(' et ')} est déjà posé, rien n’est validé. État à réconcilier.`:'rien n’a été posé.')
+         +(remise.ok===false?' Vue ESV non restituée : contrôle-la avant de reprendre.':''));}}
+   for(const [essai,[dx,dy]] of DECALAGES_CLIC.entries()){
      const now=assertExpected(expected);const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
      const view=projectToView(cam,target);
      if(!view?.inView)throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view));
      const r=view.viewport,ndc=view.ndc,avant=now.rails[side].positionSceneRelative;pixel=pixelMm(cam);
+     /* D-157 : mode corrigé, aucun clic hors de la partie visible ; tel-quel, le clic part comme avant, relevé. */
+     const [x,y]=pointClic(r,ndc,dx,dy),horsVue=horsVueClic(r,x,y);
+     if(horsVue&&mode!=='tel-quel')throw Error('Position proposée hors de la vue : '+side+' '+refusalDetail(side,now,target,cam,view,horsVue));
+     if(horsVue)noterClicHorsVue(side,'recentre',essai+1,horsVue,r,x,y,expected);
      c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
-       clientX:r.left+(ndc[0]+1)*r.width/2+dx,clientY:r.top+(1-ndc[1])*r.height/2+dy,button:0,buttons:1}));
+       clientX:x,clientY:y,button:0,buttons:1}));
      /* Posé : à 1 mm de la cible ; ou déplacé, puis immobile sur trois lectures. */
      let precedent=null,stable=0;
      const pose=await waitFor(()=>{const s=assertExpected(expected),p=s.rails[side].positionSceneRelative;
@@ -375,11 +584,168 @@
    throw Error(`Le clic n’a pas produit le déplacement demandé pour ${side} : rail posé à ${ecart.toFixed(1).replace('.',',')} mm de la cible`
      +(Number.isFinite(pixel)?`, vue ESV à ${pixel.toFixed(2).replace('.',',')} mm par pixel${pixel>.9?' (agrandis la fenêtre d’ESV)':''}`:'')+'. État à réconcilier.');
  }
- async function apply(before,proposals){cancelled=false;const now=assertExpected(before);
+ /* P1 : pose sans recentrage. ESV pose le rail du côté COURANT au point où le rayon du clic coupe
+  * son plan de coupe (5 × 7 m, les deux rails dedans) ; il ne vérifie pas que ce point soit dans
+  * la vue. Le bouton de rail fixe le côté de façon synchrone ; la caméra, elle, ne suit qu'à
+  * l'image suivante. Le clic part donc dans la MÊME tâche, calculé avec la caméra encore active :
+  * celle qu'ESV utilise pour son rayon. Garde : côté d'ESV relu sur son bouton avant le clic ;
+  * l'autre rail ne doit pas bouger. Ne conclut pas (`null`) : pose avec recentrage, comme avant. */
+ const CLASSE_COTE={left:['O2N3DCutLRClick','leftRailSClass'],right:['O2N3DCutRRClick','rightRailSClass']};
+ function poseDirecte(side,target,expected,mode=CLIC_HUMAIN){
+   const autre=side==='left'?'right':'left',avant=assertExpected(expected),[id,classe]=CLASSE_COTE[side];
+   /* Sans témoin du côté d'ESV (classe du bouton), rien n'est tenté : pose avec recentrage. */
+   if(typeof document.getElementById(id)?.classList?.contains!=='function')return null;
+   /* D-157, mode corrigé : cible hors de la partie visible de la vue active, rien n'est pressé ni cliqué. */
+   if(mode!=='tel-quel'&&!directeVisible(target))return null;
+   nativeClick(selectors[side]);if(!document.getElementById(id).classList.contains(classe))return null;
+   const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin),view=projectToView(cam,target);
+   if(!view||!view.ndc.every(v=>Number.isFinite(v)&&Math.abs(v)<50))return null;
+   const r=view.viewport,ndc=view.ndc;
+   for(const [essai,[dx,dy]] of DECALAGES_CLIC.entries()){
+     const [x,y]=pointClic(r,ndc,dx,dy),horsVue=horsVueClic(r,x,y);
+     if(mode!=='tel-quel'&&(horsVue||!view.inView))return null;
+     if(horsVue)noterClicHorsVue(side,'directe',essai+1,horsVue,r,x,y,expected);
+     c.viewer.renderer.domElement.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,
+       clientX:x,clientY:y,button:0,buttons:1}));
+     const s=assertExpected(expected);
+     if(C.distance(s.rails[autre].positionSceneRelative,avant.rails[autre].positionSceneRelative)>1e-9)
+       throw Error('Le clic a déplacé le rail '+(autre==='left'?'gauche':'droit')+' au lieu du rail '+(side==='left'?'gauche':'droit')+'. État à réconcilier.');
+     if(C.distance(s.rails[side].positionSceneRelative,target)<=.001)return s;
+     if(C.distance(s.rails[side].positionSceneRelative,avant.rails[side].positionSceneRelative)<=1e-9)return null;}
+   return null;}
+ /* 5.0 (D-147) — DÉPLACER LA VUE : AMENER LA CIBLE D'UN RAIL DANS LA VUE D'ESV PAR UN GESTE HUMAIN (fiches/DEPLACER_VUE.md).
+  *
+  * Chaque rail a sa vue (±0,2 unité de scène, centrée sur lui après le bouton du rail) : une cible plus loin est « hors de la
+  * vue » (KI-051) et le lot diffère le cut. L'opérateur, lui, dézoome à la molette ou glisse la vue au bouton gauche (D-147).
+  * `amenerVue` fait de même, après `select` et avant la lecture de caméra qui sert au clic :
+  *   1. caméra lue, cible projetée ; dans la vue (marge de 1 %) : rien ;
+  *   2. sinon le plus petit geste dans les limites : dézoom si la vue entière tient (≤ `dezoomMax`, pixel ≤ `pixelMaxMm`),
+  *      sinon glisser (≤ `glissementPxMax` px), sinon refus « hors-limites » ;
+  *   3. le geste est émis comme un humain le fait (src/gestes-vue.js : mêmes événements, même ordre que Chromium ; jamais de
+  *      `click` dans la vue), puis la caméra est attendue immobile, RELUE, et la cible REPROJETÉE ; le facteur d'un cran et le gain
+  *      du glisser sont mesurés sur ce geste et servent au suivant ;
+  *   4. au plus `gestesMax` gestes ; caméra immobile après un geste, rail déplacé, mauvais sens : arrêt (le rail déplacé est une
+  *      erreur, « État à réconcilier ») ;
+  *   5. la vue est remise ensuite (`remettreVue`) : crans dans l'autre sens, bouton du rail après un glisser, échelle relue.
+  * Ni écriture dans la caméra, ni appel d'une fonction d'ESV, ni requête : des événements de souris et de molette, non fiables
+  * (`isTrusted` faux), comme le `click` de pose d'aujourd'hui. Rien de ceci ne s'exécute sans demande du service worker. */
+ const VUE_VERSION='deplacer-vue-v1';
+ const VUE_DEFAUTS={gestesMax:3,dezoomMax:1.5,glissementPxMax:250,pixelMaxMm:.9,marge:.99,remiseTolerance:.02};
+ function reglagesVue(options){const S=window.BananeSettings?.deplacerVue||{},o=options&&typeof options==='object'?options:{};
+   const E=GV?.EMISSION||{molette:{},glisser:{}};
+   return {...VUE_DEFAUTS,...S,...o,molette:{facteurSuppose:1.1,...E.molette,...(S.molette||{}),...(o.molette||{})},glisser:{viseNdc:.8,...E.glisser,...(S.glisser||{}),...(o.glisser||{})}};}
+ /* État partagé par les deux rails d'une pose : échelle de la vue habituelle, crans nets de dézoom, glisser fait, facteur d'un
+  * cran et gain du glisser mesurés. */
+ const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,facteurCran:o.molette.facteurSuppose,gain:1});
+ const echelleVue=cam=>Math.abs(cam?.projection?.[0]??NaN);
+ const r3v=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
+ const ndcVue=v=>v?[r3v(v.ndc[0]),r3v(v.ndc[1])]:null;
+ const dansVue=(v,marge)=>!!v&&Math.abs(v.ndc[0])<=marge&&Math.abs(v.ndc[1])<=marge&&Math.abs(v.ndc[2])<=1;
+ const procheCam=(a,b)=>!!a&&!!b&&a.cameraToSceneRelative.every((x,i)=>Math.abs(x-b.cameraToSceneRelative[i])<=1e-6)&&Math.abs(echelleVue(a)/echelleVue(b)-1)<=1e-6;
+ /* Caméra immobile : `lecturesStables` comparaisons égales de suite, à `sondageMs` (comme `select`), à 1 µm et 1e-6 d'échelle près
+  * (une visionneuse amortie approche sa cible sans l'atteindre au bit près). Plafond `attenteMs`. */
+ async function cameraImmobile(guard){let prec=null,stables=0;const debut=Date.now();
+   for(;;){await sleep(P.sondageMs);if(cancelled)throw Error('Action interrompue.');guard();const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+     stables=cam&&procheCam(cam,prec)?stables+1:0;prec=cam;if(stables>=P.lecturesStables||Date.now()-debut>=P.attenteMs)return cam;}}
+ function centreVue(c){const r=c.viewer.renderer.domElement.getBoundingClientRect();return {r,x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};}
+ const gesteGarde=expected=>()=>{if(cancelled)throw Error('Action interrompue.');assertExpected(expected);};
+ async function emettreGeste(c,seq,guard){return GV.emettre(c.viewer.renderer.domElement,seq,{fenetre:window,attendre:ms=>sleep(ms),garde:guard});}
+ async function amenerVue(side,target,expected,etat,o,progress=()=>{}){const debut=Date.now(),rapport={cote:side,ok:false,raison:null,gestes:[],ndcAvant:null,ndcApres:null,pixelMm:{avant:null,apres:null}};
+   if(!GV){rapport.raison='module-absent';return rapport;}
+   const guard=gesteGarde(expected);let c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   if(!cam?.viewport||!Number.isFinite(echelleVue(cam))){rapport.raison='camera-illisible';return rapport;}
+   if(etat.echelle0===null){etat.echelle0=echelleVue(cam);etat.pixel0=pixelMm(cam);}
+   else if(Math.abs(echelleVue(cam)/etat.echelle0-1)<=1e-9)etat.crans=0;   // la vue a été remise par ESV (recentrage)
+   const poses0=assertExpected(expected).rails;
+   let v=projectToView(cam,target);rapport.ndcAvant=ndcVue(v);rapport.pixelMm.avant=r3v(pixelMm(cam));
+   if(dansVue(v,o.marge)){rapport.ok=true;rapport.raison='dans-la-vue';rapport.ndcApres=rapport.ndcAvant;rapport.pixelMm.apres=rapport.pixelMm.avant;rapport.dureeMs=Date.now()-debut;return rapport;}
+   for(let n=0;n<o.gestesMax;n++){
+     const b=GV.besoin(v.ndc,cam.viewport,o.marge),zoomActuel=etat.echelle0/echelleVue(cam),{r,x,y}=centreVue(c),geste={};
+     const dezoomPossible=zoomActuel*b.dezoom<=o.dezoomMax*(1+1e-9)&&etat.pixel0*zoomActuel*b.dezoom<=o.pixelMaxMm;
+     let seq=null;
+     if(dezoomPossible){const f=Math.max(1.0001,etat.facteurCran);
+       let crans=Math.min(o.molette.cransMax,Math.max(1,Math.ceil(Math.log(b.dezoom)/Math.log(f)-1e-9)));
+       while(crans>1&&(zoomActuel*Math.pow(f,crans)>o.dezoomMax*(1+1e-9)||etat.pixel0*zoomActuel*Math.pow(f,crans)>o.pixelMaxMm))crans--;
+       Object.assign(geste,{type:'molette',crans,sens:o.molette.sensDezoom});
+       seq=GV.sequenceMolette({x,y,crans,sens:o.molette.sensDezoom,reglages:o.molette});}
+     else if(b.panPx<=o.glissementPxMax){
+       const vise=Math.min(o.marge,o.glisser.viseNdc),cl=u=>Math.max(-vise,Math.min(vise,u));
+       let dx=(cl(v.ndc[0])-v.ndc[0])*r.width/2/etat.gain,dy=-(cl(v.ndc[1])-v.ndc[1])*r.height/2/etat.gain;
+       const L2=Math.hypot(dx,dy);if(L2>o.glissementPxMax){dx*=o.glissementPxMax/L2;dy*=o.glissementPxMax/L2;}
+       dx=Math.round(dx);dy=Math.round(dy);
+       /* Départ loin du rail sélectionné (au centre de la vue), du côté opposé au mouvement ; les deux bouts dans la vue. */
+       const borne=(u,a,l,d)=>Math.round(Math.max(a+20+Math.max(0,-d),Math.min(a+l-20-Math.max(0,d),u)));
+       const x0=borne(x-Math.sign(dx||1)*.3*r.width,r.left,r.width,dx),y0=borne(y+(dy>0?-1:1)*.3*r.height,r.top,r.height,dy);
+       Object.assign(geste,{type:'glisser',px:dx,py:dy});
+       seq=GV.sequenceGlisser({x0,y0,x1:x0+dx,y1:y0+dy,reglages:o.glisser});}
+     else{rapport.raison=n?'gestes-epuises':'hors-limites';break;}
+     const t0=Date.now();await emettreGeste(c,seq,guard);const cam2=await cameraImmobile(guard);
+     geste.dureeMs=Date.now()-t0;geste.ndcAvant=ndcVue(v);
+     /* Le geste ne doit jamais avoir bougé un rail. */
+     const apres=assertExpected(expected).rails;
+     for(const s of ['left','right'])if(C.distance(apres[s].positionSceneRelative,poses0[s].positionSceneRelative)>1e-9){
+       rapport.gestes.push(geste);progress('vue-geste',{side,...geste,rail:s});
+       throw Error('Le geste de vue a déplacé le rail '+(s==='left'?'gauche':'droit')+' ('+geste.type+'). État à réconcilier.');}
+     if(!cam2||procheCam(cam2,cam)){geste.camera='immobile';rapport.gestes.push(geste);progress('vue-geste',{side,...geste});rapport.raison='camera-immobile';break;}
+     if(geste.type==='molette'){const f=Math.pow(echelleVue(cam)/echelleVue(cam2),1/geste.crans);geste.facteurCran=r3v(f);
+       if(f<1){etat.crans-=geste.crans;geste.sensInverse=true;}else{etat.crans+=geste.crans;etat.facteurCran=f;}}
+     else{etat.glisse=true;const v2=projectToView(cam2,target),d=Math.hypot((v2.ndc[0]-v.ndc[0])*r.width/2,(v2.ndc[1]-v.ndc[1])*r.height/2),m=Math.hypot(geste.px,geste.py);
+       if(m>0&&d>0){etat.gain=d/m;geste.gain=r3v(etat.gain);}}
+     cam=cam2;c=context();v=projectToView(cam,target);geste.ndcApres=ndcVue(v);geste.zoom=r3v(etat.echelle0/echelleVue(cam));
+     rapport.gestes.push(geste);progress('vue-geste',{side,...geste});
+     if(geste.sensInverse){rapport.raison='sens-molette';break;}
+     if(pixelMm(cam)>o.pixelMaxMm){rapport.raison='pixel';break;}
+     if(dansVue(v,o.marge)){rapport.ok=true;break;}
+   }
+   if(!rapport.ok&&!rapport.raison)rapport.raison='gestes-epuises';
+   rapport.ndcApres=ndcVue(v);rapport.pixelMm.apres=r3v(pixelMm(cam));rapport.dureeMs=Date.now()-debut;return rapport;}
+ /* Remettre la vue habituelle : après un glisser, le bouton du rail la recentre ; des crans nets de dézoom sont rendus dans
+  * l'autre sens (par séries de `cransMax`) si l'échelle n'est pas déjà revenue. L'échelle est relue : écart au plus
+  * `remiseTolerance`, sinon `ok:false`. */
+ async function remettreVue(etat,side,expected,o,progress=()=>{}){const rap={ok:true,crans:0,recentre:false,ecartEchelle:0};
+   if(!etat||etat.echelle0===null||(!etat.glisse&&!etat.crans))return rap;
+   const guard=gesteGarde(expected);
+   if(etat.glisse){await select(side,expected);rap.recentre=true;etat.glisse=false;}
+   let c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+   if(etat.crans&&Math.abs(echelleVue(cam)/etat.echelle0-1)>1e-9){const {x,y}=centreVue(c),sens=etat.crans>0?-o.molette.sensDezoom:o.molette.sensDezoom;
+     let reste=Math.abs(etat.crans);
+     while(reste>0){const n=Math.min(reste,o.molette.cransMax);await emettreGeste(c,GV.sequenceMolette({x,y,crans:n,sens,reglages:o.molette}),guard);reste-=n;rap.crans+=n;
+       if(reste>0)await sleep(Math.round((o.molette.intervalleMs?.[1]??140)*2));}
+     cam=await cameraImmobile(guard);}
+   etat.crans=0;const ecart=Math.abs(echelleVue(cam)/etat.echelle0-1);rap.ecartEchelle=Math.round(ecart*1e6)/1e6;rap.ok=ecart<=o.remiseTolerance;
+   progress('vue-remise',{side,...rap});return rap;}
+ /* Action de page, sans pose : sélectionne le rail, amène la cible dans sa vue, puis REMET la vue (pré-vol du service worker,
+  * relevés sur la maquette). Ne clique jamais dans la vue. */
+ async function amenerDansLaVue(cote,cible,attendu,a4,a5){const [options,progress]=typeof a4==='function'?[{},a4]:[a4&&typeof a4==='object'?a4:{},typeof a5==='function'?a5:()=>{}];
+   cancelled=false;if(cote!=='left'&&cote!=='right')throw Error('Côté de rail inconnu : '+cote);
+   if(!Array.isArray(cible)||cible.length!==3||!cible.every(Number.isFinite))throw Error('Cible invalide.');
+   assertExpected(attendu);const o=reglagesVue(options),etat=etatVue(o);
+   await select(cote,attendu);
+   const r={version:VUE_VERSION,...await amenerVue(cote,cible,attendu,etat,o,progress)};
+   r.remise=await remettreVue(etat,cote,attendu,o,progress);if(r.ok&&!r.remise.ok){r.ok=false;r.raison='vue-non-restituee';}
+   return r;}
+ /* `options` (troisième argument, facultatif) : `{deplacerVue}` envoyé par le service worker pour un cut que la vue seule
+  * empêchait de poser (réglage `deplacerVue`, coupé par défaut). Sans lui, l'appel est celui d'avant, à l'identique. Avec lui :
+  * pas de pose directe (P1), chaque rail est amené dans sa vue par un geste humain avant le clic, et la vue est remise à la fin. */
+ async function apply(before,proposals,a3,a4){const [options,progress]=typeof a3==='function'?[{},a3]:[a3&&typeof a3==='object'?a3:{},typeof a4==='function'?a4:()=>{}];
+   cancelled=false;const now=assertExpected(before);
    if(!K.equalPoses(now.rails,before.rails))throw Error('Rails modifiés avant l’application.');
-   const expected=K.expectedPoses(before,proposals);
-   for(const s of ['left','right']){if(cancelled)throw Error('Action interrompue.');await clickPosition(s,expected[s].positionSceneRelative,before.identity);}
-   return snapshot();}
+   const plan=options.deplacerVue&&typeof options.deplacerVue==='object'?options.deplacerVue:null;
+   const reglages=plan?reglagesVue(plan):null,vue=plan?{etat:etatVue(reglages),reglages,progress,rapports:[],poses:[]}:null;
+   const expected=K.expectedPoses(before,proposals),directe=!vue&&piece(lectureDuCut(before.identity),'pose');
+   /* D-157 : 'gauche-recentre' pose d'abord le rail droit, celui de la vue active après la capture ; 'tout-recentre' ne pose
+    * jamais en direct. 'tel-quel' : gauche puis droit, en direct, comme avant. Test 6 : le mode du lot, s'il est transmis. */
+   const mode=modeClic(options);
+   const ordre=directe&&mode==='gauche-recentre'?['right','left']:['left','right'];
+   const enDirect=s=>directe&&(mode==='tel-quel'||mode==='gauche-recentre'&&s==='right');
+   for(const s of ordre){if(cancelled)throw Error('Action interrompue.');
+     if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity,mode))continue;
+     if(enDirect(s))progress('apply-repli',{side:s});
+     await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue,mode);if(vue)vue.poses.push(s);}
+   if(!vue)return snapshot();
+   const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
+   if(!remise.ok)throw Error(`Vue ESV non restituée après le déplacement de vue (échelle à ${(remise.ecartEchelle*100).toFixed(1).replace('.',',')} % de la vue habituelle) : les deux rails sont posés, rien n’est validé. Remets la vue d’ESV, puis contrôle le cut. État à réconcilier.`);
+   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise};return fin;}
  async function restore(before){cancelled=false;assertExpected(before);
    for(const s of ['left','right'])await clickPosition(s,before.rails[s].positionSceneRelative,before.identity);return snapshot();}
  async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
@@ -647,6 +1013,188 @@
      nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
      meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
  }
+ /* 5.0, RELECTURE APRÈS LE LOT (D-175, revue de la relecture, corrections 4 et 6 ; D-179) — VALIDER PAR MAJ+ESPACE, le geste de Mic.
+  * Faits (Échos du projet 2, revue « trace ») : Mic valide TOUJOURS par Maj+Espace (1 377 validations sur 1 377, aucune par
+  * Ctrl+Entrée) ; il frappe Maj (ShiftLeft) puis Espace, le canevas d'ESV ayant le focus. SUR UN VERT VALIDE, ESV valide SUR PLACE et
+  * RESTE SUR LE MÊME CUT (Mic, deux fois, D-179) ; sur un cut rouge, il passe à un autre cut (cut + 1 dans 93 à 96 % des cas relevés).
+  * Ce geste n'est employé que par la passe de relecture en mode « corriger », jamais par le lot (qui garde le bouton « valider et
+  * suivant », D-092).
+  * La frappe est relayée UNE fois, comme Mic la fait : keydown Maj, keydown Espace (Maj tenue), keyup Espace, keyup Maj, sur le
+  * canevas d'ESV (elle remonte au document, où ESV lit `e.which`), `which`/`keyCode` réglés comme pour Maj+Retour arrière.
+  * PREUVE : la page ne prouve PAS la validation ; elle rend le cut atteint après la touche, ou aucun changement observé (le cas normal
+  * d'un vert : on n'attend qu'un court instant un autre cut, jamais les 15 s d'une navigation). La preuve est l'écriture « valid » de la
+  * ligne vue par l'observateur passif, dans le service worker, qui contrôle aussi que le MÊME cut est toujours affiché. Refus AVANT
+  * l'envoi (cut, partie ou page différents, libellé illisible, option inconnue, action interrompue) : erreur qui dit « rien n'a été
+  * envoyé à ESV » ; après l'envoi, plus jamais : le résultat est rendu, sans renvoi de la touche. */
+ /* Temps laissé à ESV pour changer de cut après Maj+Espace (il le fait en 180 ms environ sur un cut rouge) : au-delà, il valide sur place. */
+ const FENETRE_SUR_PLACE_MS=1500;
+ const TOUCHES_MAJ_ESPACE=[['keydown','Shift','ShiftLeft',16,true],['keydown',' ','Space',32,true],['keyup',' ','Space',32,true],['keyup','Shift','ShiftLeft',16,false]];
+ async function validerMajEspace(identity,scope={},options={},progress=()=>{}){
+   cancelled=false;const startedAt=new Date().toISOString(),sc=scope&&typeof scope==='object'?scope:{};
+   const avantEnvoi=m=>Error(`${m} ; rien n’a été envoyé à ESV.`);
+   if(options&&typeof options==='object'&&Object.keys(options).length)throw avantEnvoi(`Maj+Espace : option inconnue (${Object.keys(options).slice(0,3).join(', ')})`);
+   let before;try{before=assertExpected(identity);}catch(e){throw avantEnvoi(`Maj+Espace refusé : ${e.message}`);}
+   if(sc.pageId!=null&&before.identity.pageId!==sc.pageId)throw avantEnvoi('Maj+Espace refusé : page ESV différente de celle du lot (rechargée ?)');
+   if(sc.part!=null&&before.identity.part!==sc.part)throw avantEnvoi(`Maj+Espace refusé : partie ${before.identity.part} affichée, partie ${sc.part} attendue`);
+   const depart=cutLabel();if(!depart||K.key(depart)!==K.key(identity))throw avantEnvoi('Maj+Espace refusé : « Cut N of part P » illisible ou différent du cut attendu');
+   progress('maj-espace-before-command',{identity:K.completeIdentity(before.identity)});
+   if(cancelled)throw avantEnvoi('Maj+Espace : action interrompue avant l’envoi');
+   let cible=null;try{cible=window.viewer?.renderer?.domElement||null;}catch{cible=null;}
+   const ou=cible&&typeof cible.dispatchEvent==='function'?cible:document;
+   for(const [type,key,code,num,maj] of TOUCHES_MAJ_ESPACE){
+     const e=new KeyboardEvent(type,{key,code,keyCode:num,which:num,shiftKey:maj,ctrlKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true});
+     for(const [k,v] of [['which',num],['keyCode',num]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
+     ou.dispatchEvent(e);}
+   const evidence={format:'banane-maj-espace-v1',trigger:'relayed-operator-validate-shortcut',startedAt,operatorDecision:'VALIDATE',command:'maj-espace',
+     decisionCommand:{id:'Shift+Space',exists:true,disabled:false,cible:ou===document?'document':'canevas'},commandSent:true,serverConfirmed:false,
+     beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,nextIdentity:null,nextReady:null,observedAt:null,meaning:null};
+   progress('maj-espace-command-returned',{label:cutLabel()});
+   const apres=await attendreAutreCut(identity,Math.min(P.attenteNavigationMs,FENETRE_SUR_PLACE_MS));
+   if(!apres){evidence.meaning='Maj+Espace transmis une fois, cut inchangé après le délai : ESV valide sur place, sans changer de cut. Validation non affirmée ici (la preuve est l’écriture vue par le service worker). Aucune touche renvoyée.';return evidence;}
+   evidence.navigationObserved=true;evidence.observedAt=new Date().toISOString();evidence.nextIdentity=K.completeIdentity(apres);
+   progress('maj-espace-navigation-observed',{nextIdentity:apres});
+   try{const pret=await waitFor(()=>{const n=snapshot();return K.key(n.identity)===K.key(apres)?n:false;},'Le cut atteint après Maj+Espace est affiché, mais ses rails ne sont pas prêts.',12000);
+     evidence.nextReady=true;evidence.nextIdentity=K.completeIdentity(pret.identity);}
+   catch(e){evidence.nextReady=false;progress('maj-espace-next-geometry-unavailable',{message:e.message,nextIdentity:apres});}
+   evidence.meaning='Maj+Espace transmis une fois ; ESV a changé de cut. La validation est prouvée par l’écriture « valid » de la ligne, vue par le service worker, qui contrôle le cut affiché.';
+   return evidence;}
+ /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-066, D-067, D-077 point 3) —
+  * LECTURE SEULE. « Aller au cut N de la partie chargée, et confirmer son identité. »
+  * Aucune décision : ni VALIDATE, ni SKIP, ni pose, ni bouton de rail, ni touche. Aller
+  * sur un cut déjà validé est permis (consultation) ; Ariane n'y écrit rien.
+  *
+  * DEUX CHEMINS, puis le refus :
+  *  1. ÉVÉNEMENT. La carte d'ESV change de cut en émettant son événement interne
+  *     `railPairSelected` (partie, index) sur `#globalcontainer`, par la copie de jQuery
+  *     exposée dans la page (`window.$`). HYPOTHÈSES, établies au banc ESV local (code
+  *     d'origine d'ESV, serveur simulé, essai E1 du 6 octobre) et JAMAIS vérifiées sur
+  *     le vrai ESV : l'index est le N de « Cut N of part P » ; la partie est passée en
+  *     TEXTE, celui du numéro affiché (en nombre, le cut s'affiche mais ESV ne sait plus
+  *     le valider ensuite) ; un index hors de la partie fait lever ESV. Le chemin n'est
+  *     pris que si un écouteur de cet événement est visible sur l'élément (`$._data`,
+  *     interne à jQuery) ; sinon, repli. Symboles internes non documentés (KI-026).
+  *  2. PAS À PAS. Boutons « cut précédent » / « cut suivant » d'ESV, quel que soit le
+  *     statut du cut (`O2N3DCutPrevious3DRail`, `O2N3DCutNext3DRail` : relevés au banc
+  *     ESV local, HYPOTHÈSE sur le vrai ESV). Un clic par pas, chaque pas confirmé (le
+  *     cut affiché avance d'exactement un, même partie) avant le suivant ; un pas raté
+  *     n'est jamais recliqué. Ni `O2N3DCutNextInvalid3DRail` (il saute les cuts validés),
+  *     ni raccourci clavier (cahier §5.5 : bouton vérifié avant d'agir).
+  *  3. REFUS RENDU, avec la raison de chaque chemin écarté. Rien n'est émis.
+  *
+  * BORNES. 0 ≤ N et N < M, M lu dans le compteur « N on M treated » (comme `releverEsv`).
+  * Sans compteur lisible, N ne dépasse pas le plus grand cut connu de la partie (le cut
+  * affiché, ou `borneConnue` donné par le service worker) : un index au-delà ferait
+  * lever ESV, et un « suivant » après le dernier cut quitterait la partie.
+  *
+  * PREUVE. Identité relue avant (« Cut N of part P »), contrôlée contre la cible, puis
+  * relue après. Succès SEULEMENT si la partie ET le cut affichés sont la cible ; sinon
+  * `incertain` et pause explicite, sans réémission. Les refus sont RENDUS, pas levés
+  * (comme `nextWithoutDecision`). Une demande à la fois : une autre demande en vol, une
+  * opération déjà invoquée, une action d'Ariane en cours dans la page (pose,
+  * validation, navigation, lecture) ou une session Écho : refus. Annulation portée par
+  * l'opération (`cancel({operationId})`) : avant l'émission, rien ne part ; entre deux
+  * pas, le pas suivant ne part pas. Un événement déjà émis ne se rattrape pas : le cut
+  * atteint est relu et dit. */
+ const RETOUR={chemin:'auto',pasMax:40,...(window.BananeSettings?.retourCut||{})};
+ const navigation={precedent:'O2N3DCutPrevious3DRail',suivant:'O2N3DCutNext3DRail',conteneur:'globalcontainer',evenement:'railPairSelected'};
+ /* Actions de la page en cours, par requête : `goToCut` refuse de partir pendant l'une d'elles. */
+ const actionsEnCours=new Map();let retourEnVol=null;
+ function cheminEvenement(){try{const $=window.$;if(typeof $!=='function')return {disponible:false,raison:'jquery-absent'};
+   const el=document.getElementById(navigation.conteneur);if(!el)return {disponible:false,raison:'conteneur-absent'};
+   if(typeof $._data!=='function')return {disponible:false,raison:'ecouteurs-illisibles'};
+   /* 4.9.5.3 : notre écouteur en ombre (espace de noms `banane53`) n'est pas un écouteur d'ESV : il ne rend jamais ce chemin disponible. */
+   const ecouteurs=($._data(el,'events')?.[navigation.evenement]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE));
+   if(!ecouteurs.length)return {disponible:false,raison:'sans-ecouteur'};
+   return {disponible:true,raison:null,jquery:typeof $.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null};}
+   catch{return {disponible:false,raison:'lecture-impossible'};}}
+ function bornesPartie(courant,borneConnue){const r=releverEsv(null),total=r.compteur&&!(r.compteursVus>1)?r.compteur.total:null;
+   if(Number.isInteger(total)&&total>0)return {total,max:total-1,source:'compteur'};
+   return {total:null,max:Math.max(...[courant,borneConnue].filter(Number.isInteger)),source:'cut-connu'};}
+ /* Attente d'un AUTRE cut affiché que `depuis`. Lecture seule : une annulation ne
+  * l'interrompt pas (la commande est déjà partie), le délai la borne. */
+ async function attendreAutreCut(depuis,delai=P.attenteNavigationMs){const debut=Date.now();
+   for(;;){const l=cutLabel();if(l&&K.key(l)!==K.key(depuis))return l;if(Date.now()-debut>=delai)return null;await sleep(P.sondageMs);}}
+ async function goToCut(target,options={},operationId=null,progress=()=>{}){
+   const t0=Date.now(),o=options&&typeof options==='object'?options:{},pc=x=>x?{part:x.part,cut:x.cut}:null;
+   const evidence={format:'ariane-goto-cut-v1',operationId:operationId??null,action:'GO_TO_CUT',lectureSeule:true,startedAt:new Date(t0).toISOString(),
+     cible:{part:Number.isInteger(target?.part)?target.part:null,cut:Number.isInteger(target?.cut)?target.cut:null},identiteAvant:null,identiteApres:null,
+     chemin:null,commande:'aucune',emissions:0,pas:null,cheminEvenement:null,cheminPas:null,bornes:null,commandInvoked:false,
+     applyCommandSent:false,validationCommandSent:false,skipCommandSent:false,railCommandSent:false,keyboardSent:false,
+     source:'symboles internes d’ESV relevés au banc ESV local (hypothèses), non vérifiés sur ESV',
+     resultat:null,confirme:false,pauseExplicite:false,pret:null,refusal:null,endedAt:null,durationMs:null};
+   const fin=(resultat,code=null,message=null)=>{evidence.resultat=resultat;evidence.confirme=resultat==='confirme';evidence.pauseExplicite=resultat==='incertain';
+     if(code)evidence.refusal={code,message,at:new Date().toISOString()};evidence.endedAt=new Date().toISOString();evidence.durationMs=Date.now()-t0;return evidence;};
+   const refuse=(code,message)=>fin('refuse',code,message+' Rien n’a été envoyé à ESV.');
+   const annule=()=>!!operationId&&cancelledOperations.has(operationId)||cancelled;
+   if(operationId&&cancelledOperations.has(operationId))return refuse('CANCELLED_BEFORE_COMMAND','Retour annulé avant toute émission.');
+   if(operationId&&invokedOperations.has(operationId)){evidence.commandInvoked='unknown';evidence.firstInvokedAt=invokedOperations.get(operationId);
+     return fin('refuse','OPERATION_ALREADY_INVOKED','Cette demande a déjà été invoquée une fois ; aucune seconde émission.');}
+   if(retourEnVol)return refuse('ALREADY_RUNNING','Un retour à un cut est déjà en cours : une seule demande à la fois.');
+   const autres=[...actionsEnCours.values()].filter(a=>a!=='goToCut'&&a!=='cancel'&&!LECTURES.has(a));
+   if(autres.length)return refuse('ADAPTER_BUSY',`Action d’Ariane en cours dans ESV (${autres[0]}) : aucune navigation pendant une pose, une validation, une lecture ou un déplacement.`);
+   if(native?.active||manual?.active)return refuse('SESSION_ACTIVE','Une session Écho est active : la navigation de consultation est refusée.');
+   if(evidence.cible.part===null||evidence.cible.cut===null)return refuse('INVALID_TARGET','Cible invalide : partie et cut entiers attendus.');
+   evidence.inheritedBlanketCancel=cancelled===true;cancelled=false;
+   const avant=cutLabel();if(!avant)return refuse('IDENTITY_UNAVAILABLE_BEFORE','« Cut N of part P » illisible : cut de départ inconnu.');
+   evidence.identiteAvant=pc(avant);
+   if(target.pageId!=null&&target.pageId!==avant.pageId)return refuse('PAGE_MISMATCH','Page ESV différente de celle de la demande (rechargée ?).');
+   if(target.part!==avant.part)return refuse('WRONG_PART',`Partie ${target.part} demandée, partie ${avant.part} chargée : seul un cut de la partie chargée est accessible.`);
+   const bornes=bornesPartie(avant.cut,o.borneConnue);evidence.bornes=bornes;
+   if(target.cut<0||target.cut>bornes.max)return refuse('OUT_OF_BOUNDS',`Cut ${target.cut} hors des bornes de la partie ${avant.part} (0 à ${bornes.max}${bornes.source==='compteur'?`, ${bornes.total} cuts au compteur`:', plus grand cut connu : compteur illisible'}).`);
+   if(target.cut===avant.cut){evidence.chemin='aucun';evidence.identiteApres=pc(avant);return fin('confirme');}
+   const sens=target.cut>avant.cut?1:-1,ecart=Math.abs(target.cut-avant.cut),bouton=commandInfo(sens>0?navigation.suivant:navigation.precedent);
+   const pasMax=Number.isInteger(RETOUR.pasMax)&&RETOUR.pasMax>0?RETOUR.pasMax:40,choix=['auto','evenement','pas','off'].includes(o.chemin)?o.chemin:RETOUR.chemin;
+   const ev=cheminEvenement(),pas={disponible:bouton.exists&&!bouton.disabled&&ecart<=pasMax,
+     raison:!bouton.exists?'bouton-absent':bouton.disabled?'bouton-desactive':ecart>pasMax?'trop-de-pas':null,bouton:bouton.id,sens,ecart,pasMax};
+   evidence.cheminEvenement=ev;evidence.cheminPas=pas;
+   if(choix==='off')return refuse('PATH_DISABLED','Retour à un cut coupé dans les réglages (retourCut.chemin).');
+   const chemin=choix!=='pas'&&ev.disponible?'evenement':choix!=='evenement'&&pas.disponible?'pas-a-pas':null;
+   if(!chemin){const pourquoi=`événement : ${ev.raison}${choix==='evenement'?'':` ; pas à pas : ${pas.raison}`}`;
+     if(choix==='evenement')return refuse('NAVIGATION_PATH_UNAVAILABLE','Événement interne d’ESV indisponible ('+pourquoi+').');
+     return refuse({'bouton-absent':'NAVIGATION_COMMAND_UNAVAILABLE','bouton-desactive':'NAVIGATION_COMMAND_DISABLED','trop-de-pas':'TOO_MANY_STEPS'}[pas.raison]||'NAVIGATION_PATH_UNAVAILABLE',
+       `Aucun chemin vers le cut ${target.cut} (${pourquoi}).`);}
+   evidence.chemin=chemin;
+   progress('goto-before-command',{operationId:evidence.operationId,chemin,identity:evidence.identiteAvant,cible:evidence.cible});
+   /* Dernier instant révocable : rien ne s'intercale plus entre ce contrôle et l'émission. */
+   if(annule())return refuse('CANCELLED_BEFORE_COMMAND','Retour annulé avant toute émission.');
+   retourEnVol={operationId,depuis:t0};evidence.commandInvoked='unknown';
+   if(operationId)invokedOperations.set(operationId,new Date().toISOString());
+   /* Le cut atteint, relu ; succès seulement si c'est la cible, puis rails prêts (sans effet sur le succès). */
+   const conclure=async l=>{const apres=l||cutLabel();evidence.identiteApres=pc(apres);
+     if(!apres)return fin('incertain','IDENTITY_UNAVAILABLE_AFTER','« Cut N of part P » illisible après la commande : cut atteint inconnu. Contrôle ESV ; aucune commande renvoyée.');
+     if(apres.part!==target.part||apres.cut!==target.cut)return fin('incertain',K.key(apres)===K.key(avant)?'NO_NAVIGATION_OBSERVED':'WRONG_TARGET_REACHED',
+       K.key(apres)===K.key(avant)?`Commande émise, cut ${avant.cut} toujours affiché. Contrôle ESV ; aucune commande renvoyée.`
+       :`ESV affiche le cut ${apres.cut} de la partie ${apres.part}, pas le cut ${target.cut} demandé. Contrôle ESV ; aucune commande renvoyée.`);
+     try{evidence.pret=!!await waitFor(()=>{const s=snapshot();return K.key(s.identity)===K.key(apres)?s:false;},'',P.attenteMs);}catch{evidence.pret=false;}
+     const final=cutLabel();evidence.identiteApres=pc(final);
+     if(!final||final.part!==target.part||final.cut!==target.cut)return fin('incertain','TARGET_LEFT_AFTER_ARRIVAL',`Le cut ${target.cut} a été atteint puis quitté (${final?`cut ${final.cut} affiché`:'cut illisible'}). Contrôle ESV.`);
+     return fin('confirme');};
+   try{
+     if(chemin==='evenement'){evidence.commande='evenement';
+       try{evidence.emissions=1;window.$(document.getElementById(navigation.conteneur)).trigger(navigation.evenement,[String(target.part),target.cut]);}
+       catch(e){evidence.identiteApres=pc(cutLabel());return fin('incertain','NAVIGATION_COMMAND_THREW',`L’événement interne d’ESV a levé (${String(e?.message||e).slice(0,160)}) : cut atteint à contrôler dans ESV ; aucune commande renvoyée.`);}
+       evidence.commandInvoked=true;evidence.invokedAt=new Date().toISOString();
+       progress('goto-command-returned',{operationId:evidence.operationId,chemin,label:pc(cutLabel())});
+       return await conclure(await attendreAutreCut(avant));}
+     evidence.commande='pas-a-pas';evidence.pas={sens,demandes:ecart,faits:0,bouton:bouton.id};let courant=avant;
+     for(let i=0;i<ecart;i++){
+       if(annule()){evidence.identiteApres=pc(cutLabel());if(i===0)evidence.commandInvoked=false;
+         return fin(i?'interrompu':'refuse','CANCELLED_BETWEEN_STEPS',`Retour annulé après ${i} pas sur ${ecart} : cut ${courant.cut} affiché, aucun pas de plus.`);}
+       const b=document.getElementById(bouton.id);
+       if(!b||b.disabled){evidence.identiteApres=pc(cutLabel());
+         return fin('interrompu',b?'NAVIGATION_COMMAND_DISABLED':'NAVIGATION_COMMAND_UNAVAILABLE',`Bouton ${bouton.id} ${b?'désactivé':'absent'} au pas ${i+1} sur ${ecart} : cut ${courant.cut} affiché, aucun pas de plus.`);}
+       try{evidence.emissions++;b.click();}
+       catch(e){evidence.identiteApres=pc(cutLabel());return fin('incertain','NAVIGATION_COMMAND_THREW',`Le bouton ${bouton.id} a levé au pas ${i+1} (${String(e?.message||e).slice(0,160)}) : contrôle ESV ; aucun pas de plus.`);}
+       evidence.commandInvoked=true;
+       const vu=await attendreAutreCut(courant),attendu=courant.cut+sens;
+       if(!vu||vu.part!==target.part||vu.cut!==attendu){const l=vu||cutLabel();evidence.identiteApres=pc(l);
+         return fin('incertain',!l?'IDENTITY_UNAVAILABLE_AFTER':!vu?'NO_NAVIGATION_OBSERVED':'WRONG_TARGET_REACHED',
+           !l?`Cut illisible après le pas ${i+1} : contrôle ESV ; aucun pas de plus.`:!vu?`Pas ${i+1} sans effet : cut ${courant.cut} toujours affiché ; aucun pas de plus.`
+           :`Pas ${i+1} : ESV affiche le cut ${vu.cut} de la partie ${vu.part} au lieu du cut ${attendu} ; aucun pas de plus.`);}
+       courant=vu;evidence.pas.faits++;progress('goto-step',{operationId:evidence.operationId,pas:i+1,sur:ecart,identity:pc(vu)});}
+     return await conclure(courant);
+   }finally{retourEnVol=null;}
+ }
  const validateAndNext=(identity,scope,progress)=>decisionAndNext(identity,'VALIDATE',scope,progress);
  const skipAndNext=(identity,scope,progress)=>decisionAndNext(identity,'SKIP',scope,progress);
  let manual=null,manualChannel=null,manualBanner=null;const manualRequests=new Map(),manualListeners=[];
@@ -704,18 +1252,77 @@
      observer.observe(node,{characterData:true,childList:true,subtree:true});
      nativeListeners.push(['mutation',observer,null]);return true;},
    install:handler=>{const relay=e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane4:native-input'||e.data.channel!==nativeChannel)return;
-     const input=e.data.input;handler({...input,target:{kind:input.targetKind}});};window.addEventListener('message',relay);nativeListeners.push(['message',relay,false]);},
+     const input=e.data.input;if(input?.type==='geste-vue')return;   // un résumé de geste ne vient que du relevé de cette page
+     handler({...input,target:{kind:input.targetKind}});};window.addEventListener('message',relay);nativeListeners.push(['message',relay,false]);
+     releverGestesVue(handler);},
    uninstall:()=>{for(const [type,handler,options] of nativeListeners.splice(0)){if(type==='mutation')handler.disconnect();else window.removeEventListener(type,handler,options);}},
    editable:el=>el?.kind==='input'||!!el?.closest?.('input,textarea,select,[contenteditable="true"]'),
    targetKind:el=>el?.kind|| (el?.closest?.('#O2N3DCutValidate3DRail')?'validation':el?.closest?.('canvas')?'canvas':el?.closest?.('button,a')?'control':'other'),
    signalFailure:message=>{if(nativeFailureBanner)return;nativeFailureBanner=document.createElement('div');nativeFailureBanner.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;max-width:520px;padding:10px 14px;background:#381f23;color:#ffd7dc;border:1px solid #8b5058;border-radius:8px;font:14px Arial;pointer-events:none';
      nativeFailureBanner.setAttribute('role','alert');nativeFailureBanner.textContent=message;document.documentElement.append(nativeFailureBanner);}};}
+ /* 5.0 (« déplacer la vue ») — RELEVÉ DES GLISSERS ET DE LA MOLETTE DE L'OPÉRATEUR pendant une session Écho (réglage
+  * `echo.gestesVue`). Écouteurs de la fenêtre, phase de capture, PASSIFS : ils lisent, n'empêchent rien, n'arrêtent rien, et ne
+  * retiennent que les événements de confiance qui visent la vue d'ESV. La caméra est lue au premier événement du geste (avant
+  * qu'ESV ne le traite) et quand elle est de nouveau immobile. Un résumé par geste (src/gestes-vue.js `Releveur`) part dans la
+  * file de l'Écho ; les écouteurs sont retirés avec ceux de la session. */
+ function releverGestesVue(handler){if(window.BananeSettings?.echo?.gestesVue===false||typeof GV?.Releveur!=='function')return;
+   const vueEsv=()=>{try{return window.viewer?.renderer?.domElement||null;}catch{return null;}};
+   const R=new GV.Releveur({lireCamera:()=>{const v=window.viewer;return v?L.cameraSnapshot(v,[0,0,0]):null;},
+     emettre:geste=>{try{handler({type:'geste-vue',isTrusted:true,target:{kind:'canvas'},geste,observedAt:new Date().toISOString()});}catch{}},
+     planifier:(fn,ms)=>setTimeout(fn,ms),maintenant:()=>heurePage()??Date.now(),
+     estVue:t=>{const c=vueEsv();return !!c&&!!t&&(t===c||(typeof t.closest==='function'&&t.closest('canvas')===c));}});
+   const ecoute=e=>R.evenement(e),opts={capture:true,passive:true};
+   for(const t of GV.TYPES_RELEVE){window.addEventListener(t,ecoute,opts);nativeListeners.push([t,ecoute,opts]);}}
  async function nativeStart(options){if(native?.active)throw Error('Écho est déjà actif dans ESV.');nativeChannel=options.channel;
    native=native||new NP4.Observer(nativeApi());return native.start(options);}
  async function nativeResume(options){nativeChannel=options.channel;native=native||new NP4.Observer(nativeApi());return native.resume(options);}
+ /* 4.9.5.3 (S6) — ÉCOUTEURS jQUERY EN OMBRE sur les événements internes d'ESV (`#globalcontainer`, par `window.$`). Le gestionnaire ne retourne
+  * rien, n'arrête rien (ni `stopPropagation`, ni `preventDefault`, ni valeur retournée), est posé APRÈS ceux d'ESV et attrape toute
+  * exception : les gestionnaires d'ESV passent comme avant. Espace de noms `banane53` (écouteurs retirés par lui seul, exclus des comptes de
+  * l'empreinte et du chemin `goToCut`). Au plus `parSecondeMax` événements par seconde (le reste est compté, `perdus`). Arguments réduits
+  * aux nombres, booléens et chaînes courtes. Posé au premier `ping` / `capture` où le conteneur existe (40 essais au plus). */
+ const ombreEsv={installe:false,essais:0,fenetre:[],perdus:0};
+ function installerOmbreEsv(){
+   if(ESVEV.ombre===false||ombreEsv.installe||ombreEsv.essais>=40)return;ombreEsv.essais++;
+   try{const $=window.$;if(typeof $!=='function')return;const el=document.getElementById('globalcontainer');if(!el)return;
+     const jq=$(el);if(typeof jq?.on!=='function')return;
+     jq.on(ESVEV.noms.map(n=>n+'.'+NS_OMBRE).join(' '),function(ev){
+       try{const now=Date.now();while(ombreEsv.fenetre.length&&now-ombreEsv.fenetre[0]>1000)ombreEsv.fenetre.shift();
+         if(ombreEsv.fenetre.length>=(ESVEV.parSecondeMax||30)){ombreEsv.perdus++;return;}ombreEsv.fenetre.push(now);
+         const args=Array.prototype.slice.call(arguments,1,7).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='boolean'?v:typeof v==='string'&&v.length<=24?v:null);
+         const perdus=ombreEsv.perdus;ombreEsv.perdus=0;
+         posterObservateur({kind:'esv-event',nom:String(ev?.type||''),args,pageMs:heurePage(),...(perdus?{perdus}:{})});}catch{}
+       /* aucune valeur retournée : jQuery ne s'en sert pas, mais un `false` aurait arrêté la propagation. */
+     });
+     ombreEsv.installe=true;}catch{}}
+ /* 4.9.5.3 (S6) — EMPREINTE DU CONTRAT ESV, à « Connecter » (lecture seule, aucune commande, aucune valeur de projet) : boutons de navigation d'ESV
+  * (`O2N3Dcut…3DRail`), classes des deux boutons de rail, écouteurs jQuery de chacun des cinq événements sur `#globalcontainer` (les nôtres
+  * exclus), versions de jQuery et de Potree. Haché (FNV-1a, 8 caractères) ; le détail part avec lui pour dire ce qui a changé. Comparée par le
+  * service worker à la précédente DU MÊME ONGLET.
+  * 4.9.5.4 (D-139) : l'empreinte ne contient plus ce qui dépend de l'ÉTAT de la page — les libellés (`title`) des boutons, qui changent selon
+  * l'état, et le NOMBRE d'écouteurs par événement. Les boutons sont pris par leur identifiant seul, et un écouteur compte par sa PRÉSENCE
+  * (vrai/faux). Les libellés et les nombres restent relevés dans `etat`, consigné sans être haché ni comparé (pour voir, au terrain, ce qui varie).
+  * Audit P-5 (H14) : la classe de SÉLECTION d'un bouton de rail (`leftRailSClass` sélectionné, `leftRailUSClass` non, idem à droite) dépend elle
+  * aussi de l'état de la page : sélectionner l'autre rail changeait l'empreinte (faux avis « contrat changé »). Elle est ramenée à
+  * `leftRail(S|US)Class` : sa présence reste comparée (CLASSE_COTE la lit), son état non ; les classes brutes vont dans `etat`. Forme 2. */
+ const FORME_CONTRAT=2,SELECTION_RAIL=/^(left|right)Rail(?:S|US)Class$/;
+ function empreinteContrat(){const d={},etat={};
+   try{const bs=[...document.querySelectorAll('[id^="O2N3DCut"]')].filter(el=>/3DRail$/.test(el.id)).slice(0,16);d.boutons=bs.map(el=>el.id);etat.titres=bs.map(el=>[el.id,(el.title||'').slice(0,60)]);}catch{d.boutons=null;etat.titres=null;}
+   try{const classes=['O2N3DCutLRClick','O2N3DCutRRClick'].map(id=>{const el=document.getElementById(id);return el?[...el.classList].sort():null;});
+     etat.rails=classes.map(c=>c?c.join(' ').slice(0,80):null);
+     d.rails=classes.map(c=>c?[...new Set(c.map(x=>x.replace(SELECTION_RAIL,'$1Rail(S|US)Class')))].sort().join(' ').slice(0,80):null);}catch{d.rails=null;etat.rails=null;}
+   try{const $=window.$;d.jquery=typeof $?.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null;
+     const el=document.getElementById('globalcontainer'),ev=typeof $==='function'&&typeof $._data==='function'&&el?$._data(el,'events'):null;
+     const nombres=Object.fromEntries(ESVEV.noms.map(n=>[n,ev?(ev[n]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE)).length:null]));
+     d.ecouteurs=Object.fromEntries(Object.entries(nombres).map(([n,v])=>[n,v===null?null:v>0]));etat.ecouteurs=nombres;}catch{d.jquery=null;d.ecouteurs=null;etat.ecouteurs=null;}
+   try{const v=window.Potree?.version;d.potree=v&&typeof v==='object'?[v.major,v.minor].filter(x=>Number.isFinite(x)).join('.')+(typeof v.suffix==='string'?String(v.suffix).slice(0,12):''):typeof v==='string'?v.slice(0,16):null;}catch{d.potree=null;}
+   const texte=JSON.stringify(d);let h=2166136261>>>0;for(let i=0;i<texte.length;i++){h^=texte.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+   return {hash:h.toString(16).padStart(8,'0'),detail:d,etat,forme:FORME_CONTRAT};}
  let intrusion=null;
- const methods={ping:()=>({version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion}),state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,
-   manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
+ const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
+   const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
+   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
+   amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
    /* Un `cancel` PORTANT un identifiant d'opération est retenu pour elle seule
@@ -789,6 +1396,8 @@
    nextWithoutDecision:'Navigation refusée : rien n’a été envoyé à ESV pour ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    skipAndNext:'SKIP refusé : rien n’a été décidé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.',
    apply:'Pose refusée : rien n’a été posé sur ce cut. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Archiver le résultat interrompu.',
+   goToCut:'Retour à un cut refusé : rien n’a été envoyé à ESV. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV.',
+   validerMajEspace:'Validation refusée : la pose de ce cut est faite, non validée. Contrôle-la dans ESV AVANT tout F5 (un F5 peut l’effacer ; valide-la toi-même si elle est juste). Puis désactive l’autre Ariane dans edge://extensions, F5 sur ESV.',
    restore:'Restauration refusée. Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV ; contrôle ce cut dans ESV, puis Archiver le résultat interrompu.'};
  const refusSecurite=action=>SANS_REPONSE+`Ariane ${nomVersion} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${intrusion.action} »). `
    +(SUITE[action]||'Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.');
@@ -800,7 +1409,12 @@
      window.postMessage({kind:'banane3:result',id,channel,error:refusEtranger()},location.origin);return;}
    if(intrusion&&!EN_SECURITE.has(action)){window.postMessage({kind:'banane3:result',id,channel,error:refusSecurite(action)},location.origin);return;}
    if(['manualStart','nativeStart','nativeResume'].includes(action))args[0]={...args[0],channel};
-   const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,detail},location.origin);
+   /* D-091 (4.9.0.9) : chaque étape porte son heure dans la page (`pageMs`, depuis la réception de
+    * la commande). Le pont horodatait à la réception du message : en mode rapide, la suite de
+    * `scheduler.yield` passe avant ce message, et la lecture d'un rail paraissait durer 0 s. */
+   const recueA=Date.now();
+   const progress=(stage,detail={})=>window.postMessage({kind:'banane3:progress',id,channel,stage,
+     detail:{...(detail&&typeof detail==='object'?detail:{}),pageMs:Date.now()-recueA}},location.origin);
    /* 4.8.0 (KI-063) — ANNULATION PÉRIMÉE. Un `cancel` sans identifiant
     * d'opération est global : arrivé en retard, il coupait une requête
     * étrangère (terrain du 26/09, partie 14 : « Export interrompu. » sur un lot
@@ -812,10 +1426,14 @@
      const target=typeof o.requestId==='string'?o.requestId:null,scoped=typeof o.operationId==='string';
      const stale=!scoped&&(target?!running.has(target):Number.isFinite(sentAt)&&![...running.values()].some(t=>t<=sentAt));
      if(stale){window.postMessage({kind:'banane3:result',id,channel,result:{cancelRequested:false,stale:true,requestId:target}},location.origin);return;}}
-   else running.set(id,Date.now());
+   else{running.set(id,Date.now());actionsEnCours.set(id,action);}
    try{progress('received');const result=await methods[action](...args,progress);window.postMessage({kind:'banane3:result',id,channel,result},location.origin);}
    catch(error){window.postMessage({kind:'banane3:result',id,channel,error:error.message},location.origin);}
-   finally{running.delete(id);
+   finally{running.delete(id);actionsEnCours.delete(id);
+     /* D-157 : le relevé des clics hors vue, après la réponse ; rien de ce qui suit ne peut la toucher. */
+     if((action==='apply'||action==='restore')&&clicsHorsVue.length)try{const clics=clicsHorsVue.splice(0),cible=args[0]?.identity;
+       window.postMessage({kind:'banane3:clic-hors-vue',channel,requestId:id,releve:{requestId:id,action,mode:action==='apply'?modeClic(args[2]):CLIC_HUMAIN,
+         identity:Number.isInteger(cible?.cut)?{part:Number.isInteger(cible.part)?cible.part:null,cut:cible.cut}:null,clics}},location.origin);}catch{}
      /* D4 : le relevé passif, après la réponse ; rien de ce qui suit ne peut la toucher. */
      if(action==='capture')try{window.postMessage({kind:'banane3:releve',channel,requestId:id,releve:releverEsv(id,args[0]?.identity)},location.origin);}catch{}}});
 })();

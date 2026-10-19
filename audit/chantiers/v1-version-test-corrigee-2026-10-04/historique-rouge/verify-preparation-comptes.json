@@ -1,0 +1,16 @@
+{
+  "counts": {
+    "tests": 1067,
+    "suites": 0,
+    "pass": 1060,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 2,
+    "todo": 0
+  },
+  "benchMode": "partial",
+  "notFullSuccess": true,
+  "freshAuditJsonWritten": false,
+  "laterSyntaxAndBaselineStepsExecuted": false,
+  "explanation": "verify exits at tests; audit/verification.json remains historical"
+}

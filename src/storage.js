@@ -8,6 +8,13 @@ class BananeStorage3{
    req.onsuccess=()=>{result=req.result;};tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
  async getState(){return (await chrome.storage.local.get('banane3State')).banane3State||null;}
  async setState(s){await chrome.storage.local.set({banane3State:s});}
+ /* V5 (D-089) : visites d'un ancien état absentes d'IndexedDB (vidées après export, ou jamais écrites),
+  * mises de côté UNE fois au passage au nouveau format, pour que rien ne soit perdu sans les réécrire
+  * à chaque sauvegarde. */
+ async archiverVisites(liste){const cle='banane3VisitesHorsCache',avant=(await chrome.storage.local.get(cle))[cle];
+  /* Sans doublon : un démarrage interrompu avant la sauvegarde recommence l'archivage. */
+  const id=r=>r?.recordId||r?.id,deja=new Set((Array.isArray(avant)?avant:[]).map(id).filter(Boolean));
+  await chrome.storage.local.set({[cle]:[...(Array.isArray(avant)?avant:[]),...liste.filter(r=>!id(r)||!deja.has(id(r)))]});}
  async putCloud(id,data){return this.transaction('clouds','readwrite',s=>s.put(data,id));}
  async getCloud(id){return this.transaction('clouds','readonly',s=>s.get(id));}
  /* Un nuage acquitté et écrit sur disque est retiré de la base : sans cela la
@@ -23,6 +30,19 @@ class BananeStorage3{
  /* Lecture par clé : un enregistrement, sans charger toute la base (4.7.2). */
  async getRecord(id){return this.transaction('records','readonly',s=>s.get(id));}
  async all(name){return this.transaction(name,'readonly',s=>s.getAll());}
+ /* V2 : suppression de plusieurs clés en UNE transaction (vidage du cache d'export). T3D-5 : rend le nombre de clés
+  * PRÉSENTES et supprimées (une clé déjà absente n'est pas comptée), lu dans la même transaction. */
+ async deleteMany(name,ids){const db=await this.open();return new Promise((resolve,reject)=>{
+   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name);let n=0;
+   for(const id of ids){const r=os.count(id);r.onsuccess=()=>{if(r.result>0){os.delete(id);n++;}};}
+   tx.oncomplete=()=>resolve(n);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
+ /* V2 : lit, compare la signature et supprime dans UNE transaction (rien ne s'écrit entre
+  * le contrôle et la suppression). Rend { supprimes:[ids], gardes:[ids modifiés] }. */
+ async deleteIfUnchanged(name,ids,signatures,signature){const db=await this.open();return new Promise((resolve,reject)=>{
+   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name),supprimes=[],gardes=[];
+   for(const id of ids){const r=os.get(id);r.onsuccess=()=>{if(r.result===undefined)return;
+     if(signature(r.result)===signatures[id]){os.delete(id);supprimes.push(id);}else gardes.push(id);};}
+   tx.oncomplete=()=>resolve({supprimes,gardes});tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
  async keys(name){return this.transaction(name,'readonly',s=>s.getAllKeys());}
 }
 globalThis.BananeStorage3=BananeStorage3;

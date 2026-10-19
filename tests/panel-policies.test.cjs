@@ -97,7 +97,7 @@ test('§10 · « Différés : N » suit les finalisations durables, jamais une i
    {deferred:[{cut:549},{cut:2400}],processed:[{cut:700}],skipped:[]}),
    deferIntent:{phase:'COMMAND_MAY_HAVE_BEEN_SENT',identity:{cut:9452},commandInvoked:'unknown'}});
  assert.match($('batch').textContent,/Différés : 2/);
- assert.match($('batch').textContent,/1 cuts traités · 0 ignorés/);
+ assert.match($('batch').textContent,/1 cut traité · 0 ignoré/); // 4.9.0.16 : accord au singulier (« 1 cut traité »)
  /* L'incertitude reste visible AVEC son cut, et n'est jamais comptée. */
  assert.match($('notice').textContent,/Cut 9452 .*n’est compté comme différé tant que la progression n’est pas acceptée/s);
 });

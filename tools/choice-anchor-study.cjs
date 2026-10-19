@@ -21,7 +21,7 @@
  * `tools/acceptance-report.cjs` (décision rejouée, jugement de l'outil
  * d'acceptation, D-040 compris). Faux : latéral OU vertical > 10 mm (D-038).
  * Aucune pose humaine n'entre dans une décision ; aucun écartement n'est une
- * cible (admissibilité [1405, 1470] mm seulement).
+ * cible (admissibilité [1420, 1470] mm seulement (1405 avant D-084)).
  *
  * Un CHOIX ne devient jamais appui (`anchor:false`) : écarter un choix ne
  * change donc pas les décisions suivantes, et les règles « choix » ci-dessous

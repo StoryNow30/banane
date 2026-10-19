@@ -1,0 +1,722 @@
+{
+ "format": "ariane-rapide-humain-empreinte-v1",
+ "source": "src/adapter-page.js de claude/50-base (c2dc0e0), avant D-157",
+ "note": "Trace envoyée à ESV (boutons et événements du canevas), étapes, poses finales, durée et erreur, par scénario de tests/helpers/esv-clic.cjs.",
+ "scenarios": {
+  "rapide-vue-droite": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": -2360.1600244140623,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1604.6499755859375,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.012322447,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.509750489,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.441338812,
+    "right": 0.258901656
+   },
+   "dureeMs": 0,
+   "erreur": null
+  },
+  "rapide-vue-gauche": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1547.3399755859375,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 5512.149975585938,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.012130509,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.509942428,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.328390252,
+    "right": 0.089938844
+   },
+   "dureeMs": 0,
+   "erreur": null
+  },
+  "reference": {
+   "cut": 102,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1547.3399755859375,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1604.6499755859375,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.012130509,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.509750489,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.328390252,
+    "right": 0.258901656
+   },
+   "dureeMs": 640,
+   "erreur": null
+  },
+  "rapide-classe-figee-gauche": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1547.3399755859375,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 5512.149975585938,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "apply-repli",
+     {
+      "side": "left",
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.012130509,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.509942428,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.328390252,
+    "right": 0.089938844
+   },
+   "dureeMs": 320,
+   "erreur": null
+  },
+  "rapide-esv-decale-une-fois": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": -2360.1600244140623,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": -2359.6600244140623,
+     "clientY": 538.284998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1604.6499755859375,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.01193857,
+     0,
+     0.002917466
+    ],
+    "right": [
+     -1.509750489,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.10288586,
+    "right": 0.258901656
+   },
+   "dureeMs": 0,
+   "erreur": null
+  },
+  "rapide-cible-droite-au-bord": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": -2360.1600244140623,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 2096.994975585938,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.012322447,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.698618052,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.441338812,
+    "right": 0.388148192
+   },
+   "dureeMs": 0,
+   "erreur": null
+  },
+  "rapide-fenetre-etroite": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": -2360.1600244140623,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1734.899975585938,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.012322447,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.55965452,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.441338812,
+    "right": 0.352322178
+   },
+   "dureeMs": 0,
+   "erreur": null
+  },
+  "reference-cible-gauche-au-bord": {
+   "cut": 102,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1060.2049755859375,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1604.6499755859375,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.199078685,
+     0,
+     0.003301343
+    ],
+    "right": [
+     -1.509750489,
+     0,
+     0.004069097
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 0.311446614,
+    "right": 0.258901656
+   },
+   "dureeMs": 640,
+   "erreur": null
+  },
+  "rapide-puis-restauration": {
+   "cut": 100,
+   "journal": [
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": -2360.1600244140623,
+     "clientY": 537.784998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1604.6499755859375,
+     "clientY": 535.179998474121,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutLRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1610.6999511718757,
+     "clientY": 554.1999969482422,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "left"
+    },
+    {
+     "quoi": "bouton",
+     "id": "O2N3DCutRRClick"
+    },
+    {
+     "quoi": "canevas",
+     "type": "click",
+     "clientX": 1553.199951171875,
+     "clientY": 556.1999969482422,
+     "button": 0,
+     "buttons": 1,
+     "bubbles": true,
+     "cancelable": true,
+     "cote": "right"
+    }
+   ],
+   "etapes": [
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ],
+    [
+     "received",
+     {
+      "pageMs": 0
+     }
+    ]
+   ],
+   "positions": {
+    "left": [
+     0.000268695,
+     0,
+     0.000076774
+    ],
+    "right": [
+     -1.499923243,
+     0,
+     0.000076774
+    ]
+   },
+   "ecartCibleMm": {
+    "left": 12.090027273,
+    "right": 10.813543617
+   },
+   "dureeMs": 0,
+   "erreur": null
+  }
+ }
+}

@@ -1,0 +1,253 @@
+{
+ "format": "ariane-gestes-chromium-v1",
+ "chromium": "141.0.7390.37",
+ "date": "2026-10-16",
+ "source": "tools/releve-gestes-vue.cjs navigateur (gestes de confiance par le protocole du navigateur)",
+ "glisserGauche": {
+  "motif": [
+   "pointerdown",
+   "mousedown",
+   "pointermove",
+   "mousemove",
+   "pointerup",
+   "mouseup",
+   "click"
+  ],
+  "champs": {
+   "pointerdown": {
+    "classe": "PointerEvent",
+    "button": 0,
+    "buttons": 1,
+    "pressure": 0.5,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "mousedown": {
+    "classe": "MouseEvent",
+    "button": 0,
+    "buttons": 1,
+    "detail": 1,
+    "cancelable": true,
+    "composed": true
+   },
+   "pointerrawupdate": {
+    "classe": "PointerEvent",
+    "button": -1,
+    "buttons": 1,
+    "pressure": 0.5,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": false,
+    "composed": true
+   },
+   "pointermove": {
+    "classe": "PointerEvent",
+    "button": -1,
+    "buttons": 1,
+    "pressure": 0.5,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "mousemove": {
+    "classe": "MouseEvent",
+    "button": 0,
+    "buttons": 1,
+    "detail": 0,
+    "cancelable": true,
+    "composed": true
+   },
+   "pointerup": {
+    "classe": "PointerEvent",
+    "button": 0,
+    "buttons": 0,
+    "pressure": 0,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "mouseup": {
+    "classe": "MouseEvent",
+    "button": 0,
+    "buttons": 0,
+    "detail": 1,
+    "cancelable": true,
+    "composed": true
+   },
+   "click": {
+    "classe": "PointerEvent",
+    "button": 0,
+    "buttons": 0,
+    "pressure": 0,
+    "detail": 1,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   }
+  }
+ },
+ "glisserDroit": {
+  "motif": [
+   "pointerdown",
+   "mousedown",
+   "contextmenu",
+   "pointermove",
+   "mousemove",
+   "pointerup",
+   "mouseup",
+   "auxclick"
+  ],
+  "champs": {
+   "pointerdown": {
+    "classe": "PointerEvent",
+    "button": 2,
+    "buttons": 2,
+    "pressure": 0.5,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "mousedown": {
+    "classe": "MouseEvent",
+    "button": 2,
+    "buttons": 2,
+    "detail": 1,
+    "cancelable": true,
+    "composed": true
+   },
+   "contextmenu": {
+    "classe": "PointerEvent",
+    "button": 2,
+    "buttons": 2,
+    "pressure": 0,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "pointerrawupdate": {
+    "classe": "PointerEvent",
+    "button": -1,
+    "buttons": 2,
+    "pressure": 0.5,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": false,
+    "composed": true
+   },
+   "pointermove": {
+    "classe": "PointerEvent",
+    "button": -1,
+    "buttons": 2,
+    "pressure": 0.5,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "mousemove": {
+    "classe": "MouseEvent",
+    "button": 0,
+    "buttons": 2,
+    "detail": 0,
+    "cancelable": true,
+    "composed": true
+   },
+   "pointerup": {
+    "classe": "PointerEvent",
+    "button": 2,
+    "buttons": 0,
+    "pressure": 0,
+    "detail": 0,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   },
+   "mouseup": {
+    "classe": "MouseEvent",
+    "button": 2,
+    "buttons": 0,
+    "detail": 1,
+    "cancelable": true,
+    "composed": true
+   },
+   "auxclick": {
+    "classe": "PointerEvent",
+    "button": 2,
+    "buttons": 0,
+    "pressure": 0,
+    "detail": 1,
+    "pointerId": 1,
+    "pointerType": "mouse",
+    "cancelable": true,
+    "composed": true
+   }
+  }
+ },
+ "molette": {
+  "motif": [
+   "wheel",
+   "wheel"
+  ],
+  "champs": {
+   "wheel": {
+    "classe": "WheelEvent",
+    "button": 0,
+    "buttons": 0,
+    "detail": 0,
+    "deltaX": 0,
+    "deltaY": 100,
+    "deltaMode": 0,
+    "wheelDeltaY": -120,
+    "cancelable": false,
+    "composed": true
+   }
+  },
+  "zoom": {
+   "classe": "WheelEvent",
+   "button": 0,
+   "buttons": 0,
+   "detail": 0,
+   "deltaX": 0,
+   "deltaY": -100,
+   "deltaMode": 0,
+   "wheelDeltaY": 120,
+   "cancelable": false,
+   "composed": true
+  },
+  "mousewheelHistorique": {
+   "isTrusted": true,
+   "wheelDelta": -120,
+   "deltaY": 100
+  }
+ },
+ "clicSimple": {
+  "motif": [
+   "pointerdown",
+   "mousedown",
+   "pointerup",
+   "mouseup",
+   "click"
+  ]
+ },
+ "synthetique": {
+  "wheelVersMousewheel": 0,
+  "wheelDeltaYNaif": 100,
+  "pointeurPourSouris": false
+ }
+}
