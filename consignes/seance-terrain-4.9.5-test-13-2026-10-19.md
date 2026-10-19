@@ -12,11 +12,11 @@ Aussi : quand la cible d'un cut sort de la vue d'ESV, Orbite **déplace la vue**
 
 ## 1. Installer et vérifier
 
-1. Exporte d'abord ce que la test 9 garde.
+1. Exporte d'abord ce que ta version actuelle garde.
 2. **Contrôle l'empreinte du zip** (PowerShell, dans le dossier du zip) : `Get-FileHash .\ariane-4.9.5-test.13.zip -Algorithm SHA256`. Les 64 caractères doivent être ceux de mon message, sinon n'installe pas.
-3. **Pose la test 13 par-dessus la test 9** : décompresse le zip dans le même dossier, en remplaçant les fichiers. Dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane.
+3. **Pose la test 13 (L1) par-dessus ta version actuelle** (la 4.9.5.11, par exemple) : décompresse le zip dans le même dossier, en remplaçant les fichiers. Dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane.
 4. **F5 sur l'onglet ESV**, puis choisis-le dans Ariane.
-5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 13 (L1) ».
+5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 13 (L1) ». Le panneau est celui de la test 9 (pas encore le nouveau).
 
 Rien à régler : le nouveau comportement est actif pour chaque lot.
 
@@ -42,7 +42,7 @@ Important pour la mesure : **ne retouche pas** un cut rouge approché par un aut
 ## 5. Si quelque chose ne va pas
 
 Arrête le lot, note l'heure et le message, exporte et envoie les zips. **Ne désinstalle pas Ariane.**
-Retour arrière (retrouver le lot d'avant, exactement) : exporte, puis **désactive** la test 13 dans `chrome://extensions` (sans la supprimer), décompresse le zip de la **4.9.5 test 9** dans le même dossier, **réactive** la carte, **Recharger**, F5 sur ESV.
+Retour arrière (retrouver le lot d'avant, exactement) : exporte, puis **désactive** la test 13 (L1) dans `chrome://extensions` (sans la supprimer), décompresse le zip de ta version d'avant (**4.9.5.11**, ou la **4.9.5 test 9**) dans le même dossier, **réactive** la carte, **Recharger**, F5 sur ESV.
 
 ## 6. Ce qui n'est pas vérifié
 

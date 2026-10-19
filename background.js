@@ -1160,6 +1160,13 @@ adapter.apply=async(...args)=>{
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
+/* 4.9.5.13 (fiches/RAPIDE_HUMAIN.md, § 2) : le mode du clic d'un lot à clic corrigé est consigné dans la LECTURE de chaque capture du lot
+ * (`readStrategy.clicHumain`, `clicHumainSource:'lot'`). Depuis la test 6, ce mode vient du lot et ne part vers la page qu'avec `apply` ; la
+ * capture, faite avant, ne le connaissait pas. Rien de plus n'est envoyé à la page ; « tel-quel » : la lecture d'avant. */
+const captureESV=adapter.capture;
+adapter.capture=async(...args)=>{const r=await captureESV(...args),c=clicHumainDuLot();
+ if(c&&r&&typeof r==='object'&&!r.readStrategy?.clicHumain)r.readStrategy={...(r.readStrategy&&typeof r.readStrategy==='object'?r.readStrategy:{}),clicHumain:c,clicHumainSource:'lot'};
+ return r;};
 /* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
 const nextSansDecisionESV=adapter.nextWithoutDecision;
 adapter.nextWithoutDecision=async(identity,...rest)=>{const p=l1PoseEnAttente;l1PoseEnAttente=null;

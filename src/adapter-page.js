@@ -742,10 +742,19 @@
      if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity,mode))continue;
      if(enDirect(s))progress('apply-repli',{side:s});
      await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue,mode);if(vue)vue.poses.push(s);}
-   if(!vue)return snapshot();
+   if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}
    const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
    if(!remise.ok)throw Error(`Vue ESV non restituée après le déplacement de vue (échelle à ${(remise.ecartEchelle*100).toFixed(1).replace('.',',')} % de la vue habituelle) : les deux rails sont posés, rien n’est validé. Remets la vue d’ESV, puis contrôle le cut. État à réconcilier.`);
-   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise};return fin;}
+   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise};fin.vueFin=vueFin(fin);return fin;}
+ /* 4.9.5.13 (analyse du lot 2:19 : le journal d'un `apply` ne gardait que « reçu » et une durée) : position de chaque rail posé dans la vue
+  * ACTIVE d'ESV à la fin de la pose (NDC, dans la vue ou non, taille du pixel). Lecture seule ; une lecture impossible est dite, jamais levée.
+  * Le moteur consigne le résultat d'`apply` en entier (`applied-verified`, `observed`). */
+ function vueFin(s){const r3=v=>Math.round(v*1000)/1000;
+   try{const c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin),out={version:'vue-fin-v1',pixelMm:Number.isFinite(pixelMm(cam))?r3(pixelMm(cam)):null};
+     for(const side of ['left','right']){const v=projectToView(cam,s.rails[side].positionSceneRelative);
+       out[side]=v&&Array.isArray(v.ndc)?{ndc:v.ndc.slice(0,2).map(r3),dansVue:!!v.inView}:null;}
+     return out;}
+   catch(e){return {version:'vue-fin-v1',erreur:String(e?.message||e).slice(0,80)};}}
  async function restore(before){cancelled=false;assertExpected(before);
    for(const s of ['left','right'])await clickPosition(s,before.rails[s].positionSceneRelative,before.identity);return snapshot();}
  async function next(identity){cancelled=false;assertExpected(identity);nativeClick(selectors.next);
