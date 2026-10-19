@@ -1,0 +1,14 @@
+{
+  "format": "ariane-lecture-verts-zones-v1",
+  "date": "2026-10-19",
+  "source": "Zones de Mic des parties d'apprentissage qui ont un lot et un Écho (RM-12) : ADV et PN, début et fin en numéros de cut, marges de Mic comprises. 2:11 : notes de Mic (datasets/marges-zones-notes-de-mic.json) découpées en cinq zones d'ADV pour que la première, 6362-6424, reste visible ; 1:29 et 2:1 : fiches/DETECTION_ADV.md ; PN : liste de Mic et zones de PN reconnues par Ariane qu'il valide.",
+  "note": "`liste: false` : Mic n'a pas noté de zones pour cette partie ; ses plages détectées ne sont alors pas jugeables. Des numéros de cut seulement.",
+  "parties": {
+    "1:17": { "liste": false, "adv": [], "pn": [] },
+    "1:24": { "liste": false, "adv": [], "pn": [] },
+    "1:29": { "liste": true, "adv": [[6558, 6678], [7954, 8066]], "pn": [[1652, 1667], [3342, 3355], [5978, 5992], [6466, 6478]] },
+    "2:1": { "liste": true, "adv": [[116, 165], [271, 670], [2911, 3036], [5496, 6185]], "pn": [[405, 409]] },
+    "2:10": { "liste": true, "adv": [], "pn": [[4118, 4135]] },
+    "2:11": { "liste": true, "adv": [[6362, 6424], [6425, 6480], [7299, 7385], [7386, 7456], [8229, 8309]], "pn": [[4558, 4581], [5528, 5551], [7476, 7488], [8369, 8391], [8785, 8805], [9176, 9196], [9568, 9586]] }
+  }
+}
