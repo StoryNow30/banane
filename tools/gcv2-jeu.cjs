@@ -22,12 +22,18 @@
  *   H4 l'interpolation des voisins SÛRS : poses de l'opérateur déjà validées AVANT la première visite du cut (ordre du temps), et poses de départ
  *      des cuts que le lot a posés et validés (visités à l'Écho). Jamais une pose non vérifiée d'Ariane.
  *   H5 (ajout demandé par RM-4) le rail manquant complété par l'écartement médian de la partie, à partir du rail sûr (l'autre rail, publié par le moteur) ;
+ *   H6 (D-207, « voie décalée ») la pose d'ESV d'origine translatée du décalage [latéral, vertical] d'un voisin SÛR récent (même règle de temps que
+ *      H4), à 10 cuts au plus : le voisin le plus proche, et la médiane des 5 plus proches ; rail par rail et « paire » (même décalage aux deux rails).
+ *      Deux familles marquées par leur source : « h6-lot-… » (voisins validés par le lot seuls : usage lot) et « h6-humain-… » (avec au moins un voisin
+ *      humain : usage relecture seulement). Priorité avant H2. La ligne de cut porte aussi la VOIE DE RÉFÉRENCE de la série (`contexte.voieH6`), qui
+ *      sert au garde-fou de voie des différés (gcv2-apprendre `--garde-voie`) ;
  * Chaque pose existe avec et sans hauteur apprise (`src/hauteur-apprise.js`) quand celle-ci donne une correction non nulle. Deux hypothèses à
  * moins de 0,75 mm l'une de l'autre sont une seule (la liste `origines` garde toutes les origines qui y mènent).
  *
  * FRONTIÈRE ANTI-FUITE. `hypothesesDuCut` ne reçoit NI la référence de l'opérateur NI aucune pose de lui pour le cut lui-même : la capture et la
  * science du cut, les décisions du lot (seul et en chaîne), les appuis de la chaîne, les voisins sûrs (déjà vérifiés AVANT la première visite de ce
- * cut) et la médiane d'écartement de la partie. L'ÉTIQUETTE (`etiqueter`) est posée après, dans une autre fonction, sur le résultat : jamais
+ * cut ; pour H6, leur décalage depuis la pose d'ESV d'origine, lue dans le journal du lot quand le lot a posé le voisin), la pose d'ESV d'origine du cut
+ * (journal du lot) et la médiane d'écartement de la partie. L'ÉTIQUETTE (`etiqueter`) est posée après, dans une autre fonction, sur le résultat : jamais
  * dans les traits. tests/gcv2-jeu.test.cjs le prouve (changer la référence ne change aucun trait ; une pose voisine validée APRÈS la première
  * visite ne change rien).
  *
@@ -60,7 +66,9 @@ const SIDES = ['left', 'right'];
 const MAX_HYP = 12;             // poses de base par rail (chacune peut avoir une variante « avec hauteur »)
 const DOUBLON_MM = 0.75;        // deux hypothèses plus proches que cela n'en font qu'une
 const SEUILS_MM = Object.freeze({ juste: 5, faux: 10, mauvaiseVoie: 50 });
-const ORIGINES = Object.freeze(['H0', 'H1', 'H2', 'H3', 'H4', 'H5']);
+const ORIGINES = Object.freeze(['H0', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+const ORIGINES_G1A = Object.freeze(['H0', 'H1', 'H2', 'H3', 'H4', 'H5']);
+const VERSION_H6 = 'h6-1';
 const fini = v => typeof v === 'number' && Number.isFinite(v);
 const arrondi = (v, d = 1) => fini(v) ? Math.round(v * 10 ** d) / 10 ** d : null;
 const sig4 = v => fini(v) ? Number(v.toPrecision(4)) : null;
@@ -90,7 +98,7 @@ function moteurAvecReservoir() {
  * positions: { left, right } (scène, en mémoire seulement) }. Une pose HUMAINE est la dernière validation de l'opérateur sur le cut, ou sa
  * pose de départ quand il l'a visité sans rien toucher (règle des 0,8 s) ; elle compte à la FIN de la visite qui l'a validée. Une pose du LOT est
  * la pose de départ d'un cut que le lot a posé et validé : elle précède tout l'Écho. */
-function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set() }) {
+function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set(), initialesLot = new Map() }) {
   const out = [];
   for (const c of parCut) {
     const v0 = c.visites[0], avant = v0 && v0.beforeEstablished && v0.beforeEstablished.rails;
@@ -101,13 +109,29 @@ function posesVerifiees(parCut, { ctx, referenceHumaine, lotValide = new Set() }
     const finale = rails && SIDES.every(s => rails[s] && Array.isArray(rails[s].positionSceneRelative) && rails[s].positionSceneRelative.length === 3)
       ? { left: rails.left.positionSceneRelative.slice(), right: rails.right.positionSceneRelative.slice() } : null;
     const fin = x => Date.parse(x && (x.endedAt || x.startedAt));
-    if (finale && fini(fin(ref.visite))) out.push({ cut: c.cut, source: 'humain', t: fin(ref.visite), positions: finale });
+    /* H6 : décalage de la pose sûre depuis la pose d'ESV d'origine (avant le lot), dans le repère profil du rail de départ de CE voisin. */
+    const decal = positions => decalageDepuisEsv(avant, positions, lotValide.has(c.cut) ? (initialesLot.get(c.cut) || null) : 'depart');
+    if (finale && fini(fin(ref.visite))) out.push({ cut: c.cut, source: 'humain', t: fin(ref.visite), positions: finale, decalage: decal(finale) });
     else if (!ref && depart) {
       const sa = J.visiteSansAction(c, J.DUREE_VISITE_DEFAUT_S, ctx);
       const t = fin(c.visites[c.visites.length - 1]);
-      if (sa.appliquee && fini(t)) out.push({ cut: c.cut, source: 'humain', t, positions: depart });
+      if (sa.appliquee && fini(t)) out.push({ cut: c.cut, source: 'humain', t, positions: depart, decalage: decal(depart) });
     }
-    if (depart && lotValide.has(c.cut)) out.push({ cut: c.cut, source: 'lot', t: -Infinity, positions: depart });
+    if (depart && lotValide.has(c.cut)) out.push({ cut: c.cut, source: 'lot', t: -Infinity, positions: depart, decalage: decal(depart) });
+  }
+  return out;
+}
+/* H6 — décalage [latéral, vertical] (mm) d'une pose sûre `positions` par rapport à la pose d'ESV d'ORIGINE du même cut, dans le repère profil
+ * du rail de départ (`rails`, pose montrée par l'Écho). `esv` : 'depart' quand la pose de départ EST celle d'ESV (cut que le lot n'a pas posé),
+ * les positions initiales du journal du lot quand le lot a posé le cut (la pose de départ de l'Écho est alors celle du lot), null si on ne la
+ * connaît pas (aucun décalage). Rien de la référence du cut JUGÉ n'entre ici : `positions` est la pose sûre d'un AUTRE cut. */
+function decalageDepuisEsv(rails, positions, esv) {
+  if (!rails || !positions || !esv) return null;
+  const out = {};
+  for (const s of SIDES) {
+    const a = RA.decalage(rails[s], positions[s]), b = esv === 'depart' ? [0, 0, 0] : RA.decalage(rails[s], esv[s]);
+    if (!a || !b) return null;
+    out[s] = [a[1] - b[1], a[2] - b[2]];
   }
   return out;
 }
@@ -121,7 +145,44 @@ function voisinsSursA(verifiees, partie, cut, t0) {
     const a = par.get(p.cut);
     if (!a || (p.source === 'humain' && a.source !== 'humain') || (p.source === a.source && p.t > a.t)) par.set(p.cut, p);
   }
-  return [...par.values()].map(p => ({ identity: { part: partie, cut: p.cut, frameId: null }, positions: p.positions, stage: 'verifie', source: p.source }));
+  return [...par.values()].map(p => ({ identity: { part: partie, cut: p.cut, frameId: null }, positions: p.positions, stage: 'verifie', source: p.source,
+    ...(p.decalage !== undefined ? { decalage: p.decalage } : {}) }));
+}
+
+/* ------------------------------------------------------------------ H6 « voie décalée » (D-207) */
+/* La paire de départ translatée du décalage [latéral, vertical] d'un voisin SÛR récent (même règle de temps que H4 : `voisinsSursA`).
+ * Deux familles : « tous » (voisins humains validés avant la première visite, et voisins du lot) pour l'usage relecture ; « lot » (voisins validés
+ * par le lot seulement) pour l'usage lot. Dans chaque famille, deux variantes : le voisin le plus proche, et la médiane des K plus proches, à
+ * FENETRE cuts au plus ; chacune rail par rail et « paire » (le même décalage, moyenne des deux rails du voisin, appliqué aux deux rails). */
+const H6 = Object.freeze({ fenetreCuts: 10, k: 5, dispersionSureMm: 50, nSur: 2, reservoirMm: 5 });
+/* Voisins utilisables : même voie, autre cut, à `fenetreCuts` au plus, avec un décalage connu ; du plus proche au plus loin (à égalité, l'amont). */
+function voisinsH6(identity, voisins) {
+  return (voisins || []).filter(a => a && a.decalage && a.identity && a.identity.part === identity.part && (a.identity.frameId ?? null) === (identity.frameId ?? null)
+    && a.identity.cut !== identity.cut && Math.abs(a.identity.cut - identity.cut) <= H6.fenetreCuts)
+    .sort((a, b) => Math.abs(a.identity.cut - identity.cut) - Math.abs(b.identity.cut - identity.cut) || a.identity.cut - b.identity.cut);
+}
+const moyPaire = d => [(d.left[0] + d.right[0]) / 2, (d.left[1] + d.right[1]) / 2];
+/* Décalages d'une famille : { proche: {left,right,paire,dist,source}, mediane: {…, n, distMax, dispersion} | null, reference } ou null. */
+function decalagesH6(identity, voisins) {
+  const v = voisinsH6(identity, voisins);
+  if (!v.length) return null;
+  const p = v[0], k = v.slice(0, H6.k), dist = a => Math.abs(a.identity.cut - identity.cut);
+  const proche = { left: p.decalage.left.slice(), right: p.decalage.right.slice(), paire: moyPaire(p.decalage), dist: dist(p), n: 1, source: p.source === 'humain' ? 'humain' : 'lot' };
+  let mediane = null;
+  if (k.length >= 2) {
+    const m = f => [med(k.map(a => f(a)[0])), med(k.map(a => f(a)[1]))];
+    const L = m(a => a.decalage.left), R = m(a => a.decalage.right), P = m(a => moyPaire(a.decalage));
+    /* Accord entre voisins : étendue (max − min) du latéral, par rail et pour la paire. */
+    const etendue = f => { const x = k.map(a => f(a)[0]); return Math.max(...x) - Math.min(...x); };
+    mediane = { left: L, right: R, paire: P, n: k.length, distMax: Math.max(...k.map(dist)), source: k.some(a => a.source === 'humain') ? 'humain' : 'lot',
+      dispersion: { left: etendue(a => a.decalage.left), right: etendue(a => a.decalage.right), paire: etendue(a => moyPaire(a.decalage)) } };
+  }
+  /* Voie de référence de la série (garde-fou des différés, gcv2-apprendre `--garde-voie`) : la médiane rail par rail des K plus proches ; sûre si au
+   * moins `nSur` voisins et une étendue latérale d'au plus `dispersionSureMm` sur chaque rail. */
+  const reference = mediane ? { left: mediane.left, right: mediane.right, n: mediane.n, distMax: mediane.distMax,
+    dispersion: { left: mediane.dispersion.left, right: mediane.dispersion.right },
+    sure: mediane.n >= H6.nSur && mediane.dispersion.left <= H6.dispersionSureMm && mediane.dispersion.right <= H6.dispersionSureMm } : null;
+  return { proche, mediane, reference };
 }
 
 /* ------------------------------------------------------------------ géométrie d'une hypothèse */
@@ -135,6 +196,15 @@ function mesuresPose(capture, side, mm, calage, etage = 'first-pass') {
   return { pos, sig, cor };
 }
 const gaugeMm = (a, b) => 1000 * C.distance(a, b);
+/* Mêmes mesures, la capture ayant ce rail translaté jusqu'à la pose `mm` (H6 : poses loin de la fenêtre de ±180 mm de la bande de points). Le
+ * calage de convention, s'il y en a un, est celui de la pose ; la position rendue est celle de la pose dans la capture d'origine. */
+function mesuresTranslatees(capture, side, mm, calage, etage = 'first-pass') {
+  const rail = capture.rails[side], pos = comptePositions(capture, side, mm);
+  const t = pos.map((v, i) => v - rail.positionSceneRelative[i]);
+  const capT = { ...capture, rails: { ...capture.rails, [side]: O.translated(rail, t) } };
+  const sig = H.signalRail(capT, { rails: { [side]: { conventionCalibration: calage || null } } }, side, pos);
+  return { pos, sig, cor: H.correctionRail(sig, etage) };
+}
 
 /* ------------------------------------------------------------------ hypothèses d'un cut (SANS la référence humaine) */
 /*
@@ -143,9 +213,14 @@ const gaugeMm = (a, b) => 1000 * C.distance(a, b);
  * `voisins` : appuis vérifiés avant la première visite ; `gMed` : médiane d'écartement de la partie (mm) ou null.
  * Rend { rails: { left: [hyp…], right: [hyp…] }, rail: { left: {...}, right: {...} }, cut: {...}, tronques: { left: [[l,a,v]…], right: … } }.
  */
-function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = [], voisins = [], gMed = null }) {
+function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = [], voisins = [], gMed = null, voisinsLot = null, departEsv = null }) {
   const T = (ShadowLivre._test), identity = capture.identity;
   const res = {};
+  /* H6 : décalages des voisins sûrs (deux familles). `departEsv` : null quand la pose de départ du cut est celle d'ESV ; { left, right } (mm,
+   * [long, lat, vert]) quand le lot l'a posé (la pose d'ESV d'origine, lue dans le journal du lot) ; false si on ne la connaît pas (pas de H6). */
+  const baseH6 = departEsv === false ? null : departEsv || { left: [0, 0, 0], right: [0, 0, 0] };
+  const famH6 = baseH6 ? { lot: decalagesH6(identity, voisinsLot || voisins.filter(a => a.source === 'lot')), tous: decalagesH6(identity, voisins) } : { lot: null, tous: null };
+  const tronquesH6 = { left: 0, right: 0 };
   /* Voie prédite par la chaîne, et interpolation des voisins sûrs, en [latéral, vertical] mm par rail. */
   let voie = null;
   if (chaine && chaine.decision && (chaine.decision.anchorsUsed || []).length) {
@@ -199,6 +274,16 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
       for (let k = 0; k < 4; k++) { const pente = (g(a + 5) - g(a)) / 5; if (!(Math.abs(pente) > 0.3)) { a = NaN; break; } a -= (g(a) - gMed) / pente; }
       if (Number.isFinite(a) && Math.abs(a) <= 80 && Math.abs(g(a) - gMed) < 0.5) items.push({ origine: 'H5', sous: 'ecartement-median', mm: [0, a, vert], calage: null, cellule: null });
     }
+    /* H6 : la pose d'ESV d'origine translatée du décalage d'un voisin sûr. Ordre : rail par rail, puis « paire » ; dans chaque mode, la famille du lot
+     * d'abord (elle sert aux deux usages), puis celle qui compte les voisins humains (seulement si elle en utilise). Avant H2. */
+    if (baseH6) for (const mode of ['rail', 'paire']) for (const fam of ['lot', 'tous']) for (const variante of ['proche', 'mediane']) {
+      const F = famH6[fam] && famH6[fam][variante];
+      if (!F || (fam === 'tous' && F.source !== 'humain')) continue;
+      const off = mode === 'paire' ? F.paire : F[s], b = baseH6[s];
+      items.push({ origine: 'H6', sous: `h6-${F.source}-${variante}-${mode}`, mm: [b[0], b[1] + off[0], b[2] + off[1]], calage: null, cellule: null,
+        h6: { source: F.source, ampleurMm: Math.hypot(off[0], off[1]), distCuts: variante === 'proche' ? F.dist : F.distMax, n: F.n,
+          dispersionMm: variante === 'mediane' ? (mode === 'paire' ? F.dispersion.paire : F.dispersion[s]) : (famH6[fam].mediane ? famH6[fam].mediane.dispersion[mode === 'paire' ? 'paire' : s] : null) } });
+    }
     /* H2 : par priorité (compétitive STRONG, compétitive, STRONG écartée), à perte croissante. */
     const h2 = cellules.filter(k => !k.astar && (k.comp || k.strong))
       .sort((a, b) => (b.comp && b.strong) - (a.comp && a.strong) || b.comp - a.comp || a.c.loss - b.c.loss);
@@ -211,13 +296,15 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
         if (!d.origines.includes(it.origine)) d.origines.push(it.origine);
         d.sousListe.push(it.sous);
         if (it.cellule) { d.cellules.push(it.cellule); if (!d.cellule || it.cellule.c.loss < d.cellule.c.loss) { d.cellule = it.cellule; d.calage = it.calage; } }
+        /* Les traits H6 suivent la première H6 qui tombe ici (celle du lot passe avant celle des voisins humains). */
+        if (it.h6 && (!d.h6 || (d.h6.source !== 'lot' && it.h6.source === 'lot'))) d.h6 = it.h6;
         return true;
       }
       if (gardees.length >= MAX_HYP) return false;
       gardees.push({ ...it, origines: [it.origine], sousListe: [it.sous], cellules: it.cellule ? [it.cellule] : [] });
       return true;
     };
-    for (const it of items) ajoute(it);
+    for (const it of items) if (!ajoute(it) && it.origine === 'H6') tronquesH6[s]++;
     for (const it of h2Items) if (!ajoute(it)) tronques[s].push(it.mm.map(v => arrondi(v, 2)));
     /* Rail : traits propres au rail. */
     railInfo[s] = {
@@ -235,7 +322,9 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
   for (const s of SIDES) {
     const { gardees, cellules } = res[s], autre = SIDES.find(x => x !== s);
     gardees.forEach((g, i) => {
-      const m = mesuresPose(capture, s, g.mm, g.calage), sig = m.sig;
+      /* Une pose H6 peut être loin de la pose de départ (130 à 250 mm) : la bande de points de la convention ne lit que ±180 mm autour du rail de
+       * départ. Les points sous le gabarit d'une H6 sont donc comptés sur la capture dont ce rail est TRANSLATÉ jusqu'à la pose (mêmes points). */
+      const m = g.h6 ? mesuresTranslatees(capture, s, g.mm, g.calage) : mesuresPose(capture, s, g.mm, g.calage), sig = m.sig;
       const dessinCellule = g.cellule;
       let proche = null;
       if (!dessinCellule && cellules.length) {
@@ -271,6 +360,13 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
         },
         _pos: m.pos, _cor: m.cor,
       };
+      /* Traits H6 (sans fuite : voisins sûrs et réservoir du moteur). La perte et les lignes au sommet ne sont connues que si une cellule du réservoir
+       * tombe à `reservoirMm` de la pose ; sinon (pose hors de la fenêtre du moteur, le cas courant au-delà de 150 mm) elles restent nulles. */
+      if (g.h6) {
+        const cel = dessinCellule ? { d: 0, k: dessinCellule } : proche, dans = !!(cel && cel.d <= H6.reservoirMm);
+        Object.assign(base.traits, { h6AmpleurMm: arrondi(g.h6.ampleurMm, 2), h6DistCuts: g.h6.distCuts, h6NVoisins: g.h6.n, h6DispersionMm: arrondi(g.h6.dispersionMm, 2),
+          h6DansReservoir: dans, h6Perte: dans ? sig4(cel.k.c.loss) : null, h6LignesSommet: dans ? (cel.k.c.topRows ?? null) : null });
+      }
       let correction = null;
       if (g.chaineRail) correction = fini(g.chaineRail.hauteurMm) && g.chaineRail.hauteurMm !== 0 ? g.chaineRail.hauteurMm : null;
       else if (m.cor && m.cor.correctionMm) correction = m.cor.correctionMm;
@@ -298,7 +394,15 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
   for (const s of SIDES) for (const h of hyps[s]) { delete h._pos; delete h._cor; }
   const ecartDepart = gaugeMm(capture.rails.left.positionSceneRelative, capture.rails.right.positionSceneRelative);
   const abstenu = !SIDES.every(s => science.rails[s] && science.rails[s].ok && science.rails[s].next.status === 'candidate') || !!(science.summary && science.summary.pairGaugeRejected);
-  return { rails: hyps, rail: railInfo, tronques,
+  /* Voie de référence de la série, par famille, en mm dans le repère profil de la pose de départ (comme `decal`) : le garde-fou des différés. */
+  const refH6 = f => {
+    const r = famH6[f] && famH6[f].reference;
+    if (!r) return null;
+    const pose = s => [arrondi(baseH6[s][1] + r[s][0], 2), arrondi(baseH6[s][2] + r[s][1], 2)];
+    return { left: pose('left'), right: pose('right'), n: r.n, distMax: r.distMax, dispersionMm: { left: arrondi(r.dispersion.left, 2), right: arrondi(r.dispersion.right, 2) }, sure: r.sure };
+  };
+  const voieH6 = baseH6 ? { tous: refH6('tous'), lot: refH6('lot'), departLot: !!departEsv } : null;
+  return { rails: hyps, rail: railInfo, tronques, voieH6, tronquesH6,
     cut: { abstenu, differe: seul.decision.stage === 'deferred', etage: seul.decision.stage, raison: seul.decision.reason != null ? String(seul.decision.reason).slice(0, 60) : null,
       etageChaine: chaine ? chaine.decision.stage : null, appuisChaine: chaine ? (chaine.decision.anchorsUsed || []).length : 0,
       voisins: infoVoisins, ecartDepartMm: arrondi(ecartDepart, 1), gMedMm: arrondi(gMed, 1),
@@ -320,12 +424,12 @@ function etiqueter(hypotheses, mic) {
 }
 
 /* ------------------------------------------------------------------ observateur d'`extraire` */
-function creerObservateur({ partie, lotValide = new Set(), moteur = moteurAvecReservoir(), journal = () => {} }) {
+function creerObservateur({ partie, lotValide = new Set(), initialesLot = new Map(), moteur = moteurAvecReservoir(), journal = () => {} }) {
   const etat = { verifiees: [], gMed: null, cuts: [], erreurs: 0, ecartsMoteur: 0, calcules: 0 };
   return {
     etat,
     debut({ parCut, ctx, referenceHumaine }) {
-      etat.verifiees = posesVerifiees(parCut, { ctx, referenceHumaine, lotValide });
+      etat.verifiees = posesVerifiees(parCut, { ctx, referenceHumaine, lotValide, initialesLot });
       /* Médiane d'écartement de la partie : poses de départ des cuts visités, hors cuts du lot et hors valeur par défaut 1500 mm (statistique
        * de la partie, comme `lignes` de relecture-autonome.cjs ; aucune référence de l'opérateur). */
       const g = [];
@@ -349,7 +453,15 @@ function creerObservateur({ partie, lotValide = new Set(), moteur = moteurAvecRe
           if (a !== b) etat.ecartsMoteur++;
         }
         const voisins = voisinsSursA(etat.verifiees, partie, c.cut, t0);
-        rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed });
+        /* H6, famille du lot : les voisins validés par le lot SEULEMENT (un cut à la fois humain et lot garde ici sa pose du lot). */
+        const voisinsLot = voisinsSursA(etat.verifiees.filter(p => p.source === 'lot'), partie, c.cut, t0);
+        /* Pose d'ESV d'origine du cut : sa pose de départ, sauf si le lot l'a posé (journal du lot ; inconnue : pas de H6). */
+        let departEsv = null;
+        if (lotValide.has(c.cut)) {
+          const ini = initialesLot.get(c.cut), d = ini ? Object.fromEntries(SIDES.map(s => [s, RA.decalage(brut.capture.rails[s], ini[s])])) : null;
+          departEsv = d && SIDES.every(s => d[s]) ? d : false;
+        }
+        rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv });
         etat.calcules++;
       } catch (e) { rec.erreur = String(e && e.message || e).slice(0, 160); etat.erreurs++; journal(`cut ${c.cut} : ${rec.erreur}`); }
     },
@@ -359,7 +471,7 @@ function creerObservateur({ partie, lotValide = new Set(), moteur = moteurAvecRe
 /* Lignes du jeu d'une partie, une fois le cas et la table connus (zone, rôle). */
 function lignesDuJeu({ designation, jeu, observateur, cas, zones }) {
   const out = [{ type: 'entete', format: FORMAT, partie: designation, jeu, note: 'jeu HORS DÉPÔT : décalages en mm dans le repère profil de la pose de départ, aucune coordonnée absolue',
-    maxHypParRail: MAX_HYP, doublonMm: DOUBLON_MM, seuilsMm: SEUILS_MM, gMedMm: arrondi(observateur.etat.gMed, 1) }];
+    maxHypParRail: MAX_HYP, doublonMm: DOUBLON_MM, seuilsMm: SEUILS_MM, gMedMm: arrondi(observateur.etat.gMed, 1), h6: { version: VERSION_H6, ...H6 } }];
   const roleDe = g => g === 'pose' ? 'rouge' : g === 'differe' ? 'differe' : 'vert';
   for (const rec of observateur.etat.cuts) {
     const o = rec.o, z = zones.get(rec.cut) || { zone: 'hors', genre: 'vert' };
@@ -368,9 +480,9 @@ function lignesDuJeu({ designation, jeu, observateur, cas, zones }) {
     const ligneCut = { type: 'cut', partie: designation, cut: rec.cut, zone: z.zone, role: roleDe(z.genre), etat: o.ariane ? o.ariane.etat : null,
       reference: o.mic ? (o.mic.ref || null) : null, visites: o.visites, etiquette: { mic, micMaxMm: micMax, grosse: fini(micMax) ? micMax > SEUILS_MM.faux : null },
       moteur: rec.hyp ? { abstenu: rec.hyp.cut.abstenu, differe: rec.hyp.cut.differe, etage: rec.hyp.cut.etage, raison: rec.hyp.cut.raison, ecartementMm: rec.hyp.cut.ecartementMm, ecartementRejete: rec.hyp.cut.ecartementRejete } : null,
-      contexte: rec.hyp ? { etageChaine: rec.hyp.cut.etageChaine, appuisChaine: rec.hyp.cut.appuisChaine, voisins: rec.hyp.cut.voisins, ecartDepartMm: rec.hyp.cut.ecartDepartMm } : null,
+      contexte: rec.hyp ? { etageChaine: rec.hyp.cut.etageChaine, appuisChaine: rec.hyp.cut.appuisChaine, voisins: rec.hyp.cut.voisins, ecartDepartMm: rec.hyp.cut.ecartDepartMm, voieH6: rec.hyp.voieH6 } : null,
       nHyp: rec.hyp ? rec.hyp.cut.nHyp : null, tronques: rec.hyp ? { left: rec.hyp.tronques.left.length, right: rec.hyp.tronques.right.length } : null,
-      tronquesPoses: rec.hyp && (rec.hyp.tronques.left.length || rec.hyp.tronques.right.length) ? rec.hyp.tronques : null, erreur: rec.erreur };
+      tronquesPoses: rec.hyp && (rec.hyp.tronques.left.length || rec.hyp.tronques.right.length) ? rec.hyp.tronques : null, tronquesH6: rec.hyp ? rec.hyp.tronquesH6 : null, erreur: rec.erreur };
     out.push(ligneCut);
     if (!rec.hyp) continue;
     const et = etiqueter(rec.hyp, mic);
@@ -389,9 +501,12 @@ function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu 
   if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
   if (!sansLot && !journaux.length) throw Error('--journal J.json (lot Orbite de la partie) ou --sans-lot (partie sans lot) attendu');
   const RM = require('./regles-metier.cjs');
-  const lotValide = new Set();
-  for (const f of sansLot ? [] : journaux) { const j = RM.lireJournal(f, partie); for (const c of j.valide) lotValide.add(c); }
-  const observateur = creerObservateur({ partie, lotValide, journal });
+  const lotValide = new Set(), initialesLot = new Map();
+  for (const f of sansLot ? [] : journaux) {
+    const j = RM.lireJournal(f, partie);
+    for (const c of j.valide) { lotValide.add(c); const p = j.poses.get(c); if (p && p.initiale && p.initiale.left && p.initiale.right) initialesLot.set(c, p.initiale); }
+  }
+  const observateur = creerObservateur({ partie, lotValide, initialesLot, journal });
   const cas = RA.extraire({ partie, projet, echo, observateur });
   const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
   const L2 = RA.lignes({ cas, table, designation });
@@ -422,9 +537,17 @@ function meilleurEcart(c, s, filtre) {
 const ZONES = ['pn', 'adv', 'abords', 'liste', 'hors'];
 /* Un ensemble d'origines S : sur chaque rail, « ne rien faire » (H0) est toujours possible, les hypothèses de S s'y ajoutent. Un cut est atteint à
  * `seuil` mm si chacun de ses deux rails a, dans H0 + S, une hypothèse à `seuil` au plus. `hauteur` : 'sans' | 'avec' | 'les-deux'. */
-function filtre({ origines = null, sous = null, hauteur = 'les-deux', avecH0 = true }) {
-  return h => (hauteur === 'les-deux' || (hauteur === 'avec') === h.hauteur)
-    && ((avecH0 && h.origines.includes('H0')) || (origines && h.origines.some(o => origines.includes(o))) || (sous && h.sousOrigines.some(x => sous.includes(x))));
+/* `prefixes` : sous-origines par préfixe (H6 : « h6-lot », « h6-humain », « -rail »…) ; `lot` : usage lot, une hypothèse qui ne vient QUE de voisins
+ * humains (H4 « voisins-humains », H6 « h6-humain-… ») est retirée, comme dans gcv2-apprendre. */
+const origineAuLot = (h, o) => o === 'H4' ? h.sousOrigines.includes('voisins-lot') : o === 'H6' ? h.sousOrigines.some(x => x.startsWith('h6-lot-')) : true;
+function filtre({ origines = null, sous = null, prefixes = null, hauteur = 'les-deux', avecH0 = true, lot = false }) {
+  return h => {
+    if (!(hauteur === 'les-deux' || (hauteur === 'avec') === h.hauteur)) return false;
+    const os = lot ? h.origines.filter(o => origineAuLot(h, o)) : h.origines;
+    const ss = lot ? h.sousOrigines.filter(x => x !== 'voisins-humains' && !x.startsWith('h6-humain-')) : h.sousOrigines;
+    return (avecH0 && os.includes('H0')) || !!(origines && os.some(o => origines.includes(o))) || !!(sous && ss.some(x => sous.includes(x)))
+      || !!(prefixes && ss.some(x => prefixes.some(p => x.includes(p))));
+  };
 }
 /* Un cut est atteint à `seuil` mm si chacun de ses deux rails a une hypothèse à `seuil` au plus (paire) ; au moins un rail : un seul suffit. */
 function atteint(c, f, seuil, mode = 'paire') {
@@ -446,11 +569,21 @@ const ENSEMBLES = Object.freeze([
   ['H0 + H1 + H2', { origines: ['H1', 'H2'], hauteur: 'sans' }],
   ['H0 à H3', { origines: ['H1', 'H2', 'H3'], hauteur: 'sans' }],
   ['H0 à H4 (sans hauteur)', { origines: ['H1', 'H2', 'H3', 'H4'], hauteur: 'sans' }],
-  ['H0 à H5 (sans hauteur)', { origines: ORIGINES, hauteur: 'sans' }],
-  ['H0 à H5, avec et sans hauteur', { origines: ORIGINES, hauteur: 'les-deux' }],
+  ['H0 à H5 (sans hauteur)', { origines: ORIGINES_G1A, hauteur: 'sans' }],
+  ['H0 à H5, avec et sans hauteur', { origines: ORIGINES_G1A, hauteur: 'les-deux' }],
+  ['H0 + H6 (voie décalée)', { origines: ['H6'], hauteur: 'sans' }],
+  ['H0 + H6 voisins du lot seuls', { prefixes: ['h6-lot-'], hauteur: 'sans' }],
+  ['H0 + H6 voisin le plus proche', { prefixes: ['-proche-'], hauteur: 'sans' }],
+  ['H0 + H6 médiane des voisins', { prefixes: ['-mediane-'], hauteur: 'sans' }],
+  ['H0 + H6 rail par rail', { prefixes: ['-rail'], hauteur: 'sans' }],
+  ['H0 + H6 même décalage aux deux rails', { prefixes: ['-paire'], hauteur: 'sans' }],
+  ['H0 à H6 (sans hauteur)', { origines: ORIGINES, hauteur: 'sans' }],
+  ['H0 à H6, avec et sans hauteur', { origines: ORIGINES, hauteur: 'les-deux' }],
+  ['usage lot : H0 à H5 sans voisins humains', { origines: ORIGINES_G1A, hauteur: 'les-deux', lot: true }],
+  ['usage lot : H0 à H6 sans voisins humains', { origines: ORIGINES, hauteur: 'les-deux', lot: true }],
 ]);
 const filtreEnsemble = filtre;
-function rappel(jeux) {
+function rappel(jeux, { selections = {} } = {}) {
   const cuts = jeux.filter(c => c.etat === 'calcule' && c.nHyp && c.etiquette.mic && c.etiquette.mic.left && c.etiquette.mic.right);
   const sansNuage = jeux.filter(c => !c.nHyp && c.etiquette.mic && c.etiquette.mic.left && c.etiquette.mic.right);
   const comptes = (liste, seuilGrosse) => liste.filter(c => c.etiquette.micMaxMm > seuilGrosse);
@@ -499,6 +632,7 @@ function rappel(jeux) {
     'sans H2': h => !(h.origines.length === 1 && h.origines[0] === 'H2'), 'sans H2 STRONG écartées': h => !(h.origines.length === 1 && h.origines[0] === 'H2' && h.sousOrigines.every(x => x === 'strong-ecartee')),
     'sans H5': h => !(h.origines.length === 1 && h.origines[0] === 'H5'),
     'sans H3': h => !(h.origines.length === 1 && h.origines[0] === 'H3'), 'sans H4': h => !(h.origines.length === 1 && h.origines[0] === 'H4'),
+    'sans H6': h => !(h.origines.length === 1 && h.origines[0] === 'H6'),
     'sans hauteur apprise': h => !h.hauteur };
   out.apportMarginal = {};
   for (const [nom, liste] of Object.entries(familles)) {
@@ -566,6 +700,31 @@ function rappel(jeux) {
       hypotheses: l.reduce((n, c) => n + c.hyp.left.length + c.hyp.right.length, 0), cutsAvecHypotheses: l.filter(c => c.hyp.left.length).length };
   }
   out.parRole = Object.fromEntries(['vert', 'rouge', 'differe'].map(r => [r, ligne(comptes(cuts.filter(c => c.role === r), 10), tout, 10)]));
+  /* H6 : rappel AVANT (origines de G1-a, H0 à H5) et APRÈS (H0 à H6), avec et sans hauteur, dans les deux usages (relecture ; lot = sans voisins
+   * humains), sur les grosses corrections : global, par zone, par partie, par rôle et sur les sélections nommées (`selections` : nom → ensemble de
+   * « partie/cut »). */
+  const fAv = filtreEnsemble({ origines: ORIGINES_G1A }), fAp = filtreEnsemble({ origines: ORIGINES });
+  const fAvL = filtreEnsemble({ origines: ORIGINES_G1A, lot: true }), fApL = filtreEnsemble({ origines: ORIGINES, lot: true });
+  const aa = l => ({ n: l.length, avant: ligne(l, fAv, 10), apres: ligne(l, fAp, 10), avant5: ligne(l, fAv, 5), apres5: ligne(l, fAp, 5), lotAvant: ligne(l, fAvL, 10), lotApres: ligne(l, fApL, 10) });
+  const gr = comptes(cuts, 10);
+  out.avantApres = { global: aa(gr), parZone: Object.fromEntries(ZONES.map(z => [z, aa(gr.filter(c => c.zone === z))])),
+    parPartie: Object.fromEntries(out.parties.map(p => [p, aa(gr.filter(c => c.partie === p))])),
+    parRole: Object.fromEntries(['vert', 'rouge', 'differe'].map(r => [r, aa(gr.filter(c => c.role === r))])),
+    selections: Object.fromEntries(Object.entries(selections).map(([nom, ens]) => {
+      const l = cuts.filter(c => ens.has(c.partie + '/' + c.cut)), g = comptes(l, 10);
+      return [nom, { cutsJugeables: l.length, grosses: aa(g), toutes: aa(l), absents: [...ens].filter(k => !l.some(c => c.partie + '/' + c.cut === k)).length }];
+    })) };
+  return out;
+}
+/* « 2:1:293-459,2:1:625 » → ensemble de « 2:1/293 »… */
+function lireSelection(texte) {
+  const out = new Set();
+  for (const morceau of String(texte).split(',').map(x => x.trim()).filter(Boolean)) {
+    const m = /^(\d+:\d+):(\d+)(?:-(\d+))?$/.exec(morceau);
+    if (!m) throw Error(`sélection illisible : ${morceau} (P:N:a-b)`);
+    const a = Number(m[2]), b = m[3] ? Number(m[3]) : a;
+    for (let c = a; c <= b; c++) out.add(m[1] + '/' + c);
+  }
   return out;
 }
 
@@ -582,18 +741,27 @@ function texte(R) {
   for (const f of ['plus-de-10-mm', 'plus-de-5-mm']) { const x = R.brut[f]; L1.push(`${f} BRUT, cuts sans nuage comptés comme échecs (${x.sansNuage} perdues pour de bon) : à 10 mm ${pc(x.a10)}, à 5 mm ${pc(x.a5)}`); }
   for (const z of ZONES) { const x = R.parZone[z]['plus-de-10-mm']; L1.push(`  zone ${z} : n = ${x.n}, paire à 10 mm ${pc(x.paire.a10)}, à 5 mm ${pc(x.paire.a5)}`); }
   for (const [nom, v] of Object.entries(R.parOrigine)) L1.push(`  ${nom} : > 10 mm à 10 mm ${pc(v['plus-de-10-mm'].global.a10)}`);
+  if (R.avantApres) {
+    const t = (nom, x) => `  ${nom} (n = ${x.n}) : avant H6 ${pc(x.avant)}, après ${pc(x.apres)} ; usage lot : avant ${pc(x.lotAvant)}, après ${pc(x.lotApres)} ; à 5 mm : ${pc(x.avant5)} → ${pc(x.apres5)}`;
+    L1.push('H6, rappel à 10 mm des > 10 mm, avant et après :', t('global', R.avantApres.global));
+    for (const z of ZONES) L1.push(t('zone ' + z, R.avantApres.parZone[z]));
+    for (const [p, x] of Object.entries(R.avantApres.parPartie)) L1.push(t('partie ' + p, x));
+    for (const [r, x] of Object.entries(R.avantApres.parRole)) L1.push(t('rôle ' + r, x));
+    for (const [nom, x] of Object.entries(R.avantApres.selections)) L1.push(t(`sélection ${nom} (${x.cutsJugeables} cuts jugeables, ${x.absents} sans jeu)`, x.grosses));
+  }
   return L1.join('\n');
 }
 
 /* ------------------------------------------------------------------ ligne de commande */
 function args(argv) {
-  const o = { mode: argv[0], echo: [], journal: [], jeux: [], sansLot: false, jugerReservee: false };
+  const o = { mode: argv[0], echo: [], journal: [], jeux: [], sansLot: false, jugerReservee: false, selections: {} };
   for (let i = 1; i < argv.length; i++) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
     else if (k === '--sortie') o.sortie = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
+    else if (k === '--selection') { const v = val(), i = v.indexOf('='); if (i < 1) throw Error('--selection NOM=P:N:a-b,…'); o.selections[v.slice(0, i)] = lireSelection(v.slice(i + 1)); }
     else throw Error('argument inconnu : ' + k);
   }
   return o;
@@ -607,8 +775,8 @@ function controlerManifeste({ projet, partie, jugerReservee }) {
   return { avis, jeu: jugerReservee ? 'jugement' : 'apprentissage', temoin: Manifeste.estTemoin(m, projet, partie) };
 }
 
-module.exports = { FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
-  creerObservateur, lignesDuJeu, construire, lireJeux, rappel, texte, controlerManifeste, args };
+module.exports = { FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
+  decalageDepuisEsv, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
 
 if (require.main === module) {
   try {
@@ -624,7 +792,7 @@ if (require.main === module) {
       console.log(`partie ${a.projet}:${a.partie} (${c.jeu}) : ${n('cut')} cuts, ${r.etat.calcules} calculés, ${n('hyp')} hypothèses, erreurs ${r.etat.erreurs}, écarts de la copie du moteur ${r.etat.ecartsMoteur}, ${Math.round((Date.now() - t0) / 1000)} s`);
     } else if (a.mode === 'rappel') {
       if (!a.jeux.length) throw Error('rappel --jeu JEU.jsonl [--jeu …] [--json R.json]');
-      const R = rappel(lireJeux(a.jeux));
+      const R = rappel(lireJeux(a.jeux), { selections: a.selections });
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(R, null, 1));
       console.log(texte(R));
     } else if (a.mode === 'essai') {

@@ -1,0 +1,21 @@
+{
+  "format": "ariane-gcv2-variantes-v1",
+  "decision": "D-207",
+  "note": "Variantes de la GCV2 pour le chantier H6 « voie décalée ». V1 est celle de D-204 et D-205, inchangée. V1+ est déclarée AVANT le calcul de la validation croisée avec H6 (consigne du chantier) et n'est pas changée après : V1, plus la GCV2 sur les cuts DIFFÉRÉS de toutes les zones, sous le garde-fou de voie (option --garde-voie : chaque rail à 45 mm au plus de la voie de référence de la série, dévers à 15 mm de celui de la référence ; aucune action sans référence sûre). Aucun coefficient. Jamais un rouge. Le fichier de D-204 (gcv2-variantes.json) ne change pas.",
+  "variantes": {
+    "V1": {
+      "resume": "GCV2 sur les verts de PN et d'ADV ; règle prudente sur les verts des abords ; hors zone, liste, rouges et différés : rien.",
+      "gcv2": { "zones": ["pn", "adv"], "roles": ["vert"] },
+      "prudente": { "zones": ["abords"], "roles": ["vert"] }
+    },
+    "V1+": {
+      "resume": "V1, plus la GCV2 sur les différés de toutes les zones, sous le garde-fou de voie ; rouges : rien.",
+      "gardeVoie": true,
+      "gcv2": [
+        { "zones": ["pn", "adv"], "roles": ["vert"] },
+        { "zones": ["pn", "adv", "abords", "liste", "hors"], "roles": ["differe"] }
+      ],
+      "prudente": { "zones": ["abords"], "roles": ["vert"] }
+    }
+  }
+}

@@ -39,6 +39,11 @@
  * VARIANTES PAR ZONE (D-204, option `--variante`, datasets/gcv2-variantes.json). Une variante ne change ni le modèle, ni le calibrage, ni τ et δ : elle
  * décide, pour chaque cut, qui agit, la GCV2 apprise du pli, la règle prudente figée, ou personne (H0). Jamais sur un cut rouge ni différé. Sans
  * l'option, la sortie est celle de G1-b, octet pour octet.
+ *
+ * H6 ET GARDE-FOU DE VOIE (D-207). Les jeux H6 portent des hypothèses « voie décalée » et leurs traits (`h6…`, nuls ailleurs ; absents des jeux de
+ * G1-a, donc sans effet sur eux). Au lot, les H6 tirées de voisins humains sont retirées comme H4. Option `--garde-voie` (le défaut ne change pas) :
+ * un cut DIFFÉRÉ est gardé par la voie de référence de sa série et non par sa pose de départ ; sans référence sûre, aucune action. Les variantes
+ * d'un fichier `--variantes` peuvent alors confier des différés à la GCV2 (`gardeVoie: true`, datasets/gcv2-variantes-h6.json : V1+), jamais un rouge.
  */
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const Manifeste = require('./manifeste-parties.cjs');
@@ -83,7 +88,11 @@ const NUM = Object.freeze([
   T('voisinsEncadre', 'ctx', 'voisinsEncadre', 'bool'), T('voisinsCoupMin', 'ctx', 'voisinsCoupMin', 'log'), T('ecartDepartMedMm', 'ctx', 'ecartDepartMedMm', 'abs'),
   T('accNProches5', 'acc', 'nProches5', 'log'), T('accNProches10', 'acc', 'nProches10', 'log'), T('accPlusProcheMm', 'acc', 'plusProcheMm', 'log'),
   T('accDistH1Mm', 'acc', 'distH1Mm', 'log'), T('accDistChaineMm', 'acc', 'distChaineMm', 'log'), T('accDistVoisinsMm', 'acc', 'distVoisinsMm', 'log'), T('accNOrigines', 'acc', 'nOrigines'),
+  /* H6 « voie décalée » (D-207) : nuls hors H6 ; absents des jeux de G1-a, donc sans effet sur eux (colonnes constantes, écartées). */
+  T('h6AmpleurMm', 'hyp', 'h6AmpleurMm', 'log'), T('h6DistCuts', 'hyp', 'h6DistCuts', 'log'), T('h6NVoisins', 'hyp', 'h6NVoisins'), T('h6DispersionMm', 'hyp', 'h6DispersionMm', 'log'),
+  T('h6Perte', 'hyp', 'h6Perte', 'log10'), T('h6LignesSommet', 'hyp', 'h6LignesSommet', 'log'), T('h6DansReservoir', 'hyp', 'h6DansReservoir', 'bool'),
 ]);
+const TRAIT_H6 = nom => nom.startsWith('h6');
 const CAT = Object.freeze([
   T('palier', 'hyp', 'palier'), T('convention', 'hyp', 'convention'), T('groupeHauteur', 'hyp', 'groupeHauteur'), T('chaineEtage', 'hyp', 'chaineEtage'),
   T('hauteurAbstention', 'hyp', 'hauteurAbstention'), T('statut', 'rail', 'statut'), T('motif', 'rail', 'motif'), T('etageChaine', 'ctx', 'etageChaine'),
@@ -140,7 +149,8 @@ function lireJeuFichier(fichier, { manifeste = Manifeste.lire() } = {}) {
 }
 
 /* ------------------------------------------------------------------ cas : un cut, ses hypothèses, ses traits bruts, ses étiquettes (séparées) */
-const SOUS_H4_HUMAIN = 'voisins-humains';
+const SOUS_H4_HUMAIN = 'voisins-humains', PREFIXE_H6_HUMAIN = 'h6-humain-', PREFIXE_H6 = 'h6-';
+const sansTraitsH6 = t => Object.fromEntries(Object.entries(t).filter(([k]) => !TRAIT_H6(k)));
 function transfo(tr, v) {
   if (v === null || v === undefined) return NaN;
   if (tr === 'bool') return v === true ? 1 : v === false ? 0 : NaN;
@@ -176,11 +186,23 @@ function brut(ligne, rail, ctx, acc) {
  * poses des voisins : l'interpolation « voisins du lot seuls » d'un cut à voisins mixtes ne peut pas être recalculée (elle est perdue). */
 function appliquerUsage(c, usage) {
   const humains = c.cut.contexte && c.cut.contexte.voisins && c.cut.contexte.voisins.humains > 0;
-  if (usage !== 'lot' || !humains) return { hyp: c.hyp, ctx: c.cut.contexte, retire: 0 };
+  /* H6 : une hypothèse de la famille « tous » qui a utilisé un voisin humain (« h6-humain-… ») n'existe pas au lot. */
+  const h6Humain = usage === 'lot' && SIDES.some(s => c.hyp[s].some(h => h.sousOrigines.some(x => x.startsWith(PREFIXE_H6_HUMAIN))));
+  if (usage !== 'lot' || (!humains && !h6Humain)) return { hyp: c.hyp, ctx: c.cut.contexte, retire: 0 };
   const hyp = { left: [], right: [] }; let retire = 0;
   for (const s of SIDES) for (const h of c.hyp[s]) {
-    if (h.origines.length === 1 && h.origines[0] === 'H4' && h.sousOrigines.every(x => x === SOUS_H4_HUMAIN)) { retire++; continue; }
-    hyp[s].push({ ...h, origines: h.origines.filter(o => o !== 'H4'), sousOrigines: h.sousOrigines.filter(x => x !== SOUS_H4_HUMAIN), traits: { ...h.traits, ecartVoisinsMm: null } });
+    let o = h.origines, so = h.sousOrigines, traits = h.traits;
+    if (humains) {
+      if (h.origines.length === 1 && h.origines[0] === 'H4' && h.sousOrigines.every(x => x === SOUS_H4_HUMAIN)) { retire++; continue; }
+      o = o.filter(x => x !== 'H4'); so = so.filter(x => x !== SOUS_H4_HUMAIN); traits = { ...traits, ecartVoisinsMm: null };
+    }
+    if (h6Humain && so.some(x => x.startsWith(PREFIXE_H6_HUMAIN))) {
+      so = so.filter(x => !x.startsWith(PREFIXE_H6_HUMAIN));
+      /* Plus aucune H6 du lot ici : l'origine H6 et ses traits partent ; l'hypothèse reste si une autre origine la porte. */
+      if (!so.some(x => x.startsWith(PREFIXE_H6))) { o = o.filter(x => x !== 'H6'); traits = sansTraitsH6(traits); }
+      if (!o.length) { retire++; continue; }
+    }
+    hyp[s].push({ ...h, origines: o, sousOrigines: so, traits });
   }
   const G0 = c.cut.contexte.ecartDepartMm, gMed = c.gMed;
   for (const s of SIDES) {
@@ -192,10 +214,10 @@ function appliquerUsage(c, usage) {
       h.traits = { ...h.traits, ecartPaireMedMm: Number.isFinite(mini) ? arrondi(mini, 1) : null };
     }
   }
-  return { hyp, ctx: { ...c.cut.contexte, voisins: { n: 0, humains: 0, lot: 0, encadre: null, coupMin: null, ecartementMm: null } }, retire };
+  return { hyp, ctx: humains ? { ...c.cut.contexte, voisins: { n: 0, humains: 0, lot: 0, encadre: null, coupMin: null, ecartementMm: null } } : c.cut.contexte, retire };
 }
 /* Les cas d'une partie : cuts calculés avec un nuage et une référence pour les deux rails. */
-function construireCas(jeu, usage = 'relecture') {
+function construireCas(jeu, usage = 'relecture', { gardeVoie = false } = {}) {
   if (!['relecture', 'lot'].includes(usage)) throw Error(`usage « ${usage} » : relecture | lot`);
   const cas = [], gMed = fini(jeu.entete.gMedMm) ? jeu.entete.gMedMm : null;
   for (const c0 of jeu.cuts) {
@@ -207,6 +229,8 @@ function construireCas(jeu, usage = 'relecture') {
       voisinsN: v.n ?? null, voisinsHumains: v.humains ?? null, voisinsLot: v.lot ?? null, voisinsEncadre: v.encadre ?? null, voisinsCoupMin: v.coupMin ?? null,
       ecartDepartMedMm: fini(G0) && fini(gMed) ? G0 - gMed : null };
     const k = { partie: jeu.partie, cut: c.cut, zone: c.zone, role: c.role, gMed, G0, chaineDifferee: ctx.etageChaine === 'deferred', rails: {}, etiq: { micMaxMm: c.etiquette.micMaxMm, mic: c.etiquette.mic } };
+    /* Garde-fou de voie (option) : un cut différé est gardé par la voie de référence de sa série (H6), celle de l'usage (lot : voisins du lot seuls). */
+    if (gardeVoie && c.role === 'differe') { const v = c.contexte && c.contexte.voieH6; k.garde = 'voie'; k.voieRef = v ? (v[usage === 'lot' ? 'lot' : 'tous'] || null) : null; }
     for (const s of SIDES) {
       const acc = accords(hyp[s]);
       k.rails[s] = { confiance: c0.rail[s] ? c0.rail[s].confianceAstar : null, hyps: hyp[s].map((h, i) => ({
@@ -229,9 +253,22 @@ const pire = decal => Math.max(Math.abs(decal[1]), Math.abs(decal[2]));
 /* Écartement de la paire (gauche i, droite j) : l'écartement de départ plus ce que chaque rail y ajoute (écartement du rail avec l'autre rail laissé au
  * départ). Exact au premier ordre en latéral ; l'écart avec le calcul exact du jeu est de 0,3 mm au plus dans 97 % des cas et de plus de 1 mm dans 0,3 % (fiche § 2.6). */
 function ecartementPaire(k, hl, hr) { return fini(k.G0) && fini(hl.g) && fini(hr.g) ? k.G0 + (hl.g - k.G0) + (hr.g - k.G0) : null; }
+/* GARDE-FOU DE VOIE (D-207, option `--garde-voie`, cuts DIFFÉRÉS seulement ; le défaut ne change pas). La pose de départ d'un différé n'est pas une
+ * voie sûre (la voie entière peut être décalée de 130 à 250 mm) : chaque rail est gardé à 45 mm au plus, en latéral, de la VOIE DE RÉFÉRENCE de la
+ * série (médiane rail par rail des décalages des voisins sûrs, `voieH6` du jeu), et le dévers à 15 mm de celui de la référence ; l'écartement de la
+ * paire comme ailleurs. Sans référence sûre (moins de 2 voisins sûrs à 10 cuts, ou une étendue latérale de plus de 50 mm entre eux), AUCUNE
+ * paire n'est permise : on n'agit pas. Mauvaise voie, pour ces cuts : pose à plus de 50 mm de celle de Mic, ou à plus de 45 mm de la référence. */
+const latRef = (k, s, h) => k.garde === 'voie' ? h.decal[1] - k.voieRef[s][0] : h.decal[1];
 function paireValide(k, hl, hr, gardes = GARDES) {
-  if (Math.abs(hl.decal[1]) > gardes.lateralMaxMm || Math.abs(hr.decal[1]) > gardes.lateralMaxMm) return false;
-  if (Math.abs(hl.decal[2] - hr.decal[2]) > gardes.deversMaxMm) return false;
+  if (k.garde === 'voie') {
+    const r = k.voieRef;
+    if (!r || !r.sure) return false;
+    if (Math.abs(latRef(k, 'left', hl)) > gardes.lateralMaxMm || Math.abs(latRef(k, 'right', hr)) > gardes.lateralMaxMm) return false;
+    if (Math.abs((hl.decal[2] - hr.decal[2]) - (r.left[1] - r.right[1])) > gardes.deversMaxMm) return false;
+  } else {
+    if (Math.abs(hl.decal[1]) > gardes.lateralMaxMm || Math.abs(hr.decal[1]) > gardes.lateralMaxMm) return false;
+    if (Math.abs(hl.decal[2] - hr.decal[2]) > gardes.deversMaxMm) return false;
+  }
   const g = ecartementPaire(k, hl, hr);
   if (!fini(g)) return false;
   return (fini(k.gMed) && Math.abs(g - k.gMed) <= gardes.ecartementMedianeMm) || (g >= gardes.contratMm[0] && g <= gardes.contratMm[1]);
@@ -477,6 +514,8 @@ function decider(k, p, seuils) {
 /* Issue d'une paire (i, j) d'un cas : écart à la pose finale (le pire des deux rails), déplacement latéral maximal. */
 function issueDePaire(k, i, j) {
   const hl = k.rails.left.hyps[i], hr = k.rails.right.hyps[j];
+  /* `lat` : déplacement latéral depuis la pose de départ ; sous le garde-fou de voie (et seulement quand on agit), depuis la voie de référence. */
+  if (k.garde === 'voie' && k.voieRef && !(i === k.i0.left && j === k.i0.right)) return { e: Math.max(hl.y.ecartMm, hr.y.ecartMm), lat: Math.max(Math.abs(latRef(k, 'left', hl)), Math.abs(latRef(k, 'right', hr))) };
   return { e: Math.max(hl.y.ecartMm, hr.y.ecartMm), lat: Math.max(Math.abs(hl.decal[1]), Math.abs(hr.decal[1])) };
 }
 /* Un résultat par cut : { partie, cut, zone, role, mic (pire des deux rails), etat, e, lat }. */
@@ -597,6 +636,9 @@ const resultatH0 = k => ({ partie: k.partie, cut: k.cut, zone: k.zone, role: k.r
 const FORMAT_VARIANTES = 'ariane-gcv2-variantes-v1';
 const FICHIER_VARIANTES = path.join(__dirname, '..', 'datasets', 'gcv2-variantes.json');
 /* Lit et vérifie les variantes. Une variante n'agit que sur des verts, et la règle prudente n'y agit que dans son propre périmètre. */
+/* `gcv2` : un bloc { zones, roles } ou une liste de blocs (la GCV2 agit dans leur réunion). Un rôle « differe » n'est permis qu'à la GCV2 d'une variante
+ * qui déclare `gardeVoie: true` (D-207 : les différés seulement sous le garde-fou de voie) ; jamais un rouge ; la règle prudente, jamais hors des verts. */
+const FICHIER_VARIANTES_H6 = path.join(__dirname, '..', 'datasets', 'gcv2-variantes-h6.json');
 function lireVariantes(fichier = FICHIER_VARIANTES) {
   const g = JSON.parse(fs.readFileSync(fichier, 'utf8'));
   if (g.format !== FORMAT_VARIANTES) throw Error(`variantes : format ${FORMAT_VARIANTES} attendu`);
@@ -606,13 +648,15 @@ function lireVariantes(fichier = FICHIER_VARIANTES) {
   };
   const out = {};
   for (const nom of Object.keys(defs)) {
-    const gcv2 = liste(defs[nom].gcv2, `${nom}.gcv2`), prudente = liste(defs[nom].prudente, `${nom}.prudente`);
-    for (const l of [gcv2, prudente]) {
+    const gardeVoie = defs[nom].gardeVoie === true, brut = defs[nom].gcv2;
+    const blocs = Array.isArray(brut) ? brut.map((b, i) => liste(b, `${nom}.gcv2[${i}]`)) : [liste(brut, `${nom}.gcv2`)], prudente = liste(defs[nom].prudente, `${nom}.prudente`);
+    for (const l of [...blocs, prudente]) {
       if (l.zones.some(z => !ZONES.includes(z))) throw Error(`variantes : ${nom} nomme une zone inconnue`);
-      if (l.roles.some(r => r !== 'vert')) throw Error(`variantes : ${nom} ne peut agir que sur des verts (ni rouge ni différé)`);
+      const permis = l === prudente || !gardeVoie ? ['vert'] : ['vert', 'differe'];
+      if (l.roles.some(r => !permis.includes(r))) throw Error(gardeVoie && l !== prudente ? `variantes : ${nom} ne peut agir que sur des verts et des différés (jamais un rouge)` : `variantes : ${nom} ne peut agir que sur des verts (ni rouge ni différé)`);
     }
     if (prudente.zones.some(z => !REGLES_PRUDENTES.zones.includes(z))) throw Error(`variantes : ${nom} donne à la règle prudente une zone hors de son périmètre`);
-    out[nom] = { resume: defs[nom].resume || null, gcv2, prudente };
+    out[nom] = { resume: defs[nom].resume || null, gcv2: Array.isArray(brut) ? blocs : blocs[0], prudente, ...(gardeVoie ? { gardeVoie: true } : {}) };
   }
   return out;
 }
@@ -620,7 +664,9 @@ function lireVariantes(fichier = FICHIER_VARIANTES) {
 function appliquerVariante(k, nom, rG, rP, defs = lireVariantes()) {
   const d = defs[nom];
   if (!d) throw Error(`variante « ${nom} » inconnue (${Object.keys(defs).join(' | ')})`);
-  const dans = l => l.zones.includes(k.zone) && l.roles.includes(k.role);
+  const dans = l => Array.isArray(l) ? l.some(dans) : l.zones.includes(k.zone) && l.roles.includes(k.role);
+  /* Un différé n'est jamais confié à la GCV2 sans le garde-fou de voie sur ce cut. */
+  if (k.role === 'differe' && dans(d.gcv2) && !(d.gardeVoie && k.garde === 'voie')) throw Error(`variante « ${nom} » : un différé sans garde-fou de voie (--garde-voie)`);
   if (dans(d.gcv2)) return rG;
   if (dans(d.prudente)) return rP;
   return resultatH0(k);
@@ -693,10 +739,12 @@ function fiabilite(paires, classes = 10) {
 }
 
 /* ------------------------------------------------------------------ validation croisée par partie */
-function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {}, variantes = [], defsVariantes } = {}) {
+function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {}, variantes = [], defsVariantes, gardeVoie = false } = {}) {
   const defs = variantes.length ? (defsVariantes || lireVariantes()) : null, methodesV = Object.fromEntries(variantes.map(v => [v, []]));
   for (const v of variantes) if (!defs[v]) throw Error(`variante « ${v} » inconnue (${Object.keys(defs).join(' | ')})`);
-  const noms = parties.map(j => j.partie), casParPartie = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, usage)]));
+  for (const v of variantes) if (defs[v].gardeVoie && !gardeVoie) throw Error(`variante « ${v} » : elle agit sur des différés, il faut --garde-voie`);
+  const noms = parties.map(j => j.partie), casParPartie = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, usage, { gardeVoie })]));
+  const detailsDifferes = [];
   const methodes = { gcv2: [], prudente: [], h0: [] }, plis = [], hasard = { total: bilanVide(), perimetrePrudent: bilanVide(), parZone: Object.fromEntries(ZONES.map(z => [z, bilanVide()])), parRole: Object.fromEntries(ROLES.map(r => [r, bilanVide()])) };
   const parPartie = {}, fiab10 = [], fiab5 = [], fiabGagnants = [], coefs = [], hasardParPartie = {};
   for (const jugee of noms) {
@@ -708,6 +756,9 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     const rsP = test.map(k => reglePrudente(k)), rsH = test.map(resultatH0);
     methodes.gcv2.push(...rs); methodes.prudente.push(...rsP); methodes.h0.push(...rsH);
     const rsV = {}; for (const v of variantes) { rsV[v] = test.map((k, i) => appliquerVariante(k, v, rs[i], rsP[i], defs)); methodesV[v].push(...rsV[v]); }
+    /* Garde-fou de voie : le détail des différés jugés (référence, décision, issue), pour la fiche. Rien d'autre ne change. */
+    if (gardeVoie) test.forEach((k, i) => { if (k.garde === 'voie') detailsDifferes.push({ partie: k.partie, cut: k.cut, zone: k.zone, mic: k.etiq.micMaxMm, reference: !!k.voieRef, sure: !!(k.voieRef && k.voieRef.sure),
+      paires: k.paires.length, etat: rs[i].etat, p: arrondi(dec[i].p, 4), e: rs[i].e, lat: rs[i].lat }); });
     /* hasard : taux d'action de la GCV2 par zone, sur cette partie */
     const taux = {}; for (const z of ZONES) { const n = rs.filter(r => r.zone === z).length; taux[z] = n ? rs.filter(r => r.zone === z && r.etat === 'agit').length / n : 0; }
     const h = hasardEnEsperance(test, taux); hasardParPartie[jugee] = h;
@@ -731,7 +782,8 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     total: { gcv2: synthese(methodes.gcv2), prudente: synthese(methodes.prudente), h0: synthese(methodes.h0), hasard: arrondiHasard },
     parPartie, calibrage: { p10: fiabilite(fiab10), p5: fiab5.length ? fiabilite(fiab5) : null, gagnants: fiabilite(fiabGagnants.map(([p, y]) => [p, y])), gagnantsHorsH0: fiabilite(fiabGagnants.filter(g => !g[2]).map(([p, y]) => [p, y])) },
     coefficients: resumeCoefficients(coefs),
-    ...(variantes.length ? { variantes: Object.fromEntries(variantes.map(v => [v, synthese(methodesV[v])])), variantesDef: Object.fromEntries(variantes.map(v => [v, defs[v]])) } : {}) };
+    ...(variantes.length ? { variantes: Object.fromEntries(variantes.map(v => [v, synthese(methodesV[v])])), variantesDef: Object.fromEntries(variantes.map(v => [v, defs[v]])) } : {}),
+    ...(gardeVoie ? { gardeVoie: true, detailsDifferes } : {}) };
 }
 /* Empreinte de tout ce qu'un modèle a appris : colonnes, normalisation, vocabulaires, coefficients. */
 function empreinteModele(m) {
@@ -748,14 +800,17 @@ function resumeCoefficients(plis) {
 }
 
 /* ------------------------------------------------------------------ export des paramètres */
-function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {} } = {}) {
+function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {}, gardeVoie = false } = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) throw Error('exporter : --date AAAA-MM-JJ attendue');
+  const h6 = parties.some(j => j.entete && j.entete.h6);
   const noms = parties.map(j => j.partie), out = { format: FORMAT_PARAMS, version: VERSION, date, graine: GRAINE, lambda, accord,
     note: 'Paramètres de la GCV2 appris sur les parties nommées. Aucune coordonnée, aucune ligne d\'exemple : des coefficients, des moyennes, des seuils et des empreintes.',
     parties: noms.map(n => ({ partie: n, sha256: parties.find(j => j.partie === n).sha256 })), garde: { ...GARDES, contratMm: [...GARDES.contratMm] },
-    cible: { ...CIBLE }, listeBlanche: listeBlancheExportable(accord), interdits: [...INTERDITS], usages: {} };
+    cible: { ...CIBLE }, listeBlanche: listeBlancheExportable(accord, h6), interdits: [...INTERDITS], usages: {} };
+  if (h6) out.h6 = { ...parties.find(j => j.entete && j.entete.h6).entete.h6 };
+  if (gardeVoie) out.garde.voie = { roles: ['differe'], reference: 'médiane rail par rail des décalages des voisins sûrs (H6), sûre si 2 voisins au moins et une étendue latérale de 50 mm au plus', lateralMaxMm: GARDES.lateralMaxMm, deversMaxMm: GARDES.deversMaxMm, sansReference: 'aucune paire permise' };
   for (const usage of usages) {
-    const cas = parties.flatMap(j => construireCas(j, usage)), t0 = Date.now();
+    const cas = parties.flatMap(j => construireCas(j, usage, { gardeVoie })), t0 = Date.now();
     /* Calibrage et seuils : sur les scores hors-échantillon de toutes les parties (une partie jugée par un modèle qui ne l'a pas vue). */
     const pli = apprendrePli(cas, { lambda, accord, cible });
     out.usages[usage] = {
@@ -772,9 +827,9 @@ function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, acc
   }
   return out;
 }
-function listeBlancheExportable(accord = true) {
+function listeBlancheExportable(accord = true, h6 = false) {
   const f = (t, type) => ({ nom: t.nom, source: t.src, chemin: t.chemin, transformation: t.tr, type });
-  return [...NUM.filter(t => accord || !SANS_ACCORD(t.nom)).map(t => f(t, t.tr === 'bool' ? 'booleen' : 'numerique')), ...CAT.map(t => f(t, 'categorie')), ...MULTI.map(t => f(t, 'multiple'))];
+  return [...NUM.filter(t => (accord || !SANS_ACCORD(t.nom)) && (h6 || !TRAIT_H6(t.nom))).map(t => f(t, t.tr === 'bool' ? 'booleen' : 'numerique')), ...CAT.map(t => f(t, 'categorie')), ...MULTI.map(t => f(t, 'multiple'))];
 }
 /* Sérialisation stable : mêmes entrées, mêmes octets. */
 const serialiser = o => JSON.stringify(o, null, 1) + '\n';
@@ -800,6 +855,7 @@ function porte(V) {
 function rapport(V) {
   const L = [], M = [['gcv2', 'GCV2'], ['prudente', 'règle prudente'], ['hasard', 'hasard'], ['h0', 'H0 (ne rien faire)']];
   L.push(`## Usage « ${V.usage} » (${V.nCas} cuts jugés, ${V.parties.length} plis)`, '');
+  if (V.gardeVoie) L.push(rapportGardeVoie(V), '');
   L.push('### Total, par méthode (mêmes cuts)', '', `méthode | ${ENTETE} | Wilson haut`, '---|' + '--:|'.repeat(10) + '---');
   for (const [k, nom] of M) L.push(`${nom} | ${LIGNE(V.total[k].total)} | ${wilsonTexte(V.total[k].total)}`);
   L.push('', '### Dans le périmètre de la règle prudente (verts de PN, ADV et abords)', '', `méthode | ${ENTETE} | Wilson haut`, '---|' + '--:|'.repeat(10) + '---');
@@ -825,10 +881,17 @@ function rapport(V) {
   if (V.variantes) L.push('', rapportVariantes(V));
   return L.join('\n');
 }
+/* Garde-fou de voie (D-207) : ce qu'il permet sur les différés. */
+function rapportGardeVoie(V) {
+  const d = V.detailsDifferes || [], n = f => d.filter(f).length;
+  const agit = d.filter(x => x.etat === 'agit');
+  return [`Garde-fou de voie sur les différés (option) : ${d.length} différés jugés ; voie de référence : ${n(x => x.reference)} (sûre : ${n(x => x.sure)}) ; sans référence sûre, aucune paire permise (${n(x => !x.sure)} cuts).`,
+    `GCV2 seule sur ces différés : agit ${agit.length}, justes ${agit.filter(x => x.mic > 10 && x.e <= 10).length}, à plus de 10 mm ${agit.filter(x => x.e > 10).length}, mauvaise voie ${agit.filter(x => x.e > 50 || x.lat > 45).length}.`].join('\n');
+}
 /* Les variantes par zone (D-204), mêmes cuts et mêmes plis que le rapport de base : variante, règle prudente seule, GCV2 seule, hasard et H0. */
 function rapportVariantes(V) {
   const L = [], oui = x => x ? 'oui' : 'NON', p1 = x => x == null ? '—' : (Math.round(1000 * x) / 10).toString().replace('.', ',') + ' %';
-  const liste = l => l.zones.length && l.roles.length ? `${l.zones.join(', ')} (${l.roles.join(', ')})` : 'rien';
+  const liste = l => Array.isArray(l) ? l.map(liste).join(' ; ') : l.zones.length && l.roles.length ? `${l.zones.join(', ')} (${l.roles.join(', ')})` : 'rien';
   for (const nom of Object.keys(V.variantes)) {
     const S = V.variantes[nom], d = V.variantesDef[nom], tete = `méthode | ${ENTETE} | Wilson haut`, ligne = '---|' + '--:|'.repeat(10) + '---';
     L.push(`## Variante ${nom} — usage « ${V.usage} » (${V.nCas} cuts jugés, ${V.parties.length} plis)`, '', `GCV2 : ${liste(d.gcv2)} ; règle prudente : ${liste(d.prudente)} ; partout ailleurs : rien. τ et δ : ceux appris dans chaque pli.`, '');
@@ -858,6 +921,7 @@ function args(argv) {
     if (a === '--jeu') o.jeux.push(argv[++i]); else if (a === '--json') o.jsons.push(argv[++i]); else if (a === '--usage') o.usage = argv[++i];
     else if (a === '--lambda') o.lambda = Number(argv[++i]); else if (a === '--sortie') o.sortie = argv[++i]; else if (a === '--date') o.date = argv[++i];
     else if (a === '--variante') o.variantes.push(...String(argv[++i]).split(',').map(x => x.trim()).filter(Boolean));
+    else if (a === '--variantes') o.fichierVariantes = argv[++i]; else if (a === '--garde-voie') o.gardeVoie = true;
     else if (a === '--sans-accord') o.accord = false; else if (a === '--erreur-max') o.erreurMax = Number(argv[++i]); else if (!o.mode) o.mode = a; else throw Error(`argument inconnu : ${a}`);
   }
   return o;
@@ -870,12 +934,13 @@ function main(argv) {
     const cible = { ...CIBLE, ...(a.erreurMax ? { erreurMax: a.erreurMax } : {}) };
     if (a.mode === 'valider') {
       if (!a.usage) throw Error('--usage relecture|lot attendu');
-      const V = validationCroisee(parties, { usage: a.usage, lambda: a.lambda || LAMBDA, accord: a.accord !== false, cible, journal, variantes: [...new Set(a.variantes)] });
+      const V = validationCroisee(parties, { usage: a.usage, lambda: a.lambda || LAMBDA, accord: a.accord !== false, cible, journal, variantes: [...new Set(a.variantes)],
+        ...(a.fichierVariantes ? { defsVariantes: lireVariantes(a.fichierVariantes) } : {}), ...(a.gardeVoie ? { gardeVoie: true } : {}) });
       if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(V)); process.stdout.write(rapport(V) + '\n');
     } else {
       if (!a.sortie) throw Error('--sortie datasets/gcv2-parametres.json attendu');
       const date = a.date || new Date().toISOString().slice(0, 10);
-      fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal })));
+      fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal, ...(a.gardeVoie ? { gardeVoie: true } : {}) })));
       process.stdout.write(`écrit ${a.sortie}\n`);
     }
   } else if (a.mode === 'rapport') {
@@ -891,6 +956,6 @@ module.exports = {
   pairesPermises, paireValide, ecartementPaire, ajusterCodage, coder, matrice, ajusterLogistique, ajusterArbres, scoresArbres, platt, appliquerPlatt, exemples, poidsParPartie, entrainer, scorer, parCas,
   meilleurePaire, decider, choisirSeuils, apprendrePli, jugerPli, reglePrudente, reglesPrudentesDuDepot, poseChaineH, resultatH0, resultatDeDecision, bilanDe, synthese, hasardEnEsperance,
   fiabilite, porte, validationCroisee, exporter, serialiser, listeBlancheExportable, rapport,
-  FORMAT_VARIANTES, FICHIER_VARIANTES, lireVariantes, appliquerVariante, rapportVariantes, args,
+  FORMAT_VARIANTES, FICHIER_VARIANTES, FICHIER_VARIANTES_H6, lireVariantes, appliquerVariante, rapportVariantes, args, issueDePaire, TRAIT_H6,
 };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`gcv2-apprendre : ${e.message}\n`); process.exit(1); } }

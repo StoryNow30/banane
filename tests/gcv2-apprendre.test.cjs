@@ -388,3 +388,125 @@ test('variantes : sans l\'option, la sortie est celle de G1-b, octet pour octet'
   assert.deepEqual(A.args(['valider', '--usage', 'lot']).variantes, []);
   assert.deepEqual(A.args(['valider', '--variante', 'V1', '--variante', 'V2,V3']).variantes, ['V1', 'V2', 'V3']);
 });
+
+/* ------------------------------------------------------------------ H6 « voie décalée » et garde-fou de voie (D-207) */
+/* Ajoute au jeu synthétique ce que le jeu H6 porte : pour chaque cut, des hypothèses H6 (une du lot, une humaine, une humaine confondue avec une
+ * cellule H2) et, pour les différés, une voie de référence (« tous » et « lot »). Valeurs inventées : la voie de la série est décalée de `decale` mm. */
+function jeuH6({ partie = '9:1', graine = 4, cuts = 60, decale = 150, sure = true, sansReference = false } = {}) {
+  const l = F.jeuSynthetique({ partie, graine, cuts, humains: false });
+  l[0].h6 = { version: 'h6-1', fenetreCuts: 10, k: 5 };
+  const out = [];
+  for (const x of l) {
+    if (x.type === 'cut') {
+      const mic = x.etiquette.mic;
+      if (x.role === 'differe') {
+        /* Voie décalée : la pose finale est loin de la pose de départ, près de la référence. */
+        for (const s of SIDES) mic[s] = [0, decale + mic[s][1] / 4, mic[s][2]];
+        x.etiquette.micMaxMm = Math.round(Math.max(...SIDES.map(s => Math.hypot(...mic[s]))) * 100) / 100; x.etiquette.grosse = true;
+      }
+      const ref = { left: [decale, 0], right: [decale, 0], n: 3, distMax: 2, dispersionMm: { left: sure ? 10 : 80, right: 10 }, sure };
+      x.contexte.voieH6 = sansReference ? { tous: null, lot: null, departLot: false } : { tous: ref, lot: ref, departLot: false };
+    }
+    if (x.type === 'hyp') {
+      const c = l.find(y => y.type === 'cut' && y.cut === x.cut), m = c.etiquette.mic[x.rail];
+      x.etiquette = { ecartMm: Math.round(Math.hypot(x.decal[1] - m[1], x.decal[2] - m[2]) * 100) / 100, classe: '' };
+    }
+    out.push(x);
+    if (x.type === 'rail') {
+      const c = l.find(y => y.type === 'cut' && y.cut === x.cut), m = c.etiquette.mic[x.rail], base = l.find(y => y.type === 'hyp' && y.cut === x.cut && y.rail === x.rail && y.origine === 'H0');
+      const h6 = (rang, origines, sous, d, h6t) => ({ ...base, rang, origine: origines[0], sous: sous[0], origines, sousOrigines: sous, decal: d,
+        traits: { ...base.traits, h6AmpleurMm: Math.hypot(d[1], d[2]), h6DistCuts: 1, h6NVoisins: 3, h6DispersionMm: 10, h6DansReservoir: false, h6Perte: null, h6LignesSommet: null, ...h6t },
+        etiquette: { ecartMm: Math.round(Math.hypot(d[1] - m[1], d[2] - m[2]) * 100) / 100, classe: '' } });
+      out.push(h6(90, ['H6'], ['h6-lot-proche-rail'], [0, decale + 2, 0]), h6(91, ['H6'], ['h6-humain-proche-rail'], [0, decale - 3, 1]),
+        h6(92, ['H2', 'H6'], ['comp', 'h6-humain-mediane-rail'], [0, decale + 40, 0], { h6DistCuts: 4 }), h6(93, ['H6'], ['h6-lot-mediane-paire'], [0, 30, 0]));
+    }
+  }
+  const j = A.jeuDeLignes(out); j.sha256 = 'z'.repeat(63) + partie.slice(-1); return j;
+}
+
+test('usage « lot » et H6 : les H6 de voisins humains partent, celles du lot restent ; une cellule confondue garde sa place sans les traits H6', () => {
+  const j = jeuH6({ cuts: 30 }), rel = A.construireCas(j, 'relecture'), lot = A.construireCas(j, 'lot');
+  const iA = A.NUM.findIndex(t => t.nom === 'h6DistCuts');
+  for (const [r, l] of rel.map((k, i) => [k, lot[i]])) for (const s of SIDES) {
+    const sousR = r.rails[s].hyps.flatMap(h => h.sousOrigines), sousL = l.rails[s].hyps.flatMap(h => h.sousOrigines);
+    assert.ok(sousR.includes('h6-humain-proche-rail') && sousR.includes('h6-lot-proche-rail'));
+    assert.equal(sousL.some(x => x.startsWith('h6-humain-')), false, 'aucune H6 humaine au lot');
+    assert.ok(sousL.includes('h6-lot-proche-rail') && sousL.includes('h6-lot-mediane-paire'), 'les H6 du lot restent');
+    const conf = l.rails[s].hyps.find(h => h.sousOrigines.includes('comp') && Math.abs(h.decal[1] - (150 + 40)) < 1e-9);
+    assert.ok(conf, 'la cellule H2 confondue avec une H6 humaine reste');
+    assert.deepEqual(conf.origines, ['H2']); assert.ok(Number.isNaN(conf.x.n[iA]), 'ses traits H6 sont retirés');
+    assert.equal(r.rails[s].hyps.length - l.rails[s].hyps.length, 1, 'une seule hypothèse retirée par rail (la H6 humaine pure)');
+  }
+  /* Un jeu sans H6 : le lot fait exactement ce qu'il faisait (H4 seulement). */
+  const j0 = jeu({ partie: '9:1', graine: 3, cuts: 40 });
+  assert.equal(JSON.stringify(A.construireCas(j0, 'lot')), JSON.stringify(A.construireCas(jeu({ partie: '9:1', graine: 3, cuts: 40 }), 'lot')));
+});
+
+test('garde-fou de voie : un différé est gardé par la voie de référence ; sans référence sûre, aucune paire ; les verts et le défaut ne changent pas', () => {
+  const j = jeuH6({ cuts: 60 }), sans = A.construireCas(j, 'relecture'), avec = A.construireCas(j, 'relecture', { gardeVoie: true });
+  const dif = avec.filter(k => k.role === 'differe');
+  assert.ok(dif.length >= 5, `${dif.length} différés`);
+  for (const k of avec) {
+    const k0 = sans.find(x => x.cut === k.cut);
+    if (k.role !== 'differe') { assert.equal(k.garde, undefined); assert.deepEqual(k.paires, k0.paires, 'vert ou rouge : mêmes paires qu\'avant'); continue; }
+    assert.equal(k.garde, 'voie');
+    assert.ok(k.paires.length > 0, 'des paires permises près de la référence');
+    assert.ok(k0.paires.every(q => Math.abs(k.rails.left.hyps[q.i].decal[1]) <= 45), 'sans l\'option : gardé par la pose de départ (H6 à 150 mm écartées)');
+    for (const q of k.paires) for (const [s, i] of [['left', q.i], ['right', q.j]]) {
+      assert.ok(Math.abs(k.rails[s].hyps[i].decal[1] - k.voieRef[s][0]) <= 45, 'chaque rail à 45 mm au plus de la référence');
+      assert.ok(A.issueDePaire(k, q.i, q.j).lat <= 45, 'mauvaise voie impossible par la référence : latéral mesuré depuis elle');
+    }
+    assert.ok(!k.paires.some(q => k.rails.left.hyps[q.i].decal[1] === 30), 'la H6 « paire » à 30 mm (120 mm de la référence) est écartée');
+    /* Même avec un score de 1 sur une paire interdite, la décision reste dans la voie. */
+    const p = { left: Float64Array.from(k.rails.left.hyps, h => Math.abs(h.decal[1] - 30) < 1e-9 ? 1 : 0.4), right: Float64Array.from(k.rails.right.hyps, h => Math.abs(h.decal[1] - 30) < 1e-9 ? 1 : 0.4) };
+    const d = A.decider(k, p, Object.fromEntries(A.ZONES.map(z => [z, { actif: true, tau: 0.1, delta: 1 }])));
+    assert.ok(d.etat !== 'agit' || Math.abs(k.rails.left.hyps[d.i].decal[1] - k.voieRef.left[0]) <= 45);
+  }
+  for (const opt of [{ sure: false }, { sansReference: true }]) {
+    const c = A.construireCas(jeuH6({ cuts: 60, ...opt }), 'lot', { gardeVoie: true }).filter(k => k.role === 'differe');
+    assert.ok(c.length && c.every(k => k.paires.length === 0), `${JSON.stringify(opt)} : aucune paire permise, on n'agit pas`);
+    const p = c.map(k => ({ left: new Float64Array(k.rails.left.hyps.length).fill(1), right: new Float64Array(k.rails.right.hyps.length).fill(1) }));
+    assert.ok(c.every((k, i) => A.decider(k, p[i], Object.fromEntries(A.ZONES.map(z => [z, { actif: true, tau: 0.1, delta: 1 }]))).etat === 'laisse'));
+  }
+  /* L'usage lot lit la référence du lot. */
+  const jl = jeuH6({ cuts: 40 }); for (const c of jl.cuts) if (c.cut.contexte.voieH6) c.cut.contexte.voieH6.lot = null;
+  assert.ok(A.construireCas(jl, 'lot', { gardeVoie: true }).filter(k => k.role === 'differe').every(k => k.paires.length === 0), 'lot : sans référence du lot, rien');
+  assert.ok(A.construireCas(jl, 'relecture', { gardeVoie: true }).filter(k => k.role === 'differe').some(k => k.paires.length > 0), 'relecture : la référence « tous »');
+});
+
+test('variantes H6 : V1 inchangée, V1+ = V1 et les différés sous le garde-fou de voie ; jamais un rouge ; jamais un différé sans le garde-fou', () => {
+  const d = A.lireVariantes(A.FICHIER_VARIANTES_H6), d0 = A.lireVariantes();
+  assert.deepEqual(d.V1, d0.V1, 'V1 est celle de D-204');
+  assert.equal(d['V1+'].gardeVoie, true);
+  assert.deepEqual(d['V1+'].gcv2, [{ zones: ['pn', 'adv'], roles: ['vert'] }, { zones: ['pn', 'adv', 'abords', 'liste', 'hors'], roles: ['differe'] }]);
+  assert.deepEqual(d['V1+'].prudente, d0.V1.prudente);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gcv2-h6-')), ecrire = v => { const f = path.join(dir, 'v.json'); fs.writeFileSync(f, JSON.stringify({ format: A.FORMAT_VARIANTES, variantes: { X: v } })); return f; };
+  assert.throws(() => A.lireVariantes(ecrire({ gcv2: { zones: ['pn'], roles: ['differe'] }, prudente: { zones: [], roles: [] } })), /ni rouge ni différé/, 'différé sans garde-fou de voie');
+  assert.throws(() => A.lireVariantes(ecrire({ gardeVoie: true, gcv2: [{ zones: ['pn'], roles: ['rouge'] }], prudente: { zones: [], roles: [] } })), /jamais un rouge/);
+  assert.throws(() => A.lireVariantes(ecrire({ gardeVoie: true, gcv2: { zones: ['pn'], roles: ['vert'] }, prudente: { zones: ['abords'], roles: ['differe'] } })), /ni rouge ni différé/, 'la règle prudente reste aux verts');
+  fs.rmSync(dir, { recursive: true });
+  const parties = [1, 2, 3].map(n => jeuH6({ partie: `9:${n}`, graine: n, cuts: 50 }));
+  assert.throws(() => A.validationCroisee(parties, { usage: 'relecture', lambda: 10, variantes: ['V1+'], defsVariantes: d }), /--garde-voie/);
+  for (const usage of ['relecture', 'lot']) {
+    const V = A.validationCroisee(parties, { usage, lambda: 10, variantes: ['V1', 'V1+'], defsVariantes: d, gardeVoie: true });
+    assert.equal(V.gardeVoie, true); assert.ok(V.detailsDifferes.length > 0);
+    assert.equal(V.variantes['V1+'].parRole.rouge.agit, 0, 'jamais un rouge'); assert.equal(V.variantes.V1.parRole.differe.agit, 0, 'V1 : jamais un différé');
+    for (const z of ['pn', 'adv', 'abords', 'liste', 'hors']) assert.deepEqual(V.variantes['V1+'].parZone[z].agit >= V.variantes.V1.parZone[z].agit, true);
+    assert.deepEqual(V.variantes['V1+'].parRole.vert, V.variantes.V1.parRole.vert, 'sur les verts, V1+ est V1');
+    assert.ok(V.detailsDifferes.filter(x => x.etat === 'agit').every(x => x.sure && x.lat <= 45), 'un différé n\'agit qu\'avec une référence sûre, dans la voie');
+    assert.equal(V.variantes['V1+'].parRole.differe.mauvaiseVoie, V.detailsDifferes.filter(x => x.etat === 'agit' && (x.e > 50 || x.lat > 45)).length);
+    assert.ok(A.rapport(V).includes('Garde-fou de voie sur les différés'));
+  }
+  /* Sans l'option, rien de nouveau dans la sortie. */
+  const V0 = A.validationCroisee(parties, { usage: 'lot', lambda: 10 });
+  assert.equal('gardeVoie' in V0, false); assert.equal('detailsDifferes' in V0, false);
+});
+
+test('export H6 : les traits H6 n\'entrent dans la liste blanche que pour un jeu H6 ; le garde-fou de voie est consigné s\'il sert', () => {
+  const vieux = A.exporter(trois(), { usages: ['relecture'], lambda: 10, date: '2026-10-19' });
+  assert.equal(vieux.listeBlanche.some(t => A.TRAIT_H6(t.nom)), false, 'jeux de G1-a : liste blanche de G1-b, octet pour octet');
+  assert.equal('h6' in vieux, false); assert.equal('voie' in vieux.garde, false);
+  const neuf = A.exporter([1, 2, 3].map(n => jeuH6({ partie: `9:${n}`, graine: n, cuts: 40 })), { usages: ['relecture'], lambda: 10, date: '2026-10-19', gardeVoie: true });
+  assert.ok(neuf.listeBlanche.filter(t => A.TRAIT_H6(t.nom)).length === 7 && neuf.h6.version === 'h6-1' && neuf.garde.voie.lateralMaxMm === 45);
+  assert.ok(neuf.listeBlanche.every(t => !A.estInterdit(t.nom)));
+});
