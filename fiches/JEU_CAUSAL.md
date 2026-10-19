@@ -6,6 +6,21 @@ Tous les chiffres sont des chiffres de **développement** : 14 parties d'apprent
 
 Les parties sont désignées par leur rang (« 2:1 » = projet 2, partie 1). Seuls des numéros de cut, des millimètres et des comptes figurent ici.
 
+## En bref
+
+| Question | Réponse |
+|---|---|
+| **V1, relecture** | porte unique **tenue** : 180 actions, 130 justes (règle prudente : 115), 0 abîmé (3), **0 mauvaise voie**, 5 erreurs (2,8 %, Wilson ≤ 6,3 %), **0 pose ajoutée** |
+| **V1, lot** | porte unique **échouée** : 2 poses ajoutées en PN (1:15 cut 7225, 1:16 cut 7419 : Mic 0, V1 à 12,5 mm) ; 9 erreurs sur 148 (Wilson ≤ 11,2 % > 9 %) ; 0 mauvaise voie ; 121 justes (115) |
+| **V1+, relecture** | porte unique **échouée** : 4 mauvaises voies au sens du protocole (différés déplacés de plus de 45 mm en travers, tous à 8 mm au plus de Mic) ; 1 pose ajoutée (1:15 cut 7128, ADV) ; 142 justes |
+| **V1+, lot** | porte unique **échouée** : 5 mauvaises voies (différés déplacés de 66 à 118 mm en travers ; 4 à 7,4 mm au plus de Mic, 1 à 14,8 mm), 2 poses ajoutées, Wilson ≤ 10,1 % |
+| **Pourquoi D-212 échouait et D-216 tenait** | effet d'**évaluateur**, pas de jeu : V1 sur les jeux de H6 rejouée avec l'évaluateur exact **échoue** comme dans D-212 (§ 5) |
+| **Banc des différés** (186 jugés, 96 sans nuage) | GCV2 seule du pli, lot : 30 actions, 27 justes, **0 mauvaise voie**, 3 erreurs ; relecture : 32 actions, 27 justes, 2 mauvaises voies (2:1). Avec le garde-fou de voie : 6 à 9 actions, dont 4 à 5 « mauvaises voies » au sens du protocole, toutes proches de Mic (§ 6) |
+| **Test croisé entre projets** (lot) | appris sur le projet 1 → différés du projet 2 : 20 actions, 16 justes, 0 mauvaise voie, 4 erreurs ; appris sur le projet 2 → projet 1 : 12 actions, 12 justes, 0, 0 |
+| **Cascade** (863 grosses corrections) | 364 sans nuage ; 52 (relecture) à 106 (lot) sans hypothèse à 10 mm ; atteignables mais confiées à personne par V1 : 292 en relecture, 240 au lot (rouges, différés, hors zone, abords où la règle n'agit pas) ; garde-fous et τ/δ de la GCV2 : 20 à 25 ; traitées : 135 (130 justes) en relecture, 128 (121) au lot (§ 7) |
+
+V1 tient la porte en relecture et la manque au lot, sur un ou deux cuts : **le développement ne montre pas une candidate solide** ; G1-c reste fermé (D-212), le protocole n'est pas modifié.
+
 ## 1. Ce qui a changé dans la fabrication du jeu
 
 Le jeu causal est le mode par défaut de `tools/gcv2-jeu.cjs construire` (version `causal-1` dans l'entête du jeu ; `--non-causal` reproduit le jeu de H6). Principe : **tout ce qui entre dans une hypothèse, un trait ou la règle prudente est pris à l'instant de la décision du cut**.
@@ -85,15 +100,15 @@ Rappel de la porte : (1) 0 mauvaise voie (erreur finale > 50 mm, ou rail déplac
 |---|---|--:|--:|--:|--:|--:|--:|---|---|
 | V1 | relecture | 180 | 130 (115) | 0 (3) | 0 | 5 (2,8 %), ≤ 6,3 % | 0 | pn 0 / 0 ; adv 0 / 0 ; abords 4,02 / 4,02 | **SUCCÈS (tenue)** |
 | V1 | lot | 148 | 121 (115) | 2 (3) | 0 | 9 (6,1 %), ≤ 11,2 % | 2 | pn 0 / 0 ; adv 0 / 0 ; abords 4,02 / 4,02 | **ÉCHEC** |
-| V1+ | relecture | | | | | | | | *calcul en cours* |
-| V1+ | lot | | | | | | | | *calcul en cours* |
+| V1+ | relecture | 281 | 142 (115) | 1 (3) | 4 | 6 (2,1 %), ≤ 4,6 % | 1 | pn 0 / 0 ; adv 0 / 0 ; abords 4,01 / 4,02 | **ÉCHEC** |
+| V1+ | lot | 176 | 133 (115) | 2 (3) | 5 | 10 (5,7 %), ≤ 10,1 % | 2 | pn 0 / 0 ; adv 0 / 0 ; abords 4,01 / 4,02 | **ÉCHEC** |
 
 Lecture par condition :
 
 - **V1, relecture : SUCCÈS (tenue)**. Mauvaises voies 0 ; Wilson 6,3 % (règle : 9 erreurs sur 145, 11,4 %) ; poses ajoutées : aucune ; médianes sur les cuts où l'une des deux agit : pn 3,09 contre 3,31 mm sur 82 cuts ; adv 3,82 contre 4,36 mm sur 48 cuts ; abords 4,12 contre 4,12 mm sur 62 cuts. Sensibilité (mêmes porte, sous-ensembles) : références explicites seulement : SUCCÈS (tenue) (0 ajoutée(s), Wilson 6,7 %) ; sans les cuts marqués SKIP par Mic : SUCCÈS (tenue) (0 ajoutée(s), Wilson 6,4 %) ; références explicites, sans SKIP : SUCCÈS (tenue) (0 ajoutée(s), Wilson 6,8 %).
 - **V1, lot : ÉCHEC** (mauvaise pose ajoutée ; borne de Wilson > 9 %). Mauvaises voies 0 ; Wilson 11,2 % (règle : 9 erreurs sur 145, 11,4 %) ; poses ajoutées : 1:15 cut 7225 (pn, Mic 0, V1 12,5, règle 0) ; 1:16 cut 7419 (pn, Mic 0, V1 12,5, règle 0) ; médianes sur les cuts où l'une des deux agit : pn 2,46 contre 3,23 mm sur 64 cuts ; adv 4,28 contre 4,52 mm sur 34 cuts ; abords 4,12 contre 4,12 mm sur 62 cuts. Sensibilité (mêmes porte, sous-ensembles) : références explicites seulement : ÉCHEC (0 ajoutée(s), Wilson 9,8 %) ; sans les cuts marqués SKIP par Mic : ÉCHEC (2 ajoutée(s), Wilson 11,4 %) ; références explicites, sans SKIP : ÉCHEC (0 ajoutée(s), Wilson 10 %).
-- **V1+, relecture** : calcul en cours.
-- **V1+, lot** : calcul en cours.
+- **V1+, relecture : ÉCHEC** (mauvaise voie observée ; une partie a une mauvaise voie ; mauvaise pose ajoutée). Mauvaises voies 4 ; Wilson 4,6 % (règle : 9 erreurs sur 145, 11,4 %) ; poses ajoutées : 1:15 cut 7128 (adv, Mic 0, V1+ 11,6, règle 0) ; médianes sur les cuts où l'une des deux agit : pn 3,09 contre 3,31 mm sur 82 cuts ; adv 3,98 contre 3,06 mm sur 139 cuts ; abords 4,2 contre 4,29 mm sur 68 cuts. Sensibilité (mêmes porte, sous-ensembles) : références explicites seulement : ÉCHEC (0 ajoutée(s), Wilson 5 %) ; sans les cuts marqués SKIP par Mic : ÉCHEC (1 ajoutée(s), Wilson 4,6 %) ; références explicites, sans SKIP : ÉCHEC (0 ajoutée(s), Wilson 5,1 %).
+- **V1+, lot : ÉCHEC** (mauvaise voie observée ; une partie a une mauvaise voie ; mauvaise pose ajoutée ; borne de Wilson > 9 %). Mauvaises voies 5 ; Wilson 10,1 % (règle : 9 erreurs sur 145, 11,4 %) ; poses ajoutées : 1:15 cut 7225 (pn, Mic 0, V1+ 12,5, règle 0) ; 1:16 cut 7419 (pn, Mic 0, V1+ 12,5, règle 0) ; médianes sur les cuts où l'une des deux agit : pn 2,57 contre 3,3 mm sur 65 cuts ; adv 4,28 contre 5,22 mm sur 56 cuts ; abords 4,12 contre 4,24 mm sur 66 cuts. Sensibilité (mêmes porte, sous-ensembles) : références explicites seulement : ÉCHEC (0 ajoutée(s), Wilson 9,3 %) ; sans les cuts marqués SKIP par Mic : ÉCHEC (2 ajoutée(s), Wilson 10,3 %) ; références explicites, sans SKIP : ÉCHEC (0 ajoutée(s), Wilson 9,4 %).
 
 ### 4.2 Par zone (candidat | règle prudente | hasard)
 
@@ -120,6 +135,28 @@ abords | 1002 | 190 | 62 / 48 / 0 / 4 / 0 | 62 / 48 / 0 / 4 / 0 | 297,4 / 13,8 /
 liste | 15 | 12 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0
 hors | 1313 | 76 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 825,1 / 18 / 301,2 / 369,6 / 0,5
 **total** | 3700 | 499 | 148 / 121 / 2 / 9 / 0 | 145 / 115 / 3 / 9 / 0 | 1215,5 / 36,8 / 400,4 / 561,5 / 3,8
+
+**V1+, relecture**
+
+zone | cuts | Mic > 10 mm | V1+ | règle prudente | hasard
+---|--:|--:|---|---|---
+pn | 438 | 71 | 77 / 60 / 0 / 1 / 0 | 56 / 52 / 2 / 2 / 0 | 84,9 / 5,7 / 31,1 / 43,6 / 0
+adv | 932 | 150 | 136 / 28 / 1 / 1 / 0 | 27 / 15 / 1 / 3 / 0 | 136 / 2,7 / 51,4 / 63,4 / 1,1
+abords | 1002 | 190 | 68 / 54 / 0 / 4 / 4 | 62 / 48 / 0 / 4 / 0 | 311,5 / 9,2 / 85,7 / 150,3 / 2,3
+liste | 15 | 12 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0
+hors | 1313 | 76 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 188,8 / 7,2 / 64 / 87 / 0
+**total** | 3700 | 499 | 281 / 142 / 1 / 6 / 4 | 145 / 115 / 3 / 9 / 0 | 721,2 / 24,9 / 232,3 / 344,4 / 3,4
+
+**V1+, lot**
+
+zone | cuts | Mic > 10 mm | V1+ | règle prudente | hasard
+---|--:|--:|---|---|---
+pn | 438 | 71 | 59 / 57 / 2 / 2 / 0 | 56 / 52 / 2 / 2 / 0 | 59 / 4,2 / 22,4 / 33,7 / 0
+adv | 932 | 150 | 51 / 25 / 0 / 3 / 3 | 27 / 15 / 1 / 3 / 0 | 50,9 / 1,4 / 18,9 / 23,2 / 0,6
+abords | 1002 | 190 | 66 / 51 / 0 / 5 / 2 | 62 / 48 / 0 / 4 / 0 | 332,3 / 10,4 / 85,9 / 154,4 / 1,6
+liste | 15 | 12 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0
+hors | 1313 | 76 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 825,1 / 18 / 301,2 / 369,6 / 0,5
+**total** | 3700 | 499 | 176 / 133 / 2 / 10 / 5 | 145 / 115 / 3 / 9 / 0 | 1267,2 / 34 / 428,4 / 580,9 / 2,7
 
 
 ### 4.3 Par partie et par projet
@@ -166,6 +203,54 @@ partie | cuts | Mic > 10 mm | V1 | règle prudente | poses ajoutées | condition
 **projet 1** | 1809 | 248 | 112 / 96 / 2 / 8 / 0 | 115 / 94 / 3 / 9 / 0 | | 
 **projet 2** | 1891 | 251 | 36 / 25 / 0 / 1 / 0 | 30 / 21 / 0 / 0 / 0 | | 
 
+**V1+, relecture**
+
+partie | cuts | Mic > 10 mm | V1+ | règle prudente | poses ajoutées | conditions ratées (publiées, condition 5)
+---|--:|--:|---|---|--:|---
+1:12 | 81 | 24 | 18 / 18 / 0 / 0 / 0 | 17 / 17 / 0 / 0 / 0 | 0 | médiane pn > référence
+1:13 | 153 | 21 | 28 / 15 / 0 / 1 / 0 | 13 / 10 / 1 / 3 / 0 | 0 | médiane pn > référence
+1:14 | 104 | 15 | 12 / 12 / 0 / 0 / 0 | 12 / 12 / 0 / 0 / 0 | 0 | —
+1:15 | 325 | 7 | 24 / 4 / 1 / 1 / 0 | 7 / 4 / 0 / 0 / 0 | 1 | mauvaise pose ajoutée
+1:16 | 335 | 20 | 24 / 13 / 0 / 0 / 0 | 14 / 9 / 2 / 2 / 0 | 0 | —
+1:17 | 199 | 44 | 6 / 4 / 0 / 1 / 1 | 5 / 3 / 0 / 1 / 0 | 0 | mauvaise voie
+1:24 | 32 | 24 | 5 / 2 / 0 / 2 / 1 | 4 / 1 / 0 / 2 / 0 | 0 | mauvaise voie
+1:29 | 580 | 93 | 58 / 41 / 0 / 1 / 1 | 43 / 38 / 0 / 1 / 0 | 0 | mauvaise voie, médiane adv > référence
+2:1 | 462 | 135 | 18 / 5 / 0 / 0 / 0 | 3 / 3 / 0 / 0 / 0 | 0 | —
+2:6 | 340 | 31 | 17 / 12 / 0 / 0 / 1 | 12 / 8 / 0 / 0 / 0 | 0 | mauvaise voie
+2:7 | 672 | 59 | 53 / 14 / 0 / 0 / 0 | 13 / 9 / 0 / 0 / 0 | 0 | médiane adv > référence
+2:10 | 21 | 1 | 2 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 | —
+2:11 | 276 | 23 | 16 / 2 / 0 / 0 / 0 | 2 / 1 / 0 / 0 / 0 | 0 | —
+2:13 | 120 | 2 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 | —
+**projet 1** | 1809 | 248 | 175 / 109 / 1 / 6 / 3 | 115 / 94 / 3 / 9 / 0 | | 
+**projet 2** | 1891 | 251 | 106 / 33 / 0 / 0 / 1 | 30 / 21 / 0 / 0 / 0 | | 
+
+**V1+, lot**
+
+partie | cuts | Mic > 10 mm | V1+ | règle prudente | poses ajoutées | conditions ratées (publiées, condition 5)
+---|--:|--:|---|---|--:|---
+1:12 | 81 | 24 | 18 / 18 / 0 / 0 / 0 | 17 / 17 / 0 / 0 / 0 | 0 | —
+1:13 | 153 | 21 | 13 / 11 / 0 / 2 / 0 | 13 / 10 / 1 / 3 / 0 | 0 | —
+1:14 | 104 | 15 | 12 / 12 / 0 / 0 / 0 | 12 / 12 / 0 / 0 / 0 | 0 | —
+1:15 | 325 | 7 | 8 / 4 / 1 / 1 / 0 | 7 / 4 / 0 / 0 / 0 | 1 | mauvaise pose ajoutée
+1:16 | 335 | 20 | 10 / 9 / 1 / 1 / 0 | 14 / 9 / 2 / 2 / 0 | 1 | mauvaise pose ajoutée
+1:17 | 199 | 44 | 6 / 4 / 0 / 1 / 1 | 5 / 3 / 0 / 1 / 0 | 0 | mauvaise voie
+1:24 | 32 | 24 | 5 / 1 / 0 / 3 / 1 | 4 / 1 / 0 / 2 / 0 | 0 | mauvaise voie
+1:29 | 580 | 93 | 45 / 41 / 0 / 1 / 0 | 43 / 38 / 0 / 1 / 0 | 0 | —
+2:1 | 462 | 135 | 5 / 4 / 0 / 1 / 0 | 3 / 3 / 0 / 0 / 0 | 0 | —
+2:6 | 340 | 31 | 23 / 13 / 0 / 0 / 2 | 12 / 8 / 0 / 0 / 0 | 0 | mauvaise voie
+2:7 | 672 | 59 | 28 / 14 / 0 / 0 / 1 | 13 / 9 / 0 / 0 / 0 | 0 | mauvaise voie
+2:10 | 21 | 1 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 | —
+2:11 | 276 | 23 | 3 / 2 / 0 / 0 / 0 | 2 / 1 / 0 / 0 / 0 | 0 | —
+2:13 | 120 | 2 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 | —
+**projet 1** | 1809 | 248 | 117 / 100 / 2 / 9 / 2 | 115 / 94 / 3 / 9 / 0 | | 
+**projet 2** | 1891 | 251 | 59 / 33 / 0 / 1 / 3 | 30 / 21 / 0 / 0 / 0 | | 
+
+
+### 4.4 Ce que V1+ fait, et pourquoi elle échoue
+
+- **Ses mauvaises voies sont toutes des différés** corrigés de 50 à 120 mm par Mic, que la GCV2 déplace de plus de 45 mm en travers depuis la pose de départ, sous le garde-fou de voie (D-207) : relecture 1:17 cut 7534, 1:24 cut 5716, 1:29 cut 6565, 2:6 cut 4725 (pose finale à 3,6 à 7,8 mm de Mic) ; lot 1:17 cut 7534, 1:24 cut 5722, 2:6 cuts 4653 et 4654, 2:7 cut 4766 (2,2 à 14,8 mm). Ce ne sont pas des poses sur une autre voie : ce sont les grandes corrections que V1+ est faite pour atteindre. Mais la définition du protocole (« rail déplacé de plus de 45 mm ») les compte, et **elle n'est pas changée** (D-216 : « pas de nouvelle règle sur les différés sans la définition de mauvaise voie du protocole »). Même constat que H6 (D-216), sur 14 parties.
+- **V1+ n'est pas « V1 plus les différés » sur les verts.** Le τ et le δ de chaque zone sont choisis dans le pli sur les cuts de la zone ; avec le garde-fou de voie (exigé par V1+), les différés y entrent autrement et les seuils de l'ADV baissent (relecture : τ de l'ADV entre 0,49 et 0,74 dans les 14 plis, contre 0,54 à 0,90 pour V1 — 0,89 ou 0,90 dans 10 plis ; δ 3 mm dans 13 plis, contre 8 mm dans 10 plis pour V1), et V1+ agit sur **95 verts d'ADV de plus** que V1 en relecture (19 au lot), presque tous sur de petites corrections (ADV : 136 actions, 28 justes, 1 abîmé, 1 erreur). L'une d'elles est la pose ajoutée 1:15 cut 7128 (Mic 0, V1+ à 11,6 mm). C'est la variante telle que déclarée (D-207) ; rien n'est réglé après lecture.
+- **Le garde-fou de voie bloque presque tout** : 132 grosses corrections différées atteignables en relecture (91 au lot) sont laissées faute de preuve de voie (§ 7) ; V1+ n'agit sur aucun différé de 2:1.
 
 ## 5. Ce qui a changé par rapport à D-212 et D-216 (vérifiable)
 
@@ -220,18 +305,124 @@ partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | jus
 **projet 2** | 139 | 32 | 138 | 67 | 17 | 14 | 0 | 0 | 3 | 3,9 | 161,7
 **total** | 186 | 96 | 180 | 106 | 30 | 27 | 0 | 0 | 3 | 3,9 | 118,1
 
+**GCV2 du pli avec le garde-fou de voie (passe V1+), relecture**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+1:17 | 10 | 26 | 8 | 9 | 1 | 1 | 0 | 1 | 0 | 7,4 | 46,4
+1:24 | 9 | 31 | 9 | 9 | 1 | 1 | 0 | 1 | 0 | 7,8 | 100,1
+1:29 | 28 | 7 | 25 | 26 | 3 | 3 | 0 | 1 | 0 | 4,5 | 39,5
+2:1 | 104 | 23 | 104 | 68 | 0 | 0 | 0 | 0 | 0 | — | 190,4
+2:6 | 10 | 1 | 10 | 10 | 1 | 1 | 0 | 1 | 0 | 3,6 | 43,8
+2:7 | 15 | 6 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | — | 71,8
+2:11 | 10 | 2 | 9 | 9 | 0 | 0 | 0 | 0 | 0 | — | 63,6
+**projet 1** | 47 | 64 | 42 | 44 | 5 | 5 | 0 | 3 | 0 | 4,9 | 45,5
+**projet 2** | 139 | 32 | 138 | 102 | 1 | 1 | 0 | 1 | 0 | 3,6 | 161,7
+**total** | 186 | 96 | 180 | 146 | 6 | 6 | 0 | 4 | 0 | 4,7 | 114,6
+
+**GCV2 du pli avec le garde-fou de voie (passe V1+), lot**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+1:17 | 10 | 26 | 8 | 7 | 1 | 1 | 0 | 1 | 0 | 7,4 | 46,4
+1:24 | 9 | 31 | 9 | 6 | 1 | 0 | 0 | 1 | 1 | 14,8 | 100,1
+1:29 | 28 | 7 | 25 | 26 | 3 | 3 | 0 | 0 | 0 | 4 | 41,1
+2:1 | 104 | 23 | 104 | 34 | 0 | 0 | 0 | 0 | 0 | — | 190,4
+2:6 | 10 | 1 | 10 | 10 | 2 | 2 | 0 | 2 | 0 | 2,6 | 40,6
+2:7 | 15 | 6 | 15 | 15 | 2 | 2 | 0 | 1 | 0 | 3,5 | 59,6
+2:11 | 10 | 2 | 9 | 8 | 0 | 0 | 0 | 0 | 0 | — | 63,6
+**projet 1** | 47 | 64 | 42 | 39 | 5 | 4 | 0 | 2 | 1 | 7,4 | 45,8
+**projet 2** | 139 | 32 | 138 | 67 | 4 | 4 | 0 | 3 | 0 | 2,6 | 161,7
+**total** | 186 | 96 | 180 | 106 | 9 | 8 | 0 | 5 | 1 | 4 | 112
+
 
 ### 6.2 Test croisé entre projets
 
 Apprendre sur toutes les parties d'un projet (λ par validation interne de ces seules parties ; un espion refuse toute lecture du projet jugé), juger les différés de l'autre.
 
-*lot, GCV2 avec H6, sans garde de série : calcul en cours.*
+**lot, GCV2 avec H6, sans garde de série — appris sur le projet 1, jugé sur le projet 2 (λ 30)**
 
-*lot, GCV2 seule (sans H6) : calcul en cours.*
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+2:1 | 104 | 23 | 104 | 34 | 5 | 4 | 0 | 0 | 1 | 7 | 190,4
+2:6 | 10 | 1 | 10 | 10 | 6 | 5 | 0 | 0 | 1 | 5,1 | 10,4
+2:7 | 15 | 6 | 15 | 15 | 5 | 4 | 0 | 0 | 1 | 3,5 | 71,8
+2:11 | 10 | 2 | 9 | 8 | 4 | 3 | 0 | 0 | 1 | 5,5 | 49,2
+**projet 2** | 139 | 32 | 138 | 67 | 20 | 16 | 0 | 0 | 4 | 5,5 | 161,7
+**total** | 139 | 32 | 138 | 67 | 20 | 16 | 0 | 0 | 4 | 5,5 | 161,7
 
-*lot, GCV2 avec H6 et garde-fou de voie : calcul en cours.*
+**lot, GCV2 avec H6, sans garde de série — appris sur le projet 2, jugé sur le projet 1 (λ 300)**
 
-*relecture, GCV2 avec H6, sans garde de série : calcul en cours.*
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+1:17 | 10 | 26 | 8 | 7 | 0 | 0 | 0 | 0 | 0 | — | 62,7
+1:24 | 9 | 31 | 9 | 6 | 0 | 0 | 0 | 0 | 0 | — | 100,4
+1:29 | 28 | 7 | 25 | 26 | 12 | 12 | 0 | 0 | 0 | 3,5 | 8,6
+**projet 1** | 47 | 64 | 42 | 39 | 12 | 12 | 0 | 0 | 0 | 3,5 | 50,2
+**total** | 47 | 64 | 42 | 39 | 12 | 12 | 0 | 0 | 0 | 3,5 | 50,2
+
+**lot, GCV2 seule (sans H6) — appris sur le projet 1, jugé sur le projet 2 (λ 30)**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+2:1 | 104 | 23 | 104 | 28 | 3 | 2 | 0 | 0 | 1 | 7 | 190,4
+2:6 | 10 | 1 | 10 | 10 | 5 | 5 | 0 | 0 | 0 | 4,1 | 28,4
+2:7 | 15 | 6 | 15 | 15 | 5 | 4 | 0 | 0 | 1 | 3,5 | 71,8
+2:11 | 10 | 2 | 9 | 8 | 3 | 3 | 0 | 0 | 0 | 3,5 | 63,6
+**projet 2** | 139 | 32 | 138 | 61 | 16 | 14 | 0 | 0 | 2 | 4,3 | 161,7
+**total** | 139 | 32 | 138 | 61 | 16 | 14 | 0 | 0 | 2 | 4,3 | 161,7
+
+**lot, GCV2 seule (sans H6) — appris sur le projet 2, jugé sur le projet 1 (λ 300)**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+1:17 | 10 | 26 | 8 | 6 | 0 | 0 | 0 | 0 | 0 | — | 62,7
+1:24 | 9 | 31 | 9 | 6 | 0 | 0 | 0 | 0 | 0 | — | 100,4
+1:29 | 28 | 7 | 25 | 26 | 13 | 13 | 0 | 0 | 0 | 3,5 | 8,6
+**projet 1** | 47 | 64 | 42 | 38 | 13 | 13 | 0 | 0 | 0 | 3,5 | 50,2
+**total** | 47 | 64 | 42 | 38 | 13 | 13 | 0 | 0 | 0 | 3,5 | 50,2
+
+**lot, GCV2 avec H6 et garde-fou de voie — appris sur le projet 1, jugé sur le projet 2 (λ 30)**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+2:1 | 104 | 23 | 104 | 34 | 0 | 0 | 0 | 0 | 0 | — | 190,4
+2:6 | 10 | 1 | 10 | 10 | 2 | 2 | 0 | 2 | 0 | 2,6 | 40,6
+2:7 | 15 | 6 | 15 | 15 | 2 | 2 | 0 | 1 | 0 | 3,5 | 59,6
+2:11 | 10 | 2 | 9 | 8 | 0 | 0 | 0 | 0 | 0 | — | 63,6
+**projet 2** | 139 | 32 | 138 | 67 | 4 | 4 | 0 | 3 | 0 | 2,6 | 161,7
+**total** | 139 | 32 | 138 | 67 | 4 | 4 | 0 | 3 | 0 | 2,6 | 161,7
+
+**lot, GCV2 avec H6 et garde-fou de voie — appris sur le projet 2, jugé sur le projet 1 (λ 300)**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+1:17 | 10 | 26 | 8 | 7 | 1 | 1 | 0 | 1 | 0 | 7,4 | 46,4
+1:24 | 9 | 31 | 9 | 6 | 0 | 0 | 0 | 0 | 0 | — | 100,4
+1:29 | 28 | 7 | 25 | 26 | 2 | 2 | 0 | 0 | 0 | 5,9 | 41,5
+**projet 1** | 47 | 64 | 42 | 39 | 3 | 3 | 0 | 1 | 0 | 7,4 | 48,6
+**total** | 47 | 64 | 42 | 39 | 3 | 3 | 0 | 1 | 0 | 7,4 | 48,6
+
+**relecture, GCV2 avec H6, sans garde de série — appris sur le projet 1, jugé sur le projet 2 (λ 30)**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+2:1 | 104 | 23 | 104 | 68 | 7 | 4 | 0 | 2 | 3 | 5,5 | 190,4
+2:6 | 10 | 1 | 10 | 10 | 6 | 5 | 0 | 0 | 1 | 4,2 | 10,3
+2:7 | 15 | 6 | 15 | 15 | 6 | 4 | 0 | 0 | 2 | 6,2 | 71,8
+2:11 | 10 | 2 | 9 | 9 | 4 | 3 | 0 | 0 | 1 | 6,6 | 49,2
+**projet 2** | 139 | 32 | 138 | 102 | 23 | 16 | 0 | 2 | 7 | 5,5 | 161,7
+**total** | 139 | 32 | 138 | 102 | 23 | 16 | 0 | 2 | 7 | 5,5 | 161,7
+
+**relecture, GCV2 avec H6, sans garde de série — appris sur le projet 2, jugé sur le projet 1 (λ 300)**
+
+partie | différés jugés | sans nuage | > 10 mm | atteignables | actions | justes | abîmés | mauvaises voies | erreurs | erreur médiane (actions) | erreur finale médiane
+---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
+1:17 | 10 | 26 | 8 | 9 | 2 | 2 | 0 | 0 | 0 | 4,1 | 62,7
+1:24 | 9 | 31 | 9 | 9 | 0 | 0 | 0 | 0 | 0 | — | 100,4
+1:29 | 28 | 7 | 25 | 26 | 16 | 12 | 0 | 0 | 4 | 4,7 | 9,3
+**projet 1** | 47 | 64 | 42 | 44 | 18 | 14 | 0 | 0 | 4 | 4,7 | 39,9
+**total** | 47 | 64 | 42 | 44 | 18 | 14 | 0 | 0 | 4 | 4,7 | 39,9
 
 
 ## 7. Cascade des pertes des grosses corrections (> 10 mm)
@@ -288,6 +479,65 @@ traitées (action de la variante) | 128 | 56 | 20 | 52 | 0 | 0 | 102 | 26
 dont justes (≤ 10 mm de Mic) | 121 | 56 | 17 | 48 | 0 | 0 | 96 | 25
 dont fausses (> 10 mm) | 7 | 0 | 3 | 4 | 0 | 0 | 6 | 1
 
+**V1+, relecture**
+
+étape | total | pn | adv | abords | liste | hors | projet 1 | projet 2
+---|--:|--:|--:|--:|--:|--:|--:|--:
+grosses corrections (Mic > 10 mm) | 863 | 86 | 190 | 443 | 16 | 128 | 541 | 322
+sans nuage (perdues d'avance) | 364 | 15 | 40 | 253 | 4 | 52 | 293 | 71
+avec nuage, hors de la population du jeu (rail sans hypothèse de départ) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+avec nuage, aucune hypothèse à 10 mm (rappel manquant) | 52 | 2 | 38 | 9 | 1 | 2 | 6 | 46
+atteignable, rouge (jamais touché) | 26 | 1 | 5 | 20 | 0 | 0 | 15 | 11
+atteignable, différé (la variante ne le confie à personne) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+atteignable, zone « hors » ou « liste » (rien n'agit) | 85 | 0 | 0 | 0 | 11 | 74 | 41 | 44
+atteignable, abords : la règle prudente n'agit pas | 41 | 0 | 0 | 41 | 0 | 0 | 32 | 9
+GCV2 s'abstient : preuve de voie manquante (différé) | 132 | 3 | 67 | 62 | 0 | 0 | 34 | 98
+GCV2 s'abstient : garde-fou d'écartement | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 0
+GCV2 s'abstient : garde-fou 45 mm latéral | 4 | 0 | 4 | 0 | 0 | 0 | 0 | 4
+GCV2 s'abstient : garde-fou de dévers | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+GCV2 s'abstient : zone inactive dans le pli (aucun τ admissible) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+GCV2 s'abstient : sa meilleure paire est « ne rien faire » | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+GCV2 s'abstient : écart sous δ | 6 | 2 | 4 | 0 | 0 | 0 | 2 | 4
+GCV2 s'abstient : probabilité sous τ | 5 | 2 | 3 | 0 | 0 | 0 | 3 | 2
+autre (non classé) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+traitées (action de la variante) | 147 | 61 | 28 | 58 | 0 | 0 | 114 | 33
+dont justes (≤ 10 mm de Mic) | 142 | 60 | 28 | 54 | 0 | 0 | 109 | 33
+dont fausses (> 10 mm) | 5 | 1 | 0 | 4 | 0 | 0 | 5 | 0
+
+**V1+, lot**
+
+étape | total | pn | adv | abords | liste | hors | projet 1 | projet 2
+---|--:|--:|--:|--:|--:|--:|--:|--:
+grosses corrections (Mic > 10 mm) | 863 | 86 | 190 | 443 | 16 | 128 | 541 | 322
+sans nuage (perdues d'avance) | 364 | 15 | 40 | 253 | 4 | 52 | 293 | 71
+avec nuage, hors de la population du jeu (rail sans hypothèse de départ) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+avec nuage, aucune hypothèse à 10 mm (rappel manquant) | 106 | 2 | 73 | 23 | 2 | 6 | 20 | 86
+atteignable, rouge (jamais touché) | 23 | 1 | 5 | 17 | 0 | 0 | 12 | 11
+atteignable, différé (la variante ne le confie à personne) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+atteignable, zone « hors » ou « liste » (rien n'agit) | 80 | 0 | 0 | 0 | 10 | 70 | 39 | 41
+atteignable, abords : la règle prudente n'agit pas | 37 | 0 | 0 | 37 | 0 | 0 | 28 | 9
+GCV2 s'abstient : preuve de voie manquante (différé) | 91 | 2 | 32 | 57 | 0 | 0 | 29 | 62
+GCV2 s'abstient : garde-fou d'écartement | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 0
+GCV2 s'abstient : garde-fou 45 mm latéral | 3 | 0 | 3 | 0 | 0 | 0 | 0 | 3
+GCV2 s'abstient : garde-fou de dévers | 2 | 2 | 0 | 0 | 0 | 0 | 2 | 0
+GCV2 s'abstient : zone inactive dans le pli (aucun τ admissible) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+GCV2 s'abstient : sa meilleure paire est « ne rien faire » | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1
+GCV2 s'abstient : écart sous δ | 8 | 4 | 4 | 0 | 0 | 0 | 6 | 2
+GCV2 s'abstient : probabilité sous τ | 6 | 3 | 3 | 0 | 0 | 0 | 4 | 2
+autre (non classé) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
+traitées (action de la variante) | 141 | 57 | 28 | 56 | 0 | 0 | 107 | 34
+dont justes (≤ 10 mm de Mic) | 133 | 57 | 25 | 51 | 0 | 0 | 100 | 33
+dont fausses (> 10 mm) | 8 | 0 | 3 | 5 | 0 | 0 | 7 | 1
+
+
+Lecture :
+
+- **Sans nuage** : 364 des 863 grosses corrections (42 %) sont perdues d'avance, surtout aux abords (253) et en projet 1 (293 ; 1:17 et 1:24 en portent 243). Aucune méthode de pose n'y peut rien : c'est l'entrée (capture) qui manque.
+- **Avec nuage, sans hypothèse à 10 mm** : 52 en relecture, 106 au lot (le jeu « lot » n'a pas les appuis humains) ; surtout en ADV (38 et 73) et en projet 2 (46 et 86).
+- **Atteignables, confiées à personne par V1** (relecture / lot) : rouges 26 / 23 ; **différés 140 / 100** (V1 n'agit jamais sur un différé) ; zone « hors » ou « liste » 85 / 80 ; abords où la règle prudente n'agit pas 41 / 37.
+- **Atteignables, la GCV2 s'abstient** (V1, relecture / lot) : garde-fou d'écartement 1 / 1 ; garde-fou 45 mm latéral 4 / 3 ; dévers 0 / 2 ; meilleure paire « ne rien faire » 0 / 1 ; sous δ 8 / 8 ; sous τ 7 / 10 ; zone inactive 0 / 0 ; preuve de voie : sans objet (aucun différé confié). Avec V1+, la case « différés » passe à 0 et la **preuve de voie manquante** en prend 132 / 91.
+- **Traitées** : V1 135 (130 justes, 5 fausses) en relecture, 128 (121, 7) au lot ; V1+ 147 (142, 5) et 141 (133, 8).
+- Le gros des pertes n'est donc ni τ ni δ ni les garde-fous de la GCV2 (20 à 25 cas) : c'est l'absence de nuage, puis ce que la variante ne confie à personne (surtout les différés), puis le rappel des hypothèses au lot.
 
 ## 8. Limites
 
@@ -298,7 +548,9 @@ dont fausses (> 10 mm) | 7 | 0 | 3 | 4 | 0 | 0 | 6 | 1
 - **D-220** : aucun filtre de séance ni de délai. Le contrôle « pose de départ de l'Écho = pose du dernier lot » n'est possible que là où la liste d'ESV du départ existe (2:13) ; ailleurs, il est supposé (aucune autre écriture connue).
 - **Différés** : 2:1 pèse plus de la moitié des différés jugés ; 1:17 et 1:24 ont plus de différés sans nuage que jugés.
 - **Hauteur apprise** figée, apprise sur 1:17, 1:24, 1:29 et 2:1 (audit V2) : la validation croisée reste un développement conditionnel.
-- **Compteur de Mic** : non mis à jour ici. Les paramètres appris sur les 14 parties (`datasets/gcv2-parametres-causal.json`) existent ; 2:6, 2:7 et 2:13 peuvent passer « appris » au compteur sur décision de l'orchestrateur (D-213).
+- **Compteur de Mic** : non mis à jour ici. Les paramètres appris sur les 14 parties sont exportés (`datasets/gcv2-parametres-causal.json`, λ 30 pour les deux usages) ; 2:6, 2:7 et 2:13 ont donc été réellement entraînées et peuvent passer « appris » au compteur sur décision de l'orchestrateur (D-213). `datasets/gcv2-parametres.json` (G1-b) reste en place, comme historique.
+- **Empreintes** : `datasets/gcv2-g1c-empreintes.json` est réécrit sur la chaîne causale (30 pièces du dépôt, 28 jeux, 14 cas). Cela ne déclare pas l'ouverture de G1-c ; si une candidate est déclarée plus tard, les empreintes seront reconsignées avec elle.
+- **V1+ et ses seuils** : V1+ change les seuils de l'ADV, donc aussi les poses sur les verts (§ 4.4) ; une variante « V1 sur les verts, plus les différés avec leurs propres seuils » serait une autre candidate, à déclarer avant toute mesure, jamais sur ces parties seulement.
 - **Hasard** : définition de G1-b (même taux d'action que la GCV2 seule, par zone, sur toutes les zones) ; il agit donc aussi hors zone, là où V1 n'agit pas.
 
 ## 9. Reproduire
