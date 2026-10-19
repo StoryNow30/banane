@@ -55,8 +55,11 @@ test('zones de Mic : le fichier versionné est bien formé, des numéros de cut 
   for (const [d, p] of Object.entries(z.parties)) {
     assert.match(d, /^\d+:\d+$/);
     for (const [a, b] of [...(p.adv || []), ...(p.pn || [])]) assert.ok(Number.isInteger(a) && Number.isInteger(b) && b >= a, d);
-    if (p.liste === false) assert.deepEqual([...(p.adv || []), ...(p.pn || [])], [], `${d} : pas de liste, pas de zones`);
   }
+  for (const d of ['1:17', '1:24']) assert.deepEqual([...z.parties[d].adv, ...z.parties[d].pn], [], `${d} : pas de liste, pas de zones`);
+  assert.deepEqual(z.parties['2:6'].pn[0], [3931, 3935], 'vérité de Mic (D-206) : PN de 2:6');
+  assert.deepEqual(z.parties['1:16'].adv, [[4006, 4071]], 'vérité de Mic (D-206) : ADV de 1:16, partie sans liste complète');
+  assert.equal(z.parties['1:16'].liste, false);
 });
 
 test('coût : les cuts lus du journal inventé, leurs phases et la distance au cut quitté', () => {
@@ -111,4 +114,56 @@ test('ombre : ni les réglages figés ni l\'extension ne lisent l\'outil', () =>
   for (const f of ['src/regles-metier.js', 'src/verts-a-controler.js', 'datasets/reglages-figes.json', 'tools/relecture-autonome.cjs', 'tools/marges-zones.cjs']) {
     assert.ok(!/lecture-verts/.test(fs.readFileSync(path.join(root, f), 'utf8')), f);
   }
+});
+
+/* ------------------------------------------------------------------ variante ciblée (RM-12b) : ne lire un vert sur N que dans les longs trous du lot */
+const st = L.essaiTrous(), Yt = L.preparerPartie(st);
+
+test('trous : après T cuts sans lecture, un vert sur N jusqu\'au cut du lot suivant ; ni avant T, ni après le dernier cut du lot', () => {
+  const r = L.lecturesTrous(Yt, 100, 5, 0);
+  assert.equal(r.lectures, 20 + 16, 'début de partie : cuts 100 à 195 par pas de 5 (20) ; trou 209–390 : cuts 310 à 385 (16)');
+  const vus = r.lect.filter(x => !Yt.lot.has(x.cut)).map(x => x.cut);
+  assert.deepEqual(vus, [310, 315, 320, 325, 330, 335, 340], 'seuls les verts à nuage sont des lectures utiles ; pas de lecture avant le cut 310');
+  assert.equal(L.lecturesTrous(Yt, 100, 5, 3).lect.filter(x => !Yt.lot.has(x.cut)).map(x => x.cut)[0], 313, 'la phase décale la première lecture');
+  assert.equal(L.lecturesTrous(Yt, 200, 5, 0).lectures, 0, 'T = 200 : le trou de 180 cuts et le début (200 cuts) n\'atteignent pas T + 1');
+  assert.equal(L.lecturesTrous(Yt, 500, 2, 0).lectures, 0);
+  for (const T of [50, 100, 150]) for (const n of [2, 3, 5]) for (let ph = 0; ph < n; ph++) {
+    const q = L.lecturesTrous(Yt, T, n, ph);
+    assert.ok(q.lect.every(x => Yt.lot.has(x.cut) || x.cut < 200 || (x.cut > 209 && x.cut < 390)), 'jamais dans le lot ni après lui');
+  }
+});
+
+test('trous : le PN du milieu d\'un trou est vu si T le laisse atteindre et N le confirme ; le comportement par défaut n\'a pas changé', () => {
+  const zones = { format: L.FORMAT_ZONES, parties: { '9:1': st.vrai } };
+  const o = L.simuler([st], { ns: [5, 10], zones, trous: [100, 150] }), t = o.total.t;
+  assert.equal(t['100|5'].pnVu.min, 1, 'deux lectures dans le PN à toutes les phases');
+  assert.equal(t['150|5'].pnVu.max, 0, 'T = 150 : la première lecture est au cut 360, après le PN');
+  assert.equal(t['100|10'].pnVu.max, 0, 'à 10 cuts, une seule lecture tombe dans un PN de 20 cuts : pas de confirmation');
+  assert.deepEqual([t['100|5'].hors.min, t['100|5'].hors.max, o.total.lot.hors], [2, 2, 3], 'le cut 50 (loin de tout) et le cut 305 (avant la première lecture du PN, plus la marge) restent hors zone ; le cut 310 est repris');
+  assert.ok(t['100|5'].cuts.moy > o.total.lot.cuts);
+  assert.ok(t['100|5'].lectures.moy < Yt.verts.length + 200, 'bien moins de lectures que tous les verts');
+  assert.equal(o.total.n['adapte|5'].pnVu.min, 1, 'les configurations de RM-12 sont toujours calculées');
+  const sans = L.simuler([st], { ns: [5], zones });
+  assert.equal(sans.total.t, undefined, 'sans --trous, aucune clé de plus');
+  assert.equal(sans.parties[0].t, undefined);
+  assert.deepEqual(sans.total.n, L.simuler([st], { ns: [5], zones, trous: [100] }).total.n, 'les trous ne changent pas les autres résultats');
+});
+
+test('trous : minutes ajoutées = lectures × secondes de la lecture à N cuts (sortie du mode cout)', () => {
+  const c = L.cout([{ data: L.journalEssai(), partie: 1, total: 400, lot: 4, minutesLot: 0.5 }], { ns: [10] });
+  const sec = L.secondesLecture(c, 10);
+  assert.ok(Math.abs(sec - 3.11) < 0.1, 'les minutes de la projection sont arrondies à 0,1');
+  assert.throws(() => L.secondesLecture(c, 5), /N = 5/);
+  const zones = { format: L.FORMAT_ZONES, parties: { '9:1': st.vrai } };
+  const o = L.simuler([st], { ns: [10], zones, trous: [100], cout: c }), r = o.total.t['100|10'];
+  assert.equal(r.secondesParLecture, Math.round(sec * 10) / 10);
+  assert.equal(r.minutesParPartie, Math.round(r.lectures.moy * sec / 60 * 10) / 10);
+  assert.match(L.texteSimulation(o), /trous T = 100, 1 vert sur 10 .*min par partie/);
+});
+
+test('trous : ligne de commande, T entier à partir de 1, --cout seulement avec --trous', () => {
+  const run = (...a) => spawnSync(process.execPath, [path.join(root, 'tools', 'lecture-verts.cjs'), ...a], { cwd: root, encoding: 'utf8' });
+  assert.equal(run('simuler', '--partie', '1:17', '--trous', '0').status, 1);
+  assert.equal(run('simuler', '--partie', '1:17', '--trous', 'a').status, 1);
+  assert.match(run('simuler', '--partie', '1:17', '--trous', '0').stderr, /--trous/);
 });

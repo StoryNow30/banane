@@ -2,13 +2,16 @@
   "format": "ariane-lecture-verts-zones-v1",
   "date": "2026-10-19",
   "source": "Zones de Mic des parties d'apprentissage qui ont un lot et un Écho (RM-12) : ADV et PN, début et fin en numéros de cut, marges de Mic comprises. 2:11 : notes de Mic (datasets/marges-zones-notes-de-mic.json) découpées en cinq zones d'ADV pour que la première, 6362-6424, reste visible ; 1:29 et 2:1 : fiches/DETECTION_ADV.md ; PN : liste de Mic et zones de PN reconnues par Ariane qu'il valide.",
-  "note": "`liste: false` : Mic n'a pas noté de zones pour cette partie ; ses plages détectées ne sont alors pas jugeables. Des numéros de cut seulement.",
+  "note": "`liste: false` : Mic n'a pas de liste complète pour cette partie ; ses plages détectées ne sont alors pas jugeables, et les zones éventuelles qui y figurent sont des vérités isolées (zones confirmées une à une). Des numéros de cut seulement.",
+  "verites_ajoutees": "RM-12b, réponses de Mic du 19/10 (D-206) : 2:6, PN 3931-3935 (cœur de chaussée, pas même un rouge invalide dans ESV) ; 1:16, ADV 4006-4071 (non corrigée par Mic). 2:6 : le reste de la liste est celle de ses notes (5 ADV et un PN).",
   "parties": {
     "1:17": { "liste": false, "adv": [], "pn": [] },
     "1:24": { "liste": false, "adv": [], "pn": [] },
     "1:29": { "liste": true, "adv": [[6558, 6678], [7954, 8066]], "pn": [[1652, 1667], [3342, 3355], [5978, 5992], [6466, 6478]] },
     "2:1": { "liste": true, "adv": [[116, 165], [271, 670], [2911, 3036], [5496, 6185]], "pn": [[405, 409]] },
     "2:10": { "liste": true, "adv": [], "pn": [[4118, 4135]] },
+    "1:16": { "liste": false, "adv": [[4006, 4071]], "pn": [] },
+    "2:6": { "liste": true, "adv": [[3359, 3442], [3478, 3535], [3670, 3752], [4423, 4477], [4723, 4779]], "pn": [[3931, 3935], [7935, 7957]] },
     "2:11": { "liste": true, "adv": [[6362, 6424], [6425, 6480], [7299, 7385], [7386, 7456], [8229, 8309]], "pn": [[4558, 4581], [5528, 5551], [7476, 7488], [8369, 8391], [8785, 8805], [9176, 9196], [9568, 9586]] }
   }
 }

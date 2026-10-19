@@ -15,6 +15,7 @@ Conventions : les parties sont désignées par leur rang (« 2:11 » = projet 2,
 | **Temps ajouté, par partie** | 1 vert sur 10 : **+36 min** (27 à 43) ; sur 5 : **+66 min** (43 à 79) ; sur 3 : **+89 min** (63 à 111) ; sur 2 : **+134 min** (82 à 167). Le lot actuel dure **14 min** en moyenne (6 à 31) : il serait **3,6 à 10 fois plus long**. |
 | **N recommandé** | **5**, avec un écart de confirmation de 5 (§ 5) : c'est le plus grand N qui retrouve les 24 zones de Mic dans toutes les phases. Mais **je ne recommande pas de l'activer sur ces chiffres** : 66 min de plus par partie pour 6 grosses corrections sur 633 (marges livrées) ou moins d'une (marges de RM-2). À soumettre à Mic avec un essai en ombre (§ 8). |
 | **2:6** (lue une fois, N = 5 figé) | **PN 3931–3935 : non vu** (0 phase sur 5). **Zone 3478–3535 : vue dans 3 phases sur 5** (le lot seul ne la voit pas). Grosses corrections hors zone : 5 sur 35 dans les 5 phases, comme le lot seul (§ 7). |
+| **Variante ciblée (RM-12b, § 11)** | Ne lire un vert sur N que dans les trous du lot (T = 400 cuts sans lecture, N = 3) : **22,6 min de plus par partie** au lieu de 89, grosses corrections hors zone 47 → 42,7 (40 en lisant partout). L'ADV 6362–6424 de 2:11 n'est retrouvée que dans 2 phases sur 3 ; le PN 3931–3935 de 2:6 n'est pas vu. Même conclusion : à ne pas activer sur ces chiffres. |
 | **Limite principale** | Les nuages des verts viennent de l'Écho : seuls **1 033 verts sur 57 470 (1,8 %)** ont un nuage, et, dans les 4 parties jugeables, les deux tiers sont dans ou près d'une zone que Mic regardait. Les fausses plages ne peuvent pas se mesurer (§ 6, § 9). |
 
 ## 2. Méthode et données
@@ -217,7 +218,7 @@ Ce que cela veut dire :
 1. **Un essai en ombre sur une partie neuve** : le lot lit 1 vert sur 5 sans pose, consigne les alertes et les cœurs, et Mic juge les plages le lendemain à l'Écho. Mesure : fausses plages, temps réel, lectures de nuage côté ESV, cuts marqués « vu ». C'est la seule façon de lever les limites du § 9.
 2. **Décider d'abord RM-2** : avec ses marges, le gain de la lecture de verts passe de 8 à moins de 1 grosse correction sur 633 (6 parties).
 3. **Ne pas élargir N sans élargir les zones étroites** : un PN de moins de 2N cuts demande l'option « cœur seul ».
-4. **Piste moins chère, non mesurée** : ne lire que là où le lot est resté longtemps muet (un trou de plus de quelques centaines de cuts entre deux cuts du lot). La mesure demande le profil des trous de chaque lot ; le lot de 2:11 en a un de 890 cuts autour de la zone manquée (5545 à 6435).
+4. **Piste moins chère** (mesurée ensuite, § 11) : ne lire que là où le lot est resté longtemps muet (un trou de plus de quelques centaines de cuts entre deux cuts du lot). La mesure demande le profil des trous de chaque lot ; le lot de 2:11 en a un de 890 cuts autour de la zone manquée (5545 à 6435).
 
 ## 9. Limites
 
@@ -237,6 +238,8 @@ Ce que cela veut dire :
 # Gain, 6 parties d'apprentissage (--surfaces-lot et --surfaces-echo : une ligne {"cut":…,"surface":{…}} par cut)
 node tools/lecture-verts.cjs simuler --partie 1:29 --cas CAS.jsonl --table TABLE.json --surfaces-lot LOT.jsonl --surfaces-echo ECHO.jsonl \
     --partie 2:11 … --zones datasets/lecture-verts-zones-de-mic.json [--marges datasets/marges-zones-proposees.json] [--n 2,3,5,10] [--json S.json]
+# Variante ciblée (§ 11) : --trous T1,T2 lit un vert sur N seulement dans les trous du lot ; --cout C.json (sortie JSON du mode cout) ajoute les minutes
+node tools/lecture-verts.cjs simuler … --n 2,3,5 --trous 100,200,400 --cout C.json
 # Coût, journaux de lot (les options --total, --lot et --minutes-lot se rapportent au dernier --journal)
 node tools/lecture-verts.cjs cout --journal J.json --partie 11 --total 9792 --lot 131 --minutes-lot 6.4 --journal … [--json S.json]
 node tools/lecture-verts.cjs essai       # partie et journal inventés
@@ -245,3 +248,110 @@ node tools/lecture-verts.cjs essai       # partie et journal inventés
 Un test (`tests/lecture-verts.test.cjs`) rejoue l'essai synthétique : un PN posé entièrement en vert, invisible au lot, vu à 1 sur 2 par le détecteur figé, jamais à 1 sur 5 par le détecteur figé, toujours à 1 sur 5 par le détecteur adapté. Une partie réservée ou un témoin est refusé sans `--juger-partie-reservee`.
 
 Les cas et les tables de RM-4 ne sont pas dans le dépôt (ce sont des fichiers de travail) ; les surfaces du lot viennent du cache de RM-1.
+
+## 11. Variante ciblée (RM-12b)
+
+Mesure seulement, comme le reste de la fiche. Aucun code de l'extension ne change ; l'outil gagne une option (`--trous`) et, sans elle, ses sorties sont inchangées (un essai le vérifie).
+
+### 11.1 En bref
+
+| Question | Réponse |
+|---|---|
+| **Ce qui est lu** | Le lot lit ce qu'il lit. Quand **T cuts consécutifs** passent sans aucune lecture (entre deux cuts du lot, ou depuis le cut 0 jusqu'au premier), il lit ensuite **un vert sur N** jusqu'au cut du lot suivant. T = 100, 200, 400 ; N = 2, 3, 5. Rien n'est lu après le dernier cut du lot. |
+| **Coût** | **17 à 63 minutes de plus par partie** (lot actuel : 14 min en moyenne), contre 66 à 134 minutes pour un vert sur N partout. Le couple retenu coûte **22,6 min** : le lot dure 2,6 fois plus (3,9 fois moins de minutes qu'un vert sur 3 partout, 89 min). |
+| **Gain** | Grosses corrections de Mic hors zone : 47 → **42,7** (T = 400, N = 3), contre 40 en lisant partout ; plafond 39. Avec les marges de RM-2 : 8 → 7,3. |
+| **ADV 6362–6424 de 2:11** | **Aucun couple ne la retrouve dans toutes les phases** : 1 phase sur 2 (N = 2), **2 sur 3 (N = 3)**, 2 sur 5 (N = 5), quel que soit T. Lire partout la retrouvait toujours (§ 11.4 dit pourquoi). |
+| **Couple retenu** | **T = 400, N = 3** (règle de repli, § 11.5) : le moins cher des couples qui la retrouvent dans la plus grande part des phases. |
+| **2:6** (lue une fois, couple figé) | **PN 3931–3935 : non vu** (0 phase sur 3), comme prédit : la première lecture du trou tombe au cut 4128 ou après, le PN est environ 200 cuts avant. Les 5 grosses corrections restent hors zone. Pour information : T = 100 ou 200 le voient dans une partie des phases (§ 11.6). |
+| **Lecture** | Moins cher par grosse correction rattrapée qu'un vert partout (32 min contre 66, marges livrées), mais le filet est troué : une zone sur trois manque selon la phase, et un PN placé dans les T premiers cuts d'un trou est invisible. Avec les marges de RM-2, 23 min par partie rattrapent moins d'une grosse correction. |
+
+### 11.2 Méthode
+
+- **Parties, zones, mesures** : celles du § 2 (1:17, 1:24, 1:29, 2:1, 2:10, 2:11 ; marges livrées, détecteur adapté, écart de confirmation = max(3, N) ; N phases essayées, moyenne [minimum-maximum]). Un deuxième passage utilise les marges proposées de RM-2.
+- **Trou** : du dernier cut lu `a` au cut du lot suivant `b`. Les lectures sont aux cuts `a + T + 1 + phase`, puis tous les N cuts, tant qu'ils sont avant `b`. La phase va de 0 à N − 1. Le début de la partie compte comme un trou qui part du cut 0. **Après le dernier cut du lot, rien n'est lu** : le lot est fini (c'est ce qui ménage 2:1 et 2:10, dont le lot s'arrête bien avant la fin de la partie).
+- **Lectures utiles** : comme au § 2, seuls les verts que Mic a visités avec un nuage dans l'Écho (1,8 %) donnent une surface. Le nombre de **lectures** (pour le coût) compte en revanche tous les cuts lus, avec ou sans nuage.
+- **Coût** : lectures × secondes d'une lecture sans pose à N cuts de distance (valeur « centre » du § 4.3 : 1,68 s à N = 2 et N = 3, 2,06 s à N = 5), puis moyenne sur les 6 parties. Les sauts longs du lot, qui deviennent des sauts plus courts, ne sont pas déduits (1 à 1,8 min par partie, § 4.3).
+- **Zones de Mic** : fichier du § 2, avec deux vérités de plus (D-206) : le PN 3931–3935 de 2:6 (liste de 2:6 complétée avec ses notes : 5 ADV et le PN 7935–7957) et l'ADV 4006–4071 de 1:16 (partie sans liste complète : `liste: false`, vérité isolée).
+
+### 11.3 Gain et coût, apprentissage
+
+6 parties d'apprentissage, marges livrées. Repères : lot seul 47 grosses corrections hors zone, 3 839 cuts à relire, 10 zones d'ADV sur 11 ; lot actuel 14,2 min en moyenne.
+
+| T | N | ADV 6362–6424 de 2:11 retrouvée | Grosses hors zone (sur 633) | Gagnées | Cuts à relire de plus | Lectures par partie | Minutes de plus par partie | Part du lot actuel | Minutes par grosse correction gagnée | Hors zone avec les marges de RM-2 (lot seul : 8) |
+|--:|--:|---|---|--:|--:|--:|--:|--:|--:|---|
+| 100 | 2 | 1 phase sur 2 | 43,5 [40-47] | 3,5 | + 40 | 2 273 | 63,4 | 446 % | 109 | 7,5 [7-8] |
+| 100 | 3 | 2 sur 3 | 42,7 [40-47] | 4,3 | + 54 | 1 515 | 42,2 | 297 % | 59 | 7,3 [7-8] |
+| 100 | 5 | 2 sur 5 | 44,6 [41-47] | 2,4 | + 22 | 909 | 31,3 | 220 % | 78 | 7,6 [7-8] |
+| 200 | 2 | 1 sur 2 | 43,5 [40-47] | 3,5 | + 23 | 1 751 | 48,9 | 344 % | 84 | 7,5 [7-8] |
+| 200 | 3 | 2 sur 3 | 42,7 [40-47] | 4,3 | + 38 | 1 168 | 32,5 | 229 % | 45 | 7,3 [7-8] |
+| 200 | 5 | 2 sur 5 | 44,6 [41-47] | 2,4 | + 15 | 701 | 24,1 | 170 % | 60 | 7,6 [7-8] |
+| 400 | 2 | 1 sur 2 | 43,5 [40-47] | 3,5 | + 23 | 1 218 | 34,0 | 239 % | 58 | 7,5 [7-8] |
+| **400** | **3** | **2 sur 3** | **42,7 [40-47]** | **4,3** | **+ 38** | **812** | **22,6** | **159 %** | **32** | **7,3 [7-8]** |
+| 400 | 5 | 2 sur 5 | 44,6 [41-47] | 2,4 | + 15 | 487 | 16,8 | 118 % | 42 | 7,6 [7-8] |
+
+Comparaison avec RM-12 (§ 3.1, § 5 : un vert sur N partout, détecteur adapté) :
+
+| | Grosses hors zone | Cuts à relire de plus | Minutes de plus par partie | Minutes par grosse correction gagnée |
+|---|--:|--:|--:|--:|
+| Lot seul | 47 | 0 | 0 | — |
+| Partout, N = 5 | 41,0 | + 114 | 66 | 66 |
+| Partout, N = 3 | 40,0 | + 166 | 89 | 76 |
+| Partout, N = 2 | 40,0 | + 154 | 134 | 115 |
+| **Trous, T = 400, N = 3** | **42,7** | **+ 38** | **22,6** | **32** |
+| Écho complet (plafond) | 39 | + 256 | environ 245 | environ 180 |
+
+Lectures :
+
+- **T = 400 donne le même gain que T = 100** à chaque N (mêmes chiffres de zones et de grosses corrections), pour 1,9 fois moins de minutes. Tout le gain vient des trous de plus de 400 cuts. Le seul trou qui compte est celui de 2:11 (890 cuts, 5545 à 6435) ; en 1:29, la zone 7954–8066 touche la fin d'un trou de 721 cuts (7280 à 8002) et fait passer les grosses corrections de 7 à 6,7.
+- **Le coût est dominé par trois parties** (T = 400, N = 3, minutes de plus) : 2:11 **52**, 2:1 36, 2:10 34,5 ; 1:29 8,5 ; 1:17 2,8 ; 1:24 1,5. 2:10 est un cas à part : son lot décide 9 cuts (0,5 min), le trou de 4 120 cuts coûte 35 min pour 0 grosse correction. 2:11 commence par un trou de 4 560 cuts (1 à 4 562), qui pèse plus de 1 380 lectures sans lien avec l'ADV manquée.
+- **Le gain reste petit** : 4,3 grosses corrections sur 633 avec les marges livrées, 0,7 avec celles de RM-2. Il tient à deux parties (2:11 : 7 → 3 en moyenne, soit 1 quand la zone est vue et 7 sinon ; 1:29 : 7 → 6,7).
+- **Les fausses plages** (§ 3.3) : 0 dans l'échantillon, sans valeur ici aussi ; les trous contiennent les verts les plus éloignés des zones de Mic, donc la limite du § 6 est plus forte, pas plus faible.
+
+### 11.4 Pourquoi 2:11 n'est pas retrouvée dans toutes les phases
+
+Lire partout (§ 5) retrouvait la zone 6362–6424 à chaque phase. Ici, non. Les alertes d'ADV de la zone sont éparses (8 alertes sur les 51 verts à nuage de 6362 à 6424 : 6390, 6391, 6394, 6407, 6411, 6412, 6414, 6418) et, avec un vert sur N, deux alertes ne se confirment que si elles sont lues à N cuts ou moins l'une de l'autre : cela dépend du reste de la division du numéro de cut par N, donc de la phase.
+
+Lire partout retrouve la zone même quand les lectures de l'intérieur ne se confirment pas, grâce aux verts **6436 à 6454**, entre les cuts du lot 6435 et 6455, portent 8 alertes (6436, 6438, 6439, 6440, 6442, 6452, 6453, 6454). Lus avec le cut 6435 du lot, ils font un cœur d'ADV qui commence vers 6435 ; sa marge avant de 30 cuts atteint 6405 et recouvre la zone (le lot seul n'a de cœur qu'à partir de 6455, marge jusqu'à 6425 : un cut après la zone). Ces cuts sont **hors du trou** : la variante ciblée ne les lit pas. Elle ne garde que les lectures de l'intérieur, qui ne suffisent que si deux alertes tombent sur les bonnes lectures.
+
+Piste non mesurée : prolonger la lecture sur quelques dizaines de cuts après la fin du trou (jusqu'au prochain cut du lot, ou une marge fixe). Elle rendrait la phase moins décisive. Elle n'est pas dans la mission, donc pas dans les chiffres.
+
+### 11.5 Couple retenu
+
+Règle écrite avant la première simulation (`FIGE-b.json`, fichier de travail hors dépôt, daté du 19/10/2026 à 10 h 18 UTC) : « parmi T = 100, 200, 400 et N = 2, 3, 5, le couple le moins cher dont l'ADV 6362–6424 de 2:11 est retrouvée dans **toutes les phases**, marges livrées, détecteur adapté ; égalité : le moins de cuts à relire ».
+
+**Aucun couple ne la remplit** (§ 11.3). Règle de repli, écrite **après** la simulation d'apprentissage et **avant** toute lecture de 2:6 : « celui qui la retrouve dans la plus grande part des phases de 2:11, puis le moins cher en minutes ». Parts : 1/2 (N = 2), **2/3 (N = 3)**, 2/5 (N = 5) ; la plus grande part est à N = 3, et T n'y change rien (les trois T retrouvent la zone dans les mêmes phases). Le moins cher est **T = 400, N = 3 : 22,6 min par partie**.
+
+Ce choix n'utilise aucun chiffre de 2:6. Il est donc **sensible** à une chose qu'il ne voit pas : T = 400 est le T le plus bas en coût, et le moins capable d'atteindre une zone proche du début d'un trou (§ 11.6).
+
+### 11.6 2:6, lue une fois
+
+**Règle de lecture.** Couple figé avant la lecture : T = 400, N = 3, marges livrées, détecteur adapté. Une seule exécution (un seul chargement des cas et de la table de 2:6), résultats écrits, rien relancé, aucun réglage modifié d'après le résultat. Les surfaces des cuts du lot viennent de l'Écho, comme au § 7. **Prédiction écrite avant la lecture**, d'après la seule géométrie du trou (le trou de 2:6 va du cut 3727 au cut 4450) : PN 3931–3935 non vu, parce que, avec T = 400, la première lecture du trou tombe au cut 4128 ou après, bien après le PN.
+
+| | Lot seul | **T = 400, N = 3 (figé), 3 phases** | Écho complet |
+|---|---|---|---|
+| **PN 3931–3935** | non vu | **non vu, 0 phase sur 3** | vu |
+| Zone ADV 3478–3535 | non vue | non vue, 0 phase sur 3 (entre des cuts du lot à moins de 110 cuts l'un de l'autre : aucun trou à lire, même à T = 100) | vue |
+| Autres zones de Mic (4 ADV, PN 7935–7957) | vues | vues | vues |
+| Grosses corrections hors zone (sur 35) | 5 (3931 à 3935) | 5 dans les 3 phases | 0 |
+| Cuts à relire | 464 | 464 à 467 | 603 |
+| Lectures, temps de plus | 0 | 1 632 à 1 635 lectures, **environ 45 min** (le lot de 2:6 n'est pas mesuré) | — |
+
+- **La prédiction se vérifie.** Le PN commence 203 cuts après le début du trou (cut 3728) : tout T de 208 ou plus le manque, quel que soit N et quelle que soit la phase.
+- **Pour information, sans rien en tirer** (les autres couples, calculés dans la même exécution) : PN 3931–3935 vu dans 1 phase sur 2 (N = 2) et 1 sur 3 (N = 3) pour T = 100 et T = 200, jamais à N = 5 ; avec les marges de RM-2 (qui ouvrent une zone sur un cœur seul), vu dans toutes les phases à N = 2 et 3 pour T = 100 et T = 200, dans 4 phases sur 5 à N = 5, jamais à T = 400. Coût de ces lectures : 41 à 93 min pour T = 100 ou 200, contre 45 min à T = 400, N = 3. La zone 3478–3535 n'est vue par aucun couple.
+- **Ce que cela dit du réglage** : T doit rester inférieur à la distance qui sépare le début d'un trou des zones qu'on veut atteindre, et la distance à la zone n'est connue qu'après coup. Le PN de 2:6 est le seul cas observé hors apprentissage ; cela ne justifie pas de changer T.
+
+**Écart de méthode à signaler.** Avant de figer le couple, je connaissais les bornes du trou de 2:6 (3727 à 4450) par la consigne de la mission. J'ai aussi ouvert deux fichiers de 2:6 avant le script de lecture, sans lien avec le choix : la liste des notes de Mic (pour compléter le fichier des zones) et la table, pour n'en lire que le nombre de cuts du lot (83), le premier (1) et le dernier (7951). Le choix du couple vient de l'apprentissage ; la prédiction n'en tire que le fait que T = 400 dépasse la distance du PN au début du trou. Les cas de 2:6 et le détail des trous n'ont été chargés qu'une fois, par le script de lecture.
+
+### 11.7 Ce que cela change à la recommandation
+
+- La variante ciblée coûte **de 3 à 4 fois moins** que lire partout (22,6 min contre 66 à 89), et **32 min par grosse correction gagnée** contre 66 à 76. Le temps de lot est multiplié par 2,6 au lieu de 5,6 à 7,3.
+- Mais elle **ne tient pas ce qu'elle visait** : elle ne retrouve l'ADV de 2:11 que dans 2 phases sur 3, et elle manque le PN de 2:6 par construction à T = 400. Pour 4,3 grosses corrections sur 633 (0,7 avec les marges de RM-2), le coût reste de 23 min par partie, dont 2:11 : 52 min et 2:10 : 34,5 min pour des lots de 6 et de 0,5 min.
+- Elle ne change pas la recommandation du § 5 : ne pas l'activer sur ces chiffres. Si Mic veut tout de même un filet : (1) décider d'abord RM-2, qui reprend déjà presque tout ; (2) prolonger la lecture après la fin du trou (§ 11.4) avant de mesurer de nouveau ; (3) un essai en ombre sur une partie neuve, comme au § 8.
+
+### 11.8 Limites
+
+- **Un seul cas pour l'ADV** : la zone 6362–6424 de 2:11 décide du couple retenu, avec 2 ou 3 phases possibles à N = 2 et 3. Les parts 1/2, 2/3 et 2/5 sont trois mesures sur un seul cas.
+- **Les mêmes limites que RM-12** : seuls 1,8 % des verts ont un nuage (§ 6) ; les lots mesurés datent d'avant la version 4.9.5.8 ; le coût d'une lecture dépend de la distance et de la taille du nuage.
+- **Pas de lecture après le dernier cut du lot** : si le lot continuait jusqu'à la fin de la partie, 2:1 (3 700 cuts après le dernier), 2:10 (5 800) et 1:17 (2 200) auraient chacune un long trou de plus, donc un coût plus élevé.
+- **Les sauts du lot ne sont pas déduits** : 1 à 1,8 min par partie (§ 4.3).
+- **Deux vérités ajoutées** (PN de 2:6, ADV de 1:16) : la seconde (1:16) ne sert à aucune mesure ici (1:16 n'est pas dans les 6 parties).

@@ -6,6 +6,7 @@
  *
  *   node tools/lecture-verts.cjs simuler --partie P:N --cas CAS.jsonl --table TABLE.json [--surfaces-lot F.jsonl] [--surfaces-echo F.jsonl] [--partie …] [--n 2,3,5,10]
  *                                         [--zones datasets/lecture-verts-zones-de-mic.json] [--marges PROPOSITION.json] [--juger-partie-reservee] [--json S.json]
+ *                                         [--trous T1,T2 --cout COUT.json]   (variante ciblée RM-12b : ne lire un vert sur N que dans les trous de lecture du lot)
  *   node tools/lecture-verts.cjs cout     --journal J.json --partie N [--total CUTS] [--lot CUTS] [--minutes-lot MIN] [--journal …] [--n 2,3,5,10] [--json S.json]
  *   node tools/lecture-verts.cjs essai
  *
@@ -22,6 +23,12 @@
  * (plus de 10 mm) hors zone + marge, cuts à relire (sélection de tools/relecture-autonome.cjs, marges livrées ou celles de `--marges`), plages « fausses »
  * (cœur sans zone de Mic à 10 cuts près ; seulement pour les parties qui ont une liste de zones). Repères : « lot » (aujourd'hui) et « écho » (N = 1 : tous les
  * verts à nuage, le plafond).
+ *
+ * TROUS (--trous, option ; sans elle rien ne change). Variante ciblée : le lot lit ce qu'il lit, et quand T cuts consécutifs passent sans aucune lecture (entre deux
+ * cuts du lot, ou depuis le cut 0 jusqu'au premier ; pas après le dernier, où le lot est fini), il lit ensuite un vert sur N jusqu'au cut du lot suivant : lectures
+ * aux cuts a+T+1+ph, a+T+1+ph+N, … (a : dernier cut lu, ph : phase de 0 à N−1). Détecteur adapté (écart de confirmation = max(3, N)). Chaque configuration
+ * donne en plus le nombre de lectures faites dans les trous (tous les cuts lus, avec ou sans nuage dans l'Écho) ; avec `--cout` (sortie JSON du mode cout), les
+ * minutes ajoutées = lectures × secondes « centre » de la lecture à N cuts de distance, comme dans la projection de RM-12.
  *
  * COUT. Lit des journaux de lot (même format que tools/perf-lot.cjs) : une ligne par cut lu, avec ses phases (navigation → capture reçue, analyse, décision,
  * pose, après pose) et la distance au cut quitté ; temps d'une lecture sans pose (navigation → capture, plus le calcul d'une relecture) selon la distance
@@ -57,6 +64,22 @@ function preparerPartie(X) {
   return { ...X, lot, lotLus, verts };
 }
 const lectures = (Y, n, phase) => [...Y.lotLus, ...(n === 1 ? Y.verts : Y.verts.filter(v => v.rang % n === phase))].sort((a, b) => a.cut - b.cut);
+
+/* Variante ciblée : lectures des verts dans les trous du lot. Un trou va du cut lu a (−1 au début de la partie) au cut du lot suivant b ; après T cuts passés sans
+ * lecture, les cuts a+T+1+phase, +N, +2N… (tant que < b) sont lus. Renvoie les lectures avec nuage (lot + verts de l'Écho) et le nombre total de lectures faites. */
+function lecturesTrous(Y, T, n, phase) {
+  const tri = [...Y.lot].sort((a, b) => a - b), bornes = [];
+  let a = -1; for (const c of tri) { bornes.push([a, c]); a = c; }
+  let lectures = 0; for (const [d, f] of bornes) { const p = d + T + 1 + phase; if (p < f) lectures += Math.floor((f - 1 - p) / n) + 1; }
+  const verts = []; let k = 0;
+  for (const v of Y.verts) {
+    while (k < bornes.length && bornes[k][1] < v.cut) k++;
+    if (k >= bornes.length) break;
+    const [d, f] = bornes[k], p = d + T + 1 + phase;
+    if (v.cut > d && v.cut < f && v.cut >= p && (v.cut - p) % n === 0) verts.push(v);
+  }
+  return { lect: [...Y.lotLus, ...verts].sort((x, y) => x.cut - y.cut), lectures, verts: verts.length };
+}
 
 /* Prépare la partie pour la sélection : mêmes champs que `preparer` de tools/marges-zones.cjs, à partir d'une liste de lectures. */
 function preparerLectures(Y, lect, { pnEcart = 3, P = MZ.parDefaut() } = {}) {
@@ -97,17 +120,25 @@ function mesurer(p, P, vrai) {
 const avecEcart = (P, e) => { const Q = clone(P); Q.adv.ecart = e; return Q; };
 
 /* Une partie : lot seul, écho complet (N = 1) et, par détecteur et par N, une mesure par phase. */
-function simulerPartie(X, { ns = NS_DEFAUT, P = MZ.parDefaut(), vrai = null } = {}) {
+function simulerPartie(X, { ns = NS_DEFAUT, P = MZ.parDefaut(), vrai = null, trous = null } = {}) {
   const Y = preparerPartie(X), un = (lect, e) => mesurer(preparerLectures(Y, lect, { pnEcart: e, P: avecEcart(P, e) }), avecEcart(P, e), vrai);
   const o = { partie: X.designation, cutsLot: Y.lot.size, vertsAvecNuage: Y.verts.length, lot: un(Y.lotLus, 3), echo: { ...un(lectures(Y, 1, 0), 3), verts: Y.verts.length }, n: {} };
   for (const det of DETECTEURS) for (const n of ns) {
     const e = det === 'fige' ? 3 : Math.max(3, n);
     o.n[`${det}|${n}`] = Array.from({ length: n }, (_, ph) => ({ ...un(lectures(Y, n, ph), e), verts: Y.verts.filter(v => v.rang % n === ph).length }));
   }
+  if (trous) {
+    o.t = {};
+    for (const T of trous) for (const n of ns) {
+      const e = Math.max(3, n);
+      o.t[`${T}|${n}`] = Array.from({ length: n }, (_, ph) => { const r = lecturesTrous(Y, T, n, ph); return { ...un(r.lect, e), lectures: r.lectures, verts: r.verts }; });
+    }
+  }
   return o;
 }
 const NUM = ['grosses', 'hors', 'cuts', 'advTotal', 'advVu', 'pnTotal', 'pnVu', 'zoneCuts', 'zoneCouverts', 'plagesADV', 'plagesPN', 'fausses', 'nonJugees', 'verts'];
-const somme = ls => Object.fromEntries(NUM.map(k => [k, ls.reduce((a, l) => a + (l[k] || 0), 0)]));
+const NUM_T = [...NUM, 'lectures'];
+const somme = (ls, noms = NUM) => Object.fromEntries(noms.map(k => [k, ls.reduce((a, l) => a + (l[k] || 0), 0)]));
 /* Toutes les parties : somme par phase, puis moyenne, minimum et maximum sur les phases. */
 function agreger(parties) {
   const o = { lot: somme(parties.map(p => p.lot)), echo: somme(parties.map(p => p.echo)), n: {} };
@@ -116,11 +147,38 @@ function agreger(parties) {
     for (const c of NUM) { const v = ph.map(x => x[c]); r[c] = { moy: r1(v.reduce((a, b) => a + b, 0) / nb), min: Math.min(...v), max: Math.max(...v) }; }
     r.phases = nb; o.n[k] = r;
   }
+  if (parties[0].t) {
+    o.t = {};
+    for (const k of Object.keys(parties[0].t)) {
+      const nb = parties[0].t[k].length, ph = Array.from({ length: nb }, (_, i) => somme(parties.map(p => p.t[k][i]), NUM_T)), r = {};
+      for (const c of NUM_T) { const v = ph.map(x => x[c]); r[c] = { moy: r1(v.reduce((a, b) => a + b, 0) / nb), min: Math.min(...v), max: Math.max(...v) }; }
+      r.phases = nb; o.t[k] = r;
+    }
+  }
   return o;
 }
 function simuler(parties, opts = {}) {
   const ps = parties.map(x => simulerPartie(x, { ...opts, vrai: opts.zones ? zonesDe(opts.zones, x.designation) : null }));
-  return { format: FORMAT_SIM, ns: opts.ns || NS_DEFAUT, marges: opts.P ? 'proposées' : 'livrées', parties: ps, total: agreger(ps) };
+  const o = { format: FORMAT_SIM, ns: opts.ns || NS_DEFAUT, marges: opts.P ? 'proposées' : 'livrées', parties: ps, total: agreger(ps) };
+  if (opts.trous) { o.trous = opts.trous; if (opts.cout) ajouterMinutes(o, opts.cout); }
+  return o;
+}
+/* Secondes d'une lecture sans pose à N cuts de distance : « centre » de la projection d'ensemble du mode cout (minutes × 60 / lectures). */
+function secondesLecture(coutJson, n) {
+  const p = coutJson && coutJson.ensemble && coutJson.ensemble.projection.find(x => x.n === n);
+  if (!p || !p.minutes || !p.lectures) throw Error(`--cout : pas de coût pour N = ${n} (relancer cout avec --n ${n})`);
+  return p.minutes.centre * 60 / p.lectures;
+}
+/* Minutes ajoutées par les lectures des trous : par partie et phase, puis en moyenne par partie (somme sur les parties / nombre de parties). */
+function ajouterMinutes(o, coutJson) {
+  const k = o.parties.length;
+  for (const cle of Object.keys(o.total.t)) {
+    const n = Number(cle.split('|')[1]), sec = secondesLecture(coutJson, n);
+    for (const p of o.parties) for (const ph of p.t[cle]) ph.minutes = r1(ph.lectures * sec / 60);
+    const par = o.parties.map(p => { const m = p.t[cle].map(ph => ph.lectures * sec / 60); return m.reduce((a, b) => a + b, 0) / m.length; });
+    const r = o.total.t[cle]; r.secondesParLecture = r1(sec); r.minutesParPartie = r1(par.reduce((a, b) => a + b, 0) / k);
+    r.minutesParPartieDetail = Object.fromEntries(o.parties.map((p, i) => [p.partie, r1(par[i])]));
+  }
 }
 function zonesDe(zones, designation) {
   if (!zones || zones.format !== FORMAT_ZONES) throw Error(`zones : format ${FORMAT_ZONES} attendu`);
@@ -214,6 +272,10 @@ function texteSimulation(o) {
     const x = t.n[`${det}|${n}`]; L.push(`1 vert sur ${n} (${det}) | ${f(x, 'advVu')}/${t.lot.advTotal} | ${f(x, 'pnVu')}/${t.lot.pnTotal} | ${f(x, 'zoneCouverts')}/${t.lot.zoneCuts} | ${f(x, 'hors')}/${t.lot.grosses} | ${f(x, 'cuts')} | ${f(x, 'fausses')} (+${f(x, 'nonJugees')} non jugées) | ${f(x, 'verts')}`);
   }
   ligne('écho complet', { ...t.echo, verts: t.echo.verts });
+  if (t.t) for (const cle of Object.keys(t.t)) {
+    const [T, n] = cle.split('|'), x = t.t[cle];
+    L.push(`trous T = ${T}, 1 vert sur ${n} | ${f(x, 'advVu')}/${t.lot.advTotal} | ${f(x, 'pnVu')}/${t.lot.pnTotal} | ${f(x, 'zoneCouverts')}/${t.lot.zoneCuts} | ${f(x, 'hors')}/${t.lot.grosses} | ${f(x, 'cuts')} | ${f(x, 'fausses')} (+${f(x, 'nonJugees')} non jugées) | ${f(x, 'verts')} verts avec nuage | ${r1(x.lectures.moy / o.parties.length)} lectures par partie${x.minutesParPartie == null ? '' : ` | +${x.minutesParPartie} min par partie`}`);
+  }
   return L.join('\n');
 }
 function texteCout(o) {
@@ -244,6 +306,11 @@ function essai() {
   const cuts = cas.map(c => ({ i: c.cut, classe: 'hors-journal', mm: 0, dureeS: 2, visites: 1, bords: { left: [c.cut, 0.7175, 0], right: [c.cut, -0.7175, 0] } }));
   return { designation: '9:1', partie: 1, cas, table: { format: 'ariane-verts-table-v1', projet: 9, partie: 1, lot: lotCuts, zonesPN: [], zonesADV: [], cuts }, vrai: { adv: [], pn: [[300, 319]], liste: true } };
 }
+/* Variante ciblée : la même partie, mais le lot lit aussi les cuts 390 à 399. Le PN (300–319) est alors dans un trou de 180 cuts, entre les cuts 209 et 390. */
+function essaiTrous() {
+  const s = essai(); s.table = { ...s.table, lot: [...s.table.lot, ...Array.from({ length: 10 }, (_, i) => ({ cut: 390 + i, differe: false }))] };
+  return s;
+}
 /* Un journal de lot inventé : trois cuts lus (1 → 2 en pas à pas, puis un saut de 10 cuts), le dernier différé. */
 function journalEssai() {
   let t = Date.parse('2026-01-01T00:00:00Z'); const ev = [], id = c => ({ part: 1, cut: c });
@@ -259,8 +326,8 @@ function journalEssai() {
   return { events: ev };
 }
 
-module.exports = { FORMAT_ZONES, FORMAT_SIM, FORMAT_COUT, ZONES, DETECTEURS, NS_DEFAUT, preparerPartie, lectures, preparerLectures, mesurer, simulerPartie, agreger, simuler, zonesDe,
-  evenements, visites, lecturesRelecture, resumerCout, projeter, cout, texteSimulation, texteCout, essai, journalEssai, seau };
+module.exports = { FORMAT_ZONES, FORMAT_SIM, FORMAT_COUT, ZONES, DETECTEURS, NS_DEFAUT, preparerPartie, lectures, preparerLectures, lecturesTrous, secondesLecture, mesurer, simulerPartie, agreger, simuler, zonesDe,
+  evenements, visites, lecturesRelecture, resumerCout, projeter, cout, texteSimulation, texteCout, essai, essaiTrous, journalEssai, seau };
 
 /* ------------------------------------------------------------------ ligne de commande */
 const lireJsonl = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
@@ -276,7 +343,8 @@ function args(argv) {
     } else if (k === '--cas') courante().cas = val(); else if (k === '--table') courante().table = val(); else if (k === '--surfaces-lot') courante().surfacesLot = val(); else if (k === '--surfaces-echo') courante().surfacesEcho = val();
     else if (k === '--journal') o.journaux.push({ fichier: val(), partie: null });
     else if (k === '--n') { o.ns = val().split(',').map(Number); if (o.ns.some(n => !Number.isInteger(n) || n < 2)) throw Error('--n 2,3,5,10 (entiers à partir de 2)'); }
-    else if (k === '--zones') o.zones = val(); else if (k === '--marges') o.marges = val(); else if (k === '--total') dernier().total = Number(val()); else if (k === '--lot') dernier().lot = Number(val());
+    else if (k === '--trous') { o.trous = val().split(',').map(Number); if (o.trous.some(t => !Number.isInteger(t) || t < 1)) throw Error('--trous T1,T2 (entiers à partir de 1)'); }
+    else if (k === '--cout') o.cout = val(); else if (k === '--zones') o.zones = val(); else if (k === '--marges') o.marges = val(); else if (k === '--total') dernier().total = Number(val()); else if (k === '--lot') dernier().lot = Number(val());
     else if (k === '--minutes-lot') dernier().minutesLot = Number(val()); else if (k === '--json') o.json = val(); else if (k === '--juger-partie-reservee') o.jugerReservee = true;
     else throw Error('argument inconnu : ' + k);
   }
@@ -305,7 +373,9 @@ if (require.main === module) {
       if (!a.parties.length) throw Error('simuler --partie P:N --cas CAS.jsonl --table TABLE.json [--surfaces-lot F.jsonl] [--n 2,3,5,10] [--zones Z.json] [--marges PROPOSITION.json] [--json S.json]');
       const zones = a.zones ? JSON.parse(fs.readFileSync(a.zones, 'utf8')) : null;
       const P = a.marges ? MZ.margesDeProposition(JSON.parse(fs.readFileSync(a.marges, 'utf8'))) : undefined;
-      const o = simuler(chargerParties(a), { ns: a.ns, zones, P });
+      const cout = a.cout ? JSON.parse(fs.readFileSync(a.cout, 'utf8')) : null;
+      if (cout && !a.trous) throw Error('--cout ne sert qu\'avec --trous');
+      const o = simuler(chargerParties(a), { ns: a.ns, zones, P, trous: a.trous, cout });
       if (a.json) fs.writeFileSync(a.json, JSON.stringify(o, null, 1));
       console.log(texteSimulation(o));
     } else if (a.mode === 'cout') {
