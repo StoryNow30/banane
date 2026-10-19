@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction H · Style Figma et Arc</title><link rel="stylesheet" href="lin.css">
+<style>
+.app{display:grid;grid-template-columns:190px 1fr 280px;height:640px;background:var(--bg);border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.esp{background:var(--side);border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:3px}
+.esp h4{margin:10px 8px 4px;font:600 11px var(--sans);color:var(--tx3)}
+.espace{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;color:var(--tx2);cursor:pointer}.espace:hover{background:var(--hov)}.espace.a{background:var(--sel);color:var(--tx)}
+.espace .pt{width:10px;height:10px;border-radius:3px}.espace small{margin-left:auto;font:11px var(--mono);color:var(--tx3)}
+.esp .bas{margin-top:auto;padding:10px 8px;border-top:1px solid var(--line);color:var(--tx2);font-size:12px}.esp .bas b{color:var(--tx);font:600 15px var(--mono)}
+.cv{display:flex;flex-direction:column;min-width:0;background:radial-gradient(circle at 1px 1px,#1d1f22 1px,transparent 0) 0 0/18px 18px,var(--bg)}
+.tools{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--side)}
+.tools .grp{display:flex;gap:2px;background:#0e0f10;border:1px solid var(--line);border-radius:8px;padding:2px}.tools .grp button{font:500 12px var(--sans);background:transparent;border:0;color:var(--tx2);padding:5px 10px;border-radius:6px;cursor:pointer}.tools .grp button.a{background:var(--sel);color:var(--tx)}
+.tools .sp{flex:1}.btn{font:600 12px var(--sans);display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border-radius:7px;border:1px solid var(--line2);background:var(--panel);color:var(--tx);cursor:pointer}.btn.p{background:var(--acc);border-color:var(--acc);color:#04140c}.btn.p kbd{background:rgba(0,0,0,.18);border-color:transparent;color:#04140c}
+.toile{flex:1;position:relative;padding:34px 26px;overflow:hidden}
+.zone-t{position:relative;height:18px;margin:0 0 4px}.zone-t span{position:absolute;top:0;font:600 10.5px var(--sans);letter-spacing:.08em;color:var(--tx2);border-top:2px solid var(--bleu);padding-top:3px}
+.rub{margin-bottom:22px}.rub .lbl{font:11px var(--mono);color:var(--tx3);margin-bottom:5px}
+.cells{display:grid;grid-template-columns:repeat(40,1fr);gap:3px}
+.cell{aspect-ratio:1;border-radius:3px;background:#1c1e21;cursor:pointer;position:relative}
+.cell.p{background:#27a96f}.cell.q{background:#7bd9ad}.cell.d{background:var(--ambre)}.cell.r{background:#1c1e21}.cell.v{background:#27a96f;box-shadow:inset 0 0 0 2px #fff4}
+.cell.now{background:#fff;box-shadow:0 0 0 3px #fff3,0 0 18px #fff6;animation:bat 1.4s ease-in-out infinite}@keyframes bat{50%{box-shadow:0 0 0 5px #fff2,0 0 26px #fff4}}
+@media(prefers-reduced-motion:reduce){.cell.now{animation:none}}
+.cell.sel{outline:2px solid var(--bleu);outline-offset:2px}.cell.bad{background:var(--rouge)}
+.mini{position:absolute;left:26px;right:26px;bottom:16px;height:26px;display:flex;gap:1px}.mini i{flex:1;border-radius:1px}
+.leg2{display:flex;gap:16px;color:var(--tx2);font-size:12px;margin:0 0 14px}.leg2 span{display:flex;gap:6px;align-items:center}.leg2 i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.insp{border-left:1px solid var(--line);background:var(--side);padding:14px;overflow:auto}.insp h3{margin:0;font-size:15px}.insp .sub{color:var(--tx2);margin:2px 0 12px}
+.insp .sec{border-top:1px solid var(--line);padding:11px 0}.insp .sec h5{margin:0 0 7px;font:600 11px var(--sans);color:var(--tx3)}
+.insp .kv{display:flex;justify-content:space-between;padding:3px 0}.insp .kv span:first-child{color:var(--tx2)}
+.ban{margin:10px 14px 0;padding:9px 12px;border:1px solid #5a2a27;background:#231615;border-radius:8px;display:flex;gap:12px;align-items:center}.ban.ok{border-color:#1f4a37;background:#10201a}.ban .tx{flex:1}.ban .tx small{display:block;color:var(--tx2)}
+.big{font:300 40px/1 var(--sans);letter-spacing:-.02em}
+</style></head><body><div class="page">
+<p><a href="index.html">← les directions</a></p>
+<h1>Direction H · Style Figma et Arc</h1>
+<p class="leg">Ce qu'on prend de <b>Figma</b> : un <b>canevas</b> et un <b>inspecteur</b>. Ici le canevas est la partie elle-même : un ruban de cuts (un carré par cut, coloré par statut), avec les zones PN et ADV au-dessus et une mini-carte en bas. On clique un cut, l'inspecteur à droite en parle. Ce qu'on prend d'<b>Arc</b> : une <b>barre latérale d'espaces</b> (une couleur par partie, on passe d'une partie à l'autre sans rien perdre) et une barre d'outils réduite. Tout se lit d'un coup d'œil : où en est le lot, où sont les différés. Chiffres inventés ; 120 cuts à poser, 40 par ligne.</p>
+<div class="sc" id="sc"></div>
+<div class="app" id="app">
+ <aside class="esp"><div style="padding:4px 8px 8px;font-weight:700;letter-spacing:.2em;font-size:12px">ARIANE</div><h4>Espaces</h4>
+  <div class="espace a"><i class="pt" style="background:var(--vert)"></i>Partie 13<small>31/120</small></div><div class="espace"><i class="pt" style="background:var(--bleu)"></i>Partie 14 · Écho<small>148</small></div><div class="espace"><i class="pt" style="background:var(--tx3)"></i>Partie 12<small>✓</small></div><div class="espace"><i class="pt" style="background:var(--tx3)"></i>Partie 11<small>✓</small></div>
+  <h4>Vues</h4><div class="espace">◔ À contrôler<small>9</small></div><div class="espace">⇪ Envois<small>3</small></div><div class="espace">⚙ Réglages</div>
+  <div class="bas">GCV2 · cuts appris<br><b>2 684</b> <span style="color:var(--vert)">↑ 61</span></div></aside>
+ <section class="cv"><div class="tools" id="tools"></div><div id="bn"></div><div class="toile" id="toile"></div></section>
+ <aside class="insp" id="insp"></aside>
+</div>
+<p class="note-b"><b>Pourquoi ce style va bien à Ariane.</b> La partie est une suite de cuts : le ruban la montre en entier, ce qu'aucune liste ne fait. Le graphique de la « voie » actuel en est une version réduite, et Mic avait réclamé une tuile du lot qui se remplit vraiment (retours sur les tests 13 et 16). Les espaces rendent le passage d'une partie à l'autre naturel. <b>Limites honnêtes :</b> il faut une fenêtre large (au moins 900 px), le ruban est moins lisible que la liste de F quand on cherche un cut précis, et il faut calculer le statut de chaque cut pour le dessiner (les données existent dans l'état du lot ; rien de nouveau côté service worker).</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const ETAT=[];for(let i=0;i<120;i++){let s='r';if(i<31)s='p';ETAT.push(s);}
+[4,9,17,25].forEach(i=>ETAT[i]='d');[6,14,22].forEach(i=>ETAT[i]='q');ETAT[30]='now';
+function ruban(etat,sel){let h='';const zones='<div class="zone-t" style="margin-left:0"><span style="left:'+(5/40*100)+'%;width:'+(8/40*100)+'%">PN</span><span style="left:'+(22/40*100)+'%;width:'+(12/40*100)+'%">ADV</span></div>';
+ for(let r=0;r<3;r++){h+=(r==0?zones:'<div class="zone-t"></div>')+`<div class="rub"><div class="lbl">cuts ${4790+r*40} → ${4829+r*40}</div><div class="cells">`;
+  for(let c=0;c<40;c++){const i=r*40+c;h+=`<div class="cell ${etat[i]}${i===sel?' sel':''}" data-i="${i}" title="cut ${4790+i}"></div>`;}h+='</div></div>';}
+ return `<div class="leg2"><span><i style="background:#27a96f"></i>posé</span><span><i style="background:#7bd9ad"></i>posé par la voie</span><span><i style="background:var(--ambre)"></i>différé</span><span><i style="background:#fff"></i>en cours</span><span><i style="background:#1c1e21;border:1px solid #333"></i>à poser</span></div>`+h+'<div class="mini">'+etat.map(s=>`<i style="background:${{p:'#27a96f',q:'#7bd9ad',d:'var(--ambre)',now:'#fff',r:'#1c1e21',bad:'var(--rouge)',v:'#27a96f'}[s]}"></i>`).join('')+'</div>';}
+function tools(b){return `<div class="grp"><button class="a">Ruban</button><button>Liste</button></div><span class="sp"></span>${b}<button class="btn">Commandes <kbd>Ctrl K</kbd></button>`;}
+function insp(kind){
+ if(kind==='lot')return `<h3>Cut 4821</h3><p class="sub">Partie 13 · en cours</p><div class="big">26 %</div><div class="sub">31 / 120 invalides</div>
+  <div class="sec"><h5>CE LOT</h5><div class="kv"><span>Posés</span><b>27</b></div><div class="kv"><span>Différés</span><b style="color:var(--ambre)">4</b></div><div class="kv"><span>À contrôler</span><b>9</b></div></div>
+  <div class="sec"><h5>ÉTAPE</h5><div class="kv"><span>capture</span><span>✓</span></div><div class="kv"><span>pose</span><b>en cours</b></div><div class="kv"><span>validation</span><span style="color:var(--tx3)">à venir</span></div></div>
+  <div class="sec"><button class="btn" style="width:100%;justify-content:space-between">❚❚ Pause <kbd>P</kbd></button></div>`;
+ if(kind==='cut')return `<h3>Cut 4799</h3><p class="sub">différé · zone PN</p>
+  <div class="sec"><h5>POURQUOI</h5><p style="margin:0;color:var(--tx2)">Refus : écartement trop bas entre les deux rails. Rien n'a été posé ni validé.</p></div>
+  <div class="sec"><h5>DÉTAIL</h5><div class="kv"><span>Écartement prévu</span><span class="mono">1 392 mm</span></div><div class="kv"><span>Voisins posés</span><span>4796, 4801</span></div><div class="kv"><span>Hypothèse la plus proche</span><span>H3</span></div></div>
+  <div class="sec"><button class="btn" style="width:100%;justify-content:space-between;margin-bottom:6px">Aller à ce cut dans ESV <kbd>↵</kbd></button><button class="btn" style="width:100%;justify-content:space-between">Reprendre les différés <kbd>R</kbd></button></div>`;
+ if(kind==='inc')return `<h3>Cut 4821</h3><p class="sub" style="color:var(--rouge)">ESV ne répond plus</p><div class="sec"><h5>QUE FAIRE</h5><p style="margin:0 0 10px;color:var(--tx2)">Recharge la page ESV (F5), puis reprends. Rien n'a été posé sur ce cut.</p><button class="btn p" style="width:100%;justify-content:space-between">Reprendre <kbd>R</kbd></button></div><div class="sec"><h5>AUTRES OPTIONS</h5><button class="btn" style="width:100%;margin-bottom:6px">Je le fais moi-même</button><button class="btn" style="width:100%;margin-bottom:6px">SKIP…</button><button class="btn" style="width:100%;color:var(--rouge)">Arrêter le lot…</button></div>`;
+ return `<h3>Partie 13 terminée</h3><p class="sub">27 posés · 4 différés · 9 à contrôler</p><div class="sec"><h5>FICHIERS PRÊTS</h5>${[1,2,3].map(i=>`<div class="kv"><span class="mono">volume0${i}-sur03.zip</span><span style="color:var(--vert)">✓</span></div>`).join('')}</div><div class="sec"><button class="btn p" style="width:100%;justify-content:space-between;margin-bottom:6px">Copier le message <kbd>⇧</kbd><kbd>C</kbd></button><button class="btn" style="width:100%">Ouvrir le dossier</button></div>`;}
+const N={lot:'1 · Le lot tourne',cut:'2 · Un cut choisi',incident:'3 · Incident',fin:'4 · Fin'};
+function show(k){let e=ETAT.slice(),sel=-1,t,i,b='';
+ if(k==='lot'){t=tools('<button class="btn">❚❚ Pause <kbd>P</kbd></button>');i=insp('lot');}
+ if(k==='cut'){sel=9;t=tools('<button class="btn">❚❚ Pause <kbd>P</kbd></button>');i=insp('cut');}
+ if(k==='incident'){e[30]='bad';t=tools('<button class="btn p">Reprendre <kbd>R</kbd></button>');i=insp('inc');b='<div class="ban"><span class="pt" style="background:var(--rouge)"></span><div class="tx">ESV ne répond plus au cut 4821<small>Rien n\'a été posé sur ce cut. Recharge la page ESV (F5), puis reprends.</small></div></div>';}
+ if(k==='fin'){e=e.map((s,j)=>s==='r'||s==='now'?(j%9===5?'q':'p'):s);t=tools('<button class="btn p">Copier le message <kbd>⇧</kbd><kbd>C</kbd></button>');i=insp('fin');b='<div class="ban ok"><span class="pt" style="background:var(--vert)"></span><div class="tx">Partie 13 terminée · relecture finie : 85 relus, 41 corrigés<small>3 volumes enregistrés et confirmés complets.</small></div></div>';}
+ $('tools').innerHTML=t;$('bn').innerHTML=b;$('toile').innerHTML=ruban(e,sel);$('insp').innerHTML=i;
+ [...$('sc').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));history.replaceState(null,'','#'+k);
+ document.querySelectorAll('.cell').forEach(c=>c.onclick=()=>{document.querySelectorAll('.cell.sel').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');$('insp').innerHTML=insp('cut').replace('4799','Cut '+c.title.slice(4)).replace('Cut Cut','Cut');});}
+Object.keys(N).forEach(k=>{const b=document.createElement('button');b.textContent=N[k];b.dataset.k=k;b.onclick=()=>show(k);$('sc').append(b);});
+show(N[location.hash.slice(1)]?location.hash.slice(1):'lot');
+</script></body></html>

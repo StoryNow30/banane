@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction G · Style Raycast</title><link rel="stylesheet" href="lin.css">
+<style>
+.fond{height:600px;border-radius:10px;border:1px solid var(--line2);background:radial-gradient(90% 80% at 50% 0,#1c2a24,#0a0c0b 70%);display:flex;justify-content:center;align-items:flex-start;padding-top:46px;position:relative;overflow:hidden}
+.ray{width:680px;background:rgba(24,25,27,.96);border:1px solid #34373b;border-radius:14px;box-shadow:0 30px 90px #000;overflow:hidden}
+.ray .q{display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line)}
+.ray .q input{flex:1;background:transparent;border:0;outline:none;color:var(--tx);font:16px var(--sans);padding:16px 0}
+.ray .q .tag{font:600 11px var(--sans);color:var(--tx2);background:#26282b;border-radius:6px;padding:3px 8px}
+.ray .etat{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:#141517}
+.ray .etat .gros{font:300 34px/1 var(--sans);letter-spacing:-.02em;min-width:90px}.ray .etat .tx{flex:1}.ray .etat .tx small{display:block;color:var(--tx2)}
+.bar-m{height:4px;border-radius:2px;background:#26282b;overflow:hidden;margin-top:6px}.bar-m i{display:block;height:100%;background:var(--vert)}
+.ray .l{padding:6px;max-height:300px;overflow:auto}.ray .g{padding:8px 10px 3px;font:600 11px var(--sans);color:var(--tx3)}
+.ray .o{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px}.ray .o.s{background:#2a2d31}.ray .o .i{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#26282b;font-size:13px}
+.ray .o .i.v{background:#143524;color:var(--vert)}.ray .o .i.a{background:#3a2c0c;color:var(--ambre)}.ray .o .i.r{background:#3d1a18;color:var(--rouge)}
+.ray .o .d{color:var(--tx3);font-size:12px}.ray .o .r{margin-left:auto;display:flex;gap:4px;align-items:center;color:var(--tx3);font-size:12px}
+.ray .pied{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--line);color:var(--tx2);font-size:12px;background:#141517}.ray .pied span{display:flex;gap:6px;align-items:center;margin-left:14px}
+.act{position:absolute;right:calc(50% - 340px + 10px);bottom:70px;width:290px;background:#1c1d20;border:1px solid #34373b;border-radius:12px;box-shadow:0 20px 60px #000;padding:6px;display:none}.act.on{display:block}
+.act .o{display:flex;justify-content:space-between;padding:8px 10px;border-radius:7px}.act .o.s{background:#2a2d31}.act .g{padding:6px 10px 2px;font:600 11px var(--sans);color:var(--tx3)}
+.hud{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:rgba(20,21,23,.96);border:1px solid #34373b;border-radius:14px;padding:14px 22px;display:none;gap:12px;align-items:center;box-shadow:0 20px 60px #000;font-size:15px}.hud.on{display:flex}.hud .ok{width:26px;height:26px;border-radius:50%;background:var(--vert);color:#04140c;display:grid;place-items:center;font-weight:700}
+</style></head><body><div class="page">
+<p><a href="index.html">← les directions</a></p>
+<h1>Direction G · Style Raycast</h1>
+<p class="leg">Ce qu'on prend de Raycast : <b>une seule barre</b>. On ouvre, on tape quelques lettres ou on appuie sur Entrée sur la <b>première suggestion</b>, qui est toujours ce qui a du sens maintenant (« Démarrer le lot », puis « Pause », puis « Envoyer »). L'état vit dans la barre (un grand chiffre et une ligne), les autres actions sont des commandes qu'on cherche, <kbd>Ctrl K</kbd> ouvre les actions de l'élément choisi, et un petit message flottant confirme (le « HUD »). Aucune case, aucune carte. Utilise ↑ ↓ ou les boutons ; chiffres inventés.</p>
+<div class="sc" id="sc"></div>
+<div class="fond" id="f"></div>
+<p class="note-b"><b>Pourquoi Raycast va bien à Ariane.</b> Mic fait presque toujours la même chose à chaque instant ; la barre la met en tête, il n'a qu'à confirmer (<kbd>Entrée</kbd>). Tout le reste (rare) se cherche en tapant, donc ne prend aucune place à l'écran. Les réglages sont des commandes (« Après le lot… »). <b>Limites honnêtes :</b> on ne voit que l'état courant (pas de liste de cuts), et il faut apprendre un mot ou deux. Côté code : la barre est un nouveau module, la liste de commandes se déduit de l'état du lot (la même idée que la table état → action vue plus haut).</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const o=(i,t,d,r,c='',s='')=>`<div class="o ${s}"><span class="i ${c}">${i}</span><span>${t} ${d?`<span class="d"> · ${d}</span>`:''}</span><span class="r">${r}</span></div>`;
+const g=t=>`<div class="g">${t}</div>`;
+const K=(...k)=>k.map(x=>`<kbd>${x}</kbd>`).join(' ');
+function ray({q='',tag='Orbite · partie 13',etat='',list,pied,extra=''}){return `<div class="ray"><div class="q"><span style="color:var(--tx3)">⌕</span><input placeholder="Que veux-tu faire ?" value="${q}"><span class="tag">${tag}</span></div>${etat}<div class="l">${list}</div><div class="pied"><span>${pied}</span><span>${K('Ctrl','K')} Actions</span></div></div>${extra}`;}
+const S={
+ repos:()=>ray({etat:`<div class="etat"><div class="gros">4790</div><div class="tx">ESV est sur ce cut rouge<small>Partie 13 · 120 cuts à poser</small></div></div>`,
+  list:g('Suggéré')+o('▶','Démarrer le lot','jusqu\'à la fin de la partie',K('↵'),'v','s')+o('◌','Passer en Écho','tu corriges toi-même',K('E'))+g('Réglages et suites')+o('⚙','Après le lot','relire et corriger','')+o('⌖','Aller au cut…','',''),pied:K('↵')+' Exécuter'}),
+ lot:()=>ray({etat:`<div class="etat"><div class="gros">4812</div><div class="tx">Lot en cours · pose des rails<small>31 / 120 · 27 posés · 4 différés · 9 à contrôler</small><div class="bar-m"><i style="width:26%"></i></div></div></div>`,
+  list:g('Suggéré')+o('❚❚','Pause','',K('↵'),'a','s')+o('■','Arrêter le lot','ne se défait pas','')+g('Voir')+o('◔','Les 9 cuts à contrôler','',K('G','C'))+o('☰','Les 4 différés','',K('G','D')),pied:K('↵')+' Pause'}),
+ incident:()=>ray({tag:'Orbite · à toi',etat:`<div class="etat" style="background:#241514"><div class="gros" style="color:var(--rouge)">4812</div><div class="tx">ESV ne répond plus<small>Rien n'a été posé sur ce cut. Recharge la page (F5), puis reprends.</small></div></div>`,
+  list:g('Suggéré')+o('↻','Reprendre','après le F5',K('↵'),'v','s')+g('Autres options')+o('✋','Je le fais moi-même','reprise manuelle','')+o('⤼','Passer ce cut en SKIP','avec confirmation','')+o('■','Arrêter le lot','','','r'),pied:K('↵')+' Reprendre'}),
+ relecture:()=>ray({etat:`<div class="etat"><div class="gros">12<span style="font-size:16px;color:var(--tx3)"> / 85</span></div><div class="tx">Relecture des verts · 3 corrigés<small>Ne touche à rien dans ESV.</small><div class="bar-m"><i style="width:14%"></i></div></div></div>`,
+  list:g('Suggéré')+o('■','Arrêter la relecture','',K('↵'),'a','s'),pied:K('↵')+' Arrêter'}),
+ fin:()=>ray({tag:'Orbite · terminé',etat:`<div class="etat"><div class="gros" style="color:var(--vert)">✓</div><div class="tx">Partie 13 terminée<small>27 posés · 4 différés · 9 à contrôler · 3 fichiers prêts</small></div></div>`,
+  list:g('Suggéré')+o('⧉','Copier le message','heures, noms et empreintes',K('↵'),'v','s')+o('📁','Ouvrir le dossier des fichiers','','')+o('▶','Nouveau lot','',K('N'))+g('Voir')+o('◔','Les 9 cuts à contrôler','',K('G','C')),pied:K('↵')+' Copier'}),
+ actions:()=>ray({etat:`<div class="etat"><div class="gros">4812</div><div class="tx">Lot en cours · pose des rails<small>31 / 120</small></div></div>`,list:g('Suggéré')+o('❚❚','Pause','',K('↵'),'a','s')+o('■','Arrêter le lot','',''),pied:K('↵')+' Pause',
+  extra:`<div class="act on">${g('Actions')}<div class="o s"><span>Mettre en pause</span>${K('↵')}</div><div class="o"><span>Copier le numéro du cut</span>${K('⌘','C')}</div><div class="o"><span>Voir dans le journal</span>${K('⌘','J')}</div><div class="o"><span style="color:var(--rouge)">Arrêter le lot…</span>${K('⇧','⌘','X')}</div></div>`}),
+ hud:()=>`<div class="hud on"><span class="ok">✓</span><span>Message copié : colle-le avec les 3 fichiers</span></div>`+ray({tag:'Orbite · terminé',etat:'',list:g('Suggéré')+o('▶','Nouveau lot','',K('↵'),'v','s'),pied:K('↵')+' Exécuter'})
+};
+const N={repos:'1 · Au repos',lot:'2 · Le lot tourne',incident:'3 · Incident',relecture:'4 · Relecture',fin:'5 · Fin',actions:'6 · Ctrl K : actions',hud:'7 · Confirmation (HUD)'};
+function show(k){$('f').innerHTML=S[k]();[...$('sc').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));history.replaceState(null,'','#'+k);}
+Object.keys(N).forEach(k=>{const b=document.createElement('button');b.textContent=N[k];b.dataset.k=k;b.onclick=()=>show(k);$('sc').append(b);});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){const l=[...document.querySelectorAll('.ray .o')];if(!l.length)return;let i=l.findIndex(x=>x.classList.contains('s'));l.forEach(x=>x.classList.remove('s'));i=Math.max(0,Math.min(l.length-1,i+(e.key==='ArrowDown'?1:-1)));l[i].classList.add('s');e.preventDefault();}});
+show(N[location.hash.slice(1)]?location.hash.slice(1):'repos');
+</script></body></html>
