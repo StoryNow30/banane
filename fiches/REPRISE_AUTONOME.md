@@ -204,3 +204,12 @@ Mic : « profite de la nuit pour lancer des gros programmes », niveaux forts qu
 - **Questions à poser à Mic, une à la fois** (voir D-188) : quand un cut est « appris » ; compter les retouches de 5 mm ou moins ; réserver des parties pour juger la GCV2 ; projet des parties 14 à 16 ; final de la partie 15.
 - **Disque** : l'allocation est de 38 Go ; j'ai supprimé les extractions déjà archivées (scratchpad). Les Échos se lisent directement dans leurs zips (pas besoin d'extraire).
 - **4 h (D-190)** : règle prudente jugée sur les parties 14 à 16 (29 grosses corrections sur 35 ramenées à 10 mm ou moins, 0 mauvaise voie, 2 abîmés) ; `relecture-autonome.cjs table --sans-lot` ajouté (branche `claude/50-compteur-gcv2`, bd7d33e, verify 2 228 essais, 0 échec) ; zones reconnues contre les notes de Mic. Il reste : attendre le final de la partie 15 et les réponses de Mic (D-188, D-190) ; **rien d'autre n'est à faire sans lui** (fusion, activation, étiquette lui restent réservées).
+
+## Passation à la session GCV2 (19 octobre 2026, matin, D-192)
+
+- **Lire d'abord, dans l'ordre** : `fiches/PLAN_SUITE_5.0.md` (le plan et les niveaux), `fiches/G0_GCV2_CONCEPTION.md` (la conception), D-188 à D-192, `fiches/ORGANISATION_DEV_5.0.md` (rôles, économie de jetons), `fiches/RELECTURE_AUTONOME.md` § 1 et § 5 (la référence à battre), `fiches/COMPTEUR_GCV2.md`.
+- **Code** : base `claude/50-base` (da9debf) ; outils du compteur et `table --sans-lot` sur `claude/50-compteur-gcv2` (6645a0e) ; test 8 sur `claude/50-relecture-couverture` (d58a6f1). Rien de tout cela n'est fusionné : Mic décide.
+- **Données** : banane-data, `collections/` (10 Échos ; `INDEX.md`) ; les cas extraits et les tables de la nuit sont dans le scratchpad de cette session (`res/cas14.jsonl`, `cas15`, `cas16`, `table14.json`, `table15`, `table16`, `jugement-14-16.json`) : à refaire par les outils si le scratchpad a disparu (commandes dans D-189 et D-190).
+- **Règles absolues** : jamais le code de projet ESV ni une coordonnée dans un dépôt ; aucun identifiant de modèle dans un dépôt ; `src/engine.js` intact ; une partie réservée ne règle rien ; un chantier = une branche = un worktree ; verify une fois par commit ; aucune lecture d'export par un modèle.
+- **Première semaine** : G1-a (rappel atteignable), RM-1, RM-4, RM-10 ; RM-5 à chaque export de la test 8 ; cycle quotidien du § 2 du plan.
+- **Réveil nocturne** : supprimé (D-192). Si Mic veut une veille de nuit, réarmer `send_later` avec un message qui renvoie au plan, pas à la nuit du 18 au 19.

@@ -1,5 +1,7 @@
 # Plan détaillé 5.0 : chantiers, branches, niveaux, portes, ordre de lancement
 
+> **19 octobre 2026** : la suite (règles métier RM-1 à RM-11, GCV2 G0 à G2, cycle quotidien, niveaux) est dans `fiches/PLAN_SUITE_5.0.md` ; la conception de la GCV2 dans `fiches/G0_GCV2_CONCEPTION.md`. Ce tableau reste l'état des chantiers du 15 octobre.
+
 Version 1 du 15 octobre 2026. Cahier signé par Mic le 15 octobre (D-119). Règles : `BANANE_5.0_CAHIER.md` et `fiches/ORGANISATION_DEV_5.0.md`. Ce plan est le tableau de bord : l'orchestrateur y tient l'état de chaque chantier (à faire / lancé / livré / au terrain / accepté) et le coût constaté. Même importance pour tous ; l'ordre est celui des dépendances et des réponses attendues.
 
 Conventions : base de code = `claude/495-test-2` (4.9.5.2) tant que la 4.9.5 n'est pas fusionnée ; branche d'un chantier = `claude/50-<code>` ; outils hors ligne dans `tools/`, essais dans `tests/`, fiches dans `fiches/`. Jetons : estimation au niveau rapide, relecture forte comprise quand elle est due. « Q n » = question n du cahier § 7.
