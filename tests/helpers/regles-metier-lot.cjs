@@ -23,7 +23,7 @@ async function lot(reglage,{panne=false,fin=115,avant=null,profil='actuel'}={}){
  const adapter=new EsvTrous([112,113]),b=production({adapter});
  /* L'ombre de la voie prédite est coupée ici : elle relance le moteur sur chaque différé et n'est pas l'objet de ces essais. */
  b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},...(reglage!==undefined?{reglesMetier:reglage}:{})};
- /* 4.9.5.10 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */
+ /* 4.9.5.13 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */
  if(profil)b.ctx.BananeSettings={...b.ctx.BananeSettings,lot:{...S.lot,profil}};
  if(panne)b.ctx.BananeReglesMetier={...b.ctx.BananeReglesMetier,evaluer:()=>{throw Error('panne simulée des règles métier');}};
  if(avant)await avant(b);

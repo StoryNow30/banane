@@ -5,7 +5,7 @@
     root.BananeVoieRecentree,root.BananeGCV1Shadow,root.BananeGauge4);
 })(typeof globalThis!=='undefined'?globalThis:this,function(C,L,O,H,Conv,V,Shadow,Gauge){
  'use strict';
- /* 4.9.5.10 (D-217, D-219) — CANDIDATE « L1 » SUR LES DIFFÉRÉS DU LOT. Module commun au banc hors ligne (`tools/banc-differes.cjs`) et au
+ /* 4.9.5.13 (D-217, D-219) — CANDIDATE « L1 » SUR LES DIFFÉRÉS DU LOT. Module commun au banc hors ligne (`tools/banc-differes.cjs`) et au
   * chemin du lot du service worker (`background.js`, profil `lot.profil = 'L1'`) : le banc mesure exactement ce que le terrain exécute.
   *
   * Pour un cut que la chaîne du lot diffère, à l'instant de la décision et avec cela seulement (capture et science du cut, décisions du lot seul

@@ -1,4 +1,4 @@
-# Séance terrain « 4.9.5 test 10 » : Orbite s'occupe aussi des différés
+# Séance terrain « 4.9.5 test 13 (L1) » : Orbite s'occupe aussi des différés
 
 **Ce qui change : le lot traite lui-même une partie des cuts qu'il différait.** Quand la chaîne du lot ne sait pas poser un cut, un second avis (la GCV2) regarde le nuage et les cuts déjà posés par le lot :
 
@@ -13,10 +13,10 @@ Aussi : quand la cible d'un cut sort de la vue d'ESV, Orbite **déplace la vue**
 ## 1. Installer et vérifier
 
 1. Exporte d'abord ce que la test 9 garde.
-2. **Contrôle l'empreinte du zip** (PowerShell, dans le dossier du zip) : `Get-FileHash .\ariane-4.9.5-test.10.zip -Algorithm SHA256`. Les 64 caractères doivent être ceux de mon message, sinon n'installe pas.
-3. **Pose la test 10 par-dessus la test 9** : décompresse le zip dans le même dossier, en remplaçant les fichiers. Dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane.
+2. **Contrôle l'empreinte du zip** (PowerShell, dans le dossier du zip) : `Get-FileHash .\ariane-4.9.5-test.13.zip -Algorithm SHA256`. Les 64 caractères doivent être ceux de mon message, sinon n'installe pas.
+3. **Pose la test 13 par-dessus la test 9** : décompresse le zip dans le même dossier, en remplaçant les fichiers. Dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane.
 4. **F5 sur l'onglet ESV**, puis choisis-le dans Ariane.
-5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 10 ».
+5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 13 (L1) ».
 
 Rien à régler : le nouveau comportement est actif pour chaque lot.
 
@@ -42,7 +42,7 @@ Important pour la mesure : **ne retouche pas** un cut rouge approché par un aut
 ## 5. Si quelque chose ne va pas
 
 Arrête le lot, note l'heure et le message, exporte et envoie les zips. **Ne désinstalle pas Ariane.**
-Retour arrière (retrouver le lot d'avant, exactement) : exporte, puis **désactive** la test 10 dans `chrome://extensions` (sans la supprimer), décompresse le zip de la **4.9.5 test 9** dans le même dossier, **réactive** la carte, **Recharger**, F5 sur ESV.
+Retour arrière (retrouver le lot d'avant, exactement) : exporte, puis **désactive** la test 13 dans `chrome://extensions` (sans la supprimer), décompresse le zip de la **4.9.5 test 9** dans le même dossier, **réactive** la carte, **Recharger**, F5 sur ESV.
 
 ## 6. Ce qui n'est pas vérifié
 

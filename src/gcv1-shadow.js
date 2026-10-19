@@ -402,7 +402,7 @@
    return Math.hypot((a[0]||0)-(b[0]||0),(a[1]||0)-(b[1]||0),(a[2]||0)-(b[2]||0));
  }
 
- /* 4.9.5.10 (L1, D-219) — RÉSERVOIR DU MOTEUR POUR LA GCV2. `scientificProposeBothAvecReservoir` rend exactement ce que rend
+ /* 4.9.5.13 (L1, D-219) — RÉSERVOIR DU MOTEUR POUR LA GCV2. `scientificProposeBothAvecReservoir` rend exactement ce que rend
   * `scientificProposeBoth`, plus, sur chaque rail résolu en repère (`ok:true`), le champ `_reservoir` (cellules du pool, perte minimale,
   * signe du profil) que lisent les hypothèses H1 et H2 de la GCV2 (`src/gcv2-l1.js`). Le drapeau ne vit que le temps de l'appel ; sans lui,
   * la sortie est celle d'avant, octet pour octet (tests/gcv1-reservoir.test.cjs). Le calcul du moteur n'est pas touché. */

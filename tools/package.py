@@ -59,7 +59,8 @@ def nom_paquet(manifest):
     version, nom = manifest['version'], manifest.get('version_name')
     if not nom or nom == version:
         return f'ariane-v{version}.zip'
-    m = re.fullmatch(r'(\d+\.\d+\.\d+) test (\d+)', nom)
+    # 4.9.5.13 : une étiquette courte entre parenthèses est permise après le numéro (« 4.9.5 test 13 (L1) ») ; le paquet n'en porte rien.
+    m = re.fullmatch(r'(\d+\.\d+\.\d+) test (\d+)(?: \([A-Za-z0-9-]{1,12}\))?', nom)
     if not m or version != f'{m[1]}.{m[2]}':
         raise ValueError(f'version {version} et version_name « {nom} » ne concordent pas')
     return f'ariane-{m[1]}-test.{m[2]}.zip'

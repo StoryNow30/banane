@@ -16,7 +16,7 @@
  *   - la science du cut (moteur d'aujourd'hui, avec son réservoir) ; la décision du lot (`L.decideCut`) avec les appuis QUE CE PROFIL a posés avant ;
  *   - la commande (`L.commandRails`) : posé si la commande est celle du lot, ou celle du moteur aux deux rails résolus ; règle « grappe » du lot ;
  *   - profils L1 et L1-v : options du lot de L1 (garde de paire éteinte, appuis à 10 cuts), cible hors de la vue amenée par la vue élargie, puis,
- *     pour un cut que la chaîne ne pose pas, la décision L1 de `src/gcv2-l1.js` (le code de la test 10) ;
+ *     pour un cut que la chaîne ne pose pas, la décision L1 de `src/gcv2-l1.js` (le code de la test 13) ;
  *   - une pose validée devient appui (si la règle « appui = cut posé » le dit, ou pose validée de la GCV2) et voisin des cuts suivants.
  * Profils : « base » (le code d'aujourd'hui sans L1 : fidélité du rejeu), « L1 », « L1-v ». Le sort RÉEL du cut (journal) est joint à chaque ligne.
  * Sortie JSON lignes HORS DÉPÔT : des millimètres dans le repère profil de la pose de départ, des numéros de cut, des comptes.

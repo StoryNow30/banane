@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.5.10 — LA PAGE EST OCCUPÉE PAR UNE CAPTURE : REFUS TRANSITOIRE. Terrain, partie 19 du 19/10 : la relecture « corriger » s'est arrêtée à 156 cuts
+/* 4.9.5.13 — LA PAGE EST OCCUPÉE PAR UNE CAPTURE : REFUS TRANSITOIRE. Terrain, partie 19 du 19/10 : la relecture « corriger » s'est arrêtée à 156 cuts
  * sur 574 sur « passage au cut 5042 refusé par la page (Action d'Ariane en cours dans ESV (capture) …) ». Ce refus (`ADAPTER_BUSY`) dit seulement
  * qu'une action de la page n'est pas finie : la page n'a rien envoyé à ESV. La passe attend la fin de l'action et redemande le passage (délais et
  * nombre d'essais bornés, chaque attente consignée : `relecture-navigation-attente`) ; la page refuse toujours de naviguer pendant une capture.

@@ -1,6 +1,6 @@
 'use strict';
 /* 5.0, revue de la relecture (W8) — un refus de navigation de la page ne fait sauter la plage que s'il vient des bornes de la partie ou
- * d'une annulation ; tout autre refus (page occupée, chemin indisponible…) arrête la passe, sans rien poser. 4.9.5.10 : une page occupée est d'abord
+ * d'une annulation ; tout autre refus (page occupée, chemin indisponible…) arrête la passe, sans rien poser. 4.9.5.13 : une page occupée est d'abord
  * attendue et redemandée (essais bornés, tests/relecture-sw-page-occupee.test.cjs) ; ici elle le reste. Données synthétiques. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,apresLot}=require('./helpers/relecture-essais.cjs');

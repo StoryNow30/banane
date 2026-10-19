@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.5.10 (test 10, D-217, D-219, D-220, fiches/L1_DIFFERES.md) — LE PROFIL DU LOT. Service worker réel en VM, moteur et GCV1 réels, ESV simulé
+/* 4.9.5.13 (test 13, D-217, D-219, D-220, fiches/L1_DIFFERES.md) — LE PROFIL DU LOT. Service worker réel en VM, moteur et GCV1 réels, ESV simulé
  * (caméra d'ESV par rail, comme tests/helpers/deplacer-vue-lot.cjs). Données synthétiques.
  *  1. Profil « actuel » (gardé au panneau, `lot-profil`) : exactement les commandes de la 4.9.5.9 (empreinte de la base,
  *     tests/fixtures/lot-sans-vue-50-base.json), mêmes appels, même scope (aucun profil dedans).

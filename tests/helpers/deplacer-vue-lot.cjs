@@ -32,7 +32,7 @@ async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',l
  const S={...b.ctx.BananeSettings};if(reglage!==undefined)S.deplacerVue=reglage;
  /* L'ombre de la voie prédite est coupée ici : elle ne commande rien et alourdit l'essai (essayée à part). */
  if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};if(seuilsVoie)S.voiePrediteOmbre={...S.voiePrediteOmbre,...seuilsVoie};
- /* 4.9.5.10 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */
+ /* 4.9.5.13 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */
  if(profil)S.lot={...S.lot,profil};b.ctx.BananeSettings=S;
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);

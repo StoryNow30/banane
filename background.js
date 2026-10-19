@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.10',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 10';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.13',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 13 (L1)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -1160,7 +1160,7 @@ adapter.apply=async(...args)=>{
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
-/* 4.9.5.10 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
+/* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
 const nextSansDecisionESV=adapter.nextWithoutDecision;
 adapter.nextWithoutDecision=async(identity,...rest)=>{const p=l1PoseEnAttente;l1PoseEnAttente=null;
  if(p&&identity&&p.batchId===(engine?.s?.batch?.id??null)&&p.cutId===globalThis.BananeCore3.cutId(identity))await l1PoserSansValider(p);
@@ -1297,12 +1297,12 @@ async function commandLot(proposal,lotObservation){
   if(VR&&b?.id){if(dvMemoire?.batchId!==b.id)dvMemoire=VR.creerMemoire(b.id);VR.noterDecisionReelle(dvMemoire,id,lotObservation);}}catch{/* jamais bloquant */}
  if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
- /* 4.9.5.10 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
+ /* 4.9.5.13 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
  if(profilL1()&&!deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=essai.command;}
  /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
  command=reglesMetierCommande(command,lotObservation,proposal,before);
- /* 4.9.5.10 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
+ /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
  if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{})};
  lotObservation.applied=command.action==='lot';
@@ -1383,7 +1383,7 @@ function holdLotAnchor(lotObservation,command){
  lotObservation.anchorHeld=L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
 }
-/* 4.9.5.10 (test 10, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
+/* 4.9.5.13 (test 13, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
  * `lot-profil`), sinon le réglage `lot.profil` (défaut 'L1') ; lu au démarrage du lot et FIGÉ dans le scope (`lotProfil:'L1'`, absent pour
  * 'actuel'). Profil 'actuel' : rien de ce qui suit ne s'exécute, les commandes sont celles de la 4.9.5.9 (tests/lot-profil-actuel.test.cjs).
  * Profil 'L1', sur un cut que la chaîne du lot ne pose pas (le moteur et la chaîne le diffèrent, ou la commande le replie) :
@@ -1638,7 +1638,7 @@ async function observeLot(shadow){
  voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
  /* 5.0 (D-147) : ce que la règle prudente de « déplacer la vue » relira, seulement si le réglage est actif (références, sans copie). */
  dvContexte=deplacerVueReglage()?{identity,lotArgs,anchors:state.anchors.slice(),decision}:null;
- /* 4.9.5.10 (L1) : ce que la GCV2 lira si la chaîne ne pose pas ce cut (capture, options, appuis AU MOMENT de la décision). */
+ /* 4.9.5.13 (L1) : ce que la GCV2 lira si la chaîne ne pose pas ce cut (capture, options, appuis AU MOMENT de la décision). */
  l1Contexte=profilL1()?{identity,lotArgs,anchors:state.anchors.slice()}:null;
  /* 5.0 : surface « au ras » du cut pour les règles métier (lecture de la capture seulement). */
  reglesMetierCapture(identity,capture);
@@ -2152,7 +2152,7 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * qu'ESV écrit 0,9 à 1,7 s après l'arrivée (rien n'est commandé pendant ce temps) ; `validation` : le geste de validation de « corriger » ('maj-espace', le seul
  * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : budget global de la sélection si entier (hors PN) ;
  * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
-/* 4.9.5.10 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
+/* 4.9.5.13 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
  * finie (`ADAPTER_BUSY`, terrain 2:19) : 6 essais au plus, 11,75 s en tout. */
 const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
  occupeAttentesMs:[250,500,1000,2000,4000,4000],...(globalThis.BananeSettings?.relecture||{})});
@@ -2484,7 +2484,7 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
  /* Champs communs des événements d'un cut relu (revue, R10). */
  const evenementCut=(c,plage,champs)=>({identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,...champs});
  /* Aller à un cut ('pas' : boutons d'ESV ; 'auto' : carte, sinon pas à pas). W8 : seul un cut hors des bornes, ou une annulation, fait
-  * sauter la plage ; tout autre refus arrête la passe. 4.9.5.10 (terrain 2:19) : un refus « action d'Ariane en cours » (`ADAPTER_BUSY` : une
+  * sauter la plage ; tout autre refus arrête la passe. 4.9.5.13 (terrain 2:19) : un refus « action d'Ariane en cours » (`ADAPTER_BUSY` : une
   * capture, une pose ou une lecture de la page n'est pas finie ; rien n'est parti vers ESV) est passager : la passe attend (`occupeAttentesMs`)
   * et redemande, avec une opération neuve ; la page garde son verrou et ne navigue jamais pendant une action. Au-delà des essais : arrêt. */
  const aller=async(cut,chemin)=>{const attentes=(Array.isArray(cfg.occupeAttentesMs)?cfg.occupeAttentesMs:[]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);let nav,demandes=0;
@@ -2611,7 +2611,7 @@ async function demarrerLot(args){
    * Au défaut (« Comme avant », règle coupée), le scope n'en porte rien : il est celui d'avant, à l'octet près (il voyage jusqu'à
    * la page) ; un champ absent se lit comme le défaut. */
   delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
-  /* 4.9.5.10 (test 10) : profil du lot figé dans le scope ; 'actuel' : le scope n'en porte rien (celui de la 4.9.5.9, à l'octet près). */
+  /* 4.9.5.13 (test 13) : profil du lot figé dans le scope ; 'actuel' : le scope n'en porte rien (celui de la 4.9.5.9, à l'octet près). */
   delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE&&await profilDuLot()==='L1')startArgs.lotProfil='L1';
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */

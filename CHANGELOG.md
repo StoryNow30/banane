@@ -1,10 +1,10 @@
 # Banane V4 TEST — journal des versions
 
-## 4.9.5.10 — 4.9.5 test 10 (19/10)
+## 4.9.5.13 — 4.9.5 test 13 (L1) (19/10)
 
-Manifeste `4.9.5.10`, « 4.9.5 test 10 », paquet `ariane-4.9.5-test.10.zip` ; base : la 4.9.5 test 9 (`claude/50-rm11-test9`) + la candidate L1 (D-217, D-219, D-220 ; `fiches/L1_DIFFERES.md`).
+Manifeste `4.9.5.13`, « 4.9.5 test 13 (L1) », paquet `ariane-4.9.5-test.13.zip` ; base : la 4.9.5 test 9 (`claude/50-rm11-test9`) + la candidate L1 (D-217, D-219, D-220 ; `fiches/L1_DIFFERES.md`).
 **Le lot change, sur ses différés seulement** : derrière le **profil du lot** (`lot.profil`, `'L1'` par défaut, figé dans le scope du lot à son départ). Profil `'actuel'` : le lot de la 4.9.5.9, commandes identiques octet pour octet (essai tests/lot-profil-sw.test.cjs). `src/engine.js` et la géométrie inchangés ; Écho et la relecture après le lot inchangés.
-Consigne : `consignes/seance-terrain-4.9.5-test-10-2026-10-19.md` ; retour arrière : la 4.9.5 test 9 (désactiver, redécompresser, réactiver, Recharger, F5).
+Consigne : `consignes/seance-terrain-4.9.5-test-13-2026-10-19.md` ; retour arrière : la 4.9.5 test 9 (désactiver, redécompresser, réactiver, Recharger, F5).
 
 - **GCV2 sur les différés du lot (L1)** : un cut que la chaîne du lot ne pose pas passe à la GCV2 (`src/gcv2-l1.js`, hypothèses H0 à H6, paramètres figés `src/gcv2-parametres-l1.js` = `datasets/gcv2-parametres-h6.json`, usage « lot »), sans le couloir de 45 mm ; τ, δ et l'écartement de la paire gardés. Au-dessus de τ : la commande devient celle de la GCV2 (`gcv2-l1`), le moteur pose et valide, le cut devient appui. Sous τ : **pose sans validation** (commande `apply` de la page, puis la navigation sans décision d'avant) ; rien à plus de 150 mm de la pose de départ. Variante L1-v (valider sous τ) : chiffrée au banc, pas livrée.
 - **Ce que la GCV2 lit** : seulement ce que le service worker a à l'instant de la décision (capture, science recalculée avec le réservoir du moteur, appuis de la chaîne, cuts validés par ce lot, zone des règles métier évaluée avant le cut).
