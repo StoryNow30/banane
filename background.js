@@ -12,9 +12,9 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.9',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 9';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.10',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 10';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -1148,7 +1148,7 @@ function clicHumainDuLot(){const b=engine?.s?.batch,v=b?.state==='RUNNING'?b.sco
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{
  /* 5.0 (D-147) : le plan de geste de la commande du lot, seulement si le réglage `deplacerVue` est actif ; sinon l'appel d'avant. */
- const plan=deplacerVueReglage()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
+ const plan=deplacerVueReglage()||profilL1()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
  /* 4.9.5 test 6 (D-164) : le clic du mode rapide figé dans le lot en cours, transmis à la page seulement s'il est corrigé ; « Comme
   * avant » (tel-quel) : l'appel d'avant, à l'octet près. */
  const clic=clicHumainDuLot(),optClic=clic?{clicHumain:clic}:null;
@@ -1160,6 +1160,11 @@ adapter.apply=async(...args)=>{
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
+/* 4.9.5.10 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
+const nextSansDecisionESV=adapter.nextWithoutDecision;
+adapter.nextWithoutDecision=async(identity,...rest)=>{const p=l1PoseEnAttente;l1PoseEnAttente=null;
+ if(p&&identity&&p.cutId===globalThis.BananeCore3.cutId(identity))await l1PoserSansValider(p);
+ return nextSansDecisionESV(identity,...rest);};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);rangerErreursDeLot(engine);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
@@ -1292,8 +1297,13 @@ async function commandLot(proposal,lotObservation){
   if(VR&&b?.id){if(dvMemoire?.batchId!==b.id)dvMemoire=VR.creerMemoire(b.id);VR.noterDecisionReelle(dvMemoire,id,lotObservation);}}catch{/* jamais bloquant */}
  if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
+ /* 4.9.5.10 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
+ if(profilL1()&&!deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
+  const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=essai.command;}
  /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
  command=reglesMetierCommande(command,lotObservation,proposal,before);
+ /* 4.9.5.10 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
+ if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
@@ -1370,9 +1380,100 @@ let lotAnchorCandidate=null;
 function holdLotAnchor(lotObservation,command){
  const L=globalThis.BananeLotDecision,batch=engine.s.batch,candidate=lotAnchorCandidate;lotAnchorCandidate=null;
  if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
- lotObservation.anchorHeld=L.commandsPositions(lotObservation,command);
+ lotObservation.anchorHeld=L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
 }
+/* 4.9.5.10 (test 10, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
+ * `lot-profil`), sinon le réglage `lot.profil` (défaut 'L1') ; lu au démarrage du lot et FIGÉ dans le scope (`lotProfil:'L1'`, absent pour
+ * 'actuel'). Profil 'actuel' : rien de ce qui suit ne s'exécute, les commandes sont celles de la 4.9.5.9 (tests/lot-profil-actuel.test.cjs).
+ * Profil 'L1', sur un cut que la chaîne du lot ne pose pas (le moteur et la chaîne le diffèrent, ou la commande le replie) :
+ *   1. la GCV2 (src/gcv2-l1.js, paramètres figés src/gcv2-parametres-l1.js) lit ce que le lot sait À CET INSTANT : la capture et les
+ *      options du cut, les appuis de la chaîne au moment de la décision (`l1Contexte`), les cuts validés par CE lot avant lui (visites
+ *      `records` des cuts de `batch.processed`, même repère), la zone de la mémoire des règles métier (évaluée avant de noter le cut) ;
+ *      la science est recalculée une fois avec le réservoir du moteur ;
+ *   2. « valider » : la commande devient celle de la GCV2 (`gcv2-l1`), le moteur pose et valide, le cut devient appui ;
+ *   3. « poser sans valider » : la commande reste un différé ; juste avant la navigation sans décision, la pose de la GCV2 est faite par
+ *      la commande `apply` de la page (aucune validation), puis `nextWithoutDecision` part comme d'habitude : le cut reste rouge, approché ;
+ *   4. cible hors de la vue : la vue est amenée sur la cible (`amenerDansLaVue`, pré-vol), puis posée par `apply` avec le plan ;
+ *   5. chaque décision est consignée dans l'observation du lot (`lotObservation.l1` : état, motif, hypothèse, probabilité, écart au départ,
+ *      zone, commande) et la pose sans validation par un événement `l1-pose-sans-valider`.
+ * Une panne ici ne pose rien : la commande du lot reste celle d'avant. */
+const CLE_LOT_PROFIL='banane50LotProfil',PROFILS_LOT=['actuel','L1'];
+async function profilDuLot(){let r={};try{r=await chrome.storage.local.get(CLE_LOT_PROFIL)||{};}catch{r={};}
+ const v=r[CLE_LOT_PROFIL],d=globalThis.BananeSettings?.lot?.profil;return PROFILS_LOT.includes(v)?v:PROFILS_LOT.includes(d)?d:'actuel';}
+async function profilChoisir(args){if(!PROFILS_LOT.includes(args?.profil))throw Error('Profil du lot inconnu : actuel ou L1.');
+ await chrome.storage.local.set({[CLE_LOT_PROFIL]:args.profil});return {profil:args.profil};}
+function profilL1(){return engine?.s?.batch?.scope?.lotProfil==='L1'&&!!globalThis.BananeGcv2L1&&!!globalThis.BananeGcv2ParametresL1;}
+const ETAGES_L1=['first-pass','window','choice','crossing'];
+function reglageVueL1(){return {...(globalThis.BananeSettings?.deplacerVue||{}),actif:true,etages:ETAGES_L1,regle:'aucune'};}
+let l1Contexte=null,l1PoseEnAttente=null,l1ModeleCache=null;
+function l1Modele(){return l1ModeleCache||(l1ModeleCache=globalThis.BananeGcv2L1.modeleFige(globalThis.BananeGcv2ParametresL1,'lot'));}
+/* Zone du cut à l'instant de la décision : mémoire des règles métier du lot, évaluée avant de noter le cut (src/regles-metier.js). */
+function l1Zone(identity){const M=globalThis.BananeReglesMetier,c=reglesOmbre.capture,mem=reglesMemoire();
+ try{if(!M||!mem||!c||c.erreur||c.cut!==identity?.cut)return {zone:'abords',adv:[],source:'inconnue'};
+  const e=M.evaluer(mem,M.resumer({identity:{part:c.part,cut:c.cut},decision:{stage:'deferred'},action:null,valide:false,surface:c.surface}));
+  const P=M.DEFAULTS.pn,A=M.DEFAULTS.adv,pn=mem.zones.map(z=>[z.debut-P.margeAvant,z.fin+P.margeApres]),adv=(mem.zonesADV||[]).map(z=>[Math.max(0,z.debut-A.margeAvant),z.fin+A.margeApres]);
+  if(e.zone.pnControle)pn.push(e.zone.pnControle);if(e.zone.advControle)adv.push(e.zone.advControle);
+  const dans=l=>l.some(([a,b])=>identity.cut>=a&&identity.cut<=b);
+  return {zone:dans(pn)?'pn':dans(adv)?'adv':'abords',adv,source:'regles-metier'};}catch{return {zone:'abords',adv:[],source:'inconnue'};}}
+/* Cuts validés par CE lot avant le cut (même partie, même repère) : pose de départ et pose validée de leur dernière visite. */
+function l1Voisins(b,identity){const SIDES=['left','right'],f=identity?.frameId??null;
+ const faits=new Set((b?.processed||[]).filter(p=>p?.identity?.part===identity.part).map(p=>p.cut??p.identity?.cut));
+ const par=new Map();
+ for(const r of engine?.s?.records||[]){const id=r?.identity;if(!id||id.part!==identity.part||(id.frameId??null)!==f||!faits.has(id.cut)||id.cut===identity.cut)continue;
+  if(SIDES.every(s=>Array.isArray(r.rails?.[s]?.initial?.sceneRelativeToProfileLocal)&&Array.isArray(r.rails?.[s]?.initial?.positionSceneRelative)&&Array.isArray(r.rails?.[s]?.corrected?.positionSceneRelative)))par.set(id.cut,r);}
+ return [...par.values()].map(r=>({identity:{part:r.identity.part,cut:r.identity.cut,frameId:f},
+  positions:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].corrected.positionSceneRelative.slice(0,3)])),rails:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].initial]))}));}
+/* Plan de vue pour une cible de la GCV2 (mêmes limites et même pré-vol que « déplacer la vue », D-147). */
+async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,r=reglageVueL1();
+ const vue=VR.vueNecessaire(capture,positions,r.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
+ if(vue.inconnu)return {ok:false,raison:'vue-inconnue'};
+ for(const s of ['left','right']){const p=vue.par[s];if(!p||p.ok)continue;const c=cams[s];
+  const pixel=c?.viewport?.width&&c.projection?.[0]?2/Math.abs(c.projection[0])/c.viewport.width*1000:NaN;
+  const dezoom=p.dezoom<=r.dezoomMax&&Number.isFinite(pixel)&&pixel*p.dezoom<=r.pixelMaxMm,glisser=p.panPx<=r.glissementPxMax;
+  if(!dezoom&&!glisser)return {ok:false,raison:'hors-limites'};
+  cotes[s]={geste:dezoom?'dezoom':'glissement',dezoom:dvR(p.dezoom),panPx:dvR(p.panPx,10),pixelMm:dvR(pixel),ndc:p.ndc.map(x=>dvR(x))};}
+ if(!Object.keys(cotes).length)return {ok:true,plan:null};
+ const plan={version:'deplacer-vue-v1',cotes,...Object.fromEntries(DV_TRANSMIS.filter(k=>r[k]!==undefined).map(k=>[k,r[k]]))};
+ if(r.preVol!==false)for(const s of Object.keys(cotes)){let x;
+  try{x=await call('amenerDansLaVue',s,positions[s],identity,{...plan,cotes:undefined,essai:true});}catch(e){x={ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
+  if(!x?.ok)return {ok:false,raison:'pre-vol:'+(x?.raison||'?')};}
+ return {ok:true,plan};}
+async function l1Commande({command,lotObservation,proposal,before,capture}){
+ const SIDES=['left','right'],ctx=l1Contexte;l1Contexte=null;
+ if(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'))return command;
+ const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow;
+ const b=engine.s.batch,identity=engine.s.before?.identity??null;
+ try{
+  if(command.reason==='regles-metier'){lotObservation.l1={version:G.VERSION,etat:'rien',motif:'regle-metier'};return command;}
+  if(!ctx||!identity||ctx.identity.cut!==identity.cut||!capture||typeof Sh?.scientificProposeBothAvecReservoir!=='function'){lotObservation.l1={version:G.VERSION,etat:'rien',motif:'contexte-absent'};return command;}
+  const t0=Date.now(),science=Sh.scientificProposeBothAvecReservoir(ctx.lotArgs.capture),z=l1Zone(identity);
+  const g=G.deciderDiffere({capture:ctx.lotArgs.capture,science,appuis:ctx.anchors,options:ctx.lotArgs.options,voisins:l1Voisins(b,identity),zone:z.zone,plagesADV:z.adv,modele:l1Modele()});
+  const d=g.decision,l1={...G.resumer(g),zoneSource:z.source,ms:Date.now()-t0};
+  lotObservation.l1=l1;
+  if(d.etat==='rien')return command;
+  const valider=d.etat==='valider';
+  const cg=G.commander({positions:g.positions,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),camerasLarges:VR.camerasLarges(capture),valider});
+  l1.commande={action:cg.action,reason:cg.reason,vue:cg.vue??null};
+  if(cg.action!=='lot')return command;
+  let plan=null;
+  if(cg.vue==='deplacer'){const v=await l1PlanVue(capture,g.positions,identity);if(!v.ok){l1.commande.refus='vue:'+v.raison;return command;}plan=v.plan;}
+  if(valider){
+   const c=reglesMetierCommande({action:'lot',reason:'gcv2-l1',rails:cg.rails,gaugeMm:cg.gaugeMm,...(plan?{deplacerVue:plan}:{})},lotObservation,proposal,before);
+   if(c.action==='lot')lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:g.positions,stage:'gcv2-l1'};
+   else l1.commande.refus='regles-metier';
+   return c;}
+  /* Sous τ : la commande reste un différé ; la pose est faite juste avant la navigation sans décision (`adapter.nextWithoutDecision`). */
+  l1PoseEnAttente={cutId:K.cutId(identity),identity:K.clone(identity),before:K.clone(engine.s.before),rails:cg.rails,plan,
+   resume:{p:l1.p,hypothese:l1.hypothese,ecartDepartMm:l1.ecartDepartMm,zone:l1.zone}};
+  l1.commande.sansValider='en-attente-de-la-navigation';
+  return command;
+ }catch(e){lotObservation.l1={version:G?.VERSION??null,etat:'erreur',message:String(e?.message||e).slice(0,160)};return command;}}
+async function l1PoserSansValider(p){const clic=clicHumainDuLot(),opt={...(clic?{clicHumain:clic}:{}),...(p.plan?{deplacerVue:p.plan}:{})};
+ const ev={identity:{part:p.identity.part??null,cut:p.identity.cut??null},batchId:engine?.s?.batch?.id??null,...p.resume,vueDeplacee:!!p.plan};
+ try{const r=Object.keys(opt).length?await applyInESV(p.before,p.rails,opt):await applyInESV(p.before,p.rails);
+  await engine.event('l1-pose-sans-valider',{...ev,ok:true,applyCommandSent:true,validateSent:false,...(r?.deplacerVue?{remise:r.deplacerVue.remise??null}:{})}).catch(()=>{});return true;}
+ catch(e){await engine.event('l1-pose-sans-valider',{...ev,ok:false,erreur:String(e?.message||e).slice(0,200)}).catch(()=>{});return false;}}
 /* B1 (D-095) — VOISINS VALIDÉS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
  * La liste vit en mémoire de la PAGE (src/esv-observer.js) ; le service worker n'en
  * demande, par le pont, qu'une fenêtre de ±5 lignes autour du cut décidé et la ligne
@@ -1515,7 +1616,8 @@ async function observeLot(shadow){
  if(typeof L.promoteAnchors==='function')promouvoirAppuis(batch,state,batch.processed,max);
  const t0=Date.now();
  const lotArgs={capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
-   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow};
+   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow,
+   ...(profilL1()?{options:{...globalThis.BananeGcv2L1.REGLE.lotOptions}}:{})};
  /* B1 (D-095) : en ombre (réglage livré), la décision réelle est celle-ci, inchangée ; l'hypothèse « voisins de la
   * liste d'ESV » est calculée à côté, après coup, et seulement consignée (`b1-ombre`). */
  const decision=await b1Decision(lotArgs,L.decideCut(lotArgs));
@@ -1532,6 +1634,8 @@ async function observeLot(shadow){
  voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
  /* 5.0 (D-147) : ce que la règle prudente de « déplacer la vue » relira, seulement si le réglage est actif (références, sans copie). */
  dvContexte=deplacerVueReglage()?{identity,lotArgs,anchors:state.anchors.slice(),decision}:null;
+ /* 4.9.5.10 (L1) : ce que la GCV2 lira si la chaîne ne pose pas ce cut (capture, options, appuis AU MOMENT de la décision). */
+ l1Contexte=profilL1()?{identity,lotArgs,anchors:state.anchors.slice()}:null;
  /* 5.0 : surface « au ras » du cut pour les règles métier (lecture de la capture seulement). */
  reglesMetierCapture(identity,capture);
  /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
@@ -2492,6 +2596,8 @@ async function demarrerLot(args){
    * Au défaut (« Comme avant », règle coupée), le scope n'en porte rien : il est celui d'avant, à l'octet près (il voyage jusqu'à
    * la page) ; un champ absent se lit comme le défaut. */
   delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
+  /* 4.9.5.10 (test 10) : profil du lot figé dans le scope ; 'actuel' : le scope n'en porte rien (celui de la 4.9.5.9, à l'octet près). */
+  delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE&&await profilDuLot()==='L1')startArgs.lotProfil='L1';
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */
   delete startArgs.relecture;{const m=await relectureChoix();if(m!=='coupee')startArgs.relecture=m;}
@@ -2540,6 +2646,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* 4.9.5 test 6 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
  if(action==='choix-lot-etat')return choixDuLot();
  if(action==='choix-lot')return choixLot(args);
+ if(action==='lot-profil-etat')return {profil:await profilDuLot()};
+ if(action==='lot-profil')return profilChoisir(args);
  /* RM-11 : choix de la raison de la correction pour la PROCHAINE séance d'Écho ; une raison tapée au panneau (secours des touches) est consignée par la séance. */
  if(action==='raison-choix-etat')return choixRaisonDuPanneau();
  if(action==='raison-choix')return raisonChoisir(args);
