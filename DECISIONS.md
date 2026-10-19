@@ -2809,3 +2809,16 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **2:6** (lue une fois, N = 5 figé) : le PN 3931–3935 n'est pas vu (5 cuts de large, une lecture sur 5) ; les 5 grosses corrections restent hors zone.
 - **Décision** : **non retenu**. Le trou de lecture est rare et la lecture des verts multiplie la durée du lot par 3,6 à 10. La question posée à Mic sur le temps acceptable est close. Pistes moins chères gardées en note : lire seulement les verts d'une fenêtre autour d'une alerte isolée, ou exploiter un signal de la liste d'ESV sans nuage ; aucune n'est lancée.
 - **Écart de méthode** relevé : le développeur avait lu les fiches de travail de RM-2 sur 2:6 avant de figer N ; écrit dans la fiche, sans effet sur le choix. 2:6 n'a plus que G1-c comme usage avant son passage en apprentissage.
+
+## D-204 — G1-b rendu : la GCV2 corrige plus que la règle prudente mais ne tient pas la porte ; variantes par zone pré-déclarées ; Astra avant G1-c (19 octobre 2026)
+
+- **G1-b** (`claude/50-g1b-apprendre`, `3580b37` et `d1ea7c5`, verify 2 257 essais, 0 échec ; `fiches/G1B_APPRENTISSAGE.md`, `tools/gcv2-apprendre.cjs`, `datasets/gcv2-parametres.json`, 44 ko, reproductible octet pour octet) : régression logistique calibrée, liste blanche des traits, validation croisée par partie (11 plis, 2 411 cuts jugés). Petits arbres écartés (gain de Brier 3,6 % sous le seuil de 5 % fixé avant la mesure). Brier hors échantillon p(10 mm) 0,043.
+- **Validation croisée, relecture** : 392 actions, **144 corrections justes** (règle prudente : 107), erreur 6,6 % (Wilson ≤ 9,5 %), **6 abîmés** (prudente : 4), **5 mauvaises voies** (prudente : 0). Lot : 125 justes, 9 abîmés, 5 mauvaises voies. Hasard : 20 justes, 125 abîmés : la condition 3 de D-201 est tenue largement. **Porte du plan non tenue.**
+- **Lecture par zone et par rôle** : la GCV2 gagne en **PN** (69 justes contre 56, 2 abîmés contre 2), en **ADV** (38 contre 18, 0 abîmé contre 2) et **hors zone** (23 justes là où la règle n'agit jamais, 3 abîmés) ; elle **perd aux abords** (14 contre 33, 27,6 % d'erreurs). Les **5 mauvaises voies sont toutes des cuts différés** aux abords de la partie 2:1 ; sur les **verts**, 0 mauvaise voie.
+- **Décision (fort)** : pas de GCV2 seule. Trois variantes structurelles, **déclarées ici avant tout calcul** et marquées « après coup » dans la fiche, car choisies en lisant la validation croisée :
+  - **V1** : GCV2 sur les verts de PN et d'ADV ; règle prudente sur les verts des abords ; hors zone, rouges et différés : rien.
+  - **V2** : V1, plus la GCV2 sur les verts hors zone.
+  - **V3** : GCV2 sur tous les verts sauf les abords ; abords : rien.
+  Mêmes plis, mêmes τ et δ par zone (appris dans le pli), mêmes mesures. Aucune n'est retenue sur la validation croisée seule : la retenue se fera au jugement à l'aveugle (G1-c) sur 2:6 et les témoins 1:11 et 1:25, après l'audit d'Astra.
+- **Compteur** : 10 sources « appris » (**1 631 cuts corrigés appris**), 152 en file (2:6, réservée). La partie 1:17 a servi à l'apprentissage mais n'est pas dans le compteur (son Écho est en 7z) ; à ajouter.
+- **Astra** (D-194) : prompt d'audit écrit dans `consignes/chantier-gcv2-g1b-auditeur.md` ; Mic le relaie ; réponse attendue dans `audit/chantiers/audit-gcv2-g1b-astra.md`. G1-c attend cette réponse.
