@@ -84,3 +84,17 @@ Sous L1, la chaîne change (garde de paire éteinte, appuis à 10 cuts, poses va
 - L1 atteint −84 % sur le projet 1 et −44 % sur le projet 2 ; L1-v −95 % et −72 %. La cible −90 % n'est atteinte que par L1-v sur le projet 1.
 - Hors 2:1, les poses de L1 sont bonnes : erreur médiane 6,7 mm, 86,5 % à 20 mm, 5 poses à plus de 50 mm. **2:1 est le point faible** : 33 des 35 poses à plus de 50 mm, gain médian 1 mm.
 - Ces chiffres ne changent pas la candidate (D-219).
+
+## 5. Candidate de terrain « L1-s » (D-221) : détails tranchés avant la mesure
+
+D-221 (après le § 3.4 : sous L1, 59 poses réelles ne sont plus validées et 430 cuts verts sont posés autrement) : la chaîne du lot ne doit pas changer.
+
+1. **La chaîne est celle de la 4.9.5.9** : décision du lot avec ses options d'aujourd'hui (garde de paire allumée, appuis de reprise à 3 cuts), mêmes appuis, mêmes voisins. Tout cut que cette chaîne pose est posé exactement comme en 4.9.5.9 (mêmes commandes).
+2. **Une pose L1-s n'est jamais un appui de la chaîne, ni un voisin** (ni pour la chaîne, ni pour la GCV2 des cuts suivants) : seules les poses de la chaîne d'aujourd'hui le sont. La mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé).
+3. **Sur un cut que la chaîne d'aujourd'hui ne pose pas**, dans cet ordre, la première étape qui pose gagne :
+   a. cible de la chaîne hors de la vue : la vue est déplacée (vue élargie), puis la pose de la chaîne est faite et validée ;
+   b. la décision du lot est refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis ; si elle pose (vue déplacée au besoin), pose validée ;
+   c. la GCV2 (règle L1 : au-dessus de τ valider, sous τ poser sans valider, rien à plus de 150 mm), appuis de la chaîne d'aujourd'hui, options de L1, voisins = poses de la chaîne d'aujourd'hui.
+   Une règle « grappe » active bloque les poses validées de a, b et c comme celles de la chaîne.
+4. **Contrôle du banc** : sur les cuts que la base rejouée pose, L1-s doit poser à l'identique (compté : doit être 0).
+
