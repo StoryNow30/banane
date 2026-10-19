@@ -213,12 +213,15 @@ function lireRejeux(textes) {
   for (const x of textes) for (const o of lireJsonl(x)) { if (o.type === 'entete') { if (o.format !== FORMAT) throw Error(`format ${FORMAT} attendu`); entetes.push(o); } else if (o.type === 'cut') lignes.push(o); }
   return { entetes, lignes };
 }
-/* Différés réels jugés contre Mic (fichiers du diagnostic) : Map « partie|lot|cut » → { depart (mm), mic: { left, right } }. */
+/* Différés réels jugés contre Mic (fichiers du diagnostic) : Map « partie|lot|cut » → { depart (mm), mic: { left, right }, memeSeance }.
+ * `D.juge` : pose de départ vérifiée à 2 mm, nuage, cut que nul autre lot n'a posé ensuite. `memeSeance` : Écho de la même séance (règle de la
+ * fiche, § 2.16). D-220 (Mic : chaque changement de pose est définitif dans ESV) : un différé est jugeable quel que soit le délai tant qu'aucune
+ * autre écriture n'a touché le cut ; les jugés d'une autre séance sont donc gardés, marqués, et comptés à part. */
 function lireJuges(textes) {
   const out = new Map();
   for (const x of textes) for (const o of lireJsonl(x)) {
-    if (o.type !== 'differe' || !D.juge(o) || o.echoMemeSeance === false || o.temoin) continue;
-    out.set(`${o.partie}|${o.lot}|${o.cut}`, { depart: Math.max(...SIDES.map(s => norme(o.mic.rails[s]))), mic: o.mic.rails, motif: o.motif ? o.motif.code : null, zone: o.zone });
+    if (o.type !== 'differe' || !D.juge(o) || o.temoin) continue;
+    out.set(`${o.partie}|${o.lot}|${o.cut}`, { depart: Math.max(...SIDES.map(s => norme(o.mic.rails[s]))), mic: o.mic.rails, motif: o.motif ? o.motif.code : null, zone: o.zone, memeSeance: o.echoMemeSeance !== false });
   }
   return out;
 }
@@ -252,15 +255,21 @@ function agreger({ entetes, lignes }, juges = new Map(), inventaire = null) {
   const tableau = liste => Object.fromEntries(['reel', ...profils].map(p => [p, compter(liste, p)]));
   const moyenneLots = (liste, p) => { const lots = [...new Set(liste.map(l => `${l.partie} ${l.lot}`))].map(k => compter(parLot.get(k), p)); return { lots: lots.length, tauxMoyen: lots.length ? arrondi(lots.reduce((s, x) => s + x.taux, 0) / lots.length, 1) : null, differesParLot: lots.length ? arrondi(lots.reduce((s, x) => s + x.differes, 0) / lots.length, 1) : null }; };
   const groupesOut = Object.fromEntries(Object.entries(groupes).map(([k, v]) => [k, { comptes: tableau(v), parLot: Object.fromEntries(['reel', ...profils].map(p => [p, moyenneLots(v, p)])) }]));
-  /* Contre Mic : différés réels jugés. */
-  const jugesL = lignes.map(l => ({ l, j: juges.get(`${l.partie}|${l.lot}|${l.cut}`) })).filter(x => x.j && !x.l.reel.pose);
-  const mic = Object.fromEntries(profils.map(p => [p, (() => {
-    const e = jugesL.map(x => ({ ...erreurProfil(x.l, p, x.j), partie: x.l.partie, projet: x.l.projet }));
+  /* Contre Mic : différés réels jugés (même séance : règle de la fiche ; toutes séances : D-220). */
+  const jugesT = lignes.map(l => ({ l, j: juges.get(`${l.partie}|${l.lot}|${l.cut}`) })).filter(x => x.j && !x.l.reel.pose);
+  const jugesL = jugesT.filter(x => x.j.memeSeance !== false);
+  const contreMic = J => Object.fromEntries(profils.map(p => [p, (() => {
+    const e = J.map(x => ({ ...erreurProfil(x.l, p, x.j), partie: x.l.partie, projet: x.l.projet }));
     const parGroupe = {};
     for (const [nom, f] of [['total', () => true], ['projet 1', x => x.projet === 1], ['projet 2', x => x.projet === 2], ['2:1', x => x.partie === '2:1'], ['hors 2:1', x => x.partie !== '2:1'],
       ['hors échantillon (2:6, 2:7)', x => ['2:6', '2:7'].includes(x.partie)]]) parGroupe[nom] = { ...stats(e.filter(f)), poses: e.filter(f).filter(x => x.pose).length, posesValidees: e.filter(f).filter(x => x.etat === 'pose').length };
     return parGroupe;
   })()]));
+  const mic = contreMic(jugesL), micToutesSeances = contreMic(jugesT);
+  /* Poses à plus de 50 mm de Mic (comptées et publiées) : partie, lot, cut, état, écart (mm), pour chaque profil L1. */
+  const plus50 = Object.fromEntries(profils.filter(p => p !== 'base').map(p => [p, jugesT.map(x => ({ x, r: erreurProfil(x.l, p, x.j) })).filter(({ r }) => r.pose && r.e > 50)
+    .map(({ x, r }) => ({ partie: x.l.partie, lot: x.l.lot, cut: x.l.cut, etat: r.etat, memeSeance: x.j.memeSeance !== false, departMm: arrondi(r.depart, 1), erreurMm: arrondi(r.e, 1),
+      hypothese: x.l.profils[p].l1 ? x.l.profils[p].l1.hypothese : null, source: x.l.profils[p].source }))]));
   /* Où se perd le reste : différés restants (non validés) par motif réel et par raison L1. */
   const reste = Object.fromEntries(profils.filter(p => p !== 'base').map(p => {
     const r = lignes.filter(l => l.profils[p] && l.profils[p].etat !== 'pose');
@@ -290,7 +299,8 @@ function agreger({ entetes, lignes }, juges = new Map(), inventaire = null) {
   /* Contrôle : la base du banc (sort réel) contre l'inventaire du diagnostic. */
   const controle = inventaire ? (() => { const B = inventaire.lots.filter(x => x.dansLaBase); const vus = new Set(lots.map(x => x.lot)); const manquants = B.filter(x => !vus.has(`${x.projet}:${x.partie} ${x.id.slice(0, 8)}`)).map(x => `${x.projet}:${x.partie} ${x.id.slice(0, 8)}`);
     return { lotsBase: B.length, lotsRejoues: lots.length, manquants, differesInventaire: B.filter(x => vus.has(`${x.projet}:${x.partie} ${x.id.slice(0, 8)}`)).reduce((s, x) => s + x.differes, 0), differesReelsBanc: compter(lignes, 'reel').differes }; })() : null;
-  return { format: FORMAT_SYNTHESE, version: VERSION, profils, lots: lots.length, groupes: groupesOut, mic, jugesN: jugesL.length, reste, effets, parLot: lots, parPartie: parties, controle };
+  return { format: FORMAT_SYNTHESE, version: VERSION, profils, lots: lots.length, groupes: groupesOut, mic, jugesN: jugesL.length, micToutesSeances, jugesToutesSeancesN: jugesT.length, plus50,
+    reste, effets, parLot: lots, parPartie: parties, controle };
 }
 const fmt = v => v == null ? '—' : typeof v === 'number' ? String(v).replace('.', ',') : String(v);
 const pc = v => v == null ? '—' : `${fmt(v)} %`;
@@ -300,8 +310,12 @@ function syntheseMd(S) {
   const out = [];
   out.push('### Taux de différés', '', table(['Groupe', 'Profil', 'Lots', 'Traités', 'Posés validés', 'Posés non validés', 'Différés (non validés)', 'Taux pondéré', 'Taux moyen par lot', 'Différés par lot', 'Réduction'],
     Object.entries(S.groupes).flatMap(([g, x]) => P.map(p => { const c = x.comptes[p], r = x.comptes.reel; return [g, nom(p), x.parLot[p].lots, c.traites, c.poses, c.posesNonValidees, c.differes, pc(c.taux), pc(x.parLot[p].tauxMoyen), x.parLot[p].differesParLot, p === 'reel' ? '—' : pc(part(r.differes - c.differes, r.differes))]; }))));
-  out.push('', `### Contre Mic (différés réels jugés : ${S.jugesN})`, '', table(['Groupe', 'Profil', 'Jugés', 'Posés (dont validés)', 'Départ médian (mm)', 'Erreur médiane (mm)', 'Gain médian (mm)', 'Gain Q1–Q3 (mm)', '≤ 10 mm', '≤ 20 mm', '> 50 mm', 'Pire que le départ', 'Rappel (> 10 mm au départ)'],
-    S.profils.flatMap(p => Object.entries(S.mic[p]).map(([g, x]) => [g, nom(p), x.n, `${x.poses} (${x.posesValidees})`, x.departMedianMm, x.erreurMedianeMm, x.gainMedianMm, `${fmt(x.gainQ1Mm)} – ${fmt(x.gainQ3Mm)}`, `${x.a10} (${pc(part(x.a10, x.n))})`, `${x.a20} (${pc(part(x.a20, x.n))})`, x.plus50, x.pire, `${x.rappel.k}/${x.rappel.n} (${pc(x.rappel.part)})`]))));
+  const tMic = M => table(['Groupe', 'Profil', 'Jugés', 'Posés (dont validés)', 'Départ médian (mm)', 'Erreur médiane (mm)', 'Gain médian (mm)', 'Gain Q1–Q3 (mm)', '≤ 10 mm', '≤ 20 mm', 'Écart final > 50 mm (posé ou laissé)', 'Pire que le départ', 'Rappel (> 10 mm au départ)'],
+    S.profils.flatMap(p => Object.entries(M[p]).filter(([, x]) => x.n).map(([g, x]) => [g, nom(p), x.n, `${x.poses} (${x.posesValidees})`, x.departMedianMm, x.erreurMedianeMm, x.gainMedianMm, `${fmt(x.gainQ1Mm)} – ${fmt(x.gainQ3Mm)}`, `${x.a10} (${pc(part(x.a10, x.n))})`, `${x.a20} (${pc(part(x.a20, x.n))})`, x.plus50, x.pire, `${x.rappel.k}/${x.rappel.n} (${pc(x.rappel.part)})`])));
+  out.push('', `### Contre Mic, Écho de la même séance (règle de la fiche ; différés réels jugés : ${S.jugesN})`, '', tMic(S.mic));
+  if (S.micToutesSeances) out.push('', `### Contre Mic, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : ${S.jugesToutesSeancesN})`, '', tMic(S.micToutesSeances));
+  if (S.plus50) for (const [p, liste] of Object.entries(S.plus50)) out.push('', `### Poses ${nom(p)} à plus de 50 mm de Mic (${liste.length})`, '',
+    liste.length ? table(['Partie', 'Lot', 'Cut', 'État', 'Même séance', 'Départ (mm)', 'Pose L1 → Mic (mm)', 'Hypothèse'], liste.map(x => [x.partie, x.lot, x.cut, x.etat, x.memeSeance ? 'oui' : 'non', x.departMm, x.erreurMm, x.hypothese])) : 'Aucune.');
   for (const [p, r] of Object.entries(S.reste)) {
     out.push('', `### Ce qui reste différé sous ${nom(p)} (${r.restants})`, '', table(['Raison', 'Cuts'], Object.entries(r.parRaison)), '', table(['Motif réel du différé', 'Différés réels', 'Restent différés', 'dont approchés'], Object.entries(r.parMotifReel).map(([k, v]) => [k, v.reels, v.restants, v.approches])));
   }
