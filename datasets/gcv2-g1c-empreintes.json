@@ -1,0 +1,195 @@
+{
+ "format": "ariane-gcv2-g1c-empreintes-v1",
+ "date": "2026-10-19",
+ "note": "Empreintes SHA-256 de la chaîne figée du jugement G1-c (fiches/PROTOCOLE_G1C.md § 1), consignées avant l'ouverture de tout résultat. Les jeux et les cas sont HORS DÉPÔT : chemin relatif à leur racine, et empreinte. Une pièce « provisoire » est modifiée par un chantier en cours : elle est signalée, et doit être reconsignée avant l'ouverture.",
+ "fichiers": [
+  {
+   "chemin": "src/engine.js",
+   "role": "moteur GCV1 (inchangé)",
+   "sha256": "527230e66648d6a846b067e8fbf83814a94a541cf81b2e6bd009404abe2ef933"
+  },
+  {
+   "chemin": "src/hauteur-apprise.js",
+   "role": "hauteur apprise figée (apprise sur 1:17, 1:24, 1:29 et 2:1)",
+   "sha256": "c7fa1998004144684ce32a0cf4e74155db3022c4eb3e93cf3e8481411c953f37"
+  },
+  {
+   "chemin": "datasets/reglages-figes.json",
+   "role": "réglages métier figés",
+   "sha256": "9fac69277de738f4bf25d1476fc2d929b1d187eff071514b7e42c397c44ef306"
+  },
+  {
+   "chemin": "datasets/gcv2-parametres.json",
+   "role": "paramètres de la GCV2 (coefficients, calibrage, seuils)",
+   "sha256": "5e3bfe95781041ffc9fa13b56f0a3e8208b96bafb77ecdc0e82f32b7bf0cff41"
+  },
+  {
+   "chemin": "datasets/gcv2-variantes.json",
+   "role": "variantes par zone (V1 est la candidate)",
+   "sha256": "9ae4039c321cee0010e6ec6784b3a9a561ef1befe220bfe752e2a6711ad425d0"
+  },
+  {
+   "chemin": "datasets/relecture-reglages-proposes.json",
+   "role": "règle prudente figée (D-180, D-190)",
+   "sha256": "312e830d3cc29bee1565e2c581a88b5b87e0352726e089547062592882381249"
+  },
+  {
+   "chemin": "datasets/manifeste-parties.json",
+   "role": "manifeste des parties (apprentissage, témoins)",
+   "sha256": "aaed1eb48909b0ddef5208b80ba22719b5d22be318914524631b72e16ca58088"
+  },
+  {
+   "chemin": "src/regles-metier.js",
+   "role": "zones PN et ADV (règles métier)",
+   "sha256": "3f989563cfe6f8737553ade5d9cbe68e3575b14298821d4937432ed5ee02e1ce"
+  },
+  {
+   "chemin": "src/verts-a-controler.js",
+   "role": "liste « À contrôler » des verts",
+   "sha256": "fa6dec1b009ff4b159fc202d56046b8c24121fca54f7067ddca5a2e8247f6d40"
+  },
+  {
+   "chemin": "src/lot-decision.js",
+   "role": "décision du lot (chaîne d'appuis)",
+   "sha256": "bf846fb448b5f2fba1ef558f96efbcad97df6ca8dfe678d594879c04dde40054"
+  },
+  {
+   "chemin": "src/gcv1-shadow.js",
+   "role": "moteur GCV1 en ombre (proposition scientifique)",
+   "sha256": "38ab795650f715b82c29d6a6ac69b0e41b5de89ec4d30847cf937da36a1e5c7d"
+  },
+  {
+   "chemin": "src/native-session.js",
+   "role": "entrée sans fuite d'une visite",
+   "sha256": "27c363c19a2fbd45e2f48a5a78add766cd8e7e3e765d8464f0b8906489ad504c"
+  },
+  {
+   "chemin": "tools/relecture-autonome.cjs",
+   "role": "règle prudente exacte (lignes, agit, juger) et extraction",
+   "sha256": "41d96a00b5c4ceeba8bc1e7714bc1cc3fe456861586ce5e3028d6ff71224fa4a"
+  },
+  {
+   "chemin": "tools/gcv2-apprendre.cjs",
+   "role": "apprentissage, validation croisée, décision de paire",
+   "sha256": "095ac20e2461cad6e110c1a2f08d31af363803fed020ae5f9f5b8f8f74696b2b"
+  },
+  {
+   "chemin": "tools/gcv2-evaluer.cjs",
+   "role": "évaluateur unique : référence exacte, porte unique, registre",
+   "sha256": "8300891c8c38bf12c85417215e05c395a317d7240641f9c5c3e9b7d3369246ef"
+  },
+  {
+   "chemin": "tools/gcv2-empreintes.cjs",
+   "role": "ce contrôle d'empreintes",
+   "sha256": "0ca96d44a49f3f7b59f0bde59d3fc5f9a5db294e63105a0bf9a3bbe768804c95"
+  },
+  {
+   "chemin": "tools/compteur-gcv2.cjs",
+   "role": "compteur des cuts appris",
+   "sha256": "5124d1c53bd83f9292c8a5e0e86bab68f238ac8e7e91ab7b726ec9ceba49c772"
+  },
+  {
+   "chemin": "tools/manifeste-parties.cjs",
+   "role": "lecture du manifeste des parties",
+   "sha256": "9bbb2df55be6110edb07fa3105407ee466c27ce99eb83a73d44595a4b47f020d"
+  },
+  {
+   "chemin": "tools/gcv2-jeu.cjs",
+   "role": "générateur d'hypothèses (le chantier H6 et le jeu causal le modifient : à reconsigner avant l'ouverture)",
+   "sha256": "7c23303828f58664abb9454614bb18a0e28e172c70b672ad0b698556f6642c37",
+   "provisoire": true
+  }
+ ],
+ "jeux": [
+  {
+   "chemin": "jeu-1-12.jsonl",
+   "sha256": "3e2c8e8b0b9006d1e959e1c566fdb79faab1c081f1baf798a0bd64c6654534e5"
+  },
+  {
+   "chemin": "jeu-1-13.jsonl",
+   "sha256": "5ef0551d76fa44d3d6d46ebc5d075cdf5daded40fac34c7856ce605fdb68d3dd"
+  },
+  {
+   "chemin": "jeu-1-14.jsonl",
+   "sha256": "22b7023fc3665729b9993a8755a40c4eeffa6297bb6b47914730542e46fe34f7"
+  },
+  {
+   "chemin": "jeu-1-15.jsonl",
+   "sha256": "c798712433260f2113f55472ccc8c475fc85c9d121096d67a3fec6a921ee0e06"
+  },
+  {
+   "chemin": "jeu-1-16.jsonl",
+   "sha256": "9da7bf2ded5c433761aec3c17f9b57de14f58cfc261cde779ddf2ed03c474d53"
+  },
+  {
+   "chemin": "jeu-1-17.jsonl",
+   "sha256": "df15bc74424cdc9ea86c5948aea6f85beefa60c18819ba95a644d0877598948b"
+  },
+  {
+   "chemin": "jeu-1-24.jsonl",
+   "sha256": "fdd87dadd66ec9c7e608824e0c379c8a96774606bf2ff65a47033c40346b851f"
+  },
+  {
+   "chemin": "jeu-1-29.jsonl",
+   "sha256": "0ea7077077d6414be69d20306b27aa1945c05cc301d6594f60ef2222ab0c6614"
+  },
+  {
+   "chemin": "jeu-2-1.jsonl",
+   "sha256": "3eaf67611d531067387a992b83636d926b13f8a2b5647a521752b215187e163e"
+  },
+  {
+   "chemin": "jeu-2-10.jsonl",
+   "sha256": "0c7a8437d6baca48a06ec90c5153f07bb8bff90f61c55bd34cd4671e4e5405f8"
+  },
+  {
+   "chemin": "jeu-2-11.jsonl",
+   "sha256": "8b4f67ccad2955d93d35f35d5bfaafb08ac47072b26fa556fc91282e826771c9"
+  }
+ ],
+ "cas": [
+  {
+   "chemin": "rm4/cas-1-12.jsonl",
+   "sha256": "0bacc40c7a459d47cee9c97741c2fac728d8417ce4e1fc64631d79e7eca7c8c2"
+  },
+  {
+   "chemin": "rm4/cas-1-13.jsonl",
+   "sha256": "7e382991504479b0facb00afecdab4b257120020edfb069c7e901a199f0107cb"
+  },
+  {
+   "chemin": "res/cas14.jsonl",
+   "sha256": "67be6ea07daad5b4a0a46fcf0a07c537aeee4142080fac70f1feb91f62a3e7f3"
+  },
+  {
+   "chemin": "res/cas15.jsonl",
+   "sha256": "e8362f5797172974f30d4d36764746a6d1729eaad95f9debf557b77a70a93f44"
+  },
+  {
+   "chemin": "res/cas16.jsonl",
+   "sha256": "719186bc7d3c0ae09370574f6c241f77aea87769354be6727485d6f4f983b006"
+  },
+  {
+   "chemin": "rm4/cas-1-17.jsonl",
+   "sha256": "816b1732cea3e54753501417f0170ec6bcb9a9cfe2ac6230dd8c7feadf43cae6"
+  },
+  {
+   "chemin": "rm4/cas-1-24.jsonl",
+   "sha256": "fd3466850423aef1ad7d604e451008e638d6000b81d0da8c33d1b949b717407d"
+  },
+  {
+   "chemin": "rm4/cas-1-29.jsonl",
+   "sha256": "b810d71f052c2a2f8a795d20d32fc67ab211e2694773fbae0ea64859d5662867"
+  },
+  {
+   "chemin": "rm4/cas-2-1.jsonl",
+   "sha256": "7fdba249ecf9a006922f67a24bb00b128346ba5e01ca0e85c849aabdc42a3584"
+  },
+  {
+   "chemin": "rm4/cas-2-10.jsonl",
+   "sha256": "d089e1bdc984d65f7fcbe5aae819659f1e3ba2b94fee9774cae1380308b3986c"
+  },
+  {
+   "chemin": "rm4/cas-2-11.jsonl",
+   "sha256": "ff369a6b088e16a05c4f73527c0bc2861bcf3d6a82055ad9210554d4892c1d5d"
+  }
+ ]
+}

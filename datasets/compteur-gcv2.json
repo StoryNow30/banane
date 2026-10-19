@@ -12,7 +12,8 @@
    "skips",
    "sansReference"
   ],
-  "compteurDeMic": "corriges"
+  "compteurDeMic": "corriges",
+  "colonneInformation": "utilisesExemples"
  },
  "sources": [
   {
@@ -30,7 +31,9 @@
    "visiteSansAction": 20,
    "skips": 0,
    "sansReference": 49,
-   "appris": 214
+   "appris": 214,
+   "utilisesExemples": 29,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-12",
@@ -47,7 +50,9 @@
    "visiteSansAction": 8,
    "skips": 0,
    "sansReference": 3,
-   "appris": 105
+   "appris": 105,
+   "utilisesExemples": 43,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-13",
@@ -64,7 +69,9 @@
    "visiteSansAction": 75,
    "skips": 1,
    "sansReference": 17,
-   "appris": 206
+   "appris": 206,
+   "utilisesExemples": 50,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-29",
@@ -81,7 +88,9 @@
    "visiteSansAction": 78,
    "skips": 0,
    "sansReference": 29,
-   "appris": 792
+   "appris": 792,
+   "utilisesExemples": 438,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p2-1",
@@ -98,7 +107,9 @@
    "visiteSansAction": 192,
    "skips": 6,
    "sansReference": 140,
-   "appris": 619
+   "appris": 619,
+   "utilisesExemples": 259,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p2-10",
@@ -115,7 +126,9 @@
    "visiteSansAction": 3,
    "skips": 0,
    "sansReference": 0,
-   "appris": 21
+   "appris": 21,
+   "utilisesExemples": 12,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p2-11",
@@ -132,7 +145,9 @@
    "visiteSansAction": 224,
    "skips": 3,
    "sansReference": 216,
-   "appris": 327
+   "appris": 327,
+   "utilisesExemples": 65,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-14",
@@ -149,7 +164,9 @@
    "visiteSansAction": 35,
    "skips": 0,
    "sansReference": 4,
-   "appris": 108
+   "appris": 108,
+   "utilisesExemples": 46,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-15",
@@ -166,7 +183,9 @@
    "visiteSansAction": 356,
    "skips": 2,
    "sansReference": 32,
-   "appris": 490
+   "appris": 490,
+   "utilisesExemples": 86,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-16",
@@ -183,7 +202,9 @@
    "visiteSansAction": 186,
    "skips": 1,
    "sansReference": 19,
-   "appris": 368
+   "appris": 368,
+   "utilisesExemples": 124,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p1-17",
@@ -200,7 +221,9 @@
    "visiteSansAction": 186,
    "skips": 0,
    "sansReference": 21,
-   "appris": 774
+   "appris": 774,
+   "utilisesExemples": 119,
+   "sourcesAvecExemples": 1
   },
   {
    "id": "p2-6",
@@ -217,7 +240,9 @@
    "visiteSansAction": 196,
    "skips": 5,
    "sansReference": 48,
-   "appris": 378
+   "appris": 378,
+   "utilisesExemples": null,
+   "sourcesAvecExemples": 0
   },
   {
    "id": "p2-7",
@@ -234,7 +259,9 @@
    "visiteSansAction": 321,
    "skips": 1,
    "sansReference": 103,
-   "appris": 856
+   "appris": 856,
+   "utilisesExemples": null,
+   "sourcesAvecExemples": 0
   }
  ],
  "totaux": {
@@ -247,6 +274,9 @@
    "visiteSansAction": 1880,
    "skips": 19,
    "sansReference": 681,
+   "utilisesExemples": 1271,
+   "sourcesAvecExemples": 11,
+   "corrigesDesSourcesAvecExemples": 2138,
    "appris": 5258
   },
   "en-file": {
@@ -258,6 +288,8 @@
    "visiteSansAction": 517,
    "skips": 6,
    "sansReference": 151,
+   "utilisesExemples": 0,
+   "sourcesAvecExemples": 0,
    "appris": 1234
   },
   "appris": {
@@ -269,6 +301,8 @@
    "visiteSansAction": 1363,
    "skips": 13,
    "sansReference": 530,
+   "utilisesExemples": 1271,
+   "sourcesAvecExemples": 11,
    "appris": 4024
   }
  },
@@ -282,6 +316,8 @@
    "visiteSansAction": 944,
    "skips": 4,
    "sansReference": 174,
+   "utilisesExemples": 935,
+   "sourcesAvecExemples": 8,
    "appris": 3057
   },
   "2": {
@@ -293,6 +329,8 @@
    "visiteSansAction": 936,
    "skips": 15,
    "sansReference": 507,
+   "utilisesExemples": 336,
+   "sourcesAvecExemples": 3,
    "appris": 2201
   }
  }

@@ -365,17 +365,21 @@ test('variantes : validation croisée, bilans par zone et par rôle conformes à
     assert.equal(S.V2.total.agit, S.V1.total.agit + S.V2.parZone.hors.agit, 'V2 = V1 plus le hors zone');
     assert.equal(S.V3.total.agit, S.V2.total.agit - S.V2.parZone.abords.agit, 'V3 = V2 moins les abords');
     for (const nom of Object.keys(S)) assert.equal(S[nom].parRole.vert.agit, S[nom].total.agit, `${nom} : tout agit sur des verts`);
-    assert.ok(A.rapport(V).includes('Variante V1') && A.rapport(V).includes('Porte du plan, V3'));
+    assert.ok(A.rapport(V).includes('Variante V1') && A.rapport(V).includes('Porte de G1-b, V3'));
   }
 });
 
 test('variantes : sans l\'option, la sortie est celle de G1-b, octet pour octet', () => {
   /* Empreintes du rapport par défaut sur le jeu synthétique, relevées avant l'ajout de l'option (G1-b, d1ea7c5). */
-  const OR = { relecture: 'af79acff69a3e55ccf4e2bfd5bb95af0f755759912dd55161f444aeeb2bef5ea', lot: 'd7c25c90238961eba249d0acdc5d7ad3e946ad9f19c0582f217a50e7114d9a81' };
+  /* Le TEXTE du rapport a changé en G1-c-prep (« score de paire », porte de G1-b non contraignante) : empreintes relevées après ce changement. Les CHIFFRES (le JSON de la validation) n'ont pas bougé
+   depuis G1-b : leurs empreintes sont celles relevées sur d1ea7c5 avant toute modification. */
+  const OR = { relecture: '51fefb8192aa24845f5ec4a95a367d16efc37991d8faff9427c18b03efb65d9e', lot: 'de6910fd6ba0b53a0d977b6fa4e4662972ef30ccc7b977efdf6b41b14f7758f3' };
+  const OJ = { relecture: '29342a3ccfe80b80', lot: '010027b6bc2341a7' };
   const sha = t => crypto.createHash('sha256').update(t).digest('hex');
   for (const usage of ['relecture', 'lot']) {
     const V0 = A.validationCroisee(trois(), { usage, lambda: 10 }), V1 = A.validationCroisee(trois(), { usage, lambda: 10, variantes: [] });
     assert.equal(sha(A.rapport(V0)), OR[usage], `rapport par défaut (${usage})`);
+    assert.equal(sha(JSON.stringify(V0)).slice(0, 16), OJ[usage], `chiffres de G1-b inchangés (${usage})`);
     assert.equal(JSON.stringify(V1), JSON.stringify(V0), 'une liste vide de variantes ne change rien');
     assert.equal('variantes' in V0, false); for (const p of V0.parties) assert.equal('variantes' in V0.parPartie[p], false);
     /* Avec une variante : tout ce qui existait est identique, la variante s'ajoute. */
@@ -387,4 +391,70 @@ test('variantes : sans l\'option, la sortie est celle de G1-b, octet pour octet'
   /* Ligne de commande : --variante est répétable ou en liste. */
   assert.deepEqual(A.args(['valider', '--usage', 'lot']).variantes, []);
   assert.deepEqual(A.args(['valider', '--variante', 'V1', '--variante', 'V2,V3']).variantes, ['V1', 'V2', 'V3']);
+});
+
+/* ------------------------------------------------------------------ G1-c-prep : λ imbriqué (V3), score de paire (G1), identifiants des exemples (M5) */
+test('λ imbriqué : λ est choisi dans chaque pli extérieur, sur ses seules parties d\'apprentissage ; changer la partie jugée ne change pas le λ de son pli', () => {
+  const LAMBDAS = [0.5, 30, 3000], normal = trois({ cuts: 30 }), abime = trois({ cuts: 30 });
+  const lignes = F.jeuSynthetique({ partie: '9:3', graine: 3, cuts: 30 });
+  for (const l of lignes) {
+    if (l.type === 'hyp') { l.traits.pointsDessus = 5000; l.traits.strong = !l.traits.strong; l.etiquette.ecartMm = l.etiquette.ecartMm > 8 ? 0 : 40; }
+    if (l.type === 'cut') { l.zone = 'liste'; l.etiquette.micMaxMm = 80; }
+  }
+  abime[2] = A.jeuDeLignes(lignes); abime[2].sha256 = normal[2].sha256;
+  const appels = [];
+  const a = A.validationCroisee(normal, { usage: 'relecture', lambdas: LAMBDAS, espion: (nom, ps) => appels.push([nom, ps.slice()]) }), b = A.validationCroisee(abime, { usage: 'relecture', lambdas: LAMBDAS });
+  assert.equal(a.lambdaImbrique, true); assert.deepEqual(a.lambdas, [0.5, 30, 3000]);
+  for (const p of a.parties) { assert.ok(LAMBDAS.includes(a.lambdaParPli[p].choisi), p); assert.deepEqual(Object.keys(a.lambdaParPli[p].criteres).sort(), ['0.5', '3000', '30'].sort()); }
+  /* le pli « 9:3 jugé » n'a jamais lu 9:3 : son λ, ses critères internes et son modèle sont identiques quelle que soit cette partie */
+  assert.equal(a.lambdaParPli['9:3'].choisi, b.lambdaParPli['9:3'].choisi); assert.deepEqual(a.lambdaParPli['9:3'].criteres, b.lambdaParPli['9:3'].criteres);
+  assert.equal(a.parPartie['9:3'].empreinteModele, b.parPartie['9:3'].empreinteModele); assert.deepEqual(a.parPartie['9:3'].seuils, b.parPartie['9:3'].seuils);
+  /* les autres plis, eux, voient la partie abîmée : leurs critères internes changent */
+  assert.notDeepEqual(a.lambdaParPli['9:1'].criteres, b.lambdaParPli['9:1'].criteres);
+  /* aucun pas (modèles internes pour chaque λ, calibrage, seuils, modèle) ne lit la partie jugée */
+  let courant = null;
+  for (const [nom, ps] of appels) { if (nom === 'pli') { courant = normal.map(p => p.partie).find(n => !ps.includes(n)); continue; } assert.ok(!ps.includes(courant), `${nom} lit la partie jugée ${courant}`); }
+  assert.ok(appels.filter(([n]) => n === 'modele').length === 9, 'un modèle final par λ et par pli (3 × 3)');
+  /* le λ retenu est celui de plus petite perte interne (à égalité, le plus petit) */
+  for (const p of a.parties) { const c = a.lambdaParPli[p].criteres, mini = Math.min(...Object.values(c)); assert.equal(c[String(a.lambdaParPli[p].choisi)], mini); }
+  /* et le pli retenu est bien celui de ce λ : mêmes paramètres qu'une validation à λ fixe sur les mêmes parties d'apprentissage */
+  const fixe = A.validationCroisee(normal, { usage: 'relecture', lambda: a.lambdaParPli['9:2'].choisi });
+  assert.equal(a.parPartie['9:2'].empreinteModele, fixe.parPartie['9:2'].empreinteModele, 'λ imbriqué = λ fixe quand le pli a choisi ce λ');
+  assert.deepEqual(a.parPartie['9:2'].seuils, fixe.parPartie['9:2'].seuils);
+  /* sans la liste de λ, rien n'est ajouté à la sortie */
+  assert.equal('lambdaParPli' in fixe, false); assert.equal('cuts' in fixe, false);
+  assert.ok(A.rapport(a).includes('λ choisi dans chaque pli extérieur'));
+});
+
+test('λ imbriqué : témoin à λ fixe dans les mêmes plis, résultats par cut gardés pour la porte unique, référence fournie par l\'évaluateur', () => {
+  const ps = trois({ cuts: 30 });
+  const fournie = k => ({ ...A.resultatH0(k), etat: 'agit', e: 0, lat: 0, mic: k.etiq.micMaxMm });
+  const V = A.validationCroisee(ps, { usage: 'relecture', lambdas: [10, 100], lambdaTemoin: 10, variantes: ['V1'], reference: fournie, garderCuts: true });
+  assert.equal(V.temoin.lambda, 10); assert.equal(V.cuts.variantes.V1.length, V.nCas); assert.equal(V.cuts.prudente.length, V.nCas); assert.equal(V.cuts.temoin.variantes.V1.length, V.nCas);
+  assert.ok(V.cuts.prudente.every(r => r.etat === 'agit' && r.e === 0), 'la référence est celle qu\'on fournit, pas le substitut');
+  assert.equal(V.total.prudente.total.agit, V.nCas);
+  assert.throws(() => A.validationCroisee(ps, { usage: 'relecture', lambdas: [10, 100], lambdaTemoin: 30 }), /absent de la liste/);
+  /* aucune coordonnée dans les résultats par cut */
+  assert.deepEqual(Object.keys(V.cuts.gcv2[0]).sort(), ['cut', 'e', 'etat', 'lat', 'mic', 'partie', 'role', 'zone']);
+});
+
+test('identifiants des exemples : partie et cut seulement, ceux que l\'entraînement consomme', () => {
+  const ps = trois(), ids = A.identifiantsExemples(ps), cas = ps.map(j => A.construireCas(j, 'relecture').map(k => k.cut).sort((x, y) => x - y));
+  assert.equal(ids.format, A.FORMAT_EXEMPLES); assert.deepEqual(ids.parties, ['9:1', '9:2', '9:3']);
+  ps.forEach((j, i) => assert.deepEqual(ids.usages.relecture[j.partie], cas[i]));
+  assert.deepEqual(Object.keys(ids.usages), ['relecture', 'lot']);
+  /* un cut sans nuage n'est pas un exemple */
+  const l = F.jeuSynthetique({ partie: '9:1', graine: 1, cuts: 50 }); l.find(x => x.type === 'cut' && x.cut === 7).etat = 'sans-nuage';
+  const j2 = A.jeuDeLignes(l); assert.ok(!A.identifiantsExemples([j2]).usages.relecture['9:1'].includes(7));
+  /* aucune coordonnée : tout est entier */
+  const brut = A.serialiser(ids), o = JSON.parse(brut);
+  for (const u of Object.values(o.usages)) for (const cuts of Object.values(u)) assert.ok(cuts.every(Number.isInteger));
+  assert.ok(!/decal|rail|pose|mic/i.test(brut.replace(/Aucune coordonnée|numéro de cut|cuts|partie/gi, '').replace(/"note":[^\n]*/, '')), 'ni pose ni décalage');
+  assert.equal(A.serialiser(A.identifiantsExemples(trois())), brut, 'mêmes entrées, mêmes octets');
+  assert.deepEqual(A.args(['exemples', '--jeu', 'a', '--sortie', 'x']).mode, 'exemples'); assert.deepEqual(A.args(['valider', '--lambdas', '3,30,300']).lambdas, [3, 30, 300]);
+});
+
+test('score de paire : le produit des probabilités de rails ne s\'appelle plus « probabilité de couple » dans les sorties', () => {
+  const V = A.validationCroisee(trois(), { usage: 'relecture', lambda: 10 }), texte = A.rapport(V);
+  assert.ok(/score de paire/.test(texte)); assert.ok(!/probabilité de (couple|paire)|paire gagnante/i.test(texte));
 });
