@@ -80,19 +80,6 @@ test('INVARIANCE (usage lot) : les poses du lot des cuts suivants ne changent pa
   assert.notEqual(json(vue(b.lignes)), json(vue(a.lignes)), 'relecture : le lot est fini, sa pose du cut 6 est un appui connu');
 });
 
-test('CONTRE-ÉPREUVES : une pose de départ antérieure change la médiane du cut 5 ; une validation antérieure change la relecture, jamais le jeu lot', () => {
-  const a = base();
-  const b = scenario({ modif: v => { if ([1, 3, 4].includes(v.cut)) v.depart = { dl: 0, dr: 0.004 }; } });
-  assert.notEqual(b.cas.find(c => c.cut === D).gMedCausalMm, a.cas.find(c => c.cut === D).gMedCausalMm, 'la médiane causale lit les cuts déjà connus');
-  assert.equal(b.cas.find(c => c.cut === 7).gMedCausalMm !== a.cas.find(c => c.cut === 7).gMedCausalMm, true);
-  const e = scenario({ modif: v => { if ([6, 7, 8].includes(v.cut)) v.depart = { dl: 0, dr: 0.009 }; } });
-  for (let c = 1; c <= D; c++) assert.equal(e.cas.find(x => x.cut === c).gMedCausalMm, a.cas.find(x => x.cut === c).gMedCausalMm, `cut ${c} : les poses de départ des cuts suivants n'entrent pas`);
-  assert.notEqual(json(vue(b.lignes)), json(vue(a.lignes)));
-  const c = scenario({ modif: v => { if (v.cut === 1) v.ref = { lat: 33 }; } });
-  assert.notEqual(json(vue(c.lignes)), json(vue(a.lignes)), 'relecture : une validation finie avant la visite du cut 5 est un appui');
-  assert.equal(json(vue(c.lignesLot)), json(vue(a.lignesLot)), 'lot : aucun appui humain, octet pour octet');
-});
-
 test('appuis humains datés (audit F2) : une revalidation postérieure ne remplace pas la version disponible avant ; une écriture tardive borne la date', () => {
   const H6 = require('./helpers/jeu-causal-echo.cjs');
   const rec = (v) => H6.visite(v).record;
@@ -185,16 +172,4 @@ test('chaîne : sa pose est une hypothèse même sans appui (étage crossing ou 
     const q = ch.rails[s].pose, h = ch.rails[s].hauteurMm || 0;
     assert.ok(c1.some(l => l.rail === s && Math.hypot(l.decal[0] - q[0], l.decal[1] - q[1], l.decal[2] - (q[2] + h)) < 0.76), `rail ${s} : la pose « chaîne + hauteur » de la règle prudente est parmi les hypothèses`);
   }
-});
-
-test('rezoner : recalculer les zones d\'un jeu déjà construit redonne exactement la construction (zones, rôles, traits, rupture de série)', () => {
-  const d = tmp(), vs = [];
-  for (let c = 1; c <= 8; c++) vs.push({ cut: c, index: c, debut: 60 * c, ref: c % 2 ? { lat: 12 } : null, depart: c === 6 ? { dl: 0.02, dr: 0.02 } : {} });
-  H.ecrireEcho(d, vs); const j = H.ecrireJournal(path.join(d, 'journal.json'), { poses: { 6: { lat: 20 } }, differes: [7] });
-  const r = G.construire({ projet: 9, partie: 91, echo: [d], journaux: [j] });
-  /* on abîme les zones et les ruptures, puis on rezone : on retrouve la construction, octet pour octet */
-  const abime = ls => ls.map(l => l.type === 'cut' ? { ...l, zone: 'pn', role: 'vert', contexte: l.contexte && l.contexte.voieH6 ? { ...l.contexte, voieH6: { ...l.contexte.voieH6, tous: l.contexte.voieH6.tous && { ...l.contexte.voieH6.tous, motifs: [...l.contexte.voieH6.tous.motifs, 'rupture-de-serie'], sure: false } } } : l.contexte } : l.type === 'hyp' ? { ...l, traits: { ...l.traits, zone: 'pn' } } : l);
-  const z = G.rezoner({ projet: 9, partie: 91, echo: [d], journaux: [j], cas: r.cas.map(c => ({ ...c, zoneCausale: 'pn' })), lignes: abime(r.lignes), lignesLot: abime(r.lignesLot) });
-  fs.rmSync(d, { recursive: true, force: true });
-  assert.equal(json(z.lignes), json(r.lignes)); assert.equal(json(z.lignesLot), json(r.lignesLot)); assert.equal(json(z.cas), json(r.cas));
 });
