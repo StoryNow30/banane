@@ -130,3 +130,31 @@ D-221 (après le § 3.4 : sous L1, 59 poses réelles ne sont plus validées et 4
    Une règle « grappe » active bloque les poses validées de a, b et c comme celles de la chaîne.
 4. **Contrôle du banc** : sur les cuts que la base rejouée pose, L1-s doit poser à l'identique (compté : doit être 0).
 
+
+## 6. Résultats du banc conjoint sous L1-s (40 lots, mesurés après le § 5)
+
+Mêmes 40 lots, mêmes jugés (282, aucun pour 2:17, 2:18). Synthèse complète : `fiches/L1S_BANC_SYNTHESE.md`.
+
+**Contrôle de D-221 : sur les 5 512 cuts que la base rejouée pose, L1-s en pose 0 autrement** (état et pose identiques à 0,001 mm). Poses réelles perdues : 2, déplacées de plus de 1 mm : 0 (les mêmes que la base rejouée).
+
+| Groupe | Différés réels | L1-s : différés (dont approchés) | Réduction L1-s | (rappel L1) | (rappel L1-v) |
+|---|--:|--:|--:|--:|--:|
+| total | 1 367 (19,9 %) | 361 (189), 5,2 % | −73,6 % | −74,9 % | −89,3 % |
+| projet 1 | 1 057 (19,2 %) | 168 (105), 3,0 % | −84,1 % | −84,1 % | −94,5 % |
+| projet 2 | 310 (22,6 %) | 193 (84), 14,1 % | −37,7 % | −43,5 % | −71,6 % |
+
+Sans compter les approchés, L1-s laisse 172 cuts sans pose (−87,4 %).
+
+| Contre Mic (282 jugés) | Posés (validés) | Départ médian | Erreur médiane | Gain médian (Q1–Q3) | ≤ 10 mm | ≤ 20 mm | Pire que le départ | Rappel |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| total | 219 (156) | 85,8 | 12,7 | 30,9 (0 – 64,5) | 127 | 155 | 21 | 118/272 |
+| projet 1 | 106 (92) | 51,4 | 7,9 | 40,1 (24,4 – 69) | 73 | 95 | 6 | 65/102 |
+| projet 2 | 113 (64) | 168,9 | 134,2 | 11,2 (0 – 55,2) | 54 | 60 | 15 | 53/170 |
+| 2:1 | 71 (28) | 191,1 | 164,4 | 0 (0 – 44,4) | 21 | 24 | 15 | 21/127 |
+| hors 2:1 | 148 (128) | 51,4 | 6,9 | 41 (25,4 – 69,5) | 106 | 131 | 6 | 97/145 |
+
+**Poses à plus de 50 mm de Mic : 43** (37 sans valider, 6 validées), dont 41 en 2:1 ; ailleurs 1:17 cut 2874 (sans valider, 122,6 → 56,5 mm) et 1:29 cut 8556 (validée, 0 → 58,3 mm).
+
+Ce qui reste (361) : 189 approchés sous τ ; rien : départ le plus probable 98, paire à plus de 150 mm 46, sous δ 9 ; sans nuage 8 ; règle grappe 6 (+1 pose de la GCV2 bloquée) ; écartement refusé 4. Par motif réel : sans appui 879 → 301 (149 approchés) ; reprise sans minimum 221 → 47 (33) ; garde de paire 214 → 2 ; hors vue 21 → 0.
+
+Lecture : sur le projet 1, L1-s fait aussi bien que L1 (−84 %, erreur médiane 7,9 mm) sans toucher un seul cut vert. Sur le projet 2, il fait moins bien (−38 % contre −44 %), et 2:1 reste mauvais (gain médian 0, 41 des 43 poses à plus de 50 mm). Ces chiffres ne changent pas la candidate (D-221).
