@@ -24,6 +24,18 @@ test('le manifeste versionné déclare les parties d\'apprentissage et rien d\'a
   assert.equal(M.statut(m, 3, 17), 'reservee', 'un projet inconnu est réservé');
 });
 
+test('rotation (D-192, D-193) : parties jugées passées en apprentissage, témoins fixes jamais appris', () => {
+  const m = M.lire();
+  for (const n of [14, 15, 16]) assert.equal(M.statut(m, 1, n), 'apprentissage', `projet 1, partie ${n}`);
+  for (const n of [10, 11]) assert.equal(M.statut(m, 2, n), 'apprentissage', `projet 2, partie ${n}`);
+  for (const n of [11, 25]) { assert.equal(M.statut(m, 1, n), 'reservee'); assert.ok(M.estTemoin(m, 1, n), `témoin 1:${n}`); }
+  assert.ok(!M.estTemoin(m, 2, 11), 'le témoin 1:11 n\'est pas la partie 11 du projet 2');
+  const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+  const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'manif-')), 'm.json');
+  fs.writeFileSync(f, JSON.stringify({ ...m, temoins: [{ projet: 1, parties: [17] }] }));
+  assert.throws(() => M.lire(f), /témoin, elle ne peut pas être en apprentissage/);
+});
+
 test('le fichier ne nomme ni projet, ni adresse, ni opérateur', () => {
   const texte = fs.readFileSync(path.join(racine, 'datasets', 'manifeste-parties.json'), 'utf8');
   assert.match(texte, /projet 1/); assert.match(texte, /projet 2/);

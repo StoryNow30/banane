@@ -35,8 +35,19 @@ function lire(chemin = CHEMIN) {
       vus.add(cle);
     }
   }
+  /* Témoins (D-192) : parties jamais apprises, qui comparent entre elles les versions des réglages. */
+  if (m.temoins !== undefined) {
+    if (!Array.isArray(m.temoins)) throw Error('manifeste des parties : « temoins » doit être une liste');
+    for (const bloc of m.temoins) {
+      if (!bloc || !entierPositif(bloc.projet) || !Array.isArray(bloc.parties) || !bloc.parties.every(entierPositif)) throw Error('manifeste des parties : chaque témoin donne un projet et ses parties');
+      for (const n of bloc.parties) if (vus.has(`${bloc.projet}:${n}`)) throw Error(`manifeste des parties : la partie ${n} du projet ${bloc.projet} est un témoin, elle ne peut pas être en apprentissage`);
+    }
+  }
   return m;
 }
+
+/* Vrai si la partie est un témoin fixe : toujours réservée, jamais apprise. */
+const estTemoin = (m, projet, partie) => (m.temoins || []).some(b => b.projet === projet && b.parties.includes(partie));
 
 /* 'apprentissage' si la partie est listée ; 'reservee' sinon (partie reçue plus tard, projet inconnu). */
 function statut(m, projet, partie) {
@@ -65,4 +76,4 @@ function controler(m, designations, { outil = 'outil', jugerReservee = false } =
   return { reservees, avis: `${outil} : partie ${liste} réservée, jugée sans réglage (--juger-partie-reservee) : aucun réglage ne doit être modifié d'après ce résultat.` };
 }
 
-module.exports = { FORMAT, CHEMIN, lire, statut, lireDesignations, controler };
+module.exports = { FORMAT, CHEMIN, lire, statut, estTemoin, lireDesignations, controler };
