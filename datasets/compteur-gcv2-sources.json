@@ -118,6 +118,16 @@
         "2026-10-19_v4.9.5.8_echo-partie-6/echo p6 08h48"
       ],
       "note": "Écho du 19/10 (4.9.5.8, 458 visites) : partie neuve, réservée, examinée (rotation D-192) ; même total de cuts que le lot Orbite du 16/10 (jointure à 0,0 mm de résidu)"
+    },
+    {
+      "id": "p2-7",
+      "projet": "2",
+      "partie": 7,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-19_v4.9.5.8_echo-partie-7/echo p7 09h21"
+      ],
+      "note": "Écho du 19/10 (4.9.5.8, 1 106 visites, 33 zips : sauvegardes cumulatives puis export final) : partie neuve, réservée, examinée (rotation D-192) ; même total de cuts (9 791) que le lot Orbite du 16/10"
     }
   ]
 }
