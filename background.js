@@ -2638,7 +2638,8 @@ async function demarrerLot(args){
    * la page) ; un champ absent se lit comme le défaut. */
   delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
   /* 4.9.5.13 (test 13) : profil du lot figé dans le scope ; 'actuel' : le scope n'en porte rien (celui de la 4.9.5.9, à l'octet près). */
-  delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE){const pr=await profilDuLot();if(pr==='L1'||pr==='L1-s')startArgs.lotProfil=pr;}
+  /* Sans les modules L1 (service worker incomplet), le lot est celui de la 4.9.5.9 : aucun profil dans le scope. */
+  delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE&&globalThis.BananeGcv2L1&&globalThis.BananeGcv2ParametresL1){const pr=await profilDuLot();if(pr==='L1'||pr==='L1-s')startArgs.lotProfil=pr;}
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */
   delete startArgs.relecture;{const m=await relectureChoix();if(m!=='coupee')startArgs.relecture=m;}

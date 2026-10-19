@@ -197,7 +197,9 @@ test('seuls le module, la décision sur le lot et le réglage nomment l\'ombre ;
  }
  /* 5.0 (D-171) : src/relecture-ombre.js, module pur de la relecture, LIT la correction consignée par la décision pour dire la pose
   * qu'Ariane donnerait ; il ne la calcule pas et ne la pose pas. Le service worker ne la nomme toujours pas. */
- assert.deepEqual(lecteurs.sort(),['src/hauteur-apprise.js','src/lot-decision.js','src/relecture-ombre.js','src/settings.js']);
+ /* 4.9.5.13 (L1, D-219) : src/gcv2-l1.js, module de la GCV2 des différés, LIT la hauteur apprise consignée par la décision (hypothèses de la
+  * chaîne), comme la relecture ; il ne la calcule pas. Le service worker ne la nomme toujours pas. */
+ assert.deepEqual(lecteurs.sort(),['src/gcv2-l1.js','src/hauteur-apprise.js','src/lot-decision.js','src/relecture-ombre.js','src/settings.js']);
  assert.ok(!/hauteurApprise|hauteur-apprise/i.test(fs.readFileSync(path.join(racine,'src/engine.js'),'utf8')));
  const liste=[...fs.readFileSync(path.join(racine,'background.js'),'utf8').match(/importScripts\(([^)]*)\)/s)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);
  assert.ok(liste.indexOf('src/hauteur-apprise.js')>=0,'absent de importScripts');

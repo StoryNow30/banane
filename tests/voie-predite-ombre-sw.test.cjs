@@ -52,6 +52,7 @@ test('aucun chemin de pose ne lit l\'ombre : seul le service worker l\'appelle, 
  for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith('.js')&&x!=='voie-recentree.js')){
   const t=fs.readFileSync(path.join(racine,'src',f),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
   if(f==='native-session.js')continue;   // l'ombre de l'Écho, essayée à part
+  if(f==='gcv2-l1.js')continue;   // 4.9.5.13 : la GCV2 des différés (L1), appelée par le service worker après la décision du lot
   assert.ok(!/BananeVoieRecentree|voie-recentree/.test(t),f+' ne lit pas le module');
  }
  assert.ok(!/BananeVoieRecentree|voiePrediteOmbre/.test(fs.readFileSync(path.join(racine,'src','engine.js'),'utf8')));

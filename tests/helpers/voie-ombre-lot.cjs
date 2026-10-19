@@ -22,6 +22,8 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 async function lot(reglage,{panne=false}={}){
  const adapter=new EsvDecale([112]),b=production({adapter});
  if(reglage!==undefined)b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:reglage};
+ /* 4.9.5.13 : profil du lot « actuel » (empreintes de la base). */
+ b.ctx.BananeSettings={...b.ctx.BananeSettings,lot:{...S.lot,profil:'actuel'}};
  if(panne)b.ctx.BananeVoieRecentree={...b.ctx.BananeVoieRecentree,evaluerDiffere:()=>{throw Error('panne simulée de l\'ombre');}};
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);

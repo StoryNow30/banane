@@ -226,7 +226,8 @@ test('références : la règle prudente est celle des réglages figés ; le hasa
   const R = A.reglesPrudentesDuDepot(), F0 = A.REGLES_PRUDENTES;
   assert.equal(R.variante, F0.variante); assert.equal(R.seuilMm, F0.seuilMm); assert.equal(R.lateralMaxMm, F0.lateralMaxMm);
   assert.equal(R.ecartementMedianeMm, F0.ecartementMedianeMm); assert.equal(R.confianceMin, F0.confianceMin);
-  assert.deepEqual(R.zones.filter(z => z !== 'hors'), [...F0.zones].sort()); assert.deepEqual(R.roles, F0.roles);
+  /* La zone « écartement » (test 8, D-185, accord de Mic) n'est pas une zone de la GCV2 : elle est hors de cette comparaison. */
+  assert.deepEqual(R.zones.filter(z => z !== 'hors' && z !== 'ecartement'), [...F0.zones].sort()); assert.deepEqual(R.roles, F0.roles);
   /* Règle prudente sur un cut synthétique : agit quand la pose A* (H1) s'écarte de 8 mm ou plus. */
   const cas = A.construireCas(jeu({ partie: '9:1', graine: 11, cuts: 60 }), 'relecture');
   const rs = cas.map(k => A.reglePrudente(k));
