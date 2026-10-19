@@ -16,8 +16,13 @@
  * (GCV2 entraînée dessus). Le dépôt ne sait pas quand la GCV2 est entraînée : tout part « en-file » tant que Mic n'a
  * pas dit le contraire, en changeant `etat` dans le fichier des sources.
  *
+ *  - `utilisesExemples` (G1-c-prep, M5 de l'audit externe) : parmi les `corriges`, ceux que l'apprentissage a EFFECTIVEMENT retenus comme exemples (cut calculé, avec un nuage et
+ *      une référence pour les deux rails), d'après le fichier d'identifiants écrit par `gcv2-apprendre` (partie et numéro de cut, aucune coordonnée). Colonne d'information :
+ *      la règle de Mic (« un cut corrigé = un cut appris ») reste la colonne principale. Une source sans identifiants (partie en file, pas encore apprise) affiche « — ».
+ *
  *   node tools/compteur-gcv2.cjs --donnees <dossier banane-data> [--sources datasets/compteur-gcv2-sources.json]
  *        [--sortie datasets/compteur-gcv2.json] [--md fiches/COMPTEUR_GCV2.md] [--seuil-visite 0.6] [--racine-supplementaire <dossier>]
+ *        [--exemples datasets/gcv2-exemples.json]
  *
  * Une source dont l'Écho est archivé en 7z (champ `archive7z`) n'est pas lue sur banane-data, qui n'est jamais modifié : on extrait ses segments
  * `ariane-native-v4-*.json` dans un dossier temporaire, rangé comme les `dossiers` de la source (<temporaire>/<dossier de la source>/), et on le donne avec
@@ -32,7 +37,7 @@ const J = require('./jointure-echo-orbite.cjs');
 const SEUIL_VISITE_S = 0.6, SEUIL_DEPLACEMENT_MM = [5, 10], ETATS = ['en-file', 'appris'];
 const COMPTEURS = ['corriges', 'dont5mm', 'dont10mm', 'valideSansMouvement', 'visiteSansAction', 'skips', 'sansReference'];
 
-const vide = () => Object.fromEntries([['cutsEcho', 0], ...COMPTEURS.map(k => [k, 0])]);
+const vide = () => Object.fromEntries([['cutsEcho', 0], ...COMPTEURS.map(k => [k, 0]), ['utilisesExemples', 0], ['sourcesAvecExemples', 0]]);
 const appris = c => c.corriges + c.valideSansMouvement + c.visiteSansAction;
 
 /* Range une ligne de la table de la jointure dans une seule catégorie. */
@@ -45,22 +50,32 @@ function categorie(ligne) {
   return 'sansReference';
 }
 
-function compterTable(table) {
+/* `exemples` : ensemble des numéros de cut retenus comme exemples pour cette partie (ou null : la partie n'a pas d'identifiants). */
+function compterTable(table, exemples = null) {
   const c = vide();
   for (const l of table) {
     c.cutsEcho++;
     const k = categorie(l);
     c[k]++;
     if (k === 'corriges') {
+      if (exemples && exemples.has(l.cut)) c.utilisesExemples++;
       const d = l.ecartHumain && Number.isFinite(l.ecartHumain.maxDist3dMm) ? l.ecartHumain.maxDist3dMm : 0;
       if (d > SEUIL_DEPLACEMENT_MM[0]) c.dont5mm++;
       if (d > SEUIL_DEPLACEMENT_MM[1]) c.dont10mm++;
     }
   }
+  if (exemples) c.sourcesAvecExemples = 1; else c.utilisesExemples = null;
   return c;
 }
+/* Identifiants d'une source dans le fichier écrit par `gcv2-apprendre exemples` (usage « relecture ») : { 'projet:partie': [cuts] }, ou null. */
+function exemplesDeSource(fichierExemples, s, usage = 'relecture') {
+  if (!fichierExemples) return null;
+  if (fichierExemples.format !== 'ariane-gcv2-exemples-v1') throw Error('fichier des exemples : format ariane-gcv2-exemples-v1 attendu');
+  const liste = fichierExemples.usages && fichierExemples.usages[usage] && fichierExemples.usages[usage][`${s.projet}:${s.partie}`];
+  return Array.isArray(liste) ? new Set(liste) : null;
+}
 
-function ajouter(total, c) { for (const k of Object.keys(vide())) total[k] += c[k]; return total; }
+function ajouter(total, c) { for (const k of Object.keys(vide())) total[k] += c[k] || 0; return total; }
 
 function verifierSources(sources) {
   if (!Array.isArray(sources) || !sources.length) throw Error('Fichier des sources vide ou invalide.');
@@ -84,13 +99,13 @@ function dossiersEcho(s, racine, racineSupp) {
   });
 }
 
-function compter(sources, { racine, racineSupplementaire = null, seuilVisiteS = SEUIL_VISITE_S, executer = J.executer } = {}) {
+function compter(sources, { racine, racineSupplementaire = null, seuilVisiteS = SEUIL_VISITE_S, executer = J.executer, exemples = null } = {}) {
   verifierSources(sources);
   const lignes = [];
   for (const s of sources) {
     const echo = dossiersEcho(s, racine, racineSupplementaire);
     const sortie = executer(['--echo', ...echo, '--sans-journal', '--partie', String(s.partie), '--visite-sans-action-bonne', String(seuilVisiteS)], () => {});
-    lignes.push({ id: s.id, projet: s.projet, projetCertain: s.projetCertain !== false, partie: s.partie, etat: s.etat || 'en-file', note: s.note || null, ...compterTable(sortie.table) });
+    lignes.push({ id: s.id, projet: s.projet, projetCertain: s.projetCertain !== false, partie: s.partie, etat: s.etat || 'en-file', note: s.note || null, ...compterTable(sortie.table, exemplesDeSource(exemples, s)) });
   }
   const totaux = { tous: vide(), 'en-file': vide(), appris: vide() };
   const parProjet = {};
@@ -99,9 +114,10 @@ function compter(sources, { racine, racineSupplementaire = null, seuilVisiteS = 
     ajouter(parProjet[l.projet] || (parProjet[l.projet] = vide()), l);
   }
   const resume = c => ({ ...c, appris: appris(c) });
+  totaux.tous.corrigesDesSourcesAvecExemples = lignes.filter(l => l.utilisesExemples !== null).reduce((a, l) => a + l.corriges, 0);
   return {
     format: 'ariane-compteur-gcv2-v1', creeLe: new Date().toISOString(),
-    regle: { seuilVisiteS, comptes: ['corriges', 'valideSansMouvement', 'visiteSansAction'], nonComptes: ['skips', 'sansReference'], compteurDeMic: 'corriges' },
+    regle: { seuilVisiteS, comptes: ['corriges', 'valideSansMouvement', 'visiteSansAction'], nonComptes: ['skips', 'sansReference'], compteurDeMic: 'corriges', colonneInformation: 'utilisesExemples' },
     sources: lignes.map(l => ({ ...l, appris: appris(l) })),
     totaux: { tous: resume(totaux.tous), 'en-file': resume(totaux['en-file']), appris: resume(totaux.appris) },
     parProjet: Object.fromEntries(Object.entries(parProjet).map(([k, v]) => [k, resume(v)])),
@@ -116,20 +132,21 @@ function enMarkdown(r) {
     '# Compteur des cuts appris par la GCV2 (depuis le début de la 5.0)', '',
     'Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (Mic). Les SKIP ne sont pas comptés. Aucune limite : on ne s\'arrête pas à 1 000 ou 1 500 cuts (Mic).', '',
     `**Cuts corrigés : ${n(T.corriges)}** (dont ${n(T.dont5mm)} de plus de 5 mm, ${n(T.dont10mm)} de plus de 10 mm). Avec les cuts validés tels quels (${n(T.valideSansMouvement)}) et les cuts visités sans action d'au moins ${String(r.regle.seuilVisiteS).replace('.', ',')} s (${n(T.visiteSansAction)}) : **${n(T.appris)} cuts apprenables**.`, '',
-    '| File | Corrigés | Validés tels quels | Visités sans action | Apprenables |', '|---|---:|---:|---:|---:|',
-    ...['en-file', 'appris'].map(k => `| ${k === 'en-file' ? 'En apprentissage (en file)' : 'Appris (GCV2 entraînée)'} | ${n(r.totaux[k].corriges)} | ${n(r.totaux[k].valideSansMouvement)} | ${n(r.totaux[k].visiteSansAction)} | ${n(r.totaux[k].appris)} |`), '',
-    '| Projet | Partie | État | Cuts à l\'Écho | Corrigés | dont > 5 mm | dont > 10 mm | Validés tels quels | Visités sans action | SKIP (non comptés) | Sans référence |', '|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|',
-    ...r.sources.map(s => `| ${s.projet}${s.projetCertain ? '' : ' (à confirmer)'} | ${s.partie} | ${s.etat} | ${n(s.cutsEcho)} | ${n(s.corriges)} | ${n(s.dont5mm)} | ${n(s.dont10mm)} | ${n(s.valideSansMouvement)} | ${n(s.visiteSansAction)} | ${n(s.skips)} | ${n(s.sansReference)} |`), '',
+    ...(T.sourcesAvecExemples ? [`**Utilisés comme exemples : ${n(T.utilisesExemples)}** cuts corrigés (sur ${n(r.totaux.tous.corrigesDesSourcesAvecExemples)} corrigés des ${T.sourcesAvecExemples} sources dont l'apprentissage a écrit les identifiants) : ceux dont le nuage existe et que l'apprentissage a effectivement retenus. La règle de Mic (« un cut corrigé = un cut appris ») reste la colonne principale ; cette colonne dit combien de corrections ont réellement servi d'exemple (D-210, M5).`, ''] : []),
+    '| File | Corrigés | Utilisés comme exemples | Validés tels quels | Visités sans action | Apprenables |', '|---|---:|---:|---:|---:|---:|',
+    ...['en-file', 'appris'].map(k => `| ${k === 'en-file' ? 'En apprentissage (en file)' : 'Appris (GCV2 entraînée)'} | ${n(r.totaux[k].corriges)} | ${r.totaux[k].sourcesAvecExemples ? n(r.totaux[k].utilisesExemples) : '—'} | ${n(r.totaux[k].valideSansMouvement)} | ${n(r.totaux[k].visiteSansAction)} | ${n(r.totaux[k].appris)} |`), '',
+    '| Projet | Partie | État | Cuts à l\'Écho | Corrigés | Utilisés comme exemples | dont > 5 mm | dont > 10 mm | Validés tels quels | Visités sans action | SKIP (non comptés) | Sans référence |', '|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
+    ...r.sources.map(s => `| ${s.projet}${s.projetCertain ? '' : ' (à confirmer)'} | ${s.partie} | ${s.etat} | ${n(s.cutsEcho)} | ${n(s.corriges)} | ${s.utilisesExemples === null || s.utilisesExemples === undefined ? '—' : n(s.utilisesExemples)} | ${n(s.dont5mm)} | ${n(s.dont10mm)} | ${n(s.valideSansMouvement)} | ${n(s.visiteSansAction)} | ${n(s.skips)} | ${n(s.sansReference)} |`), '',
     'Une partie lue en plusieurs Échos (sessions, reprises) compte chaque cut une fois, d\'après son dernier état observé.', '',
   ];
   return L.join('\n');
 }
 
 function lireArguments(argv) {
-  const a = { donnees: null, sources: null, sortie: null, md: null, seuil: SEUIL_VISITE_S, supplementaire: null };
+  const a = { donnees: null, sources: null, sortie: null, md: null, seuil: SEUIL_VISITE_S, supplementaire: null, exemples: null };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i], v = argv[i + 1];
-    if (k === '--donnees') { a.donnees = v; i++; } else if (k === '--sources') { a.sources = v; i++; } else if (k === '--sortie') { a.sortie = v; i++; } else if (k === '--md') { a.md = v; i++; } else if (k === '--seuil-visite') { a.seuil = Number(v); i++; } else if (k === '--racine-supplementaire') { a.supplementaire = v; i++; } else throw Error(`Argument inconnu : ${k}`);
+    if (k === '--exemples') { a.exemples = v; i++; } else if (k === '--donnees') { a.donnees = v; i++; } else if (k === '--sources') { a.sources = v; i++; } else if (k === '--sortie') { a.sortie = v; i++; } else if (k === '--md') { a.md = v; i++; } else if (k === '--seuil-visite') { a.seuil = Number(v); i++; } else if (k === '--racine-supplementaire') { a.supplementaire = v; i++; } else throw Error(`Argument inconnu : ${k}`);
   }
   if (!a.donnees) throw Error('Usage : node tools/compteur-gcv2.cjs --donnees <dossier banane-data> [--sources fichier.json] [--sortie fichier.json] [--md fichier.md] [--seuil-visite 0.6] [--racine-supplementaire dossier]');
   if (!Number.isFinite(a.seuil) || a.seuil < 0) throw Error('--seuil-visite : durée en secondes, positive');
@@ -139,7 +156,7 @@ function lireArguments(argv) {
 function main(argv) {
   const a = lireArguments(argv);
   const fichier = a.sources || path.join(__dirname, '..', 'datasets', 'compteur-gcv2-sources.json');
-  const r = compter(JSON.parse(fs.readFileSync(fichier, 'utf8')).sources, { racine: a.donnees, racineSupplementaire: a.supplementaire, seuilVisiteS: a.seuil });
+  const r = compter(JSON.parse(fs.readFileSync(fichier, 'utf8')).sources, { racine: a.donnees, racineSupplementaire: a.supplementaire, seuilVisiteS: a.seuil, exemples: a.exemples ? JSON.parse(fs.readFileSync(a.exemples, 'utf8')) : null });
   if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(r, null, 1) + '\n');
   if (a.md) fs.writeFileSync(a.md, enMarkdown(r));
   console.log(enMarkdown(r));
@@ -150,4 +167,4 @@ if (require.main === module) {
   try { main(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
 
-module.exports = { dossiersEcho, categorie, compterTable, compter, verifierSources, enMarkdown, lireArguments, appris, SEUIL_VISITE_S };
+module.exports = { dossiersEcho, categorie, compterTable, exemplesDeSource, compter, verifierSources, enMarkdown, lireArguments, appris, SEUIL_VISITE_S };

@@ -56,7 +56,7 @@ L'ajout « accord » n'est pas dans la liste de la consigne ; il ne lit que les 
 ### 2.4 Décision de paire (étage 3)
 
 1. **Garde-fous non appris**, appliqués avant tout score : écartement de la paire à **15 mm de la médiane** de la partie **ou** dans **1 420–1 470 mm** ; chaque rail déplacé de **45 mm au plus en latéral** depuis la pose de départ ; changement de dévers (écart de hauteur entre les deux rails, par rapport au départ) de **15 mm au plus**. Ne rien faire (H0, H0) est toujours permis.
-2. **Choix** : parmi (H0, H0) et les paires permises, celle qui maximise p_gauche × p_droite à 10 mm (71 paires permises par cut en moyenne).
+2. **Choix** : parmi (H0, H0) et les paires permises, celle qui maximise le **score de paire** p_gauche × p_droite à 10 mm (71 paires permises par cut en moyenne). C'est un score de classement, **pas une probabilité de paire calibrée** : les deux rails partagent le nuage, la zone et les appuis, leurs succès ne sont pas indépendants (audit externe, G1 ; G1-c-prep).
 3. **Agir** seulement si p ≥ τ **et** si l'écart de la paire à H0 (le plus grand |latéral| ou |vertical| des deux rails) est ≥ δ. Si la meilleure paire est H0, ou à moins de δ de H0, ou si la zone est inactive : **laisser**. Si la paire est loin de H0 mais p < τ : **abstention**.
 4. **τ et δ par zone**, choisis sur les scores **hors-échantillon du pli d'apprentissage** : grille τ de 0,30 à 0,99, δ de 2 à 30 mm ; contraintes : **0 mauvaise voie**, **erreur parmi les actions ≤ 9 %**, au moins 10 corrections justes dans la zone (sinon la zone est inactive, comme dans RELECTURE_AUTONOME) ; objectif : le plus de corrections justes, puis le moins d'erreurs, le moins d'abîmés, les seuils les plus hauts.
 
@@ -162,7 +162,7 @@ périmètre de la règle prudente | oui | oui (5,3 %) | oui (≤ 8,9 %) | NON (1
 
 #### Calibrage (hors-échantillon)
 
-Brier p(10 mm) 0.043 sur 56936 hypothèses ; p(5 mm) 0.068 ; paire gagnante 0.0302 (2411 cuts).
+Brier p(10 mm) 0.043 sur 56936 hypothèses ; p(5 mm) 0.068 ; score de paire gagnant 0.0302 (2411 cuts).
 
 classe | n (10 mm) | p moyen | observé | n (gagnants) | p moyen | observé
 ---|--:|--:|--:|--:|--:|--:
@@ -299,7 +299,7 @@ périmètre de la règle prudente | NON | oui (5,5 %) | NON (≤ 9,2 %) | NON (9
 
 #### Calibrage (hors-échantillon)
 
-Brier p(10 mm) 0.0446 sur 53354 hypothèses ; p(5 mm) 0.0659 ; paire gagnante 0.0419 (2411 cuts).
+Brier p(10 mm) 0.0446 sur 53354 hypothèses ; p(5 mm) 0.0659 ; score de paire gagnant 0.0419 (2411 cuts).
 
 classe | n (10 mm) | p moyen | observé | n (gagnants) | p moyen | observé
 ---|--:|--:|--:|--:|--:|--:
@@ -391,7 +391,7 @@ Sur les 406 grosses corrections, une paire permise est à 10 mm de Mic pour **23
 
 ### 5.5 Calibrage
 
-Brier hors-échantillon (relecture, p à 10 mm) 0,043 sur 56 936 hypothèses, p à 5 mm 0,068, paire gagnante 0,0302. Au niveau des hypothèses, la courbe est trop confiante entre 10 et 50 % (p moyen 0,35, observé 0,27) et bien tenue de 60 à 100 %. Au niveau des paires gagnantes, c'est le contraire : de 20 à 50 % le taux observé (0,36 à 0,67) dépasse la probabilité annoncée (0,25 à 0,45). Le produit de deux probabilités n'est donc pas un taux de réussite exact, et les τ de PN, ADV et hors zone (0,3 à 0,6) sont bas.
+Brier hors-échantillon (relecture, p à 10 mm) 0,043 sur 56 936 hypothèses, p à 5 mm 0,068, score de paire gagnant 0,0302. Au niveau des hypothèses, la courbe est trop confiante entre 10 et 50 % (p moyen 0,35, observé 0,27) et bien tenue de 60 à 100 %. Au niveau des paires gagnantes, c'est le contraire : de 20 à 50 % le taux observé (0,36 à 0,67) dépasse la probabilité annoncée (0,25 à 0,45). Le produit de deux probabilités n'est donc pas un taux de réussite exact, et les τ de PN, ADV et hors zone (0,3 à 0,6) sont bas.
 
 ## 6. La porte du plan
 
@@ -586,7 +586,7 @@ Pour V2, la lecture « périmètre prudent » est tenue (elle est égale à V1, 
 - **V1 tient la porte dans les deux usages.** Elle corrige 21 cuts justes de plus que la règle prudente en relecture (128 contre 107) et 16 de plus au lot (123), avec la moitié des abîmés (2 contre 4) et 0 mauvaise voie. Le gain vient de **PN** (68 justes contre 56) et d'**ADV** (27 contre 18) ; aux abords la variante **est** la règle prudente (42 actions, 33 justes, identiques). Aucune partie n'a moins de justes que la règle prudente.
 - **V2 ajoute le hors zone** : 23 justes de plus en relecture (151), mais 3 abîmés de plus. Elle dépasse la limite de 4 abîmés d'un cut en relecture et de deux au lot.
 - **V3 retire les abords** et perd les 33 corrections justes que la règle prudente y fait : dans le périmètre prudent, 95 justes contre 107. Elle laisse 286 grosses corrections fausses, contre 249 pour V2.
-- **Les mauvaises voies tombent à 0 dans les trois variantes.** C'est **par construction** : les 5 mauvaises voies de la relecture (4 au lot) étaient des cuts différés, et le seul vert à mauvaise voie du lot était aux abords ; D-204 les a écartés en lisant ces résultats. La borne haute de 0 sur 257 actions est d'environ 1,2 % (règle des trois), sur des cuts que l'on a déjà regardés : ce n'est pas une preuve.
+- **Les mauvaises voies tombent à 0 dans les trois variantes.** Ce n'est **pas une garantie** : c'est l'effet du choix des variantes après lecture : les 5 mauvaises voies de la relecture (4 au lot) étaient des cuts différés, et le seul vert à mauvaise voie du lot était aux abords ; D-204 les a écartés en lisant ces résultats. La borne haute de 0 sur 257 actions est d'environ 1,2 % (règle des trois), sur des cuts que l'on a déjà regardés : ce n'est pas une preuve.
 - **Taille des écarts.** 2 abîmés contre 4, ou 5 contre 4, sont des écarts de quelques cuts sur 2 411, sur 11 parties et un seul opérateur. Les bornes de Wilson de l'erreur sont toutes en dessous de 9 % (V1 ≤ 6,5 % et ≤ 7,5 %), plus basses que celles de la GCV2 seule (≤ 9,5 % et ≤ 9 %).
 - **Le lot** perd 5 justes pour V1 (123 contre 128) : même ordre qu'au § 5.1. Sa limite (§ 2.5) reste : les voisins mixtes du lot ne sont pas recalculés.
 

@@ -5,7 +5,7 @@ const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
 const C = require('../tools/compteur-gcv2.cjs');
 
-const ligne = (etiquetteEcho, referenceHumaine = 'observee', maxDist3dMm = 0) => ({ etiquetteEcho, referenceHumaine, ecartHumain: { maxDist3dMm } });
+const ligne = (etiquetteEcho, referenceHumaine = 'observee', maxDist3dMm = 0, cut = undefined) => ({ etiquetteEcho, referenceHumaine, ecartHumain: { maxDist3dMm }, cut });
 
 test('catégories : corrigé, validé tel quel, visité sans action, SKIP et sans référence', () => {
   assert.equal(C.categorie(ligne('VALIDATE_CORRECTED_BOTH')), 'corriges');
@@ -23,7 +23,7 @@ test('comptage : les corrigés dépassant 5 mm et 10 mm sont des sous-ensembles 
     ligne('VALIDATE_CORRECTED_RIGHT_ONLY', 'observee', 2), ligne('VALIDATE_CORRECTED_BOTH', 'observee', 7), ligne('VALIDATE_CORRECTED_LEFT_ONLY', 'observee', 12),
     ligne('VALIDATE_NO_MOVEMENT'), ligne('PASS_NO_DECISION'), ligne('PASS_NO_DECISION', 'sans-reference'), ligne('SKIP'),
   ]);
-  assert.deepEqual({ ...c }, { cutsEcho: 7, corriges: 3, dont5mm: 2, dont10mm: 1, valideSansMouvement: 1, visiteSansAction: 1, skips: 1, sansReference: 1 });
+  assert.deepEqual({ ...c }, { cutsEcho: 7, corriges: 3, dont5mm: 2, dont10mm: 1, valideSansMouvement: 1, visiteSansAction: 1, skips: 1, sansReference: 1, utilisesExemples: null, sourcesAvecExemples: 0 });
   assert.equal(C.appris(c), 5, 'apprenables = corrigés + validés tels quels + visités sans action');
 });
 
@@ -83,4 +83,37 @@ test('Écho en 7z : lu dans la racine supplémentaire si elle a son dossier, ref
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   assert.equal(C.lireArguments(['--donnees', '/r', '--racine-supplementaire', '/t']).supplementaire, '/t');
   assert.equal(C.lireArguments(['--donnees', '/r']).supplementaire, null);
+});
+
+test('colonne « utilisés comme exemples » (M5) : les corrigés effectivement retenus, d\'après les identifiants de l\'apprentissage ; la colonne de Mic ne bouge pas', () => {
+  /* Partie 1:5 : 4 corrigés (cuts 10, 11, 12, 13), dont 2 retenus par l'apprentissage (10 et 12 : les autres n'avaient pas de nuage) ; un cut validé tel quel retenu ne compte pas. */
+  const table = [ligne('VALIDATE_CORRECTED_BOTH', 'observee', 7, 10), ligne('VALIDATE_CORRECTED_BOTH', 'observee', 7, 11), ligne('VALIDATE_CORRECTED_LEFT_ONLY', 'observee', 12, 12), ligne('VALIDATE_CORRECTED_RIGHT_ONLY', 'observee', 2, 13),
+    ligne('VALIDATE_NO_MOVEMENT', 'observee', 0, 14), ligne('SKIP', 'observee', 0, 15)];
+  const avec = C.compterTable(table, new Set([10, 12, 14, 99])), sans = C.compterTable(table);
+  assert.equal(avec.corriges, 4, 'la colonne principale (un cut corrigé = un cut appris) est inchangée');
+  assert.equal(avec.utilisesExemples, 2, 'corrigés retenus : 10 et 12 (14 est validé tel quel, 99 n\'est pas dans la partie)');
+  assert.equal(avec.sourcesAvecExemples, 1);
+  assert.equal(sans.corriges, 4); assert.equal(sans.utilisesExemples, null, 'sans identifiants : inconnu, pas zéro');
+  assert.ok(avec.utilisesExemples <= avec.corriges);
+  /* Fichier d'identifiants : clé « projet:partie », format vérifié. */
+  const fichier = { format: 'ariane-gcv2-exemples-v1', usages: { relecture: { '1:5': [10, 12, 14] }, lot: { '1:5': [10] } } };
+  assert.deepEqual([...C.exemplesDeSource(fichier, { projet: '1', partie: 5 })], [10, 12, 14]);
+  assert.deepEqual([...C.exemplesDeSource(fichier, { projet: '1', partie: 5 }, 'lot')], [10]);
+  assert.equal(C.exemplesDeSource(fichier, { projet: '2', partie: 5 }), null, 'partie sans identifiants');
+  assert.equal(C.exemplesDeSource(null, { projet: '1', partie: 5 }), null);
+  assert.throws(() => C.exemplesDeSource({ format: 'autre' }, { projet: '1', partie: 5 }), /format/);
+  /* Deux sources, une seule avec identifiants : le total n'additionne que les sources connues, et le texte le dit. */
+  const sources = [{ id: 'a', projet: '1', partie: 5, dossiers: ['d1'], etat: 'appris' }, { id: 'b', projet: '1', partie: 6, dossiers: ['d2'] }];
+  const faux = () => ({ table });
+  const r = C.compter(sources, { racine: '/r', executer: faux, exemples: fichier });
+  assert.equal(r.sources[0].utilisesExemples, 2); assert.equal(r.sources[1].utilisesExemples, null);
+  assert.equal(r.totaux.tous.utilisesExemples, 2); assert.equal(r.totaux.tous.corriges, 8, 'la colonne de Mic compte les deux parties');
+  assert.equal(r.totaux.tous.corrigesDesSourcesAvecExemples, 4);
+  assert.equal(r.totaux.appris.utilisesExemples, 2); assert.equal(r.totaux['en-file'].sourcesAvecExemples, 0);
+  const md = C.enMarkdown(r);
+  assert.match(md, /Utilisés comme exemples : 2/); assert.match(md, /Utilisés comme exemples \|/); assert.match(md, /Cuts corrigés : 8/);
+  assert.match(md, /\| 1 \| 6 \| en-file \| 6 \| 4 \| — \|/, 'une source sans identifiants affiche « — »');
+  /* Sans fichier d'identifiants, rien de nouveau n'est affiché dans la phrase d'en-tête. */
+  assert.ok(!/Utilisés comme exemples : /.test(C.enMarkdown(C.compter(sources, { racine: '/r', executer: faux }))));
+  assert.equal(C.lireArguments(['--donnees', '/r', '--exemples', 'x.json']).exemples, 'x.json');
 });

@@ -5,8 +5,9 @@
  * (fiches/G0_GCV2_CONCEPTION.md § 2 à 4, fiches/G1B_APPRENTISSAGE.md, D-201). Étude HORS LIGNE : rien n'est changé à l'extension, aucune action
  * dans ESV. Node pur, sans aucune dépendance.
  *
- *   node tools/gcv2-apprendre.cjs valider  --jeu JEU.jsonl [--jeu …] --usage relecture|lot [--lambda 30] [--variante V1|V2|V3 …] [--sortie V.json]
- *   node tools/gcv2-apprendre.cjs exporter --jeu JEU.jsonl [--jeu …] [--jeu-lot JEU-LOT.jsonl …] [--garde-voie] --sortie datasets/gcv2-parametres.json [--date AAAA-MM-JJ]
+ *   node tools/gcv2-apprendre.cjs valider  --jeu JEU.jsonl [--jeu …] --usage relecture|lot [--lambda 30 | --lambdas 3,30,300] [--variante V1|V2|V3 …] [--variantes F.json] [--garde-voie] [--sortie V.json]
+ *   node tools/gcv2-apprendre.cjs exporter --jeu JEU.jsonl [--jeu …] [--jeu-lot JEU-LOT.jsonl …] [--garde-voie] --sortie datasets/gcv2-parametres.json [--date AAAA-MM-JJ] [--exemples datasets/gcv2-exemples.json]
+ *   node tools/gcv2-apprendre.cjs exemples --jeu JEU.jsonl [--jeu …] --sortie datasets/gcv2-exemples.json     (identifiants des exemples retenus : partie et cut)
  *   node tools/gcv2-apprendre.cjs rapport  --json V1.json [--json V2.json]
  *   node tools/gcv2-apprendre.cjs essai
  *
@@ -27,7 +28,8 @@
  *
  * DÉCISION DE PAIRE. Garde-fous NON APPRIS d'abord (écartement de la paire à 15 mm de la médiane de la partie ou dans 1 420–1 470 mm ; chaque rail
  * à 45 mm au plus en latéral de la pose de départ ; changement de dévers de 15 mm au plus) ; ne rien faire (H0, H0) est toujours permis. Choix :
- * le couple qui maximise p_gauche × p_droite à 10 mm. Agir seulement si p ≥ τ ET si l'écart à H0 ≥ δ ; sinon laisser (ou s'abstenir). τ et δ sont
+ * la paire qui maximise le SCORE DE PAIRE p_gauche × p_droite à 10 mm (produit de deux probabilités par rail : classement des paires, PAS une probabilité de
+ * paire calibrée, G1 de l'audit externe). Agir seulement si le score ≥ τ ET si l'écart à H0 ≥ δ ; sinon laisser (ou s'abstenir). τ et δ sont
  * choisis par zone sur les scores hors-échantillon du pli d'apprentissage seulement : 0 mauvaise voie, erreur parmi les actions ≤ 9 %, le plus de
  * corrections justes.
  *
@@ -35,6 +37,11 @@
  * hypothèses H4 de source humaine sont retirées, et les traits d'écart aux voisins sont annulés pour les cuts dont les voisins sont humains).
  * RÉFÉRENCES, sur les mêmes cuts : (a) H0, ne rien faire ; (b) la règle prudente figée de D-180 et D-190 relue sur le jeu ; (c) le hasard (une
  * paire tirée uniformément parmi les paires permises par les garde-fous, avec le taux d'action de la GCV2 par zone).
+ *
+ * λ IMBRIQUÉ (G1-c-prep, V3 de l'audit externe, option `--lambdas`) : λ est choisi DANS chaque pli extérieur, par la validation interne de ses seules parties
+ * d'apprentissage (perte logistique hors-échantillon des 10 mm), puis le calibrage et les seuils sont appris avec ce λ, sans la partie jugée. Sans l'option, λ est
+ * fixe (30) comme en G1-b. La référence « règle prudente » peut être la règle EXACTE de tools/relecture-autonome.cjs (option `reference` de `validationCroisee`,
+ * tools/gcv2-evaluer.cjs) au lieu du substitut rejoué ici (`reglePrudente`, 38 actions et 27 justes contre 40 et 29 : M1 de l'audit externe).
  *
  * VARIANTES PAR ZONE (D-204, option `--variante`, datasets/gcv2-variantes.json). Une variante ne change ni le modèle, ni le calibrage, ni τ et δ : elle
  * décide, pour chaque cut, qui agit, la GCV2 apprise du pli, la règle prudente figée, ou personne (H0). Jamais sur un cut rouge ni différé. Sans
@@ -227,6 +234,8 @@ function construireCas(jeu, usage = 'relecture', { gardeVoie = false } = {}) {
   if (usageJeu && usageJeu !== usage) throw Error(`jeu ${jeu.partie} : jeu « ${usageJeu} », usage « ${usage} » demandé${usage === 'lot' ? ' (le jeu lot est généré sans appui humain : gcv2-jeu --sortie-lot)' : ''}`);
   for (const c0 of jeu.cuts) {
     const c = c0.cut;
+    /* Référence incertaine (D-211) : la pose de départ de la visite était déjà déplacée par rapport à la liste d'ESV du début de la partie ; ce n'est pas une « correction nulle ». Jamais un exemple. */
+    if (c.reference === 'incertaine') continue;
     if (c.etat !== 'calcule' || !c.nHyp || !c.etiquette || !c.etiquette.mic || !c.etiquette.mic.left || !c.etiquette.mic.right) continue;
     const { hyp, ctx: contexte } = usageJeu ? { hyp: c0.hyp, ctx: c.contexte } : appliquerUsage({ cut: c, hyp: c0.hyp, gMed }, usage);
     const G0 = fini(contexte && contexte.ecartDepartMm) ? contexte.ecartDepartMm : null, v = (contexte && contexte.voisins) || {};
@@ -494,7 +503,8 @@ function parCas(cas, ex, v) {
 }
 
 /* ------------------------------------------------------------------ décision de paire */
-/* Le couple qui maximise p_gauche × p_droite parmi (H0, H0) et les paires permises. `p` : { left, right } probabilités calibrées à 10 mm. */
+/* La paire qui maximise le score de paire p_gauche × p_droite parmi (H0, H0) et les paires permises. `p` : { left, right } probabilités calibrées par RAIL à 10 mm ;
+ * leur produit est un score de paire, pas une probabilité de paire calibrée (G1 de l'audit externe). */
 function meilleurePaire(k, p) {
   const i0 = k.i0.left, j0 = k.i0.right;
   let best = { i: i0, j: j0, p: p.left[i0] * p.right[j0], ecart: 0, h0: true };
@@ -753,26 +763,62 @@ function fiabilite(paires, classes = 10) {
 }
 
 /* ------------------------------------------------------------------ validation croisée par partie */
-function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {}, variantes = [], defsVariantes, gardeVoie = false } = {}) {
+/* Critère interne du choix de λ (V3, audit externe) : perte logistique hors-échantillon des 10 mm, au niveau des hypothèses, calculée sur les SEULES parties
+ * d'apprentissage d'un pli (chaque partie d'apprentissage est notée par un modèle qui ne l'a pas vue) ; chaque partie pèse autant. Plus petit = meilleur. */
+function critereLambda(pli, casApp) {
+  const ex = exemples(casApp), w = poidsParPartie(ex.partie);
+  let s = 0, sw = 0;
+  ex.ref.forEach(([ci, side, hi], n) => {
+    const p = Math.min(1 - 1e-12, Math.max(1e-12, sigmoide(pli.oofZ10[ci][side][hi])));
+    s += w[n] * -(ex.y10[n] ? Math.log(p) : Math.log(1 - p)); sw += w[n];
+  });
+  return sw ? s / sw : null;
+}
+/* Apprend un pli. Sans `lambdas` : un seul λ (G1-b). Avec `lambdas` : λ choisi DANS ce pli extérieur, par la validation interne de ses seules parties
+ * d'apprentissage (`critereLambda`), puis calibrage et seuils appris avec ce λ, toujours sans la partie jugée. À égalité, le plus petit λ de la liste. */
+function apprendrePliImbrique(app, opt, lambdas) {
+  if (!lambdas || !lambdas.length) { const pli = apprendrePli(app, opt); return { pli, lambda: opt.lambda === undefined ? LAMBDA : opt.lambda, criteres: null, plis: null }; }
+  const essais = [...lambdas].sort((a, b) => a - b).map(l => { const pli = apprendrePli(app, { ...opt, lambda: l }); return { lambda: l, pli, critere: critereLambda(pli, app) }; });
+  const best = essais.reduce((m, e) => e.critere < m.critere - 1e-12 ? e : m, essais[0]);
+  return { pli: best.pli, lambda: best.lambda, criteres: Object.fromEntries(essais.map(e => [String(e.lambda), arrondi(e.critere, 6)])), plis: essais };
+}
+/* Options de G1-c-prep : `lambdas` (λ imbriqué, V3), `reference` (k → résultat de la règle prudente EXACTE, M1 ; sans elle, le substitut de G1-b),
+ * `garderCuts` (un résultat par cut et par méthode, pour la porte unique), `lambdaTemoin` (évalue aussi, dans les mêmes plis, le λ fixe de G1-b). */
+function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, accord = true, espion = () => {}, cible = CIBLE, journal = () => {}, variantes = [], defsVariantes,
+  lambdas = null, reference = null, garderCuts = false, lambdaTemoin = null, gardeVoie = false } = {}) {
   const defs = variantes.length ? (defsVariantes || lireVariantes()) : null, methodesV = Object.fromEntries(variantes.map(v => [v, []]));
   for (const v of variantes) if (!defs[v]) throw Error(`variante « ${v} » inconnue (${Object.keys(defs).join(' | ')})`);
   for (const v of variantes) if (defs[v].gardeVoie && !gardeVoie) throw Error(`variante « ${v} » : elle agit sur des différés, il faut --garde-voie`);
   const noms = parties.map(j => j.partie), casParPartie = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, usage, { gardeVoie })]));
   const detailsDifferes = [];
   const methodes = { gcv2: [], prudente: [], h0: [] }, plis = [], hasard = { total: bilanVide(), perimetrePrudent: bilanVide(), parZone: Object.fromEntries(ZONES.map(z => [z, bilanVide()])), parRole: Object.fromEntries(ROLES.map(r => [r, bilanVide()])) };
-  const parPartie = {}, fiab10 = [], fiab5 = [], fiabGagnants = [], coefs = [], hasardParPartie = {};
+  const parPartie = {}, fiab10 = [], fiab5 = [], fiabGagnants = [], coefs = [], hasardParPartie = {}, lambdaParPli = {};
+  const temoin = lambdaTemoin && lambdas ? { gcv2: [], variantes: Object.fromEntries(variantes.map(v => [v, []])) } : null;
+  const cuts = garderCuts ? { gcv2: [], prudente: [], h0: [], variantes: Object.fromEntries(variantes.map(v => [v, []])), temoin } : null;
+  const refDe = reference || (k => reglePrudente(k));
   for (const jugee of noms) {
     const app = noms.filter(n => n !== jugee).flatMap(n => casParPartie[n]), test = casParPartie[jugee];
     espion('pli', noms.filter(n => n !== jugee));
-    const t0 = Date.now(), pli = apprendrePli(app, { lambda, accord, espion: (nom, ps) => { if (ps.includes(jugee)) throw Error(`fuite : la partie jugée ${jugee} est lue par « ${nom} »`); espion(nom, ps); }, cible });
+    const t0 = Date.now(), garde = (nom, ps) => { if (ps.includes(jugee)) throw Error(`fuite : la partie jugée ${jugee} est lue par « ${nom} »`); espion(nom, ps); };
+    const imb = apprendrePliImbrique(app, { lambda, accord, espion: garde, cible }, lambdas), pli = imb.pli;
+    lambdaParPli[jugee] = { choisi: imb.lambda, criteres: imb.criteres };
     const J = jugerPli(pli, test);
     const dec = test.map((k, i) => decider(k, J.p10[i], pli.seuils)), rs = test.map((k, i) => resultatDeDecision(k, dec[i]));
-    const rsP = test.map(k => reglePrudente(k)), rsH = test.map(resultatH0);
+    const rsP = test.map(k => refDe(k)), rsH = test.map(resultatH0);
     methodes.gcv2.push(...rs); methodes.prudente.push(...rsP); methodes.h0.push(...rsH);
     const rsV = {}; for (const v of variantes) { rsV[v] = test.map((k, i) => appliquerVariante(k, v, rs[i], rsP[i], defs)); methodesV[v].push(...rsV[v]); }
     /* Garde-fou de voie : le détail des différés jugés (référence, décision, issue), pour la fiche. Rien d'autre ne change. */
     if (gardeVoie) test.forEach((k, i) => { if (k.garde === 'voie') detailsDifferes.push({ partie: k.partie, cut: k.cut, zone: k.zone, mic: k.etiq.micMaxMm, reference: !!k.voieRef, sure: !!(k.voieRef && k.voieRef.sure),
       paires: k.paires.length, motifs: k.voieRef ? k.voieRef.motifs || [] : ['aucune-reference'], etat: rs[i].etat, p: arrondi(dec[i].p, 4), e: rs[i].e, lat: rs[i].lat, latGarde: rs[i].latGarde ?? rs[i].lat }); });
+    if (cuts) { cuts.gcv2.push(...rs); cuts.prudente.push(...rsP); cuts.h0.push(...rsH); for (const v of variantes) cuts.variantes[v].push(...rsV[v]); }
+    /* λ fixe de G1-b évalué dans les mêmes plis (témoin) : même chose avec le pli appris à λ = lambdaTemoin, déjà calculé dans la liste des essais. */
+    if (temoin) {
+      const e = imb.plis.find(x => x.lambda === lambdaTemoin);
+      if (!e) throw Error(`lambdaTemoin ${lambdaTemoin} absent de la liste des λ`);
+      const Jt = jugerPli(e.pli, test), rt = test.map((k, i) => resultatDeDecision(k, decider(k, Jt.p10[i], e.pli.seuils)));
+      temoin.gcv2.push(...rt);
+      for (const v of variantes) temoin.variantes[v].push(...test.map((k, i) => appliquerVariante(k, v, rt[i], rsP[i], defs)));
+    }
     /* hasard : taux d'action de la GCV2 par zone, sur cette partie */
     const taux = {}; for (const z of ZONES) { const n = rs.filter(r => r.zone === z).length; taux[z] = n ? rs.filter(r => r.zone === z && r.etat === 'agit').length / n : 0; }
     const h = hasardEnEsperance(test, taux); hasardParPartie[jugee] = h;
@@ -797,7 +843,11 @@ function validationCroisee(parties, { usage = 'relecture', lambda = LAMBDA, acco
     parPartie, calibrage: { p10: fiabilite(fiab10), p5: fiab5.length ? fiabilite(fiab5) : null, gagnants: fiabilite(fiabGagnants.map(([p, y]) => [p, y])), gagnantsHorsH0: fiabilite(fiabGagnants.filter(g => !g[2]).map(([p, y]) => [p, y])) },
     coefficients: resumeCoefficients(coefs),
     ...(variantes.length ? { variantes: Object.fromEntries(variantes.map(v => [v, synthese(methodesV[v])])), variantesDef: Object.fromEntries(variantes.map(v => [v, defs[v]])) } : {}),
-    ...(gardeVoie ? { gardeVoie: true, detailsDifferes } : {}) };
+    ...(gardeVoie ? { gardeVoie: true, detailsDifferes } : {}),
+
+    ...(lambdas ? { lambdas: [...lambdas].sort((a, b) => a - b), lambdaParPli, lambdaImbrique: true } : {}),
+    ...(temoin ? { temoin: { lambda: lambdaTemoin, gcv2: synthese(temoin.gcv2), variantes: Object.fromEntries(variantes.map(v => [v, synthese(temoin.variantes[v])])) } } : {}),
+    ...(cuts ? { cuts } : {}) };
 }
 /* Empreinte de tout ce qu'un modèle a appris : colonnes, normalisation, vocabulaires, coefficients. */
 function empreinteModele(m) {
@@ -811,6 +861,18 @@ function resumeCoefficients(plis) {
   const out = [...par].map(([nom, v]) => { const m = v.reduce((a, b) => a + b, 0) / plis.length, pos = v.filter(x => x > 0).length, neg = v.filter(x => x < 0).length;
     return { nom, moyenne: arrondi(m, 3), plis: v.length, memeSigne: Math.max(pos, neg) / v.length }; });
   return out.sort((a, b) => Math.abs(b.moyenne) - Math.abs(a.moyenne)).slice(0, 40);
+}
+
+/* ------------------------------------------------------------------ identifiants des exemples consommés (M5) */
+const FORMAT_EXEMPLES = 'ariane-gcv2-exemples-v1';
+/* Les exemples que l'entraînement consomme vraiment : pour chaque partie, les numéros des cuts de `construireCas` (cuts calculés, avec un nuage, une référence pour
+ * les deux rails et leurs étiquettes). Rien d'autre : ni coordonnée, ni pose, ni hypothèse. Le compteur (tools/compteur-gcv2.cjs) s'en sert pour sa colonne
+ * « utilisés comme exemples ». */
+function identifiantsExemples(parties, { usages = ['relecture', 'lot'] } = {}) {
+  const out = { format: FORMAT_EXEMPLES, version: VERSION, note: 'Identifiants (partie, numéro de cut) des cuts retenus comme exemples par l\'apprentissage : cuts calculés avec un nuage et une référence humaine pour les deux rails. Aucune coordonnée.',
+    parties: parties.map(j => j.partie), usages: {} };
+  for (const u of usages) out.usages[u] = Object.fromEntries(parties.map(j => [j.partie, construireCas(j, u).map(k => k.cut).sort((a, b) => a - b)]));
+  return out;
 }
 
 /* ------------------------------------------------------------------ export des paramètres */
@@ -894,16 +956,20 @@ function rapport(V) {
   for (const o of ROLES) for (const [k, nom] of M.slice(0, 3)) L.push(`${o} | ${nom} | ${LIGNE(V.total[k].parRole[o])}`);
   const fb = c => c.classes.map(x => `${x.n ? nb(Math.round(100 * x.pMoyen)) + '/' + nb(Math.round(100 * x.observe)) : '—'}`).join(' ');
   const P = porte(V), oui = x => x ? 'oui' : 'NON';
-  L.push('', '### Porte du plan (0 mauvaise voie, erreur ≤ 9 %, corrections justes ≥ règle prudente, abîmés ≤ règle prudente)', '', 'lecture | 0 mauvaise voie | erreur ≤ 9 % | borne de Wilson ≤ 9 % | justes ≥ prudente | abîmés ≤ prudente | porte tenue', '---|---|---|---|---|---|---');
+  L.push('', '### Porte de G1-b (ancienne lecture, NON contraignante : la borne de Wilson n\'y est pas imposée ; la porte unique est celle de tools/gcv2-evaluer.cjs, fiches/PROTOCOLE_G1C.md § 3)', '', 'lecture | 0 mauvaise voie | erreur ≤ 9 % | borne de Wilson ≤ 9 % | justes ≥ prudente | abîmés ≤ prudente | porte tenue', '---|---|---|---|---|---|---');
   for (const [nom, o, t] of [['tous les cuts', P.tout, P.tenue], ['périmètre de la règle prudente', P.perimetre, P.tenuePerimetre]]) L.push(`${nom} | ${oui(o.mauvaiseVoie)} | ${oui(o.erreur)} (${o.erreurTaux == null ? '—' : (Math.round(1000 * o.erreurTaux) / 10).toString().replace('.', ',') + ' %'}) | ${oui(o.borneHaute)} (≤ ${o.wilsonHaut == null ? '—' : (Math.round(1000 * o.wilsonHaut) / 10).toString().replace('.', ',') + ' %'}) | ${oui(o.justes)} (${nb(o.valeurs.gcv2.justes)} contre ${nb(o.valeurs.prudente.justes)}) | ${oui(o.abimes)} (${nb(o.valeurs.gcv2.abimes)} contre ${nb(o.valeurs.prudente.abimes)}) | ${oui(t)}`);
-  L.push('', `### Calibrage (hors-échantillon)`, '', `Brier p(10 mm) ${arrondi(V.calibrage.p10.brier, 4)} sur ${V.calibrage.p10.n} hypothèses${V.calibrage.p5 ? ` ; p(5 mm) ${arrondi(V.calibrage.p5.brier, 4)}` : ''} ; paire gagnante ${arrondi(V.calibrage.gagnants.brier, 4)} (${V.calibrage.gagnants.n} cuts).`,
-    '', 'classe | n (10 mm) | p moyen | observé | n (gagnants) | p moyen | observé', '---|--:|--:|--:|--:|--:|--:');
+  L.push('', `### Calibrage (hors-échantillon)`, '', `Brier p(10 mm) ${arrondi(V.calibrage.p10.brier, 4)} sur ${V.calibrage.p10.n} hypothèses${V.calibrage.p5 ? ` ; p(5 mm) ${arrondi(V.calibrage.p5.brier, 4)}` : ''} ; score de paire gagnant (écart du produit à la réussite de la paire, non calibré comme probabilité) ${arrondi(V.calibrage.gagnants.brier, 4)} (${V.calibrage.gagnants.n} cuts).`,
+    '', 'classe | n (10 mm) | p moyen | observé | n (score de paire gagnant) | score moyen | observé', '---|--:|--:|--:|--:|--:|--:');
   V.calibrage.p10.classes.forEach((c, i) => { const g = V.calibrage.gagnants.classes[i]; L.push(`${i * 10}–${i * 10 + 10} % | ${c.n} | ${c.n ? arrondi(c.pMoyen, 3) : '—'} | ${c.n ? arrondi(c.observe, 3) : '—'} | ${g.n} | ${g.n ? arrondi(g.pMoyen, 3) : '—'} | ${g.n ? arrondi(g.observe, 3) : '—'}`); });
   void fb;
   L.push('', '### Seuils par pli', '', 'partie jugée | ' + ZONES.map(z => `${z} (τ, δ)`).join(' | '), '---|' + '---|'.repeat(ZONES.length));
   for (const p of V.parties) L.push(`${p} | ${ZONES.map(z => { const s = V.parPartie[p].seuils[z]; return s.actif ? `${s.tau} ; ${s.delta}` : 'inactive'; }).join(' | ')}`);
   L.push('', '### Traits dominants (coefficient moyen sur les plis, traits normalisés)', '', 'trait | coefficient moyen | plis de même signe', '---|--:|--:');
   for (const c of V.coefficients.slice(0, 20)) L.push(`${c.nom} | ${c.moyenne} | ${Math.round(100 * c.memeSigne)} %`);
+  if (V.lambdaParPli) {
+    L.push('', '### λ choisi dans chaque pli extérieur (validation interne de ses seules parties d\'apprentissage)', '', 'partie jugée | λ choisi | ' + V.lambdas.map(l => `perte interne λ=${l}`).join(' | '), '---|--:|' + '--:|'.repeat(V.lambdas.length));
+    for (const p of V.parties) L.push(`${p} | ${V.lambdaParPli[p].choisi} | ${V.lambdas.map(l => V.lambdaParPli[p].criteres[String(l)]).join(' | ')}`);
+  }
   if (V.variantes) L.push('', rapportVariantes(V));
   return L.join('\n');
 }
@@ -937,7 +1003,7 @@ function rapportVariantes(V) {
     L.push('', `### Par partie jugée (${nom} | règle prudente)`, '', `partie | ${ENTETE} | règle prudente : agit | justes | abîmés | mauvaise voie`, '---|' + '--:|'.repeat(10) + '--:|--:|--:|--:');
     for (const q of V.parties) { const g = V.parPartie[q].variantes[nom].total, r = V.parPartie[q].prudente.total; L.push(`${q} | ${LIGNE(g)} | ${nb(r.agit)} | ${nb(r.justes)} | ${nb(r.abimes)} | ${nb(r.mauvaiseVoie)}`); }
     const P = porte({ total: { gcv2: S, prudente: V.total.prudente } });
-    L.push('', `### Porte du plan, ${nom} (0 mauvaise voie, erreur ≤ 9 %, corrections justes ≥ règle prudente, abîmés ≤ règle prudente)`, '', 'lecture | 0 mauvaise voie | erreur ≤ 9 % | borne de Wilson ≤ 9 % | justes ≥ prudente | abîmés ≤ prudente | porte tenue', '---|---|---|---|---|---|---');
+    L.push('', `### Porte de G1-b, ${nom} (ancienne lecture, non contraignante ; la porte unique est celle de tools/gcv2-evaluer.cjs)`, '', 'lecture | 0 mauvaise voie | erreur ≤ 9 % | borne de Wilson ≤ 9 % | justes ≥ prudente | abîmés ≤ prudente | porte tenue', '---|---|---|---|---|---|---');
     for (const [nomL, o, t] of [['tous les cuts', P.tout, P.tenue], ['périmètre de la règle prudente', P.perimetre, P.tenuePerimetre]]) L.push(`${nomL} | ${oui(o.mauvaiseVoie)} (${nb(o.valeurs.gcv2.mauvaiseVoie)}) | ${oui(o.erreur)} (${p1(o.erreurTaux)}) | ${oui(o.borneHaute)} (≤ ${p1(o.wilsonHaut)}) | ${oui(o.justes)} (${nb(o.valeurs.gcv2.justes)} contre ${nb(o.valeurs.prudente.justes)}) | ${oui(o.abimes)} (${nb(o.valeurs.gcv2.abimes)} contre ${nb(o.valeurs.prudente.abimes)}) | ${oui(t)}`);
     L.push('');
   }
@@ -950,7 +1016,7 @@ function args(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--jeu') o.jeux.push(argv[++i]); else if (a === '--jeu-lot') (o.jeuxLot = o.jeuxLot || []).push(argv[++i]); else if (a === '--json') o.jsons.push(argv[++i]); else if (a === '--usage') o.usage = argv[++i];
-    else if (a === '--lambda') o.lambda = Number(argv[++i]); else if (a === '--sortie') o.sortie = argv[++i]; else if (a === '--date') o.date = argv[++i];
+    else if (a === '--lambda') o.lambda = Number(argv[++i]); else if (a === '--lambdas') o.lambdas = String(argv[++i]).split(',').map(Number); else if (a === '--exemples') o.exemples = argv[++i]; else if (a === '--sortie') o.sortie = argv[++i]; else if (a === '--date') o.date = argv[++i];
     else if (a === '--variante') o.variantes.push(...String(argv[++i]).split(',').map(x => x.trim()).filter(Boolean));
     else if (a === '--variantes') o.fichierVariantes = argv[++i]; else if (a === '--garde-voie') o.gardeVoie = true;
     else if (a === '--sans-accord') o.accord = false; else if (a === '--erreur-max') o.erreurMax = Number(argv[++i]); else if (!o.mode) o.mode = a; else throw Error(`argument inconnu : ${a}`);
@@ -959,35 +1025,41 @@ function args(argv) {
 }
 function main(argv) {
   const a = args(argv), journal = m => process.stderr.write(m + '\n');
-  if (a.mode === 'valider' || a.mode === 'exporter') {
+  if (a.mode === 'valider' || a.mode === 'exporter' || a.mode === 'exemples') {
     if (!a.jeux.length) throw Error('--jeu JEU.jsonl attendu (au moins un)');
     const parties = a.jeux.map(f => lireJeuFichier(f));
     const cible = { ...CIBLE, ...(a.erreurMax ? { erreurMax: a.erreurMax } : {}) };
     if (a.mode === 'valider') {
       if (!a.usage) throw Error('--usage relecture|lot attendu');
-      const V = validationCroisee(parties, { usage: a.usage, lambda: a.lambda || LAMBDA, accord: a.accord !== false, cible, journal, variantes: [...new Set(a.variantes)],
+      if (a.lambdas && (a.lambdas.some(l => !(l > 0)) || a.lambdas.length < 2)) throw Error('--lambdas 3,30,300 : au moins deux valeurs positives');
+      const V = validationCroisee(parties, { usage: a.usage, lambda: a.lambda || LAMBDA, accord: a.accord !== false, cible, journal, variantes: [...new Set(a.variantes)], lambdas: a.lambdas || null,
         ...(a.fichierVariantes ? { defsVariantes: lireVariantes(a.fichierVariantes) } : {}), ...(a.gardeVoie ? { gardeVoie: true } : {}) });
       if (a.sortie) fs.writeFileSync(a.sortie, JSON.stringify(V)); process.stdout.write(rapport(V) + '\n');
+    } else if (a.mode === 'exemples') {
+      if (!a.sortie) throw Error('--sortie datasets/gcv2-exemples.json attendu');
+      fs.writeFileSync(a.sortie, serialiser(identifiantsExemples(parties)));
+      process.stdout.write(`écrit ${a.sortie}\n`);
     } else {
       if (!a.sortie) throw Error('--sortie datasets/gcv2-parametres.json attendu');
       const date = a.date || new Date().toISOString().slice(0, 10);
       fs.writeFileSync(a.sortie, serialiser(exporter(parties, { lambda: a.lambda || LAMBDA, accord: a.accord !== false, date, cible, journal, ...(a.gardeVoie ? { gardeVoie: true } : {}),
         ...(a.jeuxLot ? { partiesLot: a.jeuxLot.map(f => lireJeuFichier(f)) } : {}) })));
       process.stdout.write(`écrit ${a.sortie}\n`);
+      if (a.exemples) { fs.writeFileSync(a.exemples, serialiser(identifiantsExemples(parties))); process.stdout.write(`écrit ${a.exemples}\n`); }
     }
   } else if (a.mode === 'rapport') {
     if (!a.jsons.length) throw Error('--json V.json attendu');
     for (const f of a.jsons) process.stdout.write(rapport(JSON.parse(fs.readFileSync(f, 'utf8'))) + '\n\n');
   } else if (a.mode === 'essai') {
     process.stdout.write('node --test tests/gcv2-apprendre.test.cjs\n');
-  } else throw Error('mode : valider | exporter | rapport | essai');
+  } else throw Error('mode : valider | exporter | exemples | rapport | essai');
 }
 module.exports = {
   FORMAT_PARAMS, FORMAT_VALID, VERSION, SEUILS, GARDES, ZONES, ROLES, CIBLE, LAMBDA, GRAINE, INTERDITS, NUM, CAT, MULTI, REGLES_PRUDENTES,
   verifierListeBlanche, estInterdit, wilson, mulberry32, sigmoide, lignesDeTexte, jeuDeLignes, lireJeuFichier, construireCas, appliquerUsage, accords, brut,
   pairesPermises, paireValide, ecartementPaire, ajusterCodage, coder, matrice, ajusterLogistique, ajusterArbres, scoresArbres, platt, appliquerPlatt, exemples, poidsParPartie, entrainer, scorer, parCas,
   meilleurePaire, decider, choisirSeuils, apprendrePli, jugerPli, reglePrudente, reglesPrudentesDuDepot, poseChaineH, resultatH0, resultatDeDecision, bilanDe, synthese, hasardEnEsperance,
-  fiabilite, porte, validationCroisee, exporter, serialiser, listeBlancheExportable, rapport,
+  fiabilite, porte, validationCroisee, critereLambda, apprendrePliImbrique, FORMAT_EXEMPLES, identifiantsExemples, exporter, serialiser, listeBlancheExportable, rapport,
   FORMAT_VARIANTES, FICHIER_VARIANTES, FICHIER_VARIANTES_H6, lireVariantes, appliquerVariante, rapportVariantes, args, issueDePaire, TRAIT_H6,
 };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`gcv2-apprendre : ${e.message}\n`); process.exit(1); } }
