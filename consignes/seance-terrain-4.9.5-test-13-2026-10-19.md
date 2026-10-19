@@ -1,12 +1,12 @@
 # Séance terrain « 4.9.5 test 13 (L1) » : Orbite s'occupe aussi des différés
 
-**Ce qui change : le lot traite lui-même une partie des cuts qu'il différait.** Quand la chaîne du lot ne sait pas poser un cut, un second avis (la GCV2) regarde le nuage et les cuts déjà posés par le lot :
+**Ce qui change : le lot traite lui-même une partie des cuts qu'il différait.** Tout ce que le lot posait avant, il le pose **exactement comme avant**. Sur un cut qu'il différait, il essaie trois choses, dans l'ordre : déplacer la vue si la cible en sortait ; refaire sa décision sans la garde de paire ; puis un second avis (la GCV2), qui regarde le nuage et les cuts posés par le lot :
 
 - **sûr de lui** : il pose et **valide** le cut (vert) ;
 - **pas assez sûr** : il pose les rails **sans valider**. Le cut reste **rouge**, mais ses rails sont déjà **près** de la bonne place. Tu n'as plus qu'à ajuster ;
 - **rien de bon**, ou une place à plus de 15 cm de la pose de départ : il ne pose rien. Le cut reste rouge, comme avant.
 
-Aussi : quand la cible d'un cut sort de la vue d'ESV, Orbite **déplace la vue**, puis pose. Le reste (Écho, la relecture après le lot, Maj+Espace) ne change pas.
+Un cut posé de cette façon ne sert jamais de point d'appui aux cuts suivants. Le reste (Écho, la relecture après le lot, Maj+Espace) ne change pas.
 
 **Correctif (partie 19 du 19/10)** : la relecture « Corriger » après le lot ne s'arrête plus quand ESV est encore occupé par une capture. Elle attend quelques secondes et repart. Si ESV reste occupé plus de 12 secondes, elle s'arrête comme avant, avec le message.
 
