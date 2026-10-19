@@ -2748,3 +2748,8 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Conséquence pour la GCV2** : les hypothèses de G1-a doivent couvrir le rail manquant (piste 1) ; la mesure de 1:17 et 1:24 est limitée tant que leurs nuages manquent (question à Mic : a-t-il un Écho complet de ces parties ?).
 - **Correction du plan** : RM-1 visait la première ADV de **1:11**, et RM-2 les notes de la partie 11 ; or **1:11 est un témoin fixe** (D-192, RM-10), qui ne doit jamais rien régler. Règle : une variante du détecteur ou une marge se choisit **sur les parties d'apprentissage seulement** (ADV et PN notés par Mic en 1:13, 1:14, 1:15, 1:16, 1:29, 2:1, 2:10, 2:11) ; 1:11 (et 1:25) n'est lu **qu'une fois, à la fin**, réglages figés, et rapporté tel quel. Aucun chiffre lu sur un témoin ne fait revenir sur un réglage.
 - **Lancés** (niveau rapide) : RM-1 (`claude/50-rm1-adv`) et RM-2 (`claude/50-rm2-marges`), depuis `claude/50-compteur-gcv2`. RM-1 sera relu au niveau fort (il touche la sélection) avant toute fusion.
+
+## D-196 — banane-data est la seule copie des exports de Mic (19 octobre 2026)
+
+- **Mic** : « Je ne les ai plus, je supprime tout ce que j'ai dès que je te les envoie. » Les nuages manquants de 1:17 et 1:24 sont perdus pour de bon ; RM-4, G1-a et la suite mesurent ces parties sur les cuts qui ont un nuage, et les comptent à part.
+- **Conséquence** : banane-data est la **seule** copie de chaque export. À chaque archivage : exports déposés tels qu'envoyés, `SHA256SUMS` du dossier, commit **poussé et vérifié sur le distant** (empreinte relue après le push) avant de dire à Mic que c'est archivé. Rien n'est jamais supprimé ni réécrit dans `collections/`.
