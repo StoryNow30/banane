@@ -245,6 +245,8 @@ Toutes les parties étiquetées ont servi. Les parties 17 et 24 n'ont pas de lis
 - **Captures de l'Écho** : lecture passive, souvent partielle. Elles servent à juger le signal sur des cuts que le lot n'a pas vus, pas à le régler.
 - **Temps** : 7 ms par cut dans la décision du lot (29 ms au plus). Négligeable devant le moteur, mais c'est du temps pris au moment du cut.
 
+- **Suite (RM-1, 19/10)** : le détecteur figé rejoué sur les parties d'apprentissage notées depuis (1:15, 1:16, 2:11 en plus), et pourquoi il ne voit pas, au lot, la première ADV de 2:11 : `fiches/RM1_ADV.md`. Aucun réglage changé.
+
 ## 11. Ce que Mic doit décider
 
 1. **Les zones reconnues hors liste** (§ 6) : parties 17, 24, 18, 23, 25, 26, 27. Sont-ce des ADV ?
