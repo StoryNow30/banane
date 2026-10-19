@@ -18,9 +18,9 @@ Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut
 | 2 | 1 | en-file | 765 | 340 | 232 | 166 | 87 | 192 | 6 | 140 |
 | 2 | 10 | en-file | 21 | 12 | 3 | 1 | 6 | 3 | 0 | 0 |
 | 2 | 11 | en-file | 546 | 77 | 40 | 25 | 26 | 224 | 3 | 216 |
-| 1 (à confirmer) | 14 | en-file | 112 | 48 | 23 | 17 | 25 | 35 | 0 | 4 |
-| 1 (à confirmer) | 15 | en-file | 524 | 107 | 35 | 9 | 27 | 356 | 2 | 32 |
-| 1 (à confirmer) | 16 | en-file | 388 | 133 | 59 | 21 | 49 | 186 | 1 | 19 |
+| 1 | 14 | en-file | 112 | 48 | 23 | 17 | 25 | 35 | 0 | 4 |
+| 1 | 15 | en-file | 524 | 107 | 35 | 9 | 27 | 356 | 2 | 32 |
+| 1 | 16 | en-file | 388 | 133 | 59 | 21 | 49 | 186 | 1 | 19 |
 
 Une partie lue en plusieurs Échos (sessions, reprises) compte chaque cut une fois, d'après son dernier état observé.
 
@@ -29,6 +29,7 @@ Une partie lue en plusieurs Échos (sessions, reprises) compte chaque cut une fo
 - **Corrigé** = Mic a déplacé au moins un rail avant de valider (étiquette de l'Écho `VALIDATE_CORRECTED_*`), de quelque ampleur que ce soit : 1 023 des 1 631 dépassent 5 mm, 527 dépassent 10 mm ; les 608 autres sont des retouches de 5 mm ou moins.
 - **En file / appris** : le dépôt ne sait pas quand la GCV2 est entraînée. Tout est donc « en file » (archivé, pas encore confirmé entraîné) ; on change `etat` dans `datasets/compteur-gcv2-sources.json` quand Mic confirme un entraînement, puis on relance l'outil.
 - **Partie 15 : compte partiel.** L'export final n'a pas été envoyé ; les segments 11 à 18 et 32 manquent (524 cuts lus, 567 visites). Les cuts après 7601 (dont le PN 8137–8151 noté par Mic) ne sont pas dans les archives.
-- **Parties 14, 15, 16 : projet 1 par déduction** (leur code de projet n'est pas celui des parties 10 et 11, du projet 2) ; à confirmer par Mic.
+- **Parties 14, 15, 16 : projet 1**, confirmé par Mic (« le projet de l'opérateur débutant », D-191).
+- **« Appris »** = la GCV2 est entraînée dessus (Mic, D-191) : aucune ne l'est encore, tout reste en file.
 - **Jeu d'apprentissage d'Ariane et compteur GCV2 sont deux choses** : `datasets/manifeste-parties.json` dit quelles parties servent à régler Ariane ; ce compteur dit combien de cuts corrigés la GCV2 peut apprendre. Les parties reçues après le 16/10 restent réservées dans le manifeste (sauf la partie 11, D-187).
 - Régénérer : `node tools/compteur-gcv2.cjs --donnees <banane-data> --sortie datasets/compteur-gcv2.json --md fiches/COMPTEUR_GCV2.md` (branche `claude/50-compteur-gcv2`), puis recopier la partie « Comment lire » à la main.

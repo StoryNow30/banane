@@ -2708,3 +2708,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Où tombent les corrections de Mic de plus de 10 mm** (42 cuts mesurables sur les trois parties) : **27 dans les PN**, 8 dans les ADV, **7 hors de toute zone reconnue** (6 en partie 16, 1 en partie 15). Les PN, qui sont un tiers des cuts visités (217 sur 686), portent près des deux tiers des grosses corrections. La règle ne touche pas les cuts hors zone (ils restent en ombre, décision D-180) : ces 7 cuts, 17 % des grosses corrections, lui échappent par construction.
 - **Limites** : trois parties, un seul opérateur débutant ; les zones n'existent que sur les cuts que Mic a visités (pas de lot) ; la partie 15 est tronquée ; la borne de confiance reste large (≤ 16,5 %).
 - **Suite** : quand Mic enverra le final de la partie 15, relancer (extraire, table, juger). Question pour Mic : la zone 4006–4071 de la partie 16 est-elle une ADV ?
+
+## D-191 — Réponses de Mic sur le compteur de la GCV2 (19 octobre 2026, matin)
+
+- **« Appris » = la GCV2 est entraînée dessus** (pas seulement archivé). Aucune GCV2 n'est encore entraînée : le compteur « appris » reste à 0 ; les 1 631 cuts corrigés sont tous « en file ».
+- **Retouches de 5 mm ou moins** : Mic ne tranche pas (« chaque cut doit être entraîné pour améliorer précision et fiabilité, à toi de voir »). Choix : le compteur de Mic compte **tous** les cuts corrigés, quelle que soit l'ampleur ; le chiffre « de plus de 5 mm » reste affiché à part, pour ne pas confondre le nombre d'exemples et le nombre d'exemples qui apprennent quelque chose. À rediscuter si l'entraînement montre que les petites retouches ne servent à rien.
+- **Parties 14, 15 et 16** : « le projet de l'opérateur débutant », comme les parties 12 et 13 (projet 1). Les sources du compteur ne sont plus « à confirmer ».
+- **Partie 15, export final** : Mic va chercher, il ne l'a peut-être plus.
+- **Zone 4006–4071 de la partie 16** : Mic répondra dans la journée.
+- **Parties en réserve pour juger la GCV2** : Mic demande ce que cela veut dire ; explication donnée (un examen que la GCV2 n'a jamais vu) ; décision en attente.
