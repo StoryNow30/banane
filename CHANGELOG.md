@@ -17,6 +17,7 @@ Consigne : `consignes/seance-terrain-4.9.5-test-13-2026-10-19.md` ; retour arri�
 - **Moteur** : `src/gcv1-shadow.js` rend son réservoir **sur demande** (`scientificProposeBothAvecReservoir`) ; la sortie par défaut est inchangée.
 - **Banc conjoint** `tools/banc-differes.cjs` (rejeu causal des 40 lots de la base du diagnostic, profils base, L1, L1-v ; jugés contre Mic de la même séance et de toute séance sans autre écriture, D-220) ; résultats dans `fiches/L1_DIFFERES.md`.
 - Essais : `tests/lot-profil-*.test.cjs` (un essai lourd par fichier ; profil « actuel » = 4.9.5.9 ; profil « L1 » : vue amenée, pose sans validation, validation, panne ; paramètres figés) ; montages d'empreinte joués sous le profil « actuel » ; `tests/pose-lot-inchanges-4959.test.cjs` mis à jour (fichiers changés déclarés).
+- verify (cœurs 2 et 3) : 2 422 essais, 2 420 réussis, 0 échec, 2 ignorés (corpus natif absent) ; `src/engine.js` identique à la base V4.6.0, géométrie inchangée.
 - Non vérifié : la GCV2 n'a jamais posé dans ESV ; le déplacement de vue n'a jamais servi en séance ; le dernier cut d'un lot n'est pas approché ; pas de choix du profil au panneau (retour arrière = test 9) ; Edge.
 
 ## 4.9.5.9 — 4.9.5 test 9 (19/10)
