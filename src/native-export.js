@@ -279,7 +279,7 @@
    * lecteurs (ex. `Array.isArray(doc.records)`), les objets sont retirés.
    * Aucune information n'est perdue : le premier segment est un instantané
    * complet, les suivants n'ont jamais eu que la même copie. */
-  const UNE_FOIS = ['events', 'records', 'state', 'stateOmits', 'closureSummary', 'v1TimingExport', 'diagnostic'];
+  const UNE_FOIS = ['events', 'records', 'state', 'stateOmits', 'closureSummary', 'v1TimingExport', 'diagnostic', 'raisonSeries'];   // RM-11 (test 9) : les séries de raisons collantes, une fois
   function enteteMince(metadata) {
     const out = {};
     for (const k of Object.keys(metadata)) {

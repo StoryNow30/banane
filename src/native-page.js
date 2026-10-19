@@ -139,10 +139,10 @@
     finally{this.flushing=false;this.flushPromise=null;}})();return this.flushPromise;}
   stateKey(state){const id=state?.identity||{};return K.identityFields.map(k=>id[k]??'not-observed').join('|');}
   railKey(state){return JSON.stringify(['left','right'].map(side=>{const r=state?.rails?.[side];return r?[r.railLocalToSceneRelative,r.profileLocalToSceneRelative]:null;}));}
-  async start({sessionId,observationPeriodId}){if(this.active)throw Error('Écho est déjà actif dans ESV.');
+  async start({sessionId,observationPeriodId,raison}){if(this.active)throw Error('Écho est déjà actif dans ESV.');
    if(this.sessionId&&this.sessionId!==sessionId){this.queue=[];this.checkpointReceipts.clear();this.retryAt=0;this.failureShown=false;this.metrics={enqueued:0,sent:0,dropped:0,sendFailures:0,
      queueDepthMax:0,handlerDurationsMs:[],captureCompleted:0,captureFailed:0,captureBudgeted:0,captureRefused:0,captureCheckpoints:0,degradationLevel:'FULL'};this.collectorSeq=0;}
-   this.sessionId=sessionId;this.periodId=observationPeriodId;this.active=true;this.paused=false;this.generation++;this.current=null;
+   this.sessionId=sessionId;this.periodId=observationPeriodId;this.raisonEssentielle=raison===true;this.active=true;this.paused=false;this.generation++;this.current=null;
    this.api.install(e=>this.input(e));this.api.watch?.(()=>{void this.observe('label-changed');});this.timer=this.api.interval(()=>{void this.observe('poll');void this.flush();},this.pollMs);
    this.enqueue('period-started',{startedAt:new Date().toISOString()},true);await this.observe('period-start');
    return {active:true,observationPeriodId:this.periodId,metrics:this.metricSnapshot()};}
@@ -173,7 +173,7 @@
      repeat:!!event.repeat,targetKind,editable,intent,decisionKey:editable?null:validateKey||(skip?'Shift+Backspace':null),repeatOfIntent:repeated&&!editable&&!!(validateKey||skip),
      observedAt:event.observedAt||new Date().toISOString(),
      eventTimeStamp:Number.isFinite(event.eventTimeStamp)?event.eventTimeStamp:null,
-     stateCapturedAt:this.current?.state?.capturedAt||null}},!!intent);
+     stateCapturedAt:this.current?.state?.capturedAt||null}},!!intent||(this.raisonEssentielle===true&&event.type==='keydown'&&!editable&&!repeated&&/^(?:Digit|Numpad)[0-6]$/.test(event.code||'')));   // RM-11 : la frappe d'un chiffre de raison (si la lecture est allumée) est un événement essentiel, il ne cède pas sous charge
    const elapsed=Math.max(0,(this.api.performanceNow?this.api.performanceNow():this.now())-began);this.metrics.handlerDurationsMs.push(elapsed);
    if(this.metrics.handlerDurationsMs.length>512)this.metrics.handlerDurationsMs.shift();
    this.api.defer?.(()=>{void this.observe(intent?'after-decision-input':'after-input');});

@@ -160,7 +160,7 @@ function evenementsUtiles(doc) {
 function lireEcho(entrees, { journal = () => {} } = {}) {
   const liste = entreesEcho(entrees);
   if (!liste.length) throw Error('Aucun export Écho (ariane-echo-*.json, ariane-native-v4-*.json, banane-native-v4-*.json) trouvé.');
-  const segments = [], pagesPerdues = new Map(), captures = new Map(), evenements = [];
+  const segments = [], pagesPerdues = new Map(), captures = new Map(), evenements = [], series = new Map();
   for (const e of liste) {
     const doc = JSON.parse(e.lire().toString('utf8'));
     if (!/^banane-native-session-/.test(doc.format || '')) { journal(`ignoré (pas un export Écho) : ${e.nom}`); continue; }
@@ -181,11 +181,13 @@ function lireEcho(entrees, { journal = () => {} } = {}) {
         if (statut) captures.set(ev.eventId || `${ev.visitId}|${ev.cloud && ev.cloud.captureId || captures.size}`, { visitId: ev.visitId, statut, seq: ev.eventSeq ?? ev.collectorSeq ?? captures.size });
       }
     }
-    segments.push({ nom: e.nom, stamp: String(seg.stamp || ''), index: seg.index || 0, records, session, debutSession: doc.session && doc.session.startedAt || null });
+    segments.push({ nom: e.nom, stamp: String(seg.stamp || ''), index: seg.index || 0, records, session, debutSession: doc.session && doc.session.startedAt || null, raisonSeries: Array.isArray(doc.raisonSeries) ? doc.raisonSeries : [] });
   }
   if (!segments.length) throw Error('Aucun des fichiers donnés n\'est un export Écho (banane-native-session-*).');
   segments.sort((a, b) => a.stamp.localeCompare(b.stamp) || a.index - b.index || a.nom.localeCompare(b.nom));
   const records = new Map();
+  /* RM-11 : séries de raisons collantes du résumé d'export ; le segment le plus récent l'emporte (une série ouverte au premier export est finie au dernier). */
+  for (const s of segments) for (const x of s.raisonSeries) if (x && Number.isInteger(x.serie)) series.set(`${s.session || ''}|${x.serie}`, { ...x, session: s.session || null });
   for (const s of segments) for (const r of s.records) records.set(r.recordId || r.id || (Number.isInteger(r.visitIndex) ? cleVisite(r) : `${s.nom}#${records.size}`), r);
   /* Sessions, dans l'ordre du temps : début déclaré par le segment, à défaut la plus ancienne visite. */
   const debuts = new Map();
@@ -199,7 +201,7 @@ function lireEcho(entrees, { journal = () => {} } = {}) {
   const ombres = new Map();
   for (const ev of evenements) ombres.set(ev.eventId || `${ev.nativeSessionId}|${ev.visitId}|${ev.type}`, ev);
   return { records: [...records.values()], evenements: [...ombres.values()], sessions, segments: segments.map(s => ({ fichier: s.nom, stamp: s.stamp || null, index: s.index, session: s.session, records: s.records.length })),
-    pagesPerdues: [...pagesPerdues.values()].sort((a, b) => a.at.localeCompare(b.at) || a.session.localeCompare(b.session)), capturesParVisite };
+    pagesPerdues: [...pagesPerdues.values()].sort((a, b) => a.at.localeCompare(b.at) || a.session.localeCompare(b.session)), capturesParVisite, raisonSeries: [...series.values()] };
 }
 
 /* Le journal Orbite : événements et records (un journal compact est déplié). */
@@ -327,6 +329,26 @@ function referenceHumaine(visites) {
     }
   }
   return null;
+}
+/* RM-11 (test 9) — RAISON DE LA CORRECTION, côté ÉTIQUETTE (fiches/RM11_RAISON_CORRECTION.md § 5). La raison que l'opérateur a tapée (champ facultatif
+ * `raisonCorrection` de la visite, format ariane-raison-v1), lue sur la visite qui porte la référence humaine, à défaut sur la dernière visite du cut qui en
+ * a une. Absente, ou effacée (code nul) : rien, c'est INCONNU (jamais « bon », jamais « autre »). N'entre jamais dans un trait. */
+function raisonHumaine(visites, ref) {
+  const lue = v => { const r = v && v.raisonCorrection; return r && typeof r.code === 'string' && r.code ? r : null; };
+  let r = ref ? lue(ref.visite) : null;
+  for (let i = visites.length - 1; !r && i >= 0; i--) r = lue(visites[i]);
+  return r ? { code: r.code, source: r.source === 'collante' ? 'collante' : 'touche', serie: Number.isInteger(r.serie) ? r.serie : null, apresValidation: fini(r.apresValidationMs) } : null;
+}
+/* Mesure de base (fiche § 6) : durée de la visite de référence, et temps entre le dernier geste de rail et la validation (secondes, 0,1 près). */
+function mesuresVisite(v) {
+  const out = {}, d = (Date.parse(v.endedAt || '') - Date.parse(v.startedAt || '')) / 1000;
+  if (fini(d) && d >= 0) out.dureeVisiteS = arrondi(d, 1);
+  const valide = (v.operatorIntents || []).filter(i => i && i.intent === 'VALIDATE').map(i => Date.parse(i.observedAt || '')).filter(fini).pop();
+  if (fini(valide)) {
+    const gestes = (v.railPoseHistory || []).map(h => Date.parse(h && h.observedAt || '')).filter(t => fini(t) && t <= valide);
+    if (gestes.length) out.gesteValidationS = arrondi((valide - Math.max(...gestes)) / 1000, 1);
+  }
+  return out;
 }
 /* Écartement entre les deux rails d'une pose (mm, distance 3D), ou null. */
 function ecartementDe(etat) {
@@ -602,6 +624,8 @@ function joindre(records, journal, options = {}) {
     const etiquette = (ref ? ref.visite : derniere).observedLabelCandidate ?? null;
     ligne.etiquetteEcho = etiquette;
     ligne.statutEcho = (ref ? ref.visite : derniere).status ?? null;
+    const raison = raisonHumaine(c.visites, ref);
+    if (raison) ligne.raisonHumaine = raison;
     let sansAction = null;
     if (!ref && regle) {
       sansAction = visiteSansAction(c, regle.seuilS, contexteVisites);
@@ -623,6 +647,7 @@ function joindre(records, journal, options = {}) {
     ligne.referenceHumaine = 'observee';
     ligne.visiteReference = ref.rang + 1;
     ligne.validationsDeLaVisite = (ref.visite.humanFinalReferences || []).filter(h => !h.supersededBy).length || 1;
+    Object.assign(ligne, mesuresVisite(ref.visite));
     if (ref.correction) {
       ligne.referenceCorrigeeParEcriture = { par: ref.correction.par, poseDe: ref.correction.poseDe, ecartMaxMm: ref.correction.ecartMaxMm };
       if (ref.correction.par === 'outil') ligne.etiquetteEchoApresCorrection = etiquetteCorrigee(ref.visite, ref.etat);
@@ -681,7 +706,34 @@ function joindre(records, journal, options = {}) {
   const resume = resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements,
     sessionsChevauchantes: sessionsChevauchantes(records, options.sessions) });
   if (ombres) resume.ombres = ombres;
+  const raisons = resumerRaisons(lignes, options.raisonSeries || []);
+  if (raisons) resume.raison = raisons;
   return { table: lignes, resume };
+}
+
+/* RM-11 : résumé des raisons (rien quand il n'y en a aucune). Couverture = parmi les corrections de plus de 10 mm (la porte : 80 %) et de plus de 5 mm (suivi),
+ * celles qui portent une raison tapée, une raison collante, ou aucune (inconnue : exclues de toute mesure qui porte sur les raisons). `mesures` : le temps entre le
+ * dernier geste de rail et la validation, médiane des corrections de plus de 5 mm avec et sans raison (la raison ne doit pas ralentir de plus de 0,6 s). `parTranche` :
+ * la couverture des corrections de plus de 10 mm par tranche de 50 cuts de l'Écho (la lassitude). */
+function resumerRaisons(lignes, series) {
+  const echo = lignes.filter(l => l.dansEcho), avec = echo.filter(l => l.raisonHumaine);
+  if (!avec.length && !series.length) return null;
+  const parCode = {}; for (const l of avec) parCode[l.raisonHumaine.code] = (parCode[l.raisonHumaine.code] || 0) + 1;
+  const dist = l => l.referenceHumaine === 'observee' && l.ecartHumain ? l.ecartHumain.maxDist3dMm : null;
+  const couverture = s => {
+    const cs = echo.filter(l => fini(dist(l)) && dist(l) > s), t = cs.filter(l => l.raisonHumaine && l.raisonHumaine.source === 'touche').length, k = cs.filter(l => l.raisonHumaine && l.raisonHumaine.source === 'collante').length;
+    return { corrections: cs.length, parTouche: t, collante: k, sans: cs.length - t - k, part: cs.length ? arrondi((t + k) / cs.length, 3) : null };
+  };
+  const mediane = rows => { const v = rows.map(l => l.gesteValidationS).filter(fini); return { n: v.length, gesteValidationMedianeS: v.length ? quantile(v, 0.5) : null }; };
+  const gros = echo.filter(l => fini(dist(l)) && dist(l) > 5);
+  const parTranche = [];
+  for (let i = 0; i < echo.length; i += 50) {
+    const t = echo.slice(i, i + 50), c10 = t.filter(l => fini(dist(l)) && dist(l) > 10);
+    parTranche.push({ debut: { partie: t[0].partie, cut: t[0].cut }, cuts: t.length, corrections10mm: c10.length, avecRaison10mm: c10.filter(l => l.raisonHumaine).length });
+  }
+  return { cutsEcho: echo.length, cutsAvecRaison: avec.length, parCode, apresValidation: avec.filter(l => l.raisonHumaine.apresValidation).length,
+    couverture: { sup10mm: couverture(10), sup5mm: couverture(5) }, series: series.map(x => ({ ...x })),
+    mesures: { avecRaison: mediane(gros.filter(l => l.raisonHumaine)), sansRaison: mediane(gros.filter(l => !l.raisonHumaine)) }, parTranche };
 }
 
 /* U5 (audit 5.0) : sessions Écho dont les intervalles de temps se recouvrent. Intervalle d'une session : du premier début de
@@ -778,14 +830,16 @@ function resumer(lignes, meta = {}) {
 function enCsv(table) {
   const cols = ['partie', 'cut', 'classe', 'motifGauche', 'motifDroite', 'visitesEcho', 'referenceHumaine', 'etiquetteEcho', 'base',
     'gaucheLateralMm', 'gaucheVerticalMm', 'gaucheLongitudinalMm', 'gaucheDist3dMm', 'droiteLateralMm', 'droiteVerticalMm', 'droiteLongitudinalMm', 'droiteDist3dMm',
-    'maxDist3dMm', 'repere', 'b1Etat', 'b1ReelStage', 'b1HypotheseStage', 'b1HypotheseRaison', 'b1Changement', 'b1Appuis'];
+    'maxDist3dMm', 'repere', 'b1Etat', 'b1ReelStage', 'b1HypotheseStage', 'b1HypotheseRaison', 'b1Changement', 'b1Appuis',
+    'raison', 'raisonSource'];   // RM-11 : ajoutées à la FIN, rien ne se décale
   const cel = v => { if (v === null || v === undefined) return ''; const s = String(v); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const lignes = [cols.join(',')];
   for (const l of table) {
     const e = l.ecartHumain || {}, g = e.gauche || {}, d = e.droite || {}, b = l.b1Ombre || {}, md = l.motifDiffere || {};
     lignes.push([l.partie, l.cut, l.classe, md.gauche && md.gauche.motif, md.droite && md.droite.motif, l.visitesEcho, l.referenceHumaine, l.etiquetteEcho, l.base,
       g.lateralMm, g.verticalMm, g.longitudinalMm, g.dist3dMm, d.lateralMm, d.verticalMm, d.longitudinalMm, d.dist3dMm,
-      e.maxDist3dMm, g.repere || d.repere, b.etat, b.reel && b.reel.stage, b.hypothese && b.hypothese.stage, b.hypothese && b.hypothese.reason, b.changement, b.hypothese && b.hypothese.appuis].map(cel).join(','));
+      e.maxDist3dMm, g.repere || d.repere, b.etat, b.reel && b.reel.stage, b.hypothese && b.hypothese.stage, b.hypothese && b.hypothese.reason, b.changement, b.hypothese && b.hypothese.appuis,
+      l.raisonHumaine && l.raisonHumaine.code, l.raisonHumaine && l.raisonHumaine.source].map(cel).join(','));
   }
   return lignes.join('\n') + '\n';
 }
@@ -841,6 +895,18 @@ function texte(resume, entete = []) {
       + (o.refuseesAvecPose.n ? ` (dont ${o.refuseesAvecPose.n} avec une pose : ${o.refuseesAvecPose.juste10} juste(s), ${o.refuseesAvecPose.fausse} fausse(s), ${o.refuseesAvecPose.mauvaiseVoie} mauvaise voie)` : '')
       + (Object.keys(o.parRaison).length ? ` ; raisons : ${Object.entries(o.parRaison).sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ')}` : '') + '.');
   }
+  const rz = resume.raison;
+  if (rz) {
+    L.push('', `Raison de la correction : ${rz.cutsAvecRaison} cuts sur ${rz.cutsEcho} en portent une (${Object.entries(rz.parCode).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune'}), `
+      + `dont ${rz.apresValidation} tapée${rz.apresValidation > 1 ? 's' : ''} après la validation. Absente = inconnue.`);
+    for (const [s, k] of [[10, 'sup10mm'], [5, 'sup5mm']]) {
+      const c = rz.couverture[k];
+      L.push(`  > ${s} mm : ${c.corrections} correction${c.corrections > 1 ? 's' : ''}, ${c.parTouche} par touche, ${c.collante} collante, ${c.sans} sans raison${c.part === null ? '' : ` (${Math.round(c.part * 100)} % étiquetées)`}.`);
+    }
+    const m = rz.mesures, f = x => x.gesteValidationMedianeS === null ? 'n=0' : `n=${x.n} méd ${f1(x.gesteValidationMedianeS)} s`;
+    L.push(`  Temps entre le dernier geste de rail et la validation (corrections > 5 mm) : avec raison ${f(m.avecRaison)}, sans raison ${f(m.sansRaison)}.`);
+    for (const x of rz.series) L.push(`  Série ${x.serie} : ${x.code}, partie ${x.partie}, cuts ${x.cutDebut} à ${x.cutFin} (${x.nCuts} cut${x.nCuts > 1 ? 's' : ''}), ${x.finPar ? `finie par ${x.finPar}` : 'encore ouverte'}.`);
+  }
   if (Object.keys(resume.motifsDeDiffere).length) L.push('', `Motifs de différé (par rail, tous les cuts différés du journal) : ${Object.entries(resume.motifsDeDiffere).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')}`);
   return L.join('\n');
 }
@@ -878,7 +944,7 @@ function executer(argv, sortie = console.log) {
   const echo = lireEcho(a.echo, { journal: m => avis.push(m) });
   const journal = a.sansJournal ? { events: [], records: [], format: null, version: null } : lireJournal(a.journal);
   const { table, resume } = joindre(echo.records, journal, { partie: a.partie, base: a.base, poses: a.poses, sessions: echo.sessions, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne,
-    pagesPerdues: echo.pagesPerdues, capturesParVisite: echo.capturesParVisite, evenementsEcho: echo.evenements });
+    pagesPerdues: echo.pagesPerdues, capturesParVisite: echo.capturesParVisite, evenementsEcho: echo.evenements, raisonSeries: echo.raisonSeries });
   resume.sources = { segmentsEcho: echo.segments.length, sessionsEcho: echo.sessions.length, recordsEcho: echo.records.length, evenementsJournal: journal.events.length, recordsJournal: journal.records.length,
     pagesPerduesEcho: echo.pagesPerdues.length, visitesAvecCaptures: Object.keys(echo.capturesParVisite).length };
   const sortieJson = { format: 'ariane-jointure-echo-orbite-v1', creeLe: new Date().toISOString(), options: { partie: a.partie, base: a.base, poses: a.poses, sansJournal: a.sansJournal, visiteSansActionBonne: a.visiteSansActionBonne }, resume, table };

@@ -434,6 +434,17 @@
      * direction, durée, bouton, clic final, caméra avant et après) et par série de crans (nombre, sens, deltaY, durée, caméra). Sert
      * à copier le geste de l'opérateur avant d'activer `deplacerVue`. `false` : aucun écouteur posé. */
     gestesVue: true,
+    /* RM-11 (4.9.5 test 9, fiches/RM11_RAISON_CORRECTION.md) : la RAISON DE LA CORRECTION. Mic tape un chiffre (1 rail voisin, 2 ADV, 3 PN, 4 nuage
+     * diffus ou pauvre, 5 hauteur seulement, 6 autre ; 0 efface) pour dire pourquoi il corrige un cut ; elle est consignée dans la visite
+     * (`raisonCorrection`), du côté de l'étiquette, jamais dans les traits. COUPÉE par défaut ; le panneau l'allume avant la séance (lue au
+     * démarrage d'Écho, gardée jusqu'à sa fin). Rien n'est retenu ni envoyé à ESV, jamais bloquant.
+     *  - `touches` : la rangée de touches lue, 'chiffres' (rangée du haut ou pavé), sinon les replis 'alt-chiffres' puis 'pave' si ESV réagissait
+     *    à un chiffre seul (le panneau les propose) ;
+     *  - `graceMs` : une touche tapée au plus 500 ms après une validation va au cut validé (marque `apresValidationMs`) ;
+     *  - `doubleAppuiMs` : deux appuis sur la même touche dans ce délai, sur le même cut, rendent la raison collante ;
+     *  - `sautCuts` : la collante s'arrête si le cut visité est à plus de 30 cuts du précédent ; `rappelCollanteCuts` : rappel doux du panneau.
+     * Les mêmes valeurs par défaut sont dans src/raison-correction.js (un essai les compare). */
+    raison: Object.freeze({ actif: false, touches: 'chiffres', graceMs: 500, doubleAppuiMs: 600, sautCuts: 30, rappelCollanteCuts: 40 }),
   });
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
@@ -470,6 +481,7 @@
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
       { groupe: 'Écho', nom: 'Seuil de déplacement', valeur: (echo.movementThresholdM * 1000) + ' mm', pourquoi: 'En dessous, le rail est dit non déplacé ; la pose exacte reste consignée.' },
+      { groupe: 'Écho', nom: 'Raison de la correction', valeur: echo.raison.actif ? 'allumée' : 'coupée (à allumer dans le panneau avant la séance)', pourquoi: 'Tu tapes 1 à 6 (0 efface) pour dire pourquoi tu corriges un cut ; consignée dans la visite, jamais dans les traits. Rien n’est retenu ni envoyé à ESV.' },
       { groupe: 'Écho', nom: 'Reprise après F5', valeur: echo.repriseAutomatique ? 'automatique' : 'à la main', pourquoi: 'Écho se remet à observer après un rechargement de la page ESV, sans rien commander.' },
       { groupe: 'Export', nom: 'Vidage automatique à', valeur: mo(exportSettings.watermarkBytes) + ' en attente', pourquoi: 'Écrit un segment avant la limite de téléchargement.' },
       { groupe: 'Export', nom: 'Libération après écriture', valeur: exportSettings.releaseAfterExport ? 'oui' : 'non', pourquoi: 'Purge les objets déjà écrits sur disque pour que la session reparte de zéro. Les identifiants restent déclarés : un segment manquant est signalé à la fusion.' },
