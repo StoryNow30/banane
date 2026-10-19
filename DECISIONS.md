@@ -2822,3 +2822,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   Mêmes plis, mêmes τ et δ par zone (appris dans le pli), mêmes mesures. Aucune n'est retenue sur la validation croisée seule : la retenue se fera au jugement à l'aveugle (G1-c) sur 2:6 et les témoins 1:11 et 1:25, après l'audit d'Astra.
 - **Compteur** : 10 sources « appris » (**1 631 cuts corrigés appris**), 152 en file (2:6, réservée). La partie 1:17 a servi à l'apprentissage mais n'est pas dans le compteur (son Écho est en 7z) ; à ajouter.
 - **Astra** (D-194) : prompt d'audit écrit dans `consignes/chantier-gcv2-g1b-auditeur.md` ; Mic le relaie ; réponse attendue dans `audit/chantiers/audit-gcv2-g1b-astra.md`. G1-c attend cette réponse.
+
+## D-205 — Variantes par zone : V1 tient la porte en validation croisée ; candidate unique pour G1-c ; compteur à 2 138 cuts appris (19 octobre 2026)
+
+- **Variantes** (`claude/50-g1b-apprendre`, `5ca9fd8`, verify 2 262 essais, 0 échec ; fiche G1B § 11 ; `datasets/gcv2-variantes.json`, paramètres inchangés) : mêmes plis, mêmes τ et δ.
+  - **V1** (GCV2 sur les verts de PN et d'ADV ; règle prudente sur les verts des abords ; rien ailleurs) : relecture **128 justes, 2 abîmés, 0 mauvaise voie, erreur 3,5 % (Wilson ≤ 6,5 %)** ; lot 123 justes, 2 abîmés, 0 mauvaise voie, 4,3 % (≤ 7,5 %). **Porte tenue dans les deux usages.** Gain : PN 68 justes contre 56, ADV 27 contre 18.
+  - **V2** (V1 + hors zone) : 151 justes mais 5 abîmés (6 au lot) : porte non tenue.
+  - **V3** (tous les verts sauf les abords) : 118 justes, 5 abîmés : non tenue.
+- Le 0 mauvaise voie vient de l'exclusion structurelle des cuts différés, pas de l'apprentissage. Le choix de V1 est fait **après coup** : V1 est la **seule** candidate envoyée au jugement à l'aveugle (G1-c : 2:6, 1:11, 1:25), sans autre réglage. Si V1 échoue en G1-c, aucune autre variante n'est essayée sur ces parties : on attend de nouvelles parties réservées.
+- **Compteur** : la partie 1:17 est ajoutée (option `--racine-supplementaire`, 7z extrait puis effacé, banane-data intact) : **2 290 cuts corrigés depuis le début de la 5.0, dont 2 138 appris (11 parties) et 152 en file (2:6)** ; 4 402 apprenables (4 024 appris, 378 en file). Fiche `fiches/COMPTEUR_GCV2.md` mise à jour.
+- Le prompt d'Astra est complété avec V1. G1-c attend toujours sa réponse.

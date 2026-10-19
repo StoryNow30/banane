@@ -50,7 +50,11 @@ GCV2 en relecture : 392 actions, 144 corrections justes (Mic > 10 mm, pose
 Règle prudente actuelle : 136 actions, 107 justes, 4 abîmés, 0 mauvaise
 voie. Hasard dans la liste : 20 justes, 125 abîmés. Les 5 mauvaises voies
 sont toutes des cuts différés aux abords de la partie 2:1. Trois variantes
-par zone (V1 à V3, D-204) sont déclarées APRÈS lecture de ces chiffres.
+par zone (V1 à V3, D-204) sont déclarées APRÈS lecture de ces chiffres
+(D-205, fiche G1B § 11). V1 (GCV2 sur les verts de PN et d'ADV, règle
+prudente sur les verts des abords, rien ailleurs) tient la porte en
+validation croisée : 128 justes, 2 abîmés, 0 mauvaise voie, erreur 3,5 %
+(Wilson ≤ 6,5 %). C'est la candidate pour G1-c.
 
 QUESTIONS (réponds à chacune)
 1. FUITE : un trait, une hypothèse ou une étape peut-il lire, même
