@@ -2753,3 +2753,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 - **Mic** : « Je ne les ai plus, je supprime tout ce que j'ai dès que je te les envoie. » Les nuages manquants de 1:17 et 1:24 sont perdus pour de bon ; RM-4, G1-a et la suite mesurent ces parties sur les cuts qui ont un nuage, et les comptent à part.
 - **Conséquence** : banane-data est la **seule** copie de chaque export. À chaque archivage : exports déposés tels qu'envoyés, `SHA256SUMS` du dossier, commit **poussé et vérifié sur le distant** (empreinte relue après le push) avant de dire à Mic que c'est archivé. Rien n'est jamais supprimé ni réécrit dans `collections/`.
+
+## D-197 — Erratum de D-195 : la première ADV « de la partie 11 » est en 2:11, pas dans le témoin 1:11 (19 octobre 2026)
+
+- Les notes de Mic « parties 10 et 11 » portent sur le **projet 2** (Écho du 18/10, 731 visites) : l'ADV 6362–6424 est dans **2:11**, partie d'apprentissage (D-187). Le témoin fixe est **1:11** (Écho du 28/09). D-195 avait confondu les deux.
+- RM-1 peut donc étudier 2:11 comme prévu au plan. La règle de D-195 reste juste pour les vrais témoins : **1:11 et 1:25** ne règlent rien et ne sont lus qu'à la fin, réglages figés.
+- Les missions G1-a, RM-1 et RM-2 ont été interrompues par une interruption de session (19/10, 6 h 38 UTC), pas par décision ; elles reprennent sur accord de Mic, avec ce brief corrigé.
