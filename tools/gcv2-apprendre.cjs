@@ -824,7 +824,7 @@ function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, acc
   if (h6) out.h6 = { ...parties.find(j => j.entete && j.entete.h6).entete.h6 };
   /* Jeux « lot » générés sans appui humain (audit F3) : l'usage lot apprend sur eux. */
   if (partiesLot) out.partiesLot = partiesLot.map(j => ({ partie: j.partie, sha256: j.sha256 }));
-  if (gardeVoie) out.garde.voie = { roles: ['differe'], reference: 'médiane rail par rail des décalages des voisins sûrs (H6), sûre si 2 voisins au moins et une étendue latérale de 50 mm au plus', lateralMaxMm: GARDES.lateralMaxMm, deversMaxMm: GARDES.deversMaxMm, sansReference: 'aucune paire permise' };
+  if (gardeVoie) out.garde.voie = { roles: ['differe'], reference: 'médiane rail par rail des décalages des voisins sûrs (H6) ; sûre seulement avec 2 appuis vérifiés au moins, une étendue latérale de 50 mm au plus, l\'appui le plus proche à 5 cuts au plus, le support local des deux rails à la référence, aucune voie concurrente au départ et aucune rupture de série (ADV) ; seuils dans h6', lateralMaxMm: GARDES.lateralMaxMm, deversMaxMm: GARDES.deversMaxMm, sansReference: 'aucune paire permise' };
   for (const usage of usages) {
     const cas = (usage === 'lot' && partiesLot ? partiesLot : parties).flatMap(j => construireCas(j, usage, { gardeVoie })), t0 = Date.now();
     /* Calibrage et seuils : sur les scores hors-échantillon de toutes les parties (une partie jugée par un modèle qui ne l'a pas vue). */
