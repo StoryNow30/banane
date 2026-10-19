@@ -51,13 +51,18 @@ test('rejeu conjoint : lignes, profils, sort réel, déterminisme et causalité'
   const g = L.find(l => l.cut === 4).profils.L1;
   assert.equal(g.source, 'gcv2'); assert.ok(g.l1 && typeof g.l1.etat === 'string' && g.l1.version, 'décision L1 consignée');
   assert.ok(!JSON.stringify(a).includes('458559'), 'aucune coordonnée absolue');
+  /* D-221 : sous L1-s, chaque cut que la base rejouée pose est posé à l'identique ; contrôle de l'agrégation : 0. */
+  for (const l of L.filter(l => l.profils.base.etat === 'pose')) { assert.equal(l.profils['L1-s'].etat, 'pose', `${l.cut}`); assert.deepEqual(l.profils['L1-s'].decal, l.profils.base.decal, `${l.cut}`); }
+  const S = B.agreger(B.lireRejeux([a.map(x => JSON.stringify(x)).join('\n')]));
+  assert.equal(S.effets['L1-s'].differentsDeLaBase, 0); assert.ok(S.effets['L1-s'].posesDeLaBase > 0);
+  assert.equal(L.find(l => l.cut === 4).profils['L1-s'].source, 'gcv2', 'la GCV2 sur le différé de la chaîne');
 });
 
 test('agrégation : taux, approchés, gain contre Mic, rappel', () => {
   const ligne = (cut, reel, L1, Lv, decal = null) => ({ type: 'cut', partie: '9:91', projet: 9, lot: 'lot-a', cut, nuage: true, zone: 'abords', reel: { pose: reel, motif: reel ? null : 'sans-appui' },
     profils: { base: { etat: reel ? 'pose' : 'differe' }, L1: { etat: L1, source: 'gcv2', decal, l1: { motif: L1 === 'differe' ? 'sous-delta' : null, hypothese: 'H1' } }, 'L1-v': { etat: Lv, source: 'gcv2', decal } } });
   const d = { left: [0, 30, 0], right: [0, 30, 0] };
-  const R = { entetes: [{ profils: B.PROFILS }], lignes: [ligne(1, true, 'pose', 'pose'), ligne(2, false, 'pose', 'pose', d), ligne(3, false, 'pose-non-validee', 'pose', d), ligne(4, false, 'differe', 'differe')] };
+  const R = { entetes: [{ profils: ['base', 'L1', 'L1-v'] }], lignes: [ligne(1, true, 'pose', 'pose'), ligne(2, false, 'pose', 'pose', d), ligne(3, false, 'pose-non-validee', 'pose', d), ligne(4, false, 'differe', 'differe')] };
   const juges = new Map([['9:91|lot-a|2', { depart: 30, mic: { left: [0, 31, 0], right: [0, 30, 0] } }], ['9:91|lot-a|3', { depart: 40, mic: { left: [0, 70, 0], right: [0, 30, 0] } }], ['9:91|lot-a|4', { depart: 5, mic: { left: [0, 5, 0], right: [0, 0, 0] } }]]);
   const S = B.agreger(R, juges);
   const c = S.groupes.total.comptes;

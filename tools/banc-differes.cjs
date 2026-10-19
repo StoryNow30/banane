@@ -38,7 +38,9 @@ const D = require('./diag-differes.cjs');
 const FORMAT = 'ariane-banc-differes-rejeu-v1', FORMAT_SYNTHESE = 'ariane-banc-differes-synthese-v1', FORMAT_COMPARAISON = 'ariane-banc-differes-comparaison-v1';
 const VERSION = 'banc-differes-1';
 const SIDES = ['left', 'right'];
-const PROFILS = Object.freeze(['base', 'L1', 'L1-v']);
+const PROFILS = Object.freeze(['base', 'L1', 'L1-v', 'L1-s']);
+/* D-221 : « L1-s » = la chaîne de la 4.9.5.9 intacte ; L1 seulement sur les cuts qu'elle ne pose pas, sans jamais en faire un appui ni un voisin. */
+const CHAINE_ACTUELLE = p => p === 'base' || p === 'L1-s';
 const PARAMETRES = path.join(__dirname, '..', 'datasets', 'gcv2-parametres-h6.json');
 const MAX_APPUIS = 40;
 const fini = v => typeof v === 'number' && Number.isFinite(v);
@@ -96,8 +98,9 @@ function lotReel(journal, partie, lotId) {
 
 /* ------------------------------------------------------------------ rejeu conjoint d'un lot */
 const decalPose = (rails, positions) => positions ? Object.fromEntries(SIDES.map(s => [s, L1.decalage(rails[s], positions[s])])) : null;
-const optionsDe = profil => profil === 'base' ? {} : { ...L1.REGLE.lotOptions };
+const optionsDe = profil => CHAINE_ACTUELLE(profil) ? {} : { ...L1.REGLE.lotOptions };
 const regleDe = profil => profil === 'L1-v' ? L1.REGLE_V : L1.REGLE;
+const optionsGcv2 = () => ({ ...L1.REGLE.lotOptions });
 function plagesDe(mem, e) {
   const P = M.DEFAULTS.pn, A = M.DEFAULTS.adv;
   const pn = mem.zones.map(z => [z.debut - P.margeAvant, z.fin + P.margeApres]), adv = (mem.zonesADV || []).map(z => [Math.max(0, z.debut - A.margeAvant), z.fin + A.margeApres]);
@@ -155,20 +158,39 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       const d = cache.has('d' + sig) ? cache.get('d' + sig) : (() => { const x = L.decideCut({ capture, science, anchors: E.anchors, Shadow: Sh, options: opts }); cache.set('d' + sig, x); return x; })();
       let cmd = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras });
       let vue = null;
-      if (p !== 'base' && cmd.action !== 'lot' && /(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
+      if (!CHAINE_ACTUELLE(p) && cmd.action !== 'lot' && /(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
         const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
         if (large.action === 'lot') { cmd = large; vue = 'deplacee'; }
       }
       let pose = cmd.action === 'lot' || (cmd.action === 'engine' && SIDES.every(s => cmd.rails && cmd.rails[s] && cmd.rails[s].status === 'candidate'));
       let positions = null;
       if (pose) positions = cmd.action === 'lot' ? d.positions : (() => { const x = K.expectedPoses({ rails: before }, cmd.rails); return Object.fromEntries(SIDES.map(s => [s, x[s].positionSceneRelative.slice(0, 3)])); })();
-      const grappeBloque = () => { if (!R.regleGrappe) return false; const e = M.evaluer(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: 'lot', valide: true, surface })); return e.regles.includes('grappe-differes'); };
+      const grappeBloque = (dd = d) => { if (!R.regleGrappe) return false; const e = M.evaluer(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: dd.stage, reason: dd.reason }, action: 'lot', valide: true, surface })); return e.regles.includes('grappe-differes'); };
+      let posesL1s = false;
       let out;
       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
       else if (pose) {
         E.valides.push({ identity, positions, rails: before });
         if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
         out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions) };
+      } else if (p === 'L1-s' && (() => {
+        /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
+        if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
+          const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
+          if (large.action === 'lot') { out = grappeBloque() ? { etat: 'differe', source: 'regle-grappe', etage: d.stage } : { etat: 'pose', source: 'l1s-vue', etage: d.stage, commande: 'lot', vue: 'deplacee', decal: decalPose(before, d.positions) }; return true; }
+        }
+        /* b. La décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis. */
+        const o2 = optionsGcv2(), sig2 = JSON.stringify(o2) + signe(E);
+        const d2 = cache.has('d' + sig2) ? cache.get('d' + sig2) : (() => { const x = L.decideCut({ capture, science, anchors: E.anchors, Shadow: Sh, options: o2 }); cache.set('d' + sig2, x); return x; })();
+        let c2 = L.commandRails({ decision: d2, runtimeRails, before, expectedPoses: K.expectedPoses, cameras }), vue2 = null;
+        if (c2.action !== 'lot' && /(^|-)hors-vue-(left|right)$/.test(c2.reason || '')) { const l2 = L.commandRails({ decision: d2, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges }); if (l2.action === 'lot') { c2 = l2; vue2 = 'deplacee'; } }
+        const pose2 = c2.action === 'lot' || (c2.action === 'engine' && SIDES.every(s => c2.rails && c2.rails[s] && c2.rails[s].status === 'candidate'));
+        if (!pose2) return false;
+        const pos2 = c2.action === 'lot' ? d2.positions : (() => { const x = K.expectedPoses({ rails: before }, c2.rails); return Object.fromEntries(SIDES.map(s => [s, x[s].positionSceneRelative.slice(0, 3)])); })();
+        out = grappeBloque(d2) ? { etat: 'differe', source: 'regle-grappe', etage: d2.stage } : { etat: 'pose', source: 'l1s-chaine', etage: d2.stage, commande: c2.action, vue: vue2, decal: decalPose(before, pos2) };
+        return true;
+      })()) {
+        posesL1s = out.etat === 'pose';
       } else if (p === 'base') {
         out = { etat: 'differe', source: 'lot', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, commande: cmd.action === 'engine' ? 'engine' : `${cmd.action}:${cmd.reason}` };
       } else {
@@ -176,7 +198,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null };
         try {
           let g = cache.get('g' + sig);
-          if (!g) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: opts, voisins: E.valides, zone, plagesADV: plages.adv, modele, regle: regleDe(p) }); cache.set('g' + sig, g); }
+          if (!g) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: p === 'L1-s' ? optionsGcv2() : opts, voisins: E.valides, zone, plagesADV: plages.adv, modele, regle: regleDe(p) }); cache.set('g' + sig, g); }
           else { const dd = L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
           const dec = g.decision, l1 = L1.resumer(g);
           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
@@ -186,15 +208,17 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             if (cg.action !== 'lot') out = { ...base, etat: 'differe', l1: { ...l1, refusCommande: cg.reason } };
             else if (valider && grappeBloque()) out = { ...base, etat: 'differe', l1: { ...l1, refusCommande: 'regle-grappe' } };
             else if (valider) {
-              E.valides.push({ identity, positions: g.positions, rails: before });
-              L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max);
+              /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin. */
+              if (p !== 'L1-s') { E.valides.push({ identity, positions: g.positions, rails: before }); L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
               out = { ...base, etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true };
             } else out = { ...base, etat: 'pose-non-validee', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1 };
           }
         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
       }
       ligne.profils[p] = out;
-      M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: out.etat === 'pose', surface }), { differe: out.etat !== 'pose' });
+      /* L1-s : la mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé). */
+      const valideChaine = out.etat === 'pose' && !(p === 'L1-s' && (posesL1s || out.source === 'gcv2'));
+      M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: valideChaine, surface }), { differe: !valideChaine });
     }
     M.noter(zoneMem, r0, { differe: !c.pose });
     lignes.push(ligne);
@@ -294,7 +318,11 @@ function agreger({ entetes, lignes }, juges = new Map(), inventaire = null) {
     const src = new Map(); for (const l of nouveaux) { const o = l.profils[p], k = o.source === 'gcv2' ? (o.aControler ? 'gcv2 sous τ (à contrôler)' : 'gcv2') : `lot:${o.etage}${o.vue ? ' (vue déplacée)' : ''}`; src.set(k, (src.get(k) || 0) + 1); }
     const vues = lignes.filter(l => l.profils[p] && l.profils[p].vue === 'deplacee').length;
     const hyp = new Map(); for (const l of lignes.filter(l => l.profils[p] && l.profils[p].source === 'gcv2' && l.profils[p].etat !== 'differe')) { const k = (l.profils[p].l1 && l.profils[p].l1.hypothese) || '?'; hyp.set(k, (hyp.get(k) || 0) + 1); }
-    return [p, { posesReellesPerdues: perdus, posesReellesDeplaceesPlus1mm: deplaces.length, deplacementMedianMm: arrondi(med(deplaces.map(l => Math.max(...SIDES.map(s => norme(moins(l.reel.decal[s], l.profils[p].decal[s])))))), 1),
+    /* D-221 : cuts que la base rejouée pose (la chaîne d'aujourd'hui) et que le profil ne pose pas à l'identique (état ou pose à plus de 0,001 mm). */
+    const parBase = lignes.filter(l => l.profils.base && l.profils.base.etat === 'pose' && l.profils[p]);
+    const differentsDeLaBase = parBase.filter(l => { const a = l.profils.base, b = l.profils[p]; if (b.etat !== 'pose') return true; if (!a.decal || !b.decal) return !!a.decal !== !!b.decal;
+      return Math.max(...SIDES.map(s => norme(moins(a.decal[s], b.decal[s])))) > 0.001; }).length;
+    return [p, { posesDeLaBase: parBase.length, differentsDeLaBase, posesReellesPerdues: perdus, posesReellesDeplaceesPlus1mm: deplaces.length, deplacementMedianMm: arrondi(med(deplaces.map(l => Math.max(...SIDES.map(s => norme(moins(l.reel.decal[s], l.profils[p].decal[s])))))), 1),
       nouvellesPoses: nouveaux.length, sources: Object.fromEntries([...src].sort((a, b) => b[1] - a[1])), vuesDeplacees: vues, hypotheses: Object.fromEntries([...hyp].sort((a, b) => b[1] - a[1]).slice(0, 12)) }];
   }));
   const lots = [...parLot].map(([k, v]) => ({ lot: k, ...Object.fromEntries(['reel', ...profils].map(p => [p, compter(v, p)])) })).sort((a, b) => a.lot.localeCompare(b.lot, 'fr', { numeric: true }));
@@ -309,7 +337,7 @@ const fmt = v => v == null ? '—' : typeof v === 'number' ? String(v).replace('
 const pc = v => v == null ? '—' : `${fmt(v)} %`;
 function table(entetes, lignes) { return [`| ${entetes.join(' | ')} |`, `|${entetes.map((_, i) => i ? '--:' : '---').join('|')}|`, ...lignes.map(l => `| ${l.map(fmt).join(' | ')} |`)].join('\n'); }
 function syntheseMd(S) {
-  const P = ['reel', ...S.profils], nom = p => ({ reel: 'base (réel)', base: 'base rejouée', L1: 'L1', 'L1-v': 'L1-v' })[p] || p;
+  const P = ['reel', ...S.profils], nom = p => ({ reel: 'base (réel)', base: 'base rejouée', L1: 'L1', 'L1-v': 'L1-v', 'L1-s': 'L1-s' })[p] || p;
   const out = [];
   out.push('### Taux de différés', '', table(['Groupe', 'Profil', 'Lots', 'Traités', 'Posés validés', 'Posés non validés', 'Différés (non validés)', 'Taux pondéré', 'Taux moyen par lot', 'Différés par lot', 'Réduction'],
     Object.entries(S.groupes).flatMap(([g, x]) => P.map(p => { const c = x.comptes[p], r = x.comptes.reel; return [g, nom(p), x.parLot[p].lots, c.traites, c.poses, c.posesNonValidees, c.differes, pc(c.taux), pc(x.parLot[p].tauxMoyen), x.parLot[p].differesParLot, p === 'reel' ? '—' : pc(part(r.differes - c.differes, r.differes))]; }))));
@@ -322,8 +350,8 @@ function syntheseMd(S) {
   for (const [p, r] of Object.entries(S.reste)) {
     out.push('', `### Ce qui reste différé sous ${nom(p)} (${r.restants})`, '', table(['Raison', 'Cuts'], Object.entries(r.parRaison)), '', table(['Motif réel du différé', 'Différés réels', 'Restent différés', 'dont approchés'], Object.entries(r.parMotifReel).map(([k, v]) => [k, v.reels, v.restants, v.approches])));
   }
-  out.push('', '### Effets du rejeu conjoint', '', table(['Profil', 'Poses réelles perdues', 'Poses réelles déplacées de plus de 1 mm (médiane)', 'Nouvelles poses validées', 'Sources', 'Vues déplacées', 'Hypothèses retenues (GCV2)'],
-    S.profils.map(p => { const e = S.effets[p]; return [nom(p), e.posesReellesPerdues, `${e.posesReellesDeplaceesPlus1mm} (${fmt(e.deplacementMedianMm)} mm)`, e.nouvellesPoses, Object.entries(e.sources).map(([k, v]) => `${k} ${v}`).join(', '), e.vuesDeplacees, Object.entries(e.hypotheses).map(([k, v]) => `${k} ${v}`).join(', ')]; })));
+  out.push('', '### Effets du rejeu conjoint', '', table(['Profil', 'Cuts posés par la base rejouée, posés autrement', 'Poses réelles perdues', 'Poses réelles déplacées de plus de 1 mm (médiane)', 'Nouvelles poses validées', 'Sources', 'Vues déplacées', 'Hypothèses retenues (GCV2)'],
+    S.profils.map(p => { const e = S.effets[p]; return [nom(p), `${e.differentsDeLaBase} / ${e.posesDeLaBase}`, e.posesReellesPerdues, `${e.posesReellesDeplaceesPlus1mm} (${fmt(e.deplacementMedianMm)} mm)`, e.nouvellesPoses, Object.entries(e.sources).map(([k, v]) => `${k} ${v}`).join(', '), e.vuesDeplacees, Object.entries(e.hypotheses).map(([k, v]) => `${k} ${v}`).join(', ')]; })));
   out.push('', '### Par lot', '', table(['Lot', 'Traités', ...P.map(p => `Différés ${nom(p)}`), ...S.profils.filter(p => p !== 'base').map(p => `dont approchés ${nom(p)}`)],
     S.parLot.map(x => [x.lot, x.reel.traites, ...P.map(p => `${x[p].differes} (${pc(x[p].taux)})`), ...S.profils.filter(p => p !== 'base').map(p => x[p].posesNonValidees)])));
   if (S.controle) out.push('', `Contrôle : ${S.controle.lotsRejoues} lots rejoués sur ${S.controle.lotsBase} de la base${S.controle.manquants.length ? ` (manquants : ${S.controle.manquants.join(', ')})` : ''} ; différés réels ${S.controle.differesReelsBanc} au banc, ${S.controle.differesInventaire} à l'inventaire.`);
