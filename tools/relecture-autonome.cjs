@@ -140,7 +140,7 @@ function variante(capture, science, anchors) {
  *  - sans appui (`seul`, champs à la racine) : le cut visité seul, premier passage du lot ;
  *  - `chaine` : avec pour appuis les poses qu'elle vient de donner aux cuts précédents de la même relecture (ordre des cuts),
  *    comme le lot le fait de ses propres poses. Jamais une pose de Mic. */
-function poseAriane(entree, { tous = null, appuis = null } = {}) {
+function poseAriane(entree, { tous = null, appuis = null, rappel = null } = {}) {
   const capture = { identity: entree.identity, rails: entree.rails, pointsSceneRelative: entree.points, visibleByClipBoxes: entree.visible };
   const science = Shadow.scientificProposeBoth(capture);
   const seul = variante(capture, science, []), decision = seul.decision, haut = seul.haut;
@@ -151,9 +151,13 @@ function poseAriane(entree, { tous = null, appuis = null } = {}) {
   if (appuis) {
     const ch = variante(capture, science, appuis.liste);
     out.chaine = ch.v;
+    /* Rappel facultatif (outils hors ligne, G1-a) : les objets bruts du cut (capture, science, décisions) et les appuis AVANT cette pose.
+     * Sans `rappel`, la sortie est inchangée. */
+    if (rappel) rappel({ capture, science, seul, chaine: ch, appuisAvant: appuis.liste.slice() });
     if (ch.decision.positions && ch.decision.anchor !== false && ['first-pass', 'window', 'crossing'].includes(ch.decision.stage))
       L.rememberAnchor(appuis.liste, { identity: { part: capture.identity.part, cut: capture.identity.cut, frameId: null }, positions: ch.decision.positions, stage: ch.decision.stage }, 40);
   }
+  if (rappel && !appuis) rappel({ capture, science, seul, chaine: null, appuisAvant: [] });
   for (const s of SIDES) {
     const r = science.rails[s], rail = entree.rails[s];
     const brut = r && r.ok && r.next && r.next.status === 'candidate' && Array.isArray(r.next.delta) ? r.next.delta.map(v => r2(1000 * v)) : null;
@@ -179,7 +183,7 @@ function poseAriane(entree, { tous = null, appuis = null } = {}) {
   return out;
 }
 
-function extraire({ partie, projet, echo, jeu }) {
+function extraire({ partie, projet, echo, jeu, observateur = null }) {
   const e = J.lireEcho(echo);
   const parCut = [...J.echoParCut(e.records, e.sessions).values()].filter(c => c.partie === partie && c.cut >= 0);  // D-172 : les premiers cuts d'une partie sont dans le périmètre
   const labels = new Map();
@@ -194,8 +198,13 @@ function extraire({ partie, projet, echo, jeu }) {
   const ctx = { pagesPerdues: e.pagesPerdues, capturesParVisite: e.capturesParVisite };
   const appuis = { liste: [] };
   const cas = [];
-  for (const c of parCut.sort((a, b) => a.cut - b.cut)) {
+  parCut.sort((a, b) => a.cut - b.cut);
+  /* Observateur facultatif (G1-a, tools/gcv2-jeu.cjs) : `debut` reçoit les cuts de l'Écho, `cut` reçoit, pour chaque cut, ce qu'`extraire` vient
+   * de calculer (la ligne `o`, l'entrée sans fuite et les objets bruts de la pose). Il ne change ni les cas ni leur ordre. */
+  if (observateur && observateur.debut) observateur.debut({ parCut, ctx, referenceHumaine });
+  for (const c of parCut) {
     const v0 = c.visites[0], lab = labels.get(c.cut) || null;
+    let brutDuCut = null, entreeDuCut = null;
     const before = v0.beforeEstablished && v0.beforeEstablished.rails;
     const o = { format: FORMAT, projet, partie, cut: c.cut, visites: c.visites.length,
       dwellPremiereS: r1((Date.parse(v0.endedAt) - Date.parse(v0.startedAt)) / 1000),
@@ -225,6 +234,7 @@ function extraire({ partie, projet, echo, jeu }) {
     else {
       /* Visibilité non relevée (exports anciens) : `gatherInput` ne garde que `=== true` ; on la tient pour vraie, comme le lecteur de surface. */
       let entree = entreeSansFuite(v0, ks);
+      entreeDuCut = entree;
       /* La chaîne d'appuis ignore le repère de page (`frameId`) : la scène de l'Écho est en coordonnées du projet, les mêmes d'une page à l'autre. */
       if (!entree.points.length && ks.length) { for (const k of ks) k.visibleByClipBoxes = k.visibleByClipBoxes.map(() => true); entree = entreeSansFuite(v0, ks); o.visibiliteForcee = true; }
       if (!entree.points.length || !SIDES.every(s => entree.rails[s] && entree.rails[s].profileContours && entree.rails[s].profileContours.length)) o.ariane = { etat: 'sans-nuage', chunks: ks.length };
@@ -233,11 +243,12 @@ function extraire({ partie, projet, echo, jeu }) {
         for (const k of ks) if (k.side && (before[k.side] && k.rail)) for (let i = 0; i < k.pointsSceneRelative.length; i++) { pts.push(k.pointsSceneRelative[i]); vis.push(k.visibleByClipBoxes[i]); }
         const tous = { rails: entree.rails, pointsSceneRelative: pts, visibleByClipBoxes: vis };
         try { entree.identity = { ...entree.identity, frameId: null };
-        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis }) }; }
+        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis, rappel: observateur ? b => { brutDuCut = b; } : null }) }; }
         catch (err) { o.ariane = { etat: 'erreur', message: String(err && err.message || err).slice(0, 120) }; }
       }
     }
     cas.push(o);
+    if (observateur && observateur.cut) observateur.cut({ c, v0, before, o, entree: entreeDuCut, brut: brutDuCut });
     for (const v of c.visites) chunks.delete(v.visitId);
   }
   return cas;
