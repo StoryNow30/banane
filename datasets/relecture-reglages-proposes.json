@@ -40,6 +40,11 @@
       "corriger": false,
       "seuilMm": 8,
       "confianceMin": 0
+    },
+    "ecartement": {
+      "corriger": true,
+      "seuilMm": 8,
+      "confianceMin": 0
     }
   },
   "variante": {

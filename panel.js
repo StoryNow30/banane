@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 7',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 9',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -418,11 +418,14 @@
  /* Bandeau dans ESV (piste H) : une ligne d'état en bas de la page ESV, qui ne
   * capte aucun clic. Il suit cette fenêtre : fermée, il disparaît. */
  let bandeau=false,bandeauEnvoye='';
+ /* RM-11 : la raison de la séance, dite en bout de ligne seulement quand la lecture est allumée et qu'il y en a une (le texte vient du catalogue). */
+ function raisonBandeau(n){const M=globalThis.BananeRaisonCorrection;if(!M||n?.raison?.actif!==true)return '';
+   const c=n.raison.collante,code=c?c.code:(n.visits||[]).at(-1)?.raison;return M.LIBELLES[code]?` · raison : ${M.LIBELLES[code]}${c?' (collante)':''}`:'';}
  function texteBandeau(s){const b=s.batch,n=s.native;
    if(b&&OUVERT.includes(b.state)){const v=voieDuLot(s);
      return {texte:`ARIANE · ORBITE · ${NOMS_ETAT[b.state]||'lot'} · cut ${entier(b.activeIdentity?.cut)} · ${v.fait.size} posés · ${v.differe.size} différés`,
        ton:INCERTAIN.includes(b.state)||s.reconcileRequired?'rouge':b.state==='RUNNING'?'vert':'ambre'};}
-   if(n&&nativeActive(s))return {texte:`ARIANE · ÉCHO · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites`,ton:n.status==='RUNNING'?'vert':'ambre'};
+   if(n&&nativeActive(s))return {texte:`ARIANE · ÉCHO · ${n.status==='RUNNING'?'collecte en cours':'collecte en pause'} · ${n.visits?.length||0} visites${raisonBandeau(n)}`,ton:n.status==='RUNNING'?'vert':'ambre'};
    if(b)return {texte:`ARIANE · ORBITE · ${NOMS_ETAT[b.state]||'lot'} · ${b.processed?.length||0} traités · ${b.deferred?.length||0} différés`,ton:''};
    return {texte:'ARIANE · prêt',ton:''};}
  let bandeauA=0;
@@ -522,6 +525,37 @@
      note(ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
    catch(e){note(e.message,true);}
    majChoixLot(state);}
+ /* RM-11 (4.9.5 test 9) — RAISON DE LA CORRECTION (fiches/RM11_RAISON_CORRECTION.md). Coupée par défaut. Le choix (allumée ou non, rangée de touches)
+  * est gardé par le service worker (`raison-choix-etat`, `raison-choix`), lu au démarrage d'Écho et gardé jusqu'à la fin de la séance : la séance en cours
+  * garde le sien. Le suivi vient de `native.raison` (état de la séance) et de `native.visits[].raison` (la bande des 24 derniers cuts). Les pastilles
+  * et les touches (quand ce panneau a le focus) envoient la raison au service worker, qui la consigne : jamais bloquant, rien n'est envoyé à ESV.
+  * Les textes viennent du catalogue du module, jamais de l'état. */
+ const IDS_TOUCHES_RAISON={'chiffres':'raison-touches-chiffres','alt-chiffres':'raison-touches-alt-chiffres','pave':'raison-touches-pave'};
+ let choixRaison=null;
+ const RC=()=>globalThis.BananeRaisonCorrection||null;
+ function majRaison(s){const M=RC(),bloc=$('carte-raison');if(!bloc||!M)return;
+   const ecrire=(id,t)=>{if($(id))$(id).textContent=t;};
+   if(choixRaison){if($('raison-actif')&&document.activeElement!==$('raison-actif'))$('raison-actif').checked=choixRaison.actif===true;
+     for(const [v,id] of Object.entries(IDS_TOUCHES_RAISON))if($(id)&&document.activeElement!==$(id))$(id).checked=choixRaison.touches===v;}
+   const n=s?.native,r=n?.raison&&n.raison.actif===true?n.raison:null,ouverte=['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n?.status);
+   if($('raison-suivi'))$('raison-suivi').hidden=!r;
+   /* La séance ouverte garde son choix ; le choix coché servira à la prochaine. */
+   ecrire('raison-note',ouverte&&choixRaison&&(!!r!==(choixRaison.actif===true)||r&&r.touches!==choixRaison.touches)?'La séance en cours garde son choix jusqu’à sa fin ; le choix coché servira à la prochaine séance.'
+     :ouverte&&r?'Lecture allumée pour cette séance. Rien n’est retenu ni envoyé à ESV.':'Coupée par défaut. Lue au démarrage d’Écho, gardée jusqu’à la fin de la séance. Rien n’est retenu ni envoyé à ESV.');
+   if(!r)return;
+   const v=M.vue(r,n.visits),vis=n.visits||[],dernier=vis.at(-1),courant=n.status==='RUNNING'&&dernier&&!dernier.endedAt?dernier:null;
+   M.CATALOGUE.forEach((c,i)=>{const b=$('raison-'+(i+1));if(!b)return;b.disabled=!courant;b.setAttribute('aria-pressed',String(!!courant&&courant.raison===c.code));});
+   if($('raison-0'))$('raison-0').disabled=!courant;
+   const lib=code=>M.LIBELLES[code]||'?';
+   ecrire('raison-ligne',(courant?(courant.raison?`Ce cut : ${lib(courant.raison)}.`:'Ce cut : aucune raison.'):'Pas de cut en cours.')+' '+
+     (v.collante?`Collante : ${lib(v.collante.code)}, depuis le cut ${entier(v.collante.depuis)} (${entier(v.collante.nCuts)} cut${v.collante.nCuts>1?'s':''}). Tape 0 pour la finir.`:'Aucune raison collante : deux appuis sur la même touche la rendent collante.'));
+   if($('raison-rappel'))$('raison-rappel').hidden=!v.rappel;
+   poser($('raison-bande'),v.bande.map(b=>{const c=M.CODES.includes(b.code)?b.code:null;return `<i class="${c?'r r-'+c:''}" title="cut ${entier(b.cut)} · ${c?lib(c):'aucune raison'}"></i>`;}).join(''));
+   ecrire('raison-couverture',v.couverture.visites?`Raison posée sur ${entier(v.couverture.avecRaison)} des ${entier(v.couverture.visites)} derniers cuts. Les autres restent inconnues.`:'Aucun cut visité pour l’instant.');}
+ async function changerChoixRaison(args){try{choixRaison=await api('raison-choix',args);note('Choix gardé pour la prochaine séance d’Écho.');}catch(e){note(e.message,true);}
+   majRaison(state);}
+ /* Une raison tapée (touche ou pastille) : envoyée au service worker, qui la consigne sur le cut en cours. Pas d'`action()` : rien n'est bloqué ni rechargé. */
+ function envoyerRaison(f){void api('native-raison',f.efface?{efface:true}:{code:f.code}).catch(e=>note(e.message,true));}
  /* Une ligne de CONTENU.txt : les choix du dernier lot (ceux de son scope). */
  const texteChoixLot=b=>b?.scope?`Choix du lot ${b.id||'?'} : clic du mode rapide « ${NOMS_CLIC[clicDuScope(b.scope)]} » (${clicDuScope(b.scope)}) ; règle métier « grappe de différés » ${nomGrappe(grappeDuScope(b.scope))}${grappeDuScope(b.scope)?' (chaque cut mis en attente : événement regles-metier-ombre, actif.applique, dans le journal)':''}.\n`:'';
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
@@ -565,6 +599,7 @@
      button('native-discard',{hidden:!n,disabled:working});
      if($('native-discard-note'))$('native-discard-note').hidden=!n;
      hierarchie(['native-resume','native-end','native-download','native-start','native-pause']);
+     majRaison(s);
    }else if(which==='automatic'){
      /* 4.7.21 : pendant un lot, l'invite « Choisis les bornes » n'a pas de sens. */
      note(active(s)?'Une collecte manuelle est active. Termine-la avant de lancer un lot.':s.notice||(b?.state==='RUNNING'?'Orbite enchaîne les cuts : tu peux suivre ici ou dans ESV.'
@@ -1592,6 +1627,17 @@ on('native-discard',async()=>{
  for(const [v,id] of Object.entries(IDS_CLIC))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixLot({clicHumain:v});};
  if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
  api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});
+ /* RM-11 : choix de la raison de la correction, relu au service worker à l'ouverture ; pastilles et touches du panneau. */
+ api('raison-choix-etat').then(r=>{if(r&&typeof r.actif==='boolean'){choixRaison=r;majRaison(state);}}).catch(()=>{});
+ if($('raison-actif'))$('raison-actif').onclick=()=>changerChoixRaison({actif:$('raison-actif').checked===true});
+ for(const [v,id] of Object.entries(IDS_TOUCHES_RAISON))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixRaison({touches:v});};
+ if(RC()){RC().CATALOGUE.forEach((c,i)=>{if($('raison-'+(i+1)))$('raison-'+(i+1)).onclick=()=>envoyerRaison({code:c.code});});
+   if($('raison-0'))$('raison-0').onclick=()=>envoyerRaison({efface:true});
+   /* Quand le panneau a le focus : mêmes touches, même lecture (module), hors champ de saisie. Rien n'est retenu (pas de preventDefault). */
+   document.addEventListener?.('keydown',e=>{const r=state?.native?.raison;if(!r||r.actif!==true||state.native.status!=='RUNNING')return;
+     const t=e.target,editable=!!t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName||'')||t.isContentEditable===true);
+     const f=RC().lireFrappe({type:'keydown',code:e.code,shiftKey:!!e.shiftKey,ctrlKey:!!e.ctrlKey,altKey:!!e.altKey,metaKey:!!e.metaKey,repeat:!!e.repeat,editable},r.touches);
+     if(f)envoyerRaison(f);});}
  /* Bandeau dans ESV : préférence gardée par le service worker. */
  const marquerBandeau=()=>$('bandeau-toggle')?.setAttribute('aria-pressed',String(bandeau));
  api('bandeau-etat').then(r=>{bandeau=r?.on===true;marquerBandeau();if(state)envoyerBandeau(state);}).catch(()=>{});

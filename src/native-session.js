@@ -4,6 +4,8 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(K,S){
  'use strict';
  const OPEN=['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'];
+ /* RM-11 (test 9) : la raison de la correction ; le module est pur (src/raison-correction.js), tout son usage ici est enveloppé et jamais bloquant. */
+ const R=typeof module==='object'?require('./raison-correction.js'):globalThis.BananeRaisonCorrection;
  const SIDES=['left','right'],unique=a=>[...new Set(a.filter(Boolean))];
  const completeRails=state=>SIDES.every(side=>!!state?.rails?.[side]);
  const anyRail=state=>SIDES.some(side=>!!state?.rails?.[side]);
@@ -101,7 +103,7 @@
   newPeriod(n){const list=n.observationPeriods;while(list.length&&list.at(-1).reason==='start-failed')list.pop();
    const period={observationPeriodId:K.uid(),startedAt:iso(),endedAt:null,endTimeStatus:'open',status:'STARTING'};
    n.observationPeriods.push(period);n.currentPeriodId=period.observationPeriodId;return period;}
-  async start(){if(this.starting||this.ending)throw Error('Le mode Natif est déjà en cours de démarrage ou de fermeture.');this.starting=true;
+  async start(options={}){if(this.starting||this.ending)throw Error('Le mode Natif est déjà en cours de démarrage ou de fermeture.');this.starting=true;
    try{const old=this.e.s.native;if(['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(old?.status))return this.resume();
     /* 4.9.0.18 (AM-19) : une session finie, avec des visites, jamais téléchargée en entier, n'est pas remplacée :
      * elle deviendrait inaccessible depuis le panneau (manifeste et « Télécharger à nouveau » visent la session courante). */
@@ -115,9 +117,11 @@
       metrics:{queueDepthMax:0,dropped:0,sendFailures:0,captureCompleted:0,captureFailed:0,captureCheckpoints:0,
        pointsSavedByRail:{left:0,right:0},inputHandlerMs:{p50:0,p95:0,max:0,samples:0},degradationLevels:[]},
       message:'Démarrage de l’observation passive…'};
+    /* RM-11 : lire les raisons est un choix du panneau, fait avant la séance et gardé jusqu'à sa fin. Coupé, la session n'a rien de plus. */
+    if(options?.raison?.actif===true)n.raison=R.nouvelEtat(options.raison.touches);
     this.e.s.native=n;this.e.s.mode='observation';const period=this.newPeriod(n);await this.e.save();
     await this.nativeEvent('session-started',{sessionId:n.id,observationPeriodId:period.observationPeriodId,identity:null});
-    try{await this.adapter.nativeStart({sessionId:n.id,observationPeriodId:period.observationPeriodId});n.status='RUNNING';period.status='RUNNING';
+    try{await this.adapter.nativeStart({sessionId:n.id,observationPeriodId:period.observationPeriodId,...(n.raison?{raison:true}:{})});n.status='RUNNING';period.status='RUNNING';
       n.message='Observation native active. Travaille normalement dans ESV : Banane n’envoie aucune commande.';await this.e.save();return this.e.view();}
     catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';this.failPeriod(period,error);n.message=error.message;await this.e.save();throw error;}
    }finally{this.starting=false;}}
@@ -311,7 +315,10 @@
     const previousId=n.visits.at(-1)?.visitId;if(previousId){const previous=await this.recordById(previousId);
       if(previous&&previous.nativeSessionId===n.id&&previous.visitId===previousId){previous.nextVisitId=record.visitId;await this.saveRecord(previous);}}
     /* 4.7.20 (piste H) : début de la visite, pour le temps par cut du panneau. */
+    /* RM-11 : la raison collante en cours passe à cette visite (source « collante ») ; elle finit ici si la partie change ou si le cut saute. */
+    if(n.raison)try{const h=R.heriter(n.raison,identity,S.echo?.raison);if(h)R.appliquer(record,{...h,poseeA:record.startedAt});}catch{/* jamais bloquant */}
     n.current=record;n.visits.push({visitId:record.visitId,visitIndex,identity,observationPeriodId:record.observationPeriodId,relation:record.visitRelation.type,startedAt:record.startedAt});
+    if(record.raisonCorrection)n.visits.at(-1).raison=record.raisonCorrection.code;
     this.e.s.current=K.clone(data.initialObserved);await this.saveRecord(record);await this.e.save();return {saved:true,recordId:record.recordId,eventSeq:logged.eventSeq};
    }
    if(type==='observation-failed'){if(n.current){this.partialReason(n.current,data.reason||'observation-failed');await this.saveRecord(n.current);}
@@ -361,6 +368,8 @@
        (record.humanFinalReferences??=[]).push(reference);record.humanFinalReference=reference;
        record.humanFinalReferenceSource=record.humanFinalReferences.length>1?'last-validate-intent':'sole-validate-intent';
        if(uncertain)this.partialReason(record,'cached-state-observed-after-operator-input');}}
+    /* RM-11 : une touche de raison (1 à 6, 0), lue après coup ; la frappe est déjà consignée ci-dessus. Rien n'est envoyé à ESV. */
+    if(n.raison)try{await this.raisonFrappe(record,observed);}catch{/* jamais bloquant */}
     await this.saveRecord(record);return {saved:true,eventSeq:logged.eventSeq};
    }
    if(type==='state-observed'){
@@ -537,6 +546,40 @@
    if(!record.lidarCaptureIds?.length&&!record.lidarChunkIds?.length)this.partialReason(record,'lidar-missing');
    const metadataComplete=!!initial&&!!last&&!!record.endedAt&&record.endTimeStatus!=='unknown';record.status=metadataComplete&&!record.partialReasons.length?'complete':'partial';
   }
+  /* RM-11 (fiches/RM11_RAISON_CORRECTION.md) — RAISON DE LA CORRECTION. Écrit `raisonCorrection` sur la visite visée, de façon facultative : absent = inconnu.
+   * Cut visé : celui de la visite, sauf si la frappe tombe au plus `graceMs` après la validation du cut d'avant, avant tout autre geste sur celui-ci
+   * (elle va alors au cut validé, avec la marque `apresValidationMs`). Le double appui ouvre une série collante (module) ; une série qui s'ouvre ou
+   * se ferme de l'autre côté de la frontière est aussi reportée sur la visite affichée. La raison est une ÉTIQUETTE : jamais dans les traits. */
+  async raisonFrappe(record,observed){
+   const f=R.lireFrappe(observed,this.e.s.native.raison.touches);if(f)await this.raisonPoser(record,f,observed,record.operatorEvents.slice(0,-1));}
+  async raisonPoser(record,f,observed,avant){
+   const n=this.e.s.native,etat=n.raison,reglage=S.echo?.raison;
+   const t=eventTime(observed),validee=R.derniereValidation(record,t);let cible=record,apres=Number.isFinite(validee)?Math.max(0,Math.round(t-validee)):null;
+   if(apres===null&&record.previousVisitId&&!R.autreGeste(avant)){
+    const prec=await this.recordById(record.previousVisitId),delai=prec&&prec.nativeSessionId===n.id?R.delaiDeGrace(R.derniereValidation(prec,t),t,reglage.graceMs):null;
+    if(delai!==null){cible=prec;apres=delai;}}
+   const poseeA=observed.observedAt||iso(),detail={poseeA,eventSeq:observed.eventSeq,apresValidationMs:apres};
+   const effet=R.appuyer(etat,{...f,cutKey:K.cutKey(cible.identity),part:cible.identity?.part,cut:cible.identity?.cut,at:t,poseeA,eventSeq:observed.eventSeq},reglage);
+   if(effet.type==='pose')R.appliquer(cible,{...detail,code:effet.code,source:'touche',serie:effet.serie});else R.effacer(cible,detail);
+   this.raisonResume(cible);
+   if(cible!==record){   // l'autre côté de la frontière : la série ouverte ou finie par cette touche touche aussi la visite affichée
+    if(effet.ouvre&&(!record.raisonCorrection||record.raisonCorrection.source==='collante')){const h=R.heriter(etat,record.identity,reglage);if(h)R.appliquer(record,{...h,poseeA:record.startedAt});}
+    else if(effet.type==='efface'&&record.raisonCorrection?.source==='collante')R.effacer(record,detail);
+    this.raisonResume(record);await this.saveRecord(cible);}
+   await this.e.save();}
+  /* Secours : une raison choisie au panneau (pastille, ou touche quand le panneau a le focus) vaut la même touche sur le cut en cours. Le geste est consigné
+   * au journal (`native-raison-panneau`) ; il passe par la file des événements comme tout le reste. Rien n'est envoyé à ESV. */
+  raisonPanneau(args){const next=this.queue.then(async()=>{const n=this.e.s.native;
+    if(!n?.raison||n.status!=='RUNNING'||!n.current)return {pris:false,raison:'Écho ne lit pas les raisons, ou aucun cut n\u2019est en cours.'};
+    const f=args?.efface===true?{efface:true}:R.CODES.includes(args?.code)?{code:args.code}:null;if(!f)throw Error('Raison inconnue.');
+    const logged=await this.nativeEvent('raison-panneau',{sessionId:n.id,observationPeriodId:n.currentPeriodId,visitId:n.current.visitId,identity:n.current.identity,...f});
+    await this.raisonPoser(n.current,f,{observedAt:iso(),eventSeq:logged.eventSeq},n.current.operatorEvents||[]);await this.saveRecord(n.current);return {pris:true};});
+   this.queue=next.catch(()=>{});return next;}
+  /* Résumé de la visite dans l'état (n.visits), pour la bande des derniers cuts du panneau. */
+  raisonResume(record){const v=this.e.s.native.visits.find(x=>x.visitId===record.visitId),code=record.raisonCorrection?.code??null;
+   if(v){if(code)v.raison=code;else delete v.raison;}}
+  /* Pause ou fin de séance : la série collante en cours finit (le F5 ne la finit pas). */
+  raisonFin(cause){const n=this.e.s.native;if(n?.raison)try{R.finir(n.raison,cause);}catch{/* jamais bloquant */}}
   /* 4.9.0.18 (AM-16) : résumé des gestes par touche, jamais tronqué. */
   summariseGesture(record,observed){const g=record.gestureSummary??={count:0,firstAt:null,lastAt:null,byKey:{},editable:0};
    g.count++;const at=observed.observedAt||null;if(!g.firstAt)g.firstAt=at;g.lastAt=at;if(observed.editable){g.editable++;return;}
@@ -618,11 +661,11 @@
      n.incomplete=(n.incomplete||[]).filter(id=>id!==record.recordId);n.current=record;await this.saveRecord(record);}}
    await this.nativeEvent('worker-restart-healed',{sessionId:n.id,observationPeriodId:period.observationPeriodId,identity:null});await this.e.save();return true;}
   async pause(){const n=this.e.s.native;if(!n||n.status!=='RUNNING')throw Error('Aucune observation Natif active à mettre en pause.');
-   try{const result=await this.adapter.nativePause();await this.queue;this.mergeMetrics(result?.metrics);n.status='PAUSED';n.currentPeriodId=null;
+   try{const result=await this.adapter.nativePause();await this.queue;this.mergeMetrics(result?.metrics);n.status='PAUSED';n.currentPeriodId=null;this.raisonFin('pause');
     n.message='Observation en pause. Reprendre ouvrira une nouvelle période, sans continuité supposée.';await this.e.save();return this.e.view();}
    catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';n.message=error.message;await this.e.save();throw error;}}
   async resume(){const n=this.e.s.native;if(!n||!['PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status))throw Error('Aucune observation Natif en pause.');
-   const period=this.newPeriod(n);try{await this.adapter.nativeResume({sessionId:n.id,observationPeriodId:period.observationPeriodId});n.status='RUNNING';period.status='RUNNING';
+   const period=this.newPeriod(n);try{await this.adapter.nativeResume({sessionId:n.id,observationPeriodId:period.observationPeriodId,...(n.raison?{raison:true}:{})});n.status='RUNNING';period.status='RUNNING';
     n.message='Nouvelle période d’observation native active.';await this.e.save();return this.e.view();}catch(error){n.status='PAUSED_ADAPTER_UNRESPONSIVE';
     this.failPeriod(period,error);n.message=error.message;await this.e.save();throw error;}}
   /* `end({dataset:false})` rend un résumé léger au lieu de la session entière.
@@ -668,6 +711,7 @@
    try{const result=await this.adapter.nativeFinish();this.mergeMetrics(result?.metrics);}catch(error){adapterError=error;n.message='Fin interrompue : '+error.message;}
    await this.queue;await this.continuityIdle();await this.queue;if(n.current){this.partialReason(n.current,'session-ended-before-visit-close');this.classify(n.current);await this.saveRecord(n.current);
     n.incomplete=unique([...n.incomplete,n.current.recordId]);n.current=null;}
+   this.raisonFin('fin-seance');
    n.status=adapterError?'PAUSED_ADAPTER_UNRESPONSIVE':'FINISHED';n.finishedAt=iso();n.adapterError=adapterError?.message||null;n.currentPeriodId=null;
    // Une visite = un enregistrement : le compte vient de la session, sans relire toute la base.
    await this.nativeEvent('session-finished',{sessionId:n.id,identity:null,status:n.status,records:(n.visits||[]).length,incomplete:n.incomplete.length,adapterError:n.adapterError});
@@ -920,7 +964,9 @@
      droppedEvents:n.metrics.dropped,degradationLevels:n.metrics.degradationLevels,serverConfirmationAvailable:false,serverConfirmationStatus:'not-observed',
      serverConfirmationNotAnError:true,passiveContract:{commandsByBanane:0,cameraChangesByBanane:0,railSelectionsByBanane:0,navigationByBanane:0}};
    const events=(await this.store.all('events')).filter(event=>event.nativeSessionId===n.id).sort((a,b)=>(a.eventSeq||a.event_seq||0)-(b.eventSeq||b.event_seq||0));
-   return {format:'banane-native-session-v2',version:K.VERSION,exportedAt:iso(),session:K.clone(n),records,events,closureSummary,cloudIds:n.cloudIds.slice()};
+   /* RM-11 : les séries collantes, une fois dans l'en-tête (seulement s'il y en a : sans raison tapée, l'export est celui d'avant). */
+   const raisonSeries=n.raison?R.resumeSeries(n.raison):[];
+   return {format:'banane-native-session-v2',version:K.VERSION,exportedAt:iso(),session:K.clone(n),records,events,closureSummary,cloudIds:n.cloudIds.slice(),...(raisonSeries.length?{raisonSeries}:{})};
   }
  }
  return {Sessions,poseEqual,referenceParEcriture,entreeSansFuite};

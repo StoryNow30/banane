@@ -12,9 +12,9 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.7',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 7';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.9',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 9';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -1134,6 +1134,16 @@ async function choixLot(args){
  if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
  if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}
  return choixDuLot();}
+/* RM-11 (4.9.5 test 9) — CHOIX DU PANNEAU POUR LA RAISON DE LA CORRECTION. Gardé dans storage.local par le panneau (actions `raison-choix-etat`, `raison-choix`),
+ * lu au démarrage d'Écho et figé dans la séance (`native.raison`) : la séance ouverte garde le sien. COUPÉ par défaut (absent, illisible ou inconnu : coupé,
+ * rangée du haut). Ce choix n'a rien à voir avec celui du lot (`choixDuLot`) : le lot ne le lit pas et ne change pas. Rien n'est envoyé à ESV. */
+const CLE_RAISON='banane50Raison';
+async function choixRaisonDuPanneau(){let r={};try{r=(await chrome.storage.local.get(CLE_RAISON))?.[CLE_RAISON]||{};}catch{r={};}
+ const R=globalThis.BananeRaisonCorrection;return {actif:r.actif===true&&!!R,touches:R?.TABLES.includes(r.touches)?r.touches:'chiffres'};}
+async function raisonChoisir(args){const R=globalThis.BananeRaisonCorrection,c=await choixRaisonDuPanneau();
+ if(args&&'actif' in args){if(typeof args.actif!=='boolean')throw Error('Raison de la correction : oui ou non.');c.actif=args.actif;}
+ if(args&&'touches' in args){if(!R?.TABLES.includes(args.touches))throw Error('Rangée de touches inconnue.');c.touches=args.touches;}
+ await chrome.storage.local.set({[CLE_RAISON]:c});return c;}
 function clicHumainDuLot(){const b=engine?.s?.batch,v=b?.state==='RUNNING'?b.scope?.clicHumain:null;return v==='gauche-recentre'||v==='tout-recentre'?v:null;}
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{
@@ -1378,7 +1388,11 @@ function b1Reglage(){const v=globalThis.BananeSettings?.appuisListe;return v==='
 /* E1 (5.0) — mémoire de la liste d'ESV (src/liste-memoire.js) : bords écrits par Ariane pendant un lot, instantané et écarts au
  * chargement d'une liste. Rien n'est envoyé à ESV ; toute panne est avalée. */
 function listeNoterEcriture(f,echoId){try{const LM=globalThis.BananeListeMemoire,b=engine?.s?.batch;
- if(LM&&!echoId&&b?.state==='RUNNING')void LM.noterEcriture(chrome.storage.local,f,{partie:b.scope?.part,enLot:true,version:VERSION});}catch{/* jamais bloquant */}}
+ /* D-211 (test 9) : pas seulement un lot `RUNNING`. Le dernier cut validé arrive parfois quelques dixièmes de seconde APRÈS le passage à `STOPPED` (fenêtre de grâce
+  * de l'observateur, `dansGrace`), et la relecture « corriger » écrit pendant que le lot est `STOPPED` : sans cela, ni l'un ni les autres n'étaient mémorisés (18 au
+  * lieu de 29, partie 13 du projet 2). La partie est celle du lot. Relevé local seulement : aucune requête vers ESV, aucun effet sur la pose. */
+ const enCours=b?.state==='RUNNING'||(!!b&&OBS_CLOS.includes(b.state)&&(dansGrace(b)||relecture.passe?.etat==='en-cours'));
+ if(LM&&!echoId&&enCours)void LM.noterEcriture(chrome.storage.local,f,{partie:b.scope?.part,enLot:true,version:VERSION});}catch{/* jamais bloquant */}}
 function listeApresChargement(e,fiche,ctx){try{const LM=globalThis.BananeListeMemoire,K=globalThis.BananeCore3;if(!LM||!fiche)return;
  void LM.apresChargement({storage:chrome.storage.local,chrome,tabId:selectedTab,obs:e,fiche,version:VERSION,
   emettre:ev=>store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),schema:1,...ev,...ctx})});}catch{/* jamais bloquant */}}
@@ -2243,8 +2257,8 @@ const attendreMs=ms=>new Promise(r=>setTimeout(r,Math.max(0,ms)));
 /* Origine de la zone d'un cut relu : PN, ADV et abords viennent du lot (captures et cuts du lot, figés avant la passe) ; la liste
  * « À contrôler » et les verts hors plage (écartement) viennent de la liste d'ESV. */
 const sourceZone=c=>['pn','adv','abords'].includes(c.zone)?'lot':c.zone==='ecartement'?'liste-esv':'liste';
-/* Un cut que les réglages pourraient corriger (vert d'une zone ouverte) : en « corriger », il n'est posé qu'atteint par les boutons. */
-const relectureCorrigeable=(c,reglages)=>c.role==='vert'&&c.zone!=='ecartement'&&reglages?.zones?.[c.zone]?.corriger===true;
+/* Un cut que les réglages pourraient corriger (vert d'une zone ouverte ; la zone « écartement » est fermée tant que les réglages ne l'ouvrent pas, D-185) : en « corriger », il n'est posé qu'atteint par les boutons. */
+const relectureCorrigeable=(c,reglages)=>c.role==='vert'&&reglages?.zones?.[c.zone]?.corriger===true;
 /* Ce qu'Ariane donnerait sur une capture (aucun effet), selon la variante du fichier de réglages (« chaine+h » : décision du lot avec
  * pour appuis la chaîne de la passe, plus la hauteur apprise ; « seul » : sans appui) : moteur, décision, jugement ; la commande qui
  * serait écrite (commande du lot sur la pose ESV de la capture, plus la hauteur pour « +h ») et son écart ; la règle prudente.
@@ -2526,6 +2540,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* 4.9.5 test 6 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
  if(action==='choix-lot-etat')return choixDuLot();
  if(action==='choix-lot')return choixLot(args);
+ /* RM-11 : choix de la raison de la correction pour la PROCHAINE séance d'Écho ; une raison tapée au panneau (secours des touches) est consignée par la séance. */
+ if(action==='raison-choix-etat')return choixRaisonDuPanneau();
+ if(action==='raison-choix')return raisonChoisir(args);
+ if(action==='native-raison')return native.raisonPanneau(args);
  if(action==='bandeau-etat'){const r=await chrome.storage.local.get('banane4Bandeau');bandeau.on=r?.banane4Bandeau===true;return {on:bandeau.on};}
  if(action==='bandeau'){bandeau={on:args.on===true,text:String(args.text||'').slice(0,200),ton:['vert','ambre','rouge'].includes(args.ton)?args.ton:''};
   await chrome.storage.local.set({banane4Bandeau:bandeau.on});await syncLauncher();return {on:bandeau.on};}
@@ -2551,7 +2569,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    catch(e){if(e?.definitif)throw e;throw Error('Écho non démarré : la page ESV ne répond pas ('+(e?.message||vu.message)+'). Clique sur Connecter, puis réessaie.');}}
   if(vu&&(!Number.isInteger(vu.identity?.part)||!Number.isInteger(vu.identity?.cut)))throw Error('Écho refusé : le libellé du cut n’est pas lisible dans ESV (« Cut N of part M » attendu). Ouvre un cut, puis réessaie.');
   const onglets=(await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'}).catch(()=>[])).length;
-  const v=await native.start();const n=engine.s.native;
+  const choixRaison=await choixRaisonDuPanneau();   // RM-11 : lu ici, figé dans la séance ; coupé, Écho démarre exactement comme avant
+  const v=await native.start(choixRaison.actif?{raison:choixRaison}:undefined);const n=engine.s.native;
   if(n&&onglets>1){n.message=`Observation native active sur l’onglet choisi seulement (${onglets} onglets ESV ouverts : travaille dans celui-ci).`;await engine.save();}
   return v;}
  if(action==='native-pause')return native.pause();

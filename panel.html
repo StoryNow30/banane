@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ariane 4.9.5 test 7</title><link rel="stylesheet" href="panel.css"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ariane 4.9.5 test 9</title><link rel="stylesheet" href="panel.css"></head>
 <body data-window="home"><main>
 
 <!-- 4.7.20 — piste H « Sans le skill » (design/pistes-retenues, direction du 24/09) :
@@ -20,7 +20,7 @@
    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15h18"/></svg>
   </button>
  </div>
- <p class="brand">ARIANE <span>4.9.5 test 7</span></p>
+ <p class="brand">ARIANE <span>4.9.5 test 9</span></p>
  <h1 id="vue-titre">Écho observe. Orbite pose.</h1>
  <p class="intro" id="vue-intro">Choisis ce que tu veux faire dans ESV.</p>
 </header>
@@ -69,6 +69,37 @@
   <button id="native-download" class="secondary" hidden>Télécharger à nouveau la session</button>
   <button id="native-details-toggle" class="link details-toggle" aria-expanded="true" aria-controls="native-details">Masquer les détails</button>
  </div>
+
+ <!-- RM-11 (4.9.5 test 9) : la raison de la correction. Coupée par défaut ; le choix est lu au démarrage d'Écho et gardé jusqu'à la fin de la séance. -->
+ <section id="carte-raison" class="bloc raison rise d5" aria-labelledby="raison-titre">
+  <p id="raison-titre" class="lbl">Raison de la correction</p>
+  <label class="interrupteur"><input type="checkbox" id="raison-actif"> Noter ma raison (touches 1 à 6, 0 efface)</label>
+  <fieldset class="choix-lot" id="raison-touches-choix">
+   <legend class="lbl">Touches lues</legend>
+   <label class="interrupteur"><input type="radio" name="raison-touches" id="raison-touches-chiffres" value="chiffres"> Chiffres de la rangée du haut ou du pavé</label>
+   <label class="interrupteur"><input type="radio" name="raison-touches" id="raison-touches-alt-chiffres" value="alt-chiffres"> Alt + chiffre (si ESV réagit au chiffre seul)</label>
+   <label class="interrupteur"><input type="radio" name="raison-touches" id="raison-touches-pave" value="pave"> Pavé numérique seul (dernier recours)</label>
+  </fieldset>
+  <p class="muted" id="raison-note">Coupée par défaut. Lue au démarrage d’Écho, gardée jusqu’à la fin de la séance. Rien n’est retenu ni envoyé à ESV.</p>
+  <div id="raison-suivi" hidden>
+   <div id="raison-pastilles" class="pastilles" role="group" aria-label="Raison de ce cut">
+    <button type="button" id="raison-1" class="pastille" data-code="rail-voisin" aria-pressed="false" aria-label="1, rail voisin"><b>1</b> Rail voisin</button>
+    <button type="button" id="raison-2" class="pastille" data-code="adv" aria-pressed="false" aria-label="2, ADV"><b>2</b> ADV</button>
+    <button type="button" id="raison-3" class="pastille" data-code="pn" aria-pressed="false" aria-label="3, PN"><b>3</b> PN</button>
+    <button type="button" id="raison-4" class="pastille" data-code="nuage-pauvre" aria-pressed="false" aria-label="4, nuage diffus ou pauvre"><b>4</b> Nuage diffus ou pauvre</button>
+    <button type="button" id="raison-5" class="pastille" data-code="hauteur" aria-pressed="false" aria-label="5, hauteur seulement"><b>5</b> Hauteur seulement</button>
+    <button type="button" id="raison-6" class="pastille" data-code="autre" aria-pressed="false" aria-label="6, autre"><b>6</b> Autre</button>
+    <button type="button" id="raison-0" class="pastille efface" aria-label="0, effacer la raison et finir la collante"><b>0</b> Effacer</button>
+   </div>
+   <p id="raison-ligne" class="muted" role="status" aria-live="polite"></p>
+   <p id="raison-rappel" class="warning" role="status" hidden>La raison collante dure depuis 40 cuts : tape 0 si elle ne s’applique plus. Rien ne s’arrête.</p>
+   <div id="raison-bande" class="bande-raison" role="img" aria-label="Raisons posées sur les 24 derniers cuts"></div>
+   <p id="raison-couverture" class="muted"></p>
+  </div>
+  <details id="raison-aide"><summary>Comment taper une raison</summary>
+   <p>Un appui sur la touche, c’est la raison de ce cut seul. <b>Deux appuis</b> sur la même touche (moins de 0,6 seconde) la rendent <b>collante</b> : elle s’applique aux cuts suivants, jusqu’à un 0, une autre raison collante, un changement de partie ou un saut de plus de 30 cuts. Une touche tapée jusqu’à une demi-seconde après la validation va au cut que tu viens de valider. Rien n’est obligatoire : sans touche, la raison reste inconnue.</p>
+  </details>
+ </section>
 
  <div class="guide"><p>Travaille ensuite normalement dans ESV. Aucun clic Ariane n’est nécessaire entre les cuts.</p><p>Ce mode n’envoie aucun déplacement, changement de caméra, choix de rail, VALIDATE, SKIP ou navigation.</p></div>
 
@@ -230,9 +261,9 @@
   <legend class="lbl">Relecture après le lot</legend>
   <label class="interrupteur"><input type="radio" name="relecture" id="relecture-coupee" value="coupee"> Coupée</label>
   <label class="interrupteur"><input type="radio" name="relecture" id="relecture-ombre" value="ombre"> Ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché)</label>
-  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-corriger" value="corriger"> Corriger (verts sûrs du PN, de l’ADV et des abords, validés par Maj+Espace)</label>
+  <label class="interrupteur"><input type="radio" name="relecture" id="relecture-corriger" value="corriger"> Corriger (verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, validés par Maj+Espace)</label>
   <dl class="choix-etat"><dt id="relecture-dernier-l">Dernier lot</dt><dd id="relecture-dernier">aucun lot</dd><dt>Prochain lot</dt><dd id="relecture-prochain">—</dd></dl>
-  <p class="muted">Après les rouges, Ariane visite les cuts que tu relirais (PN, ADV, abords des rouges et des différés, cuts isolés, « À contrôler »), verts compris. Elle part seule juste après un lot jusqu’à la fin de la partie ; « Arrêter la relecture » l’arrête. Comme pour toi, ESV marque « vu » chaque cut qu’elle affiche pour la première fois. En « corriger », elle ne pose et ne valide que les verts sûrs du PN, de l’ADV et des abords, qui passent la règle prudente (jamais un cut posé ou différé par le lot) ; les autres cuts, les verts hors zone compris, sont seulement notés. Tu as accepté les chiffres de l’ADV et des abords (14 à 18 % d’erreurs dans l’étude) : le seuil de 9 % n’est pas démontré pour ces deux zones.</p>
+  <p class="muted">Après les rouges, Ariane visite les cuts que tu relirais (PN, ADV, abords des rouges et des différés, cuts isolés, « À contrôler »), verts compris. Elle part seule juste après un lot jusqu’à la fin de la partie ; « Arrêter la relecture » l’arrête. Comme pour toi, ESV marque « vu » chaque cut qu’elle affiche pour la première fois. En « corriger », elle ne pose et ne valide que les verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, qui passent la règle prudente (jamais un cut posé ou différé par le lot) ; les autres cuts, les verts hors zone compris, sont seulement notés. Tu as accepté les chiffres de l’ADV et des abords (14 à 18 % d’erreurs dans l’étude) : le seuil de 9 % n’est pas démontré pour ces deux zones.</p>
   <p class="muted" id="relecture-note">Lue au démarrage de chaque lot, gardée jusqu’à sa fin. Coupée par défaut.</p>
   <p class="muted" id="relecture-reglages"></p>
  </fieldset>
@@ -268,6 +299,6 @@
 <!-- --------------------------------------------------- commun à toutes les vues -->
 <p id="export-status" class="muted" role="status"></p>
 <details id="connection"><summary>Connexion à ESV</summary><label>Onglet ESV<select id="tabs"><option value="">Choisir un onglet…</option></select></label><p id="tabs-note" class="muted"></p><button id="connect" class="secondary">Reconnecter ESV</button><p class="muted">Après une mise à jour, recharge la page ESV.</p></details>
-<footer>Ariane 4.9.5 test 7 · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
+<footer>Ariane 4.9.5 test 9 · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
 </div>
-</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="src/carte-relecture.js"></script><script src="panel.js"></script></body></html>
+</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="src/carte-relecture.js"></script><script src="src/raison-correction.js"></script><script src="panel.js"></script></body></html>

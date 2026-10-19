@@ -15,7 +15,7 @@ test('corriger : un vert d’abords (109) et un vert d’ADV (130, premier cut d
  zoneAdv(b,130,133);
  const p=await H.finPasse(b);
  const debut=H.evenements(b,'relecture-debut')[0];
- assert.deepEqual(j(debut.reglages),{source:'propose',statut:'propose',refus:null,invalides:[],correctionPermise:true,raison:null,zones:{pn:true,adv:true,abords:true,'vert-hors-zone':false}});assert.equal(debut.modeEffectif,'corriger');
+ assert.deepEqual(j(debut.reglages),{source:'propose',statut:'propose',refus:null,invalides:[],correctionPermise:true,raison:null,zones:{pn:true,adv:true,abords:true,'vert-hors-zone':false,ecartement:true}});assert.equal(debut.modeEffectif,'corriger');
  assert.deepEqual(j(debut.plages.map(x=>[x.debut,x.fin,x.zone])),[[108,116,'abords'],[130,133,'adv']]);
  assert.equal(p.etat,'finie',p.message);assert.equal(p.corriges,2);
  assert.deepEqual(adapter.majEspace.map(x=>x.cut),[109,130],'un vert d’abords et un vert d’ADV, validés par Maj+Espace');

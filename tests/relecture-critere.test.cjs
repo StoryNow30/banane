@@ -75,7 +75,7 @@ test('fichier proposé réel (datasets/relecture-reglages-proposes.json) : lu te
  assert.equal(r.source,'propose');assert.equal(r.statut,'propose');
  assert.deepEqual(r.etagesPermis,['first-pass','window','choice','crossing'],'les quatre étapes qui posent, sans repli sur le défaut');
  assert.deepEqual(JSON.parse(JSON.stringify(r.zones)),{pn:{corriger:true,seuilMm:8,confianceMin:0},adv:{corriger:true,seuilMm:8,confianceMin:0},
-  abords:{corriger:true,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:false,seuilMm:8,confianceMin:0}});
+  abords:{corriger:true,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:false,seuilMm:8,confianceMin:0},ecartement:{corriger:true,seuilMm:8,confianceMin:0}});
  assert.deepEqual(r.roles,['vert']);assert.deepEqual(r.jamais,['cut différé par le lot','cut posé par le lot']);
  assert.equal(r.voie.lateralMaxMm,45);assert.deepEqual(r.coherence,{diffLateraleMaxMm:100,diffVerticaleMaxMm:100,ecartementMaxMm:15});
  assert.equal(r.variante,'chaine+h');assert.equal(r.appuisMin,0,'aucun minimum d’appuis : l’étude n’en a pas');
@@ -84,9 +84,9 @@ test('fichier proposé réel (datasets/relecture-reglages-proposes.json) : lu te
  const pn=bon({zone:'pn',ecartementMm:1445,ecartementRefMm:1435,jugement:{...bon().jugement,etage:'first-pass',appuis:[],ecartMm:ec([9,0],[2,0]),confiance:{left:3,right:50}}});
  assert.equal(Q.juger(pn,r).corriger,true,Q.juger(pn,r).raison);
  for(const etage of ['window','choice','crossing'])assert.equal(Q.juger({...pn,jugement:{...pn.jugement,etage}},r).corriger,true,etage);
- /* Le même cut en ADV ou aux abords : corrigé de la même façon (D-180) ; hors zone, ou à l'écartement seul : reste en ombre. */
- for(const zone of ['adv','abords']){const x=Q.juger({...pn,zone},r);assert.equal(x.corriger,true,zone);assert.equal(x.regle,'ok',zone);}
- for(const zone of ['vert-hors-zone','ecartement']){const x=Q.juger({...pn,zone},r);assert.equal(x.corriger,false);assert.equal(x.regle,'zone',zone);}
+ /* Le même cut en ADV ou aux abords : corrigé de la même façon (D-180) ; à l'écartement seul : de même, le fichier proposé l'ouvre (D-185) ; hors zone : reste en ombre. */
+ for(const zone of ['adv','abords','ecartement']){const x=Q.juger({...pn,zone},r);assert.equal(x.corriger,true,zone);assert.equal(x.regle,'ok',zone);}
+ {const x=Q.juger({...pn,zone:'vert-hors-zone'},r);assert.equal(x.corriger,false);assert.equal(x.regle,'zone','vert-hors-zone');}
  /* Les mêmes gardes dans les trois zones : 8 mm au moins, 45 mm en travers au plus, écartement à 15 mm de la médiane, verts seulement. */
  for(const zone of ['pn','adv','abords']){const z=Q.juger({...pn,zone},r),n=(m)=>Q.juger({...pn,zone,...m},r);
   assert.equal(n({jugement:{...pn.jugement,ecartMm:ec([7.9,0],[0,0])}}).regle,'seuil',zone+' : sous 8 mm');
@@ -106,9 +106,25 @@ test('fichier proposé réel (datasets/relecture-reglages-proposes.json) : lu te
  assert.match(Q.juger({...pn,role:'differe'},r).raison,/jamais un cut différé par le lot/);assert.match(Q.juger({...pn,role:'lot'},r).raison,/jamais un cut posé par le lot/);
 });
 
-test('zone « ecartement » (H5) : jamais corrigée, même avec des réglages qui ouvriraient tout',()=>{
- const tout=Q.reglages({format:'ariane-relecture-reglages-1',zones:{pn:{corriger:true},adv:{corriger:true},abords:{corriger:true},'vert-hors-zone':{corriger:true},ecartement:{corriger:true,seuilMm:1}}});
- const r=Q.juger(bon({zone:'ecartement'}),tout);assert.equal(r.corriger,false);assert.equal(r.regle,'zone');assert.match(r.raison,/ombre seulement/);
+test('zone « ecartement » (H5, D-185) : fermée par défaut et par tout fichier qui ne l\'ouvre pas ; ouverte par un réglage explicite, avec les mêmes limites que les abords',()=>{
+ /* Fermée : le défaut, et des réglages qui ouvrent tout le reste mais pas cette zone. */
+ assert.equal(Q.DEFAUT.zones.ecartement.corriger,false);
+ const sans=Q.reglages({format:'ariane-relecture-reglages-1',zones:{pn:{corriger:true,seuilMm:8,confianceMin:0},adv:{corriger:true,seuilMm:8,confianceMin:0},abords:{corriger:true,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:true,seuilMm:8,confianceMin:0}}});
+ assert.equal(sans.zones.ecartement.corriger,false,'zone absente du fichier : fermée');assert.ok(!sans.invalides.includes('zones.ecartement'),'absente : pas une erreur, simplement fermée');
+ const r=Q.juger(bon({zone:'ecartement'}),sans);assert.equal(r.corriger,false);assert.equal(r.regle,'zone');assert.match(r.raison,/ombre seulement/);
+ /* Ouverte : Mic l'a accepté après son Écho de la partie 11 (cuts 6391, 6416, 7177). */
+ const ouvert=Q.reglages({format:'ariane-relecture-reglages-1',zones:{pn:{corriger:true,seuilMm:8,confianceMin:0},adv:{corriger:true,seuilMm:8,confianceMin:0},abords:{corriger:true,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:false,seuilMm:8,confianceMin:0},ecartement:{corriger:true,seuilMm:8,confianceMin:0}}});
+ assert.deepEqual(JSON.parse(JSON.stringify(ouvert.zones.ecartement)),{corriger:true,seuilMm:8,confianceMin:0});
+ const forte=bon({zone:'ecartement',jugement:{...bon().jugement,ecartMm:ec([-14,1],[-13,0])}});
+ const o=Q.juger(forte,ouvert);assert.equal(o.corriger,true);assert.match(o.raison,/zone ecartement/);
+ /* Mêmes limites que les autres zones : seuil, voie (45 mm), cohérence, écartement, rôle. */
+ assert.equal(Q.juger({...forte,jugement:{...forte.jugement,ecartMm:ec([7,1],[6,0])}},ouvert).regle,'seuil');
+ assert.equal(Q.juger({...forte,jugement:{...forte.jugement,ecartMm:ec([46,0],[40,0])}},ouvert).regle,'voie');
+ assert.equal(Q.juger({...forte,ecartementMm:1451},ouvert).regle,'coherence');
+ assert.equal(Q.juger({...forte,role:'differe'},ouvert).regle,'role');assert.equal(Q.juger({...forte,role:'lot'},ouvert).regle,'role');
+ /* Une zone mal écrite est signalée et reste fermée. */
+ const mal=Q.reglages({format:'ariane-relecture-reglages-1',zones:{ecartement:{corriger:'true',seuilMm:8}}},'propose');
+ assert.ok(mal.invalides.includes('zones.ecartement.corriger'));assert.equal(mal.zones.ecartement.corriger,false);
 });
 
 /* Revue de la relecture (D-175, correction 5) et D-180 : des réglages qui ne sont pas sûrs ne s'ouvrent jamais, même si le défaut du module

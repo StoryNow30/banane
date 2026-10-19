@@ -15,7 +15,7 @@ test('fichier réel : verts de PN et d’abords corrigés (8 mm et plus, premier
  b.store.events.push({eventId:'pn-essai',timestamp:new Date().toISOString(),type:'regles-metier-ombre',portee:'cut',batchId:lotId,identity:{part:23,cut:111},zone:{pnControle:[107,110]}});
  const p=await H.finPasse(b);
  const debut=H.evenements(b,'relecture-debut')[0];
- assert.deepEqual(j(debut.reglages),{source:'propose',statut:'propose',refus:null,invalides:[],correctionPermise:true,raison:null,zones:{pn:true,adv:true,abords:true,'vert-hors-zone':false}});assert.equal(debut.variante,'chaine+h');assert.equal(debut.modeEffectif,'corriger');
+ assert.deepEqual(j(debut.reglages),{source:'propose',statut:'propose',refus:null,invalides:[],correctionPermise:true,raison:null,zones:{pn:true,adv:true,abords:true,'vert-hors-zone':false,ecartement:true}});assert.equal(debut.variante,'chaine+h');assert.equal(debut.modeEffectif,'corriger');
  assert.deepEqual(j(debut.parZone),{pn:4,adv:0,abords:4,'vert-hors-zone':0,ecartement:0},'107–110 en PN ; 113 à 116 aux abords');
  assert.deepEqual(j(debut.plages.map(x=>[x.debut,x.fin,x.zone])),[[107,110,'pn'],[111,116,'abords']],'une plage par type de zone');
  assert.equal(p.etat,'finie',p.message);assert.equal(p.corriges,3);

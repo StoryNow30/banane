@@ -132,6 +132,17 @@ Le rapport G1 complet (JSON) est identique avant et après. Les cas neufs ont é
 
 Essais : `tests/jointure-echo-orbite-cadres.test.cjs` (12 essais, fixtures synthétiques, parties 94 à 96 : deux pages dans le lot, plusieurs cadres de même translation, cadre non calibré, rechargement de page et captures vides, deux comptes, sessions qui se chevauchent ou non).
 
+## La raison de la correction (RM-11, 4.9.5 test 9)
+
+Quand l'opérateur a tapé une raison dans Écho (fiches/RM11_RAISON_CORRECTION.md), la jointure la lit **comme une étiquette**, jamais comme un trait :
+
+- **Ligne d'un cut** : `raisonHumaine` = `{ code, source, serie, apresValidation }`, lue sur la visite qui porte la référence humaine, à défaut sur la dernière visite du cut qui en a une. Raison absente ou effacée (code nul) : le champ n'existe pas, c'est **inconnu**, jamais « bon » ni « autre ».
+- **Mesure de base** (étape 0 de la fiche), sur la visite de référence : `dureeVisiteS` et `gesteValidationS` (temps entre le dernier changement de pose d'un rail et la validation).
+- **CSV** : deux colonnes ajoutées **à la fin**, `raison` et `raisonSource` ; les 25 premières colonnes ne bougent pas.
+- **Résumé** `raison` (seulement s'il y a au moins une raison ou une série) : comptes par code ; **couverture** des corrections de plus de 10 mm et de plus de 5 mm (par touche, collante, sans raison, part étiquetée) ; séries collantes lues dans l'en-tête de l'export (`raisonSeries`, le segment le plus récent l'emporte) ; médiane du temps geste-validation avec et sans raison (corrections de plus de 5 mm) ; couverture des corrections de plus de 10 mm par tranche de 50 cuts (la lassitude).
+- **Jeu d'apprentissage** (`tools/jeu-apprentissage.cjs`) : la raison est recopiée dans `etiquette.raisonHumaine` seulement ; aucun trait ne la reçoit (essai : tests/raison-fuite.test.cjs). Le jeu de la GCV2 (`gcv2-jeu.cjs`) n'est pas dans cette branche : il reprendra le même champ côté étiquette.
+- Sans aucune raison dans l'Écho, la table, le CSV (colonnes finales vides) et le résumé sont ceux d'avant, hors les deux mesures de visite.
+
 ## Limites
 
 - **Pose d'Ariane = pose au moment de la validation** (record du journal, état « corrigé » ; à défaut l'événement `applied-verified`). Si Mic a déplacé un rail avant que le journal ne consigne sa validation, ce déplacement est déjà dans la « pose d'Ariane ». Sur les deux parties, la pose d'Ariane coïncide à 0,000 mm avec la pose initiale vue par l'Écho, ce qui rend l'hypothèse crédible, sans la prouver pour d'autres lots.

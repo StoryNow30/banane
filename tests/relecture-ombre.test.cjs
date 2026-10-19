@@ -156,10 +156,11 @@ test('H5 (audit P-5) : verts à plus de 15 mm de la médiane hors plage, en zone
  const s=R.selection({partie:9,lot:[{cut:100}],zonesPN:[[200,210]],ecartement:[101,205,7047,7048,7049]});
  const z=Object.fromEntries(s.cuts.map(c=>[c.cut,c.zone]));
  assert.equal(z[101],'abords','101 est déjà aux abords du cut 100');assert.equal(z[205],'pn');
- for(const c of [7047,7048,7049])assert.equal(z[c],'ecartement');
- assert.equal(s.plages.at(-1).libelle,'écartement 7047–7049');assert.equal(s.parZone.ecartement,3);
+ for(const c of [7046,7047,7048,7049,7050])assert.equal(z[c],'ecartement');
+ /* D-185 : chaque cut « écartement » est relu avec son cut d'avant et son cut d'après. */
+ assert.equal(s.plages.at(-1).libelle,'écartement 7046–7050');assert.equal(s.parZone.ecartement,6,'7046 à 7050, plus le cut 102 (marge du cut 101, hors des abords du cut 100)');
  /* Plafond : passent après tout le reste. */
- const t=R.selection({partie:9,lot:[{cut:100}],ecartement:[7047]},{plafondCuts:2});assert.deepEqual(t.horsPlafond.map(p=>p.debut),[7047]);
+ const t=R.selection({partie:9,lot:[{cut:100}],ecartement:[7047]},{plafondCuts:2});assert.deepEqual(t.horsPlafond.map(p=>p.debut),[7046]);
 });
 
 /* Revue (F4) : l'écart brut est rendu à côté de l'écart arrondi pour l'affichage. */
@@ -200,9 +201,9 @@ test('plafond par zone : l’ADV ne mange plus le budget des abords ; PN jamais 
  assert.deepEqual(s.cuts.filter(c=>c.zone==='adv').map(c=>c.cut).slice(0,2),[256,257]);
  assert.ok(nb('abords')>0&&nb('abords')<=30,'les abords ont leur budget, même avec une ADV de 434 cuts');
  assert.deepEqual(s.cuts.filter(c=>c.zone==='abords').map(c=>c.cut).filter(c=>c>=897&&c<=907).length>0,true,'grappe 897–907 gardée (priorité grappe)');
- assert.equal(nb('vert-hors-zone'),4,'liste « À contrôler » coupée à 4');
+ assert.equal(nb('vert-hors-zone'),10,'D-185 : la liste « À contrôler » n’est jamais coupée par un budget de zone');
  assert.ok(s.horsPlafond.some(p=>p.debut===316&&p.fin===400)&&s.horsPlafond.some(p=>p.debut===415&&p.fin===689),'reste de l’ADV (de part et d’autre du PN) rendu hors plafond');
- assert.ok(s.horsPlafond.some(p=>p.debut===1504&&p.fin===1509),'reste de la liste rendu hors plafond');
+ assert.ok(!s.horsPlafond.some(p=>p.debut>=1500&&p.fin<=1509),'rien de la liste rendu hors plafond');
  assert.deepEqual(s.plafondParZone,{adv:60,abords:30,'vert-hors-zone':4,ecartement:0});
  /* Sans plafond de zone (null) : tout est relu, comme l'étude. */
  const t=R.selection(entree,{plafondParZone:{adv:null,abords:null,'vert-hors-zone':null,ecartement:null}});
@@ -216,14 +217,50 @@ test('plafond par zone : l’ADV ne mange plus le budget des abords ; PN jamais 
  assert.equal(v.cuts.filter(c=>c.zone!=='pn').length<=20,true);assert.equal(v.cuts.filter(c=>c.zone==='pn').length,14);
 });
 
-test('plafond par zone : valeurs par défaut (mesurées, fiche § 11) — chaque zone a un budget fini, le PN aucun',()=>{
+test('plafond par zone : valeurs par défaut — le PN et l’ADV n’ont aucun budget (D-185), les autres zones un budget fini',()=>{
  const d=R.DEFAULTS.plafondParZone;
  assert.ok(d&&!('pn' in d),'le PN n’a pas de budget');
- assert.deepEqual(JSON.parse(JSON.stringify(d)),{adv:40,abords:70,'vert-hors-zone':20,ecartement:20});
+ assert.deepEqual(JSON.parse(JSON.stringify(d)),{adv:null,abords:70,'vert-hors-zone':20,ecartement:20});
  assert.equal(R.DEFAULTS.plafondCuts,null,'plus de budget unique par défaut');
- /* La passe d'une partie reste de l'ordre de la dizaine de minutes : PN (hors budget) + 150 cuts hors PN au plus, à 3,5 s le cut. */
- assert.ok(Object.values(d).reduce((a,b)=>a+b,0)*3.5/60<=12,'au plus 12 minutes de cuts hors PN');
  /* Appliqués sans option : une ADV de 434 cuts (PN 401–414 dedans) et une grappe d'abords de 11 cuts. */
  const s=R.selection({partie:1,lot:[{cut:900},{cut:902},{cut:904}],zonesADV:[[256,689]],zonesPN:[[401,414]]});
- assert.equal(s.cuts.filter(c=>c.zone==='pn').length,14);assert.equal(s.cuts.filter(c=>c.zone==='adv').length,40);assert.equal(s.cuts.filter(c=>c.zone==='abords').length,8);
+ assert.equal(s.cuts.filter(c=>c.zone==='pn').length,14);assert.equal(s.cuts.filter(c=>c.zone==='adv').length,420,'434 cuts d’ADV moins les 14 du PN : toute l’ADV');assert.equal(s.cuts.filter(c=>c.zone==='abords').length,8);
+});
+
+/* Écho de Mic sur la partie 11 (18/10, D-185) : la relecture avait laissé 15 verts faux de plus de 10 mm. Couverture de la sélection :
+ * plus de plafond en ADV, zones d'ADV proches enchaînées, cuts de la liste « À contrôler » et cuts « écartement » jamais écartés par un
+ * budget, et le cut d'avant et le cut d'après d'un cut isolé (« écartement »). */
+test('D-185 : l’ADV n’a plus de plafond par défaut ; les zones d’ADV de la partie 11 sont relues entières',()=>{
+ assert.equal(R.DEFAULTS.plafondParZone.adv,null,'ADV : aucun plafond');
+ const s=R.selection({partie:11,total:9792,zonesADV:[[6425,6488],[7288,7350],[7388,7470],[8223,8290]]});
+ assert.equal(s.cuts.filter(c=>c.zone==='adv').length,64+183+68,'toutes les zones relues (7288–7470 enchaînées, trou de 37 cuts compris)');
+ assert.equal(s.horsPlafond.length,0);
+});
+
+test('D-185 : deux zones d’ADV séparées de 40 cuts au plus sont enchaînées, comme Mic les contrôle d’un trait ; au-delà, elles restent séparées',()=>{
+ const s=R.selection({partie:11,total:9792,zonesADV:[[7288,7350],[7388,7470]]});
+ assert.deepEqual(plagesDe(s),[[7288,7470]]);
+ const t=R.selection({partie:11,total:9792,zonesADV:[[1000,1050],[1100,1150]]});
+ assert.deepEqual(plagesDe(t),[[1000,1050],[1100,1150]],'trou de 49 cuts : deux plages');
+ const u=R.selection({partie:11,total:9792,zonesADV:[[7288,7350],[7388,7470]]},{adv:{fusionTrouCuts:0}});
+ assert.deepEqual(plagesDe(u),[[7288,7350],[7388,7470]],'réglable à 0 : aucun cut ajouté');
+});
+
+test('D-185 : un cut « écartement » est relu avec son cut d’avant et son cut d’après (7177)',()=>{
+ const s=R.selection({partie:11,total:9792,ecartement:[7177]});
+ assert.deepEqual(cutsDe(s),[7176,7177,7178]);assert.ok(s.cuts.every(c=>c.zone==='ecartement'));
+ const t=R.selection({partie:11,total:9792,ecartement:[7177]},{ecartement:{marge:0}});assert.deepEqual(cutsDe(t),[7177]);
+});
+
+test('D-185 : les cuts de la liste « À contrôler » et les cuts « écartement » passent avant tout plafond de zone',()=>{
+ const entree={partie:11,total:9792,lot:[{cut:300},{cut:302},{cut:304},{cut:900}],aControler:[[1500,1509]],ecartement:[7177],zonesPN:[[100,110]]};
+ const s=R.selection(entree,{plafondParZone:{adv:0,abords:3,'vert-hors-zone':0,ecartement:0}});
+ const c=cutsDe(s);
+ for(const x of [1500,1501,1509,7176,7177,7178])assert.ok(c.includes(x),'cut gardé malgré un plafond de zone : '+x);
+ assert.ok(!c.includes(899),'un cut d’abords sans motif obligatoire reste soumis au plafond');
+});
+
+test('D-185 : les cuts de la liste « À contrôler » situés dans une zone d’ADV sont relus quand l’ADV a un plafond',()=>{
+ const s=R.selection({partie:11,total:9792,zonesADV:[[7388,7470]],aControler:[[7409,7414]]},{plafondParZone:{adv:10,abords:70,'vert-hors-zone':20,ecartement:20}});
+ const c=cutsDe(s);for(let x=7409;x<=7414;x++)assert.ok(c.includes(x),String(x));
 });

@@ -45,6 +45,11 @@
       "corriger": false,
       "seuilMm": 15,
       "confianceMin": 90
+    },
+    "ecartement": {
+      "corriger": false,
+      "seuilMm": 8,
+      "confianceMin": 0
     }
   }
 }

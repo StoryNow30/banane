@@ -1,0 +1,109 @@
+{
+ "_note": "Référence figée avec le code de la test 8 (4.9.5.8, d58a6f1) AVANT la fonction de la test 9. Scénario : tests/helpers/echo-scenario.cjs.",
+ "version": "4.9.5.8",
+ "base": "d58a6f1",
+ "records": "ee38986bc15b4d86bc67ed7c6ca0ec604125e498d2c14d1791dc8a23a2389eb4",
+ "events": "031ea1f2dc60f5f16e05d0d3986556634e152a58d8845d11aadd42f887f9b98c",
+ "native": "ee74938201e40d0e80908d672103d85ff936fc6782dc0bcb52e1024cb2d7c587",
+ "dataset": "c10798f22c79def4a347efd7240297249a9f6df1ffdf0b40b39be4b45a08bd67",
+ "visites": [
+  [
+   "v1",
+   "0d377919e71f7250e27017d72d7139cd3bad39300ecd5dcce452cc6474436191"
+  ],
+  [
+   "v2",
+   "26059250954c723609664a8878451e1f0cc87db79f032c39d373a7548d28bf6e"
+  ],
+  [
+   "v3",
+   "a5f95da3a84f8d0942aecca31da5e922992cb1da58c32095a84e11446811685b"
+  ],
+  [
+   "v4",
+   "76374844ed038c85b4b047835f06e6e4c51ec7a179222e6f3a9709521b291af2"
+  ]
+ ],
+ "evenements": [
+  [
+   "native-session-started",
+   "35b78006e811b2a7b2e7eb064769937ba29d2756a48d45f772251559c0238130"
+  ],
+  [
+   "native-visit-started",
+   "707dcc85b4913ed3df2a11d0c1b45eddc42cc413401df4a119e8ccca76d55a38"
+  ],
+  [
+   "native-operator-event",
+   "77bdf36234978f725db6cc7a41f86c4a17d08d6e23c0b38f7a42a3b277593442"
+  ],
+  [
+   "native-state-observed",
+   "581b5b2970e7a83adcaded1a44af65267d77f43484206c3de347ea659ba6ff9b"
+  ],
+  [
+   "native-operator-event",
+   "1010ad398381214774bb34b614d13c0d3a843d583f2cdb5e155c455fef0a5c31"
+  ],
+  [
+   "native-operator-event",
+   "a32381dd24567fbb7d44bd803d22cb9b963c032fb7e3dd81f1763db199fbd090"
+  ],
+  [
+   "native-operator-event",
+   "f1ef66660adc0f52b1a29acb41388fba020631cc4eea4319d1670e20d595c1d9"
+  ],
+  [
+   "native-visit-ended",
+   "5c145cab26801476bf9078984b847fa63983a0128dd77be7f085c42cee0244b0"
+  ],
+  [
+   "native-visit-started",
+   "d179d2e7a171002d07d046e3d444377d8d4ef358b48caf79cda67756dd06aa7a"
+  ],
+  [
+   "native-operator-event",
+   "c8f1a37141d5ace3bb246821f7b1902010524b390d305f5c8ffcdae11ff36955"
+  ],
+  [
+   "native-operator-event",
+   "6926292e77a1915d598cc824f6a717d8acb34891e1582b986448e2816e0f5b9a"
+  ],
+  [
+   "native-visit-ended",
+   "84954c31d66d876cdcabc82d4a5a7239eb0ce076d165e856099d6ffbefd59f25"
+  ],
+  [
+   "native-visit-started",
+   "4c2e30bf1a03c48c8b55874cbedba4330da8de7db04a88a196204c9ecd66ef80"
+  ],
+  [
+   "native-operator-event",
+   "6438a09fbed935e0633456b50cefbdc9cae8a18d407f03d3125300a84a49f215"
+  ],
+  [
+   "native-visit-ended",
+   "55ba0aeaf29b78f21d9f153c639905b604f3cede1d24111c1322f1e2f3757773"
+  ],
+  [
+   "native-visit-started",
+   "3775bf5c0e08e53ade6bc319335313ec36d6e076e2435bd3ba77649c7a0cb901"
+  ],
+  [
+   "native-state-observed",
+   "02fd8b9535ab33dad3144071917fde5ad1806f4b6014ddb5b8c0da9188118909"
+  ],
+  [
+   "native-operator-event",
+   "47074d4ebeff3ba5a0563565d71d9379a724f8d2a3533fa6078eda143d87a365"
+  ],
+  [
+   "native-visit-ended",
+   "e2c50150f3bf991bbcc3ec73fa177f95c7c21d014b511e7c1d4db7c85b23b42f"
+  ],
+  [
+   "native-session-finished",
+   "087a44fdab8966eff21be0cc4c2284c228ec9792b65654bc61ab9d6d7bfd0ec0"
+  ]
+ ]
+}

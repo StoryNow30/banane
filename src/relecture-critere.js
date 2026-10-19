@@ -34,7 +34,7 @@
   * (zone, `corriger`, `seuilMm`, `voie.lateralMaxMm` au-delà de 45 mm, `roles` autres que les verts, `jamais` sans les cuts du lot) est
   * listé dans `invalides` ; une correction mal écrite reste fermée. `correctionPermise(r)` ne dit oui que pour le fichier proposé, lu
   * sans refus et sans champ invalide : sinon le service worker ramène « corriger » à « ombre » et le dit au panneau. */
- const SIDES=['left','right'],ZONES=['pn','adv','abords','vert-hors-zone'],ETAGES=['first-pass','window','choice','crossing'],VARIANTES=['chaine+h','chaine','seul+h','seul'];
+ const SIDES=['left','right'],ZONES=['pn','adv','abords','vert-hors-zone'],ZONES_OPTION=['ecartement'],ETAGES=['first-pass','window','choice','crossing'],VARIANTES=['chaine+h','chaine','seul+h','seul'];
  const LATERAL_MAX_MM=45,JAMAIS=Object.freeze(['cut différé par le lot','cut posé par le lot']);
  const DEFAUT=Object.freeze({format:'ariane-relecture-reglages-1',statut:'provisoire',
   etagesPermis:Object.freeze(['first-pass','window']),appuisMin:2,roles:Object.freeze(['vert']),
@@ -45,7 +45,9 @@
    pn:Object.freeze({corriger:true,seuilMm:15,confianceMin:85}),
    adv:Object.freeze({corriger:true,seuilMm:8,confianceMin:95}),
    abords:Object.freeze({corriger:true,seuilMm:8,confianceMin:80}),
-   'vert-hors-zone':Object.freeze({corriger:false,seuilMm:15,confianceMin:90})})});
+   'vert-hors-zone':Object.freeze({corriger:false,seuilMm:15,confianceMin:90}),
+   /* D-185 : zone optionnelle, FERMÉE par défaut et par tout fichier qui ne l'ouvre pas (H5, audit P-5). */
+   ecartement:Object.freeze({corriger:false,seuilMm:8,confianceMin:0})})});
  const nombre=(v,min=0,max=1e6)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
  const virgule=v=>String(Math.round(v*10)/10).replace('.',',');
 
@@ -63,6 +65,14 @@
    if(x&&!nombre(y.seuilMm,1,500))invalides.push(`zones.${z}.seuilMm`);
    zones[z]={corriger:typeof y.corriger==='boolean'?y.corriger:false,seuilMm:nombre(y.seuilMm,1,500)?y.seuilMm:d.seuilMm,
     confianceMin:nombre(y.confianceMin,0,100)?y.confianceMin:d.confianceMin};}
+  /* Zones optionnelles : absentes du fichier, elles sont fermées sans rien signaler ; présentes et mal écrites, elles sont signalées et fermées. */
+  for(const z of ZONES_OPTION){const d=DEFAUT.zones[z],x=f.zones?.[z];
+   if(x===undefined){zones[z]={...d};continue;}
+   if(!x||typeof x!=='object'||Array.isArray(x)){invalides.push(`zones.${z}`);zones[z]={...d};continue;}
+   if(typeof x.corriger!=='boolean')invalides.push(`zones.${z}.corriger`);
+   if(!nombre(x.seuilMm,1,500))invalides.push(`zones.${z}.seuilMm`);
+   zones[z]={corriger:typeof x.corriger==='boolean'?x.corriger:false,seuilMm:nombre(x.seuilMm,1,500)?x.seuilMm:d.seuilMm,
+    confianceMin:nombre(x.confianceMin,0,100)?x.confianceMin:d.confianceMin};}
   const c=f.coherence||{},v=f.voie||{};
   const lateralOk=nombre(v.lateralMaxMm,1,LATERAL_MAX_MM);if(!lateralOk)invalides.push('voie.lateralMaxMm');
   const rolesOk=Array.isArray(f.roles)&&f.roles.length>0&&f.roles.every(r=>r==='vert');if(!rolesOk)invalides.push('roles');
@@ -104,9 +114,10 @@
   if(!etages.includes(j.etage))return non('etage',`étage « ${j.etage??'?'} » non permis (${etages.join(', ')})`);
   const appuisMin=Number.isInteger(R.appuisMin)?R.appuisMin:DEFAUT.appuisMin,nAppuis=Array.isArray(j.appuis)?j.appuis.length:0;
   if(nAppuis<appuisMin)return non('appuis',`${nAppuis} appui${nAppuis>1?'s':''} du lot, ${appuisMin} au moins`);
-  /* H5 (audit P-5) : un vert entré pour son seul écartement, hors de toute plage, reste en ombre, quels que soient les réglages. */
-  if(e.zone==='ecartement')return non('zone','vert hors plage entré pour son écartement : ombre seulement');
-  if(!['pn','adv','abords'].includes(e.zone))return non('zone',`zone « ${e.zone??'?'} » : jamais corrigée (D-180)`);
+  /* H5 (audit P-5, rouvert par D-185) : un vert entré pour son seul écartement, hors de toute plage, reste en ombre tant que les réglages
+   * ne l'ouvrent pas EXPLICITEMENT (`zones.ecartement.corriger`, fermé par défaut) ; ouvert, il suit les mêmes limites que les abords. */
+  if(e.zone==='ecartement'&&R.zones?.ecartement?.corriger!==true)return non('zone','vert hors plage entré pour son écartement : ombre seulement');
+  if(!['pn','adv','abords','ecartement'].includes(e.zone))return non('zone',`zone « ${e.zone??'?'} » : jamais corrigée (D-180)`);
   const Z=R.zones?.[e.zone];
   if(!Z)return non('zone',`zone « ${e.zone??'?'} » inconnue`);
   if(Z.corriger!==true)return non('zone',`zone ${e.zone} : correction coupée`);
@@ -131,5 +142,5 @@
    const ref=e.ecartementRefMm,g=Number.isFinite(e.ecartementBrutMm)?e.ecartementBrutMm:e.ecartementMm,d=Math.abs(g-ref);
    if(!(d<=C.ecartementMaxMm))return non('coherence',`écartement ${virgule(e.ecartementMm)} mm, à ${virgule(d)} mm de la référence ${virgule(ref)} mm`);}
   return {corriger:true,regle:'ok',raison:`zone ${e.zone}, écart ${virgule(pire)} mm (seuil ${virgule(Z.seuilMm)}), confiance ${SIDES.map(s=>virgule(conf[s])).join(' / ')}, rails cohérents`};}
- return {DEFAUT,ZONES,ETAGES,VARIANTES,LATERAL_MAX_MM,reglages,correctionPermise,juger};
+ return {DEFAUT,ZONES,ZONES_OPTION,ETAGES,VARIANTES,LATERAL_MAX_MM,reglages,correctionPermise,juger};
 });

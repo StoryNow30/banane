@@ -86,6 +86,8 @@ function etiquette(l) {
     corrige5mm: max === null ? null : max > SEUIL_5,
     corrige10mm: max === null ? null : max > SEUIL_10,
     fauxVert: pose && max !== null ? max > SEUIL_10 : null,
+    /* RM-11 : la raison tapée par l'opérateur est une ÉTIQUETTE (information humaine), jamais un trait ; absente = inconnue, le champ n'existe pas. */
+    ...(l.raisonHumaine ? { raisonHumaine: { code: l.raisonHumaine.code, source: l.raisonHumaine.source, serie: l.raisonHumaine.serie ?? null, apresValidation: l.raisonHumaine.apresValidation === true } } : {}),
   };
 }
 
@@ -130,7 +132,7 @@ function construire(table, options = {}) {
     cuts: cuts.length, avecReference: avecRef.length,
     parClasse: Object.fromEntries([...new Set(cuts.map(c => c.classe))].sort().map(k => [k, compte(c => c.classe === k)])),
     seuilsMm: [SEUIL_5, SEUIL_10],
-    absents: ['zone (M1)', 'raison de la correction (E3)', 'points par rail', 'hors-journal sans traits'],
+    absents: ['zone (M1)', ...(cuts.some(c => c.etiquette.raisonHumaine) ? [] : ['raison de la correction (E3)']), 'points par rail', 'hors-journal sans traits'],
   };
   return { entete, cuts };
 }
