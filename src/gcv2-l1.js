@@ -299,6 +299,83 @@
   * (mêmes mesures que le soutien de H6). Sert à la décision L1-e (src/gcv2-l1e.js) : un rail corrigé à l'écartement de référence n'est posé
   * que si le nuage le soutient à sa nouvelle place. */
  function soutienRail(capture,side,mm){const m=mesuresTranslatees(capture,side,mm,null).sig;return {dessus:m.pointsDessus??0,flanc:m.pointsFlanc??0};}
+ /* Cap 5b — VOIE ABSOLUE des voisins validés : leurs poses (repère scène) lues dans le repère profil de la pose de départ DU CUT, et non comme
+  * décalages depuis leurs propres poses de départ (qui changent d'un cut à l'autre en ADV). Par rail : jusqu'à `parCote` voisins de chaque côté à
+  * `fenetre` cuts au plus ; droite des moindres carrés (travers et hauteur selon la position le long de la voie), valeur en 0 ; et le voisin le
+  * plus proche. Rend { left:{ v:[lat,vert], proche:[lat,vert], distProche, n:{avant,apres}, residuMm }, right } ou null. */
+ function voieAbsolue(capture,cut,voisins,fenetre=6,parCote=3){
+   const pts={left:[],right:[]},vus=new Set();
+   for(const v of voisins||[]){
+     if(!v||!v.identity||!v.positions||!Number.isInteger(v.identity.cut))continue;
+     const dc=v.identity.cut-cut;if(!dc||Math.abs(dc)>fenetre||vus.has(v.identity.cut))continue;
+     const d=Object.fromEntries(SIDES.map(s=>[s,decalage(capture.rails[s],v.positions[s])]));if(!SIDES.every(s=>d[s]))continue;
+     vus.add(v.identity.cut);for(const s of SIDES)pts[s].push({d:d[s],dc});
+   }
+   const out={};
+   for(const s of SIDES){
+     const av=pts[s].filter(q=>q.dc<0).sort((a,b)=>b.dc-a.dc).slice(0,parCote),ap=pts[s].filter(q=>q.dc>0).sort((a,b)=>a.dc-b.dc).slice(0,parCote),P=av.concat(ap);
+     if(!P.length)return null;
+     const pr=P.slice().sort((a,b)=>Math.abs(a.dc)-Math.abs(b.dc))[0];
+     const fit=c=>{const n=P.length,mx=P.reduce((a,q)=>a+q.d[0],0)/n,my=P.reduce((a,q)=>a+q.d[c],0)/n,sxx=P.reduce((a,q)=>a+(q.d[0]-mx)**2,0);
+       const b=n>=2&&sxx>1?P.reduce((a,q)=>a+(q.d[0]-mx)*(q.d[c]-my),0)/sxx:0,a=n>=2&&sxx>1?my-b*mx:pr.d[c];
+       return {v:a,res:n>=3?Math.max(...P.map(q=>Math.abs(q.d[c]-(a+b*q.d[0])))):null};};
+     const fl=fit(1),fv=fit(2);
+     out[s]={v:[arrondi(fl.v,1),arrondi(fv.v,1)],proche:[arrondi(pr.d[1],1),arrondi(pr.d[2],1)],distProche:Math.abs(pr.dc),n:{avant:av.length,apres:ap.length},residuMm:arrondi(fl.res,1)};
+   }
+   return out;
+ }
+ /* Cap 5b — RECHERCHE RECENTRÉE : le moteur (inchangé) relancé sur une capture dont la pose de départ du rail est déplacée à `seeds[s]`
+  * ([lat, vert], mm, repère de la pose de départ du cut) ; ses fenêtres (points à 180 mm, recherche à 80 mm) suivent la nouvelle pose. Rend, par
+  * rail, les cellules FORTES et compétitives de son réservoir (calage de convention compris), en décalages depuis la vraie pose de départ. */
+ function rechercheRecentree(capture,seeds){
+   const rails={...capture.rails};
+   for(const s of SIDES){if(!seeds[s])continue;const rail=capture.rails[s],pos=L.positionOf(rail,[0,seeds[s][0]/1000,seeds[s][1]/1000]);
+     rails[s]=O.translated(rail,pos.map((v,i)=>v-rail.positionSceneRelative[i]));}
+   const capT={...capture,rails};
+   let sci;try{sci=Shadow.scientificProposeBothAvecReservoir(capT);}catch{return null;}
+   const T=Shadow.reservoirOutils,out={};
+   for(const s of SIDES){
+     if(!seeds[s])continue;
+     const r=sci.rails[s];if(!r||!r.ok||!r._reservoir){out[s]=[];continue;}
+     const rs=r._reservoir;
+     out[s]=rs.pool.filter(c=>T.qualifyStrong(c)&&T.inCompetitive(c,rs.lmin)).map(c=>{
+       const brutD=[0,rs.sign*c.u,c.z],cal=Conv.calibrate(capT,s,brutD),fin=cal.applied?cal.delta:brutD;
+       return {mm:decalage(capture.rails[s],L.positionOf(rails[s],fin)),ratio:arrondi(T.lossRatio(c.loss,rs.lmin),3),top:c.topRows,face:c.faceCount,
+         astar:(c.tags||[]).includes('astar-published')};
+     }).filter(x=>x.mm);
+   }
+   return out;
+ }
+ /* Cap 5b — PAIRES RECENTRÉES : cellules fortes de la recherche recentrée sur chaque graine ({ nom, left:[lat,vert], right }), fusionnées par rail
+  * (à 2 mm), puis toutes les paires à `ecartMm` au plus de l'écartement de référence `refMm`. Chaque paire porte son écart à la référence,
+  * son écart en travers et en hauteur à la voie absolue `va` (voisin le plus proche), et les graines qui ont donné ses cellules. */
+ function pairesRecentrees(capture,graines,refMm,va,ecartMm){
+   const C={left:[],right:[]},vues=[];
+   for(const g of graines){
+     if(!g||!SIDES.every(s=>Array.isArray(g[s])&&g[s].every(fini)))continue;
+     /* Graine à moins de 5 mm d'une graine déjà cherchée : même recherche, son nom s'ajoute aux cellules de celle-ci. */
+     const dej=vues.find(v=>SIDES.every(s=>Math.hypot(v[s][0]-g[s][0],v[s][1]-g[s][1])<5));
+     if(dej){dej.noms.push(g.nom);continue;}
+     const vue={left:g.left,right:g.right,noms:[g.nom]};vues.push(vue);
+     const rr=rechercheRecentree(capture,{left:g.left,right:g.right});if(!rr)continue;
+     for(const s of SIDES)for(const x of rr[s]||[]){
+       const d=C[s].find(c=>Math.hypot(c.mm[1]-x.mm[1],c.mm[2]-x.mm[2])<2);
+       if(d){if(!d.vues.includes(vue))d.vues.push(vue);if(x.ratio<d.ratio)d.ratio=x.ratio;}
+       else C[s].push({...x,vues:[vue]});
+     }
+   }
+   for(const s of SIDES)for(const c of C[s]){c.graines=[...new Set(c.vues.flatMap(v=>v.noms))];delete c.vues;}
+   const out=[];
+   for(const l of C.left)for(const r of C.right){
+     const decal={left:l.mm.map(v=>arrondi(v,2)),right:r.mm.map(v=>arrondi(v,2))},dg=refMm-ecartementDecal(capture,decal);
+     if(!(Math.abs(dg)<=ecartMm))continue;
+     const dv=va?SIDES.map(s=>Math.abs(decal[s][1]-va[s].proche[0])):null,dz=va?SIDES.map(s=>Math.abs(decal[s][2]-va[s].proche[1])):null;
+     out.push({decal,dg:arrondi(dg,1),dv:dv?Math.max(...dv):null,dz:dz?Math.max(...dz):null,graines:{left:l.graines,right:r.graines},ratio:{left:l.ratio,right:r.ratio},
+       depl:arrondi(Math.max(norme(decal.left),norme(decal.right)),1)});
+   }
+   out.sort((a,b)=>(a.dv??0)-(b.dv??0)||Math.abs(a.dg)-Math.abs(b.dg));
+   return {paires:out,cellules:C,graines:vues.map(v=>v.noms.join('='))};
+ }
  /* Rupture de série (audit H1) : un appui séparé du cut par un changement de statut ADV rend la voie de référence non sûre. */
  function avecRupture(voie,cut,zones){
    if(!voie)return voie;
@@ -456,7 +533,9 @@
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
-   validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null});
+   validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,
+   rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
+   rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -570,10 +649,50 @@
      const ecartVoie=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0])));
      if(ecartVoie>LEVIERS.vetoVoieMm)dd={etat:'rien',motif:'veto-voie',decal:null,corrigee:false,ecartVoieMm:arrondi(ecartVoie,1)};
    }
+   /* Cap 5b — RECHERCHE RECENTRÉE EN ADV (levier `rechercheADV`, coupé par défaut). Graines : la paire de la test 13, la paire retenue, le voisin
+    * validé le plus proche et la voie ajustée (voie absolue), la pose de départ. Paires de cellules FORTES du moteur recentré à `rechEcartMm` de
+    * l'écartement de référence ; retenue : la plus proche en travers du voisin validé le plus proche (à `rechProcheMaxCuts` cuts au plus), à
+    * `rechVoieMaxMm` au plus en travers (et `rechHauteurMaxMm` en hauteur), unique (aucune autre paire admise à plus de `rechUniqueMm` d'elle),
+    * à `rechMaxDeplMm` au plus du départ. Un « rien » devient « valider » ; une validation (`rechRemplace`) prend la paire recentrée si elle s'en
+    * écarte de plus de `rechRemplaceMm`, et (`rechSansPaireRien`) n'est pas posée sans paire recentrée. */
+   let rech=null;
+   if((LEVIERS.rechercheADV||(LEVIERS.diag&&LEVIERS.rechercheDiag))&&capture&&ref&&fini(ref.mm)&&(LEVIERS.rechZones||['adv']).includes(k.zone)){
+     const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre),lv=a=>a?[a[1],a[2]]:null,gr=[];
+     if(d0.paire)gr.push({nom:'d0',left:lv(d0.paire.left.decal),right:lv(d0.paire.right.decal)});
+     if(dd.decal)gr.push({nom:'dd',left:lv(dd.decal.left),right:lv(dd.decal.right)});
+     if(va){gr.push({nom:'proche',left:va.left.proche,right:va.right.proche});gr.push({nom:'va',left:va.left.v,right:va.right.v});}
+     gr.push({nom:'h0',left:[0,0],right:[0,0]});
+     rech={...pairesRecentrees(capture,gr,ref.mm,va,Math.max(LEVIERS.rechEcartMm,15)),va};
+     /* Hauteur : à `rechHauteurMaxMm` du voisin le plus proche OU de la pose de départ, pour chaque rail. Travers : à `rechVoieMaxMm` au plus, et à
+      * `rechVoieParCutMm` par cut d'écart au voisin le plus proche. */
+     const hOk=p=>!fini(LEVIERS.rechHauteurMaxMm)||SIDES.every(s=>Math.min(Math.abs(p.decal[s][2]-va[s].proche[1]),Math.abs(p.decal[s][2]))<=LEVIERS.rechHauteurMaxMm);
+     const adm=va?rech.paires.filter(p=>Math.abs(p.dg)<=LEVIERS.rechEcartMm&&p.depl<=LEVIERS.rechMaxDeplMm&&p.dv!=null&&p.dv<=LEVIERS.rechVoieMaxMm
+       &&(!fini(LEVIERS.rechVoieParCutMm)||p.dv<=LEVIERS.rechVoieParCutMm*Math.max(1,va.left.distProche,va.right.distProche))&&hOk(p)):[];
+     const best=va&&va.left.distProche<=LEVIERS.rechProcheMaxCuts&&va.right.distProche<=LEVIERS.rechProcheMaxCuts?adm[0]||null:null;
+     const ecart=(a,b)=>Math.max(...SIDES.map(s=>norme(moins(a.decal[s],b.decal[s]))));
+     const ambigu=best?adm.some(p=>p!==best&&ecart(p,best)>LEVIERS.rechUniqueMm):false;
+     rech.choix=best?{dv:arrondi(best.dv,1),dg:best.dg,ambigu,n:adm.length}:{n:adm.length};
+     if(LEVIERS.rechercheADV){
+       if(dd.etat==='rien'&&best&&!ambigu)dd={etat:'valider',motif:'recherche-adv',decal:best.decal,corrigee:false,avant:dd.motif};
+       else if(dd.etat==='valider'){
+         /* Pose contredite : sur un rail, la cellule forte la plus proche trouvée autour de la pose retenue en est à plus de `rechContraMinMm` (et à
+          * `rechContraMaxMm` au plus : au-delà, c'est un autre rail) ; la paire recentrée la remplace, sinon rien. */
+         const contra=fini(LEVIERS.rechContraMinMm)&&SIDES.some(s=>{const c=rech.cellules[s].filter(x=>x.graines.includes('dd'));if(!c.length)return false;
+           const m=Math.min(...c.map(x=>Math.hypot(x.mm[1]-dd.decal[s][1],x.mm[2]-dd.decal[s][2])));return m>LEVIERS.rechContraMinMm&&m<=LEVIERS.rechContraMaxMm;});
+         if(contra)dd=best&&!ambigu?{etat:'valider',motif:'recherche-adv-contredite',decal:best.decal,corrigee:false,avant:dd.motif}:{etat:'rien',motif:'recherche-adv-contredite-rien',decal:null,corrigee:false,avant:dd.motif};
+         else if(LEVIERS.rechRemplace&&best&&!ambigu&&ecart(best,{decal:dd.decal})>LEVIERS.rechRemplaceMm)dd={etat:'valider',motif:'recherche-adv-remplace',decal:best.decal,corrigee:false,avant:dd.motif};
+         else if(LEVIERS.rechSansPaireRien&&(!best||ambigu))dd={etat:'rien',motif:'recherche-adv-sans-paire',decal:null,corrigee:false,avant:dd.motif};
+       }
+     }
+   }
    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
      tous:dd.etat==='rien'&&capture&&ref&&fini(ref.mm)&&(voie||k.voieProche)?(paireConsensus(k,capture,voie||k.voieProche,ref.mm,decal=>SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))||null):null}:null;
+   if(diag&&rech){const lv=a=>[arrondi(a[1],1),arrondi(a[2],1)];
+     diag.voieAbs=rech.va;diag.recherche={graines:rech.graines,choix:rech.choix||null,
+       cellules:Object.fromEntries(SIDES.map(s=>[s,rech.cellules[s].map(x=>[arrondi(x.mm[1],1),arrondi(x.mm[2],1),x.ratio,x.graines.join('+')])])),
+       paires:rech.paires.slice(0,6).map(p=>({l:lv(p.decal.left),r:lv(p.decal.right),dg:p.dg,dv:arrondi(p.dv,1),dz:arrondi(p.dz,1),depl:p.depl,g:p.graines.left.join('+')+'|'+p.graines.right.join('+')})),n:rech.paires.length};}
    if(diag&&dd.decal&&capture){diag.soutien=Object.fromEntries(SIDES.map(s=>{const m=soutienRail(capture,s,dd.decal[s]);return [s,{dessus:m.dessus,flanc:m.flanc}];}));
      diag.ecartRefMm=ref&&fini(ref.mm)?arrondi(ref.mm-ecartementDecal(capture,dd.decal),1):null;
      if(voie)diag.dvMm=arrondi(Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0]))),1);}
@@ -672,6 +791,8 @@
    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
    const k=casDuDiffere({cut:id.cut,zone,hyp,gMed,voieRef});
    if(voieListe)k.voieListe=voieListe;
+   /* Cap 5b : voisins validés en positions de scène (chaîne et, s'il y en a, poses de la GCV2), pour la voie absolue. */
+   k.voisinsAbs=vs.concat(Array.isArray(voisinsTransport)?voisinsTransport.filter(v=>v&&v.identity&&v.positions):[]);
    /* Cap 5 : voie de référence des voisins validés, poses de la GCV2 comprises (`voisinsTransport`) ; sert seulement à la voie des voisins et à la
     * garde de voie de L1-e, jamais aux hypothèses ni aux probabilités. */
    if(Array.isArray(voisinsTransport)&&voisinsTransport.length){
