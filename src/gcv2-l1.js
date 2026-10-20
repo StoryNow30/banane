@@ -320,7 +320,10 @@
        const b=n>=2&&sxx>1?P.reduce((a,q)=>a+(q.d[0]-mx)*(q.d[c]-my),0)/sxx:0,a=n>=2&&sxx>1?my-b*mx:pr.d[c];
        return {v:a,res:n>=3?Math.max(...P.map(q=>Math.abs(q.d[c]-(a+b*q.d[0])))):null};};
      const fl=fit(1),fv=fit(2);
-     out[s]={v:[arrondi(fl.v,1),arrondi(fv.v,1)],proche:[arrondi(pr.d[1],1),arrondi(pr.d[2],1)],distProche:Math.abs(pr.dc),n:{avant:av.length,apres:ap.length},residuMm:arrondi(fl.res,1)};
+     out[s]={v:[arrondi(fl.v,1),arrondi(fv.v,1)],proche:[arrondi(pr.d[1],1),arrondi(pr.d[2],1)],distProche:Math.abs(pr.dc),n:{avant:av.length,apres:ap.length},residuMm:arrondi(fl.res,1),
+       /* Encadrement : interpolation le long de la voie entre le plus proche voisin de chaque côté (null s'il manque un côté). */
+       encadre:av.length&&ap.length?(()=>{const a=av[0],b=ap[0],t=Math.abs(b.d[0]-a.d[0])>1e-6?(0-a.d[0])/(b.d[0]-a.d[0]):0.5;
+         return {v:[arrondi(a.d[1]+t*(b.d[1]-a.d[1]),1),arrondi(a.d[2]+t*(b.d[2]-a.d[2]),1)],saut:arrondi(Math.hypot(b.d[1]-a.d[1],b.d[2]-a.d[2]),1),cuts:[-a.dc,b.dc]};})():null};
    }
    return out;
  }
@@ -549,7 +552,8 @@
    soutienMinDessus:null,soutienMinFlanc:null,
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
-   rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false});
+   rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
+   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -688,9 +692,10 @@
      const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre),lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
      const G={d0:d0.paire?{left:lv(d0.paire.left.decal),right:lv(d0.paire.right.decal)}:null,dd:dd.decal?{left:lv(dd.decal.left),right:lv(dd.decal.right)}:null,
        proche:va?{left:va.left.proche,right:va.right.proche}:null,va:va?{left:va.left.v,right:va.right.v}:null,h0:{left:[0,0],right:[0,0]}};
-     /* Ordre des graines : la pose retenue d'abord (contradiction), puis le voisin, la voie ajustée, la test 13, le départ. `rechGraineDecalMm` :
+     /* Ordre des graines (`rechOrdreGraines`) : par défaut la test 13, la pose retenue, le voisin, la voie ajustée, le départ (celui de b-r2 ; une
+      * graine à moins de `rechDedupMm` d'une graine déjà cherchée n'est pas relancée, l'ordre fixe donc où le moteur est relancé). `rechGraineDecalMm` :
       * graines déplacées en travers (mesure de sensibilité à la fenêtre du moteur seulement). */
-     const gr=['dd','proche','va','d0','h0'].filter(n=>G[n]).map(n=>({nom:n,left:[G[n].left[0]+gd,G[n].left[1]],right:[G[n].right[0]+gd,G[n].right[1]]}));
+     const gr=(LEVIERS.rechOrdreGraines||['d0','dd','proche','va','h0']).filter(n=>G[n]).map(n=>({nom:n,left:[G[n].left[0]+gd,G[n].left[1]],right:[G[n].right[0]+gd,G[n].right[1]]}));
      const filtreDec={minTop:LEVIERS.rechMinTop,minFace:LEVIERS.rechMinFace,ratioMax:LEVIERS.rechRatioMax};
      const diagLarge=LEVIERS.diag&&LEVIERS.rechercheDiag&&LEVIERS.rechDiagLarge;
      const filtreRech=diagLarge?{minTop:Math.min(10,filtreDec.minTop),minFace:Math.min(4,filtreDec.minFace),ratioMax:Math.max(2,filtreDec.ratioMax)}:filtreDec;
@@ -720,6 +725,19 @@
          else if(contra&&LEVIERS.rechContraRien)dd={etat:'rien',motif:'recherche-adv-contredite-rien',decal:null,corrigee:false,avant:dd.motif};
          else if(LEVIERS.rechRemplace&&best&&!ambigu&&ecart(best,{decal:dd.decal})>LEVIERS.rechRemplaceMm)dd={etat:'valider',motif:'recherche-adv-remplace',decal:best.decal,corrigee:false,avant:dd.motif};
          else if(LEVIERS.rechSansPaireRien&&(!best||ambigu))dd={etat:'rien',motif:'recherche-adv-sans-paire',decal:null,corrigee:false,avant:dd.motif};
+       }
+       /* Encadrement (`rechEncadre`) : toujours rien, et un voisin validé de chaque côté à `rechEncadreMaxCuts` cuts au plus, qui se suivent
+        * (écart entre eux de `rechEncadreSautMm` au plus, par rail) : la paire interpolée, chaque rail ramené sur une cellule forte à 5 mm au plus
+        * s'il y en a une (et aucune entre 5 et `rechContraMaxMm`), posée si le nuage soutient les deux rails et si son écartement est à `rechEncadreEcartMm` de la référence. */
+       if(dd.etat==='rien'&&LEVIERS.rechEncadre&&va&&SIDES.every(s=>va[s].encadre&&Math.max(...va[s].encadre.cuts)<=LEVIERS.rechEncadreMaxCuts&&va[s].encadre.saut<=LEVIERS.rechEncadreSautMm)){
+         const decal={};let contreditE=false;
+         for(const s of SIDES){const v=va[s].encadre.v;let b=null;
+           for(const x of rech.cellules[s])if(x.top>=filtreDec.minTop&&x.face>=filtreDec.minFace&&x.ratio<=filtreDec.ratioMax){const e=Math.hypot(x.mm[1]-v[0],x.mm[2]-v[1]);if(!b||e<b.e)b={e,x};}
+           /* Sans cellule forte à 5 mm, aucune ne doit être à `rechContraMaxMm` ou moins : le nuage contredirait l'interpolation. */
+           if(b&&b.e>5&&b.e<=LEVIERS.rechContraMaxMm)contreditE=true;
+           decal[s]=b&&b.e<=5?b.x.mm.map(z=>arrondi(z,2)):[0,v[0],v[1]];}
+         const sout=!contreditE&&SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;});
+         if(sout&&Math.abs(ref.mm-ecartementDecal(capture,decal))<=LEVIERS.rechEncadreEcartMm)dd={etat:'valider',motif:'recherche-adv-encadre',decal,corrigee:false,avant:dd.motif};
        }
      }
    }
