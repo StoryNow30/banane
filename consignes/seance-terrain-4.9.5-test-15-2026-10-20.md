@@ -22,11 +22,14 @@ La sélection d'une paire de rails par son seul écartement de référence a ét
 
 | Partie | Différés : avant → test 15 | Poses jugées à 1 cm ou moins |
 |---|---|---|
-| 19 | 207 → 2 (dont 1 sans nuage) | 234 sur 237 |
-| 20, second lot | 123 → 2 | 171 sur 175 |
-| 11 | 12 → 3 | |
-| 17 | 41 → 18 | |
-| 18 | 37 → 18 | |
+| 19 | 207 → 4 (dont 1 sans nuage) | 234 sur 235 |
+| 20, second lot | 123 → 2 | 173 sur 175 |
+| 11 | 12 → 3 | 6 sur 8 |
+| 6 | 11 → 3 | 6 sur 8 |
+| 13 | 2 → 0 | (pas de correction pour juger) |
+| 17 | 41 → 18 | 17 sur 23 |
+| 18 | 37 → 18 | 14 sur 18 |
+| 20, premier lot | 42 → 37, dont 29 sans nuage exploitable | 7 sur 8 |
 
 Sur toutes ces parties : **0 mauvaise voie, 0 pose à plus de 5 cm**.
 
@@ -89,7 +92,7 @@ Retour arrière :
 
 ## 6. Ce qui n'est pas vérifié
 
-- La test 15 n'a jamais posé dans ESV. Tout vient du rejeu des lots des parties 11, 17, 18, 19 et 20 du second projet.
-- Ces parties ont toutes servi à régler les seuils. On n'a donc pas encore de mesure sur une partie nouvelle.
+- La test 15 n'a jamais posé dans ESV. Tout vient du rejeu des lots des parties 6, 11, 13, 17, 18, 19 et 20 du second projet. Sur la partie 19, le vrai code de l'extension, rejoué cut par cut, prend exactement les décisions du banc (248 sur 248).
+- Ces parties ont presque toutes servi à régler les seuils. On n'a donc pas encore de vraie mesure sur une partie nouvelle.
 - Les parties 17 et 18 gardent 18 différés chacune.
 - Edge n'a pas été vu.
