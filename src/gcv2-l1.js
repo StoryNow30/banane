@@ -456,7 +456,8 @@
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
-   validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null});
+   validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,
+   branche:false,brancheMm:8,brancheVertMm:25,brancheMaxCuts:6,brancheExtrapCuts:1,brancheEcartement:Object.freeze([1380,1520])});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -557,21 +558,29 @@
       * référence ne fait que départager ; nuage (deux rails soutenus), voie et écartement doivent tous trois s'accorder. */
      if(dd.etat==='rien'&&LEVIERS.consensusTous){const t=paireConsensus(k,capture,voieC,ref.mm,soutenu);if(t)dd={etat:'valider',motif:'consensus-tous',decal:t.decal,corrigee:false};}
    }
+   /* Branche (ADV) : sans paire retenue, chaque rail prend l'hypothèse du nuage la plus proche de la voie géométrique de SON rail (à `brancheMm`),
+    * en travers (et à `brancheVertMm` en hauteur), sans imposer l'écartement de la voie (seulement une plage plausible), les deux rails soutenus par le
+    * nuage. Voie interpolée (posés avant et après), ou prolongée d'au plus `brancheExtrapCuts` cut. */
+   if(dd.etat==='rien'&&LEVIERS.branche&&capture&&k.voieGeo&&(k.voieGeo.mode==='interp'||k.voieGeo.mode==='extrap'&&k.voieGeo.distCuts<=LEVIERS.brancheExtrapCuts)&&dd.motif!=='anomalie-non-corrigee'){
+     const g=k.voieGeo,decal={};
+     for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=Math.abs(h.decal[1]-g[s][0]);if(e<=LEVIERS.brancheMm&&Math.abs(h.decal[2]-g[s][1])<=LEVIERS.brancheVertMm&&(!best||e<best.e))best={e,h};}if(best)decal[s]=best.h.decal.slice();}
+     if(SIDES.every(s=>decal[s])){const ga=ecartementDecal(capture,decal);if(ga>=LEVIERS.brancheEcartement[0]&&ga<=LEVIERS.brancheEcartement[1]&&soutenu(decal))dd={etat:'valider',motif:'branche',decal,corrigee:false};}
+   }
    /* Qualité (v5) : sans voie sûre des voisins, une validation de la test 13 exige p ≥ `validerSansVoieMinP` ; un « plus de 150 mm » validé par
     * correction exige une anomalie d'au moins `anomalieMinRienMm` (`anomalieMinRienSansVoieMm` sans voie sûre) et, si `corrigeVoieMaxMm`, une voie sûre à moins de `corrigeVoieMaxMm` en travers. */
    /* Sans voie sûre des voisins (transport ou H6), aucune validation de la GCV2 (`sansVoieRien`) : la preuve du nuage seule ne suffit pas. */
-   if(dd.etat==='valider'&&!voie&&LEVIERS.sansVoieRien)dd={etat:'rien',motif:'sans-voie',decal:null,corrigee:false};
+   if(dd.etat==='valider'&&!voie&&LEVIERS.sansVoieRien&&dd.motif!=='branche')dd={etat:'rien',motif:'sans-voie',decal:null,corrigee:false};
    if(dd.etat==='valider'&&!voie&&d0.etat==='valider'&&fini(LEVIERS.validerSansVoieMinP)&&!(d0.p>=LEVIERS.validerSansVoieMinP))dd={etat:'rien',motif:'sans-voie-p',decal:null,corrigee:false};
    if(dd.etat==='valider'&&d0.etat==='rien'&&dd.corrigee&&c&&fini(LEVIERS.anomalieMinRienMm)&&!(Math.abs(c.ecartMm)>=LEVIERS.anomalieMinRienMm))dd={etat:'rien',motif:'anomalie-faible',decal:null,corrigee:false};
    if(dd.etat==='valider'&&d0.etat==='rien'&&dd.corrigee&&c&&!voie&&fini(LEVIERS.anomalieMinRienSansVoieMm)&&!(Math.abs(c.ecartMm)>=LEVIERS.anomalieMinRienSansVoieMm))dd={etat:'rien',motif:'anomalie-faible-sans-voie',decal:null,corrigee:false};
    if(dd.etat==='valider'&&d0.etat==='rien'&&dd.corrigee&&fini(LEVIERS.corrigeVoieMaxMm)&&(!voie||Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0])))>LEVIERS.corrigeVoieMaxMm))dd={etat:'rien',motif:'corrige-hors-voie',decal:null,corrigee:false};
    /* Garde de voie : une pose validée à plus de `vetoVoieMm` en travers de la voie sûre des voisins validés n'est pas posée. */
-   if(dd.etat==='valider'&&fini(LEVIERS.vetoVoieMm)&&voie&&dd.motif!=='voie-voisins'&&dd.motif!=='consensus'){
+   if(dd.etat==='valider'&&fini(LEVIERS.vetoVoieMm)&&voie&&dd.motif!=='voie-voisins'&&dd.motif!=='consensus'&&dd.motif!=='branche'){
      const ecartVoie=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0])));
      if(ecartVoie>LEVIERS.vetoVoieMm)dd={etat:'rien',motif:'veto-voie',decal:null,corrigee:false,ecartVoieMm:arrondi(ecartVoie,1)};
    }
    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
-     voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
+     voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
      tous:dd.etat==='rien'&&capture&&ref&&fini(ref.mm)&&(voie||k.voieProche)?(paireConsensus(k,capture,voie||k.voieProche,ref.mm,decal=>SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))||null):null}:null;
    if(diag&&dd.decal&&capture){diag.soutien=Object.fromEntries(SIDES.map(s=>{const m=soutienRail(capture,s,dd.decal[s]);return [s,{dessus:m.dessus,flanc:m.flanc}];}));
@@ -642,6 +651,25 @@
    out.interp=interp;out.ecartCuts=ecartCuts;
    out.residuMm=arrondi(res,1);out.sure=avant>=1&&apres>=1&&res<=cfg.residuMaxMm;return out;
  }
+ /* Cap 5, levier « branche » — VOIE GÉOMÉTRIQUE RAIL PAR RAIL : les rails posés du lot (chaîne : voisins ; L1 : transport), en positions de
+  * scène, ramenés dans le repère profil de la pose de départ du cut ; pour chaque rail, la position en travers au cut est interpolée entre le
+  * plus proche posé avant et le plus proche après (le long de la voie), sinon prolongée des deux plus proches d'un même côté. Elle ne transporte
+  * pas une correction : elle suit la géométrie de chaque branche (bifurcation d'ADV : une branche par rail).
+  * Rend { left:[lat,vert], right, mode:'interp'|'extrap', distCuts } ou null. */
+ function voieGeometrique(capture,poses,cut,maxCuts=6){
+   if(!capture||!capture.rails)return null;const pts=[];
+   for(const v of poses||[]){if(!v||!v.identity||!v.positions||v.identity.cut===cut||Math.abs(v.identity.cut-cut)>maxCuts)continue;
+     const d=Object.fromEntries(SIDES.map(s=>[s,decalage(capture.rails[s],v.positions[s])]));if(SIDES.every(s=>d[s]))pts.push({cut:v.identity.cut,d});}
+   if(!pts.length)return null;
+   const av=pts.filter(q=>q.cut<cut).sort((a,b)=>b.cut-a.cut),ap=pts.filter(q=>q.cut>cut).sort((a,b)=>a.cut-b.cut);
+   const lin=(a,b,s,i)=>{const da=b.d[s][0]-a.d[s][0];return Math.abs(da)>1e-6?a.d[s][i]+(0-a.d[s][0])*(b.d[s][i]-a.d[s][i])/da:(a.d[s][i]+b.d[s][i])/2;};
+   let a,b,mode;
+   if(av.length&&ap.length){a=av[0];b=ap[0];mode='interp';}
+   else{const c=av.length?av:ap;if(c.length<2)return {mode:'un-seul',distCuts:Math.abs(c[0].cut-cut)};a=c[0];b=c[1];mode='extrap';}
+   const out={mode,distCuts:Math.max(Math.abs(a.cut-cut),mode==='interp'?Math.abs(b.cut-cut):0)};
+   for(const s of SIDES)out[s]=[arrondi(lin(a,b,s,1),2),arrondi(lin(a,b,s,2),2)];
+   return out;
+ }
  /* Pose de la chaîne refaite par L1-s (vue élargie ou options de L1) sous L1-se : la même correction d'écartement, sur ses décalages.
   * Rend { decal, correction } (decal : corrigé, ou celui de la chaîne). */
  function corrigerPoseChaine(capture,decal,ref){
@@ -672,6 +700,7 @@
    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
    const k=casDuDiffere({cut:id.cut,zone,hyp,gMed,voieRef});
    if(voieListe)k.voieListe=voieListe;
+   k.voieGeo=voieGeometrique(capture,voisins.concat(Array.isArray(voisinsTransport)?voisinsTransport:[]),id.cut,LEVIERS.brancheMaxCuts);
    /* Cap 5 : voie de référence des voisins validés, poses de la GCV2 comprises (`voisinsTransport`) ; sert seulement à la voie des voisins et à la
     * garde de voie de L1-e, jamais aux hypothèses ni aux probabilités. */
    if(Array.isArray(voisinsTransport)&&voisinsTransport.length){
@@ -720,5 +749,5 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer};
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer};
 });

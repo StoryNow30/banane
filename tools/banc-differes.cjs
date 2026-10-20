@@ -241,7 +241,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     M.noter(zoneMem, r0, { differe: !c.pose });
     lignes.push(ligne);
   }
-  /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre de passes) : chaque différé de L1-se est redécidé par la GCV2 avec tout
+  /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre maximal de passes, arrêt dès qu'une passe ne pose plus rien) : chaque différé de L1-se est redécidé par la GCV2 avec tout
    * ce que le lot a posé, avant ET après lui (chaîne : voisins et appuis ; poses L1 : transport). Leviers propres à la passe : `passe2Leviers`. */
   if (profils.includes('L1-se') && leviers.deuxiemePasse) {
     const E = etats['L1-se'], avant = leviers;
@@ -249,7 +249,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     try {
       for (let passe = 1; passe <= leviers.deuxiemePasse; passe++) {
         let poses = 0;
-        for (const r of restes) {
+        /* Sens alterné d'une passe à l'autre : une pose se propage vers l'avant dans une passe, vers l'arrière dans la suivante. */
+        for (const r of passe % 2 ? restes : restes.slice().reverse()) {
           if (r.ligne.profils['L1-se'].etat !== 'differe') continue;
           try {
             const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,
