@@ -562,7 +562,7 @@
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
-   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,
+   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,
    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
@@ -623,8 +623,21 @@
      c=corrigerDecal({capture,decal,ref:ref.mm,gApprox:ecartementPaire(k,hl,hr),ordre:ordreRails(capture,decal,{left:p.left[d0.i],right:p.right[d0.j]})});
    }
    let dd=E.decider(d0,c);
+   /* Cap 5b — `corrigeValideZones` (liste de zones, coupé par défaut) : seules ces zones corrigent par l'écartement une paire que la test 13 valide
+    * elle-même ; ailleurs la paire validée est gardée si le nuage la soutient (hors ADV, l'écartement de la liste n'est pas une preuve contre elle). */
+   if(Array.isArray(LEVIERS.corrigeValideZones)&&dd.etat==='valider'&&dd.corrigee&&d0.etat==='valider'&&d0.paire&&capture&&!LEVIERS.corrigeValideZones.includes(k.zone)){
+     const decal0={left:d0.paire.left.decal,right:d0.paire.right.decal};
+     if(SIDES.every(s=>{const m=soutienRail(capture,s,decal0[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))dd={etat:'valider',motif:null,decal:decal0,corrigee:false,correctionAnnulee:true};
+   }
    /* Anomalie d'écartement qu'aucun rail soutenu ne corrige : la paire de la test 13 n'est pas validée. */
-   if(LEVIERS.anomalieNonCorrigeeRien&&dd.etat==='valider'&&c&&c.anomalie&&!c.soutenue)dd={etat:'rien',motif:'anomalie-non-corrigee',decal:null,corrigee:false};
+   /* Cap 5b — `anomalieNonCorrigeePMin` (coupé par défaut) : si la test 13 valide sa paire avec p au moins égal à ce seuil et que le nuage soutient les
+   * deux rails à leur place, l'anomalie d'écartement que rien ne corrige n'écarte pas la paire (l'écartement de la liste est alors le point douteux). */
+  if(LEVIERS.anomalieNonCorrigeeRien&&dd.etat==='valider'&&c&&c.anomalie&&!c.soutenue){
+    const decal0=d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null;
+    if(fini(LEVIERS.anomalieNonCorrigeePMin)&&d0.etat==='valider'&&decal0&&capture&&d0.p>=LEVIERS.anomalieNonCorrigeePMin&&SIDES.every(s=>{const m=soutienRail(capture,s,decal0[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))
+      dd={etat:'valider',motif:null,decal:decal0,corrigee:false,anomalieGardee:true};
+    else dd={etat:'rien',motif:'anomalie-non-corrigee',decal:null,corrigee:false};
+  }
    /* Voie de référence : celle des voisins validés AVEC les poses de la GCV2 (transport, si le banc ou le lot la donne), sinon celle de H6. */
    /* Voie sûre : transport, H6, liste d'ESV (levier), ou le voisin posé le plus proche s'il est à `voieProcheSureCuts` cut(s) au plus (levier). */
    const voie=k.voieTransport&&k.voieTransport.sure?k.voieTransport:k.voieRef&&k.voieRef.sure?k.voieRef:LEVIERS.voieListe&&k.voieListe&&k.voieListe.sure?k.voieListe

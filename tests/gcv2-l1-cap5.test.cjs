@@ -20,7 +20,7 @@ test('leviers livrés : ceux de la v4 (lus par l\'extension) ; le banc les chang
     rechercheDiag: false, voieAbsFenetre: 6, rechercheADV: false, rechZones: null, rechEcartMm: 10, rechMaxDeplMm: 300, rechVoieMaxMm: 80, rechHauteurMaxMm: null,
     rechProcheMaxCuts: 6, rechUniqueMm: 15, rechRemplace: false, rechRemplaceMm: 5, rechSansPaireRien: false, rechVoieParCutMm: null, rechContraMinMm: null, rechContraMaxMm: 45, rechContraRien: false,
     rechMinTop: 15, rechMinFace: 6, rechRatioMax: 1.5, rechDedupMm: 5, rechArret: false, rechGraineDecalMm: 0, rechDiagLarge: false, rechOrdreGraines: null,
-    rechEncadre: false, rechEncadreMaxCuts: 1, rechEncadreSautMm: 15, rechEncadreEcartMm: 15,
+    rechEncadre: false, rechEncadreMaxCuts: 1, rechEncadreSautMm: 15, rechEncadreEcartMm: 15, corrigeValideZones: null, anomalieNonCorrigeePMin: null,
     /* Cap 6 (A2) : coupés par défaut. */
     voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15 });
   try {
