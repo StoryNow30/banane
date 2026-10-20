@@ -1,8 +1,8 @@
 # Banane V4 TEST — journal des versions
 
-## 4.9.5.15 — 4.9.5 test 15 (L1-e v4) (20/10)
+## 4.9.5.15 — 4.9.5 test 15 (L1-e4) (20/10)
 
-Manifeste `4.9.5.15`, « 4.9.5 test 15 (L1-e v4) », paquet `ariane-4.9.5-test.15.zip` ; base : la 4.9.5 test 14 avec les leviers v4 du cap 5 (`claude/50-l1-cap5`, `fiches/L1_APPRENTISSAGE.md`).
+Manifeste `4.9.5.15`, « 4.9.5 test 15 (L1-e4) », paquet `ariane-4.9.5-test.15.zip` ; base : la 4.9.5 test 14 avec les leviers v4 du cap 5 (`claude/50-l1-cap5`, `fiches/L1_APPRENTISSAGE.md`).
 **Le lot change, sur ses différés seulement** : profil du lot `'L1-se'` par défaut (inchangé), décision L1-e avec les leviers livrés v4 (`LEVIERS_LIVRES`, `src/gcv2-l1.js`) : écartement exact, autre rail si le premier n'est pas soutenu, anomalie de 10 à 45 mm, sous τ validé si l'écartement est cohérent (8 mm) et soutenu, voie des voisins avec raffinement obligatoire (8 mm), transport des poses L1 du lot vers la voie de référence (service worker), anomalie non corrigée → rien, veto de voie à 45 mm, consensus à trois preuves (deux rails soutenus, écartement de référence ± 10 mm, voie des voisins ± 15 mm en travers). Sélection par écartement de référence (v5) coupée.
 Consigne : `consignes/seance-terrain-4.9.5-test-15-2026-10-20.md` ; retour arrière : la 4.9.5 test 14 (désactiver, redécompresser, réactiver, Recharger, F5).
 

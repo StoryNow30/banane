@@ -1,4 +1,4 @@
-# Séance terrain « 4.9.5 test 15 (L1-e v4) » : la GCV2 pose davantage de différés, à moins d'un centimètre de toi
+# Séance terrain « 4.9.5 test 15 (L1-e4) » : la GCV2 pose davantage de différés, à moins d'un centimètre de toi
 
 **Ce qui change par rapport à la test 14 : seulement les différés.**
 
@@ -36,7 +36,7 @@ Sur toutes ces parties : **0 mauvaise voie, 0 pose à plus de 5 cm**.
 2. **Contrôle l'empreinte du zip** (PowerShell, dans le dossier du zip) : `Get-FileHash .\ariane-4.9.5-test.15.zip -Algorithm SHA256`. Les 64 caractères doivent être ceux de mon message, sinon n'installe pas.
 3. **Pose la test 15 par-dessus la test 14** : décompresse le zip dans le même dossier, en remplaçant les fichiers. Dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane.
 4. **F5 sur l'onglet ESV**, puis choisis-le dans Ariane.
-5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 15 (L1-e v4) ».
+5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 15 (L1-e4) ».
 
 Il n'y a rien à régler : le nouveau comportement est actif pour chaque lot.
 

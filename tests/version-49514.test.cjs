@@ -1,5 +1,5 @@
 'use strict';
-/* Version de test 4.9.5.15, nom « 4.9.5 test 15 (L1-e v4) » : la test 14 avec les leviers v4 de la décision L1-e (fiches/L1_APPRENTISSAGE.md, cap 5 :
+/* Version de test 4.9.5.15, nom « 4.9.5 test 15 (L1-e4) » : la test 14 avec les leviers v4 de la décision L1-e (fiches/L1_APPRENTISSAGE.md, cap 5 :
  * correction exacte, autre rail, voie des voisins, transport des poses du lot, consensus à trois preuves). Rappel de la test 14 :
  * version 4.9.5.14, la test 13, plus le profil du lot « L1-se » par défaut (fiches/L1_APPRENTISSAGE.md :
  * décision L1-e des différés, correction d'écartement apprise sur les Échos, plus de pose sans validation ; src/gcv2-l1e.js). Rappel de la test 13 :
@@ -16,8 +16,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.5.15',NOM='4.9.5 test 15 (L1-e v4)';
-test('manifeste et core : 4.9.5.15 / « 4.9.5 test 15 (L1-e v4) »',()=>{
+const VERSION='4.9.5.15',NOM='4.9.5 test 15 (L1-e4)';
+test('manifeste et core : 4.9.5.15 / « 4.9.5 test 15 (L1-e4) »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
  assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
 });
