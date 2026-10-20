@@ -1,5 +1,7 @@
 'use strict';
-/* Version de test 4.9.5.14, nom « 4.9.5 test 14 (L1-e) » : la test 13, plus le profil du lot « L1-se » par défaut (fiches/L1_APPRENTISSAGE.md :
+/* Version de test 4.9.5.15, nom « 4.9.5 test 15 (L1-e v4) » : la test 14 avec les leviers v4 de la décision L1-e (fiches/L1_APPRENTISSAGE.md, cap 5 :
+ * correction exacte, autre rail, voie des voisins, transport des poses du lot, consensus à trois preuves). Rappel de la test 14 :
+ * version 4.9.5.14, la test 13, plus le profil du lot « L1-se » par défaut (fiches/L1_APPRENTISSAGE.md :
  * décision L1-e des différés, correction d'écartement apprise sur les Échos, plus de pose sans validation ; src/gcv2-l1e.js). Rappel de la test 13 :
  * la test 9, plus le PROFIL DU LOT « L1 » (D-219, fiches/L1_DIFFERES.md : la GCV2 sur les
  * différés du lot, pose sans validation sous τ, vue déplacée, garde de paire éteinte, appuis à 10 cuts ; le profil « actuel » garde le lot
@@ -14,8 +16,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.5.14',NOM='4.9.5 test 14 (L1-e)';
-test('manifeste et core : 4.9.5.14 / « 4.9.5 test 14 (L1-e) »',()=>{
+const VERSION='4.9.5.15',NOM='4.9.5 test 15 (L1-e v4)';
+test('manifeste et core : 4.9.5.15 / « 4.9.5 test 15 (L1-e v4) »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
  assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
 });
@@ -31,9 +33,9 @@ test('aucune trace d’une autre version de test dans les chaînes de version li
  assert.ok(!/VERSION\|\|'4\.9\.(0[.']|5\.[1-9]')/.test(read('background.js')),'background.js');
  assert.ok(!/home:'4\.9\.(0|5 test [1-9]')/.test(read('panel.js')),'panel.js');
 });
-test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13 et 4.9.5.14 portent l’observateur',()=>{
+test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14 et 4.9.5.15 portent l’observateur',()=>{
  const {measure}=require('../tools/perf-phases.cjs');
- const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
+ const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13','4.9.5.14',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
  for(const v of versions)assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);
  assert.equal(measure({version:'4.9.0.1',events:[]}).observations.observerExpected,undefined,'4.9.0.1 : avant l’observateur');
 });

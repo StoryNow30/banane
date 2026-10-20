@@ -27,7 +27,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.14').join('4.9.5.8').split('4.9.5 test 14 (L1-e)').join('4.9.5 test 8'):lire(f);
+  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.15').join('4.9.5.8').split('4.9.5 test 15 (L1-e v4)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
