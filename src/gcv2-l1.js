@@ -551,7 +551,7 @@
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
-   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null});
+   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -622,7 +622,11 @@
    * deux rails à leur place, l'anomalie d'écartement que rien ne corrige n'écarte pas la paire (l'écartement de la liste est alors le point douteux). */
   if(LEVIERS.anomalieNonCorrigeeRien&&dd.etat==='valider'&&c&&c.anomalie&&!c.soutenue){
     const decal0=d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null;
-    if(fini(LEVIERS.anomalieNonCorrigeePMin)&&d0.etat==='valider'&&decal0&&capture&&d0.p>=LEVIERS.anomalieNonCorrigeePMin&&SIDES.every(s=>{const m=soutienRail(capture,s,decal0[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))
+    /* Garde indépendante de p (`anomalieNonCorrigeeVoieMm`, si réglée) : les deux rails de la paire à cette valeur au plus, en travers, du voisin validé
+     * le plus proche (voie absolue, `rechProcheMaxCuts` cuts au plus) ; sans voisin proche, la paire n'est pas gardée. */
+    const voieOk=()=>{if(!fini(LEVIERS.anomalieNonCorrigeeVoieMm))return true;const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre);
+      return !!va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts&&Math.abs(decal0[s][1]-va[s].proche[0])<=LEVIERS.anomalieNonCorrigeeVoieMm);};
+    if(fini(LEVIERS.anomalieNonCorrigeePMin)&&d0.etat==='valider'&&decal0&&capture&&d0.p>=LEVIERS.anomalieNonCorrigeePMin&&SIDES.every(s=>{const m=soutienRail(capture,s,decal0[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;})&&voieOk())
       dd={etat:'valider',motif:null,decal:decal0,corrigee:false,anomalieGardee:true};
     else dd={etat:'rien',motif:'anomalie-non-corrigee',decal:null,corrigee:false};
   }

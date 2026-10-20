@@ -35,3 +35,38 @@ test('paires recentrées : seulement à l\'écartement de référence ; graines 
   assert.ok(r.paires.some(p => Math.abs(p.decal.left[1] + 38) < 3 && Math.abs(p.decal.right[1] - 29) < 3));
   assert.equal(L1.pairesRecentrees(base, [{ nom: 'a', left: [0, 0], right: [0, 0] }], g + 200, null, 10).paires.length, 0, 'écartement hors référence : aucune paire');
 });
+
+/* Cap 5b — gardes sur la correction d'écartement (leviers coupés par défaut). Cas fabriqué sur la capture réelle d'essai : rails soutenus par le nuage
+ * à (-36, 5) et (20, 5) ; la test 13 valide cette paire (p 0,81). */
+function casSoutenu(zone) {
+  const h = (decal, origines, g) => ({ rang: 0, hauteur: false, origines, sousOrigines: [], decal, g, x: null });
+  return { cut: 4, zone, gMed: 1450, G0: 1500, voieRef: null, i0: { left: 0, right: 0 },
+    rails: { left: { hyps: [h([0, 0, 0], ['H0'], 1450), h([0, -36, 5], ['H1'], 1486)] }, right: { hyps: [h([0, 0, 0], ['H0'], 1450), h([0, 20, 5], ['H2'], 1470)] } } };
+}
+const MOD = { seuils: { abords: { actif: true, tau: 0.44, delta: 2 }, adv: { actif: true, tau: 0.44, delta: 2 }, hors: { actif: true, tau: 0.45, delta: 3 } } };
+const PR = { left: [0.2, 0.9], right: [0.2, 0.9] };
+const decider = (zone, dg, lev) => { const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] }); L1.reglerLeviers(lev);
+  try { return L1.deciderL1e(casSoutenu(zone), MOD, { mm: g + dg }, base, PR); } finally { L1.reglerLeviers(null); } };
+
+test('anomalieNonCorrigeePMin : anomalie sans correction possible, paire de la test 13 gardée si p assez haut et nuage favorable ; coupé par défaut', () => {
+  assert.equal(decider('adv', 25, null).motif, 'anomalie-non-corrigee', 'défaut : rien');
+  const d = decider('adv', 25, { anomalieNonCorrigeePMin: 0.8 });
+  assert.equal(d.etat, 'valider'); assert.deepEqual(d.paire.left.decal, [0, -36, 5]); assert.equal(d.correction.appliquee, false);
+  assert.equal(decider('adv', 25, { anomalieNonCorrigeePMin: 0.9 }).motif, 'anomalie-non-corrigee', 'p 0,81 sous le seuil 0,9');
+  /* Garde de voie : le voisin validé le plus proche (cut 3) doit être à 35 mm au plus, en travers, sur chaque rail. */
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const voisin = lat => ({ identity: { part: 1, cut: 3, frameId: null }, positions: pos(lat, 5) });
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const avec = (voisins, lev) => { L1.reglerLeviers({ anomalieNonCorrigeePMin: 0.8, ...lev }); try { const k = { ...casSoutenu('adv'), voisinsAbs: voisins }; return L1.deciderL1e(k, MOD, { mm: g + 25 }, base, PR); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec(null, { anomalieNonCorrigeeVoieMm: 35 }).motif, 'anomalie-non-corrigee', 'sans voisin : pas gardée');
+  assert.equal(avec([voisin({ left: -26, right: 25 })], { anomalieNonCorrigeeVoieMm: 35 }).etat, 'valider', 'voisin à 10 et 5 mm');
+  assert.equal(avec([voisin({ left: -26, right: 62 })], { anomalieNonCorrigeeVoieMm: 35 }).motif, 'anomalie-non-corrigee', 'voisin à 42 mm sur le rail droit : refusée');
+  assert.equal(avec([voisin({ left: -26, right: 62 })], {}).etat, 'valider', 'sans la garde de voie : gardée (garde coupée)');
+});
+
+test('corrigeValideZones : hors des zones listées, la paire validée par la test 13 n\'est pas corrigée par l\'écartement ; coupé par défaut', () => {
+  const dflt = decider('abords', -15, null); assert.equal(dflt.correction.appliquee, true, 'défaut : corrigée');
+  const ab = decider('abords', -15, { corrigeValideZones: ['adv'] });
+  assert.equal(ab.etat, 'valider'); assert.equal(ab.correction.appliquee, false); assert.deepEqual(ab.paire.left.decal, [0, -36, 5]); assert.deepEqual(ab.paire.right.decal, [0, 20, 5]);
+  assert.equal(decider('adv', -15, { corrigeValideZones: ['adv'] }).correction.appliquee, true, 'en ADV : corrigée comme avant');
+});
