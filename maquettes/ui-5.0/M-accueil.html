@@ -153,7 +153,7 @@ button{font:inherit;color:inherit}
 .row:hover{background:rgba(255,255,255,.045)}.row.sel{background:rgba(255,255,255,.085);box-shadow:inset 3px 0 0 var(--marque,#fff)}
 .row .c{font:600 14px var(--mono)}.row .s{color:var(--tx2);font-size:13.5px}.row .ok{color:var(--ok);font-weight:650;font-size:13.5px;display:inline-flex;gap:6px;align-items:center}
 .row .acts{display:flex;gap:6px;justify-content:flex-end;opacity:0;transition:opacity .15s}.row:hover .acts,.row.sel .acts{opacity:1}
-.d-row{grid-template-columns:20px 64px 1fr 220px 64px}
+.d-row{grid-template-columns:20px 64px 260px 1fr 64px}
 .r-row{grid-template-columns:20px 64px 1fr 140px 120px 230px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;padding:6px 20px 18px;font-size:14px;margin:0}.kv dt{color:var(--tx2)}.kv dd{margin:0;text-align:right}
 .avis{margin:0 20px 18px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13.5px;color:rgba(255,255,255,.88)}
@@ -163,6 +163,25 @@ button{font:inherit;color:inherit}
 .filtres button[aria-pressed=true]{background:#fff;color:#0b0b12}
 .filtres b{margin-left:5px;font-weight:700}
 
+
+/* Orbite : grand titre à gauche, carte de suivi à droite, corail ample, liste sombre dessous */
+.scene{position:relative;z-index:1;flex:none;display:grid;grid-template-columns:1fr 370px;gap:40px;align-items:center;padding:18px 36px 0}
+.scene .nom{display:flex;align-items:center;gap:12px;font-size:20px}
+.scene .nom .picto{width:40px;height:40px;border-radius:12px}.scene .nom .picto svg{width:21px;height:21px}
+.scene .nom b{font-weight:750;letter-spacing:-.015em}.scene .nom span{color:rgba(255,255,255,.8);font-weight:500}
+.scene h2{font-size:60px;line-height:1;font-weight:800;letter-spacing:-.04em;margin:18px 0 12px}
+.scene .phr{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.scene p{margin:12px 0 0;font-size:16.5px;color:rgba(255,255,255,.9);max-width:50ch}
+.suivi{padding:22px 22px 20px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),rgba(10,6,14,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.05),0 30px 60px -30px rgba(0,0,0,.9);backdrop-filter:blur(16px)}
+.suivi .n{font-size:46px;font-weight:800;letter-spacing:-.04em;line-height:1}.suivi .n b{display:inline-block;font-weight:800}.suivi .n span{font-size:16px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.86)}
+.suivi .d{display:flex;gap:16px;margin:12px 0 14px;font-size:14px;color:rgba(255,255,255,.9)}.suivi .d span{display:inline-flex;align-items:center;gap:6px}.suivi .d .r{margin-left:auto;color:rgba(255,255,255,.72)}
+.suivi .cour{display:flex;align-items:flex-start;gap:10px;margin-top:14px;font-size:14.5px;min-height:44px;line-height:1.4}.suivi .cour .spin{margin-top:2px}.suivi .cour b{font-family:var(--mono)}
+.suivi .act{display:flex;align-items:center;gap:12px;margin-top:14px}.suivi .act small{font-size:13px;color:rgba(255,255,255,.72)}
+/* position dans la partie : une autre lecture que la barre (où en est le lot dans la partie, où sont les différés) */
+.position{position:relative;z-index:1;flex:none;margin:18px 36px 0;padding:14px 20px 16px;border-radius:18px;background:rgba(8,6,12,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.position .t{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.76)}
+.position .t b{color:#fff;font-weight:650}
+.position svg{display:block;width:100%;height:38px;margin-top:4px;overflow:visible}
 .curseur{position:absolute;z-index:20;left:590px;top:400px;width:22px;height:22px;pointer-events:none;transition:left .8s cubic-bezier(.45,0,.2,1),top .8s cubic-bezier(.45,0,.2,1),transform .12s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
 .curseur.clic{transform:scale(.8)}
 </style></head>
@@ -229,18 +248,28 @@ function orbite(){const s=S(),fin=phase==='fin',cours=enCours(),dem=phase==='dem
   :cours?`<button class="pill" id="cmd" data-act="pause"><span class="lbl">${ic('pause')} Pause</span></button>`
   :fin?`<button class="pill" id="cmd" data-go="revue"><span class="lbl">Examiner les 20 cuts</span></button>`
   :`<button class="pill" id="cmd" data-act="reprendre"><span class="lbl">${ic('play')} Reprendre au cut ${s.suiv}</span></button>`;
- const ligne=dem?`<span class="spin"></span>Ariane finit le <b>cut ${s.cours}</b>, puis s’arrête. Aucun nouveau cut ne sera ouvert.`
-  :cours?`<span class="spin"></span>Pose en cours sur le <b>cut ${s.cours}</b><small>médiane observée : 8 s par cut</small>`
-  :fin?'Relecture automatique terminée : 85 relus, 41 corrigés.':`Dernière validation : <b>cut ${s.der}</b>, ${s.quand}`;
+ const ligne=dem?`<span class="spin"></span><span>Ariane finit le <b>cut ${s.cours}</b>, puis s’arrête. Aucun nouveau cut ne sera ouvert.</span>`
+  :cours?`<span class="spin"></span><span>Pose en cours sur le <b>cut ${s.cours}</b></span>`
+  :fin?'<span>Relecture automatique terminée : 85 relus, 41 corrigés.</span>':`<span>Dernière validation : <b>cut ${s.der}</b>, ${s.quand}</span>`;
+ const titre=fin?'Lot terminé':'Pose des rails';
+ const phrase=cours?'Ariane pose et valide chaque cut, puis passe au suivant. Pendant le lot, ne change pas de cut dans ESV.'
+  :fin?'Les 20 cuts que toi seul peux juger t’attendent dans la Revue.':'Le lot reprendra au cut suivant, sans repasser sur ceux déjà validés.';
+ /* position : les cuts ciblés dans l'ordre du lot ; repères = différés à leur rang ; trait = cut en cours ou dernier validé */
+ const W=1068,x=k=>k/120*W,front=fin?120:s.tr,diffs=fin?[6,13,19,26,40,52,61,77,88,96,113]:[6,13,19,26];
+ let g=`<line x1="0" y1="22" x2="${W}" y2="22" stroke="rgba(255,255,255,.16)" stroke-width="2"/><line x1="0" y1="22" x2="${x(front)}" y2="22" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
+ for(const k of diffs)g+=`<rect x="${x(k)-1.5}" y="14" width="3" height="16" rx="1.5" fill="#ffc043"/>`;
+ if(!fin)g+=`<line x1="${x(front)}" y1="6" x2="${x(front)}" y2="34" stroke="#fff" stroke-width="2"/><text x="${x(front)+8}" y="12" fill="#fff" font-size="12.5" font-family="JetBrains Mono" font-weight="600">${cours?s.cours:s.der}</text>`;
  return haut('orbite')+
- `<div class="tete">${picto('orbite')}<div><h2>Orbite · partie 13</h2><div class="sous">${pastille()}<span>jusqu’à la fin de la partie</span></div></div><span class="sp"></span>${cmd}</div>
- <section class="module"><div class="ligne"><div class="n"><b id="num">${s.tr}</b> <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i><span id="pos">${s.po}</span> posés</span><span><i class="m d"></i>${s.di} différés</span></div><span class="sp"></span>
-  <div class="d" style="color:rgba(255,255,255,.78)">${fin?'':`${120-s.tr} restants`}</div></div>${barre(s.po,s.di,120,phase==='lot')}<div class="cour" id="cour">${ligne}</div></section>
- <div class="cols"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${cours?'à reprendre après le lot':'à reprendre'}</small></div>
+ `<section class="scene"><div><div class="nom">${picto('orbite')}<b>Orbite</b><span>· partie 13</span></div>
+   <h2>${titre}</h2><div class="phr">${pastille()}<span style="color:rgba(255,255,255,.8);font-size:14px">jusqu’à la fin de la partie</span></div><p>${phrase}</p></div>
+  <div class="suivi"><div class="n"><b id="num">${s.tr}</b> <span>sur 120 cuts traités</span></div>
+   <div class="d"><span><i class="m p"></i><span id="pos">${s.po}</span> posés</span><span><i class="m d"></i>${s.di} différés</span>${fin?'':`<span class="r">${120-s.tr} restants</span>`}</div>
+   ${barre(s.po,s.di,120,phase==='lot')}<div class="cour" id="cour">${ligne}</div>
+   <div class="act">${cmd}${cours&&!dem?'<small>médiane observée : 8 s par cut</small>':''}</div></div></section>
+ <section class="position"><div class="t"><span><b>Position dans la partie</b> · cuts ciblés dans l’ordre du lot, différés en ambre</span><span>${fin?'fin de la partie atteinte':'fin de la partie'}</span></div><svg viewBox="0 0 ${W} 38" preserveAspectRatio="none" role="img" aria-label="Position du lot dans la partie">${g}</svg></section>
+ <div class="cols" style="grid-template-columns:1fr;margin-top:18px"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${cours?'à reprendre après le lot':'à reprendre'}</small></div>
   <div class="entetes d-row"><span></span><span>Cut</span><span>Motif</span><span>Précision</span><span style="text-align:right">Heure</span></div>
-  <div class="defile">${DIFF.map(([c,m,p,h])=>`<div class="row d-row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">${p}</span><span class="s" style="text-align:right">${h}</span></div>`).join('')}</div></section>
-  <section class="panneau"><div class="ph"><h3>Ce lot</h3></div><dl class="kv"><dt>Bornes</dt><dd>4781 → fin de partie</dd><dt>Relecture après le lot</dt><dd>relire et corriger</dd><dt>Clic de départ</dt><dd>automatique</dd></dl>
-  ${cours?'<p class="avis">Pendant le lot, ne change pas de cut dans ESV : Ariane travaille sur le cut ouvert.</p>':''}</section></div>`;}
+  <div class="defile">${DIFF.map(([c,m,p,h])=>`<div class="row d-row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">${p}</span><span class="s" style="text-align:right">${h}</span></div>`).join('')}</div></section></div>`;}
 
 function echo(){const indispo=enCours();return haut('echo')+
  `<div class="tete">${picto('echo')}<div><h2>Écho · partie 13</h2><div class="sous">Tu corriges dans ESV ; Écho garde chaque correction comme exemple pour un prochain modèle.</div></div><span class="sp"></span>
@@ -273,7 +302,7 @@ const AMB={accueil:'radial-gradient(100% 65% at 12% 0%,rgba(11,111,105,.5),trans
 const FOND={orbite:'linear-gradient(135deg,#a8431f,#b8135a)',echo:'linear-gradient(135deg,#2f6fd6,#5a2ad6)',revue:'linear-gradient(135deg,#a56510,#7b3a14)'};
 const ECR={accueil,orbite,echo,revue};
 const NOTES={accueil:'<b>Accueil :</b> la carte de la partie garde sa couleur. C’est la pastille qui dit l’état du lot, avec une forme à elle : roue pour en cours, roue en pointillé pour pause demandée, deux barres pour en pause, coche pour terminé. Toute carte d’activité se soulève au survol ou au clavier (flèches gauche et droite), montre une flèche et réagit à l’appui. Écho, indisponible pendant un lot, perd sa couleur et porte un cadenas.',
- orbite:'<b>Orbite :</b> le bouton de commande garde sa place et change d’état : « Pause », puis « Pause demandée… », puis « Reprendre au cut 4813 ». La liste des différés ne répète plus « différé » ni « après le lot » : chaque ligne dit le motif, sa précision quand elle existe, et l’heure.',
+ orbite:'<b>Orbite :</b> la composition que tu as choisie revient : grand titre à gauche, carte de suivi à droite avec la commande, corail ample, liste sombre dessous. La « position dans la partie » donne une autre lecture que la barre : où en est le lot parmi les cuts ciblés, et où se trouvent les différés. Le bouton de commande garde sa place et change d’état : « Pause », puis « Pause demandée… », puis « Reprendre au cut 4813 ». La liste des différés ne répète plus « différé » ni « après le lot » : chaque ligne dit le motif, sa précision quand elle existe, et l’heure.',
  echo:'<b>Écho :</b> même composition. Pendant un lot, l’écran dit qu’Écho est indisponible, et la pastille du lot reste en haut avec Pause.',
  revue:'<b>Revue :</b> l’ambre reste dans l’en-tête et les repères ; la liste est sur une surface neutre. Les colonnes sont nommées. « Marquer examiné » est une action explicite, sur la ligne choisie et en haut ; la sélection passe ensuite au prochain cut à examiner.'};
 
@@ -287,46 +316,45 @@ const EASE='cubic-bezier(.22,.8,.18,1)';
 const PLEIN={left:'0px',top:'0px',width:'1180px',height:'720px'};
 function poser(k){cur=k;amb.style.background=AMB[k];amb.classList.toggle('eteinte',k==='orbite'&&phase==='pausee');ecr.innerHTML=ECR[k]();note.innerHTML=NOTES[k];}
 function entrer(delai=0){[...ecr.children].forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:420,delay:delai+i*45,easing:EASE,fill:'backwards'}));}
-function instantane(){const a=document.createElement('div');a.className='ancien';a.innerHTML=ecr.innerHTML;app.appendChild(a);return a;}
+/* l'instantané ne reprend pas la barre du haut : la navigation garde son contraste pendant toute la transition */
+function instantane(){const a=document.createElement('div');a.className='ancien';a.innerHTML=ecr.innerHTML;const h=a.querySelector('.haut');if(h)h.style.visibility='hidden';app.appendChild(a);return a;}
 function cloneVolant(el,styles){const c=el.cloneNode(true);c.classList.add('vole');c.style.opacity='';Object.assign(c.style,styles);app.appendChild(c);return c;}
-/* ouverture : la carte s'étend, son icône et son titre rejoignent l'en-tête, le contenu arrive dessous */
+function corps(){return [...ecr.children].filter(el=>!el.matches('.haut'));}
+/* ouverture : l'icône et le nom volent de la carte à l'en-tête ; l'écran de destination arrive pendant le vol */
 function ouvrir(k,carte){if(occupe)return;if(reduit()||!carte){changer(k);return;}occupe=true;
- const r=rel(carte),srcP=carte.querySelector('.picto'),srcT=carte.querySelector('b'),old=instantane();
- const couche=document.createElement('div');couche.className='couche';couche.style.background=FOND[k];Object.assign(couche.style,px(r));app.appendChild(couche);
- const rP0=rel(srcP),rT0=rel(srcT),fs0=parseFloat(getComputedStyle(srcT).fontSize);
+ const srcP=carte.querySelector('.picto'),srcT=carte.querySelector('b'),rC=rel(carte),rP0=rel(srcP),rT0=rel(srcT),fs0=parseFloat(getComputedStyle(srcT).fontSize),old=instantane();
  const cP=cloneVolant(srcP,px(rP0)),cT=cloneVolant(srcT,{left:rT0.left+'px',top:rT0.top+'px',fontSize:fs0+'px',fontWeight:750,letterSpacing:'-.015em',lineHeight:1.2});
- poser(k);const dP=ecr.querySelector('.tete .picto'),dT=ecr.querySelector('.tete h2');dP.style.opacity=0;dT.style.opacity=0;
+ /* un simple halo de la carte, bref, pour marquer le départ */
+ const halo=document.createElement('div');halo.className='couche';halo.style.background=FOND[k];Object.assign(halo.style,px(rC));app.appendChild(halo);
+ halo.animate([{transform:'scale(1)',opacity:.55},{transform:'scale(1.12)',opacity:0}],{duration:300,easing:'ease-out',fill:'forwards'});
+ poser(k);const dP=ecr.querySelector('.nom .picto, .tete .picto'),dT=ecr.querySelector('.nom b, .tete h2');dP.style.opacity=0;dT.style.opacity=0;
  const rP1=rel(dP),rT1=rel(dT),k2=parseFloat(getComputedStyle(dT).fontSize)/fs0;
- old.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out',fill:'forwards'});
- couche.animate([{...px(r),borderRadius:'18px',opacity:.95},{...PLEIN,borderRadius:'18px',opacity:.7,offset:.5},{...PLEIN,borderRadius:'18px',opacity:0}],{duration:640,easing:EASE,fill:'forwards'});
- cP.animate([{transform:'none'},{transform:`translate(${rP1.left-rP0.left}px,${rP1.top-rP0.top}px)`}],{duration:560,easing:EASE,fill:'forwards'});
- cT.animate([{transform:'none'},{transform:`translate(${rT1.left-rT0.left}px,${rT1.top-rT0.top}px) scale(${k2})`}],{duration:560,easing:EASE,fill:'forwards'});
- [...ecr.children].forEach((el,i)=>{if(!el.matches('.tete'))el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:440,delay:320+i*50,easing:EASE,fill:'backwards'});});
- ecr.querySelectorAll('.tete .sous,.tete>.pill,.tete>.etat').forEach(el=>el.animate([{opacity:0},{opacity:1}],{duration:300,delay:400,fill:'backwards'}));
- setTimeout(()=>{dP.style.opacity='';dT.style.opacity='';cP.remove();cT.remove();old.remove();couche.remove();occupe=false;},660);}
-/* retour : l'icône et le titre redescendent dans leur carte, l'écran se replie vers elle */
+ old.animate([{opacity:1},{opacity:0}],{duration:180,easing:'ease-out',fill:'forwards'});
+ cP.animate([{transform:'none'},{transform:`translate(${rP1.left-rP0.left}px,${rP1.top-rP0.top}px) scale(${rP1.width/rP0.width})`}],{duration:480,easing:EASE,fill:'forwards'});
+ cT.animate([{transform:'none'},{transform:`translate(${rT1.left-rT0.left}px,${rT1.top-rT0.top}px) scale(${k2})`}],{duration:480,easing:EASE,fill:'forwards'});
+ corps().forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:380,delay:110+i*40,easing:EASE,fill:'backwards'}));
+ setTimeout(()=>{dP.style.opacity='';dT.style.opacity='';cP.remove();cT.remove();old.remove();halo.remove();occupe=false;},500);}
+/* retour : l'icône et le nom redescendent dans leur carte pendant que l'accueil apparaît */
 function revenir(){if(occupe)return;const de=cur;if(reduit()||!FOND[de]){changer('accueil');return;}occupe=true;
- const sP=ecr.querySelector('.tete .picto'),sT=ecr.querySelector('.tete h2'),rP0=rel(sP),rT0=rel(sT),old=instantane();
- old.querySelector('.tete .picto').style.opacity=0;old.querySelector('.tete h2').style.opacity=0;
+ const sP=ecr.querySelector('.nom .picto, .tete .picto'),sT=ecr.querySelector('.nom b, .tete h2'),rP0=rel(sP),rT0=rel(sT),fs0=parseFloat(getComputedStyle(sT).fontSize),old=instantane();
+ old.querySelectorAll('.nom .picto,.nom b,.tete .picto,.tete h2').forEach(e=>e.style.opacity=0);
  const cP=cloneVolant(sP,px(rP0)),cT=document.createElement('b');cT.textContent={orbite:'Orbite',echo:'Écho',revue:'Revue'}[de];cT.className='vole';
- Object.assign(cT.style,{left:rT0.left+'px',top:rT0.top+'px',fontSize:'28px',fontWeight:800,letterSpacing:'-.025em',lineHeight:1.1});app.appendChild(cT);
+ Object.assign(cT.style,{left:rT0.left+'px',top:rT0.top+'px',fontSize:fs0+'px',fontWeight:sT.matches('h2')?800:750,letterSpacing:'-.02em',lineHeight:1.15});app.appendChild(cT);
  poser('accueil');const carte=ecr.querySelector(`.vig[data-k="${de}"]`),dP=carte.querySelector('.picto'),dT=carte.querySelector('b');dP.style.opacity=0;dT.style.opacity=0;
- const rc=rel(carte),rP1=rel(dP),rT1=rel(dT);
- const couche=document.createElement('div');couche.className='couche';couche.style.background=FOND[de];Object.assign(couche.style,PLEIN);app.appendChild(couche);
- couche.animate([{...PLEIN,borderRadius:'18px',opacity:0},{left:'40px',top:'60px',width:'1100px',height:'620px',borderRadius:'18px',opacity:.35,offset:.25},{...px(rc),borderRadius:'18px',opacity:.8,offset:.85},{...px(rc),borderRadius:'18px',opacity:0}],{duration:640,easing:EASE,fill:'forwards'});
- old.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'});
- cP.animate([{transform:'none'},{transform:`translate(${rP1.left-rP0.left}px,${rP1.top-rP0.top}px)`}],{duration:600,easing:EASE,fill:'forwards'});
- cT.animate([{transform:'none'},{transform:`translate(${rT1.left-rT0.left}px,${rT1.top-rT0.top}px) scale(${19/28})`}],{duration:600,easing:EASE,fill:'forwards'});
- [...ecr.children].forEach((el,i)=>el.animate([{opacity:0},{opacity:1}],{duration:380,delay:200+i*50,easing:'ease-out',fill:'backwards'}));
- setTimeout(()=>{dP.style.opacity='';dT.style.opacity='';cP.remove();cT.remove();old.remove();couche.remove();occupe=false;},660);}
-/* onglets : fondu enchaîné court */
-function changer(k){const old=reduit()?null:instantane();poser(k);if(old){old.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).onfinish=()=>old.remove();entrer(60);}}
+ const rP1=rel(dP),rT1=rel(dT);
+ old.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'});
+ cP.animate([{transform:'none'},{transform:`translate(${rP1.left-rP0.left}px,${rP1.top-rP0.top}px) scale(${rP1.width/rP0.width})`}],{duration:480,easing:EASE,fill:'forwards'});
+ cT.animate([{transform:'none'},{transform:`translate(${rT1.left-rT0.left}px,${rT1.top-rT0.top}px) scale(${parseFloat(getComputedStyle(dT).fontSize)/fs0})`}],{duration:480,easing:EASE,fill:'forwards'});
+ corps().forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:360,delay:100+i*40,easing:EASE,fill:'backwards'}));
+ setTimeout(()=>{dP.style.opacity='';dT.style.opacity='';carte.animate([{boxShadow:'0 0 0 0 rgba(255,255,255,0)'},{boxShadow:'0 0 0 2px rgba(255,255,255,.5)'},{boxShadow:'0 0 0 0 rgba(255,255,255,0)'}],{duration:500});cP.remove();cT.remove();old.remove();occupe=false;},500);}
+/* onglets : fondu enchaîné court, la barre du haut reste */
+function changer(k){const old=reduit()?null:instantane();poser(k);if(old){old.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>old.remove();corps().forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:360,delay:60+i*40,easing:EASE,fill:'backwards'}));}}
 /* commande du lot : changement d'état sur place */
 function morph(){const b0=ecr.querySelector('#cmd'),w0=b0?.getBoundingClientRect().width,n0=ecr.querySelector('#num')?.textContent;
  poser('orbite');const b1=ecr.querySelector('#cmd'),s=ech();if(reduit())return;
  if(b0&&b1){const w1=b1.getBoundingClientRect().width;b1.animate([{width:w0/s+'px'},{width:w1/s+'px'}],{duration:440,easing:EASE});
   b1.firstElementChild.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:320,delay:100,easing:'ease-out',fill:'backwards'});}
- ecr.querySelector('.tete .etat')?.animate([{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],{duration:320,easing:EASE});
+ ecr.querySelector('.scene .etat, .tete .etat')?.animate([{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],{duration:320,easing:EASE});
  ecr.querySelector('#cour')?.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:380,easing:'ease-out'});
  const n=ecr.querySelector('#num');if(n&&n.textContent!==n0){n.animate([{transform:'translateY(-45%)',opacity:0},{transform:'none',opacity:1}],{duration:460,easing:EASE});ecr.querySelector('#pos')?.animate([{opacity:0},{opacity:1}],{duration:400});}}
 function maj(){cur==='orbite'?morph():poser(cur);}
@@ -352,7 +380,7 @@ nav.onclick=e=>{const b=e.target.closest('button');if(!b||enParcours||occupe)ret
 ecr.onclick=e=>{if(enParcours||occupe)return;
  const a=e.target.closest('[data-act]');if(a){if(a.dataset.act==='pause')pause();else if(a.dataset.act==='reprendre'){phase='lot';maj();}
   else if(a.dataset.act==='examine'){const rows=L.filter(x=>filtre==='tous'||x[0]===filtre),cut=+a.dataset.cut||rows[sel][1];vus.add(cut);const i=rows.findIndex(r=>!vus.has(r[1]));if(i>=0)sel=i;poser('revue');}return;}
- const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;sel=0;poser('revue');return;}
+ const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;const rows=L.filter(x=>filtre==='tous'||x[0]===filtre);sel=Math.max(0,rows.findIndex(r=>!vus.has(r[1])));poser('revue');return;}
  const r=e.target.closest('.row[data-i]');if(r){sel=+r.dataset.i;poser('revue');return;}
  const g=e.target.closest('[data-go]');if(!g||g.dataset.go===cur)return;const k=g.dataset.go;
  if(k==='accueil'){revenir();return;}const carte=g.closest('.vig');carte?ouvrir(k,carte):changer(k);};
