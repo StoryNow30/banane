@@ -1,6 +1,6 @@
 # Cap 5 : moins de 5 différés par partie, la qualité d'abord (v4 livrée en test 15, v5 explorée)
 
-Suite de `fiches/L1_APPRENTISSAGE.md` (test 14, décision L1-e). Objectif de Mic : moins de 5 différés posables par partie rejouable, avec une qualité mesurée en validation croisée par partie. La qualité passe avant le nombre de différés : en cas de conflit, le cut reste différé.
+Suite de `fiches/L1_APPRENTISSAGE.md` (test 14, décision L1-e). Objectif fixé par le responsable du terrain : moins de 5 différés posables par partie rejouable, avec une qualité mesurée en validation croisée par partie. La qualité passe avant le nombre de différés : en cas de conflit, le cut reste différé.
 
 ## 1. La v4 (test 15)
 
