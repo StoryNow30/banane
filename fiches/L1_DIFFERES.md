@@ -205,3 +205,138 @@ Départ de la partie : 5 306 validés, 248 invalides (le lot scellé du § 4 par
 Motifs des 241 décisions : `plus-de-150-mm` 191, `valider` 34, `poser-sans-valider` 9, `départ le plus probable` 7. Chaîne du lot : `no-anchor` dans 226 cas sur 241. Les 191 « plus de 150 mm » : meilleure paire à 159–192 mm du départ (médiane 174,5 mm), de probabilité médiane 0,30 (aucune au-dessus de τ = 0,49), toutes ou presque en ADV (cuts 5030 à 5288), hypothèse H1+H2 dans 172 cas. Les 34 validés : écart médian 172,7 mm, probabilité médiane 0,55.
 
 Bande de la prédiction scellée (192 laissés sur 245) contre le réel (198 sur 248) : les totaux concordent. Cut par cut, sur les 245 différés prédits : 163 laissés des deux côtés, 14 validés des deux côtés, 3 posés sans valider des deux côtés ; 35 prédits posés mais laissés, 27 prédits laissés mais validés, 3 autres. L'accord cut par cut est donc de 180 sur 245 (73 %), pas parfait : la chaîne et les voisins validés ont changé entre le lot scellé et celui-ci.
+
+## 10. Deuxième lot réel sous test 13 (L1-s), jugé contre l'Écho : partie 2:20, 20/10/2026
+
+Sources :
+
+- l'export Orbite de 10 volumes archivé dans `banane-data` (`2026-10-20_v4.9.5.13_partie-20`), profil du lot L1-s, extension 4.9.5.13 ;
+- l'Écho de l'opérateur archivé à part (`2026-10-20_v4.9.5.13_echo-partie-20`), de 12 h 08 à 12 h 32 : 536 visites sur 516 cuts, tous les segments présents.
+
+Jugement par cut : `fiches/jugements/2-20-lot-reel-echo-20261020.json`. Ce fichier contient des décalages en mm depuis la pose de départ de l'Écho, aucune coordonnée absolue.
+
+Méthode, celle du § 9 complétée de la vérité :
+
+- **Pose de l'opérateur** : `micDepuisEcho`. La correction se mesure par la norme maximale des décalages des deux rails, jamais par l'écartement de départ.
+- **Cut validé par le lot** : la pose de départ de l'Écho est la pose du lot (écartement identique à 0,5 mm près pour les 57 cuts de la GCV2). La correction de l'opérateur est donc l'erreur de la pose.
+- **Cut laissé** : la pose de départ est celle d'ESV (1 500 mm). L'erreur de la paire que la GCV2 proposait, sans la poser, se mesure dans le même repère.
+
+### 10.1 Ce que les lots ont fait
+
+Deux lots L1-s se sont succédé sur la partie :
+
+- **lot fd7067f7** : de 10 h 13 à 10 h 26, cuts 0 à 320 ;
+- **lot f228f6f9** : de 10 h 27 à 12 h 02, cuts 289 à 3793. Il a repris 32 différés du premier lot et s'est arrêté sur une page ESV sans réponse, après le dernier cut.
+
+L'audit du serveur concorde à l'unité (0 écart) :
+
+| Moment | Valides | Invalides |
+|---|--:|--:|
+| Départ du premier lot | 5 124 | 379 |
+| Fin du premier lot | 5 212 | 291 |
+| Fin du second lot | 5 370 | 133 |
+
+| Issue finale des 379 cuts invalides au départ | Cuts |
+|---|--:|
+| Validés par la chaîne du lot (sans la GCV2) | 189 (84 + 105) |
+| Validés par la GCV2 (« valider ») | 57 (4 + 53), 56 en ADV |
+| Posés sans valider (GCV2 sous τ, premier lot) | 3 (cuts 95, 100, 148) |
+| Laissés en différé | 130 (34 %) |
+
+Décisions de la GCV2 journalisées :
+
+- premier lot : 46, dont `départ le plus probable` 25, `plus-de-150-mm` 13, `valider` 4, `poser-sans-valider` 4 ;
+- second lot : 177, dont `plus-de-150-mm` 122, `valider` 54 (une refusée par ESV, écartement trop grand, cut 417).
+
+Les 130 laissés sont presque tous en ADV (128), entre les cuts 0 et 515. Leurs motifs : `plus-de-150-mm` 127 (meilleure paire à 171,3 mm médians du départ, probabilité médiane 0,25), `départ le plus probable` 2, `valider` refusé par ESV 1.
+
+Toutes les décisions de la GCV2 portent sur un cut capturé : aucune pose sans nuage.
+
+### 10.2 Contre l'opérateur
+
+| Groupe | Cuts | Jugés | Correction médiane | ≤ 10 mm | 10–20 | 20–50 | > 50 mm |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| Validés par la GCV2 | 57 | 56 | 22,8 mm (q90 30,9, max 35,5) | 9 | 9 | 38 | 0 |
+| Validés par la chaîne | 189 | 159 | 0 mm (q90 30,4, max 34,6) | 109 | 9 | 41 | 0 |
+| Laissés : paire proposée, non posée | 130 | 128 | 23,1 mm | 14 | 24 | 90 | 0 |
+| Posés sans valider (erreur de la pose) | 3 | 3 | 87,6 mm | 1 | 0 | 0 | 2 |
+
+Parmi les 159 cuts de la chaîne jugés, 89 ont été jugés par « visite sans action = bon ». Les laissés ont tous été validés par l'opérateur, à 191,8 mm médians de la pose d'ESV.
+
+**Budgets de D-223 sur les 215 validations jugées (GCV2 et chaîne).** Les trois budgets chiffrés sont tenus :
+
+- mauvaise voie validée : 0 (budget 1 %) ;
+- validée à plus de 50 mm : 0 (budget 3 %) ;
+- pose sans preuve du nuage : 0.
+
+En revanche, **79 validations sur 215 (37 %) sont à 20–50 mm** de l'opérateur : 38 de la GCV2 et 41 de la chaîne, ces dernières toutes dans le second lot (cuts 386 à 505, et 326). D-223 ne chiffre pas cette bande ; c'est le défaut de qualité de ce lot.
+
+**Cause, la même qu'en 2:19 : des paires trop larges.**
+
+- L'erreur est sur un seul rail, en travers : 23,1 mm médians (q90 30,9) pour les validées de la GCV2, 22,7 mm pour les paires des laissés. L'autre rail est juste à ± 1 mm. En 2:19, c'était l'autre rail du repère (−27 mm).
+- **Écartements posés** :
+
+  | Cuts | Écartement posé |
+  |---|--:|
+  | Validés par la GCV2 | 1 459,9 mm médians (q10 1 439,8, q90 1 465,5) |
+  | Chaîne, à plus de 20 mm de l'opérateur | 1 464,5 mm médians |
+  | Chaîne que l'opérateur garde à 10 mm près | 1 436,4 mm médians |
+
+- La médiane des voisins (`gMedMm`) est à 1 461 mm et confirme la paire trop large. Dans le second lot, la chaîne du lot, guidée par les mêmes voisins, a fait la même erreur.
+
+### 10.3 Comparaison avec 2:19 (lot réel, § 9, jugé contre son Écho)
+
+| | 2:19 | 2:20 |
+|---|--:|--:|
+| Cuts du lot | 248 | 379 (2 lots) |
+| Laissés en différé | 198 (80 %) | 130 (34 %) |
+| Validés par la GCV2 (jugés) | 34 (33) | 57 (56) |
+| dont ≤ 10 mm / 20–50 / > 50 | 1 / 31 / 0 | 9 / 38 / 0 |
+| Correction médiane des validés de la GCV2 | 26,9 mm | 22,8 mm |
+| Validés par la chaîne à 20–50 mm | 2 sur 7 | 41 sur 159 |
+| Paires des laissés : médiane, ≤ 10 mm, > 50 mm | 28,9 mm, 0 sur 190, 0 | 23,1 mm, 14 sur 128, 0 |
+
+**Lecture.** Le taux de différés est plus bas, parce que la chaîne a validé beaucoup plus de cuts (189 contre 7), mais **ce n'est pas un progrès de la GCV2**. La cause est la même : paires trop larges d'environ 25 mm en ADV, puis refus « plus de 150 mm » de paires qui n'étaient fausses que d'un rail. En 2:20, le défaut gagne la chaîne du lot.
+
+### 10.4 Correction des « posés sans valider » du § 9 et de `L1_APPRENTISSAGE`
+
+Une pose sans validation **ne reste pas dans ESV**. À l'arrivée de l'opérateur dans l'Écho, ESV montrait la pose d'origine, pas celle du lot : écartement 1 500 mm, ou 1 406,1 et 1 373,3 mm pour deux cuts. C'est le cas des 9 cuts de 2:19 comme des 3 de 2:20.
+
+La mesure « 8 sur 9 à plus de 50 mm » de 2:19 (`L1_APPRENTISSAGE`, § 1) était donc la correction de l'opérateur depuis la pose d'ESV, et non l'erreur de la pose. Dans le bon repère, l'erreur des 9 poses de 2:19 est :
+
+- à 10 mm au plus : 4 (1,8 ; 3,1 ; 7,9 ; 8,2) ;
+- de 10 à 20 mm : 2 (10,1 ; 10,4) ;
+- de 20 à 50 mm : 1 (42,1) ;
+- à plus de 50 mm : 2 (118,5 ; 171,8).
+
+En 2:20, l'erreur des 3 poses est 1,4, 87,6 et 118,5 mm.
+
+Sur les 12 poses des deux parties : 5 à 10 mm, 2 de 10 à 20, 1 de 20 à 50, 4 à plus de 50 mm. Le retrait des poses approchées en L1-e reste justifié, puisqu'une pose sur trois est mauvaise, mais il ne change rien dans ESV : la pose disparaît de toute façon.
+
+### 10.5 Ce que la test 14 (L1-e) aurait fait sur ces deux lots
+
+Le rejeu tient seulement des mesures. La partie 2:20 est **hors apprentissage** : les seuils de L1-e sont figés depuis 2:19.
+
+- **Commande** : `tools/banc-differes.cjs rejouer --profils base,L1-s,L1-se`, avec le code de la test 14 (`claude/50-l1-apprentissage`, 045f338, sans modification).
+- **Liste d'ESV** : instantané de 10 h 27, celui du lot.
+- **Vérité** : celle du § 10.2.
+- **Limite** : le second lot est rejoué depuis l'état réel laissé par le premier.
+
+| Profil rejoué | Différés finals | GCV2 : poses jugées | ≤ 10 mm | 10–20 | 20–50 | > 50 mm | Cuts de la chaîne changés |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| Réel (test 13) | 133 (dont 3 posés sans valider) | 55 | 9 | 8 | 38 | 0 | — |
+| L1-s rejoué | 132 (dont 3 approchés) | 54 | 9 | 6 | 39 | 0 | 0 |
+| **L1-se (test 14)** | **40** | 146 | **142** | 4 | **0** | **0** | 0 |
+
+Différés finals = différés du premier lot que le second n'a pas repris, plus ceux du second ; un approché (posé sans valider) reste invalide et compte comme différé.
+
+Différés de L1-se par motif :
+
+- premier lot : 42 différés (`départ le plus probable` 24, `plus-de-150-mm` 13 dont 2 sans soutien du nuage, `sans-approche` 4, chaîne 1) ;
+- second lot : 30, tous `plus-de-150-mm`, dont 5 avec anomalie d'écartement non soutenue par le nuage.
+
+La correction d'écartement s'applique à 133 cuts du second lot, sur une référence médiane de 1 435,3 mm.
+
+**Ce qui reste hors de portée de L1-e :** les **42 validations de la chaîne à 20–50 mm** du second lot (cuts 326 à 505). L1-e ne corrige que les décisions de la GCV2, pas la chaîne, qui fait la même erreur d'écartement.
+
+**Raisons tapées dans l'Écho (indicatif).** Une seule raison est utilisée, « PN », sur 18 cuts : 8 validés par la chaîne du lot, 10 hors des cuts du lot. Aucune raison n'est tapée sur un cut de la GCV2.
