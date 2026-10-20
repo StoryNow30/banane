@@ -16,7 +16,8 @@ test('leviers livrés : ceux de la v4 (lus par l\'extension) ; le banc les chang
     corrigeVoieMaxMm: null, sansVoieRien: false, voieListe: false, voieListeFenetre: 8, deuxiemePasse: 0, passe2Leviers: null,
     /* Cap 5b : recherche recentrée en ADV, coupée par défaut (l'extension reste en v4b). */
     rechercheDiag: false, voieAbsFenetre: 6, rechercheADV: false, rechZones: null, rechEcartMm: 10, rechMaxDeplMm: 300, rechVoieMaxMm: 80, rechHauteurMaxMm: null,
-    rechProcheMaxCuts: 6, rechUniqueMm: 15, rechRemplace: false, rechRemplaceMm: 5, rechSansPaireRien: false, rechVoieParCutMm: null, rechContraMinMm: null, rechContraMaxMm: 45, rechContraRien: false });
+    rechProcheMaxCuts: 6, rechUniqueMm: 15, rechRemplace: false, rechRemplaceMm: 5, rechSansPaireRien: false, rechVoieParCutMm: null, rechContraMinMm: null, rechContraMaxMm: 45, rechContraRien: false,
+    rechMinTop: 15, rechMinFace: 6, rechRatioMax: 1.5, rechDedupMm: 5, rechArret: false, rechGraineDecalMm: 0, rechDiagLarge: false });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
