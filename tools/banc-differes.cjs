@@ -124,7 +124,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   const zoneMem = M.creerMemoire('zones-' + lot.id);
   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
     valides: [], grappe: M.creerMemoire('grappe-' + p), max: MAX_APPUIS + R.seeds.length }]));
-  const lignes = [];
+  const lignes = [], restes = [];
   const t0 = Date.now();
   for (const c of cuts) {
     const identity = { part: partie, cut: c.cut, frameId: null }, cap = c.captureId ? captures.get(c.captureId) : null;
@@ -211,7 +211,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         try {
           let g = cache.get('g' + sig);
           const transport = p === 'L1-se' && leviers.transport && E.validesL1 && E.validesL1.length;
-          if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null }); if (!transport) cache.set('g' + sig, g); }
+          if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null, voieListe: p === 'L1-se' && liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }); if (!transport) cache.set('g' + sig, g); }
           else { const dd = p === 'L1-se' ? L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas) : L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
           const dec = g.decision, l1 = L1.resumer(g);
           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
@@ -231,12 +231,41 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
       }
       ligne.profils[p] = out;
+      /* Cap 5 : un différé de L1-se est gardé pour la deuxième passe (fin de lot), avec ce qu'il faut pour le redécider. */
+      if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot'))
+        restes.push({ ligne, capture, science, zone, plagesADV: plages.adv, runtimeRails, before, cameras, camerasLarges, identity, cut: c.cut });
       /* L1-s : la mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé). */
       const valideChaine = out.etat === 'pose' && !(estL1s(p) && (posesL1s || out.source === 'gcv2'));
       M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: valideChaine, surface }), { differe: !valideChaine });
     }
     M.noter(zoneMem, r0, { differe: !c.pose });
     lignes.push(ligne);
+  }
+  /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre de passes) : chaque différé de L1-se est redécidé par la GCV2 avec tout
+   * ce que le lot a posé, avant ET après lui (chaîne : voisins et appuis ; poses L1 : transport). Leviers propres à la passe : `passe2Leviers`. */
+  if (profils.includes('L1-se') && leviers.deuxiemePasse) {
+    const E = etats['L1-se'], avant = leviers;
+    if (leviers.passe2Leviers) L1.reglerLeviers({ ...leviers, ...leviers.passe2Leviers });
+    try {
+      for (let passe = 1; passe <= leviers.deuxiemePasse; passe++) {
+        let poses = 0;
+        for (const r of restes) {
+          if (r.ligne.profils['L1-se'].etat !== 'differe') continue;
+          try {
+            const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,
+              zone: r.zone, plagesADV: r.plagesADV, modele, regle: L1.REGLE_E, reference: referenceDe(r.cut), voieListe: liste ? L1.voieDeListe(liste, r.cut, r.capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
+            if (g.decision.etat !== 'valider') { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: g.decision.motif ?? null } }; continue; }
+            const cg = L1.commander({ positions: g.positions, runtimeRails: r.runtimeRails, before: r.before, expectedPoses: K.expectedPoses, cameras: r.cameras, camerasLarges: r.camerasLarges, valider: true });
+            if (cg.action !== 'lot') continue;
+            if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
+            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            poses++;
+          } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
+        }
+        journalTexte(`deuxième passe ${passe} : ${poses} pose(s)`);
+        if (!poses) break;
+      }
+    } finally { L1.reglerLeviers(avant); }
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
     regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null } } : {}),

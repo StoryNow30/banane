@@ -13,7 +13,7 @@ test('leviers livrés : ceux de la v4 (lus par l\'extension) ; le banc les chang
     voisinsRaffineMm: 8, voisinsEcartMaxMm: 10, vetoVoieMm: 45, raffineObligatoire: true, anomalieNonCorrigeeRien: true,
     consensus: true, consensusEcartMm: 10, consensusVoieMm: 15, consensusVoieProche: true, selectionRefMm: null,
     consensusTous: false, voieProcheMaxCuts: 5, diag: false, validerSansVoieMinP: null, anomalieMinRienMm: null, anomalieMinRienSansVoieMm: null,
-    corrigeVoieMaxMm: null, sansVoieRien: false });
+    corrigeVoieMaxMm: null, sansVoieRien: false, voieListe: false, voieListeFenetre: 8, deuxiemePasse: 0, passe2Leviers: null });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');

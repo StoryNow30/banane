@@ -456,7 +456,7 @@
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
-   validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false});
+   validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -519,7 +519,7 @@
    /* Anomalie d'écartement qu'aucun rail soutenu ne corrige : la paire de la test 13 n'est pas validée. */
    if(LEVIERS.anomalieNonCorrigeeRien&&dd.etat==='valider'&&c&&c.anomalie&&!c.soutenue)dd={etat:'rien',motif:'anomalie-non-corrigee',decal:null,corrigee:false};
    /* Voie de référence : celle des voisins validés AVEC les poses de la GCV2 (transport, si le banc ou le lot la donne), sinon celle de H6. */
-   const voie=k.voieTransport&&k.voieTransport.sure?k.voieTransport:k.voieRef&&k.voieRef.sure?k.voieRef:null;
+   const voie=k.voieTransport&&k.voieTransport.sure?k.voieTransport:k.voieRef&&k.voieRef.sure?k.voieRef:LEVIERS.voieListe&&k.voieListe&&k.voieListe.sure?k.voieListe:null;
    const soutenu=decal=>SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;});
    /* Leviers du cap 5 (fiches/L1_CAP5.md). Sous τ : paire déjà à l'écartement de référence et soutenue, ou corrigée et soutenue. */
    if(dd.etat==='rien'&&d0.etat==='poser-sans-valider'&&c&&capture){
@@ -571,9 +571,12 @@
      if(ecartVoie>LEVIERS.vetoVoieMm)dd={etat:'rien',motif:'veto-voie',decal:null,corrigee:false,ecartVoieMm:arrondi(ecartVoie,1)};
    }
    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
-     voieProcheDist:k.voieProche?k.voieProche.dist:null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
+     voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
      tous:dd.etat==='rien'&&capture&&ref&&fini(ref.mm)&&(voie||k.voieProche)?(paireConsensus(k,capture,voie||k.voieProche,ref.mm,decal=>SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))||null):null}:null;
+   if(diag&&dd.decal&&capture){diag.soutien=Object.fromEntries(SIDES.map(s=>{const m=soutienRail(capture,s,dd.decal[s]);return [s,{dessus:m.dessus,flanc:m.flanc}];}));
+     diag.ecartRefMm=ref&&fini(ref.mm)?arrondi(ref.mm-ecartementDecal(capture,dd.decal),1):null;
+     if(voie)diag.dvMm=arrondi(Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0]))),1);}
    const correction=c?{ref:ref.mm,ecartMm:c.ecartMm,anomalie:c.anomalie,rail:c.rail,soutenue:c.soutenue,appliquee:dd.corrigee}:{ref:ref&&fini(ref.mm)?ref.mm:null,appliquee:false};
    const base0=d0.paire||{left:{origines:['H6'],sousOrigines:[],hauteur:false},right:{origines:['H6'],sousOrigines:[],hauteur:false}};
    const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...base0[s],decal:dd.decal[s]}])):null;
@@ -606,6 +609,39 @@
    if(ecart3d>REGLE.sansValiderMaxMm)return {...out,etat:'rien',motif:'plus-de-150-mm'};
    return {...out,etat:'poser-sans-valider',motif:'sous-tau'};
  }
+ /* Cap 5, piste 2 — VOIE DE LA LISTE D'ESV : les rails des coupes valides et non touchées voisines (instantané de la partie), ramenés dans le
+  * repère profil de la pose de départ du cut par la translation monde − scène mesurée sur la ligne du cut lui-même (sa pose de départ ; les deux
+  * rails doivent donner la même translation à `rigideMaxMm` près), puis ajustés en travers et en hauteur selon la position le long de la voie
+  * (droite des moindres carrés) ; la voie au cut est la valeur ajustée en 0. Indépendante des poses de la GCV2 : elle amorce le transport.
+  * Sûre s'il y a des voisins des deux côtés et un résidu d'ajustement d'au plus `residuMaxMm`. Rend { left:[lat,vert], right, n, residuMm, sure } ou null. */
+ const VOIE_LISTE=Object.freeze({fenetre:8,parCote:3,residuMaxMm:4,rigideMaxMm:2});
+ function voieDeListe(table,cut,capture,cfg=VOIE_LISTE){
+   if(!table||!capture||!capture.rails||!Number.isInteger(cut)||cut<0||cut>=table.n)return null;
+   const row=i=>{const e=table.ed.slice(6*i,6*i+6);return e.length===6&&e.every(fini)?{left:e.slice(0,3).map(v=>v/1e4),right:e.slice(3).map(v=>v/1e4)}:null;};
+   const r0=row(cut);if(!r0||!SIDES.every(s=>capture.rails[s]&&vec3(capture.rails[s].positionSceneRelative)))return null;
+   const T=Object.fromEntries(SIDES.map(s=>[s,[0,1,2].map(i=>r0[s][i]-capture.rails[s].positionSceneRelative[i])]));
+   const rigideMm=1000*Math.hypot(...[0,1,2].map(i=>T.left[i]-T.right[i]));
+   if(!(rigideMm<=cfg.rigideMaxMm))return {sure:false,rigideMm:arrondi(rigideMm,1),motif:'repere'};
+   const Tm=[0,1,2].map(i=>(T.left[i]+T.right[i])/2),pts={left:[],right:[]};let avant=0,apres=0;
+   for(const sens of [-1,1]){let k=0;
+     for(let j=cut+sens;Math.abs(j-cut)<=cfg.fenetre&&j>=0&&j<table.n&&k<cfg.parCote;j+=sens){
+       if(table.st[j]!==0||table.fl[j]!==0)continue;const r=row(j);if(!r)continue;
+       const d=Object.fromEntries(SIDES.map(s=>[s,decalage(capture.rails[s],r[s].map((v,i)=>v-Tm[i]))]));if(!SIDES.every(s=>d[s]))continue;
+       for(const s of SIDES)pts[s].push({d:d[s],sens,j});k++;if(sens<0)avant++;else apres++;}}
+   if(avant+apres<2)return {sure:false,n:{avant,apres},rigideMm:arrondi(rigideMm,1),motif:'voisins'};
+   /* Interpolation entre la plus proche coupe valide de chaque côté (le long de la voie), en plus de l'ajustement. */
+   const proche=(s,sens)=>pts[s].filter(q=>q.sens===sens).sort((a,b)=>Math.abs(a.j-cut)-Math.abs(b.j-cut))[0]||null;
+   let interp=null,ecartCuts=null;
+   if(avant&&apres){interp={};for(const s of SIDES){const a=proche(s,-1).d,b=proche(s,1).d,t=Math.abs(b[0]-a[0])>1e-6?(0-a[0])/(b[0]-a[0]):0.5;
+     interp[s]=[arrondi(a[1]+t*(b[1]-a[1]),2),arrondi(a[2]+t*(b[2]-a[2]),2)];}ecartCuts=proche('left',1).j-proche('left',-1).j;}
+   for(const s of SIDES)pts[s]=pts[s].map(q=>q.d);
+   const ajuster=(P,c)=>{const n=P.length,mx=P.reduce((a,q)=>a+q[0],0)/n,my=P.reduce((a,q)=>a+q[c],0)/n,sxx=P.reduce((a,q)=>a+(q[0]-mx)**2,0);
+     const b=sxx>1e-6?P.reduce((a,q)=>a+(q[0]-mx)*(q[c]-my),0)/sxx:0,a=my-b*mx;return {v:a,res:Math.max(...P.map(q=>Math.abs(q[c]-(a+b*q[0]))))};};
+   const out={n:{avant,apres},rigideMm:arrondi(rigideMm,1)};let res=0;
+   for(const s of SIDES){const fl=ajuster(pts[s],1),fv=ajuster(pts[s],2);out[s]=[arrondi(fl.v,2),arrondi(fv.v,2)];res=Math.max(res,fl.res);}
+   out.interp=interp;out.ecartCuts=ecartCuts;
+   out.residuMm=arrondi(res,1);out.sure=avant>=1&&apres>=1&&res<=cfg.residuMaxMm;return out;
+ }
  /* Pose de la chaîne refaite par L1-s (vue élargie ou options de L1) sous L1-se : la même correction d'écartement, sur ses décalages.
   * Rend { decal, correction } (decal : corrigé, ou celui de la chaîne). */
  function corrigerPoseChaine(capture,decal,ref){
@@ -623,7 +659,7 @@
   *   voisins : cuts validés par le lot avant ce cut, { identity, positions, rails (pose de départ de ce voisin) } ; zone : 'pn' | 'adv' | 'abords' ;
   *   plagesADV : plages ADV connues à l'instant ; modele : `modeleFige(...)` ; regle : REGLE ou REGLE_V.
   * Rend { decision (deciderL1), positions (scène) ou null, hyp (résumé), cas } ; lève une erreur seulement sur entrée illisible. */
- function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null}){
+ function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null}){
    if(!modele)throw Error('GCV2 L1 : modèle absent.');
    if(!SIDES.every(s=>science&&science.rails&&science.rails[s]))throw Error('GCV2 L1 : science incomplète.');
    const id=capture.identity,seul=variante(capture,science,[],options),chaine=variante(capture,science,appuis.slice(),options);
@@ -635,6 +671,7 @@
    for(let x=Math.min(...bornes);x<=Math.max(...bornes);x++)zmap.set(x,{zone:(plagesADV||[]).some(([a,b])=>x>=a&&x<=b)?'adv':'autre'});
    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
    const k=casDuDiffere({cut:id.cut,zone,hyp,gMed,voieRef});
+   if(voieListe)k.voieListe=voieListe;
    /* Cap 5 : voie de référence des voisins validés, poses de la GCV2 comprises (`voisinsTransport`) ; sert seulement à la voie des voisins et à la
     * garde de voie de L1-e, jamais aux hypothèses ni aux probabilités. */
    if(Array.isArray(voisinsTransport)&&voisinsTransport.length){
@@ -683,5 +720,5 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer};
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer};
 });
