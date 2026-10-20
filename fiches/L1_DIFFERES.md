@@ -189,3 +189,19 @@ Prédictions scellées inchangées (L1/L1-v 10e8f3…9367, L1-s 9661af…e14c). 
 Les médianes portent sur les 32 jugés (un non posé garde son erreur de départ). Sur les cuts posés : L1, 19 sur 19 à 20 mm ou moins ; L1-s, 15 sur 17 ; L1-v, 22 sur 23. Presque tout est en ADV (29 cuts sur 32).
 
 Lecture : l'inverse de 2:17. Ici les trois profils posent juste, y compris en ADV, et L1-v valide 23 poses dont une seule est fausse. Cumul 2:17 + 2:18 (73 jugés) : L1-v valide 54 poses dont 14 fausses (26 %), L1 28 dont 1, L1-s 23 dont 1. Le profil L1-v n'est donc pas écarté, mais ses validations fausses se concentrent sur une partie (2:17, cuts 9523 à 9653) ; il reste à comprendre ce qui distingue 2:17.
+
+## 9. Premier lot réel de la GCV2 sous test 13 (L1-s) : partie 2:19, 20/10/2026 8 h 49 à 9 h 08
+
+Source : export Orbite de 5 volumes archivé dans `banane-data` (`2026-10-20_v4.9.5.13_partie-19`), journal du lot (`lotProfil` L1-s, extension 4.9.5.13). Aucun Écho de cette partie à ce jour : **rien n'est jugé**, seulement ce que le lot a fait.
+
+Départ de la partie : 5 306 validés, 248 invalides (le lot scellé du § 4 partait de 351 invalides : 103 cuts ont été validés entre-temps). Cuts proposés au lot : 248 (de 4863 à 5553). Décisions de la GCV2 journalisées : 241.
+
+| Résultat du lot | Cuts |
+|---|--:|
+| Validés (dont 34 validés par la GCV2, 7 par la chaîne du lot) | 41 |
+| Posés sans valider (GCV2, sous τ : 8 abords/ADV de 4863 à 4920 et 5164, 5293, 5483) | 9 |
+| Laissés en différé | 198 (80 %) |
+
+Motifs des 241 décisions : `plus-de-150-mm` 191, `valider` 34, `poser-sans-valider` 9, `départ le plus probable` 7. Chaîne du lot : `no-anchor` dans 226 cas sur 241. Les 191 « plus de 150 mm » : meilleure paire à 159–192 mm du départ (médiane 174,5 mm), de probabilité médiane 0,30 (aucune au-dessus de τ = 0,49), toutes ou presque en ADV (cuts 5030 à 5288), hypothèse H1+H2 dans 172 cas. Les 34 validés : écart médian 172,7 mm, probabilité médiane 0,55.
+
+Bande de la prédiction scellée (192 laissés sur 245) contre le réel (198 sur 248) : les totaux concordent. Cut par cut, sur les 245 différés prédits : 163 laissés des deux côtés, 14 validés des deux côtés, 3 posés sans valider des deux côtés ; 35 prédits posés mais laissés, 27 prédits laissés mais validés, 3 autres. L'accord cut par cut est donc de 180 sur 245 (73 %), pas parfait : la chaîne et les voisins validés ont changé entre le lot scellé et celui-ci.
