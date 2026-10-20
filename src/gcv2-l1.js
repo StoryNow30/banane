@@ -457,7 +457,8 @@
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
    validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,
-   branche:false,brancheMm:8,brancheVertMm:25,brancheMaxCuts:6,brancheExtrapCuts:1,brancheEcartement:Object.freeze([1380,1520])});
+   branche:false,brancheMm:8,brancheVertMm:25,brancheMaxCuts:6,brancheExtrapCuts:1,brancheEcartement:Object.freeze([1380,1520]),voieProcheSureCuts:null,
+   soutienMinDessus:null,soutienMinFlanc:null});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -520,7 +521,9 @@
    /* Anomalie d'écartement qu'aucun rail soutenu ne corrige : la paire de la test 13 n'est pas validée. */
    if(LEVIERS.anomalieNonCorrigeeRien&&dd.etat==='valider'&&c&&c.anomalie&&!c.soutenue)dd={etat:'rien',motif:'anomalie-non-corrigee',decal:null,corrigee:false};
    /* Voie de référence : celle des voisins validés AVEC les poses de la GCV2 (transport, si le banc ou le lot la donne), sinon celle de H6. */
-   const voie=k.voieTransport&&k.voieTransport.sure?k.voieTransport:k.voieRef&&k.voieRef.sure?k.voieRef:LEVIERS.voieListe&&k.voieListe&&k.voieListe.sure?k.voieListe:null;
+   /* Voie sûre : transport, H6, liste d'ESV (levier), ou le voisin posé le plus proche s'il est à `voieProcheSureCuts` cut(s) au plus (levier). */
+   const voie=k.voieTransport&&k.voieTransport.sure?k.voieTransport:k.voieRef&&k.voieRef.sure?k.voieRef:LEVIERS.voieListe&&k.voieListe&&k.voieListe.sure?k.voieListe
+     :fini(LEVIERS.voieProcheSureCuts)&&k.voieProche&&k.voieProche.dist<=LEVIERS.voieProcheSureCuts?k.voieProche:null;
    const soutenu=decal=>SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;});
    /* Leviers du cap 5 (fiches/L1_CAP5.md). Sous τ : paire déjà à l'écartement de référence et soutenue, ou corrigée et soutenue. */
    if(dd.etat==='rien'&&d0.etat==='poser-sans-valider'&&c&&capture){
@@ -574,6 +577,10 @@
    if(dd.etat==='valider'&&d0.etat==='rien'&&dd.corrigee&&c&&fini(LEVIERS.anomalieMinRienMm)&&!(Math.abs(c.ecartMm)>=LEVIERS.anomalieMinRienMm))dd={etat:'rien',motif:'anomalie-faible',decal:null,corrigee:false};
    if(dd.etat==='valider'&&d0.etat==='rien'&&dd.corrigee&&c&&!voie&&fini(LEVIERS.anomalieMinRienSansVoieMm)&&!(Math.abs(c.ecartMm)>=LEVIERS.anomalieMinRienSansVoieMm))dd={etat:'rien',motif:'anomalie-faible-sans-voie',decal:null,corrigee:false};
    if(dd.etat==='valider'&&d0.etat==='rien'&&dd.corrigee&&fini(LEVIERS.corrigeVoieMaxMm)&&(!voie||Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0])))>LEVIERS.corrigeVoieMaxMm))dd={etat:'rien',motif:'corrige-hors-voie',decal:null,corrigee:false};
+   /* Preuve du nuage sur LES DEUX rails de la paire finale (levier) : au moins `soutienMinDessus` points sur le champignon et `soutienMinFlanc` sur le
+    * flanc, pour chaque rail ; sinon rien. */
+   if(dd.etat==='valider'&&capture&&(fini(LEVIERS.soutienMinDessus)||fini(LEVIERS.soutienMinFlanc))&&!SIDES.every(s=>{const m=soutienRail(capture,s,dd.decal[s]);
+     return (!fini(LEVIERS.soutienMinDessus)||m.dessus>=LEVIERS.soutienMinDessus)&&(!fini(LEVIERS.soutienMinFlanc)||m.flanc>=LEVIERS.soutienMinFlanc);}))dd={etat:'rien',motif:'soutien-faible',decal:null,corrigee:false};
    /* Garde de voie : une pose validée à plus de `vetoVoieMm` en travers de la voie sûre des voisins validés n'est pas posée. */
    if(dd.etat==='valider'&&fini(LEVIERS.vetoVoieMm)&&voie&&dd.motif!=='voie-voisins'&&dd.motif!=='consensus'&&dd.motif!=='branche'){
      const ecartVoie=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0])));
@@ -710,6 +717,8 @@
      if(r&&r.reference)k.voieTransport={left:r.reference.left.map(x=>arrondi(x,2)),right:r.reference.right.map(x=>arrondi(x,2)),n:r.reference.n,distMin:r.reference.distMin,motifs:r.reference.motifs,sure:!r.reference.motifs.length};
      if(r&&r.proche)k.voieProche={left:r.proche.left.map(x=>arrondi(x,2)),right:r.proche.right.map(x=>arrondi(x,2)),dist:r.proche.dist};
    }
+   /* Levier `voieProcheSureCuts` : sans poses L1 à transporter, le voisin le plus proche est lu dans la chaîne seule. */
+   if(!k.voieProche&&fini(LEVIERS.voieProcheSureCuts)&&vs.length){const r=decalagesH6(id,vs);if(r&&r.proche)k.voieProche={left:r.proche.left.map(x=>arrondi(x,2)),right:r.proche.right.map(x=>arrondi(x,2)),dist:r.proche.dist};}
    const d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture):deciderL1(k,modele,regle);
    const positions=d.paire&&d.etat!=='rien'?positionsDe(capture,d.paire):null;
    return {decision:d,positions,gMed,cas:k,hyp,chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
