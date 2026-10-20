@@ -46,6 +46,10 @@ Réponse au point B de l'audit des maquettes (« les compteurs et les couleurs n
 3. « Export : prêt » ou « Export fait, 3 volumes confirmés ».
 L'action principale est alors **« Voir ce qui reste »** s'il reste quelque chose ; l'export vient en second.
 
+**Incident pendant une pose** (vérifié dans `src/engine.js`, `apply` et `closeUncertain`, et `panel.js`, autour de la ligne 820) : si ESV ne répond plus pendant la pose d'un cut, Ariane bloque toute nouvelle écriture (`reconcileRequired`). « Reprendre » n'est **pas** proposé ; la sortie est « Archiver le résultat interrompu · cut N » : le lot s'arrête et ce cut est mis de côté. « Aucune validation envoyée » n'est vrai que si l'opération interrompue est la pose (la validation vient après) ; si c'est la validation, on dit « validation non confirmée, vérifie-la dans ESV ». « Reprendre » après F5 ne vaut que si **aucune** opération n'était en cours (lot entre deux cuts). F5 n'est conseillé que si ESV reste figée. La maquette J se trompait sur ce point ; la K le corrige.
+
+**Hiérarchie (deuxième audit)** : ces états sont fiabilisés partout, mais ne sont pas tous affichés en permanence. Lot en cours : une phrase, traités sur ciblés, le cut en cours, l'action. La connexion n'est qu'un point, la dernière validation est dans « Détails ». En cas d'incident, l'opération interrompue passe devant tout. À la fin, connexion et « en cours » disparaissent.
+
 ## 4. Compteur GCV2
 
 Le nombre « 2 684 » est le nombre de **cuts corrigés par Mic dans les Échos archivés**, tous projets, au 19 octobre (`fiches/COMPTEUR_GCV2.md`). Ce sont des **exemples d'apprentissage**, pas des cuts « appris » par un modèle en service, et **il ne mesure aucune qualité**. La GCV2 n'est pas dans cette version. Il quitte l'écran de travail pour une vue « Modèle », avec sa définition et sa date.
