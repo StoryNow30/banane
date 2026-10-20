@@ -11,7 +11,9 @@ test('leviers livrés : ceux de la v4 (lus par l\'extension) ; le banc les chang
   assert.ok(Object.isFrozen(V));
   assert.deepEqual({ ...V }, { exact: true, autreRail: true, anomalieMinMm: 10, anomalieMaxMm: 45, sousTauCoherentMm: 8, sousTauCorrige: false, voisins: true, transport: true,
     voisinsRaffineMm: 8, voisinsEcartMaxMm: 10, vetoVoieMm: 45, raffineObligatoire: true, anomalieNonCorrigeeRien: true,
-    consensus: true, consensusEcartMm: 10, consensusVoieMm: 15, consensusVoieProche: true, selectionRefMm: null });
+    consensus: true, consensusEcartMm: 10, consensusVoieMm: 15, consensusVoieProche: true, selectionRefMm: null,
+    consensusTous: false, voieProcheMaxCuts: 5, diag: false, validerSansVoieMinP: null, anomalieMinRienMm: null, anomalieMinRienSansVoieMm: null,
+    corrigeVoieMaxMm: null, sansVoieRien: false });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');

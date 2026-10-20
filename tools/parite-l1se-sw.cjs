@@ -55,6 +55,9 @@ async function main(argv) {
     async skipAndNext() { pas.push({ cut: this.identity.cut, action: 'sauter' }); return super.skipAndNext(); }
     async amenerDansLaVue(cote) { this.calls.push('amenerDansLaVue'); return { version: 'banc', cote, gestes: [], ok: true, remise: { ok: true, crans: 0 } }; }
   }
+  /* Toute autre écriture vers ESV est consignée par cut (la ligne d'un cut qui n'est ni validé ni différé les montre). */
+  for (const nom of ['validateInPlace', 'validerMajEspace', 'restore', 'goToCut', 'next']) { const f = EsvRejoue.prototype[nom] || SimulatedESV.prototype[nom];
+    EsvRejoue.prototype[nom] = async function (...x) { pas.push({ cut: this.identity.cut, action: nom }); return f ? f.apply(this, x) : this.state(); }; }
   const local = memoire(); local.m[LM.PRE_INST + a.partie] = JSON.parse(fs.readFileSync(a.liste, 'utf8'));
   const adapter = new EsvRejoue(), b = production({ adapter, local });
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false } };
@@ -78,18 +81,20 @@ async function main(argv) {
     const x = parCut.get(l.cut) || {}, o = obs.get(l.cut) || null, n = parN.get(l.cut);
     let sw;
     if (!n) sw = { etat: 'absent' };
-    else if (x.apply && x.valider) {
+    /* Dernier cut du lot : le rejeu s'arrête après la pose (`apply`), la validation de fin de lot n'est pas jouée par l'ESV simulé ; la pose
+     * envoyée est comparée telle quelle (`finDeLot`). */
+    else if (x.apply && (x.valider || (!x.differe && l.cut === ordre.at(-1).cut))) {
       const pos = K.expectedPoses(x.apply.before, x.apply.proposals);
-      sw = { etat: 'pose', source: sourceDe(o && o.command), decal: Object.fromEntries(SIDES.map(s => [s, G.decalage(n.rails[s], pos[s].positionSceneRelative.slice(0, 3)).map(v => Math.round(v * 100) / 100)])) };
+      sw = { etat: 'pose', ...(x.valider ? {} : { finDeLot: true }), source: sourceDe(o && o.command), decal: Object.fromEntries(SIDES.map(s => [s, G.decalage(n.rails[s], pos[s].positionSceneRelative.slice(0, 3)).map(v => Math.round(v * 100) / 100)])) };
     } else if (x.differe || (o && o.command && o.command.action !== 'lot')) sw = { etat: 'differe', source: o && o.l1 ? 'gcv2' : 'lot', motif: o && o.l1 ? o.l1.motif ?? null : null };
-    else sw = { etat: 'inconnu', actions: Object.keys(x) };
+    else sw = { etat: 'inconnu', actions: pas.filter(q => q.cut === l.cut).map(q => q.action) };
     if (sw.etat === 'differe') differes++;
     const bp = l.profils['L1-se'] || {};
     const etatBanc = bp.etat === 'pose' ? 'pose' : 'differe';
     let ecart = null;
     if (sw.etat === 'pose' && bp.etat === 'pose' && bp.decal) ecart = Math.max(...SIDES.flatMap(s => [0, 1, 2].map(i => Math.abs(sw.decal[s][i] - bp.decal[s][i]))));
     const diff = sw.etat !== etatBanc || (sw.etat === 'pose' && (sw.source !== bp.source || !(ecart <= 0.05)));
-    if (diff) diffs.push({ cut: l.cut, nuage: l.nuage, banc: { etat: bp.etat, source: bp.source, motif: bp.l1 ? bp.l1.motif : null }, sw: { etat: sw.etat, source: sw.source, motif: sw.motif }, ecartMm: ecart == null ? null : Math.round(ecart * 100) / 100 });
+    if (diff) diffs.push({ cut: l.cut, nuage: l.nuage, banc: { etat: bp.etat, source: bp.source, motif: bp.l1 ? bp.l1.motif : null }, sw: { etat: sw.etat, source: sw.source, motif: sw.motif, actions: sw.actions }, ecartMm: ecart == null ? null : Math.round(ecart * 100) / 100 });
     lignes.push({ ...l, profils: { ...l.profils, 'L1-se': sw } });
   }
   fs.writeFileSync(a.sortie, lignes.map(x => JSON.stringify(x)).join('\n') + '\n');
