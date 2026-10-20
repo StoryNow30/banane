@@ -13,7 +13,7 @@
 :root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
  --partie-a:#0b6f69;--partie-b:#1b2f7a;--orbite-a:#a8431f;--orbite-b:#b8135a;--echo-a:#2f6fd6;--echo-b:#5a2ad6;--revue-a:#a56510;--revue-b:#7b3a14;
  --orbite:#ff9466;--echo:#9db8ff;--revue:#ffc46b;
- --fond:#09090e;--s1:#13131b;--s2:#1a1a24;--tx2:rgba(255,255,255,.72);--filet:rgba(255,255,255,.08);
+ --fond:#09090e;--s1:#13131b;--s2:#1a1a24;--tx2:rgba(255,255,255,.78);--filet:rgba(255,255,255,.08);
  --ok:#3ecf8e;--dif:#ffc043;
  --ease:cubic-bezier(.22,.8,.18,1);--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 *{box-sizing:border-box}
@@ -147,11 +147,11 @@ button{font:inherit;color:inherit}
 .panneau .ph h3{font-size:16px;font-weight:750;margin:0}.panneau .ph .sp{flex:1}.panneau .ph small{font-size:13px;color:var(--tx2)}
 .defile{overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}
 .entetes,.row{display:grid;align-items:center;gap:14px;padding:0 20px}
-.entetes{flex:none;height:30px;font-size:12.5px;font-weight:650;color:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.06)}
-.row{min-height:42px;font-size:14.5px;border-top:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s}
+.entetes{flex:none;height:32px;font-size:13px;font-weight:650;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.06)}
+.row{min-height:44px;font-size:15px;border-top:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s}
 .row:first-child{border-top:0}
 .row:hover{background:rgba(255,255,255,.045)}.row.sel{background:rgba(255,255,255,.085);box-shadow:inset 3px 0 0 var(--marque,#fff)}
-.row .c{font:600 14px var(--mono)}.row .s{color:var(--tx2);font-size:13.5px}.row .ok{color:var(--ok);font-weight:650;font-size:13.5px;display:inline-flex;gap:6px;align-items:center}
+.row .c{font:600 14.5px var(--mono)}.row .s{color:var(--tx2);font-size:14px}.row .ok{color:var(--ok);font-weight:650;font-size:13.5px;display:inline-flex;gap:6px;align-items:center}
 .row .acts{display:flex;gap:6px;justify-content:flex-end;opacity:0;transition:opacity .15s}.row:hover .acts,.row.sel .acts{opacity:1}
 .d-row{grid-template-columns:20px 64px 260px 1fr 64px}
 .r-row{grid-template-columns:20px 64px 1fr 140px 120px 230px}
@@ -179,7 +179,7 @@ button{font:inherit;color:inherit}
 .suivi .act{display:flex;align-items:center;gap:12px;margin-top:14px}.suivi .act small{font-size:13px;color:rgba(255,255,255,.72)}
 /* position dans la partie : une autre lecture que la barre (où en est le lot dans la partie, où sont les différés) */
 .position{position:relative;z-index:1;flex:none;margin:18px 36px 0;padding:14px 20px 16px;border-radius:18px;background:rgba(8,6,12,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
-.position .t{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.76)}
+.position .t{display:flex;justify-content:space-between;font-size:14px;color:rgba(255,255,255,.82)}
 .position .t b{color:#fff;font-weight:650}
 .position svg{display:block;width:100%;height:38px;margin-top:4px;overflow:visible}
 .curseur{position:absolute;z-index:20;left:590px;top:400px;width:22px;height:22px;pointer-events:none;transition:left .8s cubic-bezier(.45,0,.2,1),top .8s cubic-bezier(.45,0,.2,1),transform .12s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
@@ -258,7 +258,7 @@ function orbite(){const s=S(),fin=phase==='fin',cours=enCours(),dem=phase==='dem
  const W=1068,x=k=>k/120*W,front=fin?120:s.tr,diffs=fin?[6,13,19,26,40,52,61,77,88,96,113]:[6,13,19,26];
  let g=`<line x1="0" y1="22" x2="${W}" y2="22" stroke="rgba(255,255,255,.16)" stroke-width="2"/><line x1="0" y1="22" x2="${x(front)}" y2="22" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
  for(const k of diffs)g+=`<rect x="${x(k)-1.5}" y="14" width="3" height="16" rx="1.5" fill="#ffc043"/>`;
- if(!fin)g+=`<line x1="${x(front)}" y1="6" x2="${x(front)}" y2="34" stroke="#fff" stroke-width="2"/><text x="${x(front)+8}" y="12" fill="#fff" font-size="12.5" font-family="JetBrains Mono" font-weight="600">${cours?s.cours:s.der}</text>`;
+ if(!fin)g+=`<line x1="${x(front)}" y1="6" x2="${x(front)}" y2="34" stroke="#fff" stroke-width="2"/><text x="${x(front)+8}" y="12" fill="#fff" font-size="14" font-family="JetBrains Mono" font-weight="600">${cours?s.cours:s.der}</text>`;
  return haut('orbite')+
  `<section class="scene"><div><div class="nom">${picto('orbite')}<b>Orbite</b><span>· partie 13</span></div>
    <h2>${titre}</h2><div class="phr">${pastille()}<span style="color:rgba(255,255,255,.8);font-size:14px">jusqu’à la fin de la partie</span></div><p>${phrase}</p></div>
@@ -266,7 +266,7 @@ function orbite(){const s=S(),fin=phase==='fin',cours=enCours(),dem=phase==='dem
    <div class="d"><span><i class="m p"></i><span id="pos">${s.po}</span> posés</span><span><i class="m d"></i>${s.di} différés</span>${fin?'':`<span class="r">${120-s.tr} restants</span>`}</div>
    ${barre(s.po,s.di,120,phase==='lot')}<div class="cour" id="cour">${ligne}</div>
    <div class="act">${cmd}${cours&&!dem?'<small>médiane observée : 8 s par cut</small>':''}</div></div></section>
- <section class="position"><div class="t"><span><b>Position dans la partie</b> · cuts ciblés dans l’ordre du lot, différés en ambre</span><span>${fin?'fin de la partie atteinte':'fin de la partie'}</span></div><svg viewBox="0 0 ${W} 38" preserveAspectRatio="none" role="img" aria-label="Position du lot dans la partie">${g}</svg></section>
+ <section class="position"><div class="t"><span><b>Parcours du lot</b> · cuts ciblés dans l’ordre du lot, différés en ambre</span><span>${fin?'fin de la partie atteinte':'fin de la partie'}</span></div><svg viewBox="0 0 ${W} 38" preserveAspectRatio="none" role="img" aria-label="Parcours du lot">${g}</svg></section>
  <div class="cols" style="grid-template-columns:1fr;margin-top:18px"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${cours?'à reprendre après le lot':'à reprendre'}</small></div>
   <div class="entetes d-row"><span></span><span>Cut</span><span>Motif</span><span>Précision</span><span style="text-align:right">Heure</span></div>
   <div class="defile">${DIFF.map(([c,m,p,h])=>`<div class="row d-row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">${p}</span><span class="s" style="text-align:right">${h}</span></div>`).join('')}</div></section></div>`;}
@@ -302,7 +302,7 @@ const AMB={accueil:'radial-gradient(100% 65% at 12% 0%,rgba(11,111,105,.5),trans
 const FOND={orbite:'linear-gradient(135deg,#a8431f,#b8135a)',echo:'linear-gradient(135deg,#2f6fd6,#5a2ad6)',revue:'linear-gradient(135deg,#a56510,#7b3a14)'};
 const ECR={accueil,orbite,echo,revue};
 const NOTES={accueil:'<b>Accueil :</b> la carte de la partie garde sa couleur. C’est la pastille qui dit l’état du lot, avec une forme à elle : roue pour en cours, roue en pointillé pour pause demandée, deux barres pour en pause, coche pour terminé. Toute carte d’activité se soulève au survol ou au clavier (flèches gauche et droite), montre une flèche et réagit à l’appui. Écho, indisponible pendant un lot, perd sa couleur et porte un cadenas.',
- orbite:'<b>Orbite :</b> la composition que tu as choisie revient : grand titre à gauche, carte de suivi à droite avec la commande, corail ample, liste sombre dessous. La « position dans la partie » donne une autre lecture que la barre : où en est le lot parmi les cuts ciblés, et où se trouvent les différés. Le bouton de commande garde sa place et change d’état : « Pause », puis « Pause demandée… », puis « Reprendre au cut 4813 ». La liste des différés ne répète plus « différé » ni « après le lot » : chaque ligne dit le motif, sa précision quand elle existe, et l’heure.',
+ orbite:'<b>Orbite :</b> la composition que tu as choisie revient : grand titre à gauche, carte de suivi à droite avec la commande, corail ample, liste sombre dessous. Le « parcours du lot » donne une autre lecture que la barre : où en est le lot parmi les cuts ciblés, et où se trouvent les différés. Le bouton de commande garde sa place et change d’état : « Pause », puis « Pause demandée… », puis « Reprendre au cut 4813 ». La liste des différés ne répète plus « différé » ni « après le lot » : chaque ligne dit le motif, sa précision quand elle existe, et l’heure.',
  echo:'<b>Écho :</b> même composition. Pendant un lot, l’écran dit qu’Écho est indisponible, et la pastille du lot reste en haut avec Pause.',
  revue:'<b>Revue :</b> l’ambre reste dans l’en-tête et les repères ; la liste est sur une surface neutre. Les colonnes sont nommées. « Marquer examiné » est une action explicite, sur la ligne choisie et en haut ; la sélection passe ensuite au prochain cut à examiner.'};
 
