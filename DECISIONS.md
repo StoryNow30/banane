@@ -2987,3 +2987,17 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Le chiffre hors apprentissage (leave-one-partie-out) est toujours publié à côté du chiffre sur la partie rejouée, et une règle qui ne vaut que pour une partie est dite comme telle.
   - Pas de paquet avant la cible atteinte avec cette qualité, `verify` vert, prédictions scellées intactes.
 - **Premier usage** : chantier « cap 5 » (branche claude/50-l1-cap5, depuis claude/50-l1-apprentissage 045f338), sur 2:19 puis 2:17, 2:18, 2:11 et les parties jugées du banc.
+
+## D-223 — Garde-fous : budgets d'erreurs au lieu du zéro absolu (Mic, 20/10/2026 ; amende D-222)
+
+- **Constat** : les garde-fous à zéro ont freiné le développement. Couloir de 45 mm (665 poses empêchées ; sur 80 jugées, 52 à 10 mm, 4 à plus de 50 mm), garde de paire (211, 0 à plus de 50 mm parmi les jugées), porte G1-c fermée pour 2 poses ajoutées (zéro erreur impossible à prouver sur de petits échantillons), « plus de 150 mm » qui cachait sur 2:19 un biais d'écartement corrigeable.
+- **Principe** : le coût d'une erreur dépend de ce que Mic en voit. Un différé ou une pose rouge fausse est repris de toute façon ; une **pose verte fausse** est la seule dangereuse (risque de ne pas être revue, définitive dans ESV, D-220).
+- **Budgets acceptés** (sur les poses validées jugées, intervalle sur un effectif suffisant, publiés à chaque mesure) :
+  - mauvaise voie validée : **1 % au plus** ;
+  - pose validée à plus de 50 mm de Mic : **3 % au plus** ;
+  - pose entre 10 et 20 mm : **acceptée** (mesure de qualité, plus un garde-fou) ;
+  - cut vert changé : **accepté si le gain net est mesuré** (plus de poses rendues justes que de poses dégradées) ;
+  - pose sans preuve du nuage : **toujours zéro** (pas de pose inventée).
+- **Seuils d'arrêt** (couloir 45 mm, 150 mm, garde de paire, τ, δ) : plus des règles de principe, des **réglages du banc**, choisis par le gain mesuré.
+- **Règle de passage** : une version passe si elle fait gagner du temps net à Mic (différés évités moins coût des erreurs) en restant sous ces budgets. Pendant les portions de test (sans impact réel), les budgets peuvent être plus larges ; ils se resserrent avant une livraison.
+- Remplace les « 0 » de D-222 (mauvaise voie, poses à plus de 50 mm, cuts verts changés) ; le reste de D-222 tient.
