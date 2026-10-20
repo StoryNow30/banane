@@ -535,7 +535,7 @@
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
    validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
-   rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45});
+   rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -676,10 +676,11 @@
        if(dd.etat==='rien'&&best&&!ambigu)dd={etat:'valider',motif:'recherche-adv',decal:best.decal,corrigee:false,avant:dd.motif};
        else if(dd.etat==='valider'){
          /* Pose contredite : sur un rail, la cellule forte la plus proche trouvée autour de la pose retenue en est à plus de `rechContraMinMm` (et à
-          * `rechContraMaxMm` au plus : au-delà, c'est un autre rail) ; la paire recentrée la remplace, sinon rien. */
+          * `rechContraMaxMm` au plus : au-delà, c'est un autre rail) ; la paire recentrée la remplace, sinon (`rechContraRien`) rien. */
          const contra=fini(LEVIERS.rechContraMinMm)&&SIDES.some(s=>{const c=rech.cellules[s].filter(x=>x.graines.includes('dd'));if(!c.length)return false;
            const m=Math.min(...c.map(x=>Math.hypot(x.mm[1]-dd.decal[s][1],x.mm[2]-dd.decal[s][2])));return m>LEVIERS.rechContraMinMm&&m<=LEVIERS.rechContraMaxMm;});
-         if(contra)dd=best&&!ambigu?{etat:'valider',motif:'recherche-adv-contredite',decal:best.decal,corrigee:false,avant:dd.motif}:{etat:'rien',motif:'recherche-adv-contredite-rien',decal:null,corrigee:false,avant:dd.motif};
+         if(contra&&best&&!ambigu)dd={etat:'valider',motif:'recherche-adv-contredite',decal:best.decal,corrigee:false,avant:dd.motif};
+         else if(contra&&LEVIERS.rechContraRien)dd={etat:'rien',motif:'recherche-adv-contredite-rien',decal:null,corrigee:false,avant:dd.motif};
          else if(LEVIERS.rechRemplace&&best&&!ambigu&&ecart(best,{decal:dd.decal})>LEVIERS.rechRemplaceMm)dd={etat:'valider',motif:'recherche-adv-remplace',decal:best.decal,corrigee:false,avant:dd.motif};
          else if(LEVIERS.rechSansPaireRien&&(!best||ambigu))dd={etat:'rien',motif:'recherche-adv-sans-paire',decal:null,corrigee:false,avant:dd.motif};
        }
