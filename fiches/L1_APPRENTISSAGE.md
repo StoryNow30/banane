@@ -106,3 +106,7 @@ Les cuts « sous τ » étaient posés sans validation par la test 13 (approché
 - La référence suppose que les lignes valides non touchées sont justes ; une partie où l'extraction d'origine serait fausse donnerait une fausse référence.
 - L'écartement de l'opérateur n'est pas fixe (ADV de 2:1 : 1 448 à 1 461 mm) : la correction peut y tirer une paire juste vers une fausse place, si l'écart dépasse 15 mm. Non mesurable sans liste ni Écho de cette zone.
 - La mauvaise voie de 2:17 cut 9556 (test 13 comme test 14) n'est pas corrigée : aucune hypothèse n'est sur la voie de l'opérateur.
+
+## 9. Paquet
+
+`ariane-4.9.5-test.14.zip` (construit par `tools/package.py` sur 49a2c60) : 2 580 393 octets, SHA-256 `ff9030ae614ea7b9dd53949f46efd2a2eea10b93528b95af23e67ab14362765a`, manifeste 4.9.5.14, « 4.9.5 test 14 (L1-e) », CRC valide. Consigne : `consignes/seance-terrain-4.9.5-test-14-2026-10-20.md`.
