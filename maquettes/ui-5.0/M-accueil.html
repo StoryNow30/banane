@@ -2,239 +2,273 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ariane · accueil</title>
 <style>
-/* Écran principal d'Ariane, d'après les références choisies par Mic le 20/10 :
-   accueil à grandes vignettes (Apple TV), surfaces riches et colorées, grands titres + listes denses,
-   transitions fluides et visibles (la vignette s'agrandit pour devenir l'écran).
-   Les états et compteurs suivent fiches/UI_ETATS_COMPTEURS.md. Maquette statique, chiffres inventés. */
+/* Écran principal d'Ariane, passe de finition (audit du 20/10, quatrième retour) :
+   1. surfaces colorées hiérarchisées (la partie active la plus riche, activités contenues, parties récentes calmes) ;
+   2. un seul langage : pictogrammes d'activité pour l'identité, et seulement des données exactes et nommées ;
+   3. en-têtes bas dans Orbite et Revue, la tâche au centre ;
+   4. parcours animé accueil → activité → retour (la vignette s'agrandit, puis se replie).
+   Couleurs derrière du texte blanc : contraste mesuré ≥ 4,5:1 (formule WCAG). États : fiches/UI_ETATS_COMPTEURS.md.
+   Maquette statique, chiffres inventés mais cohérents dans chaque situation. */
 @font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
 @font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
 :root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
- /* couleurs d'activité (ambiances) */
- --partie-a:#0d8f86;--partie-b:#1b2f7a;--orbite-a:#ff8a3d;--orbite-b:#b8135a;--echo-a:#2fa8ff;--echo-b:#5a2ad6;--revue-a:#f5c542;--revue-b:#d9541e;
- /* couleurs d'état (petites marques, toujours avec une forme) */
- --ok:#3ecf8e;--dif:#ffc043;--inc:#ff6b5e}
+ /* activités : couleur pleine (texte blanc ≥ 4,5:1) et teinte contenue */
+ --partie-a:#0b6f69;--partie-b:#1b2f7a;--orbite-a:#a8431f;--orbite-b:#b8135a;--echo-a:#2f6fd6;--echo-b:#5a2ad6;--revue-a:#9a5a0c;--revue-b:#7b3a14;
+ --orbite:#ff8a5c;--echo:#8fb0ff;--revue:#ffc46b;
+ --fond:#0a0a10;--s1:#14141c;--s2:#1c1c27;--tx2:rgba(255,255,255,.74);
+ /* états : petites marques, toujours avec une forme */
+ --ok:#3ecf8e;--dif:#ffc043}
 *{box-sizing:border-box}
 body{margin:0;background:#050507;color:#fff;font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 :focus-visible{outline:3px solid #fff;outline-offset:3px}
 button{font:inherit;color:inherit}
 .page{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
-.page>h1{font-size:19px;margin:0 0 4px}.intro{color:#aaa;max-width:92ch;margin:0 0 14px;font-size:14px}.intro a{color:inherit}
+.page>h1{font-size:19px;margin:0 0 4px}.intro{color:#aaa;max-width:94ch;margin:0 0 14px;font-size:14px}.intro a{color:inherit}.intro b{color:#fff}
 .sc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
 .sc button{font:500 13px var(--sans);padding:7px 14px;border:0;border-radius:7px;background:#16161c;color:#aaa;cursor:pointer}
 .sc button[aria-pressed=true]{background:#fff;color:#000}
 .cadre{width:100%;overflow:hidden}
-.app{position:relative;width:1180px;height:720px;transform-origin:0 0;border-radius:18px;overflow:hidden;background:#0b0b12;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+.app{position:relative;width:1180px;height:720px;transform-origin:0 0;border-radius:18px;overflow:hidden;background:var(--fond);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
 .note{margin:16px 0 0;color:#aaa;font-size:14px;max-width:96ch}.note b{color:#fff}
 
-/* fonds d'ambiance : la couleur de l'écran courant baigne toute la fenêtre */
 .amb{position:absolute;inset:0;transition:background .6s ease}
-.amb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,14,.15),rgba(8,8,14,.88) 62%)}
-.ecran{position:absolute;inset:0;overflow:hidden auto;scrollbar-width:none}
-.ecran.entre>*{animation:monte .5s cubic-bezier(.2,.8,.2,1) both}.ecran.entre>*:nth-child(2){animation-delay:.05s}.ecran.entre>*:nth-child(3){animation-delay:.1s}.ecran.entre>*:nth-child(4){animation-delay:.15s}
-@keyframes monte{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.ecran{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.ecran.entre .anim{animation:monte .45s cubic-bezier(.2,.8,.2,1) both}.ecran.entre .anim:nth-of-type(2){animation-delay:.04s}.ecran.entre .anim:nth-of-type(3){animation-delay:.08s}.ecran.entre .anim:nth-of-type(4){animation-delay:.12s}
+@keyframes monte{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-/* barre du haut */
-.haut{position:relative;z-index:2;display:flex;align-items:center;gap:22px;height:64px;padding:0 40px}
+.haut{position:relative;z-index:2;flex:none;display:flex;align-items:center;gap:20px;height:62px;padding:0 36px}
 .marque{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.01em}
-.marque svg{width:26px;height:26px}
-.onglets{display:flex;gap:4px;margin-left:18px}
-.onglets button{border:0;background:transparent;padding:7px 16px;border-radius:18px;font-weight:600;font-size:14.5px;color:rgba(255,255,255,.72);cursor:pointer}
-.onglets button[aria-current=true]{background:rgba(255,255,255,.92);color:#0b0b12}
-.haut .sp{flex:1}.esv{display:flex;align-items:center;gap:7px;font-size:13.5px;color:rgba(255,255,255,.8)}.esv i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.chercher{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:17px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);font-size:13.5px;cursor:pointer}
+.onglets{display:flex;gap:2px;margin-left:16px}
+.onglets button{display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:7px 14px;border-radius:18px;font-weight:600;font-size:14.5px;color:var(--tx2);cursor:pointer}
+.onglets button i{width:7px;height:7px;border-radius:50%}
+.onglets button:hover{color:#fff}
+.onglets button[aria-current=true]{background:rgba(255,255,255,.94);color:#0b0b12}
+.haut .sp{flex:1}.esv{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--tx2)}.esv i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.chercher{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:17px;background:rgba(255,255,255,.1);color:var(--tx2);font-size:13.5px;cursor:pointer}
+.chercher kbd{font:500 11.5px var(--sans);background:rgba(255,255,255,.14);border-radius:4px;padding:0 5px}
 .mini{display:flex;align-items:center;gap:2px;padding:3px;border-radius:20px;background:linear-gradient(135deg,var(--orbite-a),var(--orbite-b))}
 .mini button{border:0;background:transparent;display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-radius:15px;font-weight:700;font-size:13.5px;cursor:pointer}
-.mini .mini-p{background:rgba(255,255,255,.95);color:#5a0a2c;padding:0 10px}
-.chercher kbd{font:500 11.5px var(--sans);background:rgba(255,255,255,.14);border-radius:4px;padding:0 5px}
+.mini .mini-p{background:rgba(255,255,255,.95);color:#5a0a2c;padding:0 11px}
 
-/* la grande vignette du haut : la partie */
-.une{position:relative;z-index:1;margin:6px 40px 0;height:250px;border-radius:22px;overflow:hidden;display:flex;align-items:flex-end;cursor:pointer;
- background:linear-gradient(120deg,var(--partie-a),var(--partie-b));box-shadow:0 30px 60px -20px rgba(0,0,0,.7);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
-.une:hover,.une:focus-visible{transform:scale(1.012);box-shadow:0 40px 80px -20px rgba(0,0,0,.8)}
-.une .art{position:absolute;inset:0}
-.une .txt{position:relative;padding:24px 36px 34px;max-width:640px}
-.une .sur{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.78)}
-.une h2{font-size:48px;line-height:1.02;font-weight:800;letter-spacing:-.03em;margin:6px 0 10px}
-.une p{margin:0;font-size:17px;color:rgba(255,255,255,.88)}
-.une .bts{display:flex;gap:10px;margin-top:20px}
-.pill{display:inline-flex;align-items:center;gap:9px;height:46px;padding:0 22px;border:0;border-radius:23px;background:#fff;color:#0b0b12;font-weight:700;font-size:15.5px;cursor:pointer}
-.pill.verre{background:rgba(255,255,255,.18);color:#fff;backdrop-filter:blur(10px)}
-.pill svg{width:16px;height:16px}
-.une .vie{position:absolute;right:36px;bottom:40px;width:300px;padding:18px 20px;border-radius:16px;background:rgba(10,10,20,.35);backdrop-filter:blur(14px)}
-.vie .l1{display:flex;justify-content:space-between;font-size:13.5px;color:rgba(255,255,255,.85)}
-.vie .n{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:4px 0 10px}.vie .n span{font-size:15px;font-weight:500;color:rgba(255,255,255,.8);letter-spacing:0}
-.barre{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;display:flex}
-.barre i{height:100%}.barre .lueur{position:absolute;top:0;bottom:0;width:50px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);animation:balaye 2.2s ease-in-out infinite}
-@keyframes balaye{from{left:-50px}to{left:var(--fin,100%)}}
+/* pictogrammes d'activité : le seul langage d'identité */
+.picto{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
+.picto svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.picto.o{background:linear-gradient(135deg,var(--orbite-a),var(--orbite-b))}.picto.e{background:linear-gradient(135deg,var(--echo-a),var(--echo-b))}.picto.r{background:linear-gradient(135deg,var(--revue-a),var(--revue-b))}
 
-/* rangées de vignettes */
-.rangee{position:relative;z-index:1;padding:26px 40px 0}
-.rangee h3{font-size:20px;font-weight:750;letter-spacing:-.01em;margin:0 0 12px}
-.vignettes{display:flex;gap:18px}
-.vig{position:relative;flex:none;width:262px;height:150px;border:0;border-radius:16px;overflow:hidden;padding:16px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;
- box-shadow:0 18px 30px -14px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
-.vig:hover,.vig:focus-visible{transform:scale(1.06) translateY(-4px);box-shadow:0 30px 50px -16px rgba(0,0,0,.85);z-index:2}
-.vig:focus-visible{outline-offset:4px}
-.vig::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.22),transparent 40%);opacity:0;transition:opacity .3s}
-.vig:hover::before,.vig:focus-visible::before{opacity:1}
-.vig .art{position:absolute;inset:0}
-.vig b{position:relative;font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
-.vig small{position:relative;font-size:14px;color:rgba(255,255,255,.88);margin-top:2px}
-.vig .badge{position:absolute;top:14px;left:16px;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:10px;background:rgba(0,0,0,.28);backdrop-filter:blur(6px)}
-.vig.o{background:linear-gradient(135deg,var(--orbite-a),var(--orbite-b))}
-.vig.e{background:linear-gradient(135deg,var(--echo-a),var(--echo-b))}
-.vig.r{background:linear-gradient(135deg,var(--revue-a),var(--revue-b))}
-.vig.p{width:180px;background:linear-gradient(135deg,#2b3a55,#141a2a)}
-.vig.p.v{background:linear-gradient(135deg,#1f7a5a,#0f2b3a)}
-
-/* écrans d'activité : grand titre + liste dense */
-.retour{position:relative;z-index:2;display:inline-flex;align-items:center;gap:6px;border:0;background:rgba(255,255,255,.14);height:34px;padding:0 14px 0 10px;border-radius:17px;font-weight:600;font-size:14px;cursor:pointer;backdrop-filter:blur(8px)}
-.tete-act{position:relative;z-index:1;display:grid;grid-template-columns:1fr 360px;gap:36px;padding:18px 40px 0;align-items:end}
-.tete-act .sur{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.78)}
-.tete-act h2{font-size:56px;line-height:1;font-weight:800;letter-spacing:-.035em;margin:8px 0 12px}
-.tete-act p{margin:0;font-size:17px;color:rgba(255,255,255,.88);max-width:56ch}
-.carte-etat{padding:20px 22px;border-radius:18px;background:rgba(10,10,20,.38);backdrop-filter:blur(16px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
-.carte-etat .n{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1}.carte-etat .n span{font-size:16px;font-weight:500;color:rgba(255,255,255,.8);letter-spacing:0}
-.carte-etat .d{display:flex;gap:16px;margin:10px 0 14px;font-size:14px;color:rgba(255,255,255,.88)}
-.carte-etat .d span{display:inline-flex;align-items:center;gap:7px}
-.carte-etat .cour{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14.5px}
-.carte-etat .cour b{font-family:var(--mono)}
-.carte-etat .act{display:flex;gap:10px;margin-top:16px}
-.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:tour 1s linear infinite}
-@keyframes tour{to{transform:rotate(360deg)}}
+/* la partie active : la surface la plus riche */
+.une{position:relative;z-index:1;flex:none;margin:4px 36px 0;border-radius:22px;overflow:hidden;cursor:pointer;
+ background:linear-gradient(115deg,var(--partie-a),var(--partie-b));box-shadow:0 26px 50px -22px rgba(0,0,0,.8);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.une.o{background:linear-gradient(115deg,var(--orbite-a),var(--orbite-b))}
+.une.r{background:linear-gradient(115deg,var(--revue-a),var(--revue-b))}
+.une::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 140% at 100% 0%,rgba(255,255,255,.14),transparent 60%)}
+.une:hover{transform:scale(1.008)}
+.une .in{position:relative;display:grid;grid-template-columns:1fr 330px;gap:30px;align-items:end;padding:34px 34px 32px 36px}
+.sur{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.84)}
+.une h2{font-size:46px;line-height:1.02;font-weight:800;letter-spacing:-.03em;margin:6px 0 8px}
+.une p{margin:0;font-size:16.5px;color:rgba(255,255,255,.92)}
+.bts{display:flex;gap:10px;margin-top:18px}
+.pill{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 20px;border:0;border-radius:22px;background:#fff;color:#0b0b12;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
+.pill.verre{background:rgba(255,255,255,.16);color:#fff}
+.pill.sombre{background:rgba(255,255,255,.08);color:#fff}
+.pill svg{width:15px;height:15px}
+.donnee{padding:16px 18px;border-radius:16px;background:rgba(6,6,14,.32)}
+.donnee .l1{display:flex;justify-content:space-between;font-size:13.5px;color:rgba(255,255,255,.88)}
+.donnee .n{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:4px 0 2px}.donnee .n span{font-size:15px;font-weight:500;color:rgba(255,255,255,.86);letter-spacing:0}
+.donnee .d{font-size:13.5px;color:rgba(255,255,255,.88);margin-bottom:10px;display:flex;gap:14px}
+.donnee .d span,.module .d span{display:inline-flex;align-items:center;gap:6px}
+/* barre de progression : données exactes, aucune poignée */
+.barre{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;display:flex}
+.barre i{height:100%}.barre .lueur{position:absolute;top:0;bottom:0;width:60px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:balaye 2.2s ease-in-out infinite}
+@keyframes balaye{from{left:-60px}to{left:var(--fin,100%)}}
 .m{display:inline-block;width:11px;height:11px;border-radius:3px;flex:none}
-.m.d{background:var(--dif);position:relative}.m.d::after{content:"";position:absolute;left:2px;right:2px;top:4.5px;height:2px;background:#4a3000}
-.m.v{box-shadow:inset 0 0 0 2px var(--dif)}.m.p{background:var(--ok)}
-/* le fil de la partie : grande illustration vivante */
-.filp{position:relative;z-index:1;margin:26px 40px 0;height:86px;border-radius:16px;background:rgba(10,10,20,.3);backdrop-filter:blur(10px);padding:16px 20px}
-.filp .t{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.78);margin-bottom:12px}
-.filp svg{width:100%;height:30px;display:block}
-.liste{position:relative;z-index:1;margin:22px 40px 30px;border-radius:16px;background:rgba(10,10,20,.42);backdrop-filter:blur(14px);overflow:hidden}
-.liste .lh{display:flex;align-items:center;gap:12px;padding:16px 20px 8px}
-.liste .lh h3{font-size:18px;font-weight:750;margin:0}.liste .lh .sp{flex:1}
-.filtres{display:flex;gap:4px}.filtres button{border:0;background:transparent;height:32px;padding:0 14px;border-radius:16px;font-weight:600;font-size:14px;color:rgba(255,255,255,.7);cursor:pointer}
-.filtres button[aria-pressed=true]{background:rgba(255,255,255,.9);color:#0b0b12}
-.row{display:grid;grid-template-columns:22px 70px 1fr 200px auto;align-items:center;gap:14px;padding:10px 20px;font-size:14.5px;border-top:1px solid rgba(255,255,255,.06);cursor:pointer}
-.row:hover,.row.sel{background:rgba(255,255,255,.08)}.row .c{font:600 14px var(--mono)}.row .s{color:rgba(255,255,255,.7);font-size:13.5px}
-.row .o{font-size:13.5px;color:rgba(255,255,255,.75);opacity:0}.row:hover .o,.row.sel .o{opacity:1}
-.row .ok{color:var(--ok);font-weight:600;font-size:13.5px}
+.m.p{background:#fff}.m.d{background:var(--dif);position:relative}.m.d::after{content:"";position:absolute;left:2px;right:2px;top:4.5px;height:2px;background:#4a3000}
+.m.v{box-shadow:inset 0 0 0 2px var(--dif)}
 
-/* la vignette qui s'agrandit pour devenir l'écran */
-.vol{position:absolute;z-index:10;border-radius:16px;transition:all .55s cubic-bezier(.65,0,.2,1);pointer-events:none}
+/* activités : couleur identifiable mais contenue */
+.rangee{position:relative;z-index:1;flex:none;padding:28px 36px 0}
+.rangee h3{font-size:19px;font-weight:750;letter-spacing:-.01em;margin:0 0 12px}
+.vignettes{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.vig{position:relative;height:136px;border:0;border-radius:16px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;gap:14px;align-items:flex-start;
+ background:var(--s1);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s;overflow:hidden}
+.vig::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 120% at 0% 0%,var(--teinte),transparent 70%);opacity:.22;transition:opacity .3s}
+.vig:hover,.vig:focus-visible{transform:translateY(-4px) scale(1.03);box-shadow:0 24px 40px -18px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08);z-index:2}
+.vig:hover::before,.vig:focus-visible::before{opacity:.38}
+.vig .picto{position:relative}
+.vig .tx{position:relative;display:flex;flex-direction:column;min-width:0;height:100%}
+.vig b{font-size:19px;font-weight:750;letter-spacing:-.01em;line-height:1.2}
+.vig small{font-size:13.5px;color:var(--tx2);margin-top:2px;line-height:1.35}
+.vig .etat{margin-top:auto;font-size:13px;font-weight:650;color:var(--c)}
+.vig.o{--teinte:var(--orbite-a);--c:var(--orbite)}.vig.e{--teinte:var(--echo-a);--c:var(--echo)}.vig.r{--teinte:var(--revue-a);--c:var(--revue)}
+.vig.b{--teinte:#555;--c:rgba(255,255,255,.8)}.vig.b .picto{background:#2a2a38}
+.vig.actif::before{opacity:.5}
+
+/* parties récentes : surfaces calmes, texte exact */
+.recents{display:flex;gap:10px;overflow-x:auto;padding:0 0 30px;scrollbar-width:none}
+.part{flex:none;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px 0 14px;border:0;border-radius:14px;background:var(--s1);cursor:pointer;text-align:left}
+.part:hover{background:var(--s2)}
+.part b{font-size:15px;font-weight:700}.part small{display:block;font-size:13px;color:var(--tx2)}
+.part i{width:8px;height:8px;border-radius:50%;flex:none}
+
+/* écrans d'activité : en-tête bas, la tâche au centre */
+.tete{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:16px;padding:8px 36px 0}
+.tete h2{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+.tete .sous{font-size:14px;color:rgba(255,255,255,.84)}
+.tete .sp{flex:1}
+.module{position:relative;z-index:1;flex:none;margin:18px 36px 0;padding:22px 24px;border-radius:20px;background:rgba(8,8,16,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.module .ligne{display:flex;align-items:flex-end;gap:28px}
+.module .n{font-size:56px;font-weight:800;letter-spacing:-.04em;line-height:.95}.module .n span{font-size:18px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.86)}
+.module .d{display:flex;gap:18px;font-size:14.5px;color:rgba(255,255,255,.9);padding-bottom:6px}
+.module .sp{flex:1}
+.module .barre{margin-top:18px;height:10px;border-radius:5px}
+.module .cour{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:15px}
+.module .cour b{font-family:var(--mono)}.module .cour small{margin-left:auto;font-size:13.5px;color:rgba(255,255,255,.78)}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:tour 1s linear infinite;flex:none}
+@keyframes tour{to{transform:rotate(360deg)}}
+.cols{position:relative;z-index:1;flex:1;min-height:0;display:grid;grid-template-columns:1fr 320px;gap:18px;margin:18px 36px 28px}
+.panneau{border-radius:18px;background:rgba(8,8,16,.5);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.panneau .ph{display:flex;align-items:center;gap:12px;padding:14px 20px 8px;flex:none}
+.panneau .ph h3{font-size:16px;font-weight:750;margin:0}.panneau .ph .sp{flex:1}.panneau .ph small{font-size:13px;color:var(--tx2)}
+.defile{overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}
+.row{display:grid;grid-template-columns:20px 64px 1fr 150px 150px;align-items:center;gap:14px;padding:9px 20px;font-size:14.5px;border-top:1px solid rgba(255,255,255,.06);cursor:pointer}
+.row:hover{background:rgba(255,255,255,.06)}.row.sel{background:rgba(255,255,255,.1);box-shadow:inset 3px 0 0 #fff}
+.row .c{font:600 14px var(--mono)}.row .s{color:var(--tx2);font-size:13.5px}.row .ok{color:var(--ok);font-weight:600;font-size:13.5px}
+.row .o{font-size:13.5px;color:var(--tx2);text-align:right}.row .o.gris{opacity:.55}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;padding:6px 20px 18px;font-size:14px;margin:0}.kv dt{color:var(--tx2)}.kv dd{margin:0;text-align:right}
+.avis{margin:0 20px 18px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);font-size:13.5px;color:rgba(255,255,255,.88)}
+.barre-act{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:10px;margin:16px 36px 0}
+.filtres{display:flex;gap:4px;padding:3px;border-radius:20px;background:rgba(8,8,16,.4)}
+.filtres button{border:0;background:transparent;height:32px;padding:0 14px;border-radius:16px;font-weight:600;font-size:14px;color:var(--tx2);cursor:pointer}
+.filtres button[aria-pressed=true]{background:rgba(255,255,255,.94);color:#0b0b12}
+.filtres b{margin-left:5px;font-weight:700}
+
+.vol{position:absolute;z-index:10;transition:all .5s cubic-bezier(.65,0,.2,1);pointer-events:none}
 </style></head>
 <body>
 <div class="page">
 <h1>M · L’écran principal d’Ariane</h1>
-<p class="intro">D’après tes choix : accueil à grandes vignettes (Apple TV), surfaces riches et colorées, grands titres et listes denses, transitions fluides. Chaque activité a sa couleur : la partie en bleu-vert, Orbite en corail, Écho en bleu-violet, la revue en ambre. <b>Clique sur une vignette</b> : elle s’agrandit pour devenir l’écran, et sa couleur baigne toute la fenêtre. Les onglets du haut mènent directement à chaque activité ; quand un lot tourne, sa pastille corail et sa Pause restent en haut de tous les écrans. Chiffres inventés. <a href="index.html">← toutes les maquettes</a></p>
+<p class="intro">Passe de finition. La partie active porte la couleur la plus riche, les activités une teinte contenue, les parties récentes une surface calme. L’identité tient dans quatre pictogrammes ; les seuls graphiques sont des données exactes et nommées. Orbite et Revue ont un en-tête bas, et la tâche est au centre. <b>Clique sur une vignette</b> : elle s’agrandit pour devenir l’écran. <b>« Accueil »</b> la replie. Chiffres inventés. <a href="index.html">← toutes les maquettes</a></p>
 <nav class="sc" id="sc"></nav>
 <div class="cadre" id="cadre"><div class="app" id="app"><div class="amb" id="amb"></div><div class="ecran" id="ecran"></div></div></div>
 <p class="note" id="note"></p>
 </div>
 <script>
 const I={play:'<path d="M7 5l12 7-12 7z" fill="currentColor"/>',pause:'<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/>',
- back:'<path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',search:'<circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ search:'<circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
  link:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',down:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'};
 const ic=(n,s=16)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true">${I[n]}</svg>`;
-const marque=`<svg viewBox="0 0 26 26" aria-hidden="true"><path d="M3 22C8 4 18 4 23 22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M7 22C10 11 16 11 19 22" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+/* pictogrammes d'activité (identité, pas des données) */
+const P={orbite:'<circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="9" ry="4.2" transform="rotate(-25 12 12)"/>',
+ echo:'<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
+ revue:'<path d="M5 6h9M5 12h6M5 18h9"/><path d="M15 12l2.2 2.2L21 10"/>',bilans:'<path d="M5 20V10M10 20V5M15 20v-7M20 20v-4"/>'};
+const picto=(n,cls='')=>`<span class="picto ${cls}"><svg viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg></span>`;
+const marque=`<svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true"><path d="M3 22C8 4 18 4 23 22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M7 22C10 11 16 11 19 22" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/></svg>`;
 
-/* illustrations : chaque vignette dessine SES données (fil de la partie, corrections d'Écho, cuts à examiner) ; aucun décor gratuit */
-function artFil(w,h,y,po,di,c,diffs,cours,op=1){const x=k=>k/c*w;let s=`<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#fff" stroke-opacity="${.22*op}" stroke-width="2"/><line x1="0" y1="${y}" x2="${x(po+di)}" y2="${y}" stroke="#fff" stroke-opacity="${op}" stroke-width="3"/>`;
- for(const k of diffs)s+=`<rect x="${x(k)-1.5}" y="${y-7}" width="3" height="14" rx="1.5" fill="#ffc043"/>`;
- if(cours)s+=`<circle cx="${x(cours)}" cy="${y}" r="4" fill="#fff"><animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite"/></circle>`;
- return `<svg class="art" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;}
-function artBarres(w,h,v){const m=Math.max(...v);return `<svg class="art" viewBox="0 0 ${w} ${h}" aria-hidden="true">${v.map((n,i)=>`<rect x="${w-28-(v.length-1-i)*22}" y="${18+(1-n/m)*60}" width="14" height="${n/m*60}" rx="3" fill="#fff" fill-opacity="${.25+.2*i}"/>`).join('')}</svg>`;}
-function artCases(w,h,d,v){let s='';for(let i=0;i<d+v;i++){const x=w-18-(9-i%10)*15,y=54+Math.floor(i/10)*15;s+=i<d?`<rect x="${x}" y="${y}" width="11" height="11" rx="2.5" fill="#fff" fill-opacity=".85"/>`:`<rect x="${x+1}" y="${y+1}" width="9" height="9" rx="2" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.6"/>`;}return `<svg class="art" viewBox="0 0 ${w} ${h}" aria-hidden="true">${s}</svg>`;}
-const etat={lot:false};
+/* trois situations cohérentes pour la partie 13 :
+   pause : lot arrêté hier après le cut 4811 ; 31 traités sur 120 (27 posés, 4 différés) ; 89 restants.
+   lot   : le lot a repris ; mêmes chiffres, cut 4812 en cours.
+   fin   : lot terminé ; 120 traités (109 posés, 11 différés) ; relecture 85 relus, 41 corrigés ; revue de 20 cuts (11 différés + 9 verts à contrôler). */
+let phase='pause';
+const COUL={orbite:'var(--orbite)',echo:'var(--echo)',revue:'var(--revue)'};
 const haut=(courant)=>`<header class="haut"><span class="marque">${marque}Ariane</span>
- <nav class="onglets">${['Accueil','Orbite','Écho','Revue'].map(t=>`<button data-go="${{Accueil:'accueil',Orbite:'orbite','Écho':'echo',Revue:'revue'}[t]}" aria-current="${t===courant}">${t}</button>`).join('')}</nav>
- <span class="sp"></span>${etat.lot&&courant!=='Orbite'?`<span class="mini"><button class="mini-go" data-go="orbite"><span class="spin"></span>Orbite · 31 / 120</button><button class="mini-p" aria-label="Pause">${ic('pause',14)}</button></span>`:''}<span class="esv"><i></i>ESV répond</span><button class="chercher">${ic('search',14)} Rechercher <kbd>Ctrl K</kbd></button></header>`;
-const barre=(po,di,c,vive)=>`<div class="barre" style="--fin:${(po+di)/c*100}%"><i style="width:${po/c*100}%;background:#fff"></i><i style="width:${di/c*100}%;background:var(--dif)"></i>${vive?'<span class="lueur"></span>':''}</div>`;
+ <nav class="onglets">${[['accueil','Accueil'],['orbite','Orbite'],['echo','Écho'],['revue','Revue']].map(([k,t])=>`<button data-go="${k}" aria-current="${k===courant}">${COUL[k]?`<i style="background:${COUL[k]}"></i>`:''}${t}</button>`).join('')}</nav>
+ <span class="sp"></span>${phase==='lot'&&!['orbite','accueil'].includes(courant)?`<span class="mini"><button data-go="orbite"><span class="spin"></span>Orbite · 31 / 120</button><button class="mini-p" aria-label="Pause du lot">${ic('pause',14)}</button></span>`:''}
+ <span class="esv"><i></i>ESV répond</span><button class="chercher">${ic('search',14)} Rechercher <kbd>Ctrl K</kbd></button></header>`;
+const barre=(po,di,c,vive)=>`<div class="barre" role="img" aria-label="${po} posés et ${di} différés sur ${c}" style="--fin:${(po+di)/c*100}%"><i style="width:${po/c*100}%;background:#fff"></i><i style="width:${di/c*100}%;background:var(--dif)"></i>${vive?'<span class="lueur"></span>':''}</div>`;
 
-function accueil(){const lot=etat.lot;
- return haut('Accueil')+
- `<section class="une" data-go="orbite" data-amb="partie" tabindex="0">${artFil(1100,250,236,27,4,120,[6,13,19,26],lot?31:0,.9)}
-  <div class="txt"><div class="sur">${lot?'En cours · Orbite':'Reprendre'}</div><h2>Partie 13</h2>
-   <p>${lot?'Orbite pose les rails, cut 4812.':'Dernier passage hier à 17 h 40 · lot jusqu’à la fin de la partie'}</p>
-   <div class="bts">${lot?`<button class="pill" data-go="orbite">Voir le lot</button><button class="pill verre">${ic('pause')} Pause</button>`:`<button class="pill" data-go="orbite">${ic('play')} Lancer Orbite</button><button class="pill verre" data-go="echo">Ouvrir Écho</button>`}</div></div>
-  <div class="vie"><div class="l1"><span>${lot?'Lot en cours':'Avancement de la partie'}</span><span>${lot?'médiane 8 s / cut':'31 / 120'}</span></div>
-   <div class="n">31 <span>sur 120 cuts traités</span></div><div style="font-size:13.5px;color:rgba(255,255,255,.85)">27 posés · 4 différés</div></div></section>
- <section class="rangee"><h3>Activités</h3><div class="vignettes">
-  <button class="vig o" data-go="orbite">${artFil(262,150,58,27,4,120,[6,13,19,26],lot?31:0)}${lot?'<span class="badge">En cours · 31 / 120</span>':''}<b>Orbite</b><small>Ariane pose les rails, tu surveilles</small></button>
-  <button class="vig e" data-go="echo">${artBarres(262,150,[96,154,212])}<b>Écho</b><small>Tu corriges, Ariane apprend</small></button>
-  <button class="vig r" data-go="revue">${artCases(262,150,11,9)}<span class="badge">20 à examiner</span><b>Revue</b><small>Différés et verts à contrôler</small></button>
-  <button class="vig" style="background:linear-gradient(135deg,#3d3d52,#1c1c28)"><b>Bilans</b><small>Relectures, exports, modèle</small></button></div></section>
- <section class="rangee" style="padding-bottom:36px"><h3>Parties récentes</h3><div class="vignettes">
-  <button class="vig p v">${artFil(180,150,60,104,0,104,[20,44,61,70,88,99],0,.8)}<span class="badge">Terminée</span><b>Partie 12</b><small>98 posés · 6 différés</small></button>
-  <button class="vig p v">${artFil(180,150,60,149,0,149,[12,30,41,66,80,95,110,121,140],0,.8)}<span class="badge">Terminée</span><b>Partie 11</b><small>140 posés · 9 différés</small></button>
-  <button class="vig p">${artBarres(180,150,[60,88,64])}<span class="badge">Écho</span><b>Partie 10</b><small>212 corrections</small></button>
-  <button class="vig p">${artFil(180,150,60,0,0,90,[],0,.8)}<b>Partie 9</b><small>Pas encore commencée</small></button></div></section>`;}
+function accueil(){
+ const H={pause:{cls:'',va:'orbite',sur:'Lot en pause',p:'Arrêté hier à 17 h 40, après le cut 4811. Il reste 89 cuts jusqu’à la fin de la partie.',
+   bts:`<button class="pill" data-go="orbite">${ic('play')} Reprendre au cut 4812</button><button class="pill verre" data-go="echo">Ouvrir Écho</button>`,
+   don:`<div class="l1"><span>Avancement du lot</span></div><div class="n">31 <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i>27 posés</span><span><i class="m d"></i>4 différés</span></div>${barre(27,4,120,false)}`},
+  lot:{cls:'o',va:'orbite',sur:'Orbite en cours',p:'Pose du cut 4812. Ne change pas de cut dans ESV pendant le lot.',
+   bts:`<button class="pill" data-go="orbite">Suivre le lot</button><button class="pill verre">${ic('pause')} Pause</button>`,
+   don:`<div class="l1"><span>Lot en cours</span><span>médiane observée 8 s / cut</span></div><div class="n">31 <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i>27 posés</span><span><i class="m d"></i>4 différés</span></div>${barre(27,4,120,true)}`},
+  fin:{cls:'r',va:'revue',sur:'Lot terminé',p:'120 cuts traités. Relecture automatique faite : 85 relus, 41 corrigés.',
+   bts:`<button class="pill" data-go="revue">Examiner les 20 cuts</button><button class="pill verre">${ic('down')} Exporter</button>`,
+   don:`<div class="l1"><span>Revue de la partie 13</span></div><div class="n">20 <span>cuts à examiner</span></div><div class="d" style="margin:0"><span><i class="m d"></i>11 différés</span><span><i class="m v"></i>9 verts à contrôler</span></div>`}}[phase];
+ const V={orbite:{pause:'En pause après le cut 4811',lot:'En cours · cut 4812',fin:'Terminé · 120 traités'},echo:{pause:'Prêt',lot:'Indisponible pendant le lot',fin:'Prêt'},
+  revue:{pause:'4 différés pour l’instant',lot:'4 différés pour l’instant',fin:'20 à examiner'},bilans:{pause:'Dernier export hier',lot:'Dernier export hier',fin:'Export à faire'}};
+ return haut('accueil')+
+ `<section class="une anim ${H.cls}" data-go="${H.va}" tabindex="0"><div class="in"><div><div class="sur">${H.sur}</div><h2>Partie 13</h2><p>${H.p}</p><div class="bts">${H.bts}</div></div><div class="donnee">${H.don}</div></div></section>
+ <section class="rangee anim"><h3>Activités · partie 13</h3><div class="vignettes">
+  <button class="vig o${phase==='lot'?' actif':''}" data-go="orbite">${picto('orbite','o')}<span class="tx"><b>Orbite</b><small>Ariane pose et valide les rails</small><span class="etat">${V.orbite[phase]}</span></span></button>
+  <button class="vig e" data-go="echo">${picto('echo','e')}<span class="tx"><b>Écho</b><small>Tu corriges, Écho garde les exemples</small><span class="etat">${V.echo[phase]}</span></span></button>
+  <button class="vig r${phase==='fin'?' actif':''}" data-go="revue">${picto('revue','r')}<span class="tx"><b>Revue</b><small>Différés et verts à contrôler</small><span class="etat">${V.revue[phase]}</span></span></button>
+  <button class="vig b">${picto('bilans')}<span class="tx"><b>Bilans</b><small>Relectures, exports, modèle</small><span class="etat">${V.bilans[phase]}</span></span></button></div></section>
+ <section class="rangee anim"><h3>Parties récentes</h3><div class="recents">
+  ${[['Partie 12','98 posés · 6 différés à reprendre','var(--dif)'],['Partie 11','140 posés · revue faite','var(--ok)'],['Partie 10','Écho · 212 corrections','var(--echo)'],['Partie 9','Pas encore commencée','rgba(255,255,255,.3)']].map(r=>`<button class="part"><i style="background:${r[2]}"></i><span><b>${r[0]}</b><small>${r[1]}</small></span></button>`).join('')}</div></section>`;}
 
-const D1=[6,13,19,26];
-const filSvg=(po,c,diffs,cours)=>{const W=1060;let s=`<line x1="0" y1="15" x2="${W}" y2="15" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`;
- s+=`<line x1="0" y1="15" x2="${(po)/c*W}" y2="15" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
- for(const k of diffs)s+=`<rect x="${k/c*W-2}" y="6" width="4" height="18" rx="2" fill="#ffc043"/>`;
- if(cours)s+=`<circle cx="${cours/c*W}" cy="15" r="5" fill="#fff"><animate attributeName="r" values="5;8;5" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.5;1" dur="1.6s" repeatCount="indefinite"/></circle>`;
- return `<svg viewBox="0 0 ${W} 30" preserveAspectRatio="none" role="img" aria-label="Fil de la partie">${s}</svg>`;};
+function orbite(){const lot=phase==='lot',fin=phase==='fin';
+ const D=[[4787,'Rail non résolu'],[4794,'Confiance basse'],[4800,'Rail non résolu'],[4807,'Écartement hors contrat']];
+ const [po,di,tr]=fin?[109,11,120]:[27,4,31];
+ return haut('orbite')+
+ `<div class="tete anim">${picto('orbite','o')}<div><h2>Orbite · partie 13</h2><div class="sous">${fin?'Lot terminé':lot?'Pose des rails, jusqu’à la fin de la partie':'Lot en pause, jusqu’à la fin de la partie'}</div></div><span class="sp"></span>
+  ${lot?`<button class="pill">${ic('pause')} Pause</button>`:fin?`<button class="pill" data-go="revue">Examiner les 20 cuts</button>`:`<button class="pill">${ic('play')} Reprendre au cut 4812</button>`}</div>
+ <section class="module anim"><div class="ligne"><div class="n">${tr} <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i>${po} posés</span><span><i class="m d"></i>${di} différés</span></div><span class="sp"></span>
+  <div class="d" style="color:rgba(255,255,255,.78)">${fin?'':`${120-tr} restants`}</div></div>${barre(po,di,120,lot)}
+  <div class="cour">${lot?'<span class="spin"></span>Pose en cours sur le <b>cut 4812</b><small>médiane observée : 8 s par cut</small>':fin?'Relecture automatique terminée : 85 relus, 41 corrigés.':'Dernière validation : <b>cut 4811</b>, hier à 17 h 40'}</div></section>
+ <div class="cols anim"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${lot?'à reprendre après le lot':'à reprendre'}</small></div>
+  <div class="defile">${D.map(([c,m])=>`<div class="row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">différé</span><span class="o${lot?' gris':''}">${lot?'après le lot':'Ouvrir dans ESV'}</span></div>`).join('')}</div></section>
+  <section class="panneau"><div class="ph"><h3>Ce lot</h3></div><dl class="kv"><dt>Bornes</dt><dd>4781 → fin de partie</dd><dt>Relecture après le lot</dt><dd>relire et corriger</dd><dt>Clic de départ</dt><dd>automatique</dd></dl>
+  ${lot?'<p class="avis">Pendant le lot, ne change pas de cut dans ESV : Ariane travaille sur le cut ouvert.</p>':''}</section></div>`;}
 
-function orbite(){const lot=etat.lot;
- return haut('Orbite')+
- `<div class="tete-act"><div><div class="sur" style="margin-top:26px">Orbite · partie 13</div>
-  <h2>${lot?'Pose des rails':'Prêt à poser'}</h2><p>${lot?'Ariane pose et valide chaque cut, puis passe au suivant. Tu peux continuer ton travail à côté.':'Jusqu’à la fin de la partie, à partir du cut 4812. Relecture et correction après le lot.'}</p></div>
-  <div class="carte-etat"><div class="n">31 <span>sur 120 cuts traités</span></div>
-   <div class="d"><span><i class="m p"></i>27 posés</span><span><i class="m d"></i>4 différés</span></div>${barre(27,4,120,lot)}
-   ${lot?`<div class="cour"><span class="spin"></span>Pose en cours sur le <b>cut 4812</b></div><div class="act"><button class="pill">${ic('pause')} Pause</button></div>`
-        :`<div class="act"><button class="pill">${ic('play')} Lancer le lot</button><button class="pill verre">Réglages</button></div>`}</div></div>
- <div class="filp"><div class="t"><span>Début de la partie</span><span>${lot?'médiane observée : 8 s par cut':'les cuts restants seront lus au fil du lot'}</span><span>Fin de la partie</span></div>${filSvg(31,120,D1,lot?31:0)}</div>
- <div class="liste"><div class="lh"><h3>Différés de ce lot</h3><span class="sp"></span><span style="font-size:13.5px;color:rgba(255,255,255,.7)">${lot?'à reprendre après le lot':'du lot précédent'}</span></div>
-  ${[[4787,'Rail non résolu'],[4794,'Confiance basse'],[4800,'Rail non résolu'],[4807,'Écartement hors contrat']].map(([c,m])=>`<div class="row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">différé</span><span class="o">${lot?'après le lot':ic('link',13)+' Ouvrir dans ESV'}</span></div>`).join('')}</div>`;}
+function echo(){return haut('echo')+
+ `<div class="tete anim">${picto('echo','e')}<div><h2>Écho · partie 13</h2><div class="sous">Tu corriges dans ESV ; Écho garde chaque correction comme exemple pour un prochain modèle.</div></div><span class="sp"></span>
+  ${phase==='lot'?'<span class="sous">Indisponible pendant un lot Orbite</span>':`<button class="pill">${ic('play')} Commencer la séance</button>`}</div>
+ <section class="module anim"><div class="ligne"><div class="n">0 <span>correction dans cette séance</span></div><span class="sp"></span><div class="d">Raison demandée : touches 1 à 5</div></div></section>
+ <div class="cols anim"><section class="panneau"><div class="ph"><h3>Séances récentes</h3></div><div class="defile">
+  ${[['Partie 10','212 corrections','hier','exportée'],['Partie 8','154 corrections','il y a 3 jours','exportée'],['Partie 7','96 corrections','il y a 5 jours','exportée']].map(r=>`<div class="row" style="grid-template-columns:20px 100px 1fr 150px 120px"><i class="m" style="background:var(--echo)"></i><span style="font-weight:600">${r[0]}</span><span>${r[1]}</span><span class="s">${r[2]}</span><span class="ok" style="text-align:right">${r[3]}</span></div>`).join('')}</div></section>
+  <section class="panneau"><div class="ph"><h3>Réglages de la séance</h3></div><dl class="kv"><dt>Raison</dt><dd>demandée</dd><dt>Export</dt><dd>à la fin</dd></dl></section></div>`;}
 
-function echo(){return haut('Écho')+
- `<div class="tete-act"><div><div class="sur" style="margin-top:26px">Écho · partie 13</div>
-  <h2>Tu corriges,<br>Ariane apprend</h2><p>Écho enregistre chaque correction que tu fais dans ESV, avec la raison si tu en donnes une. Les corrections servent d’exemples au prochain modèle.</p></div>
-  <div class="carte-etat"><div class="n">0 <span>correction dans cette séance</span></div><div class="d"><span>Partie 13 · prête</span></div>
-   <div class="act"><button class="pill">${ic('play')} Commencer</button><button class="pill verre">Réglages</button></div></div></div>
- <div class="liste" style="margin-top:30px"><div class="lh"><h3>Séances d’Écho récentes</h3></div>
-  ${[['Partie 10','212 corrections','hier','exportée'],['Partie 8','154 corrections','il y a 3 jours','exportée'],['Partie 7','96 corrections','il y a 5 jours','exportée']].map(r=>`<div class="row" style="grid-template-columns:22px 110px 1fr 200px auto"><i class="m" style="background:#7aa7ff"></i><span style="font-weight:600">${r[0]}</span><span>${r[1]}</span><span class="s">${r[2]}</span><span class="ok">${r[3]}</span></div>`).join('')}</div>`;}
+const L=[['d',4787,'Rail non résolu'],['d',4794,'Confiance basse'],['d',4800,'Rail non résolu'],['d',4807,'Écartement hors contrat'],['d',4821,'Confiance basse'],['d',4833,'Rail non résolu'],['d',4842,'Confiance basse'],['d',4858,'Rail non résolu'],['d',4869,'Confiance basse'],['d',4877,'Écartement hors contrat'],['d',4894,'Rail non résolu'],
+ ['v',4655,'PN 4655–4657'],['v',4656,'PN 4655–4657'],['v',4657,'PN 4655–4657'],['v',4712,'Écartement, cut 4712'],['v',4740,'ADV 4740–4741'],['v',4741,'ADV 4740–4741'],['v',4788,'Autour du différé 4787'],['v',4895,'Autour du différé 4894'],['v',4903,'Hauteur, cut 4903']];
+let filtre='tous',sel=0;const vus=new Set([4655]);
+function revue(){
+ if(phase!=='fin')return haut('revue')+`<div class="tete anim">${picto('revue','r')}<div><h2>Revue · partie 13</h2><div class="sous">La revue s’ouvre à la fin du lot. Pour l’instant : 4 différés.</div></div></div>
+  <div class="cols anim" style="grid-template-columns:1fr"><section class="panneau"><div class="ph"><h3>Différés pour l’instant</h3></div><div class="defile">${L.slice(0,4).map(r=>`<div class="row"><i class="m d"></i><span class="c">${r[1]}</span><span>${r[2]}</span><span class="s">différé</span><span class="o gris">${phase==='lot'?'après le lot':'Ouvrir dans ESV'}</span></div>`).join('')}</div></section></div>`;
+ const rows=L.filter(r=>filtre==='tous'||r[0]===filtre);if(sel>=rows.length)sel=0;const reste=20-vus.size,s=rows[sel];
+ return haut('revue')+
+ `<div class="tete anim">${picto('revue','r')}<div><h2>Revue · partie 13</h2><div class="sous">Revue de 20 cuts · <b>${vus.size} examiné${vus.size>1?'s':''} · ${reste} restants</b></div></div><span class="sp"></span>
+  <button class="pill">${ic('link',15)} Ouvrir le cut ${s[1]} dans ESV</button></div>
+ <div class="barre-act anim"><nav class="filtres">${[['tous','Tous',20],['d','Différés',11],['v','Verts à contrôler',9]].map(([k,t,n])=>`<button data-f="${k}" aria-pressed="${filtre===k}">${t}<b>${n}</b></button>`).join('')}</nav><span style="flex:1"></span><button class="pill sombre">${ic('down')} Exporter</button></div>
+ <div class="cols anim" style="grid-template-columns:1fr"><section class="panneau"><div class="defile">
+  ${rows.map((r,i)=>`<div class="row${i===sel?' sel':''}" data-i="${i}"><i class="m ${r[0]}"></i><span class="c">${r[1]}</span><span>${r[2]}</span><span class="${vus.has(r[1])?'ok':'s'}">${vus.has(r[1])?'✓ examiné':r[0]==='d'?'différé':'vert à contrôler'}</span><span class="o">Ouvrir dans ESV</span></div>`).join('')}</div>
+  <div style="flex:none;padding:10px 20px;font-size:13px;color:var(--tx2);border-top:1px solid rgba(255,255,255,.06)">Maquette : clique une deuxième fois sur un cut pour le marquer examiné. Hypothèse : plus tard, Ariane le cocherait seule quand tu le valides dans ESV.</div></section></div>`;}
 
-const L=[['d',4787,'Rail non résolu'],['d',4794,'Confiance basse'],['d',4800,'Rail non résolu'],['d',4807,'Écartement hors contrat'],['d',4821,'Confiance basse'],['d',4833,'Rail non résolu'],['d',4842,'Confiance basse'],['d',4858,'Rail non résolu'],['d',4869,'Confiance basse'],['d',4877,'Écartement hors contrat'],['d',4894,'Rail non résolu'],['v',4657,'PN 4655–4657'],['v',4741,'ADV 4740–4741'],['v',4895,'Autour du différé 4894'],['v',4903,'Hauteur, cut 4903'],['v',4655,'PN 4655–4657'],['v',4656,'PN 4655–4657'],['v',4788,'Autour du différé 4787'],['v',4712,'Écartement, cut 4712'],['v',4740,'ADV 4740–4741']];
-let filtre='tous',sel=0,vus=new Set([4655]);
-function revue(){const rows=L.filter(r=>filtre==='tous'||r[0]===filtre);
- return haut('Revue')+
- `<div class="tete-act"><div><div class="sur" style="margin-top:26px">Revue · partie 13</div>
-  <h2>20 cuts<br>à examiner</h2><p>Le lot est terminé : 120 cuts traités, relecture automatique faite (85 relus, 41 corrigés). Il reste ce que toi seul peux juger.</p></div>
-  <div class="carte-etat"><div class="d" style="margin-top:0"><span><i class="m d"></i>11 différés</span><span><i class="m v"></i>9 verts à contrôler</span></div>
-   <div style="font-size:14px;color:rgba(255,255,255,.85)">${vus.size} examiné sur 20</div><div style="margin-top:8px">${barre(vus.size,0,20,false)}</div>
-   <div class="act"><button class="pill">${ic('link',15)} Ouvrir le cut ${rows[sel]?.[1]} dans ESV</button></div></div></div>
- <div class="liste"><div class="lh"><h3>À examiner</h3><span class="sp"></span><nav class="filtres">${[['tous','Tous'],['d','Différés'],['v','Verts à contrôler']].map(([k,t])=>`<button data-f="${k}" aria-pressed="${filtre===k}">${t}</button>`).join('')}</nav></div>
-  ${rows.map((r,i)=>`<div class="row${i===sel?' sel':''}" data-i="${i}"><i class="m ${r[0]}"></i><span class="c">${r[1]}</span><span>${r[2]}</span><span class="${vus.has(r[1])?'ok':'s'}">${vus.has(r[1])?'✓ examiné':r[0]==='d'?'différé':'vert à contrôler'}</span><span class="o">${ic('link',13)} Ouvrir dans ESV</span></div>`).join('')}
-  <div style="padding:12px 20px;font-size:13px;color:rgba(255,255,255,.65);border-top:1px solid rgba(255,255,255,.06)">Quand tu valides le cut dans ESV, Ariane le voit et le coche « examiné ». La sélection passe au suivant.</div></div>`;}
-
-const ECR={accueil:{h:accueil,amb:'radial-gradient(120% 80% at 20% 0%,#0d8f86 0%,#1b2f7a 45%,#0b0b12 80%)'},
- orbite:{h:orbite,amb:'radial-gradient(120% 90% at 15% 0%,#ff8a3d 0%,#b8135a 45%,#160814 85%)'},
- echo:{h:echo,amb:'radial-gradient(120% 90% at 15% 0%,#2fa8ff 0%,#5a2ad6 45%,#0b0820 85%)'},
- revue:{h:revue,amb:'radial-gradient(120% 90% at 15% 0%,#f5c542 0%,#d9541e 42%,#1a0a06 85%)'}};
-const SC={repos:['Accueil, au repos',()=>{etat.lot=false;go('accueil');}],lot:['Accueil, lot en cours',()=>{etat.lot=true;go('accueil');}],
- orbite:['Orbite, lot en cours',()=>{etat.lot=true;go('orbite');}],echo:['Écho',()=>go('echo')],revue:['Revue après le lot',()=>{etat.lot=false;go('revue');}]};
-const NOTES={accueil:'<b>Accueil :</b> la grande vignette est ta partie. Elle dit d’un coup d’œil où tu en es et propose la suite (lancer Orbite, ouvrir Écho, ou voir le lot s’il tourne). En dessous, les activités, puis les parties récentes. Chaque vignette grossit au survol ou au clavier, comme sur Apple TV. L’avancement est répété dans la vignette Orbite quand un lot tourne : on le voit sans changer d’écran.',
- orbite:'<b>Orbite :</b> la vignette corail est devenue l’écran. Grand titre, carte d’état vitrée avec l’action, puis le fil de la partie (le point blanc pulse au cut en cours, les différés sont des repères ambrés), puis la liste dense des différés.',
- echo:'<b>Écho :</b> même composition, couleur bleu-violet. Écho reste une activité à part entière, au même niveau qu’Orbite.',
- revue:'<b>Revue :</b> la tâche d’après le lot. Grand titre « 20 cuts à examiner », avancement de l’examen, liste dense. La boucle est visible : ouvrir dans ESV, valider, Ariane coche « examiné », la sélection passe au suivant. <b>Hypothèse :</b> la détection « examiné » reste à construire.'};
+const AMB={accueil:{pause:'radial-gradient(110% 70% at 15% 0%,rgba(11,111,105,.55),transparent 60%),#0a0a10',lot:'radial-gradient(110% 70% at 15% 0%,rgba(168,67,31,.5),transparent 60%),#0a0a10',fin:'radial-gradient(110% 70% at 15% 0%,rgba(154,90,12,.5),transparent 60%),#0a0a10'},
+ orbite:'radial-gradient(120% 75% at 10% 0%,#a8431f 0%,#7d1040 40%,#0e0710 80%)',echo:'radial-gradient(120% 75% at 10% 0%,#2f6fd6 0%,#3a1d9a 40%,#090818 80%)',revue:'radial-gradient(120% 75% at 10% 0%,#9a5a0c 0%,#6b2c10 40%,#120806 80%)'};
+const ECR={accueil,orbite,echo,revue};
+const SC={pause:['Accueil · lot en pause',()=>{phase='pause';aller('accueil');}],lot:['Accueil · lot en cours',()=>{phase='lot';aller('accueil');}],
+ olot:['Orbite · lot en cours',()=>{phase='lot';aller('orbite');}],elot:['Écho · pendant le lot',()=>{phase='lot';aller('echo');}],
+ fin:['Accueil · lot terminé',()=>{phase='fin';aller('accueil');}],revue:['Revue · après le lot',()=>{phase='fin';aller('revue');}]};
+const NOTES={accueil:'<b>Accueil :</b> la partie active est la seule grande surface pleine. Sa couleur suit la situation : bleu-vert quand le lot est en pause, corail quand Orbite travaille, ambre quand la revue attend. Les activités gardent leur couleur dans le pictogramme, avec une teinte légère. Les parties récentes sont des lignes calmes au texte exact. Sur l’accueil, la pastille du lot n’apparaît pas : la grande vignette fait déjà ce travail.',
+ orbite:'<b>Orbite :</b> l’en-tête tient sur une ligne, avec l’action à droite. Au centre, un seul module de suivi : le chiffre, une barre exacte sans poignée, le cut en cours. Dessous, les différés et les réglages du lot. Le conseil sur ESV dit seulement ce qui est sûr : ne pas changer de cut pendant le lot.',
+ echo:'<b>Écho :</b> même composition. Le texte dit que les corrections sont gardées comme exemples, sans promettre un apprentissage immédiat. Pendant un lot, la pastille corail en haut garde Pause à portée.',
+ revue:'<b>Revue :</b> l’en-tête bas donne le compte exact (« revue de 20 cuts · 1 examiné · 19 restants ») et l’action. Les filtres et l’export forment une barre, et la liste occupe le reste de la fenêtre. Le cochage « examiné » est une hypothèse, signalée comme telle.'};
 const app=document.getElementById('app'),ecr=document.getElementById('ecran'),amb=document.getElementById('amb'),note=document.getElementById('note'),nav=document.getElementById('sc');
 let cur='accueil';
-function rendre(k){cur=k;amb.style.background=ECR[k].amb;ecr.innerHTML=ECR[k].h();ecr.classList.remove('entre');void ecr.offsetWidth;ecr.classList.add('entre');ecr.scrollTop=0;note.innerHTML=NOTES[k];}
-/* transition : la vignette cliquée s'agrandit jusqu'à remplir la fenêtre, puis l'écran apparaît dedans */
-function go(k,depuis){if(!depuis||k==='accueil'){rendre(k);return;}
- const a=app.getBoundingClientRect(),r=depuis.getBoundingClientRect(),s=a.width/1180;
- const v=document.createElement('div');v.className='vol';v.style.background=getComputedStyle(depuis).backgroundImage;
- Object.assign(v.style,{left:(r.left-a.left)/s+'px',top:(r.top-a.top)/s+'px',width:r.width/s+'px',height:r.height/s+'px'});app.appendChild(v);
- requestAnimationFrame(()=>requestAnimationFrame(()=>Object.assign(v.style,{left:'0px',top:'0px',width:'1180px',height:'720px',borderRadius:'18px'})));
- setTimeout(()=>{rendre(k);v.style.transition='opacity .35s';v.style.opacity='0';setTimeout(()=>v.remove(),380);},560);}
+function rendre(k){cur=k;const a=AMB[k];amb.style.background=typeof a==='string'?a:a[phase];ecr.innerHTML=ECR[k]();ecr.classList.remove('entre');void ecr.offsetWidth;ecr.classList.add('entre');note.innerHTML=NOTES[k];}
+const rel=el=>{const a=app.getBoundingClientRect(),r=el.getBoundingClientRect(),s=a.width/1180;return{left:(r.left-a.left)/s,top:(r.top-a.top)/s,width:r.width/s,height:r.height/s};};
+const px=r=>({left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
+const FOND={orbite:'linear-gradient(135deg,#a8431f,#b8135a)',echo:'linear-gradient(135deg,#2f6fd6,#5a2ad6)',revue:'linear-gradient(135deg,#9a5a0c,#7b3a14)'};
+/* aller : la vignette s'agrandit jusqu'à la fenêtre ; retour : l'écran se replie vers sa vignette */
+function aller(k,depuis){const reduit=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const retour=k==='accueil'&&FOND[cur];
+ if(reduit||(!depuis&&!retour)){rendre(k);return;}
+ const v=document.createElement('div');v.className='vol';
+ if(depuis){v.style.background=FOND[k]||getComputedStyle(depuis).backgroundImage;Object.assign(v.style,{...px(rel(depuis)),borderRadius:'16px'});app.appendChild(v);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>Object.assign(v.style,{left:'0px',top:'0px',width:'1180px',height:'720px',borderRadius:'18px'})));
+  setTimeout(()=>{rendre(k);v.style.transition='opacity .3s';v.style.opacity='0';setTimeout(()=>v.remove(),320);},500);return;}
+ const de=cur;v.style.background=FOND[de];Object.assign(v.style,{left:'0px',top:'0px',width:'1180px',height:'720px',borderRadius:'18px'});app.appendChild(v);
+ rendre('accueil');const cible=ecr.querySelector(`.vig[data-go="${de}"]`);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{if(cible)Object.assign(v.style,{...px(rel(cible)),borderRadius:'16px',opacity:'0'});else v.style.opacity='0';}));setTimeout(()=>v.remove(),540);}
 nav.innerHTML=Object.entries(SC).map(([k,v])=>`<button data-s="${k}">${v[0]}</button>`).join('');
-nav.onclick=e=>{const b=e.target.closest('button');if(!b)return;SC[b.dataset.s][1]();nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));};
+nav.onclick=e=>{const b=e.target.closest('button');if(!b)return;cur='';SC[b.dataset.s][1]();nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));};
 ecr.onclick=e=>{const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;sel=0;rendre('revue');return;}
  const r=e.target.closest('.row[data-i]');if(r){const rows=L.filter(x=>filtre==='tous'||x[0]===filtre);if(+r.dataset.i===sel){vus.add(rows[sel][1]);sel=Math.min(sel+1,rows.length-1);}else sel=+r.dataset.i;rendre('revue');return;}
- const g=e.target.closest('[data-go]');if(g&&g.dataset.go!==cur){const carte=g.closest('.vig,.une')||null;go(g.dataset.go,g.closest('.onglets')?null:carte);}};
+ const g=e.target.closest('[data-go]');if(!g||g.dataset.go===cur)return;const k=g.dataset.go;
+ if(k==='accueil'){aller('accueil');return;}
+ aller(k,g.closest('.onglets,.mini')?null:g.closest('.vig,.une'));};
 const ca=document.getElementById('cadre');function ech(){const s=Math.min(1,ca.clientWidth/1180);app.style.transform=`scale(${s})`;ca.style.height=720*s+'px';}
 addEventListener('resize',ech);ech();nav.querySelector('button').click();
 </script>
