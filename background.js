@@ -1306,9 +1306,16 @@ async function commandLot(proposal,lotObservation){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
  /* 4.9.5.13 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
  if(profilL1()&&!deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
-  const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=profilL1s()?{...essai.command,l1s:'vue'}:essai.command;}
+  const id=engine.s.before?.identity??null,ctx=l1Contexte,cap=ctx&&id&&ctx.identity.cut===id.cut?ctx.lotArgs.capture:null;
+  const cc=profilL1se()&&lotObservation.positions?await l1eCorrigerChaine(cap,id,lotObservation.positions):null;
+  if(cc)lotObservation.l1eChaine={correction:cc.correction};
+  const obs=cc&&cc.correction.appliquee?{...lotObservation,positions:cc.positions}:lotObservation;
+  const essai=await deplacerVuePlanifier({lotObservation:obs,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=profilL1s()?{...essai.command,l1s:'vue'}:essai.command;
+  if(cc&&command.action==='lot'&&command.l1s==='vue')lotObservation.l1eChaine.positions=obs.positions;}
  /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
  command=reglesMetierCommande(command,lotObservation,proposal,before);
+ if(command.action==='lot'&&command.l1s==='vue'&&lotObservation.l1eChaine?.positions){const id=engine.s.before?.identity??null,ctx=l1Contexte;
+  if(ctx&&id&&ctx.identity.cut===id.cut)l1eTransporter(ctx.lotArgs.capture,id,lotObservation.l1eChaine.positions);}
  /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
  if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
@@ -1427,6 +1434,21 @@ let l1eListe={cle:null,table:null};
 async function l1eTable(part){const cle=(engine?.s?.batch?.id||'')+'|'+part;if(l1eListe.cle===cle)return l1eListe.table;
  let table=null;try{const LM=globalThis.BananeListeMemoire,k=LM.PRE_INST+part,r=await chrome.storage.local.get(k);table=LM.decompacter(r?.[k])||null;}catch{table=null;}
  l1eListe={cle,table};return table;}
+/* 4.9.5.15 (fiches/L1_CAP5.md) — sous L1-se, poses de L1 de CE lot (GCV2 validées, chaîne refaite par L1-s) : voisines de la GCV2 pour la seule
+ * voie de référence (levier « transport » de src/gcv2-l1.js), jamais appuis de la chaîne ni voisines de sa décision (D-221 tenu). */
+let l1eTransport={cle:null,poses:[]};
+function l1eTransportDe(identity){const cle=(engine?.s?.batch?.id||'')+'|'+identity.part+'|'+(identity.frameId??null);if(l1eTransport.cle!==cle)l1eTransport={cle,poses:[]};return l1eTransport.poses;}
+function l1eTransporter(capture,identity,positions){const G=globalThis.BananeGcv2L1;
+ if(!profilL1se()||!G?.LEVIERS_LIVRES?.transport||!capture?.rails||!positions)return;
+ l1eTransportDe(identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:{left:positions.left.slice(0,3),right:positions.right.slice(0,3)},rails:capture.rails});}
+/* Sous L1-se, une pose de la chaîne refaite par L1-s (vue amenée, ou options de L1) passe par la correction d'écartement de la GCV2
+ * (`corrigerPoseChaine`, comme le banc). Rend { positions (corrigées ou non), correction } ou null (pas L1-se, capture absente, panne). */
+async function l1eCorrigerChaine(capture,identity,positions){const G=globalThis.BananeGcv2L1,SIDES=['left','right'];
+ try{if(!profilL1se()||!capture?.rails||!positions||!identity)return null;
+  const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(capture.rails[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return null;
+  const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut),cc=G.corrigerPoseChaine(capture,decal,ref);
+  return {positions:cc.correction.appliquee?G.positionsDe(capture,{left:{decal:cc.decal.left},right:{decal:cc.decal.right}}):positions,correction:cc.correction};}
+ catch{return null;}}
 const ETAGES_L1=['first-pass','window','choice','crossing'];
 function reglageVueL1(){return {...(globalThis.BananeSettings?.deplacerVue||{}),actif:true,etages:ETAGES_L1,regle:'aucune'};}
 let l1Contexte=null,l1PoseEnAttente=null,l1ModeleCache=null;
@@ -1475,16 +1497,20 @@ async function l1Commande({command,lotObservation,proposal,before,capture}){
   /* L1-s, b. : la décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis ; si elle pose
    * (vue amenée au besoin), pose validée, jamais appui. */
   if(profilL1s()&&command.reason!=='regles-metier'){
-   const d2=L.decideCut({...ctx.lotArgs,anchors:ctx.anchors,options:{...G.REGLE.lotOptions}});
+   let d2=L.decideCut({...ctx.lotArgs,anchors:ctx.anchors,options:{...G.REGLE.lotOptions}});
+   const cc=d2.positions?await l1eCorrigerChaine(ctx.lotArgs.capture,identity,d2.positions):null;
+   if(cc&&cc.correction.appliquee)d2={...d2,positions:cc.positions};
    let c2=L.commandRails({decision:d2,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
    if(c2.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(c2.reason||'')&&d2.positions){const essai=await deplacerVuePlanifier({lotObservation:d2,proposal,before,capture,command:c2,reglage:reglageVueL1()});if(essai.command)c2=essai.command;}
    if(c2.action==='lot'){const c=reglesMetierCommande({...c2},lotObservation,proposal,before);
     lotObservation.l1={version:G.VERSION,etat:c.action==='lot'?'chaine-l1':'rien',motif:c.action==='lot'?null:'regles-metier',etage:d2.stage,raison:d2.reason!=null?String(d2.reason).slice(0,80):null,
-     poseAvant:Object.fromEntries(SIDES.map(s=>[s,before?.[s]?.positionSceneRelative?.slice(0,3)??null])),poseEnvoyee:Object.fromEntries(SIDES.map(s=>[s,d2.positions?.[s]?.slice(0,3)??null]))};
-    if(c.action==='lot')return {...c,l1s:'chaine'};}
+     poseAvant:Object.fromEntries(SIDES.map(s=>[s,before?.[s]?.positionSceneRelative?.slice(0,3)??null])),poseEnvoyee:Object.fromEntries(SIDES.map(s=>[s,d2.positions?.[s]?.slice(0,3)??null])),
+     ...(cc?{correction:cc.correction}:{})};
+    if(c.action==='lot'){l1eTransporter(ctx.lotArgs.capture,identity,d2.positions);return {...c,l1s:'chaine'};}}
   }
   const t0=Date.now(),science=Sh.scientificProposeBothAvecReservoir(ctx.lotArgs.capture),z=l1Zone(identity);
-  const e=profilL1se()?{regle:G.REGLE_E,reference:globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut)}:{};
+  const e=profilL1se()?{regle:G.REGLE_E,reference:globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut),
+   ...(G.LEVIERS_LIVRES?.transport?{voisinsTransport:l1eTransportDe(identity).slice()}:{})}:{};
   const g=G.deciderDiffere({capture:ctx.lotArgs.capture,science,appuis:ctx.anchors,options:profilL1s()?{...G.REGLE.lotOptions}:ctx.lotArgs.options,voisins:l1Voisins(b,identity),zone:z.zone,plagesADV:z.adv,modele:l1Modele(),...e});
   const d=g.decision,l1={...G.resumer(g),zoneSource:z.source,ms:Date.now()-t0};
   lotObservation.l1=l1;
@@ -1503,6 +1529,7 @@ async function l1Commande({command,lotObservation,proposal,before,capture}){
    const c=reglesMetierCommande({action:'lot',reason:'gcv2-l1',rails:cg.rails,gaugeMm:cg.gaugeMm,...(plan?{deplacerVue:plan}:{})},lotObservation,proposal,before);
    if(c.action==='lot'&&!profilL1s())lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:g.positions,stage:'gcv2-l1'};
    else if(c.action!=='lot')l1.commande.refus='regles-metier';
+   if(c.action==='lot')l1eTransporter(ctx.lotArgs.capture,identity,g.positions);
    return profilL1s()&&c.action==='lot'?{...c,l1s:'gcv2'}:c;}
   /* Sous τ : la commande reste un différé ; la pose est faite juste avant la navigation sans décision (`adapter.nextWithoutDecision`). */
   l1PoseEnAttente={batchId:b?.id??null,cutId:K.cutId(identity),identity:K.clone(identity),before:K.clone(engine.s.before),rails:cg.rails,plan,
