@@ -842,5 +842,6 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer};
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer,
+   voieAbsolue,rechercheRecentree,pairesRecentrees};
 });
