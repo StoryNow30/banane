@@ -6,6 +6,8 @@ Cette fiche suit `fiches/UI_INVENTAIRE.md` (l'état des lieux, élément par él
 
 **Statut (19 octobre, soir) : brouillon rejeté par Mic.** Les directions A à E de cette fiche (et la recommandation A, les profils, « Envoyer ») sont rejetées (D-219). Les maquettes retenues pour l'essai sont F, G et H (`maquettes/ui-5.0/`), construites dans les versions 4.9.5 test 10, 11 et 12 (`CHANGELOG.md`). Le modèle commun du § 3 n'est pas repris ; l'inventaire (`fiches/UI_INVENTAIRE.md`) reste valable.
 
+**Point du 20 octobre.** Le panneau unique V2 (J) et V3 (K), puis les trois directions sur un seul écran (L : Atelier, Instrument, Bande), sont des **essais écartés** comme base visuelle. On en garde les acquis fonctionnels : des états fiables, des compteurs définis (`fiches/UI_ETATS_COMPTEURS.md`), la séparation entre la fin du lot et le travail restant, la liste des cuts à examiner et l'incident corrigé d'après le code. Méthode changée : on fixe d'abord des références visuelles précises (surfaces, navigation, proportions, typographie, transitions), puis on dessine l'**écran principal d'Ariane** (entrer, retrouver sa partie, choisir Orbite ou Écho, examiner son travail). « Lot en cours » et la bande compacte n'en seront que des déclinaisons. Les règles « chaque chiffre une seule fois », « une seule action » et « tout compact » ne sont plus des règles absolues : chaque choix se justifie.
+
 ## 1. Ce que la séance de Mic nous apprend
 
 Penser depuis la séance, pas depuis les fonctions. Une séance type (consignes 5 à 9) :
