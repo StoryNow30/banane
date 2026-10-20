@@ -192,9 +192,10 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         const d2 = cache.has('d' + sig2) ? cache.get('d' + sig2) : (() => { const x = L.decideCut({ capture, science, anchors: E.anchors, Shadow: Sh, options: o2 }); cache.set('d' + sig2, x); return x; })();
         let c2 = L.commandRails({ decision: d2, runtimeRails, before, expectedPoses: K.expectedPoses, cameras }), vue2 = null;
         if (c2.action !== 'lot' && /(^|-)hors-vue-(left|right)$/.test(c2.reason || '')) { const l2 = L.commandRails({ decision: d2, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges }); if (l2.action === 'lot') { c2 = l2; vue2 = 'deplacee'; } }
-        const pose2 = c2.action === 'lot' || (c2.action === 'engine' && SIDES.every(s => c2.rails && c2.rails[s] && c2.rails[s].status === 'candidate'));
-        if (!pose2) return false;
-        const pos2 = c2.action === 'lot' ? d2.positions : (() => { const x = K.expectedPoses({ rails: before }, c2.rails); return Object.fromEntries(SIDES.map(s => [s, x[s].positionSceneRelative.slice(0, 3)])); })();
+        /* Comme l'extension (background.js, `l1Commande`) : la décision refaite pose seulement par une commande du lot ; une commande « engine »
+         * (les deux rails candidats du moteur) n'est pas envoyée, le cut passe à la GCV2 (parité vérifiée par tools/parite-l1se-sw.cjs). */
+        if (c2.action !== 'lot') return false;
+        const pos2 = d2.positions;
         out = grappeBloque(d2) ? { etat: 'differe', source: 'regle-grappe', etage: d2.stage } : { etat: 'pose', source: 'l1s-chaine', etage: d2.stage, commande: c2.action, vue: vue2, decal: decalPose(before, pos2) };
         return true;
       })()) {
