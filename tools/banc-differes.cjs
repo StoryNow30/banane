@@ -249,8 +249,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     try {
       for (let passe = 1; passe <= leviers.deuxiemePasse; passe++) {
         let poses = 0;
-        /* Sens alterné d'une passe à l'autre : une pose se propage vers l'avant dans une passe, vers l'arrière dans la suivante. */
-        for (const r of passe % 2 ? restes : restes.slice().reverse()) {
+        /* Levier `passesAlternees` : sens alterné d'une passe à l'autre (une pose se propage vers l'avant, puis vers l'arrière) ; sinon toujours vers l'avant. */
+        for (const r of passe % 2 || !leviers.passesAlternees ? restes : restes.slice().reverse()) {
           if (r.ligne.profils['L1-se'].etat !== 'differe') continue;
           try {
             const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,

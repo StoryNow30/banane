@@ -9,7 +9,10 @@
  * commandé), et sur la sortie standard la comparaison décision par décision avec le rejeu du banc.
  *
  *   node tools/parite-l1se-sw.cjs --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --liste LISTE.json --banc R.jsonl
- *        --sortie S.jsonl [--racine DÉPÔT]
+ *        --sortie S.jsonl [--racine DÉPÔT] [--leviers JSON]
+ *
+ * `--leviers` (mesure seulement) : leviers de la décision L1-e réglés dans le service worker (`reglerLeviers`), comme BANC_LEVIERS au banc ; le
+ * rejeu de référence doit être fait avec les mêmes leviers (le service worker ne fait pas de deuxième passe : `deuxiemePasse` 0).
  *
  * HORS DÉPÔT : aucune donnée de lot n'est écrite dans le dépôt. Lecture seule sur ESV : il n'y en a pas, l'ESV est simulé.
  */
@@ -22,7 +25,7 @@ function args(argv) {
     const k = argv[i], v = () => argv[++i];
     if (k === '--partie') o.partie = v(); else if (k === '--journal') o.journal = v(); else if (k === '--corpus') o.corpus.push(v());
     else if (k === '--lot') o.lot = v(); else if (k === '--liste') o.liste = v(); else if (k === '--banc') o.banc = v();
-    else if (k === '--sortie') o.sortie = v(); else if (k === '--racine') o.racine = path.resolve(v()); else if (k === '--coupe') o.coupe = Number(v()); else if (k === '--progres') o.progres = true;
+    else if (k === '--sortie') o.sortie = v(); else if (k === '--racine') o.racine = path.resolve(v()); else if (k === '--coupe') o.coupe = Number(v()); else if (k === '--progres') o.progres = true; else if (k === '--leviers') o.leviers = JSON.parse(v());
     else throw Error('argument inconnu : ' + k);
   }
   for (const k of ['partie', 'journal', 'lot', 'liste', 'banc', 'sortie']) if (!o[k]) throw Error('--' + k + ' manquant');
@@ -60,6 +63,7 @@ async function main(argv) {
     EsvRejoue.prototype[nom] = async function (...x) { pas.push({ cut: this.identity.cut, action: nom }); return f ? f.apply(this, x) : this.state(); }; }
   const local = memoire(); local.m[LM.PRE_INST + a.partie] = JSON.parse(fs.readFileSync(a.liste, 'utf8'));
   const adapter = new EsvRejoue(), b = production({ adapter, local });
+  if (a.leviers) { if (a.leviers.deuxiemePasse) throw Error('--leviers : le service worker ne fait pas de deuxième passe'); b.ctx.BananeGcv2L1.reglerLeviers(a.leviers); }
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false } };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   const SCOPE = { testConfirmed: true, allowNavigationEvidence: true, lowConfidence: 'attempt', geometryEngine: 'geometry-candidate-v1', lotDecision: 'apply' };
@@ -98,6 +102,6 @@ async function main(argv) {
     lignes.push({ ...l, profils: { ...l.profils, 'L1-se': sw } });
   }
   fs.writeFileSync(a.sortie, lignes.map(x => JSON.stringify(x)).join('\n') + '\n');
-  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
+  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, leviers: a.leviers || null, cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
 }
 main(process.argv.slice(2)).catch(e => { process.stderr.write('parite-l1se-sw : ' + (e && e.stack || e) + '\n'); process.exitCode = 1; });

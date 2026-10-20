@@ -13,9 +13,13 @@ test('leviers livrés : ceux de la v4 (lus par l\'extension) ; le banc les chang
     voisinsRaffineMm: 8, voisinsEcartMaxMm: 10, vetoVoieMm: 45, raffineObligatoire: true, anomalieNonCorrigeeRien: true,
     consensus: true, consensusEcartMm: 10, consensusVoieMm: 15, consensusVoieProche: true, selectionRefMm: null,
     consensusTous: false, voieProcheMaxCuts: 5, diag: false, validerSansVoieMinP: null, anomalieMinRienMm: null, anomalieMinRienSansVoieMm: null,
-    corrigeVoieMaxMm: null, sansVoieRien: false, voieListe: false, voieListeFenetre: 8, deuxiemePasse: 0, passe2Leviers: null,
+    corrigeVoieMaxMm: null, sansVoieRien: false, voieListe: false, voieListeFenetre: 8, deuxiemePasse: 0, passe2Leviers: null, passesAlternees: false,
     branche: false, brancheMm: 8, brancheVertMm: 25, brancheMaxCuts: 6, brancheExtrapCuts: 1, brancheEcartement: [1380, 1520],
-    voieProcheSureCuts: null, soutienMinDessus: null, soutienMinFlanc: null });
+    voieProcheSureCuts: null, soutienMinDessus: null, soutienMinFlanc: null,
+    /* Cap 5b : recherche recentrée en ADV, coupée par défaut (l'extension reste en v4b). */
+    rechercheDiag: false, voieAbsFenetre: 6, rechercheADV: false, rechZones: null, rechEcartMm: 10, rechMaxDeplMm: 300, rechVoieMaxMm: 80, rechHauteurMaxMm: null,
+    rechProcheMaxCuts: 6, rechUniqueMm: 15, rechRemplace: false, rechRemplaceMm: 5, rechSansPaireRien: false, rechVoieParCutMm: null, rechContraMinMm: null, rechContraMaxMm: 45, rechContraRien: false,
+    rechMinTop: 15, rechMinFace: 6, rechRatioMax: 1.5, rechDedupMm: 5, rechArret: false, rechGraineDecalMm: 0, rechDiagLarge: false });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
