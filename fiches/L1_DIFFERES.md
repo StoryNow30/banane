@@ -175,3 +175,17 @@ Prédictions scellées avant lecture de l'Écho (SHA-256 vérifiés inchangés :
 Par zone (L1-s) : abords 9 cuts, erreur médiane 3,9 mm (6 à 10 mm ou moins) ; ADV 32 cuts, erreur médiane 133,2 mm (8 à 10 mm ou moins, 22 à plus de 50 mm).
 
 Lecture : bonne en abords, mauvaise en ADV, comme en 2:1. L1-v valide 13 poses fausses de plus de 50 mm (par exemple 9523 à 9526 : 50 à 121 mm, alors que L1-s pose 9523 à 9525 à moins de 4 mm) : le gain de rappel de L1-v est payé par des validations fausses, ce qui en fait un mauvais candidat de terrain en l'état. Une seule pose validée fausse pour L1 et L1-s (9556, 158,5 mm).
+
+## 8. Deuxième jugement : partie 2:18 (Écho du 20/10/2026, 8 h 39 à 8 h 47)
+
+Prédictions scellées inchangées (L1/L1-v 10e8f3…9367, L1-s 9661af…e14c). 37 différés prédits, **32 jugés** ; 5 non jugés faute d'Écho de Mic sur ces cuts (« sansMic »), la séance n'ayant pas encore tout couvert. Détail : `fiches/jugements/2-18-*.json`.
+
+| Profil | Posés (validés) | Erreur médiane (départ 159,9) | Gain médian | ≤ 10 mm | Posés à plus de 50 mm | dont validés |
+|---|--:|--:|--:|--:|--:|--:|
+| L1 | 19 (17) | 9,5 mm | 53,5 | 16 | 0 | 0 |
+| L1-s | 17 (12) | 23,9 mm | 10,8 | 12 | 1 | 0 |
+| L1-v | 23 (23) | 7,0 mm | 103,1 | 18 | 1 | 1 |
+
+Les médianes portent sur les 32 jugés (un non posé garde son erreur de départ). Sur les cuts posés : L1, 19 sur 19 à 20 mm ou moins ; L1-s, 15 sur 17 ; L1-v, 22 sur 23. Presque tout est en ADV (29 cuts sur 32).
+
+Lecture : l'inverse de 2:17. Ici les trois profils posent juste, y compris en ADV, et L1-v valide 23 poses dont une seule est fausse. Cumul 2:17 + 2:18 (73 jugés) : L1-v valide 54 poses dont 14 fausses (26 %), L1 28 dont 1, L1-s 23 dont 1. Le profil L1-v n'est donc pas écarté, mais ses validations fausses se concentrent sur une partie (2:17, cuts 9523 à 9653) ; il reste à comprendre ce qui distingue 2:17.

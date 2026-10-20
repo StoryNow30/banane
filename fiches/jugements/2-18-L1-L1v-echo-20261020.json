@@ -1,0 +1,547 @@
+{
+ "format": "ariane-banc-differes-comparaison-v1",
+ "partie": "2:18",
+ "lot": "eb1d9bc2",
+ "juges": 32,
+ "nonJuges": {
+  "sansMic": 5,
+  "departDifferent": 0,
+  "sansNuage": 0
+ },
+ "parProfil": {
+  "L1": {
+   "n": 32,
+   "departMedianMm": 159.9,
+   "erreurMedianeMm": 9.5,
+   "gainMedianMm": 53.5,
+   "gainQ1Mm": 0,
+   "gainQ3Mm": 188.5,
+   "a10": 16,
+   "a20": 20,
+   "plus50": 11,
+   "pire": 0,
+   "ameliore": 19,
+   "rappel": {
+    "n": 31,
+    "k": 15,
+    "part": 48.4
+   },
+   "poses": 19,
+   "posesValidees": 17,
+   "parZone": {
+    "abords": {
+     "n": 3,
+     "departMedianMm": 35.2,
+     "erreurMedianeMm": 11.8,
+     "gainMedianMm": 0,
+     "gainQ1Mm": 0,
+     "gainQ3Mm": 11.7,
+     "a10": 1,
+     "a20": 2,
+     "plus50": 1,
+     "pire": 0,
+     "ameliore": 1,
+     "rappel": {
+      "n": 2,
+      "k": 0,
+      "part": 0
+     }
+    },
+    "adv": {
+     "n": 29,
+     "departMedianMm": 163.3,
+     "erreurMedianeMm": 7.2,
+     "gainMedianMm": 67.6,
+     "gainQ1Mm": 0,
+     "gainQ3Mm": 189.1,
+     "a10": 15,
+     "a20": 18,
+     "plus50": 10,
+     "pire": 0,
+     "ameliore": 18,
+     "rappel": {
+      "n": 29,
+      "k": 15,
+      "part": 51.7
+     }
+    }
+   }
+  },
+  "L1-v": {
+   "n": 32,
+   "departMedianMm": 159.9,
+   "erreurMedianeMm": 7,
+   "gainMedianMm": 103.1,
+   "gainQ1Mm": 0,
+   "gainQ3Mm": 188.5,
+   "a10": 18,
+   "a20": 22,
+   "plus50": 9,
+   "pire": 2,
+   "ameliore": 21,
+   "rappel": {
+    "n": 31,
+    "k": 17,
+    "part": 54.8
+   },
+   "poses": 23,
+   "posesValidees": 23,
+   "parZone": {
+    "abords": {
+     "n": 3,
+     "departMedianMm": 35.2,
+     "erreurMedianeMm": 11.8,
+     "gainMedianMm": 0,
+     "gainQ1Mm": -4.1,
+     "gainQ3Mm": 11.7,
+     "a10": 1,
+     "a20": 2,
+     "plus50": 1,
+     "pire": 1,
+     "ameliore": 1,
+     "rappel": {
+      "n": 2,
+      "k": 0,
+      "part": 0
+     }
+    },
+    "adv": {
+     "n": 29,
+     "departMedianMm": 163.3,
+     "erreurMedianeMm": 6.1,
+     "gainMedianMm": 142.4,
+     "gainQ1Mm": 0,
+     "gainQ3Mm": 189.1,
+     "a10": 17,
+     "a20": 20,
+     "plus50": 8,
+     "pire": 1,
+     "ameliore": 20,
+     "rappel": {
+      "n": 29,
+      "k": 17,
+      "part": 58.6
+     }
+    }
+   }
+  }
+ },
+ "detail": [
+  {
+   "cut": 61,
+   "zone": "abords",
+   "departMm": 130.2,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 130.2
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 130.2
+   }
+  },
+  {
+   "cut": 88,
+   "zone": "adv",
+   "departMm": 34.9,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 34.9
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 34.9
+   }
+  },
+  {
+   "cut": 90,
+   "zone": "adv",
+   "departMm": 124.7,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 124.7
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 124.7
+   }
+  },
+  {
+   "cut": 153,
+   "zone": "adv",
+   "departMm": 50.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 6.8
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 6.8
+   }
+  },
+  {
+   "cut": 192,
+   "zone": "adv",
+   "departMm": 198.1,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.3
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.3
+   }
+  },
+  {
+   "cut": 193,
+   "zone": "adv",
+   "departMm": 201,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 4.4
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 4.4
+   }
+  },
+  {
+   "cut": 194,
+   "zone": "adv",
+   "departMm": 195.8,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 4.8
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 4.8
+   }
+  },
+  {
+   "cut": 195,
+   "zone": "adv",
+   "departMm": 194.4,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 6.1
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 6.1
+   }
+  },
+  {
+   "cut": 196,
+   "zone": "adv",
+   "departMm": 196.3,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 7.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 7.2
+   }
+  },
+  {
+   "cut": 197,
+   "zone": "adv",
+   "departMm": 196.8,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 4
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 4
+   }
+  },
+  {
+   "cut": 198,
+   "zone": "adv",
+   "departMm": 193,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 193
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 193
+   }
+  },
+  {
+   "cut": 199,
+   "zone": "adv",
+   "departMm": 133.9,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 133.9
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 133.9
+   }
+  },
+  {
+   "cut": 200,
+   "zone": "adv",
+   "departMm": 140.7,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 140.7
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 140.7
+   }
+  },
+  {
+   "cut": 204,
+   "zone": "adv",
+   "departMm": 163.3,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 163.3
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 163.3
+   }
+  },
+  {
+   "cut": 205,
+   "zone": "adv",
+   "departMm": 163.3,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 163.3
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 163.3
+   }
+  },
+  {
+   "cut": 206,
+   "zone": "adv",
+   "departMm": 163.8,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 163.8
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 163.8
+   }
+  },
+  {
+   "cut": 266,
+   "zone": "adv",
+   "departMm": 64.2,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 0.9
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 0.9
+   }
+  },
+  {
+   "cut": 289,
+   "zone": "adv",
+   "departMm": 197.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 5.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 5.2
+   }
+  },
+  {
+   "cut": 290,
+   "zone": "adv",
+   "departMm": 205.5,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.7
+   }
+  },
+  {
+   "cut": 291,
+   "zone": "adv",
+   "departMm": 201.8,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 5.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 5.7
+   }
+  },
+  {
+   "cut": 292,
+   "zone": "adv",
+   "departMm": 189.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 18.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 18.2
+   }
+  },
+  {
+   "cut": 298,
+   "zone": "adv",
+   "departMm": 172.5,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 172.5
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.9
+   }
+  },
+  {
+   "cut": 299,
+   "zone": "adv",
+   "departMm": 170.6,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 170.6
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 3.8
+   }
+  },
+  {
+   "cut": 323,
+   "zone": "adv",
+   "departMm": 29.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.5
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.5
+   }
+  },
+  {
+   "cut": 408,
+   "zone": "abords",
+   "departMm": 35.2,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 11.8
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 11.8
+   }
+  },
+  {
+   "cut": 409,
+   "zone": "abords",
+   "departMm": 0,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 0
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 8.2
+   }
+  },
+  {
+   "cut": 437,
+   "zone": "adv",
+   "departMm": 153.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 3.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 3.2
+   }
+  },
+  {
+   "cut": 438,
+   "zone": "adv",
+   "departMm": 156.5,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 14.1
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 14.1
+   }
+  },
+  {
+   "cut": 452,
+   "zone": "adv",
+   "departMm": 148.7,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 148.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 280.9
+   }
+  },
+  {
+   "cut": 453,
+   "zone": "adv",
+   "departMm": 147.8,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 1.6
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 1.6
+   }
+  },
+  {
+   "cut": 454,
+   "zone": "adv",
+   "departMm": 143.9,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 0.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 5.3
+   }
+  },
+  {
+   "cut": 467,
+   "zone": "adv",
+   "departMm": 86.4,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 18.8
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 18.8
+   }
+  }
+ ]
+}
