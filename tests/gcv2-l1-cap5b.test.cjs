@@ -35,3 +35,14 @@ test('paires recentrées : seulement à l\'écartement de référence ; graines 
   assert.ok(r.paires.some(p => Math.abs(p.decal.left[1] + 38) < 3 && Math.abs(p.decal.right[1] - 29) < 3));
   assert.equal(L1.pairesRecentrees(base, [{ nom: 'a', left: [0, 0], right: [0, 0] }], g + 200, null, 10).paires.length, 0, 'écartement hors référence : aucune paire');
 });
+
+test('voisins cohérents (cap 6, coupé) : une pose isolée sur une autre voie n\'est plus le voisin le plus proche', () => {
+  const pos = mm => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [mm[0] / 1000, mm[1] / 1000, mm[2] / 1000])]));
+  const v = (c, lat) => ({ identity: { part: 1, cut: c, frameId: null }, positions: pos([(c - 100) * 1000, lat, 5]) });
+  const voisins = [v(99, -120), v(96, 140), v(95, 141), v(102, 110), v(103, 108)];
+  const sans = L1.voieAbsolue(base, 100, voisins, 6), avec = L1.voieAbsolue(base, 100, voisins, 6, 3, { parCutMm: 40, baseMm: 15 });
+  assert.equal(Math.round(sans.left.proche[0]), -120, 'sans le levier : la pose isolée est le voisin le plus proche');
+  assert.equal(avec.left.distProche, 2); assert.equal(Math.round(avec.left.proche[0]), 110, 'avec : le plus proche des voisins cohérents');
+  assert.equal(L1.voieAbsolue(base, 100, [v(99, -120), v(102, 110)], 6, 3, { parCutMm: 40, baseMm: 15 }).left.distProche, 1, 'moins de trois voisins : inchangé');
+  assert.equal(L1.LEVIERS_LIVRES.voisinsCoherents, false);
+});

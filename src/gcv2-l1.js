@@ -303,14 +303,23 @@
   * décalages depuis leurs propres poses de départ (qui changent d'un cut à l'autre en ADV). Par rail : jusqu'à `parCote` voisins de chaque côté à
   * `fenetre` cuts au plus ; droite des moindres carrés (travers et hauteur selon la position le long de la voie), valeur en 0 ; et le voisin le
   * plus proche. Rend { left:{ v:[lat,vert], proche:[lat,vert], distProche, n:{avant,apres}, residuMm }, right } ou null. */
- function voieAbsolue(capture,cut,voisins,fenetre=6,parCote=3){
-   const pts={left:[],right:[]},vus=new Set();
+ function voieAbsolue(capture,cut,voisins,fenetre=6,parCote=3,coherents=null){
+   const pts={left:[],right:[]},vus=new Set();let liste=[];
    for(const v of voisins||[]){
      if(!v||!v.identity||!v.positions||!Number.isInteger(v.identity.cut))continue;
      const dc=v.identity.cut-cut;if(!dc||Math.abs(dc)>fenetre||vus.has(v.identity.cut))continue;
      const d=Object.fromEntries(SIDES.map(s=>[s,decalage(capture.rails[s],v.positions[s])]));if(!SIDES.every(s=>d[s]))continue;
-     vus.add(v.identity.cut);for(const s of SIDES)pts[s].push({d:d[s],dc});
+     vus.add(v.identity.cut);liste.push({d,dc});
    }
+   /* Cap 6 (A2) — voisins COHÉRENTS : un voisin validé qui ne s'accorde avec aucun autre (écart en travers et en hauteur, par rail, plus grand que
+    * `parCutMm` par cut d'écart entre eux + `baseMm`) est écarté ; s'il ne reste personne, tous restent. Cas visé : une pose de première passe du
+    * lot sur une autre voie (203, 451 de 2:18, à 236 et 247 mm de l'opérateur) qui fausse le voisin le plus proche. */
+   if(coherents&&liste.length>=3){
+     const ok=(a,b)=>SIDES.every(s=>Math.hypot(a.d[s][1]-b.d[s][1],a.d[s][2]-b.d[s][2])<=coherents.parCutMm*Math.abs(a.dc-b.dc)+coherents.baseMm);
+     const gardes=liste.filter(a=>liste.some(b=>b!==a&&ok(a,b)));
+     if(gardes.length>=2)liste=gardes;
+   }
+   for(const q of liste)for(const s of SIDES)pts[s].push({d:q.d[s],dc:q.dc});
    const out={};
    for(const s of SIDES){
      const av=pts[s].filter(q=>q.dc<0).sort((a,b)=>b.dc-a.dc).slice(0,parCote),ap=pts[s].filter(q=>q.dc>0).sort((a,b)=>a.dc-b.dc).slice(0,parCote),P=av.concat(ap);
@@ -553,7 +562,8 @@
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
-   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15});
+   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,
+   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -689,7 +699,7 @@
     * écarte de plus de `rechRemplaceMm`, et (`rechSansPaireRien`) n'est pas posée sans paire recentrée. */
    let rech=null;const ddAvant=dd;
    if((LEVIERS.rechercheADV||(LEVIERS.diag&&LEVIERS.rechercheDiag))&&capture&&ref&&fini(ref.mm)&&(LEVIERS.rechZones||['adv']).includes(k.zone)){
-     const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre),lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
+     const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,LEVIERS.voisinsCoherents?{parCutMm:LEVIERS.voisinsCoherentsParCutMm,baseMm:LEVIERS.voisinsCoherentsBaseMm}:null),lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
      const G={d0:d0.paire?{left:lv(d0.paire.left.decal),right:lv(d0.paire.right.decal)}:null,dd:dd.decal?{left:lv(dd.decal.left),right:lv(dd.decal.right)}:null,
        proche:va?{left:va.left.proche,right:va.right.proche}:null,va:va?{left:va.left.v,right:va.right.v}:null,h0:{left:[0,0],right:[0,0]}};
      /* Ordre des graines (`rechOrdreGraines`) : par défaut la test 13, la pose retenue, le voisin, la voie ajustée, le départ (celui de b-r2 ; une
