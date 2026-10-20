@@ -42,7 +42,7 @@ Sur la décision de la test 13 (mêmes hypothèses, mêmes probabilités, même 
 
 1. **anomalie** : l'écartement de la paire s'écarte de la référence de 15 à 40 mm (sous 15 mm : dispersion naturelle ; au-delà de 40 mm : autre chose qu'un rail mal placé) ;
 2. **correction** : le rail le **moins probable** de la paire va en travers jusqu'à l'écartement de référence, **si le nuage le soutient à sa nouvelle place** (5 points de dessus, 3 de flanc, comme H6) : aucune pose sans preuve ;
-3. « valider » (test 13) : validé, corrigé s'il y a anomalie soutenue ; « rien, plus de 150 mm » : validé **seulement** s'il y a anomalie soutenue ; « poser sans valider » : **rien** (plus de pose approchée : 52 % des approchés jugés sur les 10 parties restaient à plus de 50 mm de l'opérateur) ; tout autre « rien » : rien ;
+3. « valider » (test 13) : validé, corrigé s'il y a anomalie soutenue ; « rien, plus de 150 mm » : validé **seulement** s'il y a anomalie soutenue ; « poser sans valider » : **rien** (plus de pose approchée) ; tout autre « rien » : rien ;
 4. sans instantané de la liste : la décision de la test 13, sans pose approchée.
 
 La chaîne du lot, les cuts qu'elle pose, la vue déplacée et la règle « jamais appui ni voisin » (D-221) sont ceux de L1-s. Les seuils (15, 40, 20 lignes) viennent du diagnostic de 2:19 ; ils n'ont pas été cherchés sur les autres parties.
@@ -110,3 +110,8 @@ Les cuts « sous τ » étaient posés sans validation par la test 13 (approché
 ## 9. Paquet
 
 `ariane-4.9.5-test.14.zip` (construit par `tools/package.py` sur 49a2c60) : 2 580 393 octets, SHA-256 `ff9030ae614ea7b9dd53949f46efd2a2eea10b93528b95af23e67ab14362765a`, manifeste 4.9.5.14, « 4.9.5 test 14 (L1-e) », CRC valide. Consigne : `consignes/seance-terrain-4.9.5-test-14-2026-10-20.md`.
+
+## Correction (20/10, fiches/L1_CAP5.md)
+
+La première version de cette fiche justifiait l'abandon des poses approchées par « 52 % des approchés jugés sur les 10 parties restaient à plus de 50 mm de l'opérateur ». **Ce chiffre est faux comme mesure de l'erreur de pose.** Une pose approchée (posée sans validation) ne reste pas dans ESV : l'opérateur retrouve la pose d'origine. Le chiffre mesurait donc la correction de l'opérateur depuis la pose d'ESV, et non l'écart entre la pose approchée et la pose de l'opérateur. Mesuré correctement sur les 9 approchés jugés de 2:19, cet écart vaut : 4 à 10 mm ou moins, 2 de 10 à 20 mm, 1 de 20 à 50 mm, 2 à plus de 50 mm. La décision de ne plus poser sans validation tient pour une autre raison : une pose approchée ne fait rien gagner à l'opérateur, puisqu'elle ne persiste pas.
+
