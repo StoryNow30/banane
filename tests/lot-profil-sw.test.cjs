@@ -5,11 +5,12 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {lot,neutre,decisions,metier,SCOPE,EsvVue,production,memoire,base,K,S,GOLDEN,h,versionGolden,ev,scopeDe,attendre,EsvTrou,lotDiffere,d112}=require('./helpers/lot-profil.cjs');
 
-test('réglage livré : profil du lot « L1-s » (D-221) ; le choix du panneau est gardé et lu', async()=>{
- assert.equal(S.lot.profil,'L1-s');
+test('réglage livré : profil du lot « L1-se » (test 14) ; le choix du panneau est gardé et lu', async()=>{
+ assert.equal(S.lot.profil,'L1-se');
  const local=memoire(),b=production({local});
  const j=x=>JSON.parse(JSON.stringify(x));
- assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'L1-s'});
+ assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'L1-se'});
+ await b.api('lot-profil',{profil:'L1-s'});assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'L1-s'});
  await b.api('lot-profil',{profil:'actuel'});assert.equal(local.m.banane50LotProfil,'actuel');
  assert.deepEqual(j(await b.api('lot-profil-etat')),{profil:'actuel'});
  await assert.rejects(b.api('lot-profil',{profil:'L9'}),/Profil du lot inconnu/);

@@ -1,9 +1,9 @@
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'),require('./lot-decision.js'),require('./continuity-observer.js'),
-    require('./hauteur-apprise.js'),require('./placement-convention.js'),require('./voie-recentree.js'),require('./gcv1-shadow.js'),require('./gauge.js'));
+    require('./hauteur-apprise.js'),require('./placement-convention.js'),require('./voie-recentree.js'),require('./gcv1-shadow.js'),require('./gauge.js'),require('./gcv2-l1e.js'));
   else root.BananeGcv2L1=factory(root.BananeCaptureCore,root.BananeLotDecision,root.BananeContinuityObserver,root.BananeHauteurApprise,root.BananePlacementConvention,
-    root.BananeVoieRecentree,root.BananeGCV1Shadow,root.BananeGauge4);
-})(typeof globalThis!=='undefined'?globalThis:this,function(C,L,O,H,Conv,V,Shadow,Gauge){
+    root.BananeVoieRecentree,root.BananeGCV1Shadow,root.BananeGauge4,root.BananeGcv2L1e);
+})(typeof globalThis!=='undefined'?globalThis:this,function(C,L,O,H,Conv,V,Shadow,Gauge,E){
  'use strict';
  /* 4.9.5.13 (D-217, D-219) — CANDIDATE « L1 » SUR LES DIFFÉRÉS DU LOT. Module commun au banc hors ligne (`tools/banc-differes.cjs`) et au
   * chemin du lot du service worker (`background.js`, profil `lot.profil = 'L1'`) : le banc mesure exactement ce que le terrain exécute.
@@ -35,6 +35,9 @@
  const REGLE=Object.freeze({version:'L1',variante:'L1',sansValiderMaxMm:150,ecartementMedianeMm:15,contratMm:Object.freeze([1420,1470]),
    lotOptions:Object.freeze({pairGuard:false,gap:10})});
  const REGLE_V=Object.freeze({...REGLE,variante:'L1-v'});
+ /* 4.9.5.14 (test 14, fiches/L1_APPRENTISSAGE.md) : variante L1-e, correction d'écartement apprise sur les Échos (src/gcv2-l1e.js) ; mêmes
+  * hypothèses, mêmes probabilités, même paire ; valider ou rien, jamais de pose sans validation. */
+ const REGLE_E=Object.freeze({...REGLE,variante:'L1-e'});
 
  /* ------------------------------------------------------------------ outils de repère (tools/relecture-autonome.cjs) */
  /* Décalage d'une position par rapport au rail de départ, repère profil de ce rail (mm, [long, lat, vert]). */
@@ -292,6 +295,10 @@
        ecartementMm:science.pairGauge?arrondi(science.pairGauge.predictedMm,1):null,ecartementRejete:!!(science.summary&&science.summary.pairGaugeRejected),
        nHyp:{left:hyps.left.length,right:hyps.right.length}}};
  }
+ /* Soutien du nuage pour une pose d'un rail, décalée de `mm` ([long, lat, vert], mm) depuis la pose de départ : points de dessus et de flanc
+  * (mêmes mesures que le soutien de H6). Sert à la décision L1-e (src/gcv2-l1e.js) : un rail corrigé à l'écartement de référence n'est posé
+  * que si le nuage le soutient à sa nouvelle place. */
+ function soutienRail(capture,side,mm){const m=mesuresTranslatees(capture,side,mm,null).sig;return {dessus:m.pointsDessus??0,flanc:m.pointsFlanc??0};}
  /* Rupture de série (audit H1) : un appui séparé du cut par un changement de statut ADV rend la voie de référence non sûre. */
  function avecRupture(voie,cut,zones){
    if(!voie)return voie;
@@ -443,6 +450,25 @@
    if(ecart3d>regle.sansValiderMaxMm)return {...out,etat:'rien',motif:'plus-de-150-mm'};
    return {...out,etat:'poser-sans-valider',motif:'sous-tau'};
  }
+ /* Décision L1-e d'un cas (`casDuDiffere`) : la décision de la test 13 (`deciderL1`, mêmes probabilités), puis la correction d'écartement de
+  * `src/gcv2-l1e.js` contre la référence `ref` ({ mm } : lignes valides non touchées de la liste d'ESV, ou null), soutien du nuage lu sur la
+  * capture. Même forme que `deciderL1` ; `etat` : 'valider' ou 'rien' (jamais de pose sans validation) ; `test13` : la décision d'origine. */
+ function deciderL1e(k,mod,ref,capture,probasDonnees=null){
+   if(!E)throw Error('GCV2 L1-e : module absent.');
+   const d0=deciderL1(k,mod,REGLE,probasDonnees),p=d0.probas;
+   let c=null;
+   if(d0.paire&&Number.isInteger(d0.i)&&Number.isInteger(d0.j)&&ref&&fini(ref.mm)){
+     const hl=k.rails.left.hyps[d0.i],hr=k.rails.right.hyps[d0.j];
+     const hyps=Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map((h,i)=>({decal:h.decal,g:h.g,depart:i===k.i0[s]}))]));
+     c=E.corriger({paire:{left:{decal:hl.decal,p:p.left[d0.i]},right:{decal:hr.decal,p:p.right[d0.j]}},g:ecartementPaire(k,hl,hr),hyps,ref:ref.mm,
+       soutien:(s,mm)=>soutienRail(capture,s,mm)});
+   }
+   const dd=E.decider(d0,c);
+   const correction=c?{ref:ref.mm,ecartMm:c.ecartMm,anomalie:c.anomalie,rail:c.rail,soutenue:c.soutenue,appliquee:dd.corrigee}:{ref:ref&&fini(ref.mm)?ref.mm:null,appliquee:false};
+   const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...d0.paire[s],decal:dd.decal[s]}])):null;
+   const ecart3d=paire?Math.max(norme(paire.left.decal),norme(paire.right.decal)):d0.ecartDepartMm;
+   return {...d0,variante:'L1-e',etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,test13:{etat:d0.etat,motif:d0.motif??null}};
+ }
  /* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
  function positionsDe(capture,paire){return Object.fromEntries(SIDES.map(s=>[s,L.positionOf(capture.rails[s],paire[s].decal.map(v=>v/1000))]));}
 
@@ -453,7 +479,7 @@
   *   voisins : cuts validés par le lot avant ce cut, { identity, positions, rails (pose de départ de ce voisin) } ; zone : 'pn' | 'adv' | 'abords' ;
   *   plagesADV : plages ADV connues à l'instant ; modele : `modeleFige(...)` ; regle : REGLE ou REGLE_V.
   * Rend { decision (deciderL1), positions (scène) ou null, hyp (résumé), cas } ; lève une erreur seulement sur entrée illisible. */
- function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE}){
+ function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null}){
    if(!modele)throw Error('GCV2 L1 : modèle absent.');
    if(!SIDES.every(s=>science&&science.rails&&science.rails[s]))throw Error('GCV2 L1 : science incomplète.');
    const id=capture.identity,seul=variante(capture,science,[],options),chaine=variante(capture,science,appuis.slice(),options);
@@ -465,7 +491,7 @@
    for(let x=Math.min(...bornes);x<=Math.max(...bornes);x++)zmap.set(x,{zone:(plagesADV||[]).some(([a,b])=>x>=a&&x<=b)?'adv':'autre'});
    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
    const k=casDuDiffere({cut:id.cut,zone,hyp,gMed,voieRef});
-   const d=deciderL1(k,modele,regle);
+   const d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture):deciderL1(k,modele,regle);
    const positions=d.paire&&d.etat!=='rien'?positionsDe(capture,d.paire):null;
    return {decision:d,positions,gMed,cas:k,hyp,chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
  }
@@ -501,8 +527,8 @@
      ecartDepartMm:d.ecartDepartMm,ecartMaxLatVertMm:d.ecartMaxLatVertMm??null,paires:d.permises??null,
      paire:d.paire?{left:d.paire.left.decal,right:d.paire.right.decal}:null,aControler:d.aControler===true||undefined,
      gMedMm:arrondi(r.gMed,1),chaine:r.chaine?{stage:r.chaine.stage,reason:r.chaine.reason!=null?String(r.chaine.reason).slice(0,80):null,appuis:r.chaine.anchorsUsed.length}:null,
-     nHyp:r.hyp?r.hyp.cut.nHyp:null};
+     nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13}:{})};
  }
- return {VERSION,REGLE,REGLE_V,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,positionsDe,deciderDiffere,commander,resumer};
+ return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,deciderDiffere,commander,resumer};
 });

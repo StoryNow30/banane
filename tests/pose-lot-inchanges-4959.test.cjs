@@ -20,13 +20,14 @@ const VERSION_SEULE=['src/core.js','src/bridge.js'];   // le numéro de version,
  * modules nouveaux, lus par le service worker seulement quand le lot porte le profil « L1 ». Le profil « actuel » joue le lot de la 4.9.5.9. */
 const L1={'src/gcv1-shadow.js':'le réservoir du moteur sur demande (`scientificProposeBothAvecReservoir`), la sortie par défaut est inchangée',
  'src/adapter-page.js':'4.9.5.13 : `apply` rend en plus `vueFin` (position de chaque rail dans la vue à la fin de la pose, lecture seule, après la pose ; tests/apply-vue-fin-page.test.cjs)'};
-const NOUVEAUX=['gcv2-l1.js','gcv2-parametres-l1.js','raison-correction.js'];
+/* 4.9.5.14 (test 14) : la décision L1-e des différés (fiches/L1_APPRENTISSAGE.md), lue par src/gcv2-l1.js sous le profil « L1-se ». */
+const NOUVEAUX=['gcv2-l1.js','gcv2-l1e.js','gcv2-parametres-l1.js','raison-correction.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.13').join('4.9.5.8').split('4.9.5 test 13 (L1)').join('4.9.5 test 8'):lire(f);
+  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.14').join('4.9.5.8').split('4.9.5 test 14 (L1-e)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
@@ -54,7 +55,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
  const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
- assert.equal(profil,'L1-s','test 13 : profil du lot « L1-s » par défaut (D-221)');
+ assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');

@@ -12,9 +12,9 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.13',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 13 (L1)';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.14',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 14 (L1-e)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -1407,16 +1407,26 @@ function holdLotAnchor(lotObservation,command){
  *   5. chaque décision est consignée dans l'observation du lot (`lotObservation.l1` : état, motif, hypothèse, probabilité, écart au départ,
  *      zone, commande) et la pose sans validation par un événement `l1-pose-sans-valider`.
  * Une panne ici ne pose rien : la commande du lot reste celle d'avant. */
-const CLE_LOT_PROFIL='banane50LotProfil',PROFILS_LOT=['actuel','L1','L1-s'];
+/* 4.9.5.14 (test 14, fiches/L1_APPRENTISSAGE.md) — PROFIL « L1-se » (défaut) : celui de L1-s (chaîne, verts et vue identiques, D-221), avec la
+ * décision L1-e des différés (src/gcv2-l1e.js) : paire de la GCV2 corrigée à l'écartement des lignes valides non touchées de la liste d'ESV
+ * (instantané de la partie, lu une fois par lot), validation des cuts « plus de 150 mm » dont l'écartement anormal s'explique et que le nuage
+ * soutient ; plus aucune pose sans validation. Sans instantané de liste : la décision de L1-s sans pose approchée. */
+const CLE_LOT_PROFIL='banane50LotProfil',PROFILS_LOT=['actuel','L1','L1-s','L1-se'];
 async function profilDuLot(){let r={};try{r=await chrome.storage.local.get(CLE_LOT_PROFIL)||{};}catch{r={};}
  const v=r[CLE_LOT_PROFIL],d=globalThis.BananeSettings?.lot?.profil;return PROFILS_LOT.includes(v)?v:PROFILS_LOT.includes(d)?d:'actuel';}
-async function profilChoisir(args){if(!PROFILS_LOT.includes(args?.profil))throw Error('Profil du lot inconnu : actuel, L1 ou L1-s.');
+async function profilChoisir(args){if(!PROFILS_LOT.includes(args?.profil))throw Error('Profil du lot inconnu : actuel, L1, L1-s ou L1-se.');
  await chrome.storage.local.set({[CLE_LOT_PROFIL]:args.profil});return {profil:args.profil};}
-function profilL1(){return ['L1','L1-s'].includes(engine?.s?.batch?.scope?.lotProfil)&&!!globalThis.BananeGcv2L1&&!!globalThis.BananeGcv2ParametresL1;}
+function profilL1(){return ['L1','L1-s','L1-se'].includes(engine?.s?.batch?.scope?.lotProfil)&&!!globalThis.BananeGcv2L1&&!!globalThis.BananeGcv2ParametresL1;}
 /* D-221 (fiches/L1_DIFFERES.md § 5) — PROFIL « L1-s » : la chaîne de la 4.9.5.9 intacte (options, appuis, voisins) ; sur un cut qu'elle ne pose pas :
  * a. vue déplacée pour sa cible hors de la vue ; b. décision du lot refaite avec les options de L1 ; c. la GCV2. Une pose L1-s n'est jamais un appui
  * de la chaîne ni un voisin de la GCV2 (marquée `l1s` dans la commande consignée et `l1` dans `lotCommands`). */
-function profilL1s(){return profilL1()&&engine?.s?.batch?.scope?.lotProfil==='L1-s';}
+function profilL1s(){return profilL1()&&['L1-s','L1-se'].includes(engine?.s?.batch?.scope?.lotProfil);}
+function profilL1se(){return profilL1s()&&engine?.s?.batch?.scope?.lotProfil==='L1-se'&&!!globalThis.BananeGcv2L1e;}
+/* Instantané décompacté de la liste d'ESV de la partie (src/liste-memoire.js), lu une fois par lot ; null s'il manque. */
+let l1eListe={cle:null,table:null};
+async function l1eTable(part){const cle=(engine?.s?.batch?.id||'')+'|'+part;if(l1eListe.cle===cle)return l1eListe.table;
+ let table=null;try{const LM=globalThis.BananeListeMemoire,k=LM.PRE_INST+part,r=await chrome.storage.local.get(k);table=LM.decompacter(r?.[k])||null;}catch{table=null;}
+ l1eListe={cle,table};return table;}
 const ETAGES_L1=['first-pass','window','choice','crossing'];
 function reglageVueL1(){return {...(globalThis.BananeSettings?.deplacerVue||{}),actif:true,etages:ETAGES_L1,regle:'aucune'};}
 let l1Contexte=null,l1PoseEnAttente=null,l1ModeleCache=null;
@@ -1474,7 +1484,8 @@ async function l1Commande({command,lotObservation,proposal,before,capture}){
     if(c.action==='lot')return {...c,l1s:'chaine'};}
   }
   const t0=Date.now(),science=Sh.scientificProposeBothAvecReservoir(ctx.lotArgs.capture),z=l1Zone(identity);
-  const g=G.deciderDiffere({capture:ctx.lotArgs.capture,science,appuis:ctx.anchors,options:profilL1s()?{...G.REGLE.lotOptions}:ctx.lotArgs.options,voisins:l1Voisins(b,identity),zone:z.zone,plagesADV:z.adv,modele:l1Modele()});
+  const e=profilL1se()?{regle:G.REGLE_E,reference:globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut)}:{};
+  const g=G.deciderDiffere({capture:ctx.lotArgs.capture,science,appuis:ctx.anchors,options:profilL1s()?{...G.REGLE.lotOptions}:ctx.lotArgs.options,voisins:l1Voisins(b,identity),zone:z.zone,plagesADV:z.adv,modele:l1Modele(),...e});
   const d=g.decision,l1={...G.resumer(g),zoneSource:z.source,ms:Date.now()-t0};
   lotObservation.l1=l1;
   if(d.etat==='rien')return command;
@@ -2639,7 +2650,7 @@ async function demarrerLot(args){
   delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
   /* 4.9.5.13 (test 13) : profil du lot figé dans le scope ; 'actuel' : le scope n'en porte rien (celui de la 4.9.5.9, à l'octet près). */
   /* Sans les modules L1 (service worker incomplet), le lot est celui de la 4.9.5.9 : aucun profil dans le scope. */
-  delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE&&globalThis.BananeGcv2L1&&globalThis.BananeGcv2ParametresL1){const pr=await profilDuLot();if(pr==='L1'||pr==='L1-s')startArgs.lotProfil=pr;}
+  delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE&&globalThis.BananeGcv2L1&&globalThis.BananeGcv2ParametresL1){const pr=await profilDuLot();if(pr==='L1'||pr==='L1-s')startArgs.lotProfil=pr;else if(pr==='L1-se')startArgs.lotProfil=globalThis.BananeGcv2L1e?'L1-se':'L1-s';}
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */
   delete startArgs.relecture;{const m=await relectureChoix();if(m!=='coupee')startArgs.relecture=m;}

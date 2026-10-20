@@ -5,7 +5,8 @@
  * rien n'est commandé dans ESV ; on rejoue les lots Orbite archivés avec le code du dépôt.
  *
  *   node tools/banc-differes.cjs rejouer  --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --sortie R.jsonl
- *                                         [--profils base,L1,L1-v] [--parametres datasets/gcv2-parametres-h6.json] [--juger-partie-reservee]
+ *                                         [--profils base,L1,L1-v,L1-s,L1-se] [--parametres datasets/gcv2-parametres-h6.json] [--liste LISTE.json]
+ *                                         [--juger-partie-reservee]
  *   node tools/banc-differes.cjs predire  (mêmes arguments que rejouer ; imprime le SHA-256 du fichier, exige --juger-partie-reservee pour une
  *                                         partie réservée ; aucune entrée humaine, aucun Écho)
  *   node tools/banc-differes.cjs agreger  --rejeu R.jsonl [--rejeu …] [--juges CUTS.jsonl …] [--inventaire INV.json] [--json S.json] [--md S.md]
@@ -33,14 +34,17 @@ const Sh = require('../src/gcv1-shadow.js');
 const M = require('../src/regles-metier.js');
 const VR = require('../src/voie-recentree.js');
 const L1 = require('../src/gcv2-l1.js');
+const EL = require('../src/gcv2-l1e.js');
 const D = require('./diag-differes.cjs');
 
 const FORMAT = 'ariane-banc-differes-rejeu-v1', FORMAT_SYNTHESE = 'ariane-banc-differes-synthese-v1', FORMAT_COMPARAISON = 'ariane-banc-differes-comparaison-v1';
 const VERSION = 'banc-differes-1';
 const SIDES = ['left', 'right'];
-const PROFILS = Object.freeze(['base', 'L1', 'L1-v', 'L1-s']);
+const PROFILS = Object.freeze(['base', 'L1', 'L1-v', 'L1-s', 'L1-se']);
+/* L1-se (test 14, fiches/L1_APPRENTISSAGE.md) : la chaîne et les verts de L1-s (D-221), la décision des différés de L1-e (src/gcv2-l1e.js). */
+const estL1s = p => p === 'L1-s' || p === 'L1-se';
 /* D-221 : « L1-s » = la chaîne de la 4.9.5.9 intacte ; L1 seulement sur les cuts qu'elle ne pose pas, sans jamais en faire un appui ni un voisin. */
-const CHAINE_ACTUELLE = p => p === 'base' || p === 'L1-s';
+const CHAINE_ACTUELLE = p => p === 'base' || estL1s(p);
 const PARAMETRES = path.join(__dirname, '..', 'datasets', 'gcv2-parametres-h6.json');
 const MAX_APPUIS = 40;
 const fini = v => typeof v === 'number' && Number.isFinite(v);
@@ -99,7 +103,7 @@ function lotReel(journal, partie, lotId) {
 /* ------------------------------------------------------------------ rejeu conjoint d'un lot */
 const decalPose = (rails, positions) => positions ? Object.fromEntries(SIDES.map(s => [s, L1.decalage(rails[s], positions[s])])) : null;
 const optionsDe = profil => CHAINE_ACTUELLE(profil) ? {} : { ...L1.REGLE.lotOptions };
-const regleDe = profil => profil === 'L1-v' ? L1.REGLE_V : L1.REGLE;
+const regleDe = profil => profil === 'L1-v' ? L1.REGLE_V : profil === 'L1-se' ? L1.REGLE_E : L1.REGLE;
 const optionsGcv2 = () => ({ ...L1.REGLE.lotOptions });
 function plagesDe(mem, e) {
   const P = M.DEFAULTS.pn, A = M.DEFAULTS.adv;
@@ -110,8 +114,10 @@ function plagesDe(mem, e) {
 }
 const dans = (plages, c) => plages.some(([a, b]) => c >= a && c <= b);
 
-function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {} }) {
+function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null }) {
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
+  /* L1-se : référence d'écartement de chaque cut, lue dans l'instantané de la liste d'ESV du départ de partie (décompacté) ; sans liste : aucune. */
+  const referenceDe = cut => liste ? EL.referenceEcartement(liste, cut) : null;
   const cuts = lot.cuts.slice().sort((a, b) => a.t - b.t);
   const zoneMem = M.creerMemoire('zones-' + lot.id);
   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
@@ -173,7 +179,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         E.valides.push({ identity, positions, rails: before });
         if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
         out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions) };
-      } else if (p === 'L1-s' && (() => {
+      } else if (estL1s(p) && (() => {
         /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
         if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
           const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
@@ -198,8 +204,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null };
         try {
           let g = cache.get('g' + sig);
-          if (!g) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: p === 'L1-s' ? optionsGcv2() : opts, voisins: E.valides, zone, plagesADV: plages.adv, modele, regle: regleDe(p) }); cache.set('g' + sig, g); }
-          else { const dd = L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
+          if (!g) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null }); cache.set('g' + sig, g); }
+          else { const dd = p === 'L1-se' ? L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas) : L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
           const dec = g.decision, l1 = L1.resumer(g);
           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
           else {
@@ -209,7 +215,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             else if (valider && grappeBloque()) out = { ...base, etat: 'differe', l1: { ...l1, refusCommande: 'regle-grappe' } };
             else if (valider) {
               /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin. */
-              if (p !== 'L1-s') { E.valides.push({ identity, positions: g.positions, rails: before }); L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
+              if (!estL1s(p)) { E.valides.push({ identity, positions: g.positions, rails: before }); L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
               out = { ...base, etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true };
             } else out = { ...base, etat: 'pose-non-validee', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1 };
           }
@@ -217,14 +223,14 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       }
       ligne.profils[p] = out;
       /* L1-s : la mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé). */
-      const valideChaine = out.etat === 'pose' && !(p === 'L1-s' && (posesL1s || out.source === 'gcv2'));
+      const valideChaine = out.etat === 'pose' && !(estL1s(p) && (posesL1s || out.source === 'gcv2'));
       M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: valideChaine, surface }), { differe: !valideChaine });
     }
     M.noter(zoneMem, r0, { differe: !c.pose });
     lignes.push(ligne);
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
-    regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION,
+    regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null } } : {}),
     parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
     note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
     traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000) };
@@ -337,7 +343,7 @@ const fmt = v => v == null ? '—' : typeof v === 'number' ? String(v).replace('
 const pc = v => v == null ? '—' : `${fmt(v)} %`;
 function table(entetes, lignes) { return [`| ${entetes.join(' | ')} |`, `|${entetes.map((_, i) => i ? '--:' : '---').join('|')}|`, ...lignes.map(l => `| ${l.map(fmt).join(' | ')} |`)].join('\n'); }
 function syntheseMd(S) {
-  const P = ['reel', ...S.profils], nom = p => ({ reel: 'base (réel)', base: 'base rejouée', L1: 'L1', 'L1-v': 'L1-v', 'L1-s': 'L1-s' })[p] || p;
+  const P = ['reel', ...S.profils], nom = p => ({ reel: 'base (réel)', base: 'base rejouée', L1: 'L1', 'L1-v': 'L1-v', 'L1-s': 'L1-s', 'L1-se': 'L1-se' })[p] || p;
   const out = [];
   out.push('### Taux de différés', '', table(['Groupe', 'Profil', 'Lots', 'Traités', 'Posés validés', 'Posés non validés', 'Différés (non validés)', 'Taux pondéré', 'Taux moyen par lot', 'Différés par lot', 'Réduction'],
     Object.entries(S.groupes).flatMap(([g, x]) => P.map(p => { const c = x.comptes[p], r = x.comptes.reel; return [g, nom(p), x.parLot[p].lots, c.traites, c.poses, c.posesNonValidees, c.differes, pc(c.taux), pc(x.parLot[p].tauxMoyen), x.parLot[p].differesParLot, p === 'reel' ? '—' : pc(part(r.differes - c.differes, r.differes))]; }))));
@@ -420,7 +426,7 @@ function args(argv) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const m = /^([1-9]\d*):([1-9]\d*)$/.exec(val()); if (!m) throw Error('--partie PROJET:PARTIE'); o.projet = Number(m[1]); o.partie = Number(m[2]); }
     else if (k === '--journal') o.journal = val(); else if (k === '--corpus') o.corpus.push(val()); else if (k === '--lot') o.lot = val(); else if (k === '--sortie') o.sortie = val();
-    else if (k === '--profils') o.profils = val().split(',').filter(Boolean); else if (k === '--parametres') o.parametres = val();
+    else if (k === '--profils') o.profils = val().split(',').filter(Boolean); else if (k === '--parametres') o.parametres = val(); else if (k === '--liste') o.liste = val();
     else if (k === '--rejeu') o.rejeu.push(val()); else if (k === '--juges') o.juges.push(val()); else if (k === '--inventaire') o.inventaire = val();
     else if (k === '--json') o.json = val(); else if (k === '--md') o.md = val(); else if (k === '--prediction') o.prediction = val(); else if (k === '--echo') o.echo.push(val());
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
@@ -439,7 +445,7 @@ function main(argv) {
     const j = JSON.parse(fs.readFileSync(a.journal, 'utf8')), R = lotReel(j, a.partie, a.lot), ids = R.lot.cuts.map(c => c.captureId).filter(Boolean);
     const t0 = Date.now(), captures = chargerCaptures(a.corpus, ids);
     journalTexte(`captures retrouvées : ${captures.size}/${ids.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
-    const lignes = rejouerLot({ journal: j, captures, projet: a.projet, partie: a.partie, lotId: a.lot, parametres, profils: a.profils, journalTexte });
+    const lignes = rejouerLot({ journal: j, captures, projet: a.projet, partie: a.partie, lotId: a.lot, parametres, profils: a.profils, journalTexte, liste: a.liste ? require('../src/liste-memoire.js').decompacter(JSON.parse(fs.readFileSync(a.liste, 'utf8'))) : null });
     lignes[0].parametres.sha256 = sha256(bufP);
     const texte = lignes.map(l => JSON.stringify(l)).join('\n') + '\n';
     ecrire(a.sortie, texte);

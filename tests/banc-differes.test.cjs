@@ -56,6 +56,12 @@ test('rejeu conjoint : lignes, profils, sort réel, déterminisme et causalité'
   const S = B.agreger(B.lireRejeux([a.map(x => JSON.stringify(x)).join('\n')]));
   assert.equal(S.effets['L1-s'].differentsDeLaBase, 0); assert.ok(S.effets['L1-s'].posesDeLaBase > 0);
   assert.equal(L.find(l => l.cut === 4).profils['L1-s'].source, 'gcv2', 'la GCV2 sur le différé de la chaîne');
+  /* 4.9.5.14 : L1-se sans liste d'ESV = L1-s, sans pose approchée (même chaîne, mêmes poses validées, un approché redevient un différé). */
+  for (const l of L) {
+    const s = l.profils['L1-s'], e = l.profils['L1-se'];
+    if (s.etat === 'pose-non-validee') { assert.equal(e.etat, 'differe', `${l.cut}`); continue; }
+    assert.equal(e.etat, s.etat, `${l.cut}`); if (s.etat === 'pose') assert.deepEqual(e.decal, s.decal, `${l.cut}`);
+  }
 });
 
 test('agrégation : taux, approchés, gain contre Mic, rappel', () => {

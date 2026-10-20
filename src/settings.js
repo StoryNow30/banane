@@ -176,8 +176,10 @@
      * cut que la chaîne ne pose pas, la GCV2 (src/gcv2-l1.js, paramètres figés) pose et valide au-dessus de τ, pose SANS valider sous τ
      * (sauf à plus de 150 mm de la pose de départ), la vue est déplacée pour une cible hors de la vue, la garde de paire est éteinte et
      * les appuis de reprise vont à 10 cuts. 'actuel' : le lot de la 4.9.5.9, à l'identique (le scope ne porte alors aucun profil). */
-    /* D-221 : défaut « L1-s » (la chaîne de la 4.9.5.9 intacte ; L1 seulement sur ses différés, jamais appui ni voisin). */
-    profil: 'L1-s',
+    /* D-221 : « L1-s » (la chaîne de la 4.9.5.9 intacte ; L1 seulement sur ses différés, jamais appui ni voisin).
+     * 4.9.5.14 (test 14, fiches/L1_APPRENTISSAGE.md) : défaut « L1-se », L1-s avec la décision L1-e des différés (correction d'écartement apprise
+     * sur les Échos, src/gcv2-l1e.js ; plus de pose sans validation). */
+    profil: 'L1-se',
   });
 
   const exportSettings = Object.freeze({

@@ -5,9 +5,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {lot,neutre,decisions,metier,SCOPE,EsvVue,production,memoire,base,K,S,GOLDEN,h,versionGolden,ev,scopeDe,attendre,EsvTrou,lotDiffere,d112}=require('./helpers/lot-profil.cjs');
 
-test('profil « L1-s », au-dessus de τ : pose validée de la GCV2, jamais appui ni voisin (D-221)', async()=>{
- const x=await lotDiffere({etat:'valider'});
- assert.equal(scopeDe(x.b).lotProfil,'L1-s');
+for(const profil of ['L1-s','L1-se'])test(`profil « ${profil} », au-dessus de τ : pose validée de la GCV2, jamais appui ni voisin (D-221)`, async()=>{
+ const x=await lotDiffere({etat:'valider',profil:profil==='L1-se'?null:profil});
+ assert.equal(scopeDe(x.b).lotProfil,profil);
  assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','apply','validate','next','capture','apply']);
  const d=d112(x);assert.equal(d.command.reason,'gcv2-l1');assert.equal(d.command.l1s,'gcv2');assert.notEqual(d.anchorHeld,true,'pas un appui');
  assert.equal(x.b.get('engine').s.batch.lotCommands[112].l1,true);

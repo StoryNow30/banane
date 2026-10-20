@@ -1,5 +1,20 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.14 — 4.9.5 test 14 (L1-e) (20/10)
+
+Manifeste `4.9.5.14`, « 4.9.5 test 14 (L1-e) », paquet `ariane-4.9.5-test.14.zip` ; base : la 4.9.5 test 13 (`claude/50-l1-differes`, d7ff266). Apprentissage sur les Échos de 2:17, 2:18 et 2:19 (`fiches/L1_APPRENTISSAGE.md`).
+**Le lot change, sur ses différés seulement** : nouveau profil du lot **`'L1-se'` par défaut** : celui de L1-s (chaîne de la 4.9.5.9 intacte, verts identiques, vue déplacée, jamais appui ni voisin, D-221), avec la **décision L1-e** des différés (`src/gcv2-l1e.js`).
+Consigne : `consignes/seance-terrain-4.9.5-test-14-2026-10-20.md` ; retour arrière : la 4.9.5 test 13 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Correction d'écartement** : la paire de la GCV2 (mêmes hypothèses, mêmes probabilités, même choix que la test 13) est comparée à l'écartement des lignes valides **non touchées** de la liste d'ESV (instantané de la partie, 20 lignes les plus proches). Écart de 15 à 40 mm : le rail le moins probable va en travers jusqu'à cet écartement, **si le nuage le soutient à sa nouvelle place** (5 points de dessus, 3 de flanc).
+- **Décision** : « valider » de la test 13 → validé (corrigé s'il y a lieu) ; « plus de 150 mm » sous τ → validé **seulement** avec une correction soutenue ; **plus aucune pose sans validation** (les approchés restent rouges à la pose d'ESV : 52 % des approchés jugés restaient à plus de 50 mm de l'opérateur). Sans instantané de liste : la test 13 sans approché.
+- **Mesures** (rejeu du code, contre l'opérateur) : 2:19, partie dont l'erreur est apprise : différés du lot 202 → 22, différés jugés validés 5 → 184 dont 182 à 10 mm au plus, 0 à plus de 50 mm. Hors apprentissage (2:11, 2:17, 2:18) : différés 60 → 55, validés jugés 23 → 28 (justes 19 → 25), mauvaise voie 1 → 1 (le même cut), approchés 24 → 0. Cuts posés par la chaîne : 0 changé.
+- **Journal** : la décision L1 consigne `variante: 'L1-e'`, la correction (`ref`, écart, rail, soutien, appliquée) et la décision d'origine (`test13`).
+- **Banc** : `tools/banc-differes.cjs` (profil `L1-se`, `--liste`) ; `tools/l1-diag-hypotheses.cjs` (toutes les hypothèses de chaque différé contre l'opérateur) ; essai écarté (sélection apprise par régression logistique, ne se transporte pas d'une partie à l'autre) : `tools/l1-apprendre-ecartement.cjs`.
+- Essais : `tests/gcv2-l1e.test.cjs`, `tests/lot-profil-l1se-sw.test.cjs` ; profils L1-s et L1-se dans les essais de chaîne, de vue et de validation ; `tests/version-49514.test.cjs`.
+- verify (cœurs 0 et 1) : 2 430 essais, 2 428 réussis, 0 échec, 2 ignorés (corpus natif absent) ; `src/engine.js` identique à la base V4.6.0, géométrie inchangée.
+- Non vérifié : la correction n'a jamais posé dans ESV ; elle n'est mesurée que sur les 4 parties dont l'export porte la liste d'ESV ; ADV de 2:1 (écartement de l'opérateur 1 448 à 1 461 mm) non mesurée ; Edge.
+
 ## 4.9.5.13 — 4.9.5 test 13 (L1) (19/10)
 
 Manifeste `4.9.5.13`, « 4.9.5 test 13 (L1) », paquet `ariane-4.9.5-test.13.zip` ; base : la 4.9.5 test 9 (panneau de la test 9 ; les 4.9.5.10 à 4.9.5.12 de la session d'interface ne sont pas dans cette branche) (`claude/50-rm11-test9`) + la candidate L1 (D-217, D-219, D-220 ; `fiches/L1_DIFFERES.md`).
