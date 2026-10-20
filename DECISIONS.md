@@ -2974,3 +2974,16 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Défaut trouvé** : en rejeu conjoint, L1 **modifie la chaîne des cuts que le lot posait déjà** (59 poses réelles plus validées, 430 posées à plus de 1 mm de la pose réelle, médiane 3,4 mm), parce que ses poses deviennent des appuis et que la garde de paire est éteinte. Ce n'était pas voulu : le cap porte sur les différés.
 - **Décision (sûreté, pas réglage de performance)** : dans la test 13, **une pose L1 sur un différé ne sert jamais d'appui** à la chaîne du lot, et la garde de paire reste éteinte seulement pour les cuts que la chaîne actuelle différerait ; tout cut que la chaîne actuelle pose est posé exactement comme en 4.9.5.9 (essai : mêmes commandes sur ces cuts). Le banc conjoint est rejoué avec cette règle (« L1-s »), qui devient la candidate de terrain ; L1 et L1-v restent publiés à côté.
 - **Frontière** : les différés restants sur les parties neuves du projet 2 sont des **ADV**. Un chantier ADV dédié suit (hypothèses dans les aiguillages, voie posée de l'autre côté de l'ADV, apprentissage sur les corrections d'ADV de Mic).
+
+## D-222 — Méthode d'apprentissage permanente : rejouer et itérer jusqu'à la cible (Mic, 20/10/2026)
+
+- **Constat de Mic** sur l'apprentissage L1-e (test 14) : arrêté au premier gain, alors que la cible n'était pas atteinte (22 différés restants sur 2:19 rejouée, 55 contre 60 hors apprentissage). Jugé insuffisant (« n'oublie pas notre cap »).
+- **Règle, pour tout apprentissage futur** (tout lot, tout Écho, toute partie partagée) :
+  1. **Une cible chiffrée** fixée avant de commencer. Celle d'aujourd'hui : moins de 5 différés par partie rejouée, avec une pose de qualité.
+  2. **Rejouer la partie dans le banc local** (le vrai code sur le lot réel archivé) et **itérer** : reprendre un par un les cuts qui restent, trouver pourquoi la pose de Mic n'était pas atteinte ou pas choisie, changer l'étage responsable, rejouer. **Explorer tous les leviers** (méthode de la 4.9 : une cible, un banc réel, tous les angles). **Ne pas s'arrêter au premier gain** : on s'arrête quand la cible est atteinte, ou quand chaque différé restant est expliqué et prouvé hors de portée.
+  3. **Puis les autres parties** qui ont un Écho, chacune avec la même cible.
+- **Garde-fous inchangés** (D-220 : toute pose est définitive dans ESV) :
+  - Qualité d'abord : poses validées à 10 mm de Mic (les quelques cas à 20 mm listés), 0 mauvaise voie, 0 pose à plus de 50 mm, 0 cut vert changé, aucune pose sans preuve du nuage.
+  - Le chiffre hors apprentissage (leave-one-partie-out) est toujours publié à côté du chiffre sur la partie rejouée, et une règle qui ne vaut que pour une partie est dite comme telle.
+  - Pas de paquet avant la cible atteinte avec cette qualité, `verify` vert, prédictions scellées intactes.
+- **Premier usage** : chantier « cap 5 » (branche claude/50-l1-cap5, depuis claude/50-l1-apprentissage 045f338), sur 2:19 puis 2:17, 2:18, 2:11 et les parties jugées du banc.
