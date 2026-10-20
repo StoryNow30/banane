@@ -13,14 +13,16 @@ function versionAffichee(m){
   assert.match(m.version,/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?$/);
   const parts=m.version.split('.');assert.ok(parts.every(n=>Number(n)<=65535),'numéros MV3 bornés');
   if(parts.length===3){assert.equal(m.version_name,undefined,'une stable ne porte pas de nom de test');return m.version;}
-  const nom=`${parts.slice(0,3).join('.')} test ${parts[3]}`;assert.equal(m.version_name,nom,'le nom doit correspondre au quatrième numéro');return nom;
+  /* 4.9.5.13 : une étiquette courte entre parenthèses peut suivre le numéro (« 4.9.5 test 13 (L1) »). */
+  const nom=`${parts.slice(0,3).join('.')} test ${parts[3]}`,etiquette=typeof m.version_name==='string'?m.version_name.slice(nom.length):null;
+  assert.ok(typeof m.version_name==='string'&&m.version_name.startsWith(nom)&&/^(| \([A-Za-z0-9-]{1,12}\))$/.test(etiquette),'le nom doit correspondre au quatrième numéro');return m.version_name;
 }
 test('numérotation stable/test : format MV3, nom exact et identités courantes cohérentes',()=>{
   for(const version of ['4.8.0','4.8.6'])assert.equal(versionAffichee({version}),version,'stable historique conservée');
   assert.equal(versionAffichee({version:'4.9.0.17',version_name:'4.9.0 test 17'}),'4.9.0 test 17');
   for(const m of [{version:'4.9.0.17'},{version:'4.9.0.17',version_name:'4.9.0 test 3'},
     {version:'4.9.0',version_name:'4.9.0 test 1'},{version:'4.9.0.17',version_name:'4.8.6 test 1'},
-    {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.95536',version_name:'4.9.0 test 95536'}])assert.throws(()=>versionAffichee(m));
+    {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.95536',version_name:'4.9.0 test 95536'},{version:'4.9.0.17',version_name:'4.9.0 test 17 (avec espace)'},{version:'4.9.0.17',version_name:'4.9.0 test 171'}])assert.throws(()=>versionAffichee(m));
   const nom=versionAffichee(manifest);assert.equal(manifest.name,'Ariane');
   assert.equal(K.VERSION,manifest.version);assert.equal(K.VERSION_NAME,nom);
   const titre=`Ouvrir Ariane ${nom}`;assert.ok(manifest.action.default_title===titre||manifest.action.default_title.startsWith(titre+' — '));
@@ -39,13 +41,14 @@ print(m.nom_paquet(json.loads(sys.argv[2])))
 for version in ['4.8.0','4.8.6']:
   print(m.nom_paquet({'version':version}))
 print(m.nom_paquet({'version':'4.9.0.17','version_name':'4.9.0 test 17'}))
-for version,nom in [('4.8.6.3','4.8.6 test 2'),('4.9.0.17','4.9.0 test 3'),('4.9.0.17','4.8.6 test 1'),('4.9.0.17','test libre')]:
+print(m.nom_paquet({'version':'4.9.5.13','version_name':'4.9.5 test 13 (L1)'}))
+for version,nom in [('4.8.6.3','4.8.6 test 2'),('4.9.0.17','4.9.0 test 3'),('4.9.0.17','4.8.6 test 1'),('4.9.0.17','test libre'),('4.9.0.17','4.9.0 test 17 (avec espace)')]:
   try:
     m.nom_paquet({'version':version,'version_name':nom});print('accepté')
   except ValueError:
     print('refusé')`;
   const r=spawnSync('python3',['-c',py,path.join(root,'tools/package.py'),JSON.stringify(manifest)],{encoding:'utf8'});
-  assert.equal(r.status,0,r.stderr);assert.deepEqual(r.stdout.trim().split('\n'),[nomAttendu,'ariane-v4.8.0.zip','ariane-v4.8.6.zip','ariane-4.9.0-test.17.zip','refusé','refusé','refusé','refusé']);
+  assert.equal(r.status,0,r.stderr);assert.deepEqual(r.stdout.trim().split('\n'),[nomAttendu,'ariane-v4.8.0.zip','ariane-v4.8.6.zip','ariane-4.9.0-test.17.zip','ariane-4.9.5-test.13.zip','refusé','refusé','refusé','refusé','refusé']);
 });
 
 /* Onglet ESV simulé pour chrome.scripting : le marqueur de l'adaptateur déjà
@@ -66,7 +69,7 @@ test('4.8.0 connectée puis TEST : refus avant toute injection, message clair',a
 });
 test('adaptateur de la même extension mais d’une autre version : recharger ESV, rien d’injecté',async()=>{
   const t=onglet({version:'4.8.6.0',proprietaire:'test'}),b=background({shadow:shadowHarness(),executeScript:t.executeScript});
-  await assert.rejects(b.api('connect',{tabId:1}),new RegExp(`Recharge la page ESV \\(F5\\) pour activer Ariane ${K.VERSION_NAME.replaceAll('.', '\\.')}\\.`));
+  await assert.rejects(b.api('connect',{tabId:1}),new RegExp(`Recharge la page ESV \\(F5\\) pour activer Ariane ${K.VERSION_NAME.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&')}\\.`));
   assert.equal(t.injecte.filter(o=>o.files).length,0);
 });
 test('même version, même extension : connexion, sans réinjecter les modules de la page',async()=>{
@@ -95,7 +98,7 @@ test('TEST installée, puis commande d’un canal étranger (4.8.0) : aucune act
   assert.equal(p.ctx.__BANANE_V3_PAGE.proprietaire,'test');assert.equal(p.ctx.__BANANE_V3_PAGE.version,K.VERSION);
   assert.equal(Object.isFrozen(p.ctx.__BANANE_V3_PAGE),true);
   const avant=p.nodes.get('O2N3DCutDescription').textContent;
-  await assert.rejects(p.raw('next',[],{proprietaire:undefined}).promise,new RegExp(`Une autre Ariane \\(${K.VERSION_NAME.replaceAll('.', '\\.')}\\) est active dans cet onglet`));
+  await assert.rejects(p.raw('next',[],{proprietaire:undefined}).promise,new RegExp(`Une autre Ariane \\(${K.VERSION_NAME.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&')}\\) est active dans cet onglet`));
   assert.equal(p.nodes.get('O2N3DCutDescription').textContent,avant,'aucune navigation');
   await assert.rejects(p.call('next'),/en sécurité : une autre Ariane a tenté de commander cet onglet \(« next »\)/);
   assert.equal(p.nodes.get('O2N3DCutDescription').textContent,avant,'le propriétaire lui-même ne commande plus ESV');
@@ -103,7 +106,7 @@ test('TEST installée, puis commande d’un canal étranger (4.8.0) : aucune act
 });
 test('un ping étranger reçoit le refus, sans mettre l’adaptateur en sécurité',async()=>{
   const p=page();
-  await assert.rejects(p.raw('ping',[],{proprietaire:'autre'}).promise,new RegExp(`Une autre Ariane \\(${K.VERSION_NAME.replaceAll('.', '\\.')}\\)`));
+  await assert.rejects(p.raw('ping',[],{proprietaire:'autre'}).promise,new RegExp(`Une autre Ariane \\(${K.VERSION_NAME.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&')}\\)`));
   assert.equal((await p.call('ping')).intrusion,null);
 });
 test('l’adaptateur garde ses modules : une réinjection d’une autre version ne les remplace pas',async()=>{

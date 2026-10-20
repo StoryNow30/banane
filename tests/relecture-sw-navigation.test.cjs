@@ -1,11 +1,12 @@
 'use strict';
 /* 5.0, revue de la relecture (W8) — un refus de navigation de la page ne fait sauter la plage que s'il vient des bornes de la partie ou
- * d'une annulation ; tout autre refus (page occupée, chemin indisponible…) arrête la passe, sans rien poser. Données synthétiques. */
+ * d'une annulation ; tout autre refus (page occupée, chemin indisponible…) arrête la passe, sans rien poser. 4.9.5.13 : une page occupée est d'abord
+ * attendue et redemandée (essais bornés, tests/relecture-sw-page-occupee.test.cjs) ; ici elle le reste. Données synthétiques. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,apresLot}=require('./helpers/relecture-essais.cjs');
 
 test('refus « hors des bornes » : plage sautée, la passe continue ; refus « page occupée » : la passe s’arrête',async()=>{
- const {b,adapter,lot}=await H.lotRelecture({mode:'ombre',esv:a=>{a.refusAller=cut=>cut===108?'OUT_OF_BOUNDS':null;}});
+ const {b,adapter,lot}=await H.lotRelecture({mode:'ombre',relecture:{occupeAttentesMs:[10]},esv:a=>{a.refusAller=cut=>cut===108?'OUT_OF_BOUNDS':null;}});
  const p=await H.finPasse(b);
  assert.equal(p.etat,'finie',p.message);assert.equal(p.faits,0,'la seule plage (108–116) est sautée');
  const e=H.evenements(b,'relecture-ombre');assert.equal(e.length,1);assert.equal(e[0].action,'navigation-refusee');assert.match(e[0].raison,/OUT_OF_BOUNDS/);

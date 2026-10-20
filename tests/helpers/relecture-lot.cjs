@@ -113,7 +113,9 @@ async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},c
  b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},
   observateurPassif:{...S.observateurPassif,actif:observateur},
   /* Les règles métier en ombre voient un ADV dans le nuage de la fixture (81–143) : coupées, sauf demande (`regles`). */
-  ...(regles?{}:{reglesMetier:{...S.reglesMetier,ombre:false}}),relecture:{departMs:0,attenteEcritureMs:300,attenteVuMs:120,...relecture}};
+  ...(regles?{}:{reglesMetier:{...S.reglesMetier,ombre:false}}),relecture:{departMs:0,attenteEcritureMs:300,attenteVuMs:120,...relecture},
+  /* 4.9.5.13 : profil du lot « actuel » (empreintes de la base ; le défaut livré, « L1-s », est essayé dans tests/lot-profil-*.test.cjs). */
+  lot:{...S.lot,profil:'actuel'}};
  if(reglagesProposes)b.ctx.fetch=async url=>/relecture-reglages-proposes\.json$/.test(url)?{ok:true,json:async()=>structuredClone(reglagesProposes)}:{ok:false};
  /* L'écriture que l'observateur passif de la page relaierait après une validation. */
  let seq=0;adapter.surValidation=async(cut,e)=>{if(e===null)return;const t=Date.now();

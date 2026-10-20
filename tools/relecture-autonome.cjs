@@ -7,7 +7,7 @@
  *
  *   node tools/relecture-autonome.cjs extraire --partie P:N --echo DOSSIER [--echo DOSSIER…] [--jeu JEU.jsonl] --sortie CAS.jsonl
  *   node tools/relecture-autonome.cjs skip     --partie P:N --echo DOSSIER [...] --sortie SKIP.jsonl
- *   node tools/relecture-autonome.cjs table    --partie P:N --echo DOSSIER --journal J.json [--journal …] --cas CAS.jsonl --sortie TABLE.json
+ *   node tools/relecture-autonome.cjs table    --partie P:N --echo DOSSIER (--journal J.json [--journal …] | --sans-lot) --cas CAS.jsonl --sortie TABLE.json
  *   node tools/relecture-autonome.cjs etudier  --partie P:N --cas CAS.jsonl --table TABLE.json [--skip SKIP.jsonl] [--partie …] [--json S.json]
  *                                              [--reglages datasets/relecture-reglages-proposes.json --date AAAA-MM-JJ]
  *   node tools/relecture-autonome.cjs juger    --reglages R.json --partie P:N --cas … --table … [--skip …] --juger-partie-reservee [--json S.json]
@@ -140,7 +140,7 @@ function variante(capture, science, anchors) {
  *  - sans appui (`seul`, champs à la racine) : le cut visité seul, premier passage du lot ;
  *  - `chaine` : avec pour appuis les poses qu'elle vient de donner aux cuts précédents de la même relecture (ordre des cuts),
  *    comme le lot le fait de ses propres poses. Jamais une pose de Mic. */
-function poseAriane(entree, { tous = null, appuis = null } = {}) {
+function poseAriane(entree, { tous = null, appuis = null, rappel = null } = {}) {
   const capture = { identity: entree.identity, rails: entree.rails, pointsSceneRelative: entree.points, visibleByClipBoxes: entree.visible };
   const science = Shadow.scientificProposeBoth(capture);
   const seul = variante(capture, science, []), decision = seul.decision, haut = seul.haut;
@@ -151,9 +151,13 @@ function poseAriane(entree, { tous = null, appuis = null } = {}) {
   if (appuis) {
     const ch = variante(capture, science, appuis.liste);
     out.chaine = ch.v;
+    /* Rappel facultatif (outils hors ligne, G1-a) : les objets bruts du cut (capture, science, décisions) et les appuis AVANT cette pose.
+     * Sans `rappel`, la sortie est inchangée. */
+    if (rappel) rappel({ capture, science, seul, chaine: ch, appuisAvant: appuis.liste.slice() });
     if (ch.decision.positions && ch.decision.anchor !== false && ['first-pass', 'window', 'crossing'].includes(ch.decision.stage))
       L.rememberAnchor(appuis.liste, { identity: { part: capture.identity.part, cut: capture.identity.cut, frameId: null }, positions: ch.decision.positions, stage: ch.decision.stage }, 40);
   }
+  if (rappel && !appuis) rappel({ capture, science, seul, chaine: null, appuisAvant: [] });
   for (const s of SIDES) {
     const r = science.rails[s], rail = entree.rails[s];
     const brut = r && r.ok && r.next && r.next.status === 'candidate' && Array.isArray(r.next.delta) ? r.next.delta.map(v => r2(1000 * v)) : null;
@@ -179,7 +183,7 @@ function poseAriane(entree, { tous = null, appuis = null } = {}) {
   return out;
 }
 
-function extraire({ partie, projet, echo, jeu }) {
+function extraire({ partie, projet, echo, jeu, observateur = null }) {
   const e = J.lireEcho(echo);
   const parCut = [...J.echoParCut(e.records, e.sessions).values()].filter(c => c.partie === partie && c.cut >= 0);  // D-172 : les premiers cuts d'une partie sont dans le périmètre
   const labels = new Map();
@@ -194,8 +198,13 @@ function extraire({ partie, projet, echo, jeu }) {
   const ctx = { pagesPerdues: e.pagesPerdues, capturesParVisite: e.capturesParVisite };
   const appuis = { liste: [] };
   const cas = [];
-  for (const c of parCut.sort((a, b) => a.cut - b.cut)) {
+  parCut.sort((a, b) => a.cut - b.cut);
+  /* Observateur facultatif (G1-a, tools/gcv2-jeu.cjs) : `debut` reçoit les cuts de l'Écho, `cut` reçoit, pour chaque cut, ce qu'`extraire` vient
+   * de calculer (la ligne `o`, l'entrée sans fuite et les objets bruts de la pose). Il ne change ni les cas ni leur ordre. */
+  if (observateur && observateur.debut) observateur.debut({ parCut, ctx, referenceHumaine });
+  for (const c of parCut) {
     const v0 = c.visites[0], lab = labels.get(c.cut) || null;
+    let brutDuCut = null, entreeDuCut = null;
     const before = v0.beforeEstablished && v0.beforeEstablished.rails;
     const o = { format: FORMAT, projet, partie, cut: c.cut, visites: c.visites.length,
       dwellPremiereS: r1((Date.parse(v0.endedAt) - Date.parse(v0.startedAt)) / 1000),
@@ -225,6 +234,7 @@ function extraire({ partie, projet, echo, jeu }) {
     else {
       /* Visibilité non relevée (exports anciens) : `gatherInput` ne garde que `=== true` ; on la tient pour vraie, comme le lecteur de surface. */
       let entree = entreeSansFuite(v0, ks);
+      entreeDuCut = entree;
       /* La chaîne d'appuis ignore le repère de page (`frameId`) : la scène de l'Écho est en coordonnées du projet, les mêmes d'une page à l'autre. */
       if (!entree.points.length && ks.length) { for (const k of ks) k.visibleByClipBoxes = k.visibleByClipBoxes.map(() => true); entree = entreeSansFuite(v0, ks); o.visibiliteForcee = true; }
       if (!entree.points.length || !SIDES.every(s => entree.rails[s] && entree.rails[s].profileContours && entree.rails[s].profileContours.length)) o.ariane = { etat: 'sans-nuage', chunks: ks.length };
@@ -233,11 +243,12 @@ function extraire({ partie, projet, echo, jeu }) {
         for (const k of ks) if (k.side && (before[k.side] && k.rail)) for (let i = 0; i < k.pointsSceneRelative.length; i++) { pts.push(k.pointsSceneRelative[i]); vis.push(k.visibleByClipBoxes[i]); }
         const tous = { rails: entree.rails, pointsSceneRelative: pts, visibleByClipBoxes: vis };
         try { entree.identity = { ...entree.identity, frameId: null };
-        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis }) }; }
+        o.ariane = { etat: 'calcule', points: entree.points.length, ...poseAriane(entree, { tous, appuis, rappel: observateur ? b => { brutDuCut = b; } : null }) }; }
         catch (err) { o.ariane = { etat: 'erreur', message: String(err && err.message || err).slice(0, 120) }; }
       }
     }
     cas.push(o);
+    if (observateur && observateur.cut) observateur.cut({ c, v0, before, o, entree: entreeDuCut, brut: brutDuCut });
     for (const v of c.visites) chunks.delete(v.visitId);
   }
   return cas;
@@ -315,9 +326,10 @@ function zonesDepuisCas(cas, { cuts = null } = {}) {
 /* Table de partie (même format que les tables de tools/verts-a-controler.cjs ; HORS DÉPÔT : elle porte les bords des rails) pour une partie
  * qui n'en a pas : lot lu dans les journaux Orbite, verts lus dans l'Écho (pose de départ de la première visite), zones reconnues sur les
  * cuts du lot, correction de Mic tirée des cas (pour les seuls jugements). */
-function construireTable({ projet, partie, echo, journaux, cas }) {
+function construireTable({ projet, partie, echo, journaux, cas, sansLot = false }) {
   const RM = require('./regles-metier.cjs'), lot = new Map();
-  for (const f of journaux) {
+  if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
+  for (const f of sansLot ? [] : journaux) {
     const j = RM.lireJournal(f, partie);
     for (const d of j.decisions) { const differe = !j.valide.has(d.cut); lot.set(d.cut, lot.has(d.cut) ? lot.get(d.cut) && differe : differe); }
   }
@@ -331,7 +343,8 @@ function construireTable({ projet, partie, echo, journaux, cas }) {
       dureeS: r2(duree), visites: c.visites.length, bords: A && B ? { left: A, right: B } : null });
   }
   cuts.sort((a, b) => a.i - b.i);
-  const z = zonesDepuisCas(cas, { cuts: new Set(lot.keys()) });
+  /* Sans lot (partie d'un opérateur humain relue en Écho), les zones se reconnaissent sur tous les cuts que Mic a visités. */
+  const z = zonesDepuisCas(cas, { cuts: sansLot ? null : new Set(lot.keys()) });
   return { format: 'ariane-verts-table-v1', projet, partie, lot: [...lot].sort((a, b) => a[0] - b[0]).map(([cut, differe]) => ({ cut, differe })),
     zonesPN: z.zonesPN, zonesADV: z.zonesADV, cuts, note: 'table de travail HORS DÉPÔT : elle porte les bords des rails' };
 }
@@ -729,13 +742,13 @@ module.exports = { FORMAT, FORMAT_ETUDE, FORMAT_JUGEMENT, FORMAT_REGLAGES, decal
 /* ------------------------------------------------------------------ ligne de commande */
 const lireJsonl = f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
 function args(argv) {
-  const o = { mode: argv[0], echo: [], journal: [], parties: [] };
+  const o = { mode: argv[0], echo: [], journal: [], parties: [], sansLot: false };
   const courante = () => { if (!o.parties.length) throw Error('--partie d\'abord'); return o.parties.at(-1); };
   for (let i = 1; i < argv.length; i++) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; o.parties.push({ projet: p, partie: n, designation: `${p}:${n}` }); }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--jeu') o.jeu = val(); else if (k === '--sortie') o.sortie = val();
-    else if (k === '--journal') o.journal.push(val());
+    else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
     else if (k === '--cas') { const v = val(); if (o.mode === 'table') o.casFichier = v; else courante().cas = v; }
     else if (k === '--table') courante().table = val(); else if (k === '--skip') courante().skip = val();
     else if (k === '--json') o.json = val(); else if (k === '--reglages') o.reglages = val(); else if (k === '--date') o.date = val();
@@ -772,8 +785,8 @@ if (require.main === module) {
       const r = releverSkip(a.echo, a.partie); fs.writeFileSync(a.sortie, r.map(x => JSON.stringify(x)).join('\n') + '\n');
       console.log(JSON.stringify(bilanSkip(r)));
     } else if (a.mode === 'table') {
-      if (!a.partie || !a.echo.length || !a.journal.length || !a.casFichier || !a.sortie) throw Error('table --partie P:N --echo DOSSIER --journal J.json [...] --cas CAS.jsonl --sortie TABLE.json (hors dépôt : bords des rails)');
-      const t = construireTable({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, cas: lireJsonl(a.casFichier) });
+      if (!a.partie || !a.echo.length || !(a.journal.length || a.sansLot) || !a.casFichier || !a.sortie) throw Error('table --partie P:N --echo DOSSIER (--journal J.json [...] | --sans-lot) --cas CAS.jsonl --sortie TABLE.json (hors dépôt : bords des rails)');
+      const t = construireTable({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, cas: lireJsonl(a.casFichier), sansLot: a.sansLot });
       fs.writeFileSync(a.sortie, JSON.stringify(t));
       console.log(`partie ${a.projet}:${a.partie} : lot ${t.lot.length} (${t.lot.filter(x => x.differe).length} différés), PN ${t.zonesPN.length}, ADV ${t.zonesADV.length}, ${t.cuts.length} cuts à l'Écho`);
     } else if (a.mode === 'etudier') {

@@ -12,9 +12,9 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.10',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 10';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.13',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 13 (L1)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -1148,7 +1148,7 @@ function clicHumainDuLot(){const b=engine?.s?.batch,v=b?.state==='RUNNING'?b.sco
 const applyInESV=adapter.apply;
 adapter.apply=async(...args)=>{
  /* 5.0 (D-147) : le plan de geste de la commande du lot, seulement si le réglage `deplacerVue` est actif ; sinon l'appel d'avant. */
- const plan=deplacerVueReglage()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
+ const plan=deplacerVueReglage()||profilL1()?engine.s.proposal?.lotCommand?.deplacerVue??null:null;let result;
  /* 4.9.5 test 6 (D-164) : le clic du mode rapide figé dans le lot en cours, transmis à la page seulement s'il est corrigé ; « Comme
   * avant » (tel-quel) : l'appel d'avant, à l'octet près. */
  const clic=clicHumainDuLot(),optClic=clic?{clicHumain:clic}:null;
@@ -1160,6 +1160,18 @@ adapter.apply=async(...args)=>{
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
+/* 4.9.5.13 (fiches/RAPIDE_HUMAIN.md, § 2) : le mode du clic d'un lot à clic corrigé est consigné dans la LECTURE de chaque capture du lot
+ * (`readStrategy.clicHumain`, `clicHumainSource:'lot'`). Depuis la test 6, ce mode vient du lot et ne part vers la page qu'avec `apply` ; la
+ * capture, faite avant, ne le connaissait pas. Rien de plus n'est envoyé à la page ; « tel-quel » : la lecture d'avant. */
+const captureESV=adapter.capture;
+adapter.capture=async(...args)=>{const r=await captureESV(...args),c=clicHumainDuLot();
+ if(c&&r&&typeof r==='object'&&!r.readStrategy?.clicHumain)r.readStrategy={...(r.readStrategy&&typeof r.readStrategy==='object'?r.readStrategy:{}),clicHumain:c,clicHumainSource:'lot'};
+ return r;};
+/* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
+const nextSansDecisionESV=adapter.nextWithoutDecision;
+adapter.nextWithoutDecision=async(identity,...rest)=>{const p=l1PoseEnAttente;l1PoseEnAttente=null;
+ if(p&&identity&&p.batchId===(engine?.s?.batch?.id??null)&&p.cutId===globalThis.BananeCore3.cutId(identity))await l1PoserSansValider(p);
+ return nextSansDecisionESV(identity,...rest);};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);rangerErreursDeLot(engine);
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
@@ -1292,14 +1304,20 @@ async function commandLot(proposal,lotObservation){
   if(VR&&b?.id){if(dvMemoire?.batchId!==b.id)dvMemoire=VR.creerMemoire(b.id);VR.noterDecisionReelle(dvMemoire,id,lotObservation);}}catch{/* jamais bloquant */}
  if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
+ /* 4.9.5.13 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
+ if(profilL1()&&!deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
+  const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=profilL1s()?{...essai.command,l1s:'vue'}:essai.command;}
  /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
  command=reglesMetierCommande(command,lotObservation,proposal,before);
- lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{})};
+ /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
+ if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
+ lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
  const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
- if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={...(b.lotCommands[cut]||{}),cut,action:command.action,stage:lotObservation.stage};}
+ if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={...(b.lotCommands[cut]||{}),cut,action:command.action,stage:lotObservation.stage,
+  ...(command.l1s||command.reason==='gcv2-l1'||l1PoseEnAttente?{l1:true}:{})};}
  if(command.action==='engine')return proposal;
  engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
@@ -1370,9 +1388,122 @@ let lotAnchorCandidate=null;
 function holdLotAnchor(lotObservation,command){
  const L=globalThis.BananeLotDecision,batch=engine.s.batch,candidate=lotAnchorCandidate;lotAnchorCandidate=null;
  if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
- lotObservation.anchorHeld=L.commandsPositions(lotObservation,command);
+ /* D-221 : une pose L1-s (`l1s`) n'est jamais un appui ; sous L1, la pose validée de la GCV2 l'est. */
+ lotObservation.anchorHeld=command?.l1s?false:L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
 }
+/* 4.9.5.13 (test 13, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
+ * `lot-profil`), sinon le réglage `lot.profil` (défaut 'L1') ; lu au démarrage du lot et FIGÉ dans le scope (`lotProfil:'L1'`, absent pour
+ * 'actuel'). Profil 'actuel' : rien de ce qui suit ne s'exécute, les commandes sont celles de la 4.9.5.9 (tests/lot-profil-actuel.test.cjs).
+ * Profil 'L1', sur un cut que la chaîne du lot ne pose pas (le moteur et la chaîne le diffèrent, ou la commande le replie) :
+ *   1. la GCV2 (src/gcv2-l1.js, paramètres figés src/gcv2-parametres-l1.js) lit ce que le lot sait À CET INSTANT : la capture et les
+ *      options du cut, les appuis de la chaîne au moment de la décision (`l1Contexte`), les cuts validés par CE lot avant lui (visites
+ *      `records` des cuts de `batch.processed`, même repère), la zone de la mémoire des règles métier (évaluée avant de noter le cut) ;
+ *      la science est recalculée une fois avec le réservoir du moteur ;
+ *   2. « valider » : la commande devient celle de la GCV2 (`gcv2-l1`), le moteur pose et valide, le cut devient appui ;
+ *   3. « poser sans valider » : la commande reste un différé ; juste avant la navigation sans décision, la pose de la GCV2 est faite par
+ *      la commande `apply` de la page (aucune validation), puis `nextWithoutDecision` part comme d'habitude : le cut reste rouge, approché ;
+ *   4. cible hors de la vue : la vue est amenée sur la cible (`amenerDansLaVue`, pré-vol), puis posée par `apply` avec le plan ;
+ *   5. chaque décision est consignée dans l'observation du lot (`lotObservation.l1` : état, motif, hypothèse, probabilité, écart au départ,
+ *      zone, commande) et la pose sans validation par un événement `l1-pose-sans-valider`.
+ * Une panne ici ne pose rien : la commande du lot reste celle d'avant. */
+const CLE_LOT_PROFIL='banane50LotProfil',PROFILS_LOT=['actuel','L1','L1-s'];
+async function profilDuLot(){let r={};try{r=await chrome.storage.local.get(CLE_LOT_PROFIL)||{};}catch{r={};}
+ const v=r[CLE_LOT_PROFIL],d=globalThis.BananeSettings?.lot?.profil;return PROFILS_LOT.includes(v)?v:PROFILS_LOT.includes(d)?d:'actuel';}
+async function profilChoisir(args){if(!PROFILS_LOT.includes(args?.profil))throw Error('Profil du lot inconnu : actuel, L1 ou L1-s.');
+ await chrome.storage.local.set({[CLE_LOT_PROFIL]:args.profil});return {profil:args.profil};}
+function profilL1(){return ['L1','L1-s'].includes(engine?.s?.batch?.scope?.lotProfil)&&!!globalThis.BananeGcv2L1&&!!globalThis.BananeGcv2ParametresL1;}
+/* D-221 (fiches/L1_DIFFERES.md § 5) — PROFIL « L1-s » : la chaîne de la 4.9.5.9 intacte (options, appuis, voisins) ; sur un cut qu'elle ne pose pas :
+ * a. vue déplacée pour sa cible hors de la vue ; b. décision du lot refaite avec les options de L1 ; c. la GCV2. Une pose L1-s n'est jamais un appui
+ * de la chaîne ni un voisin de la GCV2 (marquée `l1s` dans la commande consignée et `l1` dans `lotCommands`). */
+function profilL1s(){return profilL1()&&engine?.s?.batch?.scope?.lotProfil==='L1-s';}
+const ETAGES_L1=['first-pass','window','choice','crossing'];
+function reglageVueL1(){return {...(globalThis.BananeSettings?.deplacerVue||{}),actif:true,etages:ETAGES_L1,regle:'aucune'};}
+let l1Contexte=null,l1PoseEnAttente=null,l1ModeleCache=null;
+function l1Modele(){return l1ModeleCache||(l1ModeleCache=globalThis.BananeGcv2L1.modeleFige(globalThis.BananeGcv2ParametresL1,'lot'));}
+/* Zone du cut à l'instant de la décision : mémoire des règles métier du lot, évaluée avant de noter le cut (src/regles-metier.js). */
+function l1Zone(identity){const M=globalThis.BananeReglesMetier,c=reglesOmbre.capture,mem=reglesMemoire();
+ try{if(!M||!mem||!c||c.erreur||c.cut!==identity?.cut)return {zone:'abords',adv:[],source:'inconnue'};
+  const e=M.evaluer(mem,M.resumer({identity:{part:c.part,cut:c.cut},decision:{stage:'deferred'},action:null,valide:false,surface:c.surface}));
+  const P=M.DEFAULTS.pn,A=M.DEFAULTS.adv,pn=mem.zones.map(z=>[z.debut-P.margeAvant,z.fin+P.margeApres]),adv=(mem.zonesADV||[]).map(z=>[Math.max(0,z.debut-A.margeAvant),z.fin+A.margeApres]);
+  if(e.zone.pnControle)pn.push(e.zone.pnControle);if(e.zone.advControle)adv.push(e.zone.advControle);
+  const dans=l=>l.some(([a,b])=>identity.cut>=a&&identity.cut<=b);
+  return {zone:dans(pn)?'pn':dans(adv)?'adv':'abords',adv,source:'regles-metier'};}catch{return {zone:'abords',adv:[],source:'inconnue'};}}
+/* Cuts validés par CE lot avant le cut (même partie, même repère) : pose de départ et pose validée de leur dernière visite. */
+function l1Voisins(b,identity){const SIDES=['left','right'],f=identity?.frameId??null;
+ /* L1-s (D-221) : les cuts posés par L1 ne sont pas des voisins. */
+ const horsL1=c=>!(profilL1s()&&b?.lotCommands?.[c]?.l1);
+ const faits=new Set((b?.processed||[]).filter(p=>p?.identity?.part===identity.part).map(p=>p.cut??p.identity?.cut).filter(horsL1));
+ const par=new Map();
+ for(const r of engine?.s?.records||[]){const id=r?.identity;if(!id||id.part!==identity.part||(id.frameId??null)!==f||!faits.has(id.cut)||id.cut===identity.cut)continue;
+  if(SIDES.every(s=>Array.isArray(r.rails?.[s]?.initial?.sceneRelativeToProfileLocal)&&Array.isArray(r.rails?.[s]?.initial?.positionSceneRelative)&&Array.isArray(r.rails?.[s]?.corrected?.positionSceneRelative)))par.set(id.cut,r);}
+ return [...par.values()].map(r=>({identity:{part:r.identity.part,cut:r.identity.cut,frameId:f},
+  positions:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].corrected.positionSceneRelative.slice(0,3)])),rails:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].initial]))}));}
+/* Plan de vue pour une cible de la GCV2 (mêmes limites et même pré-vol que « déplacer la vue », D-147). */
+async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,r=reglageVueL1();
+ const vue=VR.vueNecessaire(capture,positions,r.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
+ if(vue.inconnu)return {ok:false,raison:'vue-inconnue'};
+ for(const s of ['left','right']){const p=vue.par[s];if(!p||p.ok)continue;const c=cams[s];
+  const pixel=c?.viewport?.width&&c.projection?.[0]?2/Math.abs(c.projection[0])/c.viewport.width*1000:NaN;
+  const dezoom=p.dezoom<=r.dezoomMax&&Number.isFinite(pixel)&&pixel*p.dezoom<=r.pixelMaxMm,glisser=p.panPx<=r.glissementPxMax;
+  if(!dezoom&&!glisser)return {ok:false,raison:'hors-limites'};
+  cotes[s]={geste:dezoom?'dezoom':'glissement',dezoom:dvR(p.dezoom),panPx:dvR(p.panPx,10),pixelMm:dvR(pixel),ndc:p.ndc.map(x=>dvR(x))};}
+ if(!Object.keys(cotes).length)return {ok:true,plan:null};
+ const plan={version:'deplacer-vue-v1',cotes,...Object.fromEntries(DV_TRANSMIS.filter(k=>r[k]!==undefined).map(k=>[k,r[k]]))};
+ if(r.preVol!==false)for(const s of Object.keys(cotes)){let x;
+  try{x=await call('amenerDansLaVue',s,positions[s],identity,{...plan,cotes:undefined,essai:true});}catch(e){x={ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
+  if(!x?.ok)return {ok:false,raison:'pre-vol:'+(x?.raison||'?')};}
+ return {ok:true,plan};}
+async function l1Commande({command,lotObservation,proposal,before,capture}){
+ const SIDES=['left','right'],ctx=l1Contexte;l1Contexte=null;l1PoseEnAttente=null;
+ if(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'))return command;
+ const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow;
+ const b=engine.s.batch,identity=engine.s.before?.identity??null;
+ try{
+  if(command.reason==='regles-metier'){lotObservation.l1={version:G.VERSION,etat:'rien',motif:'regle-metier'};return command;}
+  if(!ctx||!identity||ctx.identity.cut!==identity.cut||!capture||typeof Sh?.scientificProposeBothAvecReservoir!=='function'){lotObservation.l1={version:G.VERSION,etat:'rien',motif:'contexte-absent'};return command;}
+  /* L1-s, b. : la décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis ; si elle pose
+   * (vue amenée au besoin), pose validée, jamais appui. */
+  if(profilL1s()&&command.reason!=='regles-metier'){
+   const d2=L.decideCut({...ctx.lotArgs,anchors:ctx.anchors,options:{...G.REGLE.lotOptions}});
+   let c2=L.commandRails({decision:d2,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
+   if(c2.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(c2.reason||'')&&d2.positions){const essai=await deplacerVuePlanifier({lotObservation:d2,proposal,before,capture,command:c2,reglage:reglageVueL1()});if(essai.command)c2=essai.command;}
+   if(c2.action==='lot'){const c=reglesMetierCommande({...c2},lotObservation,proposal,before);
+    lotObservation.l1={version:G.VERSION,etat:c.action==='lot'?'chaine-l1':'rien',motif:c.action==='lot'?null:'regles-metier',etage:d2.stage,raison:d2.reason!=null?String(d2.reason).slice(0,80):null,
+     poseAvant:Object.fromEntries(SIDES.map(s=>[s,before?.[s]?.positionSceneRelative?.slice(0,3)??null])),poseEnvoyee:Object.fromEntries(SIDES.map(s=>[s,d2.positions?.[s]?.slice(0,3)??null]))};
+    if(c.action==='lot')return {...c,l1s:'chaine'};}
+  }
+  const t0=Date.now(),science=Sh.scientificProposeBothAvecReservoir(ctx.lotArgs.capture),z=l1Zone(identity);
+  const g=G.deciderDiffere({capture:ctx.lotArgs.capture,science,appuis:ctx.anchors,options:profilL1s()?{...G.REGLE.lotOptions}:ctx.lotArgs.options,voisins:l1Voisins(b,identity),zone:z.zone,plagesADV:z.adv,modele:l1Modele()});
+  const d=g.decision,l1={...G.resumer(g),zoneSource:z.source,ms:Date.now()-t0};
+  lotObservation.l1=l1;
+  if(d.etat==='rien')return command;
+  /* D-220 : chaque changement de pose est définitif dans ESV ; le journal garde, pour chaque cut que L1 touche, la pose d'ESV AVANT la commande
+   * et la pose envoyée (repère scène de la capture, comme les visites `records`) : la jointure juge le gain (pose d'avant → Mic contre pose L1 → Mic). */
+  const p3=v=>Array.isArray(v)?v.slice(0,3):null;
+  l1.poseAvant=Object.fromEntries(SIDES.map(s=>[s,p3(before?.[s]?.positionSceneRelative)]));l1.poseEnvoyee=Object.fromEntries(SIDES.map(s=>[s,p3(g.positions?.[s])]));
+  const valider=d.etat==='valider';
+  const cg=G.commander({positions:g.positions,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),camerasLarges:VR.camerasLarges(capture),valider});
+  l1.commande={action:cg.action,reason:cg.reason,vue:cg.vue??null};
+  if(cg.action!=='lot')return command;
+  let plan=null;
+  if(cg.vue==='deplacer'){const v=await l1PlanVue(capture,g.positions,identity);if(!v.ok){l1.commande.refus='vue:'+v.raison;return command;}plan=v.plan;}
+  if(valider){
+   const c=reglesMetierCommande({action:'lot',reason:'gcv2-l1',rails:cg.rails,gaugeMm:cg.gaugeMm,...(plan?{deplacerVue:plan}:{})},lotObservation,proposal,before);
+   if(c.action==='lot'&&!profilL1s())lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:g.positions,stage:'gcv2-l1'};
+   else if(c.action!=='lot')l1.commande.refus='regles-metier';
+   return profilL1s()&&c.action==='lot'?{...c,l1s:'gcv2'}:c;}
+  /* Sous τ : la commande reste un différé ; la pose est faite juste avant la navigation sans décision (`adapter.nextWithoutDecision`). */
+  l1PoseEnAttente={batchId:b?.id??null,cutId:K.cutId(identity),identity:K.clone(identity),before:K.clone(engine.s.before),rails:cg.rails,plan,
+   resume:{etat:d.etat,motif:d.motif??null,p:l1.p,hypothese:l1.hypothese,ecartDepartMm:l1.ecartDepartMm,zone:l1.zone,poseAvant:l1.poseAvant,poseEnvoyee:l1.poseEnvoyee}};
+  l1.commande.sansValider='en-attente-de-la-navigation';
+  return command;
+ }catch(e){lotObservation.l1={version:G?.VERSION??null,etat:'erreur',message:String(e?.message||e).slice(0,160)};return command;}}
+async function l1PoserSansValider(p){const clic=clicHumainDuLot(),opt={...(clic?{clicHumain:clic}:{}),...(p.plan?{deplacerVue:p.plan}:{})};
+ const ev={identity:{part:p.identity.part??null,cut:p.identity.cut??null},batchId:engine?.s?.batch?.id??null,...p.resume,vueDeplacee:!!p.plan};
+ try{const r=Object.keys(opt).length?await applyInESV(p.before,p.rails,opt):await applyInESV(p.before,p.rails);
+  await engine.event('l1-pose-sans-valider',{...ev,ok:true,applyCommandSent:true,validateSent:false,...(r?.deplacerVue?{remise:r.deplacerVue.remise??null}:{})}).catch(()=>{});return true;}
+ catch(e){await engine.event('l1-pose-sans-valider',{...ev,ok:false,erreur:String(e?.message||e).slice(0,200)}).catch(()=>{});return false;}}
 /* B1 (D-095) — VOISINS VALIDÉS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
  * La liste vit en mémoire de la PAGE (src/esv-observer.js) ; le service worker n'en
  * demande, par le pont, qu'une fenêtre de ±5 lignes autour du cut décidé et la ligne
@@ -1515,7 +1646,8 @@ async function observeLot(shadow){
  if(typeof L.promoteAnchors==='function')promouvoirAppuis(batch,state,batch.processed,max);
  const t0=Date.now();
  const lotArgs={capture:{identity,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,
-   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow};
+   visibleByClipBoxes:capture.visibleByClipBoxes},science:{rails:shadow.rails,summary:shadow.summary},anchors:state.anchors,Shadow:globalThis.BananeGCV1Shadow,
+   ...(profilL1()&&!profilL1s()?{options:{...globalThis.BananeGcv2L1.REGLE.lotOptions}}:{})};
  /* B1 (D-095) : en ombre (réglage livré), la décision réelle est celle-ci, inchangée ; l'hypothèse « voisins de la
   * liste d'ESV » est calculée à côté, après coup, et seulement consignée (`b1-ombre`). */
  const decision=await b1Decision(lotArgs,L.decideCut(lotArgs));
@@ -1532,6 +1664,8 @@ async function observeLot(shadow){
  voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
  /* 5.0 (D-147) : ce que la règle prudente de « déplacer la vue » relira, seulement si le réglage est actif (références, sans copie). */
  dvContexte=deplacerVueReglage()?{identity,lotArgs,anchors:state.anchors.slice(),decision}:null;
+ /* 4.9.5.13 (L1) : ce que la GCV2 lira si la chaîne ne pose pas ce cut (capture, options, appuis AU MOMENT de la décision). */
+ l1Contexte=profilL1()?{identity,lotArgs,anchors:state.anchors.slice()}:null;
  /* 5.0 : surface « au ras » du cut pour les règles métier (lecture de la capture seulement). */
  reglesMetierCapture(identity,capture);
  /* Rejeu d'un lot « Reprise » : sa première décision porte les appuis de départ. */
@@ -2044,7 +2178,10 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * qu'ESV écrit 0,9 à 1,7 s après l'arrivée (rien n'est commandé pendant ce temps) ; `validation` : le geste de validation de « corriger » ('maj-espace', le seul
  * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : budget global de la sélection si entier (hors PN) ;
  * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
-const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',...(globalThis.BananeSettings?.relecture||{})});
+/* 4.9.5.13 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
+ * finie (`ADAPTER_BUSY`, terrain 2:19) : 6 essais au plus, 11,75 s en tout. */
+const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
+ occupeAttentesMs:[250,500,1000,2000,4000,4000],...(globalThis.BananeSettings?.relecture||{})});
 const passeActive=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
 const RANG_MODE={coupee:0,ombre:1,corriger:2};
 async function relectureChoix(){let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
@@ -2373,16 +2510,24 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
  /* Champs communs des événements d'un cut relu (revue, R10). */
  const evenementCut=(c,plage,champs)=>({identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,...champs});
  /* Aller à un cut ('pas' : boutons d'ESV ; 'auto' : carte, sinon pas à pas). W8 : seul un cut hors des bornes, ou une annulation, fait
-  * sauter la plage ; tout autre refus arrête la passe. */
- const aller=async(cut,chemin)=>{const opId=K.uid();p.operationId=opId;let nav;
-  try{nav=await call('goToCut',{part:partie,cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
-  catch(e){p.operationId=null;ici=null;return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
-  p.operationId=null;
+  * sauter la plage ; tout autre refus arrête la passe. 4.9.5.13 (terrain 2:19) : un refus « action d'Ariane en cours » (`ADAPTER_BUSY` : une
+  * capture, une pose ou une lecture de la page n'est pas finie ; rien n'est parti vers ESV) est passager : la passe attend (`occupeAttentesMs`)
+  * et redemande, avec une opération neuve ; la page garde son verrou et ne navigue jamais pendant une action. Au-delà des essais : arrêt. */
+ const aller=async(cut,chemin)=>{const attentes=(Array.isArray(cfg.occupeAttentesMs)?cfg.occupeAttentesMs:[]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);let nav,demandes=0;
+  for(;;){const opId=K.uid();p.operationId=opId;demandes++;
+   try{nav=await call('goToCut',{part:partie,cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
+   catch(e){p.operationId=null;ici=null;return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
+   p.operationId=null;
+   if(!(nav?.resultat==='refuse'&&String(nav.refusal?.code||'')==='ADAPTER_BUSY')||p.arret||!vivante()||demandes>attentes.length)break;
+   const attenteMs=attentes[demandes-1];
+   await engine.event('relecture-navigation-attente',{identity:{part:partie,cut},code:'ADAPTER_BUSY',essai:demandes,attenteMs,essaisMax:attentes.length,
+    raison:String(nav.refusal?.message||'').slice(0,200)}).catch(()=>{});
+   await attendreMs(attenteMs);}
   if(nav?.bornes?.source==='compteur'&&Number.isInteger(nav.bornes.total)&&nav.bornes.total>0)total=nav.bornes.total;
   if(nav?.resultat==='confirme'){ici=cut;return {ok:true,par:nav.chemin==='pas-a-pas'?'pas':nav.chemin==='aucun'?'aucun':'evenement'};}
   if(nav?.resultat==='refuse'){const code=String(nav.refusal?.code||'');
    if(p.arret||/^(OUT_OF_BOUNDS|CANCELLED_)/.test(code))return {saut:true,raison:nav.refusal?.message??code};
-   return {stop:`Relecture arrêtée : passage au cut ${cut} refusé par la page (${String(nav.refusal?.message||code||'refus').slice(0,200)}). Rien n’a été posé.`};}
+   return {stop:`Relecture arrêtée : passage au cut ${cut} refusé par la page (${String(nav.refusal?.message||code||'refus').slice(0,200)})${demandes>1?` après ${demandes} demandes`:''}. Rien n’a été posé.`};}
   ici=null;return {stop:`Relecture arrêtée : le passage au cut ${cut} n’est pas confirmé (${nav?.refusal?.message||nav?.resultat||'résultat inconnu'}). Contrôle le cut affiché ; rien n’a été posé.`};};
  for(const c of sel.cuts){
   if(!vivante()){issue='erreur';p.message='Relecture arrêtée : passe remplacée.';break;}
@@ -2492,6 +2637,9 @@ async function demarrerLot(args){
    * Au défaut (« Comme avant », règle coupée), le scope n'en porte rien : il est celui d'avant, à l'octet près (il voyage jusqu'à
    * la page) ; un champ absent se lit comme le défaut. */
   delete startArgs.clicHumain;delete startArgs.regleGrappeDifferes;
+  /* 4.9.5.13 (test 13) : profil du lot figé dans le scope ; 'actuel' : le scope n'en porte rien (celui de la 4.9.5.9, à l'octet près). */
+  /* Sans les modules L1 (service worker incomplet), le lot est celui de la 4.9.5.9 : aucun profil dans le scope. */
+  delete startArgs.lotProfil;if(geometryEngine===GCV1_ENGINE&&globalThis.BananeGcv2L1&&globalThis.BananeGcv2ParametresL1){const pr=await profilDuLot();if(pr==='L1'||pr==='L1-s')startArgs.lotProfil=pr;}
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */
   delete startArgs.relecture;{const m=await relectureChoix();if(m!=='coupee')startArgs.relecture=m;}
@@ -2540,6 +2688,8 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* 4.9.5 test 6 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
  if(action==='choix-lot-etat')return choixDuLot();
  if(action==='choix-lot')return choixLot(args);
+ if(action==='lot-profil-etat')return {profil:await profilDuLot()};
+ if(action==='lot-profil')return profilChoisir(args);
  /* RM-11 : choix de la raison de la correction pour la PROCHAINE séance d'Écho ; une raison tapée au panneau (secours des touches) est consignée par la séance. */
  if(action==='raison-choix-etat')return choixRaisonDuPanneau();
  if(action==='raison-choix')return raisonChoisir(args);

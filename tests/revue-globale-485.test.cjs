@@ -15,9 +15,9 @@ const root=path.resolve(__dirname,'..'),manifest=JSON.parse(fs.readFileSync(path
 test('adaptateur en sécurité pendant un lot : pause reprenable (F5 puis Reprendre), jamais ERROR',async()=>{
   const p=page();
   /* Le refus à une autre Ariane n'est pas un silence : il ne passe pas pour « sans réponse ». */
-  await assert.rejects(p.raw('next',[],{proprietaire:'autre'}).promise,e=>new RegExp(`^Une autre Ariane \\(${K.VERSION_NAME.replaceAll('.', '\\.')}\\)`).test(e.message));
+  await assert.rejects(p.raw('next',[],{proprietaire:'autre'}).promise,e=>new RegExp(`^Une autre Ariane \\(${K.VERSION_NAME.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&')}\\)`).test(e.message));
   let refus=null;await p.call('capture',{identity:{part:23,cut:100}}).catch(e=>{refus=e.message;});
-  assert.match(refus,new RegExp(`^Adaptateur ESV sans réponse : Ariane ${K.VERSION_NAME.replaceAll('.', '\\.')} en sécurité`));
+  assert.match(refus,new RegExp(`^Adaptateur ESV sans réponse : Ariane ${K.VERSION_NAME.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&')} en sécurité`));
   const r=await pilote(L,{start:100,end:105,esv:esv=>{esv.capture=async function(){this.calls.push('capture');throw Error(refus);};}});
   const view=await r.b.settle();
   assert.equal(view.batch.state,'PAUSED_ADAPTER_UNRESPONSIVE');
@@ -71,7 +71,7 @@ test('« écartement bas » seulement si le cut a vraiment été différé par l
 test('nom de version : une seule valeur, celle du manifeste, partout où il est écrit (stable : aucun nom de test)',()=>{
   const nom=manifest.version_name||manifest.version;assert.equal(K.VERSION_NAME,nom);
   for(const f of ['panel.html','panel.js','src/bridge.js','background.js']){
-    const s=fs.readFileSync(path.join(root,f),'utf8'),code=s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/<!--[\s\S]*?-->/g,''),tests=[...code.matchAll(/\d+\.\d+\.\d+ test \d+/g)].map(m=>m[0]);/* les commentaires datés gardent l'historique des versions */
+    const s=fs.readFileSync(path.join(root,f),'utf8'),code=s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/<!--[\s\S]*?-->/g,''),tests=[...code.matchAll(/\d+\.\d+\.\d+ test \d+(?: \([A-Za-z0-9-]{1,12}\))?/g)].map(m=>m[0]);/* les commentaires datés gardent l'historique des versions */
     if(manifest.version_name)for(const v of tests)assert.equal(v,nom,`${f} : « ${v} »`);
     else assert.deepEqual(tests,[],`${f} : nom de test dans une stable`);
     assert.ok(s.includes(nom),`${f} : ${nom}`);}

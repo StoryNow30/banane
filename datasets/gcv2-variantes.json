@@ -1,0 +1,22 @@
+{
+  "format": "ariane-gcv2-variantes-v1",
+  "decision": "D-204",
+  "note": "Variantes par zone de la GCV2, déclarées avant tout calcul et choisies APRÈS COUP, en lisant la validation croisée de G1-b. Aucun coefficient : seulement, pour chaque variante, les zones et les rôles où la GCV2 agit et ceux où la règle prudente figée (datasets/relecture-reglages-proposes.json) agit. Partout ailleurs la variante ne fait rien (comme H0). Une variante n'agit jamais sur un cut rouge ni différé. Les paramètres de la GCV2 (datasets/gcv2-parametres.json) et la règle prudente ne changent pas ; τ et δ par zone sont ceux appris dans chaque pli de la validation croisée.",
+  "variantes": {
+    "V1": {
+      "resume": "GCV2 sur les verts de PN et d'ADV ; règle prudente sur les verts des abords ; hors zone, liste, rouges et différés : rien.",
+      "gcv2": { "zones": ["pn", "adv"], "roles": ["vert"] },
+      "prudente": { "zones": ["abords"], "roles": ["vert"] }
+    },
+    "V2": {
+      "resume": "V1, plus la GCV2 sur les verts hors zone.",
+      "gcv2": { "zones": ["pn", "adv", "hors"], "roles": ["vert"] },
+      "prudente": { "zones": ["abords"], "roles": ["vert"] }
+    },
+    "V3": {
+      "resume": "GCV2 sur tous les verts sauf les abords (PN, ADV, liste si active, hors) ; abords : rien ; rouges et différés : rien.",
+      "gcv2": { "zones": ["pn", "adv", "liste", "hors"], "roles": ["vert"] },
+      "prudente": { "zones": [], "roles": [] }
+    }
+  }
+}

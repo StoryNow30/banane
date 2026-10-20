@@ -27,11 +27,13 @@ class EsvVue extends SimulatedESV{
  async nextWithoutDecision(...a){const r=await super.nextWithoutDecision(...a);this.ajuster();return r;}
 }
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-async function lot({reglage,amener,ombre=false,seuilsVoie=null}={}){
- const adapter=new EsvVue([112],amener),b=production({adapter});
+async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',local=null}={}){
+ const adapter=new EsvVue([112],amener),b=production({adapter,local});
  const S={...b.ctx.BananeSettings};if(reglage!==undefined)S.deplacerVue=reglage;
  /* L'ombre de la voie prédite est coupée ici : elle ne commande rien et alourdit l'essai (essayée à part). */
- if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};if(seuilsVoie)S.voiePrediteOmbre={...S.voiePrediteOmbre,...seuilsVoie};b.ctx.BananeSettings=S;
+ if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};if(seuilsVoie)S.voiePrediteOmbre={...S.voiePrediteOmbre,...seuilsVoie};
+ /* 4.9.5.13 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */
+ if(profil)S.lot={...S.lot,profil};b.ctx.BananeSettings=S;
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);
  await b.api('start',{part:23,start:111,end:112,...SCOPE});await b.settle();await attendre(20);
@@ -41,4 +43,4 @@ async function lot({reglage,amener,ombre=false,seuilsVoie=null}={}){
 const neutre=x=>JSON.parse(JSON.stringify(normalize(x)).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>'));
 const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,fauxVertOmbre,hauteurApprise,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
 const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing','adapter-progress'].includes(e.type)).map(e=>e.type);
-module.exports={lot,neutre,decisions,metier,SCOPE};
+module.exports={lot,neutre,decisions,metier,SCOPE,EsvVue,camerasParRail,decale};

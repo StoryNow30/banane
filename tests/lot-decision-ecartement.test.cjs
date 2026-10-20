@@ -22,7 +22,9 @@ test('écartement d\'une paire, référence par la médiane des appuis les plus 
 test('le Pilote ne passe aucune option à la décision : la variante « cible » reste une mesure',()=>{
   const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','background.js'),'utf8');
   const calls=src.match(/L\.decideCut\(\{[\s\S]*?\}\);/g)||[];
-  assert.ok(calls.length>=1);for(const c of calls)assert.ok(!/options|gaugeTarget/.test(c),c);
+  /* 4.9.5.13 (L1, D-219, D-221) : seule la décision refaite d'un cut que la chaîne d'aujourd'hui diffère (profil L1-s) passe des options, celles
+   * de la règle L1 (garde de paire éteinte, appuis à 10 cuts) ; jamais `gaugeTarget`. */
+  assert.ok(calls.length>=1);for(const c of calls){assert.ok(!/gaugeTarget/.test(c),c);if(/options/.test(c))assert.match(c,/options:\{\.\.\.G\.REGLE\.lotOptions\}/,c);}
 });
 test('paire retirée par la garde d\'écartement voisin : différée, motif nommé',()=>{
   const rails={left:{status:'candidate'},right:{status:'candidate'}};

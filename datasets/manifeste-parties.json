@@ -1,7 +1,7 @@
 {
   "format": "ariane-manifeste-parties-v1",
-  "date": "2026-10-16",
-  "regle": "Une partie d'apprentissage a servi à régler ou à choisir : elle ne peut plus servir à juger un réglage. Toute partie qui n'est pas listée ici est réservée : aucun outil de réglage ne la lit. Toute partie reçue après la date de ce fichier est réservée jusqu'à une décision écrite qui la fait passer en apprentissage (on ajoute alors la partie à la liste, avec la date et la décision). Les projets sont désignés par leur rang : projet 1 et projet 2.",
+  "date": "2026-10-19",
+  "regle": "Une partie d'apprentissage a servi à régler ou à choisir : elle ne peut plus servir à juger un réglage. Toute partie qui n'est pas listée ici est réservée : aucun outil de réglage ne la lit. Toute partie reçue après la date de ce fichier est réservée jusqu'à une décision écrite qui la fait passer en apprentissage (on ajoute alors la partie à la liste, avec la date et la décision). Les projets sont désignés par leur rang : projet 1 et projet 2. Rotation (D-192) : toute partie nouvelle est d'abord un examen (réservée, jugée avec les réglages et paramètres figés), puis passe en apprentissage après décision écrite. Les témoins ne passent jamais en apprentissage : ils comparent entre elles les versions successives des réglages et de la GCV2.",
   "apprentissage": [
     {
       "projet": 1,
@@ -36,10 +36,40 @@
       "date": "2026-10-18",
       "motif": "Écho de l'opérateur expert du 18/10 (731 visites) : a servi à juger la relecture de la test 7 (D-185), puis à régler sa couverture (plafond d'ADV, cuts à l'écartement, liste « À contrôler »). Passée en apprentissage sur décision de l'opérateur expert (D-187).",
       "decision": "D-187"
+    },
+    {
+      "projet": 1,
+      "parties": [
+        14,
+        15,
+        16
+      ],
+      "date": "2026-10-19",
+      "motif": "Parties de l'opérateur débutant relues en Écho par l'opérateur expert (18/10, sans lot Orbite). Jugées réservées, sans réglage : moteur contre la pose finale (D-189), règle prudente figée et zones reconnues (D-190). Passées en apprentissage par la rotation examen → apprentissage (D-192, D-193).",
+      "decision": "D-193"
+    },
+    {
+      "projet": 2,
+      "parties": [
+        10
+      ],
+      "date": "2026-10-19",
+      "motif": "Écho de l'opérateur expert du 18/10 (23 visites) après le lot et la relecture de la test 7 : lu pour juger la relecture (D-188), aucun réglage. Passée en apprentissage par la rotation examen → apprentissage (D-192, D-193).",
+      "decision": "D-193"
+    }
+  ],
+  "temoins": [
+    {
+      "projet": 1,
+      "parties": [
+        11,
+        25
+      ],
+      "motif": "Seules parties réservées avec un Écho au 17/10 (RELECTURE_AUTONOME § 2.1) ; témoins fixes de la rotation (D-192)."
     }
   ],
   "reservees": {
-    "depuis": "2026-10-16",
+    "depuis": "2026-10-19",
     "parties": [],
     "note": "Aucune partie reçue après la date du fichier n'est encore nommée ici. Une partie absente de la liste d'apprentissage est réservée, nommée ou non."
   }

@@ -19,19 +19,24 @@ const ECHO={'src/native-session.js':'la session Écho : la raison, la collante, 
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
 const VERSION_SEULE=['src/core.js','src/bridge.js'];   // le numéro de version, rien d'autre
 const manifeste=require('../manifest.json'),VERSION_COURANTE=manifeste.version,NOM_COURANT=manifeste.version_name;
-/* Fichiers de l'habillage du panneau (test 10-ui) : aucun ne lit ni ne commande la pose. */
+/* 4.9.5.13 (test 13, profil du lot « L1 ») : le moteur rend son réservoir SUR DEMANDE (sortie par défaut inchangée, tests/gcv2-l1.test.cjs) ; deux
+ * modules nouveaux, lus par le service worker seulement quand le lot porte le profil « L1 ». Le profil « actuel » joue le lot de la 4.9.5.9. */
+const L1={'src/gcv1-shadow.js':'le réservoir du moteur sur demande (`scientificProposeBothAvecReservoir`), la sortie par défaut est inchangée',
+ 'src/adapter-page.js':'4.9.5.13 : `apply` rend en plus `vueFin` (position de chaque rail dans la vue à la fin de la pose, lecture seule, après la pose ; tests/apply-vue-fin-page.test.cjs)'};
+const NOUVEAUX=['gcv2-l1.js','gcv2-parametres-l1.js','raison-correction.js'];
+/* Fichiers de l'habillage du panneau (UI 5.0) : aucun ne lit ni ne commande la pose. */
 const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
-  if(ECHO[f])continue;
+  if(ECHO[f]||L1[f])continue;
   const texte=VERSION_SEULE.includes(f)?lire(f).split(VERSION_COURANTE).join('4.9.5.8').split(NOM_COURANT).join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]);assert.deepEqual(nouveaux.sort(),['raison-correction.js',...HABILLAGE].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -41,7 +46,11 @@ test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
 test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur de page, ni la garde d\'entrée, ni le lot ne les lisent pour poser',()=>{
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
- for(const f of ['src/adapter-page.js','src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
+ /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
+ const ap=lire('src/adapter-page.js').replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+  .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'');
+ assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
+ for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
   assert.equal(sha(lire(f)),REF.fichiers[f],f);
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
@@ -49,7 +58,8 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,...reste}=S,{raison,...echoSans}=echo;
+ const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ assert.equal(profil,'L1-s','test 13 : profil du lot « L1-s » par défaut (D-221)');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
@@ -67,7 +77,7 @@ test('lot : avec la raison allumée au panneau, les commandes envoyées à ESV s
  assert.equal(h(versionGolden(neutre(avec.commandes))),GOLDEN.clic.empreinteCommandes,'commandes identiques à celles de la base (empreinte gardée), octet pour octet');
  assert.deepEqual(j(avec.options),GOLDEN.clic.applyOptions,'apply sans option');
  const scope=scopeDe(avec.b);assert.ok(!JSON.stringify(scope).includes('raison'),'aucune raison dans le scope du lot');
- assert.equal('clicHumain' in scope,false,'le scope du lot est celui d\'avant');assert.equal('regleGrappeDifferes' in scope,false);
+ assert.equal('clicHumain' in scope,false,'le scope du lot est celui d\'avant');assert.equal('lotProfil' in scope,false,'profil « actuel » : le scope n\'en porte rien');assert.equal('regleGrappeDifferes' in scope,false);
  const etatLot=neutre(avec.b.get('engine').s.batch);assert.ok(!JSON.stringify(etatLot).includes('raison'),'aucune raison dans l\'état du lot');
  /* Le choix du lot garde sa forme : deux clés, rien de la raison. */
  assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['clicHumain','regleGrappeDifferes']);

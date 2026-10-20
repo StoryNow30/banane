@@ -87,6 +87,14 @@ test('zones depuis les surfaces des cas : PN confirmé avec ses marges, zones d\
   assert.deepEqual(T.fusionner([[10, 20], [21, 30], [40, 50]]), [[10, 30], [40, 50]]);
 });
 
+test('table sans lot : les zones se reconnaissent sur tous les cuts visités ; --sans-lot et --journal s\'excluent', () => {
+  const cas = [];
+  for (let c = 0; c < 200; c++) cas.push({ cut: c, partie: 1, ariane: { surface: { flushPct: c >= 50 && c <= 53 ? 80 : 0, quadMin: c >= 50 && c <= 53 ? 70 : 0, coeurPN: c >= 50 && c <= 53, advRails: 0 } } });
+  assert.deepEqual(T.zonesDepuisCas(cas, { cuts: new Set() }).zonesPN, [], 'avec un lot vide, aucune zone');
+  assert.deepEqual(T.zonesDepuisCas(cas, { cuts: null }).zonesPN, [{ debut: 50, fin: 53, controle: [46, 59] }], 'sans lot, toutes les visites');
+  assert.throws(() => T.construireTable({ projet: 1, partie: 1, echo: [], journaux: ['j.json'], cas, sansLot: true }), /s'excluent/);
+});
+
 test('relevé SKIP : aucun point → SKIP ; scanners illisibles avec un seul nuage source ; sans capture : inconnu', () => {
   const r = [{ cut: 0, skipMic: true, ecritures: true, captures: 3, points_left: 0, points_right: 0, scanners_left: 0, scanners_right: 0 },
     { cut: 1, skipMic: true, ecritures: true, captures: 2, points_left: 4000, points_right: 3800, scanners_left: 1, scanners_right: 1 },
