@@ -118,6 +118,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
   /* L1-se : référence d'écartement de chaque cut, lue dans l'instantané de la liste d'ESV du départ de partie (décompacté) ; sans liste : aucune. */
   const referenceDe = cut => liste ? EL.referenceEcartement(liste, cut) : null;
+  /* Mesure seulement : leviers de la décision L1-e changés par la variable d'environnement BANC_LEVIERS (JSON), consignés dans l'en-tête. */
+  const leviers = L1.reglerLeviers(process.env.BANC_LEVIERS ? JSON.parse(process.env.BANC_LEVIERS) : null);
   const cuts = lot.cuts.slice().sort((a, b) => a.t - b.t);
   const zoneMem = M.creerMemoire('zones-' + lot.id);
   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
@@ -128,7 +130,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     const identity = { part: partie, cut: c.cut, frameId: null }, cap = c.captureId ? captures.get(c.captureId) : null;
     const reelDecision = R.decisions.get(c.cut) || null, pr = R.poseReelle.get(c.cut) || null;
     const ligne = { type: 'cut', partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), cut: c.cut,
-      reel: { pose: !!c.pose, etage: c.stage, motif: c.motif ? c.motif.code : null, decal: pr ? decalPose(pr.initiale, pr.corrigee) : null }, nuage: avecNuage(cap), profils: {} };
+      reel: { pose: !!c.pose, etage: c.stage, motif: c.motif ? c.motif.code : null, decal: pr ? decalPose(pr.initiale, pr.corrigee) : null }, nuage: avecNuage(cap), points: cap ? cap.pointsSceneRelative.length : 0, profils: {} };
     if (cap && SIDES.every(s => cap.rails[s] && Array.isArray(cap.rails[s].positionSceneRelative))) ligne.ecartDepartMm = arrondi(1000 * C.distance(cap.rails.left.positionSceneRelative, cap.rails.right.positionSceneRelative), 1);
     if (!ligne.nuage) {
       /* Sans nuage : rien à calculer ; le sort réel est gardé dans tous les profils. Un cut réellement posé reste voisin (et appui s'il l'était). */
@@ -197,6 +199,9 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         return true;
       })()) {
         posesL1s = out.etat === 'pose';
+        /* 4.9.5.15 (fiches/L1_CAP5.md) : sous L1-se, la pose refaite de la chaîne passe par la même correction d'écartement que la GCV2. */
+        if (p === 'L1-se' && out.etat === 'pose' && out.decal) { const cc = L1.corrigerPoseChaine(capture, out.decal, referenceDe(c.cut)); out.decal = cc.decal; out.correction = cc.correction;
+          if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], out.decal[s].map(v => v / 1000))])), rails: before }); }
       } else if (p === 'base') {
         out = { etat: 'differe', source: 'lot', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, commande: cmd.action === 'engine' ? 'engine' : `${cmd.action}:${cmd.reason}` };
       } else {
@@ -204,7 +209,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null };
         try {
           let g = cache.get('g' + sig);
-          if (!g) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null }); cache.set('g' + sig, g); }
+          const transport = p === 'L1-se' && leviers.transport && E.validesL1 && E.validesL1.length;
+          if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null }); if (!transport) cache.set('g' + sig, g); }
           else { const dd = p === 'L1-se' ? L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas) : L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
           const dec = g.decision, l1 = L1.resumer(g);
           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
@@ -216,6 +222,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             else if (valider) {
               /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin. */
               if (!estL1s(p)) { E.valides.push({ identity, positions: g.positions, rails: before }); L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
+              /* Cap 5, levier « transport » : sous L1-se, une pose de la GCV2 devient voisine de la GCV2 (jamais appui de la chaîne ni voisine de sa décision). */
+              else if (p === 'L1-se' && leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: g.positions, rails: before });
               out = { ...base, etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true };
             } else out = { ...base, etat: 'pose-non-validee', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1 };
           }
@@ -230,7 +238,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     lignes.push(ligne);
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
-    regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null } } : {}),
+    regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null } } : {}),
     parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
     note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
     traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000) };

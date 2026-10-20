@@ -450,24 +450,141 @@
    if(ecart3d>regle.sansValiderMaxMm)return {...out,etat:'rien',motif:'plus-de-150-mm'};
    return {...out,etat:'poser-sans-valider',motif:'sous-tau'};
  }
- /* Décision L1-e d'un cas (`casDuDiffere`) : la décision de la test 13 (`deciderL1`, mêmes probabilités), puis la correction d'écartement de
-  * `src/gcv2-l1e.js` contre la référence `ref` ({ mm } : lignes valides non touchées de la liste d'ESV, ou null), soutien du nuage lu sur la
-  * capture. Même forme que `deciderL1` ; `etat` : 'valider' ou 'rien' (jamais de pose sans validation) ; `test13` : la décision d'origine. */
+ /* 4.9.5.15 (test 15, fiches/L1_CAP5.md) — LEVIERS de la décision L1-e. Valeurs livrées figées ; le banc peut les changer pour une mesure
+  * (`reglerLeviers`), jamais l'extension. */
+ const LEVIERS_LIVRES=Object.freeze({exact:true,autreRail:true,anomalieMinMm:10,anomalieMaxMm:45,sousTauCoherentMm:8,sousTauCorrige:false,voisins:true,transport:true,
+   voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
+   consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null});
+ let LEVIERS=LEVIERS_LIVRES;
+ function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
+ /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
+ function ecartementDecal(capture,decal){return gaugeMm(L.positionOf(capture.rails.left,decal.left.map(v=>v/1000)),L.positionOf(capture.rails.right,decal.right.map(v=>v/1000)));}
+ /* Le rail `rail` déplacé en travers (vertical gardé) pour que la paire prenne l'écartement `ref` (Newton, comme H5). Rend les décalages ou null. */
+ function ramenerRail(capture,decal,rail,ref,maxMm=60){
+   const out={left:decal.left.slice(),right:decal.right.slice()},g=a=>{const d={left:out.left.slice(),right:out.right.slice()};d[rail][1]=decal[rail][1]+a;return ecartementDecal(capture,d);};
+   let a=0;
+   for(let k=0;k<6;k++){const pente=(g(a+5)-g(a))/5;if(!(Math.abs(pente)>0.3))return null;a-=(g(a)-ref)/pente;}
+   if(!Number.isFinite(a)||Math.abs(a)>maxMm||Math.abs(g(a)-ref)>0.5)return null;
+   out[rail][1]=arrondi(decal[rail][1]+a,2);return out;
+ }
+ /* Correction d'écartement d'une paire de décalages : anomalie si l'écart à la référence est dans [anomalieMinMm, anomalieMaxMm] ; rails essayés
+  * dans l'ordre `ordre` (le moins sûr d'abord) ; le premier que le nuage soutient à sa nouvelle place est retenu (sans `autreRail` : le premier
+  * seulement). `gApprox` : écartement des hypothèses, pris sans capture (ou sans le levier `exact`) ; sans capture, rien n'est corrigé.
+  * Rend { ref, ecartMm, anomalie, rail, soutenue, decal (corrigé) ou null }. */
+ function corrigerDecal({capture,decal,ref,ordre,gApprox=null,leviers=LEVIERS}){
+   const g=leviers.exact&&capture?ecartementDecal(capture,decal):gApprox;
+   const out={ref,ecartMm:fini(g)&&fini(ref)?arrondi(ref-g,1):null,anomalie:false,rail:null,soutenue:false,decal:null};
+   if(!fini(out.ecartMm))return out;
+   const e=Math.abs(out.ecartMm);if(e<leviers.anomalieMinMm||e>leviers.anomalieMaxMm)return out;
+   out.anomalie=true;
+   if(!capture)return out;
+   for(const s of leviers.autreRail?ordre:ordre.slice(0,1)){
+     const nd=ramenerRail(capture,decal,s,ref);if(!nd)continue;
+     const m=soutienRail(capture,s,nd[s]);
+     if(m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc){out.rail=s;out.soutenue=true;out.decal=nd;return out;}
+     if(!out.rail)out.rail=s;
+   }
+   return out;
+ }
+ /* Ordre des rails à corriger : le moins probable d'abord (probabilités de la GCV2), sinon le moins soutenu par le nuage à sa place. */
+ function ordreRails(capture,decal,p=null){
+   if(p&&fini(p.left)&&fini(p.right))return p.left<=p.right?['left','right']:['right','left'];
+   const m={left:soutienRail(capture,'left',decal.left),right:soutienRail(capture,'right',decal.right)};
+   return m.left.dessus<=m.right.dessus?['left','right']:['right','left'];
+ }
+ /* Décision L1-e d'un cas (`casDuDiffere`) : la décision de la test 13 (`deciderL1`, mêmes probabilités), puis la correction d'écartement contre
+  * la référence `ref` ({ mm } : lignes valides non touchées de la liste d'ESV, ou null), soutien du nuage lu sur la capture. Même forme que
+  * `deciderL1` ; `etat` : 'valider' ou 'rien' (jamais de pose sans validation) ; `test13` : la décision d'origine. */
  function deciderL1e(k,mod,ref,capture,probasDonnees=null){
    if(!E)throw Error('GCV2 L1-e : module absent.');
-   const d0=deciderL1(k,mod,REGLE,probasDonnees),p=d0.probas;
+   const d0=fini(LEVIERS.selectionRefMm)&&ref&&fini(ref.mm)&&capture?deciderL1Ref(k,mod,ref.mm,capture,probasDonnees):deciderL1(k,mod,REGLE,probasDonnees),p=d0.probas;
    let c=null;
    if(d0.paire&&Number.isInteger(d0.i)&&Number.isInteger(d0.j)&&ref&&fini(ref.mm)){
-     const hl=k.rails.left.hyps[d0.i],hr=k.rails.right.hyps[d0.j];
-     const hyps=Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map((h,i)=>({decal:h.decal,g:h.g,depart:i===k.i0[s]}))]));
-     c=E.corriger({paire:{left:{decal:hl.decal,p:p.left[d0.i]},right:{decal:hr.decal,p:p.right[d0.j]}},g:ecartementPaire(k,hl,hr),hyps,ref:ref.mm,
-       soutien:(s,mm)=>soutienRail(capture,s,mm)});
+     const hl=k.rails.left.hyps[d0.i],hr=k.rails.right.hyps[d0.j],decal={left:hl.decal,right:hr.decal};
+     c=corrigerDecal({capture,decal,ref:ref.mm,gApprox:ecartementPaire(k,hl,hr),ordre:ordreRails(capture,decal,{left:p.left[d0.i],right:p.right[d0.j]})});
    }
-   const dd=E.decider(d0,c);
+   let dd=E.decider(d0,c);
+   /* Anomalie d'écartement qu'aucun rail soutenu ne corrige : la paire de la test 13 n'est pas validée. */
+   if(LEVIERS.anomalieNonCorrigeeRien&&dd.etat==='valider'&&c&&c.anomalie&&!c.soutenue)dd={etat:'rien',motif:'anomalie-non-corrigee',decal:null,corrigee:false};
+   /* Voie de référence : celle des voisins validés AVEC les poses de la GCV2 (transport, si le banc ou le lot la donne), sinon celle de H6. */
+   const voie=k.voieTransport&&k.voieTransport.sure?k.voieTransport:k.voieRef&&k.voieRef.sure?k.voieRef:null;
+   const soutenu=decal=>SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;});
+   /* Leviers du cap 5 (fiches/L1_CAP5.md). Sous τ : paire déjà à l'écartement de référence et soutenue, ou corrigée et soutenue. */
+   if(dd.etat==='rien'&&d0.etat==='poser-sans-valider'&&c&&capture){
+     const decal={left:d0.paire.left.decal,right:d0.paire.right.decal};
+     if(fini(LEVIERS.sousTauCoherentMm)&&!c.anomalie&&fini(c.ecartMm)&&Math.abs(c.ecartMm)<=LEVIERS.sousTauCoherentMm&&soutenu(decal))dd={etat:'valider',motif:'sous-tau-coherent',decal,corrigee:false};
+     else if(LEVIERS.sousTauCorrige&&c.anomalie&&c.soutenue)dd={etat:'valider',motif:'sous-tau-corrige',decal:c.decal,corrigee:true};
+   }
+   /* Voie des voisins validés (H6, référence sûre) : la paire transportée, rapprochée de l'hypothèse du nuage la plus proche (`voisinsRaffineMm`),
+    * soutenue par le nuage et à l'écartement de référence. */
+   if(dd.etat==='rien'&&LEVIERS.voisins&&voie&&capture&&dd.motif!=='anomalie-non-corrigee'){
+     const v=voie,decal={left:[0,v.left[0],v.left[1]],right:[0,v.right[0],v.right[1]]};let raffines=0;
+     for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=norme(moins(h.decal,decal[s]));if(e<=LEVIERS.voisinsRaffineMm&&(!best||e<best.e))best={e,h};}if(best){decal[s]=best.h.decal.slice();raffines++;}}
+     const g=ecartementDecal(capture,decal),ok=(!LEVIERS.raffineObligatoire||raffines===2)&&(!ref||!fini(ref.mm)||Math.abs(ref.mm-g)<=LEVIERS.voisinsEcartMaxMm);
+     if(ok&&soutenu(decal))dd={etat:'valider',motif:'voie-voisins',decal,corrigee:false};
+   }
+   /* Consensus : sous τ ou sans paire, une paire est validée quand trois preuves indépendantes s'accordent : le nuage (deux rails soutenus), l'écartement
+    * de référence (à `consensusEcartMm`) et la voie des voisins validés (à `consensusVoieMm` en travers). Candidats : la paire de la test 13, sa
+    * correction, et la « complétion » (le rail le plus probable du nuage, l'autre ramené à l'écartement de référence depuis la voie des voisins). */
+   const voieC=voie||(LEVIERS.consensusVoieProche&&k.voieProche&&k.voieProche.dist<=5?k.voieProche:null);
+   if(dd.etat==='rien'&&LEVIERS.consensus&&voieC&&capture&&ref&&fini(ref.mm)&&dd.motif!=='anomalie-non-corrigee'){
+     const cands=[];
+     if(d0.paire)cands.push({left:d0.paire.left.decal,right:d0.paire.right.decal});
+     if(c&&c.anomalie&&c.soutenue)cands.push(c.decal);
+     for(const s of SIDES){
+       const o=s==='left'?'right':'left',hs=k.rails[s].hyps.map((h,i)=>({h,p:p[s][i],i})).filter(x=>x.i!==k.i0[s]).sort((a,b)=>b.p-a.p);
+       if(!hs.length)continue;
+       const base={[s]:hs[0].h.decal.slice(),[o]:[0,voieC[o][0],voieC[o][1]]},nd=ramenerRail(capture,base,o,ref.mm);
+       if(nd)cands.push(nd);
+     }
+     for(const cand of cands){
+       const g=ecartementDecal(capture,cand),dv=Math.max(...SIDES.map(s=>Math.abs(cand[s][1]-voieC[s][0])));
+       if(Math.abs(ref.mm-g)<=LEVIERS.consensusEcartMm&&dv<=LEVIERS.consensusVoieMm&&soutenu(cand)){dd={etat:'valider',motif:'consensus',decal:cand,corrigee:false};break;}
+     }
+   }
+   /* Garde de voie : une pose validée à plus de `vetoVoieMm` en travers de la voie sûre des voisins validés n'est pas posée. */
+   if(dd.etat==='valider'&&fini(LEVIERS.vetoVoieMm)&&voie&&dd.motif!=='voie-voisins'&&dd.motif!=='consensus'){
+     const ecartVoie=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-voie[s][0])));
+     if(ecartVoie>LEVIERS.vetoVoieMm)dd={etat:'rien',motif:'veto-voie',decal:null,corrigee:false,ecartVoieMm:arrondi(ecartVoie,1)};
+   }
    const correction=c?{ref:ref.mm,ecartMm:c.ecartMm,anomalie:c.anomalie,rail:c.rail,soutenue:c.soutenue,appliquee:dd.corrigee}:{ref:ref&&fini(ref.mm)?ref.mm:null,appliquee:false};
-   const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...d0.paire[s],decal:dd.decal[s]}])):null;
+   const base0=d0.paire||{left:{origines:['H6'],sousOrigines:[],hauteur:false},right:{origines:['H6'],sousOrigines:[],hauteur:false}};
+   const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...base0[s],decal:dd.decal[s]}])):null;
    const ecart3d=paire?Math.max(norme(paire.left.decal),norme(paire.right.decal)):d0.ecartDepartMm;
-   return {...d0,variante:'L1-e',etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,test13:{etat:d0.etat,motif:d0.motif??null}};
+   return {...d0,variante:'L1-e',etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,test13:{etat:d0.etat,motif:d0.motif??null,paire:d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null}};
+ }
+ /* Cap 5, levier « sélection à la référence » : la règle L1 (τ, δ, 150 mm), mais la meilleure paire est cherchée parmi les paires dont l'écartement
+  * EXACT est à `selectionRefMm` de la référence de la liste d'ESV (au lieu de la médiane du lot ± 15 mm ou du contrat 1 420–1 470 mm). */
+ function deciderL1Ref(k,mod,ref,capture,probasDonnees=null){
+   const p={};
+   for(const s of SIDES)p[s]=probasDonnees?Float64Array.from(probasDonnees[s]):Float64Array.from(k.rails[s].hyps.map(h=>probas(mod,h.x).p10));
+   if(SIDES.some(s=>k.i0[s]<0))return {etat:'rien',motif:'sans-pose-de-depart',p:null,paire:null,ecartDepartMm:null,zone:k.zone,probas:p};
+   const Lh=k.rails.left.hyps,Rh=k.rails.right.hyps,i0=k.i0.left,j0=k.i0.right,z=mod.seuils[k.zone]||mod.seuils.hors||{actif:false};
+   let best={i:i0,j:j0,v:p.left[i0]*p.right[j0],ecart:0,h0:true},n=0;
+   for(let i=0;i<Lh.length;i++)for(let j=0;j<Rh.length;j++){
+     if(i===i0&&j===j0)continue;
+     const v=p.left[i]*p.right[j];if(!(v>best.v))continue;
+     const g=ecartementDecal(capture,{left:Lh[i].decal,right:Rh[j].decal});
+     if(!(Math.abs(g-ref)<=LEVIERS.selectionRefMm))continue;
+     n++;best={i,j,v,ecart:Math.max(Math.abs(Lh[i].decal[1]),Math.abs(Lh[i].decal[2]),Math.abs(Rh[j].decal[1]),Math.abs(Rh[j].decal[2])),h0:false};
+   }
+   const hl=Lh[best.i],hr=Rh[best.j],ecart3d=Math.max(norme(hl.decal),norme(hr.decal));
+   const paire={left:{decal:hl.decal,origines:hl.origines,sousOrigines:hl.sousOrigines,hauteur:hl.hauteur},right:{decal:hr.decal,origines:hr.origines,sousOrigines:hr.sousOrigines,hauteur:hr.hauteur}};
+   const out={zone:k.zone,tau:z.tau??null,delta:z.delta??null,p:arrondi(best.v,4),ecartDepartMm:arrondi(ecart3d,1),ecartMaxLatVertMm:arrondi(best.ecart,1),paire,i:best.i,j:best.j,permises:n,
+     hypothese:[...new Set([...hl.origines,...hr.origines])].sort().join('+'),probas:p,selection:'reference'};
+   if(best.h0)return {...out,etat:'rien',motif:'depart-le-plus-probable',paire:null};
+   if(!z.actif)return {...out,etat:'rien',motif:'zone-inactive'};
+   if(best.ecart<z.delta)return {...out,etat:'rien',motif:'sous-delta'};
+   if(best.v>=z.tau)return {...out,etat:'valider',motif:null};
+   if(ecart3d>REGLE.sansValiderMaxMm)return {...out,etat:'rien',motif:'plus-de-150-mm'};
+   return {...out,etat:'poser-sans-valider',motif:'sous-tau'};
+ }
+ /* Pose de la chaîne refaite par L1-s (vue élargie ou options de L1) sous L1-se : la même correction d'écartement, sur ses décalages.
+  * Rend { decal, correction } (decal : corrigé, ou celui de la chaîne). */
+ function corrigerPoseChaine(capture,decal,ref){
+   if(!ref||!fini(ref.mm))return {decal,correction:{ref:null,appliquee:false}};
+   const c=corrigerDecal({capture,decal,ref:ref.mm,ordre:ordreRails(capture,decal)});
+   return {decal:c.anomalie&&c.soutenue?c.decal:decal,correction:{ref:ref.mm,ecartMm:c.ecartMm,anomalie:c.anomalie,rail:c.rail,soutenue:c.soutenue,appliquee:!!(c.anomalie&&c.soutenue)}};
  }
  /* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
  function positionsDe(capture,paire){return Object.fromEntries(SIDES.map(s=>[s,L.positionOf(capture.rails[s],paire[s].decal.map(v=>v/1000))]));}
@@ -479,7 +596,7 @@
   *   voisins : cuts validés par le lot avant ce cut, { identity, positions, rails (pose de départ de ce voisin) } ; zone : 'pn' | 'adv' | 'abords' ;
   *   plagesADV : plages ADV connues à l'instant ; modele : `modeleFige(...)` ; regle : REGLE ou REGLE_V.
   * Rend { decision (deciderL1), positions (scène) ou null, hyp (résumé), cas } ; lève une erreur seulement sur entrée illisible. */
- function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null}){
+ function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null}){
    if(!modele)throw Error('GCV2 L1 : modèle absent.');
    if(!SIDES.every(s=>science&&science.rails&&science.rails[s]))throw Error('GCV2 L1 : science incomplète.');
    const id=capture.identity,seul=variante(capture,science,[],options),chaine=variante(capture,science,appuis.slice(),options);
@@ -491,6 +608,15 @@
    for(let x=Math.min(...bornes);x<=Math.max(...bornes);x++)zmap.set(x,{zone:(plagesADV||[]).some(([a,b])=>x>=a&&x<=b)?'adv':'autre'});
    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
    const k=casDuDiffere({cut:id.cut,zone,hyp,gMed,voieRef});
+   /* Cap 5 : voie de référence des voisins validés, poses de la GCV2 comprises (`voisinsTransport`) ; sert seulement à la voie des voisins et à la
+    * garde de voie de L1-e, jamais aux hypothèses ni aux probabilités. */
+   if(Array.isArray(voisinsTransport)&&voisinsTransport.length){
+     const vt=vs.concat(voisinsTransport.filter(v=>v&&v.identity&&v.positions&&v.rails).map(v=>({identity:{part:v.identity.part,cut:v.identity.cut,frameId:v.identity.frameId??null},
+       positions:{left:v.positions.left.slice(),right:v.positions.right.slice()},stage:'verifie',source:'lot',decalage:decalageDepuisDepart(v.rails,v.positions)})));
+     const r=decalagesH6(id,vt);
+     if(r&&r.reference)k.voieTransport={left:r.reference.left.map(x=>arrondi(x,2)),right:r.reference.right.map(x=>arrondi(x,2)),n:r.reference.n,distMin:r.reference.distMin,motifs:r.reference.motifs,sure:!r.reference.motifs.length};
+     if(r&&r.proche)k.voieProche={left:r.proche.left.map(x=>arrondi(x,2)),right:r.proche.right.map(x=>arrondi(x,2)),dist:r.proche.dist};
+   }
    const d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture):deciderL1(k,modele,regle);
    const positions=d.paire&&d.etat!=='rien'?positionsDe(capture,d.paire):null;
    return {decision:d,positions,gMed,cas:k,hyp,chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
@@ -530,5 +656,5 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,deciderDiffere,commander,resumer};
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer};
 });

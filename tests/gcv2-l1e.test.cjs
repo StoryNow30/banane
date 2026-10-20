@@ -62,7 +62,7 @@ test('GCV2 L1-e sans liste d\'ESV : la décision de la test 13 (L1-s), sans pose
   const p = (a, b) => ({ left: [0.2, a], right: [0.2, b] });
   for (const [k, pr] of [[cas(), p(0.9, 0.9)], [cas(), p(0.6, 0.6)], [cas({ decalG: [0, 160, 0], decalD: [0, 160, 0] }), p(0.6, 0.6)], [cas(), p(0.01, 0.01)]]) {
     const d0 = L1.deciderL1(k, M, L1.REGLE, pr), d = L1.deciderL1e(k, M, null, null, pr);
-    assert.equal(d.variante, 'L1-e'); assert.deepEqual(d.test13, { etat: d0.etat, motif: d0.motif ?? null });
+    assert.equal(d.variante, 'L1-e'); assert.deepEqual(d.test13, { etat: d0.etat, motif: d0.motif ?? null, paire: d0.paire ? { left: d0.paire.left.decal, right: d0.paire.right.decal } : null });
     if (d0.etat === 'valider') { assert.equal(d.etat, 'valider'); assert.deepEqual(d.paire.left.decal, d0.paire.left.decal); assert.deepEqual(d.paire.right.decal, d0.paire.right.decal); }
     else { assert.equal(d.etat, 'rien'); assert.equal(d.paire, null); }
     if (d0.etat === 'poser-sans-valider') assert.equal(d.motif, 'sans-approche');
