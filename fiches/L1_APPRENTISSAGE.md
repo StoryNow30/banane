@@ -115,3 +115,9 @@ Les cuts « sous τ » étaient posés sans validation par la test 13 (approché
 
 La première version de cette fiche justifiait l'abandon des poses approchées par « 52 % des approchés jugés sur les 10 parties restaient à plus de 50 mm de l'opérateur ». **Ce chiffre est faux comme mesure de l'erreur de pose.** Une pose approchée (posée sans validation) ne reste pas dans ESV : l'opérateur retrouve la pose d'origine. Le chiffre mesurait donc la correction de l'opérateur depuis la pose d'ESV, et non l'écart entre la pose approchée et la pose de l'opérateur. Mesuré correctement sur les 9 approchés jugés de 2:19, cet écart vaut : 4 à 10 mm ou moins, 2 de 10 à 20 mm, 1 de 20 à 50 mm, 2 à plus de 50 mm. La décision de ne plus poser sans validation tient pour une autre raison : une pose approchée ne fait rien gagner à l'opérateur, puisqu'elle ne persiste pas.
 
+
+## Paquet de la test 15 (4.9.5.15, « 4.9.5 test 15 (L1-e4) »)
+
+`ariane-4.9.5-test.15.zip` (construit par `tools/package.py` sur la branche `claude/50-test15`, fusion de la v4 extension 1f793df) : 2 591 452 octets, SHA-256 `e0183c16b3f6ff772a164af22c328df7bf7cc620b897c66b55d1baae301316d4`, manifeste 4.9.5.15, CRC valide. Contrôles du zip : `LEVIERS_LIVRES` v4 dans `src/gcv2-l1.js`, transport des poses L1 (`voisinsTransport`) dans `background.js`. Consigne : `consignes/seance-terrain-4.9.5-test-15-2026-10-20.md`.
+
+Essais : tous les fichiers d'essais lancés un par un (délai 180 s) : 2 436 essais, 2 434 réussis, 0 échec, 2 ignorés (corpus natif absent). `tools/verify.cjs` (délai fixe de 20 s par fichier) a été lancé trois fois pendant que les rejeux de parité du cap 5 occupaient 2 à 3 cœurs sur 4 : 0 échec à chaque fois, mais 23 à 85 fichiers annulés pour délai dépassé ; les mêmes fichiers passent seuls. Le relevé `audit/verification.*` du paquet est celui du commit de la v4 extension, pas un relevé propre de la 4.9.5.15.
