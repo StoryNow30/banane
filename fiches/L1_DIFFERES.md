@@ -161,3 +161,17 @@ Sans compter les approchés, L1-s laisse 172 cuts sans pose (−87,4 %).
 Ce qui reste (361) : 189 approchés sous τ ; rien : départ le plus probable 98, paire à plus de 150 mm 46, sous δ 9 ; sans nuage 8 ; règle grappe 6 (+1 pose de la GCV2 bloquée) ; écartement refusé 4. Par motif réel : sans appui 879 → 301 (149 approchés) ; reprise sans minimum 221 → 47 (33) ; garde de paire 214 → 2 ; hors vue 21 → 0.
 
 Lecture : sur le projet 1, L1-s fait aussi bien que L1 (−84 %, erreur médiane 7,9 mm) sans toucher un seul cut vert. Sur le projet 2, il fait moins bien (−38 % contre −44 %), et 2:1 reste mauvais (gain médian 0, 41 des 43 poses à plus de 50 mm). Ces chiffres ne changent pas la candidate (D-221).
+
+## 7. Premier jugement contre un Écho : partie 2:17 (Écho du 20/10/2026, 8 h 28 à 8 h 32)
+
+Prédictions scellées avant lecture de l'Écho (SHA-256 vérifiés inchangés : L1/L1-v 755654…1f0d, L1-s e63c9c…71e). 41 différés, tous jugés (cuts 9521 à 9843 ; 0 non jugé). Détail par cut : `fiches/jugements/2-17-*.json`.
+
+| Profil | Posés (validés) | Erreur médiane (départ 146,9) | Gain médian | ≤ 10 mm | Posés à plus de 50 mm | dont validés |
+|---|--:|--:|--:|--:|--:|--:|
+| L1 | 24 (11) | 115,8 mm | 0 | 14 | 5 | 1 |
+| L1-s | 25 (11) | 119,1 mm | 19,3 | 14 | 7 | 1 |
+| L1-v | 31 (31) | 92,0 mm | 32,6 | 12 | 13 | 13 |
+
+Par zone (L1-s) : abords 9 cuts, erreur médiane 3,9 mm (6 à 10 mm ou moins) ; ADV 32 cuts, erreur médiane 133,2 mm (8 à 10 mm ou moins, 22 à plus de 50 mm).
+
+Lecture : bonne en abords, mauvaise en ADV, comme en 2:1. L1-v valide 13 poses fausses de plus de 50 mm (par exemple 9523 à 9526 : 50 à 121 mm, alors que L1-s pose 9523 à 9525 à moins de 4 mm) : le gain de rappel de L1-v est payé par des validations fausses, ce qui en fait un mauvais candidat de terrain en l'état. Une seule pose validée fausse pour L1 et L1-s (9556, 158,5 mm).

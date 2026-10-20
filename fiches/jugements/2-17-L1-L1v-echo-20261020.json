@@ -1,0 +1,664 @@
+{
+ "format": "ariane-banc-differes-comparaison-v1",
+ "partie": "2:17",
+ "lot": "bfb15534",
+ "juges": 41,
+ "nonJuges": {
+  "sansMic": 0,
+  "departDifferent": 0,
+  "sansNuage": 0
+ },
+ "parProfil": {
+  "L1": {
+   "n": 41,
+   "departMedianMm": 146.9,
+   "erreurMedianeMm": 115.8,
+   "gainMedianMm": 0,
+   "gainQ1Mm": 0,
+   "gainQ3Mm": 65.5,
+   "a10": 14,
+   "a20": 16,
+   "plus50": 22,
+   "pire": 4,
+   "ameliore": 20,
+   "rappel": {
+    "n": 41,
+    "k": 14,
+    "part": 34.1
+   },
+   "poses": 24,
+   "posesValidees": 11,
+   "parZone": {
+    "abords": {
+     "n": 9,
+     "departMedianMm": 68.4,
+     "erreurMedianeMm": 3.9,
+     "gainMedianMm": 60.3,
+     "gainQ1Mm": 35.1,
+     "gainQ3Mm": 65.5,
+     "a10": 6,
+     "a20": 6,
+     "plus50": 1,
+     "pire": 0,
+     "ameliore": 8,
+     "rappel": {
+      "n": 9,
+      "k": 6,
+      "part": 66.7
+     }
+    },
+    "adv": {
+     "n": 32,
+     "departMedianMm": 177.6,
+     "erreurMedianeMm": 153.7,
+     "gainMedianMm": 0,
+     "gainQ1Mm": 0,
+     "gainQ3Mm": 68.7,
+     "a10": 8,
+     "a20": 10,
+     "plus50": 21,
+     "pire": 4,
+     "ameliore": 12,
+     "rappel": {
+      "n": 32,
+      "k": 8,
+      "part": 25
+     }
+    }
+   }
+  },
+  "L1-v": {
+   "n": 41,
+   "departMedianMm": 146.9,
+   "erreurMedianeMm": 92,
+   "gainMedianMm": 32.6,
+   "gainQ1Mm": 0,
+   "gainQ3Mm": 100.5,
+   "a10": 12,
+   "a20": 15,
+   "plus50": 23,
+   "pire": 5,
+   "ameliore": 25,
+   "rappel": {
+    "n": 41,
+    "k": 12,
+    "part": 29.3
+   },
+   "poses": 31,
+   "posesValidees": 31,
+   "parZone": {
+    "abords": {
+     "n": 9,
+     "departMedianMm": 68.4,
+     "erreurMedianeMm": 41.9,
+     "gainMedianMm": 19.3,
+     "gainQ1Mm": 13.2,
+     "gainQ3Mm": 43.9,
+     "a10": 3,
+     "a20": 3,
+     "plus50": 4,
+     "pire": 2,
+     "ameliore": 7,
+     "rappel": {
+      "n": 9,
+      "k": 3,
+      "part": 33.3
+     }
+    },
+    "adv": {
+     "n": 32,
+     "departMedianMm": 177.6,
+     "erreurMedianeMm": 138.4,
+     "gainMedianMm": 35,
+     "gainQ1Mm": 0,
+     "gainQ3Mm": 123.5,
+     "a10": 9,
+     "a20": 12,
+     "plus50": 19,
+     "pire": 3,
+     "ameliore": 18,
+     "rappel": {
+      "n": 32,
+      "k": 9,
+      "part": 28.1
+     }
+    }
+   }
+  }
+ },
+ "detail": [
+  {
+   "cut": 9521,
+   "zone": "abords",
+   "departMm": 94.9,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 34.6
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 34.6
+   }
+  },
+  {
+   "cut": 9522,
+   "zone": "abords",
+   "departMm": 60,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 24.9
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 41.9
+   }
+  },
+  {
+   "cut": 9523,
+   "zone": "abords",
+   "departMm": 63.7,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 2.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 50.5
+   }
+  },
+  {
+   "cut": 9524,
+   "zone": "abords",
+   "departMm": 68.4,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 2.6
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 69
+   }
+  },
+  {
+   "cut": 9525,
+   "zone": "abords",
+   "departMm": 68.6,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 3.1
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 92
+   }
+  },
+  {
+   "cut": 9526,
+   "zone": "abords",
+   "departMm": 140.2,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 140.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 120.9
+   }
+  },
+  {
+   "cut": 9527,
+   "zone": "adv",
+   "departMm": 146.9,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 202.4
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 200.2
+   }
+  },
+  {
+   "cut": 9528,
+   "zone": "adv",
+   "departMm": 149,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 149
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 149
+   }
+  },
+  {
+   "cut": 9545,
+   "zone": "adv",
+   "departMm": 135.1,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 10.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 10.7
+   }
+  },
+  {
+   "cut": 9549,
+   "zone": "adv",
+   "departMm": 194.7,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 194.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 5.2
+   }
+  },
+  {
+   "cut": 9550,
+   "zone": "adv",
+   "departMm": 201,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 201
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 24.1
+   }
+  },
+  {
+   "cut": 9551,
+   "zone": "adv",
+   "departMm": 197.9,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 197.9
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 197.9
+   }
+  },
+  {
+   "cut": 9552,
+   "zone": "adv",
+   "departMm": 197.6,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 49.5
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 197.6
+   }
+  },
+  {
+   "cut": 9553,
+   "zone": "adv",
+   "departMm": 115.8,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 115.8
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 115.8
+   }
+  },
+  {
+   "cut": 9554,
+   "zone": "adv",
+   "departMm": 127.8,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 127.8
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 127.8
+   }
+  },
+  {
+   "cut": 9556,
+   "zone": "adv",
+   "departMm": 150,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 158.5
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 158.5
+   }
+  },
+  {
+   "cut": 9557,
+   "zone": "adv",
+   "departMm": 138.2,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 201.8
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 200.3
+   }
+  },
+  {
+   "cut": 9604,
+   "zone": "adv",
+   "departMm": 53.5,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.9
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.9
+   }
+  },
+  {
+   "cut": 9624,
+   "zone": "adv",
+   "departMm": 166,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 10
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 10
+   }
+  },
+  {
+   "cut": 9625,
+   "zone": "adv",
+   "departMm": 161.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 4.8
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 4.8
+   }
+  },
+  {
+   "cut": 9638,
+   "zone": "adv",
+   "departMm": 229.9,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.1
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.1
+   }
+  },
+  {
+   "cut": 9641,
+   "zone": "adv",
+   "departMm": 138.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.7
+   }
+  },
+  {
+   "cut": 9642,
+   "zone": "adv",
+   "departMm": 125.4,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.3
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.3
+   }
+  },
+  {
+   "cut": 9643,
+   "zone": "adv",
+   "departMm": 205.7,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 3.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 3.2
+   }
+  },
+  {
+   "cut": 9644,
+   "zone": "adv",
+   "departMm": 208,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 208
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 208
+   }
+  },
+  {
+   "cut": 9645,
+   "zone": "adv",
+   "departMm": 201.7,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 201.7
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 201.7
+   }
+  },
+  {
+   "cut": 9646,
+   "zone": "adv",
+   "departMm": 203.4,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 203.4
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 203.4
+   }
+  },
+  {
+   "cut": 9647,
+   "zone": "adv",
+   "departMm": 205.2,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 158.4
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 158.4
+   }
+  },
+  {
+   "cut": 9648,
+   "zone": "adv",
+   "departMm": 206.9,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 206.9
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 155.7
+   }
+  },
+  {
+   "cut": 9649,
+   "zone": "adv",
+   "departMm": 207.2,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 207.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 159.5
+   }
+  },
+  {
+   "cut": 9650,
+   "zone": "adv",
+   "departMm": 200.2,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 200.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 162.8
+   }
+  },
+  {
+   "cut": 9651,
+   "zone": "adv",
+   "departMm": 195.6,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 195.6
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 195.6
+   }
+  },
+  {
+   "cut": 9652,
+   "zone": "adv",
+   "departMm": 189.2,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 189.2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 156.5
+   }
+  },
+  {
+   "cut": 9653,
+   "zone": "adv",
+   "departMm": 192.8,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 249.7
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 192.8
+   }
+  },
+  {
+   "cut": 9687,
+   "zone": "abords",
+   "departMm": 47.8,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 3.9
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 3.9
+   }
+  },
+  {
+   "cut": 9689,
+   "zone": "adv",
+   "departMm": 51.8,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 8.3
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 8.3
+   }
+  },
+  {
+   "cut": 9753,
+   "zone": "abords",
+   "departMm": 36.5,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 2.6
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2.6
+   }
+  },
+  {
+   "cut": 9790,
+   "zone": "adv",
+   "departMm": 101.3,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 101.3
+   },
+   "L1-v": {
+    "etat": "differe",
+    "erreurMm": 101.3
+   }
+  },
+  {
+   "cut": 9800,
+   "zone": "adv",
+   "departMm": 34.4,
+   "L1": {
+    "etat": "pose-non-validee",
+    "erreurMm": 2
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 2
+   }
+  },
+  {
+   "cut": 9803,
+   "zone": "adv",
+   "departMm": 119.1,
+   "L1": {
+    "etat": "differe",
+    "erreurMm": 119.1
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 18.7
+   }
+  },
+  {
+   "cut": 9815,
+   "zone": "abords",
+   "departMm": 109.6,
+   "L1": {
+    "etat": "pose",
+    "erreurMm": 5.5
+   },
+   "L1-v": {
+    "etat": "pose",
+    "erreurMm": 5.5
+   }
+  }
+ ]
+}
