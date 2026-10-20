@@ -2,26 +2,23 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ariane · accueil</title>
 <style>
-/* Écran principal d'Ariane, passe de finition (audit du 20/10, quatrième retour) :
-   1. surfaces colorées hiérarchisées (la partie active la plus riche, activités contenues, parties récentes calmes) ;
-   2. un seul langage : pictogrammes d'activité pour l'identité, et seulement des données exactes et nommées ;
-   3. en-têtes bas dans Orbite et Revue, la tâche au centre ;
-   4. parcours animé accueil → activité → retour (la vignette s'agrandit, puis se replie).
-   Couleurs derrière du texte blanc : contraste mesuré ≥ 4,5:1 (formule WCAG). États : fiches/UI_ETATS_COMPTEURS.md.
-   Maquette statique, chiffres inventés mais cohérents dans chaque situation. */
+/* Écran principal d'Ariane, finition (cinquième retour du 20/10). Structure gardée ; on travaille :
+   - les surfaces (filet de lumière en haut, grain léger, deux niveaux seulement) et la typographie ;
+   - la réponse des cartes : survol et focus sur toute la carte, appui, état indisponible ;
+   - une transition qui garde l'icône et le titre comme repères (ils volent de la carte à l'en-tête, et retour) ;
+   - l'état du lot porté par une pastille à forme propre (en cours, pause demandée, en pause, terminé), pas par la couleur.
+   Couleurs derrière du texte blanc : contraste ≥ 4,5:1. États : fiches/UI_ETATS_COMPTEURS.md. Chiffres inventés. */
 @font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
 @font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
 :root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
- /* activités : couleur pleine (texte blanc ≥ 4,5:1) et teinte contenue */
- --partie-a:#0b6f69;--partie-b:#1b2f7a;--orbite-a:#a8431f;--orbite-b:#b8135a;--echo-a:#2f6fd6;--echo-b:#5a2ad6;--revue-a:#9a5a0c;--revue-b:#7b3a14;
- --orbite:#ff8a5c;--echo:#8fb0ff;--revue:#ffc46b;
- --fond:#0a0a10;--s1:#14141c;--s2:#1c1c27;--tx2:rgba(255,255,255,.74);
- /* états : petites marques, toujours avec une forme */
- --ok:#3ecf8e;--dif:#ffc043}
+ --partie-a:#0b6f69;--partie-b:#1b2f7a;--orbite-a:#a8431f;--orbite-b:#b8135a;--echo-a:#2f6fd6;--echo-b:#5a2ad6;--revue-a:#a56510;--revue-b:#7b3a14;
+ --orbite:#ff9466;--echo:#9db8ff;--revue:#ffc46b;
+ --fond:#09090e;--s1:#13131b;--s2:#1a1a24;--tx2:rgba(255,255,255,.72);--filet:rgba(255,255,255,.08);
+ --ok:#3ecf8e;--dif:#ffc043;
+ --ease:cubic-bezier(.22,.8,.18,1);--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 *{box-sizing:border-box}
-body{margin:0;background:#050507;color:#fff;font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+body{margin:0;background:#050507;color:#fff;font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-:focus-visible{outline:3px solid #fff;outline-offset:3px}
 button{font:inherit;color:inherit}
 .page{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
 .page>h1{font-size:19px;margin:0 0 4px}.intro{color:#aaa;max-width:94ch;margin:0 0 14px;font-size:14px}.intro a{color:inherit}.intro b{color:#fff}
@@ -32,130 +29,147 @@ button{font:inherit;color:inherit}
 .app{position:relative;width:1180px;height:720px;transform-origin:0 0;border-radius:18px;overflow:hidden;background:var(--fond);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
 .note{margin:16px 0 0;color:#aaa;font-size:14px;max-width:96ch}.note b{color:#fff}
 
-.amb{position:absolute;inset:0;transition:background .6s ease}
-.ecran{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
-.ecran.entre .anim{animation:monte .45s cubic-bezier(.2,.8,.2,1) both}.ecran.entre .anim:nth-of-type(2){animation-delay:.04s}.ecran.entre .anim:nth-of-type(3){animation-delay:.08s}.ecran.entre .anim:nth-of-type(4){animation-delay:.12s}
-@keyframes monte{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.amb{position:absolute;inset:0;transition:background .7s ease,filter .8s ease}.amb.eteinte{filter:saturate(.5) brightness(.82)}
+.amb::after{content:"";position:absolute;inset:0;background-image:var(--grain);opacity:.05;mix-blend-mode:overlay}
+.ecran,.ancien{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.ancien{pointer-events:none;z-index:5}
+.couche{position:absolute;z-index:6;pointer-events:none;border-radius:16px}
+.vole{position:absolute;z-index:8;pointer-events:none;transform-origin:0 0;margin:0;white-space:nowrap}
 
 .haut{position:relative;z-index:2;flex:none;display:flex;align-items:center;gap:20px;height:62px;padding:0 36px}
-.marque{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.01em}
-.onglets{display:flex;gap:2px;margin-left:16px}
-.onglets button{display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:7px 14px;border-radius:18px;font-weight:600;font-size:14.5px;color:var(--tx2);cursor:pointer}
-.onglets button i{width:7px;height:7px;border-radius:50%}
+.marque{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.015em}
+.onglets{display:flex;gap:2px;margin-left:14px;padding:3px;border-radius:20px;background:rgba(255,255,255,.05)}
+.onglets button{display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:6px 14px;border-radius:17px;font-weight:600;font-size:14px;color:var(--tx2);cursor:pointer;transition:color .2s,background .25s}
+.onglets button i{width:6px;height:6px;border-radius:50%}
 .onglets button:hover{color:#fff}
-.onglets button[aria-current=true]{background:rgba(255,255,255,.94);color:#0b0b12}
-.haut .sp{flex:1}.esv{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--tx2)}.esv i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.chercher{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:17px;background:rgba(255,255,255,.1);color:var(--tx2);font-size:13.5px;cursor:pointer}
-.chercher kbd{font:500 11.5px var(--sans);background:rgba(255,255,255,.14);border-radius:4px;padding:0 5px}
-.mini{display:flex;align-items:center;gap:2px;padding:3px;border-radius:20px;background:linear-gradient(135deg,var(--orbite-a),var(--orbite-b))}
-.mini button{border:0;background:transparent;display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-radius:15px;font-weight:700;font-size:13.5px;cursor:pointer}
-.mini .mini-p{background:rgba(255,255,255,.95);color:#5a0a2c;padding:0 11px}
+.onglets button[aria-current=true]{background:#fff;color:#0b0b12}
+.onglets button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.haut .sp{flex:1}.esv{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--tx2)}.esv i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(62,207,142,.18)}
+.chercher{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 14px;border:0;border-radius:17px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--filet);color:var(--tx2);font-size:13.5px;cursor:pointer}
+.chercher kbd{font:500 11.5px var(--sans);background:rgba(255,255,255,.1);border-radius:5px;padding:1px 6px}
+.mini{display:flex;align-items:center;gap:2px;padding:3px;border-radius:20px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--filet)}
+.mini button{border:0;background:transparent;display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-radius:15px;font-weight:650;font-size:13.5px;cursor:pointer}
+.mini .mini-p{background:#fff;color:#0b0b12;padding:0 11px}
 
-/* pictogrammes d'activité : le seul langage d'identité */
-.picto{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
-.picto svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.picto.o{background:linear-gradient(135deg,var(--orbite-a),var(--orbite-b))}.picto.e{background:linear-gradient(135deg,var(--echo-a),var(--echo-b))}.picto.r{background:linear-gradient(135deg,var(--revue-a),var(--revue-b))}
+/* pastille d'état du lot : la forme dit l'état */
+.etat{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px 0 9px;border-radius:14px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);font-size:13px;font-weight:650;color:#fff}
+.etat .f{width:14px;height:14px;display:grid;place-items:center}
+.etat.cours .f::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:tour 1s linear infinite}
+.etat.dem .f::before{content:"";width:12px;height:12px;border-radius:50%;border:2px dashed #fff;animation:tour 3s linear infinite}
+.etat.pause .f::before{content:"";width:9px;height:10px;border-left:3px solid #fff;border-right:3px solid #fff}
+.etat.fini .f::before{content:"";width:9px;height:5px;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+@keyframes tour{to{transform:rotate(360deg)}}
 
-/* la partie active : la surface la plus riche */
-.une{position:relative;z-index:1;flex:none;margin:4px 36px 0;border-radius:22px;overflow:hidden;cursor:pointer;
- background:linear-gradient(115deg,var(--partie-a),var(--partie-b));box-shadow:0 26px 50px -22px rgba(0,0,0,.8);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
-.une.o{background:linear-gradient(115deg,var(--orbite-a),var(--orbite-b))}
-.une.r{background:linear-gradient(115deg,var(--revue-a),var(--revue-b))}
-.une::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 140% at 100% 0%,rgba(255,255,255,.14),transparent 60%)}
-.une:hover{transform:scale(1.008)}
-.une .in{position:relative;display:grid;grid-template-columns:1fr 330px;gap:30px;align-items:end;padding:34px 34px 32px 36px}
-.sur{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.84)}
-.une h2{font-size:46px;line-height:1.02;font-weight:800;letter-spacing:-.03em;margin:6px 0 8px}
-.une p{margin:0;font-size:16.5px;color:rgba(255,255,255,.92)}
-.bts{display:flex;gap:10px;margin-top:18px}
-.pill{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 20px;border:0;border-radius:22px;background:#fff;color:#0b0b12;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
-.pill.verre{background:rgba(255,255,255,.16);color:#fff}
-.pill.sombre{background:rgba(255,255,255,.08);color:#fff}
+.picto{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 6px 14px -6px rgba(0,0,0,.6)}
+.picto svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.picto.o{background:linear-gradient(135deg,var(--orbite-a),var(--orbite-b))}.picto.e{background:linear-gradient(135deg,var(--echo-a),var(--echo-b))}.picto.r{background:linear-gradient(135deg,var(--revue-a),var(--revue-b))}.picto.b{background:linear-gradient(135deg,#3a3a4c,#262634)}
+
+/* grande carte : la partie (sa couleur ne change pas avec l'état) */
+.une{position:relative;z-index:1;flex:none;margin:4px 36px 0;border-radius:24px;overflow:hidden;
+ background:linear-gradient(115deg,var(--partie-a),var(--partie-b));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 1px rgba(255,255,255,.06),0 30px 60px -28px rgba(0,0,0,.85)}
+.une::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 120% at 100% 0%,rgba(255,255,255,.16),transparent 60%),radial-gradient(60% 90% at 0% 100%,rgba(0,0,0,.25),transparent 70%)}
+.une::after{content:"";position:absolute;inset:0;background-image:var(--grain);opacity:.07;mix-blend-mode:overlay}
+.une .in{position:relative;z-index:1;display:grid;grid-template-columns:1fr 340px;gap:30px;align-items:end;padding:28px 34px 30px 36px}
+.une h2{font-size:50px;line-height:1;font-weight:800;letter-spacing:-.035em;margin:14px 0 10px}
+.une p{margin:0;font-size:16.5px;color:rgba(255,255,255,.9);max-width:52ch}
+.bts{display:flex;gap:10px;margin-top:22px}
+.pill{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;height:44px;padding:0 20px;border:0;border-radius:22px;background:#fff;color:#0b0b12;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap;overflow:hidden;
+ box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 8px 18px -8px rgba(0,0,0,.6);transition:transform .15s var(--ease),background .3s,color .3s}
+.pill:hover{transform:translateY(-1px)}.pill:active,.pill.appui{transform:scale(.96)}
+.pill:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.pill.verre{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.pill.sombre{background:rgba(255,255,255,.06);color:#fff;box-shadow:inset 0 0 0 1px var(--filet)}
+.pill.petit{height:32px;padding:0 13px;font-size:13.5px;border-radius:16px}
+.pill[disabled]{background:rgba(255,255,255,.16);color:#fff;cursor:default;transform:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 .pill svg{width:15px;height:15px}
-.donnee{padding:16px 18px;border-radius:16px;background:rgba(6,6,14,.32)}
-.donnee .l1{display:flex;justify-content:space-between;font-size:13.5px;color:rgba(255,255,255,.88)}
-.donnee .n{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:4px 0 2px}.donnee .n span{font-size:15px;font-weight:500;color:rgba(255,255,255,.86);letter-spacing:0}
-.donnee .d{font-size:13.5px;color:rgba(255,255,255,.88);margin-bottom:10px;display:flex;gap:14px}
+.lbl{display:inline-flex;align-items:center;gap:8px}
+.donnee{padding:18px 20px;border-radius:18px;background:rgba(4,6,16,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.donnee .l1{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.84)}
+.donnee .n{font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:6px 0 2px}.donnee .n span{font-size:15px;font-weight:500;color:rgba(255,255,255,.84);letter-spacing:0}
+.donnee .d{font-size:13.5px;color:rgba(255,255,255,.88);margin-bottom:12px;display:flex;gap:14px}
 .donnee .d span,.module .d span{display:inline-flex;align-items:center;gap:6px}
-/* barre de progression : données exactes, aucune poignée */
-.barre{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;display:flex}
+.barre{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,.16);overflow:hidden;display:flex}
 .barre i{height:100%}.barre .lueur{position:absolute;top:0;bottom:0;width:60px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:balaye 2.2s ease-in-out infinite}
 @keyframes balaye{from{left:-60px}to{left:var(--fin,100%)}}
 .m{display:inline-block;width:11px;height:11px;border-radius:3px;flex:none}
 .m.p{background:#fff}.m.d{background:var(--dif);position:relative}.m.d::after{content:"";position:absolute;left:2px;right:2px;top:4.5px;height:2px;background:#4a3000}
 .m.v{box-shadow:inset 0 0 0 2px var(--dif)}
 
-/* activités : couleur identifiable mais contenue */
+/* cartes d'activité : toute la carte répond */
 .rangee{position:relative;z-index:1;flex:none;padding:28px 36px 0}
-.rangee h3{font-size:19px;font-weight:750;letter-spacing:-.01em;margin:0 0 12px}
+.rangee h3{font-size:18px;font-weight:750;letter-spacing:-.01em;margin:0 0 12px;color:rgba(255,255,255,.92)}
 .vignettes{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.vig{position:relative;height:136px;border:0;border-radius:16px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;gap:14px;align-items:flex-start;
- background:var(--s1);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s;overflow:hidden}
-.vig::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 120% at 0% 0%,var(--teinte),transparent 70%);opacity:.22;transition:opacity .3s}
-.vig:hover,.vig:focus-visible{transform:translateY(-4px) scale(1.03);box-shadow:0 24px 40px -18px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08);z-index:2}
-.vig:hover::before,.vig:focus-visible::before{opacity:.38}
+.vig{position:relative;height:136px;border:0;border-radius:18px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;gap:14px;align-items:flex-start;outline:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015)),var(--s1);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 0 1px rgba(255,255,255,.04);
+ transition:transform .35s var(--ease),box-shadow .35s var(--ease);overflow:hidden}
+.vig::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 130% at 0% 0%,var(--teinte),transparent 70%);opacity:.2;transition:opacity .35s}
+.vig::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1.5px var(--c);opacity:0;transition:opacity .25s}
+.vig .fl{position:absolute;right:16px;top:18px;width:24px;height:24px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.1);opacity:0;transform:translateX(-6px);transition:opacity .25s,transform .35s var(--ease)}
+.vig .fl svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
+.vig:hover,.vig:focus-visible,.vig.survol{transform:translateY(-4px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 0 1px rgba(255,255,255,.06),0 26px 44px -20px rgba(0,0,0,.95),0 0 40px -20px var(--teinte)}
+.vig:hover::before,.vig:focus-visible::before,.vig.survol::before{opacity:.42}
+.vig:focus-visible::after{opacity:1}
+.vig:hover .fl,.vig:focus-visible .fl,.vig.survol .fl{opacity:1;transform:none}
+.vig:active,.vig.appui{transform:translateY(-1px) scale(.985);transition-duration:.12s}
 .vig .picto{position:relative}
 .vig .tx{position:relative;display:flex;flex-direction:column;min-width:0;height:100%}
-.vig b{font-size:19px;font-weight:750;letter-spacing:-.01em;line-height:1.2}
+.vig b{font-size:19px;font-weight:750;letter-spacing:-.015em;line-height:1.2}
 .vig small{font-size:13.5px;color:var(--tx2);margin-top:2px;line-height:1.35}
-.vig .etat{margin-top:auto;font-size:13px;font-weight:650;color:var(--c)}
-.vig.o{--teinte:var(--orbite-a);--c:var(--orbite)}.vig.e{--teinte:var(--echo-a);--c:var(--echo)}.vig.r{--teinte:var(--revue-a);--c:var(--revue)}
-.vig.b{--teinte:#555;--c:rgba(255,255,255,.8)}.vig.b .picto{background:#2a2a38}
-.vig.actif::before{opacity:.5}
+.vig .st{margin-top:auto;font-size:13px;font-weight:650;color:var(--c);display:flex;align-items:center;gap:6px}
+.vig.o{--teinte:var(--orbite-a);--c:var(--orbite)}.vig.e{--teinte:var(--echo-a);--c:var(--echo)}.vig.r{--teinte:var(--revue-a);--c:var(--revue)}.vig.b{--teinte:#4a4a5e;--c:rgba(255,255,255,.82)}
+/* indisponible : reconnaissable sans la couleur (cadenas, texte, pas de soulèvement) */
+.vig.indispo{cursor:not-allowed}.vig.indispo .picto{filter:grayscale(1);opacity:.5}.vig.indispo b,.vig.indispo small{opacity:.5}
+.vig.indispo .st{color:rgba(255,255,255,.72)}.vig.indispo:hover,.vig.indispo.survol{transform:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 0 1px rgba(255,255,255,.04)}.vig.indispo:hover::before,.vig.indispo.survol::before{opacity:.1}.vig.indispo .fl{display:none}
 
-/* parties récentes : surfaces calmes, texte exact */
 .recents{display:flex;gap:10px;overflow-x:auto;padding:0 0 30px;scrollbar-width:none}
-.part{flex:none;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px 0 14px;border:0;border-radius:14px;background:var(--s1);cursor:pointer;text-align:left}
-.part:hover{background:var(--s2)}
+.part{flex:none;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px 0 14px;border:0;border-radius:14px;background:var(--s1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;text-align:left;transition:background .2s}
+.part:hover{background:var(--s2)}.part:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .part b{font-size:15px;font-weight:700}.part small{display:block;font-size:13px;color:var(--tx2)}
 .part i{width:8px;height:8px;border-radius:50%;flex:none}
 
-/* écrans d'activité : en-tête bas, la tâche au centre */
 .tete{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:16px;padding:8px 36px 0}
-.tete h2{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
-.tete .sous{font-size:14px;color:rgba(255,255,255,.84)}
+.tete h2{font-size:28px;font-weight:800;letter-spacing:-.025em;margin:0;line-height:1.1}
+.tete .sous{font-size:14px;color:rgba(255,255,255,.84);display:flex;align-items:center;gap:10px;margin-top:4px}
 .tete .sp{flex:1}
-.module{position:relative;z-index:1;flex:none;margin:18px 36px 0;padding:22px 24px;border-radius:20px;background:rgba(8,8,16,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.module{position:relative;z-index:1;flex:none;margin:18px 36px 0;padding:22px 24px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),rgba(8,8,16,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1px rgba(255,255,255,.04)}
 .module .ligne{display:flex;align-items:flex-end;gap:28px}
-.module .n{font-size:56px;font-weight:800;letter-spacing:-.04em;line-height:.95}.module .n span{font-size:18px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.86)}
+.module .n{font-size:58px;font-weight:800;letter-spacing:-.045em;line-height:.95}.module .n b{display:inline-block;font-weight:800}.module .n span{font-size:18px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.86)}
 .module .d{display:flex;gap:18px;font-size:14.5px;color:rgba(255,255,255,.9);padding-bottom:6px}
 .module .sp{flex:1}
 .module .barre{margin-top:18px;height:10px;border-radius:5px}
-.module .cour{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:15px}
+.module .cour{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:15px;min-height:24px}
 .module .cour b{font-family:var(--mono)}.module .cour small{margin-left:auto;font-size:13.5px;color:rgba(255,255,255,.78)}
 .spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:tour 1s linear infinite;flex:none}
-@keyframes tour{to{transform:rotate(360deg)}}
 .cols{position:relative;z-index:1;flex:1;min-height:0;display:grid;grid-template-columns:1fr 320px;gap:18px;margin:18px 36px 28px}
-.panneau{border-radius:18px;background:rgba(8,8,16,.5);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.panneau{border-radius:18px;background:rgba(10,10,18,.62);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 0 1px rgba(255,255,255,.04);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.panneau.neutre{background:#111118}
 .panneau .ph{display:flex;align-items:center;gap:12px;padding:14px 20px 8px;flex:none}
 .panneau .ph h3{font-size:16px;font-weight:750;margin:0}.panneau .ph .sp{flex:1}.panneau .ph small{font-size:13px;color:var(--tx2)}
 .defile{overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}
-.row{display:grid;grid-template-columns:20px 64px 1fr 150px 150px;align-items:center;gap:14px;padding:9px 20px;font-size:14.5px;border-top:1px solid rgba(255,255,255,.06);cursor:pointer}
-.row:hover{background:rgba(255,255,255,.06)}.row.sel{background:rgba(255,255,255,.1);box-shadow:inset 3px 0 0 #fff}
-.row .c{font:600 14px var(--mono)}.row .s{color:var(--tx2);font-size:13.5px}.row .ok{color:var(--ok);font-weight:600;font-size:13.5px}
-.row .o{font-size:13.5px;color:var(--tx2);text-align:right}.row .o.gris{opacity:.55}
+.entetes,.row{display:grid;align-items:center;gap:14px;padding:0 20px}
+.entetes{flex:none;height:30px;font-size:12.5px;font-weight:650;color:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.06)}
+.row{min-height:42px;font-size:14.5px;border-top:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s}
+.row:first-child{border-top:0}
+.row:hover{background:rgba(255,255,255,.045)}.row.sel{background:rgba(255,255,255,.085);box-shadow:inset 3px 0 0 var(--marque,#fff)}
+.row .c{font:600 14px var(--mono)}.row .s{color:var(--tx2);font-size:13.5px}.row .ok{color:var(--ok);font-weight:650;font-size:13.5px;display:inline-flex;gap:6px;align-items:center}
+.row .acts{display:flex;gap:6px;justify-content:flex-end;opacity:0;transition:opacity .15s}.row:hover .acts,.row.sel .acts{opacity:1}
+.d-row{grid-template-columns:20px 64px 1fr 220px 64px}
+.r-row{grid-template-columns:20px 64px 1fr 140px 120px 230px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;padding:6px 20px 18px;font-size:14px;margin:0}.kv dt{color:var(--tx2)}.kv dd{margin:0;text-align:right}
-.avis{margin:0 20px 18px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);font-size:13.5px;color:rgba(255,255,255,.88)}
+.avis{margin:0 20px 18px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13.5px;color:rgba(255,255,255,.88)}
 .barre-act{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:10px;margin:16px 36px 0}
-.filtres{display:flex;gap:4px;padding:3px;border-radius:20px;background:rgba(8,8,16,.4)}
-.filtres button{border:0;background:transparent;height:32px;padding:0 14px;border-radius:16px;font-weight:600;font-size:14px;color:var(--tx2);cursor:pointer}
-.filtres button[aria-pressed=true]{background:rgba(255,255,255,.94);color:#0b0b12}
+.filtres{display:flex;gap:2px;padding:3px;border-radius:20px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--filet)}
+.filtres button{border:0;background:transparent;height:30px;padding:0 13px;border-radius:15px;font-weight:600;font-size:14px;color:var(--tx2);cursor:pointer}
+.filtres button[aria-pressed=true]{background:#fff;color:#0b0b12}
 .filtres b{margin-left:5px;font-weight:700}
 
-.vig.survol{transform:translateY(-4px) scale(1.03);box-shadow:0 24px 40px -18px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08);z-index:2}.vig.survol::before{opacity:.38}
-.appui{transform:scale(.95)!important;transition:transform .12s}
-.amb{transition:background .6s ease,filter .8s ease}.amb.eteinte{filter:saturate(.45) brightness(.8)}
-#cmd{overflow:hidden;transition:background .35s,color .35s}#cmd[disabled]{background:rgba(255,255,255,.2);color:#fff;cursor:default}
-#cmd .spin{border-color:rgba(255,255,255,.35);border-top-color:#fff}
-.curseur{position:absolute;z-index:20;left:590px;top:400px;width:22px;height:22px;pointer-events:none;transition:left .75s cubic-bezier(.45,0,.2,1),top .75s cubic-bezier(.45,0,.2,1),transform .12s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.curseur{position:absolute;z-index:20;left:590px;top:400px;width:22px;height:22px;pointer-events:none;transition:left .8s cubic-bezier(.45,0,.2,1),top .8s cubic-bezier(.45,0,.2,1),transform .12s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
 .curseur.clic{transform:scale(.8)}
-.etat-l{display:inline-flex;align-items:center;gap:8px}
-.vol{position:absolute;z-index:10;transition:all .5s cubic-bezier(.65,0,.2,1);pointer-events:none}
 </style></head>
 <body>
 <div class="page">
 <h1>M · L’écran principal d’Ariane</h1>
-<p class="intro">Passe de finition. La partie active porte la couleur la plus riche, les activités une teinte contenue, les parties récentes une surface calme. L’identité tient dans quatre pictogrammes ; les seuls graphiques sont des données exactes et nommées. Orbite et Revue ont un en-tête bas, et la tâche est au centre. <b>Clique sur une vignette</b> : elle s’agrandit pour devenir l’écran. <b>« Accueil »</b> la replie. Chiffres inventés. <a href="index.html">← toutes les maquettes</a></p>
+<p class="intro">Finition sur la structure gardée. Les surfaces ont un filet de lumière et un grain léger. Toute la carte répond au survol, au clavier et à l’appui ; Écho indisponible porte un cadenas. À l’ouverture, <b>l’icône et le titre volent de la carte jusqu’à l’en-tête</b>, puis reviennent au retour. L’état du lot est porté par une pastille dont la forme change (en cours, pause demandée, en pause, terminé), et non par la couleur. <b>▶ Parcours animé</b> joue : accueil → Orbite → pause confirmée → retour. Chiffres inventés. <a href="index.html">← toutes les maquettes</a></p>
 <nav class="sc" id="sc"></nav>
 <div class="cadre" id="cadre"><div class="app" id="app"><div class="amb" id="amb"></div><div class="ecran" id="ecran"></div></div></div>
 <p class="note" id="note"></p>
@@ -163,140 +177,188 @@ button{font:inherit;color:inherit}
 <script>
 const I={play:'<path d="M7 5l12 7-12 7z" fill="currentColor"/>',pause:'<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/>',
  search:'<circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
- link:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',down:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'};
+ link:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',down:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ check:'<path d="M5 12l5 5 9-10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',lock:'<rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/>'};
 const ic=(n,s=16)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true">${I[n]}</svg>`;
-/* pictogrammes d'activité (identité, pas des données) */
 const P={orbite:'<circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="9" ry="4.2" transform="rotate(-25 12 12)"/>',
  echo:'<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
  revue:'<path d="M5 6h9M5 12h6M5 18h9"/><path d="M15 12l2.2 2.2L21 10"/>',bilans:'<path d="M5 20V10M10 20V5M15 20v-7M20 20v-4"/>'};
-const picto=(n,cls='')=>`<span class="picto ${cls}"><svg viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg></span>`;
+const CL={orbite:'o',echo:'e',revue:'r',bilans:'b'};
+const picto=n=>`<span class="picto ${CL[n]}"><svg viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg></span>`;
+const fleche='<span class="fl"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>';
 const marque=`<svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true"><path d="M3 22C8 4 18 4 23 22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M7 22C10 11 16 11 19 22" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/></svg>`;
 
-/* trois situations cohérentes pour la partie 13 :
-   pause : lot arrêté hier après le cut 4811 ; 31 traités sur 120 (27 posés, 4 différés) ; 89 restants.
-   lot   : le lot a repris ; mêmes chiffres, cut 4812 en cours.
-   fin   : lot terminé ; 120 traités (109 posés, 11 différés) ; relecture 85 relus, 41 corrigés ; revue de 20 cuts (11 différés + 9 verts à contrôler). */
+/* situations cohérentes pour la partie 13 */
 let phase='pause';
+const S=()=>({pause:{tr:31,po:27,di:4,der:4811,suiv:4812,quand:'hier à 17 h 40'},lot:{tr:31,po:27,di:4,der:4811,cours:4812},dem:{tr:31,po:27,di:4,der:4811,cours:4812},
+ pausee:{tr:32,po:28,di:4,der:4812,suiv:4813,quand:'à l’instant'},fin:{tr:120,po:109,di:11}})[phase];
+const PASTILLE={pause:['pause','En pause'],lot:['cours','Orbite en cours'],dem:['dem','Pause demandée'],pausee:['pause','En pause'],fin:['fini','Lot terminé']};
+const pastille=()=>{const [c,t]=PASTILLE[phase];return `<span class="etat ${c}"><span class="f"></span>${t}</span>`;};
+const enCours=()=>phase==='lot'||phase==='dem';
 const COUL={orbite:'var(--orbite)',echo:'var(--echo)',revue:'var(--revue)'};
-const haut=(courant)=>`<header class="haut"><span class="marque">${marque}Ariane</span>
- <nav class="onglets">${[['accueil','Accueil'],['orbite','Orbite'],['echo','Écho'],['revue','Revue']].map(([k,t])=>`<button data-go="${k}" aria-current="${k===courant}">${COUL[k]?`<i style="background:${COUL[k]}"></i>`:''}${t}</button>`).join('')}</nav>
- <span class="sp"></span>${phase==='lot'&&!['orbite','accueil'].includes(courant)?`<span class="mini"><button data-go="orbite"><span class="spin"></span>Orbite · 31 / 120</button><button class="mini-p" aria-label="Pause du lot">${ic('pause',14)}</button></span>`:''}
+const haut=courant=>`<header class="haut"><span class="marque">${marque}Ariane</span>
+ <nav class="onglets" aria-label="Activités">${[['accueil','Accueil'],['orbite','Orbite'],['echo','Écho'],['revue','Revue']].map(([k,t])=>`<button data-go="${k}" aria-current="${k===courant}">${COUL[k]?`<i style="background:${COUL[k]}"></i>`:''}${t}</button>`).join('')}</nav>
+ <span class="sp"></span>${enCours()&&!['orbite','accueil'].includes(courant)?`<span class="mini"><button data-go="orbite"><span class="spin"></span>Orbite · ${S().tr} / 120</button><button class="mini-p" data-act="pause" aria-label="Pause du lot">${ic('pause',14)}</button></span>`:''}
  <span class="esv"><i></i>ESV répond</span><button class="chercher">${ic('search',14)} Rechercher <kbd>Ctrl K</kbd></button></header>`;
 const barre=(po,di,c,vive)=>`<div class="barre" role="img" aria-label="${po} posés et ${di} différés sur ${c}" style="--fin:${(po+di)/c*100}%"><i style="width:${po/c*100}%;background:#fff"></i><i style="width:${di/c*100}%;background:var(--dif)"></i>${vive?'<span class="lueur"></span>':''}</div>`;
 
-function accueil(){
- const H={pause:{cls:'',va:'orbite',sur:'Lot en pause',p:'Arrêté hier à 17 h 40, après le cut 4811. Il reste 89 cuts jusqu’à la fin de la partie.',
-   bts:`<button class="pill" data-go="orbite">${ic('play')} Reprendre au cut 4812</button><button class="pill verre" data-go="echo">Ouvrir Écho</button>`,
-   don:`<div class="l1"><span>Avancement du lot</span></div><div class="n">31 <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i>27 posés</span><span><i class="m d"></i>4 différés</span></div>${barre(27,4,120,false)}`},
-  lot:{cls:'o',va:'orbite',sur:'Orbite en cours',p:'Pose du cut 4812. Ne change pas de cut dans ESV pendant le lot.',
-   bts:`<button class="pill" data-go="orbite">Suivre le lot</button><button class="pill verre">${ic('pause')} Pause</button>`,
-   don:`<div class="l1"><span>Lot en cours</span><span>médiane observée 8 s / cut</span></div><div class="n">31 <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i>27 posés</span><span><i class="m d"></i>4 différés</span></div>${barre(27,4,120,true)}`},
-  fin:{cls:'r',va:'revue',sur:'Lot terminé',p:'120 cuts traités. Relecture automatique faite : 85 relus, 41 corrigés.',
-   bts:`<button class="pill" data-go="revue">Examiner les 20 cuts</button><button class="pill verre">${ic('down')} Exporter</button>`,
-   don:`<div class="l1"><span>Revue de la partie 13</span></div><div class="n">20 <span>cuts à examiner</span></div><div class="d" style="margin:0"><span><i class="m d"></i>11 différés</span><span><i class="m v"></i>9 verts à contrôler</span></div>`}}[phase];
- const V={orbite:{pause:'En pause après le cut 4811',lot:'En cours · cut 4812',fin:'Terminé · 120 traités'},echo:{pause:'Prêt',lot:'Indisponible pendant le lot',fin:'Prêt'},
-  revue:{pause:'4 différés pour l’instant',lot:'4 différés pour l’instant',fin:'20 à examiner'},bilans:{pause:'Dernier export hier',lot:'Dernier export hier',fin:'Export à faire'}};
+function accueil(){const s=S();
+ const repos=[`Arrêté ${s.quand}, après le cut ${s.der}. Il reste ${120-s.tr} cuts jusqu’à la fin de la partie.`,`<button class="pill" data-act="reprendre">${ic('play')} Reprendre au cut ${s.suiv}</button><button class="pill verre" data-go="echo">Ouvrir Écho</button>`];
+ const T={pause:repos,pausee:repos,
+  lot:[`Orbite pose le cut ${s.cours}. Ne change pas de cut dans ESV pendant le lot.`,`<button class="pill" data-go="orbite">Suivre le lot</button><button class="pill verre" data-act="pause">${ic('pause')} Pause</button>`],
+  dem:[`Orbite finit le cut ${s.cours}, puis s’arrête.`,`<button class="pill" data-go="orbite">Suivre le lot</button><button class="pill" disabled><span class="spin"></span>Pause demandée…</button>`],
+  fin:['120 cuts traités. Relecture automatique faite : 85 relus, 41 corrigés. 20 cuts restent à examiner.',`<button class="pill" data-go="revue">Examiner les 20 cuts</button><button class="pill verre">${ic('down')} Exporter</button>`]}[phase];
+ const don=phase==='fin'?`<div class="l1"><span>Revue de la partie 13</span></div><div class="n">20 <span>cuts à examiner</span></div><div class="d" style="margin:0"><span><i class="m d"></i>11 différés</span><span><i class="m v"></i>9 verts à contrôler</span></div>`
+  :`<div class="l1"><span>Avancement du lot</span><span>${enCours()?'médiane observée 8 s / cut':''}</span></div><div class="n">${s.tr} <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i>${s.po} posés</span><span><i class="m d"></i>${s.di} différés</span></div>${barre(s.po,s.di,120,phase==='lot')}`;
+ const vo={pause:`En pause après le cut ${s.der}`,pausee:`En pause après le cut ${s.der}`,lot:`En cours · cut ${s.cours}`,dem:'Pause demandée',fin:'Terminé · 120 traités'}[phase];
+ const echoIndispo=enCours();
  return haut('accueil')+
- `<section class="une anim ${H.cls}" data-go="${H.va}" tabindex="0"><div class="in"><div><div class="sur">${H.sur}</div><h2>Partie 13</h2><p>${H.p}</p><div class="bts">${H.bts}</div></div><div class="donnee">${H.don}</div></div></section>
- <section class="rangee anim"><h3>Activités · partie 13</h3><div class="vignettes">
-  <button class="vig o${phase==='lot'?' actif':''}" data-go="orbite">${picto('orbite','o')}<span class="tx"><b>Orbite</b><small>Ariane pose et valide les rails</small><span class="etat">${V.orbite[phase]}</span></span></button>
-  <button class="vig e" data-go="echo">${picto('echo','e')}<span class="tx"><b>Écho</b><small>Tu corriges, Écho garde les exemples</small><span class="etat">${V.echo[phase]}</span></span></button>
-  <button class="vig r${phase==='fin'?' actif':''}" data-go="revue">${picto('revue','r')}<span class="tx"><b>Revue</b><small>Différés et verts à contrôler</small><span class="etat">${V.revue[phase]}</span></span></button>
-  <button class="vig b">${picto('bilans')}<span class="tx"><b>Bilans</b><small>Relectures, exports, modèle</small><span class="etat">${V.bilans[phase]}</span></span></button></div></section>
- <section class="rangee anim"><h3>Parties récentes</h3><div class="recents">
+ `<section class="une"><div class="in"><div>${pastille()}<h2>Partie 13</h2><p>${T[0]}</p><div class="bts">${T[1]}</div></div><div class="donnee">${don}</div></div></section>
+ <section class="rangee"><h3>Activités · partie 13</h3><div class="vignettes">
+  <button class="vig o" data-go="orbite" data-k="orbite">${picto('orbite')}<span class="tx"><b>Orbite</b><small>Ariane pose et valide les rails</small><span class="st">${vo}</span></span>${fleche}</button>
+  <button class="vig e${echoIndispo?' indispo':''}" ${echoIndispo?'aria-disabled="true" title="Écho reprend à la fin ou à la pause du lot"':'data-go="echo"'} data-k="echo">${picto('echo')}<span class="tx"><b>Écho</b><small>Tu corriges, Écho garde les exemples</small><span class="st">${echoIndispo?ic('lock',13)+' Indisponible pendant le lot':'Prêt'}</span></span>${fleche}</button>
+  <button class="vig r" data-go="revue" data-k="revue">${picto('revue')}<span class="tx"><b>Revue</b><small>Différés et verts à contrôler</small><span class="st">${phase==='fin'?'20 à examiner':`${s.di} différés pour l’instant`}</span></span>${fleche}</button>
+  <button class="vig b" data-k="bilans">${picto('bilans')}<span class="tx"><b>Bilans</b><small>Relectures, exports, modèle</small><span class="st">${phase==='fin'?'Export à faire':'Dernier export hier'}</span></span>${fleche}</button></div></section>
+ <section class="rangee"><h3>Parties récentes</h3><div class="recents">
   ${[['Partie 12','98 posés · 6 différés à reprendre','var(--dif)'],['Partie 11','140 posés · revue faite','var(--ok)'],['Partie 10','Écho · 212 corrections','var(--echo)'],['Partie 9','Pas encore commencée','rgba(255,255,255,.3)']].map(r=>`<button class="part"><i style="background:${r[2]}"></i><span><b>${r[0]}</b><small>${r[1]}</small></span></button>`).join('')}</div></section>`;}
 
-function orbite(){const dem=phase==='dem',arr=phase==='pausee',lot=phase==='lot'||dem,fin=phase==='fin';
- const D=[[4787,'Rail non résolu'],[4794,'Confiance basse'],[4800,'Rail non résolu'],[4807,'Écartement hors contrat']];
- const [po,di,tr]=fin?[109,11,120]:arr?[28,4,32]:[27,4,31];
+/* différés : la ligne dit le motif et ce qui le précise ; « différé » et « après le lot » sont déjà dans le titre */
+const DIFF=[[4787,'Rail non résolu','rail droit introuvable dans la scène','17 h 21'],[4794,'Confiance basse','proposition sous le seuil','17 h 24'],[4800,'Rail non résolu','','17 h 28'],[4807,'Écartement hors contrat','1 492 mm mesurés','17 h 33']];
+function orbite(){const s=S(),fin=phase==='fin',cours=enCours(),dem=phase==='dem';
+ const cmd=dem?`<button class="pill" id="cmd" disabled><span class="lbl"><span class="spin"></span>Pause demandée…</span></button>`
+  :cours?`<button class="pill" id="cmd" data-act="pause"><span class="lbl">${ic('pause')} Pause</span></button>`
+  :fin?`<button class="pill" id="cmd" data-go="revue"><span class="lbl">Examiner les 20 cuts</span></button>`
+  :`<button class="pill" id="cmd" data-act="reprendre"><span class="lbl">${ic('play')} Reprendre au cut ${s.suiv}</span></button>`;
+ const ligne=dem?`<span class="spin"></span>Ariane finit le <b>cut ${s.cours}</b>, puis s’arrête. Aucun nouveau cut ne sera ouvert.`
+  :cours?`<span class="spin"></span>Pose en cours sur le <b>cut ${s.cours}</b><small>médiane observée : 8 s par cut</small>`
+  :fin?'Relecture automatique terminée : 85 relus, 41 corrigés.':`Dernière validation : <b>cut ${s.der}</b>, ${s.quand}`;
  return haut('orbite')+
- `<div class="tete anim">${picto('orbite','o')}<div><h2>Orbite · partie 13</h2><div class="sous">${fin?'Lot terminé':dem?'Pause demandée : Ariane finit le cut en cours':lot?'Pose des rails, jusqu’à la fin de la partie':'Lot en pause, jusqu’à la fin de la partie'}</div></div><span class="sp"></span>
-  ${dem?`<button class="pill" id="cmd" disabled><span class="etat-l"><span class="spin"></span>Pause demandée…</span></button>`:lot?`<button class="pill" id="cmd" data-act="pause"><span class="etat-l">${ic('pause')} Pause</span></button>`:fin?`<button class="pill" id="cmd" data-go="revue"><span class="etat-l">Examiner les 20 cuts</span></button>`:`<button class="pill" id="cmd" data-act="reprendre"><span class="etat-l">${ic('play')} Reprendre au cut ${arr?4813:4812}</span></button>`}</div>
- <section class="module anim"><div class="ligne"><div class="n"><b id="num" style="font-weight:800;display:inline-block">${tr}</b> <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i><span id="pos">${po}</span> posés</span><span><i class="m d"></i>${di} différés</span></div><span class="sp"></span>
-  <div class="d" style="color:rgba(255,255,255,.78)">${fin?'':`${120-tr} restants`}</div></div>${barre(po,di,120,lot&&!dem)}
-  <div class="cour" id="cour">${dem?'<span class="spin"></span>Ariane finit le <b>cut 4812</b>, puis s’arrête. Aucun nouveau cut ne sera ouvert.':arr?'En pause. Dernière validation : <b>cut 4812</b>, à l’instant':lot?'<span class="spin"></span>Pose en cours sur le <b>cut 4812</b><small>médiane observée : 8 s par cut</small>':fin?'Relecture automatique terminée : 85 relus, 41 corrigés.':'Dernière validation : <b>cut 4811</b>, hier à 17 h 40'}</div></section>
- <div class="cols anim"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${lot?'à reprendre après le lot':'à reprendre'}</small></div>
-  <div class="defile">${D.map(([c,m])=>`<div class="row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">différé</span><span class="o${lot?' gris':''}">${lot?'après le lot':'Ouvrir dans ESV'}</span></div>`).join('')}</div></section>
+ `<div class="tete">${picto('orbite')}<div><h2>Orbite · partie 13</h2><div class="sous">${pastille()}<span>jusqu’à la fin de la partie</span></div></div><span class="sp"></span>${cmd}</div>
+ <section class="module"><div class="ligne"><div class="n"><b id="num">${s.tr}</b> <span>sur 120 cuts traités</span></div><div class="d"><span><i class="m p"></i><span id="pos">${s.po}</span> posés</span><span><i class="m d"></i>${s.di} différés</span></div><span class="sp"></span>
+  <div class="d" style="color:rgba(255,255,255,.78)">${fin?'':`${120-s.tr} restants`}</div></div>${barre(s.po,s.di,120,phase==='lot')}<div class="cour" id="cour">${ligne}</div></section>
+ <div class="cols"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${cours?'à reprendre après le lot':'à reprendre'}</small></div>
+  <div class="entetes d-row"><span></span><span>Cut</span><span>Motif</span><span>Précision</span><span style="text-align:right">Heure</span></div>
+  <div class="defile">${DIFF.map(([c,m,p,h])=>`<div class="row d-row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">${p}</span><span class="s" style="text-align:right">${h}</span></div>`).join('')}</div></section>
   <section class="panneau"><div class="ph"><h3>Ce lot</h3></div><dl class="kv"><dt>Bornes</dt><dd>4781 → fin de partie</dd><dt>Relecture après le lot</dt><dd>relire et corriger</dd><dt>Clic de départ</dt><dd>automatique</dd></dl>
-  ${lot?'<p class="avis">Pendant le lot, ne change pas de cut dans ESV : Ariane travaille sur le cut ouvert.</p>':''}</section></div>`;}
+  ${cours?'<p class="avis">Pendant le lot, ne change pas de cut dans ESV : Ariane travaille sur le cut ouvert.</p>':''}</section></div>`;}
 
-function echo(){return haut('echo')+
- `<div class="tete anim">${picto('echo','e')}<div><h2>Écho · partie 13</h2><div class="sous">Tu corriges dans ESV ; Écho garde chaque correction comme exemple pour un prochain modèle.</div></div><span class="sp"></span>
-  ${phase==='lot'?'<span class="sous">Indisponible pendant un lot Orbite</span>':`<button class="pill">${ic('play')} Commencer la séance</button>`}</div>
- <section class="module anim"><div class="ligne"><div class="n">0 <span>correction dans cette séance</span></div><span class="sp"></span><div class="d">Raison demandée : touches 1 à 5</div></div></section>
- <div class="cols anim"><section class="panneau"><div class="ph"><h3>Séances récentes</h3></div><div class="defile">
-  ${[['Partie 10','212 corrections','hier','exportée'],['Partie 8','154 corrections','il y a 3 jours','exportée'],['Partie 7','96 corrections','il y a 5 jours','exportée']].map(r=>`<div class="row" style="grid-template-columns:20px 100px 1fr 150px 120px"><i class="m" style="background:var(--echo)"></i><span style="font-weight:600">${r[0]}</span><span>${r[1]}</span><span class="s">${r[2]}</span><span class="ok" style="text-align:right">${r[3]}</span></div>`).join('')}</div></section>
+function echo(){const indispo=enCours();return haut('echo')+
+ `<div class="tete">${picto('echo')}<div><h2>Écho · partie 13</h2><div class="sous">Tu corriges dans ESV ; Écho garde chaque correction comme exemple pour un prochain modèle.</div></div><span class="sp"></span>
+  ${indispo?`<span class="etat">${ic('lock',13)} Indisponible pendant le lot</span>`:`<button class="pill">${ic('play')} Commencer la séance</button>`}</div>
+ <section class="module"><div class="ligne"><div class="n">0 <span>correction dans cette séance</span></div><span class="sp"></span><div class="d">Raison demandée : touches 1 à 5</div></div></section>
+ <div class="cols"><section class="panneau"><div class="ph"><h3>Séances récentes</h3></div><div class="defile">
+  ${[['Partie 10','212 corrections','hier','exportée'],['Partie 8','154 corrections','il y a 3 jours','exportée'],['Partie 7','96 corrections','il y a 5 jours','exportée']].map(r=>`<div class="row" style="grid-template-columns:20px 100px 1fr 150px 120px"><i class="m" style="background:var(--echo)"></i><span style="font-weight:600">${r[0]}</span><span>${r[1]}</span><span class="s">${r[2]}</span><span class="ok" style="justify-content:flex-end">${r[3]}</span></div>`).join('')}</div></section>
   <section class="panneau"><div class="ph"><h3>Réglages de la séance</h3></div><dl class="kv"><dt>Raison</dt><dd>demandée</dd><dt>Export</dt><dd>à la fin</dd></dl></section></div>`;}
 
 const L=[['d',4787,'Rail non résolu'],['d',4794,'Confiance basse'],['d',4800,'Rail non résolu'],['d',4807,'Écartement hors contrat'],['d',4821,'Confiance basse'],['d',4833,'Rail non résolu'],['d',4842,'Confiance basse'],['d',4858,'Rail non résolu'],['d',4869,'Confiance basse'],['d',4877,'Écartement hors contrat'],['d',4894,'Rail non résolu'],
  ['v',4655,'PN 4655–4657'],['v',4656,'PN 4655–4657'],['v',4657,'PN 4655–4657'],['v',4712,'Écartement, cut 4712'],['v',4740,'ADV 4740–4741'],['v',4741,'ADV 4740–4741'],['v',4788,'Autour du différé 4787'],['v',4895,'Autour du différé 4894'],['v',4903,'Hauteur, cut 4903']];
 let filtre='tous',sel=0;const vus=new Set([4655]);
 function revue(){
- if(phase!=='fin')return haut('revue')+`<div class="tete anim">${picto('revue','r')}<div><h2>Revue · partie 13</h2><div class="sous">La revue s’ouvre à la fin du lot. Pour l’instant : 4 différés.</div></div></div>
-  <div class="cols anim" style="grid-template-columns:1fr"><section class="panneau"><div class="ph"><h3>Différés pour l’instant</h3></div><div class="defile">${L.slice(0,4).map(r=>`<div class="row"><i class="m d"></i><span class="c">${r[1]}</span><span>${r[2]}</span><span class="s">différé</span><span class="o gris">${phase==='lot'?'après le lot':'Ouvrir dans ESV'}</span></div>`).join('')}</div></section></div>`;
- const rows=L.filter(r=>filtre==='tous'||r[0]===filtre);if(sel>=rows.length)sel=0;const reste=20-vus.size,s=rows[sel];
+ if(phase!=='fin')return haut('revue')+`<div class="tete">${picto('revue')}<div><h2>Revue · partie 13</h2><div class="sous">La revue s’ouvre à la fin du lot. Pour l’instant : ${S().di} différés.</div></div></div>
+  <div class="cols" style="grid-template-columns:1fr"><section class="panneau neutre"><div class="ph"><h3>Différés pour l’instant</h3></div><div class="defile">${DIFF.map(([c,m,p])=>`<div class="row d-row"><i class="m d"></i><span class="c">${c}</span><span>${m}</span><span class="s">${p}</span><span></span></div>`).join('')}</div></section></div>`;
+ const rows=L.filter(r=>filtre==='tous'||r[0]===filtre);if(sel>=rows.length)sel=0;const s=rows[sel],reste=20-vus.size;
  return haut('revue')+
- `<div class="tete anim">${picto('revue','r')}<div><h2>Revue · partie 13</h2><div class="sous">Revue de 20 cuts · <b>${vus.size} examiné${vus.size>1?'s':''} · ${reste} restants</b></div></div><span class="sp"></span>
-  <button class="pill">${ic('link',15)} Ouvrir le cut ${s[1]} dans ESV</button></div>
- <div class="barre-act anim"><nav class="filtres">${[['tous','Tous',20],['d','Différés',11],['v','Verts à contrôler',9]].map(([k,t,n])=>`<button data-f="${k}" aria-pressed="${filtre===k}">${t}<b>${n}</b></button>`).join('')}</nav><span style="flex:1"></span><button class="pill sombre">${ic('down')} Exporter</button></div>
- <div class="cols anim" style="grid-template-columns:1fr"><section class="panneau"><div class="defile">
-  ${rows.map((r,i)=>`<div class="row${i===sel?' sel':''}" data-i="${i}"><i class="m ${r[0]}"></i><span class="c">${r[1]}</span><span>${r[2]}</span><span class="${vus.has(r[1])?'ok':'s'}">${vus.has(r[1])?'✓ examiné':r[0]==='d'?'différé':'vert à contrôler'}</span><span class="o">Ouvrir dans ESV</span></div>`).join('')}</div>
-  <div style="flex:none;padding:10px 20px;font-size:13px;color:var(--tx2);border-top:1px solid rgba(255,255,255,.06)">Maquette : clique une deuxième fois sur un cut pour le marquer examiné. Hypothèse : plus tard, Ariane le cocherait seule quand tu le valides dans ESV.</div></section></div>`;}
+ `<div class="tete">${picto('revue')}<div><h2>Revue · partie 13</h2><div class="sous">Revue de 20 cuts · <b style="color:var(--revue)">${vus.size} examiné${vus.size>1?'s':''} · ${reste} restants</b></div></div><span class="sp"></span>
+  <button class="pill sombre">${ic('link',15)} Ouvrir le cut ${s[1]} dans ESV</button>${vus.has(s[1])?'':`<button class="pill" data-act="examine">${ic('check',15)} Marquer examiné</button>`}</div>
+ <div class="barre-act"><nav class="filtres">${[['tous','Tous',20],['d','Différés',11],['v','Verts à contrôler',9]].map(([k,t,n])=>`<button data-f="${k}" aria-pressed="${filtre===k}">${t}<b>${n}</b></button>`).join('')}</nav><span style="flex:1"></span><button class="pill sombre petit">${ic('down',14)} Exporter</button></div>
+ <div class="cols" style="grid-template-columns:1fr;margin-top:12px"><section class="panneau neutre" style="--marque:var(--revue)">
+  <div class="entetes r-row"><span></span><span>Cut</span><span>Motif</span><span>Type</span><span>État</span><span style="text-align:right">Actions</span></div>
+  <div class="defile">${rows.map((r,i)=>`<div class="row r-row${i===sel?' sel':''}" data-i="${i}"><i class="m ${r[0]}"></i><span class="c">${r[1]}</span><span>${r[2]}</span><span class="s">${r[0]==='d'?'différé':'vert à contrôler'}</span>${vus.has(r[1])?`<span class="ok">${ic('check',13)} examiné</span>`:'<span class="s">à examiner</span>'}
+   <span class="acts"><button class="pill sombre petit">${ic('link',13)} Ouvrir</button>${vus.has(r[1])?'':`<button class="pill petit" data-act="examine" data-cut="${r[1]}">${ic('check',13)} Examiné</button>`}</span></div>`).join('')}</div>
+  <div style="flex:none;padding:10px 20px;font-size:13px;color:var(--tx2);border-top:1px solid rgba(255,255,255,.06)">« Marquer examiné » est une action à part, distincte de l’ouverture dans ESV. Plus tard, Ariane pourrait cocher seule le cut quand tu le valides dans ESV : c’est une hypothèse à construire.</div></section></div>`;}
 
-const AMB={accueil:{pause:'radial-gradient(110% 70% at 15% 0%,rgba(11,111,105,.55),transparent 60%),#0a0a10',lot:'radial-gradient(110% 70% at 15% 0%,rgba(168,67,31,.5),transparent 60%),#0a0a10',fin:'radial-gradient(110% 70% at 15% 0%,rgba(154,90,12,.5),transparent 60%),#0a0a10'},
- orbite:'radial-gradient(120% 75% at 10% 0%,#a8431f 0%,#7d1040 40%,#0e0710 80%)',echo:'radial-gradient(120% 75% at 10% 0%,#2f6fd6 0%,#3a1d9a 40%,#090818 80%)',revue:'radial-gradient(120% 75% at 10% 0%,#9a5a0c 0%,#6b2c10 40%,#120806 80%)'};
+const AMB={accueil:'radial-gradient(100% 65% at 12% 0%,rgba(11,111,105,.5),transparent 62%),radial-gradient(60% 50% at 95% 10%,rgba(27,47,122,.4),transparent 70%),#09090e',
+ orbite:'radial-gradient(110% 70% at 8% 0%,#a8431f 0%,#7d1040 38%,#0e0710 78%)',echo:'radial-gradient(110% 70% at 8% 0%,#2f6fd6 0%,#3a1d9a 38%,#090818 78%)',
+ revue:'radial-gradient(70% 34% at 8% 0%,rgba(190,120,20,.85) 0%,rgba(120,58,20,.45) 45%,transparent 80%),#0b0a0c'};
+const FOND={orbite:'linear-gradient(135deg,#a8431f,#b8135a)',echo:'linear-gradient(135deg,#2f6fd6,#5a2ad6)',revue:'linear-gradient(135deg,#a56510,#7b3a14)'};
 const ECR={accueil,orbite,echo,revue};
-const SC={parcours:['▶ Parcours animé',()=>parcours()],pause:['Accueil · lot en pause',()=>{phase='pause';aller('accueil');}],lot:['Accueil · lot en cours',()=>{phase='lot';aller('accueil');}],
- olot:['Orbite · lot en cours',()=>{phase='lot';aller('orbite');}],elot:['Écho · pendant le lot',()=>{phase='lot';aller('echo');}],
- fin:['Accueil · lot terminé',()=>{phase='fin';aller('accueil');}],revue:['Revue · après le lot',()=>{phase='fin';aller('revue');}]};
-const NOTES={accueil:'<b>Accueil :</b> la partie active est la seule grande surface pleine. Sa couleur suit la situation : bleu-vert quand le lot est en pause, corail quand Orbite travaille, ambre quand la revue attend. Les activités gardent leur couleur dans le pictogramme, avec une teinte légère. Les parties récentes sont des lignes calmes au texte exact. Sur l’accueil, la pastille du lot n’apparaît pas : la grande vignette fait déjà ce travail.',
- orbite:'<b>Commande du lot :</b> le bouton reste à la même place et change d’état. « Pause » devient « Pause demandée… », grisé avec la roue : Ariane finit le cut 4812 sans en ouvrir d’autre. Puis le chiffre passe à 32, l’ambiance s’éteint un peu et le bouton devient « Reprendre au cut 4813 ». <b>Orbite :</b> l’en-tête tient sur une ligne, avec l’action à droite. Au centre, un seul module de suivi : le chiffre, une barre exacte sans poignée, le cut en cours. Dessous, les différés et les réglages du lot. Le conseil sur ESV dit seulement ce qui est sûr : ne pas changer de cut pendant le lot.',
- echo:'<b>Écho :</b> même composition. Le texte dit que les corrections sont gardées comme exemples, sans promettre un apprentissage immédiat. Pendant un lot, la pastille corail en haut garde Pause à portée.',
- revue:'<b>Revue :</b> l’en-tête bas donne le compte exact (« revue de 20 cuts · 1 examiné · 19 restants ») et l’action. Les filtres et l’export forment une barre, et la liste occupe le reste de la fenêtre. Le cochage « examiné » est une hypothèse, signalée comme telle.'};
+const NOTES={accueil:'<b>Accueil :</b> la carte de la partie garde sa couleur. C’est la pastille qui dit l’état du lot, avec une forme à elle : roue pour en cours, roue en pointillé pour pause demandée, deux barres pour en pause, coche pour terminé. Toute carte d’activité se soulève au survol ou au clavier (flèches gauche et droite), montre une flèche et réagit à l’appui. Écho, indisponible pendant un lot, perd sa couleur et porte un cadenas.',
+ orbite:'<b>Orbite :</b> le bouton de commande garde sa place et change d’état : « Pause », puis « Pause demandée… », puis « Reprendre au cut 4813 ». La liste des différés ne répète plus « différé » ni « après le lot » : chaque ligne dit le motif, sa précision quand elle existe, et l’heure.',
+ echo:'<b>Écho :</b> même composition. Pendant un lot, l’écran dit qu’Écho est indisponible, et la pastille du lot reste en haut avec Pause.',
+ revue:'<b>Revue :</b> l’ambre reste dans l’en-tête et les repères ; la liste est sur une surface neutre. Les colonnes sont nommées. « Marquer examiné » est une action explicite, sur la ligne choisie et en haut ; la sélection passe ensuite au prochain cut à examiner.'};
+
 const app=document.getElementById('app'),ecr=document.getElementById('ecran'),amb=document.getElementById('amb'),note=document.getElementById('note'),nav=document.getElementById('sc');
-let cur='accueil';
-function rendre(k,calme){cur=k;const a=AMB[k];amb.style.background=typeof a==='string'?a:a[phase]||a.lot;amb.classList.toggle('eteinte',phase==='pausee'&&k==='orbite');ecr.innerHTML=ECR[k]();ecr.classList.remove('entre');if(!calme){void ecr.offsetWidth;ecr.classList.add('entre');}note.innerHTML=NOTES[k];}
-/* changement d'état sur place : le bouton garde sa place et change de largeur, le texte d'état glisse, le chiffre bascule */
-function morph(){const b0=ecr.querySelector('#cmd'),w0=b0&&b0.getBoundingClientRect().width,n0=ecr.querySelector('#num')?.textContent;
- rendre('orbite',true);const b1=ecr.querySelector('#cmd'),s=app.getBoundingClientRect().width/1180;
- if(b0&&b1){const w1=b1.getBoundingClientRect().width;b1.animate([{width:w0/s+'px'},{width:w1/s+'px'}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)'});
-  b1.firstElementChild.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:320,delay:90,easing:'ease-out',fill:'backwards'});}
- ecr.querySelector('#cour')?.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:380,easing:'ease-out'});
- const n=ecr.querySelector('#num');if(n&&n.textContent!==n0){n.animate([{transform:'translateY(-40%)',opacity:0},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)'});ecr.querySelector('#pos')?.animate([{opacity:0},{opacity:1}],{duration:400});}}
-/* parcours animé : accueil → Orbite → demande de pause → pause confirmée */
-const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-let enParcours=false;
-async function parcours(){if(enParcours)return;enParcours=true;phase='lot';cur='';rendre('accueil');
- let c=app.querySelector('.curseur');if(!c){c=document.createElement('div');c.className='curseur';c.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 2l15 9-7 1.5L8.5 20z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg>';app.appendChild(c);}
- const vers=async(el,ms=800)=>{const r=rel(el);c.style.left=(r.left+r.width*.55)+'px';c.style.top=(r.top+r.height*.55)+'px';await attendre(ms);};
- const clic=async el=>{c.classList.add('clic');el.classList.add('appui');await attendre(140);c.classList.remove('clic');el.classList.remove('appui');};
- await attendre(700);const v=ecr.querySelector('.vig.o');await vers(v);v.classList.add('survol');await attendre(500);await clic(v);v.classList.remove('survol');
- aller('orbite',v);await attendre(1500);
- const b=ecr.querySelector('#cmd');await vers(b);await attendre(250);await clic(b);phase='dem';morph();await attendre(2400);
- phase='pausee';morph();await attendre(1800);c.style.left='1100px';c.style.top='680px';await attendre(800);c.remove();enParcours=false;}
-const rel=el=>{const a=app.getBoundingClientRect(),r=el.getBoundingClientRect(),s=a.width/1180;return{left:(r.left-a.left)/s,top:(r.top-a.top)/s,width:r.width/s,height:r.height/s};};
+let cur='accueil',occupe=false;
+const reduit=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+const ech=()=>app.getBoundingClientRect().width/1180;
+const rel=el=>{const a=app.getBoundingClientRect(),r=el.getBoundingClientRect(),s=ech();return{left:(r.left-a.left)/s,top:(r.top-a.top)/s,width:r.width/s,height:r.height/s};};
 const px=r=>({left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
-const FOND={orbite:'linear-gradient(135deg,#a8431f,#b8135a)',echo:'linear-gradient(135deg,#2f6fd6,#5a2ad6)',revue:'linear-gradient(135deg,#9a5a0c,#7b3a14)'};
-/* aller : la vignette s'agrandit jusqu'à la fenêtre ; retour : l'écran se replie vers sa vignette */
-function aller(k,depuis){const reduit=matchMedia('(prefers-reduced-motion:reduce)').matches;
- const retour=k==='accueil'&&FOND[cur];
- if(reduit||(!depuis&&!retour)){rendre(k);return;}
- const v=document.createElement('div');v.className='vol';
- if(depuis){v.style.background=FOND[k]||getComputedStyle(depuis).backgroundImage;Object.assign(v.style,{...px(rel(depuis)),borderRadius:'16px'});app.appendChild(v);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>Object.assign(v.style,{left:'0px',top:'0px',width:'1180px',height:'720px',borderRadius:'18px'})));
-  setTimeout(()=>{rendre(k);v.style.transition='opacity .3s';v.style.opacity='0';setTimeout(()=>v.remove(),320);},500);return;}
- const de=cur;v.style.background=FOND[de];Object.assign(v.style,{left:'0px',top:'0px',width:'1180px',height:'720px',borderRadius:'18px'});app.appendChild(v);
- rendre('accueil');const cible=ecr.querySelector(`.vig[data-go="${de}"]`);
- requestAnimationFrame(()=>requestAnimationFrame(()=>{if(cible)Object.assign(v.style,{...px(rel(cible)),borderRadius:'16px',opacity:'0'});else v.style.opacity='0';}));setTimeout(()=>v.remove(),540);}
+const EASE='cubic-bezier(.22,.8,.18,1)';
+const PLEIN={left:'0px',top:'0px',width:'1180px',height:'720px'};
+function poser(k){cur=k;amb.style.background=AMB[k];amb.classList.toggle('eteinte',k==='orbite'&&phase==='pausee');ecr.innerHTML=ECR[k]();note.innerHTML=NOTES[k];}
+function entrer(delai=0){[...ecr.children].forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:420,delay:delai+i*45,easing:EASE,fill:'backwards'}));}
+function instantane(){const a=document.createElement('div');a.className='ancien';a.innerHTML=ecr.innerHTML;app.appendChild(a);return a;}
+function cloneVolant(el,styles){const c=el.cloneNode(true);c.classList.add('vole');c.style.opacity='';Object.assign(c.style,styles);app.appendChild(c);return c;}
+/* ouverture : la carte s'étend, son icône et son titre rejoignent l'en-tête, le contenu arrive dessous */
+function ouvrir(k,carte){if(occupe)return;if(reduit()||!carte){changer(k);return;}occupe=true;
+ const r=rel(carte),srcP=carte.querySelector('.picto'),srcT=carte.querySelector('b'),old=instantane();
+ const couche=document.createElement('div');couche.className='couche';couche.style.background=FOND[k];Object.assign(couche.style,px(r));app.appendChild(couche);
+ const rP0=rel(srcP),rT0=rel(srcT),fs0=parseFloat(getComputedStyle(srcT).fontSize);
+ const cP=cloneVolant(srcP,px(rP0)),cT=cloneVolant(srcT,{left:rT0.left+'px',top:rT0.top+'px',fontSize:fs0+'px',fontWeight:750,letterSpacing:'-.015em',lineHeight:1.2});
+ poser(k);const dP=ecr.querySelector('.tete .picto'),dT=ecr.querySelector('.tete h2');dP.style.opacity=0;dT.style.opacity=0;
+ const rP1=rel(dP),rT1=rel(dT),k2=parseFloat(getComputedStyle(dT).fontSize)/fs0;
+ old.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out',fill:'forwards'});
+ couche.animate([{...px(r),borderRadius:'18px',opacity:.95},{...PLEIN,borderRadius:'18px',opacity:.7,offset:.5},{...PLEIN,borderRadius:'18px',opacity:0}],{duration:640,easing:EASE,fill:'forwards'});
+ cP.animate([{transform:'none'},{transform:`translate(${rP1.left-rP0.left}px,${rP1.top-rP0.top}px)`}],{duration:560,easing:EASE,fill:'forwards'});
+ cT.animate([{transform:'none'},{transform:`translate(${rT1.left-rT0.left}px,${rT1.top-rT0.top}px) scale(${k2})`}],{duration:560,easing:EASE,fill:'forwards'});
+ [...ecr.children].forEach((el,i)=>{if(!el.matches('.tete'))el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:440,delay:320+i*50,easing:EASE,fill:'backwards'});});
+ ecr.querySelectorAll('.tete .sous,.tete>.pill,.tete>.etat').forEach(el=>el.animate([{opacity:0},{opacity:1}],{duration:300,delay:400,fill:'backwards'}));
+ setTimeout(()=>{dP.style.opacity='';dT.style.opacity='';cP.remove();cT.remove();old.remove();couche.remove();occupe=false;},660);}
+/* retour : l'icône et le titre redescendent dans leur carte, l'écran se replie vers elle */
+function revenir(){if(occupe)return;const de=cur;if(reduit()||!FOND[de]){changer('accueil');return;}occupe=true;
+ const sP=ecr.querySelector('.tete .picto'),sT=ecr.querySelector('.tete h2'),rP0=rel(sP),rT0=rel(sT),old=instantane();
+ old.querySelector('.tete .picto').style.opacity=0;old.querySelector('.tete h2').style.opacity=0;
+ const cP=cloneVolant(sP,px(rP0)),cT=document.createElement('b');cT.textContent={orbite:'Orbite',echo:'Écho',revue:'Revue'}[de];cT.className='vole';
+ Object.assign(cT.style,{left:rT0.left+'px',top:rT0.top+'px',fontSize:'28px',fontWeight:800,letterSpacing:'-.025em',lineHeight:1.1});app.appendChild(cT);
+ poser('accueil');const carte=ecr.querySelector(`.vig[data-k="${de}"]`),dP=carte.querySelector('.picto'),dT=carte.querySelector('b');dP.style.opacity=0;dT.style.opacity=0;
+ const rc=rel(carte),rP1=rel(dP),rT1=rel(dT);
+ const couche=document.createElement('div');couche.className='couche';couche.style.background=FOND[de];Object.assign(couche.style,PLEIN);app.appendChild(couche);
+ couche.animate([{...PLEIN,borderRadius:'18px',opacity:0},{left:'40px',top:'60px',width:'1100px',height:'620px',borderRadius:'18px',opacity:.35,offset:.25},{...px(rc),borderRadius:'18px',opacity:.8,offset:.85},{...px(rc),borderRadius:'18px',opacity:0}],{duration:640,easing:EASE,fill:'forwards'});
+ old.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'});
+ cP.animate([{transform:'none'},{transform:`translate(${rP1.left-rP0.left}px,${rP1.top-rP0.top}px)`}],{duration:600,easing:EASE,fill:'forwards'});
+ cT.animate([{transform:'none'},{transform:`translate(${rT1.left-rT0.left}px,${rT1.top-rT0.top}px) scale(${19/28})`}],{duration:600,easing:EASE,fill:'forwards'});
+ [...ecr.children].forEach((el,i)=>el.animate([{opacity:0},{opacity:1}],{duration:380,delay:200+i*50,easing:'ease-out',fill:'backwards'}));
+ setTimeout(()=>{dP.style.opacity='';dT.style.opacity='';cP.remove();cT.remove();old.remove();couche.remove();occupe=false;},660);}
+/* onglets : fondu enchaîné court */
+function changer(k){const old=reduit()?null:instantane();poser(k);if(old){old.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).onfinish=()=>old.remove();entrer(60);}}
+/* commande du lot : changement d'état sur place */
+function morph(){const b0=ecr.querySelector('#cmd'),w0=b0?.getBoundingClientRect().width,n0=ecr.querySelector('#num')?.textContent;
+ poser('orbite');const b1=ecr.querySelector('#cmd'),s=ech();if(reduit())return;
+ if(b0&&b1){const w1=b1.getBoundingClientRect().width;b1.animate([{width:w0/s+'px'},{width:w1/s+'px'}],{duration:440,easing:EASE});
+  b1.firstElementChild.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:320,delay:100,easing:'ease-out',fill:'backwards'});}
+ ecr.querySelector('.tete .etat')?.animate([{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],{duration:320,easing:EASE});
+ ecr.querySelector('#cour')?.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:380,easing:'ease-out'});
+ const n=ecr.querySelector('#num');if(n&&n.textContent!==n0){n.animate([{transform:'translateY(-45%)',opacity:0},{transform:'none',opacity:1}],{duration:460,easing:EASE});ecr.querySelector('#pos')?.animate([{opacity:0},{opacity:1}],{duration:400});}}
+function maj(){cur==='orbite'?morph():poser(cur);}
+function pause(){phase='dem';maj();setTimeout(()=>{if(phase==='dem'){phase='pausee';maj();}},2400);}
+
+const attendre=ms=>new Promise(r=>setTimeout(r,ms));let enParcours=false;
+async function parcours(){if(enParcours)return;enParcours=true;phase='lot';poser('accueil');entrer();
+ const c=document.createElement('div');c.className='curseur';c.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 2l15 9-7 1.5L8.5 20z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg>';app.appendChild(c);
+ const vers=async(el,ms=850)=>{const r=rel(el);c.style.left=(r.left+r.width*.5)+'px';c.style.top=(r.top+r.height*.55)+'px';await attendre(ms);};
+ const clic=async el=>{c.classList.add('clic');el.classList.add('appui');await attendre(150);c.classList.remove('clic');el.classList.remove('appui');};
+ await attendre(800);let v=ecr.querySelector('.vig.e');await vers(v,800);v.classList.add('survol');await attendre(700);v.classList.remove('survol');
+ v=ecr.querySelector('.vig.o');await vers(v,700);v.classList.add('survol');await attendre(500);await clic(v);v.classList.remove('survol');ouvrir('orbite',v);await attendre(1500);
+ const b=ecr.querySelector('#cmd');await vers(b);await attendre(200);await clic(b);phase='dem';morph();await attendre(2500);phase='pausee';morph();await attendre(1700);
+ const t=ecr.querySelector('.onglets [data-go=accueil]');await vers(t);await clic(t);revenir();await attendre(1500);
+ await vers(ecr.querySelector('.vig.o'),900);ecr.querySelector('.vig.o').classList.add('survol');await attendre(900);ecr.querySelector('.vig.o')?.classList.remove('survol');
+ c.style.left='1120px';c.style.top='700px';await attendre(800);c.remove();enParcours=false;}
+
+const SC={parcours:['▶ Parcours animé',()=>parcours()],pause:['Accueil · lot en pause',()=>{phase='pause';changer('accueil');}],lot:['Accueil · lot en cours',()=>{phase='lot';changer('accueil');}],
+ olot:['Orbite · lot en cours',()=>{phase='lot';changer('orbite');}],elot:['Écho · pendant le lot',()=>{phase='lot';changer('echo');}],
+ fin:['Accueil · lot terminé',()=>{phase='fin';changer('accueil');}],revue:['Revue · après le lot',()=>{phase='fin';changer('revue');}]};
 nav.innerHTML=Object.entries(SC).map(([k,v])=>`<button data-s="${k}">${v[0]}</button>`).join('');
-nav.onclick=e=>{const b=e.target.closest('button');if(!b)return;cur='';SC[b.dataset.s][1]();nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));};
-ecr.onclick=e=>{const a=e.target.closest('[data-act]');if(a&&!enParcours){if(a.dataset.act==='pause'){phase='dem';morph();setTimeout(()=>{if(phase==='dem'){phase='pausee';morph();}},2400);}else{phase='lot';morph();}return;}
- const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;sel=0;rendre('revue');return;}
- const r=e.target.closest('.row[data-i]');if(r){const rows=L.filter(x=>filtre==='tous'||x[0]===filtre);if(+r.dataset.i===sel){vus.add(rows[sel][1]);sel=Math.min(sel+1,rows.length-1);}else sel=+r.dataset.i;rendre('revue');return;}
+nav.onclick=e=>{const b=e.target.closest('button');if(!b||enParcours||occupe)return;SC[b.dataset.s][1]();nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));};
+ecr.onclick=e=>{if(enParcours||occupe)return;
+ const a=e.target.closest('[data-act]');if(a){if(a.dataset.act==='pause')pause();else if(a.dataset.act==='reprendre'){phase='lot';maj();}
+  else if(a.dataset.act==='examine'){const rows=L.filter(x=>filtre==='tous'||x[0]===filtre),cut=+a.dataset.cut||rows[sel][1];vus.add(cut);const i=rows.findIndex(r=>!vus.has(r[1]));if(i>=0)sel=i;poser('revue');}return;}
+ const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;sel=0;poser('revue');return;}
+ const r=e.target.closest('.row[data-i]');if(r){sel=+r.dataset.i;poser('revue');return;}
  const g=e.target.closest('[data-go]');if(!g||g.dataset.go===cur)return;const k=g.dataset.go;
- if(k==='accueil'){aller('accueil');return;}
- aller(k,g.closest('.onglets,.mini')?null:g.closest('.vig,.une'));};
-const ca=document.getElementById('cadre');function ech(){const s=Math.min(1,ca.clientWidth/1180);app.style.transform=`scale(${s})`;ca.style.height=720*s+'px';}
-addEventListener('resize',ech);ech();nav.querySelector('button').click();
+ if(k==='accueil'){revenir();return;}const carte=g.closest('.vig');carte?ouvrir(k,carte):changer(k);};
+ecr.addEventListener('keydown',e=>{const v=e.target.closest('.vig');if(!v)return;const l=[...ecr.querySelectorAll('.vig')],i=l.indexOf(v);
+ if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();l[(i+(e.key==='ArrowRight'?1:l.length-1))%l.length].focus();}});
+const ca=document.getElementById('cadre');function echelle(){const s=Math.min(1,ca.clientWidth/1180);app.style.transform=`scale(${s})`;ca.style.height=720*s+'px';}
+addEventListener('resize',echelle);echelle();nav.querySelector('[data-s=pause]').click();
 </script>
 </body></html>
