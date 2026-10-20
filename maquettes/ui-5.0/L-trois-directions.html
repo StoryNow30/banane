@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trois directions visuelles</title>
+<style>
+/* Choix de direction artistique (troisième audit, 20/10) : le MÊME écran « lot en cours », avec EXACTEMENT
+   les mêmes informations, en trois traitements distincts, posé à côté d'une fausse page ESV.
+   Informations communes : partie 13 · Orbite ; Pose des rails ; 31 traités sur 120 (27 posés, 4 différés) ;
+   cut 4812 en cours ; médiane observée 8 s par cut ; ESV répond ; action Pause ; accès aux différés et aux détails.
+   Maquette statique, chiffres inventés. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--ok:#3ecf8e;--ok-f:#22a86b;--dif:#f0b040}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0a0d;color:#eceaf3;font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.page{max-width:1260px;margin:0 auto;padding:20px 16px 60px}
+.page>h1{font-size:19px;margin:0 0 4px}.intro{color:#aaa7b8;max-width:90ch;margin:0 0 14px;font-size:14px}.intro a{color:inherit}
+.sc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.sc button{font:500 13px var(--sans);padding:7px 14px;border:0;border-radius:7px;background:#17161f;color:#aaa7b8;cursor:pointer}
+.sc button[aria-pressed=true]{background:#eceaf3;color:#000}
+.cadre{width:100%;overflow:hidden}
+.ecran{position:relative;width:1200px;height:700px;transform-origin:0 0;border-radius:10px;overflow:hidden;background:#1b1d22}
+.texte{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px 28px;margin:18px 0 0;color:#aaa7b8;font-size:14px}
+.texte h2{color:#eceaf3;font-size:15px;margin:0 0 4px}.texte ul{margin:0;padding-left:18px}.texte b{color:#eceaf3}
+
+/* ---------- fausse page ESV (fond neutre, sans marque) ---------- */
+.esv{position:absolute;inset:0;display:grid;grid-template-columns:1fr 250px;grid-template-rows:38px 1fr}
+.esv .barre{grid-column:1/3;background:#2a2d33;display:flex;align-items:center;gap:14px;padding:0 14px;color:#c5c8ce;font:13px var(--sans)}
+.esv .barre i{width:60px;height:8px;border-radius:4px;background:#3b3f47}
+.esv canvas{width:100%;height:100%;display:block}
+.esv .cote{background:#24272c;border-left:1px solid #33363d;padding:10px;font:12px var(--mono);color:#9aa0a8;overflow:hidden}
+.esv .cote div{padding:3px 6px;border-radius:3px;display:flex;justify-content:space-between}
+.esv .cote div.r{color:#ff8a80}.esv .cote div.v{color:#8fd19e}.esv .cote div.a{background:#3a3e46;color:#fff}
+
+/* ---------- A · Atelier : profondeur, composition ample, espace de travail ---------- */
+.A{position:absolute;left:24px;bottom:24px;width:600px;border-radius:20px;color:#f3f1fa;
+ background:linear-gradient(160deg,rgba(38,34,58,.92),rgba(18,17,27,.94) 55%);backdrop-filter:blur(18px) saturate(1.3);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 1px 0 rgba(0,0,0,.4),0 40px 80px -20px rgba(0,0,0,.7)}
+.A .h{display:flex;align-items:center;gap:12px;padding:16px 18px 0 24px;font-size:13.5px;color:#b9b4cc}
+.A .h b{color:#f3f1fa;font-weight:600}.A .h .sp{flex:1}
+.A .esvp{display:flex;align-items:center;gap:6px}.A .esvp i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.A .pause{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border:0;border-radius:18px;background:#f3f1fa;color:#120f1c;font:600 14px var(--sans);cursor:pointer}
+.A .corps{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;padding:18px 24px 0}
+.A .t{font-size:15px;color:#b9b4cc;margin:0}
+.A .n{display:flex;align-items:baseline;gap:12px;margin:2px 0 0}
+.A .n b{font-size:76px;line-height:1;font-weight:600;letter-spacing:-.04em}
+.A .n span{font-size:20px;color:#b9b4cc}
+.A .chip{display:inline-flex;align-items:center;gap:8px;margin:14px 0 0;padding:6px 12px 6px 10px;border:0;border-radius:16px;background:rgba(240,176,64,.12);color:#f6cd7f;font:500 14px var(--sans);cursor:pointer}
+.A .chip i{width:8px;height:8px;border-radius:2px;background:var(--dif)}
+.A .cour{align-self:end;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.045)}
+.A .cour small{display:block;color:#b9b4cc;font-size:13px}
+.A .cour b{display:block;font:600 30px/1.1 var(--mono);letter-spacing:-.02em;margin:4px 0 6px}
+.A .cour .med{font-size:13px;color:#b9b4cc}
+.A .fil{position:relative;height:56px;margin:18px 24px 6px}
+.A .fil .l{position:absolute;left:0;right:0;top:27px;height:2px;background:rgba(255,255,255,.08);border-radius:1px}
+.A .fil .p{position:absolute;left:0;top:26px;height:4px;border-radius:2px;background:linear-gradient(90deg,#1c7f53,var(--ok));overflow:hidden}
+.A .fil .p::after{content:"";position:absolute;top:0;bottom:0;width:60px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:balaye 2.4s ease-in-out infinite}
+@keyframes balaye{from{left:-60px}to{left:100%}}
+.A .fil .k{position:absolute;top:20px;width:3px;height:16px;border-radius:2px;background:var(--dif)}
+.A .fil .lab{position:absolute;top:0;font:500 12px var(--mono);color:#b9b4cc;transform:translateX(-100%);white-space:nowrap}
+.A .fil .lab.d{transform:none}
+.A .pied{display:flex;gap:16px;padding:4px 24px 16px;font-size:13px;color:#8f8aa6}
+.A .pied button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0}
+
+/* ---------- B · Instrument : précision, cadran, surface claire ---------- */
+.B{position:absolute;left:24px;bottom:24px;width:560px;height:280px;border-radius:6px;color:#16161a;background:#eeebe3;
+ box-shadow:0 0 0 1px rgba(0,0,0,.25),0 30px 60px -16px rgba(0,0,0,.65);display:grid;grid-template-columns:250px 1fr}
+.B .cad{position:relative;display:grid;place-items:center;border-right:1px solid #d3cfc4}
+.B svg{width:210px;height:210px}
+.B .ctr{position:absolute;text-align:center}
+.B .ctr b{display:block;font:600 58px/1 var(--mono);letter-spacing:-.05em}
+.B .ctr span{font:500 13px var(--mono);color:#6d6a62}
+.B .droite{display:flex;flex-direction:column;padding:18px 20px 16px 22px}
+.B .tt{display:flex;justify-content:space-between;font:500 11.5px var(--mono);letter-spacing:.08em;color:#6d6a62}
+.B h3{font:650 24px/1.1 var(--sans);letter-spacing:-.01em;margin:10px 0 14px}
+.B dl{display:grid;grid-template-columns:auto 1fr;gap:0;margin:0;font-size:14px;border-top:1px solid #d3cfc4}
+.B dt,.B dd{margin:0;padding:7px 0;border-bottom:1px solid #d3cfc4}.B dt{color:#6d6a62;padding-right:20px}.B dd{text-align:right;font-family:var(--mono)}
+.B dd button{border:0;background:none;font:inherit;color:#9a6200;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.B .bas{display:flex;align-items:center;gap:10px;margin-top:auto}
+.B .esvp{display:flex;align-items:center;gap:6px;font:500 12px var(--mono);color:#6d6a62}.B .esvp i{width:7px;height:7px;border-radius:50%;background:#1f9a62}
+.B .sp{flex:1}
+.B .touche{height:38px;padding:0 18px;border:0;border-radius:4px;background:#16161a;color:#eeebe3;font:600 13px var(--mono);letter-spacing:.06em;cursor:pointer;box-shadow:0 2px 0 #000}
+.B .det{border:0;background:none;font:500 12px var(--mono);color:#6d6a62;cursor:pointer}
+.B .comete{animation:tourne 3s linear infinite;transform-origin:105px 105px}
+@keyframes tourne{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+
+/* ---------- C · Bande : posée sur le bas d'ESV, la progression est la bande elle-même ---------- */
+.C{position:absolute;left:0;right:250px;bottom:0;height:104px;color:#f4f3f8;
+ background:linear-gradient(180deg,rgba(14,14,20,.78),rgba(10,10,15,.94));backdrop-filter:blur(14px);box-shadow:0 -1px 0 rgba(255,255,255,.08)}
+.C .marée{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(62,207,142,0),rgba(62,207,142,.08));box-shadow:inset 0 3px 0 var(--ok)}
+.C .rail{position:absolute;left:0;right:0;top:0;height:3px;background:rgba(255,255,255,.08)}
+.C .marée::after{content:"";position:absolute;right:-1px;top:0;height:14px;width:2px;background:#fff;opacity:.0;animation:souffle 1.8s ease-in-out infinite}
+@keyframes souffle{50%{opacity:.8}}
+.C .front{position:absolute;top:-30px;font:600 13px var(--mono);padding:3px 8px;border-radius:4px;background:#f4f3f8;color:#0b0b10;transform:translateX(-50%)}
+.C .front::after{content:"";position:absolute;left:50%;bottom:-4px;margin-left:-4px;border:4px solid transparent;border-bottom:0;border-top-color:#f4f3f8}
+.C .k{position:absolute;top:0;width:3px;height:9px;border-radius:0 0 2px 2px;background:var(--dif)}
+.C .in{position:relative;display:flex;align-items:center;height:100%;padding:0 22px;gap:28px}
+.C .ctx{font-size:13px;color:#b8b5c8;line-height:1.35}.C .ctx b{display:block;font-size:20px;color:#f4f3f8;font-weight:650;letter-spacing:-.01em}
+.C .n{display:flex;align-items:baseline;gap:8px}.C .n b{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1}.C .n span{color:#b8b5c8}
+.C .sp{flex:1}
+.C .chip{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:14px;padding:5px 11px;background:rgba(240,176,64,.14);color:#f6cd7f;font:500 13.5px var(--sans);cursor:pointer}
+.C .chip i{width:7px;height:7px;border-radius:2px;background:var(--dif)}
+.C .med{font-size:13px;color:#b8b5c8;text-align:right;line-height:1.35}.C .med b{color:#f4f3f8;font-weight:600}
+.C .esvp{display:flex;align-items:center;gap:6px;font-size:13px;color:#b8b5c8}.C .esvp i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.C .pause{height:44px;padding:0 20px;border:0;border-radius:22px;background:#f4f3f8;color:#0b0b10;font:600 15px var(--sans);cursor:pointer}
+.C .det{border:0;background:none;color:#b8b5c8;font:13px var(--sans);cursor:pointer}
+</style></head>
+<body>
+<div class="page">
+<h1>L · Trois directions visuelles, un seul écran</h1>
+<p class="intro">Le même écran « lot en cours », avec exactement les mêmes informations, dans trois traitements distincts, à côté d’une fausse page ESV. On choisit ici une apparence et une composition, pas des fonctions. Chaque information n’apparaît qu’une fois. Chiffres inventés. <a href="index.html">← toutes les maquettes</a></p>
+<nav class="sc" id="sc"></nav>
+<div class="cadre" id="cadre"><div class="ecran" id="ecran">
+ <div class="esv"><div class="barre"><span>ESV</span><i></i><i></i><span style="margin-left:auto">Partie 13 · cut 4812</span></div><canvas id="vue" width="950" height="662"></canvas>
+ <div class="cote" id="cote"></div></div>
+ <div id="ariane"></div>
+</div></div>
+<div class="texte" id="texte"></div>
+</div>
+<script>
+/* fausse vue LiDAR : nuage de points et deux rails en perspective (décor neutre) */
+(function(){const c=document.getElementById('vue'),g=c.getContext('2d');let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+ g.fillStyle='#15171b';g.fillRect(0,0,950,662);
+ for(let i=0;i<9000;i++){const y=120+Math.pow(r(),.7)*540,w=(y-100)/560,x=475+(r()-.5)*1400*w;g.fillStyle=`rgba(${120+r()*60|0},${130+r()*60|0},${140+r()*50|0},${.15+w*.5})`;g.fillRect(x,y,1+w*1.5,1+w*1.5);}
+ g.lineWidth=2;for(const d of[-1,1]){g.strokeStyle='#d7dbe2';g.beginPath();g.moveTo(475+d*14,120);g.lineTo(475+d*250,662);g.stroke();
+  g.strokeStyle='rgba(255,90,80,.85)';g.setLineDash([6,5]);g.beginPath();g.moveTo(475+d*16,120);g.lineTo(475+d*262,662);g.stroke();g.setLineDash([]);}
+ const cote=document.getElementById('cote');let h='';for(let k=4800;k<4830;k++){const cl=k===4812?'a':k<4812?([4806].includes(k)?'r':'v'):'r';h+=`<div class="${cl}"><span>${k}</span><span>${cl==='v'?'valide':cl==='a'?'ouvert':'invalide'}</span></div>`;}cote.innerHTML=h;})();
+
+const D=[6,13,19,26],C=120,PO=27,DI=4,T=31;
+const pause='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+
+const A=()=>`<section class="A" aria-label="Ariane">
+ <div class="h"><span><b>Partie 13</b> · Orbite</span><span class="sp"></span><span class="esvp"><i></i>ESV répond</span><button class="pause">${pause} Pause</button></div>
+ <div class="corps"><div><p class="t">Pose des rails</p><div class="n"><b>${T}</b><span>sur ${C} cuts</span></div>
+  <button class="chip"><i></i>${DI} différés à reprendre</button></div>
+  <div class="cour"><small>En cours</small><b>cut 4812</b><span class="med">médiane observée : 8 s par cut</span></div></div>
+ <div class="fil" role="img" aria-label="${T} cuts traités sur ${C}, dont ${DI} différés"><span class="l"></span><span class="p" style="width:${T/C*100}%"></span>
+  ${D.map(k=>`<span class="k" style="left:${k/C*100}%"></span>`).join('')}<span class="lab d" style="left:0">début</span><span class="lab" style="left:100%">fin de partie</span></div>
+ <div class="pied"><button>Détails ›</button></div></section>`;
+
+const B=()=>{const R=88,L=2*Math.PI*R,a=f=>f*L;
+ const ticks=Array.from({length:12},(_,i)=>{const t=i/12*2*Math.PI-Math.PI/2;return `<line x1="${105+Math.cos(t)*96}" y1="${105+Math.sin(t)*96}" x2="${105+Math.cos(t)*102}" y2="${105+Math.sin(t)*102}" stroke="#9c988d" stroke-width="1.5"/>`;}).join('');
+ const tip=(T/C)*2*Math.PI-Math.PI/2;
+ return `<section class="B" aria-label="Ariane"><div class="cad"><svg viewBox="0 0 210 210" role="img" aria-label="${T} cuts traités sur ${C}">${ticks}
+  <circle cx="105" cy="105" r="${R}" fill="none" stroke="#d9d5ca" stroke-width="10"/>
+  <circle cx="105" cy="105" r="${R}" fill="none" stroke="#1f9a62" stroke-width="10" stroke-dasharray="${a(PO/C)} ${L}" transform="rotate(-90 105 105)"/>
+  <circle cx="105" cy="105" r="${R}" fill="none" stroke="#e09a1a" stroke-width="10" stroke-dasharray="0 ${a(PO/C)} ${a(DI/C)} ${L}" transform="rotate(-90 105 105)"/>
+  <circle class="comete" cx="${105+Math.cos(tip)*R}" cy="${105+Math.sin(tip)*R}" r="3" fill="#16161a"/></svg>
+  <div class="ctr"><b>${T}</b><span>sur ${C} cuts</span></div></div>
+ <div class="droite"><div class="tt"><span>PARTIE 13 · ORBITE</span><span class="esvp"><i></i>ESV RÉPOND</span></div>
+  <h3>Pose des rails</h3>
+  <dl><dt>En cours</dt><dd>cut 4812</dd><dt>Différés</dt><dd><button>${DI} à reprendre</button></dd><dt>Médiane observée</dt><dd>8 s / cut</dd></dl>
+  <div class="bas"><button class="det">DÉTAILS ›</button><span class="sp"></span><button class="touche">PAUSE</button></div></div></section>`;};
+
+const Cb=()=>`<section class="C" aria-label="Ariane"><span class="rail"></span><span class="marée" style="width:${T/C*100}%"></span>
+ ${D.map(k=>`<span class="k" style="left:${k/C*100}%"></span>`).join('')}<span class="front" style="left:${T/C*100}%">cut 4812</span>
+ <div class="in"><div class="ctx">Partie 13 · Orbite<b>Pose des rails</b></div><div class="n"><b>${T}</b><span>sur ${C} cuts</span></div>
+  <span class="sp"></span><button class="chip"><i></i>${DI} différés</button>
+  <div class="med">médiane observée<br><b>8 s par cut</b></div><span class="esvp"><i></i>ESV répond</span><button class="det">Détails</button><button class="pause">Pause</button></div></section>`;
+
+const SC={
+ A:{t:'A · Atelier',h:A,x:`<div><h2>Atelier : profondeur et ampleur</h2><ul><li>Une fenêtre plus large que haute (600 px), posée à côté d’ESV. Elle reprend la profondeur des premières maquettes : surface vitrée teintée, un seul niveau intérieur.</li><li>Le grand nombre domine. Le cut en cours forme le deuxième point fort.</li><li><b>Élément Ariane :</b> le fil de la partie, du début à la fin. Une lueur parcourt la partie déjà traitée tant que le lot travaille ; les différés sont des nœuds ambrés à leur place. Aucune poignée, rien ne ressemble à un contrôle.</li><li>Pause est en haut à droite, sans pied de fenêtre.</li></ul></div>`},
+ B:{t:'B · Instrument',h:B,x:`<div><h2>Instrument : précision et matière</h2><ul><li>Une surface claire et mate qui se détache d’ESV, sombre. On pense à un appareil de mesure, pas à une application.</li><li>Un cadran gradué tous les dix pour cent, chiffres en police à chasse fixe, filets fins, valeurs alignées à droite.</li><li><b>Élément Ariane :</b> le cadran. L’arc vert, puis l’arc ambre, montrent posés et différés ; un point marque le front du lot et clignote doucement tant qu’il travaille.</li><li>Pause est une touche franche, comme un bouton physique.</li></ul></div>`},
+ C:{t:'C · Bande',h:Cb,x:`<div><h2>Bande : vivre avec ESV</h2><ul><li>Ariane devient une bande basse sur toute la largeur de la vue ESV. La liste des cuts d’ESV reste visible.</li><li>La bande elle-même est la progression : une marée verte avance de gauche à droite ; une étiquette « cut 4812 » suit le front ; les différés sont des repères ambrés sur le bord du haut.</li><li><b>Élément Ariane :</b> le front du lot, lisible du coin de l’œil, sans détourner le regard de la scène.</li><li><b>Hypothèse à vérifier :</b> une fenêtre basse posée sur ESV peut cacher le bas de la scène. L’autre voie serait le bandeau qu’Ariane affiche déjà dans la page ESV.</li></ul></div>`}};
+const nav=document.getElementById('sc'),ari=document.getElementById('ariane'),tx=document.getElementById('texte');
+nav.innerHTML=Object.entries(SC).map(([k,v])=>`<button data-s="${k}">${v.t}</button>`).join('');
+const commun=`<div><h2>Mêmes informations dans les trois</h2><ul><li>Partie 13 · Orbite · Pose des rails</li><li>31 traités sur 120, dont 4 différés (affichés une fois)</li><li>Cut 4812 en cours · médiane observée de 8 s par cut</li><li>ESV répond · Pause · accès aux différés et aux détails</li></ul></div>`;
+function aff(k){ari.innerHTML=SC[k].h();tx.innerHTML=SC[k].x+commun;nav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===k));}
+nav.onclick=e=>{const b=e.target.closest('button');if(b)aff(b.dataset.s);};
+const ec=document.getElementById('ecran'),ca=document.getElementById('cadre');
+function ech(){const s=Math.min(1,ca.clientWidth/1200);ec.style.transform=`scale(${s})`;ca.style.height=700*s+'px';}
+addEventListener('resize',ech);ech();aff('A');
+</script>
+</body></html>
