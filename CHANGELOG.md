@@ -1,5 +1,16 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.6.1 — 4.9.6 test 1 (UI-L1) (20/10) : le nouveau panneau « Ariane » sur la L1
+
+Manifeste `4.9.6.1`, « 4.9.6 test 1 (UI-L1) », paquet `ariane-4.9.6-test.1.zip` ; base : la 4.9.5 test 13 (L1), fusionnée telle quelle (service worker, moteur, pose, profil du lot, exports). **Seul le panneau change** : la présentation « Ariane » (`src/ui5-rendu.js`, `src/ui5.js`, `panel-ui5.css`), d'après la maquette retenue (`maquettes/ui-5.0/M-accueil.html`, D-231).
+- **Quatre écrans** : Accueil (la partie, puis les activités), Orbite (grand titre, carte de suivi avec la commande, parcours du lot, différés), Écho, Revue (différés du lot, verts à contrôler). Réglages et bilans derrière l'engrenage.
+- **Chiffres** d'après `fiches/UI_ETATS_COMPTEURS.md` : traités = posés + différés + SKIP + repris, sur les ciblés quand ils sont connus. **Pastille d'état** par la forme (en cours, pause demandée, en pause, terminé, à toi). « Pause demandée » : le clic sur Pause tant que le lot tourne encore (rien de nouveau demandé au service worker).
+- **Incident** : la phrase vient de l'état (opération interrompue à archiver, ESV qui ne répond plus, rail non résolu), plus du message de l'ancien panneau.
+- **Commandes** : les boutons d'origine du panneau, cliqués par l'habillage (essai : mêmes messages au service worker pour Pause et l'export). Aucun message nouveau.
+- **Pas encore** : ouvrir un cut dans ESV depuis la Revue, case « examiné », palette de commandes.
+- Choix de présentation gardé sous une clé neuve (`banane51Interface`) : la test 1 s'ouvre sur « Ariane » ; « Ancien panneau » dans Réglages.
+Consigne : `consignes/seance-terrain-4.9.6-test-1-ui-2026-10-20.md` ; retour arrière : la 4.9.5 test 13 (désactiver, redécompresser, réactiver, Recharger, F5).
+
 ## 4.9.5.13 — 4.9.5 test 13 (L1) (19/10)
 
 Manifeste `4.9.5.13`, « 4.9.5 test 13 (L1) », paquet `ariane-4.9.5-test.13.zip` ; base : la 4.9.5 test 9 (panneau de la test 9 ; les 4.9.5.10 à 4.9.5.12 de la session d'interface ne sont pas dans cette branche) (`claude/50-rm11-test9`) + la candidate L1 (D-217, D-219, D-220 ; `fiches/L1_DIFFERES.md`).

@@ -3,7 +3,8 @@
  * contrôlée avant la pose, ce qu'il y a à essayer, ce qui ne change pas, le retour arrière vers la test 9, ce qui n'est pas vérifié ; aucune empreinte, aucune donnée de projet ESV,
  * aucune adresse, aucun nom de modèle d'IA ; une page. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {VERSIONS}=require('../tools/ui5-paquets.cjs');
+/* Consigne historique des 4.9.5.10 à 4.9.5.12 : l'outil de paquets ne fabrique plus que la 4.9.6 test 1 ; les trois versions de cette consigne restent celles-ci. */
+const VERSIONS={'4.9.5.10':'linear','4.9.5.11':'raycast','4.9.5.12':'figma'};
 const texte=fs.readFileSync(path.resolve(__dirname,'..','consignes/seance-terrain-4.9.5-test-10-ui-2026-10-19.md'),'utf8');
 const plat=t=>t.replace(/\s+/g,' ');
 test('les trois zips et leurs présentations sont ceux de l’outil de paquets',()=>{

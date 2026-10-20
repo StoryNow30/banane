@@ -1,14 +1,15 @@
-/* 4.9.5 test 10-ui : les trois versions installables du panneau habillé, une par présentation.
- *   4.9.5.10 « 4.9.5 test 10 » : Linear     4.9.5.11 « 4.9.5 test 11 » : Raycast     4.9.5.12 « 4.9.5 test 12 » : Figma et Arc
- * Même code, même moteur, mêmes exports ; seuls changent les chaînes de version (tests/version-49510.test.cjs) et la présentation proposée au départ
- * (src/ui5-variante.js). Les trois présentations sont dans chaque paquet et se choisissent dans Réglages ; l'ancien panneau aussi.
- *   node tools/ui5-paquets.cjs estampiller <version>     pose les chaînes de la version (4.9.5.10, .11 ou .12) dans l'arbre de travail
- *   node tools/ui5-paquets.cjs paquets <dossier>         estampille, empaquette (tools/package.py) et calcule le SHA-256 des trois, puis remet l'arbre à la version de départ */
+/* Versions installables du panneau habillé. 4.9.5.10 à 4.9.5.12 (test 10-ui) : une par présentation (Linear, Raycast, Figma et Arc), sur la test 9.
+ * 4.9.6.1 « 4.9.6 test 1 (UI-L1) » : la présentation « Ariane » (maquettes/ui-5.0/M-accueil.html) sur la L1 (4.9.5 test 13), seule version
+ * fabriquée désormais. Même moteur, mêmes exports que la base ; seuls changent les chaînes de version (tests/version-4961.test.cjs) et la
+ * présentation proposée au départ (src/ui5-variante.js). L'ancien panneau se choisit dans Réglages.
+ *   node tools/ui5-paquets.cjs estampiller <version>     pose les chaînes de la version dans l'arbre de travail
+ *   node tools/ui5-paquets.cjs paquets <dossier>         estampille, empaquette (tools/package.py) et calcule le SHA-256, puis remet l'arbre à la version de départ */
 'use strict';
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto'), { spawnSync } = require('node:child_process');
 const racine = path.resolve(__dirname, '..');
-const VERSIONS = { '4.9.5.10': 'linear', '4.9.5.11': 'raycast', '4.9.5.12': 'figma' };
-const nomDe = v => { const p = v.split('.'); return `${p[0]}.${p[1]}.${p[2]} test ${p[3]}`; };
+const VERSIONS = { '4.9.6.1': 'ariane' };
+const ETIQUETTES = { '4.9.6.1': 'UI-L1' };
+const nomDe = v => { const p = v.split('.'); return `${p[0]}.${p[1]}.${p[2]} test ${p[3]}${ETIQUETTES[v] ? ` (${ETIQUETTES[v]})` : ''}`; };
 const lire = f => fs.readFileSync(path.join(racine, f), 'utf8');
 function estampiller(version) {
   if (!VERSIONS[version]) throw new Error('version inconnue : ' + version);
@@ -37,12 +38,12 @@ function paquets(dossier) {
   fs.mkdirSync(dossier, { recursive: true });
   try {
     for (const v of Object.keys(VERSIONS)) {
-      const e = estampiller(v), zip = path.join(dossier, `ariane-4.9.5-test.${v.split('.')[3]}-${e.defaut}.zip`);
+      const p = v.split('.'), e = estampiller(v), zip = path.join(dossier, `ariane-${p[0]}.${p[1]}.${p[2]}-test.${p[3]}.zip`);
       const r = spawnSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(racine, 'tools/package.py'), '--output', zip], { encoding: 'utf8' });
       if (r.status !== 0) throw new Error(r.stderr || r.stdout);
       sortie.push({ ...e, fichier: path.basename(zip), octets: fs.statSync(zip).size, sha256: crypto.createHash('sha256').update(fs.readFileSync(zip)).digest('hex') });
     }
-  } finally { if (VERSIONS[depart]) estampiller(depart); }
+  } finally { if (VERSIONS[depart] && depart !== JSON.parse(lire('manifest.json')).version) estampiller(depart); }
   return sortie;
 }
 if (require.main === module) {

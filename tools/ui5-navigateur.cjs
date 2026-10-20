@@ -43,7 +43,7 @@ async function comparerClics(variante, controles) {
         window.fetch = async () => ({ json: async () => ({ total: 2684, date: '19/10/2026' }) });
         window.chrome = { runtime: { id: 'essai', getURL: p => 'file://' + racine + '/' + p, connect: () => ({ onMessage: { addListener() {} }, onDisconnect: { addListener() {} } }),
           sendMessage: async m => { window.__appels.push(m.action || m.kind); return { result: m.action in reponses ? reponses[m.action] : {} }; } },
-          storage: { local: { get: async () => ({ banane50Interface: v }), set: async () => {} } }, windows: { getCurrent: async () => ({ id: 1, type: 'normal', width: 1120, height: 760 }), update: async () => ({}) } };
+          storage: { local: { get: async () => ({ banane51Interface: v }), set: async () => {} } }, windows: { getCurrent: async () => ({ id: 1, type: 'normal', width: 1120, height: 760 }), update: async () => ({}) } };
       }, { state: etat, v: chemin === 'habillage' ? variante : 'ancienne', racine: ROOT });
       await page.goto('file://' + ROOT + '/panel.html#automatic');
       await page.waitForTimeout(450);
@@ -69,7 +69,7 @@ async function lancer(sortie, variantes) {
     await page.addInitScript(({ state, v, racine }) => {
       const reponses = { view: state, 'list-tabs': [{ id: 1, title: 'ESV', pret: true, utilise: true, index: 0, windowId: 1, active: true }], 'choix-lot-etat': { clicHumain: 'tel-quel', regleGrappeDifferes: false }, 'raison-choix-etat': { actif: false, touches: 'chiffres' },
         'relecture-choix-etat': { mode: 'corriger' }, 'relecture-etat': { choix: 'corriger', lot: null, passe: null }, 'bandeau-etat': { on: false }, 'fiches-depart': { fiches: [] } };
-      const stockage = { banane50Interface: v };
+      const stockage = { banane51Interface: v };
       window.__appels = [];
       window.fetch = async () => ({ json: async () => ({ total: 2684, date: '19/10/2026' }) });
       window.chrome = { runtime: { id: 'essai', getURL: p => 'file://' + racine + '/' + p, connect: () => ({ onMessage: { addListener() {} }, onDisconnect: { addListener() {} } }),
@@ -103,3 +103,36 @@ if (require.main === module) {
   lancer(sortie, variantes).then(r => { console.log(JSON.stringify(r, null, 1)); process.exit(r.erreurs.length ? 1 : 0); }).catch(e => { console.error(e); process.exit(2); });
 }
 module.exports = { lancer, comparerClics, SCENARIOS, lot, echo };
+/* 4.9.6 test 1 : la présentation « Ariane », écran par écran (accueil, Orbite, Écho, Revue, Réglages), pour chaque scénario. */
+SCENARIOS.fin = { state: lot('COMPLETED', { activeIdentity: null }), hash: '#automatic' };
+SCENARIOS.pause = { state: lot('PAUSED'), hash: '#automatic' };
+async function capturerAriane(sortie, scenarios = Object.keys(SCENARIOS), ecrans = ['accueil', 'orbite', 'echo', 'revue', 'reglages'], vue = { width: 1180, height: 800 }, attente = 700) {
+  const { chromium } = require(process.env.PLAYWRIGHT_PATH || '/opt/node-tools/node_modules/playwright');
+  const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
+  const erreurs = [], resultat = {};
+  for (const nom of scenarios) {
+    const sc = SCENARIOS[nom], page = await navigateur.newPage({ viewport: vue });
+    page.on('pageerror', e => erreurs.push(`${nom}: ${e.message}`));
+    await page.addInitScript(({ state, racine }) => {
+      const reponses = { view: state, 'list-tabs': [{ id: 1, title: 'ESV', pret: true, utilise: true, index: 0, windowId: 1, active: true }], 'choix-lot-etat': { clicHumain: 'tel-quel', regleGrappeDifferes: false }, 'raison-choix-etat': { actif: false, touches: 'chiffres' },
+        'relecture-choix-etat': { mode: 'corriger' }, 'relecture-etat': { choix: 'corriger', lot: null, passe: null }, 'bandeau-etat': { on: false }, 'fiches-depart': { fiches: [] } };
+      window.__appels = [];
+      window.fetch = async () => ({ json: async () => ({ total: 2684, date: '19/10/2026' }) });
+      window.chrome = { runtime: { id: 'essai', getURL: p => 'file://' + racine + '/' + p, connect: () => ({ onMessage: { addListener() {} }, onDisconnect: { addListener() {} } }),
+        sendMessage: async m => { window.__appels.push(m.action || m.kind); return { result: m.action in reponses ? reponses[m.action] : {} }; } },
+        storage: { local: { get: async () => ({ banane51Interface: 'ariane' }), set: async () => {} } }, windows: { getCurrent: async () => ({ id: 1, type: 'normal', width: 1180, height: 800 }), update: async () => ({}) } };
+    }, { state: sc.state, racine: ROOT });
+    await page.goto('file://' + ROOT + '/panel.html' + sc.hash);
+    await page.waitForTimeout(450);
+    for (const ec of ecrans) {
+      if (ec !== 'accueil') { await page.click(ec === 'reglages' ? '#ui5 .ico' : `#ui5 .onglets [data-act="aller:${ec}"]`); await page.waitForTimeout(attente); }
+      if (sortie) await page.screenshot({ path: path.join(sortie, `ariane-${nom}-${ec}.png`) });
+      resultat[`${nom}/${ec}`] = await page.evaluate(() => ({ vue: document.querySelector('#ui5 .app')?.dataset.vue, etat: document.querySelector('#ui5 .etat')?.textContent || '', cmd: document.querySelector('#ui5 #ar-cmd')?.textContent || '' }));
+      if (ec !== 'accueil') { await page.click('#ui5 .onglets [data-act="aller:accueil"]'); await page.waitForTimeout(Math.min(attente, 600)); }
+    }
+    await page.close();
+  }
+  await navigateur.close();
+  return { erreurs, resultat };
+}
+module.exports.capturerAriane = capturerAriane;

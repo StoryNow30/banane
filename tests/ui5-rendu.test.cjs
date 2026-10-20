@@ -71,3 +71,26 @@ test('trois présentations, un ruban et une liste dessinés avec les cuts du lot
  assert.equal((fig.match(/class="cell /g)||[]).length,3+88);assert.match(fig,/cell now sel/);assert.match(fig,/<h3>Cut 4812<\/h3>/);
  const ray=R.rendre('raycast',base,{sel:null,palette:false,q:'',pi:0},'seance');assert.match(ray,/class="o s" data-act="legacy:pause"/);assert.match(ray,/Pause <kbd>↵<\/kbd>/);
 });
+
+/* 4.9.6 test 1 — présentation « Ariane » : dessinée à partir de `snap.ar` (src/ui5.js) et des boutons du panneau. */
+const RA=require('../src/ui5-rendu.js');
+const arBase=(etat,extra={})=>({etat,traites:31,poses:27,differes:4,cibles:120,restants:89,cours:4812,dernier:4811,partie:13,differesListe:[{cut:4787,motif:'Rail non résolu',precision:'rail droit',heure:'17 h 21'}],parcours:Array(31).fill('pose'),verts:[],vertsNombre:0,aExaminer:4,lotOuvert:true,esv:'ok',pause:{actif:true},...extra});
+const btn=(id,texte,role='link',actif=true)=>({id,texte,role,actif});
+test('Ariane : la pastille dit l’état du lot par sa forme ; « Pause demandée » garde la place du bouton, grisé',()=>{
+ const snap={mode:'automatic',ar:arBase('cours'),boutonsOrbite:[btn('pause','Pause','primary'),btn('stop','Arrêter le lot','danger')]};
+ const h=RA.rendre('ariane',snap,{},'orbite');
+ assert.match(h,/class="etat cours"/);assert.match(h,/data-act="pause"/);assert.match(h,/31<\/b> <span>sur 120 cuts traités/);assert.match(h,/89 restants/);
+ const d=RA.rendre('ariane',{...snap,ar:arBase('dem')},{},'orbite');
+ assert.match(d,/class="etat dem"/);assert.match(d,/id="ar-cmd" disabled>.*Pause demandée…/);assert.doesNotMatch(d,/data-act="pause"/);
+});
+test('Ariane : Écho est indisponible pendant un lot ; la fin de lot mène d’abord à la Revue, l’export ensuite',()=>{
+ const a=RA.rendre('ariane',{mode:'home',ar:arBase('cours')},{},'accueil');
+ assert.match(a,/vig e indispo" aria-disabled="true"/);assert.doesNotMatch(a,/data-act="aller:echo" data-k/);
+ const f=RA.rendre('ariane',{mode:'automatic',ar:arBase('fini',{lotOuvert:false,cours:null}),boutonsOrbite:[btn('export-tout','Tout télécharger pour l’analyse','primary')]},{},'orbite');
+ assert.ok(f.indexOf('data-act="aller:revue">Examiner les 4 cuts')<f.indexOf('legacy:export-tout'),'Examiner avant l’export');
+});
+test('Ariane : tout texte venu du panneau est échappé ; sans `ar`, l’accueil se dessine quand même',()=>{
+ const h=RA.rendre('ariane',{mode:'automatic',ar:arBase('alerte',{alerte:'<img src=x onerror=alert(1)>'}),notice:{texte:'<b>x</b>',erreur:true},boutonsOrbite:[btn('resume','<i>Reprendre</i>','primary')]},{},'orbite');
+ assert.doesNotMatch(h,/<img|<b>x<\/b>|<i>Reprendre/);
+ assert.match(RA.rendre('ariane',{mode:'home'},{},'accueil'),/Aucune partie ouverte/);
+});

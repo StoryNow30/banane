@@ -2949,10 +2949,17 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Appui** : le skill de patrons de conception tiré de refactoring.guru (branche `claude/design-patterns-ariane-69osmz`, `claude/skills/design-patterns/`) sert là où un symptôme réel du code du panneau le justifie, jamais par principe.
 - **Hors périmètre de cette session** : moteur, lot, relecture, Écho et GCV2 (le cap D-217 continue en parallèle). Le moteur et la géométrie restent intacts.
 
-## D-219 — Interface 5.0 : les directions A à E sont rejetées ; trois présentations (Linear, Raycast, Figma et Arc) à essayer sur Chrome (19 octobre 2026)
+## D-230 — Interface 5.0 : les directions A à E sont rejetées ; trois présentations (Linear, Raycast, Figma et Arc) à essayer sur Chrome (19 octobre 2026)
 
 - **Mic** : il rejette les trois premières directions, puis la piste « Apple TV » et la piste « produits Apple » (trop proches de l'actuel, trop pauvres, mauvais point de départ, ni profils ni « Envoyer »). Il cite Linear en tête, puis Raycast, Arc et Figma. Les maquettes F (Linear), G (Raycast, refaite plus fidèle) et H (Figma et Arc) lui plaisent toutes (« très réussies, je ne sais pas quoi choisir ») : il veut **les essayer sur Chrome**.
 - **Décision** : trois versions installables, une par présentation (4.9.5.10 Linear, 4.9.5.11 Raycast, 4.9.5.12 Figma et Arc), construites sur la test 9 par un **habillage** de `panel.js` (qui reste le moteur de la page) qui clique les boutons d'origine : pose, lot, relecture, Écho et exports inchangés, aucun message de plus au service worker. Ancien panneau conservé. Pas de « Envoyer », pas de profils, pas d'envoi automatique.
 - **Numéros** : `4.9.5.10` à `4.9.5.12`, nom « 4.9.5 test N » exigé par les essais de version. Si la « test 10 » du cap différés (D-217) est construite à part, elle prend le numéro suivant.
 - **À décider avec Mic après l'essai** : la présentation retenue (ou une combinaison), et ce qui manque (verts à contrôler, départs des parties, résumé de la partie restent dans l'ancien panneau).
+
+## D-231 — Interface 5.0 : la direction « accueil à vignettes » est retenue ; première version intégrée sur la L1 (20/10/2026)
+
+- **Mic** : après les maquettes J, K et L (écartées) et quatre audits, il fixe ses références (accueil à grandes vignettes façon Apple TV, couleurs riches par activité, grands titres et listes denses, transitions fluides) et retient la maquette M (`maquettes/ui-5.0/M-accueil.html`), Orbite dans sa composition « grand titre à gauche, carte de suivi à droite ».
+- **Décision** : version de test 4.9.6.1 « 4.9.6 test 1 (UI-L1) » posée sur la 4.9.5 test 13 (L1) ; seul le panneau change (habillage de `panel.js`, qui reste le moteur de la page). Les règles « chaque chiffre une seule fois », « une seule action », « tout compact » ne sont plus des règles absolues.
+- **Vérifié dans le code** : une pose interrompue bloque toute écriture jusqu'à l'archivage du résultat (« Reprendre » n'est pas proposé) ; la maquette J se trompait.
+- **Restent hypothèses** : « pause demandée » déduite du clic ; la Revue ne coche pas encore « examiné » ; l'usage à côté d'ESV, à taille réelle, est à juger sur le terrain.
 
