@@ -547,7 +547,7 @@
    validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
-   rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false});
+   rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -672,9 +672,10 @@
      const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre),lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
      const G={d0:d0.paire?{left:lv(d0.paire.left.decal),right:lv(d0.paire.right.decal)}:null,dd:dd.decal?{left:lv(dd.decal.left),right:lv(dd.decal.right)}:null,
        proche:va?{left:va.left.proche,right:va.right.proche}:null,va:va?{left:va.left.v,right:va.right.v}:null,h0:{left:[0,0],right:[0,0]}};
-     /* Ordre des graines : la pose retenue d'abord (contradiction), puis le voisin, la voie ajustée, la test 13, le départ. `rechGraineDecalMm` :
+     /* Ordre des graines (`rechOrdreGraines`) : par défaut la test 13, la pose retenue, le voisin, la voie ajustée, le départ (celui de b-r2 ; une
+      * graine à moins de `rechDedupMm` d'une graine déjà cherchée n'est pas relancée, l'ordre fixe donc où le moteur est relancé). `rechGraineDecalMm` :
       * graines déplacées en travers (mesure de sensibilité à la fenêtre du moteur seulement). */
-     const gr=['dd','proche','va','d0','h0'].filter(n=>G[n]).map(n=>({nom:n,left:[G[n].left[0]+gd,G[n].left[1]],right:[G[n].right[0]+gd,G[n].right[1]]}));
+     const gr=(LEVIERS.rechOrdreGraines||['d0','dd','proche','va','h0']).filter(n=>G[n]).map(n=>({nom:n,left:[G[n].left[0]+gd,G[n].left[1]],right:[G[n].right[0]+gd,G[n].right[1]]}));
      const filtreDec={minTop:LEVIERS.rechMinTop,minFace:LEVIERS.rechMinFace,ratioMax:LEVIERS.rechRatioMax};
      const diagLarge=LEVIERS.diag&&LEVIERS.rechercheDiag&&LEVIERS.rechDiagLarge;
      const filtreRech=diagLarge?{minTop:Math.min(10,filtreDec.minTop),minFace:Math.min(4,filtreDec.minFace),ratioMax:Math.max(2,filtreDec.ratioMax)}:filtreDec;
