@@ -2367,7 +2367,7 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  * interrompue entre la pose et la validation est notée par cut (storage.local), dite au panneau, et bloque relecture, lot et retour à
  * un cut jusqu'à « J'ai contrôlé le cut N » (`relecture-acquitter`). */
 const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',CLE_RELECTURE_PASSE='banane50RelecturePasse',CLE_RELECTURE_REPRISE='banane51RelectureReprise',CLE_RELECTURE_REGLAGE_PAUSE='banane51RelecturePauseReglage',MODES_RELECTURE=['coupee','ombre','corriger'];
-const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer','relecture-reprendre']);
+const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer','relecture-reprendre','passe-differes-ecrire']);
 /* Actions refusées tant qu'une correction de relecture interrompue n'est pas contrôlée par Mic. */
 const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer','relecture-reprendre']);
 /* Écartement d'une pose d'ESV jamais posée (valeur d'origine d'ESV, 1 500 mm) : écarté de la médiane des verts relus. */
@@ -2572,6 +2572,8 @@ async function relectureLancer({auto=false,passe=null}={}){
   refus=await relectureRefus(engine.s.batch,auto);if(refus)return nonLancee(refus);
   if(engine.s.batch?.id!==p.lotId)return nonLancee('le lot a changé pendant la préparation');
   s=suite();if(s==='remplacee')return relectureEtat();if(s)return nonLancee('arrêtée à ta demande avant le départ','arret');
+  /* Test 18 : la deuxième passe des différés et la relecture n'écrivent jamais ensemble dans ESV (contrôle juste avant le départ). */
+  if(passeDiff.cours||passeDiff.ecriture)return nonLancee('la deuxième passe des différés travaille dans ESV');
   const b=engine.s.batch,affiches=[...new Set([...sel.cuts.map(c=>c.cut),...sel.plages.flatMap(x=>x.traverses||[])])];
   const neufs=entree.vu&&affiches.every(c=>entree.vu.has(c))?affiches.filter(c=>entree.vu.get(c)===false).length:null;
   Object.assign(p,{etat:'en-cours',modeEffectif,total:sel.total,cutsNeufsAnnonces:neufs,
