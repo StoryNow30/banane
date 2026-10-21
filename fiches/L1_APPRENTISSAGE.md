@@ -162,3 +162,19 @@ Ces parités montrent que `diag` et `rechercheDiag` coupés ne changent aucune d
 **Essais** : `tools/verify.cjs` officiel sur l'arbre af52709 (relevé `audit/verification.*`, ba4d4dc), parités suspendues pendant le passage : 2 448 essais, 2 446 réussis, **0 échec**, 0 annulé, 2 ignorés (corpus natif absent, les mêmes qu'en test 15) ; géométrie inchangée, moteur identique à la base V4.6.0. Depuis, seuls des documents ont changé (journal, consigne, fiches), qu'aucun essai ne lit.
 
 **Identité** : la fiche `PASSATION_CAP5_B.md`, nouvelle dans le paquet, nommait l'opérateur (8 fois) ; remplacé par « l'opérateur ».
+
+**Paquet** : `ariane-4.9.5-test.16.zip`, construit par `tools/package.py` sur dd2f20b, arbre propre.
+- Taille : 2 638 028 octets. SHA-256 : `03e94c378e484d502cabf666af3d0a9a67004a219b393e1faa9f912e64c8833c`.
+- Manifeste 4.9.5.16, « 4.9.5 test 16 (L1-e5) », CRC valide.
+- Contrôles du zip :
+  - ses 347 fichiers sont identiques octet pour octet à dd2f20b ;
+  - les fichiers changés depuis l'arbre du verify (af52709) sont tous des documents ;
+  - `LEVIERS_LIVRES` = V4 + V5 dans `src/gcv2-l1.js`.
+- Contrôle d'identité, comparé au paquet de la test 15 :
+  - 0 courriel, 0 code de projet ESV ;
+  - mêmes totaux de nom (1 097) et d'adresses web (49) ;
+  - 1 identifiant interne de plus : le chemin du scratchpad dans `fiches/PASSATION_CAP5_B.md`.
+- Consigne : `consignes/seance-terrain-4.9.5-test-16-2026-10-21.md`.
+- Repli : la test 15 (`ariane-4.9.5-test.15.zip`).
+
+Le paquet candidat construit sur 1bf09f6 (SHA-256 `079c6d4d…`) n'est pas livré : sa fiche B nommait l'opérateur, et sa consigne ne portait pas encore les parités.
