@@ -65,9 +65,15 @@ Pause des rejeux d'autres agents (autorisée par la session principale) : du 11:
 Essais ajoutés ou changés depuis la test 16 : voir `git diff --stat origin/claude/50-test16 -- tests` ; les essais navigateur durent de 2 à 13 s chacun (calme).
 
 
-## 9. Paquet
+## 9. Paquet [mesuré]
 
-Construit après le dernier commit de contenu : `python3 tools/package.py --output <dossier>/ariane-4.9.5-test.17-ui.zip`. Le SHA-256, la taille, le CRC, le manifeste, le scan d'identité et la comparaison du zip avec l'arbre commité sont dans le commit qui suit (le zip contient cette fiche : elle ne peut pas porter son propre SHA).
+Construit depuis le commit `6ddab5e` (arbre propre) : `python3 tools/package.py --output scratchpad/t17/paquet-ui/ariane-4.9.5-test.17-ui.zip`.
+- `ariane-4.9.5-test.17-ui.zip` : **2 709 489 octets**, **SHA-256 `0922b3ef5e540e3e1166d04c6cc31f189904c6727978b3b3123f91c09bf631de`**, CRC32 du fichier 6d1562e3, test d'intégrité du zip (CRC de chaque entrée) : OK ; 358 entrées, `manifest.json` à la racine, une seule fois : version 4.9.5.17, nom « 4.9.5 test 17 (UI) », titre « Ouvrir Ariane 4.9.5 test 17 (UI) — V1 ».
+- **Contenu identique octet pour octet à l'arbre commité** (`git show 6ddab5e:<chemin>` pour chacune des 358 entrées : 0 absente, 0 différente). Ce commit-ci (SHA et ce paragraphe) vient après le zip : seule cette fiche diffère du zip.
+- **Moteur** : les 9 fichiers `src/gcv2*.js`, `engine.js`, `geometry*.js`, `settings.js`, `lot-decision.js` du zip sont identiques octet pour octet à ceux de la test 16 (`wt/T16`).
+- **Scan d'identité** (`scan.py`, mêmes motifs que pour la test 16) : courriels 0 (test 16 : 0), codes de projet ESV 0 (0), adresses web 49 (49), identifiants de type UUID 2624 (2624, les mêmes fichiers : jeux de données de l'audit et deux fiches d'avant), « Mic » 1108 (test 16 : 1097), +11 dans `DECISIONS.md` (D-232 à D-237) et `CHANGELOG.md` (l'entrée 4.9.5.17), même usage que dans les autres décisions ; **aucun nom d'opérateur dans la consigne ni dans la fiche** (0 occurrence).
+- **Différence de contenu avec le zip de la test 16** : 11 fichiers en plus (`panel-ui5.css`, `src/ui5.js`, `src/ui5-rendu.js`, `src/ui5-variante.js`, `src/relecture-pause.js`, `tools/ui5-navigateur.cjs`, `tools/parite-relecture-sw.cjs`, les fiches du port, de cette passation et `UI_ETATS_COMPTEURS`, la consigne) ; modifiés : `background.js` (relecture), `panel.html`, `panel.js`, `src/carte-relecture.js`, les chaînes de version (`manifest.json`, `src/core.js`, `src/bridge.js`), `CHANGELOG.md`, `DECISIONS.md`, `audit/verification.*`, `fiches/L1_APPRENTISSAGE.md` (le zip de la test 16 précède des commits de documentation de cette fiche sur la branche test 16). Rien de retiré.
+- Installabilité : le zip décompressé a été ouvert dans Chromium (panneau d'avant et nouveau panneau, états de relecture en cours et en pause) : 0 erreur de page.
 
 ## 10. Risques et non prouvé
 
