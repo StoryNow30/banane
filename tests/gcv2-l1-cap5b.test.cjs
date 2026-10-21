@@ -46,3 +46,70 @@ test('voisins cohérents (cap 6, coupé) : une pose isolée sur une autre voie n
   assert.equal(L1.voieAbsolue(base, 100, [v(99, -120), v(102, 110)], 6, 3, { parCutMm: 40, baseMm: 15 }).left.distProche, 1, 'moins de trois voisins : inchangé');
   assert.equal(L1.LEVIERS_LIVRES.voisinsCoherents, false);
 });
+
+/* Cap 5b — gardes sur la correction d'écartement (leviers coupés par défaut). Cas fabriqué sur la capture réelle d'essai : rails soutenus par le nuage
+ * à (-36, 5) et (20, 5) ; la test 13 valide cette paire (p 0,81). */
+function casSoutenu(zone) {
+  const h = (decal, origines, g) => ({ rang: 0, hauteur: false, origines, sousOrigines: [], decal, g, x: null });
+  return { cut: 4, zone, gMed: 1450, G0: 1500, voieRef: null, i0: { left: 0, right: 0 },
+    rails: { left: { hyps: [h([0, 0, 0], ['H0'], 1450), h([0, -36, 5], ['H1'], 1486)] }, right: { hyps: [h([0, 0, 0], ['H0'], 1450), h([0, 20, 5], ['H2'], 1470)] } } };
+}
+const MOD = { seuils: { abords: { actif: true, tau: 0.44, delta: 2 }, adv: { actif: true, tau: 0.44, delta: 2 }, hors: { actif: true, tau: 0.45, delta: 3 } } };
+const PR = { left: [0.2, 0.9], right: [0.2, 0.9] };
+const decider = (zone, dg, lev) => { const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] }); L1.reglerLeviers(lev);
+  try { return L1.deciderL1e(casSoutenu(zone), MOD, { mm: g + dg }, base, PR); } finally { L1.reglerLeviers(null); } };
+
+test('anomalieNonCorrigeePMin : anomalie sans correction possible, paire de la test 13 gardée si p assez haut et nuage favorable ; coupé par défaut', () => {
+  assert.equal(decider('adv', 25, null).motif, 'anomalie-non-corrigee', 'défaut : rien');
+  const d = decider('adv', 25, { anomalieNonCorrigeePMin: 0.8 });
+  assert.equal(d.etat, 'valider'); assert.deepEqual(d.paire.left.decal, [0, -36, 5]); assert.equal(d.correction.appliquee, false);
+  assert.equal(decider('adv', 25, { anomalieNonCorrigeePMin: 0.9 }).motif, 'anomalie-non-corrigee', 'p 0,81 sous le seuil 0,9');
+  /* Garde de voie : le voisin validé le plus proche (cut 3) doit être à 35 mm au plus, en travers, sur chaque rail. */
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const voisin = lat => ({ identity: { part: 1, cut: 3, frameId: null }, positions: pos(lat, 5) });
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const avec = (voisins, lev) => { L1.reglerLeviers({ anomalieNonCorrigeePMin: 0.8, ...lev }); try { const k = { ...casSoutenu('adv'), voisinsAbs: voisins }; return L1.deciderL1e(k, MOD, { mm: g + 25 }, base, PR); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec(null, { anomalieNonCorrigeeVoieMm: 35 }).motif, 'anomalie-non-corrigee', 'sans voisin : pas gardée');
+  assert.equal(avec([voisin({ left: -26, right: 25 })], { anomalieNonCorrigeeVoieMm: 35 }).etat, 'valider', 'voisin à 10 et 5 mm');
+  assert.equal(avec([voisin({ left: -26, right: 62 })], { anomalieNonCorrigeeVoieMm: 35 }).motif, 'anomalie-non-corrigee', 'voisin à 42 mm sur le rail droit : refusée');
+  assert.equal(avec([voisin({ left: -26, right: 62 })], {}).etat, 'valider', 'sans la garde de voie : gardée (garde coupée)');
+});
+
+test('corrigeValideZones : hors des zones listées, la paire validée par la test 13 n\'est pas corrigée par l\'écartement ; coupé par défaut', () => {
+  const dflt = decider('abords', -15, null); assert.equal(dflt.correction.appliquee, true, 'défaut : corrigée');
+  const ab = decider('abords', -15, { corrigeValideZones: ['adv'] });
+  assert.equal(ab.etat, 'valider'); assert.equal(ab.correction.appliquee, false); assert.deepEqual(ab.paire.left.decal, [0, -36, 5]); assert.deepEqual(ab.paire.right.decal, [0, 20, 5]);
+  assert.equal(decider('adv', -15, { corrigeValideZones: ['adv'] }).correction.appliquee, true, 'en ADV : corrigée comme avant');
+});
+
+/* Cap 5b — rechPaireTopMin et rechContraRatioMax (coupés par défaut). Cas fabriqué : un voisin validé à la place des rails soutenus ; la recherche recentrée
+ * trouve une paire dont le dessus est de 67 points. */
+test('rechPaireTopMin : plancher de soutien de dessus de la paire retenue ; coupé par défaut', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const k = { ...casSoutenu('adv'), voisinsAbs: [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos({ left: -36, right: 20 }, 5) }] };
+  const avec = lev => { L1.reglerLeviers({ rechercheADV: true, ...lev }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec({}).motif, 'recherche-adv', 'défaut : la paire (dessus 67) est posée');
+  assert.equal(avec({ rechPaireTopMin: 60 }).motif, 'recherche-adv', 'plancher 60 : dessus 67, posée');
+  assert.equal(avec({ rechPaireTopMin: 100 }).etat, 'rien', 'plancher 100 : dessus 67, refusée');
+});
+
+test('rechContraRatioMax : découple le rapport des cellules qui contredisent du rapport de la paire (cellules rendues au filtre le plus large)', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const k = casSoutenu('adv');
+  const diag = lev => { L1.reglerLeviers({ rechercheADV: true, diag: true, rechercheDiag: true, ...lev }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }).diag.recherche.cellules; } finally { L1.reglerLeviers(null); } };
+  const n = c => c.left.length + c.right.length, strict = diag({ rechRatioMax: 1.0 }), large = diag({ rechRatioMax: 1.0, rechContraRatioMax: 2 });
+  assert.ok(n(large) >= n(strict), 'rapport de contradiction 2 : au moins les cellules du filtre strict');
+  assert.ok(large.left.concat(large.right).every(c => c[2] <= 2) && strict.left.concat(strict.right).every(c => c[2] <= 1));
+});
+
+test('rechSauteProcheMm : une pose validée à 2,5 mm du voisin validé le plus proche n\'est pas cherchée ; coupé par défaut', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const voisin = lat => [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos(lat, 5) }];
+  const avec = (lat, lev) => { L1.reglerLeviers({ rechercheADV: true, diag: true, rechercheDiag: true, ...lev }); try { return L1.deciderL1e({ ...casSoutenu('adv'), voisinsAbs: voisin(lat) }, MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
+  assert.ok(avec({ left: -36, right: 20 }, {}).diag.recherche, 'défaut : recherche faite');
+  const sauté = avec({ left: -36, right: 20 }, { rechSauteProcheMm: 2.5 });
+  assert.equal(sauté.diag.recherche, undefined, 'voisin à 0 mm : recherche sautée'); assert.equal(sauté.etat, 'valider');
+  assert.ok(avec({ left: -30, right: 20 }, { rechSauteProcheMm: 2.5 }).diag.recherche, 'voisin à 6 mm : recherche faite');
+});
