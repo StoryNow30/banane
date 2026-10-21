@@ -11,7 +11,8 @@
  *   node tools/parite-relecture-sw.cjs --jouer RACINE SORTIE.json          joue les cinq relectures dans RACINE et écrit leur relevé
  *   (AB_ACTIF=1 : le réglage de pause est allumé dans les cinq relectures ; la comparaison doit alors montrer l'écart.)
  *
- * Aucune donnée de lot, aucun ESV : tout est fabriqué par les montages d'essai. */
+ * Aucune donnée de lot, aucun ESV : tout est fabriqué par les montages d'essai. Sous forte charge de la machine, le nombre de cuts marqués « vu » (délai de 120 ms de l'essai) peut
+ * varier d'un jeu à l'autre, même entre deux copies du même dépôt : un écart sur les messages ou les états se rejoue avant d'être pris pour un écart de comportement. */
 const path = require('node:path'), fs = require('node:fs'), os = require('node:os'), crypto = require('node:crypto'), { spawnSync } = require('node:child_process');
 
 const BRUIT = /(^|[a-z])(ms|Ms|MS)$|duration|elapsed|^t0$|startedEpoch|endedEpoch|receivedMs|timeOrigin|engineMs|^at$|Ago$|^debut$|^fin$|^timestamp$|^t$|operationId/;
