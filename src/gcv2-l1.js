@@ -563,7 +563,7 @@
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,
-   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null});
+   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -682,7 +682,7 @@
    /* Branche (ADV) : sans paire retenue, chaque rail prend l'hypothèse du nuage la plus proche de la voie géométrique de SON rail (à `brancheMm`),
     * en travers (et à `brancheVertMm` en hauteur), sans imposer l'écartement de la voie (seulement une plage plausible), les deux rails soutenus par le
     * nuage. Voie interpolée (posés avant et après), ou prolongée d'au plus `brancheExtrapCuts` cut. */
-   if(dd.etat==='rien'&&LEVIERS.branche&&capture&&k.voieGeo&&(k.voieGeo.mode==='interp'||k.voieGeo.mode==='extrap'&&k.voieGeo.distCuts<=LEVIERS.brancheExtrapCuts)&&dd.motif!=='anomalie-non-corrigee'){
+   if(dd.etat==='rien'&&LEVIERS.branche&&!LEVIERS.brancheDernier&&capture&&k.voieGeo&&(k.voieGeo.mode==='interp'||k.voieGeo.mode==='extrap'&&k.voieGeo.distCuts<=LEVIERS.brancheExtrapCuts)&&dd.motif!=='anomalie-non-corrigee'){
      const g=k.voieGeo,decal={};
      for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=Math.abs(h.decal[1]-g[s][0]);if(e<=LEVIERS.brancheMm&&Math.abs(h.decal[2]-g[s][1])<=LEVIERS.brancheVertMm&&(!best||e<best.e))best={e,h};}if(best)decal[s]=best.h.decal.slice();}
      if(SIDES.every(s=>decal[s])){const ga=ecartementDecal(capture,decal);if(ga>=LEVIERS.brancheEcartement[0]&&ga<=LEVIERS.brancheEcartement[1]&&soutenu(decal))dd={etat:'valider',motif:'branche',decal,corrigee:false};}
@@ -764,6 +764,15 @@
          if(sout&&Math.abs(ref.mm-ecartementDecal(capture,decal))<=LEVIERS.rechEncadreEcartMm)dd={etat:'valider',motif:'recherche-adv-encadre',decal,corrigee:false,avant:dd.motif};
        }
      }
+   }
+   /* Cap 6 (A3) — « branche » en DERNIER RECOURS (`brancheDernier`, avec `branche`) : le même calcul que la branche ci-dessus, mais après la
+    * recherche recentrée et l'encadrement, et seulement s'il ne reste rien (ni pose contredite par le nuage, ni anomalie d'écartement sans correction).
+    * Évite que la branche passe devant une pose de la recherche (9553 et 199 : 15 mm au lieu de 5 mm quand la branche passe en premier). */
+   if(dd.etat==='rien'&&LEVIERS.branche&&LEVIERS.brancheDernier&&capture&&k.voieGeo&&(k.voieGeo.mode==='interp'||k.voieGeo.mode==='extrap'&&k.voieGeo.distCuts<=LEVIERS.brancheExtrapCuts)
+     &&dd.motif!=='anomalie-non-corrigee'&&dd.motif!=='recherche-adv-contredite-rien'){
+     const g=k.voieGeo,decal={};
+     for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=Math.abs(h.decal[1]-g[s][0]);if(e<=LEVIERS.brancheMm&&Math.abs(h.decal[2]-g[s][1])<=LEVIERS.brancheVertMm&&(!best||e<best.e))best={e,h};}if(best)decal[s]=best.h.decal.slice();}
+     if(SIDES.every(s=>decal[s])){const ga=ecartementDecal(capture,decal);if(ga>=LEVIERS.brancheEcartement[0]&&ga<=LEVIERS.brancheEcartement[1]&&SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))dd={etat:'valider',motif:'branche',decal,corrigee:false,avant:dd.motif};}
    }
    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
