@@ -38,6 +38,20 @@ test('le choix gardé passe devant le départ ; un choix inconnu (ancienne prés
  }
 });
 
+test('nouvelle présentation (essai) : choisie dans Réglages, gardée ; un clic sur un onglet le choisit puis clique « Reconnecter ESV » ; le cache et le verrou de connexion suivent les boutons d’origine',async()=>{
+ const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
+ assert.equal(p.body.classList.contains('ui5'),true);assert.match(p.hote.innerHTML,/class="app ar-accueil v2"/);assert.equal(p.hote.className,'u-ariane');
+ assert.deepEqual(js(p.fenetres),[{width:1180,height:840}]);
+ p.els.tabs.value='';p.ui.agir('conn:12');assert.equal(p.els.tabs.value,'12');assert.equal(p.els.connect.clics,1);
+ p.els['export-cache-clear'].disabled=true;p.els.connect.disabled=true;
+ const ar=p.ui.instantane(etat(null)).ar;assert.equal(ar.cache.actif,false);assert.equal(ar.connexionBloquee,true);
+ p.els['export-cache-clear'].disabled=false;p.els.connect.disabled=false;
+ const libre=p.ui.instantane(etat(null)).ar;assert.equal(libre.cache.actif,true);assert.equal(libre.connexionBloquee,false);
+ const autre=await monter({etat:etat(LOT)});
+ autre.hote.ecoutes.change[0]({target:{closest:()=>({dataset:{sel:'variante'},value:'ariane2'})}});await autre.attendre(20);
+ assert.deepEqual(js(autre.ecrits.at(-1)),{banane51Interface:'ariane2'});assert.match(autre.hote.innerHTML,/ v2"/);
+});
+
 test('le compteur des exemples d’apprentissage est lu dans datasets/compteur-gcv2.json (format du compteur)',async()=>{
  const p=await monter({stockage:{banane51Interface:'ariane'},etat:etat(null)});
  const j=JSON.parse(lire('datasets/compteur-gcv2.json'));

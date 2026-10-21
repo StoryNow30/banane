@@ -56,7 +56,7 @@ test('chaque action de l’habillage désigne un élément qui existe dans panel
   assert.ok(ids.has(id),id);
  const relPause={pause:{texte:'Pause',actif:true},reprendre:{texte:'Reprendre',actif:true,raison:''},arreter:true,ligne:''};
  for(const e of ECRANS)for(const m of R.rendre(avec({relPause}),e).matchAll(/data-act="legacy:([a-z-]+)"/g))assert.ok(ids.has(m[1]),e+' : '+m[1]);
- for(const e of ECRANS)for(const m of R.rendre(base,e).matchAll(/data-act="([a-z]+)(?::[a-z-]+)?"/g))assert.ok(['legacy','aller','pause','variante'].includes(m[1]),e+' : '+m[1]);
+ for(const e of ECRANS)for(const m of R.rendre(base,e).matchAll(/data-act="([a-z]+)(?::[a-z-]+)?"/g))assert.ok(['legacy','aller','pause','variante','conn'].includes(m[1]),e+' : '+m[1]);
 });
 
 /* Présentation « Ariane » : dessinée à partir de `snap.ar` (src/ui5.js) et des boutons du panneau. */
@@ -109,4 +109,38 @@ test('relecture-pause.js : ses boutons existent dans panel.html, il est chargé 
  for(const id of ['relecture-pause','relecture-reprendre','relecture-arreter-pause','relecture-pause-actif','relecture-f5','relecture-pause-zone','relecture-pause-ligne','relecture-pause-raison','relecture-pause-note'])assert.ok(ids.has(id),id);
  assert.ok(html.indexOf('src/relecture-pause.js')>0&&html.indexOf('src/relecture-pause.js')<html.indexOf('src="panel.js"'));
  assert.doesNotMatch(lire('src/relecture-pause.js'),/export-|exporter|executeScript|chrome\.tabs/);
+});
+
+/* Nouvelle présentation « ariane2 » (maquette v2) : sans grand titre ni phrase d'accompagnement, onglets ESV, cache en vue, nouveau logo. */
+const tabs=[{valeur:'11',texte:'Onglet 1 · fenêtre 1 — Partie 13'},{valeur:'12',texte:'Onglet 2 · fenêtre 1 — Partie 14'},{valeur:'13',texte:'Onglet 3 · pas prêt'}];
+const v2=(etat,ecran,extra={},a={})=>R.rendre(avec({variante:'ariane2',onglets:tabs,ongletChoisi:'11',ar:ar(etat,{lotOuvert:etat==='cours',cache:{actif:etat==='fini'},...a}),boutonsEcho:[b('native-start','Démarrer l’observation','primary')],...extra}),ecran);
+test('ariane2 : plus de grand titre, plus de phrase qui tient la main, plus de ligne « parcours du lot » ; l’Ariane d’origine ne change pas',()=>{
+ const o=v2('cours','orbite');
+ assert.doesNotMatch(o,/<h2>/);assert.doesNotMatch(o,/Pose des rails|Pendant le lot, ne change pas|Parcours du lot|class="position"/);
+ assert.doesNotMatch(v2('pret','echo',{},{lotOuvert:false}),/Tu corriges|Écho garde les exemples|<h2>/);
+ const a=v2('cours','accueil');assert.doesNotMatch(a,/<h2>|Ne change pas de cut dans ESV/);assert.match(a,/class="t2">Partie 13/);assert.match(a,/Pose du cut 4812\./);
+ assert.match(R.rendre(base,'orbite'),/<h2>Pose des rails<\/h2>/);assert.match(R.rendre(base,'accueil'),/<h2>Partie 13<\/h2>/);
+ assert.match(a,/class="app ar-accueil v2"/);assert.doesNotMatch(R.rendre(base,'accueil'),/ v2"/);
+});
+test('ariane2 : un onglet ESV par puce, un clic = choisir puis connecter ; l’onglet pas prêt ou verrouillé ne se clique pas',()=>{
+ const o=v2('pret','orbite',{},{lotOuvert:false});
+ assert.match(o,/class="esvbar"/);assert.match(o,/class="te o"[^>]*aria-disabled="true"/,'l’onglet connecté porte la couleur d’Orbite');
+ assert.match(o,/data-act="conn:12"/);assert.doesNotMatch(o,/data-act="conn:13"/);assert.doesNotMatch(o,/data-act="conn:11"/);
+ assert.doesNotMatch(v2('cours','orbite',{},{connexionBloquee:true}),/data-act="conn:/,'pendant un lot, on ne change pas d’onglet');
+ assert.match(v2('pret','echo',{},{lotOuvert:false}),/class="te e"/,'Écho a sa propre couleur');
+ assert.match(v2('pret','accueil',{onglets:[],ongletChoisi:''}),/Aucun onglet ESV ouvert\./);
+ assert.doesNotMatch(v2('pret','revue'),/esvbar/);assert.doesNotMatch(R.rendre(avec({onglets:tabs}),'orbite'),/esvbar/);
+ const piege=v2('pret','orbite',{onglets:[{valeur:'9',texte:'<img src=x onerror=alert(1)>'}],ongletChoisi:''});assert.doesNotMatch(piege,/<img/);
+});
+test('ariane2 : « Vider le cache » est en vue dans Orbite et Écho, grisé avec sa raison tant qu’il est impossible, et clique le bouton d’origine',()=>{
+ const f=v2('fini','orbite');assert.match(f,/<button type="button" class="pill cache" id="ar-cache" data-act="legacy:export-cache-clear">/);assert.match(f,/À vider seulement après réception/);
+ const l=v2('cours','orbite');assert.match(l,/id="ar-cache" data-act="legacy:export-cache-clear" disabled/);assert.match(l,/Disponible quand le lot est terminé ou arrêté\./);
+ assert.match(v2('pret','orbite',{relecture:{ligne:'',actif:true,interrompue:''}},{lotOuvert:false}),/Disponible quand la relecture est terminée ou arrêtée\./);
+ const e=v2('pret','echo',{},{lotOuvert:false,echoEtat:'Collecte en cours',cache:{actif:false}});assert.match(e,/id="ar-cache"[^>]* disabled/);assert.match(e,/Disponible quand la séance Écho est terminée\./);
+ assert.doesNotMatch(v2('fini','accueil'),/ar-cache/);assert.doesNotMatch(R.rendre(avec({ar:ar('fini',{cache:{actif:true}})}),'orbite'),/ar-cache/);
+});
+test('ariane2 : nouveau logo ; choisissable dans Réglages > Interface ; la palette n’est pas reprise',()=>{
+ assert.match(v2('pret','accueil'),/id="ar-lg"/);assert.doesNotMatch(R.rendre(base,'accueil'),/ar-lg/);
+ const g=R.rendre(avec({variante:'ariane2'}),'reglages');
+ assert.match(g,/<option value="ariane2" selected>/);assert.match(g,/<option value="ancienne">/);assert.doesNotMatch(v2('pret','accueil'),/palette|raycast/i);
 });
