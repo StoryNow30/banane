@@ -22,7 +22,7 @@ test('leviers livrés : ceux de la v4 (lus par l\'extension) ; le banc les chang
     rechMinTop: 15, rechMinFace: 6, rechRatioMax: 1.5, rechDedupMm: 5, rechArret: false, rechGraineDecalMm: 0, rechDiagLarge: false, rechOrdreGraines: null,
     rechEncadre: false, rechEncadreMaxCuts: 1, rechEncadreSautMm: 15, rechEncadreEcartMm: 15, corrigeValideZones: null, anomalieNonCorrigeePMin: null,
     /* Cap 6 (A2) : coupés par défaut. */
-    voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15 });
+    voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');

@@ -563,7 +563,7 @@
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,
-   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15});
+   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -728,7 +728,8 @@
      const hOk=p=>!fini(LEVIERS.rechHauteurMaxMm)||SIDES.every(s=>Math.min(Math.abs(p.decal[s][2]-va[s].proche[1]),Math.abs(p.decal[s][2]))<=LEVIERS.rechHauteurMaxMm);
      const admis=ps=>va?ps.filter(p=>garde(p)&&Math.abs(p.dg)<=LEVIERS.rechEcartMm&&p.depl<=LEVIERS.rechMaxDeplMm&&p.dv!=null&&p.dv<=LEVIERS.rechVoieMaxMm
        &&(!fini(LEVIERS.rechVoieParCutMm)||p.dv<=LEVIERS.rechVoieParCutMm*Math.max(1,va.left.distProche,va.right.distProche))&&hOk(p)):[];
-     const procheOk=!!(va&&va.left.distProche<=LEVIERS.rechProcheMaxCuts&&va.right.distProche<=LEVIERS.rechProcheMaxCuts);
+     const procheOk=!!(va&&va.left.distProche<=LEVIERS.rechProcheMaxCuts&&va.right.distProche<=LEVIERS.rechProcheMaxCuts
+       &&(!fini(LEVIERS.rechVoisinsMin)||SIDES.every(s=>va[s].n.avant+va[s].n.apres>=LEVIERS.rechVoisinsMin)));
      const ecart=(a,b)=>Math.max(...SIDES.map(s=>norme(moins(a.decal[s],b.decal[s]))));
      const choisir=ps=>{const adm=admis(ps),best=procheOk?adm[0]||null:null;return {adm,best,ambigu:best?adm.some(p=>p!==best&&ecart(p,best)>LEVIERS.rechUniqueMm):false};};
      /* Arrêt (`rechArret`) : dès qu'une paire sûre et unique existe (et, pour une pose retenue, après la graine de la pose). */
