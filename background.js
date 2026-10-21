@@ -2624,7 +2624,8 @@ async function relectureApresRedemarrage(){try{const st=await chrome.storage.loc
  if(pt){const reg=await relectureRepriseReglage(),b=engine?.s?.batch,bon=pt.v===1&&Array.isArray(pt.sel?.cuts)&&Number.isInteger(pt.index)&&reg.actif&&b?.id===pt.lotId&&!repriseExpiree(pt);
   if(bon){await chrome.storage.local.remove?.(CLE_RELECTURE_PASSE);relecture.planifie.add(pt.lotId);const p=relectureDepuisPoint(pt,'redemarrage',reg.f5);
    relectureJournal('relecture-pause',{mode:p.mode,modeEffectif:p.modeEffectif,raison:'redemarrage',cut:p.cut,index:pt.index,faits:p.faits,total:p.total,corriges:p.corriges,stocke:true},p);return;}
-  await relectureRepriseEffacer();}
+  await relectureRepriseEffacer();
+  if(!r)journalerSimple('relecture-fin',{lotId:pt.lotId??null,mode:pt.mode??null,modeEffectif:pt.modeEffectif??null,issue:'interrompue',raison:'point de reprise jeté au réveil',debut:pt.debut??null});}
  if(!r)return;
  await chrome.storage.local.remove?.(CLE_RELECTURE_PASSE);
  journalerSimple('relecture-fin',{lotId:r.lotId??null,mode:r.mode??null,modeEffectif:r.modeEffectif??null,issue:'interrompue',raison:'service worker redémarré pendant la passe',debut:r.debut??null});}catch{/* rien */}}
