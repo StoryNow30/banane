@@ -38,6 +38,14 @@ test('le choix gardé passe devant le départ ; un choix inconnu (présentations
  }
 });
 
+test('une fenêtre agrandie par l’opérateur n’est redimensionnée qu’au changement de présentation, jamais à l’ouverture du panneau d’avant',async()=>{
+ const p=await monter({etat:etat(LOT),fenetre:{width:1180,height:840}});
+ assert.deepEqual(js(p.fenetres),[],'panneau d’avant à l’ouverture : la taille de l’opérateur est gardée');
+ await p.ui.setVariante('ariane2');assert.deepEqual(js(p.fenetres),[],'déjà à la taille du nouveau panneau');
+ await p.ui.setVariante('palette');await p.attendre(20);p.fenetres.length=0;await p.ui.setVariante('ancienne');await p.attendre(20);
+ assert.deepEqual(js(p.fenetres),[{width:560,height:820}],'revenir au panneau d’avant le remet à sa taille');
+});
+
 test('nouvelle présentation (essai) : choisie dans Réglages, gardée ; un clic sur un onglet le choisit puis clique « Reconnecter ESV » ; le cache et le verrou de connexion suivent les boutons d’origine',async()=>{
  const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
  assert.equal(p.body.classList.contains('ui5'),true);assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.equal(p.hote.className,'u-ariane');
