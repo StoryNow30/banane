@@ -14,9 +14,9 @@
   'use strict';
   const D = root.document, R = root.ArianeUi5Rendu, CLE = 'banane51Interface';
   if (!D || !R || !root.ArianePanel) return;
-  const VARIANTES = ['ariane2', 'ancienne'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ancienne';
-  const TAILLE = { ariane2: [1180, 840], ancienne: [560, 820] };
-  const ui = { last: '', pauseLot: null };
+  const VARIANTES = ['ariane2', 'palette', 'ancienne'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ancienne';
+  const TAILLE = { ariane2: [1180, 840], palette: [720, 560], ancienne: [560, 820] };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false };
   let variante = defaut, ecran = 'accueil', hote = null, gcv2Base = null;
   const $ = id => D.getElementById(id);
   const txt = id => { const e = $(id); return e ? String(e.textContent || '').trim() : ''; };
@@ -113,7 +113,7 @@
     };
   }
   function instantane(s) {
-    const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs');
+    const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';
     const rg = {
       relecture: coche([['coupee', 'relecture-coupee'], ['ombre', 'relecture-ombre'], ['corriger', 'relecture-corriger']]),
       clic: coche([['tel-quel', 'clic-tel-quel'], ['gauche-recentre', 'clic-gauche-recentre'], ['tout-recentre', 'clic-tout-recentre']]),
@@ -126,7 +126,7 @@
       notice: { texte: txt('notice'), erreur: !!$('notice')?.classList?.contains('error') },
       avisContrat: visible('avis-contrat') ? txt('avis-contrat') : '',
       connexionOuverte: !!$('connection')?.open,
-      boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
+      mode, boutons: boutons(mode), boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
       lot: { etat: txt('lot-etat'), finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
       relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
@@ -140,16 +140,18 @@
   }
 
   /* ---------------------------------------------------------------- dessin */
-  const zones = '.ecr,.reg,.defile';
+  const zones = '.ecr,.reg,.defile,.l2';
   function maj(force) {
     if (!hote || variante === 'ancienne') return;
     const s = root.ArianePanel.state(); if (!s) return;
-    const html = R.rendre(instantane(s), ecran);
+    const html = R.rendre(instantane(s), ecran, ui);
     if (!force && html === ui.last) return;
-    const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne;
+    const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
     ui.last = html; hote.innerHTML = html;
     [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; });
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
+    const q = $('ui5-q');
+    if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
   }
 
   /* ---------------------------------------------------------------- actions */
@@ -171,6 +173,8 @@
     else if (type === 'aller') { aller(v, depuis); return; }
     else if (type === 'legacy') cliquer(v);
     else if (type === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
+    else if (type === 'mode') cliquer(v === 'native' ? 'tab-native' : 'tab-automatic');
+    else if (type === 'interface') { void setVariante('ariane2').then(() => { ecran = v; maj(true); }); return; }
     else if (type === 'variante') void setVariante(v);
     maj(true);
   }
@@ -213,14 +217,27 @@
 
   /* ---------------------------------------------------------------- événements */
   function brancher() {
-    hote.addEventListener('click', e => { const a = e.target.closest?.('[data-act]'); if (a) agir(a.dataset.act, a); });
+    hote.addEventListener('click', e => { const a = e.target.closest?.('[data-act]'); if (!a) return; if (variante === 'palette') { ui.q = ''; ui.pi = 0; } agir(a.dataset.act, a); });
     hote.addEventListener('change', e => { const s = e.target.closest?.('[data-sel]'); if (s) choisir(s.dataset.sel, s.value); });
     /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */
     hote.addEventListener('input', e => {
+      if (e.target.id === 'ui5-q') { ui.q = e.target.value; ui.pi = 0; maj(true); return; }
       const bo = e.target.dataset?.borne; if (bo && $(bo)) { $(bo).value = e.target.value; $(bo).dispatchEvent(new Event('input', { bubbles: true })); $(bo).dispatchEvent(new Event('change', { bubbles: true })); }
     });
+    hote.addEventListener('focusin', e => { if (e.target.id === 'ui5-q') ui.focusQ = true; });
+    hote.addEventListener('focusout', e => { if (e.target.id === 'ui5-q') ui.focusQ = false; });
     D.addEventListener('keydown', e => {
       if (variante === 'ancienne' || hote.hidden || e.altKey) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); void setVariante(variante === 'palette' ? 'ariane2' : 'palette'); return; }
+      if (variante === 'palette') {
+        if (e.ctrlKey || e.metaKey) return;
+        const cmds = R.paletteListe(instantane(root.ArianePanel.state() || {}), ui.q), dansChamp = e.target?.id === 'ui5-q';
+        if (e.key === 'Escape') { if (ui.q) { ui.q = ''; ui.pi = 0; maj(true); } }
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { ui.pi = Math.max(0, Math.min(cmds.length - 1, ui.pi + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); }
+        else if (e.key === 'Enter' && dansChamp) { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; if (c && !c.off) { ui.q = ''; ui.pi = 0; agir(c.act); } e.preventDefault(); }
+        else if (!dansChamp && e.key.length === 1 && /[\p{L}]/u.test(e.key)) $('ui5-q')?.focus();
+        return;
+      }
       const v = e.target?.closest?.('.vig');
       if (v && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { const l = [...hote.querySelectorAll('.vig')], i = l.indexOf(v); l[(i + (e.key === 'ArrowRight' ? 1 : l.length - 1)) % l.length].focus(); e.preventDefault(); }
       else if (e.key === 'Escape' && ecran !== 'accueil' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '')) aller('accueil');
@@ -237,19 +254,21 @@
   function appliquer(v) {
     variante = v;
     D.body.classList.toggle('ui5', v !== 'ancienne');
+    hote.className = v === 'palette' ? 'u-palette' : 'u-ariane';
     hote.hidden = v === 'ancienne';
+    ui.focusQ = v === 'palette';
     maj(true);
     void taille();
   }
   async function setVariante(v) {
     if (!VARIANTES.includes(v)) return;
     try { await root.chrome?.storage?.local?.set?.({ [CLE]: v }); } catch { /* le choix vaut pour cette fenêtre */ }
-    ecran = 'accueil';
+    ecran = 'accueil'; ui.q = ''; ui.pi = 0;
     appliquer(v);
   }
 
   async function init() {
-    hote = D.createElement('div'); hote.id = 'ui5'; hote.className = 'u-ariane'; hote.hidden = true; D.body.appendChild(hote);
+    hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
     try { const v = (await root.chrome?.storage?.local?.get?.(CLE))?.[CLE]; if (VARIANTES.includes(v)) variante = v; } catch { /* défaut de la version */ }
     /* Compteur des exemples d'apprentissage (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : les cuts corrigés, tous projets. */
     try { const j = await (await fetch(root.chrome.runtime.getURL('datasets/compteur-gcv2.json'))).json();

@@ -137,8 +137,44 @@ test('« Vider le cache » est en vue dans Orbite et Écho, grisé avec sa raiso
  const e=v2('pret','echo',{},{lotOuvert:false,echoEtat:'Collecte en cours',cache:{actif:false}});assert.match(e,/id="ar-cache"[^>]* disabled/);assert.match(e,/Disponible quand la séance Écho est terminée\./);
  assert.doesNotMatch(v2('fini','accueil'),/ar-cache/);
 });
-test('nouveau logo ; choisissable dans Réglages > Interface ; la palette n’est pas reprise',()=>{
+test('nouveau logo ; accès discret à la palette (icône, lien d’accueil) ; choisissable dans Réglages > Interface',()=>{
  assert.match(v2('pret','accueil'),/id="ar-lg"/);
  const g=R.rendre(base,'reglages');
- assert.match(g,/<option value="ariane2" selected>/);assert.match(g,/<option value="ancienne">/);assert.doesNotMatch(v2('pret','accueil'),/palette|raycast/i);
+ assert.match(g,/<option value="ariane2" selected>/);assert.match(g,/<option value="ancienne">/);const a=v2('pret','accueil');assert.match(a,/data-act="variante:palette"[^>]*aria-label="Interface palette"/);assert.match(a,/class="astuce"/);assert.match(g,/<option value="palette">Palette/);
+});
+
+/* Palette sobre (D-233, D-236) : une ligne de recherche, l'état en petit à droite, quatre commandes au plus à l'ouverture, le reste en tapant. */
+const btn=b;
+const pal=(extra={},arx={},q='',pi=0)=>R.rendre(avec({variante:'palette',mode:'automatic',onglets:tabs,ongletChoisi:'11',ar:ar('cours',{cache:{actif:false},...arx}),
+ boutons:[btn('pause','Pause','primary'),btn('stop','Arrêter le lot','danger'),btn('export-tout','Exporter le dossier','link',false)],...extra}),'accueil',{q,pi});
+test('palette : une ligne de recherche, l’état à droite, les commandes du moment (quatre au plus), rien d’autre ; aucune case ni liste',()=>{
+ const h=pal();
+ assert.equal((h.match(/class="i2[ "]/g)||[]).length,3,'pause, arrêter, exporter (grisé) : les commandes du moment seulement');
+ assert.doesNotMatch(h,/Réglages|Vider le cache|Orbite<\/span>|Écho<\/span>|Connecter à|Interface Ariane \(cartes\)/,'activités, onglets, cache et réglages n’apparaissent qu’en tapant');
+ assert.match(h,/class="et2">Orbite en cours · 31\/120</);assert.match(h,/id="ui5-q"/);assert.match(h,/class="i2 s" data-act="legacy:pause"[^>]*>.*Pause<\/span><kbd>↵<\/kbd>/);
+ assert.doesNotMatch(h,/<select|type="checkbox"|type="radio"|<h2|class="vig|class="g"|class="ty"/);assert.equal((h.match(/<input/g)||[]).length,1);
+ const six=[1,2,3,4,5,6].map(i=>btn('c'+i,'Commande '+i,i===1?'primary':'link'));
+ assert.equal((pal({boutons:six}).match(/class="i2[ "]/g)||[]).length,4,'jamais plus de quatre à l’ouverture');
+ assert.match(pal({}, {}, '', 1),/class="i2 s"[^>]*>.*Arrêter le lot/,'la ligne choisie suit ui.pi');
+});
+test('palette : en tapant on trouve activités, onglets, cache (grisé avec sa raison), réglages, retour ; Écho grisé pendant un lot ; sept résultats au plus',()=>{
+ const c=pal({},{},'vider');assert.match(c,/Vider le cache des exports/);assert.match(c,/class="i2(?: s)? off" aria-disabled="true"/);assert.match(c,/Disponible quand le lot est terminé ou arrêté\./);
+ const ok=pal({},{lotOuvert:false,cache:{actif:true}},'vider');assert.match(ok,/data-act="legacy:export-cache-clear"/);assert.doesNotMatch(ok,/class="i2(?: s)? off"/);
+ assert.match(pal({},{},'onglet 2'),/data-act="conn:12"/);assert.doesNotMatch(pal({},{},'onglet 3'),/data-act="conn:13"/,'un onglet pas prêt ne se connecte pas');
+ assert.match(pal({},{},'écho'),/class="i2(?: s)? off" aria-disabled="true"[^>]*>.*indisponible pendant un lot/);
+ assert.match(pal({},{},'regl'),/data-act="interface:reglages"/);assert.match(pal({},{},'ariane'),/data-act="variante:ariane2"/);assert.match(pal({},{},'detail'),/data-act="variante:ancienne"/);
+ assert.match(pal({},{},'zzzz'),/Aucun résultat/);
+ assert.match(pal({mode:'native',echo:{corriges:5}},{echoEtat:'Collecte en cours',lotOuvert:false},''),/class="et2">Collecte en cours · 5</);
+ assert.match(pal({ongletChoisi:''},{},''),/data-act="conn:11"/,'sans onglet choisi, la connexion est proposée en premier');
+ const beaucoup=Array.from({length:12},(_,i)=>({valeur:String(20+i),texte:'Onglet extra '+i}));
+ assert.equal((pal({onglets:beaucoup,ongletChoisi:'20'},{},'onglet').match(/class="i2[ "]/g)||[]).length,7);
+ assert.match(pal({},{etat:'pret',horsLigne:true,lotOuvert:false,traites:0,cibles:null},''),/class="et2">Hors ligne</);
+ assert.match(pal({},{esv:'ko'},''),/class="et2">ESV ne répond plus</);
+});
+test('palette : tout texte venu du panneau est échappé ; Entrée ne lance jamais une commande grisée (elle n’a pas d’action)',()=>{
+ const piege='<img src=x onerror=alert(1)>';
+ const x=pal({onglets:[{valeur:piege,texte:piege}],ongletChoisi:'',notice:{texte:piege,erreur:true},boutons:[btn(piege,piege,'primary')],relPause:{reprendre:{texte:piege,actif:true,raison:piege},arreter:true,pause:null}},{alerte:piege,etat:'alerte',etatTexte:piege},'');
+ assert.doesNotMatch(x,/<img/);assert.doesNotMatch(pal({onglets:[{valeur:piege,texte:piege}]},{},'img'),/<img/);
+ const off=pal({},{},'exporter');assert.match(off,/aria-disabled="true"/);assert.doesNotMatch(off,/data-act="legacy:export-tout"/);
+ const R2=require('../src/ui5-rendu.js');assert.ok(R2.paletteListe(avec({variante:'palette',mode:'automatic',boutons:[btn('export-tout','Exporter','link',false)]}),'exporter').every(c=>c.off));
 });
