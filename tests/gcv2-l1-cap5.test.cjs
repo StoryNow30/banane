@@ -6,17 +6,20 @@ const L1 = require('../src/gcv2-l1.js'), { base } = require('./fixtures.cjs');
 const zero = () => ({ left: [0, 0, 0], right: [0, 0, 0] });
 const vide = { ...base, pointsSceneRelative: [], visibleByClipBoxes: [] };
 
-test('leviers v4 (test 15) : la base ; leviers livrés (test 16) = v4 + v5 ; le banc les change pour une mesure et revient aux livrés', () => {
-  const V = L1.LEVIERS_LIVRES, V4 = L1.LEVIERS_V4, V5 = L1.LEVIERS_V5;
-  assert.ok(Object.isFrozen(V) && Object.isFrozen(V4) && Object.isFrozen(V5));
+test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test 18) = v4 + v5 + v6 ; le banc les change pour une mesure et revient aux livrés', () => {
+  const V = L1.LEVIERS_LIVRES, V4 = L1.LEVIERS_V4, V5 = L1.LEVIERS_V5, V6 = L1.LEVIERS_V6, V16 = { ...V4, ...V5 };
+  assert.ok(Object.isFrozen(V) && Object.isFrozen(V4) && Object.isFrozen(V5) && Object.isFrozen(V6));
   /* Test 16 : les leviers v5 livrés sont la chaîne mesurée au banc « a3-bd3 sans deuxième passe » (a3-bd3s, a2486b1), diagnostics coupés. */
   assert.deepEqual({ ...V5 }, { rechercheADV: true, rechZones: ['adv', 'abords'], rechEcartMm: 15, rechVoieParCutMm: 40, rechHauteurMaxMm: 20,
     rechContraMinMm: 22, rechContraMaxMm: 45, rechContraRien: true, rechRemplace: true, rechRemplaceMm: 12, corrigeValideZones: ['adv'], rechEncadre: true,
     anomalieNonCorrigeePMin: 0.8, anomalieNonCorrigeeVoieMm: 35, rechPaireTopMin: 60, rechContraRatioMax: 1.5, rechArret: true, rechSauteProcheMm: 2.5,
     voisinsCoherents: true, branche: true, brancheDernier: true, brancheVertMm: 60, brancheExtrapCuts: 2 });
-  assert.deepEqual({ ...V }, { ...V4, ...V5 }, 'livrés = v4 + v5');
+  assert.deepEqual({ ...V }, { ...V4, ...V5, ...V6 }, 'livrés = v4 + v5 + v6');
+  /* Test 18 : les leviers qui changent entre la test 16 et la test 18, ni plus ni moins. */
+  assert.deepEqual({ ...V6 }, { rechHauteurMaxMm: 25 });
+  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V16[k])).sort(), ['rechHauteurMaxMm']);
   /* Les 22 leviers qui changent entre la test 15 et la test 16, ni plus ni moins (rechContraMaxMm 45 était déjà la valeur v4). */
-  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V4[k])).sort(), ['anomalieNonCorrigeePMin', 'anomalieNonCorrigeeVoieMm', 'branche',
+  assert.deepEqual(Object.keys(V16).filter(k => JSON.stringify(V16[k]) !== JSON.stringify(V4[k])).sort(), ['anomalieNonCorrigeePMin', 'anomalieNonCorrigeeVoieMm', 'branche',
     'brancheDernier', 'brancheExtrapCuts', 'brancheVertMm', 'corrigeValideZones', 'rechArret', 'rechContraMinMm', 'rechContraRatioMax', 'rechContraRien', 'rechEcartMm',
     'rechEncadre', 'rechHauteurMaxMm', 'rechPaireTopMin', 'rechRemplace', 'rechRemplaceMm', 'rechSauteProcheMm', 'rechVoieParCutMm', 'rechZones', 'rechercheADV', 'voisinsCoherents']);
   assert.deepEqual(Object.keys(V).sort(), Object.keys(V4).sort(), 'aucun levier nouveau');

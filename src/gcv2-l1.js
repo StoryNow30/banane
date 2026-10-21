@@ -574,7 +574,11 @@
    rechContraMinMm:22,rechContraMaxMm:45,rechContraRien:true,rechRemplace:true,rechRemplaceMm:12,corrigeValideZones:Object.freeze(['adv']),rechEncadre:true,
    anomalieNonCorrigeePMin:0.8,anomalieNonCorrigeeVoieMm:35,rechPaireTopMin:60,rechContraRatioMax:1.5,rechArret:true,rechSauteProcheMm:2.5,
    voisinsCoherents:true,branche:true,brancheDernier:true,brancheVertMm:60,brancheExtrapCuts:2});
- const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5});
+ /* 4.9.5.18 (test 18, fiches/PASSATION_T17_SANSPOSE.md) — LEVIERS v6 LIVRÉS : hauteur de la paire recentrée à 25 mm du voisin au plus (20 dans la v5). Au banc :
+  * 0 cut changé sur les 9 anciens lots, avec et sans deuxième passe ; sur 3:0 (apprentissage), poses fausses 846 et 847 remplacées par la paire juste (à 22 mm
+  * en hauteur), 229, 845 et 848 posés justes. */
+ const LEVIERS_V6=Object.freeze({rechHauteurMaxMm:25});
+ const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -987,6 +991,6 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });
