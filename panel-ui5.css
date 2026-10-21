@@ -68,6 +68,7 @@ body.ui5>main{display:none!important}body.ui5{background:#050506;overflow:hidden
 #ui5.u-ariane .pill.sombre{background:rgba(255,255,255,.07);color:#fff;box-shadow:inset 0 0 0 1px var(--filet)}
 #ui5.u-ariane .pill.petit{height:32px;padding:0 13px;font-size:13.5px;border-radius:16px}
 #ui5.u-ariane .pill.danger{color:#ffb0a8}
+#ui5.u-ariane .pill.danger:not(.sombre):not(.verre){color:#b3261e}   /* pastille blanche (commande principale « Arrêter ») : rouge foncé, lisible sur le blanc */
 #ui5.u-ariane .pill[disabled]{background:rgba(255,255,255,.16);color:rgba(255,255,255,.85);cursor:default;transform:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 #ui5.u-ariane .ar-lbl{display:inline-flex;align-items:center;gap:8px}
 #ui5.u-ariane .spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:ar-tour 1s linear infinite;flex:none}
