@@ -50,3 +50,20 @@ Leviers : `LEVIERS_V6` = `rechHauteurMaxMm` 25 (757d5a3), preuve de SANSPOSE (9 
 | `tools/parite-l1se-sw.cjs` | passe2 (`--passe`) |
 | `tools/parite-relecture-sw.cjs` | uiport (parité de la relecture test 16 / réglage éteint) |
 | `tools/manifeste-parties.cjs`, `datasets/manifeste-parties.json` | apprentissage 3:0 (D-224) |
+
+## 6. Relecture adversariale (a7f0b98) : corrections et limites
+
+Corrigé, chacun avec un essai rouge sans la correction :
+- (1) course passe/relecture : ca938e9 ;
+- (2, 3, 4) gardes d'écriture, `engine.writable`, pas après saut : cf88b61 ;
+- (5a) sous τ exclu de la passe comme au banc : f317e48 ;
+- (8) interrupteur « inconnu » ; (6) décisions refaites à la relance ; (7) départ automatique ; (11) message de la correction interrompue, empreinte de `src/carte-relecture.js`.
+
+Point 9 : le cas NaN n'est pas atteignable (`voieAbsolue` écarte un voisin dont la projection est nulle ; essai `gcv2-l1-fautes`).
+
+Laissé et documenté (consigne § « Ce que dit le banc », § 4, § 7) :
+- (5b) cible hors de la vue : le banc la compte posée, la passe en écriture la refuse et s'arrête. La sauter sans s'arrêter est impossible, car les poses suivantes ont été décidées avec elle (transport). Le gain du banc (25 → 12) est donc un majorant.
+- (10) un cut posé par la passe reste dans `batch.deferred` (tuile « Différés », état exporté). La ligne de la passe, le résumé de la partie et le journal le comptent posé. Le corriger toucherait l'état du moteur (`src/engine.js`, gelé).
+- (9) trous de la garde : sans voisin lisible à 6 cuts ou moins ; moins de 3 voisins (pas de résidu) ; pas de garde sur sous τ, sur la contre-expertise coupée, ni sur la relecture « Corriger ».
+
+Parités : 1, 3 et 4 ne touchent que l'écriture, et la parité joue la passe en ombre. 5a ne change rien sur les lots rejoués : aucun « pose-non-validee » sous L1-se dans les rejeux du banc. 6 ne joue qu'à une relance. Les parités 2:17 et 2:19 restent donc valables.

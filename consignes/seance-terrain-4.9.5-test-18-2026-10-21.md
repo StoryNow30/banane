@@ -40,6 +40,7 @@ Lecture :
 - **Partie 0 du troisième projet** (ta vérité = tes validations d'Écho) : la test 16 y avait **4 poses fausses à plus de 50 mm** (794, 846, 847 et 869, toutes en mauvaise voie). La deuxième passe seule y en aurait ajouté une cinquième (865). En test 18 : **0 pose à plus de 20 mm**. 846 et 847 sont posés justes (5 et 8 mm), 794 aussi (3 mm). **865 et 869 restent rouges** : la garde de voie les refuse.
 - La partie 0 a servi à régler ces deux corrections : ce chiffre n'est pas une mesure hors échantillon.
 - Ce que la garde coûte : 797 passe de 8 à 10 mm.
+- **Le gain de la deuxième passe au banc est un MAJORANT.** Le banc compte posé un cut dont la cible est hors de la vue ; dans ESV, la passe ne déplace pas la vue : elle refuse ce cut et **s'arrête**, car les poses suivantes comptaient sur lui. Il en va de même au premier refus, quel qu'il soit (cut devenu vert, pose changée, cut atteint par un saut, validation non prouvée).
 
 ## 1. Installer et vérifier
 
@@ -83,6 +84,8 @@ Pour chaque cut, dans l'ordre :
 
 **Chaque pose est définitive dans ESV.** Un vert faux est pire qu'un rouge.
 
+**Comptage.** Un cut posé par la deuxième passe reste compté « différé » dans la tuile « Différés » du lot et dans l'état du lot exporté (`deferred`). La ligne de la deuxième passe du panneau, le résumé de la partie et le journal (`passe-differes-ecriture`, `validation-accepted`) le comptent posé.
+
 Note les verts **faux** (mauvaise voie, mauvais rail, plus de 1 cm de ta pose), en séparant ceux de la deuxième passe : le journal de l’export les marque (`passe-differes-ecriture`).
 
 Zones à surveiller : les ADV ; les cuts posés par la deuxième passe entre deux cuts eux-mêmes posés par Ariane ; les longues suites de cuts posés par la GCV2.
@@ -121,5 +124,6 @@ Les poses déjà validées dans ESV restent, y compris celles de la deuxième pa
 - **Le vrai code de l'extension, rejoué cut par cut** contre le banc : PARITES.
 - **Une seule connexion ESV**, partagée par Orbite et Écho, dans le nouveau panneau comme dans l'ancien.
 - **Le nouveau panneau** n'a été vu que dans Chromium, avec des états fabriqués ; il n'a pas les réglages de la pause de la relecture (ils sont dans le panneau d'avant).
+- **Trous connus de la garde de voie** : elle se tait sans voisin validé lisible à 6 cuts ou moins, et ne mesure pas l'accord des voisins quand il y en a moins de 3. Elle ne s'applique ni aux cuts posés sans validation (sous τ), ni aux verts de la chaîne, ni aux corrections de la relecture « Corriger ».
 - Les verts faux de la chaîne en ADV (une pose de la chaîne contredite par la GCV2) ne sont **ni corrigés ni signalés** dans cette version.
 - Edge n'a pas été vu.
