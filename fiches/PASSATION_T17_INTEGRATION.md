@@ -77,3 +77,10 @@ Parités : 1, 3 et 4 ne touchent que l'écriture, et la parité joue la passe en
 Les corrections des relectures (a7f0b98 et suivants) ne touchent que l'écriture, la relance, l'exclusion des cuts sous τ (aucun sous L1-se dans les rejeux) et le panneau : aucune décision de la passe en ombre ne change sur 2:17 ni 2:19.
 
 Seconde relecture (deb2370) : 1) compteurs cumulés et « calcul » à la relance (essai à trois relances) ; 2) relance bloquée par une correction interrompue, libellé selon l'origine ; 3) état « inconnu » du nouveau panneau réglable ; 4) une passe en ombre ne bloque pas la relecture ; 5) cette section.
+
+## 8. Paquet
+
+- `scratchpad/t17/paquet/ariane-4.9.5-test.18.zip` : SHA-256 `0b1e822adaf30c369ba911e6e4145a449458f4fa2255727e2a131d6668ee42df`, 2 738 475 octets, 361 fichiers, CRC bon, `manifest.json` à la racine : 4.9.5.18, « 4.9.5 test 18 (L1-e6) », « Ouvrir Ariane 4.9.5 test 18 (L1-e6) — V1 ».
+- Contenu : l'arbre e3a1eb5 vérifié, plus les deux fiches de 666da1b (FAUTES et UI-PORT, sans prénom ni chemin de session : texte seulement).
+- `tools/verify.cjs` sur e3a1eb5 (instantané, cœurs 0, 2 et 3, délai de 20 s par fichier non touché) : 2 543 essais, 2 540 réussis, 0 échec, 0 annulé. 3 ignorés : deux pour le corpus Natif privé absent, un pour la maquette d'une autre branche absente, comme sur la base. Géométrie inchangée ; moteur conforme à la base V4.6.0.
+- Scan d'identité (`scratchpad/p17echo/scan.py`), totaux identiques à ceux du zip de la test 16 : 0 courriel, 0 code de projet ESV. Les 1 097 occurrences du prénom et les 2 624 identifiants au format UUID sont tous dans des fichiers déjà présents dans la test 16 ; aucun fichier n'en a plus qu'en test 16.
