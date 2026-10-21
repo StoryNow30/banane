@@ -91,3 +91,14 @@ test('rechContraRatioMax : découple le rapport des cellules qui contredisent du
   assert.ok(n(large) >= n(strict), 'rapport de contradiction 2 : au moins les cellules du filtre strict');
   assert.ok(large.left.concat(large.right).every(c => c[2] <= 2) && strict.left.concat(strict.right).every(c => c[2] <= 1));
 });
+
+test('rechSauteProcheMm : une pose validée à 2,5 mm du voisin validé le plus proche n\'est pas cherchée ; coupé par défaut', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const voisin = lat => [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos(lat, 5) }];
+  const avec = (lat, lev) => { L1.reglerLeviers({ rechercheADV: true, diag: true, rechercheDiag: true, ...lev }); try { return L1.deciderL1e({ ...casSoutenu('adv'), voisinsAbs: voisin(lat) }, MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
+  assert.ok(avec({ left: -36, right: 20 }, {}).diag.recherche, 'défaut : recherche faite');
+  const sauté = avec({ left: -36, right: 20 }, { rechSauteProcheMm: 2.5 });
+  assert.equal(sauté.diag.recherche, undefined, 'voisin à 0 mm : recherche sautée'); assert.equal(sauté.etat, 'valider');
+  assert.ok(avec({ left: -30, right: 20 }, { rechSauteProcheMm: 2.5 }).diag.recherche, 'voisin à 6 mm : recherche faite');
+});
