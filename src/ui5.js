@@ -65,7 +65,8 @@
     const poses = compte(['pose', 'voie']), differes = compte(['differe']), traites = poses + differes + compte(['saute', 'main']);
     let cibles = null; try { const f = b && A.travailDuLot(b); if (f && Number.isInteger(f.invalides)) cibles = f.invalides; } catch { /* inconnu */ }
     const st = b?.state || null, incertain = !!s?.reconcileRequired;
-    /* La deuxième passe des différés écrit dans ESV (état `passeDifferes` du service worker) : tant qu'elle écrit, rien d'autre n'y part. */
+    /* La deuxième passe des différés écrit dans ESV (état `passeDifferes` du service worker) : tant qu'elle écrit, rien d'autre n'y part. Elle passe devant
+     * « Relecture en cours » : la relecture l'attend, et elle ne part pas pendant une relecture. */
     const p2 = s?.passeDifferes?.etat === 'ecriture' ? { cut: cutDe(s.passeDifferes), ecrites: s.passeDifferes.ecrites, demandees: s.passeDifferes.demandees } : null;
     if (st !== 'RUNNING' || ui.pauseLot !== b?.id) ui.pauseLot = null;
     let etat = 'pret', etatTexte = '';
@@ -80,6 +81,8 @@
       else if (st === 'ERROR') { etat = 'alerte'; etatTexte = 'Erreur du lot'; }
       else { etat = 'alerte'; etatTexte = st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ESV ne répond plus' : st === 'MANUAL_TAKEOVER' ? 'Repris à la main' : 'À toi'; }
     }
+    /* La relecture qui suit le lot écrit dans ESV (corriger) : tant qu'elle travaille, le lot n'est pas « terminé » ; le bouton « Arrêter la relecture » du panneau d'avant est visible. */
+    if (etat === 'fini' && visible('relecture-arreter')) etat = 'rel';
     /* Phrase de l'incident, d'après l'état (vérifié dans le code : src/engine.js `apply`, `closeUncertain` ; panel.js, « debloquable ») :
      * une opération interrompue bloque toute écriture jusqu'à son archivage ; sans opération en cours, « Reprendre » suffit. */
     const cutI = cutDe(s?.intent?.identity) ?? cutDe(b?.activeIdentity);
@@ -104,7 +107,7 @@
       cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
-      lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2), passe2: p2,
+      lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2 || etat === 'rel'), passe2: p2,
       cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
       alerte, esv: s?.connection?.status === 'unavailable' || st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ko' : s?.current?.identity ? 'ok' : 'non',

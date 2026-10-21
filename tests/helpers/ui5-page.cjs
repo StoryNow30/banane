@@ -17,6 +17,7 @@ function element(id) {
 /* `stockage` : contenu de chrome.storage.local au départ ; `etat` : état du panneau (`ArianePanel.state()`). */
 async function monter({ stockage = {}, etat = null } = {}) {
   const els = Object.fromEntries(IDS.map(id => [id, element(id)])), ecrits = [], envoyes = [];
+  els['relecture-arreter'].hidden = true;   /* caché au départ dans panel.html : visible seulement pendant la relecture */
   const body = element('body'); body.dataset.window = 'home';
   const hote = element('ui5'), champ = element('ui5-q'), fenetres = [];
   const hooks = [];

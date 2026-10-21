@@ -84,7 +84,7 @@
   };
   const ic = (n, s = 15) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true">${IC[n]}</svg>`;
   /* Pastille d'état du lot : la forme dit l'état (roue, roue en pointillé, deux barres, coche, triangle). */
-  const PASTILLE = { pret: ['pret', 'Prêt'], cours: ['cours', 'Orbite en cours'], dem: ['dem', 'Pause demandée'], pause: ['pause', 'En pause'], p2: ['cours', 'Deuxième passe en cours'], alerte: ['alerte', 'À toi'], fini: ['fini', 'Lot terminé'], arrete: ['fini', 'Lot arrêté'] };
+  const PASTILLE = { pret: ['pret', 'Prêt'], cours: ['cours', 'Orbite en cours'], dem: ['dem', 'Pause demandée'], pause: ['pause', 'En pause'], p2: ['cours', 'Deuxième passe en cours'], rel: ['cours', 'Relecture en cours'], alerte: ['alerte', 'À toi'], fini: ['fini', 'Lot terminé'], arrete: ['fini', 'Lot arrêté'] };
   const pastille = a => { const [c, t] = a.horsLigne && a.etat === 'pret' ? ['hors', 'Aucun onglet ESV'] : (PASTILLE[a.etat] || PASTILLE.pret); return `<span class="etat ${c}"><span class="f"></span>${esc(a.etatTexte || t)}</span>`; };
   const COUL = { orbite: 'var(--orbite)', echo: 'var(--echo)', revue: 'var(--revue)' };
   const barreAr = (a, vive) => {
@@ -108,14 +108,13 @@
     return `<div class="esvbar"><span class="lab">${ic('globe', 15)}Onglets ESV</span><div class="tabs">${puces || '<span class="aucun">Aucun onglet ESV ouvert.</span>'}</div></div>`;
   }
   /* Vidage du cache des exports, en vue dans Orbite et Écho. Même bouton, même confirmation que le panneau d'origine ; grisé avec sa raison tant qu'il est impossible. */
-  const raisonCache = (snap, a, courant) => {
-    const relecture = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre);
-    return courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
-      : relecture ? 'Disponible quand la relecture est terminée ou arrêtée.' : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
-  };
+  const relecture = snap => !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);   /* le service worker refuse le vidage du cache tant que la relecture vit ou attend */
+  const raisonCache = (snap, a, courant) => relecture(snap) ? 'Disponible quand la relecture est terminée ou arrêtée.'
+    : courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
+      : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
   function maintAr(snap, a, courant) {
     if (!['orbite', 'echo'].includes(courant)) return '';
-    const ok = a.cache?.actif === true, raison = raisonCache(snap, a, courant);
+    const ok = a.cache?.actif === true && !relecture(snap), raison = raisonCache(snap, a, courant);
     return `<div class="maint">${picto('cache')}<span class="tx">Cache des exports<small>${ok ? 'À vider seulement après réception de tous les volumes exportés.' : raison}</small></span><span class="sp"></span><button type="button" class="pill cache" id="ar-cache" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>${ic('trash')}Vider le cache</button></div>`;
   }
   function enteteAr(snap, a, courant) {
@@ -149,7 +148,9 @@
   };
   function accueilAr(snap, a, m) {
     const enLot = a.etat === 'cours' || a.etat === 'dem';
+    const arret = (snap.boutonsOrbite || []).find(b => b.id === 'relecture-arreter');
     const bts = a.etat === 'p2' ? '<button type="button" class="pill" data-act="aller:orbite">Suivre la passe</button>'
+      : a.etat === 'rel' ? `<button type="button" class="pill" data-act="aller:orbite">Suivre la relecture</button>${arret ? `<button type="button" class="pill verre danger" data-act="legacy:relecture-arreter"${arret.actif ? '' : ' disabled'}>Arrêter la relecture</button>` : ''}`
       : enLot ? `<button type="button" class="pill" data-act="aller:orbite" data-vers="orbite">Suivre le lot</button>${a.pause ? `<button type="button" class="pill verre" data-act="pause"${a.etat === 'dem' || !a.pause.actif ? ' disabled' : ''}>${ic('pause')}${a.etat === 'dem' ? 'Pause demandée…' : 'Pause'}</button>` : ''}`
       : a.etat === 'fini' || a.etat === 'arrete' ? `${a.aExaminer ? `<button type="button" class="pill" data-act="aller:revue">Examiner les ${esc(a.aExaminer)} cuts</button>` : ''}<button type="button" class="pill${a.aExaminer ? ' verre' : ''}" data-act="legacy:export-tout">Exporter le dossier</button>`
       : a.etat === 'pause' && a.reprendre ? `<button type="button" class="pill" data-act="legacy:resume"${a.reprendre.actif ? '' : ' disabled'}>${ic('play')}${esc(a.reprendre.texte || 'Reprendre')}</button><button type="button" class="pill verre" data-act="aller:orbite">Voir le lot</button>`
@@ -157,11 +158,12 @@
     const don = a.traites || a.cibles ? `<div class="l1"><span>Avancement du lot</span></div><div class="n">${esc(a.traites)} <span>${a.cibles ? `sur ${esc(a.cibles)} cuts traités` : 'cuts traités'}</span></div><div class="d"><span><i class="m p"></i>${esc(a.poses)} posés</span><span><i class="m d"></i>${esc(a.differes)} différés</span></div>${barreAr(a, a.etat === 'cours')}`
       : `<div class="l1"><span>Ce qu’Ariane sait de la partie</span></div><div class="n">${a.cutEsv != null ? esc(a.cutEsv) : '—'} <span>cut affiché dans ESV</span></div>`;
     const vig = (k, cls, titreV, sous, st, indispo) => `<button type="button" class="vig ${cls}${indispo ? ' indispo' : ''}" ${indispo ? 'aria-disabled="true"' : `data-act="aller:${k}"`} data-k="${k}">${picto(k)}<span class="tx"><b>${titreV}</b><small>${sous}</small><span class="st">${st}</span></span><span class="fl"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></button>`;
-    const stO = { p2: 'Deuxième passe en cours', cours: `En cours · cut ${esc(a.cours ?? '…')}`, dem: 'Pause demandée', pause: 'En pause', alerte: 'Attend ta décision', fini: 'Terminé', arrete: 'Arrêté', pret: 'Prêt' }[a.etat] || 'Prêt';
+    const stO = { p2: 'Deuxième passe en cours', rel: 'Relecture en cours', cours: `En cours · cut ${esc(a.cours ?? '…')}`, dem: 'Pause demandée', pause: 'En pause', alerte: 'Attend ta décision', fini: 'Terminé', arrete: 'Arrêté', pret: 'Prêt' }[a.etat] || 'Prêt';
     const stE = a.lotOuvert ? `${ic('lock', 12)} Indisponible pendant le lot` : esc(a.echoEtat || 'Prêt');
     const nbRevue = a.differes + (a.vertsNombre || 0);
     const courte = a.horsLigne && a.etat === 'pret' ? 'Aucun onglet connecté.'
       : a.etat === 'p2' ? 'La deuxième passe travaille dans ESV. Ne touche à rien.'
+      : a.etat === 'rel' ? esc(snap.relecture?.ligne || 'La relecture après le lot travaille.')
       : a.etat === 'cours' ? `Pose du cut ${esc(a.cours ?? '…')}.` : a.etat === 'dem' ? `Finit le cut ${esc(a.cours ?? '…')}, puis s’arrête.`
       : a.etat === 'pause' ? `En pause${a.dernier != null ? ` après le cut ${esc(a.dernier)}` : ''}.`
       : a.etat === 'alerte' ? esc(a.alerte || m.phrase || 'Le lot attend ta décision.')
@@ -184,6 +186,7 @@
     const enLot = a.etat === 'cours' || a.etat === 'dem', examiner = (a.etat === 'fini' || a.etat === 'arrete') && a.aExaminer > 0;
     const bornes = a.bornes ? `du cut ${esc(a.bornes.debut ?? '…')} ${a.bornes.fin ? 'au cut ' + esc(a.bornes.fin) : 'à la fin de la partie'}` : '';
     const ligne = a.etat === 'p2' ? `<span class="spin"></span><span>La deuxième passe travaille dans ESV${a.passe2.cut != null ? ` · <b>cut ${esc(a.passe2.cut)}</b>` : ''} · ${esc(a.passe2.ecrites)} posé sur ${esc(a.passe2.demandees)}. <b>Ne touche à rien</b> tant qu’elle n’a pas fini.</span>`
+      : a.etat === 'rel' ? `<span class="spin"></span><span>${esc(snap.relecture?.ligne || 'Relecture après le lot en cours')}</span>`
       : a.etat === 'dem' ? `<span class="spin"></span><span>Ariane finit le <b>cut ${esc(a.cours ?? '…')}</b>, puis s’arrête. Aucun nouveau cut ne sera ouvert.</span>`
       : a.etat === 'cours' ? `<span class="spin"></span><span>Pose en cours sur le <b>cut ${esc(a.cours ?? '…')}</b></span>`
       : a.dernier != null ? `<span>Dernière validation : <b>cut ${esc(a.dernier)}</b></span>` : `<span>${esc(m.etat)}</span>`;
