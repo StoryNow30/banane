@@ -88,6 +88,7 @@ test('Ariane : pendant la deuxième passe des différés, la pastille et la lign
  assert.match(o,/id="ar-cmd" disabled><span class="ar-lbl"><svg[^>]*>.*<\/svg>Ne touche à rien dans ESV/);assert.match(o,/<b>cut 4787<\/b> · 0 posé sur 2\. <b>Ne touche à rien<\/b>/);
  assert.match(a,/Suivre la passe/);assert.match(a,/vig e indispo" aria-disabled="true"/);assert.match(a,/Deuxième passe en cours<\/span><\/span><span class="fl">/);
  assert.match(R.rendre(avec({ar:ar('p2',{lotOuvert:true,passe2:{cut:null,ecrites:1,demandees:1}})}),'orbite'),/travaille dans ESV · 1 posé sur 1\./,'sans cut connu, pas de « cut null »');
+ assert.match(R.rendre(avec({variante:'palette',mode:'automatic',ar:p2}),'accueil'),/<span class="et2">Deuxième passe · ne touche à rien dans ESV<\/span>/,'palette : la même consigne');
 });
 test('Ariane : relecture en pause → ligne, « Reprendre » et « Arrêter » (clic sur les boutons du module) ; grisé si ESV ne répond pas',()=>{
  const vue=o=>({pause:null,reprendre:null,arreter:false,ligne:'',...o}),sans=ar('pret',{lotOuvert:false,traites:0,cibles:null});

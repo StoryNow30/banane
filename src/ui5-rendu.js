@@ -262,6 +262,7 @@
   function etatPal(snap, a) {
     if (a.horsLigne && a.etat === 'pret') return 'Hors ligne';
     if (a.esv === 'ko') return 'ESV ne répond plus';
+    if (a.etat === 'p2') return 'Deuxième passe · ne touche à rien dans ESV';
     if (snap.mode === 'native') return `${a.echoEtat || 'Aucune séance'}${snap.echo?.corriges ? ' · ' + snap.echo.corriges : ''}`;
     const base = a.etatTexte || (PASTILLE[a.etat] || PASTILLE.pret)[1];
     return ['cours', 'dem', 'pause'].includes(a.etat) && a.cibles ? `${base} · ${a.traites}/${a.cibles}` : base;
