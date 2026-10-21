@@ -1596,7 +1596,7 @@ async function passeDiffOmbre(b,rg,vue){
  for(const d of b.deferred||[]){const id=d.identity;if(!id||!d.lidarCaptureId)continue;
   const r=l1Restes.cle===l1ResteCle(b)?l1Restes.m.get(`${id.part}|${id.frameId??null}|${id.cut}`):null;if(!r||r.regle)continue;
   restes.push({...r,lidarCaptureId:d.lidarCaptureId,etat:'differe',capture:null,science:null,runtimeRails:null});}
- vue.differes=restes.length;
+ vue.differes=vue.ecrites+restes.length;   /* cumulés sur les relances : un cut écrit n'est plus un reste */
  const cleT=(b.id||'')+'|'+b.scope.part+'|'+(restes[0]?.identity.frameId??null),transport=(l1eTransport.cle===cleT?l1eTransport.poses:[]).slice(),anchors=(b.lotObservation?.anchors||[]).slice(),poses=[];
  /* Les leviers de la passe ne valent que le temps d'un appel (synchrone) : un lot qui démarre pendant les attentes garde les siens. */
  const avant=G.leviersActifs(),decider=a=>{G.reglerLeviers({...avant,...rg.leviers});try{return G.deciderDiffere(a);}finally{G.reglerLeviers(avant);}};
@@ -1619,7 +1619,7 @@ async function passeDiffOmbre(b,rg,vue){
     journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,l1:G.resumer(g)});
    }catch(e){journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'erreur',message:String(e?.message||e).slice(0,160)});}}
   if(!n)break;}
- vue.posees=poses.length;
+ vue.posees=vue.ecrites+poses.length;
  journalerSimple('passe-differes-ombre-fin',{lotId:b.id,mode:rg.mode,ecritureDemandee:rg.ecritureDemandee,differes:restes.length,posees:poses.length,cuts:poses.map(p=>p.cut),ms:Date.now()-debut});
  return poses;}
 /* Niveau « ecriture » (livré allumé ; fiches/PASSATION_T17_PASSE2.md) : les poses décidées en ombre sont écrites dans l'ordre où elles ont été décidées (chacune repose sur les
@@ -1650,6 +1650,7 @@ async function passeDiffEcrireDemande(){
  if(!await passeDiffAllumee())throw Error('Deuxième passe coupée dans Réglages (« Règles et choix du prochain lot ») : rien n’est écrit dans ESV.');
  const P=passeDiff.reprise;
  if(!P||P.b.id!==engine?.s?.batch?.id||passeDiff.cours||passeDiff.ecriture)throw Error('Deuxième passe : aucune écriture à relancer pour ce lot, ou une passe est déjà en cours.');
+ Object.assign(P.vue,{etat:'calcul',message:null,cut:null});
  passeDiffSuivre(P.vue,passeDiffOmbre(P.b,P.rg,P.vue).then(poses=>poses&&passeDiffEcrire(P.b,poses,P.rg,P.vue)));return {...P.vue};}
 async function passeDiffPoser(b,p,E){
  const K=globalThis.BananeCore3,G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,S=globalThis.BananeSettings?.lot||{},r=p.r,cut=r.identity.cut,part=b.scope.part,t0=Date.now();
