@@ -143,3 +143,59 @@ Analyse :
    - pour 3220, aucune preuve sûre n'est connue : rien, compensé par un gain sur 2:7 (5576, 5901, voir l'agent A).
 4. **Coût dans l'extension** : mesurer `rechArret` et `rechDedupMm` sans perdre de poses (sim2 émule l'arrêt), donner le temps par cut ADV et par lot.
 5. **Parité** : `run1s.sh` d'une chaîne sans deuxième passe sur 2:17 et 2:19, puis `parite.sh` avec les mêmes leviers, plus un témoin négatif (service worker aux leviers livrés contre ce banc : il doit différer).
+
+
+---
+
+# Agent B3 (reprise) : b-r7, robustesse, coût
+
+Les rejeux ci-dessous partent de commits poussés (`c5/r-NOM/commit.txt`). Commits : 182b8e3 (rechPaireTopMin, rechContraRatioMax), 117b17d (rechSauteProcheMm).
+
+## 10. b-r4 reproduit, puis b-r7 et b-r7a
+
+Chaîne **b-r7** = b-r4 avec : `rechHauteurMaxMm` 20 (30 avant), `rechContraMinMm` 22 (20), `anomalieNonCorrigeeVoieMm` 35, `rechPaireTopMin` 60, `rechContraRatioMax` 1,5. Chaîne **b-r7a** = b-r7 + `rechArret` + `rechSauteProcheMm` 2,5.
+
+| partie | posables v4b → b-r7a | jugées | ≤5 | ≤10 | 10–20 | >20 | MV |
+|---|---|--:|--:|--:|--:|--:|--:|
+| 2:19 | 3 → 2 | 236 | 196 | 235 | 1 | 0 | 0 |
+| 2:17 | 18 → 5 | 36 | 25 | 35 | 1 | 0 | 0 |
+| 2:18 | 18 → 12 | 23 | 17 | 21 | 2 | 0 | 0 |
+| 2:11 | 3 → 2 | 9 | 3 | 7 | 2 | 0 | 0 |
+| 2:20 fd7067f7 | 8 → 0 | 16 | 11 | 13 | 3 | 0 | 0 |
+| 2:20 f228f6f9 | 2 → 1 | 175 | 134 | 172 | 3 | 0 | 0 |
+| 2:6 | 3 → 2 | 9 | 5 | 7 | 2 | 0 | 0 |
+| 2:7 | 2 → 2 | 19 | 13 | 18 | 1 | 0 | 0 |
+| 2:13 | 0 → 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **total** | **57 → 26** | **523** | **404 (77,2 %)** | **508 (97,1 %)** | 15 | 0 | 0 |
+
+0 pose à plus de 20 mm, 0 à plus de 50 mm, 0 verts changés. Cuts gagnés contre v4b : ceux de b-r4 (2:19 5293 ; 2:17 9527 9528 9553 9554 9556 9557 9641 9642 9643 9645 9647 9653 9689 ; 2:18 14 90 199 200 298 299 ; 2:11 6455 ; fd 94–100 et 148 ; f228 329 ; 2:6 3722 ; 2:7 5576) ; perdu : 2:7 3220. b-r7 est identique cut par cut à b-r4 (un seul motif change, f228 649, différé dans les deux cas). b-r7a est identique à b-r7 sauf 4 cuts de 2:17 déplacés de 3 mm au plus. `cv.cjs v4b,b-r4,b-r7a` retient b-r4 sur les 9 parties : **ce n'est qu'un choix entre configurations, pas une validation des seuils** (voir 11).
+
+## 11. Robustesse : ce que les mesures ont montré
+
+**Un plancher de preuve commun aux falaises Z et ratioMax.** Sur toutes les paires listées par la recherche (b-d3, 688 paires admises par l'écartement, avec l'erreur contre l'opérateur) : les 6 paires à plus de 20 mm dans les cuts ADV candidats ont un soutien de dessus de 11 à 31 points ; aucune paire à 45 points ou plus n'est à plus de 20 mm ; les poses retenues de la chaîne ont 108 points au moins. Les deux paires fausses des falaises (f228 649 à 52 mm avec Z=39 ; 2:18 153 à 31 mm avec ratioMax=1,95) ont 29 et 31 points. `rechPaireTopMin` = 60 est le centre géométrique de (31 ; 108). Les paires fausses viennent de 3 parties (2:6, 2:18, f228) : le plancher n'est pas appris sur une partie, mais il est fondé sur 3 cuts : règle **peu validée**.
+
+**Hauteur (`rechHauteurMaxMm`).** Besoin réel des poses de la chaîne : 10,9 mm au plus (fd 100). Paire fausse de 649 : 33,5 mm. 20 est au centre ; la sensibilité ±30 % (14 à 26) reste dans (10,9 ; 33,5). Rejeu réel r6 (Z=20 et garde de voie 35) : 8 lots sur 8 identiques à b-r4 (f228 perdu au redémarrage).
+
+**ratioMax.** Falaise vers le haut à 1,95 (2:18 153, 30,7 mm), couverte par le plancher. **Falaise vers le bas, invisible à la simulation hors ligne** : à 1,2 (rejeu b-r5), le détecteur de contradiction ne voit plus la cellule concurrente de 2:7 3220 (rapport entre 1,2 et 1,5), et 3220 est posé à 29 mm. Le rapport des cellules qui contredisent est donc découplé (`rechContraRatioMax`, 1,5 ici) du rapport de la paire (`rechRatioMax`).
+
+**Contradiction (`rechContraMinMm`).** Fenêtre : 2:13 3533 est perdu si le seuil est 14,7 mm ou moins (une pose de v4b disparaît, 1 posable contre 0 : rejeu réel b-s-cmin14) ; 2:7 3220 n'est plus contredit à 31 mm ou plus. 22 est le centre ; ±30 % donne 15,4 à 28,6.
+
+**Anomalie d'écartement non corrigée (`anomalieNonCorrigeePMin` 0,8).** Cuts gardés : 2:6 3722 (p 0,8195), 2:7 5576 (p 0,959), f228 329 (p 0,826). Refusés : 2:6 4756 (p 0,749, paire à 48 mm de l'opérateur), 2:18 153 (p 0,53), 2:7 5901 (p 0,56). Marge de p : 0,07 d'un côté, 0,02 de l'autre. **Garde de voie indépendante de p** (`anomalieNonCorrigeeVoieMm` 35) : écart en travers des deux rails au voisin validé le plus proche : gardés à 12,9, 29,8 et 30,2 mm ; refusés à 36,5 (649) et 40,6 mm (4756). Les deux gardes sont en ET : pour qu'une mauvaise pose passe, il faut que les deux seuils bougent. Les rejeux de sensibilité de p et de la voie sont au paragraphe 13.
+
+## 12. Règles peu validées (à relire avant toute version)
+
+| règle | cuts qui la fondent | limite connue |
+|---|---|---|
+| `corrigeValideZones` ['adv'] | 2:17, 2:18 et fd en ADV | contre-exemple fd7067f7 cut 49 (hors ADV) |
+| `anomalieNonCorrigeePMin` 0,8 + voie 35 | 3 gardés, 3 refusés (4 parties) | falaise de p sans la garde de voie |
+| `rechPaireTopMin` 60 | 3 paires fausses (3 parties), 0 sur ~650 | aucune paire fausse entre 31 et 45 points : le seuil n'est pas serré |
+| `rechEncadre` | un seul cut posé (2:17 9646, 7,5 mm) | une pose |
+| `rechContraMinMm` 22 | 2:13 3533 (bas), 2:7 3220 (haut) | deux cuts bornent la fenêtre |
+| `rechRemplace` 12 mm | 10 poses (3 parties) | corrige les mauvaises voies de b-r1 (effet de chaîne) |
+| `rechSauteProcheMm` 2,5 | 0 pose modifiée sur 105 sautées | la plus petite modifiée est à 3,7 mm |
+
+## 14. Coût (rechArret et saut)
+
+Relances du moteur sur les 9 lots : 2050 (b-r7) → 533 (b-r7a). Cuts cherchés : 523 → 416. Temps de recherche cumulé : 1411 s → 428 s. Temps de lot (mur, machine chargée, indicatif) : 2:19 550 → 218 s ; f228 1163 → 728 s ; 2:17 421 → 353 s ; 2:18 649 → 616 s. Repère sans recherche (p2c) : 2:19 116 s, f228 633 s.
+
+Décomposition d'une relance (CPU, `b/cost.cjs`, 2:19 cut 5293) : 2020 ms dont V4.6 134 ms (7 %), A* 193 ms (10 %), reste 1499 ms. Éviter V4.6 ne rapporte donc presque rien (et il alimente le réservoir : le retirer changerait le résultat). Profil : la fonction `median` de `src/geometry-candidate-v1.js` (tri avec comparateur) fait plus de la moitié du CPU. Un tri numérique sans comparateur donne 950 ms par relance au lieu de 2020 (patch : `b/median-rapide.patch`), **mais `tests/pose-lot-inchanges-4959.test.cjs` épingle ce fichier octet pour octet : le patch n'est pas appliqué** (décision à prendre hors de ce cap).
