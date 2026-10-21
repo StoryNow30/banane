@@ -1444,6 +1444,8 @@ let l1eListe={cle:null,table:null};
 async function l1eTable(part){const cle=(engine?.s?.batch?.id||'')+'|'+part;if(l1eListe.cle===cle)return l1eListe.table;
  let table=null;try{const LM=globalThis.BananeListeMemoire,k=LM.PRE_INST+part,r=await chrome.storage.local.get(k);table=LM.decompacter(r?.[k])||null;}catch{table=null;}
  l1eListe={cle,table};return table;}
+/* T17B — voie de la liste d'ESV au cut (`voieDeListe`, comme le banc), lue seulement par `rechListeResMm` (coupé) ; null sans liste. */
+async function l1eVoieListe(capture,identity){const G=globalThis.BananeGcv2L1;return G.voieDeListe(await l1eTable(identity.part),identity.cut,capture,{...G.VOIE_LISTE,fenetre:G.leviersActifs().voieListeFenetre});}
 /* 4.9.5.15 (fiches/L1_CAP5.md) — sous L1-se, poses de L1 de CE lot (GCV2 validées, chaîne refaite par L1-s) : voisines de la GCV2 pour la seule
  * voie de référence (levier « transport » de src/gcv2-l1.js), jamais appuis de la chaîne ni voisines de sa décision (D-221 tenu). */
 let l1eTransport={cle:null,poses:[]};
@@ -1519,7 +1521,7 @@ async function l1CommandeCoeur({command,lotObservation,proposal,before,capture})
     if(c.action==='lot'){l1eTransporter(ctx.lotArgs.capture,identity,d2.positions);return {...c,l1s:'chaine'};}}
   }
   const t0=Date.now(),science=Sh.scientificProposeBothAvecReservoir(ctx.lotArgs.capture),z=l1Zone(identity);
-  const e=profilL1se()?{regle:G.REGLE_E,reference:globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut),
+  const e=profilL1se()?{regle:G.REGLE_E,reference:globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut),voieListe:await l1eVoieListe(ctx.lotArgs.capture,identity),
    ...(G.LEVIERS_LIVRES?.transport?{voisinsTransport:l1eTransportDe(identity).slice()}:{})}:{};
   const g=G.deciderDiffere({capture:ctx.lotArgs.capture,science,appuis:ctx.anchors,options:profilL1s()?{...G.REGLE.lotOptions}:ctx.lotArgs.options,voisins:l1Voisins(b,identity),zone:z.zone,plagesADV:z.adv,modele:l1Modele(),...e});
   const d=g.decision,l1={...G.resumer(g),zoneSource:z.source,ms:Date.now()-t0};
@@ -1587,7 +1589,7 @@ async function passeDiffOmbre(b){
       r.science=Sh.scientificProposeBothAvecReservoir(r.capture);r.runtimeRails=Sh.toRuntimeRails(r.science);}
      const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(r.identity.part),r.identity.cut);
      const g=G.deciderDiffere({capture:r.capture,science:r.science,appuis:anchors.slice(),options:{...G.REGLE.lotOptions},voisins:l1Voisins(b,r.identity),voisinsTransport:transport.slice(),
-      zone:r.zone,plagesADV:r.adv,modele:l1Modele(),regle:G.REGLE_E,reference:ref});
+      zone:r.zone,plagesADV:r.adv,modele:l1Modele(),regle:G.REGLE_E,reference:ref,voieListe:await l1eVoieListe(r.capture,r.identity)});
      if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
      const cg=G.commander({positions:g.positions,runtimeRails:r.runtimeRails,before:r.capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),valider:true});
      if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}

@@ -124,3 +124,16 @@ test('rechSauteProcheZones : la saute ne joue qu\'en ADV par défaut ; en abords
   assert.ok(avec('abords', {}).diag.recherche, 'abords : recherche faite');
   assert.equal(avec('abords', { rechSauteProcheZones: ['adv', 'abords'] }).diag.recherche, undefined, 'zones étendues : sautée');
 });
+
+test('rechListeResMm (T17B, coupé) : sans voisin posé, en abords, la voie de la liste d\'ESV tient lieu de voisin le plus proche', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const liste = (res, n = { avant: 3, apres: 3 }) => ({ sure: false, n, residuMm: res, left: [-36, 5], right: [20, 5] });
+  const avec = (zone, vl, lev) => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...{ rechercheADV: true, rechZones: ['adv', 'abords'], rechListeResMm: 6, ...lev } });
+    try { return L1.deciderL1e({ ...casSoutenu(zone), voieListe: vl }, MOD, { mm: g }, base, { left: [0.9, 0.1], right: [0.9, 0.1] }); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec('abords', liste(2), { rechListeResMm: null }).etat, 'rien', 'coupé : rien');
+  const d = avec('abords', liste(2)); assert.equal(d.motif, 'recherche-adv'); assert.ok(Math.hypot(d.paire.left.decal[1] + 36, d.paire.left.decal[2] - 5) < 3, 'cellule du moteur à moins de 3 mm de la voie');
+  assert.equal(avec('abords', liste(8)).etat, 'rien', 'résidu 8 > 6');
+  assert.equal(avec('abords', liste(2, { avant: 3, apres: 0 })).etat, 'rien', 'voisins d\'un seul côté : extrapolation, non retenue');
+  assert.equal(avec('adv', liste(2)).etat, 'rien', 'ADV : la voie de la liste n\'est pas fiable');
+  assert.equal(avec('abords', { ...liste(2), left: [60, 5] }).etat, 'rien', 'voie à 96 mm de la paire : refusée');
+});
