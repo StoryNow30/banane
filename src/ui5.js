@@ -26,6 +26,9 @@
   const ORDRE_ECHO = ['native-resume', 'native-end', 'native-download', 'native-start', 'native-pause', 'native-discard'];
   const tonClasse = id => { const c = String($(id)?.className || ''); return /\bred\b/.test(c) ? 'red' : /\bamber\b/.test(c) ? 'amber' : /\blive\b/.test(c) ? 'live' : 'ink'; };
   const coche = (ids) => { for (const [v, id] of ids) if ($(id)?.checked) return v; return null; };
+  /* 4.9.6.1 : « 999999 » est la borne interne « jusqu'à la fin de la partie » (panel.js) ; on ne l'affiche jamais. */
+  const FIN_PARTIE = 999999;
+  const finVisible = v => { const n = Number(v); return v === '' || v == null || !Number.isFinite(n) || n >= FIN_PARTIE ? null : String(v); };
   const entier = v => Number.isFinite(Number(v)) ? String(Math.trunc(Number(v))) : '—';
 
   function boutons(mode) {
@@ -80,6 +83,7 @@
     const st = b?.state || null, incertain = !!s?.reconcileRequired;
     if (st !== 'RUNNING' || !b || ui.pauseLot !== b.id) ui.pauseLot = st === 'RUNNING' && b && ui.pauseLot === b.id ? b.id : null;
     let etat = 'pret', etatTexte = '';
+    const horsLigne = !b && !s?.current?.identity;
     if (b) {
       if (incertain) { etat = 'alerte'; etatTexte = 'Résultat incertain'; }
       else if (st === 'RUNNING') etat = ui.pauseLot === b.id ? 'dem' : 'cours';
@@ -98,8 +102,8 @@
       : b.pauseReason === 'low-confidence' ? `Ariane n’est pas assez sûre de sa pose sur le cut ${cutI ?? '…'}. Choisis : réessayer, le reprendre à la main, ou le passer.`
       : st === 'MANUAL_TAKEOVER' ? `Le cut ${cutI ?? '…'} t’est rendu : corrige-le dans ESV, ouvre le cut suivant, puis déclare-le repris à la main.` : '';
     const fin = b?.scope?.end, debut = b?.scope?.start;
-    const bornes = b ? { debut: Number.isInteger(debut) ? debut : null, fin: Number.isInteger(fin) && fin < 1e7 ? fin : null }
-      : { debut: $('start')?.value || null, fin: $('end')?.value || null };
+    const bornes = b ? { debut: Number.isInteger(debut) ? debut : null, fin: Number.isInteger(fin) && fin < FIN_PARTIE ? fin : null }
+      : { debut: $('start')?.value || null, fin: finVisible($('end')?.value) };
     const differesListe = (b?.deferred || []).map(d => {
       const r = Array.isArray(d.unresolvedRails) ? d.unresolvedRails : [];
       return { cut: cutDe(d), motif: r.length ? 'Rail non résolu' : 'Différé', precision: r.length === 2 ? 'les deux rails' : r.length ? (RAILS[r[0]] || '') : '', heure: heure(d.deferredAt) };
@@ -109,7 +113,7 @@
     const parcours = [...rows].sort((x, y) => x.ordre - y.ordre).map(r => r.statut).filter(x => x !== 'cours');
     const dernierP = (b?.processed || []).at?.(-1);
     return {
-      etat, etatTexte, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
+      etat, etatTexte, horsLigne, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
       cibles, poses, differes, sautes, main, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
       cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe, parcours,
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',

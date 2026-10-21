@@ -246,7 +246,7 @@
   const nb = v => Number.isFinite(Number(v)) ? Math.trunc(Number(v)) : null;
   /* Pastille d'état du lot : la forme dit l'état (roue, roue en pointillé, deux barres, coche, triangle). */
   const PASTILLE = { pret: ['pret', 'Prêt'], cours: ['cours', 'Orbite en cours'], dem: ['dem', 'Pause demandée'], pause: ['pause', 'En pause'], alerte: ['alerte', 'À toi'], fini: ['fini', 'Lot terminé'], arrete: ['fini', 'Lot arrêté'] };
-  const pastille = a => { const [c, t] = PASTILLE[a.etat] || PASTILLE.pret; return `<span class="etat ${c}"><span class="f"></span>${esc(a.etatTexte || t)}</span>`; };
+  const pastille = a => { const [c, t] = a.horsLigne && a.etat === 'pret' ? ['hors', 'Aucun onglet ESV'] : (PASTILLE[a.etat] || PASTILLE.pret); return `<span class="etat ${c}"><span class="f"></span>${esc(a.etatTexte || t)}</span>`; };
   const COUL = { orbite: 'var(--orbite)', echo: 'var(--echo)', revue: 'var(--revue)' };
   const barreAr = (a, vive) => {
     if (!a.cibles) return '';

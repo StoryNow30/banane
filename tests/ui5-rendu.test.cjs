@@ -94,3 +94,18 @@ test('Ariane : tout texte venu du panneau est échappé ; sans `ar`, l’accueil
  assert.doesNotMatch(h,/<img|<b>x<\/b>|<i>Reprendre/);
  assert.match(RA.rendre('ariane',{mode:'home'},{},'accueil'),/Aucune partie ouverte/);
 });
+
+/* 4.9.6 (D-232, D-233) — bloc A : pastille sans onglet ESV ; bloc C : relecture en pause dans la présentation « Ariane ». */
+test('Ariane : sans onglet ESV, la pastille le dit au lieu de « Prêt »',()=>{
+ const h=RA.rendre('ariane',{mode:'home',ar:arBase('pret',{horsLigne:true,esv:'non',lotOuvert:false,traites:0,cibles:null,partie:null})},{},'accueil');
+ assert.match(h,/class="etat hors"/);assert.match(h,/Aucun onglet ESV/);assert.doesNotMatch(h,/class="etat pret"/);
+ const p=RA.rendre('ariane',{mode:'home',ar:arBase('pret',{horsLigne:false,lotOuvert:false,traites:0,cibles:null})},{},'accueil');
+ assert.match(p,/class="etat pret"/);
+});
+test('Ariane : « 999999 » n’est jamais affiché comme borne',()=>{
+ const ui=lire('src/ui5.js');
+ const fin=new Function(ui.match(/const FIN_PARTIE = 999999;\n\s*const finVisible = [^\n]+/)[0]+';return finVisible;')();
+ assert.equal(fin('999999'),null);assert.equal(fin(''),null);assert.equal(fin(null),null);assert.equal(fin('4812'),'4812');
+ const h=RA.rendre('ariane',{mode:'automatic',ar:arBase('pret',{lotOuvert:false,bornes:{debut:'1',fin:null}})},{},'orbite');
+ assert.doesNotMatch(h,/999999/);assert.match(h,/placeholder="fin de partie"/);
+});
