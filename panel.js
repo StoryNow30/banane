@@ -181,6 +181,9 @@
  const OUVERT=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER'];
  const INCERTAIN=['PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','ERROR'];
  const entier=v=>Number.isFinite(Number(v))?String(Math.trunc(Number(v))):'—';
+ /* 4.9.5 test 10-ui : l'habillage (src/ui5*.js) lit l'état et le DOM de ce panneau après chaque rendu et déclenche ses boutons par un clic ;
+  * il n'envoie aucun message au service worker et n'appelle aucun export. Les crochets sont posés plus bas (`ArianePanel`). */
+ const hooksRendu=[];
  /* La voie : une traverse par cut du lot, dans l'ordre où le Pilote les a
   * ouverts (ESV saute les cuts déjà validés). La forme porte l'état : pleine,
   * posé par le moteur ; creuse, posé par la voie (décision sur le lot) ;
@@ -850,8 +853,11 @@
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
    button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
    rendreFocus();
+   for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
+ globalThis.ArianePanel=Object.freeze({state:()=>state,which:()=>which,voieDuLot,travailDuLot,visitesNatif,
+   apres:f=>{if(typeof f!=='function')return;hooksRendu.push(f);if(state)try{f(state);}catch{/* idem */}}});
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
  /* 4.9.0.16 (test 15, capture de Mic) : deux onglets au même titre ne se distinguaient pas. Chaque
   * libellé dit maintenant, si besoin, la fenêtre, le rang de l'onglet, s'il est au premier plan et

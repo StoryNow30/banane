@@ -48,7 +48,7 @@
   const ci=$('relecture-interrompue');if(ci){ci.hidden=!c;ci.textContent=c?`Une correction de la relecture a été interrompue au cut ${c.cut} (partie ${c.part}) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ${c.cut} ».`:'';}
   const ok=$('relecture-acquitter');if(ok){ok.hidden=!c;ok.textContent=c?`J’ai contrôlé le cut ${c.cut}`:'J’ai contrôlé le cut';ok.dataset&&(ok.dataset.cut=c?String(c.cut):'');}
   const stop=$('relecture-arreter');if(stop){stop.hidden=!enCours;stop.disabled=p?.arretDemande===true;}
-  const go=$('relecture-lancer');if(go){go.hidden=enCours||!!c||!lot||lot.mode==='coupee'||!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(lot.etat)||p?.etat==='finie'&&p.lotId===lot.id;}
+  const go=$('relecture-lancer');if(go){go.hidden=enCours||p?.etat==='en-pause'||!!c||!lot||lot.mode==='coupee'||!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(lot.etat)||p?.etat==='finie'&&p.lotId===lot.id;}
   for(const id of Object.values(IDS)){const el=$(id);if(el)el.disabled=enCours;}
   /* Rythme de la mise à jour : chaque seconde pendant la passe, sinon toutes les 4 s (la passe part seule en fin de lot). */
   clearTimeout(minuterie);minuterie=setTimeout(rafraichir,enCours?1000:4000);}

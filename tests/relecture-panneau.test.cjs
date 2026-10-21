@@ -87,6 +87,16 @@ test('préparation : « Lancer » caché, « Arrêter » visible ; réglages : s
  K.arreter();
 });
 
+test('relecture en pause (test 17) : « Lancer la relecture » n’est pas proposé (elle repartirait de zéro), la ligne de la passe est dite, les choix restent libres pour le lot suivant',()=>{
+ const {el,C:K}=page();
+ const lot={id:'L1',mode:'ombre',etat:'STOPPED'},pause={lotId:'L1',etat:'en-pause',mode:'ombre',faits:12,total:85,cut:110,message:'Relecture en pause au cut 110 : 12 cuts relus sur 85. Tu peux la reprendre, même après un F5.'};
+ K.etat({choix:'ombre',lot,passe:null});K.afficher();assert.equal(el['relecture-lancer'].hidden,false,'sans passe, un lot clos se relance');
+ K.etat({choix:'ombre',lot,passe:pause});K.afficher();
+ assert.equal(el['relecture-lancer'].hidden,true);assert.equal(el['relecture-arreter'].hidden,true,'l’arrêt de la pause est celui de src/relecture-pause.js');
+ assert.match(el['relecture-ligne'].textContent,/Relecture en pause au cut 110/);assert.equal(el['relecture-ombre'].disabled,false);
+ K.arreter();
+});
+
 test('CONTENU.txt : le choix figé dans le lot et le bilan de sa passe ; rien quand la relecture est coupée',()=>{
  assert.equal(C.texteContenu({id:'L1',scope:{part:8}}),'');assert.equal(C.texteContenu(null),'');
  assert.equal(C.texteContenu({id:'L1',scope:{relecture:'ombre'}},null),'Relecture après le lot L1 : ombre (Ariane visite et ne modifie rien ; ESV marque « vu » chaque cut neuf affiché) (ombre).\n');
