@@ -2706,7 +2706,9 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  const aller=async(cut,chemin)=>{const attentes=(Array.isArray(cfg.occupeAttentesMs)?cfg.occupeAttentesMs:[]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);let nav,demandes=0;
   for(;;){const opId=K.uid();p.operationId=opId;demandes++;
    try{nav=await call('goToCut',{part:partie,cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
-   catch(e){p.operationId=null;ici=null;return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
+   catch(e){p.operationId=null;ici=null;/* « Une autre Ariane » : un F5 n'y change rien, la passe ne se met pas en pause (stopEsv ne la prend pas pour un ESV muet). */
+   if(/^Une autre Ariane/.test(e?.message||''))return {stop:`Relecture arrêtée au cut ${cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`};
+   return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
    p.operationId=null;
    if(!(nav?.resultat==='refuse'&&String(nav.refusal?.code||'')==='ADAPTER_BUSY')||p.arret||p.pauseDemandee||!vivante()||demandes>attentes.length)break;
    const attenteMs=attentes[demandes-1];
