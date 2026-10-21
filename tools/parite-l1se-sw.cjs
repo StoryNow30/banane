@@ -116,7 +116,7 @@ async function main(argv) {
   }
   fs.writeFileSync(a.sortie, lignes.map(x => JSON.stringify(x)).join('\n') + '\n');
   const fin = b.store.events.find(e => e.type === 'passe-differes-ombre-fin') || null, parPasse = (poses, p) => poses.filter(e => e.passe === p).length;
-  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, leviers: a.leviers || null, passe: a.passe ? { differes: fin && fin.differes, posees: fin && fin.posees, ms: fin && fin.ms, parPasse: [1, 2].map(p => parPasse([...ombre.values()], p)), parPasseBanc: [1, 2].map(p => banc.slice(1).filter(l => l.profils['L1-se'] && l.profils['L1-se'].etat === 'pose' && l.profils['L1-se'].passe2 && l.profils['L1-se'].passe2.passe === p).length) } : null,
+  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, leviers: a.leviers || null, passe: a.passe ? { differes: fin && fin.differes, posees: fin && fin.posees, ms: fin && fin.ms, parPasse: [1, 2].map(p => parPasse([...ombre.values()], p)), parPasseBanc: [1, 2].map(p => banc.slice(1).filter(l => l.cut <= dernier && l.profils['L1-se'] && l.profils['L1-se'].etat === 'pose' && l.profils['L1-se'].passe2 && l.profils['L1-se'].passe2.passe === p).length) } : null,
     cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
 }
 main(process.argv.slice(2)).catch(e => { process.stderr.write('parite-l1se-sw : ' + (e && e.stack || e) + '\n'); process.exitCode = 1; });

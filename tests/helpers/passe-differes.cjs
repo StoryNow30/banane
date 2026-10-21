@@ -63,6 +63,8 @@ async function lotPasse({ passe, opts = {}, observateur = true, ecritureVue = tr
 /* Le lot s'arrête sur une pose d'Ariane non validée au cut 115 (dernier cut du lot) : la passe ne part pas. L'opérateur la valide (ESV passe à un autre cut), puis relance. */
 async function relancer(x) {
   x.refus = ev(x.b, 'passe-differes-ecriture-fin').at(-1); x.adapter.identity.cut = 116;
+  /* Le lot est fini depuis longtemps : la grâce de l'observateur passif est écoulée, seule la séance de la passe lui fait ranger les écritures. */
+  const lot = x.b.get('engine').s.batch; lot.stoppedAtEnd = { ...lot.stoppedAtEnd, at: new Date(Date.now() - 60000).toISOString() };
   await x.b.api('passe-differes-ecrire'); await x.b.get('passeDiff').cours;
   const i = x.adapter.calls.indexOf('goToCut'); x.pasPasse = i < 0 ? [] : x.adapter.calls.slice(i);
   return x;
