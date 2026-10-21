@@ -123,3 +123,30 @@ La première version de cette fiche justifiait l'abandon des poses approchées p
 Essais : `tools/verify.cjs` officiel sur la 4.9.5.15, rejeux suspendus pendant le passage : 2 436 essais, 2 434 réussis, **0 échec**, 0 annulé, 2 ignorés (corpus natif absent) ; relevé `audit/verification.*` du paquet. Parité service worker / banc : 2:19 248 sur 248 décisions identiques ; 2:20 second lot en cours au moment de la livraison.
 
 Un premier paquet (SHA-256 `e0183c16…`) n'a pas été livré : sa consigne portait les chiffres du banc avant correction et son relevé d'essais n'était pas celui de la 4.9.5.15.
+
+## Test 16 (4.9.5.16, « 4.9.5 test 16 (L1-e5) ») : la v5 livrée, sans deuxième passe
+
+Branche `claude/50-test16` : la test 15 (07080f6), plus `claude/50-l1-cap5` (a2486b1) et `claude/50-l1-cap5b` (1a13119) fusionnées. Le code de `src/` et de `tools/banc-differes.cjs` est celui de a2486b1, sauf la version et l'export `leviersActifs` (1a13119).
+
+**Leviers livrés** (`src/gcv2-l1.js`) : `LEVIERS_LIVRES` = `LEVIERS_V4` (test 15) + `LEVIERS_V5`. V5 est la chaîne mesurée au banc « a3-bd3 sans deuxième passe » (`c5/r-a3-bd3s/leviers.json`, mesurée sur a2486b1), sauf `diag` et `rechercheDiag`, qui restent coupés : ils n'écrivent que le journal, et aucune décision ne les lit. 22 leviers changent par rapport à la test 15 ; `tests/gcv2-l1-cap5.test.cjs` verrouille la liste. Pas de deuxième passe : `deuxiemePasse` vaut 0. La passe en ombre du service worker (1a13119) est dans le code, mais coupée et inatteignable : aucun réglage ne l'allume. L'écriture d'une deuxième passe dans ESV n'existe pas.
+
+**Mesure de référence** : a3-bd3s, 9 lots, `c5/juger.cjs` (profil L1-se), tableau `t16/tableau.sh`.
+
+| Lot | Laissés sans pose v4b → a3-bd3s | Jugées | ≤ 5 | ≤ 10 | 10–20 | > 20 |
+|---|---|--:|--:|--:|--:|--:|
+| 2:19 | 3 → 2 | 236 | 196 | 235 | 1 | 0 |
+| 2:20 f228f6f9 | 2 → 1 | 175 | 134 | 172 | 3 | 0 |
+| 2:20 fd7067f7 | 8 → 1 (plus 29 vides) | 15 | 11 | 13 | 2 | 0 |
+| 2:11 | 3 → 2 | 9 | 3 | 7 | 2 | 0 |
+| 2:6 | 3 → 2 | 9 | 5 | 7 | 2 | 0 |
+| 2:7 | 2 → 2 | 19 | 13 | 18 | 1 | 0 |
+| 2:13 | 0 → 0 | 0 | 0 | 0 | 0 | 0 |
+| 2:17 | 18 → 4 | 37 | 26 | 35 | 2 | 0 |
+| 2:18 | 18 → 11 | 25 | 19 | 23 | 2 | 0 |
+| **total** | **57 → 25** | **525** | **407 (77,5 %)** | **510 (97,1 %)** | 15 | **0** |
+
+Sur l'ensemble : 0 pose à plus de 50 mm, 0 mauvaise voie, 0 vert de la chaîne changé. Pour comparer, sur les mêmes lots :
+- b-r7s (b-r7a sans deuxième passe) : 31 laissés sans pose ;
+- a3-bd3 (avec la deuxième passe, non livrée) : 12.
+
+2:18 garde 11 cuts laissés sans pose, au-dessus de la cible de moins de 5.

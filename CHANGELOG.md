@@ -1,5 +1,22 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.16 — 4.9.5 test 16 (L1-e5) (21/10)
+
+Manifeste `4.9.5.16`, « 4.9.5 test 16 (L1-e5) », paquet `ariane-4.9.5-test.16.zip` ; base : la 4.9.5 test 15 (`claude/50-test15`) avec les branches du cap 5 fusionnées (`claude/50-l1-cap5` a2486b1, `claude/50-l1-cap5b` 1a13119) ; fiches `fiches/PASSATION_CAP5_A.md`, `fiches/PASSATION_CAP5_A3.md`, `fiches/PASSATION_CAP5_B.md`, `fiches/L1_APPRENTISSAGE.md`.
+**Le lot change, sur ses différés seulement** (profil `'L1-se'` par défaut, inchangé ; la chaîne du lot et ses verts inchangés). Décision L1-e avec les **leviers v5 livrés** (`LEVIERS_LIVRES` = `LEVIERS_V4` + `LEVIERS_V5`, `src/gcv2-l1.js`), c'est-à-dire la chaîne mesurée au banc « a3-bd3 sans deuxième passe » (a3-bd3s) :
+- recherche recentrée en ADV et en abords : le moteur est relancé sur des graines (paire de la test 13, paire retenue, voisin validé le plus proche, voie ajustée, départ), paires de cellules fortes à 15 mm de l'écartement de référence, à 40 mm par cut en travers du voisin validé le plus proche, à 20 mm en hauteur, uniques, avec au moins 60 points de dessus ;
+- pose contredite par une cellule forte à 22–45 mm : remplacée par la paire recentrée, sinon rien ; pose validée remplacée si la paire recentrée s'en écarte de plus de 12 mm ; encadrement par deux voisins validés à 1 cut ;
+- correction d'écartement d'une paire validée par la test 13 en ADV seulement ; anomalie d'écartement non corrigée gardée si p ≥ 0,8 et la voie à 35 mm du voisin validé le plus proche ;
+- voisins cohérents pour la voie absolue ; branche rail par rail en dernier recours (60 mm en hauteur, extrapolation sur 2 cuts) ;
+- coût : arrêt à la première paire sûre et unique, recherche sautée pour une pose à 2,5 mm du voisin en ADV.
+
+**Pas de deuxième passe** : `deuxiemePasse` 0. La passe en ombre du service worker (1a13119) est dans le code, coupée et inatteignable (aucun réglage ne l'allume) ; l'écriture d'une deuxième passe dans ESV n'existe pas. Diagnostics `diag` et `rechercheDiag` coupés (journal seulement). Réglage `lot.recaptureVide` (cap 5) présent, coupé.
+Consigne : `consignes/seance-terrain-4.9.5-test-16-2026-10-21.md` ; retour arrière : la 4.9.5 test 15 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Mesures** (rejeu du banc, chaîne a3-bd3s sur a2486b1, `juger.cjs` contre l'opérateur ; parties ayant servi au réglage, pas hors échantillon). Cuts laissés sans pose avec un nuage exploitable, test 15 (v4b) → test 16 : 2:19 3 → 2 ; 2:20 second lot 2 → 1 ; 2:20 premier lot 8 → 1 (plus 29 captures vides) ; 2:11 3 → 2 ; 2:6 3 → 2 ; 2:7 2 → 2 ; 2:13 0 → 0 ; 2:17 18 → 4 ; 2:18 18 → 11 ; total 57 → 25. Poses jugées : 494 → 525 ; à 5 mm au plus 75,3 % → 77,5 % ; à 10 mm au plus 95,3 % → 97,1 % ; à plus de 20 mm 5 → 0 ; mauvaise voie 0 ; à plus de 50 mm 0 ; verts de la chaîne changés 0.
+- Essais : `tests/gcv2-l1-cap5.test.cjs` verrouille V4, V5 et la liste des 22 leviers changés ; `tests/gcv2-l1-cap5b.test.cjs` essaie chaque levier depuis la base v4 ; `tests/lot-profil-passe-differes-sw.test.cjs` (passe en ombre : coupée par défaut, rien vers ESV) ; `tests/pose-lot-inchanges-4959.test.cjs` : seul `lot.recaptureVide` (coupé) s'ajoute aux réglages.
+- Non vérifié : jamais posé dans ESV ; pas de mesure hors échantillon ; règles peu validées (écartement de la paire recentrée à 15 mm et branche en dernier recours : deux ou trois parties ; anomalie non corrigée à p 0,8 : quatre cuts) ; coût de la recherche en ADV sur le terrain ; Edge.
+
 ## 4.9.5.15 — 4.9.5 test 15 (L1-e4) (20/10)
 
 Manifeste `4.9.5.15`, « 4.9.5 test 15 (L1-e4) », paquet `ariane-4.9.5-test.15.zip` ; base : la 4.9.5 test 14 avec les leviers v4 du cap 5 (`claude/50-l1-cap5`, `fiches/L1_APPRENTISSAGE.md`).
