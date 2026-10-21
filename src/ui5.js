@@ -146,6 +146,7 @@
       connexionOuverte: !!$('connection')?.open,
       boutons: boutons(mode), boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
       lot: { etat: txt('lot-etat'), ton: tonClasse('lot-etat'), cut: txt('lot-cut') || '—', pct, traites: txt('lot-traites') === '—' ? '' : txt('lot-traites'), traitesUnite: txt('lot-traites-u'), compteurs, finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
+      relPause: (() => { try { const R2 = root.ArianeRelecturePause; return R2 ? R2.vue(R2.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
       echo: { etat: visible('native-etat') ? txt('native-etat') : '', ton: tonClasse('native-etat'), visites: txt('native-count') || '0', corriges: echo.corriges },
       rows: lot.rows, aPoser: lot.aPoser, echoRows: echo.echoRows,

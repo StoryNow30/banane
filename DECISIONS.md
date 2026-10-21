@@ -2976,3 +2976,15 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mic** sur la palette (type Raycast) de la maquette N : « un peu trop fouillie, pas fou fou ». **Refaite** : une ligne de recherche, l'état en petit à droite, **quatre commandes au plus** à l'ouverture (celles qui servent maintenant) ; activités, onglets, cache, réglages et le retour à l'interface Ariane n'apparaissent que si l'on tape. Plus de groupes, de pastille d'état séparée, de colonne « type », de fond imitant ESV. L'accès depuis l'accueil est une ligne discrète en bas à droite (« Interface palette · Ctrl K »), en plus de Réglages.
 - **Relecture en pause** (plan : `fiches/PLAN_RELECTURE_PAUSE.md`) : garde jusqu'au prochain lot ou « Arrêter », au plus une journée ; **F5 pendant la relecture : un réglage « mettre en pause » (défaut) ou « arrêter »**, au choix de Mic (« les deux ») ; la session principale décide du numéro de version et de la coordination avec la L1.
 
+
+## D-234 — Pause et reprise de la relecture : construite, éteinte par défaut (2026-10-21)
+
+- Construit selon fiches/PLAN_RELECTURE_PAUSE.md : point de reprise écrit après chaque cut relu, pause et reprise par le service worker, reprise possible après F5 ou redémarrage d'Ariane, gardée au plus un jour.
+- Réglage « Pause et reprise de la relecture » **éteint par défaut** (clé `banane51RelecturePauseReglage`) : éteint, la relecture se comporte exactement comme avant (essai `relecture-pause-identique`).
+- F5 « les deux » = un réglage : mettre en pause (défaut quand la fonction est allumée) ou arrêter.
+- Une relecture en pause bloque le lot et la deuxième passe (mêmes gardes que la relecture vivante) jusqu'à « Reprendre » ou « Arrêter ». Jamais de pause entre la pose et la validation d'une correction.
+- Nouvelle présentation : ligne + « Reprendre la relecture » / « Arrêter la relecture » à l'accueil et dans Orbite (clic sur les boutons du module `src/relecture-pause.js`).
+- Bloc A : « 999999 » jamais affiché (« fin de partie ») ; pastille « Aucun onglet ESV » au lieu de « Prêt » sans onglet.
+- Pas de numéro de version ni de zip : la session principale s'en charge.
+- À mesurer sur ESV réel : délai de réinstallation de l'observateur après F5.
+- Constat : `manifeste-parties` (21 s) et `verts-a-controler-sw` (19 s) frôlent la limite de 20 s par fichier déjà sans ces changements.

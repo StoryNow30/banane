@@ -102,6 +102,26 @@ test('Ariane : sans onglet ESV, la pastille le dit au lieu de « Prêt »',()=>{
  const p=RA.rendre('ariane',{mode:'home',ar:arBase('pret',{horsLigne:false,lotOuvert:false,traites:0,cibles:null})},{},'accueil');
  assert.match(p,/class="etat pret"/);
 });
+test('Ariane : relecture en pause → ligne, « Reprendre » et « Arrêter » (clic sur les boutons du module) ; grisé si ESV ne répond pas',()=>{
+ const vue=(o)=>({pause:null,reprendre:null,arreter:false,ligne:'',...o});
+ const actif=vue({reprendre:{texte:'Reprendre la relecture au cut 110',actif:true,raison:''},arreter:true,ligne:'Relecture en pause au cut 110 · 12 cuts relus sur 85.'});
+ for(const [ecran,mode] of [['accueil','home'],['orbite','automatic']]){
+  const h=RA.rendre('ariane',{mode,ar:arBase('pret',{lotOuvert:false,traites:0,cibles:null}),relPause:actif},{},ecran);
+  assert.match(h,/12 cuts relus sur 85/,ecran);assert.match(h,/data-act="legacy:relecture-reprendre"/,ecran);assert.match(h,/data-act="legacy:relecture-arreter-pause"/,ecran);
+  assert.doesNotMatch(h,/data-act="legacy:relecture-reprendre"[^>]*disabled/,ecran);
+ }
+ const muet=vue({reprendre:{texte:'Reprendre la relecture',actif:false,raison:'Disponible quand ESV répond.'},arreter:true});
+ assert.match(RA.rendre('ariane',{mode:'automatic',ar:arBase('pret',{lotOuvert:false}),relPause:muet},{},'orbite'),/data-act="legacy:relecture-reprendre" disabled title="Disponible quand ESV répond."/);
+ const enCours=vue({pause:{texte:'Pause',actif:true}});
+ assert.match(RA.rendre('ariane',{mode:'automatic',ar:arBase('pret',{lotOuvert:false}),relPause:enCours},{},'orbite'),/data-act="legacy:relecture-pause">.*Pause/);
+ assert.doesNotMatch(RA.rendre('ariane',{mode:'automatic',ar:arBase('pret',{lotOuvert:false})},{},'orbite'),/relpause/,'rien sans pause ni relecture');
+});
+test('Ariane : les actions du module de pause désignent des éléments de panel.html ; le module est chargé et ne touche ni ESV ni les exports',()=>{
+ for(const id of ['relecture-pause','relecture-reprendre','relecture-arreter-pause','relecture-pause-actif','relecture-f5'])assert.ok(ids.has(id),id);
+ assert.match(html,/src\/relecture-pause\.js/);
+ const src=lire('src/relecture-pause.js');assert.doesNotMatch(src,/export-|exporter|executeScript|chrome\.tabs/);
+ const ui=lire('src/ui5.js');assert.match(ui,/FIN_PARTIE\s*=\s*999999/);
+});
 test('Ariane : « 999999 » n’est jamais affiché comme borne',()=>{
  const ui=lire('src/ui5.js');
  const fin=new Function(ui.match(/const FIN_PARTIE = 999999;\n\s*const finVisible = [^\n]+/)[0]+';return finVisible;')();

@@ -272,6 +272,15 @@
     const t = [m.avis, m.connexionOuverte ? 'ESV n’est pas connecté. Recharge la page ESV (F5) si elle est figée, puis reconnecte-la dans Réglages.' : '', snap.notice?.erreur ? snap.notice.texte : '', snap.relecture?.interrompue || ''].filter(Boolean);
     return t.length ? `<div class="alerte" role="alert">${ic('alerte', 20)}<div>${t.map(x => `<p>${esc(x)}</p>`).join('')}</div></div>` : '';
   }
+  /* 4.9.6 (D-232) : relecture en pause ou pause possible — une ligne et les boutons du module `src/relecture-pause.js`, rien d'autre. */
+  const relAr = (snap, cls = 'pill') => {
+    const r = snap.relPause; if (!r || (!r.pause && !r.reprendre && !r.arreter)) return '';
+    const b = [];
+    if (r.pause) b.push(`<button type="button" class="${cls} sombre petit" data-act="legacy:relecture-pause"${r.pause.actif ? '' : ' disabled'}>${ic('pause')}${esc(r.pause.texte)}</button>`);
+    if (r.reprendre) b.push(`<button type="button" class="${cls}" data-act="legacy:relecture-reprendre"${r.reprendre.actif ? '' : ' disabled'}${r.reprendre.raison ? ` title="${esc(r.reprendre.raison)}"` : ''}>${ic('play')}${esc(r.reprendre.texte)}</button>`);
+    if (r.arreter) b.push(`<button type="button" class="${cls} sombre petit danger" data-act="legacy:relecture-arreter-pause">Arrêter la relecture</button>`);
+    return `<div class="relpause">${r.ligne ? `<p>${esc(r.ligne)}</p>` : ''}<div class="act">${b.join('')}</div></div>`;
+  };
   function accueilAr(snap, a, m) {
     const titre = a.partie != null ? `Partie ${esc(a.partie)}` : 'Aucune partie ouverte';
     const phrase = a.etat === 'cours' ? `Orbite pose le cut ${esc(a.cours ?? '…')}. Ne change pas de cut dans ESV pendant le lot.`
@@ -291,7 +300,7 @@
     const stO = { cours: `En cours · cut ${esc(a.cours ?? '…')}`, dem: 'Pause demandée', pause: 'En pause', alerte: 'Attend ta décision', fini: 'Terminé', arrete: 'Arrêté', pret: 'Prêt' }[a.etat] || 'Prêt';
     const stE = a.lotOuvert ? `${ic('lock', 12)} Indisponible pendant le lot` : esc(a.echoEtat || 'Prêt');
     const nbRevue = a.differes + (a.vertsNombre || 0);
-    return `${enteteAr(a, 'accueil')}<section class="une"><div class="in"><div>${pastille(a)}<h2>${titre}</h2><p>${phrase}</p><div class="bts">${bts}</div></div><div class="donnee">${don}</div></div></section>${alerteAr(snap, m)}
+    return `${enteteAr(a, 'accueil')}<section class="une"><div class="in"><div>${pastille(a)}<h2>${titre}</h2><p>${phrase}</p><div class="bts">${bts}</div>${relAr(snap)}</div><div class="donnee">${don}</div></div></section>${alerteAr(snap, m)}
  <section class="rangee"><h3>Activités${a.partie != null ? ' · partie ' + esc(a.partie) : ''}</h3><div class="vignettes">
   ${vig('orbite', 'o', 'Orbite', 'Ariane pose et valide les rails', stO, false)}
   ${vig('echo', 'e', 'Écho', 'Tu corriges, Écho garde les exemples', stE, a.lotOuvert)}
@@ -327,7 +336,7 @@
     const bornesEdit = a.etat === 'pret' ? `<div class="bornes"><label>Premier cut<input type="number" min="0" data-borne="start" value="${esc(a.bornes?.debut ?? '')}"></label><label>Dernier cut<input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(a.bornes?.fin ?? '')}"></label></div>` : '';
     const suivi = `<div class="suivi"><div class="n"><b>${esc(a.traites)}</b> <span>${a.cibles ? `sur ${esc(a.cibles)} cuts traités` : 'cuts traités'}</span></div>
    <div class="d"><span><i class="m p"></i>${esc(a.poses)} posés</span><span><i class="m d"></i>${esc(a.differes)} différés</span>${a.restants != null ? `<span class="r">${esc(a.restants)} restants</span>` : ''}</div>
-   ${barreAr(a, a.etat === 'cours')}<div class="cour">${ligne}</div>${bornesEdit}<div class="act">${examiner ? `<button type="button" class="pill" data-act="aller:revue">Examiner les ${esc(a.aExaminer)} cuts</button>` : commandeAr(a, m)}</div>${autresAr(examiner && m.primaire ? { autres: [m.primaire, ...m.autres] } : m)}</div>`;
+   ${barreAr(a, a.etat === 'cours')}<div class="cour">${ligne}</div>${bornesEdit}<div class="act">${examiner ? `<button type="button" class="pill" data-act="aller:revue">Examiner les ${esc(a.aExaminer)} cuts</button>` : commandeAr(a, m)}</div>${autresAr(examiner && m.primaire ? { autres: [m.primaire, ...m.autres] } : m)}${relAr(snap)}</div>`;
     return `${enteteAr(a, 'orbite')}<section class="scene"><div><div class="ar-nom">${picto('orbite')}<b>Orbite</b><span>${a.partie != null ? '· partie ' + esc(a.partie) : ''}</span></div>
    <h2>${titre}</h2><div class="phr">${pastille(a)}<span class="bo">${bornes}</span></div><p>${esc(phrase)}</p>${alerteAr(snap, m)}</div>${suivi}</section>
  ${parcoursAr(a)}<div class="cols"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${enLot ? 'à reprendre après le lot' : 'à reprendre'}</small></div>${listeDiff(a, 'Aucun différé pour l’instant.')}</section></div>`;

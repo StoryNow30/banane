@@ -26,6 +26,8 @@ const L1={'src/gcv1-shadow.js':'le réservoir du moteur sur demande (`scientific
 const NOUVEAUX=['gcv2-l1.js','gcv2-parametres-l1.js','raison-correction.js'];
 /* Fichiers de l'habillage du panneau (UI 5.0) : aucun ne lit ni ne commande la pose. */
 const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js'];
+/* 4.9.6 (D-232) : module du panneau pour la pause de la relecture — il ne parle qu'au service worker (relecture-*), jamais à ESV, ni à la pose. */
+const RELECTURE_PAUSE=['relecture-pause.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
@@ -36,7 +38,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

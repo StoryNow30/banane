@@ -2167,7 +2167,7 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  * Mémoire volatile : un redémarrage du service worker arrête la passe (relecture-fin « interrompue » au redémarrage) ; une correction
  * interrompue entre la pose et la validation est notée par cut (storage.local), dite au panneau, et bloque relecture, lot et retour à
  * un cut jusqu'à « J'ai contrôlé le cut N » (`relecture-acquitter`). */
-const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',CLE_RELECTURE_PASSE='banane50RelecturePasse',MODES_RELECTURE=['coupee','ombre','corriger'];
+const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',CLE_RELECTURE_PASSE='banane50RelecturePasse',CLE_RELECTURE_REPRISE='banane51RelectureReprise',CLE_RELECTURE_REGLAGE_PAUSE='banane51RelecturePauseReglage',MODES_RELECTURE=['coupee','ombre','corriger'];
 const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer']);
 /* Actions refusées tant qu'une correction de relecture interrompue n'est pas contrôlée par Mic. */
 const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer']);
@@ -2182,7 +2182,11 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * finie (`ADAPTER_BUSY`, terrain 2:19) : 6 essais au plus, 11,75 s en tout. */
 const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
  occupeAttentesMs:[250,500,1000,2000,4000,4000],...(globalThis.BananeSettings?.relecture||{})});
-const passeActive=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
+/* 4.9.6 (D-232, D-233 ; fiches/PLAN_RELECTURE_PAUSE.md) : une passe EN PAUSE n'agit plus, mais reste « active » pour les gardes : ni lot, ni Écho, ni retour à un cut,
+ * ni seconde passe tant qu'elle n'est pas reprise ou arrêtée. `passeVivante` : celle qui travaille ou se prépare (l'ancien sens de `passeActive`). */
+const passeVivante=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
+const passeActive=()=>passeVivante()||relecture.passe?.etat==='en-pause';
+const REPRISE_DUREE_MS=24*3600*1000;
 const RANG_MODE={coupee:0,ombre:1,corriger:2};
 async function relectureChoix(){let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
 async function relectureChoisir(args){if(!MODES_RELECTURE.includes(args?.mode))throw Error('Relecture après le lot : choix inconnu.');
@@ -2208,13 +2212,15 @@ async function relectureReglagesResume(){try{const r=await relectureReglages(),q
 async function relectureEtat(){const p=relecture.passe,intentions=await relectureIntentions(),b=engine?.s?.batch;
  return {choix:await relectureChoix(),lot:b?.id?{id:b.id,mode:relectureDuLot(b)||'coupee',etat:b.state}:null,reglages:await relectureReglagesResume(),
   passe:p?{lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,etat:p.etat,auto:p.auto===true,total:p.total,faits:p.faits,corriges:p.corriges,refusees:p.refusees,
-   vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,cut:p.cut,plage:p.plage,message:p.message,debut:p.debut,fin:p.fin,arretDemande:p.arret===true,reglages:p.reglages??null}:null,
-  correctionInterrompue:intentions.length&&!passeActive()?intentions[0]:null,correctionsInterrompues:passeActive()?[]:intentions};}
-function relectureVue(){const p=relecture.passe;return p?{etat:p.etat,mode:p.modeEffectif||p.mode,faits:p.faits,total:p.total,corriges:p.corriges,vus:p.vus,cut:p.cut,message:p.message}:null;}
+   vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,cut:p.cut,plage:p.plage,message:p.message,debut:p.debut,fin:p.fin,arretDemande:p.arret===true,reglages:p.reglages??null,pauseDemandee:p.pauseDemandee===true,pauseRaison:p.pauseRaison??null,reprise:p.reprise===true,
+   expire:p.etat==='en-pause'&&p.point?.savedAt?Date.parse(p.point.savedAt)+REPRISE_DUREE_MS:null}:null,
+  correctionInterrompue:intentions.length&&!passeVivante()?intentions[0]:null,correctionsInterrompues:passeVivante()?[]:intentions,
+  repriseReglage:await relectureRepriseReglage()};}
+function relectureVue(){const p=relecture.passe;return p?{etat:p.etat,mode:p.modeEffectif||p.mode,faits:p.faits,total:p.total,corriges:p.corriges,vus:p.vus,cut:p.cut,message:p.message,...(p.reprise?{pauseDemandee:p.pauseDemandee===true,pauseRaison:p.pauseRaison??null}:{})}:null;}
 /* Une nouvelle passe, à l'état « preparation », posée AVANT toute attente (revue, correction 2). */
 function relectureNouvelle(b,auto){const debut=new Date().toISOString();
  relecture.passe={gen:++relecture.gen,lotId:b?.id??null,mode:relectureDuLot(b),modeEffectif:null,etat:'preparation',auto,total:0,faits:0,corriges:0,refusees:0,
-  vus:0,vusCuts:new Set(),cutsNeufs:0,cutsNeufsAnnonces:null,cut:null,plage:null,message:'Relecture en préparation : elle part dans un instant.',debut,fin:null,arret:false,reglages:null,operationId:null,attente:null};
+  vus:0,vusCuts:new Set(),cutsNeufs:0,cutsNeufsAnnonces:null,cut:null,plage:null,message:'Relecture en préparation : elle part dans un instant.',debut,fin:null,arret:false,reglages:null,operationId:null,attente:null,reprise:false,repriseF5:'pause',pauseDemandee:false,pauseRaison:null,point:null,pointStocke:null};
  return relecture.passe;}
 /* Fin naturelle d'un lot créé avec la relecture : la passe est planifiée une fois par lot, et existe dès maintenant (« preparation »). */
 function relecturePlanifier(){const b=engine?.s?.batch;if(!b?.id||relecture.planifie.has(b.id)||!relectureDuLot(b)||passeActive())return;
@@ -2330,8 +2336,10 @@ async function relectureRefus(b,auto){
 async function relectureLancer({auto=false,passe=null}={}){
  let p;
  if(auto){p=passe;if(!p||relecture.passe!==p||p.etat!=='preparation')return relectureEtat();}
- else{if(passeActive())throw Error(`Relecture déjà ${relecture.passe.etat==='preparation'?'en préparation':'en cours'} : une seule passe à la fois.`);
+ else{if(relecture.passe?.etat==='en-pause')throw Error('Relecture en pause : clique sur « Reprendre la relecture » (ou « Arrêter la relecture »).');
+  if(passeActive())throw Error(`Relecture déjà ${relecture.passe.etat==='preparation'?'en préparation':'en cours'} : une seule passe à la fois.`);
   p=relectureNouvelle(engine.s.batch,false);}
+ {const rg=await relectureRepriseReglage();p.reprise=rg.actif;p.repriseF5=rg.f5;}   /* 4.9.6 : pause et reprise, éteintes par défaut */
  /* Jeton de génération : une passe remplacée, ou arrêtée pendant sa préparation, ne part jamais. */
  const vivante=()=>relecture.passe===p&&p.gen===relecture.gen&&p.etat==='preparation';
  const nonLancee=(raison,issue='non-lancee')=>{if(relecture.passe===p){p.etat=issue==='arret'?'arretee':'non-lancee';p.message=`Relecture non lancée : ${raison}.`;p.fin=new Date().toISOString();}
@@ -2369,6 +2377,7 @@ async function relectureLancer({auto=false,passe=null}={}){
     zones:Object.fromEntries(Object.entries(reglages.zones||{}).map(([z,x])=>[z,x?.corriger===true]))},
    noteMode:motif?`Mode « ${modeEffectif} »${modeEffectif!==p.mode?` (au lieu de « ${p.mode} »)`:''} : ${motif}.`:null});
   p.message=p.noteMode;
+  if(p.reprise)await relectureRepriseEffacer();   /* une passe neuve remplace toute reprise gardée */
   try{await chrome.storage.local.set({[CLE_RELECTURE_PASSE]:{lotId:p.lotId,gen:p.gen,debut:p.debut,mode:p.mode,modeEffectif}});}catch{/* mémoire seule */}
   relectureJournal('relecture-debut',{mode:p.mode,modeEffectif,choixCourant,motif,auto,total:sel.total,traverses:sel.traverses,parZone:sel.parZone,variante:reglages.variante,
    ecartementPartieMm:entree.ecartementPartieMm??null,cutsNeufsAnnonces:neufs,sourcesLot:entree.sources,chaine:'vide',validation:cfg.validation,
@@ -2377,19 +2386,84 @@ async function relectureLancer({auto=false,passe=null}={}){
    reglages:p.reglages},p);
   relecture.tache=relecturePasse(p,b,sel,reglages,entree).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
    relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges,vus:p.vus},p);}
-   void relectureOublierPasse(p);});
+   void relectureOublierPasse(p);void relectureRepriseEffacer();});
   return relectureEtat();}
  catch(e){if(relecture.passe===p&&p.etat==='preparation')return nonLancee(`erreur pendant la préparation (${String(e?.message||e).slice(0,200)})`);throw e;}}
 async function relectureOublierPasse(p){try{const r=(await chrome.storage.local.get(CLE_RELECTURE_PASSE))?.[CLE_RELECTURE_PASSE];
  if(r&&r.gen===p.gen&&r.lotId===p.lotId)await chrome.storage.local.remove?.(CLE_RELECTURE_PASSE);}catch{/* rien */}}
-/* Au redémarrage du service worker : une passe en cours a été perdue. Elle est close dans le journal (« interrompue »). */
-async function relectureApresRedemarrage(){try{const r=(await chrome.storage.local.get(CLE_RELECTURE_PASSE))?.[CLE_RELECTURE_PASSE];if(!r||relecture.passe)return;
+/* ---- 4.9.6 (D-232, D-233 ; fiches/PLAN_RELECTURE_PAUSE.md) : PAUSE ET REPRISE DE LA RELECTURE, même après un F5 ou un redémarrage du service worker.
+ * Éteinte par défaut (réglage `banane51RelecturePauseReglage`, panneau : Réglages). Allumée : la passe garde, après chaque cut relu, un POINT DE REPRISE
+ * (`banane51RelectureReprise`) : la sélection déjà calculée, le prochain cut, les compteurs, la chaîne d'appuis, les écartements des verts, les plages sautées.
+ *  - « Pause » : s'arrête au prochain point sûr (jamais entre la pose et la validation d'une correction), garde le point, passe « en-pause ».
+ *  - F5 ou ESV muet pendant la passe : pause automatique (réglage « Si ESV est rechargé » = pause, par défaut) ou arrêt comme avant (= arret).
+ *    Une correction interrompue reste une erreur : elle bloque tout jusqu'à « J'ai contrôlé le cut N ».
+ *  - Redémarrage du service worker : la passe revient EN PAUSE (jamais relancée seule).
+ *  - « Reprendre » : mêmes contrôles qu'au départ (relectureRefus), puis repart au cut gardé, sans repasser sur les cuts relus ; le cut en cours à la pause est refait.
+ *  - « Arrêter » est définitif : il efface le point. Une reprise garde au plus 24 h ; un lot différent l'efface. */
+async function relectureRepriseReglage(){let r={};try{r=(await chrome.storage.local.get(CLE_RELECTURE_REGLAGE_PAUSE))?.[CLE_RELECTURE_REGLAGE_PAUSE]||{};}catch{r={};}
+ return {actif:r.actif===true,f5:r.f5==='arret'?'arret':'pause'};}
+async function relectureRepriseReglageChoisir(args){if(passeActive())throw Error('Relecture en cours ou en pause : change ce réglage après sa fin.');
+ await chrome.storage.local.set({[CLE_RELECTURE_REGLAGE_PAUSE]:{actif:args?.actif===true,f5:args?.f5==='arret'?'arret':'pause'}});return relectureRepriseReglage();}
+async function relectureRepriseLire(){try{const v=(await chrome.storage.local.get(CLE_RELECTURE_REPRISE))?.[CLE_RELECTURE_REPRISE];
+ return v&&v.v===1&&Array.isArray(v.sel?.cuts)&&Number.isInteger(v.index)?v:null;}catch{return null;}}
+async function relectureRepriseEffacer(){try{await chrome.storage.local.remove?.(CLE_RELECTURE_REPRISE);}catch{/* rien */}}
+const repriseExpiree=pt=>!pt||!(Date.now()-Date.parse(pt.savedAt||0)<REPRISE_DUREE_MS);
+function relectureDepuisPoint(pt,raison,f5='pause'){const sc=pt.sel.cuts[pt.index];
+ relecture.passe={gen:++relecture.gen,lotId:pt.lotId,mode:pt.mode,modeEffectif:pt.modeEffectif,etat:'en-pause',auto:false,total:pt.total,faits:pt.faits,corriges:pt.corriges,refusees:pt.refusees,
+  vus:pt.vus,vusCuts:new Set(pt.vusCuts||[]),cutsNeufs:pt.cutsNeufs||0,cutsNeufsAnnonces:pt.cutsNeufsAnnonces??null,cut:sc?.cut??null,plage:pt.sel.plages?.[sc?.plage]?.libelle??null,
+  message:`Relecture gardée en pause au cut ${sc?.cut??'?'} : ${pluriel(pt.faits,'cut')} relu${pt.faits>1?'s':''} sur ${pt.total}. Tu peux la reprendre.`,debut:pt.debut,fin:null,arret:false,
+  reglages:pt.reglages??null,operationId:null,attente:null,noteMode:pt.noteMode??null,reprise:true,repriseF5:f5,pauseDemandee:false,pauseRaison:raison,point:pt,pointStocke:true};
+ return relecture.passe;}
+/* Au redémarrage du service worker : une passe en cours a été perdue. Avec un point de reprise valable (réglage allumé, même lot, moins de 24 h), elle revient EN PAUSE ;
+ * sinon elle est close dans le journal (« interrompue »). */
+async function relectureApresRedemarrage(){try{const st=await chrome.storage.local.get([CLE_RELECTURE_PASSE,CLE_RELECTURE_REPRISE]),r=st?.[CLE_RELECTURE_PASSE];if(relecture.passe)return;
+ const pt=st?.[CLE_RELECTURE_REPRISE]||null;
+ if(pt){const reg=await relectureRepriseReglage(),b=engine?.s?.batch,bon=pt.v===1&&Array.isArray(pt.sel?.cuts)&&Number.isInteger(pt.index)&&reg.actif&&b?.id===pt.lotId&&!repriseExpiree(pt);
+  if(bon){await chrome.storage.local.remove?.(CLE_RELECTURE_PASSE);relecture.planifie.add(pt.lotId);const p=relectureDepuisPoint(pt,'redemarrage',reg.f5);
+   relectureJournal('relecture-pause',{mode:p.mode,modeEffectif:p.modeEffectif,raison:'redemarrage',cut:p.cut,index:pt.index,faits:p.faits,total:p.total,corriges:p.corriges,stocke:true},p);return;}
+  await relectureRepriseEffacer();}
+ if(!r)return;
  await chrome.storage.local.remove?.(CLE_RELECTURE_PASSE);
  journalerSimple('relecture-fin',{lotId:r.lotId??null,mode:r.mode??null,modeEffectif:r.modeEffectif??null,issue:'interrompue',raison:'service worker redémarré pendant la passe',debut:r.debut??null});}catch{/* rien */}}
 void ready.then(relectureApresRedemarrage).catch(()=>{});
-function relectureArreter(){const p=relecture.passe;if(!p||!passeActive())return {arretDemande:false};p.arret=true;
+function relectureArreter(){const p=relecture.passe;if(!p||!passeActive())return {arretDemande:false};
+ if(p.etat==='en-pause'){p.etat='arretee';p.fin=new Date().toISOString();p.pauseDemandee=false;p.message=`Relecture arrêtée à ta demande (elle était en pause) : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}.`;
+  relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'arret',raison:'arrêtée pendant la pause',faits:p.faits,total:p.total,corriges:p.corriges,refusees:p.refusees,vus:p.vus,
+   cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin)-Date.parse(p.debut)},p);
+  void relectureRepriseEffacer();void relectureOublierPasse(p);return {arretDemande:true,etat:p.etat};}
+ p.arret=true;
  /* T-6 : raison neutre, celle d'une annulation de retour à un cut (aucune marque de la relecture dans la page). */
  if(p.operationId)void adapter.cancel({operationId:p.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {arretDemande:true,etat:p.etat};}
+/* Pause demandée : la passe finit l'étape en cours (jamais entre la pose et la validation d'une correction), puis s'arrête en gardant son point. */
+function relectureMettreEnPause(){const p=relecture.passe;
+ if(!p||p.etat!=='en-cours')throw Error(p?.etat==='preparation'?'La relecture part dans un instant : mets-la en pause une fois partie.':'Aucune relecture en cours à mettre en pause.');
+ if(!p.reprise)throw Error('Pause de la relecture éteinte dans les réglages : elle ne peut que s’arrêter.');
+ p.pauseDemandee=true;
+ if(p.operationId)void adapter.cancel({operationId:p.operationId,reason:'goto-cut-cancel'}).catch(()=>{});
+ return {pauseDemandee:true,etat:p.etat};}
+/* Reprise : mêmes contrôles qu'au départ, puis la passe repart au cut gardé. */
+async function relectureReprendre(){const p=relecture.passe;
+ if(!p||p.etat!=='en-pause')throw Error('Aucune relecture en pause.');
+ const b=engine.s.batch,pt=p.point&&!repriseExpiree(p.point)?p.point:await relectureRepriseLire();
+ if(!pt||pt.lotId!==p.lotId||b?.id!==p.lotId||repriseExpiree(pt)){p.etat='arretee';p.fin=new Date().toISOString();p.message='Relecture en pause abandonnée : le lot a changé ou la reprise a plus d’un jour.';
+  await relectureRepriseEffacer();await relectureOublierPasse(p);relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'interrompue',raison:'reprise expirée ou lot changé',faits:p.faits,total:p.total},p);
+  throw Error(p.message);}
+ const refus=await relectureRefus(b,false);if(refus)throw Error(`Relecture non reprise : ${refus}.`);
+ const Q=globalThis.BananeRelectureCritere,cfg=reglageRelecture(),reglages=await relectureReglages(),choixCourant=await relectureChoix();
+ /* Jamais plus permissif qu'à la pause : le plus prudent du mode gardé et du choix courant, puis les mêmes verrous qu'au départ. */
+ let modeEffectif=RANG_MODE[choixCourant]<RANG_MODE[pt.modeEffectif]?choixCourant:pt.modeEffectif;
+ if(modeEffectif==='coupee')throw Error('Relecture non reprise : relecture coupée dans le panneau depuis la pause.');
+ if(modeEffectif==='corriger'&&(cfg.validation!=='maj-espace'||globalThis.BananeSettings?.observateurPassif?.actif===false||!Q.correctionPermise(reglages).ok))modeEffectif='ombre';
+ const entree=await relectureEntree(b);
+ const entreeReprise={...entree,ecartementPartieMm:Number.isFinite(pt.ecartementPartieMm)?pt.ecartementPartieMm:entree.ecartementPartieMm,total:Number.isInteger(entree.total)?entree.total:null};
+ if(relecture.passe!==p||p.etat!=='en-pause')throw Error('Relecture non reprise : la passe a changé pendant les contrôles.');
+ p.gen=++relecture.gen;p.etat='en-cours';p.pauseDemandee=false;p.arret=false;p.fin=null;p.modeEffectif=modeEffectif;p.message=`Relecture reprise au cut ${pt.sel.cuts[pt.index]?.cut??'?'}.`;
+ relectureJournal('relecture-reprise',{mode:p.mode,modeEffectif,raisonPause:p.pauseRaison,index:pt.index,cut:pt.sel.cuts[pt.index]?.cut??null,faits:p.faits,total:p.total},p);
+ try{await chrome.storage.local.set({[CLE_RELECTURE_PASSE]:{lotId:p.lotId,gen:p.gen,debut:p.debut,mode:p.mode,modeEffectif}});}catch{/* mémoire seule */}
+ relecture.tache=relecturePasse(p,b,pt.sel,reglages,entreeReprise,pt).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
+   relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges,vus:p.vus},p);}
+   void relectureOublierPasse(p);void relectureRepriseEffacer();});
+ return relectureEtat();}
 const attendreMs=ms=>new Promise(r=>setTimeout(r,Math.max(0,ms)));
 /* Origine de la zone d'un cut relu : PN, ADV et abords viennent du lot (captures et cuts du lot, figés avant la passe) ; la liste
  * « À contrôler » et les verts hors plage (écartement) viennent de la liste d'ESV. */
@@ -2496,17 +2570,26 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  if(!vers||vers.part!==now.identity.part||vers.cut!==cut)return {action:'corrige',raison:calc.critere.raison,arrivee:vers,
   stopApres:`Relecture arrêtée après la correction du cut ${cut} (validation vue) : ${vers?`après Maj+Espace, ESV affiche le cut ${vers.cut} de la partie ${vers.part}, pas le cut ${cut}`:'le cut affiché par ESV est illisible après Maj+Espace'}. Contrôle ESV.`};
  return {action:'corrige',raison:calc.critere.raison,arrivee:vers};}
-async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.BananeCore3,R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),partie=b.scope.part;
+async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=globalThis.BananeCore3,R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),partie=b.scope.part;
  /* Chaîne d'appuis (revue, correction 8) : VIDE au départ, comme l'étude ; seules les poses calculées pour les verts relus y entrent. */
- const chaine=[],ecartementsVerts=[],ecartementPartieMm=entree.ecartementPartieMm;
+ const chaine=reprise?.chaine?JSON.parse(JSON.stringify(reprise.chaine)):[],ecartementsVerts=reprise?.ecartementsVerts?reprise.ecartementsVerts.slice():[],ecartementPartieMm=entree.ecartementPartieMm;
  /* Médiane de la partie : celle de la liste d'ESV ; sans elle, celle des poses d'ESV des verts déjà relus (5 au moins). */
  const mediane=t=>{const v=t.slice().sort((x,y)=>x-y),m=v.length>>1;return v.length%2?v[m]:(v[m-1]+v[m])/2;};
  const ctx={chaine,ecartementRef:()=>Number.isFinite(ecartementPartieMm)?ecartementPartieMm:ecartementsVerts.length>=5?Math.round(mediane(ecartementsVerts)*10)/10:null};
  let total=Number.isInteger(entree.total)?entree.total:null;
  const borne=Math.max(...[total!==null?total-1:null,...sel.cuts.map(c=>c.cut)].filter(Number.isInteger));
  const vivante=()=>relecture.passe===p&&p.gen===relecture.gen&&p.etat==='en-cours';
- const plagesSautees=new Set();let precedent=null,ici=null,issue='fin',derniereArrivee=null;
- const stop=(m,i='erreur')=>{p.message=m;issue=i;};
+ const plagesSautees=new Set(reprise?.plagesSautees||[]);let precedent=null,ici=null,issue='fin',derniereArrivee=null,ciCourant=reprise?.index??0,indexPause=null;
+ const stop=(m,i='erreur')=>{p.message=m;issue=i;if(i==='pause-esv')indexPause=ciCourant;};
+ /* 4.9.6 : ESV muet (F5, onglet rechargé) : pause automatique si le réglage le veut, sinon arrêt comme avant ; tout autre arrêt reste une erreur. */
+ const stopEsv=m=>stop(m,p.reprise&&p.repriseF5!=='arret'&&/sans réponse|ne répond pas/.test(m)?'pause-esv':'erreur');
+ /* Point de reprise après chaque cut relu : `index` est le PROCHAIN cut à relire (jamais un cut à moitié fait). */
+ const reprisePoser=async index=>{if(!p.reprise)return;
+  const pt={v:1,lotId:p.lotId,part:partie,mode:p.mode,modeEffectif:p.modeEffectif,debut:p.debut,total:p.total,index,faits:p.faits,corriges:p.corriges,refusees:p.refusees,vus:p.vus,vusCuts:[...p.vusCuts],
+   cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,chaine:JSON.parse(JSON.stringify(chaine)),ecartementsVerts:ecartementsVerts.slice(),ecartementPartieMm:Number.isFinite(ecartementPartieMm)?ecartementPartieMm:null,
+   plagesSautees:[...plagesSautees],sel:{cuts:sel.cuts,plages:sel.plages},reglages:p.reglages??null,noteMode:p.noteMode??null,savedAt:new Date().toISOString()};
+  p.point=pt;try{await chrome.storage.local.set({[CLE_RELECTURE_REPRISE]:pt});p.pointStocke=true;}catch{p.pointStocke=false;}};
+ if(p.reprise)await reprisePoser(reprise?.index??0);
  /* Champs communs des événements d'un cut relu (revue, R10). */
  const evenementCut=(c,plage,champs)=>({identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,...champs});
  /* Aller à un cut ('pas' : boutons d'ESV ; 'auto' : carte, sinon pas à pas). W8 : seul un cut hors des bornes, ou une annulation, fait
@@ -2518,7 +2601,7 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
    try{nav=await call('goToCut',{part:partie,cut},{chemin,borneConnue:Number.isFinite(borne)?borne:null},opId);}
    catch(e){p.operationId=null;ici=null;return {stop:`Relecture arrêtée : ESV ne répond pas pendant le passage au cut ${cut} (${String(e?.message||e).slice(0,160)}). Contrôle le cut affiché ; rien n’a été posé.`};}
    p.operationId=null;
-   if(!(nav?.resultat==='refuse'&&String(nav.refusal?.code||'')==='ADAPTER_BUSY')||p.arret||!vivante()||demandes>attentes.length)break;
+   if(!(nav?.resultat==='refuse'&&String(nav.refusal?.code||'')==='ADAPTER_BUSY')||p.arret||p.pauseDemandee||!vivante()||demandes>attentes.length)break;
    const attenteMs=attentes[demandes-1];
    await engine.event('relecture-navigation-attente',{identity:{part:partie,cut},code:'ADAPTER_BUSY',essai:demandes,attenteMs,essaisMax:attentes.length,
     raison:String(nav.refusal?.message||'').slice(0,200)}).catch(()=>{});
@@ -2526,12 +2609,13 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
   if(nav?.bornes?.source==='compteur'&&Number.isInteger(nav.bornes.total)&&nav.bornes.total>0)total=nav.bornes.total;
   if(nav?.resultat==='confirme'){ici=cut;return {ok:true,par:nav.chemin==='pas-a-pas'?'pas':nav.chemin==='aucun'?'aucun':'evenement'};}
   if(nav?.resultat==='refuse'){const code=String(nav.refusal?.code||'');
-   if(p.arret||/^(OUT_OF_BOUNDS|CANCELLED_)/.test(code))return {saut:true,raison:nav.refusal?.message??code};
+   if(p.arret||p.pauseDemandee||/^(OUT_OF_BOUNDS|CANCELLED_)/.test(code))return {saut:true,raison:nav.refusal?.message??code};
    return {stop:`Relecture arrêtée : passage au cut ${cut} refusé par la page (${String(nav.refusal?.message||code||'refus').slice(0,200)})${demandes>1?` après ${demandes} demandes`:''}. Rien n’a été posé.`};}
   ici=null;return {stop:`Relecture arrêtée : le passage au cut ${cut} n’est pas confirmé (${nav?.refusal?.message||nav?.resultat||'résultat inconnu'}). Contrôle le cut affiché ; rien n’a été posé.`};};
- for(const c of sel.cuts){
+ for(let ci=reprise?.index??0;ci<sel.cuts.length;ci++){const c=sel.cuts[ci];ciCourant=ci;
   if(!vivante()){issue='erreur';p.message='Relecture arrêtée : passe remplacée.';break;}
   if(p.arret){issue='arret';p.message=`Relecture arrêtée à ta demande : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}.`;break;}
+  if(p.pauseDemandee&&p.reprise){issue='pause';indexPause=ci;break;}
   if(plagesSautees.has(c.plage))continue;
   const plage=sel.plages[c.plage];p.cut=c.cut;p.plage=plage?.libelle??null;
   const t0=Date.now(),chemins=[];let par=null,r=null;
@@ -2541,11 +2625,11 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
     * carte, la passe saute au cut d'avant (d'après, pour le cut 0), puis fait un pas vers lui. */
    else if(p.modeEffectif==='corriger'&&relectureCorrigeable(c,reglages)){const avant=c.cut>0?c.cut-1:c.cut+1;
     if(ici!==avant){chemins.push(`auto:${avant}`);const r0=await aller(avant,'auto');
-     if(r0.stop){stop(r0.stop);break;}if(r0.saut)r=r0;}
+     if(r0.stop){stopEsv(r0.stop);break;}if(r0.saut)r=r0;}
     if(!r){chemins.push('pas');r=await aller(c.cut,'pas');}}
    else{chemins.push('auto');r=await aller(c.cut,'auto');}
-   if(r.stop){stop(r.stop);break;}
-   if(r.saut){if(p.arret)continue;relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'navigation-refusee',raison:r.raison??null,chemins}),p);
+   if(r.stop){stopEsv(r.stop);break;}
+   if(r.saut){if(p.arret)continue;if(p.pauseDemandee&&p.reprise){ci--;continue;}relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'navigation-refusee',raison:r.raison??null,chemins}),p);
     plagesSautees.add(c.plage);precedent=null;ici=null;continue;}
    par=r.par;
   precedent=c;const tNav=Date.now();derniereArrivee=tNav;
@@ -2554,12 +2638,12 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
    /* Statut du cut dans la liste d'ESV (mémoire de la page, dès l'arrivée) : la preuve du vert, et « vu » ou non à l'arrivée. */
    try{ligne=await relectureLigneListe(c.cut,etat);}catch{ligne=null;}
    capture=await call('capture',etat);K.assertTarget(etat.identity,capture.identity);}
-  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane|ESV affiche/.test(e?.message||'')){stop(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}
+  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane|ESV affiche/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}
    erreurCapture=String(e?.message||e).slice(0,200);}
   if(ligne&&ligne.vu===false)p.cutsNeufs++;
   /* D-172 : une capture vide est relue une fois ; deux captures complètes vides de suite : « aucun-point » (consigné, jamais envoyé). */
   let seconde=null;
-  if(capture&&R.captureVide(capture))try{seconde=await call('capture',etat);}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stop(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
+  if(capture&&R.captureVide(capture))try{seconde=await call('capture',etat);}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
   const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?R.skipOmbre(seconde?[capture,seconde]:[capture]):null;
   if(c.role==='vert'&&capture?.rails&&!R.captureVide(capture))try{const g=globalThis.BananeLotDecision.gaugeOf({left:capture.rails.left.positionSceneRelative,right:capture.rails.right.positionSceneRelative});
    if(Number.isFinite(g)&&Math.abs(g-ECARTEMENT_ORIGINE_ESV_MM)>.05)ecartementsVerts.push(g);}catch{/* écartement illisible */}
@@ -2582,9 +2666,19 @@ async function relecturePasse(p,b,sel,reglages,entree){const K=globalThis.Banane
    action:action.action,raisonAction:action.raison,erreurCapture,erreurCalcul,
    durees:{navigationMs:tNav-t0,captureMs:tCap-tNav,calculMs:tCalc-tCap,totalMs:Date.now()-t0}}),p);
   p.faits++;
+  if(p.reprise)await reprisePoser(ci+1);
   if(action.stopApres){stop(action.stopApres);break;}}
  /* Les « vu » des derniers cuts affichés arrivent après eux : la passe les attend (aucune commande pendant ce temps). */
- if(derniereArrivee!==null){const reste=cfg.attenteVuMs-(Date.now()-derniereArrivee);if(reste>0)await attendreMs(Math.min(reste,10000));}
+ if(derniereArrivee!==null&&issue!=='pause-esv'){const reste=cfg.attenteVuMs-(Date.now()-derniereArrivee);if(reste>0)await attendreMs(Math.min(reste,10000));}
+ /* Pause (demandée, ou ESV muet) : la passe garde son point et passe « en pause » ; pas de relecture-fin, la passe n'est pas finie. */
+ if((issue==='pause'||issue==='pause-esv')&&relecture.passe===p&&p.reprise&&Number.isInteger(indexPause)){
+  const sc=sel.cuts[indexPause];p.etat='en-pause';p.pauseRaison=issue==='pause'?'mic':'esv';p.pauseDemandee=false;p.arret=false;p.cut=sc?.cut??null;p.plage=sel.plages[sc?.plage]?.libelle??null;
+  await reprisePoser(indexPause);
+  p.message=issue==='pause'?`Relecture en pause au cut ${p.cut} : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}. Tu peux la reprendre, même après un F5.`
+   :`ESV ne répond plus : relecture gardée en pause au cut ${p.cut} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}). Recharge ESV (F5) si elle est figée, reconnecte-la, puis reprends la relecture.`;
+  relectureJournal('relecture-pause',{mode:p.mode,modeEffectif:p.modeEffectif,raison:p.pauseRaison,cut:p.cut,index:indexPause,faits:p.faits,total:p.total,corriges:p.corriges,stocke:p.pointStocke!==false,message:issue==='pause-esv'?String(p.message).slice(0,200):null},p);
+  await relectureOublierPasse(p);return;}
+ if(p.reprise){p.pauseDemandee=false;await relectureRepriseEffacer();}
  const vu=p.vus?` ; ESV a marqué ${pluriel(p.vus,'cut')} « vu »`:'';
  if(issue==='fin'&&p.etat==='en-cours')p.message=`Relecture finie : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''}${p.modeEffectif==='corriger'?`, ${pluriel(p.corriges,'corrigé')}${p.refusees?`, ${pluriel(p.refusees,'correction')} refusée${p.refusees>1?'s':''} par la page`:''}`:', rien de modifié'}${vu}.${p.noteMode?` ${p.noteMode}`:''}`;
  else if(issue!=='fin'&&vu&&p.message&&!p.message.includes('« vu »'))p.message=p.message.replace(/\.?$/,`${vu}.`);
@@ -2662,8 +2756,9 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  /* 5.0 (D-171, revue de la relecture) : relecture après le lot. Pendant sa préparation et pendant la passe, rien qui agisse dans ESV ou
   * sur le lot ne part du panneau ; « Arrêter » (du lot) arrête la relecture (W11). */
  if(action==='stop'&&passeActive()){relectureArreter();return engine.view();}
- if(passeActive()&&RELECTURE_BLOQUE.has(action))
-  throw Error(relecture.passe.etat==='preparation'?'Relecture après le lot en préparation (elle part dans un instant) : attends-la, ou clique sur « Arrêter la relecture ».'
+ if(passeActive()&&RELECTURE_BLOQUE.has(action)&&!(relecture.passe.etat==='en-pause'&&action==='connect'))
+  throw Error(relecture.passe.etat==='en-pause'?'Relecture en pause : clique sur « Reprendre la relecture » ou « Arrêter la relecture » avant cette action.'
+   :relecture.passe.etat==='preparation'?'Relecture après le lot en préparation (elle part dans un instant) : attends-la, ou clique sur « Arrêter la relecture ».'
    :`Relecture après le lot en cours (${relecture.passe.faits} sur ${relecture.passe.total}) : clique sur « Arrêter la relecture » et attends qu’elle s’arrête.`);
  if(RELECTURE_INTENTION_BLOQUE.has(action)){const l=await relectureIntentions();
   if(l.length)throw Error(`Une correction de la relecture a été interrompue au cut ${l[0].cut} (partie ${l[0].part}) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ${l[0].cut} » dans la carte Relecture.`);}
@@ -2672,6 +2767,10 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='relecture-etat')return relectureEtat();
  if(action==='relecture-arreter')return relectureArreter();
  if(action==='relecture-acquitter')return relectureAcquitter(args);
+ if(action==='relecture-pause')return relectureMettreEnPause();
+ if(action==='relecture-reprendre')return relectureReprendre();
+ if(action==='relecture-pause-reglage-etat')return relectureRepriseReglage();
+ if(action==='relecture-pause-reglage')return relectureRepriseReglageChoisir(args);
  if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
   await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
  if(retourCutEnCours&&PENDANT_RETOUR.has(action))throw Error('Retour à un cut en cours : attends son résultat, ou annule-le.');

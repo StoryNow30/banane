@@ -398,3 +398,6 @@ body.ui5>main{display:none!important}body.ui5{background:#050506;overflow:hidden
 @media (max-width:980px){#ui5.u-ariane .une .in,#ui5.u-ariane .scene{grid-template-columns:1fr}#ui5.u-ariane .onglets button{padding:6px 10px}}
 @media (prefers-reduced-motion:reduce){#ui5.u-ariane *{animation:none!important;transition:none!important}}
 #ui5.u-ariane .etat.hors .f::before{content:"";width:10px;height:2.5px;background:#fff;border-radius:2px;opacity:.6}
+#ui5.u-ariane .relpause{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+#ui5.u-ariane .relpause p{margin:0;font-size:13px;opacity:.75}
+#ui5.u-ariane .relpause .act{display:flex;gap:8px;flex-wrap:wrap}

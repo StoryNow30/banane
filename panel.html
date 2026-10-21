@@ -269,6 +269,16 @@
  </fieldset>
  <p class="resume-ligne" id="relecture-ligne" hidden></p>
  <p class="muted error" id="relecture-interrompue" hidden></p>
+ <!-- 4.9.6 (D-232, D-233) : pause et reprise de la relecture, même après un F5 ; tenues par src/relecture-pause.js. Éteintes par défaut. -->
+ <div id="relecture-pause-zone">
+ <p class="resume-ligne" id="relecture-pause-ligne" hidden></p>
+ <p class="row"><button id="relecture-pause" type="button" hidden>Pause</button><button id="relecture-reprendre" type="button" hidden>Reprendre la relecture</button><button id="relecture-arreter-pause" class="danger" type="button" hidden>Arrêter la relecture</button></p>
+ <p class="muted" id="relecture-pause-raison" hidden></p><p class="muted error" id="relecture-pause-note" hidden></p>
+ <fieldset class="choix-lot"><legend class="lbl">Pause de la relecture</legend>
+  <label class="interrupteur"><input type="checkbox" id="relecture-pause-actif"> Pause et reprise de la relecture (même après un F5)</label>
+  <label class="interrupteur">Si ESV est rechargé pendant la relecture : <select id="relecture-f5"><option value="pause">mettre en pause</option><option value="arret">arrêter</option></select></label>
+  <p class="muted">Éteinte par défaut : la relecture ne fait alors que s’arrêter. Allumée, « Pause » garde le cut atteint et la relecture repart de là, sans repasser sur les cuts relus, jusqu’à 24 heures. Réglable seulement hors relecture.</p>
+ </fieldset></div>
  <p class="row"><button id="relecture-arreter" class="danger" type="button" hidden>Arrêter la relecture</button><button id="relecture-acquitter" type="button" hidden>J’ai contrôlé le cut</button><button id="relecture-lancer" class="link" type="button" hidden>Lancer la relecture</button></p>
  </section>
  </section>
@@ -302,4 +312,4 @@
 <p class="muted ui5-essai"><button id="ui5-essai" class="link" type="button">Essayer le nouveau panneau</button></p>
 <footer>Ariane 4.9.6 test 1 (UI-L1) · tes données restent enregistrées quand tu fermes cette fenêtre.</footer>
 </div>
-</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="src/carte-relecture.js"></script><script src="src/raison-correction.js"></script><script src="panel.js"></script><script src="src/ui5-variante.js"></script><script src="src/ui5-rendu.js"></script><script src="src/ui5.js"></script></body></html>
+</main><script src="src/storage.js"></script><script src="src/settings.js"></script><script src="src/native-export.js"></script><script src="src/zip-writer.js"></script><script src="src/export-cache.js"></script><script src="src/liste-memoire.js"></script><script src="src/gcv1-export.js"></script><script src="src/part-summary-49.js"></script><script src="src/phase-pli.js"></script><script src="src/carte-relecture.js"></script><script src="src/relecture-pause.js"></script><script src="src/raison-correction.js"></script><script src="panel.js"></script><script src="src/ui5-variante.js"></script><script src="src/ui5-rendu.js"></script><script src="src/ui5.js"></script></body></html>
