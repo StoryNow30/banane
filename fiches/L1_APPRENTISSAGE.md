@@ -150,3 +150,15 @@ Sur l'ensemble : 0 pose à plus de 50 mm, 0 mauvaise voie, 0 vert de la chaîne 
 - a3-bd3 (avec la deuxième passe, non livrée) : 12.
 
 2:18 garde 11 cuts laissés sans pose, au-dessus de la cible de moins de 5.
+
+**Parité extension / banc** (`tools/parite-l1se-sw.cjs`, service worker de l'instantané af52709 aux leviers LIVRÉS, sans `--leviers`, contre le banc `c5/r-a3-bd3s`) :
+- 2:17 : 139 décisions sur 139 identiques (état, source, décalages à 0,05 mm) ; 4 différés, motifs identiques.
+- 2:19 : 248 sur 248 identiques ; 3 différés. Un seul libellé diffère, 5553, cut sans nuage (0 point) : le banc ne lance pas la GCV2 sans nuage (« reel-sans-nuage »), le service worker la lance sur la capture vide (« départ le plus probable »). Les deux le laissent différé.
+- 2:18 : en cours à la livraison.
+- Témoin négatif : 2:17, le même service worker réglé sur `LEVIERS_V4`, contre le même banc. 18 différés, 20 lignes différentes : l'outil voit bien un écart de leviers.
+
+Ces parités montrent que `diag` et `rechercheDiag` coupés ne changent aucune décision sur ces lots.
+
+**Essais** : `tools/verify.cjs` officiel sur l'arbre af52709 (relevé `audit/verification.*`, ba4d4dc), parités suspendues pendant le passage : 2 448 essais, 2 446 réussis, **0 échec**, 0 annulé, 2 ignorés (corpus natif absent, les mêmes qu'en test 15) ; géométrie inchangée, moteur identique à la base V4.6.0. Depuis, seuls des documents ont changé (journal, consigne, fiches), qu'aucun essai ne lit.
+
+**Identité** : la fiche `PASSATION_CAP5_B.md`, nouvelle dans le paquet, nommait l'opérateur (8 fois) ; remplacé par « l'opérateur ».

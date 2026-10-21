@@ -140,5 +140,5 @@ Les poses déjà validées dans ESV restent : le retour arrière ne les défait 
 - **La paire de la test 13 gardée sans correction d'écartement** (probabilité d'au moins 0,8, voie à 35 mm au plus du voisin validé) ne repose que sur six cuts, trois gardés et trois refusés, dans quatre parties.
 - **Le plancher de 60 points** de dessus repose sur trois cuts ; aucune paire fausse n'a été vue entre 31 et 45 points, donc le seuil n'est pas serré.
 - Une nouvelle pose change la voie des cuts suivants. Le banc rejoue en chaîne, mais le terrain peut en tirer d'autres effets.
-- Parité du vrai code de l'extension avec le banc sur cette chaîne v5 : en cours (paquet candidat).
+- Le vrai code de l'extension, rejoué cut par cut sur tes lots avec ses réglages par défaut, prend les décisions du banc : partie 17, 139 sur 139 ; partie 19, 248 sur 248. Partie 18 : rejeu en cours au moment de la livraison ; je te confirmerai le résultat.
 - Edge n'a pas été vu.
