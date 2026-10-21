@@ -9,11 +9,13 @@
  * commandé), et sur la sortie standard la comparaison décision par décision avec le rejeu du banc.
  *
  *   node tools/parite-l1se-sw.cjs --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --liste LISTE.json --banc R.jsonl
- *        --sortie S.jsonl [--racine DÉPÔT] [--leviers JSON]
+ *        --sortie S.jsonl [--racine DÉPÔT] [--leviers JSON] [--passe]
  *
  * `--leviers` (mesure seulement) : leviers de la décision L1-e réglés dans le service worker (`reglerLeviers`), comme BANC_LEVIERS au banc ; le
- * rejeu de référence doit être fait avec les mêmes leviers. Avec `deuxiemePasse` > 0, le service worker fait la deuxième passe EN OMBRE (aucune écriture
- * vers ESV) : les cuts qu'il poserait sont comptés comme posés (`passe2.ombre`) dans la comparaison avec la deuxième passe du banc.
+ * rejeu de référence doit être fait avec les mêmes leviers.
+ * `--passe` : le service worker fait la deuxième passe EN OMBRE (aucune écriture vers ESV), avec la recette livrée (`lot.passeDifferes` de src/settings.js : `passes`,
+ * `leviers`) ; les cuts qu'il poserait sont comptés comme posés (`passe2.ombre`) et leur passe est comparée à celle de la deuxième passe du banc. Le rejeu de référence doit
+ * avoir la même recette (BANC_LEVIERS `deuxiemePasse` et `passe2Leviers`) : l'en-tête du rejeu est contrôlé avant de commencer.
  *
  * HORS DÉPÔT : aucune donnée de lot n'est écrite dans le dépôt. Lecture seule sur ESV : il n'y en a pas, l'ESV est simulé.
  */
@@ -26,7 +28,7 @@ function args(argv) {
     const k = argv[i], v = () => argv[++i];
     if (k === '--partie') o.partie = v(); else if (k === '--journal') o.journal = v(); else if (k === '--corpus') o.corpus.push(v());
     else if (k === '--lot') o.lot = v(); else if (k === '--liste') o.liste = v(); else if (k === '--banc') o.banc = v();
-    else if (k === '--sortie') o.sortie = v(); else if (k === '--racine') o.racine = path.resolve(v()); else if (k === '--coupe') o.coupe = Number(v()); else if (k === '--progres') o.progres = true; else if (k === '--leviers') o.leviers = JSON.parse(v());
+    else if (k === '--sortie') o.sortie = v(); else if (k === '--racine') o.racine = path.resolve(v()); else if (k === '--coupe') o.coupe = Number(v()); else if (k === '--progres') o.progres = true; else if (k === '--leviers') o.leviers = JSON.parse(v()); else if (k === '--passe') o.passe = true;
     else throw Error('argument inconnu : ' + k);
   }
   for (const k of ['partie', 'journal', 'lot', 'liste', 'banc', 'sortie']) if (!o[k]) throw Error('--' + k + ' manquant');
@@ -62,11 +64,16 @@ async function main(argv) {
   /* Toute autre écriture vers ESV est consignée par cut (la ligne d'un cut qui n'est ni validé ni différé les montre). */
   for (const nom of ['validateInPlace', 'validerMajEspace', 'restore', 'goToCut', 'next']) { const f = EsvRejoue.prototype[nom] || SimulatedESV.prototype[nom];
     EsvRejoue.prototype[nom] = async function (...x) { pas.push({ cut: this.identity.cut, action: nom }); return f ? f.apply(this, x) : this.state(); }; }
+  const banc = fs.readFileSync(a.banc, 'utf8').trim().split('\n').map(JSON.parse), lignes = [banc[0]], diffs = [];
+  if (a.passe) {
+    const R = S.lot.passeDifferes, L = banc[0].l1e && banc[0].l1e.leviers || {};
+    if (L.deuxiemePasse !== R.passes || JSON.stringify(L.passe2Leviers) !== JSON.stringify(R.leviers)) throw Error(`le rejeu de référence n'a pas la recette de la passe livrée (deuxiemePasse ${R.passes}, passe2Leviers ${JSON.stringify(R.leviers)}) : ${JSON.stringify([L.deuxiemePasse, L.passe2Leviers])}`);
+  }
   const local = memoire(); local.m[LM.PRE_INST + a.partie] = JSON.parse(fs.readFileSync(a.liste, 'utf8'));
   const adapter = new EsvRejoue(), b = production({ adapter, local });
-  /* `deuxiemePasse` > 0 : le service worker fait la deuxième passe EN OMBRE (aucune écriture vers ESV) ; ses poses « calculées » sont comparées à celles de la deuxième passe du banc. */
   if (a.leviers) b.ctx.BananeGcv2L1.reglerLeviers(a.leviers);
-  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false } };
+  /* `--passe` : la deuxième passe en ombre (aucune écriture vers ESV) ; ses poses « calculées » sont comparées à celles de la deuxième passe du banc. */
+  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, ...(a.passe ? { lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ombre: true } } } : {}) };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   const SCOPE = { testConfirmed: true, allowNavigationEvidence: true, lowConfidence: 'attempt', geometryEngine: 'geometry-candidate-v1', lotDecision: 'apply' };
   t0 = Date.now();
@@ -82,7 +89,6 @@ async function main(argv) {
   for (const e of b.store.events) if (e.type === 'passe-differes-ombre' && e.decision === 'poserait' && e.identity && Number.isInteger(e.identity.cut)) ombre.set(e.identity.cut, e);
   const parCut = new Map();
   for (const p of pas) { const x = parCut.get(p.cut) || {}; if (p.action === 'apply') x.apply = p; else x[p.action] = true; parCut.set(p.cut, x); }
-  const banc = fs.readFileSync(a.banc, 'utf8').trim().split('\n').map(JSON.parse), lignes = [banc[0]], diffs = [];
   const sourceDe = c => c && c.l1s === 'gcv2' ? 'gcv2' : c && c.l1s === 'chaine' ? 'l1s-chaine' : c && c.l1s === 'vue' ? 'l1s-vue' : 'lot';
   const parN = new Map(ordre.map(o => [o.cut, o.nuage]));
   let differes = 0;
@@ -104,11 +110,13 @@ async function main(argv) {
     const etatBanc = bp.etat === 'pose' ? 'pose' : 'differe';
     let ecart = null;
     if (sw.etat === 'pose' && bp.etat === 'pose' && bp.decal) ecart = Math.max(...SIDES.flatMap(s => [0, 1, 2].map(i => Math.abs(sw.decal[s][i] - bp.decal[s][i]))));
-    const diff = sw.etat !== etatBanc || (sw.etat === 'pose' && (sw.source !== bp.source || !(ecart <= 0.05)));
+    const diff = sw.etat !== etatBanc || (sw.etat === 'pose' && (sw.source !== bp.source || !(ecart <= 0.05) || (sw.passe2 && sw.passe2.passe) !== (bp.passe2 && bp.passe2.passe)));
     if (diff) diffs.push({ cut: l.cut, nuage: l.nuage, banc: { etat: bp.etat, source: bp.source, motif: bp.l1 ? bp.l1.motif : null }, sw: { etat: sw.etat, source: sw.source, motif: sw.motif, actions: sw.actions }, ecartMm: ecart == null ? null : Math.round(ecart * 100) / 100 });
     lignes.push({ ...l, profils: { ...l.profils, 'L1-se': sw } });
   }
   fs.writeFileSync(a.sortie, lignes.map(x => JSON.stringify(x)).join('\n') + '\n');
-  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, leviers: a.leviers || null, cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
+  const fin = b.store.events.find(e => e.type === 'passe-differes-ombre-fin') || null, parPasse = (poses, p) => poses.filter(e => e.passe === p).length;
+  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, leviers: a.leviers || null, passe: a.passe ? { differes: fin && fin.differes, posees: fin && fin.posees, ms: fin && fin.ms, parPasse: [1, 2].map(p => parPasse([...ombre.values()], p)), parPasseBanc: [1, 2].map(p => banc.slice(1).filter(l => l.profils['L1-se'] && l.profils['L1-se'].etat === 'pose' && l.profils['L1-se'].passe2 && l.profils['L1-se'].passe2.passe === p).length) } : null,
+    cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
 }
 main(process.argv.slice(2)).catch(e => { process.stderr.write('parite-l1se-sw : ' + (e && e.stack || e) + '\n'); process.exitCode = 1; });

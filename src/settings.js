@@ -184,6 +184,13 @@
      * après `attenteMs` (le nuage du cut finit de charger), jusqu'à `essais` fois ; la plus fournie est gardée, sinon le cut suit son sort
      * d'avant. Événement `recapture-vide` (points avant et après). Non mesurable au banc : le corpus ne garde que la capture faite. */
     recaptureVide: Object.freeze({ actif: false, minPoints: 100, attenteMs: 1500, essais: 2 }),
+    /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans
+     * pose sont redécidés par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`).
+     * Deux réglages distincts, COUPÉS par défaut ; toute valeur autre que `true` les laisse coupés.
+     *   `ombre` : la passe calcule et journalise (`passe-differes-ombre`) ce qu'elle poserait ; rien n'est écrit dans ESV.
+     *   `ecriture` (avec `ombre`) : elle pose réellement, un cut après l'autre, validé sur place (Ctrl+Entrée), au plus `ecritureMax` cuts.
+     *     NE PAS L'ALLUMER sans l'accord de l'opérateur : la preuve de terrain (un seul différé, l'opérateur présent) n'est pas faite. */
+    passeDifferes: Object.freeze({ ombre: false, ecriture: false, ecritureMax: 1, passes: 2, leviers: Object.freeze({ sansVoieRien: true }) }),
   });
 
   const exportSettings = Object.freeze({
@@ -489,6 +496,7 @@
       { groupe: 'Continuité', nom: 'Hauteur apprise en ombre (Orbite)', valeur: hauteurApprise.actif ? (hauteurApprise.appliquer ? 'ACTIVE : pose la hauteur corrigée' : 'consignée seulement (hauteur corrigée selon l’épaisseur du dessus, ' + String(hauteurApprise.plafondMm).replace('.', ',') + ' mm au plus)') : 'coupée', pourquoi: 'Note, pour chaque cut posé par le lot, la hauteur que l’opérateur aurait probablement donnée au rail (apprise sur ses corrections), à côté de la pose réelle. Jamais appliquée tant que l’opérateur ne l’active pas : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Faux vert en ombre (Orbite)', valeur: fauxVertOmbre.actif ? (fauxVertOmbre.differer ? 'actif : diffère les cuts à hauteur ambiguë' : 'consigné seulement (hauteur ambiguë : calage ≥ ' + fauxVertOmbre.dzMinMm + ' mm et dessus épais ≥ ' + fauxVertOmbre.epaisseurMinMm + ' mm)') : 'coupé', pourquoi: 'Note, pour chaque cut posé par le lot, s’il ressemble à un faux vert (hauteur du rail ambiguë). Jamais appliqué : la pose et la validation sont les mêmes avec ou sans.' },
       { groupe: 'Continuité', nom: 'Verts à contrôler (fin de lot)', valeur: vertsAControler.actif ? 'actif (liste à consulter, aucune action dans ESV)' : 'coupé', pourquoi: 'Après un lot, liste les verts qu’Ariane n’a pas visités et qui méritent ta relecture (écartement, hauteur d’un rail, grappe de rouges, voisin d’un différé), par plages, avec le temps estimé. Rien n’est cliqué ni changé dans ESV.' },
+      { groupe: 'Continuité', nom: 'Deuxième passe des différés (fin de lot)', valeur: lot.passeDifferes.ombre !== true ? 'coupée' : lot.passeDifferes.ecriture === true ? 'ÉCRITURE : pose et valide ' + lot.passeDifferes.ecritureMax + ' cut au plus' : 'en ombre (calculée et consignée, rien n’est écrit dans ESV)', pourquoi: 'En fin de lot, redécide les cuts restés sans pose avec les poses d’avant et d’après. En ombre, note ce qu’elle poserait ; en écriture (accord de l’opérateur seulement), elle pose et valide sur place.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
