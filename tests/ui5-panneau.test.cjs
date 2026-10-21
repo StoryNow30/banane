@@ -103,14 +103,15 @@ test('état du lot : une pause qui attend un choix est « à toi », une pause s
  assert.equal(p.ui.instantane(etat(null)).ar.horsLigne,false,'un cut est affiché dans ESV : l’onglet existe');
 });
 
-test('deuxième passe des différés : « en cours » seulement quand elle écrit dans ESV ; un résultat incertain passe devant',async()=>{
+test('relecture après le lot : « Relecture en cours » passe devant « Lot terminé » ; un résultat incertain passe devant la relecture',async()=>{
  const p=await monter({etat:etat(LOT)});
- const fini={...LOT,state:'COMPLETED'},passe=(e,x={})=>({passeDifferes:{lotId:'L1',mode:'ecriture',etat:e,differes:3,posees:2,demandees:2,ecrites:0,cut:4787,message:null,...x}});
- const ar=(e,x)=>p.ui.instantane(etat(fini,passe(e,x))).ar;
- assert.equal(ar('ecriture').etat,'p2');assert.equal(ar('ecriture').lotOuvert,true);assert.deepEqual(js(ar('ecriture').passe2),{cut:4787,ecrites:0,demandees:2});
- for(const e of ['calcul','finie','arretee','erreur'])assert.equal(ar(e).etat,'fini',e+' : elle n’écrit pas');assert.equal(ar('finie').lotOuvert,false);
- assert.equal(p.ui.instantane(etat(fini)).ar.passe2,null,'sans deuxième passe, rien');
- assert.equal(p.ui.instantane(etat(fini,{...passe('ecriture'),reconcileRequired:true})).ar.etat,'alerte');
+ const fini={...LOT,state:'COMPLETED'},ar=x=>p.ui.instantane(etat(fini,x)).ar;
+ assert.equal(ar().etat,'fini','sans relecture : lot terminé');assert.equal(ar().lotOuvert,false);
+ p.els['relecture-arreter'].hidden=false;
+ assert.equal(ar().etat,'rel');assert.equal(ar().lotOuvert,true,'Écho et le cache sont indisponibles pendant la relecture');
+ assert.equal(p.ui.instantane(etat({...LOT,state:'STOPPED',stoppedAtEnd:{issue:'fin'}})).ar.etat,'rel','lot arrêté à la fin de la partie, puis relu');
+ assert.equal(p.ui.instantane(etat({...LOT,state:'STOPPED'})).ar.etat,'arrete','lot arrêté en route : pas de relecture');
+ assert.equal(ar({reconcileRequired:true}).etat,'alerte');
 });
 
 test('« Pause demandée » : le clic sur Pause la garde tant que le lot tourne, pour ce lot seulement',async()=>{

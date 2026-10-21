@@ -80,13 +80,18 @@ test('Ariane : sans onglet ESV, la pastille le dit au lieu de « Prêt »',()=>{
  assert.match(h,/class="etat hors"/);assert.match(h,/Aucun onglet ESV/);assert.doesNotMatch(h,/class="etat pret"/);
  assert.match(R.rendre(avec({ar:ar('pret',{horsLigne:false,lotOuvert:false,traites:0,cibles:null})}),'accueil'),/class="etat pret"/);
 });
-test('Ariane : pendant la deuxième passe des différés, la pastille et la ligne disent de ne toucher à rien dans ESV, la commande est verrouillée, Écho indisponible',()=>{
- const p2=ar('p2',{lotOuvert:true,cours:null,passe2:{cut:4787,ecrites:0,demandees:2}});
- const o=R.rendre(avec({ar:p2}),'orbite'),a=R.rendre(avec({ar:p2}),'accueil');
- for(const h of [o,a]){assert.match(h,/class="etat cours"[^>]*><span class="f"><\/span>Deuxième passe en cours/);assert.match(h,/travaille dans ESV/);assert.doesNotMatch(h,/data-act="pause"/);}
- assert.match(o,/id="ar-cmd" disabled><span class="ar-lbl"><svg[^>]*>.*<\/svg>Ne touche à rien dans ESV/);assert.match(o,/<b>cut 4787<\/b> · 0 posé sur 2\. <b>Ne touche à rien<\/b>/);
- assert.match(a,/Suivre la passe/);assert.match(a,/vig e indispo" aria-disabled="true"/);assert.match(a,/Deuxième passe en cours<\/span><\/span><span class="fl">/);
- assert.match(R.rendre(avec({ar:ar('p2',{lotOuvert:true,passe2:{cut:null,ecrites:1,demandees:1}})}),'orbite'),/travaille dans ESV · 1 posé sur 1\./,'sans cut connu, pas de « cut null »');
+test('Ariane : pendant la relecture après le lot, la pastille, la ligne et « Arrêter » le disent ; l\u2019export n\u2019est plus la commande principale ; Écho et le cache sont indisponibles',()=>{
+ const rel=avec({ar:ar('rel',{lotOuvert:true,cours:null,pause:null,cache:{actif:true}}),relecture:{ligne:'Relecture : 3 sur 40',actif:true,interrompue:''},mode:'automatic',
+  boutonsOrbite:[b('relecture-arreter','Arrêter la relecture','danger'),b('export-tout','Tout télécharger pour l’analyse')]});
+ const o=R.rendre(rel,'orbite'),a=R.rendre(rel,'accueil');
+ for(const h of [o,a]){assert.match(h,/class="etat cours"[^>]*><span class="f"><\/span>Relecture en cours/);assert.doesNotMatch(h,/Lot terminé/);}
+ assert.doesNotMatch(a,/data-act="legacy:export-tout"/,'l\u2019accueil ne propose pas l\u2019export pendant la relecture');assert.match(o,/id="ar-cmd" data-act="legacy:relecture-arreter"/,'la commande principale d\u2019Orbite est « Arrêter »');
+ assert.match(o,/id="ar-cmd" data-act="legacy:relecture-arreter"/);assert.match(o,/Relecture : 3 sur 40/);
+ assert.match(a,/Suivre la relecture/);assert.match(a,/data-act="legacy:relecture-arreter"[^>]*>Arrêter la relecture/);assert.match(a,/vig e indispo" aria-disabled="true"/);assert.match(a,/Relecture en cours<\/span><\/span><span class="fl">/);
+ assert.match(o,/id="ar-cache" data-act="legacy:export-cache-clear" disabled/,'le cache est grisé pendant la relecture, même si le bouton d\u2019origine ne l\u2019est pas');
+ assert.match(o,/Disponible quand la relecture est terminée ou arrêtée/);
+ const enPause=R.rendre(avec({ar:ar('fini',{cache:{actif:true}}),relPause:{pause:null,reprendre:{texte:'Reprendre',actif:true},arreter:true,ligne:'Relecture en pause'}}),'echo');
+ assert.match(enPause,/id="ar-cache" data-act="legacy:export-cache-clear" disabled/,'grisé aussi pendant la pause, dans Écho comme dans Orbite');assert.match(enPause,/Disponible quand la relecture est terminée ou arrêtée/);
 });
 test('Ariane : relecture en pause → ligne, « Reprendre » et « Arrêter » (clic sur les boutons du module) ; grisé si ESV ne répond pas',()=>{
  const vue=o=>({pause:null,reprendre:null,arreter:false,ligne:'',...o}),sans=ar('pret',{lotOuvert:false,traites:0,cibles:null});
