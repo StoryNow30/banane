@@ -34,3 +34,19 @@ Leviers : `LEVIERS_V6` = `rechHauteurMaxMm` 25 (757d5a3), preuve de SANSPOSE (9 
 - UIPORT : l'essai de fusion `passe-differes-relecture-pause` visait le montage de 14822b3 (lot 111 à 115) ; adapté au montage de 806a302 (111 à 113).
 - 11 h 30 : sanspose fusionnée, Z25 livré ; parité 2:19 lancée sur 0afe390 (instantané `scratchpad/t17/snapI-0afe390`, cœur 1, sortie `scratchpad/t17/parI/`) ; verify préalable lancé sur 757d5a3 (`scratchpad/t17/verify-757d5a3.out`).
 - 11 h 45 : correctifs de UI-SEULE repris (tableau § 1) ; essais ciblés (93 fichiers) lancés sur a9e850f.
+
+## 5. `git diff --stat claude/50-test16` expliqué (fichiers livrés et outils ; essais et fiches : voir les fiches des rôles)
+
+| Fichier | Origine | Pourquoi |
+|---|---|---|
+| `background.js` | passe2 (deuxième passe : ombre, écriture, `lotCloRefus`, `poserPuisVerifier`, vue `passeDifferes`), uiport (pause et reprise de la relecture), sanspose (`l1eVoieListe`), UI-SEULE (correctifs 1, 5, 6, 7), intégration (interrupteur `banane51PasseDifferes` dans `choix-lot`, `passeDiffAllumee`, version) | |
+| `panel.html`, `panel.js` | uiport (habillage, zone de pause), intégration (case de l'interrupteur, ligne `#passe-differes-ligne`, « Arrêter la deuxième passe », « Relancer la deuxième passe », cache grisé pendant l'écriture, version), UI-SEULE (`which` retiré) | |
+| `src/ui5*.js`, `panel-ui5.css` | uiport (nouveau panneau v2, palette), UI-SEULE (« Relecture en cours », cache, taille de fenêtre), intégration (état p2 gardé, ligne de Réglages, relance, état de la palette) | |
+| `src/relecture-pause.js`, `src/carte-relecture.js` | uiport, UI-SEULE (correctif 7) | |
+| `src/gcv2-l1.js` | sanspose (`rechListeResMm`, coupé), fautes (garde de voie absolue, contre-expertise, `ecartAVoie`, `contreChaine`, coupés), intégration (`LEVIERS_V6`) | |
+| `src/settings.js` | passe2 (`passeDifferesDefaut`, `lot.passeDifferes` allumé), intégration (ligne « pourquoi ») | |
+| `src/core.js`, `src/bridge.js`, `manifest.json` | version 4.9.5.18 | |
+| `tools/banc-differes.cjs` | apprentissage 3:0 (partie 0), fautes (contre-expertise au banc) | |
+| `tools/parite-l1se-sw.cjs` | passe2 (`--passe`) | |
+| `tools/parite-relecture-sw.cjs` | uiport (parité de la relecture test 16 / réglage éteint) | |
+| `tools/manifeste-parties.cjs`, `datasets/manifeste-parties.json` | apprentissage 3:0 (D-224) | |

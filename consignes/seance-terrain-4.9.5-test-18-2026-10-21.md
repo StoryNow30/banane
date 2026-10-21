@@ -93,4 +93,11 @@ Les poses déjà validées dans ESV restent, y compris celles de la deuxième pa
 
 ## 7. Limites et ce qui n'est pas vérifié
 
-LIMITES_LISTE
+- **L'écriture de la deuxième passe n'a jamais été jouée dans ESV** (§ 3). Elle a été essayée contre un ESV simulé : cut vert jamais écrasé, validation non prouvée, « Arrêter », relance, interrupteur coupé pendant l'écriture, relecture en pause.
+- **Toutes les mesures viennent de lots qui ont servi à régler**, la partie 0 comprise : aucune mesure hors échantillon. Les parties 1 et 5 du troisième projet sont gardées pour l'examen.
+- **La partie 0 est la seule** à avoir motivé le réglage de hauteur (25 mm) et la garde de voie. Sur les neuf anciens lots, ils ne changent aucune décision : ils ne dégradent rien, mais rien n'y prouve leur gain.
+- **Le vrai code de l'extension, rejoué cut par cut** contre le banc : PARITES.
+- **Une seule connexion ESV**, partagée par Orbite et Écho, dans le nouveau panneau comme dans l'ancien.
+- **Le nouveau panneau** n'a été vu que dans Chromium, avec des états fabriqués ; il n'a pas les réglages de la pause de la relecture (ils sont dans le panneau d'avant).
+- Les verts faux de la chaîne en ADV (une pose de la chaîne contredite par la GCV2) ne sont **ni corrigés ni signalés** dans cette version.
+- Edge n'a pas été vu.
