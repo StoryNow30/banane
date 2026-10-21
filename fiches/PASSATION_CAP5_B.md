@@ -219,3 +219,16 @@ Décomposition d'une relance (CPU, `b/cost.cjs`, 2:19 cut 5293) : 2020 ms dont V
 **Coût attendu** : une capture et un calcul par différé et par passe (14 à 30 différés par lot ici), plus la navigation en mode écriture.
 
 **Décision demandée à Mic avant l'étape 3** : valider un cut rouge sur place, hors ordre (Ctrl+Entrée ou autre geste), après une pose faite par Ariane ; sans cela la v5 ne peut livrer que le mode ombre de la passe.
+
+### 15.1 Ce qu'il faut demander à Mic, et la preuve de terrain (étape 3, non codée)
+
+**Question.** « Ariane peut-elle, à la fin d'un lot, revenir sur un cut rouge qu'elle a différé, y poser les rails et le valider sur place, hors de l'ordre du lot ? Chaque changement de pose est définitif dans ESV (D-220). » Elle ne le fera que pour une décision « valider » de la deuxième passe (preuve du nuage, voie des voisins, écartement de la liste), jamais pour un « poser sans valider ».
+
+**Preuve de terrain, sur un seul différé, Mic présent, avec un cut dont la pose est connue d'avance :**
+1. *Choix du cut.* Un différé de la passe en ombre (pose calculée, écart connu à la pose de l'opérateur, ou à une pose que Mic juge juste à l'écran). Noter avant : pose d'ESV du cut, statut rouge, compteur « N on M treated ».
+2. *Arrivée.* Aller au cut (`goToCut`, preuve d'arrivée) ; capturer ; refaire la décision : elle doit retrouver celle de l'ombre (même pose à 0,05 mm près).
+3. *Une pose.* `apply` (clic `tout-recentre`), relue à 1 mm. Contrôle visuel de Mic avant toute validation. Sans accord : `restore`, retour à la pose d'avant, rien d'écrit.
+4. *Une validation.* Le geste à éprouver (Ctrl+Entrée « valider sans suivant », seul geste dont l'effet est prouvé par le compteur sur le dernier cut). Preuves exigées : même cut toujours affiché, compteur N → N+1, écriture « valid » de la ligne vue par l'observateur passif. Si l'une manque : arrêt de la passe, aucun autre cut touché, avis à Mic.
+5. *Les relectures.* Relire dans la liste d'ESV le statut et la pose du cut (vert), relancer la relecture en ombre sur ce cut (elle ne doit rien contredire), vérifier que le cut suivant et le précédent n'ont pas bougé et que le compteur n'a pas changé ailleurs.
+6. *Retour arrière.* Une pose non validée se défait par `restore`. Une pose validée ne se défait pas par Ariane : la correction se fait à la main dans ESV (ou par l'opérateur). C'est pourquoi un seul cut d'abord, puis seulement la passe entière.
+Critère de succès : une pose exacte à 5 mm près de la pose attendue, validée, prouvée par les trois preuves, et aucun autre cut modifié. Un échec ne coûte qu'un cut.
