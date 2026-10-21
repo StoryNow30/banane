@@ -53,3 +53,19 @@ Reproductibilité : a3-p15 reproduit cut par cut a2-p15 (2:18) et a2-p12/a2-p15 
 ## 4. Outils (dans le scratchpad, hors dépôt)
 
 `a3lst.cjs` (différés posables), `a3diag.cjs` (diagnostic par cut), `a3gain.cjs CONFIG REF` (gagnés et perdus avec l'erreur de chacun), `a3pairs.cjs` et `a3band.cjs` (paires par bande de |dg|), `a3grille.sh` (variantes sur 2:17 et 2:18).
+
+## 5. Sur la base robuste b-r7a (fusion 7593a87)
+
+La branche contient maintenant `claude/50-l1-cap5b` jusqu'à 117b17d (b-r7a : `rechHauteurMaxMm` 20, `rechContraMinMm` 22, `anomalieNonCorrigeeVoieMm` 35, `rechPaireTopMin` 60, `rechContraRatioMax` 1,5, `rechArret`, `rechSauteProcheMm` 2,5). Tous les leviers des deux agents sont coupés. Dans `rechSauteProcheMm`, la voie absolue est calculée avec les voisins cohérents quand `voisinsCoherents` est actif.
+
+Reproduction : le code fusionné rejoue b-r7a avec 0 décision différente sur 2:17 (139), 2:18 (214), 2:7 (151) et 2:6 (83) (`c5/r-a3-r7rep`).
+
+| Configuration (snapshot 7593a87) | Chaîne | Posables | Jugées / ≤5 / ≤10 / 10–20 / >20 / MV |
+|---|---|--:|---|
+| b-r7a | voir `c5/r-b-r7a/leviers.json` | 26 | 523 / 404 / 508 / 15 / 0 / 0 |
+| a3-p15r7 | b-r7a + `rechZones` ["adv","abords"], `voisinsCoherents`, `rechEcartMm` 15 | 15 | 531 / 411 / 515 / 16 / 0 / 0 |
+| a3-bd2 | a3-p15r7 + `branche`, `brancheDernier`, `brancheVertMm` 60, `brancheExtrapCuts` 2 | 12 | 534 / 411 (77,0 %) / 517 (96,8 %) / 17 / 0 / 0 |
+
+- Contre a3-p15 (sur b-r4), le plancher `rechPaireTopMin` 60 retire la pose 88 (cellule droite à 46 points) et la pose 49 de fd7067f7 revient à 13,6 mm (`recherche-adv-remplace` perdu).
+- `brancheDernier` (code, coupé) : la branche rail par rail passe après la recherche recentrée et ne joue que s'il ne reste rien. Elle regagne 88 (6,5 mm), gagne 467 (10,5 mm) en 2:18 et 8292 (6,6 mm) en 2:11. Placée avant la recherche (a2-p3), elle dégradait 9553 et 199 (5 à 15 mm).
+- Différés restants de a3-bd2 : 2:19 4919 4920 ; 2:17 9790 ; 2:18 153 408 409 ; 2:11 7320 ; f228 649 ; 2:6 3433 4756 ; 2:7 3220 5901.
