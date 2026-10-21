@@ -13,7 +13,7 @@ const b=(id,texte,role='link',actif=true)=>({id,texte,role,actif});
 const ECRANS=['accueil','orbite','echo','revue','reglages'];
 const ar=(etat,extra={})=>({etat,traites:31,poses:27,differes:4,cibles:120,restants:89,cours:4812,dernier:4811,partie:13,differesListe:[{cut:4787,motif:'Rail non résolu',precision:'rail droit',heure:'17 h 21'}],verts:[],vertsNombre:0,aExaminer:4,lotOuvert:true,esv:'ok',pause:{actif:true},...extra});
 const base={variante:'ariane2',notice:{texte:'Orbite enchaîne les cuts.',erreur:false},avisContrat:'',connexionOuverte:false,lot:{etat:'En cours · pose des rails',finPartie:''},
- relecture:{ligne:'',actif:false,interrompue:''},echo:{visites:'0',corriges:0},echoRows:[],reglages:{relecture:'corriger',clic:'tel-quel',grappe:false,raison:false,touches:'chiffres',bandeau:false},
+ relecture:{ligne:'',actif:false,interrompue:''},echo:{visites:'0',corriges:0},echoRows:[],reglages:{relecture:'corriger',clic:'tel-quel',grappe:false,passe2:true,raison:false,touches:'chiffres',bandeau:false},
  exportTexte:'',onglets:[{valeur:'1',texte:'ESV'}],ongletChoisi:'1',connexionNote:'',gcv2:{total:2684,date:'19/10/2026'},ar:ar('cours'),
  boutonsOrbite:[b('pause','Pause','primary'),b('export-tout','Tout télécharger pour l’analyse'),b('stop','Arrêter le lot','danger')],boutonsEcho:[b('native-start','Démarrer Écho','primary')]};
 const avec=o=>({...base,...o});
@@ -35,7 +35,8 @@ test('écrans de séance : aucune case, aucun bouton radio, aucun champ de saisi
   assert.ok(!/<input(?![^>]*data-borne)/.test(s),e+' : seules les bornes du prochain lot sont des champs');
  }
  const s=R.rendre(base,'reglages');assert.ok((s.match(/<select/g)||[]).length>=5);
- for(const nom of ['relecture','clic','grappe','raison','variante','onglet'])assert.ok(s.includes(`data-sel="${nom}"`),nom);
+ for(const nom of ['relecture','clic','grappe','passe2','raison','variante','onglet'])assert.ok(s.includes(`data-sel="${nom}"`),nom);
+ assert.match(s,/Deuxième passe \(écrit dans ESV\)[\s\S]*?<option value="oui" selected>Allumée<\/option>/);
  assert.match(s,/<option value="ancienne">Ancien panneau<\/option>/);assert.doesNotMatch(s,/value="(linear|raycast|figma|ariane)"/);
 });
 
@@ -50,7 +51,7 @@ test('tout texte du panneau est échappé avant d’entrer dans le HTML',()=>{
 test('chaque action de l’habillage désigne un élément qui existe dans panel.html (clic sur le bouton d’origine)',()=>{
  const src=lire('src/ui5.js'),listes=[...src.matchAll(/const ORDRE_(?:ORBITE|ECHO) = \[([^\]]+)\]/g)].flatMap(m=>[...m[1].matchAll(/'([a-z-]+)'/g)].map(x=>x[1]));
  assert.ok(listes.length>=18);for(const id of listes)assert.ok(ids.has(id),'bouton absent de panel.html : '+id);
- for(const id of ['tab-native','tab-automatic','bandeau-toggle','theme-toggle','connect','export-cache-clear','native-discard','grappe-differes','raison-actif','tabs','ui5-essai','pause','resume','start','end',
+ for(const id of ['tab-native','tab-automatic','bandeau-toggle','theme-toggle','connect','export-cache-clear','native-discard','grappe-differes','passe-differes','raison-actif','tabs','ui5-essai','pause','resume','start','end',
   'native-count','lot-etat','lot-fin-partie','verts-controle','verts-plages','verts-ligne','relecture-ligne','relecture-interrompue','notice','avis-contrat','export-status','tabs-note',
   ...['coupee','ombre','corriger'].map(x=>'relecture-'+x),...['tel-quel','gauche-recentre','tout-recentre'].map(x=>'clic-'+x),...['chiffres','alt-chiffres','pave'].map(x=>'raison-touches-'+x)])
   assert.ok(ids.has(id),id);

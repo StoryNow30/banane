@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 16 (L1-e5)',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 18 (L1-e6)',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -518,6 +518,7 @@
    if(!choixLot)return;
    for(const [v,id] of Object.entries(IDS_CLIC))if($(id)&&document.activeElement!==$(id))$(id).checked=choixLot.clicHumain===v;
    if($('grappe-differes')&&document.activeElement!==$('grappe-differes'))$('grappe-differes').checked=choixLot.regleGrappeDifferes===true;
+   if($('passe-differes')&&document.activeElement!==$('passe-differes'))$('passe-differes').checked=choixLot.passeDifferes===true;
    ecrire('clic-prochain',`« ${NOMS_CLIC[choixLot.clicHumain]} »`);
    ecrire('grappe-prochain',`règle ${nomGrappe(choixLot.regleGrappeDifferes===true)}`);
    /* Pendant un lot, un choix différent du sien attend le lot suivant : la note le dit. */
@@ -525,7 +526,8 @@
    ecrire('grappe-note',ouvert&&grappeDuScope(sc)!==(choixLot.regleGrappeDifferes===true)?'Le lot en cours garde la sienne jusqu’à sa fin ; la case servira au prochain lot.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.');}
  async function changerChoixLot(args){try{choixLot=await api('choix-lot',args);
      const ouvert=OUVERT.includes(state?.batch?.state);
-     note(ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
+     note('passeDifferes' in args?(args.passeDifferes?'Deuxième passe allumée : elle partira à la fin du lot et écrira dans ESV.':'Deuxième passe coupée : elle n’écrira plus rien dans ESV.')
+       :ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
    catch(e){note(e.message,true);}
    majChoixLot(state);}
  /* RM-11 (4.9.5 test 9) — RAISON DE LA CORRECTION (fiches/RM11_RAISON_CORRECTION.md). Coupée par défaut. Le choix (allumée ou non, rangée de touches)
@@ -797,12 +799,21 @@
       * Pendant un lot ouvert ou un résultat à réconcilier, « Démarrer » et les
       * bornes disparaissent ; ils reviennent dès qu'un lot peut repartir. */
      const lotOuvert=OUVERT.includes(b?.state)||!!s.reconcileRequired;
+     /* Test 18 : deuxième passe des différés (vue `passeDifferes`). Tant qu'elle écrit dans ESV : la consigne en vue, « Arrêter » l'arrête avant le cut
+      * suivant, pas de nouveau lot. Arrêtée avant la fin (le dernier cut du lot attendait ta validation, par exemple) : « Relancer » pose les cuts décidés qui restent. */
+     const p2=s.passeDifferes?.lotId===b?.id?s.passeDifferes:null,p2Ecrit=p2?.etat==='ecriture';
+     if($('passe-differes-ligne')){const l=$('passe-differes-ligne');l.hidden=!p2;l.className=p2Ecrit?'warning':'muted';
+       l.textContent=!p2?'':p2Ecrit?`La deuxième passe travaille, ne touche à rien dans ESV${p2.cut!=null?' · cut '+entier(p2.cut):''} · ${p2.ecrites} posé sur ${p2.demandees}. « Arrêter la deuxième passe » l’arrête avant le cut suivant.`
+         :p2.etat==='calcul'?'Deuxième passe : calcul des cuts restés sans pose…'
+         :p2.mode==='ombre'?`Deuxième passe en ombre : ${p2.posees} cut(s) sur ${p2.differes} qu’elle poserait ; rien n’est écrit dans ESV.`
+         :`Deuxième passe ${p2.etat==='finie'?'finie':p2.etat==='erreur'?'en erreur':'arrêtée'} : ${p2.ecrites} cut(s) posé(s) et validé(s) sur ${p2.posees} décidé(s), ${p2.differes} différé(s) revus${p2.message?'. '+p2.message:''}.`;}
+     button('passe-differes-lancer',{hidden:p2?.etat!=='arretee'||!(p2.posees>p2.ecrites)||lotOuvert,disabled:busy});
      /* Fin de lot : télécharger d'abord ; « Nouveau lot » (lien) rouvre les
       * bornes et « Démarrer ». Aucun lot ne part sans que tu aies revu ses bornes. */
      const fini=['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','STOPPED','ERROR'].includes(b?.state)&&!s.reconcileRequired;
      if(lotOuvert)nouveauLot=false;
      const attendNouveau=fini&&!nouveauLot;
-     button('new-batch',{hidden:!attendNouveau,disabled:busy});
+     button('new-batch',{hidden:!attendNouveau||p2Ecrit,disabled:busy});
      button('start-batch',{hidden:lotOuvert||attendNouveau,disabled:busy||active(s)||['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)});
      if($('lot-bornes'))$('lot-bornes').hidden=lotOuvert||attendNouveau;
      /* 4.7.19 — reprise : offerte après un lot Pilote fini qui a des différés et des cuts posés. */
@@ -815,7 +826,8 @@
  * sortie du lot avec « Repris manuellement ». Le masquer enfermait l'opérateur
  * dans un état dont rien ne le faisait sortir. */
 /* 4.8.0 : « Arrêter » reste cliquable pendant une action (une reprise qui attend ESV, par exemple). */
-     button('stop',{hidden:!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state),disabled:false});
+     button('stop',{hidden:!p2Ecrit&&(!b||['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'].includes(b.state)),disabled:false});
+     if($('stop'))$('stop').textContent=p2Ecrit?'Arrêter la deuxième passe':'Arrêter le lot';
      /* 4.8.0 : « adaptateur sans réponse » se règle par F5 puis Reprendre. */
      const debloquable=b?.state==='PAUSED_ADAPTER_UNRESPONSIVE'&&b.scope?.geometryEngine==='geometry-candidate-v1'&&!s.reconcileRequired&&!s.intent;
      button('resume',{hidden:!(['PAUSED','STOPPED'].includes(b?.state)||debloquable||finProbable),disabled:busy||active(s)});
@@ -1280,6 +1292,7 @@ on('native-discard',async()=>{
  for(const id of ['pause','resume','close-uncertain'])on(id,()=>api(id));
  /* « Arrêter » passe même pendant une autre action : c'est la sortie de secours. */
  if($('stop'))$('stop').onclick=()=>{api('stop').then(()=>refresh(),e=>note(e.message,true));};
+ if($('passe-differes-lancer'))$('passe-differes-lancer').onclick=()=>{api('passe-differes-ecrire').then(()=>refresh(),e=>note(e.message,true));};
  on('retry',()=>api('retry'));
  /* « Nouveau lot » ne lance rien : il rouvre les bornes et « Démarrer ». */
  if($('new-batch'))$('new-batch').onclick=()=>{nouveauLot=true;edited.delete('start');edited.delete('end');if(state)render(state);};
@@ -1632,6 +1645,7 @@ on('native-discard',async()=>{
  /* `click` : il part aussi au clavier (Espace, flèches), une fois la case cochée. */
  for(const [v,id] of Object.entries(IDS_CLIC))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixLot({clicHumain:v});};
  if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
+ if($('passe-differes'))$('passe-differes').onclick=()=>changerChoixLot({passeDifferes:$('passe-differes').checked===true});
  api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});
  /* RM-11 : choix de la raison de la correction, relu au service worker à l'ouverture ; pastilles et touches du panneau. */
  api('raison-choix-etat').then(r=>{if(r&&typeof r.actif==='boolean'){choixRaison=r;majRaison(state);}}).catch(()=>{});

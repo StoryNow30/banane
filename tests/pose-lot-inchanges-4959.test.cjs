@@ -33,7 +33,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||PANNEAU[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.16').join('4.9.5.8').split('4.9.5 test 16 (L1-e5)').join('4.9.5 test 8'):lire(f);
+  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.18').join('4.9.5.8').split('4.9.5 test 18 (L1-e6)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
@@ -60,13 +60,14 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,...reste0}=S,{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['passeDifferes','profil','recaptureVide']);
  assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
  /* Test 17 : la deuxième passe des différés, ALLUMÉE par la décision de l'opérateur (ombre et écriture, sans plafond) ; le reste est l'empreinte d'avant. */
  assert.deepEqual([passeDifferes.ombre,passeDifferes.ecriture,passeDifferes.ecritureMax],[true,true,null],'deuxième passe des différés : écriture sans plafond');
+ assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
@@ -86,7 +87,7 @@ test('lot : avec la raison allumée au panneau, les commandes envoyées à ESV s
  const scope=scopeDe(avec.b);assert.ok(!JSON.stringify(scope).includes('raison'),'aucune raison dans le scope du lot');
  assert.equal('clicHumain' in scope,false,'le scope du lot est celui d\'avant');assert.equal('lotProfil' in scope,false,'profil « actuel » : le scope n\'en porte rien');assert.equal('regleGrappeDifferes' in scope,false);
  const etatLot=neutre(avec.b.get('engine').s.batch);assert.ok(!JSON.stringify(etatLot).includes('raison'),'aucune raison dans l\'état du lot');
- /* Le choix du lot garde sa forme : deux clés, rien de la raison. */
- assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['clicHumain','regleGrappeDifferes']);
+ /* Le choix du lot garde sa forme, rien de la raison ; test 18 : plus l'interrupteur de la deuxième passe, gardé au même endroit mais jamais figé dans le scope. */
+ assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['clicHumain','passeDifferes','regleGrappeDifferes']);assert.equal('passeDifferes' in scope,false);
  assert.equal((await avec.b.api('raison-choix-etat')).actif,true,'le choix de la raison est à part');
 });

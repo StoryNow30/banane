@@ -30,10 +30,11 @@ class EsvEcriture extends EsvTrou {
       compteurApres: { traites: this.opts.sansEffet ? avant.traites : this.traites, total: this.total }, command: 'ctrl-entrée' };
   }
 }
-/* `passe` : les réglages de `lot.passeDifferes` de l'essai ; `relecture` : le choix du panneau pour la relecture après le lot ('ombre') ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien). */
-async function lotPasse({ passe, deux = false, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300 }) {
+/* `passe` : les réglages de `lot.passeDifferes` de l'essai ; `relecture` : le choix du panneau pour la relecture après le lot ('ombre') ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien) ; `stockage` : clés de chrome.storage.local au départ (interrupteur du panneau). */
+async function lotPasse({ passe, deux = false, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300, stockage = {} }) {
   const adapter = new EsvEcriture(opts, deux ? [112, 114] : [112]), dernier = deux ? 115 : 113, local = memoire(), b = production({ adapter, local });
   if (relecture) local.m.banane50Relecture = relecture;
+  Object.assign(local.m, stockage);
   adapter.statuts = statuts;
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, observateurPassif: { ...S.observateurPassif, actif: observateur },
     relecture: { attenteEcritureMs }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ...passe } } };

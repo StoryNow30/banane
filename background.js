@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.16',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 16 (L1-e5)';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.18',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 18 (L1-e6)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -1130,14 +1130,19 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  *    avec chaque `apply` du lot en cours quand il est corrigé (src/adapter-page.js, `options.clicHumain`) ;
  *  - `regleGrappeDifferes` : la règle métier « grappe de différés » (COUPÉE par défaut) ; activée, elle ouvre le chemin d'activation
  *    existant des règles métier pour CETTE règle seulement (voir `reglesDuLot`) : elle ne peut que différer un cut que le lot validait.
- * Absent, illisible ou inconnu : le défaut. Hors d'un lot en cours (assisté, restauration), rien ne change. */
-const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
-async function choixDuLot(){let r={};try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES])||{};}catch{r={};}
- return {clicHumain:MODES_CLIC_HUMAIN.includes(r[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r[CLE_GRAPPE_DIFFERES]===true};}
+ * Absent, illisible ou inconnu : le défaut. Hors d'un lot en cours (assisté, restauration), rien ne change.
+ * Test 18 : `passeDifferes`, l'interrupteur de la deuxième passe des différés (« écrit dans ESV »), gardé au même endroit mais PAS figé dans le scope : il est lu
+ * à la fin de chaque lot, à chaque relance et avant chaque cut écrit (`passeDiffAllumee`). Absent : allumée (livrée) ; `false`, toute autre valeur ou stockage illisible : coupée. */
+const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',CLE_PASSE_DIFFERES='banane51PasseDifferes',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
+async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES])||{};}catch{r=null;}
+ const p=r?.[CLE_PASSE_DIFFERES];
+ return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true)};}
 async function choixLot(args){
  if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
  if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}
+ if(args&&'passeDifferes' in args){if(typeof args.passeDifferes!=='boolean')throw Error('Deuxième passe : oui ou non.');await chrome.storage.local.set({[CLE_PASSE_DIFFERES]:args.passeDifferes});}
  return choixDuLot();}
+const passeDiffAllumee=async()=>(await choixDuLot()).passeDifferes;
 /* RM-11 (4.9.5 test 9) — CHOIX DU PANNEAU POUR LA RAISON DE LA CORRECTION. Gardé dans storage.local par le panneau (actions `raison-choix-etat`, `raison-choix`),
  * lu au démarrage d'Écho et figé dans la séance (`native.raison`) : la séance ouverte garde le sien. COUPÉ par défaut (absent, illisible ou inconnu : coupé,
  * rangée du haut). Ce choix n'a rien à voir avec celui du lot (`choixDuLot`) : le lot ne le lit pas et ne change pas. Rien n'est envoyé à ESV. */
@@ -1551,7 +1556,7 @@ async function l1CommandeCoeur({command,lotObservation,proposal,before,capture})
   l1.commande.sansValider='en-attente-de-la-navigation';
   return command;
  }catch(e){lotObservation.l1={version:G?.VERSION??null,etat:'erreur',message:String(e?.message||e).slice(0,160)};return command;}}
-/* Cap 5b, test 17 — DEUXIÈME PASSE DES DIFFÉRÉS (réglage `lot.passeDifferes` de src/settings.js, coupé par défaut ; L1-se seulement ; fiches/PASSATION_CAP5_B.md § 15,
+/* Cap 5b, test 17 — DEUXIÈME PASSE DES DIFFÉRÉS (réglage `lot.passeDifferes` de src/settings.js, livré allumé en écriture, et interrupteur du panneau `passeDiffAllumee` ; L1-se seulement ; fiches/PASSATION_CAP5_B.md § 15,
  * fiches/PASSATION_T17_PASSE2.md). Le banc redécide chaque différé de L1-se en fin de lot avec tout ce que le lot a posé, avant ET après lui. Ici, le même calcul, à la fin
  * naturelle du lot : mémoire des différés pendant le lot (`l1Restes` : coupe d'identité, zone, plages ADV), puis, nuage relu du magasin (`store.getCloud`), décision de la GCV2
  * (voisins de fin de lot, transport complet, appuis de fin de lot, leviers de la passe réglés le temps de chaque appel), jusqu'à `passes` passes ; seules les décisions
@@ -1614,10 +1619,10 @@ async function passeDiffOmbre(b,rg,vue){
  vue.posees=poses.length;
  journalerSimple('passe-differes-ombre-fin',{lotId:b.id,mode:rg.mode,ecritureDemandee:rg.ecritureDemandee,differes:restes.length,posees:poses.length,cuts:poses.map(p=>p.cut),ms:Date.now()-debut});
  return poses;}
-/* Niveau « ecriture » (COUPÉ par défaut ; fiches/PASSATION_T17_PASSE2.md) : les poses décidées en ombre sont écrites dans l'ordre où elles ont été décidées (chacune repose sur les
+/* Niveau « ecriture » (livré allumé ; fiches/PASSATION_T17_PASSE2.md) : les poses décidées en ombre sont écrites dans l'ordre où elles ont été décidées (chacune repose sur les
  * précédentes : voisins, transport), au plus `max` ; à la première pose non écrite la passe s'arrête. Pour chaque cut (`passeDiffPoser`) : aller au cut ; ESV l'affiche rouge dans sa
  * liste (jamais d'écrasement d'un vert) ; capture ; commande du lot ; pose relue à 1 mm (remise sinon) ; Ctrl+Entrée, prouvé par le compteur « N on M treated », le même cut affiché et
- * l'écriture « valid » vue par l'observateur passif. Tant qu'elle écrit, le panneau ne lance rien d'autre et « Arrêter » l'arrête avant le cut suivant. */
+ * l'écriture « valid » vue par l'observateur passif. Tant qu'elle écrit, le panneau ne lance rien d'autre ; « Arrêter », ou l'interrupteur coupé, l'arrête avant le cut suivant. */
 async function passeDiffEcrire(b,poses,rg,vue){
  const aEcrire=poses.filter(p=>!p.fait).slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
  vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
@@ -1626,7 +1631,7 @@ async function passeDiffEcrire(b,poses,rg,vue){
  if(!raison0){const E=passeDiff.ecriture={arret:false,attente:null};
   try{
    for(const p of aEcrire){
-    if(E.arret){issue='arret';break;}
+    if(E.arret||!await passeDiffAllumee()){issue='arret';break;}
     if(engine?.s?.batch?.id!==b.id){issue='lot-change';break;}
     vue.cut=p.cut;let r;
     try{r=await passeDiffPoser(b,p,E);}catch(e){r={resultat:'incertain',raison:String(e?.message||e).slice(0,300)};}
@@ -1637,7 +1642,9 @@ async function passeDiffEcrire(b,poses,rg,vue){
  vue.etat=issue==='fin'?'finie':'arretee';vue.message=raison;
  journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees:aEcrire.length,decidees:poses.length});}
 /* Action du panneau : relance l'écriture des poses décidées qui restent, avec les mêmes refus qu'au départ automatique. */
-function passeDiffEcrireDemande(){const P=passeDiff.reprise;
+async function passeDiffEcrireDemande(){
+ if(!await passeDiffAllumee())throw Error('Deuxième passe coupée dans Réglages (« Règles et choix du prochain lot ») : rien n’est écrit dans ESV.');
+ const P=passeDiff.reprise;
  if(!P||P.b.id!==engine?.s?.batch?.id||passeDiff.cours||passeDiff.ecriture)throw Error('Deuxième passe : aucune écriture à relancer pour ce lot, ou une passe est déjà en cours.');
  passeDiffSuivre(P.vue,passeDiffEcrire(P.b,P.poses,P.rg,P.vue));return {...P.vue};}
 async function passeDiffPoser(b,p,E){
@@ -1678,10 +1685,12 @@ function passeDiffEcriture(f){const a=passeDiff.ecriture?.attente;if(a&&f?.kind=
 function passeDiffPlanifier(){const b=engine?.s?.batch,rg=passeDiffReglage();
  if(!b?.id||passeDiff.planifie.has(b.id)||rg.mode==='off'||!profilL1se())return;
  if(!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd))return;
- const vue=passeDiff.vue={lotId:b.id,mode:rg.mode,etat:'calcul',differes:0,posees:0,demandees:0,ecrites:0,cut:null,message:null};
+ const vue={lotId:b.id,mode:rg.mode,etat:'calcul',differes:0,posees:0,demandees:0,ecrites:0,cut:null,message:null};
  passeDiff.planifie.add(b.id);
- passeDiffSuivre(vue,passeDiffOmbre(b,rg,vue).then(poses=>{if(!poses||rg.mode!=='ecriture')return null;
-  passeDiff.reprise={b,rg,poses,vue};return passeDiffEcrire(b,poses,rg,vue);}));}
+ /* Test 18 : coupée dans Réglages, la passe ne part pas (ni calcul, ni écriture, rien au panneau). */
+ passeDiffSuivre(vue,passeDiffAllumee().then(allumee=>{if(!allumee)return null;passeDiff.vue=vue;
+  return passeDiffOmbre(b,rg,vue).then(poses=>{if(!poses||rg.mode!=='ecriture')return null;
+   passeDiff.reprise={b,rg,poses,vue};return passeDiffEcrire(b,poses,rg,vue);});}));}
 function passeDiffSuivre(vue,travail){
  passeDiff.cours=travail.catch(e=>{vue.etat='erreur';vue.message=String(e?.message||e).slice(0,160);journalerSimple('passe-differes-erreur',{lotId:vue.lotId,mode:vue.mode,message:vue.message});})
   .finally(()=>{if(vue.etat==='calcul'||vue.etat==='ecriture')vue.etat='finie';passeDiff.cours=null;});}

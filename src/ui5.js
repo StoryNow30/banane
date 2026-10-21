@@ -9,7 +9,7 @@
  *     d'interface (`banane51Interface`) dans chrome.storage.local, et demande la taille de sa fenêtre à chrome.windows ;
  *   - le panneau d'avant reste celui du départ (src/ui5-variante.js) : « Essayer le nouveau panneau » (pied du panneau) l'habille, « Ancien panneau »
  *     (Réglages) le rend ; le choix est gardé.
- * Les choix « après le lot », « clic », « grappe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
+ * Les choix « après le lot », « clic », « grappe », « deuxième passe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
 (function (root) {
   'use strict';
   const D = root.document, R = root.ArianeUi5Rendu, CLE = 'banane51Interface';
@@ -23,7 +23,7 @@
   const visible = id => { const e = $(id); return !!e && !e.hidden; };
 
   /* ---------------------------------------------------------------- instantané */
-  const ORDRE_ORBITE = ['start-batch', 'resume', 'retry', 'manual-takeover', 'manual-completion', 'close-uncertain', 'pause', 'export-tout', 'new-batch', 'relecture-acquitter', 'relecture-arreter', 'relecture-lancer', 'explicit-skip', 'stop'];
+  const ORDRE_ORBITE = ['start-batch', 'resume', 'retry', 'manual-takeover', 'manual-completion', 'close-uncertain', 'pause', 'export-tout', 'new-batch', 'relecture-acquitter', 'relecture-arreter', 'relecture-lancer', 'passe-differes-lancer', 'explicit-skip', 'stop'];
   const ORDRE_ECHO = ['native-resume', 'native-end', 'native-download', 'native-start', 'native-pause', 'native-discard'];
   const coche = (ids) => { for (const [v, id] of ids) if ($(id)?.checked) return v; return null; };
   /* « 999999 » est la borne interne « jusqu'à la fin de la partie » (panel.js) ; on ne l'affiche jamais. */
@@ -117,7 +117,7 @@
     const rg = {
       relecture: coche([['coupee', 'relecture-coupee'], ['ombre', 'relecture-ombre'], ['corriger', 'relecture-corriger']]),
       clic: coche([['tel-quel', 'clic-tel-quel'], ['gauche-recentre', 'clic-gauche-recentre'], ['tout-recentre', 'clic-tout-recentre']]),
-      grappe: !!$('grappe-differes')?.checked, raison: !!$('raison-actif')?.checked,
+      grappe: !!$('grappe-differes')?.checked, passe2: !!$('passe-differes')?.checked, raison: !!$('raison-actif')?.checked,
       touches: coche([['chiffres', 'raison-touches-chiffres'], ['alt-chiffres', 'raison-touches-alt-chiffres'], ['pave', 'raison-touches-pave']]),
       bandeau: $('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true',
     };
@@ -160,6 +160,7 @@
     if (nom === 'relecture') cliquer('relecture-' + v);
     else if (nom === 'clic') cliquer('clic-' + v);
     else if (nom === 'grappe') { if ((v === 'oui') !== !!$('grappe-differes')?.checked) cliquer('grappe-differes'); }
+    else if (nom === 'passe2') { if ((v === 'oui') !== !!$('passe-differes')?.checked) cliquer('passe-differes'); }
     else if (nom === 'raison') {
       if (v === 'non') { if ($('raison-actif')?.checked) cliquer('raison-actif'); }
       else { if (!$('raison-actif')?.checked) cliquer('raison-actif'); cliquer('raison-touches-' + v); }

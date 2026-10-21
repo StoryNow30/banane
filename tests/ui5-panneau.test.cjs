@@ -64,7 +64,7 @@ test('palette : champ actif à l’ouverture, frappe gardée à chaque dessin, f
  assert.match(p.hote.innerHTML,/value="regl"/);assert.match(p.hote.innerHTML,/data-act="interface:reglages"/);assert.ok(p.champ.focuses>avant,'mise au point rendue après le dessin');
  clavier(touche('Escape'));assert.match(p.hote.innerHTML,/value=""/);assert.doesNotMatch(p.hote.innerHTML,/interface:reglages/);
  /* Entrée lance la commande choisie : le bouton d’origine est cliqué. */
- for(const id of ['start-batch','resume','retry','manual-takeover','manual-completion','close-uncertain','export-tout','new-batch','relecture-acquitter','relecture-arreter','relecture-lancer','explicit-skip'])p.els[id].hidden=true;
+ for(const id of ['start-batch','resume','retry','manual-takeover','manual-completion','close-uncertain','export-tout','new-batch','relecture-acquitter','relecture-arreter','relecture-lancer','passe-differes-lancer','explicit-skip'])p.els[id].hidden=true;
  Object.assign(p.els.pause,{hidden:false,className:'primary',textContent:'Pause'});Object.assign(p.els.stop,{hidden:false,disabled:true,textContent:'Arrêter le lot'});p.rendu(etat(LOT));
  assert.match(p.hote.innerHTML,/data-act="legacy:pause"/);
  assert.equal(clavier(touche('Enter')).empeche,true);assert.equal(p.els.pause.clics,1);
@@ -143,6 +143,8 @@ test('un réglage choisi sur l’habillage clique la case ou le bouton radio d�
  choisir('grappe','oui');assert.equal(p.els['grappe-differes'].clics,1);
  p.els['grappe-differes'].checked=true;choisir('grappe','oui');assert.equal(p.els['grappe-differes'].clics,1,'déjà allumée : pas de second clic');
  choisir('grappe','non');assert.equal(p.els['grappe-differes'].clics,2);
+ p.els['passe-differes'].checked=true;choisir('passe2','oui');assert.equal(p.els['passe-differes'].clics,0,'déjà allumée : pas de clic');
+ choisir('passe2','non');assert.equal(p.els['passe-differes'].clics,1);
  choisir('raison','alt-chiffres');assert.equal(p.els['raison-actif'].clics,1);assert.equal(p.els['raison-touches-alt-chiffres'].clics,1);
  p.els['raison-actif'].checked=true;choisir('raison','non');assert.equal(p.els['raison-actif'].clics,2);
  assert.deepEqual(js(p.envoyes),[],'aucun message au service worker');
