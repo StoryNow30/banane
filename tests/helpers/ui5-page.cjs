@@ -27,7 +27,7 @@ async function monter({ stockage = {}, etat = null, fenetre = { width: 560, heig
     chrome: { runtime: { getURL: p => 'chrome-extension://test/' + p, sendMessage: async m => { envoyes.push(m); return {}; } },
       storage: { local: { get: async () => ({ ...stockage }), set: async o => { Object.assign(stockage, o); ecrits.push(o); } } },
       windows: { getCurrent: async () => ({ id: 7, type: 'popup', ...fenetre }), update: async (id, o) => { fenetres.push(o); } } },
-    ArianePanel: { state: () => ctx.etatPanneau, which: () => 'home', voieDuLot: () => ({ cuts: [], classe: () => null, ecart: () => null }), travailDuLot: () => null, visitesNatif: () => [],
+    ArianePanel: { state: () => ctx.etatPanneau, voieDuLot: () => ({ cuts: [], classe: () => null, ecart: () => null }), travailDuLot: () => null, visitesNatif: () => [],
       apres: f => { hooks.push(f); } },
     etatPanneau: etat };
   ctx.globalThis = ctx; vm.createContext(ctx);

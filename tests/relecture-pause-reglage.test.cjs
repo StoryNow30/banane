@@ -7,7 +7,7 @@ const js=x=>JSON.parse(JSON.stringify(x));   /* les objets du service worker vie
 
 test('réglage éteint (installation neuve) : « Pause » refusée, aucun point, aucun événement de pause ; la passe finit comme avant',async()=>{
  let demande=null,lu=null;
- const {b}=await lotPause({actif:null,esv:(a,bb)=>{a.surAller=async t=>{if(t.cut!==109||demande)return;lu=await bb.api('relecture-pause-reglage-etat');demande=await bb.api('relecture-pause').then(()=>'accepté',e=>e.message);}}});
+ const {b}=await lotPause({actif:null,esv:(a,bb)=>{a.surAller=async t=>{if(t.cut!==109||demande)return;lu=(await bb.api('relecture-etat')).repriseReglage;demande=await bb.api('relecture-pause').then(()=>'accepté',e=>e.message);}}});
  const p=await H.finPasse(b);
  assert.deepEqual(js(lu),{actif:false,f5:'pause'},'éteint par défaut');assert.match(demande,/éteinte dans les réglages/);
  assert.equal(p.etat,'finie');assert.equal(p.faits,7);

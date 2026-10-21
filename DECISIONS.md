@@ -1851,6 +1851,6 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - **Demande de Mic (21/10)** : recevoir tout de suite la nouvelle interface sans attendre le reste de la test 17. Paquet = test 16 inchangée (moteur identique : `src/gcv2*.js`, `src/engine.js`, géométrie, réglages de lot) + l'interface des décisions D-232 à D-236. La deuxième passe, les gardes de fautes et les cuts sans pose (`claude/50-t17-passe2`, `-fautes`, `-sanspose`) ne sont pas dans ce paquet : l'intégration complète viendra ensuite comme 4.9.5.18 « test 18 ».
 - **Mic a validé** la maquette v2 et la palette sobre. **Double connexion Orbite + Écho abandonnée** : une seule connexion ESV partagée (D-235, limite honnête maintenue).
 - **Défauts livrés** : ancien panneau par défaut, lien « Essayer le nouveau panneau » vers la v2, palette sobre éteinte, pause et reprise de la relecture éteintes (réglage).
-- **Zone « deuxième passe »** du nouveau panneau gardée, inerte (elle lit `view.passeDifferes`, absent de la test 16) et testée sur des états fabriqués ; l'intégration la branchera.
+- **Zone « deuxième passe »** du nouveau panneau **retirée de ce paquet** (elle lit `view.passeDifferes`, que la test 16 ne produit pas) ; la test 18 la reprend avec la deuxième passe (branche `claude/50-t17-passe2`). À sa place : état « Relecture en cours » du nouveau panneau pendant la relecture qui suit le lot.
 - **Numéro** : `4.9.5.17`, nom « 4.9.5 test 17 (UI) » ; la décision D-224 (apprentissage de la partie 0 du projet 3) vit sur une autre branche et n'est pas reportée ici.
 

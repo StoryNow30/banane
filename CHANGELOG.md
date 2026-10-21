@@ -10,7 +10,8 @@ Manifeste `4.9.5.17`, « 4.9.5 test 17 (UI) », paquet `ariane-4.9.5-test.17-ui.
 - Le nouveau panneau n'affiche jamais « 999999 » (« fin de partie ») et dit « Aucun onglet ESV » au lieu de « Prêt » sans onglet connecté.
 - Le panneau d'avant ne propose plus « Lancer la relecture » pendant une pause.
 - Code d'interface repris de la branche UI ; défauts corrigés au passage : voir `fiches/PASSATION_T17_UIPORT.md` § 4.
-- **Inerte dans ce paquet** : la zone « la deuxième passe travaille, ne touche à rien dans ESV » du nouveau panneau (`src/ui5.js`) lit un état `passeDifferes` que la test 16 ne produit pas ; elle ne s'affiche donc jamais ici (essais sur des états fabriqués) et sert à l'intégration complète.
+- **Pas dans ce paquet** : la zone « la deuxième passe travaille, ne touche à rien dans ESV » du nouveau panneau (elle lit un état `passeDifferes` que la test 16 ne produit pas) est retirée ; la test 18 la reprend avec la deuxième passe. À sa place, le nouveau panneau dit « Relecture en cours » (avec « Arrêter la relecture ») pendant la relecture qui suit le lot, et grise « Vider le cache » pendant la relecture ou sa pause.
+- Correctifs de relecture : « Reprendre » refusée tant qu'une correction interrompue n'est pas contrôlée ; « Une autre Ariane » au passage d'un cut arrête la relecture en erreur (pas en pause) ; un point de reprise jeté au réveil ferme le journal ; l'ancien panneau garde la taille que l'opérateur a donnée à la fenêtre.
 - Limites : une seule connexion ESV est partagée par Orbite et Écho ; le nouveau panneau n'affiche pas la relecture en cours ; le délai de réinstallation de l'observateur après un F5 pendant la pause n'est pas mesuré sur ESV.
 
 ## 4.9.5.16 — 4.9.5 test 16 (L1-e5) (21/10)

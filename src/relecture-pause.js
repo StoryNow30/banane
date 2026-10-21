@@ -1,6 +1,6 @@
 /* Test 17 (D-232 à D-234) — PAUSE ET REPRISE DE LA RELECTURE, partie panneau. Module à part : `src/carte-relecture.js` (carte « Relecture après le lot »)
  * reste tel quel ; celui-ci tient ses propres éléments dans la même carte (`#relecture-pause-*`) et ne parle au service worker que par ses actions
- * (`relecture-etat`, `relecture-pause`, `relecture-reprendre`, `relecture-arreter`, `relecture-pause-reglage-etat`, `relecture-pause-reglage`).
+ * (`relecture-etat`, `relecture-pause`, `relecture-reprendre`, `relecture-arreter`, `relecture-pause-reglage`).
  *  - « Pause » : visible pendant la passe quand le réglage est allumé ; « Pause demandée… » tant que la passe finit son étape ;
  *  - « Reprendre la relecture » et « Arrêter la relecture » : pendant la pause ; la reprise est grisée tant qu'ESV ne répond pas (raison écrite) ;
  *  - réglage : « Pause et reprise de la relecture » (éteint par défaut) et « Si ESV est rechargé pendant la relecture » (mettre en pause, ou arrêter).

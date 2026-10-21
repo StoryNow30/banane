@@ -15,6 +15,6 @@ test('F5 pendant la validation de la correction du cut 109 : erreur (pas une pau
  assert.equal(H.evenements(b,'relecture-pause').length,0,'jamais une pause : la validation est incertaine');
  const etat=await b.api('relecture-etat');assert.equal(etat.correctionInterrompue.cut,109,'la correction interrompue bloque tout jusqu’à « J’ai contrôlé le cut 109 »');
  assert.equal('banane51RelectureReprise' in b.local.m,false,'aucun point gardé');
- await assert.rejects(b.api('relecture-reprendre'),/Aucune relecture en pause/);
+ await assert.rejects(b.api('relecture-reprendre'),/J’ai contrôlé le cut 109/);   /* la garde d'intention répond avant « Aucune relecture en pause » */
  await assert.rejects(b.api('relecture-lancer'),/J’ai contrôlé le cut 109/);
 });

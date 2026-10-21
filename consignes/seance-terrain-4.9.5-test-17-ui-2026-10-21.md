@@ -60,7 +60,7 @@ Le but : dire si le nouveau panneau te convient, et si la pause de la relecture 
 
 Rien ne change côté pose. **Chaque pose est définitive dans ESV** : pour ce qui concerne les verts et les cuts douteux, garde les habitudes de la test 16. Le nouveau panneau et la palette ne posent rien eux-mêmes.
 
-**Pendant une relecture en mode « corriger »**, le nouveau panneau dit encore « Lot terminé » : seules la commande « Arrêter la relecture » et, en pause, la ligne de pause apparaissent. Le panneau d'avant montre la relecture en cours.
+**Pendant la relecture qui suit le lot**, le nouveau panneau dit « Relecture en cours » (accueil : « Suivre la relecture » et « Arrêter la relecture » ; Orbite : la ligne de la relecture et « Arrêter la relecture ») ; Écho et « Vider le cache » y sont indisponibles tant qu'elle travaille ou qu'elle est en pause.
 
 ## 6. Si quelque chose ne va pas
 
@@ -85,9 +85,9 @@ Les poses déjà validées dans ESV restent : le retour arrière ne les défait 
 ## 7. Ce qui n'est pas vérifié
 
 - **Une seule connexion à ESV** est partagée par Orbite et Écho : la rangée d'onglets montre le même onglet, colorée selon l'écran. Orbite sur un onglet et Écho sur un autre en même temps ne se peut pas.
-- **Le nouveau panneau n'affiche pas la relecture en cours** (voir § 5).
+- **Accessibilité du nouveau panneau et de la palette** : le focus clavier est perdu quand le panneau se redessine (chaque seconde), et les lignes de la palette n'ont ni rôle ni `tabindex` : la palette se pilote au clavier (flèches, Entrée), pas avec un lecteur d'écran. Non corrigé.
+- Le panneau d'avant lit l'état de la relecture par deux modules en parallèle (toutes les 1 à 5 secondes) : lectures du stockage, sans effet sur ESV, non simplifiées.
 - **Après un F5 pendant la pause, le délai de réinstallation de l'observateur dans la page ESV n'est pas mesuré sur ESV.** Si la première correction d'une relecture « corriger » repartait trop tôt, on verrait « validation non prouvée » et la relecture s'arrêterait en gardant la pose : note-le.
 - La pause de la relecture n'a jamais tourné sur ESV ; elle est éteinte tant que tu ne l'allumes pas.
 - Les écrans ont été vus dans Chromium sur des états fabriqués (accueil, Orbite au repos, en lot, en pause, incident et fin de lot, Écho, Revue, Réglages, palette, relecture en cours et en pause), pas sur ESV. Edge n'a pas été vu.
-- La zone « la deuxième passe travaille, ne touche à rien dans ESV » est dans le nouveau panneau mais ne s'affiche pas dans cette version : la deuxième passe n'existe pas ici.
 - Comparaison avec la test 16, réglages d'interface éteints : voir la fiche (relecture jouée dans le vrai service worker des deux versions, comparée champ par champ).

@@ -31,7 +31,7 @@ test('retour arrière vers la test 16 ; limites dites ; aucune empreinte, adress
  const r=plat(section('6. Si quelque chose ne va pas'));
  for(const m of ['Ne désinstalle pas Ariane','**Désactive** la test 17 (UI)','ariane-4.9.5-test.16.zip','Les poses déjà validées dans ESV restent'])assert.ok(r.includes(m),m);
  const l=plat(section('7. Ce qui n\'est pas vérifié'));
- for(const m of ['Une seule connexion à ESV','n\'affiche pas la relecture en cours','délai de réinstallation de l\'observateur','Edge n\'a pas été vu'])assert.ok(l.includes(m),m);
+ for(const m of ['Une seule connexion à ESV','Accessibilité du nouveau panneau','délai de réinstallation de l\'observateur','Edge n\'a pas été vu'])assert.ok(l.includes(m),m);
  assert.ok(!/\b[0-9a-f]{40,64}\b/i.test(texte),'aucune empreinte');assert.ok(!/https?:\/\/|@[a-z]+\./i.test(texte),'aucune adresse');
  assert.ok(!/\b\d+:\d+\b/.test(texte),'aucun code de partie de projet');
 });
