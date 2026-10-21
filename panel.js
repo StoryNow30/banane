@@ -181,7 +181,7 @@
  const OUVERT=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER'];
  const INCERTAIN=['PAUSED_DEFER_NAVIGATION_UNCERTAIN','PAUSED_AFTER_STATE_MISSING','ERROR'];
  const entier=v=>Number.isFinite(Number(v))?String(Math.trunc(Number(v))):'—';
- /* 4.9.5 test 10-ui : l'habillage (src/ui5*.js) lit l'état et le DOM de ce panneau après chaque rendu et déclenche ses boutons par un clic ;
+ /* Test 17 : l'habillage (src/ui5*.js) lit l'état et le DOM de ce panneau après chaque rendu et déclenche ses boutons par un clic ;
   * il n'envoie aucun message au service worker et n'appelle aucun export. Les crochets sont posés plus bas (`ArianePanel`). */
  const hooksRendu=[];
  /* La voie : une traverse par cut du lot, dans l'ordre où le Pilote les a
