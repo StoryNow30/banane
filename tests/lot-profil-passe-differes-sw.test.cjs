@@ -1,5 +1,5 @@
 'use strict';
-/* Cap 5b (fiches/PASSATION_CAP5_B.md § 15) — DEUXIÈME PASSE EN OMBRE dans le service worker (réglage `lot.passeDifferes` de src/settings.js, coupé par défaut).
+/* Cap 5b (fiches/PASSATION_CAP5_B.md § 15) — DEUXIÈME PASSE EN OMBRE dans le service worker (réglage `lot.passeDifferes` de src/settings.js : `ecriture:false` ; `ombre:false` la coupe).
  * Service worker réel en VM (tests/helpers/lot-profil.cjs) : cuts 111 à 114, le 112 sans point (différé). La GCV2 est forcée à « valider » sur le 112
  * pendant la passe seulement. La passe relit le nuage du magasin, décide avec les voisins de fin de lot (111 ET 113) et ne touche PAS à ESV. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
@@ -8,7 +8,7 @@ const { production, base, K, S, EsvTrou, SCOPE, ev, attendre } = require('./help
 async function lot({ passe, profil = null }) {
   const adapter = new EsvTrou([]), b = production({ adapter });
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false },
-    lot: { ...S.lot, ...(profil ? { profil } : {}), passeDifferes: { ...S.lot.passeDifferes, ...(passe ? { ombre: true, passes: 1 } : {}) } } };
+    lot: { ...S.lot, ...(profil ? { profil } : {}), passeDifferes: { ...S.lot.passeDifferes, ...(passe ? { ecriture: false, passes: 1 } : { ombre: false }) } } };
   const G = b.ctx.BananeGcv2L1, appels = [];
   b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => {
     const cut = a.capture.identity.cut;
@@ -28,9 +28,9 @@ async function lot({ passe, profil = null }) {
   return { b, adapter, appels };
 }
 
-test('deuxième passe en ombre : voisins de fin de lot (avant ET après), décision journalisée, aucune écriture vers ESV ; coupée par défaut', async () => {
+test('deuxième passe en ombre : voisins de fin de lot (avant ET après), décision journalisée, aucune écriture vers ESV ; coupée explicitement', async () => {
   const off = await lot({ passe: false });
-  assert.equal(ev(off.b, 'passe-differes-ombre-fin').length, 0, 'coupée par défaut : aucune passe');
+  assert.equal(ev(off.b, 'passe-differes-ombre-fin').length, 0, 'coupée (ombre:false) : aucune passe');
   const on = await lot({ passe: true });
   const fin = ev(on.b, 'passe-differes-ombre-fin'); assert.equal(fin.length, 1, 'une passe par lot');
   assert.equal(fin[0].mode, 'ombre'); assert.equal(fin[0].differes, 1, 'le 112 est le seul différé'); assert.deepEqual(fin[0].cuts, [112], 'le 112 serait posé');

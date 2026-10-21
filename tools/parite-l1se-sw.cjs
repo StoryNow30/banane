@@ -73,7 +73,7 @@ async function main(argv) {
   const adapter = new EsvRejoue(), b = production({ adapter, local });
   if (a.leviers) b.ctx.BananeGcv2L1.reglerLeviers(a.leviers);
   /* `--passe` : la deuxième passe en ombre (aucune écriture vers ESV) ; ses poses « calculées » sont comparées à celles de la deuxième passe du banc. */
-  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, ...(a.passe ? { lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ombre: true } } } : {}) };
+  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, ...(a.passe ? { lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ombre: true, ecriture: false } } } : {}) };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   const SCOPE = { testConfirmed: true, allowNavigationEvidence: true, lowConfidence: 'attempt', geometryEngine: 'geometry-candidate-v1', lotDecision: 'apply' };
   t0 = Date.now();

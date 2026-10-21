@@ -1562,11 +1562,14 @@ function l1ResteCle(b){return b?.id??null;}
 function l1ResteNoter(identity,reste){const b=engine?.s?.batch,cle=l1ResteCle(b);if(l1Restes.cle!==cle)l1Restes={cle,m:new Map()};
  l1Restes.m.set(`${identity.part}|${identity.frameId??null}|${identity.cut}`,reste);}
 function l1ResteOter(identity){l1Restes.m.delete(`${identity.part}|${identity.frameId??null}|${identity.cut}`);}
-/* Niveau de la passe : 'off' (défaut), 'ombre' ou 'ecriture'. Toute valeur autre que `true` laisse le réglage coupé ; l'écriture exige l'observateur passif
- * (la preuve de la validation) : sans lui, la passe reste en ombre. `max` : cuts écrits au plus (1 si la valeur est illisible). */
-function passeDiffReglage(){const R=globalThis.BananeSettings?.lot?.passeDifferes||{},passes=Number.isInteger(R.passes)&&R.passes>0?R.passes:0;let mode='off';
- if(R.ombre===true&&passes>0)mode=R.ecriture===true&&globalThis.BananeSettings?.observateurPassif?.actif!==false?'ecriture':'ombre';
- return {mode,ecritureDemandee:R.ecriture===true,passes,leviers:R.leviers&&typeof R.leviers==='object'?R.leviers:{},max:Number.isInteger(R.ecritureMax)&&R.ecritureMax>0?R.ecritureMax:1};}
+/* Niveau de la passe : 'off', 'ombre' ou 'ecriture' (livré : écriture, sans plafond, décision de l'opérateur). Une clé absente de `lot.passeDifferes` vaut la valeur livrée
+ * (`passeDifferesDefaut`) ; `false` coupe ; toute autre valeur que `true` (ou nombre illisible, leviers illisibles) coupe ; l'écriture exige l'observateur passif (la preuve de la
+ * validation) : sans lui, la passe reste en ombre. `max` : cuts écrits au plus (Infinity : sans plafond ; un plafond illisible coupe l'écriture). */
+function passeDiffReglage(){const B=globalThis.BananeSettings,R={...B?.passeDifferesDefaut,...B?.lot?.passeDifferes},passes=Number.isInteger(R.passes)&&R.passes>0?R.passes:0;
+ const leviers=R.leviers&&typeof R.leviers==='object'&&!Array.isArray(R.leviers)?R.leviers:null,max=R.ecritureMax===null?Infinity:Number.isInteger(R.ecritureMax)&&R.ecritureMax>0?R.ecritureMax:0;
+ let mode='off';
+ if(R.ombre===true&&passes>0&&leviers)mode=R.ecriture===true&&max>0&&B?.observateurPassif?.actif!==false?'ecriture':'ombre';
+ return {mode,ecritureDemandee:R.ecriture===true,passes,leviers:leviers??{},max};}
 async function l1Commande(args){
  const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
  let z=null;if(suivre)try{z=l1Zone(identity);}catch{z=null;}
@@ -1619,7 +1622,7 @@ async function passeDiffEcrire(b,poses,rg,vue){
  const aEcrire=poses.filter(p=>!p.fait).slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
  vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
- const raison0=relecture.passe?.etat==='en-cours'?'une relecture est en cours':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
+ const raison0=['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
  if(!raison0){const E=passeDiff.ecriture={arret:false,attente:null};
   try{
    for(const p of aEcrire){

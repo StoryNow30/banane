@@ -1,13 +1,13 @@
 'use strict';
-/* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, NIVEAU « ÉCRITURE » (tests/helpers/passe-differes.cjs : lot 111 à 115, les cuts 112 et 114 différés
- * puis forcés à « valider » par la GCV2 pendant la passe). Elle pose et valide sur place dans l'ESV simulé, au plus `ecritureMax` cuts, et ne touche à rien d'autre. */
+/* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, NIVEAU « ÉCRITURE » (tests/helpers/passe-differes.cjs : lot 111 à 115 (`deux`), les cuts 112 et 114 différés
+ * puis forcés à « valider » par la GCV2 pendant la passe). Livrée allumée en écriture, sans plafond de poses : elle pose et valide sur place dans l'ESV simulé, et ne touche à rien d'autre. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const { lotPasse, relancer, ev, base } = require('./helpers/passe-differes.cjs');
 const PS = require('../src/part-summary-49.js');
-const j = x => JSON.parse(JSON.stringify(x)), ECRITURE = { ombre: true, ecriture: true, passes: 1 };
+const j = x => JSON.parse(JSON.stringify(x)), ECRITURE = { passes: 1, ecritureMax: 1 };
 
 test('écriture : un cut rouge est atteint, posé (clic « tout-recentre », relu), validé sur place et prouvé ; un seul cut (ecritureMax 1) ; compté posé', async () => {
-  const x = await lotPasse({ passe: ECRITURE });
+  const x = await lotPasse({ passe: ECRITURE, deux: true });
   assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin')[0].cuts, [112, 114]);
   assert.deepEqual(x.pasPasse, [], 'rien n’est envoyé à ESV tant que la pose du dernier cut attend sa validation');
   await relancer(x); assert.equal(x.refus.issue, 'refus-depart'); assert.match(x.refus.raison, /pose d’Ariane attend ta validation au cut 115/);
@@ -30,4 +30,12 @@ test('écriture : un cut rouge est atteint, posé (clic « tout-recentre », rel
   /* Les leviers de la passe ne valent que le temps de l'appel : le lot a les siens. */
   assert.deepEqual(x.appels.map(a => a.sansVoieRien), [false, false, true, true]);
   assert.equal(x.b.ctx.BananeGcv2L1.leviersActifs().sansVoieRien, false);
+});
+
+test('écriture : livrée sans plafond de poses, tous les cuts décidés sont écrits, dans l’ordre de la décision', async () => {
+  const x = await relancer(await lotPasse({ passe: { passes: 1 }, deux: true }));
+  assert.deepEqual(x.pasPasse, ['goToCut', 'capture', 'apply', 'validateInPlace', 'goToCut', 'capture', 'apply', 'validateInPlace']);
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112, 114]);
+  const fin = ev(x.b, 'passe-differes-ecriture-fin').at(-1); assert.equal(fin.issue, 'fin'); assert.equal(fin.ecrites, 2); assert.equal(fin.demandees, 2);
+  assert.deepEqual(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).map(q => q.identity.cut), [112, 114]);
 });

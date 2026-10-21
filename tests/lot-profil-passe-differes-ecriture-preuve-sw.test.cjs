@@ -3,7 +3,7 @@
  * l'envoi remet la pose d'avant ; une validation envoyée dont l'écriture n'est pas vue laisse la pose, note l'intention et arrête la passe : le cut est à contrôler dans ESV. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const { lotPasse, relancer, ev, K, base } = require('./helpers/passe-differes.cjs');
-const j = x => JSON.parse(JSON.stringify(x)), ECRITURE = { ombre: true, ecriture: true, ecritureMax: 2, passes: 1 };
+const j = x => JSON.parse(JSON.stringify(x)), ECRITURE = { passes: 1 };
 
 test('écriture : validation refusée avant l’envoi : la pose d’avant est remise, rien n’est compté, la passe s’arrête', async () => {
   const x = await relancer(await lotPasse({ passe: ECRITURE, opts: { refusAvantEnvoi: true } }));
