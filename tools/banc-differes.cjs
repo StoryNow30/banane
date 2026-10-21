@@ -47,6 +47,7 @@ const estL1s = p => p === 'L1-s' || p === 'L1-se';
 const CHAINE_ACTUELLE = p => p === 'base' || estL1s(p);
 const PARAMETRES = path.join(__dirname, '..', 'datasets', 'gcv2-parametres-h6.json');
 const MAX_APPUIS = 40;
+const ZONES_OMBRE = (process.env.BANC_OMBRE_VERTS || '').split(',').filter(Boolean);
 const fini = v => typeof v === 'number' && Number.isFinite(v);
 const arrondi = (v, d = 1) => fini(v) ? Math.round(v * 10 ** d) / 10 ** d : null;
 const t = x => Date.parse(x || '');
@@ -178,9 +179,18 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       let out;
       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
       else if (pose) {
+        /* Mesure seulement (BANC_OMBRE_VERTS, zones séparées par des virgules) : la GCV2 refaite en ombre sur la pose de la chaîne, avec l'état d'avant ce cut ; la décision et les voisins ne changent pas. */
+        let ombre = null;
+        if (p === 'L1-se' && ZONES_OMBRE.includes(zone)) {
+          try {
+            const transport = leviers.transport && E.validesL1 && E.validesL1.length;
+            ombre = L1.resumer(L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p),
+              reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }));
+          } catch (e) { ombre = { erreur: String(e && e.message || e).slice(0, 120) }; }
+        }
         E.valides.push({ identity, positions, rails: before });
         if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
-        out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions) };
+        out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions), ...(ombre ? { ombre } : {}) };
       } else if (estL1s(p) && (() => {
         /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
         if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {

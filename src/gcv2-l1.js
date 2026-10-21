@@ -556,6 +556,7 @@
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
+   vetoVoieAbsMm:null,voieIncoherenteMm:null,
    validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,passesAlternees:false,
    branche:false,brancheMm:8,brancheVertMm:25,brancheMaxCuts:6,brancheExtrapCuts:1,brancheEcartement:Object.freeze([1380,1520]),voieProcheSureCuts:null,
    soutienMinDessus:null,soutienMinFlanc:null,
@@ -798,6 +799,18 @@
      const g=k.voieGeo,decal={};
      for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=Math.abs(h.decal[1]-g[s][0]);if(e<=LEVIERS.brancheMm&&Math.abs(h.decal[2]-g[s][1])<=LEVIERS.brancheVertMm&&(!best||e<best.e))best={e,h};}if(best)decal[s]=best.h.decal.slice();}
      if(SIDES.every(s=>decal[s])){const ga=ecartementDecal(capture,decal);if(ga>=LEVIERS.brancheEcartement[0]&&ga<=LEVIERS.brancheEcartement[1]&&SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))dd={etat:'valider',motif:'branche',decal,corrigee:false,avant:dd.motif};}
+   }
+   /* Garde de voie absolue (leviers `vetoVoieAbsMm` et `voieIncoherenteMm`, coupés par défaut), sur toute pose validée, quel qu'en soit le chemin. Voie : droite
+    * ajustée des voisins validés (voie absolue, `rechProcheMaxCuts` cuts au plus sur chaque rail). Pose à plus de `vetoVoieAbsMm` en travers de cette droite
+    * (en ADV, la voie de départ d'ESV et celle de l'opérateur sont toutes deux des rails du nuage : seuls les voisins disent laquelle) : rien. Voisins qui ne
+    * s'accordent pas (résidu de la droite au-delà de `voieIncoherenteMm`) : la voie ne tranche pas, rien. */
+   if(dd.etat==='valider'&&dd.decal&&capture&&(fini(LEVIERS.vetoVoieAbsMm)||fini(LEVIERS.voieIncoherenteMm))){
+     const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
+     if(va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts)){
+       const ecartVoie=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-va[s].v[0])));
+       if(fini(LEVIERS.vetoVoieAbsMm)&&ecartVoie>LEVIERS.vetoVoieAbsMm)dd={etat:'rien',motif:'veto-voie-absolue',decal:null,corrigee:false,avant:dd.motif,ecartVoieMm:arrondi(ecartVoie,1)};
+       else if(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>va[s].residuMm??0))>LEVIERS.voieIncoherenteMm)dd={etat:'rien',motif:'voie-incoherente',decal:null,corrigee:false,avant:dd.motif};
+     }
    }
    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
