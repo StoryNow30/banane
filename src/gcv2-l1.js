@@ -556,6 +556,7 @@
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
+   vetoVoieAbsMm:null,voieIncoherenteMm:null,contreChaineZones:null,contreChaineVoieMm:null,contreChaineMm:null,
    validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,passesAlternees:false,
    branche:false,brancheMm:8,brancheVertMm:25,brancheMaxCuts:6,brancheExtrapCuts:1,brancheEcartement:Object.freeze([1380,1520]),voieProcheSureCuts:null,
    soutienMinDessus:null,soutienMinFlanc:null,
@@ -811,6 +812,18 @@
      for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=Math.abs(h.decal[1]-g[s][0]);if(e<=LEVIERS.brancheMm&&Math.abs(h.decal[2]-g[s][1])<=LEVIERS.brancheVertMm&&(!best||e<best.e))best={e,h};}if(best)decal[s]=best.h.decal.slice();}
      if(SIDES.every(s=>decal[s])){const ga=ecartementDecal(capture,decal);if(ga>=LEVIERS.brancheEcartement[0]&&ga<=LEVIERS.brancheEcartement[1]&&SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))dd={etat:'valider',motif:'branche',decal,corrigee:false,avant:dd.motif};}
    }
+   /* Garde de voie absolue (leviers `vetoVoieAbsMm` et `voieIncoherenteMm`, coupés par défaut), sur toute pose validée, quel qu'en soit le chemin. Voie : droite
+    * ajustée des voisins validés (voie absolue, `rechProcheMaxCuts` cuts au plus sur chaque rail). Pose à plus de `vetoVoieAbsMm` en travers de cette droite
+    * (en ADV, la voie de départ d'ESV et celle de l'opérateur sont toutes deux des rails du nuage : seuls les voisins disent laquelle) : rien. Voisins qui ne
+    * s'accordent pas (résidu de la droite au-delà de `voieIncoherenteMm`) : la voie ne tranche pas, rien. */
+   if(dd.etat==='valider'&&dd.decal&&capture&&(fini(LEVIERS.vetoVoieAbsMm)||fini(LEVIERS.voieIncoherenteMm))){
+     const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
+     if(va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts)){
+       const ecartVoie=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-va[s].v[0])));
+       if(fini(LEVIERS.vetoVoieAbsMm)&&ecartVoie>LEVIERS.vetoVoieAbsMm)dd={etat:'rien',motif:'veto-voie-absolue',decal:null,corrigee:false,avant:dd.motif,ecartVoieMm:arrondi(ecartVoie,1)};
+       else if(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>va[s].residuMm??0))>LEVIERS.voieIncoherenteMm)dd={etat:'rien',motif:'voie-incoherente',decal:null,corrigee:false,avant:dd.motif};
+     }
+   }
    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
@@ -915,7 +928,22 @@
    const c=corrigerDecal({capture,decal,ref:ref.mm,ordre:ordreRails(capture,decal)});
    return {decal:c.anomalie&&c.soutenue?c.decal:decal,correction:{ref:ref.mm,ecartMm:c.ecartMm,anomalie:c.anomalie,rail:c.rail,soutenue:c.soutenue,appliquee:!!(c.anomalie&&c.soutenue)}};
  }
- /* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
+ /* Écart en travers (mm, le pire des deux rails) de la pose `decal` d'un cut à la voie absolue de ses voisins validés (`voieAbsolue`, mêmes réglages que la décision) :
+ * au voisin le plus proche et à la droite ajustée. Rend { proche, droite } ou null (aucun voisin, ou le plus proche à plus de `rechProcheMaxCuts`). */
+function ecartAVoie(capture,cut,voisins,decal){
+  const va=voieAbsolue(capture,cut,voisins,LEVIERS.voieAbsFenetre,3,LEVIERS.voisinsCoherents?{parCutMm:LEVIERS.voisinsCoherentsParCutMm,baseMm:LEVIERS.voisinsCoherentsBaseMm}:null);
+  if(!va||!SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts))return null;
+  const pire=f=>Math.max(...SIDES.map(s=>Math.abs(decal[s][1]-f(va[s]))));
+  return {proche:pire(v=>v.proche[0]),droite:pire(v=>v.v[0])};
+}
+/* Contre-expertise d'une pose de la chaîne (leviers `contreChaineZones`, `contreChaineVoieMm` et `contreChaineMm`, coupés) : `g` est la décision de la GCV2 (`deciderDiffere`) sur le même
+ * cut, avec l'état d'avant lui. Vrai si elle VALIDE une paire dont un rail est à plus de `seuilMm` (3D) de la pose de la chaîne : la chaîne n'est pas posée, le cut
+ * passe à la GCV2 comme un différé. `seuilMm` non réglé : jamais (la GCV2 ne fait que consigner sa décision). */
+function contreChaine(g,decalChaine,seuilMm){
+  const d=g&&g.decision;
+  return fini(seuilMm)&&!!d&&d.etat==='valider'&&!!d.paire&&SIDES.some(s=>norme(moins(d.paire[s].decal,decalChaine[s]))>seuilMm);
+}
+/* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
  function positionsDe(capture,paire){return Object.fromEntries(SIDES.map(s=>[s,L.positionOf(capture.rails[s],paire[s].decal.map(v=>v/1000))]));}
 
  /* ------------------------------------------------------------------ un différé, de bout en bout */
@@ -991,6 +1019,6 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });

@@ -176,12 +176,27 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       const grappeBloque = (dd = d) => { if (!R.regleGrappe) return false; const e = M.evaluer(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: dd.stage, reason: dd.reason }, action: 'lot', valide: true, surface })); return e.regles.includes('grappe-differes'); };
       let posesL1s = false;
       let out;
+      /* Contre-expertise (leviers `contreChaineZones`, `contreChaineMm`, coupés) : sur une pose de la chaîne dans ces zones, la GCV2 décide aussi, avec l'état d'avant ce cut ; `ombre`
+       * consigne sa décision. Si elle valide une paire à plus de `contreChaineMm` de la pose de la chaîne, le cut passe à la GCV2 comme un différé (ni pose, ni appui de la chaîne). */
+      let ombre = null, contre = null;
+      if (pose && p === 'L1-se' && (leviers.contreChaineZones || []).includes(zone) && !grappeBloque()) {
+        try {
+          const transport = leviers.transport && E.validesL1 && E.validesL1.length;
+          /* `contreChaineVoieMm` : la GCV2 (coûteuse) ne décide que si la pose de la chaîne est à plus de cette valeur, en travers, de la voie de ses voisins validés. */
+          const ev = fini(leviers.contreChaineVoieMm) ? L1.ecartAVoie(capture, c.cut, E.valides.concat(transport ? E.validesL1 : []), decalPose(before, positions)) : null;
+          if (fini(leviers.contreChaineVoieMm) && !(ev && Math.max(ev.proche, ev.droite) > leviers.contreChaineVoieMm)) throw null;
+          const g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p),
+            reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
+          ombre = L1.resumer(g);
+          if (L1.contreChaine(g, decalPose(before, positions), leviers.contreChaineMm)) { contre = g; pose = false; }
+        } catch (e) { if (e) ombre = { erreur: String(e.message || e).slice(0, 120) }; }
+      }
       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
       else if (pose) {
         E.valides.push({ identity, positions, rails: before });
         if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
-        out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions) };
-      } else if (estL1s(p) && (() => {
+        out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions), ...(ombre ? { ombre } : {}) };
+      } else if (!contre && estL1s(p) && (() => {
         /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
         if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
           const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
@@ -207,11 +222,12 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         out = { etat: 'differe', source: 'lot', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, commande: cmd.action === 'engine' ? 'engine' : `${cmd.action}:${cmd.reason}` };
       } else {
         /* La GCV2 (L1) sur un cut que la chaîne du lot ne pose pas. */
-        const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null };
+        const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, ...(contre ? { contreChaine: decalPose(before, positions) } : {}) };
         try {
           let g = cache.get('g' + sig);
           const transport = p === 'L1-se' && leviers.transport && E.validesL1 && E.validesL1.length;
-          if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null, voieListe: p === 'L1-se' && liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }); if (!transport) cache.set('g' + sig, g); }
+          if (contre) g = contre;
+          else if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null, voieListe: p === 'L1-se' && liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }); if (!transport) cache.set('g' + sig, g); }
           else { const dd = p === 'L1-se' ? L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas) : L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
           const dec = g.decision, l1 = L1.resumer(g);
           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
