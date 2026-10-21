@@ -563,7 +563,8 @@
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
-   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false});
+   voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
+   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
@@ -733,7 +734,14 @@
    const sauteRech=()=>{if(!fini(LEVIERS.rechSauteProcheMm)||dd.etat!=='valider'||!dd.decal||!(LEVIERS.rechSauteProcheZones||['adv']).includes(k.zone))return false;const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
      return !!va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechSauteProcheCuts&&Math.hypot(dd.decal[s][1]-va[s].proche[0],dd.decal[s][2]-va[s].proche[1])<=LEVIERS.rechSauteProcheMm);};
    if((LEVIERS.rechercheADV||(LEVIERS.diag&&LEVIERS.rechercheDiag))&&capture&&ref&&fini(ref.mm)&&(LEVIERS.rechZones||['adv']).includes(k.zone)&&!sauteRech()){
-     const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents),lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
+     let va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
+     /* T17B — `rechListeResMm` (coupé par défaut) : sans voisin posé à `rechProcheMaxCuts` cuts au plus, en abords (`rechListeZones`), la voie de la liste d'ESV
+      * (valides non touchés des deux côtés, résidu d'ajustement de cette valeur au plus) tient lieu de voisin le plus proche : graine de la recherche,
+      * référence en travers (`rechListeVoieMm`) et en hauteur. */
+     const vl=k.voieListe,parListe=fini(LEVIERS.rechListeResMm)&&!!vl&&!!vl.left&&vl.n.avant>=1&&vl.n.apres>=1&&vl.residuMm<=LEVIERS.rechListeResMm&&(LEVIERS.rechListeZones||['abords']).includes(k.zone)
+       &&!(va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts));
+     if(parListe)va=Object.fromEntries(SIDES.map(s=>[s,{v:vl[s],proche:vl[s],distProche:1,n:vl.n,residuMm:vl.residuMm,encadre:null,liste:true}]));
+     const lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
      const G={d0:d0.paire?{left:lv(d0.paire.left.decal),right:lv(d0.paire.right.decal)}:null,dd:dd.decal?{left:lv(dd.decal.left),right:lv(dd.decal.right)}:null,
        proche:va?{left:va.left.proche,right:va.right.proche}:null,va:va?{left:va.left.v,right:va.right.v}:null,h0:{left:[0,0],right:[0,0]}};
      /* Ordre des graines (`rechOrdreGraines`) : par défaut la test 13, la pose retenue, le voisin, la voie ajustée, le départ (celui de b-r2 ; une
@@ -752,7 +760,7 @@
       * `rechVoieParCutMm` par cut d'écart au voisin le plus proche. */
      const hOk=p=>!fini(LEVIERS.rechHauteurMaxMm)||SIDES.every(s=>Math.min(Math.abs(p.decal[s][2]-va[s].proche[1]),Math.abs(p.decal[s][2]))<=LEVIERS.rechHauteurMaxMm);
      const admis=ps=>va?ps.filter(p=>garde(p)&&Math.abs(p.dg)<=LEVIERS.rechEcartMm&&p.depl<=LEVIERS.rechMaxDeplMm&&p.dv!=null&&p.dv<=LEVIERS.rechVoieMaxMm
-       &&(!fini(LEVIERS.rechVoieParCutMm)||p.dv<=LEVIERS.rechVoieParCutMm*Math.max(1,va.left.distProche,va.right.distProche))&&hOk(p)):[];
+       &&(!fini(LEVIERS.rechVoieParCutMm)||p.dv<=LEVIERS.rechVoieParCutMm*Math.max(1,va.left.distProche,va.right.distProche))&&(!parListe||p.dv<=LEVIERS.rechListeVoieMm)&&hOk(p)):[];
      const procheOk=!!(va&&va.left.distProche<=LEVIERS.rechProcheMaxCuts&&va.right.distProche<=LEVIERS.rechProcheMaxCuts
        &&(!fini(LEVIERS.rechVoisinsMin)||SIDES.every(s=>va[s].n.avant+va[s].n.apres>=LEVIERS.rechVoisinsMin)));
      const ecart=(a,b)=>Math.max(...SIDES.map(s=>norme(moins(a.decal[s],b.decal[s]))));
