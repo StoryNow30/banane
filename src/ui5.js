@@ -163,7 +163,12 @@
     if (nom === 'relecture') cliquer('relecture-' + v);
     else if (nom === 'clic') cliquer('clic-' + v);
     else if (nom === 'grappe') { if ((v === 'oui') !== !!$('grappe-differes')?.checked) cliquer('grappe-differes'); }
-    else if (nom === 'passe2') { if ((v === 'oui') !== !!$('passe-differes')?.checked) cliquer('passe-differes'); }
+    else if (nom === 'passe2') {
+      /* État inconnu (case indéterminée) : la case prend l'inverse du choix, le clic la met au choix. */
+      const c = $('passe-differes'); if (!v || !c) return;
+      if (c.indeterminate) { c.indeterminate = false; c.checked = v !== 'oui'; }
+      if ((v === 'oui') !== !!c.checked) cliquer('passe-differes');
+    }
     else if (nom === 'raison') {
       if (v === 'non') { if ($('raison-actif')?.checked) cliquer('raison-actif'); }
       else { if (!$('raison-actif')?.checked) cliquer('raison-actif'); cliquer('raison-touches-' + v); }

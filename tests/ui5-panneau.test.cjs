@@ -166,6 +166,8 @@ test('un réglage choisi sur l’habillage clique la case ou le bouton radio d�
  p.els['passe-differes'].checked=true;choisir('passe2','oui');assert.equal(p.els['passe-differes'].clics,0,'déjà allumée : pas de clic');
  choisir('passe2','non');assert.equal(p.els['passe-differes'].clics,1);
  p.els['passe-differes'].indeterminate=true;assert.equal(p.ui.instantane(etat(null)).reglages.passe2,null,'case indéterminée : état inconnu');
+ choisir('passe2','non');assert.equal(p.els['passe-differes'].clics,2,'état inconnu puis « Coupée » : un clic sur la case');assert.equal(p.els['passe-differes'].indeterminate,false);
+ p.els['passe-differes'].indeterminate=true;choisir('passe2','');assert.equal(p.els['passe-differes'].clics,2,'« État inconnu » choisi : rien');
  choisir('raison','alt-chiffres');assert.equal(p.els['raison-actif'].clics,1);assert.equal(p.els['raison-touches-alt-chiffres'].clics,1);
  p.els['raison-actif'].checked=true;choisir('raison','non');assert.equal(p.els['raison-actif'].clics,2);
  assert.deepEqual(js(p.envoyes),[],'aucun message au service worker');
