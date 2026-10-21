@@ -13,6 +13,6 @@ test('réglage éteint puis F5 : erreur comme avant ; réglage lu, changé et re
  assert.equal(p.etat,'erreur');assert.equal(H.evenements(b,'relecture-pause').length,0);assert.equal('banane51RelectureReprise' in b.local.m,false);
  /* Passe finie : le réglage se change. */
  assert.deepEqual(js(await b.api('relecture-pause-reglage',{actif:true,f5:'arret'})),{actif:true,f5:'arret'});
- assert.deepEqual(js(await b.api('relecture-pause-reglage-etat')),{actif:true,f5:'arret'});
+ assert.deepEqual(js((await b.api('relecture-etat')).repriseReglage),{actif:true,f5:'arret'});
  assert.deepEqual(js(await b.api('relecture-pause-reglage',{actif:'oui',f5:'n’importe quoi'})),{actif:false,f5:'pause'},'valeurs inconnues : éteint, pause');
 });

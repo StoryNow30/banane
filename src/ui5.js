@@ -191,7 +191,7 @@
   function voler(src, dst, ms) {
     const r0 = src.getBoundingClientRect(), r1 = dst.getBoundingClientRect(), c = src.cloneNode(true);
     Object.assign(c.style, { position: 'fixed', left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px', height: r0.height + 'px', margin: 0, zIndex: 50, pointerEvents: 'none', transformOrigin: '0 0', whiteSpace: 'nowrap', fontSize: getComputedStyle(src).fontSize, fontWeight: getComputedStyle(src).fontWeight, color: '#fff' });
-    c.classList.add('ar-vole'); D.body.appendChild(c); src.style.opacity = '0'; dst.style.opacity = '0';
+    D.body.appendChild(c); src.style.opacity = '0'; dst.style.opacity = '0';
     const k = src.classList.contains('picto') ? r1.width / r0.width : parseFloat(getComputedStyle(dst).fontSize) / parseFloat(getComputedStyle(src).fontSize);
     c.animate([{ transform: 'none' }, { transform: `translate(${r1.left - r0.left}px,${r1.top - r0.top}px) scale(${k})` }], { duration: ms, easing: 'cubic-bezier(.22,.8,.18,1)', fill: 'forwards' });
     setTimeout(() => { dst.style.opacity = ''; c.remove(); }, ms + 20);

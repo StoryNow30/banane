@@ -2538,8 +2538,7 @@ async function lotCloRefus(b,auto,repartir){
 async function relectureLancer({auto=false,passe=null}={}){
  let p;
  if(auto){p=passe;if(!p||relecture.passe!==p||p.etat!=='preparation')return relectureEtat();}
- else{if(relecture.passe?.etat==='en-pause')throw Error('Relecture en pause : clique sur « Reprendre la relecture » (ou « Arrêter la relecture »).');
-  if(passeActive())throw Error(`Relecture déjà ${relecture.passe.etat==='preparation'?'en préparation':'en cours'} : une seule passe à la fois.`);
+ else{if(passeActive())throw Error(`Relecture déjà ${relecture.passe.etat==='preparation'?'en préparation':'en cours'} : une seule passe à la fois.`);
   p=relectureNouvelle(engine.s.batch,false);}
  {const rg=await relectureRepriseReglage();p.reprise=rg.actif;p.repriseF5=rg.f5;}   /* Test 17 : pause et reprise, éteintes par défaut */
  /* Jeton de génération : une passe remplacée, ou arrêtée pendant sa préparation, ne part jamais. */
@@ -2990,7 +2989,6 @@ async function dispatch(m){await ready;const {action,args={}}=m;
  if(action==='relecture-acquitter')return relectureAcquitter(args);
  if(action==='relecture-pause')return relectureMettreEnPause();
  if(action==='relecture-reprendre')return relectureReprendre();
- if(action==='relecture-pause-reglage-etat')return relectureRepriseReglage();
  if(action==='relecture-pause-reglage')return relectureRepriseReglageChoisir(args);
  if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
   await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
