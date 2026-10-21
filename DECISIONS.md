@@ -1807,3 +1807,11 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - **B3, quatre derniers essais validés sur le terrain par Mic le 15 octobre avec la 4.9.0.17, sans export** : Arrêter puis Reprendre refusé si les rails ont bougé ; Reprendre après la fin → « Lot déjà terminé » ; lot à plage fixe jusqu'à sa fin ; erreur dans l'avis. Mic confirme aussi la reprise automatique au bon endroit après une mise en veille du PC suivie d'un F5.
 - **Exports non tenus (porte, lignes 8b et 8c) : décision de Mic du 15 octobre** : il accepte la 4.9.0 sans « Préparer pour analyse » à zéro différence ni le −40 % de taille ; les deux critères sont renvoyés à la 4.9.5.
 - Fusion dans `main`, étiquette et publication : toujours à la décision de Mic.
+
+## D-224 — Partie 0 du projet 3 : examen à réglages figés de la v5, puis apprentissage (21/10/2026)
+
+- **Ordre de l'opérateur expert** : mettre en apprentissage les corrections de ses deux Échos (21/10, 41 puis 543 visites) sur le lot de la test 15 de la partie 0 du projet 3, après un examen à réglages figés (rotation D-192).
+- **Examen** (fiches/APPRENTISSAGE_3_0.md) : v5 de la test 16 (réglages livrés, `BANC_LEVIERS` vide) contre le témoin v4, aucun réglage modifié, vérité d'Écho = validations humaines seules (56 cuts sur 337 ; 154 avec la règle « visité sans action = bon », donnée à part). Avec la liste d'ESV : cuts laissés sans pose 18 → 15 ; poses jugées 20 → 22 ; à 10 mm ou moins 6 → 14 ; à plus de 50 mm 6 → 4 ; 0 vert de la chaîne changé. Sans la liste : 30 → 26 cuts sans pose, 3 poses à plus de 50 mm dans les deux versions. Toutes les poses jugées sont en ADV.
+- **Constat** : première mesure hors échantillon de la v5 ; le budget de D-223 (pose à plus de 50 mm : 3 % au plus) n'est pas tenu sur cette partie (4 sur 22). Aucun réglage n'est changé d'après cet examen ; les cuts concernés (794, 846, 847, 869, et les 15 cuts sans pose) nourrissent la recherche de la semaine.
+- **Effets** : `datasets/manifeste-parties.json` (bloc projet 3, partie 0, D-224) ; `tools/manifeste-parties.cjs` et `tools/banc-differes.cjs` acceptent le numéro de partie 0 ; la vérité des verts non visités attend un contrôle complet de la partie.
+- Note de numérotation : ce fichier s'arrête à D-110 sur cette branche ; les décisions D-111 à D-223 sont dans le `DECISIONS.md` de la branche pilote.

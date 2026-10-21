@@ -463,7 +463,7 @@ function args(argv) {
   const o = { mode: argv[0], corpus: [], rejeu: [], juges: [], echo: [], profils: PROFILS.slice(), jugerReservee: false };
   for (let i = 1; i < argv.length; i++) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
-    if (k === '--partie') { const m = /^([1-9]\d*):([1-9]\d*)$/.exec(val()); if (!m) throw Error('--partie PROJET:PARTIE'); o.projet = Number(m[1]); o.partie = Number(m[2]); }
+    if (k === '--partie') { const m = /^([1-9]\d*):(0|[1-9]\d*)$/.exec(val()); if (!m) throw Error('--partie PROJET:PARTIE'); o.projet = Number(m[1]); o.partie = Number(m[2]); }
     else if (k === '--journal') o.journal = val(); else if (k === '--corpus') o.corpus.push(val()); else if (k === '--lot') o.lot = val(); else if (k === '--sortie') o.sortie = val();
     else if (k === '--profils') o.profils = val().split(',').filter(Boolean); else if (k === '--parametres') o.parametres = val(); else if (k === '--liste') o.liste = val();
     else if (k === '--rejeu') o.rejeu.push(val()); else if (k === '--juges') o.juges.push(val()); else if (k === '--inventaire') o.inventaire = val();
@@ -478,7 +478,7 @@ const ecrire = (f, texte) => { fs.mkdirSync(path.dirname(path.resolve(f)), { rec
 function main(argv) {
   const a = args(argv), journalTexte = m => process.stderr.write(m + '\n');
   if (a.mode === 'rejouer' || a.mode === 'predire') {
-    if (!a.partie || !a.journal || !a.corpus.length || !a.lot || !a.sortie) throw Error(`${a.mode} --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --sortie R.jsonl`);
+    if (!Number.isInteger(a.partie) || !a.journal || !a.corpus.length || !a.lot || !a.sortie) throw Error(`${a.mode} --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --sortie R.jsonl`);
     if (a.mode === 'predire') { const Mf = require('./manifeste-parties.cjs'), c = Mf.controler(Mf.lire(), [{ projet: a.projet, partie: a.partie }], { outil: 'banc-differes', jugerReservee: a.jugerReservee }); if (c.avis) journalTexte(c.avis); }
     const fP = a.parametres || PARAMETRES, bufP = fs.readFileSync(fP), parametres = JSON.parse(bufP.toString('utf8'));
     const j = JSON.parse(fs.readFileSync(a.journal, 'utf8')), R = lotReel(j, a.partie, a.lot), ids = R.lot.cuts.map(c => c.captureId).filter(Boolean);

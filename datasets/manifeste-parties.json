@@ -56,6 +56,15 @@
       "date": "2026-10-19",
       "motif": "Écho de l'opérateur expert du 18/10 (23 visites) après le lot et la relecture de la test 7 : lu pour juger la relecture (D-188), aucun réglage. Passée en apprentissage par la rotation examen → apprentissage (D-192, D-193).",
       "decision": "D-193"
+    },
+    {
+      "projet": 3,
+      "parties": [
+        0
+      ],
+      "date": "2026-10-21",
+      "motif": "Écho de l'opérateur expert du 21/10 sur le lot de la test 15 : premier Écho (41 visites, cuts rouges) puis second Écho (543 visites, toute la partie). Jugée d'abord en examen à réglages figés (la v5 de la test 16 contre le témoin v4, aucun réglage modifié), vérité d'Écho (validations seules) : avec la liste d'ESV, 22 poses ajoutées par la v5 jugées, 14 à 10 mm ou moins, 4 à plus de 50 mm, cuts laissés sans pose 18 (v4) puis 15 (v5) ; sans la liste, 16 poses jugées, 9 à 10 mm ou moins, 3 à plus de 50 mm, 30 puis 26 cuts sans pose. Toutes les poses jugées sont en ADV ; le budget de D-223 (3 % au plus à plus de 50 mm) n'est pas tenu sur cette partie. Détail dans fiches/APPRENTISSAGE_3_0.md. Passée en apprentissage sur ordre de l'opérateur expert.",
+      "decision": "D-224"
     }
   ],
   "temoins": [

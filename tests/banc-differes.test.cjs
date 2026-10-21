@@ -91,3 +91,10 @@ test('prédiction et comparaison : résumé sans vérité, jugés, départ diff�
   assert.equal(C.juges, 1); assert.equal(C.nonJuges.departDifferent, 1);
   assert.equal(C.parProfil.L1.n, 1); assert.equal(C.detail[0].cut, 4);
 });
+
+test('ligne de commande : la partie 0 d\'un projet est acceptée (3:0), pas le projet 0 ni une partie négative', () => {
+  const a = B.args(['rejouer', '--partie', '3:0']);
+  assert.equal(a.projet, 3); assert.equal(a.partie, 0); assert.ok(Number.isInteger(a.partie));
+  assert.equal(B.args(['rejouer', '--partie', '2:19']).partie, 19);
+  for (const mauvais of ['0:3', '3:-1', '3:00', '3:', '3']) assert.throws(() => B.args(['rejouer', '--partie', mauvais]), /--partie/, mauvais);
+});
