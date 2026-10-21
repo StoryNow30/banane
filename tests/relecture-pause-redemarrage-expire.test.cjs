@@ -12,11 +12,13 @@ test('point de plus de 24 h, ou d’un autre lot, ou réglage éteint : jeté au
  let demande=null;
  const {b,adapter,local}=await lotPause({esv:(a,bb)=>{a.surAller=async t=>{if(t.cut!==109||demande)return;demande=await bb.api('relecture-pause');};}});
  await attendreEtat(b,'en-pause');
- const pt=js(local.m.banane51RelectureReprise);
+ const pt=js(local.m.banane51RelectureReprise);let fermetures=0;   /* le journal est partagé par les trois réveils : une fermeture de plus à chacun */
  for(const [nom,abime,reglage] of [['trop vieux',x=>{x.savedAt=new Date(Date.now()-25*3600*1000).toISOString();},null],['autre lot',x=>{x.lotId='lot-ancien';},null],['réglage éteint',()=>{},{actif:false,f5:'pause'}]]){
   local.m.banane51RelectureReprise=js(pt);abime(local.m.banane51RelectureReprise);if(reglage)local.m.banane51RelecturePauseReglage=reglage;
   const c=production({adapter,local,store:b.store});await c.api('view');await attendre(60);
   assert.equal((await c.api('relecture-etat')).passe,null,nom+' : aucune passe ressuscitée');
   assert.equal('banane51RelectureReprise' in local.m,false,nom+' : point jeté');
+  const fins=c.store.events.filter(e=>e.type==='relecture-fin'&&e.issue==='interrompue'&&e.raison==='point de reprise jeté au réveil');
+  assert.equal(fins.length,++fermetures,nom+' : le journal se ferme (relecture-fin « interrompue »), sinon il garde un début et une pause sans fin');
  }
 });
