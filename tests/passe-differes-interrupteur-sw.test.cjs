@@ -10,7 +10,7 @@ test('interrupteur absent ou vrai : allumée ; `choix-lot-etat` le dit', async (
   for (const stockage of [{}, { [CLE]: true }]) {
     const x = await relancer(await lotPasse({ passe: { passes: 1 }, stockage }));
     assert.equal((await x.b.api('choix-lot-etat')).passeDifferes, true);
-    assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin').map(e => e.cuts), [[112]]);
+    assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin').map(e => e.cuts), [[112], [112]], 'fin de lot, puis relance (décisions refaites)');
     assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112]);
   }
 });

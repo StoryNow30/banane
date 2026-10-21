@@ -28,7 +28,7 @@ test('écriture : un cut rouge est atteint, posé (clic « tout-recentre », rel
   assert.deepEqual(j(await x.b.get('relectureIntentions')()), []);
   assert.deepEqual(j(x.b.get('vuePanneau')().passeDifferes), { lotId: x.b.get('engine').s.batch.id, mode: 'ecriture', etat: 'finie', differes: 2, posees: 2, demandees: 1, ecrites: 1, cut: null, message: null });
   /* Les leviers de la passe ne valent que le temps de l'appel : le lot a les siens. */
-  assert.deepEqual(x.appels.map(a => a.sansVoieRien), [false, false, true, true]);
+  assert.deepEqual(x.appels.map(a => a.sansVoieRien), [false, false, true, true, true, true], 'lot, ombre de fin de lot, ombre refaite à la relance');
   assert.equal(x.b.ctx.BananeGcv2L1.leviersActifs().sansVoieRien, false);
 });
 
@@ -38,4 +38,13 @@ test('écriture : livrée sans plafond de poses, tous les cuts décidés sont é
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112, 114]);
   const fin = ev(x.b, 'passe-differes-ecriture-fin').at(-1); assert.equal(fin.issue, 'fin'); assert.equal(fin.ecrites, 2); assert.equal(fin.demandees, 2);
   assert.deepEqual(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).map(q => q.identity.cut), [112, 114]);
+});
+
+test('relance : les décisions sont refaites (des voisins ont pu changer) ; un cut que la GCV2 ne valide plus n’est pas écrit', async () => {
+  const x = await lotPasse({ passe: { passes: 1 }, deux: true });
+  const G = x.b.ctx.BananeGcv2L1, decider = G.deciderDiffere;
+  G.deciderDiffere = a => { const r = decider(a); return a.capture.identity.cut === 112 ? { ...r, decision: { ...r.decision, etat: 'rien', motif: 'essai' } } : r; };
+  await relancer(x);
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [114], 'le 112, décidé « valider » en fin de lot, ne l’est plus à la relance');
+  assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin').map(e => e.cuts), [[112, 114], [114]]);
 });

@@ -1587,7 +1587,7 @@ async function l1Commande(args){
   else l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:args?.command?.reason==='regles-metier'||args?.lotObservation?.l1?.motif==='regle-metier'});}
  return r;}
 /* `cours` : la passe de CE lot (promesse jamais rejetée) ; `ecriture` : l'écriture en cours (arrêt demandé, attente de l'écriture de validation) ; `vue` : ce que le panneau lit ;
- * `reprise` : les poses décidées, gardées pour relancer l'écriture (le dernier cut du lot validé à la main, par exemple). */
+ * `reprise` : le lot, le réglage et la vue de la passe, gardés pour la relancer (le dernier cut du lot validé à la main, par exemple). */
 const passeDiff={planifie:new Set(),cours:null,ecriture:null,vue:null,reprise:null};
 async function passeDiffOmbre(b,rg,vue){
  const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow,SIDES=['left','right'],debut=Date.now();
@@ -1627,7 +1627,7 @@ async function passeDiffOmbre(b,rg,vue){
  * liste (jamais d'écrasement d'un vert) ; capture ; commande du lot ; pose relue à 1 mm (remise sinon) ; Ctrl+Entrée, prouvé par le compteur « N on M treated », le même cut affiché et
  * l'écriture « valid » vue par l'observateur passif. Tant qu'elle écrit, le panneau ne lance rien d'autre ; « Arrêter », ou l'interrupteur coupé, l'arrête avant le cut suivant. */
 async function passeDiffEcrire(b,poses,rg,vue){
- const aEcrire=poses.filter(p=>!p.fait).slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
+ const aEcrire=poses.slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
  vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
  const raison0=['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
@@ -1640,16 +1640,17 @@ async function passeDiffEcrire(b,poses,rg,vue){
     try{r=await passeDiffPoser(b,p,E);}catch(e){r={resultat:'incertain',raison:String(e?.message||e).slice(0,300)};}
     journalerSimple('passe-differes-ecriture',{identity:{part:b.scope.part,cut:p.cut},passe:p.passe,decal:p.decal,...r});
     if(r.resultat!=='ecrit'){issue=r.resultat;raison=r.raison;break;}
-    p.fait=true;vue.ecrites++;}
+    l1ResteOter(p.r.identity);vue.ecrites++;}
   }finally{passeDiff.ecriture=null;vue.cut=null;}}
  vue.etat=issue==='fin'?'finie':'arretee';vue.message=raison;
  journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees:aEcrire.length,decidees:poses.length});}
-/* Action du panneau : relance l'écriture des poses décidées qui restent, avec les mêmes refus qu'au départ automatique. */
+/* Action du panneau : relance la passe, avec les mêmes refus qu'au départ automatique. Les décisions sont REFAITES (ombre) : depuis la première, une relecture ou un Écho
+ * a pu changer les voisins ; les cuts déjà écrits par la passe ne sont plus des différés pour elle. */
 async function passeDiffEcrireDemande(){
  if(!await passeDiffAllumee())throw Error('Deuxième passe coupée dans Réglages (« Règles et choix du prochain lot ») : rien n’est écrit dans ESV.');
  const P=passeDiff.reprise;
  if(!P||P.b.id!==engine?.s?.batch?.id||passeDiff.cours||passeDiff.ecriture)throw Error('Deuxième passe : aucune écriture à relancer pour ce lot, ou une passe est déjà en cours.');
- passeDiffSuivre(P.vue,passeDiffEcrire(P.b,P.poses,P.rg,P.vue));return {...P.vue};}
+ passeDiffSuivre(P.vue,passeDiffOmbre(P.b,P.rg,P.vue).then(poses=>poses&&passeDiffEcrire(P.b,poses,P.rg,P.vue)));return {...P.vue};}
 async function passeDiffPoser(b,p,E){
  const K=globalThis.BananeCore3,G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,S=globalThis.BananeSettings?.lot||{},r=p.r,cut=r.identity.cut,part=b.scope.part,t0=Date.now();
  const refuse=raison=>({resultat:'refuse',raison});
@@ -1697,7 +1698,7 @@ function passeDiffPlanifier(){const b=engine?.s?.batch,rg=passeDiffReglage();
  /* Test 18 : coupée dans Réglages, la passe ne part pas (ni calcul, ni écriture, rien au panneau). */
  passeDiffSuivre(vue,passeDiffAllumee().then(allumee=>{if(!allumee)return null;passeDiff.vue=vue;
   return passeDiffOmbre(b,rg,vue).then(poses=>{if(!poses||rg.mode!=='ecriture')return null;
-   passeDiff.reprise={b,rg,poses,vue};return passeDiffEcrire(b,poses,rg,vue);});}));}
+   passeDiff.reprise={b,rg,vue};return passeDiffEcrire(b,poses,rg,vue);});}));}
 function passeDiffSuivre(vue,travail){
  passeDiff.cours=travail.catch(e=>{vue.etat='erreur';vue.message=String(e?.message||e).slice(0,160);journalerSimple('passe-differes-erreur',{lotId:vue.lotId,mode:vue.mode,message:vue.message});})
   .finally(()=>{if(vue.etat==='calcul'||vue.etat==='ecriture')vue.etat='finie';passeDiff.cours=null;});}
