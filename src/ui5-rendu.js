@@ -109,7 +109,7 @@
   }
   /* Vidage du cache des exports, en vue dans Orbite et Écho. Même bouton, même confirmation que le panneau d'origine ; grisé avec sa raison tant qu'il est impossible. */
   const relecture = snap => !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);   /* le service worker refuse le vidage du cache tant que la relecture vit ou attend */
-  const raisonCache = (snap, a, courant) => relecture(snap) ? 'Disponible quand la relecture est terminée ou arrêtée.'
+  const raisonCache = (snap, a, courant) => a.etat === 'p2' ? 'Disponible quand la deuxième passe est finie ou arrêtée.' : relecture(snap) ? 'Disponible quand la relecture est terminée ou arrêtée.'
     : courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
       : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
   function maintAr(snap, a, courant) {

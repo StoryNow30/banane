@@ -89,6 +89,7 @@ test('Ariane : pendant la deuxième passe des différés, la pastille et la lign
  assert.match(a,/Suivre la passe/);assert.match(a,/vig e indispo" aria-disabled="true"/);assert.match(a,/Deuxième passe en cours<\/span><\/span><span class="fl">/);
  assert.match(R.rendre(avec({ar:ar('p2',{lotOuvert:true,passe2:{cut:null,ecrites:1,demandees:1}})}),'orbite'),/travaille dans ESV · 1 posé sur 1\./,'sans cut connu, pas de « cut null »');
  assert.match(R.rendre(avec({variante:'palette',mode:'automatic',ar:p2}),'accueil'),/<span class="et2">Deuxième passe · ne touche à rien dans ESV<\/span>/,'palette : la même consigne');
+ assert.match(R.rendre(avec({ar:{...p2,cache:{actif:false}}}),'orbite'),/Disponible quand la deuxième passe est finie ou arrêtée/,'cache grisé avec sa raison pendant la passe');
 });
 test('Ariane : pendant la relecture après le lot, la pastille, la ligne et « Arrêter » le disent ; l\u2019export n\u2019est plus la commande principale ; Écho et le cache sont indisponibles',()=>{
  const rel=avec({ar:ar('rel',{lotOuvert:true,cours:null,pause:null,cache:{actif:true}}),relecture:{ligne:'Relecture : 3 sur 40',actif:true,interrompue:''},mode:'automatic',

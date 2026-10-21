@@ -30,6 +30,7 @@ test('pendant qu’elle écrit : la consigne en vue, « Arrêter la deuxième pa
  assert.equal(l.textContent,'La deuxième passe travaille, ne touche à rien dans ESV · cut 112 · 1 posé sur 3. « Arrêter la deuxième passe » l’arrête avant le cut suivant.');
  assert.equal(p.$('stop').hidden,false);assert.equal(p.$('stop').textContent,'Arrêter la deuxième passe');
  assert.equal(p.$('new-batch').hidden,true);assert.equal(p.$('passe-differes-lancer').hidden,true);
+ assert.equal(p.$('export-cache-clear').disabled,true,'le service worker refuse le vidage du cache tant qu’elle écrit');
  await p.$('stop').onclick();await p.attendre();assert.ok(p.appels.some(a=>a.action==='stop'));
 });
 

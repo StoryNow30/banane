@@ -863,7 +863,7 @@
    }
    /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
-   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)||s.passeDifferes?.etat==='ecriture'});button('journal',{disabled:working});if(uiError)note(uiError,true);
    rendreFocus();
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
