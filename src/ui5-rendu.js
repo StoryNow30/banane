@@ -1,6 +1,6 @@
 /* Test 17 : HABILLAGE DU PANNEAU, partie PURE (aucun DOM, aucun message, aucune API Chrome).
  *
- * La présentation « Ariane » (maquette « accueil à vignettes », D-231 : accueil, Orbite, Écho, Revue, Réglages) dessinée à partir d'un INSTANTANÉ
+ * La présentation « ariane2 » (maquette v2, D-235 : accueil à vignettes, Orbite, Écho, Revue, Réglages) dessinée à partir d'un INSTANTANÉ
  * (voir src/ui5.js) : l'état et les libellés que `panel.js` vient d'écrire dans sa propre page. L'habillage ne décide rien : le bouton principal,
  * les autres actions, les phrases viennent du panneau (la hiérarchie « La ligne », D-045) ; un clic sur l'habillage est un clic sur le bouton
  * d'origine (`data-act="legacy:<id>"`). Aucun export, aucun message au service worker, rien de neuf envoyé à ESV.
@@ -57,7 +57,7 @@
  ${ligne('Connexion à ESV', snap.connexionNote || '', `<span class="conn">${(snap.onglets || []).length ? sel('onglet', [['', 'Choisir un onglet…'], ...snap.onglets.map(o => [o.valeur, o.texte])], snap.ongletChoisi || '') : ''}<button type="button" class="btn" data-act="legacy:connect">Reconnecter ESV</button></span>`)}
  ${ligne('Vider le cache des exports', 'Seulement après confirmation de réception.', `<button type="button" class="btn" data-act="legacy:export-cache-clear">Vider…</button>`)}
  ${ligne('Abandonner la séance Écho', 'Supprime les données de la séance, avec confirmation.', `<button type="button" class="btn danger" data-act="legacy:native-discard">Abandonner…</button>`)}
- ${ligne('Interface', 'La présentation du panneau.', sel('variante', [['ariane', 'Ariane'], ['ariane2', 'Ariane, nouvelle présentation (essai)'], ['ancienne', 'Ancien panneau']], snap.variante))}
+ ${ligne('Interface', 'La présentation du panneau.', sel('variante', [['ariane2', 'Nouveau panneau Ariane'], ['ancienne', 'Ancien panneau']], snap.variante))}
  ${ligne('Détails techniques', 'Santé de la collecte, qualité de capture, départs des parties, résumé de la partie, journal du lot.', `<button type="button" class="btn" data-act="variante:ancienne">Ouvrir l’ancien panneau</button>`)}`;
   }
 
@@ -90,15 +90,12 @@
     const p = x => Math.max(0, Math.min(100, x / a.cibles * 100)).toFixed(2);
     return `<div class="barre" role="img" aria-label="${esc(a.poses)} posés et ${esc(a.differes)} différés sur ${esc(a.cibles)}" style="--fin:${p(a.poses + a.differes)}%"><i style="width:${p(a.poses)}%;background:#fff"></i><i style="width:${p(a.differes)}%;background:var(--dif)"></i>${vive ? '<span class="lueur"></span>' : ''}</div>`;
   };
-  /* Nouvelle présentation (`variante` « ariane2 », maquette v2) : mêmes écrans, sans grand titre ni phrase d'accompagnement, rangée des onglets ESV, vidage du cache en vue,
-   * nouveau logo. Une seule connexion ESV est partagée par Orbite et Écho : la rangée montre le même onglet connecté dans les deux. */
-  const v2 = snap => snap.variante === 'ariane2';
-  const LOGO1 = '<svg viewBox="0 0 26 26" width="24" height="24" aria-hidden="true"><path d="M3 22C8 4 18 4 23 22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M7 22C10 11 16 11 19 22" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/></svg>';
-  /* Deux rails qui convergent forment un A, les traverses raccourcissent vers l'horizon ; dégradé corail → violet (couleurs d'Orbite et d'Écho). */
+  /* Présentation « ariane2 » (maquette v2) : sans grand titre ni phrase d'accompagnement, rangée des onglets ESV, vidage du cache en vue, nouveau logo.
+   * Une seule connexion ESV est partagée par Orbite et Écho : la rangée montre le même onglet connecté dans les deux. */
   const LOGO2 = '<svg class="logo" viewBox="0 0 32 32" width="26" height="26" aria-label="Ariane"><defs><linearGradient id="ar-lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9466"/><stop offset=".55" stop-color="#d4306e"/><stop offset="1" stop-color="#6a3be8"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#ar-lg)"/><g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 26L14.6 6M23.5 26L17.4 6" stroke-width="2.6"/><path d="M10 21h12" stroke-width="2.2" stroke-opacity=".85"/><path d="M11.55 16h8.9" stroke-width="2" stroke-opacity=".65"/><path d="M13.1 11h5.8" stroke-width="1.8" stroke-opacity=".45"/></g></svg>';
   /* Rangée des onglets ESV : une puce par onglet de la liste du panneau ; un clic choisit l'onglet ET clique « Reconnecter ESV ». */
   function rangeeEsv(snap, a, courant) {
-    if (!v2(snap) || !['accueil', 'orbite', 'echo'].includes(courant)) return '';
+    if (!['accueil', 'orbite', 'echo'].includes(courant)) return '';
     const choisi = snap.ongletChoisi || '', nom = courant === 'echo' ? 'Écho' : courant === 'orbite' ? 'Orbite' : 'Connecté', cl = courant === 'echo' ? 'e' : courant === 'orbite' ? 'o' : 'c';
     const puces = (snap.onglets || []).map(o => {
       const mien = String(o.valeur) === String(choisi), pasPret = /pas prêt/i.test(o.texte), off = !mien && (pasPret || a.connexionBloquee);
@@ -110,7 +107,7 @@
   }
   /* Vidage du cache des exports, en vue dans Orbite et Écho. Même bouton, même confirmation que le panneau d'origine ; grisé avec sa raison tant qu'il est impossible. */
   function maintAr(snap, a, courant) {
-    if (!v2(snap) || !['orbite', 'echo'].includes(courant)) return '';
+    if (!['orbite', 'echo'].includes(courant)) return '';
     const ok = a.cache?.actif === true, relecture = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre);
     const raison = courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
       : relecture ? 'Disponible quand la relecture est terminée ou arrêtée.' : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
@@ -121,7 +118,7 @@
     const mini = (a.etat === 'cours' || a.etat === 'dem') && !['orbite', 'accueil'].includes(courant)
       ? `<span class="mini"><button type="button" data-act="aller:orbite"><span class="spin"></span>Orbite · ${esc(a.traites)}${a.cibles ? ' / ' + esc(a.cibles) : ''}</button>${a.pause ? `<button type="button" class="mini-p" data-act="pause" aria-label="Pause du lot"${a.pause.actif && a.etat !== 'dem' ? '' : ' disabled'}>${ic('pause', 13)}</button>` : ''}</span>` : '';
     const esv = a.esv === 'ko' ? '<span class="esv ko"><i></i>ESV ne répond plus</span>' : a.esv === 'ok' ? '<span class="esv"><i></i>ESV répond</span>' : '<span class="esv non"><i></i>ESV non connecté</span>';
-    return `<header class="haut"><span class="marque">${v2(snap) ? LOGO2 : LOGO1}Ariane</span><nav class="onglets" aria-label="Activités">${ong}</nav><span class="sp"></span>${mini}${esv}<button type="button" class="ico${courant === 'reglages' ? ' a' : ''}" data-act="aller:reglages" aria-label="Réglages" title="Réglages">${picto('reglages').replace('picto b', 'picto nu')}</button></header>${rangeeEsv(snap, a, courant)}`;
+    return `<header class="haut"><span class="marque">${LOGO2}Ariane</span><nav class="onglets" aria-label="Activités">${ong}</nav><span class="sp"></span>${mini}${esv}<button type="button" class="ico${courant === 'reglages' ? ' a' : ''}" data-act="aller:reglages" aria-label="Réglages" title="Réglages">${picto('reglages').replace('picto b', 'picto nu')}</button></header>${rangeeEsv(snap, a, courant)}`;
   }
   /* Commande principale : celle du panneau ; pendant une pause demandée, elle reste en place, grisée. */
   function commandeAr(a, m, cls = 'pill') {
@@ -146,14 +143,6 @@
     return `<div class="relpause">${r.ligne ? `<p>${esc(r.ligne)}</p>` : ''}<div class="act">${b.join('')}</div></div>`;
   };
   function accueilAr(snap, a, m) {
-    const titre = a.partie != null ? `Partie ${esc(a.partie)}` : 'Aucune partie ouverte';
-    const phrase = a.etat === 'p2' ? 'La deuxième passe travaille dans ESV. Ne touche à rien tant qu’elle n’a pas fini.'
-      : a.etat === 'cours' ? `Orbite pose le cut ${esc(a.cours ?? '…')}. Ne change pas de cut dans ESV pendant le lot.`
-      : a.etat === 'dem' ? `Orbite finit le cut ${esc(a.cours ?? '…')}, puis s’arrête.`
-      : a.etat === 'pause' ? `Lot en pause${a.dernier != null ? `, après le cut ${esc(a.dernier)}` : ''}.${a.restants != null ? ` Il reste ${esc(a.restants)} cuts.` : ''}`
-      : a.etat === 'alerte' ? esc(a.alerte || m.phrase || 'Le lot attend ta décision.')
-      : a.etat === 'fini' || a.etat === 'arrete' ? `${esc(a.traites)} cuts traités.${a.aExaminer ? ` ${esc(a.aExaminer)} cuts restent à examiner.` : ''}`
-      : a.partie != null ? 'Lance un lot Orbite, ou ouvre Écho pour corriger toi-même.' : 'Ouvre une partie dans ESV ; Ariane la reconnaîtra.';
     const enLot = a.etat === 'cours' || a.etat === 'dem';
     const bts = a.etat === 'p2' ? '<button type="button" class="pill" data-act="aller:orbite">Suivre la passe</button>'
       : enLot ? `<button type="button" class="pill" data-act="aller:orbite" data-vers="orbite">Suivre le lot</button>${a.pause ? `<button type="button" class="pill verre" data-act="pause"${a.etat === 'dem' || !a.pause.actif ? ' disabled' : ''}>${ic('pause')}${a.etat === 'dem' ? 'Pause demandée…' : 'Pause'}</button>` : ''}`
@@ -172,7 +161,7 @@
       : a.etat === 'pause' ? `En pause${a.dernier != null ? ` après le cut ${esc(a.dernier)}` : ''}.`
       : a.etat === 'alerte' ? esc(a.alerte || m.phrase || 'Le lot attend ta décision.')
       : a.etat === 'fini' || a.etat === 'arrete' ? `${esc(a.traites)} cuts traités${a.aExaminer ? ` · ${esc(a.aExaminer)} à examiner` : ''}.` : '';
-    const entete = v2(snap) ? `<span class="t2">${a.partie != null ? 'Partie ' + esc(a.partie) : 'ESV'}</span>${courte ? `<p class="p2">${courte}</p>` : ''}` : `<h2>${titre}</h2><p>${phrase}</p>`;
+    const entete = `<span class="t2">${a.partie != null ? 'Partie ' + esc(a.partie) : 'ESV'}</span>${courte ? `<p class="p2">${courte}</p>` : ''}`;
     return `${enteteAr(snap, a, 'accueil')}<section class="une"><div class="in"><div>${pastille(a)}${entete}<div class="bts">${bts}</div>${relAr(snap)}</div><div class="donnee">${don}</div></div></section>${alerteAr(snap, m)}
  <section class="rangee"><h3>Activités${a.partie != null ? ' · partie ' + esc(a.partie) : ''}</h3><div class="vignettes">
   ${vig('orbite', 'o', 'Orbite', 'Ariane pose et valide les rails', stO, false)}
@@ -181,15 +170,6 @@
   ${vig('reglages', 'b', 'Réglages et bilans', 'Exports, connexion, détails techniques', esc(snap.exportTexte ? snap.exportTexte.slice(0, 40) : 'Ouvrir'), false)}
  </div></section>`;
   }
-  function parcoursAr(a) {
-    const n = Math.max(a.cibles || 0, (a.parcours || []).length); if (!n) return '';
-    const W = 1000, x = k => (k / n * W).toFixed(1), L = a.parcours || [];
-    let g = `<line x1="0" y1="22" x2="${W}" y2="22" stroke="rgba(255,255,255,.16)" stroke-width="2"/><line x1="0" y1="22" x2="${x(L.length)}" y2="22" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
-    L.forEach((st, i) => { if (st === 'differe') g += `<rect x="${(i / n * W - 1.5).toFixed(1)}" y="14" width="3" height="16" rx="1.5" fill="#ffc043"/>`; else if (st === 'incertain' || st === 'saute') g += `<rect x="${(i / n * W - 1.5).toFixed(1)}" y="14" width="3" height="16" rx="1.5" fill="#ff6b5e"/>`; });
-    const front = a.cours ?? a.dernier;
-    if (front != null && L.length) g += `<line x1="${x(L.length)}" y1="6" x2="${x(L.length)}" y2="34" stroke="#fff" stroke-width="2"/><text x="${(L.length / n * W + 8).toFixed(1)}" y="12" fill="#fff" font-size="14" font-family="JetBrains Mono" font-weight="600">${esc(front)}</text>`;
-    return `<section class="position"><div class="t"><span><b>Parcours du lot</b> · cuts dans l’ordre du lot, différés en ambre${a.cibles ? '' : ' (total inconnu pour ce lot)'}</span><span>${a.cibles ? 'fin de la partie' : ''}</span></div><svg viewBox="0 0 ${W} 38" preserveAspectRatio="none" role="img" aria-label="Parcours du lot">${g}</svg></section>`;
-  }
   function listeDiff(a, vide) {
     const L = a.differesListe || [];
     if (!L.length) return `<div class="vide">${esc(vide)}</div>`;
@@ -197,13 +177,7 @@
   }
   function orbiteAr(snap, a, m) {
     const enLot = a.etat === 'cours' || a.etat === 'dem', examiner = (a.etat === 'fini' || a.etat === 'arrete') && a.aExaminer > 0;
-    const titre = { cours: 'Pose des rails', dem: 'Pose des rails', p2: 'Deuxième passe', pause: 'Lot en pause', alerte: 'Le lot attend', fini: 'Lot terminé', arrete: 'Lot arrêté', pret: 'Prêt à poser' }[a.etat] || 'Orbite';
     const bornes = a.bornes ? `du cut ${esc(a.bornes.debut ?? '…')} ${a.bornes.fin ? 'au cut ' + esc(a.bornes.fin) : 'à la fin de la partie'}` : '';
-    const phrase = a.etat === 'p2' ? 'Ariane revoit les cuts laissés différés et pose ceux qu’elle peut décider, avec les poses d’avant et d’après. Pendant ce temps, ne change pas de cut dans ESV.'
-      : enLot ? 'Ariane pose et valide chaque cut, puis passe au suivant. Pendant le lot, ne change pas de cut dans ESV.'
-      : a.etat === 'pret' ? 'Ariane posera les rails de chaque cut invalide, puis passera au suivant. Les bornes sont remplies avec le cut affiché dans ESV.'
-      : a.etat === 'pause' ? 'Le lot reprendra au cut suivant, sans repasser sur ceux déjà validés.'
-      : (a.etat === 'fini' || a.etat === 'arrete') ? (a.aExaminer ? `Il reste ${a.aExaminer} cuts à examiner dans la Revue.` : 'Rien ne reste à examiner pour ce lot.') : (a.alerte || m.phrase || '');
     const ligne = a.etat === 'p2' ? `<span class="spin"></span><span>La deuxième passe travaille dans ESV${a.passe2.cut != null ? ` · <b>cut ${esc(a.passe2.cut)}</b>` : ''} · ${esc(a.passe2.ecrites)} posé sur ${esc(a.passe2.demandees)}. <b>Ne touche à rien</b> tant qu’elle n’a pas fini.</span>`
       : a.etat === 'dem' ? `<span class="spin"></span><span>Ariane finit le <b>cut ${esc(a.cours ?? '…')}</b>, puis s’arrête. Aucun nouveau cut ne sera ouvert.</span>`
       : a.etat === 'cours' ? `<span class="spin"></span><span>Pose en cours sur le <b>cut ${esc(a.cours ?? '…')}</b></span>`
@@ -213,13 +187,13 @@
    <div class="d"><span><i class="m p"></i>${esc(a.poses)} posés</span><span><i class="m d"></i>${esc(a.differes)} différés</span>${a.restants != null ? `<span class="r">${esc(a.restants)} restants</span>` : ''}</div>
    ${barreAr(a, a.etat === 'cours')}<div class="cour">${ligne}</div>${bornesEdit}<div class="act">${examiner ? `<button type="button" class="pill" data-act="aller:revue">Examiner les ${esc(a.aExaminer)} cuts</button>` : commandeAr(a, m)}</div>${autresAr(examiner && m.primaire ? { autres: [m.primaire, ...m.autres] } : m)}${relAr(snap)}</div>`;
     return `${enteteAr(snap, a, 'orbite')}<section class="scene"><div><div class="ar-nom">${picto('orbite')}<b>Orbite</b><span>${a.partie != null ? '· partie ' + esc(a.partie) : ''}</span></div>
-   ${v2(snap) ? '' : `<h2>${titre}</h2>`}<div class="phr">${pastille(a)}<span class="bo">${bornes}</span></div>${v2(snap) ? '' : `<p>${esc(phrase)}</p>`}${alerteAr(snap, m)}</div>${suivi}</section>
- ${v2(snap) ? '' : parcoursAr(a)}<div class="cols"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${enLot ? 'à reprendre après le lot' : 'à reprendre'}</small></div>${listeDiff(a, 'Aucun différé pour l’instant.')}</section></div>${maintAr(snap, a, 'orbite')}`;
+   <div class="phr">${pastille(a)}<span class="bo">${bornes}</span></div>${alerteAr(snap, m)}</div>${suivi}</section>
+ <div class="cols"><section class="panneau"><div class="ph"><h3>Différés de ce lot</h3><span class="sp"></span><small>${enLot ? 'à reprendre après le lot' : 'à reprendre'}</small></div>${listeDiff(a, 'Aucun différé pour l’instant.')}</section></div>${maintAr(snap, a, 'orbite')}`;
   }
   function echoAr(snap, a, m) {
     const rows = snap.echoRows || [];
     return `${enteteAr(snap, a, 'echo')}<section class="scene"><div><div class="ar-nom">${picto('echo')}<b>Écho</b><span>${a.partie != null ? '· partie ' + esc(a.partie) : ''}</span></div>
-   ${v2(snap) ? '' : '<h2>Tu corriges,<br>Écho garde les exemples</h2><p>Chaque correction que tu fais dans ESV est gardée comme exemple pour un prochain modèle, avec la raison si tu en donnes une.</p>'}${alerteAr(snap, m)}</div>
+   ${alerteAr(snap, m)}</div>
   <div class="suivi"><div class="n"><b>${esc(snap.echo?.corriges ?? 0)}</b> <span>corrections dans cette séance</span></div><div class="d"><span>${esc(snap.echo?.visites ?? 0)} cuts vus</span><span class="r">${esc(a.echoEtat || '')}</span></div>
    <div class="act">${a.lotOuvert ? `<span class="etat">${ic('lock', 13)} Indisponible pendant un lot Orbite</span>` : commandeAr(a, m)}</div>${a.lotOuvert ? '' : autresAr(m)}</div></section>
  <div class="cols"><section class="panneau"><div class="ph"><h3>Visites de la séance</h3></div>${rows.length ? `<div class="defile">${rows.map(r => `<div class="row e-row"><i class="m" style="background:${r.corrige ? 'var(--dif)' : 'var(--echo)'}"></i><span class="c">${esc(r.cut)}</span><span>${esc(r.texte)}</span><span class="s" style="text-align:right">${esc(r.duree)}</span></div>`).join('')}</div>` : '<div class="vide">Aucune visite pour l’instant.</div>'}</section></div>${maintAr(snap, a, 'echo')}`;
@@ -236,12 +210,12 @@
  <div class="cols"><section class="panneau"><div class="reg">${reglages(snap)}</div>${snap.exportTexte ? `<p class="note-ar">${esc(snap.exportTexte)}</p>` : ''}${snap.gcv2 ? `<p class="note-ar">GCV2 · exemples d’apprentissage : <b>${esc(snap.gcv2.total)}</b> cuts corrigés dans les Échos archivés, au ${esc(snap.gcv2.date)}. Ce n’est pas une mesure de qualité.</p>` : ''}</section></div>`;
   }
   function rendre(snap, ecran) {
-    const a = snap.ar || { etat: 'pret', traites: 0, poses: 0, differes: 0, differesListe: [], parcours: [], verts: [] };
+    const a = snap.ar || { etat: 'pret', traites: 0, poses: 0, differes: 0, differesListe: [], verts: [] };
     const vue = ['accueil', 'orbite', 'echo', 'revue', 'reglages'].includes(ecran) ? ecran : 'accueil';
     const mode = vue === 'echo' ? 'native' : 'automatic';
     const m = modele({ ...snap, mode, boutons: mode === 'native' ? snap.boutonsEcho : snap.boutonsOrbite });
     const corps = { accueil: accueilAr, orbite: orbiteAr, echo: echoAr, revue: revueAr, reglages: reglagesAr }[vue](snap, a, m);
-    return `<div class="app ar-${vue}${v2(snap) ? ' v2' : ''}${a.etat === 'pause' && vue === 'orbite' ? ' eteinte' : ''}" data-vue="${vue}"><div class="ecr">${corps}</div></div>`;
+    return `<div class="app ar-${vue}${a.etat === 'pause' && vue === 'orbite' ? ' eteinte' : ''}" data-vue="${vue}"><div class="ecr">${corps}</div></div>`;
   }
 
   return { esc, modele, choisirBoutons, rendre };

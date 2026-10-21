@@ -14,8 +14,8 @@
   'use strict';
   const D = root.document, R = root.ArianeUi5Rendu, CLE = 'banane51Interface';
   if (!D || !R || !root.ArianePanel) return;
-  const VARIANTES = ['ariane', 'ariane2', 'ancienne'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ancienne';
-  const TAILLE = { ariane: [1180, 800], ariane2: [1180, 840], ancienne: [560, 820] };
+  const VARIANTES = ['ariane2', 'ancienne'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ancienne';
+  const TAILLE = { ariane2: [1180, 840], ancienne: [560, 820] };
   const ui = { last: '', pauseLot: null };
   let variante = defaut, ecran = 'accueil', hote = null, gcv2Base = null;
   const $ = id => D.getElementById(id);
@@ -97,12 +97,11 @@
     }).filter(d => d.cut !== null).reverse();
     const plages = [...($('verts-plages')?.querySelectorAll?.('li') || [])].map(li => ({ libelle: String(li.querySelector('b')?.textContent || '').trim(), detail: String(li.querySelector('span')?.textContent || '').trim() }));
     const vertsNombre = plages.reduce((n, p) => n + (Number((p.detail.match(/·\s*(\d+)/) || [])[1]) || 0), 0);
-    const parcours = statuts.filter(x => x !== 'cours');
     const dernierP = (b?.processed || []).at?.(-1);
     return {
       etat, etatTexte, horsLigne, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
       cibles, poses, differes, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
-      cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe, parcours,
+      cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
       lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2), passe2: p2,
@@ -226,7 +225,7 @@
       if (v && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { const l = [...hote.querySelectorAll('.vig')], i = l.indexOf(v); l[(i + (e.key === 'ArrowRight' ? 1 : l.length - 1)) % l.length].focus(); e.preventDefault(); }
       else if (e.key === 'Escape' && ecran !== 'accueil' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '')) aller('accueil');
     });
-    const essai = $('ui5-essai'); if (essai) essai.onclick = () => void setVariante('ariane');
+    const essai = $('ui5-essai'); if (essai) essai.onclick = () => void setVariante('ariane2');
   }
 
   /* ---------------------------------------------------------------- variante et fenêtre */

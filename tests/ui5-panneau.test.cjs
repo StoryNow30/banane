@@ -23,16 +23,16 @@ test('au départ : le panneau d’avant ; rien n’est dessiné, écrit, envoyé
 test('« Essayer le nouveau panneau » habille le panneau, garde le choix et ouvre la fenêtre ; « Ancien panneau » revient',async()=>{
  const p=await monter({etat:etat(LOT)});
  p.els['ui5-essai'].click();await p.attendre(20);
- assert.deepEqual(js(p.ecrits),[{banane51Interface:'ariane'}]);assert.equal(p.body.classList.contains('ui5'),true);assert.equal(p.hote.hidden,false);
- assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.deepEqual(js(p.fenetres),[{width:1180,height:800}]);
+ assert.deepEqual(js(p.ecrits),[{banane51Interface:'ariane2'}]);assert.equal(p.body.classList.contains('ui5'),true);assert.equal(p.hote.hidden,false);
+ assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.deepEqual(js(p.fenetres),[{width:1180,height:840}]);
  p.ui.agir('variante:ancienne');await p.attendre(20);
  assert.deepEqual(js(p.ecrits.at(-1)),{banane51Interface:'ancienne'});assert.equal(p.body.classList.contains('ui5'),false);assert.equal(p.hote.hidden,true);
 });
 
-test('le choix gardé passe devant le départ ; un choix inconnu (ancienne présentation écartée comprise) laisse le départ',async()=>{
- const garde=await monter({stockage:{banane51Interface:'ariane'},etat:etat(LOT)});
+test('le choix gardé passe devant le départ ; un choix inconnu (présentations écartées comprises, dont l’ancienne « ariane ») laisse le départ',async()=>{
+ const garde=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
  assert.equal(garde.body.classList.contains('ui5'),true);assert.equal(garde.hote.hidden,false);assert.match(garde.hote.innerHTML,/data-vue="accueil"/);
- for(const v of ['linear','raycast','figma','n’importe quoi',null]){
+ for(const v of ['ariane','linear','raycast','figma','n’importe quoi',null]){
   const p=await monter({stockage:{banane51Interface:v},etat:etat(LOT)});
   assert.equal(p.hote.hidden,true,String(v));assert.equal(p.body.classList.contains('ui5'),false,String(v));
  }
@@ -40,7 +40,7 @@ test('le choix gardé passe devant le départ ; un choix inconnu (ancienne prés
 
 test('nouvelle présentation (essai) : choisie dans Réglages, gardée ; un clic sur un onglet le choisit puis clique « Reconnecter ESV » ; le cache et le verrou de connexion suivent les boutons d’origine',async()=>{
  const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
- assert.equal(p.body.classList.contains('ui5'),true);assert.match(p.hote.innerHTML,/class="app ar-accueil v2"/);assert.equal(p.hote.className,'u-ariane');
+ assert.equal(p.body.classList.contains('ui5'),true);assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.equal(p.hote.className,'u-ariane');
  assert.deepEqual(js(p.fenetres),[{width:1180,height:840}]);
  p.els.tabs.value='';p.ui.agir('conn:12');assert.equal(p.els.tabs.value,'12');assert.equal(p.els.connect.clics,1);
  p.els['export-cache-clear'].disabled=true;p.els.connect.disabled=true;
@@ -49,11 +49,11 @@ test('nouvelle présentation (essai) : choisie dans Réglages, gardée ; un clic
  const libre=p.ui.instantane(etat(null)).ar;assert.equal(libre.cache.actif,true);assert.equal(libre.connexionBloquee,false);
  const autre=await monter({etat:etat(LOT)});
  autre.hote.ecoutes.change[0]({target:{closest:()=>({dataset:{sel:'variante'},value:'ariane2'})}});await autre.attendre(20);
- assert.deepEqual(js(autre.ecrits.at(-1)),{banane51Interface:'ariane2'});assert.match(autre.hote.innerHTML,/ v2"/);
+ assert.deepEqual(js(autre.ecrits.at(-1)),{banane51Interface:'ariane2'});assert.match(autre.hote.innerHTML,/data-vue="accueil"/);
 });
 
 test('le compteur des exemples d’apprentissage est lu dans datasets/compteur-gcv2.json (format du compteur)',async()=>{
- const p=await monter({stockage:{banane51Interface:'ariane'},etat:etat(null)});
+ const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(null)});
  const j=JSON.parse(lire('datasets/compteur-gcv2.json'));
  assert.deepEqual(js(p.ui.instantane(etat(null)).gcv2),{total:j.totaux.tous.corriges,date:'19/10/2026'});
 });
@@ -92,7 +92,7 @@ test('« Pause demandée » : le clic sur Pause la garde tant que le lot tourne,
 });
 
 test('bornes du prochain lot : « 999999 » (fin de partie) n’est jamais affiché ; le champ d’origine reçoit ce qu’on tape',async()=>{
- const p=await monter({stockage:{banane51Interface:'ariane'},etat:etat(null)});
+ const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(null)});
  p.els.start.value='4800';p.els.end.value='999999';
  assert.deepEqual(JSON.parse(JSON.stringify(p.ui.instantane(etat(null)).ar.bornes)),{debut:'4800',fin:null});
  p.els.end.value='4900';assert.equal(p.ui.instantane(etat(null)).ar.bornes.fin,'4900');
@@ -117,7 +117,7 @@ test('un réglage choisi sur l’habillage clique la case ou le bouton radio d�
 });
 
 test('un nouveau dessin garde la position de défilement de l’écran, des réglages et des listes',async()=>{
- const p=await monter({stockage:{banane51Interface:'ariane'},etat:etat(LOT)});
+ const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
  const avant=[{scrollTop:240},{scrollTop:0},{scrollTop:35}],apres=[{scrollTop:0},{scrollTop:0},{scrollTop:0}];let appels=0;
  p.hote.querySelectorAll=sel=>sel.split(',').includes('.ecr')&&sel.split(',').includes('.reg')&&sel.split(',').includes('.defile')?(appels++%2===0?avant:apres):[];   /* avant le dessin, puis après : les éléments sont remplacés */
  p.ui.maj(true);
