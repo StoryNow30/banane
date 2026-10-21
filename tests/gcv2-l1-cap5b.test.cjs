@@ -113,3 +113,13 @@ test('rechSauteProcheMm : une pose validée à 2,5 mm du voisin validé le plus 
   assert.equal(sauté.diag.recherche, undefined, 'voisin à 0 mm : recherche sautée'); assert.equal(sauté.etat, 'valider');
   assert.ok(avec({ left: -30, right: 20 }, { rechSauteProcheMm: 2.5 }).diag.recherche, 'voisin à 6 mm : recherche faite');
 });
+
+test('rechSauteProcheZones : la saute ne joue qu\'en ADV par défaut ; en abords la recherche est faite (cap 6, coupé)', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const k = zone => ({ ...casSoutenu(zone), voisinsAbs: [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos({ left: -36, right: 20 }, 5) }] });
+  const avec = (zone, lev) => { L1.reglerLeviers({ rechercheADV: true, rechZones: ['adv', 'abords'], diag: true, rechercheDiag: true, rechSauteProcheMm: 2.5, ...lev }); try { return L1.deciderL1e(k(zone), MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec('adv', {}).diag.recherche, undefined, 'ADV : sautée');
+  assert.ok(avec('abords', {}).diag.recherche, 'abords : recherche faite');
+  assert.equal(avec('abords', { rechSauteProcheZones: ['adv', 'abords'] }).diag.recherche, undefined, 'zones étendues : sautée');
+});

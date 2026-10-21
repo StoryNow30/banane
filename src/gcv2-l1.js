@@ -562,7 +562,7 @@
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
-   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,
+   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
@@ -718,8 +718,9 @@
    const coherents=LEVIERS.voisinsCoherents?{parCutMm:LEVIERS.voisinsCoherentsParCutMm,baseMm:LEVIERS.voisinsCoherentsBaseMm}:null;
    /* Coût (`rechSauteProcheMm`, coupé par défaut) : une pose déjà validée à cette distance (3D, le plus grand des deux rails) de la pose du voisin validé
     * le plus proche (à `rechSauteProcheCuts` cuts au plus des deux côtés) n'est pas cherchée : la recherche ne l'a jamais modifiée (écart minimal des
-    * poses modifiées : 3,7 mm). La décision reste celle d'avant la recherche. */
-   const sauteRech=()=>{if(!fini(LEVIERS.rechSauteProcheMm)||dd.etat!=='valider'||!dd.decal)return false;const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
+    * poses modifiées : 3,7 mm). La décision reste celle d'avant la recherche. Mesure de B en ADV seulement : `rechSauteProcheZones` (par défaut ['adv']) ; en abords, la recherche modifie
+    * des poses qui sont exactement celles du voisin (fd7067f7 49 : 13,6 mm → 4,3 mm). */
+   const sauteRech=()=>{if(!fini(LEVIERS.rechSauteProcheMm)||dd.etat!=='valider'||!dd.decal||!(LEVIERS.rechSauteProcheZones||['adv']).includes(k.zone))return false;const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
      return !!va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechSauteProcheCuts&&Math.hypot(dd.decal[s][1]-va[s].proche[0],dd.decal[s][2]-va[s].proche[1])<=LEVIERS.rechSauteProcheMm);};
    if((LEVIERS.rechercheADV||(LEVIERS.diag&&LEVIERS.rechercheDiag))&&capture&&ref&&fini(ref.mm)&&(LEVIERS.rechZones||['adv']).includes(k.zone)&&!sauteRech()){
      const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents),lv=a=>a?[a[1],a[2]]:null,gd=LEVIERS.rechGraineDecalMm||0;
