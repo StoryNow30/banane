@@ -52,6 +52,38 @@ test('nouvelle présentation (essai) : choisie dans Réglages, gardée ; un clic
  assert.deepEqual(js(autre.ecrits.at(-1)),{banane51Interface:'ariane2'});assert.match(autre.hote.innerHTML,/data-vue="accueil"/);
 });
 
+const touche=(key,o={})=>({key,ctrlKey:false,altKey:false,target:null,preventDefault(){this.empeche=true;},...o});
+test('palette : champ actif à l’ouverture, frappe gardée à chaque dessin, flèches, Entrée = commande du panneau (jamais une grisée), Échap vide, Ctrl K bascule, Réglages ouvre ceux d’Ariane',async()=>{
+ const p=await monter({stockage:{banane51Interface:'palette'},etat:etat(LOT)});
+ const clavier=e=>{e.target||=p.champ;for(const f of p.body.ecoutes.keydown)f(e);return e;};
+ assert.equal(p.hote.className,'u-palette');assert.equal(p.body.classList.contains('ui5'),true);assert.deepEqual(js(p.fenetres),[{width:720,height:560}]);
+ assert.match(p.hote.innerHTML,/id="ui5-q"/);assert.ok(p.champ.focuses>=1,'le champ est actif à l’ouverture');
+ /* La frappe : le champ est redessiné à chaque lettre, il garde la mise au point et ce qui a été tapé. */
+ p.document.activeElement=p.champ;p.hote.ecoutes.focusout[0]({target:p.champ});const avant=p.champ.focuses;   /* la mise au point rendue ne tient pas à un souvenir de focusin */
+ p.champ.value='regl';p.hote.ecoutes.input[0]({target:p.champ});
+ assert.match(p.hote.innerHTML,/value="regl"/);assert.match(p.hote.innerHTML,/data-act="interface:reglages"/);assert.ok(p.champ.focuses>avant,'mise au point rendue après le dessin');
+ clavier(touche('Escape'));assert.match(p.hote.innerHTML,/value=""/);assert.doesNotMatch(p.hote.innerHTML,/interface:reglages/);
+ /* Entrée lance la commande choisie : le bouton d’origine est cliqué. */
+ for(const id of ['start-batch','resume','retry','manual-takeover','manual-completion','close-uncertain','export-tout','new-batch','relecture-acquitter','relecture-arreter','relecture-lancer','explicit-skip'])p.els[id].hidden=true;
+ Object.assign(p.els.pause,{hidden:false,className:'primary',textContent:'Pause'});Object.assign(p.els.stop,{hidden:false,disabled:true,textContent:'Arrêter le lot'});p.rendu(etat(LOT));
+ assert.match(p.hote.innerHTML,/data-act="legacy:pause"/);
+ assert.equal(clavier(touche('Enter')).empeche,true);assert.equal(p.els.pause.clics,1);
+ clavier(touche('ArrowDown'));assert.match(p.hote.innerHTML,/class="i2 s off" aria-disabled="true"/);
+ clavier(touche('Enter'));assert.equal(p.els.stop.clics,0,'une commande grisée n’est jamais lancée');
+ p.champ.value='écho';p.hote.ecoutes.input[0]({target:p.champ});clavier(touche('Enter'));assert.equal(p.els['tab-native'].clics,0,'Écho est grisé pendant le lot : Entrée ne l’ouvre pas');
+ p.champ.value='';p.hote.ecoutes.input[0]({target:p.champ});clavier(touche('ArrowUp'));clavier(touche('ArrowUp'));assert.match(p.hote.innerHTML,/class="i2 s" data-act="legacy:pause"/,'la sélection reste dans la liste');
+ /* « regl » + Entrée : les Réglages d’Ariane. */
+ p.champ.value='regl';p.hote.ecoutes.input[0]({target:p.champ});clavier(touche('Enter'));await p.attendre(30);
+ assert.equal(p.hote.className,'u-ariane');assert.match(p.hote.innerHTML,/data-vue="reglages"/);assert.deepEqual(js(p.ecrits.at(-1)),{banane51Interface:'ariane2'});
+ /* Ctrl K : cartes → palette → cartes. */
+ const k=()=>clavier(touche('k',{ctrlKey:true,target:{tagName:'DIV'}}));
+ k();await p.attendre(20);assert.equal(p.hote.className,'u-palette');k();await p.attendre(20);assert.equal(p.hote.className,'u-ariane');assert.match(p.hote.innerHTML,/data-vue="accueil"/);
+ /* Un clic sur un résultat lance sa commande et vide la recherche ; une lettre tapée hors du champ y revient. */
+ await p.ui.setVariante('palette');p.champ.value='pau';p.hote.ecoutes.input[0]({target:p.champ});p.document.activeElement=null;const f0=p.champ.focuses;
+ clavier(touche('p',{target:{tagName:'BODY'}}));assert.equal(p.champ.focuses,f0+1);
+ p.hote.ecoutes.click[0]({target:{closest:()=>({dataset:{act:'mode:native'}})}});assert.match(p.hote.innerHTML,/value=""/);assert.equal(p.els['tab-native'].clics,1);
+ assert.deepEqual(js(p.envoyes),[],'aucun message au service worker');
+});
 test('le compteur des exemples d’apprentissage est lu dans datasets/compteur-gcv2.json (format du compteur)',async()=>{
  const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(null)});
  const j=JSON.parse(lire('datasets/compteur-gcv2.json'));

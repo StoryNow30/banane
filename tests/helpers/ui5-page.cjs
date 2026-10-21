@@ -10,7 +10,7 @@ function element(id) {
   const e = { id, hidden: false, disabled: false, checked: false, open: false, value: '', textContent: '', className: '', dataset: {}, style: {}, clics: 0, scrollTop: 0, innerHTML: '', ecoutes: {},
     classList: { liste: new Set(), toggle(c, on) { on ? this.liste.add(c) : this.liste.delete(c); }, contains(c) { return this.liste.has(c); }, add(c) { this.liste.add(c); } },
     click() { e.clics++; e.onclick?.(); }, addEventListener(type, f) { (e.ecoutes[type] ||= []).push(f); }, getAttribute: () => null,
-    querySelectorAll: () => [], querySelector: () => null, appendChild() {}, focus() {} };
+    querySelectorAll: () => [], querySelector: () => null, appendChild() {}, focus() { e.focuses = (e.focuses || 0) + 1; } };
   return e;
 }
 
@@ -18,9 +18,9 @@ function element(id) {
 async function monter({ stockage = {}, etat = null } = {}) {
   const els = Object.fromEntries(IDS.map(id => [id, element(id)])), ecrits = [], envoyes = [];
   const body = element('body'); body.dataset.window = 'home';
-  const hote = element('ui5'), fenetres = [];
+  const hote = element('ui5'), champ = element('ui5-q'), fenetres = [];
   const hooks = [];
-  const document = { body, activeElement: null, readyState: 'complete', getElementById: id => id === 'ui5' ? hote : els[id] || null, createElement: () => hote, addEventListener: (t, f) => (body.ecoutes[t] ||= []).push(f) };
+  const document = { body, activeElement: null, readyState: 'complete', getElementById: id => id === 'ui5' ? hote : id === 'ui5-q' ? (hote.innerHTML.includes('id="ui5-q"') ? champ : null) : els[id] || null, createElement: () => hote, addEventListener: (t, f) => (body.ecoutes[t] ||= []).push(f) };
   const ctx = { console, setTimeout, clearTimeout, document, Event: class { constructor(t) { this.type = t; } }, getComputedStyle: () => ({}),
     fetch: async () => ({ json: async () => JSON.parse(lire('datasets/compteur-gcv2.json')) }),
     chrome: { runtime: { getURL: p => 'chrome-extension://test/' + p, sendMessage: async m => { envoyes.push(m); return {}; } },
@@ -33,6 +33,6 @@ async function monter({ stockage = {}, etat = null } = {}) {
   for (const f of ['src/ui5-variante.js', 'src/ui5-rendu.js', 'src/ui5.js']) vm.runInContext(lire(f), ctx, { filename: f });
   await new Promise(r => setTimeout(r, 30));   /* l'initialisation lit le stockage et le compteur */
   const rendu = s => { ctx.etatPanneau = s; for (const h of hooks) h(s); };
-  return { ctx, els, hote, body, ecrits, envoyes, fenetres, hooks, rendu, stockage, ui: ctx.ArianeUi5, attendre: ms => new Promise(r => setTimeout(r, ms)) };
+  return { ctx, els, hote, champ, document, body, ecrits, envoyes, fenetres, hooks, rendu, stockage, ui: ctx.ArianeUi5, attendre: ms => new Promise(r => setTimeout(r, ms)) };
 }
 module.exports = { monter, element, IDS };

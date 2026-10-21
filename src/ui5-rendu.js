@@ -57,7 +57,7 @@
  ${ligne('Connexion à ESV', snap.connexionNote || '', `<span class="conn">${(snap.onglets || []).length ? sel('onglet', [['', 'Choisir un onglet…'], ...snap.onglets.map(o => [o.valeur, o.texte])], snap.ongletChoisi || '') : ''}<button type="button" class="btn" data-act="legacy:connect">Reconnecter ESV</button></span>`)}
  ${ligne('Vider le cache des exports', 'Seulement après confirmation de réception.', `<button type="button" class="btn" data-act="legacy:export-cache-clear">Vider…</button>`)}
  ${ligne('Abandonner la séance Écho', 'Supprime les données de la séance, avec confirmation.', `<button type="button" class="btn danger" data-act="legacy:native-discard">Abandonner…</button>`)}
- ${ligne('Interface', 'La présentation du panneau.', sel('variante', [['ariane2', 'Nouveau panneau Ariane'], ['ancienne', 'Ancien panneau']], snap.variante))}
+ ${ligne('Interface', 'La présentation du panneau.', sel('variante', [['ariane2', 'Nouveau panneau Ariane'], ['palette', 'Palette (clavier)'], ['ancienne', 'Ancien panneau']], snap.variante))}
  ${ligne('Détails techniques', 'Santé de la collecte, qualité de capture, départs des parties, résumé de la partie, journal du lot.', `<button type="button" class="btn" data-act="variante:ancienne">Ouvrir l’ancien panneau</button>`)}`;
   }
 
@@ -78,6 +78,7 @@
     play: '<path d="M7 5l12 7-12 7z" fill="currentColor"/>', lock: '<rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/>',
     globe: '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></g>',
     trash: '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/></g>',
+    palette: '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10l3 2-3 2M12 14h5"/></g>',
     alerte: '<path d="M12 4l9 16H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   };
   const ic = (n, s = 15) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true">${IC[n]}</svg>`;
@@ -106,11 +107,14 @@
     return `<div class="esvbar"><span class="lab">${ic('globe', 15)}Onglets ESV</span><div class="tabs">${puces || '<span class="aucun">Aucun onglet ESV ouvert.</span>'}</div></div>`;
   }
   /* Vidage du cache des exports, en vue dans Orbite et Écho. Même bouton, même confirmation que le panneau d'origine ; grisé avec sa raison tant qu'il est impossible. */
+  const raisonCache = (snap, a, courant) => {
+    const relecture = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre);
+    return courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
+      : relecture ? 'Disponible quand la relecture est terminée ou arrêtée.' : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
+  };
   function maintAr(snap, a, courant) {
     if (!['orbite', 'echo'].includes(courant)) return '';
-    const ok = a.cache?.actif === true, relecture = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre);
-    const raison = courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
-      : relecture ? 'Disponible quand la relecture est terminée ou arrêtée.' : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
+    const ok = a.cache?.actif === true, raison = raisonCache(snap, a, courant);
     return `<div class="maint">${picto('cache')}<span class="tx">Cache des exports<small>${ok ? 'À vider seulement après réception de tous les volumes exportés.' : raison}</small></span><span class="sp"></span><button type="button" class="pill cache" id="ar-cache" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>${ic('trash')}Vider le cache</button></div>`;
   }
   function enteteAr(snap, a, courant) {
@@ -118,7 +122,7 @@
     const mini = (a.etat === 'cours' || a.etat === 'dem') && !['orbite', 'accueil'].includes(courant)
       ? `<span class="mini"><button type="button" data-act="aller:orbite"><span class="spin"></span>Orbite · ${esc(a.traites)}${a.cibles ? ' / ' + esc(a.cibles) : ''}</button>${a.pause ? `<button type="button" class="mini-p" data-act="pause" aria-label="Pause du lot"${a.pause.actif && a.etat !== 'dem' ? '' : ' disabled'}>${ic('pause', 13)}</button>` : ''}</span>` : '';
     const esv = a.esv === 'ko' ? '<span class="esv ko"><i></i>ESV ne répond plus</span>' : a.esv === 'ok' ? '<span class="esv"><i></i>ESV répond</span>' : '<span class="esv non"><i></i>ESV non connecté</span>';
-    return `<header class="haut"><span class="marque">${LOGO2}Ariane</span><nav class="onglets" aria-label="Activités">${ong}</nav><span class="sp"></span>${mini}${esv}<button type="button" class="ico${courant === 'reglages' ? ' a' : ''}" data-act="aller:reglages" aria-label="Réglages" title="Réglages">${picto('reglages').replace('picto b', 'picto nu')}</button></header>${rangeeEsv(snap, a, courant)}`;
+    return `<header class="haut"><span class="marque">${LOGO2}Ariane</span><nav class="onglets" aria-label="Activités">${ong}</nav><span class="sp"></span>${mini}${esv}<button type="button" class="ico" data-act="variante:palette" aria-label="Interface palette" title="Interface palette (Ctrl K)">${ic('palette', 18)}</button><button type="button" class="ico${courant === 'reglages' ? ' a' : ''}" data-act="aller:reglages" aria-label="Réglages" title="Réglages">${picto('reglages').replace('picto b', 'picto nu')}</button></header>${rangeeEsv(snap, a, courant)}`;
   }
   /* Commande principale : celle du panneau ; pendant une pause demandée, elle reste en place, grisée. */
   function commandeAr(a, m, cls = 'pill') {
@@ -168,7 +172,7 @@
   ${vig('echo', 'e', 'Écho', 'Tu corriges, Écho garde les exemples', stE, a.lotOuvert)}
   ${vig('revue', 'r', 'Revue', 'Différés et verts à contrôler', nbRevue ? `${esc(nbRevue)} à examiner` : 'Rien à examiner', false)}
   ${vig('reglages', 'b', 'Réglages et bilans', 'Exports, connexion, détails techniques', esc(snap.exportTexte ? snap.exportTexte.slice(0, 40) : 'Ouvrir'), false)}
- </div></section>`;
+ </div></section><div class="astuce"><button type="button" data-act="variante:palette">${ic('palette', 16)}Interface palette <kbd>Ctrl</kbd> <kbd>K</kbd></button></div>`;
   }
   function listeDiff(a, vide) {
     const L = a.differesListe || [];
@@ -209,7 +213,7 @@
     return `${enteteAr(snap, a, 'reglages')}<div class="tete">${picto('reglages')}<div><h2>Réglages et bilans</h2><div class="ar-sous">Gardés par Ariane ; les choix du lot valent pour le prochain lot.</div></div><span class="sp"></span><button type="button" class="pill sombre" data-act="legacy:export-tout">Exporter le dossier</button></div>
  <div class="cols"><section class="panneau"><div class="reg">${reglages(snap)}</div>${snap.exportTexte ? `<p class="note-ar">${esc(snap.exportTexte)}</p>` : ''}${snap.gcv2 ? `<p class="note-ar">GCV2 · exemples d’apprentissage : <b>${esc(snap.gcv2.total)}</b> cuts corrigés dans les Échos archivés, au ${esc(snap.gcv2.date)}. Ce n’est pas une mesure de qualité.</p>` : ''}</section></div>`;
   }
-  function rendre(snap, ecran) {
+  function ecranAr(snap, ecran) {
     const a = snap.ar || { etat: 'pret', traites: 0, poses: 0, differes: 0, differesListe: [], verts: [] };
     const vue = ['accueil', 'orbite', 'echo', 'revue', 'reglages'].includes(ecran) ? ecran : 'accueil';
     const mode = vue === 'echo' ? 'native' : 'automatic';
@@ -218,5 +222,57 @@
     return `<div class="app ar-${vue}${a.etat === 'pause' && vue === 'orbite' ? ' eteinte' : ''}" data-vue="${vue}"><div class="ecr">${corps}</div></div>`;
   }
 
-  return { esc, modele, choisirBoutons, rendre };
+  /* ------------------------------------------------------------------ PALETTE (D-233, D-236)
+   * Une ligne de recherche, l'état en petit à droite, quatre commandes au plus à l'ouverture. Activités, onglets, cache, réglages et retour
+   * à l'interface n'apparaissent qu'en tapant (sept résultats au plus). Les commandes sont les boutons du panneau (`legacy:<id>`) : rien d'autre n'est commandé. */
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const PIC = {
+    play: '<path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>', pause: '<path d="M8 5v14M16 5v14" stroke-width="3.2"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', check: '<path d="M5 12l5 5 9-10"/>',
+    down: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>', globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+    orbite: PICTO.orbite, echo: PICTO.echo, reglages: PICTO.reglages, palette: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10l3 2-3 2M12 14h5"/>', detail: '<path d="M5 6h14M5 12h14M5 18h14"/>',
+  };
+  const icBouton = id => /pause/.test(id) ? 'pause' : /resume|reprendre|start|lancer|new-batch/.test(id) ? 'play' : /stop|arreter|discard/.test(id) ? 'x' : /export|download/.test(id) ? 'down' : 'check';
+  /* `s` : commande « du moment », proposée à l'ouverture ; `off` : grisée (jamais lancée par Entrée). */
+  function commandesPal(snap, m) {
+    const a = snap.ar || {}, c = [], vus = new Set();
+    const add = (ib, nom, sous, act, off, s) => { if (vus.has(act)) return; vus.add(act); c.push({ ib, nom, sous: sous || '', act, off: !!off, s: !!s }); };
+    const L = snap.onglets || [], choisi = String(snap.ongletChoisi || ''), pret = o => !/pas prêt/i.test(o.texte);
+    const libres = L.filter(o => String(o.valeur) !== choisi);
+    if (L.length && !choisi) { const o = libres.find(pret); if (o) add('globe', `Connecter à ${o.texte}`, '', 'conn:' + o.valeur, false, true); }
+    const r = snap.relPause;
+    if (r?.pause) add('pause', r.pause.texte, '', 'legacy:relecture-pause', !r.pause.actif, true);
+    if (r?.reprendre) add('play', r.reprendre.texte, r.reprendre.raison || '', 'legacy:relecture-reprendre', !r.reprendre.actif, true);
+    if (r?.arreter) add('x', 'Arrêter la relecture', '', 'legacy:relecture-arreter-pause', false, true);
+    for (const b of [m.primaire, ...m.autres].filter(Boolean)) add(icBouton(b.id), b.texte, '', 'legacy:' + b.id, !b.actif, true);
+    if (snap.mode !== 'automatic') add('orbite', 'Orbite', 'activité', 'mode:automatic', false, false);
+    if (snap.mode !== 'native') add('echo', 'Écho', a.lotOuvert ? 'indisponible pendant un lot' : 'activité', 'mode:native', !!a.lotOuvert, false);
+    for (const o of libres) add('globe', `Connecter à ${o.texte}`, 'connexion', 'conn:' + o.valeur, !pret(o) || !!a.connexionBloquee, false);
+    if (a.cache) add('trash', 'Vider le cache des exports', a.cache.actif ? '' : raisonCache(snap, a, snap.mode === 'native' ? 'echo' : 'orbite'), 'legacy:export-cache-clear', !a.cache.actif, false);
+    add('reglages', 'Réglages', '', 'interface:reglages', false, false);
+    add('palette', 'Interface Ariane (cartes)', 'Ctrl K', 'variante:ariane2', false, false);
+    add('detail', 'Détails techniques (ancien panneau)', '', 'variante:ancienne', false, false);
+    return c;
+  }
+  /* La liste que voit (et que parcourt au clavier) l'utilisateur : une seule source pour le dessin et pour src/ui5.js. */
+  function paletteListe(snap, q) {
+    const n = norm(q).trim(), cmds = commandesPal(snap, modele(snap));
+    return n ? cmds.filter(x => norm(x.nom + ' ' + x.sous).includes(n)).slice(0, 7) : cmds.filter(x => x.s).slice(0, 4);
+  }
+  function etatPal(snap, a) {
+    if (a.horsLigne && a.etat === 'pret') return 'Hors ligne';
+    if (a.esv === 'ko') return 'ESV ne répond plus';
+    if (snap.mode === 'native') return `${a.echoEtat || 'Aucune séance'}${snap.echo?.corriges ? ' · ' + snap.echo.corriges : ''}`;
+    const base = a.etatTexte || (PASTILLE[a.etat] || PASTILLE.pret)[1];
+    return ['cours', 'dem', 'pause'].includes(a.etat) && a.cibles ? `${base} · ${a.traites}/${a.cibles}` : base;
+  }
+  function rendrePalette(snap, ui) {
+    const a = snap.ar || { etat: 'pret' }, m = modele(snap), L = paletteListe(snap, ui.q);
+    const i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
+    const rows = L.map((x, k) => `<div class="i2${k === i ? ' s' : ''}${x.off ? ' off' : ''}"${x.off ? ' aria-disabled="true"' : ` data-act="${esc(x.act)}"`}><svg viewBox="0 0 24 24" aria-hidden="true">${PIC[x.ib]}</svg><span class="nm">${esc(x.nom)}</span>${x.sous ? `<span class="sb">${esc(x.sous)}</span>` : ''}${k === i && !x.off ? '<kbd>↵</kbd>' : ''}</div>`).join('');
+    return `<div class="fond-p"><div class="pal2" role="dialog" aria-label="Palette Ariane"><div class="ch2"><i class="pt2" style="background:${snap.mode === 'native' ? 'var(--echo)' : 'var(--orbite)'}"></i><input id="ui5-q" value="${esc(ui.q)}" placeholder="Que veux-tu faire ?" autocomplete="off"><span class="et2">${esc(etatPal(snap, a))}</span></div>${alerteAr(snap, m)}<div class="l2">${rows || '<div class="i2 off"><span class="nm">Aucun résultat</span></div>'}</div><div class="p2"><span>Écris pour chercher : activités, onglets, cache, réglages</span><span class="sp"></span><span>Interface Ariane <kbd>Ctrl</kbd> <kbd>K</kbd></span></div></div></div>`;
+  }
+
+  function rendre(snap, ecran, ui) { return snap.variante === 'palette' ? rendrePalette(snap, ui || { q: '', pi: 0 }) : ecranAr(snap, ecran); }
+
+  return { esc, modele, choisirBoutons, paletteListe, rendre };
 });
