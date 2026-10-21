@@ -40,3 +40,26 @@ test('voieIncoherenteMm : des voisins qui ne s\'accordent pas ne tranchent pas, 
   assert.equal(decider(zigzag, { voieIncoherenteMm: 100 }).etat, 'valider', 'seuil 100 : posée');
   assert.equal(decider(droite(-36, 0), { voieIncoherenteMm: 40 }).etat, 'valider', 'voisins alignés : posée');
 });
+
+test('contreChaine : la GCV2 qui valide une paire à plus de `seuilMm` de la pose de la chaîne la contredit ; coupé dans la v4 et dans la v5 livrée', () => {
+  assert.equal(L1.LEVIERS_V4.contreChaineZones, null); assert.equal(L1.LEVIERS_V4.contreChaineVoieMm, null); assert.equal(L1.LEVIERS_V4.contreChaineMm, null);
+  assert.equal(L1.LEVIERS_LIVRES.contreChaineZones, null); assert.equal(L1.LEVIERS_LIVRES.contreChaineMm, null);
+  const chaine = { left: [0, 71, -7], right: [0, 124, -25] };
+  const g = (etat, left, right) => ({ decision: { etat, paire: { left: { decal: left }, right: { decal: right } } } });
+  const loin = g('valider', [0, 193, -8], [0, 242, 19]);
+  assert.equal(L1.contreChaine(loin, chaine, 50), true, 'paire à 122 et 118 mm de la chaîne');
+  assert.equal(L1.contreChaine(loin, chaine, 130), false, 'seuil de 130 mm');
+  assert.equal(L1.contreChaine(g('valider', [0, 80, -7], [0, 124, 40]), chaine, 50), true, 'un seul rail, à 65 mm en hauteur');
+  assert.equal(L1.contreChaine(g('valider', [0, 76, -7], [0, 130, -20]), chaine, 50), false, 'paire voisine de la chaîne');
+  assert.equal(L1.contreChaine(loin, chaine, null), false, 'seuil non réglé : jamais');
+  assert.equal(L1.contreChaine({ decision: { etat: 'rien', paire: null } }, chaine, 50), false, 'la GCV2 ne valide rien');
+  assert.equal(L1.contreChaine(g('poser-sans-valider', [0, 193, -8], [0, 242, 19]), chaine, 50), false, 'sous τ : une pose sans validation ne contredit pas');
+});
+
+test('ecartAVoie : écart en travers de la pose d\'un cut au voisin le plus proche et à la droite ajustée des voisins validés', () => {
+  const decal = lat => ({ left: [0, lat, 5], right: [0, lat + 56, 5] });
+  const e = L1.ecartAVoie(base, 4, droite(-36, 0), decal(-36)); assert.ok(e.proche < 0.5 && e.droite < 0.5, 'pose sur la voie');
+  const f = L1.ecartAVoie(base, 4, droite(-36, 0), decal(114)); assert.ok(Math.abs(f.proche - 150) < 0.5 && Math.abs(f.droite - 150) < 0.5, 'pose à 150 mm');
+  assert.equal(L1.ecartAVoie(base, 4, [], decal(0)), null, 'aucun voisin');
+  assert.equal(L1.ecartAVoie(base, 4, [voisin(-20, { left: 0, right: 56 })], decal(0)), null, 'voisin hors de la fenêtre');
+});

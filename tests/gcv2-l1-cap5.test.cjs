@@ -30,6 +30,8 @@ test('leviers v4 (test 15) : la base ; leviers livrés (test 16) = v4 + v5 ; le 
     corrigeVoieMaxMm: null, sansVoieRien: false, voieListe: false, voieListeFenetre: 8, deuxiemePasse: 0, passe2Leviers: null, passesAlternees: false,
     branche: false, brancheMm: 8, brancheVertMm: 25, brancheMaxCuts: 6, brancheExtrapCuts: 1, brancheEcartement: [1380, 1520],
     voieProcheSureCuts: null, soutienMinDessus: null, soutienMinFlanc: null,
+    /* Test 17 (fiches/PASSATION_T17_FAUTES.md) : garde de voie absolue et contre-expertise de la chaîne, coupées. */
+    vetoVoieAbsMm: null, voieIncoherenteMm: null, contreChaineZones: null, contreChaineVoieMm: null, contreChaineMm: null,
     /* Cap 5b : recherche recentrée en ADV, coupée dans la v4 (test 15). */
     rechercheDiag: false, voieAbsFenetre: 6, rechercheADV: false, rechZones: null, rechEcartMm: 10, rechMaxDeplMm: 300, rechVoieMaxMm: 80, rechHauteurMaxMm: null,
     rechProcheMaxCuts: 6, rechUniqueMm: 15, rechRemplace: false, rechRemplaceMm: 5, rechSansPaireRien: false, rechVoieParCutMm: null, rechContraMinMm: null, rechContraMaxMm: 45, rechContraRien: false,

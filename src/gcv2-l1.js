@@ -556,7 +556,7 @@
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
-   vetoVoieAbsMm:null,voieIncoherenteMm:null,
+   vetoVoieAbsMm:null,voieIncoherenteMm:null,contreChaineZones:null,contreChaineVoieMm:null,contreChaineMm:null,
    validerSansVoieMinP:null,anomalieMinRienMm:null,anomalieMinRienSansVoieMm:null,corrigeVoieMaxMm:null,sansVoieRien:false,voieListe:false,voieListeFenetre:8,deuxiemePasse:0,passe2Leviers:null,passesAlternees:false,
    branche:false,brancheMm:8,brancheVertMm:25,brancheMaxCuts:6,brancheExtrapCuts:1,brancheEcartement:Object.freeze([1380,1520]),voieProcheSureCuts:null,
    soutienMinDessus:null,soutienMinFlanc:null,
@@ -916,7 +916,22 @@
    const c=corrigerDecal({capture,decal,ref:ref.mm,ordre:ordreRails(capture,decal)});
    return {decal:c.anomalie&&c.soutenue?c.decal:decal,correction:{ref:ref.mm,ecartMm:c.ecartMm,anomalie:c.anomalie,rail:c.rail,soutenue:c.soutenue,appliquee:!!(c.anomalie&&c.soutenue)}};
  }
- /* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
+ /* Écart en travers (mm, le pire des deux rails) de la pose `decal` d'un cut à la voie absolue de ses voisins validés (`voieAbsolue`, mêmes réglages que la décision) :
+ * au voisin le plus proche et à la droite ajustée. Rend { proche, droite } ou null (aucun voisin, ou le plus proche à plus de `rechProcheMaxCuts`). */
+function ecartAVoie(capture,cut,voisins,decal){
+  const va=voieAbsolue(capture,cut,voisins,LEVIERS.voieAbsFenetre,3,LEVIERS.voisinsCoherents?{parCutMm:LEVIERS.voisinsCoherentsParCutMm,baseMm:LEVIERS.voisinsCoherentsBaseMm}:null);
+  if(!va||!SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts))return null;
+  const pire=f=>Math.max(...SIDES.map(s=>Math.abs(decal[s][1]-f(va[s]))));
+  return {proche:pire(v=>v.proche[0]),droite:pire(v=>v.v[0])};
+}
+/* Contre-expertise d'une pose de la chaîne (leviers `contreChaineZones`, `contreChaineVoieMm` et `contreChaineMm`, coupés) : `g` est la décision de la GCV2 (`deciderDiffere`) sur le même
+ * cut, avec l'état d'avant lui. Vrai si elle VALIDE une paire dont un rail est à plus de `seuilMm` (3D) de la pose de la chaîne : la chaîne n'est pas posée, le cut
+ * passe à la GCV2 comme un différé. `seuilMm` non réglé : jamais (la GCV2 ne fait que consigner sa décision). */
+function contreChaine(g,decalChaine,seuilMm){
+  const d=g&&g.decision;
+  return fini(seuilMm)&&!!d&&d.etat==='valider'&&!!d.paire&&SIDES.some(s=>norme(moins(d.paire[s].decal,decalChaine[s]))>seuilMm);
+}
+/* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
  function positionsDe(capture,paire){return Object.fromEntries(SIDES.map(s=>[s,L.positionOf(capture.rails[s],paire[s].decal.map(v=>v/1000))]));}
 
  /* ------------------------------------------------------------------ un différé, de bout en bout */
@@ -992,6 +1007,6 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });
