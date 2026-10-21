@@ -36,7 +36,9 @@ test('leviers v4 (test 15) : la base ; leviers livrés (test 16) = v4 + v5 ; le 
     rechMinTop: 15, rechMinFace: 6, rechRatioMax: 1.5, rechDedupMm: 5, rechArret: false, rechGraineDecalMm: 0, rechDiagLarge: false, rechOrdreGraines: null,
     rechEncadre: false, rechEncadreMaxCuts: 1, rechEncadreSautMm: 15, rechEncadreEcartMm: 15, corrigeValideZones: null, anomalieNonCorrigeePMin: null, anomalieNonCorrigeeVoieMm: null, rechPaireTopMin: null, rechContraRatioMax: null, rechSauteProcheMm: null, rechSauteProcheCuts: 2, rechSauteProcheZones: null,
     /* Cap 6 (A2, A3) : coupés dans la v4. */
-    voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null, brancheDernier: false });
+    voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null, brancheDernier: false,
+    /* T17B : coupés. */
+    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
