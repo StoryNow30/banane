@@ -2963,3 +2963,10 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Vérifié dans le code** : une pose interrompue bloque toute écriture jusqu'à l'archivage du résultat (« Reprendre » n'est pas proposé) ; la maquette J se trompait.
 - **Restent hypothèses** : « pause demandée » déduite du clic ; la Revue ne coche pas encore « examiné » ; l'usage à côté d'ESV, à taille réelle, est à juger sur le terrain.
 
+## D-232 — Interface 5.0 : retour de Mic sur la 4.9.6 test 1 ; maquette v2 et palette alternative, sans nouvelle version (21/10/2026)
+
+- **Mic** : il n'aime ni les gros titres, ni les phrases qui prennent par la main, ni la ligne « pose des rails » (parcours du lot). Il demande un logo en accord avec la direction, des onglets ESV démarqués et faciles à connecter dans Orbite et Écho, un bouton « Vider le cache » en évidence dans les deux, et une interface alternative de type palette (Raycast), discrète, au choix dans Réglages et depuis l'accueil.
+- **Décision** : pas de nouvelle version ; maquette `maquettes/ui-5.0/N-ariane-v2.html` et deux vidéos. Le vidage du cache reste désactivé tant qu'un lot n'est pas terminé (comportement actuel du panneau), avec la raison écrite à côté et la confirmation d'origine.
+- **À corriger à l'intégration** : la borne de fin « 999999 » affichée telle quelle sur la 4.9.6.1 ; l'état « Prêt » quand aucun onglet n'est connecté.
+- **Hypothèses** : les onglets ESV n'ont souvent que le titre « ESV » ; ils se distinguent par leur rang, leur fenêtre et « au premier plan » (vocabulaire du panneau actuel), la partie n'étant connue qu'une fois connecté.
+
