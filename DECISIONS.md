@@ -1863,3 +1863,12 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - **Interface** : le panneau d'avant reste le défaut ; le lien « Essayer le nouveau panneau » ouvre la maquette v2 (D-235) ; v2 et palette sobre (D-236) validées. Pause et reprise de la relecture livrées éteintes, réglage F5 « mettre en pause » (défaut) ou « arrêter » (D-233, D-234).
 - **Double connexion Orbite + Écho abandonnée pour cette version** : trop risqué (32 usages de l'onglet choisi dans le service worker) ; une seule connexion ESV partagée.
 - **Parties** : 3:0 en apprentissage (D-224) ; **3:1 et 3:5 réservées** comme examens (ni lues, ni rejouées, ni réglées).
+
+## D-238 — Test 18 construite : deuxième passe en écriture avec interrupteur, leviers v6 (hauteur 25 mm, garde de voie absolue) (21/10/2026)
+
+- **Contenu** (`fiches/PASSATION_T17_INTEGRATION.md`) : la test 16 plus D-224, avec les branches des rôles UI-PORT, PASSE2, SANSPOSE, FAUTES et les correctifs de la relecture du paquet « interface seule ».
+- **Interrupteur de la deuxième passe** dans Réglages, « écrit dans ESV ». Il est gardé par l'action existante `choix-lot` (clé `banane51PasseDifferes`) et n'est pas figé dans le scope. Il est lu à la fin du lot, à la relance et avant chaque cut écrit. Clé absente : allumée ; toute autre valeur que `true` : coupée.
+- **Panneau** : consigne « La deuxième passe travaille, ne touche à rien dans ESV », « Arrêter la deuxième passe », « Relancer la deuxième passe », cache grisé pendant l'écriture. Sans ces boutons, la passe ne pouvait ni être arrêtée depuis le panneau, lot clos, ni relancée après un lot arrêté sur une pose non validée.
+- **Leviers v6 livrés** : `rechHauteurMaxMm` 25, `vetoVoieAbsMm` 100, `voieIncoherenteMm` 40. Au banc, avec la deuxième passe : 0 cut changé sur les neuf anciens lots. Sur 3:0, plus aucune pose à plus de 20 mm : avant, 4 poses fausses de la test 16 et le 865 de la passe ; 794, 846 et 847 sont désormais justes, 865 et 869 restent rouges.
+- **Coupés** (non prouvés, ou question à l'opérateur) : `rechListeResMm` ; contre-expertise des verts de la chaîne en ADV (`contreChaine*` : elle change des verts et n'est pas branchée dans le service worker).
+- **Limite** : 3:0 est la seule partie qui exerce ces leviers ; aucune mesure hors échantillon (3:1 et 3:5 réservées). L'écriture de la deuxième passe n'a jamais été jouée dans ESV : au premier lot, l'opérateur est présent et elle s'arrête au premier refus.

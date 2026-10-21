@@ -17,7 +17,29 @@ Tout ce que la chaîne du lot posait avant, elle le pose comme avant. La décisi
 
 Rejeux de tes lots contre tes Échos, pas des mesures terrain. **Les neuf anciens lots et la partie 0 ont tous servi à régler** : les chiffres ne disent pas ce que la test 18 fera sur une partie nouvelle. La test 18 est mesurée telle que tu l'auras : **avec** la deuxième passe.
 
-MESURES_TABLEAU
+**Cuts laissés sans pose**, dans l'ordre test 15 (v4) → test 16 → test 18. La test 18 est jugée contre ta vérité.
+
+| Partie | Cuts laissés sans pose : test 15 → test 16 → test 18 | Poses jugées | À 5 mm ou moins | À 10 mm ou moins | À plus de 20 mm | À plus de 50 mm | Mauvaise voie |
+|---|---|---|---|---|---|---|---|
+| 19 | 3 → 2 → 2 | 236 | 196 | 235 | 0 | 0 | 0 |
+| 20, second lot | 2 → 1 → 1 | 175 | 134 | 172 | 0 | 0 | 0 |
+| 20, premier lot | 8 → 1 → 0 | 16 | 12 | 14 | 0 | 0 | 0 |
+| 11 | 3 → 2 → 1 | 10 | 3 | 8 | 0 | 0 | 0 |
+| 6 | 3 → 2 → 2 | 9 | 5 | 7 | 0 | 0 | 0 |
+| 7 | 2 → 2 → 2 | 19 | 13 | 18 | 0 | 0 | 0 |
+| 13 | 0 → 0 → 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 17 | 18 → 4 → 1 | 40 | 28 | 38 | 0 | 0 | 0 |
+| 18 | 18 → 11 → 3 | 29 | 21 | 26 | 0 | 0 | 0 |
+| **Neuf lots** | **57 → 25 → 12** | **534** | **412** | **518** | **0** | **0** | **0** |
+| **Partie 0, troisième projet** | **18 → 15 → 8** | **29** | **14** | **23** | **0** | **0** | **0** |
+
+Lecture :
+
+- **Neuf anciens lots : 57 → 25 → 12 cuts laissés sans pose.** Le gain de la test 18 vient de la deuxième passe. Le réglage de hauteur et la garde de voie n'y changent aucun cut. Il reste en plus 30 cuts rouges à nuage vide (29 dans le premier lot de la partie 20, 1 dans la partie 19).
+- **Sur 534 poses jugées : 518 à 10 mm ou moins (97,0 %), 0 à plus de 20 mm, 0 mauvaise voie, 0 vert changé.**
+- **Partie 0 du troisième projet** (ta vérité = tes validations d'Écho) : la test 16 y avait **4 poses fausses à plus de 50 mm** (794, 846, 847 et 869, toutes en mauvaise voie). La deuxième passe seule y en aurait ajouté une cinquième (865). En test 18 : **0 pose à plus de 20 mm**. 846 et 847 sont posés justes (5 et 8 mm), 794 aussi (3 mm). **865 et 869 restent rouges** : la garde de voie les refuse.
+- La partie 0 a servi à régler ces deux corrections : ce chiffre n'est pas une mesure hors échantillon.
+- Ce que la garde coûte : 797 passe de 8 à 10 mm.
 
 ## 1. Installer et vérifier
 
