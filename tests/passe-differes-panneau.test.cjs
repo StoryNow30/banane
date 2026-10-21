@@ -40,6 +40,8 @@ test('après : l’issue en une ligne ; arrêtée avec des poses qui restent, «
  assert.equal(p.$('passe-differes-lancer').hidden,false);
  await p.$('passe-differes-lancer').onclick();await p.attendre();assert.ok(p.appels.some(a=>a.action==='passe-differes-ecrire'));
  p=await ouvrir(vue({etat:'finie',ecrites:3}));assert.match(p.$('passe-differes-ligne').textContent,/^Deuxième passe finie : 3 cut\(s\) posé\(s\)/);assert.equal(p.$('passe-differes-lancer').hidden,true);
+ p=await ouvrir(vue({etat:'erreur',ecrites:0,message:'panne'}));assert.equal(p.$('passe-differes-ligne').textContent,'Deuxième passe en erreur : 0 cut(s) posé(s) et validé(s) sur 3 décidé(s), 4 différé(s) revus. panne.');
+ p=await ouvrir(vue({etat:'finie',mode:'ombre',ecrites:0}));assert.equal(p.$('passe-differes-ligne').textContent,'Deuxième passe en ombre : 3 cut(s) sur 4 qu’elle poserait ; rien n’est écrit dans ESV.');
  p=await ouvrir(vue({etat:'calcul'}));assert.equal(p.$('passe-differes-ligne').textContent,'Deuxième passe : calcul des cuts restés sans pose…');
  p=await ouvrir({...vue({etat:'ecriture'}),passeDifferes:{...vue({etat:'ecriture'}).passeDifferes,lotId:'autre'}});assert.equal(p.$('passe-differes-ligne').hidden,true);assert.equal(p.$('stop').hidden,true);
  p=await ouvrir(vue(null));assert.equal(p.$('passe-differes-ligne').hidden,true);assert.equal(p.$('passe-differes-lancer').hidden,true);
