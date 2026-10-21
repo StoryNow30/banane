@@ -1582,7 +1582,8 @@ async function l1Commande(args){
  let z=null;if(suivre)try{z=l1Zone(identity);}catch{z=null;}
  const r=await l1CommandeCoeur(args);
  if(suivre){const pose=!!(r&&(r.action==='lot'||r.action==='engine'&&['left','right'].every(s=>r.rails?.[s]?.status==='candidate')));
-  if(pose)l1ResteOter(identity);
+  /* Test 18 : un cut posé sans validation (sous τ) n'est pas un différé pour la passe, comme au banc (`pose-non-validee`). */
+  if(pose||args?.lotObservation?.l1?.commande?.sansValider)l1ResteOter(identity);
   else l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:args?.command?.reason==='regles-metier'||args?.lotObservation?.l1?.motif==='regle-metier'});}
  return r;}
 /* `cours` : la passe de CE lot (promesse jamais rejetée) ; `ecriture` : l'écriture en cours (arrêt demandé, attente de l'écriture de validation) ; `vue` : ce que le panneau lit ;
