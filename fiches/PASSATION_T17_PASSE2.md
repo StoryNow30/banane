@@ -54,14 +54,38 @@ Un refus ou une anomalie **arrête la passe** (les poses suivantes ont été dé
 - Reprise du code de la relecture sans changement de comportement (`relectureCorriger` → `poserPuisVerifier`, `remettrePose` ; `relectureRefus` → `lotCloRefus` ; `ecritureAttendue` ; `validerSurPlace` → `enPlaceProuvee`) : les essais de la relecture et du dernier cut sont inchangés.
 - Passe coupée = test 16 : un lot L1-se joué dans le service worker de la test 16 (`75b47fd`) et dans celui de cette branche, commandes et journal neutralisés (identifiants, heures, durées) : fichiers identiques (3 753 749 octets, deux scénarios).
 
-## 7. Parité extension / banc
+## 7. Parité extension / banc (`tools/parite-l1se-sw.cjs --passe`, un rejeu à la fois, cœur 1, snapshot 542daf5)
 
-À compléter.
+Recette : la passe livrée (2 passes, `sansVoieRien`), rejeu de référence du banc avec `deuxiemePasse` 2 et `passe2Leviers` (en-tête contrôlé).
 
-## 8. À prouver au terrain (l'opérateur présent, un seul différé)
+| lot | cuts rejoués | lignes différentes | poses de passe SW / banc (passe 1, 2) | durée |
+|---|--:|--:|---|--:|
+| 2:17 | 139 | **0** | 3 / 3 (3, 0), mêmes décalages à 0,05 mm | 5 086 s (passe : 109 s pour 4 différés) |
+| 3:0 | — | **non mesurée** : rejeu arrêté (pid 2177) à la demande du coordinateur, à reprendre | banc : 6 poses de passe | — |
+| 2:19 | — | **non mesurée** : pas lancée | banc (r-a3-bd3) : 0 pose de passe | — |
 
-À compléter.
+Le rejeu de référence 3:0 avec la recette (`p30/r-passe2`) est fait : différés 15 → 9 (jugé contre `verite-3-0.json` : 22 → 28 jugés, 0 vert changé). Sur les 6 poses de passe : 5 justes (3,2 ; 3,6 ; 4,7 ; 7,9 ; 8,4 mm) et **une mauvaise voie** : cut 865, 165,6 mm, p = 0,0058, zone ADV, hypothèse H0+H6. Total du lot : mauvaise voie 4 → 5 sur 28 jugés (hors budget D-223, déjà hors budget avant la passe : 4 sur 22).
+
+p de décision des poses de passe au banc : 2:17 : 0,36 ; 0,46 ; 0,0004 (9646, voie à déplacer) ; 3:0 : 0,53 ; 0,13 ; 0,02 ; 0,16 ; 0,66 ; 0,006. Sept poses sur neuf ont p < 0,5 : la passe pose sous le seuil par construction (recherche recentrée et gardes de preuve, pas par p) ; une garde sur p seul couperait presque tout ; le 865 se distingue par la voie (165 mm), pas par p.
+
+## 8. Défaut livré (décision de l'opérateur, test 17) et ce qui reste à prouver au terrain
+
+Livrée **allumée, en écriture, sans plafond** (`ecritureMax: null`) ; clé absente = livré ; `false` coupe ; valeur illisible coupe. Pour la couper : `ombre:false` (test 16 à l'identique : lots joués dans les deux services workers, fichiers identiques) ; `ecriture:false` la laisse en ombre. Aucun interrupteur à l'exécution (les Réglages du panneau sont en lecture seule).
+
+**Jamais joué dans le vrai ESV** (aucune preuve de terrain) :
+1. Ctrl+Entrée sur un cut ROUGE atteint hors ordre : valide-t-il sur place (compteur N → N+1, même cut affiché) ? Prouvé seulement sur le dernier cut d'une partie.
+2. L'observateur passif voit-il l'écriture « valid » de ce cut (`rowIndex` = numéro du cut) ?
+3. La liste d'ESV lue en mémoire de la page dit-elle `invalid` pour un différé, après le lot ?
+4. `goToCut` en chemin « auto » vers un cut éloigné, puis capture : la vue permet-elle la pose (cible dans la vue) ?
+Un échec avant la pose ne coûte rien (lectures) ; après la pose, la pose reste et le cut est à contrôler (intention + « J'ai contrôlé le cut N »). Une pose validée ne se défait pas par Ariane (D-220).
 
 ## 9. Limites connues
 
-À compléter.
+- Le 865 de la 3:0 (mauvaise voie 165,6 mm) est posé par la passe au banc, donc par l'extension : une garde est à intégrer (agent FAUTES) avant toute livraison.
+- Une pose qui exige de déplacer la vue est refusée en écriture (comptée « poserait » en ombre) ; le premier refus arrête la passe : un tel cut en tête bloque les suivants (2:17 : le 9646 est le dernier des trois).
+- Pas de départ automatique quand le lot s'arrête sur une pose non validée au dernier cut ; relance par `passe-differes-ecrire` (aucun bouton : l'UI est à faire).
+- Le ruban posés/différés du panneau ne compte pas ces cuts (le résumé de la partie, si) ; `state.passeDifferes` est exposé.
+- Un redémarrage du service worker perd la passe en cours (la pose non validée, elle, est notée).
+- Coût : 109 s de calcul pour 4 différés (2:17, machine chargée) ; le service worker est occupé pendant chaque décision.
+- Essais lourds : 16 à 17 s sous charge pour un plafond de 20 s par essai.
+- Parité 2:19 et 3:0 non mesurées ; suite complète non finie (896 essais passés, 0 échec, interrompue).
