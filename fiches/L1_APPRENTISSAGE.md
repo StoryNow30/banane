@@ -178,3 +178,5 @@ Ces parités montrent que `diag` et `rechercheDiag` coupés ne changent aucune d
 - Repli : la test 15 (`ariane-4.9.5-test.15.zip`).
 
 Le paquet candidat construit sur 1bf09f6 (SHA-256 `079c6d4d…`) n'est pas livré : sa fiche B nommait l'opérateur, et sa consigne ne portait pas encore les parités.
+
+**Parité 2:18, finie après la construction du paquet** (06:48 UTC) : 214 décisions sur 214 identiques, 11 différés, 0 motif différent. La consigne du paquet dit « partie 18 : rejeu en cours » ; ce résultat est à transmettre à l'opérateur par message. Le paquet n'est pas reconstruit.
