@@ -56,7 +56,7 @@ Un refus ou une anomalie **arrête la passe** (les poses suivantes ont été dé
 
 ## 7. Parité extension / banc
 
-Mesurée par l'intégration (`fiches/PASSATION_T17_INTEGRATION.md` § 6) : 2:17 (139 cuts) et 2:19 avec la passe en ombre et la chaîne livrée.
+Mesurée par l'intégration (`fiches/PASSATION_T17_INTEGRATION.md` § 7) avec `tools/parite-l1se-sw.cjs --passe`, chaîne livrée : 2:17, 139 lignes sur 139 identiques, passe [3, 0] = banc [3, 0] ; 2:19, 248 sur 248 identiques, passe [0, 0] = banc [0, 0]. La parité joue la passe EN OMBRE : elle prouve la décision et le câblage du calcul, pas le chemin d'écriture (essais en ESV simulé seulement) ni la relance.
 
 ## 8. À prouver au terrain (l'opérateur présent, un seul différé)
 
@@ -64,4 +64,4 @@ Voir la consigne `consignes/seance-terrain-4.9.5-test-18-2026-10-21.md` § 3 : p
 
 ## 9. Limites connues
 
-Voir `fiches/PASSATION_T17_INTEGRATION.md` § 6 (limites après la relecture adversariale).
+Voir `fiches/PASSATION_T17_INTEGRATION.md` § 6 et § 7 (limites après les relectures adversariales).

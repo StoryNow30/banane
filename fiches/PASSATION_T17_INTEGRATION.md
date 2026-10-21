@@ -32,7 +32,7 @@ Leviers : `LEVIERS_V6` = `rechHauteurMaxMm` 25 (757d5a3), preuve de SANSPOSE (9 
 - `claude/50-t17-passe2` 806a302 : `tests/pose-lot-inchanges-4959.test.cjs` ROUGE (réglages : `passeDifferesDefaut` exporté au premier niveau de `src/settings.js` change l'empreinte) [mesuré sur wt/T17C]. Corrigé ici : la clé est écartée explicitement et l'essai vérifie qu'elle est l'objet `lot.passeDifferes`.
 - passe2 : aucun bouton du panneau ne lançait `passe-differes-ecrire` ni n'arrêtait une passe en écriture (le bouton « Arrêter » est caché lot clos) : corrigé (c).
 - UIPORT : l'essai de fusion `passe-differes-relecture-pause` visait le montage de 14822b3 (lot 111 à 115) ; adapté au montage de 806a302 (111 à 113).
-- 11 h 30 : sanspose fusionnée, Z25 livré ; parité 2:19 lancée sur 0afe390 (instantané `scratchpad/t17/snapI-0afe390`, cœur 1, sortie `scratchpad/t17/parI/`) ; verify préalable lancé sur 757d5a3 (`scratchpad/t17/verify-757d5a3.out`).
+- 11 h 30 : sanspose fusionnée, Z25 livré ; parité 2:19 lancée sur 0afe390 (finie, § 7) (instantané `scratchpad/t17/snapI-0afe390`, cœur 1, sortie `scratchpad/t17/parI/`) ; verify préalable lancé sur 757d5a3 (`scratchpad/t17/verify-757d5a3.out`).
 - 11 h 45 : correctifs de UI-SEULE repris (tableau § 1) ; essais ciblés (93 fichiers) lancés sur a9e850f.
 
 ## 5. `git diff --stat claude/50-test16` expliqué (fichiers livrés et outils ; essais et fiches : voir les fiches des rôles)
@@ -67,3 +67,13 @@ Laissé et documenté (consigne § « Ce que dit le banc », § 4, § 7) :
 - (9) trous de la garde : sans voisin lisible à 6 cuts ou moins ; moins de 3 voisins (pas de résidu) ; pas de garde sur sous τ, sur la contre-expertise coupée, ni sur la relecture « Corriger ».
 
 Parités : 1, 3 et 4 ne touchent que l'écriture, et la parité joue la passe en ombre. 5a ne change rien sur les lots rejoués : aucun « pose-non-validee » sous L1-se dans les rejeux du banc. 6 ne joue qu'à une relance. Les parités 2:17 et 2:19 restent donc valables.
+
+## 7. Parités extension / banc (finales) et seconde relecture
+
+`tools/parite-l1se-sw.cjs --passe`, la passe jouée EN OMBRE (le chemin d'écriture et la relance ne sont prouvés que par les essais en ESV simulé) :
+- 2:17 : instantané d209d19, `--leviers` = leviers v6 livrés (même `background.js` que f1d12d6 ; seule la constante `LEVIERS_V6` diffère), banc `c5/r-t18g` : 139 lignes sur 139 identiques, passe [3, 0] = banc [3, 0], 0 écart (3 048 s) ;
+- 2:19 : instantané 0afe390 (avant Z25 et la garde), banc `c5/r-a3-bd3` : 248 sur 248 identiques, passe [0, 0] = banc [0, 0], 0 écart (8 237 s). La chaîne finale ne change aucune décision du banc sur 2:19 (`c5/r-t18g` contre `c5/r-a3-bd3` : 0 cut changé) ;
+- 2:18 et 3:0 : non faites (2 h et 3 h 30 et plus). Pour 3:0, la parité de passe2 (chaîne de 542daf5, passe seule) était encore en cours au moment de la livraison.
+Les corrections des relectures (a7f0b98 et suivants) ne touchent que l'écriture, la relance, l'exclusion des cuts sous τ (aucun sous L1-se dans les rejeux) et le panneau : aucune décision de la passe en ombre ne change sur 2:17 ni 2:19.
+
+Seconde relecture (deb2370) : 1) compteurs cumulés et « calcul » à la relance (essai à trois relances) ; 2) relance bloquée par une correction interrompue, libellé selon l'origine ; 3) état « inconnu » du nouveau panneau réglable ; 4) une passe en ombre ne bloque pas la relecture ; 5) cette section.
