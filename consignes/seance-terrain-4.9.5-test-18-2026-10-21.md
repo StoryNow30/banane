@@ -121,7 +121,7 @@ Les poses déjà validées dans ESV restent, y compris celles de la deuxième pa
 - **L'écriture de la deuxième passe n'a jamais été jouée dans ESV** (§ 3). Elle a été essayée contre un ESV simulé : cut vert jamais écrasé, validation non prouvée, « Arrêter », relance, interrupteur coupé pendant l'écriture, relecture en pause.
 - **Toutes les mesures viennent de lots qui ont servi à régler**, la partie 0 comprise : aucune mesure hors échantillon. Les parties 1 et 5 du troisième projet sont gardées pour l'examen.
 - **La partie 0 est la seule** à avoir motivé le réglage de hauteur (25 mm) et la garde de voie. Sur les neuf anciens lots, ils ne changent aucune décision : ils ne dégradent rien, mais rien n'y prouve leur gain.
-- **Le vrai code de l'extension, rejoué cut par cut** contre le banc : PARITES.
+- **Le vrai code de l'extension, rejoué cut par cut** contre le banc, la deuxième passe jouée en ombre : partie 17, 139 sur 139 décisions identiques, et ses 3 poses de passe ; partie 19, 248 sur 248. Les parties 18 et 0 n'ont pas été rejouées ainsi. Le chemin d'écriture, lui, n'est essayé que contre un ESV simulé.
 - **Une seule connexion ESV**, partagée par Orbite et Écho, dans le nouveau panneau comme dans l'ancien.
 - **Le nouveau panneau** n'a été vu que dans Chromium, avec des états fabriqués ; il n'a pas les réglages de la pause de la relecture (ils sont dans le panneau d'avant).
 - **Trous connus de la garde de voie** : elle se tait sans voisin validé lisible à 6 cuts ou moins, et ne mesure pas l'accord des voisins quand il y en a moins de 3. Elle ne s'applique ni aux cuts posés sans validation (sous τ), ni aux verts de la chaîne, ni aux corrections de la relecture « Corriger ».

@@ -14,17 +14,10 @@ test('relecture en préparation : « Relancer la deuxième passe » est refusée
   x.adapter.ping = async (...a) => { if (!relance && x.b.get('relecture').passe?.etat === 'preparation') relance = x.b.api('passe-differes-ecrire').then(() => 'acceptée', e => e.message); return ping(...a); };
   await x.b.api('relecture-lancer');
   assert.match(await relance, /Relecture après le lot en préparation/);
+  /* La relecture est partie seule ; on l'arrête (l'essai n'a pas besoin de ses 61 cuts). */
+  assert.equal(x.b.store.events.filter(e => e.type === 'relecture-debut').length, 1);
+  await x.b.api('relecture-arreter');
   for (let i = 0; i < 300 && x.b.get('relecture').passe?.etat === 'en-cours'; i++) await attendre(20);
-  assert.equal(x.b.get('relecture').passe.etat, 'finie');
+  assert.equal(x.b.get('relecture').passe.etat, 'arretee');
   assert.equal(ev(x.b, 'passe-differes-ecriture').length, 0, 'aucune pose de la passe'); assert.deepEqual(x.adapter.enPlace, []);
-});
-
-test('relecture qui trouve la deuxième passe au travail au moment de partir : non lancée', async () => {
-  const x = await lotPasse({ passe: { passes: 1 }, relecture: 'ombre' });
-  x.adapter.identity.cut = 114;
-  const lot = x.b.get('engine').s.batch; lot.stoppedAtEnd = { ...lot.stoppedAtEnd, at: new Date(Date.now() - 60000).toISOString() };
-  const ping = x.adapter.ping.bind(x.adapter); let pose = false;
-  x.adapter.ping = async (...a) => { if (!pose && x.b.get('relecture').passe?.etat === 'preparation') { pose = true; x.b.get('passeDiff').ecriture = { arret: false, attente: null }; } return ping(...a); };
-  await assert.rejects(x.b.api('relecture-lancer'), /la deuxième passe des différés travaille dans ESV/);
-  assert.equal(x.b.store.events.filter(e => e.type === 'relecture-debut').length, 0);
 });

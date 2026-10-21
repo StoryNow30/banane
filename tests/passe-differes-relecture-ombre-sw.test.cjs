@@ -10,4 +10,5 @@ test('passe en ombre en cours de calcul au départ de la relecture : la relectur
   x.adapter.ping = async (...a) => { if (!calcul && x.b.get('relecture').passe?.etat === 'preparation') { calcul = true; x.b.get('passeDiff').cours = new Promise(() => {}); } return ping(...a); };
   await x.b.api('relecture-lancer');
   assert.ok(calcul); assert.equal(x.b.store.events.filter(e => e.type === 'relecture-debut').length, 1);
+  await x.b.api('relecture-arreter'); await x.b.get('relecture').tache;
 });
