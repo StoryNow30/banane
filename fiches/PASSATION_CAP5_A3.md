@@ -69,3 +69,14 @@ Reproduction : le code fusionné rejoue b-r7a avec 0 décision différente sur 2
 - Contre a3-p15 (sur b-r4), le plancher `rechPaireTopMin` 60 retire la pose 88 (cellule droite à 46 points) et la pose 49 de fd7067f7 revient à 13,6 mm (`recherche-adv-remplace` perdu).
 - `brancheDernier` (code, coupé) : la branche rail par rail passe après la recherche recentrée et ne joue que s'il ne reste rien. Elle regagne 88 (6,5 mm), gagne 467 (10,5 mm) en 2:18 et 8292 (6,6 mm) en 2:11. Placée avant la recherche (a2-p3), elle dégradait 9553 et 199 (5 à 15 mm).
 - Différés restants de a3-bd2 : 2:19 4919 4920 ; 2:17 9790 ; 2:18 153 408 409 ; 2:11 7320 ; f228 649 ; 2:6 3433 4756 ; 2:7 3220 5901.
+
+### a3-bd3 (commit 004fcfb) : la saute de B limitée à l'ADV
+
+Dans a3-p15r7 et a3-bd2, `rechSauteProcheMm` (B) sautait aussi la recherche en abords. Or la pose de fd7067f7 49 est exactement celle du voisin, et la recherche la ramène de 13,6 à 4,3 mm. Nouveau levier `rechSauteProcheZones` (coupé ; par défaut ['adv'], ce qui ne change rien à la chaîne de b-r7a, dont la recherche ne joue qu'en ADV). Avec lui :
+
+| a3-bd3 = a3-bd2 sur 004fcfb | Posables | Jugées / ≤5 / ≤10 / 10–20 / >20 / MV |
+|---|--:|---|
+| b-r7a | 26 | 523 / 404 / 508 / 15 / 0 / 0 |
+| a3-bd3 | 12 | 534 / 412 (77,2 %) / 518 (97,0 %) / 16 / 0 / 0 |
+
+Par partie : 2:19 2 ; 2:17 1 ; 2:18 3 ; 2:11 1 ; fd7067f7 0 ; f228f6f9 1 ; 2:6 2 ; 2:7 2 ; 2:13 0. Gagnés sur b-r7a, aucun perdu : 2:17 9521 9522 9526 9803 ; 2:18 36 37 38 61 88 204 205 452 467 ; 2:11 8292. Seul écart avec a3-bd2 : fd7067f7 (≤5 12 au lieu de 11, ≤10 14 au lieu de 13).
