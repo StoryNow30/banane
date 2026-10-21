@@ -14,8 +14,8 @@
   'use strict';
   const D = root.document, R = root.ArianeUi5Rendu, CLE = 'banane51Interface';
   if (!D || !R || !root.ArianePanel) return;
-  const VARIANTES = ['ariane', 'ancienne'], defaut = root.ARIANE_UI5?.defaut === 'ariane' ? 'ariane' : 'ancienne';
-  const TAILLE = { ariane: [1180, 800], ancienne: [560, 820] };
+  const VARIANTES = ['ariane', 'ariane2', 'ancienne'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ancienne';
+  const TAILLE = { ariane: [1180, 800], ariane2: [1180, 840], ancienne: [560, 820] };
   const ui = { last: '', pauseLot: null };
   let variante = defaut, ecran = 'accueil', hote = null, gcv2Base = null;
   const $ = id => D.getElementById(id);
@@ -106,6 +106,7 @@
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
       lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2), passe2: p2,
+      cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
       alerte, esv: s?.connection?.status === 'unavailable' || st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ko' : s?.current?.identity ? 'ok' : 'non',
       pause: (() => { const e = $('pause'); return e && !e.hidden ? { actif: !e.disabled } : null; })(),
@@ -170,6 +171,7 @@
     if (act === 'pause') { const b = root.ArianePanel.state()?.batch; if (b?.state === 'RUNNING' && $('pause') && !$('pause').disabled) { ui.pauseLot = b.id; cliquer('pause'); } }
     else if (type === 'aller') { aller(v, depuis); return; }
     else if (type === 'legacy') cliquer(v);
+    else if (type === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
     else if (type === 'variante') void setVariante(v);
     maj(true);
   }
@@ -235,8 +237,7 @@
   }
   function appliquer(v) {
     variante = v;
-    D.body.classList.toggle('ui5', v === 'ariane');
-    hote.className = 'u-' + v;
+    D.body.classList.toggle('ui5', v !== 'ancienne');
     hote.hidden = v === 'ancienne';
     maj(true);
     void taille();
@@ -249,7 +250,7 @@
   }
 
   async function init() {
-    hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
+    hote = D.createElement('div'); hote.id = 'ui5'; hote.className = 'u-ariane'; hote.hidden = true; D.body.appendChild(hote);
     try { const v = (await root.chrome?.storage?.local?.get?.(CLE))?.[CLE]; if (VARIANTES.includes(v)) variante = v; } catch { /* défaut de la version */ }
     /* Compteur des exemples d'apprentissage (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : les cuts corrigés, tous projets. */
     try { const j = await (await fetch(root.chrome.runtime.getURL('datasets/compteur-gcv2.json'))).json();
