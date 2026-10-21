@@ -28,13 +28,13 @@ test('le bouton principal est celui du panneau ; une relecture en cours passe de
  assert.equal(R.modele(avec({boutons:[]})).primaire,null,'sans bouton principal, aucun n’est inventé');
 });
 
-test('écran de séance : aucune case, aucun bouton radio, aucune liste (seule la ligne de recherche de Raycast est un champ) ; Réglages : des listes',()=>{
+test('écran de séance : aucune case, aucun bouton radio, aucune liste (seule la ligne de recherche de la palette est un champ) ; Réglages : des listes (la palette n’a pas d’écran de Réglages : elle ouvre celui d’Ariane)',()=>{
  for(const v of R.VARIANTES)for(const mode of ['home','automatic','native']){
   const s=R.rendre(v,avec({variante:v,mode}),{sel:null,palette:false,q:'',pi:0},'seance');
   assert.ok(s.length>200,v+' '+mode);assert.ok(!/<select|type="checkbox"|type="radio"/.test(s),v+' '+mode);
   assert.ok(!/<input(?![^>]*id="ui5-q")/.test(s),v+' '+mode+' : seul le champ de recherche est permis');
  }
- for(const v of R.VARIANTES){const s=R.rendre(v,avec({variante:v}),{sel:null,palette:false,q:'',pi:0},'reglages');
+ for(const v of R.VARIANTES.filter(x=>x!=='raycast')){const s=R.rendre(v,avec({variante:v}),{sel:null,palette:false,q:'',pi:0},'reglages');
   assert.ok((s.match(/<select/g)||[]).length>=5,v);for(const nom of ['relecture','clic','grappe','raison','variante'])assert.ok(s.includes(`data-sel="${nom}"`),v+' '+nom);}
 });
 
@@ -69,7 +69,7 @@ test('trois présentations, un ruban et une liste dessinés avec les cuts du lot
  assert.match(lin,/<div class="row s" data-row="0"><span class="ic cours"><\/span><span class="c">4812<\/span>/);assert.match(lin,/Différés <span class="n">1<\/span>/);assert.match(lin,/À poser <span class="n">88<\/span>/);
  const fig=R.rendre('figma',base,{sel:null,palette:false,q:'',pi:0},'seance');
  assert.equal((fig.match(/class="cell /g)||[]).length,3+88);assert.match(fig,/cell now sel/);assert.match(fig,/<h3>Cut 4812<\/h3>/);
- const ray=R.rendre('raycast',base,{sel:null,palette:false,q:'',pi:0},'seance');assert.match(ray,/class="o s" data-act="legacy:pause"/);assert.match(ray,/Pause <kbd>↵<\/kbd>/);
+ const ray=R.rendre('raycast',base,{sel:null,palette:false,q:'',pi:0},'seance');assert.match(ray,/class="i2 s" data-act="legacy:pause"/);assert.match(ray,/Pause<\/span><kbd>↵<\/kbd>/);
 });
 
 /* 4.9.6 test 1 — présentation « Ariane » : dessinée à partir de `snap.ar` (src/ui5.js) et des boutons du panneau. */
@@ -160,7 +160,29 @@ test('ariane2 : « Vider le cache » est en vue dans Orbite et Écho, grisé ave
 test('ariane2 : nouveau logo, accès discret à la palette (icône et lien d’accueil), retour par une commande de la palette',()=>{
  const a=v2('home','pret','accueil');assert.match(a,/id="ar-lg"/);assert.match(a,/data-act="variante:raycast"[^>]*aria-label="Interface palette"/);assert.match(a,/class="astuce"/);
  assert.doesNotMatch(RA.rendre('ariane',{mode:'home',ar:arBase('pret')},{},'accueil'),/ar-lg|Interface palette/);
- const m=RA.modele(base);assert.ok(RA.commandes(base,m).some(x=>x.act==='variante:ariane2'),'la palette ramène à l’interface Ariane');
+ assert.ok(RA.paletteListe(base,'interface').some(x=>x.act==='variante:ariane2'),'la palette ramène à l’interface Ariane');
  const g=RA.rendre('ariane2',{mode:'home',variante:'ariane2',reglages:base.reglages,ar:arBase('pret')},{},'reglages');
  assert.match(g,/<option value="ariane2" selected>/);assert.match(g,/<option value="raycast">Palette/);
+});
+
+/* 4.9.6 (D-233, bloc E) : palette sobre ; l'ancienne présentation Raycast (groupes, colonne de type, panneau latéral, fond imitant ESV) n'existe plus. */
+const pal=(extra={},ar={},q='')=>RA.rendre('raycast',{mode:'automatic',variante:'raycast',onglets:tabs,ongletChoisi:'11',ar:arBase('cours',{cache:{actif:false},...ar}),boutonsOrbite:[btn('pause','Pause','primary'),btn('stop','Arrêter le lot','danger'),btn('export-tout','Exporter le dossier',undefined,false)],boutons:[btn('pause','Pause','primary'),btn('stop','Arrêter le lot','danger'),btn('export-tout','Exporter le dossier',undefined,false)],...extra},{q,pi:0},'seance');
+test('palette sobre : une ligne de recherche, l’état à droite, quatre commandes au plus à l’ouverture, rien d’autre',()=>{
+ const h=pal();
+ assert.equal((h.match(/class="i2[ "]/g)||[]).length,3,'pause, arrêter, exporter (grisé) : les commandes du moment seulement');
+ assert.doesNotMatch(h,/Réglages|Vider le cache|Orbite<\/span>|Écho<\/span>|Connecter à|Interface Ariane \(cartes\)/,'activités, onglets, cache et réglages n’apparaissent qu’en tapant');
+ assert.match(h,/class="et2">Orbite en cours · 31\/120</);assert.match(h,/id="ui5-q"/);
+ assert.doesNotMatch(h,/class="g"|class="ty"|class="meta"|esv-fond|class="bureau"|class="pied"|class="corps"/,'plus de groupes, de colonne « type », de panneau latéral ni de fond imitant ESV');
+ const six=pal({boutonsOrbite:[1,2,3,4,5,6].map(i=>btn('c'+i,'Commande '+i,i===1?'primary':'link')),boutons:[1,2,3,4,5,6].map(i=>btn('c'+i,'Commande '+i,i===1?'primary':'link'))});
+ assert.equal((six.match(/class="i2[ "]/g)||[]).length,4,'jamais plus de quatre à l’ouverture');
+});
+test('palette sobre : en tapant, on trouve les activités, les onglets, le cache (grisé avec sa raison), les réglages et le retour ; Écho est grisé pendant un lot',()=>{
+ const c=pal({},{},'vider');assert.match(c,/Vider le cache des exports/);assert.match(c,/class="i2(?: s)? off" aria-disabled="true"/);assert.match(c,/Disponible quand le lot est terminé ou arrêté\./);
+ const ok=pal({},{lotOuvert:false,cache:{actif:true}},'vider');assert.match(ok,/data-act="legacy:export-cache-clear"/);assert.doesNotMatch(ok,/class="i2(?: s)? off"/);
+ assert.match(pal({},{},'onglet 2'),/data-act="conn:12"/);assert.doesNotMatch(pal({},{},'onglet 3'),/data-act="conn:13"/,'un onglet pas prêt ne se connecte pas');
+ const e=pal({},{},'écho');assert.match(e,/class="i2(?: s)? off" aria-disabled="true"[^>]*>.*indisponible pendant un lot/);
+ assert.match(pal({},{},'regl'),/data-act="interface:reglages"/);assert.match(pal({},{},'ariane'),/data-act="variante:ariane2"/);assert.match(pal({},{},'zzzz'),/Aucun résultat/);
+ assert.match(pal({mode:'native',echo:{corriges:5}},{echoEtat:'Collecte en cours',lotOuvert:false},''),/class="et2">Collecte en cours · 5</);
+ assert.match(pal({onglets:tabs,ongletChoisi:''},{},''),/data-act="conn:11"/,'sans onglet choisi, la connexion est proposée en premier');
+ const x=pal({onglets:[{valeur:'9',texte:'<img src=x onerror=alert(1)>'}],ongletChoisi:'',notice:{texte:'<b>x</b>',erreur:true}},{alerte:'<img src=x onerror=alert(1)>',etat:'alerte'},'img');assert.doesNotMatch(x,/<img|<b>x/);
 });

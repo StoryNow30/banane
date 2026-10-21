@@ -26,3 +26,22 @@ test('ariane2 : onglets ESV, cache en vue, palette, sans grand titre ; aucune er
  assert.deepEqual(res.lot,{tabs:1,cache:true,cacheOff:true,h2:0,palette:true,parcours:false},'pendant le lot : le cache est là mais grisé');
  assert.equal(res.fin.cache,true);assert.equal(res.fin.h2,0);
 });
+test('palette sobre : le champ est actif à l’ouverture, Entrée lance la commande du panneau, « regl » ouvre les Réglages d’Ariane, Ctrl K revient aux cartes',{skip:absent,timeout:60000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const page=await nav.newPage({viewport:{width:720,height:560}}),erreurs=[];page.on('pageerror',e=>erreurs.push(e.message));
+  await N.preparerAriane(page,'lot','raycast');await page.waitForTimeout(500);
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'ui5-q');
+  assert.equal(await page.evaluate(()=>document.querySelectorAll('#ui5 .i2').length),3,'trois commandes du moment, pas plus');
+  await page.keyboard.type('regl');await page.waitForTimeout(200);
+  assert.equal(await page.evaluate(()=>document.querySelector('#ui5-q').value),'regl','la frappe n’est pas perdue à chaque dessin');
+  await page.keyboard.press('Escape');await page.waitForTimeout(200);
+  await page.keyboard.press('Enter');await page.waitForTimeout(300);
+  assert.ok((await page.evaluate(()=>window.__appels)).includes('pause'),'Entrée = « Pause », comme le bouton d’origine');
+  await page.keyboard.type('regl');await page.keyboard.press('Enter');await page.waitForTimeout(600);
+  assert.equal(await page.evaluate(()=>document.querySelector('#ui5 .app')?.dataset.vue),'reglages');
+  await page.keyboard.press('Control+k');await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(()=>document.querySelector('#ui5').className),'u-raycast');
+  assert.deepEqual(erreurs,[]);
+ }finally{await nav.close();}
+});

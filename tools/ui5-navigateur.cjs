@@ -82,13 +82,15 @@ async function lancer(sortie, variantes) {
     resultat[`${v}/${nom}`] = await page.evaluate(() => ({ ui5: document.body.classList.contains('ui5'), classe: document.getElementById('ui5')?.className, taille: document.getElementById('ui5')?.innerHTML.length, boutonsPrincipaux: document.querySelectorAll('#ui5 .btn.p').length }));
     if (nom === 'lot') {
       /* Réglages, palette, et surtout : un clic sur l'habillage déclenche le BON bouton du panneau (même action au service worker). */
-      await page.click('[data-act="ecran:reglages"]'); await page.waitForTimeout(150);
-      await page.screenshot({ path: path.join(sortie, `${v}-reglages.png`) });
-      resultat[`${v}/reglages`] = await page.evaluate(() => ({ lignes: document.querySelectorAll('#ui5 .lr').length, listes: document.querySelectorAll('#ui5 select').length }));
-      await page.click('[data-act="ecran:seance"]'); await page.waitForTimeout(150);
+      if (v !== 'raycast') { /* la palette n'a pas d'écran de Réglages : elle ouvre celui d'Ariane */
+        await page.click('[data-act="ecran:reglages"]'); await page.waitForTimeout(150);
+        await page.screenshot({ path: path.join(sortie, `${v}-reglages.png`) });
+        resultat[`${v}/reglages`] = await page.evaluate(() => ({ lignes: document.querySelectorAll('#ui5 .lr').length, listes: document.querySelectorAll('#ui5 select').length }));
+        await page.click('[data-act="ecran:seance"]'); await page.waitForTimeout(150);
+      }
       if (v === 'linear') { await page.keyboard.press('Control+k'); await page.waitForTimeout(150); await page.screenshot({ path: path.join(sortie, `${v}-palette.png`) }); await page.keyboard.press('Escape'); }
       const avant = await page.evaluate(() => window.__appels.length);
-      await page.evaluate(() => { const b = document.querySelector('#ui5 .btn.p, #ui5 .o.s'); window.__texteBouton = b && b.textContent; b && b.click(); });
+      await page.evaluate(() => { const b = document.querySelector('#ui5 .btn.p, #ui5 .i2.s'); window.__texteBouton = b && b.textContent; b && b.click(); });
       await page.waitForTimeout(300);
       resultat[`${v}/clic-principal`] = await page.evaluate(a => ({ texte: window.__texteBouton, appels: window.__appels.slice(a) }), avant);
     }

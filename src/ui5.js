@@ -15,7 +15,7 @@
   if (!D || !R || !root.ArianePanel) return;
   const defaut = R.VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ariane';
   const estAr = v => v === 'ariane' || v === 'ariane2';
-  const TAILLE = { ariane: [1180, 800], ariane2: [1180, 840], linear: [1120, 760], raycast: [900, 660], figma: [1120, 760], ancienne: [560, 820] };
+  const TAILLE = { ariane: [1180, 800], ariane2: [1180, 840], linear: [1120, 760], raycast: [720, 560], figma: [1120, 760], ancienne: [560, 820] };
   const ui = { sel: null, palette: false, q: '', pi: 0, last: '', focusQ: false, pauseLot: null };
   let variante = defaut, ecran = estAr(defaut) ? 'accueil' : 'seance', hote = null, gcv2Base = null, nbRows = 0;
   const $ = id => D.getElementById(id);
@@ -155,7 +155,7 @@
       reglages: rg, exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
       gcv2: gcv2Base ? { total: gcv2Base.total, date: gcv2Base.date, session: echo.corriges || 0 } : null,
-      ar: estAr(variante) ? calculAr(s, lot.rows) : null,
+      ar: estAr(variante) || variante === 'raycast' ? calculAr(s, lot.rows) : null,
     };
   }
 
@@ -168,12 +168,12 @@
     nbRows = snap.mode === 'native' ? snap.echoRows.length : snap.rows.length + (snap.aPoser || 0);
     const html = R.rendre(variante, snap, ui, ecran);
     if (!force && html === ui.last) return;
-    const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne;
+    const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
     ui.last = html; hote.innerHTML = html;
     [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; });
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
-    if (q && ui.focusQ) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
+    if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
   }
 
   /* ---------------------------------------------------------------- actions */
@@ -199,6 +199,7 @@
     else if (t === 'mode') { cliquer(v === 'native' ? 'tab-native' : 'tab-automatic'); ecran = 'seance'; ui.sel = null; }
     else if (t === 'ecran') { ecran = v; ui.sel = null; ui.q = ''; ui.palette = false; }
     else if (t === 'variante') void setVariante(v);
+    else if (t === 'interface') { void setVariante('ariane2').then(() => { ecran = v; maj(true); }); return; }
     else if (act === 'palette') { ui.palette = !ui.palette; ui.q = ''; ui.pi = 0; }
     else if (act === 'palette:fermer') ui.palette = false;
     maj(true);
@@ -249,6 +250,7 @@
       if (ligne) { ui.sel = Number(ligne.dataset.row) || 0; maj(true); return; }
       const a = e.target.closest?.('[data-act]'); if (!a) return;
       if (a.dataset.act === 'palette:fermer' && e.target.closest('[data-stop]')) return;
+      if (variante === 'raycast') { ui.q = ''; ui.pi = 0; }
       const fermer = a.dataset.fermer === '1';
       if (fermer) ui.palette = false;
       agir(a.dataset.act, a);
@@ -272,14 +274,14 @@
       }
       const dansChamp = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '');
       const snap = instantane(root.ArianePanel.state() || {}), m = R.modele(snap);
-      const cmds = R.filtrer(R.commandes(snap, m), ui.q), recherche = variante === 'raycast' || ui.palette;
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if (variante === 'raycast') { const q = $('ui5-q'); if (q) q.focus(); } else agir('palette'); return; }
+      const cmds = variante === 'raycast' ? R.paletteListe(snap, ui.q) : R.filtrer(R.commandes(snap, m), ui.q), recherche = variante === 'raycast' || ui.palette;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if (variante === 'raycast') void setVariante('ariane2'); else agir('palette'); return; }
       if (e.ctrlKey || e.metaKey) return;
-      if (e.key === 'Escape') { if (ui.palette) agir('palette:fermer'); else if (ui.q) { ui.q = ''; maj(true); } else if (ecran !== 'seance') agir('ecran:seance'); return; }
+      if (e.key === 'Escape') { if (ui.palette) agir('palette:fermer'); else if (ui.q) { ui.q = ''; ui.pi = 0; maj(true); } else if (ecran !== 'seance' && variante !== 'raycast') agir('ecran:seance'); return; }
       if (recherche && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { ui.pi = Math.max(0, Math.min(cmds.length - 1, (ui.pi || 0) + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); return; }
-      if (recherche && e.key === 'Enter' && (dansChamp || ui.palette) && ecran === 'seance') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi || 0))]; if (c) { ui.palette = false; ui.q = ''; ui.pi = 0; agir(c.act); } e.preventDefault(); return; }
+      if (recherche && e.key === 'Enter' && (dansChamp || ui.palette) && ecran === 'seance') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi || 0))]; if (c && !c.off) { ui.palette = false; ui.q = ''; ui.pi = 0; agir(c.act); } e.preventDefault(); return; }
       if (dansChamp) return;
-      if (variante === 'raycast' && e.key.length === 1 && /[\p{L}]/u.test(e.key)) { const q = $('ui5-q'); if (q) { q.focus(); } return; }
+      if (variante === 'raycast' && e.key.length === 1 && /[\p{L}]/u.test(e.key)) { const q = $('ui5-q'); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } } return; }
       const pas = variante === 'figma' ? { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 40, ArrowUp: -40 }[e.key] : { j: 1, k: -1, ArrowDown: 1, ArrowUp: -1 }[e.key];
       if (pas !== undefined && nbRows) { ui.sel = Math.max(0, Math.min(nbRows - 1, (ui.sel ?? 0) + pas)); maj(true); e.preventDefault(); return; }
       if (e.key === 'Enter' && !/^(BUTTON|A)$/.test(e.target?.tagName || '') && m.primaire && m.primaire.actif && ecran === 'seance') { cliquer(m.primaire.id); e.preventDefault(); }
@@ -296,6 +298,7 @@
   function appliquer(v) {
     variante = v;
     D.body.classList.toggle('ui5', v !== 'ancienne');
+    if (v === 'raycast') ui.focusQ = true;
     if (v !== 'ancienne') hote.className = v === 'ariane2' ? 'u-ariane u-ariane2' : 'u-' + v;
     hote.hidden = v === 'ancienne';
     if (v !== 'ancienne') maj(true);
@@ -311,6 +314,7 @@
   async function init() {
     hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
     try { const r = await root.chrome?.storage?.local?.get?.(CLE); const v = r?.[CLE]; if (v === 'ancienne' || R.VARIANTES.includes(v)) variante = v; } catch { /* défaut de la version */ }
+    ecran = estAr(variante) ? 'accueil' : 'seance';
     try { const f = await fetch(root.chrome.runtime.getURL('datasets/compteur-gcv2.json')); const j = await f.json();
       /* Deux formats : { total, date } (test 10-ui) ou celui du compteur (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : totaux.tous[compteurDeMic]. */
       const total = Number.isFinite(j?.total) ? j.total : j?.totaux?.tous?.[j?.regle?.compteurDeMic || 'corriges'];

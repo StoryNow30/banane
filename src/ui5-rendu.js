@@ -163,7 +163,6 @@
     const r = snap.reglages || {};
     c.push({ icone: '⚙', nom: 'Après le lot', sous: { coupee: 'rien', ombre: 'relire sans modifier', corriger: 'relire et corriger' }[r.relecture] || '', type: 'Réglage', act: 'ecran:reglages', ton: 'n', actif: true });
     c.push({ icone: '⚙', nom: 'Réglages', type: 'Vue', act: 'ecran:reglages', ton: 'n', actif: true });
-    c.push({ icone: '◧', nom: 'Interface Ariane', sous: 'cartes', type: 'Vue', act: 'variante:ariane2', ton: 'b', actif: true });
     c.push({ icone: '☰', nom: 'Détails techniques (ancien panneau)', type: 'Vue', act: 'variante:ancienne', ton: 'p', actif: true });
     return c.filter(x => x.actif !== false || x.act.startsWith('legacy:'));
   }
@@ -173,28 +172,6 @@
     const L = filtrer(commandes(snap, m), ui.q);
     const i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
     return `<div class="pal on" data-act="palette:fermer"><div class="bx" data-stop="1"><input id="ui5-q" value="${esc(ui.q)}" placeholder="Que veux-tu faire ?" autocomplete="off"><div class="l">${L.length ? L.map((c, k) => `<div class="o${k === i ? ' s' : ''}" data-act="${esc(c.act)}" data-fermer="1"><span class="t ${esc(c.ton)}">${esc(c.icone)}</span><span class="nm">${esc(c.nom)}</span>${c.sous ? `<span class="sb">${esc(c.sous)}</span>` : ''}<span class="ty">${esc(c.type)}</span></div>`).join('') : '<div class="o"><span class="nm">Aucune commande</span></div>'}</div></div></div>`;
-  }
-
-  /* ------------------------------------------------------------------ RAYCAST */
-  function rendreRaycast(snap, ui, ecran) {
-    const m = modele(snap);
-    const ec = ecran === 'reglages';
-    const tag = ec ? 'Réglages' : m.mode === 'native' ? `Écho${m.partie != null ? ' · partie ' + esc(m.partie) : ''}` : m.mode === 'automatic' ? `Orbite${m.partie != null ? ' · partie ' + esc(m.partie) : ''}` : 'Ariane';
-    let liste, meta = '', pied;
-    if (ec) { liste = `<div class="reg">${reglages(snap)}</div>`; pied = `<span class="ac" data-act="ecran:seance">Retour ${touche('Échap')}</span>`; }
-    else {
-      const cmds = filtrer(commandes(snap, m), ui.q);
-      const i = Math.max(0, Math.min(cmds.length - 1, ui.pi || 0));
-      const ligne = (c, k) => `<div class="o${k === i ? ' s' : ''}" data-act="${esc(c.act)}"><span class="t ${esc(c.ton)}">${esc(c.icone)}</span><span class="nm">${esc(c.nom)}</span>${c.sous ? `<span class="sb">${esc(c.sous)}</span>` : ''}<span class="ty">${esc(c.type)}</span></div>`;
-      const sug = cmds.filter(c => c.type === 'Commande'), autres = cmds.filter(c => c.type !== 'Commande');
-      let k = 0;
-      liste = (m.mode === 'home' ? choixMode() : '') + (sug.length ? `<div class="g">${ui.q ? 'Résultats' : 'Suggestions'}</div>` + sug.map(c => ligne(c, k++)).join('') : '') + (autres.length ? `<div class="g">Vues et réglages</div>` + autres.map(c => ligne(c, k++)).join('') : '');
-      const kv = m.compteurs.map(c => `<div class="kv"><span>${esc(c[0])}</span><span>${esc(c[1])}</span></div>`).join('');
-      meta = `<div class="ti${m.ton === 'rouge' ? ' rouge' : ''}">${esc(m.etat)}</div><div class="big">${esc(m.gros)}</div>${barre(m).replace('class="barre"', 'class="bm"')}<div class="phr">${esc(m.phrase)}</div>${kv}${m.exportTexte ? `<div class="kv"><span>Export</span><span>${esc(m.exportTexte.slice(0, 80))}</span></div>` : ''}`;
-      const cmd = cmds[i];
-      pied = `<span class="ac" data-act="${cmd ? esc(cmd.act) : ''}">${esc(cmd ? cmd.nom : '')} ${touche('↵')}</span>`;
-    }
-    return `<div class="bureau"><div class="ray"><div class="q"><span class="rt"><i></i>${tag}</span><input id="ui5-q" placeholder="Que veux-tu faire ?" value="${esc(ui.q)}" autocomplete="off"><span class="ld${m.ton === 'vert' && m.mode !== 'home' ? ' on' : ''}"></span></div>${avisHtml(m)}<div class="corps${meta ? '' : ' seul'}"><div class="l">${liste}</div>${meta ? `<div class="meta">${meta}</div>` : ''}</div><div class="pied"><span class="lg"></span><span class="sp"></span>${pied}<span class="sep"></span><span class="ac" data-act="ecran:${ec ? 'seance' : 'reglages'}">${ec ? 'Séance' : 'Réglages'}</span><span class="sep"></span><span class="ac" data-act="variante:ancienne">Ancien panneau</span></div></div></div>`;
   }
 
   /* ------------------------------------------------------------------ FIGMA ET ARC */
@@ -277,13 +254,15 @@
     }).join('');
     return `<div class="esvbar"><span class="lab">${ic('globe', 15)}Onglets ESV</span><div class="tabs">${puces || '<span class="aucun">Aucun onglet ESV ouvert.</span>'}</div></div>`;
   }
+  const raisonCache = (snap, a, courant) => {
+    const rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre);
+    return courant === 'echo' ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
+      : rel ? 'Disponible quand la relecture est terminée ou arrêtée.' : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
+  };
   /* Vidage du cache des exports, en vue dans Orbite et Écho (nouvelle présentation). Même bouton, même confirmation que le panneau d'origine. */
   function maintAr(snap, a, courant) {
     if (!V2 || !['orbite', 'echo'].includes(courant) || !a.cache) return '';
-    const ech = courant === 'echo', ok = a.cache.actif;
-    const rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre);
-    const raison = ech ? (a.lotOuvert || /Aucune/.test(a.echoEtat || '') ? 'Indisponible pour l’instant.' : 'Disponible quand la séance Écho est terminée.')
-      : rel ? 'Disponible quand la relecture est terminée ou arrêtée.' : a.lotOuvert ? 'Disponible quand le lot est terminé ou arrêté.' : 'Indisponible pour l’instant.';
+    const ok = a.cache.actif, raison = raisonCache(snap, a, courant);
     return `<div class="maint">${picto('cache')}<span class="tx">Cache des exports<small>${ok ? 'À vider seulement après réception de tous les volumes exportés.' : raison}</small></span><span class="sp"></span><button type="button" class="pill cache" id="ar-cache" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>${ic('trash')}Vider le cache</button></div>`;
   }
   function enteteAr(a, courant) {
@@ -413,8 +392,55 @@
     return `<div class="app ar-${vue}${V2 ? ' v2' : ''}${a.etat === 'pause' && vue === 'orbite' ? ' eteinte' : ''}" data-vue="${vue}"><div class="ecr">${corps}</div></div>`;
   }
 
-  const RENDUS = { linear: rendreLinear, raycast: rendreRaycast, figma: rendreFigma, ariane: (s, u, e) => rendreAriane(s, u, e, false), ariane2: (s, u, e) => rendreAriane(s, u, e, true) };
+  /* ------------------------------------------------------------------ PALETTE (D-233, bloc E ; remplace l'ancienne présentation Raycast)
+   * Une ligne de recherche, l'état en petit à droite, quatre commandes au plus à l'ouverture. Activités, onglets, cache, réglages et
+   * retour à l'interface n'apparaissent qu'en tapant. Les commandes sont les boutons du panneau (`legacy:<id>`), rien d'autre n'est commandé. */
+  const PIC = {
+    play: '<path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>', pause: '<path d="M8 5v14M16 5v14" stroke-width="3.2"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', check: '<path d="M5 12l5 5 9-10"/>',
+    down: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>', globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+    orbite: PICTO.orbite, echo: PICTO.echo, reglages: PICTO.reglages, palette: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10l3 2-3 2M12 14h5"/>', detail: '<path d="M5 6h14M5 12h14M5 18h14"/>',
+  };
+  const icBouton = id => /pause/.test(id) ? 'pause' : /resume|reprendre|start|lancer|new-batch/.test(id) ? 'play' : /stop|arreter|discard/.test(id) ? 'x' : /export|download/.test(id) ? 'down' : 'check';
+  function commandesPal(snap, m) {
+    const a = snap.ar || {}, c = [], vus = new Set();
+    const add = (ib, nom, sous, act, off, s) => { if (vus.has(act)) return; vus.add(act); c.push({ ib, nom, sous: sous || '', act, off: !!off, s: !!s }); };
+    const L = snap.onglets || [], choisi = String(snap.ongletChoisi || ''), pret = o => !/pas prêt/i.test(o.texte);
+    const libres = L.filter(o => String(o.valeur) !== choisi);
+    if (L.length && !choisi) { const o = libres.find(pret); if (o) add('globe', `Connecter à ${o.texte}`, '', 'conn:' + o.valeur, false, true); }
+    const R2 = snap.relPause;
+    if (R2?.pause) add('pause', R2.pause.texte, '', 'legacy:relecture-pause', !R2.pause.actif, true);
+    if (R2?.reprendre) add('play', R2.reprendre.texte, R2.reprendre.raison || '', 'legacy:relecture-reprendre', !R2.reprendre.actif, true);
+    if (R2?.arreter) add('x', 'Arrêter la relecture', '', 'legacy:relecture-arreter-pause', false, true);
+    for (const b of [m.primaire, ...m.autres].filter(Boolean)) add(icBouton(b.id), b.texte, '', 'legacy:' + b.id, !b.actif, true);
+    if (m.mode !== 'automatic') add('orbite', 'Orbite', 'activité', 'mode:automatic', false, false);
+    if (m.mode !== 'native') add('echo', 'Écho', a.lotOuvert ? 'indisponible pendant un lot' : 'activité', 'mode:native', !!a.lotOuvert, false);
+    for (const o of libres) add('globe', `Connecter à ${o.texte}`, 'connexion', 'conn:' + o.valeur, !pret(o) || !!a.connexionBloquee, false);
+    if (a.cache) add('trash', 'Vider le cache des exports', a.cache.actif ? '' : raisonCache(snap, a, m.mode === 'native' ? 'echo' : 'orbite'), 'legacy:export-cache-clear', !a.cache.actif, false);
+    add('reglages', 'Réglages', '', 'interface:reglages', false, false);
+    add('palette', 'Interface Ariane (cartes)', 'Ctrl K', 'variante:ariane2', false, false);
+    add('detail', 'Détails techniques (ancien panneau)', '', 'variante:ancienne', false, false);
+    return c;
+  }
+  const listePal = (cmds, q) => { const n = norm(q).trim(); return n ? cmds.filter(x => norm(x.nom + ' ' + x.sous).includes(n)).slice(0, 7) : cmds.filter(x => x.s).slice(0, 4); };
+  /* La liste que voit (et que parcourt au clavier) l'utilisateur : une seule source pour le dessin et pour ui5.js. */
+  function paletteListe(snap, q) { return listePal(commandesPal(snap, modele(snap)), q); }
+  function etatPal(snap, a, m) {
+    if (a.horsLigne && a.etat === 'pret') return 'Hors ligne';
+    if (a.esv === 'ko') return 'ESV ne répond plus';
+    if (m.mode === 'native') return `${a.echoEtat || 'Aucune séance'}${snap.echo?.corriges ? ' · ' + snap.echo.corriges : ''}`;
+    const base = a.etatTexte || (PASTILLE[a.etat] || PASTILLE.pret)[1];
+    return ['cours', 'dem', 'pause'].includes(a.etat) && a.cibles ? `${base} · ${a.traites}/${a.cibles}` : base;
+  }
+  function rendrePalette(snap, ui) {
+    const a = snap.ar || { etat: 'pret' }, m = modele(snap), L = paletteListe(snap, ui.q);
+    const i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
+    const rows = L.map((x, k) => `<div class="i2${k === i ? ' s' : ''}${x.off ? ' off' : ''}"${x.off ? ' aria-disabled="true"' : ` data-act="${esc(x.act)}"`}><svg viewBox="0 0 24 24" aria-hidden="true">${PIC[x.ib] || PIC.check}</svg><span class="nm">${esc(x.nom)}</span>${x.sous ? `<span class="sb">${esc(x.sous)}</span>` : ''}${k === i && !x.off ? '<kbd>↵</kbd>' : ''}</div>`).join('');
+    const couleur = m.mode === 'native' ? 'var(--echo)' : 'var(--orbite)';
+    return `<div class="fond-p"><div class="pal2" role="dialog" aria-label="Palette Ariane"><div class="ch2"><i class="pt2" style="background:${couleur}"></i><input id="ui5-q" value="${esc(ui.q)}" placeholder="Que veux-tu faire ?" autocomplete="off"><span class="et2">${esc(etatPal(snap, a, m))}</span></div>${alerteAr(snap, m)}<div class="l2">${rows || '<div class="i2 off"><span class="nm">Aucun résultat</span></div>'}</div><div class="p2"><span>Écris pour chercher : activités, onglets, cache, réglages</span><span class="sp"></span><span>Interface Ariane <kbd>Ctrl</kbd> <kbd>K</kbd></span></div></div></div>`;
+  }
+
+  const RENDUS = { linear: rendreLinear, raycast: (snap, ui) => rendrePalette(snap, ui), figma: rendreFigma, ariane: (s, u, e) => rendreAriane(s, u, e, false), ariane2: (s, u, e) => rendreAriane(s, u, e, true) };
   function rendre(variante, snap, ui, ecran) { const f = RENDUS[variante]; return f ? f(snap, ui || { sel: null, palette: false, q: '', pi: 0 }, ecran || 'seance') : ''; }
 
-  return { esc, VARIANTES, NOMS, modele, choisirBoutons, commandes, filtrer, rendre, norm, STATUT, ORDRE };
+  return { esc, VARIANTES, NOMS, modele, choisirBoutons, commandes, filtrer, paletteListe, rendre, norm, STATUT, ORDRE };
 });
