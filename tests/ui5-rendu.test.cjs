@@ -49,7 +49,7 @@ test('tout texte du panneau est échappé avant d’entrer dans le HTML',()=>{
 test('la palette filtre sans tenir compte des accents ni de la casse, et ne propose que des actions que le panneau offre',()=>{
  const m=R.modele(base),c=R.commandes(base,m);
  assert.ok(R.filtrer(c,'apres').some(x=>x.nom==='Après le lot'));assert.ok(R.filtrer(c,'PAUSE').some(x=>x.act==='legacy:pause'));assert.equal(R.filtrer(c,'zzzz').length,0);
- for(const x of c)assert.match(x.act,/^(legacy:[a-z-]+|mode:(automatic|native)|ecran:reglages|variante:ancienne)$/,x.act);
+ for(const x of c)assert.match(x.act,/^(legacy:[a-z-]+|mode:(automatic|native)|ecran:reglages|variante:(ancienne|ariane2))$/,x.act);
  const grise=R.commandes(avec({boutons:[b('pause','Pause','primary',false)]}),R.modele(avec({boutons:[b('pause','Pause','primary',false)]})));
  assert.ok(grise.some(x=>x.act==='legacy:pause'),'un bouton désactivé reste visible (désactivé) plutôt que de disparaître');
 });
@@ -128,4 +128,39 @@ test('Ariane : « 999999 » n’est jamais affiché comme borne',()=>{
  assert.equal(fin('999999'),null);assert.equal(fin(''),null);assert.equal(fin(null),null);assert.equal(fin('4812'),'4812');
  const h=RA.rendre('ariane',{mode:'automatic',ar:arBase('pret',{lotOuvert:false,bornes:{debut:'1',fin:null}})},{},'orbite');
  assert.doesNotMatch(h,/999999/);assert.match(h,/placeholder="fin de partie"/);
+});
+
+/* 4.9.6 (D-234, bloc D) : nouvelle présentation « ariane2 » — sans grand titre ni phrase d'accompagnement, onglets ESV, cache en vue, logo, palette. */
+const tabs=[{valeur:'11',texte:'Onglet 1 · fenêtre 1 — Partie 13'},{valeur:'12',texte:'Onglet 2 · fenêtre 1 — Partie 14'},{valeur:'13',texte:'Onglet 3 · pas prêt'}];
+const v2=(mode,etat,ecran,extra={},ar={})=>RA.rendre('ariane2',{mode,variante:'ariane2',onglets:tabs,ongletChoisi:'11',ar:arBase(etat,{lotOuvert:etat==='cours',cache:{actif:etat==='fini'},...ar}),boutonsOrbite:[btn('pause','Pause','primary')],boutonsEcho:[btn('native-start','Démarrer l’observation','primary')],...extra},{},ecran);
+test('ariane2 : plus de grand titre, plus de phrase qui tient la main, plus de ligne « parcours du lot »',()=>{
+ const o=v2('automatic','cours','orbite');
+ assert.doesNotMatch(o,/<h2>/);assert.doesNotMatch(o,/Pose des rails|Pendant le lot, ne change pas|Parcours du lot|class="position"/);
+ const e=v2('native','pret','echo');assert.doesNotMatch(e,/Tu corriges|Écho garde les exemples|<h2>/);
+ const a=v2('home','cours','accueil');assert.doesNotMatch(a,/<h2>|Ne change pas de cut dans ESV/);assert.match(a,/class="t2">Partie 13/);assert.match(a,/Pose du cut 4812\./);
+ assert.match(RA.rendre('ariane',{mode:'automatic',ar:arBase('cours'),boutonsOrbite:[]},{},'orbite'),/<h2>Pose des rails<\/h2>/,'la présentation Ariane d’origine ne change pas');
+});
+test('ariane2 : un onglet ESV par puce, un clic = choisir puis connecter ; l’onglet pas prêt ou verrouillé ne se clique pas',()=>{
+ const o=v2('automatic','pret','orbite',{},{lotOuvert:false});
+ assert.match(o,/class="esvbar"/);assert.match(o,/class="te o"[^>]*aria-disabled="true"/,'l’onglet connecté porte la couleur d’Orbite');
+ assert.match(o,/data-act="conn:12"/);assert.doesNotMatch(o,/data-act="conn:13"/);assert.doesNotMatch(o,/data-act="conn:11"/);
+ const v=v2('automatic','cours','orbite',{},{connexionBloquee:true});assert.doesNotMatch(v,/data-act="conn:/,'pendant un lot, on ne change pas d’onglet');
+ assert.match(v2('native','pret','echo',{ongletChoisi:'11'},{lotOuvert:false}),/class="te e"/,'Écho a sa propre couleur');
+ assert.match(v2('home','pret','accueil',{onglets:[],ongletChoisi:''}),/Aucun onglet ESV ouvert\./);
+ assert.doesNotMatch(v2('home','pret','revue'),/esvbar/);assert.doesNotMatch(RA.rendre('ariane',{mode:'automatic',ar:arBase('pret'),onglets:tabs},{},'orbite'),/esvbar/);
+ const piege=v2('automatic','pret','orbite',{onglets:[{valeur:'9',texte:'<img src=x onerror=alert(1)>'}],ongletChoisi:''});assert.doesNotMatch(piege,/<img/);
+});
+test('ariane2 : « Vider le cache » est en vue dans Orbite et Écho, grisé avec sa raison tant qu’il est impossible, et clique le bouton d’origine',()=>{
+ const f=v2('automatic','fini','orbite');assert.match(f,/<button type="button" class="pill cache" id="ar-cache" data-act="legacy:export-cache-clear">/);assert.match(f,/Seulement après réception|À vider seulement après réception/);
+ const l=v2('automatic','cours','orbite');assert.match(l,/id="ar-cache" data-act="legacy:export-cache-clear" disabled/);assert.match(l,/Disponible quand le lot est terminé ou arrêté\./);
+ const r=v2('automatic','pret','orbite',{relecture:{actif:true}},{lotOuvert:false});assert.match(r,/Disponible quand la relecture est terminée ou arrêtée\./);
+ const e=v2('native','pret','echo',{},{lotOuvert:false,echoEtat:'Collecte en cours',cache:{actif:false}});assert.match(e,/id="ar-cache"[^>]* disabled/);assert.match(e,/Disponible quand la séance Écho est terminée\./);
+ assert.doesNotMatch(v2('home','fini','accueil'),/ar-cache/);assert.doesNotMatch(RA.rendre('ariane',{mode:'automatic',ar:arBase('fini',{cache:{actif:true}})},{},'orbite'),/ar-cache/);
+});
+test('ariane2 : nouveau logo, accès discret à la palette (icône et lien d’accueil), retour par une commande de la palette',()=>{
+ const a=v2('home','pret','accueil');assert.match(a,/id="ar-lg"/);assert.match(a,/data-act="variante:raycast"[^>]*aria-label="Interface palette"/);assert.match(a,/class="astuce"/);
+ assert.doesNotMatch(RA.rendre('ariane',{mode:'home',ar:arBase('pret')},{},'accueil'),/ar-lg|Interface palette/);
+ const m=RA.modele(base);assert.ok(RA.commandes(base,m).some(x=>x.act==='variante:ariane2'),'la palette ramène à l’interface Ariane');
+ const g=RA.rendre('ariane2',{mode:'home',variante:'ariane2',reglages:base.reglages,ar:arBase('pret')},{},'reglages');
+ assert.match(g,/<option value="ariane2" selected>/);assert.match(g,/<option value="raycast">Palette/);
 });

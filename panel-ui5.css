@@ -401,3 +401,39 @@ body.ui5>main{display:none!important}body.ui5{background:#050506;overflow:hidden
 #ui5.u-ariane .relpause{margin-top:14px;display:flex;flex-direction:column;gap:8px}
 #ui5.u-ariane .relpause p{margin:0;font-size:13px;opacity:.75}
 #ui5.u-ariane .relpause .act{display:flex;gap:8px;flex-wrap:wrap}
+/* 4.9.6 (D-234, bloc D) — nouvelle présentation : onglets ESV, cache en vue, titres discrets (maquettes/ui-5.0/N-ariane-v2.html) */
+#ui5.u-ariane .v2 .une .t2{display:block;margin:12px 0 0;font-size:22px;font-weight:800;letter-spacing:-.025em}
+#ui5.u-ariane .v2 .une .p2{margin:4px 0 0;font-size:15px;color:rgba(255,255,255,.88)}
+#ui5.u-ariane .v2 .une .bts{margin-top:16px}
+#ui5.u-ariane .v2 .une .in{padding:22px 30px 24px 32px}
+#ui5.u-ariane .esvbar{position:relative;z-index:4;flex:none;display:flex;align-items:center;gap:10px;margin:2px clamp(16px,3vw,36px) 0;padding:8px 10px 8px 14px;border-radius:16px;background:rgba(6,6,12,.45);box-shadow:inset 0 0 0 1px var(--filet)}
+#ui5.u-ariane .esvbar .lab{font-size:13px;color:var(--tx2);white-space:nowrap;display:flex;align-items:center;gap:8px}
+#ui5.u-ariane .esvbar .lab svg{width:15px;height:15px}
+#ui5.u-ariane .tabs{display:flex;gap:8px;flex:1;min-width:0;overflow:hidden}
+#ui5.u-ariane .te{position:relative;display:flex;align-items:center;gap:10px;min-width:0;max-width:340px;height:44px;padding:0 14px 0 16px;border:0;border-radius:12px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--filet);cursor:pointer;text-align:left;transition:background .25s,box-shadow .25s,transform .2s var(--ease)}
+#ui5.u-ariane .te::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px;background:rgba(255,255,255,.22)}
+#ui5.u-ariane .te:hover{background:rgba(255,255,255,.1);transform:translateY(-1px)}
+#ui5.u-ariane .te b{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#ui5.u-ariane .te .pt{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);flex:none}
+#ui5.u-ariane .te.o{background:linear-gradient(90deg,rgba(255,148,102,.2),rgba(255,148,102,.06));box-shadow:inset 0 0 0 1px rgba(255,148,102,.55)}#ui5.u-ariane .te.o::before{background:var(--orbite)}
+#ui5.u-ariane .te.e{background:linear-gradient(90deg,rgba(157,184,255,.2),rgba(157,184,255,.06));box-shadow:inset 0 0 0 1px rgba(157,184,255,.55)}#ui5.u-ariane .te.e::before{background:var(--echo)}
+#ui5.u-ariane .te.c{background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}#ui5.u-ariane .te.c::before{background:#fff}
+#ui5.u-ariane .te.o .pt,#ui5.u-ariane .te.e .pt,#ui5.u-ariane .te.c .pt{background:var(--ok)}
+#ui5.u-ariane .te .qui{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(255,255,255,.1);white-space:nowrap;display:inline-flex;align-items:center}
+#ui5.u-ariane .te.o .qui{color:var(--orbite)}#ui5.u-ariane .te.e .qui{color:var(--echo)}
+#ui5.u-ariane .te.lock{cursor:not-allowed}#ui5.u-ariane .te.lock:hover{transform:none;background:rgba(255,255,255,.05)}
+#ui5.u-ariane .te.mien,#ui5.u-ariane .te.o,#ui5.u-ariane .te.e,#ui5.u-ariane .te.c{cursor:default}
+#ui5.u-ariane .te.attend{animation:ar-attend 1.6s ease-in-out infinite;box-shadow:inset 0 0 0 1.5px #fff}
+@keyframes ar-attend{50%{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25),0 0 22px rgba(255,255,255,.18)}}
+#ui5.u-ariane .aucun{font-size:14px;color:var(--tx2)}
+#ui5.u-ariane .maint{flex:none;display:flex;align-items:center;gap:16px;margin:0 clamp(16px,3vw,36px) 24px;padding:12px 14px 12px 20px;border-radius:18px;background:rgba(6,6,12,.5);box-shadow:inset 0 0 0 1px var(--filet)}
+#ui5.u-ariane .maint .tx{display:flex;flex-direction:column;font-size:14.5px;font-weight:650}#ui5.u-ariane .maint .tx small{font-weight:400;font-size:13px;color:var(--tx2)}
+#ui5.u-ariane .maint .picto{width:34px;height:34px;background:#2a2a38}
+#ui5.u-ariane .pill.cache{background:rgba(255,255,255,.07);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55)}
+#ui5.u-ariane .pill.cache[disabled]{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+#ui5.u-ariane .pill svg{width:15px;height:15px;flex:none}
+#ui5.u-ariane .astuce{flex:none;padding:0 clamp(16px,3vw,36px) 24px}
+#ui5.u-ariane .astuce button{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--tx2);font-size:13.5px;cursor:pointer;padding:6px 8px;border-radius:8px}
+#ui5.u-ariane .astuce button:hover{color:#fff;background:rgba(255,255,255,.08)}
+#ui5.u-ariane .astuce kbd{font:600 11.5px var(--mono);padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.1)}
+#ui5.u-ariane .logo{display:block;flex:none}

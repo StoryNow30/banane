@@ -14,9 +14,10 @@
   const D = root.document, R = root.ArianeUi5Rendu, CLE = 'banane51Interface';
   if (!D || !R || !root.ArianePanel) return;
   const defaut = R.VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ariane';
-  const TAILLE = { ariane: [1180, 800], linear: [1120, 760], raycast: [900, 660], figma: [1120, 760], ancienne: [560, 820] };
+  const estAr = v => v === 'ariane' || v === 'ariane2';
+  const TAILLE = { ariane: [1180, 800], ariane2: [1180, 840], linear: [1120, 760], raycast: [900, 660], figma: [1120, 760], ancienne: [560, 820] };
   const ui = { sel: null, palette: false, q: '', pi: 0, last: '', focusQ: false, pauseLot: null };
-  let variante = defaut, ecran = defaut === 'ariane' ? 'accueil' : 'seance', hote = null, gcv2Base = null, nbRows = 0;
+  let variante = defaut, ecran = estAr(defaut) ? 'accueil' : 'seance', hote = null, gcv2Base = null, nbRows = 0;
   const $ = id => D.getElementById(id);
   const txt = id => { const e = $(id); return e ? String(e.textContent || '').trim() : ''; };
   const visible = id => { const e = $(id); return !!e && !e.hidden; };
@@ -119,6 +120,7 @@
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
       lotOuvert: !!b && (OUVERT.includes(st) || incertain),
+      cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
       alerte, esv: s?.connection?.status === 'unavailable' || st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ko' : s?.current?.identity ? 'ok' : 'non',
       pause: (() => { const e = $('pause'); return e && !e.hidden ? { actif: !e.disabled } : null; })(),
@@ -153,7 +155,7 @@
       reglages: rg, exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
       gcv2: gcv2Base ? { total: gcv2Base.total, date: gcv2Base.date, session: echo.corriges || 0 } : null,
-      ar: variante === 'ariane' ? calculAr(s, lot.rows) : null,
+      ar: estAr(variante) ? calculAr(s, lot.rows) : null,
     };
   }
 
@@ -193,6 +195,7 @@
     if (act === 'pause') { const b = root.ArianePanel.state()?.batch; if (b?.state === 'RUNNING' && $('pause') && !$('pause').disabled) { ui.pauseLot = b.id; cliquer('pause'); } }
     else if (t === 'aller') { aller(v, depuis); return; }
     else if (t === 'legacy') cliquer(v);
+    else if (t === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
     else if (t === 'mode') { cliquer(v === 'native' ? 'tab-native' : 'tab-automatic'); ecran = 'seance'; ui.sel = null; }
     else if (t === 'ecran') { ecran = v; ui.sel = null; ui.q = ''; ui.palette = false; }
     else if (t === 'variante') void setVariante(v);
@@ -260,7 +263,8 @@
     hote.addEventListener('focusout', e => { if (e.target.id === 'ui5-q') ui.focusQ = false; });
     D.addEventListener('keydown', e => {
       if (variante === 'ancienne' || !hote || hote.hidden || e.altKey) return;
-      if (variante === 'ariane') {
+      if (estAr(variante)) {
+        if (variante === 'ariane2' && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); void setVariante('raycast'); return; }
         const v = e.target?.closest?.('.vig');
         if (v && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { const l = [...hote.querySelectorAll('.vig')], i = l.indexOf(v); l[(i + (e.key === 'ArrowRight' ? 1 : l.length - 1)) % l.length].focus(); e.preventDefault(); }
         else if (e.key === 'Escape' && ecran !== 'accueil' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '')) aller('accueil');
@@ -292,7 +296,7 @@
   function appliquer(v) {
     variante = v;
     D.body.classList.toggle('ui5', v !== 'ancienne');
-    if (v !== 'ancienne') hote.className = 'u-' + v;
+    if (v !== 'ancienne') hote.className = v === 'ariane2' ? 'u-ariane u-ariane2' : 'u-' + v;
     hote.hidden = v === 'ancienne';
     if (v !== 'ancienne') maj(true);
     void taille();
@@ -300,7 +304,7 @@
   async function setVariante(v) {
     if (v !== 'ancienne' && !R.VARIANTES.includes(v)) return;
     try { await root.chrome?.storage?.local?.set?.({ [CLE]: v }); } catch { /* le choix vaut pour cette fenêtre */ }
-    ecran = v === 'ariane' ? 'accueil' : 'seance'; ui.sel = null; ui.q = ''; ui.palette = false;
+    ecran = estAr(v) ? 'accueil' : 'seance'; ui.sel = null; ui.q = ''; ui.palette = false;
     appliquer(v);
   }
 
