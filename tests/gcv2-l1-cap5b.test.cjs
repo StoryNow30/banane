@@ -70,3 +70,24 @@ test('corrigeValideZones : hors des zones listées, la paire validée par la tes
   assert.equal(ab.etat, 'valider'); assert.equal(ab.correction.appliquee, false); assert.deepEqual(ab.paire.left.decal, [0, -36, 5]); assert.deepEqual(ab.paire.right.decal, [0, 20, 5]);
   assert.equal(decider('adv', -15, { corrigeValideZones: ['adv'] }).correction.appliquee, true, 'en ADV : corrigée comme avant');
 });
+
+/* Cap 5b — rechPaireTopMin et rechContraRatioMax (coupés par défaut). Cas fabriqué : un voisin validé à la place des rails soutenus ; la recherche recentrée
+ * trouve une paire dont le dessus est de 67 points. */
+test('rechPaireTopMin : plancher de soutien de dessus de la paire retenue ; coupé par défaut', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
+  const k = { ...casSoutenu('adv'), voisinsAbs: [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos({ left: -36, right: 20 }, 5) }] };
+  const avec = lev => { L1.reglerLeviers({ rechercheADV: true, ...lev }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec({}).motif, 'recherche-adv', 'défaut : la paire (dessus 67) est posée');
+  assert.equal(avec({ rechPaireTopMin: 60 }).motif, 'recherche-adv', 'plancher 60 : dessus 67, posée');
+  assert.equal(avec({ rechPaireTopMin: 100 }).etat, 'rien', 'plancher 100 : dessus 67, refusée');
+});
+
+test('rechContraRatioMax : découple le rapport des cellules qui contredisent du rapport de la paire (cellules rendues au filtre le plus large)', () => {
+  const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
+  const k = casSoutenu('adv');
+  const diag = lev => { L1.reglerLeviers({ rechercheADV: true, diag: true, rechercheDiag: true, ...lev }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }).diag.recherche.cellules; } finally { L1.reglerLeviers(null); } };
+  const n = c => c.left.length + c.right.length, strict = diag({ rechRatioMax: 1.0 }), large = diag({ rechRatioMax: 1.0, rechContraRatioMax: 2 });
+  assert.ok(n(large) >= n(strict), 'rapport de contradiction 2 : au moins les cellules du filtre strict');
+  assert.ok(large.left.concat(large.right).every(c => c[2] <= 2) && strict.left.concat(strict.right).every(c => c[2] <= 1));
+});

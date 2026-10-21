@@ -551,7 +551,7 @@
    rechercheDiag:false,voieAbsFenetre:6,rechercheADV:false,rechZones:null,rechEcartMm:10,rechMaxDeplMm:300,rechVoieMaxMm:80,rechHauteurMaxMm:null,
    rechProcheMaxCuts:6,rechUniqueMm:15,rechRemplace:false,rechRemplaceMm:5,rechSansPaireRien:false,rechVoieParCutMm:null,rechContraMinMm:null,rechContraMaxMm:45,rechContraRien:false,
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
-   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null});
+   rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -699,8 +699,12 @@
      const gr=(LEVIERS.rechOrdreGraines||['d0','dd','proche','va','h0']).filter(n=>G[n]).map(n=>({nom:n,left:[G[n].left[0]+gd,G[n].left[1]],right:[G[n].right[0]+gd,G[n].right[1]]}));
      const filtreDec={minTop:LEVIERS.rechMinTop,minFace:LEVIERS.rechMinFace,ratioMax:LEVIERS.rechRatioMax};
      const diagLarge=LEVIERS.diag&&LEVIERS.rechercheDiag&&LEVIERS.rechDiagLarge;
-     const filtreRech=diagLarge?{minTop:Math.min(10,filtreDec.minTop),minFace:Math.min(4,filtreDec.minFace),ratioMax:Math.max(2,filtreDec.ratioMax)}:filtreDec;
-     const garde=p=>p.top>=filtreDec.minTop&&p.face>=filtreDec.minFace&&p.ratio<=filtreDec.ratioMax;
+     const ratioContra=fini(LEVIERS.rechContraRatioMax)?LEVIERS.rechContraRatioMax:filtreDec.ratioMax;
+     const filtreRech=diagLarge?{minTop:Math.min(10,filtreDec.minTop),minFace:Math.min(4,filtreDec.minFace),ratioMax:Math.max(2,filtreDec.ratioMax)}:(ratioContra>filtreDec.ratioMax?{...filtreDec,ratioMax:ratioContra}:filtreDec);
+     /* `rechPaireTopMin` (coupé par défaut) : soutien de dessus minimal de la paire retenue (plancher de preuve, indépendant de la hauteur et du rapport :
+     * les paires fausses de 649 f228 et 153 2:18 ont un dessus de 29 à 31 points contre 55 au moins pour les justes). `rechContraRatioMax` (coupé) :
+     * rapport maximal des cellules qui CONTREDISENT une pose ou arrêtent l'encadrement (détecteur de contradiction découplé du choix de la paire). */
+     const garde=p=>p.top>=filtreDec.minTop&&p.face>=filtreDec.minFace&&p.ratio<=filtreDec.ratioMax&&(!fini(LEVIERS.rechPaireTopMin)||p.top>=LEVIERS.rechPaireTopMin);
      /* Hauteur : à `rechHauteurMaxMm` du voisin le plus proche OU de la pose de départ, pour chaque rail. Travers : à `rechVoieMaxMm` au plus, et à
       * `rechVoieParCutMm` par cut d'écart au voisin le plus proche. */
      const hOk=p=>!fini(LEVIERS.rechHauteurMaxMm)||SIDES.every(s=>Math.min(Math.abs(p.decal[s][2]-va[s].proche[1]),Math.abs(p.decal[s][2]))<=LEVIERS.rechHauteurMaxMm);
@@ -720,7 +724,7 @@
        else if(dd.etat==='valider'){
          /* Pose contredite : sur un rail, la cellule la plus proche trouvée autour de la pose retenue en est à plus de `rechContraMinMm` (et à
           * `rechContraMaxMm` au plus : au-delà, c'est un autre rail) ; la paire recentrée la remplace, sinon (`rechContraRien`) rien. */
-         const contra=fini(LEVIERS.rechContraMinMm)&&SIDES.some(s=>{const c=rech.cellules[s].filter(x=>x.graines.includes('dd')&&x.top>=filtreDec.minTop&&x.face>=filtreDec.minFace&&x.ratio<=filtreDec.ratioMax);if(!c.length)return false;
+         const contra=fini(LEVIERS.rechContraMinMm)&&SIDES.some(s=>{const c=rech.cellules[s].filter(x=>x.graines.includes('dd')&&x.top>=filtreDec.minTop&&x.face>=filtreDec.minFace&&x.ratio<=ratioContra);if(!c.length)return false;
            const m=Math.min(...c.map(x=>Math.hypot(x.mm[1]-dd.decal[s][1],x.mm[2]-dd.decal[s][2])));return m>LEVIERS.rechContraMinMm&&m<=LEVIERS.rechContraMaxMm;});
          if(contra&&best&&!ambigu)dd={etat:'valider',motif:'recherche-adv-contredite',decal:best.decal,corrigee:false,avant:dd.motif};
          else if(contra&&LEVIERS.rechContraRien)dd={etat:'rien',motif:'recherche-adv-contredite-rien',decal:null,corrigee:false,avant:dd.motif};
@@ -733,7 +737,7 @@
        if(dd.etat==='rien'&&LEVIERS.rechEncadre&&va&&SIDES.every(s=>va[s].encadre&&Math.max(...va[s].encadre.cuts)<=LEVIERS.rechEncadreMaxCuts&&va[s].encadre.saut<=LEVIERS.rechEncadreSautMm)){
          const decal={};let contreditE=false;
          for(const s of SIDES){const v=va[s].encadre.v;let b=null;
-           for(const x of rech.cellules[s])if(x.top>=filtreDec.minTop&&x.face>=filtreDec.minFace&&x.ratio<=filtreDec.ratioMax){const e=Math.hypot(x.mm[1]-v[0],x.mm[2]-v[1]);if(!b||e<b.e)b={e,x};}
+           for(const x of rech.cellules[s])if(x.top>=filtreDec.minTop&&x.face>=filtreDec.minFace&&x.ratio<=ratioContra){const e=Math.hypot(x.mm[1]-v[0],x.mm[2]-v[1]);if(!b||e<b.e)b={e,x};}
            /* Sans cellule forte à 5 mm, aucune ne doit être à `rechContraMaxMm` ou moins : le nuage contredirait l'interpolation. */
            if(b&&b.e>5&&b.e<=LEVIERS.rechContraMaxMm)contreditE=true;
            decal[s]=b&&b.e<=5?b.x.mm.map(z=>arrondi(z,2)):[0,v[0],v[1]];}
