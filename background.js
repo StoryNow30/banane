@@ -2579,8 +2579,8 @@ async function relectureLancer({auto=false,passe=null}={}){
   refus=await relectureRefus(engine.s.batch,auto);if(refus)return nonLancee(refus);
   if(engine.s.batch?.id!==p.lotId)return nonLancee('le lot a changé pendant la préparation');
   s=suite();if(s==='remplacee')return relectureEtat();if(s)return nonLancee('arrêtée à ta demande avant le départ','arret');
-  /* Test 18 : la deuxième passe des différés et la relecture n'écrivent jamais ensemble dans ESV (contrôle juste avant le départ). */
-  if(passeDiff.cours||passeDiff.ecriture)return nonLancee('la deuxième passe des différés travaille dans ESV');
+  /* Test 18 : la deuxième passe des différés et la relecture n'écrivent jamais ensemble dans ESV (contrôle juste avant le départ ; une passe en ombre ne touche pas ESV). */
+  if(passeDiff.ecriture||passeDiffReglage().mode==='ecriture'&&passeDiff.cours)return nonLancee('la deuxième passe des différés travaille dans ESV');
   const b=engine.s.batch,affiches=[...new Set([...sel.cuts.map(c=>c.cut),...sel.plages.flatMap(x=>x.traverses||[])])];
   const neufs=entree.vu&&affiches.every(c=>entree.vu.has(c))?affiches.filter(c=>entree.vu.get(c)===false).length:null;
   Object.assign(p,{etat:'en-cours',modeEffectif,total:sel.total,cutsNeufsAnnonces:neufs,
