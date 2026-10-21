@@ -16,12 +16,14 @@
 const path = require('node:path'), fs = require('node:fs'), os = require('node:os'), crypto = require('node:crypto'), { spawnSync } = require('node:child_process');
 
 const BRUIT = /(^|[a-z])(ms|Ms|MS)$|duration|elapsed|^t0$|startedEpoch|endedEpoch|receivedMs|timeOrigin|engineMs|^at$|Ago$|^debut$|^fin$|^timestamp$|^t$|operationId/;
+/* Le numéro de version (`extensionVersion` des commandes de lot) est la seule chose qui doit différer entre deux versions de test. */
+const VERSION = /\b4\.9\.5\.\d+\b/g;
 const PAUSE = ['pauseDemandee', 'pauseRaison', 'reprise', 'expire'];
 
 async function jouer(racine, sortie) {
   const H = require(path.join(racine, 'tests/helpers/relecture-lot.cjs')), { PERMISSIF } = require(path.join(racine, 'tests/helpers/relecture-essais.cjs'));
   const { memoire } = require(path.join(racine, 'tests/helpers/perf-production.cjs'));
-  const nettoyer = x => JSON.parse(JSON.stringify(H.neutre(x), (k, v) => BRUIT.test(k) ? undefined : v));
+  const nettoyer = x => JSON.parse(JSON.stringify(H.neutre(x), (k, v) => BRUIT.test(k) ? undefined : typeof v === 'string' ? v.replace(VERSION, '4.9.5.N') : v));
   const sansPause = e => { const c = JSON.parse(JSON.stringify(e)); delete c.repriseReglage; if (c.passe) for (const k of PAUSE) delete c.passe[k]; return c; };
   const SCENARIOS = {
     'ombre': {},

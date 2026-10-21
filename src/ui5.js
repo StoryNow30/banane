@@ -65,7 +65,7 @@
     const poses = compte(['pose', 'voie']), differes = compte(['differe']), traites = poses + differes + compte(['saute', 'main']);
     let cibles = null; try { const f = b && A.travailDuLot(b); if (f && Number.isInteger(f.invalides)) cibles = f.invalides; } catch { /* inconnu */ }
     const st = b?.state || null, incertain = !!s?.reconcileRequired;
-    /* La deuxième passe des différés écrit dans ESV (état `passeDifferes` du service worker) : tant qu'elle écrit, rien d'autre n'y part. */
+    /* La deuxième passe des différés écrit dans ESV (état `passeDifferes` du service worker) : tant qu'elle écrit, rien d'autre n'y part. Inerte en 4.9.5.17 : la test 16 n'a pas cet état (`view.passeDifferes` absent), la zone ne s'affiche donc jamais ; essayée sur des états fabriqués. */
     const p2 = s?.passeDifferes?.etat === 'ecriture' ? { cut: cutDe(s.passeDifferes), ecrites: s.passeDifferes.ecrites, demandees: s.passeDifferes.demandees } : null;
     if (st !== 'RUNNING' || ui.pauseLot !== b?.id) ui.pauseLot = null;
     let etat = 'pret', etatTexte = '';
