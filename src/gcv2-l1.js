@@ -550,9 +550,9 @@
    if(ecart3d>regle.sansValiderMaxMm)return {...out,etat:'rien',motif:'plus-de-150-mm'};
    return {...out,etat:'poser-sans-valider',motif:'sous-tau'};
  }
- /* 4.9.5.15 (test 15, fiches/L1_CAP5.md) — LEVIERS de la décision L1-e. Valeurs livrées figées ; le banc peut les changer pour une mesure
-  * (`reglerLeviers`), jamais l'extension. */
- const LEVIERS_LIVRES=Object.freeze({exact:true,autreRail:true,anomalieMinMm:10,anomalieMaxMm:45,sousTauCoherentMm:8,sousTauCorrige:false,voisins:true,transport:true,
+ /* 4.9.5.15 (test 15, fiches/L1_CAP5.md) — LEVIERS de la décision L1-e, valeurs v4 (test 15) : la base de tous les leviers. Le banc peut les
+  * changer pour une mesure (`reglerLeviers`), jamais l'extension. */
+ const LEVIERS_V4=Object.freeze({exact:true,autreRail:true,anomalieMinMm:10,anomalieMaxMm:45,sousTauCoherentMm:8,sousTauCorrige:false,voisins:true,transport:true,
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
    consensusTous:false,voieProcheMaxCuts:5,diag:false,
@@ -564,6 +564,16 @@
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false});
+ /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
+  * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
+  * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
+  * dernier recours. Sans deuxième passe (`deuxiemePasse` 0 : la passe en ombre du service worker reste coupée) ; diagnostics coupés (`diag`,
+  * `rechercheDiag` : ils n'écrivent que le journal, aucune décision ne les lit). */
+ const LEVIERS_V5=Object.freeze({rechercheADV:true,rechZones:Object.freeze(['adv','abords']),rechEcartMm:15,rechVoieParCutMm:40,rechHauteurMaxMm:20,
+   rechContraMinMm:22,rechContraMaxMm:45,rechContraRien:true,rechRemplace:true,rechRemplaceMm:12,corrigeValideZones:Object.freeze(['adv']),rechEncadre:true,
+   anomalieNonCorrigeePMin:0.8,anomalieNonCorrigeeVoieMm:35,rechPaireTopMin:60,rechContraRatioMax:1.5,rechArret:true,rechSauteProcheMm:2.5,
+   voisinsCoherents:true,branche:true,brancheDernier:true,brancheVertMm:60,brancheExtrapCuts:2});
+ const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -969,6 +979,6 @@
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });

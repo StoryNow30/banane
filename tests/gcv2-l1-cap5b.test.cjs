@@ -1,5 +1,6 @@
 'use strict';
-/* Cap 5b — RECHERCHE RECENTRÉE EN ADV (leviers coupés par défaut) : voie absolue des voisins validés, recherche du moteur recentré sur une graine,
+/* Cap 5b — RECHERCHE RECENTRÉE EN ADV (leviers coupés dans la v4 ; livrés par défaut depuis la test 16, voir tests/gcv2-l1-cap5.test.cjs).
+ * Chaque levier est essayé depuis la base v4 (`LEVIERS_V4`), comme avant la test 16 : voie absolue des voisins validés, recherche du moteur recentré sur une graine,
  * paires de cellules fortes à l'écartement de référence. Capture réelle du corpus d'essai (tests/fixtures.cjs). */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const L1 = require('../src/gcv2-l1.js'), L = require('../src/lot-decision.js'), { base } = require('./fixtures.cjs');
@@ -36,7 +37,7 @@ test('paires recentrées : seulement à l\'écartement de référence ; graines 
   assert.equal(L1.pairesRecentrees(base, [{ nom: 'a', left: [0, 0], right: [0, 0] }], g + 200, null, 10).paires.length, 0, 'écartement hors référence : aucune paire');
 });
 
-test('voisins cohérents (cap 6, coupé) : une pose isolée sur une autre voie n\'est plus le voisin le plus proche', () => {
+test('voisins cohérents (cap 6, livré en test 16) : une pose isolée sur une autre voie n\'est plus le voisin le plus proche', () => {
   const pos = mm => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [mm[0] / 1000, mm[1] / 1000, mm[2] / 1000])]));
   const v = (c, lat) => ({ identity: { part: 1, cut: c, frameId: null }, positions: pos([(c - 100) * 1000, lat, 5]) });
   const voisins = [v(99, -120), v(96, 140), v(95, 141), v(102, 110), v(103, 108)];
@@ -44,7 +45,7 @@ test('voisins cohérents (cap 6, coupé) : une pose isolée sur une autre voie n
   assert.equal(Math.round(sans.left.proche[0]), -120, 'sans le levier : la pose isolée est le voisin le plus proche');
   assert.equal(avec.left.distProche, 2); assert.equal(Math.round(avec.left.proche[0]), 110, 'avec : le plus proche des voisins cohérents');
   assert.equal(L1.voieAbsolue(base, 100, [v(99, -120), v(102, 110)], 6, 3, { parCutMm: 40, baseMm: 15 }).left.distProche, 1, 'moins de trois voisins : inchangé');
-  assert.equal(L1.LEVIERS_LIVRES.voisinsCoherents, false);
+  assert.equal(L1.LEVIERS_V4.voisinsCoherents, false, 'coupé dans la v4'); assert.equal(L1.LEVIERS_LIVRES.voisinsCoherents, true, 'livré en test 16');
 });
 
 /* Cap 5b — gardes sur la correction d'écartement (leviers coupés par défaut). Cas fabriqué sur la capture réelle d'essai : rails soutenus par le nuage
@@ -56,11 +57,11 @@ function casSoutenu(zone) {
 }
 const MOD = { seuils: { abords: { actif: true, tau: 0.44, delta: 2 }, adv: { actif: true, tau: 0.44, delta: 2 }, hors: { actif: true, tau: 0.45, delta: 3 } } };
 const PR = { left: [0.2, 0.9], right: [0.2, 0.9] };
-const decider = (zone, dg, lev) => { const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] }); L1.reglerLeviers(lev);
+const decider = (zone, dg, lev) => { const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] }); L1.reglerLeviers({ ...L1.LEVIERS_V4, ...lev });
   try { return L1.deciderL1e(casSoutenu(zone), MOD, { mm: g + dg }, base, PR); } finally { L1.reglerLeviers(null); } };
 
-test('anomalieNonCorrigeePMin : anomalie sans correction possible, paire de la test 13 gardée si p assez haut et nuage favorable ; coupé par défaut', () => {
-  assert.equal(decider('adv', 25, null).motif, 'anomalie-non-corrigee', 'défaut : rien');
+test('anomalieNonCorrigeePMin : anomalie sans correction possible, paire de la test 13 gardée si p assez haut et nuage favorable ; coupé dans la v4 (base de l\'essai), livré en test 16', () => {
+  assert.equal(decider('adv', 25, null).motif, 'anomalie-non-corrigee', 'v4 : rien');
   const d = decider('adv', 25, { anomalieNonCorrigeePMin: 0.8 });
   assert.equal(d.etat, 'valider'); assert.deepEqual(d.paire.left.decal, [0, -36, 5]); assert.equal(d.correction.appliquee, false);
   assert.equal(decider('adv', 25, { anomalieNonCorrigeePMin: 0.9 }).motif, 'anomalie-non-corrigee', 'p 0,81 sous le seuil 0,9');
@@ -68,15 +69,15 @@ test('anomalieNonCorrigeePMin : anomalie sans correction possible, paire de la t
   const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
   const voisin = lat => ({ identity: { part: 1, cut: 3, frameId: null }, positions: pos(lat, 5) });
   const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
-  const avec = (voisins, lev) => { L1.reglerLeviers({ anomalieNonCorrigeePMin: 0.8, ...lev }); try { const k = { ...casSoutenu('adv'), voisinsAbs: voisins }; return L1.deciderL1e(k, MOD, { mm: g + 25 }, base, PR); } finally { L1.reglerLeviers(null); } };
+  const avec = (voisins, lev) => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...{ anomalieNonCorrigeePMin: 0.8, ...lev } }); try { const k = { ...casSoutenu('adv'), voisinsAbs: voisins }; return L1.deciderL1e(k, MOD, { mm: g + 25 }, base, PR); } finally { L1.reglerLeviers(null); } };
   assert.equal(avec(null, { anomalieNonCorrigeeVoieMm: 35 }).motif, 'anomalie-non-corrigee', 'sans voisin : pas gardée');
   assert.equal(avec([voisin({ left: -26, right: 25 })], { anomalieNonCorrigeeVoieMm: 35 }).etat, 'valider', 'voisin à 10 et 5 mm');
   assert.equal(avec([voisin({ left: -26, right: 62 })], { anomalieNonCorrigeeVoieMm: 35 }).motif, 'anomalie-non-corrigee', 'voisin à 42 mm sur le rail droit : refusée');
   assert.equal(avec([voisin({ left: -26, right: 62 })], {}).etat, 'valider', 'sans la garde de voie : gardée (garde coupée)');
 });
 
-test('corrigeValideZones : hors des zones listées, la paire validée par la test 13 n\'est pas corrigée par l\'écartement ; coupé par défaut', () => {
-  const dflt = decider('abords', -15, null); assert.equal(dflt.correction.appliquee, true, 'défaut : corrigée');
+test('corrigeValideZones : hors des zones listées, la paire validée par la test 13 n\'est pas corrigée par l\'écartement ; coupé dans la v4 (base de l\'essai), livré en test 16', () => {
+  const dflt = decider('abords', -15, null); assert.equal(dflt.correction.appliquee, true, 'v4 : corrigée');
   const ab = decider('abords', -15, { corrigeValideZones: ['adv'] });
   assert.equal(ab.etat, 'valider'); assert.equal(ab.correction.appliquee, false); assert.deepEqual(ab.paire.left.decal, [0, -36, 5]); assert.deepEqual(ab.paire.right.decal, [0, 20, 5]);
   assert.equal(decider('adv', -15, { corrigeValideZones: ['adv'] }).correction.appliquee, true, 'en ADV : corrigée comme avant');
@@ -84,12 +85,12 @@ test('corrigeValideZones : hors des zones listées, la paire validée par la tes
 
 /* Cap 5b — rechPaireTopMin et rechContraRatioMax (coupés par défaut). Cas fabriqué : un voisin validé à la place des rails soutenus ; la recherche recentrée
  * trouve une paire dont le dessus est de 67 points. */
-test('rechPaireTopMin : plancher de soutien de dessus de la paire retenue ; coupé par défaut', () => {
+test('rechPaireTopMin : plancher de soutien de dessus de la paire retenue ; coupé dans la v4 (base de l\'essai), livré en test 16', () => {
   const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
   const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
   const k = { ...casSoutenu('adv'), voisinsAbs: [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos({ left: -36, right: 20 }, 5) }] };
-  const avec = lev => { L1.reglerLeviers({ rechercheADV: true, ...lev }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }); } finally { L1.reglerLeviers(null); } };
-  assert.equal(avec({}).motif, 'recherche-adv', 'défaut : la paire (dessus 67) est posée');
+  const avec = lev => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...{ rechercheADV: true, ...lev } }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }); } finally { L1.reglerLeviers(null); } };
+  assert.equal(avec({}).motif, 'recherche-adv', 'sans plancher : la paire (dessus 67) est posée');
   assert.equal(avec({ rechPaireTopMin: 60 }).motif, 'recherche-adv', 'plancher 60 : dessus 67, posée');
   assert.equal(avec({ rechPaireTopMin: 100 }).etat, 'rien', 'plancher 100 : dessus 67, refusée');
 });
@@ -97,18 +98,18 @@ test('rechPaireTopMin : plancher de soutien de dessus de la paire retenue ; coup
 test('rechContraRatioMax : découple le rapport des cellules qui contredisent du rapport de la paire (cellules rendues au filtre le plus large)', () => {
   const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
   const k = casSoutenu('adv');
-  const diag = lev => { L1.reglerLeviers({ rechercheADV: true, diag: true, rechercheDiag: true, ...lev }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }).diag.recherche.cellules; } finally { L1.reglerLeviers(null); } };
+  const diag = lev => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...{ rechercheADV: true, diag: true, rechercheDiag: true, ...lev } }); try { return L1.deciderL1e(k, MOD, { mm: g }, base, { left: [0.2, 0.1], right: [0.2, 0.1] }).diag.recherche.cellules; } finally { L1.reglerLeviers(null); } };
   const n = c => c.left.length + c.right.length, strict = diag({ rechRatioMax: 1.0 }), large = diag({ rechRatioMax: 1.0, rechContraRatioMax: 2 });
   assert.ok(n(large) >= n(strict), 'rapport de contradiction 2 : au moins les cellules du filtre strict');
   assert.ok(large.left.concat(large.right).every(c => c[2] <= 2) && strict.left.concat(strict.right).every(c => c[2] <= 1));
 });
 
-test('rechSauteProcheMm : une pose validée à 2,5 mm du voisin validé le plus proche n\'est pas cherchée ; coupé par défaut', () => {
+test('rechSauteProcheMm : une pose validée à 2,5 mm du voisin validé le plus proche n\'est pas cherchée ; coupé dans la v4 (base de l\'essai), livré en test 16', () => {
   const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
   const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
   const voisin = lat => [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos(lat, 5) }];
-  const avec = (lat, lev) => { L1.reglerLeviers({ rechercheADV: true, diag: true, rechercheDiag: true, ...lev }); try { return L1.deciderL1e({ ...casSoutenu('adv'), voisinsAbs: voisin(lat) }, MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
-  assert.ok(avec({ left: -36, right: 20 }, {}).diag.recherche, 'défaut : recherche faite');
+  const avec = (lat, lev) => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...{ rechercheADV: true, diag: true, rechercheDiag: true, ...lev } }); try { return L1.deciderL1e({ ...casSoutenu('adv'), voisinsAbs: voisin(lat) }, MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
+  assert.ok(avec({ left: -36, right: 20 }, {}).diag.recherche, 'v4 : recherche faite');
   const sauté = avec({ left: -36, right: 20 }, { rechSauteProcheMm: 2.5 });
   assert.equal(sauté.diag.recherche, undefined, 'voisin à 0 mm : recherche sautée'); assert.equal(sauté.etat, 'valider');
   assert.ok(avec({ left: -30, right: 20 }, { rechSauteProcheMm: 2.5 }).diag.recherche, 'voisin à 6 mm : recherche faite');
@@ -118,7 +119,7 @@ test('rechSauteProcheZones : la saute ne joue qu\'en ADV par défaut ; en abords
   const g = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
   const pos = (lat, vert) => Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [-1, lat[s] / 1000, vert / 1000])]));
   const k = zone => ({ ...casSoutenu(zone), voisinsAbs: [{ identity: { part: 1, cut: 3, frameId: null }, positions: pos({ left: -36, right: 20 }, 5) }] });
-  const avec = (zone, lev) => { L1.reglerLeviers({ rechercheADV: true, rechZones: ['adv', 'abords'], diag: true, rechercheDiag: true, rechSauteProcheMm: 2.5, ...lev }); try { return L1.deciderL1e(k(zone), MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
+  const avec = (zone, lev) => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...{ rechercheADV: true, rechZones: ['adv', 'abords'], diag: true, rechercheDiag: true, rechSauteProcheMm: 2.5, ...lev } }); try { return L1.deciderL1e(k(zone), MOD, { mm: g }, base, { left: [0.2, 0.9], right: [0.2, 0.9] }); } finally { L1.reglerLeviers(null); } };
   assert.equal(avec('adv', {}).diag.recherche, undefined, 'ADV : sautée');
   assert.ok(avec('abords', {}).diag.recherche, 'abords : recherche faite');
   assert.equal(avec('abords', { rechSauteProcheZones: ['adv', 'abords'] }).diag.recherche, undefined, 'zones étendues : sautée');
