@@ -1201,7 +1201,7 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if(type==='batch-stopped-at-end'){const b=engine.s.batch,at=Date.parse(b?.stoppedAtEnd?.at);if(b?.id&&b.state==='STOPPED'&&Number.isFinite(at)&&engine.s.mode==='automatic-test')poserFin(b,at,'dernier-cut');}
    const r=await evenement(type,...rest);
    /* 5.0 (D-171) : fin naturelle d'un lot créé avec la relecture : la passe est planifiée (rien si elle est coupée). */
-   if(type==='batch-state'||type==='batch-stopped-at-end')relecturePlanifier();
+   if(type==='batch-state'||type==='batch-stopped-at-end'){relecturePlanifier();passeDiffPlanifier();}
    if(type==='defer-navigation-uncertain')await coordinateurLot.transition('differe',()=>departApresDiffere(rest[0]));
    if(type==='batch-capture-wait'&&engine.s.batch?.scope?.geometryEngine===GCV1_ENGINE&&!/F5/.test(rest[0]?.message||''))
      engine.s.notice=`${rest[0]?.message||'Lecture LiDAR instable.'} Si ESV reste lent (nuages absents, vue qui ne se recentre pas) : rafraîchis la page ESV (F5), puis clique sur Reprendre ; Ariane revient seule au cut du lot, sans rien valider.`;
@@ -1496,7 +1496,7 @@ async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLo
   try{x=await call('amenerDansLaVue',s,positions[s],identity,{...plan,cotes:undefined,essai:true});}catch(e){x={ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
   if(!x?.ok)return {ok:false,raison:'pre-vol:'+(x?.raison||'?')};}
  return {ok:true,plan};}
-async function l1Commande({command,lotObservation,proposal,before,capture}){
+async function l1CommandeCoeur({command,lotObservation,proposal,before,capture}){
  const SIDES=['left','right'],ctx=l1Contexte;l1Contexte=null;l1PoseEnAttente=null;
  if(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'))return command;
  const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow;
@@ -1547,6 +1547,64 @@ async function l1Commande({command,lotObservation,proposal,before,capture}){
   l1.commande.sansValider='en-attente-de-la-navigation';
   return command;
  }catch(e){lotObservation.l1={version:G?.VERSION??null,etat:'erreur',message:String(e?.message||e).slice(0,160)};return command;}}
+/* Cap 5b — DEUXIÈME PASSE EN OMBRE (réglage `deuxiemePasse` de src/gcv2-l1.js, 0 = coupée, défaut ; L1-se seulement ; fiches/PASSATION_CAP5_B.md § 15).
+ * Le banc redécide chaque différé de L1-se en fin de lot avec tout ce que le lot a posé, avant ET après lui. Ici, le même calcul, sans AUCUNE écriture
+ * ni navigation vers ESV : mémoire des différés pendant le lot (`l1Restes`, coupe d'identité, zone, plages ADV), puis, à la fin naturelle du lot,
+ * nuage relu du magasin (`store.getCloud`), décision de la GCV2 (voisins de fin de lot, transport complet, appuis de fin de lot, leviers de passe
+ * `passe2Leviers` réglés le temps de l'appel), jusqu'à `deuxiemePasse` passes ; seules les décisions « valider » comptent, chaque pose alimente le transport
+ * LOCAL de la passe. Rien n'est posé : l'événement `passe-differes-ombre` dit ce que la passe poserait. L'écriture dans ESV (étape 3) n'existe pas. */
+let l1Restes={cle:null,m:new Map()};
+function l1ResteCle(b){return b?.id??null;}
+function l1ResteNoter(identity,reste){const b=engine?.s?.batch,cle=l1ResteCle(b);if(l1Restes.cle!==cle)l1Restes={cle,m:new Map()};
+ l1Restes.m.set(`${identity.part}|${identity.frameId??null}|${identity.cut}`,reste);}
+function l1ResteOter(identity){l1Restes.m.delete(`${identity.part}|${identity.frameId??null}|${identity.cut}`);}
+async function l1Commande(args){
+ const G=globalThis.BananeGcv2L1,identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&(G?.leviersActifs?.().deuxiemePasse|0)>0);
+ let z=null;if(suivre)try{z=l1Zone(identity);}catch{z=null;}
+ const r=await l1CommandeCoeur(args);
+ if(suivre){const pose=!!(r&&(r.action==='lot'||r.action==='engine'&&['left','right'].every(s=>r.rails?.[s]?.status==='candidate')));
+  if(pose)l1ResteOter(identity);
+  else l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:args?.command?.reason==='regles-metier'||args?.lotObservation?.l1?.motif==='regle-metier'});}
+ return r;}
+const passeDiff={planifie:new Set(),cours:null};
+async function passeDiffOmbre(b){
+ const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow,SIDES=['left','right'];
+ const lev=G.leviersActifs(),passes=lev.deuxiemePasse|0,debut=Date.now();
+ if(!(passes>0)||!profilL1se()||engine?.s?.batch?.id!==b.id)return null;
+ const restes=[];
+ for(const d of b.deferred||[]){const id=d.identity;if(!id||!d.lidarCaptureId)continue;
+  const r=l1Restes.cle===l1ResteCle(b)?l1Restes.m.get(`${id.part}|${id.frameId??null}|${id.cut}`):null;if(!r||r.regle)continue;
+  restes.push({...r,lidarCaptureId:d.lidarCaptureId,etat:'differe',capture:null,science:null,runtimeRails:null});}
+ const cleT=(b.id||'')+'|'+b.scope.part+'|'+(restes[0]?.identity.frameId??null),transport=(l1eTransport.cle===cleT?l1eTransport.poses:[]).slice(),anchors=(b.lotObservation?.anchors||[]).slice(),poses=[];
+ const avant=lev;let nPoses=0;
+ try{
+  if(lev.passe2Leviers)G.reglerLeviers({...lev,...lev.passe2Leviers});
+  for(let passe=1;passe<=passes;passe++){let n=0;
+   for(const r of restes){if(r.etat!=='differe')continue;
+    try{
+     if(!r.capture){const c=await store.getCloud(r.lidarCaptureId);if(!c?.rails?.left||!c?.rails?.right||!Array.isArray(c.pointsSceneRelative)){r.etat='sans-nuage';continue;}
+      const identity=K.completeIdentity(c.identity||r.identity);r.cloud=c;r.capture={identity,rails:c.rails,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes};
+      r.science=Sh.scientificProposeBothAvecReservoir(r.capture);r.runtimeRails=Sh.toRuntimeRails(r.science);}
+     const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(r.identity.part),r.identity.cut);
+     const g=G.deciderDiffere({capture:r.capture,science:r.science,appuis:anchors.slice(),options:{...G.REGLE.lotOptions},voisins:l1Voisins(b,r.identity),voisinsTransport:transport.slice(),
+      zone:r.zone,plagesADV:r.adv,modele:l1Modele(),regle:G.REGLE_E,reference:ref});
+     if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
+     const cg=G.commander({positions:g.positions,runtimeRails:r.runtimeRails,before:r.capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),valider:true});
+     if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
+     transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
+     r.etat='pose-ombre';r.passe=passe;n++;nPoses++;
+     const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)]));
+     poses.push({cut:r.identity.cut,passe,decal});
+     journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,l1:G.resumer(g)});
+    }catch(e){journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'erreur',message:String(e?.message||e).slice(0,160)});}}
+   if(!n)break;}
+ }finally{G.reglerLeviers(avant);}
+ const resume={lotId:b.id,mode:'ombre',differes:restes.length,posees:nPoses,cuts:poses.map(p=>p.cut),ms:Date.now()-debut};
+ journalerSimple('passe-differes-ombre-fin',resume);passeDiff.cours=null;return {...resume,poses};}
+function passeDiffPlanifier(){const b=engine?.s?.batch,G=globalThis.BananeGcv2L1;
+ if(!b?.id||passeDiff.planifie.has(b.id)||!(G?.leviersActifs?.().deuxiemePasse>0)||!profilL1se())return;
+ if(!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd))return;
+ passeDiff.planifie.add(b.id);passeDiff.cours=passeDiffOmbre(b).catch(e=>{journalerSimple('passe-differes-ombre-fin',{lotId:b.id,mode:'ombre',erreur:String(e?.message||e).slice(0,160)});return null;});}
 async function l1PoserSansValider(p){const clic=clicHumainDuLot(),opt={...(clic?{clicHumain:clic}:{}),...(p.plan?{deplacerVue:p.plan}:{})};
  const ev={identity:{part:p.identity.part??null,cut:p.identity.cut??null},batchId:engine?.s?.batch?.id??null,...p.resume,vueDeplacee:!!p.plan};
  try{const r=Object.keys(opt).length?await applyInESV(p.before,p.rails,opt):await applyInESV(p.before,p.rails);

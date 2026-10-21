@@ -12,7 +12,8 @@
  *        --sortie S.jsonl [--racine DÉPÔT] [--leviers JSON]
  *
  * `--leviers` (mesure seulement) : leviers de la décision L1-e réglés dans le service worker (`reglerLeviers`), comme BANC_LEVIERS au banc ; le
- * rejeu de référence doit être fait avec les mêmes leviers (le service worker ne fait pas de deuxième passe : `deuxiemePasse` 0).
+ * rejeu de référence doit être fait avec les mêmes leviers. Avec `deuxiemePasse` > 0, le service worker fait la deuxième passe EN OMBRE (aucune écriture
+ * vers ESV) : les cuts qu'il poserait sont comptés comme posés (`passe2.ombre`) dans la comparaison avec la deuxième passe du banc.
  *
  * HORS DÉPÔT : aucune donnée de lot n'est écrite dans le dépôt. Lecture seule sur ESV : il n'y en a pas, l'ESV est simulé.
  */
@@ -63,17 +64,22 @@ async function main(argv) {
     EsvRejoue.prototype[nom] = async function (...x) { pas.push({ cut: this.identity.cut, action: nom }); return f ? f.apply(this, x) : this.state(); }; }
   const local = memoire(); local.m[LM.PRE_INST + a.partie] = JSON.parse(fs.readFileSync(a.liste, 'utf8'));
   const adapter = new EsvRejoue(), b = production({ adapter, local });
-  if (a.leviers) { if (a.leviers.deuxiemePasse) throw Error('--leviers : le service worker ne fait pas de deuxième passe'); b.ctx.BananeGcv2L1.reglerLeviers(a.leviers); }
+  /* `deuxiemePasse` > 0 : le service worker fait la deuxième passe EN OMBRE (aucune écriture vers ESV) ; ses poses « calculées » sont comparées à celles de la deuxième passe du banc. */
+  if (a.leviers) b.ctx.BananeGcv2L1.reglerLeviers(a.leviers);
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false } };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   const SCOPE = { testConfirmed: true, allowNavigationEvidence: true, lowConfidence: 'attempt', geometryEngine: 'geometry-candidate-v1', lotDecision: 'apply' };
   t0 = Date.now();
   await b.api('start', { part: a.partie, start: ordre[0].cut, end: ordre.at(-1).cut, ...SCOPE }); await b.settle();
   await new Promise(r => setTimeout(r, 50));
+  { const cours = b.get('passeDiff') && b.get('passeDiff').cours; if (cours) await cours; await new Promise(r => setTimeout(r, 50)); }
   const dureeS = Math.round((Date.now() - t0) / 1000), profil = b.get('engine').s.batch?.scope?.lotProfil ?? null;
   /* Ce que le service worker a commandé, par cut. */
   const obs = new Map();
   for (const e of b.store.events) if (e.type === 'gcv1-shadow-observed' && e.identity && Number.isInteger(e.identity.cut)) obs.set(e.identity.cut, e.lotObservation || {});
+  /* Passe des différés en ombre : cuts que le service worker poserait (décalages, passe). */
+  const ombre = new Map();
+  for (const e of b.store.events) if (e.type === 'passe-differes-ombre' && e.decision === 'poserait' && e.identity && Number.isInteger(e.identity.cut)) ombre.set(e.identity.cut, e);
   const parCut = new Map();
   for (const p of pas) { const x = parCut.get(p.cut) || {}; if (p.action === 'apply') x.apply = p; else x[p.action] = true; parCut.set(p.cut, x); }
   const banc = fs.readFileSync(a.banc, 'utf8').trim().split('\n').map(JSON.parse), lignes = [banc[0]], diffs = [];
@@ -90,6 +96,7 @@ async function main(argv) {
     else if (x.apply && (x.valider || (!x.differe && l.cut === ordre.at(-1).cut))) {
       const pos = K.expectedPoses(x.apply.before, x.apply.proposals);
       sw = { etat: 'pose', ...(x.valider ? {} : { finDeLot: true }), source: sourceDe(o && o.command), decal: Object.fromEntries(SIDES.map(s => [s, G.decalage(n.rails[s], pos[s].positionSceneRelative.slice(0, 3)).map(v => Math.round(v * 100) / 100)])) };
+    } else if (ombre.has(l.cut)) { const e = ombre.get(l.cut); sw = { etat: 'pose', source: 'gcv2', passe2: { passe: e.passe, ombre: true }, decal: e.decal };
     } else if (x.differe || (o && o.command && o.command.action !== 'lot')) sw = { etat: 'differe', source: o && o.l1 ? 'gcv2' : 'lot', motif: o && o.l1 ? o.l1.motif ?? null : null };
     else sw = { etat: 'inconnu', actions: pas.filter(q => q.cut === l.cut).map(q => q.action) };
     if (sw.etat === 'differe') differes++;
