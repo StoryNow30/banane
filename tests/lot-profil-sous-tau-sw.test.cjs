@@ -7,7 +7,8 @@ const {lot,neutre,decisions,metier,SCOPE,EsvVue,production,memoire,base,K,S,GOLD
 
 test('profil « L1-s » (défaut), sous τ : pose SANS validation juste avant la navigation sans décision ; pose d\'avant et pose envoyée au journal', async()=>{
  const x=await lotDiffere({etat:'poser-sans-valider'});
- assert.equal(x.forcees.length,1);
+ /* Le lot, puis la deuxième passe livrée (test 18) qui redécide le 112 en fin de lot ; « sous τ » n'est pas « valider » : elle ne pose rien (commandes ci-dessous). */
+ assert.equal(x.forcees.length,2);assert.deepEqual(ev(x.b,'passe-differes-ombre-fin').map(e=>e.posees),[0]);
  /* 112 : capture, pose (apply, aucune validation), puis navigation sans décision ; 113 : comme avant. */
  assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','apply','nextWithoutDecision','capture','apply']);
  const d=d112(x);assert.equal(d.command.action,'engine');assert.equal(d.command.reason,'deferred','la commande du lot reste un différé');

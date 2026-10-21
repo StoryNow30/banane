@@ -16,8 +16,8 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
     voisinsCoherents: true, branche: true, brancheDernier: true, brancheVertMm: 60, brancheExtrapCuts: 2 });
   assert.deepEqual({ ...V }, { ...V4, ...V5, ...V6 }, 'livrés = v4 + v5 + v6');
   /* Test 18 : les leviers qui changent entre la test 16 et la test 18, ni plus ni moins. */
-  assert.deepEqual({ ...V6 }, { rechHauteurMaxMm: 25 });
-  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V16[k])).sort(), ['rechHauteurMaxMm']);
+  assert.deepEqual({ ...V6 }, { rechHauteurMaxMm: 25, vetoVoieAbsMm: 100, voieIncoherenteMm: 40 });
+  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V16[k])).sort(), ['rechHauteurMaxMm', 'vetoVoieAbsMm', 'voieIncoherenteMm']);
   /* Les 22 leviers qui changent entre la test 15 et la test 16, ni plus ni moins (rechContraMaxMm 45 était déjà la valeur v4). */
   assert.deepEqual(Object.keys(V16).filter(k => JSON.stringify(V16[k]) !== JSON.stringify(V4[k])).sort(), ['anomalieNonCorrigeePMin', 'anomalieNonCorrigeeVoieMm', 'branche',
     'brancheDernier', 'brancheExtrapCuts', 'brancheVertMm', 'corrigeValideZones', 'rechArret', 'rechContraMinMm', 'rechContraRatioMax', 'rechContraRien', 'rechEcartMm',

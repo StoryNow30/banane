@@ -17,9 +17,10 @@ const voisin = (c, lat) => ({ identity: { part: 1, cut: c, frameId: null },
 const decider = (voisins, lev) => { L1.reglerLeviers({ ...L1.LEVIERS_V4, ...lev }); try { return L1.deciderL1e(cas(voisins), MOD, { mm: G }, base, PR); } finally { L1.reglerLeviers(null); } };
 const droite = (a, b) => [1, 2, 3].map(c => voisin(c, { left: a + b * (c - 4), right: a + 56 + b * (c - 4) }));
 
-test('garde de voie absolue : coupée dans la v4 et dans la v5 livrée', () => {
+test('garde de voie absolue : coupée dans la v4 et la v5, livrée dans la v6 (test 18 : 100 mm, résidu 40 mm)', () => {
   assert.equal(L1.LEVIERS_V4.vetoVoieAbsMm, null); assert.equal(L1.LEVIERS_V4.voieIncoherenteMm, null);
-  assert.equal(L1.LEVIERS_LIVRES.vetoVoieAbsMm, null); assert.equal(L1.LEVIERS_LIVRES.voieIncoherenteMm, null);
+  assert.ok(!('vetoVoieAbsMm' in L1.LEVIERS_V5) && !('voieIncoherenteMm' in L1.LEVIERS_V5));
+  assert.equal(L1.LEVIERS_LIVRES.vetoVoieAbsMm, 100); assert.equal(L1.LEVIERS_LIVRES.voieIncoherenteMm, 40);
   assert.equal(decider(droite(150, 0), {}).etat, 'valider', 'garde coupée : la paire de la test 13 est posée, même à 190 mm de la voie des voisins');
 });
 

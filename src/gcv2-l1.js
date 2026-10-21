@@ -575,10 +575,13 @@
    rechContraMinMm:22,rechContraMaxMm:45,rechContraRien:true,rechRemplace:true,rechRemplaceMm:12,corrigeValideZones:Object.freeze(['adv']),rechEncadre:true,
    anomalieNonCorrigeePMin:0.8,anomalieNonCorrigeeVoieMm:35,rechPaireTopMin:60,rechContraRatioMax:1.5,rechArret:true,rechSauteProcheMm:2.5,
    voisinsCoherents:true,branche:true,brancheDernier:true,brancheVertMm:60,brancheExtrapCuts:2});
- /* 4.9.5.18 (test 18, fiches/PASSATION_T17_SANSPOSE.md) — LEVIERS v6 LIVRÉS : hauteur de la paire recentrée à 25 mm du voisin au plus (20 dans la v5). Au banc :
-  * 0 cut changé sur les 9 anciens lots, avec et sans deuxième passe ; sur 3:0 (apprentissage), poses fausses 846 et 847 remplacées par la paire juste (à 22 mm
-  * en hauteur), 229, 845 et 848 posés justes. */
- const LEVIERS_V6=Object.freeze({rechHauteurMaxMm:25});
+ /* 4.9.5.18 (test 18, fiches/PASSATION_T17_SANSPOSE.md, fiches/PASSATION_T17_FAUTES.md, fiches/PASSATION_T17_INTEGRATION.md) — LEVIERS v6 LIVRÉS :
+  *  - hauteur de la paire recentrée à 25 mm du voisin au plus (20 dans la v5) : sur 3:0 (apprentissage), poses fausses 846 et 847 remplacées par la paire juste (à 22 mm
+  *    en hauteur), 229, 845 et 848 posés justes ;
+  *  - garde de voie absolue : une pose validée à plus de 100 mm en travers de la droite des voisins validés, ou dont les voisins ne s'accordent pas (résidu au-delà
+  *    de 40 mm), n'est pas posée : sur 3:0 avec la deuxième passe, 865 et 869 (165 et 217 mm, mauvaise voie) ne sont plus posés, 794 est reposé juste (3 mm).
+  * Au banc, avec la deuxième passe livrée : 0 cut changé sur les 9 anciens lots ; 3:0 : 0 pose à plus de 20 mm. */
+ const LEVIERS_V6=Object.freeze({rechHauteurMaxMm:25,vetoVoieAbsMm:100,voieIncoherenteMm:40});
  const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
