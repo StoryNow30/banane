@@ -15,7 +15,7 @@ function element(id) {
 }
 
 /* `stockage` : contenu de chrome.storage.local au départ ; `etat` : état du panneau (`ArianePanel.state()`). */
-async function monter({ stockage = {}, etat = null } = {}) {
+async function monter({ stockage = {}, etat = null, fenetre = { width: 560, height: 820 } } = {}) {
   const els = Object.fromEntries(IDS.map(id => [id, element(id)])), ecrits = [], envoyes = [];
   els['relecture-arreter'].hidden = true;   /* caché au départ dans panel.html : visible seulement pendant la relecture */
   const body = element('body'); body.dataset.window = 'home';
@@ -26,7 +26,7 @@ async function monter({ stockage = {}, etat = null } = {}) {
     fetch: async () => ({ json: async () => JSON.parse(lire('datasets/compteur-gcv2.json')) }),
     chrome: { runtime: { getURL: p => 'chrome-extension://test/' + p, sendMessage: async m => { envoyes.push(m); return {}; } },
       storage: { local: { get: async () => ({ ...stockage }), set: async o => { Object.assign(stockage, o); ecrits.push(o); } } },
-      windows: { getCurrent: async () => ({ id: 7, type: 'popup', width: 560, height: 820 }), update: async (id, o) => { fenetres.push(o); } } },
+      windows: { getCurrent: async () => ({ id: 7, type: 'popup', ...fenetre }), update: async (id, o) => { fenetres.push(o); } } },
     ArianePanel: { state: () => ctx.etatPanneau, which: () => 'home', voieDuLot: () => ({ cuts: [], classe: () => null, ecart: () => null }), travailDuLot: () => null, visitesNatif: () => [],
       apres: f => { hooks.push(f); } },
     etatPanneau: etat };

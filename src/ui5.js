@@ -250,20 +250,21 @@
     if (!t || !W?.getCurrent) return;
     try { const w = await W.getCurrent(); if (w?.type === 'popup' && (Math.abs((w.width || 0) - t[0]) > 40 || Math.abs((w.height || 0) - t[1]) > 40)) await W.update(w.id, { width: t[0], height: t[1] }); } catch { /* fenêtre non redimensionnable : sans effet */ }
   }
-  function appliquer(v) {
+  /* `redimensionner` : à l'ouverture, seule une présentation habillée demande sa taille (le panneau d'avant garde celle que l'opérateur a donnée à la fenêtre) ; un changement de présentation la demande toujours. */
+  function appliquer(v, redimensionner) {
     variante = v;
     D.body.classList.toggle('ui5', v !== 'ancienne');
     hote.className = v === 'palette' ? 'u-palette' : 'u-ariane';
     hote.hidden = v === 'ancienne';
     ui.focusQ = v === 'palette';
     maj(true);
-    void taille();
+    if (redimensionner || v !== 'ancienne') void taille();
   }
   async function setVariante(v) {
     if (!VARIANTES.includes(v)) return;
     try { await root.chrome?.storage?.local?.set?.({ [CLE]: v }); } catch { /* le choix vaut pour cette fenêtre */ }
     ecran = 'accueil'; ui.q = ''; ui.pi = 0;
-    appliquer(v);
+    appliquer(v, true);
   }
 
   async function init() {
