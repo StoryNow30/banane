@@ -2376,7 +2376,7 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
 const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',CLE_RELECTURE_PASSE='banane50RelecturePasse',CLE_RELECTURE_REPRISE='banane51RelectureReprise',CLE_RELECTURE_REGLAGE_PAUSE='banane51RelecturePauseReglage',MODES_RELECTURE=['coupee','ombre','corriger'];
 const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer','relecture-reprendre','passe-differes-ecrire']);
 /* Actions refusées tant qu'une correction de relecture interrompue n'est pas contrôlée par Mic. */
-const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer','relecture-reprendre']);
+const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer','relecture-reprendre','passe-differes-ecrire']);
 /* Écartement d'une pose d'ESV jamais posée (valeur d'origine d'ESV, 1 500 mm) : écarté de la médiane des verts relus. */
 const ECARTEMENT_ORIGINE_ESV_MM=1500;
 const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
@@ -2528,7 +2528,7 @@ async function lotCloRefus(b,auto,repartir){
  /* R3 : partie sans rouge, ou départ sur un cut vert sans rien devant : rien n'a été traité, rien à relire autour. */
  if(SANS_ROUGE.has(b.stoppedAtEnd?.issue))return b.stoppedAtEnd.issue==='partie-sans-rouge'?'partie sans cut rouge : rien à relire':'lot clos au départ sur un cut vert : rien à relire';
  const interrompues=await relectureIntentions();
- if(interrompues.length)return `une correction de la relecture a été interrompue au cut ${interrompues[0].cut} : contrôle ce cut dans ESV, puis « J’ai contrôlé le cut ${interrompues[0].cut} »`;
+ if(interrompues.length)return `une correction ${interrompues[0].origine==='passe'?'de la deuxième passe':'de la relecture'} a été interrompue au cut ${interrompues[0].cut} : contrôle ce cut dans ESV, puis « J’ai contrôlé le cut ${interrompues[0].cut} »`;
  if(engine.s.intent||engine.s.reconcileRequired||engine.deferPending?.())return 'un résultat incertain reste à clôturer';
  if(engine.task||engine.busy)return 'une action d’Ariane est en cours';
  if(manual?.active?.()||native?.active?.())return 'Écho est actif';

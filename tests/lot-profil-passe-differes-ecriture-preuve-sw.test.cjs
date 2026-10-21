@@ -22,4 +22,8 @@ test('écriture : validation envoyée sans écriture vue : la pose reste, l’in
   assert.equal(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).length, 0);
   assert.deepEqual(j(await x.b.get('relectureIntentions')()).map(q => q.cut), [112], 'le cut à contrôler est noté');
   await assert.rejects(x.b.api('start', { part: 23, start: 111, end: 112 }), /Une correction de la deuxième passe a été interrompue au cut 112/);
+  await assert.rejects(x.b.api('passe-differes-ecrire'), /Une correction de la deuxième passe a été interrompue au cut 112/, 'pas de relance tant que le cut n’est pas contrôlé');
+  /* La garde de la passe elle-même (départ automatique) dit la même chose. */
+  await x.b.get('passeDiffEcrireDemande')(); await x.b.get('passeDiff').cours;
+  assert.match(ev(x.b, 'passe-differes-ecriture-fin').at(-1).raison, /^une correction de la deuxième passe a été interrompue au cut 112/);
 });
