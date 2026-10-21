@@ -24,16 +24,17 @@ const L1={'src/gcv1-shadow.js':'le réservoir du moteur sur demande (`scientific
 const NOUVEAUX=['gcv2-l1.js','gcv2-l1e.js','gcv2-parametres-l1.js','raison-correction.js'];
 /* Test 17 : fichiers de l'habillage du panneau (`src/ui5*.js`) : aucun ne lit ni ne commande la pose. */
 const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js'];
-/* Test 17 : la carte « Relecture » du panneau ne propose plus « Lancer la relecture » pendant une pause (elle repartirait de zéro) ; module du panneau, il ne parle qu'au service worker. */
-const PANNEAU={'src/carte-relecture.js':'la carte « Relecture » du panneau : « Lancer la relecture » caché pendant une pause'};
+/* Test 17 et 18 : la carte « Relecture » du panneau ne propose plus « Lancer la relecture » pendant une pause (elle repartirait de zéro) et dit si la correction interrompue est
+ * celle de la deuxième passe ; module du panneau, il ne parle qu'au service worker. Ces deux changements retirés, il est celui de la test 8 (contrôlé plus bas). */
+const PANNEAU={'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
 /* Test 17 : module du panneau pour la pause de la relecture : il ne parle qu'au service worker (relecture-*), jamais à ESV ni à la pose. */
 const RELECTURE_PAUSE=['relecture-pause.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
-  if(ECHO[f]||L1[f]||PANNEAU[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.18').join('4.9.5.8').split('4.9.5 test 18 (L1-e6)').join('4.9.5 test 8'):lire(f);
+  if(ECHO[f]||L1[f])continue;
+  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?lire(f).split('4.9.5.18').join('4.9.5.8').split('4.9.5 test 18 (L1-e6)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);

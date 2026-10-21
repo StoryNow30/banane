@@ -21,5 +21,5 @@ test('écriture : validation envoyée sans écriture vue : la pose reste, l’in
   assert.equal(ev(x.b, 'passe-differes-ecriture-fin').at(-1).issue, 'incertain');
   assert.equal(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).length, 0);
   assert.deepEqual(j(await x.b.get('relectureIntentions')()).map(q => q.cut), [112], 'le cut à contrôler est noté');
-  await assert.rejects(x.b.api('start', { part: 23, start: 111, end: 112 }), /interrompue au cut 112/);
+  await assert.rejects(x.b.api('start', { part: 23, start: 111, end: 112 }), /Une correction de la deuxième passe a été interrompue au cut 112/);
 });

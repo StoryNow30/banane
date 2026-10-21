@@ -1674,7 +1674,7 @@ async function passeDiffPoser(b,p,E){
  }catch(e){return refuse(`lecture impossible : ${String(e?.message||e).slice(0,200)}`);}
  if(cg.action!=='lot')return refuse(`commande refusée (${cg.reason})`);
  if(cg.vue==='deplacer')return refuse('cible hors de la vue : cette passe ne déplace pas la vue');
- const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails));if(pose)return refuse(pose);
+ const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails),'passe');if(pose)return refuse(pose);
  /* Ctrl+Entrée : si la preuve manque APRÈS l'envoi, la pose reste, l'intention aussi : le cut est à contrôler dans ESV. */
  const a=E.attente={cut,depuisMs:Date.now(),ok:false,refus:null},envoi=ecritureNoterValidation(now.identity),incertain=m=>Error(`cut ${cut} : validation incertaine (${m}). Contrôle ce cut dans ESV.`);
  let ev;
@@ -2750,8 +2750,8 @@ async function remettrePose(b,now,raison){const K=globalThis.BananeCore3,cut=now
  * de la passe ne clique jamais en direct (« tout-recentre », D-157), quel que soit le réglage du lot. Une anomalie remet la pose d'avant (`restore`) : rend
  * alors la raison, intention effacée. Rend null si la pose est en place (l'intention reste, à effacer après la validation) ; lève si ESV est muet ou si la
  * remise est impossible. */
-async function poserPuisVerifier(b,now,rails,expected){const K=globalThis.BananeCore3,cut=now.identity.cut;
- await relectureNoterIntention({lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString()});
+async function poserPuisVerifier(b,now,rails,expected,origine=null){const K=globalThis.BananeCore3,cut=now.identity.cut;
+ await relectureNoterIntention({lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString(),...(origine?{origine}:{})});
  const remettre=raison=>remettrePose(b,now,raison);
  let result;try{result=await applyInESV(now,rails,{clicHumain:'tout-recentre'});}
  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||''))throw Error(`cut ${cut} : ESV ne répond plus pendant la pose (${e.message}) ; rien n’est validé. Contrôle ce cut dans ESV.`);
@@ -2988,7 +2988,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
    :relecture.passe.etat==='preparation'?'Relecture après le lot en préparation (elle part dans un instant) : attends-la, ou clique sur « Arrêter la relecture ».'
    :`Relecture après le lot en cours (${relecture.passe.faits} sur ${relecture.passe.total}) : clique sur « Arrêter la relecture » et attends qu’elle s’arrête.`);
  if(RELECTURE_INTENTION_BLOQUE.has(action)){const l=await relectureIntentions();
-  if(l.length)throw Error(`Une correction de la relecture a été interrompue au cut ${l[0].cut} (partie ${l[0].part}) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ${l[0].cut} » dans la carte Relecture.`);}
+  if(l.length)throw Error(`Une correction ${l[0].origine==='passe'?'de la deuxième passe':'de la relecture'} a été interrompue au cut ${l[0].cut} (partie ${l[0].part}) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ${l[0].cut} » dans la carte Relecture.`);}
  if(action==='passe-differes-ecrire')return passeDiffEcrireDemande();
  if(action==='relecture-choix-etat')return {mode:await relectureChoix()};
  if(action==='relecture-choix')return relectureChoisir(args);

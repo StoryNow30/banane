@@ -45,7 +45,7 @@
   ecrire('relecture-reglages',texteReglages(p?.reglages&&p.etat!=='preparation'?p.reglages:etat?.reglages));
   const l=$('relecture-ligne');if(l){l.textContent=ligne(p);l.hidden=!p;}
   const c=etat?.correctionInterrompue;
-  const ci=$('relecture-interrompue');if(ci){ci.hidden=!c;ci.textContent=c?`Une correction de la relecture a été interrompue au cut ${c.cut} (partie ${c.part}) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ${c.cut} ».`:'';}
+  const ci=$('relecture-interrompue');if(ci){ci.hidden=!c;ci.textContent=c?`Une correction ${c.origine==='passe'?'de la deuxième passe':'de la relecture'} a été interrompue au cut ${c.cut} (partie ${c.part}) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ${c.cut} ».`:'';}
   const ok=$('relecture-acquitter');if(ok){ok.hidden=!c;ok.textContent=c?`J’ai contrôlé le cut ${c.cut}`:'J’ai contrôlé le cut';ok.dataset&&(ok.dataset.cut=c?String(c.cut):'');}
   const stop=$('relecture-arreter');if(stop){stop.hidden=!enCours;stop.disabled=p?.arretDemande===true;}
   const go=$('relecture-lancer');if(go){go.hidden=enCours||p?.etat==='en-pause'||!!c||!lot||lot.mode==='coupee'||!['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(lot.etat)||p?.etat==='finie'&&p.lotId===lot.id;}

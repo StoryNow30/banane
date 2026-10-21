@@ -56,12 +56,12 @@ Un refus ou une anomalie **arrête la passe** (les poses suivantes ont été dé
 
 ## 7. Parité extension / banc
 
-À compléter.
+Mesurée par l'intégration (`fiches/PASSATION_T17_INTEGRATION.md` § 6) : 2:17 (139 cuts) et 2:19 avec la passe en ombre et la chaîne livrée.
 
 ## 8. À prouver au terrain (l'opérateur présent, un seul différé)
 
-À compléter.
+Voir la consigne `consignes/seance-terrain-4.9.5-test-18-2026-10-21.md` § 3 : premier lot court, l'opérateur présent, arrêt au premier refus.
 
 ## 9. Limites connues
 
-À compléter.
+Voir `fiches/PASSATION_T17_INTEGRATION.md` § 6 (limites après la relecture adversariale).
