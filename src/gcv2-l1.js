@@ -567,7 +567,7 @@
  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
-  * dernier recours. Sans deuxième passe (`deuxiemePasse` 0 : la passe en ombre du service worker reste coupée) ; diagnostics coupés (`diag`,
+  * dernier recours. Sans deuxième passe au banc (`deuxiemePasse` 0 ; celle de l'extension a son réglage, `lot.passeDifferes`, coupé) ; diagnostics coupés (`diag`,
   * `rechercheDiag` : ils n'écrivent que le journal, aucune décision ne les lit). */
  const LEVIERS_V5=Object.freeze({rechercheADV:true,rechZones:Object.freeze(['adv','abords']),rechEcartMm:15,rechVoieParCutMm:40,rechHauteurMaxMm:20,
    rechContraMinMm:22,rechContraMaxMm:45,rechContraRien:true,rechRemplace:true,rechRemplaceMm:12,corrigeValideZones:Object.freeze(['adv']),rechEncadre:true,
