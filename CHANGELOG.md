@@ -1,5 +1,18 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.17 — 4.9.5 test 17 (UI) (21/10)
+
+Manifeste `4.9.5.17`, « 4.9.5 test 17 (UI) », paquet `ariane-4.9.5-test.17-ui.zip` ; base : la 4.9.5 test 16 (`claude/50-test16`), **moteur identique** (pose, lot, décision, réglages de lot et profil `'L1-se'` inchangés) ; seule l'interface change ; fiches `fiches/PASSATION_T17_UIPORT.md`, `fiches/PASSATION_T17_UISEULE.md`, `fiches/UI_ETATS_COMPTEURS.md`.
+**À la demande de Mic (21/10)** : l'interface de la branche UI (D-232 à D-236) livrée seule, sur le moteur de la test 16. La deuxième passe, les gardes de fautes et l'apprentissage de la partie 0 du projet 3 ne sont pas dans ce paquet (ils viendront en 4.9.5.18).
+- **Le panneau d'avant est le défaut.** Le pied du panneau propose « Essayer le nouveau panneau » (maquette v2 : accueil, Orbite, Écho, Revue, Réglages, rangée des onglets ESV, « Vider le cache » en vue) ; Réglages > Interface ramène à l'« Ancien panneau ».
+- **Palette sobre** (une ligne de recherche, quatre commandes au plus à l'ouverture, Ctrl K) : éteinte par défaut, au choix dans Réglages > Interface du nouveau panneau.
+- **Pause et reprise de la relecture** : réglage « Pause et reprise de la relecture » (carte Relecture du panneau d'avant), **éteint par défaut** ; éteint, la relecture se comporte exactement comme dans la test 16 (essais `relecture-pause-identique`, `pose-lot-inchanges-4959`, outil `tools/parite-relecture-sw.cjs`). Allumé : « Arrêter » met la relecture en pause, « Reprendre » la relance (même après un F5 ou un redémarrage d'Ariane, au plus un jour) ; au F5, réglage « mettre en pause / arrêter ».
+- Le nouveau panneau n'affiche jamais « 999999 » (« fin de partie ») et dit « Aucun onglet ESV » au lieu de « Prêt » sans onglet connecté.
+- Le panneau d'avant ne propose plus « Lancer la relecture » pendant une pause.
+- Code d'interface repris de la branche UI ; défauts corrigés au passage : voir `fiches/PASSATION_T17_UIPORT.md` § 4.
+- **Inerte dans ce paquet** : la zone « la deuxième passe travaille, ne touche à rien dans ESV » du nouveau panneau (`src/ui5.js`) lit un état `passeDifferes` que la test 16 ne produit pas ; elle ne s'affiche donc jamais ici (essais sur des états fabriqués) et sert à l'intégration complète.
+- Limites : une seule connexion ESV est partagée par Orbite et Écho ; le nouveau panneau n'affiche pas la relecture en cours ; le délai de réinstallation de l'observateur après un F5 pendant la pause n'est pas mesuré sur ESV.
+
 ## 4.9.5.16 — 4.9.5 test 16 (L1-e5) (21/10)
 
 Manifeste `4.9.5.16`, « 4.9.5 test 16 (L1-e5) », paquet `ariane-4.9.5-test.16.zip` ; base : la 4.9.5 test 15 (`claude/50-test15`) avec les branches du cap 5 fusionnées (`claude/50-l1-cap5` a2486b1, `claude/50-l1-cap5b` 1a13119) ; fiches `fiches/PASSATION_CAP5_A.md`, `fiches/PASSATION_CAP5_A3.md`, `fiches/PASSATION_CAP5_B.md`, `fiches/L1_APPRENTISSAGE.md`.
