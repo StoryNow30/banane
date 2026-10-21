@@ -9,7 +9,10 @@
  * commandé), et sur la sortie standard la comparaison décision par décision avec le rejeu du banc.
  *
  *   node tools/parite-l1se-sw.cjs --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --liste LISTE.json --banc R.jsonl
- *        --sortie S.jsonl [--racine DÉPÔT]
+ *        --sortie S.jsonl [--racine DÉPÔT] [--leviers JSON]
+ *
+ * `--leviers` (mesure seulement) : leviers de la décision L1-e réglés dans le service worker (`reglerLeviers`), comme BANC_LEVIERS au banc ; le
+ * rejeu de référence doit être fait avec les mêmes leviers (le service worker ne fait pas de deuxième passe : `deuxiemePasse` 0).
  *
  * HORS DÉPÔT : aucune donnée de lot n'est écrite dans le dépôt. Lecture seule sur ESV : il n'y en a pas, l'ESV est simulé.
  */
@@ -22,7 +25,7 @@ function args(argv) {
     const k = argv[i], v = () => argv[++i];
     if (k === '--partie') o.partie = v(); else if (k === '--journal') o.journal = v(); else if (k === '--corpus') o.corpus.push(v());
     else if (k === '--lot') o.lot = v(); else if (k === '--liste') o.liste = v(); else if (k === '--banc') o.banc = v();
-    else if (k === '--sortie') o.sortie = v(); else if (k === '--racine') o.racine = path.resolve(v()); else if (k === '--coupe') o.coupe = Number(v()); else if (k === '--progres') o.progres = true;
+    else if (k === '--sortie') o.sortie = v(); else if (k === '--racine') o.racine = path.resolve(v()); else if (k === '--coupe') o.coupe = Number(v()); else if (k === '--progres') o.progres = true; else if (k === '--leviers') o.leviers = JSON.parse(v());
     else throw Error('argument inconnu : ' + k);
   }
   for (const k of ['partie', 'journal', 'lot', 'liste', 'banc', 'sortie']) if (!o[k]) throw Error('--' + k + ' manquant');
@@ -55,8 +58,12 @@ async function main(argv) {
     async skipAndNext() { pas.push({ cut: this.identity.cut, action: 'sauter' }); return super.skipAndNext(); }
     async amenerDansLaVue(cote) { this.calls.push('amenerDansLaVue'); return { version: 'banc', cote, gestes: [], ok: true, remise: { ok: true, crans: 0 } }; }
   }
+  /* Toute autre écriture vers ESV est consignée par cut (la ligne d'un cut qui n'est ni validé ni différé les montre). */
+  for (const nom of ['validateInPlace', 'validerMajEspace', 'restore', 'goToCut', 'next']) { const f = EsvRejoue.prototype[nom] || SimulatedESV.prototype[nom];
+    EsvRejoue.prototype[nom] = async function (...x) { pas.push({ cut: this.identity.cut, action: nom }); return f ? f.apply(this, x) : this.state(); }; }
   const local = memoire(); local.m[LM.PRE_INST + a.partie] = JSON.parse(fs.readFileSync(a.liste, 'utf8'));
   const adapter = new EsvRejoue(), b = production({ adapter, local });
+  if (a.leviers) { if (a.leviers.deuxiemePasse) throw Error('--leviers : le service worker ne fait pas de deuxième passe'); b.ctx.BananeGcv2L1.reglerLeviers(a.leviers); }
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false } };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   const SCOPE = { testConfirmed: true, allowNavigationEvidence: true, lowConfidence: 'attempt', geometryEngine: 'geometry-candidate-v1', lotDecision: 'apply' };
@@ -78,21 +85,23 @@ async function main(argv) {
     const x = parCut.get(l.cut) || {}, o = obs.get(l.cut) || null, n = parN.get(l.cut);
     let sw;
     if (!n) sw = { etat: 'absent' };
-    else if (x.apply && x.valider) {
+    /* Dernier cut du lot : le rejeu s'arrête après la pose (`apply`), la validation de fin de lot n'est pas jouée par l'ESV simulé ; la pose
+     * envoyée est comparée telle quelle (`finDeLot`). */
+    else if (x.apply && (x.valider || (!x.differe && l.cut === ordre.at(-1).cut))) {
       const pos = K.expectedPoses(x.apply.before, x.apply.proposals);
-      sw = { etat: 'pose', source: sourceDe(o && o.command), decal: Object.fromEntries(SIDES.map(s => [s, G.decalage(n.rails[s], pos[s].positionSceneRelative.slice(0, 3)).map(v => Math.round(v * 100) / 100)])) };
+      sw = { etat: 'pose', ...(x.valider ? {} : { finDeLot: true }), source: sourceDe(o && o.command), decal: Object.fromEntries(SIDES.map(s => [s, G.decalage(n.rails[s], pos[s].positionSceneRelative.slice(0, 3)).map(v => Math.round(v * 100) / 100)])) };
     } else if (x.differe || (o && o.command && o.command.action !== 'lot')) sw = { etat: 'differe', source: o && o.l1 ? 'gcv2' : 'lot', motif: o && o.l1 ? o.l1.motif ?? null : null };
-    else sw = { etat: 'inconnu', actions: Object.keys(x) };
+    else sw = { etat: 'inconnu', actions: pas.filter(q => q.cut === l.cut).map(q => q.action) };
     if (sw.etat === 'differe') differes++;
     const bp = l.profils['L1-se'] || {};
     const etatBanc = bp.etat === 'pose' ? 'pose' : 'differe';
     let ecart = null;
     if (sw.etat === 'pose' && bp.etat === 'pose' && bp.decal) ecart = Math.max(...SIDES.flatMap(s => [0, 1, 2].map(i => Math.abs(sw.decal[s][i] - bp.decal[s][i]))));
     const diff = sw.etat !== etatBanc || (sw.etat === 'pose' && (sw.source !== bp.source || !(ecart <= 0.05)));
-    if (diff) diffs.push({ cut: l.cut, nuage: l.nuage, banc: { etat: bp.etat, source: bp.source, motif: bp.l1 ? bp.l1.motif : null }, sw: { etat: sw.etat, source: sw.source, motif: sw.motif }, ecartMm: ecart == null ? null : Math.round(ecart * 100) / 100 });
+    if (diff) diffs.push({ cut: l.cut, nuage: l.nuage, banc: { etat: bp.etat, source: bp.source, motif: bp.l1 ? bp.l1.motif : null }, sw: { etat: sw.etat, source: sw.source, motif: sw.motif, actions: sw.actions }, ecartMm: ecart == null ? null : Math.round(ecart * 100) / 100 });
     lignes.push({ ...l, profils: { ...l.profils, 'L1-se': sw } });
   }
   fs.writeFileSync(a.sortie, lignes.map(x => JSON.stringify(x)).join('\n') + '\n');
-  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
+  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil, leviers: a.leviers || null, cuts: lignes.length - 1, rejoues: ordre.length, absents, dureeS, differesSw: differes, lignesDifferentes: diffs.length, diffs }) + '\n');
 }
 main(process.argv.slice(2)).catch(e => { process.stderr.write('parite-l1se-sw : ' + (e && e.stack || e) + '\n'); process.exitCode = 1; });

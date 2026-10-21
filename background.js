@@ -1164,7 +1164,17 @@ adapter.capabilities={serverConfirmation:false};
  * (`readStrategy.clicHumain`, `clicHumainSource:'lot'`). Depuis la test 6, ce mode vient du lot et ne part vers la page qu'avec `apply` ; la
  * capture, faite avant, ne le connaissait pas. Rien de plus n'est envoyé à la page ; « tel-quel » : la lecture d'avant. */
 const captureESV=adapter.capture;
-adapter.capture=async(...args)=>{const r=await captureESV(...args),c=clicHumainDuLot();
+/* Cap 5, piste 1 (réglage `lot.recaptureVide`, coupé par défaut) : pendant un lot, une capture presque vide est refaite après une attente. */
+async function recaptureVide(args,r){const cfg=globalThis.BananeSettings?.lot?.recaptureVide,b=engine?.s?.batch;
+ const n=c=>Array.isArray(c?.pointsSceneRelative)?c.pointsSceneRelative.length:0;
+ if(!cfg?.actif||b?.state!=='RUNNING'||!r||typeof r!=='object'||n(r)>=cfg.minPoints)return r;
+ let best=r;const avant=n(r),essais=[];
+ for(let i=0;i<(cfg.essais|0)&&n(best)<cfg.minPoints;i++){await attendreMs(cfg.attenteMs);let x=null;
+  try{x=await captureESV(...args);}catch(e){essais.push({erreur:String(e?.message||e).slice(0,120)});break;}
+  essais.push({points:n(x)});if(n(x)>n(best))best=x;}
+ await engine.event('recapture-vide',{identity:{part:r.identity?.part??null,cut:r.identity?.cut??null},batchId:b.id??null,pointsAvant:avant,pointsApres:n(best),essais}).catch(()=>{});
+ return best;}
+adapter.capture=async(...args)=>{const r=await recaptureVide(args,await captureESV(...args)),c=clicHumainDuLot();
  if(c&&r&&typeof r==='object'&&!r.readStrategy?.clicHumain)r.readStrategy={...(r.readStrategy&&typeof r.readStrategy==='object'?r.readStrategy:{}),clicHumain:c,clicHumainSource:'lot'};
  return r;};
 /* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */

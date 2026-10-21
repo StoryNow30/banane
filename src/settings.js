@@ -180,6 +180,10 @@
      * 4.9.5.14 (test 14, fiches/L1_APPRENTISSAGE.md) : défaut « L1-se », L1-s avec la décision L1-e des différés (correction d'écartement apprise
      * sur les Échos, src/gcv2-l1e.js ; plus de pose sans validation). */
     profil: 'L1-se',
+    /* Cap 5, piste 1 (fiches/L1_CAP5.md) — CAPTURE VIDE DANS UN LOT, COUPÉ par défaut : une capture de moins de `minPoints` points est refaite
+     * après `attenteMs` (le nuage du cut finit de charger), jusqu'à `essais` fois ; la plus fournie est gardée, sinon le cut suit son sort
+     * d'avant. Événement `recapture-vide` (points avant et après). Non mesurable au banc : le corpus ne garde que la capture faite. */
+    recaptureVide: Object.freeze({ actif: false, minPoints: 100, attenteMs: 1500, essais: 2 }),
   });
 
   const exportSettings = Object.freeze({
