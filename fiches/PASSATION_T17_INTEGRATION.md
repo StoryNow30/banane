@@ -10,8 +10,11 @@ Marqueurs : **[mesuré]** = lancé ici ; **[lu]** = lu dans le code ; **[non pro
 |---|---|---|---|---|
 | 1 | `claude/50-t17-uiport` | eff912c | cd8ff8c | aucun |
 | 2 | `claude/50-t17-passe2` | 806a302 | 980edda | `background.js`, `dispatch` : bloc « deuxième passe en écriture » puis garde de la relecture en pause (résolution prévue par UIPORT § 3) |
-| 3 | `claude/50-t17-fautes` | — | — | attendue (échéance 12 h 15 UTC) |
-| 4 | `claude/50-t17-sanspose` | — | — | attendue |
+| 3 | `claude/50-t17-sanspose` | 76870be | 7e62ff1 | `background.js`, `passeDiffOmbre` (signature de passe2) : code de passe2 gardé, `voieListe` ajoutée à l'appel de la décision de la passe |
+| 4 | `claude/50-t17-ui-seule` (correctifs seulement, cherry-pick) | a4feac9, 7d42a8a, 275b0fb, 2b14ebc, 419c489, 9c645d5 | 604f975, a12abe7, 41bb716, d14eacc, 2ffa996, a9e850f | 7d42a8a : `src/ui5.js`, essais ; l'état « p2 » (retiré pour le paquet UI seule) est GARDÉ ici, il passe devant « Relecture en cours », essai de cohabitation. 9c645d5 : sans sa consigne, son CHANGELOG ni sa D-237 |
+| 5 | `claude/50-t17-fautes` | — | — | attendue (échéance 12 h 15 UTC) |
+
+Leviers : `LEVIERS_V6` = `rechHauteurMaxMm` 25 (757d5a3), preuve de SANSPOSE (9 lots avec et sans passe : 0 cut changé ; 3:0 avec passe : sans pose 9 → 6, > 50 mm 5 → 3). `rechListeResMm` reste coupé (2 poses, 3:0 seule).
 
 ## 2. Exigences (brief a à l)
 
@@ -29,3 +32,5 @@ Marqueurs : **[mesuré]** = lancé ici ; **[lu]** = lu dans le code ; **[non pro
 - `claude/50-t17-passe2` 806a302 : `tests/pose-lot-inchanges-4959.test.cjs` ROUGE (réglages : `passeDifferesDefaut` exporté au premier niveau de `src/settings.js` change l'empreinte) [mesuré sur wt/T17C]. Corrigé ici : la clé est écartée explicitement et l'essai vérifie qu'elle est l'objet `lot.passeDifferes`.
 - passe2 : aucun bouton du panneau ne lançait `passe-differes-ecrire` ni n'arrêtait une passe en écriture (le bouton « Arrêter » est caché lot clos) : corrigé (c).
 - UIPORT : l'essai de fusion `passe-differes-relecture-pause` visait le montage de 14822b3 (lot 111 à 115) ; adapté au montage de 806a302 (111 à 113).
+- 11 h 30 : sanspose fusionnée, Z25 livré ; parité 2:19 lancée sur 0afe390 (instantané `scratchpad/t17/snapI-0afe390`, cœur 1, sortie `scratchpad/t17/parI/`) ; verify préalable lancé sur 757d5a3 (`scratchpad/t17/verify-757d5a3.out`).
+- 11 h 45 : correctifs de UI-SEULE repris (tableau § 1) ; essais ciblés (93 fichiers) lancés sur a9e850f.
