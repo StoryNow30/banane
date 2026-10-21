@@ -43,7 +43,7 @@ Avec la deuxième passe (`deuxiemePasse` 2, `passe2Leviers` `sansVoieRien`) :
 |---|--:|--:|--:|--:|---|
 | 3:0 passe 2 seule | 9 | 36 | 5 | 5 | 794, 846, 847, 865, 869 faux |
 | 3:0 passe 2 + garde (veto 100 + incohérence 40) | 13 | 32 | **0** | **0** | 846, 847, 869 → rien ; 865 → rien (`sans-approche`, par cascade : la garde seule l'aurait refusé, résidu 132) ; 794 reposé à 3,2 mm ; 797 passe de 8,4 à 10,3 mm |
-| 3:0 passe 2 + veto + contre-expertise | voir § 6 | | | | |
+| 3:0 passe 2 + veto + contre-expertise | non mesuré | | | | rejeu tué par le coordinateur (mémoire) |
 
 Les 9 anciens lots avec passe 2 + garde ne sont pas rejoués (machine saturée, échéance) : voir « non prouvé ».
 
