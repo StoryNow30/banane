@@ -57,9 +57,9 @@ Pause à chaque étape (navigation, capture, calcul, juste après une correction
 - **C. Essai terrain** : une séance de Mic, avec un vrai F5 pendant une relecture.
 - **Risque principal, non vérifiable hors d'ESV** : après un F5, la liste de cuts d'ESV (mémoire de la page) et l'observateur passif se réinstallent avec un délai. Si la reprise démarre trop tôt, le statut « vert » d'un cut peut manquer et la correction serait écartée (sans danger, mais la relecture ne ferait rien). À mesurer sur ESV réel.
 
-## 8. Décisions à prendre
+## 8. Décisions de Mic (21 octobre)
 
-1. **Combien de temps garder une reprise ?** Proposition : jusqu'au prochain lot ou à « Arrêter », jamais plus d'une journée.
-2. **F5 pendant la relecture** : pause automatique (proposé) ou arrêt comme aujourd'hui ?
-3. **Version et branche** : proposé 4.9.6 test 2, sur la 4.9.6 test 1 ; à coordonner avec la branche L1 pour `background.js`.
-4. **Avant de construire** : valider la maquette (écrans, mots) et ce plan.
+1. **Durée de garde** : oui, jusqu'au prochain lot ou à « Arrêter », au plus une journée.
+2. **F5 pendant la relecture** : « les deux » : un **réglage** (Réglages, « Si ESV est rechargé pendant la relecture ») entre **Mettre en pause** (par défaut, la reprise reste possible) et **Arrêter** (comme aujourd'hui). Interprétation à confirmer : si Mic voulait autre chose (par exemple pause d'abord, puis arrêt au bout d'un délai), le dire.
+3. **Version et branche** : la session principale s'en charge (numéro, coordination avec la branche L1 pour `background.js`).
+4. **Maquette** : la palette a été refaite (trop fouillie : voir D-233) ; le reste de la maquette n'a pas reçu d'objection. Validation d'ensemble à reconfirmer avant de construire.
