@@ -1,5 +1,18 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.18 — 4.9.5 test 18 (L1-e6) (21/10)
+
+Manifeste `4.9.5.18`, « 4.9.5 test 18 (L1-e6) », paquet `ariane-4.9.5-test.18.zip` ; base : `claude/50-apprentissage-3-0` (la test 16 plus D-224) avec les branches `claude/50-t17-uiport`, `claude/50-t17-passe2`, `claude/50-t17-sanspose`, `claude/50-t17-fautes` fusionnées (`fiches/PASSATION_T17_INTEGRATION.md`). La 4.9.5.17 est le paquet « interface seule » livré à part.
+- **Deuxième passe des différés en fin de lot, EN ÉCRITURE, allumée, sans plafond** (D-237 ; `lot.passeDifferes`, `fiches/PASSATION_T17_PASSE2.md`) : profil L1-se, fin naturelle du lot ; deux passes au plus, leviers de passe `sansVoieRien` ; gardes : cut rouge dans la liste d'ESV, pose d'ESV inchangée depuis la visite, pose relue à 1 mm, validation prouvée (compteur, cut affiché, écriture « valid »), arrêt au premier refus, aucun départ quand le lot s'arrête sur une pose non validée ni pendant une relecture en cours ou en pause.
+- **Interrupteur** « Deuxième passe des différés en fin de lot (écrit dans ESV) » (Orbite, « Règles et choix du prochain lot » ; nouveau panneau : Réglages) : clé `banane51PasseDifferes` gardée par `choix-lot`, absente = allumée, toute autre valeur que `true` = coupée, lue à la fin du lot, à la relance et avant chaque cut écrit.
+- **Panneau** : « La deuxième passe travaille, ne touche à rien dans ESV » pendant l'écriture (panneau d'avant, nouveau panneau, palette), « Arrêter la deuxième passe », « Relancer la deuxième passe » ; aucune action nouvelle au service worker.
+- **Leviers v6** (`LEVIERS_V6`, `src/gcv2-l1.js`) : `rechHauteurMaxMm` 25 (20). LEVIERS_FAUTES
+- **Interface** (`fiches/PASSATION_T17_UIPORT.md`) : nouveau panneau en essai (lien « Essayer le nouveau panneau » → maquette v2 ; palette sobre), le panneau d'avant reste le défaut ; pause et reprise de la relecture, éteintes (`banane51RelecturePauseReglage`).
+Consigne : `consignes/seance-terrain-4.9.5-test-18-2026-10-21.md` ; retour arrière : la 4.9.5 test 16.
+
+- **Mesures** : MESURES_CHANGELOG
+- Non vérifié : l'écriture de la deuxième passe n'a jamais été jouée dans ESV ; pas de mesure hors échantillon (3:0 en apprentissage, 3:1 et 3:5 réservées) ; nouveau panneau vu seulement dans Chromium avec un état fabriqué ; Edge.
+
 ## 4.9.5.16 — 4.9.5 test 16 (L1-e5) (21/10)
 
 Manifeste `4.9.5.16`, « 4.9.5 test 16 (L1-e5) », paquet `ariane-4.9.5-test.16.zip` ; base : la 4.9.5 test 15 (`claude/50-test15`) avec les branches du cap 5 fusionnées (`claude/50-l1-cap5` a2486b1, `claude/50-l1-cap5b` 1a13119) ; fiches `fiches/PASSATION_CAP5_A.md`, `fiches/PASSATION_CAP5_A3.md`, `fiches/PASSATION_CAP5_B.md`, `fiches/L1_APPRENTISSAGE.md`.
