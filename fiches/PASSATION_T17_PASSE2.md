@@ -43,9 +43,16 @@ Un refus ou une anomalie **arrête la passe** (les poses suivantes ont été dé
 - Action : `passe-differes-ecrire`.
 - Séance de l'observateur passif `passe-differes:<lot>` pendant l'écriture ; les bords écrits sont mémorisés comme ceux de la relecture (`listeNoterEcriture`).
 
-## 6. Essais (rouge puis vert)
+## 6. Essais (service worker réel en VM, ESV simulé)
 
-À compléter.
+- `tests/passe-differes-reglage.test.cjs` : livré coupé, recette du banc ; toute valeur inconnue laisse coupé (`'true'`, `1`, `null`, `[true]`…), l'écriture seule ne s'allume pas, l'écriture exige l'observateur passif, `ecritureMax` illisible vaut 1.
+- `tests/lot-profil-passe-differes-sw.test.cjs` (ombre) : coupée par défaut (mêmes commandes à ESV avec et sans), voisins de fin de lot avant ET après, leviers de la passe réglés le temps de l'appel seulement, rien sous L1-s.
+- `tests/lot-profil-passe-differes-ecriture-sw.test.cjs` : lot arrêté sur une pose non validée → la passe ne part pas, rien n'est envoyé ; après validation à la main, `passe-differes-ecrire` : `goToCut`, `capture`, `apply` (clic « tout-recentre »), `validateInPlace`, rien d'autre ; pose écrite = pose décidée à 0,01 mm ; un seul cut sur deux décidés (`ecritureMax` 1) ; le résumé de la partie compte le cut posé et l'autre reste différé ; intention effacée ; vue du panneau.
+- `tests/lot-profil-passe-differes-ecriture-refus-sw.test.cjs` : un cut que la liste dit vert n'est jamais écrasé (lectures seulement, arrêt à la première pose non écrite) ; « Arrêter » arrête avant le cut suivant.
+- `tests/lot-profil-passe-differes-ecriture-preuve-sw.test.cjs` : validation refusée avant l'envoi → pose d'avant remise ; validation envoyée sans écriture vue → pose gardée, intention notée (un nouveau lot est refusé), passe arrêtée, rien compté.
+- Mutations vérifiées (le test devient rouge) : statut rouge non contrôlé ; séance de l'observateur retirée (l'écriture « valid » n'est plus vue) ; arrêt demandé ignoré.
+- Reprise du code de la relecture sans changement de comportement (`relectureCorriger` → `poserPuisVerifier`, `remettrePose` ; `relectureRefus` → `lotCloRefus` ; `ecritureAttendue` ; `validerSurPlace` → `enPlaceProuvee`) : les essais de la relecture et du dernier cut sont inchangés.
+- Passe coupée = test 16 : un lot L1-se joué dans le service worker de la test 16 (`75b47fd`) et dans celui de cette branche, commandes et journal neutralisés (identifiants, heures, durées) : fichiers identiques (3 753 749 octets, deux scénarios).
 
 ## 7. Parité extension / banc
 

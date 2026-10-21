@@ -18,3 +18,11 @@ test('écriture : « Arrêter » du panneau arrête la passe avant le cut suivan
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112], 'le 114 n’est pas écrit');
   const fin = ev(x.b, 'passe-differes-ecriture-fin').at(-1); assert.equal(fin.issue, 'arret'); assert.equal(fin.ecrites, 1); assert.equal(fin.demandees, 2);
 });
+
+test('écriture : une relecture choisie attend la passe (elle ne la bloque pas) et part après elle', async () => {
+  const x = await relancer(await lotPasse({ passe: { ombre: true, ecriture: true, passes: 1 }, relecture: 'ombre' }));
+  assert.match(x.refus.raison, /pose d’Ariane attend ta validation au cut 115/, 'refus pour la pose en attente, pas pour la relecture en préparation');
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112]);
+  const fins = x.b.store.events.map(e => e.type).filter(t => /^(passe-differes-ecriture-fin|relecture-fin)$/.test(t));
+  assert.deepEqual(fins.slice(0, 2), ['passe-differes-ecriture-fin', 'relecture-fin'], 'la relecture ne part qu’après la passe');
+});

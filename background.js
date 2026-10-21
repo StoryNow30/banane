@@ -1617,9 +1617,9 @@ async function passeDiffOmbre(b,rg,vue){
  * l'écriture « valid » vue par l'observateur passif. Tant qu'elle écrit, le panneau ne lance rien d'autre et « Arrêter » l'arrête avant le cut suivant. */
 async function passeDiffEcrire(b,poses,rg,vue){
  const aEcrire=poses.filter(p=>!p.fait).slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
- vue.etat='ecriture';vue.demandees=vue.ecrites+aEcrire.length;
+ vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
- const raison0=passeActive()?'une relecture est en cours':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
+ const raison0=relecture.passe?.etat==='en-cours'?'une relecture est en cours':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
  if(!raison0){const E=passeDiff.ecriture={arret:false,attente:null};
   try{
    for(const p of aEcrire){

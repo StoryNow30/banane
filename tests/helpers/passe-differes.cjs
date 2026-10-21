@@ -31,9 +31,10 @@ class EsvEcriture extends EsvTrou {
       compteurApres: { traites: this.opts.sansEffet ? avant.traites : this.traites, total: this.total }, command: 'ctrl-entrée' };
   }
 }
-/* `passe` : les réglages de `lot.passeDifferes` de l'essai ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien). */
-async function lotPasse({ passe, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300 }) {
-  const adapter = new EsvEcriture(opts), b = production({ adapter, local: memoire() });
+/* `passe` : les réglages de `lot.passeDifferes` de l'essai ; `relecture` : le choix du panneau pour la relecture après le lot ('ombre') ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien). */
+async function lotPasse({ passe, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300 }) {
+  const adapter = new EsvEcriture(opts), local = memoire(), b = production({ adapter, local });
+  if (relecture) local.m.banane50Relecture = relecture;
   adapter.statuts = statuts;
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, observateurPassif: { ...S.observateurPassif, actif: observateur },
     relecture: { attenteEcritureMs }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ...passe } } };
