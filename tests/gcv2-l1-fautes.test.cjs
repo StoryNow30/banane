@@ -35,6 +35,12 @@ test('vetoVoieAbsMm : une pose validée loin de la droite ajustée des voisins n
   assert.equal(decider([voisin(-20, { left: 114, right: 170 })], { vetoVoieAbsMm: 100 }).etat, 'valider', 'voisin hors de la fenêtre : la garde ne dit rien');
 });
 
+test('garde de voie absolue : un voisin à la pose illisible est écarté (aucun écart non fini) ; sans voisin lisible, la garde se tait (trou connu)', () => {
+  const illisibles = [1, 2, 3].map(c => { const v = voisin(c, { left: -36, right: 20 }); v.positions.left = [NaN, NaN, NaN]; return v; });
+  assert.equal(L1.voieAbsolue(base, 4, illisibles, 6, 3, null), null);
+  assert.equal(decider(illisibles, { vetoVoieAbsMm: 100, voieIncoherenteMm: 40 }).etat, 'valider');
+});
+
 test('voieIncoherenteMm : des voisins qui ne s\'accordent pas ne tranchent pas, la pose validée n\'est pas posée', () => {
   const zigzag = [1, 2, 3].map((c, i) => voisin(c, { left: -36 + [-70, 70, -70][i], right: 20 + [-70, 70, -70][i] }));
   assert.equal(decider(zigzag, { voieIncoherenteMm: 40 }).motif, 'voie-incoherente');

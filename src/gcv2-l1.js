@@ -815,10 +815,11 @@
      for(const s of SIDES){let best=null;for(const h of k.rails[s].hyps){const e=Math.abs(h.decal[1]-g[s][0]);if(e<=LEVIERS.brancheMm&&Math.abs(h.decal[2]-g[s][1])<=LEVIERS.brancheVertMm&&(!best||e<best.e))best={e,h};}if(best)decal[s]=best.h.decal.slice();}
      if(SIDES.every(s=>decal[s])){const ga=ecartementDecal(capture,decal);if(ga>=LEVIERS.brancheEcartement[0]&&ga<=LEVIERS.brancheEcartement[1]&&SIDES.every(s=>{const m=soutienRail(capture,s,decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))dd={etat:'valider',motif:'branche',decal,corrigee:false,avant:dd.motif};}
    }
-   /* Garde de voie absolue (leviers `vetoVoieAbsMm` et `voieIncoherenteMm`, coupés par défaut), sur toute pose validée, quel qu'en soit le chemin. Voie : droite
+   /* Garde de voie absolue (leviers `vetoVoieAbsMm` et `voieIncoherenteMm`, coupés en v4 et v5, livrés en v6), sur toute pose validée, quel qu'en soit le chemin. Voie : droite
     * ajustée des voisins validés (voie absolue, `rechProcheMaxCuts` cuts au plus sur chaque rail). Pose à plus de `vetoVoieAbsMm` en travers de cette droite
     * (en ADV, la voie de départ d'ESV et celle de l'opérateur sont toutes deux des rails du nuage : seuls les voisins disent laquelle) : rien. Voisins qui ne
-    * s'accordent pas (résidu de la droite au-delà de `voieIncoherenteMm`) : la voie ne tranche pas, rien. */
+    * s'accordent pas (résidu de la droite au-delà de `voieIncoherenteMm`) : la voie ne tranche pas, rien. Les écarts sont finis : un voisin à la pose illisible est
+    * écarté par `voieAbsolue` (projection nulle). Trous connus : sans voisin validé à `rechProcheMaxCuts` cuts au plus, la garde se tait ; avec moins de 3 voisins, pas de résidu. */
    if(dd.etat==='valider'&&dd.decal&&capture&&(fini(LEVIERS.vetoVoieAbsMm)||fini(LEVIERS.voieIncoherenteMm))){
      const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
      if(va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts)){
