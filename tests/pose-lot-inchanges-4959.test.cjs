@@ -27,7 +27,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.15').join('4.9.5.8').split('4.9.5 test 15 (L1-e4)').join('4.9.5 test 8'):lire(f);
+  const texte=VERSION_SEULE.includes(f)?lire(f).split('4.9.5.16').join('4.9.5.8').split('4.9.5 test 16 (L1-e5)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
@@ -52,10 +52,13 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
  const diff=lire('src/native-session.js');assert.ok(!/batch\.scope|startBatch|lotCommands|applyInESV/.test(diff.slice(diff.indexOf('RM-11 (fiches/RM11'),diff.indexOf('summariseGesture(record,observed){'))));
 });
-test('les réglages sont ceux de la test 8, hors la ligne echo.raison',()=>{
+test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,recaptureVide,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
+ /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['profil','recaptureVide']);
+ assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
