@@ -2276,7 +2276,7 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
 const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',CLE_RELECTURE_PASSE='banane50RelecturePasse',CLE_RELECTURE_REPRISE='banane51RelectureReprise',CLE_RELECTURE_REGLAGE_PAUSE='banane51RelecturePauseReglage',MODES_RELECTURE=['coupee','ombre','corriger'];
 const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer','relecture-reprendre']);
 /* Actions refusées tant qu'une correction de relecture interrompue n'est pas contrôlée par Mic. */
-const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer']);
+const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer','relecture-reprendre']);
 /* Écartement d'une pose d'ESV jamais posée (valeur d'origine d'ESV, 1 500 mm) : écarté de la médiane des verts relus. */
 const ECARTEMENT_ORIGINE_ESV_MM=1500;
 const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
