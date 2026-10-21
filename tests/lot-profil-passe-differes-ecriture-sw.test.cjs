@@ -48,3 +48,11 @@ test('relance : les décisions sont refaites (des voisins ont pu changer) ; un c
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [114], 'le 112, décidé « valider » en fin de lot, ne l’est plus à la relance');
   assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin').map(e => e.cuts), [[112, 114], [114]]);
 });
+
+test('départ automatique : le lot finit sur un cut différé (aucune pose d’Ariane n’attend), la passe part seule et écrit, sans action du panneau', async () => {
+  const x = await lotPasse({ passe: { passes: 1 }, sansPoints: [112, 113], fin: 113 });
+  assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin').map(e => e.cuts), [[112]]);
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112]);
+  assert.deepEqual(ev(x.b, 'passe-differes-ecriture-fin').map(e => e.issue), ['fin'], 'une seule écriture, partie seule');
+  assert.deepEqual(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).map(q => q.identity.cut), [112]);
+});
