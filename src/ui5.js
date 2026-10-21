@@ -120,7 +120,7 @@
     const rg = {
       relecture: coche([['coupee', 'relecture-coupee'], ['ombre', 'relecture-ombre'], ['corriger', 'relecture-corriger']]),
       clic: coche([['tel-quel', 'clic-tel-quel'], ['gauche-recentre', 'clic-gauche-recentre'], ['tout-recentre', 'clic-tout-recentre']]),
-      grappe: !!$('grappe-differes')?.checked, passe2: !!$('passe-differes')?.checked, raison: !!$('raison-actif')?.checked,
+      grappe: !!$('grappe-differes')?.checked, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, raison: !!$('raison-actif')?.checked,
       touches: coche([['chiffres', 'raison-touches-chiffres'], ['alt-chiffres', 'raison-touches-alt-chiffres'], ['pave', 'raison-touches-pave']]),
       bandeau: $('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true',
     };

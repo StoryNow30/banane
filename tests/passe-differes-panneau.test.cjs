@@ -17,7 +17,9 @@ test('Réglages : la case dit qu’elle écrit dans ESV, cochée d’après le c
  assert.match(HTML,/<input id="passe-differes" type="checkbox"> Deuxième passe des différés en fin de lot \(écrit dans ESV\)<\/label>/);
  assert.match(HTML,/<div id="carte-choix"[\s\S]*<div id="passe-differes-row"[\s\S]*<\/section>/);
  const enr=[],p=await ouvrir(vue(null),undefined,enr);
- assert.equal(p.$('passe-differes').checked,true);
+ assert.equal(p.$('passe-differes').checked,true);assert.equal(p.$('passe-differes').indeterminate,false);
+ /* Service worker muet sur les choix : la case reste « inconnue », jamais « coupée » par défaut d'affichage. */
+ const muet=await panneau(vue(null),{globals:{BananeSettings:Settings}});assert.equal(muet.$('passe-differes').indeterminate,true);
  p.$('passe-differes').checked=false;await p.$('passe-differes').onclick();await p.attendre();
  assert.deepEqual(JSON.parse(JSON.stringify(enr)),[{passeDifferes:false}]);assert.equal(p.$('passe-differes').checked,false);
  assert.equal(p.$('notice').textContent,'Deuxième passe coupée : elle n’écrira plus rien dans ESV.');

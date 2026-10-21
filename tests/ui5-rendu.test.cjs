@@ -37,6 +37,7 @@ test('écrans de séance : aucune case, aucun bouton radio, aucun champ de saisi
  const s=R.rendre(base,'reglages');assert.ok((s.match(/<select/g)||[]).length>=5);
  for(const nom of ['relecture','clic','grappe','passe2','raison','variante','onglet'])assert.ok(s.includes(`data-sel="${nom}"`),nom);
  assert.match(s,/Deuxième passe \(écrit dans ESV\)[\s\S]*?<option value="oui" selected>Allumée<\/option>/);
+ assert.match(R.rendre({...base,reglages:{...base.reglages,passe2:null}},'reglages'),/data-sel="passe2"><option value="" selected>État inconnu<\/option>/,'état inconnu : jamais « Coupée » par défaut');
  assert.match(s,/<option value="ancienne">Ancien panneau<\/option>/);assert.doesNotMatch(s,/value="(linear|raycast|figma|ariane)"/);
 });
 
