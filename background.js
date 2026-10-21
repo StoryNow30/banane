@@ -1655,9 +1655,13 @@ async function passeDiffPoser(b,p,E){
  let now,cg;
  /* Lectures seulement : rien n'est encore écrit. */
  try{
-  const nav=await call('goToCut',{part,cut},{chemin:'auto',borneConnue:null},K.uid());
-  if(nav?.resultat!=='confirme')return refuse(`passage au cut ${cut} non confirmé (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,160)})`);
+  /* Test 18 : comme une correction de la relecture, le cut n'est posé qu'atteint par les boutons d'ESV : saut au cut d'avant (d'après, pour le cut 0), puis un pas. */
+  const avant=cut>0?cut-1:cut+1,aller=(c,chemin)=>call('goToCut',{part,cut:c},{chemin,borneConnue:null},K.uid()),nonConfirme=(c,nav)=>refuse(`passage au cut ${c} non confirmé (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,160)})`);
+  let nav=await aller(avant,'auto');if(nav?.resultat!=='confirme')return nonConfirme(avant,nav);
+  nav=await aller(cut,'pas');if(nav?.resultat!=='confirme')return nonConfirme(cut,nav);
+  if(nav.chemin!=='pas-a-pas')return refuse(`cut ${cut} atteint par ${nav.chemin==='evenement'?'la carte (saut)':nav.chemin||'un chemin inconnu'} : pas de pose juste après un saut`);
   const etat=await readState();if(etat?.identity?.part!==part||etat.identity.cut!==cut)return refuse(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${cut}`);
+  try{engine.writable(etat.identity);}catch{return refuse('cible bloquée par un résultat incertain archivé');}
   const capture=await call('capture',etat);K.assertTarget(etat.identity,capture.identity);
   now=await readState();
   if(K.key(now.identity)!==K.key(etat.identity)||!K.equalPoses(etat.rails,now.rails))return refuse('le cut affiché ou ses rails ont changé pendant la capture');

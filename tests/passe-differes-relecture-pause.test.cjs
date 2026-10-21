@@ -18,7 +18,8 @@ test('relecture en pause : la deuxième passe en écriture ne part pas (relancé
   for (let i = 0; i < 600 && x.b.get('relecture').passe?.etat !== 'en-pause'; i++) await attendre(10);
   assert.equal(x.b.get('relecture').passe.etat, 'en-pause');
   const avant = x.adapter.enPlace.length;
-  await x.b.api('passe-differes-ecrire'); await x.b.get('passeDiff').cours; await attendre(50);
+  await assert.rejects(x.b.api('passe-differes-ecrire'), /Relecture en pause/);
+  await x.b.get('passeDiffEcrireDemande')(); await x.b.get('passeDiff').cours; await attendre(50);
   const fin = ev(x.b, 'passe-differes-ecriture-fin').at(-1);
   assert.equal(fin.issue, 'refus-depart'); assert.match(fin.raison, /relecture/); assert.equal(x.adapter.enPlace.length, avant, 'rien n’est écrit dans ESV pendant la pause');
   await x.b.api('relecture-arreter');

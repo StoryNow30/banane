@@ -6,7 +6,7 @@ const j = x => JSON.parse(JSON.stringify(x));
 
 test('écriture : un cut que la liste d’ESV dit vert n’est jamais écrasé ; la passe s’arrête à la première pose non écrite', async () => {
   const x = await relancer(await lotPasse({ passe: { passes: 1 }, deux: true, statuts: { 112: 'valid' } }));
-  assert.deepEqual(x.pasPasse, ['goToCut', 'capture'], 'lectures seulement : ni pose ni validation, et le cut 114 n’est pas visité');
+  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'capture'], 'lectures seulement : ni pose ni validation, et le cut 114 n’est pas visité');
   const e = ev(x.b, 'passe-differes-ecriture'); assert.deepEqual(e.map(q => [q.identity.cut, q.resultat]), [[112, 'refuse']]); assert.match(e[0].raison, /valid.*pas un cut rouge, rien n’est écrasé/);
   assert.equal(ev(x.b, 'passe-differes-ecriture-fin').at(-1).issue, 'refuse');
   assert.equal(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).length, 0);
@@ -30,7 +30,10 @@ test('écriture : une relecture choisie attend la passe (elle ne la bloque pas) 
 test('écriture : une relecture en pause tient ESV, la passe n’y écrit pas', async () => {
   const x = await lotPasse({ passe: { passes: 1 } });
   x.b.get('relecture').passe = { etat: 'en-pause' };
-  x.adapter.identity.cut = 116; await x.b.api('passe-differes-ecrire'); await x.b.get('passeDiff').cours;
+  x.adapter.identity.cut = 116;
+  await assert.rejects(x.b.api('passe-differes-ecrire'), /Relecture en pause/, 'le panneau ne la relance pas');
+  /* La garde de la passe elle-même (départ automatique en fin de lot) : */
+  await x.b.get('passeDiffEcrireDemande')(); await x.b.get('passeDiff').cours;
   const fin = ev(x.b, 'passe-differes-ecriture-fin').at(-1); assert.equal(fin.issue, 'refus-depart'); assert.match(fin.raison, /relecture est en cours ou en pause/);
   assert.deepEqual(x.adapter.enPlace, []);
 });

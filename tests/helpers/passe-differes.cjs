@@ -6,7 +6,7 @@
 const { production, memoire, base, K, S, EsvTrou, SCOPE, ev, attendre } = require('./lot-profil.cjs');
 class EsvEcriture extends EsvTrou {
   constructor(opts = {}, sansPoints = [112]) {
-    super([]); this.sansPoints = sansPoints; this.statuts = {}; this.traites = 100; this.total = 200; this.opts = opts; this.restes = []; this.enPlace = [];
+    super([]); this.sansPoints = sansPoints; this.statuts = {}; this.traites = 100; this.total = 200; this.opts = opts; this.restes = []; this.enPlace = []; this.operateur = [];
   }
   ajuster() { this.noPoints = this.sansPoints.includes(this.identity.cut); }
   async ping() { return { ...await super.ping(), label: { pageId: this.identity.pageId, part: this.identity.part, cut: this.identity.cut } }; }
@@ -15,8 +15,8 @@ class EsvEcriture extends EsvTrou {
     this.calls.push('goToCut'); this.identity.cut = target.cut; this.rails = K.clone(base.rails); this.ajuster();
     return { format: 'ariane-goto-cut-v1', operationId, resultat: 'confirme', confirme: true, chemin: options.chemin === 'pas' ? 'pas-a-pas' : 'evenement', refusal: null };
   }
-  /* Ligne de la liste d'ESV : rouge pour un différé du lot, sauf `statuts` (cut → statut forcé). */
-  ligne(i) { return { i, s: this.statuts[i] ?? (this.sansPoints.includes(i) ? 'invalid' : 'valid'), t: false, v: true, f: false, e: null }; }
+  /* Ligne de la liste d'ESV : rouge pour un différé du lot, sauf `statuts` (cut → statut forcé) ; `operateur` : cuts marqués « traité par un opérateur ». */
+  ligne(i) { return { i, s: this.statuts[i] ?? (this.sansPoints.includes(i) ? 'invalid' : 'valid'), t: this.operateur.includes(i), v: true, f: false, e: null }; }
   voisins(m) {
     const rows = []; for (let i = Math.max(0, m.cut - m.fenetre); i <= Math.min(this.total - 1, m.cut + m.fenetre); i++) rows.push(this.ligne(i));
     return { ok: true, table: { lignes: this.total, pages: 1, fraiches: 0, debut: true, rompue: false, tronquee: false, tables: 1 }, geo: null, rows };

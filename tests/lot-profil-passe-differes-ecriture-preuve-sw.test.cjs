@@ -7,7 +7,7 @@ const j = x => JSON.parse(JSON.stringify(x)), ECRITURE = { passes: 1 };
 
 test('écriture : validation refusée avant l’envoi : la pose d’avant est remise, rien n’est compté, la passe s’arrête', async () => {
   const x = await relancer(await lotPasse({ passe: ECRITURE, opts: { refusAvantEnvoi: true } }));
-  assert.deepEqual(x.pasPasse, ['goToCut', 'capture', 'apply', 'validateInPlace', 'restore']);
+  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'capture', 'apply', 'validateInPlace', 'restore']);
   assert.ok(K.equalPoses(x.adapter.rails, base.rails, .001), 'la pose d’avant est remise');
   const e = ev(x.b, 'passe-differes-ecriture'); assert.deepEqual(e.map(q => [q.identity.cut, q.resultat]), [[112, 'refuse']]); assert.match(e[0].raison, /validation refusée avant l’envoi.*pose remise/);
   assert.equal(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).length, 0);
@@ -16,7 +16,7 @@ test('écriture : validation refusée avant l’envoi : la pose d’avant est re
 
 test('écriture : validation envoyée sans écriture vue : la pose reste, l’intention est notée, la passe s’arrête, rien n’est compté', async () => {
   const x = await relancer(await lotPasse({ passe: ECRITURE, ecritureVue: false }));
-  assert.deepEqual(x.pasPasse, ['goToCut', 'capture', 'apply', 'validateInPlace'], 'ni remise ni cut suivant');
+  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'capture', 'apply', 'validateInPlace'], 'ni remise ni cut suivant');
   const e = ev(x.b, 'passe-differes-ecriture'); assert.deepEqual(e.map(q => [q.identity.cut, q.resultat]), [[112, 'incertain']]); assert.match(e[0].raison, /validation incertaine.*aucune écriture de validation vue.*Contrôle ce cut dans ESV/);
   assert.equal(ev(x.b, 'passe-differes-ecriture-fin').at(-1).issue, 'incertain');
   assert.equal(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).length, 0);

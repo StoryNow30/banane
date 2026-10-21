@@ -11,7 +11,7 @@ test('écriture : un cut rouge est atteint, posé (clic « tout-recentre », rel
   assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin')[0].cuts, [112, 114]);
   assert.deepEqual(x.pasPasse, [], 'rien n’est envoyé à ESV tant que la pose du dernier cut attend sa validation');
   await relancer(x); assert.equal(x.refus.issue, 'refus-depart'); assert.match(x.refus.raison, /pose d’Ariane attend ta validation au cut 115/);
-  assert.deepEqual(x.pasPasse, ['goToCut', 'capture', 'apply', 'validateInPlace']);
+  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'capture', 'apply', 'validateInPlace']);
   assert.deepEqual(x.adapter.restes.at(-1), [{ clicHumain: 'tout-recentre' }], 'la pose de la passe ne clique jamais en direct');
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112]);
   assert.equal(x.adapter.enPlace[0].options.commande, 'ctrl-entree');
@@ -34,7 +34,7 @@ test('écriture : un cut rouge est atteint, posé (clic « tout-recentre », rel
 
 test('écriture : livrée sans plafond de poses, tous les cuts décidés sont écrits, dans l’ordre de la décision', async () => {
   const x = await relancer(await lotPasse({ passe: { passes: 1 }, deux: true }));
-  assert.deepEqual(x.pasPasse, ['goToCut', 'capture', 'apply', 'validateInPlace', 'goToCut', 'capture', 'apply', 'validateInPlace']);
+  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'capture', 'apply', 'validateInPlace', 'goToCut', 'goToCut', 'capture', 'apply', 'validateInPlace']);
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112, 114]);
   const fin = ev(x.b, 'passe-differes-ecriture-fin').at(-1); assert.equal(fin.issue, 'fin'); assert.equal(fin.ecrites, 2); assert.equal(fin.demandees, 2);
   assert.deepEqual(ev(x.b, 'validation-accepted').filter(q => q.passeDifferes).map(q => q.identity.cut), [112, 114]);
