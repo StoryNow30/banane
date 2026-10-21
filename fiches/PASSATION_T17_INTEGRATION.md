@@ -37,16 +37,16 @@ Leviers : `LEVIERS_V6` = `rechHauteurMaxMm` 25 (757d5a3), preuve de SANSPOSE (9 
 
 ## 5. `git diff --stat claude/50-test16` expliqué (fichiers livrés et outils ; essais et fiches : voir les fiches des rôles)
 
-| Fichier | Origine | Pourquoi |
-|---|---|---|
-| `background.js` | passe2 (deuxième passe : ombre, écriture, `lotCloRefus`, `poserPuisVerifier`, vue `passeDifferes`), uiport (pause et reprise de la relecture), sanspose (`l1eVoieListe`), UI-SEULE (correctifs 1, 5, 6, 7), intégration (interrupteur `banane51PasseDifferes` dans `choix-lot`, `passeDiffAllumee`, version) | |
-| `panel.html`, `panel.js` | uiport (habillage, zone de pause), intégration (case de l'interrupteur, ligne `#passe-differes-ligne`, « Arrêter la deuxième passe », « Relancer la deuxième passe », cache grisé pendant l'écriture, version), UI-SEULE (`which` retiré) | |
-| `src/ui5*.js`, `panel-ui5.css` | uiport (nouveau panneau v2, palette), UI-SEULE (« Relecture en cours », cache, taille de fenêtre), intégration (état p2 gardé, ligne de Réglages, relance, état de la palette) | |
-| `src/relecture-pause.js`, `src/carte-relecture.js` | uiport, UI-SEULE (correctif 7) | |
-| `src/gcv2-l1.js` | sanspose (`rechListeResMm`, coupé), fautes (garde de voie absolue, contre-expertise, `ecartAVoie`, `contreChaine`, coupés), intégration (`LEVIERS_V6`) | |
-| `src/settings.js` | passe2 (`passeDifferesDefaut`, `lot.passeDifferes` allumé), intégration (ligne « pourquoi ») | |
-| `src/core.js`, `src/bridge.js`, `manifest.json` | version 4.9.5.18 | |
-| `tools/banc-differes.cjs` | apprentissage 3:0 (partie 0), fautes (contre-expertise au banc) | |
-| `tools/parite-l1se-sw.cjs` | passe2 (`--passe`) | |
-| `tools/parite-relecture-sw.cjs` | uiport (parité de la relecture test 16 / réglage éteint) | |
-| `tools/manifeste-parties.cjs`, `datasets/manifeste-parties.json` | apprentissage 3:0 (D-224) | |
+| Fichier | Origine et raison |
+|---|---|
+| `background.js` | passe2 (deuxième passe : ombre, écriture, `lotCloRefus`, `poserPuisVerifier`, vue `passeDifferes`), uiport (pause et reprise de la relecture), sanspose (`l1eVoieListe`), UI-SEULE (correctifs 1, 5, 6, 7), intégration (interrupteur `banane51PasseDifferes` dans `choix-lot`, `passeDiffAllumee`, version) |
+| `panel.html`, `panel.js` | uiport (habillage, zone de pause), intégration (case de l'interrupteur, ligne `#passe-differes-ligne`, « Arrêter la deuxième passe », « Relancer la deuxième passe », cache grisé pendant l'écriture, version), UI-SEULE (`which` retiré) |
+| `src/ui5*.js`, `panel-ui5.css` | uiport (nouveau panneau v2, palette), UI-SEULE (« Relecture en cours », cache, taille de fenêtre), intégration (état p2 gardé, ligne de Réglages, relance, état de la palette) |
+| `src/relecture-pause.js`, `src/carte-relecture.js` | uiport, UI-SEULE (correctif 7) |
+| `src/gcv2-l1.js` | sanspose (`rechListeResMm`, coupé), fautes (garde de voie absolue, contre-expertise, `ecartAVoie`, `contreChaine`, coupés), intégration (`LEVIERS_V6`) |
+| `src/settings.js` | passe2 (`passeDifferesDefaut`, `lot.passeDifferes` allumé), intégration (ligne « pourquoi ») |
+| `src/core.js`, `src/bridge.js`, `manifest.json` | version 4.9.5.18 |
+| `tools/banc-differes.cjs` | apprentissage 3:0 (partie 0), fautes (contre-expertise au banc) |
+| `tools/parite-l1se-sw.cjs` | passe2 (`--passe`) |
+| `tools/parite-relecture-sw.cjs` | uiport (parité de la relecture test 16 / réglage éteint) |
+| `tools/manifeste-parties.cjs`, `datasets/manifeste-parties.json` | apprentissage 3:0 (D-224) |
