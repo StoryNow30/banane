@@ -3001,3 +3001,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Seuils d'arrêt** (couloir 45 mm, 150 mm, garde de paire, τ, δ) : plus des règles de principe, des **réglages du banc**, choisis par le gain mesuré.
 - **Règle de passage** : une version passe si elle fait gagner du temps net à Mic (différés évités moins coût des erreurs) en restant sous ces budgets. Pendant les portions de test (sans impact réel), les budgets peuvent être plus larges ; ils se resserrent avant une livraison.
 - Remplace les « 0 » de D-222 (mauvaise voie, poses à plus de 50 mm, cuts verts changés) ; le reste de D-222 tient.
+
+<!-- Numérotation : D-224 à D-238 existent sur d'autres branches (claude/50-apprentissage-3-0, claude/50-test17) ; cette entrée garde le numéro suivant de la lignée globale. -->
+
+## D-239 — 5.0 centrée sur les résultats de la GCV2 et l'autonomie ; garde de non-régression GCV2 (Mic, 22/10/2026)
+
+- **Décision** : pour Mic, le cœur de la 5.0 est les résultats de la GCV2 et l'autonomie d'Ariane. La direction a changé en cours de route (D-217, D-223) vers plus d'autonomie ; le cahier du 15/10 n'est plus la référence sur l'ordre des chantiers ni sur « ombre avant actif ». `BANANE_5.0_CAHIER_V2.md` le remplace sur ces points.
+- **Validation** : « je valide tout, à condition qu'on ne perde rien de nos perf sur GCV2 ». Valide le cahier version 2 : tableau de bord (cuts sans pose, précision, budgets D-223, autonomie), cibles du § 5, chantiers retenus et mis de côté du § 6.
+- **Condition** : garde de non-régression GCV2 (cahier v2 § 2). Toute modification de la décision d'un cut est rejouée contre la base gelée de la test 18 (9 lots de réglage et 3:0) avant paquet ; critères stricts ; tout recul est une décision écrite de Mic avec le compromis chiffré. Le juge et la base sont à verser au dépôt (le juge est aujourd'hui hors dépôt).
+- **Reste ouvert** : seuil d'autonomie (après mesure de base sur 3:1 et 3:5), contre-expertise des verts de chaîne, ré-épinglage de `engine.js` pour la deuxième passe, projet de la partie 2.
+- **Rapport d'Astra du 21/10** (`audit/chantiers/audit-decodage-voie-precision-astra.md`) : priorité au choix de voie après vérification que la bonne paire existe parmi les candidats ; hauteur apprise comme référence du chantier précision.
