@@ -1,5 +1,13 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.19 — 4.9.5 test 19 (L1-e6) (22/10)
+
+Manifeste `4.9.5.19`, « 4.9.5 test 19 (L1-e6) », base : la 4.9.5 test 18 (`claude/50-test17`, 86ea20c) plus **un seul correctif**.
+- **Écho : « La session Écho précédente (N visite(s)) n'a pas été téléchargée en entier » ne bloque plus le lancement d'un nouvel Écho après un export complet.** Le panneau acquitte l'export final confirmé avec `final:true` ; la commande `native-export-ack` du service worker ne transmettait pas ce champ à `Sessions.ackExported`, donc `finalExportAt` n'était jamais noté (garde AM-19 de la 4.9.0.18, jamais atteinte de bout en bout) et « Télécharger à nouveau la session » ne débloquait rien. Une ligne dans `background.js` ; essai `tests/echo-ack-final-sw.test.cjs` (rouge avant, vert après ; sans `final`, le blocage reste).
+- Rien d'autre ne change : la pose, la décision des cuts, la deuxième passe, la relecture et l'interface sont ceux de la test 18.
+Consigne : `consignes/seance-terrain-4.9.5-test-19-2026-10-22.md` ; retour arrière : la 4.9.5 test 18.
+- Non vérifié : le correctif n'a pas été joué dans le vrai ESV ; il est couvert par l'essai du service worker (maquette de page).
+
 ## 4.9.5.18 — 4.9.5 test 18 (L1-e6) (21/10)
 
 Manifeste `4.9.5.18`, « 4.9.5 test 18 (L1-e6) », paquet `ariane-4.9.5-test.18.zip` ; base : `claude/50-apprentissage-3-0` (la test 16 plus D-224) avec les branches `claude/50-t17-uiport`, `claude/50-t17-passe2`, `claude/50-t17-sanspose`, `claude/50-t17-fautes` fusionnées (`fiches/PASSATION_T17_INTEGRATION.md`). La 4.9.5.17 est le paquet « interface seule » livré à part.
