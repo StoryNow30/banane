@@ -20,7 +20,8 @@ Condition de Mic pour toute la suite. Chaque modification qui touche la décisio
    - poses à 10 mm ou moins : nombre et proportion au moins égaux à la base ;
    - poses à plus de 20 mm : 0 ; mauvaise voie : 0 ; verts changés : 0 ; pose sans preuve du nuage : 0 ;
    - aucun cut posé à 10 mm ou moins ne passe à plus de 20 mm.
-3. **Liste de tous les cuts dont l'erreur augmente de plus de 2 mm**, montrée à Mic avec le paquet.
+3. **Liste de tous les cuts dont l'erreur augmente de plus de 2 mm, et de tous les cuts qui perdent leur pose**, montrée à Mic avec le paquet. Un total inchangé peut cacher un cut perdu et un cut gagné : la liste par cut est la vraie garde.
+3 bis. **Parité extension / banc** : quand `background.js` ou un module du service worker change, la parité (`tools/parite-l1se-sw.cjs`, `--passe` si la deuxième passe est touchée) est rejouée sur au moins un lot, 0 écart ; la garde du banc seule ne prouve pas le vrai code.
 4. **Un recul d'un critère n'est jamais silencieux** : il demande une décision écrite de Mic avec le compromis chiffré (exemple connu : le cut 797 de la 3:0 passe de 8 à 10 mm en test 18).
 5. **L'outil de jugement et la base sont versés au dépôt.** Aujourd'hui le juge est hors dépôt ; sans lui la garde n'est pas reproductible. La base ne contient que des comptes, des millimètres et des numéros de cuts, scellée par SHA-256.
 
@@ -35,6 +36,8 @@ Mesures de banc sur des parties qui ont servi à régler : un plancher à ne pas
 
 Test 16, pour mémoire : 525 poses jugées, 407 à 5 mm ou moins, 510 à 10 mm ou moins.
 
+**Auto-audit (22/10)** : ces chiffres de la test 18 viennent du rapport de l'intégrateur ; l'orchestrateur a vérifié le paquet, le verify et les parités, pas recalculé ce tableau. Il devient la base gelée seulement une fois recalculé par le juge versé au dépôt (chantier 1), scellé par SHA-256 avec ses fichiers de vérité (comptes, millimètres, numéros de cuts, rien d'autre).
+
 ## 4. Tableau de bord 5.0, le même à chaque version
 
 1. Part de cuts laissés sans pose.
@@ -43,6 +46,10 @@ Test 16, pour mémoire : 525 poses jugées, 407 à 5 mm ou moins, 510 à 10 mm o
 4. Autonomie : part de cuts d'une partie sans retouche de Mic, et temps net gagné.
 
 Chaque chiffre dit sa population. Un chiffre de réglage et un chiffre d'examen ne se mélangent pas. Première mesure d'autonomie : les Échos de la 3:1 et de la 3:5.
+
+**Définition de l'autonomie (point 4), pour qu'elle soit calculable** : sur une partie où Mic a fait l'Écho complet, un cut est « sans retouche » si l'Écho ne le déplace pas de plus de 10 mm et ne change pas sa voie. Autonomie = cuts sans retouche / cuts du lot (nuage vide compris, comptés à part). Instrument : `tools/jointure-echo-orbite.cjs`. Le « temps net gagné » se mesure par le temps d'Écho par cut relu (déjà dans les exports) multiplié par les cuts que Mic n'a plus à reprendre, moins le temps passé sur les verts faux ; c'est une estimation, dite comme telle.
+
+**Règle des parties d'examen** : une partie d'examen n'est ouverte qu'une fois, modèle et seuils gelés avant ; après l'examen elle passe en apprentissage par décision écrite (comme la 3:0, D-224) et une nouvelle partie neuve est nommée en réserve. Les résultats du premier examen ne servent pas à améliorer le second sous la même étiquette « hors apprentissage ».
 
 ## 5. Cibles
 
@@ -74,6 +81,8 @@ Chaque chiffre dit sa population. Un chiffre de réglage et un chiffre d'examen 
 ## 8. Décisions qui restent à Mic
 
 Seuil d'autonomie après la mesure de base ; contre-expertise des verts de chaîne (coupée) ; ré-épinglage de `engine.js` pour la deuxième passe ; projet de rattachement de la partie 2 ; fusion dans `main`, étiquette, publication.
+
+**Tronc de développement** : le code de la 5.0 vit sur `claude/50-test17` (tête de la test 18) ; ce cahier, D-239 et l'architecture (`fiches/ARCHITECTURE_5.0.md`) sont écrits sur `claude/execute-prompt-00-18ra5a`. Ils sont à reporter sur le tronc au premier chantier, et `DECISIONS.md` doit redevenir un seul fichier (D-224 à D-238 sont aujourd'hui sur deux branches).
 
 ## 9. Hors périmètre
 
