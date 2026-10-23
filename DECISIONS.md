@@ -3046,3 +3046,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Nouveau chantier** : un bouton dans Orbite, qui, activé, permet de passer à la partie suivante programmée, de noter ses données de départ (validés, invalides, ignorés), de commencer à poser, et ainsi de suite sur toutes les parties programmées. Cahier v2, chantier 11 ; architecture, module P, version T27.
 - **Conditions** : action de changement de partie relevée d'abord sur la maquette ESV ; reconnexion automatique après rechargement ; garde verte ; arrêt à la première anomalie ; bouton éteint par défaut ; Mic présent au premier essai.
 
+## D-245 — File de parties : réponses de Mic ; interface repensée (Mic, 23/10/2026 ; précise D-244)
+
+- **Réponses** : (1) Mic renseigne le **nombre de parties** à traiter ; (2) après chaque partie : **relecture et correction**, activables ou désactivables par un bouton, **pas d'export automatique** ; (3) **rien n'arrête la file à part un bouton d'arrêt**. Remplace les règles d'arrêt proposées par l'orchestrateur (arrêt à la première anomalie, budget D-223) : aucun arrêt de prudence. Les cas où continuer est impossible (page qui ne change pas de partie, onglet fermé, ESV muet, lot qui s'arrête sur un refus) arrêtent la file avec une alerte et un bilan.
+- **Risque accepté** : une erreur répétée sur plusieurs parties sans personne. Paramètres retenus : premier essai à deux parties avec Mic présent, bilan par partie, bouton d'arrêt.
+- **Interface** : à repenser autour de ces ajouts, avec clarté, simplicité et efficacité, sans perdre de donnée. Maquette cliquable de l'accueil validée par Mic avant le code ; T20 puis T27.
+
