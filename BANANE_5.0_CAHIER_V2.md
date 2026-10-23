@@ -22,7 +22,7 @@ Condition de Mic pour toute la suite. Chaque modification qui touche la décisio
    - poses à 10 mm ou moins : nombre et proportion au moins égaux à la base ;
    - poses à plus de 20 mm : 0 ; mauvaise voie : 0 ; verts changés : 0 ; pose sans preuve du nuage : 0 ;
    - aucun cut posé à 10 mm ou moins ne passe à plus de 20 mm.
-   - temps par cut en lot et temps par cut de relecture : pas plus lents qu'en base, ou écart écrit (critère 6, actif dès que la vitesse de référence est versée).
+   - **temps par cut en lot et temps par cut de relecture : pas plus lents qu'en base, ou écart écrit (critère 6, permanent, D-242).** La base de vitesse est prise au premier rejeu de la garde (test 19) puis resserrée à chaque gain : la vitesse ne se perd jamais en améliorant le moteur.
 3. **Liste de tous les cuts dont l'erreur augmente de plus de 2 mm, et de tous les cuts qui perdent leur pose**, montrée à Mic avec le paquet. Un total inchangé peut cacher un cut perdu et un cut gagné : la liste par cut est la vraie garde.
 3 bis. **Parité extension / banc** : quand `background.js` ou un module du service worker change, la parité (`tools/parite-l1se-sw.cjs`, `--passe` si la deuxième passe est touchée) est rejouée sur au moins un lot, 0 écart ; la garde du banc seule ne prouve pas le vrai code.
 4. **Un recul d'un critère n'est jamais silencieux** : il demande une décision écrite de Mic avec le compromis chiffré (exemple connu : le cut 797 de la 3:0 passe de 8 à 10 mm en test 18).
@@ -72,7 +72,7 @@ Chaque chiffre dit sa population. Un chiffre de réglage et un chiffre d'examen 
 6. **Maquette ESV dans `verify`** et campagne de pannes (S4, F2) ; preuve serveur (F4) ; vérifier pourquoi `serverConfirmed` est faux sur toutes les poses du lot de la partie 4:2.
 7. **Deuxième passe** : cible hors de la vue (touche `engine.js`, accord de Mic pour ré-épingler).
 8. **Précision sous 5 mm** : 60 cuts repointés de façon indépendante, hauteur apprise en comparaison. Sous la garde.
-9. **Vitesse d'exécution de la 4.9** (demande de Mic du 23/10) : retrouver, notamment pour la relecture, la vitesse obtenue en 4.9 et réatteindre les chiffres de référence du § 6 bis. Chantier de fin, avant la 5.0 officielle, mais la mesure de base démarre tôt : le temps par cut et le temps de relecture entrent dans le tableau de bord dès le chantier 2 pour que chaque chantier voie ce qu'il coûte.
+9. **Performance et vitesse, surtout en relecture** (demande de Mic du 23/10, D-242) : retrouver puis dépasser la vitesse de la 4.9, chiffres de référence du § 6 bis. Deux temps : (a) mesure de base dès le chantier 2 (temps par cut en lot, par phase, et temps par cut de relecture ; l'export du cache de Mic donne les tests 18 et 19 sur une trentaine de parties) ; (b) améliorations ciblées sur ce que la mesure désigne, en commençant par la relecture : attente de la page d'ESV, lectures de nuage, refus de navigation « action d'Ariane en cours » qui avait arrêté la relecture de la 3:0 (vérifier s'il persiste), recaptures. **Cible de la relecture : 1,8 s par cut ou mieux sur une grande partie ; lot : cycle médian de 2,44 s ou mieux sur une partie difficile ; toute valeur plus lente est un écart écrit.** Le chantier se termine avant la 5.0 officielle mais la constance (critère 6 de la garde) s'applique dès le chantier 1.
 10. **Livraison** : fusion des lignées, base de décisions unique, cahier signé, essai sur Edge, validation de l'ancien panneau remplacé, petits défauts d'interface relevés par Mic (liste à recueillir), étiquette et publication par Mic.
 
 **Mis au second plan** (repris seulement s'ils servent les cibles) : saut direct après F5, reprise automatique bornée, caméra au VALIDATE, ombre GCV1 pendant l'Écho, rail « dessus seul », B2 caméra.
@@ -92,6 +92,7 @@ Chiffres tels que consignés dans `DECISIONS.md` et `CHANGELOG.md`, non recalcul
 
 ## 7. Portes de version
 
+- **Constance de la performance** (D-242) : chaque amélioration du moteur (voie, appuis, contre-expertise, deuxième passe, hauteur apprise) annonce son coût en temps par cut avant d'être livrée ; un coût qui fait reculer le critère 6 demande une décision écrite de Mic, comme tout recul de la garde.
 - Une version de test : garde de non-régression verte, `node tools/verify.cjs` à 0 échec sans essai annulé, consigne terrain, retour de terrain analysé avant la suivante.
 - Une nouveauté à la fois quand le risque d'écriture augmente (règle de la version 1, § 6, rétablie pour tout ce qui écrit dans ESV).
 - **5.0 stable** : vitesse de la 4.9 retrouvée (§ 6 bis) ; cibles du § 5 tenues sur parties d'examen avec intervalles, filet de sécurité du chantier 5 en place, fusion et publication par Mic.

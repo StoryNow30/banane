@@ -3026,3 +3026,10 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Ce qui reste** : la détection en ombre (« ce cut ressemblerait à un cut à SKIP : aucun point, ou un seul scanner »), notée au journal, comparée aux SKIP de Mic dans les exports, sans aucune commande ESV, pour chiffrer la part concernée. Chantier renommé « cuts à SKIP parmi les rouges restants : détection en ombre seule ».
 - **Règle générale confirmée** : aucune validation ni SKIP automatique d'un cut non résolu.
 
+## D-242 — Performance et vitesse, surtout en relecture, avec constance pour toute amélioration du moteur (Mic, 23/10/2026)
+
+- **Demande** : ajouter au cahier l'amélioration de la performance et de la vitesse, surtout en relecture, et garder cette constance pour l'amélioration du moteur.
+- **Chiffres retrouvés** (cahier v2 § 6 bis) : référence 4.9.0.8 en mode rapide, cycle médian 2,44 s par cut (6,73 s en référence) ; relecture de la test 7 sur la partie 11, 144 cuts en 4 min 20 s (1,8 s par cut) ; relecture de la 3:0 en test 15, 439 cuts en 33 min 47 s (4,6 s par cut), après un premier arrêt (navigation refusée pendant une capture) ; lot de la 4:2 en test 18, cycle médian 1,6 s.
+- **Règle** : le temps par cut en lot et en relecture entre dans la garde de non-régression GCV2 (critère 6) de façon permanente ; chaque amélioration du moteur annonce son coût en temps ; un recul demande une décision écrite de Mic.
+- **Cibles** : relecture 1,8 s par cut ou mieux sur une grande partie ; lot 2,44 s ou mieux sur une partie difficile. Mesure de base dès le tableau de bord, sur l'export du cache de Mic s'il le fournit.
+
