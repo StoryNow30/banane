@@ -3036,6 +3036,6 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 ## D-243 — Interface : reconnexion à ESV après rechargement et historique des parties (Mic, 23/10/2026)
 
 - **Demande** : (1) l'extension se reconnecte seule à la page ESV à chaque rechargement ; (2) à défaut, un bouton de reconnexion dans la barre du haut, à côté de « Onglets ESV » ; (3) l'historique des parties traitées sur la page d'accueil. D'autres détails d'interface suivront.
-- **Cause lue dans le code (test 18)** : le rechargement de l'onglet détruit l'adaptateur injecté ; `chrome.tabs.onUpdated` ne le réinjecte que pour Écho (`echoReprise`), pas pour Orbite, d'où le clic à refaire dans le menu.
+- **Cause : SUPPOSÉE, non constatée** (précision de Mic le 23/10 : l'adaptateur ne disparaît pas ; c'est le bouton de reconnexion du menu qui ne fonctionne pas comme il l'attend, il sert à choisir l'onglet et non à se reconnecter). Lecture du code (test 18) : `chrome.tabs.onUpdated` ne rétablit la connexion que pour Écho (`echoReprise`), pas pour Orbite. À reproduire avec le message exact affiché par le panneau avant de corriger.
 - **Chantier** : cahier v2, chantier 10 ; architecture, module U. Livré avec les autres détails d'interface, sous la garde.
 
