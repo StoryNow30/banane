@@ -1,130 +1,226 @@
-# Architecture du développement restant de la 5.0 (22 octobre 2026)
+# Architecture du développement restant de la 5.0 (révisée le 23 octobre 2026)
 
-Cadre le reste du chemin autour de `BANANE_5.0_CAHIER_V2.md` (D-239). Lecture seule au moment de l'écriture : rien n'est lancé, rien n'est modifié dans le code. Le tronc de code est `claude/50-test17` (test 18, 4.9.5.18) ; cette fiche doit y être reportée avec le cahier v2 et D-239.
+Remplace la fiche du 22/10. Cadre le reste du chemin autour de `BANANE_5.0_CAHIER_V2.md` et des décisions D-239 à D-243. Lecture seule du code au moment de l'écriture : rien n'est lancé, rien n'est modifié dans le code. Tronc de code : `claude/50-test17` (test 18, 4.9.5.18) plus `claude/50-echo-ack` (test 19, 4.9.5.19, un seul commit : acquittement de l'export Écho). Cette fiche, le cahier v2 et D-239 à D-243 sont écrits sur `claude/execute-prompt-00-18ra5a` et doivent être reportés sur le tronc au premier chantier. Aucune donnée de partie, aucun code de projet, aucun identifiant de modèle.
 
-## 0. Auto-audit du cahier v2 (corrigé dans le cahier le même jour)
+Règle première partout : **ne rien perdre des résultats de la GCV2** (D-239), vitesse comprise (D-242). Aucun SKIP envoyé par Ariane (D-241).
 
-| Faille trouvée | Correction |
-|---|---|
-| La base gelée (§ 3) n'était pas recalculée par l'orchestrateur, et le juge qui la produit est hors dépôt | Base gelée seulement une fois recalculée par le juge versé au dépôt (chantier 1), scellée par SHA-256 |
-| Un total inchangé de cuts sans pose peut cacher un cut perdu et un cut gagné | Garde par cut : liste des cuts qui perdent leur pose, en plus de ceux dont l'erreur augmente de plus de 2 mm |
-| La garde du banc ne prouve pas le vrai code de l'extension | Parité extension/banc rejouée à chaque changement du service worker |
-| « Autonomie » n'était pas calculable | Définition : cut sans retouche = Écho ne le déplace pas de plus de 10 mm et ne change pas sa voie ; instrument : la jointure Écho-Orbite |
-| Les parties d'examen pouvaient être réutilisées sous la même étiquette | Une partie d'examen s'ouvre une fois, gelée avant ; puis passe en apprentissage par décision écrite |
-| Le cahier v2 et D-239 ne sont pas sur le tronc de code ; `DECISIONS.md` est éclaté sur deux branches | Report sur `claude/50-test17` au premier chantier, un seul `DECISIONS.md` |
+---
 
-Non corrigé, à décider par Mic : le cahier garde « deuxième passe allumée en écriture, sans limite » (son choix D-237) alors qu'aucune écriture réelle n'a encore eu lieu ; § 5 ci-dessous propose un protocole de première écriture plutôt qu'un retour en arrière.
+## a. Système et modules à construire
 
-## 1. Le système tel qu'il est (ce sur quoi on construit)
+### a.1 Ce qui existe (on construit dessus)
 
 ```
 ESV (page Potree + jQuery)
    ▲ commandes DOM / lecture       │ événements, liste d'ESV, nuage
 src/bridge.js (contenu)  ◄────────┘
    ▲
-background.js (service worker, un seul onglet ESV : selectedTab)
-   ├─ src/engine.js            GELÉ (épinglé) : chaîne de pose GCV1, premier passage
-   ├─ src/lot-decision.js      décision du lot (first-pass, choice, window, crossing, deferred)
-   ├─ src/gcv2-l1.js           GCV2 « L1 » : décision des différés en lot (recherche recentrée,
-   │                           voie absolue, garde de voie, leviers v6)
-   ├─ src/voie-recentree.js    paires recentrées dans le nuage
-   ├─ src/regles-metier.js     zones PN / ADV (en ombre dans le lot)
-   ├─ src/hauteur-apprise.js   correction verticale apprise (EN OMBRE)
-   ├─ passe différés (dans background.js) : fin de lot, décision avec poses avant/après,
-   │                           écriture dans ESV sous gardes, interrupteur Réglages
-   ├─ relecture (dans background.js) : verts à contrôler, « Ombre » / « Corriger », pause
-   └─ relevés en lecture seule, journal, export (journal, bilan, corpus, liste, verts)
+background.js (service worker, un seul onglet ESV : selectedTab, gardé dans banane3Tab)
+   ├─ src/engine.js        GELÉ (épinglé, baseline contrôlée par verify) : chaîne de pose GCV1
+   ├─ src/lot-decision.js  décision du lot      ├─ src/gcv2-l1.js  GCV2 « L1 » (différés, leviers v6)
+   ├─ src/voie-recentree.js, regles-metier.js (zones), hauteur-apprise.js (ombre)
+   ├─ passe différés (fin de lot, écrit sous gardes)   ├─ relecture (ombre / corriger, pause, attentes fixes)
+   ├─ chrome.tabs.onUpdated → echoReprise (Écho seul) ; retablirApresRechargement (lot seul)
+   └─ journal, export, relevés lecture seule
    ▲
-panel.js + src/ui5*.js (ancien panneau, v2, palette)
+panel.js + src/ui5*.js (panneau ; message « ESV n'est pas connecté » tiré de l'état OUVERT du volet)
 
-Hors ligne (banane + banane-data)
-   exports ──► banane-data/collections (archive brute, SHA-256)
-   tools/banc-differes.cjs rejouer   rejeu de la chaîne sur un lot archivé
-   juger.cjs (HORS DÉPÔT, scratchpad)  jugement contre la vérité Écho
-   cv.cjs (hors dépôt)               validation croisée par partie
-   tools/parite-l1se-sw.cjs          parité extension / banc (--passe)
-   tools/jointure-echo-orbite.cjs    jointure Écho ↔ Orbite par cut
-   tools/gcv2-jeu.cjs, gcv2-apprendre.cjs   hypothèses et apprentissage hors ligne (G1-a/b)
-   tools/hauteur-apprise.cjs         modèle de hauteur
-   datasets/manifeste-parties.json   apprentissage / examen / témoin
+Hors ligne (dépôt + archives hors dépôt)
+   tools/banc-differes.cjs rejouer|predire|agreger      rejeu de la chaîne sur un lot archivé (profils base, L1, L1-se)
+   tools/parite-l1se-sw.cjs [--passe]                  vrai service worker en vm contre ESV simulé (tests/helpers/perf-production.cjs)
+   tools/parite-relecture-sw.cjs                       cinq relectures dans le vrai service worker (tests/helpers/relecture-lot.cjs)
+   tools/relecture-banc.cjs                            extension réelle dans Chromium + maquette ESV (branche claude/esv-locale-audit, Playwright)
+   tools/perf-lot.cjs, perf-phases.cjs, perf-v3.cjs    temps terrain lus dans les exports
+   tools/jointure-echo-orbite.cjs                      Écho ↔ Orbite par cut
+   tools/verify.cjs (+ verify-garde.cjs : verrou « rejeu lourd », priorité basse)
+   juger.cjs, cv.cjs                                   HORS DÉPÔT (scratchpad) : à verser
+   datasets/manifeste-parties.json                     apprentissage / examen / témoin
 ```
 
-Points d'appui déjà là : le générateur d'hypothèses par cut (H0 à H5, `gcv2-jeu.cjs`), la décision des différés avec voisins avant et après (passe), la jointure Écho-Orbite, le manifeste, la parité. Trous : juge hors dépôt, aucune maquette ESV dans `verify`, aucune classe de provenance des appuis, décision de voie purement locale.
+### a.2 Modules à construire et interfaces
 
-## 2. Modules à construire, et où ils se branchent
+| # | Module | Emplacement | Contrat (entrée → sortie) |
+|---|---|---|---|
+| R | Report sur le tronc | tronc | cahier v2, cette fiche, D-239 à D-243 ; `DECISIONS.md` redevient un seul fichier (D-224 à D-238 sont sur deux branches) |
+| A | **Garde de non-régression GCV2** | `tools/garde-gcv2.cjs`, `tools/juger.cjs` (porté), `datasets/garde-gcv2/` | voir a.3 |
+| B | **Tableau de bord** | `tools/tableau-bord.cjs` → `fiches/TABLEAU_BORD.md` + `datasets/tableau-bord/<version>.json` | voir a.4 |
+| V | **Vitesse** | V-a mesure (`perf-lot.cjs` existant, `datasets/vitesse/`) ; V-b relecture ; V-c lot | voir a.5 ; V-b et V-c changent `background.js` (attentes), jamais la décision |
+| U | **Interface D-243** | `panel.js`, `src/ui5*.js`, `background.js` (action `reconnect` → `equiperOnglet(selectedTab)`, `onUpdated` hors Écho et hors lot) | aucune commande ESV ; l'historique lit `batch-started` / `batch-stopped-at-end` |
+| SK | **Cuts à SKIP, ombre seule** | `src/regles-metier.js` ou module voisin ; événement `skip-ombre` ; `tools/skip-ombre.cjs` | entrée : nombre de points et scanners déjà lus pour le cut ; sortie : journal seulement ; l'outil hors ligne compare aux SKIP de Mic dans les exports (précision, rappel) |
+| C | Diagnostic « oracle » de la voie | `tools/voie-oracle.cjs` (hors ligne) | par bloc d'ADV : la bonne paire est-elle parmi les candidats à 5 / 10 / 20 mm ; parts « candidat manquant », « mal classé », « appui contaminé » |
+| E | Provenance des appuis (M2) | `src/lot-decision.js`, `src/gcv2-l1.js` | classe par appui `{humain, chaine, l1, passe}` ; pose L1 et pose de la passe jamais appui ; verts de chaîne non contrôlés = appuis faibles en ADV |
+| D | Décodage global de la voie | `src/voie-decodage.js` (pur, sans DOM), appelé par la passe puis par le lot en ADV | états = paires candidates, émissions = preuves du nuage, transitions = continuité ; **abstention** si la marge au second chemin est faible ; jamais de pose sans preuve des deux rails |
+| G | Maquette ESV | G1 : ESV simulé en vm étendu en campagne de pannes, dans `verify` (rejeu court) ; G2 : maquette Playwright de `relecture-banc.cjs`, complète avant tout paquet qui écrit | pannes : worker arrêté en pleine capture / pose / validation / écriture de la passe, F5, 500 puis 204, 502, nuage vide, onglet caché, cible hors vue |
+| H | Preuve serveur (F4) | `background.js` autour de `applied-verified`, lecture seule d'abord | pourquoi `serverConfirmed` est faux sur 68/68 poses du lot de la partie 4:2 |
+| F | Contre-expertise des verts de chaîne | déjà codée (leviers `contreChaine*`) ; câblage si Mic l'allume | gain net (verts rendus justes − dégradés) sur la base et la 3:0 |
+| I | Deuxième passe : cible hors de la vue | `engine.js` (ré-épinglage) ou contournement « déplacer la vue » hors moteur | poses écrites / poses décidées sur lots de terrain |
+| J | Précision sous 5 mm | `tools/repointage.cjs` (hors ligne) ; 60 cuts repointés deux fois | plafond de bruit par axe ; décision d'activer la hauteur apprise |
+| K | Livraison | fusion, cahier signé, Edge, ancien panneau, étiquette | cahier v2 § 7, « 5.0 stable » |
 
-| # | Module | Emplacement | Se branche sur | Livrable mesurable |
-|---|---|---|---|---|
-| A | **Garde de non-régression GCV2** | `tools/garde-gcv2.cjs` ; `datasets/garde-gcv2/` (vérités Écho en comptes/mm/numéros, résultats attendus, SHA256SUMS) ; essai `tests/garde-gcv2.test.cjs` sur une fixture | `banc-differes rejouer` + juge versé (`tools/juger.cjs`, porté du scratchpad) | Une commande : rejoue la base, juge, compare au scellé, imprime la liste par cut (perdus, dégradés > 2 mm, gagnés), code de sortie rouge au premier recul |
-| B | **Tableau de bord** | `tools/tableau-bord.cjs` ; sortie `fiches/TABLEAU_BORD.md` par version | juge, jointure Écho-Orbite, manifeste | Les 4 indicateurs du cahier § 4, chacun avec sa population et son intervalle (Wilson), par partie puis total |
-| C | **Diagnostic « oracle » de la voie** | `tools/voie-oracle.cjs` (hors ligne, lecture seule) | `gcv2-jeu.cjs` (hypothèses), vérité Écho, zones `regles-metier` | Par bloc d'ADV : part des cuts où une paire de la bonne voie existe parmi les candidats à 5 / 10 / 20 mm ; part « candidat manquant » / « mal classé » / « appui contaminé » |
-| D | **Décodage global de la voie** | `src/voie-decodage.js` (nouveau, pur, sans accès DOM), appelé d'abord par la passe différés | passe différés (elle a déjà avant + après et une zone) ; plus tard la décision du lot en ADV | Chemin de voie par zone (états = paires candidates dédupliquées, émissions = preuves du nuage, transitions = continuité écartement/dévers, changement de voie seulement en ADV), **abstention** si la marge au second chemin imposant une autre paire au cut est insuffisante. Jamais de pose sans preuve directe des deux rails |
-| E | **Provenance des appuis (M2)** | `src/lot-decision.js` et `gcv2-l1.js` : classe sur chaque appui `{humain, chaine, l1, passe}` ; règle par zone | D-221 déjà : une pose L1 n'est jamais appui. Étendre : pose de la passe jamais appui ; en ADV, verts de chaîne non contrôlés = appuis faibles | Rejeu de la base sans perte (garde A) ; sur 3:0, les 4 verts de chaîne faux ne se propagent plus (mesuré) |
-| F | **Contre-expertise des verts de chaîne** | déjà codée (leviers `contreChaine*`, banc seulement) ; à câbler dans `background.js` si Mic l'allume | gcv2-l1 | Gain net mesuré (verts rendus justes − verts dégradés) sur la base et sur 3:0 ; parité |
-| G | **Maquette ESV dans `verify`** (S4, F2) | `tests/esv-maquette/` porté de `claude/esv-locale-audit` (f4f2720) ; rejeu court (~40 cuts) dans `verify`, complet avant paquet | bridge, background | Campagne de pannes exécutable : worker arrêté en pleine capture / pose / validation / écriture de la passe, F5 à chaque étape, 500 puis 204, 502 relancé, nuage vide, onglet caché, cible hors de la vue |
-| H | **Preuve serveur (F4)** | `background.js` autour de `applied-verified` | relevés existants | Comprendre d'abord pourquoi `serverConfirmed` est faux sur 68/68 poses du lot de la partie 2 (normal ou défaut) ; puis 204 observé → confirmé, Δ au F5 |
-| I | **Deuxième passe : cible hors de la vue** | `engine.js` (gelé) → décision de Mic sur le ré-épinglage ; sinon contournement par « déplacer la vue » (D-156) hors moteur | passe différés | Le majorant du banc se rapproche du réel : poses écrites / poses décidées sur les lots de terrain |
-| J | **Précision sous 5 mm** | protocole hors ligne : 60 cuts repointés deux fois sans voir la pose précédente (lecteur hors ligne à écrire : `tools/repointage.cjs` sur les nuages archivés) ; comparaison hauteur apprise / correction nulle | hauteur-apprise.js, corpus archivés | Plafond de bruit mesuré (différences signées par axe, σ/√2 seulement si indépendance vérifiée) ; décision d'activer ou non la hauteur apprise au lot, sous la garde A |
-| SK | **Cuts à SKIP parmi les rouges restants : détection en ombre seule (D-172, D-241)** | `src/regles-metier.js` ou module voisin ; détection en ombre dans le lot et à la fin de lot ; journal `skip-ombre` ; `tools/skip-ombre.cjs` (hors ligne, compare aux SKIP de Mic dans les exports) | lecture du nuage déjà faite par la décision du lot (nombre de points, scanners présents) ; passe différés | Part des différés restants qui sont à SKIP, précision/rappel de la détection contre les SKIP de Mic ; aucun SKIP n'est jamais envoyé par Ariane (D-241) |
-| V | **Vitesse de la 4.9 retrouvée** | `tools/perf-v3.cjs`, `perf-lot.cjs`, `perf-phases.cjs` (existent) ; `datasets/vitesse/` (comptes et durées, sans coordonnées) ; critère 6 de la garde | `journal` (phase-timing), exports de lots et de relectures | Chiffres de référence du cahier § 6 bis rejoués puis comparés à la test 19 ; écarts expliqués par phase (capture, pose, validation, passe, relecture) ; corrections ciblées sous la garde |
-| U | **Interface : reconnexion et historique (D-243)** | `background.js` (`chrome.tabs.onUpdated` : réinjecter l'adaptateur par `equiperOnglet` au rechargement de l'onglet choisi, hors lot et hors Écho, sans commande ESV) ; action `reconnect` ; `panel.js` / `src/ui5*.js` : bouton « Reconnecter » dans la barre du haut ; vue d'accueil : liste des lots lue dans les événements `batch-started` / `batch-stopped-at-end` | `selectedTab` déjà gardé dans `banane3Tab` ; `retablirApresRechargement` pour les lots | F5 sur l'onglet ESV : l'extension se reconnecte seule en moins de 2 s, aucune commande envoyée ; l'historique montre les parties des lots du cache avec leurs comptes ; essais service worker (maquette de page), parité |
-| K | **Livraison** | fusion des lignées vers un tronc, `DECISIONS.md` unique, cahier signé, Edge, ancien panneau, étiquette | tout | 5.0 stable selon cahier v2 § 7 |
-
-## 3. Dépendances et ordre
+### a.3 Contrat de la garde (A)
 
 ```
-A garde ──► tout le reste (aucun paquet sans elle)
-B tableau de bord ──► mesure de base d'autonomie (3:1, 3:5, Écho partie 2)
-C oracle ──► D décodage (seulement si C dit « mal classé » plutôt que « candidat manquant »)
-          └► élargissement de la génération d'hypothèses (si « candidat manquant »)
-E provenance ──► D (les appuis typés sont les observations fortes/faibles du décodage)
-G maquette ──► toute nouvelle écriture dans ESV (I, F allumée, D en écriture)
-H preuve serveur ──► lecture fiable des lots de terrain
-J précision : indépendant, démarre quand Mic a 2 × 1 h pour repointer
-SK cuts à SKIP : détection en ombre indépendante, tôt (peu coûteux) ; aucun envoi réel (D-241)
-V vitesse : mesure de base tôt (entre dans le tableau de bord B), corrections à la fin, avant K
-K : à la fin, mais le report sur le tronc se fait dès le chantier A
+node tools/garde-gcv2.cjs --base datasets/garde-gcv2/base-test18.json [--lots tous|ID,ID] [--vitesse] [--sortie DOSSIER]
+Entrée  : base scellée (comptes, mm, numéros de cuts ; commit et version du code mesuré ; SHA256SUMS) ;
+          lots archivés HORS dépôt (dossier donné par BANANE_LOTS) ; code du dépôt courant.
+Sortie  : garde.md + garde.json : par groupe, critères 1 à 6 du cahier § 2 ; liste PAR CUT : perdus, dégradés > 2 mm,
+          gagnés, nouvellement posés ; temps banc par lot (analyse + décision + passe : médiane, p90).
+Retour  : 0 vert · 1 recul de qualité (critères 1 à 5) · 2 recul de vitesse banc seul (critère 6-i, > 10 %)
+          3 garde non rendue (base non scellée, commit absent, lot manquant) · 4 erreur d'outil.
+Règle   : 1 ou 2 → pas de paquet sans décision écrite de Mic avec le compromis chiffré ; 3 → pas de paquet du tout.
+          Un changement hors module de décision : « garde sans objet, parité 0 écart » écrit dans le paquet (cahier § 2, 3 bis).
 ```
 
-Ordre de travail proposé (mis à jour le 23/10 : la 3:5 est retirée de la file, SK et V ajoutés) : **A** (et report cahier/D-239 sur le tronc) → **B** avec les Échos 3:1 / 3:5 et l'Écho des 63 cuts de la partie 2 → **C** → **E** → **D** → **G** en parallèle de C/E/D → **H** court dès maintenant (lecture seule) → **F** sur décision → **I** sur décision → **J** quand l'opérateur est disponible → **K**.
+Essai rouge d'abord : `tests/garde-gcv2.test.cjs` sur une fixture synthétique (un cut perdu → retour 1 ; un lot plus lent de 20 % → retour 2 ; base sans commit → retour 3).
 
-Ajouts du 23/10 : SK (S–M), V (M, mesure d'abord) ; petits détails d'interface relevés par Mic : à recueillir puis traiter dans K.
+### a.4 Schéma du tableau de bord (B), un fichier par version
 
-Effort (jours d'agent, S ≈ 0,5–1, M ≈ 2–3, L ≈ 5+) : A M · B M · C S · D L · E M · F S · G L · H S puis M · I M · J M · K M. Total de l'ordre de 25 à 30 jours d'agent, loin des 95 de la version 1 : le cœur est resserré.
+```
+{ version, commit, date, population: 'reglage' | 'examen',
+  exports: [{ sha256, partie, lotId, cuts }],                       // jamais de coordonnées ni de code de projet
+  sansEcho: { sansPose: {n, N, p, wilson95}, differes: {...},
+              vitesseLot: {cycleMedMs, p90Ms, captureMedMs, analyseMedMs, poste},
+              relecture: {mode, cutsRelus, dureeMs, msParCut, corriges, arrets},
+              skipOmbre: {detectes, skipMic, precision, rappel} },
+  avecEcho: { precision: {medMm, p5, p10, pires: [{cut, mm}]},
+              budgets: {mauvaiseVoie: {n, N, wilson95}, plus50: {...}, sansPreuve: n},
+              autonomie: {sansRetouche, N, p, wilson95, tempsNetEstimeMin} } }
+```
 
-## 4. Règles de fabrication (valables pour chaque chantier)
+`avecEcho` reste `null` tant qu'aucun Écho complet n'est joint à la partie ; le markdown le dit en clair.
 
-1. Une branche par chantier depuis le tronc, une fiche `fiches/PASSATION_<CHANTIER>.md`, essai rouge d'abord.
-2. `node tools/verify.cjs` : 0 échec, 0 annulé (un essai lourd par fichier, délai de 20 s jamais allongé).
-3. Garde A verte, liste par cut jointe ; parité rejouée si le service worker change.
-4. Relecture indépendante (Opus) pour tout code qui touche l'écriture dans ESV ou la décision d'un cut ; Sonnet pour le reste ; Fable réservé au cadrage.
-5. Jamais de nom d'opérateur, de code de projet, de capture d'ESV ni d'identifiant de modèle dans le dépôt ; `engine.js` intact sauf décision écrite de ré-épinglage.
-6. Une nouveauté active à la fois dès qu'elle écrit dans ESV.
+### a.5 Schéma de la base de vitesse (V)
 
-## 5. Protocole de première écriture réelle de la deuxième passe
+- `datasets/vitesse/base-banc-test19.json` : `{ commit, version, machine: {cpus, node}, lots: [{lotId, cuts, analyseMedMs, analyseP90Ms, decisionMedMs, passeMedMs}] }`, scellé. C'est la mesure qui entre dans la garde (critère 6-i).
+- `datasets/vitesse/terrain.json` : une ligne par `{partie, poste, version, cuts, cycleMedMs, p90Ms, captureMedMs, relectureMode, relectureMsParCut}` ; comparaison seulement à partie et poste égaux ; sinon « non contrôlé ». Alimenté par V-a à chaque export reçu.
 
-La passe n'a jamais écrit dans le vrai ESV (lot de la partie 2 : 1 différé, 0 écrit). Avant de la considérer éprouvée :
+## b. Dépendances et ordre
 
-1. Un lot sur une partie d'apprentissage avec au moins 3 différés attendus, Mic présent, export Orbite immédiat après le lot.
-2. Attendu dans le journal : `passe-differes-ecriture-*` avec relecture à 1 mm et preuve de validation pour chaque cut écrit ; arrêt au premier refus avec le motif.
-3. Écho des seuls cuts écrits par la passe le jour même ; jugement contre la vérité ; les poses de la passe entrent dans le tableau de bord à part (« posées par la passe »).
-4. Tant que ce protocole n'est pas passé, le gain de la passe reste un majorant du banc dans toute communication.
+```
+R report ──► tout (une seule lignée de décisions)
+U interface : indépendant de la décision ──► livrable en premier (parité vaut garde)
+A garde ──► tout paquet qui touche la décision (E, D, F, I, J)
+V-a mesure ──► B (famille sansEcho) et base de vitesse ; V-b relecture (attentes) ──► V-c lot
+B tableau ──► seuil d'autonomie (décision de Mic) ; a besoin des Échos 3:1 et 4:2 pour avecEcho
+SK ombre : indépendant, lecture seule, tôt
+C oracle (hors ligne) ──► D seulement si « mal classé » > « candidat manquant »
+E provenance ──► D (appuis typés = observations fortes/faibles du décodage)
+G1 pannes dans verify ──► toute nouvelle écriture (D en écriture, F, I) ; G2 complète avant chaque paquet qui écrit
+H preuve serveur : lecture seule, n'importe quand ──► lecture fiable des lots de terrain
+J précision : indépendant, démarre quand Mic repointe
+K : à la fin
+```
 
-## 6. Risques et parades
+En parallèle sans risque : C, SK (outil hors ligne), B, V-a, H, G1 sont des outils hors ligne ou lecture seule ; ils avancent pendant que U puis A sont construits. Jamais deux rejeux lourds en même temps (disque 1,6 Go ; verrou `verify-garde`).
+
+Ordre retenu : **R + U** → **A + V-a + SK** → **V-b + B** → **C ∥ G1 ∥ H** → **E** → **D** → **F ou I (sur décision)** → **V-c + J** → **K**.
+
+## c. Versions de test livrables (une nouveauté qui écrit à la fois)
+
+| Version | Contenu | Critère de sortie mesurable |
+|---|---|---|
+| **T20** | R + U : message fondé sur `connection.status`, reconnexion après F5, bouton « Reconnecter », historique d'accueil | essai vm : après rechargement de l'onglet, état « connecté » en < 2 s et **0 commande ESV** ; message affiché seulement si `status === 'unavailable'` ; historique = lots du cache avec comptes ; `parite-l1se-sw --passe` et `parite-relecture-sw` 0 écart ; verify 0 échec 0 annulé ; terrain : 3 F5 de suite sans repasser par le menu |
+| **T21** | A versée + base test 18 recalculée et scellée + base vitesse banc (test 19) + SK en ombre + H lecture seule | `garde-gcv2` retour 0 sur le code T21 ; base avec commit et SHA ; essai rouge de la garde vert ; `skip-ombre` : précision et rappel chiffrés sur ≥ 3 parties avec SKIP de Mic, 0 commande ESV (parité) |
+| **T22** | V-b relecture : attente sur l'état de l'adaptateur au lieu des 6 essais fixes, attentes revues ; B v1 | `parite-relecture-sw` 0 écart de décision (durées neutralisées) ; `relecture-banc` : 0 arrêt `ADAPTER_BUSY` sur 7 refus simulés ; terrain : relecture ombre ≤ 1,8 s par cut sur ≥ 100 cuts relus ; garde retour 0 ; `TABLEAU_BORD.md` produit |
+| **T23** | E provenance des appuis (décision) | garde 0 ; sur la 3:0 les 4 verts de chaîne faux ne se propagent plus (cuts listés) ; parité `--passe` 0 écart ; relecture indépendante |
+| **T24** | D décodage de voie, après C et G1 | garde 0 ; mauvaise voie 0 sur la base ; cuts gagnés et abstentions listés ; G2 complète rejouée ; relecture indépendante |
+| **T25** | F **ou** I, sur décision de Mic (jamais les deux) | F : gain net ≥ 0 vert, garde 0 ; I : poses écrites / décidées ≥ 0,9 sur un lot de terrain ; protocole de première écriture réelle (§ d) |
+| **T26** | V-c lot, J si repointage fait | lot ≤ 2,44 s médiane sur ≥ 300 cuts et pas plus lent à partie égale ; J : plafond de bruit écrit |
+| **5.0** | K | cahier v2 § 7 « 5.0 stable » |
+
+Chaque version a sa fiche `fiches/PASSATION_T<nn>.md`, sa consigne terrain, et le retour de terrain analysé avant la suivante.
+
+## d. Stratégie de tests et de preuves
+
+1. **Essais rouges d'abord** : chaque module naît avec un essai qui échoue (fixture synthétique, jamais une partie), puis passe. `verify` : 0 échec, 0 annulé, délai 20 s jamais allongé.
+2. **Maquette ESV à deux étages** : G1 (vm, dans `verify`) pour les pannes et la non-écriture (compteur de commandes à 0 pour U, SK, V) ; G2 (Playwright) avant tout paquet qui écrit. Aucune nouveauté qui écrit sans G1 vert.
+3. **Parité extension / banc** à chaque changement du service worker : `parite-l1se-sw` (`--passe` si la passe est touchée), `parite-relecture-sw` si la relecture est touchée. 0 écart ou le paquet n'est pas livré.
+4. **Garde A** pour tout ce qui touche la décision ; liste par cut jointe au paquet ; retour 1 ou 2 = décision écrite de Mic.
+5. **Relecture indépendante** (autre agent, Opus) de tout code qui touche la décision d'un cut ou l'écriture dans ESV ; sa fiche de relecture est jointe au paquet.
+6. **Étanchéité réglage / examen** : tout réglage (leviers, seuils, attentes) se fait sur la population de réglage ; une partie d'examen s'ouvre une fois, modèle gelé avant (commit nommé), puis passe en apprentissage par décision écrite. Les mesures de vitesse se font sur des parties de réglage ou sur des exports de terrain, jamais en rouvrant une partie d'examen.
+7. **Première écriture réelle de la deuxième passe** (inchangé) : un lot d'apprentissage avec ≥ 3 différés attendus, Mic présent, export immédiat ; journal `passe-differes-ecriture-*` avec relecture à 1 mm et preuve de validation par cut ; Écho des seuls cuts écrits le jour même ; tant que ce n'est pas fait, le gain de la passe est un majorant du banc.
+
+## e. Répartition par type d'agent
+
+| Travail | Agent | Pourquoi |
+|---|---|---|
+| Code de l'extension, outils, essais, parités, rejeux (R, U, A, V, SK, E, D, G, H, K) | **Sonnet** par défaut, une branche par chantier depuis le tronc, fiche de passation | tâches cadrées, critère de sortie écrit |
+| Relecture indépendante de tout ce qui touche la décision ou l'écriture (A, E, D, F, I, V-b) | **Opus**, séance courte, lit le diff et la liste par cut, ne code pas | second regard |
+| Cadrage, portes de version, arbitrages | l'architecte, seulement aux portes | quota |
+| **Agent externe**, **sur accord de Mic** : C oracle, `tools/tableau-bord.cjs`, `tools/skip-ombre.cjs`, `tools/repointage.cjs`, fixtures synthétiques, documentation d'outils | branche dédiée `ext/<outil>`, **jamais le tronc**, outils hors ligne seulement, **aucun export ni lot** transmis (fixtures synthétiques du dépôt), aucun accès à `background.js`, `src/`, `engine.js` ; revue Sonnet puis fusion par nous | zéro risque d'écriture dans ESV et zéro fuite de données ; les vrais rejeux sur archives restent chez nous |
+
+Ce qui ne sort jamais vers un agent externe : le service worker, les modules de décision, les parités, la garde elle-même, tout fichier des archives.
+
+## f. Risques et parades
 
 | Risque | Parade |
 |---|---|
-| Pose fausse écrite sans relecture humaine, définitive | Garde A, maquette G avant toute nouvelle écriture, protocole § 5, budgets D-223 avec intervalles |
-| Chiffres de réglage pris pour des preuves | Tableau de bord par population ; parties d'examen ouvertes une fois |
-| Décodage global qui renforce une voie fausse par des appuis autocorrélés | E avant D ; marge au second chemin ; ne jamais compter deux fois la même information (émission puis transition) |
-| Juge et base divergent du scratchpad au dépôt | Chantier A recalcule la base et la scelle ; tout chiffre antérieur est dit « non scellé » |
-| Disque et mémoire (1,9 Go libres) | Pas de copie de lots hors scratchpad ; instantanés supprimés après chaque rejeu ; un rejeu lourd à la fois |
-| Quota : 9 % hebdomadaire | Fable pour ce cadrage seulement ; Sonnet par défaut ; Opus en relecture courte ; pas d'agent de recherche sans demande explicite |
+| Pose fausse écrite sans relecture humaine | garde A, G1 puis G2 avant toute écriture nouvelle, une nouveauté qui écrit à la fois, protocole § d.7 |
+| Vitesse « gagnée » au banc mais perdue au terrain (le banc ne voit qu'un cinquième du cycle) | deux mesures distinctes (critère 6-i et 6-ii) ; comparaison terrain à partie et poste égaux ; `relecture-banc` avec latence réglée |
+| Corriger le message (U-a) et croire la reconnexion réglée alors qu'un vrai défaut reste | critère de sortie T20 en vm **et** 3 F5 de suite au terrain ; (b) construit si le défaut reste |
+| Chiffres de réglage pris pour des preuves ; fuite réglage → examen | tableau de bord par population ; partie d'examen ouverte une fois ; partie neuve de réserve nommée avant |
+| Base test 18 jamais recalculée ; juge hors dépôt | T21 recalcule, scelle, nomme le commit ; tout chiffre antérieur dit « non scellé » |
+| Décodage global qui renforce une voie fausse par des appuis autocorrélés | E avant D ; marge au second chemin ; une information comptée une fois |
+| SKIP en ombre sans vérité (Mic n'a pas transmis d'exports) | SK livré en journal seul ; précision/rappel calculés quand des exports arrivent ; aucune conclusion avant |
+| Disque 1,6 Go ; machine partagée | verrou `verify-garde`, un rejeu lourd à la fois, sorties au scratchpad, suppression après rejeu, `.jsonl` compressés |
+| Quota hebdomadaire presque épuisé | § h ; arrêt d'une séance à 80 % de son budget avec fiche de passation ; aucun agent de recherche |
+| Agent externe : fuite de données ou code non relu dans le tronc | branche `ext/`, fixtures seules, revue avant fusion ; jamais d'export |
+| `engine.js` touché sans ré-épinglage | baseline contrôlée par `verify` ; I par contournement tant que Mic n'a pas tranché |
+| Deux `DECISIONS.md` divergents (D-224 à D-238) | R en T20, numérotation vérifiée, un seul fichier ensuite |
 
-## 7. Décisions attendues de Mic avant de lancer
+## g. Décisions attendues de Mic, par ce qu'elles débloquent
 
-1. Lancer le chantier A maintenant (rejeux longs, disque serré) ?
-2. Contre-expertise des verts de chaîne : allumer pour mesure sous la garde, ou laisser coupée ?
-3. Ré-épinglage de `engine.js` pour la cible hors de la vue (I), ou contournement hors moteur ?
-4. Deux séances de repointage d'environ 1 h pour J, et une séance pour l'Écho des 63 cuts de la partie 2 ?
-5. Projet de rattachement de la partie 2 (pour le manifeste).
+| Débloque | Décision |
+|---|---|
+| **T20** (tout de suite) | 1. Accord pour livrer une version interface avant la garde, sous parité (règle ajoutée au cahier § 2, 3 bis). 2. Liste des « petits détails d'interface ». |
+| **T21 / B** | 3. Transmettre les exports (ou le cache de l'extension) des tests 18 et 19 ; sans eux, pas de base terrain ni de mesure SKIP. 4. Autoriser les rejeux longs sur le disque plein (ou libérer de la place). 5. Nommer une partie neuve d'examen en réserve. |
+| **T22 / V** | 6. Quelle relecture compte (fin de lot en ombre, « corriger », ou l'Écho) et quel temps visé ; quelle partie sert de référence au lot. |
+| **T23 à T25** | 7. Contre-expertise des verts de chaîne : allumer pour mesure ou laisser coupée. 8. Ré-épinglage de `engine.js` pour la cible hors vue, ou contournement. 9. Projet de rattachement de la partie 2 (manifeste). |
+| **J** | 10. Deux séances d'environ 1 h de repointage. |
+| **Passation** | 11. Accord et périmètre pour un agent externe (outils hors ligne, fixtures synthétiques, branche `ext/`). |
+| **K** | 12. Seuil d'autonomie après la mesure de base ; fusion dans `main`, étiquette, publication. |
+
+Les trois plus bloquantes : 3 (exports), 1 (version interface sous parité), 6 (définition de la relecture visée).
+
+## h. Budget de quota prudent
+
+Unité : une séance = une session d'agent bornée ; « appels » = appels d'outils, plafond à ne pas dépasser (arrêt à 80 % avec passation). Cette semaine, quota presque épuisé : rien d'autre que la préparation de T20 si de la marge reste, sinon rien.
+
+| Phase | Sonnet | Opus (relecture) | Architecte |
+|---|---|---|---|
+| R + T20 | 2 séances, ≤ 120 appels | 1 courte, ≤ 25 | porte : ≤ 15 |
+| T21 (A, bases, SK, H) | 3 séances, ≤ 200 (rejeux en arrière-plan, un à la fois) | 1, ≤ 30 | ≤ 15 |
+| T22 (V-b, B) | 2 à 3 séances, ≤ 180 | 1, ≤ 30 | ≤ 15 |
+| C ∥ G1 ∥ H | 2 séances, ≤ 120 (ou agent externe pour C) | — | — |
+| T23 (E) | 2 séances, ≤ 120 | 1, ≤ 40 | ≤ 15 |
+| T24 (D) | 4 séances, ≤ 300 | 2, ≤ 80 | ≤ 20 |
+| T25 (F ou I) | 2 séances, ≤ 120 | 1, ≤ 40 | ≤ 15 |
+| T26 + K | 3 séances, ≤ 180 | 1, ≤ 30 | ≤ 20 |
+| **Total** | **≈ 20 séances, ≤ 1 350 appels** | **≈ 8 courtes, ≤ 275** | **≤ 130** |
+
+Règles : jamais deux séances lourdes en parallèle ; pas d'agent de recherche, pas de recherche web ; une séance qui lit un export ne lit que les événements dont elle a besoin (jamais le fichier entier dans le contexte).
+
+---
+
+## Auto-audit du 23/10 (corrigé dans le cahier le même jour)
+
+| Problème | Preuve | Correction |
+|---|---|---|
+| La 3:5 restait partie d'examen (§ 2.1) et source d'autonomie (§ 4) | D-240 : 3:5 retirée le 22/10 ; § 6.2 du cahier le disait déjà, contradiction interne | § 2.1 et § 4 : 3:1 seule, Écho 4:2 ajouté, partie neuve de réserve à nommer |
+| Critère « nombre **et** proportion à 10 mm » pouvait bloquer un gain légitime | un cut nouvellement posé à 15 mm fait baisser la proportion sans rien perdre | comparaison appariée par cut ; cuts nouvellement posés jugés à part par les budgets |
+| Critère 6 : la garde rejoue au banc sans page ESV, le temps terrain n'y est pas mesurable | `perf-lot` sur la 4:2 : l'attente d'ESV fait 63 % du cycle, l'analyse un cinquième | deux mesures : 6-i banc (dans la garde, ± 10 %), 6-ii terrain (tableau de bord, à partie et poste égaux) |
+| Métrique de vitesse non définie (outil, statistique, mode, population) | § 6 bis mélangeait cycle `perf-v3`, `perf-lot` et `relecture-fin` ; « partie difficile » sans définition | définitions écrites : `perf-lot` cycle médian + p90 sur ≥ 300 cuts ; `relecture-fin.dureeMs / cuts relus` par mode, ≥ 100 cuts, pauses exclues |
+| Deux bases (qualité test 18, vitesse test 19) sans commit nommé | § 2.5 et § 3 ne nommaient aucun commit | chaque fichier de base nomme commit et version ; sans commit, retour 3 de la garde |
+| Porte circulaire : la garde est exigée pour toute version alors qu'elle est le chantier 1 | § 7 v. précédente | parité 0 écart vaut garde pour un changement hors décision ; avant le chantier 1, seule une telle version peut sortir |
+| Chantier 2 : hypothèse non vérifiée (exports ou cache disponibles) ; autonomie impossible sans Écho | D-240 : aucun export transmis ; l'autonomie se calcule par jointure Écho-Orbite | deux familles d'indicateurs (sans / avec Écho) ; plan si le cache est vide ; critère de sortie du chantier 2 |
+| Chantier 10 : causes supposées, ordre (a, b, d, c), (a) et (d) probablement un seul défaut | `panel.js` ouvre le volet dès `status === 'unavailable'` ; `ui5.js` en tire le message ; `onUpdated` ne rétablit qu'Écho et lot | ordre : message d'abord, F5 rejoué, reconnexion seulement si le défaut reste ; critère de sortie écrit |
+| « Vérifier si le refus `ADAPTER_BUSY` persiste » : le code répond déjà | `occupeAttentesMs` = 6 essais, 11,75 s ; la 3:0 a eu 7 demandes | écrit dans le chantier 9 : le défaut persiste par construction ; correction = attendre l'état de l'adaptateur |
+| Parité : `tools/parite-relecture-sw.cjs` ignoré | existe sur le tronc | ajouté au § 2, 3 bis, obligatoire si la relecture est touchée |
+| « Maquette ESV dans `verify` » impossible telle quelle | la maquette est sous Playwright (`relecture-banc.cjs`) ; `verify` limite chaque essai à 20 s | deux étages : G1 vm dans `verify`, G2 Playwright avant paquet |
+| Référence « D-1xx » non résolue dans § 6 bis | texte | note explicite « à retrouver lors de la fusion » |
+| Chantiers 2 et 10 sans critère de sortie ; § 7 sans règle générale | texte | critères ajoutés ; règle : une version sans critère de sortie écrit n'est pas planifiée |
+| § 8 oubliait les décisions nouvelles (exports, relecture visée, partie de réserve, agent externe) | texte | § 8 complété, renvoi au § g |
+
+Non corrigé, à décider par Mic : le cahier garde « deuxième passe allumée en écriture » (D-237) alors qu'aucune écriture réelle n'a eu lieu ; le protocole § d.7 encadre la première écriture au lieu d'un retour en arrière.
+
+Rappel de l'auto-audit du 22/10 (déjà dans le cahier) : base non recalculée → à sceller par le juge versé ; garde par cut ; parité à chaque changement du service worker ; définition calculable de l'autonomie ; partie d'examen ouverte une fois ; report sur le tronc et `DECISIONS.md` unique.
