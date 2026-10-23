@@ -136,7 +136,7 @@ Chaque version a sa fiche `fiches/PASSATION_T<nn>.md`, sa consigne terrain, et l
 2. **Maquette ESV à deux étages** : G1 (vm, dans `verify`) pour les pannes et la non-écriture (compteur de commandes à 0 pour U, SK, V) ; G2 (Playwright) avant tout paquet qui écrit. Aucune nouveauté qui écrit sans G1 vert.
 3. **Parité extension / banc** à chaque changement du service worker : `parite-l1se-sw` (`--passe` si la passe est touchée), `parite-relecture-sw` si la relecture est touchée. 0 écart ou le paquet n'est pas livré.
 4. **Garde A** pour tout ce qui touche la décision ; liste par cut jointe au paquet ; retour 1 ou 2 = décision écrite de Mic.
-5. **Relecture indépendante** (autre agent, Opus) de tout code qui touche la décision d'un cut ou l'écriture dans ESV ; sa fiche de relecture est jointe au paquet.
+5. **Relecture indépendante** (autre agent, le plus capable) de tout code qui touche la décision d'un cut ou l'écriture dans ESV ; sa fiche de relecture est jointe au paquet.
 6. **Étanchéité réglage / examen** : tout réglage (leviers, seuils, attentes) se fait sur la population de réglage ; une partie d'examen s'ouvre une fois, modèle gelé avant (commit nommé), puis passe en apprentissage par décision écrite. Les mesures de vitesse se font sur des parties de réglage ou sur des exports de terrain, jamais en rouvrant une partie d'examen.
 7. **Première écriture réelle de la deuxième passe** (inchangé) : un lot d'apprentissage avec ≥ 3 différés attendus, Mic présent, export immédiat ; journal `passe-differes-ecriture-*` avec relecture à 1 mm et preuve de validation par cut ; Écho des seuls cuts écrits le jour même ; tant que ce n'est pas fait, le gain de la passe est un majorant du banc.
 
@@ -144,10 +144,10 @@ Chaque version a sa fiche `fiches/PASSATION_T<nn>.md`, sa consigne terrain, et l
 
 | Travail | Agent | Pourquoi |
 |---|---|---|
-| Code de l'extension, outils, essais, parités, rejeux (R, U, A, V, SK, E, D, G, H, K) | **Sonnet** par défaut, une branche par chantier depuis le tronc, fiche de passation | tâches cadrées, critère de sortie écrit |
-| Relecture indépendante de tout ce qui touche la décision ou l'écriture (A, E, D, F, I, V-b) | **Opus**, séance courte, lit le diff et la liste par cut, ne code pas | second regard |
+| Code de l'extension, outils, essais, parités, rejeux (R, U, A, V, SK, E, D, G, H, K) | **Agent de code** par défaut, une branche par chantier depuis le tronc, fiche de passation | tâches cadrées, critère de sortie écrit |
+| Relecture indépendante de tout ce qui touche la décision ou l'écriture (A, E, D, F, I, V-b) | **Relecteur indépendant**, séance courte, lit le diff et la liste par cut, ne code pas | second regard |
 | Cadrage, portes de version, arbitrages | l'architecte, seulement aux portes | quota |
-| **Agent externe**, **sur accord de Mic** : C oracle, `tools/tableau-bord.cjs`, `tools/skip-ombre.cjs`, `tools/repointage.cjs`, fixtures synthétiques, documentation d'outils | branche dédiée `ext/<outil>`, **jamais le tronc**, outils hors ligne seulement, **aucun export ni lot** transmis (fixtures synthétiques du dépôt), aucun accès à `background.js`, `src/`, `engine.js` ; revue Sonnet puis fusion par nous | zéro risque d'écriture dans ESV et zéro fuite de données ; les vrais rejeux sur archives restent chez nous |
+| **Agent externe**, **sur accord de Mic** : C oracle, `tools/tableau-bord.cjs`, `tools/skip-ombre.cjs`, `tools/repointage.cjs`, fixtures synthétiques, documentation d'outils | branche dédiée `ext/<outil>`, **jamais le tronc**, outils hors ligne seulement, **aucun export ni lot** transmis (fixtures synthétiques du dépôt), aucun accès à `background.js`, `src/`, `engine.js` ; revue par l'agent de code puis fusion par nous | zéro risque d'écriture dans ESV et zéro fuite de données ; les vrais rejeux sur archives restent chez nous |
 
 Ce qui ne sort jamais vers un agent externe : le service worker, les modules de décision, les parités, la garde elle-même, tout fichier des archives.
 
@@ -186,7 +186,7 @@ Les trois plus bloquantes : 3 (exports), 1 (version interface sous parité), 6 (
 
 Unité : une séance = une session d'agent bornée ; « appels » = appels d'outils, plafond à ne pas dépasser (arrêt à 80 % avec passation). Cette semaine, quota presque épuisé : rien d'autre que la préparation de T20 si de la marge reste, sinon rien.
 
-| Phase | Sonnet | Opus (relecture) | Architecte |
+| Phase | Agent de code | Relecteur indépendant | Architecte |
 |---|---|---|---|
 | R + T20 | 2 séances, ≤ 120 appels | 1 courte, ≤ 25 | porte : ≤ 15 |
 | T21 (A, bases, SK, H) | 3 séances, ≤ 200 (rejeux en arrière-plan, un à la fois) | 1, ≤ 30 | ≤ 15 |
