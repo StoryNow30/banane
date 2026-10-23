@@ -66,7 +66,7 @@ Chaque chiffre dit sa population. Un chiffre de réglage et un chiffre d'examen 
 
 1. **Garde de non-régression GCV2** : verser le juge et la base ; commande unique de rejeu et comparaison. Prérequis des suivants. La garde porte aussi sur la vitesse (§ 2, critère 6) dès que la vitesse de référence est versée (chantier 9).
 2. **Tableau de bord** et mesure de base d'autonomie. Les Échos 3:1 et 3:5 ne servent plus (3:5 retirée de la file par Mic le 22/10) ; la base vient des exports de lots récents de Mic, ou du cache de l'extension s'il n'a pas été vidé (une trentaine de parties en tests 18 et 19).
-3. **Différés à SKIP (règle D-172)** : un cut est à SKIP seulement si aucun point ne s'affiche ou si un seul scanner s'affiche. Observation de Mic : une partie des différés restants sont de tels cuts. Étapes : détection en ombre dans le lot (« ce cut serait à SKIP : aucun point / un seul scanner »), comparée aux SKIP de Mic dans les exports ; mesure de la part des différés concernés ; **l'envoi réel du SKIP (même geste qu'un humain) ne s'active qu'avec l'accord écrit de Mic**, jamais pour un autre cas que la règle. Sous la garde.
+3. **Cuts à SKIP parmi les rouges restants : détection en ombre seulement** (règle D-172 : aucun point, ou un seul scanner). Observation de Mic : une partie de ce qui reste est de cette nature, pas tous. **Ariane n'envoie jamais de SKIP** (décision de Mic du 23/10, D-241) : le chantier repère en ombre, note au journal, compare aux SKIP de Mic dans les exports et chiffre la part concernée, pour informer l'opérateur ; aucune commande ESV. Sous la garde.
 4. **Choix de voie en ADV** : diagnostic « oracle » (la bonne paire est-elle parmi les candidats ?), puis décodage global de la voie avec abstention si le diagnostic le justifie. Sous la garde.
 5. **Contre-expertise des verts de chaîne** et **provenance des appuis (M2)**. Sous la garde.
 6. **Maquette ESV dans `verify`** et campagne de pannes (S4, F2) ; preuve serveur (F4) ; vérifier pourquoi `serverConfirmed` est faux sur toutes les poses du lot de la partie 4:2.
@@ -103,4 +103,4 @@ Seuil d'autonomie après la mesure de base ; contre-expertise des verts de chaî
 
 ## 9. Hors périmètre
 
-Multi-sessions, suivi mobile, écriture directe sur le serveur d'ESV, modification de `src/engine.js` hors correctif avéré avec ré-épinglage accordé. Orbite et Écho en parallèle : abandonné pour la 5.0 (un seul état d'onglet dans le service worker).
+Envoi d'un SKIP par Ariane, quel que soit le cas (D-241). Multi-sessions, suivi mobile, écriture directe sur le serveur d'ESV, modification de `src/engine.js` hors correctif avéré avec ré-épinglage accordé. Orbite et Écho en parallèle : abandonné pour la 5.0 (un seul état d'onglet dans le service worker).

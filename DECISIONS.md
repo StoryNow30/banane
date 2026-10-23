@@ -3020,3 +3020,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Aussi** : Mic a abandonné la 3:5 (retirée de la file d'analyse le 22/10) ; l'Écho transmis le 22/10 est la partie 4:2 et non la 3:2 (notes d'archive corrigées). De petits détails d'interface sont à recueillir auprès de Mic.
 - **Effet sur le cahier** : `BANANE_5.0_CAHIER_V2.md` complété (§ 1, § 2, § 6, § 6 bis, § 7) ; `fiches/ARCHITECTURE_5.0.md` ajoute les modules SK et V.
 
+## D-241 — Ariane ne SKIP jamais un différé (Mic, 23/10/2026 ; précise D-240 et D-172)
+
+- **Décision** : « les différés ne sont pas à skip ». Ariane n'envoie jamais de SKIP, ni sur un différé ni sur un autre cut. Remplace l'étape « envoi réel du SKIP sur accord de Mic » de D-240 et la mention d'un envoi futur de D-172.
+- **Ce qui reste** : la détection en ombre (« ce cut ressemblerait à un cut à SKIP : aucun point, ou un seul scanner »), notée au journal, comparée aux SKIP de Mic dans les exports, sans aucune commande ESV, pour chiffrer la part concernée. Chantier renommé « cuts à SKIP parmi les rouges restants : détection en ombre seule ».
+- **Règle générale confirmée** : aucune validation ni SKIP automatique d'un cut non résolu.
+
