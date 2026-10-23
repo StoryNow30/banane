@@ -1,12 +1,14 @@
 # ARIANE 5.0 — CAHIER DES CHARGES, VERSION 2
 
-Version 2 du 22 octobre 2026. Elle remplace l'objectif et l'ordre de `BANANE_5.0_CAHIER.md` (version 1 du 15 octobre, gardée comme historique) ; les règles non négociables de la version 1 tiennent toujours. Validée par Mic le 22/10/2026 : « je valide tout, à condition qu'on ne perde rien de nos perf sur GCV2 » (D-239). Aucune donnée de partie ni identifiant de projet.
+Version 2 du 22 octobre 2026, complétée le 23/10 (retour de terrain, SKIP, vitesse). Elle remplace l'objectif et l'ordre de `BANANE_5.0_CAHIER.md` (version 1 du 15 octobre, gardée comme historique) ; les règles non négociables de la version 1 tiennent toujours. Validée par Mic le 22/10/2026 : « je valide tout, à condition qu'on ne perde rien de nos perf sur GCV2 » (D-239). Aucune donnée de partie ni identifiant de projet.
 
 ---
 
 ## 1. Ce que la 5.0 doit être
 
 Pour Mic, le cœur de la 5.0 est **les résultats de la GCV2 et l'autonomie** : Ariane pose seule, et juste, la grande majorité des cuts, y compris ceux que la GCV1 laissait en différé, avec peu d'erreurs graves et peu de reprises de la part de Mic. Les trois attentes de D-112 (poser juste plus souvent, traiter les zones difficiles, apprendre des corrections) en sont les moyens.
+
+**Retour de terrain du 23/10/2026 (Mic, sans export)** : les tests 18 et 19 ont tourné sur une trentaine de parties ; résultats « extrêmement satisfaisants », la plupart du temps très peu de différés. Un certain nombre de ceux qui restent sont des cuts à SKIP. Mesure qualitative rapportée par Mic : elle reste à chiffrer (tableau de bord, § 4) ; la preuve hors échantillon du § 5 reste exigée.
 
 La direction a changé en cours de route (D-217 « différés −90 % », puis D-223 budgets d'erreurs) : plus d'autonomie, GCV2 livrée active sous le nom L1 plutôt qu'en ombre, deuxième passe qui écrit. La version 1 décrivait une 5.0 prudente en ombre avant actif ; elle n'est plus la référence sur ces points.
 
@@ -20,6 +22,7 @@ Condition de Mic pour toute la suite. Chaque modification qui touche la décisio
    - poses à 10 mm ou moins : nombre et proportion au moins égaux à la base ;
    - poses à plus de 20 mm : 0 ; mauvaise voie : 0 ; verts changés : 0 ; pose sans preuve du nuage : 0 ;
    - aucun cut posé à 10 mm ou moins ne passe à plus de 20 mm.
+   - temps par cut en lot et temps par cut de relecture : pas plus lents qu'en base, ou écart écrit (critère 6, actif dès que la vitesse de référence est versée).
 3. **Liste de tous les cuts dont l'erreur augmente de plus de 2 mm, et de tous les cuts qui perdent leur pose**, montrée à Mic avec le paquet. Un total inchangé peut cacher un cut perdu et un cut gagné : la liste par cut est la vraie garde.
 3 bis. **Parité extension / banc** : quand `background.js` ou un module du service worker change, la parité (`tools/parite-l1se-sw.cjs`, `--passe` si la deuxième passe est touchée) est rejouée sur au moins un lot, 0 écart ; la garde du banc seule ne prouve pas le vrai code.
 4. **Un recul d'un critère n'est jamais silencieux** : il demande une décision écrite de Mic avec le compromis chiffré (exemple connu : le cut 797 de la 3:0 passe de 8 à 10 mm en test 18).
@@ -61,22 +64,36 @@ Chaque chiffre dit sa population. Un chiffre de réglage et un chiffre d'examen 
 
 ## 6. Chantiers retenus, dans l'ordre
 
-1. **Garde de non-régression GCV2** : verser le juge et la base ; commande unique de rejeu et comparaison. Prérequis des suivants.
-2. **Tableau de bord** et mesure de base d'autonomie (3:1, 3:5, retours de la test 18, analyse de la partie 2).
-3. **Choix de voie en ADV** : diagnostic « oracle » (la bonne paire est-elle parmi les candidats ?), puis décodage global de la voie avec abstention si le diagnostic le justifie. Sous la garde.
-4. **Contre-expertise des verts de chaîne** et **provenance des appuis (M2)**. Sous la garde.
-5. **Maquette ESV dans `verify`** et campagne de pannes (S4, F2) ; preuve serveur (F4) ; vérifier pourquoi `serverConfirmed` est faux sur toutes les poses du lot de la partie 2.
-6. **Deuxième passe** : cible hors de la vue (touche `engine.js`, accord de Mic pour ré-épingler).
-7. **Précision sous 5 mm** : 60 cuts repointés de façon indépendante, hauteur apprise en comparaison. Sous la garde.
-8. **Livraison** : fusion des lignées, base de décisions unique, cahier signé, essai sur Edge, validation de l'ancien panneau remplacé, étiquette et publication par Mic.
+1. **Garde de non-régression GCV2** : verser le juge et la base ; commande unique de rejeu et comparaison. Prérequis des suivants. La garde porte aussi sur la vitesse (§ 2, critère 6) dès que la vitesse de référence est versée (chantier 9).
+2. **Tableau de bord** et mesure de base d'autonomie. Les Échos 3:1 et 3:5 ne servent plus (3:5 retirée de la file par Mic le 22/10) ; la base vient des exports de lots récents de Mic, ou du cache de l'extension s'il n'a pas été vidé (une trentaine de parties en tests 18 et 19).
+3. **Différés à SKIP (règle D-172)** : un cut est à SKIP seulement si aucun point ne s'affiche ou si un seul scanner s'affiche. Observation de Mic : une partie des différés restants sont de tels cuts. Étapes : détection en ombre dans le lot (« ce cut serait à SKIP : aucun point / un seul scanner »), comparée aux SKIP de Mic dans les exports ; mesure de la part des différés concernés ; **l'envoi réel du SKIP (même geste qu'un humain) ne s'active qu'avec l'accord écrit de Mic**, jamais pour un autre cas que la règle. Sous la garde.
+4. **Choix de voie en ADV** : diagnostic « oracle » (la bonne paire est-elle parmi les candidats ?), puis décodage global de la voie avec abstention si le diagnostic le justifie. Sous la garde.
+5. **Contre-expertise des verts de chaîne** et **provenance des appuis (M2)**. Sous la garde.
+6. **Maquette ESV dans `verify`** et campagne de pannes (S4, F2) ; preuve serveur (F4) ; vérifier pourquoi `serverConfirmed` est faux sur toutes les poses du lot de la partie 4:2.
+7. **Deuxième passe** : cible hors de la vue (touche `engine.js`, accord de Mic pour ré-épingler).
+8. **Précision sous 5 mm** : 60 cuts repointés de façon indépendante, hauteur apprise en comparaison. Sous la garde.
+9. **Vitesse d'exécution de la 4.9** (demande de Mic du 23/10) : retrouver, notamment pour la relecture, la vitesse obtenue en 4.9 et réatteindre les chiffres de référence du § 6 bis. Chantier de fin, avant la 5.0 officielle, mais la mesure de base démarre tôt : le temps par cut et le temps de relecture entrent dans le tableau de bord dès le chantier 2 pour que chaque chantier voie ce qu'il coûte.
+10. **Livraison** : fusion des lignées, base de décisions unique, cahier signé, essai sur Edge, validation de l'ancien panneau remplacé, petits défauts d'interface relevés par Mic (liste à recueillir), étiquette et publication par Mic.
 
 **Mis au second plan** (repris seulement s'ils servent les cibles) : saut direct après F5, reprise automatique bornée, caméra au VALIDATE, ombre GCV1 pendant l'Écho, rail « dessus seul », B2 caméra.
+
+## 6 bis. Vitesse de référence de la 4.9 (à retrouver, chantier 9)
+
+Chiffres tels que consignés dans `DECISIONS.md` et `CHANGELOG.md`, non recalculés ici ; le chantier 9 les rejoue d'abord avec les outils de l'époque (`tools/perf-v3.cjs`, `tools/perf-lot.cjs`, `tools/perf-phases.cjs`).
+- **Mode rapide, lot de la 4.9.0.8 (D-090, 13/10)** : 112 cuts (95 posés, 17 différés) en 8 min 24 s ; cycle médian V1 2,44 s en rapide contre 6,73 s en référence (−63,7 %) ; un cut rapide après un rapide 2,32 s ; capture 1,35 s contre 5,11 s ; pose 0,19 s contre 0,86 s ; part posée identique, 0 capture perdue.
+- **Gains mesurés au terrain, rapide contre référence (CHANGELOG 4.9)** : −54 % (test 15), −71 % (test 16, partie 26), −48 % (test 16, partie 25), −57 % sur la séance de la test 17, −71 % sur une page ESV fraîche.
+- **Relecture de la test 7 (D-184, partie 11)** : 144 cuts relus en 4 min 20 s (environ 1,8 s par cut) ; liste « À contrôler » : 256 verts signalés ≈ 8,5 min contre 36 min pour les 585 verts relus par Mic (partie 29, D-162).
+- **Aujourd'hui (test 18, lot de la partie 4:2)** : 69 cuts en 2 min 40 s, soit environ 2,3 s par cut, du même ordre que le « rapide après rapide » de la 4.9. Rien de mesuré sur la vitesse de la relecture 5.0 ni sur le temps de la deuxième passe sur un grand lot.
+- **Question à Mic** : quelle relecture avais-tu en tête (relecture de fin de lot, « Mes corrections », ou l'Écho) et quel temps visais-tu ? Le chantier mesure les trois.
+- **Cible** : chaque chiffre de référence atteint ou dépassé, ou écart écrit et décidé par Mic. Le temps par cut en lot et le temps par cut de relecture entrent dans la garde (§ 2, critère 6).
+
+---
 
 ## 7. Portes de version
 
 - Une version de test : garde de non-régression verte, `node tools/verify.cjs` à 0 échec sans essai annulé, consigne terrain, retour de terrain analysé avant la suivante.
 - Une nouveauté à la fois quand le risque d'écriture augmente (règle de la version 1, § 6, rétablie pour tout ce qui écrit dans ESV).
-- **5.0 stable** : cibles du § 5 tenues sur parties d'examen avec intervalles, filet de sécurité du chantier 5 en place, fusion et publication par Mic.
+- **5.0 stable** : vitesse de la 4.9 retrouvée (§ 6 bis) ; cibles du § 5 tenues sur parties d'examen avec intervalles, filet de sécurité du chantier 5 en place, fusion et publication par Mic.
 
 ## 8. Décisions qui restent à Mic
 

@@ -3011,3 +3011,12 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Condition** : garde de non-régression GCV2 (cahier v2 § 2). Toute modification de la décision d'un cut est rejouée contre la base gelée de la test 18 (9 lots de réglage et 3:0) avant paquet ; critères stricts ; tout recul est une décision écrite de Mic avec le compromis chiffré. Le juge et la base sont à verser au dépôt (le juge est aujourd'hui hors dépôt).
 - **Reste ouvert** : seuil d'autonomie (après mesure de base sur 3:1 et 3:5), contre-expertise des verts de chaîne, ré-épinglage de `engine.js` pour la deuxième passe, projet de la partie 2.
 - **Rapport d'Astra du 21/10** (`audit/chantiers/audit-decodage-voie-precision-astra.md`) : priorité au choix de voie après vérification que la bonne paire existe parmi les candidats ; hauteur apprise comme référence du chantier précision.
+
+## D-240 — Retour de terrain sur les tests 18 et 19 ; deux chantiers ajoutés à la 5.0 (Mic, 23/10/2026)
+
+- **Retour de Mic** : les tests 18 et 19 ont tourné sur une trentaine de parties ; « extrêmement satisfaisant », la plupart du temps très peu de différés. Aucun export partagé : l'observation est qualitative, à chiffrer par le tableau de bord (cahier v2 § 4).
+- **Observation** : un certain nombre des différés qui restent sont des cuts à SKIP (pas tous). Chantier ajouté : détection en ombre selon la règle D-172 (aucun point, ou un seul scanner), mesure de la part concernée, envoi réel du SKIP seulement sur accord écrit de Mic.
+- **Demande** : ajouter, à la fin et avant la 5.0 officielle, un chantier pour retrouver la rapidité d'exécution poussée en 4.9, notamment pour la relecture, avec les chiffres obtenus alors comme références à réatteindre (cahier v2 § 6 bis, chantier 9). La mesure de base démarre tôt ; le temps par cut entre dans la garde de non-régression (critère 6).
+- **Aussi** : Mic a abandonné la 3:5 (retirée de la file d'analyse le 22/10) ; l'Écho transmis le 22/10 est la partie 4:2 et non la 3:2 (notes d'archive corrigées). De petits détails d'interface sont à recueillir auprès de Mic.
+- **Effet sur le cahier** : `BANANE_5.0_CAHIER_V2.md` complété (§ 1, § 2, § 6, § 6 bis, § 7) ; `fiches/ARCHITECTURE_5.0.md` ajoute les modules SK et V.
+

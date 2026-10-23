@@ -65,6 +65,8 @@ Points d'appui déjà là : le générateur d'hypothèses par cut (H0 à H5, `gc
 | H | **Preuve serveur (F4)** | `background.js` autour de `applied-verified` | relevés existants | Comprendre d'abord pourquoi `serverConfirmed` est faux sur 68/68 poses du lot de la partie 2 (normal ou défaut) ; puis 204 observé → confirmé, Δ au F5 |
 | I | **Deuxième passe : cible hors de la vue** | `engine.js` (gelé) → décision de Mic sur le ré-épinglage ; sinon contournement par « déplacer la vue » (D-156) hors moteur | passe différés | Le majorant du banc se rapproche du réel : poses écrites / poses décidées sur les lots de terrain |
 | J | **Précision sous 5 mm** | protocole hors ligne : 60 cuts repointés deux fois sans voir la pose précédente (lecteur hors ligne à écrire : `tools/repointage.cjs` sur les nuages archivés) ; comparaison hauteur apprise / correction nulle | hauteur-apprise.js, corpus archivés | Plafond de bruit mesuré (différences signées par axe, σ/√2 seulement si indépendance vérifiée) ; décision d'activer ou non la hauteur apprise au lot, sous la garde A |
+| SK | **Différés à SKIP (D-172)** | `src/regles-metier.js` ou module voisin ; détection en ombre dans le lot et à la fin de lot ; journal `skip-ombre` ; `tools/skip-ombre.cjs` (hors ligne, compare aux SKIP de Mic dans les exports) | lecture du nuage déjà faite par la décision du lot (nombre de points, scanners présents) ; passe différés | Part des différés restants qui sont à SKIP, précision/rappel de la détection contre les SKIP de Mic ; l'envoi réel reste coupé tant que Mic n'a pas écrit son accord |
+| V | **Vitesse de la 4.9 retrouvée** | `tools/perf-v3.cjs`, `perf-lot.cjs`, `perf-phases.cjs` (existent) ; `datasets/vitesse/` (comptes et durées, sans coordonnées) ; critère 6 de la garde | `journal` (phase-timing), exports de lots et de relectures | Chiffres de référence du cahier § 6 bis rejoués puis comparés à la test 19 ; écarts expliqués par phase (capture, pose, validation, passe, relecture) ; corrections ciblées sous la garde |
 | K | **Livraison** | fusion des lignées vers un tronc, `DECISIONS.md` unique, cahier signé, Edge, ancien panneau, étiquette | tout | 5.0 stable selon cahier v2 § 7 |
 
 ## 3. Dépendances et ordre
@@ -78,10 +80,14 @@ E provenance ──► D (les appuis typés sont les observations fortes/faibles
 G maquette ──► toute nouvelle écriture dans ESV (I, F allumée, D en écriture)
 H preuve serveur ──► lecture fiable des lots de terrain
 J précision : indépendant, démarre quand Mic a 2 × 1 h pour repointer
+SK différés à SKIP : détection en ombre indépendante, tôt (peu coûteux) ; activation réelle sur accord écrit de Mic
+V vitesse : mesure de base tôt (entre dans le tableau de bord B), corrections à la fin, avant K
 K : à la fin, mais le report sur le tronc se fait dès le chantier A
 ```
 
-Ordre de travail proposé : **A** (et report cahier/D-239 sur le tronc) → **B** avec les Échos 3:1 / 3:5 et l'Écho des 63 cuts de la partie 2 → **C** → **E** → **D** → **G** en parallèle de C/E/D → **H** court dès maintenant (lecture seule) → **F** sur décision → **I** sur décision → **J** quand l'opérateur est disponible → **K**.
+Ordre de travail proposé (mis à jour le 23/10 : la 3:5 est retirée de la file, SK et V ajoutés) : **A** (et report cahier/D-239 sur le tronc) → **B** avec les Échos 3:1 / 3:5 et l'Écho des 63 cuts de la partie 2 → **C** → **E** → **D** → **G** en parallèle de C/E/D → **H** court dès maintenant (lecture seule) → **F** sur décision → **I** sur décision → **J** quand l'opérateur est disponible → **K**.
+
+Ajouts du 23/10 : SK (S–M), V (M, mesure d'abord) ; petits détails d'interface relevés par Mic : à recueillir puis traiter dans K.
 
 Effort (jours d'agent, S ≈ 0,5–1, M ≈ 2–3, L ≈ 5+) : A M · B M · C S · D L · E M · F S · G L · H S puis M · I M · J M · K M. Total de l'ordre de 25 à 30 jours d'agent, loin des 95 de la version 1 : le cœur est resserré.
 
