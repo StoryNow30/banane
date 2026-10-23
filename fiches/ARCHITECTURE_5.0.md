@@ -202,6 +202,16 @@ Règles : jamais deux séances lourdes en parallèle ; pas d'agent de recherche,
 
 ---
 
+## Ajout du 23/10 : Orbite en file de parties (module P, version T27, D-244)
+
+- **Objet** : bouton d'enchaînement des parties dans Orbite (éteint par défaut). Une partie finie → noter les données de départ de la suivante → poser → ainsi de suite sur les parties programmées.
+- **Ce que la page d'ESV offre (lu dans une page enregistrée, pas encore sur la maquette)** : un sélecteur de parties (`partsSelectorList`) dont chaque entrée est un lien vers la partie (`…&p=N`), un compteur « Part 5 / 12 » et les compteurs Validated / Invalid / Skipped. Passer à la partie suivante = cliquer le lien, comme un humain ; la page se recharge (événement `newPart`), donc **la reconnexion après rechargement (T20) est un prérequis**.
+- **Module P** (`src/file-parties.js`, pur, sans DOM : liste des parties, partie courante, règles d'arrêt, bilan ; `background.js` : transition de lot « partie suivante », action `file-parties-demarrer/arreter`, état persistant dans `chrome.storage.local`, reprise après redémarrage du service worker) ; panneau : bouton, liste des parties programmées, bilan par partie. Les données de départ passent par le chemin existant (`fichesDepart`, `batch-started`).
+- **Dépendances** : T20 (reconnexion), G maquette avec scénario « changement de partie » et pannes, garde A verte, relecture indépendante, décision de Mic sur la nouvelle action ESV. Placé **après T25** et avant la livraison ; ne se livre qu'avec une file de deux parties au plus pour le premier essai de terrain, Mic présent.
+- **Règles d'arrêt (proposées)** : première anomalie (refus d'ESV, pose non prouvée, changement de partie qui n'aboutit pas en 10 s, cut « sans nuage » en rafale) ; budget D-223 dépassé sur la partie qui vient de finir ; plafond de parties par lancement ; arrêt immédiat sur clic. Pas de SKIP ni de VALIDATE hors du lot (D-241).
+- **Critère de sortie T27** : sur la maquette, file de 3 parties avec une panne de page injectée au changement : arrêt propre et reprise ; sur le terrain, 2 parties enchaînées sans intervention, bilan par partie écrit, 0 commande ESV hors du lot et du changement de partie.
+- **Effort** : M à L (service worker, maquette, panneau). Risque principal : une erreur répétée sur plusieurs parties sans personne ; parade : arrêt à la première anomalie et plafond.
+
 ## Auto-audit du 23/10 (corrigé dans le cahier le même jour)
 
 | Problème | Preuve | Correction |

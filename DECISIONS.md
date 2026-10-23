@@ -3040,3 +3040,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Chantier** : cahier v2, chantier 10 ; architecture, module U. Livré avec les autres détails d'interface, sous la garde.
 - **Ajout du 23/10 (capture de Mic)** : le message « ESV n'est pas connecté. Recharge la page ESV (F5)… » reste affiché alors que la connexion est bonne. Lecture du code : `src/ui5.js` passe `connexionOuverte` = état ouvert du volet « Connexion à ESV » et `src/ui5-rendu.js` en tire le message ; `panel.js` ouvre ce volet dans plusieurs cas (statut `unavailable`, aucun ou plusieurs onglets, échec de découverte) et ne le referme que dans l'action de connexion. À corriger en basant le message sur `connection.status` ; à reproduire d'abord.
 
+## D-244 — Architecture de développement validée ; Orbite en file de parties (Mic, 23/10/2026)
+
+- **Validation** : Mic valide l'architecture de développement révisée (`fiches/ARCHITECTURE_5.0.md`, auto-audit du cahier v2) : ordre, versions de test T20 à T26, règles de fabrication ; T20 (interface) d'abord.
+- **Nouveau chantier** : un bouton dans Orbite, qui, activé, permet de passer à la partie suivante programmée, de noter ses données de départ (validés, invalides, ignorés), de commencer à poser, et ainsi de suite sur toutes les parties programmées. Cahier v2, chantier 11 ; architecture, module P, version T27.
+- **Conditions** : action de changement de partie relevée d'abord sur la maquette ESV ; reconnexion automatique après rechargement ; garde verte ; arrêt à la première anomalie ; bouton éteint par défaut ; Mic présent au premier essai.
+
