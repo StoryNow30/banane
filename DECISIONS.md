@@ -3033,3 +3033,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Règle** : le temps par cut en lot et en relecture entre dans la garde de non-régression GCV2 (critère 6) de façon permanente ; chaque amélioration du moteur annonce son coût en temps ; un recul demande une décision écrite de Mic.
 - **Cibles** : relecture 1,8 s par cut ou mieux sur une grande partie ; lot 2,44 s ou mieux sur une partie difficile. Mesure de base dès le tableau de bord, sur l'export du cache de Mic s'il le fournit.
 
+## D-243 — Interface : reconnexion à ESV après rechargement et historique des parties (Mic, 23/10/2026)
+
+- **Demande** : (1) l'extension se reconnecte seule à la page ESV à chaque rechargement ; (2) à défaut, un bouton de reconnexion dans la barre du haut, à côté de « Onglets ESV » ; (3) l'historique des parties traitées sur la page d'accueil. D'autres détails d'interface suivront.
+- **Cause lue dans le code (test 18)** : le rechargement de l'onglet détruit l'adaptateur injecté ; `chrome.tabs.onUpdated` ne le réinjecte que pour Écho (`echoReprise`), pas pour Orbite, d'où le clic à refaire dans le menu.
+- **Chantier** : cahier v2, chantier 10 ; architecture, module U. Livré avec les autres détails d'interface, sous la garde.
+
