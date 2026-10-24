@@ -414,6 +414,7 @@ function avancer(dt) {
     if (L.encours.depuis >= L.encours.attendu) {
       const dif = al() < .08, c = L.encours;
       L.cuts.push({ cut: c.cut, statut: dif ? 'differe' : (al() < .15 ? 'voie' : 'pose'), dur: c.attendu, rail: dif ? 'rail droit' : '' });
+      S.neuf = true; setTimeout(() => { S.neuf = false; }, 200);
       const prochain = c.cut + 1 + (al() < .4 ? 1 : 0);
       if (L.etat === 'dem') { L.etat = 'pause'; L.pauseDepuis = 0; L.encours = { cut: prochain, depuis: 0, attendu: 0 }; S.scene = 'pause'; rendre(); return; }
       if (L.cuts.length >= L.cibles) { S.scene = 'fin'; rendre(); return; }
@@ -438,18 +439,18 @@ const SCENES = [
   ['palette', 'Palette Ctrl K'], ['reglages', 'Feuille de réglages'], ['cache', 'Confirmation de vidage du cache'], ['esv', 'Sélecteur de connexion ESV'],
 ];
 const NOTES = {
-  pret: 'Au repos. Un seul bouton, qui dit l’effet (« Démarrer jusqu’à la fin de la partie »). Les bornes du lot sont dans la phrase, pas dans un formulaire : on les change dans la feuille de réglages, au repos.',
-  cours: 'Le rail avance au rythme réel de la simulation : le curseur glisse à chaque cut terminé (240 ms), l’anneau « en cours » se remplit du temps passé sur le cut en cours jusqu’à la médiane (il reste plein si le cut traîne). Ligne d’allure : cuts par minute, médiane des 20 derniers cuts, temps restant estimé (seulement si le total est connu). Pause → « Pause demandée… » → En pause après le cut en cours.',
-  pause: 'Même instrument. Le curseur devient ambre et ne bouge plus. L’allure dit depuis quand, et garde la médiane d’avant la pause. « Reprendre » nomme le cut.',
+  pret: 'Au repos : la trame est une seule barre grise de 120 restants. Un seul bouton, qui dit l’effet. Les bornes du lot sont dans la phrase ; on les change au repos, dans la feuille de réglages.',
+  cours: 'La trame se remplit au rythme réel de la simulation : un carré par cut traité (plein : posé ; à bord : posé par la voie ; barré ocre : différé ; croix : SKIP ; point : repris), le carré « en cours » à contour épais se remplit du temps passé sur le cut jusqu’à la médiane, comme le glyphe d’état. Un carré nouveau apparaît par un bref assombrissement (150 ms). Les restants : une seule barre grise. Ligne d’allure : cuts par minute, médiane des 20 derniers cuts, temps restant estimé (seulement si le total est connu).',
+  pause: 'Même instrument. Le carré « en cours » reste à contour épais, vide ; l’allure dit depuis quand, et garde la médiane d’avant la pause. « Reprendre » nomme le cut.',
   incident: 'Le bloc incident remplace le rail, pas l’état. Une phrase, trois sorties ; « Passer » n’est jamais principal et garde sa confirmation (2 clics).',
   interrompu: 'ESV s’est tu pendant une pose : l’opération interrompue reste écrite jusqu’à sa clôture. Aucun « Reprendre » : la seule sortie est d’archiver le résultat.',
   'esv-muet': 'ESV s’est tu entre deux cuts : rien n’était en l’air, « Reprendre » est permis dès qu’ESV répond ; F5 seulement si la page est figée. La puce passe en brique.',
   fin: 'Trois lignes distinctes, jamais une coche seule. « Voir ce qui reste » ouvre le tiroir ; l’export vient en second ; le cache devient disponible.',
-  relecture: 'La relecture est un état d’Orbite : même rail, en mode relus / sélection, repères verts aux cuts corrigés. Pause, Reprendre, Arrêter à la place de l’action principale.',
+  relecture: 'La relecture est un état d’Orbite : même trame, en mode relus / sélection (gris : relu ; vert : corrigé ; barre : reste à relire). Pause, Reprendre, Arrêter à la place de l’action principale.',
   'relecture-f5': 'Après un F5 d’ESV pendant la relecture : « Reprendre » reste là, grisé, avec sa raison écrite dessous.',
   verrou: 'Deuxième passe : cadenas, aucune action, cache grisé. Le nom et les états viendront de la session principale.',
   'echo-vide': 'Écho sans séance : pas de rail. Le cache dit pourquoi il est indisponible.',
-  echo: 'Écho en observation : un compteur de visites et une ligne de marques (haute : corrigée ; basse : validée telle quelle ; claire : visite en cours). L’allure est celle de Mic : médiane par cut.',
+  echo: 'Écho en observation : un compteur de visites et une trame des visites (pleine : corrigée ; vide : validée telle quelle ; contour épais : visite en cours, qui se remplit). L’allure est celle de Mic : médiane par cut.',
   'sans-esv': 'Aucun onglet ESV : la puce est vide, l’action principale devient « Choisir un onglet ».',
   palette: 'Ctrl K. Quatre commandes du moment, l’état en petit à droite ; le reste en tapant. Une commande grisée dit sa raison et ne s’exécute pas. Ctrl K ou Échap ferme.',
   reglages: 'Sept lignes, jamais ouvertes en séance. Le compteur d’exemples (ancien « GCV2 ») vit ici avec sa définition et sa date. En bas : l’ancien panneau et la zone à part.',
@@ -540,34 +541,45 @@ function modele() {
 
 /* ─────────────────────────── rendu */
 const glypheHtml = (m, cls = '') => `<span class="glyphe ${m.glyphe === 'cours' || m.glyphe === 'echo' ? 'vivant' : ''} ${cls}" data-ton="${m.ton}" aria-hidden="true">${GLYPHE[m.glyphe]}</span>`;
+/* La trame : un carré par cut traité, dans l'ordre du lot ; les restants forment une seule barre grise (fiche des compteurs, § 2).
+ * Le nombre de colonnes vient de la largeur réelle de l'instrument : la trame passe à la ligne, elle ne déborde jamais. */
+function colonnes() {
+  const compact = R.dataset.taille === 'compact', W = (compact ? 360 : 600) - 2 * (compact ? 16 : 48), cel = compact ? 8 : 10, gap = compact ? 2 : 3;
+  return Math.max(8, Math.floor((W + gap) / (cel + gap)));
+}
+function trame(cellules, restants, label, inconnu) {
+  const cols = colonnes(), rangs = [];
+  let i = 0, reste = Math.max(0, restants | 0);
+  while (i < cellules.length || reste > 0) {
+    let h = '<div class="rang">', n = 0;
+    while (i < cellules.length && n < cols) { h += cellules[i++]; n++; }
+    if (reste > 0 && n < cols) { const prend = Math.min(reste, cols - n); const premier = reste === restants, dernier = prend === reste; h += `<div class="reste ${premier && dernier ? '' : premier ? 'debut' : dernier ? 'fin' : 'milieu'}" style="flex:${prend} ${prend} 0"></div>`; if (prend < cols - n) h += `<span style="flex:${cols - n - prend} ${cols - n - prend} 0"></span>`; reste -= prend; n = cols; }
+    else if (n < cols) h += `<span style="flex:${cols - n} ${cols - n} 0"></span>`;
+    rangs.push(h + '</div>');
+    if (rangs.length > 40) break;
+  }
+  return `<div class="trame" data-total="${inconnu ? 'inconnu' : 'connu'}" role="img" aria-label="${esc(label)}">${rangs.join('')}</div>`;
+}
 function railHtml(m) {
-  const L = sim.lot, c = m.compte, total = c.cibles, inconnu = !total;
-  const pos = i => `${(i / total * 100).toFixed(3)}%`;
-  let h = `<div class="rail" data-etat="${m.railEtat}" data-total="${inconnu ? 'inconnu' : 'connu'}" role="img" aria-label="${esc(`${c.traites} traités sur ${total} ciblés, ${c.differes} différés`)}"><div class="rail-base"></div>`;
-  if (!inconnu) { for (let k = 0; k <= total; k += 10) h += `<div class="rail-grad${k % 50 === 0 ? ' dix' : ''}" style="left:${pos(k)}"></div>`; h += `<div class="rail-num debut">0</div><div class="rail-num" style="left:50%">${total / 2}</div><div class="rail-num fin" style="left:100%">${total}</div>`; }
-  h += `<div class="rail-fait" style="width:${pos(c.traites)}"></div>`;
-  L.cuts.slice(0, c.traites).forEach((x, i) => { if (x.statut === 'differe') h += `<div class="rail-dif" style="left:${pos(i + .5)}" title="cut ${x.cut}, différé"></div>`; });
-  if (m.railEtat !== 'fini' && m.railEtat !== 'vide') h += `<div class="rail-cur" style="left:${pos(c.traites)}"></div>`;
-  return h + '</div>';
+  const L = sim.lot, c = m.compte, inconnu = !c.cibles;
+  const cel = L.cuts.slice(0, c.traites).map((x, i) => `<div class="c ${x.statut}${i === c.traites - 1 && S.neuf ? ' neuf' : ''}" title="cut ${x.cut}"></div>`);
+  if (m.railEtat === 'cours' || m.railEtat === 'pause') cel.push(`<div class="c cours" title="cut ${L.encours.cut}, en cours"></div>`);
+  return trame(cel, inconnu ? 0 : c.cibles - c.traites - (cel.length > c.traites ? 1 : 0), `${c.traites} traités sur ${c.cibles || '?'} ciblés, ${c.differes} différés`, inconnu);
 }
 function railRelecture(m) {
-  const c = m.compte, pos = i => `${(i / c.selection * 100).toFixed(3)}%`;
-  let h = `<div class="rail" data-etat="relecture" data-total="connu" role="img" aria-label="${esc(`${c.relus} relus sur ${c.selection}, ${c.corriges} corrigés`)}"><div class="rail-base"></div>`;
-  for (let k = 0; k <= c.selection; k += 10) h += `<div class="rail-grad" style="left:${pos(Math.min(k, c.selection))}"></div>`;
-  h += `<div class="rail-num debut">0</div><div class="rail-num fin" style="left:100%">${c.selection}</div><div class="rail-fait" style="width:${pos(c.relus)}"></div>`;
-  [4, 11, 19, 27, 41, 52].forEach(i => { h += `<div class="rail-corr" style="left:${pos(i + .5)}"></div>`; });
-  h += `<div class="rail-cur" style="left:${pos(c.relus)};background:var(--attention)"></div></div>`;
-  return h;
+  const c = m.compte, corr = new Set([4, 11, 19, 27, 41, 52]);
+  const cel = Array.from({ length: c.relus }, (_, i) => `<div class="c ${corr.has(i) ? 'corrige' : 'relu'}"></div>`);
+  return trame(cel, c.selection - c.relus, `${c.relus} relus sur ${c.selection}, ${c.corriges} corrigés`, false);
 }
 function objetHtml(m) {
   const c = m.compte;
   if (m.incident) return `<div class="incident" role="alert"><p>${m.incident.texte}</p>${m.incident.op ? `<p class="op">${m.incident.op}</p>` : ''}</div>`;
   if (m.objet === 'fin') return `<dl class="fin">${m.fin.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
   if (m.objet === 'relecture') return `<div class="objet"><div class="compte"><span class="chiffre">${c.relus}</span><span class="suite">relus sur ${c.selection} sélectionnés</span><span class="droite"><b>${c.corriges}</b> corrigés</span></div>${railRelecture(m)}</div>`;
-  if (m.objet === 'echo') { const E = sim.echo; return `<div class="objet"><div class="compte"><span class="chiffre">${c.vus}</span><span class="suite">cuts vus</span><span class="droite"><b>${c.corriges}</b> corrigés · <b>${c.vus - c.corriges}</b> validés tels quels</span></div><div class="marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${E.visites.slice(-60).map(v => `<i class="${v.corrige ? 'c' : ''}"></i>`).join('')}<i class="en"></i></div></div>`; }
+  if (m.objet === 'echo') { const E = sim.echo, max = colonnes() * 4 - 1, V = E.visites.slice(-max); return `<div class="objet"><div class="compte"><span class="chiffre">${c.vus}</span><span class="suite">cuts vus</span><span class="droite"><b>${c.corriges}</b> corrigés · <b>${c.vus - c.corriges}</b> validés tels quels</span></div>${trame(V.map(v => `<div class="c visite${v.corrige ? ' corrigee' : ''}" title="cut ${v.cut}"></div>`).concat([`<div class="c cours" title="visite en cours"></div>`]), 0, `${c.vus} visites, ${c.corriges} corrigées`, true)}</div>`; }
   if (m.objet === 'aucun') return '';
   if (m.railEtat === 'vide') return `<div class="objet"><div class="compte"><span class="chiffre">${c.cibles}</span><span class="suite">cuts ciblés · aucun traité</span></div>${railHtml(m)}</div>`;
-  const droite = `<span class="droite"><b>${c.poses}</b> posés · <span class="dif">${c.differes}</span> différés${c.sautes ? ` · <b>${c.sautes}</b> SKIP` : ''}</span>`;
+  const droite = `<span class="droite"><b>${c.poses}</b> posés · <span class="dif">${c.differes}</span> différés${c.sautes ? ` · <b>${c.sautes}</b> SKIP` : ''}${c.cibles && c.restants ? ` · <b>${c.restants}</b> restants` : ''}</span>`;
   const suite = c.cibles ? `traités sur ${c.cibles} ciblés` : 'traités';
   return `<div class="objet"><div class="compte"><span class="chiffre">${c.traites}</span><span class="suite">${suite}</span>${droite}</div>${railHtml(m)}</div>`;
 }
@@ -759,6 +771,8 @@ function scene(id) {
 const sel = D.getElementById('sc-scene'); sel.innerHTML = SCENES.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join(''); sel.addEventListener('change', () => scene(sel.value));
 D.querySelectorAll('.banc .seg button').forEach(b => b.addEventListener('click', () => { const k = Object.keys(b.dataset)[0]; regler(k, b.dataset[k]); }));
 D.getElementById('sc-reduit').addEventListener('change', e => { if (e.target.checked) R.dataset.reduit = '1'; else delete R.dataset.reduit; });
+D.getElementById('sc-serif').addEventListener('change', e => { if (e.target.checked) R.dataset.serif = '1'; else delete R.dataset.serif; });
+if (new URLSearchParams(location.search).get('serif') === '1') { R.dataset.serif = '1'; D.getElementById('sc-serif').checked = true; }
 const P = new URLSearchParams(location.search);
 R.dataset.nu = P.get('nu') === '1' ? '1' : '0';
 if (P.get('taille')) regler('taille', P.get('taille')); if (P.get('theme')) regler('theme', P.get('theme')); if (P.get('revue')) regler('revue', P.get('revue')); if (P.get('cadence')) regler('cadence', P.get('cadence'));
