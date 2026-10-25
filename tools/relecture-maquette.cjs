@@ -2,10 +2,10 @@
 /*
  * relecture-maquette.cjs — RÈGLE LA MAQUETTE ESV DU BANC DE LA RELECTURE (fiches/RELECTURE_OMBRE.md § 7), hors du dépôt.
  *
- * La maquette (tests/esv-maquette de la branche claude/esv-locale-audit, extraite hors du dépôt par `git archive`) prend Maj+Espace
+ * La maquette (tests/esv-maquette, rapatriée de la branche claude/esv-locale-audit ; le banc en règle une copie temporaire) prend Maj+Espace
  * pour « valider et aller au prochain cut non validé » (supposé). Le banc a besoin de trois réglages, appliqués ici à la copie extraite
  * par de simples remplacements de texte (chaque ancre doit se trouver une seule fois ; une copie déjà réglée est laissée telle quelle) :
- *   - `majEspace=surplace` (D-179, Mic) : Maj+Espace sur un cut VERT valide SUR PLACE, ESV reste sur le même cut ; sur un cut rouge, il
+ *   - `majEspace=surplace` (D-179, l'opérateur) : Maj+Espace sur un cut VERT valide SUR PLACE, ESV reste sur le même cut ; sur un cut rouge, il
  *     garde le comportement d'origine (valider et aller au prochain non validé). `majEspace=plus1` : l'ancienne supposition de la
  *     branche (valider puis charger le cut + 1), gardée pour mémoire ; sans paramètre : la maquette d'origine ;
  *   - `vu=1` : ESV écrit {SeenByOperator:true} 1 s après le premier affichage d'un cut jamais vu ;
@@ -22,7 +22,7 @@ const REMPLACEMENTS = [
   ['esv-maquette.js',
     "source:q.get('source')||'synthetique',valides:num('valides',0)};",
     "source:q.get('source')||'synthetique',valides:num('valides',0),\n" +
-    "   /* " + MARQUE + " : `majEspace=surplace` : Maj+Espace valide SUR PLACE un cut vert, sans changer de cut (Mic, D-179) ; `majEspace=plus1` :\n" +
+    "   /* " + MARQUE + " : `majEspace=surplace` : Maj+Espace valide SUR PLACE un cut vert, sans changer de cut (l'opérateur, D-179) ; `majEspace=plus1` :\n" +
     "    * valide puis charge le cut + 1 (ancienne supposition) ; `vu=1` : ESV écrit {SeenByOperator:true} 1 s après le premier affichage d'un cut. */\n" +
     "   majEspace:q.get('majEspace')||'non-valide',vu:num('vu',0)===1};"],
   ['esv-maquette.js',

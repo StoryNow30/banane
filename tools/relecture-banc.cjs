@@ -4,17 +4,15 @@
  * relecture-banc.cjs — BANC DE LA RELECTURE APRÈS LE LOT (fiches/RELECTURE_OMBRE.md § 7), extension réelle dans Chromium.
  *
  * L'extension du dépôt est chargée dans Chromium ; l'hôte d'ESV (lu dans manifest.json, jamais écrit ici) est ROUTÉ vers la maquette
- * ESV de la branche claude/esv-locale-audit (fiches/AUDIT_ESV_LOCALE.md : page qui imite le contrat d'ESV, aucun code ni contenu
- * d'ESV, points du corpus du dépôt). Le panneau garde le choix « relecture », lance un lot Orbite, puis la passe part seule à la fin
- * du lot (ou après la validation du dernier cut par « Mic », que le banc joue : bouton de validation de la maquette, puis « Lancer la
+ * ESV du dépôt (tests/esv-maquette, rapatriée de la branche claude/esv-locale-audit au rangement R du 25/10/2026 ; page qui imite
+ * le contrat d'ESV, aucun code ni contenu d'ESV, points du corpus du dépôt). Le panneau garde le choix « relecture », lance un lot Orbite, puis la passe part seule à la fin
+ * du lot (ou après la validation du dernier cut par l'opérateur, que le banc joue : bouton de validation de la maquette, puis « Lancer la
  * relecture »). Tout passe par le vrai chemin : service worker, pont, observateur passif, adaptateur de page, maquette, serveur.
  * Rendu : par cut relu, navigation, capture, calcul ; durée de la passe ; écritures reçues par le serveur pendant la passe (validations,
  * « vu ») ; lectures de nuages de points (requêtes `ept-data` reçues par le serveur) par cut relu et par vert relu (revue, correction
  * 11) ; touches Maj+Espace vues par la page.
  *
- *   git archive origin/claude/esv-locale-audit tests/esv-maquette | tar -x -C <DOSSIER>     (une fois : la maquette, hors du dépôt ;
- *                                                                                          le banc la règle lui-même)
- *   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs --maquette <DOSSIER>/tests/esv-maquette \
+ *   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tools/relecture-banc.cjs [--maquette <DOSSIER>/tests/esv-maquette] \
  *        [--mode ombre|corriger] [--cuts 16] [--debut 100] [--lot 104:107] [--latence 40] [--reglages FICHIER.json] [--json SORTIE.json]
  *        [--terrain 1] [--rouges A-B] [--plafond-lectures N]
  *
@@ -23,7 +21,9 @@
  * comportement relevé sur le terrain (paramètres `majEspace=surplace` : Maj+Espace sur un vert valide SUR PLACE, ESV reste sur le même
  * cut, D-179 ; `vu=1` : « vu » écrit 1 s après le premier affichage d'un cut ; `--rouges A-B` : seuls les cuts A à B sont rouges, les
  * autres sont des verts d'ESV jamais traités, comme autour d'un lot sur le terrain). Ces réglages sont posés par tools/relecture-maquette.cjs
- * sur la copie extraite de la maquette (hors du dépôt), au démarrage du banc. Sans `--terrain 1`, la maquette d'origine : Maj+Espace y
+ * sur une COPIE de la maquette, au démarrage du banc : sans `--maquette`, tests/esv-maquette du dépôt est copiée dans un dossier
+ * temporaire (supprimé à la fin), réglée là, et la maquette versionnée n'est jamais modifiée ; `--maquette DOSSIER` désigne une copie
+ * extraite ailleurs (ancien usage), réglée sur place, jamais tests/esv-maquette du dépôt lui-même. Sans `--terrain 1`, la maquette d'origine : Maj+Espace y
  * charge le cut non validé suivant, et la passe s'arrête après la première correction (ESV n'est plus sur le cut corrigé). `--plafond-lectures N` : échec (code 2) si
  * un vert relu coûte en moyenne plus de N lectures de nuage. Ce que le banc prouve : la passe tourne de bout en bout sur une page qui
  * imite ESV, avec ses temps de page à elle. Ce qu'il ne prouve pas : le vrai ESV, le vrai Potree (la maquette charge les nœuds d'un cut
@@ -31,26 +31,32 @@
  * existent pas), Edge, le réseau ; les temps de calcul sont ceux de cette machine (fiches/CYCLE_OMBRE.md : 2,5 fois plus lente que le
  * poste du terrain). Hors de tools/verify.cjs.
  */
-const path=require('node:path'),fs=require('node:fs');
+const path=require('node:path'),fs=require('node:fs'),os=require('node:os');
 const racine=path.resolve(__dirname,'..');
 function args(argv){const o={maquette:null,mode:'ombre',cuts:16,debut:100,lot:null,latence:40,reglages:null,json:null,delai:600000,terrain:0,rouges:null,'plafond-lectures':null};
  for(let i=0;i<argv.length;i++){const a=argv[i];if(a.startsWith('--'))o[a.slice(2)]=argv[++i];}
  for(const k of ['cuts','debut','latence','delai','terrain'])o[k]=Number(o[k]);o.plafondLectures=o['plafond-lectures']==null?null:Number(o['plafond-lectures']);
  if(!['ombre','corriger'].includes(o.mode))throw Error('--mode : ombre ou corriger');
  const [a,z]=String(o.lot||`${o.debut+4}:${o.debut+7}`).split(':').map(Number);o.lot={start:a,end:z};
- if(!o.maquette)throw Error('--maquette DOSSIER : la maquette ESV (tests/esv-maquette de la branche claude/esv-locale-audit)');
- o.maquette=path.resolve(o.maquette);return o;}
+ o.maquette=o.maquette?path.resolve(o.maquette):null;return o;}
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
+/* Maquette du dépôt (rangement R) : copiée dans un dossier temporaire, rendu { dossier, nettoyer }. La version suivie n'est jamais réglée. */
+const MAQUETTE_DEPOT=path.join(racine,'tests/esv-maquette');
+function copierMaquette(){const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'banc-maquette-')),dossier=path.join(tmp,'tests/esv-maquette');
+ fs.cpSync(MAQUETTE_DEPOT,dossier,{recursive:true});return {dossier,nettoyer:()=>fs.rmSync(tmp,{recursive:true,force:true})};}
 /* La maquette lit ses voisins à deux niveaux au-dessus d'elle (corpus, capture-core) : liens vers ceux du dépôt s'ils manquent. */
 function preparerMaquette(dossier){const base=path.resolve(dossier,'../..');
+ if(path.resolve(dossier)===MAQUETTE_DEPOT)throw Error('La maquette versionnée (tests/esv-maquette) ne se règle pas sur place : omets --maquette, le banc en règle une copie.');
  require('./relecture-maquette.cjs').regler(dossier);
  for(const [lien,cible] of [['tests/corpus','tests/corpus'],['vendor','vendor']]){const l=path.join(base,lien);
   if(!fs.existsSync(l)){fs.mkdirSync(path.dirname(l),{recursive:true});fs.symlinkSync(path.join(racine,cible),l);}}
  for(const f of ['navigateur.cjs','serveur.cjs','esv.html','esv-maquette.js'])if(!fs.existsSync(path.join(dossier,f)))throw Error('Maquette incomplète : '+f+' absent de '+dossier);}
 const stat=v=>{const t=v.filter(Number.isFinite).sort((a,b)=>a-b);if(!t.length)return null;const q=p=>t[Math.min(t.length-1,Math.floor(p*(t.length-1)))];
  return {n:t.length,mediane:q(.5),p90:q(.9),max:t.at(-1),moyenne:Math.round(t.reduce((a,b)=>a+b,0)/t.length)};};
-async function banc(o){preparerMaquette(o.maquette);
- const N=require(path.join(o.maquette,'navigateur.cjs')),{demarrer}=require(path.join(o.maquette,'serveur.cjs'));
+async function banc(o){const maquetteCopie=o.maquette?null:copierMaquette(),maquetteDossier=o.maquette||maquetteCopie.dossier;
+ try{return await bancSur(o,maquetteDossier);}finally{maquetteCopie?.nettoyer();}}
+async function bancSur(o,maquetteDossier){preparerMaquette(maquetteDossier);
+ const N=require(path.join(maquetteDossier,'navigateur.cjs')),{demarrer}=require(path.join(maquetteDossier,'serveur.cjs'));
  const pw=N.playwright();if(!pw)throw Error('Playwright introuvable.');
  const manifeste=JSON.parse(fs.readFileSync(path.join(racine,'manifest.json'),'utf8')),hote=manifeste.host_permissions[0].replace(/\*$/,'');
  const origine=new URL(hote).origin,prefixe=new URL(hote).pathname;
@@ -85,7 +91,7 @@ async function banc(o){preparerMaquette(o.maquette);
   const debutLot=Date.now();await api('start',lot);
   let vue=null;for(;;){await dormir(400);vue=await api('view');if(vue?.batch?.state!=='RUNNING')break;if(Date.now()-debutLot>o.delai){erreurs.push('délai du lot dépassé');break;}}
   const dureeLotMs=Date.now()-debutLot,ecrituresLot=serveur.journal.ecritures.length;
-  /* Le lot borné s'arrête sur une pose non validée : « Mic » la valide (bouton de la maquette), puis lance la relecture. */
+  /* Le lot borné s'arrête sur une pose non validée : l'opérateur la valide (bouton de la maquette), puis lance la relecture. */
   let validationMic=false;await dormir(2500);
   let etat=await api('relecture-etat');
   if(etat.passe?.etat==='non-lancee'&&/attend ta validation/.test(etat.passe.message||'')){
@@ -126,6 +132,6 @@ async function banc(o){preparerMaquette(o.maquette);
   if(o.json)fs.writeFileSync(o.json,JSON.stringify({resume,evenements:ev,maquetteJournal:maquette.journal},null,1));
   return resume;
  }finally{await ctx?.close().catch(()=>{});await serveur?.fermer();remettre();process.removeListener('SIGINT',surSignal);process.removeListener('SIGTERM',surSignal);}}
-module.exports={banc,args,stat};
+module.exports={banc,args,stat,copierMaquette,preparerMaquette,MAQUETTE_DEPOT};
 if(require.main===module){let o;try{o=args(process.argv.slice(2));}catch(e){console.error(e.message);process.exit(2);}
  banc(o).then(r=>{console.log(JSON.stringify(r,null,1));process.exitCode=r.erreurs.length?2:0;},e=>{console.error(e.stack||e.message);process.exitCode=1;});}
