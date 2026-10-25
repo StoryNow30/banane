@@ -84,7 +84,8 @@ def section(fichier, titre):
 
 def decisions():
     t = (R / 'DECISIONS.md').read_text(encoding='utf-8')
-    d = t.index('## D-064'); f = t.index('## D-056')
+    # Rangement R (25/10/2026) : DECISIONS.md est en ordre croissant ; de D-057 jusqu'au titre qui suit D-064.
+    d = t.index('## D-057'); f = t.index('\n## D-', t.index('## D-064') + 1) + 1
     return "\n\n# ═══ DECISIONS.md — D-057 à D-064 ═══\n\n" + t[d:f].rstrip() + "\n"
 
 def lignes_ki():
