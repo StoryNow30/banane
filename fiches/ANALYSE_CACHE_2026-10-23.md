@@ -42,3 +42,10 @@ Références : 1,8 s par cut (test 7, partie 11), 4,6 s (3:0, test 15). Aucun re
 - Pourquoi la molette n'a-t-elle jamais déplacé la caméra (30 sur 30) ? Réglage d'ESV, geste non pris en compte, ou autre : à relever avec Mic.
 - Les 70 cuts « sans appui » de la partie 0 ne sont pas repris par la GCV2 du lot (en 4:2, les cuts de même motif l'étaient) : à expliquer.
 - Autonomie (cuts sans retouche) : non calculable sans Écho.
+
+## 6. Corrections du 25/10 (partie 0 jugée contre l'Écho, `ANALYSE_PARTIE0_ECHO_2026-10-23.md`, D-250)
+
+- **Partie 29** : « aucun cut traité » est faux. Le lot de la partie 29 (8 h 33, heure de Paris) a été vidé à la main à 9 h 05, avec le reste du cache d'avant cette heure (voir l'en-tête), avant l'export, sans export confirmé ; il n'en reste que la capture du dernier cut. La ligne du § 1 et la première question du § 5 sont donc sans objet pour la partie 29.
+- **Les 70 « sans appui »** : la formule « non repris par la GCV2 du lot » est trompeuse. La GCV2 du lot a posé 40 cuts depuis l'étape « différé » ; les 70 sont ceux qui restaient sans appui à la fin. Le lot 2 (14 h 41, « Tout recentré ») en a posé 11 de plus. Qualité de ces reprises : voir D-250 (5 poses à plus de 50 mm sur 42 jugées).
+- **Passe de la partie 0** : la cause est établie. Le service worker a redémarré à 10 h 35 min 46 s, 32 s après la dernière décision ; la passe vit en mémoire et a disparu. Probable, non prouvé : l'arrêt du service worker par Chrome.
+- **Déplacement de la vue** : recompté sur le lot 1 avec l'outil de jointure, 29 demandes de déplacement (64 envois de molette de 1 à 4 crans), toutes « caméra immobile » ; lot 2, 2 demandes (7 envois), même résultat.
