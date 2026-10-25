@@ -609,7 +609,7 @@ function tiroirHtml(m) {
 function poigneeHtml(m) {
   const p = m.poignee || { n: 0, texte: '' }, v2 = R.dataset.revue === 'v2', total = (m.differes?.length || 0) + (m.verts?.length || 0), reste = total - [...S.examines].filter(c => (m.differes || []).some(d => d.cut === c) || (m.verts || []).some(d => d.cut === c)).length;
   const n = p.n ? `<span class="n${m.tiroir !== 'visites' && (m.differes?.length) ? ' dif' : ''}">${p.n}</span> ` : '';
-  const court = p.court || (m.tiroir === 'visites' ? 'visites' : p.n ? 'à examiner' : 'rien à examiner');
+  const court = p.court || (m.tiroir === 'visites' ? (p.n ? 'visites' : 'aucune visite') : p.n ? 'à examiner' : 'rien à examiner');
   return `<button type="button" class="poignee" data-act="tiroir" aria-expanded="${S.tiroir}" aria-controls="tiroir-corps">${IC.fleche.replace('<svg', '<svg class="fl"')}<span class="txt">${n}<span class="long">${esc(p.texte)}</span><span class="court">${esc(court)}</span></span>${v2 && total && m.tiroir !== 'visites' ? `<span class="reste">reste à examiner ${reste} sur ${total}</span>` : ''}<span class="etat-mini">${glypheHtml(m)}<span>${esc(m.mot)}${m.compte?.traites != null && m.compte.cibles ? ` · ${m.compte.traites} sur ${m.compte.cibles}` : ''}</span></span></button>`;
 }
 function cacheHtml(m) {
