@@ -1,6 +1,6 @@
 # Décisions techniques
 
-> **Rangement R du plan 5.0 (25/10/2026).** Fichier unique, décisions dans l'ordre des numéros : union du tronc (`claude/50-test17`, D-224 et D-232 à D-238), de la branche de documentation (`claude/execute-prompt-00-18ra5a`, D-111 à D-223 et D-239 à D-249) et de la branche d'interface (`claude/50-ui-5.0`, D-230 et D-231, absentes ailleurs). Aucun texte de décision n'a été réécrit : quand deux branches portaient le même numéro, le texte qui contient l'autre est gardé (D-079 et D-110 : une ligne de correction ajoutée sur la branche de documentation). Les décisions 4.4 et 4.7 à numéro non entier (D-4.4.2 à D-4.7c) sont rangées entre D-027 et D-028. **D-097, D-098 et D-099 portent chacun deux décisions différentes** depuis l'origine du fichier (deux séries des 13 et 14 octobre) : les deux textes sont gardés, dans l'ordre où ils figuraient, sans trancher. **D-225 à D-229 n'ont jamais été attribués** (recherche sur toutes les branches, 25/10/2026). Vérification de la numérotation : `node tools/decisions-numeros.cjs`.
+> **Rangement R du plan 5.0 (25/10/2026).** Fichier unique, décisions dans l'ordre des numéros : union du tronc (`claude/50-test17`, D-224 et D-232 à D-238), de la branche de documentation (`claude/execute-prompt-00-18ra5a`, D-111 à D-223 et D-239 à D-249) et de la branche d'interface (`claude/50-ui-5.0`, D-230 et D-231, absentes ailleurs). Aucun texte de décision n'a été réécrit : quand deux branches portaient le même numéro, le texte qui contient l'autre est gardé (D-079 et D-110 : une ligne de correction ajoutée sur la branche de documentation). D-178 et D-181 sont pris dans leur forme de `claude/50-ui-5.0`, identique à celle de la branche de documentation sauf les noms de modèles, remplacés par des niveaux (règle du cahier § 2, essai `tests/noms-modeles.test.cjs`). Les décisions 4.4 et 4.7 à numéro non entier (D-4.4.2 à D-4.7c) sont rangées entre D-027 et D-028. **D-097, D-098 et D-099 portent chacun deux décisions différentes** depuis l'origine du fichier (deux séries des 13 et 14 octobre) : les deux textes sont gardés, dans l'ordre où ils figuraient, sans trancher. **D-225 à D-229 n'ont jamais été attribués** (recherche sur toutes les branches, 25/10/2026). Vérification de la numérotation : `node tools/decisions-numeros.cjs`.
 
 ## D-001 - Préserver la référence originale
 
@@ -2566,13 +2566,13 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Documentation** : avant de la verser dans un dépôt, vérifier qu'elle n'est ni propriétaire ni sensible. Les deux dépôts sont publics. Sinon, la garder hors dépôt et n'en reporter que les règles, reformulées.
 - **Précision de Mic, sur les corrections des débutants** : « elles sont utiles, car j'y applique le bon comportement de la règle métier. La lacune des débutants est bien plus dans la règle métier que dans leur placement sur le nuage. » Conséquence : les Échos sur des parties de débutants servent à apprendre **la sélection** (quoi relire, où, avec quelles marges, quand corriger). Les couples Orbite → Écho servent à apprendre **la précision de pose d'Ariane**. Les deux jeux restent séparés dans le manifeste.
 
-## D-178 — Pas de Fable avant la dernière session qui précède la réinitialisation hebdomadaire (17 octobre 2026)
+## D-178 — Pas de le niveau le plus fort avant la dernière session qui précède la réinitialisation hebdomadaire (17 octobre 2026)
 
-- **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **Fable est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
+- **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **le niveau le plus fort est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
 - **Conséquences** :
   - les chantiers et les revues tournent avec le modèle de session par défaut ;
-  - la relecture de la test 7 se fait **sans Fable dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **Sonnet 5.5** comme modèle de session pour cette relecture (D-181) ;
-  - aucun agent ni workflow ne porte `model: 'fable'` avant elle.
+  - la relecture de la test 7 se fait **sans le niveau le plus fort dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **le niveau rapide** comme modèle de session pour cette relecture (D-181) ;
+  - aucun agent ni workflow ne porte un agent du niveau le plus fort avant elle.
 
 ## D-179 — Maj+Espace sur un vert valide sur place, sans changer de cut (17 octobre 2026)
 
@@ -2599,9 +2599,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Mesure sur le terrain** : l'ombre continue de calculer et de noter toutes les zones ; les Échos de Mic qui suivent un lot en mode corriger montrent s'il a dû reprendre des cuts corrigés par Ariane. C'est la mesure qui dira si la zone peut rester ouverte.
 - **Suite** : le changement part sur la branche de la relecture, avec les corrections de la contre-revue en cours et celle de D-179, avant la fusion dans 50-base.
 
-## D-181 — Quota presque épuisé : Sonnet 5.5 pour la relecture de la test 7, travail resserré (17 octobre 2026)
+## D-181 — Quota presque épuisé : le niveau rapide pour la relecture de la test 7, travail resserré (17 octobre 2026)
 
-- **Mic** : il reste très peu de quota ; il refuse de repasser sur Opus. La relecture de la test 7 se fait avec **Sonnet 5.5**, au plus haut effort, sans Fable.
+- **Mic** : il reste très peu de quota ; il refuse de repasser sur niveau fort. La relecture de la test 7 se fait avec **le niveau rapide**, au plus haut effort, sans le niveau le plus fort.
 - **Conséquences** :
   - la contre-revue lancée à cinq angles et au plus haut effort est **arrêtée** : elle relisait du code que D-179 et D-180 font changer ;
   - un seul agent applique D-179 (Maj+Espace sur place) et D-180 (ADV et abords), avec un seul verify complet à la fin ;
